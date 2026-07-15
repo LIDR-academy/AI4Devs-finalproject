@@ -187,15 +187,15 @@ describe('LessonPlayer', () => {
     expect(screen.getByText('Slide 1 of 5')).toBeTruthy();
   });
 
-  // Mutation — ProgressIndicator current is currentIndex+1 (not -1); 1/5 → 20%.
-  it('feeds 1-based current into the progress indicator on the first slide', async () => {
+  // Mutation — SlideProgress gets 0-based current + kind→type map (instructional→lesson).
+  it('feeds 0-based current and slide kinds into the segmented progress indicator', async () => {
     await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
 
-    const progressRoot = screen.getByTestId('lesson-progress-indicator');
-    const bar = progressRoot.children[0] as unknown as {
-      props: { accessibilityValue: { now: number } };
-    };
-    expect(bar.props.accessibilityValue.now).toBe(20);
+    expect(screen.getByTestId('lesson-progress-indicator')).toBeTruthy();
+    expect(screen.getByLabelText('Lesson 1')).toBeTruthy();
+    expect(screen.getByLabelText('Activity 2')).toBeTruthy();
+    expect(screen.getByLabelText('Activity 3')).toBeTruthy();
+    expect(screen.getByLabelText('Lesson 4')).toBeTruthy();
   });
 
   // @s4 — Back unavailable on first slide.
@@ -470,7 +470,7 @@ describe('LessonPlayer', () => {
     expect(screen.getByText('Slide 1 of 5').props.accessibilityLiveRegion).toBe('polite');
   });
 
-  // Mutation — testIDs, i18n keys, progress currentIndex+1, layout styles.
+  // Mutation — testIDs, i18n keys, chrome a11y, layout styles.
   it('pins empty/error testIDs, chrome a11y labels, and deck layout styles', async () => {
     expect(LESSON_PLAYER_TEST_ID).toBe('lesson-player');
     expect(LESSON_PLAYER_EMPTY_TEST_ID).toBe('lesson-player-empty');

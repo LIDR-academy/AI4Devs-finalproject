@@ -108,11 +108,15 @@ const LessonPlayerDeck = ({ lesson, onBackToLessons }: DeckProps) => {
     total: player.totalSteps,
   });
 
+  const progressSlides = lesson.slides.map((slide) => ({
+    type: slide.kind === 'activity' ? ('activity' as const) : ('lesson' as const),
+  }));
+
   return (
     <View style={styles.root} testID={LESSON_PLAYER_TEST_ID}>
       <LessonProgressIndicator
-        current={player.currentIndex + 1}
-        total={player.totalSteps}
+        slides={progressSlides}
+        current={player.currentIndex}
         label={stepLabel}
       />
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>

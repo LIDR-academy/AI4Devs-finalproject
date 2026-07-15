@@ -1,8 +1,12 @@
+import type { SlideProgressSlide } from '../slide-progress/slide-progress';
+
 export type LessonProgressIndicatorProps = {
-  /** 1-based current step. */
+  /** Content slides (instructional → `lesson`, activity → `activity`). No results segment. */
+  slides: SlideProgressSlide[];
+  /** 0-based current step. Results = `slides.length` (all segments done). */
   current: number;
-  /** Total steps (content slides + results). */
-  total: number;
   /** Localized "slide X of N" label (caller resolves via t()). */
   label: string;
+  /** Optional seek — when set, segments are tappable. */
+  onSeek?: (index: number) => void;
 };
