@@ -93,12 +93,16 @@ export class UsersService {
         }
       }
 
+      // Bump sessionVersion so existing access tokens fail JwtStrategy checks.
+      // Also clear refresh state. Call the same invalidation whenever a future
+      // role-update endpoint changes privileges.
       return tx.user.update({
         where: { id: userId },
         data: {
           active: false,
           refreshTokenHash: null,
           refreshTokenExpiresAt: null,
+          sessionVersion: { increment: 1 },
         },
       });
     });

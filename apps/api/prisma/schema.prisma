@@ -32,6 +32,7 @@ model User {
   fullName              String
   role                  UserRole
   active                Boolean   @default(true)
+  sessionVersion        Int       @default(0)
   refreshTokenHash      String?
   refreshTokenExpiresAt DateTime?
   createdAt             DateTime  @default(now())

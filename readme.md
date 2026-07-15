@@ -291,8 +291,63 @@ El MVP de gestión de usuarios (US-002) cubre **alta**, **listado** y **desactiv
 
 #### Requisitos
 
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (incluye Docker Compose)
+
+#### Despliegue completo con Docker (recomendado)
+
+No necesitas Node.js ni terminal para el día a día: con Docker Desktop puedes levantar **PostgreSQL, API y frontend** con un solo comando o desde la interfaz gráfica.
+
+Desde la raíz del repositorio:
+
+```bash
+docker compose up -d --build
+```
+
+O en **Docker Desktop**: *Open* el proyecto → pestaña *Compose* → **Start**.
+
+Cuando los contenedores estén en verde:
+
+| Servicio | URL |
+|----------|-----|
+| **Aplicación web** | http://localhost:3000 |
+| PostgreSQL (opcional, depuración) | `localhost:5434` |
+
+La primera vez, el contenedor `api` aplica migraciones y carga datos de prueba automáticamente.
+
+**Usuarios de prueba:**
+
+| Email | Contraseña | Rol |
+|-------|------------|-----|
+| `admin@taller.com` | `AdminPass123` | Administrador |
+| `mechanic@taller.com` | `MechanicPass123` | Mecánico |
+
+Para detener todo: `docker compose down` (los datos persisten en el volumen `mecatrack_pg_data`).
+
+Variables JWT opcionales: copia `.env.docker.example` a `.env` en la raíz si quieres personalizar secretos.
+
+#### Acceso desde la red WiFi (móvil, tablet u otro PC)
+
+Los dispositivos en la misma red pueden usar MecaTrack si apuntan a la **IP local** del equipo donde corre Docker (no uses `localhost` en el teléfono).
+
+1. **Levanta el stack** (si no está ya en marcha): `docker compose up -d --build`
+2. **Obtén la IP del PC** en Windows (PowerShell o CMD):
+   ```bash
+   ipconfig
+   ```
+   Busca la dirección **IPv4** de tu adaptador WiFi (ejemplo: `192.168.1.42`).
+3. **En el otro dispositivo**, abre el navegador en:
+   ```
+   http://192.168.1.42:3000
+   ```
+   (sustituye por tu IP real).
+4. **Firewall de Windows**: si no carga, permite conexiones entrantes en el puerto **3000** (Panel de control → Firewall → Reglas de entrada → puerto TCP 3000).
+
+Requisitos: el PC con Docker y el dispositivo cliente deben estar en la **misma red WiFi**. Tras cambiar la configuración de red, reconstruye el frontend una vez: `docker compose up -d --build web`.
+
+#### Desarrollo local (sin contenedores de app)
+
 - Node.js 20+
-- Docker Desktop (PostgreSQL)
+- Docker Desktop (solo PostgreSQL)
 - npm
 
 #### Base de datos
@@ -322,7 +377,14 @@ Usuarios de prueba (semilla): `admin@taller.com` / `AdminPass123`, `mechanic@tal
 
 #### Frontend
 
-> Pendiente de implementación (US-001 frontend). Se documentará en `apps/web` cuando exista.
+```bash
+cd apps/web
+cp .env.local.example .env.local
+npm install
+npm run dev
+```
+
+Abre `http://localhost:3000` (requiere la API en ejecución).
 
 ---
 

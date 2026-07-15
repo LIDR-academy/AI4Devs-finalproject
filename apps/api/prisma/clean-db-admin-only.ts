@@ -1,10 +1,33 @@
 import { PrismaClient, UserRole } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
 import 'dotenv/config';
+import {
+  UnsafeDestructiveOperationError,
+  formatTargetSummary,
+  getSanitizedDbTarget,
+  validateDestructiveExecution,
+} from '../src/common/utils/destructive-db-ops';
 
 const prisma = new PrismaClient();
+const ADMIN_EMAIL = 'admin@taller.com';
 
 async function main(): Promise<void> {
+  validateDestructiveExecution({
+    nodeEnv: process.env.NODE_ENV,
+    allowDestructiveDbOps: process.env.ALLOW_DESTRUCTIVE_DB_OPS,
+    argv: process.argv,
+  });
+
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new UnsafeDestructiveOperationError('DATABASE_URL is required');
+  }
+
+  const target = getSanitizedDbTarget(databaseUrl);
+  console.log(formatTargetSummary(target, process.env.NODE_ENV));
+  console.log(
+    'Proceeding with destructive cleanup (admin password will NOT be reset).',
+  );
+
   const result = await prisma.$transaction(async (tx) => {
     const tasks = await tx.workOrderTask.deleteMany();
     const workOrders = await tx.workOrder.deleteMany();
@@ -15,33 +38,57 @@ async function main(): Promise<void> {
     const vehicles = await tx.vehicle.deleteMany();
     const clients = await tx.client.deleteMany();
     const users = await tx.user.deleteMany({
-      where: { email: { not: 'admin@taller.com' } },
+      where: { email: { not: ADMIN_EMAIL } },
     });
 
-    const passwordHash = await bcrypt.hash('AdminPass123', 12);
-    const admin = await tx.user.upsert({
-      where: { email: 'admin@taller.com' },
-      update: {
+    const existingAdmin = await tx.user.findUnique({
+      where: { email: ADMIN_EMAIL },
+    });
+
+    if (!existingAdmin) {
+      return {
+        tasks,
+        workOrders,
+        ownerships,
+        vehicles,
+        clients,
+        users,
+        adminEmail: null as string | null,
+        adminPreserved: false,
+      };
+    }
+
+    const admin = await tx.user.update({
+      where: { email: ADMIN_EMAIL },
+      data: {
         active: true,
-        passwordHash,
-        fullName: 'Workshop Admin',
         role: UserRole.ADMIN,
         refreshTokenHash: null,
         refreshTokenExpiresAt: null,
       },
-      create: {
-        email: 'admin@taller.com',
-        passwordHash,
-        fullName: 'Workshop Admin',
-        role: UserRole.ADMIN,
-        active: true,
-      },
     });
 
-    return { tasks, workOrders, ownerships, vehicles, clients, users, adminEmail: admin.email };
+    return {
+      tasks,
+      workOrders,
+      ownerships,
+      vehicles,
+      clients,
+      users,
+      adminEmail: admin.email,
+      adminPreserved: true,
+    };
   });
 
-  console.log('Database cleaned. Remaining admin:', result.adminEmail);
+  if (!result.adminPreserved) {
+    console.warn(
+      `Warning: no admin user (${ADMIN_EMAIL}) remained after cleanup. Password was not created or reset.`,
+    );
+  } else {
+    console.log('Database cleaned. Remaining admin:', result.adminEmail);
+    console.log('Admin password hash was preserved (not reset).');
+  }
+
   console.log('Deleted counts:', {
     tasks: result.tasks.count,
     workOrders: result.workOrders.count,
@@ -54,7 +101,11 @@ async function main(): Promise<void> {
 
 main()
   .catch((error: unknown) => {
-    console.error(error);
+    if (error instanceof UnsafeDestructiveOperationError) {
+      console.error(error.message);
+    } else {
+      console.error(error);
+    }
     process.exit(1);
   })
   .finally(async () => {

@@ -1,6 +1,15 @@
-# Production stack (US-011 hardened). Secrets come from host .env (not committed).
-# Do not add a custom Compose `name:` here — existing volume is
-# ai4devs-finalproject_mecatrack_pg_data.
+# Production-oriented compose EXAMPLE for later deployment approval (US-011).
+# Do not treat this file as the live production stack.
+# Copy/adapt to the production folder only after explicit approval.
+#
+# Required host env vars (no insecure fallbacks):
+#   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+#   JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
+# Optional:
+#   WEB_PORT (default 3000)
+#   ENABLE_ADMIN_BOOTSTRAP=false (recommended)
+
+name: mecatrack
 
 services:
   postgres:
@@ -16,7 +25,7 @@ services:
     volumes:
       - mecatrack_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -41,7 +50,6 @@ services:
       CORS_ORIGIN: http://localhost:3000
       COOKIE_SECURE: 'false'
       ENABLE_ADMIN_BOOTSTRAP: ${ENABLE_ADMIN_BOOTSTRAP:-false}
-      ENABLE_HSTS: ${ENABLE_HSTS:-false}
 
   web:
     build:

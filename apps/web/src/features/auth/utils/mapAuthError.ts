@@ -6,12 +6,10 @@ export function mapAuthError(error: unknown): string {
       ? error.messages.join(', ')
       : error.messages;
 
-    if (error.statusCode === 401) {
+    // Login failures are intentionally generic (US-014): wrong credentials and
+    // inactive accounts both surface as 401 from the API.
+    if (error.statusCode === 401 || error.statusCode === 403) {
       return 'Correo o contraseña incorrectos';
-    }
-
-    if (error.statusCode === 403) {
-      return 'Tu cuenta está inactiva. Contacta al administrador del taller.';
     }
 
     if (error.statusCode === 429) {

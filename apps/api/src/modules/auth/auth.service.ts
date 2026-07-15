@@ -1,5 +1,4 @@
 import {
-  ForbiddenException,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -19,10 +18,11 @@ import {
 import { LoginDto } from './dto/login.dto';
 import { parseDurationToMs } from './utils/duration.util';
 
-interface AccessTokenPayload {
+export interface AccessTokenPayload {
   sub: string;
   email: string;
   role: string;
+  sessionVersion: number;
 }
 
 @Injectable()
@@ -54,11 +54,14 @@ export class AuthService {
     };
   }
 
-  async refresh(refreshToken: string): Promise<RefreshResponseDto> {
+  async refresh(
+    refreshToken: string,
+  ): Promise<RefreshResponseDto & { refreshToken: string }> {
     const refreshTokenHash = this.hashRefreshToken(refreshToken);
     const user = await this.prisma.user.findFirst({
       where: {
         refreshTokenHash,
+        active: true,
         refreshTokenExpiresAt: {
           gt: new Date(),
         },
@@ -69,13 +72,8 @@ export class AuthService {
       throw new UnauthorizedException('Unauthorized');
     }
 
-    const accessToken = await this.jwtService.signAsync({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    } satisfies AccessTokenPayload);
-
-    return { accessToken };
+    // Rotate refresh token so the previous cookie cannot be reused.
+    return this.issueTokens(user);
   }
 
   async logout(userId: string): Promise<void> {
@@ -103,17 +101,21 @@ export class AuthService {
       where: { email: normalizedEmail },
     });
 
+    // Constant-time-ish path: always run bcrypt even when the user is missing.
+    const passwordHash =
+      user?.passwordHash ??
+      '$2b$12$C6UzMDM.H6dfI/f/IKxGhuYk.0nQkqUaZ7mWZ8o0c3oJbJvJvJvJu';
+    const isPasswordValid = await bcrypt.compare(password, passwordHash);
+
     if (!user) {
       return null;
     }
 
     if (!user.active) {
-      throw new ForbiddenException(
-        'Your account is inactive. Contact the workshop administrator.',
-      );
+      this.logger.warn(`Inactive account login attempt for email: ${normalizedEmail}`);
+      return null;
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       return null;
     }
@@ -128,6 +130,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      sessionVersion: user.sessionVersion,
     } satisfies AccessTokenPayload);
 
     const refreshToken = randomBytes(32).toString('hex');
@@ -154,6 +157,7 @@ export class AuthService {
       data: {
         refreshTokenHash: null,
         refreshTokenExpiresAt: null,
+        sessionVersion: { increment: 1 },
       },
     });
   }

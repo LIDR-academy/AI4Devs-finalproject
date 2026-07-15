@@ -1,164 +1,17 @@
-import { PrismaClient, UserRole } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+/**
+ * Prisma seed entrypoint.
+ * Delegates to development seed only. Production container startup must never
+ * invoke this file automatically (see docker-entrypoint.sh / US-010).
+ */
 import 'dotenv/config';
+import { DevSeedError } from '../src/common/utils/admin-bootstrap';
+import { runDevSeed } from './seed-dev';
 
-const prisma = new PrismaClient();
-
-async function main(): Promise<void> {
-  const passwordHash = await bcrypt.hash('AdminPass123', 12);
-  const mechanicPasswordHash = await bcrypt.hash('MechanicPass123', 12);
-
-  await prisma.user.upsert({
-    where: { email: 'admin@taller.com' },
-    update: {
-      active: true,
-      passwordHash,
-    },
-    create: {
-      email: 'admin@taller.com',
-      passwordHash,
-      fullName: 'Workshop Admin',
-      role: UserRole.ADMIN,
-      active: true,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'mechanic@taller.com' },
-    update: {
-      active: true,
-      passwordHash: mechanicPasswordHash,
-    },
-    create: {
-      email: 'mechanic@taller.com',
-      passwordHash: mechanicPasswordHash,
-      fullName: 'Workshop Mechanic',
-      role: UserRole.MECHANIC,
-      active: true,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'inactive@taller.com' },
-    update: {},
-    create: {
-      email: 'inactive@taller.com',
-      passwordHash: await bcrypt.hash('InactivePass123', 12),
-      fullName: 'Inactive User',
-      role: UserRole.MECHANIC,
-      active: false,
-    },
-  });
-
-  await prisma.client.upsert({
-    where: { nationalId: '1-2345-6789' },
-    update: {},
-    create: {
-      fullName: 'Juan Pérez',
-      nationalId: '1-2345-6789',
-      phone: '88887777',
-      email: 'juan@email.com',
-    },
-  });
-
-  await prisma.client.upsert({
-    where: { nationalId: '2-3456-7890' },
-    update: {},
-    create: {
-      fullName: 'María López',
-      nationalId: '2-3456-7890',
-      phone: '77776666',
-    },
-  });
-
-  await prisma.client.upsert({
-    where: { nationalId: '3-4567-8901' },
-    update: {},
-    create: {
-      fullName: 'Carlos Ruiz',
-      nationalId: '3-4567-8901',
-      email: 'carlos@email.com',
-    },
-  });
-
-  const juanClient = await prisma.client.findUnique({
-    where: { nationalId: '1-2345-6789' },
-  });
-  const mariaClient = await prisma.client.findUnique({
-    where: { nationalId: '2-3456-7890' },
-  });
-
-  if (juanClient) {
-    const juanVehicle = await prisma.vehicle.upsert({
-      where: { licensePlate: 'ABC123' },
-      update: {},
-      create: {
-        licensePlate: 'ABC123',
-        brand: 'Toyota',
-        model: 'Corolla',
-        year: 2018,
-        color: 'Blanco',
-      },
-    });
-
-    const existingJuanOwnership = await prisma.vehicleOwnership.findFirst({
-      where: {
-        vehicleId: juanVehicle.id,
-        clientId: juanClient.id,
-        validTo: null,
-      },
-    });
-
-    if (!existingJuanOwnership) {
-      await prisma.vehicleOwnership.create({
-        data: {
-          vehicleId: juanVehicle.id,
-          clientId: juanClient.id,
-          validTo: null,
-        },
-      });
-    }
-  }
-
-  if (mariaClient) {
-    const mariaVehicle = await prisma.vehicle.upsert({
-      where: { licensePlate: 'XYZ789' },
-      update: {},
-      create: {
-        licensePlate: 'XYZ789',
-        brand: 'Honda',
-        model: 'Civic',
-        year: 2020,
-        color: 'Gris',
-      },
-    });
-
-    const existingMariaOwnership = await prisma.vehicleOwnership.findFirst({
-      where: {
-        vehicleId: mariaVehicle.id,
-        clientId: mariaClient.id,
-        validTo: null,
-      },
-    });
-
-    if (!existingMariaOwnership) {
-      await prisma.vehicleOwnership.create({
-        data: {
-          vehicleId: mariaVehicle.id,
-          clientId: mariaClient.id,
-          validTo: null,
-        },
-      });
-    }
-  }
-}
-
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error: unknown) => {
+runDevSeed().catch((error: unknown) => {
+  if (error instanceof DevSeedError) {
+    console.error(error.message);
+  } else {
     console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+  }
+  process.exit(1);
+});

@@ -41,7 +41,10 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Req() request: Request) {
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const refreshToken = request.cookies?.[REFRESH_COOKIE_NAME] as
       | string
       | undefined;
@@ -50,7 +53,10 @@ export class AuthController {
       throw new UnauthorizedException('Unauthorized');
     }
 
-    return this.authService.refresh(refreshToken);
+    const { refreshToken: rotatedRefreshToken, ...result } =
+      await this.authService.refresh(refreshToken);
+    this.setRefreshCookie(response, rotatedRefreshToken);
+    return result;
   }
 
   @Post('logout')

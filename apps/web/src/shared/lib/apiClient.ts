@@ -1,8 +1,8 @@
 import { clearAccessToken, getAccessToken, setAccessToken } from './tokenStore';
 import { parseApiError } from './apiError';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api';
+// Relative URL so the app works on localhost and on LAN IPs (e.g. http://192.168.1.10:3000).
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 
 let refreshPromise: Promise<boolean> | null = null;
 
