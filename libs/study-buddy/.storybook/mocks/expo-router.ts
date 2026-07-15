@@ -5,5 +5,8 @@
  * viteFinal — never resolved by Jest or the real app build.
  */
 export const useRouter = () => ({
+  navigate: (_path: string) => {},
   push: (_path: string) => {},
 });
+
+export const usePathname = () => '/';

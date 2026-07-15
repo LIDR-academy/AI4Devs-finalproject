@@ -1,6 +1,6 @@
 import { ApiKeyProvider } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
-import { SignOut } from '@helsoft/study-buddy';
+import { AppChrome } from '@helsoft/study-buddy';
 import { Stack } from 'expo-router';
 
 export default function AppLayout() {
@@ -12,16 +12,11 @@ export default function AppLayout() {
   // Round 1, Minor 14).
   return (
     <ApiKeyProvider>
-      <Stack>
+      <AppChrome />
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ title: t('nav.myLessons') }} />
         <Stack.Screen name="upload" options={{ title: t('nav.newLesson') }} />
-        <Stack.Screen
-          name="settings"
-          options={{
-            title: t('nav.settings'),
-            headerRight: () => <SignOut style={{ marginRight: 10, marginTop: 10 }} />,
-          }}
-        />
+        <Stack.Screen name="settings" options={{ title: t('nav.settings') }} />
         <Stack.Screen name="lesson/[id]/index" options={{ title: t('nav.lesson') }} />
         <Stack.Screen name="lesson/[id]/player" options={{ title: t('nav.study') }} />
         <Stack.Screen name="lesson/[id]/results" options={{ title: t('nav.results') }} />

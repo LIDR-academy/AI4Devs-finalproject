@@ -13,6 +13,11 @@
 | @s14 | session label, initials, fallback, unavailable user | `session-identity.helpers.test.ts` |
 | @s14, @s18 | initials avatar render, accessible trigger, touch target | `initials-avatar.test.tsx` |
 | @s5, @s6, @s7, @s8, @s10, @s18 | identity, actions, error style, full-bleed outside dismiss, trigger semantics, touch targets | `account-menu.test.tsx`, `use-account-menu.test.tsx`, `tests/e2e/organisms/account-menu/account-menu.e2e.js` |
+| @s19 | web and native breakpoint selection | `use-breakpoint.test.ts` |
+| @s5, @s7 | controlled dialog-only SignOut and auth confirmation | `sign-out.test.tsx` |
+| @s2, @s5, @s6, @s7, @s13, @s14, @s17, @s19 | AppChrome navigation, identity, SignOut, deep-route active state, mobile bars | `app-chrome.test.tsx`, `use-app-chrome.test.ts` |
+| @s14 | AppChrome Content and Loading Storybook states | `tests/e2e/components/app-chrome/app-chrome.e2e.js` |
+| @s16 | App shell excludes redundant Home links and Settings/header SignOut | `app-shell.test.ts` |
 
 ## Slice 1
 - @s3/@s12 RED missing NavItem → GREEN pill + selected link.
@@ -36,3 +41,14 @@
 - @s5/@s7 RED Storybook lacked Sign-out close coverage → GREEN e2e action-close assertion.
 - @s8 RED AccountMenu state/effect stayed in organism → GREEN `use-account-menu` owns state and Escape effect; handlers remain in component.
 - @s8 RED outside press lacked a full-bleed hit target → GREEN Modal scrim plus unit and browser outside-press coverage.
+
+## Slice 3
+- @s19 RED missing breakpoint hook → GREEN web 768 cutoff and native mobile selection.
+- @s5/@s7 RED controlled SignOut rendered its trigger → GREEN dialog-only controlled mode; wrapper forwards props.
+- @s2/@s5/@s6/@s7/@s13/@s14/@s17/@s19 RED missing AppChrome → GREEN session/i18n/router wiring, controlled sign-out, and responsive bars.
+- @s13/@s16 GREEN mount AppChrome in protected layout; hide Stack chrome and remove redundant Home/Settings entry points.
+- Refactor: restored hook backward-compatible default args; lint, touched type-checks, and workspace suites green.
+- @s17 RED missing mobile-title helper module → GREEN `getMobileTitleKey` pure lookup.
+- @s2/@s5/@s6/@s7/@s13/@s14/@s17/@s19 RED missing AppChrome state hook → GREEN `use-app-chrome` owns identity, nav derivation, and controlled SignOut state; handlers remain in the component.
+- @s14 RED missing AppChrome Storybook coverage → GREEN Content and Loading stories plus matching browser checks.
+- @s16 regression test added: route-source assertions prevent Home Upload/Settings links and Settings/header SignOut paths returning.

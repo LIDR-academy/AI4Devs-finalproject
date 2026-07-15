@@ -33,6 +33,20 @@ describe('SignOut', () => {
     expect(screen.queryByText('auth.logOutConfirmBody')).toBeNull();
   });
 
+  it('renders only the controlled confirmation dialog and reports close changes', async () => {
+    const onOpenChange = jest.fn();
+    await render(<SignOut onSignOut={jest.fn()} open onOpenChange={onOpenChange} />);
+
+    expect(screen.queryByRole('button', { name: 'auth.logOut' })).toBeNull();
+    expect(screen.getByText('auth.logOutConfirmBody')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'auth.logOutCancelAction' }));
+    });
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
   // @s4/@s10/@s11 — pressing the trigger shows a confirmation dialog before signing out.
   it('shows a confirmation dialog when the trigger is pressed', async () => {
     await renderSignOut();

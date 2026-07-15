@@ -3,7 +3,7 @@ id: task-5
 title: study-buddy AppChrome wiring (session, i18n, SignOut, breakpoint, nav)
 slice: 3
 scenarios: [s2, s5, s6, s7, s14, s17, s19]
-status: todo
+status: done
 paths:
   [
     libs/study-buddy/src/components/app-chrome/,

@@ -3,7 +3,7 @@ id: task-6
 title: App shell mount + replace ad-hoc Links / header SignOut
 slice: 3
 scenarios: [s13, s16]
-status: todo
+status: done
 paths:
   [
     apps/app-study-buddy/src/app/(app)/_layout.tsx,
