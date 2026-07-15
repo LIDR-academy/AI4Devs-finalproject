@@ -1,0 +1,44 @@
+<a class="artist-card" [routerLink]="['/artista', item().artist.slug]">
+  <div class="artist-card__image-wrapper">
+    <img
+      class="artist-card__image"
+      [src]="item().imageUrl"
+      [alt]="item().artist.artistName"
+      loading="lazy"
+    />
+    @if (item().artist.isCertified) {
+      <span class="artist-card__badge artist-card__badge--certified">
+        <mat-icon>verified</mat-icon> Certificado
+      </span>
+    }
+  </div>
+
+  <div class="artist-card__body">
+    <p class="artist-card__name">{{ item().artist.artistName }}</p>
+    <p class="artist-card__meta">
+      <mat-icon class="artist-card__icon">place</mat-icon>
+      {{ item().artist.commune }}
+    </p>
+    <p class="artist-card__meta">
+      <mat-icon class="artist-card__icon">star</mat-icon>
+      {{ item().artist.averageRating | number: '1.1-1' }}
+      <span class="artist-card__reviews">({{ item().artist.reviewCount }})</span>
+    </p>
+    <p class="artist-card__style">{{ item().style }}</p>
+
+    @if (item().artist.sponsorBadges.length > 0) {
+      <div class="artist-card__sponsors">
+        @for (badge of item().artist.sponsorBadges; track badge.brandName) {
+          @if (badge.brandLogoUrl) {
+            <img
+              class="artist-card__sponsor-logo"
+              [src]="badge.brandLogoUrl"
+              [alt]="badge.brandName"
+              loading="lazy"
+            />
+          }
+        }
+      </div>
+    }
+  </div>
+</a>
