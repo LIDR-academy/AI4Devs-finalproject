@@ -7,6 +7,7 @@ import { CoachLayout } from "@/ui/components/layouts/CoachLayout";
 import { ProtectedRoute } from "@/ui/components/ProtectedRoute";
 import { ToastContainer } from "@/ui/components/Toast";
 import { AdminCalendarPage } from "@/ui/pages/admin/CalendarPage";
+import { AdminCoachDetailPage } from "@/ui/pages/admin/CoachDetailPage";
 import { AdminCoacheeDetailPage } from "@/ui/pages/admin/CoacheeDetailPage";
 import { AdminCoacheesPage } from "@/ui/pages/admin/CoacheesPage";
 import { AdminCoachesPage } from "@/ui/pages/admin/CoachesPage";
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
       { path: "coachees", element: <AdminCoacheesPage /> },
       { path: "coachees/:id", element: <AdminCoacheeDetailPage /> },
       { path: "coaches", element: <AdminCoachesPage /> },
+      { path: "coaches/:id", element: <AdminCoachDetailPage /> },
     ],
   },
   {

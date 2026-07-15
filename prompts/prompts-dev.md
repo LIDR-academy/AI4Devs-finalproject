@@ -75,3 +75,13 @@ I interrupted the last prompt because you said ther was no constitution but ther
 [/speckit.tasks]
 [/speckit.implement]
 
+---
+
+I see we have 2 migration.sql filess created and some changes in the schema.prisma - what should I do, what commands should I run in order to execute all the changes done? Givve me specific details
+
+---
+
+Things to fix:
+- When adding a Coach, it is Inactive by default. It should be active
+- In the Coaches page, I see the table with the coach but when I click on the coach menu at the end of the row, the options are not visible. They get displayed inside the table and they get cut.
+- In the coach detail view, I'd like that instead of "Coach Profile" we display the name of the coach. Therefore we don't need it below.
