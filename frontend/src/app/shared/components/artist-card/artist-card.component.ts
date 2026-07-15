@@ -1,8 +1,8 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { ShowcaseItem } from '../../../core/models/showcase.models';
+import { ArtistCard, ShowcaseItem } from '../../../core/models/showcase.models';
 
 @Component({
   selector: 'app-artist-card',
@@ -12,5 +12,10 @@ import { ShowcaseItem } from '../../../core/models/showcase.models';
   styleUrl: './artist-card.component.scss'
 })
 export class ArtistCardComponent {
-  readonly item = input.required<ShowcaseItem>();
+  readonly item = input<ShowcaseItem | null>(null);
+  readonly artist = input<ArtistCard | null>(null);
+
+  readonly cardArtist = computed(() => this.artist() ?? this.item()?.artist ?? null);
+  readonly cardImage = computed(() => this.item()?.imageUrl ?? this.cardArtist()?.profilePhotoUrl ?? '');
+  readonly cardStyle = computed(() => this.item()?.style ?? this.cardArtist()?.styles[0] ?? 'Sin estilo');
 }

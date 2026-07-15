@@ -1,17 +1,23 @@
-<a class="artist-card" [routerLink]="['/artista', item().artist.slug]">
+<a class="artist-card" [routerLink]="['/artista', cardArtist()?.slug]">
   <div class="artist-card__image-wrapper">
-    <img
-      class="artist-card__image"
-      [src]="item().imageUrl"
-      [alt]="item().artist.artistName"
-      loading="lazy"
-    />
-    <div class="artist-card__gradient"></div>
+    @if (cardImage()) {
+      <img
+        class="artist-card__image"
+        [src]="cardImage()"
+        [alt]="cardArtist()?.artistName ?? 'Artista'"
+        loading="lazy"
+      />
+      <div class="artist-card__gradient"></div>
+    } @else {
+      <div class="artist-card__placeholder" aria-hidden="true">
+        <mat-icon>person</mat-icon>
+      </div>
+    }
     <div class="artist-card__overlay">
-      <p class="artist-card__name">{{ item().artist.artistName }}</p>
-      <p class="artist-card__style">{{ item().style }}</p>
+      <p class="artist-card__name">{{ cardArtist()?.artistName }}</p>
+      <p class="artist-card__style">{{ cardStyle() }}</p>
     </div>
-    @if (item().artist.isCertified) {
+    @if (cardArtist()?.isCertified) {
       <span class="artist-card__badge" title="Artista certificado">
         <mat-icon>verified</mat-icon>
       </span>
@@ -22,18 +28,18 @@
     <div class="artist-card__meta">
       <span class="artist-card__location">
         <mat-icon class="artist-card__icon">place</mat-icon>
-        {{ item().artist.commune }}
+        {{ cardArtist()?.commune }}
       </span>
       <span class="artist-card__rating">
         <mat-icon class="artist-card__icon artist-card__icon--star">star</mat-icon>
-        {{ item().artist.averageRating | number: '1.1-1' }}
-        <span class="artist-card__reviews">({{ item().artist.reviewCount }})</span>
+        {{ cardArtist()?.averageRating | number: '1.1-1' }}
+        <span class="artist-card__reviews">({{ cardArtist()?.reviewCount }})</span>
       </span>
     </div>
 
-    @if (item().artist.sponsorBadges.length > 0) {
+    @if ((cardArtist()?.sponsorBadges?.length ?? 0) > 0) {
       <div class="artist-card__sponsors">
-        @for (badge of item().artist.sponsorBadges; track badge.brandName) {
+        @for (badge of cardArtist()?.sponsorBadges ?? []; track badge.brandName) {
           @if (badge.brandLogoUrl) {
             <img
               class="artist-card__sponsor-logo"

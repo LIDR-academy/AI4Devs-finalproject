@@ -1,0 +1,116 @@
+<div class="filter-panel">
+  <header class="filter-panel__header">
+    <p class="filter-panel__eyebrow">Refina tu búsqueda</p>
+    <h2 class="filter-panel__title">Filtros</h2>
+    <p class="filter-panel__subtitle">Los resultados se actualizan automáticamente.</p>
+  </header>
+
+  <section class="filter-panel__section">
+    <div class="filter-panel__section-head">
+      <h3>Estilos</h3>
+      <span>Selecciona un estilo</span>
+    </div>
+
+    <div class="filter-panel__styles">
+      @for (style of tattooStyles; track style.slug) {
+        <mat-checkbox
+          class="filter-panel__checkbox"
+          [checked]="filters().style === style.slug"
+          (change)="toggleStyle(style.slug, $event)"
+        >
+          {{ style.name }}
+        </mat-checkbox>
+      }
+    </div>
+  </section>
+
+  <section class="filter-panel__section">
+    <div class="filter-panel__section-head">
+      <h3>Precio por sesión</h3>
+      <span>CLP</span>
+    </div>
+
+    <div class="filter-panel__price-grid">
+      <label class="filter-panel__field">
+        <span>Mínimo</span>
+        <input
+          type="number"
+          min="0"
+          [value]="minPriceInput() ?? ''"
+          (input)="onMinPriceInput($any($event.target).value)"
+        />
+      </label>
+
+      <label class="filter-panel__field">
+        <span>Máximo</span>
+        <input
+          type="number"
+          min="0"
+          [value]="maxPriceInput() ?? ''"
+          (input)="onMaxPriceInput($any($event.target).value)"
+        />
+      </label>
+    </div>
+  </section>
+
+  <section class="filter-panel__section">
+    <div class="filter-panel__section-head">
+      <h3>Calificación mínima</h3>
+      <span>{{ filters().minRating ?? 0 }}+</span>
+    </div>
+
+    <div class="filter-panel__rating" role="group" aria-label="Seleccionar calificación mínima">
+      @for (rating of [1, 2, 3, 4, 5]; track rating) {
+        <button
+          type="button"
+          class="filter-panel__star"
+          [class.filter-panel__star--active]="rating <= (filters().minRating ?? 0)"
+          [attr.aria-pressed]="rating === filters().minRating"
+          (click)="setMinRating(rating)"
+        >
+          <mat-icon>star</mat-icon>
+          <span>{{ rating }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="filter-panel__section">
+    <div class="filter-panel__toggles">
+      <mat-slide-toggle
+        [checked]="!!filters().certified"
+        (change)="setToggleFilter('certified', $event)"
+      >
+        Solo certificados
+      </mat-slide-toggle>
+
+      <mat-slide-toggle
+        [checked]="!!filters().available"
+        (change)="setToggleFilter('available', $event)"
+      >
+        Con disponibilidad esta semana
+      </mat-slide-toggle>
+    </div>
+  </section>
+
+  <section class="filter-panel__section">
+    <div class="filter-panel__section-head">
+      <h3>Tipo de artista</h3>
+      <span>Filtra por modalidad</span>
+    </div>
+
+    <mat-radio-group
+      class="filter-panel__radio-group"
+      [value]="filters().type ?? 'all'"
+      (change)="setArtistType($event)"
+    >
+      <mat-radio-button value="all">Todos</mat-radio-button>
+      <mat-radio-button value="studio">Estudio</mat-radio-button>
+      <mat-radio-button value="independent">Independiente</mat-radio-button>
+    </mat-radio-group>
+  </section>
+
+  <button type="button" class="filter-panel__clear" (click)="clearFilters()">
+    Limpiar filtros
+  </button>
+</div>

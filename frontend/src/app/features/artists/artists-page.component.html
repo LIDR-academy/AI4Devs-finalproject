@@ -1,0 +1,75 @@
+<div class="artists-page">
+  <header class="artists-page__hero">
+    <p class="artists-page__eyebrow">Artistas destacados</p>
+    <h1 class="artists-page__title">Encuentra al artista ideal para tu próximo tattoo</h1>
+    <p class="artists-page__subtitle">
+      Filtra por estilo, presupuesto, calificación y disponibilidad en tiempo real.
+    </p>
+  </header>
+
+  <div class="artists-page__container">
+    <aside class="artists-page__sidebar">
+      <app-filter-panel />
+    </aside>
+
+    <section class="artists-page__content">
+      <div class="artists-page__toolbar">
+        <div>
+          <h2 class="artists-page__heading">Resultados</h2>
+          <p class="artists-page__counter">{{ results()?.total ?? 0 }} artistas encontrados</p>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="artists-page__skeleton-grid">
+          @for (card of [1, 2, 3, 4, 5, 6]; track card) {
+            <div class="artists-page__skeleton-card"></div>
+          }
+        </div>
+      } @else if (error()) {
+        <div class="artists-page__error">
+          <mat-icon>error</mat-icon>
+          <p>{{ error() }}</p>
+          <button type="button" class="artists-page__ghost-button" (click)="retry()">
+            Reintentar
+          </button>
+        </div>
+      } @else if (artists().length === 0) {
+        <div class="artists-page__empty">
+          <mat-icon>search_off</mat-icon>
+          <h3>No encontramos artistas con esos filtros</h3>
+          <p>Prueba limpiando los filtros o ajustando el rango para ampliar los resultados.</p>
+          <button type="button" class="artists-page__primary-button" (click)="clearFilters()">
+            Limpiar filtros
+          </button>
+        </div>
+      } @else {
+        <div class="artists-page__grid">
+          @for (artist of artists(); track artist.id) {
+            <app-artist-card [artist]="artist" />
+          }
+        </div>
+      }
+    </section>
+  </div>
+
+  <button type="button" class="artists-page__mobile-trigger" (click)="openFilters()">
+    <mat-icon>tune</mat-icon>
+    <span>Filtros</span>
+  </button>
+
+  @if (showFilters()) {
+    <div class="artists-page__overlay" (click)="closeFilters()">
+      <div class="artists-page__sheet" (click)="$event.stopPropagation()">
+        <div class="artists-page__sheet-handle"></div>
+        <div class="artists-page__sheet-header">
+          <h2>Filtros</h2>
+          <button type="button" class="artists-page__sheet-close" (click)="closeFilters()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <app-filter-panel />
+      </div>
+    </div>
+  }
+</div>
