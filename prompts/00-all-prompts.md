@@ -756,4 +756,141 @@ continua
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 5 sesiones · 46 prompts documentados*
+---
+
+# Sesión 6 — US0003: Vitrina principal (backend + frontend + UI refinamiento)
+
+> 📅 2026-07-14 · Copilot CLI · Claude Opus 4.6 (sub-tareas: Claude Sonnet 4.6)
+
+---
+
+## 47 — Implementación TASK0001 backend US0003
+
+> 📋 2026-07-14T22:00:00Z · Copilot CLI · Claude Opus 4.6 · medium · ~80K tokens · rodri
+
+```
+Implementa el TASK0001 de US0003: endpoint GET /api/showcase con secciones dinámicas y PostGIS para geolocalización. Sigue TDD.
+```
+
+*(Implementa ShowcaseService con secciones dinámicas (cerca de ti, mejor valorados, certificados, nuevos), endpoint GET /api/showcase con lat/lng opcionales, 7 tests de integración con TestContainers — todos en verde.)*
+
+---
+
+## 48 — Implementación TASK0002 frontend US0003
+
+> 📋 2026-07-14T23:00:00Z · Copilot CLI · Claude Opus 4.6 · medium · ~100K tokens · rodri
+
+```
+Implementa el TASK0002 de US0003: vitrina frontend con secciones, ArtistCard, skeleton loading y geolocalización del navegador.
+```
+
+*(Crea ShowcasePageComponent con geolocalización, ShowcaseSectionComponent, ArtistCardComponent con ratings y badges de sponsors, skeleton loading con shimmer, ShowcaseService HTTP. 19 tests en verde.)*
+
+---
+
+## 49 — Seed de imágenes en MinIO
+
+> 📋 2026-07-15T00:00:00Z · Copilot CLI · Claude Opus 4.6 · medium · ~110K tokens · rodri
+
+```
+Crea un seed de imágenes en MinIO desde picsum.photos para que la vitrina tenga imágenes de muestra sin problemas de copyright.
+```
+
+*(Perfil docker-compose `seed-images` con script que descarga imágenes de picsum.photos y las sube a MinIO, asociándolas a los artistas del seed.)*
+
+---
+
+## 50 — Refinamiento UI/UX: dark theme premium
+
+> 📋 2026-07-15T00:44:00Z · Copilot CLI · Claude Opus 4.6 · high · ~120K tokens · rodri
+
+```
+Mejora la interfaz de mi sitio web con ui-ux-pro-max
+```
+
+*(Implementa diseño dark premium completo: sistema de CSS custom properties (--ink-*), tipografía Inter + Playfair Display, navbar con glassmorphism sticky, hero section con gradient dorado, artist cards con gradient overlay y zoom en hover, login con branding centrado, account page con avatar de iniciales. Build exitoso.)*
+
+---
+
+## Resumen de archivos modificados (sesión 6)
+
+| Archivo | Acción |
+|---|---|
+| `backend/src/InkLink.Api/Controllers/ShowcaseController.cs` | Creado — endpoint GET /api/showcase |
+| `backend/src/InkLink.Application/Services/ShowcaseService.cs` | Creado — lógica de secciones dinámicas |
+| `backend/tests/InkLink.IntegrationTests/Showcase/` | Creados — 7 tests de integración |
+| `frontend/src/app/features/showcase/` | Creado — página de vitrina con geolocalización |
+| `frontend/src/app/shared/components/artist-card/` | Creado — componente ArtistCard |
+| `frontend/src/app/shared/components/showcase-section/` | Creado — componente ShowcaseSection |
+| `frontend/src/index.html` | Actualizado — Google Fonts, meta tags, lang="es" |
+| `frontend/src/styles.scss` | Reescrito — dark theme con CSS custom properties |
+| `frontend/src/app/app.html` | Reescrito — navbar glassmorphism |
+| `frontend/src/app/app.scss` | Reescrito — toolbar sticky con blur |
+| `frontend/src/app/features/showcase/showcase-page/showcase-page.component.html` | Reescrito — hero section + dark skeleton |
+| `frontend/src/app/features/showcase/showcase-page/showcase-page.component.scss` | Reescrito — hero, skeleton, error states |
+| `frontend/src/app/shared/components/artist-card/artist-card.component.html` | Reescrito — gradient overlay, badge reposicionado |
+| `frontend/src/app/shared/components/artist-card/artist-card.component.scss` | Reescrito — dark cards con hover effects |
+| `frontend/src/app/shared/components/showcase-section/showcase-section.component.html` | Reescrito — accent line, Playfair titles |
+| `frontend/src/app/shared/components/showcase-section/showcase-section.component.scss` | Reescrito — dark section styles |
+| `frontend/src/app/features/auth/login/login.component.html` | Reescrito — brand + radial glow |
+| `frontend/src/app/features/auth/login/login.component.scss` | Reescrito — dark login page |
+| `frontend/src/app/features/account/account.component.ts` | Reescrito — avatar + structured fields |
+| `docker-compose.yml` | Actualizado — perfil seed-images |
+
+---
+
+# Sesión 7 — Skill UI/UX Design System + registro de prompts
+
+> 📅 2026-07-15 · Copilot CLI · Claude Opus 4.6
+
+---
+
+## 51 — Crear skill de design system para Claude y Copilot
+
+> 📋 2026-07-15T01:28:00Z · Copilot CLI · Claude Opus 4.6 · high · ~130K tokens · rodri
+
+```
+Crea una SKILL para Copilot y para Claude para que las reglas de UI y UX y diseño del front se mantengan iguales en todo el sitio web
+```
+
+*(Crea ai-specs/skills/ui-ux-design-system/SKILL.md — design system completo con paleta, tipografía, componentes, animaciones, prohibiciones y checklist. Symlink en .claude/skills/, SKILL.md en .github/skills/, prompt en .github/prompts/. Build pasa.)*
+
+---
+
+## 52 — Commit, push y PR de la skill
+
+> 📋 2026-07-15T01:33:00Z · Copilot CLI · Claude Opus 4.6 · high · ~135K tokens · rodri
+
+```
+Haz un commit y push de esto. Crea una rama, docs o feature el que sea necesario y luego un PR con descripcion
+```
+
+*(Rama docs/ui-ux-design-system-skill, commit con 4 archivos (527 líneas), push y PR #6 creado en GitHub con descripción detallada del design system.)*
+
+---
+
+## 53 — Análisis del plan y verificación de registro de prompts
+
+> 📋 2026-07-15T01:37:00Z · Copilot CLI · Claude Opus 4.6 · high · ~140K tokens · rodri
+
+```
+Listo, ya está. Ahora hay que continuar con el plan. Analiza lo que deberia seguir segun el plan. Recuerda que se deben documentar todos los prompts. Esto se esta haciendo?
+```
+
+*(Detecta gap: 3 sesiones sin registrar (US0003, UI refinamiento, skill). Siguiente según plan: US0004 (Filtrar artistas). Usuario solicita registrar prompts pendientes.)*
+
+---
+
+## Resumen de archivos modificados (sesión 7)
+
+| Archivo | Acción |
+|---|---|
+| `ai-specs/skills/ui-ux-design-system/SKILL.md` | Creado — skill canónica del design system |
+| `.claude/skills/ui-ux-design-system` | Creado — symlink para Claude |
+| `.github/skills/ui-ux-design-system/SKILL.md` | Creado — skill para Copilot |
+| `.github/prompts/ui-ux-design-system.prompt.md` | Creado — prompt de referencia rápida |
+| `prompts/00-all-prompts.md` | Actualizado — sesiones 6 y 7 |
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 7 sesiones · 53 prompts documentados*
