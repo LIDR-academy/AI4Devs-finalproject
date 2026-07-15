@@ -142,6 +142,7 @@ describe('WorkOrdersController (e2e)', () => {
       expect.arrayContaining([
         expect.objectContaining({
           fullName: 'Workshop Mechanic',
+          role: 'MECHANIC',
         }),
       ]),
     );
@@ -151,6 +152,45 @@ describe('WorkOrdersController (e2e)', () => {
           mechanic.fullName === 'Inactive User',
       ),
     ).toBe(false);
+    expect(
+      response.body.some(
+        (mechanic: { email?: string; fullName: string; role: string }) =>
+          mechanic.fullName === 'Workshop Admin',
+      ),
+    ).toBe(false);
+  });
+
+  it('GET /api/work-orders/mechanics includes ADMIN with canActAsMechanic', async () => {
+    const createAdmin = await request(app.getHttpServer())
+      .post('/api/users')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        fullName: 'Assignable Admin',
+        email: `assignable.admin.${Date.now()}@taller.com`,
+        password: 'AssignableAdmin1',
+        role: 'ADMIN',
+        canActAsMechanic: true,
+      })
+      .expect(201);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/work-orders/mechanics')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: createAdmin.body.id,
+          fullName: 'Assignable Admin',
+          role: 'ADMIN',
+        }),
+        expect.objectContaining({
+          fullName: 'Workshop Mechanic',
+          role: 'MECHANIC',
+        }),
+      ]),
+    );
   });
 
   it('GET /api/work-orders/active?vehicleId= valid returns null or active', async () => {
@@ -320,6 +360,60 @@ describe('WorkOrdersController (e2e)', () => {
       .expect(400);
   });
 
+  it('POST /api/work-orders assigns ADMIN with canActAsMechanic and detail includes assignedMechanic', async () => {
+    const createAdmin = await request(app.getHttpServer())
+      .post('/api/users')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        fullName: 'Detail Assign Admin',
+        email: `detail.assign.admin.${Date.now()}@taller.com`,
+        password: 'DetailAssignAdmin1',
+        role: 'ADMIN',
+        canActAsMechanic: true,
+      })
+      .expect(201);
+
+    const vehicleId = await createVehicleForWorkOrder(
+      app,
+      adminAccessToken,
+      juanClientId,
+    );
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/work-orders')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        vehicleId,
+        entryReason: 'Assigned to floor admin',
+        mileage: 21000,
+        assignedMechanicId: createAdmin.body.id,
+        initialTasks: [{ description: 'Road test' }],
+      })
+      .expect(201);
+
+    expect(createResponse.body.assignedMechanicId).toBe(createAdmin.body.id);
+    expect(createResponse.body.assignedMechanic).toEqual(
+      expect.objectContaining({
+        id: createAdmin.body.id,
+        fullName: 'Detail Assign Admin',
+        role: 'ADMIN',
+      }),
+    );
+
+    const detailResponse = await request(app.getHttpServer())
+      .get(`/api/work-orders/${createResponse.body.id as string}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    expect(detailResponse.body.assignedMechanic).toEqual(
+      expect.objectContaining({
+        id: createAdmin.body.id,
+        fullName: 'Detail Assign Admin',
+        role: 'ADMIN',
+      }),
+    );
+  });
+
   it('GET /api/work-orders/:id after create returns tasks', async () => {
     const vehicleId = await createVehicleForWorkOrder(
       app,
@@ -395,6 +489,61 @@ describe('WorkOrdersController (e2e)', () => {
         }),
       ]),
     );
+  });
+
+  it('POST /api/work-orders without mileage returns 201 with mileage null', async () => {
+    const vehicleId = await createVehicleForWorkOrder(
+      app,
+      adminAccessToken,
+      juanClientId,
+    );
+
+    const response = await request(app.getHttpServer())
+      .post('/api/work-orders')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        vehicleId,
+        entryReason: 'Vehicle towed in without readable odometer',
+        initialTasks: [{ description: 'Electrical diagnosis' }],
+      })
+      .expect(201);
+
+    expect(response.body.mileage).toBeNull();
+  });
+
+  it('PATCH /api/work-orders/:id/mileage updates mileage on EN_PROCESO', async () => {
+    const vehicleId = await createVehicleForWorkOrder(
+      app,
+      adminAccessToken,
+      juanClientId,
+    );
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/work-orders')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        vehicleId,
+        entryReason: 'No odometer at intake',
+        initialTasks: [{ description: 'General inspection' }],
+      })
+      .expect(201);
+
+    const workOrderId = createResponse.body.id as string;
+
+    const patchResponse = await request(app.getHttpServer())
+      .patch(`/api/work-orders/${workOrderId}/mileage`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({ mileage: 85400 })
+      .expect(200);
+
+    expect(patchResponse.body.mileage).toBe(85400);
+
+    const detailResponse = await request(app.getHttpServer())
+      .get(`/api/work-orders/${workOrderId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    expect(detailResponse.body.mileage).toBe(85400);
   });
 
   it('POST /api/work-orders without token returns 401', async () => {

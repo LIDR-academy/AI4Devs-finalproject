@@ -30,7 +30,7 @@ export interface VehicleVisit {
   status: string;
   statusLabel: string;
   entryReason: string;
-  mileage: number;
+  mileage: number | null;
   totalAmount: number;
   ownerAtVisit: OwnerAtVisit;
   visitNotes: VisitNotes;

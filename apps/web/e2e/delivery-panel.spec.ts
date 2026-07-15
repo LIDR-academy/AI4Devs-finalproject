@@ -118,6 +118,43 @@ test.describe('Delivery panel (admin)', () => {
     await expect(page.getByText(/Total a cobrar:.*₡20/)).toBeVisible();
   });
 
+  test('mark owner contacted keeps row and allows deliver', async ({ page }) => {
+    const { plate } = await createReadyWorkOrder(page);
+
+    await page.goto('/admin/delivery');
+    await expect(page.getByText(plate)).toBeVisible({ timeout: 10_000 });
+
+    const row = page.locator('tr', { hasText: plate });
+    await expect(row.getByText('Lista para entrega')).toBeVisible();
+    await row.getByRole('button', { name: 'Ver detalle' }).click();
+    await page
+      .getByRole('button', { name: 'Marcar propietario contactado' })
+      .click();
+    await page.getByRole('button', { name: 'Confirmar contacto' }).click();
+
+    await expect(
+      page.getByText('Propietario marcado como contactado'),
+    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(plate)).toBeVisible();
+    await expect(row.getByText('Propietario contactado')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Contactados' }).click();
+    await expect(page.getByText(plate)).toBeVisible();
+    await page.getByRole('button', { name: 'Pendiente de contacto' }).click();
+    await expect(page.getByText(plate)).not.toBeVisible();
+    await page.getByRole('button', { name: 'Todos' }).click();
+
+    const contactedRow = page.locator('tr', { hasText: plate });
+    await contactedRow.getByRole('button', { name: 'Ver detalle' }).click();
+    await page.getByRole('button', { name: 'Marcar como entregada' }).click();
+    await page.getByRole('button', { name: 'Confirmar' }).click();
+
+    await expect(page.getByText('Vehículo marcado como entregado')).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByText(plate)).not.toBeVisible({ timeout: 10_000 });
+  });
+
   test('mark delivered removes row from list', async ({ page }) => {
     const { plate } = await createReadyWorkOrder(page);
 

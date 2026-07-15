@@ -26,6 +26,7 @@ describe('WorkOrdersService', () => {
       findFirst: jest.Mock;
       findUnique: jest.Mock;
       create: jest.Mock;
+      update: jest.Mock;
     };
     workOrderTask: {
       createMany: jest.Mock;
@@ -52,6 +53,7 @@ describe('WorkOrdersService', () => {
     entryReason: 'Oil change',
     mileage: 50000,
     assignedMechanicId: null,
+    assignedMechanic: null,
     createdById,
     checkedInAt: new Date('2026-06-19T10:00:00.000Z'),
     updatedAt: new Date('2026-06-19T10:00:00.000Z'),
@@ -90,6 +92,7 @@ describe('WorkOrdersService', () => {
         findFirst: jest.fn(),
         findUnique: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
       },
       workOrderTask: {
         createMany: jest.fn(),
@@ -103,20 +106,44 @@ describe('WorkOrdersService', () => {
   });
 
   describe('findActiveMechanics', () => {
-    it('returns only active mechanics ordered by name', async () => {
+    it('returns assignable mechanics and admins with flag', async () => {
       prisma.user.findMany.mockResolvedValue([
-        { id: mechanicId, fullName: 'Workshop Mechanic' },
+        {
+          id: 'admin-eligible',
+          fullName: 'Working Admin',
+          role: UserRole.ADMIN,
+        },
+        {
+          id: mechanicId,
+          fullName: 'Workshop Mechanic',
+          role: UserRole.MECHANIC,
+        },
       ]);
 
       const result = await workOrdersService.findActiveMechanics();
 
       expect(prisma.user.findMany).toHaveBeenCalledWith({
-        where: { role: UserRole.MECHANIC, active: true },
-        select: { id: true, fullName: true },
+        where: {
+          active: true,
+          OR: [
+            { role: UserRole.MECHANIC },
+            { role: UserRole.ADMIN, canActAsMechanic: true },
+          ],
+        },
+        select: { id: true, fullName: true, role: true },
         orderBy: { fullName: 'asc' },
       });
       expect(result).toEqual([
-        { id: mechanicId, fullName: 'Workshop Mechanic' },
+        {
+          id: 'admin-eligible',
+          fullName: 'Working Admin',
+          role: UserRole.ADMIN,
+        },
+        {
+          id: mechanicId,
+          fullName: 'Workshop Mechanic',
+          role: UserRole.MECHANIC,
+        },
       ]);
     });
   });
@@ -256,6 +283,45 @@ describe('WorkOrdersService', () => {
       expect(result.tasks[0].status).toBe(WorkOrderTaskStatus.PENDING);
     });
 
+    it('persists null mileage when mileage is omitted', async () => {
+      let capturedMileage: number | null | undefined;
+
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          vehicle: {
+            findUnique: jest.fn().mockResolvedValue(vehicleWithOwnership),
+          },
+          workOrder: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockImplementation(({ data }) => {
+              capturedMileage = data.mileage;
+              return { id: workOrderId };
+            }),
+          },
+          workOrderTask: {
+            createMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          user: { findFirst: jest.fn() },
+        }),
+      );
+
+      prisma.workOrder.findUnique.mockResolvedValue({
+        ...workOrderDetail,
+        mileage: null,
+      });
+
+      const dto: CreateWorkOrderDto = {
+        vehicleId,
+        entryReason: 'Vehicle towed in without odometer',
+        initialTasks: [{ description: 'Diagnose no-start' }],
+      };
+
+      const result = await workOrdersService.create(dto, createdById);
+
+      expect(capturedMileage).toBeNull();
+      expect(result.mileage).toBeNull();
+    });
+
     it('creates multiple tasks with correct sortOrder', async () => {
       const dto: CreateWorkOrderDto = {
         ...baseDto,
@@ -331,6 +397,20 @@ describe('WorkOrdersService', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
+    it('links admin with canActAsMechanic when provided', async () => {
+      const adminEligibleId = 'admin-eligible';
+      const dto: CreateWorkOrderDto = {
+        ...baseDto,
+        assignedMechanicId: adminEligibleId,
+      };
+
+      mockSuccessfulTransaction({ assignedMechanicId: adminEligibleId });
+
+      const result = await workOrdersService.create(dto, createdById);
+
+      expect(result.assignedMechanicId).toBe(adminEligibleId);
+    });
+
     it('throws NotFoundException for unknown vehicle', async () => {
       prisma.$transaction.mockImplementation(async (callback) =>
         callback({
@@ -382,6 +462,106 @@ describe('WorkOrdersService', () => {
       await expect(
         workOrdersService.create(baseDto, createdById),
       ).rejects.toBeInstanceOf(ConflictException);
+    });
+  });
+
+  describe('updateMileage', () => {
+    it('updates mileage on EN_PROCESO work order', async () => {
+      const updatedAt = new Date('2026-07-15T12:00:00.000Z');
+
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: workOrderId,
+        status: WorkOrderStatus.EN_PROCESO,
+      });
+      prisma.workOrder.update.mockResolvedValue({
+        id: workOrderId,
+        mileage: 85400,
+        updatedAt,
+      });
+
+      const result = await workOrdersService.updateMileage(
+        workOrderId,
+        { mileage: 85400 },
+        { userId: createdById, role: UserRole.MECHANIC },
+      );
+
+      expect(result).toEqual({
+        id: workOrderId,
+        mileage: 85400,
+        updatedAt,
+      });
+    });
+
+    it('allows admin to update mileage on ENTREGADA work order', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: workOrderId,
+        status: WorkOrderStatus.ENTREGADA,
+      });
+      prisma.workOrder.update.mockResolvedValue({
+        id: workOrderId,
+        mileage: 90000,
+        updatedAt: new Date(),
+      });
+
+      await workOrdersService.updateMileage(
+        workOrderId,
+        { mileage: 90000 },
+        { userId: createdById, role: UserRole.ADMIN },
+      );
+
+      expect(prisma.workOrder.update).toHaveBeenCalled();
+    });
+
+    it('forbids mechanic from updating mileage on ENTREGADA work order', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: workOrderId,
+        status: WorkOrderStatus.ENTREGADA,
+      });
+
+      await expect(
+        workOrdersService.updateMileage(
+          workOrderId,
+          { mileage: 90000 },
+          { userId: createdById, role: UserRole.MECHANIC },
+        ),
+      ).rejects.toMatchObject({
+        response: {
+          message:
+            'Only administrators can update mileage on delivered work orders',
+        },
+      });
+    });
+
+    it('clears mileage to null', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: workOrderId,
+        status: WorkOrderStatus.LISTA_PARA_ENTREGA,
+      });
+      prisma.workOrder.update.mockResolvedValue({
+        id: workOrderId,
+        mileage: null,
+        updatedAt: new Date(),
+      });
+
+      const result = await workOrdersService.updateMileage(
+        workOrderId,
+        { mileage: null },
+        { userId: createdById, role: UserRole.ADMIN },
+      );
+
+      expect(result.mileage).toBeNull();
+    });
+
+    it('throws NotFoundException for unknown work order', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue(null);
+
+      await expect(
+        workOrdersService.updateMileage(
+          workOrderId,
+          { mileage: 1000 },
+          { userId: createdById, role: UserRole.ADMIN },
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });

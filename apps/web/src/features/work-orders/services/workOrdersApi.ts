@@ -4,6 +4,7 @@ import type {
   CreateWorkOrderRequest,
   MechanicSummary,
   TaskTechnicalNotesResponse,
+  UpdateMileageResponse,
   UpdateTaskRequest,
   UpdateTaskResponse,
   UpdateTaskTechnicalNotesRequest,
@@ -33,6 +34,16 @@ export const workOrdersApi = {
 
   getById(id: string): Promise<WorkOrderDetail> {
     return apiClient<WorkOrderDetail>(`/work-orders/${id}`);
+  },
+
+  updateMileage(
+    workOrderId: string,
+    mileage: number | null,
+  ): Promise<UpdateMileageResponse> {
+    return apiClient(`/work-orders/${workOrderId}/mileage`, {
+      method: 'PATCH',
+      body: JSON.stringify({ mileage }),
+    });
   },
 
   addTask(

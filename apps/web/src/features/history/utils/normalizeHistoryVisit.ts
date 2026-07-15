@@ -17,7 +17,7 @@ export function normalizeHistoryVisit(
     status: visit.status,
     statusLabel: visit.statusLabel ?? visit.status,
     entryReason: visit.entryReason,
-    mileage: visit.mileage ?? 0,
+    mileage: visit.mileage ?? null,
     totalAmount: visit.totalAmount ?? 0,
     ownerAtVisit: {
       id: visit.ownerAtVisit.id ?? '',

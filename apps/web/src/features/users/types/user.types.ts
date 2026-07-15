@@ -5,6 +5,7 @@ export interface UserListItem {
   fullName: string;
   email: string;
   role: UserRole;
+  canActAsMechanic: boolean;
   active: boolean;
   createdAt: string;
   updatedAt?: string;
@@ -15,6 +16,15 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   role: UserRole;
+  canActAsMechanic?: boolean;
+}
+
+export interface UpdateUserRequest {
+  fullName?: string;
+  email?: string;
+  role?: UserRole;
+  password?: string;
+  canActAsMechanic?: boolean;
 }
 
 export type CreateUserResponse = UserListItem;

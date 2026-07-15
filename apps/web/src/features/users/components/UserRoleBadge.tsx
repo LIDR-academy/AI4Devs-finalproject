@@ -13,9 +13,18 @@ const ROLE_CLASSES: Record<UserRole, string> = {
 
 interface UserRoleBadgeProps {
   role: UserRole;
+  canActAsMechanic?: boolean;
 }
 
-export function UserRoleBadge({ role }: UserRoleBadgeProps) {
+export function UserRoleBadge({
+  role,
+  canActAsMechanic = false,
+}: UserRoleBadgeProps) {
+  const label =
+    role === 'ADMIN' && canActAsMechanic
+      ? 'Admin · Mecánico'
+      : ROLE_LABELS[role];
+
   return (
     <span
       className={cn(
@@ -23,7 +32,7 @@ export function UserRoleBadge({ role }: UserRoleBadgeProps) {
         ROLE_CLASSES[role],
       )}
     >
-      {ROLE_LABELS[role]}
+      {label}
     </span>
   );
 }

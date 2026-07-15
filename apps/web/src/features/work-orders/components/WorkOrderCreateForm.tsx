@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/shared/components/Button';
+import { Modal } from '@/shared/components/Modal';
 import { cn } from '@/shared/lib/cn';
 import type { Vehicle } from '@/features/vehicles/types/vehicle.types';
+import { useVehicleHistory } from '@/features/history/hooks/useVehicleHistory';
 import { useCreateWorkOrder } from '../hooks/useCreateWorkOrder';
 import {
   createWorkOrderSchema,
@@ -16,6 +18,12 @@ import {
   getActiveWorkOrderIdFromError,
   mapWorkOrdersError,
 } from '../utils/mapWorkOrdersError';
+import {
+  getPreviousVisitMileage,
+  isMileageDecrease,
+  lowerMileageConfirmMessage,
+  resolveMileageBaseline,
+} from '../utils/mileageDecrease';
 import { ActiveWorkOrderBanner } from './ActiveWorkOrderBanner';
 import { InitialTasksEditor } from './InitialTasksEditor';
 import { MechanicSelect } from './MechanicSelect';
@@ -34,9 +42,13 @@ export function WorkOrderCreateForm({
   const router = useRouter();
   const { mutateAsync, isPending, error, reset: resetMutation } =
     useCreateWorkOrder();
+  const { data: history } = useVehicleHistory(vehicle.id);
   const [conflictWorkOrderId, setConflictWorkOrderId] = useState<string | null>(
     null,
   );
+  const [pendingValues, setPendingValues] =
+    useState<CreateWorkOrderFormValues | null>(null);
+  const [confirmLowerOpen, setConfirmLowerOpen] = useState(false);
 
   const {
     register,
@@ -51,7 +63,7 @@ export function WorkOrderCreateForm({
     defaultValues: {
       vehicleId: vehicle.id,
       entryReason: '',
-      mileage: 0,
+      mileage: null,
       assignedMechanicId: '',
       initialTasks: [{ description: '' }],
     },
@@ -59,11 +71,20 @@ export function WorkOrderCreateForm({
 
   const assignedMechanicId = watch('assignedMechanicId') ?? '';
 
+  const baseline = useMemo(
+    () =>
+      resolveMileageBaseline(
+        getPreviousVisitMileage(history?.visits ?? []),
+        null,
+      ),
+    [history?.visits],
+  );
+
   useEffect(() => {
     setValue('vehicleId', vehicle.id, { shouldValidate: true });
   }, [vehicle.id, setValue]);
 
-  const submit = async (values: CreateWorkOrderFormValues) => {
+  const createWorkOrder = async (values: CreateWorkOrderFormValues) => {
     resetMutation();
     setConflictWorkOrderId(null);
 
@@ -77,13 +98,30 @@ export function WorkOrderCreateForm({
           description: task.description.trim(),
         })),
       });
+      setConfirmLowerOpen(false);
+      setPendingValues(null);
       router.push(`/work-orders/${workOrder.id}`);
     } catch (submitError) {
       const activeWorkOrderId = getActiveWorkOrderIdFromError(submitError);
       if (activeWorkOrderId) {
         setConflictWorkOrderId(activeWorkOrderId);
       }
+      setConfirmLowerOpen(false);
     }
+  };
+
+  const submit = async (values: CreateWorkOrderFormValues) => {
+    if (
+      isMileageDecrease(values.mileage, baseline) &&
+      values.mileage !== null &&
+      baseline !== null
+    ) {
+      setPendingValues(values);
+      setConfirmLowerOpen(true);
+      return;
+    }
+
+    await createWorkOrder(values);
   };
 
   const isDisabled = blockedByActiveWorkOrder || isPending;
@@ -174,10 +212,23 @@ export function WorkOrderCreateForm({
               'w-full rounded-lg border px-3 py-2 text-slate-900 outline-none ring-blue-500 focus:ring-2',
               errors.mileage ? 'border-red-500' : 'border-slate-300',
             )}
-            {...register('mileage', { valueAsNumber: true })}
+            {...register('mileage', {
+              setValueAs: (value) =>
+                value === '' || value === null || value === undefined
+                  ? null
+                  : Number(value),
+            })}
           />
           {errors.mileage && (
             <p className="text-sm text-red-600">{errors.mileage.message}</p>
+          )}
+          <p className="text-sm text-slate-500">
+            Puede completarse más adelante (p. ej. vehículo varado)
+          </p>
+          {baseline !== null && (
+            <p className="text-sm text-slate-500">
+              Último registrado: {baseline.toLocaleString('es-CR')} km
+            </p>
           )}
         </div>
 
@@ -202,6 +253,47 @@ export function WorkOrderCreateForm({
           </Button>
         </div>
       </form>
+
+      <Modal
+        open={confirmLowerOpen}
+        onOpenChange={(next) => {
+          if (!next) {
+            setConfirmLowerOpen(false);
+            setPendingValues(null);
+          }
+        }}
+        title="Kilometraje menor al anterior"
+      >
+        {pendingValues?.mileage != null && baseline !== null && (
+          <p className="mb-4 text-sm text-amber-900">
+            {lowerMileageConfirmMessage(pendingValues.mileage, baseline)}
+          </p>
+        )}
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setConfirmLowerOpen(false);
+              setPendingValues(null);
+            }}
+            disabled={isPending}
+          >
+            Revisar
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              if (pendingValues) {
+                void createWorkOrder(pendingValues);
+              }
+            }}
+            disabled={isPending}
+          >
+            {isPending ? 'Creando...' : 'Sí, crear igual'}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

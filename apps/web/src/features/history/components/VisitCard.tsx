@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { WorkOrderStatusBadge } from '@/features/work-orders/components/WorkOrderStatusBadge';
 import { formatCurrency } from '@/features/work-orders/utils/formatCurrency';
+import { formatMileage } from '@/features/work-orders/utils/formatMileage';
 import type { WorkOrderStatus } from '@/features/work-orders/types/work-order.types';
 import type { VehicleVisit } from '../types/history.types';
 import { VisitTasksList } from './VisitTasksList';
@@ -76,7 +77,7 @@ export function VisitCard({
                 Kilometraje
               </p>
               <p className="mt-1 text-sm text-slate-800">
-                {visit.mileage.toLocaleString('es-CR')} km
+                {formatMileage(visit.mileage)}
               </p>
               {visit.deliveredAt && (
                 <p className="mt-2 text-sm text-slate-600">

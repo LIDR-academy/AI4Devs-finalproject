@@ -53,6 +53,7 @@ describe('UsersController (e2e)', () => {
   let mechanicAccessToken: string;
   let mechanicUserId: string;
   let adminUserId: string;
+  const uniqueSuffix = `${Date.now()}`;
 
   beforeAll(async () => {
     process.env.JWT_ACCESS_SECRET = 'test-access-secret-min-32-characters';
@@ -142,14 +143,15 @@ describe('UsersController (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .send({
         fullName: 'New Employee',
-        email: 'new.employee@taller.com',
+        email: `new.employee.${uniqueSuffix}@taller.com`,
         password: 'EmployeePass123',
         role: 'MECHANIC',
       })
       .expect(201);
 
     expect(response.body.active).toBe(true);
-    expect(response.body.email).toBe('new.employee@taller.com');
+    expect(response.body.email).toBe(`new.employee.${uniqueSuffix}@taller.com`);
+    expect(response.body.canActAsMechanic).toBe(false);
     expect(response.body.passwordHash).toBeUndefined();
   });
 
@@ -174,7 +176,7 @@ describe('UsersController (e2e)', () => {
       .set('Authorization', `Bearer ${mechanicAccessToken}`)
       .send({
         fullName: 'Forbidden User',
-        email: 'forbidden@taller.com',
+        email: `forbidden.${uniqueSuffix}@taller.com`,
         password: 'ForbiddenPass123',
         role: 'MECHANIC',
       })
@@ -187,7 +189,7 @@ describe('UsersController (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .send({
         fullName: 'Short Password',
-        email: 'short.pass@taller.com',
+        email: `short.pass.${uniqueSuffix}@taller.com`,
         password: 'short',
         role: 'MECHANIC',
       })
@@ -200,7 +202,7 @@ describe('UsersController (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .send({
         fullName: 'To Deactivate',
-        email: 'deactivate.me@taller.com',
+        email: `deactivate.me.${uniqueSuffix}@taller.com`,
         password: 'DeactivatePass123',
         role: 'MECHANIC',
       })
@@ -229,40 +231,69 @@ describe('UsersController (e2e)', () => {
   });
 
   it('PATCH deactivate last active admin returns 400', async () => {
-    const createResponse = await request(app.getHttpServer())
-      .post('/api/users')
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .send({
-        fullName: 'Second Admin',
-        email: 'second.admin@taller.com',
-        password: 'SecondAdminPass123',
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+
+    const otherActiveAdmins = await prisma.user.findMany({
+      where: {
         role: 'ADMIN',
-      })
-      .expect(201);
+        active: true,
+        id: { not: adminUserId },
+      },
+      select: { id: true },
+    });
 
-    const secondAdminId = createResponse.body.id as string;
+    try {
+      if (otherActiveAdmins.length > 0) {
+        await prisma.user.updateMany({
+          where: { id: { in: otherActiveAdmins.map((user) => user.id) } },
+          data: { active: false },
+        });
+      }
 
-    const secondAdminLogin = await request(app.getHttpServer())
-      .post('/api/auth/login')
-      .send({
-        email: 'second.admin@taller.com',
-        password: 'SecondAdminPass123',
-      });
-    const secondAdminToken = secondAdminLogin.body.accessToken as string;
+      const createResponse = await request(app.getHttpServer())
+        .post('/api/users')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({
+          fullName: 'Second Admin',
+          email: `second.admin.${uniqueSuffix}@taller.com`,
+          password: 'SecondAdminPass123',
+          role: 'ADMIN',
+        })
+        .expect(201);
 
-    await request(app.getHttpServer())
-      .patch(`/api/users/${secondAdminId}/deactivate`)
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .expect(200);
+      const secondAdminId = createResponse.body.id as string;
 
-    const response = await request(app.getHttpServer())
-      .patch(`/api/users/${adminUserId}/deactivate`)
-      .set('Authorization', `Bearer ${secondAdminToken}`)
-      .expect(400);
+      const secondAdminLogin = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          email: `second.admin.${uniqueSuffix}@taller.com`,
+          password: 'SecondAdminPass123',
+        });
+      const secondAdminToken = secondAdminLogin.body.accessToken as string;
 
-    expect(response.body.message).toBe(
-      'At least one active administrator is required',
-    );
+      await request(app.getHttpServer())
+        .patch(`/api/users/${secondAdminId}/deactivate`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .expect(200);
+
+      const response = await request(app.getHttpServer())
+        .patch(`/api/users/${adminUserId}/deactivate`)
+        .set('Authorization', `Bearer ${secondAdminToken}`)
+        .expect(400);
+
+      expect(response.body.message).toBe(
+        'At least one active administrator is required',
+      );
+    } finally {
+      if (otherActiveAdmins.length > 0) {
+        await prisma.user.updateMany({
+          where: { id: { in: otherActiveAdmins.map((user) => user.id) } },
+          data: { active: true },
+        });
+      }
+      await prisma.$disconnect();
+    }
   });
 
   it('PATCH deactivate unknown id returns 404', async () => {
@@ -278,7 +309,7 @@ describe('UsersController (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .send({
         fullName: 'Double Deactivate',
-        email: 'double.deactivate@taller.com',
+        email: `double.deactivate.${uniqueSuffix}@taller.com`,
         password: 'DoubleDeactivate1',
         role: 'MECHANIC',
       })
@@ -305,7 +336,7 @@ describe('UsersController (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .send({
         fullName: 'Login Blocked',
-        email: 'login.blocked@taller.com',
+        email: `login.blocked.${uniqueSuffix}@taller.com`,
         password: 'LoginBlocked123',
         role: 'MECHANIC',
       })
@@ -321,7 +352,7 @@ describe('UsersController (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'login.blocked@taller.com',
+        email: `login.blocked.${uniqueSuffix}@taller.com`,
         password: 'LoginBlocked123',
       })
       .expect(403);
@@ -350,5 +381,157 @@ describe('UsersController (e2e)', () => {
       .post('/api/auth/refresh')
       .set('Cookie', cookies)
       .expect(401);
+  });
+
+  it('POST /api/users ADMIN with canActAsMechanic true returns 201', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/users')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        fullName: 'Floor Admin',
+        email: `floor.admin.${uniqueSuffix}@taller.com`,
+        password: 'FloorAdminPass1',
+        role: 'ADMIN',
+        canActAsMechanic: true,
+      })
+      .expect(201);
+
+    expect(response.body.role).toBe('ADMIN');
+    expect(response.body.canActAsMechanic).toBe(true);
+  });
+
+  it('PATCH /api/users/:id sets canActAsMechanic for admin', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/users')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        fullName: 'Patchable Admin',
+        email: `patchable.admin.${uniqueSuffix}@taller.com`,
+        password: 'PatchableAdmin1',
+        role: 'ADMIN',
+        canActAsMechanic: false,
+      })
+      .expect(201);
+
+    const userId = createResponse.body.id as string;
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/users/${userId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({ canActAsMechanic: true })
+      .expect(200);
+
+    expect(response.body.canActAsMechanic).toBe(true);
+  });
+
+  it('PATCH /api/users/:id updates fullName', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/users')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        fullName: 'Editable Mechanic',
+        email: `editable.mechanic.${uniqueSuffix}@taller.com`,
+        password: 'EditablePass123',
+        role: 'MECHANIC',
+      })
+      .expect(201);
+
+    const userId = createResponse.body.id as string;
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/users/${userId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({ fullName: 'Nombre Actualizado' })
+      .expect(200);
+
+    expect(response.body.fullName).toBe('Nombre Actualizado');
+  });
+
+  it('PATCH /api/users/:id duplicate email returns 409', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/users')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        fullName: 'Email Conflict Target',
+        email: `email.conflict.${uniqueSuffix}@taller.com`,
+        password: 'EmailConflict12',
+        role: 'MECHANIC',
+      })
+      .expect(201);
+
+    const userId = createResponse.body.id as string;
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/users/${userId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({ email: 'admin@taller.com' })
+      .expect(409);
+
+    expect(response.body.message).toBe('This email is already registered');
+  });
+
+  it('PATCH /api/users/:id as MECHANIC returns 403', async () => {
+    await request(app.getHttpServer())
+      .patch(`/api/users/${mechanicUserId}`)
+      .set('Authorization', `Bearer ${mechanicAccessToken}`)
+      .send({ fullName: 'Hacked' })
+      .expect(403);
+  });
+
+  it('PATCH /api/users/:id empty body returns 400', async () => {
+    await request(app.getHttpServer())
+      .patch(`/api/users/${mechanicUserId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({})
+      .expect(400);
+  });
+
+  it('PATCH /api/users/:id password change updates hash and clears refresh', async () => {
+    const bcrypt = await import('bcrypt');
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    const email = `password.reset.${uniqueSuffix}@taller.com`;
+
+    try {
+      const createResponse = await request(app.getHttpServer())
+        .post('/api/users')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({
+          fullName: 'Password Reset User',
+          email,
+          password: 'OriginalPass12',
+          role: 'MECHANIC',
+        })
+        .expect(201);
+
+      const userId = createResponse.body.id as string;
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          refreshTokenHash: 'stale-hash',
+          refreshTokenExpiresAt: new Date(Date.now() + 86_400_000),
+        },
+      });
+
+      await request(app.getHttpServer())
+        .patch(`/api/users/${userId}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({ password: 'BrandNewPass99' })
+        .expect(200);
+
+      const updated = await prisma.user.findUnique({ where: { id: userId } });
+      expect(updated).not.toBeNull();
+      expect(updated!.refreshTokenHash).toBeNull();
+      expect(updated!.refreshTokenExpiresAt).toBeNull();
+      expect(await bcrypt.compare('BrandNewPass99', updated!.passwordHash)).toBe(
+        true,
+      );
+      expect(await bcrypt.compare('OriginalPass12', updated!.passwordHash)).toBe(
+        false,
+      );
+    } finally {
+      await prisma.$disconnect();
+    }
   });
 });

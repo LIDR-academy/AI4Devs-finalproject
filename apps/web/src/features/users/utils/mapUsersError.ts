@@ -5,8 +5,10 @@ const MESSAGE_MAP: Record<string, string> = {
   'You cannot deactivate your own account':
     'No puedes desactivar tu propia cuenta',
   'At least one active administrator is required':
-    'Debe permanecer al menos un administrador activo',
+    'Debe haber al menos un administrador activo',
   'User is already inactive': 'El usuario ya está inactivo',
+  'User is inactive': 'El usuario está inactivo',
+  'At least one field is required': 'Debes modificar al menos un campo',
   'Not Found': 'Usuario no encontrado',
 };
 

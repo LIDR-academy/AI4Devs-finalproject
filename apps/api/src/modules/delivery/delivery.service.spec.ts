@@ -35,6 +35,7 @@ describe('DeliveryService', () => {
     deliveredAt: null,
     ownerContactedAt: null,
     ownerContactedById: null,
+    ownerContactedBy: null,
     visitDiagnosis: null,
     visitRepairSummary: null,
     visitPartsUsed: null,
@@ -137,7 +138,7 @@ describe('DeliveryService', () => {
   });
 
   describe('listReady', () => {
-    it('returns only LISTA_PARA_ENTREGA work orders', async () => {
+    it('returns LISTA_PARA_ENTREGA and OWNER_CONTACTED work orders', async () => {
       prisma.workOrder.findMany.mockResolvedValue([
         secondReadyWorkOrder,
         readyWorkOrder,
@@ -147,11 +148,43 @@ describe('DeliveryService', () => {
 
       expect(prisma.workOrder.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { status: WorkOrderStatus.LISTA_PARA_ENTREGA },
+          where: {
+            status: {
+              in: [
+                WorkOrderStatus.LISTA_PARA_ENTREGA,
+                WorkOrderStatus.OWNER_CONTACTED,
+              ],
+            },
+          },
         }),
       );
       expect(result.total).toBe(2);
       expect(result.items).toHaveLength(2);
+      expect(result.items[0].status).toBe(WorkOrderStatus.LISTA_PARA_ENTREGA);
+      expect(result.items[0].ownerContactedAt).toBeNull();
+      expect(result.items[0].ownerContactedBy).toBeNull();
+    });
+
+    it('includes contact audit for OWNER_CONTACTED items', async () => {
+      const contactedAt = new Date('2026-06-19T15:00:00.000Z');
+      prisma.workOrder.findMany.mockResolvedValue([
+        {
+          ...readyWorkOrder,
+          status: WorkOrderStatus.OWNER_CONTACTED,
+          ownerContactedAt: contactedAt,
+          ownerContactedById: 'admin-1',
+          ownerContactedBy: { id: 'admin-1', fullName: 'Workshop Admin' },
+        },
+      ]);
+
+      const result = await service.listReady({});
+
+      expect(result.items[0].status).toBe(WorkOrderStatus.OWNER_CONTACTED);
+      expect(result.items[0].ownerContactedAt).toEqual(contactedAt);
+      expect(result.items[0].ownerContactedBy).toEqual({
+        id: 'admin-1',
+        fullName: 'Workshop Admin',
+      });
     });
 
     it('includes ownerPhone from ownerClient snapshot', async () => {
@@ -229,6 +262,20 @@ describe('DeliveryService', () => {
       expect(result.owner.fullName).toBe('Juan Pérez');
     });
 
+    it('returns full detail for OWNER_CONTACTED work order', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        ...readyWorkOrder,
+        status: WorkOrderStatus.OWNER_CONTACTED,
+        ownerContactedAt: new Date('2026-06-19T15:00:00.000Z'),
+        ownerContactedBy: { id: 'admin-1', fullName: 'Workshop Admin' },
+      });
+
+      const result = await service.getReadyDetail('wo-ready-1');
+
+      expect(result.status).toBe(WorkOrderStatus.OWNER_CONTACTED);
+      expect(result.ownerContactedBy?.fullName).toBe('Workshop Admin');
+    });
+
     it('throws NotFoundException when work order is EN_PROCESO', async () => {
       prisma.workOrder.findUnique.mockResolvedValue({
         ...readyWorkOrder,
@@ -246,6 +293,77 @@ describe('DeliveryService', () => {
       await expect(service.getReadyDetail('missing')).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('markContacted', () => {
+    it('marks LISTA_PARA_ENTREGA as OWNER_CONTACTED with audit', async () => {
+      const contactedAt = new Date('2026-06-19T16:00:00.000Z');
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.LISTA_PARA_ENTREGA,
+      });
+      prisma.workOrder.update.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.OWNER_CONTACTED,
+        ownerContactedAt: contactedAt,
+        ownerContactedBy: { id: 'admin-1', fullName: 'Workshop Admin' },
+      });
+
+      const result = await service.markContacted('wo-ready-1', 'admin-1');
+
+      expect(prisma.workOrder.update).toHaveBeenCalledWith({
+        where: { id: 'wo-ready-1' },
+        data: {
+          status: WorkOrderStatus.OWNER_CONTACTED,
+          ownerContactedAt: expect.any(Date),
+          ownerContactedById: 'admin-1',
+        },
+        include: {
+          ownerContactedBy: {
+            select: { id: true, fullName: true },
+          },
+        },
+      });
+      expect(result).toEqual({
+        workOrderId: 'wo-ready-1',
+        status: WorkOrderStatus.OWNER_CONTACTED,
+        ownerContactedAt: contactedAt,
+        ownerContactedBy: { id: 'admin-1', fullName: 'Workshop Admin' },
+      });
+    });
+
+    it('throws ConflictException when already OWNER_CONTACTED', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.OWNER_CONTACTED,
+      });
+
+      await expect(
+        service.markContacted('wo-ready-1', 'admin-1'),
+      ).rejects.toThrow(new ConflictException('Owner already contacted'));
+      expect(prisma.workOrder.update).not.toHaveBeenCalled();
+    });
+
+    it('throws ConflictException when status is EN_PROCESO', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.EN_PROCESO,
+      });
+
+      await expect(
+        service.markContacted('wo-ready-1', 'admin-1'),
+      ).rejects.toThrow(
+        new ConflictException('Work order is not ready for contact'),
+      );
+    });
+
+    it('throws NotFoundException when work order is missing', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.markContacted('missing', 'admin-1'),
+      ).rejects.toThrow(new NotFoundException('Work order not found'));
     });
   });
 
@@ -275,10 +393,107 @@ describe('DeliveryService', () => {
           id: true,
           status: true,
           deliveredAt: true,
+          mileage: true,
         },
       });
       expect(result.status).toBe(WorkOrderStatus.ENTREGADA);
       expect(result.deliveredAt).toEqual(deliveredAt);
+    });
+
+    it('persists optional mileage when provided on deliver', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.LISTA_PARA_ENTREGA,
+        mileage: null,
+      });
+      prisma.workOrder.update.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.ENTREGADA,
+        deliveredAt: new Date('2026-06-20T12:00:00.000Z'),
+        mileage: 125000,
+      });
+
+      const result = await service.markDelivered('wo-ready-1', { mileage: 125000 });
+
+      expect(prisma.workOrder.update).toHaveBeenCalledWith({
+        where: { id: 'wo-ready-1' },
+        data: expect.objectContaining({
+          status: WorkOrderStatus.ENTREGADA,
+          mileage: 125000,
+        }),
+        select: {
+          id: true,
+          status: true,
+          deliveredAt: true,
+          mileage: true,
+        },
+      });
+      expect(result.mileage).toBe(125000);
+    });
+
+    it('delivers without changing mileage when body is empty', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.LISTA_PARA_ENTREGA,
+        mileage: null,
+      });
+      prisma.workOrder.update.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.ENTREGADA,
+        deliveredAt: new Date('2026-06-20T12:00:00.000Z'),
+        mileage: null,
+      });
+
+      const result = await service.markDelivered('wo-ready-1', {});
+
+      expect(prisma.workOrder.update).toHaveBeenCalledWith({
+        where: { id: 'wo-ready-1' },
+        data: {
+          status: WorkOrderStatus.ENTREGADA,
+          deliveredAt: expect.any(Date),
+        },
+        select: {
+          id: true,
+          status: true,
+          deliveredAt: true,
+          mileage: true,
+        },
+      });
+      expect(result.mileage).toBeNull();
+    });
+
+    it('marks OWNER_CONTACTED work order as ENTREGADA without clearing contact audit', async () => {
+      const deliveredAt = new Date('2026-06-20T12:00:00.000Z');
+
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.OWNER_CONTACTED,
+        ownerContactedAt: new Date('2026-06-19T16:00:00.000Z'),
+        ownerContactedById: 'admin-1',
+      });
+      prisma.workOrder.update.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.ENTREGADA,
+        deliveredAt,
+        mileage: 45000,
+      });
+
+      const result = await service.markDelivered('wo-ready-1');
+
+      expect(prisma.workOrder.update).toHaveBeenCalledWith({
+        where: { id: 'wo-ready-1' },
+        data: {
+          status: WorkOrderStatus.ENTREGADA,
+          deliveredAt: expect.any(Date),
+        },
+        select: {
+          id: true,
+          status: true,
+          deliveredAt: true,
+          mileage: true,
+        },
+      });
+      expect(result.status).toBe(WorkOrderStatus.ENTREGADA);
     });
 
     it('throws ConflictException when work order is EN_PROCESO', async () => {

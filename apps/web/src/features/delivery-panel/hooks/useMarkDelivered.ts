@@ -5,7 +5,13 @@ export function useMarkDelivered() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (workOrderId: string) => deliveryApi.markDelivered(workOrderId),
+    mutationFn: ({
+      workOrderId,
+      mileage,
+    }: {
+      workOrderId: string;
+      mileage?: number;
+    }) => deliveryApi.markDelivered(workOrderId, mileage !== undefined ? { mileage } : undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['delivery', 'ready'] });
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });

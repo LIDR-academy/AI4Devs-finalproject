@@ -20,6 +20,22 @@ export function Modal({
 }: ModalProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  const onOpenChangeRef = useRef(onOpenChange);
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  }, [onOpenChange]);
+
+  // Autofocus the panel only when the dialog transitions closed → open.
+  // Do not re-focus on parent re-renders (e.g. form onChange), or typing
+  // in inputs loses focus (bug visible in CompleteTaskModal cost field).
+  useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      panelRef.current?.focus();
+    }
+    wasOpenRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -28,17 +44,15 @@ export function Modal({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onOpenChange(false);
+        onOpenChangeRef.current(false);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    panelRef.current?.focus();
-
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onOpenChange, open]);
+  }, [open]);
 
   if (!open) {
     return null;
@@ -49,9 +63,8 @@ export function Modal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="presentation"
     >
-      <button
-        type="button"
-        aria-label="Cerrar"
+      <div
+        aria-hidden="true"
         className="absolute inset-0 bg-slate-900/40"
         onClick={() => onOpenChange(false)}
       />

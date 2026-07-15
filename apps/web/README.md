@@ -77,9 +77,11 @@ npm run test:e2e
 ## User management (US-002)
 
 - **Route:** `/admin/users` (admin only; nav link **Usuarios** in admin layout)
-- **Features:** list users, create employee (modal), soft-deactivate with confirmation
-- **React Query keys:** `['users']` (invalidated after create/deactivate)
-- **Requires:** US-002 backend (`GET/POST /api/users`, `PATCH /api/users/:id/deactivate`)
+- **Features:** list users, create employee (modal), **edit** (modal), soft-deactivate with confirmation
+- **US-D6 edit:** `EditUserDialog` — `fullName`, `email`, `role`, optional password reset; confirmation when role/password changes (closes refresh sessions). Inactive rows have no Editar.
+- **US-D8:** when role is Administrador, checkbox *También puede realizar trabajo de mecánico* on create **and** edit; list badge **Admin · Mecánico** when flag is true.
+- **React Query keys:** `['users']` (invalidated after create/update/deactivate)
+- **Requires:** US-002 / US-D6 / US-D8 backend (`GET/POST /api/users`, `PATCH /api/users/:id`, `PATCH /api/users/:id/deactivate`)
 
 Mechanics do not see the Usuarios link and are redirected to `/403` if they open `/admin/users` directly.
 
@@ -111,7 +113,9 @@ Mechanics do not see the Usuarios link and are redirected to `/403` if they open
 - **Access:** `ADMIN` and `MECHANIC` (shared layout with `RoleNav`)
 - **Nav:** **Nueva OT** link in admin and mechanic nav
 - **Query params:** `?vehicleId=` on `/work-orders/new` pre-fills vehicle from US-004; vehicle create success links to `/work-orders/new?vehicleId=`
-- **Wizard flow:** Step 1 — search/select vehicle (reuses `VehicleSearchBar`); Step 2 — entry reason, mileage, optional mechanic, dynamic initial tasks (`useFieldArray`)
+- **Wizard flow:** Step 1 — search/select vehicle (reuses `VehicleSearchBar`); Step 2 — entry reason, optional mileage (`null` when empty), optional mechanic, dynamic initial tasks (`useFieldArray`)
+- **Assignable mechanics (US-D8):** `MechanicSelect` lists active mechanics and admins with `canActAsMechanic`, suffix `(Admin)` on admin options; detail header uses `assignedMechanic` from the API (not a client-side mechanics-list lookup)
+- **Mileage (US-D7):** optional on create; edit from detail via `UpdateMileageDialog`; display *Sin registrar* when null (`formatMileage`); **lower-than-previous confirm** before create/update/deliver when new km < baseline (last visit / current WO)
 - **Active WO guard:** `useActiveWorkOrder` shows `ActiveWorkOrderBanner` and disables form; vehicle detail shows **Ver orden activa** instead of **Nueva orden de trabajo**
 - **React Query keys:** `['work-orders', 'mechanics']`, `['work-orders', 'active', vehicleId]`, `['work-orders', id]`; on create invalidates `['vehicles', vehicleId, 'history']` and `['work-orders', 'active', vehicleId]`
 - **409 handling:** `activeWorkOrderId` in API error body; UI shows banner with link to existing work order
@@ -139,15 +143,15 @@ Mechanics do not see the Usuarios link and are redirected to `/403` if they open
 - **History:** `VehicleVisitTechnicalDetails` expandable **Detalle técnico** on visit cards (US-009 prep)
 - **Requires:** US-007 backend (`PATCH .../technical-notes`, `PATCH .../visit-notes`, enriched `GET` history)
 
-## Delivery panel (US-008)
+## Delivery panel (US-008 + US-D1)
 
 - **Route:** `/admin/delivery` (admin only; nav link **Listos para entrega** in admin layout)
-- **Features:** table of `LISTA_PARA_ENTREGA` work orders with **Teléfono** column visible without expanding; expandable billing detail; mark as delivered confirmation
+- **Features:** table of ready OTs (`LISTA_PARA_ENTREGA` + `OWNER_CONTACTED`) with **Teléfono** and **Estado** columns; expandable billing detail; mark delivered; optional mileage at deliver (US-D7)
+- **US-D1 contact:** **Marcar propietario contactado** (confirm dialog) → badge *Propietario contactado*; audit who/when; filters *Todos / Pendiente de contacto / Contactados*; deliver still works from either status
 - **Phone column:** `tel:` link when owner has phone (`ownerPhoneDisplay` e.g. `8888-7777`); *Sin teléfono* when null (snapshot from check-in, not live client record)
 - **Refresh:** **Actualizar** button; optional **Actualizar automáticamente** checkbox enables 60s polling (no WebSockets in MVP)
-- **React Query keys:** `['delivery', 'ready']`, `['delivery', 'ready', workOrderId]`; on deliver invalidates `['vehicles']` and `['work-orders']`
-- **V2 D1:** `OWNER_CONTACTED` / *Contactar propietario* reserved — not implemented
-- **Requires:** US-008 backend (`GET/PATCH /api/delivery/ready`)
+- **React Query keys:** `['delivery', 'ready']`, `['delivery', 'ready', workOrderId]`; contact/deliver invalidate ready list (+ vehicles/work-orders on deliver)
+- **Requires:** US-008 / US-D1 backend (`GET/PATCH /api/delivery/ready`, `PATCH .../mark-contacted`)
 
 Mechanics do not see the **Listos para entrega** link and are redirected to `/403` if they open `/admin/delivery` directly.
 

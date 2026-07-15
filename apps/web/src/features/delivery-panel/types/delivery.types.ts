@@ -1,3 +1,12 @@
+export type DeliveryPanelStatus = 'LISTA_PARA_ENTREGA' | 'OWNER_CONTACTED';
+
+export type ContactFilter = 'all' | 'pending' | 'contacted';
+
+export interface OwnerContactedBy {
+  id: string;
+  fullName: string;
+}
+
 export interface DeliveryReadyItem {
   workOrderId: string;
   licensePlate: string;
@@ -9,6 +18,9 @@ export interface DeliveryReadyItem {
   totalAmount: number;
   checkedInAt: string;
   elapsedLabel: string;
+  status: DeliveryPanelStatus | string;
+  ownerContactedAt: string | null;
+  ownerContactedBy: OwnerContactedBy | null;
 }
 
 export interface DeliveryReadyListResponse {
@@ -16,10 +28,18 @@ export interface DeliveryReadyListResponse {
   total: number;
 }
 
+export interface DeliverTarget {
+  workOrderId: string;
+  vehicleId: string;
+  licensePlate: string;
+  mileage: number | null;
+}
+
 export interface DeliveryReadyDetail extends DeliveryReadyItem {
-  status: string;
+  status: DeliveryPanelStatus | string;
   entryReason: string;
-  mileage: number;
+  mileage: number | null;
+  vehicleId: string;
   vehicle: {
     licensePlate: string;
     brand: string;
@@ -44,4 +64,12 @@ export interface DeliverResponse {
   workOrderId: string;
   status: string;
   deliveredAt: string;
+  mileage: number | null;
+}
+
+export interface MarkContactedResponse {
+  workOrderId: string;
+  status: string;
+  ownerContactedAt: string;
+  ownerContactedBy: OwnerContactedBy;
 }

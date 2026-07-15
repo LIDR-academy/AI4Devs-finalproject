@@ -7,10 +7,10 @@ export const createWorkOrderSchema = z.object({
     .trim()
     .min(5, 'Mínimo 5 caracteres')
     .max(500, 'Máximo 500 caracteres'),
-  mileage: z
-    .number()
-    .int('Debe ser un número entero')
-    .min(0, 'Debe ser 0 o mayor'),
+  mileage: z.union([
+    z.number().int('Debe ser un número entero').min(0, 'Debe ser 0 o mayor'),
+    z.null(),
+  ]),
   assignedMechanicId: z.union([z.string().uuid(), z.literal('')]).optional(),
   initialTasks: z
     .array(

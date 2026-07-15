@@ -3,6 +3,7 @@ import type {
   DeliverResponse,
   DeliveryReadyDetail,
   DeliveryReadyListResponse,
+  MarkContactedResponse,
 } from '../types/delivery.types';
 
 export const deliveryApi = {
@@ -28,10 +29,26 @@ export const deliveryApi = {
     return apiClient<DeliveryReadyDetail>(`/delivery/ready/${workOrderId}`);
   },
 
-  markDelivered(workOrderId: string): Promise<DeliverResponse> {
+  markContacted(workOrderId: string): Promise<MarkContactedResponse> {
+    return apiClient<MarkContactedResponse>(
+      `/delivery/ready/${workOrderId}/mark-contacted`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({}),
+      },
+    );
+  },
+
+  markDelivered(
+    workOrderId: string,
+    body?: { mileage?: number },
+  ): Promise<DeliverResponse> {
     return apiClient<DeliverResponse>(
       `/delivery/ready/${workOrderId}/deliver`,
-      { method: 'PATCH' },
+      {
+        method: 'PATCH',
+        body: JSON.stringify(body ?? {}),
+      },
     );
   },
 };

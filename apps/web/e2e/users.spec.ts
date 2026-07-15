@@ -127,4 +127,63 @@ test.describe('User management', () => {
     const body = (await response.json()) as { message?: string };
     expect(body.message).toMatch(/inactive/i);
   });
+
+  test('admin can create admin with canActAsMechanic badge', async ({ page }) => {
+    const uniqueEmail = `admin.mechanic.${Date.now()}@taller.com`;
+
+    await gotoUsersAsAdmin(page);
+    await page.getByRole('button', { name: 'Nuevo usuario' }).click();
+    await page.getByLabel('Nombre completo').fill('Admin Mecánico E2E');
+    await page.getByLabel('Correo electrónico').fill(uniqueEmail);
+    await page.getByLabel('Contraseña temporal').fill('AdminMechanic1');
+    await page.getByLabel('Rol').selectOption('ADMIN');
+    await page
+      .getByLabel('También puede realizar trabajo de mecánico')
+      .check();
+    await page.getByRole('button', { name: 'Crear usuario' }).click();
+
+    await expect(page.getByText('Usuario creado correctamente')).toBeVisible();
+    const row = page.getByRole('row', { name: new RegExp(uniqueEmail) });
+    await expect(row.getByText('Admin · Mecánico')).toBeVisible();
+  });
+
+  test('admin can edit user full name', async ({ page }) => {
+    const uniqueEmail = `editable.${Date.now()}@taller.com`;
+    const updatedName = `Nombre Editado ${Date.now()}`;
+
+    await gotoUsersAsAdmin(page);
+    await page.getByRole('button', { name: 'Nuevo usuario' }).click();
+    await page.getByLabel('Nombre completo').fill('Usuario Editable');
+    await page.getByLabel('Correo electrónico').fill(uniqueEmail);
+    await page.getByLabel('Contraseña temporal').fill('EditablePass1');
+    await page.getByRole('button', { name: 'Crear usuario' }).click();
+    await expect(page.getByText(uniqueEmail)).toBeVisible();
+
+    const row = page.getByRole('row', { name: new RegExp(uniqueEmail) });
+    await row.getByRole('button', { name: 'Editar' }).click();
+    await page.getByLabel('Nombre completo').fill(updatedName);
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
+
+    await expect(page.getByText('Usuario actualizado')).toBeVisible();
+    await expect(page.getByRole('cell', { name: updatedName })).toBeVisible();
+  });
+
+  test('edit duplicate email shows Spanish error', async ({ page }) => {
+    const uniqueEmail = `dup.edit.${Date.now()}@taller.com`;
+
+    await gotoUsersAsAdmin(page);
+    await page.getByRole('button', { name: 'Nuevo usuario' }).click();
+    await page.getByLabel('Nombre completo').fill('Dup Edit Target');
+    await page.getByLabel('Correo electrónico').fill(uniqueEmail);
+    await page.getByLabel('Contraseña temporal').fill('DupEditPass1');
+    await page.getByRole('button', { name: 'Crear usuario' }).click();
+    await expect(page.getByText(uniqueEmail)).toBeVisible();
+
+    const row = page.getByRole('row', { name: new RegExp(uniqueEmail) });
+    await row.getByRole('button', { name: 'Editar' }).click();
+    await page.getByLabel('Correo electrónico').fill('admin@taller.com');
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
+
+    await expect(page.getByText('Este correo ya está registrado')).toBeVisible();
+  });
 });

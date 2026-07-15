@@ -16,6 +16,7 @@ export const createUserSchema = z.object({
   role: z.enum(['ADMIN', 'MECHANIC'], {
     message: 'Selecciona un rol',
   }),
+  canActAsMechanic: z.boolean(),
 });
 
 export type CreateUserFormValues = z.infer<typeof createUserSchema>;

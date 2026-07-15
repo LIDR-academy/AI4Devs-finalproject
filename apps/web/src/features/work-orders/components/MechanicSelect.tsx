@@ -35,11 +35,19 @@ export function MechanicSelect({
         )}
       >
         <option value="">Sin asignar</option>
-        {mechanics.map((mechanic) => (
-          <option key={mechanic.id} value={mechanic.id}>
-            {mechanic.fullName}
-          </option>
-        ))}
+        {mechanics.map((mechanic) => {
+          const role = mechanic.role ?? 'MECHANIC';
+          const label =
+            role === 'ADMIN'
+              ? `${mechanic.fullName} (Admin)`
+              : mechanic.fullName;
+
+          return (
+            <option key={mechanic.id} value={mechanic.id}>
+              {label}
+            </option>
+          );
+        })}
       </select>
       {isLoading && (
         <p className="text-sm text-slate-500">Cargando mecánicos...</p>

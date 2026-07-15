@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,16 +11,24 @@ import {
   WorkOrderTaskStatus,
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ACTIVE_WORK_ORDER_STATUSES } from './constants/work-order-status';
+import {
+  ACTIVE_WORK_ORDER_STATUSES,
+  MILEAGE_EDITABLE_PRE_DELIVERY_STATUSES,
+} from './constants/work-order-status';
 import { ActiveWorkOrderResponseDto } from './dto/active-work-order-response.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { MechanicSummaryDto } from './dto/mechanic-summary.dto';
+import {
+  UpdateWorkOrderMileageDto,
+  UpdateWorkOrderMileageResponseDto,
+} from './dto/update-work-order-mileage.dto';
 import { WorkOrderDetailResponseDto } from './dto/work-order-detail-response.dto';
 import {
   toWorkOrderDetailResponse,
   WORK_ORDER_DETAIL_INCLUDE,
   WorkOrderWithRelations,
 } from './mappers/work-order.mapper';
+import { assignableMechanicWhere } from './utils/assignable-mechanic';
 
 const ACTIVE_OWNERSHIP_INCLUDE = {
   ownerships: {
@@ -34,13 +43,11 @@ export class WorkOrdersService {
 
   async findActiveMechanics(): Promise<MechanicSummaryDto[]> {
     const mechanics = await this.prisma.user.findMany({
-      where: {
-        role: UserRole.MECHANIC,
-        active: true,
-      },
+      where: assignableMechanicWhere(),
       select: {
         id: true,
         fullName: true,
+        role: true,
       },
       orderBy: { fullName: 'asc' },
     });
@@ -122,8 +129,7 @@ export class WorkOrdersService {
         const mechanic = await tx.user.findFirst({
           where: {
             id: dto.assignedMechanicId,
-            role: UserRole.MECHANIC,
-            active: true,
+            ...assignableMechanicWhere(),
           },
         });
 
@@ -137,7 +143,7 @@ export class WorkOrdersService {
           vehicleId: dto.vehicleId,
           ownerClientId: activeOwnership.clientId,
           entryReason: dto.entryReason.trim(),
-          mileage: dto.mileage,
+          mileage: dto.mileage ?? null,
           assignedMechanicId: dto.assignedMechanicId ?? null,
           createdById,
           status: WorkOrderStatus.EN_PROCESO,
@@ -157,6 +163,47 @@ export class WorkOrdersService {
     });
 
     return this.findById(workOrderId);
+  }
+
+  async updateMileage(
+    id: string,
+    dto: UpdateWorkOrderMileageDto,
+    actor: { userId: string; role: UserRole },
+  ): Promise<UpdateWorkOrderMileageResponseDto> {
+    const workOrder = await this.prisma.workOrder.findUnique({
+      where: { id },
+      select: { id: true, status: true },
+    });
+
+    if (!workOrder) {
+      throw new NotFoundException('Not Found');
+    }
+
+    if (workOrder.status === WorkOrderStatus.ENTREGADA) {
+      if (actor.role !== UserRole.ADMIN) {
+        throw new ForbiddenException(
+          'Only administrators can update mileage on delivered work orders',
+        );
+      }
+    } else if (
+      !MILEAGE_EDITABLE_PRE_DELIVERY_STATUSES.includes(workOrder.status)
+    ) {
+      throw new BadRequestException(
+        'Work order mileage cannot be updated in its current status',
+      );
+    }
+
+    const updated = await this.prisma.workOrder.update({
+      where: { id },
+      data: { mileage: dto.mileage },
+      select: {
+        id: true,
+        mileage: true,
+        updatedAt: true,
+      },
+    });
+
+    return updated;
   }
 
   private throwActiveWorkOrderConflict(activeWorkOrderId: string): never {

@@ -111,7 +111,10 @@ export function WorkOrderDetailPage({ workOrderId }: WorkOrderDetailPageProps) {
         ← Nueva orden de trabajo
       </Link>
 
-      <WorkOrderDetailHeader workOrder={workOrder} />
+      <WorkOrderDetailHeader
+        workOrder={workOrder}
+        onMileageUpdated={() => setToastMessage('Kilometraje actualizado')}
+      />
 
       <WorkOrderVisitNotesForm
         workOrder={workOrder}

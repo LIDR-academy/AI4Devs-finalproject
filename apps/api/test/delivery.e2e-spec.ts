@@ -47,6 +47,7 @@ async function createReadyWorkOrder(
   app: INestApplication,
   accessToken: string,
   clientId: string,
+  options?: { mileage?: number | null },
 ): Promise<{ workOrderId: string; vehicleId: string; taskIds: string[] }> {
   const vehicleResponse = await request(app.getHttpServer())
     .post('/api/vehicles')
@@ -60,18 +61,25 @@ async function createReadyWorkOrder(
     })
     .expect(201);
 
+  const workOrderPayload: Record<string, unknown> = {
+    vehicleId: vehicleResponse.body.id,
+    entryReason: 'Delivery panel e2e work order',
+    initialTasks: [
+      { description: 'Oil change' },
+      { description: 'Filter replacement' },
+    ],
+  };
+
+  if (options?.mileage !== undefined) {
+    workOrderPayload.mileage = options.mileage;
+  } else {
+    workOrderPayload.mileage = 50000;
+  }
+
   const workOrderResponse = await request(app.getHttpServer())
     .post('/api/work-orders')
     .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      vehicleId: vehicleResponse.body.id,
-      entryReason: 'Delivery panel e2e work order',
-      mileage: 50000,
-      initialTasks: [
-        { description: 'Oil change' },
-        { description: 'Filter replacement' },
-      ],
-    })
+    .send(workOrderPayload)
     .expect(201);
 
   const workOrderId = workOrderResponse.body.id as string;
@@ -348,6 +356,24 @@ describe('DeliveryController (e2e)', () => {
       .expect(201);
   });
 
+  it('PATCH deliver with optional mileage persists mileage on ENTREGADA', async () => {
+    const { workOrderId } = await createReadyWorkOrder(
+      app,
+      adminAccessToken,
+      juanClientId,
+      { mileage: null },
+    );
+
+    const deliverResponse = await request(app.getHttpServer())
+      .patch(`/api/delivery/ready/${workOrderId}/deliver`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({ mileage: 125000 })
+      .expect(200);
+
+    expect(deliverResponse.body.status).toBe('ENTREGADA');
+    expect(deliverResponse.body.mileage).toBe(125000);
+  });
+
   it('list item for client without phone returns ownerPhone null', async () => {
     const { workOrderId } = await createReadyWorkOrder(
       app,
@@ -370,5 +396,97 @@ describe('DeliveryController (e2e)', () => {
         ownerPhoneDisplay: null,
       }),
     );
+  });
+
+  it('PATCH mark-contacted transitions to OWNER_CONTACTED and stays on list', async () => {
+    const { workOrderId, vehicleId } = await createReadyWorkOrder(
+      app,
+      adminAccessToken,
+      juanClientId,
+    );
+
+    const contactResponse = await request(app.getHttpServer())
+      .patch(`/api/delivery/ready/${workOrderId}/mark-contacted`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    expect(contactResponse.body).toEqual(
+      expect.objectContaining({
+        workOrderId,
+        status: 'OWNER_CONTACTED',
+        ownerContactedAt: expect.any(String),
+        ownerContactedBy: expect.objectContaining({
+          fullName: expect.any(String),
+        }),
+      }),
+    );
+
+    const listResponse = await request(app.getHttpServer())
+      .get('/api/delivery/ready')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    expect(listResponse.body.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          workOrderId,
+          status: 'OWNER_CONTACTED',
+        }),
+      ]),
+    );
+
+    await request(app.getHttpServer())
+      .get(`/api/delivery/ready/${workOrderId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post('/api/work-orders')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        vehicleId,
+        entryReason: 'Should conflict while OWNER_CONTACTED',
+        mileage: 52000,
+        initialTasks: [{ description: 'Blocked task' }],
+      })
+      .expect(409);
+
+    await request(app.getHttpServer())
+      .patch(`/api/delivery/ready/${workOrderId}/deliver`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+  });
+
+  it('PATCH mark-contacted twice returns 409', async () => {
+    const { workOrderId } = await createReadyWorkOrder(
+      app,
+      adminAccessToken,
+      juanClientId,
+    );
+
+    await request(app.getHttpServer())
+      .patch(`/api/delivery/ready/${workOrderId}/mark-contacted`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/delivery/ready/${workOrderId}/mark-contacted`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(409);
+
+    expect(response.body.message).toBe('Owner already contacted');
+  });
+
+  it('PATCH mark-contacted as MECHANIC returns 403', async () => {
+    const { workOrderId } = await createReadyWorkOrder(
+      app,
+      adminAccessToken,
+      juanClientId,
+    );
+
+    await request(app.getHttpServer())
+      .patch(`/api/delivery/ready/${workOrderId}/mark-contacted`)
+      .set('Authorization', `Bearer ${mechanicAccessToken}`)
+      .expect(403);
   });
 });

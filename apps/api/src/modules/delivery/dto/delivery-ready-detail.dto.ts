@@ -26,7 +26,8 @@ export class DeliveryReadyOwnerDto {
 export class DeliveryReadyDetailDto extends DeliveryReadyItemDto {
   status!: WorkOrderStatus;
   entryReason!: string;
-  mileage!: number;
+  mileage!: number | null;
+  vehicleId!: string;
   vehicle!: DeliveryReadyVehicleDto;
   owner!: DeliveryReadyOwnerDto;
   tasks!: DeliveryReadyTaskDto[];

@@ -65,11 +65,16 @@ All `/api/users` routes require a valid Bearer token with role `ADMIN`. Mechanic
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/users` | List all users (active first, then by name) |
-| `POST` | `/api/users` | Create active employee (`ADMIN` or `MECHANIC`) |
+| `GET` | `/api/users` | List all users (active first, then by name); includes `canActAsMechanic` |
+| `POST` | `/api/users` | Create active employee (`ADMIN` or `MECHANIC`); optional `canActAsMechanic` |
+| `PATCH` | `/api/users/:id` | Partial update (`fullName`, `email`, `role`, `password`, `canActAsMechanic`) — US-D6 |
 | `PATCH` | `/api/users/:id/deactivate` | Soft-deactivate user and revoke refresh tokens |
 
 Deactivated users cannot log in or refresh sessions. The last active administrator cannot be deactivated. Admins cannot deactivate their own account.
+
+**US-D6 — edit users:** `PATCH /api/users/:id` requires at least one field. Inactive users return `409`. Duplicate email returns `409`. Demoting the last active admin returns `400`. Changing `password` or `role` clears refresh tokens (full access-token `sessionVersion` revocation is US-012). Name/email/`canActAsMechanic`-only updates do not clear refresh tokens.
+
+**US-D8 — admin as mechanic:** `canActAsMechanic` defaults to `false`. When `role = MECHANIC`, the flag is always stored as `false`. When `role = ADMIN` and the flag is `true`, that admin appears in `GET /api/work-orders/mechanics` and may be assigned on `POST /api/work-orders`. The flag does not change RBAC (admin routes stay admin-only).
 
 OpenAPI fragment: [`docs/api-spec.users.yml`](../../docs/api-spec.users.yml)
 
@@ -141,10 +146,11 @@ All `/api/work-orders` routes require a valid Bearer token with role `ADMIN` or 
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/work-orders/mechanics` | List active mechanics for assignment |
+| `GET` | `/api/work-orders/mechanics` | List assignable users: active `MECHANIC` + active `ADMIN` with `canActAsMechanic` (includes `role`) |
 | `GET` | `/api/work-orders/active?vehicleId=` | Active work order for vehicle (or `null`) |
-| `POST` | `/api/work-orders` | Create work order + initial tasks (transactional) |
-| `GET` | `/api/work-orders/:id` | Work order detail with tasks and `totalAmount` |
+| `POST` | `/api/work-orders` | Create work order + initial tasks (transactional); `mileage` optional (`null` allowed) |
+| `GET` | `/api/work-orders/:id` | Work order detail with tasks, `totalAmount`, and `assignedMechanic` summary |
+| `PATCH` | `/api/work-orders/:id/mileage` | Update mileage (`number` ≥ 0 or `null`); MECHANIC forbidden on `ENTREGADA` |
 | `POST` | `/api/work-orders/:workOrderId/tasks` | Add task (`EN_PROCESO` only) |
 | `PATCH` | `/api/work-orders/:workOrderId/tasks/:taskId` | Update task status / complete with cost |
 | `PATCH` | `/api/work-orders/:workOrderId/tasks/:taskId/technical-notes` | Update task diagnosis/repair/parts/notes |
@@ -152,7 +158,7 @@ All `/api/work-orders` routes require a valid Bearer token with role `ADMIN` or 
 
 Business rules:
 
-- Only one active work order per vehicle (`EN_PROCESO` or `LISTA_PARA_ENTREGA`).
+- `mileage` on work orders is nullable (US-D7); omit or send `null` on create when odometer is unknown.
 - `ownerClientId` is snapshotted from the vehicle's current owner at check-in.
 - `createdById` comes from the JWT — never from the request body.
 - Duplicate active work order returns `409` with `activeWorkOrderId` in the response.
@@ -216,19 +222,22 @@ All `/api/delivery` routes require a valid Bearer token with role `ADMIN`. Mecha
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/delivery/ready` | List work orders `LISTA_PARA_ENTREGA` with owner contact data |
-| `GET` | `/api/delivery/ready/:workOrderId` | Detail for expanded panel row (tasks + totals) |
-| `PATCH` | `/api/delivery/ready/:workOrderId/deliver` | Mark `ENTREGADA` and set `deliveredAt` |
+| `GET` | `/api/delivery/ready` | List `LISTA_PARA_ENTREGA` + `OWNER_CONTACTED` with contact audit fields |
+| `GET` | `/api/delivery/ready/:workOrderId` | Detail for panel row (either ready status) |
+| `PATCH` | `/api/delivery/ready/:workOrderId/mark-contacted` | `LISTA_PARA_ENTREGA` → `OWNER_CONTACTED`; sets `ownerContactedAt` + actor (US-D1) |
+| `PATCH` | `/api/delivery/ready/:workOrderId/deliver` | Mark `ENTREGADA` from either panel status; optional body `{ "mileage": number }` |
 
 Business rules:
 
-- Panel lists only `LISTA_PARA_ENTREGA` work orders (not `OWNER_CONTACTED` in MVP).
+- Panel lists both ready statuses; items include `status`, `ownerContactedAt`, `ownerContactedBy`.
 - `ownerPhone` is always present in list items (nullable when client has no phone); sourced from `ownerClient` snapshot at check-in.
 - `totalAmount` reuses `calculateTotalAmount` from work-orders (sum of completed task costs).
 - `elapsedLabel` is a Spanish human-readable duration since `checkedInAt`.
-- `deliveredAt` is set server-side only; double deliver returns `409`.
+- Second `mark-contacted` → `409` `Owner already contacted` (audit not overwritten).
+- Deliver allowed without contacting first; from `OWNER_CONTACTED` preserves contact fields.
+- `OWNER_CONTACTED` is an **active** work order (blocks a second OT for the same vehicle).
 - After delivery, vehicle is released for a new active work order (US-005).
-- **V2 D1:** `OWNER_CONTACTED`, `ownerContactedAt`, `ownerContactedById` reserved for mark-contacted flow (not implemented).
+- Mileage on deliver is optional (US-D7); never required to close delivery.
 
 ### Examples
 
@@ -244,6 +253,10 @@ curl -H "Authorization: Bearer $TOKEN" \
 # Get detail
 curl -H "Authorization: Bearer $TOKEN" \
   http://localhost:4000/api/delivery/ready/WORK_ORDER_UUID
+
+# Mark owner contacted
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/delivery/ready/WORK_ORDER_UUID/mark-contacted
 
 # Mark delivered
 curl -X PATCH -H "Authorization: Bearer $TOKEN" \

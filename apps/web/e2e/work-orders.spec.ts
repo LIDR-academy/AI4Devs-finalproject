@@ -139,6 +139,51 @@ test.describe('Work orders (admin)', () => {
     await page.getByRole('link', { name: 'Nueva orden de trabajo' }).click();
     await expect(page).toHaveURL(`/work-orders/new?vehicleId=${vehicleId}`);
   });
+  test('assigns admin with canActAsMechanic and shows name on detail', async ({
+    page,
+  }) => {
+    const uniqueEmail = `floor.admin.${Date.now()}@taller.com`;
+    const adminName = `Floor Admin ${uniquePlateSuffix()}`;
+
+    await page.goto('/admin/users');
+    await expect(page.getByRole('heading', { name: 'Usuarios' })).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole('button', { name: 'Nuevo usuario' }).click();
+    await page.getByLabel('Nombre completo').fill(adminName);
+    await page.getByLabel('Correo electrónico').fill(uniqueEmail);
+    await page.getByLabel('Contraseña temporal').fill('FloorAdminE2E1');
+    await page.getByLabel('Rol').selectOption('ADMIN');
+    await page
+      .getByLabel('También puede realizar trabajo de mecánico')
+      .check();
+    await page.getByRole('button', { name: 'Crear usuario' }).click();
+    await expect(page.getByText('Usuario creado correctamente')).toBeVisible();
+
+    const vehicleId = await createVehicle(page);
+    await page.goto(`/work-orders/new?vehicleId=${vehicleId}`);
+    await expect(page.getByText('Paso 2 de 2')).toBeVisible({ timeout: 10_000 });
+
+    const mechanicSelect = page.getByLabel('Mecánico asignado (opcional)');
+    await expect(mechanicSelect).toBeVisible();
+    await expect(
+      mechanicSelect.locator('option', { hasText: `${adminName} (Admin)` }),
+    ).toHaveCount(1);
+    await expect(
+      mechanicSelect.locator('option', { hasText: 'Workshop Mechanic' }),
+    ).toHaveCount(1);
+
+    await mechanicSelect.selectOption({ label: `${adminName} (Admin)` });
+    await page.getByLabel('Motivo de ingreso').fill('OT asignada a admin');
+    await page.getByLabel('Kilometraje').fill('41000');
+    await page.getByLabel('Tarea 1').fill('Diagnóstico general');
+    await page.getByRole('button', { name: 'Crear orden de trabajo' }).click();
+
+    await expect(page).toHaveURL(/\/work-orders\/[0-9a-f-]+$/, { timeout: 10_000 });
+    await expect(
+      page.getByText(`Mecánico asignado: ${adminName} (Admin)`),
+    ).toBeVisible();
+  });
 });
 
 test.describe('Work orders (mechanic)', () => {

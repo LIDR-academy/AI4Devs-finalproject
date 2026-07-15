@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -21,6 +22,10 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { ActiveWorkOrderResponseDto } from './dto/active-work-order-response.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { MechanicSummaryDto } from './dto/mechanic-summary.dto';
+import {
+  UpdateWorkOrderMileageDto,
+  UpdateWorkOrderMileageResponseDto,
+} from './dto/update-work-order-mileage.dto';
 import { WorkOrderDetailResponseDto } from './dto/work-order-detail-response.dto';
 import { WorkOrdersService } from './work-orders.service';
 
@@ -56,5 +61,17 @@ export class WorkOrdersController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<WorkOrderDetailResponseDto> {
     return this.workOrdersService.findById(id);
+  }
+
+  @Patch(':id/mileage')
+  updateMileage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateWorkOrderMileageDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<UpdateWorkOrderMileageResponseDto> {
+    return this.workOrdersService.updateMileage(id, dto, {
+      userId: user.userId,
+      role: user.role as UserRole,
+    });
   }
 }

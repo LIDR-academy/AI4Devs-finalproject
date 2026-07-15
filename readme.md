@@ -1,4 +1,4 @@
-## Índice
+﻿## Índice
 
 0. [Ficha del proyecto](#0-ficha-del-proyecto)
 1. [Descripción general del producto](#1-descripción-general-del-producto)
@@ -262,6 +262,7 @@ El MVP de gestión de usuarios (US-002) cubre **alta**, **listado** y **desactiv
 | Correo electrónico | Único en el sistema; normalización a minúsculas; conflicto → `409` |
 | Rol | Cambio entre `ADMIN` y `MECHANIC`; no permitir dejar el sistema sin al menos un administrador activo |
 | Contraseña | Reseteo opcional por el administrador (nueva contraseña temporal) o flujo de cambio obligatorio en primer login |
+| Flag mecánico (D8) | Solo relevante si `role = ADMIN`: `canActAsMechanic` para aparecer en asignación de OT |
 
 **Comportamiento previsto en V2:**
 
@@ -271,6 +272,44 @@ El MVP de gestión de usuarios (US-002) cubre **alta**, **listado** y **desactiv
 - Opcionalmente en la misma versión o en V2.1: **reactivación** de cuentas inactivas (`PATCH .../reactivate`) y **cambio obligatorio de contraseña** en el primer inicio de sesión (`mustChangePassword`).
 
 > **Consideración de modelo de datos:** puede requerir campos `mustChangePassword` y `passwordChangedAt` en `User` (ya previstos en US-002 como extensión V2). El historial de OT y tareas no se altera al editar nombre o correo del empleado.
+
+#### D7. Kilometraje Opcional en la Orden de Trabajo
+
+En el MVP, el kilometraje se exige al crear la orden de trabajo. En la práctica, algunos vehículos ingresan **varados o en condiciones en las que el odómetro no es legible** (sin batería, tablero apagado, daños, etc.), por lo que forzar el dato en el ingreso retrasa la recepción.
+
+En V2 el kilometraje de la OT será **opcional en el alta** y **actualizable en cualquier momento** (incluido el momento de entrega). Si al entregar aún no está registrado, se mostrará un recordatorio para capturarlo entonces, sin bloquear la entrega si se omite.
+
+**Comportamiento previsto en V2:**
+
+- Al crear la OT (`POST /api/work-orders`), `mileage` podrá omitirse o enviarse como `null`.
+- El formulario de creación no bloqueará el envío si el kilometraje está vacío; podrá mostrarse como campo opcional con ayuda contextual (“puede completarse más adelante”).
+- Desde el detalle de la OT, administrador o mecánico podrán **registrar o corregir** el kilometraje en cuanto sea posible leerlo (`PATCH /api/work-orders/:id` o endpoint dedicado de kilometraje).
+- El historial y las vistas que muestren kilometraje deben tolerar el valor ausente (por ejemplo, “Sin registrar”) hasta que se complete.
+- Si ya existe un valor, una actualización posterior debe quedar auditada al menos con la marca de tiempo de la OT (`updatedAt`) o, idealmente, con nota operativa si el taller lo requiere.
+- **Al momento de la entrega:** si el kilometraje sigue sin registrar, la UI mostrará un **recordatorio** y permitirá agregarlo en ese paso. Completarlo será **opcional**: el usuario podrá omitirlo y la entrega avanzará dejando el kilometraje vacío.
+
+> **Consideración de modelo de datos / API:** el atributo `WorkOrder.mileage` debería pasar de obligatorio a **nullable** (o equivalente), con migración y ajuste de DTOs/validaciones Zod del frontend. Las reglas de “solo números positivos” se mantienen cuando el valor sí se informa. El flujo de entrega (US-008) no debe exigir `mileage` para confirmar la entrega.
+
+#### D8. Administradores con Capacidad de Mecánico
+
+En el MVP, el campo **mecánico asignado** de la orden de trabajo solo admite usuarios con rol `MECHANIC`. En talleres pequeños es frecuente que el administrador también atienda piso: con el rol `ADMIN` conserva permisos administrativos, pero hoy **no aparece** en el listado de asignación.
+
+En V2, un administrador podrá marcarse con un **flag de mecánico** (`canActAsMechanic` o equivalente). Quienes lo tengan activo podrán:
+
+- Aparecer en el listado de asignables al **crear la OT** (y al cambiar el asignado si la OT lo permite).
+- Ser **asignados** como responsables de la visita / trabajo mecánico, igual que un usuario `MECHANIC`.
+- Seguir usando el resto de funciones de administrador (usuarios, panel de entrega, etc.).
+
+**Comportamiento previsto en V2:**
+
+- En alta/edición de usuarios (US-002 / D6): si el rol es `ADMIN`, checkbox u opción *“También puede realizar trabajo de mecánico”*.
+- Usuarios `MECHANIC` no necesitan el flag (ya son asignables por definición); el flag aplica a `ADMIN`.
+- El endpoint de candidatos a asignación (`GET .../mechanics` o equivalente) devolverá: mecánicos activos **unión** administradores activos con `canActAsMechanic = true`.
+- Validación al crear/actualizar OT: `assignedMechanicId` acepta esos mismos criterios (no solo `role = MECHANIC`).
+- El flag no sustituye el rol: un admin con flag **no pierde** acceso a rutas de administración.
+- Desactivar el flag o la cuenta quita al usuario de futuros listados; las OT históricas conservan la referencia al usuario asignado.
+
+> **Consideración de modelo de datos:** añadir booleano en `User` (p. ej. `canActAsMechanic Boolean @default(false)`). La FK `WorkOrder.assignedMechanicId` puede seguir apuntando a `User` sin cambio estructural; solo cambia la regla de elegibilidad en servicio y UI.
 
 ---
 
@@ -350,33 +389,6 @@ Requisitos: el PC con Docker y el dispositivo cliente deben estar en la **misma 
 - Docker Desktop (solo PostgreSQL)
 - npm
 
-#### Base de datos
-
-Desde la raíz del repositorio:
-
-```bash
-docker compose up -d
-```
-
-PostgreSQL queda disponible en `localhost:5434` (usuario/contraseña/BD: `mecatrack`).
-
-#### API (backend)
-
-```bash
-cd apps/api
-cp .env.example .env
-npm install
-npx prisma migrate dev
-npx prisma db seed
-npm run dev
-```
-
-La API escucha en `http://localhost:4000/api`.
-
-Usuarios de prueba (semilla): `admin@taller.com` / `AdminPass123`, `mechanic@taller.com` / `MechanicPass123`.
-
-#### Frontend
-
 ```bash
 cd apps/web
 cp .env.local.example .env.local
@@ -430,14 +442,14 @@ flowchart TB
 | Flujo E2E con estados (OT, tareas) | Reglas de dominio en backend, no solo en UI |
 | Roles administrador / mecánico | RBAC en API + rutas protegidas en frontend |
 | Historial e integridad de datos | Base relacional con transacciones ACID |
-| Extensiones V2 (email, recordatorios, propietario histórico, búsqueda por correo, edición de usuarios) | Puertos/adaptadores y endpoints PATCH sin reescribir el núcleo |
+| Extensiones V2 (email, recordatorios, propietario histórico, búsqueda por correo, edición de usuarios, kilometraje opcional, admin-mecánico) | Puertos/adaptadores y endpoints PATCH sin reescribir el núcleo |
 | MVP académico y operación en un solo taller | Un despliegue, un repositorio, complejidad operativa baja |
 
 **Beneficios principales**
 
 - **Simplicidad operativa:** un solo backend y una base de datos facilitan desarrollo local, pruebas y despliegue.
 - **Consistencia transaccional:** crear OT, agregar tareas y registrar costos pueden ejecutarse en la misma unidad de trabajo.
-- **Evolución ordenada:** los módulos del monolito (auth, work-orders, notifications, users, clients) permiten añadir D1–D6 sin cambiar el patrón general.
+- **Evolución ordenada:** los módulos del monolito (auth, work-orders, notifications, users, clients) permiten añadir D1–D8 sin cambiar el patrón general.
 - **Alineación con el dominio:** el modelo relacional encaja con clientes, vehículos, órdenes de trabajo, tareas e historicidad de propietario.
 
 **Sacrificios y déficits**
@@ -474,10 +486,10 @@ Microservicios no se consideran adecuados en esta fase: el volumen, el equipo y 
 | Módulo | Historias de usuario | Alcance |
 |--------|---------------------|---------|
 | `auth` | US-001 | Login, logout, sesión, validación de cuenta activa |
-| `users` | US-002, D6 (V2) | Alta, listado y desactivación (MVP); edición de perfil en V2 |
+| `users` | US-002, D6 (V2), D8 (V2) | Alta, listado y desactivación (MVP); edición de perfil y flag de mecánico en admin (V2) |
 | `clients` | US-003, D5 (V2) | Búsqueda, alta y edición de clientes (MVP); búsqueda por correo en V2 |
 | `vehicles` | US-004 | Búsqueda, alta, edición y eliminación de vehículos (sin OT); asociación a cliente |
-| `work-orders` | US-005, US-006 | OT, tareas dinámicas, estados y costos |
+| `work-orders` | US-005, US-006, D7 (V2), D8 (V2) | OT, tareas dinámicas, estados y costos; kilometraje opcional; admins con flag asignables en V2 |
 | `task-notes` | US-007 | Diagnósticos, reparaciones y observaciones |
 | `delivery` | US-008 | Panel de vehículos listos para entrega |
 | `history` | US-009 | Historial de vehículos y clientes |
@@ -570,21 +582,167 @@ Esta estructura facilita que cada historia de usuario se implemente de forma inc
 
 ### **2.4. Infraestructura y despliegue**
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+La infraestructura actual de MecaTrack se apoya en **Docker Compose** para orquestar los componentes principales del sistema en el entorno productivo local. El despliegue sigue un esquema de **tres servicios**: un contenedor para PostgreSQL, un contenedor para la API NestJS y un contenedor para el frontend Next.js. El navegador del usuario solo se conecta al frontend; este reenvía las solicitudes `/api` al backend dentro de la red interna de Docker, y la API persiste la información en PostgreSQL.
+
+```mermaid
+flowchart LR
+    User[Navegador del usuario]
+
+    subgraph Host [Host local]
+        Web[Contenedor web\nNext.js standalone\npuerto 3000]
+        PG[Contenedor postgres\nPostgreSQL 16\npuerto host 5434]
+    end
+
+    subgraph Docker [Red interna Docker Compose]
+        API[Contenedor api\nNestJS\npuerto interno 4000]
+        DB[(PostgreSQL\npuerto interno 5432)]
+    end
+
+    Volume[(Volumen persistente\nmecatrack_pg_data)]
+
+    User -->|HTTP| Web
+    Web -->|/api proxy| API
+    API -->|Prisma / SQL| DB
+    DB --- Volume
+    PG --- DB
+```
+
+#### Componentes de infraestructura
+
+| Componente | Implementación actual | Función en el despliegue |
+|------------|------------------------|---------------------------|
+| **Frontend** | Contenedor `mecatrack-web` construido desde `apps/web/Dockerfile` | Sirve la aplicación Next.js en modo `standalone`, expuesta al host por el puerto `3000` (o `WEB_PORT` si se sobreescribe) |
+| **Backend** | Contenedor `mecatrack-api` construido desde `apps/api/Dockerfile` | Expone la API NestJS dentro de la red Docker, aplica reglas de negocio, autenticación y acceso a datos |
+| **Base de datos** | Contenedor `mecatrack-postgres` con imagen `postgres:16-alpine` | Almacena usuarios, clientes, vehículos, órdenes de trabajo, tareas e historial en la BD `mecatrack` |
+| **Persistencia** | Volumen Docker `mecatrack_pg_data` | Conserva los datos de PostgreSQL entre reinicios o recreaciones de contenedores |
+| **Orquestación** | Archivo `docker-compose.yml` del entorno productivo | Coordina construcción, variables de entorno, dependencias y puertos publicados |
+
+#### Proceso de despliegue actual
+
+El despliegue productivo se levanta desde un `docker-compose.yml` que construye y arranca `postgres`, `api` y `web`. PostgreSQL se inicia primero, publica el puerto `5434` **solo en `127.0.0.1`** y declara un `healthcheck` con `pg_isready`. La API depende de que la base esté saludable y recibe por variables de entorno (archivo `.env` del host, sin fallbacks inseguros) la cadena `DATABASE_URL`, los secretos JWT y los tiempos de expiración de sesión.
+
+La imagen de la API se construye en múltiples etapas: instala dependencias, genera el cliente Prisma, compila NestJS y artefactos de bootstrap/seed opcionales. Al arrancar, `docker-entrypoint.sh` ejecuta `prisma migrate deploy`, puede correr un **bootstrap de admin opcional** solo si `ENABLE_ADMIN_BOOTSTRAP=true` (BD vacía), **no ejecuta el seed de desarrollo**, e inicia la aplicación como usuario no privilegiado (`nestjs`).
+
+El frontend también se construye en múltiples etapas y se publica como aplicación Next.js `standalone`. Su contenedor no llama al backend por `localhost`, sino por la variable `API_PROXY_TARGET=http://api:4000`, lo que mantiene la comunicación dentro de la red interna de Docker. Hacia el navegador, el frontend publica el puerto `3000` y resuelve las llamadas a `/api/*` como proxy al contenedor `api`, manteniendo una única URL de acceso para el usuario final.
+
+#### Separación entre desarrollo y producción
+
+En la operación actual existen dos configuraciones distintas. **Producción** utiliza el stack completo con `postgres` + `api` + `web`, expuesto en `127.0.0.1:5434` y `3000`. En cambio, esta copia de **desarrollo** usa un `docker-compose.yml` aislado con `name: mecatrack-dev` y solo levanta PostgreSQL en `127.0.0.1:5435`, precisamente para no interferir con el entorno productivo local. La API y el frontend de desarrollo se ejecutan por separado cuando se necesitan pruebas locales.
+
+#### Consideraciones operativas
+
+- El puerto **`3000`** es la entrada principal del sistema para el usuario final; la API no se expone directamente al host en el despliegue productivo actual.
+- El puerto **`5434`** queda bound a **localhost** para herramientas locales (pgAdmin/DBeaver); no debe publicarse en todas las interfaces.
+- El volumen **`mecatrack_pg_data`** es crítico: ahí persisten los datos reales aunque el contenedor de PostgreSQL se reinicie o se recree.
+- La API depende de PostgreSQL con validación de salud, pero el frontend solo depende del contenedor `api` a nivel de arranque; por ello, un fallo del backend impacta inmediatamente las rutas `/api` aunque el frontend siga respondiendo HTML.
+- El **seed de desarrollo no forma parte del arranque productativo**; datos demo solo vía comandos explícitos (`db:seed:dev`) fuera de `NODE_ENV=production`.
 
 ### **2.5. Seguridad**
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+MecaTrack combina una línea base de autenticación/autorización del MVP con un **endurecimiento posterior a auditoría** (informe `reporteDeSeguridad.md`, historias `us/seguridad/US-010` … `US-014`). El enfoque sigue siendo el de un sistema interno de taller: tokens, RBAC, validación de entrada y restricciones sobre rutas y operaciones sensibles, con mitigaciones explícitas sobre bootstrap, secretos, exposición de base de datos, revocación de sesión y endurecimiento HTTP/runtime.
 
-### **2.6. Tests**
+#### Hallazgos de auditoría y mitigaciones implementadas
 
-> Describe brevemente algunos de los tests realizados
+| ID auditoría | Riesgo | Mitigación (estado) |
+|--------------|--------|---------------------|
+| Seed automático en arranque de API (credenciales conocidas) | Crítico | **US-010:** entrypoint sin seed; seed solo en desarrollo; bootstrap de admin opt-in y solo si la tabla `User` está vacía |
+| Postgres expuesto + credenciales triviales | Alto | **US-011:** bind `127.0.0.1`, password rotado/inyectado por `.env`, sin literales débiles en compose prod |
+| JWT con fallbacks predecibles en compose | Alto | **US-011:** secretos obligatorios `${VAR:?…}`; validación fail-fast en arranque (`validate-environment`) |
+| Scripts destructivos sin salvaguardas / reset de admin | Alto | **US-013:** bloqueo si `NODE_ENV=production`; exige `ALLOW_DESTRUCTIVE_DB_OPS=true` y `--confirm`; ya no resetea a `AdminPass123` |
+| Access token válido tras desactivar / sin rotación de refresh | Alto | **US-012:** `sessionVersion` + chequeo en `JwtStrategy`; refresh rota en cada `/auth/refresh` |
+| Login de inactivos con mensaje distinto / headers / root en contenedor | Medio | **US-014:** inactive → mismo `401` genérico; `helmet`; imagen API como usuario `nestjs` |
+
+Artefactos de referencia: `reporteDeSeguridad.md`, `us/seguridad/`, `docs/plans/US-010_*` … `US-014_*`, ejemplo endurecido `docker-compose.production.example.yml`.
+
+#### Controles actuales
+
+| Mecanismo | Implementación actual | Qué protege / cómo se aplica |
+|-----------|------------------------|-------------------------------|
+| **Autenticación** | JWT de acceso (`15m`) + refresh (`7d`) | Login con email/contraseña; `accessToken` en Bearer y `refreshToken` en cookie |
+| **Gestión de sesión** | Cookie `httpOnly`, `sameSite: strict`, path `/api/auth` | Limita exposición del refresh al JS del navegador |
+| **Rotación de refresh** | Nuevo refresh en cada `POST /api/auth/refresh` | El cookie anterior queda inválido (reuso → `401`) |
+| **Revocación inmediata** | Campo `User.sessionVersion` en el JWT y re-chequeo en DB | Logout y desactivación incrementan la versión; `JwtStrategy` rechaza tokens stale, usuarios inactivos o ausentes, y usa el **rol actual** de la BD |
+| **Access token en frontend** | Solo en memoria | Evita persistir el JWT en `localStorage` / `sessionStorage` |
+| **Contraseñas** | Hash `bcrypt` | Sin texto plano; comparación en login |
+| **Autorización** | RBAC `ADMIN` / `MECHANIC` | `JwtAuthGuard` + `RolesGuard`; UI con `ProtectedRoute` |
+| **Validación de entrada** | `ValidationPipe` global | `whitelist`, `forbidNonWhitelisted`, DTOs |
+| **Rate limiting** | `ThrottlerGuard` en login | **5** intentos / **15** minutos (prod/test) |
+| **Cuentas inactivas** | `active` en login + en cada request protegido | Login falla como credenciales inválidas (`401`); requests con token stale → `401` |
+| **Mensajes de login** | Respuesta genérica + UI alineada | Wrong password e inactive no distinguen al atacante (US-014) |
+| **Configuración segura** | `validateEnvironmentFromProcessEnv()` | En `NODE_ENV=production` exige JWT ≥32 chars, sin placeholders, y rechaza passwords DB triviales |
+| **Headers HTTP** | `helmet` | `X-Frame-Options`, `nosniff`, COOP/CORP, etc.; HSTS solo si `ENABLE_HSTS=true` (HTTPS) |
+| **Runtime del contenedor API** | Usuario no-root `nestjs` | Reduce impacto de un compromiso del proceso Node |
+| **Operaciones destructivas** | Guards en `destructive-db-ops` | Impiden wipe accidental de prod |
+| **Errores HTTP** | `HttpExceptionFilter` | Formato uniforme `400` / `401` / `403` / `409` / `429` |
+
+#### Cómo se combinan frontend y backend
+
+El backend firma el JWT con `JWT_ACCESS_SECRET`, valida expiración **y estado de sesión en base de datos**, compara contraseñas con `bcrypt`, guarda el hash del refresh token, rota ese refresh en cada renovación y comprueba roles (desde DB) en endpoints protegidos. El frontend limita la navegación por rol, redirige a login sin sesión y, ante un `401`, intenta un único `POST /api/auth/refresh` con cookie; si falla, limpia estado local y redirige a `/login?session=expired`.
+
+Aunque un usuario fuerce una URL manualmente, la API sigue siendo la autoridad final sobre autenticación y permisos.
+
+#### Sesión y renovación de acceso
+
+La sesión activa tiene dos piezas: `accessToken` (**15 minutos**, Bearer) y `refreshToken` (**7 días**, cookie `httpOnly`). El payload del access incluye `sessionVersion`. Al renovar, la API emite access + refresh nuevos y actualiza la cookie. Si la renovación falla (revocado, reusado, usuario inactivo), el frontend limpia sesión y muestra el aviso de sesión expirada.
+
+El refresh no se guarda en claro: se persiste el hash SHA-256 y su expiración. Logout y desactivación **limpian el refresh y suben `sessionVersion`**, de modo que ni refresh ni access previos siguen siendo aceptados.
+
+#### Bootstrap, seed y secretos de despliegue
+
+- **Producción:** migrate (+ bootstrap admin solo con flag explícito y tabla vacía); nunca seed de demo en el entrypoint.
+- **Desarrollo:** `npm run db:seed:dev` / `prisma db seed` fuera de `NODE_ENV=production`; re-seed preserva `passwordHash` de usuarios ya existentes.
+- **Secretos prod:** obligatorios vía `.env` del host (`JWT_*`, `POSTGRES_*`); sin valores `mecatrack-docker-…` ni placeholders `change-me-…`.
+- Referencia de compose endurecido: `docker-compose.production.example.yml` (el compose vivo de Despliegues debe seguir el mismo modelo).
+
+#### Consideraciones y límites remanentes
+
+- El rate limiting reforzado sigue centrado en **login**; no hay throttle global en todos los endpoints.
+- La cookie `secure` se activa con `NODE_ENV=production`; en despliegues solo-HTTP locales puede requerir `COOKIE_SECURE=false` consciente hasta disponer de HTTPS.
+- HSTS está **apagado por defecto** (`ENABLE_HSTS`); conviene activarlo únicamente detrás de TLS real.
+- Un cambio de **rol** vía un futuro endpoint de edición de usuarios (D6) deberá incrementar `sessionVersion` igual que la desactivación.
+- CORS sigue amarrado a `CORS_ORIGIN` con credenciales: debe coincidir con la URL pública del front.
+- Mejoras deseables posteriores: secretos en vault, Postgres solo en red interna Docker, MFA, rate limit configurable y endpoint de edición de usuarios con revocación de sesión.
+
+La estrategia de pruebas de MecaTrack combina **pruebas unitarias**, **pruebas end-to-end del backend** y **pruebas end-to-end del frontend** para validar tanto las reglas de negocio aisladas como los flujos completos del MVP. La cobertura está organizada por capas: Jest se utiliza en la API para servicios y contratos HTTP, mientras que Playwright valida el comportamiento real de la aplicación web desde la perspectiva del usuario.
+
+| Nivel de prueba | Herramienta | Ubicación principal | Qué valida |
+|-----------------|-------------|----------------------|------------|
+| **Unitarias backend** | Jest | `apps/api/src/**/**.spec.ts` | Reglas de negocio, validaciones, transiciones de estado, normalización de datos y respuestas de servicios |
+| **E2E backend** | Jest + Supertest | `apps/api/test/*.e2e-spec.ts` | Endpoints reales de la API, autenticación, autorización, persistencia y flujos HTTP completos contra la aplicación NestJS |
+| **E2E frontend** | Playwright | `apps/web/e2e/*.spec.ts` | Flujos de usuario en navegador: login, navegación por rol, formularios, órdenes de trabajo, entrega e historial |
+
+#### Cobertura actual por capa
+
+En el **backend**, las pruebas unitarias cubren módulos y servicios clave como `auth`, `users`, `clients`, `vehicles`, `history`, `delivery` y `work-orders`, además de utilidades de dominio como el cálculo de totales de órdenes de trabajo. Este nivel valida reglas críticas del negocio, por ejemplo: evitar correos duplicados, impedir la auto-desactivación del último administrador, exigir costos al completar tareas, bloquear edición de órdenes cerradas y mantener coherencia en la selección de mecánicos o propietarios.
+
+Las **pruebas end-to-end del backend** ejercitan la API NestJS con la aplicación real inicializada, `ValidationPipe`, filtros HTTP y persistencia contra PostgreSQL. Las suites actuales cubren autenticación (`auth.e2e-spec.ts`), gestión de usuarios, clientes y vehículos, creación de órdenes de trabajo, gestión de tareas, notas técnicas, panel de entrega e historial. Con ello se validan respuestas HTTP, restricciones por rol, estados de sesión, mensajes de error, payloads de entrada y continuidad entre operaciones encadenadas.
+
+En el **frontend**, Playwright valida el comportamiento funcional de la interfaz Next.js desde la perspectiva del usuario final. Las suites cubren autenticación, usuarios, clientes, vehículos, creación de órdenes de trabajo, gestión de tareas, notas técnicas, panel de entrega e historial. Estas pruebas confirman redirecciones por rol, mensajes de error, bloqueo de accesos, navegación entre pantallas, formularios con datos reales y flujos completos como registrar un vehículo, crear una orden de trabajo, completar tareas o consultar historial.
+
+#### Organización y ejecución de las suites
+
+La API usa los scripts `npm test` para unitarias y `npm run test:e2e` para pruebas end-to-end. Las suites E2E del backend emplean `jest-e2e.json`, levantan la aplicación NestJS con su configuración real y preparan la base de datos de prueba ejecutando `prisma migrate deploy` y `prisma db seed` antes de correr los casos.
+
+El frontend usa `npm run test:e2e` con Playwright. La configuración define proyectos separados por dominio (`chromium-admin`, `chromium-clients`, `chromium-vehicles`, `chromium-work-orders`, `chromium-work-order-tasks`, `chromium-technical-notes`, `chromium-delivery-panel`, `chromium-history`) y utiliza `globalSetup` para sembrar datos, además de archivos `storageState` distintos para sesiones de administrador y mecánico. El servidor web se inicia automáticamente con `webServer` cuando es necesario.
+
+#### Pruebas de regresión
+
+Para reducir regresiones al introducir nuevas funcionalidades, el proyecto ya permite una estrategia incremental basada en las suites existentes. El enfoque recomendado es ejecutar primero las **unitarias del módulo afectado**, después la **suite E2E del backend** relacionada con ese flujo y finalmente el **proyecto Playwright** correspondiente a la superficie UI impactada. Por ejemplo, un cambio en órdenes de trabajo debería validar al menos `work-orders`, `work-order-tasks`, `technical-notes` y, si afecta cierre de órdenes, también `delivery` o `history`.
+
+Como validación de regresión amplia antes de integrar cambios mayores, conviene correr el conjunto completo de pruebas del backend y las suites Playwright principales del frontend. Esta combinación aporta confianza sobre compatibilidad entre autenticación, roles, formularios, endpoints y reglas de negocio compartidas entre módulos.
+
+#### Limitaciones y consideraciones actuales
+
+- La cobertura es sólida sobre el **MVP funcional** (US-001 a US-009), pero no implica cobertura exhaustiva de cada combinación posible de errores o datos extremos.
+- Las pruebas E2E dependen de una base de datos accesible y de semillas consistentes; por tanto, el entorno debe mantenerse alineado con migraciones y datos de prueba.
+- Playwright cubre los flujos más importantes por dominio, pero no sustituye pruebas exploratorias manuales sobre UX fina, responsividad o comportamiento visual fuera de los casos automatizados.
+- La regresión completa del sistema requiere coordinar backend, base de datos y frontend, por lo que el costo de ejecución es mayor que el de las pruebas unitarias aisladas.
 
 ---
 
 ## 3. Modelo de Datos
 
-El modelo relacional de MecaTrack está diseñado en PostgreSQL y gestionado con Prisma. Consolida las entidades definidas en las historias de usuario US-001 a US-009, con campos adicionales preparados para extensiones V2 (D1–D6) sin cambios estructurales.
+El modelo relacional de MecaTrack está diseñado en PostgreSQL y gestionado con Prisma. Consolida las entidades definidas en las historias de usuario US-001 a US-009, con campos adicionales preparados para extensiones V2 (D1–D8) sin cambios estructurales.
 
 ### **3.1. Diagrama del modelo de datos:**
 
@@ -597,6 +755,7 @@ erDiagram
         string fullName "NOT NULL"
         enum role "ADMIN | MECHANIC, NOT NULL"
         boolean active "NOT NULL, DEFAULT true"
+        int sessionVersion "DEFAULT 0, US-012"
         string refreshTokenHash "NULL"
         datetime refreshTokenExpiresAt "NULL"
         datetime createdAt "NOT NULL"
@@ -719,13 +878,15 @@ Empleado del taller con acceso al sistema.
 | `passwordHash` | String | NOT NULL | Hash bcrypt/Argon2; nunca expuesto en API |
 | `fullName` | String | NOT NULL | Nombre del empleado |
 | `role` | UserRole | NOT NULL | `ADMIN` o `MECHANIC` |
-| `active` | Boolean | NOT NULL, DEFAULT `true` | `false` impide login; conserva historial |
+| `canActAsMechanic` | Boolean | NOT NULL, DEFAULT `false` | V2 (D8): si `ADMIN`, permite listarlo y asignarlo como mecánico de OT; ignorado/redundante en `MECHANIC` |
+| `active` | Boolean | NOT NULL, DEFAULT `true` | `false` impide login y falla requests protegidos; conserva historial |
+| `sessionVersion` | Int | NOT NULL, DEFAULT `0` | Versión de sesión en el JWT; se incrementa en logout/desactivación (US-012) |
 | `refreshTokenHash` | String | NULL | Hash del refresh token vigente |
 | `refreshTokenExpiresAt` | DateTime | NULL | Expiración del refresh token |
 | `createdAt` | DateTime | NOT NULL | Alta del registro |
 | `updatedAt` | DateTime | NOT NULL | Última modificación |
 
-**Relaciones:** crea OT (`createdById`), puede ser mecánico asignado (`assignedMechanicId`), contacta propietario en V2 (`ownerContactedById`), excluye vehículo de recordatorios en V2 (`excludedById`).
+**Relaciones:** crea OT (`createdById`), puede ser mecánico asignado (`assignedMechanicId`; en V2 también admins con `canActAsMechanic`), contacta propietario en V2 (`ownerContactedById`), excluye vehículo de recordatorios en V2 (`excludedById`).
 
 ---
 
@@ -1003,7 +1164,176 @@ model WorkOrderTask {
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+La API de MecaTrack se expone como un backend REST bajo el prefijo `/api` y cubre el flujo completo del MVP: autenticación, gestión de usuarios, clientes, vehículos, órdenes de trabajo, tareas, entrega e historial. La documentación OpenAPI del proyecto está separada por dominio para mantener cada módulo autocontenido y facilitar su evolución independiente.
+
+### Especificaciones OpenAPI disponibles
+
+| Archivo | Dominio cubierto | Endpoints principales |
+|---------|------------------|-----------------------|
+| `docs/api-spec.auth.yml` | Autenticación | `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/me` |
+| `docs/api-spec.users.yml` | Gestión de usuarios | `GET /users`, `POST /users`, `PATCH /users/{id}/deactivate` |
+| `docs/api-spec.clients.yml` | Clientes | `GET /clients/search`, `POST /clients`, `GET/PATCH /clients/{id}` |
+| `docs/api-spec.vehicles.yml` | Vehículos | `GET /vehicles/search`, `POST /vehicles`, `GET/PATCH/DELETE /vehicles/{id}` |
+| `docs/api-spec.work-orders.yml` | Órdenes de trabajo, tareas y notas técnicas | `POST /work-orders`, `GET /work-orders/{id}`, `POST/PATCH /work-orders/{id}/tasks`, `PATCH /work-orders/{id}/visit-notes` |
+| `docs/api-spec.delivery.yml` | Entrega | `GET /delivery/ready`, `GET /delivery/ready/{workOrderId}`, `PATCH /delivery/ready/{workOrderId}/deliver` |
+| `docs/api-spec.history.yml` | Historial | `GET /vehicles/{vehicleId}/history`, `GET /clients/{clientId}` |
+
+### Endpoints representativos del MVP
+
+Aunque el proyecto dispone de documentación detallada por dominio, los siguientes tres endpoints resumen bien el flujo central del sistema: autenticación, creación de una orden de trabajo y consulta del historial técnico.
+
+#### 1. Autenticación de usuario
+
+- **Método:** `POST`
+- **Ruta:** `/api/auth/login`
+- **Propósito:** valida credenciales, entrega un `accessToken` JWT y emite el `refreshToken` en cookie `httpOnly`.
+- **Contexto de uso:** punto de entrada obligatorio para administradores y mecánicos.
+
+**Ejemplo de request**
+
+```json
+{
+  "email": "user@taller.com",
+  "password": "Usuario123"
+}
+```
+
+**Ejemplo de response**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "bb42fa72-c22d-4c88-9cc4-aa73e95cb264",
+    "email": "admin@taller.com",
+    "fullName": "Workshop Admin",
+    "role": "ADMIN"
+  }
+}
+```
+
+**Notas relevantes**
+
+- `401 Unauthorized`: credenciales inválidas.
+- `403 Forbidden`: cuenta inactiva.
+- `429 Too Many Requests`: demasiados intentos de login.
+
+#### 2. Creación de orden de trabajo
+
+- **Método:** `POST`
+- **Ruta:** `/api/work-orders`
+- **Propósito:** crea una orden de trabajo con sus tareas iniciales en una sola transacción, tomando una instantánea del propietario actual del vehículo.
+- **Contexto de uso:** flujo principal de ingreso del vehículo al taller; accesible para `ADMIN` y `MECHANIC`.
+
+**Ejemplo de request**
+
+```json
+{
+  "vehicleId": "1f0d9710-c9fd-4fae-8ce7-4a72e91f7fcb",
+  "entryReason": "Revisión general del vehículo",
+  "mileage": 45000,
+  "assignedMechanicId": "7daf14b6-6de4-4c4b-8ac6-05b6ad8c33ab",
+  "initialTasks": [
+    {
+      "description": "Cambio de aceite"
+    }
+  ]
+}
+```
+
+**Ejemplo de response**
+
+```json
+{
+  "id": "9a54db58-4f77-46e4-9857-cf5afdb43f5d",
+  "status": "EN_PROCESO",
+  "entryReason": "Revisión general del vehículo",
+  "mileage": 45000,
+  "totalAmount": 0,
+  "vehicle": {
+    "licensePlate": "WO123456",
+    "brand": "Toyota",
+    "model": "Yaris"
+  },
+  "owner": {
+    "fullName": "Juan Pérez",
+    "nationalId": "1-2345-6789"
+  },
+  "tasks": [
+    {
+      "id": "0f6f5352-5985-4b6d-95e8-0eb1b854db0c",
+      "description": "Cambio de aceite",
+      "status": "PENDING",
+      "sortOrder": 0
+    }
+  ]
+}
+```
+
+**Notas relevantes**
+
+- `409 Conflict`: el vehículo ya tiene una orden activa (`activeWorkOrderId` en la respuesta).
+- `400 Bad Request`: mecánico inválido, vehículo sin propietario activo o validación fallida.
+- `404 Not Found`: vehículo inexistente.
+
+#### 3. Consulta de historial del vehículo
+
+- **Método:** `GET`
+- **Ruta:** `/api/vehicles/{vehicleId}/history`
+- **Propósito:** devuelve la línea de tiempo completa de visitas del vehículo, incluyendo tareas, notas técnicas, montos cobrados y propietario al momento de cada visita.
+- **Contexto de uso:** soporte a diagnósticos posteriores, revisión de antecedentes y trazabilidad de reparaciones; accesible para `ADMIN` y `MECHANIC`.
+
+**Ejemplo de response**
+
+```json
+{
+  "vehicleId": "1f0d9710-c9fd-4fae-8ce7-4a72e91f7fcb",
+  "licensePlate": "ABC123",
+  "vehicleLabel": "Toyota Corolla 2018",
+  "currentOwner": {
+    "id": "a4a8f84a-2f63-4f97-89cb-8f1a963ea1d2",
+    "fullName": "Juan Pérez",
+    "nationalId": "1-2345-6789"
+  },
+  "visits": [
+    {
+      "workOrderId": "9a54db58-4f77-46e4-9857-cf5afdb43f5d",
+      "checkedInAt": "2026-06-28T20:12:00.000Z",
+      "status": "ENTREGADA",
+      "statusLabel": "Entregada",
+      "entryReason": "Revisión general del vehículo",
+      "mileage": 45000,
+      "totalAmount": 35000,
+      "ownerAtVisit": {
+        "id": "a4a8f84a-2f63-4f97-89cb-8f1a963ea1d2",
+        "fullName": "Juan Pérez",
+        "nationalId": "1-2345-6789"
+      },
+      "visitNotes": {
+        "visitDiagnosis": "Cambio preventivo por mantenimiento",
+        "visitRepairSummary": "Aceite y filtro reemplazados"
+      },
+      "tasks": [
+        {
+          "description": "Cambio de aceite",
+          "status": "COMPLETED",
+          "cost": 35000
+        }
+      ]
+    }
+  ],
+  "total": 1
+}
+```
+
+**Notas relevantes**
+
+- `404 Not Found`: vehículo inexistente.
+- La respuesta es de solo lectura y representa el historial persistido por visitas.
+
+### Cómo esta API soporta el flujo del MVP
+
+En conjunto, la API permite cubrir el recorrido principal del sistema: un usuario se autentica, registra o selecciona clientes y vehículos, crea una orden de trabajo, agrega y completa tareas, mueve la orden al panel de entrega y finalmente consulta el historial resultante del vehículo o del cliente. La separación de especificaciones por dominio facilita que cada historia de usuario del MVP tenga su contrato API claramente identificable sin perder coherencia global.
 
 ---
 
@@ -1173,15 +1503,171 @@ model WorkOrderTask {
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+Esta sección resume tres tickets técnicos representativos del desarrollo de MecaTrack. Se seleccionó un ticket de **backend**, uno de **frontend** y uno de **base de datos**, todos basados en funcionalidades reales del MVP ya implementado. El objetivo es que cada ticket sirva como especificación de trabajo ejecutable, no solo como descripción funcional.
 
-**Ticket 1 — Backend: US-002 User Management**
+### **Ticket 1 — Backend: US-002 User Management**
 
-Admin-only REST endpoints under `/api/users`: list users, create employees (`ADMIN` | `MECHANIC`), and soft-deactivate accounts. Builds on US-001 JWT auth (`JwtAuthGuard`, `RolesGuard`). See [`docs/api-spec.users.yml`](docs/api-spec.users.yml) and [`apps/api/README.md`](apps/api/README.md).
+- **Tipo:** Backend
+- **Título:** Implementar gestión de usuarios solo para administradores
+- **Objetivo:** Exponer endpoints seguros para listar usuarios, crear cuentas de empleados y desactivar cuentas sin eliminar historial operativo.
+- **Contexto:** Tras completar la autenticación (US-001), el sistema necesitaba una capa administrativa para controlar qué empleados pueden acceder al taller digital y con qué rol. El ticket debía reutilizar la infraestructura de JWT, guards y modelo `User` ya existente.
+- **Alcance:**
+  - `GET /api/users`
+  - `POST /api/users`
+  - `PATCH /api/users/:id/deactivate`
+  - validación de DTOs y respuestas tipadas
+  - revocación de refresh tokens al desactivar
+- **Fuera de alcance:**
+  - edición de usuarios
+  - reactivación de cuentas
+  - eliminación física
+  - reseteo de contraseña
+- **Requisitos funcionales y técnicos:**
+  - solo `ADMIN` puede acceder a la gestión de usuarios
+  - el listado debe devolver activos e inactivos
+  - no se puede registrar un email duplicado
+  - no se puede desactivar la propia cuenta
+  - no se puede desactivar al último administrador activo
+  - la respuesta nunca debe exponer `passwordHash` ni tokens
+  - la desactivación debe invalidar la sesión renovable del usuario
+- **Criterios de aceptación:**
+  - un administrador autenticado puede listar usuarios y ver estado/rol
+  - un administrador puede crear un usuario `ADMIN` o `MECHANIC`
+  - un mecánico recibe `403` si intenta usar estos endpoints
+  - al desactivar, el usuario queda con `active = false`
+  - un usuario inactivo no puede volver a iniciar sesión
+- **Componentes / archivos impactados:**
+  - `apps/api/src/modules/users/users.module.ts`
+  - `apps/api/src/modules/users/users.controller.ts`
+  - `apps/api/src/modules/users/users.service.ts`
+  - `apps/api/src/modules/users/dto/create-user.dto.ts`
+  - `apps/api/src/modules/users/dto/user-response.dto.ts`
+  - `apps/api/src/app.module.ts`
+  - `apps/api/test/users.e2e-spec.ts`
+  - `apps/api/src/modules/users/users.service.spec.ts`
+- **Plan de implementación a alto nivel:**
+  1. Definir DTOs y mapping de respuesta.
+  2. Crear `UsersService` con reglas de negocio (email único, no self-deactivate, protección del último admin).
+  3. Exponer controlador protegido por `JwtAuthGuard` + `RolesGuard`.
+  4. Integrar el módulo en `AppModule`.
+  5. Añadir pruebas unitarias y E2E.
+- **Estrategia de pruebas:**
+  - unitarias de servicio para reglas críticas
+  - E2E de API para roles, conflictos, validación y desactivación real
+- **Dependencias, riesgos y consideraciones:**
+  - depende de US-001 (auth, JWT, roles)
+  - la desactivación revoca refresh token y sube `sessionVersion`, invalidando también el access token de inmediato (US-012)
+  - cualquier cambio futuro de roles o edición de usuarios debe respetar la regla del último admin
 
-**Ticket 2**
+### **Ticket 2 — Frontend: US-008 Delivery Panel**
 
-**Ticket 3**
+- **Tipo:** Frontend
+- **Título:** Implementar panel administrativo de vehículos listos para entrega
+- **Objetivo:** Permitir que el administrador vea en una sola pantalla las órdenes en estado `LISTA_PARA_ENTREGA`, consulte el detalle de cobro y marque un vehículo como entregado.
+- **Contexto:** Después de crear órdenes de trabajo y completar tareas (US-005 y US-006), faltaba una interfaz operativa para cerrar el ciclo en la recepción del taller. El panel debía ser exclusivo para administradores y mostrar información útil sin obligar a entrar al detalle de cada OT.
+- **Alcance:**
+  - ruta `/admin/delivery`
+  - tabla con órdenes listas para entrega
+  - columna visible de teléfono del propietario
+  - expansión de fila con detalle de tareas y total
+  - confirmación para marcar como entregada
+  - actualización manual y polling opcional
+- **Fuera de alcance:**
+  - contacto al propietario (D1)
+  - envío de correo (D2)
+  - acceso de mecánicos
+  - tiempo real con WebSockets
+- **Requisitos funcionales y técnicos:**
+  - acceso restringido a `ADMIN`
+  - lista alimentada desde React Query
+  - proxy de llamadas vía `apiClient`
+  - feedback visual para carga, vacío, error y éxito
+  - invalidación/refresco de caché tras entregar
+  - detalle expandible sin navegación extra
+- **Criterios de aceptación:**
+  - el administrador ve la tabla con placa, modelo, propietario, teléfono y total
+  - si el propietario tiene teléfono, se muestra link `tel:`
+  - si no tiene teléfono, se muestra “Sin teléfono”
+  - al marcar como entregada, la orden desaparece de la lista
+  - un mecánico no puede acceder y termina en `/403`
+- **Componentes / archivos impactados:**
+  - `apps/web/src/app/admin/delivery/page.tsx`
+  - `apps/web/src/features/delivery-panel/components/DeliveryPanelPage.tsx`
+  - `apps/web/src/features/delivery-panel/components/DeliveryReadyTable.tsx`
+  - `apps/web/src/features/delivery-panel/components/DeliveryReadyDetail.tsx`
+  - `apps/web/src/features/delivery-panel/components/OwnerPhoneCell.tsx`
+  - `apps/web/src/features/delivery-panel/components/MarkDeliveredDialog.tsx`
+  - `apps/web/src/features/delivery-panel/hooks/*.ts`
+  - `apps/web/src/features/delivery-panel/services/deliveryApi.ts`
+  - `apps/web/src/shared/components/RoleNav.tsx`
+  - `apps/web/e2e/delivery-panel.spec.ts`
+- **Plan de implementación a alto nivel:**
+  1. Definir tipos del dominio `delivery-panel`.
+  2. Implementar capa de servicios y hooks con React Query.
+  3. Construir componentes de tabla, detalle expandible y diálogo de confirmación.
+  4. Registrar la ruta bajo layout admin y navegación.
+  5. Validar el flujo con Playwright.
+- **Estrategia de pruebas:**
+  - Playwright para flujos admin: abrir panel, ver teléfono, expandir detalle, marcar entregado
+  - pruebas manuales de estados de carga, vacío y error
+- **Dependencias, riesgos y consideraciones:**
+  - depende de US-008 backend y de órdenes que ya hayan transitado a `LISTA_PARA_ENTREGA`
+  - el polling debe ser opcional para no sobrecargar el backend
+  - el panel usa snapshot del propietario registrado al ingreso, no necesariamente el contacto más reciente del cliente
+
+### **Ticket 3 — Base de datos: Modelo relacional para órdenes de trabajo y tareas**
+
+- **Tipo:** Database
+- **Título:** Diseñar e implementar la migración de `WorkOrder` y `WorkOrderTask`
+- **Objetivo:** Incorporar en PostgreSQL la estructura necesaria para registrar visitas al taller, tareas dinámicas, costos y estados operativos, preservando integridad referencial y soporte para extensiones futuras.
+- **Contexto:** El sistema ya gestionaba usuarios, clientes y vehículos, pero aún no tenía una entidad que representara formalmente el ingreso del vehículo al taller ni el detalle granular del trabajo realizado. La base de datos debía soportar una OT activa por vehículo, tareas múltiples, costos por tarea, notas técnicas y el panel de entrega.
+- **Alcance:**
+  - enums `WorkOrderStatus` y `WorkOrderTaskStatus`
+  - tabla `WorkOrder`
+  - tabla `WorkOrderTask`
+  - relaciones con `User`, `Client` y `Vehicle`
+  - índices para búsquedas por estado y cronología
+  - snapshot de propietario (`ownerClientId`)
+  - soporte estructural para V2 (`OWNER_CONTACTED`, notas de visita)
+- **Fuera de alcance:**
+  - panel de recordatorios
+  - transferencia de propietario D3
+  - bitácora histórica de recordatorios
+  - multi-tenant
+- **Requisitos funcionales y técnicos:**
+  - una OT debe pertenecer a un vehículo existente
+  - una tarea debe pertenecer a una OT existente
+  - `WorkOrderTask` debe borrarse en cascada si la OT se elimina
+  - debe ser posible distinguir OT activas por `status`
+  - el esquema debe permitir costos nulos hasta completar una tarea
+  - las consultas por historial y entrega deben ser eficientes
+- **Criterios de aceptación:**
+  - migración aplicable con Prisma sin cambios manuales posteriores
+  - tablas creadas con claves foráneas correctas
+  - índices para `vehicleId + status`, `checkedInAt` y `workOrderId`
+  - relaciones accesibles desde Prisma Client
+  - el seed y los servicios pueden operar sobre el nuevo modelo
+- **Componentes / archivos impactados:**
+  - `apps/api/prisma/schema.prisma`
+  - `apps/api/prisma/migrations/20260619160000_add_work_order_and_tasks/migration.sql`
+  - `apps/api/prisma/seed.ts`
+  - `apps/api/src/modules/work-orders/**`
+  - `apps/api/src/modules/history/**`
+- **Plan de implementación a alto nivel:**
+  1. Extender `schema.prisma` con enums, modelos y relaciones.
+  2. Generar migración versionada.
+  3. Validar claves foráneas, `onDelete`, índices y nullable fields.
+  4. Ajustar seed y servicios consumidores.
+  5. Ejecutar migración sobre base limpia y verificar lectura/escritura desde Prisma.
+- **Estrategia de pruebas:**
+  - aplicar `prisma migrate deploy` en entorno de prueba
+  - ejecutar seed y confirmar consistencia referencial
+  - validar mediante E2E backend la creación de OTs, tareas, notas y transición a entrega
+- **Dependencias, riesgos y consideraciones:**
+  - depende del modelo previo de `User`, `Client`, `Vehicle` y `VehicleOwnership`
+  - una mala definición de relaciones rompería historial, entrega y asignación de mecánicos
+  - el valor `OWNER_CONTACTED` se reserva desde ahora para evitar refactors posteriores
+  - la unicidad de “una sola OT activa por vehículo” se implementa en la capa de aplicación, no como constraint SQL directa
 
 ---
 

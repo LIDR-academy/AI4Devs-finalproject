@@ -1,8 +1,10 @@
 'use client';
 
 import { Button } from '@/shared/components/Button';
+import { WorkOrderStatusBadge } from '@/features/work-orders/components/WorkOrderStatusBadge';
+import type { WorkOrderStatus } from '@/features/work-orders/types/work-order.types';
 import { formatCurrency } from '@/features/work-orders/utils/formatCurrency';
-import type { DeliveryReadyItem } from '../types/delivery.types';
+import type { DeliverTarget, DeliveryReadyItem } from '../types/delivery.types';
 import { OwnerPhoneCell } from './OwnerPhoneCell';
 import { DeliveryReadyDetail } from './DeliveryReadyDetail';
 
@@ -10,13 +12,15 @@ interface DeliveryReadyTableProps {
   items: DeliveryReadyItem[];
   expandedId: string | null;
   onToggleExpand: (workOrderId: string) => void;
-  onMarkDelivered: (item: DeliveryReadyItem) => void;
+  onMarkContacted: (item: DeliveryReadyItem) => void;
+  onMarkDelivered: (target: DeliverTarget) => void;
 }
 
 export function DeliveryReadyTable({
   items,
   expandedId,
   onToggleExpand,
+  onMarkContacted,
   onMarkDelivered,
 }: DeliveryReadyTableProps) {
   return (
@@ -50,6 +54,12 @@ export function DeliveryReadyTable({
             </th>
             <th
               scope="col"
+              className="px-4 py-3 text-left font-medium text-slate-700"
+            >
+              Estado
+            </th>
+            <th
+              scope="col"
               className="px-4 py-3 text-right font-medium text-slate-700"
             >
               Monto total
@@ -72,6 +82,7 @@ export function DeliveryReadyTable({
                 item={item}
                 isExpanded={isExpanded}
                 onToggleExpand={onToggleExpand}
+                onMarkContacted={onMarkContacted}
                 onMarkDelivered={onMarkDelivered}
               />
             );
@@ -86,13 +97,17 @@ function ItemRows({
   item,
   isExpanded,
   onToggleExpand,
+  onMarkContacted,
   onMarkDelivered,
 }: {
   item: DeliveryReadyItem;
   isExpanded: boolean;
   onToggleExpand: (workOrderId: string) => void;
-  onMarkDelivered: (item: DeliveryReadyItem) => void;
+  onMarkContacted: (item: DeliveryReadyItem) => void;
+  onMarkDelivered: (target: DeliverTarget) => void;
 }) {
+  const status = (item.status || 'LISTA_PARA_ENTREGA') as WorkOrderStatus;
+
   return (
     <>
       <tr className={isExpanded ? 'bg-slate-50' : undefined}>
@@ -106,6 +121,9 @@ function ItemRows({
             phone={item.ownerPhone}
             phoneDisplay={item.ownerPhoneDisplay}
           />
+        </td>
+        <td className="px-4 py-3">
+          <WorkOrderStatusBadge status={status} />
         </td>
         <td className="px-4 py-3 text-right font-medium text-slate-900">
           {formatCurrency(item.totalAmount)}
@@ -124,10 +142,12 @@ function ItemRows({
       </tr>
       {isExpanded && (
         <tr id={`delivery-detail-${item.workOrderId}`}>
-          <td colSpan={6} className="border-t border-slate-100 bg-slate-50/80">
+          <td colSpan={7} className="border-t border-slate-100 bg-slate-50/80">
             <DeliveryReadyDetail
               workOrderId={item.workOrderId}
-              onMarkDelivered={() => onMarkDelivered(item)}
+              licensePlate={item.licensePlate}
+              onMarkContacted={() => onMarkContacted(item)}
+              onMarkDelivered={onMarkDelivered}
             />
           </td>
         </tr>

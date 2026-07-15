@@ -1,4 +1,4 @@
-import { WorkOrderStatus, WorkOrderTaskStatus } from '@prisma/client';
+import { UserRole, WorkOrderStatus, WorkOrderTaskStatus } from '@prisma/client';
 
 export class WorkOrderTaskResponseDto {
   id!: string;
@@ -25,14 +25,21 @@ export class WorkOrderOwnerSummaryDto {
   nationalId!: string;
 }
 
+export class AssignedMechanicSummaryDto {
+  id!: string;
+  fullName!: string;
+  role!: UserRole;
+}
+
 export class WorkOrderDetailResponseDto {
   id!: string;
   vehicleId!: string;
   ownerClientId!: string;
   status!: WorkOrderStatus;
   entryReason!: string;
-  mileage!: number;
+  mileage!: number | null;
   assignedMechanicId!: string | null;
+  assignedMechanic!: AssignedMechanicSummaryDto | null;
   checkedInAt!: Date;
   updatedAt!: Date;
   createdById!: string;

@@ -5,6 +5,7 @@ export class UserResponseDto {
   fullName!: string;
   email!: string;
   role!: UserRole;
+  canActAsMechanic!: boolean;
   active!: boolean;
   createdAt!: Date;
   updatedAt?: Date;

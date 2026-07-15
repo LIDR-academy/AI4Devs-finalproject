@@ -32,7 +32,7 @@ export class VehicleHistoryVisitDto {
   status!: WorkOrderStatus;
   statusLabel!: string;
   entryReason!: string;
-  mileage!: number;
+  mileage!: number | null;
   totalAmount!: number;
   ownerAtVisit!: OwnerAtVisitDto;
   visitNotes!: VisitNotesDto;

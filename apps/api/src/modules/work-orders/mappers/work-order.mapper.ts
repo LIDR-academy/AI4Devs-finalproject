@@ -17,7 +17,7 @@ export type WorkOrderWithRelations = WorkOrder & {
   tasks: WorkOrderTask[];
   vehicle: Pick<Vehicle, 'licensePlate' | 'brand' | 'model'>;
   ownerClient: Pick<Client, 'fullName' | 'nationalId'>;
-  assignedMechanic?: Pick<User, 'id' | 'fullName'> | null;
+  assignedMechanic?: Pick<User, 'id' | 'fullName' | 'role'> | null;
 };
 
 export function toWorkOrderTaskResponse(
@@ -49,6 +49,13 @@ export function toWorkOrderDetailResponse(
     entryReason: workOrder.entryReason,
     mileage: workOrder.mileage,
     assignedMechanicId: workOrder.assignedMechanicId,
+    assignedMechanic: workOrder.assignedMechanic
+      ? {
+          id: workOrder.assignedMechanic.id,
+          fullName: workOrder.assignedMechanic.fullName,
+          role: workOrder.assignedMechanic.role,
+        }
+      : null,
     checkedInAt: workOrder.checkedInAt,
     updatedAt: workOrder.updatedAt,
     createdById: workOrder.createdById,
@@ -96,5 +103,8 @@ export const WORK_ORDER_DETAIL_INCLUDE = {
   },
   ownerClient: {
     select: { fullName: true, nationalId: true },
+  },
+  assignedMechanic: {
+    select: { id: true, fullName: true, role: true },
   },
 } satisfies Prisma.WorkOrderInclude;

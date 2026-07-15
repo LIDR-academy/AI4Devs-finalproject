@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/shared/components/Button';
@@ -24,6 +24,8 @@ export function UserForm({ onSuccess, onCancel }: UserFormProps) {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isValid },
   } = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
@@ -33,8 +35,17 @@ export function UserForm({ onSuccess, onCancel }: UserFormProps) {
       email: '',
       password: '',
       role: 'MECHANIC',
+      canActAsMechanic: false,
     },
   });
+
+  const role = watch('role');
+
+  useEffect(() => {
+    if (role !== 'ADMIN') {
+      setValue('canActAsMechanic', false);
+    }
+  }, [role, setValue]);
 
   const submit = async (values: CreateUserFormValues) => {
     resetMutation();
@@ -44,6 +55,8 @@ export function UserForm({ onSuccess, onCancel }: UserFormProps) {
         email: values.email.trim().toLowerCase(),
         password: values.password,
         role: values.role,
+        canActAsMechanic:
+          values.role === 'ADMIN' ? values.canActAsMechanic === true : false,
       });
       reset();
       onSuccess?.();
@@ -143,6 +156,20 @@ export function UserForm({ onSuccess, onCancel }: UserFormProps) {
           <p className="text-sm text-red-600">{errors.role.message}</p>
         )}
       </div>
+
+      {role === 'ADMIN' && (
+        <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+          <input
+            id="canActAsMechanic"
+            type="checkbox"
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            {...register('canActAsMechanic')}
+          />
+          <label htmlFor="canActAsMechanic" className="text-sm text-slate-700">
+            También puede realizar trabajo de mecánico
+          </label>
+        </div>
+      )}
 
       <div className="flex justify-end gap-3 pt-2">
         {onCancel && (

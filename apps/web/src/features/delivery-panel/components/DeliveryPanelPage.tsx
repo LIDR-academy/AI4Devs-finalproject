@@ -1,25 +1,49 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/shared/components/Button';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { useDeliveryReadyList } from '../hooks/useDeliveryReadyList';
 import { mapDeliveryError } from '../utils/mapDeliveryError';
-import type { DeliveryReadyItem } from '../types/delivery.types';
+import type {
+  ContactFilter,
+  DeliverTarget,
+  DeliveryReadyItem,
+} from '../types/delivery.types';
 import { DeliveryReadyTable } from './DeliveryReadyTable';
+import { MarkContactedDialog } from './MarkContactedDialog';
 import { MarkDeliveredDialog } from './MarkDeliveredDialog';
+
+const FILTER_LABELS: Record<ContactFilter, string> = {
+  all: 'Todos',
+  pending: 'Pendiente de contacto',
+  contacted: 'Contactados',
+};
 
 export function DeliveryPanelPage() {
   const [enablePolling, setEnablePolling] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [deliverTarget, setDeliverTarget] = useState<DeliveryReadyItem | null>(
+  const [contactFilter, setContactFilter] = useState<ContactFilter>('all');
+  const [contactTarget, setContactTarget] = useState<DeliveryReadyItem | null>(
     null,
   );
+  const [deliverTarget, setDeliverTarget] = useState<DeliverTarget | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch, isFetching } =
     useDeliveryReadyList({ enablePolling });
+
+  const filteredItems = useMemo(() => {
+    const items = data?.items ?? [];
+    if (contactFilter === 'pending') {
+      return items.filter((item) => item.status === 'LISTA_PARA_ENTREGA');
+    }
+    if (contactFilter === 'contacted') {
+      return items.filter((item) => item.status === 'OWNER_CONTACTED');
+    }
+    return items;
+  }, [data?.items, contactFilter]);
 
   useEffect(() => {
     if (!toastMessage) {
@@ -32,6 +56,18 @@ export function DeliveryPanelPage() {
 
   const handleToggleExpand = (workOrderId: string) => {
     setExpandedId((current) => (current === workOrderId ? null : workOrderId));
+  };
+
+  const handleContactSuccess = () => {
+    setContactTarget(null);
+    setToastMessage('Propietario marcado como contactado');
+    void refetch();
+  };
+
+  const handleContactConflict = () => {
+    setContactTarget(null);
+    setToastMessage('El propietario ya fue marcado como contactado');
+    void refetch();
   };
 
   const handleDeliverSuccess = () => {
@@ -79,6 +115,21 @@ export function DeliveryPanelPage() {
         </div>
       </div>
 
+      {!isLoading && !isError && data && data.items.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(FILTER_LABELS) as ContactFilter[]).map((filter) => (
+            <Button
+              key={filter}
+              type="button"
+              variant={contactFilter === filter ? 'primary' : 'secondary'}
+              onClick={() => setContactFilter(filter)}
+            >
+              {FILTER_LABELS[filter]}
+            </Button>
+          ))}
+        </div>
+      )}
+
       {isLoading && <LoadingSpinner label="Cargando panel de entrega..." />}
 
       {isError && (
@@ -97,14 +148,38 @@ export function DeliveryPanelPage() {
         />
       )}
 
-      {!isLoading && !isError && data && data.items.length > 0 && (
+      {!isLoading &&
+        !isError &&
+        data &&
+        data.items.length > 0 &&
+        filteredItems.length === 0 && (
+          <EmptyState
+            title="No hay vehículos en este filtro"
+            description="Cambia el filtro para ver otras órdenes del panel."
+          />
+        )}
+
+      {!isLoading && !isError && filteredItems.length > 0 && (
         <DeliveryReadyTable
-          items={data.items}
+          items={filteredItems}
           expandedId={expandedId}
           onToggleExpand={handleToggleExpand}
-          onMarkDelivered={(item) => setDeliverTarget(item)}
+          onMarkContacted={(item) => setContactTarget(item)}
+          onMarkDelivered={(target) => setDeliverTarget(target)}
         />
       )}
+
+      <MarkContactedDialog
+        target={contactTarget}
+        open={contactTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setContactTarget(null);
+          }
+        }}
+        onSuccess={handleContactSuccess}
+        onConflict={handleContactConflict}
+      />
 
       <MarkDeliveredDialog
         target={deliverTarget}

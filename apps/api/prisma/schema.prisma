@@ -31,6 +31,7 @@ model User {
   passwordHash          String
   fullName              String
   role                  UserRole
+  canActAsMechanic      Boolean   @default(false)
   active                Boolean   @default(true)
   sessionVersion        Int       @default(0)
   refreshTokenHash      String?
@@ -101,7 +102,7 @@ model WorkOrder {
   ownerClientId        String
   status               WorkOrderStatus @default(EN_PROCESO)
   entryReason          String
-  mileage              Int
+  mileage              Int?
   assignedMechanicId   String?
   createdById          String
   checkedInAt          DateTime        @default(now())

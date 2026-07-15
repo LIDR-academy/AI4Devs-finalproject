@@ -8,10 +8,11 @@ import { UserStatusBadge } from './UserStatusBadge';
 
 interface UserTableProps {
   users: UserListItem[];
+  onEdit: (user: UserListItem) => void;
   onDeactivate: (user: UserListItem) => void;
 }
 
-export function UserTable({ users, onDeactivate }: UserTableProps) {
+export function UserTable({ users, onEdit, onDeactivate }: UserTableProps) {
   const { user: currentUser } = useAuth();
 
   return (
@@ -46,27 +47,39 @@ export function UserTable({ users, onDeactivate }: UserTableProps) {
                 <td className="px-4 py-3 font-medium text-slate-900">{user.fullName}</td>
                 <td className="px-4 py-3 text-slate-600">{user.email}</td>
                 <td className="px-4 py-3">
-                  <UserRoleBadge role={user.role} />
+                  <UserRoleBadge
+                    role={user.role}
+                    canActAsMechanic={user.canActAsMechanic}
+                  />
                 </td>
                 <td className="px-4 py-3">
                   <UserStatusBadge active={user.active} />
                 </td>
                 <td className="px-4 py-3 text-right">
                   {user.active ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="text-red-600 hover:bg-red-50 hover:text-red-700 disabled:text-slate-400"
-                      disabled={!canDeactivate}
-                      title={
-                        isCurrentUser
-                          ? 'No puedes desactivar tu propia cuenta'
-                          : undefined
-                      }
-                      onClick={() => onDeactivate(user)}
-                    >
-                      Desactivar
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => onEdit(user)}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700 disabled:text-slate-400"
+                        disabled={!canDeactivate}
+                        title={
+                          isCurrentUser
+                            ? 'No puedes desactivar tu propia cuenta'
+                            : undefined
+                        }
+                        onClick={() => onDeactivate(user)}
+                      >
+                        Desactivar
+                      </Button>
+                    </div>
                   ) : (
                     <span className="text-slate-400">—</span>
                   )}

@@ -24,6 +24,7 @@ describe('AuthService', () => {
     passwordHash: '$2b$12$hashedpasswordvalue',
     fullName: 'Workshop Mechanic',
     role: UserRole.MECHANIC,
+    canActAsMechanic: false,
     active: true,
     refreshTokenHash: null,
     refreshTokenExpiresAt: null,

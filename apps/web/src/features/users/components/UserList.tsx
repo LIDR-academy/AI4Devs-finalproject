@@ -9,12 +9,14 @@ import { useUsers } from '../hooks/useUsers';
 import type { UserListItem } from '../types/user.types';
 import { mapUsersError } from '../utils/mapUsersError';
 import { DeactivateUserDialog } from './DeactivateUserDialog';
+import { EditUserDialog } from './EditUserDialog';
 import { UserForm } from './UserForm';
 import { UserTable } from './UserTable';
 
 export function UserList() {
   const { data: users, isLoading, isError, error, refetch, isFetching } = useUsers();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editUser, setEditUser] = useState<UserListItem | null>(null);
   const [deactivateUser, setDeactivateUser] = useState<UserListItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -74,6 +76,7 @@ export function UserList() {
       {!isLoading && !isError && users && users.length > 0 && (
         <UserTable
           users={users}
+          onEdit={(user) => setEditUser(user)}
           onDeactivate={(user) => setDeactivateUser(user)}
         />
       )}
@@ -91,6 +94,17 @@ export function UserList() {
           }}
         />
       </Modal>
+
+      <EditUserDialog
+        user={editUser}
+        open={editUser !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditUser(null);
+          }
+        }}
+        onSuccess={() => setToastMessage('Usuario actualizado')}
+      />
 
       <DeactivateUserDialog
         user={deactivateUser}

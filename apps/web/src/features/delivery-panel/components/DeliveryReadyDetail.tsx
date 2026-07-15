@@ -3,15 +3,21 @@
 import Link from 'next/link';
 import { Button } from '@/shared/components/Button';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { WorkOrderStatusBadge } from '@/features/work-orders/components/WorkOrderStatusBadge';
+import type { WorkOrderStatus } from '@/features/work-orders/types/work-order.types';
 import { formatCurrency } from '@/features/work-orders/utils/formatCurrency';
+import { formatMileage } from '@/features/work-orders/utils/formatMileage';
 import { useDeliveryReadyDetail } from '../hooks/useDeliveryReadyDetail';
 import { mapDeliveryError } from '../utils/mapDeliveryError';
+import type { DeliverTarget } from '../types/delivery.types';
 import { OwnerPhoneCell } from './OwnerPhoneCell';
 import { DeliveryTaskBreakdown } from './DeliveryTaskBreakdown';
 
 interface DeliveryReadyDetailProps {
   workOrderId: string;
-  onMarkDelivered: () => void;
+  licensePlate: string;
+  onMarkContacted: () => void;
+  onMarkDelivered: (target: DeliverTarget) => void;
 }
 
 function formatDate(isoDate: string): string {
@@ -23,6 +29,8 @@ function formatDate(isoDate: string): string {
 
 export function DeliveryReadyDetail({
   workOrderId,
+  licensePlate,
+  onMarkContacted,
   onMarkDelivered,
 }: DeliveryReadyDetailProps) {
   const { data, isLoading, isError, error } = useDeliveryReadyDetail(workOrderId);
@@ -45,8 +53,15 @@ export function DeliveryReadyDetail({
     );
   }
 
+  const isPendingContact = data.status === 'LISTA_PARA_ENTREGA';
+  const isContacted = data.status === 'OWNER_CONTACTED';
+
   return (
     <div className="space-y-5 px-4 py-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <WorkOrderStatusBadge status={data.status as WorkOrderStatus} />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -100,10 +115,21 @@ export function DeliveryReadyDetail({
           </h3>
           <p className="mt-1 text-sm text-slate-700">{data.entryReason}</p>
           <p className="mt-1 text-sm text-slate-600">
-            {data.mileage.toLocaleString('es-CR')} km
+            {formatMileage(data.mileage)}
           </p>
         </div>
       </div>
+
+      {isContacted && data.ownerContactedAt && (
+        <div className="rounded-lg border border-purple-100 bg-purple-50 px-4 py-3 text-sm text-purple-900">
+          <p>
+            Contactado el {formatDate(data.ownerContactedAt)}
+            {data.ownerContactedBy
+              ? ` por ${data.ownerContactedBy.fullName}`
+              : ''}
+          </p>
+        </div>
+      )}
 
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -123,13 +149,26 @@ export function DeliveryReadyDetail({
           >
             Ver OT completa
           </Link>
-          <Button type="button" onClick={onMarkDelivered}>
+          {isPendingContact && (
+            <Button type="button" variant="secondary" onClick={onMarkContacted}>
+              Marcar propietario contactado
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={() =>
+              onMarkDelivered({
+                workOrderId: data.workOrderId,
+                vehicleId: data.vehicleId,
+                licensePlate,
+                mileage: data.mileage,
+              })
+            }
+          >
             Marcar como entregada
           </Button>
         </div>
       </div>
-
-      {/* V2 D1: placeholder for "Contactar propietario" (OWNER_CONTACTED flow) */}
     </div>
   );
 }

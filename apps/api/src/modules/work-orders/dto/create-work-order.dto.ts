@@ -8,6 +8,7 @@ import {
   IsUUID,
   Length,
   Min,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { InitialTaskDto } from './initial-task.dto';
@@ -20,9 +21,12 @@ export class CreateWorkOrderDto {
   @Length(5, 500)
   entryReason!: string;
 
+  @IsOptional()
+  @ValidateIf((_object, value) => value !== null && value !== undefined)
   @IsInt()
   @Min(0)
-  mileage!: number;
+  @Type(() => Number)
+  mileage?: number | null;
 
   @IsOptional()
   @IsUUID()
