@@ -6,25 +6,30 @@
       [alt]="item().artist.artistName"
       loading="lazy"
     />
+    <div class="artist-card__gradient"></div>
+    <div class="artist-card__overlay">
+      <p class="artist-card__name">{{ item().artist.artistName }}</p>
+      <p class="artist-card__style">{{ item().style }}</p>
+    </div>
     @if (item().artist.isCertified) {
-      <span class="artist-card__badge artist-card__badge--certified">
-        <mat-icon>verified</mat-icon> Certificado
+      <span class="artist-card__badge" title="Artista certificado">
+        <mat-icon>verified</mat-icon>
       </span>
     }
   </div>
 
   <div class="artist-card__body">
-    <p class="artist-card__name">{{ item().artist.artistName }}</p>
-    <p class="artist-card__meta">
-      <mat-icon class="artist-card__icon">place</mat-icon>
-      {{ item().artist.commune }}
-    </p>
-    <p class="artist-card__meta">
-      <mat-icon class="artist-card__icon">star</mat-icon>
-      {{ item().artist.averageRating | number: '1.1-1' }}
-      <span class="artist-card__reviews">({{ item().artist.reviewCount }})</span>
-    </p>
-    <p class="artist-card__style">{{ item().style }}</p>
+    <div class="artist-card__meta">
+      <span class="artist-card__location">
+        <mat-icon class="artist-card__icon">place</mat-icon>
+        {{ item().artist.commune }}
+      </span>
+      <span class="artist-card__rating">
+        <mat-icon class="artist-card__icon artist-card__icon--star">star</mat-icon>
+        {{ item().artist.averageRating | number: '1.1-1' }}
+        <span class="artist-card__reviews">({{ item().artist.reviewCount }})</span>
+      </span>
+    </div>
 
     @if (item().artist.sponsorBadges.length > 0) {
       <div class="artist-card__sponsors">

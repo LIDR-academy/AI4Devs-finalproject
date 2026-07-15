@@ -56,7 +56,7 @@ describe('ArtistCardComponent', () => {
   });
 
   it('does not show the certified badge when isCertified is false', () => {
-    const badge = fixture.nativeElement.querySelector('.artist-card__badge--certified');
+    const badge = fixture.nativeElement.querySelector('.artist-card__badge');
     expect(badge).toBeNull();
   });
 
@@ -67,7 +67,7 @@ describe('ArtistCardComponent', () => {
     });
     fixture.detectChanges();
 
-    const badge = fixture.nativeElement.querySelector('.artist-card__badge--certified');
+    const badge = fixture.nativeElement.querySelector('.artist-card__badge');
     expect(badge).toBeTruthy();
   });
 

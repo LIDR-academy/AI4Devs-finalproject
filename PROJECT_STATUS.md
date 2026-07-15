@@ -9,11 +9,11 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0 y US0001 completas; US0003 en desarrollo |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001 y US0003 completas; PR #4 pendiente de merge |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
-| Backend (`backend/`) | ✅ Scaffolding .NET 10 (API por capas + xUnit, health endpoint, tests en verde) |
-| Frontend (`frontend/`) | ✅ Scaffolding Angular 20 (environments, build y tests en verde) |
-| Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web) |
+| Backend (`backend/`) | ✅ US0001 + US0003 implementados (ShowcaseService, endpoint GET /api/showcase, 16 tests en verde) |
+| Frontend (`frontend/`) | ✅ US0001 + US0003 implementados (vitrina con dark theme, ArtistCard, 19 tests en verde) |
+| Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web; perfil `seed-images` para imágenes de muestra) |
 | CI/CD | ✅ `.github/workflows/ci.yml` (build + tests backend y frontend) |
 | API oficial | ✅ `docs/api-spec.yml` v2.0.0 sincronizada con backlog y modelo |
 

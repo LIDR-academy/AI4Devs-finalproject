@@ -1,14 +1,17 @@
-<mat-toolbar color="primary" class="app-toolbar">
-  <span class="brand" routerLink="/">🖋️ INK·LINK</span>
+<mat-toolbar class="app-toolbar">
+  <a class="app-brand" routerLink="/">
+    <span class="app-brand__mark">✒</span>
+    <span class="app-brand__name">INK<span class="app-brand__dot">·</span>LINK</span>
+  </a>
   <span class="spacer"></span>
   @if (authService.isAuthenticated()) {
-    <button mat-button routerLink="/mi-cuenta">Mi cuenta</button>
-    <button mat-button (click)="authService.logout()">Cerrar sesión</button>
+    <button mat-button class="nav-link" routerLink="/mi-cuenta">Mi cuenta</button>
+    <button mat-stroked-button class="nav-btn--logout" (click)="authService.logout()">Salir</button>
   } @else {
-    <button mat-button routerLink="/login">Iniciar sesión</button>
+    <button mat-flat-button class="nav-btn--cta" routerLink="/login">Iniciar sesión</button>
   }
 </mat-toolbar>
 
-<main>
+<main class="app-main">
   <router-outlet />
 </main>

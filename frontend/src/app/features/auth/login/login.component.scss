@@ -1,24 +1,80 @@
-.login-container {
+.login-page {
+  position: relative;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
   min-height: 100dvh;
   padding: 2rem 1rem;
-  box-sizing: border-box;
+  background: var(--ink-bg);
+  overflow: hidden;
+}
+
+.login-page__bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(201, 164, 70, 0.09) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(201, 164, 70, 0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.login-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+
+  &__mark {
+    font-size: 1.7rem;
+    color: var(--ink-accent);
+    line-height: 1;
+  }
+
+  &__name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--ink-text-primary);
+    letter-spacing: 0.5px;
+  }
+
+  &__dot {
+    color: var(--ink-accent);
+  }
+}
+
+.login-tagline {
+  margin: 0 0 28px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--ink-text-secondary);
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
+  border-radius: var(--ink-radius) !important;
+  box-shadow: var(--ink-shadow-lg) !important;
 
   mat-card-header {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
 
-  form {
+  mat-card-content form {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
 }
 
@@ -26,10 +82,24 @@
   width: 100%;
 }
 
+.submit-btn {
+  margin-top: 0.25rem !important;
+  height: 44px !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.3px;
+  border-radius: 8px !important;
+}
+
 .error-message {
-  color: var(--mat-sys-error, #b3261e);
-  margin: 0 0 0.75rem;
+  color: #ef4444;
+  margin: 0 0 0.5rem;
   font-size: 0.875rem;
+  background: rgba(239, 68, 68, 0.08);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #ef4444;
 }
 
 .button-spinner {

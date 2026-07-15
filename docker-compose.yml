@@ -49,8 +49,39 @@ services:
       mc anonymous set download local/inklink-images
       "
 
-  # Full-stack profile: `docker compose --profile full up --build`
-  # Default `docker compose up -d` starts infrastructure only (db + storage).
+  # Uploads seed images to MinIO from picsum.photos (free, no API key needed).
+  # Run once: docker compose --profile seed-images up seed-images
+  seed-images:
+    image: alpine:3.20
+    container_name: inklink-seed-images
+    profiles: ["seed-images"]
+    depends_on:
+      storage:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      apk add --no-cache curl &&
+      curl -sL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc &&
+      chmod +x /usr/local/bin/mc &&
+      mc alias set local http://storage:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/inklink-images &&
+      mc anonymous set download local/inklink-images &&
+
+      for slug in matias-herrera fernanda-munoz cristobal-vidal antonia-reyes javier-castro; do
+        echo \"Uploading images for artist: $${slug}\" &&
+        for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+          num=$$(printf '%02d' $$i) &&
+          curl -sL --retry 3 \"https://picsum.photos/seed/$${slug}-$${i}/800/800\" | mc pipe local/inklink-images/$${slug}/work-$${num}.jpg &&
+          curl -sL --retry 3 \"https://picsum.photos/seed/$${slug}-$${i}/400/400\" | mc pipe local/inklink-images/$${slug}/work-$${num}-thumb.jpg;
+        done;
+      done &&
+
+      echo 'Uploading brand logo...' &&
+      curl -sL --retry 3 'https://picsum.photos/seed/eternal-ink/200/80' | mc pipe local/inklink-images/brands/eternal-ink.png &&
+
+      echo 'Seed images completed successfully'
+      "
+
   api:
     build: ./backend
     container_name: inklink-api

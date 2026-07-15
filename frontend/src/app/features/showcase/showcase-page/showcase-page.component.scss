@@ -1,41 +1,112 @@
 .showcase-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 16px;
+  min-height: 100vh;
+}
 
-  &__error {
-    text-align: center;
-    padding: 48px 16px;
-    color: #c62828;
+/* ── Hero ────────────────────────────────────── */
+.showcase-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 80px 24px 72px;
+  text-align: center;
 
-    p {
-      margin-bottom: 16px;
+  &__bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201, 164, 70, 0.14) 0%, transparent 70%),
+      linear-gradient(180deg, var(--ink-bg-secondary) 0%, var(--ink-bg) 100%);
+    z-index: 0;
+  }
+
+  &__content {
+    position: relative;
+    z-index: 1;
+    max-width: 580px;
+    margin: 0 auto;
+  }
+
+  &__eyebrow {
+    margin: 0 0 14px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-accent);
+  }
+
+  &__title {
+    margin: 0 0 18px;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 700;
+    color: var(--ink-text-primary);
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+
+    em {
+      font-style: italic;
+      color: var(--ink-accent);
     }
+  }
 
-    button {
-      padding: 8px 24px;
-      border: none;
-      background: #1a1a1a;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+  &__sub {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--ink-text-secondary);
+    line-height: 1.65;
+    font-weight: 300;
   }
 }
 
-/* Skeleton loading */
+/* ── Sections ────────────────────────────────── */
+.showcase-page__sections {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 16px 56px;
+}
+
+/* ── Error ───────────────────────────────────── */
+.showcase-page__error {
+  text-align: center;
+  padding: 64px 16px;
+  color: #f87171;
+
+  p {
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+  }
+}
+
+.error-retry {
+  padding: 10px 28px;
+  border: 1px solid var(--ink-border);
+  background: var(--ink-bg-elevated);
+  color: var(--ink-text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: var(--ink-bg-card);
+    border-color: var(--ink-text-muted);
+  }
+}
+
+/* ── Skeleton ────────────────────────────────── */
 .skeleton-section {
-  margin-bottom: 48px;
+  margin-bottom: 56px;
 }
 
 .skeleton-title {
-  width: 200px;
-  height: 28px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  width: 180px;
+  height: 26px;
+  background: linear-gradient(90deg, var(--ink-bg-elevated) 25%, var(--ink-bg-card) 50%, var(--ink-bg-elevated) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
   border-radius: 4px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .skeleton-grid {
@@ -53,14 +124,14 @@
 }
 
 .skeleton-card {
-  aspect-ratio: 3 / 4;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(90deg, var(--ink-bg-elevated) 25%, var(--ink-bg-card) 50%, var(--ink-bg-elevated) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
-  border-radius: 8px;
+  border-radius: var(--ink-radius);
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
+  0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }

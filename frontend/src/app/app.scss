@@ -1,10 +1,90 @@
 .app-toolbar {
-  .brand {
-    cursor: pointer;
-    font-weight: 600;
-  }
+  position: sticky !important;
+  top: 0;
+  z-index: 100;
+  background: rgba(12, 12, 12, 0.88) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--ink-border) !important;
+  color: var(--ink-text-primary) !important;
+  height: 64px !important;
 
   .spacer {
     flex: 1 1 auto;
   }
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--ink-text-primary);
+
+  &__mark {
+    font-size: 1.25rem;
+    color: var(--ink-accent);
+    line-height: 1;
+    transition: opacity 0.2s ease;
+  }
+
+  &__name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--ink-text-primary);
+  }
+
+  &__dot {
+    color: var(--ink-accent);
+  }
+
+  &:hover .app-brand__mark {
+    opacity: 0.75;
+  }
+}
+
+.nav-link {
+  color: var(--ink-text-secondary) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  letter-spacing: 0.3px;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--ink-text-primary) !important;
+  }
+}
+
+.nav-btn--logout {
+  color: var(--ink-text-secondary) !important;
+  border-color: var(--ink-border) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  transition: border-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    border-color: var(--ink-text-muted) !important;
+    color: var(--ink-text-primary) !important;
+  }
+}
+
+.nav-btn--cta {
+  background: var(--ink-accent) !important;
+  color: #111 !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  letter-spacing: 0.3px;
+  border-radius: 6px !important;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--ink-accent-hover) !important;
+  }
+}
+
+.app-main {
+  min-height: calc(100vh - 64px);
 }

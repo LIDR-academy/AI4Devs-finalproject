@@ -1,25 +1,36 @@
-<main class="showcase-page">
-  @if (loading()) {
-    <div class="showcase-page__skeleton">
-      @for (section of [1, 2, 3, 4]; track section) {
-        <div class="skeleton-section">
-          <div class="skeleton-title"></div>
-          <div class="skeleton-grid">
-            @for (card of [1, 2, 3, 4]; track card) {
-              <div class="skeleton-card"></div>
-            }
+<div class="showcase-page">
+  <section class="showcase-hero">
+    <div class="showcase-hero__bg" aria-hidden="true"></div>
+    <div class="showcase-hero__content">
+      <p class="showcase-hero__eyebrow">La vitrina digital del tatuaje</p>
+      <h1 class="showcase-hero__title">Encuentra tu artista<br><em>perfecto</em></h1>
+      <p class="showcase-hero__sub">Descubre tatuadores certificados, estilos únicos y artistas cerca de ti.</p>
+    </div>
+  </section>
+
+  <div class="showcase-page__sections">
+    @if (loading()) {
+      <div class="showcase-page__skeleton">
+        @for (section of [1, 2, 3, 4]; track section) {
+          <div class="skeleton-section">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-grid">
+              @for (card of [1, 2, 3, 4]; track card) {
+                <div class="skeleton-card"></div>
+              }
+            </div>
           </div>
-        </div>
+        }
+      </div>
+    } @else if (error()) {
+      <div class="showcase-page__error">
+        <p>{{ error() }}</p>
+        <button class="error-retry" (click)="fetchSections()">Reintentar</button>
+      </div>
+    } @else {
+      @for (section of sections(); track section.key) {
+        <app-showcase-section [section]="section" />
       }
-    </div>
-  } @else if (error()) {
-    <div class="showcase-page__error">
-      <p>{{ error() }}</p>
-      <button (click)="fetchSections()">Reintentar</button>
-    </div>
-  } @else {
-    @for (section of sections(); track section.key) {
-      <app-showcase-section [section]="section" />
     }
-  }
-</main>
+  </div>
+</div>

@@ -3,15 +3,21 @@
   flex-direction: column;
   text-decoration: none;
   color: inherit;
-  border-radius: 8px;
+  border-radius: var(--ink-radius);
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: var(--ink-bg-card);
+  border: 1px solid var(--ink-border);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: pointer;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+    transform: translateY(-6px);
+    box-shadow: var(--ink-shadow-lg);
+    border-color: var(--ink-border-accent);
+
+    .artist-card__image {
+      transform: scale(1.06);
+    }
   }
 
   &__image-wrapper {
@@ -19,91 +25,124 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    background: #f5f5f5;
+    background: var(--ink-bg-secondary);
+    flex-shrink: 0;
   }
 
   &__image {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.35s ease;
+    display: block;
   }
 
-  &__badge {
+  &__gradient {
     position: absolute;
-    bottom: 8px;
-    left: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
-
-    &--certified {
-      background: rgba(0, 150, 136, 0.9);
-      color: #fff;
-
-      mat-icon {
-        font-size: 14px;
-        height: 14px;
-        width: 14px;
-      }
-    }
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 35%, rgba(0, 0, 0, 0.8) 100%);
+    pointer-events: none;
   }
 
-  &__body {
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  &__overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 12px;
+    z-index: 1;
   }
 
   &__name {
-    margin: 0;
+    margin: 0 0 2px;
     font-weight: 600;
     font-size: 0.9rem;
+    color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  &__meta {
-    margin: 0;
-    font-size: 0.78rem;
-    color: #666;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  &__icon {
-    font-size: 14px;
-    height: 14px;
-    width: 14px;
-  }
-
-  &__reviews {
-    color: #999;
-    font-size: 0.72rem;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
   }
 
   &__style {
     margin: 0;
-    font-size: 0.75rem;
-    color: #888;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.65);
     text-transform: capitalize;
+    letter-spacing: 0.3px;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    padding: 3px;
+    z-index: 2;
+    color: var(--ink-certified);
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+    }
+  }
+
+  &__body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__location,
+  &__rating {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.74rem;
+    color: var(--ink-text-secondary);
+  }
+
+  &__icon {
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+    color: var(--ink-text-muted);
+
+    &--star {
+      color: var(--ink-accent);
+    }
+  }
+
+  &__reviews {
+    color: var(--ink-text-muted);
+    font-size: 0.68rem;
   }
 
   &__sponsors {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
-    margin-top: 4px;
   }
 
   &__sponsor-logo {
-    height: 18px;
+    height: 16px;
     object-fit: contain;
+    opacity: 0.5;
+    filter: brightness(0) invert(1);
   }
 }
