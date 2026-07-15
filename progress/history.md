@@ -39,3 +39,5 @@
 2026-07-14 | generate-lesson (ad hoc) | n/a | — | Groq json_schema break: gpt-oss-20b + nullable schema; generation_failed fixed.
 2026-07-14 | pending-pdfs-generate (rules align) | n/a | — | DAO types + molecule-owned i18n + spinner tokens (07b665d).
 2026-07-14 | lesson-player | pr_ready | docs/features/lesson-player/ | DoD PASS; results=last slide; save-once
+
+2026-07-15 | api-key-form i18n inline (ad hoc) | n/a | — | Dropped ApiKeyForm labels prop; inline useLocalization; keySavedStatusLabel only. Branch feature-entrega2-HernanLaura.
