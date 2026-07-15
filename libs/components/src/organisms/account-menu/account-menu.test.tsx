@@ -1,7 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { Pressable, Text } from 'react-native';
 
-import { layout, lightColors } from '../../theme';
+import { layout, lightColors, spacing } from '../../theme';
 import { AccountMenu } from './account-menu';
 
 describe('AccountMenu', () => {
@@ -146,10 +146,68 @@ describe('AccountMenu', () => {
       expanded: true,
     });
     const scrim = screen.getByTestId('account-menu-scrim');
-    expect(scrim.props.style).toMatchObject({ flex: 1 });
+    expect(scrim.props.style).toMatchObject({
+      alignItems: 'flex-end',
+      flex: 1,
+      justifyContent: 'flex-start',
+    });
     fireEvent.press(scrim);
 
     await waitFor(() => expect(screen.queryByText('ada@example.com')).toBeNull());
+  });
+
+  it('closes from native modal dismissal and isolates menu presses from the scrim', async () => {
+    await render(
+      <AccountMenu
+        email="ada@example.com"
+        identityLabel="Ada Lovelace"
+        initials="AL"
+        onSettings={jest.fn()}
+        onSignOut={jest.fn()}
+        renderTrigger={({ onPress }) => (
+          <Pressable accessibilityLabel="Open account menu" onPress={onPress}>
+            <Text>AL</Text>
+          </Pressable>
+        )}
+        settingsLabel="Settings"
+        signOutLabel="Sign out"
+      />,
+    );
+
+    fireEvent.press(screen.getByText('AL'));
+    const menu = await screen.findByTestId('account-menu');
+    const stopPropagation = jest.fn();
+
+    expect(menu.props.style).toMatchObject({
+      backgroundColor: expect.any(String),
+      borderRadius: expect.any(Number),
+      gap: spacing.s2,
+      padding: spacing.s3,
+    });
+    fireEvent(menu, 'press', { stopPropagation });
+    expect(stopPropagation).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('ada@example.com')).toBeOnTheScreen();
+    expect(screen.getByText('Ada Lovelace').parent?.parent?.props.style).toMatchObject({
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.s2,
+    });
+    expect(screen.getByText('ada@example.com').props.style).toMatchObject({
+      color: expect.any(String),
+      fontSize: expect.any(Number),
+    });
+    expect(screen.getByText('Ada Lovelace').props.style).toMatchObject({
+      color: expect.any(String),
+      fontSize: expect.any(Number),
+    });
+    expect(screen.getByRole('menuitem', { name: 'Settings' }).props.style).toMatchObject({
+      justifyContent: 'center',
+    });
+    expect(screen.getByText('Settings').props.style).toMatchObject({
+      color: expect.any(String),
+      fontSize: expect.any(Number),
+    });
+
   });
 
   it('dismisses with Escape on web', async () => {
@@ -173,6 +231,33 @@ describe('AccountMenu', () => {
     fireEvent.press(screen.getByText('AL'));
     const menu = await screen.findByTestId('account-menu');
     fireEvent(menu, 'accessibilityEscape');
+
+    await waitFor(() => expect(screen.queryByText('ada@example.com')).toBeNull());
+  });
+
+  it('closes from the native modal dismissal request', async () => {
+    await render(
+      <AccountMenu
+        email="ada@example.com"
+        identityLabel="Ada Lovelace"
+        initials="AL"
+        onSettings={jest.fn()}
+        onSignOut={jest.fn()}
+        renderTrigger={({ onPress }) => (
+          <Pressable accessibilityLabel="Open account menu" onPress={onPress}>
+            <Text>AL</Text>
+          </Pressable>
+        )}
+        settingsLabel="Settings"
+        signOutLabel="Sign out"
+      />,
+    );
+
+    fireEvent.press(screen.getByText('AL'));
+    await screen.findByTestId('account-menu-scrim');
+    await act(async () => {
+      fireEvent(screen.getByTestId('account-menu-scrim').parent, 'requestClose');
+    });
 
     await waitFor(() => expect(screen.queryByText('ada@example.com')).toBeNull());
   });

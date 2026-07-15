@@ -48,4 +48,17 @@ describe('useAppChrome', () => {
 
     expect(result.current.signOutOpen).toBe(true);
   });
+
+  it('marks Home active only at the root pathname', async () => {
+    const { result, rerender } = await renderHook(({ pathname }) => useAppChrome(pathname), {
+      initialProps: { pathname: '/' },
+    });
+
+    expect(result.current.home).toEqual({ active: true, label: 'nav.myLessons' });
+
+    await rerender({ pathname: '/lesson/123' });
+
+    expect(result.current.home).toEqual({ active: false, label: 'nav.myLessons' });
+    expect(result.current.newLesson).toEqual({ active: false, label: 'nav.newLesson' });
+  });
 });

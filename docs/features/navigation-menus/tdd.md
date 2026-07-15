@@ -52,3 +52,8 @@
 - @s2/@s5/@s6/@s7/@s13/@s14/@s17/@s19 RED missing AppChrome state hook → GREEN `use-app-chrome` owns identity, nav derivation, and controlled SignOut state; handlers remain in the component.
 - @s14 RED missing AppChrome Storybook coverage → GREEN Content and Loading stories plus matching browser checks.
 - @s16 regression test added: route-source assertions prevent Home Upload/Settings links and Settings/header SignOut paths returning.
+
+## Mutation re-work
+- @s3/@s4/@s12/@s14/@s18 RED strengthened indicator/default, avatar branch/style, token-style, modal, and Escape listener assertions; components mutation re-run 100%.
+- @s2/@s13/@s14/@s19 RED strengthened desktop/mobile routes, root active state, and identity fallback/initials assertions; AppChrome and route mutants killed.
+- @s14 RED added repeated-space and four-word identity initials assertion; helper mutant still survives scoped mutation despite exact `AB` output.

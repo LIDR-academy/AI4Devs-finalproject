@@ -35,6 +35,40 @@ describe('getSessionIdentity', () => {
     });
   });
 
+  it('keeps only the first two initials from multi-word names', () => {
+    expect(
+      getSessionIdentity({
+        email: 'learner@example.com',
+        user_metadata: { full_name: 'Ada Byron King' },
+      }),
+    ).toEqual({
+      email: 'learner@example.com',
+      initials: 'AB',
+      label: 'Ada Byron King',
+    });
+  });
+
+  it('ignores repeated spaces while limiting initials to two letters', () => {
+    expect(
+      getSessionIdentity({
+        email: 'learner@example.com',
+        user_metadata: { full_name: ' Ada   Byron  King Doe ' },
+      }),
+    ).toEqual({
+      email: 'learner@example.com',
+      initials: 'AB',
+      label: ' Ada   Byron  King Doe ',
+    });
+  });
+
+  it('preserves empty optional session fields instead of inventing an identity', () => {
+    expect(getSessionIdentity({ email: null })).toEqual({
+      label: '',
+      email: '',
+      initials: '',
+    });
+  });
+
   it('returns no identity while the session user is unavailable', () => {
     expect(getSessionIdentity(undefined)).toBeNull();
   });

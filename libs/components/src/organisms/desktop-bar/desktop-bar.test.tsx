@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
+import { layout, lightColors, spacing } from '../../theme';
 import { DesktopBar } from './desktop-bar';
 
 describe('DesktopBar', () => {
@@ -14,11 +15,49 @@ describe('DesktopBar', () => {
     );
 
     expect(screen.getByText('AI Study Buddy')).toBeOnTheScreen();
+    expect(screen.getByText('AI Study Buddy').props.style).toMatchObject({
+      color: lightColors.onSurface,
+      fontSize: expect.any(Number),
+    });
     expect(screen.getByRole('link', { name: 'Home' })).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'New lesson' })).toBeOnTheScreen();
     expect(screen.getByTestId('desktop-alerts')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Alerts' })).toBeNull();
     expect(screen.getByText('HL')).toBeOnTheScreen();
+  });
+
+  it('uses tokenized desktop layout for brand, navigation, and actions', async () => {
+    await render(
+      <DesktopBar
+        avatar={<Text>HL</Text>}
+        home={{ label: 'Home', onPress: jest.fn() }}
+        newLesson={{ label: 'New lesson', onPress: jest.fn() }}
+      />,
+    );
+
+    const root = screen.getByText('AI Study Buddy').parent?.parent;
+    expect(root?.props.style).toMatchObject({
+      alignItems: 'center',
+      backgroundColor: lightColors.surface,
+      flexDirection: 'row',
+      gap: spacing.s4,
+      minHeight: layout.touchTarget,
+    });
+    expect(screen.getByText('AI Study Buddy').parent?.props.style).toMatchObject({
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.s2,
+    });
+    expect(screen.getByRole('link', { name: 'Home' }).parent?.props.style).toMatchObject({
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.s1,
+    });
+    expect(screen.getByTestId('desktop-alerts').parent?.props.style).toMatchObject({
+      alignItems: 'center',
+      flexDirection: 'row',
+      marginLeft: 'auto',
+    });
   });
 
   it('forwards primary destination presses to its injected handlers', async () => {

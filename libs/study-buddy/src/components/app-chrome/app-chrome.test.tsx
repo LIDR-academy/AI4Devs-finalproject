@@ -53,6 +53,21 @@ describe('AppChrome', () => {
   it('navigates to primary desktop destinations', async () => {
     await render(<AppChrome />);
 
+    expect(screen.getByText('AI Study Buddy')).toBeOnTheScreen();
+    expect(screen.queryByTestId('mobile-top-bar')).toBeNull();
+    await act(async () => {
+      fireEvent.press(screen.getByRole('link', { name: 'nav.myLessons' }));
+      fireEvent.press(screen.getByRole('link', { name: 'nav.newLesson' }));
+    });
+
+    expect(navigate).toHaveBeenNthCalledWith(1, '/');
+    expect(navigate).toHaveBeenNthCalledWith(2, '/upload');
+  });
+
+  it('wires mobile primary destinations to their exact routes', async () => {
+    mockUseBreakpoint.mockReturnValue('mobile');
+    await render(<AppChrome />);
+
     await act(async () => {
       fireEvent.press(screen.getByRole('link', { name: 'nav.myLessons' }));
       fireEvent.press(screen.getByRole('link', { name: 'nav.newLesson' }));
