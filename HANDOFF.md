@@ -49,11 +49,12 @@ Retoma el trabajo desde el punto indicado en "Estado detallado" de HANDOFF.md.
 
 ### Dónde quedamos
 
-- ✅ **Fase 0** (fundaciones) y **US0001** (login) mergeadas a `main` (PRs #1–#3).
-- 🟣 **US0003 lista para PR** — rama `feature/us0003-vitrina`.
-  - **TASK0001** ✅ Backend `GET /api/showcase`: `ShowcaseService` (Haversine + secciones), `ShowcaseController`, DTOs (`ShowcaseResponse`, `ShowcaseSection`, `ShowcaseItem`, `ArtistCardDto`, `SponsorBadgeDto`). 7 tests integración (Testcontainers postgis) en verde.
-  - **TASK0002** ✅ Frontend vitrina: `ShowcaseService`, `ArtistCardComponent`, `ShowcaseSectionComponent`, `ShowcasePageComponent` (ruta `/`, geolocalización, skeleton, error handling). 19 tests en verde.
-- ⬜ Prompts de US0003 pendientes de registrar en `prompts/00-all-prompts.md`.
+- ✅ **Fase 0**, **US0001**, **US0003–US0007** mergeadas a `main` (PRs #1–#11).
+- 🟣 **US0008 lista para PR** — rama `feature/us0008-seleccionar-slot`.
+  - **TASK0001** ✅ Backend: `AvailabilityService` (slots semanales desde la grilla `Availability`, excluye bookings confirmados/holds activos/blocked dates/pasado) + `POST /api/bookings/hold` (booking `pending_payment` con TTL 5 min, `SELECT FOR UPDATE` por artista contra race conditions, limpieza lazy de holds expirados). 12 tests integración; suite backend 59/59.
+  - **TASK0002** ✅ Frontend: `WeeklyCalendarComponent` (navegación solo a futuro), `BookingSummaryComponent` (ruta `/reserva` con authGuard, countdown 5 min), integración en perfil de artista (sin sesión → login con returnUrl + slot preseleccionado en query params; 409 → mensaje). 12 tests; suite frontend 54/54.
+- El botón "Pagar depósito" navega a `/pago/:bookingId` — esa ruta la implementa **US0009**.
+- **Pendiente deferred**: `fix-search-dropdown` (dropdown de sugerencias se superpone con "Resultados").
 
 ### Decisiones/contexto no evidentes en el repo
 

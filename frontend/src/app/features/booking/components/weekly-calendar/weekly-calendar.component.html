@@ -1,0 +1,56 @@
+<div class="calendar">
+  <div class="calendar__header">
+    <button
+      type="button"
+      class="calendar__nav"
+      [disabled]="!canGoPrevious()"
+      (click)="previousWeek()"
+      aria-label="Semana anterior"
+    >
+      <span class="material-icons">chevron_left</span>
+    </button>
+    <span class="calendar__range">{{ weekRangeLabel() }}</span>
+    <button type="button" class="calendar__nav" (click)="nextWeek()" aria-label="Semana siguiente">
+      <span class="material-icons">chevron_right</span>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="calendar__skeleton" aria-hidden="true">
+      @for (i of [1, 2, 3, 4, 5, 6, 7]; track i) {
+        <div class="calendar__skeleton-col"></div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="calendar__error">
+      <p>No pudimos cargar la disponibilidad.</p>
+      <button type="button" class="calendar__retry" (click)="reload()">Reintentar</button>
+    </div>
+  } @else {
+    <div class="calendar__grid">
+      @for (day of days(); track day.date) {
+        <div class="calendar__day">
+          <div class="calendar__day-header">
+            <span class="calendar__day-label">{{ day.label }}</span>
+            <span class="calendar__day-number">{{ day.dayNumber }}</span>
+          </div>
+          <div class="calendar__slots">
+            @for (slot of day.slots; track slot.startTime) {
+              <button
+                type="button"
+                class="calendar__slot"
+                [class.calendar__slot--selected]="selectedSlot() === slot"
+                [disabled]="!slot.isAvailable"
+                (click)="selectSlot(slot)"
+              >
+                {{ slot.startTime }}
+              </button>
+            } @empty {
+              <span class="calendar__no-slots">—</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

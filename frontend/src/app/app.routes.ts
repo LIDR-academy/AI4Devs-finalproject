@@ -27,6 +27,14 @@ export const routes: Routes = [
       import('./features/account/account.component').then((m) => m.AccountComponent)
   },
   {
+    path: 'reserva',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/booking/booking-summary/booking-summary.component').then(
+        (m) => m.BookingSummaryComponent
+      )
+  },
+  {
     path: 'artista/:slug',
     loadComponent: () =>
       import('./features/artist-profile/artist-profile.component').then(

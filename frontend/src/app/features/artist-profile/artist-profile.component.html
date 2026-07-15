@@ -175,6 +175,18 @@
     </aside>
   </div>
 
+  <!-- RESERVA (US0008) -->
+  <section class="booking-section">
+    <h2 class="section-title">Reserva una sesión</h2>
+    @if (holdError(); as error) {
+      <div class="booking-section__error" role="alert">{{ error }}</div>
+    }
+    @if (holding()) {
+      <p class="booking-section__holding">Reservando tu horario…</p>
+    }
+    <app-weekly-calendar [artistProfileId]="a.id" (slotSelected)="onSlotSelected($event)" />
+  </section>
+
   <!-- REVIEWS -->
   <section class="reviews-section">
     <h2 class="section-title">Reseñas</h2>

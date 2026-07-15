@@ -79,7 +79,7 @@ describe('ArtistProfileComponent', () => {
         { provide: ArtistProfileService, useValue: artistService },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { params: { slug: 'carlos-ink' } } }
+          useValue: { snapshot: { params: { slug: 'carlos-ink' }, queryParams: {} } }
         }
       ]
     }).compileComponents();
@@ -99,6 +99,19 @@ describe('ArtistProfileComponent', () => {
 
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('.hero__name')?.textContent).toContain('Carlos Ink');
+  }));
+
+  it('mapea dayOfWeek con 0=lunes en la disponibilidad semanal', fakeAsync(() => {
+    artistService.getArtistProfile.and.returnValue(of(mockArtist));
+    createComponent();
+    fixture.detectChanges();
+    tick();
+
+    // mockArtist tiene availableSlots con dayOfWeek: 1 → martes (0=lunes según data model)
+    const week = component.getWeekAvailability();
+    expect(week.map((d) => d.day)).toEqual(['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']);
+    expect(week.find((d) => d.day === 'Ma')?.available).toBeTrue();
+    expect(week.find((d) => d.day === 'Lu')?.available).toBeFalse();
   }));
 
   it('shows loading skeleton initially', () => {

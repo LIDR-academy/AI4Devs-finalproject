@@ -29,6 +29,7 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ShowcaseService>();
 builder.Services.AddScoped<ArtistQueryService>();
+builder.Services.AddScoped<AvailabilityService>();
 builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 

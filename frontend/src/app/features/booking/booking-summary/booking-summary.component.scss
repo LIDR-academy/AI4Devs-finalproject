@@ -1,0 +1,116 @@
+.summary {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+
+  &__card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--ink-bg-card);
+    border: 1px solid var(--ink-border);
+    border-radius: var(--ink-radius);
+    padding: 2rem;
+  }
+
+  &__title {
+    color: var(--ink-text-primary);
+    font-size: 1.4rem;
+    margin: 0 0 1.25rem;
+  }
+
+  &__countdown {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--ink-border-accent);
+    border-radius: 8px;
+    color: var(--ink-accent);
+    margin-bottom: 1.5rem;
+
+    &--warning {
+      color: #f87171;
+      border-color: rgba(248, 113, 113, 0.4);
+    }
+  }
+
+  &__expired {
+    text-align: center;
+    color: var(--ink-text-secondary);
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+
+    .material-icons {
+      font-size: 2rem;
+      color: var(--ink-text-muted);
+    }
+  }
+
+  &__back {
+    color: var(--ink-accent);
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0 0 1.75rem;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    dt {
+      color: var(--ink-text-secondary);
+    }
+
+    dd {
+      color: var(--ink-text-primary);
+      margin: 0;
+      text-align: right;
+      text-transform: capitalize;
+    }
+
+    &--deposit {
+      border-top: 1px solid var(--ink-border);
+      padding-top: 0.75rem;
+
+      dd {
+        color: var(--ink-accent);
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  &__pay {
+    width: 100%;
+    padding: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--ink-accent);
+    color: var(--ink-bg);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--ink-accent-hover);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  &__note {
+    color: var(--ink-text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+    margin: 0.75rem 0 0;
+  }
+}

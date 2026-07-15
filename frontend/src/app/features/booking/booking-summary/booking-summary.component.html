@@ -1,0 +1,59 @@
+@if (booking(); as b) {
+  <div class="summary">
+    <div class="summary__card">
+      <h1 class="summary__title">Resumen de tu reserva</h1>
+
+      @if (!expired()) {
+        <div class="summary__countdown" [class.summary__countdown--warning]="remainingSeconds() < 60">
+          <span class="material-icons">timer</span>
+          <span>Tu horario está reservado por <strong>{{ countdownLabel }}</strong></span>
+        </div>
+      } @else {
+        <div class="summary__expired">
+          <span class="material-icons">timer_off</span>
+          <p>Tiempo expirado. El horario fue liberado.</p>
+          <a class="summary__back" [routerLink]="['/artista', b.artist.slug]">Volver a elegir un horario</a>
+        </div>
+      }
+
+      <dl class="summary__details">
+        <div class="summary__row">
+          <dt>Artista</dt>
+          <dd>{{ b.artist.artistName }}</dd>
+        </div>
+        <div class="summary__row">
+          <dt>Fecha</dt>
+          <dd>{{ b.bookingDate | date: 'EEEE dd MMMM yyyy' }}</dd>
+        </div>
+        <div class="summary__row">
+          <dt>Hora</dt>
+          <dd>{{ b.startTime }} — {{ b.endTime }}</dd>
+        </div>
+        <div class="summary__row">
+          <dt>Duración estimada</dt>
+          <dd>{{ durationLabel() }}</dd>
+        </div>
+        <div class="summary__row">
+          <dt>Precio estimado</dt>
+          <dd>{{ formatCLP(b.estimatedPriceMin) }} — {{ formatCLP(b.estimatedPriceMax) }}</dd>
+        </div>
+        <div class="summary__row summary__row--deposit">
+          <dt>Depósito a pagar</dt>
+          <dd>{{ formatCLP(b.depositAmount) }}</dd>
+        </div>
+      </dl>
+
+      <button
+        type="button"
+        class="summary__pay"
+        [disabled]="expired()"
+        (click)="payDeposit()"
+      >
+        Pagar depósito
+      </button>
+      <p class="summary__note">
+        El depósito se descuenta del precio final de tu tatuaje.
+      </p>
+    </div>
+  </div>
+}

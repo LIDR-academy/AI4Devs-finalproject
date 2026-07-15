@@ -1196,4 +1196,56 @@ Listo el merge a main. Ahora puedes continuar segun el plan
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 11 sesiones · 69 prompts documentados*
+# Sesión 12 — US0008 seleccionar slot y resumen de reserva
+
+> 📅 2026-07-15 · Claude Code · Claude Fable 5 · medium
+
+---
+
+## 70 — Analizar estado del proyecto y continuar el plan
+
+> 📋 2026-07-15T17:40:00Z · Claude Code · Claude Fable 5 · medium · ~40K tokens · rodri
+
+```
+Analiza el proyeto, especialmente project status y dime en qué parte del plan
+debemos continuar. Ojo que project status puede que no esté actualizad, pero
+entiendo que ya debería estar realizado hasta el us0007
+```
+
+*(Verificado contra git: US0007 ya mergeada (PR #11) aunque PROJECT_STATUS decía "PR pendiente"; HANDOFF desactualizado en US0003. Siguiente paso: US0008.)*
+
+---
+
+## 71 — Actualizar docs e implementar US0008
+
+> 📋 2026-07-15T17:50:00Z · Claude Code · Claude Fable 5 · medium · ~60K tokens · rodri
+
+```
+Sí, actualiza los documentos y empieza con US0008
+```
+
+*(Actualizados PROJECT_STATUS/HANDOFF. TASK0001: GET /api/artists/{id}/availability + POST /api/bookings/hold con TTL 5 min, lock FOR UPDATE contra race conditions, limpieza lazy de holds expirados — 12 tests integración, suite backend 59/59. TASK0002: WeeklyCalendarComponent + BookingSummaryComponent con countdown, ruta /reserva con authGuard, integración en perfil con redirect a login y slot preseleccionado — 12 tests, suite frontend 54/54. Branch feature/us0008-seleccionar-slot.)*
+
+---
+
+## Resumen de archivos modificados (sesión 12)
+
+| Archivo | Acción |
+|---|---|
+| `backend/Application/Dtos/BookingsDtos.cs` | Creado — DTOs de disponibilidad y booking |
+| `backend/Domain/Services/AvailabilityService.cs` | Creado — slots semanales + hold con TTL |
+| `backend/Controllers/AvailabilityController.cs` | Creado — GET availability |
+| `backend/Controllers/BookingsController.cs` | Creado — POST /bookings/hold |
+| `backend/Tests/AvailabilityTests.cs` | Creado — 12 tests integración |
+| `backend/Program.cs` | Actualizado — registra AvailabilityService |
+| `frontend/src/app/core/models/booking.models.ts` | Creado — modelos de booking |
+| `frontend/src/app/features/booking/` | Creado — servicio, calendario semanal, resumen de reserva |
+| `frontend/src/app/features/artist-profile/` | Actualizado — sección de reserva + flujo hold/login |
+| `frontend/src/app/app.routes.ts` | Actualizado — ruta /reserva con authGuard |
+| `PROJECT_STATUS.md` | Actualizado — US0008 |
+| `HANDOFF.md` | Actualizado — estado detallado |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 12 |
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 12 sesiones · 71 prompts documentados*
