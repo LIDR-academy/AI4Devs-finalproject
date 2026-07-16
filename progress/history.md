@@ -48,3 +48,5 @@
 2026-07-16 | new-lesson-dialog (ad hoc) | n/a | — | Upload+generate in Dialog; extraction reset; upload screen wired.
 
 2026-07-16 | implementer-rename + pdf-upload tests (ad hoc) | n/a | — | Renamed implementator→implementer; fixed pdf-upload storage/RN mocks + continue assert.
+
+2026-07-16 | lesson-player (ad hoc) | n/a | docs/features/lesson-player/ | Top arrow IconButtons beside progress via LessonPlayerNavigator (ae7e77e).
