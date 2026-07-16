@@ -50,3 +50,5 @@
 2026-07-16 | implementer-rename + pdf-upload tests (ad hoc) | n/a | — | Renamed implementator→implementer; fixed pdf-upload storage/RN mocks + continue assert.
 
 2026-07-16 | lesson-player (ad hoc) | n/a | docs/features/lesson-player/ | Top arrow IconButtons beside progress via LessonPlayerNavigator (ae7e77e).
+
+2026-07-16 | lesson-player open route (ad hoc) | n/a | — | Open lesson → /lesson/[id]/player; PRD R4 struck; orchestrator diagram fix loops.
