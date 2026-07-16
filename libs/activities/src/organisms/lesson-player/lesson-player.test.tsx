@@ -528,28 +528,28 @@ describe('LessonPlayer', () => {
 
     await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
     const deckRoot = screen.getAllByTestId(LESSON_PLAYER_TEST_ID).at(-1)!;
+    const header = deckRoot.children[0] as unknown as { props: { style: unknown } };
     const body = deckRoot.children[1] as unknown as {
       props: { style: unknown; contentContainerStyle: unknown };
     };
-    const nav = deckRoot.children[2] as unknown as { props: { style: unknown } };
-    expect(body.props.style).toEqual(expect.objectContaining({ flex: 1 }));
-    expect(body.props.contentContainerStyle).toEqual(expect.objectContaining({ flexGrow: 1 }));
-    expect(nav.props.style).toEqual(
+    expect(header.props.style).toEqual(
       expect.objectContaining({
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        alignItems: 'center',
         gap: 12,
       }),
     );
+    expect(body.props.style).toEqual(expect.objectContaining({ flex: 1 }));
+    expect(body.props.contentContainerStyle).toEqual(expect.objectContaining({ flexGrow: 1 }));
     expect(screen.getByText('Slide 1 of 5')).toBeTruthy();
     const next = screen.getByRole('button', { name: 'Next' });
     expect(next.props.accessibilityLabel).toBe('Next');
-    expect(screen.getByText('Next')).toBeTruthy();
+    expect(screen.getByText('arrow_forward')).toBeTruthy();
 
     await pressNext();
     expect(screen.getByText('Slide 2 of 5')).toBeTruthy();
     const back = screen.getByRole('button', { name: 'Back' });
     expect(back.props.accessibilityLabel).toBe('Back');
-    expect(screen.getByText('Back')).toBeTruthy();
+    expect(screen.getByText('arrow_back')).toBeTruthy();
   });
 });

@@ -1,4 +1,4 @@
-import { Button, LessonProgressIndicator } from '@helsoft/components';
+import { Button } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
 import { ScrollView, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -6,6 +6,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { LessonResults } from '../lesson-results/lesson-results';
 import { SlideView } from '../slide-view/slide-view';
 import type { LessonPlayerProps } from './lesson-player.types';
+import { LessonPlayerNavigator } from './lesson-player-navigator/lesson-player-navigator';
 import { useLessonPlayer } from './use-lesson-player';
 
 export const LESSON_PLAYER_TEST_ID = 'lesson-player';
@@ -114,10 +115,14 @@ const LessonPlayerDeck = ({ lesson, onBackToLessons }: DeckProps) => {
 
   return (
     <View style={styles.root} testID={LESSON_PLAYER_TEST_ID}>
-      <LessonProgressIndicator
+      <LessonPlayerNavigator
         slides={progressSlides}
         current={player.currentIndex}
         label={stepLabel}
+        canGoBack={player.canGoBack}
+        canGoNext={player.canGoNext}
+        onBack={player.goBack}
+        onNext={player.goNext}
       />
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
         {player.isResultsSlide ? (
@@ -137,18 +142,6 @@ const LessonPlayerDeck = ({ lesson, onBackToLessons }: DeckProps) => {
           />
         ) : null}
       </ScrollView>
-      <View style={styles.nav}>
-        {player.canGoBack ? (
-          <Button variant="outlined" accessibilityLabel={t('player.back')} onPress={player.goBack}>
-            {t('player.back')}
-          </Button>
-        ) : null}
-        {player.canGoNext ? (
-          <Button variant="filled" accessibilityLabel={t('player.next')} onPress={player.goNext}>
-            {t('player.next')}
-          </Button>
-        ) : null}
-      </View>
     </View>
   );
 };
@@ -163,11 +156,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   bodyContent: {
     flexGrow: 1,
-  },
-  nav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: theme.spacing.s3,
   },
   state: {
     flex: 1,

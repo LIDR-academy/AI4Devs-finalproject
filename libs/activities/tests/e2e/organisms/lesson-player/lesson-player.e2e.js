@@ -17,7 +17,7 @@ test('Lesson player shows first slide and progress', async ({ page }) => {
 
   await expect(canvas.getByText('Welcome', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Slide 1 of 5', { exact: true })).toBeVisible();
-  await expect(canvas.getByText('Next', { exact: true })).toBeVisible();
+  await expect(canvas.getByRole('button', { name: 'Next' })).toBeVisible();
 });
 
 // @s2/@s20 — Next advances; Back from results returns to last content slide.
@@ -29,13 +29,13 @@ test('Lesson player navigates to results and back', async ({ page }) => {
 
   // 4 content slides → results is step 5
   for (let i = 0; i < 4; i++) {
-    await canvas.getByText('Next', { exact: true }).click();
+    await canvas.getByRole('button', { name: 'Next' }).click();
   }
 
   await expect(canvas.getByText('Slide 5 of 5', { exact: true })).toBeVisible();
-  await expect(canvas.getByText('Back', { exact: true }).first()).toBeVisible();
+  await expect(canvas.getByRole('button', { name: 'Back' })).toBeVisible();
 
-  await canvas.getByText('Back', { exact: true }).first().click();
+  await canvas.getByRole('button', { name: 'Back' }).click();
   await expect(canvas.getByText('Summary', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Slide 4 of 5', { exact: true })).toBeVisible();
 });
@@ -64,8 +64,8 @@ test('Lesson player shows empty state for zero slides', async ({ page }) => {
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.getByText('This lesson has no slides yet.', { exact: true })).toBeVisible();
-  await expect(canvas.getByText('Back', { exact: true })).toBeVisible();
-  await expect(canvas.getByText('Next', { exact: true })).toHaveCount(0);
+  await expect(canvas.getByRole('button', { name: 'Back' })).toBeVisible();
+  await expect(canvas.getByRole('button', { name: 'Next' })).toHaveCount(0);
 });
 
 // @s16 — Error state with Retry + Back.
@@ -86,8 +86,8 @@ test('Lesson player is usable on a mobile viewport', async ({ page }) => {
 
   await expect(canvas.getByText('Welcome', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Slide 1 of 5', { exact: true })).toBeVisible();
-  await expect(canvas.getByText('Next', { exact: true })).toBeVisible();
-  await canvas.getByText('Next', { exact: true }).click();
+  await expect(canvas.getByRole('button', { name: 'Next' })).toBeVisible();
+  await canvas.getByRole('button', { name: 'Next' }).click();
   await expect(canvas.getByText('France', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Slide 2 of 5', { exact: true })).toBeVisible();
 });
@@ -100,7 +100,7 @@ test('Lesson player is usable on a web viewport', async ({ page }) => {
 
   await expect(canvas.getByText('Welcome', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Slide 1 of 5', { exact: true })).toBeVisible();
-  await expect(canvas.getByText('Next', { exact: true })).toBeVisible();
-  await canvas.getByText('Next', { exact: true }).click();
+  await expect(canvas.getByRole('button', { name: 'Next' })).toBeVisible();
+  await canvas.getByRole('button', { name: 'Next' }).click();
   await expect(canvas.getByText('France', { exact: true })).toBeVisible();
 });
