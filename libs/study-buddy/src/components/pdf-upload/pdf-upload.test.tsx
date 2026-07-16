@@ -155,12 +155,12 @@ describe('PdfUpload', () => {
   });
 
   // @s6 — once stage is 'success', the panel shows the Content summary from the typed result.
-  // Also asserts the summary's own i18n key labels and the continue affordance's key (mutation-kill
-  // guard, round-3 pass) — the prior version only checked the interpolated values, never the
-  // `t('upload.filenameLabel')`/`t('upload.pageCountLabel')`/`t('upload.imageCountLabel')`/
-  // `t('upload.continue')` keys passed into `labels`, so a mutation blanking any one of those keys
-  // went unnoticed.
-  it('shows the content summary, its field labels, and the continue affordance once stage is success', async () => {
+  // Also asserts the summary's own i18n key labels (mutation-kill guard, round-3 pass) — the prior
+  // version only checked the interpolated values, never the `t('upload.filenameLabel')`/
+  // `t('upload.pageCountLabel')`/`t('upload.imageCountLabel')` keys passed into `labels`, so a
+  // mutation blanking any one of those keys went unnoticed. No continue button: `NewLessonDialog`
+  // auto-advances to the generate step via `onExtracted`, so `usePdfUpload` never sets `onContinue`.
+  it('shows the content summary and its field labels once stage is success', async () => {
     mockUsePdfExtraction.mockReturnValue(
       extractionValue({
         stage: 'success',
@@ -183,7 +183,6 @@ describe('PdfUpload', () => {
     expect(screen.getByText('upload.filenameLabel')).toBeTruthy();
     expect(screen.getByText('upload.pageCountLabel')).toBeTruthy();
     expect(screen.getByText('upload.imageCountLabel')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'upload.continue' })).toBeTruthy();
   });
 
   // N5 (accessibility review round-1 fix) — the wiring layer computes the image-count row's

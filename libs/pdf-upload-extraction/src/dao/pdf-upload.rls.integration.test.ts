@@ -168,7 +168,7 @@ describe('pdf-upload-extraction RLS (@s14, live local Supabase)', () => {
     const path = `${userA.userId}/${documentAId}/source.pdf`;
     const { error: uploadError } = await userA.client.storage
       .from('pdf-uploads')
-      .upload(path, new Blob([new Uint8Array([1, 2, 3])]), {
+      .upload(path, new Uint8Array([1, 2, 3]), {
         contentType: 'application/pdf',
         upsert: true,
       });
@@ -191,7 +191,7 @@ describe('pdf-upload-extraction RLS (@s14, live local Supabase)', () => {
     const path = `${userA.userId}/${documentAId}/anon-attempt.pdf`;
     const { error } = await anonClient.storage
       .from('pdf-uploads')
-      .upload(path, new Blob([new Uint8Array([1])]), { contentType: 'application/pdf' });
+      .upload(path, new Uint8Array([1]), { contentType: 'application/pdf' });
 
     expect(error).not.toBeNull();
   });

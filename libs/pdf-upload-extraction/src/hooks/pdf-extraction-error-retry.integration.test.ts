@@ -1,5 +1,10 @@
 /** @jest-environment jsdom */
 
+jest.mock('react-native', () => ({
+  Platform: { OS: 'web' },
+  useWindowDimensions: jest.fn(),
+}));
+
 import { useSession } from '@helsoft/hooks';
 import type { SupabaseClient } from '@helsoft/supabase-services';
 import { FunctionsFetchError, initSupabase } from '@helsoft/supabase-services';
