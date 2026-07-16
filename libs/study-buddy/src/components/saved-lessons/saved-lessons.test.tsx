@@ -105,8 +105,8 @@ describe('SavedLessons', () => {
     expect(screen.getByText(/Jul(y)?\s*13,?\s*2026/)).toBeTruthy();
   });
 
-  // @s6 — reopen navigates to /lesson/[id] (existing entry, starts from top).
-  it('navigates to /lesson/[id] when a lesson is opened', async () => {
+  // @s6 — reopen navigates to /lesson/[id]/player (existing entry, starts from top).
+  it('navigates to /lesson/[id]/player when a lesson is opened', async () => {
     mockUseLessons.mockReturnValue(
       lessonsValue({
         lessons: [
@@ -123,7 +123,7 @@ describe('SavedLessons', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Open Capitals' }));
 
     expect(push).toHaveBeenCalledWith({
-      pathname: '/lesson/[id]',
+      pathname: '/lesson/[id]/player',
       params: { id: 'lesson-42' },
     });
   });

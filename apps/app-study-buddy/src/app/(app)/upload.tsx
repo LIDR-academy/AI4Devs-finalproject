@@ -18,7 +18,7 @@ export default function UploadScreen() {
 
   const handleOpenLesson = useCallback(
     (lessonId: string) => {
-      router.push({ pathname: '/lesson/[id]', params: { id: lessonId } });
+      router.push({ pathname: '/lesson/[id]/player', params: { id: lessonId } });
     },
     [router],
   );

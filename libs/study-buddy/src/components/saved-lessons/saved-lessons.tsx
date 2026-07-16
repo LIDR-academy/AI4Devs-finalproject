@@ -22,7 +22,7 @@ export const SavedLessons = () => {
 
   const onOpenLesson = useCallback(
     (id: string) => {
-      router.push({ pathname: '/lesson/[id]', params: { id } });
+      router.push({ pathname: '/lesson/[id]/player', params: { id } });
     },
     [router],
   );
