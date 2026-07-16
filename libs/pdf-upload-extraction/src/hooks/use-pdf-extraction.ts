@@ -70,11 +70,17 @@ export const usePdfExtraction = (): UsePdfExtractionResult => {
     await run(lastAttempt.input, lastAttempt.documentId);
   }, [run]);
 
+  const reset = useCallback(() => {
+    lastAttemptRef.current = null;
+    dispatch({ type: 'extract/reset' });
+  }, []);
+
   return {
     extract,
     stage: state.stage,
     result: state.result,
     error: state.error,
     retry,
+    reset,
   };
 };

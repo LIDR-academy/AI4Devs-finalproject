@@ -18,6 +18,8 @@ export * from './components/matching-activity/matching-activity';
 export type * from './components/matching-activity/matching-activity.types';
 export * from './components/multiple-choice-activity/multiple-choice-activity';
 export type * from './components/multiple-choice-activity/multiple-choice-activity.types';
+export * from './components/new-lesson-dialog/new-lesson-dialog';
+export type * from './components/new-lesson-dialog/new-lesson-dialog.types';
 export * from './components/open-ended-activity/open-ended-activity';
 export type * from './components/open-ended-activity/open-ended-activity.types';
 export * from './components/pdf-documents/pdf-documents';

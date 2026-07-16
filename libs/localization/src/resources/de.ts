@@ -76,6 +76,8 @@ export const de: TranslationResource = {
         action: 'API-Schlüssel hinzufügen',
       },
       chooseFile: 'PDF auswählen',
+      dialogHeadline: 'PDF hochladen',
+      dialogClose: 'Schließen',
       loading: 'Wird extrahiert…',
       filenameLabel: 'Datei',
       pageCountLabel: 'Seiten',
@@ -99,6 +101,7 @@ export const de: TranslationResource = {
       },
     },
     generation: {
+      dialogHeadline: 'Lektion erstellen',
       composition: {
         heading: 'Lektionsinhalt',
         instructionalOnly: 'Nur lehrreich',

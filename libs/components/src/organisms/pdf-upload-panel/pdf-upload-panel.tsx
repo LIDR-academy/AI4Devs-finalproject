@@ -84,7 +84,7 @@ export const PdfUploadPanel = ({
               <Text style={styles.summaryLabel}>{t('upload.imageCountLabel')}</Text>
               <Text style={styles.summaryValue}>{imageCount}</Text>
             </View>
-            <Button onPress={onContinue}>{t('upload.continue')}</Button>
+            {onContinue ? <Button onPress={onContinue}>{t('upload.continue')}</Button> : null}
           </View>
         ) : null}
 

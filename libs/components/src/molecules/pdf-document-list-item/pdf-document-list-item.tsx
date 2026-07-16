@@ -57,6 +57,7 @@ export const PdfDocumentListItem = ({
       </View>
       <View style={styles.actions}>
         <Button
+          style={styles.actionButton}
           variant="tonal"
           size="small"
           onPress={onAction}
@@ -100,6 +101,9 @@ const styles = StyleSheet.create((theme) => ({
   meta: {
     ...theme.typography.bodyMedium,
     color: theme.colors.onSurfaceVariant,
+  },
+  actionButton: {
+    alignSelf: 'center',
   },
   actions: {
     flexDirection: 'row',

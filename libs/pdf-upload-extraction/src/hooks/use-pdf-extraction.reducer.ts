@@ -10,7 +10,8 @@ type State = {
 type Action =
   | { type: 'extract/start' }
   | { type: 'extract/success'; result: PdfExtractionResult }
-  | { type: 'extract/failure'; error: PdfExtractionErrorCode };
+  | { type: 'extract/failure'; error: PdfExtractionErrorCode }
+  | { type: 'extract/reset' };
 
 export const usePdfExtractionInitialState: State = {
   stage: 'idle',
@@ -26,5 +27,7 @@ export function usePdfExtractionReducer(state: State, action: Action): State {
       return { stage: 'success', result: action.result, error: null };
     case 'extract/failure':
       return { stage: 'error', result: state.result, error: action.error };
+    case 'extract/reset':
+      return usePdfExtractionInitialState;
   }
 }

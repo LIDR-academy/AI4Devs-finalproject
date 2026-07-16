@@ -76,6 +76,8 @@ export const es: TranslationResource = {
         action: 'Agregar clave de API',
       },
       chooseFile: 'Elige un PDF',
+      dialogHeadline: 'Subir PDF',
+      dialogClose: 'Cerrar',
       loading: 'Extrayendo…',
       filenameLabel: 'Archivo',
       pageCountLabel: 'Páginas',
@@ -98,6 +100,7 @@ export const es: TranslationResource = {
       },
     },
     generation: {
+      dialogHeadline: 'Generar lección',
       composition: {
         heading: 'Contenido de la lección',
         instructionalOnly: 'Solo instructivo',
