@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-native-web-vite';
 
-import { configureApiKeyMock, configureEntitlementsMock } from '../../../.storybook/mocks/hooks';
+import { configureApiKeyMock, configureProfileMock } from '../../../.storybook/mocks/hooks';
 import { ApiKeySettings } from './api-key-settings';
 
 const FREE_ENTITLEMENTS = {
@@ -19,9 +19,9 @@ const withApiKeyMock =
   };
 
 const withEntitlementsMock =
-  (config: Parameters<typeof configureEntitlementsMock>[0]): Decorator =>
+  (config: Parameters<typeof configureProfileMock>[0]): Decorator =>
   (StoryFn) => {
-    configureEntitlementsMock(config);
+    configureProfileMock(config);
     return <StoryFn />;
   };
 

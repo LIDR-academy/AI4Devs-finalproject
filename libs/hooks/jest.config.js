@@ -6,12 +6,12 @@ module.exports = {
       preset: 'ts-jest',
       testEnvironment: 'jsdom',
       testMatch: ['<rootDir>/src/**/*.test.ts'],
-      testPathIgnorePatterns: ['/node_modules/', 'use-entitlements.test.ts$'],
+      testPathIgnorePatterns: ['/node_modules/', 'use-profile.test.ts$'],
     },
     {
       displayName: 'native',
       preset: 'jest-expo',
-      testMatch: ['<rootDir>/src/hooks/use-entitlements.test.ts'],
+      testMatch: ['<rootDir>/src/hooks/use-profile.test.ts'],
     },
   ],
 };

@@ -1,7 +1,7 @@
 import type { Entitlements } from '@helsoft/types';
 import type { ReactNode } from 'react';
 
-export type UseEntitlementsResult = {
+export type UseProfileResult = {
   entitlements: Entitlements | null;
   isLoading: boolean;
   error: Error | null;

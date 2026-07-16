@@ -12,13 +12,13 @@ type Action =
   | { type: 'load/failure'; error: Error }
   | { type: 'load/unauthenticated' };
 
-export const useEntitlementsInitialState: State = {
+export const useProfileInitialState: State = {
   data: null,
   isLoading: true,
   error: null,
 };
 
-export function useEntitlementsReducer(state: State, action: Action): State {
+export function useProfileReducer(state: State, action: Action): State {
   switch (action.type) {
     case 'load/start':
       return { data: state.data, isLoading: true, error: null };

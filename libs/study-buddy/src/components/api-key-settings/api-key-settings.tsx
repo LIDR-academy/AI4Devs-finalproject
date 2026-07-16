@@ -1,5 +1,5 @@
 import { ApiKeyForm, Button } from '@helsoft/components';
-import { useApiKey, useEntitlements } from '@helsoft/hooks';
+import { useApiKey, useProfile } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import type { AiProvider, ApiKeyErrorCode } from '@helsoft/types';
 import { useEffect } from 'react';
@@ -41,7 +41,7 @@ export const ApiKeySettings = () => {
     isLoading: areEntitlementsLoading,
     error: entitlementsError,
     retry,
-  } = useEntitlements();
+  } = useProfile();
   const { t, locale } = useLocalization();
 
   useEffect(() => {

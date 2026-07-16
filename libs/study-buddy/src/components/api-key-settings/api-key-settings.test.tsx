@@ -1,13 +1,13 @@
 jest.mock('@helsoft/hooks', () => ({
   ...jest.requireActual('@helsoft/hooks'),
   useApiKey: jest.fn(),
-  useEntitlements: jest.fn(),
+  useProfile: jest.fn(),
 }));
 jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
 
-import { useApiKey, useEntitlements } from '@helsoft/hooks';
+import { useApiKey, useProfile } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo, Linking } from 'react-native';
@@ -16,7 +16,7 @@ import { localizationValue } from '../../test-utils/auth-test-factories';
 import { ApiKeySettings, apiKeySettingsStyles, EMPTY_SAVED_STATUS_LABEL } from './api-key-settings';
 
 const mockUseApiKey = useApiKey as jest.Mock;
-const mockUseEntitlements = useEntitlements as jest.Mock;
+const mockUseProfile = useProfile as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
 
 const apiKeyValue = (overrides: Partial<ReturnType<typeof useApiKey>> = {}) => ({
@@ -29,7 +29,7 @@ const apiKeyValue = (overrides: Partial<ReturnType<typeof useApiKey>> = {}) => (
   ...overrides,
 });
 
-const entitlementsValue = (overrides: Partial<ReturnType<typeof useEntitlements>> = {}) => ({
+const entitlementsValue = (overrides: Partial<ReturnType<typeof useProfile>> = {}) => ({
   entitlements: {
     plan: 'free' as const,
     keySource: 'user' as const,
@@ -46,7 +46,7 @@ const entitlementsValue = (overrides: Partial<ReturnType<typeof useEntitlements>
 describe('ApiKeySettings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseEntitlements.mockReturnValue(entitlementsValue());
+    mockUseProfile.mockReturnValue(entitlementsValue());
   });
 
   it('does not announce entitlement loading after entitlements resolve', async () => {
@@ -70,7 +70,7 @@ describe('ApiKeySettings', () => {
     mockUseLocalization.mockReturnValue(localizationValue());
     const view = await render(<ApiKeySettings />);
 
-    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
     await view.rerender(<ApiKeySettings />);
 
     expect(announce).toHaveBeenCalledWith('entitlements.loading');
@@ -79,7 +79,7 @@ describe('ApiKeySettings', () => {
 
   it('hides key settings when resolved entitlements are absent', async () => {
     mockUseApiKey.mockReturnValue(apiKeyValue());
-    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null }));
+    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null }));
     mockUseLocalization.mockReturnValue(localizationValue());
 
     const view = await render(<ApiKeySettings />);
@@ -194,7 +194,7 @@ describe('ApiKeySettings', () => {
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockImplementation(jest.fn());
     mockUseApiKey.mockReturnValue(apiKeyValue());
-    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
     mockUseLocalization.mockReturnValue(localizationValue());
 
     await render(<ApiKeySettings />);
@@ -212,7 +212,7 @@ describe('ApiKeySettings', () => {
         status: { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' },
       }),
     );
-    mockUseEntitlements.mockReturnValue(
+    mockUseProfile.mockReturnValue(
       entitlementsValue({
         entitlements: {
           plan: 'paid',
@@ -234,7 +234,7 @@ describe('ApiKeySettings', () => {
   it('renders an entitlement error and retries without showing key settings', async () => {
     const retry = jest.fn();
     mockUseApiKey.mockReturnValue(apiKeyValue());
-    mockUseEntitlements.mockReturnValue(
+    mockUseProfile.mockReturnValue(
       entitlementsValue({
         entitlements: null,
         error: new Error('read failed'),

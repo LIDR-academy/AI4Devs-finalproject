@@ -1,5 +1,5 @@
 import { ApiKeyRequiredNotice, Button } from '@helsoft/components';
-import { useEntitlements } from '@helsoft/hooks';
+import { useProfile } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
@@ -15,7 +15,7 @@ import { ApiKeyGateCanCreateContext } from './use-api-key-gate-can-create';
  * Consumers read `useApiKeyGateCanCreate()` instead of a children-as-function render prop.
  */
 export const ApiKeyGate = ({ children }: ApiKeyGateProps) => {
-  const { entitlements, isLoading: areEntitlementsLoading, error, retry } = useEntitlements();
+  const { entitlements, isLoading: areEntitlementsLoading, error, retry } = useProfile();
   const { t } = useLocalization();
   const router = useRouter();
   const canCreate = Boolean(entitlements?.canCreate) && !areEntitlementsLoading && !error;

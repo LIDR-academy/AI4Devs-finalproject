@@ -9,14 +9,14 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
 
 import { useApiKey } from './use-api-key';
-import { ProfileProvider, useEntitlements } from './use-entitlements';
+import { ProfileProvider, useProfile } from './use-profile';
 import { useSession } from './use-session';
 
 const service = EntitlementsService as jest.Mocked<typeof EntitlementsService>;
 const mockUseApiKey = useApiKey as jest.Mock;
 const mockUseSession = useSession as jest.Mock;
 
-describe('useEntitlements', () => {
+describe('useProfile', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseSession.mockReturnValue({
@@ -42,7 +42,7 @@ describe('useEntitlements', () => {
       canCreateWithoutKey: false,
     });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.entitlements).toEqual({
@@ -69,7 +69,7 @@ describe('useEntitlements', () => {
       canCreateWithoutKey: false,
     });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.entitlements?.canCreate).toBe(false);
@@ -88,7 +88,7 @@ describe('useEntitlements', () => {
       canCreateWithoutKey: false,
     });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(service.getEntitlements).toHaveBeenCalled());
     expect(result.current.isLoading).toBe(true);
@@ -98,7 +98,7 @@ describe('useEntitlements', () => {
   it('@s4 hides entitlements while the plan request is still pending', () => {
     service.getEntitlements.mockReturnValue(new Promise(() => {}));
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.entitlements).toBeNull();
@@ -109,7 +109,7 @@ describe('useEntitlements', () => {
     const error = new Error('Profile not found');
     service.getEntitlements.mockRejectedValue(error);
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.entitlements).toBeNull();
@@ -126,7 +126,7 @@ describe('useEntitlements', () => {
       canCreateWithoutKey: true,
     });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
     await waitFor(() => expect(result.current.error).not.toBeNull());
 
     act(() => result.current.retry());
@@ -156,7 +156,7 @@ describe('useEntitlements', () => {
       canCreateWithoutKey: true,
     });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.entitlements).toEqual({
@@ -186,7 +186,7 @@ describe('useEntitlements', () => {
         canCreateWithoutKey: false,
       });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
     await waitFor(() => expect(result.current.entitlements?.plan).toBe('paid'));
 
     act(() => result.current.retry());
@@ -223,7 +223,7 @@ describe('useEntitlements', () => {
         canCreateWithoutKey: false,
       });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
     await waitFor(() => expect(result.current.entitlements?.plan).toBe('paid'));
 
     act(() => result.current.retry());
@@ -253,7 +253,7 @@ describe('useEntitlements', () => {
         canCreateWithoutKey: true,
       });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
     await waitFor(() => expect(result.current.entitlements?.plan).toBe('free'));
     expect(result.current.entitlements?.canCreate).toBe(false);
 
@@ -286,7 +286,7 @@ describe('useEntitlements', () => {
         canCreateWithoutKey: true,
       });
 
-    const { result } = renderHook(() => useEntitlements());
+    const { result } = renderHook(() => useProfile());
     act(() => result.current.retry());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -310,8 +310,8 @@ describe('useEntitlements', () => {
 
     const { result } = renderHook(
       () => ({
-        a: useEntitlements(),
-        b: useEntitlements(),
+        a: useProfile(),
+        b: useProfile(),
       }),
       { wrapper },
     );

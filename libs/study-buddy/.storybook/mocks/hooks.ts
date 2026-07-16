@@ -215,24 +215,24 @@ export const useApiKey = () => {
   return { status, isLoading, isSubmitting, error, saveApiKey, removeApiKey };
 };
 
-// --- useEntitlements -----------------------------------------------------------
+// --- useProfile -----------------------------------------------------------
 
-export type EntitlementsMockConfig = {
+export type ProfileMockConfig = {
   entitlements?: Entitlements | null;
   isLoading?: boolean;
   error?: Error | null;
 };
 
-let pendingEntitlementsConfig: EntitlementsMockConfig = {};
+let pendingProfileConfig: ProfileMockConfig = {};
 
-export const configureEntitlementsMock = (config: EntitlementsMockConfig) => {
-  pendingEntitlementsConfig = config;
+export const configureProfileMock = (config: ProfileMockConfig) => {
+  pendingProfileConfig = config;
 };
 
-export const useEntitlements = () => {
+export const useProfile = () => {
   const [config] = useState(() => {
-    const next = pendingEntitlementsConfig;
-    pendingEntitlementsConfig = {};
+    const next = pendingProfileConfig;
+    pendingProfileConfig = {};
     return next;
   });
   const [error, setError] = useState<Error | null>(config.error ?? null);

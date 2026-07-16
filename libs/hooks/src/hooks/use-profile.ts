@@ -11,19 +11,19 @@ import {
 } from 'react';
 
 import { useApiKey } from './use-api-key';
-import { useEntitlementsInitialState, useEntitlementsReducer } from './use-entitlements.reducer';
-import type { ProfileProviderProps, UseEntitlementsResult } from './use-entitlements.types';
+import { useProfileInitialState, useProfileReducer } from './use-profile.reducer';
+import type { ProfileProviderProps, UseProfileResult } from './use-profile.types';
 import { useSession } from './use-session';
 
 /**
- * Shared entitlements state. `skip` keeps hooks-order stable when a `ProfileProvider`
+ * Shared profile+flags state. `skip` keeps hooks-order stable when a `ProfileProvider`
  * ancestor already owns the single profile+flags fetch.
  */
-const useEntitlementsState = (skip: boolean): UseEntitlementsResult => {
+const useProfileState = (skip: boolean): UseProfileResult => {
   const { session, isLoading: isSessionLoading } = useSession();
   const sessionUserId = session?.user?.id;
   const { status: apiKeyStatus, isLoading: isApiKeyLoading } = useApiKey();
-  const [state, dispatch] = useReducer(useEntitlementsReducer, useEntitlementsInitialState);
+  const [state, dispatch] = useReducer(useProfileReducer, useProfileInitialState);
   const requestId = useRef(0);
 
   const load = useCallback(() => {
@@ -70,20 +70,20 @@ const useEntitlementsState = (skip: boolean): UseEntitlementsResult => {
   );
 };
 
-const EntitlementsContext = createContext<UseEntitlementsResult | undefined>(undefined);
+const ProfileContext = createContext<UseProfileResult | undefined>(undefined);
 
 /**
  * One profile→plans join (via EntitlementsService) shared app-wide when under
  * `ProfileProvider`. Standalone still works for tests/Storybook without a provider.
  */
-export const useEntitlements = (): UseEntitlementsResult => {
-  const shared = useContext(EntitlementsContext);
-  const own = useEntitlementsState(shared !== undefined);
+export const useProfile = (): UseProfileResult => {
+  const shared = useContext(ProfileContext);
+  const own = useProfileState(shared !== undefined);
   return shared ?? own;
 };
 
 /** Owns the single profile+flags fetch for the authenticated app shell. Nest under `ApiKeyProvider`. */
 export const ProfileProvider = ({ children }: ProfileProviderProps) => {
-  const value = useEntitlementsState(false);
-  return createElement(EntitlementsContext.Provider, { value }, children);
+  const value = useProfileState(false);
+  return createElement(ProfileContext.Provider, { value }, children);
 };

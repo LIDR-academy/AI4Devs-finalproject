@@ -1,7 +1,7 @@
 jest.mock('@helsoft/hooks', () => ({
   ...jest.requireActual('@helsoft/hooks'),
   useApiKey: jest.fn(),
-  useEntitlements: jest.fn(),
+  useProfile: jest.fn(),
 }));
 jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
@@ -10,7 +10,7 @@ jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-import { useApiKey, useEntitlements } from '@helsoft/hooks';
+import { useApiKey, useProfile } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
@@ -20,7 +20,7 @@ import { localizationValue } from '../../test-utils/auth-test-factories';
 import { ApiKeyGate, apiKeyGateStyles, useApiKeyGateCanCreate } from './api-key-gate';
 
 const mockUseApiKey = useApiKey as jest.Mock;
-const mockUseEntitlements = useEntitlements as jest.Mock;
+const mockUseProfile = useProfile as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
 const mockUseRouter = useRouter as jest.Mock;
 
@@ -39,7 +39,7 @@ const apiKeyValue = (overrides: Partial<ReturnType<typeof useApiKey>> = {}) => (
   ...overrides,
 });
 
-const entitlementsValue = (overrides: Partial<ReturnType<typeof useEntitlements>> = {}) => ({
+const entitlementsValue = (overrides: Partial<ReturnType<typeof useProfile>> = {}) => ({
   entitlements: {
     plan: 'free' as const,
     keySource: 'user' as const,
@@ -59,7 +59,7 @@ describe('ApiKeyGate', () => {
     mockUseRouter.mockReturnValue({ push: jest.fn() });
     mockUseLocalization.mockReturnValue(localizationValue());
     mockUseApiKey.mockReturnValue(apiKeyValue());
-    mockUseEntitlements.mockReturnValue(entitlementsValue());
+    mockUseProfile.mockReturnValue(entitlementsValue());
   });
 
   it('does not announce entitlement loading after entitlements resolve', async () => {
@@ -87,7 +87,7 @@ describe('ApiKeyGate', () => {
       </ApiKeyGate>,
     );
 
-    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
     await view.rerender(
       <ApiKeyGate>
         <Text>generation content</Text>
@@ -99,7 +99,7 @@ describe('ApiKeyGate', () => {
   });
 
   it('handles unresolved non-loading entitlements as unavailable', async () => {
-    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null }));
+    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null }));
 
     await render(
       <ApiKeyGate>
@@ -114,7 +114,7 @@ describe('ApiKeyGate', () => {
   });
 
   it('exposes canCreate=true via context when creation is available', async () => {
-    mockUseEntitlements.mockReturnValue(
+    mockUseProfile.mockReturnValue(
       entitlementsValue({
         entitlements: {
           plan: 'paid',
@@ -160,7 +160,7 @@ describe('ApiKeyGate', () => {
     const announce = jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockImplementation(jest.fn());
-    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
 
     await render(
       <ApiKeyGate>
@@ -195,7 +195,7 @@ describe('ApiKeyGate', () => {
 
   // @s10 — once a key is saved, the gate renders its children instead of the notice.
   it('renders children when a key is saved', async () => {
-    mockUseEntitlements.mockReturnValue(
+    mockUseProfile.mockReturnValue(
       entitlementsValue({
         entitlements: {
           plan: 'free',
@@ -219,7 +219,7 @@ describe('ApiKeyGate', () => {
 
   // @s9/@s17 — paid creation uses the platform key and bypasses the user-key gate.
   it('renders children for a paid learner without a saved user key', async () => {
-    mockUseEntitlements.mockReturnValue(
+    mockUseProfile.mockReturnValue(
       entitlementsValue({
         entitlements: {
           plan: 'paid',
@@ -264,7 +264,7 @@ describe('ApiKeyGate', () => {
   // @s5/@s6 — entitlement failures expose retry while children stay mounted (@s13).
   it('renders an entitlement error and retries while keeping children mounted', async () => {
     const retry = jest.fn();
-    mockUseEntitlements.mockReturnValue(
+    mockUseProfile.mockReturnValue(
       entitlementsValue({
         entitlements: null,
         error: new Error('profile missing'),
@@ -300,7 +300,7 @@ describe('ApiKeyGate', () => {
   });
 
   it('exposes canCreate=false via context while entitlements load', async () => {
-    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
 
     await render(
       <ApiKeyGate>
@@ -313,7 +313,7 @@ describe('ApiKeyGate', () => {
   });
 
   it('exposes canCreate=false via context when entitlements fail', async () => {
-    mockUseEntitlements.mockReturnValue(
+    mockUseProfile.mockReturnValue(
       entitlementsValue({ entitlements: null, error: new Error('read failed') }),
     );
 
