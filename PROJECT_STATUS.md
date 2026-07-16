@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-16 (US0012 ✅ PR #16 mergeada; US0014 🟣 En revisión — PR #17)
+> Última actualización: 2026-07-16 (US0014 ✅ PR #17 mergeada; US0011 🟣 En revisión — PR #18)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -9,10 +9,10 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0010, US0012 y US0013 completas (9/9 Must-Have ✅); US0014 en revisión |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0010, US0012–US0014 completas (9/9 Must-Have ✅); US0011 en revisión — última US del backlog |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
-| Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0010 + US0012–US0013 implementados (93 tests en verde) |
-| Frontend (`frontend/`) | ✅ US0001 + US0003–US0010 + US0012–US0013 implementados (101 tests en verde) |
+| Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0014 implementados (108 tests en verde) |
+| Frontend (`frontend/`) | ✅ US0001 + US0003–US0014 implementados (126 tests en verde) |
 | Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web; perfil `seed-images` para imágenes de muestra) |
 | CI/CD | ✅ `.github/workflows/ci.yml` (build + tests backend y frontend) |
 | API oficial | ✅ `docs/api-spec.yml` v2.0.0 sincronizada con backlog y modelo |
@@ -30,10 +30,10 @@
 | US0008 | Seleccionar slot y ver resumen | Must | 5 | ✅ Done (PR #12 mergeado a main) |
 | US0009 | Pagar depósito vía Flow | Must | 13 | ✅ Done (PR #13 mergeado a main; Flow real deferred — ver Bloqueos §3) |
 | US0010 | Historial + confirmar asistencia | Must | 5 | ✅ Done (PR #14 mergeado a main) |
-| US0011 | Cotizar con chatbot | Should | 13 | ⬜ Pendiente |
+| US0011 | Cotizar con chatbot | Should | 13 | 🟣 En revisión (feature/us0011-chatbot-cotizador, PR #18) |
 | US0012 | Explorar artistas en mapa | Should | 8 | ✅ Done (PR #16 mergeado a main) |
 | US0013 | Calificar artista post-sesión | Should | 5 | ✅ Done (PR #15 mergeado a main) |
-| US0014 | Mostrar auspicios de marcas | Should | 2 | 🟣 En revisión (feature/us0014-auspicios-marcas, PR #17) |
+| US0014 | Mostrar auspicios de marcas | Should | 2 | ✅ Done (PR #17 mergeado a main) |
 
 Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · ✅ Done (según Definition of Done de `CONTRIBUTING.md`)
 
@@ -63,6 +63,6 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **US0014** — revisar y mergear PR #17 (`feature/us0014-auspicios-marcas`)
-2. Última Should-Have restante: **US0011** (cotizar con chatbot, 13 SP)
-3. **Pendiente deferred**: integración Flow real con sandbox (ver Bloqueos §3) · `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`) · `fixs/issue-005.md` (foto de reseña no se persiste)
+1. **US0011** — revisar y mergear PR #18 (`feature/us0011-chatbot-cotizador`). Con eso queda **todo el backlog (13 US / 80 SP) completo**
+2. **Pendiente deferred**: integración Flow real con sandbox (ver Bloqueos §3) · `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`) · `fixs/issue-005.md` (foto de reseña no se persiste) · upload de imágenes de referencia del chatbot a Object Storage (misma limitación que issue-005)
+3. Preparación de la entrega final: revisar `readme.md` secciones 2–7 y consolidar documentación

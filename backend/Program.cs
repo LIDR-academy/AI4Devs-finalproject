@@ -32,6 +32,7 @@ builder.Services.AddScoped<ShowcaseService>();
 builder.Services.AddScoped<ArtistQueryService>();
 builder.Services.AddScoped<GeoService>();
 builder.Services.AddScoped<AvailabilityService>();
+builder.Services.AddScoped<QuoteCalculatorService>();
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<ReviewService>();
 

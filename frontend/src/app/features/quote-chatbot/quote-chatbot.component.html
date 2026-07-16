@@ -1,0 +1,132 @@
+<div class="chatbot-overlay" (click)="close()">
+  <div class="chatbot" (click)="$event.stopPropagation()" role="dialog" aria-label="Cotizador de tatuajes">
+
+    <header class="chatbot__header">
+      <div class="chatbot__title">
+        <span class="chatbot__bot-icon" aria-hidden="true">💬</span>
+        <div>
+          <h3 class="chatbot__heading">Cotiza tu tatuaje</h3>
+          <p class="chatbot__subheading">con {{ artist().artistName }}</p>
+        </div>
+      </div>
+      <button class="chatbot__close" (click)="close()" aria-label="Cerrar cotizador">✕</button>
+    </header>
+
+    <div class="chatbot__messages">
+      @for (message of messages(); track $index) {
+        <div class="message message--{{ message.from }}">{{ message.text }}</div>
+      }
+
+      @if (calculating()) {
+        <div class="message message--bot message--typing">Calculando…</div>
+      }
+
+      <!-- Resultado (CA3) -->
+      @if (quote(); as q) {
+        <div class="message message--bot quote-result">
+          <p class="quote-result__intro">Este es el rango estimado:</p>
+          <p class="quote-result__range">
+            ${{ q.priceMin | number:'1.0-0':'es-CL' }} – ${{ q.priceMax | number:'1.0-0':'es-CL' }} {{ q.currency }}
+          </p>
+          @if (q.factors.length > 0) {
+            <ul class="quote-result__factors">
+              @for (factor of q.factors; track factor) {
+                <li>{{ factor }}</li>
+              }
+            </ul>
+          }
+          <p class="quote-result__deposit">
+            Depósito para reservar: <strong>${{ q.depositAmount | number:'1.0-0':'es-CL' }}</strong>
+          </p>
+          <p class="quote-result__disclaimer">
+            Es una estimación referencial — el precio final lo confirma el artista.
+          </p>
+        </div>
+      }
+    </div>
+
+    @if (error(); as message) {
+      <p class="chatbot__error">{{ message }}</p>
+    }
+
+    <div class="chatbot__input">
+      @switch (step()) {
+        @case ('zone') {
+          <div class="option-chips">
+            @for (zone of bodyZones; track zone.slug) {
+              <button class="option-chip" (click)="selectZone(zone)">
+                {{ zone.label }}@if (zone.difficult) { <span class="option-chip__hint">+15%</span> }
+              </button>
+            }
+          </div>
+        }
+        @case ('size') {
+          <div class="option-chips">
+            @for (size of sizeOptions; track size.slug) {
+              <button class="option-chip option-chip--size" (click)="selectSize(size)">
+                <span class="option-chip__icon">{{ size.icon }}</span> {{ size.label }}
+              </button>
+            }
+          </div>
+        }
+        @case ('style') {
+          <div class="option-chips">
+            @for (style of artistStyles(); track style.id) {
+              <button class="option-chip" (click)="selectStyle(style)">{{ style.name }}</button>
+            } @empty {
+              <p class="chatbot__empty">Cargando estilos…</p>
+            }
+          </div>
+        }
+        @case ('references') {
+          <div class="references">
+            @if (references().length > 0) {
+              <div class="references__previews">
+                @for (ref of references(); track ref.name) {
+                  <span class="references__item">
+                    <img [src]="ref.dataUrl" [alt]="ref.name" class="references__thumb" />
+                    <button class="references__remove" (click)="removeReference($index)" aria-label="Quitar referencia">✕</button>
+                  </span>
+                }
+              </div>
+            }
+            <div class="references__actions">
+              @if (references().length < 3) {
+                <label class="option-chip references__upload">
+                  📎 Adjuntar imagen
+                  <input type="file" accept="image/*" multiple hidden (change)="onReferencesSelected($event)" />
+                </label>
+              }
+              <button class="option-chip option-chip--primary" (click)="confirmReferences()">
+                {{ references().length > 0 ? 'Continuar' : 'Omitir' }}
+              </button>
+            </div>
+          </div>
+        }
+        @case ('options') {
+          <div class="option-chips">
+            <button class="option-chip option-chip--toggle" [class.active]="isColor()" (click)="toggleColor()">
+              🎨 Color {{ isColor() ? '✓' : '' }}
+            </button>
+            <button class="option-chip option-chip--toggle" [class.active]="isCoverup()" (click)="toggleCoverup()">
+              🩹 Cover-up {{ isCoverup() ? '✓' : '' }}
+            </button>
+            <button class="option-chip option-chip--primary" [disabled]="calculating()" (click)="calculate()">
+              Calcular precio
+            </button>
+          </div>
+        }
+        @case ('result') {
+          <div class="option-chips">
+            <button class="option-chip option-chip--primary" (click)="reserve()">¿Quieres reservar? →</button>
+            <button class="option-chip" (click)="close()">Cerrar</button>
+          </div>
+        }
+      }
+
+      @if (canGoBack()) {
+        <button class="chatbot__back" (click)="goBack()">← Atrás</button>
+      }
+    </div>
+  </div>
+</div>

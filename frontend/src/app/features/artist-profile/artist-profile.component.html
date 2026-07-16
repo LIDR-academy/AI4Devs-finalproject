@@ -46,8 +46,8 @@
           <span class="hero__rating-text">{{ a.averageRating.toFixed(1) }} ({{ a.reviewCount }} reseñas)</span>
         </div>
         <div class="hero__ctas">
-          <a href="#" class="btn btn--primary">Cotizar</a>
-          <a href="#" class="btn btn--ghost">Reservar</a>
+          <button type="button" class="btn btn--primary" (click)="openChatbot()">Cotizar</button>
+          <button type="button" class="btn btn--ghost" (click)="scrollToBooking()">Reservar</button>
         </div>
       </div>
     </div>
@@ -175,6 +175,11 @@
     }
     <app-weekly-calendar [artistProfileId]="a.id" (slotSelected)="onSlotSelected($event)" />
   </section>
+
+  <!-- COTIZADOR (US0011) -->
+  @if (showChatbot()) {
+    <app-quote-chatbot [artist]="a" (closed)="closeChatbot()" (reserveRequested)="onQuoteReserve()" />
+  }
 
   <!-- REVIEWS -->
   <section class="reviews-section">

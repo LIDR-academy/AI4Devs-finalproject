@@ -430,6 +430,7 @@ Transversal
 - [ ] CA6: El cliente puede volver atrás en cualquier paso para ajustar respuestas
 - [ ] CA7: Si el cliente no quiere reservar ahora, la cotización queda guardada (si está autenticado)
 - [ ] CA8: Los datos del chatbot (zona, tamaño, estilo, color, cover-up, referencias) se pasan al booking si reserva
+- [ ] CA9: Si la reserva se origina en una cotización, el booking hereda el rango estimado y el depósito se calcula como deposit_percentage × máx(mínimo cotizado, min_session_price); sin cotización, fallback 30% × min_session_price (decisión `fixs/issue-007.md`)
 
 ## Notas Técnicas
 - Frontend: componente de chat con pasos guiados (no IA generativa — flujo determinístico)

@@ -224,6 +224,57 @@ public class AvailabilityTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Hold_With_Quote_Data_Computes_Deposit_From_Estimate()
+    {
+        await using var factory = CreateFactory();
+        var client = await CreateAuthenticatedClientAsync(factory);
+
+        // US0011 CA8-CA9 (issue-007): hand = 4h → base 30.000×4 = 120.000 > min 40.000
+        var request = HoldRequest() with { SizeReference = "hand", BodyZone = "brazo" };
+        var response = await client.PostAsJsonAsync("/api/bookings/hold", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var booking = await response.Content.ReadFromJsonAsync<BookingDto>();
+        Assert.Equal(96_000, booking!.EstimatedPriceMin);   // 120.000 × 0.8
+        Assert.Equal(156_000, booking.EstimatedPriceMax);   // 120.000 × 1.3
+        Assert.Equal(28_800, booking.DepositAmount);        // 96.000 × 30%
+    }
+
+    [Fact]
+    public async Task Hold_With_Small_Quote_Keeps_MinSessionPrice_Floor_For_Deposit()
+    {
+        await using var factory = CreateFactory();
+        var client = await CreateAuthenticatedClientAsync(factory);
+
+        // coin = 1h → base max(40.000, 30.000) = 40.000 → estimado min 32.000 < piso
+        var request = HoldRequest() with { SizeReference = "coin", BodyZone = "brazo" };
+        var response = await client.PostAsJsonAsync("/api/bookings/hold", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var booking = await response.Content.ReadFromJsonAsync<BookingDto>();
+        Assert.Equal(32_000, booking!.EstimatedPriceMin);
+        Assert.Equal(12_000, booking.DepositAmount);        // piso: 40.000 × 30% (issue-007)
+    }
+
+    [Fact]
+    public async Task Hold_With_Unrecognized_Size_Falls_Back_To_Fixed_Deposit()
+    {
+        await using var factory = CreateFactory();
+        var client = await CreateAuthenticatedClientAsync(factory);
+
+        var request = HoldRequest() with { SizeReference = "gigante" };
+        var response = await client.PostAsJsonAsync("/api/bookings/hold", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var booking = await response.Content.ReadFromJsonAsync<BookingDto>();
+        // Comportamiento pre-US0011: estimado desde tarifas y duración del slot
+        Assert.Equal(40_000, booking!.EstimatedPriceMin);
+        Assert.Equal(60_000, booking.EstimatedPriceMax);    // 30.000 × 2h
+        Assert.Equal(12_000, booking.DepositAmount);
+        Assert.Equal("gigante", booking.SizeReference);     // el texto igual se conserva
+    }
+
+    [Fact]
     public async Task Hold_Unknown_Artist_Returns_404()
     {
         await using var factory = CreateFactory();

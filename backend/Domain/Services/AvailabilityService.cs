@@ -145,9 +145,25 @@ public class AvailabilityService
             return new HoldResult(HoldOutcome.SlotTaken);
         }
 
-        var durationHours = (decimal)(end - start).TotalHours;
-        var estimatedMin = artist.MinSessionPrice;
-        var estimatedMax = Math.Max(estimatedMin, (int)(artist.HourlyRate * durationHours));
+        // US0011 CA8-CA9 (issue-007): with valid quote data the estimate comes from the
+        // pricing formula (recomputed server-side — client amounts are never trusted);
+        // otherwise fall back to the artist tariffs and the slot duration.
+        int estimatedMin, estimatedMax, depositAmount;
+        if (QuoteCalculatorService.IsValidSizeReference(request.SizeReference))
+        {
+            var estimate = QuoteCalculatorService.Estimate(
+                artist, request.BodyZone, request.SizeReference!, request.IsColor, request.IsCoverup);
+            estimatedMin = estimate.PriceMin;
+            estimatedMax = estimate.PriceMax;
+            depositAmount = estimate.DepositAmount;
+        }
+        else
+        {
+            var durationHours = (decimal)(end - start).TotalHours;
+            estimatedMin = artist.MinSessionPrice;
+            estimatedMax = Math.Max(estimatedMin, (int)(artist.HourlyRate * durationHours));
+            depositAmount = estimatedMin * artist.DepositPercentage / 100;
+        }
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
@@ -159,7 +175,7 @@ public class AvailabilityService
             Status = BookingStatus.PendingPayment,
             EstimatedPriceMin = estimatedMin,
             EstimatedPriceMax = estimatedMax,
-            DepositAmount = estimatedMin * artist.DepositPercentage / 100,
+            DepositAmount = depositAmount,
             BodyZone = request.BodyZone,
             SizeReference = request.SizeReference,
             StyleId = request.StyleId,

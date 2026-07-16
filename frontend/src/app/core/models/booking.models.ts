@@ -17,6 +17,12 @@ export interface BookingHoldRequest {
   bookingDate: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm
+  // US0011 CA8-CA9 — quote data; the backend recomputes the estimate server-side
+  bodyZone?: string | null;
+  sizeReference?: string | null;
+  styleId?: string | null;
+  isColor?: boolean;
+  isCoverup?: boolean;
 }
 
 export interface BookingArtistSummary {

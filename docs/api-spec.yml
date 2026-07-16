@@ -405,7 +405,24 @@ components:
           example: CLP
         depositAmount:
           type: integer
-          description: priceMin * artist.deposit_percentage / 100 (CLP)
+          description: max(priceMin, artist.min_session_price) * artist.deposit_percentage / 100 (CLP) — see fixs/issue-007.md
+        factors:
+          type: array
+          description: Human-readable complexity factors applied to the estimate (US0011 CA4)
+          items:
+            type: string
+
+    TattooStyleItem:
+      type: object
+      description: Public style catalog entry (US0011 CA2 — resolves style slugs into ids for QuoteRequest)
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
 
     BookingHoldRequest:
       type: object
@@ -901,6 +918,21 @@ paths:
                 $ref: '#/components/schemas/WeekAvailabilityResponse'
         '404':
           description: Artist not found
+
+  /styles:
+    get:
+      tags: [Quotes]
+      summary: Public tattoo style catalog
+      description: "US0011 CA2 — id, name and slug of every tattoo style; the chatbot resolves the artist's style slugs into ids. Public (no login required)"
+      responses:
+        '200':
+          description: Style catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TattooStyleItem'
 
   /quotes/calculate:
     post:

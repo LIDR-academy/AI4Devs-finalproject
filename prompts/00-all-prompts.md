@@ -1362,6 +1362,32 @@ listo el merge. Ahora continuemos con la US0014 segun el protocolo
 
 ---
 
+## 81 — Detección de inconsistencia: depósito fijo vs cotización del chatbot
+
+> 📋 2026-07-16T20:30:00Z · Claude Code · Claude Fable 5 · medium · ~140K tokens · rodri
+
+```
+listo el merge, continuemos con la US0011. Pero ojo: Creo que existe una inconsistencia en el proyecto:
+Al reservar, se deja un 30% del valor...pero de que valor? o el valor es fijo por artista? 
+Porque depende del tatuaje el valor, y para eso, esta también el chatbot que ayuda a cotizar, pero, si existen montos predefinidos, para que existe el chatbot? Comentame si me equivoco en esto antes de proceder
+```
+
+*(Inconsistencia confirmada: el depósito era siempre 30% × min_session_price, independiente del tatuaje — riesgo #8 de issue-004 que seguía abierto. Se presentaron 2 opciones: depósito según cotización (recomendada) vs depósito fijo con chatbot informativo.)*
+
+---
+
+## 82 — Decisión: depósito según cotización
+
+> 📋 2026-07-16T21:00:00Z · Claude Code · Claude Fable 5 · medium · ~145K tokens · rodri
+
+```
+avancemos con la opción 1, depósito según cotización
+```
+
+*(Decisión registrada en `fixs/issue-007.md` + CA9 en us0011.md/all-us.md. US0011 completa en feature/us0011-chatbot-cotizador con TDD: QuoteCalculatorService + POST /api/quotes/calculate + GET /api/styles; hold recalcula estimado/depósito server-side desde la cotización con piso min_session_price; QuoteChatbotComponent (5 pasos, atrás, draft en localStorage) conectado al flujo de reserva. Verificado e2e: cotización costillas+color+mano → depósito $79.488 heredado por la reserva. Backend 108/108, frontend 126/126.)*
+
+---
+
 ## Resumen de archivos modificados (sesión 13)
 
 | Archivo | Acción |
@@ -1385,9 +1411,17 @@ listo el merge. Ahora continuemos con la US0014 segun el protocolo
 | `frontend/src/app/core/models/artist-profile.models.ts` | Actualizado — SponsorshipDto (US0014) |
 | `scripts/seed-images.ps1` + `docker-compose.yml` | Actualizados — 3 logos de marca; fix fallback Docker en Windows |
 | `docs/us/us0014/` | Actualizado — CAs y criterios de done marcados |
+| `fixs/issue-007.md` | Creado — decisión depósito-según-cotización (US0011) |
+| `backend/.../QuoteCalculatorService.cs` + `QuotesController.cs` + `StylesController.cs` | Creados — cotización US0011 |
+| `backend/Domain/Services/AvailabilityService.cs` | Actualizado — hold con depósito desde cotización (CA9) |
+| `backend/Tests/QuoteTests.cs` (+ AvailabilityTests) | Creado/actualizado — 14 tests US0011 |
+| `frontend/src/app/features/quote-chatbot/` | Creado — chatbot wizard + QuoteService (US0011) |
+| `frontend/.../artist-profile/` | Actualizado — CTAs Cotizar/Reservar + hold con draft de cotización |
+| `docs/api-spec.yml` | Actualizado — QuoteResponse.factors, /styles, depositAmount con piso |
+| `docs/us/us0011/` + `docs/us/all-us.md` | Actualizados — CA9 y CAs marcados |
 
 > ⚠️ Nota de trazabilidad: las sesiones que implementaron US0012 (commits `2389366`, `aab2996`, `d9c766b`) y US0013 (PR #15) no quedaron registradas en este archivo; sus prompts no están disponibles desde esta sesión.
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 13 sesiones · 80 prompts documentados*
+*INK·LINK © 2026 · Registro de prompts · 13 sesiones · 82 prompts documentados*

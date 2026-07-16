@@ -11,11 +11,13 @@ import { BookingService } from '../booking/services/booking.service';
 import { CertificationBadgeComponent } from '../../shared/components/certification-badge/certification-badge.component';
 import { WeeklyCalendarComponent } from '../booking/components/weekly-calendar/weekly-calendar.component';
 import { SponsorshipSectionComponent } from './components/sponsorship-section/sponsorship-section.component';
+import { QuoteChatbotComponent } from '../quote-chatbot/quote-chatbot.component';
+import { QuoteService } from '../quote-chatbot/services/quote.service';
 
 @Component({
   selector: 'app-artist-profile',
   standalone: true,
-  imports: [DatePipe, CertificationBadgeComponent, WeeklyCalendarComponent, SponsorshipSectionComponent],
+  imports: [DatePipe, CertificationBadgeComponent, WeeklyCalendarComponent, SponsorshipSectionComponent, QuoteChatbotComponent],
   templateUrl: './artist-profile.component.html',
   styleUrl: './artist-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,6 +29,7 @@ export class ArtistProfileComponent implements OnInit {
   private readonly artistService = inject(ArtistProfileService);
   private readonly authService = inject(AuthService);
   private readonly bookingService = inject(BookingService);
+  private readonly quoteService = inject(QuoteService);
 
   readonly artist = signal<ArtistProfileDto | null>(null);
   readonly holdError = signal<string | null>(null);
@@ -39,6 +42,7 @@ export class ArtistProfileComponent implements OnInit {
   readonly reviewsLoading = signal(false);
   readonly selectedImage = signal<string | null>(null);
   readonly bioExpanded = signal(false);
+  readonly showChatbot = signal(false);
 
   private readonly PAGE_SIZE = 5;
 
@@ -154,6 +158,25 @@ export class ArtistProfileComponent implements OnInit {
     return (this.artist()?.certifications ?? []).some(c => c.isActive);
   }
 
+  /** US0011 CA1 — the "Cotizar" CTA opens the chatbot overlay. */
+  openChatbot(): void {
+    this.showChatbot.set(true);
+  }
+
+  closeChatbot(): void {
+    this.showChatbot.set(false);
+  }
+
+  /** US0011 CA5 — after quoting, the client jumps straight to slot selection. */
+  onQuoteReserve(): void {
+    this.showChatbot.set(false);
+    this.scrollToBooking();
+  }
+
+  scrollToBooking(): void {
+    document.querySelector('.booking-section')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
   /** US0008 CA5 — Selecting a slot requires login; CA7 — creates the 5-minute hold. */
   onSlotSelected(slot: BookableSlot): void {
     const artist = this.artist();
@@ -173,12 +196,24 @@ export class ArtistProfileComponent implements OnInit {
 
     this.holdError.set(null);
     this.holding.set(true);
+    // US0011 CA8 — a quote made for this artist travels with the hold; the backend
+    // recomputes the estimate and the deposit from it (CA9, issue-007)
+    const draft = this.quoteService.draftFor(artist.id);
     this.bookingService
       .holdSlot({
         artistProfileId: artist.id,
         bookingDate: slot.date,
         startTime: slot.startTime,
-        endTime: slot.endTime
+        endTime: slot.endTime,
+        ...(draft
+          ? {
+              bodyZone: draft.request.bodyZone,
+              sizeReference: draft.request.sizeReference,
+              styleId: draft.request.styleId,
+              isColor: draft.request.isColor,
+              isCoverup: draft.request.isCoverup
+            }
+          : {})
       })
       .subscribe({
         next: (booking) => {
