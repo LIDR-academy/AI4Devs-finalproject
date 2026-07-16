@@ -20,8 +20,8 @@ jest.mock('@helsoft/study-buddy', () => {
   const { Text } = require('react-native');
 
   return {
-    ApiKeyGate: ({ children }: { children: (canCreate: boolean) => ReactNode }) =>
-      children(mockCanCreate),
+    ApiKeyGate: ({ children }: { children: ReactNode }) => children,
+    useApiKeyGateCanCreate: () => mockCanCreate,
     NewLessonDialog: () => React.createElement(Text, null, 'new-lesson-dialog'),
     PdfDocuments: (props: typeof mockPdfDocumentsProps) => {
       mockPdfDocumentsProps = props;
@@ -60,6 +60,7 @@ describe('UploadScreen entitlements composition', () => {
     await render(<UploadScreen />);
 
     expect(screen.getByText('new-lesson-dialog')).toBeTruthy();
+    expect(screen.getByText('pdf-documents')).toBeTruthy();
     expect(mockPdfDocumentsProps.onGenerate).toEqual(expect.any(Function));
   });
 });

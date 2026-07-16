@@ -1,7 +1,52 @@
 import { ScreenContainer } from '@helsoft/components';
-import { ApiKeyGate, NewLessonDialog, PdfDocuments } from '@helsoft/study-buddy';
+import {
+  ApiKeyGate,
+  NewLessonDialog,
+  PdfDocuments,
+  useApiKeyGateCanCreate,
+} from '@helsoft/study-buddy';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+
+type UploadBodyProps = {
+  reloadToken: number;
+  generateDocumentId: string | undefined;
+  onExtracted: () => void;
+  onGenerated: () => void;
+  onGenerateHandled: () => void;
+  onGenerate: (documentId: string) => void;
+  onOpenLesson: (lessonId: string) => void;
+};
+
+const UploadBody = ({
+  reloadToken,
+  generateDocumentId,
+  onExtracted,
+  onGenerated,
+  onGenerateHandled,
+  onGenerate,
+  onOpenLesson,
+}: UploadBodyProps) => {
+  const canCreate = useApiKeyGateCanCreate();
+
+  return (
+    <>
+      {canCreate ? (
+        <NewLessonDialog
+          onExtracted={onExtracted}
+          onGenerated={onGenerated}
+          generateDocumentId={generateDocumentId}
+          onGenerateHandled={onGenerateHandled}
+        />
+      ) : null}
+      <PdfDocuments
+        onGenerate={canCreate ? onGenerate : undefined}
+        onOpenLesson={onOpenLesson}
+        reloadToken={reloadToken}
+      />
+    </>
+  );
+};
 
 export default function UploadScreen() {
   const [reloadToken, setReloadToken] = useState(0);
@@ -26,23 +71,15 @@ export default function UploadScreen() {
   return (
     <ScreenContainer>
       <ApiKeyGate>
-        {(canCreate) => (
-          <>
-            {canCreate ? (
-              <NewLessonDialog
-                onExtracted={handleExtracted}
-                onGenerated={bumpReload}
-                generateDocumentId={generateDocumentId}
-                onGenerateHandled={() => setGenerateDocumentId(undefined)}
-              />
-            ) : null}
-            <PdfDocuments
-              onGenerate={canCreate ? setGenerateDocumentId : undefined}
-              onOpenLesson={handleOpenLesson}
-              reloadToken={reloadToken}
-            />
-          </>
-        )}
+        <UploadBody
+          reloadToken={reloadToken}
+          generateDocumentId={generateDocumentId}
+          onExtracted={handleExtracted}
+          onGenerated={bumpReload}
+          onGenerateHandled={() => setGenerateDocumentId(undefined)}
+          onGenerate={setGenerateDocumentId}
+          onOpenLesson={handleOpenLesson}
+        />
       </ApiKeyGate>
     </ScreenContainer>
   );

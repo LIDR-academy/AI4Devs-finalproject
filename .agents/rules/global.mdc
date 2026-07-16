@@ -54,6 +54,7 @@ This is a monorepo for react-native/node/next applications.
 
 ### Components & Storybook
 - **Every component authored in a Storybook-enabled library always ships a co-located `component-name.stories.tsx`** (`@helsoft/components`, `@helsoft/activities`, `@helsoft/logging-in-out`, and any lib scaffolded from `@helsoft/lib-with-storybook`). No component is "done" without its story; the story covers the component's states. See `.agents/rules/atomic-design.mdc`.
+- **No children-as-function / render-prop pattern** (`children(value)`, `renderChildren?.(flag)`, `children: (x) => ReactNode`) unless a measured performance need forces it (e.g. deferring a heavy subtree that context/slots cannot solve). Prefer: plain `ReactNode` children, explicit props, context + hook (`useX`), or a named slot prop (`header`, `fallback`). Document the perf rationale in a comment when the exception is used.
 
 ### i18n / user-facing text
 - **Never hardcode user-facing strings.** Render them with `t('namespace.key')` **directly at the usage site** — do not collect them into a `labels` variable/object. The only allowed constant is a **key dictionary** that maps a domain value to a translation key (e.g. `GENERATION_ERROR_KEYS`). See `.agents/rules/i18n.mdc`.

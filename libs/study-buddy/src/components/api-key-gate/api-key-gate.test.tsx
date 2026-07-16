@@ -17,12 +17,17 @@ import { useRouter } from 'expo-router';
 import { AccessibilityInfo, Text } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
-import { ApiKeyGate, apiKeyGateStyles } from './api-key-gate';
+import { ApiKeyGate, apiKeyGateStyles, useApiKeyGateCanCreate } from './api-key-gate';
 
 const mockUseApiKey = useApiKey as jest.Mock;
 const mockUseEntitlements = useEntitlements as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
 const mockUseRouter = useRouter as jest.Mock;
+
+const CanCreateProbe = () => {
+  const canCreate = useApiKeyGateCanCreate();
+  return <Text>{canCreate ? 'creation enabled' : 'creation disabled'}</Text>;
+};
 
 const apiKeyValue = (overrides: Partial<ReturnType<typeof useApiKey>> = {}) => ({
   status: { hasKey: false },
@@ -98,15 +103,17 @@ describe('ApiKeyGate', () => {
 
     await render(
       <ApiKeyGate>
-        <Text>generation content</Text>
+        <CanCreateProbe />
+        <Text>open existing lesson</Text>
       </ApiKeyGate>,
     );
 
     expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
-    expect(screen.queryByText('generation content')).toBeNull();
+    expect(screen.getByText('creation disabled')).toBeTruthy();
+    expect(screen.getByText('open existing lesson')).toBeTruthy();
   });
 
-  it('passes true to render-prop children when creation is available', async () => {
+  it('exposes canCreate=true via context when creation is available', async () => {
     mockUseEntitlements.mockReturnValue(
       entitlementsValue({
         entitlements: {
@@ -121,7 +128,7 @@ describe('ApiKeyGate', () => {
 
     await render(
       <ApiKeyGate>
-        {(canCreate) => <Text>{canCreate ? 'creation enabled' : 'creation disabled'}</Text>}
+        <CanCreateProbe />
       </ApiKeyGate>,
     );
 
@@ -148,9 +155,8 @@ describe('ApiKeyGate', () => {
     });
   });
 
-  // @s10 (loading facet) — while key status is still loading, the gate renders neither the
-  // notice nor its children (no premature "key required" flash).
-  it('announces entitlement loading without rendering plan-sensitive controls', async () => {
+  // @s10 (loading facet) — while loading, no notice; children stay mounted with canCreate=false.
+  it('announces entitlement loading without the required-key notice', async () => {
     const announce = jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockImplementation(jest.fn());
@@ -158,30 +164,33 @@ describe('ApiKeyGate', () => {
 
     await render(
       <ApiKeyGate>
-        <Text>generation content</Text>
+        <CanCreateProbe />
+        <Text>open existing lesson</Text>
       </ApiKeyGate>,
     );
 
-    expect(screen.queryByText('generation content')).toBeNull();
+    expect(screen.getByText('creation disabled')).toBeTruthy();
+    expect(screen.getByText('open existing lesson')).toBeTruthy();
     expect(screen.queryByText('upload.apiKeyRequired.message')).toBeNull();
     expect(screen.getByText('entitlements.loading').props.accessibilityLiveRegion).toBe('polite');
     expect(announce).toHaveBeenCalledWith('entitlements.loading');
     announce.mockRestore();
   });
 
-  // @s10 (guard facet) — once status resolves to no-key, the notice renders instead of the
-  // generation entry's children.
+  // @s10 (guard facet) — notice when gated; children remain for open/play (@s13).
   it('renders the required-key notice when there is no key', async () => {
     mockUseApiKey.mockReturnValue(apiKeyValue({ status: { hasKey: false } }));
 
     await render(
       <ApiKeyGate>
-        <Text>generation content</Text>
+        <CanCreateProbe />
+        <Text>open existing lesson</Text>
       </ApiKeyGate>,
     );
 
     expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
-    expect(screen.queryByText('generation content')).toBeNull();
+    expect(screen.getByText('creation disabled')).toBeTruthy();
+    expect(screen.getByText('open existing lesson')).toBeTruthy();
   });
 
   // @s10 — once a key is saved, the gate renders its children instead of the notice.
@@ -233,7 +242,7 @@ describe('ApiKeyGate', () => {
   });
 
   // @s12 — reloaded entitlements are authoritative after a downgrade.
-  it('hides children when current entitlements disallow creation', async () => {
+  it('disables create via context when current entitlements disallow creation', async () => {
     mockUseApiKey.mockReturnValue(
       apiKeyValue({
         status: { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' },
@@ -242,16 +251,18 @@ describe('ApiKeyGate', () => {
 
     await render(
       <ApiKeyGate>
-        <Text>generation content</Text>
+        <CanCreateProbe />
+        <Text>open existing lesson</Text>
       </ApiKeyGate>,
     );
 
-    expect(screen.queryByText('generation content')).toBeNull();
+    expect(screen.getByText('creation disabled')).toBeTruthy();
+    expect(screen.getByText('open existing lesson')).toBeTruthy();
     expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
   });
 
-  // @s5/@s6 — entitlement failures hide creation and expose the hook retry.
-  it('renders an entitlement error and retries without showing children', async () => {
+  // @s5/@s6 — entitlement failures expose retry while children stay mounted (@s13).
+  it('renders an entitlement error and retries while keeping children mounted', async () => {
     const retry = jest.fn();
     mockUseEntitlements.mockReturnValue(
       entitlementsValue({
@@ -263,40 +274,37 @@ describe('ApiKeyGate', () => {
 
     await render(
       <ApiKeyGate>
-        <Text>generation content</Text>
+        <Text>open existing lesson</Text>
       </ApiKeyGate>,
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('entitlements.error.message');
-    expect(screen.queryByText('generation content')).toBeNull();
+    expect(screen.getByText('open existing lesson')).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'entitlements.error.retry' }));
     expect(retry).toHaveBeenCalledTimes(1);
   });
 
-  // @s13 — render-prop consumers can preserve lesson access while creation stays gated.
-  it('passes false to render-prop children while creation is unavailable', async () => {
+  // @s13 — context consumers preserve lesson access while creation stays gated.
+  it('exposes canCreate=false via context while creation is unavailable', async () => {
     await render(
       <ApiKeyGate>
-        {(canCreate) => (
-          <>
-            {canCreate ? <Text>create lesson</Text> : null}
-            <Text>open existing lesson</Text>
-          </>
-        )}
+        <CanCreateProbe />
+        <Text>open existing lesson</Text>
       </ApiKeyGate>,
     );
 
-    expect(screen.queryByText('create lesson')).toBeNull();
+    expect(screen.getByText('creation disabled')).toBeTruthy();
+    expect(screen.queryByText('creation enabled')).toBeNull();
     expect(screen.getByText('open existing lesson')).toBeTruthy();
     expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
   });
 
-  it('passes false to render-prop children while entitlements load', async () => {
+  it('exposes canCreate=false via context while entitlements load', async () => {
     mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
 
     await render(
       <ApiKeyGate>
-        {(canCreate) => <Text>{canCreate ? 'creation enabled' : 'creation disabled'}</Text>}
+        <CanCreateProbe />
       </ApiKeyGate>,
     );
 
@@ -304,14 +312,14 @@ describe('ApiKeyGate', () => {
     expect(screen.queryByText('creation enabled')).toBeNull();
   });
 
-  it('passes false to render-prop children when entitlements fail', async () => {
+  it('exposes canCreate=false via context when entitlements fail', async () => {
     mockUseEntitlements.mockReturnValue(
       entitlementsValue({ entitlements: null, error: new Error('read failed') }),
     );
 
     await render(
       <ApiKeyGate>
-        {(canCreate) => <Text>{canCreate ? 'creation enabled' : 'creation disabled'}</Text>}
+        <CanCreateProbe />
       </ApiKeyGate>,
     );
 

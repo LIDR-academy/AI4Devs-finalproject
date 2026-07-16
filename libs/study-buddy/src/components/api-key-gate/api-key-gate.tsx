@@ -7,18 +7,18 @@ import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import type { ApiKeyGateProps } from './api-key-gate.types';
+import { ApiKeyGateCanCreateContext } from './use-api-key-gate-can-create';
 
 /**
- * ApiKeyGate — feature component guarding the lesson-generation entry point (AC10, @s10):
- * renders `ApiKeyRequiredNotice` when the caller has no key saved, its `children` once a key
- * is present, and neither branch while the key status is still loading (no premature "key
- * required" flash). Does not implement any generation logic itself — R2 builds inside it.
+ * ApiKeyGate — guards create/upload affordances while always mounting `children` so existing
+ * lessons stay reachable (@s13). Status UI (loading / error / key-required) sits above children.
+ * Consumers read `useApiKeyGateCanCreate()` instead of a children-as-function render prop.
  */
 export const ApiKeyGate = ({ children }: ApiKeyGateProps) => {
   const { entitlements, isLoading: areEntitlementsLoading, error, retry } = useEntitlements();
   const { t } = useLocalization();
   const router = useRouter();
-  const renderChildren = typeof children === 'function' ? children : null;
+  const canCreate = Boolean(entitlements?.canCreate) && !areEntitlementsLoading && !error;
 
   useEffect(() => {
     if (areEntitlementsLoading) {
@@ -26,43 +26,37 @@ export const ApiKeyGate = ({ children }: ApiKeyGateProps) => {
     }
   }, [areEntitlementsLoading, t]);
 
-  if (areEntitlementsLoading) {
-    return (
-      <>
+  return (
+    <ApiKeyGateCanCreateContext.Provider value={canCreate}>
+      {areEntitlementsLoading ? (
         <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
           {t('entitlements.loading')}
         </Text>
-        {renderChildren?.(false)}
-      </>
-    );
-  }
+      ) : null}
 
-  if (error) {
-    return (
-      <View style={styles.gatedContent}>
-        <View style={styles.error}>
-          <Text accessibilityRole="alert" style={styles.message}>
-            {t('entitlements.error.message')}
-          </Text>
-          <Button onPress={retry}>{t('entitlements.error.retry')}</Button>
+      {error ? (
+        <View style={styles.gatedContent}>
+          <View style={styles.error}>
+            <Text accessibilityRole="alert" style={styles.message}>
+              {t('entitlements.error.message')}
+            </Text>
+            <Button onPress={retry}>{t('entitlements.error.retry')}</Button>
+          </View>
         </View>
-        {renderChildren?.(false)}
-      </View>
-    );
-  }
+      ) : null}
 
-  if (!entitlements?.canCreate) {
-    return (
-      <View style={styles.gatedContent}>
-        <ApiKeyRequiredNotice onNavigateToAccount={() => router.push('/settings')} />
-        {renderChildren?.(false)}
-      </View>
-    );
-  }
+      {!areEntitlementsLoading && !error && !canCreate ? (
+        <View style={styles.gatedContent}>
+          <ApiKeyRequiredNotice onNavigateToAccount={() => router.push('/settings')} />
+        </View>
+      ) : null}
 
-  if (typeof children === 'function') return children(true);
-  return children;
+      {children}
+    </ApiKeyGateCanCreateContext.Provider>
+  );
 };
+
+export { useApiKeyGateCanCreate } from './use-api-key-gate-can-create';
 
 export const apiKeyGateStyles = StyleSheet.create((theme) => ({
   gatedContent: {
