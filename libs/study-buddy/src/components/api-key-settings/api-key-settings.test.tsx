@@ -10,7 +10,7 @@ jest.mock('@helsoft/localization', () => ({
 import { useApiKey, useEntitlements } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { Linking } from 'react-native';
+import { AccessibilityInfo, Linking } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
 import { ApiKeySettings } from './api-key-settings';
@@ -115,14 +115,20 @@ describe('ApiKeySettings', () => {
   });
 
   // @s4 — plan-sensitive settings stay hidden until entitlements resolve.
-  it('renders nothing while entitlements are loading', async () => {
+  it('announces entitlement loading without rendering key settings', async () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(jest.fn());
     mockUseApiKey.mockReturnValue(apiKeyValue());
     mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
     mockUseLocalization.mockReturnValue(localizationValue());
 
-    const view = await render(<ApiKeySettings />);
+    await render(<ApiKeySettings />);
 
-    expect(view.toJSON()).toBeNull();
+    expect(screen.queryByLabelText('settings.apiKey.inputLabel')).toBeNull();
+    expect(screen.getByText('entitlements.loading').props.accessibilityLiveRegion).toBe('polite');
+    expect(announce).toHaveBeenCalledWith('entitlements.loading');
+    announce.mockRestore();
   });
 
   // @s9/@s17 — paid users never see BYOK settings, even with a stale saved key.

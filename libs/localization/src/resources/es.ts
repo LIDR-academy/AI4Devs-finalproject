@@ -70,6 +70,7 @@ export const es: TranslationResource = {
       count_other: '{{count}} lecciones',
     },
     entitlements: {
+      loading: 'Cargando tu plan…',
       error: {
         message: 'No pudimos cargar tu plan.',
         retry: 'Intentar de nuevo',

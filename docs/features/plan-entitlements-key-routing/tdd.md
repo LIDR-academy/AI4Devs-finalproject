@@ -73,12 +73,10 @@ They caused no production change.
 - @s7–@s19 RED Deno mirror/wiring absent; GREEN live profile read, exclusive Vault/platform branches, ignored request selectors, and source-aware provider errors.
 - Barrel-export RED failed integration import; GREEN key-source decision exported through services.
 
-## Manual deployed-function check
+## Manual runtime smoke check
 
-After setting `PLATFORM_GROQ_API_KEY` in the deployed Edge Function environment, invoke once as a
-paid user with no saved key and once after a dashboard plan flip to free. Confirm the paid call
-succeeds without `get_api_key`, the next call reads the new live plan, and missing/invalid platform
-configuration returns only `platform_key_unavailable` with no key material in response or logs.
+After setting `PLATFORM_GROQ_API_KEY`, confirm one paid keyless generation succeeds and runtime
+secret/configuration failures remain redacted. Plan flips and crafted fields are executable tests.
 
 ## Review refactors
 
@@ -87,9 +85,20 @@ configuration returns only `platform_key_unavailable` with no key material in re
 - @s10/@s18 RED paid exclusivity/provider behavior had no executable seam; GREEN lazy plan router + resolved-key provider seam.
 - @s7/@s15 RED Edge wiring lacked control-flow proof; GREEN Deno mirror uses lazy Vault callback, live profile plan, and resolved provider key.
 - @s7/@s15 free crafted-selector behavioral coverage passed after the review refactor; no further source change.
+- @s1 RED trigger followed backfill; GREEN trigger now protects signups before idempotent backfill.
+- @s14 RED executable Edge route was absent; GREEN each request reads the current server plan.
+- @s15 crafted route-field coverage passed against the executable Edge route; source regex removed.
+- Paid control RED had no funded slot; GREEN atomic per-user concurrency/rate/daily quota RPCs.
+- @s4 RED loading was silent; GREEN both entitlement gates expose live status + iOS announcement.
+- Key-failure RED accepted image reads; GREEN routing resolves key and limits before image metadata.
 
 ## Mutation re-work
 
 - @s7/@s10/@s15 RED key-route mutants bypassed source exclusivity/acquisition/provider calls; GREEN direct production-seam tests.
 - @s15 RED malformed API and schema-error mutants escaped precedence checks; GREEN observable guard/branch tests.
 - @s19 nullish-body mutant was equivalent inside the broad catch; GREEN refactor plus parse-failure coverage made every branch killable.
+
+## Full-review CI re-work
+
+- Existing AppChrome E2E RED exposed missing safe-area context; GREEN Storybook root now provides it.
+- Existing PdfUpload E2E RED expected removed manual continuation; GREEN asserts the auto-advance contract.

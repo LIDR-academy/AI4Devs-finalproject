@@ -14,7 +14,7 @@ import { useApiKey, useEntitlements } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
-import { Text } from 'react-native';
+import { AccessibilityInfo, Text } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
 import { ApiKeyGate } from './api-key-gate';
@@ -59,7 +59,10 @@ describe('ApiKeyGate', () => {
 
   // @s10 (loading facet) — while key status is still loading, the gate renders neither the
   // notice nor its children (no premature "key required" flash).
-  it('renders neither the notice nor children while status is loading', async () => {
+  it('announces entitlement loading without rendering plan-sensitive controls', async () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(jest.fn());
     mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
 
     await render(
@@ -70,9 +73,9 @@ describe('ApiKeyGate', () => {
 
     expect(screen.queryByText('generation content')).toBeNull();
     expect(screen.queryByText('upload.apiKeyRequired.message')).toBeNull();
-    // spec.md's deliberate anti-flash decision (@s10): the Loading branch renders nothing at
-    // all, not even an accessibility-only node — a bare `null`.
-    expect(screen.toJSON()).toBeNull();
+    expect(screen.getByText('entitlements.loading').props.accessibilityLiveRegion).toBe('polite');
+    expect(announce).toHaveBeenCalledWith('entitlements.loading');
+    announce.mockRestore();
   });
 
   // @s10 (guard facet) — once status resolves to no-key, the notice renders instead of the

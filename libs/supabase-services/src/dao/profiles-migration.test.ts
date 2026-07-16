@@ -7,6 +7,15 @@ const migrationPath = resolve(
 );
 
 describe('profiles migration', () => {
+  it('@s1 installs the signup trigger before backfilling existing users', () => {
+    const sql = readFileSync(migrationPath, 'utf8');
+
+    expect(sql.indexOf('create trigger on_auth_user_profile_created')).toBeGreaterThan(-1);
+    expect(
+      sql.indexOf('insert into public.profiles (id)\nselect id from auth.users'),
+    ).toBeGreaterThan(sql.indexOf('create trigger on_auth_user_profile_created'));
+  });
+
   it('@s1 creates one default-free profile per auth user with select-own-only RLS', () => {
     const sql = readFileSync(migrationPath, 'utf8');
 

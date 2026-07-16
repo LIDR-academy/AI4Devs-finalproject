@@ -2,7 +2,8 @@ import { ApiKeyRequiredNotice, Button } from '@helsoft/components';
 import { useEntitlements } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import type { ApiKeyGateProps } from './api-key-gate.types';
@@ -19,7 +20,22 @@ export const ApiKeyGate = ({ children }: ApiKeyGateProps) => {
   const router = useRouter();
   const renderChildren = typeof children === 'function' ? children : null;
 
-  if (areEntitlementsLoading) return renderChildren?.(false) ?? null;
+  useEffect(() => {
+    if (areEntitlementsLoading) {
+      AccessibilityInfo.announceForAccessibility(t('entitlements.loading'));
+    }
+  }, [areEntitlementsLoading, t]);
+
+  if (areEntitlementsLoading) {
+    return (
+      <>
+        <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
+          {t('entitlements.loading')}
+        </Text>
+        {renderChildren?.(false)}
+      </>
+    );
+  }
 
   if (error) {
     return (
@@ -59,5 +75,11 @@ const styles = StyleSheet.create((theme) => ({
   message: {
     ...theme.typography.bodyMedium,
     color: theme.colors.error,
+  },
+  visuallyHidden: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    overflow: 'hidden',
   },
 }));

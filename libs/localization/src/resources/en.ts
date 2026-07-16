@@ -76,6 +76,7 @@ export const en = {
       count_other: '{{count}} lessons',
     },
     entitlements: {
+      loading: 'Loading your plan…',
       error: {
         message: "We couldn't load your plan.",
         retry: 'Try again',

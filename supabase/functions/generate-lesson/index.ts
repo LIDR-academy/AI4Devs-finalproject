@@ -25,8 +25,8 @@ import { assembleGeneratedLesson } from './_shared/lesson-generation.assembly.ts
 import { GenerationTimeoutError, mapGenerationError } from './_shared/lesson-generation.errors.ts';
 import {
   callProviderWithResolvedKey,
-  resolveLessonGenerationKeyForPlan,
 } from './_shared/lesson-generation.key-source.ts';
+import { handleLessonGenerationRoute } from './_shared/lesson-generation.route.ts';
 import { markDocumentGenerationFailure, persistLesson } from './_shared/lesson-generation.persist.ts';
 import { placeImagesByMetadata } from './_shared/lesson-generation.placement.ts';
 import { buildDeckPrompt } from './_shared/lesson-generation.prompt.ts';
@@ -48,7 +48,6 @@ import type {
 type AnySupabaseClient = any;
 
 type DocumentRow = { pages: { page: number; text: string }[]; status: string };
-type ProfileRow = { plan: 'free' | 'paid' };
 
 type DocumentImageRow = {
   id: string;
@@ -184,18 +183,6 @@ Deno.serve(async (req) => {
   }
   const { documentId, composition } = body as GenerateLessonRequest;
 
-  // @s14/@s15 -- plan is server-owned and read live after authentication on every request.
-  // Any client-supplied plan/entitlement/key-source fields are ignored by the request contract.
-  const { data: profileRow, error: profileError } = await adminClient
-    .from('profiles')
-    .select('plan')
-    .eq('id', user.id)
-    .single();
-  const profile = profileRow as ProfileRow | null;
-  if (profileError || !profile || (profile.plan !== 'free' && profile.plan !== 'paid')) {
-    return errorResponse('generation_failed', 500);
-  }
-
   const { data: documentRow, error: documentError } = await callerClient
     .from('documents')
     .select('pages, status')
@@ -206,24 +193,50 @@ Deno.serve(async (req) => {
     return errorResponse('document_not_ready', 422);
   }
 
-  const { data: imageRows } = await callerClient
-    .from('document_images')
-    .select('id, page_number, position_index, storage_path, width, height, description')
-    .eq('document_id', documentId);
-  const images = (imageRows ?? []) as DocumentImageRow[];
-
-  // @s7/@s8/@s10/@s18 -- the free route alone reads Vault. Paid reads only the runtime platform
-  // secret and therefore works without, and ignores, any saved user-key row.
-  const resolvedKey = await resolveLessonGenerationKeyForPlan({
-    plan: profile.plan,
-    readUserApiKey: async () => {
-      const { data: keyRows } = await adminClient.rpc('get_api_key', { p_user_id: user.id });
-      const keyRow = Array.isArray(keyRows) ? keyRows[0] : keyRows;
-      return keyRow?.api_key ?? null;
-    },
-    platformApiKey:
-      profile.plan === 'paid' ? (Deno.env.get('PLATFORM_GROQ_API_KEY') ?? null) : null,
-  });
+  let resolvedKey: Awaited<ReturnType<typeof handleLessonGenerationRoute>>;
+  try {
+    resolvedKey = await handleLessonGenerationRoute({
+      userId: user.id,
+      requestBody: body,
+      readPlan: async (userId) => {
+        const { data: profileRow, error: profileError } = await adminClient
+          .from('profiles')
+          .select('plan')
+          .eq('id', userId)
+          .single();
+        const plan = profileRow?.plan;
+        return !profileError && (plan === 'free' || plan === 'paid') ? plan : null;
+      },
+      readUserApiKey: async () => {
+        const { data: keyRows } = await adminClient.rpc('get_api_key', { p_user_id: user.id });
+        const keyRow = Array.isArray(keyRows) ? keyRows[0] : keyRows;
+        return keyRow?.api_key ?? null;
+      },
+      platformApiKey: Deno.env.get('PLATFORM_GROQ_API_KEY') ?? null,
+      acquirePlatformSlot: async (userId) => {
+        const { data, error } = await adminClient.rpc('acquire_platform_generation_slot', {
+          p_user_id: userId,
+        });
+        if (error) throw error;
+        return data === true;
+      },
+      releasePlatformSlot: async (userId) => {
+        const { error } = await adminClient.rpc('release_platform_generation_slot', {
+          p_user_id: userId,
+        });
+        if (error) throw error;
+      },
+      readImageMetadata: async () => {
+        const { data: imageRows } = await callerClient
+          .from('document_images')
+          .select('id, page_number, position_index, storage_path, width, height, description')
+          .eq('document_id', documentId);
+        return (imageRows ?? []) as DocumentImageRow[];
+      },
+    });
+  } catch {
+    return errorResponse('generation_failed', 500);
+  }
   if (!resolvedKey.ok) {
     // Document identified — mark so the PDF list shows Retry (@s3/@s8).
     try {
@@ -233,9 +246,16 @@ Deno.serve(async (req) => {
     }
     return errorResponse(
       resolvedKey.errorCode,
-      resolvedKey.errorCode === 'platform_key_unavailable' ? 503 : 422,
+      resolvedKey.errorCode === 'platform_key_unavailable'
+        ? 503
+        : resolvedKey.errorCode === 'rate_limited'
+          ? 429
+          : resolvedKey.errorCode === 'generation_failed'
+            ? 500
+            : 422,
     );
   }
+  const images = (resolvedKey.imageMetadata ?? []) as DocumentImageRow[];
 
   const promptImages: PromptImageManifestEntry[] = images.map((image) => ({
     imageId: image.id,
@@ -334,5 +354,13 @@ Deno.serve(async (req) => {
       // best-effort; still return the typed generation error
     }
     return errorResponse(errorCode, status);
+  } finally {
+    if (resolvedKey.source === 'platform') {
+      try {
+        await resolvedKey.release();
+      } catch {
+        // The expiring lease is the crash-safe fallback when release fails.
+      }
+    }
   }
 });

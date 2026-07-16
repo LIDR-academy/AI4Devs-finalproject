@@ -70,6 +70,7 @@ export const de: TranslationResource = {
       count_other: '{{count}} Lektionen',
     },
     entitlements: {
+      loading: 'Dein Tarif wird geladen…',
       error: {
         message: 'Dein Tarif konnte nicht geladen werden.',
         retry: 'Erneut versuchen',

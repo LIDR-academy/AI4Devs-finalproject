@@ -6,6 +6,7 @@ import { type ThemeScheme, themes } from '@helsoft/components/theme';
 import { LocalizationProvider } from '@helsoft/localization';
 import type { Decorator, Preview } from '@storybook/react-native-web-vite';
 import { useEffect } from 'react';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { UnistylesRuntime } from 'react-native-unistyles';
 
 // The library defaults to adaptive (OS) themes; storybook drives them manually.
@@ -36,6 +37,12 @@ const withLocalizationProvider: Decorator = (Story) => (
   </LocalizationProvider>
 );
 
+const withSafeAreaProvider: Decorator = (Story) => (
+  <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+    <Story />
+  </SafeAreaProvider>
+);
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -62,7 +69,7 @@ const preview: Preview = {
   initialGlobals: {
     theme: 'light',
   },
-  decorators: [withUnistylesTheme, withLocalizationProvider],
+  decorators: [withUnistylesTheme, withLocalizationProvider, withSafeAreaProvider],
 };
 
 export default preview;

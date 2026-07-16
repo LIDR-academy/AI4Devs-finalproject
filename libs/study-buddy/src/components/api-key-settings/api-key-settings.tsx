@@ -2,7 +2,8 @@ import { ApiKeyForm, Button } from '@helsoft/components';
 import { useApiKey, useEntitlements } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import type { AiProvider, ApiKeyErrorCode } from '@helsoft/types';
-import { Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 /** Provider brand names are not translated (proper nouns) — the seam stays open for more
@@ -42,7 +43,19 @@ export const ApiKeySettings = () => {
   } = useEntitlements();
   const { t, locale } = useLocalization();
 
-  if (areEntitlementsLoading) return null;
+  useEffect(() => {
+    if (areEntitlementsLoading) {
+      AccessibilityInfo.announceForAccessibility(t('entitlements.loading'));
+    }
+  }, [areEntitlementsLoading, t]);
+
+  if (areEntitlementsLoading) {
+    return (
+      <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
+        {t('entitlements.loading')}
+      </Text>
+    );
+  }
 
   if (entitlementsError) {
     return (
@@ -95,5 +108,11 @@ const styles = StyleSheet.create((theme) => ({
   errorMessage: {
     ...theme.typography.bodyMedium,
     color: theme.colors.error,
+  },
+  visuallyHidden: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    overflow: 'hidden',
   },
 }));
