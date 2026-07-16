@@ -1,4 +1,4 @@
-import { ApiKeyProvider, EntitlementsProvider } from '@helsoft/hooks';
+import { ApiKeyProvider, ProfileProvider } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { AppChrome } from '@helsoft/study-buddy';
 import { Stack } from 'expo-router';
@@ -6,11 +6,11 @@ import { Stack } from 'expo-router';
 export default function AppLayout() {
   const { t } = useLocalization();
 
-  // ApiKeyProvider + EntitlementsProvider: one shared key-status and one profile→plans
+  // ApiKeyProvider + ProfileProvider: one shared key-status and one profile→plans
   // flags fetch for the authenticated shell (Settings, Upload, …).
   return (
     <ApiKeyProvider>
-      <EntitlementsProvider>
+      <ProfileProvider>
         <AppChrome />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ title: t('nav.myLessons') }} />
@@ -20,7 +20,7 @@ export default function AppLayout() {
           <Stack.Screen name="lesson/[id]/player" options={{ title: t('nav.study') }} />
           <Stack.Screen name="lesson/[id]/results" options={{ title: t('nav.results') }} />
         </Stack>
-      </EntitlementsProvider>
+      </ProfileProvider>
     </ApiKeyProvider>
   );
 }

@@ -12,11 +12,11 @@ import {
 
 import { useApiKey } from './use-api-key';
 import { useEntitlementsInitialState, useEntitlementsReducer } from './use-entitlements.reducer';
-import type { EntitlementsProviderProps, UseEntitlementsResult } from './use-entitlements.types';
+import type { ProfileProviderProps, UseEntitlementsResult } from './use-entitlements.types';
 import { useSession } from './use-session';
 
 /**
- * Shared entitlements state. `skip` keeps hooks-order stable when an `EntitlementsProvider`
+ * Shared entitlements state. `skip` keeps hooks-order stable when a `ProfileProvider`
  * ancestor already owns the single profile+flags fetch.
  */
 const useEntitlementsState = (skip: boolean): UseEntitlementsResult => {
@@ -74,7 +74,7 @@ const EntitlementsContext = createContext<UseEntitlementsResult | undefined>(und
 
 /**
  * One profile→plans join (via EntitlementsService) shared app-wide when under
- * `EntitlementsProvider`. Standalone still works for tests/Storybook without a provider.
+ * `ProfileProvider`. Standalone still works for tests/Storybook without a provider.
  */
 export const useEntitlements = (): UseEntitlementsResult => {
   const shared = useContext(EntitlementsContext);
@@ -82,8 +82,8 @@ export const useEntitlements = (): UseEntitlementsResult => {
   return shared ?? own;
 };
 
-/** Owns the single entitlements fetch for the authenticated app shell. Nest under `ApiKeyProvider`. */
-export const EntitlementsProvider = ({ children }: EntitlementsProviderProps) => {
+/** Owns the single profile+flags fetch for the authenticated app shell. Nest under `ApiKeyProvider`. */
+export const ProfileProvider = ({ children }: ProfileProviderProps) => {
   const value = useEntitlementsState(false);
   return createElement(EntitlementsContext.Provider, { value }, children);
 };

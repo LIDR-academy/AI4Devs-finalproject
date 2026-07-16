@@ -8,6 +8,6 @@ export type UseEntitlementsResult = {
   retry: () => void;
 };
 
-export type EntitlementsProviderProps = {
+export type ProfileProviderProps = {
   children: ReactNode;
 };

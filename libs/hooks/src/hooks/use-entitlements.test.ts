@@ -9,7 +9,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
 
 import { useApiKey } from './use-api-key';
-import { EntitlementsProvider, useEntitlements } from './use-entitlements';
+import { ProfileProvider, useEntitlements } from './use-entitlements';
 import { useSession } from './use-session';
 
 const service = EntitlementsService as jest.Mocked<typeof EntitlementsService>;
@@ -296,7 +296,7 @@ describe('useEntitlements', () => {
     expect(result.current.entitlements?.plan).toBe('paid');
   });
 
-  it('shares one profile fetch across consumers under EntitlementsProvider', async () => {
+  it('shares one profile fetch across consumers under ProfileProvider', async () => {
     service.getEntitlements.mockResolvedValue({
       plan: 'free',
       keySource: 'user',
@@ -306,7 +306,7 @@ describe('useEntitlements', () => {
     });
 
     const wrapper = ({ children }: { children: ReactNode }) =>
-      createElement(EntitlementsProvider, null, children);
+      createElement(ProfileProvider, null, children);
 
     const { result } = renderHook(
       () => ({
