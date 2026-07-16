@@ -16,6 +16,7 @@ const PROVIDER_DISPLAY_NAMES: Record<AiProvider, string> = { groq: 'Groq' };
  * (Full-review Round 1, Minor 8) and threaded into ApiKeyForm's `guidanceUrl` prop, rather than
  * hardcoded inside the presentational organism. */
 const GUIDANCE_URL = 'https://console.groq.com/keys';
+export const EMPTY_SAVED_STATUS_LABEL = '';
 
 /**
  * Maps useApiKey()'s normalized ApiKeyErrorCode to its i18n banner key (@s7/@s9).
@@ -75,7 +76,7 @@ export const ApiKeySettings = () => {
         provider: status.provider ? PROVIDER_DISPLAY_NAMES[status.provider] : '',
         date: status.updatedAt ? new Date(status.updatedAt).toLocaleDateString(locale) : '',
       })
-    : '';
+    : EMPTY_SAVED_STATUS_LABEL;
 
   const errorKey = error ? API_KEY_ERROR_KEYS[error] : undefined;
   const errorMessage = errorKey ? t(errorKey) : undefined;
@@ -101,7 +102,7 @@ export const ApiKeySettings = () => {
   );
 };
 
-const styles = StyleSheet.create((theme) => ({
+export const apiKeySettingsStyles = StyleSheet.create((theme) => ({
   error: {
     gap: theme.spacing.s4,
   },
@@ -116,3 +117,5 @@ const styles = StyleSheet.create((theme) => ({
     overflow: 'hidden',
   },
 }));
+
+const styles = apiKeySettingsStyles;

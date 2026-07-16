@@ -13,7 +13,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo, Linking } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
-import { ApiKeySettings } from './api-key-settings';
+import { ApiKeySettings, apiKeySettingsStyles, EMPTY_SAVED_STATUS_LABEL } from './api-key-settings';
 
 const mockUseApiKey = useApiKey as jest.Mock;
 const mockUseEntitlements = useEntitlements as jest.Mock;
@@ -47,6 +47,66 @@ describe('ApiKeySettings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseEntitlements.mockReturnValue(entitlementsValue());
+  });
+
+  it('does not announce entitlement loading after entitlements resolve', async () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(jest.fn());
+    mockUseApiKey.mockReturnValue(apiKeyValue());
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(<ApiKeySettings />);
+
+    expect(announce).not.toHaveBeenCalled();
+    announce.mockRestore();
+  });
+
+  it('announces when entitlement loading starts after mount', async () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(jest.fn());
+    mockUseApiKey.mockReturnValue(apiKeyValue());
+    mockUseLocalization.mockReturnValue(localizationValue());
+    const view = await render(<ApiKeySettings />);
+
+    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    await view.rerender(<ApiKeySettings />);
+
+    expect(announce).toHaveBeenCalledWith('entitlements.loading');
+    announce.mockRestore();
+  });
+
+  it('hides key settings when resolved entitlements are absent', async () => {
+    mockUseApiKey.mockReturnValue(apiKeyValue());
+    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null }));
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    const view = await render(<ApiKeySettings />);
+
+    expect(view.toJSON()).toBeNull();
+  });
+
+  it('keeps the no-key saved-status fallback empty', () => {
+    expect(EMPTY_SAVED_STATUS_LABEL).toBe('');
+  });
+
+  it('preserves the concrete error and hidden styles', () => {
+    expect(apiKeySettingsStyles.error).toEqual({ gap: 16 });
+    expect(apiKeySettingsStyles.errorMessage).toMatchObject({
+      color: '#b7191c',
+      fontFamily: 'IBM Plex Sans',
+      fontSize: 14,
+      fontWeight: '400',
+      letterSpacing: 0.25,
+      lineHeight: 20,
+    });
+    expect(apiKeySettingsStyles.visuallyHidden).toEqual({
+      position: 'absolute',
+      width: 1,
+      height: 1,
+      overflow: 'hidden',
+    });
   });
 
   // @s1 — entering and saving a key calls useApiKey().saveApiKey with the entered value.
@@ -102,6 +162,20 @@ describe('ApiKeySettings', () => {
     expect(
       screen.getByText(`settings.apiKey.savedStatus:{"provider":"Groq","date":"${expectedDate}"}`),
     ).toBeTruthy();
+  });
+
+  it('uses empty saved-status metadata fallbacks when provider details are absent', async () => {
+    mockUseApiKey.mockReturnValue(apiKeyValue({ status: { hasKey: true } }));
+    mockUseLocalization.mockReturnValue(
+      localizationValue({
+        t: (key: string, options?: Record<string, unknown>) =>
+          options ? `${key}:${JSON.stringify(options)}` : key,
+      }),
+    );
+
+    await render(<ApiKeySettings />);
+
+    expect(screen.getByText('settings.apiKey.savedStatus:{"provider":"","date":""}')).toBeTruthy();
   });
 
   // @s3 — useApiKey().isLoading drives the ApiKeyForm Loading state.

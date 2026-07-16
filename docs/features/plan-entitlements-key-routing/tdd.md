@@ -49,9 +49,6 @@
 
 ## Coverage added on already-green production
 
-These review-driven tests passed on first run; they are coverage, not falsely reported RED cycles.
-They caused no production change.
-
 - @s3 free without key disables creation.
 - @s4 plan-pending and key-pending states hide entitlements.
 - @s5 Supabase data-access errors propagate unchanged from the DAO.
@@ -97,6 +94,7 @@ secret/configuration failures remain redacted. Plan flips and crafted fields are
 - @s7/@s10/@s15 RED key-route mutants bypassed source exclusivity/acquisition/provider calls; GREEN direct production-seam tests.
 - @s15 RED malformed API and schema-error mutants escaped precedence checks; GREEN observable guard/branch tests.
 - @s19 nullish-body mutant was equivalent inside the broad catch; GREEN refactor plus parse-failure coverage made every branch killable.
+- @s4/@s5/@s13 UI mutants survived; GREEN effect, branch, fallback, and style contracts.
 
 ## Full-review CI re-work
 

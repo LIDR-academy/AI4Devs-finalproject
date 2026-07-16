@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 import { AccessibilityInfo, Text } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
-import { ApiKeyGate } from './api-key-gate';
+import { ApiKeyGate, apiKeyGateStyles } from './api-key-gate';
 
 const mockUseApiKey = useApiKey as jest.Mock;
 const mockUseEntitlements = useEntitlements as jest.Mock;
@@ -55,6 +55,97 @@ describe('ApiKeyGate', () => {
     mockUseLocalization.mockReturnValue(localizationValue());
     mockUseApiKey.mockReturnValue(apiKeyValue());
     mockUseEntitlements.mockReturnValue(entitlementsValue());
+  });
+
+  it('does not announce entitlement loading after entitlements resolve', async () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(jest.fn());
+
+    await render(
+      <ApiKeyGate>
+        <Text>generation content</Text>
+      </ApiKeyGate>,
+    );
+
+    expect(announce).not.toHaveBeenCalled();
+    announce.mockRestore();
+  });
+
+  it('announces when entitlement loading starts after mount', async () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(jest.fn());
+    const view = await render(
+      <ApiKeyGate>
+        <Text>generation content</Text>
+      </ApiKeyGate>,
+    );
+
+    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    await view.rerender(
+      <ApiKeyGate>
+        <Text>generation content</Text>
+      </ApiKeyGate>,
+    );
+
+    expect(announce).toHaveBeenCalledWith('entitlements.loading');
+    announce.mockRestore();
+  });
+
+  it('handles unresolved non-loading entitlements as unavailable', async () => {
+    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null }));
+
+    await render(
+      <ApiKeyGate>
+        <Text>generation content</Text>
+      </ApiKeyGate>,
+    );
+
+    expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
+    expect(screen.queryByText('generation content')).toBeNull();
+  });
+
+  it('passes true to render-prop children when creation is available', async () => {
+    mockUseEntitlements.mockReturnValue(
+      entitlementsValue({
+        entitlements: {
+          plan: 'paid',
+          keySource: 'platform',
+          showKeySettings: false,
+          showAds: false,
+          canCreate: true,
+        },
+      }),
+    );
+
+    await render(
+      <ApiKeyGate>
+        {(canCreate) => <Text>{canCreate ? 'creation enabled' : 'creation disabled'}</Text>}
+      </ApiKeyGate>,
+    );
+
+    expect(screen.getByText('creation enabled')).toBeTruthy();
+    expect(screen.queryByText('creation disabled')).toBeNull();
+  });
+
+  it('preserves the concrete gate, error, message, and hidden styles', () => {
+    expect(apiKeyGateStyles.gatedContent).toMatchObject({ flex: 1, gap: 16 });
+    expect(apiKeyGateStyles.error).toMatchObject({ gap: 16 });
+    expect(apiKeyGateStyles.message).toMatchObject({
+      color: '#b7191c',
+      fontFamily: 'IBM Plex Sans',
+      fontSize: 14,
+      fontWeight: '400',
+      letterSpacing: 0.25,
+      lineHeight: 20,
+    });
+    expect(apiKeyGateStyles.visuallyHidden).toEqual({
+      position: 'absolute',
+      width: 1,
+      height: 1,
+      overflow: 'hidden',
+    });
   });
 
   // @s10 (loading facet) — while key status is still loading, the gate renders neither the
@@ -198,6 +289,34 @@ describe('ApiKeyGate', () => {
     expect(screen.queryByText('create lesson')).toBeNull();
     expect(screen.getByText('open existing lesson')).toBeTruthy();
     expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
+  });
+
+  it('passes false to render-prop children while entitlements load', async () => {
+    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+
+    await render(
+      <ApiKeyGate>
+        {(canCreate) => <Text>{canCreate ? 'creation enabled' : 'creation disabled'}</Text>}
+      </ApiKeyGate>,
+    );
+
+    expect(screen.getByText('creation disabled')).toBeTruthy();
+    expect(screen.queryByText('creation enabled')).toBeNull();
+  });
+
+  it('passes false to render-prop children when entitlements fail', async () => {
+    mockUseEntitlements.mockReturnValue(
+      entitlementsValue({ entitlements: null, error: new Error('read failed') }),
+    );
+
+    await render(
+      <ApiKeyGate>
+        {(canCreate) => <Text>{canCreate ? 'creation enabled' : 'creation disabled'}</Text>}
+      </ApiKeyGate>,
+    );
+
+    expect(screen.getByText('creation disabled')).toBeTruthy();
+    expect(screen.queryByText('creation enabled')).toBeNull();
   });
 
   // AC10 — the notice's action navigates to the account screen (/settings).
