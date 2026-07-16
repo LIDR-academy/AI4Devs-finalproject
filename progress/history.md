@@ -46,3 +46,5 @@
 2026-07-15 | navigation-menus | pr_ready | docs/features/navigation-menus/ | DoD PASS; ready for PR
 
 2026-07-16 | new-lesson-dialog (ad hoc) | n/a | — | Upload+generate in Dialog; extraction reset; upload screen wired.
+
+2026-07-16 | implementer-rename + pdf-upload tests (ad hoc) | n/a | — | Renamed implementator→implementer; fixed pdf-upload storage/RN mocks + continue assert.
