@@ -14,6 +14,22 @@ public record ArtistFilterRequest
     public int PageSize { get; init; } = 12;
 }
 
+// US0012 — Geo search request
+public record GeoFilterRequest
+{
+    public decimal Lat { get; init; }
+    public decimal Lng { get; init; }
+    /// <summary>Search radius in kilometres (1–50). 0 = entire city (no radius limit, max 100).</summary>
+    public decimal RadiusKm { get; init; } = 10;
+    // Optional US0004 filters
+    public string[]? Styles { get; init; }
+    public int? MinPrice { get; init; }
+    public int? MaxPrice { get; init; }
+    public decimal? MinRating { get; init; }
+    public bool? Certified { get; init; }
+    public string? Type { get; init; }
+}
+
 public record ArtistListResponse(List<ArtistCardDto> Data, int Total, int Page, int PageSize);
 
 public record ArtistSuggestionsResponse(List<string> Styles, List<string> Communes);

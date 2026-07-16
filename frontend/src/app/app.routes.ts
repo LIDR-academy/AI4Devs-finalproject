@@ -16,6 +16,11 @@ export const routes: Routes = [
       import('./features/artists/artists-page.component').then((m) => m.ArtistsPageComponent)
   },
   {
+    path: 'mapa',
+    loadComponent: () =>
+      import('./features/map/map-view.component').then((m) => m.MapViewComponent)
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./features/auth/login/login.component').then((m) => m.LoginComponent)

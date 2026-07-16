@@ -1,5 +1,8 @@
 /* INK·LINK global styles */
 @import '@angular/material/prebuilt-themes/azure-blue.css';
+@import 'leaflet/dist/leaflet.css';
+@import 'leaflet.markercluster/dist/MarkerCluster.css';
+@import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 :root {
   /* Brand palette */

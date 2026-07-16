@@ -13,6 +13,18 @@ export interface ArtistFilters {
   pageSize: number;
 }
 
+export interface GeoFilters {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  styles?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  certified?: boolean;
+  type?: 'independent' | 'studio' | null;
+}
+
 export interface ArtistSuggestionsResponse {
   styles: string[];
   communes: string[];

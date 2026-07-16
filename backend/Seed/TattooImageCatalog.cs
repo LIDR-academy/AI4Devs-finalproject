@@ -67,7 +67,7 @@ public static class TattooImageCatalog
             ],
             ["lettering"] =
             [
-                "https://live.staticflickr.com/135/342403992_d981945d52_b.jpg",
+                "https://upload.wikimedia.org/wikipedia/commons/5/5a/Corpus_Vile.JPG",
                 "https://live.staticflickr.com/5477/10542508985_ec7e37d67f_b.jpg",
                 "https://live.staticflickr.com/8158/7572572346_0493f66ae5.jpg",
                 "https://live.staticflickr.com/4537/38466424566_032694c7b8.jpg",

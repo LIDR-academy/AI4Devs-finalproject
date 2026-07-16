@@ -302,12 +302,12 @@ japones:
     dimensiones: "730x952"
 
 lettering:
-  - archivo: "good luck in thai letter tattoo (Dejavu Tattoo Studio Chiangmai Thailand)"
-    url: "https://live.staticflickr.com/135/342403992_d981945d52_b.jpg"
-    fuente: "Flickr"
-    autor: "augrust"
-    licencia: "CC BY-NC-SA 2.0"
-    dimensiones: "1024x768"
+  - archivo: "Corpus Vile"
+    url: "https://upload.wikimedia.org/wikipedia/commons/5/5a/Corpus_Vile.JPG"
+    fuente: "Wikimedia Commons"
+    autor: "Digitalnomade"
+    licencia: "Public Domain"
+    dimensiones: "1112x1620"
   - archivo: "lettering tattoo thomas jacobson orlando florida"
     url: "https://live.staticflickr.com/5477/10542508985_ec7e37d67f_b.jpg"
     fuente: "Flickr"

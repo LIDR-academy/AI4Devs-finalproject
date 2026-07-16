@@ -10,10 +10,12 @@ namespace InkLink.Api.Controllers;
 public class ArtistsController : ControllerBase
 {
     private readonly ArtistQueryService _service;
+    private readonly GeoService _geoService;
 
-    public ArtistsController(ArtistQueryService service)
+    public ArtistsController(ArtistQueryService service, GeoService geoService)
     {
         _service = service;
+        _geoService = geoService;
     }
 
     [HttpGet]
@@ -25,6 +27,18 @@ public class ArtistsController : ControllerBase
         }
 
         var result = await _service.GetArtistsAsync(request);
+        return Ok(result);
+    }
+
+    /// <summary>US0012 — Artists within a geo radius using PostGIS ST_DWithin.</summary>
+    [HttpGet("geo")]
+    public async Task<IActionResult> GetArtistsByLocation(
+        [FromQuery] GeoFilterRequest request, CancellationToken cancellationToken)
+    {
+        if (!IsValidGeoRequest(request))
+            return BadRequest(new { message = "Invalid geo params", code = "VALIDATION_ERROR" });
+
+        var result = await _geoService.GetByLocationAsync(request, cancellationToken);
         return Ok(result);
     }
 
@@ -81,5 +95,16 @@ public class ArtistsController : ControllerBase
 
         return string.IsNullOrWhiteSpace(request.Type)
             || Enum.TryParse<ArtistType>(request.Type, true, out _);
+    }
+
+    private static bool IsValidGeoRequest(GeoFilterRequest r)
+    {
+        if (r.Lat is < -90m or > 90m) return false;
+        if (r.Lng is < -180m or > 180m) return false;
+        if (r.RadiusKm < 0 || r.RadiusKm > 50) return false;
+        if (r.MinPrice is < 0 || r.MaxPrice is < 0) return false;
+        if (r.MinRating.HasValue && (r.MinRating < 1m || r.MinRating > 5m)) return false;
+        if (!string.IsNullOrWhiteSpace(r.Type) && !Enum.TryParse<ArtistType>(r.Type, true, out _)) return false;
+        return true;
     }
 }

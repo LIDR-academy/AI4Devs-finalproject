@@ -1,0 +1,415 @@
+$ink-bg: #0c0c0c;
+$ink-bg-card: #1c1c1c;
+$ink-accent: #c9a446;
+$ink-text-primary: #f0ede8;
+$ink-text-secondary: #888888;
+$ink-border: rgba(255, 255, 255, 0.07);
+$ink-radius: 12px;
+
+.map-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  background: $ink-bg;
+  color: $ink-text-primary;
+}
+
+.map-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: $ink-bg-card;
+  border-bottom: 1px solid $ink-border;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.controls-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid $ink-border;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.view-btn {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: none;
+  color: $ink-text-secondary;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &.active {
+    background: $ink-accent;
+    color: $ink-bg;
+  }
+
+  &:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+    color: $ink-text-primary;
+  }
+}
+
+.radius-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radius-label {
+  color: $ink-text-secondary;
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.radius-btn {
+  padding: 6px 12px;
+  border: 1px solid $ink-border;
+  border-radius: 20px;
+  background: transparent;
+  color: $ink-text-primary;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+
+  &:hover { border-color: $ink-accent; }
+
+  &.active {
+    background: $ink-accent;
+    border-color: $ink-accent;
+    color: $ink-bg;
+  }
+}
+
+.filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid $ink-border;
+  border-radius: $ink-radius;
+  background: transparent;
+  color: $ink-text-primary;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+
+  &:hover { border-color: $ink-accent; }
+}
+
+.filter-drawer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 16px 24px;
+  background: darken($ink-bg-card, 2%);
+  border-bottom: 1px solid $ink-border;
+}
+
+.filter-section { min-width: 200px; }
+
+.filter-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $ink-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1px solid $ink-border;
+  border-radius: 16px;
+  background: transparent;
+  color: $ink-text-primary;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+
+  &:hover { border-color: $ink-accent; }
+
+  &.active {
+    background: rgba($ink-accent, 0.15);
+    border-color: $ink-accent;
+    color: $ink-accent;
+  }
+}
+
+.rating-buttons, .type-buttons { display: flex; gap: 8px; }
+.rating-btn, .type-btn { @extend .chip; }
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    accent-color: $ink-accent;
+  }
+}
+
+.clear-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: $ink-radius;
+  background: transparent;
+  color: $ink-accent;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+
+  &:hover { text-decoration: none; }
+}
+
+.map-content {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-wrapper {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+
+  &--hidden { display: none; }
+}
+
+.map-container {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1;
+}
+
+.map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 1000;
+  color: $ink-text-secondary;
+  font-size: 0.875rem;
+
+  &__spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid $ink-border;
+    border-top-color: $ink-accent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.list-wrapper {
+  flex: 1;
+  padding: 24px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.list-loading, .list-error, .list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: $ink-text-secondary;
+
+  p { margin: 0; }
+}
+
+.list-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid $ink-border;
+  border-top-color: $ink-accent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.list-empty-hint {
+  font-size: 14px;
+  color: $ink-text-secondary;
+}
+
+.artist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.results-count {
+  padding: 12px 24px;
+  background: $ink-bg-card;
+  border-top: 1px solid $ink-border;
+  color: $ink-text-secondary;
+  font-size: 14px;
+  text-align: center;
+}
+
+:host ::ng-deep {
+  .artist-marker { background: transparent; border: none; }
+
+  .artist-marker-inner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: $ink-bg-card;
+    border: 3px solid $ink-accent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease;
+
+    &:hover { transform: scale(1.1); }
+    &.certified { border-color: #4caf50; }
+  }
+
+  .marker-photo { width: 100%; height: 100%; object-fit: cover; }
+
+  .marker-initials {
+    font-size: 14px;
+    font-weight: 600;
+    color: $ink-text-primary;
+  }
+
+  .leaflet-popup-content-wrapper {
+    background: $ink-bg-card;
+    border-radius: $ink-radius;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .leaflet-popup-content { margin: 0; width: 100% !important; }
+  .leaflet-popup-tip { background: $ink-bg-card; }
+
+  .leaflet-popup-close-button {
+    color: $ink-text-secondary !important;
+    &:hover { color: $ink-text-primary !important; }
+  }
+
+  .popup-content { padding: 16px; color: $ink-text-primary; }
+
+  .popup-header { display: flex; gap: 12px; margin-bottom: 12px; }
+
+  .popup-photo, .popup-photo-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .popup-photo-placeholder {
+    background: $ink-accent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: $ink-bg;
+  }
+
+  .popup-info { flex: 1; min-width: 0; }
+
+  .popup-name {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .popup-rating {
+    margin-bottom: 4px;
+    font-size: 13px;
+    .stars { color: $ink-accent; }
+  }
+
+  .popup-meta { font-size: 13px; color: $ink-text-secondary; }
+
+  .popup-price {
+    padding: 8px 0;
+    border-top: 1px solid $ink-border;
+    border-bottom: 1px solid $ink-border;
+    font-size: 14px;
+    color: $ink-accent;
+    font-weight: 500;
+  }
+
+  .popup-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+  .popup-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+
+    &--view {
+      background: transparent;
+      border: 1px solid $ink-border;
+      color: $ink-text-primary;
+      &:hover { border-color: $ink-accent; }
+    }
+
+    &--book {
+      background: $ink-accent;
+      border: 1px solid $ink-accent;
+      color: $ink-bg;
+      &:hover { background: darken($ink-accent, 5%); }
+    }
+  }
+
+  .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+    background: rgba($ink-accent, 0.6);
+    div { background: $ink-accent; color: $ink-bg; font-weight: 600; }
+  }
+}
+
+@media (max-width: 768px) {
+  .map-controls { padding: 12px 16px; }
+  .filter-drawer { padding: 12px 16px; }
+  .list-wrapper { padding: 16px; }
+  .artist-grid { grid-template-columns: 1fr; }
+}

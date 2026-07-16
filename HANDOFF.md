@@ -45,15 +45,16 @@ Retoma el trabajo desde el punto indicado en "Estado detallado" de HANDOFF.md.
 
 ## Estado detallado (actualizar SIEMPRE antes de cerrar sesión)
 
-**Última actualización**: 2026-07-15
+**Última actualización**: 2026-07-16
 
 ### Dónde quedamos
 
-- ✅ **Fase 0**, **US0001**, **US0003–US0009** mergeadas a `main` (PRs #1–#13).
-- 🟣 **US0010 lista para PR** — rama `feature/us0010-historial-reservas`.
-  - **TASK0001** ✅ Backend: `BookingService` (`GET /api/bookings/me` paginado con filtro por status, próximas primero; `POST /{id}/complete` confirmed+pasada→completed; `POST /{id}/cancel` confirmed+futura→cancelled, libera slot). Refactor: mapeo compartido en `BookingMapper`. 11 tests; suite backend 79/79.
-  - **TASK0002** ✅ Frontend: `/mis-reservas` (authGuard) con `MyBookingsComponent` + `BookingCardComponent` (badges por estado, detalle expandible, confirmación inline para completar/cancelar, CTA "Calificar" deshabilitado hasta US0013). Enlace "Mis reservas" en el menú. 13 tests; suite frontend 74/74.
-- Con US0010 mergeada se completan las **9 Must-Have (52 SP)**. Siguiente sugerida: **US0013** (calificar — habilita el CTA ya presente en Mis Reservas).
+- ✅ **Fase 0**, **US0001**, **US0003–US0010** y **US0013** mergeadas a `main` (PRs #1–#15). Las **9 Must-Have (52 SP) están completas**.
+- 🟣 **US0012 en revisión** — rama `feature/us0012-mapa-artistas`, **PR #16 abierto**. El mapa (Leaflet + markercluster, filtros, radio, vista lista) está implementado; en la sesión del 2026-07-16 se corrigieron dos cosas sobre la rama:
+  - **Fix render del mapa** (`fixs/issue-006.md`): los CSS de Leaflet/MarkerCluster se movieron de `angular.json` a `src/styles.scss` — el dev server servía `styles.css` sin Leaflet porque `angular.json` solo se lee al arrancar `ng serve`.
+  - **Reemplazo de imagen seed** (estilo lettering): `342403992_d981945d52_b.jpg` (Flickr) → `Corpus_Vile.JPG` (Wikimedia Commons, dominio público) en `TattooImageCatalog.cs` + `docs/tattoo-styles.yml`. ⚠️ El seeder solo corre con BD vacía: la BD dev local se corrigió con `UPDATE portfolio_items`; otros entornos ya sembrados necesitan re-seed o el mismo UPDATE.
+  - Suites en verde tras los cambios: backend 93/93, frontend 101/101.
+- Siguientes: mergear PR #16 → quedan **US0011** (chatbot, 13 SP) y **US0014** (auspicios, 2 SP).
 - **Rechazo de pago (US0009)**: Payment queda `pending` (el modelo no tiene estado `failed`); el cliente puede reintentar mientras el hold viva y el TTL libera el slot.
 - **Flow real**: ⏸️ deferred por decisión del 2026-07-15 — se seguirá con el mock. Al retomar: obtener credenciales sandbox → `Flow:ApiKey/SecretKey` + `Flow:UseMock=false` + prueba end-to-end contra sandbox.flow.cl. El resto del código no cambia.
 - **Pendiente deferred**: `fix-search-dropdown` (dropdown de sugerencias se superpone con "Resultados").

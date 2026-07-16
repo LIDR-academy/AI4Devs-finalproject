@@ -1,0 +1,113 @@
+<div class="map-page">
+
+  <!-- Controls -->
+  <div class="map-controls">
+    <div class="controls-left">
+      <div class="view-toggle">
+        <button class="view-btn" [class.active]="viewMode() === 'map'" (click)="setViewMode('map')">
+          🗺 Mapa
+        </button>
+        <button class="view-btn" [class.active]="viewMode() === 'list'" (click)="setViewMode('list')">
+          ☰ Lista
+        </button>
+      </div>
+
+      <div class="radius-selector">
+        <span class="radius-label">Radio:</span>
+        @for (opt of radiusOptions; track opt.value) {
+          <button class="radius-btn" [class.active]="selectedRadius() === opt.value" (click)="onRadiusChange(opt.value)">
+            {{ opt.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <button class="filter-toggle-btn" (click)="toggleFilters()">
+      ⚙ Filtros
+    </button>
+  </div>
+
+  <!-- Filter drawer -->
+  @if (showFilters()) {
+    <div class="filter-drawer">
+      <div class="filter-section">
+        <h4 class="filter-title">Estilos</h4>
+        <div class="filter-chips">
+          @for (style of tattooStyles; track style.slug) {
+            <button class="chip" [class.active]="selectedStyles().includes(style.slug)"
+              (click)="onStyleToggle(style.slug, !selectedStyles().includes(style.slug))">
+              {{ style.name }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h4 class="filter-title">Calificación mínima</h4>
+        <div class="rating-buttons">
+          @for (r of [1,2,3,4,5]; track r) {
+            <button class="rating-btn" [class.active]="minRating() === r" (click)="onMinRatingChange(r)">{{ r }}★</button>
+          }
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label class="checkbox-label">
+          <input type="checkbox" [checked]="certifiedOnly() === true"
+            (change)="onCertifiedChange($any($event.target).checked)" />
+          <span>Solo certificados</span>
+        </label>
+      </div>
+
+      <div class="filter-section">
+        <h4 class="filter-title">Tipo</h4>
+        <div class="type-buttons">
+          <button class="type-btn" [class.active]="artistType() === null" (click)="onArtistTypeChange(null)">Todos</button>
+          <button class="type-btn" [class.active]="artistType() === 'independent'" (click)="onArtistTypeChange('independent')">Independiente</button>
+          <button class="type-btn" [class.active]="artistType() === 'studio'" (click)="onArtistTypeChange('studio')">Estudio</button>
+        </div>
+      </div>
+
+      <button class="clear-btn" (click)="clearAllFilters()">Limpiar filtros</button>
+    </div>
+  }
+
+  <!-- Map (always in DOM so Leaflet keeps its state) -->
+  <div class="map-wrapper" [class.map-wrapper--hidden]="viewMode() !== 'map'">
+    @if (locationLoading()) {
+      <div class="map-loading">
+        <div class="map-loading__spinner"></div>
+        <p>Obteniendo tu ubicación…</p>
+      </div>
+    }
+    <div #mapContainer class="map-container"></div>
+  </div>
+
+  <!-- List view -->
+  @if (viewMode() === 'list') {
+    <div class="list-wrapper">
+      @if (loading()) {
+        <div class="list-loading"><div class="list-spinner"></div></div>
+      } @else if (error()) {
+        <div class="list-empty"><p>{{ error() }}</p></div>
+      } @else if (artistList().length === 0) {
+        <div class="list-empty">
+          <p>No se encontraron artistas en esta zona.</p>
+          <p class="list-empty-hint">Prueba ampliando el radio o ajustando los filtros.</p>
+        </div>
+      } @else {
+        <div class="artist-grid">
+          @for (artist of artistList(); track artist.id) {
+            <app-artist-card [artist]="artist" />
+          }
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loading() && artists()) {
+    <div class="results-count">
+      {{ artistList().length }} artista{{ artistList().length !== 1 ? 's' : '' }} encontrado{{ artistList().length !== 1 ? 's' : '' }}
+    </div>
+  }
+</div>

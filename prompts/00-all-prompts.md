@@ -1286,4 +1286,87 @@ Listo, el cambio está mergeado con main, continua según el plan
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 12 sesiones · 74 prompts documentados*
+# Sesión 13 — Fixes US0012: render del mapa Leaflet y reemplazo de imagen seed
+
+> 📅 2026-07-16 · Claude Code · Claude Fable 5 · medium
+
+## 75 — Reportar error en el mapa (issue-map.png)
+
+> 📋 2026-07-16T00:15:00Z · Claude Code · Claude Fable 5 · medium · ~30K tokens · rodri
+
+```
+Hay un error en el mapa, revisa el issue-map.png que está en la carpeta fixs
+```
+
+*(Diagnóstico: tiles dispersos sobre fondo negro = Leaflet sin su CSS. `angular.json` sí lo declaraba, pero el dev server llevaba corriendo desde antes de ese cambio y `ng serve` solo lee `angular.json` al arrancar. Ver `fixs/issue-006.md`.)*
+
+---
+
+## 76 — Mover imports de CSS de Leaflet a styles.scss
+
+> 📋 2026-07-16T00:40:00Z · Claude Code · Claude Fable 5 · medium · ~45K tokens · rodri
+
+```
+mueve los imports a styles.scss, ya reinicié el server
+```
+
+*(Los 3 CSS (leaflet, MarkerCluster, MarkerCluster.Default) pasaron de `angular.json` a `@import` en `src/styles.scss` — a prueba de hot-reload. Verificado: `styles.css` servido pasó de 8.7 KB a 24 KB con las reglas de Leaflet.)*
+
+---
+
+## 77 — Reemplazar imagen del seed
+
+> 📋 2026-07-16T01:10:00Z · Claude Code · Claude Fable 5 · medium · ~60K tokens · rodri
+
+```
+elimina esta imagen y reemplazala por otra cualquiera     https://live.staticflickr.com/135/342403992_d981945d52_b.jpg
+```
+
+*(Imagen del estilo lettering reemplazada por "Corpus Vile" de Wikimedia Commons (dominio público, 1112x1620), verificada visualmente. Actualizados `TattooImageCatalog.cs` y la ficha de atribución en `docs/tattoo-styles.yml`.)*
+
+---
+
+## 78 — ¿La imagen está en la BD?
+
+> 📋 2026-07-16T01:20:00Z · Claude Code · Claude Fable 5 · medium · ~65K tokens · rodri
+
+```
+será que la imagen esta en bbdd?
+```
+
+*(Correcto: el seeder solo corre con BD vacía, así que la URL vieja estaba persistida en 1 fila de `portfolio_items` (image_url + thumbnail_url). Corregida con UPDATE en `inklink_dev`; verificado 0 referencias restantes en BD y repo.)*
+
+---
+
+## 79 — Cierre de sesión: documentación, commit, push y PR
+
+> 📋 2026-07-16T01:45:00Z · Claude Code · Claude Fable 5 · medium · ~80K tokens · rodri
+
+```
+Listo, funciona. Si hay que actualizar los archivos .md de prompts y otros archivos mrkdown luego hacer commit, push y PR creo que debemos comenzar. Luego que sigue?
+```
+
+*(Creado `fixs/issue-006.md`; actualizados `PROJECT_STATUS.md` y `HANDOFF.md` (US0010 ✅ PR #14, US0013 ✅ PR #15, US0012 🟣 PR #16) y este registro. Suite frontend 101/101. Commit + push a `feature/us0012-mapa-artistas` → actualiza PR #16 existente.)*
+
+---
+
+## Resumen de archivos modificados (sesión 13)
+
+| Archivo | Acción |
+|---|---|
+| `frontend/src/styles.scss` | Actualizado — imports CSS de Leaflet/MarkerCluster |
+| `frontend/angular.json` | Actualizado — retirados los CSS de node_modules del array styles |
+| `frontend/src/app/features/map/map-view.component.html` | Actualizado — refactor sin Angular Material (venía de sesión anterior sin commitear) |
+| `backend/Seed/TattooImageCatalog.cs` | Actualizado — imagen lettering reemplazada |
+| `docs/tattoo-styles.yml` | Actualizado — atribución de la nueva imagen |
+| `fixs/issue-006.md` | Creado — análisis del bug de render del mapa |
+| `fixs/issue-map.png` | Agregado — evidencia del bug |
+| `PROJECT_STATUS.md` | Actualizado — estado US0010/US0012/US0013 |
+| `HANDOFF.md` | Actualizado — estado detallado |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 13 |
+
+> ⚠️ Nota de trazabilidad: las sesiones que implementaron US0012 (commits `2389366`, `aab2996`, `d9c766b`) y US0013 (PR #15) no quedaron registradas en este archivo; sus prompts no están disponibles desde esta sesión.
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 13 sesiones · 79 prompts documentados*
