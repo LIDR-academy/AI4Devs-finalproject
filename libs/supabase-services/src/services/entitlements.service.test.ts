@@ -10,40 +10,54 @@ const dao = EntitlementsDao as jest.Mocked<typeof EntitlementsDao>;
 describe('EntitlementsService', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('@s2 derives free plan settings and ads from the live profile', async () => {
-    dao.getCurrentPlan.mockResolvedValue({ plan: 'free' });
+  it('@s2 maps free plan flags to user-key entitlements', async () => {
+    dao.getCurrentPlan.mockResolvedValue({
+      plan: 'free',
+      usePlatformKey: false,
+      showAds: true,
+      showKeySettings: true,
+      canCreateWithoutKey: false,
+    });
 
     await expect(EntitlementsService.getEntitlements()).resolves.toEqual({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
+      canCreateWithoutKey: false,
     });
   });
 
-  it('@s9 derives platform access without key settings or ads for paid plans', async () => {
-    dao.getCurrentPlan.mockResolvedValue({ plan: 'paid' });
+  it('@s9 maps paid plan flags to platform entitlements without key settings or ads', async () => {
+    dao.getCurrentPlan.mockResolvedValue({
+      plan: 'paid',
+      usePlatformKey: true,
+      showAds: false,
+      showKeySettings: false,
+      canCreateWithoutKey: true,
+    });
 
     await expect(EntitlementsService.getEntitlements()).resolves.toEqual({
       plan: 'paid',
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
+      canCreateWithoutKey: true,
     });
   });
 
-  it('@s5 rejects an invalid stored plan instead of granting fallback entitlements', async () => {
-    dao.getCurrentPlan.mockResolvedValue({ plan: 'enterprise' as 'free' });
+  it('@s16 exposes showAds from the plan row without starting ad behavior', async () => {
+    dao.getCurrentPlan.mockResolvedValue({
+      plan: 'free',
+      usePlatformKey: false,
+      showAds: true,
+      showKeySettings: true,
+      canCreateWithoutKey: false,
+    });
 
-    await expect(EntitlementsService.getEntitlements()).rejects.toThrow('Invalid profile plan');
-  });
-
-  it.each([
-    ['free', true],
-    ['paid', false],
-  ] as const)('@s16 derives plan %s showAds=%s', async (plan, showAds) => {
-    dao.getCurrentPlan.mockResolvedValue({ plan });
-
-    await expect(EntitlementsService.getEntitlements()).resolves.toMatchObject({ plan, showAds });
+    await expect(EntitlementsService.getEntitlements()).resolves.toMatchObject({
+      plan: 'free',
+      showAds: true,
+    });
   });
 });

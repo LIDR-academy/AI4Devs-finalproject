@@ -1,13 +1,13 @@
 ---
 feature: plan-entitlements-key-routing
-story: user-stories/in-progress/plan-entitlements-key-routing.md
+story: user-stories/done/plan-entitlements-key-routing.md
 status: approved
 ---
 
 # Spec — plan-entitlements-key-routing
 
 ## Summary
-Derive client entitlements from a server-owned `free|paid` plan and route generation keys from that same live plan. Free learners use BYOK; paid learners use the platform Groq key without making client gates authoritative.
+Client entitlements and generation key routing come from live `plans` flags joined via `profiles.plan_id`. Capability checks never branch on plan name; seeded `free`/`paid` rows set `use_platform_key`, `show_ads`, `show_key_settings`, and `can_create_without_key`.
 
 ## User stories
 - As a free learner, I want clear BYOK gating so I know when generation is available.
@@ -21,32 +21,33 @@ See [`gherkin-scenarios.md`](./gherkin-scenarios.md). Each `@s` scenario is an a
 | State | Trigger | Plan-sensitive UI |
 |---|---|---|
 | Loading | Plan or key status unresolved | Hide upload/create and key settings |
-| Content | Paid, or free with saved key | Show create/upload; show key settings only for free |
-| Empty | Free with no saved key | Hide create/upload; show key setup guidance |
+| Content | `can_create_without_key` or saved key | Show create/upload; key settings when `show_key_settings` |
+| Empty | Needs key (`!can_create_without_key` and no key) | Hide create/upload; show key setup guidance |
 | Error | Plan read fails or profile is missing | Hide plan-sensitive controls; show error + retry |
 
 ## Analytics events
 None in v1.
 
 ## Feature flags
-None. `profiles.plan` is the switch and applies without redeploy.
+None. `profiles.plan_id` → `plans` flags is the switch and applies without redeploy.
 
 ## Out of scope / non-goals
 - Billing, Stripe, checkout, or plan-management UI
 - Ad rendering or ad-network requests
 - Usage caps, token metering, or quotas
-- Independently editable entitlement flags
+- Per-user editable entitlement overrides (flags live on `plans` rows only)
 - Changing access to previously generated lessons
 - New AI providers or key migration
 
 ## Open decisions (resolved)
-1. **This story supersedes PRD Non-Goal #5 and its Future-only paid inference note for the v1 demo.** The story and its approved human decisions are source of truth despite citing an absent R10. Scope is manual dashboard plan flips plus managed inference—no billing. **Why:** enable trusted bootcamp demos without expanding into Stripe or self-service plans.
-2. **Store plan in `public.profiles`.** Seed constrained `free` rows from `auth.users`; expose select-own RLS. **Why:** plan exists independently of optional BYOK metadata and defaults securely.
-3. **Use `PLATFORM_GROQ_API_KEY`.** **Why:** provider-explicit naming avoids ambiguity.
-4. **Expose `useEntitlements()` through Service → DAO; compose shared `useApiKey()` in the hook.** **Why:** preserves layering while deriving `canCreate` from plan + key status.
-5. **Hide plan-sensitive controls while loading; make failed/missing profile reads retryable errors.** **Why:** prevents incorrect-plan flashes and exposes data-integrity failures.
-6. **Expose derived `showAds`, unused.** **Why:** stabilizes the later contract without adding ads now.
-7. **Read plan live in `generate-lesson`; route exclusively.** Free reads Vault BYOK; paid reads only the platform key and ignores saved user keys. **Why:** dashboard changes apply immediately and clients cannot select funded inference.
-8. **Return `platform_key_unavailable` for absent or unusable platform configuration.** **Why:** identifies an operator failure and prevents any BYOK CTA or cross-source fallback.
-9. **No analytics or feature flag in v1.** **Why:** unnecessary for the demo; plan is the switch.
-10. **Discard plan-on-`user_ai_keys`, client-supplied plan, and key fallback.** **Why:** they fail for keyless paid users, enable escalation, or hide configuration errors.
+1. **This story supersedes PRD Non-Goal #5 for the v1 demo.** Manual dashboard `plan_id` flips + managed inference—no billing. **Why:** trusted bootcamp demos.
+2. **`public.plans` holds entitlement flags; `profiles.plan_id` FKs to it (default `free`).** Seeded free/paid rows. **Why:** capabilities are data-driven; no `plan === 'paid'` branches.
+3. **Plan flag columns:** `use_platform_key`, `show_ads`, `show_key_settings`, `can_create_without_key`. **Why:** explicit B contract; `canCreate = can_create_without_key || hasKey`.
+4. **Use `PLATFORM_GROQ_API_KEY`.** **Why:** provider-explicit naming.
+5. **`useEntitlements()` → Service → DAO join; compose `useApiKey()`.** **Why:** layering; `canCreate` from flag + key status.
+6. **Hide plan-sensitive controls while loading; failed/missing profile → error+retry.** **Why:** no incorrect-plan flash.
+7. **Expose `showAds` unused.** **Why:** stable later contract.
+8. **Edge reads live plan flags each generate; route on `use_platform_key` only.** **Why:** no name checks; dashboard flips apply immediately.
+9. **`platform_key_unavailable` for absent/unusable platform key.** **Why:** no BYOK CTA/fallback.
+10. **No analytics in v1.** **Why:** demo scope.
+11. **Discard plan-name derivation, client-supplied plan, and key fallback.** **Why:** escalation / config-error hiding.

@@ -1,7 +1,36 @@
+create table public.plans (
+  id text primary key,
+  use_platform_key boolean not null,
+  show_ads boolean not null,
+  show_key_settings boolean not null,
+  can_create_without_key boolean not null
+);
+
+insert into public.plans (
+  id,
+  use_platform_key,
+  show_ads,
+  show_key_settings,
+  can_create_without_key
+)
+values
+  ('free', false, true, true, false),
+  ('paid', true, false, false, true);
+
+alter table public.plans enable row level security;
+
+create policy "plans_select_authenticated" on public.plans
+  for select
+  to authenticated
+  using (true);
+
+revoke all on public.plans from anon, authenticated;
+grant select on public.plans to authenticated;
+grant all on public.plans to service_role;
+
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
-  plan text not null default 'free',
-  constraint profiles_plan_check check (plan in ('free', 'paid'))
+  plan_id text not null default 'free' references public.plans (id)
 );
 
 alter table public.profiles enable row level security;

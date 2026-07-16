@@ -1,21 +1,19 @@
-import type { Plan } from '@helsoft/types';
-
 export const resolveLessonGenerationKey = ({
-  plan,
+  usePlatformKey,
   userApiKey,
   platformApiKey,
 }: {
-  plan: Plan;
+  usePlatformKey: boolean;
   userApiKey?: string | null;
   platformApiKey?: string | null;
 }) => {
-  if (plan === 'free' && userApiKey?.trim()) {
+  if (!usePlatformKey && userApiKey?.trim()) {
     return { ok: true as const, apiKey: userApiKey, source: 'user' as const };
   }
-  if (plan === 'paid' && platformApiKey?.trim()) {
+  if (usePlatformKey && platformApiKey?.trim()) {
     return { ok: true as const, apiKey: platformApiKey, source: 'platform' as const };
   }
-  if (plan === 'paid') {
+  if (usePlatformKey) {
     return { ok: false as const, errorCode: 'platform_key_unavailable' as const };
   }
 
@@ -23,18 +21,18 @@ export const resolveLessonGenerationKey = ({
 };
 
 export const resolveLessonGenerationKeyForPlan = async ({
-  plan,
+  usePlatformKey,
   readUserApiKey,
   platformApiKey,
 }: {
-  plan: Plan;
+  usePlatformKey: boolean;
   readUserApiKey: () => Promise<string | null>;
   platformApiKey?: string | null;
 }) =>
   resolveLessonGenerationKey({
-    plan,
-    userApiKey: plan === 'free' ? await readUserApiKey() : null,
-    platformApiKey,
+    usePlatformKey,
+    userApiKey: usePlatformKey ? null : await readUserApiKey(),
+    platformApiKey: usePlatformKey ? platformApiKey : null,
   });
 
 export const callProviderWithResolvedKey = <T>(

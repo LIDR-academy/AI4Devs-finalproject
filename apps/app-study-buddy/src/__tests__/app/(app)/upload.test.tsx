@@ -36,7 +36,7 @@ jest.mock('expo-router', () => ({
 
 import { render, screen } from '@testing-library/react-native';
 
-import UploadScreen from './upload';
+import UploadScreen from '../../../app/(app)/upload';
 
 describe('UploadScreen entitlements composition', () => {
   beforeEach(() => {

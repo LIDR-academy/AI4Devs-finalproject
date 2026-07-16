@@ -1,7 +1,7 @@
 # Definition of Done — plan-entitlements-key-routing
 
 **Verdict:** PASS
-_Validated by `dod_validator`; objective checks re-run on 2026-07-16._
+_Validated by `dod_validator`; amended 2026-07-16 for `plans` flag table (unit suites re-verified)._
 
 ## Accepted minors (documented risk-accepted, if any)
 - _none_
@@ -19,7 +19,7 @@ _Validated by `dod_validator`; objective checks re-run on 2026-07-16._
 - [x] No TODOs without an issue; Conventional Commits — evidence: feature diff clean; history uses conventional prefixes.
 
 ## Architecture
-- [x] `Component→Hook→Service→DAO` respected; no cross-layer imports — evidence: `use-entitlements.ts:1-46`; `entitlements.service.ts:1-24`; `entitlements.dao.ts:1-16`.
+- [x] `Component→Hook→Service→DAO` respected; no cross-layer imports — evidence: `use-entitlements.ts`; `entitlements.service.ts` flag-map; `entitlements.dao.ts` profiles→plans join.
 - [x] DTOs not leaked out of data/DAO; barrels updated — evidence: `entitlements.ts:1-9`; task-2 barrel tests/exports green.
 - [x] No unapproved dependencies — evidence: bootstrap/install succeeded; TanStack Query explicitly human-waived.
 

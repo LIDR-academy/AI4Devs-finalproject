@@ -198,14 +198,18 @@ Deno.serve(async (req) => {
     resolvedKey = await handleLessonGenerationRoute({
       userId: user.id,
       requestBody: body,
-      readPlan: async (userId) => {
+      readPlanFlags: async (userId) => {
         const { data: profileRow, error: profileError } = await adminClient
           .from('profiles')
-          .select('plan')
+          .select('plan_id, plans(use_platform_key)')
           .eq('id', userId)
           .single();
-        const plan = profileRow?.plan;
-        return !profileError && (plan === 'free' || plan === 'paid') ? plan : null;
+        const plans = profileRow?.plans;
+        const planEmbed = Array.isArray(plans) ? plans[0] : plans;
+        if (profileError || !planEmbed || typeof planEmbed.use_platform_key !== 'boolean') {
+          return null;
+        }
+        return { usePlatformKey: planEmbed.use_platform_key };
       },
       readUserApiKey: async () => {
         const { data: keyRows } = await adminClient.rpc('get_api_key', { p_user_id: user.id });

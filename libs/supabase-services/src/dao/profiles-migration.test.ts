@@ -7,9 +7,17 @@ const migrationPath = resolve(
 );
 
 describe('profiles migration', () => {
-  it('@s1 installs the signup trigger before backfilling existing users', () => {
+  it('@s1 seeds plans before profiles and installs the signup trigger before backfill', () => {
     const sql = readFileSync(migrationPath, 'utf8');
 
+    expect(sql.indexOf('create table public.plans')).toBeGreaterThan(-1);
+    expect(sql.indexOf("('free', false, true, true, false)")).toBeGreaterThan(
+      sql.indexOf('create table public.plans'),
+    );
+    expect(sql.indexOf("('paid', true, false, false, true)")).toBeGreaterThan(-1);
+    expect(sql.indexOf('create table public.profiles')).toBeGreaterThan(
+      sql.indexOf("('paid', true, false, false, true)"),
+    );
     expect(sql.indexOf('create trigger on_auth_user_profile_created')).toBeGreaterThan(-1);
     expect(
       sql.indexOf('insert into public.profiles (id)\nselect id from auth.users'),
@@ -20,8 +28,11 @@ describe('profiles migration', () => {
     const sql = readFileSync(migrationPath, 'utf8');
 
     expect(sql).toMatch(/id uuid primary key references auth\.users \(id\) on delete cascade/i);
-    expect(sql).toMatch(/plan text not null default 'free'/i);
-    expect(sql).toMatch(/check \(plan in \('free', 'paid'\)\)/i);
+    expect(sql).toMatch(/plan_id text not null default 'free' references public\.plans \(id\)/i);
+    expect(sql).toMatch(/use_platform_key boolean not null/i);
+    expect(sql).toMatch(/show_ads boolean not null/i);
+    expect(sql).toMatch(/show_key_settings boolean not null/i);
+    expect(sql).toMatch(/can_create_without_key boolean not null/i);
     expect(sql).toMatch(/insert into public\.profiles \(id\)\s+values \(new\.id\)/i);
     expect(sql).toMatch(/after insert on auth\.users\s+for each row/i);
     expect(sql).toMatch(
@@ -30,6 +41,7 @@ describe('profiles migration', () => {
     expect(sql).toMatch(/for select\s+to authenticated\s+using \(\(select auth\.uid\(\)\) = id\)/i);
     expect(sql).not.toMatch(/for (insert|update|delete)\s+to authenticated/i);
     expect(sql).toMatch(/grant select on public\.profiles to authenticated/i);
+    expect(sql).toMatch(/grant select on public\.plans to authenticated/i);
     expect(sql).toMatch(/grant all on public\.profiles to service_role/i);
   });
 });

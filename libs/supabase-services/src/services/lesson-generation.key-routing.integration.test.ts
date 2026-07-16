@@ -5,14 +5,14 @@ import {
 import { handleLessonGenerationRoute } from '../../../../supabase/functions/generate-lesson/_shared/lesson-generation.route';
 
 describe('generate-lesson key routing integration', () => {
-  // @s10/@s18 — the paid control flow never executes the Vault reader and the provider receives
-  // the platform key selected by the resolver.
-  it('routes paid generation exclusively through the platform key', async () => {
+  // @s10/@s18 — the platform control flow never executes the Vault reader and the provider
+  // receives the platform key selected by the resolver.
+  it('routes platform generation exclusively through the platform key', async () => {
     const readUserApiKey = jest.fn().mockResolvedValue('saved-user-secret');
     const providerCall = jest.fn().mockResolvedValue('generated');
 
     const resolvedKey = await resolveLessonGenerationKeyForPlan({
-      plan: 'paid',
+      usePlatformKey: true,
       readUserApiKey,
       platformApiKey: 'platform-secret',
     });
@@ -28,13 +28,13 @@ describe('generate-lesson key routing integration', () => {
     expect(providerCall).toHaveBeenCalledWith('platform-secret');
   });
 
-  // @s7/@s15 — server plan wins over extra crafted selector fields; free executes Vault exactly
+  // @s7/@s15 — server flags win over extra crafted selector fields; BYOK executes Vault exactly
   // once and the provider receives the user key even when a platform key is available.
-  it('routes free generation through Vault despite crafted paid selectors', async () => {
+  it('routes user-key generation through Vault despite crafted platform selectors', async () => {
     const readUserApiKey = jest.fn().mockResolvedValue('saved-user-secret');
     const providerCall = jest.fn().mockResolvedValue('generated');
     const craftedInput = {
-      plan: 'free' as const,
+      usePlatformKey: false,
       readUserApiKey,
       platformApiKey: 'platform-secret',
       requestPlan: 'paid',
@@ -55,40 +55,40 @@ describe('generate-lesson key routing integration', () => {
     expect(providerCall).toHaveBeenCalledWith('saved-user-secret');
   });
 
-  // @s14 — the executable Edge routing seam reads the live plan for each request.
+  // @s14 — the executable Edge routing seam reads live plan flags for each request.
   it('applies a dashboard plan flip to the next generation route', async () => {
-    let plan: 'free' | 'paid' = 'paid';
-    const readPlan = jest.fn(async () => plan);
+    let usePlatformKey = true;
+    const readPlanFlags = jest.fn(async () => ({ usePlatformKey }));
     const readUserApiKey = jest.fn().mockResolvedValue('saved-user-secret');
 
     await expect(
       handleLessonGenerationRoute({
         userId: 'user-1',
         requestBody: { documentId: 'doc-1', composition: 'both' },
-        readPlan,
+        readPlanFlags,
         readUserApiKey,
         platformApiKey: 'platform-secret',
         acquirePlatformSlot: jest.fn().mockResolvedValue(true),
       }),
     ).resolves.toMatchObject({ ok: true, source: 'platform', apiKey: 'platform-secret' });
 
-    plan = 'free';
+    usePlatformKey = false;
 
     await expect(
       handleLessonGenerationRoute({
         userId: 'user-1',
         requestBody: { documentId: 'doc-1', composition: 'both' },
-        readPlan,
+        readPlanFlags,
         readUserApiKey,
         platformApiKey: 'platform-secret',
         acquirePlatformSlot: jest.fn().mockResolvedValue(true),
       }),
     ).resolves.toMatchObject({ ok: true, source: 'user', apiKey: 'saved-user-secret' });
-    expect(readPlan).toHaveBeenCalledTimes(2);
+    expect(readPlanFlags).toHaveBeenCalledTimes(2);
   });
 
   // @s15 — crafted client route selectors are inert at the executable Edge routing seam.
-  it('uses the live free plan when crafted route fields claim paid access', async () => {
+  it('uses live user-key flags when crafted route fields claim platform access', async () => {
     const readUserApiKey = jest.fn().mockResolvedValue('saved-user-secret');
 
     await expect(
@@ -101,7 +101,7 @@ describe('generate-lesson key routing integration', () => {
           entitlements: { keySource: 'platform' },
           keySource: 'platform',
         },
-        readPlan: jest.fn().mockResolvedValue('free'),
+        readPlanFlags: jest.fn().mockResolvedValue({ usePlatformKey: false }),
         readUserApiKey,
         platformApiKey: 'platform-secret',
         acquirePlatformSlot: jest.fn().mockResolvedValue(true),
@@ -117,7 +117,7 @@ describe('generate-lesson key routing integration', () => {
       handleLessonGenerationRoute({
         userId: 'user-1',
         requestBody: { documentId: 'doc-1', composition: 'both' },
-        readPlan: jest.fn().mockResolvedValue('paid'),
+        readPlanFlags: jest.fn().mockResolvedValue({ usePlatformKey: true }),
         readUserApiKey: jest.fn(),
         platformApiKey: 'platform-secret',
         acquirePlatformSlot,
@@ -131,7 +131,7 @@ describe('generate-lesson key routing integration', () => {
     const route = await handleLessonGenerationRoute({
       userId: 'user-1',
       requestBody: { documentId: 'doc-1', composition: 'both' },
-      readPlan: jest.fn().mockResolvedValue('paid'),
+      readPlanFlags: jest.fn().mockResolvedValue({ usePlatformKey: true }),
       readUserApiKey: jest.fn(),
       platformApiKey: 'platform-secret',
       acquirePlatformSlot: jest.fn().mockResolvedValue(true),
@@ -149,7 +149,7 @@ describe('generate-lesson key routing integration', () => {
       handleLessonGenerationRoute({
         userId: 'user-1',
         requestBody: { documentId: 'doc-1', composition: 'both' },
-        readPlan: jest.fn().mockResolvedValue('paid'),
+        readPlanFlags: jest.fn().mockResolvedValue({ usePlatformKey: true }),
         readUserApiKey: jest.fn(),
         platformApiKey: 'platform-secret',
         acquirePlatformSlot: jest.fn().mockResolvedValue(false),
@@ -164,7 +164,7 @@ describe('generate-lesson key routing integration', () => {
       handleLessonGenerationRoute({
         userId: 'user-1',
         requestBody: { documentId: 'doc-1', composition: 'both' },
-        readPlan: jest.fn().mockResolvedValue('free'),
+        readPlanFlags: jest.fn().mockResolvedValue({ usePlatformKey: false }),
         readUserApiKey: jest.fn().mockResolvedValue(null),
         platformApiKey: 'platform-secret',
         acquirePlatformSlot: jest.fn().mockResolvedValue(true),

@@ -31,6 +31,7 @@ describe('useEntitlements', () => {
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
+      canCreateWithoutKey: false,
     });
 
     const { result } = renderHook(() => useEntitlements());
@@ -41,6 +42,7 @@ describe('useEntitlements', () => {
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
+      canCreateWithoutKey: false,
       canCreate: true,
     });
     expect(result.current.error).toBeNull();
@@ -56,6 +58,7 @@ describe('useEntitlements', () => {
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
+      canCreateWithoutKey: false,
     });
 
     const { result } = renderHook(() => useEntitlements());
@@ -74,6 +77,7 @@ describe('useEntitlements', () => {
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
+      canCreateWithoutKey: false,
     });
 
     const { result } = renderHook(() => useEntitlements());
@@ -111,6 +115,7 @@ describe('useEntitlements', () => {
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
+      canCreateWithoutKey: true,
     });
 
     const { result } = renderHook(() => useEntitlements());
@@ -125,6 +130,7 @@ describe('useEntitlements', () => {
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
+      canCreateWithoutKey: true,
       canCreate: true,
     });
   });
@@ -139,6 +145,7 @@ describe('useEntitlements', () => {
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
+      canCreateWithoutKey: true,
     });
 
     const { result } = renderHook(() => useEntitlements());
@@ -149,6 +156,7 @@ describe('useEntitlements', () => {
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
+      canCreateWithoutKey: true,
       canCreate: true,
     });
   });
@@ -160,12 +168,14 @@ describe('useEntitlements', () => {
         keySource: 'platform',
         showKeySettings: false,
         showAds: false,
+        canCreateWithoutKey: true,
       })
       .mockResolvedValueOnce({
         plan: 'free',
         keySource: 'user',
         showKeySettings: true,
         showAds: true,
+        canCreateWithoutKey: false,
       });
 
     const { result } = renderHook(() => useEntitlements());
@@ -179,6 +189,7 @@ describe('useEntitlements', () => {
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
+      canCreateWithoutKey: false,
       canCreate: true,
     });
   });
@@ -194,12 +205,14 @@ describe('useEntitlements', () => {
         keySource: 'platform',
         showKeySettings: false,
         showAds: false,
+        canCreateWithoutKey: true,
       })
       .mockResolvedValueOnce({
         plan: 'free',
         keySource: 'user',
         showKeySettings: true,
         showAds: true,
+        canCreateWithoutKey: false,
       });
 
     const { result } = renderHook(() => useEntitlements());
@@ -222,12 +235,14 @@ describe('useEntitlements', () => {
         keySource: 'user',
         showKeySettings: true,
         showAds: true,
+        canCreateWithoutKey: false,
       })
       .mockResolvedValueOnce({
         plan: 'paid',
         keySource: 'platform',
         showKeySettings: false,
         showAds: false,
+        canCreateWithoutKey: true,
       });
 
     const { result } = renderHook(() => useEntitlements());
@@ -242,6 +257,7 @@ describe('useEntitlements', () => {
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
+      canCreateWithoutKey: true,
       canCreate: true,
     });
   });
@@ -259,6 +275,7 @@ describe('useEntitlements', () => {
         keySource: 'platform',
         showKeySettings: false,
         showAds: false,
+        canCreateWithoutKey: true,
       });
 
     const { result } = renderHook(() => useEntitlements());

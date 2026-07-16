@@ -5,11 +5,11 @@ import {
 } from './lesson-generation.key-source';
 
 describe('resolveLessonGenerationKey', () => {
-  // @s7 — a free request resolves exclusively to its Vault-backed user key.
-  it('resolves a free plan to the saved user key', () => {
+  // @s7 — BYOK resolves exclusively to its Vault-backed user key.
+  it('resolves a user-key plan to the saved user key', () => {
     expect(
       resolveLessonGenerationKey({
-        plan: 'free',
+        usePlatformKey: false,
         userApiKey: 'user-secret',
         platformApiKey: 'platform-secret',
       }),
@@ -22,31 +22,31 @@ describe('resolveLessonGenerationKey', () => {
     undefined,
     '',
     '   ',
-  ])('rejects a free plan when its saved user key is %p', (userApiKey) => {
-    expect(resolveLessonGenerationKey({ plan: 'free', userApiKey })).toEqual({
+  ])('rejects a user-key plan when its saved user key is %p', (userApiKey) => {
+    expect(resolveLessonGenerationKey({ usePlatformKey: false, userApiKey })).toEqual({
       ok: false,
       errorCode: 'missing_key',
     });
   });
 
-  it('never resolves a platform key for a free plan without a user key', () => {
+  it('never resolves a platform key for a user-key plan without a user key', () => {
     expect(
       resolveLessonGenerationKey({
-        plan: 'free',
+        usePlatformKey: false,
         userApiKey: null,
         platformApiKey: 'platform-secret',
       }),
     ).toEqual({ ok: false, errorCode: 'missing_key' });
   });
 
-  // @s10/@s18 — paid always resolves to the platform key, regardless of saved-key state.
+  // @s10/@s18 — platform flag always resolves to the platform key, regardless of saved-key state.
   it.each([
     'user-secret',
     null,
-  ])('resolves a paid plan to the platform key when userApiKey is %p', (userApiKey) => {
+  ])('resolves a platform plan to the platform key when userApiKey is %p', (userApiKey) => {
     expect(
       resolveLessonGenerationKey({
-        plan: 'paid',
+        usePlatformKey: true,
         userApiKey,
         platformApiKey: 'platform-secret',
       }),
@@ -59,10 +59,10 @@ describe('resolveLessonGenerationKey', () => {
     undefined,
     '',
     '   ',
-  ])('rejects a paid plan when its platform key is %p', (platformApiKey) => {
+  ])('rejects a platform plan when its platform key is %p', (platformApiKey) => {
     expect(
       resolveLessonGenerationKey({
-        plan: 'paid',
+        usePlatformKey: true,
         userApiKey: 'user-secret',
         platformApiKey,
       }),
@@ -71,12 +71,12 @@ describe('resolveLessonGenerationKey', () => {
 });
 
 describe('resolveLessonGenerationKeyForPlan', () => {
-  it('reads and returns the user key for free plans', async () => {
+  it('reads and returns the user key when usePlatformKey is false', async () => {
     const readUserApiKey = jest.fn().mockResolvedValue('user-secret');
 
     await expect(
       resolveLessonGenerationKeyForPlan({
-        plan: 'free',
+        usePlatformKey: false,
         readUserApiKey,
         platformApiKey: 'platform-secret',
       }),
@@ -84,12 +84,12 @@ describe('resolveLessonGenerationKeyForPlan', () => {
     expect(readUserApiKey).toHaveBeenCalledTimes(1);
   });
 
-  it('returns the resolved platform key without reading the user key for paid plans', async () => {
+  it('returns the resolved platform key without reading the user key when usePlatformKey is true', async () => {
     const readUserApiKey = jest.fn().mockResolvedValue('user-secret');
 
     await expect(
       resolveLessonGenerationKeyForPlan({
-        plan: 'paid',
+        usePlatformKey: true,
         readUserApiKey,
         platformApiKey: 'platform-secret',
       }),

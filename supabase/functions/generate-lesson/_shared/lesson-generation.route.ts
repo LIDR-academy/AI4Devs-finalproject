@@ -1,11 +1,13 @@
 import { resolveLessonGenerationKeyForPlan } from './lesson-generation.key-source.ts';
 
-type Plan = 'free' | 'paid';
+export type PlanFlags = {
+  usePlatformKey: boolean;
+};
 
 type HandleLessonGenerationRouteInput = {
   userId: string;
   requestBody: unknown;
-  readPlan: (userId: string) => Promise<Plan | null>;
+  readPlanFlags: (userId: string) => Promise<PlanFlags | null>;
   readUserApiKey: () => Promise<string | null>;
   platformApiKey?: string | null;
   acquirePlatformSlot: (userId: string) => Promise<boolean>;
@@ -16,7 +18,7 @@ type HandleLessonGenerationRouteInput = {
 export const handleLessonGenerationRoute = async ({
   userId,
   requestBody,
-  readPlan,
+  readPlanFlags,
   readUserApiKey,
   platformApiKey,
   acquirePlatformSlot,
@@ -24,15 +26,15 @@ export const handleLessonGenerationRoute = async ({
   readImageMetadata,
 }: HandleLessonGenerationRouteInput) => {
   void requestBody;
-  const plan = await readPlan(userId);
-  if (!plan) {
+  const planFlags = await readPlanFlags(userId);
+  if (!planFlags) {
     return { ok: false as const, errorCode: 'generation_failed' as const };
   }
 
   const resolvedKey = await resolveLessonGenerationKeyForPlan({
-    plan,
+    usePlatformKey: planFlags.usePlatformKey,
     readUserApiKey,
-    platformApiKey: plan === 'paid' ? platformApiKey : null,
+    platformApiKey: planFlags.usePlatformKey ? platformApiKey : null,
   });
   if (!resolvedKey.ok) {
     return resolvedKey;

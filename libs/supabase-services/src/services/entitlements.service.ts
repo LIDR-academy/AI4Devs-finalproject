@@ -3,22 +3,14 @@ import type { PlanEntitlements } from './entitlements.types';
 
 export abstract class EntitlementsService {
   static async getEntitlements(): Promise<PlanEntitlements> {
-    const { plan } = await EntitlementsDao.getCurrentPlan();
-    if (plan === 'paid') {
-      return {
-        plan,
-        keySource: 'platform',
-        showKeySettings: false,
-        showAds: false,
-      };
-    }
-    if (plan !== 'free') throw new Error('Invalid profile plan');
+    const flags = await EntitlementsDao.getCurrentPlan();
 
     return {
-      plan,
-      keySource: 'user',
-      showKeySettings: true,
-      showAds: true,
+      plan: flags.plan,
+      keySource: flags.usePlatformKey ? 'platform' : 'user',
+      showKeySettings: flags.showKeySettings,
+      showAds: flags.showAds,
+      canCreateWithoutKey: flags.canCreateWithoutKey,
     };
   }
 }

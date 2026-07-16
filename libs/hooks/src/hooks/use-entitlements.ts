@@ -38,7 +38,7 @@ export function useEntitlements(): UseEntitlementsResult {
     if (!state.data || isLoading || state.error) return null;
     return {
       ...state.data,
-      canCreate: state.data.plan === 'paid' || apiKeyStatus.hasKey,
+      canCreate: state.data.canCreateWithoutKey || apiKeyStatus.hasKey,
     };
   }, [apiKeyStatus.hasKey, isLoading, state.data, state.error]);
 

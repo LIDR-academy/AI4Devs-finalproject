@@ -100,3 +100,6 @@ secret/configuration failures remain redacted. Plan flips and crafted fields are
 
 - Existing AppChrome E2E RED exposed missing safe-area context; GREEN Storybook root now provides it.
 - Existing PdfUpload E2E RED expected removed manual continuation; GREEN asserts the auto-advance contract.
+
+## Amend — plans flags
+- @s1 plans seed + plan_id FK; @s2/@s9 DAO join flag-map; hook canCreateWithoutKey; Edge usePlatformKey.
