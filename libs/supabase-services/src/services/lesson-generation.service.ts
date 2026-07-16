@@ -39,19 +39,19 @@ export const GENERATION_ERROR_CODES: Record<GenerationErrorCode, true> = {
 const isKnownErrorCode = (code: unknown): code is GenerationErrorCode =>
   typeof code === 'string' && Object.hasOwn(GENERATION_ERROR_CODES, code);
 
+const errorCodeFromBody = (body: unknown): GenerationErrorCode => {
+  if (typeof body !== 'object' || body === null) return 'generation_failed';
+  const errorCode = (body as { errorCode?: unknown }).errorCode;
+  return isKnownErrorCode(errorCode) ? errorCode : 'generation_failed';
+};
+
 /** Reads the Edge Function's typed `{ errorCode }` body off a non-2xx invoke response — the raw
  * body is only reachable via `FunctionsHttpError.context` (an unread Response), never parsed by
  * supabase-js itself for error responses (mirrors `pdf-extraction.service.ts`'s
  * `readFunctionErrorCode`). Falls back to `generation_failed` for a malformed/absent body or an
  * `errorCode` outside the known union, so a violated server contract never leaks a raw shape. */
-const readFunctionErrorCode = async (error: FunctionsHttpError): Promise<GenerationErrorCode> => {
-  try {
-    const body = await error.context.json();
-    return isKnownErrorCode(body?.errorCode) ? body.errorCode : 'generation_failed';
-  } catch {
-    return 'generation_failed';
-  }
-};
+const readFunctionErrorCode = (error: FunctionsHttpError): Promise<GenerationErrorCode> =>
+  error.context.json().then(errorCodeFromBody, () => 'generation_failed');
 
 /** Normalizes every DAO-thrown cause — the Edge Function's typed result or a transport failure —
  * into the typed `GenerationErrorCode` union so the UI never branches on a raw Supabase/function

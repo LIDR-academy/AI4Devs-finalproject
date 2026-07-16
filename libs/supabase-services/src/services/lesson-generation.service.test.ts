@@ -140,6 +140,16 @@ describe('LessonGenerationService', () => {
       ).rejects.toMatchObject({ code: 'generation_failed' });
     });
 
+    it('falls back to generation_failed when the server error body cannot be parsed', async () => {
+      dao.generateLesson.mockRejectedValue(
+        new FunctionsHttpError({ json: () => Promise.reject(new Error('invalid JSON')) }),
+      );
+
+      await expect(
+        LessonGenerationService.generate({ documentId: 'doc-1', composition: 'both' }, 'user-1'),
+      ).rejects.toMatchObject({ code: 'generation_failed' });
+    });
+
     // A transport-level failure reaching the function at all (offline, DNS, etc.) is surfaced as
     // network_error, distinct from a typed server response.
     it('normalizes a transport-level FunctionsFetchError as network_error', async () => {

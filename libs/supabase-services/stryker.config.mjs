@@ -17,7 +17,13 @@ export default {
   reporters: ['html', 'clear-text', 'progress'],
   coverageAnalysis: 'perTest',
   // Default scope (overridden per-feature via --mutate). Never mutate tests or barrels.
-  mutate: ['src/**/*.ts', '!src/**/*.test.ts', '!src/**/index.ts'],
+  mutate: [
+    'src/**/*.ts',
+    '!src/**/*.test.ts',
+    '!src/**/index.ts',
+    '!src/**/test-utils/**',
+    '!src/**/testing/**',
+  ],
   // Feature policy: 100% of mutants on changed lines must be killed.
   thresholds: { high: 100, low: 100, break: 100 },
 };

@@ -22,6 +22,14 @@ describe('mapGenerationError', () => {
     });
   });
 
+  it('prioritizes GenerationSchemaError over another recognizable error shape', () => {
+    const cause = Object.assign(new GenerationSchemaError('bad deck'), {
+      code: 'persist_failed',
+    });
+
+    expect(mapGenerationError(cause)).toEqual({ errorCode: 'generation_failed', status: 502 });
+  });
+
   // @s15 — an explicit wall-clock timeout maps to the typed timeout code.
   it('maps a GenerationTimeoutError to timeout', () => {
     expect(mapGenerationError(new GenerationTimeoutError())).toEqual({
@@ -44,6 +52,14 @@ describe('mapGenerationError', () => {
       ['an object whose statusCode is not a number', { statusCode: 'not-a-number' }],
     ])('falls back to generation_failed for %s', (_label, cause) => {
       expect(mapGenerationError(cause)).toEqual({ errorCode: 'generation_failed', status: 502 });
+    });
+
+    it('validates statusCode before reading its mapped value', () => {
+      const statusCode = jest.fn().mockReturnValueOnce(401).mockReturnValueOnce(500);
+      const cause = Object.defineProperty({}, 'statusCode', { get: statusCode });
+
+      expect(mapGenerationError(cause)).toEqual({ errorCode: 'generation_failed', status: 502 });
+      expect(statusCode).toHaveBeenCalledTimes(2);
     });
   });
 

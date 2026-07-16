@@ -87,3 +87,9 @@ configuration returns only `platform_key_unavailable` with no key material in re
 - @s10/@s18 RED paid exclusivity/provider behavior had no executable seam; GREEN lazy plan router + resolved-key provider seam.
 - @s7/@s15 RED Edge wiring lacked control-flow proof; GREEN Deno mirror uses lazy Vault callback, live profile plan, and resolved provider key.
 - @s7/@s15 free crafted-selector behavioral coverage passed after the review refactor; no further source change.
+
+## Mutation re-work
+
+- @s7/@s10/@s15 RED key-route mutants bypassed source exclusivity/acquisition/provider calls; GREEN direct production-seam tests.
+- @s15 RED malformed API and schema-error mutants escaped precedence checks; GREEN observable guard/branch tests.
+- @s19 nullish-body mutant was equivalent inside the broad catch; GREEN refactor plus parse-failure coverage made every branch killable.
