@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** navigation-menus
-**Folder:** docs/features/navigation-menus/
-**Phase:** pr_ready
-**Status:** DoD PASS. Compact docs done. risks landed; story moved to done. Ready for human to open/merge PR.
-**Notes:** Worktree `.worktrees/navigation-menus` on `feat/navigation-menus`. Non-Claude models used for build/review/mutation/DoD.
+**Active feature:** plan-entitlements-key-routing
+**Folder:** docs/features/plan-entitlements-key-routing/
+**Phase:** pending
+**Status:** Booted. Worktree ready. Awaiting spec_partner.
+**Notes:** Worktree `.worktrees/plan-entitlements-key-routing` on `feat/plan-entitlements-key-routing`. Base: feature-entrega2-HernanLaura (origin/main is course template, not monorepo).
