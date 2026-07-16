@@ -1,12 +1,13 @@
 jest.mock('@helsoft/hooks', () => ({
   ...jest.requireActual('@helsoft/hooks'),
   useApiKey: jest.fn(),
+  useEntitlements: jest.fn(),
 }));
 jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
 
-import { useApiKey } from '@helsoft/hooks';
+import { useApiKey, useEntitlements } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { Linking } from 'react-native';
@@ -15,6 +16,7 @@ import { localizationValue } from '../../test-utils/auth-test-factories';
 import { ApiKeySettings } from './api-key-settings';
 
 const mockUseApiKey = useApiKey as jest.Mock;
+const mockUseEntitlements = useEntitlements as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
 
 const apiKeyValue = (overrides: Partial<ReturnType<typeof useApiKey>> = {}) => ({
@@ -27,8 +29,25 @@ const apiKeyValue = (overrides: Partial<ReturnType<typeof useApiKey>> = {}) => (
   ...overrides,
 });
 
+const entitlementsValue = (overrides: Partial<ReturnType<typeof useEntitlements>> = {}) => ({
+  entitlements: {
+    plan: 'free' as const,
+    keySource: 'user' as const,
+    showKeySettings: true,
+    showAds: true,
+    canCreate: false,
+  },
+  isLoading: false,
+  error: null,
+  retry: jest.fn(),
+  ...overrides,
+});
+
 describe('ApiKeySettings', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseEntitlements.mockReturnValue(entitlementsValue());
+  });
 
   // @s1 — entering and saving a key calls useApiKey().saveApiKey with the entered value.
   it('calls saveApiKey with the entered key on submit', async () => {
@@ -93,6 +112,63 @@ describe('ApiKeySettings', () => {
     await render(<ApiKeySettings />);
 
     expect(screen.queryByLabelText('settings.apiKey.inputLabel')).toBeNull();
+  });
+
+  // @s4 — plan-sensitive settings stay hidden until entitlements resolve.
+  it('renders nothing while entitlements are loading', async () => {
+    mockUseApiKey.mockReturnValue(apiKeyValue());
+    mockUseEntitlements.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    const view = await render(<ApiKeySettings />);
+
+    expect(view.toJSON()).toBeNull();
+  });
+
+  // @s9/@s17 — paid users never see BYOK settings, even with a stale saved key.
+  it('renders nothing for paid entitlements when a user key remains saved', async () => {
+    mockUseApiKey.mockReturnValue(
+      apiKeyValue({
+        status: { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' },
+      }),
+    );
+    mockUseEntitlements.mockReturnValue(
+      entitlementsValue({
+        entitlements: {
+          plan: 'paid',
+          keySource: 'platform',
+          showKeySettings: false,
+          showAds: false,
+          canCreate: true,
+        },
+      }),
+    );
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    const view = await render(<ApiKeySettings />);
+
+    expect(view.toJSON()).toBeNull();
+  });
+
+  // @s5/@s6 — entitlement failures hide key controls and delegate retry.
+  it('renders an entitlement error and retries without showing key settings', async () => {
+    const retry = jest.fn();
+    mockUseApiKey.mockReturnValue(apiKeyValue());
+    mockUseEntitlements.mockReturnValue(
+      entitlementsValue({
+        entitlements: null,
+        error: new Error('read failed'),
+        retry,
+      }),
+    );
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(<ApiKeySettings />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('entitlements.error.message');
+    expect(screen.queryByLabelText('settings.apiKey.inputLabel')).toBeNull();
+    fireEvent.press(screen.getByRole('button', { name: 'entitlements.error.retry' }));
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
   // @s2 — useApiKey().isSubmitting disables the Save control via the ApiKeyForm wiring.

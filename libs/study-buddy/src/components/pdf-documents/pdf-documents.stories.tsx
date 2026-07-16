@@ -55,6 +55,14 @@ export const Content: Story = {
   decorators: [withPdfDocumentsMock({ documents: SAMPLE_DOCUMENTS })],
 };
 
+/** Creation disabled — generated lessons remain openable while Generate/Retry stay hidden. */
+export const CreationDisabled: Story = {
+  args: {
+    onGenerate: undefined,
+  },
+  decorators: [withPdfDocumentsMock({ documents: SAMPLE_DOCUMENTS })],
+};
+
 /** Loading — spinner while usePdfDocuments fetches. */
 export const Loading: Story = {
   decorators: [withPdfDocumentsMock({ isLoading: true })],

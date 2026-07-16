@@ -69,6 +69,12 @@ export const es: TranslationResource = {
       count_one: '{{count}} lección',
       count_other: '{{count}} lecciones',
     },
+    entitlements: {
+      error: {
+        message: 'No pudimos cargar tu plan.',
+        retry: 'Intentar de nuevo',
+      },
+    },
     upload: {
       intro: 'Sube un PDF para generar una lección',
       apiKeyRequired: {

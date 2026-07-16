@@ -9,7 +9,6 @@ const meta = {
     filename: 'notes.pdf',
     createdAt: '2026-07-14T12:00:00.000Z',
     pageCount: 12,
-    onGenerate: () => {},
     onOpenLesson: () => {},
     onDelete: () => {},
   },
@@ -20,16 +19,23 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {
-  args: { status: 'ready' },
+  args: { status: 'ready', onGenerate: () => {} },
 };
 
 export const Failed: Story = {
-  args: { status: 'failed' },
+  args: { status: 'failed', onGenerate: () => {} },
 };
 
 export const Generated: Story = {
   args: {
     status: 'generated',
     onDelete: undefined,
+  },
+};
+
+/** Creation disabled — document metadata remains while Generate is hidden. */
+export const CreationDisabled: Story = {
+  args: {
+    status: 'ready',
   },
 };

@@ -69,6 +69,12 @@ export const de: TranslationResource = {
       count_one: '{{count}} Lektion',
       count_other: '{{count}} Lektionen',
     },
+    entitlements: {
+      error: {
+        message: 'Dein Tarif konnte nicht geladen werden.',
+        retry: 'Erneut versuchen',
+      },
+    },
     upload: {
       intro: 'Lade ein PDF hoch, um eine Lektion zu erstellen',
       apiKeyRequired: {

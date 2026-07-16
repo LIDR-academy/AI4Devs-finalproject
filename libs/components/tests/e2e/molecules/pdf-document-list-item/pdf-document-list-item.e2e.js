@@ -31,3 +31,11 @@ test('Generated story renders Open lesson action', async ({ page }) => {
   await expect(canvas.locator('text=Lesson ready').first()).toBeVisible();
   await expect(canvas.locator('text=Open lesson').first()).toBeVisible();
 });
+
+test('CreationDisabled story hides Generate while retaining document content', async ({ page }) => {
+  await page.goto(story('creation-disabled'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.locator('text=notes.pdf').first()).toBeVisible();
+  await expect(canvas.getByText('Generate', { exact: true })).toHaveCount(0);
+});

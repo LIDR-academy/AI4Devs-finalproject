@@ -1,7 +1,9 @@
-import { ApiKeyForm } from '@helsoft/components';
-import { useApiKey } from '@helsoft/hooks';
+import { ApiKeyForm, Button } from '@helsoft/components';
+import { useApiKey, useEntitlements } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import type { AiProvider, ApiKeyErrorCode } from '@helsoft/types';
+import { Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 /** Provider brand names are not translated (proper nouns) — the seam stays open for more
  * providers alongside the `AiProvider` union (spec.md Open decision 2; ai-lesson-generation
@@ -32,7 +34,28 @@ const API_KEY_ERROR_KEYS: Partial<Record<ApiKeyErrorCode, string>> = {
  */
 export const ApiKeySettings = () => {
   const { status, isLoading, isSubmitting, error, saveApiKey, removeApiKey } = useApiKey();
+  const {
+    entitlements,
+    isLoading: areEntitlementsLoading,
+    error: entitlementsError,
+    retry,
+  } = useEntitlements();
   const { t, locale } = useLocalization();
+
+  if (areEntitlementsLoading) return null;
+
+  if (entitlementsError) {
+    return (
+      <View style={styles.error}>
+        <Text accessibilityRole="alert" style={styles.errorMessage}>
+          {t('entitlements.error.message')}
+        </Text>
+        <Button onPress={retry}>{t('entitlements.error.retry')}</Button>
+      </View>
+    );
+  }
+
+  if (!entitlements?.showKeySettings) return null;
 
   const keySavedStatusLabel = status.hasKey
     ? t('settings.apiKey.savedStatus', {
@@ -64,3 +87,13 @@ export const ApiKeySettings = () => {
     />
   );
 };
+
+const styles = StyleSheet.create((theme) => ({
+  error: {
+    gap: theme.spacing.s4,
+  },
+  errorMessage: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.error,
+  },
+}));

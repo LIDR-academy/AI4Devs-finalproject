@@ -75,6 +75,12 @@ export const en = {
       count_one: '{{count}} lesson',
       count_other: '{{count}} lessons',
     },
+    entitlements: {
+      error: {
+        message: "We couldn't load your plan.",
+        retry: 'Try again',
+      },
+    },
     upload: {
       intro: 'Upload a PDF to generate a lesson',
       // ai-key-management task-12 (Slice 2) — the ApiKeyGate guard-rail copy; added ahead of

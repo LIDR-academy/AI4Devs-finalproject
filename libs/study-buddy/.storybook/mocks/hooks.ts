@@ -12,6 +12,7 @@ export * from '../../../hooks/src/hooks/use-interaction-state';
 import type {
   ApiKeyErrorCode,
   ApiKeyStatus,
+  Entitlements,
   GeneratedLesson,
   GenerateLessonRequest,
   GenerationErrorCode,
@@ -212,6 +213,45 @@ export const useApiKey = () => {
   );
 
   return { status, isLoading, isSubmitting, error, saveApiKey, removeApiKey };
+};
+
+// --- useEntitlements -----------------------------------------------------------
+
+export type EntitlementsMockConfig = {
+  entitlements?: Entitlements | null;
+  isLoading?: boolean;
+  error?: Error | null;
+};
+
+let pendingEntitlementsConfig: EntitlementsMockConfig = {};
+
+export const configureEntitlementsMock = (config: EntitlementsMockConfig) => {
+  pendingEntitlementsConfig = config;
+};
+
+export const useEntitlements = () => {
+  const [config] = useState(() => {
+    const next = pendingEntitlementsConfig;
+    pendingEntitlementsConfig = {};
+    return next;
+  });
+  const [error, setError] = useState<Error | null>(config.error ?? null);
+
+  return {
+    entitlements:
+      config.entitlements === undefined
+        ? {
+            plan: 'free' as const,
+            keySource: 'user' as const,
+            showKeySettings: true,
+            showAds: true,
+            canCreate: false,
+          }
+        : config.entitlements,
+    isLoading: config.isLoading ?? false,
+    error,
+    retry: () => setError(null),
+  };
 };
 
 // --- useLessons ----------------------------------------------------------------

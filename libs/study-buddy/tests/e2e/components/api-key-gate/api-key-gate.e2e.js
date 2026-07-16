@@ -30,3 +30,22 @@ test('WithKey story renders children', async ({ page }) => {
     canvas.getByText('An API key is required to generate lessons.', { exact: true }),
   ).toHaveCount(0);
 });
+
+test('Paid story renders children without key guidance', async ({ page }) => {
+  await page.goto(story('paid'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText('Generation entry content', { exact: true })).toBeVisible();
+  await expect(
+    canvas.getByText('An API key is required to generate lessons.', { exact: true }),
+  ).toHaveCount(0);
+});
+
+test('Error story renders retry and hides children', async ({ page }) => {
+  await page.goto(story('error'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText("We couldn't load your plan.", { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Try again', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Generation entry content', { exact: true })).toHaveCount(0);
+});

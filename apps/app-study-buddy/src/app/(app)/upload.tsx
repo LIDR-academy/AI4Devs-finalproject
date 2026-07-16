@@ -26,17 +26,23 @@ export default function UploadScreen() {
   return (
     <ScreenContainer>
       <ApiKeyGate>
-        <NewLessonDialog
-          onExtracted={handleExtracted}
-          onGenerated={bumpReload}
-          generateDocumentId={generateDocumentId}
-          onGenerateHandled={() => setGenerateDocumentId(undefined)}
-        />
-        <PdfDocuments
-          onGenerate={setGenerateDocumentId}
-          onOpenLesson={handleOpenLesson}
-          reloadToken={reloadToken}
-        />
+        {(canCreate) => (
+          <>
+            {canCreate ? (
+              <NewLessonDialog
+                onExtracted={handleExtracted}
+                onGenerated={bumpReload}
+                generateDocumentId={generateDocumentId}
+                onGenerateHandled={() => setGenerateDocumentId(undefined)}
+              />
+            ) : null}
+            <PdfDocuments
+              onGenerate={canCreate ? setGenerateDocumentId : undefined}
+              onOpenLesson={handleOpenLesson}
+              reloadToken={reloadToken}
+            />
+          </>
+        )}
       </ApiKeyGate>
     </ScreenContainer>
   );

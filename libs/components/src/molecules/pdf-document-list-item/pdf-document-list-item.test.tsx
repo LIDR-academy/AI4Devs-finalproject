@@ -85,6 +85,19 @@ describe('PdfDocumentListItem', () => {
     expect(screen.getByText('Open lesson')).toBeTruthy();
   });
 
+  // @s13 — creation can be hidden without removing access to generated lessons.
+  it('hides create actions without hiding Open lesson when onGenerate is omitted', async () => {
+    const { rerender } = await render(
+      <PdfDocumentListItem {...baseProps} status="ready" onGenerate={undefined} />,
+    );
+    expect(screen.queryByRole('button', { name: 'Generate notes.pdf' })).toBeNull();
+
+    await rerender(
+      <PdfDocumentListItem {...baseProps} status="generated" onGenerate={undefined} />,
+    );
+    expect(screen.getByRole('button', { name: 'Open lesson for notes.pdf' })).toBeTruthy();
+  });
+
   // @s11 — delete only for ready/failed when onDelete provided.
   it('renders delete for ready when onDelete is set', async () => {
     const onDelete = jest.fn();

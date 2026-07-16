@@ -5,16 +5,17 @@
 | Scenario | Test | File |
 |---|---|---|
 | @s1 | live trigger/default/constraint/select-own/write-denial behavior | `profiles.rls.integration.test.ts` |
-| @s2 | reads/derives free entitlements; saved key enables creation | `entitlements.dao.test.ts`, `entitlements.service.test.ts`, `use-entitlements.test.ts` |
-| @s3 | free plan without key disables creation | `use-entitlements.test.ts` |
-| @s4 | pending plan or key status hides entitlements | `use-entitlements.test.ts` |
-| @s5 | missing profile, invalid plan, and read failure are explicit errors | `entitlements.dao.test.ts`, `entitlements.service.test.ts`, `use-entitlements.test.ts` |
-| @s6 | retry clears error; stale requests cannot overwrite success | `use-entitlements.test.ts` |
-| @s9 | paid plan derives platform access without user key | `entitlements.service.test.ts`, `use-entitlements.test.ts` |
-| @s12 | paid→free reload with key present and absent | `use-entitlements.test.ts`, `entitlements.integration.test.ts` |
+| @s2 | free saved-key controls | `use-entitlements.test.ts`, `api-key-gate.test.tsx`, `upload.test.tsx` |
+| @s3 | free no-key guidance; create hidden | `api-key-gate.test.tsx`, `upload.test.tsx` |
+| @s4 | pending hides create/key settings | `api-key-gate.test.tsx`, `api-key-settings.test.tsx`, `upload.test.tsx` |
+| @s5 | explicit error hides controls | `entitlements.service.test.ts`, `api-key-gate.test.tsx`, `api-key-settings.test.tsx`, `upload.test.tsx` |
+| @s6 | retry delegates and recovers | `use-entitlements.test.ts`, `api-key-gate.test.tsx`, `api-key-settings.test.tsx` |
+| @s9 | paid enables create; hides BYOK | `entitlements-ui.integration.test.tsx`, `upload.test.tsx` |
+| @s12 | downgrade applies current controls | `use-entitlements.test.ts`, `api-key-gate.test.tsx` |
+| @s13 | create gating preserves Open lesson | `pdf-document-list-item.test.tsx`, `pdf-documents.test.tsx` |
 | @s14 | profile plan is persisted as the live server-read foundation | `profiles-migration.test.ts`, `entitlements.dao.test.ts` |
 | @s16 | `showAds` derives from plan only | `entitlements.service.test.ts`, `use-entitlements.test.ts` |
-| @s17 | paid reload enables creation without user key | `use-entitlements.test.ts` |
+| @s17 | paid enables create; hides BYOK | `entitlements-ui.integration.test.tsx`, `upload.test.tsx` |
 
 ## Observed RED → GREEN cycles
 
@@ -31,6 +32,13 @@
 - @s9 RED paid plan was rejected; GREEN platform-derived paid entitlements.
 - @s2 RED package import lacked `EntitlementsDao`; GREEN DAO/package barrels.
 - @s2 RED RNTL could not parse under web Jest; GREEN isolated `jest-expo` native project.
+- @s4 RED loading exposed controls; GREEN both UI gates hide plan-sensitive controls.
+- @s9/@s17 RED paid no-key hit BYOK UI; GREEN current entitlements drive gate/settings.
+- @s12 RED saved-key state overrode downgrade; GREEN `canCreate` is authoritative.
+- @s5/@s6 RED failures showed guidance/blank UI; GREEN localized error + hook retry.
+- @s13 RED hiding create removed row access; GREEN optional generate preserves Open lesson.
+- @s2–@s5/@s9/@s17 RED UploadScreen had no runnable branch test; GREEN Expo Jest + screen wiring tests.
+- @s13 RED creation-disabled stories were absent; GREEN item/list/feature stories + scoped E2E.
 
 ## Coverage added on already-green production
 
@@ -45,6 +53,7 @@ They caused no production change.
 - @s14 Service → DAO integration reads the current profile plan.
 - @s16 `showAds` derives from free/paid plan.
 - @s17 free→paid reload enables creation without a user key.
+- @s9/@s17 paid gate + settings integration passed first run; no source change.
 
 ## Review refactors
 

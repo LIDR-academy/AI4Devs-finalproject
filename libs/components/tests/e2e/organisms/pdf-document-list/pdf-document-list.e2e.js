@@ -22,6 +22,15 @@ test('Content story renders document rows', async ({ page }) => {
   await expect(canvas.locator('text=biology.pdf')).toBeVisible();
 });
 
+test('CreationDisabled story hides create actions and retains Open lesson', async ({ page }) => {
+  await page.goto(story('creation-disabled'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.locator('text=Generate')).toHaveCount(0);
+  await expect(canvas.locator('text=Retry')).toHaveCount(0);
+  await expect(canvas.locator('text=Open lesson').first()).toBeVisible();
+});
+
 // @s14 — empty.
 test('Empty story shows the empty-state message', async ({ page }) => {
   await page.goto(story('empty'));
