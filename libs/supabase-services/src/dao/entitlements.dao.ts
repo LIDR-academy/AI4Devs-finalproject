@@ -22,11 +22,6 @@ type ProfilePlanJoinRow = {
   plans: PlansEmbed | PlansEmbed[] | null;
 };
 
-const asPlan = (planId: string): Plan => {
-  if (planId === 'free' || planId === 'paid') return planId;
-  throw new Error('Invalid profile plan');
-};
-
 const embedPlans = (plans: ProfilePlanJoinRow['plans']): PlansEmbed => {
   if (!plans) throw new Error('Plan not found');
   return Array.isArray(plans) ? plans[0] : plans;
@@ -47,7 +42,7 @@ export abstract class EntitlementsDao {
     const plan = embedPlans(row.plans);
 
     return {
-      plan: asPlan(row.plan_id),
+      plan: row.plan_id,
       usePlatformKey: plan.use_platform_key,
       showAds: plan.show_ads,
       showKeySettings: plan.show_key_settings,

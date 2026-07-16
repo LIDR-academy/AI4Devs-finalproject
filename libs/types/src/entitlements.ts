@@ -1,4 +1,4 @@
-export type Plan = 'free' | 'paid';
+export type Plan = string;
 
 export type Entitlements = {
   plan: Plan;
