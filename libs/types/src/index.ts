@@ -3,6 +3,7 @@ export * from './activity-type';
 export * from './api-key';
 export * from './api-key-error';
 export * from './auth-error';
+export * from './entitlements';
 export * from './graded-answer';
 export * from './lesson';
 export * from './lesson-attempt';

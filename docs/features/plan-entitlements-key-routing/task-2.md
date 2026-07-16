@@ -3,7 +3,7 @@ id: task-2
 title: Expose derived client entitlements
 slice: 1
 scenarios: [s2, s3, s4, s5, s6, s9, s12, s16, s17]
-status: todo
+status: done
 paths:
   - libs/types/src/entitlements.ts
   - libs/types/src/index.ts
@@ -24,14 +24,14 @@ paths:
 Implement `useEntitlements()` through the required Hook → Service → DAO layers. The DAO reads the caller's `profiles.plan`; the service validates and derives plan-only values; the hook composes shared `useApiKey()` status to derive `canCreate`, and exposes loading, error, and retry.
 
 ## Done criteria
-- [ ] Contract exposes `plan`, `keySource`, `showKeySettings`, `showAds`, and `canCreate`
-- [ ] `free` derives user-key source, key settings and ads; `paid` derives platform-key source, neither settings nor ads
-- [ ] `canCreate` is `paid || hasKey`; no raw key enters the contract
-- [ ] Missing profile and data-access failure are explicit errors, never coerced to `free`
-- [ ] Loading covers both plan and key-status dependencies; retry reloads the failed entitlement read
-- [ ] Related loading/data/error state uses a co-located reducer
-- [ ] DAO, service, hook, type, and barrel tests/exports are complete
-- [ ] Scenarios `@s2`–`@s6`, `@s9`, `@s12`, `@s16`, `@s17` are mapped in `tdd.md`
+- [x] Contract exposes `plan`, `keySource`, `showKeySettings`, `showAds`, and `canCreate`
+- [x] `free` derives user-key source, key settings and ads; `paid` derives platform-key source, neither settings nor ads
+- [x] `canCreate` is `paid || hasKey`; no raw key enters the contract
+- [x] Missing profile and data-access failure are explicit errors, never coerced to `free`
+- [x] Loading covers both plan and key-status dependencies; retry reloads the failed entitlement read
+- [x] Related loading/data/error state uses a co-located reducer
+- [x] DAO, service, hook, type, and barrel tests/exports are complete
+- [x] Scenarios `@s2`–`@s6`, `@s9`, `@s12`, `@s16`, `@s17` are mapped in `tdd.md`
 
 ## Notes
 `showAds` is returned but has no consumer in this feature. Reuse the existing `ApiKeyProvider` value so entitlement composition does not duplicate key-status requests.
