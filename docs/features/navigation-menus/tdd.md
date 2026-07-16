@@ -15,7 +15,7 @@
 | @s5, @s6, @s7, @s8, @s10, @s18 | identity, actions, error style, full-bleed outside dismiss, trigger semantics, touch targets | `account-menu.test.tsx`, `use-account-menu.test.tsx`, `tests/e2e/organisms/account-menu/account-menu.e2e.js` |
 | @s19 | web and native breakpoint selection | `use-breakpoint.test.ts` |
 | @s5, @s7 | controlled dialog-only SignOut and auth confirmation | `sign-out.test.tsx` |
-| @s2, @s5, @s6, @s7, @s13, @s14, @s17, @s19 | AppChrome navigation, identity, SignOut, deep-route active state, mobile bars | `app-chrome.test.tsx`, `use-app-chrome.test.ts` |
+| @s2, @s5, @s6, @s7, @s11, @s13, @s14, @s17, @s19 | AppChrome navigation, identity, SignOut, safe-area inset, deep-route active state, mobile bars | `app-chrome.test.tsx`, `use-app-chrome.test.ts` |
 | @s14 | AppChrome Content and Loading Storybook states | `tests/e2e/components/app-chrome/app-chrome.e2e.js` |
 | @s16 | App shell excludes redundant Home links and Settings/header SignOut | `app-shell.test.ts` |
 
@@ -59,8 +59,13 @@
 - @s14 RED added repeated-space and four-word identity initials assertion; helper mutant still survives scoped mutation despite exact `AB` output.
 - @s2/@s17 RED rerendered with replacement router/localization dependencies; all five AppChrome dependency-array mutants killed.
 
+## Rules-audit fix
+- @s17 RED hardcoded account-menu AT label → GREEN `nav.openAccountMenu` in all locale bundles + AppChrome `t()`.
+- @s11 RED AppChrome never forwarded safe-area inset → GREEN `useSafeAreaInsets().bottom` → `MobileBar`.
+- hooks barrel: `useBreakpoint` exported from `hooks/index.ts`; AppChrome imports `@helsoft/hooks`.
+
 ## CI re-work
-- @s19 RED AppChrome's isolated breakpoint import was unavailable; GREEN published a subpath entry point, kept the root barrel React Native-free, and verified the PDF integrations.
+- @s19 RED AppChrome's isolated breakpoint import was unavailable; GREEN published a subpath entry point (later also barrel-exported), and verified the PDF integrations.
 - @s14 RED AppChrome Storybook could not resolve the breakpoint subpath; GREEN aliased the subpath to the existing hooks mock and scoped browser checks passed.
 - @s8 RED nullable native modal parent failed type-check; GREEN narrowed it before dispatching `requestClose`.
 - @s2/@s13 RED AppChrome hook props/result inferred unknown; GREEN typed `renderHook` result and pathname props.

@@ -6,6 +6,7 @@ const meta = {
   title: 'Organisms/DesktopBar',
   component: DesktopBar,
   args: {
+    brandLabel: 'AI Study Buddy',
     avatar: <Text>HL</Text>,
     home: { label: 'Home', active: true, onPress: () => undefined },
     newLesson: { label: 'New lesson', onPress: () => undefined },

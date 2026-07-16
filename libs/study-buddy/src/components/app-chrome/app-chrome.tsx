@@ -1,9 +1,10 @@
 import { AccountMenu, DesktopBar, InitialsAvatar, MobileBar } from '@helsoft/components';
-import { useBreakpoint } from '@helsoft/hooks/use-breakpoint';
+import { useBreakpoint } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { usePathname, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SignOut } from '../sign-out/sign-out';
 import type { AppChromeProps } from './app-chrome.types';
@@ -12,6 +13,7 @@ import { useAppChrome } from './use-app-chrome';
 export const AppChrome = (_props: AppChromeProps) => {
   const { t } = useLocalization();
   const breakpoint = useBreakpoint();
+  const { bottom: safeAreaInsetBottom } = useSafeAreaInsets();
   const pathname = usePathname();
   const router = useRouter();
   const { home, identity, mobileTitleKey, newLesson, setSignOutOpen, signOutOpen } =
@@ -32,7 +34,7 @@ export const AppChrome = (_props: AppChromeProps) => {
       onSignOut={() => setSignOutOpen(true)}
       renderTrigger={({ expanded, onPress }) => (
         <InitialsAvatar
-          accessibilityLabel={`Open ${identity.label} account menu`}
+          accessibilityLabel={t('nav.openAccountMenu', { label: identity.label })}
           accessibilityState={{ expanded }}
           initials={identity.initials}
           onPress={onPress}
@@ -46,12 +48,18 @@ export const AppChrome = (_props: AppChromeProps) => {
   return (
     <>
       {breakpoint === 'desktop' ? (
-        <DesktopBar avatar={accountMenu} home={homeProps} newLesson={newLessonProps} />
+        <DesktopBar
+          avatar={accountMenu}
+          brandLabel={t('brand.name')}
+          home={homeProps}
+          newLesson={newLessonProps}
+        />
       ) : (
         <MobileBar
           avatar={accountMenu}
           home={homeProps}
           newLesson={newLessonProps}
+          safeAreaInsetBottom={safeAreaInsetBottom}
           title={<Text>{t(mobileTitleKey)}</Text>}
         />
       )}

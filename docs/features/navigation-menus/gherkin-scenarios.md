@@ -140,7 +140,8 @@ Feature: Desktop and mobile navigation menus
     And New lesson uses "nav.newLesson"
     And Settings uses "nav.settings"
     And Sign out uses "auth.logOut" and existing confirm keys when the dialog is shown
-    And no new product copy keys are required for this chrome
+    And the account-menu trigger uses "nav.openAccountMenu" with the identity label
+    And no other new product copy keys are required for this chrome
 
   @s18
   Scenario: Navigation chrome meets interaction and contrast a11y baselines
@@ -169,5 +170,5 @@ Feature: Desktop and mobile navigation menus
   Scenario: Desktop brand lockup uses the product name
     Given the desktop top bar is visible
     When the brand lockup renders
-    Then it includes the wordmark "AI Study Buddy"
+    Then it includes the wordmark from "brand.name" ("AI Study Buddy")
 ```

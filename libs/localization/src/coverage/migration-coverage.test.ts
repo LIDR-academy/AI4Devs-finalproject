@@ -153,6 +153,11 @@ const LESSON_GENERATION_DIR = resolve(
   REPO_ROOT,
   'libs/study-buddy/src/components/lesson-generation',
 );
+/**
+ * navigation-menus — AppChrome owns `t('nav.openAccountMenu')` plus other `nav.*` /
+ * `auth.*` chrome keys; same missing-key guard as the other feature-wiring components.
+ */
+const APP_CHROME_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/app-chrome');
 
 const isExcluded = (file: string) =>
   file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
@@ -261,6 +266,7 @@ const T_KEY_COMPONENT_DIRS: Array<[name: string, dir: string]> = [
   ['flashcard', FLASHCARD_DIR],
   ['lesson-generation-panel', LESSON_GENERATION_PANEL_DIR],
   ['lesson-generation', LESSON_GENERATION_DIR],
+  ['app-chrome', APP_CHROME_DIR],
 ];
 
 describe.each(T_KEY_COMPONENT_DIRS)('t() key existence coverage (%s)', (name, dir) => {

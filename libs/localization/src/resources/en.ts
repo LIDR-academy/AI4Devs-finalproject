@@ -8,10 +8,14 @@
  */
 export const en = {
   translation: {
+    brand: {
+      name: 'AI Study Buddy',
+    },
     nav: {
       myLessons: 'My lessons',
       newLesson: 'New lesson',
       settings: 'Settings',
+      openAccountMenu: 'Open {{label}} account menu',
       lesson: 'Lesson',
       study: 'Study',
       results: 'Results',

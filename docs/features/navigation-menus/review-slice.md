@@ -1,31 +1,38 @@
 ---
 feature: navigation-menus
 reviewer: reviewer_slice
-slice: 3
-round: 2
+scope: full branch feat/navigation-menus vs origin/feature-entrega2-HernanLaura (PR #7)
+round: rules-audit-fix
 verdict: APPROVED
 ---
 
-# Slice Review — navigation-menus (Slice 3)
+# Slice Review — navigation-menus (full-branch rules audit)
 
 **Verdict: APPROVED**
 
-Scope: task-5 + task-6 (AppChrome, `useBreakpoint`, SignOut controlled mode, `(app)` layout/index, tdd.md). Diff vs `a887684` (uncommitted). Round 2: verify R1 fixes + fresh rules pass.
+## Findings
 
-## Round-1 findings — verified fixed
+_None open._ Prior rules-audit findings fixed:
 
-1. **[atomic-design]/[global]** — `app-chrome.stories.tsx` present; Content + Loading states (session identity / loading without invented identity).
-2. **[tdd]** — `tests/e2e/components/app-chrome/app-chrome.e2e.js` covers both Storybook stories.
-3. **[component-split]** — `getMobileTitleKey` in `app-chrome.helpers.ts`; identity/nav/`signOutOpen` in `use-app-chrome.ts`; `onPress`/`onSettings`/`onSignOut` stay in `app-chrome.tsx`.
-4. **[tdd]** — `@s16` → `app-shell.test.ts` (Home body Links + Settings/`headerRight` SignOut absent); `tdd.md` map updated.
+1. **[i18n]** `AppChrome` account trigger uses `t('nav.openAccountMenu', { label })` (en/es/pt/de + migration-coverage guard).
+2. **[tdd/@s11]** `AppChrome` forwards `useSafeAreaInsets().bottom` to `MobileBar.safeAreaInsetBottom`; unit covers inset wiring.
+3. **[hooks-service-dao]** `useBreakpoint` re-exported from `libs/hooks/src/hooks/index.ts`; consumers import `@helsoft/hooks` (subpath kept for compat).
 
-## Fresh pass — no findings
+## Per-rule (audit)
 
-- **[hooks-service-dao]** — AppChrome → hooks only; no DAO from UI; `useBreakpoint` barrel-exported from `@helsoft/hooks`.
-- **[state]** — single `signOutOpen` `useState` (menu open owned by AccountMenu); no reducer required.
-- **[types]** — Props in `app-chrome.types.ts` / SignOut types files; no runtime in types.
-- **[i18n]** — inline `t('nav.*')` / `t('auth.logOut')`; key dictionary `getMobileTitleKey`; no new locale keys; no `labels` bag.
-- **[tdd]** — `@s2/@s5/@s6/@s7/@s13/@s14/@s16/@s17/@s19` mapped to concrete tests; SignOut controlled-mode coverage; breakpoint matrix covered.
-- **[global]** — functional React, Props type, kebab-case, barrels export AppChrome.
-- Design: Content/Loading stories match applicable UI states; Error/Empty N/A for chrome.
-- Shell: Stack `headerShown: false`; Home Links + Settings header SignOut removed; settings screen SignOut-free.
+| Rule | Result |
+| --- | --- |
+| global.mdc | PASS |
+| hooks-service-dao.mdc | PASS |
+| atomic-design.mdc | PASS |
+| component-split.mdc | PASS |
+| state.mdc | PASS |
+| types.mdc | PASS |
+| i18n.mdc | PASS |
+| tdd.mdc | PASS |
+
+## Intentional / accepted (docs)
+
+- Brand wordmark `"AI Study Buddy"` not localized — `spec.md` + @s20.
+- Help & feedback cut — `spec.md` / `dod.md`.
+- Empty/Error chrome N/A — `spec.md` UI states.

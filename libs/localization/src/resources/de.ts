@@ -3,10 +3,14 @@ import type { TranslationResource } from './en';
 /** German bundle. Key-aligned with `en` (compiler-enforced). Copy pending native review (R6). */
 export const de: TranslationResource = {
   translation: {
+    brand: {
+      name: 'AI Study Buddy',
+    },
     nav: {
       myLessons: 'Meine Lektionen',
       newLesson: 'Neue Lektion',
       settings: 'Einstellungen',
+      openAccountMenu: 'Kontomenü von {{label}} öffnen',
       lesson: 'Lektion',
       study: 'Lernen',
       results: 'Ergebnisse',

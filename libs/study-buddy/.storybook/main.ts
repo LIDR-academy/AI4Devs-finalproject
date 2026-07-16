@@ -57,7 +57,6 @@ const config: StorybookConfig = {
         // Storybook-only seams: no Expo Router / Supabase tree here. See .storybook/mocks/*.
         'expo-router': `${dirname}mocks/expo-router.ts`,
         'expo-document-picker': `${dirname}mocks/expo-document-picker.ts`,
-        '@helsoft/hooks/use-breakpoint': `${dirname}mocks/hooks.ts`,
         '@helsoft/hooks': `${dirname}mocks/hooks.ts`,
         '@helsoft/pdf-upload-extraction': `${dirname}mocks/pdf-upload-extraction.ts`,
       },

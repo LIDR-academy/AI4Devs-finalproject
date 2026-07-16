@@ -6,6 +6,7 @@ import { NavItem } from '../../molecules/nav-item/nav-item';
 import type { DesktopBarProps } from './desktop-bar.types';
 
 export const DesktopBar = ({
+  brandLabel,
   avatar,
   home,
   newLesson,
@@ -15,7 +16,7 @@ export const DesktopBar = ({
   <View style={styles.root}>
     <View style={styles.brand}>
       <Icon name="auto_awesome" />
-      <Text style={styles.wordmark}>AI Study Buddy</Text>
+      <Text style={styles.wordmark}>{brandLabel}</Text>
     </View>
     <View style={styles.navigation}>
       <NavItem {...home} indicatorVariant={indicatorVariant} />

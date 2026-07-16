@@ -36,7 +36,7 @@ None.
 - Real notifications (bell+badge = visual placeholder only)
 - Avatar photo upload / picker
 - Adding lesson/player deep routes as top-level tabs
-- New i18n product keys (reuse existing `nav.*` / `auth.*`)
+- New i18n product keys beyond the account-trigger a11y key `nav.openAccountMenu` (reuse existing `nav.*` / `auth.*`)
 - Changing product default indicator away from `pill` (API still exposes `underline` | `dot`)
 
 ## Open decisions (resolved, with rationale)
@@ -47,8 +47,8 @@ None.
 - **Real session user + initials avatar** — **why:** avatar/menu identity must reflect the actual signed-in user (@s14); initials placeholder personalizes without adding a photo-upload feature (Non-goals). (lock #5)
 - **Mobile avatar → same account menu as desktop** — **why:** one shared AccountMenu organism, two triggers → action parity + no divergent/duplicated menu to maintain (@s10). (lock #6)
 - **Breakpoint 768** — web ≥768 desktop; web &lt;768 **and** native iOS/Android → mobile — **why:** matches the design SoT desktop cutoff; native has no wide-canvas layout so it always uses the mobile pattern (@s19). (lock #7)
-- **i18n keys** — see `@s17`; reuse existing `nav.*` / `auth.*` bundle keys (chrome ships no new user-facing copy) — **why:** those strings are already reviewed + translated across all 4 locales, so no new product copy or translation work is introduced. (lock #8)
-- **Brand wordmark literal “AI Study Buddy”** — not localized — **why:** product name already used as brand in theme/docs; design lockup.
+- **i18n keys** — see `@s17`; reuse existing `nav.*` / `auth.*` plus one a11y key `nav.openAccountMenu` (`{{label}}`) — **why:** product labels already translated; AT strings are user-facing under i18n.mdc, so the trigger label needs a key. (lock #8)
+- **Brand wordmark via `brand.name`** — same literal in all locales, not translated — **why:** product name; still goes through `t()` so i18n.mdc / migration coverage hold.
 - **Presentational chrome in `@helsoft/components`**; wiring in `@helsoft/study-buddy` + app layouts — **why:** atomic design + Component→Hook layering; props for labels/handlers.
 - **Account Sign out reuses existing SignOut confirm dialog via a new controlled mode** — add optional `open`/`onOpenChange` to `SignOut`/`SignOutView` (dialog-only when controlled; absent = today's behavior, backward-compatible). AccountMenu's error-styled row fires `onSignOut`; AppChrome opens the controlled dialog, reusing `auth.logOut*` + `useAuth().signOut()`. Mechanism + paths in **`task-5.md`**; AccountMenu (task-4) stays presentational. — **why:** the row must be an error-styled menu item (@s5), not SignOut's outlined Button, and re-implementing the dialog would duplicate confirm wiring — controlled mode swaps only the trigger. _(FYI at gate — technical call made without a live human.)_
 - **Hide redundant Expo Stack header chrome** where custom bars own title/actions; keep deep-route titles coherent via same `t()` keys — **why:** avoid double headers + duplicate SignOut.
