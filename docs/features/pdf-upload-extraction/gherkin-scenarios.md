@@ -5,7 +5,7 @@ status: approved
 
 # Gherkin scenarios — pdf-upload-extraction
 
-The signed contract. Every `@s` tag is the traceability key the `implementator` and reviewers use;
+The signed contract. Every `@s` tag is the traceability key the `implementer` and reviewers use;
 each maps to ≥ 1 concrete test. Every acceptance criterion in `spec.md` maps to ≥ 1 scenario here.
 
 ```gherkin
@@ -169,7 +169,7 @@ Feature: PDF upload and backend content extraction
 | AC16 (accessibility) | @s16 |
 | _(no numbered AC)_ — analytics is an **added, human-approved scope item** locked at the gate (see spec *Resolved decisions → [Analytics]*), not tied to a story AC | @s17 |
 
-## Scenario → primary test kind (how the implementator consumes it)
+## Scenario → primary test kind (how the implementer consumes it)
 
 | Scenario | Primary test |
 |---|---|

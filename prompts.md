@@ -397,3 +397,13 @@ These prompts drove refinement, reconciliation and review across the documents r
 1. modify @reviewer_slice.md so it reviews the code against all the rules in the .agents/rules directory
 
 2. write to prompts.md the prompts since your last write
+
+---
+
+## Anexo — Prompts de la sesión: renombrado de `implementator` → `implementer`
+
+> Prompts del usuario (verbatim, en orden) de la sesión que renombró el agente `implementator` a `implementer` en todos los archivos operativos del harness (agente `.agents/agents/implementer.md` + frontmatter `name`, `.agents/**`, `ORCHESTRATOR_PLAN.md`, `AGENTS.md`, artefactos de `docs/features/**`, diagrama excalidraw), dejando intacto el log verbatim de `prompts.md` y las copias en `.worktrees/`.
+
+1. rename everywhere from implementator into implementer
+
+2. write this prompt into prompts.md

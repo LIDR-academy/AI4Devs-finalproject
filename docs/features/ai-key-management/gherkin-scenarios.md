@@ -1,6 +1,6 @@
 # Gherkin scenarios — ai-key-management
 
-The signed contract. Every `@s` tag is the traceability key the `implementator` and reviewers use;
+The signed contract. Every `@s` tag is the traceability key the `implementer` and reviewers use;
 each maps to ≥ 1 concrete test. Every acceptance criterion in `spec.md` maps to ≥ 1 scenario here.
 
 ```gherkin
@@ -166,7 +166,7 @@ Feature: Bring-your-own AI key management
 | AC12 (accessibility — account-screen form **and** generation-entry-guard notice) | @s14 |
 | AC13 (i18n) | @s15 |
 
-## Scenario → primary test kind (how the implementator consumes it)
+## Scenario → primary test kind (how the implementer consumes it)
 
 | Scenario | Primary test |
 |---|---|

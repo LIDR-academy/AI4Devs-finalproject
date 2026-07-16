@@ -57,14 +57,14 @@ Round 1's analysis is **still open, unaddressed**, at their current line numbers
   `api-key-required-notice.tsx` lines 31-35 (`notice`/`message`).
 
 ### Route
-Hand to `implementator`: fix all "real" items above via TDD (one-line message assertions in
+Hand to `implementer`: fix all "real" items above via TDD (one-line message assertions in
 services; the session-change-race test in hooks; the `api-key-form.tsx` gaps; `toHaveStyle`
 assertions for the style mutants, per `language-selector.test.tsx`'s precedent). Get a written
 equivalence confirmation for the 3 flagged `useCallback`-array hook mutants and the `onRemove`
 optional-chaining call before excluding either. Re-run mutation per lib after fixes; report back
 for a final verification pass before the mutation gate can close.
 
-### Round 2 fix pass (implementator) — results
+### Round 2 fix pass (implementer) — results
 
 All four `@helsoft/supabase-services` message-content survivors killed with one-line `.message`
 assertions added to the existing matching-code test in each case (`api-key.service.test.ts`'s
@@ -178,13 +178,13 @@ Per-file: `api-key.dao.ts` 100% (0 survived) · `api-key.service.ts` 77.78% (3 s
 
    The effect's deps are `[session, isSessionLoading]` — **the effect re-runs (with cleanup) whenever `session` changes, not only on unmount.** The existing test (`use-api-key.test.ts:233`, "ignores a status load that resolves after unmount") only exercises the unmount case, and — checked directly — only asserts `console.error` wasn't called; it never re-reads `result.current` (a `renderHook` result can't reflect a post-unmount re-render anyway, so that specific test genuinely can't distinguish the guard's presence for *unmount*). But a **session-change-while-in-flight** race is real and currently untested: e.g. an authenticated session with a pending `getApiKeyStatus()` call, then the session flips to `null` (logout) before it resolves — without the guard, the stale promise's `setStatus`/`setIsLoading` calls would incorrectly overwrite the already-reset no-key state. **Not equivalent — this is a real, currently-unverified race.** To kill: mock an authenticated session with a controllable pending promise, `rerender` with `noSession` before resolving, then resolve it, and assert `status` stays `{ hasKey: false }` (not clobbered by the stale resolution).
 
-**Likely-equivalent (propose excluding, but implementator/reviewer must confirm in writing before doing so — do not exclude on my say-so alone):**
+**Likely-equivalent (propose excluding, but implementer/reviewer must confirm in writing before doing so — do not exclude on my say-so alone):**
 
 10. **`use-api-key.ts:91:6`** `}, []);` → `}, ["Stryker was here"]);` (ArrayDeclaration, `runMutation`'s own `useCallback` deps).
 11. **`use-api-key.ts:93:107`** `[runMutation]` → `[]` (ArrayDeclaration, `saveApiKey`'s deps).
 12. **`use-api-key.ts:94:91`** `[runMutation]` → `[]` (ArrayDeclaration, `removeApiKey`'s deps).
 
-    `runMutation` closes only over the three `useState` setters (React-guaranteed stable references) and has literal `[]` deps today, so it is referentially stable across the component's lifetime regardless of what's in its own dep array (a fresh-but-constant string literal element compares equal via `Object.is` on every render). Since `runMutation` never changes identity, `saveApiKey`/`removeApiKey`'s dep arrays being `[runMutation]` vs `[]` produce the same stable identity either way. Mirrors the accepted equivalent pattern in `docs/features/localization-i18n/mutation.md` #21/#22 (dependency arrays on an already-stable callback) — same reasoning, different file. If implementator's own check confirms no test input can observe a difference, exclude with that written justification; otherwise treat as real.
+    `runMutation` closes only over the three `useState` setters (React-guaranteed stable references) and has literal `[]` deps today, so it is referentially stable across the component's lifetime regardless of what's in its own dep array (a fresh-but-constant string literal element compares equal via `Object.is` on every render). Since `runMutation` never changes identity, `saveApiKey`/`removeApiKey`'s dep arrays being `[runMutation]` vs `[]` produce the same stable identity either way. Mirrors the accepted equivalent pattern in `docs/features/localization-i18n/mutation.md` #21/#22 (dependency arrays on an already-stable callback) — same reasoning, different file. If implementer's own check confirms no test input can observe a difference, exclude with that written justification; otherwise treat as real.
 
 ### @helsoft/components — 20 real (api-key-form.tsx) + 3 style mutants (api-key-required-notice.tsx), no proposed equivalents
 
@@ -200,7 +200,7 @@ Per-file: `api-key.dao.ts` 100% (0 survived) · `api-key.service.ts` 77.78% (3 s
 
 20. **`api-key-form.tsx:124:33`** `accessibilityState={{ disabled: isSubmitting }}` → `accessibilityState={{}}`. No test asserts this prop's actual value (WCAG state-change relevance, task-14's a11y pass). To kill: assert the input's `accessibilityState` reflects `isSubmitting`.
 
-21. **`api-key-form.tsx:170:11`** `onRemove?.()` → `onRemove()` (OptionalChaining). Survives because the one test exercising this always provides `onRemove`. `onRemove` is typed optional in `ApiKeyFormProps`, so this is a real (if edge-case) gap — either (a) add a test rendering without `onRemove` and confirming removal, asserting no crash, or (b) if `ApiKeySettings` always provides it in practice, tighten the prop to required and delete the optional chain (removes the mutant entirely). Implementator's call — flag which was chosen in `tdd.md`.
+21. **`api-key-form.tsx:170:11`** `onRemove?.()` → `onRemove()` (OptionalChaining). Survives because the one test exercising this always provides `onRemove`. `onRemove` is typed optional in `ApiKeyFormProps`, so this is a real (if edge-case) gap — either (a) add a test rendering without `onRemove` and confirming removal, asserting no crash, or (b) if `ApiKeySettings` always provides it in practice, tighten the prop to required and delete the optional chain (removes the mutant entirely). Implementer's call — flag which was chosen in `tdd.md`.
 
 22. **`api-key-form.tsx:169:33`** `setIsConfirmingRemove(false)` → `setIsConfirmingRemove(true)`. No test asserts the dialog actually closes after confirming (only that `onRemove` fires). To kill: assert the dialog is closed post-confirm.
 
@@ -214,4 +214,4 @@ Per-file: `api-key.dao.ts` 100% (0 survived) · `api-key.service.ts` 77.78% (3 s
 
 ## Threshold check
 
-Gate requires 100% killed on changed lines. Not met (91.55% / 80.00% / 62.30%). **Route: hand to `implementator`** to write the red tests above (Group real) and get a written equivalence confirmation for the 3 flagged hook mutants (#10-12) and the `onRemove` optional-chaining call (#21) before any exclusion. Re-run mutation per lib after fixes; this loop runs alongside the full review's fix round per the ORCHESTRATOR quality loop (one combined round, not two).
+Gate requires 100% killed on changed lines. Not met (91.55% / 80.00% / 62.30%). **Route: hand to `implementer`** to write the red tests above (Group real) and get a written equivalence confirmation for the 3 flagged hook mutants (#10-12) and the `onRemove` optional-chaining call (#21) before any exclusion. Re-run mutation per lib after fixes; this loop runs alongside the full review's fix round per the ORCHESTRATOR quality loop (one combined round, not two).

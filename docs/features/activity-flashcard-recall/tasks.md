@@ -5,7 +5,7 @@ review_round: 1     # incremented by reviews_lead; cap 2
 ---
 
 # Tasks — activity-flashcard-recall
-Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not** duplicate them here. `orchestrator_lead` owns `phase`; `implementator` flips each task's `status`.
+Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not** duplicate them here. `orchestrator_lead` owns `phase`; `implementer` flips each task's `status`.
 
 | Task | Slice | Scenarios | Status | Paths |
 |---|---|---|---|---|

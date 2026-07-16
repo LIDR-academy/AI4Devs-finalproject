@@ -9,7 +9,7 @@ skipped_lenses: none
 
 # Review — pending-pdfs-generate (round 2)
 
-Round-1 findings (6) fixed by implementator. Dirty re-review:
+Round-1 findings (6) fixed by implementer. Dirty re-review:
 - `reviewer_engineering` → APPROVED (empty findings)
 - `reviewer_standards` → APPROVED (empty findings)
 

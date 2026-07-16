@@ -37,6 +37,6 @@ Return one line: `spec_drafted -> docs/features/<name>/` (spec + tasks + task-N 
 ## Hard rules
 
 - ❌ No code, no tests. ❌ Don't guess unresolved product questions — ask.
-- ❌ Don't start building — that's `implementator`, after the gate.
+- ❌ Don't start building — that's `implementer`, after the gate.
 - ✅ Produce the spec **and** the `gherkin-scenarios.md` in the same step (via the `gherkin-authoring` skill). ✅ Atomic, self-contained tasks, each tied to `@s` tags. ✅ Decisions carry their "why".
 - ✅ **Shrink `spec.md` after the tasks + gherkin exist** — it's a terse overview (≤ ~4 KB), never a dump; nothing in it duplicates `gherkin-scenarios.md`, `task-N.md`, or `risks.md`.

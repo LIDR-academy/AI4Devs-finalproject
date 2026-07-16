@@ -66,7 +66,7 @@ export type ActivityAnswer =
   | FillInTheBlankAnswer;
 ```
 
-**Pure grading** (no DAO/service — no I/O). Signatures only; implementator writes bodies TDD-first.
+**Pure grading** (no DAO/service — no I/O). Signatures only; implementer writes bodies TDD-first.
 
 ```ts
 // libs/study-buddy/src/grading/grade-fill-in-the-blank.ts

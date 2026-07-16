@@ -84,7 +84,7 @@ Default-param / `?? ''` fallback never hit by current tests; no surviving (tests
 - Round 2: 98.43% (313/318) · 5 survivors
 
 ## Post-review pass (final, round 3)
-**Base-ref:** `999b2fb` (pre-review sha) · WT includes implementator kill rounds
+**Base-ref:** `999b2fb` (pre-review sha) · WT includes implementer kill rounds
 **Score: 100.00% (288/288 detected)** | **0 survivors** | **PASS**
 
 Threshold = 100% killed on changed lines. **Met.** Round 1: 75.59%/62 → round 2: 95.45%/13 → **final 100%/0**.

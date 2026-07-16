@@ -1,6 +1,6 @@
 # Gherkin scenarios — signup-and-lesson-persistence
 
-The signed contract. Every `@s` tag is the traceability key the `implementator` and reviewers use;
+The signed contract. Every `@s` tag is the traceability key the `implementer` and reviewers use;
 each maps to ≥ 1 concrete test. Every acceptance criterion in `spec.md` maps to ≥ 1 scenario here.
 Scope = **lesson persistence + delete** (sign-up is carved out to `pending/sign-up.md`).
 
@@ -140,7 +140,7 @@ Feature: Lesson persistence and delete
 | Loading / Error states | @s13, @s14 |
 | i18n / a11y (cross-cutting) | @s15, @s16 |
 
-## Scenario → primary test kind (how the implementator consumes it)
+## Scenario → primary test kind (how the implementer consumes it)
 
 | Scenario | Primary test |
 |---|---|

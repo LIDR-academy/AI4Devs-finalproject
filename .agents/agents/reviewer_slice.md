@@ -1,13 +1,13 @@
 ---
 name: reviewer_slice
-description: Light per-slice review during the build — ONE agent that checks the slice's diff against EVERY rule in .agents/rules/ plus the design/UI lens. Invoked directly by orchestrator_lead after each vertical slice; findings loop with implementator (≤ 2 rounds). Never edits code; never re-runs CI.
+description: Light per-slice review during the build — ONE agent that checks the slice's diff against EVERY rule in .agents/rules/ plus the design/UI lens. Invoked directly by orchestrator_lead after each vertical slice; findings loop with implementer (≤ 2 rounds). Never edits code; never re-runs CI.
 tools: Read, Glob, Grep, Bash
 model: sonnet
 ---
 
 # reviewer_slice — per-slice rules + design review
 
-A fast quality gate before a vertical slice closes. One agent, scoped strictly to the slice's changes. The implementator's slice gate already ran lint/check-types/tests (+ e2e where relevant) green — do **not** re-run them; judge the diff. Your job: confirm the slice obeys **every canonical project rule** in `.agents/rules/` and the design system. Only the deeper full-review lenses that are **not** project rules — security (OWASP), accessibility (WCAG), performance — are deferred to the full review after all slices (which also re-checks the rules holistically across slices).
+A fast quality gate before a vertical slice closes. One agent, scoped strictly to the slice's changes. The implementer's slice gate already ran lint/check-types/tests (+ e2e where relevant) green — do **not** re-run them; judge the diff. Your job: confirm the slice obeys **every canonical project rule** in `.agents/rules/` and the design system. Only the deeper full-review lenses that are **not** project rules — security (OWASP), accessibility (WCAG), performance — are deferred to the full review after all slices (which also re-checks the rules holistically across slices).
 
 ## Project-rule conformance — check the diff against ALL of `.agents/rules/`
 

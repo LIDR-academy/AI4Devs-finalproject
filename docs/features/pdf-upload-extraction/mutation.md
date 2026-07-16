@@ -2,7 +2,7 @@
 
 **Test date:** 2026-07-10  
 **Base commit:** a62cb0c (just after round 2 mutation-closure pass documented in tdd.md)  
-**Mode:** Round 3 (final verification) — fresh Stryker run post-implementator's round-2 fixes  
+**Mode:** Round 3 (final verification) — fresh Stryker run post-implementer's round-2 fixes  
 **Strategy:** Stryker scoped to feature's changed source files only (per skill protocol) across all 5 touched workspaces
 
 ---
@@ -125,7 +125,7 @@
 - @helsoft/study-buddy: 0 survivors ✓ 100% threshold met
 
 **Hidden logic beneath styling/integration survivors:**
-All real logic gaps identified in round 2 have been closed per the implementator's round-2 mutation-closure pass (documented in tdd.md):
+All real logic gaps identified in round 2 have been closed per the implementer's round-2 mutation-closure pass (documented in tdd.md):
 
 1. ✓ Constants locked via direct test assertions (`pdf-extraction.constants.test.ts`)
 2. ✓ Boundary guards pinned via boundary tests (`extraction-failure-detection.ts`)
@@ -159,7 +159,7 @@ All real logic gaps identified in round 2 have been closed per the implementator
 
 ## Human risk-acceptance (final gate sign-off, 2026-07-10)
 
-The 2-round full-review + mutation loop cap was reached with 39 survivors (round 2, 80.86%). Per explicit human direction, `implementator` closed every genuine gap for real (see round-2/round-3 fix commits + `tdd.md`), reducing the feature to exactly the categories below — each explicitly reviewed and **risk-accepted by the human**, not silently waived by an agent:
+The 2-round full-review + mutation loop cap was reached with 39 survivors (round 2, 80.86%). Per explicit human direction, `implementer` closed every genuine gap for real (see round-2/round-3 fix commits + `tdd.md`), reducing the feature to exactly the categories below — each explicitly reviewed and **risk-accepted by the human**, not silently waived by an agent:
 
 - **228 total survivors, all in three accepted categories:**
   1. **16 styling mutations** (`libs/components/src/organisms/pdf-upload-panel/pdf-upload-panel.tsx`, `StyleSheet.create` properties) — accepted as a presentation/rendering concern outside unit-test scope; guarded by the Playwright e2e suite instead.

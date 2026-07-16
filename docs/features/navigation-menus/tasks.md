@@ -5,7 +5,7 @@ review_round: 2
 ---
 
 # Tasks — navigation-menus
-Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not** duplicate them here. `orchestrator_lead` owns `phase`; `implementator` flips each task's `status`.
+Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not** duplicate them here. `orchestrator_lead` owns `phase`; `implementer` flips each task's `status`.
 
 Design SoT: Claude Design `Navigation menus.html` (DesktopBar / MobileBar / account menu). Build Slice 1 → 2 → 3.
 

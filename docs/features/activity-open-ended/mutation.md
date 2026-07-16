@@ -37,7 +37,7 @@ None.
 
 ## Notes
 
-- Prior 15 survivors killed by implementator’s follow-up tests (guards, style tokens, label keys, optional `onAnswered`).
+- Prior 15 survivors killed by implementer’s follow-up tests (guards, style tokens, label keys, optional `onAnswered`).
 - 1 runtime/compile error mutant per lib — Stryker treats as detected; score 100%, 0 survived.
 
 post-review pass skipped — review changed no source

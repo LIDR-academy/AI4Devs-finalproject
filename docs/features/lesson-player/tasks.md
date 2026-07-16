@@ -5,7 +5,7 @@ review_round: 2     # incremented by reviews_lead; cap 2
 ---
 
 # Tasks — lesson-player
-Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not** duplicate them here. `orchestrator_lead` owns `phase`; `implementator` flips each task's `status`.
+Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not** duplicate them here. `orchestrator_lead` owns `phase`; `implementer` flips each task's `status`.
 
 Deck model: results is the **final slide** of the player deck (index = last, `N = contentSlides + 1`), reached by Next off the last content slide, with Back enabled and Next hidden on it — not a separate route.
 

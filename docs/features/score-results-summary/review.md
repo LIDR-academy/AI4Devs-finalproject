@@ -17,7 +17,7 @@ Lenses: all six run in round 1 (no skips — diff touches UI components, DAO/ser
 | `reviewer_accessibility` | APPROVED — 0 |
 | `reviewer_performance` | APPROVED — 0 |
 
-Findings (both fixed by `implementator` via TDD, see round 2):
+Findings (both fixed by `implementer` via TDD, see round 2):
 1. **Major** — `libs/hooks/src/hooks/use-lesson-attempt.ts:56-59` — `retry()` bypassed the overlapping-save guard that `saveAttempt` had (risk R5, no-double-insert). Fixed: guard consolidated into `runSave` via an `isSaving` ref shared by both call sites; new regression test added.
 2. **Minor** — `libs/components/src/organisms/results-summary/results-summary.tsx:76,94,116` — `saveFailed && variant === 'score'` duplicated verbatim three times. Fixed: extracted to a single `showSaveFailure` derived value, referenced at all three sites (pure refactor, all existing tests green unmodified).
 

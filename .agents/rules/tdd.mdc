@@ -1,11 +1,11 @@
 ---
-description: TDD rules for the implementator — Three Laws, Red→Green→Refactor, vertical slices. Loaded on demand, not injected into every agent.
+description: TDD rules for the implementer — Three Laws, Red→Green→Refactor, vertical slices. Loaded on demand, not injected into every agent.
 alwaysApply: false
 ---
 
 # TDD — Three Laws & Red→Green→Refactor (TypeScript)
 
-The `implementator` obeys these. Every line of production code exists because a failing test demanded it first.
+The `implementer` obeys these. Every line of production code exists because a failing test demanded it first.
 
 ## The Three Laws (non-negotiable)
 

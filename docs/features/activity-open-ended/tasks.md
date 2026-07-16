@@ -6,7 +6,7 @@ review_round: 1
 
 # Tasks — activity-open-ended
 
-Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementator` flips each task's `status`.
+Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementer` flips each task's `status`.
 
 | Task | Slice | Scenarios | Status | Paths |
 |---|---|---|---|---|

@@ -5,7 +5,7 @@ review_round: 2     # incremented by reviews_lead; cap 2
 ---
 
 # Tasks — score-results-summary
-Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not** duplicate them here. `orchestrator_lead` owns `phase`; `implementator` flips each task's `status`.
+Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not** duplicate them here. `orchestrator_lead` owns `phase`; `implementer` flips each task's `status`.
 
 - **Slice 1** (happy path + loading — score computed, attempt persisted, score shown):
   - [task-1](./task-1.md) — shared types: `ScorableSlide`, `GradedAnswer`, `ScoreSummary`, `LessonAttempt` + system-checked-activity set & guard

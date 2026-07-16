@@ -644,7 +644,7 @@ duplicated here except where a reviewer independently found the same gap through
 
 **Provenance note.** This fix round was picked up mid-flight: `review.md`/`tasks.md` already
 recorded findings 1–4, 6, 8, 9 (and the dead `api-key-form/index.ts` barrel, finding 10) as
-"dispatched to implementator, in progress" from an earlier interrupted session, and the working
+"dispatched to implementer, in progress" from an earlier interrupted session, and the working
 tree already contained their Red→Green→Refactor diffs (each inline-commented `Full-review Round
 1, Major/Minor N`) when this session started. Before touching anything, each of those was
 independently re-verified here — reading the actual diff, confirming a real RED existed for the

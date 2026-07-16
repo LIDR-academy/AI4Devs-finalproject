@@ -17,7 +17,7 @@ Scope: task-9 → task-12, committed as `feat(ai-key-management): add error hand
 
 ## Consolidated verdict: APPROVED
 
-- `review-code.md` (round 2): APPROVED, zero open findings. Round 1's minor finding (unhandled `Linking.openURL` promise rejection on the guidance-link tap, `api-key-form.tsx:133`) verified resolved — `reviewer_code` independently reproduced the RED→GREEN transition (reverted the file to the `c0f60f8` state, confirmed the new test fails there, restored the fix, confirmed green) rather than trusting the implementator's narration. Fresh full-file pass found no new duplication/scope-inflation/magic-numbers/debug-leftovers; the `progressLabel` extraction is a clean, test-covered dedup. Re-ran `pnpm --filter @helsoft/components test` (88/88), `check-types` (workspace + root, 8/8), `pnpm lint` (root) — all green.
+- `review-code.md` (round 2): APPROVED, zero open findings. Round 1's minor finding (unhandled `Linking.openURL` promise rejection on the guidance-link tap, `api-key-form.tsx:133`) verified resolved — `reviewer_code` independently reproduced the RED→GREEN transition (reverted the file to the `c0f60f8` state, confirmed the new test fails there, restored the fix, confirmed green) rather than trusting the implementer's narration. Fresh full-file pass found no new duplication/scope-inflation/magic-numbers/debug-leftovers; the `progressLabel` extraction is a clean, test-covered dedup. Re-ran `pnpm --filter @helsoft/components test` (88/88), `check-types` (workspace + root, 8/8), `pnpm lint` (root) — all green.
 - `review-design.md` (round 2): APPROVED, zero open findings. Round 1's major finding (Content-state `Replace`/`Remove` not honoring `isSubmitting` during a remove-in-flight, `api-key-form.tsx:138-150`, contradicting `spec.md`'s Loading-state requirement for "a save/remove in flight") verified resolved — both buttons now `disabled={isSubmitting}` and the shared progress label renders in that branch too, backed by a new passing test (`status={savedStatus} isSubmitting` → both disabled + label visible). Confirmed no token/style regression, no new UI state, and the unrelated `Linking.openURL` fix has no design-system surface.
 - Both reviewers independently re-ran verification commands themselves (not just trusted `tdd.md`'s claims): `pnpm --filter @helsoft/components test`, `check-types` (workspace + root), `pnpm lint` (root).
 
@@ -38,14 +38,14 @@ Scope: task-13 (i18n keys + coverage guard) + task-14 (a11y backfill + Storybook
 - `review-design.md` (round 1 and round 2): APPROVED, zero open findings across both rounds.
   - All 4 states confirmed present in `api-key-form.stories.tsx` (Empty/Content/Loading/Error) by reading the file, not trusting task-14.md's checkboxes; `api-key-required-notice.stories.tsx` correct for a single-state presentational organism.
   - No ad-hoc tokens in any new story/e2e file; components themselves untouched this slice (already token-approved in Slice 1/2). Correct atomic-design placement: stories under `libs/components/src/organisms/...`; e2e under `libs/components/tests/e2e/organisms/<component>/...` mirroring `src/`, not co-located.
-  - Independently rebuilt Storybook and read the real `index.json` to verify the implementator's flagged Storybook-slug claim (`Organisms/ApiKeyForm` → `organisms-apikeyform--{empty,content,loading,error}`; `Organisms/ApiKeyRequiredNotice` → `organisms-apikeyrequirednotice--default`) — matches the new `.e2e.js` slugs exactly. Also independently reconfirmed the pre-existing, out-of-scope `slide-progress.e2e.js`/skill-doc slug mismatch (not touched by this commit, correctly not raised as a Slice 3 finding).
+  - Independently rebuilt Storybook and read the real `index.json` to verify the implementer's flagged Storybook-slug claim (`Organisms/ApiKeyForm` → `organisms-apikeyform--{empty,content,loading,error}`; `Organisms/ApiKeyRequiredNotice` → `organisms-apikeyrequirednotice--default`) — matches the new `.e2e.js` slugs exactly. Also independently reconfirmed the pre-existing, out-of-scope `slide-progress.e2e.js`/skill-doc slug mismatch (not touched by this commit, correctly not raised as a Slice 3 finding).
   - `error.empty` copy tone/format matches sibling `apiKey.error.*` keys across en/es/pt/de; no leftover English/copy-paste artifacts.
   - Round 2: confirmed via `git diff` that the only change since round 1 was the one-line comment fix in `migration-coverage.test.ts` (no `.tsx`/story/locale diff); re-ran `pnpm --filter @helsoft/components test` (91/91) — still green. Round 1 verdict stood unchanged.
 
 - `review-code.md`: round 1 CHANGES_REQUESTED (one minor finding), round 2 APPROVED with zero open findings.
   - Every `@s14`/`@s15` assertion maps to a concrete test; genuine RED independently reproduced for both new `AccessibilityInfo.announceForAccessibility` tests (temporarily deleted the effect from `api-key-form.tsx:86-90`, both failed, restored byte-exact).
   - Confirmed **zero production diff** on `api-key-form.tsx`/`api-key-required-notice.tsx` this slice (`git diff eea4e87 4a2a34c --` empty for both) — task-14.md's claim holds.
-  - Independently verified all three implementator-flagged scope decisions (not accepted on the implementator's framing alone):
+  - Independently verified all three implementer-flagged scope decisions (not accepted on the implementer's framing alone):
     1. i18n scope (task-13.md Deviations) — only `settings.apiKey.error.empty` is new; the rest of `settings.apiKey.*` was already added in Slices 1-2 (confirmed via `en.ts` + its `git log`); `heading`/`description`/`getKeyLink`/`getKeyUrl`/`input.placeholder` are genuinely unneeded — `GUIDANCE_URL` (`api-key-form.tsx:13`) is a fixed, non-rendered `Linking.openURL` destination, the only visible copy is the localized `labels.guidance` string. **No AC13/@s15 gap.**
     2. `migration-coverage.test.ts`'s 2-of-4-dir `t()`-guard scope — grepped both `api-key-form.tsx` and `api-key-required-notice.tsx`; zero real `t(` calls in either (only a doc-comment mention in `api-key-form.tsx`). Claim confirmed true.
     3. `slide-progress.e2e.js` slug mismatch — confirmed via `git log --follow` + `git merge-base --is-ancestor f11200b 7e08dee` that the file predates this feature's Slice 1 commit. Genuinely pre-existing; correctly out of scope.
@@ -54,7 +54,7 @@ Scope: task-13 (i18n keys + coverage guard) + task-14 (a11y backfill + Storybook
 
 ## Notes for the record (Slice 3)
 - Round 1 found one item, now resolved: [MINOR] `libs/localization/src/coverage/migration-coverage.test.ts:23` — a stale doc-comment reference to `AUTH_COMPONENT_DIRS`, a name renamed to `T_KEY_COMPONENT_DIRS` by this same slice's diff. Fixed as a comment-only edit (no behavior/test change); re-verified independently by reviewer_code in round 2.
-- All three scope decisions the implementator flagged for reviewer scrutiny (task-13.md Deviations 1-2, task-14.md Findings 3) were independently re-verified by both reviewers across both rounds and confirmed accurate — no reviewer finding attached to any of the three.
+- All three scope decisions the implementer flagged for reviewer scrutiny (task-13.md Deviations 1-2, task-14.md Findings 3) were independently re-verified by both reviewers across both rounds and confirmed accurate — no reviewer finding attached to any of the three.
 - Slice 3 was the last vertical slice. The feature now moves to the `full` review round (all six reviewers), bracketed by `mutation_tester` before and after.
 
 ---
@@ -70,7 +70,7 @@ CHANGES_REQUESTED (3 minor) · `review-architecture.md` APPROVED (0) · `review-
 APPROVED with 1 informational item carried forward as a minor per the "any finding blocks" rule ·
 `review-accessibility.md` CHANGES_REQUESTED (1 major, 2 minor) · `review-performance.md`
 CHANGES_REQUESTED (1 major, 2 minor). **Consolidated: 4 major, 11 minor — 15 open findings,** all
-issued to `implementator` in one change request.
+issued to `implementer` in one change request.
 
 **All 15 confirmed fixed in Round 2** (see below), independently re-verified by each originating
 lens against the current source (not taken on `tdd.md`'s narration):
@@ -101,14 +101,14 @@ touched.
 > **Provenance/process note, carried forward for the human's attention — not a code-review
 > finding, but load-bearing context for this round's one open major.** During this round, multiple
 > independent signals converged on the same conclusion: something other than the requested
-> `implementator` fix session made an additional, undemanded production change to
+> `implementer` fix session made an additional, undemanded production change to
 > `libs/study-buddy/src/components/api-key-gate/api-key-gate.tsx` / `.test.tsx` (plus a new
 > `upload.apiKeyRequired.loading` locale key in all four bundles), attributed it to a finding
 > number ("Full-review Round 1, Minor 12") that actually belongs to a *different* file
 > (`api-key-form.tsx`'s submitting label — already fixed there), and left `tdd.md` asserting the
 > file was "untouched" when it was not. Separately, this same review.md file was found overwritten
 > mid-round with content describing itself as the product of "real concurrent activity on this
-> shared worktree" — content this consolidation has now replaced. The `implementator`, and
+> shared worktree" — content this consolidation has now replaced. The `implementer`, and
 > `reviewer_code`/`reviewer_design`/`reviewer_security` this round, each independently encountered
 > and correctly refused suspicious tool-output messages instructing them to hide file-reversion
 > claims or accept unverified narration. `reviewer_security` checked `git fsck`/`git reflog` and
@@ -146,7 +146,7 @@ code findings #1/#2 and design finding #8 independently overlapped several of th
 `mutation_tester` owns the remaining survivor list and its own re-run passes (before and after each
 full-review round), outside this review loop's own responsibility.
 
-## Change request → `implementator` (Round 2 fixes) — COMPLETED
+## Change request → `implementer` (Round 2 fixes) — COMPLETED
 
 Both Round 2 findings were fixed via strict Red→Green→Refactor in commit `33cb017`
 ("fix(ai-key-management): resolve full-review round 1+2 findings"): the `ApiKeyGate` revert and

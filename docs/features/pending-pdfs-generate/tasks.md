@@ -6,7 +6,7 @@ review_round: 2
 
 # Tasks — pending-pdfs-generate (PDF list)
 Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not**
-duplicate them here. `orchestrator_lead` owns `phase`; `implementator` flips each task's `status`.
+duplicate them here. `orchestrator_lead` owns `phase`; `implementer` flips each task's `status`.
 
 ## Slice 1 — Data + schema foundation (list = extracted docs; status derived from lesson link + error; delete purges)
 | Task | Title |

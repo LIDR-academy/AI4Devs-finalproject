@@ -6,7 +6,7 @@ review_round: 3     # incremented by reviews_lead; cap 3
 
 # Tasks — activity-multiple-choice
 
-Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementator` flips each task's `status`. Build order is strictly Slice 1 → 2 → 3; do not start a slice until the previous slice's gate passes. Within Slice 1, build the data/domain backbone (task-1 → task-2) before the UI (task-3 → task-4).
+Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementer` flips each task's `status`. Build order is strictly Slice 1 → 2 → 3; do not start a slice until the previous slice's gate passes. Within Slice 1, build the data/domain backbone (task-1 → task-2) before the UI (task-3 → task-4).
 
 | Task | Slice | Scenarios | Status | Paths |
 |---|---|---|---|---|

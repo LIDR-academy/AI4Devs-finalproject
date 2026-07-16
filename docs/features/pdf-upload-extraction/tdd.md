@@ -1,6 +1,6 @@
 # TDD log — pdf-upload-extraction
 
-`implementator` build log for **Slice 1 (happy path + Loading)**. One block per Red→Green→Refactor
+`implementer` build log for **Slice 1 (happy path + Loading)**. One block per Red→Green→Refactor
 cycle, grouped by task (build order task-1 → task-8, per `tasks.md`'s note: schema → contract
 types → Edge Function → DAO → service → hook → presentational panel → wiring/screen/integration).
 Every `@s` scenario this slice touches maps to at least one concrete test below.
@@ -348,7 +348,7 @@ here for re-review before Slice 2 begins.
 
 # Slice 2 (Empty + Error + Retry)
 
-`implementator` build log for **Slice 2**. Build order per `tasks.md`: task-9 (server error
+`implementer` build log for **Slice 2**. Build order per `tasks.md`: task-9 (server error
 contract + client normalization) → task-10 (client pre-validation) → task-11 (`PdfUploadPanel`
 Empty + Error states) → task-12 (hook error/retry + wiring + integration). task-9 and task-10 both
 land in the same file (`pdf-extraction.service.ts`) and were built together in one coherent pass
@@ -644,7 +644,7 @@ own gate note above: e2e is explicitly scoped to task-14/Slice 3, unaffected by 
 
 # Slice 3 (Analytics + a11y + i18n) — final slice
 
-`implementator` build log for **Slice 3**, the last slice. Build order per `tasks.md`/this
+`implementer` build log for **Slice 3**, the last slice. Build order per `tasks.md`/this
 session's brief: task-13 (i18n parity) → task-14 (a11y + Playwright e2e) → task-15 (analytics).
 
 ## Design reconciliation (recorded for reviewers)
@@ -888,10 +888,10 @@ clean, the feature moves to the full 6-reviewer round + mutation testing (not st
 
 # Round-1 fix — full review + mutation findings
 
-`implementator` fix cycle for `review.md`'s round-1 consolidated change request (9 findings: 3
+`implementer` fix cycle for `review.md`'s round-1 consolidated change request (9 findings: 3
 major, 6 minor) plus the real (non-equivalent) mutation-testing gaps from `mutation.md`. Every item
 below is a genuine RED→GREEN→(REFACTOR) cycle, not narration — `review.md`/`review-*.md`/
-`mutation.md` themselves are untouched (out of scope for `implementator`; re-run separately by
+`mutation.md` themselves are untouched (out of scope for `implementer`; re-run separately by
 `reviews_lead`/`mutation_tester`).
 
 ## Part A — review findings
@@ -1077,7 +1077,7 @@ Every Part A finding (3 major, 6 minor) and every Part B mutation gap flagged as
 (not already justified as equivalent/acceptable in `mutation.md`) has a genuine failing-test-first
 fix above. `review.md`/`review-*.md`/`mutation.md` are unchanged — re-run separately by
 `reviews_lead`/`mutation_tester` for round 2 of the (reduced) 2-round cap. Feature status/phase
-left untouched — that's `orchestrator_lead`'s call, not `implementator`'s.
+left untouched — that's `orchestrator_lead`'s call, not `implementer`'s.
 
 ## Mutation-closure pass (post full-review round 2, pre-DoD)
 

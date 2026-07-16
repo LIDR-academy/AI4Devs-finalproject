@@ -6,7 +6,7 @@ review_round: 2     # FULL round 2 — APPROVED (B1+M1 fixed; all 6 lenses clean
 
 # Tasks — activity-matching
 
-Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementator` flips each task's `status`.
+Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementer` flips each task's `status`.
 
 | Task | Slice | Scenarios | Status | Paths |
 |---|---|---|---|---|

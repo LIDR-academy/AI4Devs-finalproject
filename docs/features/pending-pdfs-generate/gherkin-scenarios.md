@@ -5,7 +5,7 @@ status: spec_drafted
 
 # Gherkin scenarios — pending-pdfs-generate (PDF list)
 
-The signed contract. Every `@s` tag is the traceability key the `implementator` and reviewers use;
+The signed contract. Every `@s` tag is the traceability key the `implementer` and reviewers use;
 each maps to ≥ 1 concrete test. Every acceptance criterion in `spec.md` maps to ≥ 1 scenario here.
 Scope = **list the learner's successfully-extracted PDFs on the upload screen, each with the action
 that fits its state (Generate / Retry / Open lesson), plus delete for un-generated PDFs**.
@@ -207,7 +207,7 @@ Feature: PDF list — generate, retry, or open lessons from your uploaded PDFs
 | Own documents only (RLS read + delete) | @s18, @s19 |
 | i18n / a11y (cross-cutting) | @s20, @s21 |
 
-## Scenario → primary test kind (how the implementator consumes it)
+## Scenario → primary test kind (how the implementer consumes it)
 
 | Scenario | Primary test |
 |---|---|

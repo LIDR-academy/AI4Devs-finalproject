@@ -6,7 +6,7 @@ review_round: 3     # incremented by reviews_lead; cap 3
 
 # Tasks — ai-key-management
 
-Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementator` flips each task's `status`. Build order is strictly Slice 1 → 2 → 3; do not start a slice until the previous slice's gate passes. Within Slice 1, build the backend + backbone (task-1 → task-6) before the UI (task-7 → task-8).
+Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementer` flips each task's `status`. Build order is strictly Slice 1 → 2 → 3; do not start a slice until the previous slice's gate passes. Within Slice 1, build the backend + backbone (task-1 → task-6) before the UI (task-7 → task-8).
 
 > **Pre-Slice-1 spike (see risks R-enc / R1 / R2):** confirm Supabase **Vault** availability and the target **provider/validation endpoint** on the hosted project before task-1/task-2. If Vault is unavailable, use the documented `pgcrypto`/`pgsodium` bytea fallback — the client contract is unaffected.
 
@@ -31,7 +31,7 @@ Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orches
 
 ## Full review — status (see `review.md`)
 
-- **Round 1** (all six reviewers, first full pass): CHANGES_REQUESTED — 4 major, 11 minor (15 total). All 15 fixed via TDD by `implementator`; independently re-verified by each originating reviewer in Round 2.
-- **Round 2** (all six reviewers, re-verification): all 15 Round 1 findings confirmed genuinely fixed. 1 new major (an undemanded, mislabeled production change to `libs/study-buddy/src/components/api-key-gate/api-key-gate.tsx` reversing an already-closed Round 1 decision — see `review.md`'s provenance note) + 1 new minor (unmemoized `ApiKeyProvider` context value) surfaced and dispatched to `implementator`.
+- **Round 1** (all six reviewers, first full pass): CHANGES_REQUESTED — 4 major, 11 minor (15 total). All 15 fixed via TDD by `implementer`; independently re-verified by each originating reviewer in Round 2.
+- **Round 2** (all six reviewers, re-verification): all 15 Round 1 findings confirmed genuinely fixed. 1 new major (an undemanded, mislabeled production change to `libs/study-buddy/src/components/api-key-gate/api-key-gate.tsx` reversing an already-closed Round 1 decision — see `review.md`'s provenance note) + 1 new minor (unmemoized `ApiKeyProvider` context value) surfaced and dispatched to `implementer`.
 - **Round 3** (final, cap reached): pending — re-run all six reviewers after this round's 2 fixes land. Any blocker/major still open after Round 3 is hard (escalate); only-minors may ship as documented, human-accepted risk.
 - Full suite green throughout: `pnpm check-types` 8/8, `pnpm test` all 6 workspaces (services 59, hooks 46, components 98, study-buddy 38, localization 57, lib-with-storybook 2), `pnpm lint` clean, `deno test` 24/24, Playwright 35/35.

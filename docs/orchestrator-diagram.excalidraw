@@ -670,7 +670,7 @@
     },
     {
       "type": "rectangle",
-      "id": "r-implementator",
+      "id": "r-implementer",
       "x": 860,
       "y": 420,
       "width": 280,
@@ -688,7 +688,7 @@
       "isDeleted": false,
       "boundElements": [
         {
-          "id": "r-implementator-text",
+          "id": "r-implementer-text",
           "type": "text"
         },
         {
@@ -717,7 +717,7 @@
     },
     {
       "type": "text",
-      "id": "r-implementator-text",
+      "id": "r-implementer-text",
       "x": 904.4200973510742,
       "y": 466.875,
       "width": 191.15980529785156,
@@ -742,13 +742,13 @@
       "strokeStyle": "solid",
       "roughness": 1,
       "opacity": 100,
-      "text": "implementator\nTDD per vertical slice\n(ONLY agent editing code)",
+      "text": "implementer\nTDD per vertical slice\n(ONLY agent editing code)",
       "fontSize": 15,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "r-implementator",
-      "originalText": "implementator\nTDD per vertical slice\n(ONLY agent editing code)",
+      "containerId": "r-implementer",
+      "originalText": "implementer\nTDD per vertical slice\n(ONLY agent editing code)",
       "lineHeight": 1.25,
       "baseline": 13,
       "autoResize": true
@@ -808,7 +808,7 @@
         ]
       },
       "endBinding": {
-        "elementId": "r-implementator",
+        "elementId": "r-implementer",
         "focus": 0,
         "gap": 4,
         "fixedPoint": [
@@ -980,7 +980,7 @@
       ],
       "lastCommittedPoint": null,
       "startBinding": {
-        "elementId": "r-implementator",
+        "elementId": "r-implementer",
         "focus": -0.04579562682966021,
         "gap": 1
       },
@@ -1469,7 +1469,7 @@
         "gap": 6.66227864046607
       },
       "endBinding": {
-        "elementId": "r-implementator",
+        "elementId": "r-implementer",
         "focus": -0.03778489954319567,
         "gap": 1.2668457031250568
       },
@@ -2298,7 +2298,7 @@
         "gap": 2.0127569838014097
       },
       "endBinding": {
-        "elementId": "r-implementator",
+        "elementId": "r-implementer",
         "focus": -0.11556014560823087,
         "gap": 3.4823998367161892
       },

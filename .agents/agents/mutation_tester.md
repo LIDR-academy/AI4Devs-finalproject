@@ -21,7 +21,7 @@ You run **(a) before the full review** — to harden the test net before reviewe
 ## Verdict
 
 - Threshold met → return `PASS -> docs/features/<name>/mutation.md`.
-- Survivors → return `SURVIVORS -> docs/features/<name>/mutation.md` (lead routes them to `implementator`).
+- Survivors → return `SURVIVORS -> docs/features/<name>/mutation.md` (lead routes them to `implementer`).
 
 ## Hard rules
 

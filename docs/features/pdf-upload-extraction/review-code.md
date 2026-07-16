@@ -4,7 +4,7 @@
 
 Scope: entire feature diff, base `0dfc914` → `HEAD` (`904d06e`), i.e. `git diff 0dfc914..HEAD` (all
 3 slices + both review fix cycles + chore commits). This replaces the round-1 `review-code.md`
-(CHANGES_REQUESTED, 3 findings: N1-N3), which `implementator` addressed in commits `76b4be4` /
+(CHANGES_REQUESTED, 3 findings: N1-N3), which `implementer` addressed in commits `76b4be4` /
 `6474a15` / `2073e65` / `904d06e` (base `00cbca3` → `HEAD`).
 
 ## Commands run for real, this round (not trusted from tdd.md/mutation.md)

@@ -1,6 +1,6 @@
 # TDD log — login-and-logout
 
-`implementator` build log — one line per Red→Green→Refactor cycle, grouped by slice/round. Every
+`implementer` build log — one line per Red→Green→Refactor cycle, grouped by slice/round. Every
 `@s` in `gherkin-scenarios.md` maps to ≥ 1 concrete test below. Full detail lives in git history.
 
 ## Design reconciliation (for reviewers)

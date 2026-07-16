@@ -19,7 +19,7 @@ pending
         (+ risks.md → gitignored tmp/<name>/, landed in docs/ at PR time)              [spec_drafted]
   → spec_reviewer       → review-spec.md  (loop with spec_partner, ≤ 2 rounds)          [spec_ready]
   → ⏸ HUMAN GATE: approve the spec + Gherkin contract (single approval)                 [approved]
-  → implementator       → per vertical slice: build (TDD) → reviewer_slice (ONE agent,
+  → implementer       → per vertical slice: build (TDD) → reviewer_slice (ONE agent,
         checks all .agents/rules/ + design) → fix → commit; no slice N+1 until clean    [in_progress]
   ── quality gate (after all slices) ──
   → mutation_tester (pre-review)   → mutation.md; kill every survivor (≤ 2 rounds)      [mutation]
@@ -32,7 +32,7 @@ pending
   → ⟵ human opens & merges the PR                                                       [done]
 ```
 
-Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `implementator` flips `task-N.md` statuses. Everything after the gate is autonomous up to `pr_ready`.
+Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `implementer` flips `task-N.md` statuses. Everything after the gate is autonomous up to `pr_ready`.
 
 ## Roles (see `.agents/agents/<name>.md` — each reviewer file carries its own rubric)
 
@@ -41,19 +41,19 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 | `orchestrator_lead` | orchestrates all | `progress/*`, phase in `tasks.md` | no |
 | `spec_partner` | 1 — spec + contract (debate) | spec bundle + `gherkin-scenarios.md` | no |
 | `spec_reviewer` | 1 — spec review (pre-gate) | `review-spec.md` | no |
-| `implementator` | 2 — build (TDD) | `src/`, `tests/`, `tdd.md`, task statuses | **yes** |
+| `implementer` | 2 — build (TDD) | `src/`, `tests/`, `tdd.md`, task statuses | **yes** |
 | `reviewer_slice` | 2 — per slice (all `.agents/rules/` + design, one agent) | `review-slice.md` | no |
 | `reviews_lead` | 3 — full review round (CI once, reviewer/lens skipping) | `review.md` | no |
 | `reviewer_engineering` (code · architecture · performance) / `reviewer_standards` (security · accessibility) | 3 — full only (2 agents in parallel, as applicable) | `review-engineering.md` / `review-standards.md` | no |
 | `mutation_tester` | 3 — StrykerJS (pre-review; post-review only if the review changed source) | `mutation.md` | no |
 | `dod_validator` | 4 — DoD | `dod.md` | no |
 
-`implementator` is the **only** agent that edits feature code. Reviewers and leads prune, they don't patch.
+`implementer` is the **only** agent that edits feature code. Reviewers and leads prune, they don't patch.
 
 ## Models (per-agent `model:` frontmatter)
 
 - **Opus** — `spec_partner` (highest-leverage reasoning).
-- **Sonnet** — `orchestrator_lead`, `spec_reviewer`, `implementator`, `reviewer_slice`, `reviews_lead`, and both full reviewers (`reviewer_engineering`, `reviewer_standards`).
+- **Sonnet** — `orchestrator_lead`, `spec_reviewer`, `implementer`, `reviewer_slice`, `reviews_lead`, and both full reviewers (`reviewer_engineering`, `reviewer_standards`).
 - **Haiku** — `mutation_tester`, `dod_validator` (mechanical).
 
 ## Gates (all must pass to advance — full detail in `orchestrator_lead.md` §Protocol)
@@ -112,5 +112,5 @@ See `/ORCHESTRATOR_PLAN.md` §7. Validated by `dod_validator`: Functionality · 
 
 - `.agents/skills/gherkin-authoring/` — the `@s` contract (used by `spec_partner`)
 - `.agents/skills/mutation-testing/` — StrykerJS scoped to changed files, `scripts/run-mutation.sh [base-ref]` (used by `mutation_tester`)
-- `.agents/skills/storybook-e2e-tests/` — Playwright e2e for Storybook components (used by `implementator`)
+- `.agents/skills/storybook-e2e-tests/` — Playwright e2e for Storybook components (used by `implementer`)
 - `.agents/skills/compact-docs/` — pre-PR doc cleanup (used by `orchestrator_lead`, step 10)

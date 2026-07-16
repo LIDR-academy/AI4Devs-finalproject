@@ -22,7 +22,7 @@ You run the full DoD against the implemented feature and report pass/fail. You *
 ## Verdict → gate
 
 - All items pass → verdict `PASS`; set `tasks.md` phase = `pr_ready`. Return `PASS -> docs/features/<name>/dod.md`. **PASS may carry documented, human-accepted minors** (list them under "Accepted minors" in `dod.md`) — but **never** an open blocker/major or an unmet mutation threshold.
-- A blocker/major is open, the mutation threshold is unmet, or a leftover minor is **not** human-accepted → verdict `DOD_FAILED`; return `DOD_FAILED -> docs/features/<name>/dod.md` (lead routes the gap to `implementator`).
+- A blocker/major is open, the mutation threshold is unmet, or a leftover minor is **not** human-accepted → verdict `DOD_FAILED`; return `DOD_FAILED -> docs/features/<name>/dod.md` (lead routes the gap to `implementer`).
 
 Opening & merging the PR is a **manual human step** after `pr_ready` → `done`.
 

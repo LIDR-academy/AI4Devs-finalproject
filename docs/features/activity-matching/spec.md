@@ -79,7 +79,7 @@ export type MatchingAnswer = {
 export type ActivityAnswer = MultipleChoiceAnswer | MatchingAnswer; // union grows with sibling types
 ```
 
-**Pure grading function** (no DAO/service — no I/O; the correct pairing is on the slide). Signatures only; the `implementator` writes the bodies TDD-first.
+**Pure grading function** (no DAO/service — no I/O; the correct pairing is on the slide). Signatures only; the `implementer` writes the bodies TDD-first.
 
 ```ts
 // libs/study-buddy/src/grading/grade-matching.ts

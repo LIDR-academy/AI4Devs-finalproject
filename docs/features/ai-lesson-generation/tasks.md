@@ -6,7 +6,7 @@ review_round: 1     # incremented by reviews_lead; cap 2
 
 # Tasks — ai-lesson-generation
 
-Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementator` flips each task's `status`. Build order is strictly Slice 1 → 2 → 3; within a slice, backend + logic before UI.
+Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementer` flips each task's `status`. Build order is strictly Slice 1 → 2 → 3; within a slice, backend + logic before UI.
 
 Slice 1 build order = task table order (task-1 → task-10): provider swap → types → key-read migration → Edge Function → DAO → service → hook → progress molecule → panel organism → wiring. Slice 2 (task-11/12/13) layers composition variants + errors + vision/degradation; Slice 3 (task-14/15) adds i18n + a11y + e2e.
 

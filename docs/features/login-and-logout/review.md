@@ -7,7 +7,7 @@ Nothing left to fix.
 
 ## Round history (findings all resolved)
 - **Round 1** (full-feature, after all 3 slices): 5 major + 3 minor + a mutation FAIL (6 killable
-  survivors in Slice 2/3 code). All 8 fixed by `implementator`, commit `feb4204`.
+  survivors in Slice 2/3 code). All 8 fixed by `implementer`, commit `feb4204`.
 - **Round 2**: all Round-1 fixes re-verified resolved (several via revert→confirm-RED→restore). One
   new major from `reviewer_design`: Round-1 had added `TextField.accessibilityInvalid` as an
   independent prop rather than deriving it from the component's own `error` prop (unlike every

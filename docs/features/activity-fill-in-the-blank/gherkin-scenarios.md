@@ -1,6 +1,6 @@
 # Gherkin scenarios — activity-fill-in-the-blank
 
-The signed contract. Every `@s` tag is the traceability key the `implementator` and reviewers use;
+The signed contract. Every `@s` tag is the traceability key the `implementer` and reviewers use;
 each maps to ≥ 1 concrete test. Every acceptance criterion in `spec.md` / the user story maps to ≥ 1 scenario here.
 
 ```gherkin

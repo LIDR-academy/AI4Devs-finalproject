@@ -6,7 +6,7 @@ review_round: 2     # incremented by reviews_lead; cap 2
 
 # Tasks — pdf-upload-extraction
 
-Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementator` flips each task's `status`. Build order is strictly Slice 1 → 2 → 3; do not start a slice until the previous slice's gate passes.
+Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementer` flips each task's `status`. Build order is strictly Slice 1 → 2 → 3; do not start a slice until the previous slice's gate passes.
 
 Within **Slice 1**, build backend + logic before UI: schema (task-1) → contract types (task-2) → Edge Function happy path incl. the `mupdf`-wasm spike (task-3) → DAO (task-4) → service (task-5) → hook (task-6) → presentational panel (task-7) → wiring + screen + integration (task-8). Slices 2 and 3 layer error/empty and observability/a11y/i18n on top.
 

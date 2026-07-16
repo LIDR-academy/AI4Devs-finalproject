@@ -1,6 +1,6 @@
 # Gherkin scenarios — login-and-logout
 
-The signed contract. Every `@s` tag is the traceability key the `implementator` and reviewers use;
+The signed contract. Every `@s` tag is the traceability key the `implementer` and reviewers use;
 each maps to ≥ 1 concrete test. Every acceptance criterion in `spec.md` maps to ≥ 1 scenario here.
 
 ```gherkin
@@ -135,7 +135,7 @@ Feature: Login and logout
 | AC12 (accessibility) | @s12 |
 | AC13 (i18n) | @s13 |
 
-## Scenario → primary test kind (how the implementator consumes it)
+## Scenario → primary test kind (how the implementer consumes it)
 
 | Scenario | Primary test |
 |---|---|

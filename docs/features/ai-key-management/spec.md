@@ -4,7 +4,7 @@ story: user-stories/ai-key-management.md
 status: approved
 ---
 
-> **Human gate (approved):** Encryption = Supabase Vault (default, as specced). Provider = OpenAI (default, as specced). Hosted-project Vault/Edge Functions availability was **not confirmed** at the gate — `implementator` must verify this early in Slice 1 (task-1/task-2) and fall back to the documented `pgcrypto`/`pgsodium` column mechanism (Open decision 1) if Vault is unavailable, without blocking the rest of the build.
+> **Human gate (approved):** Encryption = Supabase Vault (default, as specced). Provider = OpenAI (default, as specced). Hosted-project Vault/Edge Functions availability was **not confirmed** at the gate — `implementer` must verify this early in Slice 1 (task-1/task-2) and fall back to the documented `pgcrypto`/`pgsodium` column mechanism (Open decision 1) if Vault is unavailable, without blocking the rest of the build.
 
 # Spec — ai-key-management
 

@@ -6,7 +6,7 @@ review_round: 2     # incremented by reviews_lead; cap 2
 
 # Tasks — signup-and-lesson-persistence
 Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`** — do **not**
-duplicate them here. `orchestrator_lead` owns `phase`; `implementator` flips each task's `status`.
+duplicate them here. `orchestrator_lead` owns `phase`; `implementer` flips each task's `status`.
 Scope = lesson persistence + delete (sign-up carved to `pending/sign-up.md`).
 
 - **Slice 1** (persistence backend + read path): [task-1](./task-1.md) · [task-2](./task-2.md) · [task-3](./task-3.md)

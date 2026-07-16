@@ -222,7 +222,7 @@ libs/study-buddy/src/components/pdf-documents/pdf-documents.tsx
 ```
 
 ## Notes
-- Post-review r2 re-measure vs `8781bee2` after implementator killable fixes.
+- Post-review r2 re-measure vs `8781bee2` after implementer killable fixes.
 - 5/5 remaining survivors justified as equivalents; 0 killable.
 - Timeouts count as detected (components×26, study-buddy×7, supabase×7).
 - Post-review r1 (95.74% / 4 killable) superseded by this section.
