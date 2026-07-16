@@ -52,3 +52,4 @@
 2026-07-16 | lesson-player (ad hoc) | n/a | docs/features/lesson-player/ | Top arrow IconButtons beside progress via LessonPlayerNavigator (ae7e77e).
 
 2026-07-16 | lesson-player open route (ad hoc) | n/a | — | Open lesson → /lesson/[id]/player; PRD R4 struck; orchestrator diagram fix loops.
+2026-07-16 | plan-entitlements-key-routing | pr_ready | docs/features/plan-entitlements-key-routing/ | profiles plan + key routing; DoD PASS

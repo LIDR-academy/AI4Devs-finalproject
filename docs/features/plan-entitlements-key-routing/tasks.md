@@ -1,6 +1,6 @@
 ---
 feature: plan-entitlements-key-routing
-phase: mutation
+phase: pr_ready
 review_round: 2
 ---
 
