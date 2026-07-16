@@ -44,3 +44,5 @@
 
 2026-07-15 | lesson-player (ad hoc) | n/a | docs/features/lesson-player/ | Moved LessonPlayer/SlideView/SlideImage into @helsoft/activities; thin study-buddy re-exports.
 2026-07-15 | navigation-menus | pr_ready | docs/features/navigation-menus/ | DoD PASS; ready for PR
+
+2026-07-16 | new-lesson-dialog (ad hoc) | n/a | — | Upload+generate in Dialog; extraction reset; upload screen wired.
