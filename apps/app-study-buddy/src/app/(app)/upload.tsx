@@ -1,26 +1,20 @@
 import { ScreenContainer } from '@helsoft/components';
-import { ApiKeyGate, LessonGeneration, PdfDocuments, PdfUpload } from '@helsoft/study-buddy';
+import { ApiKeyGate, NewLessonDialog, PdfDocuments } from '@helsoft/study-buddy';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 export default function UploadScreen() {
-  // Composition glue only (pending-pdfs-generate decision #5 + R2 decision #9):
-  // lifted documentId feeds LessonGeneration; reloadToken refetches PdfDocuments.
-  const [documentId, setDocumentId] = useState<string | undefined>(undefined);
   const [reloadToken, setReloadToken] = useState(0);
+  const [generateDocumentId, setGenerateDocumentId] = useState<string | undefined>(undefined);
   const router = useRouter();
 
   const bumpReload = useCallback(() => {
     setReloadToken((n) => n + 1);
   }, []);
 
-  const handleExtracted = useCallback(
-    (id: string) => {
-      setDocumentId(id);
-      bumpReload();
-    },
-    [bumpReload],
-  );
+  const handleExtracted = useCallback(() => {
+    bumpReload();
+  }, [bumpReload]);
 
   const handleOpenLesson = useCallback(
     (lessonId: string) => {
@@ -32,13 +26,17 @@ export default function UploadScreen() {
   return (
     <ScreenContainer>
       <ApiKeyGate>
-        <PdfUpload onExtracted={handleExtracted} />
+        <NewLessonDialog
+          onExtracted={handleExtracted}
+          onGenerated={bumpReload}
+          generateDocumentId={generateDocumentId}
+          onGenerateHandled={() => setGenerateDocumentId(undefined)}
+        />
         <PdfDocuments
-          onGenerate={setDocumentId}
+          onGenerate={setGenerateDocumentId}
           onOpenLesson={handleOpenLesson}
           reloadToken={reloadToken}
         />
-        <LessonGeneration documentId={documentId} onGenerated={bumpReload} />
       </ApiKeyGate>
     </ScreenContainer>
   );

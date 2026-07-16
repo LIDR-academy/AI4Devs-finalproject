@@ -24,35 +24,6 @@ type PdfDocumentListRowProps = {
 };
 
 /**
- * Memoized row — keeps per-cell handlers stable across parent FlatList re-renders
- * (full-review minor [perf]).
- */
-const PdfDocumentListRow = memo(function PdfDocumentListRow({
-  item,
-  onGenerate,
-  onOpenLesson,
-  onRequestDelete,
-}: PdfDocumentListRowProps) {
-  const handleGenerate = useCallback(() => onGenerate(item.id), [onGenerate, item.id]);
-  const handleOpenLesson = useCallback(() => onOpenLesson(item.id), [onOpenLesson, item.id]);
-  const handleDelete = useCallback(() => {
-    onRequestDelete?.(item.id);
-  }, [onRequestDelete, item.id]);
-
-  return (
-    <PdfDocumentListItem
-      filename={item.filename}
-      status={item.status}
-      createdAt={item.createdAt}
-      pageCount={item.pageCount}
-      onGenerate={handleGenerate}
-      onOpenLesson={handleOpenLesson}
-      onDelete={onRequestDelete ? handleDelete : undefined}
-    />
-  );
-});
-
-/**
  * PdfDocumentList — presentational organism for the upload-screen PDF list
  * (Loading / Content / Empty / Error). Owns chrome i18n via t(); rows own theirs.
  * Delete confirms via shared Dialog before calling `onDelete` (@s12/@s13).
@@ -185,3 +156,32 @@ const styles = StyleSheet.create((theme) => ({
     overflow: 'hidden',
   },
 }));
+
+/**
+ * Memoized row — keeps per-cell handlers stable across parent FlatList re-renders
+ * (full-review minor [perf]).
+ */
+const PdfDocumentListRow = memo(function PdfDocumentListRow({
+  item,
+  onGenerate,
+  onOpenLesson,
+  onRequestDelete,
+}: PdfDocumentListRowProps) {
+  const handleGenerate = useCallback(() => onGenerate(item.id), [onGenerate, item.id]);
+  const handleOpenLesson = useCallback(() => onOpenLesson(item.id), [onOpenLesson, item.id]);
+  const handleDelete = useCallback(() => {
+    onRequestDelete?.(item.id);
+  }, [onRequestDelete, item.id]);
+
+  return (
+    <PdfDocumentListItem
+      filename={item.filename}
+      status={item.status}
+      createdAt={item.createdAt}
+      pageCount={item.pageCount}
+      onGenerate={handleGenerate}
+      onOpenLesson={handleOpenLesson}
+      onDelete={onRequestDelete ? handleDelete : undefined}
+    />
+  );
+});

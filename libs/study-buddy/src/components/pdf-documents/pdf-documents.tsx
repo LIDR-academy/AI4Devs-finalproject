@@ -81,6 +81,7 @@ const styles = StyleSheet.create((theme) => ({
   root: {
     flex: 1,
     gap: theme.spacing.s3,
+    marginTop: theme.spacing.s4,
   },
   heading: {
     ...theme.typography.headlineSmall,

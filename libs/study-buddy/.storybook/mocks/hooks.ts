@@ -6,8 +6,8 @@
  * with fake, story-configurable implementations. Aliased in main.ts's viteFinal — never
  * resolved by Jest or the real app build.
  */
+export * from '../../../hooks/src/hooks/use-breakpoint';
 export * from '../../../hooks/src/hooks/use-interaction-state';
-export * from '../../../hooks/src/hooks/use-session';
 
 import type {
   ApiKeyErrorCode,
@@ -23,6 +23,31 @@ import type {
 import { useCallback, useState } from 'react';
 
 export type AuthErrorCode = 'invalid_credentials' | 'network_error';
+
+export type SessionMockConfig = {
+  isLoading?: boolean;
+  session?: {
+    user: {
+      email: string;
+      user_metadata?: { full_name?: string };
+    };
+  } | null;
+};
+
+let pendingSessionConfig: SessionMockConfig = {};
+
+export const configureSessionMock = (config: SessionMockConfig) => {
+  pendingSessionConfig = config;
+};
+
+export const useSession = () => {
+  const [config] = useState(() => {
+    const next = pendingSessionConfig;
+    pendingSessionConfig = {};
+    return next;
+  });
+  return { isLoading: config.isLoading ?? false, session: config.session ?? null };
+};
 
 export type AuthMockConfig = {
   isSubmitting?: boolean;

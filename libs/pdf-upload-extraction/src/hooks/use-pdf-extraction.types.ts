@@ -16,4 +16,6 @@ export type UsePdfExtractionResult = {
    * before any extract() attempt. Reusing the documentId avoids a duplicate orphaned row
    * (task-12/task-9's failure cleanup). */
   retry: () => Promise<void>;
+  /** Back to idle — clears result/error (e.g. dialog re-open before a new pick). */
+  reset: () => void;
 };

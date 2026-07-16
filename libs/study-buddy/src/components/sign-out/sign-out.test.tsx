@@ -36,4 +36,14 @@ describe('SignOut (study-buddy wiring)', () => {
 
     expect(signOut).toHaveBeenCalledTimes(1);
   });
+
+  it('forwards controlled dialog props without rendering a trigger', async () => {
+    mockUseAuth.mockReturnValue(authValue());
+    const onOpenChange = jest.fn();
+
+    await render(<SignOut open onOpenChange={onOpenChange} />);
+
+    expect(screen.queryByRole('button', { name: 'auth.logOut' })).toBeNull();
+    expect(screen.getByText('auth.logOutConfirmBody')).toBeTruthy();
+  });
 });

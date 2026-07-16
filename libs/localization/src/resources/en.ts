@@ -8,10 +8,14 @@
  */
 export const en = {
   translation: {
+    brand: {
+      name: 'AI Study Buddy',
+    },
     nav: {
       myLessons: 'My lessons',
       newLesson: 'New lesson',
       settings: 'Settings',
+      openAccountMenu: 'Open {{label}} account menu',
       lesson: 'Lesson',
       study: 'Study',
       results: 'Results',
@@ -80,6 +84,8 @@ export const en = {
         action: 'Add API key',
       },
       chooseFile: 'Choose a PDF',
+      dialogHeadline: 'Upload PDF',
+      dialogClose: 'Close',
       loading: 'Extracting…',
       filenameLabel: 'File',
       pageCountLabel: 'Pages',
@@ -109,6 +115,7 @@ export const en = {
     // picker, Generate action, progress step labels, ready-state summary). Error-state copy
     // (`generation.error.*`) is Slice-2/task-13, added with the Error state itself.
     generation: {
+      dialogHeadline: 'Generate lesson',
       composition: {
         heading: 'Lesson content',
         instructionalOnly: 'Instructional only',

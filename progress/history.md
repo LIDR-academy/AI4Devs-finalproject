@@ -43,5 +43,6 @@
 2026-07-15 | api-key-form i18n inline (ad hoc) | n/a | — | Dropped ApiKeyForm labels prop; inline useLocalization; keySavedStatusLabel only. Branch feature-entrega2-HernanLaura.
 
 2026-07-15 | lesson-player (ad hoc) | n/a | docs/features/lesson-player/ | Moved LessonPlayer/SlideView/SlideImage into @helsoft/activities; thin study-buddy re-exports.
+2026-07-15 | navigation-menus | pr_ready | docs/features/navigation-menus/ | DoD PASS; ready for PR
 
-2026-07-16 | navigation-menus (user story) | pending | user-stories/pending/navigation-menus.md | Responsive desktop/mobile nav + account menu story; ready for orchestrator.
+2026-07-16 | new-lesson-dialog (ad hoc) | n/a | — | Upload+generate in Dialog; extraction reset; upload screen wired.

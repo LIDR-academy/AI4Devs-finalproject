@@ -3,10 +3,14 @@ import type { TranslationResource } from './en';
 /** Spanish bundle. Key-aligned with `en` (compiler-enforced). Copy pending native review (R6). */
 export const es: TranslationResource = {
   translation: {
+    brand: {
+      name: 'AI Study Buddy',
+    },
     nav: {
       myLessons: 'Mis lecciones',
       newLesson: 'Nueva lección',
       settings: 'Ajustes',
+      openAccountMenu: 'Abrir menú de cuenta de {{label}}',
       lesson: 'Lección',
       study: 'Estudiar',
       results: 'Resultados',
@@ -72,6 +76,8 @@ export const es: TranslationResource = {
         action: 'Agregar clave de API',
       },
       chooseFile: 'Elige un PDF',
+      dialogHeadline: 'Subir PDF',
+      dialogClose: 'Cerrar',
       loading: 'Extrayendo…',
       filenameLabel: 'Archivo',
       pageCountLabel: 'Páginas',
@@ -94,6 +100,7 @@ export const es: TranslationResource = {
       },
     },
     generation: {
+      dialogHeadline: 'Generar lección',
       composition: {
         heading: 'Contenido de la lección',
         instructionalOnly: 'Solo instructivo',
