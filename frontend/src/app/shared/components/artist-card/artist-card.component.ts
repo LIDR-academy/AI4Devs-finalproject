@@ -4,11 +4,12 @@ import { DecimalPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { ArtistCard, ShowcaseItem } from '../../../core/models/showcase.models';
 import { CertificationBadgeComponent } from '../certification-badge/certification-badge.component';
+import { SponsorBadgesComponent } from '../sponsor-badges/sponsor-badges.component';
 
 @Component({
   selector: 'app-artist-card',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, MatIconModule, CertificationBadgeComponent],
+  imports: [RouterLink, DecimalPipe, MatIconModule, CertificationBadgeComponent, SponsorBadgesComponent],
   templateUrl: './artist-card.component.html',
   styleUrl: './artist-card.component.scss'
 })

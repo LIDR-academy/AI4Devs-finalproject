@@ -23,9 +23,13 @@ export interface AwardDto {
   badgeIconUrl: string | null;
 }
 
-export interface SponsorBadgeDto {
+export type SponsorshipRelationType = 'ambassador' | 'sponsored' | 'certified';
+
+export interface SponsorshipDto {
+  id: string;
   brandName: string;
-  brandLogoUrl: string;
+  brandLogoUrl: string | null;
+  relationshipType: SponsorshipRelationType;
 }
 
 export interface AvailableSlotDto {
@@ -58,7 +62,7 @@ export interface ArtistProfileDto {
   portfolioItems: PortfolioItemDto[];
   certifications: CertificationDto[];
   awards: AwardDto[];
-  sponsorBadges: SponsorBadgeDto[];
+  sponsorships: SponsorshipDto[];
   availableSlots: AvailableSlotDto[];
 }
 

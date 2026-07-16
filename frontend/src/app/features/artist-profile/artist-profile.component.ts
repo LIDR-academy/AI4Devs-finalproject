@@ -10,11 +10,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { BookingService } from '../booking/services/booking.service';
 import { CertificationBadgeComponent } from '../../shared/components/certification-badge/certification-badge.component';
 import { WeeklyCalendarComponent } from '../booking/components/weekly-calendar/weekly-calendar.component';
+import { SponsorshipSectionComponent } from './components/sponsorship-section/sponsorship-section.component';
 
 @Component({
   selector: 'app-artist-profile',
   standalone: true,
-  imports: [DatePipe, CertificationBadgeComponent, WeeklyCalendarComponent],
+  imports: [DatePipe, CertificationBadgeComponent, WeeklyCalendarComponent, SponsorshipSectionComponent],
   templateUrl: './artist-profile.component.html',
   styleUrl: './artist-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

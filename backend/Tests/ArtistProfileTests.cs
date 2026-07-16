@@ -60,7 +60,7 @@ public class ArtistProfileTests : IAsyncLifetime
         Assert.NotEmpty(profile.PortfolioItems);
         Assert.NotEmpty(profile.Certifications);
         Assert.NotEmpty(profile.Awards);
-        Assert.NotEmpty(profile.SponsorBadges);
+        Assert.NotEmpty(profile.Sponsorships);
         Assert.NotEmpty(profile.AvailableSlots);
     }
 
@@ -141,8 +141,24 @@ public class ArtistProfileTests : IAsyncLifetime
         var profile = await client.GetFromJsonAsync<ArtistProfileDto>("/api/artists/bruno-real");
         Assert.NotNull(profile);
         // Bruno has 1 active + 1 inactive sponsor; only active should be returned
-        Assert.Single(profile!.SponsorBadges);
-        Assert.Equal("Ink Pro", profile.SponsorBadges[0].BrandName);
+        Assert.Single(profile!.Sponsorships);
+        Assert.Equal("Ink Pro", profile.Sponsorships[0].BrandName);
+    }
+
+    [Fact]
+    public async Task GetProfile_Sponsorships_Include_RelationshipType()
+    {
+        await using var factory = CreateFactory();
+        var client = factory.CreateClient();
+
+        // US0014 CA2: each sponsorship exposes its relationship type (api-spec enum)
+        var profile = await client.GetFromJsonAsync<ArtistProfileDto>("/api/artists/bruno-real");
+        Assert.NotNull(profile);
+        var sponsorship = Assert.Single(profile!.Sponsorships);
+        Assert.NotEqual(Guid.Empty, sponsorship.Id);
+        Assert.Equal("Ink Pro", sponsorship.BrandName);
+        Assert.Equal("https://cdn.inklink.test/brand.png", sponsorship.BrandLogoUrl);
+        Assert.Equal("sponsored", sponsorship.RelationshipType);
     }
 
     [Fact]

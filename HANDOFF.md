@@ -49,12 +49,13 @@ Retoma el trabajo desde el punto indicado en "Estado detallado" de HANDOFF.md.
 
 ### Dónde quedamos
 
-- ✅ **Fase 0**, **US0001**, **US0003–US0010** y **US0013** mergeadas a `main` (PRs #1–#15). Las **9 Must-Have (52 SP) están completas**.
-- 🟣 **US0012 en revisión** — rama `feature/us0012-mapa-artistas`, **PR #16 abierto**. El mapa (Leaflet + markercluster, filtros, radio, vista lista) está implementado; en la sesión del 2026-07-16 se corrigieron dos cosas sobre la rama:
-  - **Fix render del mapa** (`fixs/issue-006.md`): los CSS de Leaflet/MarkerCluster se movieron de `angular.json` a `src/styles.scss` — el dev server servía `styles.css` sin Leaflet porque `angular.json` solo se lee al arrancar `ng serve`.
-  - **Reemplazo de imagen seed** (estilo lettering): `342403992_d981945d52_b.jpg` (Flickr) → `Corpus_Vile.JPG` (Wikimedia Commons, dominio público) en `TattooImageCatalog.cs` + `docs/tattoo-styles.yml`. ⚠️ El seeder solo corre con BD vacía: la BD dev local se corrigió con `UPDATE portfolio_items`; otros entornos ya sembrados necesitan re-seed o el mismo UPDATE.
-  - Suites en verde tras los cambios: backend 93/93, frontend 101/101.
-- Siguientes: mergear PR #16 → quedan **US0011** (chatbot, 13 SP) y **US0014** (auspicios, 2 SP).
+- ✅ **Fase 0**, **US0001**, **US0003–US0010**, **US0012** y **US0013** mergeadas a `main` (PRs #1–#16). Las **9 Must-Have (52 SP) están completas**.
+- 🟣 **US0014 en revisión** — rama `feature/us0014-auspicios-marcas`, **PR #17 abierto** (TASK0001 completa, CAs verificados visualmente en dev):
+  - **Backend**: `GET /api/artists/{slug}` devuelve `sponsorships[]` con `id/brandName/brandLogoUrl/relationshipType` (alineado a api-spec; antes exponía `sponsorBadges` sin tipo). `ArtistCard.sponsorBadges` no cambia.
+  - **Frontend**: `SponsorshipSectionComponent` ("Auspiciado por": logo + nombre + badge Embajador/Auspiciado/Certificado, fallback con inicial) y `SponsorBadgesComponent` compartido para cards (máx 3 logos + "+N más", fallback a nombre).
+  - **Seed**: cubre los 3 tipos de relación — Matías: Eternal Ink (ambassador) + Cheyenne (certified); Fernanda: Dynamic Color (sponsored). docker-compose y `seed-images.ps1` suben los 3 logos. ⚠️ BD dev ya sembradas: se replicó con UPDATE/INSERT manual en `sponsorships` (el seeder solo corre con BD vacía).
+  - **Fix colateral**: el fallback Docker de `scripts/seed-images.ps1` estaba roto en Windows (`--network host` + alias mc no persistente entre contenedores efímeros → "subía" sin subir); ahora usa un único contenedor en la red del compose.
+- Siguiente: mergear PR #17; queda **US0011** (cotizar con chatbot, 13 SP) como última Should-Have.
 - **Rechazo de pago (US0009)**: Payment queda `pending` (el modelo no tiene estado `failed`); el cliente puede reintentar mientras el hold viva y el TTL libera el slot.
 - **Flow real**: ⏸️ deferred por decisión del 2026-07-15 — se seguirá con el mock. Al retomar: obtener credenciales sandbox → `Flow:ApiKey/SecretKey` + `Flow:UseMock=false` + prueba end-to-end contra sandbox.flow.cl. El resto del código no cambia.
 - **Pendiente deferred**: `fix-search-dropdown` (dropdown de sugerencias se superpone con "Resultados").
@@ -62,7 +63,7 @@ Retoma el trabajo desde el punto indicado en "Estado detallado" de HANDOFF.md.
 ### Decisiones/contexto no evidentes en el repo
 
 - Cuenta **Flow** de producción ya creada (2026-07-14, rubro: reserva/depósitos de servicios de tatuaje). Credenciales sandbox pendientes; US0009 usa mock hasta tenerlas.
-- Seed actual (`backend/Seed/DatabaseSeeder.cs`): 5 artistas publicados en Santiago con coordenadas reales, 12 obras de portafolio c/u, 3 certificados, 2 premiados, 2 auspiciados. `RatingAvg`/`TotalReviews` quedan en 0 (no hay reviews seed) — la vitrina "Mejor calificados" ordenará por rating aunque todos empaten; considerar seed de reviews si un CA lo exige.
+- Seed actual (`backend/Seed/DatabaseSeeder.cs`): 5 artistas publicados en Santiago con coordenadas reales, 12 obras de portafolio c/u, 3 certificados, 2 premiados, 2 auspiciados (3 sponsorships cubriendo los 3 tipos de relación). `RatingAvg`/`TotalReviews` quedan en 0 (no hay reviews seed) — la vitrina "Mejor calificados" ordenará por rating aunque todos empaten; considerar seed de reviews si un CA lo exige.
 - El equipo usa la skill `prompt-registry` (`ai-specs/skills/prompt-registry/SKILL.md`) para registrar prompts en `prompts/00-all-prompts.md` al cerrar cada US.
 
 ### Comandos útiles

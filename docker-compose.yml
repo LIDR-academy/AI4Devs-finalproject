@@ -76,8 +76,10 @@ services:
         done;
       done &&
 
-      echo 'Uploading brand logo...' &&
-      curl -sL --retry 3 'https://picsum.photos/seed/eternal-ink/200/80' | mc pipe local/inklink-images/brands/eternal-ink.png &&
+      echo 'Uploading brand logos...' &&
+      for brand in eternal-ink cheyenne dynamic-color; do
+        curl -sL --retry 3 \"https://picsum.photos/seed/$${brand}/200/80\" | mc pipe local/inklink-images/brands/$${brand}.png;
+      done &&
 
       echo 'Seed images completed successfully'
       "

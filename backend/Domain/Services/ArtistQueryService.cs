@@ -214,8 +214,8 @@ public class ArtistQueryService
                 .OrderByDescending(a => a.Year)
                 .Select(a => new AwardDto(a.Title, a.EventName, a.Year, a.Category, a.BadgeIconUrl))
                 .ToList(),
-            SponsorBadges: artist.Sponsorships
-                .Select(s => new SponsorBadgeDto(s.BrandName, s.BrandLogoUrl))
+            Sponsorships: artist.Sponsorships
+                .Select(s => new SponsorshipDto(s.Id, s.BrandName, s.BrandLogoUrl, s.RelationshipType.ToString().ToLowerInvariant()))
                 .ToList(),
             AvailableSlots: artist.Availabilities
                 .Select(a => new AvailableSlotDto(a.DayOfWeek, a.StartTime.ToString("HH:mm"), a.EndTime.ToString("HH:mm"), a.SlotDurationMinutes))

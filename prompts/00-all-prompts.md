@@ -1350,6 +1350,18 @@ Listo, funciona. Si hay que actualizar los archivos .md de prompts y otros archi
 
 ---
 
+## 80 — Merge US0012 y continuar con US0014
+
+> 📋 2026-07-16T03:30:00Z · Claude Code · Claude Fable 5 · medium · ~120K tokens · rodri
+
+```
+listo el merge. Ahora continuemos con la US0014 segun el protocolo
+```
+
+*(US0014 completa en feature/us0014-auspicios-marcas, TDD en 3 baby steps: (1) backend alinea GET /artists/{slug} a api-spec — sponsorships[] con relationshipType; (2) seed cubre los 3 tipos de relación + logos en docker-compose/seed-images.ps1; (3) SponsorshipSectionComponent "Auspiciado por" en perfil + SponsorBadgesComponent en cards (máx 3 + "+N más", fallbacks). CAs verificados visualmente en dev. Fix colateral: fallback Docker de seed-images.ps1 roto en Windows. Backend 94/94, frontend 112/112.)*
+
+---
+
 ## Resumen de archivos modificados (sesión 13)
 
 | Archivo | Acción |
@@ -1364,9 +1376,18 @@ Listo, funciona. Si hay que actualizar los archivos .md de prompts y otros archi
 | `PROJECT_STATUS.md` | Actualizado — estado US0010/US0012/US0013 |
 | `HANDOFF.md` | Actualizado — estado detallado |
 | `prompts/00-all-prompts.md` | Actualizado — sesión 13 |
+| `backend/Application/Dtos/ArtistsDtos.cs` | Actualizado — SponsorshipDto con relationshipType (US0014) |
+| `backend/Domain/Services/ArtistQueryService.cs` | Actualizado — mapeo sponsorships en perfil (US0014) |
+| `backend/Seed/DatabaseSeeder.cs` | Actualizado — 3 tipos de relación de auspicio (US0014) |
+| `backend/Tests/ArtistProfileTests.cs` + `DatabaseMigrationAndSeedTests.cs` | Actualizados — tests US0014 |
+| `frontend/.../sponsorship-section/` | Creado — sección "Auspiciado por" del perfil (US0014) |
+| `frontend/.../sponsor-badges/` | Creado — badges de marca en cards (US0014) |
+| `frontend/src/app/core/models/artist-profile.models.ts` | Actualizado — SponsorshipDto (US0014) |
+| `scripts/seed-images.ps1` + `docker-compose.yml` | Actualizados — 3 logos de marca; fix fallback Docker en Windows |
+| `docs/us/us0014/` | Actualizado — CAs y criterios de done marcados |
 
 > ⚠️ Nota de trazabilidad: las sesiones que implementaron US0012 (commits `2389366`, `aab2996`, `d9c766b`) y US0013 (PR #15) no quedaron registradas en este archivo; sus prompts no están disponibles desde esta sesión.
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 13 sesiones · 79 prompts documentados*
+*INK·LINK © 2026 · Registro de prompts · 13 sesiones · 80 prompts documentados*

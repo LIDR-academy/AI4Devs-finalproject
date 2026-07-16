@@ -73,7 +73,13 @@ public class DatabaseMigrationAndSeedTests : IAsyncLifetime
         // Certifications, awards and sponsorships exist for the expected artists
         Assert.Equal(3, await context.Certifications.CountAsync(c => c.IsActive));
         Assert.Equal(2, await context.Awards.CountAsync());
-        Assert.Equal(2, await context.Sponsorships.CountAsync());
+        Assert.Equal(3, await context.Sponsorships.CountAsync());
+
+        // US0014 CA2: the seed covers the three relationship types
+        var relationTypes = await context.Sponsorships.Select(s => s.RelationshipType).ToListAsync();
+        Assert.Contains(Domain.Enums.SponsorshipRelationType.Ambassador, relationTypes);
+        Assert.Contains(Domain.Enums.SponsorshipRelationType.Sponsored, relationTypes);
+        Assert.Contains(Domain.Enums.SponsorshipRelationType.Certified, relationTypes);
 
         // Seeding twice is idempotent
         await seeder.SeedAsync();

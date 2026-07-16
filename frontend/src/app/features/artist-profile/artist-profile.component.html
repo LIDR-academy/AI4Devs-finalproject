@@ -146,19 +146,8 @@
         </div>
       }
 
-      <!-- SPONSORS -->
-      @if (a.sponsorBadges.length > 0) {
-        <div class="sidebar-card">
-          <h3 class="sidebar-card__title">Sponsors</h3>
-          <div class="sponsors-grid">
-            @for (sponsor of a.sponsorBadges; track sponsor.brandName) {
-              <div class="sponsor-item" [title]="sponsor.brandName">
-                <img [src]="sponsor.brandLogoUrl" [alt]="sponsor.brandName" class="sponsor-item__logo" />
-              </div>
-            }
-          </div>
-        </div>
-      }
+      <!-- AUSPICIOS (US0014) -->
+      <app-sponsorship-section [sponsorships]="a.sponsorships" />
 
       <!-- DISPONIBILIDAD -->
       <div class="sidebar-card">

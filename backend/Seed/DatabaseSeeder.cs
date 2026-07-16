@@ -224,15 +224,30 @@ public class DatabaseSeeder
 
             if (a.Sponsored)
             {
-                profile.Sponsorships.Add(new Sponsorship
+                // US0014 CA2: the seed covers the three relationship types across artists
+                var brands = a.Slug == "matias-herrera"
+                    ? new[]
+                    {
+                        ("Eternal Ink", "eternal-ink", SponsorshipRelationType.Ambassador),
+                        ("Cheyenne", "cheyenne", SponsorshipRelationType.Certified)
+                    }
+                    : new[]
+                    {
+                        ("Dynamic Color", "dynamic-color", SponsorshipRelationType.Sponsored)
+                    };
+
+                foreach (var (brandName, logoSlug, relationType) in brands)
                 {
-                    Id = Guid.NewGuid(),
-                    ArtistProfileId = profile.Id,
-                    BrandName = "Eternal Ink",
-                    BrandLogoUrl = $"{ImageBaseUrl}/brands/eternal-ink.png",
-                    RelationshipType = SponsorshipRelationType.Sponsored,
-                    IsActive = true
-                });
+                    profile.Sponsorships.Add(new Sponsorship
+                    {
+                        Id = Guid.NewGuid(),
+                        ArtistProfileId = profile.Id,
+                        BrandName = brandName,
+                        BrandLogoUrl = $"{ImageBaseUrl}/brands/{logoSlug}.png",
+                        RelationshipType = relationType,
+                        IsActive = true
+                    });
+                }
             }
 
             result.Add(new ArtistSeed(user, profile));

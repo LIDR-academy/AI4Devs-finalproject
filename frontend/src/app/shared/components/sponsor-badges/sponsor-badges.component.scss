@@ -1,0 +1,39 @@
+.sponsor-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 2px 5px;
+    height: 22px;
+
+    &--more {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--ink-text-secondary);
+    }
+  }
+
+  &__logo {
+    height: 14px;
+    max-width: 48px;
+    object-fit: contain;
+    display: block;
+  }
+
+  &__name {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--ink-text-secondary);
+    max-width: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

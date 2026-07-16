@@ -52,7 +52,9 @@ public record ArtistProfileDto(
     bool IsCertified, decimal AverageRating, int ReviewCount,
     List<string> Styles, List<PortfolioItemDto> PortfolioItems,
     List<CertificationDto> Certifications, List<AwardDto> Awards,
-    List<SponsorBadgeDto> SponsorBadges, List<AvailableSlotDto> AvailableSlots);
+    List<SponsorshipDto> Sponsorships, List<AvailableSlotDto> AvailableSlots);
+
+public record SponsorshipDto(Guid Id, string BrandName, string? BrandLogoUrl, string RelationshipType);
 
 public record ReviewDto(Guid Id, string ClientName, int RatingHygiene, int RatingPainManagement,
     int RatingCustomerService, int RatingResult, decimal AverageRating,

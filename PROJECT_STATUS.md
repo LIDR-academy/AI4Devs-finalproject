@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-16 (US0010 ✅ PR #14 y US0013 ✅ PR #15 mergeadas; US0012 🟣 En revisión — PR #16 con fixes de mapa e imagen seed)
+> Última actualización: 2026-07-16 (US0012 ✅ PR #16 mergeada; US0014 🟣 En revisión — PR #17)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -9,7 +9,7 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0010 y US0013 completas (9/9 Must-Have ✅); US0012 en revisión |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0010, US0012 y US0013 completas (9/9 Must-Have ✅); US0014 en revisión |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
 | Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0010 + US0012–US0013 implementados (93 tests en verde) |
 | Frontend (`frontend/`) | ✅ US0001 + US0003–US0010 + US0012–US0013 implementados (101 tests en verde) |
@@ -31,9 +31,9 @@
 | US0009 | Pagar depósito vía Flow | Must | 13 | ✅ Done (PR #13 mergeado a main; Flow real deferred — ver Bloqueos §3) |
 | US0010 | Historial + confirmar asistencia | Must | 5 | ✅ Done (PR #14 mergeado a main) |
 | US0011 | Cotizar con chatbot | Should | 13 | ⬜ Pendiente |
-| US0012 | Explorar artistas en mapa | Should | 8 | 🟣 En revisión (feature/us0012-mapa-artistas, PR #16) |
+| US0012 | Explorar artistas en mapa | Should | 8 | ✅ Done (PR #16 mergeado a main) |
 | US0013 | Calificar artista post-sesión | Should | 5 | ✅ Done (PR #15 mergeado a main) |
-| US0014 | Mostrar auspicios de marcas | Should | 2 | ⬜ Pendiente |
+| US0014 | Mostrar auspicios de marcas | Should | 2 | 🟣 En revisión (feature/us0014-auspicios-marcas, PR #17) |
 
 Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · ✅ Done (según Definition of Done de `CONTRIBUTING.md`)
 
@@ -63,6 +63,6 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **US0012** — revisar y mergear PR #16 (`feature/us0012-mapa-artistas`; incluye fix de CSS Leaflet — `fixs/issue-006.md` — y reemplazo de imagen seed)
-2. Restantes Should-Have: **US0011** (chatbot, 13 SP) y **US0014** (auspicios, 2 SP)
+1. **US0014** — revisar y mergear PR #17 (`feature/us0014-auspicios-marcas`)
+2. Última Should-Have restante: **US0011** (cotizar con chatbot, 13 SP)
 3. **Pendiente deferred**: integración Flow real con sandbox (ver Bloqueos §3) · `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`) · `fixs/issue-005.md` (foto de reseña no se persiste)

@@ -1,0 +1,22 @@
+@if (badges().length > 0) {
+  <div class="sponsor-badges">
+    @for (badge of visibleBadges(); track badge.brandName) {
+      <span class="sponsor-badges__pill" [title]="badge.brandName">
+        @if (showLogo(badge)) {
+          <img
+            class="sponsor-badges__logo"
+            [src]="badge.brandLogoUrl"
+            [alt]="badge.brandName"
+            loading="lazy"
+            (error)="onLogoError(badge)"
+          />
+        } @else {
+          <span class="sponsor-badges__name">{{ badge.brandName }}</span>
+        }
+      </span>
+    }
+    @if (hiddenCount() > 0) {
+      <span class="sponsor-badges__pill sponsor-badges__pill--more">+{{ hiddenCount() }} más</span>
+    }
+  </div>
+}

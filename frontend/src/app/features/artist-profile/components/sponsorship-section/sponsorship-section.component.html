@@ -1,0 +1,30 @@
+@if (sponsorships().length > 0) {
+  <div class="sponsorship-card">
+    <h3 class="sponsorship-card__title">Auspiciado por</h3>
+    <ul class="sponsorship-list">
+      @for (sponsorship of sponsorships(); track sponsorship.id) {
+        <li class="sponsorship-item">
+          <span class="sponsorship-item__logo-box">
+            @if (showFallback(sponsorship)) {
+              <span class="sponsorship-item__fallback" aria-hidden="true">{{ brandInitial(sponsorship.brandName) }}</span>
+            } @else {
+              <img
+                class="sponsorship-item__logo"
+                [src]="sponsorship.brandLogoUrl"
+                [alt]="sponsorship.brandName"
+                loading="lazy"
+                (error)="onLogoError(sponsorship)"
+              />
+            }
+          </span>
+          <span class="sponsorship-item__info">
+            <span class="sponsorship-item__name">{{ sponsorship.brandName }}</span>
+            <span
+              class="sponsorship-item__type sponsorship-item__type--{{ sponsorship.relationshipType }}"
+            >{{ relationLabel(sponsorship.relationshipType) }}</span>
+          </span>
+        </li>
+      }
+    </ul>
+  </div>
+}

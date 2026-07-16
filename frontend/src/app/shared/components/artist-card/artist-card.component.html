@@ -44,21 +44,6 @@
 
     <app-certification-badge [isCertified]="cardArtist()?.isCertified ?? false" size="sm" />
 
-    @if ((cardArtist()?.sponsorBadges?.length ?? 0) > 0) {
-      <div class="artist-card__sponsors">
-        @for (badge of cardArtist()?.sponsorBadges ?? []; track badge.brandName) {
-          @if (badge.brandLogoUrl) {
-            <span class="artist-card__sponsor-pill" [title]="badge.brandName">
-              <img
-                class="artist-card__sponsor-logo"
-                [src]="badge.brandLogoUrl"
-                [alt]="badge.brandName"
-                loading="lazy"
-              />
-            </span>
-          }
-        }
-      </div>
-    }
+    <app-sponsor-badges [badges]="cardArtist()?.sponsorBadges ?? []" />
   </div>
 </a>

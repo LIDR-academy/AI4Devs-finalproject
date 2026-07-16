@@ -64,13 +64,13 @@ function Upload-Image {
         & mc cp $tmp "local/$BucketName/$DestPath" | Out-Null
         Remove-Item $tmp -Force
     } else {
-        # Direct PUT via AWS Signature V4 is complex; use mc Docker image instead
-        Write-Warning "mc CLI not found. Using Docker mc container..."
+        # Docker fallback: el alias de mc no persiste entre contenedores efímeros y
+        # --network host no funciona en Docker Desktop (Windows/macOS), así que se
+        # configura el alias y se copia en un único contenedor unido a la red del compose
         $tmp = [System.IO.Path]::GetTempFileName() + ".jpg"
         [System.IO.File]::WriteAllBytes($tmp, $bytes)
-        $tmpLinux = $tmp -replace "\\", "/"
-        docker run --rm -v "${tmp}:/img.jpg" --network host minio/mc `
-            cp /img.jpg "local/$BucketName/$DestPath" 2>$null
+        docker run --rm --network $script:DockerNetwork -v "${tmp}:/img.jpg" --entrypoint sh minio/mc `
+            -c "mc alias set local http://storage:9000 $AccessKey $SecretKey >/dev/null && mc cp /img.jpg 'local/$BucketName/$DestPath'"
         Remove-Item $tmp -Force
     }
 }
@@ -87,9 +87,12 @@ if ($mc) {
     Write-Host "mc configurado correctamente.`n" -ForegroundColor Green
 } else {
     Write-Host "mc CLI no encontrado. Se usará mc vía Docker.`n" -ForegroundColor Yellow
-    docker run --rm --network host minio/mc alias set local $MinioUrl $AccessKey $SecretKey | Out-Null
-    docker run --rm --network host minio/mc mb --ignore-existing "local/$BucketName" | Out-Null
-    docker run --rm --network host minio/mc anonymous set download "local/$BucketName" | Out-Null
+    $script:DockerNetwork = docker inspect inklink-storage --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}'
+    if (-not $script:DockerNetwork) {
+        throw "No se encontró el contenedor inklink-storage. Levanta la infraestructura con: docker-compose up -d"
+    }
+    docker run --rm --network $script:DockerNetwork --entrypoint sh minio/mc -c `
+        "mc alias set local http://storage:9000 $AccessKey $SecretKey >/dev/null && mc mb --ignore-existing local/$BucketName && mc anonymous set download local/$BucketName" | Out-Null
 }
 
 foreach ($slug in $Artists) {
@@ -106,10 +109,12 @@ foreach ($slug in $Artists) {
     }
 }
 
-Write-Host "`nLogo de marca..." -ForegroundColor Yellow
-Upload-Image `
-    -SourceUrl "https://picsum.photos/seed/eternal-ink/200/80" `
-    -DestPath "brands/eternal-ink.png"
+Write-Host "`nLogos de marca..." -ForegroundColor Yellow
+foreach ($brand in @('eternal-ink', 'cheyenne', 'dynamic-color')) {
+    Upload-Image `
+        -SourceUrl "https://picsum.photos/seed/$brand/200/80" `
+        -DestPath "brands/$brand.png"
+}
 
 Write-Host "`n✅ Seed de imágenes completado." -ForegroundColor Green
 Write-Host "Puedes verificar en http://localhost:9001 (usuario: minioadmin / minioadmin)"

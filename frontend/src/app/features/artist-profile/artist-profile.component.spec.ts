@@ -36,7 +36,9 @@ const mockArtist: ArtistProfileDto = {
   awards: [
     { title: 'Best Realism', eventName: 'Chile Tattoo Expo', year: 2024, category: 'Realismo', badgeIconUrl: null }
   ],
-  sponsorBadges: [],
+  sponsorships: [
+    { id: 'sp1', brandName: 'Eternal Ink', brandLogoUrl: 'https://cdn.test/eternal.png', relationshipType: 'ambassador' }
+  ],
   availableSlots: [
     { dayOfWeek: 1, startTime: '10:00', endTime: '18:00', slotDurationMinutes: 60 }
   ]
