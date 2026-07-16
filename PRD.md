@@ -120,7 +120,7 @@ Acceptance criteria (per type):
 - Matching: learner pairs related items by tapping one item then its match (no drag-drop); correctness shown on submit.
 - *(P0 floor: multiple choice + fill-in-the-blank + flashcards. Open-ended / short answer and matching are also in scope for v1. Drag-drop interaction is **out of scope** — matching uses tap-to-select-two — see Non-Goals.)*
 
-**R4 — Slide navigation & lesson player**
+~**R4 — Slide navigation & lesson player**~
 Description: A player to move through the deck one slide at a time.
 Acceptance criteria:
 - Given a generated lesson, the learner can advance and go back through slides.
