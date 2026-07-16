@@ -1,16 +1,17 @@
 import { EntitlementsDao } from '../dao/entitlements.dao';
 import type { PlanEntitlements } from './entitlements.types';
 
+/** Maps the single profiles→plans join into the client entitlements contract. */
 export abstract class EntitlementsService {
   static async getEntitlements(): Promise<PlanEntitlements> {
-    const flags = await EntitlementsDao.getCurrentPlan();
+    const profile = await EntitlementsDao.getCurrentProfile();
 
     return {
-      plan: flags.plan,
-      keySource: flags.usePlatformKey ? 'platform' : 'user',
-      showKeySettings: flags.showKeySettings,
-      showAds: flags.showAds,
-      canCreateWithoutKey: flags.canCreateWithoutKey,
+      plan: profile.plan,
+      keySource: profile.usePlatformKey ? 'platform' : 'user',
+      showKeySettings: profile.showKeySettings,
+      showAds: profile.showAds,
+      canCreateWithoutKey: profile.canCreateWithoutKey,
     };
   }
 }

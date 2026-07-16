@@ -2,19 +2,27 @@ jest.mock('@helsoft/supabase-services', () => ({
   EntitlementsService: { getEntitlements: jest.fn() },
 }));
 jest.mock('./use-api-key', () => ({ useApiKey: jest.fn() }));
+jest.mock('./use-session', () => ({ useSession: jest.fn() }));
 
 import { EntitlementsService } from '@helsoft/supabase-services';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { createElement, type ReactNode } from 'react';
 
 import { useApiKey } from './use-api-key';
-import { useEntitlements } from './use-entitlements';
+import { EntitlementsProvider, useEntitlements } from './use-entitlements';
+import { useSession } from './use-session';
 
 const service = EntitlementsService as jest.Mocked<typeof EntitlementsService>;
 const mockUseApiKey = useApiKey as jest.Mock;
+const mockUseSession = useSession as jest.Mock;
 
 describe('useEntitlements', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseSession.mockReturnValue({
+      session: { user: { id: 'user-1' } },
+      isLoading: false,
+    });
     mockUseApiKey.mockReturnValue({
       status: { hasKey: true },
       isLoading: false,
@@ -286,5 +294,30 @@ describe('useEntitlements', () => {
 
     expect(result.current.error).toBeNull();
     expect(result.current.entitlements?.plan).toBe('paid');
+  });
+
+  it('shares one profile fetch across consumers under EntitlementsProvider', async () => {
+    service.getEntitlements.mockResolvedValue({
+      plan: 'free',
+      keySource: 'user',
+      showKeySettings: true,
+      showAds: true,
+      canCreateWithoutKey: false,
+    });
+
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(EntitlementsProvider, null, children);
+
+    const { result } = renderHook(
+      () => ({
+        a: useEntitlements(),
+        b: useEntitlements(),
+      }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.a.isLoading).toBe(false));
+    expect(result.current.a.entitlements).toEqual(result.current.b.entitlements);
+    expect(service.getEntitlements).toHaveBeenCalledTimes(1);
   });
 });

@@ -22,13 +22,13 @@ describe('EntitlementsDao', () => {
     mockGetSupabase.mockReturnValue({ from });
   });
 
-  it('@s2 reads the current caller plan flags via profiles→plans join', async () => {
+  it('@s2 reads the current caller profile with plan flags via profiles→plans join', async () => {
     single.mockResolvedValue({
       data: { plan_id: 'free', plans: freePlansEmbed },
       error: null,
     });
 
-    await expect(EntitlementsDao.getCurrentPlan()).resolves.toEqual({
+    await expect(EntitlementsDao.getCurrentProfile()).resolves.toEqual({
       plan: 'free',
       usePlatformKey: false,
       showAds: true,
@@ -45,13 +45,13 @@ describe('EntitlementsDao', () => {
   it('@s5 rejects a missing profile instead of coercing it to free', async () => {
     single.mockResolvedValue({ data: null, error: null });
 
-    await expect(EntitlementsDao.getCurrentPlan()).rejects.toThrow('Profile not found');
+    await expect(EntitlementsDao.getCurrentProfile()).rejects.toThrow('Profile not found');
   });
 
   it('@s5 throws the Supabase data-access error unchanged', async () => {
     const error = { message: 'profiles unavailable', code: 'PGRST001' };
     single.mockResolvedValue({ data: null, error });
 
-    await expect(EntitlementsDao.getCurrentPlan()).rejects.toBe(error);
+    await expect(EntitlementsDao.getCurrentProfile()).rejects.toBe(error);
   });
 });

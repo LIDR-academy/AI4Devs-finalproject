@@ -1,5 +1,5 @@
 jest.mock('../dao/entitlements.dao', () => ({
-  EntitlementsDao: { getCurrentPlan: jest.fn() },
+  EntitlementsDao: { getCurrentProfile: jest.fn() },
 }));
 
 import { EntitlementsDao } from '../dao/entitlements.dao';
@@ -11,7 +11,7 @@ describe('EntitlementsService', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('@s2 maps free plan flags to user-key entitlements', async () => {
-    dao.getCurrentPlan.mockResolvedValue({
+    dao.getCurrentProfile.mockResolvedValue({
       plan: 'free',
       usePlatformKey: false,
       showAds: true,
@@ -29,7 +29,7 @@ describe('EntitlementsService', () => {
   });
 
   it('@s9 maps paid plan flags to platform entitlements without key settings or ads', async () => {
-    dao.getCurrentPlan.mockResolvedValue({
+    dao.getCurrentProfile.mockResolvedValue({
       plan: 'paid',
       usePlatformKey: true,
       showAds: false,
@@ -47,7 +47,7 @@ describe('EntitlementsService', () => {
   });
 
   it('@s16 exposes showAds from the plan row without starting ad behavior', async () => {
-    dao.getCurrentPlan.mockResolvedValue({
+    dao.getCurrentProfile.mockResolvedValue({
       plan: 'free',
       usePlatformKey: false,
       showAds: true,

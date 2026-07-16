@@ -9,7 +9,8 @@ type State = {
 type Action =
   | { type: 'load/start' }
   | { type: 'load/success'; data: PlanEntitlements }
-  | { type: 'load/failure'; error: Error };
+  | { type: 'load/failure'; error: Error }
+  | { type: 'load/unauthenticated' };
 
 export const useEntitlementsInitialState: State = {
   data: null,
@@ -25,5 +26,7 @@ export function useEntitlementsReducer(state: State, action: Action): State {
       return { data: action.data, isLoading: false, error: null };
     case 'load/failure':
       return { data: null, isLoading: false, error: action.error };
+    case 'load/unauthenticated':
+      return { data: null, isLoading: false, error: null };
   }
 }

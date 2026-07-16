@@ -2,7 +2,7 @@ import type { Plan } from '@helsoft/types';
 
 import { getSupabase } from '../supabase/supabase-client';
 
-export type PlanFlagsRow = {
+export type ProfileWithPlanFlags = {
   plan: Plan;
   usePlatformKey: boolean;
   showAds: boolean;
@@ -27,8 +27,9 @@ const embedPlans = (plans: ProfilePlanJoinRow['plans']): PlansEmbed => {
   return Array.isArray(plans) ? plans[0] : plans;
 };
 
+/** One Supabase round-trip: caller's profile row joined with its plan flags. */
 export abstract class EntitlementsDao {
-  static async getCurrentPlan(): Promise<PlanFlagsRow> {
+  static async getCurrentProfile(): Promise<ProfileWithPlanFlags> {
     const { data, error } = await getSupabase()
       .from('profiles')
       .select(
