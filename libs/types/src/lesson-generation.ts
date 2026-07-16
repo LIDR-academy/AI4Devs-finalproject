@@ -54,6 +54,7 @@ export const GENERATION_PROGRESS_STEPS = [
 export type GenerationErrorCode =
   | 'missing_key'
   | 'invalid_key'
+  | 'platform_key_unavailable'
   | 'rate_limited'
   | 'timeout'
   | 'generation_failed'

@@ -52,6 +52,16 @@ describe('mapGenerationError', () => {
     expect(mapGenerationError({ statusCode })).toEqual({ errorCode: 'invalid_key', status: 401 });
   });
 
+  // @s19 — paid platform authentication failures are operator failures, never BYOK guidance.
+  it.each([
+    401, 403,
+  ])('maps a platform API-call error with statusCode %d to platform_key_unavailable', (statusCode) => {
+    expect(mapGenerationError({ statusCode }, 'platform')).toEqual({
+      errorCode: 'platform_key_unavailable',
+      status: 503,
+    });
+  });
+
   // @s15 — Groq's rate limit (429) maps to rate_limited.
   it('maps an API-call error with statusCode 429 to rate_limited', () => {
     expect(mapGenerationError({ statusCode: 429 })).toEqual({

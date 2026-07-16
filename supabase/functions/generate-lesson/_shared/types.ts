@@ -93,6 +93,7 @@ export type GenerationProgressStep = 'reading' | 'generating' | 'attaching';
 export type GenerationErrorCode =
   | 'missing_key'
   | 'invalid_key'
+  | 'platform_key_unavailable'
   | 'rate_limited'
   | 'timeout'
   | 'generation_failed'

@@ -63,10 +63,11 @@ describe('GENERATION_PROGRESS_STEPS', () => {
 // spec.md's Error contract table — the closed set of codes LessonGenerationService normalizes
 // every failure to (mirrors PdfExtractionError).
 describe('GenerationError', () => {
-  it('carries one of the 9 closed GenerationErrorCode values', () => {
+  it('carries one of the 10 closed GenerationErrorCode values', () => {
     const codes: GenerationErrorCode[] = [
       'missing_key',
       'invalid_key',
+      'platform_key_unavailable',
       'rate_limited',
       'timeout',
       'generation_failed',
@@ -77,7 +78,7 @@ describe('GenerationError', () => {
     ];
     const error: GenerationError = { code: 'missing_key' };
 
-    expect(codes).toHaveLength(9);
+    expect(codes).toHaveLength(10);
     expect(error).toEqual({ code: 'missing_key' });
   });
 });

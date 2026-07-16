@@ -152,6 +152,7 @@ export const en = {
       error: {
         missingKey: 'An API key is required to generate lessons.',
         invalidKey: 'Your API key was rejected. Check it in Settings.',
+        platformKeyUnavailable: 'Lesson generation is temporarily unavailable. Try again.',
         rateLimited: "You've hit the provider's rate limit. Try again in a moment.",
         timeout: 'Generation took too long. Try again.',
         generationFailed: 'Something went wrong while generating your lesson. Try again.',

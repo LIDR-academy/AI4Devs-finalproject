@@ -3,7 +3,7 @@ id: task-4
 title: Route generation keys by live plan
 slice: 3
 scenarios: [s7, s8, s10, s11, s14, s15, s18, s19]
-status: todo
+status: in_progress
 paths:
   - supabase/functions/generate-lesson/index.ts
   - supabase/functions/generate-lesson/_shared/types.ts

@@ -133,6 +133,8 @@ export const es: TranslationResource = {
       error: {
         missingKey: 'Se requiere una clave de API para generar lecciones.',
         invalidKey: 'Tu clave de API fue rechazada. Revísala en Ajustes.',
+        platformKeyUnavailable:
+          'La generación de lecciones no está disponible temporalmente. Inténtalo de nuevo.',
         rateLimited: 'Alcanzaste el límite del proveedor. Vuelve a intentarlo en un momento.',
         timeout: 'La generación tardó demasiado. Vuelve a intentarlo.',
         generationFailed: 'Algo salió mal al generar tu lección. Vuelve a intentarlo.',

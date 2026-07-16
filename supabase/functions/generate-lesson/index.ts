@@ -23,6 +23,10 @@ import { z } from 'npm:zod@4';
 
 import { assembleGeneratedLesson } from './_shared/lesson-generation.assembly.ts';
 import { GenerationTimeoutError, mapGenerationError } from './_shared/lesson-generation.errors.ts';
+import {
+  callProviderWithResolvedKey,
+  resolveLessonGenerationKeyForPlan,
+} from './_shared/lesson-generation.key-source.ts';
 import { markDocumentGenerationFailure, persistLesson } from './_shared/lesson-generation.persist.ts';
 import { placeImagesByMetadata } from './_shared/lesson-generation.placement.ts';
 import { buildDeckPrompt } from './_shared/lesson-generation.prompt.ts';
@@ -44,6 +48,7 @@ import type {
 type AnySupabaseClient = any;
 
 type DocumentRow = { pages: { page: number; text: string }[]; status: string };
+type ProfileRow = { plan: 'free' | 'paid' };
 
 type DocumentImageRow = {
   id: string;
@@ -163,8 +168,8 @@ Deno.serve(async (req) => {
     return errorResponse('unauthenticated', 401);
   }
 
-  // Service-role client -- reaches the Vault-backed get_api_key() RPC only (spec.md Open
-  // decision #6); never used for the documents/document_images reads above, which stay RLS-scoped.
+  // Service role reads only this caller's live plan and, for free users, their Vault key.
+  // Documents and lesson persistence remain caller-JWT/RLS scoped.
   const adminClient: AnySupabaseClient = createClient(supabaseUrl, serviceRoleKey);
 
   let body: Partial<GenerateLessonRequest>;
@@ -178,6 +183,18 @@ Deno.serve(async (req) => {
     return errorResponse('document_not_ready', 400);
   }
   const { documentId, composition } = body as GenerateLessonRequest;
+
+  // @s14/@s15 -- plan is server-owned and read live after authentication on every request.
+  // Any client-supplied plan/entitlement/key-source fields are ignored by the request contract.
+  const { data: profileRow, error: profileError } = await adminClient
+    .from('profiles')
+    .select('plan')
+    .eq('id', user.id)
+    .single();
+  const profile = profileRow as ProfileRow | null;
+  if (profileError || !profile || (profile.plan !== 'free' && profile.plan !== 'paid')) {
+    return errorResponse('generation_failed', 500);
+  }
 
   const { data: documentRow, error: documentError } = await callerClient
     .from('documents')
@@ -195,18 +212,29 @@ Deno.serve(async (req) => {
     .eq('document_id', documentId);
   const images = (imageRows ?? []) as DocumentImageRow[];
 
-  // @s7/@s8 -- the decrypted key is read only here, server-side, via the service-role-only RPC;
-  // it is never included in any request/response body and never logged.
-  const { data: keyRows } = await adminClient.rpc('get_api_key', { p_user_id: user.id });
-  const keyRow = Array.isArray(keyRows) ? keyRows[0] : keyRows;
-  if (!keyRow?.api_key) {
+  // @s7/@s8/@s10/@s18 -- the free route alone reads Vault. Paid reads only the runtime platform
+  // secret and therefore works without, and ignores, any saved user-key row.
+  const resolvedKey = await resolveLessonGenerationKeyForPlan({
+    plan: profile.plan,
+    readUserApiKey: async () => {
+      const { data: keyRows } = await adminClient.rpc('get_api_key', { p_user_id: user.id });
+      const keyRow = Array.isArray(keyRows) ? keyRows[0] : keyRows;
+      return keyRow?.api_key ?? null;
+    },
+    platformApiKey:
+      profile.plan === 'paid' ? (Deno.env.get('PLATFORM_GROQ_API_KEY') ?? null) : null,
+  });
+  if (!resolvedKey.ok) {
     // Document identified — mark so the PDF list shows Retry (@s3/@s8).
     try {
-      await markDocumentGenerationFailure(callerClient, documentId, 'missing_key');
+      await markDocumentGenerationFailure(callerClient, documentId, resolvedKey.errorCode);
     } catch {
       // best-effort; still return the typed generation error
     }
-    return errorResponse('missing_key', 422);
+    return errorResponse(
+      resolvedKey.errorCode,
+      resolvedKey.errorCode === 'platform_key_unavailable' ? 503 : 422,
+    );
   }
 
   const promptImages: PromptImageManifestEntry[] = images.map((image) => ({
@@ -226,7 +254,9 @@ Deno.serve(async (req) => {
   }));
 
   const generateLesson = async (): Promise<GeneratedLesson> => {
-    const rawDeck = await runGeneration(keyRow.api_key, prompt);
+    const rawDeck = await callProviderWithResolvedKey(resolvedKey, (apiKey) =>
+      runGeneration(apiKey, prompt),
+    );
 
     // Un-anchorable images (@s10) -- derived structurally from the model's own response, ahead
     // of assembleGeneratedLesson's own (re-)validation, so the vision call runs only for images
@@ -263,7 +293,9 @@ Deno.serve(async (req) => {
             title: slide.title ?? '',
             content: slide.content ?? '',
           }));
-          visionDecisions = await runVisionPlacement(keyRow.api_key, downloaded, slideSummaries);
+          visionDecisions = await callProviderWithResolvedKey(resolvedKey, (apiKey) =>
+            runVisionPlacement(apiKey, downloaded, slideSummaries),
+          );
         }
       } catch {
         visionDecisions = [];
@@ -294,7 +326,7 @@ Deno.serve(async (req) => {
   } catch (cause) {
     // Redacted per @s8 -- never log the request body, the key, or the raw provider error; the
     // typed mapping below is the only thing derived from `cause`.
-    const { errorCode, status } = mapGenerationError(cause);
+    const { errorCode, status } = mapGenerationError(cause, resolvedKey.source);
     // Document identified — mark so the PDF list shows Retry (@s3/@s8).
     try {
       await markDocumentGenerationFailure(callerClient, documentId, errorCode);

@@ -133,6 +133,8 @@ export const pt: TranslationResource = {
       error: {
         missingKey: 'É necessária uma chave de API para gerar lições.',
         invalidKey: 'Sua chave de API foi rejeitada. Verifique-a em Configurações.',
+        platformKeyUnavailable:
+          'A geração de lições está temporariamente indisponível. Tente novamente.',
         rateLimited: 'Você atingiu o limite do provedor. Tente novamente em instantes.',
         timeout: 'A geração demorou demais. Tente novamente.',
         generationFailed: 'Algo deu errado ao gerar sua lição. Tente novamente.',

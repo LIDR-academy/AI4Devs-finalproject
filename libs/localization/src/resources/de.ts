@@ -134,6 +134,8 @@ export const de: TranslationResource = {
       error: {
         missingKey: 'Zum Generieren von Lektionen ist ein API-Schlüssel erforderlich.',
         invalidKey: 'Dein API-Schlüssel wurde abgelehnt. Überprüfe ihn in den Einstellungen.',
+        platformKeyUnavailable:
+          'Die Lektionserstellung ist vorübergehend nicht verfügbar. Versuche es erneut.',
         rateLimited:
           'Du hast das Ratenlimit des Anbieters erreicht. Versuche es gleich noch einmal.',
         timeout: 'Die Generierung hat zu lange gedauert. Versuche es erneut.',

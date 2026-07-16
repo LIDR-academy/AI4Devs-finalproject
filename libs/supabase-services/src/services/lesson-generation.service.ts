@@ -26,6 +26,7 @@ export const toGenerationError = (code: GenerationErrorCode): Error & Generation
 export const GENERATION_ERROR_CODES: Record<GenerationErrorCode, true> = {
   missing_key: true,
   invalid_key: true,
+  platform_key_unavailable: true,
   rate_limited: true,
   timeout: true,
   generation_failed: true,

@@ -27,7 +27,10 @@ const apiCallStatusCode = (cause: unknown): number | undefined =>
  * Groq/Supabase error (@s8 redaction: the mapped result carries only these two fields, nothing
  * from `cause` itself).
  */
-export const mapGenerationError = (cause: unknown): GenerationErrorMapping => {
+export const mapGenerationError = (
+  cause: unknown,
+  keySource: 'user' | 'platform' = 'user',
+): GenerationErrorMapping => {
   if (cause instanceof GenerationTimeoutError) return { errorCode: 'timeout', status: 504 };
   if (cause instanceof GenerationSchemaError) {
     return { errorCode: 'generation_failed', status: 502 };
@@ -41,7 +44,11 @@ export const mapGenerationError = (cause: unknown): GenerationErrorMapping => {
   }
 
   const statusCode = apiCallStatusCode(cause);
-  if (statusCode === 401 || statusCode === 403) return { errorCode: 'invalid_key', status: 401 };
+  if (statusCode === 401 || statusCode === 403) {
+    return keySource === 'platform'
+      ? { errorCode: 'platform_key_unavailable', status: 503 }
+      : { errorCode: 'invalid_key', status: 401 };
+  }
   if (statusCode === 429) return { errorCode: 'rate_limited', status: 429 };
 
   return { errorCode: 'generation_failed', status: 502 };

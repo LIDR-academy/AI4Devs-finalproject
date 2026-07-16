@@ -10,12 +10,19 @@
 | @s4 | pending hides create/key settings | `api-key-gate.test.tsx`, `api-key-settings.test.tsx`, `upload.test.tsx` |
 | @s5 | explicit error hides controls | `entitlements.service.test.ts`, `api-key-gate.test.tsx`, `api-key-settings.test.tsx`, `upload.test.tsx` |
 | @s6 | retry delegates and recovers | `use-entitlements.test.ts`, `api-key-gate.test.tsx`, `api-key-settings.test.tsx` |
+| @s7 | free route resolves Vault user key | `lesson-generation.key-source.test.ts`, `lesson-generation.key-routing.integration.test.ts` |
+| @s8 | free missing/blank key returns `missing_key` | `lesson-generation.key-source.test.ts`, `lesson-generation.key-routing.integration.test.ts` |
 | @s9 | paid enables create; hides BYOK | `entitlements-ui.integration.test.tsx`, `upload.test.tsx` |
+| @s10 | paid ignores saved key and uses platform key | `lesson-generation.key-source.test.ts`, `lesson-generation.key-routing.integration.test.ts` |
+| @s11 | missing/blank platform key is retryable server failure | `lesson-generation.key-source.test.ts`, `lesson-generation.helpers.test.ts` |
 | @s12 | downgrade applies current controls | `use-entitlements.test.ts`, `api-key-gate.test.tsx` |
 | @s13 | create gating preserves Open lesson | `pdf-document-list-item.test.tsx`, `pdf-documents.test.tsx` |
-| @s14 | profile plan is persisted as the live server-read foundation | `profiles-migration.test.ts`, `entitlements.dao.test.ts` |
+| @s14 | next generation reads live server plan | `profiles-migration.test.ts`, `entitlements.dao.test.ts`, `lesson-generation.key-routing.integration.test.ts` |
+| @s15 | request selectors cannot choose funded inference | `lesson-generation.key-routing.integration.test.ts` |
 | @s16 | `showAds` derives from plan only | `entitlements.service.test.ts`, `use-entitlements.test.ts` |
 | @s17 | paid enables create; hides BYOK | `entitlements-ui.integration.test.tsx`, `upload.test.tsx` |
+| @s18 | paid keyless generation resolves platform key | `lesson-generation.key-source.test.ts`, `lesson-generation.key-routing.integration.test.ts` |
+| @s19 | unusable platform key has no BYOK fallback/CTA | `lesson-generation.errors.test.ts`, `lesson-generation.service.test.ts`, `lesson-generation.helpers.test.ts` |
 
 ## Observed RED → GREEN cycles
 
@@ -55,7 +62,28 @@ They caused no production change.
 - @s17 free→paid reload enables creation without a user key.
 - @s9/@s17 paid gate + settings integration passed first run; no source change.
 
+## Slice 3 cycles
+
+- @s7 RED key-source module absent; GREEN free route returns only the saved user key.
+- @s8 RED whitespace Vault key passed; GREEN blank free keys return `missing_key`.
+- @s10/@s18 RED paid route returned BYOK error; GREEN paid uses platform key regardless of user-key state.
+- @s11 RED absent platform key returned `missing_key`; GREEN paid configuration failures return `platform_key_unavailable`.
+- @s19 RED platform 401/403 mapped to BYOK `invalid_key`; GREEN source-aware mapping returns retryable `platform_key_unavailable`.
+- @s11/@s19 RED client lacked platform mapping; GREEN typed normalization, localized server copy, and retry recovery.
+- @s7–@s19 RED Deno mirror/wiring absent; GREEN live profile read, exclusive Vault/platform branches, ignored request selectors, and source-aware provider errors.
+- Barrel-export RED failed integration import; GREEN key-source decision exported through services.
+
+## Manual deployed-function check
+
+After setting `PLATFORM_GROQ_API_KEY` in the deployed Edge Function environment, invoke once as a
+paid user with no saved key and once after a dashboard plan flip to free. Confirm the paid call
+succeeds without `get_api_key`, the next call reads the new live plan, and missing/invalid platform
+configuration returns only `platform_key_unavailable` with no key material in response or logs.
+
 ## Review refactors
 
 - @s1 profile RLS test now consumes shared project Supabase Test Helpers; behavior unchanged.
 - TanStack Query finding human-waived: dependency absent; local reducer matches sibling Supabase hooks.
+- @s10/@s18 RED paid exclusivity/provider behavior had no executable seam; GREEN lazy plan router + resolved-key provider seam.
+- @s7/@s15 RED Edge wiring lacked control-flow proof; GREEN Deno mirror uses lazy Vault callback, live profile plan, and resolved provider key.
+- @s7/@s15 free crafted-selector behavioral coverage passed after the review refactor; no further source change.

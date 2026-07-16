@@ -3,6 +3,7 @@ export * from './auth.service';
 export * from './entitlements.service';
 export type * from './entitlements.types';
 export * from './lesson-attempt.service';
+export * from './lesson-generation.key-source';
 export * from './lesson-generation.service';
 export * from './lesson-image.service';
 export * from './lessons.service';
