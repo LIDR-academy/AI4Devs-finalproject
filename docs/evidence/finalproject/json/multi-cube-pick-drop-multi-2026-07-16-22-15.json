@@ -1,0 +1,3080 @@
+{
+  "status": "SUCCESS",
+  "timestamp": "2026-07-17T02:14:22.788002+00:00",
+  "runId": "multi-f8fbe361-563d-4616-9317-479b76f1032f",
+  "snapshotSignature": "e406bde6378e4fe22914dc29",
+  "truckCode": "TRUCK-003",
+  "maxCubes": 4,
+  "totalDetectedCubes": 4,
+  "totalPlannedCubes": 4,
+  "totalExecutedCubes": 4,
+  "totalPhysicalConfirmedCubes": 4,
+  "totalBackendSyncedActions": 4,
+  "totalBackendSyncFailedActions": 0,
+  "totalFailedPhysicalConfirmations": 0,
+  "totalAttemptedCubes": 4,
+  "totalRemainingCubes": 0,
+  "totalSkippedCubes": 0,
+  "lastBackendSyncError": null,
+  "lastPhysicalError": null,
+  "snapshot": {
+    "runId": "f8fbe361-563d-4616-9317-479b76f1032f",
+    "timestamp": "2026-07-17T02:13:21.610320+00:00",
+    "source": "opencv-camera",
+    "truckCode": "TRUCK-003",
+    "frameSource": "camera:1",
+    "frameId": null,
+    "calibrationVersion": null,
+    "detections": [
+      {
+        "color": "red",
+        "x": 96,
+        "y": 153,
+        "w": 90,
+        "h": 74,
+        "center": {
+          "x": 141.0,
+          "y": 190.0
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 5931.5,
+          "fillRatio": 0.8906,
+          "aspectRatio": 1.2162,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      {
+        "color": "blue",
+        "x": 174,
+        "y": 242,
+        "w": 87,
+        "h": 75,
+        "center": {
+          "x": 217.5,
+          "y": 279.5
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 5526.0,
+          "fillRatio": 0.8469,
+          "aspectRatio": 1.16,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      {
+        "color": "yellow",
+        "x": 260,
+        "y": 166,
+        "w": 69,
+        "h": 71,
+        "center": {
+          "x": 294.5,
+          "y": 201.5
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 4405.5,
+          "fillRatio": 0.8993,
+          "aspectRatio": 0.9718,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      {
+        "color": "green",
+        "x": 39,
+        "y": 247,
+        "w": 72,
+        "h": 68,
+        "center": {
+          "x": 75.0,
+          "y": 281.0
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 4557.5,
+          "fillRatio": 0.9309,
+          "aspectRatio": 1.0588,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      }
+    ],
+    "metadata": {
+      "profile": "vision-dry-run",
+      "dryRun": true,
+      "frameWidth": 640,
+      "frameHeight": 480,
+      "qrDetected": true,
+      "qrValid": true,
+      "qrStatus": "OK",
+      "qrRawValue": "TRUCK-003",
+      "qrRoi": {
+        "x": 496,
+        "y": 159,
+        "w": 143,
+        "h": 197
+      },
+      "cargoRoi": {
+        "x": 30,
+        "y": 140,
+        "w": 349,
+        "h": 210
+      },
+      "counts": {
+        "red": 1,
+        "blue": 1,
+        "green": 1,
+        "yellow": 1,
+        "total": 4
+      },
+      "snapshotSignature": "e406bde6378e4fe22914dc29"
+    }
+  },
+  "plannedActions": [
+    {
+      "sequenceNumber": 1,
+      "selectedCube": {
+        "color": "red",
+        "x": 96,
+        "y": 153,
+        "w": 90,
+        "h": 74,
+        "center": {
+          "x": 141.0,
+          "y": 190.0
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 5931.5,
+          "fillRatio": 0.8906,
+          "aspectRatio": 1.2162,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      "selectedCubeColor": "red",
+      "selectedCubeCenter": {
+        "x": 141.0,
+        "y": 190.0
+      },
+      "selectedCubeBoundingBox": {
+        "x": 96,
+        "y": 153,
+        "w": 90,
+        "h": 74
+      },
+      "pickupPositionCm": {
+        "x": 4.237,
+        "y": 1.515
+      },
+      "pickupOffset": {
+        "x": 0.0,
+        "y": -5.0,
+        "z": 0.0
+      },
+      "pickupTargetBase": {
+        "x": 49.526,
+        "y": -176.807,
+        "z": 138.0
+      },
+      "pickupTarget": {
+        "x": 49.526,
+        "y": -181.807,
+        "z": 138.0
+      },
+      "pickupSafe": {
+        "x": 49.526,
+        "y": -181.807,
+        "z": 150.0
+      },
+      "dropZoneCode": "DROP_RED_01",
+      "dropZonePose": {
+        "x": -170.0,
+        "y": -111.0,
+        "z": 86.0
+      },
+      "positionOrder": 1,
+      "commandsPreview": [
+        "POSE 124 -83 212 0",
+        "POSE 0 -79 176 0",
+        "POSE 50 -182 150 0",
+        "POSE 50 -182 138 1",
+        "POSE 50 -182 188 1",
+        "POSE 0 -79 176 1",
+        "POSE -170 -111 150 1",
+        "POSE -170 -111 86 1",
+        "POSE -170 -111 86 0",
+        "POSE -170 -111 150 0",
+        "POSE 0 -79 176 0",
+        "POSE 124 -83 212 0"
+      ],
+      "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+      "visualCalibrationUsed": true,
+      "homographyUsed": true,
+      "movementDelaySeconds": 0.8,
+      "pickupHoldSeconds": 1.2,
+      "releaseHoldSeconds": 0.8
+    },
+    {
+      "sequenceNumber": 2,
+      "selectedCube": {
+        "color": "blue",
+        "x": 174,
+        "y": 242,
+        "w": 87,
+        "h": 75,
+        "center": {
+          "x": 217.5,
+          "y": 279.5
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 5526.0,
+          "fillRatio": 0.8469,
+          "aspectRatio": 1.16,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      "selectedCubeColor": "blue",
+      "selectedCubeCenter": {
+        "x": 217.5,
+        "y": 279.5
+      },
+      "selectedCubeBoundingBox": {
+        "x": 174,
+        "y": 242,
+        "w": 87,
+        "h": 75
+      },
+      "pickupPositionCm": {
+        "x": 7.227,
+        "y": 4.678
+      },
+      "pickupOffset": {
+        "x": 0.0,
+        "y": -5.0,
+        "z": 0.0
+      },
+      "pickupTargetBase": {
+        "x": 24.244,
+        "y": -212.067,
+        "z": 138.0
+      },
+      "pickupTarget": {
+        "x": 24.244,
+        "y": -217.067,
+        "z": 138.0
+      },
+      "pickupSafe": {
+        "x": 24.244,
+        "y": -217.067,
+        "z": 150.0
+      },
+      "dropZoneCode": "DROP_BLUE_01",
+      "dropZonePose": {
+        "x": -68.0,
+        "y": -93.0,
+        "z": 86.0
+      },
+      "positionOrder": 1,
+      "commandsPreview": [
+        "POSE 124 -83 212 0",
+        "POSE 0 -79 176 0",
+        "POSE 24 -217 150 0",
+        "POSE 24 -217 138 1",
+        "POSE 24 -217 188 1",
+        "POSE 0 -79 176 1",
+        "POSE -68 -93 150 1",
+        "POSE -68 -93 86 1",
+        "POSE -68 -93 86 0",
+        "POSE -68 -93 150 0",
+        "POSE 0 -79 176 0",
+        "POSE 124 -83 212 0"
+      ],
+      "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+      "visualCalibrationUsed": true,
+      "homographyUsed": true,
+      "movementDelaySeconds": 0.8,
+      "pickupHoldSeconds": 1.2,
+      "releaseHoldSeconds": 0.8
+    },
+    {
+      "sequenceNumber": 3,
+      "selectedCube": {
+        "color": "yellow",
+        "x": 260,
+        "y": 166,
+        "w": 69,
+        "h": 71,
+        "center": {
+          "x": 294.5,
+          "y": 201.5
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 4405.5,
+          "fillRatio": 0.8993,
+          "aspectRatio": 0.9718,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      "selectedCubeColor": "yellow",
+      "selectedCubeCenter": {
+        "x": 294.5,
+        "y": 201.5
+      },
+      "selectedCubeBoundingBox": {
+        "x": 260,
+        "y": 166,
+        "w": 69,
+        "h": 71
+      },
+      "pickupPositionCm": {
+        "x": 10.298,
+        "y": 1.963
+      },
+      "pickupOffset": {
+        "x": 0.0,
+        "y": -5.0,
+        "z": 0.0
+      },
+      "pickupTargetBase": {
+        "x": -5.006,
+        "y": -186.183,
+        "z": 138.0
+      },
+      "pickupTarget": {
+        "x": -5.006,
+        "y": -191.183,
+        "z": 138.0
+      },
+      "pickupSafe": {
+        "x": -5.006,
+        "y": -191.183,
+        "z": 150.0
+      },
+      "dropZoneCode": "DROP_YELLOW_01",
+      "dropZonePose": {
+        "x": 34.0,
+        "y": -91.0,
+        "z": 86.0
+      },
+      "positionOrder": 1,
+      "commandsPreview": [
+        "POSE 124 -83 212 0",
+        "POSE 0 -79 176 0",
+        "POSE -5 -191 150 0",
+        "POSE -5 -191 138 1",
+        "POSE -5 -191 188 1",
+        "POSE 0 -79 176 1",
+        "POSE 34 -91 150 1",
+        "POSE 34 -91 86 1",
+        "POSE 34 -91 86 0",
+        "POSE 34 -91 150 0",
+        "POSE 0 -79 176 0",
+        "POSE 124 -83 212 0"
+      ],
+      "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+      "visualCalibrationUsed": true,
+      "homographyUsed": true,
+      "movementDelaySeconds": 0.8,
+      "pickupHoldSeconds": 1.2,
+      "releaseHoldSeconds": 0.8
+    },
+    {
+      "sequenceNumber": 4,
+      "selectedCube": {
+        "color": "green",
+        "x": 39,
+        "y": 247,
+        "w": 72,
+        "h": 68,
+        "center": {
+          "x": 75.0,
+          "y": 281.0
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 4557.5,
+          "fillRatio": 0.9309,
+          "aspectRatio": 1.0588,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      "selectedCubeColor": "green",
+      "selectedCubeCenter": {
+        "x": 75.0,
+        "y": 281.0
+      },
+      "selectedCubeBoundingBox": {
+        "x": 39,
+        "y": 247,
+        "w": 72,
+        "h": 68
+      },
+      "pickupPositionCm": {
+        "x": 1.598,
+        "y": 4.697
+      },
+      "pickupOffset": {
+        "x": 0.0,
+        "y": -5.0,
+        "z": 0.0
+      },
+      "pickupTargetBase": {
+        "x": 76.528,
+        "y": -208.94,
+        "z": 138.0
+      },
+      "pickupTarget": {
+        "x": 76.528,
+        "y": -213.94,
+        "z": 138.0
+      },
+      "pickupSafe": {
+        "x": 76.528,
+        "y": -213.94,
+        "z": 150.0
+      },
+      "dropZoneCode": "DROP_GREEN_01",
+      "dropZonePose": {
+        "x": 172.0,
+        "y": -71.0,
+        "z": 86.0
+      },
+      "positionOrder": 1,
+      "commandsPreview": [
+        "POSE 124 -83 212 0",
+        "POSE 0 -79 176 0",
+        "POSE 77 -214 150 0",
+        "POSE 77 -214 138 1",
+        "POSE 77 -214 188 1",
+        "POSE 0 -79 176 1",
+        "POSE 172 -71 150 1",
+        "POSE 172 -71 86 1",
+        "POSE 172 -71 86 0",
+        "POSE 172 -71 150 0",
+        "POSE 0 -79 176 0",
+        "POSE 124 -83 212 0"
+      ],
+      "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+      "visualCalibrationUsed": true,
+      "homographyUsed": true,
+      "movementDelaySeconds": 0.8,
+      "pickupHoldSeconds": 1.2,
+      "releaseHoldSeconds": 0.8
+    }
+  ],
+  "executedActions": [
+    {
+      "sequenceNumber": 1,
+      "selectedCube": {
+        "color": "red",
+        "x": 96,
+        "y": 153,
+        "w": 90,
+        "h": 74,
+        "center": {
+          "x": 141.0,
+          "y": 190.0
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 5931.5,
+          "fillRatio": 0.8906,
+          "aspectRatio": 1.2162,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      "selectedCubeColor": "red",
+      "selectedCubeCenter": {
+        "x": 141.0,
+        "y": 190.0
+      },
+      "selectedCubeBoundingBox": {
+        "x": 96,
+        "y": 153,
+        "w": 90,
+        "h": 74
+      },
+      "pickupPositionCm": {
+        "x": 4.237,
+        "y": 1.515
+      },
+      "pickupOffset": {
+        "x": 0.0,
+        "y": -5.0,
+        "z": 0.0
+      },
+      "pickupTargetBase": {
+        "x": 49.526,
+        "y": -176.807,
+        "z": 138.0
+      },
+      "pickupTarget": {
+        "x": 49.526,
+        "y": -181.807,
+        "z": 138.0
+      },
+      "pickupSafe": {
+        "x": 49.526,
+        "y": -181.807,
+        "z": 150.0
+      },
+      "dropZoneCode": "DROP_RED_01",
+      "dropZonePose": {
+        "x": -170.0,
+        "y": -111.0,
+        "z": 86.0
+      },
+      "positionOrder": 1,
+      "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+      "visualCalibrationUsed": true,
+      "homographyUsed": true,
+      "status": "SUCCESS",
+      "firmwareResponses": [
+        {
+          "attempt": 1,
+          "step": "ready_to_take",
+          "commandSent": "POSE 124 -83 212 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\t\u0001 \u0003UU\u0002\u0007\u0001\r\u0002 \u0003UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:22.825048+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:23.045762+00:00",
+          "elapsedMs": 219.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset",
+          "commandSent": "POSE 0 -79 176 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:23.848704+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:24.061400+00:00",
+          "elapsedMs": 219.0
+        },
+        {
+          "attempt": 1,
+          "step": "cube_safe_pose",
+          "commandSent": "POSE 50 -182 150 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003\u001fUU\u0002\u0007\u0001\u0001 \u0003%UU\u0003\u0007\u0001Y\u0002 \u0003vDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:24.870634+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:25.100094+00:00",
+          "elapsedMs": 219.0
+        },
+        {
+          "attempt": 1,
+          "step": "cube_target_pick",
+          "commandSent": "POSE 50 -182 138 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003\u001fUU\u0002\u0007\u0001\u0001 \u00030UU\u0003\u0007\u0001m\u0002 \u0003bDONE",
+          "success": true,
+          "postStepDelaySeconds": 1.2,
+          "stepStartedAt": "2026-07-17T02:14:25.900975+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:26.641346+00:00",
+          "elapsedMs": 735.0
+        },
+        {
+          "attempt": 1,
+          "step": "lift_after_pick",
+          "commandSent": "POSE 50 -182 188 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003\u001fUU\u0002\u0007\u0001\u0001 \u0003\u0011UU\u0003\u0007\u0001\u0019\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:27.841914+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:29.931526+00:00",
+          "elapsedMs": 2094.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset_with_cube",
+          "commandSent": "POSE 0 -79 176 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:30.733411+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:30.954575+00:00",
+          "elapsedMs": 218.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_safe_pose",
+          "commandSent": "POSE -170 -111 150 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0002 \u0003UU\u0002\u0007\u0001\u0001 \u0003>UU\u0003\u0007\u0001Q\u0002 \u0003~DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:31.755046+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:31.994197+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_zone_with_cube",
+          "commandSent": "POSE -170 -111 86 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0002 \u0003UU\u0002\u0007\u0001Q\u0001 \u0003UU\u0003\u0007\u0001\u0002 \u0003\u001fDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:32.795285+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:33.225075+00:00",
+          "elapsedMs": 422.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_zone_release",
+          "commandSent": "POSE -170 -111 86 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0002 \u0003UU\u0002\u0007\u0001Q\u0001 \u0003UU\u0003\u0007\u0001\u0002 \u0003\u001fDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:34.025966+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:34.264443+00:00",
+          "elapsedMs": 235.0
+        },
+        {
+          "attempt": 1,
+          "step": "retract_after_release",
+          "commandSent": "POSE -170 -111 150 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0002 \u0003UU\u0002\u0007\u0001\u0001 \u0003>UU\u0003\u0007\u0001Q\u0002 \u0003~DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:35.067366+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:35.313268+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset_without_cube",
+          "commandSent": "POSE 0 -79 176 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:36.118578+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:36.349019+00:00",
+          "elapsedMs": 234.0
+        },
+        {
+          "attempt": 1,
+          "step": "ready_to_take_end",
+          "commandSent": "POSE 124 -83 212 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\t\u0001 \u0003UU\u0002\u0007\u0001\r\u0002 \u0003UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:37.150015+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:37.629884+00:00",
+          "elapsedMs": 469.0
+        }
+      ],
+      "commandExecutionStatus": "SUCCESS",
+      "backendSyncStatus": "SUCCESS",
+      "serialOpened": true,
+      "hardwareMovement": true,
+      "suctionActivated": true,
+      "pickupExecuted": true,
+      "dropExecuted": true,
+      "releaseConfirmed": true,
+      "occupiedPersisted": true,
+      "movementDelaySeconds": 0.8,
+      "pickupHoldSeconds": 1.2,
+      "releaseHoldSeconds": 0.8,
+      "successMeaning": "physical_confirmed",
+      "physicalConfirmation": {
+        "enabled": true,
+        "status": "CONFIRMED",
+        "method": "post_drop_vision_count_delta",
+        "attempts": [
+          {
+            "enabled": true,
+            "method": "post_drop_vision_count_delta",
+            "attempt": 1,
+            "pickZ": 138.0,
+            "selectedCubeColor": "red",
+            "totalBefore": 4,
+            "colorBefore": 1,
+            "expectedTotalAfter": 3,
+            "expectedColorAfter": 0,
+            "snapshotBeforeSignature": "e406bde6378e4fe22914dc29",
+            "snapshotAfterSignature": "2e811ff9c04ba52121a0896c",
+            "totalAfter": 3,
+            "colorAfter": 0,
+            "status": "CONFIRMED",
+            "reason": "Total and color counts decreased by 1",
+            "firmwareResponseCount": 12
+          }
+        ],
+        "selectedCubeColor": "red",
+        "totalBefore": 4,
+        "totalAfter": 3,
+        "colorBefore": 1,
+        "colorAfter": 0,
+        "expectedTotalAfter": 3,
+        "expectedColorAfter": 0,
+        "snapshotBeforeSignature": "e406bde6378e4fe22914dc29",
+        "snapshotAfterSignature": "2e811ff9c04ba52121a0896c",
+        "reason": "Total and color counts decreased by 1"
+      },
+      "retryEnabled": true,
+      "maxAttempts": 3,
+      "zStep": -2.0,
+      "minPickZ": 132.0,
+      "finalPickZUsed": 138.0,
+      "backend": {
+        "action": {
+          "id": "e9a71ed8-b7a5-4706-aef7-30d445578718",
+          "code": "ACTION-001",
+          "sessionId": "645bd3b5-f82f-4a4b-9fb2-23b436b12e50",
+          "actionType": "PICK_AND_DROP",
+          "status": "SUCCESS",
+          "mode": "hardware",
+          "color": "red",
+          "metadata": {
+            "zStep": -2,
+            "dryRun": false,
+            "profile": "hardware",
+            "minPickZ": 132,
+            "truckCode": "TRUCK-003",
+            "pickupSafe": {
+              "x": 49.526,
+              "y": -181.807,
+              "z": 150
+            },
+            "maxAttempts": 3,
+            "dropZoneCode": "DROP_RED_01",
+            "dropZonePose": {
+              "x": -170,
+              "y": -111,
+              "z": 86
+            },
+            "pickupOffset": {
+              "x": 0,
+              "y": -5,
+              "z": 0
+            },
+            "pickupTarget": {
+              "x": 49.526,
+              "y": -181.807,
+              "z": 138
+            },
+            "retryEnabled": true,
+            "selectedCube": {
+              "h": 74,
+              "w": 90,
+              "x": 96,
+              "y": 153,
+              "color": "red"
+            },
+            "positionOrder": 1,
+            "finalPickZUsed": 138,
+            "homographyUsed": true,
+            "multiCubeRunId": "multi-f8fbe361-563d-4616-9317-479b76f1032f",
+            "sequenceNumber": 1,
+            "successMeaning": "physical_confirmed",
+            "sanitizedFields": [
+              "metadata.firmwareResponses[0].firmwareResponse",
+              "metadata.firmwareResponses[1].firmwareResponse",
+              "metadata.firmwareResponses[2].firmwareResponse",
+              "metadata.firmwareResponses[3].firmwareResponse",
+              "metadata.firmwareResponses[4].firmwareResponse",
+              "metadata.firmwareResponses[5].firmwareResponse",
+              "metadata.firmwareResponses[6].firmwareResponse",
+              "metadata.firmwareResponses[7].firmwareResponse",
+              "metadata.firmwareResponses[8].firmwareResponse",
+              "metadata.firmwareResponses[9].firmwareResponse",
+              "metadata.firmwareResponses[10].firmwareResponse",
+              "metadata.firmwareResponses[11].firmwareResponse"
+            ],
+            "pickupPositionCm": {
+              "x": 4.237,
+              "y": 1.515
+            },
+            "pickupTargetBase": {
+              "x": 49.526,
+              "y": -176.807,
+              "z": 138
+            },
+            "backendSyncStatus": "SKIPPED",
+            "firmwareResponses": [
+              {
+                "step": "ready_to_take",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 219,
+                "commandSent": "POSE 124 -83 212 0",
+                "stepStartedAt": "2026-07-17T02:14:22.825048+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01>\t<0x01> <0x03>UU<0x02><0x07><0x01>\r<0x02> <0x03>UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:23.045762+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "reset",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 219,
+                "commandSent": "POSE 0 -79 176 0",
+                "stepStartedAt": "2026-07-17T02:14:23.848704+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:24.061400+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "cube_safe_pose",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 219,
+                "commandSent": "POSE 50 -182 150 0",
+                "stepStartedAt": "2026-07-17T02:14:24.870634+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03><0x1F>UU<0x02><0x07><0x01><0x01> <0x03>%UU<0x03><0x07><0x01>Y<0x02> <0x03>vDONE",
+                "responseReceivedAt": "2026-07-17T02:14:25.100094+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "cube_target_pick",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 735,
+                "commandSent": "POSE 50 -182 138 1",
+                "stepStartedAt": "2026-07-17T02:14:25.900975+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03><0x1F>UU<0x02><0x07><0x01><0x01> <0x03>0UU<0x03><0x07><0x01>m<0x02> <0x03>bDONE",
+                "responseReceivedAt": "2026-07-17T02:14:26.641346+00:00",
+                "postStepDelaySeconds": 1.2,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "lift_after_pick",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 2094,
+                "commandSent": "POSE 50 -182 188 1",
+                "stepStartedAt": "2026-07-17T02:14:27.841914+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03><0x1F>UU<0x02><0x07><0x01><0x01> <0x03><0x11>UU<0x03><0x07><0x01><0x19><0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:29.931526+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 18
+              },
+              {
+                "step": "reset_with_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 218,
+                "commandSent": "POSE 0 -79 176 1",
+                "stepStartedAt": "2026-07-17T02:14:30.733411+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:30.954575+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_safe_pose",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE -170 -111 150 1",
+                "stepStartedAt": "2026-07-17T02:14:31.755046+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x02> <0x03>UU<0x02><0x07><0x01><0x01> <0x03>>UU<0x03><0x07><0x01>Q<0x02> <0x03>~DONE",
+                "responseReceivedAt": "2026-07-17T02:14:31.994197+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_zone_with_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 422,
+                "commandSent": "POSE -170 -111 86 1",
+                "stepStartedAt": "2026-07-17T02:14:32.795285+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x02> <0x03>UU<0x02><0x07><0x01>Q<0x01> <0x03>UU<0x03><0x07><0x01><0x02> <0x03><0x1F>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:33.225075+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "drop_zone_release",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 235,
+                "commandSent": "POSE -170 -111 86 0",
+                "stepStartedAt": "2026-07-17T02:14:34.025966+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x02> <0x03>UU<0x02><0x07><0x01>Q<0x01> <0x03>UU<0x03><0x07><0x01><0x02> <0x03><0x1F>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:34.264443+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "retract_after_release",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE -170 -111 150 0",
+                "stepStartedAt": "2026-07-17T02:14:35.067366+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x02> <0x03>UU<0x02><0x07><0x01><0x01> <0x03>>UU<0x03><0x07><0x01>Q<0x02> <0x03>~DONE",
+                "responseReceivedAt": "2026-07-17T02:14:35.313268+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "reset_without_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 234,
+                "commandSent": "POSE 0 -79 176 0",
+                "stepStartedAt": "2026-07-17T02:14:36.118578+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:36.349019+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "ready_to_take_end",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 469,
+                "commandSent": "POSE 124 -83 212 0",
+                "stepStartedAt": "2026-07-17T02:14:37.150015+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01>\t<0x01> <0x03>UU<0x02><0x07><0x01>\r<0x02> <0x03>UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:37.629884+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              }
+            ],
+            "metadataSanitized": true,
+            "occupiedPersisted": true,
+            "pickupHoldSeconds": 1.2,
+            "selectedCubeColor": "red",
+            "snapshotSignature": "e406bde6378e4fe22914dc29",
+            "totalPlannedCubes": 4,
+            "releaseHoldSeconds": 0.8,
+            "selectedCubeCenter": {
+              "x": 141,
+              "y": 190
+            },
+            "movementDelaySeconds": 0.8,
+            "physicalConfirmation": {
+              "method": "post_drop_vision_count_delta",
+              "reason": "Total and color counts decreased by 1",
+              "status": "CONFIRMED",
+              "enabled": true,
+              "attempts": [
+                {
+                  "pickZ": 138,
+                  "method": "post_drop_vision_count_delta",
+                  "reason": "Total and color counts decreased by 1",
+                  "status": "CONFIRMED",
+                  "attempt": 1,
+                  "enabled": true,
+                  "colorAfter": 0,
+                  "totalAfter": 3,
+                  "colorBefore": 1,
+                  "totalBefore": 4,
+                  "selectedCubeColor": "red",
+                  "expectedColorAfter": 0,
+                  "expectedTotalAfter": 3,
+                  "firmwareResponseCount": 12,
+                  "snapshotAfterSignature": "2e811ff9c04ba52121a0896c",
+                  "snapshotBeforeSignature": "e406bde6378e4fe22914dc29"
+                }
+              ],
+              "colorAfter": 0,
+              "totalAfter": 3,
+              "colorBefore": 1,
+              "totalBefore": 4,
+              "selectedCubeColor": "red",
+              "expectedColorAfter": 0,
+              "expectedTotalAfter": 3,
+              "snapshotAfterSignature": "2e811ff9c04ba52121a0896c",
+              "snapshotBeforeSignature": "e406bde6378e4fe22914dc29"
+            },
+            "firmwareResponseCount": 12,
+            "visualCalibrationUsed": true,
+            "commandExecutionStatus": "SUCCESS",
+            "selectedCubeBoundingBox": {
+              "h": 74,
+              "w": 90,
+              "x": 96,
+              "y": 153
+            },
+            "firmwareResponsesTruncated": false
+          },
+          "createdAt": "2026-07-17T02:14:39.627Z",
+          "updatedAt": "2026-07-17T02:14:39.627Z"
+        }
+      },
+      "backendActionId": "e9a71ed8-b7a5-4706-aef7-30d445578718",
+      "backendActionCode": "ACTION-001"
+    },
+    {
+      "sequenceNumber": 2,
+      "selectedCube": {
+        "color": "blue",
+        "x": 174,
+        "y": 242,
+        "w": 87,
+        "h": 75,
+        "center": {
+          "x": 217.5,
+          "y": 279.5
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 5534.5,
+          "fillRatio": 0.8482,
+          "aspectRatio": 1.16,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      "selectedCubeColor": "blue",
+      "selectedCubeCenter": {
+        "x": 217.5,
+        "y": 279.5
+      },
+      "selectedCubeBoundingBox": {
+        "x": 174,
+        "y": 242,
+        "w": 87,
+        "h": 75
+      },
+      "pickupPositionCm": {
+        "x": 7.227,
+        "y": 4.678
+      },
+      "pickupOffset": {
+        "x": 0.0,
+        "y": -5.0,
+        "z": 0.0
+      },
+      "pickupTargetBase": {
+        "x": 24.244,
+        "y": -212.067,
+        "z": 138.0
+      },
+      "pickupTarget": {
+        "x": 24.244,
+        "y": -217.067,
+        "z": 138.0
+      },
+      "pickupSafe": {
+        "x": 24.244,
+        "y": -217.067,
+        "z": 150.0
+      },
+      "dropZoneCode": "DROP_BLUE_01",
+      "dropZonePose": {
+        "x": -68.0,
+        "y": -93.0,
+        "z": 86.0
+      },
+      "positionOrder": 1,
+      "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+      "visualCalibrationUsed": true,
+      "homographyUsed": true,
+      "status": "SUCCESS",
+      "firmwareResponses": [
+        {
+          "attempt": 1,
+          "step": "ready_to_take",
+          "commandSent": "POSE 124 -83 212 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\t\u0001 \u0003UU\u0002\u0007\u0001\r\u0002 \u0003UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:39.646602+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:39.881155+00:00",
+          "elapsedMs": 234.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset",
+          "commandSent": "POSE 0 -79 176 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:40.682405+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:40.930281+00:00",
+          "elapsedMs": 234.0
+        },
+        {
+          "attempt": 1,
+          "step": "cube_safe_pose",
+          "commandSent": "POSE 24 -217 150 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001x\u0001 \u0003YUU\u0003\u0007\u0001E\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:41.732846+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:41.982730+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "cube_target_pick",
+          "commandSent": "POSE 24 -217 138 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001p\u0001 \u0003aUU\u0003\u0007\u0001W\u0002 \u0003xDONE",
+          "success": true,
+          "postStepDelaySeconds": 1.2,
+          "stepStartedAt": "2026-07-17T02:14:42.783736+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:43.314164+00:00",
+          "elapsedMs": 532.0
+        },
+        {
+          "attempt": 1,
+          "step": "lift_after_pick",
+          "commandSent": "POSE 24 -217 188 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0001 \u0003IUU\u0003\u0007\u0001\b\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:44.515456+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:44.765072+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset_with_cube",
+          "commandSent": "POSE 0 -79 176 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:45.565936+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:45.826069+00:00",
+          "elapsedMs": 265.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_safe_pose",
+          "commandSent": "POSE -68 -93 150 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0002 \u0003GUU\u0002\u0007\u00015\u0002 \u0003UU\u0003\u0007\u0001[\u0002 \u0003tDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:46.626991+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:46.878042+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_zone_with_cube",
+          "commandSent": "POSE -68 -93 86 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0002 \u0003GUU\u0002\u0007\u0001\u0001 \u0003\u0013UU\u0003\u0007\u0001\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:47.689268+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:48.277575+00:00",
+          "elapsedMs": 593.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_zone_release",
+          "commandSent": "POSE -68 -93 86 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0002 \u0003GUU\u0002\u0007\u0001\u0001 \u0003\u0013UU\u0003\u0007\u0001\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:49.079871+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:49.329158+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "retract_after_release",
+          "commandSent": "POSE -68 -93 150 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0002 \u0003GUU\u0002\u0007\u00015\u0002 \u0003UU\u0003\u0007\u0001[\u0002 \u0003tDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:50.140608+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:50.391185+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset_without_cube",
+          "commandSent": "POSE 0 -79 176 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:51.192378+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:51.461336+00:00",
+          "elapsedMs": 265.0
+        },
+        {
+          "attempt": 1,
+          "step": "ready_to_take_end",
+          "commandSent": "POSE 124 -83 212 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\t\u0001 \u0003UU\u0002\u0007\u0001\r\u0002 \u0003UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:52.262714+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:52.903905+00:00",
+          "elapsedMs": 640.0
+        }
+      ],
+      "commandExecutionStatus": "SUCCESS",
+      "backendSyncStatus": "SUCCESS",
+      "serialOpened": true,
+      "hardwareMovement": true,
+      "suctionActivated": true,
+      "pickupExecuted": true,
+      "dropExecuted": true,
+      "releaseConfirmed": true,
+      "occupiedPersisted": true,
+      "movementDelaySeconds": 0.8,
+      "pickupHoldSeconds": 1.2,
+      "releaseHoldSeconds": 0.8,
+      "successMeaning": "physical_confirmed",
+      "physicalConfirmation": {
+        "enabled": true,
+        "status": "CONFIRMED",
+        "method": "post_drop_vision_count_delta",
+        "attempts": [
+          {
+            "enabled": true,
+            "method": "post_drop_vision_count_delta",
+            "attempt": 1,
+            "pickZ": 138.0,
+            "selectedCubeColor": "blue",
+            "totalBefore": 3,
+            "colorBefore": 1,
+            "expectedTotalAfter": 2,
+            "expectedColorAfter": 0,
+            "snapshotBeforeSignature": "2e811ff9c04ba52121a0896c",
+            "snapshotAfterSignature": "7339f04aa229ce7de63a0159",
+            "totalAfter": 2,
+            "colorAfter": 0,
+            "status": "CONFIRMED",
+            "reason": "Total and color counts decreased by 1",
+            "firmwareResponseCount": 12
+          }
+        ],
+        "selectedCubeColor": "blue",
+        "totalBefore": 3,
+        "totalAfter": 2,
+        "colorBefore": 1,
+        "colorAfter": 0,
+        "expectedTotalAfter": 2,
+        "expectedColorAfter": 0,
+        "snapshotBeforeSignature": "2e811ff9c04ba52121a0896c",
+        "snapshotAfterSignature": "7339f04aa229ce7de63a0159",
+        "reason": "Total and color counts decreased by 1"
+      },
+      "retryEnabled": true,
+      "maxAttempts": 3,
+      "zStep": -2.0,
+      "minPickZ": 132.0,
+      "finalPickZUsed": 138.0,
+      "backend": {
+        "action": {
+          "id": "b9350ae6-cbc3-44e4-83e7-e24c5a558cb5",
+          "code": "ACTION-002",
+          "sessionId": "645bd3b5-f82f-4a4b-9fb2-23b436b12e50",
+          "actionType": "PICK_AND_DROP",
+          "status": "SUCCESS",
+          "mode": "hardware",
+          "color": "blue",
+          "metadata": {
+            "zStep": -2,
+            "dryRun": false,
+            "profile": "hardware",
+            "minPickZ": 132,
+            "truckCode": "TRUCK-003",
+            "pickupSafe": {
+              "x": 24.244,
+              "y": -217.067,
+              "z": 150
+            },
+            "maxAttempts": 3,
+            "dropZoneCode": "DROP_BLUE_01",
+            "dropZonePose": {
+              "x": -68,
+              "y": -93,
+              "z": 86
+            },
+            "pickupOffset": {
+              "x": 0,
+              "y": -5,
+              "z": 0
+            },
+            "pickupTarget": {
+              "x": 24.244,
+              "y": -217.067,
+              "z": 138
+            },
+            "retryEnabled": true,
+            "selectedCube": {
+              "h": 75,
+              "w": 87,
+              "x": 174,
+              "y": 242,
+              "color": "blue"
+            },
+            "positionOrder": 1,
+            "finalPickZUsed": 138,
+            "homographyUsed": true,
+            "multiCubeRunId": "multi-f8fbe361-563d-4616-9317-479b76f1032f",
+            "sequenceNumber": 2,
+            "successMeaning": "physical_confirmed",
+            "sanitizedFields": [
+              "metadata.firmwareResponses[0].firmwareResponse",
+              "metadata.firmwareResponses[1].firmwareResponse",
+              "metadata.firmwareResponses[2].firmwareResponse",
+              "metadata.firmwareResponses[3].firmwareResponse",
+              "metadata.firmwareResponses[4].firmwareResponse",
+              "metadata.firmwareResponses[5].firmwareResponse",
+              "metadata.firmwareResponses[6].firmwareResponse",
+              "metadata.firmwareResponses[7].firmwareResponse",
+              "metadata.firmwareResponses[8].firmwareResponse",
+              "metadata.firmwareResponses[9].firmwareResponse",
+              "metadata.firmwareResponses[10].firmwareResponse",
+              "metadata.firmwareResponses[11].firmwareResponse"
+            ],
+            "pickupPositionCm": {
+              "x": 7.227,
+              "y": 4.678
+            },
+            "pickupTargetBase": {
+              "x": 24.244,
+              "y": -212.067,
+              "z": 138
+            },
+            "backendSyncStatus": "SKIPPED",
+            "firmwareResponses": [
+              {
+                "step": "ready_to_take",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 234,
+                "commandSent": "POSE 124 -83 212 0",
+                "stepStartedAt": "2026-07-17T02:14:39.646602+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01>\t<0x01> <0x03>UU<0x02><0x07><0x01>\r<0x02> <0x03>UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:39.881155+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "reset",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 234,
+                "commandSent": "POSE 0 -79 176 0",
+                "stepStartedAt": "2026-07-17T02:14:40.682405+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:40.930281+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "cube_safe_pose",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE 24 -217 150 0",
+                "stepStartedAt": "2026-07-17T02:14:41.732846+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01>x<0x01> <0x03>YUU<0x03><0x07><0x01>E<0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:41.982730+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "cube_target_pick",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 532,
+                "commandSent": "POSE 24 -217 138 1",
+                "stepStartedAt": "2026-07-17T02:14:42.783736+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01>p<0x01> <0x03>aUU<0x03><0x07><0x01>W<0x02> <0x03>xDONE",
+                "responseReceivedAt": "2026-07-17T02:14:43.314164+00:00",
+                "postStepDelaySeconds": 1.2,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "lift_after_pick",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE 24 -217 188 1",
+                "stepStartedAt": "2026-07-17T02:14:44.515456+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x01> <0x03>IUU<0x03><0x07><0x01><0x08><0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:44.765072+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "reset_with_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 265,
+                "commandSent": "POSE 0 -79 176 1",
+                "stepStartedAt": "2026-07-17T02:14:45.565936+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:45.826069+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_safe_pose",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE -68 -93 150 1",
+                "stepStartedAt": "2026-07-17T02:14:46.626991+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x02> <0x03>GUU<0x02><0x07><0x01>5<0x02> <0x03>UU<0x03><0x07><0x01>[<0x02> <0x03>tDONE",
+                "responseReceivedAt": "2026-07-17T02:14:46.878042+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_zone_with_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 593,
+                "commandSent": "POSE -68 -93 86 1",
+                "stepStartedAt": "2026-07-17T02:14:47.689268+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x02> <0x03>GUU<0x02><0x07><0x01><0x01> <0x03><0x13>UU<0x03><0x07><0x01><0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:48.277575+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "drop_zone_release",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE -68 -93 86 0",
+                "stepStartedAt": "2026-07-17T02:14:49.079871+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x02> <0x03>GUU<0x02><0x07><0x01><0x01> <0x03><0x13>UU<0x03><0x07><0x01><0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:49.329158+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "retract_after_release",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE -68 -93 150 0",
+                "stepStartedAt": "2026-07-17T02:14:50.140608+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x02> <0x03>GUU<0x02><0x07><0x01>5<0x02> <0x03>UU<0x03><0x07><0x01>[<0x02> <0x03>tDONE",
+                "responseReceivedAt": "2026-07-17T02:14:50.391185+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "reset_without_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 265,
+                "commandSent": "POSE 0 -79 176 0",
+                "stepStartedAt": "2026-07-17T02:14:51.192378+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:51.461336+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "ready_to_take_end",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 640,
+                "commandSent": "POSE 124 -83 212 0",
+                "stepStartedAt": "2026-07-17T02:14:52.262714+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01>\t<0x01> <0x03>UU<0x02><0x07><0x01>\r<0x02> <0x03>UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:52.903905+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              }
+            ],
+            "metadataSanitized": true,
+            "occupiedPersisted": true,
+            "pickupHoldSeconds": 1.2,
+            "selectedCubeColor": "blue",
+            "snapshotSignature": "2e811ff9c04ba52121a0896c",
+            "totalPlannedCubes": 4,
+            "releaseHoldSeconds": 0.8,
+            "selectedCubeCenter": {
+              "x": 217.5,
+              "y": 279.5
+            },
+            "movementDelaySeconds": 0.8,
+            "physicalConfirmation": {
+              "method": "post_drop_vision_count_delta",
+              "reason": "Total and color counts decreased by 1",
+              "status": "CONFIRMED",
+              "enabled": true,
+              "attempts": [
+                {
+                  "pickZ": 138,
+                  "method": "post_drop_vision_count_delta",
+                  "reason": "Total and color counts decreased by 1",
+                  "status": "CONFIRMED",
+                  "attempt": 1,
+                  "enabled": true,
+                  "colorAfter": 0,
+                  "totalAfter": 2,
+                  "colorBefore": 1,
+                  "totalBefore": 3,
+                  "selectedCubeColor": "blue",
+                  "expectedColorAfter": 0,
+                  "expectedTotalAfter": 2,
+                  "firmwareResponseCount": 12,
+                  "snapshotAfterSignature": "7339f04aa229ce7de63a0159",
+                  "snapshotBeforeSignature": "2e811ff9c04ba52121a0896c"
+                }
+              ],
+              "colorAfter": 0,
+              "totalAfter": 2,
+              "colorBefore": 1,
+              "totalBefore": 3,
+              "selectedCubeColor": "blue",
+              "expectedColorAfter": 0,
+              "expectedTotalAfter": 2,
+              "snapshotAfterSignature": "7339f04aa229ce7de63a0159",
+              "snapshotBeforeSignature": "2e811ff9c04ba52121a0896c"
+            },
+            "firmwareResponseCount": 12,
+            "visualCalibrationUsed": true,
+            "commandExecutionStatus": "SUCCESS",
+            "selectedCubeBoundingBox": {
+              "h": 75,
+              "w": 87,
+              "x": 174,
+              "y": 242
+            },
+            "firmwareResponsesTruncated": false
+          },
+          "createdAt": "2026-07-17T02:14:54.785Z",
+          "updatedAt": "2026-07-17T02:14:54.785Z"
+        }
+      },
+      "backendActionId": "b9350ae6-cbc3-44e4-83e7-e24c5a558cb5",
+      "backendActionCode": "ACTION-002"
+    },
+    {
+      "sequenceNumber": 3,
+      "selectedCube": {
+        "color": "yellow",
+        "x": 260,
+        "y": 167,
+        "w": 69,
+        "h": 69,
+        "center": {
+          "x": 294.5,
+          "y": 201.5
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 4401.0,
+          "fillRatio": 0.9244,
+          "aspectRatio": 1.0,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      "selectedCubeColor": "yellow",
+      "selectedCubeCenter": {
+        "x": 294.5,
+        "y": 201.5
+      },
+      "selectedCubeBoundingBox": {
+        "x": 260,
+        "y": 167,
+        "w": 69,
+        "h": 69
+      },
+      "pickupPositionCm": {
+        "x": 10.298,
+        "y": 1.963
+      },
+      "pickupOffset": {
+        "x": 0.0,
+        "y": -5.0,
+        "z": 0.0
+      },
+      "pickupTargetBase": {
+        "x": -5.006,
+        "y": -186.183,
+        "z": 138.0
+      },
+      "pickupTarget": {
+        "x": -5.006,
+        "y": -191.183,
+        "z": 138.0
+      },
+      "pickupSafe": {
+        "x": -5.006,
+        "y": -191.183,
+        "z": 150.0
+      },
+      "dropZoneCode": "DROP_YELLOW_01",
+      "dropZonePose": {
+        "x": 34.0,
+        "y": -91.0,
+        "z": 86.0
+      },
+      "positionOrder": 1,
+      "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+      "visualCalibrationUsed": true,
+      "homographyUsed": true,
+      "status": "SUCCESS",
+      "firmwareResponses": [
+        {
+          "attempt": 1,
+          "step": "ready_to_take",
+          "commandSent": "POSE 124 -83 212 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\t\u0001 \u0003UU\u0002\u0007\u0001\r\u0002 \u0003UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:54.794960+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:55.064089+00:00",
+          "elapsedMs": 266.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset",
+          "commandSent": "POSE 0 -79 176 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:55.864354+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:56.125388+00:00",
+          "elapsedMs": 265.0
+        },
+        {
+          "attempt": 1,
+          "step": "cube_safe_pose",
+          "commandSent": "POSE -5 -191 150 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0001 \u0003)UU\u0003\u0007\u0001X\u0002 \u0003wDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:56.925764+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:57.128012+00:00",
+          "elapsedMs": 203.0
+        },
+        {
+          "attempt": 1,
+          "step": "cube_target_pick",
+          "commandSent": "POSE -5 -191 138 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0001 \u00033UU\u0003\u0007\u0001l\u0002 \u0003cDONE",
+          "success": true,
+          "postStepDelaySeconds": 1.2,
+          "stepStartedAt": "2026-07-17T02:14:57.928676+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:58.128068+00:00",
+          "elapsedMs": 203.0
+        },
+        {
+          "attempt": 1,
+          "step": "lift_after_pick",
+          "commandSent": "POSE -5 -191 188 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0001 \u0003\u0015UU\u0003\u0007\u0001\u0018\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:14:59.329399+00:00",
+          "responseReceivedAt": "2026-07-17T02:14:59.960281+00:00",
+          "elapsedMs": 625.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset_with_cube",
+          "commandSent": "POSE 0 -79 176 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:00.760660+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:00.970548+00:00",
+          "elapsedMs": 203.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_safe_pose",
+          "commandSent": "POSE 34 -91 150 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u00034UU\u0002\u0007\u0001`\u0002 \u0003pUU\u0003\u0007\u0001K\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:01.772064+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:02.432698+00:00",
+          "elapsedMs": 672.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_zone_with_cube",
+          "commandSent": "POSE 34 -91 86 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u00034UU\u0002\u0007\u0001\u0001 \u0003UU\u0003\u0007\u0001\u0006\u0003 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:03.233547+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:03.455565+00:00",
+          "elapsedMs": 218.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_zone_release",
+          "commandSent": "POSE 34 -91 86 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u00034UU\u0002\u0007\u0001\u0001 \u0003UU\u0003\u0007\u0001\u0006\u0003 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:04.256262+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:04.944387+00:00",
+          "elapsedMs": 688.0
+        },
+        {
+          "attempt": 1,
+          "step": "retract_after_release",
+          "commandSent": "POSE 34 -91 150 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u00034UU\u0002\u0007\u0001`\u0002 \u0003pUU\u0003\u0007\u0001K\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:05.745785+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:05.966080+00:00",
+          "elapsedMs": 219.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset_without_cube",
+          "commandSent": "POSE 0 -79 176 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:06.766677+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:07.463210+00:00",
+          "elapsedMs": 703.0
+        },
+        {
+          "attempt": 1,
+          "step": "ready_to_take_end",
+          "commandSent": "POSE 124 -83 212 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\t\u0001 \u0003UU\u0002\u0007\u0001\r\u0002 \u0003UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:08.267711+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:08.480800+00:00",
+          "elapsedMs": 219.0
+        }
+      ],
+      "commandExecutionStatus": "SUCCESS",
+      "backendSyncStatus": "SUCCESS",
+      "serialOpened": true,
+      "hardwareMovement": true,
+      "suctionActivated": true,
+      "pickupExecuted": true,
+      "dropExecuted": true,
+      "releaseConfirmed": true,
+      "occupiedPersisted": true,
+      "movementDelaySeconds": 0.8,
+      "pickupHoldSeconds": 1.2,
+      "releaseHoldSeconds": 0.8,
+      "successMeaning": "physical_confirmed",
+      "physicalConfirmation": {
+        "enabled": true,
+        "status": "CONFIRMED",
+        "method": "post_drop_vision_count_delta",
+        "attempts": [
+          {
+            "enabled": true,
+            "method": "post_drop_vision_count_delta",
+            "attempt": 1,
+            "pickZ": 138.0,
+            "selectedCubeColor": "yellow",
+            "totalBefore": 2,
+            "colorBefore": 1,
+            "expectedTotalAfter": 1,
+            "expectedColorAfter": 0,
+            "snapshotBeforeSignature": "7339f04aa229ce7de63a0159",
+            "snapshotAfterSignature": "0abaeb4d86fed127325e210f",
+            "totalAfter": 1,
+            "colorAfter": 0,
+            "status": "CONFIRMED",
+            "reason": "Total and color counts decreased by 1",
+            "firmwareResponseCount": 12
+          }
+        ],
+        "selectedCubeColor": "yellow",
+        "totalBefore": 2,
+        "totalAfter": 1,
+        "colorBefore": 1,
+        "colorAfter": 0,
+        "expectedTotalAfter": 1,
+        "expectedColorAfter": 0,
+        "snapshotBeforeSignature": "7339f04aa229ce7de63a0159",
+        "snapshotAfterSignature": "0abaeb4d86fed127325e210f",
+        "reason": "Total and color counts decreased by 1"
+      },
+      "retryEnabled": true,
+      "maxAttempts": 3,
+      "zStep": -2.0,
+      "minPickZ": 132.0,
+      "finalPickZUsed": 138.0,
+      "backend": {
+        "action": {
+          "id": "6e72594a-8e89-45ed-a76e-d2faee24fdcb",
+          "code": "ACTION-003",
+          "sessionId": "645bd3b5-f82f-4a4b-9fb2-23b436b12e50",
+          "actionType": "PICK_AND_DROP",
+          "status": "SUCCESS",
+          "mode": "hardware",
+          "color": "yellow",
+          "metadata": {
+            "zStep": -2,
+            "dryRun": false,
+            "profile": "hardware",
+            "minPickZ": 132,
+            "truckCode": "TRUCK-003",
+            "pickupSafe": {
+              "x": -5.006,
+              "y": -191.183,
+              "z": 150
+            },
+            "maxAttempts": 3,
+            "dropZoneCode": "DROP_YELLOW_01",
+            "dropZonePose": {
+              "x": 34,
+              "y": -91,
+              "z": 86
+            },
+            "pickupOffset": {
+              "x": 0,
+              "y": -5,
+              "z": 0
+            },
+            "pickupTarget": {
+              "x": -5.006,
+              "y": -191.183,
+              "z": 138
+            },
+            "retryEnabled": true,
+            "selectedCube": {
+              "h": 69,
+              "w": 69,
+              "x": 260,
+              "y": 167,
+              "color": "yellow"
+            },
+            "positionOrder": 1,
+            "finalPickZUsed": 138,
+            "homographyUsed": true,
+            "multiCubeRunId": "multi-f8fbe361-563d-4616-9317-479b76f1032f",
+            "sequenceNumber": 3,
+            "successMeaning": "physical_confirmed",
+            "sanitizedFields": [
+              "metadata.firmwareResponses[0].firmwareResponse",
+              "metadata.firmwareResponses[1].firmwareResponse",
+              "metadata.firmwareResponses[2].firmwareResponse",
+              "metadata.firmwareResponses[3].firmwareResponse",
+              "metadata.firmwareResponses[4].firmwareResponse",
+              "metadata.firmwareResponses[5].firmwareResponse",
+              "metadata.firmwareResponses[6].firmwareResponse",
+              "metadata.firmwareResponses[7].firmwareResponse",
+              "metadata.firmwareResponses[8].firmwareResponse",
+              "metadata.firmwareResponses[9].firmwareResponse",
+              "metadata.firmwareResponses[10].firmwareResponse",
+              "metadata.firmwareResponses[11].firmwareResponse"
+            ],
+            "pickupPositionCm": {
+              "x": 10.298,
+              "y": 1.963
+            },
+            "pickupTargetBase": {
+              "x": -5.006,
+              "y": -186.183,
+              "z": 138
+            },
+            "backendSyncStatus": "SKIPPED",
+            "firmwareResponses": [
+              {
+                "step": "ready_to_take",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 266,
+                "commandSent": "POSE 124 -83 212 0",
+                "stepStartedAt": "2026-07-17T02:14:54.794960+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01>\t<0x01> <0x03>UU<0x02><0x07><0x01>\r<0x02> <0x03>UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:55.064089+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "reset",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 265,
+                "commandSent": "POSE 0 -79 176 0",
+                "stepStartedAt": "2026-07-17T02:14:55.864354+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:56.125388+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "cube_safe_pose",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 203,
+                "commandSent": "POSE -5 -191 150 0",
+                "stepStartedAt": "2026-07-17T02:14:56.925764+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x01> <0x03>)UU<0x03><0x07><0x01>X<0x02> <0x03>wDONE",
+                "responseReceivedAt": "2026-07-17T02:14:57.128012+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "cube_target_pick",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 203,
+                "commandSent": "POSE -5 -191 138 1",
+                "stepStartedAt": "2026-07-17T02:14:57.928676+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x01> <0x03>3UU<0x03><0x07><0x01>l<0x02> <0x03>cDONE",
+                "responseReceivedAt": "2026-07-17T02:14:58.128068+00:00",
+                "postStepDelaySeconds": 1.2,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "lift_after_pick",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 625,
+                "commandSent": "POSE -5 -191 188 1",
+                "stepStartedAt": "2026-07-17T02:14:59.329399+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x01> <0x03><0x15>UU<0x03><0x07><0x01><0x18><0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:14:59.960281+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 17
+              },
+              {
+                "step": "reset_with_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 203,
+                "commandSent": "POSE 0 -79 176 1",
+                "stepStartedAt": "2026-07-17T02:15:00.760660+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:00.970548+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_safe_pose",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 672,
+                "commandSent": "POSE 34 -91 150 1",
+                "stepStartedAt": "2026-07-17T02:15:01.772064+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>4UU<0x02><0x07><0x01>`<0x02> <0x03>pUU<0x03><0x07><0x01>K<0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:02.432698+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_zone_with_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 218,
+                "commandSent": "POSE 34 -91 86 1",
+                "stepStartedAt": "2026-07-17T02:15:03.233547+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>4UU<0x02><0x07><0x01><0x01> <0x03>UU<0x03><0x07><0x01><0x06><0x03> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:03.455565+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "drop_zone_release",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 688,
+                "commandSent": "POSE 34 -91 86 0",
+                "stepStartedAt": "2026-07-17T02:15:04.256262+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>4UU<0x02><0x07><0x01><0x01> <0x03>UU<0x03><0x07><0x01><0x06><0x03> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:04.944387+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "retract_after_release",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 219,
+                "commandSent": "POSE 34 -91 150 0",
+                "stepStartedAt": "2026-07-17T02:15:05.745785+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>4UU<0x02><0x07><0x01>`<0x02> <0x03>pUU<0x03><0x07><0x01>K<0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:05.966080+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "reset_without_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 703,
+                "commandSent": "POSE 0 -79 176 0",
+                "stepStartedAt": "2026-07-17T02:15:06.766677+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:07.463210+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "ready_to_take_end",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 219,
+                "commandSent": "POSE 124 -83 212 0",
+                "stepStartedAt": "2026-07-17T02:15:08.267711+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01>\t<0x01> <0x03>UU<0x02><0x07><0x01>\r<0x02> <0x03>UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:08.480800+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              }
+            ],
+            "metadataSanitized": true,
+            "occupiedPersisted": true,
+            "pickupHoldSeconds": 1.2,
+            "selectedCubeColor": "yellow",
+            "snapshotSignature": "7339f04aa229ce7de63a0159",
+            "totalPlannedCubes": 4,
+            "releaseHoldSeconds": 0.8,
+            "selectedCubeCenter": {
+              "x": 294.5,
+              "y": 201.5
+            },
+            "movementDelaySeconds": 0.8,
+            "physicalConfirmation": {
+              "method": "post_drop_vision_count_delta",
+              "reason": "Total and color counts decreased by 1",
+              "status": "CONFIRMED",
+              "enabled": true,
+              "attempts": [
+                {
+                  "pickZ": 138,
+                  "method": "post_drop_vision_count_delta",
+                  "reason": "Total and color counts decreased by 1",
+                  "status": "CONFIRMED",
+                  "attempt": 1,
+                  "enabled": true,
+                  "colorAfter": 0,
+                  "totalAfter": 1,
+                  "colorBefore": 1,
+                  "totalBefore": 2,
+                  "selectedCubeColor": "yellow",
+                  "expectedColorAfter": 0,
+                  "expectedTotalAfter": 1,
+                  "firmwareResponseCount": 12,
+                  "snapshotAfterSignature": "0abaeb4d86fed127325e210f",
+                  "snapshotBeforeSignature": "7339f04aa229ce7de63a0159"
+                }
+              ],
+              "colorAfter": 0,
+              "totalAfter": 1,
+              "colorBefore": 1,
+              "totalBefore": 2,
+              "selectedCubeColor": "yellow",
+              "expectedColorAfter": 0,
+              "expectedTotalAfter": 1,
+              "snapshotAfterSignature": "0abaeb4d86fed127325e210f",
+              "snapshotBeforeSignature": "7339f04aa229ce7de63a0159"
+            },
+            "firmwareResponseCount": 12,
+            "visualCalibrationUsed": true,
+            "commandExecutionStatus": "SUCCESS",
+            "selectedCubeBoundingBox": {
+              "h": 69,
+              "w": 69,
+              "x": 260,
+              "y": 167
+            },
+            "firmwareResponsesTruncated": false
+          },
+          "createdAt": "2026-07-17T02:15:10.419Z",
+          "updatedAt": "2026-07-17T02:15:10.419Z"
+        }
+      },
+      "backendActionId": "6e72594a-8e89-45ed-a76e-d2faee24fdcb",
+      "backendActionCode": "ACTION-003"
+    },
+    {
+      "sequenceNumber": 4,
+      "selectedCube": {
+        "color": "green",
+        "x": 39,
+        "y": 246,
+        "w": 92,
+        "h": 68,
+        "center": {
+          "x": 85.0,
+          "y": 280.0
+        },
+        "confidence": null,
+        "metadata": {
+          "area": 5676.5,
+          "fillRatio": 0.9074,
+          "aspectRatio": 1.3529,
+          "sizeValid": true,
+          "coordinateSpace": "frame-pixels",
+          "roiLimited": true
+        }
+      },
+      "selectedCubeColor": "green",
+      "selectedCubeCenter": {
+        "x": 85.0,
+        "y": 280.0
+      },
+      "selectedCubeBoundingBox": {
+        "x": 39,
+        "y": 246,
+        "w": 92,
+        "h": 68
+      },
+      "pickupPositionCm": {
+        "x": 1.994,
+        "y": 4.664
+      },
+      "pickupOffset": {
+        "x": 0.0,
+        "y": -5.0,
+        "z": 0.0
+      },
+      "pickupTargetBase": {
+        "x": 72.819,
+        "y": -208.82,
+        "z": 138.0
+      },
+      "pickupTarget": {
+        "x": 72.819,
+        "y": -213.82,
+        "z": 138.0
+      },
+      "pickupSafe": {
+        "x": 72.819,
+        "y": -213.82,
+        "z": 150.0
+      },
+      "dropZoneCode": "DROP_GREEN_01",
+      "dropZonePose": {
+        "x": 172.0,
+        "y": -71.0,
+        "z": 86.0
+      },
+      "positionOrder": 1,
+      "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+      "visualCalibrationUsed": true,
+      "homographyUsed": true,
+      "status": "SUCCESS",
+      "firmwareResponses": [
+        {
+          "attempt": 1,
+          "step": "ready_to_take",
+          "commandSent": "POSE 124 -83 212 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\t\u0001 \u0003UU\u0002\u0007\u0001\r\u0002 \u0003UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:10.429207+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:10.662567+00:00",
+          "elapsedMs": 234.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset",
+          "commandSent": "POSE 0 -79 176 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:11.470826+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:11.709717+00:00",
+          "elapsedMs": 234.0
+        },
+        {
+          "attempt": 1,
+          "step": "cube_safe_pose",
+          "commandSent": "POSE 73 -214 150 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003-UU\u0002\u0007\u0001j\u0001 \u0003gUU\u0003\u0007\u0001>\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:12.510549+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:14.582200+00:00",
+          "elapsedMs": 2062.0
+        },
+        {
+          "attempt": 1,
+          "step": "cube_target_pick",
+          "commandSent": "POSE 73 -214 138 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003-UU\u0002\u0007\u0001c\u0001 \u0003nUU\u0003\u0007\u0001O\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 1.2,
+          "stepStartedAt": "2026-07-17T02:15:15.382777+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:15.791839+00:00",
+          "elapsedMs": 422.0
+        },
+        {
+          "attempt": 1,
+          "step": "lift_after_pick",
+          "commandSent": "POSE 73 -214 188 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003-UU\u0002\u0007\u0001x\u0001 \u0003YUU\u0003\u0007\u0001\u0001\u0002 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:16.992894+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:17.223328+00:00",
+          "elapsedMs": 219.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset_with_cube",
+          "commandSent": "POSE 0 -79 176 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:18.024344+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:18.446695+00:00",
+          "elapsedMs": 422.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_safe_pose",
+          "commandSent": "POSE 172 -71 150 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0000 \u0003UU\u0002\u0007\u0001\u0001 \u0003!UU\u0003\u0007\u0001[\u0002 \u0003tDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:19.254883+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:19.496664+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_zone_with_cube",
+          "commandSent": "POSE 172 -71 86 1",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0000 \u0003UU\u0002\u0007\u0001f\u0001 \u0003kUU\u0003\u0007\u0001\u0002 \u0003\rDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:20.306698+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:20.756328+00:00",
+          "elapsedMs": 437.0
+        },
+        {
+          "attempt": 1,
+          "step": "drop_zone_release",
+          "commandSent": "POSE 172 -71 86 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0000 \u0003UU\u0002\u0007\u0001f\u0001 \u0003kUU\u0003\u0007\u0001\u0002 \u0003\rDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:21.556866+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:21.779421+00:00",
+          "elapsedMs": 218.0
+        },
+        {
+          "attempt": 1,
+          "step": "retract_after_release",
+          "commandSent": "POSE 172 -71 150 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0000 \u0003UU\u0002\u0007\u0001\u0001 \u0003!UU\u0003\u0007\u0001[\u0002 \u0003tDONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:22.588350+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:23.078760+00:00",
+          "elapsedMs": 484.0
+        },
+        {
+          "attempt": 1,
+          "step": "reset_without_cube",
+          "commandSent": "POSE 0 -79 176 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\u0001 \u0003UU\u0002\u0007\u0001\u0002 \u00033UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:23.879591+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:24.129642+00:00",
+          "elapsedMs": 250.0
+        },
+        {
+          "attempt": 1,
+          "step": "ready_to_take_end",
+          "commandSent": "POSE 124 -83 212 0",
+          "firmwareResponse": "UU\u0001\u0007\u0001\t\u0001 \u0003UU\u0002\u0007\u0001\r\u0002 \u0003UU\u0003\u0007\u0001\u0001 \u0003DONE",
+          "success": true,
+          "postStepDelaySeconds": 0.8,
+          "stepStartedAt": "2026-07-17T02:15:24.931177+00:00",
+          "responseReceivedAt": "2026-07-17T02:15:25.162022+00:00",
+          "elapsedMs": 218.0
+        }
+      ],
+      "commandExecutionStatus": "SUCCESS",
+      "backendSyncStatus": "SUCCESS",
+      "serialOpened": true,
+      "hardwareMovement": true,
+      "suctionActivated": true,
+      "pickupExecuted": true,
+      "dropExecuted": true,
+      "releaseConfirmed": true,
+      "occupiedPersisted": true,
+      "movementDelaySeconds": 0.8,
+      "pickupHoldSeconds": 1.2,
+      "releaseHoldSeconds": 0.8,
+      "successMeaning": "physical_confirmed",
+      "physicalConfirmation": {
+        "enabled": true,
+        "status": "CONFIRMED",
+        "method": "post_drop_vision_count_delta",
+        "attempts": [
+          {
+            "enabled": true,
+            "method": "post_drop_vision_count_delta",
+            "attempt": 1,
+            "pickZ": 138.0,
+            "selectedCubeColor": "green",
+            "totalBefore": 1,
+            "colorBefore": 1,
+            "expectedTotalAfter": 0,
+            "expectedColorAfter": 0,
+            "snapshotBeforeSignature": "0abaeb4d86fed127325e210f",
+            "snapshotAfterSignature": "0f20a4402e5c33a0d2070233",
+            "totalAfter": 0,
+            "colorAfter": 0,
+            "status": "CONFIRMED",
+            "reason": "Total and color counts decreased by 1",
+            "firmwareResponseCount": 12
+          }
+        ],
+        "selectedCubeColor": "green",
+        "totalBefore": 1,
+        "totalAfter": 0,
+        "colorBefore": 1,
+        "colorAfter": 0,
+        "expectedTotalAfter": 0,
+        "expectedColorAfter": 0,
+        "snapshotBeforeSignature": "0abaeb4d86fed127325e210f",
+        "snapshotAfterSignature": "0f20a4402e5c33a0d2070233",
+        "reason": "Total and color counts decreased by 1"
+      },
+      "retryEnabled": true,
+      "maxAttempts": 3,
+      "zStep": -2.0,
+      "minPickZ": 132.0,
+      "finalPickZUsed": 138.0,
+      "backend": {
+        "action": {
+          "id": "0de888fe-2d86-4931-b6c5-5f659be5cec5",
+          "code": "ACTION-004",
+          "sessionId": "645bd3b5-f82f-4a4b-9fb2-23b436b12e50",
+          "actionType": "PICK_AND_DROP",
+          "status": "SUCCESS",
+          "mode": "hardware",
+          "color": "green",
+          "metadata": {
+            "zStep": -2,
+            "dryRun": false,
+            "profile": "hardware",
+            "minPickZ": 132,
+            "truckCode": "TRUCK-003",
+            "pickupSafe": {
+              "x": 72.819,
+              "y": -213.82,
+              "z": 150
+            },
+            "maxAttempts": 3,
+            "dropZoneCode": "DROP_GREEN_01",
+            "dropZonePose": {
+              "x": 172,
+              "y": -71,
+              "z": 86
+            },
+            "pickupOffset": {
+              "x": 0,
+              "y": -5,
+              "z": 0
+            },
+            "pickupTarget": {
+              "x": 72.819,
+              "y": -213.82,
+              "z": 138
+            },
+            "retryEnabled": true,
+            "selectedCube": {
+              "h": 68,
+              "w": 92,
+              "x": 39,
+              "y": 246,
+              "color": "green"
+            },
+            "positionOrder": 1,
+            "finalPickZUsed": 138,
+            "homographyUsed": true,
+            "multiCubeRunId": "multi-f8fbe361-563d-4616-9317-479b76f1032f",
+            "sequenceNumber": 4,
+            "successMeaning": "physical_confirmed",
+            "sanitizedFields": [
+              "metadata.firmwareResponses[0].firmwareResponse",
+              "metadata.firmwareResponses[1].firmwareResponse",
+              "metadata.firmwareResponses[2].firmwareResponse",
+              "metadata.firmwareResponses[3].firmwareResponse",
+              "metadata.firmwareResponses[4].firmwareResponse",
+              "metadata.firmwareResponses[5].firmwareResponse",
+              "metadata.firmwareResponses[6].firmwareResponse",
+              "metadata.firmwareResponses[7].firmwareResponse",
+              "metadata.firmwareResponses[8].firmwareResponse",
+              "metadata.firmwareResponses[9].firmwareResponse",
+              "metadata.firmwareResponses[10].firmwareResponse",
+              "metadata.firmwareResponses[11].firmwareResponse"
+            ],
+            "pickupPositionCm": {
+              "x": 1.994,
+              "y": 4.664
+            },
+            "pickupTargetBase": {
+              "x": 72.819,
+              "y": -208.82,
+              "z": 138
+            },
+            "backendSyncStatus": "SKIPPED",
+            "firmwareResponses": [
+              {
+                "step": "ready_to_take",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 234,
+                "commandSent": "POSE 124 -83 212 0",
+                "stepStartedAt": "2026-07-17T02:15:10.429207+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01>\t<0x01> <0x03>UU<0x02><0x07><0x01>\r<0x02> <0x03>UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:10.662567+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "reset",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 234,
+                "commandSent": "POSE 0 -79 176 0",
+                "stepStartedAt": "2026-07-17T02:15:11.470826+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:11.709717+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "cube_safe_pose",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 2062,
+                "commandSent": "POSE 73 -214 150 0",
+                "stepStartedAt": "2026-07-17T02:15:12.510549+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>-UU<0x02><0x07><0x01>j<0x01> <0x03>gUU<0x03><0x07><0x01>><0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:14.582200+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "cube_target_pick",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 422,
+                "commandSent": "POSE 73 -214 138 1",
+                "stepStartedAt": "2026-07-17T02:15:15.382777+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>-UU<0x02><0x07><0x01>c<0x01> <0x03>nUU<0x03><0x07><0x01>O<0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:15.791839+00:00",
+                "postStepDelaySeconds": 1.2,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "lift_after_pick",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 219,
+                "commandSent": "POSE 73 -214 188 1",
+                "stepStartedAt": "2026-07-17T02:15:16.992894+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>-UU<0x02><0x07><0x01>x<0x01> <0x03>YUU<0x03><0x07><0x01><0x01><0x02> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:17.223328+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 32,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 16
+              },
+              {
+                "step": "reset_with_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 422,
+                "commandSent": "POSE 0 -79 176 1",
+                "stepStartedAt": "2026-07-17T02:15:18.024344+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:18.446695+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_safe_pose",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE 172 -71 150 1",
+                "stepStartedAt": "2026-07-17T02:15:19.254883+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x00> <0x03>UU<0x02><0x07><0x01><0x01> <0x03>!UU<0x03><0x07><0x01>[<0x02> <0x03>tDONE",
+                "responseReceivedAt": "2026-07-17T02:15:19.496664+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_zone_with_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 437,
+                "commandSent": "POSE 172 -71 86 1",
+                "stepStartedAt": "2026-07-17T02:15:20.306698+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x00> <0x03>UU<0x02><0x07><0x01>f<0x01> <0x03>kUU<0x03><0x07><0x01><0x02> <0x03>\rDONE",
+                "responseReceivedAt": "2026-07-17T02:15:20.756328+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "drop_zone_release",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 218,
+                "commandSent": "POSE 172 -71 86 0",
+                "stepStartedAt": "2026-07-17T02:15:21.556866+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x00> <0x03>UU<0x02><0x07><0x01>f<0x01> <0x03>kUU<0x03><0x07><0x01><0x02> <0x03>\rDONE",
+                "responseReceivedAt": "2026-07-17T02:15:21.779421+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "retract_after_release",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 484,
+                "commandSent": "POSE 172 -71 150 0",
+                "stepStartedAt": "2026-07-17T02:15:22.588350+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x00> <0x03>UU<0x02><0x07><0x01><0x01> <0x03>!UU<0x03><0x07><0x01>[<0x02> <0x03>tDONE",
+                "responseReceivedAt": "2026-07-17T02:15:23.078760+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 31,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "reset_without_cube",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 250,
+                "commandSent": "POSE 0 -79 176 0",
+                "stepStartedAt": "2026-07-17T02:15:23.879591+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01><0x01> <0x03>UU<0x02><0x07><0x01><0x02> <0x03>3UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:24.129642+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 29,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              },
+              {
+                "step": "ready_to_take_end",
+                "attempt": 1,
+                "success": true,
+                "elapsedMs": 218,
+                "commandSent": "POSE 124 -83 212 0",
+                "stepStartedAt": "2026-07-17T02:15:24.931177+00:00",
+                "firmwareResponse": "UU<0x01><0x07><0x01>\t<0x01> <0x03>UU<0x02><0x07><0x01>\r<0x02> <0x03>UU<0x03><0x07><0x01><0x01> <0x03>DONE",
+                "responseReceivedAt": "2026-07-17T02:15:25.162022+00:00",
+                "postStepDelaySeconds": 0.8,
+                "firmwareResponseRawLength": 30,
+                "firmwareResponseSanitized": true,
+                "firmwareResponseHadControlChars": true,
+                "firmwareResponseControlCharCount": 15
+              }
+            ],
+            "metadataSanitized": true,
+            "occupiedPersisted": true,
+            "pickupHoldSeconds": 1.2,
+            "selectedCubeColor": "green",
+            "snapshotSignature": "0abaeb4d86fed127325e210f",
+            "totalPlannedCubes": 4,
+            "releaseHoldSeconds": 0.8,
+            "selectedCubeCenter": {
+              "x": 85,
+              "y": 280
+            },
+            "movementDelaySeconds": 0.8,
+            "physicalConfirmation": {
+              "method": "post_drop_vision_count_delta",
+              "reason": "Total and color counts decreased by 1",
+              "status": "CONFIRMED",
+              "enabled": true,
+              "attempts": [
+                {
+                  "pickZ": 138,
+                  "method": "post_drop_vision_count_delta",
+                  "reason": "Total and color counts decreased by 1",
+                  "status": "CONFIRMED",
+                  "attempt": 1,
+                  "enabled": true,
+                  "colorAfter": 0,
+                  "totalAfter": 0,
+                  "colorBefore": 1,
+                  "totalBefore": 1,
+                  "selectedCubeColor": "green",
+                  "expectedColorAfter": 0,
+                  "expectedTotalAfter": 0,
+                  "firmwareResponseCount": 12,
+                  "snapshotAfterSignature": "0f20a4402e5c33a0d2070233",
+                  "snapshotBeforeSignature": "0abaeb4d86fed127325e210f"
+                }
+              ],
+              "colorAfter": 0,
+              "totalAfter": 0,
+              "colorBefore": 1,
+              "totalBefore": 1,
+              "selectedCubeColor": "green",
+              "expectedColorAfter": 0,
+              "expectedTotalAfter": 0,
+              "snapshotAfterSignature": "0f20a4402e5c33a0d2070233",
+              "snapshotBeforeSignature": "0abaeb4d86fed127325e210f"
+            },
+            "firmwareResponseCount": 12,
+            "visualCalibrationUsed": true,
+            "commandExecutionStatus": "SUCCESS",
+            "selectedCubeBoundingBox": {
+              "h": 68,
+              "w": 92,
+              "x": 39,
+              "y": 246
+            },
+            "firmwareResponsesTruncated": false
+          },
+          "createdAt": "2026-07-17T02:15:27.069Z",
+          "updatedAt": "2026-07-17T02:15:27.069Z"
+        }
+      },
+      "backendActionId": "0de888fe-2d86-4931-b6c5-5f659be5cec5",
+      "backendActionCode": "ACTION-004"
+    }
+  ],
+  "skippedCubes": [],
+  "movementDelaySeconds": 0.8,
+  "pickupHoldSeconds": 1.2,
+  "releaseHoldSeconds": 0.8,
+  "successMeaning": "physical_confirmed",
+  "physicalConfirmation": {
+    "enabled": true,
+    "method": "post_drop_vision_count_delta",
+    "visionSettleSeconds": 1.0,
+    "expectedTotalDelta": -1,
+    "expectedColorDelta": -1
+  },
+  "pickupRetry": {
+    "enabled": true,
+    "maxAttempts": 3,
+    "zStep": -2.0,
+    "minPickZ": 132.0,
+    "plannedPickZValues": [
+      138.0,
+      136.0,
+      134.0
+    ]
+  },
+  "planFingerprint": {
+    "snapshotSignature": "e406bde6378e4fe22914dc29",
+    "truckCode": "TRUCK-003",
+    "maxCubes": 4,
+    "plannedActions": [
+      {
+        "sequenceNumber": 1,
+        "selectedCubeColor": "red",
+        "selectedCubeCenter": {
+          "x": 141.0,
+          "y": 190.0
+        },
+        "selectedCubeBoundingBox": {
+          "x": 96,
+          "y": 153,
+          "w": 90,
+          "h": 74
+        },
+        "pickupPositionCm": {
+          "x": 4.237,
+          "y": 1.515
+        },
+        "pickupOffset": {
+          "x": 0.0,
+          "y": -5.0,
+          "z": 0.0
+        },
+        "pickupTargetBase": {
+          "x": 49.526,
+          "y": -176.807,
+          "z": 138.0
+        },
+        "pickupTarget": {
+          "x": 49.526,
+          "y": -181.807,
+          "z": 138.0
+        },
+        "pickupSafe": {
+          "x": 49.526,
+          "y": -181.807,
+          "z": 150.0
+        },
+        "dropZoneCode": "DROP_RED_01",
+        "dropZonePose": {
+          "x": -170.0,
+          "y": -111.0,
+          "z": 86.0
+        },
+        "positionOrder": 1,
+        "commandsPreview": [
+          "POSE 124 -83 212 0",
+          "POSE 0 -79 176 0",
+          "POSE 50 -182 150 0",
+          "POSE 50 -182 138 1",
+          "POSE 50 -182 188 1",
+          "POSE 0 -79 176 1",
+          "POSE -170 -111 150 1",
+          "POSE -170 -111 86 1",
+          "POSE -170 -111 86 0",
+          "POSE -170 -111 150 0",
+          "POSE 0 -79 176 0",
+          "POSE 124 -83 212 0"
+        ],
+        "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+        "visualCalibrationUsed": true,
+        "homographyUsed": true
+      },
+      {
+        "sequenceNumber": 2,
+        "selectedCubeColor": "blue",
+        "selectedCubeCenter": {
+          "x": 217.5,
+          "y": 279.5
+        },
+        "selectedCubeBoundingBox": {
+          "x": 174,
+          "y": 242,
+          "w": 87,
+          "h": 75
+        },
+        "pickupPositionCm": {
+          "x": 7.227,
+          "y": 4.678
+        },
+        "pickupOffset": {
+          "x": 0.0,
+          "y": -5.0,
+          "z": 0.0
+        },
+        "pickupTargetBase": {
+          "x": 24.244,
+          "y": -212.067,
+          "z": 138.0
+        },
+        "pickupTarget": {
+          "x": 24.244,
+          "y": -217.067,
+          "z": 138.0
+        },
+        "pickupSafe": {
+          "x": 24.244,
+          "y": -217.067,
+          "z": 150.0
+        },
+        "dropZoneCode": "DROP_BLUE_01",
+        "dropZonePose": {
+          "x": -68.0,
+          "y": -93.0,
+          "z": 86.0
+        },
+        "positionOrder": 1,
+        "commandsPreview": [
+          "POSE 124 -83 212 0",
+          "POSE 0 -79 176 0",
+          "POSE 24 -217 150 0",
+          "POSE 24 -217 138 1",
+          "POSE 24 -217 188 1",
+          "POSE 0 -79 176 1",
+          "POSE -68 -93 150 1",
+          "POSE -68 -93 86 1",
+          "POSE -68 -93 86 0",
+          "POSE -68 -93 150 0",
+          "POSE 0 -79 176 0",
+          "POSE 124 -83 212 0"
+        ],
+        "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+        "visualCalibrationUsed": true,
+        "homographyUsed": true
+      },
+      {
+        "sequenceNumber": 3,
+        "selectedCubeColor": "yellow",
+        "selectedCubeCenter": {
+          "x": 294.5,
+          "y": 201.5
+        },
+        "selectedCubeBoundingBox": {
+          "x": 260,
+          "y": 166,
+          "w": 69,
+          "h": 71
+        },
+        "pickupPositionCm": {
+          "x": 10.298,
+          "y": 1.963
+        },
+        "pickupOffset": {
+          "x": 0.0,
+          "y": -5.0,
+          "z": 0.0
+        },
+        "pickupTargetBase": {
+          "x": -5.006,
+          "y": -186.183,
+          "z": 138.0
+        },
+        "pickupTarget": {
+          "x": -5.006,
+          "y": -191.183,
+          "z": 138.0
+        },
+        "pickupSafe": {
+          "x": -5.006,
+          "y": -191.183,
+          "z": 150.0
+        },
+        "dropZoneCode": "DROP_YELLOW_01",
+        "dropZonePose": {
+          "x": 34.0,
+          "y": -91.0,
+          "z": 86.0
+        },
+        "positionOrder": 1,
+        "commandsPreview": [
+          "POSE 124 -83 212 0",
+          "POSE 0 -79 176 0",
+          "POSE -5 -191 150 0",
+          "POSE -5 -191 138 1",
+          "POSE -5 -191 188 1",
+          "POSE 0 -79 176 1",
+          "POSE 34 -91 150 1",
+          "POSE 34 -91 86 1",
+          "POSE 34 -91 86 0",
+          "POSE 34 -91 150 0",
+          "POSE 0 -79 176 0",
+          "POSE 124 -83 212 0"
+        ],
+        "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+        "visualCalibrationUsed": true,
+        "homographyUsed": true
+      },
+      {
+        "sequenceNumber": 4,
+        "selectedCubeColor": "green",
+        "selectedCubeCenter": {
+          "x": 75.0,
+          "y": 281.0
+        },
+        "selectedCubeBoundingBox": {
+          "x": 39,
+          "y": 247,
+          "w": 72,
+          "h": 68
+        },
+        "pickupPositionCm": {
+          "x": 1.598,
+          "y": 4.697
+        },
+        "pickupOffset": {
+          "x": 0.0,
+          "y": -5.0,
+          "z": 0.0
+        },
+        "pickupTargetBase": {
+          "x": 76.528,
+          "y": -208.94,
+          "z": 138.0
+        },
+        "pickupTarget": {
+          "x": 76.528,
+          "y": -213.94,
+          "z": 138.0
+        },
+        "pickupSafe": {
+          "x": 76.528,
+          "y": -213.94,
+          "z": 150.0
+        },
+        "dropZoneCode": "DROP_GREEN_01",
+        "dropZonePose": {
+          "x": 172.0,
+          "y": -71.0,
+          "z": 86.0
+        },
+        "positionOrder": 1,
+        "commandsPreview": [
+          "POSE 124 -83 212 0",
+          "POSE 0 -79 176 0",
+          "POSE 77 -214 150 0",
+          "POSE 77 -214 138 1",
+          "POSE 77 -214 188 1",
+          "POSE 0 -79 176 1",
+          "POSE 172 -71 150 1",
+          "POSE 172 -71 86 1",
+          "POSE 172 -71 86 0",
+          "POSE 172 -71 150 0",
+          "POSE 0 -79 176 0",
+          "POSE 124 -83 212 0"
+        ],
+        "visualCalibrationVersion": "local-pickup-visual-and-robot-calibration-2026-07-06-base-plus-pickupOffset-x5-yminus5",
+        "visualCalibrationUsed": true,
+        "homographyUsed": true
+      }
+    ]
+  },
+  "serialOpened": true,
+  "hardwareMovement": true,
+  "safetyWarnings": [],
+  "limitations": [
+    "For real demos, use Edge Vision recapture between cubes so each next pick uses an updated snapshot.",
+    "When physicalConfirmation.enabled=false, success means command execution only."
+  ],
+  "errorCode": null,
+  "errorMessage": null
+}

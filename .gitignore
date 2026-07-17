@@ -46,3 +46,5 @@ workspace/generated/
 
 # Prisma generated artifacts if any local temp appears
 backend/prisma/dev.db
+# Final demo videos - stored outside Git because of GitHub size limits
+docs/evidence/finalproject/video/*.mp4
