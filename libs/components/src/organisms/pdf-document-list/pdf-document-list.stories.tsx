@@ -51,6 +51,13 @@ export const ContentWithDelete: Story = {
   },
 };
 
+/** Creation disabled — ready/failed actions hidden; generated lesson remains openable. */
+export const CreationDisabled: Story = {
+  args: {
+    onGenerate: undefined,
+  },
+};
+
 export const Loading: Story = {
   args: {
     state: 'loading',

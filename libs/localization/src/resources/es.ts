@@ -69,12 +69,20 @@ export const es: TranslationResource = {
       count_one: '{{count}} lección',
       count_other: '{{count}} lecciones',
     },
+    entitlements: {
+      loading: 'Cargando tu plan…',
+      error: {
+        message: 'No pudimos cargar tu plan.',
+        retry: 'Intentar de nuevo',
+      },
+    },
     upload: {
       intro: 'Sube un PDF para generar una lección',
       apiKeyRequired: {
         message: 'Se requiere una clave de API para generar lecciones.',
         action: 'Agregar clave de API',
       },
+      cannotCreate: 'No puedes crear lecciones. Contacta a soporte.',
       chooseFile: 'Elige un PDF',
       dialogHeadline: 'Subir PDF',
       dialogClose: 'Cerrar',
@@ -127,6 +135,8 @@ export const es: TranslationResource = {
       error: {
         missingKey: 'Se requiere una clave de API para generar lecciones.',
         invalidKey: 'Tu clave de API fue rechazada. Revísala en Ajustes.',
+        platformKeyUnavailable:
+          'La generación de lecciones no está disponible temporalmente. Inténtalo de nuevo.',
         rateLimited: 'Alcanzaste el límite del proveedor. Vuelve a intentarlo en un momento.',
         timeout: 'La generación tardó demasiado. Vuelve a intentarlo.',
         generationFailed: 'Algo salió mal al generar tu lección. Vuelve a intentarlo.',

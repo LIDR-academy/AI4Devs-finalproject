@@ -1,14 +1,13 @@
 // Mirrors libs/supabase-services/src/services/lesson-generation.prompt.ts -- kept manually in
 // sync by hand (task-4 note, same rule as R1's pdf-extraction/_shared mirrors).
+import { MIN_LESSON_SLIDES } from './lesson-generation.schema.ts';
 import type { BuildDeckPromptInput, PromptImageManifestEntry } from './lesson-generation.types.ts';
 import type { LessonComposition } from './types.ts';
 
 const COMPOSITION_INSTRUCTIONS: Record<LessonComposition, string> = {
-  both: 'Generate a deck that mixes instructional slides (kind: "instructional") and activity slides (kind: "activity") covering the five supported activity types where relevant.',
-  'instructional-only':
-    'Generate a deck containing ONLY instructional slides (kind: "instructional"). Do not include any activity slides.',
-  'activity-only':
-    'Generate a deck containing ONLY activity slides (kind: "activity") covering the five supported activity types where relevant. Do not include any instructional slides.',
+  both: `Generate a deck of at least ${MIN_LESSON_SLIDES} slides that mixes instructional slides (kind: "instructional") and activity slides (kind: "activity") covering the five supported activity types where relevant.`,
+  'instructional-only': `Generate a deck of at least ${MIN_LESSON_SLIDES} slides containing ONLY instructional slides (kind: "instructional"). Do not include any activity slides.`,
+  'activity-only': `Generate a deck of at least ${MIN_LESSON_SLIDES} slides containing ONLY activity slides (kind: "activity") covering the five supported activity types where relevant. Do not include any instructional slides.`,
 };
 
 const formatPages = (pages: BuildDeckPromptInput['pages']): string =>

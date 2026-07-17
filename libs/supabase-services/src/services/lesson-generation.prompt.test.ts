@@ -1,3 +1,4 @@
+import { MIN_LESSON_SLIDES } from './lesson-generation.schema';
 import { buildDeckPrompt } from './lesson-generation.prompt';
 
 const pages = [
@@ -5,8 +6,7 @@ const pages = [
   { page: 2, text: 'Chlorophyll absorbs mostly red and blue light.' },
 ];
 
-const COMPOSITION_INSTRUCTIONS_BOTH =
-  'Generate a deck that mixes instructional slides (kind: "instructional") and activity slides (kind: "activity") covering the five supported activity types where relevant.';
+const COMPOSITION_INSTRUCTIONS_BOTH = `Generate a deck of at least ${MIN_LESSON_SLIDES} slides that mixes instructional slides (kind: "instructional") and activity slides (kind: "activity") covering the five supported activity types where relevant.`;
 
 describe('buildDeckPrompt', () => {
   // @s3 — the full extracted text is available to the model, in page order.
@@ -36,6 +36,7 @@ describe('buildDeckPrompt', () => {
 
     expect(prompt).toMatch(/instructional/i);
     expect(prompt).toMatch(/activity/i);
+    expect(prompt).toMatch(new RegExp(`at least ${MIN_LESSON_SLIDES} slides`, 'i'));
   });
 
   // @s9 — the image manifest (ids/page/position, never bytes) is embedded for metadata-driven
@@ -102,6 +103,7 @@ describe('buildDeckPrompt', () => {
 
       expect(prompt).toMatch(/only instructional slides/i);
       expect(prompt).toMatch(/do not include any activity slides/i);
+      expect(prompt).toMatch(new RegExp(`at least ${MIN_LESSON_SLIDES} slides`, 'i'));
     });
 
     // @s5 — "activity only" forbids instructional slides in the prompt instruction.
@@ -110,6 +112,7 @@ describe('buildDeckPrompt', () => {
 
       expect(prompt).toMatch(/only activity slides/i);
       expect(prompt).toMatch(/do not include any instructional slides/i);
+      expect(prompt).toMatch(new RegExp(`at least ${MIN_LESSON_SLIDES} slides`, 'i'));
     });
 
     // @s6 — the chosen composition (whichever of the three) drives a distinct instruction; no

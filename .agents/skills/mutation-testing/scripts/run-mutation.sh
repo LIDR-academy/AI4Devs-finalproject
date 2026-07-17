@@ -21,12 +21,11 @@ for entry in "${LIBS[@]}"; do
   lib="${entry%%:*}"
   pkg="${entry##*:}"
 
-  # `test-utils/` holds pure test-fixture builders (e.g. constructing a synthetic PDF/PNG for a
-  # unit test) — not shipped production logic — so they're excluded here the same as *.test.ts
-  # (review round-1 Part B #8 finding, confirmed via usage: only ever imported from *.test.ts).
+  # `test-utils/` and `testing/` hold pure test-fixture builders — not shipped production logic —
+  # so they're excluded here the same as *.test.ts (confirmed via test-only imports).
   files="$(git diff --name-only "${BASE}...HEAD" -- "${lib}/src" \
     | grep -E '\.(ts|tsx)$' \
-    | grep -vE '\.(test|stories)\.(ts|tsx)$|\.e2e\.js$|/index\.ts$|/test-utils/' || true)"
+    | grep -vE '\.(test|stories)\.(ts|tsx)$|\.e2e\.js$|/index\.ts$|/(test-utils|testing)/' || true)"
 
   if [ -z "${files}" ]; then
     echo "· ${pkg}: no changed source, skipping"

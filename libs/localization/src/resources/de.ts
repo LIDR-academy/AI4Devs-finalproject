@@ -69,12 +69,20 @@ export const de: TranslationResource = {
       count_one: '{{count}} Lektion',
       count_other: '{{count}} Lektionen',
     },
+    entitlements: {
+      loading: 'Dein Tarif wird geladen…',
+      error: {
+        message: 'Dein Tarif konnte nicht geladen werden.',
+        retry: 'Erneut versuchen',
+      },
+    },
     upload: {
       intro: 'Lade ein PDF hoch, um eine Lektion zu erstellen',
       apiKeyRequired: {
         message: 'Ein API-Schlüssel ist erforderlich, um Lektionen zu erstellen.',
         action: 'API-Schlüssel hinzufügen',
       },
+      cannotCreate: 'Du kannst keine Lektionen erstellen. Bitte kontaktiere den Support.',
       chooseFile: 'PDF auswählen',
       dialogHeadline: 'PDF hochladen',
       dialogClose: 'Schließen',
@@ -128,6 +136,8 @@ export const de: TranslationResource = {
       error: {
         missingKey: 'Zum Generieren von Lektionen ist ein API-Schlüssel erforderlich.',
         invalidKey: 'Dein API-Schlüssel wurde abgelehnt. Überprüfe ihn in den Einstellungen.',
+        platformKeyUnavailable:
+          'Die Lektionserstellung ist vorübergehend nicht verfügbar. Versuche es erneut.',
         rateLimited:
           'Du hast das Ratenlimit des Anbieters erreicht. Versuche es gleich noch einmal.',
         timeout: 'Die Generierung hat zu lange gedauert. Versuche es erneut.',

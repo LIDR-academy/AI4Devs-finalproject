@@ -22,6 +22,14 @@ describe('mapGenerationError', () => {
     });
   });
 
+  it('prioritizes GenerationSchemaError over another recognizable error shape', () => {
+    const cause = Object.assign(new GenerationSchemaError('bad deck'), {
+      code: 'persist_failed',
+    });
+
+    expect(mapGenerationError(cause)).toEqual({ errorCode: 'generation_failed', status: 502 });
+  });
+
   // @s15 — an explicit wall-clock timeout maps to the typed timeout code.
   it('maps a GenerationTimeoutError to timeout', () => {
     expect(mapGenerationError(new GenerationTimeoutError())).toEqual({
@@ -45,11 +53,29 @@ describe('mapGenerationError', () => {
     ])('falls back to generation_failed for %s', (_label, cause) => {
       expect(mapGenerationError(cause)).toEqual({ errorCode: 'generation_failed', status: 502 });
     });
+
+    it('validates statusCode before reading its mapped value', () => {
+      const statusCode = jest.fn().mockReturnValueOnce(401).mockReturnValueOnce(500);
+      const cause = Object.defineProperty({}, 'statusCode', { get: statusCode });
+
+      expect(mapGenerationError(cause)).toEqual({ errorCode: 'generation_failed', status: 502 });
+      expect(statusCode).toHaveBeenCalledTimes(2);
+    });
   });
 
   // @s15 — Groq rejecting the stored key (401/403) maps to invalid_key, not a raw provider error.
   it.each([401, 403])('maps an API-call error with statusCode %d to invalid_key', (statusCode) => {
     expect(mapGenerationError({ statusCode })).toEqual({ errorCode: 'invalid_key', status: 401 });
+  });
+
+  // @s19 — paid platform authentication failures are operator failures, never BYOK guidance.
+  it.each([
+    401, 403,
+  ])('maps a platform API-call error with statusCode %d to platform_key_unavailable', (statusCode) => {
+    expect(mapGenerationError({ statusCode }, 'platform')).toEqual({
+      errorCode: 'platform_key_unavailable',
+      status: 503,
+    });
   });
 
   // @s15 — Groq's rate limit (429) maps to rate_limited.

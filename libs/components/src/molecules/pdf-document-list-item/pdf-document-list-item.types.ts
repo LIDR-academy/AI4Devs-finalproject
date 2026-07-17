@@ -5,7 +5,7 @@ export type PdfDocumentListItemProps = {
   status: PdfDocumentStatus;
   createdAt: string;
   pageCount: number | null;
-  onGenerate: () => void;
+  onGenerate?: () => void;
   onOpenLesson: () => void;
   /** Delete only for ready/failed when provided (@s11). */
   onDelete?: () => void;

@@ -8,6 +8,7 @@
     "check-types": "tsc --noEmit",
     "lint": "biome check .",
     "test": "jest --coverage=false --passWithNoTests --watchman=false",
+    "test:rls": "jest --config jest.rls.config.js --coverage=false --watchman=false --runInBand",
     "test:watch": "jest --watch",
     "mutation": "stryker run"
   },

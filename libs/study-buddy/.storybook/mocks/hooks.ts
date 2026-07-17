@@ -12,6 +12,7 @@ export * from '../../../hooks/src/hooks/use-interaction-state';
 import type {
   ApiKeyErrorCode,
   ApiKeyStatus,
+  Profile,
   GeneratedLesson,
   GenerateLessonRequest,
   GenerationErrorCode,
@@ -212,6 +213,45 @@ export const useApiKey = () => {
   );
 
   return { status, isLoading, isSubmitting, error, saveApiKey, removeApiKey };
+};
+
+// --- useProfile -----------------------------------------------------------
+
+export type ProfileMockConfig = {
+  profile?: Profile | null;
+  isLoading?: boolean;
+  error?: Error | null;
+};
+
+let pendingProfileConfig: ProfileMockConfig = {};
+
+export const configureProfileMock = (config: ProfileMockConfig) => {
+  pendingProfileConfig = config;
+};
+
+export const useProfile = () => {
+  const [config] = useState(() => {
+    const next = pendingProfileConfig;
+    pendingProfileConfig = {};
+    return next;
+  });
+  const [error, setError] = useState<Error | null>(config.error ?? null);
+
+  return {
+    profile:
+      config.profile === undefined
+        ? {
+            plan: 'free' as const,
+            keySource: 'user' as const,
+            showKeySettings: true,
+            showAds: true,
+            canCreate: false,
+          }
+        : config.profile,
+    isLoading: config.isLoading ?? false,
+    error,
+    retry: () => setError(null),
+  };
 };
 
 // --- useLessons ----------------------------------------------------------------

@@ -23,6 +23,10 @@ import { z } from 'npm:zod@4';
 
 import { assembleGeneratedLesson } from './_shared/lesson-generation.assembly.ts';
 import { GenerationTimeoutError, mapGenerationError } from './_shared/lesson-generation.errors.ts';
+import {
+  callProviderWithResolvedKey,
+} from './_shared/lesson-generation.key-source.ts';
+import { handleLessonGenerationRoute } from './_shared/lesson-generation.route.ts';
 import { markDocumentGenerationFailure, persistLesson } from './_shared/lesson-generation.persist.ts';
 import { placeImagesByMetadata } from './_shared/lesson-generation.placement.ts';
 import { buildDeckPrompt } from './_shared/lesson-generation.prompt.ts';
@@ -163,8 +167,8 @@ Deno.serve(async (req) => {
     return errorResponse('unauthenticated', 401);
   }
 
-  // Service-role client -- reaches the Vault-backed get_api_key() RPC only (spec.md Open
-  // decision #6); never used for the documents/document_images reads above, which stay RLS-scoped.
+  // Service role reads only this caller's live plan and, for free users, their Vault key.
+  // Documents and lesson persistence remain caller-JWT/RLS scoped.
   const adminClient: AnySupabaseClient = createClient(supabaseUrl, serviceRoleKey);
 
   let body: Partial<GenerateLessonRequest>;
@@ -189,25 +193,73 @@ Deno.serve(async (req) => {
     return errorResponse('document_not_ready', 422);
   }
 
-  const { data: imageRows } = await callerClient
-    .from('document_images')
-    .select('id, page_number, position_index, storage_path, width, height, description')
-    .eq('document_id', documentId);
-  const images = (imageRows ?? []) as DocumentImageRow[];
-
-  // @s7/@s8 -- the decrypted key is read only here, server-side, via the service-role-only RPC;
-  // it is never included in any request/response body and never logged.
-  const { data: keyRows } = await adminClient.rpc('get_api_key', { p_user_id: user.id });
-  const keyRow = Array.isArray(keyRows) ? keyRows[0] : keyRows;
-  if (!keyRow?.api_key) {
+  let resolvedKey: Awaited<ReturnType<typeof handleLessonGenerationRoute>>;
+  try {
+    resolvedKey = await handleLessonGenerationRoute({
+      userId: user.id,
+      requestBody: body,
+      readPlanFlags: async (userId) => {
+        const { data: profileRow, error: profileError } = await adminClient
+          .from('profiles')
+          .select('plan_id, plans(use_platform_key)')
+          .eq('id', userId)
+          .single();
+        const plans = profileRow?.plans;
+        const planEmbed = Array.isArray(plans) ? plans[0] : plans;
+        if (profileError || !planEmbed || typeof planEmbed.use_platform_key !== 'boolean') {
+          return null;
+        }
+        return { usePlatformKey: planEmbed.use_platform_key };
+      },
+      readUserApiKey: async () => {
+        const { data: keyRows } = await adminClient.rpc('get_api_key', { p_user_id: user.id });
+        const keyRow = Array.isArray(keyRows) ? keyRows[0] : keyRows;
+        return keyRow?.api_key ?? null;
+      },
+      platformApiKey: Deno.env.get('PLATFORM_GROQ_API_KEY') ?? null,
+      acquirePlatformSlot: async (userId) => {
+        const { data, error } = await adminClient.rpc('acquire_platform_generation_slot', {
+          p_user_id: userId,
+        });
+        if (error) throw error;
+        return data === true;
+      },
+      releasePlatformSlot: async (userId) => {
+        const { error } = await adminClient.rpc('release_platform_generation_slot', {
+          p_user_id: userId,
+        });
+        if (error) throw error;
+      },
+      readImageMetadata: async () => {
+        const { data: imageRows } = await callerClient
+          .from('document_images')
+          .select('id, page_number, position_index, storage_path, width, height, description')
+          .eq('document_id', documentId);
+        return (imageRows ?? []) as DocumentImageRow[];
+      },
+    });
+  } catch {
+    return errorResponse('generation_failed', 500);
+  }
+  if (!resolvedKey.ok) {
     // Document identified — mark so the PDF list shows Retry (@s3/@s8).
     try {
-      await markDocumentGenerationFailure(callerClient, documentId, 'missing_key');
+      await markDocumentGenerationFailure(callerClient, documentId, resolvedKey.errorCode);
     } catch {
       // best-effort; still return the typed generation error
     }
-    return errorResponse('missing_key', 422);
+    return errorResponse(
+      resolvedKey.errorCode,
+      resolvedKey.errorCode === 'platform_key_unavailable'
+        ? 503
+        : resolvedKey.errorCode === 'rate_limited'
+          ? 429
+          : resolvedKey.errorCode === 'generation_failed'
+            ? 500
+            : 422,
+    );
   }
+  const images = (resolvedKey.imageMetadata ?? []) as DocumentImageRow[];
 
   const promptImages: PromptImageManifestEntry[] = images.map((image) => ({
     imageId: image.id,
@@ -226,7 +278,9 @@ Deno.serve(async (req) => {
   }));
 
   const generateLesson = async (): Promise<GeneratedLesson> => {
-    const rawDeck = await runGeneration(keyRow.api_key, prompt);
+    const rawDeck = await callProviderWithResolvedKey(resolvedKey, (apiKey) =>
+      runGeneration(apiKey, prompt),
+    );
 
     // Un-anchorable images (@s10) -- derived structurally from the model's own response, ahead
     // of assembleGeneratedLesson's own (re-)validation, so the vision call runs only for images
@@ -263,7 +317,9 @@ Deno.serve(async (req) => {
             title: slide.title ?? '',
             content: slide.content ?? '',
           }));
-          visionDecisions = await runVisionPlacement(keyRow.api_key, downloaded, slideSummaries);
+          visionDecisions = await callProviderWithResolvedKey(resolvedKey, (apiKey) =>
+            runVisionPlacement(apiKey, downloaded, slideSummaries),
+          );
         }
       } catch {
         visionDecisions = [];
@@ -294,7 +350,7 @@ Deno.serve(async (req) => {
   } catch (cause) {
     // Redacted per @s8 -- never log the request body, the key, or the raw provider error; the
     // typed mapping below is the only thing derived from `cause`.
-    const { errorCode, status } = mapGenerationError(cause);
+    const { errorCode, status } = mapGenerationError(cause, resolvedKey.source);
     // Document identified — mark so the PDF list shows Retry (@s3/@s8).
     try {
       await markDocumentGenerationFailure(callerClient, documentId, errorCode);
@@ -302,5 +358,13 @@ Deno.serve(async (req) => {
       // best-effort; still return the typed generation error
     }
     return errorResponse(errorCode, status);
+  } finally {
+    if (resolvedKey.source === 'platform') {
+      try {
+        await resolvedKey.release();
+      } catch {
+        // The expiring lease is the crash-safe fallback when release fails.
+      }
+    }
   }
 });

@@ -22,6 +22,7 @@ export const toPanelState = (stage: LessonGenerationStage): LessonGenerationPane
 export const GENERATION_ERROR_KEYS: Record<GenerationErrorCode, string> = {
   missing_key: 'generation.error.missingKey',
   invalid_key: 'generation.error.invalidKey',
+  platform_key_unavailable: 'generation.error.platformKeyUnavailable',
   rate_limited: 'generation.error.rateLimited',
   timeout: 'generation.error.timeout',
   generation_failed: 'generation.error.generationFailed',
@@ -39,6 +40,7 @@ export type GenerationErrorRecovery = 'retry' | 'settings' | 'signIn' | 'none';
 export const GENERATION_ERROR_RECOVERY: Record<GenerationErrorCode, GenerationErrorRecovery> = {
   missing_key: 'settings',
   invalid_key: 'settings',
+  platform_key_unavailable: 'retry',
   rate_limited: 'retry',
   timeout: 'retry',
   generation_failed: 'retry',

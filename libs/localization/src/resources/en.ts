@@ -75,6 +75,13 @@ export const en = {
       count_one: '{{count}} lesson',
       count_other: '{{count}} lessons',
     },
+    entitlements: {
+      loading: 'Loading your plan…',
+      error: {
+        message: "We couldn't load your plan.",
+        retry: 'Try again',
+      },
+    },
     upload: {
       intro: 'Upload a PDF to generate a lesson',
       // ai-key-management task-12 (Slice 2) — the ApiKeyGate guard-rail copy; added ahead of
@@ -83,6 +90,7 @@ export const en = {
         message: 'An API key is required to generate lessons.',
         action: 'Add API key',
       },
+      cannotCreate: "You can't create lessons. Please contact support.",
       chooseFile: 'Choose a PDF',
       dialogHeadline: 'Upload PDF',
       dialogClose: 'Close',
@@ -146,6 +154,7 @@ export const en = {
       error: {
         missingKey: 'An API key is required to generate lessons.',
         invalidKey: 'Your API key was rejected. Check it in Settings.',
+        platformKeyUnavailable: 'Lesson generation is temporarily unavailable. Try again.',
         rateLimited: "You've hit the provider's rate limit. Try again in a moment.",
         timeout: 'Generation took too long. Try again.',
         generationFailed: 'Something went wrong while generating your lesson. Try again.',

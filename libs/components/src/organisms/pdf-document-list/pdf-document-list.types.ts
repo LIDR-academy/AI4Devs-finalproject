@@ -14,7 +14,7 @@ export type PdfDocumentListItemData = {
 export type PdfDocumentListSharedProps = {
   state: PdfDocumentListState;
   documents: PdfDocumentListItemData[];
-  onGenerate: (id: string) => void;
+  onGenerate?: (id: string) => void;
   onOpenLesson: (id: string) => void;
   onRetry: () => void;
 };

@@ -18,7 +18,7 @@ export const PDF_DOCUMENT_LIST_TEST_ID = 'pdf-document-list';
 
 type PdfDocumentListRowProps = {
   item: PdfDocumentListItemData;
-  onGenerate: (id: string) => void;
+  onGenerate?: (id: string) => void;
   onOpenLesson: (id: string) => void;
   onRequestDelete?: (id: string) => void;
 };
@@ -167,7 +167,7 @@ const PdfDocumentListRow = memo(function PdfDocumentListRow({
   onOpenLesson,
   onRequestDelete,
 }: PdfDocumentListRowProps) {
-  const handleGenerate = useCallback(() => onGenerate(item.id), [onGenerate, item.id]);
+  const handleGenerate = useCallback(() => onGenerate?.(item.id), [onGenerate, item.id]);
   const handleOpenLesson = useCallback(() => onOpenLesson(item.id), [onOpenLesson, item.id]);
   const handleDelete = useCallback(() => {
     onRequestDelete?.(item.id);
@@ -179,7 +179,7 @@ const PdfDocumentListRow = memo(function PdfDocumentListRow({
       status={item.status}
       createdAt={item.createdAt}
       pageCount={item.pageCount}
-      onGenerate={handleGenerate}
+      onGenerate={onGenerate ? handleGenerate : undefined}
       onOpenLesson={handleOpenLesson}
       onDelete={onRequestDelete ? handleDelete : undefined}
     />

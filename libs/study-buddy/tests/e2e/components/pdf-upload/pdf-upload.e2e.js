@@ -36,7 +36,7 @@ test('Success story renders the extraction summary', async ({ page }) => {
   await expect(canvas.locator('text=12').first()).toBeVisible();
   await expect(canvas.locator('text=Images').first()).toBeVisible();
   await expect(canvas.locator('text=5').first()).toBeVisible();
-  await expect(canvas.locator('text=Continue').first()).toBeVisible();
+  await expect(canvas.locator('text=Continue')).toHaveCount(0);
 });
 
 test('ErrorRetryable story shows network error + Try again', async ({ page }) => {

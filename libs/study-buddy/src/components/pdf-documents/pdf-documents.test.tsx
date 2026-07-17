@@ -211,6 +211,38 @@ describe('PdfDocuments', () => {
     expect(onGenerate).not.toHaveBeenCalled();
   });
 
+  // @s13 — disabling creation keeps existing generated lessons openable.
+  it('hides Generate while preserving Open lesson when onGenerate is omitted', async () => {
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-ready',
+            filename: 'notes.pdf',
+            pageCount: 12,
+            createdAt: '2026-07-13T12:00:00.000Z',
+            status: 'ready',
+            lessonId: null,
+          },
+          {
+            id: 'doc-gen',
+            filename: 'done.pdf',
+            pageCount: 3,
+            createdAt: '2026-07-11T12:00:00.000Z',
+            status: 'generated',
+            lessonId: 'lesson-42',
+          },
+        ],
+      }),
+    );
+
+    await render(<PdfDocuments onOpenLesson={onOpenLesson} />);
+
+    expect(screen.queryByRole('button', { name: 'Generate notes.pdf' })).toBeNull();
+    fireEvent.press(screen.getByRole('button', { name: 'Open lesson for done.pdf' }));
+    expect(onOpenLesson).toHaveBeenCalledWith('lesson-42');
+  });
+
   // @s16 — error + retry wired to refetch.
   it('shows error copy and retries via refetch', async () => {
     const refetch = jest.fn();

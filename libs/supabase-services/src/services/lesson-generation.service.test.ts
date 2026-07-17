@@ -102,6 +102,7 @@ describe('LessonGenerationService', () => {
       ['generation_failed'],
       ['document_not_ready'],
       ['missing_key'],
+      ['platform_key_unavailable'],
       ['persist_failed'],
     ] as const)('normalizes a %s server error', async (errorCode) => {
       dao.generateLesson.mockRejectedValue(httpErrorWithBody({ errorCode }));
@@ -133,6 +134,16 @@ describe('LessonGenerationService', () => {
     // of `errorCode` off a nullish body never throws through to the caller either way.
     it('falls back to generation_failed when the server error body itself resolves to undefined', async () => {
       dao.generateLesson.mockRejectedValue(httpErrorWithBody(undefined));
+
+      await expect(
+        LessonGenerationService.generate({ documentId: 'doc-1', composition: 'both' }, 'user-1'),
+      ).rejects.toMatchObject({ code: 'generation_failed' });
+    });
+
+    it('falls back to generation_failed when the server error body cannot be parsed', async () => {
+      dao.generateLesson.mockRejectedValue(
+        new FunctionsHttpError({ json: () => Promise.reject(new Error('invalid JSON')) }),
+      );
 
       await expect(
         LessonGenerationService.generate({ documentId: 'doc-1', composition: 'both' }, 'user-1'),

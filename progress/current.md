@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** navigation-menus
-**Folder:** docs/features/navigation-menus/
+**Active feature:** plan-entitlements-key-routing
+**Folder:** docs/features/plan-entitlements-key-routing/
 **Phase:** pr_ready
-**Status:** DoD PASS. Compact docs done. risks landed; story moved to done. Ready for human to open/merge PR.
-**Notes:** Worktree `.worktrees/navigation-menus` on `feat/navigation-menus`. Non-Claude models used for build/review/mutation/DoD.
+**Status:** DoD PASS. Amended: plans flag table (no plan-name branches). Ready for human PR.
+**Notes:** Worktree `.worktrees/plan-entitlements-key-routing` on `feat/plan-entitlements-key-routing`.

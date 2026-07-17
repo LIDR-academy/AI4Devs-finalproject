@@ -46,6 +46,7 @@ describe('GENERATION_ERROR_KEYS (task-13)', () => {
     expect(GENERATION_ERROR_KEYS).toEqual({
       missing_key: 'generation.error.missingKey',
       invalid_key: 'generation.error.invalidKey',
+      platform_key_unavailable: 'generation.error.platformKeyUnavailable',
       rate_limited: 'generation.error.rateLimited',
       timeout: 'generation.error.timeout',
       generation_failed: 'generation.error.generationFailed',
@@ -63,6 +64,7 @@ describe('GENERATION_ERROR_RECOVERY (task-13)', () => {
     expect(GENERATION_ERROR_RECOVERY).toEqual({
       missing_key: 'settings',
       invalid_key: 'settings',
+      platform_key_unavailable: 'retry',
       rate_limited: 'retry',
       timeout: 'retry',
       generation_failed: 'retry',
@@ -71,5 +73,13 @@ describe('GENERATION_ERROR_RECOVERY (task-13)', () => {
       unauthenticated: 'signIn',
       persist_failed: 'retry',
     });
+  });
+
+  // @s11/@s19 — platform failures are retryable server errors, never Settings/BYOK actions.
+  it('maps platform key unavailability to server copy and retry recovery', () => {
+    expect(GENERATION_ERROR_KEYS.platform_key_unavailable).toBe(
+      'generation.error.platformKeyUnavailable',
+    );
+    expect(GENERATION_ERROR_RECOVERY.platform_key_unavailable).toBe('retry');
   });
 });

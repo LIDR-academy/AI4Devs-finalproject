@@ -1,7 +1,10 @@
-import { ApiKeyForm } from '@helsoft/components';
-import { useApiKey } from '@helsoft/hooks';
+import { ApiKeyForm, Button } from '@helsoft/components';
+import { useApiKey, useProfile } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import type { AiProvider, ApiKeyErrorCode } from '@helsoft/types';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 /** Provider brand names are not translated (proper nouns) — the seam stays open for more
  * providers alongside the `AiProvider` union (spec.md Open decision 2; ai-lesson-generation
@@ -13,6 +16,7 @@ const PROVIDER_DISPLAY_NAMES: Record<AiProvider, string> = { groq: 'Groq' };
  * (Full-review Round 1, Minor 8) and threaded into ApiKeyForm's `guidanceUrl` prop, rather than
  * hardcoded inside the presentational organism. */
 const GUIDANCE_URL = 'https://console.groq.com/keys';
+export const EMPTY_SAVED_STATUS_LABEL = '';
 
 /**
  * Maps useApiKey()'s normalized ApiKeyErrorCode to its i18n banner key (@s7/@s9).
@@ -32,14 +36,47 @@ const API_KEY_ERROR_KEYS: Partial<Record<ApiKeyErrorCode, string>> = {
  */
 export const ApiKeySettings = () => {
   const { status, isLoading, isSubmitting, error, saveApiKey, removeApiKey } = useApiKey();
+  const {
+    profile,
+    isLoading: isProfileLoading,
+    error: profileError,
+    retry,
+  } = useProfile();
   const { t, locale } = useLocalization();
+
+  useEffect(() => {
+    if (isProfileLoading) {
+      AccessibilityInfo.announceForAccessibility(t('entitlements.loading'));
+    }
+  }, [isProfileLoading, t]);
+
+  if (isProfileLoading) {
+    return (
+      <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
+        {t('entitlements.loading')}
+      </Text>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <View style={styles.error}>
+        <Text accessibilityRole="alert" style={styles.errorMessage}>
+          {t('entitlements.error.message')}
+        </Text>
+        <Button onPress={retry}>{t('entitlements.error.retry')}</Button>
+      </View>
+    );
+  }
+
+  if (!profile?.showKeySettings) return null;
 
   const keySavedStatusLabel = status.hasKey
     ? t('settings.apiKey.savedStatus', {
         provider: status.provider ? PROVIDER_DISPLAY_NAMES[status.provider] : '',
         date: status.updatedAt ? new Date(status.updatedAt).toLocaleDateString(locale) : '',
       })
-    : '';
+    : EMPTY_SAVED_STATUS_LABEL;
 
   const errorKey = error ? API_KEY_ERROR_KEYS[error] : undefined;
   const errorMessage = errorKey ? t(errorKey) : undefined;
@@ -64,3 +101,21 @@ export const ApiKeySettings = () => {
     />
   );
 };
+
+export const apiKeySettingsStyles = StyleSheet.create((theme) => ({
+  error: {
+    gap: theme.spacing.s4,
+  },
+  errorMessage: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.error,
+  },
+  visuallyHidden: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    overflow: 'hidden',
+  },
+}));
+
+const styles = apiKeySettingsStyles;

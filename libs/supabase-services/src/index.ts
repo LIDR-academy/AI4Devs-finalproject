@@ -7,6 +7,7 @@ export {
   FunctionsHttpError,
   FunctionsRelayError,
 } from '@supabase/supabase-js';
+export * from './dao';
 export * from './services';
 export * from './supabase/supabase-client';
 export type * from './supabase/supabase-client.types';

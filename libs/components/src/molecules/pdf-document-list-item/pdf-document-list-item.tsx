@@ -45,6 +45,7 @@ export const PdfDocumentListItem = ({
         ? t('pdfList.action.retryA11y', { filename })
         : t('pdfList.action.openLessonA11y', { filename });
   const onAction = isGenerated ? onOpenLesson : onGenerate;
+  const showAction = isGenerated || onGenerate;
   const showDelete = !isGenerated && onDelete;
 
   return (
@@ -56,15 +57,17 @@ export const PdfDocumentListItem = ({
         <Text style={styles.meta}>{pageCountLabel}</Text>
       </View>
       <View style={styles.actions}>
-        <Button
-          style={styles.actionButton}
-          variant="tonal"
-          size="small"
-          onPress={onAction}
-          accessibilityLabel={actionAccessibilityLabel}
-        >
-          {actionLabel}
-        </Button>
+        {showAction ? (
+          <Button
+            style={styles.actionButton}
+            variant="tonal"
+            size="small"
+            onPress={onAction}
+            accessibilityLabel={actionAccessibilityLabel}
+          >
+            {actionLabel}
+          </Button>
+        ) : null}
         {showDelete ? (
           <IconButton
             icon="delete"

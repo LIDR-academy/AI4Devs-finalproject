@@ -30,11 +30,11 @@ test('Saved story renders Replace/Remove and masked status', async ({ page }) =>
   await expect(canvas.locator('text=Remove').first()).toBeVisible();
 });
 
-test('Loading story shows progress and hides Save', async ({ page }) => {
+test('Loading story hides plan-sensitive settings', async ({ page }) => {
   await page.goto(story('loading'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  await expect(canvas.locator('[role="progressbar"]')).toBeVisible();
+  await expect(canvas.locator('[aria-label="API key"]')).toHaveCount(0);
   await expect(canvas.locator('text=Save')).toHaveCount(0);
 });
 
@@ -45,4 +45,21 @@ test('NetworkError story renders the alert banner', async ({ page }) => {
   const alert = canvas.locator('[role="alert"]');
   await expect(alert).toBeVisible();
   await expect(alert).toContainText("Couldn't reach the server. Try again.");
+});
+
+test('Paid story hides key settings with a saved key', async ({ page }) => {
+  await page.goto(story('paid'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.locator('[aria-label="API key"]')).toHaveCount(0);
+  await expect(canvas.locator('text=Groq key saved')).toHaveCount(0);
+});
+
+test('EntitlementsError story renders retry and hides key settings', async ({ page }) => {
+  await page.goto(story('entitlements-error'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText("We couldn't load your plan.", { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Try again', { exact: true })).toBeVisible();
+  await expect(canvas.locator('[aria-label="API key"]')).toHaveCount(0);
 });

@@ -69,12 +69,20 @@ export const pt: TranslationResource = {
       count_one: '{{count}} lição',
       count_other: '{{count}} lições',
     },
+    entitlements: {
+      loading: 'Carregando seu plano…',
+      error: {
+        message: 'Não foi possível carregar seu plano.',
+        retry: 'Tentar novamente',
+      },
+    },
     upload: {
       intro: 'Envie um PDF para gerar uma lição',
       apiKeyRequired: {
         message: 'É necessária uma chave de API para gerar lições.',
         action: 'Adicionar chave de API',
       },
+      cannotCreate: 'Você não pode criar lições. Entre em contato com o suporte.',
       chooseFile: 'Escolha um PDF',
       dialogHeadline: 'Enviar PDF',
       dialogClose: 'Fechar',
@@ -127,6 +135,8 @@ export const pt: TranslationResource = {
       error: {
         missingKey: 'É necessária uma chave de API para gerar lições.',
         invalidKey: 'Sua chave de API foi rejeitada. Verifique-a em Configurações.',
+        platformKeyUnavailable:
+          'A geração de lições está temporariamente indisponível. Tente novamente.',
         rateLimited: 'Você atingiu o limite do provedor. Tente novamente em instantes.',
         timeout: 'A geração demorou demais. Tente novamente.',
         generationFailed: 'Algo deu errado ao gerar sua lição. Tente novamente.',

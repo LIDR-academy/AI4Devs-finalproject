@@ -23,6 +23,15 @@ test('Content story renders heading and document rows', async ({ page }) => {
   await expect(canvas.getByText('Lesson ready', { exact: true })).toBeVisible();
 });
 
+test('CreationDisabled story hides create actions and retains Open lesson', async ({ page }) => {
+  await page.goto(story('creation-disabled'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText('Generate', { exact: true })).toHaveCount(0);
+  await expect(canvas.getByText('Retry', { exact: true })).toHaveCount(0);
+  await expect(canvas.getByText('Open lesson', { exact: true })).toBeVisible();
+});
+
 test('Loading story loads', async ({ page }) => {
   await page.goto(story('loading'));
   const iframe = page.locator('iframe[title="storybook-preview-iframe"]');
