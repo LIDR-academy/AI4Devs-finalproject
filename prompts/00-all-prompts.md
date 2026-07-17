@@ -1618,4 +1618,16 @@ sigue con la revisión de prompts.md
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 15 sesiones · 96 prompts documentados*
+## 97 — Pasada de coherencia sobre documentacion.md
+
+> 📋 2026-07-17T02:30:00Z · Claude Code · Claude Fable 5 · medium · ~210K tokens · rodri
+
+```
+listo, continua con la pasada de coherencia sobre documentacion.md
+```
+
+*(Cierra el punto B5 de issue-004: nota de vigencia global que remite a all-us.md como backlog vigente, notas 📌 en CU-01 (sin registro ni notificaciones; depósito según cotización), CU-02 (artista = seed, fuera del MVP) y CU-03 (foto de curación 90 días y respuesta del artista Won't-Have), nota as-built en el C4 nivel 3, y corrección factual del stack (Angular Material + SCSS, no Tailwind). El documento histórico de la Entrega 1 se preserva intacto.)*
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 15 sesiones · 97 prompts documentados*

@@ -1,5 +1,7 @@
 # INK·LINK — Documentación Técnica v1
 
+> 📌 **Nota de vigencia (2026-07-17)**: este documento corresponde a la **visión de producto de la Entrega 1**. Decisiones posteriores (`fixs/issue-002.md`, `issue-003.md`, `issue-004.md`, `issue-007.md`) acotaron el MVP a un **flujo 100 % cliente**: el artista es datos seed (sin panel de gestión ni login operativo), no hay registro de usuarios, notificaciones ni foto de curación a 90 días. El **backlog vigente es [docs/us/all-us.md](us/all-us.md)** (13 US · 80 SP, todas implementadas) y el contrato oficial de la API es [docs/api-spec.yml](api-spec.yml). Los casos de uso afectados llevan su propia nota 📌.
+
 ---
 
 ## 1. Descripción del Software
@@ -126,6 +128,8 @@ block-beta
 
 ### 2.1 CU-01: Cliente Cotiza y Reserva un Tatuaje
 
+> 📌 **Vigencia**: implementado en US0008 + US0009 + US0011 con dos matices respecto de esta visión: **no existe registro** de usuarios (cuentas seed; el paso 9 es solo login — US0001) y la confirmación **no envía email/notificación** (Won't-Have) — se muestra en pantalla y en "Mis reservas". Además, si la reserva nace de una cotización, el depósito se calcula sobre el mínimo cotizado (`fixs/issue-007.md`).
+
 **Actores:** Cliente, Sistema (Chatbot Cotizador), Pasarela Flow
 
 **Precondiciones:**
@@ -184,6 +188,8 @@ sequenceDiagram
 
 ### 2.2 CU-02: Tatuador Configura su Perfil y Agenda
 
+> ⚠️ **Fuera del MVP** (decisión `fixs/issue-003.md`, flujo 100 % cliente): el artista es **datos pre-cargados vía seed** — perfil, tarifas, portafolio y agenda se cargan en `backend/Seed/DatabaseSeeder.cs`. No existe panel de gestión ni login operativo de artista. Este caso de uso queda documentado como referencia para versiones futuras.
+
 **Actores:** Tatuador/Estudio
 
 **Precondiciones:**
@@ -229,6 +235,8 @@ sequenceDiagram
 ```
 
 ### 2.3 CU-03: Cliente Califica con Foto de Curación
+
+> 📌 **Vigencia**: implementado parcialmente como **US0013** (calificación en 4 dimensiones tras confirmar asistencia). La **foto de curación a los 90 días** y la **respuesta del artista a reseñas** quedaron **Won't-Have** (decisión `fixs/issue-003.md`). La foto adjunta a la reseña tiene además una limitación conocida de persistencia (`fixs/issue-005.md`).
 
 **Actores:** Cliente
 
@@ -968,6 +976,8 @@ flowchart TB
 
 Se profundiza en el contenedor **API Backend** por ser el componente central que orquesta toda la lógica de negocio.
 
+> 📌 **Vigencia**: diagrama de diseño de la Entrega 1. Los controllers implementados difieren en nombre y granularidad (Auth, Showcase, Artists, Styles, Quotes, Availability, Bookings, Payments, Reviews, Geo — sin Register ni CRUD de artista, que es seed). El detalle as-built está en [ARCHITECTURE.md](../ARCHITECTURE.md) y el contrato en [api-spec.yml](api-spec.yml).
+
 ```mermaid
 flowchart TB
     SPA[📱 Angular SPA]
@@ -1016,7 +1026,7 @@ flowchart TB
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | Angular 20, TypeScript, Tailwind CSS |
+| Frontend | Angular 20, TypeScript, Angular Material + SCSS |
 | Backend | .NET Core 10, C#, ASP.NET Core Web API |
 | Base de datos | PostgreSQL 16 + PostGIS |
 | ORM | Entity Framework Core |
