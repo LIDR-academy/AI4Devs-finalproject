@@ -58,3 +58,5 @@
 2026-07-16 | plan-entitlements-key-routing (amend) | pr_ready | docs/features/plan-entitlements-key-routing/ | Profile* rename; drop can_create_without_key; canCreate from use_platform_key; contact-support empty create; docs synced.
 
 2026-07-16 | lesson-generation min slides (ad hoc) | n/a | — | Enforce MIN_LESSON_SLIDES=5 in schema+prompt (all compositions); Edge mirror + deploy.
+
+2026-07-16 | plan-entitlements-key-routing | done | docs/features/plan-entitlements-key-routing/ | Merged PR #9 into feature-entrega2-HernanLaura; worktree removed.

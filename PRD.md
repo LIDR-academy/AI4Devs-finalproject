@@ -18,7 +18,7 @@ Anyone who needs to learn or be tested on the contents of a PDF — a student wi
 1. **Turn a PDF into a usable lesson with one upload.** A learner uploads a PDF and receives a generated deck of instructional + activity slides without any manual authoring.
 2. **Produce content that demonstrably teaches.** The core success bet is *learning gains* — measured by improvement between activity attempts (retakes) within a lesson.
 3. **Work everywhere from one codebase.** Ship to web first, with iOS/Android buildable from the same React Native + Expo project.
-4. **Keep AI cost off the builder.** Users supply their own AI API key, so the app can run with near-zero variable cost during the portfolio phase.
+4. **Keep AI cost controllable.** Free users bring their own AI API key (near-zero variable cost). A small manually-flagged paid tier may use a platform key for demos — no public billing yet.
 5. **Be a clean portfolio artifact.** A reviewable repo with a real architecture (auth, backend, CI/CD) that a hiring manager or instructor can run and evaluate.
 
 ---
@@ -29,7 +29,7 @@ Anyone who needs to learn or be tested on the contents of a PDF — a student wi
 2. **Multi-format ingest (DOCX, PPTX, URLs, video).** PDF only for v1. More formats on v2. *(Each format is its own parsing problem; PDF covers the stated use case.)*
 3. **Spaced-repetition / long-term scheduling across lessons.** No cross-lesson review queue yet. *(Valuable but a separate initiative; v1 proves single-lesson learning gains first.)*
 4. **Collaboration, sharing, or classroom/teacher features.** Single-user study experience only. *(The app is an individual study tool; multi-user roles and permissions add complexity for little MVP value.)*
-5. **Hosting/managing AI keys or billing.** No platform-managed inference or paid tiers in v1. *(Bring-your-own-key keeps cost and compliance simple for a portfolio MVP.)*
+5. **Real billing, ads networks, or usage metering.** No Stripe/App Store IAP, no ad-network integration, no token/lesson caps in v1. *(Users have a `plan_id` → `plans` row with capability flags; `show_ads` is stored for later; paid demos use a platform key with no hard cap until v2.)*
 6. **Native mobile store releases.** Mobile is buildable but the CI pipeline deploys **web only** at start. *(Store submission is process overhead, not core value.)*
 7. **Drag-drop interactions.** Matching activities are in scope (see R3), but implemented as tap-to-select-two-items-to-pair, not drag-and-drop. *(Drag-drop is meaningfully more work on RN + web for little added proof of the learning loop; revisit later.)*
 
@@ -37,7 +37,7 @@ Anyone who needs to learn or be tested on the contents of a PDF — a student wi
 
 ## Target Users
 
-Anyone who needs to learn or assess themselves on the contents of a PDF, regardless of why they're learning it — students studying and self-testing on material assigned by a school or university, professionals upskilling from manuals or papers, and people preparing for exams or certifications. For v1 they are comfortable getting an AI API key (or willing to follow a short setup guide).
+Anyone who needs to learn or assess themselves on the contents of a PDF, regardless of why they're learning it — students studying and self-testing on material assigned by a school or university, professionals upskilling from manuals or papers, and people preparing for exams or certifications. **Free** users are comfortable getting an AI API key (or willing to follow a short setup guide). **Paid** users (manually flagged) skip key setup and use the platform key.
 
 ---
 
@@ -48,8 +48,10 @@ Grouped by the core loop. Ordered by priority within each group.
 ### Onboarding & setup
 - As a new user, I want to sign up, log in, and log out securely so that my documents and lessons stay private to me and are available whenever I return.
 - As a returning user, I want my session to persist across app restarts (until I log out) so that I don't have to re-authenticate every time.
-- As a user, I want to add my own AI API key once and have it securely stored so that I don't re-enter it every session.
-- As a user, I want clear guidance on where to get an API key so that setup doesn't block me.
+- As a free-tier user, I want to add my own AI API key once and have it securely stored so that I don't re-enter it every session.
+- As a free-tier user, I want clear guidance on where to get an API key so that setup doesn't block me.
+- As a paid-tier user, I want to generate lessons without supplying an API key so that setup stays frictionless.
+- As the product, I want plan **flags** (key source, key-settings visibility, ads flag, create gate) enforced client-side and server-side so free vs paid behave correctly even if the UI is bypassed.
 
 ### Generating a lesson
 - As a learner, I want to upload a PDF and have the app generate a lesson so that I can start studying without manual prep.
@@ -140,12 +142,12 @@ Acceptance criteria:
 - User can sign up, log in, and log out.
 
 ~**R6 — Bring-your-own AI key (server-side proxy)**~
-Description: User stores their own API key; **all AI calls are proxied through a Supabase Edge Function** so the key is used server-side and never reaches the client at call time.
+Description: **Free-tier** user stores their own API key; **all AI calls are proxied through a Supabase Edge Function** so the key is used server-side and never reaches the client at call time. Paid-tier key source is R10.
 Acceptance criteria:
-- User can save, update, and remove their key.
+- Free-tier user can save, update, and remove their key.
 - The key is stored encrypted/secured server-side, scoped to the user, never returned to the client after save, and never written to logs.
-- Generation reads the key inside the Edge Function (R2); the client only triggers the function and never holds the raw key during a request.
-- Generation fails gracefully with guidance if no key is set.
+- For free tier, generation reads the user key inside the Edge Function (R2); the client only triggers the function and never holds the raw key during a request.
+- Free-tier generation fails gracefully with guidance if no key is set.
 
 ~**R7 — Score / results summary**~
 Description: End-of-lesson summary showing performance.
@@ -169,6 +171,27 @@ Acceptance criteria:
 - Already-answered activity slides retain their state on resume so progress and score (R7) stay consistent.
 - A completed lesson can be restarted from the beginning (and retaken per R7).
 
+~**R10 — Plan flags & key-source routing**~
+Description: Each user has a `profiles.plan_id` FK to `public.plans` (default `free` on signup via trigger). Capabilities come from **live plan flags** — never `plan === 'paid'` / `plan === 'free'` branches. Seeded `free` / `paid` rows set the flags below; additional plan ids are allowed via FK. Flip `plan_id` manually in the Supabase dashboard — no billing UI. Client exposes profile via `useProfile` / `ProfileProvider`; Edge `generate-lesson` routes the AI key from `use_platform_key` only.
+
+Plan flags (seeded defaults):
+
+| Flag | Free | Paid | Effect |
+|---|---|---|---|
+| `use_platform_key` | false | true | Edge key route; client `canCreate = use_platform_key` or saved key |
+| `show_key_settings` | true | false | BYOK settings visibility |
+| `show_ads` | true | false | Exposed on client profile; **no ad UI** in v1 |
+
+Acceptance criteria:
+- New signups get exactly one profile with `plan_id = free`.
+- Client loads flags via profiles→plans join (`useProfile`); shows key settings when `show_key_settings`; create/upload when `canCreate`; exposes `showAds` unused.
+- `!canCreate`: create/upload hidden; upload shows contact-support copy (`upload.cannotCreate`). If generate is invoked anyway with `use_platform_key=false` and no user key, Edge rejects with `missing_key`.
+- `use_platform_key=false` + saved key: generation uses the user's Vault key (R6).
+- `use_platform_key=true`: key settings hidden; generation uses `PLATFORM_GROQ_API_KEY`; server never reads the user key; missing/unusable platform key → `platform_key_unavailable` (server error + retry, not a "add your key" CTA).
+- Plan flip (e.g. paid → free): existing lessons stay playable; next profile load and next generate use live flags (no redeploy).
+- Crafted client plan / entitlement / keySource fields are ignored — Edge always reads live `use_platform_key`.
+- Authenticated clients can select-own profile and read plans; they cannot mutate `plan_id`.
+
 ### Nice-to-Have (P1) — fast follows, core works without them
 
 - **Regenerate / adjust** a lesson (e.g., "make it harder," "more activities," fewer slides).
@@ -180,7 +203,8 @@ Acceptance criteria:
 
 - Spaced-repetition review queue across lessons (data model should allow per-activity attempt history).
 - Additional ingest formats (DOCX, URLs) — keep extraction decoupled from generation.
-- **Paid tier with managed AI (no bring-your-own-key).** A paid plan where the app's own AI service powers generation, so paying users don't supply or manage an API key — the platform covers inference as part of the subscription. Free tier keeps the bring-your-own-key model (R6); the Edge Function proxy (R2/R6) should keep the key source swappable so it can read either the user's key (free) or the platform key (paid) without reworking generation. Implies usage limits/metering and billing.
+- **Billing + paid usage metering.** Stripe (or similar) and a **token-based hard cap** on platform-key usage when `use_platform_key` is true. v1 ships manual `plan_id` flips + uncapped platform key for trusted demos only (R10).
+- **Ad network integration** driven by the existing `show_ads` / `showAds` flag (R10) — UI/network out of scope until then.
 - Native app store releases via the same CI pipeline.
 - Drag-drop interaction for matching (v1 uses tap-to-select-two).
 - Sharing or exporting a generated deck (e.g., to PPTX/PDF).
@@ -216,6 +240,7 @@ The headline bet is **learning gains**, with supporting funnel and quality metri
 - **Image placement:** when the extracted image carries a description/position, generation uses that metadata to pick the slide; when only the raw image is available, a vision-capable model decides placement. (Drives R2.)
 - **Learning-gain measurement:** measured via **retake improvement only**. No pre/post quiz in this project. (Drives Success Metrics.)
 - **Matching:** **in scope** for v1, implemented as tap-to-select-two-items-to-pair (no drag-drop). Open-ended / short answer also stays in. (Drives R3, Non-Goals.)
+- **Plans:** `profiles.plan_id` → `plans` flag rows (seeded `free` / `paid`; flip via dashboard). Flags: `use_platform_key`, `show_key_settings`, `show_ads`. Client `canCreate = use_platform_key || hasKey`; Edge routes on live `use_platform_key`. No Stripe, no ads UI, no hard cap in v1. (Drives R10; extends R6.)
 
 ## Open Questions
 
@@ -234,11 +259,11 @@ This is a bootcamp final project, so phase to guarantee a working demo of the **
 
 **Phase 2 — Persistence & platform:** R5 lesson persistence + RLS (auth itself lands in Phase 0), R6 server-side bring-your-own key, R9 resume mid-lesson (depends on persistence), R8 web CI/CD on GitHub Actions.
 
-**Phase 3 — Polish:** P1 items as time allows, mobile responsiveness pass.
+**Phase 3 — Polish & plans:** ~R10 plan flags + key-source routing~ (shipped); P1 items as time allows; mobile responsiveness pass.
 
 **Dependencies & sequencing:**
 - Authentication (R5 auth) and backend PDF extraction (R1) are the first deliverables — auth is the foundation for per-user data and RLS; extraction is the highest technical risk and everything downstream depends on it.
-- The Edge Function proxy pattern is shared by R1, R2, and R6 — build the function scaffolding once, early.
+- The Edge Function proxy pattern is shared by R1, R2, R6, and R10 — build the function scaffolding once, early; R10 extends the same proxy to swap key source from live `use_platform_key`.
 - CI/CD (R8) deploys web only at start; native builds are validated locally but not released.
 
 ---
@@ -248,5 +273,5 @@ This is a bootcamp final project, so phase to guarantee a working demo of the **
 - **Stack:** React Native + Expo, targeting Android, iOS, and web via react-native-web.
 - **Auth + backend:** Supabase.
 - **CI/CD:** GitHub Actions — initially build + deploy **web** only.
-- **AI usage:** user supplies their own API key (free tier); calls go through the **Vercel AI SDK** for provider-agnostic generation.
+- **AI usage:** free-flagged users supply their own API key; `use_platform_key` plans use `PLATFORM_GROQ_API_KEY`. Calls go through the **Vercel AI SDK**. Key source resolved server-side from live plan flags (R10).
 - **PDF extraction:** server-side, candidate library [liteparse](https://github.com/run-llama/liteparse) pending the R1 research spike.
