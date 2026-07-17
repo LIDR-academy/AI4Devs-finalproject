@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-16 (US0014 ✅ PR #17 mergeada; US0011 🟣 En revisión — PR #18)
+> Última actualización: 2026-07-16 (US0011 ✅ PR #18 y chore Flow sandbox ✅ PR #19 mergeados — **backlog completo: 13 US / 80 SP** · integración Flow real validada e2e contra sandbox)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -9,9 +9,9 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0010, US0012–US0014 completas (9/9 Must-Have ✅); US0011 en revisión — última US del backlog |
+| Entrega 2 (implementación) | ✅ **Backlog completo** — Fase 0 + las 13 US (9 Must-Have 52 SP + 4 Should-Have 28 SP) mergeadas a main |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
-| Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0014 implementados (108 tests en verde) |
+| Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0014 implementados (109 tests en verde) |
 | Frontend (`frontend/`) | ✅ US0001 + US0003–US0014 implementados (126 tests en verde) |
 | Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web; perfil `seed-images` para imágenes de muestra) |
 | CI/CD | ✅ `.github/workflows/ci.yml` (build + tests backend y frontend) |
@@ -28,9 +28,9 @@
 | US0006 | Ver perfil de artista completo | Must | 5 | ✅ Done (PR #10 mergeado a main) |
 | US0007 | Badge de certificación sanitaria | Must | 2 | ✅ Done (PR #11 mergeado a main) |
 | US0008 | Seleccionar slot y ver resumen | Must | 5 | ✅ Done (PR #12 mergeado a main) |
-| US0009 | Pagar depósito vía Flow | Must | 13 | ✅ Done (PR #13 mergeado a main; Flow real deferred — ver Bloqueos §3) |
+| US0009 | Pagar depósito vía Flow | Must | 13 | ✅ Done (PR #13; integración Flow real validada e2e contra sandbox — PR #19, `docs/flow-sandbox-testing.md`) |
 | US0010 | Historial + confirmar asistencia | Must | 5 | ✅ Done (PR #14 mergeado a main) |
-| US0011 | Cotizar con chatbot | Should | 13 | 🟣 En revisión (feature/us0011-chatbot-cotizador, PR #18) |
+| US0011 | Cotizar con chatbot | Should | 13 | ✅ Done (PR #18 mergeado a main; depósito según cotización — `fixs/issue-007.md`) |
 | US0012 | Explorar artistas en mapa | Should | 8 | ✅ Done (PR #16 mergeado a main) |
 | US0013 | Calificar artista post-sesión | Should | 5 | ✅ Done (PR #15 mergeado a main) |
 | US0014 | Mostrar auspicios de marcas | Should | 2 | ✅ Done (PR #17 mergeado a main) |
@@ -41,13 +41,16 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 1. ~~Decisiones pendientes en `fixs/issue-004.md` §E~~ — ✅ resueltas el 2026-07-14 (ver issue-004 §G). `api-spec.yml` v2.0.0 sincronizada.
 2. ~~Cuenta sandbox de Flow~~ — ✅ cuenta Flow creada el 2026-07-14 (rubro declarado: reserva/depósitos de servicios de tatuaje). Falta obtener credenciales sandbox (apiKey/secretKey) al llegar a US0009; hasta entonces se usa mock.
-3. **Integración Flow real con cuenta sandbox** — ⏸️ pendiente (decisión 2026-07-15). US0009 quedó implementada mock-first: el `FlowClient` real (firma HMAC) ya existe en `backend/Infrastructure/External/FlowClient.cs`; cuando se obtengan las credenciales, configurar `Flow:ApiKey`, `Flow:SecretKey` y `Flow:UseMock=false`, y probar el flujo end-to-end contra sandbox.flow.cl. No bloquea el resto del backlog.
+3. ~~Integración Flow real con cuenta sandbox~~ — ✅ **validada e2e el 2026-07-16** (PR #19): orden firmada → checkout Webpay real → confirm firmado → reserva confirmada. Guía de configuración de credenciales y pruebas: `docs/flow-sandbox-testing.md`. En local el webhook de Flow no alcanza localhost — confirm manual o túnel (documentado).
+
+**Sin bloqueos activos.**
 
 ## Inventario de documentación
 
 | Documento | Rol |
 |---|---|
-| `readme.md` | Ficha del proyecto y descripción del producto (⚠️ secciones 2–7 pendientes) |
+| `readme.md` | Ficha del proyecto, descripción del producto y secciones 2–7 de la entrega (incluye tarjetas de prueba del sandbox en §2.6) |
+| `docs/flow-sandbox-testing.md` | Guía de pruebas del sandbox de Flow: levantar proyecto, credenciales, flujo e2e |
 | `docs/documentacion.md` | Documentación técnica v1: Lean Canvas, casos de uso, modelo, C4 |
 | `docs/data-model.md` | Modelo de datos vigente (13 entidades) |
 | `docs/api-spec.yml` | **Especificación oficial de la API** (OpenAPI 3.0) |
@@ -63,6 +66,5 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **US0011** — revisar y mergear PR #18 (`feature/us0011-chatbot-cotizador`). Con eso queda **todo el backlog (13 US / 80 SP) completo**
-2. **Pendiente deferred**: integración Flow real con sandbox (ver Bloqueos §3) · `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`) · `fixs/issue-005.md` (foto de reseña no se persiste) · upload de imágenes de referencia del chatbot a Object Storage (misma limitación que issue-005)
-3. Preparación de la entrega final: revisar `readme.md` secciones 2–7 y consolidar documentación
+1. **Preparación de la entrega final**: revisar y consolidar la documentación (`readme.md` §2–7, diagramas, PRs enumerados en §7) y grabar/preparar la demo
+2. **Mejoras opcionales (post-backlog)**: `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`) · `fixs/issue-005.md` (foto de reseña no se persiste) · upload de imágenes de referencia del chatbot a Object Storage (misma limitación que issue-005)

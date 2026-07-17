@@ -49,21 +49,19 @@ Retoma el trabajo desde el punto indicado en "Estado detallado" de HANDOFF.md.
 
 ### Dónde quedamos
 
-- ✅ **Fase 0**, **US0001**, **US0003–US0010**, **US0012–US0014** mergeadas a `main` (PRs #1–#17). Las **9 Must-Have (52 SP) están completas**.
-- 🟣 **US0011 en revisión** — rama `feature/us0011-chatbot-cotizador`, **PR #18 abierto** (última US del backlog):
-  - **Decisión previa** (`fixs/issue-007.md`, CA9): el depósito deja de ser fijo — si la reserva viene de una cotización, el hold recalcula la fórmula server-side y deposit = deposit_percentage × máx(mínimo cotizado, min_session_price). Sin cotización, fallback 30% × min_session_price.
-  - **Backend**: `QuoteCalculatorService` (fuente única de la fórmula: base = max(min, hourly × horas por tamaño coin/palm/hand/arm = 1/2/4/6h); factores multiplicativos cover-up +30%, color +20%, zona difícil +15%; rango [×0.8, ×1.3]) · `POST /api/quotes/calculate` (público, 404/422) · `GET /api/styles` (catálogo id/name/slug, nuevo en api-spec) · hold de US0008 integra la cotización.
-  - **Frontend**: `QuoteChatbotComponent` (overlay 5 pasos, conversación derivada del estado → atrás = limpiar respuesta) + `QuoteService` (draft en memoria + localStorage si autenticado; el hold del perfil adjunta el draft). CTAs del hero "Cotizar"/"Reservar" ahora funcionales.
-  - **Verificado e2e en dev**: cotización costillas+color+mano con Matías → rango $264.960–$430.560, depósito $79.488 heredado por el resumen de reserva (antes: $24.000 fijo).
-  - ⚠️ **Limitación conocida**: las imágenes de referencia del paso 4 solo tienen preview local — el upload a Object Storage sigue pendiente (misma limitación mock-first que `fixs/issue-005.md`).
-- Siguiente: mergear PR #18 → **backlog completo (13 US / 80 SP)**. Luego: deferred (Flow sandbox, fix-search-dropdown, issue-005, upload referencias) y preparación de la entrega final (readme.md §2–7).
+- ✅ **BACKLOG COMPLETO** — Fase 0 + las **13 US (80 SP)** mergeadas a `main` (PRs #1–#18). Última: US0011 (chatbot cotizador + depósito según cotización, `fixs/issue-007.md`).
+- ✅ **Integración Flow real validada e2e contra sandbox.flow.cl** (2026-07-16, PR #19): orden firmada HMAC → checkout Webpay real con tarjeta de prueba → confirm firmado → pago `completed` y reserva `confirmed`. Guía completa (levantar proyecto, credenciales por entorno, tarjetas, confirm manual): **`docs/flow-sandbox-testing.md`**.
+  - Credenciales: user-secrets o `appsettings.Development.json` (gitignored) en local; `.env` en Docker; `Flow__*` env vars en producción. Nunca en el repo.
+  - En local el webhook de Flow no alcanza localhost → confirm manual (`POST /api/payments/confirm` con el token) o túnel ngrok. Documentado.
+  - Hallazgos corregidos en PR #19: FK de limpieza de holds expirados con pago iniciado (bug que bloqueaba reservas del artista), FlowClient ahora expone el error de Flow, PaymentTests herméticos (fuerzan `Flow:UseMock=true`).
+- Siguiente: **preparación de la entrega final** (consolidar readme §2–7, PRs en §7, demo). Mejoras opcionales: fix-search-dropdown · issue-005 (foto de reseña) · upload de referencias del chatbot a Object Storage.
 - **Rechazo de pago (US0009)**: Payment queda `pending` (el modelo no tiene estado `failed`); el cliente puede reintentar mientras el hold viva y el TTL libera el slot.
-- **Flow real**: ⏸️ deferred por decisión del 2026-07-15 — se seguirá con el mock. Al retomar: obtener credenciales sandbox → `Flow:ApiKey/SecretKey` + `Flow:UseMock=false` + prueba end-to-end contra sandbox.flow.cl. El resto del código no cambia.
-- **Pendiente deferred**: `fix-search-dropdown` (dropdown de sugerencias se superpone con "Resultados").
+- ⚠️ **Limitación conocida (US0011)**: las imágenes de referencia del paso 4 del chatbot solo tienen preview local — upload a Object Storage pendiente (como `fixs/issue-005.md`).
 
 ### Decisiones/contexto no evidentes en el repo
 
-- Cuenta **Flow** de producción ya creada (2026-07-14, rubro: reserva/depósitos de servicios de tatuaje). Credenciales sandbox pendientes; US0009 usa mock hasta tenerlas.
+- Cuenta **Flow** creada (2026-07-14) y **credenciales sandbox configuradas y validadas** (2026-07-16) — viven en el `appsettings.Development.json` local del desarrollador (gitignored), no en el repo.
+- **BD dev local**: la clienta seed Camila quedó con email real `rodrigo@syntaxis.cl` (login con ese email / `Test1234!`) porque el sandbox de Flow valida el email del pagador (error 1620 con `@example.cl`). Revertible con UPDATE; necesario para probar pagos reales.
 - Seed actual (`backend/Seed/DatabaseSeeder.cs`): 5 artistas publicados en Santiago con coordenadas reales, 12 obras de portafolio c/u, 3 certificados, 2 premiados, 2 auspiciados (3 sponsorships cubriendo los 3 tipos de relación). `RatingAvg`/`TotalReviews` quedan en 0 (no hay reviews seed) — la vitrina "Mejor calificados" ordenará por rating aunque todos empaten; considerar seed de reviews si un CA lo exige.
 - El equipo usa la skill `prompt-registry` (`ai-specs/skills/prompt-registry/SKILL.md`) para registrar prompts en `prompts/00-all-prompts.md` al cerrar cada US.
 

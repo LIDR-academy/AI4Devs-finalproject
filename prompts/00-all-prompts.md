@@ -1388,6 +1388,54 @@ avancemos con la opción 1, depósito según cotización
 
 ---
 
+## 83 — Configuración segura de credenciales del sandbox de Flow
+
+> 📋 2026-07-16T22:30:00Z · Claude Code · Claude Fable 5 · medium · ~160K tokens · rodri
+
+```
+Pasemos al sandbox. Donde dejo la API KEY y la Secret Key ? Ojo que esto no debe quedar en github por seghuridad ni tampoco en el odigo fuente pero debe funcionar para que probemos en local y si se publica en produccion
+```
+
+*(Mecanismo montado en chore/flow-sandbox-config: UserSecretsId en el csproj (dotnet user-secrets), appsettings.Development.json ya gitignored, Flow__* desde .env en docker-compose (+.env.example), variables de entorno en producción. Las claves nunca tocan el repo ni la conversación.)*
+
+---
+
+## 84 — Probar el sandbox con las claves configuradas
+
+> 📋 2026-07-16T23:00:00Z · Claude Code · Claude Fable 5 · medium · ~170K tokens · rodri
+
+```
+listo, lo hice con la alternativa del appsettings.development, ahora podemos probar?
+```
+
+*(Validación por API con 3 hallazgos corregidos: (1) placeholder Jwt del example rompía el login (IDX10720, <256 bits) — sección eliminada del Development.json local; (2) bug real US0008: la limpieza de holds expirados violaba la FK payments→bookings si el hold inició un pago, bloqueando reservas futuras del artista — fix + test de regresión; (3) FlowClient ocultaba el error de Flow — ahora expone el cuerpo (así se descubrió el code 1620: el sandbox exige email real del pagador; email seed actualizado en BD dev). Resultado: orden real creada en sandbox.flow.cl — credenciales y firma HMAC validadas.)*
+
+---
+
+## 85 — Pago con tarjeta de prueba y confirmación manual
+
+> 📋 2026-07-16T23:45:00Z · Claude Code · Claude Fable 5 · medium · ~185K tokens · rodri
+
+```
+listo, pagué con la tarjeta de prueba, confirma el pago
+```
+
+*(POST /api/payments/confirm disparado manualmente con el token (el webhook de Flow no alcanza localhost; el confirm autentica consultando el estado real a Flow con firma y es idempotente): pago Completed con paid_at, reserva Confirmed. Las órdenes no pagadas siguieron Pending. **Flujo Flow sandbox validado end-to-end** — bloqueo #3 resuelto. Fix adicional: PaymentTests herméticos (fuerzan UseMock=true; cargaban el Development.json local). Backend 95/95 en la rama.)*
+
+---
+
+## 86 — Documentar tarjetas de prueba, flujo de tests y arranque del proyecto
+
+> 📋 2026-07-16T23:55:00Z · Claude Code · Claude Fable 5 · medium · ~190K tokens · rodri
+
+```
+Deja esto de las tarjetas de pruebas en un archivo .md y en el Readme del proyecto. Lo mismo en cmo se debe realizar el flujo para tests y commo se debe levantar el proyecto.
+```
+
+*(Creado docs/flow-sandbox-testing.md (levantar proyecto, credenciales por entorno, flujo e2e con tarjetas Webpay y confirm manual, verificación); readme.md §2.6 con comandos + tabla de tarjetas; puntero en development_guide.md. PR #19 mergeado; docs de estado sincronizados tras los merges de #18 y #19.)*
+
+---
+
 ## Resumen de archivos modificados (sesión 13)
 
 | Archivo | Acción |
@@ -1419,9 +1467,127 @@ avancemos con la opción 1, depósito según cotización
 | `frontend/.../artist-profile/` | Actualizado — CTAs Cotizar/Reservar + hold con draft de cotización |
 | `docs/api-spec.yml` | Actualizado — QuoteResponse.factors, /styles, depositAmount con piso |
 | `docs/us/us0011/` + `docs/us/all-us.md` | Actualizados — CA9 y CAs marcados |
+| `backend/backend.csproj` + `.env.example` + `docker-compose.yml` + `appsettings.Development.example.json` | Actualizados/creados — credenciales Flow seguras |
+| `backend/Infrastructure/External/FlowClient.cs` | Actualizado — expone el error de Flow |
+| `backend/Tests/PaymentTests.cs` | Actualizado — hermeticidad (UseMock forzado) |
+| `docs/flow-sandbox-testing.md` | Creado — guía de pruebas del sandbox |
+| `readme.md` | Actualizado — §2.6 arranque, tests y tarjetas de prueba |
 
-> ⚠️ Nota de trazabilidad: las sesiones que implementaron US0012 (commits `2389366`, `aab2996`, `d9c766b`) y US0013 (PR #15) no quedaron registradas en este archivo; sus prompts no están disponibles desde esta sesión.
+> ⚠️ Nota de trazabilidad: las sesiones que implementaron US0012 (commits `2389366`, `aab2996`, `d9c766b`) y US0013 (PR #15) no quedaron registradas en su momento. ✅ Los prompts de US0012 fueron recuperados después en la **Sesión 14** (87–94, registrados desde GitHub Copilot); los de US0013 siguen sin recuperar.
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 13 sesiones · 82 prompts documentados*
+# Sesión 14 — Fix mapa US0012: render, overflow y Angular Material
+
+> 📅 2026-07-15/16 · GitHub Copilot CLI · Claude Opus 4.6 · high · ~120K tokens · rodri
+
+---
+
+## 87 — Retomar proyecto y revisar contexto
+
+> 📋 2026-07-15T23:00:00Z · Copilot CLI · Claude Sonnet 4.6 · high · ~80K tokens · rodri
+
+```
+Claude code quedó iniciando una tarea que era al parecer la US0013. Revisa el contexto del proyecto, project status, prompts y all prompts en archivos markdown y los cambios locales, en base a eso retoma el proyecto para continuar con la historia de usuario
+```
+
+*(Se retomó el proyecto identificando que US0013 ya estaba mergeada y US0012 tenía el build roto por duplicación de clase en map-view.component.ts.)*
+
+---
+
+## 88 — Credenciales de ejemplo para seeds
+
+> 📋 2026-07-15T23:15:00Z · Copilot CLI · Claude Sonnet 4.6 · high · ~85K tokens · rodri
+
+```
+dame un listado de las credenciales de ejemplo y dejalo en un archivo login-samples.md que deberían estar en los seeds
+```
+
+*(Creado login-samples.md en la raíz con los 9 usuarios seed (3 clientes, 5 artistas, 1 admin) — todos con password Test1234!.)*
+
+---
+
+## 89 — Problema con reseñas: no se puede calificar
+
+> 📋 2026-07-15T23:30:00Z · Copilot CLI · Claude Sonnet 4.6 · high · ~90K tokens · rodri
+
+```
+Como puedo calificar y/o dejar reseñas de artistas, ingresé como camila rojas que es cliente, reservé, la reserva está confirmada pero no puedo dejar reseña.
+```
+
+*(Se investigó el flujo de review — el issue estaba en el endpoint POST /api/bookings/{id}/review que requiere booking status Confirmed. Se verificó que funciona correctamente.)*
+
+---
+
+## 90 — Foto de reseña no aparece en perfil del artista
+
+> 📋 2026-07-16T00:00:00Z · Copilot CLI · Claude Sonnet 4.6 · high · ~95K tokens · rodri
+
+```
+Subí una imagen a la reseña y ésta no aparece después en el perfil del artista. Dejalo como pendiente
+```
+
+*(Registrado como issue-005.md: tattooPhotoUrl siempre null, presigned URL flow no implementado para reviews. CA5 de US0013 pendiente.)*
+
+---
+
+## 91 — Continuar con US0012 (mapa)
+
+> 📋 2026-07-16T00:20:00Z · Copilot CLI · Claude Sonnet 4.6 · high · ~100K tokens · rodri
+
+```
+vamos con el mapa primero, lueg el orden ya defindo.
+```
+
+*(Se priorizó US0012 sobre US0014. Se inició implementación del mapa interactivo con Leaflet + PostGIS.)*
+
+---
+
+## 92 — Bug: mapa se ve negro, no muestra nada
+
+> 📋 2026-07-16T01:00:00Z · Copilot CLI · Claude Sonnet 4.6 · high · ~110K tokens · rodri
+
+```
+El mapa se ve negro, no muestra nada. Hice la prueba y si selecciono "Ciudad" solamente me muestra los artistas en modo lista, por 10km no me muestra nada. Aún sí, el mapa no se ve
+```
+
+*(Diagnosticados 3 bugs: ViewChild dentro de @if, Angular Material no instalado, contenedor destruido en toggle. Se reescribió el componente completo sin Angular Material, con container siempre en DOM.)*
+
+---
+
+## 93 — Fix overflow: mapa se sale del cuadro
+
+> 📋 2026-07-16T00:09:00Z · Copilot CLI · Claude Opus 4.6 · high · ~120K tokens · rodri
+
+```
+Se ve mal el mapa. Se sale del cuadro donde deberia estar
+```
+
+*(Fix CSS: .map-page cambió de min-height a height con overflow:hidden; .map-wrapper con min-height:0 para que flex:1 compute altura; .list-wrapper con overflow-y:auto. Commit d9c766b.)*
+
+---
+
+## 94 — Registrar prompts de la sesión
+
+> 📋 2026-07-16T00:16:00Z · Copilot CLI · Claude Opus 4.6 · high · ~120K tokens · rodri
+
+```
+Recuerda usar la skill prompt registry, entiendo que en esta sesión hubo prompts que no quedaron registrados como se debería.
+```
+
+*(Se ejecutó la skill prompt-registry para registrar los 8 prompts significativos de esta sesión.)*
+
+---
+
+## Resumen de archivos modificados (sesión 14)
+
+| Archivo | Acción |
+|---|---|
+| `frontend/src/app/features/map/map-view.component.ts` | Reescrito — eliminado Angular Material, ViewChild siempre en DOM |
+| `frontend/src/app/features/map/map-view.component.scss` | Reescrito — eliminados bloques muertos mat-*, fix height/overflow |
+| `frontend/src/app/features/map/map-view.component.spec.ts` | Actualizado — mock initializeMap, setViewMode en vez de onViewModeChange |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 14 |
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 14 sesiones · 94 prompts documentados*
