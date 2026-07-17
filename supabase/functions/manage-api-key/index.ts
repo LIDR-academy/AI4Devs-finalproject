@@ -6,6 +6,7 @@
 // Jest/Stryker harness).
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
+import { corsHeaders, corsPreflightResponse } from '../_shared/cors.ts';
 import { handleRemoveApiKey, type RemoveApiKeyResult } from './handle-remove.ts';
 import { handleSaveApiKey, type SaveApiKeyResult } from './handle-save.ts';
 import { logEvent } from './logger.ts';
@@ -25,8 +26,11 @@ type RequestBody = SaveRequestBody | RemoveRequestBody;
 
 type DispatchResult = { status: number; body: SaveApiKeyResult | RemoveApiKeyResult };
 
-const jsonResponse = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const jsonResponse = (request: Request, status: number, body: unknown): Response =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders(request), 'Content-Type': 'application/json' },
+  });
 
 const errorStatus = (result: SaveApiKeyResult | RemoveApiKeyResult): number =>
   'code' in result ? 502 : 200;
@@ -103,6 +107,10 @@ const dispatch = async (
 };
 
 Deno.serve(async (request: Request) => {
+  if (request.method === 'OPTIONS') {
+    return corsPreflightResponse(request);
+  }
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -113,7 +121,7 @@ Deno.serve(async (request: Request) => {
   try {
     const caller = await authenticateCaller(request, supabaseUrl, anonKey);
     if (!caller) {
-      return jsonResponse(401, { code: 'network_error' });
+      return jsonResponse(request, 401, { code: 'network_error' });
     }
 
     const body = (await request.json()) as Partial<RequestBody>;
@@ -122,12 +130,12 @@ Deno.serve(async (request: Request) => {
 
     const result = await dispatch(body, adminClient, caller.userId);
     if (!result) {
-      return jsonResponse(400, { code: 'network_error' });
+      return jsonResponse(request, 400, { code: 'network_error' });
     }
-    return jsonResponse(result.status, result.body);
+    return jsonResponse(request, result.status, result.body);
   } catch {
     // Redacted per @s12 -- never log the request body or key, only a generic outcome.
     logEvent({ action, outcome: 'network_error', userId: 'unknown' });
-    return jsonResponse(502, { code: 'network_error' });
+    return jsonResponse(request, 502, { code: 'network_error' });
   }
 });

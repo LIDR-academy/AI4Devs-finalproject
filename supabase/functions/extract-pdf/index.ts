@@ -13,6 +13,7 @@
 // pipeline (out of scope — a manual step later).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { corsHeaders, corsPreflightResponse } from '../_shared/cors.ts';
 import { buildPdfExtractionResult } from './_shared/extraction-dto.ts';
 import { detectExtractionFailure } from './_shared/extraction-failure-detection.ts';
 import { isFileTooLarge } from './_shared/file-size-guard.ts';
@@ -32,8 +33,11 @@ type ExtractPdfRequestBody = {
   documentId: string;
 };
 
-const jsonResponse = (body: unknown, status = 200): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const jsonResponse = (req: Request, body: unknown, status = 200): Response =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
+  });
 
 // deno-lint-ignore no-explicit-any
 type AnySupabaseClient = any;
@@ -48,9 +52,13 @@ const markDocumentFailed = (
 ): Promise<unknown> => supabase.from('documents').update({ status: 'failed', error_code: errorCode }).eq('id', documentId);
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return corsPreflightResponse(req);
+  }
+
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
-    return jsonResponse({ errorCode: 'unauthenticated' }, 401);
+    return jsonResponse(req, { errorCode: 'unauthenticated' }, 401);
   }
 
   // Scoped to the caller's own JWT (forwarded, not the service-role key) — every read/write below
@@ -64,7 +72,7 @@ Deno.serve(async (req) => {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return jsonResponse({ errorCode: 'unauthenticated' }, 401);
+    return jsonResponse(req, { errorCode: 'unauthenticated' }, 401);
   }
 
   const { documentId } = (await req.json()) as ExtractPdfRequestBody;
@@ -75,7 +83,7 @@ Deno.serve(async (req) => {
     .eq('id', documentId)
     .single();
   if (documentError || !documentRow) {
-    return jsonResponse({ errorCode: 'extraction_failed' }, 404);
+    return jsonResponse(req, { errorCode: 'extraction_failed' }, 404);
   }
 
   try {
@@ -93,7 +101,7 @@ Deno.serve(async (req) => {
     // parse/image work runs (no `.arrayBuffer()` read needed for the oversized case at all).
     if (isFileTooLarge(sourceBlob.size, PDF_EXTRACTION_LIMITS)) {
       await markDocumentFailed(supabase, documentId, 'file_too_large');
-      return jsonResponse({ errorCode: 'file_too_large' }, 422);
+      return jsonResponse(req, { errorCode: 'file_too_large' }, 422);
     }
 
     const sourceBytes = new Uint8Array(await sourceBlob.arrayBuffer());
@@ -107,7 +115,7 @@ Deno.serve(async (req) => {
       ({ pages, images: rawImages } = await MupdfExtractionAdapter.extract(sourceBytes));
     } catch (_parseCause) {
       await markDocumentFailed(supabase, documentId, 'corrupt_or_unreadable');
-      return jsonResponse({ errorCode: 'corrupt_or_unreadable' }, 422);
+      return jsonResponse(req, { errorCode: 'corrupt_or_unreadable' }, 422);
     }
 
     // Structural/content guards (@s8 scanned-detection, @s11 page-count) run over the parsed
@@ -117,7 +125,7 @@ Deno.serve(async (req) => {
     const failureCode = detectExtractionFailure({ pages }, PDF_EXTRACTION_LIMITS, SCANNED_DETECTION_MIN_TEXT_LENGTH);
     if (failureCode) {
       await markDocumentFailed(supabase, documentId, failureCode);
-      return jsonResponse({ errorCode: failureCode }, 422);
+      return jsonResponse(req, { errorCode: failureCode }, 422);
     }
 
     // Downscale every image in memory first (pure, no I/O) — a failure here aborts before any
@@ -191,9 +199,9 @@ Deno.serve(async (req) => {
       images: imageRefs,
     });
 
-    return jsonResponse(result, 200);
+    return jsonResponse(req, result, 200);
   } catch (_cause) {
     await markDocumentFailed(supabase, documentId, 'extraction_failed');
-    return jsonResponse({ errorCode: 'extraction_failed' }, 500);
+    return jsonResponse(req, { errorCode: 'extraction_failed' }, 500);
   }
 });

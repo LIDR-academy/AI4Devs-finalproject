@@ -21,6 +21,7 @@ import { generateObject } from 'npm:ai@7';
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@4';
 
+import { corsHeaders, corsPreflightResponse } from '../_shared/cors.ts';
 import { assembleGeneratedLesson } from './_shared/lesson-generation.assembly.ts';
 import { GenerationTimeoutError, mapGenerationError } from './_shared/lesson-generation.errors.ts';
 import {
@@ -59,11 +60,14 @@ type DocumentImageRow = {
   description: string | null;
 };
 
-const jsonResponse = (body: unknown, status = 200): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const jsonResponse = (req: Request, body: unknown, status = 200): Response =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
+  });
 
-const errorResponse = (errorCode: GenerationErrorCode, status: number): Response =>
-  jsonResponse({ errorCode }, status);
+const errorResponse = (req: Request, errorCode: GenerationErrorCode, status: number): Response =>
+  jsonResponse(req, { errorCode }, status);
 
 const isLessonComposition = (value: unknown): value is LessonComposition =>
   value === 'instructional-only' || value === 'activity-only' || value === 'both';
@@ -146,9 +150,13 @@ const runVisionPlacement = async (
 };
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return corsPreflightResponse(req);
+  }
+
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
-    return errorResponse('unauthenticated', 401);
+    return errorResponse(req, 'unauthenticated', 401);
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -164,7 +172,7 @@ Deno.serve(async (req) => {
     data: { user },
   } = await callerClient.auth.getUser();
   if (!user) {
-    return errorResponse('unauthenticated', 401);
+    return errorResponse(req, 'unauthenticated', 401);
   }
 
   // Service role reads only this caller's live plan and, for free users, their Vault key.
@@ -175,11 +183,11 @@ Deno.serve(async (req) => {
   try {
     body = (await req.json()) as Partial<GenerateLessonRequest>;
   } catch {
-    return errorResponse('document_not_ready', 400);
+    return errorResponse(req, 'document_not_ready', 400);
   }
 
   if (typeof body.documentId !== 'string' || !isLessonComposition(body.composition)) {
-    return errorResponse('document_not_ready', 400);
+    return errorResponse(req, 'document_not_ready', 400);
   }
   const { documentId, composition } = body as GenerateLessonRequest;
 
@@ -190,7 +198,7 @@ Deno.serve(async (req) => {
     .single();
   const document = documentRow as DocumentRow | null;
   if (documentError || !document || document.status !== 'extracted') {
-    return errorResponse('document_not_ready', 422);
+    return errorResponse(req, 'document_not_ready', 422);
   }
 
   let resolvedKey: Awaited<ReturnType<typeof handleLessonGenerationRoute>>;
@@ -239,7 +247,7 @@ Deno.serve(async (req) => {
       },
     });
   } catch {
-    return errorResponse('generation_failed', 500);
+    return errorResponse(req, 'generation_failed', 500);
   }
   if (!resolvedKey.ok) {
     // Document identified — mark so the PDF list shows Retry (@s3/@s8).
@@ -248,7 +256,7 @@ Deno.serve(async (req) => {
     } catch {
       // best-effort; still return the typed generation error
     }
-    return errorResponse(
+    return errorResponse(req, 
       resolvedKey.errorCode,
       resolvedKey.errorCode === 'platform_key_unavailable'
         ? 503
@@ -346,7 +354,7 @@ Deno.serve(async (req) => {
       lessonId,
       slides: lesson.slides.map((slide) => ({ ...slide, lessonId })),
     };
-    return jsonResponse(persisted, 200);
+    return jsonResponse(req, persisted, 200);
   } catch (cause) {
     // Redacted per @s8 -- never log the request body, the key, or the raw provider error; the
     // typed mapping below is the only thing derived from `cause`.
@@ -357,7 +365,7 @@ Deno.serve(async (req) => {
     } catch {
       // best-effort; still return the typed generation error
     }
-    return errorResponse(errorCode, status);
+    return errorResponse(req, errorCode, status);
   } finally {
     if (resolvedKey.source === 'platform') {
       try {
