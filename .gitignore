@@ -48,3 +48,10 @@ workspace/generated/
 backend/prisma/dev.db
 # Final demo videos - stored outside Git because of GitHub size limits
 docs/evidence/finalproject/video/*.mp4
+
+# Local Edge configuration and generated workspace artifacts
+edge/config/*.local.json
+edge/config/*.local.json.backup-*
+edge/workspace/
+frontend/.env.local
+
