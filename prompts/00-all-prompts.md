@@ -1630,4 +1630,16 @@ listo, continua con la pasada de coherencia sobre documentacion.md
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 15 sesiones · 97 prompts documentados*
+## 98 — Publicar la primera versión estable
+
+> 📋 2026-07-17T03:00:00Z · Claude Code · Claude Fable 5 · medium · ~215K tokens · rodri
+
+```
+Listo, deja una versión estable de esto como primera versión estable del producto
+```
+
+*(Tag anotado **v1.0.0** sobre main + release en GitHub con notas completas: flujo del cliente de punta a punta, 235 tests, validación Flow sandbox, stack, cómo ejecutar y limitaciones conocidas. Hito registrado en PROJECT_STATUS.)*
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 15 sesiones · 98 prompts documentados*

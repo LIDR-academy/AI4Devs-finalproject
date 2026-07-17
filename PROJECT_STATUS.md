@@ -1,14 +1,15 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-16 (US0011 ✅ PR #18 y chore Flow sandbox ✅ PR #19 mergeados — **backlog completo: 13 US / 80 SP** · integración Flow real validada e2e contra sandbox)
+> Última actualización: 2026-07-17 — 🏷️ **[v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0) publicada: primera versión estable del MVP** (backlog completo 13 US / 80 SP · 235 tests en verde · Flow validado e2e contra sandbox · documentación de entrega consolidada — PRs #21 y #22)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
 
 | Aspecto | Estado |
 |---|---|
-| Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
+| Versión estable | 🏷️ **v1.0.0** (tag + release en GitHub, 2026-07-17) |
+| Entrega 1 (documentación) | ✅ Completa (inconsistencias de `fixs/issue-004.md` resueltas; notas de vigencia en `docs/documentacion.md` — PR #22) |
 | Entrega 2 (implementación) | ✅ **Backlog completo** — Fase 0 + las 13 US (9 Must-Have 52 SP + 4 Should-Have 28 SP) mergeadas a main |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
 | Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0014 implementados (109 tests en verde) |
