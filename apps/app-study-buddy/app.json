@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "app-study-buddy",
-    "slug": "app-study-buddy",
+    "slug": "aistudybuddy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -35,6 +35,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8d10a287-6bd1-40a6-9649-31993eb16c2a"
+      }
+    },
+    "owner": "rimbener"
   }
 }
