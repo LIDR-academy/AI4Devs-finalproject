@@ -1,0 +1,68 @@
+---
+description: when a hook/component has several related pieces of local state
+alwaysApply: false
+---
+
+# Related local state → reducer
+
+When a hook or component owns **3 or more state values that change together**, use `useReducer` instead of multiple `useState` calls.
+
+"Change together" = updated in the same handlers / transitions (e.g. loading + data + error; step + draft + dirty flag). Independent unrelated scalars may stay as separate `useState`.
+
+Still React local state only — **no Redux** (see `global.mdc`).
+
+```ts
+// ❌ don't — coordinated fields as separate useState
+const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+const [data, setData] = useState<Lesson | null>(null);
+const [error, setError] = useState<string | null>(null);
+
+const load = async () => {
+  setStatus('loading');
+  setError(null);
+  try {
+    const lesson = await fetchLesson();
+    setData(lesson);
+    setStatus('idle');
+  } catch {
+    setError('failed');
+    setStatus('error');
+  }
+};
+
+// ✅ do — one reducer, one dispatch per transition
+type State = {
+  status: 'idle' | 'loading' | 'error';
+  data: Lesson | null;
+  error: string | null;
+};
+
+type Action =
+  | { type: 'load/start' }
+  | { type: 'load/success'; data: Lesson }
+  | { type: 'load/failure'; error: string };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'load/start':
+      return { status: 'loading', data: state.data, error: null };
+    case 'load/success':
+      return { status: 'idle', data: action.data, error: null };
+    case 'load/failure':
+      return { status: 'error', data: null, error: action.error };
+  }
+}
+
+const [state, dispatch] = useReducer(reducer, {
+  status: 'idle',
+  data: null,
+  error: null,
+});
+```
+
+## Rules of thumb
+
+- **Threshold**: ≥3 related fields → reducer. 1–2 is fine as `useState`.
+- **File name**: put the pure reducer (+ its private `State` / `Action` + initial state) in a co-located `*.reducer.ts` named after the owner — `use-feature.ts` → `use-feature.reducer.ts`, `component-name` hook → `use-component-name.reducer.ts`. Follow `types.mdc` / `component-split.mdc` for any other split.
+- **Prefer named actions** over a grab-bag `setState` patch; transitions should be explicit and testable.
+- Reducer stays **pure** — no side effects; effects and service calls stay in the hook/component.

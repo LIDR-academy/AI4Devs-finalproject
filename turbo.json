@@ -1,0 +1,22 @@
+{
+  "$schema": "https://v2-10-4.turborepo.dev/schema.json",
+  "globalDependencies": ["biome.jsonc"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "storybook-static/**"]
+    },
+    "lint": {},
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "test": {},
+    "mutation": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

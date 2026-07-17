@@ -1,0 +1,65 @@
+---
+alwaysApply: true
+---
+
+## Monorepo Specification
+
+This is a monorepo for react-native/node/next applications.
+
+### This monorepo have 3 main folders: apps, libs and supabase
+
+- libs: this folder should contain the shared code between the applications. Always name them with @helsoft/
+  The main libraries are:
+  - @helsoft/types: this library should contain the shared types between the applications (cross-lib contracts only).
+    - The files on this folder should be named like this: type-name.ts.
+    - The files on this folder should be plain typescript files. No need to use any framework or library.
+    - Feature-local / multi-file types stay co-located as `*.types.ts` next to the component / hook / service / DAO — see `.agents/rules/types.mdc`.
+  - @helsoft/lib-with-storybook: this library is a template library for creating new libraries that use storybook
+  - @helsoft/components: this library should contain the shared components between the applications.
+    - The files on this folder should be on a folder named like this: component-name.
+    - The files on this folder should be named like this: component-name.tsx.
+    - Each component should have Storybook stories on a file named component-name.stories.tsx
+    - Use the examples in libs/lib-with-storybook/src/stories to create new stories.
+    - Follow .agents/rules/atomic-design.mdc when structuring components.
+    - Follow .agents/rules/component-split.mdc for non-trivial components (organisms / complex molecules).
+    - Storybook dev: port 6007 (libs/lib-with-storybook uses 6006).
+  - @helsoft/activities: this library holds activity-slide organisms only (multiple choice, fill-in-the-blank, flashcard, matching, open-ended, etc.) — every new activity type is built here, not in @helsoft/components.
+    - Same conventions and tooling as @helsoft/components (Storybook + Jest + Playwright + Stryker), scaffolded the same way.
+    - Depends on @helsoft/components (workspace:*) for shared atoms/molecules/theme (e.g. Card, AnswerOption) — no duplicating the design system.
+    - Storybook dev: port 6009.
+  - @helsoft/logging-in-out: prop-driven login/logout organisms (LoginForm, SignInForm, SignOut). Same Storybook/Jest/Playwright/Stryker tooling as @helsoft/components; depends on @helsoft/components for atoms/molecules. No useAuth or router — parents inject callbacks/state via props. Storybook dev: port 6010.
+  - @helsoft/hooks: this library should contain the shared hooks between the applications.
+    - Use rules from .agents/rules/hooks-service-dao.mdc and .agents/rules/state.mdc
+  - @helsoft/services: non-Supabase services + DAOs (`fetch` REST, AsyncStorage, other external/platform stores).
+    - Use rules from .agents/rules/hooks-service-dao.mdc
+    - Do **not** put Supabase client / DB / auth / storage DAOs here — those live in `@helsoft/supabase-services`.
+  - @helsoft/supabase-services: Supabase services + DAOs + shared client.
+    - Use rules from .agents/rules/hooks-service-dao.mdc
+    - The shared Supabase client lives in src/supabase/ (initSupabase/getSupabase).
+    - Do **not** put generic REST/`fetch` or platform-store DAOs here — those live in `@helsoft/services`.
+
+- apps: this folder should contain the applications. The code on the applications should be minimal, the business logic should be on the libs folder. So for example for an application named app-feature-name, there should be a lib named libs/feature-name.
+
+- supabase: the BE is Supabase. This folder holds CLI config and migrations.
+  - Schema changes via migrations: npx supabase migration new <name>, then npx supabase db push.
+  - Apps read EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY from .env (see apps/app-study-buddy/.env.example) and call initSupabase at startup.
+
+- Use pnpm as package manager.
+- Use Turborepo tooling.
+- Use Expo for react-native applications.
+- Use Expo Router for react-native applications.
+- Always use functional React. Don't use Redux. Related local state (≥3 fields that change together) → `useReducer` per `.agents/rules/state.mdc`.
+- Always create a type for React components Props. Types rules: `.agents/rules/types.mdc` (multi-file → `*.types.ts`; only exported types there; no runtime logic).
+- **Comment the *why*, not the *what**.**
+
+### Components & Storybook
+- **Every component authored in a Storybook-enabled library always ships a co-located `component-name.stories.tsx`** (`@helsoft/components`, `@helsoft/activities`, `@helsoft/logging-in-out`, and any lib scaffolded from `@helsoft/lib-with-storybook`). No component is "done" without its story; the story covers the component's states. See `.agents/rules/atomic-design.mdc`.
+- **No children-as-function / render-prop pattern** (`children(value)`, `renderChildren?.(flag)`, `children: (x) => ReactNode`) unless a measured performance need forces it (e.g. deferring a heavy subtree that context/slots cannot solve). Prefer: plain `ReactNode` children, explicit props, context + hook (`useX`), or a named slot prop (`header`, `fallback`). Document the perf rationale in a comment when the exception is used.
+
+### i18n / user-facing text
+- **Never hardcode user-facing strings.** Render them with `t('namespace.key')` **directly at the usage site** — do not collect them into a `labels` variable/object. The only allowed constant is a **key dictionary** that maps a domain value to a translation key (e.g. `GENERATION_ERROR_KEYS`). See `.agents/rules/i18n.mdc`.
+
+### Testing
+- Use Storybook + Playwright for testing components that use storybook.
+- Use Jest, React Native Testing Library for testing hooks, services, daos and components logic.
+- Use Supabase Test Helpers for testing Supabase queries.

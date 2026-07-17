@@ -1,0 +1,187 @@
+import { useLocalization } from '@helsoft/localization';
+import { memo, useCallback } from 'react';
+import { FlatList, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
+import { Button } from '../../atoms/button/button';
+import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
+import { PdfDocumentListItem } from '../../molecules/pdf-document-list-item/pdf-document-list-item';
+import { layout } from '../../theme/spacing';
+import { Dialog } from '../dialog/dialog';
+import type { PdfDocumentListItemData, PdfDocumentListProps } from './pdf-document-list.types';
+import { usePdfDocumentList } from './use-pdf-document-list';
+
+/** testID for the Loading-state affordance (@s15). */
+export const PDF_DOCUMENT_LIST_LOADING_TEST_ID = 'pdf-document-list-loading-indicator';
+
+/** testID for the virtualized content list. */
+export const PDF_DOCUMENT_LIST_TEST_ID = 'pdf-document-list';
+
+type PdfDocumentListRowProps = {
+  item: PdfDocumentListItemData;
+  onGenerate?: (id: string) => void;
+  onOpenLesson: (id: string) => void;
+  onRequestDelete?: (id: string) => void;
+};
+
+/**
+ * PdfDocumentList — presentational organism for the upload-screen PDF list
+ * (Loading / Content / Empty / Error). Owns chrome i18n via t(); rows own theirs.
+ * Delete confirms via shared Dialog before calling `onDelete` (@s12/@s13).
+ */
+export const PdfDocumentList = ({
+  state,
+  documents,
+  onGenerate,
+  onOpenLesson,
+  onRetry,
+  onDelete,
+}: PdfDocumentListProps) => {
+  const { t } = useLocalization();
+  const { pendingDeleteId, setPendingDeleteId } = usePdfDocumentList({ state });
+
+  const keyExtractor = useCallback((item: PdfDocumentListItemData) => item.id, []);
+
+  const handleRequestDelete = useCallback(
+    (id: string) => {
+      setPendingDeleteId(id);
+    },
+    [setPendingDeleteId],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: PdfDocumentListItemData }) => (
+      <PdfDocumentListRow
+        item={item}
+        onGenerate={onGenerate}
+        onOpenLesson={onOpenLesson}
+        onRequestDelete={onDelete ? handleRequestDelete : undefined}
+      />
+    ),
+    [onGenerate, onOpenLesson, onDelete, handleRequestDelete],
+  );
+
+  if (state === 'loading') {
+    return (
+      <View testID={PDF_DOCUMENT_LIST_LOADING_TEST_ID}>
+        <ProgressIndicator variant="circular" size={layout.iconSize} />
+        <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
+          {t('pdfList.loading')}
+        </Text>
+      </View>
+    );
+  }
+
+  if (state === 'empty') {
+    return (
+      <View accessibilityRole="text" accessibilityLiveRegion="polite">
+        <Text style={styles.emptyText}>{t('pdfList.empty')}</Text>
+      </View>
+    );
+  }
+
+  if (state === 'error') {
+    return (
+      <View
+        style={styles.errorBanner}
+        accessibilityRole="alert"
+        accessibilityLiveRegion="assertive"
+      >
+        <Text style={styles.errorText}>{t('pdfList.error')}</Text>
+        <Button variant="text" onPress={onRetry}>
+          {t('pdfList.retry')}
+        </Button>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.root}>
+      <FlatList
+        testID={PDF_DOCUMENT_LIST_TEST_ID}
+        data={documents}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+      />
+      {onDelete ? (
+        <Dialog
+          open={pendingDeleteId !== null}
+          onClose={() => setPendingDeleteId(null)}
+          headline={t('pdfList.delete.confirmHeadline')}
+          confirmLabel={t('pdfList.delete.confirmAction')}
+          cancelLabel={t('pdfList.delete.cancelAction')}
+          onConfirm={() => {
+            const id = pendingDeleteId;
+            setPendingDeleteId(null);
+            if (id) onDelete(id);
+          }}
+        >
+          {t('pdfList.delete.confirmBody')}
+        </Dialog>
+      ) : null}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create((theme) => ({
+  root: {
+    flex: 1,
+    gap: theme.spacing.s3,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    gap: theme.spacing.s3,
+  },
+  emptyText: {
+    ...theme.typography.bodyLarge,
+    color: theme.colors.onSurfaceVariant,
+  },
+  errorBanner: {
+    gap: theme.spacing.s3,
+    backgroundColor: theme.colors.errorContainer,
+    borderRadius: theme.shape.card,
+    padding: theme.spacing.s3,
+  },
+  errorText: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.onErrorContainer,
+  },
+  visuallyHidden: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    overflow: 'hidden',
+  },
+}));
+
+/**
+ * Memoized row — keeps per-cell handlers stable across parent FlatList re-renders
+ * (full-review minor [perf]).
+ */
+const PdfDocumentListRow = memo(function PdfDocumentListRow({
+  item,
+  onGenerate,
+  onOpenLesson,
+  onRequestDelete,
+}: PdfDocumentListRowProps) {
+  const handleGenerate = useCallback(() => onGenerate?.(item.id), [onGenerate, item.id]);
+  const handleOpenLesson = useCallback(() => onOpenLesson(item.id), [onOpenLesson, item.id]);
+  const handleDelete = useCallback(() => {
+    onRequestDelete?.(item.id);
+  }, [onRequestDelete, item.id]);
+
+  return (
+    <PdfDocumentListItem
+      filename={item.filename}
+      status={item.status}
+      createdAt={item.createdAt}
+      pageCount={item.pageCount}
+      onGenerate={onGenerate ? handleGenerate : undefined}
+      onOpenLesson={handleOpenLesson}
+      onDelete={onRequestDelete ? handleDelete : undefined}
+    />
+  );
+});

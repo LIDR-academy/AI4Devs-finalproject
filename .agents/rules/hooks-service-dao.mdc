@@ -1,0 +1,110 @@
+---
+description: when creating hooks, services, or daos in libs
+alwaysApply: false
+---
+
+# Hook / Service / DAO layering
+
+```
+Component → Hook → Service → DAO → Supabase / external API
+```
+
+Components may call a Service directly (skipping the hook) when no React state/effects are needed. Each layer exports through its `index.ts` barrel and is tested independently.
+
+## Which lib?
+
+| Data source | Package | Approach |
+| --- | --- | --- |
+| App's own backend (DB tables, auth, storage) | **`@helsoft/supabase-services`** (`libs/supabase-services`) | Supabase DAO — `getSupabase()` from `src/supabase/supabase-client.ts` |
+| Any endpoint/store not on Supabase (AI provider, third-party REST, AsyncStorage) | **`@helsoft/services`** (`libs/services`) | External/platform DAO — `fetch` / AsyncStorage / etc. |
+
+Same class/naming conventions in both libs. Pick the package by data source — never mix Supabase client calls into `@helsoft/services`, or non-Supabase REST/platform stores into `@helsoft/supabase-services`.
+
+## DAO
+
+- Supabase: `libs/supabase-services/src/dao/{feature}.dao.ts`
+- REST: `libs/services/src/dao/{feature}.dao.ts`
+
+Raw data access only. `{FeatureName}Dao`, `abstract class` with `static` methods, named export; descriptive action verbs (`getProfileById`). No business logic, no validation beyond the call itself, no React. **One DAO class per data source** (a feature can have several). Response transformation only when needed for API compatibility.
+
+```typescript
+// Pattern A — Supabase DAO (@helsoft/supabase-services)
+import { getSupabase } from '../supabase/supabase-client';
+
+export abstract class LessonsDao {
+  static async getLessonsByUserId(userId: string): Promise<Lesson[]> {
+    const { data, error } = await getSupabase().from('lessons').select('*').eq('user_id', userId);
+    if (error) throw error;
+    return data;
+  }
+}
+
+// Pattern B — External API DAO (@helsoft/services)
+export abstract class AiProviderDao {
+  static async generateLesson(apiKey: string, prompt: string): Promise<GeneratedLessonDto> {
+    const res = await fetch('https://api.some-ai-provider.com/v1/generate', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    if (!res.ok) throw new Error(`AI provider request failed: ${res.status}`);
+    return res.json();
+  }
+}
+```
+
+## Service
+
+- Supabase: `libs/supabase-services/src/services/{feature}.service.ts`
+- REST: `libs/services/src/services/{feature}.service.ts`
+
+Business logic + validation. `{FeatureName}Service`, `abstract class` with `static` methods; instance-based (`static create()` + private `initialize()`) only when internal state is needed. Validates inputs before calling DAOs, composes multiple DAO calls, transforms data, throws clear errors. **Never fetches directly; no React.** Exported through that lib's `src/services/index.ts`.
+
+```typescript
+export abstract class ProfileService {
+  static getProfile(id: number): Promise<ProfileDto> {
+    if (!id) return Promise.reject(new Error('Missing id parameter'));
+    return ProfileDao.getProfile(id);
+  }
+}
+```
+
+## Hook — `libs/hooks/src/hooks/use-{feature}.ts`
+
+React integration wrapping a **service** (never a DAO) from either `@helsoft/services` or `@helsoft/supabase-services`. `use{FeatureName}`, `export function`, exported through `src/hooks/index.ts`. React state/effects/lifecycle live here; business logic does not (delegate to services). Data-fetching hooks use tanstack-query (`useQuery`) — add `@tanstack/react-query` to `@helsoft/hooks` when first needed (not installed yet).
+
+```typescript
+export const useGetProfile = () => {
+  const { id } = useId();
+  return useQuery({ queryKey: ['profile', id], queryFn: () => ProfileService.getProfile(id) });
+};
+```
+
+## Types
+
+Follow `.agents/rules/types.mdc`.
+
+- Multi-file / shared layer shapes (DAO DTOs, service results, hook return shapes, error codes) → co-located `{feature}.types.ts` (or `@helsoft/types` for cross-lib contracts)
+- Do **not** export types from the DAO / service / hook implementation file
+- Private / single-file types stay next to the implementation (or inline)
+
+## Local state in hooks / components
+
+Follow `.agents/rules/state.mdc`.
+
+- ≥3 related pieces of local state that change together → `useReducer` (not multiple `useState`, not Redux)
+- Independent unrelated scalars may stay as separate `useState`
+
+## Hard boundaries
+
+- A component never imports a DAO; a hook never calls a DAO; a service never touches React; a DAO never holds business logic.
+- DTOs stay in the data layer — services map them before handing them up.
+- New feature build order: DAO → Service → Hook (if needed) → barrel exports.
+- Refactor direction: API calls → DAOs; business logic → services; React concerns → hooks/components.
+- Supabase vs REST: choose `@helsoft/supabase-services` or `@helsoft/services` by data source (table above).
+
+## Testing (each layer independently)
+
+- `*.dao.test.ts` — mock `getSupabase()` (supabase-services) / `fetch` (services).
+- `*.service.test.ts` — mock the DAOs.
+- Hook tests (`use-*.test.ts`) — mock the services.

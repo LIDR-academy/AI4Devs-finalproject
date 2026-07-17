@@ -1,0 +1,91 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
+
+import { PdfUploadPanel } from './pdf-upload-panel';
+import type { PdfUploadPanelState } from './pdf-upload-panel.types';
+
+const meta = {
+  title: 'Organisms/PdfUploadPanel',
+  component: PdfUploadPanel,
+  args: {
+    onChooseFile: () => {},
+    // Mirror PDF_EXTRACTION_LIMITS so Storybook idle hint matches the service ceiling.
+    maxMb: 10,
+    maxPages: 20,
+  },
+} satisfies Meta<typeof PdfUploadPanel>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+// Empty/pristine (@s7) — "choose a PDF" affordance, size/page constraints hint, no error.
+export const Empty: Story = {
+  args: {
+    state: 'idle',
+  },
+};
+
+// Loading (@s5) — indeterminate progress affordance; the choose-file control is disabled.
+export const Loading: Story = {
+  args: {
+    state: 'loading',
+  },
+};
+
+// Content (@s6) — success summary (filename, page count, image count) + continue affordance.
+export const Content: Story = {
+  args: {
+    state: 'content',
+    filename: 'biology-chapter-4.pdf',
+    pageCount: 12,
+    imageCount: 5,
+    onContinue: () => {},
+  },
+};
+
+// Error, retryable (@s8-@s13, review round-1 fix) — a transient code (network_error/
+// extraction_failed) where retrying can actually change the outcome: the message, a retry
+// affordance, and the choose-file control staying enabled ("returns to a usable state").
+export const ErrorRetryable: Story = {
+  args: {
+    state: 'error',
+    errorMessage: 'Something went wrong while reading your PDF',
+    onRetry: () => {},
+  },
+};
+
+// Error, non-retryable (@s8-@s13, review round-1 fix) — one of the 6 non-transient codes (here
+// too_many_pages): no retry affordance, since retrying would deterministically reproduce the same
+// failure — the persistent choose-file control is the real recovery action.
+export const ErrorNonRetryable: Story = {
+  args: {
+    state: 'error',
+    errorMessage: 'This PDF has too many pages (max 20)',
+    canRetry: false,
+  },
+};
+
+/** @s16 (task-14) — a stateful demo purely so the Playwright e2e can exercise the retry
+ * *interaction* itself (pressing "Try again" transitions the panel back to Loading), not just
+ * assert each state's static markup like the stories above. */
+const InteractiveRetryDemo = () => {
+  const [state, setState] = useState<PdfUploadPanelState>('error');
+
+  return (
+    <PdfUploadPanel
+      state={state}
+      onChooseFile={() => {}}
+      errorMessage="Something went wrong while reading your PDF"
+      onRetry={() => setState('loading')}
+    />
+  );
+};
+
+export const InteractiveRetry: Story = {
+  // `state`/`errorMessage`/`onRetry` are all owned by InteractiveRetryDemo itself; `args.state`
+  // only exists to satisfy StoryObj's required-args typing (PdfUploadPanelProps has no optional
+  // default for `state`) — `render` below never reads it.
+  args: { state: 'error' },
+  render: () => <InteractiveRetryDemo />,
+};

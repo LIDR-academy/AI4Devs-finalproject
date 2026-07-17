@@ -1,0 +1,38 @@
+import { ResultsSummary } from '@helsoft/components';
+
+import type { LessonResultsProps } from './lesson-results.types';
+import { useLessonResults } from './use-lesson-results';
+
+export { toScorableSlides } from './lesson-results.helpers';
+
+/**
+ * LessonResults — organism owning scoreLesson + save + i18n, wiring presentational
+ * ResultsSummary. Completion variant (no save) when nothing system-checked; otherwise
+ * score variant with loading/save-failure from useLessonAttempt.
+ */
+export const LessonResults = ({
+  lesson,
+  answers,
+  onRetake,
+  onBackToLessons,
+  persistOnMount = true,
+}: LessonResultsProps) => {
+  const { variant, loading, saveFailed, correct, total, onRetrySave } = useLessonResults({
+    lesson,
+    answers,
+    persistOnMount,
+  });
+
+  return (
+    <ResultsSummary
+      variant={variant}
+      loading={loading}
+      saveFailed={saveFailed}
+      correct={correct}
+      total={total}
+      onRetake={onRetake}
+      onBackToLessons={onBackToLessons}
+      onRetrySave={onRetrySave}
+    />
+  );
+};

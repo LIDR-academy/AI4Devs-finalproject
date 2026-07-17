@@ -1,0 +1,50 @@
+---
+description: when rendering user-facing text or adding i18n labels
+alwaysApply: false
+---
+
+# i18n / labels
+
+User-facing text is never hardcoded — it always goes through the translation function `t('namespace.key')`.
+
+## Call `t()` directly at the usage site
+
+Do **not** wrap translations in an intermediate `labels` variable/object. Inline the `t('…')` call where the text is rendered.
+
+```tsx
+// ❌ don't collect labels into a variable
+const labels = {
+  title: t('generation.title'),
+  retry: t('generation.retry'),
+};
+return <Button title={labels.retry} />;
+
+// ✅ call t() directly where it's used
+return <Button title={t('generation.retry')} />;
+```
+
+Why: the indirection adds a layer to read through, hides the key from the usage site, and is dead weight for one or two strings.
+
+## Exception — key dictionaries
+
+A **constant that maps a domain value to a translation key** is allowed and encouraged — it's a lookup table, not a bag of pre-resolved labels. Name it in SCREAMING_SNAKE_CASE and store **keys** (strings), resolving with `t()` at the call site:
+
+```ts
+// ✅ dictionary of KEYS, resolved at use
+const GENERATION_ERROR_KEYS: Record<GenerationError, string> = {
+  timeout: 'generation.error.timeout',
+  quota:   'generation.error.quota',
+  unknown: 'generation.error.unknown',
+};
+
+// usage
+return <Text>{t(GENERATION_ERROR_KEYS[error])}</Text>;
+```
+
+The distinction: a dictionary holds **translation keys** (resolved by `t()` later); a forbidden `labels` object holds **already-resolved strings**.
+
+## Rules
+
+- No string literal shown to a user without `t()`. (Complements "no hardcoded strings" in `.agents/rules/tdd.mdc` / `global.mdc`.)
+- No `labels`/`copy`/`strings` object of pre-resolved `t()` calls — inline them.
+- Key dictionaries store keys only, are `SCREAMING_SNAKE_CASE`, and are resolved with `t()` at the usage site (pure lookup → fine in `*.helpers.ts`).

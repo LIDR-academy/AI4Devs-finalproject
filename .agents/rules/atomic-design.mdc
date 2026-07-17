@@ -1,0 +1,55 @@
+---
+description: when creating components in figma-sds or components libraries
+alwaysApply: false
+---
+
+# Atomic design
+
+Methodology for structuring UI into five layers. Compose upward. An atom never imports a molecule; a molecule never owns page layout.
+
+## Atoms
+
+Foundational building blocks that can't be split further without losing meaning: Button, Input, Label, Icon, Text, Spacer.
+
+- Single responsibility, highly reusable, no business logic.
+- Props describe presentation/behavior of that one control (variant, size, disabled, `onPress`).
+- No awareness of where they sit on a page.
+
+## Molecules
+
+Simple groups of atoms that work as one unit. Example: Label + Input + Button → search field.
+
+- Give atoms purpose in combination (label describes the input; button submits).
+- Still portable and reusable — drop in wherever that pattern is needed.
+- Prefer composition of existing atoms over new primitives.
+
+## Organisms
+
+Distinct sections of an interface made of molecules, atoms, and/or other organisms. Example: Header = logo atom + nav molecule + search molecule.
+
+- Standalone sections (header, product grid, lesson slide chrome) with their own structure and behavior.
+- May mix dissimilar pieces (logo + nav + search) or repeat the same molecule (product card grid).
+- This is the usual ceiling for shared component libraries.
+
+## Templates
+
+Page-level layouts that place organisms/molecules into a content structure — skeleton, not final copy.
+
+- Focus on slots and hierarchy (where header, body, footer go), not real text/images.
+- Demonstrate how sections relate without committing to specific content.
+
+## Pages
+
+Specific instances of templates filled with real representative content.
+
+- Prove the layout with real copy, images, and edge-case content (long titles, empty states).
+- In practice: app screens / Storybook "page" stories that wire template slots to data.
+
+## In this monorepo
+
+| Layer | Where |
+| --- | --- |
+| Atoms / molecules / organisms | `libs/components` (shared UI); activity organisms in `libs/activities` |
+| Templates / pages | App screens (`apps/app-study-buddy`) and feature libs — not in the component library |
+
+**Every component authored in a Storybook-enabled library _always_ ships a co-located `component-name.stories.tsx` — no exceptions.** This covers `@helsoft/components`, `@helsoft/activities`, `@helsoft/logging-in-out`, and any lib scaffolded from `@helsoft/lib-with-storybook`. The story must cover the component's states (the 4 UI states — Loading/Content/Error/Empty — where applicable). Follow kebab-case folders (`button/button.tsx` + `button.stories.tsx`) and reuse tokens — no hardcoded colors/spacing. A component without its story is an incomplete component.

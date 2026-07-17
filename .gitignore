@@ -1,0 +1,55 @@
+.vscode/autosave-editor.txt
+.DS_Store
+
+# dependencies
+node_modules/
+
+# expo
+.expo/
+expo-env.d.ts
+
+# builds
+dist/
+web-build/
+
+# turborepo
+.turbo/
+
+# storybook
+storybook-static/
+*storybook.log
+.design-sync/sb-reference/
+.ds-sync/
+ds-bundle/
+
+# env
+.env
+.env.*
+!.env.example
+
+# native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# supabase
+supabase/.temp/
+
+# playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.auth/
+
+# stryker (mutation testing output)
+**/reports/mutation/
+**/.stryker-tmp/
+
+# orchestrator feature worktrees (one per feature, on feat/<name>)
+.worktrees/
+
+# orchestrator scratch — risks.md is written here (never re-read into context), landed in docs/ at PR time
+tmp/
