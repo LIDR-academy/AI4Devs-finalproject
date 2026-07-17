@@ -4,10 +4,13 @@
 # Usage:
 #   run-mutation.sh [base-ref]      # base-ref defaults to "main"
 #
-# Computes files changed on the current branch since its merge-base with
-# base-ref, filters to each lib's mutate-able source (excludes tests, stories,
-# e2e, and index barrels), and runs `stryker run --mutate` for each affected lib.
-# Never runs a whole-repo mutation.
+# Computes files changed since the merge-base with base-ref via three-dot
+# (`git diff A...B` ≡ `git diff $(merge-base A B) B`). Required for the
+# default base (`main`) so only this branch's changes are included; when
+# base-ref is an ancestor of HEAD (post-review pre-review-sha), equivalent
+# to two-dot `A..B`. Filters to each lib's mutate-able source (excludes
+# tests, stories, e2e, and index barrels), and runs `stryker run --mutate`
+# for each affected lib. Never runs a whole-repo mutation.
 set -euo pipefail
 
 BASE="${1:-main}"
@@ -21,6 +24,7 @@ for entry in "${LIBS[@]}"; do
   lib="${entry%%:*}"
   pkg="${entry##*:}"
 
+  # Three-dot on purpose — keep in sync with orchestrator_lead.md §Phase 3c skip check.
   # `test-utils/` and `testing/` hold pure test-fixture builders — not shipped production logic —
   # so they're excluded here the same as *.test.ts (confirmed via test-only imports).
   files="$(git diff --name-only "${BASE}...HEAD" -- "${lib}/src" \
