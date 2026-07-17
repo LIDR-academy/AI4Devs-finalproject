@@ -41,6 +41,7 @@ Rodrigo Antonio Chamy Cruz
 ### **0.4. URL del proyecto:**
 
 > https://github.com/rchamycruz/AI4Devs-finalproject
+> *(sin despliegue productivo en el MVP académico — la aplicación corre completa en local con los comandos de §2.6)*
 
 ### **0.5. URL o archivo comprimido del repositorio**
 
@@ -408,7 +409,10 @@ Backend por capas (Api / Application / Domain / Infrastructure / Seed) y fronten
 
 ### **2.4. Infraestructura y despliegue**
 
-Entorno local reproducible con Docker Compose (PostgreSQL + PostGIS, MinIO) — ver [docs/development_guide.md](docs/development_guide.md). CI con GitHub Actions (build + tests en cada PR) se incorpora en la Fase 0 del [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md).
+- **Entorno local reproducible** con Docker Compose: PostgreSQL 16 + PostGIS, MinIO (S3), perfil `full` (api + web contenerizados) y perfil `seed-images` — ver [docs/development_guide.md](docs/development_guide.md)
+- **CI con GitHub Actions** (`.github/workflows/ci.yml`): build + suites completas de backend (xUnit + Testcontainers) y frontend (Karma) en cada PR; el merge a `main` exige CI verde
+- **Configuración por entorno sin secretos en el repo**: `dotnet user-secrets` / `appsettings.Development.json` (gitignored) en local, `.env` para Docker Compose, variables de entorno (`Flow__*`, `Jwt__*`) en producción — ver [docs/flow-sandbox-testing.md](docs/flow-sandbox-testing.md)
+- Despliegue productivo fuera del alcance del MVP académico; la app corre completa en local con los comandos de §2.6
 
 ### **2.5. Seguridad**
 
@@ -420,7 +424,7 @@ Entorno local reproducible con Docker Compose (PostgreSQL + PostGIS, MinIO) — 
 
 ### **2.6. Tests**
 
-TDD como práctica base: xUnit + TestContainers (PostgreSQL) en backend; Karma/Jest y Cypress en frontend. Detalle por ticket en `docs/us/us*/task*.md`.
+TDD como práctica base (test rojo → implementación mínima → refactor). **235 tests en verde**: backend **109** (xUnit + Testcontainers con PostgreSQL/PostGIS real — integración sobre la API HTTP completa) y frontend **126** (Karma/Jasmine — componentes y servicios). Detalle por ticket en `docs/us/us*/task*.md`.
 
 ```bash
 cd backend && dotnet test              # requiere Docker corriendo (Testcontainers)
@@ -465,8 +469,9 @@ Especificación oficial OpenAPI 3.0: **[docs/api-spec.yml](docs/api-spec.yml)** 
 | `POST /auth/login` | Login de usuarios seed, retorna JWT 24 h | US0001 |
 | `GET /showcase` | Vitrina pública por secciones (Cerca de ti, Mejor calificados, …) | US0003 |
 | `GET /artists` | Listado con filtros combinados, búsqueda por texto y geo (mapa) | US0004/05/12 |
-| `GET /artists/{slug}` | Perfil público completo del artista | US0006 |
-| `POST /quotes/calculate` | Cotización determinística del chatbot con tarifas del artista | US0011 |
+| `GET /artists/{slug}` | Perfil público completo del artista (incluye auspicios) | US0006/14 |
+| `GET /artists/{id}/availability` | Slots reservables de la semana | US0008 |
+| `GET /styles` · `POST /quotes/calculate` | Catálogo de estilos y cotización determinística del chatbot | US0011 |
 | `POST /bookings/hold` | Reserva temporal del slot (TTL 5 min, `pending_payment`) | US0008 |
 | `POST /payments/create` → webhook `POST /payments/confirm` | Depósito vía Flow; el pago confirma la reserva | US0009 |
 | `GET /bookings/me`, `POST /bookings/{id}/complete\|cancel` | Historial, confirmar asistencia y cancelar | US0010 |
@@ -503,13 +508,39 @@ Backlog completo (13 US · 80 SP · 9 Must-Have + 4 Should-Have): **[docs/us/all
 
 ## 7. Pull requests
 
-Se documentan durante la Entrega 2 (implementación):
+La Entrega 2 se implementó en **20 pull requests mergeados a `main`** (una US por rama, TDD, CI verde como requisito de merge). Tres PRs documentados en detalle:
 
-> **PR-1 — `docs/entrega2`**: preparación de la Entrega 2 — informe de inconsistencias (fixs/issue-004.md), documentos permanentes (PROJECT_STATUS, DEVELOPMENT_PLAN, ARCHITECTURE, CONTRIBUTING, PROMPT_REGISTRY), skill `prompt-registry`, sincronización de `api-spec.yml` con el backlog de 13 US y completado de este README.
+> **[PR #13 — feat(us0009): pagar depósito vía Flow y confirmar reserva (mock-first)](https://github.com/rchamycruz/AI4Devs-finalproject/pull/13)**
+> La US más grande del backlog (13 SP). Integración de pagos con patrón **mock-first**: `IFlowClient` con dos implementaciones — `MockFlowClient` (checkout simulado `/pago-simulado`, usado por tests y CI) y `FlowClient` real con firma HMAC-SHA256 sobre parámetros ordenados, listo para sandbox/producción vía configuración (`Flow:UseMock`). Flujo completo: `POST /payments/create` (orden + split de comisión) → webhook idempotente `POST /payments/confirm` (autenticado consultando el estado a Flow con petición firmada) → transición `pending_payment → confirmed`. Página de confirmación con reintento en el frontend.
 
-> **PR-2** — *(pendiente: Fase 0 — scaffolding backend/frontend + Docker + CI)*
+> **[PR #18 — feat(us0011): cotizar tatuaje con chatbot conversacional + depósito según cotización](https://github.com/rchamycruz/AI4Devs-finalproject/pull/18)**
+> Cierra el backlog e incorpora una **decisión de producto** surgida de una inconsistencia detectada antes de implementar (`fixs/issue-007.md`): el depósito dejó de ser un monto fijo por artista — si la reserva nace de una cotización, el hold recalcula la fórmula **server-side** (nunca se confían montos del cliente) y el depósito usa el mínimo cotizado con `min_session_price` como piso (CA9). `QuoteCalculatorService` es la fuente única de la fórmula, compartida por `POST /quotes/calculate` y el hold de US0008. Chatbot de 5 pasos con conversación derivada del estado (retroceder = limpiar la última respuesta) y cotización persistida que viaja con la reserva.
 
-> **PR-3** — *(pendiente: US0001 — login de usuarios)*
+> **[PR #19 — chore(flow): integración sandbox de Flow validada e2e + fixes derivados](https://github.com/rchamycruz/AI4Devs-finalproject/pull/19)**
+> Activación de la integración real contra `sandbox.flow.cl`, **validada end-to-end** (orden firmada → checkout Webpay con tarjeta de prueba → confirm firmado → reserva confirmada). Configuración segura de credenciales en 4 entornos sin tocar el repo (user-secrets, `appsettings.Development.json` gitignored, `.env` para Docker, variables `Flow__*` en producción). La validación destapó y corrigió un **bug latente**: la limpieza de holds expirados violaba la FK `payments→bookings` si el hold había iniciado un pago, bloqueando reservas futuras del artista. Incluye la guía [docs/flow-sandbox-testing.md](docs/flow-sandbox-testing.md).
+
+Listado completo:
+
+| PR | Título | Alcance |
+|---|---|---|
+| [#1](https://github.com/rchamycruz/AI4Devs-finalproject/pull/1) | Preparación Entrega 2 — análisis, documentos permanentes y api-spec v2.0.0 | Docs |
+| [#2](https://github.com/rchamycruz/AI4Devs-finalproject/pull/2) | Fase 0 — scaffolding .NET 10 + Angular 20, Docker y CI | Infra |
+| [#3](https://github.com/rchamycruz/AI4Devs-finalproject/pull/3) | US0001 — login JWT (migración + seed + frontend) | Must |
+| [#4](https://github.com/rchamycruz/AI4Devs-finalproject/pull/4) · [#5](https://github.com/rchamycruz/AI4Devs-finalproject/pull/5) | US0003 — vitrina principal + refinamiento UI y seed de imágenes | Must |
+| [#6](https://github.com/rchamycruz/AI4Devs-finalproject/pull/6) · [#7](https://github.com/rchamycruz/AI4Devs-finalproject/pull/7) | Skill de design system UI/UX + registro de prompts | Docs |
+| [#8](https://github.com/rchamycruz/AI4Devs-finalproject/pull/8) | US0004 — filtros por estilo, precio, rating y certificación | Must |
+| [#9](https://github.com/rchamycruz/AI4Devs-finalproject/pull/9) | US0005 — búsqueda de artistas por texto | Must |
+| [#10](https://github.com/rchamycruz/AI4Devs-finalproject/pull/10) | US0006 — perfil público con portafolio, tarifas y reviews | Must |
+| [#11](https://github.com/rchamycruz/AI4Devs-finalproject/pull/11) | US0007 — badge de certificación sanitaria reutilizable | Must |
+| [#12](https://github.com/rchamycruz/AI4Devs-finalproject/pull/12) | US0008 — selección de slot y resumen de reserva (hold TTL 5 min) | Must |
+| [#13](https://github.com/rchamycruz/AI4Devs-finalproject/pull/13) | US0009 — pago de depósito vía Flow (mock-first) | Must |
+| [#14](https://github.com/rchamycruz/AI4Devs-finalproject/pull/14) | US0010 — historial, confirmar asistencia y cancelar | Must |
+| [#15](https://github.com/rchamycruz/AI4Devs-finalproject/pull/15) | US0013 — calificar artista post-sesión (4 dimensiones) | Should |
+| [#16](https://github.com/rchamycruz/AI4Devs-finalproject/pull/16) | US0012 — explorar artistas en mapa interactivo (Leaflet + PostGIS) | Should |
+| [#17](https://github.com/rchamycruz/AI4Devs-finalproject/pull/17) | US0014 — auspicios de marcas en perfil y vitrina | Should |
+| [#18](https://github.com/rchamycruz/AI4Devs-finalproject/pull/18) | US0011 — chatbot cotizador + depósito según cotización | Should |
+| [#19](https://github.com/rchamycruz/AI4Devs-finalproject/pull/19) | Integración Flow sandbox validada e2e + fixes derivados | Infra |
+| [#20](https://github.com/rchamycruz/AI4Devs-finalproject/pull/20) | Sincronización de estado — backlog completo + registro de prompts | Docs |
 
 ---
 

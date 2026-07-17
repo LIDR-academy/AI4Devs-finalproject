@@ -98,15 +98,58 @@ proyecto, que es: netcore 10 C#, base de datos PostgreSQL, Angular 20.
 
 ### **2.4. Infraestructura y despliegue**
 
-<!-- PENDIENTE: No se han generado prompts de infraestructura/despliegue aún -->
+**Prompt 1** — Fase 0: fundaciones de infraestructura (desbloqueada por las decisiones de issue-004 §E):
+```
+continua
+```
+> 📋 2026-07-14T21:30:00Z · Claude Code CLI · Claude Fable 5 · medium · rodri
+> Resultado: docker-compose (PostgreSQL 16 + PostGIS, MinIO), scaffolding .NET 10 por capas + Angular 20, Dockerfiles y CI de GitHub Actions (build + tests obligatorios en cada PR) — registro completo en [prompt 46](prompts/00-all-prompts.md)
+
+**Prompt 2** — Configuración segura de credenciales por entorno:
+```
+Pasemos al sandbox. Donde dejo la API KEY y la Secret Key ? Ojo que esto no debe quedar en github por seghuridad ni tampoco en el odigo fuente pero debe funcionar para que probemos en local y si se publica en produccion
+```
+> 📋 2026-07-16T22:30:00Z · Claude Code · Claude Fable 5 · medium · rodri
+> Resultado: user-secrets (UserSecretsId en csproj) / appsettings.Development.json gitignored en local, `.env` + variables `Flow__*` en docker-compose (`.env.example` documentado), variables de entorno en producción — las claves nunca tocan el repo
+
+**Prompt 3** — Seed de imágenes en Object Storage:
+```
+Crea un seed de imágenes en MinIO desde picsum.photos para que la vitrina tenga imágenes de muestra sin problemas de copyright.
+```
+> 📋 2026-07-15T00:00:00Z · Copilot CLI · Claude Opus 4.6 · medium · rodri
+> Resultado: perfil `seed-images` en docker-compose + script `scripts/seed-images.ps1` idempotente
 
 ### **2.5. Seguridad**
 
-<!-- PENDIENTE: No se han generado prompts específicos de seguridad aún -->
+**Prompt 1** — Validación real de la integración de pagos (destapó dos hallazgos de seguridad/robustez):
+```
+listo, lo hice con la alternativa del appsettings.development, ahora podemos probar?
+```
+> 📋 2026-07-16T23:00:00Z · Claude Code · Claude Fable 5 · medium · rodri
+> Resultado: detectado y corregido secret JWT débil (<256 bits, IDX10720) y bug de FK en la limpieza de holds expirados con pago iniciado (bloqueaba reservas del artista); firma HMAC-SHA256 del FlowClient validada contra sandbox real
+
+**Prompt 2** — Confirmación de pago con webhook autenticado:
+```
+listo, pagué con la tarjeta de prueba, confirma el pago
+```
+> 📋 2026-07-16T23:45:00Z · Claude Code · Claude Fable 5 · medium · rodri
+> Resultado: verificado que `POST /payments/confirm` es seguro e idempotente — el token por sí solo no otorga nada: el estado se consulta a Flow con petición firmada antes de confirmar la reserva
 
 ### **2.6. Tests**
 
-<!-- PENDIENTE: No se han generado prompts de testing aún -->
+**Prompt 1** — TDD con tests de integración reales (patrón de todas las US):
+```
+Implementa el TASK0001 de US0003: endpoint GET /api/showcase con secciones dinámicas y PostGIS para geolocalización. Sigue TDD.
+```
+> 📋 2026-07-14T22:00:00Z · Copilot CLI · Claude Opus 4.6 · medium · rodri
+> Resultado: 7 tests de integración con TestContainers (PostgreSQL/PostGIS real) escritos antes de la implementación — el patrón se repitió en las 13 US hasta llegar a 235 tests (109 backend + 126 frontend)
+
+**Prompt 2** — Hermeticidad de la suite descubierta al activar el sandbox:
+```
+listo, cuando pasen los tests continúa con el push y PR
+```
+> 📋 2026-07-17T00:30:00Z · Claude Code · Claude Fable 5 · medium · rodri
+> Resultado: 5 PaymentTests fallaron porque cargaban el appsettings.Development.json local (con Flow real) — corregidos forzando `Flow:UseMock=true` en la factory de tests; la suite ya no depende de la configuración local del desarrollador
 
 ---
 
@@ -137,7 +180,27 @@ Ejecutalo
 ```
 > 📋 2026-06-10 · VS Code · Claude Opus 4.6 · rodri
 > Resultado: docs/api-spec.yml regenerado a partir de las historias de usuario (auth, artists, bookings, reviews, payments, geo)
-> ⚠️ Pendiente: sincronización con el backlog final de 13 US — ver fixs/issue-004.md §A
+
+**Prompt 2** — Sincronización definitiva de la spec (decisiones de issue-004 §E):
+```
+1. Si, 2. Agregalo como alcance del MVP, 3. Lo que sea mas coherente y atinente al proyecto, 4. Si,
+5. Deja el modelo como recomendado, pero no obligatorio y openspec no es obligatorio pero sí se debe
+considerar para el futuro hasta que aprenda a implementarlo. A menos que me des instrucciones de como
+implementarlo desde ya con lo qu ya existe si es posible y no es complejo. 6. Confirmo comenzar con la
+Fase 0 y luego US0001 PERO EN UNA RAMA APARTE A TODO LO DEMÁS, primero hacer commit y push de lo que
+hay en una rama llamada docs/entrega2 y luego puedes comenzar con el punto 6
+```
+> 📋 2026-07-14T21:00:00Z · Claude Code CLI · Claude Fable 5 · medium · rodri
+> Resultado: api-spec.yml v2.0.0 alineada con el backlog de 13 US y data-model (schemas, numeración de US, endpoints de pago create/confirm/return, cancelación como alcance MVP) — desde entonces es la fuente de verdad del contrato REST
+
+**Prompt 3** — La spec como árbitro ante inconsistencias de producto:
+```
+listo el merge, continuemos con la US0011. Pero ojo: Creo que existe una inconsistencia en el proyecto:
+Al reservar, se deja un 30% del valor...pero de que valor? o el valor es fijo por artista? 
+Porque depende del tatuaje el valor, y para eso, esta también el chatbot que ayuda a cotizar, pero, si existen montos predefinidos, para que existe el chatbot? Comentame si me equivoco en esto antes de proceder
+```
+> 📋 2026-07-16T20:30:00Z · Claude Code · Claude Fable 5 · medium · rodri
+> Resultado: la spec ya definía `QuoteResponse.depositAmount` sobre el mínimo cotizado — la decisión (depósito según cotización, `fixs/issue-007.md`) alineó el código al contrato con cambios aditivos (CA9, `factors`, `GET /styles`)
 
 ---
 
@@ -171,10 +234,34 @@ Los casos de uso que agregaste tienen coherencia con los diagramas de casos de u
 
 ### 6. Tickets de Trabajo
 
-<!-- PENDIENTE: Las tareas de implementación (tasks) se generarán usando el agente @tech-lead a partir de cada historia de usuario -->
+**Prompt 1** — Generación de los tickets de trabajo de todo el backlog:
+```
+analiza la carpeta US y luego crea los tickets de trabajo necesarios para completarlas junto sus criterios de aceptación. Incluye que sea TDD, buenas practicas de desarrollo, etc y la logica de negocio correspondiente que se cumpla. Considera también el modelo de datos y el contexto de negocio en readme.md. Al finalizar actualiza all-prompts.md con lo que he escrito hoy en el chat.
+```
+> 📋 2026-06-12T11:00:00Z · VS Code · Claude Opus 4.6 · Medium · rodri
+> Resultado: 25 task files distribuidos en las 13 US (backend + frontend por US) con TDD obligatorio, criterios de done y estimación — la unidad de trabajo de toda la Entrega 2
 
 ---
 
 ### 7. Pull Requests
 
-<!-- PENDIENTE: Se documentarán durante la fase de implementación -->
+**Prompt 1** — Cierre de US según protocolo: documentación + commit + push + PR:
+```
+Listo, funciona. Si hay que actualizar los archivos .md de prompts y otros archivos mrkdown luego hacer commit, push y PR creo que debemos comenzar. Luego que sigue?
+```
+> 📋 2026-07-16T01:45:00Z · Claude Code · Claude Fable 5 · medium · rodri
+> Resultado: patrón de cierre aplicado en cada US — PROJECT_STATUS/HANDOFF/registro de prompts actualizados, suites en verde y PR a main (en este caso PR #16, US0012); 20 PRs mergeados en total
+
+**Prompt 2** — Protocolo completo de una US en un solo ciclo (rama → TDD → verificación → PR):
+```
+listo el merge. Ahora continuemos con la US0014 segun el protocolo
+```
+> 📋 2026-07-16T03:30:00Z · Claude Code · Claude Fable 5 · medium · rodri
+> Resultado: US0014 de punta a punta en 5 commits: rama feature, test rojo→verde en backend (sponsorships con relationshipType según api-spec), seed con los 3 tipos de relación, componentes frontend con 11 specs, verificación visual en dev y PR #17
+
+**Prompt 3** — Coordinación multi-agente en una misma rama/PR:
+```
+recién le pedi a copilot que actualice sus prompts e hizo un push. Revisa los cambios y ve que debes commitear y hacer push igual para que se vaya todo junto
+```
+> 📋 2026-07-17T01:00:00Z · Claude Code · Claude Fable 5 · medium · rodri
+> Resultado: trabajo de GitHub Copilot (sesión 14 del registro) y de Claude Code (sincronización de estado) reconciliados en la rama compartida `chore/sync-status-docs` y mergeados juntos en el PR #20
