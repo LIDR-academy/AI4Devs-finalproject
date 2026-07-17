@@ -60,3 +60,5 @@
 2026-07-16 | lesson-generation min slides (ad hoc) | n/a | — | Enforce MIN_LESSON_SLIDES=5 in schema+prompt (all compositions); Edge mirror + deploy.
 
 2026-07-16 | plan-entitlements-key-routing | done | docs/features/plan-entitlements-key-routing/ | Merged PR #9 into feature-entrega2-HernanLaura; worktree removed.
+
+2026-07-17 | web-deploy-cors (ad hoc) | n/a | — | CORS for edge fns; EAS web deploy; mutation three-dot sync.
