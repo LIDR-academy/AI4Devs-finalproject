@@ -422,6 +422,28 @@ Entorno local reproducible con Docker Compose (PostgreSQL + PostGIS, MinIO) — 
 
 TDD como práctica base: xUnit + TestContainers (PostgreSQL) en backend; Karma/Jest y Cypress en frontend. Detalle por ticket en `docs/us/us*/task*.md`.
 
+```bash
+cd backend && dotnet test              # requiere Docker corriendo (Testcontainers)
+cd frontend && npm test -- --watch=false
+```
+
+**Cómo levantar el proyecto** (guía completa en [docs/development_guide.md](docs/development_guide.md)):
+
+```bash
+docker-compose up -d                   # PostgreSQL 16 + PostGIS y MinIO
+cd backend && dotnet run --seed        # primera vez: migra + seed → luego dotnet run (http://localhost:5000)
+cd frontend && npm ci && npm start     # http://localhost:4200
+```
+
+**Pruebas de pago contra el sandbox de Flow**: flujo end-to-end, configuración segura de credenciales (nunca en el repo) y confirmación manual del webhook en local: **[docs/flow-sandbox-testing.md](docs/flow-sandbox-testing.md)**. Tarjetas de prueba (Webpay/Transbank, ambiente de integración):
+
+| Resultado | Tarjeta | Número | CVV | Vencimiento |
+|---|---|---|---|---|
+| ✅ Aprobado | VISA | `4051 8856 0044 6623` | 123 | fecha futura |
+| ❌ Rechazado | Mastercard | `5186 0595 5959 0568` | 123 | fecha futura |
+
+Autenticación bancaria simulada: RUT `11.111.111-1` · clave `123`.
+
 ---
 
 ## 3. Modelo de datos

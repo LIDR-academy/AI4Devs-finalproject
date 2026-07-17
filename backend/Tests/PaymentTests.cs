@@ -266,8 +266,12 @@ public class PaymentTests : IAsyncLifetime
 
     private WebApplicationFactory<Program> CreateFactory() =>
         new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder => builder.UseSetting(
-                "ConnectionStrings:DefaultConnection", _postgres.GetConnectionString()));
+            .WithWebHostBuilder(builder => builder
+                .UseSetting("ConnectionStrings:DefaultConnection", _postgres.GetConnectionString())
+                // Hermeticidad: el entorno de test es Development y cargaría el
+                // appsettings.Development.json local (que puede tener Flow real);
+                // estos tests siempre usan el mock
+                .UseSetting("Flow:UseMock", "true"));
 
     private InkLinkDbContext CreateContext()
     {

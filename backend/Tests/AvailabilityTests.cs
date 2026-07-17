@@ -199,6 +199,36 @@ public class AvailabilityTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Hold_On_Slot_With_Expired_Hold_That_Has_Pending_Payment_Succeeds()
+    {
+        await using var factory = CreateFactory();
+        var client = await CreateAuthenticatedClientAsync(factory);
+        await using var context = CreateContext();
+
+        // Bug encontrado probando el sandbox de Flow: un hold expirado que ya inició
+        // un pago (fila en payments) rompía la limpieza perezosa por la FK
+        var expired = await AddBookingAsync(context, WeekStart, new TimeOnly(10, 0), new TimeOnly(12, 0),
+            BookingStatus.PendingPayment, expiresAt: DateTime.UtcNow.AddMinutes(-1));
+        context.Payments.Add(new Payment
+        {
+            Id = Guid.NewGuid(),
+            BookingId = expired.Id,
+            FlowTransactionId = "expired-token",
+            Amount = 12000,
+            PlatformFee = 840,
+            ArtistAmount = 11160,
+            Status = PaymentStatus.Pending
+        });
+        await context.SaveChangesAsync();
+
+        var response = await client.PostAsJsonAsync("/api/bookings/hold", HoldRequest());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.False(await context.Bookings.AnyAsync(b => b.Id == expired.Id));
+        Assert.False(await context.Payments.AnyAsync(p => p.BookingId == expired.Id));
+    }
+
+    [Fact]
     public async Task Hold_Outside_Availability_Grid_Returns_422()
     {
         await using var factory = CreateFactory();

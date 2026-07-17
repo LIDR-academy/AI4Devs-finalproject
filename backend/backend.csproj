@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>InkLink.Api</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Secretos locales (Flow ApiKey/SecretKey, etc.) fuera del repo: dotnet user-secrets -->
+    <UserSecretsId>inklink-api-dev</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

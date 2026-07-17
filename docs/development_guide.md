@@ -52,6 +52,11 @@ El archivo `docker-compose.yml` en la raíz levanta:
 
 ## Variables de Entorno
 
+> 💳 **Credenciales de Flow (sandbox) y pruebas de pago end-to-end**: ver
+> [flow-sandbox-testing.md](flow-sandbox-testing.md) — configuración segura de claves
+> (user-secrets / .env, nunca en el repo), tarjetas de prueba y confirmación manual del
+> webhook en local.
+
 ### Backend (`backend/appsettings.Development.json`)
 
 ```json

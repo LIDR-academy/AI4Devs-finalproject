@@ -92,6 +92,10 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=inklink_dev;Username=inklink;Password=inklink_dev_password
       Storage__Endpoint: storage:9000
+      # Flow: los valores vienen del archivo .env (gitignored) — ver .env.example
+      Flow__UseMock: ${FLOW_USE_MOCK:-true}
+      Flow__ApiKey: ${FLOW_API_KEY:-}
+      Flow__SecretKey: ${FLOW_SECRET_KEY:-}
     ports:
       - "5000:5000"
     depends_on:

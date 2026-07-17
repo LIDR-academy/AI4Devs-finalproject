@@ -75,7 +75,7 @@ public class FlowClient : IFlowClient
             $"{_settings.BaseUrl}/payment/create",
             new FormUrlEncodedContent(parameters),
             cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureFlowSuccessAsync(response, "payment/create", cancellationToken);
 
         var body = await response.Content.ReadFromJsonAsync<FlowCreateResponse>(cancellationToken)
             ?? throw new InvalidOperationException("Flow returned an empty payment/create response");
@@ -94,11 +94,24 @@ public class FlowClient : IFlowClient
 
         var response = await _httpClient.GetAsync(
             $"{_settings.BaseUrl}/payment/getStatus?{query}&s={signature}", cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureFlowSuccessAsync(response, "payment/getStatus", cancellationToken);
 
         var body = await response.Content.ReadFromJsonAsync<FlowStatusResponse>(cancellationToken)
             ?? throw new InvalidOperationException("Flow returned an empty payment/getStatus response");
         return (FlowPaymentStatus)body.Status;
+    }
+
+    /// <summary>Surfaces Flow's error body (e.g. invalid apiKey / signature) instead of a bare status code.</summary>
+    private static async Task EnsureFlowSuccessAsync(
+        HttpResponseMessage response, string operation, CancellationToken cancellationToken)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+        var error = await response.Content.ReadAsStringAsync(cancellationToken);
+        throw new HttpRequestException(
+            $"Flow {operation} failed ({(int)response.StatusCode}): {error}");
     }
 
     internal static string Sign(SortedDictionary<string, string> parameters, string secretKey)

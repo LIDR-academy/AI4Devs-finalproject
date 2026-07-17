@@ -125,7 +125,13 @@ public class AvailabilityService
         await _context.Database.ExecuteSqlAsync(
             $"SELECT id FROM artist_profiles WHERE id = {artist.Id} FOR UPDATE", cancellationToken);
 
-        // Lazy cleanup: expired holds release their slot (CA8)
+        // Lazy cleanup: expired holds release their slot (CA8). Payments started for
+        // those holds (pending, never completed) must go first or the FK blocks the delete
+        await _context.Payments
+            .Where(p => p.Booking.ArtistProfileId == artist.Id
+                && p.Booking.Status == BookingStatus.PendingPayment
+                && p.Booking.ExpiresAt <= now)
+            .ExecuteDeleteAsync(cancellationToken);
         await _context.Bookings
             .Where(b => b.ArtistProfileId == artist.Id
                 && b.Status == BookingStatus.PendingPayment
