@@ -1,15 +1,13 @@
 import type { LessonComposition } from '@helsoft/types';
 
+import { MIN_LESSON_SLIDES } from './lesson-generation.schema';
 import type { BuildDeckPromptInput, PromptImageManifestEntry } from './lesson-generation.types';
 
-/** Per-composition instruction enforcing the chosen mix (@s3/@s4/@s5/@s6) — 'both' is the only
- * branch this Slice-1 task builds; the other two land in task-11. */
+/** Per-composition instruction enforcing the chosen mix (@s3/@s4/@s5/@s6). */
 const COMPOSITION_INSTRUCTIONS: Record<LessonComposition, string> = {
-  both: 'Generate a deck that mixes instructional slides (kind: "instructional") and activity slides (kind: "activity") covering the five supported activity types where relevant.',
-  'instructional-only':
-    'Generate a deck containing ONLY instructional slides (kind: "instructional"). Do not include any activity slides.',
-  'activity-only':
-    'Generate a deck containing ONLY activity slides (kind: "activity") covering the five supported activity types where relevant. Do not include any instructional slides.',
+  both: `Generate a deck of at least ${MIN_LESSON_SLIDES} slides that mixes instructional slides (kind: "instructional") and activity slides (kind: "activity") covering the five supported activity types where relevant.`,
+  'instructional-only': `Generate a deck of at least ${MIN_LESSON_SLIDES} slides containing ONLY instructional slides (kind: "instructional"). Do not include any activity slides.`,
+  'activity-only': `Generate a deck of at least ${MIN_LESSON_SLIDES} slides containing ONLY activity slides (kind: "activity") covering the five supported activity types where relevant. Do not include any instructional slides.`,
 };
 
 const formatPages = (pages: BuildDeckPromptInput['pages']): string =>

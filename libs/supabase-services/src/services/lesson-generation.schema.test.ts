@@ -1,4 +1,4 @@
-import { deckSchema, rawSlideSchema } from './lesson-generation.schema';
+import { deckSchema, MIN_LESSON_SLIDES, rawSlideSchema } from './lesson-generation.schema';
 
 const validInstructional = {
   kind: 'instructional',
@@ -58,6 +58,16 @@ const validFlashcard = {
   sourcePage: null,
 };
 
+/** Pad so deck-level `.min(MIN_LESSON_SLIDES)` does not mask slide invariant tests. */
+const withMinSlides = <T extends typeof validInstructional>(slides: T[]) => {
+  const padded = [...slides];
+  let n = 0;
+  while (padded.length < MIN_LESSON_SLIDES) {
+    padded.push({ ...validInstructional, title: `Pad ${++n}` } as T);
+  }
+  return padded;
+};
+
 describe('deckSchema', () => {
   // @s3/@s13 — a "both" deck with an instructional slide and one of each R3 activity shape
   // parses cleanly.
@@ -83,7 +93,7 @@ describe('deckSchema', () => {
   it('rejects a multiple-choice slide whose correctOptionId is not one of its options', () => {
     const deck = {
       title: 'Geography basics',
-      slides: [{ ...validMultipleChoice, correctOptionId: 'opt-nonexistent' }],
+      slides: withMinSlides([{ ...validMultipleChoice, correctOptionId: 'opt-nonexistent' }]),
     };
 
     const result = deckSchema.safeParse(deck);
@@ -101,7 +111,7 @@ describe('deckSchema', () => {
   it('rejects a matching slide whose correctPairs is not a perfect pairing', () => {
     const deck = {
       title: 'Geography basics',
-      slides: [
+      slides: withMinSlides([
         {
           ...validMatching,
           leftItems: [
@@ -111,7 +121,7 @@ describe('deckSchema', () => {
           // Only one pair for two left items — not a perfect pairing.
           correctPairs: [{ leftId: 'l1', rightId: 'r1' }],
         },
-      ],
+      ]),
     };
 
     const result = deckSchema.safeParse(deck);
@@ -127,7 +137,9 @@ describe('deckSchema', () => {
   it('rejects a matching pair that references an id absent from its column', () => {
     const deck = {
       title: 'Geography basics',
-      slides: [{ ...validMatching, correctPairs: [{ leftId: 'l1', rightId: 'r-missing' }] }],
+      slides: withMinSlides([
+        { ...validMatching, correctPairs: [{ leftId: 'l1', rightId: 'r-missing' }] },
+      ]),
     };
 
     expect(deckSchema.safeParse(deck).success).toBe(false);
@@ -176,7 +188,7 @@ describe('deckSchema', () => {
     it('rejects when leftItems/rightItems match in length but correctPairs does not', () => {
       const deck = {
         title: 'Geography basics',
-        slides: [
+        slides: withMinSlides([
           {
             ...validMatching,
             leftItems: [
@@ -189,7 +201,7 @@ describe('deckSchema', () => {
             ],
             correctPairs: [{ leftId: 'l1', rightId: 'r1' }],
           },
-        ],
+        ]),
       };
 
       expect(deckSchema.safeParse(deck).success).toBe(false);
@@ -198,7 +210,7 @@ describe('deckSchema', () => {
     it('rejects when leftItems/correctPairs match in length but rightItems does not', () => {
       const deck = {
         title: 'Geography basics',
-        slides: [
+        slides: withMinSlides([
           {
             ...validMatching,
             leftItems: [{ id: 'l1', label: 'France' }],
@@ -208,7 +220,7 @@ describe('deckSchema', () => {
             ],
             correctPairs: [{ leftId: 'l1', rightId: 'r1' }],
           },
-        ],
+        ]),
       };
 
       expect(deckSchema.safeParse(deck).success).toBe(false);
@@ -221,7 +233,7 @@ describe('deckSchema', () => {
   it('rejects a matching slide with a mix of one valid and one invalid pair', () => {
     const deck = {
       title: 'Geography basics',
-      slides: [
+      slides: withMinSlides([
         {
           ...validMatching,
           leftItems: [
@@ -237,7 +249,7 @@ describe('deckSchema', () => {
             { leftId: 'l2', rightId: 'r-missing' },
           ],
         },
-      ],
+      ]),
     };
 
     expect(deckSchema.safeParse(deck).success).toBe(false);
@@ -251,7 +263,7 @@ describe('deckSchema', () => {
     it('rejects a matching slide that reuses the same leftId across two pairs', () => {
       const deck = {
         title: 'Geography basics',
-        slides: [
+        slides: withMinSlides([
           {
             ...validMatching,
             leftItems: [
@@ -267,7 +279,7 @@ describe('deckSchema', () => {
               { leftId: 'l1', rightId: 'r2' },
             ],
           },
-        ],
+        ]),
       };
 
       expect(deckSchema.safeParse(deck).success).toBe(false);
@@ -276,7 +288,7 @@ describe('deckSchema', () => {
     it('rejects a matching slide that reuses the same rightId across two pairs', () => {
       const deck = {
         title: 'Geography basics',
-        slides: [
+        slides: withMinSlides([
           {
             ...validMatching,
             leftItems: [
@@ -292,7 +304,7 @@ describe('deckSchema', () => {
               { leftId: 'l2', rightId: 'r1' },
             ],
           },
-        ],
+        ]),
       };
 
       expect(deckSchema.safeParse(deck).success).toBe(false);
@@ -302,12 +314,23 @@ describe('deckSchema', () => {
   // Malformed/non-conforming AI output (risks.md R3) — a slide missing a required field fails
   // validation rather than silently coercing, so the caller can map it to generation_failed.
   it('rejects a deck whose slide is missing a required field', () => {
-    const deck = { title: 'Geography basics', slides: [{ kind: 'instructional', title: 'Intro' }] };
+    const deck = {
+      title: 'Geography basics',
+      slides: withMinSlides([{ kind: 'instructional', title: 'Intro' } as never]),
+    };
 
     expect(deckSchema.safeParse(deck).success).toBe(false);
   });
 
   it('rejects an empty deck (no slides)', () => {
     expect(deckSchema.safeParse({ title: 'Empty', slides: [] }).success).toBe(false);
+  });
+
+  it(`rejects a deck with fewer than ${MIN_LESSON_SLIDES} slides`, () => {
+    const slides = Array.from({ length: MIN_LESSON_SLIDES - 1 }, (_, i) => ({
+      ...validInstructional,
+      title: `Slide ${i + 1}`,
+    }));
+    expect(deckSchema.safeParse({ title: 'Short', slides }).success).toBe(false);
   });
 });

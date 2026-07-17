@@ -110,10 +110,12 @@ const isPerfectMatchingPairing = (slide: z.infer<typeof rawMatchingSlideSchema>)
   });
 };
 
+export const MIN_LESSON_SLIDES = 5;
+
 export const deckSchema = z
   .object({
     title: z.string().min(1),
-    slides: z.array(rawSlideSchema).min(1),
+    slides: z.array(rawSlideSchema).min(MIN_LESSON_SLIDES),
   })
   .superRefine((deck, ctx) => {
     deck.slides.forEach((slide, index) => {

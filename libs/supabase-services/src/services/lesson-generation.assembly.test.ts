@@ -19,23 +19,34 @@ const placementFor = (
     images,
   );
 
+const instructionalSlide = {
+  kind: 'instructional' as const,
+  title: 'Intro',
+  content: 'Welcome',
+  sourcePage: 1,
+};
+const activitySlide = {
+  kind: 'activity' as const,
+  activityType: 'multiple-choice' as const,
+  title: 'Quiz',
+  content: 'What converts light to energy?',
+  options: [
+    { id: 'opt-a', label: 'Chlorophyll' },
+    { id: 'opt-b', label: 'Xylem' },
+  ],
+  correctOptionId: 'opt-a',
+  explanation: null,
+  sourcePage: 2,
+};
+
 const rawDeck = {
   title: 'Photosynthesis',
   slides: [
-    { kind: 'instructional', title: 'Intro', content: 'Welcome', sourcePage: 1 },
-    {
-      kind: 'activity',
-      activityType: 'multiple-choice',
-      title: 'Quiz',
-      content: 'What converts light to energy?',
-      options: [
-        { id: 'opt-a', label: 'Chlorophyll' },
-        { id: 'opt-b', label: 'Xylem' },
-      ],
-      correctOptionId: 'opt-a',
-      explanation: null,
-      sourcePage: 2,
-    },
+    instructionalSlide,
+    activitySlide,
+    { ...instructionalSlide, title: 'Chlorophyll', sourcePage: 3 },
+    { ...instructionalSlide, title: 'Light', sourcePage: 3 },
+    { ...instructionalSlide, title: 'Energy', sourcePage: 4 },
   ],
 };
 
@@ -51,9 +62,10 @@ describe('assembleGeneratedLesson', () => {
     expect(lesson.lessonId).toBeTruthy();
     expect(lesson.title).toBe('Photosynthesis');
     expect(lesson.composition).toBe('both');
-    expect(lesson.slides).toHaveLength(2);
+    expect(lesson.slides).toHaveLength(5);
     expect(lesson.slides[0].position).toBe(0);
     expect(lesson.slides[1].position).toBe(1);
+    expect(lesson.slides[4].position).toBe(4);
   });
 
   it('stamps every slide with the same lessonId as the deck', () => {
@@ -139,6 +151,12 @@ describe('assembleGeneratedLesson', () => {
           explanation: 'Common trivia',
           sourcePage: null,
         },
+        {
+          kind: 'instructional',
+          title: 'Wrap-up',
+          content: 'Paris is the capital of France.',
+          sourcePage: null,
+        },
       ],
     };
 
@@ -189,10 +207,9 @@ describe('assembleGeneratedLesson', () => {
   it('carries explanation through on a multiple-choice slide when the model provided one', () => {
     const deckWithExplanation = {
       ...rawDeck,
-      slides: [
-        rawDeck.slides[0],
-        { ...rawDeck.slides[1], explanation: 'Chlorophyll captures light energy' },
-      ],
+      slides: rawDeck.slides.map((slide, index) =>
+        index === 1 ? { ...slide, explanation: 'Chlorophyll captures light energy' } : slide,
+      ),
     };
 
     const lesson = assembleGeneratedLesson({
@@ -274,13 +291,19 @@ describe('assembleGeneratedLesson', () => {
   // than silently returning a wrong-composition deck (risks.md R3, feeds task-12's
   // generation_failed).
   describe('composition enforcement (task-11)', () => {
-    const instructionalSlide = rawDeck.slides[0];
-    const activitySlide = rawDeck.slides[1];
-
     // @s4 — a model response that ignores the "instructional only" instruction and still
     // includes an activity slide is rejected, not silently returned.
     it('rejects an instructional-only deck that contains an activity slide', () => {
-      const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
+      const deck = {
+        title: 'Photosynthesis',
+        slides: [
+          instructionalSlide,
+          activitySlide,
+          { ...instructionalSlide, title: 'A' },
+          { ...instructionalSlide, title: 'B' },
+          { ...instructionalSlide, title: 'C' },
+        ],
+      };
 
       expect(() =>
         assembleGeneratedLesson({
@@ -293,7 +316,16 @@ describe('assembleGeneratedLesson', () => {
 
     // @s4 — an all-instructional deck is accepted for the instructional-only composition.
     it('accepts an instructional-only deck containing only instructional slides', () => {
-      const deck = { title: 'Photosynthesis', slides: [instructionalSlide] };
+      const deck = {
+        title: 'Photosynthesis',
+        slides: [
+          instructionalSlide,
+          { ...instructionalSlide, title: 'A' },
+          { ...instructionalSlide, title: 'B' },
+          { ...instructionalSlide, title: 'C' },
+          { ...instructionalSlide, title: 'D' },
+        ],
+      };
 
       const lesson = assembleGeneratedLesson({
         composition: 'instructional-only',
@@ -307,7 +339,16 @@ describe('assembleGeneratedLesson', () => {
     // @s5 — a model response that ignores the "activity only" instruction and still includes an
     // instructional slide is rejected, not silently returned.
     it('rejects an activity-only deck that contains an instructional slide', () => {
-      const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
+      const deck = {
+        title: 'Photosynthesis',
+        slides: [
+          instructionalSlide,
+          activitySlide,
+          { ...activitySlide, title: 'A' },
+          { ...activitySlide, title: 'B' },
+          { ...activitySlide, title: 'C' },
+        ],
+      };
 
       expect(() =>
         assembleGeneratedLesson({
@@ -320,7 +361,16 @@ describe('assembleGeneratedLesson', () => {
 
     // @s5 — an all-activity deck is accepted for the activity-only composition.
     it('accepts an activity-only deck containing only activity slides', () => {
-      const deck = { title: 'Photosynthesis', slides: [activitySlide] };
+      const deck = {
+        title: 'Photosynthesis',
+        slides: [
+          activitySlide,
+          { ...activitySlide, title: 'A' },
+          { ...activitySlide, title: 'B' },
+          { ...activitySlide, title: 'C' },
+          { ...activitySlide, title: 'D' },
+        ],
+      };
 
       const lesson = assembleGeneratedLesson({
         composition: 'activity-only',
@@ -335,12 +385,10 @@ describe('assembleGeneratedLesson', () => {
     // checks: a mixed deck still assembles for it (already covered by the top-level tests above),
     // pinned here so a mutant collapsing the composition guard to always-throw is caught.
     it('never rejects a mixed deck for the "both" composition', () => {
-      const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
-
       expect(() =>
         assembleGeneratedLesson({
           composition: 'both',
-          rawDeck: deck,
+          rawDeck,
           metadataPlacement: emptyPlacement,
         }),
       ).not.toThrow();
