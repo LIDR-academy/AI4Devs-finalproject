@@ -1,10 +1,6 @@
 import { ScreenContainer } from '@helsoft/components';
-import {
-  ApiKeyGate,
-  NewLessonDialog,
-  PdfDocuments,
-  useApiKeyGateCanCreate,
-} from '@helsoft/study-buddy';
+import { useProfile } from '@helsoft/hooks';
+import { ApiKeyGate, NewLessonDialog, PdfDocuments } from '@helsoft/study-buddy';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 
@@ -27,7 +23,8 @@ const UploadBody = ({
   onGenerate,
   onOpenLesson,
 }: UploadBodyProps) => {
-  const canCreate = useApiKeyGateCanCreate();
+  const { profile } = useProfile();
+  const canCreate = Boolean(profile?.canCreate);
 
   return (
     <>

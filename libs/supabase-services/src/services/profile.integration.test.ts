@@ -1,7 +1,7 @@
 jest.mock('../supabase/supabase-client', () => ({ getSupabase: jest.fn() }));
 
 import { getSupabase } from '../supabase/supabase-client';
-import { EntitlementsService } from './entitlements.service';
+import { ProfileService } from './profile.service';
 
 const mockGetSupabase = getSupabase as jest.Mock;
 
@@ -14,7 +14,6 @@ describe('entitlements service integration', () => {
           use_platform_key: false,
           show_ads: true,
           show_key_settings: true,
-          can_create_without_key: false,
         },
       },
       error: null,
@@ -22,12 +21,11 @@ describe('entitlements service integration', () => {
     const select = jest.fn(() => ({ single }));
     mockGetSupabase.mockReturnValue({ from: jest.fn(() => ({ select })) });
 
-    await expect(EntitlementsService.getEntitlements()).resolves.toEqual({
+    await expect(ProfileService.getProfile()).resolves.toEqual({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
-      canCreateWithoutKey: false,
     });
   });
 });

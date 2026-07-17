@@ -10,15 +10,14 @@ test('Loading story loads (blank while status resolves)', async ({ page }) => {
   expect(page.url()).toContain('features-apikeygate--loading');
 });
 
-test('RequiresKey story renders the notice and action', async ({ page }) => {
-  await page.goto(story('requires-key'));
+test('CannotCreate story renders the blocked message and keeps children', async ({ page }) => {
+  await page.goto(story('cannot-create'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(
-    canvas.getByText('An API key is required to generate lessons.', { exact: true }),
+    canvas.getByText("You can't create lessons. Please contact support.", { exact: true }),
   ).toBeVisible();
-  await expect(canvas.getByText('Add API key', { exact: true })).toBeVisible();
-  await expect(canvas.getByText('Generation entry content', { exact: true })).toHaveCount(0);
+  await expect(canvas.getByText('Generation entry content', { exact: true })).toBeVisible();
 });
 
 test('WithKey story renders children', async ({ page }) => {
@@ -27,25 +26,25 @@ test('WithKey story renders children', async ({ page }) => {
 
   await expect(canvas.getByText('Generation entry content', { exact: true })).toBeVisible();
   await expect(
-    canvas.getByText('An API key is required to generate lessons.', { exact: true }),
+    canvas.getByText("You can't create lessons. Please contact support.", { exact: true }),
   ).toHaveCount(0);
 });
 
-test('Paid story renders children without key guidance', async ({ page }) => {
+test('Paid story renders children without blocked message', async ({ page }) => {
   await page.goto(story('paid'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.getByText('Generation entry content', { exact: true })).toBeVisible();
   await expect(
-    canvas.getByText('An API key is required to generate lessons.', { exact: true }),
+    canvas.getByText("You can't create lessons. Please contact support.", { exact: true }),
   ).toHaveCount(0);
 });
 
-test('Error story renders retry and hides children', async ({ page }) => {
+test('Error story renders retry and keeps children', async ({ page }) => {
   await page.goto(story('error'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.getByText("We couldn't load your plan.", { exact: true })).toBeVisible();
   await expect(canvas.getByText('Try again', { exact: true })).toBeVisible();
-  await expect(canvas.getByText('Generation entry content', { exact: true })).toHaveCount(0);
+  await expect(canvas.getByText('Generation entry content', { exact: true })).toBeVisible();
 });

@@ -17,8 +17,8 @@ edge-function import. The identical helper-computed mutation scope was rerun wit
 
 ## Per-file results
 
-- `entitlements.dao.ts`: 7 killed / 0 survived / 100%
-- `entitlements.service.ts`: 11 killed / 0 survived / 100%
+- `profile.dao.ts` (was `entitlements.dao.ts`): 7 killed / 0 survived / 100%
+- `profile.service.ts` (was `entitlements.service.ts`): 11 killed / 0 survived / 100%
 - `lesson-generation.errors.ts`: 40 killed / 0 survived / 100%
 - `lesson-generation.key-source.ts`: 25 killed / 0 survived / 100%
 - `lesson-generation.service.ts`: 20 killed / 0 survived / 100%
@@ -79,6 +79,10 @@ Stryker generated 85 mutants across the two changed files. No equivalent-mutant 
 - `api-key-gate.tsx`: 45 killed / 0 survived / 0 no coverage / 100%
 - `api-key-settings.tsx`: 38 killed / 0 survived / 0 no coverage / 100%
 
-Behavioral tests cover loading-effect guards/dependencies, unresolved entitlements, and every
-render-prop branch. Direct stylesheet contracts cover concrete token values and hidden styles.
-Saved-status tests cover the empty label and missing provider/date fallbacks. No exclusions.
+Behavioral tests cover loading-effect guards/dependencies, unresolved profile, and create gating via
+`useProfile().profile?.canCreate` (render-prop / can-create context removed later). Direct stylesheet
+contracts cover concrete token values and hidden styles. Saved-status tests cover the empty label and
+missing provider/date fallbacks. No exclusions.
+
+_Note: later renames (`Profile*` / `useProfile`) and empty-state copy (`upload.cannotCreate`) post-date
+this mutation pass; scores above refer to the files as mutated at that commit._

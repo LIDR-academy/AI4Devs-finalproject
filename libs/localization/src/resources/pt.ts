@@ -82,6 +82,7 @@ export const pt: TranslationResource = {
         message: 'É necessária uma chave de API para gerar lições.',
         action: 'Adicionar chave de API',
       },
+      cannotCreate: 'Você não pode criar lições. Entre em contato com o suporte.',
       chooseFile: 'Escolha um PDF',
       dialogHeadline: 'Enviar PDF',
       dialogClose: 'Fechar',

@@ -12,7 +12,7 @@ export * from '../../../hooks/src/hooks/use-interaction-state';
 import type {
   ApiKeyErrorCode,
   ApiKeyStatus,
-  Entitlements,
+  Profile,
   GeneratedLesson,
   GenerateLessonRequest,
   GenerationErrorCode,
@@ -218,7 +218,7 @@ export const useApiKey = () => {
 // --- useProfile -----------------------------------------------------------
 
 export type ProfileMockConfig = {
-  entitlements?: Entitlements | null;
+  profile?: Profile | null;
   isLoading?: boolean;
   error?: Error | null;
 };
@@ -238,8 +238,8 @@ export const useProfile = () => {
   const [error, setError] = useState<Error | null>(config.error ?? null);
 
   return {
-    entitlements:
-      config.entitlements === undefined
+    profile:
+      config.profile === undefined
         ? {
             plan: 'free' as const,
             keySource: 'user' as const,
@@ -247,7 +247,7 @@ export const useProfile = () => {
             showAds: true,
             canCreate: false,
           }
-        : config.entitlements,
+        : config.profile,
     isLoading: config.isLoading ?? false,
     error,
     retry: () => setError(null),

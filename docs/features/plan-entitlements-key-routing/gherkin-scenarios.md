@@ -7,7 +7,7 @@ Feature: Plan entitlements and server-side AI key routing
   So that generation works for my plan without trusting client-side gates
 
   Background:
-    Given seeded plans "free" and "paid" with their entitlement flags
+    Given seeded plans "free" and "paid" with their plan flags
 
   @s1
   Scenario: New accounts default to the free plan
@@ -17,36 +17,36 @@ Feature: Plan entitlements and server-side AI key routing
     And its plan_id is "free"
 
   @s2
-  Scenario: Free learner with a saved key loads content entitlements
+  Scenario: Free learner with a saved key loads content profile
     Given my profile plan_id is "free"
     And I have a saved user AI key
-    When my entitlements load
+    When my profile loads
     Then key settings are shown from show_key_settings
     And showAds is true from show_ads
     And create and upload controls are shown
 
   @s3
-  Scenario: Free learner without a saved key sees the empty entitlement state
+  Scenario: Free learner without a saved key sees the empty create state
     Given my profile plan_id is "free"
     And I have no saved user AI key
-    When my entitlements load
+    When my profile loads
     Then key settings are shown from show_key_settings
     And showAds is true from show_ads
     And create and upload controls are hidden
-    And I see guidance to add a key
+    And I see a contact-support cannot-create message
 
   @s4
-  Scenario: Entitlements loading hides plan-sensitive controls
-    Given my entitlements request is pending
+  Scenario: Profile loading hides plan-sensitive controls
+    Given my profile request is pending
     When I view upload or settings
     Then create and upload controls are hidden
     And key settings are hidden
 
   @s5
-  Scenario Outline: Entitlements load failure offers retry
-    Given my entitlements cannot load because of "<cause>"
+  Scenario Outline: Profile load failure offers retry
+    Given my profile cannot load because of "<cause>"
     When I view upload or settings
-    Then I see an entitlements error state
+    Then I see a profile error state
     And I see a retry action
     And create, upload, and key settings are hidden
 
@@ -56,9 +56,9 @@ Feature: Plan entitlements and server-side AI key routing
       | a missing profile   |
 
   @s6
-  Scenario: Retrying a failed entitlement load recovers
-    Given my entitlements are in the error state
-    And the next entitlements request succeeds
+  Scenario: Retrying a failed profile load recovers
+    Given my profile is in the error state
+    And the next profile request succeeds
     When I retry
     Then the error state clears
     And I see controls derived from my current plan flags and key status
@@ -83,13 +83,13 @@ Feature: Plan entitlements and server-side AI key routing
     And the client presents guidance to add a user key
 
   @s9
-  Scenario: Paid learner loads content entitlements without a user key
+  Scenario: Paid learner loads content profile without a user key
     Given my profile plan_id is "paid"
     And I have no saved user AI key
-    When my entitlements load
+    When my profile loads
     Then key settings are hidden from show_key_settings
     And showAds is false from show_ads
-    And create and upload controls are shown from can_create_without_key
+    And create and upload controls are shown from use_platform_key
 
   @s10
   Scenario: Paid generation uses only the platform key
@@ -135,11 +135,11 @@ Feature: Plan entitlements and server-side AI key routing
     And the server does not fall back to a saved user key
 
   @s12
-  Scenario Outline: A paid-to-free change applies when entitlements reload
+  Scenario Outline: A paid-to-free change applies when profile reloads
     Given my profile plan_id was "paid"
     And my saved user AI key is "<key state>"
     And an administrator changes my profile plan_id to "free"
-    When I next load entitlements
+    When I next load profile
     Then key settings are shown
     And showAds is true
     And create and upload controls are "<control state>"
@@ -158,7 +158,7 @@ Feature: Plan entitlements and server-side AI key routing
 
   @s14
   Scenario: A dashboard plan change applies to the next generation
-    Given my entitlements were previously loaded for one plan
+    Given my profile was previously loaded for one plan
     And an administrator changes my profile plan_id in the dashboard
     When I next generate a lesson
     Then the server reads the current plan flags
@@ -173,17 +173,17 @@ Feature: Plan entitlements and server-side AI key routing
     And the server follows the user-key route from use_platform_key
 
   @s16
-  Scenario: Ad entitlement is exposed without ad behavior
-    Given my entitlements load successfully
-    When the entitlements object is returned
+  Scenario: Ad flag is exposed without ad behavior
+    Given my profile loads successfully
+    When the profile object is returned
     Then it includes showAds from the plan show_ads flag
     And no ad UI or ad-network request is started
 
   @s17
-  Scenario: A free-to-paid dashboard change applies when entitlements reload
+  Scenario: A free-to-paid dashboard change applies when profile reloads
     Given my profile plan_id was "free"
     And an administrator changes my profile plan_id to "paid"
-    When I next load entitlements
+    When I next load profile
     Then key settings are hidden
     And showAds is false
     And create and upload controls are shown without a user key

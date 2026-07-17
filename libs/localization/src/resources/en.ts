@@ -90,6 +90,7 @@ export const en = {
         message: 'An API key is required to generate lessons.',
         action: 'Add API key',
       },
+      cannotCreate: "You can't create lessons. Please contact support.",
       chooseFile: 'Choose a PDF',
       dialogHeadline: 'Upload PDF',
       dialogClose: 'Close',

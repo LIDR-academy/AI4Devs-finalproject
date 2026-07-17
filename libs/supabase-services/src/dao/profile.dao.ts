@@ -7,14 +7,12 @@ export type ProfileWithPlanFlags = {
   usePlatformKey: boolean;
   showAds: boolean;
   showKeySettings: boolean;
-  canCreateWithoutKey: boolean;
 };
 
 type PlansEmbed = {
   use_platform_key: boolean;
   show_ads: boolean;
   show_key_settings: boolean;
-  can_create_without_key: boolean;
 };
 
 type ProfilePlanJoinRow = {
@@ -28,13 +26,11 @@ const embedPlans = (plans: ProfilePlanJoinRow['plans']): PlansEmbed => {
 };
 
 /** One Supabase round-trip: caller's profile row joined with its plan flags. */
-export abstract class EntitlementsDao {
+export abstract class ProfileDao {
   static async getCurrentProfile(): Promise<ProfileWithPlanFlags> {
     const { data, error } = await getSupabase()
       .from('profiles')
-      .select(
-        'plan_id, plans(use_platform_key, show_ads, show_key_settings, can_create_without_key)',
-      )
+      .select('plan_id, plans(use_platform_key, show_ads, show_key_settings)')
       .single();
     if (error) throw error;
     if (!data) throw new Error('Profile not found');
@@ -47,7 +43,6 @@ export abstract class EntitlementsDao {
       usePlatformKey: plan.use_platform_key,
       showAds: plan.show_ads,
       showKeySettings: plan.show_key_settings,
-      canCreateWithoutKey: plan.can_create_without_key,
     };
   }
 }

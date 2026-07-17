@@ -2,20 +2,18 @@ create table public.plans (
   id text primary key,
   use_platform_key boolean not null,
   show_ads boolean not null,
-  show_key_settings boolean not null,
-  can_create_without_key boolean not null
+  show_key_settings boolean not null
 );
 
 insert into public.plans (
   id,
   use_platform_key,
   show_ads,
-  show_key_settings,
-  can_create_without_key
+  show_key_settings
 )
 values
-  ('free', false, true, true, false),
-  ('paid', true, false, false, true);
+  ('free', false, true, true),
+  ('paid', true, false, false);
 
 alter table public.plans enable row level security;
 

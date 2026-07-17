@@ -6,27 +6,22 @@ jest.mock('@helsoft/hooks', () => ({
 jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(),
-}));
 
 import { useApiKey, useProfile } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { useRouter } from 'expo-router';
 import { AccessibilityInfo, Text } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
-import { ApiKeyGate, apiKeyGateStyles, useApiKeyGateCanCreate } from './api-key-gate';
+import { ApiKeyGate, apiKeyGateStyles } from './api-key-gate';
 
 const mockUseApiKey = useApiKey as jest.Mock;
 const mockUseProfile = useProfile as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
-const mockUseRouter = useRouter as jest.Mock;
 
 const CanCreateProbe = () => {
-  const canCreate = useApiKeyGateCanCreate();
-  return <Text>{canCreate ? 'creation enabled' : 'creation disabled'}</Text>;
+  const { profile } = useProfile();
+  return <Text>{profile?.canCreate ? 'creation enabled' : 'creation disabled'}</Text>;
 };
 
 const apiKeyValue = (overrides: Partial<ReturnType<typeof useApiKey>> = {}) => ({
@@ -39,8 +34,8 @@ const apiKeyValue = (overrides: Partial<ReturnType<typeof useApiKey>> = {}) => (
   ...overrides,
 });
 
-const entitlementsValue = (overrides: Partial<ReturnType<typeof useProfile>> = {}) => ({
-  entitlements: {
+const profileValue = (overrides: Partial<ReturnType<typeof useProfile>> = {}) => ({
+  profile: {
     plan: 'free' as const,
     keySource: 'user' as const,
     showKeySettings: true,
@@ -56,10 +51,9 @@ const entitlementsValue = (overrides: Partial<ReturnType<typeof useProfile>> = {
 describe('ApiKeyGate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseRouter.mockReturnValue({ push: jest.fn() });
     mockUseLocalization.mockReturnValue(localizationValue());
     mockUseApiKey.mockReturnValue(apiKeyValue());
-    mockUseProfile.mockReturnValue(entitlementsValue());
+    mockUseProfile.mockReturnValue(profileValue());
   });
 
   it('does not announce entitlement loading after entitlements resolve', async () => {
@@ -87,7 +81,7 @@ describe('ApiKeyGate', () => {
       </ApiKeyGate>,
     );
 
-    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    mockUseProfile.mockReturnValue(profileValue({ profile: null, isLoading: true }));
     await view.rerender(
       <ApiKeyGate>
         <Text>generation content</Text>
@@ -99,7 +93,7 @@ describe('ApiKeyGate', () => {
   });
 
   it('handles unresolved non-loading entitlements as unavailable', async () => {
-    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null }));
+    mockUseProfile.mockReturnValue(profileValue({ profile: null }));
 
     await render(
       <ApiKeyGate>
@@ -108,15 +102,15 @@ describe('ApiKeyGate', () => {
       </ApiKeyGate>,
     );
 
-    expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
+    expect(screen.getByText('upload.cannotCreate')).toBeTruthy();
     expect(screen.getByText('creation disabled')).toBeTruthy();
     expect(screen.getByText('open existing lesson')).toBeTruthy();
   });
 
-  it('exposes canCreate=true via context when creation is available', async () => {
+  it('exposes canCreate=true via useProfile when creation is available', async () => {
     mockUseProfile.mockReturnValue(
-      entitlementsValue({
-        entitlements: {
+      profileValue({
+        profile: {
           plan: 'paid',
           keySource: 'platform',
           showKeySettings: false,
@@ -137,7 +131,7 @@ describe('ApiKeyGate', () => {
   });
 
   it('preserves the concrete gate, error, message, and hidden styles', () => {
-    expect(apiKeyGateStyles.gatedContent).toMatchObject({ flex: 1, gap: 16 });
+    expect(apiKeyGateStyles.gatedContent).toMatchObject({ gap: 16 });
     expect(apiKeyGateStyles.error).toMatchObject({ gap: 16 });
     expect(apiKeyGateStyles.message).toMatchObject({
       color: '#b7191c',
@@ -156,11 +150,11 @@ describe('ApiKeyGate', () => {
   });
 
   // @s10 (loading facet) — while loading, no notice; children stay mounted with canCreate=false.
-  it('announces entitlement loading without the required-key notice', async () => {
+  it('announces entitlement loading without the cannot-create message', async () => {
     const announce = jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockImplementation(jest.fn());
-    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+    mockUseProfile.mockReturnValue(profileValue({ profile: null, isLoading: true }));
 
     await render(
       <ApiKeyGate>
@@ -171,14 +165,14 @@ describe('ApiKeyGate', () => {
 
     expect(screen.getByText('creation disabled')).toBeTruthy();
     expect(screen.getByText('open existing lesson')).toBeTruthy();
-    expect(screen.queryByText('upload.apiKeyRequired.message')).toBeNull();
+    expect(screen.queryByText('upload.cannotCreate')).toBeNull();
     expect(screen.getByText('entitlements.loading').props.accessibilityLiveRegion).toBe('polite');
     expect(announce).toHaveBeenCalledWith('entitlements.loading');
     announce.mockRestore();
   });
 
   // @s10 (guard facet) — notice when gated; children remain for open/play (@s13).
-  it('renders the required-key notice when there is no key', async () => {
+  it('renders the cannot-create message when there is no key', async () => {
     mockUseApiKey.mockReturnValue(apiKeyValue({ status: { hasKey: false } }));
 
     await render(
@@ -188,7 +182,7 @@ describe('ApiKeyGate', () => {
       </ApiKeyGate>,
     );
 
-    expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
+    expect(screen.getByText('upload.cannotCreate')).toBeTruthy();
     expect(screen.getByText('creation disabled')).toBeTruthy();
     expect(screen.getByText('open existing lesson')).toBeTruthy();
   });
@@ -196,8 +190,8 @@ describe('ApiKeyGate', () => {
   // @s10 — once a key is saved, the gate renders its children instead of the notice.
   it('renders children when a key is saved', async () => {
     mockUseProfile.mockReturnValue(
-      entitlementsValue({
-        entitlements: {
+      profileValue({
+        profile: {
           plan: 'free',
           keySource: 'user',
           showKeySettings: true,
@@ -214,14 +208,14 @@ describe('ApiKeyGate', () => {
     );
 
     expect(screen.getByText('generation content')).toBeTruthy();
-    expect(screen.queryByText('upload.apiKeyRequired.message')).toBeNull();
+    expect(screen.queryByText('upload.cannotCreate')).toBeNull();
   });
 
   // @s9/@s17 — paid creation uses the platform key and bypasses the user-key gate.
   it('renders children for a paid learner without a saved user key', async () => {
     mockUseProfile.mockReturnValue(
-      entitlementsValue({
-        entitlements: {
+      profileValue({
+        profile: {
           plan: 'paid',
           keySource: 'platform',
           showKeySettings: false,
@@ -238,11 +232,11 @@ describe('ApiKeyGate', () => {
     );
 
     expect(screen.getByText('generation content')).toBeTruthy();
-    expect(screen.queryByText('upload.apiKeyRequired.message')).toBeNull();
+    expect(screen.queryByText('upload.cannotCreate')).toBeNull();
   });
 
   // @s12 — reloaded entitlements are authoritative after a downgrade.
-  it('disables create via context when current entitlements disallow creation', async () => {
+  it('disables create via useProfile when current entitlements disallow creation', async () => {
     mockUseApiKey.mockReturnValue(
       apiKeyValue({
         status: { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' },
@@ -258,15 +252,15 @@ describe('ApiKeyGate', () => {
 
     expect(screen.getByText('creation disabled')).toBeTruthy();
     expect(screen.getByText('open existing lesson')).toBeTruthy();
-    expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
+    expect(screen.getByText('upload.cannotCreate')).toBeTruthy();
   });
 
   // @s5/@s6 — entitlement failures expose retry while children stay mounted (@s13).
   it('renders an entitlement error and retries while keeping children mounted', async () => {
     const retry = jest.fn();
     mockUseProfile.mockReturnValue(
-      entitlementsValue({
-        entitlements: null,
+      profileValue({
+        profile: null,
         error: new Error('profile missing'),
         retry,
       }),
@@ -285,7 +279,7 @@ describe('ApiKeyGate', () => {
   });
 
   // @s13 — context consumers preserve lesson access while creation stays gated.
-  it('exposes canCreate=false via context while creation is unavailable', async () => {
+  it('exposes canCreate=false via useProfile while creation is unavailable', async () => {
     await render(
       <ApiKeyGate>
         <CanCreateProbe />
@@ -296,11 +290,11 @@ describe('ApiKeyGate', () => {
     expect(screen.getByText('creation disabled')).toBeTruthy();
     expect(screen.queryByText('creation enabled')).toBeNull();
     expect(screen.getByText('open existing lesson')).toBeTruthy();
-    expect(screen.getByText('upload.apiKeyRequired.message')).toBeTruthy();
+    expect(screen.getByText('upload.cannotCreate')).toBeTruthy();
   });
 
-  it('exposes canCreate=false via context while entitlements load', async () => {
-    mockUseProfile.mockReturnValue(entitlementsValue({ entitlements: null, isLoading: true }));
+  it('exposes canCreate=false via useProfile while entitlements load', async () => {
+    mockUseProfile.mockReturnValue(profileValue({ profile: null, isLoading: true }));
 
     await render(
       <ApiKeyGate>
@@ -312,9 +306,9 @@ describe('ApiKeyGate', () => {
     expect(screen.queryByText('creation enabled')).toBeNull();
   });
 
-  it('exposes canCreate=false via context when entitlements fail', async () => {
+  it('exposes canCreate=false via useProfile when entitlements fail', async () => {
     mockUseProfile.mockReturnValue(
-      entitlementsValue({ entitlements: null, error: new Error('read failed') }),
+      profileValue({ profile: null, error: new Error('read failed') }),
     );
 
     await render(
@@ -327,19 +321,4 @@ describe('ApiKeyGate', () => {
     expect(screen.queryByText('creation enabled')).toBeNull();
   });
 
-  // AC10 — the notice's action navigates to the account screen (/settings).
-  it('navigates to /settings when the notice action is pressed', async () => {
-    const push = jest.fn();
-    mockUseRouter.mockReturnValue({ push });
-    mockUseApiKey.mockReturnValue(apiKeyValue({ status: { hasKey: false } }));
-
-    await render(
-      <ApiKeyGate>
-        <Text>generation content</Text>
-      </ApiKeyGate>,
-    );
-    fireEvent.press(screen.getByRole('button', { name: 'upload.apiKeyRequired.action' }));
-
-    expect(push).toHaveBeenCalledWith('/settings');
-  });
 });

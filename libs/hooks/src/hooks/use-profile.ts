@@ -1,4 +1,4 @@
-import { EntitlementsService } from '@helsoft/supabase-services';
+import { ProfileService } from '@helsoft/supabase-services';
 import {
   createContext,
   createElement,
@@ -30,7 +30,7 @@ const useProfileState = (skip: boolean): UseProfileResult => {
     if (skip) return;
     const id = ++requestId.current;
     dispatch({ type: 'load/start' });
-    void EntitlementsService.getEntitlements()
+    void ProfileService.getProfile()
       .then((data) => {
         if (id !== requestId.current) return;
         dispatch({ type: 'load/success', data });
@@ -44,7 +44,6 @@ const useProfileState = (skip: boolean): UseProfileResult => {
       });
   }, [skip]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on sessionUserId, not session object
   useEffect(() => {
     if (skip) return;
     if (isSessionLoading) return;
@@ -56,24 +55,24 @@ const useProfileState = (skip: boolean): UseProfileResult => {
   }, [skip, sessionUserId, isSessionLoading, load]);
 
   const isLoading = state.isLoading || isApiKeyLoading || isSessionLoading;
-  const entitlements = useMemo(() => {
+  const profile = useMemo(() => {
     if (!state.data || isLoading || state.error) return null;
     return {
       ...state.data,
-      canCreate: state.data.canCreateWithoutKey || apiKeyStatus.hasKey,
+      canCreate: state.data.keySource === 'platform' || apiKeyStatus.hasKey,
     };
   }, [apiKeyStatus.hasKey, isLoading, state.data, state.error]);
 
   return useMemo(
-    () => ({ entitlements, isLoading, error: state.error, retry: load }),
-    [entitlements, isLoading, state.error, load],
+    () => ({ profile, isLoading, error: state.error, retry: load }),
+    [profile, isLoading, state.error, load],
   );
 };
 
 const ProfileContext = createContext<UseProfileResult | undefined>(undefined);
 
 /**
- * One profile→plans join (via EntitlementsService) shared app-wide when under
+ * One profile→plans join (via ProfileService) shared app-wide when under
  * `ProfileProvider`. Standalone still works for tests/Storybook without a provider.
  */
 export const useProfile = (): UseProfileResult => {

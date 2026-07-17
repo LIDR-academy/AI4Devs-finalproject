@@ -46,7 +46,7 @@ describe('profiles migration (@s1, live local Supabase)', () => {
   it('authenticated users can read seeded plan flags', async () => {
     const { data, error } = await userA.client
       .from('plans')
-      .select('id, use_platform_key, show_ads, show_key_settings, can_create_without_key')
+      .select('id, use_platform_key, show_ads, show_key_settings')
       .order('id');
 
     expect(error).toBeNull();
@@ -56,14 +56,12 @@ describe('profiles migration (@s1, live local Supabase)', () => {
         use_platform_key: false,
         show_ads: true,
         show_key_settings: true,
-        can_create_without_key: false,
       },
       {
         id: 'paid',
         use_platform_key: true,
         show_ads: false,
         show_key_settings: false,
-        can_create_without_key: true,
       },
     ]);
   });

@@ -82,6 +82,7 @@ export const de: TranslationResource = {
         message: 'Ein API-Schlüssel ist erforderlich, um Lektionen zu erstellen.',
         action: 'API-Schlüssel hinzufügen',
       },
+      cannotCreate: 'Du kannst keine Lektionen erstellen. Bitte kontaktiere den Support.',
       chooseFile: 'PDF auswählen',
       dialogHeadline: 'PDF hochladen',
       dialogClose: 'Schließen',

@@ -14,14 +14,14 @@ The signup trigger only covers future users; current auth users could produce cl
 **Mitigation:** migration backfills one `free` profile per existing `auth.users` row before enabling runtime reads; unique PK makes reruns safe. Test existing-user backfill and new-user trigger.
 
 ### R2 — Privilege escalation through profile writes
-If authenticated clients can update `profiles.plan`, free users can select the platform key.
+If authenticated clients can update `profiles.plan_id`, free users can select the platform key.
 
 **Mitigation:** authenticated role receives select-own only; no update/insert/delete policy or grant. Plan changes remain dashboard/service-role operations. Test denied client mutation.
 
 ### R3 — Client/server entitlement drift
 Cached client state may lag a dashboard plan change.
 
-**Mitigation:** UI reload/retry fetches current plan for UX, while generation always reads `profiles.plan` live and ignores client plan/key-source inputs.
+**Mitigation:** UI reload/retry fetches current plan flags for UX, while generation always reads live `plans` flags via the profile join and ignores client plan/key-source inputs.
 
 ### R4 — Wrong-key fallback leaks cost or breaks downgrade behavior
 A paid request might accidentally call Vault, or a missing platform key might fall back to the user's key.
@@ -38,15 +38,15 @@ Adding a second key source increases chances of logging key material or raw prov
 
 **Mitigation:** pass keys only to provider construction; never include them in response/error objects or logs. Retain redacted error mapping and add assertions around observable output.
 
-### R7 — Duplicate key-status requests
-`useEntitlements()` composing `useApiKey()` could bypass the shared provider and fetch status repeatedly.
+### R7 — Duplicate key-status / profile requests
+`useProfile()` composing `useApiKey()` could bypass shared providers and fetch repeatedly.
 
-**Mitigation:** keep `ApiKeyProvider` above plan-sensitive screens and consume its context. Test one status request across entitlement consumers.
+**Mitigation:** keep `ApiKeyProvider` + `ProfileProvider` above plan-sensitive screens and consume their context. Test one profile fetch across consumers under `ProfileProvider`.
 
 ### R8 — Loading/error UI flashes unauthorized controls
 Independent plan and key requests can briefly expose free or paid controls.
 
-**Mitigation:** entitlement loading spans both dependencies; render neither upload/create nor key settings until resolved. Errors hide all plan-sensitive controls and expose retry.
+**Mitigation:** profile loading spans both dependencies; render neither upload/create nor key settings until resolved. Errors hide all plan-sensitive controls and expose retry. Empty create uses contact-support copy.
 
 ### R9 — Edge Function logic lacks direct Deno CI coverage
 The repository tests pure Edge decisions through mirrored Jest modules; runtime wiring can still diverge.

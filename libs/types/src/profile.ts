@@ -1,6 +1,6 @@
 export type Plan = string;
 
-export type Entitlements = {
+export type Profile = {
   plan: Plan;
   keySource: 'user' | 'platform';
   showKeySettings: boolean;

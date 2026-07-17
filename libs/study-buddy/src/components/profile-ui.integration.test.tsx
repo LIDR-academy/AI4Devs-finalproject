@@ -6,14 +6,10 @@ jest.mock('@helsoft/hooks', () => ({
 jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(),
-}));
 
 import { useApiKey, useProfile } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { render, screen } from '@testing-library/react-native';
-import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { localizationValue } from '../test-utils/auth-test-factories';
@@ -23,12 +19,10 @@ import { ApiKeySettings } from './api-key-settings/api-key-settings';
 const mockUseApiKey = useApiKey as jest.Mock;
 const mockUseProfile = useProfile as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
-const mockUseRouter = useRouter as jest.Mock;
 
-describe('entitlements UI integration', () => {
+describe('profile UI integration', () => {
   beforeEach(() => {
     mockUseLocalization.mockReturnValue(localizationValue());
-    mockUseRouter.mockReturnValue({ push: jest.fn() });
     mockUseApiKey.mockReturnValue({
       status: { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' },
       isLoading: false,
@@ -40,9 +34,9 @@ describe('entitlements UI integration', () => {
   });
 
   // @s9/@s17 — one paid entitlement result enables creation and hides stale BYOK settings.
-  it('applies paid entitlements across upload gating and settings', async () => {
+  it('applies paid profile across upload gating and settings', async () => {
     mockUseProfile.mockReturnValue({
-      entitlements: {
+      profile: {
         plan: 'paid',
         keySource: 'platform',
         showKeySettings: false,

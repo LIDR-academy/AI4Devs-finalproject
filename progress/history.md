@@ -54,3 +54,5 @@
 2026-07-16 | lesson-player open route (ad hoc) | n/a | — | Open lesson → /lesson/[id]/player; PRD R4 struck; orchestrator diagram fix loops.
 2026-07-16 | plan-entitlements-key-routing | pr_ready | docs/features/plan-entitlements-key-routing/ | profiles plan + key routing; DoD PASS
 2026-07-16 | supabase-restart-script (ad hoc, no story) | n/a | — | Added supabase/restart.sh (stop --no-backup + start) wired as pnpm supabase:restart (720a22f).
+
+2026-07-16 | plan-entitlements-key-routing (amend) | pr_ready | docs/features/plan-entitlements-key-routing/ | Profile* rename; drop can_create_without_key; canCreate from use_platform_key; contact-support empty create; docs synced.

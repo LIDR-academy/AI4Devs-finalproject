@@ -82,6 +82,7 @@ export const es: TranslationResource = {
         message: 'Se requiere una clave de API para generar lecciones.',
         action: 'Agregar clave de API',
       },
+      cannotCreate: 'No puedes crear lecciones. Contacta a soporte.',
       chooseFile: 'Elige un PDF',
       dialogHeadline: 'Subir PDF',
       dialogClose: 'Cerrar',

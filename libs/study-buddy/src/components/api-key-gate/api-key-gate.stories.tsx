@@ -4,7 +4,7 @@ import { Text } from 'react-native';
 import { configureProfileMock } from '../../../.storybook/mocks/hooks';
 import { ApiKeyGate } from './api-key-gate';
 
-const withEntitlementsMock =
+const withProfileMock =
   (config: Parameters<typeof configureProfileMock>[0]): Decorator =>
   (StoryFn) => {
     configureProfileMock(config);
@@ -25,14 +25,14 @@ type Story = StoryObj<typeof meta>;
 
 /** Loading — status still in flight; gate renders nothing (no premature notice flash). */
 export const Loading: Story = {
-  decorators: [withEntitlementsMock({ entitlements: null, isLoading: true })],
+  decorators: [withProfileMock({ profile: null, isLoading: true })],
 };
 
-/** No key — ApiKeyRequiredNotice instead of children. */
-export const RequiresKey: Story = {
+/** Cannot create — contact-support message above children. */
+export const CannotCreate: Story = {
   decorators: [
-    withEntitlementsMock({
-      entitlements: {
+    withProfileMock({
+      profile: {
         plan: 'free',
         keySource: 'user',
         showKeySettings: true,
@@ -46,8 +46,8 @@ export const RequiresKey: Story = {
 /** Key present — children render. */
 export const WithKey: Story = {
   decorators: [
-    withEntitlementsMock({
-      entitlements: {
+    withProfileMock({
+      profile: {
         plan: 'free',
         keySource: 'user',
         showKeySettings: true,
@@ -61,8 +61,8 @@ export const WithKey: Story = {
 /** Paid — platform access bypasses user-key setup. */
 export const Paid: Story = {
   decorators: [
-    withEntitlementsMock({
-      entitlements: {
+    withProfileMock({
+      profile: {
         plan: 'paid',
         keySource: 'platform',
         showKeySettings: false,
@@ -76,6 +76,6 @@ export const Paid: Story = {
 /** Error — plan read failed and can be retried. */
 export const Error: Story = {
   decorators: [
-    withEntitlementsMock({ entitlements: null, error: new globalThis.Error('read failed') }),
+    withProfileMock({ profile: null, error: new globalThis.Error('read failed') }),
   ],
 };

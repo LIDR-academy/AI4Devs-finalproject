@@ -37,20 +37,20 @@ const API_KEY_ERROR_KEYS: Partial<Record<ApiKeyErrorCode, string>> = {
 export const ApiKeySettings = () => {
   const { status, isLoading, isSubmitting, error, saveApiKey, removeApiKey } = useApiKey();
   const {
-    entitlements,
-    isLoading: areEntitlementsLoading,
-    error: entitlementsError,
+    profile,
+    isLoading: isProfileLoading,
+    error: profileError,
     retry,
   } = useProfile();
   const { t, locale } = useLocalization();
 
   useEffect(() => {
-    if (areEntitlementsLoading) {
+    if (isProfileLoading) {
       AccessibilityInfo.announceForAccessibility(t('entitlements.loading'));
     }
-  }, [areEntitlementsLoading, t]);
+  }, [isProfileLoading, t]);
 
-  if (areEntitlementsLoading) {
+  if (isProfileLoading) {
     return (
       <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
         {t('entitlements.loading')}
@@ -58,7 +58,7 @@ export const ApiKeySettings = () => {
     );
   }
 
-  if (entitlementsError) {
+  if (profileError) {
     return (
       <View style={styles.error}>
         <Text accessibilityRole="alert" style={styles.errorMessage}>
@@ -69,7 +69,7 @@ export const ApiKeySettings = () => {
     );
   }
 
-  if (!entitlements?.showKeySettings) return null;
+  if (!profile?.showKeySettings) return null;
 
   const keySavedStatusLabel = status.hasKey
     ? t('settings.apiKey.savedStatus', {

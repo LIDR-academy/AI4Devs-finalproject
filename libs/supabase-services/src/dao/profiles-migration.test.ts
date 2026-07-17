@@ -11,12 +11,12 @@ describe('profiles migration', () => {
     const sql = readFileSync(migrationPath, 'utf8');
 
     expect(sql.indexOf('create table public.plans')).toBeGreaterThan(-1);
-    expect(sql.indexOf("('free', false, true, true, false)")).toBeGreaterThan(
+    expect(sql.indexOf("('free', false, true, true)")).toBeGreaterThan(
       sql.indexOf('create table public.plans'),
     );
-    expect(sql.indexOf("('paid', true, false, false, true)")).toBeGreaterThan(-1);
+    expect(sql.indexOf("('paid', true, false, false)")).toBeGreaterThan(-1);
     expect(sql.indexOf('create table public.profiles')).toBeGreaterThan(
-      sql.indexOf("('paid', true, false, false, true)"),
+      sql.indexOf("('paid', true, false, false)"),
     );
     expect(sql.indexOf('create trigger on_auth_user_profile_created')).toBeGreaterThan(-1);
     expect(
@@ -32,7 +32,7 @@ describe('profiles migration', () => {
     expect(sql).toMatch(/use_platform_key boolean not null/i);
     expect(sql).toMatch(/show_ads boolean not null/i);
     expect(sql).toMatch(/show_key_settings boolean not null/i);
-    expect(sql).toMatch(/can_create_without_key boolean not null/i);
+    expect(sql).not.toMatch(/can_create_without_key/i);
     expect(sql).toMatch(/insert into public\.profiles \(id\)\s+values \(new\.id\)/i);
     expect(sql).toMatch(/after insert on auth\.users\s+for each row/i);
     expect(sql).toMatch(

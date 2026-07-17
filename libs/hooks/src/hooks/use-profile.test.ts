@@ -1,10 +1,10 @@
 jest.mock('@helsoft/supabase-services', () => ({
-  EntitlementsService: { getEntitlements: jest.fn() },
+  ProfileService: { getProfile: jest.fn() },
 }));
 jest.mock('./use-api-key', () => ({ useApiKey: jest.fn() }));
 jest.mock('./use-session', () => ({ useSession: jest.fn() }));
 
-import { EntitlementsService } from '@helsoft/supabase-services';
+import { ProfileService } from '@helsoft/supabase-services';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
 
@@ -12,7 +12,7 @@ import { useApiKey } from './use-api-key';
 import { ProfileProvider, useProfile } from './use-profile';
 import { useSession } from './use-session';
 
-const service = EntitlementsService as jest.Mocked<typeof EntitlementsService>;
+const service = ProfileService as jest.Mocked<typeof ProfileService>;
 const mockUseApiKey = useApiKey as jest.Mock;
 const mockUseSession = useSession as jest.Mock;
 
@@ -34,23 +34,21 @@ describe('useProfile', () => {
   });
 
   it('@s2 exposes free entitlements with creation enabled when a saved key exists', async () => {
-    service.getEntitlements.mockResolvedValue({
+    service.getProfile.mockResolvedValue({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
-      canCreateWithoutKey: false,
     });
 
     const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.entitlements).toEqual({
+    expect(result.current.profile).toEqual({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
-      canCreateWithoutKey: false,
       canCreate: true,
     });
     expect(result.current.error).toBeNull();
@@ -61,18 +59,17 @@ describe('useProfile', () => {
       ...mockUseApiKey(),
       status: { hasKey: false },
     });
-    service.getEntitlements.mockResolvedValue({
+    service.getProfile.mockResolvedValue({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
-      canCreateWithoutKey: false,
     });
 
     const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.entitlements?.canCreate).toBe(false);
+    expect(result.current.profile?.canCreate).toBe(false);
   });
 
   it('@s4 hides entitlements while key status is loading', async () => {
@@ -80,50 +77,48 @@ describe('useProfile', () => {
       ...mockUseApiKey(),
       isLoading: true,
     });
-    service.getEntitlements.mockResolvedValue({
+    service.getProfile.mockResolvedValue({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
-      canCreateWithoutKey: false,
     });
 
     const { result } = renderHook(() => useProfile());
 
-    await waitFor(() => expect(service.getEntitlements).toHaveBeenCalled());
+    await waitFor(() => expect(service.getProfile).toHaveBeenCalled());
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.entitlements).toBeNull();
+    expect(result.current.profile).toBeNull();
   });
 
   it('@s4 hides entitlements while the plan request is still pending', () => {
-    service.getEntitlements.mockReturnValue(new Promise(() => {}));
+    service.getProfile.mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useProfile());
 
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.entitlements).toBeNull();
+    expect(result.current.profile).toBeNull();
     expect(result.current.error).toBeNull();
   });
 
   it('@s5 exposes a retryable error and no entitlements after a plan read failure', async () => {
     const error = new Error('Profile not found');
-    service.getEntitlements.mockRejectedValue(error);
+    service.getProfile.mockRejectedValue(error);
 
     const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.entitlements).toBeNull();
+    expect(result.current.profile).toBeNull();
     expect(result.current.error).toBe(error);
     expect(result.current.retry).toEqual(expect.any(Function));
   });
 
   it('@s6 clears an error and derives current controls after retry succeeds', async () => {
-    service.getEntitlements.mockRejectedValueOnce(new Error('read failed')).mockResolvedValueOnce({
+    service.getProfile.mockRejectedValueOnce(new Error('read failed')).mockResolvedValueOnce({
       plan: 'paid',
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
-      canCreateWithoutKey: true,
     });
 
     const { result } = renderHook(() => useProfile());
@@ -133,12 +128,11 @@ describe('useProfile', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.error).toBeNull();
-    expect(result.current.entitlements).toEqual({
+    expect(result.current.profile).toEqual({
       plan: 'paid',
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
-      canCreateWithoutKey: true,
       canCreate: true,
     });
   });
@@ -148,56 +142,51 @@ describe('useProfile', () => {
       ...mockUseApiKey(),
       status: { hasKey: false },
     });
-    service.getEntitlements.mockResolvedValue({
+    service.getProfile.mockResolvedValue({
       plan: 'paid',
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
-      canCreateWithoutKey: true,
     });
 
     const { result } = renderHook(() => useProfile());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.entitlements).toEqual({
+    expect(result.current.profile).toEqual({
       plan: 'paid',
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
-      canCreateWithoutKey: true,
       canCreate: true,
     });
   });
 
   it('@s12 reloads paid to free and keeps creation enabled when the user key is present', async () => {
-    service.getEntitlements
+    service.getProfile
       .mockResolvedValueOnce({
         plan: 'paid',
         keySource: 'platform',
         showKeySettings: false,
         showAds: false,
-        canCreateWithoutKey: true,
       })
       .mockResolvedValueOnce({
         plan: 'free',
         keySource: 'user',
         showKeySettings: true,
         showAds: true,
-        canCreateWithoutKey: false,
       });
 
     const { result } = renderHook(() => useProfile());
-    await waitFor(() => expect(result.current.entitlements?.plan).toBe('paid'));
+    await waitFor(() => expect(result.current.profile?.plan).toBe('paid'));
 
     act(() => result.current.retry());
 
-    await waitFor(() => expect(result.current.entitlements?.plan).toBe('free'));
-    expect(result.current.entitlements).toEqual({
+    await waitFor(() => expect(result.current.profile?.plan).toBe('free'));
+    expect(result.current.profile).toEqual({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
-      canCreateWithoutKey: false,
       canCreate: true,
     });
   });
@@ -207,29 +196,27 @@ describe('useProfile', () => {
       ...mockUseApiKey(),
       status: { hasKey: false },
     });
-    service.getEntitlements
+    service.getProfile
       .mockResolvedValueOnce({
         plan: 'paid',
         keySource: 'platform',
         showKeySettings: false,
         showAds: false,
-        canCreateWithoutKey: true,
       })
       .mockResolvedValueOnce({
         plan: 'free',
         keySource: 'user',
         showKeySettings: true,
         showAds: true,
-        canCreateWithoutKey: false,
       });
 
     const { result } = renderHook(() => useProfile());
-    await waitFor(() => expect(result.current.entitlements?.plan).toBe('paid'));
+    await waitFor(() => expect(result.current.profile?.plan).toBe('paid'));
 
     act(() => result.current.retry());
 
-    await waitFor(() => expect(result.current.entitlements?.plan).toBe('free'));
-    expect(result.current.entitlements?.canCreate).toBe(false);
+    await waitFor(() => expect(result.current.profile?.plan).toBe('free'));
+    expect(result.current.profile?.canCreate).toBe(false);
   });
 
   it('@s17 reloads free to paid and enables creation without a user key', async () => {
@@ -237,42 +224,39 @@ describe('useProfile', () => {
       ...mockUseApiKey(),
       status: { hasKey: false },
     });
-    service.getEntitlements
+    service.getProfile
       .mockResolvedValueOnce({
         plan: 'free',
         keySource: 'user',
         showKeySettings: true,
         showAds: true,
-        canCreateWithoutKey: false,
       })
       .mockResolvedValueOnce({
         plan: 'paid',
         keySource: 'platform',
         showKeySettings: false,
         showAds: false,
-        canCreateWithoutKey: true,
       });
 
     const { result } = renderHook(() => useProfile());
-    await waitFor(() => expect(result.current.entitlements?.plan).toBe('free'));
-    expect(result.current.entitlements?.canCreate).toBe(false);
+    await waitFor(() => expect(result.current.profile?.plan).toBe('free'));
+    expect(result.current.profile?.canCreate).toBe(false);
 
     act(() => result.current.retry());
 
-    await waitFor(() => expect(result.current.entitlements?.plan).toBe('paid'));
-    expect(result.current.entitlements).toEqual({
+    await waitFor(() => expect(result.current.profile?.plan).toBe('paid'));
+    expect(result.current.profile).toEqual({
       plan: 'paid',
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
-      canCreateWithoutKey: true,
       canCreate: true,
     });
   });
 
   it('@s6 ignores an older failed request after a newer retry succeeds', async () => {
     let rejectFirst: (error: Error) => void = () => {};
-    service.getEntitlements
+    service.getProfile
       .mockReturnValueOnce(
         new Promise((_, reject) => {
           rejectFirst = reject;
@@ -283,7 +267,6 @@ describe('useProfile', () => {
         keySource: 'platform',
         showKeySettings: false,
         showAds: false,
-        canCreateWithoutKey: true,
       });
 
     const { result } = renderHook(() => useProfile());
@@ -293,16 +276,15 @@ describe('useProfile', () => {
     await act(async () => rejectFirst(new Error('stale failure')));
 
     expect(result.current.error).toBeNull();
-    expect(result.current.entitlements?.plan).toBe('paid');
+    expect(result.current.profile?.plan).toBe('paid');
   });
 
   it('shares one profile fetch across consumers under ProfileProvider', async () => {
-    service.getEntitlements.mockResolvedValue({
+    service.getProfile.mockResolvedValue({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
-      canCreateWithoutKey: false,
     });
 
     const wrapper = ({ children }: { children: ReactNode }) =>
@@ -317,7 +299,7 @@ describe('useProfile', () => {
     );
 
     await waitFor(() => expect(result.current.a.isLoading).toBe(false));
-    expect(result.current.a.entitlements).toEqual(result.current.b.entitlements);
-    expect(service.getEntitlements).toHaveBeenCalledTimes(1);
+    expect(result.current.a.profile).toEqual(result.current.b.profile);
+    expect(service.getProfile).toHaveBeenCalledTimes(1);
   });
 });

@@ -8,18 +8,16 @@ insert into public.plans (
   id,
   use_platform_key,
   show_ads,
-  show_key_settings,
-  can_create_without_key
+  show_key_settings
 )
 values
-  ('demo_platform_key', true, false, false, false),
-  ('demo_show_ads', false, true, false, false),
-  ('demo_show_key', false, false, true, false)
+  ('demo_platform_key', true, false, false),
+  ('demo_show_ads', false, true, false),
+  ('demo_show_key', false, false, true)
 on conflict (id) do update set
   use_platform_key = excluded.use_platform_key,
   show_ads = excluded.show_ads,
-  show_key_settings = excluded.show_key_settings,
-  can_create_without_key = excluded.can_create_without_key;
+  show_key_settings = excluded.show_key_settings;
 
 do $$
 declare

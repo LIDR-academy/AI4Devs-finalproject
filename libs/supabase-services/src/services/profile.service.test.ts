@@ -1,13 +1,13 @@
-jest.mock('../dao/entitlements.dao', () => ({
-  EntitlementsDao: { getCurrentProfile: jest.fn() },
+jest.mock('../dao/profile.dao', () => ({
+  ProfileDao: { getCurrentProfile: jest.fn() },
 }));
 
-import { EntitlementsDao } from '../dao/entitlements.dao';
-import { EntitlementsService } from './entitlements.service';
+import { ProfileDao } from '../dao/profile.dao';
+import { ProfileService } from './profile.service';
 
-const dao = EntitlementsDao as jest.Mocked<typeof EntitlementsDao>;
+const dao = ProfileDao as jest.Mocked<typeof ProfileDao>;
 
-describe('EntitlementsService', () => {
+describe('ProfileService', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('@s2 maps free plan flags to user-key entitlements', async () => {
@@ -16,15 +16,13 @@ describe('EntitlementsService', () => {
       usePlatformKey: false,
       showAds: true,
       showKeySettings: true,
-      canCreateWithoutKey: false,
     });
 
-    await expect(EntitlementsService.getEntitlements()).resolves.toEqual({
+    await expect(ProfileService.getProfile()).resolves.toEqual({
       plan: 'free',
       keySource: 'user',
       showKeySettings: true,
       showAds: true,
-      canCreateWithoutKey: false,
     });
   });
 
@@ -34,15 +32,13 @@ describe('EntitlementsService', () => {
       usePlatformKey: true,
       showAds: false,
       showKeySettings: false,
-      canCreateWithoutKey: true,
     });
 
-    await expect(EntitlementsService.getEntitlements()).resolves.toEqual({
+    await expect(ProfileService.getProfile()).resolves.toEqual({
       plan: 'paid',
       keySource: 'platform',
       showKeySettings: false,
       showAds: false,
-      canCreateWithoutKey: true,
     });
   });
 
@@ -52,10 +48,9 @@ describe('EntitlementsService', () => {
       usePlatformKey: false,
       showAds: true,
       showKeySettings: true,
-      canCreateWithoutKey: false,
     });
 
-    await expect(EntitlementsService.getEntitlements()).resolves.toMatchObject({
+    await expect(ProfileService.getProfile()).resolves.toMatchObject({
       plan: 'free',
       showAds: true,
     });

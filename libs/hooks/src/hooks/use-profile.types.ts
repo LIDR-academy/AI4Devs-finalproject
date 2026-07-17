@@ -1,8 +1,8 @@
-import type { Entitlements } from '@helsoft/types';
+import type { Profile } from '@helsoft/types';
 import type { ReactNode } from 'react';
 
 export type UseProfileResult = {
-  entitlements: Entitlements | null;
+  profile: Profile | null;
   isLoading: boolean;
   error: Error | null;
   retry: () => void;

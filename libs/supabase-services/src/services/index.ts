@@ -1,7 +1,7 @@
 export * from './api-key.service';
 export * from './auth.service';
-export * from './entitlements.service';
-export type * from './entitlements.types';
+export * from './profile.service';
+export type * from './profile.types';
 export * from './lesson-attempt.service';
 export * from './lesson-generation.key-source';
 export * from './lesson-generation.service';

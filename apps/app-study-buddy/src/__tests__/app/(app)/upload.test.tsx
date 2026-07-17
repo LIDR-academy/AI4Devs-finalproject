@@ -15,13 +15,35 @@ jest.mock('@helsoft/components', () => {
   };
 });
 
+jest.mock('@helsoft/hooks', () => ({
+  useProfile: () => ({
+    profile: mockCanCreate
+      ? {
+          plan: 'paid',
+          keySource: 'platform',
+          showKeySettings: false,
+          showAds: false,
+          canCreate: true,
+        }
+      : {
+          plan: 'free',
+          keySource: 'user',
+          showKeySettings: true,
+          showAds: true,
+          canCreate: false,
+        },
+    isLoading: false,
+    error: null,
+    retry: jest.fn(),
+  }),
+}));
+
 jest.mock('@helsoft/study-buddy', () => {
   const React = require('react');
   const { Text } = require('react-native');
 
   return {
     ApiKeyGate: ({ children }: { children: ReactNode }) => children,
-    useApiKeyGateCanCreate: () => mockCanCreate,
     NewLessonDialog: () => React.createElement(Text, null, 'new-lesson-dialog'),
     PdfDocuments: (props: typeof mockPdfDocumentsProps) => {
       mockPdfDocumentsProps = props;

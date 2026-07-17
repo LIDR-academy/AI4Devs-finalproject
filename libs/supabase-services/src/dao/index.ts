@@ -1,1 +1,1 @@
-export * from './entitlements.dao';
+export * from './profile.dao';

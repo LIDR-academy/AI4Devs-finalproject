@@ -1,14 +1,14 @@
-import type { PlanEntitlements } from '@helsoft/supabase-services';
+import type { ProfilePlan } from '@helsoft/supabase-services';
 
 type State = {
-  data: PlanEntitlements | null;
+  data: ProfilePlan | null;
   isLoading: boolean;
   error: Error | null;
 };
 
 type Action =
   | { type: 'load/start' }
-  | { type: 'load/success'; data: PlanEntitlements }
+  | { type: 'load/success'; data: ProfilePlan }
   | { type: 'load/failure'; error: Error }
   | { type: 'load/unauthenticated' };
 

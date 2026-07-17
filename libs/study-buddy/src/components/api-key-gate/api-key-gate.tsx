@@ -1,34 +1,30 @@
-import { ApiKeyRequiredNotice, Button } from '@helsoft/components';
+import { Button } from '@helsoft/components';
 import { useProfile } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
-import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import type { ApiKeyGateProps } from './api-key-gate.types';
-import { ApiKeyGateCanCreateContext } from './use-api-key-gate-can-create';
 
 /**
  * ApiKeyGate — guards create/upload affordances while always mounting `children` so existing
- * lessons stay reachable (@s13). Status UI (loading / error / key-required) sits above children.
- * Consumers read `useApiKeyGateCanCreate()` instead of a children-as-function render prop.
+ * lessons stay reachable (@s13). Status UI (loading / error / cannot-create) sits above children.
+ * Consumers gate create/upload via `useProfile().profile?.canCreate`.
  */
 export const ApiKeyGate = ({ children }: ApiKeyGateProps) => {
-  const { entitlements, isLoading: areEntitlementsLoading, error, retry } = useProfile();
+  const { profile, isLoading: isProfileLoading, error, retry } = useProfile();
   const { t } = useLocalization();
-  const router = useRouter();
-  const canCreate = Boolean(entitlements?.canCreate) && !areEntitlementsLoading && !error;
 
   useEffect(() => {
-    if (areEntitlementsLoading) {
+    if (isProfileLoading) {
       AccessibilityInfo.announceForAccessibility(t('entitlements.loading'));
     }
-  }, [areEntitlementsLoading, t]);
+  }, [isProfileLoading, t]);
 
   return (
-    <ApiKeyGateCanCreateContext.Provider value={canCreate}>
-      {areEntitlementsLoading ? (
+    <>
+      {isProfileLoading ? (
         <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
           {t('entitlements.loading')}
         </Text>
@@ -45,22 +41,21 @@ export const ApiKeyGate = ({ children }: ApiKeyGateProps) => {
         </View>
       ) : null}
 
-      {!areEntitlementsLoading && !error && !canCreate ? (
+      {!isProfileLoading && !error && !profile?.canCreate ? (
         <View style={styles.gatedContent}>
-          <ApiKeyRequiredNotice onNavigateToAccount={() => router.push('/settings')} />
+          <Text accessibilityRole="alert" style={styles.cannotCreate}>
+            {t('upload.cannotCreate')}
+          </Text>
         </View>
       ) : null}
 
       {children}
-    </ApiKeyGateCanCreateContext.Provider>
+    </>
   );
 };
 
-export { useApiKeyGateCanCreate } from './use-api-key-gate-can-create';
-
 export const apiKeyGateStyles = StyleSheet.create((theme) => ({
   gatedContent: {
-    flex: 1,
     gap: theme.spacing.s4,
   },
   error: {
@@ -69,6 +64,10 @@ export const apiKeyGateStyles = StyleSheet.create((theme) => ({
   message: {
     ...theme.typography.bodyMedium,
     color: theme.colors.error,
+  },
+  cannotCreate: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.onSurfaceVariant,
   },
   visuallyHidden: {
     position: 'absolute',

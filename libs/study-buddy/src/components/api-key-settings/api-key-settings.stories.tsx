@@ -3,7 +3,7 @@ import type { Decorator, Meta, StoryObj } from '@storybook/react-native-web-vite
 import { configureApiKeyMock, configureProfileMock } from '../../../.storybook/mocks/hooks';
 import { ApiKeySettings } from './api-key-settings';
 
-const FREE_ENTITLEMENTS = {
+const FREE_PROFILE = {
   plan: 'free' as const,
   keySource: 'user' as const,
   showKeySettings: true,
@@ -18,7 +18,7 @@ const withApiKeyMock =
     return <StoryFn />;
   };
 
-const withEntitlementsMock =
+const withProfileMock =
   (config: Parameters<typeof configureProfileMock>[0]): Decorator =>
   (StoryFn) => {
     configureProfileMock(config);
@@ -37,7 +37,7 @@ type Story = StoryObj<typeof meta>;
 /** Empty — no key saved; Save disabled until a non-blank key is entered. */
 export const Empty: Story = {
   decorators: [
-    withEntitlementsMock({ entitlements: FREE_ENTITLEMENTS }),
+    withProfileMock({ profile: FREE_PROFILE }),
     withApiKeyMock({ status: { hasKey: false } }),
   ],
 };
@@ -45,8 +45,8 @@ export const Empty: Story = {
 /** Content — masked saved status + Replace/Remove. */
 export const Saved: Story = {
   decorators: [
-    withEntitlementsMock({
-      entitlements: { ...FREE_ENTITLEMENTS, canCreate: true },
+    withProfileMock({
+      profile: { ...FREE_PROFILE, canCreate: true },
     }),
     withApiKeyMock({
       status: { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' },
@@ -57,7 +57,7 @@ export const Saved: Story = {
 /** Loading — initial status fetch in flight. */
 export const Loading: Story = {
   decorators: [
-    withEntitlementsMock({ entitlements: null, isLoading: true }),
+    withProfileMock({ profile: null, isLoading: true }),
     withApiKeyMock({ status: { hasKey: false } }),
   ],
 };
@@ -65,7 +65,7 @@ export const Loading: Story = {
 /** Error — network failure banner; form stays editable. */
 export const NetworkError: Story = {
   decorators: [
-    withEntitlementsMock({ entitlements: FREE_ENTITLEMENTS }),
+    withProfileMock({ profile: FREE_PROFILE }),
     withApiKeyMock({ status: { hasKey: false }, error: 'network_error' }),
   ],
 };
@@ -73,8 +73,8 @@ export const NetworkError: Story = {
 /** Paid — BYOK settings stay hidden even if a key remains saved. */
 export const Paid: Story = {
   decorators: [
-    withEntitlementsMock({
-      entitlements: {
+    withProfileMock({
+      profile: {
         plan: 'paid',
         keySource: 'platform',
         showKeySettings: false,
@@ -88,11 +88,11 @@ export const Paid: Story = {
   ],
 };
 
-/** Entitlements error — key controls hidden with retry. */
-export const EntitlementsError: Story = {
+/** Profile error — key controls hidden with retry. */
+export const ProfileError: Story = {
   decorators: [
-    withEntitlementsMock({
-      entitlements: null,
+    withProfileMock({
+      profile: null,
       error: new globalThis.Error('read failed'),
     }),
     withApiKeyMock({ status: { hasKey: false } }),
