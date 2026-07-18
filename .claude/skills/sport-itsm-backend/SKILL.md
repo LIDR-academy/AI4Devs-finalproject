@@ -70,10 +70,16 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 
 # Architecture & Monorepo Conventions
 
-- This is an **Nx monorepo**. The API application lives in **`apps/api/`**; its E2E suite in **`apps/api-e2e/`**; shared and feature code lives in **`libs/`** (e.g., `libs/license/api/`).
-- Respect **module boundaries** enforced by ESLint. Cross-project imports must go through each library's public entry point (its `index.ts` barrel), never deep-import internal files of another project.
-- Follow NestJS modular design: one **feature module** per bounded capability, with clear separation of **controller → service → repository**. Keep controllers thin (HTTP concerns) and business logic in services.
-- Use **constructor-based dependency injection**. Prefer interfaces/tokens for injectable boundaries where it aids testability.
+> **Cross-cutting architecture (DDD + Hexagonal + Nx tags/boundaries) is defined by the `sport-itsm-architecture` skill — defer to it for bounded contexts, layer rules, tag scheme, and the dependency-constraint matrix.** This section only maps those rules to NestJS.
+
+- This is an **Nx monorepo**. The API composition root lives in **`apps/api/`**; its E2E suite in **`apps/api-e2e/`**; domain/application/infrastructure code lives in **`libs/<context>/…`** (e.g., `libs/license/api/`).
+- Respect **module boundaries** enforced by ESLint (`@nx/enforce-module-boundaries`). Cross-project imports go through each library's public `index.ts` barrel, never deep-import internals.
+- **Hexagonal → NestJS mapping:**
+  - `type:domain` — pure entities/value objects/aggregates + **port interfaces**. No `@nestjs/*`, no TypeORM.
+  - `type:application` — use cases (application services) implementing inbound ports and depending on outbound ports. Framework-light.
+  - `type:infrastructure` — **outbound adapters**: TypeORM repository implementations, external gateways.
+  - `apps/api` + NestJS **modules** are the **composition root** and **inbound adapter** (controllers): wire ports to adapters via DI. Keep controllers thin (HTTP only); no business logic in controllers.
+- Use **constructor-based dependency injection**; bind ports to adapters with **injection tokens/interfaces** (this is the idiomatic NestJS way to honor the dependency rule).
 
 # API Conventions
 

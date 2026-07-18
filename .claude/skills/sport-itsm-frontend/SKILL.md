@@ -66,8 +66,12 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 
 # Architecture & Monorepo Conventions
 
-- **Nx monorepo** shared with the backend. Frontend code is organized into libraries by type — **feature**, **ui** (presentational/shared components), **data-access** (services, HTTP, state), and **util** — with the app shell in `apps/`.
-- Respect **module boundaries** enforced by ESLint. Import across projects only through each library's public `index.ts` barrel; never deep-import internal files.
+> **Cross-cutting architecture (DDD + Hexagonal + Nx tags/boundaries) is defined by the `sport-itsm-architecture` skill — defer to it for bounded contexts, tag scheme, and the dependency-constraint matrix.** This section only maps those rules to Angular.
+
+- **Nx monorepo** shared with the backend. Frontend code is organized by **bounded context** and **type** — **`type:feature`**, **`type:ui`** (presentational components), **`type:data-access`** (HttpClient + signals state), and **`type:util`** — under `libs/<context>/…`, with the app shell in `apps/web/`.
+- **Hexagonal → Angular mapping:** the web app is an **inbound adapter** to the backend. `data-access` libs are the outbound edge (HttpClient calls typed by the shared `contracts` lib); `feature` libs orchestrate; `ui` libs are pure presentation. Keep components thin; no cross-context deep imports.
+- Consume the shared **`libs/shared/contracts`** types for all HTTP calls so frontend and backend stay in lockstep.
+- Respect **module boundaries** enforced by ESLint. Import across projects only through each library's public `index.ts` barrel; never deep-import internals.
 - Use **Nx generators** to scaffold libs/components so structure and tags stay consistent.
 
 # HTTP, Errors & Accessibility (baseline — mandatory)
