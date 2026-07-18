@@ -137,6 +137,7 @@ https://github.com/LIDR-academy/AI4Devs-finalproject/pull/173
 **Pull Request 2**
 https://github.com/LIDR-academy/AI4Devs-finalproject/pull/202
 **Pull Request 3**
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/264
 
 ## 8. Prompts - AI usage
 [Prompts and AI usage](prompts.md)
