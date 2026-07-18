@@ -30,7 +30,7 @@ RealSaveFooding - Stop Wasting Food & Money
 RealSaveFooding is a pantry + consumption management mobile app concept focused on reducing food waste and saving money by helping people track what they buy, monitor expiration dates, and get recipe suggestions. A key capability is AI assistance—notably analyzing receipts to automatically infer items and suggest estimated expiration dates, reducing manual entry and improving automation.
 
 ### **0.4. Project URL:**
-https://dtjx9r745cz30.cloudfront.net
+https://d1jbzlp7xjxbaw.cloudfront.net/ <-- It won't be available but it's the one used for the video.
 
 Deployed on AWS free tier (EC2 + RDS + CloudFront); see `docs/deployment/aws-free-tier-runbook.md`
 for the deployment process and `infra/` for the Dockerfiles/Terraform/docker-compose.

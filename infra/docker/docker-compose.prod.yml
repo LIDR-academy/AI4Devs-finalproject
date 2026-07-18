@@ -13,12 +13,16 @@ services:
       - back.env
     ports:
       - "3000:3000"
+    # No awslogs-stream-prefix: the Docker Engine version installed on the EC2 instance
+    # (get.docker.com always installs latest, currently 29.x) rejects that option with
+    # "unknown log opt 'awslogs-stream-prefix' for awslogs log driver". Without it the
+    # driver falls back to naming streams by container ID, which is fine for a single
+    # long-lived container per service.
     logging:
       driver: awslogs
       options:
         awslogs-group: /realsavefooding/prod
         awslogs-region: eu-west-1
-        awslogs-stream-prefix: api
 
   frontend:
     image: realsavefooding-front:latest
@@ -36,4 +40,3 @@ services:
       options:
         awslogs-group: /realsavefooding/prod
         awslogs-region: eu-west-1
-        awslogs-stream-prefix: frontend
