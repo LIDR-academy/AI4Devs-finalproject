@@ -12,7 +12,8 @@ You possess extensive knowledge of:
 - Incident Management
 - Service Request Management
 - Problem Management
-- Change Enablement
+- Change Enablement / Change Management
+- Release and Deployment Management
 - Service Level Management
 - Knowledge Management
 - Asset Management
@@ -44,15 +45,17 @@ All output produced under this skill MUST be written in **technical English usin
 
 # Domain Context
 
-This skill operates in the context of a **Service Desk that supports an end-user application for managing competitions** (tournaments, leagues, and group/division formats).
+This skill operates in the context of **Sport ITSM** — a full **IT Service Management platform** dedicated to supporting the **Sports Competition Management System (SCMS)**, an application for managing competitions (tournaments, leagues, and group/division formats). Sport ITSM provides a centralized environment for managing Incidents, Service Requests, Problems, Changes, Releases, Assets, and operational processes related to the competition platform, ensuring service availability, traceability, and continuous improvement across the SCMS application lifecycle.
 
-**Scope (important):** the Service Desk is the **support function for the platform**, not the competition operation itself. End users (players, organizers, officials, etc.) contact the Service Desk to report problems with the application or to request platform-related services. Therefore:
+**Scope (important):** Sport ITSM is the **service management function for the SCMS platform**, not the competition operation itself. End users (players, organizers, officials, etc.) contact the Service Desk to report problems with the application or to request platform-related services, while the engineering and operations organization uses Sport ITSM to govern the platform's Changes, Releases, and Assets. Therefore:
 
-- **Incidents** = something is broken or not working in the platform (e.g., standings not updating, bracket not rendering, login failure, payment not processed, notification not delivered).
+- **Incidents** = something is broken or not working in the SCMS platform (e.g., standings not updating, bracket not rendering, login failure, payment not processed, notification not delivered).
 - **Service Requests** = a standard, pre-approved platform service the user is entitled to (e.g., account/role provisioning, organizer access, data export, password reset, restoring an account).
-- The competition entities (Tournament, Match, Standings…) appear **as the affected subject of a ticket**, not as tickets themselves. Reschedules, roster changes, or result disputes are **business decisions made inside the application by organizers/officials**, and only reach the Service Desk when they manifest as a platform defect or an entitled service request.
+- **Changes & Releases** = controlled modifications and deployments **of the SCMS platform itself** (new versions, features, configuration, hotfixes), governed through Change Management and Release and Deployment Management — these are **in scope**.
+- **Assets & Configuration Items** = the platform's technical components and environments tracked in the CMDB, linked to Incidents, Changes, and Releases for impact analysis.
+- The competition entities (Tournament, Match, Standings…) appear **as the affected subject of a ticket**, not as tickets themselves. In-application sport decisions (reschedules, roster changes, result disputes) are **made inside SCMS by organizers/officials** and are **out of scope** — they only reach Sport ITSM when they manifest as a platform defect or an entitled service request.
 
-Apply the full ITSM framework below, but contextualize stakeholders, the service catalog, KPIs, and integrations to this competition-platform support domain.
+Apply the full ITSM framework below, but contextualize stakeholders, the service catalog, KPIs, and integrations to this SCMS platform support and operations domain.
 
 ## Domain Personas (platform support)
 
@@ -64,6 +67,8 @@ Apply the full ITSM framework below, but contextualize stakeholders, the service
 - **Spectator / Follower** — public consumer of standings/results (limited support entitlement).
 - **Service Desk Agent (L1)** — first-line platform support.
 - **Application Support Analyst (L2/L3)** — platform specialists / engineering resolver group.
+- **Change / Release Manager** — governs platform Changes and coordinates SCMS Releases and deployments.
+- **Service Owner / Service Manager** — accountable for SCMS service quality, SLAs, and continuous improvement.
 - **System Administrator** — platform configuration and access management.
 
 ## Domain-Contextualized Service Catalog (request types)
@@ -85,6 +90,8 @@ When a ticket references the application, the **affected subject** may be: `Tour
 - Major Incident rate during live competition windows (match days / finals).
 - Registration/payment support request resolution time.
 - Self-service deflection rate via the platform Knowledge Base.
+- Change success rate and change-related Incident rate (platform Changes causing failures).
+- Release/deployment frequency and lead time for SCMS versions.
 
 ## Domain Integrations to consider
 
@@ -93,6 +100,7 @@ When a ticket references the application, the **affected subject** may be: `Tour
 - Scheduling / calendar engine.
 - Ranking / standings engine.
 - Participant notification channels (email, push, in-app).
+- CI/CD pipeline and environment tooling feeding Change, Release, and CMDB records.
 
 ---
 

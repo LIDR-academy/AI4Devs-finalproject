@@ -2,6 +2,7 @@ b> Detalla en esta sección los prompts principales utilizados durante la creaci
 
 ## Índice
 
+0. [Preparación skills](#0-preparación-skills)
 1. [Descripción general del producto](#1-descripción-general-del-producto)
 2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
 3. [Modelo de datos](#3-modelo-de-datos)
@@ -12,7 +13,7 @@ b> Detalla en esta sección los prompts principales utilizados durante la creaci
 
 ---
 
-## 1. Descripción general del producto
+## 0. Preparación skills
 
 **Prompt 1 (meta-prompt):**
 
@@ -62,7 +63,23 @@ Agent: Claude Code - Sonnet 4.6
 
 @.claude/skills/service-desk-expert/ guarda en tu skill que tienes que escribir todo en inglés técnico del sector de Service Desk.
 
-Además, necesito que rellenes para un producto Service Desk y, en el documento 'readme.md' que se encuentra en la raíz del proyecto, los siguientes campos:
+¿cambiarías algo del skill @.claude/skills/service-desk-expert/ si dicho service-desk fuese expresamente para una aplicación que gestiona competiciones de tipo torneo, liga o grupos? Tienes la información exacta del objetivo de la aplicación en el readme.md (sección '0.3. Descripción breve del proyecto')
+
+### Response:
+
+Claude ha mejorad el skill @.claude/skills/service-desk-expert/, varios apartados en los que concreta su Alcance y Contexto concreto dentro de la aplicación de Gestión de Ligas y Torneos.
+
+---
+
+## 1. Descripción general del producto
+
+**Prompt 1:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+@.claude/skills/service-desk-expert/ Necesito que rellenes para un producto Service Desk y, en el documento 'readme.md' que se encuentra en la raíz del proyecto, los siguientes campos:
 
 - 1. Descripción general del producto/1.1. Objetivo
 - 1. Descripción general del producto/1.2. Características y funcionalidades principales
@@ -73,21 +90,33 @@ Añadido en el readme.md: '1.1. Objetivo' y '1.2. Características y funcionalid
 
 </br>
 
+**Prompt 2:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+### Response:
+
+</br>
+
+**Prompt 3:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+### Response:
+
+</br>
+
 **Prompt 4:**
 
 Agent: Claude Code - Sonnet 4.6
 
 ### Request:
 
-¿cambiarías algo del skill @.claude/skills/service-desk-expert/ si dicho service-desk fuese expresamente para una aplicación que gestiona competiciones de tipo torneo, liga o grupos?
-
 ### Response:
-
-Sí, cambiaría bastante — pero manteniendo el esqueleto ITSM intacto, porque un Service Desk para una app de competiciones sigue siendo un Service Desk (SPOC, ciclo de vida del ticket, SLAs, colas, escalado). Lo que añadiría es una capa de especialización de dominio. Antes de detallar, hay una bifurcación importante que define cuánto cambia:
-
-Opción A — Soporte de la plataforma (interpretación ITSM pura): los usuarios (jugadores, organizadores) abren Incidents y Service Requests sobre la aplicación ("no puedo inscribirme", "el bracket no carga"). Aquí el skill apenas cambia: solo adapto personas, catálogo y KPIs.
-
-Opción B — La operación de la competición modelada como gestión de servicios: las inscripciones, cambios de roster, reprogramaciones de partido y disputas de resultado se gestionan como "tickets" con workflow, aprobación y SLA. Aquí el dominio entra de lleno en el modelo y el cambio es mayor.
 
 </br>
 
@@ -97,11 +126,7 @@ Agent: Claude Code - Sonnet 4.6
 
 ### Request:
 
-Quiero la Opción A
-
 ### Response:
-
-Claude ha añadido al skill @.claude/skills/service-desk-expert/, varios apartados en los que concreta su Alcance y Contexto concreto dentro de la aplicación de Gestión de Ligas y Torneos.
 
 </br>
 
@@ -111,11 +136,17 @@ Agent: Claude Code - Sonnet 4.6
 
 ### Request:
 
-@.claude/skills/service-desk-expert/ con los nuevos parámetros que tienes configurados, vuelve a revisar el readme.md: '1.1. Objetivo' y '1.2. Características y funcionalidades principales'.
-
 ### Response:
 
-Mejorado en el readme.md: '1.1. Objetivo' y '1.2. Características y funcionalidades principales'.
+</br>
+
+**Prompt 7:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+### Response:
 
 </br>
 
