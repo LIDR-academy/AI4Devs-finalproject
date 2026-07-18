@@ -96,7 +96,18 @@ Agent: Claude Code - Sonnet 4.6
 
 ### Request:
 
+Usa el agente sport-itsm-product-owner para redactar el CLAUDE.md (raíz del repo). Va a contener:
+
+- Qué es el producto en 3 líneas (Sport ITSM: plataforma ITSM que soporta el SCMS).
+- Stack tecnológico. -> Dejalo sin rellenar, porque lo hará otro agente.
+- Convenciones de código, estructura de carpetas, comandos (build/test/lint), reglas de estilo, qué NO hacer. -> Dejalo sin rellenar, porque lo hará otro agente.
+- Puntero a que las specs viven en openspec/ y a cómo trabajar con changes.
+
+Sin requisitos funcionales aquí: es contexto operativo para el agente. (OpenSpec también usa AGENTS.md; puedes mantener CLAUDE.md como el archivo de Claude Code y que apunte a openspec/.)
+
 ### Response:
+
+Añadido en el CLAUDE.md (primera versión).
 
 </br>
 
