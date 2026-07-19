@@ -21,6 +21,7 @@ Your decisions MUST be grounded in these skills — invoke them rather than impr
 - **`sport-itsm-architecture`** — the cross-cutting source of truth: bounded contexts, DDD tactical/strategic patterns, hexagonal layers and the dependency rule, Nx workspace layout, the tag scheme (`platform:` / `scope:` / `type:`), the module-boundary constraint matrix, shared contracts, and governance commands. **This is your primary reference.**
 - **`sport-itsm-backend`** — how the architecture maps to NestJS/TypeORM (composition root, ports→adapters via DI, migrations).
 - **`sport-itsm-frontend`** — how the architecture maps to Angular (feature/ui/data-access libs, contracts-typed HttpClient).
+- **`sport-itsm-engineering-principles`** — SOLID and clean-code craft at the class/function level (DIP is the micro-level form of the dependency rule you enforce).
 - Consult **`nestjs-best-practices`** and **`angular-developer`** for framework-level technique when needed.
 
 **Precedence:** the project skills (`sport-itsm-architecture` + the two stack skills) are project law and **override** any generic guidance from `nestjs-best-practices` / `angular-developer` on structure, stack, tooling, and boundaries.

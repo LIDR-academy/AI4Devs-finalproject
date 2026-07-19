@@ -50,7 +50,34 @@ Specifications live under `openspec/` and are the canonical source of product be
 
 ## 5. Roles, Agents & Skills
 
-- **`sport-itsm-product-owner`** (`.claude/agents/`) — the Product Owner agent: owns the backlog and product vision, writes Epics / User Stories / Gherkin acceptance criteria, and translates approved requirements into OpenSpec Change Proposals and Spec Deltas.
-- **`service-desk-expert`** (`.claude/skills/`) — the ITSM / Service Desk domain skill: authoritative source for service management processes, functional analysis, and ITSM terminology. Invoke it for domain depth when analyzing capabilities or drafting specifications.
+### Agents (`.claude/agents/`)
+
+Agents are **roles** with their own context and tools; they invoke skills for knowledge.
+
+| Agent | Role |
+|-------|------|
+| **`sport-itsm-product-owner`** | Product Owner: owns backlog and product vision; writes Epics / User Stories / Gherkin acceptance criteria; translates approved requirements into OpenSpec Change Proposals and Spec Deltas. Grounded in `readme.md` §0.3/§1.1/§1.2. |
+| **`sport-itsm-architect`** | Software Architect: owns the end-to-end architecture (frontend + backend) under Nx using DDD + Hexagonal; designs bounded contexts, defines the lib/tag structure and module boundaries, scaffolds Nx libraries, reviews the dependency graph, writes ADRs. |
+
+### Skills (`.claude/skills/`)
+
+Skills are **reusable knowledge/guardrails**, invokable by any agent or the main loop. They are layered by **altitude** (business → system → craft → stack → framework):
+
+| Skill | Altitude | What it provides |
+|-------|----------|------------------|
+| **`service-desk-expert`** | Business / domain | ITSM service-management processes, functional analysis, and ITSM terminology. Domain depth for specs. |
+| **`sport-itsm-architecture`** | System / structure | DDD + Hexagonal + Nx: bounded contexts, layer rules, tag scheme (`platform:`/`scope:`/`type:`), the module-boundary constraint matrix, shared contracts. |
+| **`sport-itsm-engineering-principles`** | Craft (class/function) | SOLID + clean-code universals (DRY, KISS, YAGNI, naming, small functions, immutability, error handling) in TypeScript. Stack-agnostic. |
+| **`sport-itsm-backend`** | Stack (backend) | NestJS 11 / TypeORM / PostgreSQL exact stack, conventions, commands, and guardrails. |
+| **`sport-itsm-frontend`** | Stack (frontend) | Angular 20 / signals / Material exact stack, conventions, commands, and guardrails. |
+| **`nestjs-best-practices`** | Framework technique (external) | Generic NestJS best-practice rules with examples (DI, security, performance…). Reference library. |
+| **`angular-developer`** | Framework technique (external, official) | Generic modern-Angular technique (signals, forms, DI, SSR, a11y, testing). Reference library. |
+
+### How they relate
+
+- **Agents consume skills.** The **PO** uses `service-desk-expert` for domain depth. The **architect** uses `sport-itsm-architecture` + both stack skills + `sport-itsm-engineering-principles`, and may consult the two external skills.
+- **Skills are layered, not overlapping.** Each altitude is a single source of truth and cross-references the others instead of duplicating: `sport-itsm-architecture` (system) ↔ `sport-itsm-engineering-principles` (the DIP is the micro-level form of the dependency rule); the two stack skills defer to both for structure and craft, adding only tech-specific rules.
+- **Precedence.** The project skills (`sport-itsm-*`) are **project law** and **override** the generic external skills (`nestjs-best-practices`, `angular-developer`) wherever they differ — especially on stack, tooling, boundaries, and E2E (Cypress/Cucumber, not Supertest).
+- **Behavior vs structure vs code.** Product behavior lives in `openspec/` (§4); how the system is structured and coded lives in the skills above; this `CLAUDE.md` only points to them.
 
 **Language standard:** all product and specification artifacts are written in **technical English using standard Service Desk / ITSM terminology** (Incident, Service Request, Problem, Change, Release, SLA, OLA, CMDB, Configuration Item, Resolver Group, Major Incident; FCR, MTTR, MTTA, CSAT, RCA, KEDB, CAB), regardless of the language of the request.
