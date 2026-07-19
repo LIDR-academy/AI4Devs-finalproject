@@ -248,7 +248,7 @@ Usa el agente **sport-itsm-architect** para generar la "3.1. Diagrama del modelo
 
 ### Response:
 
-Creado documento PROJECT-STRUCTURE.md y rellenado apartado "2.3. Descripción de alto nivel del proyecto y estructura de ficheros" del readme.md.
+Creado documento DATA-MODEL.md y rellenado apartado "3.1. Diagrama del modelo de datos" del readme.md.
 
 </br>
 
