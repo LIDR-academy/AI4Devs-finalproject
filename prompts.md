@@ -168,9 +168,23 @@ Rellena el apartado "2.1. Diagrama de arquitectura" del readme.md y revisa que s
 
 Apartado "2.1. Diagrama de arquitectura" del readme.md rellenado.
 
+</br>
+
 ### **2.2. Descripción de componentes principales:**
 
 **Prompt 1:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Usa el agente **sport-itsm-architect** para generar la "Descripción de componentes principales" de la aplicación, ayudándote del documento PRD.md y el ARCHITECTURE.md si es necesario. Describe los componentes más importantes, incluyendo la tecnología utilizada. Llamalo COMPONENTS.md y, añade la información también en la sección 2.2 del readme.md.
+
+### Response:
+
+Creado documento COMPONENTS.md y rellenado apartado "2.2. Descripción de componentes principales" del readme.md.
+
+</br>
 
 **Prompt 2:**
 
