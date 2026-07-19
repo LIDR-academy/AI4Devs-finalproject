@@ -240,6 +240,18 @@ Creado documento PROJECT-STRUCTURE.md y rellenado apartado "2.3. Descripción de
 
 **Prompt 1:**
 
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Usa el agente **sport-itsm-architect** para generar la "3.1. Diagrama del modelo de datos" de la aplicación. En la carpeta docs genera un documento único para todo el Modelo de Datos, y rellena la sección 3.1 del readme.md.
+
+### Response:
+
+Creado documento PROJECT-STRUCTURE.md y rellenado apartado "2.3. Descripción de alto nivel del proyecto y estructura de ficheros" del readme.md.
+
+</br>
+
 **Prompt 2:**
 
 **Prompt 3:**
