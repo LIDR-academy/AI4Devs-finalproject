@@ -158,6 +158,16 @@ Se ha creado el documento docs/ARCHITECTURE.md
 
 **Prompt 3:**
 
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Rellena el apartado "2.1. Diagrama de arquitectura" del readme.md y revisa que se hayan cumplido todos los requisitos.
+
+### Response:
+
+Apartado "2.1. Diagrama de arquitectura" del readme.md rellenado.
+
 ### **2.2. Descripción de componentes principales:**
 
 **Prompt 1:**

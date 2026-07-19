@@ -151,6 +151,108 @@ Sport ITSM delivers the following core capabilities, spanning end-user support a
 
 > Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
 
+Sport ITSM is a **modular monolith** built as a single **Nx monorepo** that applies **Domain-Driven Design** (strategic and tactical) and **Hexagonal Architecture (Ports & Adapters)** across both platforms. The diagrams below go from the general to the concrete. The full architecture document — C4 context, context map, tactical model, end-to-end sequences and ADRs — lives in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+#### Containers and technologies
+
+```mermaid
+flowchart TB
+    USER["Requesters and Service Organization<br/>browser, desktop and mobile"]
+
+    subgraph boundary["Sport ITSM system boundary"]
+        WEB["<b>Web Client</b> - apps/web<br/>Angular 20.3, standalone components, signals,<br/>Angular Material 20, Reactive Forms, Transloco<br/>Self-Service Portal, Agent Workspace, Admin Console"]
+        API["<b>API</b> - apps/api<br/>NestJS 11 on Express 4, Node.js 20 LTS<br/>Inbound HTTP adapter plus composition root<br/>Passport JWT, class-validator, nestjs-i18n, pino"]
+        DB[("<b>PostgreSQL 16</b><br/>single system of record<br/>tickets, SLA timers, catalog, knowledge,<br/>approvals, append-only audit<br/>TypeORM 0.3, synchronize always false")]
+    end
+
+    IDP["SCMS Identity Provider / SSO"]
+    MAIL["Email Gateway"]
+    SCMS["SCMS competition reference data"]
+
+    USER -->|"HTTPS"| WEB
+    WEB -->|"HTTPS / JSON REST - typed by libs/shared/contracts<br/>Bearer JWT plus Accept-Language"| API
+    API -->|"TCP 5432 - pg driver, migrations only"| DB
+    API -->|"validate token and read profile"| IDP
+    API -->|"send notification"| MAIL
+    API -->|"read competition identifiers - optional, ACL"| SCMS
+```
+
+There is deliberately **no message broker, no cache tier and no separate reporting store**: one API process, one database, one client.
+
+#### Layering and the dependency rule
+
+Every bounded context (`incident`, `service-request`, `sla`, `service-catalog`, `knowledge`, `identity-access`, …) is materialized as a set of Nx libraries tagged on three axes — `platform:` / `scope:` / `type:` — and `@nx/enforce-module-boundaries` makes the rule below **mechanical rather than aspirational**.
+
+```mermaid
+flowchart LR
+    subgraph FE["platform:frontend"]
+        F_FEAT["type:feature<br/>routed containers"]
+        F_UI["type:ui<br/>presentational"]
+        F_DA["type:data-access<br/>HttpClient + signal stores"]
+    end
+
+    subgraph SH["platform:shared"]
+        CONTRACTS["shared/contracts<br/>DTO types, enums, error codes"]
+        SDOM["shared/domain + shared/util"]
+    end
+
+    subgraph BE["platform:backend"]
+        B_INFRA["type:infrastructure<br/>TypeORM entities, mappers, gateways"]
+        B_APP["type:application<br/>use cases"]
+        B_DOM["type:domain<br/>aggregates, value objects, ports"]
+    end
+
+    APP_API["apps/api - composition root<br/>binds ports to adapters"]
+
+    F_FEAT --> F_UI
+    F_FEAT --> F_DA
+    F_DA --> CONTRACTS
+    B_INFRA --> B_APP
+    B_APP --> B_DOM
+    B_DOM --> SDOM
+    B_INFRA -.->|"implements ports"| B_DOM
+    APP_API --> B_INFRA
+    APP_API --> B_APP
+    APP_API --> CONTRACTS
+
+    FORBIDDEN["FORBIDDEN<br/>domain or application importing NestJS, TypeORM or HTTP<br/>frontend importing backend<br/>context importing another context"]
+```
+
+Dependencies point **inward only**: `infrastructure → application → domain`, never the reverse. Domain and application layers contain zero framework, ORM, HTTP or I/O code. Cross-context collaboration (e.g. Incident needing SLA, Approval, Notification or Audit) never becomes an import: the consuming context declares an outbound **port** in its own language and `apps/api` supplies the adapter, so no context-to-context edge ever exists in the Nx graph.
+
+#### Patterns applied and why
+
+| Pattern | Where it applies | Why it was chosen |
+| --- | --- | --- |
+| **Domain-Driven Design** | One bounded context per ITSM capability | ITSM is a domain with a precise, standardized ubiquitous language (Incident, Problem, Change, SLA, CI, CAB). Modeling it explicitly is what keeps _"a match reschedule is not a ticket"_ enforceable instead of a convention. |
+| **Hexagonal (Ports & Adapters)** | Backend, per context | The business rules that matter (Impact × Urgency → Priority, SLA target recalculation, lifecycle transitions) are testable with zero infrastructure, and PostgreSQL/TypeORM/NestJS become replaceable details. |
+| **Modular monolith** | Whole system | Fifteen contexts could suggest microservices; delivery is portfolio-scale. One process gives single-transaction consistency and near-zero operational cost, while the Nx boundaries preserve the option to extract a context later. |
+| **Nx monorepo + tag boundaries** | Whole system | The architecture is enforced by `pnpm nx lint` in CI, not by review discipline. An illegal dependency fails the build. |
+| **Shared typed contracts** | `libs/shared/contracts` | The single permitted coupling between frontend and backend. A breaking API change fails the frontend build immediately — the intended safety property. |
+| **Signals-first Angular** | Frontend | Standalone components, `OnPush` everywhere, functional interceptors and signal stores; no NgModules, no external state library. |
+| **Event-driven cross-cutting** | Audit, Notification, Reporting | Mutating operations commit first and publish domain events after; a notification outage can never block ticket intake. |
+
+#### Benefits
+
+- **Testability.** Business rules live in framework-free TypeScript. The most valuable tests need no database, no HTTP and no Angular TestBed.
+- **Enforced boundaries.** Architectural erosion is caught by the linter, which matters most on a long-lived platform with many capabilities.
+- **Evolvability.** Adding `problem`, `change` or `release` in phase 2 is additive: the Incident aggregate already reserves link semantics for them as opaque identifiers.
+- **Coherence FE/BE.** One repository, one TypeScript version, one lint/format setup, `nx affected` for changed-only CI, and types that cannot drift between client and server.
+- **Replaceable infrastructure.** ORM, identity provider or email gateway are adapters behind ports; swapping one does not touch business logic.
+
+#### Sacrifices and deficits
+
+Honest accounting of what this architecture costs:
+
+- **Ceremony.** A trivial CRUD feature still needs a port, an adapter, a use case, a DTO, a mapper and a contract type. For a small product this is over-engineering; it pays off only because the ITSM domain is genuinely large.
+- **Mapping code.** Domain aggregates and TypeORM entities are separate types, so mappers must be written and maintained.
+- **A composition root that grows.** Every cross-context collaboration adds one adapter class in `apps/api`. Coupling is not eliminated — it is concentrated in a visible, reviewable place.
+- **Single deployable.** Contexts cannot be scaled or released independently; the whole API deploys together, and a defect in one context can affect the process.
+- **Eventual consistency in the cross-cutting path.** Audit and notification writes sit outside the ticket transaction. Mitigated with an in-process dispatcher with retry and audit-completeness assertions in acceptance tests, but it is a real trade-off against strict transactional auditing.
+- **Learning curve.** DDD + hexagonal + Nx tags is a steep onboarding cost, and the discipline degrades quickly if boundary violations are silenced instead of fixed.
+
+> **Status:** this is the **target architecture**. The Nx workspace (`apps/`, `libs/`) has not been scaffolded yet, so the boundary rules above have not been verified with `pnpm nx lint` / `pnpm nx graph`.
+
 ### **2.2. Descripción de componentes principales:**
 
 > Describe los componentes más importantes, incluyendo la tecnología utilizada
