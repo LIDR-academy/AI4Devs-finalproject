@@ -1,4 +1,4 @@
-# Registro de Prompts · INK·LINK
+# Registro de Prompts · INKSPIRE
 
 > Historial completo de prompts del proyecto con metadatos de ejecución.
 
@@ -211,7 +211,7 @@ docs/us/us0001/task0001.md y las historias de usuario en: docs/us/us0001/us0001.
 ser creado en .github/agents
 ```
 
-*(Crea .github/agents/technical-product-owner.agent.md con templates de US y tasks, contexto de negocio INK·LINK)*
+*(Crea .github/agents/technical-product-owner.agent.md con templates de US y tasks, contexto de negocio INKSPIRE)*
 
 ---
 
@@ -657,7 +657,7 @@ analiza la carpeta US y luego crea los tickets de trabajo necesarios para comple
 |---|---|
 | `fixs/issue-002.md` | Resuelto — 5 fixes ejecutados |
 | `fixs/issue-003.md` | Creado y resuelto — 4 decisiones de dependencias |
-| `docs/development_guide.md` | Reescrito — INK·LINK stack |
+| `docs/development_guide.md` | Reescrito — INKSPIRE stack |
 | `docs/data-model.md` | Actualizado — status machine cliente-only, expires_at |
 | `docs/api-spec.yml` | Regenerado — sin endpoints de artista/admin/quote |
 | `docs/us/us0001/us0001.md` | Reescrito — login genérico |
@@ -1642,4 +1642,4 @@ Listo, deja una versión estable de esto como primera versión estable del produ
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 15 sesiones · 98 prompts documentados*
+*INKSPIRE © 2026 · Registro de prompts · 15 sesiones · 98 prompts documentados*

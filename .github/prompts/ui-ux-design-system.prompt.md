@@ -1,10 +1,10 @@
 ---
 name: ui-ux-design-system
-description: Enforce INK·LINK frontend design system for consistent UI/UX across all components.
+description: Enforce INKSPIRE frontend design system for consistent UI/UX across all components.
 mode: agent
 ---
 
-# INK·LINK UI/UX Design System
+# INKSPIRE UI/UX Design System
 
 When working on any file inside `frontend/src/`, apply the design system rules from `.github/skills/ui-ux-design-system/SKILL.md`.
 

@@ -1,4 +1,4 @@
-# CONTRIBUTING — INK·LINK
+# CONTRIBUTING — INKSPIRE
 
 > Flujo de trabajo Git, convenciones y Definition of Done. Aplica a humanos y agentes IA.
 > Estándares generales: `docs/base-standards.md`. Última actualización: 2026-07-14.

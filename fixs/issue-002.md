@@ -9,10 +9,10 @@
 **Problema:** El archivo pertenece al proyecto `AI4Devs-LTI-extended`. Contiene:
 - Referencias a Node.js v16, npm v8, Prisma, React
 - Credenciales de otro proyecto (`LTIdbUser`)
-- Puerto 3000 (INK·LINK usa 5000)
+- Puerto 3000 (INKSPIRE usa 5000)
 - Instrucciones de `git clone` de otro repo
 
-**Fix:** Reescribir completamente para INK·LINK con:
+**Fix:** Reescribir completamente para INKSPIRE con:
 - Prerequisites: .NET SDK 10, Node.js 22+, Angular CLI 20, Docker, PostgreSQL 16
 - Setup: `docker-compose up` para PostgreSQL + MinIO
 - Backend: `dotnet run` en /backend
@@ -71,7 +71,7 @@ Agregar nota aclaratoria en US0007: "El toggle de filtro se implementa en US0004
 
 | Paso | Acción | Archivo(s) | Hallazgo |
 |---|---|---|---|
-| 1 | Reescribir development_guide.md para INK·LINK | `docs/development_guide.md` | #1 |
+| 1 | Reescribir development_guide.md para INKSPIRE | `docs/development_guide.md` | #1 |
 | 2 | Eliminar campos Won't-Have de Review | `docs/data-model.md` | #2 |
 | 3 | Agregar relationship_type a Sponsorship | `docs/data-model.md` | #3 |
 | 4 | Agregar nota aclaratoria en US0007 | `docs/us/us0007/us0007.md` | #4 |

@@ -1,4 +1,4 @@
-# DEVELOPMENT_PLAN — INK·LINK
+# DEVELOPMENT_PLAN — INKSPIRE
 
 > Roadmap y orden de implementación de la Entrega 2. **Actualizar al cerrar cada fase o al cambiar el alcance.**
 > Fuente del backlog: `docs/us/all-us.md` (13 US · 80 SP). Última actualización: 2026-07-14.

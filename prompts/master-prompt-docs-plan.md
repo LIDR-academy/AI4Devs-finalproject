@@ -69,7 +69,7 @@
 - [ ] 4.3 Diagrama de arquitectura (Mermaid flowchart)
 
 ### 5. Diagrama C4
-- [ ] 5.1 Nivel 1 — Contexto: INK·LINK + actores externos + sistemas externos
+- [ ] 5.1 Nivel 1 — Contexto: INKSPIRE + actores externos + sistemas externos
 - [ ] 5.2 Nivel 2 — Contenedores: Angular SPA, .NET API, PostgreSQL, Object Storage, Flow API, Servicio de notificaciones
 - [ ] 5.3 Nivel 3 — Componentes del contenedor **".NET API"** (el más simple):
   - AuthController

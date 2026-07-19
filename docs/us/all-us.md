@@ -1,4 +1,4 @@
-# Backlog de Historias de Usuario — INK·LINK MVP
+# Backlog de Historias de Usuario — INKSPIRE MVP
 
 > 13 historias de usuario · 80 Story Points · 9 Must-Have (52 SP) + 4 Should-Have (28 SP)
 > Flujo 100% centrado en el cliente. El artista es solo datos seed en esta versión.
@@ -78,7 +78,7 @@ Transversal
 
 ## Descripción
 **Como** visitante (sin cuenta ni login)
-**Quiero** ver una vitrina visual de tatuajes y artistas al abrir INK·LINK
+**Quiero** ver una vitrina visual de tatuajes y artistas al abrir INKSPIRE
 **Para** descubrir artistas cercanos y trabajos destacados sin barreras de entrada
 
 ## Criterios de Aceptación

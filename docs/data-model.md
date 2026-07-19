@@ -1,6 +1,6 @@
 # Data Model Documentation
 
-This document describes the data model for the INK·LINK application, including entity descriptions, field definitions, relationships, and an entity-relationship diagram.
+This document describes the data model for the INKSPIRE application, including entity descriptions, field definitions, relationships, and an entity-relationship diagram.
 
 ## Model Descriptions
 

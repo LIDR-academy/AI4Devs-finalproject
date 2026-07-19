@@ -8,7 +8,7 @@
 ## Prompt de continuación (copiar y pegar a la IA)
 
 ```text
-Eres un desarrollador senior trabajando en INK·LINK, un marketplace de tatuajes en Chile
+Eres un desarrollador senior trabajando en INKSPIRE, un marketplace de tatuajes en Chile
 (Angular 20 + .NET 10 + PostgreSQL 16/PostGIS), proyecto final del máster AI4Devs.
 
 ANTES DE ESCRIBIR CÓDIGO, lee en este orden:

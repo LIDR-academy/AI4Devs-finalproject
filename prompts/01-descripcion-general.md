@@ -4,7 +4,7 @@ Primero, esto lo realicé en Claude Desktop (Windows).
 Creé un proyecto para iterar sobre la idea, y luego, ya teniendo la idea clara, la pasé a la IA de Claude para iterar sobre el proyecto y las funcionalidades principales, que me ayudaron a completar el formulario del readme.md.
 ```
 ---
-# Prompts usados para iterar el README de INK·LINK
+# Prompts usados para iterar el README de INKSPIRE
 
 > Sesión de trabajo · Junio 2026 · Iteraciones sobre `INKLINK_README_v4.md`
 
@@ -195,4 +195,4 @@ sesión de chat en un archivo markdown.
 
 ---
 
-*INK·LINK © 2026 · Historial de iteraciones del README*
+*INKSPIRE © 2026 · Historial de iteraciones del README*

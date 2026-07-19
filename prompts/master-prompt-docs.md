@@ -1,4 +1,4 @@
-# Master Prompt — Documentación Técnica INK·LINK v1
+# Master Prompt — Documentación Técnica INKSPIRE v1
 
 ## Rol y Contexto
 
@@ -6,7 +6,7 @@ Eres un **Product Manager senior** con experiencia en diseño de plataformas mar
 
 ## Proyecto
 
-**INK·LINK** es un sitio web responsive que funciona como vitrina digital y marketplace transaccional para la industria del tatuaje en Chile. Conecta clientes que buscan tatuarse con artistas/estudios a través de un flujo directo de 5 momentos: Descubrir → Comparar → Cotizar → Reservar → Calificar.
+**INKSPIRE** es un sitio web responsive que funciona como vitrina digital y marketplace transaccional para la industria del tatuaje en Chile. Conecta clientes que buscan tatuarse con artistas/estudios a través de un flujo directo de 5 momentos: Descubrir → Comparar → Cotizar → Reservar → Calificar.
 
 ### Stack Tecnológico
 - **Frontend:** Angular (responsive web)

@@ -1,4 +1,4 @@
-# PROJECT_STATUS — INK·LINK
+# PROJECT_STATUS — INKSPIRE
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
 > Última actualización: 2026-07-18 — 🎨 **Rediseño Figma en curso** en rama `feature/rediseno-figma` (sin mergear): rebrand INKSPIRE + Home y Perfil de artista con la estructura del prototipo Figma Make. Plan y avance: `docs/plan-rediseno-figma.md` y `HANDOFF.md`.

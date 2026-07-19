@@ -1,7 +1,7 @@
 ---
 name: prompt-registry
 description: Register AI prompts used during the session into the project prompt registry (prompts/00-all-prompts.md and prompts.md), independent of IDE and AI provider. Use when the user asks to register/save prompts, at the end of a work session, or when completing a User Story (step 9 of the CONTRIBUTING.md flow).
-author: INK·LINK
+author: INKSPIRE
 version: 1.0.0
 ---
 # prompt-registry Skill

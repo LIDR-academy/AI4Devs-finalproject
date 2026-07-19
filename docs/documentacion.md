@@ -1,4 +1,4 @@
-# INK·LINK — Documentación Técnica v1
+# INKSPIRE — Documentación Técnica v1
 
 > 📌 **Nota de vigencia (2026-07-17)**: este documento corresponde a la **visión de producto de la Entrega 1**. Decisiones posteriores (`fixs/issue-002.md`, `issue-003.md`, `issue-004.md`, `issue-007.md`) acotaron el MVP a un **flujo 100 % cliente**: el artista es datos seed (sin panel de gestión ni login operativo), no hay registro de usuarios, notificaciones ni foto de curación a 90 días. El **backlog vigente es [docs/us/all-us.md](us/all-us.md)** (13 US · 80 SP, todas implementadas) y el contrato oficial de la API es [docs/api-spec.yml](api-spec.yml). Los casos de uso afectados llevan su propia nota 📌.
 
@@ -8,9 +8,9 @@
 
 ### 1.1 Descripción General
 
-**INK·LINK** es un sitio web responsive que funciona como vitrina digital y marketplace transaccional para la industria del tatuaje en Chile. La plataforma reemplaza el proceso informal y fragmentado de buscar tatuadores en redes sociales (Instagram, TikTok, WhatsApp) con un flujo digital estructurado que cubre todo el ciclo: desde el descubrimiento del artista hasta la calificación post-curación.
+**INKSPIRE** es un sitio web responsive que funciona como vitrina digital y marketplace transaccional para la industria del tatuaje en Chile. La plataforma reemplaza el proceso informal y fragmentado de buscar tatuadores en redes sociales (Instagram, TikTok, WhatsApp) con un flujo digital estructurado que cubre todo el ciclo: desde el descubrimiento del artista hasta la calificación post-curación.
 
-El sistema conecta tres actores principales: clientes que buscan tatuarse (18+ años), tatuadores y estudios que necesitan visibilidad profesional, y marcas del rubro que buscan canales de publicidad dirigidos. INK·LINK opera inicialmente en Santiago, Chile, con un stack Angular + .NET + PostgreSQL.
+El sistema conecta tres actores principales: clientes que buscan tatuarse (18+ años), tatuadores y estudios que necesitan visibilidad profesional, y marcas del rubro que buscan canales de publicidad dirigidos. INKSPIRE opera inicialmente en Santiago, Chile, con un stack Angular + .NET + PostgreSQL.
 
 El principio fundamental del MVP es la **autonomía del flujo**: el artista configura su perfil, tarifas y agenda una sola vez, y a partir de ahí todo el ciclo del cliente ocurre sin intervención del artista en tiempo real.
 
@@ -142,7 +142,7 @@ block-beta
 - El slot queda bloqueado en la agenda del artista
 
 **Flujo Principal:**
-1. El cliente abre INK·LINK y navega la vitrina/mapa
+1. El cliente abre INKSPIRE y navega la vitrina/mapa
 2. Aplica filtros (estilo, zona, precio, rating)
 3. Selecciona un artista y revisa su perfil
 4. Inicia cotización con el chatbot
@@ -293,7 +293,7 @@ sequenceDiagram
 - Puede acceder al perfil de cualquier artista desde los resultados
 
 **Flujo Principal:**
-1. El cliente abre INK·LINK (sin login)
+1. El cliente abre INKSPIRE (sin login)
 2. Ve la vitrina con secciones: "Cerca de ti", "Mejor calificados", "Estilos populares", "Artistas premiados"
 3. Aplica filtros: estilo, rango de precio, calificación mínima, certificación sanitaria, disponibilidad, tipo (estudio/independiente)
 4. Opcionalmente busca por texto (nombre artista, estilo, comuna)
@@ -311,7 +311,7 @@ sequenceDiagram
     participant F as Motor de Filtros
     participant DB as Base de Datos
 
-    C->>V: Abre INK·LINK (sin login)
+    C->>V: Abre INKSPIRE (sin login)
     V->>DB: Solicita artistas destacados + geolocalización
     DB-->>V: Resultados por sección
     V-->>C: Muestra vitrina personalizada
@@ -862,7 +862,7 @@ erDiagram
 
 ### 4.1 Arquitectura
 
-INK·LINK adopta una arquitectura de **monolito modular** apropiada para la etapa pre-seed. Esto permite iterar rápido manteniendo separación lógica por dominio, sin la complejidad operacional de microservicios.
+INKSPIRE adopta una arquitectura de **monolito modular** apropiada para la etapa pre-seed. Esto permite iterar rápido manteniendo separación lógica por dominio, sin la complejidad operacional de microservicios.
 
 **Capas:**
 
@@ -937,7 +937,7 @@ flowchart TB
     CLIENT[👤 Cliente<br/>Persona que busca tatuarse]
     ARTIST[🎨 Tatuador/Estudio<br/>Profesional del tatuaje]
     
-    INKLINK[🖋️ INK·LINK<br/>Marketplace de tatuajes<br/>Angular + .NET + PostgreSQL]
+    INKLINK[🖋️ INKSPIRE<br/>Marketplace de tatuajes<br/>Angular + .NET + PostgreSQL]
     
     FLOW_EXT[💳 Flow<br/>Pasarela de pagos Chile]
     MAPS_EXT[🗺️ Mapas<br/>Geolocalización]
@@ -955,7 +955,7 @@ flowchart TB
     CLIENT[👤 Cliente]
     ARTIST[🎨 Tatuador]
 
-    subgraph INKLINK["INK·LINK System"]
+    subgraph INKLINK["INKSPIRE System"]
         SPA[📱 Angular SPA<br/>Aplicación web responsive<br/>TypeScript/Angular]
         API[⚙️ .NET Web API<br/>Backend REST<br/>C#/.NET Core 10]
         DB[(🗄️ PostgreSQL<br/>Base de datos relacional<br/>+ PostGIS)]
