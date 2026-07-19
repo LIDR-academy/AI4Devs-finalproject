@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: INK-LINK API
+  title: INKSPIRE API
   description: |
-    REST API for the INK-LINK tattoo marketplace platform.
+    REST API for the INKSPIRE tattoo marketplace platform.
     Marketplace connecting clients with tattoo artists in Chile.
 
     Source of truth for the REST contract. Kept in sync with:
@@ -15,7 +15,7 @@ info:
     - Slot hold with 5-minute TTL while the client pays (expires_at).
   version: 2.0.0
   contact:
-    name: INK-LINK Development Team
+    name: INKSPIRE Development Team
 
 servers:
   - url: http://localhost:5000/api

@@ -1,4 +1,4 @@
-# ARCHITECTURE — INK·LINK
+# ARCHITECTURE — INKSPIRE
 
 > Resumen de arquitectura para incorporación rápida de cualquier agente o desarrollador.
 > Detalle completo (C4, decisiones, diagramas de secuencia): `docs/documentacion.md` §4–5. Última actualización: 2026-07-14.

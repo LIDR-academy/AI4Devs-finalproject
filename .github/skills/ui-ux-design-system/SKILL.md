@@ -1,7 +1,7 @@
 ---
 name: ui-ux-design-system
-description: Enforce INK·LINK UI/UX design system rules when creating or modifying frontend components. Ensures visual consistency across the entire site.
-author: INK·LINK
+description: Enforce INKSPIRE UI/UX design system rules when creating or modifying frontend components. Ensures visual consistency across the entire site.
+author: INKSPIRE
 version: 1.0.0
 ---
 
@@ -15,10 +15,10 @@ Apply this skill whenever creating, modifying, or reviewing any frontend compone
 
 | Attribute      | Value                                                   |
 | -------------- | ------------------------------------------------------- |
-| Product name   | **INK·LINK**                                            |
+| Product name   | **INKSPIRE**                                            |
 | Tagline        | La vitrina digital del tatuaje                          |
 | Tone           | Premium, dark, editorial — think luxury tattoo magazine |
-| Logo rendering | `✒ INK·LINK` (pen emoji + Playfair Display, dot in gold) |
+| Logo rendering | `✒ INKSPIRE` (pen emoji + Playfair Display, dot in gold) |
 
 ---
 
@@ -127,7 +127,7 @@ All colors MUST be used via `var(--ink-*)` tokens. Never hard-code hex values in
 - Background: `rgba(12, 12, 12, 0.88)` with `backdrop-filter: blur(14px)`
 - Border-bottom: `1px solid var(--ink-border)`
 - Height: `64px`
-- Brand: pen icon in gold + "INK·LINK" in Playfair Display
+- Brand: pen icon in gold + "INKSPIRE" in Playfair Display
 - Nav links: Inter, `0.875rem`, `--ink-text-secondary` → `--ink-text-primary` on hover
 - Primary CTA: gold bg, dark text, rounded
 

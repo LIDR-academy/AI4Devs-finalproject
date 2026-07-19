@@ -34,7 +34,7 @@ El export de Figma Make es una app React + Tailwind con 3 vistas (Home, Artistas
 - **Tarjetas de artista** con imagen, badges (verificado, certificado, premiado, auspiciado), rating con estrellas, etiqueta dorada de estilo.
 - **Chatbot modal** de cotización por pasos.
 - **Barras de dimensión** en reseñas (4 dimensiones).
-- Branding: el prototipo usa "INKSPIRE"; **se mantiene la marca actual INK·LINK** (solo cambia el estilo visual del logo).
+- Branding: el prototipo usa "INKSPIRE"; **se mantiene esa marca** (solo cambia el estilo visual del logo).
 
 ---
 
@@ -58,7 +58,7 @@ El export de Figma Make es una app React + Tailwind con 3 vistas (Home, Artistas
 - **Verificación**: `ng build` + revisión visual de todas las rutas (nada roto, solo colores/tipografía).
 
 ### Fase 1 — Shell de navegación (`app.html` / `app.scss` / `app.ts`)
-- Nav superior fija con transición al scroll (transparente → blur), logo INK·LINK con marca dorada, links Vitrina/Artistas/Mapa, CTA "Registrarse"/"Ingresar" o menú de usuario autenticado.
+- Nav superior fija con transición al scroll (transparente → blur), logo INKSPIRE con marca dorada, links Vitrina/Artistas/Mapa, CTA "Registrarse"/"Ingresar" o menú de usuario autenticado.
 - Nav móvil inferior fija (Inicio, Buscar, Mapa, Mi cuenta) — enlaza a rutas existentes.
 - Menú hamburguesa móvil para el nav superior.
 - **Verificación**: navegación completa funciona, login/logout visibles según estado de sesión.

@@ -1,4 +1,4 @@
-# INK·LINK — Credenciales de ejemplo (seed)
+# INKSPIRE — Credenciales de ejemplo (seed)
 
 > Todos los usuarios del seed usan la misma contraseña: **`Test1234!`**
 > Endpoint de login: `POST /api/auth/login` · body `{ "email": "...", "password": "..." }`

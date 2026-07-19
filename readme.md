@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🖋️_INK·LINK-La_Vitrina_Digital_del_Tatuaje-E8521A?style=for-the-badge&labelColor=0A0A0F" alt="INK·LINK"/>
+  <img src="https://img.shields.io/badge/🖋️_INKSPIRE-La_Vitrina_Digital_del_Tatuaje-E8521A?style=for-the-badge&labelColor=0A0A0F" alt="INKSPIRE"/>
 </p>
 
 <p align="center">
@@ -8,6 +8,9 @@
   <img src="https://img.shields.io/badge/Mercado-Santiago,_Chile_🇨🇱-4A9B5E?style=flat-square&labelColor=1A1F2E" />
   <img src="https://img.shields.io/badge/Stack-Angular_·_.NET_·_PostgreSQL-A8B2C3?style=flat-square&labelColor=1A1F2E" />
 </p>
+
+# INKSPIRE
+
 ---
 
 ## Índice
@@ -29,13 +32,13 @@ Rodrigo Antonio Chamy Cruz
 
 ### **0.2. Nombre del proyecto:**
 
-> 🖋️ **INK·LINK** — La vitrina digital del tatuaje en Chile
+> 🖋️ **INKSPIRE** — La vitrina digital del tatuaje en Chile
 
 ### **0.3. Descripción breve del proyecto:**
 
-> **INK·LINK** es un sitio web responsive que funciona como **vitrina digital y marketplace transaccional** para la industria del tatuaje en Chile. Nace para resolver un problema concreto: hoy, quien quiere tatuarse depende de redes sociales (Instagram, TikTok, Facebook, WhatsApp) para descubrir artistas, pedir precios y coordinar citas — un proceso lento, opaco y sin garantías para ninguna de las partes.
+> **INKSPIRE** es un sitio web responsive que funciona como **vitrina digital y marketplace transaccional** para la industria del tatuaje en Chile. Nace para resolver un problema concreto: hoy, quien quiere tatuarse depende de redes sociales (Instagram, TikTok, Facebook, WhatsApp) para descubrir artistas, pedir precios y coordinar citas — un proceso lento, opaco y sin garantías para ninguna de las partes.
 >
-> INK·LINK estructura ese flujo en **5 momentos clave**: el usuario **descubre** tatuajes y tatuadores cercanos desde que abre la plataforma, **compara** artistas por calificaciones, certificaciones y premios, **cotiza** a través de un chatbot que estima precio según las tarifas publicadas del artista, **reserva** un slot y paga depósito de forma directa (sin esperar aprobación del artista), y **califica** con reseñas verificadas en 4 dimensiones incluyendo foto de curación a los 90 días.
+> INKSPIRE estructura ese flujo en **5 momentos clave**: el usuario **descubre** tatuajes y tatuadores cercanos desde que abre la plataforma, **compara** artistas por calificaciones, certificaciones y premios, **cotiza** a través de un chatbot que estima precio según las tarifas publicadas del artista, **reserva** un slot y paga depósito de forma directa (sin esperar aprobación del artista), y **califica** con reseñas verificadas en 4 dimensiones incluyendo foto de curación a los 90 días.
 >
 
 ### **0.4. URL del proyecto:**
@@ -70,7 +73,7 @@ Reemplazar el sistema informal y fragmentado de reservas a través de redes soci
 <table>
 <tr>
 <th width="50%">😤 Problema actual</th>
-<th width="50%">✅ Cómo lo resuelve INK·LINK</th>
+<th width="50%">✅ Cómo lo resuelve INKSPIRE</th>
 </tr>
 <tr>
 <td>Los clientes buscan tatuadores en redes sociales <strong>sin filtros reales</strong> de estilo, precio o calidad</td>
@@ -148,7 +151,7 @@ Buscan un canal de publicidad dirigido a la comunidad activa de tatuaje y auspic
 <tr>
 <td><img src="https://img.shields.io/badge/1.1-1D6FA4?style=flat-square"/></td>
 <td>🖼️ <strong>Vitrina de tatuajes (Must-Have)</strong></td>
-<td>Al abrir INK·LINK el usuario <strong>ya está viendo tatuajes</strong>. Feed visual de trabajos destacados mostrando el artista que los hizo, su ubicación y su calificación. Secciones dinámicas personalizadas según geolocalización: <em>"Cerca de ti"</em>, <em>"Mejor calificados"</em>, <em>"Estilos populares"</em>, <em>"Artistas premiados"</em>. Sin login obligatorio — la vitrina está abierta desde el segundo 0.</td>
+<td>Al abrir INKSPIRE el usuario <strong>ya está viendo tatuajes</strong>. Feed visual de trabajos destacados mostrando el artista que los hizo, su ubicación y su calificación. Secciones dinámicas personalizadas según geolocalización: <em>"Cerca de ti"</em>, <em>"Mejor calificados"</em>, <em>"Estilos populares"</em>, <em>"Artistas premiados"</em>. Sin login obligatorio — la vitrina está abierta desde el segundo 0.</td>
 </tr>
 <tr>
 <td><img src="https://img.shields.io/badge/1.2-1D6FA4?style=flat-square"/></td>
@@ -484,7 +487,7 @@ Especificación oficial OpenAPI 3.0: **[docs/api-spec.yml](docs/api-spec.yml)** 
 Backlog completo (13 US · 80 SP · 9 Must-Have + 4 Should-Have): **[docs/us/all-us.md](docs/us/all-us.md)**. Tres historias principales:
 
 > **US0003 — Ver vitrina principal de tatuajes (Must-Have, 8 SP)**
-> *Como* visitante sin cuenta, *quiero* ver una vitrina visual de tatuajes y artistas al abrir INK·LINK, *para* descubrir artistas cercanos sin barreras de entrada. Secciones dinámicas por geolocalización, sin login, mobile-first. [Detalle](docs/us/us0003/us0003.md)
+> *Como* visitante sin cuenta, *quiero* ver una vitrina visual de tatuajes y artistas al abrir INKSPIRE, *para* descubrir artistas cercanos sin barreras de entrada. Secciones dinámicas por geolocalización, sin login, mobile-first. [Detalle](docs/us/us0003/us0003.md)
 
 > **US0009 — Pagar depósito vía Flow y confirmar reserva (Must-Have, 13 SP)**
 > *Como* cliente autenticado con un slot seleccionado, *quiero* pagar el depósito a través de Flow, *para* confirmar mi cita y asegurar el horario. Sin aprobación del artista: slot abierto + pago = reserva firme. [Detalle](docs/us/us0009/us0009.md)
@@ -545,6 +548,6 @@ Listado completo:
 ---
 
 <p align="center">
-  <img src="https://img.shields.io/badge/INK·LINK-Documento_Confidencial-1D3A5E?style=flat-square&labelColor=0A0A0F" />
+  <img src="https://img.shields.io/badge/INKSPIRE-Documento_Confidencial-1D3A5E?style=flat-square&labelColor=0A0A0F" />
   <img src="https://img.shields.io/badge/©_2026-Fuente_de_verdad_del_proyecto-1D3A5E?style=flat-square&labelColor=0A0A0F" />
 </p>

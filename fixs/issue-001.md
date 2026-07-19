@@ -23,7 +23,7 @@ Análisis de coherencia entre `readme.md`, `docs/documentacion.md` y `docs/data-
 
 **Dónde:** `docs/api-spec.yml`
 
-**Problema:** Describe un sistema de recruitment (Candidate, Position, Interview) — no INK·LINK. Está completamente comentado.
+**Problema:** Describe un sistema de recruitment (Candidate, Position, Interview) — no INKSPIRE. Está completamente comentado.
 
 **Fix:** Eliminar contenido actual. Dejar como TODO vacío (solo con las llaves del yml, pero el contenido de ellas eliminalo.)
 
