@@ -94,6 +94,13 @@ public class AvailabilityService
             return new HoldResult(HoldOutcome.InvalidSlot, Error: "Invalid start/end time");
         }
 
+        // Validate client exists (JWT may contain a stale user ID after DB reseed)
+        var clientExists = await _context.Users.AnyAsync(u => u.Id == clientId, cancellationToken);
+        if (!clientExists)
+        {
+            return new HoldResult(HoldOutcome.InvalidSlot, Error: "Tu sesión expiró. Cierra sesión y vuelve a ingresar.");
+        }
+
         var artist = await _context.ArtistProfiles
             .Include(a => a.User)
             .Include(a => a.Availabilities.Where(av => av.IsActive))

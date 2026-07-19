@@ -96,13 +96,6 @@ public class QuoteCalculatorService
             return new QuoteResult(QuoteOutcome.InvalidSize);
         }
 
-        var artist = await _context.ArtistProfiles
-            .FirstOrDefaultAsync(a => a.Id == request.ArtistProfileId && a.IsPublished, cancellationToken);
-        if (artist is null)
-        {
-            return new QuoteResult(QuoteOutcome.ArtistNotFound);
-        }
-
         var styleExists = await _context.TattooStyles
             .AnyAsync(s => s.Id == request.StyleId, cancellationToken);
         if (!styleExists)
@@ -110,9 +103,47 @@ public class QuoteCalculatorService
             return new QuoteResult(QuoteOutcome.StyleNotFound);
         }
 
+        // General mode: when no artist specified, average across all published artists
+        if (request.ArtistProfileId == Guid.Empty)
+        {
+            return await CalculateGeneralAsync(request, cancellationToken);
+        }
+
+        var artist = await _context.ArtistProfiles
+            .FirstOrDefaultAsync(a => a.Id == request.ArtistProfileId && a.IsPublished, cancellationToken);
+        if (artist is null)
+        {
+            return new QuoteResult(QuoteOutcome.ArtistNotFound);
+        }
+
         var estimate = Estimate(artist, request.BodyZone, request.SizeReference, request.IsColor, request.IsCoverup);
         return new QuoteResult(QuoteOutcome.Ok, new QuoteResponse(
             estimate.PriceMin, estimate.PriceMax, "CLP", estimate.DepositAmount, estimate.Factors));
+    }
+
+    /// <summary>General quote: averages pricing across all published artists.</summary>
+    private async Task<QuoteResult> CalculateGeneralAsync(QuoteRequest request, CancellationToken cancellationToken)
+    {
+        var artists = await _context.ArtistProfiles
+            .Where(a => a.IsPublished)
+            .ToListAsync(cancellationToken);
+
+        if (artists.Count == 0)
+        {
+            return new QuoteResult(QuoteOutcome.ArtistNotFound);
+        }
+
+        var estimates = artists.Select(a =>
+            Estimate(a, request.BodyZone, request.SizeReference, request.IsColor, request.IsCoverup)).ToList();
+
+        var avgMin = (int)estimates.Average(e => e.PriceMin);
+        var avgMax = (int)estimates.Average(e => e.PriceMax);
+        var avgDeposit = (int)estimates.Average(e => e.DepositAmount);
+        var factors = estimates.First().Factors;
+        factors.Add($"Promedio de {artists.Count} artistas");
+
+        return new QuoteResult(QuoteOutcome.Ok, new QuoteResponse(
+            avgMin, avgMax, "CLP", avgDeposit, factors));
     }
 
     private static int ToClp(decimal amount) =>

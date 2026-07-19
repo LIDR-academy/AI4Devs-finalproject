@@ -44,7 +44,7 @@ const MAX_REFERENCES = 3;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class QuoteChatbotComponent implements OnInit {
-  readonly artist = input.required<ArtistProfileDto>();
+  readonly artist = input<ArtistProfileDto | null>(null);
 
   readonly closed = output<void>();
   /** CA5 — the client wants to book: the parent scrolls to the slot calendar. */
@@ -70,9 +70,11 @@ export class QuoteChatbotComponent implements OnInit {
 
   private readonly catalog = signal<TattooStyleOption[]>([]);
 
-  /** Styles the artist actually works with (CA2 paso 3). */
+  /** Styles the artist actually works with, or all styles in general mode. */
   readonly artistStyles = computed<TattooStyleOption[]>(() => {
-    const slugs = this.artist().styles;
+    const a = this.artist();
+    if (!a) return this.catalog();
+    const slugs = a.styles;
     return this.catalog().filter(style => slugs.includes(style.slug));
   });
 
@@ -87,8 +89,12 @@ export class QuoteChatbotComponent implements OnInit {
 
   /** Conversation derived from the answers, so going back just clears an answer (CA6). */
   readonly messages = computed<ChatMessage[]>(() => {
+    const a = this.artist();
+    const greeting = a
+      ? `¡Hola! Te ayudo a estimar el precio de tu tatuaje con ${a.artistName}. ¿En qué zona del cuerpo te lo quieres hacer?`
+      : '¡Hola! Te ayudo a estimar el precio de tu próximo tatuaje. ¿En qué zona del cuerpo te lo quieres hacer?';
     const msgs: ChatMessage[] = [
-      { from: 'bot', text: `¡Hola! Te ayudo a estimar el precio de tu tatuaje con ${this.artist().artistName}. ¿En qué zona del cuerpo te lo quieres hacer?` }
+      { from: 'bot', text: greeting }
     ];
 
     const zone = this.selectedZone();
@@ -99,7 +105,7 @@ export class QuoteChatbotComponent implements OnInit {
     const size = this.selectedSize();
     if (!size) return msgs;
     msgs.push({ from: 'user', text: `${size.icon} ${size.label}` });
-    msgs.push({ from: 'bot', text: '¿Qué estilo te interesa? Estos son los que maneja este artista:' });
+    msgs.push({ from: 'bot', text: a ? '¿Qué estilo te interesa? Estos son los que maneja este artista:' : '¿Qué estilo de tatuaje te interesa?' });
 
     const style = this.selectedStyle();
     if (!style) return msgs;
@@ -186,7 +192,7 @@ export class QuoteChatbotComponent implements OnInit {
     this.error.set(null);
     this.calculating.set(true);
     const request = {
-      artistProfileId: this.artist().id,
+      artistProfileId: this.artist()?.id ?? '00000000-0000-0000-0000-000000000000',
       bodyZone: zone.slug,
       sizeReference: size.slug,
       styleId: style.id,
@@ -238,7 +244,7 @@ export class QuoteChatbotComponent implements OnInit {
     const style = this.selectedStyle()!;
     const draft: QuoteDraft = {
       request: {
-        artistProfileId: this.artist().id,
+        artistProfileId: this.artist()?.id ?? '',
         bodyZone: zone.slug,
         sizeReference: size.slug,
         styleId: style.id,

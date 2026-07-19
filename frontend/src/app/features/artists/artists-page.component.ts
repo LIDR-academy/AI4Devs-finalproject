@@ -8,7 +8,6 @@ import {
   signal
 } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ArtistFilters } from '../../core/models/artist-filter.models';
 import { ArtistCardComponent } from '../../shared/components/artist-card/artist-card.component';
@@ -19,7 +18,7 @@ import { ArtistFilterService } from './services/artist-filter.service';
 @Component({
   selector: 'app-artists-page',
   standalone: true,
-  imports: [ArtistCardComponent, FilterPanelComponent, SearchBarComponent, MatButtonModule, MatIconModule],
+  imports: [ArtistCardComponent, FilterPanelComponent, SearchBarComponent, MatIconModule],
   templateUrl: './artists-page.component.html',
   styleUrl: './artists-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -31,10 +30,35 @@ export class ArtistsPageComponent implements OnInit {
   private readonly filtersInitialized = signal(false);
 
   readonly showFilters = signal(false);
+  readonly showFilterPanel = signal(true);
+  readonly viewMode = signal<'grid' | 'list'>('grid');
+  readonly sortBy = signal<'relevance' | 'rating' | 'priceAsc' | 'priceDesc' | 'reviews'>('relevance');
   readonly results = this.filterService.results.asReadonly();
   readonly loading = this.filterService.loading.asReadonly();
   readonly error = this.filterService.error.asReadonly();
-  readonly artists = computed(() => this.results()?.data ?? []);
+  readonly artists = computed(() => {
+    let data = this.results()?.data ?? [];
+    // Client-side filter: awarded (backend doesn't support this param)
+    if (this.filterService.currentFilters().awarded) {
+      data = data.filter(a => a.hasAwards);
+    }
+    switch (this.sortBy()) {
+      case 'rating':
+        return [...data].sort((a, b) => b.averageRating - a.averageRating);
+      case 'priceAsc':
+        return [...data].sort((a, b) => a.hourlyRate - b.hourlyRate);
+      case 'priceDesc':
+        return [...data].sort((a, b) => b.hourlyRate - a.hourlyRate);
+      case 'reviews':
+        return [...data].sort((a, b) => b.reviewCount - a.reviewCount);
+      default:
+        return data;
+    }
+  });
+
+  onSortChange(value: string): void {
+    this.sortBy.set(value as 'relevance' | 'rating' | 'priceAsc' | 'priceDesc' | 'reviews');
+  }
 
   constructor() {
     effect(() => {
@@ -99,6 +123,14 @@ export class ArtistsPageComponent implements OnInit {
 
     if (filters.available != null) {
       queryParams['available'] = filters.available;
+    }
+
+    if (filters.awarded != null) {
+      queryParams['awarded'] = filters.awarded;
+    }
+
+    if (filters.commune) {
+      queryParams['commune'] = filters.commune;
     }
 
     if (filters.type) {

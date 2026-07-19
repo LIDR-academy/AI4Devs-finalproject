@@ -101,6 +101,8 @@ if (args.Contains("--seed"))
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<InkLinkDbContext>();
     await context.Database.MigrateAsync();
+    // PostGIS must exist before the seeder runs geo queries
+    await context.Database.ExecuteSqlRawAsync("CREATE EXTENSION IF NOT EXISTS postgis");
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     await seeder.SeedAsync();
 }

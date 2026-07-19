@@ -1,5 +1,5 @@
-import { Component, HostListener, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, HostListener, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -7,8 +7,8 @@ import { ArtistProfileDto, ReviewDto } from '../../core/models/artist-profile.mo
 import { BookableSlot } from '../../core/models/booking.models';
 import { ArtistProfileService } from './services/artist-profile.service';
 import { AuthService } from '../../core/services/auth.service';
+import { FavoritesService } from '../../core/services/favorites.service';
 import { BookingService } from '../booking/services/booking.service';
-import { CertificationBadgeComponent } from '../../shared/components/certification-badge/certification-badge.component';
 import { WeeklyCalendarComponent } from '../booking/components/weekly-calendar/weekly-calendar.component';
 import { SponsorshipSectionComponent } from './components/sponsorship-section/sponsorship-section.component';
 import { QuoteChatbotComponent } from '../quote-chatbot/quote-chatbot.component';
@@ -17,7 +17,7 @@ import { QuoteService } from '../quote-chatbot/services/quote.service';
 @Component({
   selector: 'app-artist-profile',
   standalone: true,
-  imports: [DatePipe, CertificationBadgeComponent, WeeklyCalendarComponent, SponsorshipSectionComponent, QuoteChatbotComponent],
+  imports: [DatePipe, RouterLink, WeeklyCalendarComponent, SponsorshipSectionComponent, QuoteChatbotComponent],
   templateUrl: './artist-profile.component.html',
   styleUrl: './artist-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,6 +30,7 @@ export class ArtistProfileComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly bookingService = inject(BookingService);
   private readonly quoteService = inject(QuoteService);
+  protected readonly favoritesService = inject(FavoritesService);
 
   readonly artist = signal<ArtistProfileDto | null>(null);
   readonly holdError = signal<string | null>(null);
@@ -43,6 +44,27 @@ export class ArtistProfileComponent implements OnInit {
   readonly selectedImage = signal<string | null>(null);
   readonly bioExpanded = signal(false);
   readonly showChatbot = signal(false);
+  readonly activeTab = signal<'portfolio' | 'reviews' | 'info'>('portfolio');
+
+  /** Hero backdrop: the featured portfolio piece, else the first one. */
+  readonly heroImage = computed(() => {
+    const items = this.artist()?.portfolioItems ?? [];
+    return (items.find((i) => i.isFeatured) ?? items[0])?.imageUrl ?? null;
+  });
+
+  /** Aggregate of the 4 review dimensions across loaded reviews. */
+  readonly ratingDimensions = computed(() => {
+    const list = this.reviews();
+    if (list.length === 0) return [];
+    const avg = (fn: (r: ReviewDto) => number) =>
+      Math.round((list.reduce((acc, r) => acc + fn(r), 0) / list.length) * 10) / 10;
+    return [
+      { label: 'Higiene', value: avg((r) => r.ratingHygiene) },
+      { label: 'Manejo del dolor', value: avg((r) => r.ratingPainManagement) },
+      { label: 'Trato al cliente', value: avg((r) => r.ratingCustomerService) },
+      { label: 'Resultado final', value: avg((r) => r.ratingResult) }
+    ];
+  });
 
   private readonly PAGE_SIZE = 5;
 
@@ -57,7 +79,7 @@ export class ArtistProfileComponent implements OnInit {
     this.artistService.getArtistProfile(slug).subscribe({
       next: (profile) => {
         this.artist.set(profile);
-        this.titleService.setTitle(`${profile.artistName} — INK·LINK`);
+        this.titleService.setTitle(`${profile.artistName} — INKSPIRE`);
         this.loading.set(false);
         this.loadReviews(slug);
         this.holdPreselectedSlot();
@@ -158,6 +180,18 @@ export class ArtistProfileComponent implements OnInit {
     return (this.artist()?.certifications ?? []).some(c => c.isActive);
   }
 
+  readonly isFavorite = computed(() => {
+    const id = this.artist()?.id;
+    return id != null && this.favoritesService.favorites().has(id);
+  });
+
+  toggleFavorite(): void {
+    const id = this.artist()?.id;
+    if (id != null) {
+      this.favoritesService.toggle(id);
+    }
+  }
+
   /** US0011 CA1 — the "Cotizar" CTA opens the chatbot overlay. */
   openChatbot(): void {
     this.showChatbot.set(true);
@@ -223,18 +257,34 @@ export class ArtistProfileComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.holding.set(false);
-          this.holdError.set(
-            err.status === 409
-              ? 'Este horario ya fue reservado. Elige otro, por favor.'
-              : 'No pudimos reservar el horario. Inténtalo de nuevo.'
-          );
+          const msg = err.error?.message;
+          console.error('[Hold] Error:', err.status, err.statusText, msg, err);
+          let userMsg: string;
+          if (err.status === 409) {
+            userMsg = 'Este horario ya fue reservado. Elige otro, por favor.';
+          } else if (err.status === 422) {
+            userMsg = msg ?? 'El horario seleccionado no es válido. Intenta con otro.';
+          } else if (err.status === 404) {
+            userMsg = 'Artista no encontrado. Intenta recargar la página.';
+          } else if (err.status === 401) {
+            userMsg = 'Debes iniciar sesión para reservar.';
+          } else {
+            userMsg = `No pudimos reservar el horario (${err.status}). Inténtalo de nuevo.`;
+          }
+          this.holdError.set(userMsg);
         }
       });
   }
 
   /** Post-login return (CA5): the slot preselected before login travels as query params. */
   private holdPreselectedSlot(): void {
-    const { slotDate, slotStart, slotEnd } = this.route.snapshot.queryParams;
+    const { slotDate, slotStart, slotEnd, cotizar } = this.route.snapshot.queryParams;
+
+    // Auto-open chatbot when arriving from the Home "Cotizar IA" CTA
+    if (cotizar === '1') {
+      this.openChatbot();
+    }
+
     if (!slotDate || !slotStart || !slotEnd || !this.authService.isAuthenticated()) {
       return;
     }

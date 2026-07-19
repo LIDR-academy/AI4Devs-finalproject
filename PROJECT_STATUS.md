@@ -1,7 +1,9 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-17 — 🏷️ **[v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0) publicada: primera versión estable del MVP** (backlog completo 13 US / 80 SP · 235 tests en verde · Flow validado e2e contra sandbox · documentación de entrega consolidada — PRs #21 y #22)
+> Última actualización: 2026-07-18 — 🎨 **Rediseño Figma en curso** en rama `feature/rediseno-figma` (sin mergear): rebrand INKSPIRE + Home y Perfil de artista con la estructura del prototipo Figma Make. Plan y avance: `docs/plan-rediseno-figma.md` y `HANDOFF.md`.
+> **Fixes aplicados (sesión 2026-07-18):** issues 008–019 resueltos (imágenes, scroll, carrusel, pagos, mapa, cuenta, reseñas, chatbot general, reserva con JWT expirado).
+> Hito previo: 🏷️ **[v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0)** (backlog completo 13 US / 80 SP · 235 tests en verde · Flow validado e2e contra sandbox · documentación de entrega consolidada — PRs #21 y #22)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -45,6 +47,23 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 3. ~~Integración Flow real con cuenta sandbox~~ — ✅ **validada e2e el 2026-07-16** (PR #19): orden firmada → checkout Webpay real → confirm firmado → reserva confirmada. Guía de configuración de credenciales y pruebas: `docs/flow-sandbox-testing.md`. En local el webhook de Flow no alcanza localhost — confirm manual o túnel (documentado).
 
 **Sin bloqueos activos.**
+
+## Issues resueltos (rama `feature/rediseno-figma`, sesión 2026-07-18)
+
+| Issue | Descripción | Estado |
+|---|---|---|
+| 008 | Imágenes de portafolio incorrectas (animales, autos) — reemplazadas por Unsplash/Figma | ✅ |
+| 009 | Cotizar con IA redirige a artista predefinido — ahora abre chatbot general desde Home | ✅ |
+| 010 | Estilos populares en múltiples filas — corregido a carrusel una fila | ✅ |
+| 011 | Scroll comienza a mitad de página — `scrollPositionRestoration` habilitado | ✅ |
+| 012 | Pago con Flow da error — mock habilitado en Development | ✅ |
+| 013 | Artistas no aparecen en mapa — PostGIS auto-creado | ✅ |
+| 014 | Nombre/correo invisibles en Mi Cuenta — colores con variables de tema | ✅ |
+| 015 | No se puede dejar reseña — reservas sin reseña agregadas al seed | ✅ |
+| 016 | Chatbot general falla al cotizar — backend promedia precios de todos los artistas | ✅ |
+| 017 | Carrusel cortado sin flechas — wrapper con padding y botones de navegación | ✅ |
+| 018 | Error genérico al reservar — mensajes específicos por código HTTP | ✅ |
+| 019 | Botón "Reservar" en chatbot general sin destino — oculto (mejora futura) | ✅ |
 
 ## Inventario de documentación
 

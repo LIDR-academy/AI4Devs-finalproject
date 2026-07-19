@@ -16,142 +16,258 @@
 }
 
 @if (artist(); as a) {
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero__content">
-      <div class="hero__avatar">
-        @if (a.profilePhotoUrl) {
-          <img [src]="a.profilePhotoUrl" [alt]="a.artistName" class="hero__photo" />
-        } @else {
-          <span class="hero__initials">{{ getInitials(a.artistName) }}</span>
-        }
-      </div>
-      <div class="hero__info">
-        <h1 class="hero__name">{{ a.artistName }}</h1>
-        @if (a.bio) {
-          <p class="hero__bio" [class.hero__bio--expanded]="bioExpanded()">{{ a.bio }}</p>
-          <button class="hero__bio-toggle" (click)="bioExpanded.set(!bioExpanded())">
-            {{ bioExpanded() ? 'Ver menos' : 'Ver más' }}
-          </button>
-        }
-        <div class="hero__chips">
-          <span class="chip">{{ a.yearsExperience }} años exp.</span>
-          <span class="chip">{{ getArtistTypeLabel(a.artistType) }}</span>
-          <span class="chip">{{ a.commune }}</span>
+  <a class="back-link" routerLink="/artistas">
+    <span class="material-icons">chevron_left</span> Volver a artistas
+  </a>
+
+  <!-- Hero backdrop -->
+  <section class="hero-backdrop" aria-hidden="true">
+    @if (heroImage()) {
+      <img [src]="heroImage()" [alt]="''" class="hero-backdrop__img" />
+    }
+    <div class="hero-backdrop__gradient"></div>
+  </section>
+
+  <div class="profile-layout">
+    <div class="profile-main">
+      <!-- Header del artista -->
+      <header class="hero">
+        <div class="hero__row">
+          <div class="hero__avatar">
+            @if (a.profilePhotoUrl) {
+              <img [src]="a.profilePhotoUrl" [alt]="a.artistName" class="hero__photo" />
+            } @else {
+              <span class="hero__initials">{{ getInitials(a.artistName) }}</span>
+            }
+          </div>
+          <div class="hero__info">
+            <div class="hero__title-row">
+              <h1 class="hero__name">{{ a.artistName }}</h1>
+              @if (a.isCertified) {
+                <span class="chip-gold"><span class="material-icons">verified</span> Verificado</span>
+              }
+              @if (getActiveCertifications()) {
+                <span class="chip-green"><span class="material-icons">health_and_safety</span> Sanitario</span>
+              }
+              @if (a.awards.length > 0) {
+                <span class="chip-amber"><span class="material-icons">emoji_events</span> Premiado</span>
+              }
+              @if (a.sponsorships.length > 0) {
+                <span class="chip-violet"><span class="material-icons">auto_awesome</span> Auspiciado</span>
+              }
+            </div>
+            <p class="hero__type">{{ getArtistTypeLabel(a.artistType) === 'Independiente' ? 'Tatuador independiente' : 'Artista de estudio' }}</p>
+            <div class="hero__meta">
+              <span><span class="material-icons">place</span>{{ a.address ?? a.commune }}</span>
+              <span><span class="material-icons">schedule</span>{{ a.yearsExperience }} años de exp.</span>
+            </div>
+          </div>
         </div>
+
         <div class="hero__rating">
           @for (star of getStars(a.averageRating); track $index) {
             <span class="material-icons star" [class.star--filled]="star === 1">star</span>
           }
-          <span class="hero__rating-text">{{ a.averageRating.toFixed(1) }} ({{ a.reviewCount }} reseñas)</span>
+          <span class="hero__rating-value">{{ a.averageRating.toFixed(1) }}</span>
+          <span class="hero__rating-count">({{ a.reviewCount }} reseñas)</span>
         </div>
-        <div class="hero__ctas">
-          <button type="button" class="btn btn--primary" (click)="openChatbot()">Cotizar</button>
-          <button type="button" class="btn btn--ghost" (click)="scrollToBooking()">Reservar</button>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ESTILOS -->
-  @if (a.styles.length > 0) {
-    <section class="styles-section">
-      <h2 class="section-title">Estilos</h2>
-      <div class="styles-tags">
-        @for (style of a.styles; track style) {
-          <span class="style-tag">{{ style }}</span>
+        <div class="hero__styles">
+          @for (style of a.styles; track style) {
+            <span class="style-tag">{{ style }}</span>
+          }
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <nav class="tabs">
+        <button class="tabs__item" [class.tabs__item--active]="activeTab() === 'portfolio'" (click)="activeTab.set('portfolio')">Portafolio</button>
+        <button class="tabs__item" [class.tabs__item--active]="activeTab() === 'reviews'" (click)="activeTab.set('reviews')">Reseñas ({{ a.reviewCount }})</button>
+        <button class="tabs__item" [class.tabs__item--active]="activeTab() === 'info'" (click)="activeTab.set('info')">Info &amp; tarifas</button>
+      </nav>
+
+      <!-- Tab: Portafolio -->
+      @if (activeTab() === 'portfolio') {
+        @if (a.portfolioItems.length > 0) {
+          <div class="portfolio">
+            @for (item of a.portfolioItems; track item.id) {
+              <div class="portfolio__item" (click)="openLightbox(item.imageUrl)">
+                <img [src]="item.thumbnailUrl" [alt]="'Trabajo de ' + a.artistName" loading="lazy" class="portfolio__img" />
+                <div class="portfolio__overlay"><span class="material-icons">zoom_in</span></div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-text">Sin trabajos en portafolio aún.</p>
         }
-      </div>
-    </section>
-  }
+      }
 
-  <!-- MAIN CONTENT -->
-  <div class="main-grid">
-    <!-- PORTAFOLIO -->
-    <section class="portfolio">
-      <h2 class="section-title">Portafolio</h2>
-      @if (a.portfolioItems.length > 0) {
-        <div class="portfolio__grid">
-          @for (item of a.portfolioItems; track item.id) {
-            <div class="portfolio__item" (click)="openLightbox(item.imageUrl)">
-              <img [src]="item.thumbnailUrl" [alt]="'Trabajo de ' + a.artistName" loading="lazy" class="portfolio__img" />
-              <div class="portfolio__overlay">
-                <span class="material-icons">zoom_in</span>
+      <!-- Tab: Reseñas -->
+      @if (activeTab() === 'reviews') {
+        @if (ratingDimensions().length > 0) {
+          <div class="panel reviews-summary">
+            <div class="reviews-summary__head">
+              <div class="reviews-summary__big">{{ a.averageRating.toFixed(1) }}</div>
+              <div>
+                <div class="reviews-summary__stars">
+                  @for (star of getStars(a.averageRating); track $index) {
+                    <span class="material-icons star" [class.star--filled]="star === 1">star</span>
+                  }
+                </div>
+                <div class="reviews-summary__count">{{ a.reviewCount }} reseñas verificadas</div>
+              </div>
+            </div>
+            <div class="dim-bars">
+              @for (dim of ratingDimensions(); track dim.label) {
+                <div class="dim-bar">
+                  <span class="dim-bar__label">{{ dim.label }}</span>
+                  <div class="dim-bar__track"><div class="dim-bar__fill" [style.width.%]="getRatingPercent(dim.value)"></div></div>
+                  <span class="dim-bar__value">{{ dim.value }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (reviews().length > 0) {
+          <div class="reviews-list">
+            @for (review of reviews(); track review.id) {
+              <div class="panel review-card">
+                <div class="review-card__header">
+                  <span class="review-card__avatar">{{ getInitials(review.clientName) }}</span>
+                  <div class="review-card__meta">
+                    <span class="review-card__name">{{ review.clientName }}</span>
+                    <span class="review-card__date">{{ review.createdAt | date: 'dd MMM yyyy' }}</span>
+                  </div>
+                  <div class="review-card__right">
+                    @if (review.tattooPhotoUrl) {
+                      <span class="chip-green"><span class="material-icons">check_circle</span> Reseña completa</span>
+                    }
+                    <div class="review-card__stars">
+                      @for (star of getStars(review.averageRating); track $index) {
+                        <span class="material-icons star-sm" [class.star-sm--filled]="star === 1">star</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                @if (review.comment) {
+                  <p class="review-card__comment">&ldquo;{{ review.comment }}&rdquo;</p>
+                }
+                <div class="dim-bars dim-bars--bordered">
+                  <div class="dim-bar">
+                    <span class="dim-bar__label">Higiene</span>
+                    <div class="dim-bar__track"><div class="dim-bar__fill" [style.width.%]="getRatingPercent(review.ratingHygiene)"></div></div>
+                    <span class="dim-bar__value">{{ review.ratingHygiene }}</span>
+                  </div>
+                  <div class="dim-bar">
+                    <span class="dim-bar__label">Manejo del dolor</span>
+                    <div class="dim-bar__track"><div class="dim-bar__fill" [style.width.%]="getRatingPercent(review.ratingPainManagement)"></div></div>
+                    <span class="dim-bar__value">{{ review.ratingPainManagement }}</span>
+                  </div>
+                  <div class="dim-bar">
+                    <span class="dim-bar__label">Trato al cliente</span>
+                    <div class="dim-bar__track"><div class="dim-bar__fill" [style.width.%]="getRatingPercent(review.ratingCustomerService)"></div></div>
+                    <span class="dim-bar__value">{{ review.ratingCustomerService }}</span>
+                  </div>
+                  <div class="dim-bar">
+                    <span class="dim-bar__label">Resultado final</span>
+                    <div class="dim-bar__track"><div class="dim-bar__fill" [style.width.%]="getRatingPercent(review.ratingResult)"></div></div>
+                    <span class="dim-bar__value">{{ review.ratingResult }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+          @if (hasMoreReviews) {
+            <button class="btn-outline btn--load-more" (click)="loadMoreReviews()" [disabled]="reviewsLoading()">
+              {{ reviewsLoading() ? 'Cargando...' : 'Cargar más reseñas' }}
+            </button>
+          }
+        } @else if (!reviewsLoading()) {
+          <p class="empty-text">Aún no hay reseñas.</p>
+        }
+      }
+
+      <!-- Tab: Info & tarifas -->
+      @if (activeTab() === 'info') {
+        <div class="info-stack">
+          @if (a.bio) {
+            <div class="panel">
+              <div class="gold-label">Sobre mí</div>
+              <p class="panel__text">{{ a.bio }}</p>
+            </div>
+          }
+
+          <div class="panel">
+            <div class="gold-label">Tarifas y políticas</div>
+            <div class="tariff-grid">
+              <div class="tariff-cell">
+                <div class="tariff-cell__label">Precio mínimo por sesión</div>
+                <div class="tariff-cell__value">{{ formatCLP(a.minSessionPrice) }}</div>
+              </div>
+              <div class="tariff-cell">
+                <div class="tariff-cell__label">Precio por hora</div>
+                <div class="tariff-cell__value">{{ formatCLP(a.hourlyRate) }}</div>
+              </div>
+              <div class="tariff-cell">
+                <div class="tariff-cell__label">Depósito requerido</div>
+                <div class="tariff-cell__value">{{ a.depositPercentage }}%</div>
+              </div>
+              <div class="tariff-cell">
+                <div class="tariff-cell__label">Política de cancelación</div>
+                <div class="tariff-cell__value">{{ getCancellationLabel(a.cancellationPolicy) }}</div>
+              </div>
+            </div>
+          </div>
+
+          @if (a.certifications.length > 0) {
+            <div class="panel">
+              <div class="gold-label">Certificaciones</div>
+              <div class="cert-list">
+                @for (cert of a.certifications; track cert.name) {
+                  <div class="cert-row">
+                    <span class="material-icons cert-row__icon">health_and_safety</span>
+                    <div class="cert-row__body">
+                      <div class="cert-row__name">{{ cert.name }}</div>
+                      <div class="cert-row__issuer">{{ cert.issuer }}</div>
+                    </div>
+                    <div class="cert-row__validity">Vigente hasta {{ cert.validUntil }}</div>
+                  </div>
+                }
               </div>
             </div>
           }
-        </div>
-      } @else {
-        <p class="empty-text">Sin trabajos en portafolio aún.</p>
-      }
-    </section>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <!-- TARIFAS -->
-      <div class="sidebar-card">
-        <h3 class="sidebar-card__title">Tarifas</h3>
-        <dl class="tariff-list">
-          <div class="tariff-item">
-            <dt>Sesión mínima</dt>
-            <dd>{{ formatCLP(a.minSessionPrice) }}</dd>
-          </div>
-          <div class="tariff-item">
-            <dt>Por hora</dt>
-            <dd>{{ formatCLP(a.hourlyRate) }}</dd>
-          </div>
-          <div class="tariff-item">
-            <dt>Depósito requerido</dt>
-            <dd>{{ a.depositPercentage }}%</dd>
-          </div>
-          <div class="tariff-item">
-            <dt>Cancelación</dt>
-            <dd>{{ getCancellationLabel(a.cancellationPolicy) }}</dd>
-          </div>
-        </dl>
-      </div>
+          @if (a.awards.length > 0) {
+            <div class="panel">
+              <div class="gold-label">Premios y reconocimientos</div>
+              <div class="cert-list">
+                @for (award of a.awards; track award.title) {
+                  <div class="award-row">
+                    <span class="material-icons award-row__icon">emoji_events</span>
+                    <div>
+                      <div class="award-row__title">{{ award.title }}</div>
+                      <div class="award-row__event">{{ award.eventName }} · {{ award.year }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
 
-      <!-- CERTIFICACIONES -->
-      @if (a.certifications.length > 0) {
-        <div class="sidebar-card">
-          <h3 class="sidebar-card__title">Certificaciones</h3>
-          <app-certification-badge [isCertified]="getActiveCertifications()" size="md" />
-          <ul class="cert-list">
-            @for (cert of a.certifications; track cert.name) {
-              <li class="cert-list__item">
-                <span class="cert-list__name">{{ cert.name }}</span>
-                <span class="cert-list__issuer">{{ cert.issuer }}</span>
-                <span class="cert-list__date">Válido hasta {{ cert.validUntil }}</span>
-              </li>
-            }
-          </ul>
+          <app-sponsorship-section [sponsorships]="a.sponsorships" />
+
+          <div class="panel location-panel">
+            <span class="material-icons location-panel__pin">place</span>
+            <div class="location-panel__address">{{ a.address ?? a.commune }}</div>
+            <div class="location-panel__commune">{{ a.commune }}, Santiago</div>
+          </div>
         </div>
       }
 
-      <!-- PREMIOS -->
-      @if (a.awards.length > 0) {
-        <div class="sidebar-card">
-          <h3 class="sidebar-card__title">Premios</h3>
-          <ul class="awards-list">
-            @for (award of a.awards; track award.title) {
-              <li class="awards-list__item">
-                <span class="material-icons awards-list__icon">emoji_events</span>
-                <div>
-                  <span class="awards-list__title">{{ award.title }}</span>
-                  <span class="awards-list__event">{{ award.eventName }} · {{ award.year }}</span>
-                </div>
-              </li>
-            }
-          </ul>
-        </div>
-      }
-
-      <!-- AUSPICIOS (US0014) -->
-      <app-sponsorship-section [sponsorships]="a.sponsorships" />
-
-      <!-- DISPONIBILIDAD -->
-      <div class="sidebar-card">
-        <h3 class="sidebar-card__title">Disponibilidad</h3>
+      <!-- Reserva (US0008) — siempre visible, ancla del CTA -->
+      <section class="booking-section">
+        <h2 class="booking-section__title">Reserva una sesión</h2>
         <div class="availability-week">
           @for (day of getWeekAvailability(); track day.day) {
             <div class="availability-day" [class.availability-day--active]="day.available">
@@ -160,81 +276,61 @@
             </div>
           }
         </div>
+        @if (holdError(); as error) {
+          <div class="booking-section__error" role="alert">{{ error }}</div>
+        }
+        @if (holding()) {
+          <p class="booking-section__holding">Reservando tu horario…</p>
+        }
+        <app-weekly-calendar [artistProfileId]="a.id" (slotSelected)="onSlotSelected($event)" />
+      </section>
+    </div>
+
+    <!-- Booking card sticky (desktop) -->
+    <aside class="booking-aside">
+      <div class="booking-card">
+        <div class="booking-card__price-block">
+          <div class="booking-card__from">Desde</div>
+          <div class="booking-card__price">{{ formatCLP(a.hourlyRate) }}<span>/hr</span></div>
+          <div class="booking-card__deposit">Depósito: {{ a.depositPercentage }}% al reservar</div>
+        </div>
+        <div class="booking-card__ctas">
+          <button type="button" class="booking-card__quote" (click)="openChatbot()">
+            <span class="material-icons">smart_toy</span> Cotizar con IA
+          </button>
+          <button type="button" class="btn-gold booking-card__reserve" (click)="scrollToBooking()">
+            <span class="material-icons">event</span> Reservar sesión
+          </button>
+          <button type="button" class="booking-card__save" [class.booking-card__save--active]="isFavorite()" (click)="toggleFavorite()" [attr.aria-pressed]="isFavorite()">
+            <span class="material-icons">{{ isFavorite() ? 'favorite' : 'favorite_border' }}</span>
+            {{ isFavorite() ? 'Guardado' : 'Guardar artista' }}
+          </button>
+        </div>
+        <div class="booking-card__policy">
+          Cancelación: {{ getCancellationLabel(a.cancellationPolicy) }} · Depósito protegido
+        </div>
       </div>
     </aside>
   </div>
 
-  <!-- RESERVA (US0008) -->
-  <section class="booking-section">
-    <h2 class="section-title">Reserva una sesión</h2>
-    @if (holdError(); as error) {
-      <div class="booking-section__error" role="alert">{{ error }}</div>
-    }
-    @if (holding()) {
-      <p class="booking-section__holding">Reservando tu horario…</p>
-    }
-    <app-weekly-calendar [artistProfileId]="a.id" (slotSelected)="onSlotSelected($event)" />
-  </section>
+  <!-- Booking bar móvil -->
+  <div class="booking-bar">
+    <div class="booking-bar__price">
+      <div class="booking-bar__from">Desde</div>
+      <div class="booking-bar__value">{{ formatCLP(a.hourlyRate) }}/hr</div>
+    </div>
+    <button type="button" class="booking-bar__quote" (click)="openChatbot()">
+      <span class="material-icons">smart_toy</span> Cotizar
+    </button>
+    <button type="button" class="booking-bar__reserve" (click)="scrollToBooking()">Reservar</button>
+  </div>
 
-  <!-- COTIZADOR (US0011) -->
+  <!-- Cotizador (US0011) -->
   @if (showChatbot()) {
     <app-quote-chatbot [artist]="a" (closed)="closeChatbot()" (reserveRequested)="onQuoteReserve()" />
   }
 
-  <!-- REVIEWS -->
-  <section class="reviews-section">
-    <h2 class="section-title">Reseñas</h2>
-    @if (reviews().length > 0) {
-      <div class="reviews-list">
-        @for (review of reviews(); track review.id) {
-          <div class="review-card">
-            <div class="review-card__header">
-              <span class="review-card__avatar">{{ getInitials(review.clientName) }}</span>
-              <div class="review-card__meta">
-                <span class="review-card__name">{{ review.clientName }}</span>
-                <span class="review-card__date">{{ review.createdAt | date: 'dd MMM yyyy' }}</span>
-              </div>
-              <div class="review-card__stars">
-                @for (star of getStars(review.averageRating); track $index) {
-                  <span class="material-icons star-sm" [class.star-sm--filled]="star === 1">star</span>
-                }
-              </div>
-            </div>
-            <div class="review-card__ratings">
-              <div class="rating-bar">
-                <span class="rating-bar__label">Higiene</span>
-                <div class="rating-bar__track"><div class="rating-bar__fill" [style.width.%]="getRatingPercent(review.ratingHygiene)"></div></div>
-              </div>
-              <div class="rating-bar">
-                <span class="rating-bar__label">Manejo dolor</span>
-                <div class="rating-bar__track"><div class="rating-bar__fill" [style.width.%]="getRatingPercent(review.ratingPainManagement)"></div></div>
-              </div>
-              <div class="rating-bar">
-                <span class="rating-bar__label">Atención</span>
-                <div class="rating-bar__track"><div class="rating-bar__fill" [style.width.%]="getRatingPercent(review.ratingCustomerService)"></div></div>
-              </div>
-              <div class="rating-bar">
-                <span class="rating-bar__label">Resultado</span>
-                <div class="rating-bar__track"><div class="rating-bar__fill" [style.width.%]="getRatingPercent(review.ratingResult)"></div></div>
-              </div>
-            </div>
-            @if (review.comment) {
-              <p class="review-card__comment">{{ review.comment }}</p>
-            }
-          </div>
-        }
-      </div>
-      @if (hasMoreReviews) {
-        <button class="btn btn--ghost btn--load-more" (click)="loadMoreReviews()" [disabled]="reviewsLoading()">
-          {{ reviewsLoading() ? 'Cargando...' : 'Cargar más reseñas' }}
-        </button>
-      }
-    } @else if (!reviewsLoading()) {
-      <p class="empty-text">Aún no hay reseñas.</p>
-    }
-  </section>
-
-  <!-- LIGHTBOX -->
+  <!-- Lightbox -->
   @if (selectedImage()) {
     <div class="lightbox" (click)="closeLightbox()">
       <button class="lightbox__close" aria-label="Cerrar">

@@ -1,38 +1,82 @@
-/* INK·LINK global styles */
-@import '@angular/material/prebuilt-themes/azure-blue.css';
+/* INKSPIRE global styles */
+@use '@angular/material' as mat;
+
 @import 'leaflet/dist/leaflet.css';
 @import 'leaflet.markercluster/dist/MarkerCluster.css';
 @import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 :root {
-  /* Brand palette */
-  --ink-bg:             #0c0c0c;
-  --ink-bg-secondary:   #141414;
-  --ink-bg-card:        #1c1c1c;
-  --ink-bg-elevated:    #252525;
-  --ink-accent:         #c9a446;
-  --ink-accent-hover:   #ddb95e;
+  /* Brand palette (Figma "Premium Tattoo Marketplace") */
+  --ink-bg:             #0d0d0d;
+  --ink-bg-secondary:   #161616;
+  --ink-bg-card:        #1e1e1e;
+  --ink-bg-elevated:    #262626;
+  --ink-accent:         #d4af37;
+  --ink-accent-hover:   #e2c14f;
+  --ink-accent-soft:    rgba(212, 175, 55, 0.12);
 
   /* Typography */
-  --ink-text-primary:   #f0ede8;
-  --ink-text-secondary: #888888;
-  --ink-text-muted:     #505050;
+  --ink-text-primary:   #ffffff;
+  --ink-text-secondary: #a3a3a3;
+  --ink-text-muted:     #6b6b6b;
+  --ink-font-body:      'Inter', 'Geist', system-ui, sans-serif;
+  --ink-font-display:   'Inter', 'Geist', system-ui, sans-serif;
 
   /* Structure */
   --ink-border:         rgba(255, 255, 255, 0.07);
-  --ink-border-accent:  rgba(201, 164, 70, 0.25);
+  --ink-border-accent:  rgba(212, 175, 55, 0.25);
+  --ink-ring:           rgba(212, 175, 55, 0.4);
   --ink-shadow-sm:      0 2px 8px rgba(0, 0, 0, 0.4);
   --ink-shadow-md:      0 4px 20px rgba(0, 0, 0, 0.5);
   --ink-shadow-lg:      0 8px 40px rgba(0, 0, 0, 0.65);
-  --ink-radius:         12px;
+  --ink-shadow-accent:  0 8px 32px rgba(212, 175, 55, 0.3);
+  --ink-radius-sm:      12px;
+  --ink-radius:         16px;
+  --ink-radius-lg:      20px;
   --ink-certified:      #34d399;
+}
+
+/* Angular Material dark theme (gold accent) */
+html {
+  color-scheme: dark;
+
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$yellow-palette,
+      tertiary: mat.$yellow-palette
+    ),
+    typography: (
+      plain-family: Inter,
+      brand-family: Inter
+    ),
+    density: 0
+  ));
+
+  /* Pin Material system tokens to the exact brand values */
+  --mat-sys-primary: #d4af37;
+  --mat-sys-on-primary: #0d0d0d;
+  --mat-sys-primary-container: rgba(212, 175, 55, 0.18);
+  --mat-sys-on-primary-container: #e9d38a;
+  --mat-sys-secondary: #a3a3a3;
+  --mat-sys-on-secondary: #0d0d0d;
+  --mat-sys-surface: #0d0d0d;
+  --mat-sys-on-surface: #ffffff;
+  --mat-sys-surface-container-lowest: #0d0d0d;
+  --mat-sys-surface-container-low: #161616;
+  --mat-sys-surface-container: #1e1e1e;
+  --mat-sys-surface-container-high: #262626;
+  --mat-sys-surface-container-highest: #2e2e2e;
+  --mat-sys-on-surface-variant: #a3a3a3;
+  --mat-sys-outline: rgba(255, 255, 255, 0.2);
+  --mat-sys-outline-variant: rgba(255, 255, 255, 0.07);
 }
 
 html,
 body {
   height: 100%;
   margin: 0;
-  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  font-family: var(--ink-font-body);
   background-color: var(--ink-bg);
   color: var(--ink-text-primary);
   -webkit-font-smoothing: antialiased;
@@ -42,6 +86,105 @@ body {
 * {
   box-sizing: border-box;
 }
+
+:focus-visible {
+  outline: 2px solid var(--ink-ring);
+  outline-offset: 2px;
+}
+
+/* Shared design-system utilities (Figma redesign) */
+.gold-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-accent);
+  margin-bottom: 0.75rem;
+}
+
+.btn-gold,
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.85rem 1.75rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btn-gold mat-icon,
+.btn-outline mat-icon { font-size: 15px; width: 15px; height: 15px; }
+
+.btn-gold {
+  background: var(--ink-accent);
+  color: var(--ink-bg);
+  border: none;
+}
+.btn-gold:hover { filter: brightness(1.1); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--ink-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.btn-outline:hover { color: var(--ink-text-primary); }
+
+.icon-tile {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  flex-shrink: 0;
+}
+.icon-tile mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--ink-accent); }
+
+.chip-gold,
+.chip-green,
+.chip-amber,
+.chip-violet {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 11px;
+  border: 1px solid;
+}
+.chip-gold mat-icon, .chip-gold .material-icons,
+.chip-green mat-icon, .chip-green .material-icons,
+.chip-amber mat-icon, .chip-amber .material-icons,
+.chip-violet mat-icon, .chip-violet .material-icons { font-size: 10px; width: 10px; height: 10px; }
+
+.chip-gold { color: var(--ink-accent); background: rgba(212, 175, 55, 0.08); border-color: rgba(212, 175, 55, 0.2); }
+.chip-green { color: #4ade80; background: rgba(74, 222, 128, 0.07); border-color: rgba(74, 222, 128, 0.18); }
+.chip-amber { color: #fbbf24; background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.2); }
+.chip-violet { color: #a78bfa; background: rgba(167, 139, 250, 0.08); border-color: rgba(167, 139, 250, 0.2); }
+
+.carousel-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--ink-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+.carousel-arrow mat-icon { font-size: 16px; width: 16px; height: 16px; }
+.carousel-arrow:hover { border-color: rgba(255, 255, 255, 0.2); }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar        { width: 5px; }

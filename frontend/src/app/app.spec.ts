@@ -29,7 +29,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('INK·LINK');
+    expect(compiled.textContent).toContain('INKSPIRE');
     expect(compiled.textContent).toContain('Iniciar sesión');
   });
 });

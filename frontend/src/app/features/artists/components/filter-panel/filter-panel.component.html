@@ -1,115 +1,131 @@
 <div class="filter-panel">
   <header class="filter-panel__header">
-    <p class="filter-panel__eyebrow">Refina tu búsqueda</p>
-    <h2 class="filter-panel__title">Filtros</h2>
-    <p class="filter-panel__subtitle">Los resultados se actualizan automáticamente.</p>
+    <span class="filter-panel__title">Filtros</span>
+    <button type="button" class="filter-panel__clear" (click)="clearFilters()">Limpiar</button>
   </header>
 
   <section class="filter-panel__section">
-    <div class="filter-panel__section-head">
-      <h3>Estilos</h3>
-      <span>Selecciona uno o más</span>
-    </div>
-
-    <div class="filter-panel__styles">
+    <h3 class="filter-panel__label">Estilo</h3>
+    <div class="filter-panel__chips">
       @for (style of tattooStyles; track style.slug) {
-        <mat-checkbox
-          class="filter-panel__checkbox"
-          [checked]="filters().styles?.includes(style.slug) ?? false"
-          (change)="toggleStyle(style.slug, $event)"
-        >
-          {{ style.name }}
-        </mat-checkbox>
-      }
-    </div>
-  </section>
-
-  <section class="filter-panel__section">
-    <div class="filter-panel__section-head">
-      <h3>Precio por sesión</h3>
-      <span>CLP</span>
-    </div>
-
-    <div class="filter-panel__price-grid">
-      <label class="filter-panel__field">
-        <span>Mínimo</span>
-        <input
-          type="number"
-          min="0"
-          [value]="minPriceInput() ?? ''"
-          (input)="onMinPriceInput($any($event.target).value)"
-        />
-      </label>
-
-      <label class="filter-panel__field">
-        <span>Máximo</span>
-        <input
-          type="number"
-          min="0"
-          [value]="maxPriceInput() ?? ''"
-          (input)="onMaxPriceInput($any($event.target).value)"
-        />
-      </label>
-    </div>
-  </section>
-
-  <section class="filter-panel__section">
-    <div class="filter-panel__section-head">
-      <h3>Calificación mínima</h3>
-      <span>{{ filters().minRating ?? 0 }}+</span>
-    </div>
-
-    <div class="filter-panel__rating" role="group" aria-label="Seleccionar calificación mínima">
-      @for (rating of [1, 2, 3, 4, 5]; track rating) {
         <button
           type="button"
-          class="filter-panel__star"
-          [class.filter-panel__star--active]="rating <= (filters().minRating ?? 0)"
-          [attr.aria-pressed]="rating === filters().minRating"
-          (click)="setMinRating(rating)"
+          class="filter-chip"
+          [class.filter-chip--active]="isStyleActive(style.slug)"
+          [attr.aria-pressed]="isStyleActive(style.slug)"
+          (click)="toggleStyle(style.slug)"
         >
-          <mat-icon>star</mat-icon>
+          {{ style.name }}
         </button>
       }
     </div>
   </section>
 
   <section class="filter-panel__section">
-    <div class="filter-panel__toggles">
-      <mat-slide-toggle
-        [checked]="!!filters().certified"
-        (change)="setToggleFilter('certified', $event)"
-      >
-        Solo certificados
-      </mat-slide-toggle>
-
-      <mat-slide-toggle
-        [checked]="!!filters().available"
-        (change)="setToggleFilter('available', $event)"
-      >
-        Con disponibilidad esta semana
-      </mat-slide-toggle>
+    <h3 class="filter-panel__label">Precio máx. por hora</h3>
+    <div class="filter-panel__price-value">{{ formatCLP(maxPriceSlider()) }}</div>
+    <input
+      type="range"
+      class="filter-panel__slider"
+      min="20000"
+      max="110000"
+      step="5000"
+      [value]="maxPriceSlider()"
+      (input)="onMaxPriceSlider($any($event.target).value)"
+    />
+    <div class="filter-panel__slider-labels">
+      <span>$20.000</span>
+      <span>$110.000</span>
     </div>
   </section>
 
   <section class="filter-panel__section">
-    <div class="filter-panel__section-head">
-      <h3>Tipo de artista</h3>
-      <span>Filtra por modalidad</span>
+    <h3 class="filter-panel__label">Calificación mínima</h3>
+    <div class="filter-panel__chips" role="group" aria-label="Calificación mínima">
+      @for (option of ratingOptions; track option.value) {
+        <button
+          type="button"
+          class="filter-chip"
+          [class.filter-chip--active]="(filters().minRating ?? 0) === option.value"
+          [attr.aria-pressed]="(filters().minRating ?? 0) === option.value"
+          (click)="setMinRating(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      }
     </div>
-
-    <mat-radio-group
-      class="filter-panel__radio-group"
-      [value]="filters().type ?? 'all'"
-      (change)="setArtistType($event)"
-    >
-      <mat-radio-button value="all">Todos</mat-radio-button>
-      <mat-radio-button value="studio">Estudio</mat-radio-button>
-      <mat-radio-button value="independent">Independiente</mat-radio-button>
-    </mat-radio-group>
   </section>
 
-  <button type="button" class="filter-panel__clear" (click)="clearFilters()">
-    Limpiar filtros
-  </button>
+  <section class="filter-panel__section">
+    <h3 class="filter-panel__label">Tipo de artista</h3>
+    <div class="filter-panel__chips">
+      @for (option of typeOptions; track option.value) {
+        <button
+          type="button"
+          class="filter-chip"
+          [class.filter-chip--active]="(filters().type ?? 'all') === option.value"
+          [attr.aria-pressed]="(filters().type ?? 'all') === option.value"
+          (click)="setArtistType(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="filter-panel__section">
+    <h3 class="filter-panel__label">Comuna</h3>
+    <select
+      class="filter-panel__select"
+      [value]="filters().commune ?? ''"
+      (change)="setCommune($any($event.target).value)"
+    >
+      <option value="">Toda la RM</option>
+      @for (commune of communeOptions; track commune) {
+        <option [value]="commune">{{ commune }}</option>
+      }
+    </select>
+  </section>
+
+  <section class="filter-panel__section filter-panel__section--toggles">
+    <label class="filter-panel__toggle">
+      <span>Certificación sanitaria</span>
+      <button
+        type="button"
+        class="switch"
+        [class.switch--on]="!!filters().certified"
+        role="switch"
+        [attr.aria-checked]="!!filters().certified"
+        (click)="toggleFilter('certified')"
+      >
+        <span class="switch__thumb"></span>
+      </button>
+    </label>
+    <label class="filter-panel__toggle">
+      <span>Solo premiados</span>
+      <button
+        type="button"
+        class="switch"
+        [class.switch--on]="!!filters().awarded"
+        role="switch"
+        [attr.aria-checked]="!!filters().awarded"
+        (click)="toggleFilter('awarded')"
+      >
+        <span class="switch__thumb"></span>
+      </button>
+    </label>
+    <label class="filter-panel__toggle">
+      <span>Con disponibilidad esta semana</span>
+      <button
+        type="button"
+        class="switch"
+        [class.switch--on]="!!filters().available"
+        role="switch"
+        [attr.aria-checked]="!!filters().available"
+        (click)="toggleFilter('available')"
+      >
+        <span class="switch__thumb"></span>
+      </button>
+    </label>
+  </section>
 </div>

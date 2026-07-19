@@ -97,7 +97,7 @@ import { AuthService } from '../../core/services/auth.service';
 
     .account-name {
       margin: 0 0 4px;
-      font-family: 'Playfair Display', serif;
+      font-family: var(--ink-font-display);
       font-size: 1.4rem;
       font-weight: 700;
       color: var(--ink-text-primary);
@@ -116,6 +116,8 @@ import { AuthService } from '../../core/services/auth.service';
       width: 100%;
       border-radius: 12px !important;
       box-shadow: var(--ink-shadow-lg) !important;
+      background: var(--ink-bg-card) !important;
+      color: var(--ink-text-primary) !important;
     }
 
     .account-fields {
@@ -129,14 +131,14 @@ import { AuthService } from '../../core/services/auth.service';
       justify-content: space-between;
       align-items: center;
       padding: 14px 0;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      border-bottom: 1px solid var(--ink-border);
 
       &:last-child { border-bottom: none; }
 
       dt {
         font-size: 0.78rem;
         font-weight: 500;
-        color: #777;
+        color: var(--ink-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
@@ -145,7 +147,7 @@ import { AuthService } from '../../core/services/auth.service';
         margin: 0;
         font-size: 0.9rem;
         font-weight: 500;
-        color: #1a1a1a;
+        color: var(--ink-text-primary);
         text-align: right;
         max-width: 60%;
         overflow: hidden;
@@ -156,8 +158,8 @@ import { AuthService } from '../../core/services/auth.service';
 
     .account-badge {
       display: inline-block;
-      background: rgba(0, 107, 182, 0.1);
-      color: #006bb6;
+      background: rgba(212, 175, 55, 0.1);
+      color: var(--ink-accent);
       padding: 2px 10px;
       border-radius: 20px;
       font-size: 0.75rem;

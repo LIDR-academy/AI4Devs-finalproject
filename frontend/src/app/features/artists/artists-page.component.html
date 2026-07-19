@@ -1,28 +1,50 @@
 <div class="artists-page">
-  <header class="artists-page__hero">
-    <p class="artists-page__eyebrow">Artistas destacados</p>
-    <h1 class="artists-page__title">Encuentra al artista ideal para tu próximo tattoo</h1>
-    <p class="artists-page__subtitle">
-      Filtra por estilo, presupuesto, calificación y disponibilidad en tiempo real.
-    </p>
-  </header>
+  <!-- Barra superior sticky -->
+  <div class="artists-toolbar">
+    <div class="artists-toolbar__inner">
+      <div class="artists-toolbar__search">
+        <app-search-bar />
+      </div>
 
-  <div class="artists-page__search-section">
-    <app-search-bar />
+      <select class="artists-toolbar__sort" [value]="sortBy()" (change)="onSortChange($any($event.target).value)" aria-label="Ordenar resultados">
+        <option value="relevance">Relevancia</option>
+        <option value="rating">Mejor calificados</option>
+        <option value="priceAsc">Precio: menor</option>
+        <option value="priceDesc">Precio: mayor</option>
+        <option value="reviews">Más reseñas</option>
+      </select>
+
+      <div class="artists-toolbar__view" role="group" aria-label="Modo de vista">
+        <button type="button" [class.active]="viewMode() === 'grid'" (click)="viewMode.set('grid')" aria-label="Vista en grilla">
+          <mat-icon>grid_view</mat-icon>
+        </button>
+        <button type="button" [class.active]="viewMode() === 'list'" (click)="viewMode.set('list')" aria-label="Vista en lista">
+          <mat-icon>view_list</mat-icon>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="artists-toolbar__filters"
+        [class.active]="showFilterPanel()"
+        (click)="showFilterPanel.set(!showFilterPanel())"
+      >
+        <mat-icon>tune</mat-icon> Filtros
+      </button>
+    </div>
   </div>
 
   <div class="artists-page__container">
-    <aside class="artists-page__sidebar">
-      <app-filter-panel />
-    </aside>
+    @if (showFilterPanel()) {
+      <aside class="artists-page__sidebar">
+        <app-filter-panel />
+      </aside>
+    }
 
     <section class="artists-page__content">
-      <div class="artists-page__toolbar">
-        <div>
-          <h2 class="artists-page__heading">Resultados</h2>
-          <p class="artists-page__counter">{{ results()?.total ?? 0 }} artistas encontrados</p>
-        </div>
-      </div>
+      <p class="artists-page__counter">
+        <strong>{{ results()?.total ?? 0 }}</strong> artistas encontrados
+      </p>
 
       @if (loading()) {
         <div class="artists-page__skeleton-grid">
@@ -34,25 +56,29 @@
         <div class="artists-page__error">
           <mat-icon>error</mat-icon>
           <p>{{ error() }}</p>
-          <button type="button" class="artists-page__ghost-button" (click)="retry()">
-            Reintentar
-          </button>
+          <button type="button" class="btn-outline" (click)="retry()">Reintentar</button>
         </div>
       } @else if (artists().length === 0) {
         <div class="artists-page__empty">
           <mat-icon>search_off</mat-icon>
           <h3>No encontramos artistas con esos filtros</h3>
           <p>Prueba limpiando los filtros o ajustando el rango para ampliar los resultados.</p>
-          <button type="button" class="artists-page__primary-button" (click)="clearFilters()">
-            Limpiar filtros
-          </button>
+          <button type="button" class="btn-gold" (click)="clearFilters()">Limpiar filtros</button>
         </div>
       } @else {
-        <div class="artists-page__grid">
-          @for (artist of artists(); track artist.id) {
-            <app-artist-card [artist]="artist" />
-          }
-        </div>
+        @if (viewMode() === 'grid') {
+          <div class="artists-page__grid" [class.artists-page__grid--wide]="!showFilterPanel()">
+            @for (artist of artists(); track artist.id) {
+              <app-artist-card [artist]="artist" />
+            }
+          </div>
+        } @else {
+          <div class="artists-page__list">
+            @for (artist of artists(); track artist.id) {
+              <app-artist-card [artist]="artist" layout="list" />
+            }
+          </div>
+        }
       }
     </section>
   </div>

@@ -1,20 +1,95 @@
-<mat-toolbar class="app-toolbar">
-  <a class="app-brand" routerLink="/">
-    <span class="app-brand__mark">✒</span>
-    <span class="app-brand__name">INK<span class="app-brand__dot">·</span>LINK</span>
-  </a>
-  <a class="nav-link" routerLink="/artistas">Artistas</a>
-  <a class="nav-link" routerLink="/mapa">Mapa</a>
-  <span class="spacer"></span>
-  @if (authService.isAuthenticated()) {
-    <button mat-button class="nav-link" routerLink="/mis-reservas">Mis reservas</button>
-    <button mat-button class="nav-link" routerLink="/mi-cuenta">Mi cuenta</button>
-    <button mat-stroked-button class="nav-btn--logout" (click)="authService.logout()">Salir</button>
-  } @else {
-    <button mat-flat-button class="nav-btn--cta" routerLink="/login">Iniciar sesión</button>
+<nav class="topnav" [class.topnav--scrolled]="scrolled()">
+  <div class="topnav__inner">
+    <a class="app-brand" routerLink="/" (click)="closeMobileMenu()">
+      <span class="app-brand__mark">✦</span>
+      <span class="app-brand__name">INKSPIRE</span>
+    </a>
+
+    <div class="topnav__links">
+      <a class="nav-link" routerLink="/" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{ exact: true }">Vitrina</a>
+      <a class="nav-link" routerLink="/artistas" routerLinkActive="nav-link--active">Artistas</a>
+      <a class="nav-link" routerLink="/mapa" routerLinkActive="nav-link--active">Mapa</a>
+    </div>
+
+    <div class="topnav__actions">
+      @if (authService.isAuthenticated()) {
+        <a class="nav-link" routerLink="/mis-reservas" routerLinkActive="nav-link--active">Mis reservas</a>
+        <a class="nav-link" routerLink="/mi-cuenta" routerLinkActive="nav-link--active">Mi cuenta</a>
+        <button class="nav-btn nav-btn--ghost" (click)="authService.logout()">Salir</button>
+      } @else {
+        <a class="nav-btn nav-btn--cta" routerLink="/login">Iniciar sesión</a>
+      }
+    </div>
+
+    <button class="topnav__burger" (click)="mobileMenuOpen.set(!mobileMenuOpen())" aria-label="Abrir menú">
+      <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
+    </button>
+  </div>
+
+  @if (mobileMenuOpen()) {
+    <div class="topnav__mobile">
+      <a class="nav-link" routerLink="/" (click)="closeMobileMenu()">Vitrina</a>
+      <a class="nav-link" routerLink="/artistas" (click)="closeMobileMenu()">Artistas</a>
+      <a class="nav-link" routerLink="/mapa" (click)="closeMobileMenu()">Mapa</a>
+      @if (authService.isAuthenticated()) {
+        <a class="nav-link" routerLink="/mis-reservas" (click)="closeMobileMenu()">Mis reservas</a>
+        <button class="nav-btn nav-btn--ghost" (click)="authService.logout(); closeMobileMenu()">Salir</button>
+      } @else {
+        <a class="nav-btn nav-btn--cta" routerLink="/login" (click)="closeMobileMenu()">Iniciar sesión</a>
+      }
+    </div>
   }
-</mat-toolbar>
+</nav>
 
 <main class="app-main">
   <router-outlet />
 </main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <div class="app-brand">
+          <span class="app-brand__mark app-brand__mark--sm">✦</span>
+          <span class="app-brand__name">INKSPIRE</span>
+        </div>
+        <p>El marketplace de tatuajes más confiable de Chile. Santiago, 2026.</p>
+      </div>
+      <div class="site-footer__col">
+        <h3>Plataforma</h3>
+        <a routerLink="/artistas">Explorar artistas</a>
+        <a routerLink="/mapa">Mapa interactivo</a>
+        <a routerLink="/artistas">Estilos</a>
+      </div>
+      <div class="site-footer__col">
+        <h3>Artistas</h3>
+        <a routerLink="/login">Registrar mi perfil</a>
+        <a routerLink="/login">Panel de artista</a>
+      </div>
+      <div class="site-footer__col">
+        <h3>Ayuda</h3>
+        <a routerLink="/">¿Cómo funciona?</a>
+        <a routerLink="/">Privacidad</a>
+        <a routerLink="/">Términos</a>
+      </div>
+    </div>
+    <div class="site-footer__legal">
+      <span>© 2026 INKSPIRE SpA · Santiago, Chile · Todos los derechos reservados.</span>
+    </div>
+  </div>
+</footer>
+
+<nav class="bottomnav">
+  <a routerLink="/" routerLinkActive="bottomnav__item--active" [routerLinkActiveOptions]="{ exact: true }" class="bottomnav__item">
+    <mat-icon>home</mat-icon><span>Inicio</span>
+  </a>
+  <a routerLink="/artistas" routerLinkActive="bottomnav__item--active" class="bottomnav__item">
+    <mat-icon>search</mat-icon><span>Buscar</span>
+  </a>
+  <a routerLink="/mapa" routerLinkActive="bottomnav__item--active" class="bottomnav__item">
+    <mat-icon>map</mat-icon><span>Mapa</span>
+  </a>
+  <a [routerLink]="authService.isAuthenticated() ? '/mi-cuenta' : '/login'" routerLinkActive="bottomnav__item--active" class="bottomnav__item">
+    <mat-icon>person</mat-icon><span>Mi cuenta</span>
+  </a>
+</nav>

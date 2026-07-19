@@ -145,7 +145,9 @@ public class ShowcaseTests : IAsyncLifetime
         await using var context = CreateContext();
         var response = await CreateService(context).GetShowcaseAsync(null, null, 1);
 
-        Assert.All(response.Sections, s => Assert.True(s.Items.Count <= 1));
+        // popular_styles has its own fixed limit (one per style) — exclude from this check
+        Assert.All(response.Sections.Where(s => s.Key != "popular_styles"),
+            s => Assert.True(s.Items.Count <= 1));
     }
 
     [Fact]

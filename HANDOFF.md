@@ -45,10 +45,21 @@ Retoma el trabajo desde el punto indicado en "Estado detallado" de HANDOFF.md.
 
 ## Estado detallado (actualizar SIEMPRE antes de cerrar sesión)
 
-**Última actualización**: 2026-07-16
+**Última actualización**: 2026-07-18 (sesión Copilot CLI)
 
 ### Dónde quedamos
 
+- 🎨 **Rediseño Figma en curso** (rama `feature/rediseno-figma`, sin mergear): rebrand a **INKSPIRE** + port del prototipo Figma Make (`fixs/figma-design/`, plan en `docs/plan-rediseno-figma.md`).
+  - ✅ Fase 0: tokens (#0D0D0D/#D4AF37), tema Material M3 oscuro, tipografía Inter/Geist, rebrand textos visibles (claves localStorage `inklink_*` intactas a propósito).
+  - ✅ Home con estructura del prototipo (hero + buscador funcional, carrusel top_rated, estilos con flechas de navegación, banners, grids near_you/premiados, footer y nav global con blur + nav móvil inferior).
+  - ✅ Perfil de artista con estructura del prototipo (hero backdrop, tabs Portafolio/Reseñas/Info, booking card sticky, booking bar móvil). Flujos de cotización/reserva intactos.
+  - ✅ Listado de artistas (`/artistas`) con filtros al estilo Figma: slider de precio, filtro de comuna (select), toggle "Solo premiados", toggle "Certificación sanitaria", tipo de artista, rating mínimo. Vistas grid/lista.
+  - ✅ FavoritesService (localStorage) + botón ❤️ en tarjeta de artista.
+  - ✅ Filtro de comuna en Home conectado al listado vía queryParam.
+  - ✅ Seed ampliado: 14 artistas con reviews (4 dimensiones), certificaciones, premios y auspicios variados. Imágenes Unsplash reales (12 gallery rotadas, referencia: `fixs/figma-images.yml`).
+  - ✅ **12 issues resueltos (008–019)**: imágenes, scroll, carrusel, pagos, mapa PostGIS, cuenta visible, reseñas, chatbot general sin artista, reserva con JWT expirado, mensajes de error específicos.
+  - Pendiente (fases 5–8 del plan): restyle fino del chatbot, auth/cuenta/reservas, mapa, verificación e2e completa y PR.
+  - 126/126 tests frontend en verde; `ng build` producción OK. 109/109 tests backend en verde. Budget `anyComponentStyle` subido a 10kB/20kB.
 - ✅ **BACKLOG COMPLETO** — Fase 0 + las **13 US (80 SP)** mergeadas a `main` (PRs #1–#18). Última: US0011 (chatbot cotizador + depósito según cotización, `fixs/issue-007.md`).
 - ✅ **Integración Flow real validada e2e contra sandbox.flow.cl** (2026-07-16, PR #19): orden firmada HMAC → checkout Webpay real con tarjeta de prueba → confirm firmado → pago `completed` y reserva `confirmed`. Guía completa (levantar proyecto, credenciales por entorno, tarjetas, confirm manual): **`docs/flow-sandbox-testing.md`**.
   - Credenciales: user-secrets o `appsettings.Development.json` (gitignored) en local; `.env` en Docker; `Flow__*` env vars en producción. Nunca en el repo.
@@ -62,7 +73,9 @@ Retoma el trabajo desde el punto indicado en "Estado detallado" de HANDOFF.md.
 
 - Cuenta **Flow** creada (2026-07-14) y **credenciales sandbox configuradas y validadas** (2026-07-16) — viven en el `appsettings.Development.json` local del desarrollador (gitignored), no en el repo.
 - **BD dev local**: la clienta seed Camila quedó con email real `rodrigo@syntaxis.cl` (login con ese email / `Test1234!`) porque el sandbox de Flow valida el email del pagador (error 1620 con `@example.cl`). Revertible con UPDATE; necesario para probar pagos reales.
-- Seed actual (`backend/Seed/DatabaseSeeder.cs`): 5 artistas publicados en Santiago con coordenadas reales, 12 obras de portafolio c/u, 3 certificados, 2 premiados, 2 auspiciados (3 sponsorships cubriendo los 3 tipos de relación). `RatingAvg`/`TotalReviews` quedan en 0 (no hay reviews seed) — la vitrina "Mejor calificados" ordenará por rating aunque todos empaten; considerar seed de reviews si un CA lo exige.
+- Seed actual (`backend/Seed/DatabaseSeeder.cs`): 14 artistas publicados en Santiago con coordenadas reales, 12 obras de portafolio c/u (imágenes Unsplash rotadas — catálogo en `backend/Seed/TattooImageCatalog.cs`, referencia en `fixs/figma-images.yml`), certificaciones, premios y auspicios variados. `RatingAvg`/`TotalReviews` calculados con reviews seed. Incluye reservas completadas sin reseña (para probar el flujo de calificación).
+- **PostGIS**: se crea automáticamente con `CREATE EXTENSION IF NOT EXISTS postgis` en `Program.cs` antes de migrar. No requiere migración EF adicional.
+- **JWT expirado tras reseed**: al droppear/reseedar la BD, los JWTs existentes contienen user IDs obsoletos → FK violation. `AvailabilityService` ahora valida que el client exista antes de crear el hold. El usuario debe re-loguearse.
 - El equipo usa la skill `prompt-registry` (`ai-specs/skills/prompt-registry/SKILL.md`) para registrar prompts en `prompts/00-all-prompts.md` al cerrar cada US.
 
 ### Comandos útiles

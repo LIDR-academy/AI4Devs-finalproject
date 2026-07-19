@@ -32,7 +32,7 @@ export class MyBookingsComponent implements OnInit {
   private readonly PAGE_SIZE = 10;
 
   ngOnInit(): void {
-    this.titleService.setTitle('Mis Reservas — INK·LINK');
+    this.titleService.setTitle('Mis Reservas — INKSPIRE');
     // US0013: pick up toast message from ReviewFormComponent redirect
     const nav = this.router.getCurrentNavigation();
     const toastMsg = nav?.extras?.state?.['toast'] as string | undefined;

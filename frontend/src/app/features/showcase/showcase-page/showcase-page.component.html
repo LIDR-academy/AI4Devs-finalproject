@@ -1,40 +1,329 @@
 <div class="showcase-page">
-  <section class="showcase-hero">
-    <div class="showcase-hero__bg" aria-hidden="true"></div>
-    <div class="showcase-hero__content">
-      <p class="showcase-hero__eyebrow">La vitrina digital del tatuaje</p>
-      <h1 class="showcase-hero__title">Encuentra tu artista<br><em>perfecto</em></h1>
-      <p class="showcase-hero__sub">Descubre tatuadores certificados, estilos únicos y artistas cerca de ti.</p>
+  <!-- Hero -->
+  <section class="home-hero">
+    <div class="home-hero__bg" aria-hidden="true"></div>
+    <div class="home-hero__content">
+      <div class="home-hero__pill">
+        <span class="home-hero__pill-dot"></span>
+        La plataforma de tatuajes más confiable de Chile
+      </div>
+
+      <h1 class="home-hero__title">
+        Encuentra al tatuador<br /><em>perfecto para ti.</em>
+      </h1>
+
+      <p class="home-hero__sub">
+        Portafolios verificados, precios transparentes y reserva directa. Sin esperar DMs, sin sorpresas.
+      </p>
+
+      <div class="home-hero__search">
+        <label class="home-hero__field">
+          <mat-icon>search</mat-icon>
+          <input
+            type="text"
+            placeholder="Artista, estilo o nombre..."
+            [(ngModel)]="searchText"
+            (keyup.enter)="goSearch()"
+          />
+        </label>
+        <label class="home-hero__field home-hero__field--select">
+          <mat-icon>auto_awesome</mat-icon>
+          <select [(ngModel)]="styleFilter">
+            <option value="">Cualquier estilo</option>
+            @for (style of styleOptions; track style) {
+              <option [value]="style">{{ style }}</option>
+            }
+          </select>
+        </label>
+        <label class="home-hero__field home-hero__field--select home-hero__field--commune">
+          <mat-icon>place</mat-icon>
+          <select [(ngModel)]="communeFilter">
+            <option value="">Toda la RM</option>
+            @for (commune of communeOptions; track commune) {
+              <option [value]="commune">{{ commune }}</option>
+            }
+          </select>
+        </label>
+        <button class="home-hero__search-btn" (click)="goSearch()">
+          <mat-icon>search</mat-icon> Buscar
+        </button>
+      </div>
+
+      <div class="home-hero__tags">
+        <button class="home-hero__tag home-hero__tag--location" (click)="goNearMe()">
+          <mat-icon>my_location</mat-icon> Cerca de mí
+        </button>
+        @for (tag of quickTags; track tag) {
+          <button class="home-hero__tag" (click)="goStyle(tag)">{{ tag }}</button>
+        }
+      </div>
+
+      <button class="home-hero__bot-cta" (click)="goTopArtistChatbot()">
+        <mat-icon>smart_toy</mat-icon>
+        Cotiza en segundos con nuestro asistente IA
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+
+    <div class="home-hero__stats">
+      @for (stat of heroStats; track stat.label) {
+        <div class="home-hero__stat">
+          <div class="home-hero__stat-value">{{ stat.value }}</div>
+          <div class="home-hero__stat-label">{{ stat.label }}</div>
+        </div>
+      }
     </div>
   </section>
 
-  <div class="showcase-page__cta-bar">
-    <a class="showcase-page__cta-link" routerLink="/artistas">Explorar y filtrar artistas →</a>
-  </div>
+  <!-- Trust -->
+  <section class="home-trust">
+    @for (item of trustItems; track item.title) {
+      <div class="home-trust__item">
+        <div class="icon-tile"><mat-icon>{{ item.icon }}</mat-icon></div>
+        <div>
+          <div class="home-trust__title">{{ item.title }}</div>
+          <div class="home-trust__detail">{{ item.detail }}</div>
+        </div>
+      </div>
+    }
+  </section>
 
-  <div class="showcase-page__sections">
-    @if (loading()) {
-      <div class="showcase-page__skeleton">
-        @for (section of [1, 2, 3, 4]; track section) {
-          <div class="skeleton-section">
-            <div class="skeleton-title"></div>
-            <div class="skeleton-grid">
-              @for (card of [1, 2, 3, 4]; track card) {
-                <div class="skeleton-card"></div>
+  @if (loading()) {
+    <div class="showcase-page__skeleton">
+      @for (section of [1, 2]; track section) {
+        <div class="skeleton-section">
+          <div class="skeleton-title"></div>
+          <div class="skeleton-grid">
+            @for (card of [1, 2, 3, 4]; track card) {
+              <div class="skeleton-card"></div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="showcase-page__error">
+      <p>{{ error() }}</p>
+      <button class="error-retry" (click)="fetchSections()">Reintentar</button>
+    </div>
+  } @else {
+    <!-- Carrusel: mejor calificados -->
+    @if (topRated(); as section) {
+      @if (section.items.length > 0) {
+        <section class="home-section">
+          <header class="home-section__header">
+            <div>
+              <div class="gold-label">Artistas destacados</div>
+              <h2 class="home-section__title">{{ section.title }}</h2>
+              <p class="home-section__sub">Seleccionados por portafolio, calificación y disponibilidad</p>
+            </div>
+            <div class="home-section__controls">
+              <button class="carousel-arrow" (click)="scrollCarousel(-1)" aria-label="Anterior"><mat-icon>chevron_left</mat-icon></button>
+              <button class="carousel-arrow" (click)="scrollCarousel(1)" aria-label="Siguiente"><mat-icon>chevron_right</mat-icon></button>
+              <button class="home-section__more" (click)="goArtists()">Ver todos <mat-icon>chevron_right</mat-icon></button>
+            </div>
+          </header>
+          <div class="home-carousel" #carousel>
+            @for (item of section.items; track item.artist.id) {
+              <div class="home-carousel__card"><app-artist-card [item]="item" /></div>
+            }
+            <button class="home-carousel__cta" (click)="goArtists()">
+              <span class="home-carousel__cta-circle"><mat-icon>chevron_right</mat-icon></span>
+              <span class="home-carousel__cta-title">Ver todos los artistas</span>
+              <span class="home-carousel__cta-sub">Explora todo el catálogo</span>
+            </button>
+          </div>
+        </section>
+      }
+    }
+
+    <!-- Estilos populares -->
+    @if (popularStyles().length > 0) {
+      <section class="home-section home-section--bordered">
+        <div class="home-section__centered">
+          <div class="gold-label">Explora</div>
+          <h2 class="home-section__title">Estilos populares</h2>
+          <p class="home-section__sub">Encuentra artistas especializados en el estilo que siempre quisiste</p>
+        </div>
+        <div class="home-styles-wrapper">
+          <button class="home-styles__arrow home-styles__arrow--left" (click)="scrollStyles('left')" aria-label="Anterior">
+            <span>‹</span>
+          </button>
+          <div class="home-styles" #stylesCarousel>
+            @for (item of popularStyles(); track item.style) {
+              <button class="home-styles__item" (click)="goStyle(item.style)">
+                <span class="home-styles__circle">
+                  <img [src]="item.thumbnailUrl ?? item.imageUrl" [alt]="item.style" loading="lazy" />
+                </span>
+                <span class="home-styles__name">{{ item.style }}</span>
+              </button>
+            }
+          </div>
+          <button class="home-styles__arrow home-styles__arrow--right" (click)="scrollStyles('right')" aria-label="Siguiente">
+            <span>›</span>
+          </button>
+        </div>
+      </section>
+    }
+
+    <!-- Banner: tu próxima historia -->
+    <section class="home-banner">
+      <div class="home-banner__panel">
+        <div class="home-banner__text">
+          <div class="gold-label">Miles de clientes satisfechos</div>
+          <h2>Tu próxima historia<br /><em>comienza aquí.</em></h2>
+          <p>Miles de personas ya encontraron al artista perfecto en INKSPIRE. ¿Qué esperas para encontrar el tuyo?</p>
+          <div class="home-banner__actions">
+            <button class="btn-gold" (click)="goArtists()">Explorar artistas <mat-icon>arrow_forward</mat-icon></button>
+            <button class="btn-outline" (click)="goArtists()"><mat-icon>smart_toy</mat-icon> Cotizar gratis</button>
+          </div>
+        </div>
+        <div class="home-banner__image" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- Cerca de ti -->
+    @if (nearYou(); as section) {
+      @if (section.items.length > 0) {
+        <section class="home-section home-section--bordered">
+          <header class="home-section__header">
+            <div>
+              <div class="gold-label">Tu zona</div>
+              <h2 class="home-section__title">{{ section.title }}</h2>
+              <p class="home-section__sub">Artistas verificados cerca de tu ubicación</p>
+            </div>
+            <button class="home-section__more" (click)="goArtists()">Ver todos <mat-icon>chevron_right</mat-icon></button>
+          </header>
+          <div class="home-grid">
+            @for (item of section.items.slice(0, 4); track item.artist.id) {
+              <app-artist-card [item]="item" />
+            }
+          </div>
+        </section>
+      }
+    }
+
+    <!-- Cómo funciona -->
+    <section class="home-section home-section--bordered">
+      <div class="home-section__centered">
+        <div class="gold-label">Simple y seguro</div>
+        <h2 class="home-section__title">Así funciona INKSPIRE</h2>
+      </div>
+      <div class="home-steps">
+        @for (step of howItWorks; track step.number) {
+          <div class="home-steps__card">
+            <div class="home-steps__number">{{ step.number }}</div>
+            <div class="icon-tile"><mat-icon>{{ step.icon }}</mat-icon></div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.detail }}</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Premiados -->
+    @if (awarded(); as section) {
+      @if (section.items.length > 0) {
+        <section class="home-section home-section--bordered">
+          <header class="home-section__header">
+            <div>
+              <div class="gold-label">Reconocimiento</div>
+              <h2 class="home-section__title">{{ section.title }}</h2>
+              <p class="home-section__sub">Artistas premiados en convenciones nacionales e internacionales</p>
+            </div>
+            <button class="home-section__more" (click)="goArtists()">Ver todos <mat-icon>chevron_right</mat-icon></button>
+          </header>
+          <div class="home-grid">
+            @for (item of section.items.slice(0, 4); track item.artist.id) {
+              <app-artist-card [item]="item" />
+            }
+          </div>
+        </section>
+      }
+    }
+
+    <!-- Comunidad -->
+    <section class="home-section home-section--bordered">
+      <div class="home-section__centered">
+        <div class="gold-label">Comunidad</div>
+        <h2 class="home-section__title">Lo que dice nuestra comunidad</h2>
+        <p class="home-section__sub">Reseñas verificadas post-sesión en 4 dimensiones</p>
+      </div>
+      <div class="home-reviews">
+        @for (review of communityReviews; track review.name) {
+          <div class="home-reviews__card">
+            <span class="home-reviews__stars" aria-hidden="true">
+              @for (star of [1, 2, 3, 4, 5]; track star) {
+                <mat-icon>star</mat-icon>
               }
+            </span>
+            <p class="home-reviews__comment">&ldquo;{{ review.comment }}&rdquo;</p>
+            <div class="home-reviews__chips">
+              <span class="chip-gold">{{ review.style }}</span>
+              @if (review.verified) {
+                <span class="chip-green"><mat-icon>check_circle</mat-icon> Reseña completa</span>
+              }
+            </div>
+            <div class="home-reviews__author">
+              <span class="home-reviews__avatar"><mat-icon>person</mat-icon></span>
+              <div>
+                <div class="home-reviews__name">{{ review.name }}</div>
+                <div class="home-reviews__meta">{{ review.commune }} · {{ review.date }}</div>
+              </div>
+              <mat-icon class="home-reviews__check">verified</mat-icon>
             </div>
           </div>
         }
       </div>
-    } @else if (error()) {
-      <div class="showcase-page__error">
-        <p>{{ error() }}</p>
-        <button class="error-retry" (click)="fetchSections()">Reintentar</button>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="home-newsletter">
+      <div class="home-newsletter__panel">
+        <div class="home-newsletter__text">
+          <div class="gold-label">Inspírate cada semana</div>
+          <h2>Lo mejor del tatuaje <em>en tu correo.</em></h2>
+          <p>Recibe diseños exclusivos, guías de cuidado, artistas destacados de la semana y ofertas especiales.</p>
+        </div>
+        <div class="home-newsletter__form">
+          @if (!newsletterDone()) {
+            <div class="home-newsletter__row">
+              <input type="email" placeholder="tu@correo.cl" [(ngModel)]="newsletterEmail" (keyup.enter)="subscribeNewsletter()" />
+              <button class="btn-gold" (click)="subscribeNewsletter()">Suscribirme</button>
+            </div>
+          } @else {
+            <div class="home-newsletter__ok">
+              <mat-icon>check_circle</mat-icon>
+              <div>
+                <div class="home-newsletter__ok-title">¡Listo! Ya estás suscrito.</div>
+                <div class="home-newsletter__ok-sub">Recibirás contenido exclusivo cada semana.</div>
+              </div>
+            </div>
+          }
+          <p class="home-newsletter__note">Sin spam. Te puedes desuscribir en cualquier momento.</p>
+        </div>
       </div>
-    } @else {
-      @for (section of sections(); track section.key) {
-        <app-showcase-section [section]="section" />
-      }
-    }
-  </div>
+    </section>
+
+    <!-- CTA final -->
+    <section class="home-cta">
+      <div class="home-cta__panel">
+        <div class="gold-label">Empieza hoy</div>
+        <h2>Tu próximo tatuaje<br /><em>empieza aquí.</em></h2>
+        <p>Únete a los clientes que encontraron a su artista ideal en INKSPIRE. Sin DMs, sin sorpresas.</p>
+        <div class="home-cta__actions">
+          <button class="btn-gold" (click)="goArtists()">Encontrar artistas <mat-icon>arrow_forward</mat-icon></button>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Chatbot modal (general quote, no artist required) -->
+  @if (showChatbot()) {
+    <div class="chatbot-overlay" (click)="closeChatbot()">
+      <div class="chatbot-overlay__panel" (click)="$event.stopPropagation()">
+        <app-quote-chatbot [artist]="null" (closed)="closeChatbot()" (reserveRequested)="closeChatbot()" />
+      </div>
+    </div>
+  }
 </div>

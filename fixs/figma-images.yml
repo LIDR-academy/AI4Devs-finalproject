@@ -1,0 +1,169 @@
+# Figma Design Image Reference
+# Source: fixs/figma-design/src/app/App.tsx
+# All images are from Unsplash with open licenses
+# Format: https://images.unsplash.com/{photo-id}?w={w}&h={h}&fit=crop&auto=format
+#
+# This file is the single source of truth for all design images.
+# Use it when seeding the database or updating frontend mocks.
+
+# ─────────────────────────────────────────────────────────────────────
+# STYLE IMAGES — one representative image per tattoo style
+# Used in: Home "Estilos populares" section, style filter thumbnails
+# ─────────────────────────────────────────────────────────────────────
+styles:
+  realismo: photo-1519822356-4853be4346a8
+  tradicional: photo-1568515045052-f9a854d70bfd
+  blackwork: photo-1597852075234-fd721ac361d3
+  fine-line: photo-1479767574301-a01c78234a0c
+  japones: photo-1565058379802-bbe93b2f703a
+  lettering: photo-1588417490421-63d4e4175f95
+  neotradicional: photo-1643513456892-437e82e06f4a
+  acuarela: photo-1724343163782-52276ca2e6c2
+  geometrico: photo-1561377455-190afb395ed7
+  minimalista: photo-1759247943101-f1b32bcc6a8b
+  dotwork: photo-1712432321375-226f466fff85
+  tribal: photo-1607943917700-18ec6ff5a4c2
+
+# ─────────────────────────────────────────────────────────────────────
+# GALLERY BASE — 12 curated tattoo images used for artist portfolios
+# Artists rotate/shift this list to create varied galleries
+# ─────────────────────────────────────────────────────────────────────
+gallery_base:
+  - photo-1568515045052-f9a854d70bfd   # 0  - tradicional
+  - photo-1597852075234-fd721ac361d3   # 1  - blackwork
+  - photo-1565058379802-bbe93b2f703a   # 2  - japonés
+  - photo-1643513456892-437e82e06f4a   # 3  - neotradicional
+  - photo-1479767574301-a01c78234a0c   # 4  - fine-line
+  - photo-1519822356-4853be4346a8     # 5  - realismo
+  - photo-1724343163782-52276ca2e6c2   # 6  - acuarela
+  - photo-1759247943101-f1b32bcc6a8b   # 7  - minimalista
+  - photo-1561377455-190afb395ed7     # 8  - geométrico
+  - photo-1588417490421-63d4e4175f95   # 9  - lettering
+  - photo-1712432321375-226f466fff85   # 10 - dotwork
+  - photo-1775135332562-9ff99e65a616   # 11 - extra tattoo
+
+# ─────────────────────────────────────────────────────────────────────
+# ARTISTS — 6 Figma artists with their images and gallery rotation
+# ─────────────────────────────────────────────────────────────────────
+artists:
+  valentina-cortes:
+    nombre: Valentina Cortés
+    handle: "@vale.ink"
+    comuna: Providencia
+    estilos: [Realismo, Fine-line, Minimalista]
+    featured_image: photo-1568515045052-f9a854d70bfd    # w=600&h=720
+    avatar: photo-1577357922830-eae2e1c7b4de             # w=80&h=80
+    gallery_rotation: 0   # GALERIA_BASE as-is
+
+  matias-herrera:
+    nombre: Matías Herrera
+    handle: "@mati.blackwork"
+    comuna: Ñuñoa
+    estilos: [Blackwork, Geométrico, Dotwork]
+    featured_image: photo-1597852075234-fd721ac361d3
+    avatar: photo-1671695157166-c4bbd8e6e94e
+    gallery_rotation: reverse  # GALERIA_BASE reversed
+
+  camila-vega:
+    nombre: Camila Vega
+    handle: "@cami.irezumi"
+    comuna: Barrio Italia
+    estilos: [Japonés, Neotradicional, Acuarela]
+    featured_image: photo-1565058379802-bbe93b2f703a
+    avatar: photo-1687825495498-1bb4c92dbb19
+    gallery_rotation: 2   # slice(2).concat(slice(0,2))
+
+  rodrigo-soto:
+    nombre: Rodrigo Soto
+    handle: "@rodo.letters"
+    comuna: Bellavista
+    estilos: [Lettering, Minimalista, Fine-line]
+    featured_image: photo-1643513456892-437e82e06f4a
+    avatar: photo-1724343163782-52276ca2e6c2
+    gallery_rotation: 3
+
+  diego-fuentes:
+    nombre: Diego Fuentes
+    handle: "@diego.tribal"
+    comuna: Las Condes
+    estilos: [Tribal, Dotwork, Blackwork]
+    featured_image: photo-1547754145-ef9ff306e3f3
+    avatar: photo-1759247943101-f1b32bcc6a8b
+    gallery_rotation: 1
+
+  isadora-paz:
+    nombre: Isadora Paz
+    handle: "@isa.acuarela"
+    comuna: Vitacura
+    estilos: [Acuarela, Neotradicional, Fine-line]
+    featured_image: photo-1779122590768-cd9bd39b07b4
+    avatar: photo-1781258606224-c010bc4a642a
+    gallery_rotation: 4
+
+# ─────────────────────────────────────────────────────────────────────
+# REVIEWER AVATARS
+# ─────────────────────────────────────────────────────────────────────
+reviewers:
+  sofia-alarcon:
+    avatar: photo-1577357922830-eae2e1c7b4de
+  tomas-munoz:
+    avatar: photo-1671695157166-c4bbd8e6e94e
+  javiera-rojas:
+    avatar: photo-1687825495498-1bb4c92dbb19
+  camilo-reyes:
+    avatar: photo-1724343163782-52276ca2e6c2
+
+# ─────────────────────────────────────────────────────────────────────
+# STUDIO IMAGES — featured images for studio cards on Home
+# ─────────────────────────────────────────────────────────────────────
+studios:
+  dark-matter-studio:
+    image: photo-1775135981378-4e7c1767436d    # w=640&h=420
+  barrio-ink:
+    image: photo-1760877611905-0f885a3ce551
+  neon-temple:
+    image: photo-1763888647744-c566e723c396
+  obsidian-arts:
+    image: photo-1775567950587-f8440ec16499
+
+# ─────────────────────────────────────────────────────────────────────
+# HERO / PROMOTIONAL IMAGES
+# ─────────────────────────────────────────────────────────────────────
+hero:
+  background: photo-1783973190331-53d4db4f697f   # w=1800&h=1100
+  featured_section: photo-1775135981378-4e7c1767436d  # w=800&h=700
+  bottom_cta: photo-1783973190331-53d4db4f697f         # w=1400&h=500
+
+# ─────────────────────────────────────────────────────────────────────
+# ALL UNIQUE UNSPLASH PHOTO IDS (for quick reference / dedup)
+# 20 unique tattoo/portfolio images + 4 avatar images + 4 studio + 1 hero
+# ─────────────────────────────────────────────────────────────────────
+all_unique_photo_ids:
+  # Tattoo portfolio/style images (12 gallery + 1 extra artist featured + 1 hero)
+  - photo-1568515045052-f9a854d70bfd
+  - photo-1597852075234-fd721ac361d3
+  - photo-1565058379802-bbe93b2f703a
+  - photo-1643513456892-437e82e06f4a
+  - photo-1479767574301-a01c78234a0c
+  - photo-1519822356-4853be4346a8
+  - photo-1724343163782-52276ca2e6c2
+  - photo-1759247943101-f1b32bcc6a8b
+  - photo-1561377455-190afb395ed7
+  - photo-1588417490421-63d4e4175f95
+  - photo-1712432321375-226f466fff85
+  - photo-1775135332562-9ff99e65a616
+  - photo-1607943917700-18ec6ff5a4c2
+  - photo-1547754145-ef9ff306e3f3
+  - photo-1779122590768-cd9bd39b07b4
+  # Avatar images
+  - photo-1577357922830-eae2e1c7b4de
+  - photo-1671695157166-c4bbd8e6e94e
+  - photo-1687825495498-1bb4c92dbb19
+  - photo-1781258606224-c010bc4a642a
+  # Studio images
+  - photo-1775135981378-4e7c1767436d
+  - photo-1760877611905-0f885a3ce551
+  - photo-1763888647744-c566e723c396
+  - photo-1775567950587-f8440ec16499
+  # Hero
+  - photo-1783973190331-53d4db4f697f

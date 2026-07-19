@@ -7,7 +7,9 @@ export interface ArtistFilters {
   minRating?: number;
   certified?: boolean;
   available?: boolean;
+  awarded?: boolean;
   type?: 'independent' | 'studio' | null;
+  commune?: string;
   search?: string;
   page: number;
   pageSize: number;
@@ -50,4 +52,9 @@ export const TATTOO_STYLES = [
   { slug: 'minimalista', name: 'Minimalista' },
   { slug: 'dotwork', name: 'Dotwork' },
   { slug: 'tribal', name: 'Tribal' }
+] as const;
+
+export const COMMUNE_OPTIONS = [
+  'Providencia', 'Ñuñoa', 'Barrio Italia', 'Bellavista', 'Las Condes',
+  'Vitacura', 'Santiago Centro', 'La Reina', 'Macul'
 ] as const;

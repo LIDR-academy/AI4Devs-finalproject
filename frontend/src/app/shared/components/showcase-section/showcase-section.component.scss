@@ -18,7 +18,7 @@
 
   &__title {
     margin: 0;
-    font-family: 'Playfair Display', serif;
+    font-family: var(--ink-font-display);
     font-size: 1.35rem;
     font-weight: 700;
     color: var(--ink-text-primary);

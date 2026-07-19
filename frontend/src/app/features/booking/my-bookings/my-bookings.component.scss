@@ -4,7 +4,7 @@
   padding: 2.5rem 1.5rem 3rem;
 
   &__title {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--ink-font-display);
     color: var(--ink-text-primary);
     font-size: 1.6rem;
     margin: 0 0 1.5rem;

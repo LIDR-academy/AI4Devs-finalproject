@@ -33,21 +33,17 @@ describe('FilterPanelComponent', () => {
     fixture.detectChanges();
   });
 
-  it('debounces price range updates by 300ms', fakeAsync(() => {
-    const inputs = fixture.nativeElement.querySelectorAll('input[type="number"]') as NodeListOf<HTMLInputElement>;
+  it('debounces price slider updates by 300ms', fakeAsync(() => {
+    const slider = fixture.nativeElement.querySelector('input[type="range"]') as HTMLInputElement;
 
-    inputs[0].value = '50000';
-    inputs[0].dispatchEvent(new Event('input'));
-    tick(200);
-
-    inputs[1].value = '120000';
-    inputs[1].dispatchEvent(new Event('input'));
+    slider.value = '80000';
+    slider.dispatchEvent(new Event('input'));
     tick(299);
 
     expect(mockService.updatePriceRange).not.toHaveBeenCalled();
 
     tick(1);
 
-    expect(mockService.updatePriceRange).toHaveBeenCalledOnceWith(50000, 120000);
+    expect(mockService.updatePriceRange).toHaveBeenCalledOnceWith(0, 80000);
   }));
 });

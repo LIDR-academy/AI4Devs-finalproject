@@ -80,6 +80,14 @@ export class ArtistFilterService {
       parsedFilters.available = true;
     }
 
+    if (queryParams['awarded'] === 'true') {
+      parsedFilters.awarded = true;
+    }
+
+    if (typeof queryParams['commune'] === 'string' && queryParams['commune'].trim().length > 0) {
+      parsedFilters.commune = queryParams['commune'].trim();
+    }
+
     if (queryParams['type'] === 'independent' || queryParams['type'] === 'studio') {
       parsedFilters.type = queryParams['type'];
     }
@@ -147,6 +155,9 @@ export class ArtistFilterService {
 
     if (filters.search && filters.search.length >= 2) {
       params = params.set('search', filters.search);
+    } else if (filters.commune) {
+      // Backend's search does ILIKE on commune, name, bio — use commune as search text
+      params = params.set('search', filters.commune);
     }
 
     if (filters.page !== DEFAULT_FILTERS.page) {

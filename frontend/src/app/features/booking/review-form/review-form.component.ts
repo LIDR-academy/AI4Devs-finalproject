@@ -55,7 +55,7 @@ export class ReviewFormComponent implements OnInit {
   readonly commentLength = computed(() => this.comment().length);
 
   ngOnInit(): void {
-    this.titleService.setTitle('Calificar artista — INK·LINK');
+    this.titleService.setTitle('Calificar artista — INKSPIRE');
     this.bookingId.set(this.route.snapshot.paramMap.get('bookingId') ?? '');
   }
 

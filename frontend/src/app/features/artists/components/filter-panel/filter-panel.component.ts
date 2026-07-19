@@ -1,24 +1,13 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
-import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
-import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Subject, debounceTime } from 'rxjs';
-import { ArtistFilters, TATTOO_STYLES } from '../../../../core/models/artist-filter.models';
+import { ArtistFilters, COMMUNE_OPTIONS, TATTOO_STYLES } from '../../../../core/models/artist-filter.models';
 import { ArtistFilterService } from '../../services/artist-filter.service';
 
 @Component({
   selector: 'app-filter-panel',
   standalone: true,
-  imports: [
-    MatButtonModule,
-    MatCheckboxModule,
-    MatIconModule,
-    MatRadioModule,
-    MatSlideToggleModule
-  ],
+  imports: [],
   templateUrl: './filter-panel.component.html',
   styleUrl: './filter-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -26,76 +15,78 @@ import { ArtistFilterService } from '../../services/artist-filter.service';
 export class FilterPanelComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly filterService = inject(ArtistFilterService);
-  private readonly priceChange$ = new Subject<{ min: number; max: number }>();
+  private readonly priceChange$ = new Subject<number>();
 
   readonly filters = this.filterService.currentFilters;
   readonly tattooStyles = TATTOO_STYLES;
-  readonly minPriceInput = signal<number | null>(null);
-  readonly maxPriceInput = signal<number | null>(null);
+  readonly communeOptions = COMMUNE_OPTIONS;
+  readonly ratingOptions = [
+    { value: 0, label: 'Todos' },
+    { value: 3, label: '3+★' },
+    { value: 4, label: '4+★' },
+    { value: 4.5, label: '4.5+★' },
+    { value: 5, label: '5★' }
+  ];
+  readonly typeOptions: { value: 'all' | 'independent' | 'studio'; label: string }[] = [
+    { value: 'all', label: 'Todos' },
+    { value: 'independent', label: 'Independiente' },
+    { value: 'studio', label: 'Estudio' }
+  ];
+  readonly maxPriceSlider = signal(110000);
 
   constructor() {
     effect(
       () => {
         const filters = this.filters();
-        this.minPriceInput.set(filters.minPrice ?? null);
-        this.maxPriceInput.set(filters.maxPrice ?? null);
+        this.maxPriceSlider.set(filters.maxPrice ?? 110000);
       }
     );
 
     this.priceChange$
       .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ min, max }) => this.filterService.updatePriceRange(min, max));
+      .subscribe((max) => this.filterService.updatePriceRange(0, max < 110000 ? max : 0));
   }
 
-  toggleStyle(slug: string, event: MatCheckboxChange): void {
+  toggleStyle(slug: string): void {
     const current = this.filters().styles ?? [];
-    const next = event.checked
-      ? [...current, slug]
-      : current.filter((s) => s !== slug);
+    const next = current.includes(slug)
+      ? current.filter((s) => s !== slug)
+      : [...current, slug];
     this.filterService.updateFilter('styles', next.length > 0 ? next : undefined);
   }
 
-  onMinPriceInput(value: string): void {
-    this.minPriceInput.set(this.parseInputValue(value));
-    this.emitPriceRange();
+  isStyleActive(slug: string): boolean {
+    return this.filters().styles?.includes(slug) ?? false;
   }
 
-  onMaxPriceInput(value: string): void {
-    this.maxPriceInput.set(this.parseInputValue(value));
-    this.emitPriceRange();
+  onMaxPriceSlider(value: string): void {
+    const v = Number(value);
+    this.maxPriceSlider.set(v);
+    this.priceChange$.next(v);
   }
 
   setMinRating(rating: number): void {
-    const currentRating = this.filters().minRating;
-    this.filterService.updateFilter('minRating', currentRating === rating ? undefined : rating);
+    this.filterService.updateFilter('minRating', rating === 0 ? undefined : rating);
   }
 
-  setToggleFilter(key: 'certified' | 'available', event: MatSlideToggleChange): void {
-    this.filterService.updateFilter(key, event.checked ? true : undefined);
+  toggleFilter(key: 'certified' | 'available' | 'awarded'): void {
+    const current = !!this.filters()[key];
+    this.filterService.updateFilter(key, current ? undefined : true);
   }
 
-  setArtistType(event: MatRadioChange): void {
-    const value = event.value as ArtistFilters['type'] | 'all';
-    this.filterService.updateFilter('type', value === 'all' ? null : value);
+  setArtistType(value: 'all' | 'independent' | 'studio'): void {
+    this.filterService.updateFilter('type', value === 'all' ? null : (value as ArtistFilters['type']));
+  }
+
+  setCommune(value: string): void {
+    this.filterService.updateFilter('commune', value || undefined);
   }
 
   clearFilters(): void {
     this.filterService.clearFilters();
   }
 
-  private emitPriceRange(): void {
-    this.priceChange$.next({
-      min: this.minPriceInput() ?? 0,
-      max: this.maxPriceInput() ?? 0
-    });
-  }
-
-  private parseInputValue(value: string): number | null {
-    if (value.trim().length === 0) {
-      return null;
-    }
-
-    const parsedValue = Number(value);
-    return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : null;
+  formatCLP(value: number): string {
+    return '$' + value.toLocaleString('es-CL');
   }
 }

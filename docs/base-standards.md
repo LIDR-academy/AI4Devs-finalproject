@@ -65,3 +65,34 @@ Rules while OpenSpec adoption is pending:
 
 If a change **explicitly** uses OpenSpec artifacts (created via `opsx:propose`/`opsx:apply`), then documentation-first applies for that change: update the affected OpenSpec artifacts (scenarios, requirements/specs, `tasks.md`) before coding, and re-verify against the updated artifacts before archiving. Do not apply code-only fixes inside an active OpenSpec change window without updating its artifacts.
 
+## 8. Issue Tracking and Traceability
+
+Every bug found, reported by the user, or discovered during development **must** be documented and tracked:
+
+### 8.1 Issue Registration
+- Create an issue file in `fixs/issue-NNN.md` (sequential numbering) with:
+  - **Estado** (🔧 En progreso / ✅ Resuelto / ⏳ Pendiente)
+  - **Severidad** (Alta / Media / Baja)
+  - **Descripción** del problema
+  - **Causa raíz** (root cause analysis)
+  - **Solución aplicada** (o propuesta si queda pendiente)
+  - **Archivos modificados**
+
+### 8.2 Execution Plan
+- Before starting fixes, create a traceable plan with checkboxes (SQL todos or plan.md).
+- Update status as each task is completed (`pending` → `in_progress` → `done`).
+- Group related fixes in logical commits with descriptive messages.
+
+### 8.3 Documentation Updates (mandatory after every fix session)
+After completing fixes or features, **always** update these documents:
+1. **`PROJECT_STATUS.md`** — current state, new issues resolved, pending items.
+2. **`HANDOFF.md`** § "Estado detallado" — exact point where work stopped, what changed.
+3. **`docs/plan-rediseno-figma.md`** — if changes relate to the redesign (phases completed, pending).
+4. **`prompts/00-all-prompts.md`** — register significant prompts used (per `PROMPT_REGISTRY.md`).
+5. **Issue files** — update status from 🔧 to ✅ when resolved.
+
+### 8.4 Commit Discipline
+- Each fix or group of related fixes gets its own commit with descriptive message.
+- Reference the issue number in the commit: `fix: descripción (issue-NNN)`.
+- Never leave uncommitted fixes at end of session.
+

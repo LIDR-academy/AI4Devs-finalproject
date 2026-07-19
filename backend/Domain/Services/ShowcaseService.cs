@@ -31,7 +31,7 @@ public class ShowcaseService
         {
             BuildNearYouSection(artists, lat, lng, limitPerSection),
             BuildTopRatedSection(artists, limitPerSection),
-            BuildPopularStylesSection(artists, limitPerSection),
+            BuildPopularStylesSection(artists, 12),
             BuildAwardedArtistsSection(artists, limitPerSection),
         };
 
@@ -61,21 +61,28 @@ public class ShowcaseService
 
     private static ShowcaseSection BuildPopularStylesSection(IEnumerable<ArtistProfile> artists, int limit)
     {
-        // Find most popular style (by number of published artists using it)
+        // One representative item per style, ordered by how many artists use that style
         var artistList = artists.ToList();
-        var topStyleId = artistList
-            .SelectMany(a => a.ArtistStyles)
-            .GroupBy(s => s.StyleId)
-            .OrderByDescending(g => g.Count())
-            .Select(g => g.Key)
-            .FirstOrDefault();
-
-        // Portfolio items of the most popular style, from best-rated artists
         var items = artistList
-            .Where(a => a.ArtistStyles.Any(s => s.StyleId == topStyleId))
-            .OrderByDescending(a => a.RatingAvg)
+            .SelectMany(a => a.ArtistStyles.Select(s => new { Artist = a, Style = s.Style }))
+            .GroupBy(x => x.Style.Id)
+            .OrderByDescending(g => g.Count())
             .Take(limit)
-            .Select(a => ToShowcaseItemForStyle(a, topStyleId))
+            .Select(g =>
+            {
+                var bestArtist = g.OrderByDescending(x => x.Artist.RatingAvg).First();
+                var portfolio = bestArtist.Artist.PortfolioItems
+                    .Where(p => p.StyleId == g.Key)
+                    .OrderByDescending(p => p.IsFeatured)
+                    .ThenBy(p => p.SortOrder)
+                    .FirstOrDefault();
+                if (portfolio is null) return null;
+                return new ShowcaseItem(
+                    ImageUrl: portfolio.ThumbnailUrl ?? portfolio.ImageUrl,
+                    ThumbnailUrl: portfolio.ThumbnailUrl,
+                    Style: bestArtist.Style.Slug,
+                    Artist: ToArtistCard(bestArtist.Artist));
+            })
             .Where(i => i is not null)
             .Cast<ShowcaseItem>()
             .ToList();
