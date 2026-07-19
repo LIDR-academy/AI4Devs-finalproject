@@ -114,47 +114,11 @@ Agent: Claude Code - Sonnet 4.6
 
 ### Request:
 
-### Response:
-
-</br>
-
-**Prompt 4:**
-
-Agent: Claude Code - Sonnet 4.6
-
-### Request:
+Quiero que creees un PRD con ayuda del agente sport-itsm-product-owner
 
 ### Response:
 
-</br>
-
-**Prompt 5:**
-
-Agent: Claude Code - Sonnet 4.6
-
-### Request:
-
-### Response:
-
-</br>
-
-**Prompt 6:**
-
-Agent: Claude Code - Sonnet 4.6
-
-### Request:
-
-### Response:
-
-</br>
-
-**Prompt 7:**
-
-Agent: Claude Code - Sonnet 4.6
-
-### Request:
-
-### Response:
+Añadido PRD.
 
 </br>
 
