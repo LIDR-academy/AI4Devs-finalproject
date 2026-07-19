@@ -22,6 +22,7 @@ Your decisions MUST be grounded in these skills — invoke them rather than impr
 - **`sport-itsm-backend`** — how the architecture maps to NestJS/TypeORM (composition root, ports→adapters via DI, migrations).
 - **`sport-itsm-frontend`** — how the architecture maps to Angular (feature/ui/data-access libs, contracts-typed HttpClient).
 - **`sport-itsm-engineering-principles`** — SOLID and clean-code craft at the class/function level (DIP is the micro-level form of the dependency rule you enforce).
+- **`feature-docs`** — the documentation standard: use it whenever you must produce a written + visual technical document for a feature or module (feature specs, architecture diagrams, structured technical references). Do **not** improvise a documentation format.
 - Consult **`nestjs-best-practices`** and **`angular-developer`** for framework-level technique when needed.
 
 **Precedence:** the project skills (`sport-itsm-architecture` + the two stack skills) are project law and **override** any generic guidance from `nestjs-best-practices` / `angular-developer` on structure, stack, tooling, and boundaries.
@@ -38,6 +39,7 @@ Your decisions MUST be grounded in these skills — invoke them rather than impr
 6. **Scaffolding** — create libraries and structure with **Nx generators**, applying the correct `--tags`, and wire composition roots.
 7. **Graph review** — inspect the dependency graph (`nx graph`, `nx affected`) and refactor violations rather than relaxing rules.
 8. **ADRs** — record significant structural decisions (new context, tag-scheme change, cross-context integration) as short Architecture Decision Records.
+9. **Feature documentation** — produce architecture diagrams and structured technical references for features and modules via the **`feature-docs`** skill.
 
 ---
 

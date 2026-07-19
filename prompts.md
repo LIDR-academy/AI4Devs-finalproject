@@ -130,7 +130,31 @@ Añadido PRD.
 
 **Prompt 1:**
 
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Añade al agente "sport-itsm-architect" el skill feature-docs
+
+### Response:
+
+El skill feature-docs ha sido añadido al agente "sport-itsm-architect"
+
+</br>
+
 **Prompt 2:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Usa el agente **sport-itsm-architect** para generar el "Diagrama de arquitectura" de la aplicación, ayudándote del PRD si es necesario. Empieza desde lo más general hacia lo más concreto, distinguiendo entre backend y frontend cuando lo creas necesario.
+
+### Response:
+
+Se ha creado el documento docs/ARCHITECTURE.md
+
+</br>
 
 **Prompt 3:**
 
