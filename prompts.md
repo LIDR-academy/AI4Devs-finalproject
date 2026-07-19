@@ -254,6 +254,18 @@ Creado documento DATA-MODEL.md y rellenado apartado "3.1. Diagrama del modelo de
 
 **Prompt 2:**
 
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Usa el agente **sport-itsm-architect** para generar la "3.2. Descripción de entidades principales" de la aplicación. Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc. Añade todo al fichero creado anteriormente DATA-MODEL.md, y rellena la sección 3.2 del readme.md.
+
+### Response:
+
+Añdadido a DATA-MODEL.md este nuevo apartado y rellenado "3.2. Descripción de entidades principales" del readme.md.
+
+</br>
+
 **Prompt 3:**
 
 ---

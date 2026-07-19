@@ -1936,7 +1936,414 @@ Indexes are chosen for stated non-functional requirements, not speculatively:
 
 ### **3.2. Descripción de entidades principales:**
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+A **main entity** here is a table that either (a) is the **aggregate root** of a bounded context — the row a transaction is written around, the row that carries `version` for optimistic locking — or (b) is **reference data that every ITSM flow touches**: the taxonomy, the priority matrix, the support schedule, the workflow version. Everything else in the model is a *part* of one of those aggregates (notes, attachments, transitions, form answers, tasks) or a projection of them.
+
+**A table is not an aggregate (ADR-005).** `type:domain` holds framework-free aggregates (`Incident`, `ServiceRequest`, `SlaInstance`), `type:infrastructure` holds TypeORM `*.entity.ts` classes, and an explicit mapper joins them. One aggregate therefore spans several tables — `incident_ticket` + its six part tables persist **one** `Incident`, loaded and saved as a unit in a single transaction — and value objects are inlined as columns, never given a table of their own (§3.1.1).
+
+This section is the **curated view of the roots**. The exhaustive, column-by-column dictionary of **all ~85 tables** — every attribute with type, nullability, key role, default and description, plus the full constraint catalogue and enum value sets — is **§20 "Entity dictionary — attribute-level reference"** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md). The attribute tables below list the *significant* columns only; audit columns (`created_at`, `updated_at`, `created_by`, `updated_by`) are omitted here and specified once in §3.2.10.
+
+#### 3.2.1 The main entities at a glance
+
+| Entity (table) | Context / schema | Kind | Identity | Purpose |
+| --- | --- | --- | --- | --- |
+| `iam_user` | `identity-access` / `iam` | Aggregate root | `id` UUID v7; `email` UK, `external_subject_id` UK (partial) | Authentication material, entitlement tier and the PII columns that lawful erasure rewrites (FR-IAM-01/02, NFR-SEC-07) |
+| `iam_role` | `identity-access` / `iam` | Aggregate root + configurable lookup | `id`; `code` UK | Named bundle of permissions; RBAC with least privilege, configurable without a release (FR-IAM-02, NFR-CFG-01) |
+| `iam_resolver_group` | `identity-access` / `iam` | Aggregate root | `id`; `code` UK | Assignment target for Incidents, Requests and fulfillment tasks, with an optional coverage schedule (FR-INC-12, FR-QUE-02/03) |
+| `catalog_service` | `service-catalog` / `catalog` | Aggregate root | `id`; `code` UK | Business-facing Service whose defects become Incidents; input to SLA policy resolution (FR-CAT-01, FR-SLA-02) |
+| `catalog_service_offering` | `service-catalog` / `catalog` | Aggregate root | `id`; `code` UK | The **requestable** unit: form versions, eligibility, approval requirement, fulfillment target (FR-CAT-01/02/03/06) |
+| `catalog_category` | `service-catalog` / `catalog` | Configurable lookup (self-referencing taxonomy) | `id`; `code` UK; `path` materialized | Category → Subcategory → Item taxonomy shared by both ticket types (FR-INC-03, FR-CAT-05, M3) |
+| `incident_ticket` | `incident` / `incident` | Aggregate root | `id`; `reference` UK (`INC0000123`) | The Incident: intake, triage, competition flag, assignment, resolution, closure (FR-INC-01 → FR-INC-13, FR-INC-18) |
+| `incident_priority_matrix` | `incident` / `incident` | Configuration-as-data (versioned) | `id`; `version_no` UK | Impact × Urgency matrix version and the competition uplift step; pinned on every ticket (FR-INC-04/05, NFR-CFG-02) |
+| `incident_workflow` | `incident` / `incident` | Configuration-as-data (versioned) | `id`; `version_no` UK | Configurable Incident lifecycle version; in-flight tickets keep the version they were created under (FR-WFL-01, NFR-CFG-02) |
+| `sr_request` | `service-request` / `service_request` | Aggregate root | `id`; `reference` UK (`SRQ0000045`) | The Service Request raised against a published Offering, with the approval gate and pinned form version (FR-SRQ-01 → FR-SRQ-11) |
+| `sla_policy` | `sla` / `sla` | Aggregate root + configuration-as-data (versioned) | `id`; `(code, version_no)` UK; `(record_type, service_id, offering_id, priority, major_incident_only, version_no)` UK | Versioned response/resolution commitments, with `specificity` making policy selection deterministic (FR-SLA-01/02, M7) |
+| `sla_instance` | `sla` / `sla` | Aggregate root | `id`; `(record_type, record_id, target_type)` UK partial `WHERE superseded_at IS NULL` | One live or historical timing commitment for one target of one ticket; the canonical polymorphic soft reference (FR-SLA-02/04/06/08) |
+| `sla_support_schedule` | `sla` / `sla` | Configuration-as-data lookup | `id`; `code` UK | Business-hours or 24×7 calendar, and the IANA zone its wall-clock windows are read in (FR-SLA-03, NFR-I18N-03) |
+| `kb_article` | `knowledge` / `knowledge` | Aggregate root | `id`; `reference` UK (`KB0000031`) | Stable citable Knowledge Article identity; content lives in versions and translations (FR-KNW-01/02) |
+| `apr_request` | `approval` / `approval` | Aggregate root | `id`; `(record_type, record_id)` UK partial `WHERE state = 'pending'` | One authorization in flight over a record of another context (FR-APR-01, FR-SRQ-04) |
+| `ntf_dispatch` | `notification` / `notification` | Append-only journal (outbox + evidence) | `id` | What was actually sent, to whom, in which locale, rendered — evidence, not a re-renderable pointer (FR-NOT-08, ADR-008) |
+| `audit_entry` | `audit` / `audit` | Append-only journal (monthly RANGE partitions) | `(id, occurred_at)` composite PK; `(event_id, occurred_at)` UK | The single authority for "who changed what, when" across every record type, including configuration (FR-AUD-01 → FR-AUD-06) |
+| `rpt_ticket_fact` | `reporting` / `reporting` | Read-model projection (rebuildable) | `id` = source ticket id; `reference` UK | Denormalized ticket fact behind dashboards and KPIs; never a system of record (FR-RPT-01/05/07) |
+
+#### 3.2.2 `incident_ticket` — schema `incident`
+
+Aggregate root of the `Incident` aggregate: one row per Incident, carrying the inlined `TicketReference`, `Priority`, `CompetitionImpactFlag`, `CompetitionSubject`, `OriginChannel` and `ResolverAssignment` value objects as flat columns. It persists **FR-INC-01 → FR-INC-13** and **FR-INC-18**, plus FR-MIM-01/02/03 for Major Incidents, and is the only table in the context carrying `version`.
+
+Significant attributes (the full 50-column list is in **§20.3** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md)):
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, NOT NULL | UUID v7 issued by `IncidentRepositoryPort.nextIdentity()` |
+| `reference` | `varchar(20)` | UK `uq_incident_reference`, NOT NULL | `INC` + `incident_reference_seq`; immutable, never reused (FR-INC-02, NFR-DAT-01) |
+| `short_description` | `varchar(255)` | NOT NULL | Work-list title of the reported Incident |
+| `description` | `text` | NOT NULL | Full report, including requester free text about competition context |
+| `origin_channel` | `origin_channel_enum` | NOT NULL | Intake channel; `portal` and `agent_logged` in the MVP (FR-OMN-01/02) |
+| `reporter_user_id` | `uuid` | NOT NULL, soft → `iam.iam_user.id` | Requester the Incident exists for; anonymous intake is impossible (FR-OMN-04) |
+| `service_id` | `uuid` | NULL, soft → `catalog.catalog_service.id` | Affected Service; drives SLA policy resolution (FR-SLA-02) |
+| `category_id` | `uuid` | NULL, soft → `catalog.catalog_category.id` | Leaf `item` of the taxonomy; required before the ticket leaves `New` (FR-INC-03) |
+| `workflow_id` | `uuid` | NOT NULL, FK → `incident_workflow` (RESTRICT) | Lifecycle configuration version in force for this ticket (FR-WFL-01) |
+| `state_id` | `uuid` | NOT NULL, FK → `incident_workflow_state` (RESTRICT) | Current configurable lifecycle state (FR-INC-06) |
+| `state_category` | `state_category_enum` | NOT NULL | Denormalized, non-configurable classification so KPIs never depend on configuration |
+| `pending_reason` | `pending_reason_enum` | NULL | `customer` / `third_party` / `change`; drives clock-pause semantics (FR-INC-08) |
+| `priority_matrix_id` | `uuid` | NOT NULL, FK → `incident_priority_matrix` (RESTRICT) | The matrix **version** that produced `priority` (NFR-CFG-02) |
+| `base_impact` / `assessed_impact` | `impact_enum` | NOT NULL | Impact before / after the competition uplift (FR-INC-05, M4) |
+| `urgency` | `urgency_enum` | NOT NULL | Agent-assessed Urgency (FR-INC-04) |
+| `priority` | `priority_enum` | NOT NULL | Derived from `(assessed_impact, urgency)`; never chosen by a requester (R8) |
+| `priority_overridden` / `priority_override_justification` | `boolean` / `varchar(500)` | NOT NULL `false` / NULL, CHECK | Authorized override plus its mandatory justification (FR-INC-04) |
+| `competition_affects` | `boolean` | NOT NULL `false`, CHECK | Agent-only "affects a competition in progress" flag; never automatic (FR-INC-05, ADR-006) |
+| `competition_justification`, `competition_flag_set_by`, `competition_flag_set_at` | `varchar(500)`, `uuid`, `timestamptz` | NULL, CHECK | Who raised the flag, when and why — mandatory whenever it is true |
+| `competition_subject_type` / `_external_id` / `_label` | `competition_subject_enum`, `varchar(100)`, `varchar(255)` | NULL, CHECK | The **affected** competition entity in SCMS; opaque id with free-text fallback (R10) |
+| `assigned_group_id` / `assigned_user_id` / `assigned_at` | `uuid`, `uuid`, `timestamptz` | NULL, soft → `iam` | Current `ResolverAssignment`; the history lives in `incident_assignment_history` |
+| `is_major`, `major_declared_by/at`, `major_justification` | `boolean`, `uuid`, `timestamptz`, `varchar(500)` | CHECK | Major Incident declaration and its mandatory justification (FR-MIM-01) |
+| `parent_incident_id` | `uuid` | NULL, FK → `incident_ticket` (self, RESTRICT) | Parent Major Incident of a child Incident (FR-MIM-03) |
+| `resolution_code_id` / `resolution_notes` | `uuid` / `text` | NULL, FK (RESTRICT), CHECK | Mandatory to reach `Resolved` (FR-INC-07) |
+| `resolution_article_id` | `uuid` | NULL, soft → `knowledge.kb_article.id` | Article used to resolve; feeds the knowledge-assisted KPI (FR-KNW-05) |
+| `first_response_at`, `resolved_at`, `closed_at`, `confirmation_due_at` | `timestamptz` | NULL | MTTA / MTTR inputs and the auto-close deadline (FR-INC-09, PRD §9.1) |
+| `first_contact_resolution` / `reopen_count` / `csat_score` | `boolean` / `smallint` / `smallint` | NOT NULL / NOT NULL `0` / NULL, CHECK 1–5 | FCR, Reopen Rate and basic CSAT capture (FR-INC-18, PRD §9.1) |
+| `version` | `integer` | NOT NULL `1` | `@VersionColumn` optimistic lock — concurrent triage must not silently overwrite |
+
+**CHECK constraints, verbatim.** These are the invariants that hold regardless of application version:
+
+| Name | Rule |
+| --- | --- |
+| `ck_incident_resolution` | `state_category NOT IN ('resolved','closed') OR (resolution_code_id IS NOT NULL AND resolution_notes IS NOT NULL)` |
+| `ck_incident_competition_flag` | `competition_affects = false OR (competition_justification IS NOT NULL AND competition_flag_set_by IS NOT NULL AND competition_flag_set_at IS NOT NULL)` |
+| `ck_incident_priority_override` | `priority_overridden = false OR priority_override_justification IS NOT NULL` |
+| `ck_incident_subject` | `competition_subject_type IS NULL OR competition_subject_external_id IS NOT NULL OR competition_subject_label IS NOT NULL` |
+| `ck_incident_major` | `is_major = false OR (major_declared_by IS NOT NULL AND major_declared_at IS NOT NULL AND major_justification IS NOT NULL)` |
+| `ck_incident_csat` | `csat_score IS NULL OR csat_score BETWEEN 1 AND 5` |
+
+**Relationships.**
+
+| Related entity | Cardinality | Kind | Meaning |
+| --- | --- | --- | --- |
+| `incident_work_note` | 1:N | hard FK (owning aggregate, CASCADE) | Public comments and internal work notes (FR-INC-11) |
+| `incident_attachment` | 1:N | hard FK (owning aggregate, CASCADE) | Evidence files |
+| `incident_assignment_history` | 1:N | hard FK (owning aggregate, CASCADE) | Routing history through groups and agents |
+| `incident_state_transition` | 1:N | hard FK (owning aggregate, CASCADE) | Append-only lifecycle projection |
+| `incident_link` | 1:N | hard FK (owning aggregate, CASCADE) | Links to other records, including phase-2 types (FR-INC-10) |
+| `incident_escalation` | 1:N | hard FK (owning aggregate, CASCADE) | Functional and hierarchical escalations (FR-INC-13) |
+| `incident_major_communication` | 1:N | hard FK (owning aggregate, CASCADE) | Stakeholder communications of a Major Incident |
+| `incident_ticket` (parent) | N:1 | self-referencing hard FK (RESTRICT) | Child Incidents of a parent Major Incident (FR-MIM-03) |
+| `incident_workflow` / `incident_workflow_state` | N:1 | hard FK (RESTRICT) | Pinned lifecycle configuration and current state |
+| `incident_priority_matrix` | N:1 | hard FK (RESTRICT) | Matrix version that derived the Priority |
+| `incident_resolution_code` | N:1 | hard FK (RESTRICT) | Code that closes the Incident |
+| `iam.iam_user` / `iam.iam_resolver_group` | N:1 | soft reference (cross-context, ADR-003) | Reporter, logger, assignee, flag setter, declarer; assigned group |
+| `catalog.catalog_service` / `catalog.catalog_category` | N:1 | soft reference (cross-context, ADR-003) | Affected Service and taxonomy classification |
+| `knowledge.kb_article` | N:1 | soft reference (cross-context, ADR-003) | Article used as the resolution source |
+| `sla.sla_instance` | 1:N | polymorphic soft reference | Commitments timing the ticket (`record_type = 'incident'`) |
+| `audit.audit_entry` | 1:N | polymorphic soft reference | Immutable activity history |
+| `reporting.rpt_ticket_fact` | 1:1 | soft reference (cross-context, ADR-003) | Projection into the read model |
+| SCMS competition entity | N:1 | polymorphic soft reference | The affected subject as `(type, external_id, label)`; **never** a FK (PRD D2, R10) |
+
+#### 3.2.3 `sr_request` — schema `service_request`
+
+Aggregate root of the `ServiceRequest` aggregate: a request raised against a **published** Service Offering, carrying the pinned form version, the approval gate and the competition-subject value object. Serves **FR-SRQ-01 → FR-SRQ-11**, FR-OMN-01/02/04 and FR-CAT-04. Full column list in **§20.4** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md).
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, NOT NULL | UUID v7 from the repository port |
+| `reference` | `varchar(20)` | UK `uq_sr_request_reference`, NOT NULL | `SRQ` + `sr_reference_seq`; immutable, never reused (NFR-DAT-01) |
+| `short_description` / `description` | `varchar(255)` / `text` | NOT NULL | Work-list title and the requester's statement of need (FR-SRQ-03) |
+| `origin_channel` | `origin_channel_enum` | NOT NULL, default `'portal'` | Intake channel (FR-OMN-01/02) |
+| `requester_user_id` | `uuid` | NOT NULL, soft → `iam.iam_user.id` | Requester; anonymous intake is impossible (FR-OMN-04) |
+| `logged_by_user_id` | `uuid` | NULL, soft → `iam.iam_user.id` | Agent who logged it on the requester's behalf (FR-OMN-02) |
+| `offering_id` | `uuid` | NOT NULL, soft → `catalog.catalog_service_offering.id` | The published Offering requested (FR-SRQ-01, K6) |
+| `form_definition_id` | `uuid` | NOT NULL, soft → `catalog.catalog_form_definition.id` | Pins the form **version** answered, so later catalog edits cannot invalidate an in-flight request (NFR-CFG-02) |
+| `category_id` | `uuid` | NULL, soft → `catalog.catalog_category.id` | Taxonomy classification for routing and reporting |
+| `workflow_id` / `state_id` | `uuid` | NOT NULL, FK → `sr_workflow` / `sr_workflow_state` (RESTRICT) | Pinned lifecycle version and current configurable state (FR-WFL-01) |
+| `state_category` | `sr_state_category_enum` | NOT NULL, default `'new'` | Non-configurable classification driving queries and the fulfillment gate (FR-SRQ-05) |
+| `priority` | `priority_enum` | NOT NULL | Taken from the Offering, **not** derived from Impact × Urgency (FR-SRQ-07) |
+| `competition_affects` / `competition_justification` | `boolean` / `varchar(500)` | NOT NULL `false` / NULL, CHECK | Agent-only competition flag and its mandatory justification (ADR-006) |
+| `competition_subject_type` / `_external_id` / `_label` | `competition_subject_enum`, `varchar(100)`, `varchar(255)` | NULL, CHECK | Affected competition entity in SCMS, with free-text fallback (R10) |
+| `approval_request_id` | `uuid` | NULL, soft → `approval.apr_request.id` | Authorization instance; fulfillment cannot start before a decision exists (FR-SRQ-04) |
+| `approval_outcome` | `approval_outcome_enum` | NOT NULL, default `'not_required'`, CHECK | Denormalized gate value read by the fulfillment guard (FR-SRQ-04) |
+| `rejection_reason` | `varchar(500)` | NULL, CHECK | Mandatory when rejected, communicated to the requester (FR-SRQ-11) |
+| `assigned_group_id` / `assigned_user_id` / `assigned_at` | `uuid`, `uuid`, `timestamptz` | NULL, soft → `iam` | Fulfillment group and individual fulfiller (FR-SRQ-06) |
+| `fulfilled_at` / `closed_at` | `timestamptz` | NULL | Fulfillment-target and closure instants (FR-SRQ-05, FR-SLA-01) |
+| `cancelled_at` / `cancellation_reason` | `timestamptz` / `varchar(255)` | NULL, CHECK | Cancellation, allowed only before fulfillment starts (FR-SRQ-08) |
+| `csat_score` | `smallint` | NULL, CHECK 1–5 | Basic satisfaction capture (PRD §9.1) |
+| `version` | `integer` | NOT NULL `1` | Optimistic lock on the aggregate root |
+
+**CHECK constraints, verbatim:** `ck_sr_rejection` — `state_category <> 'rejected' OR rejection_reason IS NOT NULL`; **`ck_sr_fulfillment_gate`** — `state_category NOT IN ('in_fulfillment','fulfilled') OR approval_outcome IN ('approved','not_required')`, which is FR-SRQ-04 made structurally unbypassable; `ck_sr_cancel` — `state_category <> 'cancelled' OR cancelled_at IS NOT NULL`; `ck_sr_competition_flag` — `competition_affects = false OR competition_justification IS NOT NULL`; `ck_sr_subject` and `ck_sr_csat` as on the Incident.
+
+**Relationships.**
+
+| Related entity | Cardinality | Kind | Meaning |
+| --- | --- | --- | --- |
+| `sr_field_value` | 1:N | hard FK (owning aggregate, CASCADE) | Answers to the pinned form version, as rows rather than a blob |
+| `sr_fulfillment_task` | 1:N | hard FK (owning aggregate, CASCADE) | Fulfillment decomposition (FR-SRQ-06) |
+| `sr_comment` / `sr_attachment` | 1:N | hard FK (owning aggregate, CASCADE) | Public and internal conversation; evidence files |
+| `sr_state_transition` / `sr_link` | 1:N | hard FK (owning aggregate, CASCADE) | Append-only lifecycle projection; links to other records |
+| `sr_workflow` / `sr_workflow_state` | N:1 | hard FK (RESTRICT) | Configured lifecycle governing the request |
+| `catalog.catalog_service_offering` | N:1 | soft reference (cross-context, ADR-003) | The Offering requested (FR-SRQ-01) |
+| `catalog.catalog_form_definition` | N:1 | soft reference (cross-context, ADR-003) | The form version answered (NFR-CFG-02) |
+| `iam.iam_user` / `iam.iam_resolver_group` | N:1 | soft reference (cross-context, ADR-003) | Requester, logger, assignee; fulfillment group |
+| `approval.apr_request` | 1:1 | soft reference (cross-context, ADR-003) | Authorization instance gating fulfillment (FR-SRQ-04) |
+| `sla.sla_instance` | 1:N | polymorphic soft reference | Response and fulfillment commitments (`record_type = 'service_request'`) |
+| SCMS competition entity | N:1 | polymorphic soft reference | Affected subject as `(type, external_id, label)`; never a FK |
+
+#### 3.2.4 `sla_policy` and `sla_instance` — schema `sla`
+
+Two roots, deliberately separated: the **commitment definition** (configuration-as-data, versioned) and the **live timer** (one per target per ticket). Serves **FR-SLA-01 → FR-SLA-08**, FR-MIM-02 and FR-SRQ-07. Full column lists in **§20.5** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md).
+
+**`sla_policy`** — versioned, never edited in place; `specificity` turns "attach exactly one applicable policy" (FR-SLA-02) into a deterministic `ORDER BY` instead of an implicit rule (M7):
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, NOT NULL | Surrogate identity of the policy **version** |
+| `code` | `varchar(64)` | NOT NULL, UK `(code, version_no)` | Stable identifier shared by every version of the policy |
+| `name` | `varchar(150)` | NOT NULL | Administrative label shown to the Service Manager |
+| `record_type` | `record_type_enum` | NOT NULL, UK (scope) | `incident` or `service_request` — Incident and fulfillment targets are distinct policies |
+| `service_id` | `uuid` | NULL, soft → `catalog.catalog_service.id` | `NULL` means "any service" — how a default policy is expressed |
+| `offering_id` | `uuid` | NULL, soft → `catalog.catalog_service_offering.id` | `NULL` means "any offering" (FR-SRQ-07) |
+| `priority` | `priority_enum` | NULL | `NULL` means "any priority" |
+| `major_incident_only` | `boolean` | NOT NULL `false` | Accelerated targets applied only to declared Major Incidents (FR-MIM-02) |
+| `support_schedule_id` | `uuid` | NOT NULL, FK → `sla_support_schedule` (RESTRICT) | Calendar the targets are measured against (FR-SLA-03) |
+| `response_target_minutes` | `integer` | NOT NULL, CHECK | Minutes of **schedule time**, not wall time |
+| `resolution_target_minutes` | `integer` | NOT NULL, CHECK | Resolution target for Incidents, fulfillment target for Requests |
+| `specificity` | `integer` | NOT NULL `0` | Precomputed match rank (offering > service > default) resolving FR-SLA-02 deterministically |
+| `version_no` | `integer` | NOT NULL `1`, UK | Policies are versioned; instances pin the version in force (NFR-CFG-02) |
+| `active` | `boolean` | NOT NULL `true` | Only active versions participate in policy resolution |
+| `effective_from` / `effective_to` | `timestamptz` | NOT NULL / NULL, CHECK | Validity window; `effective_to IS NULL` while current |
+
+CHECK constraints verbatim: `ck_sla_targets_positive` — `response_target_minutes > 0 AND resolution_target_minutes > 0`; `ck_sla_target_order` — `response_target_minutes <= resolution_target_minutes`; `ck_sla_policy_effective_range` — `effective_to IS NULL OR effective_to > effective_from`.
+
+**`sla_instance`** — the **canonical polymorphic soft reference** of the model: `(record_type, record_id)` addresses a ticket of some type with no foreign key, because `sla` must not depend on `incident` or `service-request` (ADR-003). Remaining time is derivable from stored timestamps alone, so timers survive a restart (NFR-AVL-05, ADR-009):
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, NOT NULL | Surrogate identity of the commitment |
+| `record_type` / `record_id` | `record_type_enum` / `uuid` | NOT NULL, soft (polymorphic), UK partial | The timed ticket; no FK by design (§3.1.3) |
+| `record_reference` | `varchar(20)` | NULL | Denormalized `INC…` / `SRQ…` so the row reads without a cross-schema join |
+| `policy_id` / `policy_version_no` | `uuid` / `integer` | NOT NULL, FK → `sla_policy` (RESTRICT) | Policy version that produced the targets (NFR-CFG-02) |
+| `target_type` | `sla_target_type_enum` | NOT NULL, UK partial | `response` or `resolution`; one instance per target |
+| `record_created_at` | `timestamptz` | NOT NULL | The **original** ticket creation instant; recalculation runs from here (FR-SLA-04) |
+| `started_at` / `target_at` | `timestamptz` | NOT NULL, CHECK | The `SlaCommitment` value object; `target_at` already accounts for schedule and holidays |
+| `elapsed_paused_seconds` | `integer` | NOT NULL `0`, CHECK `>= 0` | Accumulated pause; remaining time never depends on an in-memory counter |
+| `paused_at` | `timestamptz` | NULL, CHECK | Non-null exactly while the clock is stopped (FR-INC-08, FR-SLA-08) |
+| `stopped_at` | `timestamptz` | NULL | Instant the response was given or the resolution/fulfillment reached |
+| `state` | `sla_instance_state_enum` | NOT NULL, default `'running'` | `running`, `paused`, `met`, `breached`, `cancelled`, `superseded`; `ix_sla_sweep` scans `WHERE state = 'running'` |
+| `breached` / `breached_at` / `breach_elapsed_seconds` | `boolean` / `timestamptz` / `integer` | NOT NULL `false` / NULL / NULL, CHECK | Written **once**; no update path exists on the repository port (FR-SLA-06) |
+| `superseded_at` | `timestamptz` | NULL, CHECK | Non-null when a recalculation replaced this commitment — supersede, never mutate (M6) |
+| `version` | `integer` | NOT NULL `1` | Optimistic lock; the sweep job and an agent action must not collide |
+
+CHECK constraints verbatim: `ck_sla_instance_paused` — `(state = 'paused') = (paused_at IS NOT NULL)`; `ck_sla_instance_breach` — `breached = false OR (breached_at IS NOT NULL AND breach_elapsed_seconds IS NOT NULL)`; `ck_sla_instance_superseded` — `state <> 'superseded' OR superseded_at IS NOT NULL`; `ck_sla_instance_target_order` — `target_at > record_created_at`. The unique constraint `uq_sla_instance_active` is **partial** — `UNIQUE (record_type, record_id, target_type) WHERE superseded_at IS NULL` — so exactly one live commitment per target per ticket coexists with a full supersession history.
+
+**Relationships.**
+
+| Related entity | Cardinality | Kind | Meaning |
+| --- | --- | --- | --- |
+| `sla_policy` → `sla_warning_threshold` | 1:N | hard FK (owning aggregate, CASCADE) | Consumption percentages at which warnings fire (FR-SLA-05) |
+| `sla_policy` → `sla_escalation_rule` | 1:N | hard FK (owning aggregate, CASCADE) | Escalations triggered by warning or breach (FR-SLA-07) |
+| `sla_policy` → `sla_support_schedule` | N:1 | hard FK (RESTRICT) | Calendar the targets are measured against (FR-SLA-03) |
+| `sla_policy` → `sla_instance` | 1:N | hard FK (RESTRICT) | Live and historical commitments governed by this policy version |
+| `sla_instance` → `sla_instance_revision` | 1:N | hard FK (owning aggregate, CASCADE) | Append-only record of recalculations (FR-SLA-04) |
+| `sla_instance` → `sla_pause_period` | 1:N | hard FK (owning aggregate, CASCADE) | Intervals during which the clock was stopped (FR-SLA-08) |
+| `sla_instance` → `sla_event` | 1:N | hard FK (owning aggregate, CASCADE) | Append-only timer events (FR-SLA-05/06) |
+| `sla_instance` → `sla_instance` (successor) | 1:1 | soft reference | A recalculated instance supersedes its predecessor rather than mutating it (M6) |
+| `incident.incident_ticket` / `service_request.sr_request` | N:1 | polymorphic soft reference | The timed ticket; **no FK**, because `sla` may not depend on the ticket contexts (ADR-003) |
+| `catalog.catalog_service` / `catalog_service_offering` | N:1 | soft reference (cross-context, ADR-003) | Scope of the policy; `NULL` means "any" |
+| `notification.ntf_dispatch` | 1:N | soft reference (cross-context, ADR-003) | Warning and breach notifications, raised through `sla_event` |
+
+#### 3.2.5 `catalog_service_offering` — schema `catalog`
+
+Aggregate root of the `ServiceOffering` aggregate — the **requestable** unit of the catalog, owning its form versions, eligibility rules, approval requirement, fulfillment target and SLA policy. Serves FR-CAT-01/02/03/06 and FR-SRQ-01/04/07/09. Full column list in **§20.2** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md).
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, NOT NULL | UUID v7 from the repository port |
+| `service_id` | `uuid` | NOT NULL, FK → `catalog_service` (RESTRICT) | Owning Service — hard FK, same schema, same context |
+| `code` | `varchar(64)` | UK `uq_catalog_service_offering_code`, NOT NULL | Stable identifier used by seeds, tests and the six MVP offerings (FR-SRQ-09) |
+| `name` / `description` | `varchar(150)` / `text` | NOT NULL / NULL | Default-locale text; translations live in `catalog_offering_translation` (NFR-I18N-05) |
+| `category_id` | `uuid` | NULL, FK → `catalog_category` (RESTRICT) | Taxonomy node used for catalog browsing (FR-CAT-05) |
+| `publication_status` | `publication_status_enum` | NOT NULL, default `'draft'`, CHECK | Only `published` offerings are visible and requestable (FR-CAT-03) |
+| `requires_approval` | `boolean` | NOT NULL `false`, CHECK | Drives FR-SRQ-04 routing into the `approval` context |
+| `approval_workflow_id` | `uuid` | NULL, soft → `approval.apr_workflow.id` | Approval chain to instantiate (ADR-003) |
+| `fulfillment_group_id` | `uuid` | NULL, soft → `iam.iam_resolver_group.id` | Default assignment target on approval (FR-CAT-02) |
+| `sla_policy_id` | `uuid` | NULL, soft → `sla.sla_policy.id` | Fulfillment target policy (FR-SRQ-07) |
+| `expected_fulfillment_hours` | `integer` | NULL, CHECK `> 0` | Expected fulfillment time displayed to the requester (FR-CAT-06) |
+| `auto_fulfillment` | `boolean` | NOT NULL `false` | Phase-3 automated fulfillment (FR-SRQ-10); `false` throughout the MVP |
+| `sort_order` | `integer` | NOT NULL `0` | Presentation order within the category (FR-CAT-05) |
+| `published_at` / `retired_at` | `timestamptz` | NULL, CHECK | Publication and retirement instants; retirement is a state, never a delete |
+| `version` | `integer` | NOT NULL `1` | Optimistic lock on the aggregate root |
+
+CHECK constraints verbatim: `ck_offering_approval` — `requires_approval = false OR approval_workflow_id IS NOT NULL`; `ck_offering_published` — `publication_status <> 'published' OR published_at IS NOT NULL`; `ck_offering_retired` — `publication_status <> 'retired' OR retired_at IS NOT NULL`; `ck_offering_fulfillment_hours` — `expected_fulfillment_hours IS NULL OR expected_fulfillment_hours > 0`.
+
+**Relationships.**
+
+| Related entity | Cardinality | Kind | Meaning |
+| --- | --- | --- | --- |
+| `catalog_service` | N:1 | hard FK (RESTRICT) | The Service that publishes the Offering |
+| `catalog_category` | N:1 | hard FK (RESTRICT) | Taxonomy node that classifies the Offering |
+| `catalog_offering_translation` | 1:N | hard FK (owning aggregate, CASCADE) | Localized name and description (NFR-I18N-05) |
+| `catalog_form_definition` | 1:N | hard FK (owning aggregate, CASCADE) | Immutable versions of the request form |
+| `catalog_eligibility_rule` | 1:N | hard FK (owning aggregate, CASCADE) | Who may request the Offering (FR-SRQ-02, FR-CAT-04) |
+| `service_request.sr_request` | 1:N | soft reference (cross-context, ADR-003) | Requests raised through the Offering (FR-SRQ-01) |
+| `approval.apr_workflow` | N:1 | soft reference (cross-context, ADR-003) | Approval chain instantiated when `requires_approval` |
+| `iam.iam_resolver_group` | N:1 | soft reference (cross-context, ADR-003) | Default fulfillment group |
+| `sla.sla_policy` | N:1 | soft reference (cross-context, ADR-003) | Fulfillment target policy |
+
+#### 3.2.6 `kb_article` — schema `knowledge`
+
+Aggregate root of the Knowledge Article: a **stable, citable identity** whose content lives in versions and translations, carrying the authoring lifecycle, the audience visibility setting and the denormalized usefulness counters that feed the stale-article review queue. Serves FR-KNW-01 → FR-KNW-07 and FR-KNW-09. Full column list in **§20.6** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md).
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, NOT NULL | UUID v7 from the repository port |
+| `reference` | `varchar(20)` | UK `uq_kb_article_reference`, NOT NULL | Stable citable identifier (`KB0000031`), immutable and never reused (NFR-DAT-01) |
+| `article_type` | `kb_type_enum` | NOT NULL | `how_to`, `known_issue`, `workaround`, `faq`, `policy` (FR-KNW-01) |
+| `status` | `kb_status_enum` | NOT NULL, default `'draft'`, CHECK | `draft → review → published → retired`; publication requires an approver (FR-KNW-02) |
+| `visibility` | `kb_visibility_enum` | NOT NULL, default `'internal'` | `requester` or `internal`; there is **no** `public` value — no article is reachable unauthenticated (FR-KNW-03, FR-IAM-01) |
+| `owner_user_id` | `uuid` | NOT NULL, soft → `iam.iam_user.id` | Accountable owner for review and retirement (FR-KNW-07) |
+| `category_id` | `uuid` | NULL, soft → `catalog.catalog_category.id` | Taxonomy classification for browsing and intake suggestion (FR-KNW-04, M3) |
+| `service_id` | `uuid` | NULL, soft → `catalog.catalog_service.id` | Affected SCMS Service the article documents (FR-KNW-05) |
+| `current_version_no` | `integer` | NOT NULL `1`, CHECK `> 0` | Version served to readers; search and rendering resolve through it |
+| `approved_by` | `uuid` | NULL, soft → `iam.iam_user.id`, CHECK | Publication approver; mandatory once `status = 'published'` (FR-KNW-02) |
+| `published_at` / `retired_at` | `timestamptz` | NULL, CHECK | Publication and retirement instants; retirement is a lifecycle state, never a delete |
+| `review_due_at` | `timestamptz` | NULL | Staleness deadline driving the review queue (FR-KNW-07) |
+| `view_count` | `integer` | NOT NULL `0`, CHECK `>= 0` | Denormalized read counter maintained from `kb_view_event` (FR-KNW-06) |
+| `helpful_count` / `not_helpful_count` | `integer` | NOT NULL `0`, CHECK `>= 0` | Denormalized ratings; low-rated articles surface for review (FR-KNW-07) |
+| `version` | `integer` | NOT NULL `1` | Optimistic lock — concurrent authoring must not silently overwrite |
+
+CHECK constraints verbatim: `ck_kb_published` — `status <> 'published' OR (published_at IS NOT NULL AND approved_by IS NOT NULL)`; `ck_kb_retired` — `status <> 'retired' OR retired_at IS NOT NULL`; `ck_kb_counters` — `view_count >= 0 AND helpful_count >= 0 AND not_helpful_count >= 0`; `ck_kb_current_version` — `current_version_no > 0`.
+
+**Relationships.**
+
+| Related entity | Cardinality | Kind | Meaning |
+| --- | --- | --- | --- |
+| `kb_article_version` | 1:N | hard FK (owning aggregate, CASCADE) | Content history of the article (FR-KNW-02) |
+| `kb_article_translation` | 1:N | hard FK (through the version) | Localized title and body, and the GIN-indexed `search_vector` (FR-KNW-04) |
+| `kb_article_tag` | N:M via `kb_tag` | hard FK (owning aggregate, CASCADE) | Tag assignments used for browsing and search |
+| `kb_article_link` | 1:N | hard FK (owning aggregate, CASCADE) | Attachments to tickets and phase-2 Problems |
+| `kb_article_feedback` | 1:N | hard FK (owning aggregate, CASCADE) | Reader ratings feeding the counters |
+| `kb_view_event` | 1:N | hard FK (RESTRICT) | Append-only read telemetry, retained independently (FR-KNW-06) |
+| `iam.iam_user` | N:1 | soft reference (cross-context, ADR-003) | Owner, publication approver and audit actors |
+| `catalog.catalog_category` / `catalog.catalog_service` | N:1 | soft reference (cross-context, ADR-003) | Taxonomy and affected-service classification |
+| `incident.incident_ticket` | 1:N | soft reference (cross-context, ADR-003) | `incident_ticket.resolution_article_id` points here (FR-KNW-05) |
+
+#### 3.2.7 `apr_request` — schema `approval`
+
+Aggregate root of **one authorization in flight**: raised against a record of another context and closed by a terminal state. `(record_type, record_id)` is a polymorphic soft reference — the subject is a Service Request today, a Change or Release in phase 2 — held as an opaque `uuid` with no foreign key, because `approval` must not depend on those contexts (ADR-003). Serves FR-APR-01 → FR-APR-07 and FR-SRQ-04. Full column list in **§20.7** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md).
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, NOT NULL | UUID v7 from the repository port |
+| `workflow_id` | `uuid` | NOT NULL, FK → `apr_workflow` (RESTRICT) | Governing workflow (FR-APR-01) |
+| `workflow_version_no` | `integer` | NOT NULL | Workflow version in force when raised; later edits cannot alter an in-flight authorization (NFR-CFG-02) |
+| `record_type` | `record_type_enum` | NOT NULL, UK partial | Polymorphic discriminator of the authorized record |
+| `record_id` | `uuid` | NOT NULL, soft (polymorphic), UK partial | Opaque identifier of the Service Request / Change / Release; **no FK by design** |
+| `record_reference` | `varchar(20)` | NOT NULL | Denormalized `SRQ…` for operator readability without a cross-context read |
+| `requested_by` | `uuid` | NOT NULL, soft → `iam.iam_user.id` | Actor who raised the authorization (FR-AUD-01) |
+| `requested_at` | `timestamptz` | NOT NULL | Instant raised; basis for stage due dates (FR-APR-05) |
+| `state` | `apr_state_enum` | NOT NULL, default `'pending'`, CHECK | `pending → approved / rejected / cancelled / expired` |
+| `current_stage_seq` | `integer` | NOT NULL `1`, CHECK `> 0` | Sequence number of the stage currently open (FR-APR-01) |
+| `decided_at` | `timestamptz` | NULL, CHECK | Instant of the terminal state; gates fulfillment (FR-SRQ-04) |
+| `version` | `integer` | NOT NULL `1` | Optimistic lock — two approvers deciding concurrently must not silently overwrite |
+
+CHECK constraints verbatim: `ck_apr_request_decided` — `state = 'pending' OR decided_at IS NOT NULL`; `ck_apr_request_stage` — `current_stage_seq > 0`. The unique constraint `uq_apr_request_active` is **partial** — `(record_type, record_id) WHERE state = 'pending'` — so exactly one live authorization per record coexists with the full history of previous ones.
+
+**Relationships.**
+
+| Related entity | Cardinality | Kind | Meaning |
+| --- | --- | --- | --- |
+| `apr_workflow` | N:1 | hard FK (RESTRICT) | The workflow version that governs this authorization |
+| `apr_task` | 1:N | hard FK (owning aggregate, CASCADE) | Approver tasks materialized for this request (FR-APR-05) |
+| `apr_decision` | 1:N | hard FK (RESTRICT) | Immutable decisions aggregated by this request (FR-APR-07) |
+| `service_request.sr_request` (phase 2: `change`, `release`) | 1:1 | polymorphic soft reference | The authorized record; `sr_request.approval_request_id` is the mirror soft reference (FR-SRQ-04) |
+| `iam.iam_user` | N:1 | soft reference (cross-context, ADR-003) | Requester, approvers and delegates, by id only |
+| `notification.ntf_dispatch` | 1:N | soft reference (cross-context, ADR-003) | Requests, reminders and outcomes dispatched post-commit (ADR-008, FR-NOT-08) |
+| `audit.audit_entry` | 1:N | polymorphic soft reference | Authorization history alongside the business decision record |
+
+**Immutability is enforced on three levels, not one** (FR-APR-07): `apr_decision` has no `updated_at`; `ApprovalRepositoryPort` exposes no update or delete method for decisions; and the application database role holds `INSERT, SELECT` only on the table.
+
+#### 3.2.8 `audit_entry` — schema `audit`
+
+Append-only journal entry for **one action on one record** — state transition, field change, assignment, comment, approval, notification or automated rule execution. Administrative configuration changes live in the same table with `record_type = 'configuration'`: one journal, one query path, one guarantee. Serves FR-AUD-01 → FR-AUD-06, FR-WFL-06 and NFR-AUD-01/02/03. Full column list in **§20.9** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md).
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK part 1 of 2, NOT NULL | UUID v7 — time-ordered, so inserts stay at the right edge of the index |
+| `occurred_at` | `timestamptz` | PK part 2 of 2, NOT NULL | Instant of the action from `ClockPort`, **and** the monthly RANGE partition key; it replaces `created_at` |
+| `event_id` | `uuid` | NOT NULL, UK `(event_id, occurred_at)` | Domain-event id used as an **idempotency key** — a retry cannot double-write history (NFR-AUD-02) |
+| `context` | `varchar(32)` | NOT NULL | Bounded context that produced the entry (`incident`, `sla`, `approval`, `iam`, …) |
+| `record_type` | `record_type_enum` | NOT NULL, soft (polymorphic) | Record family acted on, including `configuration` (FR-AUD-05) |
+| `record_id` | `uuid` | NOT NULL, soft (polymorphic), indexed | Record identifier. **No FK is possible and none is wanted** — audit must outlive any record |
+| `record_reference` | `varchar(20)` | NULL | Denormalized `INC…` / `SRQ…` so a two-year-old entry reads without a join (NFR-DAT-03) |
+| `actor_type` | `actor_type_enum` | NOT NULL, CHECK | `user`, `system_rule`, `integration` — an actor is mandatory even when it is an automation |
+| `actor_user_id` | `uuid` | NULL, soft → `iam.iam_user.id`, CHECK | Identifier **only** — no name, no email; this is what makes pseudonymization possible without destroying history |
+| `actor_rule_code` | `varchar(100)` | NULL, CHECK | Which automation rule fired, with what effect (FR-WFL-06) |
+| `action` | `varchar(64)` | NOT NULL | Stable action code (`state_changed`, `field_changed`, `assigned`, `commented`, `approved`, `notified`, `rule_executed`) |
+| `field_name` | `varchar(64)` | NULL, CHECK | Null for whole-record actions; set for `field_changed` |
+| `previous_value` / `new_value` | `jsonb` | NULL | The before/after pair that **is** FR-AUD-02, as `jsonb` so any field type fits one column pair |
+| `visibility` | `audit_visibility_enum` | NOT NULL, default `'internal'` | Separates `requester_visible` from internal entries inside one journal (FR-AUD-04, NFR-SEC-04) |
+| `correlation_id` | `uuid` | NULL | Ties the entry to the `nestjs-pino` request or job log (NFR-AUD-01) |
+| `ip_address` / `user_agent` | `inet` / `varchar(255)` | NULL | Client context when the action came over HTTP; null for scheduled jobs |
+
+CHECK constraints verbatim: `ck_audit_entry_actor` — `actor_type <> 'user' OR actor_user_id IS NOT NULL`; `ck_audit_entry_rule_actor` — `actor_type <> 'system_rule' OR actor_rule_code IS NOT NULL`; `ck_audit_entry_field_change` — `action <> 'field_changed' OR field_name IS NOT NULL`.
+
+**What is absent is the point.** No `updated_at`, no `updated_by`, no `deleted_at`; no update or delete method on `AuditRepositoryPort`; and `GRANT INSERT, SELECT` / `REVOKE UPDATE, DELETE, TRUNCATE` for the application role. FR-AUD-03 is therefore not a policy anyone can forget to apply — the capability does not exist at the port and the privilege does not exist at the database. Corrections are new entries. Retention is `DETACH PARTITION`, never a mass `DELETE` (NFR-DAT-02).
+
+**Relationships.** Every one of them is a soft reference; the table carries **no foreign key of any kind**:
+
+| Related entity | Cardinality | Kind | Meaning |
+| --- | --- | --- | --- |
+| `incident.incident_ticket` | N:1 | polymorphic soft reference | `record_type = 'incident'`; the ticket's activity history (FR-AUD-04) |
+| `service_request.sr_request` | N:1 | polymorphic soft reference | `record_type = 'service_request'` |
+| `approval.apr_request` / `apr_decision` | N:1 | polymorphic soft reference | Authorization history beside the business decision record (FR-APR-07) |
+| `sla.sla_instance` | N:1 | polymorphic soft reference | Recalculation, warning and breach events (FR-SLA-04/06) |
+| Configuration tables (`catalog`, `sla`, `incident` workflow, `iam` role grants) | N:1 | polymorphic soft reference | `record_type = 'configuration'` (FR-AUD-05) |
+| `iam.iam_user` | N:1 | soft reference (cross-context, ADR-003) | The actor, by id only — never PII (NFR-SEC-07) |
+| `notification.ntf_dispatch` | N:1 | polymorphic soft reference | Notifications journaled with `action = 'notified'` (FR-NOT-08) |
+
+#### 3.2.9 `iam_user` — schema `iam`
+
+Aggregate root of the `User` aggregate and the **phase-0 anchor of the whole model**: it holds authentication material, the entitlement tier that drives catalog eligibility, and the PII columns that lawful erasure rewrites. Every other context references it by `uuid` only, which is exactly what makes pseudonymization possible without breaking history. Serves FR-IAM-01/02/03 and NFR-SEC-07. Full column list in **§20.1** of [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md).
+
+| Attribute | Type | Constraints | Description |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, NOT NULL | UUID v7 from the repository port |
+| `external_subject_id` | `varchar(64)` | NULL, UK partial `WHERE NOT NULL` | SSO/OIDC subject once FR-IAM-04 lands; null in the MVP local-credential mode |
+| `email` | `citext` | NOT NULL, UK `uq_iam_user_email` | Login identity and notification address, case-insensitive by column type (FR-IAM-01). PII |
+| `password_hash` | `varchar(255)` | NULL | bcrypt hash; null when federated. Excluded at the mapper, never reachable from the API layer (NFR-SEC-01) |
+| `display_name` | `varchar(150)` | NOT NULL | Name shown on tickets and activity history. PII, rewritten on erasure |
+| `phone` | `varchar(32)` | NULL | Optional contact for phone-logged intake (FR-OMN-02). PII |
+| `locale` | `varchar(10)` | NOT NULL, default `'en'` | Drives `Accept-Language` defaults and notification language (NFR-I18N-02/04) |
+| `time_zone` | `varchar(64)` | NOT NULL, default `'UTC'` | IANA zone, **presentation only** — SLA arithmetic never uses it (NFR-I18N-03) |
+| `entitlement_tier` | `entitlement_tier_enum` | NOT NULL | `player`, `team_manager`, `organizer`, `official`, `league_admin`, `staff` — drives catalog eligibility (FR-SRQ-02, FR-CAT-04) |
+| `status` | `user_status_enum` | NOT NULL, default `'active'` | `active`, `suspended`, `disabled`; deactivation is a state, never a row delete (FR-IAM-05) |
+| `last_login_at` | `timestamptz` | NULL | Adoption metric input (PRD §9.3) |
+| `pseudonymized_at` | `timestamptz` | NULL | Non-null means the PII columns hold tombstone values after a lawful erasure (NFR-SEC-07, K9) |
+
+CHECK constraint verbatim: `ck_iam_user_credential` — `password_hash IS NOT NULL OR external_subject_id IS NOT NULL`; an account must be authenticable somehow. `ix_iam_user_status` is a partial index `(id) WHERE status = 'active'`.
+
+**Relationships.**
+
+| Related entity | Cardinality | Kind | Meaning |
+| --- | --- | --- | --- |
+| `iam.iam_user_role` | 1:N | hard FK (RESTRICT) | Temporal role grants — `revoked_at`, never a deleted association, so "who could do what on 3 May" stays answerable (FR-IAM-05) |
+| `iam.iam_resolver_group_member` | 1:N | hard FK (RESTRICT) | Resolver Group memberships |
+| `iam.iam_resolver_group` | 1:N | hard FK (RESTRICT) | Groups the user manages, via `manager_user_id` (FR-INC-13) |
+| `iam.iam_competition_scope` | 1:N | hard FK (RESTRICT) | Competition-scoped visibility grants, making FR-IAM-03 a server-side predicate |
+| `iam.iam_role` | N:M through `iam_user_role` | hard FK (RESTRICT) | RBAC grants; permissions attach to the role, never to the user (FR-IAM-02) |
+| `incident.incident_ticket` / `service_request.sr_request` | 1:N | soft reference (cross-context, ADR-003) | Reporter/requester, logger, assignee, competition-flag setter |
+| `catalog.catalog_service` | 1:N | soft reference (cross-context, ADR-003) | Service owner, via `owner_user_id` |
+| `audit.audit_entry` | 1:N | soft reference (cross-context, ADR-003) | Actor of every journaled action, by id only (FR-AUD-02) |
+
+#### 3.2.10 Cross-cutting rules that shape every entity
+
+These hold for every table above and are stated once rather than repeated per entity (§3.1.2):
+
+| Rule | What it means concretely |
+| --- | --- |
+| **Surrogate PK, business key as UK** | Every table's PK is a `uuid` (**UUID v7**, time-ordered) issued by the repository port through `nextIdentity()`, so an aggregate is fully constructed and valid in pure domain code before any I/O. Business keys — `reference`, `code`, `email` — are **unique constraints, never the PK**. The only composite PK is `audit_entry (id, occurred_at)`, forced by RANGE partitioning. |
+| **Time is `timestamptz` in UTC, via `ClockPort`** | Every instant is UTC, obtained from `ClockPort` (ADR-009) — never `now()` in a trigger or a DB default. `date`/`time` appear only in `sla_schedule_window` and `sla_holiday`, which are deliberately wall-clock values read in the schedule's own `time_zone`. |
+| **Audit columns everywhere, `version` on roots** | `created_at`, `updated_at`, `created_by`, `updated_by` on every table; `version` (`@VersionColumn`, optimistic lock) on aggregate roots only, so two agents cannot silently overwrite a triage. On **append-only** tables `updated_at` is absent — the missing column *is* the immutability statement. These columns are a convenience: `audit.audit_entry` is the only authority for "who changed what". |
+| **No soft delete** | **No `deleted_at` on any table.** Removal is a lifecycle state: `publication_status = 'retired'`, `status = 'disabled'`, `active = false`, `revoked_at IS NOT NULL`. Retired reference data stays joinable by history forever, and existence has exactly one truth. |
+| **Enums vs versioned lookup tables** | A native PG enum when the value set is closed and the domain branches on it (`priority`, `impact`, `origin_channel`, `sla_instance_state`, `actor_type`). A lookup table (`id`, `code` UK, `active`, `*_translation`) when an administrator may change it without a release (NFR-CFG-01) or it must be translatable without changing its identifier (NFR-I18N-05). Records store the lookup **id**, never the label, so a rename changes one row and zero historical facts. Configuration is **versioned, never edited in place**: a ticket keeps the matrix, workflow and policy version it was created under (NFR-CFG-02). |
+| **Hard FK only inside a context** | A real `FOREIGN KEY` exists only within one schema / one bounded context, with `ON DELETE CASCADE` only from an aggregate root to a part it exclusively owns and `RESTRICT` everywhere else. Every cross-context or polymorphic reference is an **indexed `uuid` with no constraint** (ADR-003) — the database expression of the module-boundary rule of §2.1. |
+
+> **Status:** as in §3.1, this is the **target entity model**, derived from the PRD and the OpenSpec capability specs. **No TypeORM entity class exists, no migration exists, and no database has ever been created.** None of the primary keys, unique constraints, `CHECK` constraints, partial indexes, partitions or `GRANT`/`REVOKE` statements described above has been executed, and no cardinality or constraint here has been validated against a live PostgreSQL instance. The first migration is the moment any of it becomes fact; until then the correct reading is "designed and reviewed", not "implemented".
 
 ---
 
