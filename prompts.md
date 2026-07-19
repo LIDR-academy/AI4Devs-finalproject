@@ -194,6 +194,18 @@ Creado documento COMPONENTS.md y rellenado apartado "2.2. Descripción de compon
 
 **Prompt 1:**
 
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Usa el agente **sport-itsm-architect** para generar la "Descripción de alto nivel del proyecto y estructura de ficheros" de la aplicación. Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica. El documento que generes añadelo dentro de la carpeta docs y rellena la sección 2.3 del readme.md.
+
+### Response:
+
+Creado documento PROJECT-STRUCTURE.md y rellenado apartado "2.3. Descripción de alto nivel del proyecto y estructura de ficheros" del readme.md.
+
+</br>
+
 **Prompt 2:**
 
 **Prompt 3:**
