@@ -27,25 +27,34 @@ func TestLoad(t *testing.T) {
 			name: "defaults applied with only VALKEY_ADDR",
 			env:  map[string]string{"VALKEY_ADDR": "valkey:6379"},
 			want: config.Config{
-				ValkeyAddr:     "valkey:6379",
-				ValkeyPassword: "",
-				ValkeyDB:       0,
-				HTTPAddr:       ":8080",
+				ValkeyAddr:      "valkey:6379",
+				ValkeyPassword:  "",
+				ValkeyDB:        0,
+				HTTPAddr:        ":8080",
+				ChatMaxMessages: 1000000,
+				ChatPageSize:    200,
+				ChatMaxLength:   500,
 			},
 		},
 		{
 			name: "all values set",
 			env: map[string]string{
-				"VALKEY_ADDR":     "10.0.0.5:6379",
-				"VALKEY_PASSWORD": "secret",
-				"VALKEY_DB":       "3",
-				"STREAMER_ADDR":   ":9090",
+				"VALKEY_ADDR":       "10.0.0.5:6379",
+				"VALKEY_PASSWORD":   "secret",
+				"VALKEY_DB":         "3",
+				"STREAMER_ADDR":     ":9090",
+				"CHAT_MAX_MESSAGES": "50",
+				"CHAT_PAGE_SIZE":    "10",
+				"CHAT_MAX_LENGTH":   "140",
 			},
 			want: config.Config{
-				ValkeyAddr:     "10.0.0.5:6379",
-				ValkeyPassword: "secret",
-				ValkeyDB:       3,
-				HTTPAddr:       ":9090",
+				ValkeyAddr:      "10.0.0.5:6379",
+				ValkeyPassword:  "secret",
+				ValkeyDB:        3,
+				HTTPAddr:        ":9090",
+				ChatMaxMessages: 50,
+				ChatPageSize:    10,
+				ChatMaxLength:   140,
 			},
 		},
 		{
@@ -58,12 +67,30 @@ func TestLoad(t *testing.T) {
 			env:     map[string]string{"VALKEY_ADDR": "valkey:6379", "VALKEY_DB": "-1"},
 			wantErr: true,
 		},
+		{
+			name:    "non-integer CHAT_MAX_MESSAGES",
+			env:     map[string]string{"VALKEY_ADDR": "valkey:6379", "CHAT_MAX_MESSAGES": "lots"},
+			wantErr: true,
+		},
+		{
+			name:    "non-positive CHAT_PAGE_SIZE",
+			env:     map[string]string{"VALKEY_ADDR": "valkey:6379", "CHAT_PAGE_SIZE": "0"},
+			wantErr: true,
+		},
+		{
+			name:    "negative CHAT_MAX_LENGTH",
+			env:     map[string]string{"VALKEY_ADDR": "valkey:6379", "CHAT_MAX_LENGTH": "-5"},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clear the variables this test cares about, then set the case's values.
-			for _, k := range []string{"VALKEY_ADDR", "VALKEY_PASSWORD", "VALKEY_DB", "STREAMER_ADDR"} {
+			for _, k := range []string{
+				"VALKEY_ADDR", "VALKEY_PASSWORD", "VALKEY_DB", "STREAMER_ADDR",
+				"CHAT_MAX_MESSAGES", "CHAT_PAGE_SIZE", "CHAT_MAX_LENGTH",
+			} {
 				t.Setenv(k, "")
 			}
 			for k, v := range tt.env {

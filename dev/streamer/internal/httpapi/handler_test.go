@@ -7,40 +7,51 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 
+	"github.com/quickchat/streamer/internal/chat"
 	"github.com/quickchat/streamer/internal/httpapi"
+	"github.com/quickchat/streamer/internal/hub"
 	"github.com/quickchat/streamer/internal/stream"
 )
 
-// fakeStore is an in-memory Store for handler tests.
-type fakeStore struct {
-	mu      sync.Mutex
-	streams map[string]stream.Stream
+// --- fake stream.Store ---
+
+type storedStream struct {
+	s   stream.Stream
+	key string
 }
 
-func newFakeStore() *fakeStore { return &fakeStore{streams: make(map[string]stream.Stream)} }
+type fakeStreamStore struct {
+	mu      sync.Mutex
+	streams map[string]storedStream
+}
 
-func (f *fakeStore) List(context.Context) ([]stream.Stream, error) {
+func newFakeStreamStore() *fakeStreamStore {
+	return &fakeStreamStore{streams: make(map[string]storedStream)}
+}
+
+func (f *fakeStreamStore) List(context.Context) ([]stream.Stream, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	out := make([]stream.Stream, 0, len(f.streams))
-	for _, s := range f.streams {
-		out = append(out, s)
+	for _, v := range f.streams {
+		out = append(out, v.s)
 	}
 	return out, nil
 }
 
-func (f *fakeStore) Add(_ context.Context, s stream.Stream) error {
+func (f *fakeStreamStore) Add(_ context.Context, s stream.Stream, key string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.streams[s.ID] = s
+	f.streams[s.ID] = storedStream{s: s, key: key}
 	return nil
 }
 
-func (f *fakeStore) Remove(_ context.Context, id string) error {
+func (f *fakeStreamStore) Remove(_ context.Context, id string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if _, ok := f.streams[id]; !ok {
@@ -50,25 +61,112 @@ func (f *fakeStore) Remove(_ context.Context, id string) error {
 	return nil
 }
 
-// fakePinger reports a fixed readiness result.
+func (f *fakeStreamStore) Creator(_ context.Context, id string) (string, string, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	v, ok := f.streams[id]
+	if !ok {
+		return "", "", stream.ErrNotFound
+	}
+	return v.s.Username, v.key, nil
+}
+
+func (f *fakeStreamStore) Exists(_ context.Context, id string) (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	_, ok := f.streams[id]
+	return ok, nil
+}
+
+// --- fake chat.MessageStore ---
+
+type fakeMsgStore struct {
+	mu      sync.Mutex
+	rooms   map[string][]chat.Message
+	seq     int
+	deleted []string
+}
+
+func newFakeMsgStore() *fakeMsgStore { return &fakeMsgStore{rooms: make(map[string][]chat.Message)} }
+
+func (f *fakeMsgStore) Append(_ context.Context, roomID string, m chat.Message) (chat.Message, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.seq++
+	m.ID = strconv.Itoa(f.seq)
+	f.rooms[roomID] = append(f.rooms[roomID], m)
+	return m, nil
+}
+
+func (f *fakeMsgStore) History(_ context.Context, roomID, before string, limit int) ([]chat.Message, string, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	msgs := f.rooms[roomID]
+	end := len(msgs)
+	if before != "" {
+		for i, m := range msgs {
+			if m.ID == before {
+				end = i
+				break
+			}
+		}
+	}
+	start := end - limit
+	if start < 0 {
+		start = 0
+	}
+	page := append([]chat.Message(nil), msgs[start:end]...)
+	next := ""
+	if start > 0 {
+		next = msgs[start].ID
+	}
+	return page, next, nil
+}
+
+func (f *fakeMsgStore) DeleteRoom(_ context.Context, roomID string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.deleted = append(f.deleted, roomID)
+	delete(f.rooms, roomID)
+	return nil
+}
+
 type fakePinger struct{ err error }
 
 func (p fakePinger) Ping(context.Context) error { return p.err }
 
-func newServer(t *testing.T, store stream.Store, ping httpapi.Pinger) http.Handler {
+type server struct {
+	h        http.Handler
+	streams  *fakeStreamStore
+	messages *fakeMsgStore
+}
+
+func newServer(t *testing.T) server {
 	t.Helper()
-	svc := stream.NewService(store)
+	ss := newFakeStreamStore()
+	ms := newFakeMsgStore()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	return httpapi.NewHandler(svc, ping, log)
+	streamSvc := stream.NewService(ss)
+	chatSvc := chat.NewService(ms, 500, 200, nil)
+	h := httpapi.NewHandler(streamSvc, chatSvc, hub.New(log), fakePinger{}, log)
+	return server{h: h, streams: ss, messages: ms}
 }
 
 func do(t *testing.T, h http.Handler, method, path, body string) *httptest.ResponseRecorder {
+	t.Helper()
+	return doAuth(t, h, method, path, body, "")
+}
+
+func doAuth(t *testing.T, h http.Handler, method, path, body, bearer string) *httptest.ResponseRecorder {
 	t.Helper()
 	var r *http.Request
 	if body == "" {
 		r = httptest.NewRequest(method, path, nil)
 	} else {
 		r = httptest.NewRequest(method, path, strings.NewReader(body))
+	}
+	if bearer != "" {
+		r.Header.Set("Authorization", "Bearer "+bearer)
 	}
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
@@ -78,159 +176,180 @@ func do(t *testing.T, h http.Handler, method, path, body string) *httptest.Respo
 func decodeError(t *testing.T, w *httptest.ResponseRecorder) {
 	t.Helper()
 	if ct := w.Header().Get("Content-Type"); !strings.HasPrefix(ct, "application/json") {
-		t.Fatalf("error response Content-Type = %q, want application/json", ct)
+		t.Fatalf("error Content-Type = %q, want application/json", ct)
 	}
 	var body struct {
 		Error string `json:"error"`
 	}
-	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
-		t.Fatalf("error body is not valid JSON: %v (%q)", err, w.Body.String())
-	}
-	if body.Error == "" {
-		t.Fatalf("error body has empty error field: %q", w.Body.String())
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil || body.Error == "" {
+		t.Fatalf("bad error body: %q (%v)", w.Body.String(), err)
 	}
 }
 
-func TestListEmpty(t *testing.T) {
-	h := newServer(t, newFakeStore(), fakePinger{})
-	w := do(t, h, http.MethodGet, "/streams", "")
-	if w.Code != http.StatusOK {
-		t.Fatalf("status = %d, want 200", w.Code)
-	}
-	if got := strings.TrimSpace(w.Body.String()); got != "[]" {
-		t.Fatalf("body = %q, want []", got)
-	}
-}
+func TestCreateReturnsCreatorKeyAndListHidesIt(t *testing.T) {
+	srv := newServer(t)
 
-func TestCreateAndList(t *testing.T) {
-	h := newServer(t, newFakeStore(), fakePinger{})
-
-	// Title only → description defaults to "".
-	w := do(t, h, http.MethodPost, "/streams", `{"title":"only title"}`)
+	w := do(t, srv.h, http.MethodPost, "/streams", `{"username":"  alice  ","title":"t","description":"d"}`)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("status = %d, want 201; body=%s", w.Code, w.Body.String())
 	}
-	var created stream.Stream
+	var created stream.Created
 	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
-		t.Fatalf("decode create response: %v", err)
-	}
-	if created.ID == "" || created.Title != "only title" || created.Description != "" {
-		t.Fatalf("created = %+v, want id set, title 'only title', empty description", created)
-	}
-
-	// Title + description echoes both.
-	w = do(t, h, http.MethodPost, "/streams", `{"title":"  trimmed  ","description":"desc"}`)
-	if w.Code != http.StatusCreated {
-		t.Fatalf("status = %d, want 201", w.Code)
-	}
-	var second stream.Stream
-	if err := json.Unmarshal(w.Body.Bytes(), &second); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if second.Title != "trimmed" || second.Description != "desc" {
-		t.Fatalf("second = %+v, want trimmed title and desc", second)
+	if created.Username != "alice" || created.Title != "t" || created.Description != "d" {
+		t.Fatalf("created = %+v, want trimmed username/title/desc", created)
+	}
+	if created.CreatorKey == "" || created.ID == "" {
+		t.Fatalf("created must have id and creatorKey: %+v", created)
 	}
 
-	// Both appear in the list.
-	w = do(t, h, http.MethodGet, "/streams", "")
-	var list []stream.Stream
+	// GET includes username but never creatorKey.
+	w = do(t, srv.h, http.MethodGet, "/streams", "")
+	if strings.Contains(w.Body.String(), "creatorKey") {
+		t.Fatalf("GET /streams leaked creatorKey: %s", w.Body.String())
+	}
+	var list []map[string]any
 	if err := json.Unmarshal(w.Body.Bytes(), &list); err != nil {
 		t.Fatalf("decode list: %v", err)
 	}
-	if len(list) != 2 {
-		t.Fatalf("list length = %d, want 2", len(list))
+	if len(list) != 1 || list[0]["username"] != "alice" {
+		t.Fatalf("list = %+v, want one stream with username alice", list)
 	}
 }
 
-func TestCreateValidationErrors(t *testing.T) {
-	tests := []struct {
-		name string
-		body string
-	}{
-		{name: "empty title", body: `{"title":""}`},
-		{name: "whitespace title", body: `{"title":"   "}`},
-		{name: "missing title", body: `{"description":"d"}`},
-		{name: "description over 100", body: `{"title":"ok","description":"` + strings.Repeat("a", 101) + `"}`},
-		{name: "title over 200", body: `{"title":"` + strings.Repeat("a", 201) + `"}`},
-		{name: "malformed json", body: `{"title":`},
-		{name: "body over 8KiB", body: `{"title":"` + strings.Repeat("a", 9000) + `"}`},
+func TestCreateValidation(t *testing.T) {
+	cases := map[string]string{
+		"missing username": `{"title":"t"}`,
+		"empty username":   `{"username":"  ","title":"t"}`,
+		"missing title":    `{"username":"u"}`,
+		"description over": `{"username":"u","title":"t","description":"` + strings.Repeat("a", 101) + `"}`,
+		"malformed":        `{"username":`,
+		"body over 8KiB":   `{"username":"u","title":"` + strings.Repeat("a", 9000) + `"}`,
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			store := newFakeStore()
-			h := newServer(t, store, fakePinger{})
-			w := do(t, h, http.MethodPost, "/streams", tt.body)
+	for name, body := range cases {
+		t.Run(name, func(t *testing.T) {
+			srv := newServer(t)
+			w := do(t, srv.h, http.MethodPost, "/streams", body)
 			if w.Code != http.StatusBadRequest {
 				t.Fatalf("status = %d, want 400; body=%s", w.Code, w.Body.String())
 			}
 			decodeError(t, w)
-			if len(store.streams) != 0 {
-				t.Fatalf("a stream was created despite validation failure")
+			if len(srv.streams.streams) != 0 {
+				t.Fatalf("stream created despite validation failure")
 			}
 		})
 	}
 }
 
-func TestDelete(t *testing.T) {
-	store := newFakeStore()
-	h := newServer(t, store, fakePinger{})
-
-	w := do(t, h, http.MethodPost, "/streams", `{"title":"to delete"}`)
-	var created stream.Stream
+func TestDeleteRequiresCreatorKey(t *testing.T) {
+	srv := newServer(t)
+	w := do(t, srv.h, http.MethodPost, "/streams", `{"username":"u","title":"t"}`)
+	var created stream.Created
 	_ = json.Unmarshal(w.Body.Bytes(), &created)
 
-	// Existing → 204.
-	w = do(t, h, http.MethodDelete, "/streams/"+created.ID, "")
-	if w.Code != http.StatusNoContent {
-		t.Fatalf("delete status = %d, want 204", w.Code)
+	// No key → 403, nothing deleted.
+	w = do(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "")
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("delete without key status = %d, want 403", w.Code)
+	}
+	decodeError(t, w)
+	if len(srv.messages.deleted) != 0 {
+		t.Fatalf("delete without key still cascaded to messages: %v", srv.messages.deleted)
+	}
+	if ok, _ := srv.streams.Exists(context.Background(), created.ID); !ok {
+		t.Fatalf("stream was removed despite missing key")
 	}
 
-	// Already gone → 404 with error body.
-	w = do(t, h, http.MethodDelete, "/streams/"+created.ID, "")
+	// Wrong key → 403, nothing deleted.
+	w = doAuth(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "", "not-the-key")
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("delete with wrong key status = %d, want 403", w.Code)
+	}
+	if len(srv.messages.deleted) != 0 {
+		t.Fatalf("delete with wrong key still cascaded: %v", srv.messages.deleted)
+	}
+
+	// Nonexistent stream (with any key) → 404.
+	w = doAuth(t, srv.h, http.MethodDelete, "/streams/nope", "", created.CreatorKey)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("delete nonexistent status = %d, want 404", w.Code)
+	}
+
+	// Correct key → 204 and cascade.
+	w = doAuth(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "", created.CreatorKey)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("delete with key status = %d, want 204", w.Code)
+	}
+	if len(srv.messages.deleted) == 0 || srv.messages.deleted[len(srv.messages.deleted)-1] != created.ID {
+		t.Fatalf("authorized delete did not cascade to messages: %v", srv.messages.deleted)
+	}
+	if ok, _ := srv.streams.Exists(context.Background(), created.ID); ok {
+		t.Fatalf("stream still live after authorized delete")
+	}
+
+	// Deleting again (now gone) → 404.
+	w = doAuth(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "", created.CreatorKey)
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("second delete status = %d, want 404", w.Code)
 	}
 	decodeError(t, w)
 }
 
-func TestMethodNotAllowed(t *testing.T) {
-	h := newServer(t, newFakeStore(), fakePinger{})
-	w := do(t, h, http.MethodPut, "/streams", "")
-	if w.Code != http.StatusMethodNotAllowed {
-		t.Fatalf("status = %d, want 405", w.Code)
-	}
-	decodeError(t, w)
-}
+func TestMessagesEndpoint(t *testing.T) {
+	srv := newServer(t)
+	w := do(t, srv.h, http.MethodPost, "/streams", `{"username":"u","title":"t"}`)
+	var created stream.Created
+	_ = json.Unmarshal(w.Body.Bytes(), &created)
 
-func TestUnknownPath(t *testing.T) {
-	h := newServer(t, newFakeStore(), fakePinger{})
-	w := do(t, h, http.MethodGet, "/nope", "")
-	if w.Code != http.StatusNotFound {
-		t.Fatalf("status = %d, want 404", w.Code)
+	// Missing room → 404.
+	if w := do(t, srv.h, http.MethodGet, "/streams/nope/messages", ""); w.Code != http.StatusNotFound {
+		t.Fatalf("messages missing room status = %d, want 404", w.Code)
 	}
-	decodeError(t, w)
-}
 
-func TestHealthz(t *testing.T) {
-	h := newServer(t, newFakeStore(), fakePinger{})
-	w := do(t, h, http.MethodGet, "/healthz", "")
+	// Seed a few messages directly in the store, then read history.
+	for i := 0; i < 3; i++ {
+		_, _ = srv.messages.Append(context.Background(), created.ID, chat.Message{Sender: "u", Role: chat.RoleViewer, Text: "m" + strconv.Itoa(i), Ts: "t"})
+	}
+	w = do(t, srv.h, http.MethodGet, "/streams/"+created.ID+"/messages", "")
 	if w.Code != http.StatusOK {
-		t.Fatalf("status = %d, want 200", w.Code)
+		t.Fatalf("messages status = %d, want 200", w.Code)
+	}
+	var resp struct {
+		Messages   []chat.Message `json:"messages"`
+		NextCursor *string        `json:"nextCursor"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(resp.Messages) != 3 || resp.Messages[0].Text != "m0" || resp.Messages[2].Text != "m2" {
+		t.Fatalf("messages = %+v, want m0..m2 oldest→newest", resp.Messages)
+	}
+	if resp.NextCursor != nil {
+		t.Fatalf("nextCursor = %v, want null when history fits in one page", *resp.NextCursor)
 	}
 }
 
-func TestReadyz(t *testing.T) {
-	// Reachable store → 200.
-	h := newServer(t, newFakeStore(), fakePinger{err: nil})
-	if w := do(t, h, http.MethodGet, "/readyz", ""); w.Code != http.StatusOK {
-		t.Fatalf("readyz (ok) status = %d, want 200", w.Code)
+func TestMethodNotAllowed(t *testing.T) {
+	srv := newServer(t)
+	for _, tc := range []struct{ method, path string }{
+		{http.MethodPut, "/streams"},
+		{http.MethodPost, "/streams/x/messages"},
+	} {
+		w := do(t, srv.h, tc.method, tc.path, "")
+		if w.Code != http.StatusMethodNotAllowed {
+			t.Fatalf("%s %s status = %d, want 405", tc.method, tc.path, w.Code)
+		}
+		decodeError(t, w)
 	}
+}
 
-	// Unreachable store → 503 with error body.
-	h = newServer(t, newFakeStore(), fakePinger{err: context.DeadlineExceeded})
-	w := do(t, h, http.MethodGet, "/readyz", "")
-	if w.Code != http.StatusServiceUnavailable {
-		t.Fatalf("readyz (down) status = %d, want 503", w.Code)
+func TestHealthAndReady(t *testing.T) {
+	srv := newServer(t)
+	if w := do(t, srv.h, http.MethodGet, "/healthz", ""); w.Code != http.StatusOK {
+		t.Fatalf("healthz = %d, want 200", w.Code)
 	}
-	decodeError(t, w)
+	if w := do(t, srv.h, http.MethodGet, "/readyz", ""); w.Code != http.StatusOK {
+		t.Fatalf("readyz = %d, want 200", w.Code)
+	}
 }

@@ -1,17 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { countCodePoints, validateDescription, validateTitle } from "./validation";
+import { countCodePoints, validateDescription, validateRequired } from "./validation";
 
-describe("validateTitle", () => {
-  test("accepts and trims a non-empty title", () => {
-    expect(validateTitle("  hi  ")).toEqual({ ok: true, value: "hi" });
+describe("validateRequired", () => {
+  test("accepts and trims a non-empty value", () => {
+    expect(validateRequired("  hi  ")).toEqual({ ok: true, value: "hi" });
   });
 
-  test("rejects an empty title", () => {
-    expect(validateTitle("")).toEqual({ ok: false, error: "empty" });
+  test("rejects an empty value", () => {
+    expect(validateRequired("")).toEqual({ ok: false, error: "empty" });
   });
 
-  test("rejects a whitespace-only title", () => {
-    expect(validateTitle("   ")).toEqual({ ok: false, error: "empty" });
+  test("rejects a whitespace-only value", () => {
+    expect(validateRequired("   ")).toEqual({ ok: false, error: "empty" });
   });
 });
 

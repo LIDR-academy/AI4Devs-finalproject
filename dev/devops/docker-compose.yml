@@ -31,6 +31,10 @@ services:
       VALKEY_PASSWORD: ${VALKEY_PASSWORD:-}
       VALKEY_DB: ${VALKEY_DB:-0}
       STREAMER_ADDR: ${STREAMER_ADDR:-:8080}
+      # Chat knobs (room-chat-v0) — read verbatim by streamer, overridable via .env.
+      CHAT_MAX_MESSAGES: ${CHAT_MAX_MESSAGES:-1000000}
+      CHAT_PAGE_SIZE: ${CHAT_PAGE_SIZE:-200}
+      CHAT_MAX_LENGTH: ${CHAT_MAX_LENGTH:-500}
     depends_on:
       valkey:
         condition: service_healthy

@@ -18,8 +18,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/quickchat/streamer/internal/chat"
 	"github.com/quickchat/streamer/internal/config"
 	"github.com/quickchat/streamer/internal/httpapi"
+	"github.com/quickchat/streamer/internal/hub"
 	"github.com/quickchat/streamer/internal/stream"
 	"github.com/quickchat/streamer/internal/valkey"
 )
@@ -57,12 +59,19 @@ func run() error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	store := valkey.New(cfg.ValkeyAddr, cfg.ValkeyPassword, cfg.ValkeyDB)
+	store := valkey.New(cfg.ValkeyAddr, cfg.ValkeyPassword, cfg.ValkeyDB, cfg.ChatMaxMessages)
 	defer func() { _ = store.Close() }()
 
-	svc := stream.NewService(store)
+	streamSvc := stream.NewService(store)
+	chatSvc := chat.NewService(store, cfg.ChatMaxLength, cfg.ChatPageSize, nil)
+	realtime := hub.New(log)
+
+	// WebSocket connections are hijacked and outlive graceful HTTP shutdown, so
+	// close them explicitly once the server stops.
+	defer realtime.CloseAll()
+
 	srv := &http.Server{
-		Handler:           httpapi.NewHandler(svc, store, log),
+		Handler:           httpapi.NewHandler(streamSvc, chatSvc, realtime, store, log),
 		ReadHeaderTimeout: readHeaderTimeout,
 		ReadTimeout:       readTimeout,
 		WriteTimeout:      writeTimeout,

@@ -22,6 +22,12 @@ type Config struct {
 	ValkeyDB int
 	// HTTPAddr is the address the HTTP server listens on (e.g. ":8080").
 	HTTPAddr string
+	// ChatMaxMessages is the per-room ring-buffer cap (drop-oldest).
+	ChatMaxMessages int
+	// ChatPageSize is the history page size and the cap on a requested limit.
+	ChatPageSize int
+	// ChatMaxLength is the maximum message length in Unicode code points.
+	ChatMaxLength int
 }
 
 // Load reads the configuration from the environment, applying defaults for the
@@ -50,10 +56,43 @@ func Load() (Config, error) {
 		httpAddr = ":8080"
 	}
 
+	chatMaxMessages, err := positiveInt("CHAT_MAX_MESSAGES", 1000000)
+	if err != nil {
+		return Config{}, err
+	}
+	chatPageSize, err := positiveInt("CHAT_PAGE_SIZE", 200)
+	if err != nil {
+		return Config{}, err
+	}
+	chatMaxLength, err := positiveInt("CHAT_MAX_LENGTH", 500)
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
-		ValkeyAddr:     addr,
-		ValkeyPassword: os.Getenv("VALKEY_PASSWORD"),
-		ValkeyDB:       db,
-		HTTPAddr:       httpAddr,
+		ValkeyAddr:      addr,
+		ValkeyPassword:  os.Getenv("VALKEY_PASSWORD"),
+		ValkeyDB:        db,
+		HTTPAddr:        httpAddr,
+		ChatMaxMessages: chatMaxMessages,
+		ChatPageSize:    chatPageSize,
+		ChatMaxLength:   chatMaxLength,
 	}, nil
+}
+
+// positiveInt reads name from the environment as a positive integer, returning
+// def when it is unset and an error when it is not a valid positive integer.
+func positiveInt(name string, def int) (int, error) {
+	raw := strings.TrimSpace(os.Getenv(name))
+	if raw == "" {
+		return def, nil
+	}
+	parsed, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, fmt.Errorf("%s %q is not a valid integer: %w", name, raw, err)
+	}
+	if parsed <= 0 {
+		return 0, fmt.Errorf("%s %d must be positive", name, parsed)
+	}
+	return parsed, nil
 }

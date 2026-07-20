@@ -9,12 +9,12 @@ export function countCodePoints(value: string): number {
   return [...value].length;
 }
 
-export type TitleValidation =
+export type RequiredValidation =
   | { readonly ok: true; readonly value: string }
   | { readonly ok: false; readonly error: "empty" };
 
-/** Validate the title: required, non-empty after trimming. Returns the trimmed value. */
-export function validateTitle(raw: string): TitleValidation {
+/** Validate a required text field: non-empty after trimming. Returns the trimmed value. */
+export function validateRequired(raw: string): RequiredValidation {
   const value = raw.trim();
   if (value.length === 0) {
     return { ok: false, error: "empty" };

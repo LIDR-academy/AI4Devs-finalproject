@@ -1,4 +1,4 @@
-import type { CreateStreamInput, Stream } from "./types";
+import type { CreateStreamInput, CreateStreamResult, Stream } from "./types";
 
 /** The streams API module owns the entire wire boundary to the §6 contract (design D-P2).
  *  UI never calls `fetch`; every response is parsed from `unknown` and validated here. */
@@ -22,6 +22,7 @@ function isStream(value: unknown): value is Stream {
   return (
     isRecord(value) &&
     typeof value.id === "string" &&
+    typeof value.username === "string" &&
     typeof value.title === "string" &&
     typeof value.description === "string"
   );
@@ -29,6 +30,10 @@ function isStream(value: unknown): value is Stream {
 
 function isStreamArray(value: unknown): value is Stream[] {
   return Array.isArray(value) && value.every(isStream);
+}
+
+function isCreateStreamResult(value: unknown): value is CreateStreamResult {
+  return isRecord(value) && typeof value.creatorKey === "string" && isStream(value);
 }
 
 async function parseJson(response: Response): Promise<unknown> {
@@ -59,8 +64,11 @@ export async function listStreams(): Promise<ApiResult<Stream[]>> {
   return { ok: true, value: data };
 }
 
-/** `POST /streams` — start a stream. `201` returns the created stream; `400` is a validation failure. */
-export async function createStream(input: CreateStreamInput): Promise<ApiResult<Stream>> {
+/** `POST /streams` — start a stream. `201` returns the created stream plus a `creatorKey`;
+ *  `400` is a validation failure. */
+export async function createStream(
+  input: CreateStreamInput,
+): Promise<ApiResult<CreateStreamResult>> {
   let response: Response;
   try {
     response = await fetch("/streams", {
@@ -75,17 +83,22 @@ export async function createStream(input: CreateStreamInput): Promise<ApiResult<
     return { ok: false, error: { kind: "http", status: response.status } };
   }
   const data = await parseJson(response);
-  if (!isStream(data)) {
+  if (!isCreateStreamResult(data)) {
     return { ok: false, error: { kind: "malformed" } };
   }
   return { ok: true, value: data };
 }
 
-/** `DELETE /streams/{id}` — end a stream. `204` succeeds; callers treat `404` as already-ended. */
-export async function endStream(id: string): Promise<ApiResult<null>> {
+/** `DELETE /streams/{id}` — end a stream, authenticated with the creator's key as
+ *  `Authorization: Bearer <creatorKey>` (coordinated transport, root D10). `204` succeeds;
+ *  callers treat `404` as already-ended and `403` as not-allowed. */
+export async function endStream(id: string, creatorKey: string): Promise<ApiResult<null>> {
   let response: Response;
   try {
-    response = await fetch(`/streams/${encodeURIComponent(id)}`, { method: "DELETE" });
+    response = await fetch(`/streams/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${creatorKey}` },
+    });
   } catch {
     return { ok: false, error: { kind: "network" } };
   }

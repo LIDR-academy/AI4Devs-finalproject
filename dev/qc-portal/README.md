@@ -1,21 +1,26 @@
 # QuickChat Portal (`qc-portal`)
 
-The frontend of QuickChat. This v0 slice delivers the **Streamings** experience:
-a Home page listing live streams, a modal flow to start a stream, and a stream
-page to end it. Built with TypeScript, Vite, VanJS, Bun, and Tailwind v4.
+The frontend of QuickChat. It delivers the **Streamings** and **Rooms** experience:
+a Home page listing live streams, a modal flow to start a stream, and a room page
+with live chat. Built with TypeScript, Vite, VanJS, Bun, and Tailwind v4.
 
 ## What it is
 
 - **Home (`/`)** — fetches `GET /streams` once on load (no polling) and lists live
-  streams by title, with a **Start streaming** action. Calm empty state when none.
-- **Start flow** — a single modal: required title + optional description
-  (≤ 100 Unicode code points), `POST /streams`, redirect to the new stream on success.
-- **Stream page (`/stream/{id}`)** — placeholder content + **End stream**
-  (`DELETE /streams/{id}`), redirecting Home on success or if already ended.
+  streams by username + title, with a **Start streaming** action. Calm empty state when none.
+- **Start flow** — a single modal: required username + title + optional description
+  (≤ 100 Unicode code points), `POST /streams`; the returned `creatorKey` is kept in
+  memory only (never persisted), then redirect to the new room.
+- **Room page (`/stream/{id}`)** — camera placeholder + live **chat** (camera 2/3 +
+  chat 1/3 wide, stacked rows narrow, with a chat toggle), and **End stream**
+  (`DELETE /streams/{id}`). Chat history loads over HTTP and live messages over a
+  WebSocket, reconciled so nothing is missed or duplicated; the stream creator is
+  labelled **STREAMER** from a server-stamped role.
 
-The portal consumes the streamer HTTP contract at the **same-origin path `/streams`**
-— no base URL is baked into the bundle, and there is no CORS. In production a reverse
-proxy routes `/streams*` to streamer and everything else to this app's static server.
+The portal consumes the streamer HTTP + WebSocket contract at the **same-origin path
+`/streams`** (chat WS at `/streams/{id}/ws`) — no base URL is baked into the bundle,
+and there is no CORS. In production a reverse proxy routes `/streams*` (HTTP and WS
+upgrade) to streamer and everything else to this app's static server.
 
 ## Prerequisites
 
@@ -34,8 +39,9 @@ cp .env.example .env   # set STREAMER_PROXY_TARGET if streamer isn't on :8080
 bun run dev
 ```
 
-Vite serves the app and proxies the literal `/streams` path to `STREAMER_PROXY_TARGET`,
-mirroring the production single-origin setup.
+Vite serves the app and proxies the literal `/streams` path (HTTP and the chat
+WebSocket upgrade at `/streams/{id}/ws`) to `STREAMER_PROXY_TARGET`, mirroring the
+production single-origin setup.
 
 ## Test
 

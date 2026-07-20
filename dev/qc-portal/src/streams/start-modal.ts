@@ -2,23 +2,27 @@ import van from "vanjs-core";
 import type { ApiResult } from "./api";
 import { createStream } from "./api";
 import { COPY } from "./copy";
-import type { CreateStreamInput, Stream } from "./types";
-import { validateDescription, validateTitle } from "./validation";
+import { setCreatorKey } from "./creator-key";
+import type { CreateStreamInput, CreateStreamResult } from "./types";
+import { validateDescription, validateRequired } from "./validation";
 
-/** The start-flow modal (design D-P8): one dialog with title + optional description,
- *  client-side validation, and a POST that redirects on success. Side effects (create,
- *  navigate, close) are injected so the flow is testable without the DOM or network. */
+/** The start-flow modal (design D-P8): one dialog with username + title + optional
+ *  description, client-side validation, and a POST that on 201 retains the creatorKey
+ *  in memory and redirects. Side effects (create, retainKey, navigate, close) are
+ *  injected so the flow is testable without the DOM, network, or the real store. */
 
 const { div, form, label, span, input, textarea, p, button } = van.tags;
 
 type StartModalConfig = {
-  readonly create: (input: CreateStreamInput) => Promise<ApiResult<Stream>>;
+  readonly create: (input: CreateStreamInput) => Promise<ApiResult<CreateStreamResult>>;
+  readonly retainKey: (streamId: string, creatorKey: string) => void;
   readonly navigate: (path: string) => void;
   readonly onClose: () => void;
 };
 
 export type StartModal = {
   readonly root: HTMLElement;
+  readonly usernameInput: HTMLInputElement;
   readonly titleInput: HTMLInputElement;
   readonly descriptionInput: HTMLTextAreaElement;
   readonly errorText: { readonly val: string };
@@ -32,6 +36,12 @@ export function createStartModal(config: StartModalConfig): StartModal {
   const errorText = van.state("");
   const submitting = van.state(false);
 
+  const usernameInput = input({
+    class: "field",
+    type: "text",
+    name: "username",
+    id: "start-username",
+  });
   const titleInput = input({ class: "field", type: "text", name: "title", id: "start-title" });
   const descriptionInput = textarea({
     class: "field",
@@ -43,7 +53,12 @@ export function createStartModal(config: StartModalConfig): StartModal {
     if (submitting.val) {
       return;
     }
-    const title = validateTitle(titleInput.value);
+    const username = validateRequired(usernameInput.value);
+    if (!username.ok) {
+      errorText.val = COPY.usernameRequired;
+      return;
+    }
+    const title = validateRequired(titleInput.value);
     if (!title.ok) {
       errorText.val = COPY.titleRequired;
       return;
@@ -55,9 +70,14 @@ export function createStartModal(config: StartModalConfig): StartModal {
     }
     errorText.val = "";
     submitting.val = true;
-    const result = await config.create({ title: title.value, description: description.value });
+    const result = await config.create({
+      username: username.value,
+      title: title.value,
+      description: description.value,
+    });
     submitting.val = false;
     if (result.ok) {
+      config.retainKey(result.value.id, result.value.creatorKey);
       config.onClose();
       config.navigate(`/stream/${result.value.id}`);
       return;
@@ -69,6 +89,13 @@ export function createStartModal(config: StartModalConfig): StartModal {
   const cancel = (): void => {
     config.onClose();
   };
+
+  const field = (labelText: string, forId: string, control: HTMLElement): HTMLElement =>
+    label(
+      { class: "flex flex-col gap-1 text-sm", for: forId },
+      span({ class: "font-semibold" }, labelText),
+      control,
+    );
 
   const root = div(
     {
@@ -89,16 +116,9 @@ export function createStartModal(config: StartModalConfig): StartModal {
         },
       },
       p({ class: "text-xl font-semibold" }, COPY.startConfirmHeading),
-      label(
-        { class: "flex flex-col gap-1 text-sm", for: "start-title" },
-        span({ class: "font-semibold" }, COPY.titleLabel),
-        titleInput,
-      ),
-      label(
-        { class: "flex flex-col gap-1 text-sm", for: "start-description" },
-        span({ class: "font-semibold" }, COPY.descriptionLabel),
-        descriptionInput,
-      ),
+      field(COPY.usernameLabel, "start-username", usernameInput),
+      field(COPY.titleLabel, "start-title", titleInput),
+      field(COPY.descriptionLabel, "start-description", descriptionInput),
       // Error region is always in the DOM (aria-live) so screen readers hear updates.
       p(
         { class: "text-sm text-gray-strong min-h-5", role: "alert", "aria-live": "polite" },
@@ -122,11 +142,11 @@ export function createStartModal(config: StartModalConfig): StartModal {
     ),
   );
 
-  return { root, titleInput, descriptionInput, errorText, submit, cancel };
+  return { root, usernameInput, titleInput, descriptionInput, errorText, submit, cancel };
 }
 
 type StartModalDeps = {
-  readonly create: (input: CreateStreamInput) => Promise<ApiResult<Stream>>;
+  readonly create: (input: CreateStreamInput) => Promise<ApiResult<CreateStreamResult>>;
   readonly navigate: (path: string) => void;
 };
 
@@ -148,7 +168,12 @@ export function openStartModal(deps: StartModalDeps): HTMLElement {
     }
   };
 
-  const modal = createStartModal({ create: deps.create, navigate: deps.navigate, onClose });
+  const modal = createStartModal({
+    create: deps.create,
+    retainKey: setCreatorKey,
+    navigate: deps.navigate,
+    onClose,
+  });
 
   function onKeydown(event: KeyboardEvent): void {
     if (event.key === "Escape") {
@@ -176,7 +201,7 @@ export function openStartModal(deps: StartModalDeps): HTMLElement {
 
   document.addEventListener("keydown", onKeydown);
   document.body.appendChild(modal.root);
-  modal.titleInput.focus();
+  modal.usernameInput.focus();
   return modal.root;
 }
 

@@ -19,7 +19,8 @@ the proxy, so streamer needs no CORS and the portal bakes in no API base URL.
 
 ### Routing (single origin)
 
-- `GET/POST /streams` and `DELETE /streams/{id}` → `streamer` (paths forwarded verbatim).
+- `GET/POST /streams`, `DELETE /streams/{id}`, `GET /streams/{id}/messages` → `streamer` (paths forwarded verbatim, HTTP).
+- `GET /streams/{id}/ws` → `streamer` as a **WebSocket** (room chat): the proxy performs the HTTP/1.1 Upgrade and keeps idle sockets open, so live chat traverses the single origin (no CORS, no baked URL).
 - Everything else → `portal` (which serves `index.html` as the SPA fallback).
 
 ## Requirements
@@ -47,6 +48,9 @@ and ephemeral. Variables:
 | `VALKEY_PASSWORD` | *(empty)*                 | Valkey password (none — anonymous)                  |
 | `VALKEY_DB`       | `0`                       | Valkey logical DB for streamer                      |
 | `STREAMER_ADDR`   | `:8080`                   | Streamer's internal listen address                  |
+| `CHAT_MAX_MESSAGES` | `1000000`               | Per-room chat ring-buffer cap (drop-oldest)         |
+| `CHAT_PAGE_SIZE`  | `200`                     | Chat history page size / cap                        |
+| `CHAT_MAX_LENGTH` | `500`                     | Max characters per chat message (server-enforced)   |
 
 ## Run
 

@@ -3,7 +3,9 @@ import { defineConfig, loadEnv } from "vite";
 
 // Vite config. In dev, mirror the production single-origin setup by proxying the
 // literal `/streams` path to the streamer service, so the app can call `/streams`
-// with no base URL baked into the bundle (see openspec design D-P6).
+// with no base URL baked into the bundle (see openspec design D-P6). The proxy also
+// upgrades the room-chat WebSocket at `/streams/{id}/ws` (ws: true), mirroring nginx
+// in production (root D4).
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const target = env.STREAMER_PROXY_TARGET ?? "http://localhost:8080";
@@ -12,7 +14,7 @@ export default defineConfig(({ mode }) => {
     plugins: [tailwindcss()],
     server: {
       proxy: {
-        "/streams": { target, changeOrigin: true },
+        "/streams": { target, changeOrigin: true, ws: true },
       },
     },
   };
