@@ -1,0 +1,56 @@
+schema: spec-driven
+
+# Service context — shown to AI when creating artifacts (proposals, specs, tasks)
+# for the security scope. Grounds proposals/specs/tasks in what this service is.
+context: |
+  SERVICE: security — QuickChat's authentication and token authority. Stack: Go.
+
+  COMPONENTS:
+  - User [Go package]   — passwordless auth. Generates magic links via the SuperTokens
+                          SDK; serves login requests from qc-portal (JSON/HTTP). On a
+                          brand-new user, issues a create-user command to the users service.
+  - Tokens [Go package] — issues JWT / room tokens; serves streamer's requests for
+                          stream-room tokens (JSON/HTTP): claims, TTL, signing/verification.
+
+  EXTERNAL SYSTEM: SuperTokens (magic-link auth backend).
+
+  INTEGRATION SEAMS (cross-scope wire contracts — agreed up front in a feature's contract
+  phase, never changed unilaterally; this service owns none of these peers' code):
+  - qc-portal -> security: magic-link request/verify (JSON/HTTP); session/token returned to portal.
+  - streamer  -> security: fetch room token (JSON/HTTP); claims, TTL, signing/verification.
+  - security  -> users:    create-user command on first auth; MUST be idempotent
+                           (retries never duplicate the user).
+  - OPEN (from root openspec): who issues the LiveKit access token (security vs streamer)
+    — resolve in a feature's contract phase, not here.
+
+  HARD BOUNDARY: create/modify files only inside dev/security/. Never touch the root
+  openspec, root tooling, or any other teammate's scope. Cross-scope needs go through the
+  team lead or direct coordination with the owning teammate, always recorded in openspec.
+
+  WORKFLOW: openspec-first — proposal -> spec -> tasks -> implementation. Jumping straight
+  to code is forbidden. Report done with evidence, never a bare "done".
+
+  DEFINITION OF DONE (security essentials, from the constitution):
+  - gofmt + go vet + golangci-lint clean; `go test -race ./...` passes; go.mod tidy.
+  - New/changed behavior covered by tests (happy path + error paths); no skipped/disabled tests.
+  - Every goroutine has a stop path; context.Context on every I/O path, never stored in a struct.
+  - Errors wrapped with context; never panic in business code.
+  - Config comes from the environment; no secrets or SuperTokens keys baked into code or the image.
+  - SECURITY BOUNDARY: validate every external input (HTTP payload, env var) at the boundary;
+    never log tokens, magic links, or credentials.
+  - This service owns its own Dockerfile (multi-stage Go build); devops only consumes it.
+
+# Per-artifact rules applied when generating openspec artifacts in this scope.
+rules:
+  proposal:
+    - State which scope(s) the change touches; flag every cross-scope wire contract explicitly.
+    - Include a "Non-goals" section.
+    - Resolve cross-scope contracts before implementation, not during it.
+  spec:
+    - Specify behavior, not implementation; cover error paths, not just the happy path.
+    - Define and validate every external input (HTTP payload, env var) at the boundary.
+    - Never expose or log tokens, magic links, or credentials.
+  tasks:
+    - Each unit of work ships with its tests; no task is "done" without them.
+    - Definition of Done requires evidence: root cause (for bugs) -> change -> test that
+      proves it -> full-suite result (gofmt/go vet/golangci-lint/go test -race). Never a bare "done".

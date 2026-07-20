@@ -1,0 +1,67 @@
+schema: spec-driven
+
+# Project context — shown to AI when creating artifacts (proposals, specs, tasks).
+context: |
+  SCOPE: devops — the QuickChat environment. Owns docker-compose orchestration,
+  environment configuration, and runtime scripts that bring the whole system up,
+  down, and observable locally. Part of QuickChat, a live streaming + chat platform.
+
+  WHAT THIS SCOPE OWNS (writes only inside dev/devops/):
+  - docker-compose definition wiring the five services + backing infrastructure.
+  - Environment configuration (env-var contracts, git-ignored dev env files — never committed secrets).
+  - Runtime scripts to run and operate the environment: bring up, tear down, status, logs.
+
+  HARD BOUNDARY:
+  - READ-ONLY on ALL service code, including every service's Dockerfile. Each service owns
+    and maintains its own Dockerfile; devops only CONSUMES them to build and run.
+  - devops never modifies another scope. If a service or its Dockerfile needs a change to be
+    runnable (build failure, wrong/hardcoded port, missing health endpoint, config that should
+    come from the environment), devops does NOT fix it — it reports exact evidence (build output,
+    logs, exit codes) to the owning teammate and keeps the team lead informed for the root openspec.
+
+  SYSTEM DEVOPS ORCHESTRATES (services and what each depends on):
+  - qc-portal  (TS/Vite/VanJS, Bun) -> security, streamer, LiveKit
+  - security   (Go API)             -> SuperTokens, users
+  - streamer   (Go API)             -> Valkey, security, LiveKit
+  - users      (Go API)             -> MongoDB
+  - INFRASTRUCTURE devops stands up: SuperTokens, Valkey, MongoDB, LiveKit SFU.
+
+  RUNTIME CONTRACTS devops depends on (agreed with owning teammates, not invented here):
+  - Each service's container port, its health-check endpoint/command, and the exact set of
+    env vars it reads (names + which are required). Config comes from the environment.
+
+  GOVERNANCE:
+  - The code constitution (code-constitution/CONSTITUTION.md + .go.md + .ts.md) is law.
+  - Openspec is the single source of truth; the team lead coordinates via the root openspec.
+    This is devops's OWN openspec for its per-feature workflow: proposal -> spec -> tasks -> implementation.
+    Jumping straight to compose/scripts is forbidden.
+
+  DEFINITION OF DONE ESSENTIALS (devops):
+  - Boring, standard infra: official base images, versions PINNED (never `latest`); reproducible
+    (works today = works tomorrow).
+  - Compose wires all five services + infra with health checks, sensible dependency ordering,
+    and configuration via environment variables. NO secrets baked into images or compose files
+    (Constitution 10); dev secrets supplied via git-ignored env files.
+  - Evidence, not claims: images build cleanly, `docker compose up` succeeds, and EVERY service
+    passes its health check. "The environment runs" requires command output, not a bare "done".
+  - Errors are first-class: fail fast and loudly on missing/invalid configuration at startup.
+
+# Per-artifact rules applied when devops generates openspec artifacts.
+rules:
+  proposal:
+    - State the runtime change and which services/infra it affects; flag every cross-scope
+      dependency (a Dockerfile, port, health endpoint, or env var owned by another teammate).
+    - Include a "Non-goals" section. Never propose changes to another scope's code.
+    - Resolve runtime contracts (ports, health checks, env-var names) with owning teammates
+      before implementation, not during it.
+  spec:
+    - Specify runtime behavior, not implementation trivia; cover failure paths (a service that
+      won't start, a failing health check, a missing env var), not just the happy path.
+    - Validate configuration (env vars) at the boundary; fail fast on missing/invalid config.
+    - No secrets or credentials in specs, compose files, or fixtures.
+  tasks:
+    - Every task stays inside dev/devops/. Anything requiring another scope's code becomes a
+      coordination item reported to the team lead, not a devops task.
+    - Pin every image version; justify each base image and dependency.
+    - Definition of Done requires evidence: images build -> `docker compose up` succeeds ->
+      every service passes its health check (with command output). Never a bare "done".
