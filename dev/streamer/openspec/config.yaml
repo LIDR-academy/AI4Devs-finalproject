@@ -46,12 +46,12 @@ rules:
     - State that the change is in the streamer scope; flag every cross-scope wire contract (qc-portal, security) explicitly.
     - Include a "Non-goals" section.
     - Resolve cross-scope contracts before implementation, coordinated through the team lead.
-  spec:
+  specs:
     - Specify behavior, not implementation; cover error paths, not just the happy path.
     - Define and validate every external input (HTTP payload, WebSocket frame, env var) at the boundary.
     - Every concurrency-bearing behavior states its goroutine owner, stop path, and ctx.Done() handling.
   tasks:
     - Every task stays inside the streamer scope.
     - Each unit of work ships with its tests; no task is "done" without them.
-    - Definition of Done requires evidence: root cause (for bugs) -> change -> test that proves it ->
-      `go test -race ./...` + go vet + golangci-lint result. Never a bare "done".
+    - Definition of Done requires evidence - root cause (for bugs), the change, the test that proves it,
+      and the full-suite result (go test -race ./..., go vet, golangci-lint). Never a bare "done".

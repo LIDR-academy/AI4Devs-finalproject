@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* Self-hosted fonts — the style law freezes Inter (sans) + JetBrains Mono (mono). */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/600.css";
+
+/* The style law, tokenized once (CONSTITUTION.style.md §2/§5). Components consume
+   only these tokens — no arbitrary colors or font sizes anywhere else. */
+@theme {
+  --color-ink: #000000;
+  --color-paper: #fafaf8;
+  --color-surface: #ffffff;
+  --color-gray-strong: #4a4a4a;
+  --color-gray-mid: #8a8a8a;
+  --color-gray-line: #e4e4e1;
+  --color-gray-fill: #f1f1ef;
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-xl: 20px;
+  --text-2xl: 28px;
+  --text-3xl: 40px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  /* Mandatory, always-visible focus for keyboard users (style §6). */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Buttons and inputs are used across several views, so their token/state combos
+     are extracted here (style §9) rather than repeated as utility noise. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: 0;
+    cursor: pointer;
+  }
+
+  .btn:disabled {
+    background-color: var(--color-gray-fill);
+    color: var(--color-gray-mid);
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .btn-primary:not(:disabled):hover {
+    background-color: var(--color-gray-strong);
+  }
+
+  .btn-secondary {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    border: 1px solid var(--color-gray-line);
+  }
+
+  .btn-secondary:not(:disabled):hover {
+    background-color: var(--color-gray-fill);
+  }
+
+  .field {
+    width: 100%;
+    padding: 8px 12px;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--color-ink);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-gray-line);
+    border-radius: 0;
+  }
+
+  .field:focus {
+    border-color: var(--color-ink);
+  }
+
+  /* The entire motion budget (style §7): opacity/color only, calm, ease-out. */
+  .transition-calm {
+    transition-property: opacity, background-color, border-color, color;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+}
+
+/* Nothing moves for users who ask for less motion (style §7). */
+@media (prefers-reduced-motion: reduce) {
+  .transition-calm {
+    transition: none;
+  }
+}

@@ -1,0 +1,88 @@
+# QuickChat local runtime — home-stream-lifecycle-v0.
+# Single browser-facing origin: only the `proxy` publishes a host port.
+# `docker compose up` brings up Valkey + streamer + portal + reverse proxy.
+#
+# devops owns this file and nginx.conf. It CONSUMES streamer's and qc-portal's
+# Dockerfiles (build contexts below) without modifying them.
+
+name: quickchat
+
+services:
+  # Ephemeral, anonymous key/value store — streamer's private storage.
+  # No volume => nothing survives a restart (v0 has no persistence).
+  valkey:
+    image: ${VALKEY_IMAGE:-valkey/valkey:8.1-alpine}
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - quickchat
+    restart: unless-stopped
+
+  # Go HTTP API. Internal only; reached by the browser only through the proxy.
+  # Env var names are owned by streamer and supplied here verbatim.
+  streamer:
+    build:
+      context: ../streamer
+    environment:
+      VALKEY_ADDR: ${VALKEY_ADDR:-valkey:6379}
+      VALKEY_PASSWORD: ${VALKEY_PASSWORD:-}
+      VALKEY_DB: ${VALKEY_DB:-0}
+      STREAMER_ADDR: ${STREAMER_ADDR:-:8080}
+    depends_on:
+      valkey:
+        condition: service_healthy
+    # In-image health subcommand (streamer's minimal image has no shell/curl).
+    # It GETs /readyz, which is 200 only once Valkey is reachable — so
+    # "streamer healthy" means "streamer is actually wired to Valkey".
+    healthcheck:
+      test: ["CMD", "/streamer", "healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - quickchat
+    restart: unless-stopped
+
+  # Static portal (Bun.serve). Serves assets and owns SPA fallback internally.
+  # Internal only; reached by the browser only through the proxy.
+  portal:
+    build:
+      context: ../qc-portal
+    environment:
+      PORT: ${PORTAL_PORT:-3000}
+    # The portal image has no curl/wget, but ships bun and a GET /healthz -> 200.
+    # Probe it with bun's fetch so the proxy waits for the portal to actually serve.
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r=await fetch('http://localhost:'+(process.env.PORT||'3000')+'/healthz');process.exit(r.ok?0:1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - quickchat
+    restart: unless-stopped
+
+  # The single browser-facing origin. Routes /streams* -> streamer (verbatim),
+  # everything else -> portal (which handles SPA fallback).
+  proxy:
+    image: ${NGINX_IMAGE:-nginx:1.27-alpine}
+    ports:
+      - "${PROXY_PORT:-8080}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      streamer:
+        condition: service_healthy
+      portal:
+        condition: service_healthy
+    networks:
+      - quickchat
+    restart: unless-stopped
+
+networks:
+  quickchat:
+    driver: bridge

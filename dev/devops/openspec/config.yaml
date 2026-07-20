@@ -54,7 +54,7 @@ rules:
     - Include a "Non-goals" section. Never propose changes to another scope's code.
     - Resolve runtime contracts (ports, health checks, env-var names) with owning teammates
       before implementation, not during it.
-  spec:
+  specs:
     - Specify runtime behavior, not implementation trivia; cover failure paths (a service that
       won't start, a failing health check, a missing env var), not just the happy path.
     - Validate configuration (env vars) at the boundary; fail fast on missing/invalid config.
@@ -63,5 +63,5 @@ rules:
     - Every task stays inside dev/devops/. Anything requiring another scope's code becomes a
       coordination item reported to the team lead, not a devops task.
     - Pin every image version; justify each base image and dependency.
-    - Definition of Done requires evidence: images build -> `docker compose up` succeeds ->
+    - Definition of Done requires evidence — images build -> `docker compose up` succeeds ->
       every service passes its health check (with command output). Never a bare "done".

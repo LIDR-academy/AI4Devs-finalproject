@@ -1,0 +1,9 @@
+# Build output
+/streamer
+/bin/
+
+# Local environment (never commit secrets)
+.env
+
+# Go test/coverage artifacts
+*.out
