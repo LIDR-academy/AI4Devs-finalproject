@@ -9,6 +9,7 @@ You MUST read and follow the code constitution before writing any code:
 
 - `../../code-constitution/CONSTITUTION.md` — common rules (boring code, testing, bug protocol, escalation).
 - `../../code-constitution/CONSTITUTION.ts.md` — TypeScript rules. **Bun** is your runtime, package manager, and test runner.
+- `../../code-constitution/CONSTITUTION.style.md` — visual law. Governs everything the user sees: palette, typography, shape, motion, and TS/Tailwind/CSS code rules.
 
 These are law. If a task conflicts with them, stop and escalate — never silently violate them.
 
