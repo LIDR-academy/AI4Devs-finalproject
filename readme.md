@@ -57,7 +57,7 @@ Source:
 
 ### 0.3. Project Description
 
-Acualuz v1 is an online aquaponic farm management platform for Colombia that unifies monitoring, traceability, operational events, sales, visitors, and MIPE under Cognito-authenticated React experiences and a shared HTTP API Gateway. The MVP spans nine use cases (`UC-001`–`UC-009`) and twenty backend tickets (`T-001`–`T-020`) across six Lambda-backed services plus one React frontend. Architecture contracts live in [acualuz-c4](https://github.com/icsanabriar/acualuz-c4); operator UI implementation lives in [acualuz-frontend](https://github.com/icsanabriar/acualuz-frontend).
+Acualuz v1 is an online aquaponic farm management platform for Colombia that unifies monitoring, traceability, operational events, sales, visitors, and MIPE under Cognito-authenticated React experiences and a shared HTTP API Gateway. The MVP spans nine use cases (`UC-001`–`UC-009`) and sixteen backend tickets (`T-001`–`T-016`) across six Lambda-backed services plus one React frontend with 4 frontend tickets (`T-017`–`T-020`). Architecture contracts live in [acualuz-c4](https://github.com/icsanabriar/acualuz-c4); operator UI implementation lives in [acualuz-frontend](https://github.com/icsanabriar/acualuz-frontend).
 
 Source: 
 - [docs/product/prd.md](https://github.com/icsanabriar/acualuz-c4/blob/main/docs/product/prd.md)
