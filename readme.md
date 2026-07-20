@@ -187,7 +187,7 @@ Documented prerequisites and commands:
 |---|---|---|
 | Prerequisites | Node.js ≥ 20 (LTS), npm | [frontend/package.json](https://github.com/icsanabriar/acualuz-frontend/blob/main/frontend/package.json) `engines` |
 | Install dependencies | `cd frontend && npm ci` | Application root is `frontend/` |
-| Configure environment | `cp frontend/.env.example frontend/.env.local` | Fill public `VITE_*` identifiers only (Cognito, per-service API Gateway URLs) |
+| Configure environment | `cp .env.example .env.local` (from `frontend/` after install) | Fill public `VITE_*` identifiers only (Cognito, per-service API Gateway URLs) |
 | Development server | `npm run dev` (from `frontend/`) | Optional LAN testing: `HOST=0.0.0.0 npm run dev` per workspace rules |
 | Build | `npm run build` | Type-check + Vite production bundle |
 | Tests | `npm run test:unit -- --coverage`, `npm run test:e2e`, `npm run lint`, `npm run typecheck` | Coverage target ≥ 95% per [testing-strategy.md](https://github.com/icsanabriar/acualuz-c4/blob/main/docs/architecture/testing-strategy.md) |
@@ -203,7 +203,7 @@ Each implemented canonical backend repository (`acualuz-monitor`, `acualuz-traci
 | Step | Command / action | Notes |
 |---|---|---|
 | Prerequisites | Go 1.26.4+; Node.js 20+; Docker; AWS deploy permissions (GitHub OIDC in CI, named profile locally) | Serverless CLI via `npm install` at repo root; optional `gitleaks`, `govulncheck`, `go-licenses`, `newman`, `openapi-to-postmanv2` |
-| Bootstrapped `docs/` | Import full tree from [acualuz-c4](https://github.com/icsanabriar/acualuz-c4) | `rsync -a --delete ../acualuz-c4/docs/ ./docs/` then `make docs-check` and `make install-hooks` |
+| Bootstrapped `docs/` | Import full tree from [acualuz-c4](https://github.com/icsanabriar/acualuz-c4) | `rsync -a ../acualuz-c4/docs/ ./docs/` then `make docs-check` and `make install-hooks` |
 | Install Node tooling | `npm install` | Installs `serverless@3.40.0` and plugins at service repo root |
 | Go modules | `cd src && go mod tidy && cd ..` | Go module root is `src/` |
 | Build | `make build` | Lambda binaries under `bin/` |
@@ -445,6 +445,9 @@ Nine DynamoDB entities across six service tables; iteration 3 consolidates fish/
 | `OperationalEvent` | `events` | `FARM#<farmId>` | `EVENT#<eventId>` | UC-003 |
 | `BpaRecord` | `events` | `FARM#<farmId>` | `BPA#<recordId>` | UC-003 |
 | `Visit` | `visitors` | `FARM#<farmId>` | `VISIT#<visitId>` | UC-005 |
+| `Product` | `sales` | `FARM#<farmId>` | `PRODUCT#<productId>` | UC-004 |
+| `SalesOrder` | `sales` | `FARM#<farmId>` | `ORDER#<orderId>` | UC-004 |
+| `MipeApplication` | `mipe` | `FARM#<farmId>` | `MIPE#<applicationId>` | UC-006 |
 
 **Lifecycle vocabulary (English codes persisted; Spanish labels UI-only):**
 
