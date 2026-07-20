@@ -15,7 +15,7 @@ Prompt 2:
 Prompt 3:
 - **Source:** `acualuz-frontend/prompts/prompts-scrum-36.md` — `## Prompt - 2026-07-18T03:55:38Z` (`### Agent: orchestrator`)
 - **Relevance:** SCRUM-36 orchestration anchors tracing product capabilities to UC-002 and related tracing use cases (UC-007/008/009 in the same track), which define operator-facing product behavior summarized under product overview.
-- **Excerpt/Summary:** “Act as orchestrator. Run orchesttrate for SCRUM-36. Track: frontend UC: UC-002 T: https://acualuz.atlassian.net/browse/SCRUM-36” (followed by tracing module implementation scope under `frontend/`).
+- **Excerpt/Summary:** “Act as orchestrator. Run orchestrate for SCRUM-36. Track: frontend UC: UC-002 T: https://acualuz.atlassian.net/browse/SCRUM-36” (followed by tracing module implementation scope under `frontend/`).
 
 ## 2. System Architecture
 
@@ -34,7 +34,7 @@ Prompt 2:
 Prompt 3:
 - **Source:** `prompts/prompts-project-audit.md` — `## Prompt - 2026-06-23T05:30:00Z` (Agent: Agent)
 - **Relevance:** README update prompt; committed README contains the Mermaid architecture-at-a-glance diagram reproduced in delivery documentation.
-- **Excerpt/Summary:** "@README.md is out of date. The application is already deployed. … update @README.md with the appropiate updates."
+- **Excerpt/Summary:** "@README.md is out of date. The application is already deployed. … update @README.md with the appropriate updates."
 
 ### 2.2. Description of Main Components
 
@@ -68,7 +68,7 @@ Prompt 2:
 Prompt 3:
 - **Source:** `acualuz-tracing/prompts/prompts-cursor-setup.md` — `## Prompt - 2026-06-24T22:22:29Z` (`### Agent: Agent`)
 - **Relevance:** Fills `.cursor/domain.manifest.yaml` from imported `docs/` and Cursor setup— tying repository structure and domain manifest to platform documentation.
-- **Excerpt/Summary:** “@.cursor/domain.manifest.yaml needs to be filled for this respository. Please update it using the necesary information given by @.cursor/ setup and imported @docs/ .”
+- **Excerpt/Summary:** “@.cursor/domain.manifest.yaml needs to be filled for this repository. Please update it using the necessary information given by @.cursor/ setup and imported @docs/ .”
 
 ### 2.4. Infrastructure & Deployment
 
@@ -165,7 +165,7 @@ Prompt 1:
 Prompt 2:
 - **Source:** `acualuz-frontend/prompts/prompts-scrum-38.md` — `## Prompt - 2026-07-18T23:57:00Z` (`### Agent: orchestrator`)
 - **Relevance:** SCRUM-38 orchestration for UC-005 visitors module includes story refinement and quality gates— maps operator user stories to implementation.
-- **Excerpt/Summary:** “Run orchesttrate for SCRUM-38 … UC: UC-005 … also not forget to execute story refinement and after implementation execute the quality gates.”
+- **Excerpt/Summary:** “Run orchestrate for SCRUM-38 … UC: UC-005 … also not forget to execute story refinement and after implementation execute the quality gates.”
 
 Prompt 3:
 - **Source:** `acualuz-frontend/prompts/prompts-scrum-36.md` — `## Prompt - 2026-07-18T04:32:57Z` (`### Agent: frontend-developer`)
