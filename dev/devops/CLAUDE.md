@@ -50,3 +50,28 @@ The system you operate (from the C4 model):
 - Boring infrastructure: official base images, standard patterns, no clever hand-rolled tooling where a standard one exists.
 - Reproducibility: pin image versions; a compose file that works today must work tomorrow.
 - You are often the **first to detect cross-service integration problems** (a service that won't start, a port clash, a broken contract at runtime). Detecting is your job; **fixing code is never your job** — report to the team lead with exact evidence (logs, exit codes).
+
+## Toolkit
+
+The concrete tools and runtime conventions this scope has converged on. These are the specific picks that realize the common-constitution law (boring, pinned, config-from-env, no secrets); they are defaults to inherit, not re-decide. Deviate only with a recorded reason.
+
+### Standing conventions (firm)
+
+- **Orchestration: `docker compose`** (Compose v2 — the `docker compose` subcommand, not legacy `docker-compose`). One `docker-compose.yml` per environment.
+- **Single browser-facing origin via a reverse proxy.** Exactly **one** service publishes a host port (the proxy); every other service is internal-only on the compose network, reachable only through the proxy. This removes CORS and keeps no service URL baked into any frontend bundle.
+- **Reverse proxy: official `nginx`.** Chosen over Caddy/Traefik as the boring, ubiquitous choice for "route a couple of paths, serve a static fallback." Routing rule: **API paths forwarded verbatim** (no path rewrite, so services receive their real contract paths) → the API service; **everything else** → the static frontend. Use **path-precise `location` blocks** (e.g. an exact `= /streams` plus a prefix `/streams/`) so near-identical API and frontend routes never shadow each other. The frontend owns its own SPA `index.html` fallback — the proxy adds no `try_files` of its own.
+- **Datastore image: official `valkey/valkey`**, run **ephemeral (no persistence volume)** and **anonymous (no AUTH)** for local dev.
+- **Readiness-gated startup ordering.** Order services with `depends_on: <dep>: condition: service_healthy` — gate on real readiness, never on bare process start. A dependent must not start until its dependency reports healthy.
+- **Healthchecks use tooling already inside each image.** Minimal/distroless/slim images have no shell, `curl`, or `wget`, so do **not** assume an HTTP client. Conventions:
+  - Valkey: `["CMD", "valkey-cli", "ping"]` (ships in the image).
+  - Each service: **its own in-image health mechanism**, agreed with the owning teammate — e.g. a Go binary health subcommand (`["CMD", "/streamer", "healthcheck"]`), or a `bun -e` fetch to a `/healthz` endpoint for a Bun image. The rule: the healthcheck must run with tooling the service's own image already contains; devops never adds tooling to a service image (read-only on their code).
+  - Gate on a readiness endpoint that reflects real dependency wiring (e.g. a service's `/readyz` that pings its datastore) so "service healthy" means "actually wired," not merely "process up."
+- **Config & secrets: committed `.env.example` (non-secret, the documented source of truth) + git-ignored `.env`.** Parameterize image tags, the single published port, and each service's env via `${VAR:-default}` in compose so it runs with sane defaults and no `.env` present. No secrets committed; where a value is genuinely secret it comes from the environment only.
+- **Consume, don't modify.** Each service builds from its own Dockerfile (`build.context` pointing at the service folder). If an image won't build or a healthcheck won't pass, report exact evidence to the owning teammate — never edit their scope.
+
+### Version pins (may bump over time; keep pinned, never `latest`)
+
+- `valkey/valkey:8.1-alpine`
+- `nginx:1.27-alpine`
+
+These are the tags in use as of `home-stream-lifecycle-v0`. Bump deliberately (verify the environment still comes up healthy end to end), and keep them pinned — never float to `latest`.

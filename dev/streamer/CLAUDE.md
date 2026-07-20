@@ -53,3 +53,27 @@ External systems you integrate with: **LiveKit SFU** (WebRTC media) and **Valkey
 - Validate every inbound WebSocket message at the boundary; malformed frames are handled, not crashed on.
 - No disabled tests; no `time.Sleep` synchronization in tests.
 - Bugs: reproduce with a failing test → root cause → fix → prove (Constitution §8).
+
+## Toolkit
+
+Specific picks this service converged on in `home-stream-lifecycle-v0`, for the choices the constitutions deliberately leave open. Inherit these by default so features and freshly-mustered sessions don't re-decide them. These do **not** restate constitution mandates (gofmt/vet/golangci-lint/`-race`/`go mod tidy` are already law).
+
+**Standing conventions (firm — change only with a recorded reason):**
+
+- **HTTP routing:** stdlib `net/http.ServeMux` with Go 1.22 method+path patterns (`GET /streams`, `DELETE /streams/{id}`). **No router dependency** (chi etc.) — the stdlib mux is enough. We register paths *without* methods and dispatch on `r.Method` inside the handler, so we can return the standard JSON error body on `405` (the mux's built-in `405` is plain text). Reusable pattern for any Go service here.
+- **Testing:** standard `testing`, table-driven, hand-written fakes for dependencies (no mocking frameworks). Integration tests that need a real backing service are build-tagged `//go:build integration` and skip when their env (e.g. `VALKEY_ADDR`) is unset, so the default `go test ./...` stays hermetic. Reusable pattern.
+- **Container image:** multi-stage build → **distroless static, nonroot** (`gcr.io/distroless/static-debian12:nonroot`), `CGO_ENABLED=0`. Because the image is shell-less, the service binary carries a **`healthcheck` subcommand** (`<binary> healthcheck` probes its own `/readyz`, exits 0/1) used as the container `HEALTHCHECK` — no wget/curl/busybox needed. devops references it as `["CMD","/streamer","healthcheck"]`. Reusable pattern for any Go service with a `/readyz`.
+- **Health/readiness split:** `GET /healthz` = liveness (200 while serving); `GET /readyz` = readiness (pings the backing store per request, 200/503). devops gates compose readiness on `/readyz`. Reusable pattern.
+- **Error body:** one stable shape `{"error": string}` for every error status (400/404/405/500), written by a single shared helper; `500` messages stay generic with the real cause logged (no body, no credentials). Reusable pattern.
+- **Lint config:** `.golangci.yml` lives in this scope (`dev/streamer/`), golangci-lint v2 format, `default: standard` + `misspell`.
+
+**Streamer-specific picks (not for other scopes to inherit blindly):**
+
+- **Valkey client:** `github.com/redis/go-redis/v9` — the single justified external dependency (Valkey is Redis-protocol compatible; hand-rolling RESP + pooling + pipelining is not "a few lines"). Chosen over `valkey-go` for the more familiar/boring API and cleaner `TxPipeline`. Confined to `internal/valkey` behind the `stream.Store` interface, so a swap touches one package. **Only relevant to Valkey/Redis-backed services.**
+- **Valkey key model:** `streams` SET of live ids + `stream:{id}` HASH per stream; both writes in one transaction; no `KEYS`/`SCAN`. Streamer-specific storage detail.
+
+**Version pins (may bump over time — not firm conventions):**
+
+- Go toolchain: **1.26.x** (module targets Go ≥ 1.22 for ServeMux method patterns).
+- `go-redis/v9`: **v9.21.0** as of `home-stream-lifecycle-v0`.
+- Base image: **`gcr.io/distroless/static-debian12:nonroot`**; build stage **`golang:1.26`**.
