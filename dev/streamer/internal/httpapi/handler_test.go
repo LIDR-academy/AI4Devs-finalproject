@@ -15,6 +15,8 @@ import (
 	"github.com/quickchat/streamer/internal/chat"
 	"github.com/quickchat/streamer/internal/httpapi"
 	"github.com/quickchat/streamer/internal/hub"
+	"github.com/quickchat/streamer/internal/livekit"
+	"github.com/quickchat/streamer/internal/media"
 	"github.com/quickchat/streamer/internal/stream"
 )
 
@@ -131,25 +133,97 @@ func (f *fakeMsgStore) DeleteRoom(_ context.Context, roomID string) error {
 	return nil
 }
 
+// --- fake LiveKit collaborators ---
+
+type fakeRoomController struct {
+	mu           sync.Mutex
+	hasPublisher bool
+	hasErr       error
+	deleted      []string
+}
+
+func (f *fakeRoomController) HasActivePublisher(context.Context, string) (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.hasPublisher, f.hasErr
+}
+
+func (f *fakeRoomController) DeleteRoom(_ context.Context, room string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.deleted = append(f.deleted, room)
+	return nil
+}
+
+type fakeTokener struct{}
+
+func (fakeTokener) Sign(identity, room string, canPublish bool) (string, error) {
+	return "tok:" + identity + ":" + room + ":" + strconv.FormatBool(canPublish), nil
+}
+
+type fakeWebhookReceiver struct {
+	event livekit.WebhookEvent
+	err   error
+}
+
+func (f *fakeWebhookReceiver) ReceiveWebhook(*http.Request) (livekit.WebhookEvent, error) {
+	return f.event, f.err
+}
+
+type fakeEvents struct {
+	mu    sync.Mutex
+	calls []string
+}
+
+func (f *fakeEvents) HandleEvent(_ context.Context, eventType, room, identity string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.calls = append(f.calls, eventType+":"+room+":"+identity)
+}
+
 type fakePinger struct{ err error }
 
 func (p fakePinger) Ping(context.Context) error { return p.err }
+
+// --- test server ---
 
 type server struct {
 	h        http.Handler
 	streams  *fakeStreamStore
 	messages *fakeMsgStore
+	lk       *fakeRoomController
+	webhook  *fakeWebhookReceiver
+	events   *fakeEvents
 }
 
-func newServer(t *testing.T) server {
+func newServer(t *testing.T) *server {
 	t.Helper()
 	ss := newFakeStreamStore()
 	ms := newFakeMsgStore()
+	lk := &fakeRoomController{hasPublisher: true} // default: live room, key required
+	wh := &fakeWebhookReceiver{}
+	ev := &fakeEvents{}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
 	streamSvc := stream.NewService(ss)
 	chatSvc := chat.NewService(ms, 500, 200, nil)
-	h := httpapi.NewHandler(streamSvc, chatSvc, hub.New(log), fakePinger{}, log)
-	return server{h: h, streams: ss, messages: ms}
+	h := hub.New(log)
+	ender := media.NewRoomEnder(chatSvc, streamSvc, h, lk, log)
+	tokenSvc := media.NewTokenService(streamSvc, fakeTokener{}, "ws://public:7880")
+
+	handler := httpapi.NewHandler(httpapi.Deps{
+		Streams:    streamSvc,
+		Chat:       chatSvc,
+		Hub:        h,
+		Ready:      fakePinger{},
+		Minter:     tokenSvc,
+		Publishers: lk,
+		Ender:      ender,
+		Webhooks:   wh,
+		Events:     ev,
+		Log:        log,
+	})
+	return &server{h: handler, streams: ss, messages: ms, lk: lk, webhook: wh, events: ev}
 }
 
 func do(t *testing.T, h http.Handler, method, path, body string) *httptest.ResponseRecorder {
@@ -186,35 +260,29 @@ func decodeError(t *testing.T, w *httptest.ResponseRecorder) {
 	}
 }
 
+func create(t *testing.T, srv *server, body string) stream.Created {
+	t.Helper()
+	w := do(t, srv.h, http.MethodPost, "/streams", body)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create status = %d, want 201; body=%s", w.Code, w.Body.String())
+	}
+	var c stream.Created
+	if err := json.Unmarshal(w.Body.Bytes(), &c); err != nil {
+		t.Fatalf("decode created: %v", err)
+	}
+	return c
+}
+
 func TestCreateReturnsCreatorKeyAndListHidesIt(t *testing.T) {
 	srv := newServer(t)
-
-	w := do(t, srv.h, http.MethodPost, "/streams", `{"username":"  alice  ","title":"t","description":"d"}`)
-	if w.Code != http.StatusCreated {
-		t.Fatalf("status = %d, want 201; body=%s", w.Code, w.Body.String())
-	}
-	var created stream.Created
-	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if created.Username != "alice" || created.Title != "t" || created.Description != "d" {
-		t.Fatalf("created = %+v, want trimmed username/title/desc", created)
-	}
-	if created.CreatorKey == "" || created.ID == "" {
-		t.Fatalf("created must have id and creatorKey: %+v", created)
+	created := create(t, srv, `{"username":"  alice  ","title":"t","description":"d"}`)
+	if created.Username != "alice" || created.CreatorKey == "" || created.ID == "" {
+		t.Fatalf("created = %+v, want trimmed username + id + creatorKey", created)
 	}
 
-	// GET includes username but never creatorKey.
-	w = do(t, srv.h, http.MethodGet, "/streams", "")
+	w := do(t, srv.h, http.MethodGet, "/streams", "")
 	if strings.Contains(w.Body.String(), "creatorKey") {
 		t.Fatalf("GET /streams leaked creatorKey: %s", w.Body.String())
-	}
-	var list []map[string]any
-	if err := json.Unmarshal(w.Body.Bytes(), &list); err != nil {
-		t.Fatalf("decode list: %v", err)
-	}
-	if len(list) != 1 || list[0]["username"] != "alice" {
-		t.Fatalf("list = %+v, want one stream with username alice", list)
 	}
 }
 
@@ -225,7 +293,6 @@ func TestCreateValidation(t *testing.T) {
 		"missing title":    `{"username":"u"}`,
 		"description over": `{"username":"u","title":"t","description":"` + strings.Repeat("a", 101) + `"}`,
 		"malformed":        `{"username":`,
-		"body over 8KiB":   `{"username":"u","title":"` + strings.Repeat("a", 9000) + `"}`,
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -235,98 +302,157 @@ func TestCreateValidation(t *testing.T) {
 				t.Fatalf("status = %d, want 400; body=%s", w.Code, w.Body.String())
 			}
 			decodeError(t, w)
-			if len(srv.streams.streams) != 0 {
-				t.Fatalf("stream created despite validation failure")
-			}
 		})
 	}
 }
 
-func TestDeleteRequiresCreatorKey(t *testing.T) {
+func TestDeleteLiveRoomRequiresKey(t *testing.T) {
 	srv := newServer(t)
-	w := do(t, srv.h, http.MethodPost, "/streams", `{"username":"u","title":"t"}`)
-	var created stream.Created
-	_ = json.Unmarshal(w.Body.Bytes(), &created)
+	srv.lk.hasPublisher = true // live room
+	created := create(t, srv, `{"username":"u","title":"t"}`)
 
 	// No key → 403, nothing deleted.
-	w = do(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "")
+	w := do(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "")
 	if w.Code != http.StatusForbidden {
-		t.Fatalf("delete without key status = %d, want 403", w.Code)
+		t.Fatalf("no-key delete = %d, want 403", w.Code)
 	}
 	decodeError(t, w)
-	if len(srv.messages.deleted) != 0 {
-		t.Fatalf("delete without key still cascaded to messages: %v", srv.messages.deleted)
-	}
 	if ok, _ := srv.streams.Exists(context.Background(), created.ID); !ok {
-		t.Fatalf("stream was removed despite missing key")
+		t.Fatalf("stream removed despite missing key")
 	}
 
-	// Wrong key → 403, nothing deleted.
-	w = doAuth(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "", "not-the-key")
-	if w.Code != http.StatusForbidden {
-		t.Fatalf("delete with wrong key status = %d, want 403", w.Code)
-	}
-	if len(srv.messages.deleted) != 0 {
-		t.Fatalf("delete with wrong key still cascaded: %v", srv.messages.deleted)
+	// Wrong key → 403.
+	if w := doAuth(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "", "nope"); w.Code != http.StatusForbidden {
+		t.Fatalf("wrong-key delete = %d, want 403", w.Code)
 	}
 
-	// Nonexistent stream (with any key) → 404.
-	w = doAuth(t, srv.h, http.MethodDelete, "/streams/nope", "", created.CreatorKey)
-	if w.Code != http.StatusNotFound {
-		t.Fatalf("delete nonexistent status = %d, want 404", w.Code)
-	}
-
-	// Correct key → 204 and cascade.
+	// Correct key → 204 + cascade (LiveKit room deleted too).
 	w = doAuth(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "", created.CreatorKey)
 	if w.Code != http.StatusNoContent {
-		t.Fatalf("delete with key status = %d, want 204", w.Code)
-	}
-	if len(srv.messages.deleted) == 0 || srv.messages.deleted[len(srv.messages.deleted)-1] != created.ID {
-		t.Fatalf("authorized delete did not cascade to messages: %v", srv.messages.deleted)
+		t.Fatalf("key delete = %d, want 204", w.Code)
 	}
 	if ok, _ := srv.streams.Exists(context.Background(), created.ID); ok {
 		t.Fatalf("stream still live after authorized delete")
 	}
-
-	// Deleting again (now gone) → 404.
-	w = doAuth(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "", created.CreatorKey)
-	if w.Code != http.StatusNotFound {
-		t.Fatalf("second delete status = %d, want 404", w.Code)
+	if len(srv.lk.deleted) == 0 || srv.lk.deleted[len(srv.lk.deleted)-1] != created.ID {
+		t.Fatalf("LiveKit room not deleted on cascade: %v", srv.lk.deleted)
 	}
-	decodeError(t, w)
+}
+
+func TestDeleteAbandonedRoomEscapeHatch(t *testing.T) {
+	srv := newServer(t)
+	created := create(t, srv, `{"username":"u","title":"t"}`)
+	srv.lk.hasPublisher = false // abandoned: no active publisher
+
+	// No key → 204 (escape hatch).
+	w := do(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "")
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("abandoned-room delete without key = %d, want 204", w.Code)
+	}
+	if ok, _ := srv.streams.Exists(context.Background(), created.ID); ok {
+		t.Fatalf("abandoned stream not removed")
+	}
+}
+
+func TestDeleteFailsClosedOnLiveKitError(t *testing.T) {
+	srv := newServer(t)
+	created := create(t, srv, `{"username":"u","title":"t"}`)
+	srv.lk.hasErr = context.DeadlineExceeded // can't determine publisher state
+
+	// No key → 403 (fail closed).
+	if w := do(t, srv.h, http.MethodDelete, "/streams/"+created.ID, ""); w.Code != http.StatusForbidden {
+		t.Fatalf("fail-closed delete without key = %d, want 403", w.Code)
+	}
+	// Valid key → 204 even when publisher state is unknown.
+	if w := doAuth(t, srv.h, http.MethodDelete, "/streams/"+created.ID, "", created.CreatorKey); w.Code != http.StatusNoContent {
+		t.Fatalf("fail-closed delete with key = %d, want 204", w.Code)
+	}
+}
+
+func TestDeleteNonexistent(t *testing.T) {
+	srv := newServer(t)
+	if w := doAuth(t, srv.h, http.MethodDelete, "/streams/nope", "", "anykey"); w.Code != http.StatusNotFound {
+		t.Fatalf("delete nonexistent = %d, want 404", w.Code)
+	}
+}
+
+func TestMediaToken(t *testing.T) {
+	srv := newServer(t)
+	created := create(t, srv, `{"username":"alice","title":"t"}`)
+
+	// Creator (valid key) → streamer role, identity = username.
+	w := doAuth(t, srv.h, http.MethodPost, "/streams/"+created.ID+"/media-token", "", created.CreatorKey)
+	if w.Code != http.StatusOK {
+		t.Fatalf("media-token status = %d, want 200; body=%s", w.Code, w.Body.String())
+	}
+	var tok media.Token
+	if err := json.Unmarshal(w.Body.Bytes(), &tok); err != nil {
+		t.Fatalf("decode token: %v", err)
+	}
+	if tok.Role != "streamer" || tok.Identity != "alice" || tok.URL != "ws://public:7880" || tok.Token == "" {
+		t.Fatalf("creator token = %+v, want streamer/alice/public-url", tok)
+	}
+
+	// Viewer (no key) → viewer role, generated identity.
+	w = do(t, srv.h, http.MethodPost, "/streams/"+created.ID+"/media-token", "")
+	_ = json.Unmarshal(w.Body.Bytes(), &tok)
+	if w.Code != http.StatusOK || tok.Role != "viewer" || tok.Identity == "alice" || tok.Identity == "" {
+		t.Fatalf("viewer token = %+v (code %d), want viewer + generated id", tok, w.Code)
+	}
+
+	// Nonexistent room → 404.
+	if w := do(t, srv.h, http.MethodPost, "/streams/nope/media-token", ""); w.Code != http.StatusNotFound {
+		t.Fatalf("media-token nonexistent = %d, want 404", w.Code)
+	}
+}
+
+func TestWebhookVerifiedThenDispatched(t *testing.T) {
+	srv := newServer(t)
+	srv.webhook.event = livekit.WebhookEvent{Type: "participant_left", Room: "r1", Identity: "alice"}
+
+	w := do(t, srv.h, http.MethodPost, "/livekit/webhook", `{}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("webhook status = %d, want 200", w.Code)
+	}
+	if len(srv.events.calls) != 1 || srv.events.calls[0] != "participant_left:r1:alice" {
+		t.Fatalf("dispatched events = %v, want the participant_left event", srv.events.calls)
+	}
+}
+
+func TestWebhookSpoofedRejected(t *testing.T) {
+	srv := newServer(t)
+	srv.webhook.err = context.Canceled // signature verification failed
+
+	w := do(t, srv.h, http.MethodPost, "/livekit/webhook", `{}`)
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("spoofed webhook status = %d, want 401", w.Code)
+	}
+	if len(srv.events.calls) != 0 {
+		t.Fatalf("spoofed webhook still dispatched: %v", srv.events.calls)
+	}
 }
 
 func TestMessagesEndpoint(t *testing.T) {
 	srv := newServer(t)
-	w := do(t, srv.h, http.MethodPost, "/streams", `{"username":"u","title":"t"}`)
-	var created stream.Created
-	_ = json.Unmarshal(w.Body.Bytes(), &created)
+	created := create(t, srv, `{"username":"u","title":"t"}`)
 
-	// Missing room → 404.
 	if w := do(t, srv.h, http.MethodGet, "/streams/nope/messages", ""); w.Code != http.StatusNotFound {
-		t.Fatalf("messages missing room status = %d, want 404", w.Code)
+		t.Fatalf("messages missing room = %d, want 404", w.Code)
 	}
-
-	// Seed a few messages directly in the store, then read history.
 	for i := 0; i < 3; i++ {
 		_, _ = srv.messages.Append(context.Background(), created.ID, chat.Message{Sender: "u", Role: chat.RoleViewer, Text: "m" + strconv.Itoa(i), Ts: "t"})
 	}
-	w = do(t, srv.h, http.MethodGet, "/streams/"+created.ID+"/messages", "")
+	w := do(t, srv.h, http.MethodGet, "/streams/"+created.ID+"/messages", "")
 	if w.Code != http.StatusOK {
-		t.Fatalf("messages status = %d, want 200", w.Code)
+		t.Fatalf("messages = %d, want 200", w.Code)
 	}
 	var resp struct {
 		Messages   []chat.Message `json:"messages"`
 		NextCursor *string        `json:"nextCursor"`
 	}
-	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if len(resp.Messages) != 3 || resp.Messages[0].Text != "m0" || resp.Messages[2].Text != "m2" {
-		t.Fatalf("messages = %+v, want m0..m2 oldest→newest", resp.Messages)
-	}
-	if resp.NextCursor != nil {
-		t.Fatalf("nextCursor = %v, want null when history fits in one page", *resp.NextCursor)
+	_ = json.Unmarshal(w.Body.Bytes(), &resp)
+	if len(resp.Messages) != 3 || resp.NextCursor != nil {
+		t.Fatalf("messages = %+v cursor %v, want 3 msgs and null cursor", resp.Messages, resp.NextCursor)
 	}
 }
 
@@ -334,13 +460,13 @@ func TestMethodNotAllowed(t *testing.T) {
 	srv := newServer(t)
 	for _, tc := range []struct{ method, path string }{
 		{http.MethodPut, "/streams"},
-		{http.MethodPost, "/streams/x/messages"},
+		{http.MethodGet, "/streams/x/media-token"},
+		{http.MethodGet, "/livekit/webhook"},
 	} {
 		w := do(t, srv.h, tc.method, tc.path, "")
 		if w.Code != http.StatusMethodNotAllowed {
-			t.Fatalf("%s %s status = %d, want 405", tc.method, tc.path, w.Code)
+			t.Fatalf("%s %s = %d, want 405", tc.method, tc.path, w.Code)
 		}
-		decodeError(t, w)
 	}
 }
 

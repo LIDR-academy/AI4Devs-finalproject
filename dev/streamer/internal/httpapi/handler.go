@@ -14,6 +14,8 @@ import (
 
 	"github.com/quickchat/streamer/internal/chat"
 	"github.com/quickchat/streamer/internal/hub"
+	"github.com/quickchat/streamer/internal/livekit"
+	"github.com/quickchat/streamer/internal/media"
 	"github.com/quickchat/streamer/internal/stream"
 )
 
@@ -23,6 +25,45 @@ const maxBodyBytes = 8 << 10 // 8 KiB
 // Pinger reports whether the backing store is reachable, for readiness checks.
 type Pinger interface {
 	Ping(ctx context.Context) error
+}
+
+// Minter mints a media token for a room (satisfied by media.TokenService).
+type Minter interface {
+	Mint(ctx context.Context, roomID, creatorKey string) (media.Token, error)
+}
+
+// PublisherChecker reports whether a room has an active LiveKit publisher.
+type PublisherChecker interface {
+	HasActivePublisher(ctx context.Context, room string) (bool, error)
+}
+
+// RoomEnder runs the room-teardown cascade (satisfied by media.RoomEnder).
+type RoomEnder interface {
+	EndRoom(ctx context.Context, id string) error
+}
+
+// WebhookReceiver verifies and decodes a LiveKit webhook (satisfied by livekit.Client).
+type WebhookReceiver interface {
+	ReceiveWebhook(r *http.Request) (livekit.WebhookEvent, error)
+}
+
+// EventDispatcher consumes a verified webhook event (satisfied by media.Reaper).
+type EventDispatcher interface {
+	HandleEvent(ctx context.Context, eventType, room, identity string)
+}
+
+// Deps are the handler's collaborators.
+type Deps struct {
+	Streams    *stream.Service
+	Chat       *chat.Service
+	Hub        *hub.Hub
+	Ready      Pinger
+	Minter     Minter
+	Publishers PublisherChecker
+	Ender      RoomEnder
+	Webhooks   WebhookReceiver
+	Events     EventDispatcher
+	Log        *slog.Logger
 }
 
 type errorBody struct {
@@ -45,22 +86,40 @@ type historyResponse struct {
 }
 
 type api struct {
-	streams *stream.Service
-	chat    *chat.Service
-	hub     *hub.Hub
-	ready   Pinger
-	log     *slog.Logger
+	streams    *stream.Service
+	chat       *chat.Service
+	hub        *hub.Hub
+	ready      Pinger
+	minter     Minter
+	publishers PublisherChecker
+	ender      RoomEnder
+	webhooks   WebhookReceiver
+	events     EventDispatcher
+	log        *slog.Logger
 }
 
 // NewHandler wires the routes and returns the HTTP handler for the service.
-func NewHandler(streams *stream.Service, chatSvc *chat.Service, h *hub.Hub, ready Pinger, log *slog.Logger) http.Handler {
-	a := &api{streams: streams, chat: chatSvc, hub: h, ready: ready, log: log}
+func NewHandler(d Deps) http.Handler {
+	a := &api{
+		streams:    d.Streams,
+		chat:       d.Chat,
+		hub:        d.Hub,
+		ready:      d.Ready,
+		minter:     d.Minter,
+		publishers: d.Publishers,
+		ender:      d.Ender,
+		webhooks:   d.Webhooks,
+		events:     d.Events,
+		log:        d.Log,
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/streams", a.streamsRoute)
 	mux.HandleFunc("/streams/{id}", a.streamByID)
 	mux.HandleFunc("/streams/{id}/messages", a.messages)
+	mux.HandleFunc("/streams/{id}/media-token", a.mediaToken)
 	mux.HandleFunc("/streams/{id}/ws", a.ws)
+	mux.HandleFunc("/livekit/webhook", a.livekitWebhook)
 	mux.HandleFunc("/healthz", a.healthz)
 	mux.HandleFunc("/readyz", a.readyz)
 	mux.HandleFunc("/", a.notFound)
@@ -109,9 +168,10 @@ func (a *api) createStream(w http.ResponseWriter, r *http.Request) {
 	a.writeJSON(w, http.StatusCreated, created)
 }
 
-// streamByID handles DELETE on /streams/{id}. It requires the stream's
-// creatorKey as `Authorization: Bearer <creatorKey>` and, when authorized,
-// cascades to messages and live connections.
+// streamByID handles DELETE on /streams/{id}. Authorization is publisher-aware
+// (design D4): a room with an active LiveKit publisher requires the creatorKey as
+// `Authorization: Bearer`, while an abandoned room (no publisher) may be ended
+// without a key. It fails closed when publisher state can't be determined.
 func (a *api) streamByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		a.writeError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -124,40 +184,89 @@ func (a *api) streamByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify ownership before touching anything: a missing/invalid key deletes
-	// nothing.
-	isCreator, _, err := a.streams.VerifyCreator(r.Context(), id, bearerToken(r))
+	exists, err := a.streams.Exists(r.Context(), id)
+	if err != nil {
+		a.internalError(w, "checking stream", err)
+		return
+	}
+	if !exists {
+		a.writeError(w, http.StatusNotFound, "stream not found")
+		return
+	}
+
+	// Determine whether the room has an active publisher. On a LiveKit error, fail
+	// closed: require the key.
+	hasPublisher := true
+	if ok, perr := a.publishers.HasActivePublisher(r.Context(), id); perr != nil {
+		a.log.Warn("publisher check failed; requiring key", "room", id, "error", perr)
+	} else {
+		hasPublisher = ok
+	}
+
+	if hasPublisher {
+		isCreator, _, verr := a.streams.VerifyCreator(r.Context(), id, bearerToken(r))
+		if verr != nil {
+			if errors.Is(verr, stream.ErrNotFound) {
+				a.writeError(w, http.StatusNotFound, "stream not found")
+				return
+			}
+			a.internalError(w, "verifying stream owner", verr)
+			return
+		}
+		if !isCreator {
+			a.writeError(w, http.StatusForbidden, "invalid or missing creator key")
+			return
+		}
+	}
+
+	// Authorized (valid key, or abandoned room). Run the shared cascade.
+	if err := a.ender.EndRoom(r.Context(), id); err != nil {
+		a.internalError(w, "ending stream", err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// mediaToken handles POST /streams/{id}/media-token, minting a LiveKit token
+// scoped to the room. A valid creatorKey (Authorization: Bearer) grants publish.
+func (a *api) mediaToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		a.writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	id := r.PathValue("id")
+	token, err := a.minter.Mint(r.Context(), id, bearerToken(r))
 	if err != nil {
 		if errors.Is(err, stream.ErrNotFound) {
 			a.writeError(w, http.StatusNotFound, "stream not found")
 			return
 		}
-		a.internalError(w, "verifying stream owner", err)
+		a.internalError(w, "minting media token", err)
 		return
 	}
-	if !isCreator {
-		a.writeError(w, http.StatusForbidden, "invalid or missing creator key")
+	a.writeJSON(w, http.StatusOK, token)
+}
+
+// livekitWebhook handles POST /livekit/webhook: it verifies the LiveKit signature
+// and dispatches the event to the reaper. A missing/invalid signature is rejected
+// and changes no state.
+func (a *api) livekitWebhook(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		a.writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
 
-	// Authorized. Delete messages first so a failure aborts before the stream is
-	// removed and nothing leaks.
-	if err := a.chat.DeleteRoom(r.Context(), id); err != nil {
-		a.internalError(w, "deleting room messages", err)
-		return
-	}
-	if err := a.streams.End(r.Context(), id); err != nil {
-		if errors.Is(err, stream.ErrNotFound) {
-			a.writeError(w, http.StatusNotFound, "stream not found")
-			return
-		}
-		a.internalError(w, "ending stream", err)
+	event, err := a.webhooks.ReceiveWebhook(r)
+	if err != nil {
+		// Unsigned/tampered request: reject, no state change. Not an internal error.
+		a.log.Warn("rejected livekit webhook", "error", err)
+		a.writeError(w, http.StatusUnauthorized, "invalid webhook signature")
 		return
 	}
 
-	// Close any live connections in the room ("room ended" + close).
-	a.hub.CloseRoom(id)
-	w.WriteHeader(http.StatusNoContent)
+	a.events.HandleEvent(r.Context(), event.Type, event.Room, event.Identity)
+	w.WriteHeader(http.StatusOK)
 }
 
 // bearerToken extracts the token from an `Authorization: Bearer <token>` header,

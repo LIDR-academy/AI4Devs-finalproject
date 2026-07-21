@@ -22,6 +22,8 @@ import (
 	"github.com/quickchat/streamer/internal/config"
 	"github.com/quickchat/streamer/internal/httpapi"
 	"github.com/quickchat/streamer/internal/hub"
+	"github.com/quickchat/streamer/internal/livekit"
+	"github.com/quickchat/streamer/internal/media"
 	"github.com/quickchat/streamer/internal/stream"
 	"github.com/quickchat/streamer/internal/valkey"
 )
@@ -33,6 +35,11 @@ const (
 	writeTimeout      = 10 * time.Second
 	idleTimeout       = 60 * time.Second
 	shutdownTimeout   = 10 * time.Second
+
+	// Media (LiveKit) tuning. Documented in the README.
+	mediaTokenTTL  = 1 * time.Hour    // minted token lifetime
+	departureGrace = 30 * time.Second // publisher gone → reap after
+	creationGrace  = 2 * time.Minute  // room never gets a publisher → reap after
 )
 
 func main() {
@@ -70,8 +77,26 @@ func run() error {
 	// close them explicitly once the server stops.
 	defer realtime.CloseAll()
 
+	// Media: LiveKit token authority, room control, and the abandoned-room reaper.
+	lkClient := livekit.New(cfg.LiveKitURL, cfg.LiveKitAPIKey, cfg.LiveKitAPISecret, mediaTokenTTL)
+	tokenSvc := media.NewTokenService(streamSvc, lkClient, cfg.LiveKitPublicURL)
+	ender := media.NewRoomEnder(chatSvc, streamSvc, realtime, lkClient, log)
+	reaper := media.NewReaper(ender, streamSvc, departureGrace, creationGrace, log)
+	defer reaper.Shutdown()
+
 	srv := &http.Server{
-		Handler:           httpapi.NewHandler(streamSvc, chatSvc, realtime, store, log),
+		Handler: httpapi.NewHandler(httpapi.Deps{
+			Streams:    streamSvc,
+			Chat:       chatSvc,
+			Hub:        realtime,
+			Ready:      store,
+			Minter:     tokenSvc,
+			Publishers: lkClient,
+			Ender:      ender,
+			Webhooks:   lkClient,
+			Events:     reaper,
+			Log:        log,
+		}),
 		ReadHeaderTimeout: readHeaderTimeout,
 		ReadTimeout:       readTimeout,
 		WriteTimeout:      writeTimeout,

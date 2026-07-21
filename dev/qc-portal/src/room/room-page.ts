@@ -1,5 +1,6 @@
 import van from "vanjs-core";
 import { type ChatPanel, createChatPanel } from "../chat/chat-panel";
+import { createMediaPanel, type MediaPanel } from "../media/media-panel";
 import { navigate } from "../router/router";
 import type { ApiResult } from "../streams/api";
 import { endStream, listStreams } from "../streams/api";
@@ -7,11 +8,11 @@ import { COPY } from "../streams/copy";
 import { clearCreatorKey, getCreatorKey } from "../streams/creator-key";
 import type { Stream } from "../streams/types";
 
-/** The room page (`/stream/{id}`, design D-P9 + D9/D10/D11): header + camera placeholder
- *  + chat, laid out camera 2/3 + chat 1/3 on wide and stacked rows on narrow, with a chat
- *  toggle. The End control shows ONLY for the creator (creatorKey in memory) and sends an
- *  authenticated DELETE. On the terminal room-ended signal it shows a calm notice and
- *  redirects Home. Side effects are injected for testing. */
+/** The room page (`/stream/{id}`, design D-P9 + D9/D10/D11 + media): header + media area
+ *  + chat, laid out media 2/3 + chat 1/3 on wide and stacked rows on narrow, with a chat
+ *  toggle. Media and chat are independent lifecycles (D8). The End control shows ONLY for
+ *  the creator (creatorKey in memory) and sends an authenticated DELETE. On the terminal
+ *  room-ended signal it shows a calm notice and redirects Home. Side effects are injected. */
 
 const { section, div, header, h1, p, span, button } = van.tags;
 
@@ -22,6 +23,7 @@ type RoomPageDeps = {
   readonly end?: (id: string, creatorKey: string) => Promise<ApiResult<null>>;
   readonly navigate?: (path: string) => void;
   readonly buildChat?: (id: string, onEnded: () => void) => ChatPanel;
+  readonly buildMedia?: (id: string) => MediaPanel;
   readonly getKey?: (id: string) => string | undefined;
   readonly scheduleRedirect?: (run: () => void) => void;
 };
@@ -49,6 +51,7 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
   const endFn = deps.end ?? endStream;
   const nav = deps.navigate ?? navigate;
   const buildChat = deps.buildChat ?? ((id, onEnded) => createChatPanel(id, { onEnded }));
+  const buildMedia = deps.buildMedia ?? createMediaPanel;
   const getKey = deps.getKey ?? getCreatorKey;
   const scheduleRedirect = deps.scheduleRedirect ?? ((run) => setTimeout(run, REDIRECT_DELAY_MS));
 
@@ -69,11 +72,13 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
     }
     endedHandled = true;
     chat.unmount();
+    media.unmount();
     el.replaceChildren(endedNotice());
     scheduleRedirect(() => nav("/"));
   };
 
   const chat = buildChat(streamId, onEnded);
+  const media = buildMedia(streamId);
 
   const headerBox = header({ class: "flex flex-col gap-1" });
   void loadStream(streamId).then((stream) => {
@@ -103,6 +108,7 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
     if (result.ok || (result.error.kind === "http" && result.error.status === 404)) {
       clearCreatorKey(streamId);
       chat.unmount();
+      media.unmount();
       nav("/");
       return;
     }
@@ -120,23 +126,12 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
       p({ class: "text-sm text-gray-strong" }, COPY.redirecting),
     );
 
-  const camera = div(
-    {
-      class:
-        "bg-gray-fill border border-gray-line flex items-center justify-center min-h-64 h-full",
-    },
-    p(
-      { class: "font-mono text-xs uppercase tracking-wide text-gray-strong" },
-      COPY.cameraPlaceholder,
-    ),
-  );
-
   const cameraWrap = div(
     {
       class: () =>
         `min-h-0 ${chatVisible.val ? "lg:col-span-2" : "lg:col-span-3 row-span-2 lg:row-span-1"}`,
     },
-    camera,
+    media.el,
   );
   const chatWrap = div({ class: () => `min-h-0 ${chatVisible.val ? "" : "hidden"}` }, chat.el);
 
@@ -188,7 +183,14 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
     ),
   );
 
+  // Media and chat mount independently (D8); a fault in one never tears down the other.
   chat.mount();
+  media.mount();
 
-  return { el, end, unmount: () => chat.unmount(), errorText, chatVisible, isCreator };
+  const unmount = (): void => {
+    chat.unmount();
+    media.unmount();
+  };
+
+  return { el, end, unmount, errorText, chatVisible, isCreator };
 }

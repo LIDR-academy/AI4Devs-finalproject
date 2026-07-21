@@ -28,6 +28,15 @@ type Config struct {
 	ChatPageSize int
 	// ChatMaxLength is the maximum message length in Unicode code points.
 	ChatMaxLength int
+	// LiveKitAPIKey is the LiveKit API key.
+	LiveKitAPIKey string
+	// LiveKitAPISecret is the LiveKit API secret (used to sign tokens and verify
+	// webhooks; never logged or returned).
+	LiveKitAPISecret string
+	// LiveKitURL is the server-to-server LiveKit API URL (e.g. http://livekit:7880).
+	LiveKitURL string
+	// LiveKitPublicURL is the browser-facing LiveKit URL returned in media tokens.
+	LiveKitPublicURL string
 }
 
 // Load reads the configuration from the environment, applying defaults for the
@@ -69,15 +78,46 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 
+	livekitAPIKey, err := required("LIVEKIT_API_KEY")
+	if err != nil {
+		return Config{}, err
+	}
+	livekitAPISecret, err := required("LIVEKIT_API_SECRET")
+	if err != nil {
+		return Config{}, err
+	}
+	livekitURL, err := required("LIVEKIT_URL")
+	if err != nil {
+		return Config{}, err
+	}
+	livekitPublicURL, err := required("LIVEKIT_PUBLIC_URL")
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
-		ValkeyAddr:      addr,
-		ValkeyPassword:  os.Getenv("VALKEY_PASSWORD"),
-		ValkeyDB:        db,
-		HTTPAddr:        httpAddr,
-		ChatMaxMessages: chatMaxMessages,
-		ChatPageSize:    chatPageSize,
-		ChatMaxLength:   chatMaxLength,
+		ValkeyAddr:       addr,
+		ValkeyPassword:   os.Getenv("VALKEY_PASSWORD"),
+		ValkeyDB:         db,
+		HTTPAddr:         httpAddr,
+		ChatMaxMessages:  chatMaxMessages,
+		ChatPageSize:     chatPageSize,
+		ChatMaxLength:    chatMaxLength,
+		LiveKitAPIKey:    livekitAPIKey,
+		LiveKitAPISecret: livekitAPISecret,
+		LiveKitURL:       livekitURL,
+		LiveKitPublicURL: livekitPublicURL,
 	}, nil
+}
+
+// required reads a mandatory environment variable, returning an error naming it
+// when unset or blank.
+func required(name string) (string, error) {
+	v := strings.TrimSpace(os.Getenv(name))
+	if v == "" {
+		return "", fmt.Errorf("%s is required", name)
+	}
+	return v, nil
 }
 
 // positiveInt reads name from the environment as a positive integer, returning

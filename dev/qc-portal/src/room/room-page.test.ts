@@ -1,5 +1,6 @@
 import { afterEach, expect, mock, test } from "bun:test";
 import type { ChatPanel } from "../chat/chat-panel";
+import type { MediaPanel } from "../media/media-panel";
 import type { ApiResult } from "../streams/api";
 import { COPY } from "../streams/copy";
 import { clearCreatorKey, getCreatorKey, setCreatorKey } from "../streams/creator-key";
@@ -10,6 +11,13 @@ function fakeChat() {
   const mount = mock(() => {});
   const unmount = mock(() => {});
   const panel: ChatPanel = { el: document.createElement("div"), mount, unmount };
+  return { panel, mount, unmount };
+}
+
+function fakeMedia() {
+  const mount = mock(() => {});
+  const unmount = mock(() => {});
+  const panel: MediaPanel = { el: document.createElement("div"), mount, unmount };
   return { panel, mount, unmount };
 }
 
@@ -32,23 +40,41 @@ function hasEndButton(el: HTMLElement): boolean {
   return [...el.querySelectorAll("button")].some((b) => b.textContent === COPY.endAction);
 }
 
-test("mounts chat on creation", () => {
+test("mounts chat and media on creation", () => {
   const chat = fakeChat();
+  const media = fakeMedia();
   createRoomPage("r1", {
     loadStream: () => Promise.resolve(stream()),
     navigate: () => {},
     buildChat: () => chat.panel,
+    buildMedia: () => media.panel,
     getKey: noKey,
   });
   expect(chat.mount).toHaveBeenCalledTimes(1);
+  expect(media.mount).toHaveBeenCalledTimes(1);
+});
+
+test("unmount tears down both chat and media", () => {
+  const chat = fakeChat();
+  const media = fakeMedia();
+  const page = createRoomPage("r1", {
+    loadStream: noStream,
+    navigate: () => {},
+    buildChat: () => chat.panel,
+    buildMedia: () => media.panel,
+    getKey: noKey,
+  });
+  page.unmount();
+  expect(chat.unmount).toHaveBeenCalledTimes(1);
+  expect(media.unmount).toHaveBeenCalledTimes(1);
 });
 
 test("renders the header username, title, and description after load", async () => {
-  const chat = fakeChat();
   const page = createRoomPage("r1", {
     loadStream: () => Promise.resolve(stream()),
     navigate: () => {},
-    buildChat: () => chat.panel,
+    buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
     getKey: noKey,
   });
   await flush();
@@ -62,6 +88,7 @@ test("shows the End control only for the creator (creatorKey in memory)", () => 
     loadStream: noStream,
     navigate: () => {},
     buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
     getKey: hasKey,
   });
   expect(creator.isCreator).toBe(true);
@@ -71,6 +98,7 @@ test("shows the End control only for the creator (creatorKey in memory)", () => 
     loadStream: noStream,
     navigate: () => {},
     buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
     getKey: noKey,
   });
   expect(viewer.isCreator).toBe(false);
@@ -84,37 +112,41 @@ test("End sends the creatorKey to the API", async () => {
     end,
     navigate: () => {},
     buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
     getKey: () => "secret",
   });
   await page.end();
   expect(end).toHaveBeenCalledWith("r1", "secret");
 });
 
-test("End on 204 clears the key, unmounts chat, and redirects home", async () => {
+test("End on 204 clears the key, tears down chat + media, and redirects home", async () => {
   setCreatorKey("r1", "k");
   const chat = fakeChat();
+  const media = fakeMedia();
   const navigate = mock(() => {});
   const page = createRoomPage("r1", {
     loadStream: noStream,
     end: ended,
     navigate,
     buildChat: () => chat.panel,
+    buildMedia: () => media.panel,
     getKey: hasKey,
   });
   await page.end();
   expect(navigate).toHaveBeenCalledWith("/");
   expect(chat.unmount).toHaveBeenCalled();
+  expect(media.unmount).toHaveBeenCalled();
   expect(getCreatorKey("r1")).toBeUndefined();
 });
 
 test("End on 404 also redirects home", async () => {
-  const chat = fakeChat();
   const navigate = mock(() => {});
   const page = createRoomPage("r1", {
     loadStream: noStream,
     end: async () => ({ ok: false, error: { kind: "http", status: 404 } }),
     navigate,
-    buildChat: () => chat.panel,
+    buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
     getKey: hasKey,
   });
   await page.end();
@@ -122,13 +154,13 @@ test("End on 404 also redirects home", async () => {
 });
 
 test("End on 403 shows a calm not-allowed message and stays", async () => {
-  const chat = fakeChat();
   const navigate = mock(() => {});
   const page = createRoomPage("r1", {
     loadStream: noStream,
     end: async () => ({ ok: false, error: { kind: "http", status: 403 } }),
     navigate,
-    buildChat: () => chat.panel,
+    buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
     getKey: hasKey,
   });
   await page.end();
@@ -137,13 +169,13 @@ test("End on 403 shows a calm not-allowed message and stays", async () => {
 });
 
 test("End on another failure shows calm copy and does not redirect", async () => {
-  const chat = fakeChat();
   const navigate = mock(() => {});
   const page = createRoomPage("r1", {
     loadStream: noStream,
     end: async () => ({ ok: false, error: { kind: "http", status: 500 } }),
     navigate,
-    buildChat: () => chat.panel,
+    buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
     getKey: hasKey,
   });
   await page.end();
@@ -151,9 +183,10 @@ test("End on another failure shows calm copy and does not redirect", async () =>
   expect(page.errorText.val).toBe(COPY.endFailed);
 });
 
-test("terminal room-ended shows a notice, unmounts chat, and redirects home", () => {
+test("terminal room-ended shows a notice, tears down chat + media, and redirects home", () => {
   let captured: (() => void) | null = null;
   const chat = fakeChat();
+  const media = fakeMedia();
   const navigate = mock(() => {});
   const scheduleRedirect = mock((run: () => void) => run()); // run immediately for the test
   const page = createRoomPage("r1", {
@@ -163,6 +196,7 @@ test("terminal room-ended shows a notice, unmounts chat, and redirects home", ()
       captured = onEnded;
       return chat.panel;
     },
+    buildMedia: () => media.panel,
     getKey: noKey,
     scheduleRedirect,
   });
@@ -173,15 +207,16 @@ test("terminal room-ended shows a notice, unmounts chat, and redirects home", ()
   fireEnded();
   expect(page.el.textContent).toContain(COPY.streamEnded);
   expect(chat.unmount).toHaveBeenCalled();
+  expect(media.unmount).toHaveBeenCalled();
   expect(navigate).toHaveBeenCalledWith("/");
 });
 
 test("chat toggle hides and shows the chat", () => {
-  const chat = fakeChat();
   const page = createRoomPage("r1", {
     loadStream: noStream,
     navigate: () => {},
-    buildChat: () => chat.panel,
+    buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
     getKey: noKey,
   });
   expect(page.chatVisible.val).toBe(true);

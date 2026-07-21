@@ -146,6 +146,18 @@ func (s *Service) Exists(ctx context.Context, id string) (bool, error) {
 	return ok, nil
 }
 
+// Username returns the stream's username, or ErrNotFound when it is not live.
+func (s *Service) Username(ctx context.Context, id string) (string, error) {
+	username, _, err := s.store.Creator(ctx, id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return "", ErrNotFound
+		}
+		return "", fmt.Errorf("reading username for stream %s: %w", id, err)
+	}
+	return username, nil
+}
+
 // VerifyCreator reports whether key is the stream's creatorKey (constant-time
 // compare) and returns the stream's username. It returns ErrNotFound when the
 // stream is not live. A non-matching or empty key is not an error: isCreator is

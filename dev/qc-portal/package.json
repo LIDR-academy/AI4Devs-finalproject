@@ -16,6 +16,7 @@
   "dependencies": {
     "@fontsource/inter": "^5.1.0",
     "@fontsource/jetbrains-mono": "^5.1.0",
+    "livekit-client": "^2.5.0",
     "vanjs-core": "^1.5.5"
   },
   "devDependencies": {

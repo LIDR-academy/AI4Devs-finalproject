@@ -17,8 +17,10 @@ and handles **no OPTIONS**.
 |---|---|---|
 | `GET /streams` | `200` — `[{id,username,title,description}]`; `[]` when none | — |
 | `POST /streams` | `201` — `{id,username,title,description,creatorKey}` | `400` on validation failure |
-| `DELETE /streams/{id}` | `204` (deletes the room's messages + closes live connections) | `403` bad/missing key; `404` when not live |
+| `DELETE /streams/{id}` | `204` (deletes messages + LiveKit room + closes live connections) | `403` bad/missing key on a live room; `404` when not live |
 | `GET /streams/{id}/messages?before={id}&limit={n}` | `200` — `{messages:[{id,sender,role,text,ts}], nextCursor}` | `404` when room not live |
+| `POST /streams/{id}/media-token` | `200` — `{token,url,identity,role}` | `404` when room not live |
+| `POST /livekit/webhook` | `200` (signature-verified; server-to-server) | `401` on bad/missing signature |
 
 Validation at the boundary (POST):
 
@@ -31,11 +33,39 @@ Validation at the boundary (POST):
 listing, history, error, or log. Length is counted in **Unicode code points**
 (`utf8.RuneCountInString`), matching the portal.
 
-Ending a stream requires proof of ownership: `DELETE /streams/{id}` must carry
-`Authorization: Bearer <creatorKey>`, verified with a constant-time compare —
-match → `204` + cascade; existing stream with a missing/invalid key → `403`
-(nothing deleted); unknown id → `404`. A creator who loses the key (e.g. by
-reloading) can no longer end the stream (accepted v0 limitation).
+Ending a stream is **publisher-aware**: `DELETE /streams/{id}` on a room with an
+active LiveKit publisher requires `Authorization: Bearer <creatorKey>` (constant-time
+compare) — match → `204` + cascade; missing/invalid key → `403` (nothing deleted).
+A room with **no active publisher** (abandoned, e.g. a creator reloaded and lost
+the key) may be ended **without** a key (the escape hatch). If publisher state
+can't be determined (LiveKit unreachable), it fails closed and requires the key.
+Unknown id → `404`.
+
+## Media (LiveKit)
+
+streamer is the **LiveKit token authority**. `POST /streams/{id}/media-token`
+(with `Authorization: Bearer <creatorKey>` for the creator, nothing for a viewer)
+returns `{token, url, identity, role}`:
+
+- Valid key → `role: "streamer"`, `identity` = username, token grants
+  **publish + subscribe**.
+- No/invalid key → `role: "viewer"`, generated `identity`, token grants
+  **subscribe only** (`CanPublish=false`) — a silent downgrade. Publish permission
+  is enforced by LiveKit via the grant, never by the client.
+- `token` and `url` are opaque; `url` is the browser-facing LiveKit URL
+  (`LIVEKIT_PUBLIC_URL`). The API secret and the server-side `LIVEKIT_URL` never
+  cross this boundary. Token TTL: **1 hour**.
+
+**On stream end**, streamer deletes the LiveKit room via the server API
+(participants disconnect); a LiveKit outage still lets the Valkey delete succeed
+(logged).
+
+**Auto-reap**: streamer receives signed LiveKit webhooks at `POST /livekit/webhook`
+(server-to-server; signature-verified, spoofed requests → `401`). When the
+publisher leaves and doesn't return within the **departure grace (30s)**, or a room
+never gets a publisher within the **creation grace (2m)**, streamer ends the room
+(Valkey stream + messages + LiveKit room), firing the room-ended broadcast so
+viewers redirect Home. A transient blip within grace does not reap.
 
 History (`GET /streams/{id}/messages`): no `before` = latest page; `limit`
 defaults to and is capped at `CHAT_PAGE_SIZE`; messages ordered oldest→newest;
@@ -103,6 +133,10 @@ chat knob.
 | `CHAT_MAX_MESSAGES` | no | `1000000` | per-room message cap (drop-oldest) |
 | `CHAT_PAGE_SIZE` | no | `200` | history page size / limit cap |
 | `CHAT_MAX_LENGTH` | no | `500` | max message length (code points) |
+| `LIVEKIT_API_KEY` | yes | — | LiveKit API key |
+| `LIVEKIT_API_SECRET` | yes | — | LiveKit API secret (never logged/returned) |
+| `LIVEKIT_URL` | yes | — | server-to-server LiveKit API URL (e.g. `http://livekit:7880`) |
+| `LIVEKIT_PUBLIC_URL` | yes | — | browser-facing LiveKit URL (returned in tokens) |
 
 ## Run
 
@@ -143,5 +177,7 @@ internal/stream/   domain: Stream, validation, id/creatorKey, Service, Store int
 internal/chat/     domain: Message, validation, viewer identity, history, MessageStore
 internal/valkey/   Valkey-backed Store + MessageStore
 internal/hub/      in-process broadcast hub + WebSocket connection lifecycle
+internal/media/    token grants, the shared room-end cascade, the abandoned-room reaper
+internal/livekit/  LiveKit adapter (token signing, room control, webhook verify) — confines the SDK
 internal/httpapi/  thin HTTP handlers + error shape + WS routing
 ```

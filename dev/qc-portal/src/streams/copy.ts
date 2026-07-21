@@ -40,6 +40,19 @@ export const COPY = {
   messageTooLong: "Message must be 500 characters or fewer.",
   messageRejected: "That message couldn't be sent.",
 
+  // Media
+  mediaLoading: "Connecting media…",
+  mediaError: "Media is unavailable right now.",
+  mediaOffline: "No one is on air right now.",
+  mediaReconnecting: "Reconnecting media…",
+  mediaPrejoin: "Set up your camera and microphone, then go live.",
+  goLiveAction: "Go live",
+  muteMicAction: "Mute mic",
+  unmuteMicAction: "Unmute mic",
+  cameraOffAction: "Camera off",
+  cameraOnAction: "Camera on",
+  tapToUnmute: "Tap to unmute",
+
   notFound: "Page not found.",
   backHome: "Back to home",
 } as const;

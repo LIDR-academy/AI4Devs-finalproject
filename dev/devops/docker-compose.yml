@@ -1,9 +1,11 @@
-# QuickChat local runtime — home-stream-lifecycle-v0.
-# Single browser-facing origin: only the `proxy` publishes a host port.
-# `docker compose up` brings up Valkey + streamer + portal + reverse proxy.
+# QuickChat local runtime.
+# The APP plane is single-origin: only the `proxy` publishes app ports.
+# The MEDIA plane is a SECOND origin: `livekit` publishes its own ports because
+# WebRTC cannot traverse the nginx HTTP proxy (stream-media-v0, root D3).
+# `docker compose up` brings up Valkey + LiveKit + streamer + portal + reverse proxy.
 #
-# devops owns this file and nginx.conf. It CONSUMES streamer's and qc-portal's
-# Dockerfiles (build contexts below) without modifying them.
+# devops owns this file, nginx.conf, and livekit.yaml. It CONSUMES streamer's and
+# qc-portal's Dockerfiles (build contexts below) without modifying them.
 
 name: quickchat
 
@@ -17,6 +19,47 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - quickchat
+    restart: unless-stopped
+
+  # LiveKit SFU (WebRTC media). SECOND published origin — the browser connects to
+  # it directly (not through nginx). Dev mode (--dev provides the devkey/secret dev
+  # pair); livekit.yaml pins ports, the single UDP mux port, and the streamer webhook.
+  # DEV ONLY: no Redis, no TLS, no TURN. Host networking would avoid port mapping but
+  # is Linux-only; published ports + single UDP mux is the cross-platform dev path.
+  livekit:
+    image: ${LIVEKIT_IMAGE:-livekit/livekit-server:v1.13.4}
+    command: --config /etc/livekit/livekit.yaml --dev --bind 0.0.0.0
+    volumes:
+      - ./livekit.yaml:/etc/livekit/livekit.yaml:ro
+    ports:
+      - "${LIVEKIT_WS_PORT:-7880}:7880"        # WS signaling (browser) + HTTP/Twirp API (streamer)
+      - "${LIVEKIT_TCP_PORT:-7881}:7881"       # ICE/TCP fallback
+      - "${LIVEKIT_UDP_PORT:-7882}:7882/udp"   # single UDP mux for media (direct path)
+      # NOTE (stream-media-v0): the direct UDP/TCP paths above are unreliable for
+      # real browsers on Docker Desktop macOS (mDNS-hidden host candidates + flaky
+      # UDP). The `coturn` dev TURN service (below) provides a reliable TCP relay
+      # candidate that browsers fall back to. See coturn.conf + livekit.yaml
+      # turn_servers. Direct paths are kept for host clients / Linux where they work.
+    networks:
+      - quickchat
+    restart: unless-stopped
+
+  # Dev TURN server (stream-media-v0, root D10). DEV ONLY — plain TURN over TCP,
+  # static dev creds, no TLS. Relays real-browser media reliably on Docker Desktop
+  # macOS, where the direct WebRTC path is unreliable (mDNS-hidden host candidates +
+  # flaky UDP). Only the control port 3478 is published (browsers reach it at
+  # localhost:3478); the relay range 50000-50100 stays internal — LiveKit reaches it
+  # on the compose network. Production TURN/TLS/host-networking is a deferred feature.
+  coturn:
+    image: ${COTURN_IMAGE:-coturn/coturn:4.6.2}
+    command: -c /etc/coturn/turnserver.conf
+    volumes:
+      - ./coturn.conf:/etc/coturn/turnserver.conf:ro
+    ports:
+      - "${TURN_PORT:-3478}:3478"        # TURN control (browser-facing, TCP)
+      - "${TURN_PORT:-3478}:3478/udp"    # TURN control (UDP; harmless, TCP is used)
     networks:
       - quickchat
     restart: unless-stopped
@@ -35,9 +78,18 @@ services:
       CHAT_MAX_MESSAGES: ${CHAT_MAX_MESSAGES:-1000000}
       CHAT_PAGE_SIZE: ${CHAT_PAGE_SIZE:-200}
       CHAT_MAX_LENGTH: ${CHAT_MAX_LENGTH:-500}
+      # LiveKit config (stream-media-v0). DEV-ONLY key/secret (well-known dev pair;
+      # same pair LiveKit uses in --dev). LIVEKIT_URL is the internal HTTP/Twirp
+      # server API; LIVEKIT_PUBLIC_URL is browser-facing and returned in tokens.
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
+      LIVEKIT_URL: ${LIVEKIT_URL:-http://livekit:7880}
+      LIVEKIT_PUBLIC_URL: ${LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
     depends_on:
       valkey:
         condition: service_healthy
+      livekit:
+        condition: service_started
     # In-image health subcommand (streamer's minimal image has no shell/curl).
     # It GETs /readyz, which is 200 only once Valkey is reachable — so
     # "streamer healthy" means "streamer is actually wired to Valkey".
