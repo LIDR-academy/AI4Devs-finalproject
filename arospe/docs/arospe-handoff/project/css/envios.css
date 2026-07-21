@@ -1,0 +1,34 @@
+/* envios.css — específico de Configuración de Envíos */
+
+/* Tarjetas de transportistas */
+.carriers{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
+.carrier{background:#fff;border:1px solid var(--border);border-radius:14px;padding:17px;display:flex;flex-direction:column;gap:13px}
+.carrier__top{display:flex;justify-content:space-between;align-items:flex-start}
+.carrier__logo{
+  width:44px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;font-family:var(--mono);letter-spacing:-.5px;
+}
+.carrier__name{font-size:14.5px;font-weight:700}
+.carrier__desc{font-size:12.5px;color:var(--muted-2);margin-top:2px}
+.carrier__state{font-size:12px;font-weight:600;font-family:var(--mono)}
+.carrier__state.is-on{color:#15803d}
+.carrier__state.is-off{color:var(--muted-3)}
+
+/* Switch */
+.switch{width:40px;height:23px;border-radius:20px;border:none;padding:2px;display:flex;background:#d4d4dd;justify-content:flex-start}
+.switch.is-on{background:var(--accent);justify-content:flex-end}
+.switch i{width:19px;height:19px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+
+/* Tabla de tarifas agrupada */
+.r-grid{grid-template-columns:1.5fr 1.4fr 1.1fr .9fr .95fr 76px}
+.r-grid.table__row{padding-left:38px}
+.group__band{display:flex;align-items:center;gap:9px;padding:11px 22px;border-bottom:1px solid var(--border);background:#f7f8fc}
+.group--off .group__band{background:#f4f4f6}
+.group--off{opacity:.55}
+.group__dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.group__name{font-size:13.5px;font-weight:700;letter-spacing:-.1px;color:#2a2a32}
+.group--off .group__name{color:#7a7a85}
+.group__badge{font-size:10.5px;font-weight:600;font-family:var(--mono);letter-spacing:.4px;padding:2px 8px;border-radius:20px}
+.group__badge.is-on{color:#15803d;background:#e3f3ea}
+.group__badge.is-off{color:#8a8a94;background:#eaeaee}
+.group__count{margin-left:auto;font-size:12px;color:var(--muted-3);font-family:var(--mono)}

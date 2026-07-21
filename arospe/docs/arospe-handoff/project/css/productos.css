@@ -1,0 +1,78 @@
+/* productos.css — específico de Gestión de Productos */
+.p-grid{grid-template-columns:2.4fr 1fr .8fr 1fr 96px}
+.p-grid.table__row{padding-top:13px;padding-bottom:13px}
+
+/* Layout del editor */
+.editor-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.editor-main{display:flex;flex-direction:column;gap:18px;min-width:0}
+.editor-side{display:flex;flex-direction:column;gap:18px;position:sticky;top:0}
+
+/* Imagen destacada */
+.featured{position:relative;border-radius:11px;overflow:hidden;border:1px solid var(--border);aspect-ratio:4/3;background-size:cover;background-position:center}
+.featured__clear{
+  position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:8px;border:none;
+  background:rgba(20,20,30,.6);color:#fff;display:flex;align-items:center;justify-content:center;
+}
+.featured__clear:hover{background:rgba(20,20,30,.85)}
+.featured__change{
+  position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:8px;border:none;
+  background:rgba(20,20,30,.6);color:#fff;display:flex;align-items:center;justify-content:center;
+}
+.featured__change:hover{background:rgba(20,20,30,.85)}
+.featured__cta{width:100%;justify-content:center;margin-top:10px}
+.featured__caption{font-size:12.5px;color:var(--muted);margin-top:8px}
+.featured-pick{
+  width:100%;aspect-ratio:4/3;border:1.5px dashed #d4d4dd;border-radius:11px;background:var(--surface-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;color:var(--muted-2);
+}
+.featured-pick:hover{border-color:var(--accent);color:var(--accent);background:#f7f7ff}
+.featured-pick span{font-size:12.5px;font-weight:600}
+
+/* Cabecera de la sección galería */
+.gallery-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:12px}
+.gallery-sub{font-size:12.5px;color:var(--muted)}
+
+/* Minicarrusel de imágenes del producto */
+.carousel-wrap{position:relative}
+.carousel{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity}
+.carousel::-webkit-scrollbar{height:8px}
+.carousel-nav{
+  position:absolute;top:34px;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);
+  background:#fff;box-shadow:0 6px 16px -6px rgba(20,20,50,.35);display:flex;align-items:center;justify-content:center;
+  color:#44444f;z-index:3;
+}
+.carousel-nav--prev{left:-8px}
+.carousel-nav--next{right:-8px}
+.carousel-nav:hover{color:var(--accent);border-color:#dfe1f7;background:var(--surface-2)}
+.carousel-nav:disabled{opacity:0;pointer-events:none}
+.carousel__item{position:relative;width:132px;flex-shrink:0;scroll-snap-align:start}
+.carousel__img{
+  width:132px;height:99px;border-radius:10px;border:1px solid var(--border);
+  background-size:cover;background-position:center;
+}
+.carousel__item.is-cover .carousel__img{border-color:var(--accent);box-shadow:0 0 0 2px rgba(79,70,229,.18)}
+.carousel__bar{position:absolute;top:6px;right:6px;display:flex;gap:5px}
+.carousel__btn{
+  width:26px;height:26px;border-radius:7px;border:none;background:rgba(20,20,30,.62);color:#fff;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);
+}
+.carousel__btn:hover{background:rgba(20,20,30,.85)}
+.carousel__cap{font-size:11.5px;color:var(--muted-2);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.carousel__flag{
+  position:absolute;left:6px;top:6px;font-size:10px;font-weight:700;font-family:var(--mono);letter-spacing:.4px;
+  background:var(--accent);color:#fff;padding:2px 7px;border-radius:6px;
+}
+.carousel__add{
+  width:132px;height:99px;flex-shrink:0;border:1.5px dashed #d4d4dd;border-radius:10px;background:var(--surface-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted-2);font-size:12px;font-weight:600;
+}
+.carousel__add:hover{border-color:var(--accent);color:var(--accent);background:#f7f7ff}
+
+/* Estado vacío de la galería */
+.gallery-empty{
+  border:1.5px dashed #d4d4dd;border-radius:12px;background:var(--surface-2);padding:26px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted-2);text-align:center;
+}
+.gallery-empty:hover{border-color:var(--accent);color:var(--accent);background:#f7f7ff}
+.gallery-empty b{font-size:13.5px;color:var(--text)}
+.gallery-empty span{font-size:12.5px}

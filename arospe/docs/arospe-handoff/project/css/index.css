@@ -1,0 +1,27 @@
+/* index.css — específico de la pantalla de Inicio */
+
+.hero{
+  background:linear-gradient(110deg,#4f46e5,#6d5ef0);
+  border-radius:18px;padding:30px 32px;color:#fff;margin-bottom:24px;
+  display:flex;justify-content:space-between;align-items:center;gap:24px;
+}
+.hero__text{max-width:560px}
+.hero__text h2{margin:0 0 8px;font-size:23px;font-weight:700;letter-spacing:-.4px}
+.hero__text p{margin:0;font-size:14.5px;line-height:1.55;color:rgba(255,255,255,.85)}
+.hero__stats{display:flex;gap:26px;flex-shrink:0}
+.stat__num{font-size:30px;font-weight:800;font-family:var(--mono)}
+.stat__lbl{font-size:12px;color:rgba(255,255,255,.7);font-family:var(--mono)}
+
+.quick{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.quick__card{
+  display:flex;gap:15px;align-items:flex-start;background:#fff;
+  border:1px solid var(--border);border-radius:15px;padding:22px;
+}
+.quick__card:hover{border-color:#cfcfe6;box-shadow:0 6px 22px -14px rgba(40,40,90,.35)}
+.quick__ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.quick__ico--indigo{background:var(--accent-soft);color:var(--accent)}
+.quick__ico--green{background:#e9f7ef;color:#15803d}
+.quick__ico--amber{background:#fbf1e3;color:#b45309}
+.quick__ico--pink{background:#fdecf3;color:#be185d}
+.quick__title{font-size:15.5px;font-weight:700;margin-bottom:4px}
+.quick__desc{font-size:13px;color:var(--muted);line-height:1.5}
