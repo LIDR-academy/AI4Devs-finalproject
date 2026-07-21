@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog · Panel Admin Arospe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/blog.css">
+</head>
+<body data-title="Blog" data-sub="Artículos publicados">
+
+  <main data-view>
+
+    <!-- ===== LISTA ===== -->
+    <div class="page" data-screen="list">
+      <div class="section-head">
+        <div class="section-meta" data-meta></div>
+        <button class="btn btn-primary" data-new></button>
+      </div>
+      <div class="card">
+        <div class="table__head b-grid">
+          <div>TÍTULO</div><div>CATEGORÍA</div><div>ESTADO</div><div>FECHA</div><div class="cell-right">·</div>
+        </div>
+        <div data-rows></div>
+      </div>
+    </div>
+
+    <!-- ===== EDITOR ===== -->
+    <div class="page page--narrow" data-screen="edit" hidden>
+      <button class="link-back" data-back></button>
+      <div class="card card--pad" style="margin-bottom:18px">
+        <input class="title-input" data-f="title" placeholder="Título del artículo…">
+        <div class="field-grid cols-2 field">
+          <div><label class="label">Categoría</label><select class="input" data-f="cat"><option>Guías</option><option>Entrenamiento</option><option>Novedades</option><option>Nutrición</option></select></div>
+          <div><label class="label">Estado</label><select class="input" data-f="status"><option>Borrador</option><option>Publicado</option><option>Programado</option></select></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="wysiwyg__toolbar" data-toolbar></div>
+        <div class="editor editor--tall" data-editor contenteditable="true" data-ph="Empieza a escribir tu artículo…"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px">
+        <button class="btn btn-ghost" data-cancel>Cancelar</button>
+        <button class="btn btn-primary" data-save>Guardar artículo</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/blog.js"></script>
+</body>
+</html>
