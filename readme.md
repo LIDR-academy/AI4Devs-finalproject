@@ -443,6 +443,8 @@ Instaladas, migradas y con `HasRoles` **ya conectado** al modelo `User`, pero si
 
 **Pull Request 1**
 
+[#269](https://github.com/LIDR-academy/AI4Devs-finalproject/pull/269)
+
 **Pull Request 2**
 
 **Pull Request 3**
