@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosHeaders } from 'axios'
 import { clearAuthSession, readAuthSession, saveAuthSession } from './authSession'
 
 export const AUTH_UNAUTHORIZED_EVENT = 'psai-auth-unauthorized'
@@ -91,9 +91,13 @@ http.interceptors.request.use((config) => {
   const accessToken = readAuthSession()?.accessToken
 
   if (accessToken) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${accessToken}`,
+    if (config.headers && 'set' in config.headers && typeof config.headers.set === 'function') {
+      config.headers.set('Authorization', `Bearer ${accessToken}`)
+    } else {
+      config.headers = AxiosHeaders.from({
+        ...config.headers,
+        Authorization: `Bearer ${accessToken}`,
+      })
     }
   }
 
@@ -115,9 +119,13 @@ http.interceptors.response.use(
 
         if (renewedAccessToken) {
           config._psaiRetry = true
-          config.headers = {
-            ...config.headers,
-            Authorization: `Bearer ${renewedAccessToken}`,
+          if (config.headers && 'set' in config.headers && typeof config.headers.set === 'function') {
+            config.headers.set('Authorization', `Bearer ${renewedAccessToken}`)
+          } else {
+            config.headers = AxiosHeaders.from({
+              ...config.headers,
+              Authorization: `Bearer ${renewedAccessToken}`,
+            })
           }
 
           return http.request(config)

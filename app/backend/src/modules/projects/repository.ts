@@ -39,7 +39,9 @@ export const getProjectById = (id: string) => {
     where: { id },
     include: {
       useCases: true,
-      estimation: {
+      estimations: {
+        take: 1,
+        orderBy: { version: "desc" },
         include: {
           phases: {
             include: {
@@ -84,73 +86,105 @@ export const getProjectForEstimation = (id: string) => {
 };
 
 export const upsertEstimation = (input: SaveEstimationInput) => {
-  return prisma.estimation.upsert({
-    where: {
-      projectId: input.projectId
-    },
-    create: {
-      projectId: input.projectId,
-      totalHours: input.totalHours,
-      totalCost: input.totalCost,
-      assumptions: input.assumptions,
-      risks: input.risks,
-      phases: {
-        create: input.phases.map((phase) => ({
-          name: phase.name,
-          description: phase.description,
-          order: phase.order,
-          roleEstimates: {
-            create: phase.roleEstimates.map((roleEstimate) => ({
-              role: roleEstimate.role,
-              hours: roleEstimate.hours
-            }))
-          }
-        }))
-      },
-      tokens: {
-        create: {
-          model: input.token.model,
-          tokens: input.token.tokens,
-          cost: input.token.cost
-        }
-      }
-    },
-    update: {
-      totalHours: input.totalHours,
-      totalCost: input.totalCost,
-      assumptions: input.assumptions,
-      risks: input.risks,
-      phases: {
-        deleteMany: {},
-        create: input.phases.map((phase) => ({
-          name: phase.name,
-          description: phase.description,
-          order: phase.order,
-          roleEstimates: {
-            create: phase.roleEstimates.map((roleEstimate) => ({
-              role: roleEstimate.role,
-              hours: roleEstimate.hours
-            }))
-          }
-        }))
-      },
-      tokens: {
-        deleteMany: {},
-        create: {
-          model: input.token.model,
-          tokens: input.token.tokens,
-          cost: input.token.cost
-        }
-      }
-    },
-    include: {
-      phases: {
-        include: {
-          roleEstimates: true
+  return prisma.$transaction(async (tx) => {
+    const latest = await tx.estimation.findFirst({
+      where: { projectId: input.projectId },
+      orderBy: { version: "desc" },
+      select: { version: true }
+    });
+
+    return tx.estimation.create({
+      data: {
+        projectId: input.projectId,
+        version: (latest?.version ?? 0) + 1,
+        totalHours: input.totalHours,
+        totalCost: input.totalCost,
+        assumptions: input.assumptions,
+        risks: input.risks,
+        phases: {
+          create: input.phases.map((phase) => ({
+            name: phase.name,
+            description: phase.description,
+            order: phase.order,
+            roleEstimates: {
+              create: phase.roleEstimates.map((roleEstimate) => ({
+                role: roleEstimate.role,
+                hours: roleEstimate.hours
+              }))
+            }
+          }))
         },
-        orderBy: { order: "asc" }
+        tokens: {
+          create: {
+            model: input.token.model,
+            tokens: input.token.tokens,
+            cost: input.token.cost
+          }
+        }
       },
-      tokens: true
-    }
+      include: {
+        phases: {
+          include: {
+            roleEstimates: true
+          },
+          orderBy: { order: "asc" }
+        },
+        tokens: true
+      }
+    });
   });
+};
+
+export const ensureDefaultAgentRoles = async () => {
+  const defaults = [
+    {
+      key: "frontend-developer",
+      name: "Frontend Developer",
+      description: "Build and maintain frontend UI components and features"
+    },
+    {
+      key: "backend-developer",
+      name: "Backend Developer",
+      description: "Build and maintain backend services, APIs, and integrations"
+    },
+    {
+      key: "qa-engineer",
+      name: "QA Engineer",
+      description: "Validate software quality, behavior, and edge cases"
+    },
+    {
+      key: "devops-engineer",
+      name: "DevOps Engineer",
+      description: "Manage CI/CD pipelines, deployments, and infrastructure"
+    },
+    {
+      key: "security-reviewer",
+      name: "Security Reviewer",
+      description: "Find security risks, vulnerabilities, and unsafe patterns"
+    },
+    {
+      key: "product-owner",
+      name: "Product Owner",
+      description: "Define requirements, user stories, and acceptance criteria"
+    }
+  ];
+
+  await Promise.all(
+    defaults.map((role) =>
+      prisma.agentRole.upsert({
+        where: { key: role.key },
+        update: {
+          name: role.name,
+          description: role.description,
+          isActive: true
+        },
+        create: {
+          key: role.key,
+          name: role.name,
+          description: role.description,
+          isActive: true
+        }
+      })
+    )
+  );
 };

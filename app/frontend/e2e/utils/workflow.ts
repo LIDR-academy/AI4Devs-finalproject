@@ -6,8 +6,6 @@ export const createProject = async (page: Page, projectName: string, projectDesc
   await page.getByTestId('psai-project-submit-button').click()
 
   await expect(page.getByTestId('psai-project-form-alert')).toContainText('Proyecto creado correctamente.')
-
-  await page.getByRole('button', { name: 'Continuar a casos de uso' }).click()
 }
 
 export const addUseCase = async (page: Page, title: string, description: string) => {
@@ -16,5 +14,4 @@ export const addUseCase = async (page: Page, title: string, description: string)
   await page.getByTestId('psai-use-case-submit-button').click()
 
   await expect(page.getByTestId('psai-use-case-form-alert')).toContainText('Caso de uso agregado correctamente.')
-  await page.getByRole('button', { name: 'Continuar a estimacion' }).click()
 }

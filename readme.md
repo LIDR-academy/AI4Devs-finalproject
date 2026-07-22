@@ -604,6 +604,25 @@ Incluye escenario de error:
 
 ## 🚀 Infraestructura y despliegue
 
+### Evidencia de entrega final
+
+Estado de validaciones en rama `v1.0-final-GV`:
+
+- Backend: `npm run typecheck` ✅
+- Backend: `npm run test` ✅ (16/16)
+- Frontend: `npm run test` ✅ (4/4)
+- Frontend: `npm run build` ✅
+- E2E Playwright (T11): `npm run test:e2e --prefix app/frontend` ✅ (2/2) usando PostgreSQL local `projectscope_e2e_local`.
+
+Enlace a entorno público:
+
+- Frontend: `PENDIENTE_COMPLETAR_URL_PUBLICA`
+- Backend: `PENDIENTE_COMPLETAR_URL_PUBLICA`
+
+Si no se usa entorno público, adjuntar capturas en `docs/evidence/` y referenciarlas aquí.
+
+Registro de ejecución de validaciones: `docs/evidence/final-validation.md`.
+
 ### Plataformas
 
 | Componente        | Plataforma       | Notas |
@@ -644,6 +663,49 @@ Runbooks operativos:
 
 - Variables de entorno: `docs/operations/environment-variables.md`
 - Deploy y rollback: `docs/operations/release-runbook.md`
+
+### Reproducción E2E local (T11)
+
+Requisitos:
+
+- Docker Desktop ejecutándose
+- Puerto `55432` libre
+
+Pasos:
+
+1. Levantar PostgreSQL temporal:
+
+```bash
+docker run --rm -d --name psai-e2e-db \
+    -e POSTGRES_DB=projectscope_e2e \
+    -e POSTGRES_USER=postgres \
+    -e POSTGRES_PASSWORD=postgres \
+    -p 55432:5432 postgres:16
+```
+
+2. Aplicar migraciones:
+
+```bash
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/projectscope_e2e?schema=public" npm run prisma:migrate:deploy --prefix app/backend
+```
+
+3. Instalar navegador Playwright (una sola vez):
+
+```bash
+npm run test:e2e:install --prefix app/frontend
+```
+
+4. Ejecutar E2E:
+
+```bash
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/projectscope_e2e?schema=public" npm run test:e2e --prefix app/frontend
+```
+
+5. Apagar base temporal:
+
+```bash
+docker rm -f psai-e2e-db
+```
 
 ---
 

@@ -45,3 +45,16 @@ export type SaveEstimationInput = {
     cost: number;
   };
 };
+
+export type ProjectEstimationContext = {
+  id: string;
+  name: string;
+  description: string;
+  complexity: Complexity;
+  useCases: {
+    id: string;
+    title: string;
+    description: string;
+    priority: Priority;
+  }[];
+};

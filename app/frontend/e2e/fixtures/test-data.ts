@@ -1,5 +1,5 @@
 export const buildProjectData = () => {
-  const suffix = Date.now()
+  const suffix = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`
 
   return {
     projectName: `MVP E2E ${suffix}`,

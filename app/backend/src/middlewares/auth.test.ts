@@ -43,7 +43,6 @@ describe("attachActorContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
-    vi.unmock("../config/env");
   });
 
   it("returns 401 when auth is enabled and token is missing", async () => {
@@ -85,6 +84,7 @@ describe("attachActorContext", () => {
     const req = createRequest({ authorization: `Bearer ${token}` }) as unknown as {
       actorId?: string;
       actorName?: string;
+      actorRole?: string;
       header: (name: string) => string | undefined;
     };
     const res = createResponse();

@@ -21,7 +21,12 @@ export const getProjectById = async (id: string) => {
     throw error;
   }
 
-  return project;
+  const latestEstimation = project.estimations[0] ?? null;
+
+  return {
+    ...project,
+    estimation: latestEstimation
+  };
 };
 
 export const addUseCase = async (projectId: string, input: AddUseCaseInput) => {

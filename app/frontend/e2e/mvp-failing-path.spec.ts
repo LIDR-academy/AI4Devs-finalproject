@@ -10,7 +10,7 @@ test('shows validation error when estimation model is invalid', async ({ page })
   await createProject(page, data.projectName, data.projectDescription)
   await addUseCase(page, data.useCaseTitle, data.useCaseDescription)
 
-  await page.getByTestId('psai-estimate-model-input').fill('x')
+  await page.getByLabel('Modelo').fill('x')
   await page.getByTestId('psai-estimate-trigger-button').click()
 
   await expect(page.getByTestId('psai-estimate-alert')).toBeVisible()
