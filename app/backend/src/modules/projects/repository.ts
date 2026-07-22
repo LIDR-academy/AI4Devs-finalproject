@@ -1,9 +1,43 @@
 import { prisma } from "../../lib/prisma";
-import { AddUseCaseInput, CreateProjectInput, SaveEstimationInput } from "./types";
+import { AddUseCaseInput, CreateAgentRoleInput, CreateProjectInput, SaveEstimationInput, UpdateAgentRoleInput } from "./types";
 
-export const createProject = (input: CreateProjectInput) => {
+const defaultRoles: Array<{ key: string; name: string; description: string }> = [
+  {
+    key: "frontend-developer",
+    name: "Frontend Developer",
+    description: "Construye interfaces, estados de UI y experiencia de usuario."
+  },
+  {
+    key: "backend-developer",
+    name: "Backend Developer",
+    description: "Implementa APIs, reglas de negocio y persistencia."
+  },
+  {
+    key: "qa-engineer",
+    name: "QA Engineer",
+    description: "Define y ejecuta pruebas funcionales y de regresion."
+  },
+  {
+    key: "devops-engineer",
+    name: "DevOps Engineer",
+    description: "Automatiza despliegues, pipelines y observabilidad."
+  },
+  {
+    key: "security-reviewer",
+    name: "Security Reviewer",
+    description: "Evalua riesgos, controles de acceso y exposicion de datos."
+  },
+  {
+    key: "product-owner",
+    name: "Product Owner",
+    description: "Prioriza alcance, requisitos y decisiones de negocio."
+  }
+];
+
+export const createProject = (input: CreateProjectInput, ownerId: string) => {
   return prisma.project.create({
     data: {
+      ownerId,
       name: input.name,
       description: input.description,
       complexity: input.complexity,
@@ -23,7 +57,19 @@ export const createProject = (input: CreateProjectInput) => {
   });
 };
 
-export const listProjects = () => {
+export const listProjects = (ownerId: string) => {
+  return prisma.project.findMany({
+    where: { ownerId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: {
+        select: { useCases: true }
+      }
+    }
+  });
+};
+
+export const listAllProjects = () => {
   return prisma.project.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -34,14 +80,33 @@ export const listProjects = () => {
   });
 };
 
-export const getProjectById = (id: string) => {
+export const listProjectsByIds = (ids: string[]) => {
+  if (ids.length === 0) {
+    return Promise.resolve([]);
+  }
+
+  return prisma.project.findMany({
+    where: {
+      id: {
+        in: ids
+      }
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: {
+        select: { useCases: true }
+      }
+    }
+  });
+};
+
+export const getProjectByIdUnscoped = (id: string) => {
   return prisma.project.findUnique({
     where: { id },
     include: {
       useCases: true,
       estimations: {
-        take: 1,
-        orderBy: { version: "desc" },
+        orderBy: [{ version: "desc" }],
         include: {
           phases: {
             include: {
@@ -50,15 +115,152 @@ export const getProjectById = (id: string) => {
             orderBy: { order: "asc" }
           },
           tokens: true
+        },
+        take: 1
+      }
+    }
+  });
+};
+
+export const getProjectForEstimationUnscoped = (id: string) => {
+  return prisma.project.findUnique({
+    where: { id },
+    include: {
+      useCases: true
+    }
+  });
+};
+
+export const listProjectEstimationsUnscoped = (projectId: string) => {
+  return prisma.estimation.findMany({
+    where: {
+      projectId
+    },
+    orderBy: [{ version: "desc" }],
+    select: {
+      id: true,
+      version: true,
+      totalHours: true,
+      totalCost: true,
+      createdAt: true,
+      updatedAt: true,
+      tokens: {
+        select: {
+          model: true,
+          tokens: true,
+          cost: true
         }
       }
     }
   });
 };
 
-export const projectExists = async (id: string) => {
-  const project = await prisma.project.findUnique({
-    where: { id },
+export const getProjectEstimationByVersionUnscoped = (projectId: string, version: number) => {
+  return prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      useCases: true,
+      estimations: {
+        where: { version },
+        include: {
+          phases: {
+            include: {
+              roleEstimates: true
+            },
+            orderBy: { order: "asc" }
+          },
+          tokens: true
+        },
+        take: 1
+      }
+    }
+  });
+};
+
+export const listUseCasesByProjectIds = (projectIds: string[]) => {
+  if (projectIds.length === 0) {
+    return Promise.resolve([]);
+  }
+
+  return prisma.useCase.findMany({
+    where: {
+      projectId: {
+        in: projectIds
+      }
+    },
+    orderBy: [{ createdAt: "desc" }],
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          complexity: true
+        }
+      }
+    }
+  });
+};
+
+export const getProjectById = (id: string, ownerId: string) => {
+  return prisma.project.findFirst({
+    where: { id, ownerId },
+    include: {
+      useCases: true,
+      estimations: {
+        orderBy: [{ version: "desc" }],
+        include: {
+          phases: {
+            include: {
+              roleEstimates: true
+            },
+            orderBy: { order: "asc" }
+          },
+          tokens: true
+        },
+        take: 1
+      }
+    }
+  });
+};
+
+export const listUseCasesByProject = (ownerId: string) => {
+  return prisma.useCase.findMany({
+    where: {
+      project: {
+        ownerId
+      }
+    },
+    orderBy: [{ createdAt: "desc" }],
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          complexity: true
+        }
+      }
+    }
+  });
+};
+
+export const listUseCasesByProjectUnscoped = () => {
+  return prisma.useCase.findMany({
+    orderBy: [{ createdAt: "desc" }],
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          complexity: true
+        }
+      }
+    }
+  });
+};
+
+export const projectExists = async (id: string, ownerId: string) => {
+  const project = await prisma.project.findFirst({
+    where: { id, ownerId },
     select: { id: true }
   });
 
@@ -76,16 +278,38 @@ export const createUseCase = (projectId: string, input: AddUseCaseInput) => {
   });
 };
 
-export const getProjectForEstimation = (id: string) => {
-  return prisma.project.findUnique({
-    where: { id },
+export const getProjectForEstimation = (id: string, ownerId: string) => {
+  return prisma.project.findFirst({
+    where: { id, ownerId },
     include: {
       useCases: true
     }
   });
 };
 
-export const upsertEstimation = (input: SaveEstimationInput) => {
+export const getProjectEstimationByVersion = (projectId: string, version: number, ownerId: string) => {
+  return prisma.project.findFirst({
+    where: { id: projectId, ownerId },
+    include: {
+      useCases: true,
+      estimations: {
+        where: { version },
+        include: {
+          phases: {
+            include: {
+              roleEstimates: true
+            },
+            orderBy: { order: "asc" }
+          },
+          tokens: true
+        },
+        take: 1
+      }
+    }
+  });
+};
+
+export const createEstimationVersion = (input: SaveEstimationInput) => {
   return prisma.$transaction(async (tx) => {
     const latest = await tx.estimation.findFirst({
       where: { projectId: input.projectId },
@@ -93,10 +317,12 @@ export const upsertEstimation = (input: SaveEstimationInput) => {
       select: { version: true }
     });
 
+    const nextVersion = (latest?.version ?? 0) + 1;
+
     return tx.estimation.create({
       data: {
         projectId: input.projectId,
-        version: (latest?.version ?? 0) + 1,
+        version: nextVersion,
         totalHours: input.totalHours,
         totalCost: input.totalCost,
         assumptions: input.assumptions,
@@ -135,51 +361,40 @@ export const upsertEstimation = (input: SaveEstimationInput) => {
   });
 };
 
-export const ensureDefaultAgentRoles = async () => {
-  const defaults = [
-    {
-      key: "frontend-developer",
-      name: "Frontend Developer",
-      description: "Build and maintain frontend UI components and features"
+export const listProjectEstimations = (projectId: string, ownerId: string) => {
+  return prisma.estimation.findMany({
+    where: {
+      projectId,
+      project: {
+        ownerId
+      }
     },
-    {
-      key: "backend-developer",
-      name: "Backend Developer",
-      description: "Build and maintain backend services, APIs, and integrations"
-    },
-    {
-      key: "qa-engineer",
-      name: "QA Engineer",
-      description: "Validate software quality, behavior, and edge cases"
-    },
-    {
-      key: "devops-engineer",
-      name: "DevOps Engineer",
-      description: "Manage CI/CD pipelines, deployments, and infrastructure"
-    },
-    {
-      key: "security-reviewer",
-      name: "Security Reviewer",
-      description: "Find security risks, vulnerabilities, and unsafe patterns"
-    },
-    {
-      key: "product-owner",
-      name: "Product Owner",
-      description: "Define requirements, user stories, and acceptance criteria"
+    orderBy: [{ version: "desc" }],
+    select: {
+      id: true,
+      version: true,
+      totalHours: true,
+      totalCost: true,
+      createdAt: true,
+      updatedAt: true,
+      tokens: {
+        select: {
+          model: true,
+          tokens: true,
+          cost: true
+        }
+      }
     }
-  ];
+  });
+};
 
+export const ensureDefaultAgentRoles = async () => {
   await Promise.all(
-    defaults.map((role) =>
+    defaultRoles.map((role) =>
       prisma.agentRole.upsert({
         where: { key: role.key },
+        create: role,
         update: {
-          name: role.name,
-          description: role.description,
-          isActive: true
-        },
-        create: {
-          key: role.key,
           name: role.name,
           description: role.description,
           isActive: true
@@ -187,4 +402,47 @@ export const ensureDefaultAgentRoles = async () => {
       })
     )
   );
+};
+
+export const listAgentRoles = () => {
+  return prisma.agentRole.findMany({
+    orderBy: [{ isActive: "desc" }, { name: "asc" }]
+  });
+};
+
+export const listActiveAgentRoles = () => {
+  return prisma.agentRole.findMany({
+    where: { isActive: true },
+    orderBy: { name: "asc" }
+  });
+};
+
+export const createAgentRole = (input: CreateAgentRoleInput & { key: string }) => {
+  return prisma.agentRole.create({
+    data: {
+      key: input.key,
+      name: input.name,
+      description: input.description,
+      isActive: true
+    }
+  });
+};
+
+export const updateAgentRole = (roleId: string, input: UpdateAgentRoleInput & { key?: string }) => {
+  return prisma.agentRole.update({
+    where: { id: roleId },
+    data: input
+  });
+};
+
+export const deleteAgentRole = (roleId: string) => {
+  return prisma.agentRole.delete({
+    where: { id: roleId }
+  });
+};
+
+export const getAgentRoleById = (roleId: string) => {
+  return prisma.agentRole.findUnique({
+    where: { id: roleId }
+  });
 };

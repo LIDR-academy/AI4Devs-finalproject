@@ -1,20 +1,54 @@
 import * as repository from "./repository";
-import { Complexity } from "@prisma/client";
-import { AddUseCaseInput, CreateProjectInput, GenerateEstimateInput } from "./types";
+import {
+  AddUseCaseInput,
+  AssignProjectMemberInput,
+  CreateAgentRoleInput,
+  CreateProjectInput,
+  CreateTeamInput,
+  GenerateEstimateInput,
+  InviteTeamMemberInput,
+  UpdateAgentRoleInput
+} from "./types";
 import { env } from "../../config/env";
-import { z } from "zod";
+import { getBaseEstimationInputs } from "./estimation/shared";
+import { generateHeuristicEstimate } from "./estimation/heuristic";
+import { generateAzureEstimate } from "./estimation/azure";
 import { telemetry } from "../../lib/telemetry";
+import { authSessionStore } from "../auth/session-store";
 
-export const createProject = async (input: CreateProjectInput) => {
-  return repository.createProject(input);
+type ActorRole = "SUPERADMIN" | "ADMIN" | "USER";
+
+const ensureProjectAccess = async (actorId: string, actorRole: ActorRole, projectId: string) => {
+  if (actorRole === "SUPERADMIN" || actorRole === "ADMIN") {
+    return true;
+  }
+
+  return authSessionStore.isAssignedToProject(projectId, actorId);
 };
 
-export const listProjects = async () => {
-  return repository.listProjects();
+export const createProject = async (actorId: string, input: CreateProjectInput) => {
+  return repository.createProject(input, actorId);
 };
 
-export const getProjectById = async (id: string) => {
-  const project = await repository.getProjectById(id);
+export const listProjects = async (actorId: string, actorRole: ActorRole) => {
+  if (actorRole === "USER") {
+    const assignedProjectIds = await authSessionStore.getAssignedProjectIds(actorId);
+    return repository.listProjectsByIds(assignedProjectIds);
+  }
+
+  return repository.listAllProjects();
+};
+
+export const getProjectById = async (actorId: string, actorRole: ActorRole, id: string, estimationVersion?: number) => {
+  const hasAccess = await ensureProjectAccess(actorId, actorRole, id);
+
+  if (!hasAccess) {
+    const error = new Error("Project not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const project = await repository.getProjectByIdUnscoped(id);
 
   if (!project) {
     const error = new Error("Project not found") as Error & { statusCode: number };
@@ -22,16 +56,108 @@ export const getProjectById = async (id: string) => {
     throw error;
   }
 
-  const latestEstimation = project.estimations[0] ?? null;
+  const { estimations, ...projectBase } = project;
+  let estimation = estimations[0] ?? null;
+
+  if (estimationVersion) {
+    const projectWithRequestedVersion =
+      actorRole === "USER"
+        ? await repository.getProjectEstimationByVersionUnscoped(id, estimationVersion)
+        : await repository.getProjectEstimationByVersionUnscoped(id, estimationVersion);
+    const requestedEstimation = projectWithRequestedVersion?.estimations[0] ?? null;
+
+    if (!requestedEstimation) {
+      const error = new Error("Estimation version not found") as Error & { statusCode: number };
+      error.statusCode = 404;
+      throw error;
+    }
+
+    estimation = requestedEstimation;
+  }
+
+  if (!estimation) {
+    return {
+      ...projectBase,
+      estimation: null,
+      summary: null
+    };
+  }
+
+  const hoursByRole = estimation.phases
+    .flatMap((phase) => phase.roleEstimates)
+    .reduce<Record<string, number>>((acc, roleEstimate) => {
+      const current = acc[roleEstimate.role] ?? 0;
+      acc[roleEstimate.role] = Math.round((current + roleEstimate.hours) * 10) / 10;
+      return acc;
+    }, {});
+
+  const totalTokens = estimation.tokens.reduce((acc, token) => acc + token.tokens, 0);
+  const tokenCost = Math.round(estimation.tokens.reduce((acc, token) => acc + token.cost, 0) * 100) / 100;
+  const laborCost = Math.round((estimation.totalCost - tokenCost) * 100) / 100;
+  const averageHoursPerUseCase =
+    project.useCases.length > 0
+      ? Math.round((estimation.totalHours / project.useCases.length) * 10) / 10
+      : 0;
 
   return {
-    ...project,
-    estimation: latestEstimation
+    ...projectBase,
+    estimation,
+    summary: {
+      useCaseCount: project.useCases.length,
+      phaseCount: estimation.phases.length,
+      roleCount: Object.keys(hoursByRole).length,
+      totalTokens,
+      tokenCost,
+      laborCost,
+      averageHoursPerUseCase,
+      hoursByRole,
+      generatedAt: estimation.updatedAt
+    }
   };
 };
 
-export const addUseCase = async (projectId: string, input: AddUseCaseInput) => {
-  const exists = await repository.projectExists(projectId);
+export const listProjectEstimations = async (actorId: string, actorRole: ActorRole, projectId: string) => {
+  const hasAccess = await ensureProjectAccess(actorId, actorRole, projectId);
+
+  if (!hasAccess) {
+    const error = new Error("Project not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const project =
+    actorRole === "USER"
+      ? await repository.getProjectForEstimationUnscoped(projectId)
+      : await repository.getProjectForEstimation(projectId, actorId);
+
+  if (!project) {
+    const error = new Error("Project not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return repository.listProjectEstimationsUnscoped(projectId);
+};
+
+export const listUseCasesByProject = async (actorId: string, actorRole: ActorRole) => {
+  if (actorRole === "USER") {
+    const assignedProjectIds = await authSessionStore.getAssignedProjectIds(actorId);
+    return repository.listUseCasesByProjectIds(assignedProjectIds);
+  }
+
+  return repository.listUseCasesByProjectUnscoped();
+};
+
+export const addUseCase = async (actorId: string, actorRole: ActorRole, projectId: string, input: AddUseCaseInput) => {
+  const hasAccess = await ensureProjectAccess(actorId, actorRole, projectId);
+
+  if (!hasAccess) {
+    const error = new Error("Project not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const exists = Boolean(await repository.getProjectByIdUnscoped(projectId));
 
   if (!exists) {
     const error = new Error("Project not found") as Error & { statusCode: number };
@@ -42,326 +168,79 @@ export const addUseCase = async (projectId: string, input: AddUseCaseInput) => {
   return repository.createUseCase(projectId, input);
 };
 
-const complexityFactorByLevel: Record<Complexity, number> = {
-  LOW: 0.85,
-  MEDIUM: 1,
-  HIGH: 1.3
+const slugifyRoleKey = (value: string) => {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 };
 
-const phaseBlueprint = [
-  {
-    name: "Discovery",
-    description: "Analisis de alcance, refinamiento funcional y definicion de arquitectura.",
-    weight: 0.25
-  },
-  {
-    name: "Build",
-    description: "Implementacion backend y frontend con integraciones y validaciones.",
-    weight: 0.55
-  },
-  {
-    name: "Quality & Launch",
-    description: "Pruebas, endurecimiento operativo y preparacion de release.",
-    weight: 0.2
-  }
-];
-
-const estimateRoleBaseHours = (role: string) => {
-  const normalized = role.trim().toLowerCase();
-
-  if (normalized.includes("backend")) return 14;
-  if (normalized.includes("frontend")) return 12;
-  if (normalized.includes("qa")) return 8;
-  if (normalized.includes("devops")) return 7;
-  if (normalized.includes("security")) return 6;
-  if (normalized.includes("product")) return 6;
-
-  return 9;
+export const listAgentRoles = async () => {
+  return repository.listAgentRoles();
 };
 
-const aiEstimationSchema = z.object({
-  phases: z
-    .array(
-      z.object({
-        name: z.string().min(1),
-        description: z.string().min(1),
-        order: z.number().int().positive().optional(),
-        roleEstimates: z
-          .array(
-            z.object({
-              role: z.string().min(1),
-              hours: z.number().positive()
-            })
-          )
-          .min(1)
-      })
-    )
-    .min(1),
-  assumptions: z.array(z.string().min(1)).min(1),
-  risks: z.array(z.string().min(1)).min(1)
-});
+export const createAgentRole = async (input: CreateAgentRoleInput) => {
+  const key = slugifyRoleKey(input.key?.trim() || input.name);
 
-type ProjectEstimationContext = Awaited<ReturnType<typeof repository.getProjectForEstimation>>;
-
-const getBaseEstimationInputs = (project: NonNullable<ProjectEstimationContext>, input: GenerateEstimateInput) => {
-  const complexityFactor = complexityFactorByLevel[project.complexity];
-  const useCaseFactor = Math.max(1, project.useCases.length);
-  const selectedRoles = Array.from(new Set(input.roles.map((role) => role.trim()).filter(Boolean)));
-
-  return {
-    complexityFactor,
-    useCaseFactor,
-    selectedRoles
-  };
-};
-
-const parseJsonObjectFromText = (text: string) => {
-  const trimmed = text.trim();
-
-  if (trimmed.startsWith("{")) {
-    return JSON.parse(trimmed) as unknown;
+  if (!key) {
+    const error = new Error("Role key could not be generated") as Error & { statusCode: number };
+    error.statusCode = 400;
+    throw error;
   }
 
-  const start = trimmed.indexOf("{");
-  const end = trimmed.lastIndexOf("}");
-
-  if (start === -1 || end === -1 || end <= start) {
-    throw new Error("AI response did not include a valid JSON object.");
-  }
-
-  return JSON.parse(trimmed.slice(start, end + 1)) as unknown;
-};
-
-const calculateTokenCost = (promptTokens: number, completionTokens: number) => {
-  const promptCost = (promptTokens / 1000) * env.AZURE_OPENAI_INPUT_COST_PER_1K;
-  const completionCost = (completionTokens / 1000) * env.AZURE_OPENAI_OUTPUT_COST_PER_1K;
-  return Math.round((promptCost + completionCost) * 10000) / 10000;
-};
-
-const estimateHeuristicTokenBreakdown = (totalTokens: number) => {
-  const promptTokens = Math.round(totalTokens * 0.7);
-  const completionTokens = Math.max(totalTokens - promptTokens, 0);
-
-  return {
-    promptTokens,
-    completionTokens
-  };
-};
-
-const generateHeuristicEstimate = (
-  project: NonNullable<ProjectEstimationContext>,
-  input: GenerateEstimateInput,
-  reason: string
-) => {
-  const { complexityFactor, useCaseFactor, selectedRoles } = getBaseEstimationInputs(project, input);
-
-  const phases = phaseBlueprint.map((phase, index) => {
-    const roleEstimates = selectedRoles.map((role) => {
-      const rawHours = estimateRoleBaseHours(role) * complexityFactor * useCaseFactor * phase.weight;
-      const roundedHours = Math.round(rawHours * 10) / 10;
-
-      return {
-        role,
-        hours: roundedHours
-      };
-    });
-
-    return {
-      name: phase.name,
-      description: phase.description,
-      order: index + 1,
-      roleEstimates
-    };
+  return repository.createAgentRole({
+    ...input,
+    key
   });
-
-  const totalHours =
-    Math.round(
-      phases.reduce(
-        (phaseTotal, phase) =>
-          phaseTotal + phase.roleEstimates.reduce((roleTotal, roleEstimate) => roleTotal + roleEstimate.hours, 0),
-        0
-      ) * 10
-    ) / 10;
-
-  const model = input.model ?? "gpt-4o-mini";
-  const projectedTokens = Math.round(1200 * complexityFactor * useCaseFactor + selectedRoles.length * 300);
-  const tokenBreakdown = estimateHeuristicTokenBreakdown(projectedTokens);
-  const tokenCost = calculateTokenCost(tokenBreakdown.promptTokens, tokenBreakdown.completionTokens);
-  const laborCost = Math.round(totalHours * 45 * 100) / 100;
-  const totalCost = Math.round((laborCost + tokenCost) * 100) / 100;
-
-  const assumptions = [
-    `Estimation model: ${model}`,
-    `Roles selected: ${selectedRoles.join(", ")}`,
-    `Complexity factor: ${project.complexity}`,
-    `Use cases considered: ${project.useCases.length}`,
-    `Generation mode: heuristic fallback (${reason})`
-  ].join("\n");
-
-  const risks = [
-    "Project scope may change after technical discovery.",
-    "Token consumption may vary with prompt and context size.",
-    "Dependencies and integrations can impact delivery timelines."
-  ].join("\n");
-
-  return {
-    totalHours,
-    totalCost,
-    assumptions,
-    risks,
-    phases,
-    token: {
-      model,
-      tokens: projectedTokens,
-      cost: tokenCost
-    }
-  };
 };
 
-const generateAzureEstimate = async (
-  project: NonNullable<ProjectEstimationContext>,
+export const updateAgentRole = async (roleId: string, input: UpdateAgentRoleInput) => {
+  const role = await repository.getAgentRoleById(roleId);
+
+  if (!role) {
+    const error = new Error("Agent role not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const normalizedKey = input.key ? slugifyRoleKey(input.key) : undefined;
+
+  return repository.updateAgentRole(roleId, {
+    ...input,
+    key: normalizedKey
+  });
+};
+
+export const deleteAgentRole = async (roleId: string) => {
+  const role = await repository.getAgentRoleById(roleId);
+
+  if (!role) {
+    const error = new Error("Agent role not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return repository.deleteAgentRole(roleId);
+};
+
+export const generateEstimate = async (
+  actorId: string,
+  actorRole: ActorRole,
+  projectId: string,
   input: GenerateEstimateInput
 ) => {
-  if (!env.AZURE_OPENAI_ENABLED) {
-    return null;
+  const hasAccess = await ensureProjectAccess(actorId, actorRole, projectId);
+
+  if (!hasAccess) {
+    const error = new Error("Project not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
   }
 
-  if (!env.AZURE_OPENAI_ENDPOINT || !env.AZURE_OPENAI_API_KEY || !env.AZURE_OPENAI_DEPLOYMENT) {
-    return null;
-  }
-
-  const { selectedRoles } = getBaseEstimationInputs(project, input);
-
-  const targetModel = input.model?.trim() || env.AZURE_OPENAI_DEPLOYMENT;
-  const endpoint = env.AZURE_OPENAI_ENDPOINT.replace(/\/$/, "");
-  const requestUrl = `${endpoint}/openai/deployments/${env.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=${env.AZURE_OPENAI_API_VERSION}`;
-
-  const systemPrompt = [
-    "You are a senior software estimation assistant.",
-    "Return ONLY valid JSON with this exact structure:",
-    "{",
-    '  "phases": [{"name":"...","description":"...","order":1,"roleEstimates":[{"role":"...","hours":10.5}]}],',
-    '  "assumptions": ["..."],',
-    '  "risks": ["..."]',
-    "}",
-    "Rules:",
-    "- At least 3 phases",
-    "- roleEstimates must include only provided roles",
-    "- hours must be positive numbers",
-    "- keep assumptions and risks concise"
-  ].join("\n");
-
-  const userPrompt = JSON.stringify(
-    {
-      project: {
-        name: project.name,
-        description: project.description,
-        complexity: project.complexity
-      },
-      useCases: project.useCases.map((useCase) => ({
-        title: useCase.title,
-        description: useCase.description,
-        priority: useCase.priority
-      })),
-      roles: selectedRoles,
-      modelHint: targetModel
-    },
-    null,
-    2
-  );
-
-  const response = await fetch(requestUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": env.AZURE_OPENAI_API_KEY
-    },
-    body: JSON.stringify({
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: userPrompt
-        }
-      ],
-      temperature: 0.2,
-      response_format: { type: "json_object" }
-    }),
-    signal: AbortSignal.timeout(env.AZURE_OPENAI_TIMEOUT_MS)
-  });
-
-  if (!response.ok) {
-    const bodyText = await response.text();
-    throw new Error(`Azure OpenAI request failed with status ${response.status}: ${bodyText}`);
-  }
-
-  const payload = (await response.json()) as {
-    choices?: { message?: { content?: string } }[];
-    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
-  };
-
-  const content = payload.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new Error("Azure OpenAI did not return message content.");
-  }
-
-  const parsed = aiEstimationSchema.parse(parseJsonObjectFromText(content));
-
-  const phases = parsed.phases
-    .map((phase, index) => ({
-      name: phase.name,
-      description: phase.description,
-      order: phase.order ?? index + 1,
-      roleEstimates: phase.roleEstimates
-        .filter((estimate) => selectedRoles.includes(estimate.role))
-        .map((estimate) => ({
-          role: estimate.role,
-          hours: Math.round(estimate.hours * 10) / 10
-        }))
-    }))
-    .filter((phase) => phase.roleEstimates.length > 0)
-    .sort((a, b) => a.order - b.order);
-
-  if (phases.length === 0) {
-    throw new Error("Azure OpenAI response did not include role estimates for selected roles.");
-  }
-
-  const totalHours =
-    Math.round(
-      phases.reduce(
-        (phaseTotal, phase) =>
-          phaseTotal + phase.roleEstimates.reduce((roleTotal, roleEstimate) => roleTotal + roleEstimate.hours, 0),
-        0
-      ) * 10
-    ) / 10;
-
-  const promptTokens = payload.usage?.prompt_tokens ?? 0;
-  const completionTokens = payload.usage?.completion_tokens ?? 0;
-  const totalTokens = payload.usage?.total_tokens ?? promptTokens + completionTokens;
-  const tokenCost = calculateTokenCost(promptTokens, completionTokens);
-  const laborCost = Math.round(totalHours * 45 * 100) / 100;
-  const totalCost = Math.round((laborCost + tokenCost) * 100) / 100;
-
-  return {
-    totalHours,
-    totalCost,
-    assumptions: parsed.assumptions.join("\n"),
-    risks: parsed.risks.join("\n"),
-    phases,
-    token: {
-      model: targetModel,
-      tokens: totalTokens,
-      cost: tokenCost
-    }
-  };
-};
-
-export const generateEstimate = async (projectId: string, input: GenerateEstimateInput) => {
-  const project = await repository.getProjectForEstimation(projectId);
+  const project = await repository.getProjectForEstimationUnscoped(projectId);
 
   if (!project) {
     const error = new Error("Project not found") as Error & { statusCode: number };
@@ -378,49 +257,69 @@ export const generateEstimate = async (projectId: string, input: GenerateEstimat
   }
 
   const { selectedRoles } = getBaseEstimationInputs(project, input);
+  const activeRoles = await repository.listActiveAgentRoles();
+  const activeRoleByKey = new Map(activeRoles.map((role) => [role.key, role.name]));
+  const resolvedRoleNames = selectedRoles.map((roleKey) => activeRoleByKey.get(roleKey)).filter(Boolean) as string[];
 
-  if (selectedRoles.length === 0) {
-    const error = new Error("At least one role is required") as Error & { statusCode: number };
+  if (resolvedRoleNames.length === 0) {
+    const error = new Error("At least one valid role is required") as Error & { statusCode: number };
     error.statusCode = 400;
     throw error;
   }
 
+  const resolvedInput: GenerateEstimateInput = {
+    ...input,
+    roles: resolvedRoleNames
+  };
+
+  const azureConfigured = Boolean(env.AZURE_OPENAI_ENDPOINT && env.AZURE_OPENAI_API_KEY && env.AZURE_OPENAI_DEPLOYMENT);
+  let fallbackReason = !env.AZURE_OPENAI_ENABLED
+    ? "azure-disabled"
+    : azureConfigured
+      ? "azure-request-failed-or-invalid-output"
+      : "azure-misconfigured";
+
   let estimation = null;
-  let fallbackReason: string | undefined;
 
   try {
-    estimation = await generateAzureEstimate(project, input);
+    estimation = await generateAzureEstimate(project, resolvedInput);
   } catch (error) {
-    fallbackReason = "azure-request-failed-or-invalid-output";
-    const message = error instanceof Error ? error.message : "unknown error";
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.warn(
       JSON.stringify({
         level: "warn",
-        message: "estimation.azure_fallback",
+        message: "estimation.azure_failed",
         projectId,
-        reason: fallbackReason,
-        detail: message
+        actorId,
+        error: errorMessage
       })
     );
+    fallbackReason = "azure-request-failed-or-invalid-output";
     estimation = null;
   }
 
-  const resolvedEstimation =
-    estimation ??
-    generateHeuristicEstimate(
-      project,
-      input,
-      fallbackReason ?? (env.AZURE_OPENAI_ENABLED ? "azure-not-configured" : "azure-disabled")
-    );
+  const resolvedEstimation = estimation ?? generateHeuristicEstimate(project, resolvedInput, fallbackReason);
+  const usedFallback = estimation === null;
 
   telemetry.recordEstimationRun({
-    usedFallback: !estimation,
-    fallbackReason: !estimation
-      ? fallbackReason ?? (env.AZURE_OPENAI_ENABLED ? "azure-not-configured" : "azure-disabled")
-      : undefined
+    usedFallback,
+    fallbackReason: usedFallback ? fallbackReason : undefined
   });
 
-  return repository.upsertEstimation({
+  console.info(
+    JSON.stringify({
+      level: "info",
+      message: "estimation.completed",
+      projectId,
+      actorId,
+      usedFallback,
+      fallbackReason: usedFallback ? fallbackReason : null,
+      totalHours: resolvedEstimation.totalHours,
+      totalCost: resolvedEstimation.totalCost
+    })
+  );
+
+  return repository.createEstimationVersion({
     projectId,
     totalHours: resolvedEstimation.totalHours,
     totalCost: resolvedEstimation.totalCost,
@@ -429,4 +328,147 @@ export const generateEstimate = async (projectId: string, input: GenerateEstimat
     phases: resolvedEstimation.phases,
     token: resolvedEstimation.token
   });
+};
+
+export const assignProjectMember = async (actorId: string, actorRole: ActorRole, projectId: string, input: AssignProjectMemberInput) => {
+  if (actorRole === "USER") {
+    const error = new Error("Forbidden: insufficient permissions") as Error & { statusCode: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const project = await repository.getProjectByIdUnscoped(projectId);
+
+  if (!project) {
+    const error = new Error("Project not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await authSessionStore.getOrCreate(input.actorId, input.actorId);
+
+  return {
+    projectId,
+    members: await authSessionStore.assignProject(projectId, input.actorId)
+  };
+};
+
+export const unassignProjectMember = async (actorId: string, actorRole: ActorRole, projectId: string, targetActorId: string) => {
+  if (actorRole === "USER") {
+    const error = new Error("Forbidden: insufficient permissions") as Error & { statusCode: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const project = await repository.getProjectByIdUnscoped(projectId);
+
+  if (!project) {
+    const error = new Error("Project not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    projectId,
+    members: await authSessionStore.unassignProject(projectId, targetActorId)
+  };
+};
+
+export const listProjectMembers = async (actorId: string, actorRole: ActorRole, projectId: string) => {
+  if (actorRole === "USER") {
+    const error = new Error("Forbidden: insufficient permissions") as Error & { statusCode: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const project = await repository.getProjectByIdUnscoped(projectId);
+
+  if (!project) {
+    const error = new Error("Project not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    projectId,
+    members: await authSessionStore.listProjectAssignments(projectId)
+  };
+};
+
+export const listUsers = async (actorRole: ActorRole) => {
+  if (actorRole !== "SUPERADMIN") {
+    const error = new Error("Forbidden: insufficient permissions") as Error & { statusCode: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return authSessionStore.listUsers();
+};
+
+export const updateUserRole = async (
+  actorRole: ActorRole,
+  targetActorId: string,
+  role: "SUPERADMIN" | "ADMIN" | "USER"
+) => {
+  if (actorRole !== "SUPERADMIN") {
+    const error = new Error("Forbidden: insufficient permissions") as Error & { statusCode: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const updated = await authSessionStore.setUserRole(targetActorId, role);
+
+  if (!updated) {
+    const error = new Error("User not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return updated;
+};
+
+export const createTeam = async (actorId: string, actorRole: ActorRole, input: CreateTeamInput) => {
+  if (actorRole === "USER") {
+    const error = new Error("Forbidden: insufficient permissions") as Error & { statusCode: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return authSessionStore.createTeam({
+    name: input.name,
+    createdBy: actorId
+  });
+};
+
+export const listTeams = async (actorRole: ActorRole) => {
+  if (actorRole === "USER") {
+    const error = new Error("Forbidden: insufficient permissions") as Error & { statusCode: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return authSessionStore.listTeams();
+};
+
+export const inviteTeamMember = async (
+  actorRole: ActorRole,
+  teamId: string,
+  input: InviteTeamMemberInput
+) => {
+  if (actorRole === "USER") {
+    const error = new Error("Forbidden: insufficient permissions") as Error & { statusCode: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  await authSessionStore.getOrCreate(input.actorId, input.actorId);
+  const team = await authSessionStore.addTeamMember(teamId, input.actorId);
+
+  if (!team) {
+    const error = new Error("Team not found") as Error & { statusCode: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return team;
 };

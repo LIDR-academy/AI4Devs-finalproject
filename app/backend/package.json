@@ -13,8 +13,10 @@
     "test:unit": "vitest run src/**/*.test.ts",
     "test:integration": "vitest run src/**/*.integration.test.ts",
     "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:status": "prisma migrate status",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {

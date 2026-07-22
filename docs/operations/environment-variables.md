@@ -20,11 +20,11 @@ Defined and validated in app/backend/src/config/env.ts.
 
 - PORT (default: 3001)
 - AUTH_ENABLED (default: false)
-- AUTH_LOGIN_PASSWORD (default: dev-password)
-- AUTH_TOKEN_SECRET (default: local-dev-token-secret-1234)
-- AUTH_TOKEN_TTL_SECONDS (default: 3600)
+- AUTH_LOGIN_PASSWORD (default: dev-pass-123)
+- AUTH_TOKEN_SECRET (default: dev-token-secret-change-me)
+- AUTH_TOKEN_TTL_SECONDS (default: 28800)
 - AUTH_REFRESH_TOKEN_TTL_SECONDS (default: 604800)
-- AUTH_SUPERADMIN_ACTOR_IDS (default: "local-dev-actor")
+- AUTH_SUPERADMIN_ACTOR_IDS (default: "")
 - AUTH_ADMIN_ACTOR_IDS (default: "")
 - CORS_ALLOWED_ORIGINS (default: http://localhost:3000,http://127.0.0.1:3000)
 - RATE_LIMIT_WINDOW_MS (default: 60000)
@@ -34,10 +34,6 @@ Defined and validated in app/backend/src/config/env.ts.
 - AZURE_OPENAI_TIMEOUT_MS (default: 25000)
 - AZURE_OPENAI_INPUT_COST_PER_1K (default: 0.005)
 - AZURE_OPENAI_OUTPUT_COST_PER_1K (default: 0.015)
-
-Hardening rule:
-
-- When `AUTH_ENABLED=true`, `AUTH_LOGIN_PASSWORD` and `AUTH_TOKEN_SECRET` must not use development defaults.
 
 ## Frontend
 

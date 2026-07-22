@@ -51,8 +51,9 @@ export const attachActorContext = async (req: Request, res: Response, next: Next
     });
   }
 
-  req.actorId = DEV_FALLBACK_ACTOR_ID;
-  req.actorName = DEV_FALLBACK_ACTOR_ID;
-  req.actorRole = "ADMIN";
+  const actorFromHeader = req.header("x-actor-id")?.trim() || null;
+  req.actorId = actorFromHeader || DEV_FALLBACK_ACTOR_ID;
+  req.actorName = actorFromHeader || DEV_FALLBACK_ACTOR_ID;
+  req.actorRole = "SUPERADMIN";
   return next();
 };

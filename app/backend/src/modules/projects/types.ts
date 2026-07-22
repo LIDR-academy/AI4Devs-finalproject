@@ -58,3 +58,54 @@ export type ProjectEstimationContext = {
     priority: Priority;
   }[];
 };
+
+export type GeneratedEstimationOutput = {
+  totalHours: number;
+  totalCost: number;
+  assumptions: string;
+  risks: string;
+  phases: EstimationPhaseInput[];
+  token: {
+    model: string;
+    tokens: number;
+    cost: number;
+  };
+};
+
+export type CreateAgentRoleInput = {
+  name: string;
+  key?: string;
+  description?: string;
+};
+
+export type UpdateAgentRoleInput = {
+  name?: string;
+  key?: string;
+  description?: string;
+  isActive?: boolean;
+};
+
+export type AssignProjectMemberInput = {
+  actorId: string;
+};
+
+export type CreateTeamInput = {
+  name: string;
+};
+
+export type InviteTeamMemberInput = {
+  actorId: string;
+};
+
+export type UseCaseByProjectRow = {
+  id: string;
+  title: string;
+  description: string;
+  priority: string;
+  createdAt: Date;
+  project: {
+    id: string;
+    name: string;
+    complexity: string;
+  };
+};
