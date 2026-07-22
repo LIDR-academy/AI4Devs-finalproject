@@ -51,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IGuestService, GuestService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IInvitationService, InvitationService>();
+        services.AddScoped<IRsvpService, RsvpService>();
         services.AddScoped<FluentValidation.IValidator<Aura.Core.DTOs.Guests.AddGuestRequest>, Aura.Core.Validators.Guests.AddGuestRequestValidator>();
         services.AddScoped<FluentValidation.IValidator<Aura.Core.DTOs.Guests.ImportGuestRow>, Aura.Core.Validators.Guests.ImportGuestRowValidator>();
 
