@@ -23,6 +23,7 @@ import (
 
 	"github.com/coder/websocket"
 
+	"github.com/quickchat/streamer/internal/auth"
 	"github.com/quickchat/streamer/internal/chat"
 )
 
@@ -53,13 +54,13 @@ const (
 	// Non-terminal reasons (connection stays open; not followed by a close).
 	ReasonInvalidFrame = "invalid frame"          // unparseable or non-message frame
 	ReasonSendFailed   = "could not send message" // transient storage failure
+	ReasonAuthRequired = "auth_required"          // message from a read-only (no/invalid token) connection
 )
 
-// Authenticator resolves a room's creator identity for a presented key.
-type Authenticator interface {
-	// VerifyCreator reports whether key matches the room's creatorKey and returns
-	// the room's username. It returns a non-nil error when the room is not live.
-	VerifyCreator(ctx context.Context, roomID, key string) (isCreator bool, username string, err error)
+// RoomOwner returns a room's owner userId (satisfied by stream.Service). A non-nil
+// error means the room is not joinable (not live).
+type RoomOwner interface {
+	Owner(ctx context.Context, roomID string) (ownerID string, err error)
 }
 
 // Poster validates and stores an inbound chat message, returning it with its
@@ -70,9 +71,10 @@ type Poster interface {
 
 // client is one live WebSocket connection in a room.
 type client struct {
-	sender string
-	role   string
-	send   chan []byte
+	sender  string
+	role    string
+	canChat bool // false for a read-only (anonymous/invalid-token) connection
+	send    chan []byte
 
 	stopOnce sync.Once
 	stop     chan struct{}
@@ -180,7 +182,7 @@ func (h *Hub) RoomSize(roomID string) int {
 // ServeWS upgrades the request, runs the join handshake, and serves the
 // connection until it drops or the room closes. It returns only after both pumps
 // have stopped and the connection is unregistered.
-func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request, roomID string, auth Authenticator, poster Poster) {
+func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request, roomID string, verifier auth.Verifier, owner RoomOwner, poster Poster) {
 	// InsecureSkipVerify: streamer is not browser-facing — it sits behind the
 	// single-origin reverse proxy (design D4), so origin enforcement is the proxy's
 	// job, not ours. There is no CORS surface here.
@@ -195,12 +197,11 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request, roomID string, aut
 	// stop channel so the read is never cancelled out from under a pending write.
 	ctx := r.Context()
 
-	sender, role, ok := h.handshake(ctx, conn, roomID, auth)
+	c, ok := h.handshake(ctx, conn, roomID, verifier, owner)
 	if !ok {
 		return
 	}
 
-	c := &client{sender: sender, role: role, send: make(chan []byte, sendBuffer), stop: make(chan struct{})}
 	h.register(roomID, c)
 	defer h.unregister(roomID, c)
 
@@ -211,50 +212,61 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request, roomID string, aut
 	wg.Wait()
 }
 
-// handshake reads the join frame, resolves identity, and sends welcome. It
-// returns ok=false (after closing) when the join is invalid or the room is gone.
-func (h *Hub) handshake(ctx context.Context, conn *websocket.Conn, roomID string, auth Authenticator) (sender, role string, ok bool) {
+// handshake reads the join frame, resolves identity from the optional token, and
+// sends welcome. It returns ok=false (after closing) when the join is invalid or
+// the room is gone. A valid token yields a chat-capable identity (streamer if
+// owner, else viewer); no/invalid token yields a read-only viewer.
+func (h *Hub) handshake(ctx context.Context, conn *websocket.Conn, roomID string, verifier auth.Verifier, owner RoomOwner) (*client, bool) {
 	joinCtx, cancel := context.WithTimeout(ctx, joinTimeout)
 	defer cancel()
 
 	_, data, err := conn.Read(joinCtx)
 	if err != nil {
 		_ = conn.Close(websocket.StatusPolicyViolation, "join expected")
-		return "", "", false
+		return nil, false
 	}
 
 	var f inFrame
 	if err := json.Unmarshal(data, &f); err != nil || f.Type != "join" {
 		h.sendError(conn, ReasonExpectedJoin)
 		_ = conn.Close(websocket.StatusPolicyViolation, "join expected")
-		return "", "", false
+		return nil, false
 	}
 
-	isCreator, username, err := auth.VerifyCreator(ctx, roomID, f.CreatorKey)
+	ownerID, err := owner.Owner(ctx, roomID)
 	if err != nil {
-		// Room not live (or unreachable): not joinable.
+		// Room not live: not joinable.
 		h.sendError(conn, ReasonRoomNotFound)
 		_ = conn.Close(websocket.StatusPolicyViolation, "room not found")
-		return "", "", false
+		return nil, false
 	}
 
-	if isCreator {
-		role, sender = chat.RoleStreamer, username
+	var sender, role string
+	var canChat bool
+	if claims, verr := verifier.Verify(ctx, f.Token); verr == nil {
+		// Valid token: chat as the account username; role by ownership.
+		sender, canChat = claims.Username, true
+		if claims.UserID == ownerID {
+			role = chat.RoleStreamer
+		} else {
+			role = chat.RoleViewer
+		}
 	} else {
-		role = chat.RoleViewer
+		// No/invalid token: read-only viewer (silent downgrade).
+		role, canChat = chat.RoleViewer, false
 		sender, err = chat.NewViewerID()
 		if err != nil {
 			h.log.Error("generating viewer id", "error", err)
 			_ = conn.Close(websocket.StatusInternalError, "internal error")
-			return "", "", false
+			return nil, false
 		}
 	}
 
 	if err := h.write(conn, mustMarshal(welcomeFrame{Type: "welcome", Sender: sender, Role: role})); err != nil {
 		_ = conn.Close(websocket.StatusNormalClosure, "")
-		return "", "", false
+		return nil, false
 	}
-	return sender, role, true
+	return &client{sender: sender, role: role, canChat: canChat, send: make(chan []byte, sendBuffer), stop: make(chan struct{})}, true
 }
 
 // readPump reads frames until the connection fails or is closed by the write
@@ -271,6 +283,12 @@ func (h *Hub) readPump(ctx context.Context, conn *websocket.Conn, roomID string,
 		var f inFrame
 		if err := json.Unmarshal(data, &f); err != nil || f.Type != "message" {
 			h.queue(c, mustMarshal(errorFrame{Type: "error", Reason: ReasonInvalidFrame}))
+			continue
+		}
+
+		// Read-only (no/invalid token) connections may not send messages.
+		if !c.canChat {
+			h.queue(c, mustMarshal(errorFrame{Type: "error", Reason: ReasonAuthRequired}))
 			continue
 		}
 
@@ -348,9 +366,9 @@ func (h *Hub) sendError(conn *websocket.Conn, reason string) {
 // --- frames ---
 
 type inFrame struct {
-	Type       string `json:"type"`
-	CreatorKey string `json:"creatorKey"`
-	Text       string `json:"text"`
+	Type  string `json:"type"`
+	Token string `json:"token"`
+	Text  string `json:"text"`
 }
 
 type welcomeFrame struct {

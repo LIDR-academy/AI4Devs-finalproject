@@ -32,6 +32,7 @@ func TestLoad(t *testing.T) {
 				"LIVEKIT_API_SECRET": "devsecret",
 				"LIVEKIT_URL":        "http://livekit:7880",
 				"LIVEKIT_PUBLIC_URL": "ws://localhost:7880",
+				"SECURITY_JWKS_URL":  "http://security:4000/auth/jwt/jwks.json",
 			},
 			want: config.Config{
 				ValkeyAddr:       "valkey:6379",
@@ -45,6 +46,7 @@ func TestLoad(t *testing.T) {
 				LiveKitAPISecret: "devsecret",
 				LiveKitURL:       "http://livekit:7880",
 				LiveKitPublicURL: "ws://localhost:7880",
+				SecurityJWKSURL:  "http://security:4000/auth/jwt/jwks.json",
 			},
 		},
 		{
@@ -61,6 +63,7 @@ func TestLoad(t *testing.T) {
 				"LIVEKIT_API_SECRET": "s",
 				"LIVEKIT_URL":        "http://lk:7880",
 				"LIVEKIT_PUBLIC_URL": "ws://pub:7880",
+				"SECURITY_JWKS_URL":  "http://sec/jwks",
 			},
 			want: config.Config{
 				ValkeyAddr:       "10.0.0.5:6379",
@@ -74,7 +77,16 @@ func TestLoad(t *testing.T) {
 				LiveKitAPISecret: "s",
 				LiveKitURL:       "http://lk:7880",
 				LiveKitPublicURL: "ws://pub:7880",
+				SecurityJWKSURL:  "http://sec/jwks",
 			},
+		},
+		{
+			name: "missing SECURITY_JWKS_URL",
+			env: map[string]string{
+				"VALKEY_ADDR": "valkey:6379", "LIVEKIT_API_KEY": "k", "LIVEKIT_API_SECRET": "s",
+				"LIVEKIT_URL": "http://lk:7880", "LIVEKIT_PUBLIC_URL": "ws://p:7880",
+			},
+			wantErr: true,
 		},
 		{
 			name: "missing LIVEKIT_API_KEY",
@@ -126,6 +138,7 @@ func TestLoad(t *testing.T) {
 				"VALKEY_ADDR", "VALKEY_PASSWORD", "VALKEY_DB", "STREAMER_ADDR",
 				"CHAT_MAX_MESSAGES", "CHAT_PAGE_SIZE", "CHAT_MAX_LENGTH",
 				"LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "LIVEKIT_URL", "LIVEKIT_PUBLIC_URL",
+				"SECURITY_JWKS_URL",
 			} {
 				t.Setenv(k, "")
 			}

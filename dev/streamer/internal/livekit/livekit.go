@@ -71,26 +71,6 @@ func (c *Client) DeleteRoom(ctx context.Context, room string) error {
 	return nil
 }
 
-// HasActivePublisher reports whether the room has a participant publishing a
-// track. A room LiveKit never created (not found) has no publisher — reported as
-// false, nil so the DELETE escape hatch applies. Only a genuine transport error
-// returns a non-nil error (the caller fails closed on it).
-func (c *Client) HasActivePublisher(ctx context.Context, room string) (bool, error) {
-	resp, err := c.room.ListParticipants(ctx, &livekit.ListParticipantsRequest{Room: room})
-	if err != nil {
-		if isNotFound(err) {
-			return false, nil
-		}
-		return false, fmt.Errorf("listing participants for %s: %w", room, err)
-	}
-	for _, p := range resp.GetParticipants() {
-		if len(p.GetTracks()) > 0 {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
 // WebhookEvent is a minimal, SDK-free view of a LiveKit webhook.
 type WebhookEvent struct {
 	Type     string

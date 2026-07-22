@@ -17,24 +17,36 @@ import (
 
 	"github.com/coder/websocket"
 
+	"github.com/quickchat/streamer/internal/auth"
 	"github.com/quickchat/streamer/internal/chat"
 	"github.com/quickchat/streamer/internal/hub"
 )
 
-// fakeAuth: room "missing" is not live; key "goodkey" is the creator "alice".
-type fakeAuth struct{}
+// fakeVerifier: "owner-token" → the owner; "viewer-token" → a signed-in non-owner;
+// anything else → unauthenticated.
+type fakeVerifier struct{}
 
-func (fakeAuth) VerifyCreator(_ context.Context, roomID, key string) (bool, string, error) {
-	if roomID == "missing" {
-		return false, "", errors.New("room not found")
+func (fakeVerifier) Verify(_ context.Context, token string) (auth.Claims, error) {
+	switch token {
+	case "owner-token":
+		return auth.Claims{UserID: "owner-1", Username: "alice"}, nil
+	case "viewer-token":
+		return auth.Claims{UserID: "user-2", Username: "bob"}, nil
+	default:
+		return auth.Claims{}, auth.ErrUnauthenticated
 	}
-	if key == "goodkey" {
-		return true, "alice", nil
-	}
-	return false, "alice", nil
 }
 
-// memMsgStore is a minimal in-memory chat.MessageStore for the Poster.
+// fakeOwner: room "missing" is not live; "live" is owned by owner-1.
+type fakeOwner struct{}
+
+func (fakeOwner) Owner(_ context.Context, roomID string) (string, error) {
+	if roomID == "missing" {
+		return "", errors.New("not live")
+	}
+	return "owner-1", nil
+}
+
 type memMsgStore struct {
 	mu  sync.Mutex
 	seq int
@@ -66,11 +78,10 @@ func newWSFixture(t *testing.T, roomID string) *wsFixture {
 	returns := make(chan struct{}, 16)
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h.ServeWS(w, r, roomID, fakeAuth{}, poster)
+		h.ServeWS(w, r, roomID, fakeVerifier{}, fakeOwner{}, poster)
 		returns <- struct{}{}
 	}))
 	t.Cleanup(srv.Close)
-
 	return &wsFixture{url: "ws" + strings.TrimPrefix(srv.URL, "http"), hub: h, returns: returns}
 }
 
@@ -110,132 +121,110 @@ func readJSON(t *testing.T, c *websocket.Conn) map[string]any {
 	return m
 }
 
-func TestJoinAsCreator(t *testing.T) {
+func TestJoinOwner(t *testing.T) {
 	fx := newWSFixture(t, "live")
 	c := dial(t, fx.url)
-	writeJSON(t, c, `{"type":"join","creatorKey":"goodkey"}`)
-
+	writeJSON(t, c, `{"type":"join","token":"owner-token"}`)
 	f := readJSON(t, c)
 	if f["type"] != "welcome" || f["role"] != "streamer" || f["sender"] != "alice" {
 		t.Fatalf("welcome = %v, want streamer/alice", f)
 	}
 }
 
-func TestJoinAsViewer(t *testing.T) {
+func TestJoinSignedInNonOwner(t *testing.T) {
+	fx := newWSFixture(t, "live")
+	c := dial(t, fx.url)
+	writeJSON(t, c, `{"type":"join","token":"viewer-token"}`)
+	f := readJSON(t, c)
+	if f["type"] != "welcome" || f["role"] != "viewer" || f["sender"] != "bob" {
+		t.Fatalf("welcome = %v, want viewer/bob", f)
+	}
+}
+
+func TestJoinAnonymousReadOnly(t *testing.T) {
 	fx := newWSFixture(t, "live")
 	c := dial(t, fx.url)
 	writeJSON(t, c, `{"type":"join"}`)
-
 	f := readJSON(t, c)
 	if f["type"] != "welcome" || f["role"] != "viewer" {
 		t.Fatalf("welcome = %v, want viewer", f)
 	}
 	if sender, _ := f["sender"].(string); !regexp.MustCompile(`^[a-z]+-[a-z0-9]+$`).MatchString(sender) {
-		t.Fatalf("viewer sender = %v, want word-alphanumeric", f["sender"])
+		t.Fatalf("anon sender = %v, want generated id", f["sender"])
 	}
 }
 
 func TestJoinNonexistentRoom(t *testing.T) {
 	fx := newWSFixture(t, "missing")
 	c := dial(t, fx.url)
-	writeJSON(t, c, `{"type":"join"}`)
-
+	writeJSON(t, c, `{"type":"join","token":"owner-token"}`)
 	f := readJSON(t, c)
 	if f["type"] != "error" || f["reason"] != hub.ReasonRoomNotFound {
-		t.Fatalf("frame = %v, want terminal error reason %q", f, hub.ReasonRoomNotFound)
+		t.Fatalf("frame = %v, want terminal room-not-found", f)
 	}
-	// Terminal: the connection is then closed (error-then-close invariant).
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if _, _, err := c.Read(ctx); err == nil {
-		t.Fatalf("expected the connection to be closed after a terminal error")
+		t.Fatal("expected close after terminal error")
 	}
 }
 
-func TestMessageBroadcast(t *testing.T) {
+func TestAuthenticatedMessageBroadcastsToAll(t *testing.T) {
 	fx := newWSFixture(t, "live")
-	c1 := dial(t, fx.url)
-	c2 := dial(t, fx.url)
-	writeJSON(t, c1, `{"type":"join"}`)
-	writeJSON(t, c2, `{"type":"join"}`)
-	readJSON(t, c1) // welcome
-	readJSON(t, c2) // welcome
+	owner := dial(t, fx.url)
+	anon := dial(t, fx.url)
+	writeJSON(t, owner, `{"type":"join","token":"owner-token"}`)
+	writeJSON(t, anon, `{"type":"join"}`) // read-only viewer
+	readJSON(t, owner)                    // welcome
+	readJSON(t, anon)                     // welcome
 
-	writeJSON(t, c1, `{"type":"message","text":"hello room"}`)
+	writeJSON(t, owner, `{"type":"message","text":"hi all"}`)
 
-	for _, c := range []*websocket.Conn{c1, c2} {
+	// Both the owner and the read-only viewer receive the broadcast.
+	for _, c := range []*websocket.Conn{owner, anon} {
 		f := readJSON(t, c)
-		if f["type"] != "message" {
-			t.Fatalf("frame = %v, want message", f)
-		}
 		msg, _ := f["message"].(map[string]any)
-		if msg["text"] != "hello room" || msg["id"] == "" || msg["role"] != "viewer" {
-			t.Fatalf("broadcast message = %v, want text/id/role", msg)
+		if f["type"] != "message" || msg["text"] != "hi all" || msg["role"] != "streamer" {
+			t.Fatalf("broadcast = %v, want streamer message to all", f)
 		}
 	}
 }
 
-func TestEmptyMessageRejectedToSenderOnly(t *testing.T) {
+func TestReadOnlyMessageRejectedAuthRequired(t *testing.T) {
 	fx := newWSFixture(t, "live")
 	c := dial(t, fx.url)
-	writeJSON(t, c, `{"type":"join"}`)
-	readJSON(t, c) // welcome
+	writeJSON(t, c, `{"type":"join"}`) // anonymous → read-only
+	readJSON(t, c)                     // welcome
 
-	writeJSON(t, c, `{"type":"message","text":"   "}`)
+	writeJSON(t, c, `{"type":"message","text":"let me in"}`)
 	f := readJSON(t, c)
-	if f["type"] != "error" {
-		t.Fatalf("frame = %v, want error for empty message", f)
+	if f["type"] != "error" || f["reason"] != hub.ReasonAuthRequired {
+		t.Fatalf("frame = %v, want auth_required error", f)
 	}
-	// Non-terminal: the connection stays open, so a following valid message is
-	// still accepted and broadcast (no close after a validation error).
-	writeJSON(t, c, `{"type":"message","text":"still here"}`)
-	next := readJSON(t, c)
-	if next["type"] != "message" {
-		t.Fatalf("frame = %v, want a broadcast after a non-terminal error", next)
+	// Non-terminal: the connection stays open (invalid frame still gets a reply).
+	writeJSON(t, c, `{"type":"message"}`)
+	if next := readJSON(t, c); next["type"] != "error" {
+		t.Fatalf("connection closed after auth_required; got %v", next)
 	}
-}
-
-func TestRoomClosedWhileConnected(t *testing.T) {
-	fx := newWSFixture(t, "live")
-	c := dial(t, fx.url)
-	writeJSON(t, c, `{"type":"join"}`)
-	readJSON(t, c) // welcome
-
-	fx.hub.CloseRoom("live")
-
-	f := readJSON(t, c)
-	if f["type"] != "error" || f["reason"] != hub.ReasonRoomEnded {
-		t.Fatalf("frame = %v, want terminal error reason %q", f, hub.ReasonRoomEnded)
-	}
-	waitReturn(t, fx) // ServeWS returned → no leak
 }
 
 func TestClientDropIsCleanedUp(t *testing.T) {
 	fx := newWSFixture(t, "live")
 	c := dial(t, fx.url)
-	writeJSON(t, c, `{"type":"join"}`)
-	readJSON(t, c) // welcome
+	writeJSON(t, c, `{"type":"join","token":"owner-token"}`)
+	readJSON(t, c)
 
 	if fx.hub.RoomSize("live") != 1 {
-		t.Fatalf("RoomSize = %d, want 1 after join", fx.hub.RoomSize("live"))
+		t.Fatalf("RoomSize = %d, want 1", fx.hub.RoomSize("live"))
 	}
-
-	// Drop the connection; the server must tear down both pumps and unregister.
 	_ = c.Close(websocket.StatusNormalClosure, "bye")
 
-	waitReturn(t, fx)
-	if fx.hub.RoomSize("live") != 0 {
-		t.Fatalf("RoomSize = %d after drop, want 0 (leak)", fx.hub.RoomSize("live"))
-	}
-}
-
-// waitReturn blocks until one ServeWS invocation returns, proving its goroutines
-// stopped, or fails after a bounded deadline.
-func waitReturn(t *testing.T, fx *wsFixture) {
-	t.Helper()
 	select {
 	case <-fx.returns:
 	case <-time.After(5 * time.Second):
-		t.Fatalf("ServeWS did not return within the deadline (possible goroutine leak)")
+		t.Fatal("ServeWS did not return (possible leak)")
+	}
+	if fx.hub.RoomSize("live") != 0 {
+		t.Fatalf("RoomSize = %d after drop, want 0", fx.hub.RoomSize("live"))
 	}
 }

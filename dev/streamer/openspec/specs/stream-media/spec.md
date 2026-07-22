@@ -4,19 +4,23 @@
 TBD - created by archiving change stream-media-v0. Update Purpose after archive.
 ## Requirements
 ### Requirement: Mint a media access token
-The service SHALL expose `POST /streams/{id}/media-token` accepting an optional `creatorKey` as an `Authorization: Bearer <creatorKey>` header. The room MUST exist in Valkey, else the service SHALL return `404` and SHALL NOT create a LiveKit room. On success it SHALL return `200` with `{ "token": string, "url": string, "identity": string, "role": "streamer" | "viewer" }`, where `token` is a signed LiveKit access token, `url` is the browser-facing LiveKit URL from `LIVEKIT_PUBLIC_URL`, and `identity`/`role` are server-stamped. A `creatorKey` that matches the stream's stored key by constant-time comparison SHALL grant publish+subscribe with `identity` = the stream username and `role` = `"streamer"`. An absent or non-matching key SHALL grant subscribe-only with a generated word+alphanumeric `identity` and `role` = `"viewer"` — a non-matching key is a silent viewer downgrade, not an error. The LiveKit API secret SHALL NEVER appear in the response, logs, or errors.
+The service SHALL expose `POST /streams/{id}/media-token` with an **empty body** and **optional** authentication via `Authorization: Bearer <access token>` (`creatorKey` is retired). The room MUST exist in Valkey, else the service SHALL return `404` and SHALL NOT create a LiveKit room. On success it SHALL return `200` with `{ "token": string, "url": string, "identity": string, "role": "streamer" | "viewer" }`, where `token` is a signed LiveKit access token, `url` is the browser-facing LiveKit URL from `LIVEKIT_PUBLIC_URL`, and `identity`/`role` are server-stamped. A valid token whose `userId` is the stream owner SHALL grant publish+subscribe with `identity` = the account username and `role` = `"streamer"`. A valid token for a non-owner SHALL grant subscribe-only with `identity` = the account username and `role` = `"viewer"`. No or an invalid token (anonymous) SHALL grant subscribe-only with a generated word+alphanumeric `identity` and `role` = `"viewer"` — not an error. The LiveKit API secret SHALL NEVER appear in the response, logs, or errors.
 
-#### Scenario: Creator gets a publish token
-- **WHEN** a client POSTs the media-token endpoint with a valid `creatorKey` for an existing room
-- **THEN** the response is `200` with a token granting publish+subscribe, `identity` = the stream username, `role` = `"streamer"`, and a browser-facing `url`
+#### Scenario: Owner gets a publish token
+- **WHEN** the stream owner POSTs the media-token endpoint with a valid token whose `userId` is the owner
+- **THEN** the response is `200` with a publish+subscribe token, `identity` = the account username, and `role` = `"streamer"`
 
-#### Scenario: Viewer gets a subscribe-only token
-- **WHEN** a client POSTs with no key or a non-matching key for an existing room
-- **THEN** the response is `200` with a subscribe-only token, a generated word+alphanumeric `identity`, `role` = `"viewer"`, and no error
+#### Scenario: Signed-in non-owner gets subscribe-only
+- **WHEN** a signed-in non-owner POSTs the media-token endpoint with a valid token
+- **THEN** the response is `200` with a subscribe-only token, `identity` = their account username, and `role` = `"viewer"`
+
+#### Scenario: Anonymous gets subscribe-only
+- **WHEN** a client with no or an invalid token POSTs the media-token endpoint for an existing room
+- **THEN** the response is `200` with a subscribe-only token, a generated `identity`, `role` = `"viewer"`, and no error
 
 #### Scenario: Token for a nonexistent room
 - **WHEN** a client POSTs the media-token endpoint for a room id that does not exist
-- **THEN** the response is `404` and no LiveKit room is created
+- **THEN** the response is `404`
 
 ### Requirement: Publish permission is server-enforced by the token grant
 The service SHALL encode publish permission in the token grant, not leave it to the client: a streamer token SHALL carry `CanPublish` true and `CanSubscribe` true; a viewer token SHALL carry `CanPublish` false and `CanSubscribe` true. The grant SHALL scope the token to the specific room. This makes any publish attempt with a viewer token rejectable by LiveKit.

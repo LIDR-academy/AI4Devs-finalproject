@@ -10,55 +10,63 @@ import (
 	"github.com/quickchat/streamer/internal/stream"
 )
 
-// stored is a stream plus its private creatorKey, as the fake store holds it.
 type stored struct {
-	s   stream.Stream
-	key string
+	s     stream.Stream
+	owner string
 }
 
-// fakeStore is a hand-written in-memory Store for domain tests.
+// fakeStore is a hand-written in-memory Store with a one-per-user slot.
 type fakeStore struct {
 	mu      sync.Mutex
 	streams map[string]stored
+	byUser  map[string]string // ownerID → streamID
 }
 
-func newFakeStore() *fakeStore { return &fakeStore{streams: make(map[string]stored)} }
+func newFakeStore() *fakeStore {
+	return &fakeStore{streams: make(map[string]stored), byUser: make(map[string]string)}
+}
 
 func (f *fakeStore) List(context.Context) ([]stream.Stream, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	out := make([]stream.Stream, 0, len(f.streams))
 	for _, v := range f.streams {
-		out = append(out, v.s) // never includes the key
+		out = append(out, v.s)
 	}
 	return out, nil
 }
 
-func (f *fakeStore) Add(_ context.Context, s stream.Stream, key string) error {
+func (f *fakeStore) Add(_ context.Context, s stream.Stream, ownerID string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.streams[s.ID] = stored{s: s, key: key}
+	if _, ok := f.byUser[ownerID]; ok {
+		return stream.ErrAlreadyStreaming
+	}
+	f.byUser[ownerID] = s.ID
+	f.streams[s.ID] = stored{s: s, owner: ownerID}
 	return nil
 }
 
 func (f *fakeStore) Remove(_ context.Context, id string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if _, ok := f.streams[id]; !ok {
+	v, ok := f.streams[id]
+	if !ok {
 		return stream.ErrNotFound
 	}
 	delete(f.streams, id)
+	delete(f.byUser, v.owner)
 	return nil
 }
 
-func (f *fakeStore) Creator(_ context.Context, id string) (string, string, error) {
+func (f *fakeStore) Get(_ context.Context, id string) (stream.Stream, string, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	v, ok := f.streams[id]
 	if !ok {
-		return "", "", stream.ErrNotFound
+		return stream.Stream{}, "", stream.ErrNotFound
 	}
-	return v.s.Username, v.key, nil
+	return v.s, v.owner, nil
 }
 
 func (f *fakeStore) Exists(_ context.Context, id string) (bool, error) {
@@ -71,141 +79,105 @@ func (f *fakeStore) Exists(_ context.Context, id string) (bool, error) {
 func TestServiceCreate(t *testing.T) {
 	desc100 := strings.Repeat("é", 100)
 	desc101 := strings.Repeat("é", 101)
-	name200 := strings.Repeat("あ", 200)
-	name201 := strings.Repeat("あ", 201)
+	title200 := strings.Repeat("あ", 200)
+	title201 := strings.Repeat("あ", 201)
 
 	tests := []struct {
 		name        string
-		username    string
 		title       string
 		description string
-		wantUser    string
 		wantTitle   string
 		wantDesc    string
 		wantInvalid bool
 	}{
-		{name: "username and title only", username: "alice", title: "My stream", wantUser: "alice", wantTitle: "My stream", wantDesc: ""},
-		{name: "with description", username: "bob", title: "Cooking", description: "pasta", wantUser: "bob", wantTitle: "Cooking", wantDesc: "pasta"},
-		{name: "username and title trimmed", username: "  al  ", title: "  spaced  ", wantUser: "al", wantTitle: "spaced", wantDesc: ""},
-		{name: "description at 100 code points", username: "u", title: "t", description: desc100, wantUser: "u", wantTitle: "t", wantDesc: desc100},
-		{name: "username at 200 code points", username: name200, title: "t", wantUser: name200, wantTitle: "t"},
-		{name: "empty username rejected", username: "", title: "t", wantInvalid: true},
-		{name: "whitespace username rejected", username: "  ", title: "t", wantInvalid: true},
-		{name: "empty title rejected", username: "u", title: "", wantInvalid: true},
-		{name: "username over 200 rejected", username: name201, title: "t", wantInvalid: true},
-		{name: "description over 100 rejected", username: "u", title: "t", description: desc101, wantInvalid: true},
+		{name: "title only", title: "My stream", wantTitle: "My stream", wantDesc: ""},
+		{name: "title and description", title: "Cooking", description: "pasta", wantTitle: "Cooking", wantDesc: "pasta"},
+		{name: "title trimmed", title: "  spaced  ", wantTitle: "spaced"},
+		{name: "description at 100", title: "t", description: desc100, wantTitle: "t", wantDesc: desc100},
+		{name: "title at 200", title: title200, wantTitle: title200},
+		{name: "empty title", title: "", wantInvalid: true},
+		{name: "whitespace title", title: "   ", wantInvalid: true},
+		{name: "title over 200", title: title201, wantInvalid: true},
+		{name: "description over 100", title: "t", description: desc101, wantInvalid: true},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := stream.NewService(newFakeStore())
-			got, err := svc.Create(context.Background(), tt.username, tt.title, tt.description)
-
+			got, err := svc.Create(context.Background(), "user-1", "alice", tt.title, tt.description)
 			if tt.wantInvalid {
 				var ve stream.ValidationError
 				if !errors.As(err, &ve) {
-					t.Fatalf("Create() error = %v, want ValidationError", err)
+					t.Fatalf("Create() err = %v, want ValidationError", err)
 				}
 				return
 			}
 			if err != nil {
-				t.Fatalf("Create() unexpected error: %v", err)
+				t.Fatalf("Create() error: %v", err)
 			}
-			if got.Username != tt.wantUser || got.Title != tt.wantTitle || got.Description != tt.wantDesc {
-				t.Fatalf("Create() = %+v, want user %q title %q desc %q", got, tt.wantUser, tt.wantTitle, tt.wantDesc)
-			}
-			if got.ID == "" {
-				t.Errorf("id is empty")
-			}
-			if got.CreatorKey == "" {
-				t.Errorf("creatorKey is empty")
+			if got.Username != "alice" || got.Title != tt.wantTitle || got.Description != tt.wantDesc || got.ID == "" {
+				t.Fatalf("Create() = %+v, want username alice + title %q", got, tt.wantTitle)
 			}
 		})
 	}
 }
 
-func TestCreatorKeyNotInList(t *testing.T) {
+func TestOneStreamPerUser(t *testing.T) {
 	svc := stream.NewService(newFakeStore())
-	created, err := svc.Create(context.Background(), "alice", "t", "")
-	if err != nil {
-		t.Fatalf("Create() error: %v", err)
+	if _, err := svc.Create(context.Background(), "user-1", "alice", "first", ""); err != nil {
+		t.Fatalf("first Create: %v", err)
 	}
-	list, err := svc.List(context.Background())
-	if err != nil {
-		t.Fatalf("List() error: %v", err)
+	_, err := svc.Create(context.Background(), "user-1", "alice", "second", "")
+	if !errors.Is(err, stream.ErrAlreadyStreaming) {
+		t.Fatalf("second Create err = %v, want ErrAlreadyStreaming", err)
 	}
-	if len(list) != 1 {
-		t.Fatalf("list length = %d, want 1", len(list))
-	}
-	// The public Stream type has no creatorKey field; assert the listed data equals
-	// the created public stream and the key is only on the Created result.
-	if list[0] != created.Stream {
-		t.Fatalf("listed = %+v, want %+v", list[0], created.Stream)
-	}
-	if created.CreatorKey == "" {
-		t.Fatalf("expected a creatorKey on create")
+	// A different user can create.
+	if _, err := svc.Create(context.Background(), "user-2", "bob", "other", ""); err != nil {
+		t.Fatalf("other user Create: %v", err)
 	}
 }
 
-func TestVerifyCreator(t *testing.T) {
+func TestOwnerAndUsername(t *testing.T) {
 	svc := stream.NewService(newFakeStore())
-	created, err := svc.Create(context.Background(), "alice", "t", "")
+	created, err := svc.Create(context.Background(), "user-1", "alice", "t", "")
 	if err != nil {
-		t.Fatalf("Create() error: %v", err)
+		t.Fatalf("Create: %v", err)
 	}
 
-	// Matching key → creator, username returned.
-	isCreator, username, err := svc.VerifyCreator(context.Background(), created.ID, created.CreatorKey)
-	if err != nil || !isCreator || username != "alice" {
-		t.Fatalf("VerifyCreator(match) = (%v, %q, %v), want (true, alice, nil)", isCreator, username, err)
+	owner, err := svc.Owner(context.Background(), created.ID)
+	if err != nil || owner != "user-1" {
+		t.Fatalf("Owner = (%q, %v), want user-1", owner, err)
 	}
-
-	// Non-matching key → not creator, but username still returned, no error.
-	isCreator, username, err = svc.VerifyCreator(context.Background(), created.ID, "wrong")
-	if err != nil || isCreator || username != "alice" {
-		t.Fatalf("VerifyCreator(wrong) = (%v, %q, %v), want (false, alice, nil)", isCreator, username, err)
+	username, err := svc.Username(context.Background(), created.ID)
+	if err != nil || username != "alice" {
+		t.Fatalf("Username = (%q, %v), want alice", username, err)
 	}
-
-	// Empty key → not creator, no error.
-	isCreator, _, err = svc.VerifyCreator(context.Background(), created.ID, "")
-	if err != nil || isCreator {
-		t.Fatalf("VerifyCreator(empty) = (%v, _, %v), want (false, _, nil)", isCreator, err)
-	}
-
-	// Missing room → ErrNotFound.
-	if _, _, err := svc.VerifyCreator(context.Background(), "nope", "x"); !errors.Is(err, stream.ErrNotFound) {
-		t.Fatalf("VerifyCreator(missing) err = %v, want ErrNotFound", err)
+	if _, err := svc.Owner(context.Background(), "nope"); !errors.Is(err, stream.ErrNotFound) {
+		t.Fatalf("Owner(missing) err = %v, want ErrNotFound", err)
 	}
 }
 
-func TestServiceEndAndExists(t *testing.T) {
+func TestEndFreesSlot(t *testing.T) {
 	svc := stream.NewService(newFakeStore())
-	created, err := svc.Create(context.Background(), "alice", "to end", "")
+	created, err := svc.Create(context.Background(), "user-1", "alice", "t", "")
 	if err != nil {
-		t.Fatalf("Create() error: %v", err)
-	}
-
-	if ok, _ := svc.Exists(context.Background(), created.ID); !ok {
-		t.Fatalf("Exists() = false, want true for a live stream")
+		t.Fatalf("Create: %v", err)
 	}
 	if err := svc.End(context.Background(), created.ID); err != nil {
-		t.Fatalf("End() unexpected error: %v", err)
+		t.Fatalf("End: %v", err)
 	}
-	if ok, _ := svc.Exists(context.Background(), created.ID); ok {
-		t.Fatalf("Exists() = true after End, want false")
+	// Slot freed: the same user can create again.
+	if _, err := svc.Create(context.Background(), "user-1", "alice", "again", ""); err != nil {
+		t.Fatalf("Create after End: %v", err)
 	}
-	if err := svc.End(context.Background(), created.ID); !errors.Is(err, stream.ErrNotFound) {
-		t.Fatalf("End() second call = %v, want ErrNotFound", err)
+	if err := svc.End(context.Background(), "nope"); !errors.Is(err, stream.ErrNotFound) {
+		t.Fatalf("End(missing) err = %v, want ErrNotFound", err)
 	}
 }
 
-func TestServiceListEmptyReturnsNonNil(t *testing.T) {
+func TestListEmptyNonNil(t *testing.T) {
 	svc := stream.NewService(newFakeStore())
 	list, err := svc.List(context.Background())
-	if err != nil {
-		t.Fatalf("List() error: %v", err)
-	}
-	if list == nil || len(list) != 0 {
-		t.Fatalf("List() = %v, want empty non-nil slice", list)
+	if err != nil || list == nil || len(list) != 0 {
+		t.Fatalf("List() = (%v, %v), want empty non-nil", list, err)
 	}
 }

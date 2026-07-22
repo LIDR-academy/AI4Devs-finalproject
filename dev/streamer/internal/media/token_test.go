@@ -23,21 +23,24 @@ func (c *captureTokener) Sign(identity, room string, canPublish bool) (string, e
 	return "signed-token", nil
 }
 
-type fakeVerifier struct {
-	isCreator bool
-	username  string
-	err       error
+// fakeOwner returns a fixed owner id, or ErrNotFound for a missing room.
+type fakeOwner struct {
+	owner   string
+	missing bool
 }
 
-func (f fakeVerifier) VerifyCreator(context.Context, string, string) (bool, string, error) {
-	return f.isCreator, f.username, f.err
+func (f fakeOwner) Owner(context.Context, string) (string, error) {
+	if f.missing {
+		return "", stream.ErrNotFound
+	}
+	return f.owner, nil
 }
 
-func TestMintCreatorGetsPublishGrant(t *testing.T) {
+func TestMintOwnerGetsPublishGrant(t *testing.T) {
 	tok := &captureTokener{}
-	svc := media.NewTokenService(fakeVerifier{isCreator: true, username: "alice"}, tok, "ws://pub:7880")
+	svc := media.NewTokenService(fakeOwner{owner: "user-1"}, tok, "ws://pub:7880")
 
-	out, err := svc.Mint(context.Background(), "room1", "goodkey")
+	out, err := svc.Mint(context.Background(), "room1", "user-1", "alice", true)
 	if err != nil {
 		t.Fatalf("Mint: %v", err)
 	}
@@ -49,38 +52,50 @@ func TestMintCreatorGetsPublishGrant(t *testing.T) {
 	}
 }
 
-func TestMintViewerGetsSubscribeOnlyGrant(t *testing.T) {
+func TestMintNonOwnerGetsSubscribeOnly(t *testing.T) {
 	tok := &captureTokener{}
-	// Non-matching key: isCreator false, but the room's username is still returned.
-	svc := media.NewTokenService(fakeVerifier{isCreator: false, username: "alice"}, tok, "ws://pub:7880")
+	svc := media.NewTokenService(fakeOwner{owner: "user-1"}, tok, "ws://pub:7880")
 
-	out, err := svc.Mint(context.Background(), "room1", "wrongkey")
+	// Authenticated non-owner.
+	out, err := svc.Mint(context.Background(), "room1", "user-2", "bob", true)
+	if err != nil {
+		t.Fatalf("Mint: %v", err)
+	}
+	if out.Role != "viewer" || out.Identity != "bob" {
+		t.Fatalf("non-owner token = %+v, want viewer/bob", out)
+	}
+	if tok.canPublish {
+		t.Fatalf("non-owner grant has publish=true, want false")
+	}
+}
+
+func TestMintAnonymousGetsSubscribeOnlyGeneratedID(t *testing.T) {
+	tok := &captureTokener{}
+	svc := media.NewTokenService(fakeOwner{owner: "user-1"}, tok, "ws://pub:7880")
+
+	out, err := svc.Mint(context.Background(), "room1", "", "", false)
 	if err != nil {
 		t.Fatalf("Mint: %v", err)
 	}
 	if out.Role != "viewer" {
 		t.Fatalf("role = %q, want viewer", out.Role)
 	}
-	if out.Identity == "alice" || !regexp.MustCompile(`^[a-z]+-[a-z0-9]+$`).MatchString(out.Identity) {
-		t.Fatalf("identity = %q, want a generated word-alphanumeric id (not the username)", out.Identity)
+	if !regexp.MustCompile(`^[a-z]+-[a-z0-9]+$`).MatchString(out.Identity) {
+		t.Fatalf("anon identity = %q, want generated word-alphanumeric", out.Identity)
 	}
 	if tok.canPublish {
-		t.Fatalf("viewer grant has publish=true, want false")
-	}
-	if tok.room != "room1" {
-		t.Fatalf("grant room = %q, want room1 (room-scoped)", tok.room)
+		t.Fatalf("anon grant has publish=true, want false")
 	}
 }
 
-func TestMintNonexistentRoomPropagatesNotFound(t *testing.T) {
+func TestMintNonexistentRoom(t *testing.T) {
 	tok := &captureTokener{}
-	svc := media.NewTokenService(fakeVerifier{err: stream.ErrNotFound}, tok, "ws://pub:7880")
+	svc := media.NewTokenService(fakeOwner{missing: true}, tok, "ws://pub:7880")
 
-	_, err := svc.Mint(context.Background(), "nope", "")
-	if !errors.Is(err, stream.ErrNotFound) {
+	if _, err := svc.Mint(context.Background(), "nope", "user-1", "alice", true); !errors.Is(err, stream.ErrNotFound) {
 		t.Fatalf("Mint err = %v, want ErrNotFound", err)
 	}
 	if tok.called {
-		t.Fatalf("token was signed for a nonexistent room")
+		t.Fatalf("token signed for a nonexistent room")
 	}
 }

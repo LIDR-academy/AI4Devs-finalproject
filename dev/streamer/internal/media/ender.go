@@ -14,9 +14,6 @@ import (
 type RoomController interface {
 	// DeleteRoom deletes the LiveKit room, disconnecting all participants.
 	DeleteRoom(ctx context.Context, room string) error
-	// HasActivePublisher reports whether the room has a participant publishing a
-	// track (used for the DELETE escape-hatch decision).
-	HasActivePublisher(ctx context.Context, room string) (bool, error)
 }
 
 // ChatDeleter deletes a room's stored messages (satisfied by chat.Service).

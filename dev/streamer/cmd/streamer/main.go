@@ -18,6 +18,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/quickchat/streamer/internal/auth"
 	"github.com/quickchat/streamer/internal/chat"
 	"github.com/quickchat/streamer/internal/config"
 	"github.com/quickchat/streamer/internal/httpapi"
@@ -66,6 +67,16 @@ func run() error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
+	// App-lifetime context: cancelled when run returns so the JWKS refresh worker
+	// (and any other background worker bound to it) stops.
+	appCtx, appCancel := context.WithCancel(context.Background())
+	defer appCancel()
+
+	verifier, err := auth.NewJWKSVerifier(appCtx, cfg.SecurityJWKSURL, log)
+	if err != nil {
+		return fmt.Errorf("creating token verifier: %w", err)
+	}
+
 	store := valkey.New(cfg.ValkeyAddr, cfg.ValkeyPassword, cfg.ValkeyDB, cfg.ChatMaxMessages)
 	defer func() { _ = store.Close() }()
 
@@ -86,16 +97,16 @@ func run() error {
 
 	srv := &http.Server{
 		Handler: httpapi.NewHandler(httpapi.Deps{
-			Streams:    streamSvc,
-			Chat:       chatSvc,
-			Hub:        realtime,
-			Ready:      store,
-			Minter:     tokenSvc,
-			Publishers: lkClient,
-			Ender:      ender,
-			Webhooks:   lkClient,
-			Events:     reaper,
-			Log:        log,
+			Streams:  streamSvc,
+			Chat:     chatSvc,
+			Hub:      realtime,
+			Ready:    store,
+			Verifier: verifier,
+			Minter:   tokenSvc,
+			Ender:    ender,
+			Webhooks: lkClient,
+			Events:   reaper,
+			Log:      log,
 		}),
 		ReadHeaderTimeout: readHeaderTimeout,
 		ReadTimeout:       readTimeout,

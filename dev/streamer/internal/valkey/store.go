@@ -4,8 +4,10 @@
 //
 // Storage model:
 //   - streams (SET)                — every live stream id.
-//   - stream:{id} (HASH)           — {username, title, description, creatorKey};
-//     creatorKey is private and never returned in a listing.
+//   - stream:{id} (HASH)           — {userid, username, title, description};
+//     userid is the owner and is never returned in a listing.
+//   - user:{userId}:stream (STRING)— the owner's single active stream id; the
+//     one-stream-per-user slot, claimed atomically with SETNX at create.
 //   - room:{id}:messages (STREAM)  — the room's capped message log; each entry's
 //     id is the server-authoritative message id and pagination cursor.
 package valkey
@@ -64,50 +66,71 @@ func (s *Store) Ping(ctx context.Context) error {
 
 // --- stream.Store ---
 
-// Add stores a new live stream and its private creatorKey in one transaction.
-func (s *Store) Add(ctx context.Context, st stream.Stream, creatorKey string) error {
+// Add stores a new live stream owned by ownerID. It enforces one active stream
+// per user atomically: a SETNX on the owner's slot fails with
+// stream.ErrAlreadyStreaming when the user already has an active stream.
+func (s *Store) Add(ctx context.Context, st stream.Stream, ownerID string) error {
 	ctx, cancel := context.WithTimeout(ctx, opTimeout)
 	defer cancel()
 
-	_, err := s.client.TxPipelined(ctx, func(p redis.Pipeliner) error {
+	// Claim the owner's single-stream slot first (atomic).
+	claimed, err := s.client.SetNX(ctx, userStreamKey(ownerID), st.ID, 0).Result()
+	if err != nil {
+		return fmt.Errorf("claiming stream slot for %s: %w", ownerID, err)
+	}
+	if !claimed {
+		return stream.ErrAlreadyStreaming
+	}
+
+	_, err = s.client.TxPipelined(ctx, func(p redis.Pipeliner) error {
 		p.SAdd(ctx, streamsKey, st.ID)
 		p.HSet(ctx, streamKey(st.ID),
+			"userid", ownerID,
 			"username", st.Username,
 			"title", st.Title,
 			"description", st.Description,
-			"creatorKey", creatorKey,
 		)
 		return nil
 	})
 	if err != nil {
+		// Roll back the slot so a failed create doesn't lock the user out.
+		_ = s.client.Del(ctx, userStreamKey(ownerID)).Err()
 		return fmt.Errorf("adding stream %s: %w", st.ID, err)
 	}
 	return nil
 }
 
-// Remove deletes the stream, returning stream.ErrNotFound when its id was not a
-// live member. It does not delete the room's messages — the caller does that via
-// DeleteRoom so message storage has one owner.
+// Remove deletes the stream and frees its owner's active-stream slot, returning
+// stream.ErrNotFound when the id is not live. It does not delete the room's
+// messages — the caller does that via DeleteRoom.
 func (s *Store) Remove(ctx context.Context, id string) error {
 	ctx, cancel := context.WithTimeout(ctx, opTimeout)
 	defer cancel()
 
-	var removed *redis.IntCmd
-	_, err := s.client.TxPipelined(ctx, func(p redis.Pipeliner) error {
-		removed = p.SRem(ctx, streamsKey, id)
+	fields, err := s.client.HGetAll(ctx, streamKey(id)).Result()
+	if err != nil {
+		return fmt.Errorf("reading stream %s: %w", id, err)
+	}
+	if len(fields) == 0 {
+		return stream.ErrNotFound
+	}
+	ownerID := fields["userid"]
+
+	_, err = s.client.TxPipelined(ctx, func(p redis.Pipeliner) error {
+		p.SRem(ctx, streamsKey, id)
 		p.Del(ctx, streamKey(id))
+		if ownerID != "" {
+			p.Del(ctx, userStreamKey(ownerID))
+		}
 		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("removing stream %s: %w", id, err)
 	}
-	if removed.Val() == 0 {
-		return stream.ErrNotFound
-	}
 	return nil
 }
 
-// List returns all live streams, never including creatorKey.
+// List returns all live streams, never including the owner userid.
 func (s *Store) List(ctx context.Context) ([]stream.Stream, error) {
 	ctx, cancel := context.WithTimeout(ctx, opTimeout)
 	defer cancel()
@@ -148,20 +171,25 @@ func (s *Store) List(ctx context.Context) ([]stream.Stream, error) {
 	return out, nil
 }
 
-// Creator returns the stream's username and private creatorKey, or
-// stream.ErrNotFound when the stream is not live.
-func (s *Store) Creator(ctx context.Context, id string) (string, string, error) {
+// Get returns the public stream and its owner's userId, or stream.ErrNotFound
+// when the stream is not live.
+func (s *Store) Get(ctx context.Context, id string) (stream.Stream, string, error) {
 	ctx, cancel := context.WithTimeout(ctx, opTimeout)
 	defer cancel()
 
 	fields, err := s.client.HGetAll(ctx, streamKey(id)).Result()
 	if err != nil {
-		return "", "", fmt.Errorf("reading stream %s: %w", id, err)
+		return stream.Stream{}, "", fmt.Errorf("reading stream %s: %w", id, err)
 	}
 	if len(fields) == 0 {
-		return "", "", stream.ErrNotFound
+		return stream.Stream{}, "", stream.ErrNotFound
 	}
-	return fields["username"], fields["creatorKey"], nil
+	return stream.Stream{
+		ID:          id,
+		Username:    fields["username"],
+		Title:       fields["title"],
+		Description: fields["description"],
+	}, fields["userid"], nil
 }
 
 // Exists reports whether a stream with the id is live.
@@ -250,8 +278,9 @@ func (s *Store) DeleteRoom(ctx context.Context, roomID string) error {
 	return nil
 }
 
-func streamKey(id string) string   { return streamKeyPrefix + id }
-func messagesKey(id string) string { return "room:" + id + ":messages" }
+func streamKey(id string) string          { return streamKeyPrefix + id }
+func messagesKey(id string) string        { return "room:" + id + ":messages" }
+func userStreamKey(ownerID string) string { return "user:" + ownerID + ":stream" }
 
 // strField reads a string field from a stream entry's values, tolerating a
 // missing or non-string value.

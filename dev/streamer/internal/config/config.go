@@ -37,6 +37,9 @@ type Config struct {
 	LiveKitURL string
 	// LiveKitPublicURL is the browser-facing LiveKit URL returned in media tokens.
 	LiveKitPublicURL string
+	// SecurityJWKSURL is the security service's JWKS endpoint, used to verify
+	// access tokens locally.
+	SecurityJWKSURL string
 }
 
 // Load reads the configuration from the environment, applying defaults for the
@@ -94,6 +97,10 @@ func Load() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	securityJWKSURL, err := required("SECURITY_JWKS_URL")
+	if err != nil {
+		return Config{}, err
+	}
 
 	return Config{
 		ValkeyAddr:       addr,
@@ -107,6 +114,7 @@ func Load() (Config, error) {
 		LiveKitAPISecret: livekitAPISecret,
 		LiveKitURL:       livekitURL,
 		LiveKitPublicURL: livekitPublicURL,
+		SecurityJWKSURL:  securityJWKSURL,
 	}, nil
 }
 

@@ -1,6 +1,7 @@
 // Package stream is the streamer domain: the live-stream model, input validation,
-// opaque id and creatorKey generation, and the Service that lists, starts, ends,
-// and authenticates streams.
+// opaque id generation, and the Service that lists, starts, ends, and resolves
+// ownership of streams. Ownership is by the authenticated user's id (userId
+// claim); the old creatorKey is retired.
 //
 // Storage is abstracted behind the Store interface (defined here, where it is
 // consumed) so the domain is testable with a hand-written fake and the Valkey
@@ -10,7 +11,6 @@ package stream
 import (
 	"context"
 	"crypto/rand"
-	"crypto/subtle"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -18,25 +18,23 @@ import (
 	"unicode/utf8"
 )
 
-// Limits on client-supplied fields, counted in Unicode code points. The
-// description limit is the cross-scope contract with qc-portal; the username and
-// title limits are server-authoritative.
+// Limits on client-supplied fields, counted in Unicode code points.
 const (
-	MaxUsernameRunes    = 200
 	MaxTitleRunes       = 200
 	MaxDescriptionRunes = 100
 
-	// creatorKeyBytes is the entropy of a creatorKey credential.
-	creatorKeyBytes = 32
-	// idBytes is the entropy of a stream id.
 	idBytes = 16
 )
 
 // ErrNotFound is returned when no live stream has the given id.
 var ErrNotFound = errors.New("stream not found")
 
+// ErrAlreadyStreaming is returned when a user who already owns an active stream
+// tries to start another (one active stream per user).
+var ErrAlreadyStreaming = errors.New("user already has an active stream")
+
 // ValidationError describes invalid client input. Its message is safe to return
-// to the client verbatim (it contains no storage or credential detail).
+// to the client verbatim.
 type ValidationError struct {
 	Message string
 }
@@ -44,8 +42,8 @@ type ValidationError struct {
 // Error implements error.
 func (e ValidationError) Error() string { return e.Message }
 
-// Stream is a live stream as stored and returned over the wire. It never carries
-// the creatorKey — that is private and returned only once, at creation.
+// Stream is a live stream as stored and returned over the wire. The owner's
+// userId is stored privately and never serialized.
 type Stream struct {
 	ID          string `json:"id"`
 	Username    string `json:"username"`
@@ -53,26 +51,19 @@ type Stream struct {
 	Description string `json:"description"`
 }
 
-// Created is the result of starting a stream: the public stream plus the
-// creatorKey, which is returned only in the create response and never again.
-type Created struct {
-	Stream
-	CreatorKey string `json:"creatorKey"`
-}
-
 // Store persists live streams. A stream exists in the Store if and only if it is
 // live. Implementations must be safe for concurrent use.
 type Store interface {
-	// List returns all live streams (never including creatorKey). Order is unspecified.
+	// List returns all live streams. Order is unspecified.
 	List(ctx context.Context) ([]Stream, error)
-	// Add stores a new live stream together with its private creatorKey.
-	Add(ctx context.Context, s Stream, creatorKey string) error
-	// Remove deletes the stream with the given id, returning ErrNotFound when no
-	// such stream is live.
+	// Add stores a new live stream owned by ownerID. It returns ErrAlreadyStreaming
+	// when the owner already has an active stream (enforced atomically).
+	Add(ctx context.Context, s Stream, ownerID string) error
+	// Remove deletes the stream and frees the owner's active-stream slot,
+	// returning ErrNotFound when no such stream is live.
 	Remove(ctx context.Context, id string) error
-	// Creator returns the stream's username and private creatorKey, or ErrNotFound
-	// when the stream is not live.
-	Creator(ctx context.Context, id string) (username, creatorKey string, err error)
+	// Get returns the public stream and its owner's userId, or ErrNotFound.
+	Get(ctx context.Context, id string) (Stream, string, error)
 	// Exists reports whether a stream with the id is live.
 	Exists(ctx context.Context, id string) (bool, error)
 }
@@ -99,34 +90,32 @@ func (s *Service) List(ctx context.Context) ([]Stream, error) {
 	return streams, nil
 }
 
-// Create validates the input, generates an opaque id and creatorKey, stores the
-// stream, and returns it with the creatorKey. A ValidationError means the input
-// was rejected at the boundary.
-func (s *Service) Create(ctx context.Context, username, title, description string) (Created, error) {
-	username, title, description, err := validate(username, title, description)
+// Create validates the input, generates an opaque id, and stores the stream owned
+// by ownerID with the account username. It returns ErrAlreadyStreaming when the
+// owner already has an active stream, or a ValidationError for bad input.
+func (s *Service) Create(ctx context.Context, ownerID, username, title, description string) (Stream, error) {
+	title, description, err := validate(title, description)
 	if err != nil {
-		return Created{}, err
+		return Stream{}, err
 	}
 
 	id, err := randomToken(idBytes)
 	if err != nil {
-		return Created{}, fmt.Errorf("creating stream id: %w", err)
-	}
-	creatorKey, err := randomToken(creatorKeyBytes)
-	if err != nil {
-		return Created{}, fmt.Errorf("creating stream key: %w", err)
+		return Stream{}, fmt.Errorf("creating stream id: %w", err)
 	}
 
 	st := Stream{ID: id, Username: username, Title: title, Description: description}
-	if err := s.store.Add(ctx, st, creatorKey); err != nil {
-		return Created{}, fmt.Errorf("storing stream %s: %w", id, err)
+	if err := s.store.Add(ctx, st, ownerID); err != nil {
+		if errors.Is(err, ErrAlreadyStreaming) {
+			return Stream{}, ErrAlreadyStreaming
+		}
+		return Stream{}, fmt.Errorf("storing stream %s: %w", id, err)
 	}
-	return Created{Stream: st, CreatorKey: creatorKey}, nil
+	return st, nil
 }
 
-// End removes the stream with the given id. It returns ErrNotFound when the
-// stream is not live. Message deletion and connection teardown are orchestrated
-// by the caller (they belong to the chat store and the hub).
+// End removes the stream and frees the owner's slot. It returns ErrNotFound when
+// the stream is not live.
 func (s *Service) End(ctx context.Context, id string) error {
 	if err := s.store.Remove(ctx, id); err != nil {
 		if errors.Is(err, ErrNotFound) {
@@ -146,63 +135,48 @@ func (s *Service) Exists(ctx context.Context, id string) (bool, error) {
 	return ok, nil
 }
 
-// Username returns the stream's username, or ErrNotFound when it is not live.
-func (s *Service) Username(ctx context.Context, id string) (string, error) {
-	username, _, err := s.store.Creator(ctx, id)
+// Owner returns the stream's owner userId, or ErrNotFound when it is not live.
+func (s *Service) Owner(ctx context.Context, id string) (string, error) {
+	_, ownerID, err := s.store.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			return "", ErrNotFound
 		}
-		return "", fmt.Errorf("reading username for stream %s: %w", id, err)
+		return "", fmt.Errorf("reading owner of stream %s: %w", id, err)
 	}
-	return username, nil
+	return ownerID, nil
 }
 
-// VerifyCreator reports whether key is the stream's creatorKey (constant-time
-// compare) and returns the stream's username. It returns ErrNotFound when the
-// stream is not live. A non-matching or empty key is not an error: isCreator is
-// false and the caller treats the connection as a viewer.
-func (s *Service) VerifyCreator(ctx context.Context, id, key string) (isCreator bool, username string, err error) {
-	username, storedKey, err := s.store.Creator(ctx, id)
+// Username returns the stream's account username, or ErrNotFound when it is not
+// live.
+func (s *Service) Username(ctx context.Context, id string) (string, error) {
+	st, _, err := s.store.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return false, "", ErrNotFound
+			return "", ErrNotFound
 		}
-		return false, "", fmt.Errorf("verifying creator for stream %s: %w", id, err)
+		return "", fmt.Errorf("reading username of stream %s: %w", id, err)
 	}
-	if key != "" && subtle.ConstantTimeCompare([]byte(key), []byte(storedKey)) == 1 {
-		return true, username, nil
-	}
-	return false, username, nil
+	return st.Username, nil
 }
 
-// validate trims username and title and enforces the code-point bounds.
-// Description is not trimmed (whitespace may be meaningful) but is bounded.
-func validate(username, title, description string) (string, string, string, error) {
-	username = strings.TrimSpace(username)
-	if username == "" {
-		return "", "", "", ValidationError{Message: "username is required"}
-	}
-	if utf8.RuneCountInString(username) > MaxUsernameRunes {
-		return "", "", "", ValidationError{Message: fmt.Sprintf("username must be at most %d characters", MaxUsernameRunes)}
-	}
-
+// validate trims the title and enforces the code-point bounds. Description is not
+// trimmed (whitespace may be meaningful) but is bounded.
+func validate(title, description string) (string, string, error) {
 	title = strings.TrimSpace(title)
 	if title == "" {
-		return "", "", "", ValidationError{Message: "title is required"}
+		return "", "", ValidationError{Message: "title is required"}
 	}
 	if utf8.RuneCountInString(title) > MaxTitleRunes {
-		return "", "", "", ValidationError{Message: fmt.Sprintf("title must be at most %d characters", MaxTitleRunes)}
+		return "", "", ValidationError{Message: fmt.Sprintf("title must be at most %d characters", MaxTitleRunes)}
 	}
-
 	if utf8.RuneCountInString(description) > MaxDescriptionRunes {
-		return "", "", "", ValidationError{Message: fmt.Sprintf("description must be at most %d characters", MaxDescriptionRunes)}
+		return "", "", ValidationError{Message: fmt.Sprintf("description must be at most %d characters", MaxDescriptionRunes)}
 	}
-	return username, title, description, nil
+	return title, description, nil
 }
 
-// randomToken returns an opaque, URL-safe token of n random bytes, base64
-// raw-url encoded.
+// randomToken returns an opaque, URL-safe token of n random bytes.
 func randomToken(n int) (string, error) {
 	b := make([]byte, n)
 	if _, err := rand.Read(b); err != nil {

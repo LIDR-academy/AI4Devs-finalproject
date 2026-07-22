@@ -35,7 +35,6 @@ func (r *recRooms) DeleteRoom(_ context.Context, room string) error {
 	r.deleted = append(r.deleted, room)
 	return r.deleteErr
 }
-func (r *recRooms) HasActivePublisher(context.Context, string) (bool, error) { return false, nil }
 
 func newEnder(chat *recChat, streams *recStreamEnder, hub *recHub, rooms *recRooms) *media.RoomEnder {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/quickchat/streamer/internal/auth"
 	"github.com/quickchat/streamer/internal/chat"
 	"github.com/quickchat/streamer/internal/hub"
 	"github.com/quickchat/streamer/internal/livekit"
@@ -29,12 +30,7 @@ type Pinger interface {
 
 // Minter mints a media token for a room (satisfied by media.TokenService).
 type Minter interface {
-	Mint(ctx context.Context, roomID, creatorKey string) (media.Token, error)
-}
-
-// PublisherChecker reports whether a room has an active LiveKit publisher.
-type PublisherChecker interface {
-	HasActivePublisher(ctx context.Context, room string) (bool, error)
+	Mint(ctx context.Context, roomID, userID, username string, authed bool) (media.Token, error)
 }
 
 // RoomEnder runs the room-teardown cascade (satisfied by media.RoomEnder).
@@ -54,16 +50,16 @@ type EventDispatcher interface {
 
 // Deps are the handler's collaborators.
 type Deps struct {
-	Streams    *stream.Service
-	Chat       *chat.Service
-	Hub        *hub.Hub
-	Ready      Pinger
-	Minter     Minter
-	Publishers PublisherChecker
-	Ender      RoomEnder
-	Webhooks   WebhookReceiver
-	Events     EventDispatcher
-	Log        *slog.Logger
+	Streams  *stream.Service
+	Chat     *chat.Service
+	Hub      *hub.Hub
+	Ready    Pinger
+	Verifier auth.Verifier
+	Minter   Minter
+	Ender    RoomEnder
+	Webhooks WebhookReceiver
+	Events   EventDispatcher
+	Log      *slog.Logger
 }
 
 type errorBody struct {
@@ -71,9 +67,9 @@ type errorBody struct {
 }
 
 // createRequest is the accepted body for POST /streams. Unknown fields are
-// ignored; an absent description decodes to "".
+// ignored; an absent description decodes to "". Username comes from the token, not
+// the body.
 type createRequest struct {
-	Username    string `json:"username"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 }
@@ -86,31 +82,31 @@ type historyResponse struct {
 }
 
 type api struct {
-	streams    *stream.Service
-	chat       *chat.Service
-	hub        *hub.Hub
-	ready      Pinger
-	minter     Minter
-	publishers PublisherChecker
-	ender      RoomEnder
-	webhooks   WebhookReceiver
-	events     EventDispatcher
-	log        *slog.Logger
+	streams  *stream.Service
+	chat     *chat.Service
+	hub      *hub.Hub
+	ready    Pinger
+	verifier auth.Verifier
+	minter   Minter
+	ender    RoomEnder
+	webhooks WebhookReceiver
+	events   EventDispatcher
+	log      *slog.Logger
 }
 
 // NewHandler wires the routes and returns the HTTP handler for the service.
 func NewHandler(d Deps) http.Handler {
 	a := &api{
-		streams:    d.Streams,
-		chat:       d.Chat,
-		hub:        d.Hub,
-		ready:      d.Ready,
-		minter:     d.Minter,
-		publishers: d.Publishers,
-		ender:      d.Ender,
-		webhooks:   d.Webhooks,
-		events:     d.Events,
-		log:        d.Log,
+		streams:  d.Streams,
+		chat:     d.Chat,
+		hub:      d.Hub,
+		ready:    d.Ready,
+		verifier: d.Verifier,
+		minter:   d.Minter,
+		ender:    d.Ender,
+		webhooks: d.Webhooks,
+		events:   d.Events,
+		log:      d.Log,
 	}
 
 	mux := http.NewServeMux()
@@ -147,19 +143,28 @@ func (a *api) listStreams(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) createStream(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
+	claims, ok := a.authenticate(r)
+	if !ok {
+		a.writeError(w, http.StatusUnauthorized, "authentication required")
+		return
+	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 	var req createRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		a.writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	created, err := a.streams.Create(r.Context(), req.Username, req.Title, req.Description)
+	created, err := a.streams.Create(r.Context(), claims.UserID, claims.Username, req.Title, req.Description)
 	if err != nil {
 		var ve stream.ValidationError
 		if errors.As(err, &ve) {
 			a.writeError(w, http.StatusBadRequest, ve.Message)
+			return
+		}
+		if errors.Is(err, stream.ErrAlreadyStreaming) {
+			a.writeError(w, http.StatusConflict, "you already have an active stream")
 			return
 		}
 		a.internalError(w, "creating stream", err)
@@ -168,58 +173,34 @@ func (a *api) createStream(w http.ResponseWriter, r *http.Request) {
 	a.writeJSON(w, http.StatusCreated, created)
 }
 
-// streamByID handles DELETE on /streams/{id}. Authorization is publisher-aware
-// (design D4): a room with an active LiveKit publisher requires the creatorKey as
-// `Authorization: Bearer`, while an abandoned room (no publisher) may be ended
-// without a key. It fails closed when publisher state can't be determined.
+// streamByID handles DELETE on /streams/{id}: authenticated, owner-only.
 func (a *api) streamByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		a.writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
 
+	claims, ok := a.authenticate(r)
+	if !ok {
+		a.writeError(w, http.StatusUnauthorized, "authentication required")
+		return
+	}
+
 	id := r.PathValue("id")
-	if id == "" {
-		a.writeError(w, http.StatusNotFound, "stream not found")
-		return
-	}
-
-	exists, err := a.streams.Exists(r.Context(), id)
+	ownerID, err := a.streams.Owner(r.Context(), id)
 	if err != nil {
-		a.internalError(w, "checking stream", err)
-		return
-	}
-	if !exists {
-		a.writeError(w, http.StatusNotFound, "stream not found")
-		return
-	}
-
-	// Determine whether the room has an active publisher. On a LiveKit error, fail
-	// closed: require the key.
-	hasPublisher := true
-	if ok, perr := a.publishers.HasActivePublisher(r.Context(), id); perr != nil {
-		a.log.Warn("publisher check failed; requiring key", "room", id, "error", perr)
-	} else {
-		hasPublisher = ok
-	}
-
-	if hasPublisher {
-		isCreator, _, verr := a.streams.VerifyCreator(r.Context(), id, bearerToken(r))
-		if verr != nil {
-			if errors.Is(verr, stream.ErrNotFound) {
-				a.writeError(w, http.StatusNotFound, "stream not found")
-				return
-			}
-			a.internalError(w, "verifying stream owner", verr)
+		if errors.Is(err, stream.ErrNotFound) {
+			a.writeError(w, http.StatusNotFound, "stream not found")
 			return
 		}
-		if !isCreator {
-			a.writeError(w, http.StatusForbidden, "invalid or missing creator key")
-			return
-		}
+		a.internalError(w, "reading stream owner", err)
+		return
+	}
+	if claims.UserID != ownerID {
+		a.writeError(w, http.StatusForbidden, "only the owner can end this stream")
+		return
 	}
 
-	// Authorized (valid key, or abandoned room). Run the shared cascade.
 	if err := a.ender.EndRoom(r.Context(), id); err != nil {
 		a.internalError(w, "ending stream", err)
 		return
@@ -228,7 +209,7 @@ func (a *api) streamByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // mediaToken handles POST /streams/{id}/media-token, minting a LiveKit token
-// scoped to the room. A valid creatorKey (Authorization: Bearer) grants publish.
+// scoped to the room. Auth is optional; the owner gets a publish token.
 func (a *api) mediaToken(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		a.writeError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -236,7 +217,8 @@ func (a *api) mediaToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := r.PathValue("id")
-	token, err := a.minter.Mint(r.Context(), id, bearerToken(r))
+	claims, authed := a.authenticate(r)
+	token, err := a.minter.Mint(r.Context(), id, claims.UserID, claims.Username, authed)
 	if err != nil {
 		if errors.Is(err, stream.ErrNotFound) {
 			a.writeError(w, http.StatusNotFound, "stream not found")
@@ -246,6 +228,16 @@ func (a *api) mediaToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.writeJSON(w, http.StatusOK, token)
+}
+
+// authenticate verifies the request's Bearer token. ok is false for an absent or
+// invalid token (the caller decides whether that is a 401 or anonymous access).
+func (a *api) authenticate(r *http.Request) (auth.Claims, bool) {
+	claims, err := a.verifier.Verify(r.Context(), bearerToken(r))
+	if err != nil {
+		return auth.Claims{}, false
+	}
+	return claims, true
 }
 
 // livekitWebhook handles POST /livekit/webhook: it verifies the LiveKit signature
@@ -328,7 +320,7 @@ func (a *api) ws(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := r.PathValue("id")
-	a.hub.ServeWS(w, r, id, a.streams, a.chat)
+	a.hub.ServeWS(w, r, id, a.verifier, a.streams, a.chat)
 }
 
 func (a *api) healthz(w http.ResponseWriter, r *http.Request) {

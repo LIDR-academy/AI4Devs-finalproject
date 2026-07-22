@@ -11,11 +11,10 @@ import (
 	"github.com/quickchat/streamer/internal/chat"
 )
 
-// CreatorVerifier verifies a room's creatorKey (satisfied by stream.Service). It
-// returns the room's username and whether the presented key matches, or an error
-// (ErrNotFound) when the room is not live.
-type CreatorVerifier interface {
-	VerifyCreator(ctx context.Context, roomID, key string) (isCreator bool, username string, err error)
+// OwnerLookup returns a room's owner userId (satisfied by stream.Service). It
+// returns an error (ErrNotFound) when the room is not live.
+type OwnerLookup interface {
+	Owner(ctx context.Context, roomID string) (ownerID string, err error)
 }
 
 // Tokener signs a room-scoped LiveKit access token for an identity, granting
@@ -33,46 +32,48 @@ type Token struct {
 }
 
 // TokenService mints media tokens. Publish permission is decided here from
-// creatorKey validity and encoded into the token grant — never left to the client.
+// ownership and encoded into the token grant — never left to the client.
 type TokenService struct {
-	verifier  CreatorVerifier
+	owners    OwnerLookup
 	tokener   Tokener
 	publicURL string
 }
 
 // NewTokenService returns a TokenService. publicURL is the browser-facing LiveKit
 // URL returned to clients (never the server-to-server URL or the secret).
-func NewTokenService(verifier CreatorVerifier, tokener Tokener, publicURL string) *TokenService {
-	return &TokenService{verifier: verifier, tokener: tokener, publicURL: publicURL}
+func NewTokenService(owners OwnerLookup, tokener Tokener, publicURL string) *TokenService {
+	return &TokenService{owners: owners, tokener: tokener, publicURL: publicURL}
 }
 
-// Mint returns a media token for the room. A valid creatorKey grants
-// publish+subscribe as the stream username (role streamer); an absent or
-// non-matching key grants subscribe-only under a generated viewer identity (role
-// viewer) — a silent downgrade, not an error. It returns the verifier's error
-// (ErrNotFound) when the room is not live.
-func (s *TokenService) Mint(ctx context.Context, roomID, creatorKey string) (Token, error) {
-	isCreator, username, err := s.verifier.VerifyCreator(ctx, roomID, creatorKey)
+// Mint returns a media token for the room. The room must be live (else the
+// OwnerLookup error — ErrNotFound — is returned for a 404). An authenticated
+// owner grants publish+subscribe as their account username (role streamer); an
+// authenticated non-owner grants subscribe-only as their username (role viewer);
+// an anonymous caller grants subscribe-only under a generated viewer identity.
+func (s *TokenService) Mint(ctx context.Context, roomID, userID, username string, authed bool) (Token, error) {
+	ownerID, err := s.owners.Owner(ctx, roomID)
 	if err != nil {
 		return Token{}, err
 	}
 
-	identity := username
-	role := chat.RoleStreamer
-	canPublish := true
-	if !isCreator {
+	var identity, role string
+	var canPublish bool
+	switch {
+	case authed && userID == ownerID:
+		identity, role, canPublish = username, chat.RoleStreamer, true
+	case authed:
+		identity, role, canPublish = username, chat.RoleViewer, false
+	default:
 		identity, err = chat.NewViewerID()
 		if err != nil {
 			return Token{}, fmt.Errorf("generating viewer identity: %w", err)
 		}
-		role = chat.RoleViewer
-		canPublish = false
+		role, canPublish = chat.RoleViewer, false
 	}
 
 	token, err := s.tokener.Sign(identity, roomID, canPublish)
 	if err != nil {
 		return Token{}, fmt.Errorf("signing media token for room %s: %w", roomID, err)
 	}
-
 	return Token{Token: token, URL: s.publicURL, Identity: identity, Role: role}, nil
 }
