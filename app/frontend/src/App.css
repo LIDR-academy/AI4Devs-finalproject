@@ -1,0 +1,453 @@
+[data-testid='psai-app-root'] {
+  position: relative;
+  padding: 2.1rem 1.2rem;
+}
+
+[data-testid='psai-app-root']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(95, 114, 181, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(95, 114, 181, 0.11) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(circle at center, black 52%, transparent 88%);
+}
+
+.glass-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  top: -140px;
+  right: -135px;
+  background: radial-gradient(circle, rgba(111, 147, 255, 0.24) 0%, rgba(111, 147, 255, 0) 74%);
+  pointer-events: none;
+}
+
+.psai-sidebar-shell {
+  background: linear-gradient(180deg, #151a35 0%, #1d2447 54%, #141933 100%) !important;
+  border: 1px solid rgba(133, 150, 214, 0.28) !important;
+  color: #f4f7ff;
+  box-shadow: 0 16px 38px rgba(6, 8, 22, 0.6);
+  overflow: auto;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.psai-sidebar-shell.is-collapsed {
+  box-shadow: 0 12px 28px rgba(6, 8, 22, 0.56);
+}
+
+.psai-sidebar-shell.is-collapsed .MuiCardContent-root {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+.psai-sidebar-shell.is-collapsed .psai-sidebar-item {
+  justify-content: center;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.psai-sidebar-shell.is-collapsed .MuiListItemIcon-root {
+  min-width: 0 !important;
+  margin-right: 0 !important;
+  justify-content: center;
+}
+
+.psai-sidebar-shell .MuiTypography-root,
+.psai-sidebar-shell .MuiListItemText-primary,
+.psai-sidebar-shell .MuiListItemIcon-root,
+.psai-sidebar-shell .MuiChip-label {
+  color: #f4f7ff;
+}
+
+.psai-sidebar-shell .MuiTypography-colorTextSecondary {
+  color: rgba(229, 235, 255, 0.74) !important;
+}
+
+.psai-sidebar-shell .MuiLinearProgress-root {
+  background: rgba(113, 130, 190, 0.34);
+}
+
+.psai-sidebar-shell .MuiLinearProgress-bar {
+  background: linear-gradient(90deg, #6f93e8, #8ec8ff);
+}
+
+.psai-logo-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: conic-gradient(from 220deg, #ff8f3f, #f95f90, #6f93e8, #ff8f3f);
+  box-shadow: 0 0 0 3px rgba(27, 33, 61, 0.82), 0 8px 16px rgba(0, 0, 0, 0.22);
+}
+
+.psai-sidebar-item {
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.psai-sidebar-item .MuiListItemText-primary {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.psai-sidebar-item:hover {
+  border-color: rgba(174, 192, 255, 0.38);
+  background: rgba(115, 139, 221, 0.2);
+}
+
+.psai-sidebar-item.Mui-selected {
+  border-color: rgba(184, 200, 255, 0.46);
+  background: linear-gradient(90deg, rgba(105, 132, 221, 0.5), rgba(90, 102, 192, 0.34));
+  box-shadow: inset 3px 0 0 #ff8f3f;
+}
+
+.psai-sidebar-item.Mui-selected:hover {
+  background: linear-gradient(90deg, rgba(105, 132, 221, 0.52), rgba(90, 102, 192, 0.36));
+}
+
+.psai-sidebar-shell .MuiChip-root {
+  border-color: rgba(194, 207, 255, 0.35) !important;
+  background: rgba(107, 127, 196, 0.3) !important;
+}
+
+.psai-sidebar-shell .MuiButton-outlined {
+  border-color: rgba(194, 207, 255, 0.42);
+  color: #eef2ff;
+}
+
+.psai-sidebar-shell .MuiButton-outlined:hover {
+  border-color: rgba(255, 185, 132, 0.8);
+  background: rgba(255, 162, 88, 0.14);
+}
+
+.psai-auth-card {
+  border: 1px solid rgba(97, 122, 216, 0.36) !important;
+  background: linear-gradient(160deg, rgba(15, 22, 52, 0.97), rgba(18, 26, 60, 0.94)) !important;
+  box-shadow: 0 22px 42px rgba(6, 10, 28, 0.56) !important;
+}
+
+.psai-auth-card .MuiTypography-colorTextSecondary {
+  color: #a5b7e2 !important;
+}
+
+[data-testid='psai-home-header'] {
+  background: linear-gradient(120deg, rgba(18, 24, 54, 0.98) 0%, rgba(25, 32, 68, 0.96) 56%, rgba(40, 24, 64, 0.92) 100%);
+  border: 1px solid rgba(108, 126, 224, 0.34);
+  border-radius: 18px;
+  padding: 1.55rem;
+  box-shadow: 0 24px 42px rgba(8, 10, 30, 0.55);
+}
+
+[data-testid='psai-home-title'] {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+[data-testid='psai-home-subtitle'] {
+  margin-top: 0.9rem;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.psai-kpi-card,
+[data-testid='psai-home-metrics-card'] {
+  border: 1px solid rgba(112, 136, 233, 0.36) !important;
+  background: linear-gradient(155deg, rgba(18, 24, 56, 0.96), rgba(25, 33, 73, 0.94)) !important;
+  box-shadow: 0 12px 28px rgba(8, 10, 28, 0.5) !important;
+}
+
+[data-testid='psai-home-metrics-card'] .MuiTypography-root {
+  color: #e8efff;
+}
+
+[data-testid='psai-home-metrics-card'] .MuiTypography-colorTextSecondary {
+  color: #9db0dc !important;
+}
+
+[data-testid='psai-home-metrics-card'] .MuiLinearProgress-root {
+  background: rgba(99, 122, 206, 0.32);
+}
+
+[data-testid='psai-home-metrics-card'] .MuiLinearProgress-bar {
+  background: linear-gradient(90deg, #6f93ff, #ff9d5d);
+}
+
+[data-testid='psai-home-next-steps'] {
+  margin-top: 1.3rem;
+  background: linear-gradient(155deg, rgba(15, 21, 48, 0.95), rgba(18, 25, 57, 0.92));
+  border: 1px solid rgba(86, 107, 197, 0.28);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+[data-testid='psai-home-next-steps-title'] {
+  color: #dfe8ff;
+  font-size: 1.25rem;
+}
+
+.psai-module-card {
+  border: 1px solid rgba(94, 117, 208, 0.3) !important;
+  background: linear-gradient(160deg, rgba(19, 27, 60, 0.95), rgba(18, 24, 56, 0.92)) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.psai-module-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(8, 12, 33, 0.62);
+}
+
+.metric-box {
+  padding: 0.62rem 0.75rem;
+  border: 1px solid rgba(95, 122, 209, 0.32);
+  border-radius: 12px;
+  background: linear-gradient(150deg, rgba(22, 31, 69, 0.94), rgba(20, 27, 62, 0.92));
+}
+
+.metric-box h4 {
+  font-size: 1.3rem;
+  color: #a8cbff;
+  margin-top: 0.18rem;
+}
+
+.psai-project-list-item {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.psai-project-list-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(8, 12, 32, 0.62);
+}
+
+[data-testid='psai-project-form-card'],
+[data-testid='psai-use-case-form-card'],
+[data-testid='psai-estimation-trigger-card'],
+[data-testid='psai-estimate-result-card'],
+[data-testid='psai-report-view-card'],
+[data-testid='psai-admin-overview-card'],
+[data-testid='psai-project-list-card'] {
+  border: 1px solid rgba(86, 107, 197, 0.3) !important;
+  background: linear-gradient(160deg, rgba(16, 22, 51, 0.96), rgba(18, 25, 59, 0.93)) !important;
+}
+
+[data-testid='psai-home-header'],
+[data-testid='psai-home-next-steps'],
+[data-testid='psai-home-metrics-card'],
+[data-testid='psai-admin-overview-card'],
+[data-testid='psai-project-list-card'],
+[data-testid='psai-project-form-card'],
+[data-testid='psai-use-case-form-card'],
+[data-testid='psai-estimation-trigger-card'],
+[data-testid='psai-estimate-result-card'],
+[data-testid='psai-report-view-card'] {
+  color: #e8efff;
+}
+
+[data-testid='psai-home-header'] .MuiTypography-root,
+[data-testid='psai-home-next-steps'] .MuiTypography-root,
+[data-testid='psai-home-metrics-card'] .MuiTypography-root,
+[data-testid='psai-admin-overview-card'] .MuiTypography-root,
+[data-testid='psai-project-list-card'] .MuiTypography-root,
+[data-testid='psai-project-form-card'] .MuiTypography-root,
+[data-testid='psai-use-case-form-card'] .MuiTypography-root,
+[data-testid='psai-estimation-trigger-card'] .MuiTypography-root,
+[data-testid='psai-estimate-result-card'] .MuiTypography-root,
+[data-testid='psai-report-view-card'] .MuiTypography-root,
+[data-testid='psai-project-form-card'] .MuiFormControlLabel-label,
+[data-testid='psai-use-case-form-card'] .MuiFormControlLabel-label,
+[data-testid='psai-estimation-trigger-card'] .MuiFormControlLabel-label,
+[data-testid='psai-estimate-result-card'] .MuiFormControlLabel-label,
+[data-testid='psai-report-view-card'] .MuiFormControlLabel-label,
+[data-testid='psai-home-header'] .MuiButton-root,
+[data-testid='psai-home-next-steps'] .MuiButton-root,
+[data-testid='psai-home-metrics-card'] .MuiButton-root,
+[data-testid='psai-admin-overview-card'] .MuiButton-root,
+[data-testid='psai-project-list-card'] .MuiButton-root,
+[data-testid='psai-project-form-card'] .MuiButton-root,
+[data-testid='psai-use-case-form-card'] .MuiButton-root,
+[data-testid='psai-estimation-trigger-card'] .MuiButton-root,
+[data-testid='psai-estimate-result-card'] .MuiButton-root,
+[data-testid='psai-report-view-card'] .MuiButton-root,
+[data-testid='psai-home-header'] .MuiChip-label,
+[data-testid='psai-home-next-steps'] .MuiChip-label,
+[data-testid='psai-home-metrics-card'] .MuiChip-label,
+[data-testid='psai-admin-overview-card'] .MuiChip-label,
+[data-testid='psai-project-list-card'] .MuiChip-label,
+[data-testid='psai-project-form-card'] .MuiChip-label,
+[data-testid='psai-use-case-form-card'] .MuiChip-label,
+[data-testid='psai-estimation-trigger-card'] .MuiChip-label,
+[data-testid='psai-estimate-result-card'] .MuiChip-label,
+[data-testid='psai-report-view-card'] .MuiChip-label {
+  color: #e8efff;
+}
+
+[data-testid='psai-home-header'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-home-next-steps'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-home-metrics-card'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-admin-overview-card'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-project-list-card'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-project-form-card'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-use-case-form-card'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-estimation-trigger-card'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-estimate-result-card'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-report-view-card'] .MuiTypography-colorTextSecondary,
+[data-testid='psai-project-form-card'] .MuiFormHelperText-root,
+[data-testid='psai-use-case-form-card'] .MuiFormHelperText-root,
+[data-testid='psai-estimation-trigger-card'] .MuiFormHelperText-root,
+[data-testid='psai-estimate-result-card'] .MuiFormHelperText-root,
+[data-testid='psai-report-view-card'] .MuiFormHelperText-root,
+[data-testid='psai-project-form-card'] .MuiFormLabel-root,
+[data-testid='psai-use-case-form-card'] .MuiFormLabel-root,
+[data-testid='psai-estimation-trigger-card'] .MuiFormLabel-root,
+[data-testid='psai-estimate-result-card'] .MuiFormLabel-root,
+[data-testid='psai-report-view-card'] .MuiFormLabel-root {
+  color: #9fb0db !important;
+}
+
+[data-testid='psai-project-form-card'] .MuiInputBase-input,
+[data-testid='psai-use-case-form-card'] .MuiInputBase-input,
+[data-testid='psai-estimation-trigger-card'] .MuiInputBase-input,
+[data-testid='psai-project-form-card'] .MuiSelect-select,
+[data-testid='psai-use-case-form-card'] .MuiSelect-select,
+[data-testid='psai-estimation-trigger-card'] .MuiSelect-select {
+  color: #edf2ff !important;
+}
+
+[data-testid='psai-home-header'] .MuiButton-outlined,
+[data-testid='psai-home-next-steps'] .MuiButton-outlined,
+[data-testid='psai-home-metrics-card'] .MuiButton-outlined,
+[data-testid='psai-project-form-card'] .MuiButton-outlined,
+[data-testid='psai-use-case-form-card'] .MuiButton-outlined,
+[data-testid='psai-estimation-trigger-card'] .MuiButton-outlined,
+[data-testid='psai-report-view-card'] .MuiButton-outlined {
+  color: #cdddff;
+  border-color: rgba(128, 150, 238, 0.45);
+}
+
+[data-testid='psai-home-header'] .MuiButton-outlined:hover,
+[data-testid='psai-home-next-steps'] .MuiButton-outlined:hover,
+[data-testid='psai-home-metrics-card'] .MuiButton-outlined:hover,
+[data-testid='psai-project-form-card'] .MuiButton-outlined:hover,
+[data-testid='psai-use-case-form-card'] .MuiButton-outlined:hover,
+[data-testid='psai-estimation-trigger-card'] .MuiButton-outlined:hover,
+[data-testid='psai-report-view-card'] .MuiButton-outlined:hover {
+  border-color: rgba(165, 184, 255, 0.72);
+  background: rgba(111, 147, 255, 0.14);
+}
+
+.MuiCardContent-root {
+  padding: 16px !important;
+}
+
+.MuiCardContent-root:last-child {
+  padding-bottom: 16px !important;
+}
+
+.MuiFormLabel-root,
+.MuiFormHelperText-root,
+.MuiTypography-colorTextSecondary {
+  color: #9fb0db !important;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: rgba(121, 141, 221, 0.45) !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(146, 169, 255, 0.7) !important;
+}
+
+.MuiOutlinedInput-input,
+.MuiSelect-select,
+.MuiMenuItem-root,
+.MuiTypography-root {
+  letter-spacing: 0;
+}
+
+.MuiTableCell-root,
+.MuiTablePagination-root,
+.MuiTablePagination-toolbar,
+.MuiTablePagination-selectLabel,
+.MuiTablePagination-displayedRows,
+.MuiTablePagination-actions,
+.MuiInputBase-input,
+.MuiSelect-select,
+.MuiMenuItem-root,
+.MuiDialogTitle-root,
+.MuiDialogContentText-root,
+.MuiDialogActions-root .MuiButton-root,
+.MuiBreadcrumbs-li,
+.MuiBreadcrumbs-separator {
+  color: #e8efff !important;
+}
+
+.MuiTableCell-head {
+  color: #b8c7ef !important;
+}
+
+[data-testid='psai-home-next-steps-list'] .MuiGrid-root:nth-child(1) .psai-module-card {
+  border-color: rgba(76, 149, 255, 0.36) !important;
+}
+
+[data-testid='psai-home-next-steps-list'] .MuiGrid-root:nth-child(2) .psai-module-card {
+  border-color: rgba(255, 143, 63, 0.38) !important;
+}
+
+[data-testid='psai-home-next-steps-list'] .MuiGrid-root:nth-child(3) .psai-module-card {
+  border-color: rgba(81, 194, 124, 0.34) !important;
+}
+
+[data-testid='psai-home-next-steps-list'] .MuiGrid-root:nth-child(4) .psai-module-card {
+  border-color: rgba(180, 92, 255, 0.34) !important;
+}
+
+@keyframes psaiFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-testid='psai-home-header'],
+[data-testid='psai-home-next-steps'],
+[data-testid='psai-admin-overview-card'],
+[data-testid='psai-project-list-card'],
+[data-testid='psai-project-form-card'],
+[data-testid='psai-use-case-form-card'],
+[data-testid='psai-estimation-trigger-card'],
+[data-testid='psai-estimate-result-card'],
+[data-testid='psai-report-view-card'] {
+  animation: psaiFadeUp 0.38s ease both;
+}
+
+@media (max-width: 900px) {
+  [data-testid='psai-app-root'] {
+    padding: 1.4rem 0.8rem;
+  }
+
+  .psai-sidebar-shell {
+    box-shadow: 0 10px 24px rgba(27, 37, 69, 0.28);
+  }
+}
+
+@media (max-width: 640px) {
+  [data-testid='psai-home-header'],
+  [data-testid='psai-home-next-steps'] {
+    border-radius: 12px;
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,44 @@
+# Dependencies
+**/node_modules/
+
+# Package manager caches
+.npm-cache/
+**/.npm-cache/
+
+# Build outputs
+app/**/dist/
+app/**/dist-ssr/
+app/**/.turbo/
+app/**/.vite/
+
+# Test artifacts
+app/**/coverage/
+app/**/playwright-report/
+app/**/test-results/
+
+# Environment files
+app/**/.env
+app/**/.env.local
+app/**/.env.*
+!app/**/.env.example
+
+# Logs and runtime dumps
+**/logs/
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+**/lerna-debug.log*
+
+# OS / editor artifacts
+**/.DS_Store
+**/.idea/
+**/*.suo
+**/*.ntvs*
+**/*.njsproj
+**/*.sln
+**/*.sw?
+
+# Keep useful VS Code config, ignore noisy generated task files
+**/.vscode/tasks.json
