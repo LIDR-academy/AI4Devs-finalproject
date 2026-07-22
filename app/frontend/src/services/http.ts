@@ -31,10 +31,10 @@ let refreshPromise: Promise<string | null> | null = null
 
 const withAuthorizationHeader = (headers: unknown, token: string) => {
   if (headers && typeof headers === 'object' && 'set' in headers) {
-    const setHeader = (headers as { set: (name: string, value: string) => void }).set
+    const axiosLikeHeaders = headers as { set?: (name: string, value: string) => void }
 
-    if (typeof setHeader === 'function') {
-      setHeader('Authorization', `Bearer ${token}`)
+    if (typeof axiosLikeHeaders.set === 'function') {
+      axiosLikeHeaders.set('Authorization', `Bearer ${token}`)
       return headers
     }
   }
