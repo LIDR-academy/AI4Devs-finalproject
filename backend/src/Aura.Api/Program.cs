@@ -11,6 +11,8 @@ using Aura.Infrastructure;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -197,6 +199,25 @@ try
 
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.AddFixedWindowLimiter("RsvpGetPolicy", opt =>
+        {
+            opt.PermitLimit = 60;
+            opt.Window = TimeSpan.FromMinutes(1);
+            opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 0;
+        });
+
+        options.AddFixedWindowLimiter("RsvpSubmitPolicy", opt =>
+        {
+            opt.PermitLimit = 5;
+            opt.Window = TimeSpan.FromHours(1);
+            opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 0;
+        });
+    });
+
     builder.Services.AddAuraHealthChecks(builder.Configuration);
 
     var app = builder.Build();
@@ -215,6 +236,7 @@ try
     }
     
     app.UseMiddleware<RateLimitingMiddleware>();
+    app.UseRateLimiter();
     app.UseCors("DefaultPolicy");
     app.UseMiddleware<CsrfValidationMiddleware>();
     app.UseAuthentication();

@@ -23,6 +23,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/pages/control-dashboard.page'),
     canActivate: [authGuard]
   },
+  { 
+    path: 'rsvp/:token', 
+    loadComponent: () => import('./features/rsvp/pages/rsvp-form.page').then(m => m.RsvpFormPageComponent) 
+  },
+  { 
+    path: 'rsvp/:token/confirmation', 
+    loadComponent: () => import('./features/rsvp/pages/rsvp-confirmation.page').then(m => m.RsvpConfirmationPageComponent) 
+  },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: '/dashboard' }
 ];
