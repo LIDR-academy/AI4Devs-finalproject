@@ -15,6 +15,7 @@ public class EventServiceTests
     private readonly IEventRepository _eventRepositoryMock;
     private readonly ISlugGenerator _slugGeneratorMock;
     private readonly IDataRetentionJobRepository _jobRepositoryMock;
+    private readonly IMessageTemplateService _messageTemplateServiceMock;
     private readonly EventService _sut;
 
     public EventServiceTests()
@@ -22,11 +23,13 @@ public class EventServiceTests
         _eventRepositoryMock = Substitute.For<IEventRepository>();
         _slugGeneratorMock = Substitute.For<ISlugGenerator>();
         _jobRepositoryMock = Substitute.For<IDataRetentionJobRepository>();
+        _messageTemplateServiceMock = Substitute.For<IMessageTemplateService>();
 
         _sut = new EventService(
             _eventRepositoryMock,
             _slugGeneratorMock,
-            _jobRepositoryMock);
+            _jobRepositoryMock,
+            _messageTemplateServiceMock);
     }
 
     [Fact]

@@ -22,6 +22,7 @@ public class WebhooksControllerTests
     private readonly IDeliveryLogRepository _logRepo;
     private readonly IInvitationRepository _invRepo;
     private readonly ILogger<WebhooksController> _logger;
+    private readonly ILiveMessageRepository _liveMessageRepo;
     private readonly WebhooksController _sut;
 
     public WebhooksControllerTests()
@@ -32,8 +33,9 @@ public class WebhooksControllerTests
         _logRepo = Substitute.For<IDeliveryLogRepository>();
         _invRepo = Substitute.For<IInvitationRepository>();
         _logger = Substitute.For<ILogger<WebhooksController>>();
+        _liveMessageRepo = Substitute.For<ILiveMessageRepository>();
 
-        _sut = new WebhooksController(_config, _logRepo, _invRepo, _logger);
+        _sut = new WebhooksController(_config, _logRepo, _invRepo, _liveMessageRepo, _logger);
         _sut.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext()

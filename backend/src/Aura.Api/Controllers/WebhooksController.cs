@@ -19,17 +19,20 @@ public class WebhooksController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IDeliveryLogRepository _deliveryLogRepository;
     private readonly IInvitationRepository _invitationRepository;
+    private readonly ILiveMessageRepository _liveMessageRepository;
     private readonly ILogger<WebhooksController> _logger;
 
     public WebhooksController(
         IConfiguration configuration,
         IDeliveryLogRepository deliveryLogRepository,
         IInvitationRepository invitationRepository,
+        ILiveMessageRepository liveMessageRepository,
         ILogger<WebhooksController> logger)
     {
         _configuration = configuration;
         _deliveryLogRepository = deliveryLogRepository;
         _invitationRepository = invitationRepository;
+        _liveMessageRepository = liveMessageRepository;
         _logger = logger;
     }
 
@@ -150,6 +153,15 @@ public class WebhooksController : ControllerBase
                 {
                     invitation.DeliveryStatus = newStatus;
                     await _invitationRepository.UpdateAsync(invitation);
+                }
+            }
+            else if (log.EntityType == DeliveryEntityType.LiveMessage)
+            {
+                var liveMessage = await _liveMessageRepository.GetByIdAsync(log.EntityId);
+                if (liveMessage != null && newStatus > liveMessage.DeliveryStatus)
+                {
+                    liveMessage.DeliveryStatus = newStatus;
+                    await _liveMessageRepository.UpdateAsync(liveMessage);
                 }
             }
         }
