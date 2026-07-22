@@ -17,10 +17,38 @@ modifying it.
 | `valkey`   | official `valkey/valkey` (pinned) | no (internal) | Ephemeral key/value store for streamer          |
 | `livekit`  | official `livekit/livekit-server` (pinned) | **yes** — media origin | Dev-mode SFU for WebRTC video/audio (second origin) |
 | `coturn`   | official `coturn/coturn` (pinned) | **yes** — TURN `3478` | Dev TURN server; relays browser media over TCP (Docker-Desktop reliability) |
+| `security` | built from `../security` | no (internal, via proxy `/auth`) | Magic-link auth (SuperTokens Go SDK → managed cloud); exposes JWKS |
+| `users`    | built from `../users`    | no (internal)   | User persistence (Go + MongoDB); reached only by `security`          |
+| `mongo`    | official `mongo` (pinned) | no (internal)  | User store for `users`; DEV-ONLY creds, **ephemeral** (no volume)   |
 
 The proxy publishes the app origin; LiveKit publishes the media origin. Every other
-service is internal-only. The browser reaches `streamer` only through the proxy (no
-CORS, no baked API URL); it reaches LiveKit directly on LiveKit's own ports.
+service is internal-only. The browser reaches `streamer` (`/streams*`) and `security`
+(`/auth*`) only through the proxy (no CORS, no baked API URL); it reaches LiveKit
+directly on LiveKit's own ports. `users` and `mongo` are **never** reachable from the
+host or the browser.
+
+## Auth / identity (security-v0)
+
+Magic-link email auth via **SuperTokens managed cloud** (free tier), fronted by the
+`security` service. `users` persists accounts in MongoDB. No SuperTokens core and no
+mail container run locally — the managed cloud hosts the core + storage and sends the
+magic-link email.
+
+- **Browser `/auth/*`** is routed through the single origin to `security` (same as
+  `/streams*` → streamer). No CORS, no baked URL.
+- **`streamer` verifies JWTs locally** against security's JWKS (`SECURITY_JWKS_URL`,
+  fetched at startup + refreshed with retry) — no per-request call to security.
+- **`users` + `mongo` are internal-only** and ephemeral (dev users wiped on
+  `docker compose down`).
+- **Required human-supplied secrets** (SuperTokens managed-cloud, free tier):
+  set the REAL values ONLY in the git-ignored `dev/devops/.env` — NEVER commit them:
+  ```
+  SUPERTOKENS_CONNECTION_URI=...   # from your SuperTokens dashboard
+  SUPERTOKENS_API_KEY=...          # from your SuperTokens dashboard
+  ```
+  `.env.example` carries empty placeholders only. If unset, the `security` service
+  **fails fast at startup** with a clear log (routine compose commands still work).
+  They must never appear in git, a log, or a response (AC7).
 
 ## Media is a second origin (stream-media-v0)
 

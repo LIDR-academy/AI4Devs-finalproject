@@ -1,11 +1,13 @@
 # QuickChat local runtime.
-# The APP plane is single-origin: only the `proxy` publishes app ports.
-# The MEDIA plane is a SECOND origin: `livekit` publishes its own ports because
-# WebRTC cannot traverse the nginx HTTP proxy (stream-media-v0, root D3).
-# `docker compose up` brings up Valkey + LiveKit + streamer + portal + reverse proxy.
+# The APP plane is single-origin: only the `proxy` publishes app ports (browser
+# reaches streamer /streams*, security /auth*, and the portal through it).
+# The MEDIA plane is a SECOND origin: `livekit` (+ `coturn` TURN) publishes its own
+# ports because WebRTC cannot traverse the nginx HTTP proxy (stream-media-v0, root D3).
+# `docker compose up` brings up the full stack: valkey, livekit, coturn, mongo,
+# users, security, streamer, portal, and the reverse proxy.
 #
-# devops owns this file, nginx.conf, and livekit.yaml. It CONSUMES streamer's and
-# qc-portal's Dockerfiles (build contexts below) without modifying them.
+# devops owns this file, nginx.conf, livekit.yaml, coturn.conf. It CONSUMES each
+# service's Dockerfile (build contexts below) without modifying them.
 
 name: quickchat
 
@@ -64,6 +66,73 @@ services:
       - quickchat
     restart: unless-stopped
 
+  # MongoDB — persistence for the `users` service (security-v0). INTERNAL ONLY:
+  # no published host port; never reachable from the host or portal (PRD §5.2).
+  # DEV-ONLY root creds from env; EPHEMERAL (no volume) — dev users are wiped on
+  # `docker compose down`. A named volume is a one-line change if persistence is wanted.
+  mongo:
+    image: ${MONGO_IMAGE:-mongo:7.0}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-quickchat}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-quickchatdev}
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - quickchat
+    restart: unless-stopped
+
+  # User persistence service (Go + MongoDB). INTERNAL ONLY — never published;
+  # reached only by `security` over the compose network. Env var names owned by users
+  # and supplied here verbatim (pinned with users: MONGO_URI / MONGO_DB / USERS_HTTP_ADDR).
+  users:
+    build:
+      context: ../users
+    environment:
+      MONGO_URI: ${MONGO_URI:-mongodb://quickchat:quickchatdev@mongo:27017/?authSource=admin}
+      MONGO_DB: ${MONGO_DB:-quickchat}
+      USERS_HTTP_ADDR: ${USERS_HTTP_ADDR:-:8080}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - quickchat
+    restart: unless-stopped
+
+  # Auth service (Go + SuperTokens Go SDK) — fronts SuperTokens managed cloud.
+  # Internal; reached by the browser only through the proxy at /auth/*, and by
+  # streamer internally for JWKS. The SuperTokens creds are HUMAN-SUPPLIED via the
+  # git-ignored .env and are NEVER committed. They render empty if unset, and the
+  # `security` service fails fast at startup with a clear log if they are empty
+  # (keeping routine compose commands — ps/down/config — usable without creds). NO
+  # SuperTokens core / mail container — the managed cloud hosts core + storage + email.
+  security:
+    build:
+      context: ../security
+    environment:
+      # REQUIRED, human-supplied in dev/devops/.env (git-ignored). Never commit.
+      SUPERTOKENS_CONNECTION_URI: ${SUPERTOKENS_CONNECTION_URI:-}
+      SUPERTOKENS_API_KEY: ${SUPERTOKENS_API_KEY:-}
+      # App/API + website domains (names confirmed with security). Both are the
+      # single origin http://localhost:8080 here — the portal is served THROUGH the
+      # proxy at 8080, NOT a standalone Vite dev server on 5173.
+      SECURITY_API_DOMAIN: ${SECURITY_API_DOMAIN:-http://localhost:8080}
+      SECURITY_WEBSITE_DOMAIN: ${SECURITY_WEBSITE_DOMAIN:-http://localhost:8080}
+      SECURITY_API_BASE_PATH: ${SECURITY_API_BASE_PATH:-/auth}
+      # security → users internal get-or-create endpoint (users listens on :8080).
+      USERS_GET_OR_CREATE_URL: ${USERS_GET_OR_CREATE_URL:-http://users:8080/internal/users/get-or-create}
+      # security reads PORT (default 8080) for its listen addr.
+      PORT: ${SECURITY_PORT:-8080}
+    depends_on:
+      users:
+        condition: service_started
+    networks:
+      - quickchat
+    restart: unless-stopped
+
   # Go HTTP API. Internal only; reached by the browser only through the proxy.
   # Env var names are owned by streamer and supplied here verbatim.
   streamer:
@@ -85,6 +154,10 @@ services:
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
       LIVEKIT_URL: ${LIVEKIT_URL:-http://livekit:7880}
       LIVEKIT_PUBLIC_URL: ${LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
+      # security-v0: streamer verifies Bearer JWTs locally against security's JWKS,
+      # fetched at startup + refreshed WITH RETRY (so it tolerates security starting
+      # later — no health gate below, avoiding a deadlock). Path pending security's confirm.
+      SECURITY_JWKS_URL: ${SECURITY_JWKS_URL:-http://security:8080/auth/jwt/jwks.json}
     depends_on:
       valkey:
         condition: service_healthy
@@ -135,6 +208,8 @@ services:
         condition: service_healthy
       portal:
         condition: service_healthy
+      security:
+        condition: service_started   # /auth upstream exists when the origin comes up
     networks:
       - quickchat
     restart: unless-stopped
