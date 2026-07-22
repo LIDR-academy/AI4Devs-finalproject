@@ -21,7 +21,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, HasUuids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
     // HasRoles is in the trait list — $user->assignRole(...) etc. are callable.
 }
 ```
@@ -56,6 +56,18 @@ Table names are the package defaults:
 | `table_names.model_has_permissions` | `model_has_permissions` |
 | `table_names.role_has_permissions` | `role_has_permissions` |
 
+The polymorphic **morph key** is **not** the package default. Because `users.id` is a UUID (v7) string (see [ADR 0001](../decisions/0001-uuid-primary-keys.md)), the morph-key column on `model_has_roles` / `model_has_permissions` was renamed from the default `model_id` (bigint) to `model_uuid` (UUID-typed):
+
+```php
+// config/permission.php
+'column_names' => [
+    'model_morph_key' => 'model_uuid',
+    // ...
+],
+```
+
+This config change tells the package which column to *query*; the physical column was renamed/retyped by the alteration migration `database/migrations/2026_07_22_100004_convert_model_morph_key_to_uuid_in_permission_tables_table.php`. See [database/schema.md](../database/schema.md) for the column shapes.
+
 Permission checks are cached for 24 hours by default (`config/permission.php`, `'cache'` section) and the cache is flushed automatically whenever a role/permission is created, updated, or deleted through the package's own methods.
 
 The schema (all five tables plus how they relate to `users`) is documented once in [database/schema.md](../database/schema.md) — this file does not repeat the ER diagram.
@@ -80,4 +92,4 @@ Route gating with the package's middleware aliases (`role`, `permission`, `role_
 | Migration | `database/migrations/2026_07_12_181045_create_permission_tables.php` |
 | Trait usage | `app/Models/User.php` |
 
-_Last updated: 2026-07-21 — Corrected doc-vs-code drift: `HasRoles` **is** attached to `User` (verified against `app/Models/User.php` line 37); reworded Stack/Current state/How-to-use-it to reflect the trait being attached and callable while roles/permissions remain unexercised (no roles seeded, no gating, no calls)._
+_Last updated: 2026-07-22 — Documented the UUID (v7) `users.id` conversion's authorization impact (ADR 0001, Epic 1): the morph key is now `model_uuid` (UUID-typed), not `model_id` (bigint); added the `column_names.model_morph_key` config note and `HasUuids` to the trait-list snippet._

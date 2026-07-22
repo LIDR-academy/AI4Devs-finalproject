@@ -1,0 +1,42 @@
+<?php
+
+use App\Models\User;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+
+beforeEach(function () {
+    Route::middleware('web')->get('/__test/users/{user}', function (User $user) {
+        return response()->json(['id' => $user->id]);
+    });
+});
+
+test('a valid uuid resolves the correct user via implicit route binding', function () {
+    $user = User::factory()->create();
+
+    $this->get('/__test/users/'.$user->id)
+        ->assertOk()
+        ->assertJson(['id' => $user->id]);
+});
+
+test('a malformed non-uuid identifier 404s via model-not-found rather than a 500', function () {
+    $this->get('/__test/users/not-a-uuid')->assertNotFound();
+});
+
+test('a stale integer-style identifier 404s via model-not-found rather than a 500', function () {
+    $this->assertDatabaseMissing('users', ['id' => 1]);
+
+    $this->get('/__test/users/1')->assertNotFound();
+});
+
+test('a well-formed but nonexistent uuid 404s', function () {
+    $this->get('/__test/users/'.Str::uuid7())->assertNotFound();
+});
+
+test('User::find() returns null for stale bigint-style lookups', function () {
+    User::factory()->create();
+
+    $this->assertDatabaseMissing('users', ['id' => 1]);
+
+    expect(User::find(1))->toBeNull()
+        ->and(User::find('1'))->toBeNull();
+});

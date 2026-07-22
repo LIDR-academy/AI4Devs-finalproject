@@ -6,7 +6,7 @@
 - [Structure](#structure)
 - [Real examples](#real-examples)
 - [Adding a column to an existing table](#adding-a-column-to-an-existing-table)
-- [Upcoming convention: UUID primary keys](#upcoming-convention-uuid-primary-keys)
+- [UUID primary keys](#uuid-primary-keys)
 - [Package-vendored migrations](#package-vendored-migrations)
 
 ## File naming
@@ -127,9 +127,9 @@ public function down(): void
 
 ✅ Good — `after(...)` keeps column order deliberate and readable; `down()` drops exactly the columns `up()` added, nothing more.
 
-## Upcoming convention: UUID primary keys
+## UUID primary keys
 
-> **Not used anywhere in `database/migrations/` yet.** Every existing migration keys tables with `$table->id()` (auto-increment `bigint`). This subsection documents the pattern that future migrations **will** follow, per [ADR 0001 — UUID primary keys](../decisions/0001-uuid-primary-keys.md): the seven UUID-keyed entities are `users` (once its alteration migration is written) plus the greenfield Products / Product Variants / Product Categories (PRD Epic 2) and Blog Categories / Blog Tags / Blog Posts (PRD Epic 4). Do not treat the snippets below as citations of existing files — they are the target pattern.
+> **Implemented for `users` (Epic 1); the greenfield pattern below is still the target for future tables.** Per [ADR 0001 — UUID primary keys](../decisions/0001-uuid-primary-keys.md), the seven UUID-keyed entities are `users` (**done** — converted by the 5 alteration migrations `2026_07_22_100001..100005_*.php`) plus the greenfield Products / Product Variants / Product Categories (PRD Epic 2) and Blog Categories / Blog Tags / Blog Posts (PRD Epic 4), which **do not exist in code yet**. The `create_products_table` snippet below is the *target* greenfield pattern (not a citation of an existing file); the `users` conversion — which was an alteration, not a `create_table` — is described further down and its real files are cited there.
 
 Today's pattern (real, current):
 ```php
@@ -148,9 +148,21 @@ Schema::create('products', function (Blueprint $table) {
 });
 ```
 
-Key differences from today's `create_passkeys_table` FK pattern: `$table->uuid('id')->primary();` replaces `$table->id()`, and child tables use `foreignUuid(...)->constrained()->cascadeOnDelete()` instead of `foreignId(...)->constrained()->cascadeOnDelete()` so the FK column type matches the parent's UUID key. The model-side counterpart (the `HasUuids` trait, `@property string $id`, no `$keyType`/`$incrementing` properties) is documented in [conventions/base-standards.md](../conventions/base-standards.md#uuid-primary-keys-convention-to-follow-not-yet-in-the-repo).
+Key differences from today's `create_passkeys_table` FK pattern: `$table->uuid('id')->primary();` replaces `$table->id()`, and child tables use `foreignUuid(...)->constrained()->cascadeOnDelete()` instead of `foreignId(...)->constrained()->cascadeOnDelete()` so the FK column type matches the parent's UUID key. The model-side counterpart (the `HasUuids` trait, `@property string $id`, no `$keyType`/`$incrementing` properties) is documented in [conventions/base-standards.md](../conventions/base-standards.md#uuid-primary-keys).
 
-The `users` case is **not** a fresh `create_table` — it is a breaking alteration migration with a backfill. Its cascades to `passkeys.user_id`, `sessions.user_id`, and the `spatie/laravel-permission` morph-key columns are each a **new** alteration migration against the existing table, never a hand-edit of the original already-run `create_*` files. In particular the permission morph key needs two distinct steps: changing `config/permission.php`'s `column_names.model_morph_key` only tells the package which column to *query* — the physical column is renamed/retyped to `uuid` by a new migration (e.g. `convert_model_morph_key_to_uuid_in_permission_tables_table`), and you must **not** edit the vendored `2026_07_12_181045_create_permission_tables.php` in place (see [Package-vendored migrations](#package-vendored-migrations)). Read [ADR 0001's Consequences](../decisions/0001-uuid-primary-keys.md#consequences) before writing any of it.
+### The real `users` conversion (alteration, not `create_table`)
+
+`users` was **not** a fresh `create_table` — it was a breaking alteration migration with a backfill, done as **5 new alteration migrations** (the historical `create_*` files were left untouched):
+
+| Order | File | Purpose |
+| --- | --- | --- |
+| 1 | `2026_07_22_100001_convert_id_to_uuid_in_users_table.php` | rename `id` → `legacy_id` (kept as-is), add nullable `uuid` `CHAR(36)`, backfill it |
+| 2 | `2026_07_22_100002_convert_user_id_to_uuid_in_passkeys_table.php` | drop the passkeys FK, retype `user_id` bigint → uuid (backfill by joining on `users.legacy_id`) |
+| 3 | `2026_07_22_100003_convert_user_id_to_uuid_in_sessions_table.php` | retype `sessions.user_id` bigint → uuid |
+| 4 | `2026_07_22_100004_convert_model_morph_key_to_uuid_in_permission_tables_table.php` | retype/rename the permission morph key to `model_uuid` (name read from config) |
+| 5 | `2026_07_22_100005_finalize_uuid_primary_key_on_users_table.php` | drop `legacy_id`, rename `uuid` → `id`, set it PRIMARY KEY, **re-add** the passkeys `cascadeOnDelete` FK |
+
+Two ordering facts worth internalizing before writing any similar alteration set: the transient `legacy_id` is what every dependent (2–4) joins against to backfill its own column, and it is only dropped in the finalize step (5) — that is also the single point the passkeys FK reappears. The permission morph key needed two distinct steps: changing `config/permission.php`'s `column_names.model_morph_key` (to `model_uuid`) only tells the package which column to *query* — the physical column is renamed/retyped by migration 4, which reads the column name from config rather than hardcoding, and you must **not** edit the vendored `2026_07_12_181045_create_permission_tables.php` in place (see [Package-vendored migrations](#package-vendored-migrations)). Rollback across this set is **data-lossy** (an accepted, human-confirmed tradeoff). Read [ADR 0001's Consequences](../decisions/0001-uuid-primary-keys.md#consequences) before touching it.
 
 ## Package-vendored migrations
 
@@ -163,4 +175,4 @@ throw_if(empty($tableNames), 'Error: config/permission.php not loaded. Run [php 
 
 When vendoring a package migration like this, keep that defensive `throw_if` pattern — it turns a silent misconfiguration into an immediate, actionable migration failure.
 
-_Last updated: 2026-07-21 — Added the "Upcoming convention: UUID primary keys" subsection per ADR 0001; clarified that each `users` cascade is a new alteration migration (never a hand-edit of the vendored/original `create_*` files) and that the permission config change vs. the physical column retype are two separate steps._
+_Last updated: 2026-07-22 — The `users` UUIDv7 conversion is now implemented (Epic 1): retitled the subsection to "UUID primary keys", and replaced the hypothetical `users` description with a table citing the 5 real alteration migrations (`2026_07_22_100001..100005_*.php`); the greenfield `create_products_table` pattern remains the target for the still-future Epic 2/4 tables._
