@@ -4,6 +4,6 @@ namespace Aura.Core.Interfaces.Services;
 
 public interface ILiveMessageService
 {
-    Task<LiveMessageResponse> SendLiveMessageAsync(string accompliceToken, SendLiveMessageRequest request, CancellationToken cancellationToken = default);
+    Task<LiveMessageResponse> SendLiveMessageAsync(Guid accompliceId, string eventSlug, SendLiveMessageRequest request, CancellationToken cancellationToken = default);
     Task<IEnumerable<LiveMessageResponse>> GetLiveMessagesByEventAsync(string eventSlug, CancellationToken cancellationToken = default);
 }

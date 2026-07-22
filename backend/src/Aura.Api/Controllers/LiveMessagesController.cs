@@ -15,11 +15,15 @@ public class LiveMessagesController : ControllerBase
         _liveMessageService = liveMessageService;
     }
 
-    [HttpPost("api/live/{accompliceToken}/send")]
-    [AllowAnonymous]
-    public async Task<ActionResult<LiveMessageResponse>> SendLiveMessage(string accompliceToken, [FromBody] SendLiveMessageRequest request, CancellationToken cancellationToken)
+    [HttpPost("api/live/{slug}/send")]
+    [Authorize(Policy = "AccompliceScoped")]
+    public async Task<ActionResult<LiveMessageResponse>> SendLiveMessage(string slug, [FromBody] SendLiveMessageRequest request, CancellationToken cancellationToken)
     {
-        var response = await _liveMessageService.SendLiveMessageAsync(accompliceToken, request, cancellationToken);
+        var accompliceIdStr = User.FindFirst(System.Security.Claims.JwtRegisteredClaimNames.Sub)?.Value;
+        if (!Guid.TryParse(accompliceIdStr, out var accompliceId))
+            return Unauthorized(new { Message = "Invalid accomplice token." });
+
+        var response = await _liveMessageService.SendLiveMessageAsync(accompliceId, slug, request, cancellationToken);
         return Accepted(response);
     }
 

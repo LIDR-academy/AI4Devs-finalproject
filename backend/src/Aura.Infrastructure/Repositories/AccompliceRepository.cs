@@ -21,4 +21,11 @@ public class AccompliceRepository : Repository<Accomplice>, IAccompliceRepositor
         return await _context.Accomplices
             .FirstOrDefaultAsync(a => a.TokenHash == tokenHash, cancellationToken);
     }
+
+    public async Task<IEnumerable<Accomplice>> GetAccomplicesByEventAsync(Guid eventId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Accomplices
+            .Where(a => a.EventId == eventId)
+            .ToListAsync(cancellationToken);
+    }
 }
