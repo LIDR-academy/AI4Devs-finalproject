@@ -85,6 +85,7 @@ describe("attachActorContext", () => {
     const req = createRequest({ authorization: `Bearer ${token}` }) as unknown as {
       actorId?: string;
       actorName?: string;
+      actorRole?: string;
       header: (name: string) => string | undefined;
     };
     const res = createResponse();
