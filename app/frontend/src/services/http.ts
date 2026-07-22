@@ -29,6 +29,22 @@ type RetriableRequestConfig = {
 
 let refreshPromise: Promise<string | null> | null = null
 
+const withAuthorizationHeader = (headers: unknown, token: string) => {
+  if (headers && typeof headers === 'object' && 'set' in headers) {
+    const setHeader = (headers as { set: (name: string, value: string) => void }).set
+
+    if (typeof setHeader === 'function') {
+      setHeader('Authorization', `Bearer ${token}`)
+      return headers
+    }
+  }
+
+  return {
+    ...(headers as Record<string, unknown>),
+    Authorization: `Bearer ${token}`,
+  }
+}
+
 const refreshAccessToken = async () => {
   const session = readAuthSession()
 
@@ -91,10 +107,7 @@ http.interceptors.request.use((config) => {
   const accessToken = readAuthSession()?.accessToken
 
   if (accessToken) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${accessToken}`,
-    }
+    config.headers = withAuthorizationHeader(config.headers, accessToken) as typeof config.headers
   }
 
   return config
@@ -115,10 +128,7 @@ http.interceptors.response.use(
 
         if (renewedAccessToken) {
           config._psaiRetry = true
-          config.headers = {
-            ...config.headers,
-            Authorization: `Bearer ${renewedAccessToken}`,
-          }
+          config.headers = withAuthorizationHeader(config.headers, renewedAccessToken) as typeof config.headers
 
           return http.request(config)
         }
