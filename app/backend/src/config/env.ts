@@ -3,10 +3,30 @@ import { z } from "zod";
 
 dotenv.config();
 
+const booleanFromEnv = z.preprocess((value) => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+
+    if (["true", "1", "yes", "on"].includes(normalized)) {
+      return true;
+    }
+
+    if (["false", "0", "no", "off", ""].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return value;
+}, z.boolean());
+
 const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   DATABASE_URL: z.string().min(1),
-  AUTH_ENABLED: z.coerce.boolean().default(false),
+  AUTH_ENABLED: booleanFromEnv.default(false),
   AUTH_LOGIN_PASSWORD: z.string().min(1).default("dev-pass-123"),
   AUTH_TOKEN_SECRET: z.string().min(16).default("dev-token-secret-change-me"),
   AUTH_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(28_800),
@@ -16,7 +36,7 @@ const envSchema = z.object({
   CORS_ALLOWED_ORIGINS: z.string().default("http://localhost:3000,http://127.0.0.1:3000"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
-  AZURE_OPENAI_ENABLED: z.coerce.boolean().default(false),
+  AZURE_OPENAI_ENABLED: booleanFromEnv.default(false),
   AZURE_OPENAI_ENDPOINT: z.string().url().optional(),
   AZURE_OPENAI_API_KEY: z.string().min(1).optional(),
   AZURE_OPENAI_DEPLOYMENT: z.string().min(1).optional(),
