@@ -1,4 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
+import { createFakeAuthSession } from "../auth/auth-session.fake";
+import { setAuthSession } from "../auth/session-store";
 import { fetchMediaToken } from "./media-api";
 import type { MediaToken } from "./types";
 
@@ -12,6 +14,14 @@ function stubFetch(impl: FetchImpl): void {
     impl(input, init)) as typeof fetch;
 }
 
+function signedIn(token: string): void {
+  setAuthSession(createFakeAuthSession({ signedIn: true, username: "neo", token }));
+}
+
+function signedOut(): void {
+  setAuthSession(createFakeAuthSession({ signedIn: false }));
+}
+
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
@@ -19,11 +29,13 @@ afterEach(() => {
 const token: MediaToken = { token: "jwt", url: "ws://livekit", identity: "neo", role: "streamer" };
 
 test("returns a parsed token on 200", async () => {
+  signedIn("t");
   stubFetch(() => new Response(JSON.stringify(token), { status: 200 }));
-  expect(await fetchMediaToken("room", "k")).toEqual({ ok: true, value: token });
+  expect(await fetchMediaToken("room")).toEqual({ ok: true, value: token });
 });
 
-test("sends the creatorKey as Authorization: Bearer when held", async () => {
+test("sends the access token as Authorization: Bearer when signed in", async () => {
+  signedIn("secret");
   let auth = "";
   let url = "";
   stubFetch((requestUrl, init) => {
@@ -31,12 +43,13 @@ test("sends the creatorKey as Authorization: Bearer when held", async () => {
     auth = new Headers(init?.headers).get("Authorization") ?? "";
     return new Response(JSON.stringify(token), { status: 200 });
   });
-  await fetchMediaToken("a/b", "secret");
+  await fetchMediaToken("a/b");
   expect(url).toBe("/streams/a%2Fb/media-token");
   expect(auth).toBe("Bearer secret");
 });
 
-test("omits Authorization when no key is held", async () => {
+test("omits Authorization when signed out (auth-optional read)", async () => {
+  signedOut();
   let hasAuth = true;
   stubFetch((_url, init) => {
     hasAuth = new Headers(init?.headers).has("Authorization");
@@ -47,24 +60,28 @@ test("omits Authorization when no key is held", async () => {
 });
 
 test("flags a malformed token (bad role)", async () => {
+  signedOut();
   stubFetch(() => new Response(JSON.stringify({ ...token, role: "admin" }), { status: 200 }));
   expect(await fetchMediaToken("room")).toEqual({ ok: false, error: { kind: "malformed" } });
 });
 
 test("flags a token missing a field", async () => {
+  signedOut();
   stubFetch(() => new Response(JSON.stringify({ token: "x", url: "y" }), { status: 200 }));
   expect(await fetchMediaToken("room")).toEqual({ ok: false, error: { kind: "malformed" } });
 });
 
 test("surfaces a 404 for a nonexistent room", async () => {
+  signedIn("t");
   stubFetch(() => new Response(JSON.stringify({ error: "no room" }), { status: 404 }));
-  expect(await fetchMediaToken("room", "k")).toEqual({
+  expect(await fetchMediaToken("room")).toEqual({
     ok: false,
     error: { kind: "http", status: 404 },
   });
 });
 
 test("surfaces a network failure", async () => {
+  signedOut();
   stubFetch(() => {
     throw new TypeError("offline");
   });

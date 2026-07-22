@@ -1,8 +1,15 @@
 import { afterEach, expect, mock, test } from "bun:test";
+import van from "vanjs-core";
 import { COPY } from "../streams/copy";
 import type { ChatHandlers } from "./chat-client";
 import { type ChatController, createChatPanel } from "./chat-panel";
 import type { ChatMessage } from "./frames";
+
+const flush = async (): Promise<void> => {
+  for (let i = 0; i < 6; i += 1) {
+    await Promise.resolve();
+  }
+};
 
 function msg(id: string): ChatMessage {
   return { id, sender: "u", role: "viewer", text: `t${id}`, ts: "t" };
@@ -71,9 +78,12 @@ test("onEnded fires when status becomes ended, not on reconnecting", () => {
   expect(onEnded).toHaveBeenCalledTimes(1);
 });
 
-test("composer submit sends through the controller", () => {
+test("a signed-in user sees the composer; submit sends through the controller", () => {
   const controller = fakeController();
-  const panel = createChatPanel("room", { createController: () => controller });
+  const panel = createChatPanel("room", {
+    createController: () => controller,
+    signedIn: () => true,
+  });
   const inputEl = panel.el.querySelector<HTMLInputElement>('input[name="message"]');
   const formEl = panel.el.querySelector("form");
   if (inputEl === null || formEl === null) {
@@ -82,4 +92,40 @@ test("composer submit sends through the controller", () => {
   inputEl.value = "hey";
   formEl.dispatchEvent(new Event("submit"));
   expect(controller.send).toHaveBeenCalledWith("hey");
+});
+
+test("an anonymous user sees a calm Sign in to chat affordance, not the composer", () => {
+  const onSignIn = mock(() => {});
+  const panel = createChatPanel("room", {
+    createController: () => fakeController(),
+    signedIn: () => false,
+    onSignIn,
+  });
+  expect(panel.el.querySelector('input[name="message"]')).toBeNull();
+  expect(panel.el.textContent).toContain(COPY.signInToChat);
+  const signIn = [...panel.el.querySelectorAll("button")].find(
+    (b) => b.textContent === COPY.signInAction,
+  );
+  expect(signIn).toBeDefined();
+  signIn?.click();
+  expect(onSignIn).toHaveBeenCalledTimes(1);
+});
+
+test("an auth_required error prompts re-auth calmly", async () => {
+  let captured: ChatHandlers | null = null;
+  const panel = createChatPanel("room", {
+    createController: (handlers) => {
+      captured = handlers;
+      return fakeController();
+    },
+    signedIn: () => true,
+  });
+  if (captured === null) {
+    throw new Error("handlers were not captured");
+  }
+  // Mount with van.add so the composer's reactive error text flushes.
+  van.add(document.body, panel.el);
+  (captured as ChatHandlers).onErrorMessage("auth_required");
+  await flush();
+  expect(panel.el.textContent).toContain(COPY.signInToContinue);
 });

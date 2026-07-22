@@ -1,9 +1,9 @@
 import { afterEach, expect, mock, test } from "bun:test";
+import van from "vanjs-core";
 import type { ChatPanel } from "../chat/chat-panel";
 import type { MediaPanel } from "../media/media-panel";
 import type { ApiResult } from "../streams/api";
 import { COPY } from "../streams/copy";
-import { clearCreatorKey, getCreatorKey, setCreatorKey } from "../streams/creator-key";
 import type { Stream } from "../streams/types";
 import { createRoomPage } from "./room-page";
 
@@ -28,11 +28,11 @@ function stream(): Stream {
 const ended = async (): Promise<ApiResult<null>> => ({ ok: true, value: null });
 const noStream = async (): Promise<Stream | null> => null;
 const flush = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve));
-const hasKey = (): string | undefined => "k";
-const noKey = (): string | undefined => undefined;
+
+// Signed-out identity by default so tests are deterministic (never read the global session).
+const signedOut = { signedIn: (): boolean => false, username: (): string | undefined => undefined };
 
 afterEach(() => {
-  clearCreatorKey("r1");
   document.body.replaceChildren();
 });
 
@@ -48,7 +48,7 @@ test("mounts chat and media on creation", () => {
     navigate: () => {},
     buildChat: () => chat.panel,
     buildMedia: () => media.panel,
-    getKey: noKey,
+    ...signedOut,
   });
   expect(chat.mount).toHaveBeenCalledTimes(1);
   expect(media.mount).toHaveBeenCalledTimes(1);
@@ -62,7 +62,7 @@ test("unmount tears down both chat and media", () => {
     navigate: () => {},
     buildChat: () => chat.panel,
     buildMedia: () => media.panel,
-    getKey: noKey,
+    ...signedOut,
   });
   page.unmount();
   expect(chat.unmount).toHaveBeenCalledTimes(1);
@@ -75,7 +75,7 @@ test("renders the header username, title, and description after load", async () 
     navigate: () => {},
     buildChat: () => fakeChat().panel,
     buildMedia: () => fakeMedia().panel,
-    getKey: noKey,
+    ...signedOut,
   });
   await flush();
   expect(page.el.textContent).toContain("neo");
@@ -83,29 +83,48 @@ test("renders the header username, title, and description after load", async () 
   expect(page.el.textContent).toContain("desc");
 });
 
-test("shows the End control only for the creator (creatorKey in memory)", () => {
-  const creator = createRoomPage("r1", {
-    loadStream: noStream,
+test("owner-by-session (signed-in, username matches) sees End; others do not", async () => {
+  const owner = createRoomPage("r1", {
+    loadStream: () => Promise.resolve(stream()),
     navigate: () => {},
     buildChat: () => fakeChat().panel,
     buildMedia: () => fakeMedia().panel,
-    getKey: hasKey,
+    signedIn: () => true,
+    username: () => "neo",
   });
-  expect(creator.isCreator).toBe(true);
-  expect(hasEndButton(creator.el)).toBe(true);
+  van.add(document.body, owner.el);
+  await flush();
+  expect(owner.isOwner.val).toBe(true);
+  expect(hasEndButton(owner.el)).toBe(true);
 
   const viewer = createRoomPage("r1", {
-    loadStream: noStream,
+    loadStream: () => Promise.resolve(stream()),
     navigate: () => {},
     buildChat: () => fakeChat().panel,
     buildMedia: () => fakeMedia().panel,
-    getKey: noKey,
+    signedIn: () => true,
+    username: () => "someone-else",
   });
-  expect(viewer.isCreator).toBe(false);
+  van.add(document.body, viewer.el);
+  await flush();
+  expect(viewer.isOwner.val).toBe(false);
   expect(hasEndButton(viewer.el)).toBe(false);
 });
 
-test("End sends the creatorKey to the API", async () => {
+test("a signed-out visitor is never the owner even if usernames would match", async () => {
+  const page = createRoomPage("r1", {
+    loadStream: () => Promise.resolve(stream()),
+    navigate: () => {},
+    buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
+    signedIn: () => false,
+    username: () => "neo",
+  });
+  await flush();
+  expect(page.isOwner.val).toBe(false);
+});
+
+test("End sends only the stream id to the API (no creatorKey)", async () => {
   const end = mock(async () => ({ ok: true, value: null }) as ApiResult<null>);
   const page = createRoomPage("r1", {
     loadStream: noStream,
@@ -113,14 +132,13 @@ test("End sends the creatorKey to the API", async () => {
     navigate: () => {},
     buildChat: () => fakeChat().panel,
     buildMedia: () => fakeMedia().panel,
-    getKey: () => "secret",
+    ...signedOut,
   });
   await page.end();
-  expect(end).toHaveBeenCalledWith("r1", "secret");
+  expect(end).toHaveBeenCalledWith("r1");
 });
 
-test("End on 204 clears the key, tears down chat + media, and redirects home", async () => {
-  setCreatorKey("r1", "k");
+test("End on 204 tears down chat + media and redirects home", async () => {
   const chat = fakeChat();
   const media = fakeMedia();
   const navigate = mock(() => {});
@@ -130,13 +148,12 @@ test("End on 204 clears the key, tears down chat + media, and redirects home", a
     navigate,
     buildChat: () => chat.panel,
     buildMedia: () => media.panel,
-    getKey: hasKey,
+    ...signedOut,
   });
   await page.end();
   expect(navigate).toHaveBeenCalledWith("/");
   expect(chat.unmount).toHaveBeenCalled();
   expect(media.unmount).toHaveBeenCalled();
-  expect(getCreatorKey("r1")).toBeUndefined();
 });
 
 test("End on 404 also redirects home", async () => {
@@ -147,7 +164,7 @@ test("End on 404 also redirects home", async () => {
     navigate,
     buildChat: () => fakeChat().panel,
     buildMedia: () => fakeMedia().panel,
-    getKey: hasKey,
+    ...signedOut,
   });
   await page.end();
   expect(navigate).toHaveBeenCalledWith("/");
@@ -161,7 +178,22 @@ test("End on 403 shows a calm not-allowed message and stays", async () => {
     navigate,
     buildChat: () => fakeChat().panel,
     buildMedia: () => fakeMedia().panel,
-    getKey: hasKey,
+    ...signedOut,
+  });
+  await page.end();
+  expect(navigate).not.toHaveBeenCalled();
+  expect(page.errorText.val).toBe(COPY.endNotAllowed);
+});
+
+test("End on 401 also shows the calm not-allowed message", async () => {
+  const navigate = mock(() => {});
+  const page = createRoomPage("r1", {
+    loadStream: noStream,
+    end: async () => ({ ok: false, error: { kind: "http", status: 401 } }),
+    navigate,
+    buildChat: () => fakeChat().panel,
+    buildMedia: () => fakeMedia().panel,
+    ...signedOut,
   });
   await page.end();
   expect(navigate).not.toHaveBeenCalled();
@@ -176,7 +208,7 @@ test("End on another failure shows calm copy and does not redirect", async () =>
     navigate,
     buildChat: () => fakeChat().panel,
     buildMedia: () => fakeMedia().panel,
-    getKey: hasKey,
+    ...signedOut,
   });
   await page.end();
   expect(navigate).not.toHaveBeenCalled();
@@ -197,7 +229,7 @@ test("terminal room-ended shows a notice, tears down chat + media, and redirects
       return chat.panel;
     },
     buildMedia: () => media.panel,
-    getKey: noKey,
+    ...signedOut,
     scheduleRedirect,
   });
   if (captured === null) {
@@ -217,7 +249,7 @@ test("chat toggle hides and shows the chat", () => {
     navigate: () => {},
     buildChat: () => fakeChat().panel,
     buildMedia: () => fakeMedia().panel,
-    getKey: noKey,
+    ...signedOut,
   });
   expect(page.chatVisible.val).toBe(true);
   const toggle = [...page.el.querySelectorAll("button")].find(

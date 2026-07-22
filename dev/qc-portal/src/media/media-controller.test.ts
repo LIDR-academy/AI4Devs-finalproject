@@ -64,7 +64,6 @@ function harness(role: MediaRole) {
     {
       fetchToken,
       engineFactory: () => engine.engine,
-      getKey: () => (role === "streamer" ? "k" : undefined),
     },
   );
   const elements = {
@@ -159,7 +158,6 @@ test("a viewer connect failure yields the error state", async () => {
         value: { token: "t", url: "u", identity: "i", role: "viewer" },
       }),
       engineFactory: () => bad.engine,
-      getKey: () => undefined,
     },
   );
   await controller.start({

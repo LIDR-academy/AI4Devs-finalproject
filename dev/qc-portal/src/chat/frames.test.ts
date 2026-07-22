@@ -55,9 +55,9 @@ test("isChatMessage validates shape", () => {
   expect(isChatMessage({ ...validMessage, ts: 123 })).toBe(false);
 });
 
-test("encodeJoin includes creatorKey only when present", () => {
+test("encodeJoin includes the access token only when signed in", () => {
   expect(JSON.parse(encodeJoin(undefined))).toEqual({ type: "join" });
-  expect(JSON.parse(encodeJoin("k"))).toEqual({ type: "join", creatorKey: "k" });
+  expect(JSON.parse(encodeJoin("access-tok"))).toEqual({ type: "join", token: "access-tok" });
 });
 
 test("encodeMessage wraps text", () => {

@@ -88,11 +88,11 @@ function buildWsUrl(streamId: string): string {
   return `${protocol}//${window.location.host}/streams/${encodeURIComponent(streamId)}/ws`;
 }
 
-/** Create a chat client for a room. `creatorKey` (if held in memory) is sent on join
- *  and re-sent on reconnect. */
+/** Create a chat client for a room. `getToken` yields the current access token (or undefined
+ *  when anonymous); it is resolved and sent on the `join` frame on each connect and reconnect. */
 export function createChatClient(
   streamId: string,
-  creatorKey: string | undefined,
+  getToken: () => Promise<string | undefined>,
   handlers: ChatHandlers,
   deps: ChatClientDeps = {},
 ): ChatClient {
@@ -233,7 +233,10 @@ export function createChatClient(
       onOpen: () => {
         attempt = 0;
         errorPrecededClose = false;
-        socket?.send(encodeJoin(creatorKey));
+        // Join carries a fresh access token (signed in) each connect/reconnect (D6).
+        void (async () => {
+          socket?.send(encodeJoin(await getToken()));
+        })();
         if (!initialLoaded) {
           void loadInitial();
         } else {

@@ -1,9 +1,11 @@
+import { authedFetch } from "../auth/authed-fetch";
 import type { ApiResult } from "../streams/api";
 import type { MediaRole, MediaToken } from "./types";
 
-/** The media-token HTTP boundary (PRD §6): `POST /streams/{id}/media-token`. Sends the
- *  in-memory creatorKey as `Authorization: Bearer` (root D2) only when held; validates the
- *  response from `unknown`; treats `token`/`url` as opaque. Reuses the streams `ApiResult`. */
+/** The media-token HTTP boundary (PRD §6): `POST /streams/{id}/media-token`. Auth-optional:
+ *  `authedFetch` attaches the access token as `Authorization: Bearer` when signed in (root D2)
+ *  and omits it when anonymous; the server stamps the `role`. Validates the response from
+ *  `unknown`; treats `token`/`url` as opaque. Reuses the streams `ApiResult`. */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -32,24 +34,15 @@ async function parseJson(response: Response): Promise<unknown> {
   }
 }
 
-/** Fetch a media token for a room. A held `creatorKey` yields a publish (`streamer`) grant;
- *  none yields a subscribe-only (`viewer`) grant. `404` means the room is gone. */
-export async function fetchMediaToken(
-  streamId: string,
-  creatorKey?: string,
-): Promise<ApiResult<MediaToken>> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  };
-  if (creatorKey !== undefined) {
-    headers.Authorization = `Bearer ${creatorKey}`;
-  }
+/** Fetch a media token for a room. The server grants a publish (`streamer`) or subscribe-only
+ *  (`viewer`) role from the authenticated session/ownership. `404` means the room is gone. */
+export async function fetchMediaToken(streamId: string): Promise<ApiResult<MediaToken>> {
   let response: Response;
   try {
-    response = await fetch(`/streams/${encodeURIComponent(streamId)}/media-token`, {
+    // Auth-optional: `authedFetch` attaches the Bearer token when signed in, else omits it.
+    response = await authedFetch(`/streams/${encodeURIComponent(streamId)}/media-token`, {
       method: "POST",
-      headers,
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: "{}",
     });
   } catch {

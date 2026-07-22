@@ -3,13 +3,23 @@
 
 export type Route =
   | { readonly name: "home" }
+  | { readonly name: "sign-in" }
+  | { readonly name: "auth-verify" }
   | { readonly name: "stream"; readonly id: string }
   | { readonly name: "not-found" };
 
-/** Map a pathname to a route. Pure — no globals, so it is trivially testable. */
+/** Map a pathname to a route. Pure — no globals, so it is trivially testable. `/auth/verify`
+ *  is the magic-link landing (served to the SPA by nginx); all other `/auth/*` are the
+ *  security service's and never reach the router. */
 export function resolve(path: string): Route {
   if (path === "/") {
     return { name: "home" };
+  }
+  if (path === "/sign-in") {
+    return { name: "sign-in" };
+  }
+  if (path === "/auth/verify") {
+    return { name: "auth-verify" };
   }
   const match = path.match(/^\/stream\/([^/]+)$/);
   const id = match?.[1];

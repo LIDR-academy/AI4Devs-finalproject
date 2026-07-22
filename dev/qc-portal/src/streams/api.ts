@@ -1,9 +1,11 @@
-import type { CreateStreamInput, CreateStreamResult, Stream } from "./types";
+import { authedFetch } from "../auth/authed-fetch";
+import type { CreateStreamInput, Stream } from "./types";
 
-/** The streams API module owns the entire wire boundary to the §6 contract (design D-P2).
- *  UI never calls `fetch`; every response is parsed from `unknown` and validated here. */
+/** The streams API module owns the entire wire boundary to the §6 contract (design D-P2/D-P3).
+ *  UI never calls `fetch`; every response is parsed from `unknown` and validated here.
+ *  Protected calls (create, end) attach the Bearer token via `authedFetch`; reads are public. */
 
-/** Why a call failed. `http` carries the status; the error body is never read (design D-P3). */
+/** Why a call failed. `http` carries the status; the error body is never read. */
 export type ApiError =
   | { readonly kind: "http"; readonly status: number }
   | { readonly kind: "network" }
@@ -32,21 +34,16 @@ function isStreamArray(value: unknown): value is Stream[] {
   return Array.isArray(value) && value.every(isStream);
 }
 
-function isCreateStreamResult(value: unknown): value is CreateStreamResult {
-  return isRecord(value) && typeof value.creatorKey === "string" && isStream(value);
-}
-
 async function parseJson(response: Response): Promise<unknown> {
   try {
     const data: unknown = await response.json();
     return data;
   } catch {
-    // A non-JSON / truncated body is a boundary failure, surfaced as `undefined`.
     return undefined;
   }
 }
 
-/** `GET /streams` — list live streams. Malformed bodies fail rather than render. */
+/** `GET /streams` — list live streams (public, no auth). Malformed bodies fail rather than render. */
 export async function listStreams(): Promise<ApiResult<Stream[]>> {
   let response: Response;
   try {
@@ -64,14 +61,12 @@ export async function listStreams(): Promise<ApiResult<Stream[]>> {
   return { ok: true, value: data };
 }
 
-/** `POST /streams` — start a stream. `201` returns the created stream plus a `creatorKey`;
- *  `400` is a validation failure. */
-export async function createStream(
-  input: CreateStreamInput,
-): Promise<ApiResult<CreateStreamResult>> {
+/** `POST /streams` — start a stream (authenticated). `201` returns the created stream (no
+ *  creatorKey); `401` unauthenticated, `409` already streaming, `400` validation. */
+export async function createStream(input: CreateStreamInput): Promise<ApiResult<Stream>> {
   let response: Response;
   try {
-    response = await fetch("/streams", {
+    response = await authedFetch("/streams", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(input),
@@ -83,22 +78,18 @@ export async function createStream(
     return { ok: false, error: { kind: "http", status: response.status } };
   }
   const data = await parseJson(response);
-  if (!isCreateStreamResult(data)) {
+  if (!isStream(data)) {
     return { ok: false, error: { kind: "malformed" } };
   }
   return { ok: true, value: data };
 }
 
-/** `DELETE /streams/{id}` — end a stream, authenticated with the creator's key as
- *  `Authorization: Bearer <creatorKey>` (coordinated transport, root D10). `204` succeeds;
- *  callers treat `404` as already-ended and `403` as not-allowed. */
-export async function endStream(id: string, creatorKey: string): Promise<ApiResult<null>> {
+/** `DELETE /streams/{id}` — end a stream (authenticated, owner-only). `204` succeeds; callers
+ *  treat `404` as already-ended, `403`/`401` as not-allowed. */
+export async function endStream(id: string): Promise<ApiResult<null>> {
   let response: Response;
   try {
-    response = await fetch(`/streams/${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${creatorKey}` },
-    });
+    response = await authedFetch(`/streams/${encodeURIComponent(id)}`, { method: "DELETE" });
   } catch {
     return { ok: false, error: { kind: "network" } };
   }

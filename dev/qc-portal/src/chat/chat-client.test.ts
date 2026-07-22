@@ -29,7 +29,7 @@ function message(id: string, text = "m"): ChatMessage {
 
 const flush = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve));
 
-function harness(creatorKey?: string) {
+function harness(token?: string) {
   const sockets: FakeSocket[] = [];
   const events = {
     reset: [] as ChatMessage[][],
@@ -86,7 +86,7 @@ function harness(creatorKey?: string) {
   };
 
   // Uses the real default terminal matcher (exact match against TERMINAL_REASONS).
-  const client = createChatClient("room", creatorKey, handlers, {
+  const client = createChatClient("room", () => Promise.resolve(token), handlers, {
     socketFactory,
     loadHistory,
     schedule,
@@ -120,16 +120,21 @@ function harness(creatorKey?: string) {
   };
 }
 
-test("join omits creatorKey when none is held, includes it when held", () => {
-  const noKey = harness();
-  noKey.client.connect();
-  noKey.last().open();
-  expect(JSON.parse(noKey.last().sent[0] ?? "{}")).toEqual({ type: "join" });
+test("join omits the token when anonymous, includes it when signed in", async () => {
+  const anon = harness();
+  anon.client.connect();
+  anon.last().open();
+  await flush(); // the join is sent after awaiting the access token
+  expect(JSON.parse(anon.last().sent[0] ?? "{}")).toEqual({ type: "join" });
 
-  const withKey = harness("K");
-  withKey.client.connect();
-  withKey.last().open();
-  expect(JSON.parse(withKey.last().sent[0] ?? "{}")).toEqual({ type: "join", creatorKey: "K" });
+  const signedIn = harness("access-tok");
+  signedIn.client.connect();
+  signedIn.last().open();
+  await flush();
+  expect(JSON.parse(signedIn.last().sent[0] ?? "{}")).toEqual({
+    type: "join",
+    token: "access-tok",
+  });
 });
 
 test("welcome frame yields identity", async () => {
@@ -189,8 +194,8 @@ test("a non-terminal error frame is surfaced, not added to the log", async () =>
   expect(h.events.status.at(-1)).toBe("live"); // not terminal
 });
 
-test("a transient drop reconnects and re-joins", async () => {
-  const h = harness("K");
+test("a transient drop reconnects and re-joins with the token", async () => {
+  const h = harness("access-tok");
   h.client.connect();
   h.last().open();
   h.resolveInitial({ ok: true, value: { messages: [], nextCursor: null } });
@@ -201,7 +206,8 @@ test("a transient drop reconnects and re-joins", async () => {
   h.runScheduled();
   expect(h.socketCount()).toBe(firstCount + 1);
   h.last().open();
-  expect(JSON.parse(h.last().sent[0] ?? "{}")).toEqual({ type: "join", creatorKey: "K" });
+  await flush();
+  expect(JSON.parse(h.last().sent[0] ?? "{}")).toEqual({ type: "join", token: "access-tok" });
 });
 
 test("room ended is terminal: status ended and no reconnect", async () => {

@@ -1,18 +1,18 @@
 import van from "vanjs-core";
+import { currentUsername, isSignedIn } from "../auth/session-store";
 import { type ChatPanel, createChatPanel } from "../chat/chat-panel";
 import { createMediaPanel, type MediaPanel } from "../media/media-panel";
 import { navigate } from "../router/router";
 import type { ApiResult } from "../streams/api";
 import { endStream, listStreams } from "../streams/api";
 import { COPY } from "../streams/copy";
-import { clearCreatorKey, getCreatorKey } from "../streams/creator-key";
 import type { Stream } from "../streams/types";
 
-/** The room page (`/stream/{id}`, design D-P9 + D9/D10/D11 + media): header + media area
- *  + chat, laid out media 2/3 + chat 1/3 on wide and stacked rows on narrow, with a chat
- *  toggle. Media and chat are independent lifecycles (D8). The End control shows ONLY for
- *  the creator (creatorKey in memory) and sends an authenticated DELETE. On the terminal
- *  room-ended signal it shows a calm notice and redirects Home. Side effects are injected. */
+/** The room page (`/stream/{id}`): header + media area + chat. Ownership is by session
+ *  (signed-in AND the session username equals the stream's username — creatorKey retired,
+ *  D4); the owner sees End and (via the media token role) the publisher experience, and it
+ *  survives reload. On terminal room-ended it shows a calm notice and redirects. Side
+ *  effects are injected for testing. */
 
 const { section, div, header, h1, p, span, button } = van.tags;
 
@@ -20,11 +20,12 @@ const REDIRECT_DELAY_MS = 2000;
 
 type RoomPageDeps = {
   readonly loadStream?: (id: string) => Promise<Stream | null>;
-  readonly end?: (id: string, creatorKey: string) => Promise<ApiResult<null>>;
+  readonly end?: (id: string) => Promise<ApiResult<null>>;
   readonly navigate?: (path: string) => void;
   readonly buildChat?: (id: string, onEnded: () => void) => ChatPanel;
   readonly buildMedia?: (id: string) => MediaPanel;
-  readonly getKey?: (id: string) => string | undefined;
+  readonly signedIn?: () => boolean;
+  readonly username?: () => string | undefined;
   readonly scheduleRedirect?: (run: () => void) => void;
 };
 
@@ -43,7 +44,7 @@ export type RoomPage = {
   unmount(): void;
   readonly errorText: { readonly val: string };
   readonly chatVisible: { readonly val: boolean };
-  readonly isCreator: boolean;
+  readonly isOwner: { readonly val: boolean };
 };
 
 export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomPage {
@@ -52,20 +53,16 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
   const nav = deps.navigate ?? navigate;
   const buildChat = deps.buildChat ?? ((id, onEnded) => createChatPanel(id, { onEnded }));
   const buildMedia = deps.buildMedia ?? createMediaPanel;
-  const getKey = deps.getKey ?? getCreatorKey;
+  const signedIn = deps.signedIn ?? isSignedIn;
+  const username = deps.username ?? currentUsername;
   const scheduleRedirect = deps.scheduleRedirect ?? ((run) => setTimeout(run, REDIRECT_DELAY_MS));
-
-  const creatorKey = getKey(streamId);
-  const isCreator = creatorKey !== undefined;
 
   const errorText = van.state("");
   const ending = van.state(false);
   const chatVisible = van.state(true);
+  const isOwner = van.state(false);
 
   let endedHandled = false;
-  // D11: on the terminal room-ended signal, show a calm notice and redirect Home. A
-  // transient drop never reaches "ended" (it reconnects), so this only fires when the room
-  // is truly gone.
   const onEnded = (): void => {
     if (endedHandled) {
       return;
@@ -85,6 +82,9 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
     if (stream === null) {
       return;
     }
+    if (signedIn() && username() === stream.username) {
+      isOwner.val = true;
+    }
     const parts: HTMLElement[] = [
       span(
         { class: "font-mono text-xs uppercase tracking-wide text-gray-strong" },
@@ -99,20 +99,22 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
   });
 
   const end = async (): Promise<void> => {
-    if (creatorKey === undefined || ending.val) {
+    if (ending.val) {
       return;
     }
     ending.val = true;
-    const result = await endFn(streamId, creatorKey);
+    const result = await endFn(streamId);
     ending.val = false;
     if (result.ok || (result.error.kind === "http" && result.error.status === 404)) {
-      clearCreatorKey(streamId);
       chat.unmount();
       media.unmount();
       nav("/");
       return;
     }
-    if (result.error.kind === "http" && result.error.status === 403) {
+    if (
+      result.error.kind === "http" &&
+      (result.error.status === 403 || result.error.status === 401)
+    ) {
       errorText.val = COPY.endNotAllowed;
       return;
     }
@@ -147,30 +149,25 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
     () => (chatVisible.val ? COPY.hideChat : COPY.showChat),
   );
 
-  // D10: the End control exists only for the creator (holds the creatorKey in memory).
-  const actions: HTMLElement[] = [toggleButton];
-  if (isCreator) {
-    actions.push(
-      button(
-        {
-          class: "btn btn-primary transition-calm",
-          type: "button",
-          disabled: () => ending.val,
-          onclick: () => {
-            void end();
-          },
-        },
-        COPY.endAction,
-      ),
-    );
-  }
+  const endButton = button(
+    {
+      class: "btn btn-primary transition-calm",
+      type: "button",
+      disabled: () => ending.val,
+      onclick: () => {
+        void end();
+      },
+    },
+    COPY.endAction,
+  );
 
   const el = section(
     { class: "mx-auto max-w-5xl px-4 py-6 flex flex-col gap-4" },
     div(
       { class: "flex items-start justify-between gap-4" },
       headerBox,
-      div({ class: "flex gap-3 shrink-0" }, ...actions),
+      // End is shown only to the signed-in owner (D4); reactive to the resolved ownership.
+      div({ class: "flex gap-3 shrink-0" }, toggleButton, () => (isOwner.val ? endButton : "")),
     ),
     div(
       { class: "grid gap-4 grid-rows-2 lg:grid-rows-1 lg:grid-cols-3 min-h-96" },
@@ -183,7 +180,6 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
     ),
   );
 
-  // Media and chat mount independently (D8); a fault in one never tears down the other.
   chat.mount();
   media.mount();
 
@@ -192,5 +188,5 @@ export function createRoomPage(streamId: string, deps: RoomPageDeps = {}): RoomP
     media.unmount();
   };
 
-  return { el, end, unmount, errorText, chatVisible, isCreator };
+  return { el, end, unmount, errorText, chatVisible, isOwner };
 }

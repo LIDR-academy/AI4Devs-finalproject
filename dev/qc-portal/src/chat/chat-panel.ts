@@ -1,14 +1,16 @@
 import van from "vanjs-core";
+import { accessToken, isSignedIn, subscribe } from "../auth/session-store";
+import { goToSignIn } from "../auth/sign-in-navigation";
 import { COPY } from "../streams/copy";
-import { getCreatorKey } from "../streams/creator-key";
 import { type ChatHandlers, type ChatStatus, createChatClient } from "./chat-client";
 import { createComposer } from "./composer";
 import { createMessageList } from "./message-list";
 
-/** The chat panel wires the message list + composer to a chat controller. The controller
- *  is injected (defaults to the real chat client) so the wiring is testable with a fake. */
+/** The chat panel wires the message list + composer to a chat controller. Anonymous users
+ *  read history/live messages but see a calm "Sign in to chat" affordance in place of the
+ *  composer (D6). The controller and the sign-in action are injected for testing. */
 
-const { section, div, p } = van.tags;
+const { section, div, p, button } = van.tags;
 
 export type ChatController = {
   connect(): void;
@@ -41,12 +43,16 @@ export function createChatPanel(
   deps: {
     createController?: (handlers: ChatHandlers) => ChatController;
     onEnded?: () => void;
+    onSignIn?: () => void;
+    signedIn?: () => boolean;
   } = {},
 ): ChatPanel {
+  const signedIn = deps.signedIn ?? isSignedIn;
+  const onSignIn = deps.onSignIn ?? goToSignIn;
+
   const list = createMessageList({ onReachTop: () => void controller.loadOlder() });
   const composer = createComposer({ onSend: (text) => controller.send(text) });
 
-  // Status is set imperatively (not a reactive binding) so it updates synchronously.
   const statusEl = p(
     { class: "px-3 py-1 text-sm text-gray-strong min-h-6", role: "status", "aria-live": "polite" },
     statusText("connecting"),
@@ -65,12 +71,30 @@ export function createChatPanel(
     onIdentity: () => {
       // Identity is server-stamped; v0 does not surface the viewer's own id.
     },
-    onErrorMessage: () => composer.setError(COPY.messageRejected),
+    onErrorMessage: (reason) => {
+      composer.setError(reason === "auth_required" ? COPY.signInToContinue : COPY.messageRejected);
+    },
   };
 
   const createController =
-    deps.createController ?? ((h) => createChatClient(streamId, getCreatorKey(streamId), h));
+    deps.createController ?? ((h) => createChatClient(streamId, accessToken, h));
   const controller = createController(handlers);
+
+  // The composer area shows the input for signed-in users, else a calm sign-in affordance.
+  const signInAffordance = div(
+    { class: "flex flex-col gap-2 items-start" },
+    p({ class: "text-sm text-gray-strong" }, COPY.signInToChat),
+    button(
+      { class: "btn btn-secondary transition-calm", type: "button", onclick: () => onSignIn() },
+      COPY.signInAction,
+    ),
+  );
+  const composerArea = div({ class: "border-t border-gray-line p-3" });
+  const renderComposerArea = (): void => {
+    composerArea.replaceChildren(signedIn() ? composer.el : signInAffordance);
+  };
+  renderComposerArea();
+  const unsubscribe = subscribe(renderComposerArea);
 
   const el = section(
     {
@@ -86,12 +110,15 @@ export function createChatPanel(
     ),
     statusEl,
     div({ class: "flex-1 min-h-0 flex flex-col" }, list.el),
-    div({ class: "border-t border-gray-line p-3" }, composer.el),
+    composerArea,
   );
 
   return {
     el,
     mount: () => controller.connect(),
-    unmount: () => controller.close(),
+    unmount: () => {
+      unsubscribe();
+      controller.close();
+    },
   };
 }

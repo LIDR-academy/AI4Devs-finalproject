@@ -1,4 +1,7 @@
 import van from "vanjs-core";
+import { createAuthControls } from "../auth/auth-controls";
+import { isSignedIn } from "../auth/session-store";
+import { goToSignIn } from "../auth/sign-in-navigation";
 import { navigate } from "../router/router";
 import type { ApiResult } from "./api";
 import { listStreams } from "./api";
@@ -6,9 +9,9 @@ import { COPY } from "./copy";
 import { openStartModalDefault } from "./start-modal";
 import type { Stream } from "./types";
 
-/** Home (`/`): fetch `GET /streams` once on load, list live streams by title, calm
- *  empty state, and a Start streaming action. The view is pure (data in → DOM out);
- *  the fetch and the start action are injected (design D-P1/D-P2). */
+/** Home (`/`): fetch `GET /streams` once on load, list live streams, calm empty state, and
+ *  auth-aware controls. Start streaming is visible to everyone; a signed-out click routes to
+ *  sign-in (D6). The view is pure; the fetch, start action, and auth controls are injected. */
 
 const { section, header, div, h1, ul, li, p, span, a, button } = van.tags;
 
@@ -16,13 +19,16 @@ type HomeDeps = {
   readonly list: () => Promise<ApiResult<Stream[]>>;
   readonly onStart: () => void;
   readonly onOpen: (id: string) => void;
+  readonly buildAuthControls: () => HTMLElement;
 };
 
 function defaultHomeDeps(): HomeDeps {
   return {
     list: listStreams,
-    onStart: () => openStartModalDefault(navigate),
+    // Visible-but-gated: signed-out click routes to sign-in, signed-in opens the modal.
+    onStart: () => (isSignedIn() ? openStartModalDefault(navigate) : goToSignIn()),
     onOpen: (id) => navigate(`/stream/${id}`),
+    buildAuthControls: () => createAuthControls(),
   };
 }
 
@@ -80,9 +86,13 @@ export function createHome(deps: HomeDeps = defaultHomeDeps()): {
     header(
       { class: "flex items-center justify-between gap-4" },
       h1({ class: "text-2xl font-semibold" }, COPY.homeHeading),
-      button(
-        { class: "btn btn-primary transition-calm", type: "button", onclick: deps.onStart },
-        COPY.startAction,
+      div(
+        { class: "flex items-center gap-3 shrink-0" },
+        button(
+          { class: "btn btn-primary transition-calm", type: "button", onclick: deps.onStart },
+          COPY.startAction,
+        ),
+        deps.buildAuthControls(),
       ),
     ),
     content,

@@ -1,28 +1,27 @@
 import van from "vanjs-core";
+import { goToSignIn } from "../auth/sign-in-navigation";
 import type { ApiResult } from "./api";
 import { createStream } from "./api";
 import { COPY } from "./copy";
-import { setCreatorKey } from "./creator-key";
-import type { CreateStreamInput, CreateStreamResult } from "./types";
+import type { CreateStreamInput, Stream } from "./types";
 import { validateDescription, validateRequired } from "./validation";
 
-/** The start-flow modal (design D-P8): one dialog with username + title + optional
- *  description, client-side validation, and a POST that on 201 retains the creatorKey
- *  in memory and redirects. Side effects (create, retainKey, navigate, close) are
- *  injected so the flow is testable without the DOM, network, or the real store. */
+/** The start-flow modal (design D-P5): title + optional description (username comes from the
+ *  account — no username field; creatorKey retired). Submit is authenticated; on 201 it
+ *  redirects, on 401 it routes to sign-in, on 409 it shows "already streaming". Side effects
+ *  are injected so the flow is testable without the DOM, network, or session. */
 
 const { div, form, label, span, input, textarea, p, button } = van.tags;
 
 type StartModalConfig = {
-  readonly create: (input: CreateStreamInput) => Promise<ApiResult<CreateStreamResult>>;
-  readonly retainKey: (streamId: string, creatorKey: string) => void;
+  readonly create: (input: CreateStreamInput) => Promise<ApiResult<Stream>>;
   readonly navigate: (path: string) => void;
   readonly onClose: () => void;
+  readonly onAuthRequired: () => void;
 };
 
 export type StartModal = {
   readonly root: HTMLElement;
-  readonly usernameInput: HTMLInputElement;
   readonly titleInput: HTMLInputElement;
   readonly descriptionInput: HTMLTextAreaElement;
   readonly errorText: { readonly val: string };
@@ -30,18 +29,11 @@ export type StartModal = {
   readonly cancel: () => void;
 };
 
-/** Build the modal element and its behavior. Mounting concerns (focus, Esc, DOM
- *  insertion) live in `openStartModal`; this stays a pure UI + submit unit. */
+/** Build the modal element and its behavior. Mounting concerns live in `openStartModal`. */
 export function createStartModal(config: StartModalConfig): StartModal {
   const errorText = van.state("");
   const submitting = van.state(false);
 
-  const usernameInput = input({
-    class: "field",
-    type: "text",
-    name: "username",
-    id: "start-username",
-  });
   const titleInput = input({ class: "field", type: "text", name: "title", id: "start-title" });
   const descriptionInput = textarea({
     class: "field",
@@ -51,11 +43,6 @@ export function createStartModal(config: StartModalConfig): StartModal {
 
   const submit = async (): Promise<void> => {
     if (submitting.val) {
-      return;
-    }
-    const username = validateRequired(usernameInput.value);
-    if (!username.ok) {
-      errorText.val = COPY.usernameRequired;
       return;
     }
     const title = validateRequired(titleInput.value);
@@ -70,19 +57,23 @@ export function createStartModal(config: StartModalConfig): StartModal {
     }
     errorText.val = "";
     submitting.val = true;
-    const result = await config.create({
-      username: username.value,
-      title: title.value,
-      description: description.value,
-    });
+    const result = await config.create({ title: title.value, description: description.value });
     submitting.val = false;
     if (result.ok) {
-      config.retainKey(result.value.id, result.value.creatorKey);
       config.onClose();
       config.navigate(`/stream/${result.value.id}`);
       return;
     }
-    // Any failure — including a 400 the client did not pre-check (design D-P4) — is calm copy.
+    if (result.error.kind === "http" && result.error.status === 401) {
+      config.onClose();
+      config.onAuthRequired();
+      return;
+    }
+    if (result.error.kind === "http" && result.error.status === 409) {
+      errorText.val = COPY.alreadyStreaming;
+      return;
+    }
+    // Any other failure — incl. a 400 the client did not pre-check — is calm copy.
     errorText.val = COPY.startFailed;
   };
 
@@ -104,7 +95,6 @@ export function createStartModal(config: StartModalConfig): StartModal {
       "aria-modal": "true",
       "aria-label": COPY.startConfirmHeading,
     },
-    // Scrim: a plain ink overlay at low opacity (the only elevation cue, style §4).
     div({ class: "absolute inset-0 bg-ink/40", onclick: cancel }),
     form(
       {
@@ -116,10 +106,8 @@ export function createStartModal(config: StartModalConfig): StartModal {
         },
       },
       p({ class: "text-xl font-semibold" }, COPY.startConfirmHeading),
-      field(COPY.usernameLabel, "start-username", usernameInput),
       field(COPY.titleLabel, "start-title", titleInput),
       field(COPY.descriptionLabel, "start-description", descriptionInput),
-      // Error region is always in the DOM (aria-live) so screen readers hear updates.
       p(
         { class: "text-sm text-gray-strong min-h-5", role: "alert", "aria-live": "polite" },
         () => errorText.val,
@@ -142,12 +130,13 @@ export function createStartModal(config: StartModalConfig): StartModal {
     ),
   );
 
-  return { root, usernameInput, titleInput, descriptionInput, errorText, submit, cancel };
+  return { root, titleInput, descriptionInput, errorText, submit, cancel };
 }
 
 type StartModalDeps = {
-  readonly create: (input: CreateStreamInput) => Promise<ApiResult<CreateStreamResult>>;
+  readonly create: (input: CreateStreamInput) => Promise<ApiResult<Stream>>;
   readonly navigate: (path: string) => void;
+  readonly onAuthRequired?: () => void;
 };
 
 function focusableWithin(root: HTMLElement): HTMLElement[] {
@@ -170,9 +159,9 @@ export function openStartModal(deps: StartModalDeps): HTMLElement {
 
   const modal = createStartModal({
     create: deps.create,
-    retainKey: setCreatorKey,
     navigate: deps.navigate,
     onClose,
+    onAuthRequired: deps.onAuthRequired ?? goToSignIn,
   });
 
   function onKeydown(event: KeyboardEvent): void {
@@ -201,11 +190,11 @@ export function openStartModal(deps: StartModalDeps): HTMLElement {
 
   document.addEventListener("keydown", onKeydown);
   document.body.appendChild(modal.root);
-  modal.usernameInput.focus();
+  modal.titleInput.focus();
   return modal.root;
 }
 
-/** Default open used by Home: real create + real navigation. */
+/** Default open used by Home (signed-in): real create + real navigation. */
 export function openStartModalDefault(navigate: (path: string) => void): void {
   openStartModal({ create: createStream, navigate });
 }

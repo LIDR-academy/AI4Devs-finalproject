@@ -10,6 +10,9 @@ function okList(streams: Stream[]): () => Promise<ApiResult<Stream[]>> {
 
 const noop = (): void => {};
 
+// Auth controls are covered by auth-controls.test.ts; Home only needs a placeholder element.
+const buildAuthControls = (): HTMLElement => document.createElement("div");
+
 afterEach(() => {
   document.body.replaceChildren();
 });
@@ -19,7 +22,12 @@ test("renders each stream's username and title in received order", async () => {
     { id: "1", username: "alpha", title: "First", description: "" },
     { id: "2", username: "beta", title: "Second", description: "" },
   ];
-  const home = createHome({ list: okList(streams), onStart: noop, onOpen: noop });
+  const home = createHome({
+    list: okList(streams),
+    onStart: noop,
+    onOpen: noop,
+    buildAuthControls,
+  });
   await home.ready;
   const items = home.el.querySelectorAll("li");
   expect(items.length).toBe(2);
@@ -35,6 +43,7 @@ test("each stream is a keyboard-accessible link that opens its room", async () =
     list: okList([{ id: "42", username: "u", title: "T", description: "" }]),
     onStart: noop,
     onOpen,
+    buildAuthControls,
   });
   await home.ready;
   const link = home.el.querySelector("a");
@@ -49,13 +58,14 @@ test("does not render the description", async () => {
     list: okList([{ id: "1", username: "u", title: "T", description: "SECRET-DESC" }]),
     onStart: noop,
     onOpen: noop,
+    buildAuthControls,
   });
   await home.ready;
   expect(home.el.textContent).not.toContain("SECRET-DESC");
 });
 
 test("shows a calm empty state when no streams are live", async () => {
-  const home = createHome({ list: okList([]), onStart: noop, onOpen: noop });
+  const home = createHome({ list: okList([]), onStart: noop, onOpen: noop, buildAuthControls });
   await home.ready;
   expect(home.el.textContent).toContain(COPY.emptyState);
 });
@@ -65,6 +75,7 @@ test("shows load error copy when the list fails", async () => {
     list: () => Promise.resolve({ ok: false, error: { kind: "network" } }),
     onStart: noop,
     onOpen: noop,
+    buildAuthControls,
   });
   await home.ready;
   expect(home.el.textContent).toContain(COPY.loadError);
@@ -72,7 +83,7 @@ test("shows load error copy when the list fails", async () => {
 
 test("Start streaming action is present and triggers onStart", async () => {
   const onStart = mock(() => {});
-  const home = createHome({ list: okList([]), onStart, onOpen: noop });
+  const home = createHome({ list: okList([]), onStart, onOpen: noop, buildAuthControls });
   await home.ready;
   const startButton = [...home.el.querySelectorAll("button")].find(
     (button) => button.textContent === COPY.startAction,
@@ -80,4 +91,17 @@ test("Start streaming action is present and triggers onStart", async () => {
   expect(startButton).toBeDefined();
   startButton?.click();
   expect(onStart).toHaveBeenCalledTimes(1);
+});
+
+test("mounts the auth controls beside Start streaming", async () => {
+  const marker = document.createElement("span");
+  marker.textContent = "AUTH-CONTROLS";
+  const home = createHome({
+    list: okList([]),
+    onStart: noop,
+    onOpen: noop,
+    buildAuthControls: () => marker,
+  });
+  await home.ready;
+  expect(home.el.contains(marker)).toBe(true);
 });

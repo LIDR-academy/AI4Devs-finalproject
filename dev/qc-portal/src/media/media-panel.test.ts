@@ -59,7 +59,6 @@ test("viewer shows the offline state, then video + tap-to-unmute on a publisher"
   const panel = createMediaPanel("room", {
     fetchToken: tokenFetcher("viewer"),
     engineFactory: () => engine.engine,
-    getKey: () => undefined,
   });
   panel.mount();
   await flush();
@@ -78,7 +77,6 @@ test("creator shows pre-join with Go live, and publishes on activation", async (
   const panel = createMediaPanel("room", {
     fetchToken: tokenFetcher("streamer"),
     engineFactory: () => engine.engine,
-    getKey: () => "k",
   });
   panel.mount();
   await flush();
@@ -97,7 +95,6 @@ test("offline state shows no spinner element", async () => {
   const panel = createMediaPanel("room", {
     fetchToken: tokenFetcher("viewer"),
     engineFactory: () => engine.engine,
-    getKey: () => undefined,
   });
   panel.mount();
   await flush();

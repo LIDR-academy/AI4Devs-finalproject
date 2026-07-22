@@ -6,6 +6,18 @@ describe("resolve", () => {
     expect(resolve("/")).toEqual({ name: "home" });
   });
 
+  test("/sign-in resolves to sign-in", () => {
+    expect(resolve("/sign-in")).toEqual({ name: "sign-in" });
+  });
+
+  test("/auth/verify resolves to auth-verify (the SPA landing route)", () => {
+    expect(resolve("/auth/verify")).toEqual({ name: "auth-verify" });
+  });
+
+  test("other /auth/* paths are not-found (they belong to the security service)", () => {
+    expect(resolve("/auth/signinup/code")).toEqual({ name: "not-found" });
+  });
+
   test("/stream/{id} resolves to stream", () => {
     expect(resolve("/stream/abc")).toEqual({ name: "stream", id: "abc" });
   });

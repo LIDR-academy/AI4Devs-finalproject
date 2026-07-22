@@ -1,5 +1,4 @@
 import type { ApiResult } from "../streams/api";
-import { getCreatorKey } from "../streams/creator-key";
 import { fetchMediaToken } from "./media-api";
 // Type-only import: this keeps `livekit-client` (imported by media-engine) out of the
 // controller's runtime graph, so tests inject a fake engine and never load WebRTC.
@@ -36,9 +35,8 @@ export type MediaElements = {
 };
 
 export type MediaControllerDeps = {
-  readonly fetchToken?: (id: string, creatorKey?: string) => Promise<ApiResult<MediaToken>>;
+  readonly fetchToken?: (id: string) => Promise<ApiResult<MediaToken>>;
   readonly engineFactory?: MediaEngineFactory;
-  readonly getKey?: (id: string) => string | undefined;
 };
 
 export type MediaController = {
@@ -57,7 +55,6 @@ export function createMediaController(
   deps: MediaControllerDeps = {},
 ): MediaController {
   const fetchToken = deps.fetchToken ?? fetchMediaToken;
-  const getKey = deps.getKey ?? getCreatorKey;
 
   let engine: MediaEngine | null = null;
   let role: MediaRole = "viewer";
@@ -116,7 +113,7 @@ export function createMediaController(
     role: () => role,
     async start(elements) {
       handlers.onState("loading");
-      const result = await fetchToken(streamId, getKey(streamId));
+      const result = await fetchToken(streamId);
       if (stopped) {
         return;
       }

@@ -65,9 +65,9 @@ export function parseServerFrame(raw: string): ServerFrame | null {
   return null;
 }
 
-/** Encode the outbound `join` frame (optionally carrying the in-memory creatorKey). */
-export function encodeJoin(creatorKey: string | undefined): string {
-  return JSON.stringify(creatorKey === undefined ? { type: "join" } : { type: "join", creatorKey });
+/** Encode the outbound `join` frame, carrying the access token when signed in (D6). */
+export function encodeJoin(token: string | undefined): string {
+  return JSON.stringify(token === undefined ? { type: "join" } : { type: "join", token });
 }
 
 /** Encode the outbound `message` frame. */

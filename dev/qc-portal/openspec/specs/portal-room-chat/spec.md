@@ -19,18 +19,18 @@ The room page (`/stream/{id}`) SHALL present a header showing the stream's `user
 - **THEN** the header shows the username, then the title, then the description, and the username is display-only
 
 ### Requirement: Creator-only End control
-The room page SHALL show the **End stream** control ONLY when the client holds the stream's `creatorKey` in memory (the creator who has not reloaded); viewers and reloaded creators SHALL NOT see it. Activating End SHALL send `DELETE /streams/{id}` with an `Authorization: Bearer <creatorKey>` header. On `204` or `404` it SHALL clear the in-memory key and redirect to `/`; on `403` it SHALL show a calm inline message and remain on the page.
+The room page SHALL show the **End stream** control ONLY to the signed-in **owner** — determined client-side as `signed-in AND the session username equals the stream's username` (the `creatorKey` mechanism is retired); anonymous users, viewers, and other signed-in users SHALL NOT see it. Because the session survives reload, the owner keeps the End control after reloading. Activating End SHALL send `DELETE /streams/{id}` with `Authorization: Bearer <access token>`. On `204` or `404` it SHALL redirect to `/`; on `403`/`401` it SHALL show a calm inline message and remain on the page. The server is authoritative on ownership (`403` for a non-owner).
 
-#### Scenario: Creator sees End, viewer does not
-- **WHEN** the room page renders while a `creatorKey` for that stream is held in memory
-- **THEN** the End stream control is shown; and when no `creatorKey` is held it is not shown
+#### Scenario: Owner sees End across reload
+- **WHEN** the room renders for the signed-in owner, and again after they reload
+- **THEN** the End stream control is shown both times; it is not shown to anonymous users, viewers, or non-owner signed-in users
 
 #### Scenario: End is authenticated and redirects
-- **WHEN** the creator activates End and the server returns `204`
-- **THEN** the request carried `Authorization: Bearer <creatorKey>`, the in-memory key is cleared, and the portal redirects to `/`
+- **WHEN** the owner activates End and the server returns `204`
+- **THEN** the request carried `Authorization: Bearer <access token>` and the portal redirects to `/`
 
 #### Scenario: End forbidden
-- **WHEN** End returns `403`
+- **WHEN** End returns `403` or `401`
 - **THEN** a calm inline message is shown and the portal does not redirect
 
 ### Requirement: Room ended notice and redirect
@@ -45,15 +45,15 @@ When the chat reaches the terminal room-ended state, the room page SHALL show a 
 - **THEN** the client reconnects and no ended notice or redirect occurs
 
 ### Requirement: Chat client joins with server-stamped identity
-On entering a room the portal SHALL open the room WebSocket at the same-origin path and send a `join` frame carrying the in-memory `creatorKey` if one is held for that stream. It SHALL render the `sender` and `role` returned in the server's `welcome` frame and SHALL NEVER send a role or infer which participant is the streamer. The `creatorKey` SHALL be read from memory only.
+On entering a room the portal SHALL open the room WebSocket at the same-origin path and send a `join` frame carrying the access **token** when the user is signed in (no token when anonymous — the `creatorKey` mechanism is retired). It SHALL render the `sender` and `role` returned in the server's `welcome` frame and SHALL NEVER send a role or infer which participant is the streamer.
 
-#### Scenario: Join carries a held creatorKey
-- **WHEN** the room is entered and a `creatorKey` for that stream is held in memory
-- **THEN** the `join` frame includes that `creatorKey`
+#### Scenario: Signed-in join carries the token
+- **WHEN** a signed-in user enters a room
+- **THEN** the `join` frame includes their access token
 
-#### Scenario: Join without a key
-- **WHEN** the room is entered with no held `creatorKey`
-- **THEN** the `join` frame is sent without a `creatorKey` and the client accepts whatever `sender`/`role` the `welcome` assigns
+#### Scenario: Anonymous join carries no token
+- **WHEN** an anonymous visitor enters a room
+- **THEN** the `join` frame is sent without a token and the connection is read-only (history + live messages)
 
 ### Requirement: History and live reconcile without gaps or duplicates
 On entry the portal SHALL open the WebSocket and buffer inbound live `message` frames first, then fetch the latest history page, then render that page and flush the buffer, de-duplicating by server message `id`, so that a message broadcast during the load window appears exactly once. Message `id`s are treated as server-authoritative for de-duplication.
@@ -96,19 +96,19 @@ Scrolling to the top of the chat SHALL load the previous page via the `nextCurso
 - **THEN** the previous page is fetched and prepended, and this repeats on further scroll-to-top until `nextCursor` is `null`, after which no further request is made
 
 ### Requirement: Composer validates before sending
-The composer SHALL be a single-line input that blocks sending when the trimmed text is empty or exceeds `CHAT_MAX_LENGTH` (500) Unicode code points, counted as `[...str].length`, showing calm inline validation and sending no frame. Valid text SHALL be sent as a `message` frame. The server enforces the same rules regardless, and an inbound `error` frame SHALL be shown calmly.
+The composer SHALL be shown ONLY to signed-in users; for anonymous visitors the composer area SHALL be replaced by a calm **"Sign in to chat"** affordance (they still read history and live messages). For a signed-in user the composer is a single-line input that blocks sending when the trimmed text is empty or exceeds `CHAT_MAX_LENGTH` (500) Unicode code points (`[...str].length`), showing calm inline validation and sending no frame; valid text is sent as a `message` frame. The server enforces the rules regardless, and an inbound `error` frame — including `"auth_required"` (e.g. a lapsed token) — SHALL be shown calmly, with `"auth_required"` prompting re-authentication.
 
-#### Scenario: Empty message blocked
-- **WHEN** the user tries to send empty or whitespace-only text
+#### Scenario: Anonymous sees a sign-in affordance
+- **WHEN** an anonymous visitor is in a room
+- **THEN** the composer area shows a calm "Sign in to chat" affordance instead of an input, and chat history and live messages are still readable
+
+#### Scenario: Empty or over-long message blocked
+- **WHEN** a signed-in user tries to send empty/whitespace or over-`CHAT_MAX_LENGTH` text
 - **THEN** no frame is sent and a calm inline validation message is shown
 
-#### Scenario: Over-long message blocked
-- **WHEN** the user tries to send text longer than `CHAT_MAX_LENGTH` code points
-- **THEN** no frame is sent and a calm inline validation message is shown
-
-#### Scenario: Server error frame shown calmly
-- **WHEN** the server returns an `error` frame for a sent message
-- **THEN** a calm inline message is shown and no message is added to the log
+#### Scenario: auth_required shown calmly
+- **WHEN** the server returns an `error` frame (including `"auth_required"`)
+- **THEN** a calm inline message is shown, no message is added to the log, and `"auth_required"` prompts re-authentication
 
 ### Requirement: Reconnect and room-ended handling
 On an unexpected WebSocket close the portal SHALL show a quiet "reconnecting" status and retry with a bounded backoff, re-sending `join` on reconnect (the assigned identity MAY change if no `creatorKey` is held, which is correct). When the room ends (a server `error` indicating the room ended, or a close following deletion) the portal SHALL move to a calm "ended" state and SHALL NOT keep reconnecting.
