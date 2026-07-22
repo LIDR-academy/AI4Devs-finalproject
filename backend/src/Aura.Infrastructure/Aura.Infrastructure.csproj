@@ -14,6 +14,7 @@
     <PackageReference Include="Minio" Version="7.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
     <PackageReference Include="StackExchange.Redis" Version="3.0.17" />
+    <PackageReference Include="Stripe.net" Version="52.1.0" />
   </ItemGroup>
 
   <PropertyGroup>

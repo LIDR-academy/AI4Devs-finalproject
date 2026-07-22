@@ -3,10 +3,11 @@ import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { EventService } from '../../../core/services/event.service';
 import { EventResponse } from '../../../core/models/event.model';
+import { PublishDialogComponent } from '../components/publish-dialog/publish-dialog';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, CommonModule, PublishDialogComponent],
   template: `
     <div style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -44,12 +45,23 @@ import { EventResponse } from '../../../core/models/event.model';
                      style="padding: 0.5rem 1rem; border: 1px solid #4f46e5; border-radius: 6px; text-decoration: none; color: #4f46e5; font-weight: 500; font-size: 0.875rem; text-align: center; flex: 1; background-color: #eef2ff;">
                     Stats
                   </a>
+                  <button *ngIf="event.status === 'Draft'" (click)="openPublishDialog(event)" 
+                     style="padding: 0.5rem 1rem; border: 1px solid #10b981; border-radius: 6px; text-decoration: none; color: white; font-weight: 500; font-size: 0.875rem; text-align: center; flex: 1; background-color: #10b981; cursor: pointer;">
+                    Publish
+                  </button>
                 </div>
               </div>
             </div>
           }
         </div>
       }
+
+      <app-publish-dialog 
+        *ngIf="selectedEventToPublish"
+        [eventSlug]="selectedEventToPublish.slug"
+        (close)="selectedEventToPublish = null"
+        (published)="onPublished()">
+      </app-publish-dialog>
     </div>
   `
 })
@@ -58,6 +70,7 @@ export default class DashboardPage implements OnInit {
   
   events = signal<EventResponse[]>([]);
   loading = signal(true);
+  selectedEventToPublish: EventResponse | null = null;
 
   ngOnInit() {
     this.eventService.getEvents().subscribe({
@@ -70,5 +83,14 @@ export default class DashboardPage implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  openPublishDialog(event: EventResponse) {
+    this.selectedEventToPublish = event;
+  }
+
+  onPublished() {
+    this.selectedEventToPublish = null;
+    this.ngOnInit(); // Refresh list to see updated status
   }
 }

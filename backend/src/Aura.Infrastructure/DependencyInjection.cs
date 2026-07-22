@@ -23,6 +23,8 @@ public static class DependencyInjection
                    .UseSnakeCaseNamingConvention();
         });
 
+        services.Configure<Aura.Core.Configuration.StripeOptions>(options => configuration.GetSection(Aura.Core.Configuration.StripeOptions.SectionName).Bind(options));
+
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserConsentRepository, UserConsentRepository>();
@@ -51,6 +53,8 @@ public static class DependencyInjection
         services.AddScoped<IInvitationService, InvitationService>();
         services.AddScoped<FluentValidation.IValidator<Aura.Core.DTOs.Guests.AddGuestRequest>, Aura.Core.Validators.Guests.AddGuestRequestValidator>();
         services.AddScoped<FluentValidation.IValidator<Aura.Core.DTOs.Guests.ImportGuestRow>, Aura.Core.Validators.Guests.ImportGuestRowValidator>();
+
+        services.AddScoped<IPaymentService, StripePaymentService>();
 
         services.AddScoped<Minio.IMinioClient>(sp => 
         {

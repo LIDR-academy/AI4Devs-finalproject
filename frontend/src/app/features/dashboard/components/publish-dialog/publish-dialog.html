@@ -1,0 +1,84 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in-up">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-100">
+      <h2 class="text-2xl font-semibold text-gray-800">Publish Event</h2>
+      <button (click)="onClose()" class="text-gray-400 hover:text-gray-600 transition-colors">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6">
+      
+      <!-- Step 1: Select Tier -->
+      <div *ngIf="clientSecret === null">
+        <p class="text-gray-600 mb-6">Select a tier to publish your event. This allows your guests to RSVP and receive updates.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Standard -->
+          <div (click)="selectTier(0)" 
+               class="border-2 rounded-xl p-5 cursor-pointer transition-all hover:border-indigo-500 hover:shadow-md"
+               [class.border-indigo-500]="selectedTier === 0"
+               [class.border-gray-200]="selectedTier !== 0">
+            <h3 class="text-lg font-semibold text-gray-800">Standard</h3>
+            <p class="text-2xl font-bold text-indigo-600 my-2">€19<span class="text-sm font-normal text-gray-500">.00</span></p>
+            <ul class="text-sm text-gray-600 space-y-2 mt-4">
+              <li class="flex items-center"><svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Publish event</li>
+              <li class="flex items-center"><svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> RSVPs tracking</li>
+            </ul>
+          </div>
+          
+          <!-- Premium -->
+          <div (click)="selectTier(1)" 
+               class="border-2 rounded-xl p-5 cursor-pointer transition-all hover:border-indigo-500 hover:shadow-md relative overflow-hidden"
+               [class.border-indigo-500]="selectedTier === 1"
+               [class.border-gray-200]="selectedTier !== 1">
+            <div class="absolute top-0 right-0 bg-indigo-500 text-white text-xs px-2 py-1 rounded-bl-lg font-medium">Popular</div>
+            <h3 class="text-lg font-semibold text-gray-800">Premium</h3>
+            <p class="text-2xl font-bold text-indigo-600 my-2">€29<span class="text-sm font-normal text-gray-500">.00</span></p>
+            <ul class="text-sm text-gray-600 space-y-2 mt-4">
+              <li class="flex items-center"><svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Everything in Standard</li>
+              <li class="flex items-center"><svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> WhatsApp Integration</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+          <button (click)="onClose()" class="px-5 py-2 text-gray-600 hover:text-gray-800 font-medium mr-3">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="flex flex-col items-center justify-center py-10">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        <p class="text-gray-500 mt-4">Initializing secure payment...</p>
+      </div>
+
+      <!-- Step 2: Payment Form -->
+      <div *ngIf="clientSecret !== null && !loading" class="animate-fade-in">
+        <div *ngIf="error" class="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
+          {{ error }}
+        </div>
+
+        <div #paymentElement class="mb-6 min-h-[200px]"></div>
+
+        <div class="flex justify-end gap-3 mt-6">
+          <button (click)="clientSecret = null; selectedTier = null" [disabled]="processing" class="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors disabled:opacity-50">Back</button>
+          <button (click)="submitPayment()" [disabled]="processing || !paymentElement" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm transition-all flex items-center disabled:opacity-50">
+            <span *ngIf="processing" class="mr-2">
+              <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            {{ processing ? 'Processing...' : 'Pay & Publish' }}
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
