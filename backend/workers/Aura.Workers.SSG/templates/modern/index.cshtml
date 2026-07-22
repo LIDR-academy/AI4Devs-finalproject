@@ -1,0 +1,65 @@
+@using Aura.Core.Models
+@model Event
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.CoupleNames - Wedding Invitation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=@Model.Template?.FontFamily:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="classic-theme">
+    <header class="hero">
+        <div class="hero-content">
+            <h1>@Model.CoupleNames</h1>
+            <p>Are getting married</p>
+        </div>
+    </header>
+
+    <main>
+        <section class="details">
+            <h2>The Details</h2>
+            <p><strong>Date:</strong> @Model.EventDate.ToString("D")</p>
+            <p><strong>Venue:</strong> @Model.VenueName</p>
+            <p>@Model.VenueAddress</p>
+        </section>
+
+        <section class="rsvp-section">
+            <h2>RSVP</h2>
+            <p>Please let us know if you can make it.</p>
+            <!-- In a real app this would use a token or ask for email. For the template we just link to a generic RSVP or rely on app.js to append the token -->
+            <a href="/rsvp" id="rsvp-btn" class="btn btn-primary">RSVP Now</a>
+        </section>
+
+        <section class="map-section">
+            <h2>Location</h2>
+            <iframe
+                width="100%"
+                height="400"
+                frameborder="0" style="border:0"
+                src="https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=@Uri.EscapeDataString(Model.VenueAddress)" allowfullscreen>
+            </iframe>
+            <div class="actions">
+                <a href="https://www.google.com/maps/dir/?api=1&destination=@Uri.EscapeDataString(Model.VenueAddress)" target="_blank" class="btn btn-secondary">Get Directions</a>
+                <a href="#" id="add-to-calendar-btn" class="btn btn-secondary">Add to Calendar</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; @DateTime.UtcNow.Year @Model.CoupleNames</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        window.eventData = {
+            name: '@Model.Name',
+            date: '@Model.EventDate.ToString("O")',
+            venue: '@Model.VenueName',
+            address: '@Model.VenueAddress'
+        };
+    </script>
+</body>
+</html>
