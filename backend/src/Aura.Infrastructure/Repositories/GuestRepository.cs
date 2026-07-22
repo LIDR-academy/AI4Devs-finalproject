@@ -6,7 +6,7 @@ namespace Aura.Infrastructure.Repositories;
 
 public class GuestRepository : Repository<Guest>, IGuestRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly new ApplicationDbContext _context;
 
     public GuestRepository(ApplicationDbContext context) : base(context)
     {

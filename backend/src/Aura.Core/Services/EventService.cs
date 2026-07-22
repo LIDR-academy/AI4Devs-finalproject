@@ -11,15 +11,18 @@ public class EventService : IEventService
     private readonly IEventRepository _eventRepository;
     private readonly ISlugGenerator _slugGenerator;
     private readonly IDataRetentionJobRepository _jobRepository;
+    private readonly IMessageTemplateService _messageTemplateService;
     
     public EventService(
         IEventRepository eventRepository,
         ISlugGenerator slugGenerator,
-        IDataRetentionJobRepository jobRepository)
+        IDataRetentionJobRepository jobRepository,
+        IMessageTemplateService messageTemplateService)
     {
         _eventRepository = eventRepository;
         _slugGenerator = slugGenerator;
         _jobRepository = jobRepository;
+        _messageTemplateService = messageTemplateService;
     }
 
     public async Task<EventResponse> CreateEventAsync(Guid userId, CreateEventRequest request)
@@ -99,7 +102,13 @@ public class EventService : IEventService
         
         if (request.Status.HasValue)
         {
+            var oldStatus = ev.Status;
             ev.Status = request.Status.Value;
+
+            if (oldStatus != EventStatus.Published && ev.Status == EventStatus.Published)
+            {
+                await _messageTemplateService.CreateDefaultTemplatesAsync(ev.Id);
+            }
         }
 
         ev.UpdatedAt = DateTimeOffset.UtcNow;
