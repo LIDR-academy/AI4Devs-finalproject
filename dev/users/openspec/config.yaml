@@ -1,0 +1,48 @@
+schema: spec-driven
+
+# Service context — shown to AI when creating artifacts (proposals, specs, tasks) for the users scope.
+context: |
+  SERVICE: users — user management and persistence for QuickChat.
+  This service is the SINGLE SOURCE OF TRUTH for what a "user" is; every other
+  service treats it as authoritative for user data.
+
+  STACK: Go API + MongoDB.
+
+  EXTERNAL SYSTEM:
+  - MongoDB — the only external system this service integrates with (user persistence).
+
+  PEER / INTEGRATION SEAM (cross-scope wire contract — agreed up front, never changed unilaterally):
+  - security -> users: create-user command on a user's first authentication.
+    MUST be idempotent — security retrying the command never produces a duplicate user.
+    Schema/document-shape changes are contract changes, resolved in a feature's contract
+    phase with the team lead, never improvised.
+
+  SCOPE BOUNDARY:
+  - Create/modify files ONLY inside dev/users/. Never touch another scope or the root openspec.
+  - Own this service's Dockerfile; devops only consumes it. Config from the environment only
+    (no MongoDB credentials baked into code or image).
+
+  ENGINEERING BASELINE (from the constitution — law):
+  - Boring, obvious code; no speculative abstractions; touch only files related to the task.
+  - Tests are non-negotiable and ship with every change (happy + error paths). Never skip/disable a test.
+  - Never log PII or any personal/user data. Validate every inbound command at the boundary.
+  - MongoDB access sits behind a small interface with a hand-written fake for unit tests.
+  - Integration tests (real MongoDB) are separated from the default `go test ./...` run
+    (build tag or dedicated folder).
+  - Go: gofmt + go vet + golangci-lint + `go test -race ./...` clean; go.mod tidy; every goroutine
+    has a stop path; context.Context is the first param on every I/O path, never stored in a struct.
+
+# Per-artifact rules applied when generating openspec artifacts in this scope.
+rules:
+  proposal:
+    - "State the change belongs to the users scope; flag any cross-scope wire contract (security -> users) explicitly."
+    - "Include a Non-goals section."
+    - "Resolve cross-scope contracts (with the team lead) before implementation, not during it."
+  specs:
+    - "Specify behavior, not implementation; cover error paths, not just the happy path."
+    - "Define and validate every external input (create-user command payload, env vars) at the boundary."
+    - "Create-user behavior must be idempotent; specify the uniqueness/dedup rule explicitly."
+  tasks:
+    - "Every task stays inside the users scope."
+    - "Each unit of work ships with its tests; no task is done without them."
+    - "Definition of Done requires evidence: root cause (for bugs) -> change -> test that proves it -> full-suite result (gofmt/go vet/golangci-lint/go test -race ./... clean). Never a bare done."

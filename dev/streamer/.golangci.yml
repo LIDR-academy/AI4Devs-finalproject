@@ -1,0 +1,8 @@
+# golangci-lint v2 configuration for the streamer service.
+# Boring and standard: the default linter set plus misspell.
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - misspell

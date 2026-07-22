@@ -1,0 +1,69 @@
+schema: spec-driven
+
+# Project context — shown to AI when creating artifacts (proposals, specs, tasks).
+context: |
+  SERVICE: qc-portal — the frontend portal of QuickChat, a live streaming + chat platform.
+  This openspec governs qc-portal's own feature workflow only (proposal -> spec -> tasks ->
+  implementation). Orchestration and cross-scope history live in the team lead's root openspec.
+
+  USERS: Publishers (create/manage rooms and streams) and Subscribers (watch and chat).
+
+  STACK: TypeScript, Vite, VanJS, Bun (runtime, package manager, test runner, bundler),
+  Tailwind (utilities compose the design tokens; version resolved at scaffolding).
+
+  COMPONENTS:
+  - Login       — authentication UI; requests magic links from the security service.
+  - Streamings  — lists and manages streams via the streamer service.
+  - Rooms       — in-room experience: media via LiveKit SFU, chat via the streamer service.
+
+  PEERS / EXTERNAL SYSTEMS I CONSUME (I never edit their scope; contracts are agreed up front):
+  - security -> magic-link request/verify (JSON/HTTP); session/token returned to the portal.
+  - streamer -> streams list/manage + rooms (JSON/HTTP); chat (WebSocket frames).
+  - LiveKit SFU -> room media (WebRTC).
+
+  BOUNDARY: I create/modify files only inside dev/qc-portal/. I may READ other services' API
+  contracts to consume them, but never modify anything outside my scope, and never change a wire
+  contract unilaterally. Cross-scope needs go through the team lead (recorded in the root openspec)
+  or direct-to-owner with the team lead informed.
+
+  DOCKER: I own qc-portal's Dockerfile (multi-stage: Bun install/build -> minimal static-serving
+  image). devops consumes it; build/port/env issues are my fix, coordinated with devops.
+  Config comes from environment variables, never baked in.
+
+  GOVERNANCE:
+  - The code constitution (CONSTITUTION.md + CONSTITUTION.ts.md + CONSTITUTION.style.md) is law.
+  - Openspec first: proposal -> spec -> tasks -> implementation. Jumping straight to code is forbidden.
+
+  STYLE LAW (CONSTITUTION.style.md, qc-portal only): token-only palette (ink/paper/surface + grays),
+  no arbitrary colors, no accent color; WCAG AA contrast; border-radius 0, 1px hairline borders,
+  no shadows/gradients/blurs; Inter + JetBrains Mono, fixed 12/14/16/20/28/40 scale, weights 400/600;
+  calm-or-nothing motion respecting prefers-reduced-motion; dark mode out of scope.
+
+  DEFINITION OF DONE (essentials):
+  - tsc --noEmit clean in strict mode (strict + noUncheckedIndexedAccess); no `any`; no unjustified
+    `as` / `!` / `@ts-ignore`.
+  - bun test passes; new behavior covered incl. error paths; no skipped/deleted tests.
+  - Formatter + linter clean, no inline rule disables.
+  - Side effects (fetch, WebSocket, storage) live in dedicated modules, not UI components.
+  - All wire messages (HTTP payloads, WS frames) typed and validated at the boundary.
+  - Style-law compliance verified before shipping any UI (the CONSTITUTION.style.md litmus test).
+  - Public functions/types/modules documented; README current (bun install / run / test, env vars).
+  - Diff scoped to the task only; bun.lock changes only for intentional, justified deps.
+  - Bugs: failing test reproduces -> root cause -> fix -> prove; regression test stays. Never a bare "done".
+
+# Per-artifact rules applied when qc-portal generates openspec artifacts.
+rules:
+  proposal:
+    - 'State which components (Login, Streamings, Rooms) the change touches.'
+    - 'Flag every cross-scope wire contract (security, streamer, LiveKit) explicitly; resolve it before implementation, not during. The wire contract is law once frozen.'
+    - 'Include a Non-goals section.'
+  design:
+    - 'Record how the portal implements the frozen contract; never restate the contract as changeable.'
+    - 'Cover style-law implications (tokens, components, motion) and self-owned concerns (SPA fallback, modal, Tailwind version).'
+  specs:
+    - 'Specify behavior, not implementation; cover error paths, not just the happy path.'
+    - 'Type and validate every external input (HTTP payload, WebSocket frame, env var) at the boundary.'
+  tasks:
+    - 'Each unit of work ships with its tests; no task is done without them.'
+    - 'Include an explicit style-law compliance step for any UI deliverable.'
+    - 'Definition of Done requires evidence — change, the test that proves it, and tsc --noEmit + bun test + linter results. Never a bare done.'

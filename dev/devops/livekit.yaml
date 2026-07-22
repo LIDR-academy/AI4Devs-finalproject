@@ -1,0 +1,47 @@
+# LiveKit dev configuration for QuickChat (stream-media-v0).
+# DEV ONLY — localhost-oriented. Uses a dev coturn TURN server (see coturn.conf +
+# docker-compose.yml) for reliable browser media on Docker Desktop macOS; NO TLS,
+# static dev creds. Production LiveKit/TURN/TLS/host-networking remains a separately
+# deferred hardening feature. Run with `--dev` (well-known devkey/secret pair).
+
+port: 7880              # WebSocket signaling (browser) + HTTP/Twirp server API (streamer)
+
+rtc:
+  tcp_port: 7881        # direct ICE/TCP candidate (published)
+  udp_port: 7882        # direct ICE/UDP candidate (published)
+  use_external_ip: false # localhost dev: do not STUN for a public IP; LiveKit
+                         # advertises its own container (Docker-internal) IP.
+  # NOTE: we deliberately do NOT set node_ip: 127.0.0.1 here. With TURN, all real
+  # browser media relays through coturn, and coturn (another container) must be able
+  # to deliver that media TO LiveKit — which requires LiveKit's Docker-internal IP,
+  # NOT 127.0.0.1 (from coturn's container, 127.0.0.1 is coturn's own loopback). By
+  # letting LiveKit advertise its container IP, both relay legs use reachable Docker
+  # addresses (browser -> coturn:3478 control -> coturn -> livekit-docker-ip, and
+  # livekit -> coturn-relay 172.20.x). The host browser can't reach the Docker IP
+  # directly, so it simply uses the TURN relay — which is the whole point.
+  # ICE-Lite: LiveKit is a passive agent (the browser drives ICE onto the relay).
+  use_ice_lite: true
+  # DEV TURN (stream-media-v0, root D10): on Docker Desktop macOS the DIRECT paths
+  # are unreliable for real browsers (mDNS-hidden host candidates + flaky UDP
+  # reflection; TCP-only can't be forced reliably). Advertise the dev coturn server
+  # so the browser gets a TURN RELAY candidate over TCP and media relays reliably,
+  # bypassing the direct-path problem. Browsers try direct first, then fall back to
+  # this relay. `host` is browser-facing (localhost:3478 published); coturn relays
+  # to LiveKit over the internal compose network. DEV creds; not production.
+  turn_servers:
+    - host: localhost
+      port: 3478
+      protocol: tcp
+      username: devuser
+      credential: devpass
+
+# LiveKit -> streamer participant/room webhooks (server-to-server, internal network,
+# NOT through nginx, NOT browser-facing). Signed with the dev API key; streamer
+# verifies the signature. Powers streamer's auto-reap of abandoned rooms.
+webhook:
+  api_key: devkey
+  urls:
+    - http://streamer:8080/livekit/webhook
+
+logging:
+  level: info

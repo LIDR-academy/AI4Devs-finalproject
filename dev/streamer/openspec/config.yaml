@@ -1,0 +1,57 @@
+schema: spec-driven
+
+# Service context — shown to AI when creating artifacts (proposals, specs, tasks) for the streamer scope.
+context: |
+  SERVICE: streamer — the real-time core of QuickChat (a live streaming + chat platform).
+  Owns rooms, chat, and stream lifecycle. Stack: Go. Scope folder: dev/streamer/ (this teammate
+  never edits another scope; cross-scope needs are requested through the team lead or the owning teammate).
+
+  COMPONENTS:
+  - Stream [Go package] — receives publisher media streams from LiveKit SFU (WebRTC media).
+  - Rooms  [Go package] — room lifecycle (create/delete), requested by qc-portal over JSON/HTTP;
+    room state backed by Valkey.
+  - Chats  [Go package] — read/write chat messages with qc-portal over WebSocket; message
+    fan-out/state via Valkey.
+  - Auth   [Go package] — obtains room tokens: requests them from the security service over JSON/HTTP
+    when the portal asks for a room's token.
+
+  EXTERNAL SYSTEMS:
+  - LiveKit SFU — WebRTC media (publisher streams).
+  - Valkey — real-time room/chat state and pub/sub fan-out.
+
+  PEERS & INTEGRATION SEAMS (cross-scope wire contracts — agreed up front, never changed unilaterally):
+  - qc-portal -> streamer: streams/rooms management (JSON/HTTP); chat (WebSocket frames). streamer serves these.
+  - streamer -> security: fetch room token (JSON/HTTP); claims, TTL, signing handled by security.
+  - OPEN: who issues the LiveKit access token (security vs streamer) — resolve in a feature's contract phase.
+
+  GOVERNANCE:
+  - The code constitution (code-constitution/CONSTITUTION.md + .go.md) is law.
+  - This scope runs its own openspec workflow: proposal -> spec -> tasks -> implementation.
+    Jumping straight to code is forbidden. The root openspec (team lead) remains the orchestration source of truth.
+
+  DEFINITION OF DONE (streamer essentials, from the constitution):
+  - gofmt + go vet + golangci-lint clean; `go test -race ./...` passes; `go mod tidy` produces no diff.
+  - Every goroutine has a defined owner and stop path; every WebSocket read/write pump and Valkey
+    subscriber selects on ctx.Done(). A dropped client leaks no goroutine and no Valkey subscription.
+  - context.Context is the first parameter on every I/O path; never stored in a struct.
+  - Every inbound WebSocket frame is validated at the boundary; malformed frames are handled, not crashed on.
+  - Tests cover happy + error paths; no disabled/skipped tests; no time.Sleep for synchronization.
+  - Config comes from environment variables only; no secrets/tokens/PII in code, fixtures, or logs.
+  - streamer owns its own Dockerfile (multi-stage build -> minimal image); devops only consumes it.
+  - Bug fixes: reproduce with a failing test -> root cause -> smallest fix -> prove (regression test + full suite).
+
+# Per-artifact rules applied when generating openspec artifacts for this scope.
+rules:
+  proposal:
+    - State that the change is in the streamer scope; flag every cross-scope wire contract (qc-portal, security) explicitly.
+    - Include a "Non-goals" section.
+    - Resolve cross-scope contracts before implementation, coordinated through the team lead.
+  specs:
+    - Specify behavior, not implementation; cover error paths, not just the happy path.
+    - Define and validate every external input (HTTP payload, WebSocket frame, env var) at the boundary.
+    - Every concurrency-bearing behavior states its goroutine owner, stop path, and ctx.Done() handling.
+  tasks:
+    - Every task stays inside the streamer scope.
+    - Each unit of work ships with its tests; no task is "done" without them.
+    - Definition of Done requires evidence - root cause (for bugs), the change, the test that proves it,
+      and the full-suite result (go test -race ./..., go vet, golangci-lint). Never a bare "done".

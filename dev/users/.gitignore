@@ -1,0 +1,8 @@
+# Build output
+/out/
+/bin/
+users
+
+# Local environment files — never commit secrets or credentials
+.env
+*.env

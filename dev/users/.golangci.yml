@@ -1,0 +1,9 @@
+version: "2"
+
+# Boring, standard linting for the users service. The default set (errcheck,
+# govet, ineffassign, staticcheck, unused) plus misspell. No rules are disabled
+# to make code pass — fix the code instead.
+linters:
+  default: standard
+  enable:
+    - misspell

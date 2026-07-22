@@ -1,0 +1,2 @@
+# Local environment overrides — never commit. Use .env.example as the template.
+.env

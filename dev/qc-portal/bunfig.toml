@@ -1,0 +1,3 @@
+[test]
+# Register a DOM (happy-dom) so VanJS components can be rendered and asserted in bun test.
+preload = ["./happydom.ts"]
