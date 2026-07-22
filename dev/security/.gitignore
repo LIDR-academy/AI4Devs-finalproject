@@ -1,0 +1,8 @@
+# Real environment files carry secrets (SuperTokens API key) — never commit them.
+.env
+.env.*
+!.env.example
+
+# Build output
+/security
+/out/

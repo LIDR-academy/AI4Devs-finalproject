@@ -1,0 +1,8 @@
+# Keep secrets and local cruft out of the build context.
+.env
+.env.*
+!.env.example
+.git
+*_test.go
+openspec
+README.md
