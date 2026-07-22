@@ -29,6 +29,9 @@ authentication:
       sdk: FirebaseAuth.createUserWithEmailAndPassword
     signOut:
       sdk: FirebaseAuth.signOut
+    sendPasswordResetEmail:
+      sdk: FirebaseAuth.sendPasswordResetEmail
+      usage: Diálogo "¿Olvidaste tu contraseña?" sobre SignInPage (LPT-25)
     authStateChanges:
       sdk: FirebaseAuth.authStateChanges
       usage: BLoC de sesión / navegación condicional

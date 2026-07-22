@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:la_pocha/features/auth/domain/entities/user_profile.dart';
 import 'package:la_pocha/features/auth/domain/failures/auth_failure.dart' as domain;
 import 'package:la_pocha/features/auth/domain/repositories/auth_repository.dart';
+import 'package:la_pocha/features/auth/domain/usecases/send_password_reset_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_in_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_up_usecase.dart';
@@ -18,11 +19,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this._signIn,
     required this._signUp,
     required this._signOut,
+    required this._sendPasswordReset,
   }) : super(const AuthInitial()) {
     on<AuthStarted>(_onStarted);
     on<SignInSubmitted>(_onSignInSubmitted);
     on<SignUpSubmitted>(_onSignUpSubmitted);
     on<SignOutRequested>(_onSignOutRequested);
+    on<PasswordResetRequested>(_onPasswordResetRequested);
     on<_AuthUserChanged>(_onAuthUserChanged);
   }
 
@@ -30,6 +33,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInUseCase _signIn;
   final SignUpUseCase _signUp;
   final SignOutUseCase _signOut;
+  final SendPasswordResetUseCase _sendPasswordReset;
   StreamSubscription<UserProfile?>? _authSubscription;
 
   Future<void> _onStarted(
@@ -101,6 +105,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(const Unauthenticated());
       }
+    }
+  }
+
+  Future<void> _onPasswordResetRequested(
+    PasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      await _sendPasswordReset(email: event.email);
+      emit(const PasswordResetEmailSent());
+      emit(const Unauthenticated());
+    } on domain.AuthFailure catch (error) {
+      emit(AuthFailure(message: error.message));
+      emit(const Unauthenticated());
     }
   }
 

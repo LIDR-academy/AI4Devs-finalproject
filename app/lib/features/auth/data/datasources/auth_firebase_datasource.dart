@@ -38,11 +38,25 @@ class AuthFirebaseDatasource {
     return _wrapAuthCall(_auth.signOut);
   }
 
+  Future<void> sendPasswordResetEmail(String email) {
+    return _wrapPasswordResetCall(
+      () => _auth.sendPasswordResetEmail(email: email),
+    );
+  }
+
   Future<T> _wrapAuthCall<T>(Future<T> Function() action) async {
     try {
       return await action();
     } on FirebaseAuthException catch (error) {
       throw _mapAuthException(error);
+    }
+  }
+
+  Future<T> _wrapPasswordResetCall<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } on FirebaseAuthException catch (error) {
+      throw _mapPasswordResetException(error);
     }
   }
 
@@ -54,6 +68,16 @@ class AuthFirebaseDatasource {
       'user-not-found' ||
       'invalid-email' =>
         const InvalidCredentialsFailure(),
+      'network-request-failed' => const NetworkUnavailableFailure(),
+      _ => UnknownAuthFailure(error.message ?? 'Ha ocurrido un error inesperado'),
+    };
+  }
+
+  AuthFailure _mapPasswordResetException(FirebaseAuthException error) {
+    return switch (error.code) {
+      'user-not-found' => const UserNotFoundFailure(),
+      'invalid-email' =>
+        const ValidationFailure('Introduce un email válido'),
       'network-request-failed' => const NetworkUnavailableFailure(),
       _ => UnknownAuthFailure(error.message ?? 'Ha ocurrido un error inesperado'),
     };

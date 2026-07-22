@@ -85,6 +85,17 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> signOut() => _authDatasource.signOut();
 
   @override
+  Future<void> sendPasswordReset({required String email}) async {
+    try {
+      await _authDatasource.sendPasswordResetEmail(email);
+    } on AuthFailure {
+      rethrow;
+    } catch (error) {
+      throw UnknownAuthFailure(error.toString());
+    }
+  }
+
+  @override
   Future<UserProfile?> getCurrentUser() async {
     final user = _authDatasource.currentUser;
     if (user == null) {

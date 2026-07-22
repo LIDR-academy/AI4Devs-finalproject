@@ -3,6 +3,7 @@ import 'package:la_pocha/features/auth/domain/entities/user_profile.dart';
 import 'package:la_pocha/features/auth/domain/failures/auth_failure.dart'
     as domain;
 import 'package:la_pocha/features/auth/domain/repositories/auth_repository.dart';
+import 'package:la_pocha/features/auth/domain/usecases/send_password_reset_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_in_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_up_usecase.dart';
@@ -18,12 +19,14 @@ import 'auth_bloc_test.mocks.dart';
   MockSpec<SignInUseCase>(),
   MockSpec<SignUpUseCase>(),
   MockSpec<SignOutUseCase>(),
+  MockSpec<SendPasswordResetUseCase>(),
 ])
 void main() {
   late MockAuthRepository authRepository;
   late MockSignInUseCase signIn;
   late MockSignUpUseCase signUp;
   late MockSignOutUseCase signOut;
+  late MockSendPasswordResetUseCase sendPasswordReset;
 
   final profile = UserProfile(
     uid: 'uid-1',
@@ -38,6 +41,7 @@ void main() {
         signIn: signIn,
         signUp: signUp,
         signOut: signOut,
+        sendPasswordReset: sendPasswordReset,
       );
 
   setUp(() {
@@ -45,6 +49,7 @@ void main() {
     signIn = MockSignInUseCase();
     signUp = MockSignUpUseCase();
     signOut = MockSignOutUseCase();
+    sendPasswordReset = MockSendPasswordResetUseCase();
     when(authRepository.authStateChanges).thenAnswer((_) => const Stream.empty());
   });
 
@@ -137,6 +142,40 @@ void main() {
     act: (bloc) => bloc.add(const AuthStarted()),
     expect: () => [
       Authenticated(profile),
+    ],
+  );
+
+  blocTest<AuthBloc, AuthState>(
+    'emits PasswordResetEmailSent then Unauthenticated when reset succeeds',
+    build: buildBloc,
+    setUp: () {
+      when(sendPasswordReset(email: 'ana@example.com'))
+          .thenAnswer((_) async {});
+    },
+    act: (bloc) => bloc.add(
+      const PasswordResetRequested(email: 'ana@example.com'),
+    ),
+    expect: () => [
+      const PasswordResetEmailSent(),
+      const Unauthenticated(),
+    ],
+  );
+
+  blocTest<AuthBloc, AuthState>(
+    'emits AuthFailure then Unauthenticated when reset fails',
+    build: buildBloc,
+    setUp: () {
+      when(sendPasswordReset(email: 'missing@example.com'))
+          .thenThrow(const domain.UserNotFoundFailure());
+    },
+    act: (bloc) => bloc.add(
+      const PasswordResetRequested(email: 'missing@example.com'),
+    ),
+    expect: () => [
+      const AuthFailure(
+        message: 'No hay ninguna cuenta asociada a este email.',
+      ),
+      const Unauthenticated(),
     ],
   );
 }

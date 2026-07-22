@@ -72,6 +72,7 @@ import 'package:la_pocha/features/auth/data/datasources/user_firestore_datasourc
 import 'package:la_pocha/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:la_pocha/features/auth/domain/repositories/auth_repository.dart';
 import 'package:la_pocha/features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'package:la_pocha/features/auth/domain/usecases/send_password_reset_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_in_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_up_usecase.dart';
@@ -128,6 +129,10 @@ Future<void> configureDependencies() async {
     () => GetCurrentUserUseCase(getIt<AuthRepository>()),
   );
 
+  getIt.registerLazySingleton<SendPasswordResetUseCase>(
+    () => SendPasswordResetUseCase(getIt<AuthRepository>()),
+  );
+
   getIt.registerLazySingleton<GameFirestoreDatasource>(
     () => GameFirestoreDatasource(getIt<FirebaseFirestore>()),
   );
@@ -167,6 +172,7 @@ Future<void> configureDependencies() async {
       signIn: getIt<SignInUseCase>(),
       signUp: getIt<SignUpUseCase>(),
       signOut: getIt<SignOutUseCase>(),
+      sendPasswordReset: getIt<SendPasswordResetUseCase>(),
     ),
   );
 

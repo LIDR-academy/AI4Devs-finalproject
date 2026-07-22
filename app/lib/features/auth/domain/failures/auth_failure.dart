@@ -17,9 +17,14 @@ final class InvalidCredentialsFailure extends AuthFailure {
       : super('Email o contraseña incorrectos');
 }
 
+final class UserNotFoundFailure extends AuthFailure {
+  const UserNotFoundFailure()
+      : super('No hay ninguna cuenta asociada a este email.');
+}
+
 final class NetworkUnavailableFailure extends AuthFailure {
   const NetworkUnavailableFailure()
-      : super('Sin conexión. Comprueba tu red');
+      : super('Comprueba tu conexión e inténtalo de nuevo.');
 }
 
 final class ValidationFailure extends AuthFailure {

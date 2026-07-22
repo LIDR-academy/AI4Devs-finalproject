@@ -43,6 +43,15 @@ final class SignOutRequested extends AuthEvent {
   const SignOutRequested();
 }
 
+final class PasswordResetRequested extends AuthEvent {
+  const PasswordResetRequested({required this.email});
+
+  final String email;
+
+  @override
+  List<Object?> get props => [email];
+}
+
 final class _AuthUserChanged extends AuthEvent {
   const _AuthUserChanged(this.user);
 

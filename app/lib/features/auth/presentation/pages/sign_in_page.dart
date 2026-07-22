@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
 import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:la_pocha/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:la_pocha/features/auth/presentation/widgets/forgot_password_dialog.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -43,6 +44,16 @@ class _SignInPageState extends State<SignInPage> {
         if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
+          );
+        }
+        if (state is PasswordResetEmailSent) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Te hemos enviado un email para restablecer tu contraseña. '
+                'Revisa tu bandeja de entrada.',
+              ),
+            ),
           );
         }
         if (state is Authenticated) {
@@ -138,6 +149,15 @@ class _SignInPageState extends State<SignInPage> {
                                   : const Text('Entrar'),
                             ),
                             const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () => showForgotPasswordDialog(
+                                        context,
+                                        initialEmail: _emailController.text,
+                                      ),
+                              child: const Text('¿Olvidaste tu contraseña?'),
+                            ),
                             TextButton(
                               onPressed: isLoading
                                   ? null

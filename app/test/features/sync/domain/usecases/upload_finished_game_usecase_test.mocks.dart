@@ -133,6 +133,15 @@ class MockAuthRepository extends _i1.Mock implements _i6.AuthRepository {
           as _i7.Future<void>);
 
   @override
+  _i7.Future<void> sendPasswordReset({required String? email}) =>
+      (super.noSuchMethod(
+            Invocation.method(#sendPasswordReset, [], {#email: email}),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
   _i7.Future<_i2.UserProfile?> getCurrentUser() =>
       (super.noSuchMethod(
             Invocation.method(#getCurrentUser, []),
