@@ -3,6 +3,7 @@ import { Complexity } from "@prisma/client";
 import { AddUseCaseInput, CreateProjectInput, GenerateEstimateInput } from "./types";
 import { env } from "../../config/env";
 import { z } from "zod";
+import { telemetry } from "../../lib/telemetry";
 
 export const createProject = async (input: CreateProjectInput) => {
   return repository.createProject(input);
@@ -137,6 +138,16 @@ const calculateTokenCost = (promptTokens: number, completionTokens: number) => {
   return Math.round((promptCost + completionCost) * 10000) / 10000;
 };
 
+const estimateHeuristicTokenBreakdown = (totalTokens: number) => {
+  const promptTokens = Math.round(totalTokens * 0.7);
+  const completionTokens = Math.max(totalTokens - promptTokens, 0);
+
+  return {
+    promptTokens,
+    completionTokens
+  };
+};
+
 const generateHeuristicEstimate = (
   project: NonNullable<ProjectEstimationContext>,
   input: GenerateEstimateInput,
@@ -174,7 +185,8 @@ const generateHeuristicEstimate = (
 
   const model = input.model ?? "gpt-4o-mini";
   const projectedTokens = Math.round(1200 * complexityFactor * useCaseFactor + selectedRoles.length * 300);
-  const tokenCost = Math.round((projectedTokens / 1000) * 0.01 * 10000) / 10000;
+  const tokenBreakdown = estimateHeuristicTokenBreakdown(projectedTokens);
+  const tokenCost = calculateTokenCost(tokenBreakdown.promptTokens, tokenBreakdown.completionTokens);
   const laborCost = Math.round(totalHours * 45 * 100) / 100;
   const totalCost = Math.round((laborCost + tokenCost) * 100) / 100;
 
@@ -374,10 +386,22 @@ export const generateEstimate = async (projectId: string, input: GenerateEstimat
   }
 
   let estimation = null;
+  let fallbackReason: string | undefined;
 
   try {
     estimation = await generateAzureEstimate(project, input);
-  } catch {
+  } catch (error) {
+    fallbackReason = "azure-request-failed-or-invalid-output";
+    const message = error instanceof Error ? error.message : "unknown error";
+    console.warn(
+      JSON.stringify({
+        level: "warn",
+        message: "estimation.azure_fallback",
+        projectId,
+        reason: fallbackReason,
+        detail: message
+      })
+    );
     estimation = null;
   }
 
@@ -386,8 +410,15 @@ export const generateEstimate = async (projectId: string, input: GenerateEstimat
     generateHeuristicEstimate(
       project,
       input,
-      env.AZURE_OPENAI_ENABLED ? "azure-request-failed-or-invalid-output" : "azure-disabled"
+      fallbackReason ?? (env.AZURE_OPENAI_ENABLED ? "azure-not-configured" : "azure-disabled")
     );
+
+  telemetry.recordEstimationRun({
+    usedFallback: !estimation,
+    fallbackReason: !estimation
+      ? fallbackReason ?? (env.AZURE_OPENAI_ENABLED ? "azure-not-configured" : "azure-disabled")
+      : undefined
+  });
 
   return repository.upsertEstimation({
     projectId,

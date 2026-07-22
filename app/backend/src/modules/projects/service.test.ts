@@ -12,12 +12,15 @@ vi.mock("./repository", () => ({
 
 import * as repository from "./repository";
 import { generateEstimate } from "./service";
+import { telemetry } from "../../lib/telemetry";
 
 const mockedRepository = vi.mocked(repository);
+const telemetrySpy = vi.spyOn(telemetry, "recordEstimationRun");
 
 describe("projects service generateEstimate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    telemetrySpy.mockClear();
   });
 
   it("throws 404 when project does not exist", async () => {
@@ -75,5 +78,9 @@ describe("projects service generateEstimate", () => {
     expect(payload.phases.length).toBeGreaterThanOrEqual(3);
     expect(payload.assumptions).toContain("Generation mode: heuristic fallback");
     expect(payload.token.tokens).toBeGreaterThan(0);
+    expect(telemetrySpy).toHaveBeenCalledWith({
+      usedFallback: true,
+      fallbackReason: "azure-disabled"
+    });
   });
 });

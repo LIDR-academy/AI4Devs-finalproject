@@ -155,13 +155,39 @@ describe("attachActorContext", () => {
 
   it("falls back to local dev actor when auth is disabled", async () => {
     const attachActorContext = await loadAttachActorContext(false);
-    const req = createRequest({}) as unknown as { actorId?: string; header: (name: string) => string | undefined };
+    const req = createRequest({}) as unknown as {
+      actorId?: string;
+      actorName?: string;
+      actorRole?: string;
+      header: (name: string) => string | undefined;
+    };
     const res = createResponse();
     const next = vi.fn();
 
     await attachActorContext(req as never, res as never, next);
 
     expect(req.actorId).toBe("local-dev-actor");
+    expect(req.actorName).toBe("local-dev-actor");
+    expect(req.actorRole).toBe("ADMIN");
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it("ignores x-actor-id header when auth is disabled", async () => {
+    const attachActorContext = await loadAttachActorContext(false);
+    const req = createRequest({ "x-actor-id": "spoofed-actor" }) as unknown as {
+      actorId?: string;
+      actorName?: string;
+      actorRole?: string;
+      header: (name: string) => string | undefined;
+    };
+    const res = createResponse();
+    const next = vi.fn();
+
+    await attachActorContext(req as never, res as never, next);
+
+    expect(req.actorId).toBe("local-dev-actor");
+    expect(req.actorName).toBe("local-dev-actor");
+    expect(req.actorRole).toBe("ADMIN");
     expect(next).toHaveBeenCalledOnce();
   });
 });

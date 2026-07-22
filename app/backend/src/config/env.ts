@@ -40,6 +40,26 @@ const envSchema = z.object({
   AZURE_OPENAI_TIMEOUT_MS: z.coerce.number().int().positive().default(25000),
   AZURE_OPENAI_INPUT_COST_PER_1K: z.coerce.number().positive().default(0.005),
   AZURE_OPENAI_OUTPUT_COST_PER_1K: z.coerce.number().positive().default(0.015)
+}).superRefine((value, ctx) => {
+  if (!value.AUTH_ENABLED) {
+    return;
+  }
+
+  if (value.AUTH_LOGIN_PASSWORD === "dev-password") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["AUTH_LOGIN_PASSWORD"],
+      message: "AUTH_LOGIN_PASSWORD must be changed when AUTH_ENABLED=true"
+    });
+  }
+
+  if (value.AUTH_TOKEN_SECRET === "local-dev-token-secret-1234") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["AUTH_TOKEN_SECRET"],
+      message: "AUTH_TOKEN_SECRET must be changed when AUTH_ENABLED=true"
+    });
+  }
 });
 
 const parsed = envSchema.safeParse(process.env);

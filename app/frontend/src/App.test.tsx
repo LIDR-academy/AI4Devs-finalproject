@@ -12,6 +12,23 @@ const jsonResponse = (data: unknown, status = 200) => {
   })
 }
 
+const renderApp = () => {
+  render(
+    <ThemeProvider theme={appTheme}>
+      <CssBaseline />
+      <App />
+    </ThemeProvider>,
+  )
+}
+
+const baseProject = {
+  id: 'project-1',
+  name: 'MVP Project',
+  description: 'This is a valid project description for test',
+  complexity: 'MEDIUM',
+  createdAt: new Date().toISOString(),
+}
+
 describe('App', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
@@ -21,12 +38,7 @@ describe('App', () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse([]))
     vi.stubGlobal('fetch', fetchMock)
 
-    render(
-      <ThemeProvider theme={appTheme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>,
-    )
+    renderApp()
 
     expect(screen.getByTestId('psai-home-title')).toHaveTextContent('ProjectScope AI')
 
@@ -43,21 +55,13 @@ describe('App', () => {
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(
         jsonResponse({
-          id: 'project-1',
-          name: 'MVP Project',
-          description: 'This is a valid project description for test',
-          complexity: 'MEDIUM',
-          createdAt: new Date().toISOString(),
+            ...baseProject,
         }, 201),
       )
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 'project-1',
-            name: 'MVP Project',
-            description: 'This is a valid project description for test',
-            complexity: 'MEDIUM',
-            createdAt: new Date().toISOString(),
+            ...baseProject,
             _count: { useCases: 0 },
           },
         ]),
@@ -65,12 +69,7 @@ describe('App', () => {
 
     vi.stubGlobal('fetch', fetchMock)
 
-    render(
-      <ThemeProvider theme={appTheme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>,
-    )
+    renderApp()
 
     await user.type(screen.getByTestId('psai-project-name-input'), 'MVP Project')
     await user.type(

@@ -35,6 +35,10 @@ Defined and validated in app/backend/src/config/env.ts.
 - AZURE_OPENAI_INPUT_COST_PER_1K (default: 0.005)
 - AZURE_OPENAI_OUTPUT_COST_PER_1K (default: 0.015)
 
+Hardening rule:
+
+- When `AUTH_ENABLED=true`, `AUTH_LOGIN_PASSWORD` and `AUTH_TOKEN_SECRET` must not use development defaults.
+
 ## Frontend
 
 - VITE_API_BASE_URL: public backend URL (for example https://projectscope-backend.onrender.com).

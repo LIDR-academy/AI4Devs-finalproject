@@ -116,6 +116,9 @@ Deployment basics:
 Required:
 
 - `DATABASE_URL`
+
+Required only when `AZURE_OPENAI_ENABLED=true`:
+
 - `AZURE_OPENAI_API_KEY`
 - `AZURE_OPENAI_ENDPOINT`
 - `AZURE_OPENAI_DEPLOYMENT`

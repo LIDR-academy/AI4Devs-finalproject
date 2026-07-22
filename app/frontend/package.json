@@ -9,6 +9,8 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test -g \"Feature: estimation_smoke\"",
+    "test:e2e:regression": "playwright test -g \"Feature: estimation_regression\"",
     "test:e2e:install": "playwright install chromium",
     "lint": "oxlint",
     "preview": "vite preview"

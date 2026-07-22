@@ -440,10 +440,6 @@ Redactá descripciones de PR.
 
 Ajuste humano: se mejoró claridad.
 
-```
-
-```
-
 ---
 
 ## 8. Resumen de avance y prompts de arranque

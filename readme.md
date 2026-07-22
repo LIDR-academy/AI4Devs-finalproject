@@ -146,8 +146,6 @@ El MVP incluye autenticación por token (access + refresh) y control de acceso p
 | Capacidad | SUPERADMIN | ADMIN | USER |
 | --- | --- | --- | --- |
 | Crear proyecto (`POST /projects`) | ✅ | ✅ | ❌ |
-| Gestionar roles de agentes (`/projects/agent-roles`) | ✅ | ✅ | ❌ |
-| Gestionar usuarios del sistema (`/projects/users`) | ✅ | ❌ | ❌ |
 | Listar/consultar proyectos asignados | ✅ | ✅ | ✅ |
 | Agregar casos de uso en proyectos permitidos | ✅ | ✅ | ✅ |
 | Ejecutar estimación en proyectos permitidos | ✅ | ✅ | ✅ |
@@ -506,7 +504,7 @@ erDiagram
     }
 
     Project ||--o{ UseCase : "tiene"
-    Project ||--o| Estimation : "genera"
+    Project ||--o{ Estimation : "genera"
     Estimation ||--o{ Phase : "contiene"
     Phase ||--o{ RoleEstimate : "incluye"
     Estimation ||--o{ TokenEstimate : "calcula"
@@ -536,14 +534,7 @@ erDiagram
 | `POST` | `/auth/logout`           | Cerrar sesión y revocar sesión actual |
 | `POST` | `/projects`              | Crear un nuevo proyecto             |
 | `GET`  | `/projects`              | Listar todos los proyectos          |
-| `GET`  | `/projects/use-cases`    | Listar casos de uso por proyecto    |
-| `GET`  | `/projects/agent-roles`  | Listar catálogo de roles de agente  |
-| `POST` | `/projects/agent-roles`  | Crear rol de agente (`ADMIN+`)      |
-| `PUT`  | `/projects/agent-roles/:roleId` | Actualizar rol de agente (`ADMIN+`) |
-| `DELETE` | `/projects/agent-roles/:roleId` | Eliminar rol de agente (`ADMIN+`) |
 | `GET`  | `/projects/:id`          | Obtener detalle con la estimación más reciente |
-| `GET`  | `/projects/:id?version=2`| Obtener detalle con una versión específica de estimación |
-| `GET`  | `/projects/:id/estimations` | Listar historial de versiones de estimación |
 | `POST` | `/projects/:id/use-cases`| Crear caso de uso en proyecto       |
 | `POST` | `/projects/:id/estimate` | Generar roadmap + guardar una nueva versión de estimación |
 
@@ -612,16 +603,18 @@ Estado de validaciones en rama `v1.0-final-GV`:
 - Backend: `npm run test` ✅ (16/16)
 - Frontend: `npm run test` ✅ (4/4)
 - Frontend: `npm run build` ✅
-- E2E Playwright (T11): `npm run test:e2e --prefix app/frontend` ✅ (2/2) usando PostgreSQL local `projectscope_e2e_local`.
+- E2E Playwright BDD (T11): `npm run test:e2e --prefix app/frontend` ✅ (2/2) usando PostgreSQL local `projectscope_e2e_local`.
 
 Enlace a entorno público:
 
-- Frontend: `PENDIENTE_COMPLETAR_URL_PUBLICA`
-- Backend: `PENDIENTE_COMPLETAR_URL_PUBLICA`
+- Frontend: pendiente de publicación (completar URL al desplegar).
+- Backend: pendiente de publicación (completar URL al desplegar).
 
 Si no se usa entorno público, adjuntar capturas en `docs/evidence/` y referenciarlas aquí.
 
 Registro de ejecución de validaciones: `docs/evidence/final-validation.md`.
+
+Historial de cambios de entrega: `CHANGELOG.md`.
 
 ### Plataformas
 
