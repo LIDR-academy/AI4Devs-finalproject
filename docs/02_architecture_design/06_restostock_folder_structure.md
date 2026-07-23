@@ -15,12 +15,12 @@ restostock-monorepo/
 ├── docker-compose.yml               # Orquestación de base de datos local (PostgreSQL & PgAdmin)
 ├── readme.md                        # Documentación general de instalación y setup del proyecto
 ├── docs/                            # Documentación de requerimientos, arquitectura y diseño técnico
-│   ├── 01_idea_inicial.md
-│   ├── 02_restostock_prd.md
-│   ├── 03_restostock_design.md
-│   ├── 04_restostock_architecture_diagram.md
-│   ├── 05_restostock_components_description.md
-│   └── 06_restostock_folder_structure.md
+│   ├── README.md                    # Índice navegable de toda la documentación
+│   ├── 01_product_definition/       # Concepción, Idea Inicial y PRD
+│   ├── 02_architecture_design/      # Planos de Arquitectura C4 y Estructura de Directorios
+│   ├── 03_governance_and_quality/   # Estrategia de Seguridad OWASP, Testing TDD y Auditorías
+│   ├── 04_persistence_and_api/      # Esquema Prisma 3NF y Especificación OpenAPI 3.0
+│   └── 05_agile_planning/           # Mapa del Backlog, Historias de Usuario (US) y Tickets (TK)
 │
 ├── apps/                            # Contenedor de aplicaciones del monorepo
 │   │

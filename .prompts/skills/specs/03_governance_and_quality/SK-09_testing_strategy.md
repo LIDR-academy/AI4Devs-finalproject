@@ -1,3 +1,14 @@
+---
+name: testing-strategy
+description: "Establece la directiva de pruebas TDD Test-First (Red-Green-Refactor) y la taxonomía de pruebas Unitarias, Integración y E2E."
+version: "1.1.0"
+category: "03_governance_and_quality"
+inputs:
+  - prd_doc
+outputs:
+  - "docs/03_governance_and_quality/08_testing_strategy.md"
+---
+
 Actúa como un Senior QA Engineer y me ayudes a configurar las instrucciones de testing de mi proyecto.
 
 Escribe una directiva estricta que le ordene a la IA seguir un proceso riguroso de Test-Driven Development (TDD):

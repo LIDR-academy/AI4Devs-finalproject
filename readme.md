@@ -368,7 +368,7 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
 
 ## 5. Historias de Usuario
 
-Se han definido detalladamente las siguientes 9 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/user_stories/indice_user_stories.md)):
+Se han definido detalladamente las siguientes 9 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/user_stories/indice_user_stories.md)):
 
 ### **5.1. US-001: Autenticación por PIN del Personal de Cocina**
 *   **Formato de Negocio:** Como operario de cocina (Staff), quiero autenticarme en la terminal táctil ingresando mi PIN personal de 4 dígitos, para registrar mis movimientos de insumos y consumos de forma rápida y segura sin interrumpir el ritmo del servicio.
@@ -437,7 +437,7 @@ Se han definido detalladamente las siguientes 9 historias de usuario críticas (
 
 ## 6. Tickets de Trabajo
 
-El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo](docs/tickets/indice_tickets.md)) contiene las especificaciones exactas para el desarrollo del sprint:
+El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo](docs/05_agile_planning/tickets/indice_tickets.md)) contiene las especificaciones exactas para el desarrollo del sprint:
 
 ### **6.1. TK-001: Configuración del Core del Backend y Base de Datos (Base de Datos)**
 *   **Descripción:** Configuración inicial del monorepo Express, Prisma Client, inyección síncrona segura de variables de entorno y middleware global de excepciones y validación de esquemas Zod.

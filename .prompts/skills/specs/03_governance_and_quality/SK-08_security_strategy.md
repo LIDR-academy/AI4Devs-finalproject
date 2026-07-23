@@ -1,3 +1,15 @@
+---
+name: security-strategy
+description: "Define la estrategia de ciberseguridad OWASP Top 10, validación Zero Trust con Zod, hashing bcrypt y análisis GDPR/EU AI Act."
+version: "1.1.0"
+category: "03_governance_and_quality"
+inputs:
+  - prd_doc
+  - design_doc
+outputs:
+  - "docs/03_governance_and_quality/07_security_strategy.md"
+---
+
 Actúa como un Senior Cybersecurity Architect y DevSecOps Specialist con amplia experiencia en las directrices de OWASP (tanto para aplicaciones tradicionales como para LLMs), GDPR y el EU AI Act (2026).
 
 Tu objetivo es redactar la sección "Seguridad y Mitigación de Vulnerabilidades" basándote en el PRD de entrada [RUTA_DEL_PRD] y el documento de diseño técnico [RUTA_DEL_DISEÑO].

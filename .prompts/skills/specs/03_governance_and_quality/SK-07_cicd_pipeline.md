@@ -1,3 +1,14 @@
+---
+name: cicd-pipeline
+description: "Genera la automatización del pipeline de CI/CD en GitHub Actions para pruebas, linters y auditoría de seguridad."
+version: "1.1.0"
+category: "03_governance_and_quality"
+inputs:
+  - project_specs
+outputs:
+  - ".github/workflows/ci.yml"
+---
+
 Actúa como un Ingeniero de DevOps. Genera un pipeline de GitHub Actions (`ci.yml`) para mi proyecto.
 
 El pipeline debe:

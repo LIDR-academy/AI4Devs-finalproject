@@ -1,3 +1,15 @@
+---
+name: api-specification
+description: "Diseña la especificación OpenAPI 3.0 de endpoints REST con serialización estricta de Decimal como string numérico."
+version: "1.1.0"
+category: "04_persistence_and_api"
+inputs:
+  - prd_doc
+  - schema_doc
+outputs:
+  - "docs/04_persistence_and_api/10_api_specification.md"
+---
+
 Actúa como un Senior API Architect experto en especificaciones RESTful bajo el estándar OpenAPI 3.0.0 e ingeniería de software Contract-First.
 
 Tu objetivo es diseñar la especificación de la API para dar soporte exclusivo al Flujo Prioritario (Happy Path de Negocio) detallado en los documentos adjuntos. Analiza el archivo [RUTA_DEL_PRD] y el esquema físico en [RUTA_DEL_DISEÑO] para asegurar la total coherencia de datos, llaves foráneas y tipos físicos.
@@ -23,3 +35,10 @@ Por favor, genera de manera exclusiva la sección de Contratos de la API estruct
 Genera tu respuesta en formato Markdown limpio, redactando las explicaciones lógicas en español (Latinoamérica) y manteniendo las claves JSON, parámetros de URL, tipos de datos e interfaces en inglés profesional para integración directa con compiladores de TypeScript. Comienza directamente con la documentación técnica sin preámbulos.
 
 Guarda el resultado en el archivo: [RUTA_DE_SALIDA_API]
+
+
+---
+
+## 📌 Directiva de Gobernanza Documental (Agnóstica):
+- Guarda por defecto los contratos en `docs/04_persistence_and_api/10_api_specification.md` (o `[RUTA_DE_SALIDA_API]`).
+- Serializar estrictamente todos los tipos `Decimal` como `string` numérico en los contratos JSON (ej: `"150.0000"`).

@@ -1,3 +1,14 @@
+---
+name: prd-generation
+description: "Genera el Documento de Requisitos de Producto (PRD) estructurado con Historias INVEST, criterios BDD Gherkin y políticas TDD."
+version: "1.1.0"
+category: "01_product_definition"
+inputs:
+  - initial_idea_doc
+outputs:
+  - "docs/01_product_definition/02_prd.md"
+---
+
 Actúa como un Senior Product Manager y Arquitecto de Software experto en metodologías ágiles, Spec-Driven Development (SDD) y Domain-Driven Design (DDD). Su especialidad es traducir descripciones de alcance o flujos de Happy Path en Documentos de Requisitos de Producto (PRD) de alta fidelidad, diseñados específicamente para actuar como una "especificación ejecutable" que un agente de codificación autónomo pueda implementar sin desviaciones lógicas.
 
 Analiza el siguiente documento de entrada que describe el alcance y flujo principal del MVP:
@@ -77,3 +88,10 @@ Traduce el flujo del MVP en historias de usuario independientes y estimables. Ca
 Genera tu respuesta con un tono directo, estructurado y profesional, comenzando directamente con el título del PRD en formato Markdown, con indice.
 
 Guarda el archivo en: [RUTA_DE_SALIDA_PRD]
+
+
+---
+
+## 📌 Directiva de Gobernanza Documental (Agnóstica):
+- Guarda por defecto el PRD generado en `docs/01_product_definition/02_prd.md` (o `[RUTA_DE_SALIDA_PRD]`).
+- Todo escenario BDD Gherkin debe ser verificable y respetar las reglas del glosario en `docs/01_product_definition/03_glosario_y_reglas_negocio.md`.

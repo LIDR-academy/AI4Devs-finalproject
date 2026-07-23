@@ -107,7 +107,7 @@ El sistema optimiza la rotación de inventarios forzando una lógica FEFO (First
 *   **Integración de Hardware Físico:** No se integra## 📋 5. Backlog de Historias de Usuario (INVEST)
 
 > [!NOTE]
-> Para consultar las especificaciones detalladas, los escenarios BDD Gherkin completos y las restricciones de UI/UX de cada una de estas historias, refiérase al [Índice de Historias de Usuario (Backlog)](user_stories/indice_user_stories.md).
+> Para consultar las especificaciones detalladas, los escenarios BDD Gherkin completos y las restricciones de UI/UX de cada una de estas historias, refiérase al [Índice de Historias de Usuario (Backlog)](../05_agile_planning/user_stories/indice_user_stories.md).
 
 A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el estándar INVEST:
 
@@ -121,7 +121,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: La complejidad de implementar hashing con bcrypt y tokens JWT está bien acotada.
     *   **S**mall: Se puede realizar dentro de un sprint de 1 o 2 semanas.
     *   **T**esteable: Verificable mediante pruebas unitarias y de integración sobre la API REST.
-*   **Detalle completo:** [US-001.md](user_stories/US-001.md)
+*   **Detalle completo:** [US-001.md](../05_agile_planning/user_stories/US-001.md)
 
 ### US-002: Registro de Extracciones de Bodega
 *   **Historia:** Como operario de cocina (Staff), quiero registrar la extracción física de un insumo desde la bodega principal, para transferir la materia prima al inventario activo de cocina e iniciar su ciclo de vida y control de expiración dinámica.
@@ -133,7 +133,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: La lógica de inventario e inserción de movimientos está documentada.
     *   **S**mall: Centrado únicamente en la resta de stock cerrado y creación del registro transaccional.
     *   **T**esteable: Se valida mediante la comprobación del stock del depósito antes y después de la operación.
-*   **Detalle completo:** [US-002.md](user_stories/US-002.md)
+*   **Detalle completo:** [US-002.md](../05_agile_planning/user_stories/US-002.md)
 
 ### US-003: Consulta Táctil de Remanentes Activos en Orden FEFO
 *   **Historia:** Como operario de cocina (Staff), quiero visualizar en la terminal táctil la lista de insumos abiertos y activos de forma ordenada por fecha de vencimiento acelerado, para priorizar el uso de los ingredientes más próximos a expirar (FEFO) y minimizar el desperdicio.
@@ -145,7 +145,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: Se reduce a consultas de lectura en base de datos.
     *   **S**mall: Consiste en una interfaz de búsqueda y visualización filtrada.
     *   **T**esteable: Verificable al auditar la lista de remanentes cargados y ordenados por FEFO.
-*   **Detalle completo:** [US-003.md](user_stories/US-003.md)
+*   **Detalle completo:** [US-003.md](../05_agile_planning/user_stories/US-003.md)
 
 ### US-004: Registro de Consumo Parcial de Remanentes
 *   **Historia:** Como operario de cocina (Staff), quiero registrar consumos parciales aplicados a preparaciones durante el turno, para mantener el inventario de la línea al día y registrar cuándo un ingrediente abierto se ha agotado por completo.
@@ -157,7 +157,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: La fórmula matemática y lógica de vencimiento acelerado está definida.
     *   **S**mall: Delimitada al consumo y la inicialización del objeto `Remanente`.
     *   **T**esteable: Es verificable al auditar la creación del remanente y su fecha de vencimiento calculada.
-*   **Detalle completo:** [US-004.md](user_stories/US-004.md)
+*   **Detalle completo:** [US-004.md](../05_agile_planning/user_stories/US-004.md)
 
 ### US-005: Registro de Descartes y Mermas
 *   **Historia:** Como operario de cocina (Staff), quiero descartar un remanente vencido o deteriorado indicando el motivo de forma obligatoria, para asegurar que el stock físico de la cocina coincida con el sistema y auditar el costo de la pérdida.
@@ -169,7 +169,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: Modificación simple de estado del remanente e inserción de movimiento.
     *   **S**mall: Flujo de actualización a cero y guardado del log de merma.
     *   **T**esteable: Se valida que el stock del remanente sea cero y que se registre la merma en el historial.
-*   **Detalle completo:** [US-005.md](user_stories/US-005.md)
+*   **Detalle completo:** [US-005.md](../05_agile_planning/user_stories/US-005.md)
 
 ### US-006: Consulta de Alertas y Notificaciones Críticas en Cocina
 *   **Historia:** Como operario de cocina (Staff), quiero visualizar alertas instantáneas en la pantalla sobre vencimientos inminentes, falta de insumos de cocina o desconexión offline, para tomar medidas preventivas sin demorar el servicio.
@@ -181,7 +181,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: La persistencia de alertas y el chequeo periódico están bien definidos.
     *   **S**mall: Centrado en la lectura del feed y estado de la conexión.
     *   **T**esteable: Se simula pérdida de conexión o insumo vencido para verificar el disparo de la notificación.
-*   **Detalle completo:** [US-006.md](user_stories/US-006.md)
+*   **Detalle completo:** [US-006.md](../05_agile_planning/user_stories/US-006.md)
 
 ### US-007: Consumo Rápido de Stock por Recetas
 *   **Historia:** Como operario de cocina (Staff), quiero declarar la preparación de un plato indicando sus porciones producidas, para que el sistema descuente automáticamente el stock teórico en cascada (FEFO) según la receta de insumos.
@@ -193,7 +193,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: La lógica de cascada FEFO sobre el array de remanentes activos está modelada.
     *   **S**mall: Encapsulado en el caso de uso de consumo transaccional.
     *   **T**esteable: Se valida que tras registrar una porción, el remanente más antiguo disminuya según la receta.
-*   **Detalle completo:** [US-007.md](user_stories/US-007.md)
+*   **Detalle completo:** [US-007.md](../05_agile_planning/user_stories/US-007.md)
 
 ### US-008: Cierre de Turno y Conciliación de Cocina
 *   **Historia:** Como operario de cocina (Staff), quiero realizar un flujo guiado de cierre para registrar el inventario físico real y auto-descartar de forma masiva los remanentes vencidos, para iniciar el siguiente turno con información limpia y precisa.
@@ -205,7 +205,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: Se trata de un flujo de lectura secuencial, actualización masiva y logeo.
     *   **S**mall: Se limita al proceso del cierre físico y guardado del reporte de conciliación.
     *   **T**esteable: Se valida que al cerrar el turno, los remanentes vencidos se inactiven y se generen los movimientos de desajuste.
-*   **Detalle completo:** [US-008.md](user_stories/US-008.md)
+*   **Detalle completo:** [US-008.md](../05_agile_planning/user_stories/US-008.md)
 
 ### US-009: Dashboard y Reporte de Mermas Visibles
 *   **Historia:** Como Administrador, quiero visualizar en el backoffice el desglose y sumatoria de mermas físicas registradas, agrupadas por insumo y motivo de descarte, para identificar pérdidas y tomar acciones correctivas sobre el desperdicio.
@@ -217,7 +217,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **E**stimable: La consulta SQL/Prisma de agrupación y agregación (`SUM`) está bien delimitada.
     *   **S**mall: Consiste en un endpoint de consulta simple y una pantalla de visualización en el panel administrador.
     *   **T**esteable: Verificable al contrastar los mermas individuales creadas contra la sumatoria reportada por el endpoint.
-*   **Detalle completo:** [US-009.md](user_stories/US-009.md)
+*   **Detalle completo:** [US-009.md](../05_agile_planning/user_stories/US-009.md)
 
 
 ---
