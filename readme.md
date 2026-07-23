@@ -28,7 +28,7 @@ Asistente educativo con IA para compradores primerizos de vivienda en España. A
 
 ### **0.4. URL del proyecto:**
 
-> TBD — Pendiente de despliegue
+> TBD — Pendiente de despliegue (planificado para la Entrega Final, 29 Julio). El proyecto es 100% funcional en local con `docker compose up -d && npm run dev`.
 
 ### 0.5. URL o archivo comprimido del repositorio
 
@@ -63,9 +63,7 @@ Acompañar al comprador primerizo de vivienda en España con tres herramientas q
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> Pendiente de implementación. Se incluirán capturas cuando el frontend esté desarrollado.
-
-Principios UX: mobile-first (375px+), PWA instalable, navegación por pestañas, sin wizard forzado — cada herramienta accesible independientemente.
+Interfaz mobile-first (375px+) desarrollada con SvelteKit. PWA instalable con navegación por tabs — cada herramienta accesible independientemente, sin wizard forzado. Componentes clave: Header con logo, ProcessStepper (etapas del proceso de compra), AIDisclaimer persistente, AmortizationVsInvestmentChart (gráfico side-by-side), DiffBadge (cambios al re-analizar), NegotiationPoints (preguntas accionables), RedFlagCard (flags con reasoning del LLM). Principios UX: mobile-first (375px+), PWA instalable, navegación por pestañas, sin wizard forzado — cada herramienta accesible independientemente.
 
 ### **1.4. Instrucciones de instalación:**
 
@@ -212,12 +210,9 @@ docs/                     # Constitución, ADRs y eventos de dominio
 
 ### **2.4. Infraestructura y despliegue**
 
-> Pendiente de implementación.
+**CI/CD:** GitHub Actions operativo en `.github/workflows/ci.yml` — 3 jobs (backend, frontend, E2E) con PostgreSQL service. Pipeline: lint → typecheck → tests unitarios → coverage → hexagonal-check → E2E. Triggers en push y PR a `main` y `feature-entrega2-DMM`.
 
-**Plan previsto:**
-- Backend: Railway o Render (Node.js + PostgreSQL)
-- Frontend: Vercel o Netlify (PWA estática)
-- CI/CD: GitHub Actions — lint → typecheck → tests unitarios → tests integración → build → E2E → deploy
+**Despliegue:** TBD — planificado para la Entrega Final. Candidatos: Railway/Render (backend + PostgreSQL) y Vercel (frontend PWA estática).
 
 ### **2.5. Seguridad**
 
@@ -231,13 +226,17 @@ docs/                     # Constitución, ADRs y eventos de dominio
 
 ### **2.6. Tests**
 
-> Pendiente de implementación.
+| Suite | Framework | Tests | Estado |
+|-------|-----------|-------|--------|
+| Backend unitarios | Vitest | 92 tests (22 files) | ✅ Todos pasando |
+| Backend integración | Vitest + supertest | 7 tests (1 file) | ✅ Todos pasando |
+| Frontend unitarios | Vitest + happy-dom | 51 tests (12 files) | ✅ Todos pasando |
+| E2E | Playwright | 7 tests (4 flows) | ✅ Todos pasando |
 
-**Estrategia prevista:**
-- Vitest para unitarios (dominio, value objects, adaptadores) + integración (API + DB)
-- Playwright para E2E (flujo: Listing Lens → Mortgage Compass → Dashboard)
-- Objetivo: 80%+ cobertura en capa de dominio
-- Feature-slice TDD: tests escritos antes de la implementación
+- **Backend dominio (~20 tests):** TransparencyScore, RedFlags, FinancialProfile, Coordinates, SnapshotHash, HiddenCosts, AmortizationCalculator, InvestmentCalculator, NarrativeGenerator, ChecklistTemplate, DiffService, AnalyzeListingUseCase.diff, PurchaseProcessAggregator, NegotiationPointsService. **Adaptadores (~10 tests):** CheerioAdapter (port + headers + retry), PlaywrightAdapter, ChainedFetchAdapter, BrowserPool, OpenRouterAdapter, xmlParser. **Integración (7 tests):** Dashboard (estado vacío + activo) y Listings (analyze + validación + GET por id). Cobertura configurada al 80% en capa de dominio.
+- **Frontend:** componentes (Header, Logo, LandingHero, ProcessStepper, ListingTabs, LandingStepper, RedFlagCard, DiffBadge) + API client (streamingClient, crossModuleApiError) + utilidades (format, session). Entorno happy-dom.
+- **E2E:** full-flow (4 tests), listing-lens (1 test), mortgage-compass (2 tests), UX redesign (1 test). Ejecutados con Playwright + Chromium.
+- CI ejecuta `test:all` + `test:coverage` + `hexagonal-check` en cada push.
 
 ---
 
@@ -724,6 +723,22 @@ Criterios de aceptación:
 **Impacto:** Cubre los requisitos de la Entrega 1 (Documentación técnica) más allá de la plantilla. Establece la base de gobernanza técnica para futuros colaboradores.
 
 **Cambios:** 7 archivos creados o modificados (649 líneas, 14 eliminadas) en su versión original. Ampliada en commits posteriores (`f1b432c` + `42cc631` + `78de70c` + `b42fd93`) con la traducción completa al español, los 3 fixes críticos del E2E, los 9 fixes importantes+menores, y la corrección del code review (`f1b432c` con 3 critical + 8 important).
+
+---
+
+**Pull Request 4 — Entrega 2: Código funcional (MVP ejecutable)**
+
+**Título:** `Entrega 2: MVP funcional — Backend + Frontend + DB + Tests`
+
+**Rama:** `feature-entrega2-DMM` → `main`
+
+**Descripción:** Esta PR contiene el MVP funcional completo de Realista con 236 archivos (+33,290 líneas). Incluye backend hexagonal (Express + TypeScript + Prisma), frontend SvelteKit PWA con 6 páginas, base de datos PostgreSQL con 8 modelos y 2 migraciones, y suites de tests unitarios (64 backend + 14 frontend) y E2E (7 tests Playwright). CI/CD operativo con GitHub Actions. Features: Listing Lens con streaming SSE y diff de re-análisis, Mortgage Compass con gráficos de amortización vs inversión, Dashboard con vista agregada, Negotiation Assistant, Timeline interactiva y Checklist documental. Documentación de uso de IA ampliada en `prompts.md` (sección 9: AI Engineering).
+
+**Relación con historias de usuario:** US1 (Listing Lens), US2 (Mortgage Compass), US3 (Dashboard), US4 (Negotiation Assistant), US5 (Timeline), US6 (Checklist) — todas implementadas.
+
+**Impacto:** Primera entrega de código funcional. Todas las fases de `tasks.md` (1-9) completadas.
+
+**Cambios:** 236 archivos, +33,290 líneas, 125 commits desde `feature-entrega1-DMM`.
 
 ---
 
