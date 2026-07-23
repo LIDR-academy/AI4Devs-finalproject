@@ -109,4 +109,23 @@ public class EventsController : ControllerBase
         // Just in case, we could do a partial update, but EventService doesn't have it.
         return Ok(new { url });
     }
+
+    [HttpPost("{slug}/reminders/manual")]
+    public async Task<IActionResult> SendManualReminders(string slug, [FromBody] Aura.Core.DTOs.Reminders.ManualReminderRequest request, [FromServices] IReminderService reminderService)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdString, out var userId))
+            return Unauthorized();
+            
+        // Verify user owns event
+        var ev = await _eventService.GetEventBySlugAsync(slug, userId);
+        if (ev == null) return NotFound();
+
+        if (request.GuestIds == null || !request.GuestIds.Any())
+            return BadRequest("GuestIds must be provided.");
+
+        await reminderService.SendManualRemindersAsync(slug, request.GuestIds);
+
+        return Accepted();
+    }
 }

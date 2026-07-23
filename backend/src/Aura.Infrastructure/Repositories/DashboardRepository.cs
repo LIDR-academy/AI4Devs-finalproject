@@ -55,7 +55,9 @@ public class DashboardRepository : IDashboardRepository
             var rsvp = rsvps.FirstOrDefault(r => r.GuestId == g.Id);
             return new GuestExportDto
             {
+                Id = g.Id,
                 Name = g.Name,
+                InviteStatus = g.InviteStatus.ToString(),
                 Email = g.Email,
                 Phone = g.Phone,
                 Category = g.Category.ToString(),
@@ -92,7 +94,9 @@ public class DashboardRepository : IDashboardRepository
 
         return data.Select(d => new GuestExportDto
         {
+            Id = d.Guest.Id,
             Name = d.Guest.Name,
+            InviteStatus = d.Guest.InviteStatus.ToString(),
             Email = d.Guest.Email,
             Phone = d.Guest.Phone,
             Category = d.Guest.Category.ToString(),

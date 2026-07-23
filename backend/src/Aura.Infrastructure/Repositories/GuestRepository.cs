@@ -1,6 +1,7 @@
 using Aura.Core.Interfaces.Repositories;
 using Aura.Core.Models;
 using Aura.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Aura.Infrastructure.Repositories;
 
@@ -38,5 +39,31 @@ public class GuestRepository : Repository<Guest>, IGuestRepository
     public async Task<bool> ExistsByEmailAsync(Guid eventId, string email)
     {
         return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AnyAsync(_context.Guests, g => g.EventId == eventId && g.Email == email);
+    }
+
+    public async Task<IEnumerable<Guest>> GetPendingReminderGuestsAsync(int daysBeforeEvent, CancellationToken cancellationToken = default)
+    {
+        var targetDate = DateTimeOffset.UtcNow.AddDays(daysBeforeEvent);
+        
+        var query = _context.Guests
+            .Include(g => g.Event)
+            .Include(g => g.Invitations)
+            .Where(g => !g.IsDeleted 
+                     && g.Event.Status == Aura.Core.Enums.EventStatus.Published
+                     && g.Event.EventDate <= targetDate
+                     && g.Invitations.Any(i => i.DeliveryStatus == Aura.Core.Enums.DeliveryStatus.Sent || i.DeliveryStatus == Aura.Core.Enums.DeliveryStatus.Delivered)
+                     && !g.Invitations.Any(i => i.Rsvp != null));
+
+        return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(query, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Guest>> GetGuestsByIdsAsync(IEnumerable<Guid> guestIds, CancellationToken cancellationToken = default)
+    {
+        return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+            _context.Guests
+                .Include(g => g.Event)
+                .Include(g => g.Invitations)
+                .Where(g => guestIds.Contains(g.Id)), 
+            cancellationToken);
     }
 }

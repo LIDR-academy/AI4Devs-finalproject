@@ -11,6 +11,7 @@ resources:
   - workers/email-deployment.yaml
   - workers/whatsapp-deployment.yaml
   - workers/ssg-deployment.yaml
+  - workers/reminders-cronjob.yaml
   - database/postgres-statefulset.yaml
   - database/service.yaml
   - database/pvc.yaml

@@ -16,4 +16,13 @@ public class DeliveryLogRepository : Repository<DeliveryLog>, IDeliveryLogReposi
         return await _context.DeliveryLogs
             .FirstOrDefaultAsync(l => l.ProviderMessageId == providerMessageId, cancellationToken);
     }
+
+    public async Task<bool> HasRecentLogAsync(Guid entityId, Aura.Core.Enums.DeliveryEntityType entityType, TimeSpan within, CancellationToken cancellationToken = default)
+    {
+        var cutoffTime = DateTimeOffset.UtcNow.Subtract(within);
+        return await _context.DeliveryLogs.AnyAsync(l => 
+            l.EntityId == entityId && 
+            l.EntityType == entityType && 
+            l.SentAt >= cutoffTime, cancellationToken);
+    }
 }
