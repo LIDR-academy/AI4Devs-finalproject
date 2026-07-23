@@ -21,5 +21,8 @@
       "ES2022",
       "dom"
     ]
-  }
+  },
+  "exclude": [
+    "src/**/*.spec.ts"
+  ]
 }

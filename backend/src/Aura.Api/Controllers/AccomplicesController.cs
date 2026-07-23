@@ -83,4 +83,23 @@ public class AccomplicesController : ControllerBase
             return Unauthorized(new { Message = ex.Message });
         }
     }
+
+    [HttpGet("me")]
+    [Authorize(Policy = "AccompliceScoped")]
+    public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
+    {
+        var accompliceIdStr = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+        if (!Guid.TryParse(accompliceIdStr, out var accompliceId))
+            return Unauthorized();
+
+        try
+        {
+            var response = await _accompliceService.GetMeAsync(accompliceId, cancellationToken);
+            return Ok(response);
+        }
+        catch (Aura.Core.Exceptions.NotFoundException)
+        {
+            return NotFound();
+        }
+    }
 }

@@ -173,6 +173,32 @@ public class AccompliceService : IAccompliceService
         await _queueService.EnqueueAsync("email:queue", messageJson, cancellationToken);
     }
 
+    public async Task<AccompliceMeResponse> GetMeAsync(Guid accompliceId, CancellationToken cancellationToken = default)
+    {
+        var accomplice = await _accompliceRepository.GetByIdAsync(accompliceId, cancellationToken);
+        if (accomplice == null)
+            throw new NotFoundException($"Accomplice not found.");
+
+        var @event = await _eventRepository.GetByIdAsync(accomplice.EventId, cancellationToken);
+        if (@event == null)
+            throw new NotFoundException($"Event not found.");
+
+        var perms = new List<string>();
+        try
+        {
+            perms = JsonSerializer.Deserialize<List<string>>(accomplice.Permissions) ?? new List<string>();
+        }
+        catch { }
+
+        return new AccompliceMeResponse
+        {
+            Id = accomplice.Id,
+            Email = accomplice.Email,
+            Permissions = perms,
+            EventSlug = @event.Slug
+        };
+    }
+
     private AccompliceResponse MapToResponse(Accomplice accomplice)
     {
         var perms = new List<string>();

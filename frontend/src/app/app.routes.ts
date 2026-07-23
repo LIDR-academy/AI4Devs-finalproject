@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 
+import { accompliceGuard } from './core/auth/accomplice.guard';
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./features/auth/pages/login.page') },
   { path: 'verify', loadComponent: () => import('./features/auth/pages/verify.page') },
@@ -22,6 +23,15 @@ export const routes: Routes = [
     path: 'events/:slug/dashboard',
     loadComponent: () => import('./features/dashboard/pages/control-dashboard.page'),
     canActivate: [authGuard]
+  },
+  { 
+    path: 'accomplice/panel', 
+    loadComponent: () => import('./features/accomplice/pages/accomplice-panel.page'),
+    canActivate: [accompliceGuard]
+  },
+  { 
+    path: 'accomplice/:token', 
+    loadComponent: () => import('./features/accomplice/pages/accomplice-verify.page') 
   },
   { 
     path: 'rsvp/:token', 
