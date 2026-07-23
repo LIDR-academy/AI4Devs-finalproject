@@ -1,0 +1,103 @@
+<div class="accomplices-panel">
+  <div class="panel-header">
+    <h2>Accomplice Management</h2>
+    <p>Invite co-hosts or assistants to help manage your event.</p>
+  </div>
+
+  <div *ngIf="successMessage()" class="alert alert-success">
+    {{ successMessage() }}
+  </div>
+
+  <div *ngIf="errorMessage()" class="alert alert-danger">
+    {{ errorMessage() }}
+  </div>
+
+  <div class="invite-section card">
+    <h3>Invite New Accomplice</h3>
+    <form [formGroup]="inviteForm" (ngSubmit)="onInvite()" class="invite-form">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input 
+          id="email" 
+          type="email" 
+          formControlName="email" 
+          placeholder="colleague@example.com"
+          class="form-control"
+          [class.is-invalid]="inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched"
+        />
+        <div class="invalid-feedback" *ngIf="inviteForm.get('email')?.hasError('required') && inviteForm.get('email')?.touched">
+          Email is required.
+        </div>
+        <div class="invalid-feedback" *ngIf="inviteForm.get('email')?.hasError('email') && inviteForm.get('email')?.touched">
+          Please enter a valid email.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="permissions">Permissions</label>
+        <select 
+          id="permissions" 
+          formControlName="permissions" 
+          multiple
+          class="form-control"
+        >
+          <option *ngFor="let p of availablePermissions" [value]="p.value">
+            {{ p.label }}
+          </option>
+        </select>
+        <small class="form-text">Hold Ctrl/Cmd to select multiple.</small>
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="inviteForm.invalid || isLoading()">
+        <span *ngIf="isLoading()" class="spinner"></span>
+        Invite
+      </button>
+    </form>
+  </div>
+
+  <div class="list-section">
+    <h3>Invited Accomplices</h3>
+    
+    <div *ngIf="isLoading() && accomplices().length === 0" class="loading-state">
+      Loading accomplices...
+    </div>
+
+    <div *ngIf="!isLoading() && accomplices().length === 0" class="empty-state">
+      <p>No accomplices invited yet.</p>
+    </div>
+
+    <div class="accomplice-list" *ngIf="accomplices().length > 0">
+      <div class="accomplice-card" *ngFor="let acc of accomplices()" [class.revoked]="acc.isRevoked">
+        <div class="accomplice-info">
+          <h4>{{ acc.email }}</h4>
+          <div class="badges">
+            <span class="badge" *ngFor="let perm of acc.permissions">{{ perm }}</span>
+          </div>
+          <p class="status-text">
+            Status: 
+            <span class="status" [ngClass]="{'status-active': acc.lastAccessedAt && !acc.isRevoked, 'status-pending': !acc.lastAccessedAt && !acc.isRevoked, 'status-revoked': acc.isRevoked}">
+              {{ acc.isRevoked ? 'Revoked' : (acc.lastAccessedAt ? 'Active' : 'Pending') }}
+            </span>
+          </p>
+          <p class="date-text">Invited: {{ acc.grantedAt | date:'mediumDate' }}</p>
+        </div>
+        
+        <div class="accomplice-actions" *ngIf="!acc.isRevoked">
+          <button 
+            *ngIf="!acc.lastAccessedAt" 
+            class="btn btn-secondary btn-sm" 
+            (click)="onResendInvite(acc.id)"
+            [disabled]="isLoading()">
+            Resend
+          </button>
+          <button 
+            class="btn btn-danger btn-sm" 
+            (click)="onRevokeAccess(acc.id)"
+            [disabled]="isLoading()">
+            Revoke
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
