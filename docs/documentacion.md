@@ -33,6 +33,24 @@ El principio fundamental del MVP es la **autonomía del flujo**: el artista conf
 | Pago protegido con depósito | Reserva directa integrada con pasarela local (Flow) |
 | Perfil permanente (no stories que desaparecen) | Certificación sanitaria y premios verificados |
 
+### 1.3.1 Análisis Competitivo — Mercado Latinoamericano
+
+Relevamiento de plataformas similares en Latinoamérica (búsqueda web, julio 2026). No existe un competidor directo con la combinación completa cotización + reserva + depósito + reseñas en 4 dimensiones + foto de curación que ofrece INKSPIRE; los más cercanos cubren solo parte del flujo.
+
+| Plataforma | País/alcance | Usuarios / escala | Solapamiento con INKSPIRE |
+|---|---|---|---|
+| **TatuArte.ink** | Iberoamérica (~20 países, incluye LatAm) | ~20.000 usuarios, ~3.000 tatuadores registrados | Descubrimiento y perfiles; sin cotizador ni depósito |
+| **Bookink** | Foco en Chile (mismo mercado que INKSPIRE) | Sin cifras públicas | Reserva de citas; el más parecido en propuesta |
+| **Tatau** | LatAm (en acceso anticipado) | Sin cifras públicas — app en fase temprana | Descubrimiento + agenda; sin pago integrado |
+| **Ink Market** (Tatuadores.com) | Iberoamérica | Sin cifras públicas | Marketplace de venta de obra, no de reservas/pagos |
+| **Tattoodo** | Global (referencia, no LatAm-específico) | +10 millones de descargas | Descubrimiento y booking a escala global; sin presencia local en Chile ni pasarela local |
+
+**Conclusiones:**
+- Se identificaron 3–4 competidores directos en LatAm (Bookink, Tatau, TatuArte.ink, Ink Market); solo TatuArte.ink publica cifras de usuarios.
+- Bookink y Tatau, los más cercanos en propuesta de valor (reserva + pago), no publican métricas — indicio de que son startups tempranas o de escala reducida.
+- Ningún competidor releva combina reserva con depósito vía pasarela local (Flow/Webpay), certificación sanitaria verificable ni foto de curación a 90 días — ver [1.3 Ventajas Competitivas](#13-ventajas-competitivas).
+- Las cifras de usuarios provienen de tiendas de apps y sitios propios de cada plataforma, no de reportes auditados; deben tratarse como estimaciones de orden de magnitud.
+
 ### 1.4 Funciones Principales
 
 1. **Descubrir** — Vitrina visual + mapa interactivo con geolocalización y filtros avanzados
