@@ -11,6 +11,8 @@ public class DataRetentionJob
     public DateTimeOffset? ExecutedAt { get; set; }
     public string? FailureReason { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public int RetryCount { get; set; } = 0;
 
     public Event Event { get; set; } = null!;
 }

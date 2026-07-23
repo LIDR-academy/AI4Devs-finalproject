@@ -60,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IAccompliceService, AccompliceService>();
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IThankYouCardService, ThankYouCardService>();
+        services.AddScoped<IDataRetentionService, DataRetentionService>();
         services.AddScoped<FluentValidation.IValidator<Aura.Core.DTOs.Guests.AddGuestRequest>, Aura.Core.Validators.Guests.AddGuestRequestValidator>();
         services.AddScoped<FluentValidation.IValidator<Aura.Core.DTOs.Guests.ImportGuestRow>, Aura.Core.Validators.Guests.ImportGuestRowValidator>();
 
