@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: data-retention-worker
+  namespace: aura
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: data-retention-worker
+        spec:
+          containers:
+          - name: worker
+            image: aura-workers-dataretention:latest
+            imagePullPolicy: IfNotPresent
+            envFrom:
+            - secretRef:
+                name: api-secrets
+          restartPolicy: OnFailure

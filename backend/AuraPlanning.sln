@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.Workers.Reminders", "w
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.Workers.ThankYouCards", "workers\Aura.Workers.ThankYouCards\Aura.Workers.ThankYouCards.csproj", "{EE90AC7E-5326-46CB-BA88-7386DD209A42}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.Workers.DataRetention", "workers\Aura.Workers.DataRetention\Aura.Workers.DataRetention.csproj", "{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -187,6 +189,18 @@ Global
 		{EE90AC7E-5326-46CB-BA88-7386DD209A42}.Release|x64.Build.0 = Release|Any CPU
 		{EE90AC7E-5326-46CB-BA88-7386DD209A42}.Release|x86.ActiveCfg = Release|Any CPU
 		{EE90AC7E-5326-46CB-BA88-7386DD209A42}.Release|x86.Build.0 = Release|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Debug|x64.Build.0 = Debug|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Debug|x86.Build.0 = Debug|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Release|x64.ActiveCfg = Release|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Release|x64.Build.0 = Release|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Release|x86.ActiveCfg = Release|Any CPU
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -204,5 +218,6 @@ Global
 		{1FC2DFDB-86DF-4C98-8814-77012295B47E} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{5E28250A-D3F3-4CB8-A4C7-4A1CADDF8210} = {20543853-AF10-B830-2A3D-9FE9F6ECBF6C}
 		{EE90AC7E-5326-46CB-BA88-7386DD209A42} = {20543853-AF10-B830-2A3D-9FE9F6ECBF6C}
+		{97BA4450-F6BB-4FB1-990B-D8AE7F61C97C} = {20543853-AF10-B830-2A3D-9FE9F6ECBF6C}
 	EndGlobalSection
 EndGlobal

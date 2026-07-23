@@ -12,6 +12,7 @@ COPY backend/workers/Aura.Workers.WhatsApp/Aura.Workers.WhatsApp.csproj backend/
 COPY backend/workers/Aura.Workers.SSG/Aura.Workers.SSG.csproj backend/workers/Aura.Workers.SSG/
 COPY backend/workers/Aura.Workers.ThankYouCards/Aura.Workers.ThankYouCards.csproj backend/workers/Aura.Workers.ThankYouCards/
 COPY backend/workers/Aura.Workers.Reminders/Aura.Workers.Reminders.csproj backend/workers/Aura.Workers.Reminders/
+COPY backend/workers/Aura.Workers.DataRetention/Aura.Workers.DataRetention.csproj backend/workers/Aura.Workers.DataRetention/
 COPY backend/tests/Aura.Api.Tests/Aura.Api.Tests.csproj backend/tests/Aura.Api.Tests/
 COPY backend/tests/Aura.Infrastructure.Tests/Aura.Infrastructure.Tests.csproj backend/tests/Aura.Infrastructure.Tests/
 COPY backend/tests/Aura.Workers.Email.Tests/Aura.Workers.Email.Tests.csproj backend/tests/Aura.Workers.Email.Tests/
