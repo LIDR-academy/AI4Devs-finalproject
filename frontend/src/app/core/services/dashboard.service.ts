@@ -9,7 +9,9 @@ export interface DietaryRestrictionDto {
 }
 
 export interface GuestExportDto {
+  id: string;
   name: string;
+  inviteStatus?: string;
   email?: string;
   phone?: string;
   category: string;

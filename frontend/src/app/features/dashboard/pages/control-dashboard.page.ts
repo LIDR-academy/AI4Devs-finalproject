@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { DashboardService, DashboardStatsResponse } from '../../../core/services/dashboard.service';
+import { EventService } from '../../../core/services/event.service';
 import { StatsCardComponent } from '../components/stats-card.component';
 import { GuestTableComponent } from '../components/guest-table.component';
 import { AccompliceManagement } from '../components/accomplice-management/accomplice-management';
@@ -16,9 +17,14 @@ import { Subscription, interval, switchMap, startWith, catchError, of } from 'rx
     <div class="dashboard-container">
       <div class="dashboard-header">
         <h1>Event Dashboard</h1>
-        <button class="btn btn-primary" (click)="exportCsv()" [disabled]="!stats() || stats()!.totalInvited === 0">
-          Export CSV
-        </button>
+        <div class="header-actions">
+          <button class="btn btn-secondary mr-2" (click)="sendReminders()" [disabled]="!stats() || eligibleGuestsForReminder.length === 0">
+            Send Reminders
+          </button>
+          <button class="btn btn-primary" (click)="exportCsv()" [disabled]="!stats() || stats()!.totalInvited === 0">
+            Export CSV
+          </button>
+        </div>
       </div>
 
       <ng-container *ngIf="stats() as data; else loading">
@@ -181,11 +187,19 @@ import { Subscription, interval, switchMap, startWith, catchError, of } from 'rx
 })
 export default class ControlDashboardPageComponent implements OnInit, OnDestroy {
   private dashboardService = inject(DashboardService);
+  private eventService = inject(EventService);
   private route = inject(ActivatedRoute);
 
   stats = signal<DashboardStatsResponse | null>(null);
   eventSlug = '';
   private pollingSub?: Subscription;
+
+  get eligibleGuestsForReminder(): string[] {
+    const guests = this.stats()?.guestList || [];
+    return guests
+      .filter(g => g.inviteStatus === 'Sent' || g.inviteStatus === 'Delivered')
+      .map(g => g.id || '');
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -232,6 +246,20 @@ export default class ControlDashboardPageComponent implements OnInit, OnDestroy 
           a.remove();
         },
         error: (err) => console.error('Error exporting CSV', err)
+      });
+    }
+  }
+
+  sendReminders() {
+    const ids = this.eligibleGuestsForReminder;
+    if (ids.length === 0) return;
+
+    if (confirm(`Are you sure you want to send reminders to ${ids.length} pending guest(s)?`)) {
+      this.eventService.sendManualReminders(this.eventSlug, ids).subscribe({
+        next: () => {
+          alert('Reminders have been sent or enqueued!');
+        },
+        error: (err) => console.error('Error sending reminders', err)
       });
     }
   }

@@ -36,4 +36,8 @@ export class EventService {
     formData.append('file', file);
     return this.http.post<{ url: string }>(`${this.apiUrl}/${slug}/upload-hero-image`, formData);
   }
+
+  sendManualReminders(slug: string, guestIds: string[]): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${slug}/reminders/manual`, { guestIds });
+  }
 }
