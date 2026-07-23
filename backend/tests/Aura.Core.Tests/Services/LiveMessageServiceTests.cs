@@ -52,11 +52,13 @@ public class LiveMessageServiceTests
     public async Task SendLiveMessageAsync_InvalidToken_ThrowsUnauthorized()
     {
         // Arrange
-        _accompliceRepoMock.GetByTokenAsync("invalid-token", Arg.Any<CancellationToken>())
+        _accompliceRepoMock.GetByIdAsync(Guid.Empty, Arg.Any<CancellationToken>())
             .Returns((Accomplice?)null);
 
+        _eventRepoMock.GetBySlugAsync("test-event").Returns(new Event { Id = Guid.NewGuid(), Slug = "test-event" });
+
         // Act
-        var act = async () => await _sut.SendLiveMessageAsync("invalid-token", new SendLiveMessageRequest());
+        Func<Task> act = async () => await _sut.SendLiveMessageAsync(Guid.Empty, "test-event", new SendLiveMessageRequest());
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
@@ -66,12 +68,15 @@ public class LiveMessageServiceTests
     public async Task SendLiveMessageAsync_NoPermission_ThrowsUnauthorized()
     {
         // Arrange
-        var accomplice = new Accomplice { TokenHash = "valid", Permissions = "[]" };
-        _accompliceRepoMock.GetByTokenAsync("valid", Arg.Any<CancellationToken>())
-            .Returns(accomplice);
+        var evId = Guid.NewGuid();
+        var accompliceId = Guid.NewGuid();
+        var accomplice = new Accomplice { Id = accompliceId, EventId = evId, TokenHash = "valid", Permissions = "[]", ExpiresAt = DateTimeOffset.UtcNow.AddDays(1) };
+        
+        _eventRepoMock.GetBySlugAsync("test-event").Returns(new Event { Id = evId, Slug = "test-event" });
+        _accompliceRepoMock.GetByIdAsync(accompliceId, Arg.Any<CancellationToken>()).Returns(accomplice);
 
         // Act
-        var act = async () => await _sut.SendLiveMessageAsync("valid", new SendLiveMessageRequest());
+        Func<Task> act = async () => await _sut.SendLiveMessageAsync(accompliceId, "test-event", new SendLiveMessageRequest());
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
@@ -81,13 +86,17 @@ public class LiveMessageServiceTests
     public async Task SendLiveMessageAsync_RateLimitExceeded_ThrowsInvalidOperationException()
     {
         // Arrange
-        var accomplice = new Accomplice { Id = Guid.NewGuid(), TokenHash = "valid", Permissions = "[\"send_messages\"]", ExpiresAt = DateTimeOffset.UtcNow.AddDays(1) };
-        _accompliceRepoMock.GetByTokenAsync("valid", Arg.Any<CancellationToken>()).Returns(accomplice);
+        var evId = Guid.NewGuid();
+        var accompliceId = Guid.NewGuid();
+        var accomplice = new Accomplice { Id = accompliceId, EventId = evId, TokenHash = "valid", Permissions = "[\"send_messages\"]", ExpiresAt = DateTimeOffset.UtcNow.AddDays(1) };
+        
+        _eventRepoMock.GetBySlugAsync("test-event").Returns(new Event { Id = evId, Slug = "test-event" });
+        _accompliceRepoMock.GetByIdAsync(accompliceId, Arg.Any<CancellationToken>()).Returns(accomplice);
         _rateLimiterMock.IsRateLimitedAsync(Arg.Any<string>(), 20, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         // Act
-        var act = async () => await _sut.SendLiveMessageAsync("valid", new SendLiveMessageRequest());
+        Func<Task> act = async () => await _sut.SendLiveMessageAsync(accompliceId, "test-event", new SendLiveMessageRequest());
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
@@ -99,19 +108,21 @@ public class LiveMessageServiceTests
         // Arrange
         var evId = Guid.NewGuid();
         var templateId = Guid.NewGuid();
-        var accomplice = new Accomplice { Id = Guid.NewGuid(), EventId = evId, TokenHash = "valid", Permissions = "[\"send_messages\"]", ExpiresAt = DateTimeOffset.UtcNow.AddDays(1) };
+        var accompliceId = Guid.NewGuid();
+        var accomplice = new Accomplice { Id = accompliceId, EventId = evId, TokenHash = "valid", Permissions = "[\"send_messages\"]", ExpiresAt = DateTimeOffset.UtcNow.AddDays(1) };
         var template = new MessageTemplate { Id = templateId, EventId = evId, DefaultMessage = "Hello" };
         
-        _accompliceRepoMock.GetByTokenAsync("valid", Arg.Any<CancellationToken>()).Returns(accomplice);
+        _eventRepoMock.GetBySlugAsync("test-event").Returns(new Event { Id = evId, Slug = "test-event" });
+        _accompliceRepoMock.GetByIdAsync(accompliceId, Arg.Any<CancellationToken>()).Returns(accomplice);
         _rateLimiterMock.IsRateLimitedAsync(Arg.Any<string>(), 20, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).Returns(false);
         _templateRepoMock.GetByIdAsync(templateId, Arg.Any<CancellationToken>()).Returns(template);
         _guestRepoMock.GetGuestsByEventAsync(evId).Returns(new List<Guest> { new Guest { Phone = "123456" } });
 
         // Act
-        var response = await _sut.SendLiveMessageAsync("valid", new SendLiveMessageRequest { MessageTemplateId = templateId });
+        var result = await _sut.SendLiveMessageAsync(accompliceId, "test-event", new SendLiveMessageRequest { MessageTemplateId = templateId });
 
         // Assert
-        response.Should().NotBeNull();
+        result.Should().NotBeNull();
         await _queueMock.Received(1).EnqueueAsync("whatsapp:queue", Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 }

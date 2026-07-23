@@ -1,0 +1,59 @@
+<div class="accomplice-management">
+  <h3>Manage Accomplices</h3>
+  <p class="text-sm text-gray-400 mb-4">Invite trusted friends to help manage your event.</p>
+
+  <div class="invite-form bg-surface p-4 rounded-lg border border-border mb-6">
+    <h4 class="mb-3">Invite Accomplice</h4>
+    <div class="form-group mb-3">
+      <label class="block text-sm mb-1">Email Address</label>
+      <input type="email" [(ngModel)]="newEmail" class="w-full p-2 bg-background border border-border rounded text-white" placeholder="friend@example.com">
+    </div>
+    
+    <div class="permissions mb-4">
+      <label class="block text-sm mb-2">Permissions</label>
+      <div class="flex gap-4">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" [(ngModel)]="canSendMessages">
+          <span>Send Live Messages</span>
+        </label>
+        <label class="flex items-center gap-2">
+          <input type="checkbox" [(ngModel)]="canViewRsvps">
+          <span>View RSVPs</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" (click)="invite()" [disabled]="!newEmail || isInviting">
+      {{ isInviting ? 'Inviting...' : 'Send Invite' }}
+    </button>
+  </div>
+
+  <div class="accomplices-list">
+    <h4 class="mb-3">Current Accomplices</h4>
+    
+    <div *ngIf="accomplices.length === 0" class="text-gray-400 text-sm">
+      No accomplices invited yet.
+    </div>
+
+    <div *ngFor="let acc of accomplices" class="accomplice-item bg-surface p-4 rounded-lg border border-border mb-3 flex justify-between items-center">
+      <div>
+        <div class="font-bold flex items-center gap-2">
+          {{ acc.email }}
+          <span *ngIf="acc.isRevoked" class="badge bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-xs">Revoked</span>
+          <span *ngIf="!acc.isRevoked" class="badge bg-green-500/20 text-green-500 px-2 py-0.5 rounded text-xs">Active</span>
+        </div>
+        <div class="text-xs text-gray-400 mt-1 flex gap-2">
+          <span *ngFor="let perm of acc.permissions" class="bg-border px-1.5 py-0.5 rounded">{{ perm }}</span>
+        </div>
+        <div class="text-xs text-gray-500 mt-1" *ngIf="acc.lastAccessedAt">
+          Last access: {{ acc.lastAccessedAt | date:'short' }}
+        </div>
+      </div>
+      
+      <div class="actions flex gap-2">
+        <button *ngIf="!acc.isRevoked" class="btn btn-outline text-xs px-3 py-1" (click)="resend(acc.id)">Resend</button>
+        <button *ngIf="!acc.isRevoked" class="btn border border-red-500/50 text-red-500 hover:bg-red-500/10 text-xs px-3 py-1" (click)="revoke(acc.id)">Revoke</button>
+      </div>
+    </div>
+  </div>
+</div>

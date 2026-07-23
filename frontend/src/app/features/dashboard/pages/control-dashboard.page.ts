@@ -4,13 +4,14 @@ import { ActivatedRoute } from '@angular/router';
 import { DashboardService, DashboardStatsResponse } from '../../../core/services/dashboard.service';
 import { StatsCardComponent } from '../components/stats-card.component';
 import { GuestTableComponent } from '../components/guest-table.component';
+import { AccompliceManagement } from '../components/accomplice-management/accomplice-management';
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { Subscription, interval, switchMap, startWith, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-control-dashboard-page',
   standalone: true,
-  imports: [CommonModule, StatsCardComponent, GuestTableComponent, EmptyStateComponent],
+  imports: [CommonModule, StatsCardComponent, GuestTableComponent, EmptyStateComponent, AccompliceManagement],
   template: `
     <div class="dashboard-container">
       <div class="dashboard-header">
@@ -87,6 +88,11 @@ import { Subscription, interval, switchMap, startWith, catchError, of } from 'rx
 
           <!-- Guest List Table -->
           <app-guest-table [guests]="data.guestList"></app-guest-table>
+
+          <!-- Accomplice Management -->
+          <div class="mt-6">
+            <app-accomplice-management [eventSlug]="eventSlug"></app-accomplice-management>
+          </div>
 
         </ng-container>
       </ng-container>

@@ -39,9 +39,16 @@ public class LiveMessageService : ILiveMessageService
         _rateLimitingService = rateLimitingService;
     }
 
-    public async Task<LiveMessageResponse> SendLiveMessageAsync(string accompliceToken, SendLiveMessageRequest request, CancellationToken cancellationToken = default)
+    public async Task<LiveMessageResponse> SendLiveMessageAsync(Guid accompliceId, string eventSlug, SendLiveMessageRequest request, CancellationToken cancellationToken = default)
     {
-        var accomplice = await _accompliceRepository.GetByTokenAsync(accompliceToken, cancellationToken);
+        var @event = await _eventRepository.GetBySlugAsync(eventSlug);
+        if (@event == null)
+            throw new NotFoundException($"Event {eventSlug} not found.");
+
+        var accomplice = await _accompliceRepository.GetByIdAsync(accompliceId, cancellationToken);
+
+        if (accomplice == null || accomplice.EventId != @event.Id)
+            throw new UnauthorizedAccessException("Accomplice not found or not associated with this event.");
 
         if (accomplice == null || accomplice.IsRevoked || accomplice.ExpiresAt < DateTimeOffset.UtcNow)
         {
