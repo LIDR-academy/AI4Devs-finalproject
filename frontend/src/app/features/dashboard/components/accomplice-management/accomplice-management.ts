@@ -83,7 +83,7 @@ export class AccompliceManagement implements OnInit {
     });
   }
 
-  isExpired(expiresAt: string): boolean {
+  isExpired(_expiresAt: string): boolean {
     // Actually the backend doesn't return expiresAt in the response yet, let's just check revoked status
     return false;
   }

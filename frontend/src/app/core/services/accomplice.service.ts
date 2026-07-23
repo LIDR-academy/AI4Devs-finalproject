@@ -22,7 +22,7 @@ export interface GrantAccessRequest {
 })
 export class AccompliceService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/accomplices`;
+  private apiUrl = `${environment.apiBaseUrl}/accomplices`;
 
   getAccomplices(eventSlug: string): Observable<AccompliceResponse[]> {
     return this.http.get<AccompliceResponse[]>(`${this.apiUrl}/${eventSlug}`);

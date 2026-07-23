@@ -1,9 +1,7 @@
+using Aura.Core.Models;
+using Aura.Infrastructure.Data;
 using Aura.Core.Interfaces.Repositories;
-using Aura.Core.Models;
-using Aura.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Aura.Core.Models;
-using Aura.Infrastructure.Data;
 
 namespace Aura.Infrastructure.Repositories;
 

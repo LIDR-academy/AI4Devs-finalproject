@@ -19,7 +19,7 @@ public class LiveMessagesController : ControllerBase
     [Authorize(Policy = "AccompliceScoped")]
     public async Task<ActionResult<LiveMessageResponse>> SendLiveMessage(string slug, [FromBody] SendLiveMessageRequest request, CancellationToken cancellationToken)
     {
-        var accompliceIdStr = User.FindFirst(System.Security.Claims.JwtRegisteredClaimNames.Sub)?.Value;
+        var accompliceIdStr = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
         if (!Guid.TryParse(accompliceIdStr, out var accompliceId))
             return Unauthorized(new { Message = "Invalid accomplice token." });
 
