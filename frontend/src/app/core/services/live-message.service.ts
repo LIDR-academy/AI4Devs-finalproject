@@ -28,14 +28,14 @@ export class LiveMessageService {
   private http = inject(HttpClient);
   
   getTemplates(slug: string): Observable<MessageTemplate[]> {
-    return this.http.get<MessageTemplate[]>(`${environment.apiUrl}/events/${slug}/message-templates`);
+    return this.http.get<MessageTemplate[]>(`${environment.apiBaseUrl}/events/${slug}/message-templates`);
   }
 
   getLiveMessages(slug: string): Observable<LiveMessage[]> {
-    return this.http.get<LiveMessage[]>(`${environment.apiUrl}/events/${slug}/live-messages`);
+    return this.http.get<LiveMessage[]>(`${environment.apiBaseUrl}/events/${slug}/live-messages`);
   }
 
   sendLiveMessage(slug: string, content: string, category: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/live/${slug}/send`, { content, category });
+    return this.http.post<any>(`${environment.apiBaseUrl}/live/${slug}/send`, { content, category });
   }
 }

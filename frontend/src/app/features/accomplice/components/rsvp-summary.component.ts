@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 export interface RsvpSummary {
   confirmed: number;
@@ -93,7 +93,7 @@ export class RsvpSummaryComponent implements OnInit {
   }
 
   private fetchSummary() {
-    this.http.get<any>(`${environment.apiUrl}/events/${this.eventSlug}/rsvps`).subscribe({
+    this.http.get<any>(`${environment.apiBaseUrl}/events/${this.eventSlug}/rsvps`).subscribe({
       next: (res) => {
         const rsvps: any[] = res || [];
         this.summary = {
