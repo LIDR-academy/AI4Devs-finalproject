@@ -66,4 +66,20 @@ public class GuestRepository : Repository<Guest>, IGuestRepository
                 .Where(g => guestIds.Contains(g.Id)), 
             cancellationToken);
     }
+
+    public async Task<IEnumerable<Guest>> GetGuestsForThankYouCardsAsync(CancellationToken cancellationToken = default)
+    {
+        var targetDate = DateTimeOffset.UtcNow.AddDays(-1).Date;
+
+        var query = _context.Guests
+            .Include(g => g.Event)
+            .Include(g => g.Invitations)
+                .ThenInclude(i => i.Rsvp)
+            .Where(g => !g.IsDeleted
+                     && g.Event.Status == Aura.Core.Enums.EventStatus.Published
+                     && g.Event.EventDate.Date == targetDate
+                     && g.Invitations.Any(i => i.Rsvp != null && i.Rsvp.Attendance == Aura.Core.Enums.AttendanceStatus.Yes));
+
+        return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(query, cancellationToken);
+    }
 }

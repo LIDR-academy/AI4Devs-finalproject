@@ -12,6 +12,7 @@ resources:
   - workers/whatsapp-deployment.yaml
   - workers/ssg-deployment.yaml
   - workers/reminders-cronjob.yaml
+  - workers/thank-you-cards-cronjob.yaml
   - database/postgres-statefulset.yaml
   - database/service.yaml
   - database/pvc.yaml

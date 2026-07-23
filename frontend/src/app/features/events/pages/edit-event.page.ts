@@ -43,7 +43,9 @@ export default class EditEventPage implements OnInit, OnDestroy {
       primaryColor: ['#000000', Validators.required],
       secondaryColor: ['#ffffff', Validators.required],
       fontFamily: ['Inter', Validators.required],
-      heroImageUrl: ['']
+      heroImageUrl: [''],
+      thankYouMessage: [''],
+      photoGalleryUrl: ['']
     });
 
     // Auto-save logic
@@ -154,7 +156,9 @@ export default class EditEventPage implements OnInit, OnDestroy {
           primaryColor: event.primaryColor || '#000000',
           secondaryColor: event.secondaryColor || '#ffffff',
           fontFamily: event.fontFamily || 'Inter',
-          heroImageUrl: event.heroImageUrl || ''
+          heroImageUrl: event.heroImageUrl || '',
+          thankYouMessage: event.thankYouMessage || '',
+          photoGalleryUrl: event.photoGalleryUrl || ''
         }, { emitEvent: false }); // Don't trigger auto-save on initial load
       },
       error: (err) => {

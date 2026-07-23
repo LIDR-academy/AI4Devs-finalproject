@@ -258,6 +258,11 @@ namespace Aura.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<string>("PhotoGalleryUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("photo_gallery_url");
+
                     b.Property<string>("PrimaryColor")
                         .IsRequired()
                         .HasMaxLength(7)
@@ -289,6 +294,11 @@ namespace Aura.Infrastructure.Migrations
                     b.Property<Guid?>("TemplateId")
                         .HasColumnType("uuid")
                         .HasColumnName("template_id");
+
+                    b.Property<string>("ThankYouMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("thank_you_message");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")

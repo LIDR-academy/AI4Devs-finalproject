@@ -17,6 +17,8 @@ export interface EventResponse {
   pendingRsvps: number;
   confirmedRsvps: number;
   declinedRsvps: number;
+  thankYouMessage?: string;
+  photoGalleryUrl?: string;
 }
 
 export interface CreateEventRequest {
@@ -45,4 +47,6 @@ export interface UpdateEventRequest {
   venueName: string;
   venueAddress: string;
   status?: string;
+  thankYouMessage?: string;
+  photoGalleryUrl?: string;
 }
