@@ -78,7 +78,7 @@ public class GuestRepository : Repository<Guest>, IGuestRepository
             .Where(g => !g.IsDeleted
                      && g.Event.Status == Aura.Core.Enums.EventStatus.Published
                      && g.Event.EventDate.Date == targetDate
-                     && g.Invitations.Any(i => i.Rsvp != null && i.Rsvp.Attendance == Aura.Core.Enums.AttendanceStatus.Yes));
+                     && g.Invitations.Any(i => i.Rsvp != null && i.Rsvp.Attendance == Aura.Core.Enums.RsvpAttendance.Yes));
 
         return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(query, cancellationToken);
     }

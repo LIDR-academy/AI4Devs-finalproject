@@ -41,7 +41,7 @@ public class ThankYouCardService : IThankYouCardService
         if (hasBeenSent)
             return;
 
-        var activeInvitation = guest.Invitations.FirstOrDefault(i => i.Rsvp != null && i.Rsvp.Attendance == AttendanceStatus.Yes);
+        var activeInvitation = guest.Invitations.FirstOrDefault(i => i.Rsvp != null && i.Rsvp.Attendance == RsvpAttendance.Yes);
 
         if (activeInvitation == null || activeInvitation.SentVia == null)
             return;
