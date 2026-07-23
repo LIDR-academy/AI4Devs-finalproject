@@ -24,6 +24,15 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   { 
+    path: 'accomplice/panel', 
+    loadComponent: () => import('./features/accomplice/pages/accomplice-panel.page'),
+    canActivate: [accompliceGuard]
+  },
+  { 
+    path: 'accomplice/:token', 
+    loadComponent: () => import('./features/accomplice/pages/accomplice-verify.page') 
+  },
+  { 
     path: 'rsvp/:token', 
     loadComponent: () => import('./features/rsvp/pages/rsvp-form.page').then(m => m.RsvpFormPageComponent) 
   },

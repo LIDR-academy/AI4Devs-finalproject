@@ -1,6 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface AccompliceResponse {
@@ -23,6 +24,9 @@ export interface GrantAccessRequest {
 export class AccompliceService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiBaseUrl}/accomplices`;
+  private state = signal<any>(null);
+
+  readonly currentAccomplice = () => this.state();
 
   getAccomplices(eventSlug: string): Observable<AccompliceResponse[]> {
     return this.http.get<AccompliceResponse[]>(`${this.apiUrl}/${eventSlug}`);
@@ -42,5 +46,19 @@ export class AccompliceService {
 
   verifyToken(token: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/verify?token=${token}`);
+  }
+
+  getMe(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/me`);
+  }
+
+  checkAuthStatus(): Observable<any> {
+    return this.getMe().pipe(
+      tap((res) => this.state.set(res)),
+      catchError(() => {
+        this.state.set(null);
+        return of(null);
+      })
+    );
   }
 }
