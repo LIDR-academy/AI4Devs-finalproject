@@ -24,6 +24,9 @@ public class Event
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset EventEndDate { get; set; }
+    
+    public string? ThankYouMessage { get; set; }
+    public string? PhotoGalleryUrl { get; set; }
 
     public User User { get; set; } = null!;
     public Template? Template { get; set; }

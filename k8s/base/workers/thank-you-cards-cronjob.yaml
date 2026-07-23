@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: thank-you-cards-worker
+  namespace: aura
+spec:
+  schedule: "0 12 * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: thank-you-cards-worker
+        spec:
+          containers:
+          - name: worker
+            image: aura-workers-thankyoucards:latest
+            imagePullPolicy: IfNotPresent
+            envFrom:
+            - secretRef:
+                name: api-secrets
+          restartPolicy: OnFailure

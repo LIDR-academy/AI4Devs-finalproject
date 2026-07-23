@@ -93,6 +93,18 @@
         <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/jpeg,image/png" class="sr-only">
       </div>
     </div>
+
+    <div class="editor-section">
+      <h3>Post-Event</h3>
+      <div class="form-group">
+        <label for="thankYouMessage">Thank You Message</label>
+        <textarea id="thankYouMessage" formControlName="thankYouMessage" class="form-control" rows="3" placeholder="Thank you for celebrating with us!"></textarea>
+      </div>
+      <div class="form-group" style="margin-top: 1rem;">
+        <label for="photoGalleryUrl">Photo Gallery URL</label>
+        <input type="url" id="photoGalleryUrl" formControlName="photoGalleryUrl" class="form-control" placeholder="https://photos.app.goo.gl/...">
+      </div>
+    </div>
   </aside>
 
   <!-- Live Preview -->
