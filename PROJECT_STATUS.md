@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INKSPIRE
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-18 — 🎨 **Rediseño Figma en curso** en rama `feature/rediseno-figma` (sin mergear): rebrand INKSPIRE + Home y Perfil de artista con la estructura del prototipo Figma Make. Plan y avance: `docs/plan-rediseno-figma.md` y `HANDOFF.md`.
+> Última actualización: 2026-07-23 — 🏷️ **[v1.1.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.1.0)** publicado: rediseño Figma Premium mergeado a main + rebrand INKSPIRE + fix de puerto Postgres (5434) + análisis competitivo LatAm (PRs #24, #25, #27).
 > **Fixes aplicados (sesión 2026-07-18):** issues 008–019 resueltos (imágenes, scroll, carrusel, pagos, mapa, cuenta, reseñas, chatbot general, reserva con JWT expirado).
 > Hito previo: 🏷️ **[v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0)** (backlog completo 13 US / 80 SP · 235 tests en verde · Flow validado e2e contra sandbox · documentación de entrega consolidada — PRs #21 y #22)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
@@ -10,7 +10,7 @@
 
 | Aspecto | Estado |
 |---|---|
-| Versión estable | 🏷️ **v1.0.0** (tag + release en GitHub, 2026-07-17) |
+| Versión estable | 🏷️ **v1.1.0** (tag + release en GitHub, 2026-07-23) — anterior: [v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0) |
 | Entrega 1 (documentación) | ✅ Completa (inconsistencias de `fixs/issue-004.md` resueltas; notas de vigencia en `docs/documentacion.md` — PR #22) |
 | Entrega 2 (implementación) | ✅ **Backlog completo** — Fase 0 + las 13 US (9 Must-Have 52 SP + 4 Should-Have 28 SP) mergeadas a main |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
