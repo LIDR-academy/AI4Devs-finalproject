@@ -1,134 +1,340 @@
-## Índice
+# RoboDock AI
+
+RoboDock AI es el Proyecto Final de AI4Devs. En la rama `finalproject-ASP`, el
+repositorio integra el flujo local de descarga asistida por vision: Backend REST
+con PostgreSQL, dashboard operacional compacto, servicio Edge Vision con camara
+OpenCV, lectura QR de camion, deteccion de cubos por color, planificacion
+multi-cubo, drop zones por color, ejecucion MaxArm fisica bajo confirmaciones,
+modos dry-run/hardware, confirmacion fisica por vision, reset operacional para
+preparar un nuevo camion y feedback en vivo de ejecucion.
+
+## Estado actual
+
+El flujo final implementado combina componentes reales y controles de seguridad
+locales:
+
+```text
+PostgreSQL Docker
+-> Backend REST / Prisma
+-> Edge Vision API
+-> camara u origen fixture OpenCV
+-> QR de camion
+-> deteccion de cubos por color
+-> planificacion multi-cubo por drop zone
+-> dashboard operacional compacto
+-> dry-run o ejecucion MaxArm fisica con confirmaciones
+-> sync de acciones, conteos y feedback en vivo
+-> reset operacional / preparar nuevo camion
+```
+
+Capacidades principales:
+
+- Backend REST local con Node.js, Express, TypeScript, Prisma y PostgreSQL.
+- Modelo operacional para camiones, sesiones, cubos detectados y acciones robot.
+- Dashboard React/Vite con vista compacta de sesion, vision, plan, ejecucion,
+  acciones, trazabilidad y reset.
+- Edge Vision API con camara/OpenCV, QR de camion, deteccion HSV por color,
+  snapshot polling y sincronizacion opt-in con Backend.
+- Planificacion multi-cubo con seleccion de drop zones por color.
+- Reset operacional para iniciar jornada o preparar un nuevo camion sin borrar
+  historial.
+- Modos `simulation`, `vision-dry-run` y flujo hardware con gates explicitos.
+- Ejecucion fisica MaxArm desde Edge Vision usando configuracion local, puerto
+  serial local y confirmaciones humanas.
+- Confirmacion fisica por vision y feedback de estado de ejecucion en dashboard.
+
+## Arquitectura resumida
+
+```mermaid
+flowchart LR
+    Camera[Camara / Fixture OpenCV] --> Edge[Edge Vision API]
+    Edge -->|HTTP JSON| Backend[Backend REST Express]
+    Frontend[Dashboard React/Vite] -->|HTTP JSON| Backend
+    Frontend -->|HTTP JSON| Edge
+    Backend --> Prisma[Prisma ORM]
+    Prisma --> DB[(PostgreSQL 16)]
+    Edge --> MaxArm[MaxArm fisico / dry-run]
+```
+
+Responsabilidades:
+
+- `backend/`: API REST, validacion, persistencia, dashboard operacional y reset.
+- `edge/`: vision, QR, deteccion de cubos, planificacion, drop zones, dry-run y
+  adaptadores MaxArm.
+- `frontend/`: dashboard operacional compacto para monitoreo, planificacion,
+  ejecucion y reset.
+- `docs/`: arquitectura, delivery, ADRs, API, evidencias y prompt-runs.
+- `prompts/`: agentes, subagentes, skills, commands y playbooks usados.
+
+## Estructura del repo
+
+```text
+backend/     API Express + TypeScript + Prisma
+frontend/    Dashboard React + Vite + TypeScript
+edge/        Edge Vision, OpenCV, QR, drop zones y MaxArm
+docs/        Documentacion, arquitectura, decisiones y evidencias
+prompts/     Agentes, subagentes, skills, commands y playbooks
+spikes/      Experimentos de factibilidad
+docker-compose.yml
+```
+
+## Requisitos
+
+- Docker Desktop con Docker Compose.
+- Node.js 20+.
+- npm.
+- Python 3.10+.
+- PowerShell en Windows.
+- Camara y MaxArm solo para modo hardware fisico.
+
+## Configuracion local
+
+Mantener los archivos `.env` y configuraciones locales fuera del repositorio.
+Usar los `.example` como base:
+
+- `backend/.env.example` para `DATABASE_URL`, `PORT` y CORS.
+- `frontend/.env.example` para `VITE_BACKEND_URL`, `VITE_EDGE_VISION_URL` y
+  polling.
+- `edge/.env.example` para URL de backend y config Edge.
+- `edge/config/edge.vision.example.json` como base de vision.
+- `edge/config/single-cube-pick-drop.example.json` como base de descarga.
+- `edge/config/drop_zones.example.json` como base de slots.
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+Los archivos locales de hardware/camara, como `*.local.json` y
+`frontend/.env.local`, no deben commitearse.
 
----
+## Levantar PostgreSQL
 
-## 0. Ficha del proyecto
+Desde la raiz del proyecto:
 
-### **0.1. Tu nombre completo:**
+```powershell
+docker compose up -d
+docker compose ps
+```
 
-### **0.2. Nombre del proyecto:**
+Configuracion incluida:
 
-### **0.3. Descripción breve del proyecto:**
+- DB: `robodockdb`
+- User: `robodock_user`
+- Password: `robodock_pass`
+- Host port: `5434`
+- Container port: `5432`
+- Volumen: `robodock_postgres_data`
 
-### **0.4. URL del proyecto:**
+## Levantar backend
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+```powershell
+cd backend
+npm install
+```
 
-### 0.5. URL o archivo comprimido del repositorio
+Crear `backend/.env` desde `backend/.env.example`:
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+```env
+PORT=3000
+NODE_ENV=development
+DATABASE_URL="postgresql://robodock_user:robodock_pass@localhost:5434/robodockdb?schema=public"
+CORS_ORIGIN="http://localhost:5173"
+```
 
+Preparar Prisma y datos demo:
 
----
+```powershell
+npm run prisma:generate
+npm run prisma:migrate -- --name init
+npm run prisma:seed
+```
 
-## 1. Descripción general del producto
+Ejecutar:
 
-> Describe en detalle los siguientes aspectos del producto:
+```powershell
+npm run dev
+```
 
-### **1.1. Objetivo:**
+Backend disponible en:
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+```text
+http://localhost:3000
+```
 
-### **1.2. Características y funcionalidades principales:**
+## Levantar Edge Vision
 
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+Instalar dependencias:
 
-### **1.3. Diseño y experiencia de usuario:**
+```powershell
+cd edge
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+Modo seguro con fixture/example:
 
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+```powershell
+python src\service\vision_api.py --config config\edge.vision.example.json
+```
 
----
+Modo camara/dry-run con sincronizacion backend:
 
-## 2. Arquitectura del Sistema
+```powershell
+python src\service\vision_api.py `
+  --config config\edge.vision.local.json `
+  --unload-config config\single-cube-pick-drop.local.json `
+  --allow-camera `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
 
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+El servicio queda por defecto en:
 
+```text
+http://127.0.0.1:8001
+```
 
-### **2.2. Descripción de componentes principales:**
+## Levantar frontend
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+```powershell
+cd frontend
+npm install
+```
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+Crear `frontend/.env` desde `frontend/.env.example` si necesitas configurar URLs:
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+```env
+VITE_BACKEND_URL=http://localhost:3000
+VITE_EDGE_VISION_URL=http://localhost:8001
+VITE_DASHBOARD_REFRESH_MS=3000
+VITE_EDGE_VISION_REFRESH_MS=2000
+```
 
-### **2.4. Infraestructura y despliegue**
+Ejecutar:
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+```powershell
+npm run dev
+```
 
-### **2.5. Seguridad**
+Abrir:
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+```text
+http://localhost:5173
+```
 
-### **2.6. Tests**
+## Simulacion vs hardware
 
-> Describe brevemente algunos de los tests realizados
+`simulation` conserva el flujo inicial sin camara ni robot fisico. Sirve para QA,
+demo y desarrollo sin hardware.
 
----
+`vision-dry-run` usa vision real o fixture, QR y detecciones para planificar sin
+abrir serial ni mover MaxArm. El Backend guarda acciones seguras con
+`mode=simulation`, `dryRun=true`, `serialOpened=false` y
+`hardwareMovement=false`.
 
-## 3. Modelo de Datos
+El flujo hardware se ejecuta desde Edge Vision y requiere configuracion local,
+camara autorizada con `--allow-camera`, puerto MaxArm, plan previo, QR valido,
+cubos detectados y confirmaciones de seguridad. El dashboard no habla directo
+con serial.
 
-### **3.1. Diagrama del modelo de datos:**
+## Validar flujo completo
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+1. Levantar PostgreSQL:
 
+```powershell
+docker compose up -d
+```
 
-### **3.2. Descripción de entidades principales:**
+2. Levantar backend:
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+```powershell
+cd backend
+npm run dev
+```
 
----
+3. Verificar healthcheck:
 
-## 4. Especificación de la API
+```powershell
+Invoke-RestMethod -Method GET -Uri "http://localhost:3000/health"
+```
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+4. Levantar Edge Vision en fixture, dry-run o camara segun el entorno.
 
----
+5. Levantar frontend:
 
-## 5. Historias de Usuario
+```powershell
+cd frontend
+npm run dev
+```
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+6. Validar en dashboard:
 
-**Historia de Usuario 1**
+- sesion activa o estado limpio segun reset;
+- QR/truckCode cuando Edge Vision detecta camion;
+- conteos de cubos registrados y detectados por vision;
+- plan multi-cubo y drop zones por color cuando hay snapshot valido;
+- estado de ejecucion fisica/dry-run;
+- ultimas acciones robot y feedback de errores;
+- reset operacional para iniciar jornada o preparar nuevo camion.
 
-**Historia de Usuario 2**
+## Endpoints principales
 
-**Historia de Usuario 3**
+Backend:
 
----
+- `GET /health`
+- `POST /sessions`
+- `GET /sessions`
+- `GET /sessions/:id`
+- `PATCH /sessions/:id`
+- `POST /sessions/:id/cubes`
+- `POST /robot/actions`
+- `PATCH /robot/actions/:id`
+- `GET /dashboard/operational`
+- `POST /dashboard/operational/reset`
+- `POST /vision/snapshots/sync`
 
-## 6. Tickets de Trabajo
+Edge Vision:
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+- `GET /health`
+- `GET /vision/status`
+- `GET /vision/snapshot`
+- `GET /vision/snapshot/image`
+- `POST /vision/sync-backend`
+- `POST /vision/plan-dry-run`
+- `POST /drop-zones/reset`
+- `POST /operation/reset`
+- `POST /robot/multi-cube/plan`
+- `POST /robot/multi-cube/execute`
+- `GET /robot/multi-cube/status`
 
-**Ticket 1**
+## Limitaciones conocidas
 
-**Ticket 2**
+- El sistema esta pensado para ejecucion local academica, no despliegue cloud.
+- No incluye autenticacion, RBAC, auditoria empresarial, colas ni WebSockets.
+- El dashboard usa polling, no streaming MJPEG ni eventos server-side.
+- La calibracion de camara, ROI, HSV, pickup y workspace depende del montaje
+  fisico local.
+- El modo hardware requiere validacion operacional del entorno, zona despejada,
+  puerto serial correcto y confirmaciones humanas.
+- Los archivos `*.local.json` son responsabilidad local y no forman parte del
+  repositorio.
 
-**Ticket 3**
+## Antecedente Entrega 2
 
----
+La Entrega 2 valido el MVP simulado inicial: PostgreSQL, Backend REST, dashboard
+operacional, Edge en `simulation`, creacion de sesion por `truckCode`, registro
+de cubos simulados, acciones robot simuladas y consulta del dashboard. Esa base
+se mantiene como fallback para QA y demos sin hardware, pero ya no representa el
+estado actual de la rama `finalproject-ASP`.
 
-## 7. Pull Requests
+Documentacion historica:
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+- `docs/delivery/01-alcance-entrega2.md`
+- `docs/delivery/02-plan-delivery-entrega2.md`
+- `docs/architecture/architecture-entrega2.md`
+- `docs/evidence/edge-simulation-test-results.md`
 
-**Pull Request 1**
+## Documentacion relacionada
 
-**Pull Request 2**
-
-**Pull Request 3**
-
+- `docs/delivery/roadmap-entregas.md`
+- `docs/api-design.md`
+- `backend/README.md`
+- `edge/README.md`
+- `frontend/README.md`

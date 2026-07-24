@@ -1,0 +1,170 @@
+{
+  "red": [
+    {
+      "code": "DROP_RED_01",
+      "color": "red",
+      "position_order": 1,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_RED_02",
+      "color": "red",
+      "position_order": 2,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_RED_03",
+      "color": "red",
+      "position_order": 3,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_RED_04",
+      "color": "red",
+      "position_order": 4,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    }
+  ],
+  "blue": [
+    {
+      "code": "DROP_BLUE_01",
+      "color": "blue",
+      "position_order": 1,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_BLUE_02",
+      "color": "blue",
+      "position_order": 2,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_BLUE_03",
+      "color": "blue",
+      "position_order": 3,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_BLUE_04",
+      "color": "blue",
+      "position_order": 4,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    }
+  ],
+  "yellow": [
+    {
+      "code": "DROP_YELLOW_01",
+      "color": "yellow",
+      "position_order": 1,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_YELLOW_02",
+      "color": "yellow",
+      "position_order": 2,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_YELLOW_03",
+      "color": "yellow",
+      "position_order": 3,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_YELLOW_04",
+      "color": "yellow",
+      "position_order": 4,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    }
+  ],
+  "green": [
+    {
+      "code": "DROP_GREEN_01",
+      "color": "green",
+      "position_order": 1,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_GREEN_02",
+      "color": "green",
+      "position_order": 2,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_GREEN_03",
+      "color": "green",
+      "position_order": 3,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    },
+    {
+      "code": "DROP_GREEN_04",
+      "color": "green",
+      "position_order": 4,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "active": false,
+      "occupied": false
+    }
+  ]
+}

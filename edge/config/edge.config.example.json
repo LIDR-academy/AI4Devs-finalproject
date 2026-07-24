@@ -1,0 +1,113 @@
+{
+  "profile": "simulation",
+  "truckCode": "TRUCK-001",
+  "dropZones": {
+    "path": "drop_zones.example.json"
+  },
+  "safety": {
+    "dryRun": true,
+    "enableHardwareMotion": false,
+    "humanConfirmationRequired": true
+  },
+  "robotPlanning": {
+    "enabled": false
+  },
+  "vision": {
+    "source": "simulation",
+    "imagePath": null,
+    "cameraIndex": 1,
+    "qrRoi": null,
+    "cargoRoi": null,
+    "qr": {
+      "pattern": "^TRUCK-\\d{3}$",
+      "allowedTruckCodes": [
+        "TRUCK-001",
+        "TRUCK-002",
+        "TRUCK-003"
+      ]
+    },
+    "detection": {
+      "minArea": 250,
+      "maxArea": 100000,
+      "minFillRatio": 0.45
+    },
+    "hsvRanges": {
+      "red": [
+        {
+          "lower": [0, 100, 80],
+          "upper": [10, 255, 255]
+        },
+        {
+          "lower": [170, 100, 80],
+          "upper": [179, 255, 255]
+        }
+      ],
+      "blue": [
+        {
+          "lower": [95, 90, 70],
+          "upper": [130, 255, 255]
+        }
+      ],
+      "yellow": [
+        {
+          "lower": [22, 120, 120],
+          "upper": [34, 255, 255]
+        }
+      ],
+      "green": [
+        {
+          "lower": [40, 70, 70],
+          "upper": [85, 255, 255]
+        }
+      ]
+    },
+    "evidence": {
+      "directory": "evidence"
+    },
+    "cubes": [
+      {
+        "color": "red",
+        "x": 143,
+        "y": 323,
+        "w": 84,
+        "h": 68,
+        "confidence": 0.9
+      },
+      {
+        "color": "blue",
+        "x": 220,
+        "y": 300,
+        "w": 80,
+        "h": 70,
+        "confidence": 0.88
+      },
+      {
+        "color": "yellow",
+        "x": 310,
+        "y": 340,
+        "w": 76,
+        "h": 75,
+        "confidence": 0.86
+      }
+    ]
+  },
+  "robot": {
+    "actionType": "PICK_AND_DROP",
+    "status": "SUCCESS",
+    "mode": "simulation",
+    "color": "red",
+    "metadata": {
+      "dryRun": true,
+      "commandPreview": "POSE 32 -204 124 1",
+      "sequence": [
+        "ready_to_take",
+        "reset",
+        "safe_robot_pose",
+        "target_robot_pose",
+        "cross-docking",
+        "release",
+        "reset"
+      ]
+    }
+  }
+}

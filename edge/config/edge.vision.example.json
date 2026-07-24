@@ -1,0 +1,87 @@
+{
+  "profile": "vision-dry-run",
+  "truckCode": "TRUCK-003",
+  "dropZones": {
+    "path": "drop_zones.example.json"
+  },
+  "safety": {
+    "dryRun": true,
+    "enableHardwareMotion": false,
+    "humanConfirmationRequired": true
+  },
+  "robotPlanning": {
+    "enabled": false
+  },
+  "vision": {
+    "source": "file",
+    "imagePath": "../../_local_context/spikes/experiments/dynamic_pickup_detection/debug/dynamic_pickup_original_20260621_163854.png",
+    "cameraIndex": 1,
+    "qrRoi": {
+      "x": 500,
+      "y": 180,
+      "w": 140,
+      "h": 170
+    },
+    "cargoRoi": {
+      "x": 47,
+      "y": 157,
+      "w": 348,
+      "h": 203
+    },
+    "qr": {
+      "pattern": "^TRUCK-\\d{3}$",
+      "allowedTruckCodes": [
+        "TRUCK-001",
+        "TRUCK-002",
+        "TRUCK-003"
+      ]
+    },
+    "detection": {
+      "minArea": 1200,
+      "maxArea": 14000,
+      "minWidth": 25,
+      "maxWidth": 105,
+      "minHeight": 25,
+      "maxHeight": 105,
+      "minFillRatio": 0.45,
+      "minAspectRatio": 0.55,
+      "maxAspectRatio": 1.8,
+      "overlapThreshold": 0.35,
+      "sizeValid": true,
+      "morphologyKernelSize": 5
+    },
+    "hsvRanges": {
+      "red": [
+        {
+          "lower": [0, 100, 80],
+          "upper": [10, 255, 255]
+        },
+        {
+          "lower": [170, 100, 80],
+          "upper": [179, 255, 255]
+        }
+      ],
+      "blue": [
+        {
+          "lower": [95, 90, 70],
+          "upper": [130, 255, 255]
+        }
+      ],
+      "yellow": [
+        {
+          "lower": [22, 120, 145],
+          "upper": [34, 255, 255]
+        }
+      ],
+      "green": [
+        {
+          "lower": [40, 70, 70],
+          "upper": [85, 255, 255]
+        }
+      ]
+    },
+    "evidence": {
+      "directory": "../../workspace/generated/vision-evidence"
+    }
+  }
+}

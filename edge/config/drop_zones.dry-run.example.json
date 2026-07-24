@@ -1,0 +1,50 @@
+{
+  "red": [
+    {
+      "code": "DRY_RED_01",
+      "color": "red",
+      "position_order": 1,
+      "x": 120,
+      "y": -80,
+      "z": 80,
+      "active": true,
+      "occupied": false
+    }
+  ],
+  "blue": [
+    {
+      "code": "DRY_BLUE_01",
+      "color": "blue",
+      "position_order": 1,
+      "x": 40,
+      "y": -80,
+      "z": 80,
+      "active": true,
+      "occupied": false
+    }
+  ],
+  "yellow": [
+    {
+      "code": "DRY_YELLOW_01",
+      "color": "yellow",
+      "position_order": 1,
+      "x": -40,
+      "y": -80,
+      "z": 80,
+      "active": true,
+      "occupied": false
+    }
+  ],
+  "green": [
+    {
+      "code": "DRY_GREEN_01",
+      "color": "green",
+      "position_order": 1,
+      "x": -120,
+      "y": -80,
+      "z": 80,
+      "active": true,
+      "occupied": false
+    }
+  ]
+}

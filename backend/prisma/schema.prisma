@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ERROR
+}
+
+enum CubeColor {
+  red
+  blue
+  green
+  yellow
+}
+
+enum RobotActionType {
+  PICK_AND_DROP
+}
+
+enum RobotActionStatus {
+  PLANNED
+  SUCCESS
+  ERROR
+}
+
+enum ExecutionMode {
+  simulation
+  hardware
+}
+
+model Truck {
+  id        String          @id @default(uuid()) @db.Uuid
+  code      String          @unique
+  sessions  UnloadSession[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model UnloadSession {
+  id           String          @id @default(uuid()) @db.Uuid
+  code         String          @unique
+  status       SessionStatus   @default(IN_PROGRESS)
+  truckId      String          @db.Uuid
+  truck        Truck           @relation(fields: [truckId], references: [id])
+  startedAt    DateTime        @default(now())
+  finishedAt   DateTime?
+  cubes        DetectedCube[]
+  robotActions RobotAction[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model DetectedCube {
+  id         String        @id @default(uuid()) @db.Uuid
+  code       String
+  sessionId  String        @db.Uuid
+  session    UnloadSession @relation(fields: [sessionId], references: [id])
+  color      CubeColor
+  confidence Float?
+  x          Int?
+  y          Int?
+  w          Int?
+  h          Int?
+  metadata   Json?
+  detectedAt DateTime      @default(now())
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([sessionId, code])
+  @@index([sessionId])
+  @@index([color])
+}
+
+model RobotAction {
+  id         String            @id @default(uuid()) @db.Uuid
+  code       String
+  sessionId  String            @db.Uuid
+  session    UnloadSession     @relation(fields: [sessionId], references: [id])
+  actionType RobotActionType
+  status     RobotActionStatus
+  mode       ExecutionMode     @default(simulation)
+  color      CubeColor?
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([sessionId, code])
+  @@index([sessionId])
+  @@index([status])
+}

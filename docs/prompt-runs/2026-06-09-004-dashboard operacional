@@ -1,0 +1,66 @@
+Usa AGENTS.md como guía principal del proyecto.
+
+Actúa como:
+- prompts/agents/frontend.md
+
+Usa skills:
+- prompts/skills/react-dashboard.md
+- prompts/skills/documentation.md
+
+Usa command:
+- prompts/commands/implement-feature.md
+
+Lee:
+- docs/delivery/roadmap-entregas.md
+- docs/delivery/01-alcance-entrega2.md
+- docs/delivery/02-plan-delivery-entrega2.md
+- docs/architecture/architecture-entrega2.md
+- docs/api-design.md
+- backend/README.md
+- edge/README.md
+- docs/evidence/backend-api-test-results.md
+- docs/evidence/edge-simulation-test-results.md
+
+Objetivo:
+Implementar el frontend/dashboard operacional de RoboDock AI para la Entrega 2.
+
+Alcance:
+- Crear o actualizar frontend/.
+- Implementar frontend con React + Vite + TypeScript.
+- Consumir el backend real en http://localhost:3000.
+- Mostrar el dashboard operacional usando GET /dashboard/operational.
+- Mostrar sesión activa.
+- Mostrar truckCode.
+- Mostrar estado de sesión.
+- Mostrar conteo de cubos por color.
+- Mostrar total de cubos.
+- Mostrar últimas acciones del robot.
+- Mostrar claramente mode = simulation cuando corresponda.
+- Manejar estados loading, error y empty.
+- Crear frontend/.env.example.
+- Crear frontend/README.md con instrucciones de instalación y ejecución.
+
+Pantalla mínima:
+- Dashboard Operacional
+
+Reglas:
+- No modifiques backend.
+- No modifiques edge.
+- No cambies endpoints existentes.
+- No declares hardware real como implementado.
+- Mantén diseño simple, claro y demostrable.
+- No hagas commit ni push.
+
+Antes de modificar archivos:
+1. Resume brevemente el plan.
+2. Lista archivos que crearás o modificarás.
+
+Luego implementa.
+
+Al finalizar:
+1. Resume archivos creados o modificados.
+2. Indica comandos de instalación.
+3. Indica cómo configurar la URL del backend.
+4. Indica cómo levantar el frontend.
+5. Indica cómo validar visualmente el dashboard.
+6. Indica riesgos o pendientes.
