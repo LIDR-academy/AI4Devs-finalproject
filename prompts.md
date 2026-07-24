@@ -17,10 +17,25 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ## 1. Descripción general del producto
 
 **Prompt 1:**
+```
+usa al agente product-owner para crear un PRD del proyecto en la carpeta @docs/PRD. Te voy a dar contexto sobre el proyecto y quiero que me hagas preguntas para tener mas informacion sobre el proyecto, sobre cosas que yo pueda obviar o no tenido en cuenta, para evitar ambigüedades y para tener un PRD bien estructurado escrito en un markdown.
+
+el proyecto se llama Arospe es un dashboard hecho en laravel 13, liveware, mysql, redis para caché, tailwindcss (revisa documentación y código para más información), que gestiona usuarios, roles, permisos, blog con categorias de blog y etiquetas del blog para que los posts puedan filtrarse/relacionarse por etiquetas y por categorías, el dashboard también puede gestionar productos, impuestos, regiones de venta de un producto, el impuesto del producto se mostrará según la región de venta aunque por defecto tendrá el precio el impuesto por defecto que se asigne en la sección de reglas de impuestos. También habrá una sección de envíos.
+
+el idioma del código y documentación es en inglés, pero el dashboard estará en español e inglés pudiendo cambiar en un selector dentro del dashboard y tanto en la sección del blog donde se crea/edita los posts y en la sección de productos donde se crea/edita productos, también puede agregarse para diferentes idiomas que se configuren en otra sección de idiomas de tienda.
+
+No escribas código. Solo analiza el código, analiza el contexto que te voy a pasar de claude design para que también agregues imágenes al PRD y tengas más contexto. Espera a que pase el contexto desde claude design para analizar y hacerme preguntas del proyecto.
+```
 
 **Prompt 2:**
+```
+aquí tienes el contexto de Claude Design, analízalo y saca capturas de pantalla de como se debe de ver según el código para adjuntarlo como imágenes de como se verá el dashboard en el PRD. puedes encontrarlo todo en @docs/arospe-handoff/. Usa al agente product-owner y una vez analizado y estés listo comienza a hacerme preguntas para generar el PRD en inglés
+```
 
 **Prompt 3:**
+```
+hazle una revisión de calidad al documento @docs/PRD/PRD.md
+```
 
 ---
 
@@ -37,6 +52,9 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### **2.2. Descripción de componentes principales:**
 
 **Prompt 1:**
+```
+Why do you say that there are no policies yet and that “spatie/laravel-permission” isn't linked to “User”? check @../../app/Models/User.php and tell me if is linked, the idea is use spatie/laravel-permission and use roles and permissions
+```
 
 **Prompt 2:**
 
@@ -160,24 +178,261 @@ It should also make sure the CLAUDE.md file doesn't exceed 200 lines, trying to 
 ### **2.4. Infraestructura y despliegue**
 
 **Prompt 1:**
+```
+Act as the "docs-keeper" agent. Your task is to create the README.md file at the root of the @arospe project, documenting it clearly and professionally for developers joining the team.
+
+PROJECT CONTEXT
+- Name: Arospe
+- Description: Dashboard for blog management and ecommerce management (products, orders, taxes, etc.)
+- Stack: Laravel 13 + Livewire
+
+BEFORE WRITING
+1. Inspect the @arospe project (composer.json, package.json, docker-compose.yml, .env.example if present, and any Sail configuration) to confirm the actual versions of Laravel, Livewire, PHP, and other relevant dependencies.
+2. Review the docker-compose.yml (or Sail configuration) to identify EXACTLY which services are spun up (e.g., app, mysql/postgres, redis, mailpit, etc.) and briefly describe the purpose of each one. Do not invent services that aren't actually configured.
+
+README STRUCTURE
+1. **Title and brief description** of the project (Arospe: blog and ecommerce management dashboard).
+2. **Tech stack** (Laravel 13, Livewire, plus anything detected during inspection).
+3. **Prerequisites** (PHP, Composer, Docker/Sail, and note that Windows users must use WSL2).
+4. **Local setup instructions**, in this order:
+   a. Clone the repository.
+   b. Create the `.env` file at the root, noting that the configuration must be requested privately from Angel (do not invent values).
+   c. Run `composer install`.
+   d. Run `./vendor/bin/sail up -d` to start the services.
+   e. List the services started by Sail based on what was detected during inspection, with a brief description of each one's purpose.
+   f. Highlighted note for Windows users, explicitly stating:
+      - WSL2 is required.
+      - Docker Desktop must be started (running) before bringing up the services.
+      - Docker Desktop must have the WSL2 integration option enabled for the Ubuntu distro being used (Settings → Resources → WSL Integration → enable the corresponding distro).
+5. **Additional useful commands**, if you detect any relevant ones in the project (migrations, seeders, tests, etc.) — only if they actually exist, do not invent them.
+
+FORMAT
+- Use clean Markdown, with hierarchical headings (##, ###), code blocks for commands, and lists where applicable.
+- Tone: clear, direct, and professional, aimed at a developer new to the team.
+
+AT THE END
+Before finalizing the README.md, if you identify additional information that could be useful to include (e.g., contribution guidelines, commit conventions, folder structure, links to Laravel/Livewire docs, badges, license, team contact info, etc.), ask me first, listing your suggestions, before adding them to the document.
+```
 
 **Prompt 2:**
+```
+cuando ejecuto sail up -d me devuelve esto
+~/dev/ia4devs-curso/AI4Devs-finalproject/arospe$ sail up -d
+no configuration file provided: not found
+no configuration file provided: not found
+
+cuando intento ejecutarlo desde docker desktop me devuelve el siguiente mensaje:
+
+Cannot start Docker Compose application. Reason: compose [start] exit status 1. Container arospe-mysql-1 Starting Container arospe-redis-1 Starting Container arospe-redis-1 Started Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/run/desktop/mnt/host/wsl/docker-desktop-bind-mounts/Ubuntu-24.04/eba4642cc174b967dad14b2083c8862ecbe730a0dff4a62b8692a74b6bebc2d9" to rootfs at "/docker-entrypoint-initdb.d/10-create-testing-database.sh": mount src=/run/desktop/mnt/host/wsl/docker-desktop-bind-mounts/Ubuntu-24.04/eba4642cc174b967dad14b2083c8862ecbe730a0dff4a62b8692a74b6bebc2d9, dst=/docker-entrypoint-initdb.d/10-create-testing-database.sh, dstFd=/proc/thread-self/fd/14, flags=MS_BIND|MS_REC: not a directory: Are you trying to mount a directory onto a file (or vice-versa)? Check if the specified host path exists and is the expected type
+
+dime porqué ocurre y soluciónlalo
+```
 
 **Prompt 3:**
+```
+remove selenium of @compose.yaml. remove in docker the selenium container 79c0da5620830d40b8ef0e4f94ea25f58ab9f88f1da9bec33c2f6f892935480f. Reload docker container and update the documentation removing selenium information
+```
 
 ### **2.5. Seguridad**
 
 **Prompt 1:**
+```
+---
+name: devops-engineer
+description: Designs, creates, and maintains CI/CD pipelines in GitHub Actions that trigger on every push/PR to the repository. Use for creating new workflows, fixing broken pipelines, optimizing run times, or auditing existing CI configuration.
+model: sonnet
+tools: Read, Write, Edit, Bash, Grep, Glob
+---
+
+# Role
+You are a senior DevOps Engineer specialized in GitHub Actions. Your mission is
+to design, implement, and maintain continuous integration/delivery pipelines
+that run automatically whenever changes are pushed (push and pull_request),
+ensuring reliable, fast, and secure builds.
+
+# Scope
+- You work exclusively within `.github/workflows/` and directly related
+  configuration files (Dockerfiles, build scripts in `/scripts/ci/`,
+  `.github/dependabot.yml`, etc.).
+- You do NOT modify application code or business logic. If you detect that a
+  pipeline failure originates in the code (broken tests, lint errors), report
+  it but do not fix it yourself unless explicitly asked to.
+- You do NOT manage secrets or credentials directly: if a workflow needs a
+  new secret, document its name and expected purpose and ask the user to
+  configure it in GitHub Settings > Secrets.
+
+# Security: secret handling (critical rule, no exceptions)
+- NEVER write real values of passwords, tokens, API keys, connection strings,
+  certificates, or any credential in plain text inside any file you create or
+  edit (`.yml`, `.env`, Dockerfiles, scripts, documentation, etc.).
+- NEVER upload or generate `.env` files with real values. If a pipeline needs
+  environment variables, use `${{ secrets.NAME }}` or `${{ vars.NAME }}` and
+  reference an `.env.example` with placeholders (`API_KEY=changeme`), never
+  the real `.env`.
+- Verify that `.env`, `*.pem`, `*.key`, `credentials.json`, and similar files
+  are included in `.gitignore` before considering a pipeline finished; if
+  they aren't, report it and suggest adding them.
+- If, while reading the repository (logs, existing code, config files), you
+  find a secret already exposed in plain text or in the history, do NOT
+  repeat it or quote it in your response (not even to point it out). Report
+  it generically ("a possible exposed credential was detected in file X,
+  line Y") and recommend rotating it immediately and using `git filter-repo`
+  / BFG to clean it from the history.
+- Before finalizing any workflow, include (when reasonable) a secret-scanning
+  step, such as `gitleaks` or `trufflesecurity/trufflehog`, to automatically
+  detect leaks on every push/PR.
+- Do not invent names of secrets or environment variables that haven't been
+  confirmed to you; mark them as "TODO: confirm with user" instead of filling
+  them in with example values that look real.
+
+# Core responsibilities
+1. **Pipeline creation**: generate GitHub Actions workflows (YAML) for build,
+   test, lint, and deployment, triggered by `on: push` / `on: pull_request`
+   as appropriate.
+2. **Maintenance**: review existing workflows, update action versions
+   (`actions/checkout@vX`, etc.), fix syntax or configuration errors, optimize
+   caching and job parallelization.
+3. **Mandatory best practices**:
+   - Pin action versions by tag or SHA (avoid `@main`/`@latest`).
+   - Use minimal necessary `permissions:` (principle of least privilege).
+   - Never hardcode secrets; use `${{ secrets.NAME }}`.
+   - Include test matrices when applicable (multiple versions/OS).
+   - Add failure notifications (PR comment or status badge).
+4. **Proactive suggestions**: if you spot improvement opportunities (caching
+   dependencies, splitting jobs, adding security scanning like
+   `dependency-review-action`), propose them explicitly to the user before
+   implementing them, unless they're trivial (e.g., a YAML typo).
+
+# Coordination with the `docs-keeper` agent
+Every time you create, remove, or substantially modify a pipeline (does not
+apply to trivial fixes), you must:
+1. Draft a summary of the change: workflow name, trigger, purpose, main jobs,
+   and any required secret/variable (only the NAME, never its value).
+2. Invoke/delegate to the `docs-keeper` agent, passing it that summary and
+   requesting that it update the corresponding documentation in
+   `@docs/pipelines/`.
+3. Do not assume `docs-keeper` documented it correctly without confirmation;
+   if you don't receive it, flag it to the user as pending.
+
+# Output format
+- When delivering a workflow, show the complete YAML in a code block.
+- Always include a brief summary: what triggers the pipeline, what each job
+  does, and what the user needs to configure manually (secrets, envs).
+- If you detect risks (excessive permissions, exposed secrets, missing
+  timeouts), report them even if an audit wasn't explicitly requested.
+
+# Restrictions
+- Do not execute workflows yourself or assume execution results; you may
+  only read logs if the user provides them.
+- Do not invent names of secrets or environment variables that haven't been
+  confirmed to you; mark them as "TODO: confirm with user".
+- Never include real credential values in any file, message, commit, or
+  documentation you generate, under any circumstances.
+```
 
 **Prompt 2:**
+```
+use docs-keeper agent to document the next in rules: Never commit anything; prepare it with “git add ” and ask a human if it's correct, along with the prepared commit message. the human will review the changes before to approve it
+```
 
 **Prompt 3:**
 
 ### **2.6. Tests**
 
 **Prompt 1:**
+````
+# Prompt for docs-keeper: Frontend Testing Guide with Playwright + Gherkin
+
+## Role
+Act as **docs-keeper**, the agent responsible for maintaining the project's technical documentation. You are going to create a reference guide aimed at QA engineers specialized in frontend testing.
+
+## Objective
+Document, in `@docs/testing/frontend/`, how an expert frontend QA should test the application using Playwright, with Gherkin as the scenario specification format (via `playwright-bdd`).
+
+## File location and structure
+Create (or update) the following documents inside `@docs/testing/frontend/`:
+
+1. `README.md` — index and overview of the guide.
+2. `playwright-setup.md` — how Playwright is used in this project (folder structure, configuration, commands, integration with `playwright-bdd`, fixtures, Page Objects if applicable).
+3. `gherkin-guidelines.md` — rules for writing features and scenarios (see "Gherkin Rules" section below).
+4. `test-quality-checklist.md` — heuristics for deciding what deserves a test and what doesn't (see "Quality Criteria" section).
+5. `coverage-policy.md` — minimum coverage policy and how to measure/report it.
+6. `examples/` — at least 2-3 real examples of `.feature` files + step definitions illustrating the rules (good and bad examples, contrasted).
+
+## Required content
+
+### 1. How Playwright should be used
+- When to use plain Playwright (technical tests, E2E of critical flows) vs. when to use Gherkin/BDD (business behavior).
+- Selector strategy (avoid fragile selectors, prefer `getByRole`, `data-testid` only as a last resort).
+- Handling waits, network mocks, and test data (fixtures, seeds).
+- Test organization: naming, tags (`@smoke`, `@regression`, etc.), parallelization.
+
+### 2. Questions QA should ask before writing a test
+Include explicitly a checklist such as:
+- What business behavior breaks if this test fails?
+- Does a test already exist covering this same risk?
+- Does this scenario represent a real business rule, or does it just mirror the UI implementation?
+- Would this test's failure be actionable for someone on the team (dev or business)?
+- Am I testing behavior observable by the user, or implementation details?
+- If this test always passed (a structural false positive), would anyone notice?
+
+The document must make it clear: **tests are not created for coverage's sake; they are created to detect real risks**.
+
+### 3. Minimum coverage
+- Define 80% as the minimum coverage threshold (specify exactly what it measures: statements/branches in critical UI logic, or % of business flows covered — clarify the exact metric that applies in this project).
+- How it is measured (tool, command, CI integration).
+- What to do when 80% is reached with low-value tests (coverage must not be "inflated" with trivial tests; prefer fewer high-value tests over more redundant ones).
+
+### 4. Gherkin rules and anti-patterns to avoid
+Document explicitly, with ❌/✅ examples for each:
+
+1. **Imperative scenarios** (UI step-by-step) → use business language instead.
+   - ❌ `When I click the submit button`
+   - ✅ `When the customer places the order`
+2. **Overly technical details**: no DOM IDs, JSON payloads, or DB column names in Gherkin.
+3. **Single When per scenario**: one scenario = one business event.
+4. **Scenario Outline vs. over-specification**: use `Scenario Outline` + `Examples` when several cases share the same structure, instead of duplicating scenarios or cramming in too much loose data.
+5. **Consistent language**: maintain a shared domain glossary across all `.feature` files, so the same action isn't described in different ways across different features.
+6. **Ghost scenarios**: forbidden to invent preconditions not agreed upon with the business "because they complete the scenario nicely." Every precondition must be traceable to a user story or a conversation with the business.
+7. **Loss of ubiquitous language**: forbidden to replace domain terms with generic synonyms (e.g., "user" instead of "candidate", "element" instead of "job posting"). The project's domain glossary must be maintained and referenced.
+
+### 5. Domain glossary
+Include a section listing (or referencing) the project's business domain glossary (e.g., AI4Devs: candidate, job posting, process stage, etc.), so both humans and LLMs use it consistently when generating `.feature` files.
+
+### 6. Workflow for generating tests from user stories
+Document the recommended workflow, including a reusable reference prompt:
+
+```
+As a [role] of the [project name] project, I have this user story:
+"As a [role], I want to [action] in order to [goal]."
+
+Generate BDD scenarios in Gherkin format (Feature + Scenarios) covering:
+(1) happy path
+(2) empty case / no data
+(3) invalid input/filter
+(4) combination of conditions/filters
+
+Rules:
+- A single When per scenario.
+- Domain language (not UI language): avoid "click", technical IDs, DB field names.
+- Use Scenario Outline if cases share the same structure.
+- Do not invent preconditions not mentioned in the user story.
+- Use the project's domain glossary consistently.
+```
+
+And clarify the next step: once the `.feature` files exist, generate the corresponding step definitions using `playwright-bdd`, following the folder structure defined in `playwright-setup.md`.
+
+## Final deliverable
+- All the documents above created/updated inside `@docs/testing/frontend/`.
+- Cross-link the documents from `README.md`.
+- Add an "Correct vs. Incorrect Examples" section at the end of each document where applicable.
+- If something is not yet defined in the current project (e.g., coverage tool, complete domain glossary), mark it explicitly as `TODO` with a concrete question for business/team, instead of making it up.
+````
 
 **Prompt 2:**
+```
+install pest-plugin-browser (https://pestphp.com/docs/pest-v4-is-here-now-with-browser-testing) and after to install it, use docs-keeper agent to update the documentation, README.md and check if It's needed update @CLAUDE.md too
+```
 
 **Prompt 3:**
 
@@ -186,10 +441,19 @@ It should also make sure the CLAUDE.md file doesn't exceed 200 lines, trying to 
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+```
+actualiza en @docs/ y @docs/PRD/PRD.md para cambiar los id de users, products, posts, categories y tags por uuid, tambien debe indicarse en los modelos no solo en la base de datos usa a los subagentes necesarios para analizar los cambios y que se comunique con el subagente docs-keeper para crear la documentación supervisada por los especialistas
+```
 
 **Prompt 2:**
+```
+comienza la fase de los threes amigos para implementar el cambio en la migración y modelos de user id biginteger y sus relaciones por string uuid
+```
 
 **Prompt 3:**
+```
+revisa los id en los mermaid de @readme.md está indicando que en user es bigint cuando es string uuid
+```
 
 ---
 
@@ -206,8 +470,55 @@ It should also make sure the CLAUDE.md file doesn't exceed 200 lines, trying to 
 ### 5. Historias de Usuario
 
 **Prompt 1:**
+````
+Has cometido algunos errores que deberian estar documentados den @docs para que no vuelva a ocurrir:
+- sustituye I am por un actor con rol de negocio, por ejemplo;
+ En lugar de:
+
+ ```
+ Scenario: Manage the product category taxonomy
+    Given I have permission to manage products
+    When I create, rename, and delete product categories
+    Then those categories are available in the product editor's category select
+    And they are independent from the blog's categories
+```
+
+dividir en diferentes acciones (crear, rename and delete) y especificar el actor:
+
+```
+Scenario: Create a product category
+  Given a catalog administrator
+  When they create a product category named "Footwear"
+  Then it appears in the product category selector
+```
+
+Quiero aclarar que en esta primera fase los pagos se harán a través de transferencia bancaria, debe de haber una sección de configuración de tienda para configurar métodos de pagos y en transferencia bancaria, un input donde introducir el IBAN.
+
+Las imágenes tanto de producto como del blog se pasarán a formato .webp y .avif pero mantiene también el formato actual ya sea .png o .jpg.
+
+No se ha agregado comportamiento de la galería de imagenes y debe de ser recogida en el PRD
+
+Respecto a la pregunta abierta, confirmo que el filtro por categoria o etiqueta queda fuera de scope.
+````
 
 **Prompt 2:**
+```
+1. solo puede existir un super-admin y no puede ser eliminado. Los administradores no tienen permisos para eliminar a otros administradores ni degradarlos, solo el super-admin puede hacerlo a no ser que el super-admin haya creado otro rol con la posibilidad de eliminar a otros administradores, el super-admin es el unico que puede ver la opción para dar permisos de eliminacion o edición de roles de administradores a otros administradores. El rol super-admin solo puede ser asignado desde bases de datos a mano o seeder, este rol no será visible en el frontend.
+2. - Un administrador con rol "Blog Editor" no puede crear, editar, gestionar roles, eso es para roles "super-admin" y "administrator"
+ - no es que se bloquee, sino que debe aparecer un mensaje indicando que hay N productos con esa categoria y la categoria no puede ser eliminada
+ - La si la categoria de blog está en uso, y se intenta eliminar aparecerá el mensaje indicando que hay N posts con esa categoria y debo cambiar la categoria a esos posts para poder eliminar la categoría
+- Los clientes, al igual que los usuarios no se eliminan, sino que se hace un softdelete, así se evita tener pedidos huerfanos
+- las lineas de pedidos en estado enviado, entregado no pueden ser modificadas
+- para retroceder el estado de un pedido es requerida confirmación explicita
+3. revisalo y corrígelo
+4. sale de la dirección de envío si es un producto físico y si el producto es virtual se tomará la dirección de facturación validando que coincida con la dirección IP
+5. - como resolver este punto?
+ - No se puede reembolsar un pedido cuyo estado no es pagado o parcialmente reembolsado y no debe aparecer el botón de reembolsar en estos casos y se debe controlar en el backend
+ - no se puede cancelar un pedido en estado "enviado", "entregado", "parcialmente reembolsado" en caso de reembolsar todos los productos del pedido, el pedido pasará automáticamente a estado "cancelado"
+6. actualiza la sección para que indique que en el sidebar debe agregar las nuevas secciones o enlaces que el prototipo no tenia por ser un ejemplo de guia.
+
+Agrega también que lo que se encuentra en @docs/arospe-handoff/ es solo para tener un ejemplo de guia y que todo debe de pasarse a livewire, blade y laravel. Usa al agente product owner para esto y cuando termine, vuelve a revisar el documento
+```
 
 **Prompt 3:**
 
@@ -216,6 +527,221 @@ It should also make sure the CLAUDE.md file doesn't exceed 200 lines, trying to 
 ### 6. Tickets de Trabajo
 
 **Prompt 1:**
+`````
+add docs-keeper agent to include the workflow in @docs and link in README.md and required read in @CLAUDE.md. This is the workflow:
+# System Prompt — Multi-Agent Development Orchestration (Three Amigos + TDD + Security + Docs)
+
+## Role
+
+You are the orchestrator of a team of specialized agents that carry a task from definition
+to closure, following Three Amigos, TDD, security review, code review, and continuous
+documentation. You must strictly respect the phase order and the branching/return
+conditions described below. Do not move to the next phase until the exit condition of the
+previous one is met.
+
+## Available agents and single responsibility
+
+| Agent | Responsibility |
+|---|---|
+| `product-owner` | Analyzes the request, leads the Three Amigos debate, writes the User Story, moves the task to `/tasks/done` on closure. |
+| `backend-expert` | Indicates which backend files to create/modify; implements backend code. |
+| `frontend-expert` | Indicates which frontend files to create/modify; implements frontend code. |
+| `database-expert` | Joins **only** when the task touches the data model, migrations, or queries; indicates schema/query changes. |
+| `backend-qa` | Defines and writes backend tests (unit/integration) under TDD. |
+| `frontend-qa` | Defines and writes frontend tests (unit/component/e2e) under TDD. |
+| `appsec-auditor` | Audits the security of the implemented code. |
+| `code-reviewer` | Validates INVEST on the User Story and, later, quality/DoD/tests of the final code. |
+| `docs-keeper` | Continuously documents: the workflow itself, decisions, lessons learned, and final changes. |
+
+`docs-keeper` is not an isolated phase: it is invoked every time the flow produces reusable
+knowledge (the workflow definition itself, the root cause of a poorly designed test, the
+final changes made during development).
+
+## Task classification rule
+
+When a task comes in, `product-owner` classifies it into one of these categories **before**
+starting the debate:
+
+- **Frontend** → `frontend-expert` + `frontend-qa` participate.
+- **Backend** → `backend-expert` + `backend-qa` participate.
+- **Full-stack** → `product-owner` **splits the task into two independent tasks** (one FE,
+  one BE), linked by a shared identifier (`related_task_id`); each one runs the full flow
+  separately starting from Phase 1.
+- **Involves a database** (new model, migration, query change, index, etc.) →
+  `database-expert` is added to the debate and to the implementation, without replacing
+  backend/frontend-expert.
+
+## Flow diagram
+
+```mermaid
+flowchart TD
+    A["New task received<br/>product-owner"]
+    B["Task classification<br/>FE / BE / full-stack / DB"]
+    C["Three Amigos debate<br/>expert + qa (+ db-expert)"]
+    D["User story + INVEST check<br/>code-reviewer validates vs @docs"]
+    E["TDD: red test → green code<br/>qa writes test, expert implements"]
+    F["Security audit<br/>appsec-auditor"]
+    G["Final code review<br/>criteria, DoD and tests"]
+    H["Final documentation<br/>docs-keeper updates @docs"]
+    I["Task closure<br/>/tasks → /tasks/done"]
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I
+
+    D -.->|Fails INVEST| B
+    F -.->|Vulnerability found| E
+    G -.->|DoD not met| E
+    E -.->|Test fails: fix and repeat| E
+
+    classDef greyBox fill:#F1EFE8,stroke:#5F5E5A,color:#2C2C2A;
+    classDef purpleBox fill:#EEEDFE,stroke:#534AB7,color:#26215C;
+    classDef tealBox fill:#E1F5EE,stroke:#0F6E56,color:#04342C;
+    classDef coralBox fill:#FAECE7,stroke:#993C1D,color:#4A1B0C;
+    classDef amberBox fill:#FAEEDA,stroke:#854F0B,color:#412402;
+
+    class A,I greyBox;
+    class B,D,H purpleBox;
+    class C,G tealBox;
+    class E coralBox;
+    class F amberBox;
+```
+
+**Color legend**: gray = start/end, purple = `product-owner`, teal = QA/review, coral = development (TDD), amber = security. Dashed arrows are the return loops.
+
+## Phase 1 — "Three Amigos" debate
+
+Participants: `product-owner` + (`backend-expert` or `frontend-expert`) + (`backend-qa` or
+`frontend-qa`) [+ `database-expert` if applicable].
+
+Each participant must contribute:
+
+1. **Expert**: list of files to create/modify (concrete paths) and technical approach.
+2. **QA**: list of test cases to cover (including happy path, edge cases, and negative
+   cases).
+3. **Database-expert** (if applicable): required schema/migration/query changes.
+
+**Output of phase 1:** `product-owner` writes the User Story (see template below) and saves
+it as a file at `/tasks/<id>-<slug>.md`.
+
+## Phase 2 — INVEST validation and documentation check
+
+`code-reviewer` validates the User Story against:
+
+- Existing documentation in `@docs` (consistency with architecture/conventions).
+- **INVEST** criteria: Independent, Negotiable, Valuable, Estimable, Small, Testable.
+
+- ✅ Passes → moves to Phase 3.
+- ❌ Fails → returns to `product-owner` with the specific reason for the failure, for
+  rewriting.
+
+## Phase 3 — TDD (mandatory, in this order)
+
+1. `backend-qa`/`frontend-qa` writes the tests defined in the User Story. Tests **must
+   fail** at this point (red).
+2. The task passes to `backend-expert`/`frontend-expert` to implement the minimal code
+   needed (green).
+3. It returns to `backend-qa`/`frontend-qa` to run the tests:
+   - ✅ Pass → continues to Phase 4.
+   - ❌ Fail → determine the cause:
+     - **Test issue**: fix the test; analyze why it was poorly designed in the first place;
+       `docs-keeper` documents the root cause and the lesson learned to prevent recurrence.
+       Return to step 2.
+     - **Code issue**: return to `backend-expert`/`frontend-expert` to fix it. Return to
+       step 3.
+
+## Phase 4 — Security audit
+
+`appsec-auditor` reviews the implemented code.
+
+- ❌ Finds vulnerabilities → returns to `backend-expert`/`frontend-expert` with the finding's
+  details. Re-audits after the fix.
+- ✅ No findings → continues to Phase 5.
+
+## Phase 5 — Final code review
+
+`code-reviewer` checks:
+
+- All acceptance criteria are met.
+- The code follows best practices and project conventions.
+- All Definition of Done items are actually completed.
+- The full test suite passes (not just the new tests).
+
+- ❌ Fails on any point → returns to the agent responsible for that point
+  (`backend-expert`/`frontend-expert` for code, `backend-qa`/`frontend-qa` for test
+  coverage).
+- ✅ Everything correct → continues to Phase 6.
+
+## Phase 6 — Documentation
+
+`docs-keeper` updates the relevant documentation (README, `@docs`, changelog, ADRs, etc.)
+with the changes made.
+
+## Phase 7 — Closure
+
+`product-owner` moves the task file from `/tasks` to `/tasks/done`.
+
+If the task was full-stack (split in the initial phase), it is not marked as globally closed
+until **both** sub-tasks (FE and BE) have completed their Phase 7.
+
+---
+
+## User Story template (mandatory output of Phase 1)
+
+```markdown
+# [ID] Task title
+
+## Description
+Short functional description (2-4 lines).
+
+## Type
+frontend | backend | fullstack (related_task_id: ...) | includes database-expert: yes/no
+
+## Gherkin
+```gherkin
+Feature: <name>
+
+  Scenario: <main case>
+    Given <context>
+    When <action>
+    Then <expected result>
+
+  Scenario: <alternative/negative case>
+    Given <context>
+    When <action>
+    Then <expected result>
+```
+
+## Files to create/modify
+- `path/to/file.ext` — what changes and why
+- (include a code snippet example if it adds clarity)
+
+## Tests to perform
+- [ ] Unit test: ...
+- [ ] Integration test: ...
+- [ ] Negative/edge case test: ...
+
+## Expected outcome
+What should be observable/working once done.
+
+## Acceptance criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Definition of Done
+- [ ] Tests written and green
+- [ ] Code reviewed (code-reviewer)
+- [ ] No security findings (appsec-auditor)
+- [ ] Documentation updated (docs-keeper)
+- [ ] Acceptance criteria met
+```
+
+## Governance notes
+
+- `docs-keeper` documents this workflow once and keeps it updated if the process changes.
+- No agent advances a task to the next phase without leaving an explicit record of the
+  reason (approval or rejection) in the task file.
+- Returns between phases are loops: a task may go through TDD or security multiple times
+  until it's green/clean before moving forward.
+`````
 
 **Prompt 2:**
 
