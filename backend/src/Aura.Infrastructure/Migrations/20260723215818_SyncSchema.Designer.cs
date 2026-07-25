@@ -3,6 +3,7 @@ using System;
 using Aura.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Aura.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260723215818_SyncSchema")]
+    partial class SyncSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -802,52 +805,6 @@ namespace Aura.Infrastructure.Migrations
                         .HasDatabaseName("ix_templates_category");
 
                     b.ToTable("templates", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Category = "wedding",
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "A classic and elegant design with floral touches.",
-                            IsPremium = false,
-                            LayoutJson = "{}",
-                            Name = "Elegant Rose",
-                            PreviewUrl = "/assets/templates/classic.jpg"
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            Category = "wedding",
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "Clean lines and ample whitespace for a contemporary look.",
-                            IsPremium = false,
-                            LayoutJson = "{}",
-                            Name = "Modern Minimalist",
-                            PreviewUrl = "/assets/templates/modern.jpg"
-                        },
-                        new
-                        {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            Category = "wedding",
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "Warm and inviting, perfect for country or outdoor weddings.",
-                            IsPremium = false,
-                            LayoutJson = "{}",
-                            Name = "Rustic Charm",
-                            PreviewUrl = "/assets/templates/rustic.jpg"
-                        },
-                        new
-                        {
-                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
-                            Category = "wedding",
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "Luxurious gold accents for a premium feel.",
-                            IsPremium = true,
-                            LayoutJson = "{}",
-                            Name = "Premium Gold",
-                            PreviewUrl = "/assets/templates/premium.jpg"
-                        });
                 });
 
             modelBuilder.Entity("Aura.Core.Models.User", b =>
