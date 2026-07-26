@@ -19,4 +19,8 @@ spec:
       containers:
       - name: worker
         image: aura-worker-whatsapp
-        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: aura-app-configmap
+        - secretRef:
+            name: aura-app-secret

@@ -1,10 +1,11 @@
-apiVersion: batch/v1
+﻿apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: thank-you-cards-worker
   namespace: aura
 spec:
-  schedule: "0 12 * * *"
+  schedule: "0 10 * * *"
+  concurrencyPolicy: Forbid
   jobTemplate:
     spec:
       template:
@@ -17,8 +18,11 @@ spec:
           containers:
           - name: worker
             image: aura-workers-thankyoucards:latest
-            imagePullPolicy: IfNotPresent
             envFrom:
+            - configMapRef:
+                name: aura-app-configmap
+            - secretRef:
+                name: aura-app-secret
             - secretRef:
                 name: api-secrets
           restartPolicy: OnFailure
