@@ -19,11 +19,11 @@ public class SmtpEmailService : IEmailService
 
     public async Task SendMagicLinkAsync(string email, string magicLinkUrl)
     {
-        var smtpServer = _configuration["Email:SmtpServer"] ?? "smtp.gmail.com";
-        var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
-        var smtpUsername = _configuration["Email:SmtpUsername"];
-        var smtpPassword = _configuration["Email:SmtpPassword"];
-        var fromEmail = _configuration["Email:FromEmail"] ?? "noreply@aura.com";
+        var smtpServer = _configuration["Smtp:Host"] ?? "smtp.gmail.com";
+        var smtpPort = int.Parse(_configuration["Smtp:Port"] ?? "587");
+        var smtpUsername = _configuration["Smtp:Username"];
+        var smtpPassword = _configuration["Smtp:Password"];
+        var fromEmail = _configuration["Smtp:FromEmail"] ?? "noreply@aura.com";
 
         using var client = new SmtpClient(smtpServer, smtpPort)
         {
@@ -54,11 +54,11 @@ public class SmtpEmailService : IEmailService
 
     public async Task SendEmailAsync(string to, string subject, string htmlBody)
     {
-        var smtpServer = _configuration["Email:SmtpServer"] ?? "smtp.gmail.com";
-        var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
-        var smtpUsername = _configuration["Email:SmtpUsername"];
-        var smtpPassword = _configuration["Email:SmtpPassword"];
-        var fromEmail = _configuration["Email:FromEmail"] ?? "noreply@aura.com";
+        var smtpServer = _configuration["Smtp:Host"] ?? "smtp.gmail.com";
+        var smtpPort = int.Parse(_configuration["Smtp:Port"] ?? "587");
+        var smtpUsername = _configuration["Smtp:Username"];
+        var smtpPassword = _configuration["Smtp:Password"];
+        var fromEmail = _configuration["Smtp:FromEmail"] ?? "noreply@aura.com";
 
         using var client = new SmtpClient(smtpServer, smtpPort)
         {
