@@ -29,3 +29,7 @@ secretGenerator:
     behavior: replace
     envs:
       - .env.production
+  - name: aura-postgres-secret
+    behavior: replace
+    envs:
+      - .env.postgres
