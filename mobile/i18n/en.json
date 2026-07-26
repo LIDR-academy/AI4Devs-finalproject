@@ -1,0 +1,86 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "save": "Save",
+    "delete": "Delete"
+  },
+  "auth": {
+    "loginTitle": "Welcome back",
+    "registerTitle": "Create account",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "loginButton": "Log In",
+    "registerButton": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "alreadyAccount": "Already have an account?",
+    "logoutButton": "Log Out",
+    "loginError": "Incorrect email or password",
+    "registerError": "Could not create account. Try again."
+  },
+  "addWord": {
+    "title": "Add Word",
+    "termLabel": "Word or phrase",
+    "termPlaceholder": "e.g. \"serendipity\"",
+    "langLabel": "Definition language",
+    "langEs": "Spanish",
+    "langEn": "English",
+    "generateButton": "Generate Definition",
+    "definitionLabel": "Definition (editable)",
+    "chooseImageLabel": "Choose an image",
+    "saveButton": "Save Card",
+    "errorEmpty": "Please enter a word or phrase",
+    "errorDuplicate": "You already have a card for \"{{term}}\"",
+    "errorMinWords": "You need at least 4 words to practice. Add more words first.",
+    "generating": "Generating..."
+  },
+  "home": {
+    "greeting": "Hello!",
+    "streak": "🔥 {{count}}-day streak",
+    "noStreak": "Start your streak today!",
+    "practiceButton": "Start Practice",
+    "practiceAgain": "Practice Again",
+    "practiceCompleted": "Practice done for today ✓",
+    "addWordButton": "Add Word",
+    "needMoreWords": "Add at least {{min}} words to practice",
+    "wordCount": "{{count}} words in your dictionary"
+  },
+  "dictionary": {
+    "title": "My Dictionary",
+    "empty": "No words yet. Add your first word!",
+    "tabActive": "Active",
+    "tabLearned": "Learned"
+  },
+  "cardDetail": {
+    "title": "Word Details",
+    "markLearned": "Mark as Learned",
+    "markActive": "Mark as Active",
+    "editDefinition": "Edit definition...",
+    "changeImage": "Change Image",
+    "saveChanges": "Save Changes"
+  },
+  "practice": {
+    "title": "Daily Practice",
+    "progress": "{{current}} / {{total}}",
+    "imageQuestion": "Which word matches this image?",
+    "nextButton": "Next",
+    "submitButton": "Finish"
+  },
+  "results": {
+    "title": "Session Complete!",
+    "score": "{{correct}} / {{total}} correct",
+    "perfect": "Perfect score! 🎉",
+    "streakMessage": "🔥 {{count}}-day streak!",
+    "backHome": "Back to Home",
+    "viewDictionary": "View Dictionary"
+  },
+  "settings": {
+    "title": "Settings",
+    "languageLabel": "App Language",
+    "langEs": "Español",
+    "langEn": "English"
+  }
+}
