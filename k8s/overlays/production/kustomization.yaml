@@ -5,3 +5,20 @@ resources:
 patchesStrategicMerge:
   - patch-resources.yaml
   - patch-replicas.yaml
+
+images:
+  - name: aura-api
+    newName: ghcr.io/pedrosrp/aura-api
+    newTag: latest
+  - name: aura-frontend
+    newName: ghcr.io/pedrosrp/aura-frontend
+    newTag: latest
+  - name: aura-worker-email
+    newName: ghcr.io/pedrosrp/aura-worker-email
+    newTag: latest
+  - name: aura-worker-ssg
+    newName: ghcr.io/pedrosrp/aura-worker-ssg
+    newTag: latest
+  - name: aura-worker-whatsapp
+    newName: ghcr.io/pedrosrp/aura-worker-whatsapp
+    newTag: latest
