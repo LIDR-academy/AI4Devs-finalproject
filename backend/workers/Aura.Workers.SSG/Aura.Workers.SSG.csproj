@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
     <UserSecretsId>dotnet-Aura.Workers.SSG-cedf6dbb-e233-4037-bb82-13456230a353</UserSecretsId>
   </PropertyGroup>
 
