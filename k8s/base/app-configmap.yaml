@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aura-app-configmap
+data:
+  Dragonfly__ConnectionString: "aura-dragonfly:6379"
+  Minio__Endpoint: "aura-minio:9000"
+  Minio__BucketName: "auraplanning"

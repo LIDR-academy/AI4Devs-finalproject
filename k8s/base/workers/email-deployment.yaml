@@ -18,7 +18,11 @@ spec:
       containers:
       - name: worker
         image: aura-worker-email
-        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: aura-app-configmap
+        - secretRef:
+            name: aura-app-secret
         env:
         - name: Smtp__Host
           value: "aura-mailhog"

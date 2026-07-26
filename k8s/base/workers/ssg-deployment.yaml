@@ -18,4 +18,8 @@ spec:
       containers:
       - name: worker
         image: aura-worker-ssg
-        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: aura-app-configmap
+        - secretRef:
+            name: aura-app-secret

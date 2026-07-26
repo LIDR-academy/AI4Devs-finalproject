@@ -22,3 +22,9 @@ images:
   - name: aura-worker-whatsapp
     newName: ghcr.io/pedrosrp/aura-worker-whatsapp
     newTag: latest
+
+secretGenerator:
+  - name: aura-app-secret
+    behavior: replace
+    envs:
+      - .env.production

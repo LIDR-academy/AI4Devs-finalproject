@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: aura-api
@@ -18,10 +18,13 @@ spec:
       containers:
       - name: api
         image: aura-api
-        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
         envFrom:
+        - configMapRef:
+            name: aura-app-configmap
+        - secretRef:
+            name: aura-app-secret
         - secretRef:
             name: aura-jwt-secret
         livenessProbe:
