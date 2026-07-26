@@ -22,6 +22,9 @@ spec:
         envFrom:
         - secretRef:
             name: aura-postgres-secret
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
