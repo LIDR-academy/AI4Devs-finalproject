@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -255,6 +256,12 @@ try
     {
         Predicate = check => check.Tags.Contains("ready")
     });
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<Aura.Infrastructure.Data.ApplicationDbContext>();
+        dbContext.Database.Migrate();
+    }
 
     app.Run();
 }
