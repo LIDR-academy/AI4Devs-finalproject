@@ -6,3 +6,7 @@ data:
   Dragonfly__ConnectionString: "aura-dragonfly:6379"
   Minio__Endpoint: "aura-minio:9000"
   Minio__BucketName: "auraplanning"
+  ConnectionStrings__RedisConnection: "aura-dragonfly:6379,abortConnect=false"
+  ConnectionStrings__Redis: "aura-dragonfly:6379,abortConnect=false"
+  Jwt__Issuer: "AuraPlanning"
+  Jwt__Audience: "AuraUsers"
