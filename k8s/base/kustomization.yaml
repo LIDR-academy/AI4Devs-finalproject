@@ -30,3 +30,4 @@ resources:
   - secrets/jwt-secret.yaml
   - app-configmap.yaml
   - app-secret.yaml
+  - ingress.yaml
