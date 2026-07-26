@@ -3,4 +3,4 @@ kind: Deployment
 metadata:
   name: aura-api
 spec:
-  replicas: 2
+  replicas: 1
