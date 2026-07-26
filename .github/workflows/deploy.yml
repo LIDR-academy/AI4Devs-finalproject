@@ -57,8 +57,12 @@ jobs:
             --docker-email=github-actions@github.com \
             --namespace=aura \
             --dry-run=client -o yaml | kubectl apply -f -
+      - name: Inject Production Secrets
+        run: |
+          echo "ConnectionStrings__DefaultConnection=${{ secrets.PROD_DB_CONNECTION }}" >> k8s/overlays/production/.env.production
+          echo "Minio__AccessKey=${{ secrets.PROD_MINIO_ACCESS }}" >> k8s/overlays/production/.env.production
+          echo "Minio__SecretKey=${{ secrets.PROD_MINIO_SECRET }}" >> k8s/overlays/production/.env.production
 
       - name: Deploy to Kubernetes
         run: |
-          # Run Kustomize and apply
-          kustomize build k8s/overlays/${{ env.ENV_NAME }} | kubectl apply -f -
+          # Run Kustomize and apply          kustomize build k8s/overlays/${{ env.ENV_NAME }} | kubectl apply -f -

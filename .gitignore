@@ -49,3 +49,6 @@ yarn-error.log
 
 # Dev script logs
 .dev-*.log
+
+.env.production
+
