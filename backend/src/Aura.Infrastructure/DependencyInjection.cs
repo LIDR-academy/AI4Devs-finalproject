@@ -20,7 +20,8 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
-                   .UseSnakeCaseNamingConvention();
+                   .UseSnakeCaseNamingConvention()
+                   .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         services.Configure<Aura.Core.Configuration.StripeOptions>(options => configuration.GetSection(Aura.Core.Configuration.StripeOptions.SectionName).Bind(options));
