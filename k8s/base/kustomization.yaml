@@ -23,6 +23,8 @@ resources:
   - minio/statefulset.yaml
   - minio/service.yaml
   - minio/pvc.yaml
+  - mailhog/deployment.yaml
+  - mailhog/service.yaml
   - secrets/postgres-secret.yaml
   - secrets/minio-secret.yaml
   - secrets/jwt-secret.yaml

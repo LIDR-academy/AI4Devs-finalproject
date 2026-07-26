@@ -36,13 +36,25 @@ jobs:
             echo "ENV_NAME=production" >> $GITHUB_ENV
           fi
 
-      - name: Deploy to Kubernetes
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Save DigitalOcean kubeconfig
+        run: doctl kubernetes cluster kubeconfig save k8s-aura
+      - name: Create GHCR Image Pull Secret
         run: |
-          # Write KUBE_CONFIG secret to a temporary file
-          mkdir -p ~/.kube
-          echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
-          
+          kubectl create namespace aura --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GH_PAT }} \
+            --docker-email=github-actions@github.com \
+            --namespace=aura \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to Kubernetes
+        run: |
           # Run Kustomize and apply
           kustomize build k8s/overlays/${{ env.ENV_NAME }} | kubectl apply -f -

@@ -13,6 +13,8 @@ spec:
       labels:
         app: aura-frontend
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: frontend
         image: aura-frontend

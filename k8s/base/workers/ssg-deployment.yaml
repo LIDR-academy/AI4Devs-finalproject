@@ -13,6 +13,8 @@ spec:
       labels:
         app: aura-worker-ssg
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: worker
         image: aura-worker-ssg

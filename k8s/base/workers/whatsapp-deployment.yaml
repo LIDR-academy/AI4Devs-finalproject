@@ -14,6 +14,8 @@ spec:
       labels:
         app: aura-worker-whatsapp
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: worker
         image: aura-worker-whatsapp
