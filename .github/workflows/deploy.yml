@@ -81,6 +81,9 @@ jobs:
         run: |
           # Run Kustomize and apply
           kustomize build k8s/overlays/${{ env.ENV_NAME }} | kubectl apply -f -
+          
+          # Force deployments to pull the newly built 'latest' images
+          kubectl rollout restart deployment -n aura
 
       - name: Output Application URL
         run: |
