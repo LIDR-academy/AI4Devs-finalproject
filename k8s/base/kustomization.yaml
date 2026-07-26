@@ -28,3 +28,5 @@ resources:
   - secrets/postgres-secret.yaml
   - secrets/minio-secret.yaml
   - secrets/jwt-secret.yaml
+  - app-configmap.yaml
+  - app-secret.yaml
