@@ -93,22 +93,21 @@ describe('SessionService.createDailySession', () => {
     ).rejects.toMatchObject({ statusCode: 403, errorCode: 'INSUFFICIENT_VOCABULARY' });
   });
 
-  it('lanza ConflictError si la sesión de hoy ya fue completada', async () => {
+  it('crea una nueva sesión si la sesión de hoy ya fue completada', async () => {
     mockWordRepo.countByUser.mockResolvedValue(10);
-    mockSessionRepo.findByDate.mockResolvedValue({ ...mockSession, completed: true });
+    mockSessionRepo.findInProgressByDate.mockResolvedValue(null);
+    mockWordRepo.findAllByUser.mockResolvedValue(TEN_WORDS);
+    mockSessionRepo.create.mockResolvedValue({ ...mockSession, id: 'session-002' });
 
-    await expect(
-      SessionService.createDailySession('user-test', {})
-    ).rejects.toThrow(ConflictError);
+    const result = await SessionService.createDailySession('user-test', {});
 
-    await expect(
-      SessionService.createDailySession('user-test', {})
-    ).rejects.toMatchObject({ errorCode: 'SESSION_ALREADY_COMPLETED' });
+    expect(result.id).toBe('session-002');
+    expect(mockSessionRepo.create).toHaveBeenCalled();
   });
 
   it('devuelve la sesión existente si está en progreso (no completada)', async () => {
     mockWordRepo.countByUser.mockResolvedValue(10);
-    mockSessionRepo.findByDate.mockResolvedValue({ ...mockSession, completed: false });
+    mockSessionRepo.findInProgressByDate.mockResolvedValue({ ...mockSession, completed: false });
 
     const result = await SessionService.createDailySession('user-test', {});
 
@@ -118,7 +117,7 @@ describe('SessionService.createDailySession', () => {
 
   it('crea una nueva sesión con exactamente 10 ejercicios', async () => {
     mockWordRepo.countByUser.mockResolvedValue(10);
-    mockSessionRepo.findByDate.mockResolvedValue(null);
+    mockSessionRepo.findInProgressByDate.mockResolvedValue(null);
     mockWordRepo.findAllByUser.mockResolvedValue(TEN_WORDS);
     mockSessionRepo.create.mockResolvedValue(mockSession);
 
@@ -139,7 +138,7 @@ describe('SessionService.createDailySession', () => {
 
   it('genera ejercicios de tipo image_match y mcq', async () => {
     mockWordRepo.countByUser.mockResolvedValue(10);
-    mockSessionRepo.findByDate.mockResolvedValue(null);
+    mockSessionRepo.findInProgressByDate.mockResolvedValue(null);
     mockWordRepo.findAllByUser.mockResolvedValue(TEN_WORDS);
     mockSessionRepo.create.mockResolvedValue(mockSession);
 

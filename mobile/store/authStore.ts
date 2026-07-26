@@ -60,8 +60,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    await signOut(firebaseAuth);
-    set({ user: null });
+    set({ loading: true });
+    try {
+      await signOut(firebaseAuth);
+      set({ user: null, error: null });
+    } finally {
+      set({ loading: false });
+    }
   },
 
   clearError: () => set({ error: null }),

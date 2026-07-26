@@ -9,12 +9,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useState } from 'react';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { register, loading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,6 +33,7 @@ export default function RegisterScreen() {
     }
     try {
       await register(email, password);
+      router.replace('/(tabs)/home');
     } catch {
       setError(t('auth.registerError'));
     }

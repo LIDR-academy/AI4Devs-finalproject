@@ -205,9 +205,37 @@ Pantalla React Native (Expo Router) con el flujo: input de término → selector
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-**Pull Request 1**
+Documentación completa en [7-pull-requests.md](./7-pull-requests.md).
 
-**Pull Request 2**
+---
 
-**Pull Request 3**
+**Pull Request 1 — Entrega 1: Documentación y planificación** `feature-entrega1-jfvg` → `main`
+
+PR de la primera entrega con toda la planificación del producto Lexio: Master PRD, arquitectura del sistema, modelo de datos Firestore, especificaciones OpenAPI, historias de usuario (LEX-7, LEX-12, LEX-15), tickets de trabajo (DB-01, BE-01, FE-01) y registro de prompts.
+
+*Archivos principales:* `master-prd.md`, `1-descripcion-general-del-producto.md`, `2-arquitectura-del-sistema.md`, `3-modelo-de-datos.md`, `4-especificaciones-de-la-api.md`, `5-historias-de-usuario.md`, `6-tickets-de-trabajo.md`
+
+*Estado:* ✅ Merged · Commit: `f3761df`
+
+---
+
+**Pull Request 2 — Entrega 2: MVP completo Backend + Mobile** `feature-entrega2-jfvg` → `main`
+
+Implementación del MVP de extremo a extremo: backend Express + TypeScript con Claude Haiku 4.5 y Unsplash, app móvil React Native + Expo (auth, captura de vocabulario, práctica diaria, racha, i18n ES/EN), Firebase (rules + índices), 29 tests unitarios y documentación de despliegue/testing.
+
+*Archivos principales:* `backend/`, `mobile/`, `firestore.rules`, `firestore.indexes.json`, `7-desarrollo.md`, `DEPLOYMENT.md`, `TESTING.md`, `MUESTRA_DEL_PRODUCTO.md`
+
+*Flujo E2E verificado:* Captura de palabra → Sesión diaria (10 ejercicios) → Resultados + racha
+
+*Estado:* 🔄 Entrega final
+
+---
+
+**Pull Request 3 — Hotfix: Modelo Claude e índices Firestore** `hotfix/claude-model-and-indexes`
+
+Corrección de errores críticos detectados en pruebas E2E: actualización del modelo deprecado `claude-3-5-haiku-20241022` → `claude-haiku-4-5`, y despliegue de índices compuestos Firestore para consultas de sesiones y palabras.
+
+*Archivos modificados:* `backend/src/integrations/claudeClient.ts`, `firestore.indexes.json`
+
+*Estado:* ✅ Integrado en rama de desarrollo
 

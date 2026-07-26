@@ -18,17 +18,19 @@ function toSession(doc: FirebaseFirestore.DocumentData, id: string): DailySessio
 }
 
 export const SessionRepository = {
-  async findByDate(userId: string, sessionDate: string): Promise<DailySession | null> {
+  async findInProgressByDate(
+    userId: string,
+    sessionDate: string
+  ): Promise<DailySession | null> {
     const snapshot = await db
       .collection(COLLECTION)
       .where('userId', '==', userId)
       .where('sessionDate', '==', sessionDate)
-      .limit(1)
       .get();
 
-    if (snapshot.empty) return null;
-    const doc = snapshot.docs[0];
-    return toSession(doc.data(), doc.id);
+    const inProgressDoc = snapshot.docs.find((doc) => !doc.data().completed);
+    if (!inProgressDoc) return null;
+    return toSession(inProgressDoc.data(), inProgressDoc.id);
   },
 
   async findById(id: string, userId: string): Promise<DailySession | null> {

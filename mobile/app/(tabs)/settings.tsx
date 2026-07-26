@@ -4,14 +4,26 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
+import { useWordStore } from '../../store/wordStore';
+import { useSessionStore } from '../../store/sessionStore';
 import type { UiLanguage } from '../../types';
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
-  const { user, logout } = useAuthStore();
+  const router = useRouter();
+  const { user, logout, loading } = useAuthStore();
+
+  const handleLogout = async () => {
+    await logout();
+    useWordStore.setState({ words: [], suggestedImages: [], error: null });
+    useSessionStore.setState({ session: null, streak: null, error: null });
+    router.replace('/(auth)/login');
+  };
 
   const changeLanguage = (lang: UiLanguage) => {
     i18n.changeLanguage(lang);
@@ -51,8 +63,16 @@ export default function SettingsScreen() {
           <Text style={styles.emailText}>{user?.email}</Text>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Text style={styles.logoutText}>{t('auth.logoutButton')}</Text>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#EF4444" />
+          ) : (
+            <Text style={styles.logoutText}>{t('auth.logoutButton')}</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

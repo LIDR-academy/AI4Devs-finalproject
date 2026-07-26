@@ -42,6 +42,7 @@
     "streak": "🔥 Racha de {{count}} días",
     "noStreak": "¡Empieza tu racha hoy!",
     "practiceButton": "Iniciar Práctica",
+    "practiceAgain": "Practicar de nuevo",
     "practiceCompleted": "Práctica completada hoy ✓",
     "addWordButton": "Añadir Palabra",
     "needMoreWords": "Añade al menos {{min}} palabras para practicar",

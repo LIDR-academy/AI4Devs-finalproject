@@ -27,7 +27,7 @@ export default function HomeScreen() {
   }, []);
 
   const canPractice = words.length >= MIN_WORDS_FOR_PRACTICE;
-  const sessionDoneToday = session?.completed === true;
+  const practicedToday = session?.completed === true;
 
   const handleStartPractice = () => {
     router.push('/practice');
@@ -54,15 +54,13 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        {sessionDoneToday ? (
-          <View style={[styles.practiceButton, styles.practiceButtonDone]}>
-            <Text style={styles.practiceButtonTextDone}>
-              {t('home.practiceCompleted')}
-            </Text>
-          </View>
-        ) : canPractice ? (
+        {practicedToday ? (
+          <Text style={styles.practiceHint}>{t('home.practiceCompleted')}</Text>
+        ) : null}
+
+        {canPractice ? (
           <TouchableOpacity
-            style={styles.practiceButton}
+            style={[styles.practiceButton, practicedToday && styles.practiceButtonAgain]}
             onPress={handleStartPractice}
             disabled={loading}
           >
@@ -70,7 +68,7 @@ export default function HomeScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.practiceButtonText}>
-                {t('home.practiceButton')}
+                {practicedToday ? t('home.practiceAgain') : t('home.practiceButton')}
               </Text>
             )}
           </TouchableOpacity>
@@ -131,13 +129,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-  practiceButtonDone: {
-    backgroundColor: '#D1FAE5',
-  },
-  practiceButtonTextDone: {
+  practiceHint: {
     color: '#065F46',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  practiceButtonAgain: {
+    backgroundColor: '#6366F1',
   },
   practiceButtonDisabled: {
     backgroundColor: '#F3F4F6',

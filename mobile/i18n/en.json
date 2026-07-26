@@ -42,6 +42,7 @@
     "streak": "🔥 {{count}}-day streak",
     "noStreak": "Start your streak today!",
     "practiceButton": "Start Practice",
+    "practiceAgain": "Practice Again",
     "practiceCompleted": "Practice done for today ✓",
     "addWordButton": "Add Word",
     "needMoreWords": "Add at least {{min}} words to practice",

@@ -112,15 +112,9 @@ export const SessionService = {
       );
     }
 
-    const existing = await SessionRepository.findByDate(userId, today);
-    if (existing) {
-      if (existing.completed) {
-        throw new ConflictError(
-          'SESSION_ALREADY_COMPLETED',
-          "You've already completed today's practice. Come back tomorrow!"
-        );
-      }
-      return existing;
+    const inProgress = await SessionRepository.findInProgressByDate(userId, today);
+    if (inProgress) {
+      return inProgress;
     }
 
     const allWords = await WordRepository.findAllByUser(userId);

@@ -2,9 +2,12 @@ import '../i18n';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
+import { useProtectedRoute } from '../hooks/useProtectedRoute';
 
 export default function RootLayout() {
   const { init } = useAuthStore();
+
+  useProtectedRoute();
 
   useEffect(() => {
     const unsubscribe = init();
