@@ -65,4 +65,5 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          # Run Kustomize and apply          kustomize build k8s/overlays/${{ env.ENV_NAME }} | kubectl apply -f -
+          # Run Kustomize and apply
+          kustomize build k8s/overlays/${{ env.ENV_NAME }} | kubectl apply -f -
