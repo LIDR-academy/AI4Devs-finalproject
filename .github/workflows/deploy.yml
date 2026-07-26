@@ -62,8 +62,28 @@ jobs:
           echo "ConnectionStrings__DefaultConnection=${{ secrets.PROD_DB_CONNECTION }}" >> k8s/overlays/production/.env.production
           echo "Minio__AccessKey=${{ secrets.PROD_MINIO_ACCESS }}" >> k8s/overlays/production/.env.production
           echo "Minio__SecretKey=${{ secrets.PROD_MINIO_SECRET }}" >> k8s/overlays/production/.env.production
+          echo "Smtp__Host=smtp.gmail.com" >> k8s/overlays/production/.env.production
+          echo "Smtp__Port=587" >> k8s/overlays/production/.env.production
+          echo "Smtp__Username=${{ secrets.PROD_SMTP_USER }}" >> k8s/overlays/production/.env.production
+          echo "Smtp__Password=${{ secrets.PROD_SMTP_PASSWORD }}" >> k8s/overlays/production/.env.production
 
       - name: Deploy to Kubernetes
         run: |
           # Run Kustomize and apply
           kustomize build k8s/overlays/${{ env.ENV_NAME }} | kubectl apply -f -
+
+      - name: Output Application URL
+        run: |
+          echo "Fetching Load Balancer IP..."
+          for i in {1..30}; do
+            IP=$(kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            if [ -n "$IP" ]; then
+              break
+            fi
+            sleep 10
+          done
+          if [ -n "$IP" ]; then
+            echo "🚀 Application is publicly accessible at: http://$IP"
+          else
+            echo "⚠️ Could not retrieve Load Balancer IP within 5 minutes. Check DigitalOcean dashboard."
+          fi
