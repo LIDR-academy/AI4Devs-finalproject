@@ -71,3 +71,19 @@ jobs:
         run: |
           # Run Kustomize and apply
           kustomize build k8s/overlays/${{ env.ENV_NAME }} | kubectl apply -f -
+
+      - name: Output Application URL
+        run: |
+          echo "Fetching Load Balancer IP..."
+          for i in {1..30}; do
+            IP=$(kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            if [ -n "$IP" ]; then
+              break
+            fi
+            sleep 10
+          done
+          if [ -n "$IP" ]; then
+            echo "🚀 Application is publicly accessible at: http://$IP"
+          else
+            echo "⚠️ Could not retrieve Load Balancer IP within 5 minutes. Check DigitalOcean dashboard."
+          fi
