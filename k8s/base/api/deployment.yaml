@@ -13,6 +13,8 @@ spec:
       labels:
         app: aura-api
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: api
         image: aura-api

@@ -12,6 +12,8 @@ spec:
           labels:
             app: thank-you-cards-worker
         spec:
+          imagePullSecrets:
+          - name: ghcr-secret
           containers:
           - name: worker
             image: aura-workers-thankyoucards:latest

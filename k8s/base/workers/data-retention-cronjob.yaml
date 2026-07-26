@@ -13,6 +13,8 @@ spec:
           labels:
             app: data-retention-worker
         spec:
+          imagePullSecrets:
+          - name: ghcr-secret
           containers:
           - name: worker
             image: aura-workers-dataretention:latest

@@ -13,7 +13,18 @@ spec:
       labels:
         app: aura-worker-email
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: worker
         image: aura-worker-email
         imagePullPolicy: IfNotPresent
+        env:
+        - name: Smtp__Host
+          value: "aura-mailhog"
+        - name: Smtp__Port
+          value: "1025"
+        - name: Smtp__Username
+          value: ""
+        - name: Smtp__Password
+          value: ""
