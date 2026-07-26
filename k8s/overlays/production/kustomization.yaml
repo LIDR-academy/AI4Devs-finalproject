@@ -5,6 +5,7 @@ resources:
 patchesStrategicMerge:
   - patch-resources.yaml
   - patch-replicas.yaml
+  - remove-mailhog.yaml
 
 images:
   - name: aura-api

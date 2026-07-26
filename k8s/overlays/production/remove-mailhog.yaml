@@ -1,0 +1,11 @@
+$patch: delete
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-mailhog
+---
+$patch: delete
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-mailhog
