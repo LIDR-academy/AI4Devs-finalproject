@@ -24,11 +24,3 @@ spec:
         - secretRef:
             name: aura-app-secret
         env:
-        - name: Smtp__Host
-          value: "aura-mailhog"
-        - name: Smtp__Port
-          value: "1025"
-        - name: Smtp__Username
-          value: ""
-        - name: Smtp__Password
-          value: ""

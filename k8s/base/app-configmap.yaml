@@ -9,4 +9,5 @@ data:
   ConnectionStrings__RedisConnection: "aura-dragonfly:6379,abortConnect=false"
   ConnectionStrings__Redis: "aura-dragonfly:6379,abortConnect=false"
   Jwt__Issuer: "AuraPlanning"
-  Jwt__Audience: "AuraUsers"
+  Jwt__Audience: "AuraUsers"  Smtp__Host: "aura-mailhog"
+  Smtp__Port: "1025"
