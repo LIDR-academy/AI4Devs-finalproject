@@ -62,6 +62,22 @@ export interface EditionCoversResponse {
   default_cover_id: string | null;
 }
 
+export interface BookCoverSearchEdition {
+  title: string;
+  authors: string;
+  data_source: 'open_library' | 'google_books';
+  external_provider_id: string;
+  cover_image_url: string | null;
+  covers: CoverOption[];
+  default_cover_id: string | null;
+}
+
+export interface BookCoverSearchResponse {
+  query: string;
+  source: 'open_library' | 'google_books' | 'none';
+  items: BookCoverSearchEdition[];
+}
+
 export interface Book {
   id: string;
   user_id: string;

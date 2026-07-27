@@ -3,7 +3,7 @@
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
   "last_completed": "KAN-77",
-  "current_ticket": null,
+  "current_ticket": "KAN-78",
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -456,5 +456,15 @@
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/60",
       "pr_number": 60,
       "archived_at": "2026-07-27T09:34:00Z",
+      "error": null
+    },
+    "KAN-78": {
+      "status": "awaiting_merge",
+      "failed_step": null,
+      "change_name": "kan-78-edit-book-cover-picker",
+      "branch": "feature/KAN-78-edit-book-cover-picker",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/61",
+      "pr_number": 61,
+      "archived_at": null,
       "error": null
     }

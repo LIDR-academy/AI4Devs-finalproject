@@ -9,6 +9,8 @@ interface CoverPickerProps {
   error: string | null;
   onRetry: () => void;
   editionTitle: string;
+  emptyMessage?: string;
+  showContinueWithoutCover?: boolean;
 }
 
 export function CoverPicker({
@@ -19,6 +21,8 @@ export function CoverPicker({
   error,
   onRetry,
   editionTitle,
+  emptyMessage,
+  showContinueWithoutCover = true,
 }: CoverPickerProps) {
   if (loading) {
     return <p className="cover-picker-hint">Cargando portadas…</p>;
@@ -40,15 +44,18 @@ export function CoverPicker({
       <div className="cover-picker-empty">
         <div className="cover-picker-placeholder">Sin portada</div>
         <p className="cover-picker-hint">
-          No hay portadas para «{editionTitle}». Puedes guardar el libro sin imagen.
+          {emptyMessage ??
+            `No hay portadas para «${editionTitle}». Puedes guardar el libro sin imagen.`}
         </p>
-        <button
-          type="button"
-          className={`cover-none-btn ${selectedId === null ? 'selected' : ''}`}
-          onClick={() => onSelect(null)}
-        >
-          Continuar sin portada
-        </button>
+        {showContinueWithoutCover ? (
+          <button
+            type="button"
+            className={`cover-none-btn ${selectedId === null ? 'selected' : ''}`}
+            onClick={() => onSelect(null)}
+          >
+            Continuar sin portada
+          </button>
+        ) : null}
       </div>
     );
   }
