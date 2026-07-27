@@ -365,6 +365,52 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /books/{bookId}/cover-search:
+    get:
+      summary: Search catalog covers for an owned book
+      description: >-
+        Searches external catalog using the saved book title and authors by default
+        (or optional `q`), then resolves cover options per edition via the same
+        logic as `GET /books/catalog/covers`. Returns only editions with at least one cover.
+      tags: [Books, Catalog]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 500
+          description: Optional search override; defaults to saved book title and authors
+      responses:
+        '200':
+          description: Cover search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCoverSearchResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Book not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /books/{bookId}/reading-record:
     patch:
       summary: Update reading status, dates, rating, or format
@@ -1383,6 +1429,51 @@ components:
         default_cover_id:
           type: string
           nullable: true
+
+    BookCoverSearchEdition:
+      type: object
+      required:
+        - title
+        - authors
+        - data_source
+        - external_provider_id
+        - covers
+      properties:
+        title:
+          type: string
+        authors:
+          type: string
+        data_source:
+          type: string
+          enum: [open_library, google_books]
+        external_provider_id:
+          type: string
+        cover_image_url:
+          type: string
+          format: uri
+          nullable: true
+        covers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoverOption'
+        default_cover_id:
+          type: string
+          nullable: true
+
+    BookCoverSearchResponse:
+      type: object
+      required: [query, source, items]
+      properties:
+        query:
+          type: string
+          description: Query sent to catalog search (default or override)
+        source:
+          type: string
+          enum: [open_library, google_books, none]
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookCoverSearchEdition'
 
     ErrorMessage:
       type: object
