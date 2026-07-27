@@ -25,6 +25,17 @@ export class AutoAttachService {
     });
 
     if (existing) {
+      if (existing.propertyPrice === null && input.propertyPrice !== null) {
+        await prisma.purchaseProcess.update({
+          where: { id: existing.id },
+          data: { propertyPrice: input.propertyPrice },
+        });
+        return {
+          processId: existing.id,
+          isNewProcess: false,
+          propertyPrice: input.propertyPrice,
+        };
+      }
       return {
         processId: existing.id,
         isNewProcess: false,
@@ -47,5 +58,18 @@ export class AutoAttachService {
       isNewProcess: true,
       propertyPrice: created.propertyPrice ? Number(created.propertyPrice) : null,
     };
+  }
+
+  async setSourceListingIfMissing(processId: string, listingId: string): Promise<void> {
+    const proc = await prisma.purchaseProcess.findUnique({
+      where: { id: processId },
+      select: { sourceListingId: true },
+    });
+    if (proc && !proc.sourceListingId) {
+      await prisma.purchaseProcess.update({
+        where: { id: processId },
+        data: { sourceListingId: listingId },
+      });
+    }
   }
 }

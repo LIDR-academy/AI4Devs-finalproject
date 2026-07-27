@@ -74,6 +74,7 @@ function makeDeps(overrides: {
       isNewProcess: true,
       propertyPrice: 200000,
     })),
+    setSourceListingIfMissing: vi.fn().mockResolvedValue(undefined),
   } as unknown as AutoAttachService;
   const checklistRepo = {
     ensureForProcess: vi.fn(async () => null),

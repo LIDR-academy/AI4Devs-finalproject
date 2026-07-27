@@ -54,6 +54,12 @@ export interface AnalyzeListingResult {
   };
 }
 
+function extractPriceFromText(text: string): number | undefined {
+  const match = text.match(/(\d{1,3}(?:\.\d{3})*|\d+)\s*(?:€|EUR|euros?)/i);
+  if (!match) return undefined;
+  return parseInt(match[1].replace(/\./g, ''), 10);
+}
+
 export class AnalyzeListingUseCase {
   private readonly diffService = new DiffService();
 
@@ -79,6 +85,7 @@ export class AnalyzeListingUseCase {
           html: '',
           text: input.manualText,
           declaredAddress: undefined,
+          price: extractPriceFromText(input.manualText),
         }
       : await this.fetcher.fetch(input.url);
 
@@ -156,6 +163,8 @@ export class AnalyzeListingUseCase {
       catastroMatch: catastroResult,
       redFlags: analysis.redFlags.items,
     });
+
+    await this.autoAttach.setSourceListingIfMissing(processId, stored.id);
 
     return this.toResult(stored, processId, isNewProcess, propertyPrice);
   }

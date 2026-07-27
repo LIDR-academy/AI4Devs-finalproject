@@ -45,6 +45,16 @@
       financialProfile.update((p) => ({
         ...p,
         propertyPrice: price ?? p.propertyPrice,
+        ...(detail.financialProfile
+          ? {
+              savings: detail.financialProfile.savings ?? p.savings,
+              monthlyIncome: detail.financialProfile.monthlyIncome ?? p.monthlyIncome,
+              existingDebts: detail.financialProfile.existingDebts ?? p.existingDebts,
+              region: detail.financialProfile.region ?? p.region,
+              persona: detail.financialProfile.persona ?? p.persona,
+              interestRate: detail.financialProfile.interestRate ?? p.interestRate,
+            }
+          : {}),
       }));
       computed = detail.computed;
       if (computed) step = 'strategies';

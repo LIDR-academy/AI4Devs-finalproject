@@ -99,6 +99,7 @@ function mockAutoAttach(overrides: { newProcess?: boolean; processId?: string } 
       isNewProcess: overrides.newProcess ?? true,
       propertyPrice: 200000,
     }),
+    setSourceListingIfMissing: vi.fn().mockResolvedValue(undefined),
   } as unknown as AutoAttachService;
 }
 
