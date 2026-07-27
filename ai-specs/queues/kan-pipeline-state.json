@@ -3,7 +3,7 @@
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
   "last_completed": "KAN-75",
-  "current_ticket": null,
+  "current_ticket": "KAN-77",
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -446,5 +446,15 @@
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/59",
       "pr_number": 59,
       "archived_at": "2026-07-27T09:26:00Z",
+      "error": null
+    },
+    "KAN-77": {
+      "status": "awaiting_merge",
+      "failed_step": null,
+      "change_name": "kan-77-book-cover-search",
+      "branch": "feature/KAN-77-book-cover-search",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/60",
+      "pr_number": 60,
+      "archived_at": null,
       "error": null
     }
