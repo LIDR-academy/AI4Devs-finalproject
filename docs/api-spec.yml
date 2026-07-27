@@ -162,6 +162,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /formats/{id}/affected-readings:
+    get:
+      summary: Count reading records assigned to a format
+      description: Returns how many of the user's reading records reference this format before delete confirmation.
+      tags: [Formats]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Affected reading count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AffectedReadingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Format not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /formats/{id}:
     delete:
       summary: Delete format label
@@ -1076,6 +1106,14 @@ components:
       required: [affected_book_count]
       properties:
         affected_book_count:
+          type: integer
+          minimum: 0
+
+    AffectedReadingsResponse:
+      type: object
+      required: [affected_reading_count]
+      properties:
+        affected_reading_count:
           type: integer
           minimum: 0
 

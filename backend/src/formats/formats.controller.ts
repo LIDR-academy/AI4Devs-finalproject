@@ -30,6 +30,14 @@ export class FormatsController {
     return this.formatsService.createForUser(req.user.userId, body.name);
   }
 
+  @Get(':id/affected-readings')
+  affectedReadings(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.formatsService.countAffectedReadings(req.user.userId, id);
+  }
+
   @Delete(':id')
   @HttpCode(204)
   async delete(

@@ -3,7 +3,7 @@
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
   "last_completed": "KAN-73",
-  "current_ticket": null,
+  "current_ticket": "KAN-74",
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -426,5 +426,15 @@
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/57",
       "pr_number": 57,
       "archived_at": "2026-07-27T08:58:00Z",
+      "error": null
+    },
+    "KAN-74": {
+      "status": "awaiting_merge",
+      "failed_step": null,
+      "change_name": "kan-74-format-delete-confirmation",
+      "branch": "feature/KAN-74-format-delete-confirmation",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/58",
+      "pr_number": 58,
+      "archived_at": null,
       "error": null
     }

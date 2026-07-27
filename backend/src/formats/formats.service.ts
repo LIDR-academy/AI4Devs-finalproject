@@ -1,10 +1,12 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ReadingRecord } from '../books/entities/reading-record.entity';
 import {
   DEFAULT_FORMAT_NAMES,
   LEGACY_NAME_BY_READ_FORMAT,
 } from './formats.constants';
+import { AffectedReadingsResponseDto } from './dto/affected-readings-response.dto';
 import { FormatResponseDto, toFormatResponse } from './dto/format-response.dto';
 import { Format } from './entities/format.entity';
 
@@ -13,6 +15,8 @@ export class FormatsService {
   constructor(
     @InjectRepository(Format)
     private readonly formatsRepo: Repository<Format>,
+    @InjectRepository(ReadingRecord)
+    private readonly readingRepo: Repository<ReadingRecord>,
   ) {}
 
   async hasFormats(userId: string): Promise<boolean> {
@@ -58,6 +62,32 @@ export class FormatsService {
     return this.formatsRepo.findOne({
       where: { id: formatId, userId },
     });
+  }
+
+  async countAffectedReadings(
+    userId: string,
+    formatId: string,
+  ): Promise<AffectedReadingsResponseDto> {
+    const format = await this.formatsRepo.findOne({
+      where: { id: formatId, userId },
+    });
+
+    if (!format) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Format not found',
+        code: 'FORMAT_NOT_FOUND',
+      });
+    }
+
+    const affected_reading_count = await this.readingRepo
+      .createQueryBuilder('reading')
+      .innerJoin('reading.book', 'book')
+      .where('book.user_id = :userId', { userId })
+      .andWhere('reading.format_id = :formatId', { formatId })
+      .getCount();
+
+    return { affected_reading_count };
   }
 
   async deleteForUser(userId: string, formatId: string): Promise<void> {
