@@ -37,7 +37,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npx prisma migrate deploy
+      - run: cd backend && npx prisma migrate deploy
       - run: npm run lint -w backend
       - run: npm run typecheck -w backend
       - run: npm run test:all -w backend
@@ -105,7 +105,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npx prisma migrate deploy
+      - run: cd backend && npx prisma migrate deploy
       - run: npm run build -w backend
       - run: npm run build -w frontend
       - run: npx playwright install --with-deps chromium
