@@ -479,12 +479,12 @@
       "error": null
     },
     "KAN-59": {
-      "status": "in_progress",
+      "status": "awaiting_merge",
       "failed_step": null,
       "change_name": "kan-59-genres-data-model",
       "branch": "feature/KAN-59-genres-data-model",
-      "pr_url": null,
-      "pr_number": null,
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/63",
+      "pr_number": 63,
       "archived_at": null,
       "error": null
     }
