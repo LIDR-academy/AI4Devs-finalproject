@@ -1,0 +1,8 @@
+{
+  "enabledPlugins": {
+    "stripe@claude-plugins-official": true,
+    "remember@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true
+  }
+}

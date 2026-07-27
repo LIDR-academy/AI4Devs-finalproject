@@ -1,0 +1,72 @@
+{
+  "summary": "Iteration 19 testing completed: Demo user feature fully tested and working. Demo login with email/password, read-only restrictions via middleware, and demo banner on dashboard all verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_demo_user.py",
+    "/app/test_reports/pytest/pytest_demo_user.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_demo_user.py",
+    "/app/memory/test_credentials.md"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": "Demo login: POST /api/auth/demo-login with {email: 'demo@bpmnmodeler.app', password: 'demo'}",
+  "seed_data_creation": "None - demo user is created on first login",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 19 tested the demo user feature. Demo credentials: email=demo@bpmnmodeler.app, password=demo. The middleware in server.py blocks all POST/PUT/DELETE requests for demo users except for allowed paths (login, logout, language). Demo user gets is_demo=true in /auth/me response. Dashboard shows yellow 'Modo Demo - Solo lectura' banner for demo users only.",
+  "features_tested": {
+    "demo_login_backend": {
+      "correct_credentials": "PASS - Returns 200 with is_demo=true, session_token",
+      "wrong_password": "PASS - Returns 401 'Invalid demo credentials'",
+      "wrong_email": "PASS - Returns 401 'Invalid demo credentials'"
+    },
+    "demo_user_read_access": {
+      "auth_me": "PASS - Returns is_demo=true",
+      "get_diagrams": "PASS - Returns list of diagrams",
+      "get_projects": "PASS - Returns list of projects",
+      "get_oop_classes": "PASS - Returns list of OOP classes",
+      "get_components": "PASS - Returns list of components"
+    },
+    "demo_user_write_restrictions": {
+      "create_diagram": "PASS - Returns 403 'Demo account: read-only mode'",
+      "create_project": "PASS - Returns 403 'Demo account: read-only mode'",
+      "create_oop_class": "PASS - Returns 403 'Demo account: read-only mode'",
+      "create_component": "PASS - Returns 403 'Demo account: read-only mode'",
+      "delete_diagram": "PASS - Returns 403 'Demo account: read-only mode'"
+    },
+    "demo_allowed_write_paths": {
+      "set_language": "PASS - PUT /api/i18n/user-language returns 200",
+      "logout": "PASS - POST /api/auth/logout returns 200"
+    },
+    "normal_user_can_modify": {
+      "auth_me_not_demo": "PASS - is_demo=false for dev-login user",
+      "create_oop_class": "PASS - Returns 200/201",
+      "create_component": "PASS - Returns 200/201"
+    },
+    "frontend_login_page": {
+      "demo_section_visible": "PASS - 'ACCESO DEMO' section with email/password fields",
+      "demo_email_input": "PASS - data-testid='demo-email-input' present",
+      "demo_password_input": "PASS - data-testid='demo-password-input' present",
+      "demo_login_button": "PASS - data-testid='demo-login-btn' present",
+      "demo_login_flow": "PASS - Fills credentials, clicks button, redirects to dashboard"
+    },
+    "frontend_dashboard": {
+      "demo_banner_for_demo_user": "PASS - Yellow banner 'Modo Demo - Solo lectura' visible",
+      "no_banner_for_normal_user": "PASS - Banner NOT visible for dev-login user"
+    }
+  }
+}

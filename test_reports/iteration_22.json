@@ -1,0 +1,31 @@
+{
+  "summary": "Phase D · AI Code Generation end-to-end tested. Backend: 14/14 pytest cases PASS (2 environmentally skipped), covering auth 401 on all 4 endpoints, 404 unknown project/spec/codegen (generate, get, download, delete), GET detail with/without file content, list history excludes files[], ZIP download with MANIFEST.json + files, project tree phases.code integration. Frontend: ProjectDetailPage 'Codigo SDD' button (project-codegen-btn) navigates to /projects/{id}/codegen; CodeGenPage renders all form controls (spec select, target {fullstack|backend|frontend}, variant {pro|flash}, notes); history sidebar shows existing ce7b7e93; clicking it loads full doc — PhaseTimeline all-green (queued→generating→post_processing→complete), summary card with badges + next_steps, file tree (14 clickable nodes), dark CodeViewer shows requirements.txt content, Copy button flips to 'Copiado', Descargar ZIP triggers download of codegen-ce7b7e93.zip. Delete 403 path skipped (dev-user IS the author of ce7b7e93 → cannot self-403; path verified by code review only). No new LLM generation triggered (per instructions, reused existing codegen).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_ai_codegen.py",
+    "/app/test_reports/pytest/pytest_ai_codegen.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ai_codegen.py:315-316 correctly rejects spec belonging to different project with 400 BEFORE requirements lookup. Not exercised by pytest (no cross-project spec available in seed) but logic is correct.",
+    "ai_codegen.py:190-213 _validate_files correctly guards against path traversal (`..`, leading `/` or `~`) and de-duplicates paths. Good security posture.",
+    "ai_codegen.py:281 snapshot failure is caught and logged but does not fail the codegen — verified trigger=ai.code snapshot is created when bg task completes (tree integration test passes).",
+    "ai_codegen.py:420-424 include_content=false correctly uses projection {'files': 0} to skip bulky payload for lighter polling — verified.",
+    "ai_codegen.py:437-438 403 path for non-author non-admin delete is correctly implemented; could not exercise via pytest because existing codegen is owned by dev user (so delete would 200, not 403). Recommend adding a unit-level test with a seeded codegen owned by a different email for full coverage.",
+    "CodeGenPage.jsx:267-295 polling logic has a subtle concern: pollerRef.current holds the timeout id, but if activeId changes rapidly (e.g., user clicks another history item while processing), the cleanup only cancels via `cancelled` flag; the ref may leak a timeout set for the old id. Low impact (auto-cleared on next effect cycle).",
+    "CodeGenPage.jsx:254 auto-selects first spec_id only when form.spec_id is empty — good, avoids clobbering user choice.",
+    "Download via fetch+blob+anchor pattern (lines 336-350) works correctly with Bearer auth (can't use <a href> directly since header is required).",
+    "Download uses localStorage.getItem('session_token') directly (line 338) instead of authHeaders() helper — minor DRY nit."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ai_codegen.py",
+    "/app/test_reports/pytest/pytest_ai_codegen.xml"
+  ],
+  "success_rate": {"backend": "100% (14/14 passed, 2 env-skipped)", "frontend": "100% (all testids wired, all flows functional)"},
+  "test_credentials": "POST /api/auth/dev-login (no body) → session_token as Bearer.",
+  "seed_data_creation": "None. Reused existing codegen ce7b7e93-9d98-4a9d-934e-c0df5f129b8c and LTI project/spec as instructed. No new LLM call fired.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Reusable pytest suite at /app/backend/tests/test_ai_codegen.py covers all rejection paths, auth, happy-path read flows, tree integration. If you need to exercise the fresh generate-code→processing→ready transition, fire ONE variant=flash target=backend call (≈70s) and poll /api/ai-projects/code-generations/{id}. Do NOT hammer LLM — prefer the seeded ce7b7e93 for read-only verification. The 403 delete path is unexercised in tests (dev-user owns seeded codegen); to add coverage, seed a codegen doc with created_by=someone-else@example.com directly into MongoDB and attempt DELETE as dev user."
+}

@@ -35,14 +35,16 @@
 
 ### Frontend
 - **Fetch nativo:** no se usa axios (aunque esta en dependencias). Sin wrapper centralizado.
-- **authHeaders():** funcion auxiliar definida inline en cada pagina para obtener token
+- **Auth centralizada:** `lib/api.js` exporta `getAuthHeaders()` con Content-Type + Bearer token (migrado 2026-07-06). Paginas antiguas pueden tener `authHeaders()` inline.
 - **useI18n().t():** TODOS los textos visibles usan la funcion `t()` de internacionalizacion
 - **shadcn/ui new-york style:** componentes Radix wrappeados con `cn()` y `cva()`
 - **data-testid:** en casi todos los elementos interactivos
 - **3 fuentes:** Chivo (headings), Work Sans (body), IBM Plex Mono (labels/code/mono)
 - **Sin emojis** (prohibido en design_guidelines.json)
-- **Estilo brutalista:** `rounded-none`, `border-2`, sombras solidas `shadow-[8px_8px_0_0_#18181b]`
+- **Estilo brutalista (original):** `rounded-none`, `border-2`, sombras solidas `shadow-[8px_8px_0_0_#18181b]`
   - NOTA: El diseno esta migrando hacia un estilo mas moderno con `rounded-lg`, glass effects, ghost buttons (ver team memory "Modern UI design direction")
+- **Glassmorphism (nuevo):** clases CSS reutilizables en `index.css`: `.glass-card`, `.ai-glow`, `.gradient-text`, `.bg-tech-pattern`
+- **Colores landing:** tokens Tailwind `deep-navy`, `electric-cyan`, `soft-glass`, `accent-glow` (solo en landing page)
 
 ### Commits
 - **Convencion actual:** Conventional Commits (`feat:`, `fix:`, `i18n:`, `chore:`)

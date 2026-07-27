@@ -21,7 +21,8 @@
 1. Identifica la pagina en `src/pages/` o el componente en `src/components/`
 2. Si necesitas texto nuevo en UI: anade clave i18n en `src/i18n/translations.js` en los 6 idiomas
 3. Usa `useI18n().t("clave")` para todo texto visible
-4. Si el cambio es un componente reutilizable: va en `src/components/` (raiz o `ui/`)
+4. Usa `getAuthHeaders()` de `lib/api.js` para headers de autenticacion (no funciones inline)
+5. Si el cambio es un componente reutilizable: va en `src/components/` (raiz o `ui/`)
 5. Si es un panel del editor: va en `src/components/editor-panels/`
 6. Anade `data-testid` a elementos interactivos
 7. Verifica que no uses `rounded-none` en componentes nuevos si aplica el nuevo estilo moderno

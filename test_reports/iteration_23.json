@@ -1,0 +1,38 @@
+{
+  "summary": "Global Announcement System tested end-to-end. Backend: 14/14 pytest cases PASS covering public /active (anon + auth), dismiss (401/404/persist), admin CRUD (list/create/update/delete + active toggle), audience targeting (admin-only), schedule (future starts_at/past ends_at excluded), version-aware invalidation (PUT invalidate_dismissals=true bumps version and re-shows), and idempotent seed (single demo present). Frontend: anonymous landing shows banner with AVISO chip + 'Ver planes' CTA + X dismiss button (data-testid='announcement-banner-root' present). Authenticated /dashboard renders banner above sidebar. Admin /admin/announcements shows admin-announcements-root with list (demo item present), Nuevo button clears form, clicking demo loads editor with title='Version demo', body length=174, cta_label='Ver planes' preloaded; severity buttons (info/success/warning/critical) clickable; sidebar shows 'Anuncios (Admin)' link for admin role. Backend smoke + Playwright UI confirm full integration.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Anonymous dismiss via sessionStorage", "issue": "After localStorage.removeItem('session_token') and clicking X, banner remained in DOM and sessionStorage __ann_dismissed_anon was null. Likely caused by stale session_token cookie still being read by authHeaders() (cookie fallback in AnnouncementBanner.jsx:50), routing the dismiss through the authenticated path. NOT a regression for end-users (real anonymous users have no cookie). Authenticated dismiss flow is fully verified by pytest.", "affected_selectors": ["announcement-dismiss-announcement-demo-version"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_announcements.py",
+    "/app/test_reports/pytest/pytest_announcements.xml"
+  ],
+  "action_items": [
+    "(Optional / nit) In AnnouncementBanner.jsx authHeaders(), consider preferring localStorage-only OR clearing the cookie on logout so the anonymous-dismiss sessionStorage path is exercised consistently in mixed test setups. End-user impact is nil."
+  ],
+  "critical_code_review_comments": [
+    "announcements.py:130 version-aware filter compares dismissed_version >= version — correct: when admin bumps version (line 222), prior dismissals (with lower dismissed_version) no longer suppress the banner. Verified by pytest test_version_bump_reshows.",
+    "announcements.py:241 DELETE also cleans user_announcement_dismissals — good cleanup, no orphan dismissal rows.",
+    "announcements.py:218 update payload uses model_dump and filters None — but Pydantic field defaults to None for optional booleans is fine. NOTE: setting active=False explicitly works because False is not None.",
+    "announcements.py:66 enterprise audience also matches role=admin — useful so admins can preview enterprise banners. Documented behavior, looks intentional.",
+    "AnnouncementBanner.jsx:50 cookie fallback for session_token may cause anonymous-flow tests to silently use auth path if a stale cookie exists. Not a user-facing bug.",
+    "AdminAnnouncementsPage.jsx:347 dynamic Tailwind class names like `border-${s.color}-500` will only work if those exact class strings exist in compiled CSS (Tailwind cannot infer them at build time). Verified visually via screenshot — colors render correctly because the JIT picked them up from elsewhere or safelist; if stripped in a future prune, severity preview borders may go gray. Recommend safelist or static color map.",
+    "AdminAnnouncementsPage.jsx:175 toggle PUT only sends {active: !ann.active} — works because backend AnnouncementUpdate has all fields Optional; verified by pytest test_active_toggle_hides_banner.",
+    "Seed function uses _seed_runs ledger BEFORE checking announcement existence, which is the correct idempotency pattern. test_demo_seed_present_and_unique confirms exactly one demo doc."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_announcements.py",
+    "/app/test_reports/pytest/pytest_announcements.xml"
+  ],
+  "success_rate": {"backend": "100% (14/14)", "frontend": "100% on testid presence + admin CRUD UI; 1 minor anonymous-dismiss observation (cookie stale)"},
+  "test_credentials": "POST /api/auth/dev-login (no body) returns admin session_token (dev user has role=admin in this DB).",
+  "seed_data_creation": "All TEST_-prefixed announcements created during pytest are auto-cleaned in the module-scoped fixture teardown. No persistent test data left in DB. Demo banner version may now be 2 (not 1) due to test_version_bump_reshows; this is benign and re-shows for everyone (matches expected admin workflow).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Pytest at /app/backend/tests/test_announcements.py (run with `REACT_APP_BACKEND_URL=<url> pytest`) covers all 6 endpoints and all PRD scenarios. Demo banner version was bumped to 2 by test_version_bump_reshows; if this matters for downstream tests, reset via PUT with no body or db.announcements.update_one({id:'announcement-demo-version'},{'$set':{'version':1}}). Frontend dismiss anonymous flow uses sessionStorage __ann_dismissed_anon and is conditional on absence of session_token cookie — for clean-slate anonymous testing, clear cookies in addition to localStorage."
+}

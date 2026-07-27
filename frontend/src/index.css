@@ -1,0 +1,380 @@
+@import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 0 0% 4%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 4%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 4%;
+        --primary: 217 91% 60%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 240 5% 96%;
+        --secondary-foreground: 0 0% 4%;
+        --muted: 240 5% 96%;
+        --muted-foreground: 240 4% 46%;
+        --accent: 217 91% 60%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 240 6% 90%;
+        --input: 240 6% 90%;
+        --ring: 217 91% 60%;
+        --radius: 0.125rem;
+
+        /* Chart colors */
+        --chart-1: 217 91% 60%;
+        --chart-2: 160 84% 39%;
+        --chart-3: 38 92% 50%;
+        --chart-4: 0 72% 51%;
+        --chart-5: 200 98% 39%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground antialiased;
+        font-family: 'Work Sans', system-ui, sans-serif;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Chivo', system-ui, sans-serif;
+        @apply font-bold tracking-tight;
+    }
+
+    code, pre, .font-mono {
+        font-family: 'IBM Plex Mono', monospace;
+    }
+}
+
+/* BPMN.js styles */
+.bpmn-container {
+    @apply w-full h-full;
+}
+
+.bjs-container {
+    @apply w-full h-full;
+}
+
+.bjs-powered-by {
+    display: none !important;
+}
+
+/* Canvas dotted grid */
+.bpmn-canvas-bg {
+    background-image: radial-gradient(circle, #d4d4d8 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: #fafafa;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-zinc-300;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-400;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideIn {
+    animation: slideIn 0.2s ease-out;
+}
+
+.animate-marquee {
+    animation: marquee 30s linear infinite;
+}
+
+/* Status badges */
+.badge-valid {
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+}
+
+.badge-warning {
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
+}
+
+.badge-error {
+    @apply bg-red-50 text-red-700 border border-red-200;
+}
+
+/* Category badges */
+.badge-order { @apply bg-blue-50 text-blue-700 border border-blue-200; }
+.badge-payment { @apply bg-green-50 text-green-700 border border-green-200; }
+.badge-shipping { @apply bg-orange-50 text-orange-700 border border-orange-200; }
+.badge-customer { @apply bg-violet-50 text-violet-700 border border-violet-200; }
+.badge-inventory { @apply bg-yellow-50 text-yellow-700 border border-yellow-200; }
+.badge-other { @apply bg-zinc-50 text-zinc-700 border border-zinc-200; }
+
+/* OOP Class overlays */
+.oop-overlay {
+    @apply absolute px-2 py-1 text-xs font-medium shadow-sm;
+    @apply bg-blue-600 text-white;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Collaboration cursors */
+.collab-cursor {
+    @apply absolute pointer-events-none z-50;
+    transition: all 0.1s ease-out;
+}
+
+.collab-cursor-label {
+    @apply px-2 py-0.5 text-xs font-medium text-white whitespace-nowrap;
+    font-family: 'IBM Plex Mono', monospace;
+    transform: translateX(-50%);
+}
+
+/* Drag and drop */
+.dragging {
+    @apply opacity-50 cursor-grabbing;
+}
+
+.drag-over {
+    @apply ring-2 ring-blue-400 ring-offset-2;
+}
+
+/* UML Diagram styles */
+.uml-class {
+    @apply bg-white border-2 border-zinc-900;
+}
+
+.uml-class-header {
+    @apply bg-zinc-900 text-white px-3 py-2 font-semibold;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+.uml-class-body {
+    @apply p-3 text-sm divide-y divide-zinc-200;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+.uml-relation-line {
+    stroke: #71717a;
+    stroke-width: 2;
+    fill: none;
+}
+
+/* Properties panel */
+.properties-panel {
+    @apply bg-white border-l border-zinc-200;
+}
+
+.properties-section {
+    @apply border-b border-zinc-100 last:border-b-0;
+}
+
+/* Toolbar styles */
+.toolbar-button {
+    @apply p-2 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900;
+    @apply transition-colors duration-100;
+}
+
+.toolbar-button.active {
+    @apply bg-blue-50 text-blue-700;
+}
+
+/* Toolbar divider */
+.toolbar-divider {
+    @apply w-px h-6 bg-zinc-200 mx-1;
+}
+
+/* Input focus styles */
+input:focus, textarea:focus, select:focus {
+    @apply ring-2 ring-blue-500 ring-offset-1 outline-none;
+}
+
+/* Card hover effects */
+.card-hover {
+    @apply transition-colors duration-150;
+}
+
+.card-hover:hover {
+    @apply bg-zinc-50;
+}
+
+/* Version tree */
+.version-tree-line {
+    @apply absolute left-4 top-0 bottom-0 w-0.5 bg-zinc-200;
+}
+
+.version-tree-node {
+    @apply relative pl-8;
+}
+
+.version-tree-node::before {
+    content: '';
+    @apply absolute left-4 top-3 w-3 h-0.5 bg-zinc-200;
+}
+
+/* Toast styles override */
+[data-sonner-toaster] {
+    --normal-bg: hsl(var(--card));
+    --normal-text: hsl(var(--foreground));
+    --normal-border: hsl(var(--border));
+}
+
+/* Debug wrapper fix */
+[data-debug-wrapper="true"] {
+    display: contents !important;
+}
+
+/* BPMN palette styles */
+.djs-palette {
+    @apply bg-white border-r border-zinc-200 !important;
+}
+
+.djs-palette-entries {
+    @apply p-1;
+}
+
+.entry {
+    @apply p-2 hover:bg-zinc-100 cursor-pointer transition-colors;
+}
+
+/* Selection highlight */
+.djs-element.selected .djs-outline {
+    stroke: hsl(217, 91%, 60%) !important;
+    stroke-width: 2px !important;
+}
+
+/* Context pad */
+.djs-context-pad {
+    @apply bg-white shadow-md border border-zinc-200 !important;
+}
+
+.djs-context-pad .entry {
+    @apply hover:bg-blue-50;
+}
+
+/* Bento grid */
+.bento-grid {
+    display: grid;
+    gap: 1px;
+    background-color: #e4e4e7;
+}
+
+.bento-grid > * {
+    background-color: white;
+}
+
+/* Label style */
+.label-xs {
+    font-family: 'IBM Plex Mono', monospace;
+    @apply text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+    .responsive-stack {
+        flex-direction: column !important;
+    }
+    .responsive-grid-1 {
+        grid-template-columns: 1fr !important;
+    }
+    .responsive-p-4 {
+        padding: 1rem !important;
+    }
+}
+
+/* Dark mode overrides */
+.dark .bento-grid {
+    background-color: #27272a;
+}
+.dark .bento-grid > * {
+    background-color: #18181b;
+}
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+    --tw-ring-color: hsl(217, 91%, 60%);
+}
+.dark .djs-palette {
+    @apply bg-zinc-900 border-zinc-800 !important;
+}
+.dark .entry {
+    @apply hover:bg-zinc-800;
+}
+.dark .toolbar-button {
+    @apply text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100;
+}
+.dark .toolbar-button.active {
+    @apply bg-blue-900 text-blue-300;
+}
+.dark .card-hover:hover {
+    @apply bg-zinc-800;
+}
+.dark [data-sonner-toaster] {
+    --normal-bg: hsl(240, 6%, 10%);
+    --normal-text: hsl(0, 0%, 90%);
+    --normal-border: hsl(240, 4%, 16%);
+}
+.dark .properties-panel {
+    @apply bg-zinc-900 border-zinc-800;
+}
+
+/* Landing glassmorphism utilities */
+.glass-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 26, 77, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+}
+
+.ai-glow {
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #001A4D 0%, #00E5FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.bg-tech-pattern {
+    background-image: radial-gradient(circle at 2px 2px, rgba(0, 26, 77, 0.03) 1px, transparent 0);
+    background-size: 32px 32px;
+}

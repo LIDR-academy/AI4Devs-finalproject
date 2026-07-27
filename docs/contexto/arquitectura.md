@@ -35,7 +35,7 @@ raiz/
       saml_auth.py         # SAML 2.0 SSO multi-tenant
       diagrams.py          # CRUD diagramas, versiones, ramas
       projects.py          # CRUD proyectos, GitHub sync
-      ai.py                # Chat IA, generacion BPMN, analisis
+      ai.py                # Chat IA, generacion BPMN, analisis, sugerencias inline
       ai_generator.py      # Generacion BPMN via prompt
       ai_codegen.py        # Generacion codigo desde diagramas
       project_tree.py      # Arbol de proyecto por fases (A-E)
@@ -56,7 +56,7 @@ raiz/
       pages/               # 33 paginas
       components/
         ui/                # 46 componentes shadcn/ui (Radix)
-        editor-panels/     # 11 paneles del editor BPMN
+        editor-panels/     # 12 paneles del editor BPMN (incluye AISuggestions)
         *.jsx              # ~40 componentes de alto nivel
       hooks/               # 7 hooks custom
       contexts/            # I18nContext, UpgradeModalContext
@@ -88,6 +88,8 @@ Usuario -> Google OAuth / SAML -> backend genera session_token (UUID)
 React (bpmn-js) -> fetch REST /api/diagrams/* -> MongoDB
                  -> WebSocket /api/ws/diagram/{id} -> colaboracion en tiempo real
                  -> fetch /api/ai/* -> DeepSeek/MiniMax/MiMo
+                 -> fetch /api/ai/suggest -> sugerencias inline (DeepSeek Flash)
+                 -> fetch /api/ai/apply-suggestion -> aplicar sugerencia al XML
 ```
 
 ### Proyectos

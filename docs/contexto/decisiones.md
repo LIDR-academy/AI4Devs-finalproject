@@ -103,3 +103,23 @@
 **Cambio en curso:** Segun team memory "Modern UI design direction" (2026-06-26), el diseno esta migrando a `rounded-lg`, glass effects, ghost buttons y overflow menus.
 
 **Por que del cambio:** [PENDIENTE: documentar la razon — probablemente para una apariencia mas moderna/amigable]
+
+## Landing page: glassmorphism con paleta navy+cyan
+
+**Decision:** Reescribir la landing page (`LandingPage.jsx`) con estilo glassmorphism, paleta deep-navy (#001A4D) + electric-cyan (#00E5FF), y estructura narrativa moderna (commit `ffb2a00`, julio 2026).
+
+**Por que:** La landing anterior usaba brutalism editorial que no conectaba con el mercado objetivo. El nuevo diseno incluye glass-card, gradient-text, bg-tech-pattern, y secciones como "From Chaos to Clarity", "Three Pillars", ROI Calculator, Pricing (4 tiers), Trust, y CTA final.
+
+**Descartado:** Mantener el brutalismo en la landing — el resto del editor ya estaba migrando a estilo moderno.
+
+**Impacto:** Tailwind config con nuevos tokens (deep-navy, electric-cyan, soft-glass, accent-glow). Clases CSS reutilizables (glass-card, ai-glow, gradient-text, bg-tech-pattern). ~55 nuevas claves i18n `landing.v2.*` en 6 idiomas. Secciones ext.* (HiddenCostTable, RiskMap, etc.) eliminadas.
+
+## IA inline en el editor (estilo Copilot)
+
+**Decision:** Anadir sugerencias contextuales de IA inline en el editor BPMN, como GitHub Copilot en VS Code (commit `27a0de7`, julio 2026).
+
+**Por que:** La IA actual funciona como dialogo modal que reemplaza todo el diagrama. Las sugerencias inline son menos intrusivas y mas utiles — aparecen al seleccionar un elemento y sugieren 2-3 siguientes pasos logicos.
+
+**Descartado:** Solo mejorar el dialogo existente — no resuelve el problema de UX de tener que abrir un modal para cada interaccion con la IA.
+
+**Impacto:** Nuevos endpoints `/ai/suggest` y `/ai/apply-suggestion` usando DeepSeek V4-Flash (rapido, no cuenta contra limite de IA). Componente `AISuggestions.jsx` popover con glass-card. Toggle en toolbar con persistencia en localStorage. Fallback local si la IA no responde.

@@ -1,0 +1,30 @@
+{
+  "summary": "End-to-end testing of Project Tree & Versioning System (project_tree.py router + ProjectTreePage UI). All 18 backend pytest cases pass (auth, tree, manual snapshots, read snapshot, compare phase/bpmn/edge cases, restore phase/bpmn). Frontend smoke-tested on /projects/5ad98a45-a536-4fd8-a9e0-051f40d26ce4/tree: tree loads with 4 phase sections, A/B compare opens diff panel, View opens snapshot sheet, manual Snapshot button creates v(N+1) and toast, 'Versiones' button on ProjectDetailPage navigates correctly. Auto-snapshot hooks confirmed via code review (ai_generator.py:382 trigger=ai.requirements; specs.py:1207-1218 trigger=ai.speckit). _id leak fix verified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ProjectTreePage / PhaseSection", "issue": "Invalid HTML: a <Button data-testid='snapshot-specification-btn'> is rendered INSIDE the collapsible header <button>. React logs hydration error 'In HTML, button cannot be a descendant of button'. Functionality works (e.stopPropagation prevents collapse) but produces console errors and is invalid semantics. Fix: change the outer collapsible wrapper from <button> to a <div role='button' tabIndex={0} onClick=... onKeyDown=...> (lines 86-111 of ProjectTreePage.jsx).", "selector": "[data-testid^='phase-section-'] > button", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_project_tree.py", "/app/test_reports/pytest/pytest_project_tree.xml"],
+  "action_items": [
+    "(MEDIUM) Refactor PhaseSection header in /app/frontend/src/pages/ProjectTreePage.jsx (lines 86-111): replace outer <button> with a div+role=button to remove nested-button HTML hydration warning."
+  ],
+  "critical_code_review_comments": [
+    "Route ordering in project_tree.py is correct: /snapshots/compare declared before /snapshots/{snapshot_id} catch-all (verified by tests test_compare_phase + test_compare_same_id_400 + test_compare_unknown_404 all hitting compare path correctly).",
+    "_id leak fix verified: all insert_one calls use .copy() (lines 78, 281, 369, 415, 431) and find_one/find use {'_id': 0} projection. Manual snapshot endpoints return JSON-serializable bodies (test_create_bpmn_snapshot_no_id_leak passes).",
+    "Auto-snapshot CODE-REVIEW: ai_generator.py:380-392 calls snapshot_spec_full(trigger='ai.requirements') wrapped in try/except (non-fatal). specs.py:1207-1220 inside _run_speckit_llm AFTER speckit_status='ready' update calls snapshot_spec_full(trigger='ai.speckit'), also non-fatal. Both hooks present and correctly placed.",
+    "Restore endpoint correctly takes a pre-restore safety snapshot before overwriting (verified: test_restore_phase passes, and tree shows 'Pre-restore' badged rows like v3/v11 from prior runs).",
+    "Minor: monotonic versioning uses sort by version desc per (project_id, phase, resource_id) — correct, but consider an index for performance once snapshots accumulate."
+  ],
+  "updated_files": ["/app/backend/tests/test_project_tree.py", "/app/test_reports/pytest/pytest_project_tree.xml"],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "100% functional (1 minor HTML semantics warning)"},
+  "test_credentials": "POST /api/auth/dev-login (no body) -> session_token used as Bearer.",
+  "seed_data_creation": "Created TEST_pytest_spec/TEST_pytest_bpmn snapshots and several extra v8-v12 manual snapshots on project 5ad98a45 / spec lti-spec-onboarding / diagram 0dac3518 during testing. Restore tests also created pre-restore + restore versions. These add to the visible tree but do not corrupt prior data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend test file at /app/backend/tests/test_project_tree.py is reusable for regression — uses dev-login + LTI project. Frontend ProjectTreePage works end-to-end; only outstanding issue is nested <button> in PhaseSection header (medium priority cosmetic/console error, no functional impact). LLM endpoints (/generate-requirements, /generate-speckit) NOT exercised per instruction; their auto-snapshot hooks were verified by source review only.",
+  "rca of the issue": "Nested <button> warning RCA: ProjectTreePage.jsx line 86 wraps the entire phase header in a <button type='button'> for collapse toggle, but inside that header (line 98) it conditionally renders a shadcn <Button data-testid='snapshot-specification-btn'> — shadcn Button renders a native <button>. Solution: convert the outer toggle to a div with role='button' and onKeyDown for Enter/Space, or move the Snapshot button outside the toggle <button> (e.g., next to ChevronDown)."
+}

@@ -1,0 +1,30 @@
+{
+  "summary": "Comprehensive backend + frontend testing of Custom Schemas Enterprise feature and InlineProgress component in BpmnEditor SummaryLlmDialog. All 11 backend tests PASS (auth gates, plan field on /auth/me, full CRUD, schema validation 400, apply-custom-schema with invalid/valid metadata). All frontend interaction flows PASS (UI builder save, UI<->Raw toggle conversion, invalid-JSON error, edit/rename, delete, lock-card for non-enterprise users, sidebar gating, InlineProgress rendering with elapsed counter & rotating tips).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_custom_schemas.py",
+    "/app/test_reports/pytest/pytest_custom_schemas.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CustomSchemasPage.jsx exposes 'schema' field directly from backend (which uses alias for json_schema). Works because server stores under literal key 'schema' in Mongo and serialises that key in responses. Consistent — no bug.",
+    "_require_enterprise queries DB on every endpoint hit; consider caching plan on the User model or session for performance under load.",
+    "list_custom_schemas filters by owner_email only — admin sees only their own, not all. If admins should oversee org-wide schemas, add admin bypass similar to RLS pattern used elsewhere.",
+    "InlineProgress re-creates a <style> tag with the same @keyframes on every mount. Minor — works fine, but consider hoisting into a global CSS file."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% (all flows pass)"},
+  "test_credentials": "dev-login (test@bpmnmodeler.dev) is plan=enterprise; free@bpmnmodeler.dev (token 2d4177f7-212e-406a-b389-0fee5abd0df2) plan=null returns 403 / sees lock card.",
+  "seed_data_creation": "Tests create TEST_-prefixed schemas and clean them up via teardown.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Custom Schemas Enterprise CRUD, plan gating, schema validation, apply-custom-schema, UI builder, Raw JSON toggle, edit/delete, lock card and sidebar gating all verified. InlineProgress in SummaryLlmDialog shows immediately on Generar (step config) with elapsed counter that increments and label/tip text. test_custom_schemas.py is reusable as regression. dev-login user is currently plan=enterprise — if it gets reset, backend tests for the enterprise positive flows will fail with 403. The 'Prompt' BPMN toolbar button is the trigger for SummaryLlmDialog (no explicit data-testid on it; located by text='Prompt')."
+}

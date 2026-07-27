@@ -1,0 +1,146 @@
+{
+  "theme": "Light",
+  "archetype": "Archetype 4 (Swiss & High-Contrast)",
+  "typography": {
+    "fonts": {
+      "headings": "Chivo",
+      "body": "Work Sans",
+      "mono": "IBM Plex Mono",
+      "icons": "lucide-react"
+    },
+    "hierarchy": {
+      "h1": "text-5xl sm:text-6xl md:text-7xl font-black tracking-tighter uppercase leading-none",
+      "h2": "text-3xl sm:text-4xl font-extrabold tracking-tight uppercase",
+      "h3": "text-xl sm:text-2xl font-bold tracking-tight",
+      "body": "text-base font-normal leading-relaxed text-zinc-700",
+      "labels": "text-xs font-bold tracking-[0.2em] uppercase font-mono"
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "bg-white",
+      "secondary": "bg-zinc-50",
+      "inverted": "bg-zinc-900",
+      "accent": "bg-blue-600"
+    },
+    "text": {
+      "primary": "text-zinc-900",
+      "secondary": "text-zinc-600",
+      "inverted": "text-white",
+      "accent": "text-blue-600"
+    },
+    "border": {
+      "primary": "border-zinc-900",
+      "secondary": "border-zinc-200",
+      "accent": "border-blue-600"
+    }
+  },
+  "components": {
+    "cards": {
+      "style": "rounded-none border-2 border-zinc-900 bg-white shadow-[8px_8px_0_0_#18181b] flex flex-col p-8",
+      "hover": "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0_0_#18181b] transition-all duration-200",
+      "invertedStyle": "rounded-none border-2 border-zinc-900 bg-zinc-900 text-white shadow-[8px_8px_0_0_#2563eb] flex flex-col p-8 transform md:-translate-y-4"
+    },
+    "buttons": {
+      "primary": "rounded-none bg-blue-600 text-white font-mono font-bold uppercase tracking-widest px-6 py-4 border-2 border-blue-600 hover:bg-white hover:text-blue-600 transition-colors w-full",
+      "secondary": "rounded-none bg-white text-zinc-900 font-mono font-bold uppercase tracking-widest px-6 py-4 border-2 border-zinc-900 hover:bg-zinc-900 hover:text-white transition-colors w-full",
+      "inverted": "rounded-none bg-white text-zinc-900 font-mono font-bold uppercase tracking-widest px-6 py-4 border-2 border-white hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors w-full"
+    },
+    "badges": {
+      "style": "rounded-none bg-blue-100 text-blue-600 font-mono text-xs font-bold tracking-widest px-3 py-1 uppercase border-2 border-blue-600 inline-block"
+    }
+  },
+  "layout": {
+    "spacing": "py-24 px-4 sm:px-6 lg:px-8",
+    "grid": "grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 w-full max-w-7xl mx-auto items-start mt-16"
+  },
+  "content": {
+    "hero": {
+      "title": "Modelado BPMN.\nSin Límites.",
+      "subtitle": "Selecciona el plan que mejor se adapte a tu flujo de trabajo. Tres opciones claras. Precisión absoluta en la nube."
+    },
+    "pricing_tiers": [
+      {
+        "name": "Gratis",
+        "price": "€0",
+        "period": "/mes",
+        "description": "Para exploración y pequeños proyectos.",
+        "features": [
+          "2 Diagramas",
+          "6 Ejecuciones AI / mes",
+          "10 Clases OOP",
+          "10 Componentes",
+          "Sin opción de exportar"
+        ],
+        "cta": {
+          "text": "Comenzar Gratis",
+          "testid": "btn-tier-free",
+          "type": "secondary"
+        },
+        "highlight": false
+      },
+      {
+        "name": "Suscripción",
+        "badge": "Próximamente",
+        "price": "TBD",
+        "period": "",
+        "description": "Potencia ilimitada para profesionales.",
+        "features": [
+          "Diagramas ilimitados",
+          "AI ilimitada",
+          "Clases OOP ilimitadas",
+          "Componentes ilimitados",
+          "Exportación en todos los formatos"
+        ],
+        "cta": {
+          "text": "Unirse a la lista",
+          "testid": "btn-tier-subscription-waitlist",
+          "type": "inverted"
+        },
+        "highlight": true
+      },
+      {
+        "name": "Admin",
+        "price": "A medida",
+        "period": "",
+        "description": "Para equipos y gestión a gran escala.",
+        "features": [
+          "Todo lo de Suscripción",
+          "Gestión de Usuarios Avanzada",
+          "Editor de Traducciones",
+          "Soporte Prioritario",
+          "Seguridad Enterprise"
+        ],
+        "cta": {
+          "text": "Contactar Ventas",
+          "testid": "btn-tier-admin",
+          "type": "primary"
+        },
+        "highlight": false
+      }
+    ],
+    "ai_models_section": {
+      "title": "Modelos AI Integrados",
+      "description": "Potenciado por los motores de inteligencia artificial más avanzados del mercado.",
+      "models": [
+        "Gemini 2.5 Flash",
+        "GPT 4.1",
+        "MiniMax M2.7",
+        "MiMo-V2-Pro"
+      ]
+    }
+  },
+  "instructions_to_main_agent": [
+    "Strictly use standard React (.js) with functional components and tailwindcss. DO NOT use TypeScript (.tsx).",
+    "Apply Archetype 4 (Swiss & High-Contrast). Do not use soft shadows (shadow-sm/md/lg); instead use brutalist solid drop shadows like shadow-[8px_8px_0_0_#18181b].",
+    "Enforce sharp corners by using 'rounded-none' everywhere. DO NOT use rounded corners anywhere.",
+    "Use 'Chivo' font for all headings (h1, h2, h3). Use 'Work Sans' for body text. Use 'IBM Plex Mono' for uppercase labels, button texts, price numbers, and badges.",
+    "The middle card ('Suscripción') MUST stand out. Apply an inverted color scheme to it: bg-zinc-900, white text, and an accent border/shadow (blue-600). Make it physically pop out slightly by adding '-translate-y-4' on desktop.",
+    "Ensure all features in the list use 'lucide-react' icons. For 'Gratis' plan, render an 'X' or 'Minus' icon (text-zinc-400) for 'Sin opción de exportar'. For others, use a 'Check' icon (text-blue-600 or text-zinc-900).",
+    "Add a striking 'AI Models' section below the pricing grid. Display the 4 models (Gemini 2.5 Flash, GPT 4.1, MiniMax M2.7, MiMo-V2-Pro) using a technical/brutalist grid of minimalist boxes or a scrolling marquee with IBM Plex Mono font.",
+    "Use 'data-testid' on all interactive elements, specifically buttons, as specified in the content block.",
+    "Do NOT use emojis anywhere on the page.",
+    "Do not import external image URLs. Use CSS shapes, stark typography, and lucide-react icons for the visual 'spectacular' feel.",
+    "Write the page entirely in Spanish as requested."
+  ]
+}

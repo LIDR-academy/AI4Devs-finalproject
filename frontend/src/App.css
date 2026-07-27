@@ -1,0 +1,121 @@
+.App-logo {
+    height: 40vmin;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .App-logo {
+        animation: App-logo-spin infinite 20s linear;
+    }
+}
+
+.App-header {
+    background-color: #0f0f10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+}
+
+.App-link {
+    color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* BPMN I/O Overlays */
+.io-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.io-in {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.io-out {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+/* BPMN Simulator Markers */
+.highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
+    stroke: #10b981 !important;
+    fill: #d1fae5 !important;
+    stroke-width: 2px !important;
+}
+
+.highlight-active:not(.djs-connection) .djs-visual > :nth-child(1) {
+    stroke: #7c3aed !important;
+    fill: #ede9fe !important;
+    stroke-width: 3px !important;
+    animation: pulse-border 1s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% { stroke-opacity: 1; }
+    50% { stroke-opacity: 0.5; }
+}
+
+
+/* MoSCoW requirement markers (applied via canvas.addMarker) */
+.moscow-must:not(.djs-connection) .djs-visual > :nth-child(1) {
+    stroke: #dc2626 !important;
+    stroke-width: 4px !important;
+}
+.moscow-should:not(.djs-connection) .djs-visual > :nth-child(1) {
+    stroke: #f59e0b !important;
+    stroke-width: 4px !important;
+}
+.moscow-could:not(.djs-connection) .djs-visual > :nth-child(1) {
+    stroke: #0ea5e9 !important;
+    stroke-width: 4px !important;
+}
+.moscow-wont:not(.djs-connection) .djs-visual > :nth-child(1) {
+    stroke: #71717a !important;
+    stroke-width: 3px !important;
+    stroke-dasharray: 4 3 !important;
+}
+
+/* Little "req code" badge shown on top-left of the element */
+.moscow-badge {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    line-height: 1;
+    color: white;
+    z-index: 2;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.moscow-badge.must   { background: #dc2626; }
+.moscow-badge.should { background: #f59e0b; }
+.moscow-badge.could  { background: #0ea5e9; }
+.moscow-badge.wont   { background: #71717a; }

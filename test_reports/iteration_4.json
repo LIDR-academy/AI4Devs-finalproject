@@ -1,0 +1,75 @@
+{
+  "summary": "Comprehensive testing of new Code Generation feature for BPMN Modeler. Backend: 12/12 tests passed (100%). Frontend: All UI elements work correctly - 3-step dialog (Configurar, Prompt, Codigo), diagram selection, code type options, language selector, editable prompt, copy/download buttons, and Gemini LLM code generation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "backend_api": [
+      "POST /api/projects/{id}/generate-prompt - all diagrams with API type + Python ✓",
+      "POST /api/projects/{id}/generate-prompt - specific diagram_ids ✓",
+      "POST /api/projects/{id}/generate-prompt - automation code type ✓",
+      "POST /api/projects/{id}/generate-prompt - custom type with custom_instructions ✓",
+      "POST /api/projects/{id}/generate-prompt - all 5 languages (python, nodejs, java, csharp, go) ✓",
+      "POST /api/projects/{id}/generate-prompt - 404 for non-existent project ✓",
+      "POST /api/projects/{id}/generate-prompt - 400 for project with no diagrams ✓",
+      "POST /api/projects/{id}/generate-code - Python API code generation via Gemini ✓",
+      "POST /api/projects/{id}/generate-code - Node.js/TypeScript code generation ✓",
+      "POST /api/projects/{id}/generate-code - 404 for non-existent project ✓",
+      "BPMN parsing extracts process elements into prompt ✓",
+      "BPMN parsing handles invalid XML gracefully ✓"
+    ],
+    "frontend_ui": [
+      "'Generar Codigo' button visible on project detail page header ✓",
+      "Code generation dialog opens with 3-step indicator (Configurar, Prompt, Codigo) ✓",
+      "Step 1: 'Todos los diagramas del proyecto' checkbox works ✓",
+      "Step 1: Individual diagram checkboxes appear when 'all' unchecked ✓",
+      "Step 1: 3 code type options (API Backend, Automatizacion, Personalizado) ✓",
+      "Step 1: Custom instructions textarea appears for 'Personalizado' type ✓",
+      "Step 1: Language selector with 5 options (Python, Node.js, Java, C#, Go) ✓",
+      "Step 1: 'Generar Prompt' button works ✓",
+      "Step 2: Editable prompt textarea displays generated prompt ✓",
+      "Step 2: Copy and Download prompt buttons present ✓",
+      "Step 2: 'Generar Codigo con IA' button works ✓",
+      "Step 3: Generated code display shows Python code from Gemini ✓",
+      "Step 3: Copy and Download code buttons present ✓",
+      "Step 3: 'Ver Prompt', 'Nueva Generacion', 'Cerrar' buttons work ✓"
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_code_generation_api.py",
+    "/app/test_reports/pytest/pytest_code_gen_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_code_generation_api.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all UI elements work correctly)"
+  },
+  "test_credentials": {
+    "dev_login": "POST /api/auth/dev-login (no credentials needed)",
+    "test_user": "test@bpmnmodeler.dev / Dev Tester"
+  },
+  "seed_data_verified": {
+    "test_project": {
+      "id": "34cdbb9e-656c-4bc6-a403-45cc2b81721f",
+      "name": "Sistema de Ventas",
+      "diagrams": 2
+    },
+    "test_diagrams": [
+      {"id": "d261a9af-8cfc-44fc-8aa8-417b0e00c60d", "name": "Test Diagram"},
+      {"id": "5dc38ab6-9ab7-4907-9f95-4a98e88e5dc0", "name": "Proceso de Compra"}
+    ]
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Code generation feature fully tested and working. Uses Gemini 3 Flash via emergentintegrations for LLM calls. The generate-prompt endpoint parses BPMN XML to extract process descriptions. The generate-code endpoint sends prompt to Gemini and returns generated code. LLM calls take 5-15 seconds. All 5 languages work (Python, Node.js, Java, C#, Go). All 3 code types work (API, Automation, Custom). Frontend dialog has 3 steps with proper navigation and copy/download functionality."
+}

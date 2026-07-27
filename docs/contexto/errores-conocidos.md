@@ -51,7 +51,7 @@
 
 ### ESLint warnings: exhaustive-deps
 - **Sintoma:** Multiples warnings de `react-hooks/exhaustive-deps` en build de produccion.
-- **Archivos afectados:** AnalyticsDialog, FilePreviewPanel, ProjectTree, SimulatorDialog, UMLDialog, ValidationDialog, AdminUsersPage, BpmnComponentsLibrary, DiagramsLibrary, ProjectDetailPage.
+- **Archivos afectados:** AnalyticsDialog, FilePreviewPanel, ProjectTree, SimulatorDialog, UMLDialog, ValidationDialog, AdminUsersPage, BpmnComponentsLibrary, DiagramsLibrary, ProjectDetailPage, LandingPage.
 - **Estado:** No criticos (warnings, no errores). Build continua.
 - **Deuda tecnica:** [PENDIENTE: plan para limpiar estos warnings]
 
@@ -106,3 +106,9 @@
 - **Riesgo:** Si hay cambios locales en el servidor (ej. archivos creados por linter/forks), `git pull` puede fallar.
 - **Handling:** `update.sh` hace `git stash` antes del pull.
 - **Origen del problema:** Linter o forks crean archivos en el servidor que no estan sincronizados al repo local (ver team memory "Server file sync drift").
+
+### Token de GitHub en update.sh (resuelto 2026-07-20)
+- **Sintoma:** `update.sh` fallaba con "Invalid username or token" al hacer fetch.
+- **Causa:** El script tenia hardcodeado un PAT (`ghp_...`) expirado y sobrescribia la remote en cada ejecucion.
+- **Fix:** El token hardcodeado se elimino del script; ahora solo sobrescribe la remote si se pasa `GITHUB_TOKEN` por entorno. La remote del servidor y `~/.git-credentials` usan el token actual del gestor de credenciales local.
+- **Regla:** Si vuelve a fallar la autenticacion, actualizar el token en la remote del servidor: `git remote set-url origin https://thorpette:<TOKEN>@github.com/thorpette/bpmnoo.git` y en `/home/ubuntu/.git-credentials`.

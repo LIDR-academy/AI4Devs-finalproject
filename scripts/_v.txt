@@ -1,0 +1,1 @@
+bash: line 1: echo SERVER_OK && cd /opt/bpmn-modeler && git log --oneline -1 && ls -la frontend/build/static/js/main.*.js: No such file or directory

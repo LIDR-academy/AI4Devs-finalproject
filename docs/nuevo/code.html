@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SDD-IA | AI-Powered Traceability &amp; Software Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#d8dadc",
+                      "on-error-container": "#93000a",
+                      "on-surface-variant": "#444651",
+                      "on-primary-fixed": "#00174c",
+                      "secondary": "#006970",
+                      "on-background": "#191c1e",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#002b7f",
+                      "secondary-container": "#4df2ff",
+                      "error-container": "#ffdad6",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "secondary-fixed": "#7cf4ff",
+                      "surface-container": "#eceef0",
+                      "primary-fixed": "#dbe1ff",
+                      "outline-variant": "#c4c6d3",
+                      "surface-variant": "#e0e3e5",
+                      "on-primary-container": "#7c97ef",
+                      "on-secondary-fixed": "#002022",
+                      "on-secondary": "#ffffff",
+                      "tertiary-fixed": "#d4e3ff",
+                      "on-tertiary-fixed-variant": "#004786",
+                      "surface-container-highest": "#e0e3e5",
+                      "deep-navy": "#001A4D",
+                      "secondary-fixed-dim": "#24dbe8",
+                      "error": "#ba1a1a",
+                      "surface-container-low": "#f2f4f6",
+                      "surface-tint": "#3d5aad",
+                      "inverse-surface": "#2d3133",
+                      "accent-glow": "rgba(30, 144, 255, 0.15)",
+                      "outline": "#747683",
+                      "on-secondary-container": "#006c73",
+                      "background": "#f7f9fb",
+                      "on-tertiary-container": "#4b9dff",
+                      "surface-container-high": "#e6e8ea",
+                      "on-tertiary-fixed": "#001c3a",
+                      "tertiary-fixed-dim": "#a5c8ff",
+                      "inverse-primary": "#b5c4ff",
+                      "surface": "#f7f9fb",
+                      "on-secondary-fixed-variant": "#004f54",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#003363",
+                      "on-primary": "#ffffff",
+                      "tertiary": "#001e3e",
+                      "on-surface": "#191c1e",
+                      "surface-bright": "#f7f9fb",
+                      "on-primary-fixed-variant": "#224194",
+                      "primary": "#001851",
+                      "inverse-on-surface": "#eff1f3",
+                      "electric-cyan": "#00E5FF",
+                      "soft-glass": "rgba(255, 255, 255, 0.7)",
+                      "surface-container-lowest": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-md": "16px",
+                      "stack-lg": "32px",
+                      "gutter": "24px",
+                      "margin-desktop": "64px",
+                      "margin-mobile": "20px",
+                      "container-max": "1440px",
+                      "stack-sm": "8px"
+              },
+              "fontFamily": {
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "label-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 26, 77, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+        }
+        .ai-glow {
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #001A4D 0%, #00E5FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bg-tech-pattern {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0, 26, 77, 0.03) 1px, transparent 0);
+            background-size: 32px 32px;
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-surface overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 backdrop-blur-md bg-soft-glass border-b border-outline-variant/10 shadow-sm">
+<div class="flex justify-between items-center h-20 px-margin-desktop max-w-container-max mx-auto">
+<div class="flex items-center gap-4">
+<img alt="SDD-IA Logo" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida/AP1WRLticiFFojhYk24E63Lh9qKFbE6X9dHClfYeJNoDXGX9W20G38IA3bLp8RM0ldBIjN57AatoosEKDljWOuPuxSWdeBQfGaWZ2JiKUmOYJskRWbjuRUHfluDWAqWxXzYKD8zhrYPGdpxlnSBKtwvR2Oo2ENszRA9MrzBUcCwT78vGswhXXaT7CM2P73cpxxCmTcFCqTuUHpxSy7w1k1we5qnWNrYp3pWdoHacP0InWz0u-OC75yMOAwvxE18"/>
+<span class="font-headline-md text-headline-md font-bold text-deep-navy">SDD-IA</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-body-md text-body-md text-primary font-bold border-b-2 border-primary pb-1" href="#">Product</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Solutions</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Pricing</a>
+</nav>
+<div class="flex items-center gap-6">
+<button class="hidden lg:block text-primary font-label-md hover:opacity-80 transition-all">Log In</button>
+<button class="bg-gradient-to-r from-deep-navy to-primary px-6 py-3 rounded-lg text-white font-label-md shadow-lg scale-95 active:scale-90 transition-transform">
+                    Request Demo
+                </button>
+</div>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative min-h-[85vh] flex items-center overflow-hidden bg-tech-pattern">
+<!-- Decorative Glows -->
+<div class="absolute -top-24 -left-24 w-96 h-96 bg-electric-cyan/10 rounded-full blur-[120px]"></div>
+<div class="absolute top-1/2 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]"></div>
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 lg:grid-cols-2 gap-stack-lg items-center relative z-10">
+<div class="space-y-stack-lg">
+<div class="inline-flex items-center gap-2 bg-primary/5 border border-primary/10 px-4 py-2 rounded-full">
+<span class="material-symbols-outlined text-primary text-[18px]">bolt</span>
+<span class="font-label-md text-primary uppercase tracking-wider">AI-Powered Traceability</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-deep-navy leading-tight">
+<span class="block">68% of production errors</span>
+<span class="gradient-text">stem from poor traceability</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                        SDD-IA bridges the gap between requirements, processes, and code with AI-powered traceability. Eliminate silos and ensure architectural integrity across your entire software lifecycle.
+                    </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<button class="bg-primary text-white px-8 py-4 rounded-xl font-label-md flex items-center gap-3 shadow-xl hover:shadow-primary/20 transition-all active:scale-95">
+                            Request Demo
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="border-2 border-deep-navy text-deep-navy px-8 py-4 rounded-xl font-label-md flex items-center gap-3 hover:bg-deep-navy hover:text-white transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+                            Watch Video
+                        </button>
+</div>
+</div>
+<div class="relative hidden lg:block">
+<!-- Modern Tech Visualization -->
+<div class="relative z-10 glass-card p-stack-md rounded-3xl border border-white/50 ai-glow overflow-hidden">
+<div class="w-full aspect-square rounded-2xl bg-cover bg-center" data-alt="A high-tech digital dashboard interface for software traceability, showing complex interconnected nodes and flowcharts in deep blue and luminous cyan. The UI is clean, modern, and high-fidelity, featuring glassmorphic windows that display AI-verified badges and real-time status updates in a bright, futuristic light-mode environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB46dhlgmyezP6nDP9PWpgBqGVp284qV2248jnycZE01MRNjKXM0NeYmxF4-zQ9r60r_0pkd1BHObNJ3zAbJ2yf0FAtu3b-mfeOSfWNPKeBMBTJqMJUuXjf-hGzIRqDaQBzaXEf-5snd4CVtWMYp5wxffLn4waseWvkmCIbUQJps5MY3gDOykln5Y5R-oPC8yUWsrZDq65o6tGufMLOiddcBwVYKn5dc0WzXQaq6Ial45JUxRzZkFwDrEUPrWkVSYYFAVxCdQtg5__b')"></div>
+<div class="absolute bottom-10 left-10 right-10 glass-card p-6 rounded-2xl border border-white/20 shadow-2xl flex items-center gap-4">
+<div class="w-12 h-12 bg-electric-cyan/20 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary-container" style="font-variation-settings: 'FILL' 1;">spark</span>
+</div>
+<div>
+<p class="font-label-md text-deep-navy">AI Integrity Check</p>
+<p class="font-label-sm text-on-surface-variant">Traceability link verified across 3 platforms</p>
+</div>
+<div class="ml-auto bg-electric-cyan text-white px-3 py-1 rounded-full text-[10px] font-bold">AI-VERIFIED</div>
+</div>
+</div>
+<!-- Background shapes for depth -->
+<div class="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border border-primary/5 rounded-full animate-[spin_60s_linear_infinite]"></div>
+</div>
+</div>
+</section>
+<!-- The Problem/Solution Section -->
+<section class="py-stack-lg bg-surface-container-lowest">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="text-center mb-16 space-y-4">
+<h2 class="font-headline-lg text-headline-lg text-deep-navy">From Chaos to Clarity</h2>
+<p class="font-body-md text-on-surface-variant max-w-2xl mx-auto">Stop letting vital project knowledge vanish into thin air. SDD-IA synchronizes every layer of development.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- The Mess -->
+<div class="p-10 rounded-3xl bg-surface-container-low border border-outline-variant/30 relative overflow-hidden group">
+<div class="mb-6 flex items-center justify-between">
+<h3 class="font-headline-md text-deep-navy opacity-60">The Mess</h3>
+<span class="material-symbols-outlined text-error opacity-40 text-4xl">link_off</span>
+</div>
+<ul class="space-y-6">
+<li class="flex items-start gap-4 p-4 rounded-xl bg-white/50 border border-transparent">
+<span class="material-symbols-outlined text-error mt-1">cancel</span>
+<div>
+<p class="font-label-md text-deep-navy">Disconnected Silos</p>
+<p class="text-label-sm text-on-surface-variant">Requirements live in Jira, code in GitHub, and logic in people's heads.</p>
+</div>
+</li>
+<li class="flex items-start gap-4 p-4 rounded-xl bg-white/50">
+<span class="material-symbols-outlined text-error mt-1">cancel</span>
+<div>
+<p class="font-label-md text-deep-navy">Manual Traceability</p>
+<p class="text-label-sm text-on-surface-variant">Spreadsheets that are outdated the moment they are saved.</p>
+</div>
+</li>
+<li class="flex items-start gap-4 p-4 rounded-xl bg-white/50">
+<span class="material-symbols-outlined text-error mt-1">cancel</span>
+<div>
+<p class="font-label-md text-deep-navy">High Maintenance Debt</p>
+<p class="text-label-sm text-on-surface-variant">New developers spend weeks just understanding the "Why" behind the code.</p>
+</div>
+</li>
+</ul>
+</div>
+<!-- The SDD-IA Way -->
+<div class="p-10 rounded-3xl glass-card border-2 border-electric-cyan/20 relative overflow-hidden ai-glow">
+<div class="absolute top-0 right-0 p-4">
+<div class="bg-electric-cyan/10 text-secondary px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">auto_awesome</span> THE FUTURE
+                            </div>
+</div>
+<div class="mb-6 flex items-center justify-between">
+<h3 class="font-headline-md text-deep-navy">The SDD-IA Way</h3>
+<span class="material-symbols-outlined text-secondary text-4xl">hub</span>
+</div>
+<ul class="space-y-6">
+<li class="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+<span class="material-symbols-outlined text-secondary mt-1">check_circle</span>
+<div>
+<p class="font-label-md text-deep-navy">Unified Source of Truth</p>
+<p class="text-label-sm text-on-surface-variant">Live mapping between business requirements and functional code.</p>
+</div>
+</li>
+<li class="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+<span class="material-symbols-outlined text-secondary mt-1">check_circle</span>
+<div>
+<p class="font-label-md text-deep-navy">Automated Documentation</p>
+<p class="text-label-sm text-on-surface-variant">AI generates and updates technical documentation based on real-time activity.</p>
+</div>
+</li>
+<li class="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+<span class="material-symbols-outlined text-secondary mt-1">check_circle</span>
+<div>
+<p class="font-label-md text-deep-navy">Architecture Integrity</p>
+<p class="text-label-sm text-on-surface-variant">Instant alerts when code changes violate established business rules.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Product Pillars -->
+<section class="py-stack-lg">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-stack-md">
+<div class="max-w-xl">
+<h2 class="font-headline-lg text-headline-lg text-deep-navy">The Three Pillars of Software Intelligence</h2>
+<p class="font-body-md text-on-surface-variant mt-4">Modular, integrated tools designed to scale with your organization's complexity.</p>
+</div>
+<a class="text-primary font-label-md flex items-center gap-2 hover:underline" href="#">Explore all modules <span class="material-symbols-outlined">east</span></a>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- ModulOW -->
+<div class="group relative p-10 rounded-[32px] glass-card hover:bg-white transition-all duration-500 hover:-translate-y-2">
+<div class="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl">list_alt</span>
+</div>
+<h3 class="font-headline-md text-deep-navy mb-4">ModulOW</h3>
+<p class="font-body-md text-on-surface-variant mb-8">AI-driven requirement management that translates fuzzy business needs into precise technical specifications automatically.</p>
+<div class="space-y-3">
+<div class="flex items-center gap-2 text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-electric-cyan text-sm">star</span> Natural Language Processing
+                            </div>
+<div class="flex items-center gap-2 text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-electric-cyan text-sm">star</span> Conflict Detection
+                            </div>
+</div>
+</div>
+<!-- BPMN -->
+<div class="group relative p-10 rounded-[32px] glass-card border-2 border-primary/10 hover:bg-white transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+<div class="w-16 h-16 bg-electric-cyan/10 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary text-3xl">account_tree</span>
+</div>
+<h3 class="font-headline-md text-deep-navy mb-4">BPMN</h3>
+<p class="font-body-md text-on-surface-variant mb-8">Intelligent process automation and living documentation that stays in sync with your operational reality.</p>
+<div class="space-y-3">
+<div class="flex items-center gap-2 text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-electric-cyan text-sm">star</span> Executable Workflows
+                            </div>
+<div class="flex items-center gap-2 text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-electric-cyan text-sm">star</span> Auto-sync documentation
+                            </div>
+</div>
+</div>
+<!-- Technical Space -->
+<div class="group relative p-10 rounded-[32px] glass-card hover:bg-white transition-all duration-500 hover:-translate-y-2">
+<div class="w-16 h-16 bg-deep-navy rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-white text-3xl">code_blocks</span>
+</div>
+<h3 class="font-headline-md text-deep-navy mb-4">Technical Space</h3>
+<p class="font-body-md text-on-surface-variant mb-8">Real-time code and architecture alignment. Map your infrastructure directly to the business logic it supports.</p>
+<div class="space-y-3">
+<div class="flex items-center gap-2 text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-electric-cyan text-sm">star</span> Git Integration
+                            </div>
+<div class="flex items-center gap-2 text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-electric-cyan text-sm">star</span> Real-time Architecture Maps
+                            </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ROI Calculator -->
+<section class="py-stack-lg bg-deep-navy text-white relative overflow-hidden">
+<div class="absolute inset-0 opacity-10">
+<div class="absolute top-0 left-0 w-full h-full" style="background: radial-gradient(circle at 20% 50%, #00E5FF 0%, transparent 50%);"></div>
+</div>
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 lg:grid-cols-2 gap-stack-lg items-center relative z-10">
+<div>
+<h2 class="font-headline-lg text-headline-lg mb-6">How much is it costing you?</h2>
+<p class="font-body-lg text-surface-variant mb-12">Production errors, missed deadlines, and architectural debt are not just frustrations—they are financial leaks. Calculate your potential savings with SDD-IA.</p>
+<div class="space-y-8 max-w-md">
+<div class="space-y-4">
+<div class="flex justify-between font-label-md">
+<span>Team Size</span>
+<span>50 Engineers</span>
+</div>
+<input class="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-electric-cyan" type="range"/>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between font-label-md">
+<span>Avg. Release Cycle</span>
+<span>2 Weeks</span>
+</div>
+<input class="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-electric-cyan" type="range"/>
+</div>
+</div>
+</div>
+<div class="p-stack-lg rounded-[40px] bg-white/5 border border-white/10 backdrop-blur-xl text-center">
+<p class="font-label-md text-electric-cyan uppercase tracking-widest mb-4">Estimated Yearly Savings</p>
+<div class="font-display-lg text-display-lg text-white mb-4">362.280€</div>
+<p class="text-surface-variant/70 font-body-md mb-8">Based on 15% efficiency increase and 40% reduction in high-priority production bugs.</p>
+<div class="flex flex-col items-center gap-4">
+<div class="w-full h-40 flex items-end justify-center gap-4 mb-8">
+<div class="w-12 bg-white/10 rounded-t-lg h-[40%]"></div>
+<div class="w-12 bg-white/10 rounded-t-lg h-[60%]"></div>
+<div class="w-12 bg-white/10 rounded-t-lg h-[50%]"></div>
+<div class="w-12 bg-electric-cyan rounded-t-lg h-[95%] shadow-[0_0_30px_rgba(0,229,255,0.4)]"></div>
+<div class="w-12 bg-white/10 rounded-t-lg h-[55%]"></div>
+</div>
+<button class="bg-electric-cyan text-deep-navy px-10 py-4 rounded-xl font-bold shadow-xl hover:bg-white transition-all">Get Detailed Report</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Trust Section -->
+<section class="py-16 border-b border-outline-variant/10">
+<div class="max-w-container-max mx-auto px-margin-desktop text-center">
+<p class="font-label-sm text-on-surface-variant uppercase tracking-widest mb-10">Integrates seamlessly with your stack</p>
+<div class="flex flex-wrap justify-center items-center gap-12 lg:gap-24 opacity-40 grayscale hover:grayscale-0 transition-all">
+<span class="font-display-lg font-bold">Jira</span>
+<span class="font-display-lg font-bold">GitHub</span>
+<span class="font-display-lg font-bold">Azure</span>
+<span class="font-display-lg font-bold">AWS</span>
+<span class="font-display-lg font-bold">Figma</span>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-32 relative overflow-hidden">
+<div class="absolute inset-0 -z-10 bg-tech-pattern opacity-50"></div>
+<div class="max-w-3xl mx-auto px-margin-mobile text-center">
+<div class="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8">
+<span class="material-symbols-outlined text-primary text-4xl">rocket_launch</span>
+</div>
+<h2 class="font-display-lg text-display-lg text-deep-navy mb-6">Ready to optimize your production?</h2>
+<p class="font-body-lg text-on-surface-variant mb-12">Join hundreds of engineering teams using SDD-IA to build more reliable software, faster.</p>
+<div class="flex flex-wrap justify-center gap-4">
+<button class="bg-primary text-white px-10 py-5 rounded-2xl font-label-md shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Free Pilot</button>
+<button class="bg-white border-2 border-primary/10 text-primary px-10 py-5 rounded-2xl font-label-md hover:bg-primary/5 transition-all">Contact Sales</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-stack-lg border-t border-outline-variant/20 bg-surface-container-lowest">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
+<div class="space-y-6">
+<div class="flex items-center gap-3">
+<img alt="SDD-IA Footer Logo" class="h-8 w-auto" src="https://lh3.googleusercontent.com/aida/AP1WRLticiFFojhYk24E63Lh9qKFbE6X9dHClfYeJNoDXGX9W20G38IA3bLp8RM0ldBIjN57AatoosEKDljWOuPuxSWdeBQfGaWZ2JiKUmOYJskRWbjuRUHfluDWAqWxXzYKD8zhrYPGdpxlnSBKtwvR2Oo2ENszRA9MrzBUcCwT78vGswhXXaT7CM2P73cpxxCmTcFCqTuUHpxSy7w1k1we5qnWNrYp3pWdoHacP0InWz0u-OC75yMOAwvxE18"/>
+<span class="font-headline-md text-headline-md font-bold text-deep-navy">SDD-IA</span>
+</div>
+<p class="font-label-md text-on-surface-variant">Transforming software traceability through the power of Integrated Intelligence.</p>
+</div>
+<div>
+<h4 class="font-label-md text-deep-navy mb-6">Product</h4>
+<ul class="space-y-4">
+<li><a class="font-label-md text-on-surface-variant hover:text-primary hover:underline decoration-electric-cyan" href="#">Product</a></li>
+<li><a class="font-label-md text-on-surface-variant hover:text-primary hover:underline decoration-electric-cyan" href="#">Solutions</a></li>
+<li><a class="font-label-md text-on-surface-variant hover:text-primary hover:underline decoration-electric-cyan" href="#">Pricing</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-md text-deep-navy mb-6">Company</h4>
+<ul class="space-y-4">
+<li><a class="font-label-md text-on-surface-variant hover:text-primary hover:underline decoration-electric-cyan" href="#">Contact Us</a></li>
+<li><a class="font-label-md text-on-surface-variant hover:text-primary hover:underline decoration-electric-cyan" href="#">Privacy Policy</a></li>
+<li><a class="font-label-md text-on-surface-variant hover:text-primary hover:underline decoration-electric-cyan" href="#">Terms of Service</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-md text-deep-navy mb-6">Newsletter</h4>
+<p class="font-label-sm text-on-surface-variant mb-4">Stay updated with the latest in AI-traceability.</p>
+<div class="flex gap-2">
+<input class="bg-surface-container border-none rounded-lg font-label-sm w-full focus:ring-2 focus:ring-primary" placeholder="Email" type="email"/>
+<button class="bg-primary text-white p-2 rounded-lg"><span class="material-symbols-outlined">send</span></button>
+</div>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-margin-desktop mt-16 pt-8 border-t border-outline-variant/10 text-center">
+<p class="font-label-md text-on-surface-variant opacity-60">© 2024 SDD-IA. All rights reserved.</p>
+</div>
+</footer>
+<script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Simple animation logic for the calculator
+        const rangeInputs = document.querySelectorAll('input[type="range"]');
+        rangeInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                // In a real app, logic would go here to update the 362.280€ number
+            });
+        });
+    </script>
+</body></html>

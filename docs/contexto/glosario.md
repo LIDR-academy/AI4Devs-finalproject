@@ -10,6 +10,8 @@
 | **Elemento BPMN** | Nodo individual en un diagrama (task, gateway, event, pool, lane, etc.) |
 | **XML BPMN** | Representacion serializada del diagrama en formato BPMN 2.0 XML |
 | **Sanitizador BPMN** | Funcion que corrige XML malformado generado por LLMs (cierra tags huerfanos, corrige errores comunes) |
+| **Glassmorphism** | Estilo visual con fondos semi-transparentes, backdrop-filter blur y bordes sutiles. Clases CSS: `.glass-card`, `.ai-glow` |
+| **IA inline** | Sugerencias contextuales de IA que aparecen como popover en el editor BPMN al seleccionar un elemento (estilo Copilot) |
 
 ## Entidades principales
 
