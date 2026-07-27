@@ -107,8 +107,8 @@ jobs:
       - run: npm ci
       - run: cd backend && npx prisma generate
       - run: cd backend && npx prisma migrate deploy
-      - run: npm run build -w backend
-      - run: npm run build -w frontend
+      - run: cd backend && npm run build
+      - run: cd frontend && npm run build
       - run: npx playwright install --with-deps chromium
       - name: Start servers and run E2E
         run: |
