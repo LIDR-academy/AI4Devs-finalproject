@@ -66,9 +66,9 @@
 
 ## Fase 3: Historia de Usuario 1 - Listing Lens (Prioridad: P1) 🎯 MVP
 
-**Objetivo**: Usuario pega URL del anuncio → análisis LLM + cruce catastral → puntuación de transparencia + informe de banderas rojas
+**Objetivo**: Usuario pega el texto del anuncio → extracción automática de datos (precio, m², habitaciones) → revisión por el usuario → análisis LLM + cruce catastral → puntuación de transparencia + informe de banderas rojas. La URL es opcional y secundaria (todos los portales bloquean scraping automatizado, ver spec.md).
 
-**Prueba independiente**: POST URL de anuncio simulado a `/api/listings/analyze` → verificar 200 con score, redFlags, comparativa catastral y `processSummary` con el proceso asociado
+**Prueba independiente**: POST texto de anuncio simulado a `/api/listings/analyze` → verificar 200 con score, redFlags, comparativa catastral y `processSummary` con el proceso asociado
 
 ### Tests para Historia 1
 
@@ -114,11 +114,13 @@
 - [ ] T039 [US1] Implementar ruta analyze listing POST /api/listings/analyze (ahora devuelve processSummary) en `backend/src/api/routes/listings.ts`
 - [ ] T040 [US1] Crear controlador de listings gestionando validación de request y dispatch de use case en `backend/src/api/controllers/listingsController.ts`
 - [ ] T041 [US1] Añadir helper de validación de URL (valida formato, comprueba accesibilidad) en `backend/src/infrastructure/utils/urlValidator.ts`
-- [ ] T042 [US1] Crear UI de página Listing Lens con input URL, **estado de carga con progress events de 8-15s** (FR-018), tarjeta de resultados con **AI Reasoning por red flag** (FR-025), y **AI disclaimer** persistente (FR-017, en `frontend/src/lib/components/AIDisclaimer.svelte`) en `frontend/src/routes/listing-lens/+page.svelte`
+- [ ] T042 [US1] Crear UI de página Listing Lens con input de texto (primario, con extracción automática de precio/m²/habitaciones), URL (secundario, portales bloquean), **CopyGuide educativo** explicando cómo copiar el anuncio, **estado de carga con progress events de 8-15s** (FR-018), tarjeta de resultados con **AI Reasoning por red flag** (FR-025), y **AI disclaimer** persistente (FR-017, en `frontend/src/lib/components/AIDisclaimer.svelte`) en `frontend/src/routes/listing-lens/+page.svelte`
 - [ ] T043 [US1] Crear server-side loader que proxy la petición analyze al backend en `frontend/src/routes/listing-lens/+page.server.ts`
 - [ ] T044 [US1] Crear store de listings (Svelte writable) para historial de listings analizados en `frontend/src/lib/stores/listings.ts`
+- [ ] T044a [US1] Crear CopyGuide.svelte: wizard educativo con pasos para copiar el texto del anuncio, selector de portal, explicación de bloqueo de portales en `frontend/src/lib/components/CopyGuide.svelte`
+- [ ] T044b [US1] Añadir extractFields (precio, m², habitaciones) con regex en `frontend/src/lib/utils/format.ts` y mostrar preview editable antes de enviar al análisis
 
-**Checkpoint**: Listing Lens totalmente funcional — pegar URL, obtener score + red flags + comparativa catastral + auto-attach al PurchaseProcess con `processSummary`. Ciclo TDD completo.
+**Checkpoint**: Listing Lens totalmente funcional — pegar texto del anuncio → extracción de datos → revisión → análisis LLM → score + red flags + comparativa catastral + auto-attach al PurchaseProcess con `processSummary`. CopyGuide educativo integrado. URL como opción secundaria.
 
 ---
 
@@ -276,7 +278,7 @@
 - [ ] T086 [P] Añadir skeletons de carga y estados de error a todas las páginas (Listing Lens, Mortgage Compass, Dashboard)
 - [ ] T087 [P] Añadir mensajes de error y etiquetas de UI en español consistentes en todas las páginas
 - [ ] T091a [P] Añadir banner global de AI disclaimer **persistente** en el layout principal (`+layout.svelte`) explicando que el análisis es generado por IA. Se muestra SIEMPRE que haya contenido IA visible (no solo en primera visita) en `frontend/src/routes/+layout.svelte`
-- [ ] T088 Crear test E2E: flujo completo (pegar URL → score → perfil financiero → gastos ocultos → estrategia → dashboard) en `e2e/flows/full-flow.spec.ts`
+- [ ] T088 Crear test E2E: flujo completo (pegar texto del anuncio → extracción → score → perfil financiero → gastos ocultos → estrategia → dashboard) en `e2e/flows/full-flow.spec.ts`
 - [ ] T089 Ejecutar validación de quickstart.md: verificar que todos los comandos de setup y test funcionan desde cero
 - [ ] T090 TypeScript typecheck + lint pass final en todos los paquetes
 - [ ] T091 Añadir script de seed de Prisma con datos de checklist de muestra y valor por defecto del Euríbor

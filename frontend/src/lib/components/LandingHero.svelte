@@ -3,8 +3,8 @@
 
 <section class="hero">
   <h1>Compra una casa<br />con los ojos abiertos</h1>
-  <p class="sub">Análisis honesto de anuncios y simulación de hipoteca. Sin humo.</p>
-  <a href="/listing-lens" class="btn-primary cta">Pon a prueba tu casa soñada</a>
+  <p class="sub">Pega el texto del anuncio y te contamos lo que no dice. Simula tu hipoteca y descubre los costes ocultos.</p>
+  <a href="/listing-lens" class="btn-primary cta">Analizar un anuncio</a>
 </section>
 
 <style>

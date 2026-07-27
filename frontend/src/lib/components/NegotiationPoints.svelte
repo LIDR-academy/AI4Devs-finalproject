@@ -9,6 +9,22 @@
   let loading = true;
   let error: string | null = null;
 
+  const CATEGORY_LABELS: Record<string, string> = {
+    euphemistic_language: 'Lenguaje eufemístico',
+    suspicious_price: 'Precio sospechoso',
+    missing_energy_certificate: 'Sin certificado energético',
+    inflated_square_meters: 'Metros cuadrados inflados',
+    vague_location: 'Ubicación vaga',
+    no_floor_plan: 'Sin plano',
+    stale_listing: 'Anuncio antiguo',
+    missing_community_costs: 'Gastos de comunidad',
+    hidden_fees_mentioned: 'Cargos ocultos',
+    photos_mismatch: 'Fotos inconsistentes',
+    missing_year_built: 'Año de construcción',
+    missing_orientation: 'Orientación',
+    general: 'General',
+  };
+
   const CATEGORY_COLOR: Record<string, string> = {
     euphemistic_language: '#eab308',
     suspicious_price: '#dc2626',
@@ -60,7 +76,7 @@
             <summary class="text-muted">Por qué esta pregunta</summary>
             <p class="rationale">{p.rationale}</p>
           </details>
-          <span class="tag" style="background: {colorFor(p.category)}">{p.category}</span>
+          <span class="tag" style="background: {colorFor(p.category)}">{CATEGORY_LABELS[p.category] ?? p.category}</span>
         </li>
       {/each}
     </ol>
@@ -106,7 +122,6 @@
     padding: 0.1rem 0.4rem;
     border-radius: 3px;
     margin-top: 0.25rem;
-    text-transform: lowercase;
   }
   .error {
     color: #b91c1c;

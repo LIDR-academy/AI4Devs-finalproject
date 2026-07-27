@@ -19,3 +19,55 @@ export function scoreLabelEs(score: number): string {
   if (score >= 50) return 'Media';
   return 'Baja';
 }
+
+export function extractPrice(text: string): number | null {
+  const patterns = [
+    /(\d{1,3}(?:\.\d{3})*)\s*(?:€|EUR|euros)/i,
+    /precio[:\s]*(\d{1,3}(?:\.\d{3})*)/i,
+    /(\d{1,3}(?:\.\d{3})*)\s*€/,
+  ];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return parseInt(m[1].replace(/\./g, ''), 10);
+  }
+  return null;
+}
+
+export function extractSquareMeters(text: string): number | null {
+  const patterns = [
+    /(\d+)\s*m[²2]/i,
+    /(\d+)\s*metros?\s*(?:cuadrados|construidos)/i,
+    /superficie[:\s]*(\d+)/i,
+  ];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return parseInt(m[1], 10);
+  }
+  return null;
+}
+
+export function extractBedrooms(text: string): number | null {
+  const patterns = [
+    /(\d+)\s*(?:hab|dormitorio|habitacione)s?/i,
+    /(\d+)\s*hab\.?/i,
+  ];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return parseInt(m[1], 10);
+  }
+  return null;
+}
+
+export interface ExtractedFields {
+  price: number | null;
+  squareMeters: number | null;
+  bedrooms: number | null;
+}
+
+export function extractFields(text: string): ExtractedFields {
+  return {
+    price: extractPrice(text),
+    squareMeters: extractSquareMeters(text),
+    bedrooms: extractBedrooms(text),
+  };
+}

@@ -17,13 +17,13 @@ describe('Header', () => {
     expect(styles.position).toBe('sticky');
   });
 
-  it('el inner div es flex con space-between', () => {
+  it('el inner div es flex con gap y right-slot auto-margin', () => {
     const { container } = render(Header);
     const inner = container.querySelector('.inner');
     const styles = window.getComputedStyle(inner as Element);
     expect(styles.display).toBe('flex');
-    expect(styles.justifyContent).toBe('space-between');
     expect(styles.alignItems).toBe('center');
+    expect(styles.gap).toBe('0.5rem');
   });
 
   it('el header tiene un border-bottom', () => {
