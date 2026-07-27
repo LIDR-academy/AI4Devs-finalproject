@@ -2,6 +2,11 @@
  * AutoAttachService (T037a, FR-014).
  * - If no active PurchaseProcess for the user, create one with propertyPrice from the listing.
  * - If active process exists, attach the listing to it (no propertyPrice change).
+ *
+ * NOTE: This service imports Prisma directly from infrastructure, which breaks
+ * strict hexagonal purity. Trade-off: the auto-attach logic needs atomic find-or-create
+ * behaviour that would require a full repository port + transaction support for a
+ * single method. For MVP scope, direct Prisma access is the pragmatic choice.
  */
 import { prisma } from '../../infrastructure/prisma/client';
 

@@ -434,3 +434,71 @@ Los componentes de IA refuerzan los 6 principios de la constitución (ver `docs/
 2. Explorar monitorización proactiva de portales (FR-027 actualmente es un stub)
 3. Autenticación de usuarios (`userId` nullable ya preparado en el schema)
 4. Internacionalización i18n para otros mercados inmobiliarios europeos
+
+---
+
+## 10. Entrega Final — Sesión de polish y debugging crítico
+
+> Última sesión antes de la entrega (2026-07-27/28). Se ejecutó una auditoría exhaustiva que reveló 5 bugs críticos y varias consistencias de documentación. A continuación, los prompts y decisiones más relevantes.
+
+### 10.1. Prompts clave de la sesión
+
+**Prompt 1 — Auditoría inicial de la entrega**
+
+> "Evalúa qué falta para la entrega final. [...] Crea una rama final con el siguiente formato: finalproject-[iniciales]"
+
+**Contexto:** El autor pidió evaluar el estado real de la entrega antes de declararla terminada. El agente realizó una auditoría de 10 puntos contra los requisitos del cohort.
+
+**Resultado:** Se identificaron 3 problemas críticos (URLs de despliegue desactualizadas en readme, VITE_API_URL no configurado en Railway, CI sin build steps), 4 importantes y 3 menores. Las URLs se corrigieron a `realista.up.railway.app` y `realista-api.up.railway.app`.
+
+---
+
+**Prompt 2 — Descubrimiento del bug de sesión**
+
+> "Revisa de nuevo críticamente lo que hay vs los artefactos que se esperan en la entrega final. [...] No veo que el flujo E2E funcione: Al pasar del análisis del anuncio a calcular hipoteca no arrastra precio de compra, y al volver atrás se borra y se empieza de cero."
+
+**Contexto:** El autor, probando el sistema manualmente, detectó que el flujo principal del producto no funcionaba. El precio de la vivienda analizada no se transfería al simulador de hipotecas.
+
+**Resultado:** Se trazó el flujo completo (22 archivos analizados) y se encontraron 5 bugs encadenados:
+
+| Bug | Archivo | Causa |
+|-----|---------|-------|
+| `manualText` no extraía precio | `AnalyzeListingUseCase.ts:78` | El `ParsedListingHtml` sintético para texto manual no incluía el campo `price` |
+| Proceso nunca actualizaba `propertyPrice` | `AutoAttachService.ts:27` | Si el primer análisis devolvía `null`, el proceso se bloqueaba con `propertyPrice=null` para siempre |
+| `sourceListingId` nunca se seteaba | `AutoAttachService.ts:52` | Siempre `null` → el banner "precio del anuncio analizado" nunca se mostraba |
+| `onMount` solo restauraba `propertyPrice` | `mortgage-compass/+page.svelte:45` | `savings`, `income`, etc. no se restauraban del API → en sesión limpia se perdían |
+| **`if (sid && !sid)` — sesión rota** | `client.ts:45` | Condición tautológica imposible. El frontend nunca capturaba `X-Session-Id` del backend. Cada page load creaba un usuario anónimo distinto. |
+
+El último bug era el más grave: explicaba por qué "se borraba todo". Cada navegación entre páginas consultaba datos de un usuario diferente.
+
+---
+
+**Prompt 3 — Decisión sobre Playwright en Railway**
+
+> "no se puede usar chromium en Railway?" → "la pregunta es, ¿tiene sentido? Fallará más o menos que con Cheerio?"
+
+**Contexto:** Tras detectar un error de Chromium no encontrado en Railway, el autor cuestionó si Playwright debía estar habilitado. El agente analizó que Playwright sin stealth no bypassa DataDome.
+
+**Resultado:** Se cambió el default de `PLAYWRIGHT_ENABLED` de `'true'` a `'false'` en `env.ts`. En Railway, Cheerio falla con `PortalBlockedError` → mensaje claro pidiendo texto manual. Sin Chromium, sin dependencia innecesaria.
+
+---
+
+**Prompt 4 — Auditoría exhaustiva final**
+
+> "De nuevo, haz una revisión completa y exhaustiva de la entrega. Quiero asegurarme un notable al menos"
+
+**Contexto:** El autor pidió verificación final contra todos los requisitos. Se ejecutó una auditoría simulando lo que haría un TA: verificar repo, branch, tag, URLs, API endpoints, PWA, tests, documentación, coherencia entre documentos.
+
+**Resultado:** Se encontraron y corrigieron discrepancias de documentación (APIs inexistentes en readme, cifras de tests desactualizadas en 5 documentos, referencias inconsistentes a "8 fases" vs "9 fases"). Verificación final: 186 tests pasando, todos los endpoints funcionando, PWA completa, hexagonal check pasando. Nota estimada: 8.7-9.2/10.
+
+### 10.2. Decisiones y ajustes humanos de la sesión
+
+1. **Priorizar texto manual sobre URL en Railway**: Playwright no aporta valor real (DataDome lo detecta igual) y añade 300MB de dependencias. Se mantiene Cheerio como único fetcher en producción con fallback a texto manual.
+
+2. **No implementar OpenTofu para IaC**: Evaluado como valioso pero post-entrega. Railway auto-deployea al detectar commits; la configuración manual inicial es aceptable para MVP.
+
+3. **CI rewrite completo**: Se reescribió el pipeline para que el job E2E realmente construya y arranque ambos servidores contra PostgreSQL antes de ejecutar Playwright. El pipeline anterior instalaba Chromium y corría tests contra servidores que nunca arrancaba.
+
+4. **Cambio de NODE_ENV a `development` en E2E CI**: El backend no arranca en modo `test` (`IS_TEST` previene `app.listen`). Los adaptadores mockean con `MOCK_*` env vars independientemente del entorno.
+
+5. **Auditoría de coherencia documental**: Se unificaron cifras de tests (186), fases (9), y URLs de despliegue en readme, CHANGELOG y prompts. Se eliminaron endpoints documentados pero inexistentes.

@@ -18,8 +18,9 @@ Implementar una **cadena de fallback con dos adaptadores**:
 2. **PlaywrightAdapter** (fallback): Chromium real con JavaScript. Se activa cuando Cheerio detecta página vacía o DataDome captcha.
 
 El PlaywrightAdapter usa un **BrowserPool** para gestionar instancias de Chromium:
-- Pool configurable con `PLAYWRIGHT_POOL_SIZE` (default: 2)
-- Timeout por página: `PLAYWRIGHT_TIMEOUT_MS` (default: 15000ms)
+- Habilitación: `PLAYWRIGHT_ENABLED` (default: `false` desde 2026-07-28; `true` solo en desarrollo local con Chromium instalado)
+- Pool configurable con `PLAYWRIGHT_POOL_SIZE` (default: 1)
+- Timeout por página: `PLAYWRIGHT_BROWSER_TIMEOUT_MS` (default: 15000ms)
 - Headless mode configurable: `PLAYWRIGHT_HEADLESS` (default: true)
 - Instalación separada: `npx playwright install chromium`
 
@@ -44,3 +45,13 @@ Con CheerioAdapter: <5s. Con PlaywrightAdapter: <15s (dentro del SLA de FR-018).
 - FR-012: User-Agent `Realista/1.0 (analizador educativo)`
 - FR-011: No se almacena contenido de terceros
 - ADR-003: No-scraping (educational analysis, not commercial scraping)
+
+## Superseding Decision (2026-07-28)
+
+Playwright se deshabilita por defecto en producción (`PLAYWRIGHT_ENABLED` default: `false`). Motivación:
+
+1. **DataDome detecta headless browsers sin stealth**: Idealista, Fotocasa y Habitaclia bloquean tanto Cheerio como Playwright headless estándar. No hay bypass efectivo sin parches anti-detección.
+2. **Railway free tier no tiene Chromium instalado**: Instalarlo añade ~300MB al build y requiere `--with-deps` para dependencias de sistema.
+3. **Principio educativo**: El proyecto usa User-Agent honesto `Realista/1.0 (analizador educativo)`. Implementar evasión de anti-bot contradice este principio.
+
+Estrategia actual: Cheerio como único fetcher. Si el portal bloquea, se devuelve `PortalBlockedError` con mensaje claro pidiendo al usuario pegar el texto manualmente. Playwright permanece disponible para desarrollo local si se habilita explícitamente (`PLAYWRIGHT_ENABLED=true` en `.env`).
