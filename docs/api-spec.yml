@@ -21,6 +21,10 @@ tags:
     description: Authentication (MVP dev login)
   - name: Audiences
     description: User-configurable audience labels (Settings)
+  - name: Formats
+    description: User-configurable read format labels (Settings)
+  - name: Genres
+    description: User-configurable genre labels (Settings)
   - name: Books
     description: User library
   - name: Catalog
@@ -106,6 +110,83 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           description: Duplicate audience name (case-insensitive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /genres:
+    get:
+      summary: List genres for current user
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User genre labels ordered by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Genre'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Create genre label
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGenreRequest'
+      responses:
+        '201':
+          description: Genre created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Genre'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Duplicate genre name (case-insensitive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /genres/{id}:
+    delete:
+      summary: Delete genre label
+      description: Removes the genre for the current user. Books referencing it have `genre_id` set to null.
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Genre deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Genre not found
           content:
             application/json:
               schema:
@@ -1139,6 +1220,34 @@ components:
           format: date-time
 
     CreateFormatRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    Genre:
+      type: object
+      required: [id, name, is_default, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateGenreRequest:
       type: object
       required: [name]
       properties:

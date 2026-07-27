@@ -1,0 +1,135 @@
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { Test } from '@nestjs/testing';
+import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+import request from 'supertest';
+import { App } from 'supertest/types';
+import { Repository } from 'typeorm';
+import { Audience } from '../src/audiences/entities/audience.entity';
+import { AuthModule } from '../src/auth/auth.module';
+import { Book } from '../src/books/entities/book.entity';
+import { ReadingRecord } from '../src/books/entities/reading-record.entity';
+import { Format } from '../src/formats/entities/format.entity';
+import { Genre } from '../src/genres/entities/genre.entity';
+import { GenresModule } from '../src/genres/genres.module';
+import { DEFAULT_GENRE_NAMES } from '../src/genres/genres.constants';
+import { User } from '../src/users/user.entity';
+import { UsersModule } from '../src/users/users.module';
+
+describe('Genres API (integration)', () => {
+  let app: INestApplication<App>;
+  let token: string;
+  let userId: string;
+  let bookRepo: Repository<Book>;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({ isGlobal: true }),
+        TypeOrmModule.forRoot({
+          type: 'sqlite',
+          database: ':memory:',
+          entities: [User, Book, ReadingRecord, Audience, Format, Genre],
+          synchronize: true,
+        }),
+        UsersModule,
+        AuthModule,
+        GenresModule,
+        TypeOrmModule.forFeature([Book]),
+      ],
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    app.setGlobalPrefix('v1');
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
+    await app.init();
+
+    const login = await request(app.getHttpServer())
+      .post('/v1/auth/dev-login')
+      .send({ email: 'genres@example.com' })
+      .expect(201);
+    token = login.body.access_token;
+    userId = login.body.user.id;
+    bookRepo = moduleRef.get(getRepositoryToken(Book));
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('GET /v1/genres returns seeded defaults for new user', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body).toHaveLength(DEFAULT_GENRE_NAMES.length);
+    expect(res.body.map((item: { name: string }) => item.name).sort()).toEqual(
+      [...DEFAULT_GENRE_NAMES].sort(),
+    );
+  });
+
+  it('POST /v1/genres creates a custom genre', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Misterio' })
+      .expect(201);
+
+    expect(res.body.name).toBe('Misterio');
+    expect(res.body.is_default).toBe(false);
+  });
+
+  it('POST /v1/genres rejects duplicate names', async () => {
+    await request(app.getHttpServer())
+      .post('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'fantasía' })
+      .expect(409);
+  });
+
+  it('POST /v1/genres rejects empty name', async () => {
+    await request(app.getHttpServer())
+      .post('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: '   ' })
+      .expect(400);
+  });
+
+  it('DELETE /v1/genres/{id} removes genre and clears books.genre_id', async () => {
+    const list = await request(app.getHttpServer())
+      .get('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const target = list.body.find((item: { name: string }) => item.name === 'Misterio');
+    expect(target).toBeDefined();
+
+    const book = await bookRepo.save(
+      bookRepo.create({
+        userId,
+        title: 'Genre Book',
+        authors: 'Author',
+        dataSource: 'manual',
+        genreId: target.id,
+      }),
+    );
+
+    await request(app.getHttpServer())
+      .delete(`/v1/genres/${target.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(204);
+
+    const after = await request(app.getHttpServer())
+      .get('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(after.body.find((item: { id: string }) => item.id === target.id)).toBeUndefined();
+
+    const reloaded = await bookRepo.findOne({ where: { id: book.id } });
+    expect(reloaded?.genreId).toBeNull();
+  });
+});
