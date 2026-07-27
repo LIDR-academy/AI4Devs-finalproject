@@ -42,10 +42,8 @@ export async function api<T = unknown>(path: string, options: ApiOptions = {}): 
     credentials: 'include',
   });
 
-  if (sid && !sid) {
-    const newSid = res.headers.get('X-Session-Id');
-    if (newSid) session.setSessionId(newSid);
-  }
+  const newSid = res.headers.get('X-Session-Id');
+  if (newSid) session.setSessionId(newSid);
 
   if (!res.ok) {
     let body: { error?: string; message?: string } = {};

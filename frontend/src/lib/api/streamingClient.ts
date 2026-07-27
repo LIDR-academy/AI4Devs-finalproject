@@ -48,6 +48,9 @@ export async function analyzeListingStream(
     );
   }
 
+  const newSid = res.headers.get('X-Session-Id');
+  if (newSid) session.setSessionId(newSid);
+
   if (!res.body) {
     throw new ApiError(res.status, 'NO_BODY', 'Empty response body');
   }
