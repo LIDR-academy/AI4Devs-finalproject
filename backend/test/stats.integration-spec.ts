@@ -54,7 +54,29 @@ describe('Stats API (integration)', () => {
     return (res.body as { access_token: string }).access_token;
   }
 
+  async function resolveGenreId(
+    authToken: string,
+    genreName: string | null | undefined,
+  ): Promise<string | null> {
+    if (genreName == null) return null;
+    const listRes = await request(app.getHttpServer())
+      .get('/v1/genres')
+      .set('Authorization', `Bearer ${authToken}`)
+      .expect(200);
+    const existing = (
+      listRes.body as Array<{ id: string; name: string }>
+    ).find((g) => g.name.toLowerCase() === genreName.toLowerCase());
+    if (existing) return existing.id;
+    const created = await request(app.getHttpServer())
+      .post('/v1/genres')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ name: genreName })
+      .expect(201);
+    return (created.body as { id: string }).id;
+  }
+
   async function seedBook(authToken: string, book: SeedBook): Promise<void> {
+    const genreId = await resolveGenreId(authToken, book.genre);
     const createRes = await request(app.getHttpServer())
       .post('/v1/books')
       .set('Authorization', `Bearer ${authToken}`)
@@ -62,7 +84,7 @@ describe('Stats API (integration)', () => {
         title: book.title,
         authors: 'Test Author',
         data_source: 'manual',
-        genre: book.genre ?? null,
+        genre_id: genreId,
         page_count: book.pageCount ?? null,
       })
       .expect(201);

@@ -19,6 +19,7 @@ import {
 import { buildBookCoverSearchQuery } from '../lib/bookCoverSearch';
 import { AudienceSelect } from './AudienceSelect';
 import { BookCoverSearchPanel } from './BookCoverSearchPanel';
+import { GenreSelect } from './GenreSelect';
 import { READING_STATUS_OPTIONS } from './readingStatus';
 import { ReadFormatSelect } from './ReadFormatSelect';
 import { Button, Input, Select, StarRating } from './ui';
@@ -230,11 +231,12 @@ export function BookFormModal({
             ) : null}
           </div>
 
-          <Input
+          <GenreSelect
+            id={`${formId}-genre`}
             label="Género"
-            value={form.genre}
+            value={form.genre_id}
             disabled={saving}
-            onChange={(e) => setField('genre', e.target.value)}
+            onChange={(value) => setField('genre_id', value)}
           />
 
           <div className="ui-field book-form__full-width">

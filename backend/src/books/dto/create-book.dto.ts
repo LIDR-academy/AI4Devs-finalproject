@@ -42,9 +42,9 @@ export class CreateBookDto {
   page_count?: number | null;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  genre?: string | null;
+  @ValidateIf((_o, v) => v !== null)
+  @IsUUID()
+  genre_id?: string | null;
 
   @IsOptional()
   @IsString()

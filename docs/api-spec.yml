@@ -1309,6 +1309,11 @@ components:
         genre:
           type: string
           nullable: true
+          description: Display name resolved from the book's genre_id
+        genre_id:
+          type: string
+          format: uuid
+          nullable: true
         series_name:
           type: string
           nullable: true
@@ -1391,9 +1396,11 @@ components:
           type: integer
           minimum: 0
           nullable: true
-        genre:
+        genre_id:
           type: string
+          format: uuid
           nullable: true
+          description: User-owned genre id; null clears genre
         series_name:
           type: string
           nullable: true
@@ -1435,9 +1442,11 @@ components:
           type: integer
           minimum: 0
           nullable: true
-        genre:
+        genre_id:
           type: string
+          format: uuid
           nullable: true
+          description: User-owned genre id; null clears genre
         series_name:
           type: string
           nullable: true

@@ -10,7 +10,7 @@ export type BookFormState = {
   title: string;
   authors: string;
   cover_image_url: string;
-  genre: string;
+  genre_id: string | null;
   notes: string;
   audience_id: string | null;
   page_count: string;
@@ -30,7 +30,7 @@ export function emptyBookFormState(): BookFormState {
     title: '',
     authors: '',
     cover_image_url: '',
-    genre: '',
+    genre_id: null,
     notes: '',
     audience_id: null,
     page_count: '',
@@ -49,7 +49,7 @@ export function bookToFormState(book: Book): BookFormState {
     title: book.title,
     authors: book.authors,
     cover_image_url: book.cover_image_url ?? '',
-    genre: book.genre ?? '',
+    genre_id: book.genre_id ?? null,
     notes: book.notes ?? '',
     audience_id: book.audience_id ?? null,
     page_count: book.page_count != null ? String(book.page_count) : '',
@@ -145,7 +145,7 @@ export function buildCreateBookPayload(state: BookFormState): CreateBookPayload 
     authors: state.authors.trim(),
     data_source: 'manual',
     cover_image_url: state.cover_image_url.trim() || null,
-    genre: state.genre.trim() || null,
+    genre_id: state.genre_id,
     notes: state.notes.trim() || null,
     audience_id: state.audience_id,
     page_count: pageCount ?? null,
@@ -162,7 +162,7 @@ export function buildPatchBookPayload(state: BookFormState): PatchBookPayload {
     title: state.title.trim(),
     authors: state.authors.trim(),
     cover_image_url: state.cover_image_url.trim() || null,
-    genre: state.genre.trim() || null,
+    genre_id: state.genre_id,
     notes: state.notes.trim() || null,
     audience_id: state.audience_id,
     page_count: pageCount ?? null,

@@ -40,9 +40,8 @@ export class PatchBookDto {
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
-  @IsString()
-  @MaxLength(100)
-  genre?: string | null;
+  @IsUUID()
+  genre_id?: string | null;
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)

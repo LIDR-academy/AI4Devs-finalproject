@@ -96,6 +96,7 @@ export interface Book {
   cover_image_url: string | null;
   page_count: number | null;
   genre: string | null;
+  genre_id: string | null;
   series_name: string | null;
   publication_year: number | null;
   data_source: DataSource;
@@ -298,7 +299,7 @@ export interface CreateBookPayload {
   isbn_10?: string | null;
   cover_image_url?: string | null;
   page_count?: number | null;
-  genre?: string | null;
+  genre_id?: string | null;
   series_name?: string | null;
   publication_year?: number | null;
   data_source: DataSource;
@@ -313,7 +314,7 @@ export interface PatchBookPayload {
   authors?: string;
   cover_image_url?: string | null;
   page_count?: number | null;
-  genre?: string | null;
+  genre_id?: string | null;
   series_name?: string | null;
   publication_year?: number | null;
   audience?: AudienceType | null;

@@ -24,9 +24,7 @@ import {
   ReadingRecordResourceDto,
 } from './dto/reading-record-response.dto';
 import { GoogleBooksClient } from './catalog/google-books.client';
-import { CatalogService } from './catalog/catalog.service';
 import { OpenLibraryEnrichmentService } from './catalog/open-library-enrichment.service';
-import { GenreNormalizerService } from './genre-normalizer.service';
 import { AudiencesService } from '../audiences/audiences.service';
 import { FormatsService } from '../formats/formats.service';
 import { GenresService } from '../genres/genres.service';
@@ -47,8 +45,6 @@ export class BooksService {
     private readonly readingRepo: Repository<ReadingRecord>,
     private readonly openLibraryEnrichment: OpenLibraryEnrichmentService,
     private readonly googleBooksClient: GoogleBooksClient,
-    private readonly catalogService: CatalogService,
-    private readonly genreNormalizer: GenreNormalizerService,
     private readonly audiencesService: AudiencesService,
     private readonly formatsService: FormatsService,
     private readonly genresService: GenresService,
@@ -230,11 +226,8 @@ export class BooksService {
   async create(userId: string, dto: CreateBookDto): Promise<BookCreatedResponseDto> {
     await this.assertNotDuplicate(userId, dto);
     const audienceId = await this.resolveAudienceId(userId, dto.audience_id);
+    const genreId = await this.resolveGenreId(userId, dto.genre_id);
     const metadata = await this.resolveMetadata(dto);
-    const genreId = await this.genresService.resolveGenreIdByName(
-      userId,
-      metadata.genre,
-    );
 
     const book = this.booksRepo.create({
       userId,
@@ -274,12 +267,11 @@ export class BooksService {
 
   private async resolveMetadata(
     dto: CreateBookDto,
-  ): Promise<{ genre: string | null; page_count: number | null }> {
-    let genre = dto.genre ?? null;
+  ): Promise<{ page_count: number | null }> {
     let page_count = dto.page_count ?? null;
 
-    if (genre && page_count) {
-      return { genre, page_count };
+    if (page_count) {
+      return { page_count };
     }
 
     if (dto.data_source === 'open_library' && dto.external_provider_id) {
@@ -289,7 +281,7 @@ export class BooksService {
           authors: dto.authors,
           cover_image_url: dto.cover_image_url ?? null,
           page_count,
-          genre,
+          genre: null,
           isbn_13: dto.isbn_13 ?? null,
           isbn_10: dto.isbn_10 ?? null,
           data_source: 'open_library',
@@ -300,31 +292,20 @@ export class BooksService {
       page_count = page_count ?? enriched.page_count;
     }
 
-    if (!genre && dto.data_source === 'open_library') {
-      genre = await this.catalogService.resolveMissingGenre({
-        genre,
-        isbn_13: dto.isbn_13 ?? null,
-        isbn_10: dto.isbn_10 ?? null,
-        data_source: 'open_library',
-        external_provider_id: dto.external_provider_id ?? '',
-      });
-    }
-
     if (
       dto.data_source === 'google_books' &&
       dto.external_provider_id &&
-      (!genre || !page_count)
+      !page_count
     ) {
       const volume = await this.googleBooksClient.getVolumeDetails(
         dto.external_provider_id,
       );
       if (volume) {
-        genre = genre ?? this.genreNormalizer.normalize(volume.genre);
         page_count = page_count ?? volume.page_count;
       }
     }
 
-    return { genre, page_count };
+    return { page_count };
   }
 
   private async assertNotDuplicate(
@@ -395,12 +376,8 @@ export class BooksService {
     if (dto.page_count !== undefined) {
       book.pageCount = dto.page_count;
     }
-    if (dto.genre !== undefined) {
-      book.genreId =
-        dto.genre === null
-          ? null
-          : (await this.genresService.findOrCreateByName(userId, dto.genre))?.id ??
-            null;
+    if (dto.genre_id !== undefined) {
+      book.genreId = await this.resolveGenreId(userId, dto.genre_id);
       book.genreRef = null;
     }
     if (dto.series_name !== undefined) {
@@ -433,7 +410,7 @@ export class BooksService {
       dto.authors !== undefined ||
       dto.cover_image_url !== undefined ||
       dto.page_count !== undefined ||
-      dto.genre !== undefined ||
+      dto.genre_id !== undefined ||
       dto.series_name !== undefined ||
       dto.publication_year !== undefined ||
       dto.audience !== undefined ||
@@ -455,6 +432,7 @@ export class BooksService {
       cover_image_url: book.coverImageUrl,
       page_count: book.pageCount,
       genre: book.genreRef?.name ?? null,
+      genre_id: book.genreId,
       series_name: book.seriesName,
       publication_year: book.publicationYear,
       data_source: book.dataSource,
@@ -485,5 +463,25 @@ export class BooksService {
     }
 
     return audience.id;
+  }
+
+  private async resolveGenreId(
+    userId: string,
+    genreId: string | null | undefined,
+  ): Promise<string | null> {
+    if (genreId === undefined || genreId === null) {
+      return null;
+    }
+
+    const genre = await this.genresService.findOwnedById(userId, genreId);
+    if (!genre) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Genre not found for this user',
+        code: 'GENRE_NOT_FOUND',
+      });
+    }
+
+    return genre.id;
   }
 }
