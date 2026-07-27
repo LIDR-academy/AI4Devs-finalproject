@@ -97,7 +97,6 @@ jobs:
       FRONTEND_URL: http://localhost:5173
       VITE_API_URL: http://localhost:3001
       PLAYWRIGHT_ENABLED: 'false'
-      PORT: 3001
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -112,9 +111,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Start servers and run E2E
         run: |
-          cd backend && npm run start &> /tmp/backend.log &
+          PORT=3001 npm run start -w backend &> /tmp/backend.log &
           BACKEND_PID=$!
-          cd frontend && node build/index.js &> /tmp/frontend.log &
+          (cd frontend && PORT=5173 node build/index.js) &> /tmp/frontend.log &
           FRONTEND_PID=$!
 
           echo "Waiting for backend..."
