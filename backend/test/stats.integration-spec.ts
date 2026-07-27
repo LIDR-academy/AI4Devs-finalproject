@@ -406,8 +406,88 @@ describe('Stats API (integration)', () => {
     const byFormat = Object.fromEntries(
       body.format_distribution.map((f) => [f.format, f.count]),
     );
-    expect(byFormat).toEqual({ fisico: 2, ebook: 1, unknown: 1 });
-    expect(body.predominant_format).toBe('fisico');
+    expect(byFormat).toEqual({ Físico: 2, Ebook: 1, unknown: 1 });
+    expect(body.predominant_format).toBe('Físico');
+  });
+
+  it('includes custom format names in format distribution', async () => {
+    const customToken = await login('stats-format-custom@example.com');
+    const customFormat = await request(app.getHttpServer())
+      .post('/v1/formats')
+      .set('Authorization', `Bearer ${customToken}`)
+      .send({ name: 'Audiolibro por capítulos' })
+      .expect(201);
+
+    await seedBook(customToken, {
+      title: 'Physical custom month',
+      genre: 'Fantasy',
+      pageCount: 200,
+      finishedOn: '2025-09-10',
+      readFormat: 'fisico',
+    });
+    await seedBook(customToken, {
+      title: 'Custom format month',
+      genre: 'Fantasy',
+      pageCount: 220,
+      finishedOn: '2025-09-12',
+    });
+
+    const booksRes = await request(app.getHttpServer())
+      .get('/v1/books')
+      .set('Authorization', `Bearer ${customToken}`)
+      .expect(200);
+    const customBook = (
+      booksRes.body as Array<{ id: string; title: string }>
+    ).find((book) => book.title === 'Custom format month');
+    expect(customBook).toBeDefined();
+
+    await request(app.getHttpServer())
+      .patch(`/v1/books/${customBook!.id}/reading-record`)
+      .set('Authorization', `Bearer ${customToken}`)
+      .send({ format_id: customFormat.body.id })
+      .expect(200);
+
+    const body = await fetchStats(customToken, 2025, 9);
+    const byFormat = Object.fromEntries(
+      body.format_distribution.map((f) => [f.format, f.count]),
+    );
+    expect(byFormat).toEqual({
+      Físico: 1,
+      'Audiolibro por capítulos': 1,
+    });
+    expect(body.predominant_format).toBe('Audiolibro por capítulos');
+  });
+
+  it('buckets null format_id as unknown after format delete', async () => {
+    const deleteToken = await login('stats-format-delete@example.com');
+    await seedBook(deleteToken, {
+      title: 'Ebook before delete',
+      genre: 'Fantasy',
+      pageCount: 150,
+      finishedOn: '2025-10-05',
+      readFormat: 'ebook',
+    });
+
+    const formatsRes = await request(app.getHttpServer())
+      .get('/v1/formats')
+      .set('Authorization', `Bearer ${deleteToken}`)
+      .expect(200);
+    const ebook = (formatsRes.body as Array<{ id: string; name: string }>).find(
+      (item) => item.name === 'Ebook',
+    );
+    expect(ebook).toBeDefined();
+
+    await request(app.getHttpServer())
+      .delete(`/v1/formats/${ebook!.id}`)
+      .set('Authorization', `Bearer ${deleteToken}`)
+      .expect(204);
+
+    const body = await fetchStats(deleteToken, 2025, 10);
+    const byFormat = Object.fromEntries(
+      body.format_distribution.map((f) => [f.format, f.count]),
+    );
+    expect(byFormat).toEqual({ unknown: 1 });
+    expect(body.predominant_format).toBeNull();
   });
 
   it('returns audience distribution with null audience_id bucketed as unknown', async () => {
