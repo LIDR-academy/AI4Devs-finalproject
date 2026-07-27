@@ -1,15 +1,5 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-const DEFAULT_GENRE_NAMES = [
-  'Fantasía',
-  'Thriller',
-  'Ciencia ficción',
-  'Romance',
-  'Histórica',
-  'Ficción',
-  'No ficción',
-];
-
 export class CreateGenres1756000000000 implements MigrationInterface {
   name = 'CreateGenres1756000000000';
 
@@ -36,20 +26,24 @@ export class CreateGenres1756000000000 implements MigrationInterface {
       REFERENCES genres(id) ON DELETE SET NULL
     `);
 
-    for (const name of DEFAULT_GENRE_NAMES) {
-      await queryRunner.query(
-        `
-        INSERT INTO genres (user_id, name, is_default)
-        SELECT u.id, $1, true
-        FROM users u
-        WHERE NOT EXISTS (
-          SELECT 1 FROM genres g
-          WHERE g.user_id = u.id AND lower(g.name) = lower($1)
-        )
-      `,
-        [name],
-      );
-    }
+    await queryRunner.query(`
+      INSERT INTO genres (user_id, name, is_default)
+      SELECT u.id, names.name, true
+      FROM users u
+      CROSS JOIN (VALUES
+        ('Fantasía'),
+        ('Thriller'),
+        ('Ciencia ficción'),
+        ('Romance'),
+        ('Histórica'),
+        ('Ficción'),
+        ('No ficción')
+      ) AS names(name)
+      WHERE NOT EXISTS (
+        SELECT 1 FROM genres g
+        WHERE g.user_id = u.id AND lower(g.name) = lower(names.name)
+      )
+    `);
 
     await queryRunner.query(`
       INSERT INTO genres (user_id, name, is_default)
