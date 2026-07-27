@@ -81,7 +81,7 @@ describe('Books API (integration)', () => {
         data_source: 'open_library',
         external_provider_id: 'OL82563W',
         page_count: 304,
-        genre: 'Science fiction',
+        // genre set via genre_id in dedicated tests
       })
       .expect(201);
 
@@ -332,6 +332,15 @@ describe('Books API (integration)', () => {
   });
 
   it('POST /v1/books creates manual book with full metadata', async () => {
+    const genres = await request(app.getHttpServer())
+      .get('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const fantasy = genres.body.find(
+      (g: { name: string }) => g.name === 'Fantasía',
+    );
+    expect(fantasy).toBeDefined();
+
     const res = await request(app.getHttpServer())
       .post('/v1/books')
       .set('Authorization', `Bearer ${token}`)
@@ -341,7 +350,7 @@ describe('Books API (integration)', () => {
         data_source: 'manual',
         cover_image_url: 'https://example.com/cover.jpg',
         page_count: 200,
-        genre: 'Fantasy',
+        genre_id: fantasy.id,
         series_name: 'Manual Series',
         publication_year: 2020,
         audience: 'new_adult',
@@ -352,7 +361,8 @@ describe('Books API (integration)', () => {
     expect(res.body.book.data_source).toBe('manual');
     expect(res.body.book.title).toBe('Manual Title');
     expect(res.body.book.page_count).toBe(200);
-    expect(res.body.book.genre).toBe('Fantasy');
+    expect(res.body.book.genre).toBe('Fantasía');
+    expect(res.body.book.genre_id).toBe(fantasy.id);
     expect(res.body.book.series_name).toBe('Manual Series');
     expect(res.body.book.publication_year).toBe(2020);
     expect(res.body.book.notes).toBe('Signed copy');
@@ -360,6 +370,12 @@ describe('Books API (integration)', () => {
   });
 
   it('PATCH /v1/books/{bookId} updates multiple metadata fields', async () => {
+    const speculative = await request(app.getHttpServer())
+      .post('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Speculative fiction' })
+      .expect(201);
+
     const res = await request(app.getHttpServer())
       .patch(`/v1/books/${bookId}`)
       .set('Authorization', `Bearer ${token}`)
@@ -367,7 +383,7 @@ describe('Books API (integration)', () => {
         title: 'Updated Title',
         authors: 'Updated Author',
         page_count: 350,
-        genre: 'Speculative fiction',
+        genre_id: speculative.body.id,
         series_name: 'Hainish Cycle',
         publication_year: 1969,
         notes: 'Library edition',
@@ -378,6 +394,7 @@ describe('Books API (integration)', () => {
     expect(res.body.authors).toBe('Updated Author');
     expect(res.body.page_count).toBe(350);
     expect(res.body.genre).toBe('Speculative fiction');
+    expect(res.body.genre_id).toBe(speculative.body.id);
     expect(res.body.series_name).toBe('Hainish Cycle');
     expect(res.body.publication_year).toBe(1969);
     expect(res.body.notes).toBe('Library edition');
@@ -433,14 +450,21 @@ describe('Books API (integration)', () => {
       .expect(400);
   });
 
-  it('PATCH /v1/books/{bookId} persists genre via genres table', async () => {
+  it('PATCH /v1/books/{bookId} persists genre_id', async () => {
+    const mystery = await request(app.getHttpServer())
+      .post('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Mystery' })
+      .expect(201);
+
     const patchRes = await request(app.getHttpServer())
       .patch(`/v1/books/${bookId}`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ genre: 'Mystery' })
+      .send({ genre_id: mystery.body.id })
       .expect(200);
 
     expect(patchRes.body.genre).toBe('Mystery');
+    expect(patchRes.body.genre_id).toBe(mystery.body.id);
 
     const list = await request(app.getHttpServer())
       .get('/v1/books')
@@ -449,16 +473,33 @@ describe('Books API (integration)', () => {
 
     const item = list.body.find((b: { id: string }) => b.id === bookId);
     expect(item.genre).toBe('Mystery');
+    expect(item.genre_id).toBe(mystery.body.id);
   });
 
-  it('PATCH /v1/books/{bookId} clears genre with null', async () => {
+  it('PATCH /v1/books/{bookId} clears genre_id with null', async () => {
     const patchRes = await request(app.getHttpServer())
       .patch(`/v1/books/${bookId}`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ genre: null })
+      .send({ genre_id: null })
       .expect(200);
 
     expect(patchRes.body.genre).toBeNull();
+    expect(patchRes.body.genre_id).toBeNull();
+  });
+
+  it('PATCH /v1/books/{bookId} rejects foreign genre_id', async () => {
+    const otherGenres = await request(app.getHttpServer())
+      .get('/v1/genres')
+      .set('Authorization', `Bearer ${otherToken}`)
+      .expect(200);
+    const foreign = otherGenres.body[0];
+    expect(foreign).toBeDefined();
+
+    await request(app.getHttpServer())
+      .patch(`/v1/books/${bookId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ genre_id: foreign.id })
+      .expect(400);
   });
 
   it('PATCH /v1/books/{bookId} rejects empty body', async () => {

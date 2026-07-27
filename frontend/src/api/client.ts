@@ -354,6 +354,7 @@ export function catalogEditionToCreatePayload(
   edition: CatalogEdition,
   coverUrl?: string | null,
   audienceId?: string | null,
+  genreId?: string | null,
 ): CreateBookPayload {
   return {
     title: edition.title,
@@ -362,7 +363,7 @@ export function catalogEditionToCreatePayload(
     isbn_10: edition.isbn_10,
     cover_image_url: coverUrl !== undefined ? coverUrl : edition.cover_image_url,
     page_count: edition.page_count,
-    genre: edition.genre,
+    genre_id: genreId ?? null,
     data_source: edition.data_source,
     external_provider_id: edition.external_provider_id,
     audience_id: audienceId ?? null,

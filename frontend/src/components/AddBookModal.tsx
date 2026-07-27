@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   catalogEditionToCreatePayload,
   createBook,
   fetchEditionCovers,
+  listGenres,
   searchCatalog,
 } from '../api/client';
 import { messageFromUnknownError } from '../api/errors';
 import type { CatalogEdition, CoverOption } from '../api/types';
 import { AudienceSelect } from './AudienceSelect';
 import { CoverPicker } from './CoverPicker';
+import { GenreSelect } from './GenreSelect';
 import './AddBookModal.css';
 
 type ModalStep = 'search' | 'covers';
@@ -18,6 +21,15 @@ interface AddBookModalProps {
   onClose: () => void;
   onSaved: () => void;
   onCreateManual?: () => void;
+}
+
+function matchGenreId(
+  catalogGenre: string | null,
+  genres: Array<{ id: string; name: string }>,
+): string | null {
+  if (!catalogGenre) return null;
+  const needle = catalogGenre.trim().toLowerCase();
+  return genres.find((g) => g.name.toLowerCase() === needle)?.id ?? null;
 }
 
 export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBookModalProps) {
@@ -34,6 +46,13 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [audienceId, setAudienceId] = useState<string | null>(null);
+  const [genreId, setGenreId] = useState<string | null>(null);
+
+  const { data: genres = [] } = useQuery({
+    queryKey: ['genres'],
+    queryFn: listGenres,
+    enabled: open,
+  });
 
   const resetState = useCallback(() => {
     setStep('search');
@@ -49,6 +68,7 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
     setSaving(false);
     setError(null);
     setAudienceId(null);
+    setGenreId(null);
   }, []);
 
   useEffect(() => {
@@ -124,11 +144,12 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
     (edition: CatalogEdition) => {
       setSelectedEdition(edition);
       setAudienceId(null);
+      setGenreId(matchGenreId(edition.genre, genres));
       setStep('covers');
       setError(null);
       void loadCovers(edition);
     },
-    [loadCovers],
+    [genres, loadCovers],
   );
 
   const handleBackToSearch = () => {
@@ -137,6 +158,7 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
     setCovers([]);
     setSelectedCover(null);
     setCoversError(null);
+    setGenreId(null);
   };
 
   const canSave =
@@ -152,7 +174,12 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
 
     try {
       await createBook(
-        catalogEditionToCreatePayload(selectedEdition, coverUrl, audienceId),
+        catalogEditionToCreatePayload(
+          selectedEdition,
+          coverUrl,
+          audienceId,
+          genreId,
+        ),
       );
       onSaved();
       onClose();
@@ -161,7 +188,15 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
     } finally {
       setSaving(false);
     }
-  }, [selectedEdition, selectedCover, covers.length, audienceId, onSaved, onClose]);
+  }, [
+    selectedEdition,
+    selectedCover,
+    covers.length,
+    audienceId,
+    genreId,
+    onSaved,
+    onClose,
+  ]);
 
   const showManualCreate =
     step === 'search' &&
@@ -273,6 +308,13 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
               error={coversError}
               onRetry={() => loadCovers(selectedEdition)}
               editionTitle={selectedEdition.title}
+            />
+            <GenreSelect
+              id="add-book-genre"
+              label="Género"
+              value={genreId}
+              onChange={setGenreId}
+              disabled={saving}
             />
             <AudienceSelect
               id="add-book-audience"
