@@ -10,6 +10,7 @@ import { BrowserPool } from '../../adapters/playwright/BrowserPool';
 import { realChromiumLauncher } from '../../adapters/playwright/realChromiumLauncher';
 import { ChainedFetchAdapter } from '../../adapters/fetch/ChainedFetchAdapter';
 import { OpenRouterAdapter } from '../../adapters/openrouter/OpenRouterAdapter';
+import { DeepSeekAdapter } from '../../adapters/deepseek/DeepSeekAdapter';
 import { CatastroAdapter } from '../../adapters/catastro/CatastroAdapter';
 import { AnalyzedListingRepository } from '../../infrastructure/repositories/AnalyzedListingRepository';
 import { ChecklistRepository } from '../../infrastructure/repositories/ChecklistRepository';
@@ -39,7 +40,9 @@ const playwright = env.PLAYWRIGHT_ENABLED
 const fetcher = playwright
   ? new ChainedFetchAdapter([cheerio, playwright])
   : cheerio;
-const openrouter = new OpenRouterAdapter();
+const analyzer = env.LLM_PROVIDER === 'deepseek'
+  ? new DeepSeekAdapter()
+  : new OpenRouterAdapter();
 const catastro = new CatastroAdapter();
 const locationResolver = new LocationResolver();
 const autoAttach = new AutoAttachService();
@@ -47,7 +50,7 @@ const repository = new AnalyzedListingRepository(prisma);
 const checklistRepository = new ChecklistRepository(prisma);
 const analyzeUseCase = new AnalyzeListingUseCase(
   fetcher,
-  openrouter,
+  analyzer,
   locationResolver,
   catastro,
   autoAttach,

@@ -7,8 +7,13 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url().default('http://localhost:5173'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
-  OPENROUTER_API_KEY: z.string().min(20, 'OPENROUTER_API_KEY must be set'),
+  OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_MODEL: z.string().default('anthropic/claude-3.5-sonnet'),
+
+  DEEPSEEK_API_KEY: z.string().optional(),
+  DEEPSEEK_MODEL: z.string().default('deepseek-chat'),
+
+  LLM_PROVIDER: z.enum(['openrouter', 'deepseek']).default('openrouter'),
 
   RATE_LIMIT_PER_DAY: z.coerce.number().int().positive().default(20),
 
