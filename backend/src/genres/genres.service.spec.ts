@@ -1,6 +1,7 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Book } from '../books/entities/book.entity';
 import { DEFAULT_GENRE_NAMES } from './genres.constants';
 import { GenresService } from './genres.service';
 import { Genre } from './entities/genre.entity';
@@ -15,6 +16,9 @@ describe('GenresService', () => {
     save: jest.Mock;
     remove: jest.Mock;
     createQueryBuilder: jest.Mock;
+  };
+  let booksRepo: {
+    count: jest.Mock;
   };
   let queryBuilder: {
     where: jest.Mock;
@@ -54,10 +58,15 @@ describe('GenresService', () => {
       createQueryBuilder: jest.fn(() => queryBuilder),
     };
 
+    booksRepo = {
+      count: jest.fn(),
+    };
+
     const module = await Test.createTestingModule({
       providers: [
         GenresService,
         { provide: getRepositoryToken(Genre), useValue: repo },
+        { provide: getRepositoryToken(Book), useValue: booksRepo },
       ],
     }).compile();
 
@@ -139,6 +148,26 @@ describe('GenresService', () => {
     await service.deleteForUser('user-1', 'g1');
 
     expect(repo.remove).toHaveBeenCalledWith(genre);
+  });
+
+  it('counts books affected by an owned genre', async () => {
+    repo.findOne.mockResolvedValue({ id: 'g1', userId: 'user-1' } as Genre);
+    booksRepo.count.mockResolvedValue(3);
+
+    const result = await service.countAffectedBooks('user-1', 'g1');
+
+    expect(booksRepo.count).toHaveBeenCalledWith({
+      where: { userId: 'user-1', genreId: 'g1' },
+    });
+    expect(result).toEqual({ affected_book_count: 3 });
+  });
+
+  it('throws when counting affected books for a missing genre', async () => {
+    repo.findOne.mockResolvedValue(null);
+
+    await expect(
+      service.countAffectedBooks('user-1', 'missing'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('throws when deleting a missing genre', async () => {

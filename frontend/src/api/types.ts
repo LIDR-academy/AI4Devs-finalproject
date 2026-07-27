@@ -38,6 +38,8 @@ export interface AudienceAffectedBooksResponse {
   affected_book_count: number;
 }
 
+export type GenreAffectedBooksResponse = AudienceAffectedBooksResponse;
+
 export interface FormatAffectedReadingsResponse {
   affected_reading_count: number;
 }

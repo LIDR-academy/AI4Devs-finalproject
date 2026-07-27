@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Book } from '../books/entities/book.entity';
 import { DEFAULT_GENRE_NAMES } from './genres.constants';
+import { AffectedBooksResponseDto } from './dto/affected-books-response.dto';
 import { GenreResponseDto, toGenreResponse } from './dto/genre-response.dto';
 import { Genre } from './entities/genre.entity';
 
@@ -14,6 +16,8 @@ export class GenresService {
   constructor(
     @InjectRepository(Genre)
     private readonly genresRepo: Repository<Genre>,
+    @InjectRepository(Book)
+    private readonly booksRepo: Repository<Book>,
   ) {}
 
   async hasGenres(userId: string): Promise<boolean> {
@@ -59,6 +63,29 @@ export class GenresService {
     );
 
     return toGenreResponse(genre);
+  }
+
+  async countAffectedBooks(
+    userId: string,
+    genreId: string,
+  ): Promise<AffectedBooksResponseDto> {
+    const genre = await this.genresRepo.findOne({
+      where: { id: genreId, userId },
+    });
+
+    if (!genre) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Genre not found',
+        code: 'GENRE_NOT_FOUND',
+      });
+    }
+
+    const affected_book_count = await this.booksRepo.count({
+      where: { userId, genreId },
+    });
+
+    return { affected_book_count };
   }
 
   async deleteForUser(userId: string, genreId: string): Promise<void> {

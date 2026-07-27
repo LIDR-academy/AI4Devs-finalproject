@@ -1,15 +1,30 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { createGenre, deleteGenre, listGenres } from '../../api/client';
+import {
+  createGenre,
+  deleteGenre,
+  getGenreAffectedBookCount,
+  listGenres,
+} from '../../api/client';
 import { messageFromUnknownError } from '../../api/errors';
-import { Button, Card, Input } from '../ui';
+import { Button, Card, ConfirmModal, Input } from '../ui';
 import './GenreSettingsSection.css';
+
+type PendingDelete = {
+  id: string;
+  name: string;
+  affectedBookCount: number;
+};
 
 export function GenreSettingsSection() {
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [deletePreviewLoadingId, setDeletePreviewLoadingId] = useState<string | null>(
+    null,
+  );
 
   const { data: genres = [], isLoading, error } = useQuery({
     queryKey: ['genres'],
@@ -31,6 +46,7 @@ export function GenreSettingsSection() {
   const deleteMutation = useMutation({
     mutationFn: (genreId: string) => deleteGenre(genreId),
     onSuccess: () => {
+      setPendingDelete(null);
       setDeleteError(null);
       void queryClient.invalidateQueries({ queryKey: ['genres'] });
       void queryClient.invalidateQueries({ queryKey: ['books'] });
@@ -49,6 +65,35 @@ export function GenreSettingsSection() {
     }
     setFormError(null);
     createMutation.mutate(trimmed);
+  }
+
+  async function handleDeleteClick(genreId: string, genreName: string) {
+    setDeleteError(null);
+    setDeletePreviewLoadingId(genreId);
+
+    try {
+      const { affected_book_count } = await getGenreAffectedBookCount(genreId);
+
+      if (affected_book_count === 0) {
+        deleteMutation.mutate(genreId);
+        return;
+      }
+
+      setPendingDelete({
+        id: genreId,
+        name: genreName,
+        affectedBookCount: affected_book_count,
+      });
+    } catch (err) {
+      setDeleteError(messageFromUnknownError(err));
+    } finally {
+      setDeletePreviewLoadingId(null);
+    }
+  }
+
+  function handleConfirmDelete() {
+    if (!pendingDelete) return;
+    deleteMutation.mutate(pendingDelete.id);
   }
 
   return (
@@ -85,10 +130,12 @@ export function GenreSettingsSection() {
               type="button"
               variant="ghost"
               className="genre-settings__delete"
-              disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(genre.id)}
+              disabled={
+                deleteMutation.isPending || deletePreviewLoadingId === genre.id
+              }
+              onClick={() => void handleDeleteClick(genre.id, genre.name)}
             >
-              Eliminar
+              {deletePreviewLoadingId === genre.id ? 'Comprobando…' : 'Eliminar'}
             </Button>
           </li>
         ))}
@@ -111,6 +158,30 @@ export function GenreSettingsSection() {
           Añadir
         </Button>
       </form>
+
+      <ConfirmModal
+        open={pendingDelete !== null}
+        title="Eliminar género"
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        onClose={() => {
+          if (!deleteMutation.isPending) {
+            setPendingDelete(null);
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+      >
+        {pendingDelete ? (
+          <p>
+            Este género está asignado a {pendingDelete.affectedBookCount}{' '}
+            {pendingDelete.affectedBookCount === 1 ? 'libro' : 'libros'}. Si lo borras,
+            {pendingDelete.affectedBookCount === 1
+              ? ' ese libro se quedará'
+              : ' esos libros se quedarán'}{' '}
+            sin género. ¿Continuar?
+          </p>
+        ) : null}
+      </ConfirmModal>
     </Card>
   );
 }

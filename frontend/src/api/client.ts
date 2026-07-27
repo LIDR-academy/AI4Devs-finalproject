@@ -14,6 +14,7 @@ import type {
   Format,
   FormatAffectedReadingsResponse,
   Genre,
+  GenreAffectedBooksResponse,
   GoodreadsImportResponse,
   ImportJobAcceptedResponse,
   ImportJobStatusResponse,
@@ -126,6 +127,12 @@ export async function createGenre(name: string): Promise<Genre> {
     method: 'POST',
     body: JSON.stringify({ name }),
   });
+}
+
+export async function getGenreAffectedBookCount(
+  genreId: string,
+): Promise<GenreAffectedBooksResponse> {
+  return request(`/genres/${genreId}/affected-books`);
 }
 
 export async function deleteGenre(genreId: string): Promise<void> {

@@ -98,6 +98,46 @@ describe('Genres API (integration)', () => {
       .expect(400);
   });
 
+  it('GET /v1/genres/{id}/affected-books returns book count', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Count Preview Genre' })
+      .expect(201);
+
+    await bookRepo.save(
+      bookRepo.create({
+        userId,
+        title: 'Count Book',
+        authors: 'Author',
+        dataSource: 'manual',
+        genreId: created.body.id,
+      }),
+    );
+
+    const res = await request(app.getHttpServer())
+      .get(`/v1/genres/${created.body.id}/affected-books`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body).toEqual({ affected_book_count: 1 });
+  });
+
+  it('GET /v1/genres/{id}/affected-books returns zero when unused', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/v1/genres')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Unused Genre' })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .get(`/v1/genres/${created.body.id}/affected-books`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body).toEqual({ affected_book_count: 0 });
+  });
+
   it('DELETE /v1/genres/{id} removes genre and clears books.genre_id', async () => {
     const list = await request(app.getHttpServer())
       .get('/v1/genres')

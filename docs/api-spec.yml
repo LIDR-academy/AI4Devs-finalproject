@@ -166,6 +166,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /genres/{id}/affected-books:
+    get:
+      summary: Count books assigned to a genre
+      description: Returns how many of the user's books reference this genre before delete confirmation.
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Affected book count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AffectedBooksResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Genre not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /genres/{id}:
     delete:
       summary: Delete genre label
