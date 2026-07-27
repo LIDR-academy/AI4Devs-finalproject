@@ -509,12 +509,12 @@
       "error": null
     },
     "KAN-62": {
-      "status": "in_progress",
+      "status": "awaiting_merge",
       "failed_step": null,
       "change_name": "kan-62-genre-delete-confirmation",
       "branch": "feature/KAN-62-genre-delete-confirmation",
-      "pr_url": null,
-      "pr_number": null,
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/66",
+      "pr_number": 66,
       "archived_at": null,
       "error": null
     }
