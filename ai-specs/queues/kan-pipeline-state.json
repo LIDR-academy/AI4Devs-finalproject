@@ -2,8 +2,8 @@
   "version": 1,
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
-  "last_completed": "KAN-59",
-  "current_ticket": "KAN-60",
+  "last_completed": "KAN-60",
+  "current_ticket": null,
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -489,13 +489,13 @@
       "error": null
     },
     "KAN-60": {
-      "status": "awaiting_merge",
+      "status": "done",
       "failed_step": null,
       "change_name": "kan-60-genres-settings-crud",
       "branch": "feature/KAN-60-genres-settings-crud",
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/64",
       "pr_number": 64,
-      "archived_at": null,
+      "archived_at": "2026-07-27T20:30:00Z",
       "error": null
     }
   }
