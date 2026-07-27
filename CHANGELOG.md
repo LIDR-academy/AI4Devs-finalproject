@@ -25,12 +25,11 @@
 - Sistema de autodocumentación con evidence files
 
 ### Testing
-- 99 tests backend (23 archivos) — Vitest
+- 122 tests backend (27 archivos) — Vitest + supertest
 - 51 tests frontend (12 archivos) — Vitest + happy-dom
 - 13 tests E2E (4 flows) — Playwright
-- 3 tests de contrato — Vitest + supertest
 - Cobertura 80%+ en capa de dominio
-- CI/CD con GitHub Actions
+- CI/CD con GitHub Actions (lint → typecheck → test → coverage → hexagonal-check → build → E2E con servidores reales)
 
 ### Deployment
 - Railway: 2 servicios Node.js (backend + frontend) + PostgreSQL plugin

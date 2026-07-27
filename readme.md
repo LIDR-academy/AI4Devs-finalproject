@@ -232,17 +232,15 @@ docs/                     # Constitución, ADRs y eventos de dominio
 
 | Suite | Framework | Tests | Estado |
 |-------|-----------|-------|--------|
-| Backend unitarios | Vitest | 96 tests (21 files) | ✅ Todos pasando |
-| Backend integración | Vitest + supertest | 7 tests (1 file) | ✅ Todos pasando |
-| Backend contrato | Vitest + supertest | 7 tests (1 file) | ✅ Todos pasando |
-| Backend middleware | Vitest | 6 tests (1 file) | ✅ Todos pasando |
-| Frontend unitarios | Vitest + happy-dom | 51 tests (12 files) | ✅ Todos pasando |
-| E2E | Playwright | 13 tests (4 flows) | ✅ Todos pasando |
+| Backend (dominio + adaptadores + integración + contrato + middleware) | Vitest + supertest | 122 tests (27 files) | ✅ Todos pasando |
+| Frontend (componentes + API + utilidades) | Vitest + happy-dom | 51 tests (12 files) | ✅ Todos pasando |
+| E2E (full-flow + listing-lens + mortgage-compass + UX) | Playwright | 13 tests (4 flows) | ✅ Todos pasando |
+| **Total** | | **186 tests** (43 files) | ✅ Todos pasando |
 
 - **Backend dominio:** TransparencyScore, RedFlags, FinancialProfile, Coordinates, SnapshotHash, HiddenCosts, AmortizationCalculator, InvestmentCalculator, NarrativeGenerator, ChecklistTemplate, DiffService, AnalyzeListingUseCase (core + diff), PurchaseProcessAggregator, NegotiationPointsService. **Adaptadores:** CheerioAdapter (port + headers + retry), PlaywrightAdapter, ChainedFetchAdapter, BrowserPool, OpenRouterAdapter, xmlParser. **Middleware:** RateLimiter. **Integración:** Dashboard (estado vacío + activo) y Listings (analyze + validación + GET por id + negotiation-points). Cobertura configurada al 80% en capa de dominio.
 - **Frontend:** componentes (Header, Logo, LandingHero, ProcessStepper, ListingTabs, LandingStepper, RedFlagCard, DiffBadge) + API client (streamingClient, crossModuleApiError) + utilidades (format, session). Entorno happy-dom. Cobertura configurada.
 - **E2E:** full-flow (4 tests), listing-lens (1 test), mortgage-compass (2 tests), UX redesign (6 tests). Ejecutados con Playwright + Chromium.
-- CI ejecuta `lint` → `typecheck` → `test:all` → `test:coverage` → `hexagonal-check` → `E2E` en cada push.
+- CI ejecuta `lint` → `typecheck` → `test:all` → `test:coverage` → `hexagonal-check` → `build` (backend + frontend) en cada push. El job E2E construye y arranca ambos servidores contra PostgreSQL antes de ejecutar Playwright.
 
 ### **2.7. Despliegue en Railway**
 
@@ -911,7 +909,7 @@ cat .opencode/harness/README.md
 
 - **127 tareas** completadas en 9 fases (tasks.md)
 - **6 historias de usuario** implementadas: Listing Lens, Mortgage Compass, Dashboard, Negotiation Assistant, Timeline, Checklist
-- **150 tests** pasando (99 backend + 51 frontend) + 13 E2E
+- **186 tests** pasando (122 backend + 51 frontend + 13 E2E)
 - **7 ADRs** documentando decisiones arquitectónicas
 - **CI/CD** operativo con GitHub Actions
 - **Despliegue** en Railway (backend + frontend + PostgreSQL)

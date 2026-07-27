@@ -1,6 +1,6 @@
 # Documentación de uso de IA en Realista — Entrega Final
 
-> Documentación del uso de IA en Realista, organizada según el formato esperado para el cohort AI4Devs: skills, subagentes, workflows, herramientas, procesos, prompts y comparativas. La Entrega 1 documentó la fase de planificación (spec-kit + brainstorming + revisión crítica). La Entrega 2 introdujo la capa de AI Engineering explícita con agentes, comandos, skills, hooks, playbooks, prompt-runs, harness y sistema de autodocumentación — todo en `.opencode/`. La Entrega Final consolida el proyecto completo con despliegue en Railway, 150 tests pasando y 7 ADRs.
+> Documentación del uso de IA en Realista, organizada según el formato esperado para el cohort AI4Devs: skills, subagentes, workflows, herramientas, procesos, prompts y comparativas. La Entrega 1 documentó la fase de planificación (spec-kit + brainstorming + revisión crítica). La Entrega 2 introdujo la capa de AI Engineering explícita con agentes, comandos, skills, hooks, playbooks, prompt-runs, harness y sistema de autodocumentación — todo en `.opencode/`. La Entrega Final consolida el proyecto completo con despliegue en Railway, 186 tests pasando y 7 ADRs.
 
 ## Índice
 
@@ -27,7 +27,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
 | **`using-superpowers`** | Carga al inicio de cada conversación | Protocolo de invocación de skills antes de responder |
 | **`test-driven-development`** | Referencia para estructura de tareas | 17 tareas de test (TDD) integradas en tasks.md |
 | **`verification-before-completion`** | Carga durante commits | Mensajes de commit verifican el estado antes de afirmar "completado" |
-| **`writing-plans`** | Referencia conceptual para tasks.md | tasks.md con 127 tareas en 8 fases |
+| **`writing-plans`** | Referencia conceptual para tasks.md | tasks.md con 127 tareas en 9 fases |
 | **`writing-skills`** | Cargado en setup inicial (con spec-kit) | Especificaciones estructuradas en specs/001-realista-mvp/ |
 
 **Habilidades de spec-kit (GitHub SDD toolkit)** instaladas vía `uv tool install`:
@@ -38,7 +38,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
 | `/speckit.specify` | Generar la spec inicial con 5 historias de usuario |
 | `/speckit.clarify` | Resolver 5 ambigüedades (persistencia, LLM, rate limit, narrativas, HTML parsing) |
 | `/speckit.plan` | Generar plan, research, data-model, contracts, quickstart |
-| `/speckit.tasks` | Generar 127 tareas en 8 fases |
+| `/speckit.tasks` | Generar 127 tareas en 9 fases |
 
 ---
 
@@ -69,7 +69,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
    ↓
 5. /speckit.plan → plan.md + research.md + data-model.md + contracts/ + quickstart.md
    ↓
-6. /speckit.tasks → tasks.md (127 tareas, 8 fases)
+6. /speckit.tasks → tasks.md (127 tareas, 9 fases)
    ↓
 7. /speckit.implement → (completado — 127 tareas en 9 fases, ver tasks.md)
 ```
@@ -165,7 +165,7 @@ Por cada historia de usuario:
 
 **Output**: spec.md v2 + 4 FRs nuevos (FR-014 a FR-018) + LocationResolverPort documentado
 
-### Proceso 4: Desglose de tareas (127 tareas en 8 fases)
+### Proceso 4: Desglose de tareas (127 tareas en 9 fases)
 
 **Input**: spec.md, plan.md, data-model.md, contracts/
 
