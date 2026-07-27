@@ -1,3 +1,4 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DEFAULT_GENRE_NAMES } from './genres.constants';
@@ -12,6 +13,7 @@ describe('GenresService', () => {
     findOne: jest.Mock;
     create: jest.Mock;
     save: jest.Mock;
+    remove: jest.Mock;
     createQueryBuilder: jest.Mock;
   };
   let queryBuilder: {
@@ -48,6 +50,7 @@ describe('GenresService', () => {
           updatedAt: new Date('2026-01-01T00:00:00.000Z'),
         };
       }),
+      remove: jest.fn(),
       createQueryBuilder: jest.fn(() => queryBuilder),
     };
 
@@ -83,6 +86,67 @@ describe('GenresService', () => {
     expect(repo.create).not.toHaveBeenCalled();
     expect(repo.save).not.toHaveBeenCalled();
     expect(result).toEqual(existing);
+  });
+
+  it('lists genres for a user', async () => {
+    repo.find.mockResolvedValue([
+      {
+        id: 'g1',
+        name: 'Fantasía',
+        isDefault: true,
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    ]);
+
+    const result = await service.listForUser('user-1');
+
+    expect(result).toEqual([
+      {
+        id: 'g1',
+        name: 'Fantasía',
+        is_default: true,
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+  });
+
+  it('rejects duplicate genre names case-insensitively', async () => {
+    queryBuilder.getOne.mockResolvedValue({ id: 'g1', name: 'Fantasía' });
+
+    await expect(service.createForUser('user-1', 'fantasía')).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+  });
+
+  it('creates a custom genre when name is unique', async () => {
+    const result = await service.createForUser('user-1', 'Misterio');
+
+    expect(repo.create).toHaveBeenCalledWith({
+      userId: 'user-1',
+      name: 'Misterio',
+      isDefault: false,
+    });
+    expect(result.name).toBe('Misterio');
+    expect(result.is_default).toBe(false);
+  });
+
+  it('deletes an owned genre', async () => {
+    const genre = { id: 'g1', userId: 'user-1', name: 'Misterio' } as Genre;
+    repo.findOne.mockResolvedValue(genre);
+
+    await service.deleteForUser('user-1', 'g1');
+
+    expect(repo.remove).toHaveBeenCalledWith(genre);
+  });
+
+  it('throws when deleting a missing genre', async () => {
+    repo.findOne.mockResolvedValue(null);
+
+    await expect(service.deleteForUser('user-1', 'missing')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('findOrCreateByName creates a custom genre when missing', async () => {

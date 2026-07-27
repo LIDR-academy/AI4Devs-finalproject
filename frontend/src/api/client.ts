@@ -13,6 +13,7 @@ import type {
   EditionCoversResponse,
   Format,
   FormatAffectedReadingsResponse,
+  Genre,
   GoodreadsImportResponse,
   ImportJobAcceptedResponse,
   ImportJobStatusResponse,
@@ -114,6 +115,21 @@ export async function getFormatAffectedReadingCount(
   formatId: string,
 ): Promise<FormatAffectedReadingsResponse> {
   return request(`/formats/${formatId}/affected-readings`);
+}
+
+export async function listGenres(): Promise<Genre[]> {
+  return request('/genres');
+}
+
+export async function createGenre(name: string): Promise<Genre> {
+  return request('/genres', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function deleteGenre(genreId: string): Promise<void> {
+  return request(`/genres/${genreId}`, { method: 'DELETE' });
 }
 
 export async function searchCatalog(
