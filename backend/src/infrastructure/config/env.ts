@@ -49,4 +49,10 @@ function loadEnv(): Env {
   return result.data;
 }
 
-export const env: Env = loadEnv();
+const rawEnv = loadEnv();
+
+export const env = Object.assign(rawEnv, {
+  get IS_TEST(): boolean {
+    return process.env.VITEST === 'true' || (process.env.NODE_ENV || 'development') === 'test';
+  },
+}) as Env & { IS_TEST: boolean };

@@ -57,9 +57,10 @@ export async function analyzeListingStream(
   let buffer = '';
   let final: AnalyzeListingResponse | null = null;
 
-  while (true) {
+  let reading = true;
+  while (reading) {
     const { value, done } = await reader.read();
-    if (done) break;
+    if (done) { reading = false; break; }
     buffer += decoder.decode(value, { stream: true });
 
     let idx: number;

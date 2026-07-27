@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import supertest from 'supertest';
 
 const { mockPrisma } = vi.hoisted(() => {
-  const mock = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mock: any = {
     user: { upsert: vi.fn() },
     purchaseProcess: { findFirst: vi.fn(), create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     analyzedListing: { findFirst: vi.fn(), create: vi.fn(), findUnique: vi.fn() },

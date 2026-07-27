@@ -1,7 +1,7 @@
 # Realista — Agent Guidance
 
 ## Project Status
-Greenfield project. Specification phase. See `specs/001-realista-mvp/spec.md`.
+MVP complete. Final delivery phase. Deployed on Railway. See `specs/001-realista-mvp/spec.md`.
 
 ## Stack
 - **Frontend:** SvelteKit + Vite + PWA (mobile-first SPA)
@@ -9,7 +9,7 @@ Greenfield project. Specification phase. See `specs/001-realista-mvp/spec.md`.
 - **Database:** PostgreSQL + Prisma ORM
 - **Analysis:** LLM system prompt (primary, via OpenRouter) → manual text paste (fallback)
 - **Testing:** Vitest (unit + integration), Playwright (E2E)
-- **Deployment:** TBD (Vercel/Railway candidates)
+- **Deployment:** Railway (backend + frontend + PostgreSQL)
 
 ## Architecture
 Hexagonal + DDD tactical. Domain has zero framework dependencies.

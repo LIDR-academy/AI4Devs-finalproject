@@ -52,9 +52,13 @@ app.use((req, res) => {
 // Error handler (must be last)
 app.use(errorHandler);
 
-const server = app.listen(env.PORT, () => {
-  logger.info({ port: env.PORT, env: env.NODE_ENV }, 'Realista backend started');
-});
+let server: ReturnType<typeof app.listen> | null = null;
+
+if (!env.IS_TEST) {
+  server = app.listen(env.PORT, () => {
+    logger.info({ port: env.PORT, env: env.NODE_ENV }, 'Realista backend started');
+  });
+}
 
 // FR-027 portal health monitor — stub for MVP.
 // Production should use a proper cron (node-cron or external scheduler) to
@@ -67,9 +71,13 @@ const portalHealthMonitorInterval = setInterval(() => {
 const shutdown = (signal: string): void => {
   logger.info({ signal }, 'shutting down');
   clearInterval(portalHealthMonitorInterval);
-  server.close(() => {
+  if (server) {
+    server.close(() => {
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

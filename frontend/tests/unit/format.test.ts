@@ -10,7 +10,7 @@ describe('formatCurrency', () => {
   it('formats EUR with Spanish locale by default', () => {
     const result = formatCurrency(1234.56);
     // Intl formats vary by Node version, just check it contains the digits
-    expect(result).toMatch(/1[\.,\s]?234/);
+    expect(result).toMatch(/1[.,\s]?234/);
     expect(result).toMatch(/56/);
   });
   it('accepts a custom currency', () => {

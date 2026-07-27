@@ -1,6 +1,6 @@
-# Documentación de uso de IA en Realista — Entrega 1 + 2
+# Documentación de uso de IA en Realista — Entrega Final
 
-> Documentación del uso de IA en Realista, organizada según el formato esperado para el cohort AI4Devs: skills, subagentes, workflows, herramientas, procesos, prompts y comparativas. La Entrega 1 documentó la fase de planificación (spec-kit + brainstorming + revisión crítica). La **Entrega 2 introduce la capa de AI Engineering explícita** con agentes, comandos, skills, hooks, playbooks, prompt-runs, harness y sistema de autodocumentación — todo en `.opencode/`.
+> Documentación del uso de IA en Realista, organizada según el formato esperado para el cohort AI4Devs: skills, subagentes, workflows, herramientas, procesos, prompts y comparativas. La Entrega 1 documentó la fase de planificación (spec-kit + brainstorming + revisión crítica). La Entrega 2 introdujo la capa de AI Engineering explícita con agentes, comandos, skills, hooks, playbooks, prompt-runs, harness y sistema de autodocumentación — todo en `.opencode/`. La Entrega Final consolida el proyecto completo con despliegue en Railway, 150 tests pasando y 7 ADRs.
 
 ## Índice
 
@@ -71,10 +71,10 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
    ↓
 6. /speckit.tasks → tasks.md (127 tareas, 8 fases)
    ↓
-7. /speckit.implement → (pendiente de ejecutar)
+7. /speckit.implement → (completado — 127 tareas en 9 fases, ver tasks.md)
 ```
 
-### Workflow 2: Feature-slice TDD (planificado para implementación)
+### Workflow 2: Feature-slice TDD (completado)
 
 ```
 Por cada historia de usuario:
@@ -428,10 +428,9 @@ Los componentes de IA refuerzan los 6 principios de la constitución (ver `docs/
 
 **Resultado:** Scope ampliado a 6 US a nivel MVP (implementación mínima funcional completa), secuenciadas story-by-story TDD.
 
-### 9.13. Próximos pasos
+### 9.13. Próximos pasos (post-entrega)
 
-1. Activar el hook `post-commit` vía Husky (`.opencode/hooks/post-commit.md`)
-2. Empezar US1 (Listing Lens) con `/sprint US1` — TDD, tests first, commit por tarea
-3. Generar evidence por cada tarea cerrada con `auto-evidence`
-4. Primer PR `feature-entrega2-DMM-us1` cuando US1 esté verde
-5. Generar `/evidence-report` al cerrar cada US para revisión de hitos
+1. Activar el hook `post-commit` vía Husky (`.opencode/hooks/post-commit.md`) para validación local
+2. Explorar monitorización proactiva de portales (FR-027 actualmente es un stub)
+3. Autenticación de usuarios (`userId` nullable ya preparado en el schema)
+4. Internacionalización i18n para otros mercados inmobiliarios europeos

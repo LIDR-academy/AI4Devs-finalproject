@@ -59,7 +59,7 @@ npm run typecheck     # TypeScript compiler check
 Push to main → lint → typecheck → unit tests → integration tests → build → E2E → deploy
 ```
 
-Pipeline config in `.github/workflows/ci.yml` (TBD during Setup phase).
+Pipeline config in `.github/workflows/ci.yml` (operativo — lint → typecheck → test → coverage → hexagonal-check → E2E).
 
 ## Project Structure
 

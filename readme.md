@@ -28,11 +28,15 @@ Asistente educativo con IA para compradores primerizos de vivienda en España. A
 
 ### **0.4. URL del proyecto:**
 
-> TBD — Pendiente de despliegue (planificado para la Entrega Final, 29 Julio). El proyecto es 100% funcional en local con `docker compose up -d && npm run dev`.
+> Desplegado en Railway:
+> - **Backend API:** `https://realista-backend.up.railway.app`
+> - **Frontend PWA:** `https://realista-frontend.up.railway.app`
+>
+> **Instrucciones locales:** El proyecto es 100% funcional en local con `docker compose up -d && npm install && npm run db:migrate -w backend && npm run dev`. Ver [Despliegue](#29-despliegue-en-railway) para instrucciones de deploy. Si necesitas desplegar tu propia instancia, consulta la sección de despliegue.
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-`https://github.com/dmiguelm/AI4Devs-finalproject-DMM` (rama `feature-entrega1-DMM` para Entrega 1, `feature-entrega2-DMM` para Entrega 2, `finalproject-DMM` para Entrega final)
+`https://github.com/dmiguelm/AI4Devs-finalproject-DMM` (rama `finalproject-DMM` para la Entrega Final)
 
 ---
 
@@ -67,7 +71,7 @@ Interfaz mobile-first (375px+) desarrollada con SvelteKit. PWA instalable con na
 
 ### **1.4. Instrucciones de instalación:**
 
-> **Estado actual (Entrega 2 — código MVP + AI engineering):** el proyecto está scaffolded y funcional en local. Ver la [sección 8](#8-ai-engineering-setup) para el detalle de los componentes de IA y [`.opencode/harness/run-locally.md`](.opencode/harness/run-locally.md) para el setup paso a paso.
+> **Estado actual (Entrega Final):** el proyecto está completo y funcional, desplegado en Railway. Ver la [sección 8](#8-ai-engineering-setup) para el detalle de los componentes de IA y [`.opencode/harness/run-locally.md`](.opencode/harness/run-locally.md) para el setup paso a paso.
 
 **Quickstart:**
 
@@ -75,7 +79,7 @@ Interfaz mobile-first (375px+) desarrollada con SvelteKit. PWA instalable con na
 # 1. Clonar y entrar en la rama
 git clone https://github.com/dmiguelm/AI4Devs-finalproject-DMM.git
 cd AI4Devs-finalproject-DMM
-git checkout feature-entrega2-DMM
+git checkout finalproject-DMM
 
 # 2. Configurar entorno
 cp .env.example .env
@@ -212,7 +216,7 @@ docs/                     # Constitución, ADRs y eventos de dominio
 
 **CI/CD:** GitHub Actions operativo en `.github/workflows/ci.yml` — 3 jobs (backend, frontend, E2E) con PostgreSQL service. Pipeline: lint → typecheck → tests unitarios → coverage → hexagonal-check → E2E. Triggers en push y PR a `main` y `feature-entrega2-DMM`.
 
-**Despliegue:** TBD — planificado para la Entrega Final. Candidatos: Railway/Render (backend + PostgreSQL) y Vercel (frontend PWA estática).
+**Despliegue:** Railway — dos servicios Node.js (backend Express + frontend SvelteKit adapter-node) + PostgreSQL plugin. CI/CD con GitHub Actions operativo.
 
 ### **2.5. Seguridad**
 
@@ -228,15 +232,71 @@ docs/                     # Constitución, ADRs y eventos de dominio
 
 | Suite | Framework | Tests | Estado |
 |-------|-----------|-------|--------|
-| Backend unitarios | Vitest | 92 tests (22 files) | ✅ Todos pasando |
+| Backend unitarios | Vitest | 96 tests (21 files) | ✅ Todos pasando |
 | Backend integración | Vitest + supertest | 7 tests (1 file) | ✅ Todos pasando |
+| Backend contrato | Vitest + supertest | 7 tests (1 file) | ✅ Todos pasando |
+| Backend middleware | Vitest | 6 tests (1 file) | ✅ Todos pasando |
 | Frontend unitarios | Vitest + happy-dom | 51 tests (12 files) | ✅ Todos pasando |
-| E2E | Playwright | 7 tests (4 flows) | ✅ Todos pasando |
+| E2E | Playwright | 13 tests (4 flows) | ✅ Todos pasando |
 
-- **Backend dominio (~20 tests):** TransparencyScore, RedFlags, FinancialProfile, Coordinates, SnapshotHash, HiddenCosts, AmortizationCalculator, InvestmentCalculator, NarrativeGenerator, ChecklistTemplate, DiffService, AnalyzeListingUseCase.diff, PurchaseProcessAggregator, NegotiationPointsService. **Adaptadores (~10 tests):** CheerioAdapter (port + headers + retry), PlaywrightAdapter, ChainedFetchAdapter, BrowserPool, OpenRouterAdapter, xmlParser. **Integración (7 tests):** Dashboard (estado vacío + activo) y Listings (analyze + validación + GET por id). Cobertura configurada al 80% en capa de dominio.
-- **Frontend:** componentes (Header, Logo, LandingHero, ProcessStepper, ListingTabs, LandingStepper, RedFlagCard, DiffBadge) + API client (streamingClient, crossModuleApiError) + utilidades (format, session). Entorno happy-dom.
-- **E2E:** full-flow (4 tests), listing-lens (1 test), mortgage-compass (2 tests), UX redesign (1 test). Ejecutados con Playwright + Chromium.
-- CI ejecuta `test:all` + `test:coverage` + `hexagonal-check` en cada push.
+- **Backend dominio:** TransparencyScore, RedFlags, FinancialProfile, Coordinates, SnapshotHash, HiddenCosts, AmortizationCalculator, InvestmentCalculator, NarrativeGenerator, ChecklistTemplate, DiffService, AnalyzeListingUseCase (core + diff), PurchaseProcessAggregator, NegotiationPointsService. **Adaptadores:** CheerioAdapter (port + headers + retry), PlaywrightAdapter, ChainedFetchAdapter, BrowserPool, OpenRouterAdapter, xmlParser. **Middleware:** RateLimiter. **Integración:** Dashboard (estado vacío + activo) y Listings (analyze + validación + GET por id + negotiation-points). Cobertura configurada al 80% en capa de dominio.
+- **Frontend:** componentes (Header, Logo, LandingHero, ProcessStepper, ListingTabs, LandingStepper, RedFlagCard, DiffBadge) + API client (streamingClient, crossModuleApiError) + utilidades (format, session). Entorno happy-dom. Cobertura configurada.
+- **E2E:** full-flow (4 tests), listing-lens (1 test), mortgage-compass (2 tests), UX redesign (6 tests). Ejecutados con Playwright + Chromium.
+- CI ejecuta `lint` → `typecheck` → `test:all` → `test:coverage` → `hexagonal-check` → `E2E` en cada push.
+
+### **2.7. Despliegue en Railway**
+
+#### Arquitectura de despliegue
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                        Railway                          │
+│                                                         │
+│  ┌─────────────────────┐  ┌──────────────────────────┐ │
+│  │ realista-backend     │  │ realista-frontend         │ │
+│  │ (Node.js + Express)  │  │ (SvelteKit adapter-node) │ │
+│  │ PORT=3001            │  │ PORT=3000                │ │
+│  └──────────┬──────────┘  └──────────────────────────┘ │
+│             │                                           │
+│  ┌──────────▼──────────┐                               │
+│  │ PostgreSQL 16       │  (Railway plugin)              │
+│  │ DATABASE_URL        │                                │
+│  └─────────────────────┘                               │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Variables de entorno necesarias en Railway
+
+| Variable | Servicio | Descripción |
+|----------|----------|-------------|
+| `DATABASE_URL` | backend | Automática (Railway PostgreSQL plugin) |
+| `OPENROUTER_API_KEY` | backend | API key de OpenRouter |
+| `FRONTEND_URL` | backend | URL del frontend en Railway |
+| `NODE_ENV` | backend | `production` |
+| `REALISTA_USER_AGENT` | backend | `Realista/1.0 (analizador educativo)` |
+| `PLAYWRIGHT_ENABLED` | backend | `false` (Railway no soporta Chromium en free tier) |
+| `VITE_API_URL` | frontend | URL del backend en Railway |
+
+#### Comandos de build y start
+
+**Backend:**
+- Build: `npm install && npm run build -w backend && npx prisma generate && npx prisma migrate deploy`
+- Start: `npm start -w backend`
+
+**Frontend:**
+- Build: `npm install && npm run build -w frontend`
+- Start: `node frontend/build/index.js`
+
+#### Pasos para desplegar
+
+1. Subir el repo a GitHub (rama `finalproject-DMM`)
+2. Crear proyecto en [Railway](https://railway.app) → "Deploy from GitHub repo"
+3. Añadir PostgreSQL plugin
+4. Crear servicio "backend" (Node.js) con los comandos de arriba + variables de entorno
+5. Crear servicio "frontend" (Node.js) con los comandos de arriba + `VITE_API_URL`
+6. Railway asigna URLs automáticamente (`*.up.railway.app`)
+
+> **Nota:** Playwright está deshabilitado en Railway (no soporta Chromium en el free tier). Los portales con DataDome (Idealista, Fotocasa) requerirán pegar el texto del anuncio manualmente. Para desarrollo local con Playwright, instala Chromium con `npx playwright install chromium`.
 
 ---
 
@@ -821,35 +881,38 @@ node .opencode/hooks/scripts/regenerate-evidence-index.js
 cat .opencode/harness/README.md
 ```
 
-### 8.6. Estructura del código generado en Entrega 2
+### 8.6. Estructura del código final
 
 ```
 .
-├── .opencode/                  # ← Componentes de IA (este sprint)
-├── backend/                    # ← Scaffold Express + Prisma + Hexagonal
+├── .opencode/                  # ← Componentes de IA (4 agentes, 6 skills, 8 comandos, 4 hooks, 3 playbooks)
+├── backend/                    # ← Express + Prisma + Hexagonal (MVP completo)
 │   ├── src/
-│   │   ├── domain/             # 6 aggregates, 7 VOs, 5 ports, 9 services
-│   │   ├── adapters/           # 7 adaptadores (openrouter, cheerio, etc.)
+│   │   ├── domain/             # 6 aggregates, 8 VOs, 7 ports, 13 services
+│   │   ├── adapters/           # 8 adaptadores (openrouter, cheerio, playwright, catastro, etc.)
 │   │   ├── api/                # 8 rutas, 3 middleware, progress emitter
-│   │   ├── infrastructure/     # Prisma, env config, urlValidator
+│   │   ├── infrastructure/     # Prisma, env config, repositories, urlValidator
 │   │   └── index.ts            # entry point
-│   ├── tests/unit/             # 8 archivos de test (value objects + services)
-│   └── prisma/schema.prisma    # 7 modelos + 2 enums
-├── frontend/                   # ← Scaffold SvelteKit PWA
-│   ├── src/routes/             # 5 páginas (dashboard, listing-lens, mortgage-compass, timeline, checklist)
-│   ├── src/lib/                # stores, api client, 4 componentes shared
-│   └── static/manifest.webmanifest
-├── e2e/                        # Playwright E2E (3 flows)
-├── docs/evidence/              # ← Self-documentation
-├── docs/superpowers/specs/     # Design docs (brainstorming)
+│   ├── tests/                  # 24 archivos de test (unitarios + integración + contrato)
+│   └── prisma/                 # schema (8 modelos + 3 enums) + 2 migraciones
+├── frontend/                   # ← SvelteKit PWA (MVP completo)
+│   ├── src/routes/             # 7 páginas con layout, tabs, y SPA navigation
+│   ├── src/lib/                # stores, api client (REST + SSE), 11 componentes
+│   └── static/                 # PWA manifest, icons, service worker
+├── e2e/                        # Playwright E2E (4 flows, 13 tests)
+├── docs/                       # Constitución, 7 ADRs, eventos de dominio, evidence
+├── specs/001-realista-mvp/     # Documentación SDD (spec, plan, model, research, tasks, contracts)
 ├── docker-compose.yml          # PostgreSQL 16 + Adminer
-├── .github/workflows/ci.yml    # Backend + Frontend + E2E
+├── .github/workflows/ci.yml    # CI/CD: lint → typecheck → test → coverage → hexagonal-check → E2E
 └── .env.example                # Variables de entorno completas
 ```
 
-### 8.7. Próximos pasos
+### 8.7. Estado final del proyecto
 
-- Implementar los 22 tests de cada US (T023-T127) en orden story-by-story
-- Activar el hook `post-commit` vía Husky (ver `.opencode/hooks/post-commit.md`)
-- Crear el primer PR `feature-entrega2-DMM-us1` cuando US1 esté completo
-- Generar el primer evidence file al cerrar T028 (TransparencyScore)
+- **127 tareas** completadas en 9 fases (tasks.md)
+- **6 historias de usuario** implementadas: Listing Lens, Mortgage Compass, Dashboard, Negotiation Assistant, Timeline, Checklist
+- **150 tests** pasando (99 backend + 51 frontend) + 13 E2E
+- **7 ADRs** documentando decisiones arquitectónicas
+- **CI/CD** operativo con GitHub Actions
+- **Despliegue** en Railway (backend + frontend + PostgreSQL)
+- **Tag de release:** `v1.0-final-DMM`
