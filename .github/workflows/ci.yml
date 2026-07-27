@@ -105,6 +105,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      - run: cd backend && npx prisma generate
       - run: cd backend && npx prisma migrate deploy
       - run: npm run build -w backend
       - run: npm run build -w frontend
