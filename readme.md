@@ -588,14 +588,13 @@ erDiagram
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | `/api/listings` | Lista todos los listings analizados de la sesión |
 | GET | `/api/listings/:id` | Detalle de un listing con diff vs snapshot anterior |
-| PATCH | `/api/purchase-processes/:id` | Actualiza proceso (status, financialProfile, currentStage, propertyPrice) |
 | GET | `/api/purchase-processes/:id` | Detalle del proceso con listings y checklist |
-| PATCH | `/api/checklist/:processId/items/:itemId` | Toggle completado de un ítem del checklist |
+| PATCH | `/api/purchase-processes/:id` | Actualiza proceso (status, financialProfile, currentStage, propertyPrice) |
+| GET | `/api/checklist/process/:processId` | Obtiene el checklist documental por etapa |
+| PATCH | `/api/checklist/items/:itemId` | Toggle completado de un ítem del checklist |
 | GET | `/api/admin/portal-health` | Estado de salud de portales inmobiliarios (FR-027) |
-| GET | `/api/session` | Obtener/crear UUID de sesión |
-| GET | `/api/health` | Health check para CI/CD |
+| GET | `/health` | Health check para CI/CD |
 
 > Para la especificación completa con todos los payloads, ver `specs/001-realista-mvp/contracts/api.md`
 
