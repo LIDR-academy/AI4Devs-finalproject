@@ -27,9 +27,6 @@ import {
 
 const UNKNOWN_BUCKET = 'unknown';
 
-/** Deterministic tie-break order for predominant format. */
-const FORMAT_ORDER = ['fisico', 'ebook', 'audio'];
-
 interface AggregateRow {
   booksRead: string | number | null;
   pagesRead: string | number | null;
@@ -217,36 +214,19 @@ export class StatsService {
       .createQueryBuilder('rr')
       .innerJoin(Book, 'b', 'b.id = rr.bookId')
       .leftJoin(Format, 'f', 'f.id = rr.formatId')
-      .select(
-        `CASE
-          WHEN f.name IS NULL THEN :unknown
-          WHEN lower(f.name) = 'físico' THEN 'fisico'
-          WHEN lower(f.name) = 'ebook' THEN 'ebook'
-          WHEN lower(f.name) = 'audio' THEN 'audio'
-          ELSE :unknown
-        END`,
-        'key',
-      )
+      .select('COALESCE(f.name, :unknown)', 'key')
       .addSelect('COUNT(*)', 'count')
       .where('b.userId = :userId', { userId })
       .andWhere('rr.status = :status', { status: 'leido' })
       .andWhere('rr.finishedOn >= :periodStart', { periodStart })
       .andWhere('rr.finishedOn < :periodEnd', { periodEnd })
-      .groupBy(
-        `CASE
-          WHEN f.name IS NULL THEN :unknown
-          WHEN lower(f.name) = 'físico' THEN 'fisico'
-          WHEN lower(f.name) = 'ebook' THEN 'ebook'
-          WHEN lower(f.name) = 'audio' THEN 'audio'
-          ELSE :unknown
-        END`,
-      )
+      .groupBy('COALESCE(f.name, :unknown)')
       .orderBy('COUNT(*)', 'DESC')
       .setParameter('unknown', UNKNOWN_BUCKET)
       .getRawMany<DistributionRow>();
 
     return rows.map((row) => ({
-      format: row.key ?? UNKNOWN_BUCKET,
+      format: StatsService.formatDistributionKey(row.key),
       count: StatsService.toInt(row.count),
     }));
   }
@@ -509,6 +489,15 @@ export class StatsService {
     return audienceName;
   }
 
+  static formatDistributionKey(
+    formatName: string | null | undefined,
+  ): string {
+    if (!formatName || formatName === UNKNOWN_BUCKET) {
+      return UNKNOWN_BUCKET;
+    }
+    return formatName;
+  }
+
   static toInt(value: string | number | null | undefined): number {
     if (value === null || value === undefined) {
       return 0;
@@ -541,15 +530,8 @@ export class StatsService {
       if (b.count !== a.count) {
         return b.count - a.count;
       }
-      return (
-        StatsService.formatRank(a.format) - StatsService.formatRank(b.format)
-      );
+      return a.format.localeCompare(b.format, 'es', { sensitivity: 'base' });
     });
     return candidates[0].format;
-  }
-
-  private static formatRank(format: string): number {
-    const index = FORMAT_ORDER.indexOf(format);
-    return index === -1 ? FORMAT_ORDER.length : index;
   }
 }

@@ -1569,7 +1569,7 @@ components:
       properties:
         format:
           type: string
-          description: Read format (`fisico` | `ebook` | `audio`), or `unknown` when unset.
+          description: User format label name from `formats`, or `unknown` when `format_id` is unset.
         count:
           type: integer
 

@@ -21,11 +21,11 @@ describe('generateStatsInsights', () => {
       { genre: 'unknown', count: 1 },
     ],
     formatDistribution: [
-      { format: 'fisico', count: 2 },
-      { format: 'ebook', count: 1 },
+      { format: 'Físico', count: 2 },
+      { format: 'Ebook', count: 1 },
       { format: 'unknown', count: 1 },
     ],
-    predominantFormat: 'fisico',
+    predominantFormat: 'Físico',
     previousBooksRead: 1,
     baselineLabel: 'Mayo 2025',
   };

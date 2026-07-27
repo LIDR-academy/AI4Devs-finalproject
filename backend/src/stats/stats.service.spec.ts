@@ -89,23 +89,48 @@ describe('StatsService (pure helpers)', () => {
     });
   });
 
+  describe('formatDistributionKey', () => {
+    it('maps missing format to unknown', () => {
+      expect(StatsService.formatDistributionKey(null)).toBe('unknown');
+      expect(StatsService.formatDistributionKey(undefined)).toBe('unknown');
+      expect(StatsService.formatDistributionKey('unknown')).toBe('unknown');
+    });
+
+    it('preserves user format names', () => {
+      expect(StatsService.formatDistributionKey('Físico')).toBe('Físico');
+      expect(StatsService.formatDistributionKey('Audiolibro por capítulos')).toBe(
+        'Audiolibro por capítulos',
+      );
+    });
+  });
+
   describe('pickPredominantFormat', () => {
     it('selects the highest non-unknown count', () => {
       const distribution: FormatCountDto[] = [
-        { format: 'fisico', count: 3 },
-        { format: 'ebook', count: 1 },
+        { format: 'Físico', count: 3 },
+        { format: 'Ebook', count: 1 },
         { format: 'unknown', count: 2 },
       ];
-      expect(StatsService.pickPredominantFormat(distribution)).toBe('fisico');
+      expect(StatsService.pickPredominantFormat(distribution)).toBe('Físico');
     });
 
-    it('breaks ties by enum order fisico > ebook > audio', () => {
+    it('breaks ties alphabetically in es locale', () => {
       const distribution: FormatCountDto[] = [
-        { format: 'audio', count: 2 },
-        { format: 'ebook', count: 2 },
-        { format: 'fisico', count: 2 },
+        { format: 'Ebook', count: 2 },
+        { format: 'Físico', count: 2 },
+        { format: 'Audio', count: 2 },
       ];
-      expect(StatsService.pickPredominantFormat(distribution)).toBe('fisico');
+      expect(StatsService.pickPredominantFormat(distribution)).toBe('Audio');
+    });
+
+    it('prefers custom format names when they lead', () => {
+      const distribution: FormatCountDto[] = [
+        { format: 'Audiolibro por capítulos', count: 4 },
+        { format: 'Físico', count: 1 },
+      ];
+      expect(StatsService.pickPredominantFormat(distribution)).toBe(
+        'Audiolibro por capítulos',
+      );
     });
 
     it('returns null when only unknown formats are present', () => {
