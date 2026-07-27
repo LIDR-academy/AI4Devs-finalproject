@@ -62,8 +62,8 @@ The dashboard SHALL render the format breakdown as a **pie chart** from `format_
 
 #### Scenario: Predominant format highlighted
 
-- **WHEN** the response has `predominant_format: "fisico"`
-- **THEN** the format pie legend indicates `fisico` as the predominant format
+- **WHEN** the response has `predominant_format: "Físico"`
+- **THEN** the format pie legend indicates `Físico` as the predominant format
 
 #### Scenario: Format chart card alignment (KAN-23)
 
