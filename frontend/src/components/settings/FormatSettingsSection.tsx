@@ -1,15 +1,30 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { createFormat, deleteFormat, listFormats } from '../../api/client';
+import {
+  createFormat,
+  deleteFormat,
+  getFormatAffectedReadingCount,
+  listFormats,
+} from '../../api/client';
 import { messageFromUnknownError } from '../../api/errors';
-import { Button, Card, Input } from '../ui';
+import { Button, Card, ConfirmModal, Input } from '../ui';
 import './FormatSettingsSection.css';
+
+type PendingDelete = {
+  id: string;
+  name: string;
+  affectedReadingCount: number;
+};
 
 export function FormatSettingsSection() {
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [deletePreviewLoadingId, setDeletePreviewLoadingId] = useState<string | null>(
+    null,
+  );
 
   const { data: formats = [], isLoading, error } = useQuery({
     queryKey: ['formats'],
@@ -31,6 +46,7 @@ export function FormatSettingsSection() {
   const deleteMutation = useMutation({
     mutationFn: (formatId: string) => deleteFormat(formatId),
     onSuccess: () => {
+      setPendingDelete(null);
       setDeleteError(null);
       void queryClient.invalidateQueries({ queryKey: ['formats'] });
       void queryClient.invalidateQueries({ queryKey: ['books'] });
@@ -49,6 +65,35 @@ export function FormatSettingsSection() {
     }
     setFormError(null);
     createMutation.mutate(trimmed);
+  }
+
+  async function handleDeleteClick(formatId: string, formatName: string) {
+    setDeleteError(null);
+    setDeletePreviewLoadingId(formatId);
+
+    try {
+      const { affected_reading_count } = await getFormatAffectedReadingCount(formatId);
+
+      if (affected_reading_count === 0) {
+        deleteMutation.mutate(formatId);
+        return;
+      }
+
+      setPendingDelete({
+        id: formatId,
+        name: formatName,
+        affectedReadingCount: affected_reading_count,
+      });
+    } catch (err) {
+      setDeleteError(messageFromUnknownError(err));
+    } finally {
+      setDeletePreviewLoadingId(null);
+    }
+  }
+
+  function handleConfirmDelete() {
+    if (!pendingDelete) return;
+    deleteMutation.mutate(pendingDelete.id);
   }
 
   return (
@@ -85,10 +130,12 @@ export function FormatSettingsSection() {
               type="button"
               variant="ghost"
               className="format-settings__delete"
-              disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(format.id)}
+              disabled={
+                deleteMutation.isPending || deletePreviewLoadingId === format.id
+              }
+              onClick={() => void handleDeleteClick(format.id, format.name)}
             >
-              Eliminar
+              {deletePreviewLoadingId === format.id ? 'Comprobando…' : 'Eliminar'}
             </Button>
           </li>
         ))}
@@ -111,6 +158,31 @@ export function FormatSettingsSection() {
           Añadir elemento
         </Button>
       </form>
+
+      <ConfirmModal
+        open={pendingDelete !== null}
+        title="Eliminar formato"
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        onClose={() => {
+          if (!deleteMutation.isPending) {
+            setPendingDelete(null);
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+      >
+        {pendingDelete ? (
+          <p>
+            Este formato está asignado a {pendingDelete.affectedReadingCount}{' '}
+            {pendingDelete.affectedReadingCount === 1 ? 'lectura' : 'lecturas'}. Si lo
+            borras,
+            {pendingDelete.affectedReadingCount === 1
+              ? ' esa lectura se quedará'
+              : ' esas lecturas se quedarán'}{' '}
+            sin formato. ¿Continuar?
+          </p>
+        ) : null}
+      </ConfirmModal>
     </Card>
   );
 }

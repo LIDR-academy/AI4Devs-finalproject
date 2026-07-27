@@ -11,6 +11,7 @@ import type {
   CreateBookPayload,
   EditionCoversResponse,
   Format,
+  FormatAffectedReadingsResponse,
   GoodreadsImportResponse,
   ImportJobAcceptedResponse,
   ImportJobStatusResponse,
@@ -106,6 +107,12 @@ export async function createFormat(name: string): Promise<Format> {
 
 export async function deleteFormat(formatId: string): Promise<void> {
   return request(`/formats/${formatId}`, { method: 'DELETE' });
+}
+
+export async function getFormatAffectedReadingCount(
+  formatId: string,
+): Promise<FormatAffectedReadingsResponse> {
+  return request(`/formats/${formatId}/affected-readings`);
 }
 
 export async function searchCatalog(

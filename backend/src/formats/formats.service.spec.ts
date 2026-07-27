@@ -1,6 +1,7 @@
 import { ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { ReadingRecord } from '../books/entities/reading-record.entity';
 import { DEFAULT_FORMAT_NAMES } from './formats.constants';
 import { FormatsService } from './formats.service';
 import { Format } from './entities/format.entity';
@@ -16,10 +17,19 @@ describe('FormatsService', () => {
     remove: jest.Mock;
     createQueryBuilder: jest.Mock;
   };
+  let readingRepo: {
+    createQueryBuilder: jest.Mock;
+  };
   let queryBuilder: {
     where: jest.Mock;
     andWhere: jest.Mock;
     getOne: jest.Mock;
+  };
+  let readingQueryBuilder: {
+    innerJoin: jest.Mock;
+    where: jest.Mock;
+    andWhere: jest.Mock;
+    getCount: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -27,6 +37,13 @@ describe('FormatsService', () => {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       getOne: jest.fn().mockResolvedValue(null),
+    };
+
+    readingQueryBuilder = {
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getCount: jest.fn().mockResolvedValue(3),
     };
 
     repo = {
@@ -54,10 +71,15 @@ describe('FormatsService', () => {
       createQueryBuilder: jest.fn(() => queryBuilder),
     };
 
+    readingRepo = {
+      createQueryBuilder: jest.fn(() => readingQueryBuilder),
+    };
+
     const module = await Test.createTestingModule({
       providers: [
         FormatsService,
         { provide: getRepositoryToken(Format), useValue: repo },
+        { provide: getRepositoryToken(ReadingRecord), useValue: readingRepo },
       ],
     }).compile();
 
@@ -131,5 +153,18 @@ describe('FormatsService', () => {
     await service.deleteForUser('user-1', 'format-1');
 
     expect(repo.remove).toHaveBeenCalledWith(format);
+  });
+
+  it('counts affected readings for an owned format', async () => {
+    repo.findOne.mockResolvedValue({ id: 'format-1', userId: 'user-1' });
+
+    const result = await service.countAffectedReadings('user-1', 'format-1');
+
+    expect(result).toEqual({ affected_reading_count: 3 });
+    expect(readingQueryBuilder.innerJoin).toHaveBeenCalledWith('reading.book', 'book');
+    expect(readingQueryBuilder.andWhere).toHaveBeenCalledWith(
+      'reading.format_id = :formatId',
+      { formatId: 'format-1' },
+    );
   });
 });

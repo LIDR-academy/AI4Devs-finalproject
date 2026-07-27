@@ -92,6 +92,40 @@ describe('Formats API (integration)', () => {
       .expect(409);
   });
 
+  it('GET /v1/formats/{id}/affected-readings returns assigned reading count', async () => {
+    const list = await request(app.getHttpServer())
+      .get('/v1/formats')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const target = list.body.find((item: { name: string }) => item.name === 'Físico');
+    expect(target).toBeDefined();
+
+    const book = await bookRepo.save(
+      bookRepo.create({
+        userId,
+        title: 'Physical Book',
+        authors: 'Author',
+        dataSource: 'manual',
+      }),
+    );
+
+    await readingRepo.save(
+      readingRepo.create({
+        bookId: book.id,
+        status: 'pendiente',
+        formatId: target.id,
+      }),
+    );
+
+    const res = await request(app.getHttpServer())
+      .get(`/v1/formats/${target.id}/affected-readings`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body.affected_reading_count).toBe(1);
+  });
+
   it('DELETE /v1/formats/{id} clears format_id on assigned reading records', async () => {
     const list = await request(app.getHttpServer())
       .get('/v1/formats')

@@ -30,6 +30,10 @@ export interface AudienceAffectedBooksResponse {
   affected_book_count: number;
 }
 
+export interface FormatAffectedReadingsResponse {
+  affected_reading_count: number;
+}
+
 export interface CatalogEdition {
   title: string;
   authors: string;
