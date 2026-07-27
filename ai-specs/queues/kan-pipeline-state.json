@@ -3,7 +3,7 @@
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
   "last_completed": "KAN-78",
-  "current_ticket": null,
+  "current_ticket": "KAN-79",
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -466,5 +466,15 @@
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/61",
       "pr_number": 61,
       "archived_at": "2026-07-27T09:50:00Z",
+      "error": null
+    },
+    "KAN-79": {
+      "status": "awaiting_merge",
+      "failed_step": null,
+      "change_name": "kan-79-persist-cover-selection",
+      "branch": "feature/KAN-79-persist-cover-selection",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/62",
+      "pr_number": 62,
+      "archived_at": null,
       "error": null
     }

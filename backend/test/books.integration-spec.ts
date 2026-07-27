@@ -382,6 +382,56 @@ describe('Books API (integration)', () => {
     expect(res.body.notes).toBe('Library edition');
   });
 
+  it('PATCH /v1/books/{bookId} persists cover_image_url from catalog-style URL', async () => {
+    const gridCoverUrl = 'https://covers.openlibrary.org/b/id/12345-L.jpg';
+
+    const patchRes = await request(app.getHttpServer())
+      .patch(`/v1/books/${bookId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ cover_image_url: gridCoverUrl })
+      .expect(200);
+
+    expect(patchRes.body.cover_image_url).toBe(gridCoverUrl);
+
+    const list = await request(app.getHttpServer())
+      .get('/v1/books')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const item = list.body.find((b: { id: string }) => b.id === bookId);
+    expect(item.cover_image_url).toBe(gridCoverUrl);
+  });
+
+  it('PATCH /v1/books/{bookId} overrides cover_image_url with manual URL', async () => {
+    const manualCoverUrl = 'https://example.com/manual-cover.jpg';
+
+    const patchRes = await request(app.getHttpServer())
+      .patch(`/v1/books/${bookId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ cover_image_url: manualCoverUrl })
+      .expect(200);
+
+    expect(patchRes.body.cover_image_url).toBe(manualCoverUrl);
+  });
+
+  it('PATCH /v1/books/{bookId} clears cover_image_url with null', async () => {
+    const patchRes = await request(app.getHttpServer())
+      .patch(`/v1/books/${bookId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ cover_image_url: null })
+      .expect(200);
+
+    expect(patchRes.body.cover_image_url).toBeNull();
+  });
+
+  it('PATCH /v1/books/{bookId} rejects invalid cover_image_url', async () => {
+    await request(app.getHttpServer())
+      .patch(`/v1/books/${bookId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ cover_image_url: 'not-a-url' })
+      .expect(400);
+  });
+
   it('PATCH /v1/books/{bookId} rejects empty body', async () => {
     await request(app.getHttpServer())
       .patch(`/v1/books/${bookId}`)
