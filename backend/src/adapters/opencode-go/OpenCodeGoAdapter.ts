@@ -97,7 +97,7 @@ export class OpenCodeGoAdapter implements ListingAnalyzerPort {
         ],
         temperature: 0.2,
       }),
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(60_000),
     });
 
     if (!res.ok) {
