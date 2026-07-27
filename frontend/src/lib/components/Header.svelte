@@ -19,7 +19,7 @@
 
 <svelte:window on:click={close} on:keydown={handleKeydown} />
 
-<header class="header" role="banner">
+<header class="header">
   <div class="inner">
     <button
       class="hamburger"
@@ -46,13 +46,9 @@
     </div>
 
     {#if open}
-      <nav
-        class="menu"
-        role="navigation"
-        aria-label="Navegación principal"
-        on:click|stopPropagation
-        transition:fade={{ duration: 120 }}
-      >
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div class="menu" on:click|stopPropagation on:keydown={handleKeydown} transition:fade={{ duration: 120 }}>
+        <nav aria-label="Navegación principal">
         <a href="/listing-lens" on:click={close}>Analizar anuncio</a>
         <a href="/mortgage-compass" on:click={close}>Simular hipoteca</a>
         <a href="/timeline" on:click={close}>Cronograma</a>
@@ -60,6 +56,7 @@
         <hr class="divider" />
         <a href="/mi-proceso" on:click={close}>Mi proceso</a>
       </nav>
+      </div>
     {/if}
   </div>
 </header>
