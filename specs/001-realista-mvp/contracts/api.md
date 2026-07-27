@@ -4,7 +4,7 @@
 
 ```
 Development: http://localhost:3001/api
-Production: https://realista-backend.up.railway.app/api (Railway)
+Production: https://realista-api.up.railway.app/api (Railway)
 ```
 
 ## Headers

@@ -1,6 +1,6 @@
 {
   "name": "realista",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Realista — AI-powered educational assistant for first-time home buyers in Spain",
   "workspaces": ["backend", "frontend", "e2e"],

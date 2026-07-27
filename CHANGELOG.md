@@ -34,8 +34,8 @@
 
 ### Deployment
 - Railway: 2 servicios Node.js (backend + frontend) + PostgreSQL plugin
-- Backend: https://realista-backend.up.railway.app
-- Frontend: https://realista-frontend.up.railway.app
+- Backend: https://realista-api.up.railway.app
+- Frontend: https://realista.up.railway.app
 
 ### Documentation
 - 7 ADRs (hexagonal, fallback, no-scraping, location-resolver, playwright, SSE, PWA)

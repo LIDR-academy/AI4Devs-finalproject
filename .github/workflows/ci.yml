@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, feature-entrega2-DMM]
+    branches: [main, feature-entrega2-DMM, finalproject-DMM]
   pull_request:
-    branches: [main, feature-entrega2-DMM]
+    branches: [main, feature-entrega2-DMM, finalproject-DMM]
 
 jobs:
   backend:
@@ -58,7 +58,7 @@ jobs:
     env:
       VITE_API_URL: http://localhost:3001
       VITE_APP_NAME: Realista
-      VITE_APP_VERSION: 0.2.0
+      VITE_APP_VERSION: 1.0.0
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

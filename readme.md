@@ -29,8 +29,8 @@ Asistente educativo con IA para compradores primerizos de vivienda en España. A
 ### **0.4. URL del proyecto:**
 
 > Desplegado en Railway:
-> - **Backend API:** `https://realista-backend.up.railway.app`
-> - **Frontend PWA:** `https://realista-frontend.up.railway.app`
+> - **Frontend PWA:** `https://realista.up.railway.app`
+> - **Backend API:** `https://realista-api.up.railway.app`
 >
 > **Instrucciones locales:** El proyecto es 100% funcional en local con `docker compose up -d && npm install && npm run db:migrate -w backend && npm run dev`. Ver [Despliegue](#29-despliegue-en-railway) para instrucciones de deploy. Si necesitas desplegar tu propia instancia, consulta la sección de despliegue.
 
@@ -253,7 +253,7 @@ docs/                     # Constitución, ADRs y eventos de dominio
 │                        Railway                          │
 │                                                         │
 │  ┌─────────────────────┐  ┌──────────────────────────┐ │
-│  │ realista-backend     │  │ realista-frontend         │ │
+│  │ realista-api          │  │ realista                  │ │
 │  │ (Node.js + Express)  │  │ (SvelteKit adapter-node) │ │
 │  │ PORT=3001            │  │ PORT=3000                │ │
 │  └──────────┬──────────┘  └──────────────────────────┘ │
@@ -269,13 +269,13 @@ docs/                     # Constitución, ADRs y eventos de dominio
 
 | Variable | Servicio | Descripción |
 |----------|----------|-------------|
-| `DATABASE_URL` | backend | Automática (Railway PostgreSQL plugin) |
-| `OPENROUTER_API_KEY` | backend | API key de OpenRouter |
-| `FRONTEND_URL` | backend | URL del frontend en Railway |
-| `NODE_ENV` | backend | `production` |
-| `REALISTA_USER_AGENT` | backend | `Realista/1.0 (analizador educativo)` |
-| `PLAYWRIGHT_ENABLED` | backend | `false` (Railway no soporta Chromium en free tier) |
-| `VITE_API_URL` | frontend | URL del backend en Railway |
+| `DATABASE_URL` | realista-api | Automática (Railway PostgreSQL plugin) |
+| `OPENROUTER_API_KEY` | realista-api | API key de OpenRouter |
+| `FRONTEND_URL` | realista-api | URL del frontend en Railway |
+| `NODE_ENV` | realista-api | `production` |
+| `REALISTA_USER_AGENT` | realista-api | `Realista/1.0 (analizador educativo)` |
+| `PLAYWRIGHT_ENABLED` | realista-api | `false` (Railway no soporta Chromium en free tier) |
+| `VITE_API_URL` | realista | URL del backend en Railway |
 
 #### Comandos de build y start
 
@@ -292,8 +292,8 @@ docs/                     # Constitución, ADRs y eventos de dominio
 1. Subir el repo a GitHub (rama `finalproject-DMM`)
 2. Crear proyecto en [Railway](https://railway.app) → "Deploy from GitHub repo"
 3. Añadir PostgreSQL plugin
-4. Crear servicio "backend" (Node.js) con los comandos de arriba + variables de entorno
-5. Crear servicio "frontend" (Node.js) con los comandos de arriba + `VITE_API_URL`
+4. Crear servicio "realista-api" (Node.js) con los comandos de arriba + variables de entorno
+5. Crear servicio "realista" (Node.js) con los comandos de arriba + `VITE_API_URL`
 6. Railway asigna URLs automáticamente (`*.up.railway.app`)
 
 > **Nota:** Playwright está deshabilitado en Railway (no soporta Chromium en el free tier). Los portales con DataDome (Idealista, Fotocasa) requerirán pegar el texto del anuncio manualmente. Para desarrollo local con Playwright, instala Chromium con `npx playwright install chromium`.
