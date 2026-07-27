@@ -469,12 +469,12 @@
       "error": null
     },
     "KAN-79": {
-      "status": "in_progress",
+      "status": "awaiting_merge",
       "failed_step": null,
       "change_name": "kan-79-persist-cover-selection",
       "branch": "feature/KAN-79-persist-cover-selection",
-      "pr_url": null,
-      "pr_number": null,
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/62",
+      "pr_number": 62,
       "archived_at": null,
       "error": null
     }
