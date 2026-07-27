@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cactify}
+      POSTGRES_USER: ${POSTGRES_USER:-cactify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cactify}
+    ports:
+      - "5432:5432"
+    volumes:
+      - cactify_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cactify}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../../backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-cactify}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-cactify}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-cactify}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../../frontend
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  cactify_pgdata:

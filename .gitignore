@@ -1,0 +1,25 @@
+# --- General ---
+.DS_Store
+*.log
+.env
+.env.local
+chats/
+
+# --- Backend (Kotlin / Gradle / Spring Boot) ---
+backend/build/
+backend/.gradle/
+backend/out/
+backend/HELP.md
+!backend/gradle/wrapper/gradle-wrapper.jar
+.kotlin/
+
+# --- Frontend (Nuxt / Node) ---
+frontend/node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/dist/
+
+# --- IDE ---
+.idea/
+.vscode/
+*.iml
