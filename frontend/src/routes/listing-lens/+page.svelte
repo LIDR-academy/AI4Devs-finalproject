@@ -43,19 +43,35 @@
       currentStep = null;
     }
   }
+
+  function resetForm() {
+    result = null;
+    error = null;
+    urlBlocked = false;
+    url = '';
+    manualText = '';
+  }
+
+  function editAgain() {
+    result = null;
+    error = null;
+  }
 </script>
 
 <div class="container">
-  <h1>Analizar anuncio</h1>
+  <h1>Analizar un anuncio</h1>
   <AIDisclaimer />
 
-  <ListingTabs
-    bind:url
-    bind:manualText
-    bind:urlBlocked
-    disabled={loading}
-    onAnalize={handleAnalyze}
-  />
+  {#if !loading && !result}
+    <p class="intro">Pega el texto del anuncio que te interesa y descubre lo que oculta. También puedes probar con una URL.</p>
+    <ListingTabs
+      bind:url
+      bind:manualText
+      bind:urlBlocked
+      disabled={loading}
+      onAnalize={handleAnalyze}
+    />
+  {/if}
 
   {#if loading}
     <LoadingState activeStep={currentStep} />
@@ -64,11 +80,6 @@
   {#if error && !urlBlocked}
     <div class="card error">
       <p>{error}</p>
-      {#if !urlBlocked}
-        <p class="text-muted">
-          Si el portal está bloqueando peticiones, pega el texto del anuncio manualmente.
-        </p>
-      {/if}
     </div>
   {/if}
 
@@ -111,11 +122,42 @@
           Precio detectado: {formatCurrency(result.processSummary.propertyPrice)}
         </p>
       {/if}
+
+      <div class="result-actions">
+        <button class="btn-secondary" on:click={editAgain}>
+          ← Editar texto
+        </button>
+        <button class="btn-secondary" on:click={resetForm}>
+          Nuevo análisis
+        </button>
+      </div>
+    </section>
+
+    <section class="card next-steps">
+      <h3>Siguientes pasos</h3>
+      <p class="text-muted">El análisis se ha guardado en tu proceso. Ahora puedes:</p>
+      <div class="actions">
+        <a href="/mortgage-compass" class="btn-primary">
+          Calcular hipoteca →
+        </a>
+        <a href="/timeline" class="btn-secondary">
+          Ver cronograma
+        </a>
+        <a href="/mi-proceso" class="btn-secondary">
+          Ir al dashboard
+        </a>
+      </div>
     </section>
   {/if}
 </div>
 
 <style>
+  .intro {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin: 0 0 1rem;
+    line-height: 1.4;
+  }
   .error {
     border-color: var(--color-danger);
   }
@@ -132,5 +174,47 @@
     font-size: 1rem;
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
+  }
+  .next-steps {
+    margin-top: 1rem;
+  }
+  .next-steps h3 {
+    margin-top: 0;
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  .actions a {
+    text-align: center;
+    text-decoration: none;
+    padding: 0.65rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .result-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .result-actions button {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-secondary {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+  .btn-primary {
+    background: var(--color-primary);
+    color: white;
   }
 </style>

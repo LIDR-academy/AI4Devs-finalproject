@@ -8,69 +8,98 @@
     { key: 'cross_referencing_cadastro', label: 'Cruzando con Catastro' },
   ] as const;
 
-  function isActive(stepKey: typeof STEPS[number]['key']): boolean {
-    if (!activeStep) return false;
-    return STEPS.findIndex((s) => s.key === stepKey) <= STEPS.findIndex((s) => s.key === activeStep);
+  function stepIndex(key: string): number {
+    return STEPS.findIndex((s) => s.key === key);
   }
+
+  $: currentIdx = activeStep ? stepIndex(activeStep) : -1;
+  $: progress = currentIdx >= 0 ? ((currentIdx + 1) / STEPS.length) * 100 : 0;
 </script>
 
 <div class="loading" role="status" aria-live="polite">
-  <div class="spinner" />
-  <ul>
-    {#each STEPS as step}
-      <li class:active={isActive(step.key)} class:current={activeStep === step.key}>
-        {step.label}
-      </li>
+  <div class="progress-track">
+    <div class="progress-fill" style="width: {progress}%"></div>
+  </div>
+  <div class="steps">
+    {#each STEPS as step, i}
+      <div
+        class="step"
+        class:past={currentIdx > i}
+        class:current={currentIdx === i}
+        class:future={currentIdx < i}
+      >
+        <div class="dot" />
+        <span class="label">{step.label}</span>
+      </div>
     {/each}
-  </ul>
-  <p class="text-muted">Esto puede tardar entre 8 y 15 segundos.</p>
+  </div>
+  <p class="eta">Unos segundos más…</p>
 </div>
 
 <style>
   .loading {
-    text-align: center;
     padding: 2rem 1rem;
+    max-width: 400px;
+    margin: 0 auto;
   }
-  .spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--color-border);
-    border-top-color: var(--color-primary);
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: var(--color-bg-soft);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0.4;
+    transition: opacity 0.3s;
+  }
+  .step.current {
+    opacity: 1;
+  }
+  .step.past {
+    opacity: 0.6;
+  }
+  .dot {
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    margin: 0 auto 1rem;
-    animation: spin 1s linear infinite;
+    background: var(--color-border);
+    flex-shrink: 0;
+    transition: background 0.3s;
   }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+  .step.current .dot {
+    background: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
   }
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 1rem 0;
-    text-align: left;
-    max-width: 320px;
-    margin-left: auto;
-    margin-right: auto;
+  .step.past .dot {
+    background: var(--color-success);
   }
-  li {
-    padding: 0.4rem 0;
-    color: var(--color-text-muted);
+  .label {
     font-size: 0.9rem;
-    transition: color 0.2s;
-  }
-  li.active {
     color: var(--color-text);
   }
-  li.current {
-    color: var(--color-primary);
+  .step.current .label {
     font-weight: 600;
   }
-  li::before {
-    content: '○ ';
-  }
-  li.active::before {
-    content: '● ';
+  .eta {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 1.5rem;
   }
 </style>

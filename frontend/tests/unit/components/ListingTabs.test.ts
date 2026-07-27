@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import ListingTabs from '$lib/components/ListingTabs.svelte';
 
 describe('ListingTabs', () => {
-  it('muestra ambas tabs (URL y Texto)', () => {
+  it('muestra ambas tabs (Texto y URL)', () => {
     const { container } = render(ListingTabs, {
       props: { url: '', manualText: '', urlBlocked: false, onAnalize: vi.fn() },
     });
@@ -11,22 +11,22 @@ describe('ListingTabs', () => {
     expect(container.textContent).toContain('Texto');
   });
 
-  it('la tab URL está activa por defecto', () => {
+  it('la tab Texto está activa por defecto', () => {
     const { container } = render(ListingTabs, {
       props: { url: '', manualText: '', urlBlocked: false, onAnalize: vi.fn() },
     });
-    const urlField = container.querySelector('input[type="url"]');
-    expect(urlField).toBeTruthy();
-  });
-
-  it('cambia a tab Texto al hacer click', async () => {
-    const { container } = render(ListingTabs, {
-      props: { url: '', manualText: '', urlBlocked: false, onAnalize: vi.fn() },
-    });
-    const textTab = container.querySelector('[data-tab="text"]');
-    if (textTab) await fireEvent.click(textTab);
     const textarea = container.querySelector('textarea');
     expect(textarea).toBeTruthy();
+  });
+
+  it('cambia a tab URL al hacer click', async () => {
+    const { container } = render(ListingTabs, {
+      props: { url: '', manualText: '', urlBlocked: false, onAnalize: vi.fn() },
+    });
+    const urlTab = container.querySelector('[data-tab="url"]');
+    if (urlTab) await fireEvent.click(urlTab);
+    const urlField = container.querySelector('input[type="url"]');
+    expect(urlField).toBeTruthy();
   });
 
   it('marca la tab URL como tachada cuando urlBlocked=true', () => {

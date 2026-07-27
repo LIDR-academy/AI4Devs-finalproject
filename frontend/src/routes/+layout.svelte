@@ -43,8 +43,8 @@
       }
       const cs = new Set<string>();
       if (data.latestListing) cs.add('listing');
-      if (data.process.propertyPrice != null) cs.add('mortgage');
-      if (data.process.currentStage != null) cs.add('timeline');
+      if (data.process.financialProfile != null) cs.add('mortgage');
+      if (data.process.currentStage !== 'PRE_ARRAS') cs.add('timeline');
       if (data.checklist && data.checklist.completedItems > 0) cs.add('checklist');
       completedSteps = cs;
     } catch {

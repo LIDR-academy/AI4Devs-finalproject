@@ -12,7 +12,7 @@ describe('LandingHero', () => {
   it('muestra el sub-hero', () => {
     const { container } = render(LandingHero);
     const sub = container.querySelector('.sub');
-    expect(sub?.textContent).toContain('Sin humo');
+    expect(sub?.textContent).toContain('costes ocultos');
   });
 
   it('el CTA apunta a /listing-lens', () => {

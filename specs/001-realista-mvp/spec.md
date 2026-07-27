@@ -222,7 +222,7 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 ## Suposiciones
 
 - Los usuarios tienen conectividad a internet estable para el análisis de anuncios (requiere fetch en servidor).
-- **Updated 2026-07-10**: Los principales portales españoles (Idealista, Fotocasa) usan **DataDome** que detecta fingerprints TLS/HTTP-2 de `node-fetch` y devuelve 403 incluso con Chrome UA. Asumimos que **el operador ha ejecutado `npx playwright install chromium`** antes de `npm run dev`. Sin ese paso, la cadena cae al fallback manual de paste de texto. El spec del MVP documenta este paso en `quickstart.md`.
+- **Updated 2026-07-20**: Tras probar Idealista (DataDome), Fotocasa (Didomi + headless detection), Habitaclia (Imperva), Pisos.com (cookie wall) y Milanuncios (cookie wall), se confirma que **ningún portal español permite scraping automatizado**. El flujo principal es **texto manual pegado por el usuario**. El sistema extrae automáticamente precio, metros y habitaciones del texto pegado para que el usuario los revise antes del análisis completo. La URL se mantiene como opción secundaria (por si algún portal cambia su política).
 - La API del Catastro (Sede Electrónica del Catastro) es accesible públicamente y devuelve datos estructurados.
 - La API de OpenRouter está disponible con una clave válida. El modelo elegido soporta modo de salida JSON estructurada.
 - Los usuarios comprenden conceptos financieros básicos españoles (ITP, IVA, Euríbor) o la interfaz proporciona explicaciones contextuales.
