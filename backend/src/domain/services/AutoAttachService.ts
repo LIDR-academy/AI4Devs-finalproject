@@ -2,13 +2,8 @@
  * AutoAttachService (T037a, FR-014).
  * - If no active PurchaseProcess for the user, create one with propertyPrice from the listing.
  * - If active process exists, attach the listing to it (no propertyPrice change).
- *
- * NOTE: This service imports Prisma directly from infrastructure, which breaks
- * strict hexagonal purity. Trade-off: the auto-attach logic needs atomic find-or-create
- * behaviour that would require a full repository port + transaction support for a
- * single method. For MVP scope, direct Prisma access is the pragmatic choice.
  */
-import { prisma } from '../../infrastructure/prisma/client';
+import type { PurchaseProcessRepositoryPort } from '../ports/PurchaseProcessRepositoryPort';
 
 export interface AutoAttachInput {
   userId: string;
@@ -23,18 +18,14 @@ export interface AutoAttachResult {
 }
 
 export class AutoAttachService {
+  constructor(private readonly repo: PurchaseProcessRepositoryPort) {}
+
   async attach(input: AutoAttachInput): Promise<AutoAttachResult> {
-    const existing = await prisma.purchaseProcess.findFirst({
-      where: { userId: input.userId, status: 'ACTIVE' },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const existing = await this.repo.findActiveByUserId(input.userId);
 
     if (existing) {
       if (existing.propertyPrice === null && input.propertyPrice !== null) {
-        await prisma.purchaseProcess.update({
-          where: { id: existing.id },
-          data: { propertyPrice: input.propertyPrice },
-        });
+        await this.repo.updatePropertyPrice(existing.id, input.propertyPrice);
         return {
           processId: existing.id,
           isNewProcess: false,
@@ -44,37 +35,23 @@ export class AutoAttachService {
       return {
         processId: existing.id,
         isNewProcess: false,
-        propertyPrice: existing.propertyPrice ? Number(existing.propertyPrice) : null,
+        propertyPrice: existing.propertyPrice,
       };
     }
 
-    const created = await prisma.purchaseProcess.create({
-      data: {
-        userId: input.userId,
-        status: 'ACTIVE',
-        currentStage: 'PRE_ARRAS',
-        propertyPrice: input.propertyPrice,
-        sourceListingId: null,
-      },
+    const created = await this.repo.create({
+      userId: input.userId,
+      propertyPrice: input.propertyPrice,
     });
 
     return {
       processId: created.id,
       isNewProcess: true,
-      propertyPrice: created.propertyPrice ? Number(created.propertyPrice) : null,
+      propertyPrice: created.propertyPrice,
     };
   }
 
   async setSourceListingIfMissing(processId: string, listingId: string): Promise<void> {
-    const proc = await prisma.purchaseProcess.findUnique({
-      where: { id: processId },
-      select: { sourceListingId: true },
-    });
-    if (proc && !proc.sourceListingId) {
-      await prisma.purchaseProcess.update({
-        where: { id: processId },
-        data: { sourceListingId: listingId },
-      });
-    }
+    await this.repo.setSourceIfMissing(processId, listingId);
   }
 }

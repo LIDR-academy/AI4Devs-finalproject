@@ -14,6 +14,7 @@ import { OpenCodeGoAdapter } from '../../adapters/opencode-go/OpenCodeGoAdapter'
 import { CatastroAdapter } from '../../adapters/catastro/CatastroAdapter';
 import { AnalyzedListingRepository } from '../../infrastructure/repositories/AnalyzedListingRepository';
 import { ChecklistRepository } from '../../infrastructure/repositories/ChecklistRepository';
+import { PurchaseProcessRepository } from '../../infrastructure/repositories/PurchaseProcessRepository';
 import { prisma } from '../../infrastructure/prisma/client';
 import { validateListingUrl, UrlValidationError } from '../../infrastructure/utils/urlValidator';
 import { InvalidUrlError } from '../../domain/errors/DomainError';
@@ -45,7 +46,7 @@ const analyzer = env.LLM_PROVIDER === 'opencode-go'
   : new OpenRouterAdapter();
 const catastro = new CatastroAdapter();
 const locationResolver = new LocationResolver();
-const autoAttach = new AutoAttachService();
+const autoAttach = new AutoAttachService(new PurchaseProcessRepository(prisma));
 const repository = new AnalyzedListingRepository(prisma);
 const checklistRepository = new ChecklistRepository(prisma);
 const analyzeUseCase = new AnalyzeListingUseCase(
