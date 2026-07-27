@@ -10,8 +10,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
+import { BookCoverSearchService } from './catalog/book-cover-search.service';
 import { CatalogService } from './catalog/catalog.service';
 import { EditionCoversService } from './catalog/edition-covers.service';
+import { BookCoverSearchQueryDto } from './dto/book-cover-search.dto';
 import { CatalogSearchQueryDto } from './dto/catalog-search-query.dto';
 import { EditionCoversQueryDto } from './dto/edition-covers.dto';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -27,6 +29,7 @@ export class BooksController {
     private readonly booksService: BooksService,
     private readonly catalogService: CatalogService,
     private readonly editionCoversService: EditionCoversService,
+    private readonly bookCoverSearchService: BookCoverSearchService,
   ) {}
 
   @Get()
@@ -52,6 +55,19 @@ export class BooksController {
   @Post()
   create(@Req() req: RequestWithUser, @Body() dto: CreateBookDto) {
     return this.booksService.create(req.user.userId, dto);
+  }
+
+  @Get(':bookId/cover-search')
+  searchBookCovers(
+    @Req() req: RequestWithUser,
+    @Param('bookId') bookId: string,
+    @Query() query: BookCoverSearchQueryDto,
+  ) {
+    return this.bookCoverSearchService.searchForBook(
+      req.user.userId,
+      bookId,
+      query.q,
+    );
   }
 
   @Patch(':bookId')

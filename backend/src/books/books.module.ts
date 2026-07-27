@@ -7,6 +7,7 @@ import { FormatsModule } from '../formats/formats.module';
 import { BooksController } from './books.controller';
 import { BooksService } from './books.service';
 import { CatalogService } from './catalog/catalog.service';
+import { BookCoverSearchService } from './catalog/book-cover-search.service';
 import { CatalogRateLimiter } from './catalog/catalog-rate-limiter.service';
 import { EditionCoversService } from './catalog/edition-covers.service';
 import { GoogleBooksCoversService } from './catalog/google-books-covers.service';
@@ -35,6 +36,7 @@ import { ReadingRecord } from './entities/reading-record.entity';
   controllers: [BooksController],
   providers: [
     BooksService,
+    BookCoverSearchService,
     CatalogService,
     CatalogRateLimiter,
     EditionCoversService,
