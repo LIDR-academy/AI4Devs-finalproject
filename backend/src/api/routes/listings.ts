@@ -10,7 +10,7 @@ import { BrowserPool } from '../../adapters/playwright/BrowserPool';
 import { realChromiumLauncher } from '../../adapters/playwright/realChromiumLauncher';
 import { ChainedFetchAdapter } from '../../adapters/fetch/ChainedFetchAdapter';
 import { OpenRouterAdapter } from '../../adapters/openrouter/OpenRouterAdapter';
-import { DeepSeekAdapter } from '../../adapters/deepseek/DeepSeekAdapter';
+import { OpenCodeGoAdapter } from '../../adapters/opencode-go/OpenCodeGoAdapter';
 import { CatastroAdapter } from '../../adapters/catastro/CatastroAdapter';
 import { AnalyzedListingRepository } from '../../infrastructure/repositories/AnalyzedListingRepository';
 import { ChecklistRepository } from '../../infrastructure/repositories/ChecklistRepository';
@@ -40,8 +40,8 @@ const playwright = env.PLAYWRIGHT_ENABLED
 const fetcher = playwright
   ? new ChainedFetchAdapter([cheerio, playwright])
   : cheerio;
-const analyzer = env.LLM_PROVIDER === 'deepseek'
-  ? new DeepSeekAdapter()
+const analyzer = env.LLM_PROVIDER === 'opencode-go'
+  ? new OpenCodeGoAdapter()
   : new OpenRouterAdapter();
 const catastro = new CatastroAdapter();
 const locationResolver = new LocationResolver();

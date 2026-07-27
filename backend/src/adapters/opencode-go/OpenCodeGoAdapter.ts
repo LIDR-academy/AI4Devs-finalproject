@@ -8,13 +8,7 @@ import { RedFlags, RED_FLAG_TYPES, type RedFlagItem } from '../../domain/value-o
 import { LlmMalformedResponseError } from '../../domain/errors/DomainError';
 import type { ListingAnalyzerPort, LLMAnalysisResult } from '../../domain/ports/ListingAnalyzerPort';
 
-const logger = pino({ level: env.LOG_LEVEL }).child({ module: 'DeepSeekAdapter' });
-
-function stripMarkdownCodeBlocks(raw: string): string {
-  const trimmed = raw.trim();
-  const match = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/);
-  return match ? match[1].trim() : trimmed;
-}
+const logger = pino({ level: env.LOG_LEVEL }).child({ module: 'OpenCodeGoAdapter' });
 
 const LLMResponseSchema = z.object({
   transparencyScore: z.number().int().min(0).max(100),
@@ -55,8 +49,8 @@ Reglas:
 5. Sin detalles inventados.
 6. JSON estricto. Sin markdown ni texto adicional.`;
 
-export class DeepSeekAdapter implements ListingAnalyzerPort {
-  private readonly endpoint = 'https://api.deepseek.com/v1/chat/completions';
+export class OpenCodeGoAdapter implements ListingAnalyzerPort {
+  private readonly endpoint = 'https://opencode.ai/zen/go/v1/chat/completions';
   private readonly maxRetries = 2;
 
   async analyze(text: string, url: string): Promise<LLMAnalysisResult> {
@@ -67,29 +61,35 @@ export class DeepSeekAdapter implements ListingAnalyzerPort {
     let lastError: Error | null = null;
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
-        const raw = await this.callDeepSeek(text, url);
-        const cleaned = stripMarkdownCodeBlocks(raw);
-        logger.debug({ attempt, rawLength: raw.length, cleanedLength: cleaned.length, hadMarkdown: raw !== cleaned }, 'DeepSeek raw response');
+        const raw = await this.callOpenCodeGo(text, url);
+        const cleaned = this.stripMarkdownCodeBlocks(raw);
+        logger.debug({ attempt, rawLength: raw.length, cleanedLength: cleaned.length, hadMarkdown: raw !== cleaned }, 'OpenCodeGo raw response');
         const parsed = LLMResponseSchema.parse(JSON.parse(cleaned));
         return this.toResult(parsed);
       } catch (err) {
         lastError = err as Error;
-        logger.warn({ attempt, error: lastError.message }, 'DeepSeek response parse/validation failed');
+        logger.warn({ attempt, error: lastError.message }, 'OpenCodeGo response parse/validation failed');
       }
     }
     throw new LlmMalformedResponseError(lastError ?? undefined);
   }
 
-  private async callDeepSeek(text: string, url: string): Promise<string> {
+  private stripMarkdownCodeBlocks(raw: string): string {
+    const trimmed = raw.trim();
+    const match = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/);
+    return match ? match[1].trim() : trimmed;
+  }
+
+  private async callOpenCodeGo(text: string, url: string): Promise<string> {
     const res = await fetch(this.endpoint, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
+        Authorization: `Bearer ${env.OPENCODE_GO_API_KEY}`,
         'Content-Type': 'application/json',
         'User-Agent': REALISTA_USER_AGENT,
       },
       body: JSON.stringify({
-        model: env.DEEPSEEK_MODEL,
+        model: env.OPENCODE_GO_MODEL,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
@@ -102,8 +102,8 @@ export class DeepSeekAdapter implements ListingAnalyzerPort {
 
     if (!res.ok) {
       const body = await res.text();
-      logger.error({ status: res.status, body: body.slice(0, 500) }, 'DeepSeek HTTP error');
-      throw new Error(`DeepSeek ${res.status}: ${body}`);
+      logger.error({ status: res.status, body: body.slice(0, 500) }, 'OpenCodeGo HTTP error');
+      throw new Error(`OpenCodeGo ${res.status}: ${body}`);
     }
 
     const json = (await res.json()) as {
@@ -111,8 +111,8 @@ export class DeepSeekAdapter implements ListingAnalyzerPort {
     };
     const content = json.choices[0]?.message?.content;
     if (!content) {
-      logger.error({ responseKeys: Object.keys(json) }, 'DeepSeek returned empty content');
-      throw new Error('DeepSeek returned empty content');
+      logger.error({ responseKeys: Object.keys(json) }, 'OpenCodeGo returned empty content');
+      throw new Error('OpenCodeGo returned empty content');
     }
     return content;
   }

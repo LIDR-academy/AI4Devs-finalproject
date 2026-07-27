@@ -33,7 +33,7 @@ const VALID_LLM_JSON = JSON.stringify({
   summary: 'Anuncio con poca información.',
 });
 
-describe('DeepSeekAdapter', () => {
+describe('OpenCodeGoAdapter', () => {
   const origEnv = { ...process.env };
 
   beforeEach(() => {
@@ -43,8 +43,8 @@ describe('DeepSeekAdapter', () => {
       ...origEnv,
       NODE_ENV: 'development',
       MOCK_OPENROUTER: '',
-      DEEPSEEK_API_KEY: 'sk-test-key-deepseek-1234567890',
-      DEEPSEEK_MODEL: 'deepseek-chat',
+      OPENCODE_GO_API_KEY: 'oc-go-test-key-123456',
+      OPENCODE_GO_MODEL: 'deepseek-v4-flash',
       LOG_LEVEL: 'error',
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
     };
@@ -56,10 +56,10 @@ describe('DeepSeekAdapter', () => {
   });
 
   async function importAdapter() {
-    const { DeepSeekAdapter } = await import(
-      '../../../../src/adapters/deepseek/DeepSeekAdapter'
+    const { OpenCodeGoAdapter } = await import(
+      '../../../../src/adapters/opencode-go/OpenCodeGoAdapter'
     );
-    return new DeepSeekAdapter();
+    return new OpenCodeGoAdapter();
   }
 
   describe('canned response (mock mode)', () => {
@@ -73,16 +73,16 @@ describe('DeepSeekAdapter', () => {
   });
 
   describe('real LLM flow (mocked fetch)', () => {
-    it('envía request a api.deepseek.com con formato correcto', async () => {
+    it('envía request a opencode.ai/zen/go con formato correcto', async () => {
       mockFetch.mockResolvedValue(successResponse(VALID_LLM_JSON) as never);
       const adapter = await importAdapter();
       await adapter.analyze('Piso en zona centro', 'https://x.com');
 
       const call = mockFetch.mock.calls[0]!;
-      expect(call[0]).toBe('https://api.deepseek.com/v1/chat/completions');
+      expect(call[0]).toBe('https://opencode.ai/zen/go/v1/chat/completions');
       const init = call[1] as Record<string, Record<string, string>>;
       expect(init.headers?.Authorization).toMatch(/^Bearer /);
-      expect(init.body).toContain('deepseek-chat');
+      expect(init.body).toContain('deepseek-v4-flash');
     });
 
     it('parsea respuesta LLM válida correctamente', async () => {
@@ -113,7 +113,7 @@ describe('DeepSeekAdapter', () => {
       await expect(adapter.analyze('test', 'https://x.com')).rejects.toThrow('no devolvió una respuesta válida');
     });
 
-    it('lanza error si DeepSeek devuelve HTTP error', async () => {
+    it('lanza error si OpenCodeGo devuelve HTTP error', async () => {
       mockFetch.mockResolvedValue(errorResponse(401, '{"error": "invalid api key"}') as never);
 
       const adapter = await importAdapter();

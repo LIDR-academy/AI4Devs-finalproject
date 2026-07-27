@@ -10,10 +10,10 @@ const envSchema = z.object({
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_MODEL: z.string().default('anthropic/claude-3.5-sonnet'),
 
-  DEEPSEEK_API_KEY: z.string().optional(),
-  DEEPSEEK_MODEL: z.string().default('deepseek-chat'),
+  LLM_PROVIDER: z.enum(['openrouter', 'opencode-go']).default('openrouter'),
 
-  LLM_PROVIDER: z.enum(['openrouter', 'deepseek']).default('openrouter'),
+  OPENCODE_GO_API_KEY: z.string().optional(),
+  OPENCODE_GO_MODEL: z.string().default('deepseek-v4-flash'),
 
   RATE_LIMIT_PER_DAY: z.coerce.number().int().positive().default(20),
 
