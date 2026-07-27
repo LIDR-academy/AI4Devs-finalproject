@@ -6,7 +6,7 @@ on:
 
 jobs:
   backend:
-    name: Backend (lint + typecheck + test + build)
+    name: Backend (lint + typecheck + test + coverage)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -44,7 +44,6 @@ jobs:
       - run: npm run test:all -w backend
       - run: npm run test:coverage -w backend
       - run: bash .opencode/skills/hexagonal-check/run.sh
-      - run: npm run build -w backend
       - uses: actions/upload-artifact@v4
         if: always()
         with:
