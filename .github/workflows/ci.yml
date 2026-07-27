@@ -37,6 +37,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      - run: npx prisma generate --schema=backend/prisma/schema.prisma
       - run: cd backend && npx prisma migrate deploy
       - run: npm run lint -w backend
       - run: npm run typecheck -w backend
