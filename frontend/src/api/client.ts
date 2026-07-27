@@ -5,6 +5,7 @@ import type {
   Audience,
   AudienceAffectedBooksResponse,
   Book,
+  BookCoverSearchResponse,
   BookCreatedResponse,
   CatalogEdition,
   CatalogSearchResponse,
@@ -136,6 +137,19 @@ export async function fetchEditionCovers(
     params.set('hint_cover_url', hintCoverUrl);
   }
   return request(`/books/catalog/covers?${params}`);
+}
+
+export async function searchBookCovers(
+  bookId: string,
+  q?: string,
+): Promise<BookCoverSearchResponse> {
+  const params = new URLSearchParams();
+  const trimmed = q?.trim();
+  if (trimmed && trimmed.length >= 2) {
+    params.set('q', trimmed);
+  }
+  const query = params.toString();
+  return request(`/books/${bookId}/cover-search${query ? `?${query}` : ''}`);
 }
 
 export async function createBook(

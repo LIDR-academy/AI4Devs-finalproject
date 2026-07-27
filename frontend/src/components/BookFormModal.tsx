@@ -16,7 +16,9 @@ import {
   type BookFormFieldErrors,
   type BookFormState,
 } from '../lib/bookForm';
+import { buildBookCoverSearchQuery } from '../lib/bookCoverSearch';
 import { AudienceSelect } from './AudienceSelect';
+import { BookCoverSearchPanel } from './BookCoverSearchPanel';
 import { READING_STATUS_OPTIONS } from './readingStatus';
 import { ReadFormatSelect } from './ReadFormatSelect';
 import { Button, Input, Select, StarRating } from './ui';
@@ -50,6 +52,7 @@ export function BookFormModal({
   const [fieldErrors, setFieldErrors] = useState<BookFormFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [coverSearchOpen, setCoverSearchOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -58,6 +61,7 @@ export function BookFormModal({
     );
     setFieldErrors({});
     setFormError(null);
+    setCoverSearchOpen(false);
   }, [open, mode, book]);
 
   const setField = useCallback(
@@ -189,19 +193,42 @@ export function BookFormModal({
             <span className="book-form__field-error">{fieldErrors.authors}</span>
           ) : null}
 
-          <Input
-            label="Portada (URL)"
-            type="url"
-            value={form.cover_image_url}
-            disabled={saving}
-            aria-invalid={fieldErrors.cover_image_url ? true : undefined}
-            onChange={(e) => setField('cover_image_url', e.target.value)}
-          />
-          {fieldErrors.cover_image_url ? (
-            <span className="book-form__field-error">
-              {fieldErrors.cover_image_url}
-            </span>
-          ) : null}
+          <div className="book-form__full-width">
+            <div className="book-form__cover-row">
+              <Input
+                label="Portada (URL)"
+                type="url"
+                value={form.cover_image_url}
+                disabled={saving}
+                aria-invalid={fieldErrors.cover_image_url ? true : undefined}
+                onChange={(e) => setField('cover_image_url', e.target.value)}
+              />
+              {mode === 'edit' && book ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={saving}
+                  onClick={() => setCoverSearchOpen(true)}
+                >
+                  Buscar portada
+                </Button>
+              ) : null}
+            </div>
+            {fieldErrors.cover_image_url ? (
+              <span className="book-form__field-error">
+                {fieldErrors.cover_image_url}
+              </span>
+            ) : null}
+            {coverSearchOpen && mode === 'edit' && book ? (
+              <BookCoverSearchPanel
+                bookId={book.id}
+                defaultQuery={buildBookCoverSearchQuery(form.title, form.authors)}
+                selectedCoverUrl={form.cover_image_url}
+                onSelectCover={(url) => setField('cover_image_url', url)}
+                disabled={saving}
+              />
+            ) : null}
+          </div>
 
           <Input
             label="Género"
