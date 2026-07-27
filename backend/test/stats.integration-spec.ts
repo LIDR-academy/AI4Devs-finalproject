@@ -8,6 +8,7 @@ import { AudiencesModule } from '../src/audiences/audiences.module';
 import { Audience } from '../src/audiences/entities/audience.entity';
 import { FormatsModule } from '../src/formats/formats.module';
 import { Format } from '../src/formats/entities/format.entity';
+import { Genre } from '../src/genres/entities/genre.entity';
 import { AuthModule } from '../src/auth/auth.module';
 import { BooksModule } from '../src/books/books.module';
 import { Book } from '../src/books/entities/book.entity';
@@ -139,6 +140,7 @@ describe('Stats API (integration)', () => {
             ReadingRecord,
             Audience,
             Format,
+            Genre,
             AnnualReadingGoal,
             MonthlyTbrList,
             TbrEntry,

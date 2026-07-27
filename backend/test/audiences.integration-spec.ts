@@ -7,6 +7,8 @@ import { App } from 'supertest/types';
 import { Repository } from 'typeorm';
 import { AudiencesModule } from '../src/audiences/audiences.module';
 import { Audience } from '../src/audiences/entities/audience.entity';
+import { Format } from '../src/formats/entities/format.entity';
+import { Genre } from '../src/genres/entities/genre.entity';
 import { AuthModule } from '../src/auth/auth.module';
 import { Book } from '../src/books/entities/book.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
@@ -26,7 +28,7 @@ describe('Audiences API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, Audience],
+          entities: [User, Book, ReadingRecord, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,

@@ -6,6 +6,9 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AuthModule } from '../src/auth/auth.module';
 import { BooksModule } from '../src/books/books.module';
+import { Audience } from '../src/audiences/entities/audience.entity';
+import { Format } from '../src/formats/entities/format.entity';
+import { Genre } from '../src/genres/entities/genre.entity';
 import { Book } from '../src/books/entities/book.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { ListsModule } from '../src/lists/lists.module';
@@ -31,7 +34,7 @@ describe('TBR API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, MonthlyTbrList, TbrEntry],
+          entities: [User, Book, ReadingRecord, MonthlyTbrList, TbrEntry, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,

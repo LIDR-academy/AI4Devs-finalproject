@@ -330,7 +330,7 @@ async function main(): Promise<void> {
   try {
     const books = await dataSource.getRepository(Book).find({
       where: {
-        genre: IsNull(),
+        genreId: IsNull(),
         ...(options.userId ? { userId: options.userId } : {}),
       },
       order: { createdAt: 'DESC' },

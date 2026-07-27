@@ -14,6 +14,7 @@ import { Book } from '../src/books/entities/book.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { FormatsModule } from '../src/formats/formats.module';
 import { Format } from '../src/formats/entities/format.entity';
+import { Genre } from '../src/genres/entities/genre.entity';
 import { ListsModule } from '../src/lists/lists.module';
 import { MonthlyTbrList } from '../src/lists/entities/monthly-tbr-list.entity';
 import { TbrEntry } from '../src/lists/entities/tbr-entry.entity';
@@ -41,7 +42,7 @@ describe('Book cover search API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, MonthlyTbrList, TbrEntry, Audience, Format],
+          entities: [User, Book, ReadingRecord, MonthlyTbrList, TbrEntry, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,

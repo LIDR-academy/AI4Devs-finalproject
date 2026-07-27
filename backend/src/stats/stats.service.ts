@@ -5,6 +5,7 @@ import { Book } from '../books/entities/book.entity';
 import { ReadingRecord } from '../books/entities/reading-record.entity';
 import { Audience } from '../audiences/entities/audience.entity';
 import { Format } from '../formats/entities/format.entity';
+import { Genre } from '../genres/entities/genre.entity';
 import type {
   AudienceCountDto,
   FormatCountDto,
@@ -179,9 +180,8 @@ export class StatsService {
       .andWhere('rr.finishedOn < :periodEnd', { periodEnd })
       .getRawOne<AggregateRow>();
 
-    const genreDistribution: GenreCountDto[] = (
-      await this.distribution(userId, periodStart, periodEnd, 'b.genre')
-    ).map(({ label, count }) => ({ genre: label, count }));
+    const genreDistribution: GenreCountDto[] =
+      await this.genreDistribution(userId, periodStart, periodEnd);
 
     const formatDistribution: FormatCountDto[] =
       await this.formatDistribution(userId, periodStart, periodEnd);
@@ -203,6 +203,32 @@ export class StatsService {
       audience_distribution: audienceDistribution,
       rating_distribution: ratingDistribution,
     };
+  }
+
+  private async genreDistribution(
+    userId: string,
+    periodStart: string,
+    periodEnd: string,
+  ): Promise<GenreCountDto[]> {
+    const rows = await this.readingRepo
+      .createQueryBuilder('rr')
+      .innerJoin(Book, 'b', 'b.id = rr.bookId')
+      .leftJoin(Genre, 'g', 'g.id = b.genreId')
+      .select('COALESCE(g.name, :unknown)', 'key')
+      .addSelect('COUNT(*)', 'count')
+      .where('b.userId = :userId', { userId })
+      .andWhere('rr.status = :status', { status: 'leido' })
+      .andWhere('rr.finishedOn >= :periodStart', { periodStart })
+      .andWhere('rr.finishedOn < :periodEnd', { periodEnd })
+      .groupBy('COALESCE(g.name, :unknown)')
+      .orderBy('COUNT(*)', 'DESC')
+      .setParameter('unknown', UNKNOWN_BUCKET)
+      .getRawMany<DistributionRow>();
+
+    return rows.map((row) => ({
+      genre: row.key ?? UNKNOWN_BUCKET,
+      count: StatsService.toInt(row.count),
+    }));
   }
 
   private async formatDistribution(

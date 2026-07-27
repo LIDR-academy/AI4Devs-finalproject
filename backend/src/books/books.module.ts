@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ListsModule } from '../lists/lists.module';
 import { AudiencesModule } from '../audiences/audiences.module';
 import { FormatsModule } from '../formats/formats.module';
+import { GenresModule } from '../genres/genres.module';
 import { BooksController } from './books.controller';
 import { BooksService } from './books.service';
 import { CatalogService } from './catalog/catalog.service';
@@ -32,6 +33,7 @@ import { ReadingRecord } from './entities/reading-record.entity';
     forwardRef(() => ListsModule),
     AudiencesModule,
     FormatsModule,
+    GenresModule,
   ],
   controllers: [BooksController],
   providers: [

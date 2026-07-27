@@ -146,7 +146,7 @@ export class GoodreadsImportProcessor {
       const book = await this.booksRepo.findOne({
         where: { id: failure.book_id },
       });
-      if (!book || (book.coverImageUrl && book.genre)) {
+      if (!book || (book.coverImageUrl && book.genreId)) {
         continue;
       }
 
@@ -192,7 +192,7 @@ export class GoodreadsImportProcessor {
       dataSource: bookDraft.data_source,
       externalProviderId: bookDraft.external_provider_id,
       coverImageUrl: null,
-      genre: null,
+      genreId: null,
       seriesName: null,
       notes: null,
       audience: null,
