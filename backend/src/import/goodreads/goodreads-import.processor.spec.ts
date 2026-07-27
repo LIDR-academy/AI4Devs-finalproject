@@ -48,7 +48,7 @@ describe('GoodreadsImportProcessor', () => {
       findOne: jest.fn().mockResolvedValue({
         id: 'book-1',
         coverImageUrl: null,
-        genre: null,
+        genreId: null,
       } as Book),
       create: jest.fn((value) => value as Book),
       save: jest.fn(async (value) => ({ ...value, id: 'book-1' }) as Book),

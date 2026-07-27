@@ -192,7 +192,7 @@ export class GoodreadsImportProcessor {
       dataSource: bookDraft.data_source,
       externalProviderId: bookDraft.external_provider_id,
       coverImageUrl: null,
-      genre: null,
+      genreId: null,
       seriesName: null,
       notes: null,
       audience: null,
