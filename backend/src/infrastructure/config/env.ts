@@ -32,7 +32,7 @@ const envSchema = z.object({
   // Playwright headless-browser adapter (DataDome bypass)
   PLAYWRIGHT_ENABLED: z
     .enum(['true', 'false'])
-    .default('true')
+    .default('false')
     .transform((v) => v === 'true'),
   PLAYWRIGHT_POOL_SIZE: z.coerce.number().int().positive().default(1),
   PLAYWRIGHT_BROWSER_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
