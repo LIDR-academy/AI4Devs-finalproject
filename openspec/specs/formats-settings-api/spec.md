@@ -37,6 +37,8 @@ The system SHALL reject case-insensitive duplicate names for the same user with 
 
 The system SHALL expose `DELETE /v1/formats/{id}` for the authenticated owner and respond HTTP 204 on success.
 
+The system SHALL expose `GET /v1/formats/{id}/affected-readings` returning `{ affected_reading_count }` for the same owned format before the client shows a delete confirmation.
+
 #### Scenario: Delete owned format
 
 - **WHEN** the user DELETEs a format they own
