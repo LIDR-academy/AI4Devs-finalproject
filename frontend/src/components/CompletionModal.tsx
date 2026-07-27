@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ReadFormat, ReadingRecordResource } from '../api/types';
+import type { ReadingRecordResource } from '../api/types';
 import { ReadFormatSelect } from './ReadFormatSelect';
 import { StarRating } from './StarRating';
 import './CompletionModal.css';
@@ -11,7 +11,7 @@ interface CompletionModalProps {
   onClose: () => void;
   onSave: (payload: {
     finished_on: string;
-    read_format?: ReadFormat | null;
+    format_id?: string | null;
     rating?: number;
   }) => void;
 }
@@ -24,13 +24,13 @@ export function CompletionModal({
   onSave,
 }: CompletionModalProps) {
   const [finishedOn, setFinishedOn] = useState('');
-  const [readFormat, setReadFormat] = useState<ReadFormat | ''>('');
+  const [formatId, setFormatId] = useState<string | null>(null);
   const [rating, setRating] = useState<number | null>(null);
 
   useEffect(() => {
     if (reading) {
       setFinishedOn(reading.finished_on ?? new Date().toISOString().slice(0, 10));
-      setReadFormat(reading.read_format ?? '');
+      setFormatId(reading.format_id ?? null);
       setRating(reading.rating);
     }
   }, [reading]);
@@ -59,9 +59,9 @@ export function CompletionModal({
         <ReadFormatSelect
           id="completion-read-format"
           label="Formato"
-          value={readFormat || null}
+          value={formatId}
           disabled={saving}
-          onChange={(value) => setReadFormat(value ?? '')}
+          onChange={(value) => setFormatId(value)}
         />
         <div className="completion-field">
           <span>Puntuación</span>
@@ -82,7 +82,7 @@ export function CompletionModal({
             onClick={() =>
               onSave({
                 finished_on: finishedOn,
-                read_format: readFormat ? readFormat : null,
+                format_id: formatId ?? null,
                 ...(rating ? { rating } : {}),
               })
             }

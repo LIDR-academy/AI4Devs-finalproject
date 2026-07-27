@@ -66,6 +66,7 @@ export class BooksService {
       started_on: b.readingRecord?.startedOn ?? null,
       finished_on: b.readingRecord?.finishedOn ?? null,
       rating: normalizeRating(b.readingRecord?.rating),
+      format_id: b.readingRecord?.formatId ?? null,
       read_format: legacySlugFromFormatName(b.readingRecord?.formatRef?.name),
     }));
   }
@@ -100,11 +101,20 @@ export class BooksService {
     if (dto.rating !== undefined) {
       reading.rating = dto.rating === null ? null : String(dto.rating);
     }
-    if (dto.read_format !== undefined) {
-      reading.formatId = await this.formatsService.resolveFormatIdByLegacySlug(
-        userId,
-        dto.read_format,
-      );
+    if (dto.format_id !== undefined) {
+      if (dto.format_id === null) {
+        reading.formatId = null;
+      } else {
+        const format = await this.formatsService.findOwnedById(userId, dto.format_id);
+        if (!format) {
+          throw new BadRequestException({
+            statusCode: 400,
+            message: 'Format not found for this user',
+            code: 'FORMAT_NOT_FOUND',
+          });
+        }
+        reading.formatId = format.id;
+      }
       reading.formatRef = null;
     }
 
@@ -188,7 +198,7 @@ export class BooksService {
       dto.started_on !== undefined ||
       dto.finished_on !== undefined ||
       dto.rating !== undefined ||
-      dto.read_format !== undefined;
+      dto.format_id !== undefined;
     if (!hasField) {
       throw new BadRequestException('At least one field must be provided');
     }
@@ -207,6 +217,7 @@ export class BooksService {
       current_page: reading.currentPage,
       progress_percent: reading.progressPercent,
       rating: normalizeRating(reading.rating),
+      format_id: reading.formatId,
       read_format: legacySlugFromFormatName(reading.formatRef?.name),
       started_on: reading.startedOn,
       finished_on: reading.finishedOn,

@@ -145,9 +145,9 @@ export function BookTrackerRow({
           id={`format-${book.id}`}
           label={`Formato de ${book.title}`}
           className="read-format-select--inline"
-          value={book.read_format}
+          value={book.format_id}
           disabled={mutation.isPending || bookMutation.isPending}
-          onChange={(next) => patch({ read_format: next })}
+          onChange={(next) => patch({ format_id: next })}
         />
       </td>
       <td className="col-rating">

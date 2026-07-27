@@ -921,9 +921,10 @@ components:
           maximum: 5
           multipleOf: 0.5
           description: Half-star rating from 0.5 to 5 in 0.5 steps.
-        read_format:
+        format_id:
           oneOf:
-            - $ref: '#/components/schemas/ReadFormat'
+            - type: string
+              format: uuid
             - type: 'null'
 
     ReadingRecordResource:
@@ -947,6 +948,10 @@ components:
           minimum: 0.5
           maximum: 5
           multipleOf: 0.5
+        format_id:
+          type: string
+          format: uuid
+          nullable: true
         read_format:
           oneOf:
             - $ref: '#/components/schemas/ReadFormat'
@@ -1160,6 +1165,10 @@ components:
               minimum: 0.5
               maximum: 5
               multipleOf: 0.5
+            format_id:
+              type: string
+              format: uuid
+              nullable: true
             read_format:
               oneOf:
                 - $ref: '#/components/schemas/ReadFormat'

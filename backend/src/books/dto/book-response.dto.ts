@@ -37,5 +37,6 @@ export class BookListItemDto extends BookDto {
   started_on: string | null;
   finished_on: string | null;
   rating: number | null;
+  format_id: string | null;
   read_format: string | null;
 }

@@ -17,7 +17,8 @@ import {
   type BookFormState,
 } from '../lib/bookForm';
 import { AudienceSelect } from './AudienceSelect';
-import { READ_FORMAT_OPTIONS, READING_STATUS_OPTIONS } from './readingStatus';
+import { READING_STATUS_OPTIONS } from './readingStatus';
+import { ReadFormatSelect } from './ReadFormatSelect';
 import { Button, Input, Select, StarRating } from './ui';
 import { Modal } from './ui/Modal';
 import './BookFormModal.css';
@@ -95,7 +96,7 @@ export function BookFormModal({
           form.status !== 'pendiente' ||
           readingPatch.started_on != null ||
           readingPatch.finished_on != null ||
-          readingPatch.read_format != null ||
+          form.format_id != null ||
           readingPatch.rating != null;
 
         if (needsReadingPatch) {
@@ -310,24 +311,13 @@ export function BookFormModal({
             </>
           ) : null}
 
-          <Select
+          <ReadFormatSelect
+            id={`${formId}-format`}
             label="Formato"
-            value={form.read_format}
+            value={form.format_id}
             disabled={saving}
-            onChange={(e) =>
-              setField(
-                'read_format',
-                e.target.value as BookFormState['read_format'],
-              )
-            }
-          >
-            <option value="">—</option>
-            {READ_FORMAT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </Select>
+            onChange={(value) => setField('format_id', value)}
+          />
 
           {showRating ? (
             <div className="ui-field book-form__full-width">

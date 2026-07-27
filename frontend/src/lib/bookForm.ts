@@ -3,7 +3,6 @@ import type {
   CreateBookPayload,
   PatchBookPayload,
   PatchReadingRecordPayload,
-  ReadFormat,
   ReadingStatus,
 } from '../api/types';
 
@@ -20,7 +19,7 @@ export type BookFormState = {
   status: ReadingStatus;
   started_on: string;
   finished_on: string;
-  read_format: ReadFormat | '';
+  format_id: string | null;
   rating: number | null;
 };
 
@@ -40,7 +39,7 @@ export function emptyBookFormState(): BookFormState {
     status: 'pendiente',
     started_on: '',
     finished_on: '',
-    read_format: '',
+    format_id: null,
     rating: null,
   };
 }
@@ -60,7 +59,7 @@ export function bookToFormState(book: Book): BookFormState {
     status: book.reading_status ?? 'pendiente',
     started_on: book.started_on ?? '',
     finished_on: book.finished_on ?? '',
-    read_format: book.read_format ?? '',
+    format_id: book.format_id ?? null,
     rating: book.rating ?? null,
   };
 }
@@ -183,9 +182,7 @@ export function buildReadingPatchPayload(
   if (showFinishDateField(state.status) && state.finished_on) {
     payload.finished_on = state.finished_on;
   }
-  if (state.read_format) {
-    payload.read_format = state.read_format;
-  }
+  payload.format_id = state.format_id ?? null;
   if (showRatingField(state.status) && state.rating != null) {
     payload.rating = state.rating;
   }
@@ -201,7 +198,7 @@ export function readingFieldsChanged(
   if (state.status !== status) return true;
   if ((book.started_on ?? '') !== state.started_on) return true;
   if ((book.finished_on ?? '') !== state.finished_on) return true;
-  if ((book.read_format ?? '') !== state.read_format) return true;
+  if ((book.format_id ?? null) !== state.format_id) return true;
   if ((book.rating ?? null) !== state.rating) return true;
   return false;
 }

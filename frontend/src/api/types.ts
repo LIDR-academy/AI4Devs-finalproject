@@ -81,6 +81,7 @@ export interface Book {
   started_on?: string | null;
   finished_on?: string | null;
   rating?: number | null;
+  format_id?: string | null;
   read_format?: ReadFormat | null;
 }
 
@@ -89,7 +90,7 @@ export interface PatchReadingRecordPayload {
   started_on?: string;
   finished_on?: string;
   rating?: number;
-  read_format?: ReadFormat | null;
+  format_id?: string | null;
 }
 
 export interface ReadingRecordResource {
@@ -98,6 +99,7 @@ export interface ReadingRecordResource {
   current_page: number | null;
   progress_percent: string | null;
   rating: number | null;
+  format_id: string | null;
   read_format: ReadFormat | null;
   started_on: string | null;
   finished_on: string | null;

@@ -35,6 +35,12 @@ interface SeedBook {
   audienceId?: string | null;
 }
 
+const FORMAT_NAME_BY_LEGACY: Record<'fisico' | 'ebook' | 'audio', string> = {
+  fisico: 'Físico',
+  ebook: 'Ebook',
+  audio: 'Audio',
+};
+
 describe('Stats API (integration)', () => {
   let app: INestApplication<App>;
   let token: string;
@@ -81,7 +87,14 @@ describe('Stats API (integration)', () => {
       patch.rating = book.rating;
     }
     if (book.readFormat !== undefined) {
-      patch.read_format = book.readFormat;
+      const formatsRes = await request(app.getHttpServer())
+        .get('/v1/formats')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+      const format = (formatsRes.body as Array<{ id: string; name: string }>).find(
+        (item) => item.name === FORMAT_NAME_BY_LEGACY[book.readFormat!],
+      );
+      patch.format_id = format?.id ?? null;
     }
 
     await request(app.getHttpServer())

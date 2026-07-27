@@ -6,6 +6,7 @@ export class ReadingRecordResourceDto {
   current_page: number | null;
   progress_percent: string | null;
   rating: number | null;
+  format_id: string | null;
   read_format: string | null;
   started_on: string | null;
   finished_on: string | null;

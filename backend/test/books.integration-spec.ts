@@ -102,6 +102,7 @@ describe('Books API (integration)', () => {
     expect(item).toHaveProperty('started_on');
     expect(item).toHaveProperty('finished_on');
     expect(item).toHaveProperty('rating');
+    expect(item).toHaveProperty('format_id');
     expect(item).toHaveProperty('read_format');
   });
 
@@ -405,30 +406,60 @@ describe('Books API (integration)', () => {
       .expect(404);
   });
 
-  it('PATCH reading-record sets read_format', async () => {
+  it('PATCH reading-record sets format_id', async () => {
+    const formats = await request(app.getHttpServer())
+      .get('/v1/formats')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const target = formats.body.find((f: { name: string }) => f.name === 'Ebook');
+
     const res = await request(app.getHttpServer())
       .patch(`/v1/books/${bookId}/reading-record`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ read_format: 'ebook' })
+      .send({ format_id: target.id })
       .expect(200);
 
+    expect(res.body.reading.format_id).toBe(target.id);
     expect(res.body.reading.read_format).toBe('ebook');
   });
 
-  it('PATCH reading-record clears read_format with null', async () => {
+  it('PATCH reading-record clears format_id with null', async () => {
+    const formats = await request(app.getHttpServer())
+      .get('/v1/formats')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const target = formats.body.find((f: { name: string }) => f.name === 'Físico');
+
     await request(app.getHttpServer())
       .patch(`/v1/books/${bookId}/reading-record`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ read_format: 'fisico' })
+      .send({ format_id: target.id })
       .expect(200);
 
     const res = await request(app.getHttpServer())
       .patch(`/v1/books/${bookId}/reading-record`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ read_format: null })
+      .send({ format_id: null })
       .expect(200);
 
+    expect(res.body.reading.format_id).toBeNull();
     expect(res.body.reading.read_format).toBeNull();
+  });
+
+  it('PATCH reading-record rejects foreign format_id', async () => {
+    const otherFormats = await request(app.getHttpServer())
+      .get('/v1/formats')
+      .set('Authorization', `Bearer ${otherToken}`)
+      .expect(200);
+    const foreignFormatId = otherFormats.body[0].id as string;
+
+    const res = await request(app.getHttpServer())
+      .patch(`/v1/books/${bookId}/reading-record`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ format_id: foreignFormatId })
+      .expect(400);
+
+    expect(res.body.code).toBe('FORMAT_NOT_FOUND');
   });
 
   it('POST /v1/books creates reading record without read_format', async () => {

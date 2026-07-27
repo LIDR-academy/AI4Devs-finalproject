@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsNumber,
   IsOptional,
+  IsUUID,
   Max,
   Min,
   ValidateIf,
@@ -36,6 +37,6 @@ export class PatchReadingRecordDto {
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
-  @IsEnum(['fisico', 'ebook', 'audio'])
-  read_format?: 'fisico' | 'ebook' | 'audio' | null;
+  @IsUUID()
+  format_id?: string | null;
 }

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { listBooks, patchReadingRecord } from '../api/client';
 import { messageFromUnknownError } from '../api/errors';
-import type { Book, ReadFormat, ReadingRecordResource } from '../api/types';
+import type { Book, ReadingRecordResource } from '../api/types';
 import { AddBookModal } from '../components/AddBookModal';
 import { BookFormModal } from '../components/BookFormModal';
 import { BookTrackerRow } from '../components/BookTrackerRow';
@@ -50,7 +50,7 @@ export function BookTrackerPage() {
   const completionMutation = useMutation({
     mutationFn: (payload: {
       finished_on: string;
-      read_format?: ReadFormat | null;
+      format_id?: string | null;
       rating?: number;
     }) => patchReadingRecord(completionBookId!, payload),
     onSuccess: (data) => {
@@ -79,7 +79,7 @@ export function BookTrackerPage() {
 
   const handleCompletionSave = (payload: {
     finished_on: string;
-    read_format?: ReadFormat | null;
+    format_id?: string | null;
     rating?: number;
   }) => {
     completionMutation.mutate(payload);

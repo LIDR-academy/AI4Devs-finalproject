@@ -19,3 +19,12 @@
   white-space: nowrap;
   border: 0;
 }
+
+.read-format-select--empty {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.read-format-select__empty-notice {
+  margin: 0;
+}
