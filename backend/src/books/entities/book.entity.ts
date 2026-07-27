@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/user.entity';
 import { Audience } from '../../audiences/entities/audience.entity';
+import { Genre } from '../../genres/entities/genre.entity';
 import { ReadingRecord } from './reading-record.entity';
 
 export type DataSourceType =
@@ -50,8 +51,12 @@ export class Book {
   @Column({ name: 'page_count', type: 'int', nullable: true })
   pageCount: number | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  genre: string | null;
+  @Column({ name: 'genre_id', type: 'uuid', nullable: true })
+  genreId: string | null;
+
+  @ManyToOne(() => Genre, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'genre_id' })
+  genreRef: Genre | null;
 
   @Column({ name: 'series_name', type: 'varchar', length: 255, nullable: true })
   seriesName: string | null;

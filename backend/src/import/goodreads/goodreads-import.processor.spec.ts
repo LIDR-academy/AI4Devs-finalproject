@@ -123,14 +123,14 @@ describe('GoodreadsImportProcessor', () => {
   it('clears enrichment failures when retry pass succeeds', async () => {
     catalogEnrichment.enrichBook
       .mockResolvedValueOnce({
-        book: { id: 'book-1', coverImageUrl: null, genre: null } as Book,
+        book: { id: 'book-1', coverImageUrl: null, genreId: null } as Book,
         enrichment_failed: true,
       })
       .mockResolvedValueOnce({
         book: {
           id: 'book-1',
           coverImageUrl: 'https://covers.openlibrary.org/b/id/1-L.jpg',
-          genre: 'Fantasía',
+          genreId: 'genre-fantasia',
         } as Book,
         enrichment_failed: false,
       });

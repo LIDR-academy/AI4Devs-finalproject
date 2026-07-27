@@ -2,6 +2,7 @@ import { ImportCatalogEnrichmentService } from './import-catalog-enrichment.serv
 import { Book } from '../../books/entities/book.entity';
 import { CatalogService } from '../../books/catalog/catalog.service';
 import { CatalogRateLimiter } from '../../books/catalog/catalog-rate-limiter.service';
+import { GenresService } from '../../genres/genres.service';
 import { Repository } from 'typeorm';
 
 describe('ImportCatalogEnrichmentService', () => {
@@ -9,18 +10,28 @@ describe('ImportCatalogEnrichmentService', () => {
     Pick<CatalogService, 'lookupByIsbn' | 'lookupByTitleAuthor'>
   >;
   let rateLimiter: jest.Mocked<Pick<CatalogRateLimiter, 'throttle'>>;
+  let genresService: jest.Mocked<Pick<GenresService, 'findOrCreateByName'>>;
   let booksRepo: jest.Mocked<Pick<Repository<Book>, 'save' | 'find'>>;
   let service: ImportCatalogEnrichmentService;
+
+  const genreIdByName: Record<string, string> = {
+    Fantasy: 'genre-fantasy',
+    Fiction: 'genre-fiction',
+    Romance: 'genre-romance',
+    'New Genre': 'genre-new',
+    Fantasía: 'genre-fantasia',
+  };
 
   const baseBook = (): Book =>
     ({
       id: 'book-1',
+      userId: 'user-1',
       title: 'The Hobbit',
       authors: 'J.R.R. Tolkien',
       isbn13: '9780618640157',
       isbn10: '0618640150',
       coverImageUrl: null,
-      genre: null,
+      genreId: null,
       audience: null,
     }) as Book;
 
@@ -30,6 +41,14 @@ describe('ImportCatalogEnrichmentService', () => {
       lookupByTitleAuthor: jest.fn(),
     };
     rateLimiter = { throttle: jest.fn().mockResolvedValue(undefined) };
+    genresService = {
+      findOrCreateByName: jest.fn(async (_userId, name) => ({
+        id: genreIdByName[name] ?? `genre-${name.toLowerCase()}`,
+        name,
+        userId: 'user-1',
+        isDefault: false,
+      })),
+    };
     booksRepo = {
       save: jest.fn(async (book) => book),
       find: jest.fn(),
@@ -37,6 +56,7 @@ describe('ImportCatalogEnrichmentService', () => {
     service = new ImportCatalogEnrichmentService(
       catalog as unknown as CatalogService,
       rateLimiter as unknown as CatalogRateLimiter,
+      genresService as unknown as GenresService,
       booksRepo as unknown as Repository<Book>,
     );
   });
@@ -54,11 +74,11 @@ describe('ImportCatalogEnrichmentService', () => {
     expect(booksRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({
         coverImageUrl: 'https://covers.openlibrary.org/b/id/1-L.jpg',
-        genre: 'Fantasy',
+        genreId: 'genre-fantasy',
       }),
     );
     expect(result.enrichment_failed).toBe(false);
-    expect(result.book.genre).toBe('Fantasy');
+    expect(result.book.genreId).toBe('genre-fantasy');
   });
 
   it('uses title+author lookup when no ISBN is present', async () => {
@@ -103,7 +123,7 @@ describe('ImportCatalogEnrichmentService', () => {
       'The Hobbit',
       'J.R.R. Tolkien',
     );
-    expect(result.book.genre).toBe('Romance');
+    expect(result.book.genreId).toBe('genre-romance');
     expect(result.book.coverImageUrl).toBe(
       'https://covers.openlibrary.org/b/id/3-L.jpg',
     );
@@ -122,7 +142,7 @@ describe('ImportCatalogEnrichmentService', () => {
     const result = await service.enrichBook(baseBook());
 
     expect(catalog.lookupByTitleAuthor).toHaveBeenCalled();
-    expect(result.book.genre).toBe('Fantasy');
+    expect(result.book.genreId).toBe('genre-fantasy');
     expect(result.book.coverImageUrl).toBe(
       'https://covers.openlibrary.org/b/id/9-L.jpg',
     );
@@ -143,7 +163,7 @@ describe('ImportCatalogEnrichmentService', () => {
     const book = {
       ...baseBook(),
       coverImageUrl: 'https://example.com/cover.jpg',
-      genre: 'Fantasy',
+      genreId: 'genre-fantasy',
     } as Book;
 
     const result = await service.enrichBook(book);
@@ -170,7 +190,7 @@ describe('ImportCatalogEnrichmentService', () => {
     expect(booksRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({
         coverImageUrl: 'https://existing-cover.jpg',
-        genre: 'New Genre',
+        genreId: 'genre-new',
       }),
     );
   });
@@ -205,16 +225,17 @@ describe('ImportCatalogEnrichmentService', () => {
     booksRepo.find = jest.fn().mockResolvedValue([
       {
         id: 'book-1',
+        userId: 'user-1',
         title: 'The Hobbit',
         authors: 'J.R.R. Tolkien',
         coverImageUrl: null,
-        genre: null,
+        genreId: null,
         isbn13: '9780618640157',
       },
       {
         id: 'book-2',
         coverImageUrl: 'https://example.com/cover.jpg',
-        genre: 'Fantasía',
+        genreId: 'genre-fantasia',
       },
     ]);
     catalog.lookupByIsbn.mockResolvedValue({

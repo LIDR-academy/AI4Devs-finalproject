@@ -9,6 +9,7 @@ import { Book } from '../src/books/entities/book.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { Audience } from '../src/audiences/entities/audience.entity';
 import { Format } from '../src/formats/entities/format.entity';
+import { Genre } from '../src/genres/entities/genre.entity';
 import { FormatsModule } from '../src/formats/formats.module';
 import { AuthModule } from '../src/auth/auth.module';
 import { User } from '../src/users/user.entity';
@@ -28,7 +29,7 @@ describe('Formats API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, Audience, Format],
+          entities: [User, Book, ReadingRecord, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,

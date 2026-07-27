@@ -5,6 +5,7 @@ import { CatalogService } from '../../books/catalog/catalog.service';
 import type { CatalogIsbnLookupResult } from '../../books/catalog/catalog-isbn-lookup.types';
 import { CatalogRateLimiter } from '../../books/catalog/catalog-rate-limiter.service';
 import { Book } from '../../books/entities/book.entity';
+import { GenresService } from '../../genres/genres.service';
 
 export interface ImportEnrichmentResult {
   book: Book;
@@ -24,12 +25,13 @@ export class ImportCatalogEnrichmentService {
   constructor(
     private readonly catalog: CatalogService,
     private readonly rateLimiter: CatalogRateLimiter,
+    private readonly genresService: GenresService,
     @InjectRepository(Book)
     private readonly booksRepo: Repository<Book>,
   ) {}
 
   async enrichBook(book: Book): Promise<ImportEnrichmentResult> {
-    if (book.coverImageUrl && book.genre) {
+    if (book.coverImageUrl && book.genreId) {
       return { book, enrichment_failed: false };
     }
 
@@ -45,7 +47,7 @@ export class ImportCatalogEnrichmentService {
         lookup = await this.catalog.lookupByIsbn(isbn);
       }
 
-      const missingGenre = !book.genre && !lookup?.genre;
+      const missingGenre = !book.genreId && !lookup?.genre;
       const missingCover = !book.coverImageUrl && !lookup?.cover_image_url;
       const canSearchByTitle = Boolean(book.title.trim() && book.authors.trim());
 
@@ -70,9 +72,16 @@ export class ImportCatalogEnrichmentService {
         changed = true;
       }
 
-      if (!book.genre && lookup.genre) {
-        book.genre = lookup.genre;
-        changed = true;
+      if (!book.genreId && lookup.genre) {
+        const genre = await this.genresService.findOrCreateByName(
+          book.userId,
+          lookup.genre,
+        );
+        if (genre) {
+          book.genreId = genre.id;
+          book.genreRef = genre;
+          changed = true;
+        }
       }
 
       if (changed) {
@@ -112,19 +121,19 @@ export class ImportCatalogEnrichmentService {
       order: { createdAt: 'ASC' },
     });
 
-    const pending = books.filter((book) => !book.coverImageUrl || !book.genre);
+    const pending = books.filter((book) => !book.coverImageUrl || !book.genreId);
     let enriched = 0;
     let still_failed = 0;
 
     for (const book of pending) {
       const missingCover = !book.coverImageUrl;
-      const missingGenre = !book.genre;
+      const missingGenre = !book.genreId;
       const result = await this.enrichBook(book);
       if (result.enrichment_failed) {
         still_failed += 1;
       } else if (
         (missingCover && result.book.coverImageUrl) ||
-        (missingGenre && result.book.genre)
+        (missingGenre && result.book.genreId)
       ) {
         enriched += 1;
       }

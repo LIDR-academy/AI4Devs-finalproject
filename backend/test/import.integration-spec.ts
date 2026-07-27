@@ -6,6 +6,9 @@ import { join } from 'path';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AuthModule } from '../src/auth/auth.module';
+import { Audience } from '../src/audiences/entities/audience.entity';
+import { Format } from '../src/formats/entities/format.entity';
+import { Genre } from '../src/genres/entities/genre.entity';
 import { Book } from '../src/books/entities/book.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { ImportJob } from '../src/import/entities/import-job.entity';
@@ -57,7 +60,7 @@ describe('Import API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, ImportJob],
+          entities: [User, Book, ReadingRecord, ImportJob, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,

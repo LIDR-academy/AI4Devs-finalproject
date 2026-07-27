@@ -6,6 +6,7 @@ import { AudiencesModule } from '../src/audiences/audiences.module';
 import { Audience } from '../src/audiences/entities/audience.entity';
 import { FormatsModule } from '../src/formats/formats.module';
 import { Format } from '../src/formats/entities/format.entity';
+import { Genre } from '../src/genres/entities/genre.entity';
 import { AuthModule } from '../src/auth/auth.module';
 import { BooksModule } from '../src/books/books.module';
 import { Book } from '../src/books/entities/book.entity';
@@ -32,7 +33,7 @@ describe('Books API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, MonthlyTbrList, TbrEntry, Audience, Format],
+          entities: [User, Book, ReadingRecord, MonthlyTbrList, TbrEntry, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,
@@ -430,6 +431,34 @@ describe('Books API (integration)', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ cover_image_url: 'not-a-url' })
       .expect(400);
+  });
+
+  it('PATCH /v1/books/{bookId} persists genre via genres table', async () => {
+    const patchRes = await request(app.getHttpServer())
+      .patch(`/v1/books/${bookId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ genre: 'Mystery' })
+      .expect(200);
+
+    expect(patchRes.body.genre).toBe('Mystery');
+
+    const list = await request(app.getHttpServer())
+      .get('/v1/books')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const item = list.body.find((b: { id: string }) => b.id === bookId);
+    expect(item.genre).toBe('Mystery');
+  });
+
+  it('PATCH /v1/books/{bookId} clears genre with null', async () => {
+    const patchRes = await request(app.getHttpServer())
+      .patch(`/v1/books/${bookId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ genre: null })
+      .expect(200);
+
+    expect(patchRes.body.genre).toBeNull();
   });
 
   it('PATCH /v1/books/{bookId} rejects empty body', async () => {

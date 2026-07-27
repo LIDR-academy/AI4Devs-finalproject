@@ -3,7 +3,7 @@
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
   "last_completed": "KAN-79",
-  "current_ticket": null,
+  "current_ticket": "KAN-59",
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -477,4 +477,16 @@
       "pr_number": 62,
       "archived_at": "2026-07-27T13:30:00Z",
       "error": null
+    },
+    "KAN-59": {
+      "status": "in_progress",
+      "failed_step": null,
+      "change_name": "kan-59-genres-data-model",
+      "branch": "feature/KAN-59-genres-data-model",
+      "pr_url": null,
+      "pr_number": null,
+      "archived_at": null,
+      "error": null
     }
+  }
+}

@@ -29,6 +29,7 @@ import { OpenLibraryEnrichmentService } from './catalog/open-library-enrichment.
 import { GenreNormalizerService } from './genre-normalizer.service';
 import { AudiencesService } from '../audiences/audiences.service';
 import { FormatsService } from '../formats/formats.service';
+import { GenresService } from '../genres/genres.service';
 import { legacySlugFromFormatName } from '../formats/formats.constants';
 import { TbrService } from '../lists/tbr.service';
 import { Book } from './entities/book.entity';
@@ -50,6 +51,7 @@ export class BooksService {
     private readonly genreNormalizer: GenreNormalizerService,
     private readonly audiencesService: AudiencesService,
     private readonly formatsService: FormatsService,
+    private readonly genresService: GenresService,
     @Inject(forwardRef(() => TbrService))
     private readonly tbrService: TbrService,
   ) {}
@@ -57,7 +59,7 @@ export class BooksService {
   async listForUser(userId: string): Promise<BookListItemDto[]> {
     const books = await this.booksRepo.find({
       where: { userId },
-      relations: ['readingRecord', 'readingRecord.formatRef'],
+      relations: ['readingRecord', 'readingRecord.formatRef', 'genreRef'],
       order: { createdAt: 'DESC' },
     });
     return books.map((b) => ({
@@ -229,6 +231,10 @@ export class BooksService {
     await this.assertNotDuplicate(userId, dto);
     const audienceId = await this.resolveAudienceId(userId, dto.audience_id);
     const metadata = await this.resolveMetadata(dto);
+    const genreId = await this.genresService.resolveGenreIdByName(
+      userId,
+      metadata.genre,
+    );
 
     const book = this.booksRepo.create({
       userId,
@@ -238,7 +244,7 @@ export class BooksService {
       isbn10: dto.isbn_10 ?? null,
       coverImageUrl: dto.cover_image_url ?? null,
       pageCount: metadata.page_count,
-      genre: metadata.genre,
+      genreId,
       seriesName: dto.series_name ?? null,
       publicationYear: dto.publication_year ?? null,
       dataSource: dto.data_source,
@@ -249,6 +255,10 @@ export class BooksService {
     });
 
     const saved = await this.booksRepo.save(book);
+    const reloaded = await this.booksRepo.findOne({
+      where: { id: saved.id },
+      relations: ['genreRef'],
+    });
 
     const reading = this.readingRepo.create({
       bookId: saved.id,
@@ -257,7 +267,7 @@ export class BooksService {
     await this.readingRepo.save(reading);
 
     return {
-      book: this.toBookDto(saved),
+      book: this.toBookDto(reloaded ?? saved),
       reading: { book_id: saved.id, status: 'pendiente' },
     };
   }
@@ -386,7 +396,12 @@ export class BooksService {
       book.pageCount = dto.page_count;
     }
     if (dto.genre !== undefined) {
-      book.genre = dto.genre;
+      book.genreId =
+        dto.genre === null
+          ? null
+          : (await this.genresService.findOrCreateByName(userId, dto.genre))?.id ??
+            null;
+      book.genreRef = null;
     }
     if (dto.series_name !== undefined) {
       book.seriesName = dto.series_name;
@@ -405,7 +420,11 @@ export class BooksService {
     }
 
     const saved = await this.booksRepo.save(book);
-    return this.toBookDto(saved);
+    const reloaded = await this.booksRepo.findOne({
+      where: { id: saved.id },
+      relations: ['genreRef'],
+    });
+    return this.toBookDto(reloaded ?? saved);
   }
 
   private assertPatchBookHasFields(dto: PatchBookDto): void {
@@ -435,7 +454,7 @@ export class BooksService {
       isbn_10: book.isbn10,
       cover_image_url: book.coverImageUrl,
       page_count: book.pageCount,
-      genre: book.genre,
+      genre: book.genreRef?.name ?? null,
       series_name: book.seriesName,
       publication_year: book.publicationYear,
       data_source: book.dataSource,
