@@ -2,8 +2,8 @@
   "version": 1,
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
-  "last_completed": "KAN-60",
-  "current_ticket": "KAN-61",
+  "last_completed": "KAN-61",
+  "current_ticket": null,
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -499,13 +499,13 @@
       "error": null
     },
     "KAN-61": {
-      "status": "awaiting_merge",
+      "status": "done",
       "failed_step": null,
       "change_name": "kan-61-genre-book-selector",
       "branch": "feature/KAN-61-genre-book-selector",
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/65",
       "pr_number": 65,
-      "archived_at": null,
+      "archived_at": "2026-07-27T20:40:00Z",
       "error": null
     }
   }
