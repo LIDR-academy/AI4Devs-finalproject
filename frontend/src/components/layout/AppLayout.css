@@ -1,6 +1,8 @@
 .app-layout {
   display: flex;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
   align-items: stretch;
   background: var(--color-background);
 }
@@ -8,18 +10,16 @@
 .app-layout__main {
   flex: 1;
   min-width: 0;
+  max-width: 100%;
   padding: var(--space-6) var(--space-8);
+  /* Contain wide tables so they scroll locally instead of widening the page. */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 @media (max-width: 768px) {
   .app-layout {
     flex-direction: column;
-  }
-
-  .app-sidebar {
-    width: 100%;
-    min-height: auto;
-    position: static;
   }
 
   .app-layout__main {

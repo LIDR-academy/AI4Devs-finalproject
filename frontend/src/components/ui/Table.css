@@ -1,6 +1,11 @@
 .ui-table-scroll {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Prefer panning over pinch-zoom when scrolling the wide table on Android. */
+  touch-action: pan-x pan-y;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);

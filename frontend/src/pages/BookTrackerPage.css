@@ -1,5 +1,6 @@
 .book-tracker {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -16,6 +17,9 @@
 
 .books-table-scroll {
   box-shadow: var(--shadow-md);
+  /* Keep the wide table inside a scrollport so it cannot widen the page
+     (Android Chrome otherwise zooms out to fit the full table width). */
+  max-width: 100%;
 }
 
 .books-table {
