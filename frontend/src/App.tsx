@@ -6,6 +6,7 @@ import { ThemeProvider } from './theme/ThemeProvider';
 import { BookTrackerPage } from './pages/BookTrackerPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { HomePage } from './pages/HomePage';
+import { LibraryPage } from './pages/LibraryPage';
 import { ListsPage } from './pages/ListsPage';
 import { LoginPage } from './pages/LoginPage';
 import { ImportExportPage } from './pages/ImportExportPage';
@@ -40,15 +41,7 @@ function AppRoutes() {
         <Route path="lists" element={<ListsPage />} />
         <Route path="stats" element={<StatsPage />} />
         <Route path="goals" element={<GoalsPage />} />
-        <Route
-          path="library"
-          element={
-            <PlaceholderPage
-              title="Biblioteca"
-              description="Tu historial completo de lectura con búsqueda avanzada y filtros estará aquí."
-            />
-          }
-        />
+        <Route path="library" element={<LibraryPage />} />
         <Route
           path="recap"
           element={

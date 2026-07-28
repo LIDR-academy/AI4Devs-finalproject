@@ -7,10 +7,22 @@
 }
 
 .ui-card__title {
+  display: inline-block;
+  max-width: 100%;
   margin: 0 0 var(--space-2);
   font-family: var(--font-display);
   font-size: var(--font-size-xl);
   color: var(--color-text-heading);
+}
+
+.ui-card__title::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 0.2rem;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
 }
 
 .ui-card__subtitle {
@@ -35,11 +47,16 @@
 }
 
 .ui-badge--accent {
-  background: var(--color-highlight);
+  background: color-mix(in srgb, var(--color-highlight) 55%, var(--color-surface));
   color: var(--color-text-heading);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-highlight) 70%, transparent);
 }
 
 .ui-badge--kpi {
-  background: var(--color-accent-kpi);
-  color: var(--color-primary-text);
+  /* Soft tint + dark text: full-strength accent-kpi often fails AA with white text. */
+  background: color-mix(in srgb, var(--color-accent-kpi) 28%, var(--color-surface));
+  color: var(--color-text-heading);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-accent-kpi) 55%, transparent);
 }

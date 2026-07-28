@@ -41,7 +41,7 @@
   gap: var(--space-4);
   margin-bottom: var(--space-8);
   padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
 }
 
 .ui-page-header__text {
@@ -50,11 +50,24 @@
 }
 
 .ui-page-header__title {
+  display: inline-block;
+  max-width: 100%;
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--font-size-display);
   font-weight: var(--font-weight-semibold);
+  /* Keep heading text dark for AA; brand shows via decorative accent below. */
   color: var(--color-text-heading);
+}
+
+.ui-page-header__title::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 0.25rem;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
 }
 
 .ui-page-header__subtitle {

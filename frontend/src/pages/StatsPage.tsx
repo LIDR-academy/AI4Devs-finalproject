@@ -294,7 +294,9 @@ export function StatsPage() {
               {data.books_in_period.length > 0 && (
                 <CoverGallery
                   books={data.books_in_period}
-                  periodScope={periodScope}
+                  heading="Galería"
+                  subtitle={`Libros terminados ${periodScope} (${data.books_in_period.length})`}
+                  ariaLabel={`Portadas de libros leídos ${periodScope}`}
                 />
               )}
               </>

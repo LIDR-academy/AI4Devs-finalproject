@@ -156,7 +156,7 @@ Avoid global stores until cross-cutting client state justifies them.
 
 - **Desktop-first** reading analytics (not social).
 - **Style:** soft feminine / coquette — warm, clean, journaling-like.
-- **Palette (tokens):** see `docs/design-system-palette.md` and `frontend/src/theme/tokens.css`
+- **Palette (tokens):** see `docs/design-system-palette.md` and `frontend/src/theme/tokens.css`. Use the full semantic set in shared chrome (sidebar accents, page title decoration, layout washes, KPI edges) as well as charts — not `--color-highlight` / `--color-accent-kpi` in charts only. Prefer soft `color-mix` tints and decorative accents so text stays WCAG 2.1 AA across user presets.
 - **Accessibility:** WCAG 2.1 AA — semantic HTML, labels on inputs, keyboard access for modals, sufficient contrast when applying brand colors.
 
 Import shared primitives from `frontend/src/components/ui/` for new UI work. Page-level restyles migrate in KAN-20+.

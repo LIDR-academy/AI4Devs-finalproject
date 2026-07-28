@@ -50,27 +50,29 @@ export function HomeReadingCard() {
             {readingBooks.map((book) => (
               <li key={book.id} className="cover-gallery__item">
                 <figure className="cover-gallery__tile">
-                  {book.cover_image_url ? (
-                    <img
-                      src={book.cover_image_url}
-                      alt={coverAltText(book)}
-                      className="cover-gallery__image"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div
-                      className="cover-gallery__placeholder"
-                      role="img"
-                      aria-label={coverAltText(book)}
-                    >
-                      <span
-                        className="cover-gallery__placeholder-icon"
-                        aria-hidden="true"
+                  <div className="cover-gallery__media">
+                    {book.cover_image_url ? (
+                      <img
+                        src={book.cover_image_url}
+                        alt={coverAltText(book)}
+                        className="cover-gallery__image"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className="cover-gallery__placeholder"
+                        role="img"
+                        aria-label={coverAltText(book)}
                       >
-                        📖
-                      </span>
-                    </div>
-                  )}
+                        <span
+                          className="cover-gallery__placeholder-icon"
+                          aria-hidden="true"
+                        >
+                          📖
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <figcaption className="cover-gallery__caption">
                     <span className="cover-gallery__title">{book.title}</span>
                     <span className="cover-gallery__authors">{book.authors}</span>
@@ -80,7 +82,7 @@ export function HomeReadingCard() {
             ))}
           </ul>
           <p className="home-reading-card__footer">
-            <Link to="/book-tracker">Ver en seguimiento de libros</Link>
+            <Link to="/book-tracker">Ver en Todas mis lecturas</Link>
           </p>
         </div>
       ) : null}

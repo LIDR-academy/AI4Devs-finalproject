@@ -40,6 +40,20 @@
   --color-error-text: #c44;
   --color-overlay: rgba(0, 0, 0, 0.35);
 
+  /* Brand accent gradient (one-way; reuse in chrome accents) */
+  --gradient-brand: linear-gradient(
+    90deg,
+    var(--color-primary),
+    var(--color-accent-kpi),
+    var(--color-highlight)
+  );
+  --gradient-brand-vertical: linear-gradient(
+    180deg,
+    var(--color-primary),
+    var(--color-accent-kpi),
+    var(--color-highlight)
+  );
+
   /* Typography */
   --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --font-body: 'Nunito', system-ui, -apple-system, sans-serif;

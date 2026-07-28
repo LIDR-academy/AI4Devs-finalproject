@@ -4,7 +4,11 @@
   width: 100%;
   max-width: 100%;
   align-items: stretch;
-  background: var(--color-background);
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 7%,
+    var(--color-background)
+  );
 }
 
 .app-layout__main {
@@ -15,6 +19,11 @@
   /* Contain wide tables so they scroll locally instead of widening the page. */
   overflow-x: hidden;
   overflow-x: clip;
+  background: color-mix(
+    in srgb,
+    var(--color-highlight) 6%,
+    transparent
+  );
 }
 
 @media (max-width: 768px) {

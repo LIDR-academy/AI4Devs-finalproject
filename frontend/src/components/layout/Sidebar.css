@@ -22,12 +22,14 @@
 
 .app-sidebar__brand {
   margin: 0 0 var(--space-8);
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-2) var(--space-3);
   font-family: var(--font-display);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary-text);
   line-height: var(--line-height-tight);
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--color-highlight) 70%, var(--color-primary-text));
 }
 
 .app-sidebar__menu-toggle {
@@ -90,22 +92,27 @@
 }
 
 .app-sidebar .ui-sidebar-item {
+  position: relative;
   color: var(--color-primary-text);
+  box-shadow: inset 3px 0 0 transparent;
 }
 
 .app-sidebar .ui-sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: color-mix(in srgb, var(--color-primary-text) 14%, transparent);
   color: var(--color-primary-text);
+  box-shadow: inset 3px 0 0 var(--color-highlight);
 }
 
 .app-sidebar .ui-sidebar-item--active {
   background: var(--color-primary-text);
   color: var(--color-primary);
+  box-shadow: inset 3px 0 0 var(--color-accent-kpi);
 }
 
 .app-sidebar .ui-sidebar-item--active:hover {
   background: var(--color-surface-card);
   color: var(--color-primary);
+  box-shadow: inset 3px 0 0 var(--color-accent-kpi);
 }
 
 .app-sidebar .ui-sidebar-item:focus-visible {
