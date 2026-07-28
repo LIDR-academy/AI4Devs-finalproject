@@ -242,7 +242,7 @@ export function ImportExportPage() {
                 role="status"
                 aria-live="polite"
               >
-                Analizando géneros del catálogo…
+                Añadiendo libros a tu biblioteca. Este proceso puede tardar unos minutos. Puedes salir de esta página y volver más tarde para ver el resultado.
               </p>
             ) : null}
 

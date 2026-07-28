@@ -4,6 +4,8 @@ import { ReadingStatus } from '../entities/reading-record.entity';
 export class BookDto {
   id: string;
   user_id: string;
+  catalog_edition_id?: string | null;
+  has_overrides?: boolean;
   title: string;
   authors: string;
   isbn_13: string | null;

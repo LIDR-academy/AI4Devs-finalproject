@@ -103,7 +103,6 @@ export class ImportJobService {
   ): Promise<GenreResolutionMap> {
     const job = await this.jobsRepo.findOne({
       where: { id: jobId, userId },
-      select: ['genreResolutions'],
     });
     if (!job) {
       throw new NotFoundException('Import job not found');
@@ -114,7 +113,6 @@ export class ImportJobService {
   async getCsvContent(userId: string, jobId: string): Promise<string> {
     const job = await this.jobsRepo.findOne({
       where: { id: jobId, userId },
-      select: ['csvContent'],
     });
     if (!job) {
       throw new NotFoundException('Import job not found');

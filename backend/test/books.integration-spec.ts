@@ -10,6 +10,8 @@ import { Genre } from '../src/genres/entities/genre.entity';
 import { AuthModule } from '../src/auth/auth.module';
 import { BooksModule } from '../src/books/books.module';
 import { Book } from '../src/books/entities/book.entity';
+import { CatalogEdition } from '../src/books/entities/catalog-edition.entity';
+import { UserBookOverride } from '../src/books/entities/user-book-override.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { ListsModule } from '../src/lists/lists.module';
 import { MonthlyTbrList } from '../src/lists/entities/monthly-tbr-list.entity';
@@ -33,7 +35,7 @@ describe('Books API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, MonthlyTbrList, TbrEntry, Audience, Format, Genre],
+          entities: [User, Book, CatalogEdition, UserBookOverride, ReadingRecord, MonthlyTbrList, TbrEntry, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,

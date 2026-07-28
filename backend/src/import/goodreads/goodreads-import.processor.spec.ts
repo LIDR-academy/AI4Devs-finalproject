@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Book } from '../../books/entities/book.entity';
 import { ReadingRecord } from '../../books/entities/reading-record.entity';
 import { GoodreadsImportProcessor } from './goodreads-import.processor';
+import { CatalogEditionsService } from '../../books/catalog/catalog-editions.service';
+import { BookMetadataResolver } from '../../books/book-metadata.resolver';
 import { ImportCatalogEnrichmentService } from './import-catalog-enrichment.service';
 import { FormatsService } from '../../formats/formats.service';
 import type { GoodreadsMappedRow } from './goodreads-import.types';
@@ -17,6 +19,8 @@ describe('GoodreadsImportProcessor', () => {
   let catalogEnrichment: jest.Mocked<
     Pick<ImportCatalogEnrichmentService, 'enrichBook'>
   >;
+  let catalogEditions: jest.Mocked<Pick<CatalogEditionsService, 'upsert'>>;
+  let metadataResolver: BookMetadataResolver;
   let formatsService: jest.Mocked<
     Pick<FormatsService, 'resolveFormatIdByLegacySlug'>
   >;
@@ -47,8 +51,21 @@ describe('GoodreadsImportProcessor', () => {
       find: jest.fn().mockResolvedValue([]),
       findOne: jest.fn().mockResolvedValue({
         id: 'book-1',
-        coverImageUrl: null,
         genreId: null,
+        catalogEdition: {
+          title: 'The Hobbit',
+          authors: 'J.R.R. Tolkien',
+          isbn13: '9780618640157',
+          isbn10: '0618640150',
+          coverImageUrl: null,
+          pageCount: 320,
+          dataSource: 'goodreads',
+          externalProviderId: '1001',
+          catalogGenre: null,
+          seriesName: null,
+          publicationYear: null,
+        },
+        override: null,
       } as Book),
       create: jest.fn((value) => value as Book),
       save: jest.fn(async (value) => ({ ...value, id: 'book-1' }) as Book),
@@ -68,6 +85,23 @@ describe('GoodreadsImportProcessor', () => {
         .fn()
         .mockResolvedValue('format-fisico'),
     };
+    catalogEditions = {
+      upsert: jest.fn().mockResolvedValue({
+        id: 'ce-1',
+        title: 'The Hobbit',
+        authors: 'J.R.R. Tolkien',
+        isbn13: '9780618640157',
+        isbn10: '0618640150',
+        pageCount: 320,
+        publicationYear: 1937,
+        dataSource: 'goodreads',
+        externalProviderId: '1001',
+        coverImageUrl: null,
+        catalogGenre: null,
+        seriesName: null,
+      }),
+    };
+    metadataResolver = new BookMetadataResolver();
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -75,6 +109,8 @@ describe('GoodreadsImportProcessor', () => {
         { provide: getRepositoryToken(Book), useValue: booksRepo },
         { provide: getRepositoryToken(ReadingRecord), useValue: readingRepo },
         { provide: ImportCatalogEnrichmentService, useValue: catalogEnrichment },
+        { provide: CatalogEditionsService, useValue: catalogEditions },
+        { provide: BookMetadataResolver, useValue: metadataResolver },
         { provide: FormatsService, useValue: formatsService },
       ],
     }).compile();
@@ -96,6 +132,7 @@ describe('GoodreadsImportProcessor', () => {
     );
     expect(catalogEnrichment.enrichBook).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'book-1' }),
+      {},
     );
     expect(result.enrichment_failed).toEqual([]);
     expect(result.meta.enrichment_failed_count).toBe(0);
@@ -123,14 +160,44 @@ describe('GoodreadsImportProcessor', () => {
   it('clears enrichment failures when retry pass succeeds', async () => {
     catalogEnrichment.enrichBook
       .mockResolvedValueOnce({
-        book: { id: 'book-1', coverImageUrl: null, genreId: null } as Book,
+        book: {
+          id: 'book-1',
+          genreId: null,
+          catalogEdition: {
+            coverImageUrl: null,
+            title: 'The Hobbit',
+            authors: 'J.R.R. Tolkien',
+            isbn13: '9780618640157',
+            isbn10: null,
+            pageCount: null,
+            seriesName: null,
+            publicationYear: null,
+            catalogGenre: null,
+            dataSource: 'goodreads',
+            externalProviderId: null,
+          },
+          override: null,
+        } as Book,
         enrichment_failed: true,
       })
       .mockResolvedValueOnce({
         book: {
           id: 'book-1',
-          coverImageUrl: 'https://covers.openlibrary.org/b/id/1-L.jpg',
           genreId: 'genre-fantasia',
+          catalogEdition: {
+            coverImageUrl: 'https://covers.openlibrary.org/b/id/1-L.jpg',
+            title: 'The Hobbit',
+            authors: 'J.R.R. Tolkien',
+            isbn13: '9780618640157',
+            isbn10: null,
+            pageCount: null,
+            seriesName: null,
+            publicationYear: null,
+            catalogGenre: null,
+            dataSource: 'goodreads',
+            externalProviderId: null,
+          },
+          override: null,
         } as Book,
         enrichment_failed: false,
       });
@@ -146,9 +213,20 @@ describe('GoodreadsImportProcessor', () => {
     booksRepo.find.mockResolvedValue([
       {
         id: 'existing-1',
-        isbn13: '9780618640157',
-        title: 'The Hobbit',
-        authors: 'J.R.R. Tolkien',
+        catalogEdition: {
+          isbn13: '9780618640157',
+          title: 'The Hobbit',
+          authors: 'J.R.R. Tolkien',
+          isbn10: null,
+          coverImageUrl: null,
+          pageCount: null,
+          seriesName: null,
+          publicationYear: null,
+          catalogGenre: null,
+          dataSource: 'goodreads',
+          externalProviderId: null,
+        },
+        override: null,
       } as Book,
     ]);
 

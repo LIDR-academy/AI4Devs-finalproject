@@ -11,15 +11,20 @@ import { Format } from '../src/formats/entities/format.entity';
 import { Genre } from '../src/genres/entities/genre.entity';
 import { AuthModule } from '../src/auth/auth.module';
 import { Book } from '../src/books/entities/book.entity';
+import { CatalogEdition } from '../src/books/entities/catalog-edition.entity';
+import { UserBookOverride } from '../src/books/entities/user-book-override.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { User } from '../src/users/user.entity';
 import { UsersModule } from '../src/users/users.module';
+import { seedCatalogBook } from './catalog-book-seed';
 
 describe('Audiences API (integration)', () => {
   let app: INestApplication<App>;
   let token: string;
   let userId: string;
   let bookRepo: Repository<Book>;
+  let catalogRepo: Repository<CatalogEdition>;
+  let readingRepo: Repository<ReadingRecord>;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -28,12 +33,13 @@ describe('Audiences API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, Audience, Format, Genre],
+          entities: [User, Book, CatalogEdition, UserBookOverride, ReadingRecord, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,
         AuthModule,
         AudiencesModule,
+        TypeOrmModule.forFeature([Book, CatalogEdition, ReadingRecord]),
       ],
     }).compile();
 
@@ -51,6 +57,8 @@ describe('Audiences API (integration)', () => {
     token = login.body.access_token;
     userId = login.body.user.id;
     bookRepo = moduleRef.get(getRepositoryToken(Book));
+    catalogRepo = moduleRef.get(getRepositoryToken(CatalogEdition));
+    readingRepo = moduleRef.get(getRepositoryToken(ReadingRecord));
   });
 
   afterAll(async () => {
@@ -99,15 +107,12 @@ describe('Audiences API (integration)', () => {
     const target = list.body.find((item: { name: string }) => item.name === 'Adulto');
     expect(target).toBeDefined();
 
-    await bookRepo.save(
-      bookRepo.create({
-        userId,
-        title: 'Assigned Book',
-        authors: 'Author',
-        dataSource: 'manual',
-        audienceId: target.id,
-      }),
-    );
+    await seedCatalogBook(catalogRepo, bookRepo, readingRepo, {
+      userId,
+      title: 'Assigned Book',
+      authors: 'Author',
+      audienceId: target.id,
+    });
 
     const res = await request(app.getHttpServer())
       .get(`/v1/audiences/${target.id}/affected-books`)
@@ -126,15 +131,12 @@ describe('Audiences API (integration)', () => {
     const target = list.body.find((item: { name: string }) => item.name === 'Juvenil');
     expect(target).toBeDefined();
 
-    const book = await bookRepo.save(
-      bookRepo.create({
-        userId,
-        title: 'Juvenil Book',
-        authors: 'Author',
-        dataSource: 'manual',
-        audienceId: target.id,
-      }),
-    );
+    const book = await seedCatalogBook(catalogRepo, bookRepo, readingRepo, {
+      userId,
+      title: 'Juvenil Book',
+      authors: 'Author',
+      audienceId: target.id,
+    });
 
     await request(app.getHttpServer())
       .delete(`/v1/audiences/${target.id}`)

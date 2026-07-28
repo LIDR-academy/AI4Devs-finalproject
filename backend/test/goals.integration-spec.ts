@@ -10,6 +10,8 @@ import { Audience } from '../src/audiences/entities/audience.entity';
 import { Format } from '../src/formats/entities/format.entity';
 import { Genre } from '../src/genres/entities/genre.entity';
 import { Book } from '../src/books/entities/book.entity';
+import { CatalogEdition } from '../src/books/entities/catalog-edition.entity';
+import { UserBookOverride } from '../src/books/entities/user-book-override.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { GoalsModule } from '../src/goals/goals.module';
 import { AnnualReadingGoal } from '../src/goals/entities/annual-reading-goal.entity';
@@ -36,6 +38,8 @@ describe('Goals API (integration)', () => {
           entities: [
             User,
             Book,
+            CatalogEdition,
+            UserBookOverride,
             ReadingRecord,
             AnnualReadingGoal,
             MonthlyTbrList,

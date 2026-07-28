@@ -12,6 +12,8 @@ import { User } from '../../users/user.entity';
 import { Audience } from '../../audiences/entities/audience.entity';
 import { Genre } from '../../genres/entities/genre.entity';
 import { ReadingRecord } from './reading-record.entity';
+import { CatalogEdition } from './catalog-edition.entity';
+import { UserBookOverride } from './user-book-override.entity';
 
 export type DataSourceType =
   | 'open_library'
@@ -33,23 +35,17 @@ export class Book {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'text' })
-  title: string;
+  @Column({ name: 'catalog_edition_id', type: 'uuid' })
+  catalogEditionId: string;
 
-  @Column({ type: 'text' })
-  authors: string;
+  @ManyToOne(() => CatalogEdition, (edition) => edition.libraryBooks, {
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'catalog_edition_id' })
+  catalogEdition: CatalogEdition;
 
-  @Column({ name: 'isbn_13', type: 'varchar', length: 13, nullable: true })
-  isbn13: string | null;
-
-  @Column({ name: 'isbn_10', type: 'varchar', length: 10, nullable: true })
-  isbn10: string | null;
-
-  @Column({ name: 'cover_image_url', type: 'text', nullable: true })
-  coverImageUrl: string | null;
-
-  @Column({ name: 'page_count', type: 'int', nullable: true })
-  pageCount: number | null;
+  @OneToOne(() => UserBookOverride, (override) => override.userBook)
+  override: UserBookOverride | null;
 
   @Column({ name: 'genre_id', type: 'uuid', nullable: true })
   genreId: string | null;
@@ -57,18 +53,6 @@ export class Book {
   @ManyToOne(() => Genre, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'genre_id' })
   genreRef: Genre | null;
-
-  @Column({ name: 'series_name', type: 'varchar', length: 255, nullable: true })
-  seriesName: string | null;
-
-  @Column({ name: 'publication_year', type: 'smallint', nullable: true })
-  publicationYear: number | null;
-
-  @Column({ name: 'data_source', type: 'varchar', length: 32 })
-  dataSource: DataSourceType;
-
-  @Column({ name: 'external_provider_id', type: 'varchar', length: 128, nullable: true })
-  externalProviderId: string | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;

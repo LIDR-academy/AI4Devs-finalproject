@@ -21,7 +21,9 @@
     "test:integration": "jest --config ./test/jest-integration.json",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts",
     "typeorm": "typeorm-ts-node-commonjs",
-    "audit:genres": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/audit-missing-genres.ts"
+    "audit:genres": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/audit-missing-genres.ts",
+    "build:catalog-seed": "python3 scripts/build_open_library_catalog_seed.py",
+    "seed:catalog": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/import-catalog-seed.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",

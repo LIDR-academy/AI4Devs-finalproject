@@ -18,6 +18,14 @@ describe('CatalogService', () => {
   let googleBooks: { search: jest.Mock; lookupGenreByIsbn: jest.Mock };
   let openLibraryEnrichment: { lookupGenreFromProviderId: jest.Mock };
   let genreNormalizer: { normalize: jest.Mock };
+  let catalogEditions: {
+    searchLocal: jest.Mock;
+    toCatalogEditionDto: jest.Mock;
+    upsertFromCatalogEdition: jest.Mock;
+    findByIsbn: jest.Mock;
+    findBestByTitleAuthor: jest.Mock;
+    upsert: jest.Mock;
+  };
   let service: CatalogService;
 
   beforeEach(() => {
@@ -29,11 +37,42 @@ describe('CatalogService', () => {
         .fn()
         .mockImplementation((value: string | null | undefined) => value ?? null),
     };
+    catalogEditions = {
+      searchLocal: jest.fn().mockResolvedValue([]),
+      toCatalogEditionDto: jest.fn((edition) => ({
+        title: edition.title ?? olEdition.title,
+        authors: edition.authors ?? olEdition.authors,
+        cover_image_url: edition.coverImageUrl ?? olEdition.cover_image_url,
+        page_count: edition.pageCount ?? olEdition.page_count,
+        genre: edition.catalogGenre ?? edition.genre ?? null,
+        isbn_13: edition.isbn13 ?? olEdition.isbn_13,
+        isbn_10: edition.isbn10 ?? olEdition.isbn_10,
+        data_source: edition.dataSource === 'google_books' ? 'google_books' : 'open_library',
+        external_provider_id: edition.externalProviderId ?? olEdition.external_provider_id,
+        catalog_edition_id: edition.id ?? 'ce-1',
+      })),
+      upsertFromCatalogEdition: jest.fn().mockImplementation(async (edition) => ({
+        id: 'ce-1',
+        title: edition.title,
+        authors: edition.authors,
+        coverImageUrl: edition.cover_image_url,
+        pageCount: edition.page_count,
+        catalogGenre: edition.genre,
+        isbn13: edition.isbn_13,
+        isbn10: edition.isbn_10,
+        dataSource: edition.data_source,
+        externalProviderId: edition.external_provider_id,
+      })),
+      findByIsbn: jest.fn().mockResolvedValue(null),
+      findBestByTitleAuthor: jest.fn().mockResolvedValue(null),
+      upsert: jest.fn().mockResolvedValue({ id: 'ce-1' }),
+    };
     service = new CatalogService(
       openLibrary as never,
       googleBooks as never,
       openLibraryEnrichment as never,
       genreNormalizer as never,
+      catalogEditions as never,
     );
   });
 
@@ -261,6 +300,33 @@ describe('CatalogService', () => {
   });
 
   describe('lookupByTitleAuthor', () => {
+    it('returns local catalog match before calling external providers', async () => {
+      catalogEditions.findBestByTitleAuthor.mockResolvedValue({
+        id: 'ce-seed',
+        title: 'Hamnet',
+        authors: "Maggie O'Farrell",
+        coverImageUrl: 'https://covers.openlibrary.org/b/id/10713474-L.jpg',
+        catalogGenre: 'Fiction, historical',
+      });
+      genreNormalizer.normalize.mockReturnValue('Histórica');
+
+      const result = await service.lookupByTitleAuthor(
+        'Hamnet',
+        "Maggie O'Farrell",
+      );
+
+      expect(catalogEditions.findBestByTitleAuthor).toHaveBeenCalledWith(
+        'Hamnet',
+        "Maggie O'Farrell",
+      );
+      expect(openLibrary.search).not.toHaveBeenCalled();
+      expect(googleBooks.search).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        cover_image_url: 'https://covers.openlibrary.org/b/id/10713474-L.jpg',
+        genre: 'Histórica',
+      });
+    });
+
     it('queries both providers with title and author text', async () => {
       openLibrary.search.mockResolvedValue([
         {

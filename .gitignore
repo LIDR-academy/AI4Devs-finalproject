@@ -12,3 +12,7 @@ frontend/.env.local
 *.log
 
 packages/
+backend/data/
+*.db
+*.db-wal
+*.db-shm

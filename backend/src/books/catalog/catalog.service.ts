@@ -5,6 +5,7 @@ import {
 } from '../dto/catalog-edition.dto';
 import { GenreNormalizerService } from '../genre-normalizer.service';
 import type { CatalogIsbnLookupResult } from './catalog-isbn-lookup.types';
+import { CatalogEditionsService } from './catalog-editions.service';
 import { OpenLibraryEnrichmentService } from './open-library-enrichment.service';
 import { isTransientCatalogError } from './catalog-error.util';
 import { retryWithBackoff } from './retry-with-backoff.util';
@@ -29,9 +30,40 @@ export class CatalogService {
     private readonly googleBooks: GoogleBooksClient,
     private readonly openLibraryEnrichment: OpenLibraryEnrichmentService,
     private readonly genreNormalizer: GenreNormalizerService,
+    private readonly catalogEditions: CatalogEditionsService,
   ) {}
 
   async search(query: string, limit: number): Promise<CatalogSearchResponseDto> {
+    const localItems = await this.catalogEditions.searchLocal(query, limit);
+    if (localItems.length >= limit) {
+      return {
+        items: localItems.map((item) =>
+          this.normalizeEditionGenre(this.catalogEditions.toCatalogEditionDto(item)),
+        ),
+        source: 'open_library',
+      };
+    }
+
+    const localDtos = localItems.map((item) =>
+      this.catalogEditions.toCatalogEditionDto(item),
+    );
+    const remaining = Math.max(limit - localDtos.length, 0);
+    const external =
+      remaining > 0
+        ? await this.searchExternal(query, remaining)
+        : { items: [], source: 'none' as const };
+
+    const merged = await this.mergeAndPersistSearchResults(localDtos, external.items);
+    return {
+      items: merged,
+      source: external.source === 'none' && localDtos.length > 0 ? 'open_library' : external.source,
+    };
+  }
+
+  private async searchExternal(
+    query: string,
+    limit: number,
+  ): Promise<CatalogSearchResponseDto> {
     try {
       const olItems = await this.openLibrary.search(query, limit);
       if (olItems.length > 0) {
@@ -65,10 +97,48 @@ export class CatalogService {
     return { items: [], source: 'none' };
   }
 
+  private async mergeAndPersistSearchResults(
+    localItems: CatalogEditionDto[],
+    externalItems: CatalogEditionDto[],
+  ): Promise<CatalogEditionDto[]> {
+    const seen = new Set(
+      localItems.map((item) => this.editionKey(item)),
+    );
+    const merged = [...localItems];
+
+    for (const item of externalItems) {
+      const key = this.editionKey(item);
+      if (seen.has(key)) {
+        continue;
+      }
+      const persisted = await this.catalogEditions.upsertFromCatalogEdition(item);
+      const dto = this.catalogEditions.toCatalogEditionDto(persisted);
+      merged.push(this.normalizeEditionGenre(dto));
+      seen.add(key);
+    }
+
+    return merged;
+  }
+
+  private editionKey(item: CatalogEditionDto): string {
+    if (item.isbn_13) {
+      return `isbn:${item.isbn_13}`;
+    }
+    return `${item.data_source}:${item.external_provider_id}`;
+  }
+
   async lookupByIsbn(isbn: string): Promise<CatalogIsbnLookupResult | null> {
     const normalized = isbn.replace(/-/g, '').trim();
     if (!normalized) {
       return null;
+    }
+
+    const local = await this.catalogEditions.findByIsbn(normalized);
+    if (local?.coverImageUrl || local?.catalogGenre) {
+      return {
+        cover_image_url: local.coverImageUrl,
+        genre: this.genreNormalizer.normalize(local.catalogGenre),
+      };
     }
 
     const query = `isbn:${normalized}`;
@@ -78,10 +148,30 @@ export class CatalogService {
     ]);
 
     if (!olEdition && !gbEdition) {
-      return null;
+      return local
+        ? {
+            cover_image_url: local.coverImageUrl,
+            genre: this.genreNormalizer.normalize(local.catalogGenre),
+          }
+        : null;
     }
 
-    return this.mergeProviderLookups(olEdition, gbEdition);
+    const merged = await this.mergeProviderLookups(olEdition, gbEdition);
+    if (merged?.cover_image_url || merged?.genre) {
+      await this.catalogEditions.upsert({
+        title: olEdition?.title ?? gbEdition?.title ?? 'Unknown',
+        authors: olEdition?.authors ?? gbEdition?.authors ?? 'Unknown',
+        isbn_13: olEdition?.isbn_13 ?? gbEdition?.isbn_13 ?? normalized,
+        isbn_10: olEdition?.isbn_10 ?? gbEdition?.isbn_10 ?? null,
+        cover_image_url: merged.cover_image_url,
+        catalog_genre: merged.genre,
+        data_source: olEdition?.data_source ?? gbEdition?.data_source ?? 'open_library',
+        external_provider_id:
+          olEdition?.external_provider_id ?? gbEdition?.external_provider_id ?? null,
+      });
+    }
+
+    return merged;
   }
 
   async lookupByTitleAuthor(
@@ -92,6 +182,17 @@ export class CatalogService {
     const trimmedAuthors = authors.trim();
     if (!trimmedTitle || !trimmedAuthors) {
       return null;
+    }
+
+    const local = await this.catalogEditions.findBestByTitleAuthor(
+      trimmedTitle,
+      trimmedAuthors,
+    );
+    if (local?.coverImageUrl || local?.catalogGenre) {
+      return {
+        cover_image_url: local.coverImageUrl,
+        genre: this.genreNormalizer.normalize(local.catalogGenre),
+      };
     }
 
     const query = `${trimmedTitle} ${trimmedAuthors}`;

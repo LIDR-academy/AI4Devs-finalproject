@@ -2,6 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Book } from '../books/entities/book.entity';
+import { CatalogEdition } from '../books/entities/catalog-edition.entity';
+import { UserBookOverride } from '../books/entities/user-book-override.entity';
+import { BookMetadataResolver } from '../books/book-metadata.resolver';
 import { ReadingRecord } from '../books/entities/reading-record.entity';
 import { Audience } from '../audiences/entities/audience.entity';
 import { Format } from '../formats/entities/format.entity';
@@ -163,16 +166,39 @@ export class StatsService {
     };
   }
 
+  private effectivePageCountSql(): string {
+    const dialect = this.isPostgres() ? 'postgres' : 'sqlite';
+    const isOverridden =
+      dialect === 'postgres'
+        ? `ubo.overridden_fields::jsonb ? 'page_count'`
+        : `instr(ubo.overridden_fields, '"page_count"') > 0`;
+    return `COALESCE(CASE WHEN ${isOverridden} THEN ubo.page_count ELSE ce.page_count END, 0)`;
+  }
+
+  private sqlDialect(): 'postgres' | 'sqlite' {
+    return this.isPostgres() ? 'postgres' : 'sqlite';
+  }
+
+  private joinEffectiveBibliographic(
+    qb: ReturnType<Repository<ReadingRecord>['createQueryBuilder']>,
+  ) {
+    return qb
+      .innerJoin(Book, 'b', 'b.id = rr.bookId')
+      .innerJoin(CatalogEdition, 'ce', 'ce.id = b.catalogEditionId')
+      .leftJoin(UserBookOverride, 'ubo', 'ubo.userBookId = b.id');
+  }
+
   private async aggregateStats(
     userId: string,
     periodStart: string,
     periodEnd: string,
   ): Promise<PeriodAggregate> {
-    const totals = await this.readingRepo
-      .createQueryBuilder('rr')
-      .innerJoin(Book, 'b', 'b.id = rr.bookId')
+    const pageCountExpr = this.effectivePageCountSql();
+    const totals = await this.joinEffectiveBibliographic(
+      this.readingRepo.createQueryBuilder('rr'),
+    )
       .select('COUNT(*)', 'booksRead')
-      .addSelect('COALESCE(SUM(b.pageCount), 0)', 'pagesRead')
+      .addSelect(`COALESCE(SUM(${pageCountExpr}), 0)`, 'pagesRead')
       .addSelect('AVG(rr.rating)', 'avgRating')
       .where('b.userId = :userId', { userId })
       .andWhere('rr.status = :status', { status: 'leido' })
@@ -339,20 +365,42 @@ export class StatsService {
     periodStart: string,
     periodEnd: string,
   ): Promise<PeriodBookSummaryDto[]> {
-    const rows = await this.readingRepo
-      .createQueryBuilder('rr')
-      .innerJoin(Book, 'b', 'b.id = rr.bookId')
+    const titleExpr = BookMetadataResolver.effectiveSql(
+      'title',
+      'title',
+      'ubo',
+      'ce',
+      this.sqlDialect(),
+    );
+    const authorsExpr = BookMetadataResolver.effectiveSql(
+      'authors',
+      'authors',
+      'ubo',
+      'ce',
+      this.sqlDialect(),
+    );
+    const coverExpr = BookMetadataResolver.effectiveSql(
+      'cover_image_url',
+      'cover_image_url',
+      'ubo',
+      'ce',
+      this.sqlDialect(),
+    );
+
+    const rows = await this.joinEffectiveBibliographic(
+      this.readingRepo.createQueryBuilder('rr'),
+    )
       .select('b.id', 'id')
-      .addSelect('b.title', 'title')
-      .addSelect('b.authors', 'authors')
-      .addSelect('b.coverImageUrl', 'coverImageUrl')
+      .addSelect(titleExpr, 'title')
+      .addSelect(authorsExpr, 'authors')
+      .addSelect(coverExpr, 'coverImageUrl')
       .addSelect('rr.finishedOn', 'finishedOn')
       .where('b.userId = :userId', { userId })
       .andWhere('rr.status = :status', { status: 'leido' })
       .andWhere('rr.finishedOn >= :periodStart', { periodStart })
       .andWhere('rr.finishedOn < :periodEnd', { periodEnd })
       .orderBy('rr.finishedOn', 'ASC')
-      .addOrderBy('b.title', 'ASC')
+      .addOrderBy(titleExpr, 'ASC')
       .getRawMany<PeriodBookRow>();
 
     return rows.map((row) => ({
@@ -403,13 +451,14 @@ export class StatsService {
     year: number,
   ): Promise<MonthBucketDto[]> {
     const { periodStart, periodEnd } = StatsService.yearBounds(year);
+    const pageCountExpr = this.effectivePageCountSql();
     const monthExpr = this.monthBucketExpression();
-    const rows = await this.readingRepo
-      .createQueryBuilder('rr')
-      .innerJoin(Book, 'b', 'b.id = rr.bookId')
+    const rows = await this.joinEffectiveBibliographic(
+      this.readingRepo.createQueryBuilder('rr'),
+    )
       .select(monthExpr, 'bucket')
       .addSelect('COUNT(*)', 'booksRead')
-      .addSelect('COALESCE(SUM(b.pageCount), 0)', 'pagesRead')
+      .addSelect(`COALESCE(SUM(${pageCountExpr}), 0)`, 'pagesRead')
       .where('b.userId = :userId', { userId })
       .andWhere('rr.status = :status', { status: 'leido' })
       .andWhere('rr.finishedOn >= :periodStart', { periodStart })
@@ -443,13 +492,14 @@ export class StatsService {
     userId: string,
     upToYear: number,
   ): Promise<YearBucketDto[]> {
+    const pageCountExpr = this.effectivePageCountSql();
     const yearExpr = this.yearBucketExpression();
-    const rows = await this.readingRepo
-      .createQueryBuilder('rr')
-      .innerJoin(Book, 'b', 'b.id = rr.bookId')
+    const rows = await this.joinEffectiveBibliographic(
+      this.readingRepo.createQueryBuilder('rr'),
+    )
       .select(yearExpr, 'bucket')
       .addSelect('COUNT(*)', 'booksRead')
-      .addSelect('COALESCE(SUM(b.pageCount), 0)', 'pagesRead')
+      .addSelect(`COALESCE(SUM(${pageCountExpr}), 0)`, 'pagesRead')
       .where('b.userId = :userId', { userId })
       .andWhere('rr.status = :status', { status: 'leido' })
       .andWhere(`${yearExpr} <= :upToYear`, {

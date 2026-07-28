@@ -10,6 +10,7 @@ export class CatalogEditionDto {
   isbn_10: string | null;
   data_source: 'open_library' | 'google_books';
   external_provider_id: string;
+  catalog_edition_id?: string;
 }
 
 export type CatalogSource = 'open_library' | 'google_books' | 'none';

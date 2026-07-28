@@ -10,6 +10,8 @@ import { Audience } from '../src/audiences/entities/audience.entity';
 import { Format } from '../src/formats/entities/format.entity';
 import { Genre } from '../src/genres/entities/genre.entity';
 import { Book } from '../src/books/entities/book.entity';
+import { CatalogEdition } from '../src/books/entities/catalog-edition.entity';
+import { UserBookOverride } from '../src/books/entities/user-book-override.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { ImportJob } from '../src/import/entities/import-job.entity';
 import { ImportCatalogEnrichmentService } from '../src/import/goodreads/import-catalog-enrichment.service';
@@ -60,7 +62,7 @@ describe('Import API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, ImportJob, Audience, Format, Genre],
+          entities: [User, Book, CatalogEdition, UserBookOverride, ReadingRecord, ImportJob, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,

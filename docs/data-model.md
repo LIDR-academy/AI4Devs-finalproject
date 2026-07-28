@@ -7,7 +7,9 @@ Data model for **Reading Analytics Platform**: personal reading library, progres
 | Entity | Table | Description |
 |--------|-------|-------------|
 | **User** | `users` | Account identified by email (MVP: dev-login, optional password later) |
-| **Book** | `books` | User-owned bibliographic record with catalog/manual provenance |
+| **Book** | `books` | User library link to a shared catalog edition (reading list membership) |
+| **CatalogEdition** | `catalog_editions` | Shared bibliographic metadata (title, ISBN, cover URL, provenance) |
+| **UserBookOverride** | `user_book_overrides` | Sparse per-user overrides for bibliographic fields |
 | **ReadingRecord** | `reading_records` | 1:1 reading state and progress for a book |
 | **MonthlyTbrList** | `monthly_tbr_lists` | One TBR list per user per calendar month |
 | **TbrEntry** | `tbr_entries` | Book on a monthly TBR with sort order and completion |
@@ -53,40 +55,66 @@ Stores per-user UI preferences (KAN-80).
 |-----|------|---------|-------------|
 | `theme_palette_id` | string enum | `veranda` | Preset palette slug applied app-wide |
 
+### CatalogEdition
+
+Shared canonical metadata for a book edition. Not scoped by `user_id`. Populated on catalog import, Goodreads import, and `POST /v1/books`.
+
+| Field | Column | Type | Constraints |
+|-------|--------|------|-------------|
+| id | `id` | UUID | PK |
+| title | `title` | TEXT | NOT NULL |
+| authors | `authors` | TEXT | NOT NULL |
+| isbn13 | `isbn_13` | VARCHAR(13) | NULL |
+| isbn10 | `isbn_10` | VARCHAR(10) | NULL |
+| coverImageUrl | `cover_image_url` | TEXT | NULL |
+| pageCount | `page_count` | INTEGER | NULL |
+| seriesName | `series_name` | VARCHAR(255) | NULL |
+| publicationYear | `publication_year` | SMALLINT | NULL |
+| catalogGenre | `catalog_genre` | VARCHAR(255) | NULL (raw provider genre) |
+| dataSource | `data_source` | VARCHAR(32) | NOT NULL |
+| externalProviderId | `external_provider_id` | VARCHAR(128) | NULL |
+| createdAt | `created_at` | TIMESTAMPTZ | NOT NULL |
+| updatedAt | `updated_at` | TIMESTAMPTZ | NOT NULL |
+
+**Uniqueness:** partial unique on `isbn_13` (when not null) and on `(data_source, external_provider_id)` (when provider id set).
+
+### UserBookOverride
+
+Sparse per-user bibliographic overrides. `overridden_fields` tracks which columns are active; unset fields inherit from `catalog_editions`.
+
+| Field | Column | Type | Constraints |
+|-------|--------|------|-------------|
+| userBookId | `user_book_id` | UUID | PK, FK → `books.id`, ON DELETE CASCADE |
+| overriddenFields | `overridden_fields` | TEXT[] | NOT NULL, default `{}` |
+| title | `title` | TEXT | NULL |
+| authors | `authors` | TEXT | NULL |
+| coverImageUrl | `cover_image_url` | TEXT | NULL |
+| pageCount | `page_count` | INTEGER | NULL |
+| seriesName | `series_name` | VARCHAR(255) | NULL |
+| publicationYear | `publication_year` | SMALLINT | NULL |
+| updatedAt | `updated_at` | TIMESTAMPTZ | NOT NULL |
+
 ### Book
 
-Metadata for a title in the user’s library.
+User library membership for a catalog edition. API responses expose **effective** bibliographic fields (`override` merged over `catalog_editions`) via `BookMetadataResolver`.
 
 | Field | Column | Type | Constraints |
 |-------|--------|------|-------------|
 | id | `id` | UUID | PK |
 | userId | `user_id` | UUID | FK → `users.id`, ON DELETE CASCADE |
-| title | `title` | TEXT | NOT NULL |
-| authors | `authors` | TEXT | NOT NULL (display string, may list several) |
-| isbn13 | `isbn_13` | VARCHAR(13) | NULL |
-| isbn10 | `isbn_10` | VARCHAR(10) | NULL |
-| coverImageUrl | `cover_image_url` | TEXT | NULL |
-| pageCount | `page_count` | INTEGER | NULL, ≥ 0 if set |
+| catalogEditionId | `catalog_edition_id` | UUID | FK → `catalog_editions.id`, ON DELETE RESTRICT, NOT NULL |
 | genreId | `genre_id` | UUID | NULL, FK → `genres.id`, ON DELETE SET NULL |
-| seriesName | `series_name` | VARCHAR(255) | NULL |
-| publicationYear | `publication_year` | SMALLINT | NULL |
-| dataSource | `data_source` | VARCHAR(32) | NOT NULL; see enum below |
-| externalProviderId | `external_provider_id` | VARCHAR(128) | NULL (catalog edition id) |
 | notes | `notes` | TEXT | NULL |
-| audience | `audience` | VARCHAR(32) | NULL; `young_adult` \| `new_adult` \| `adult` (legacy enum, KAN-35) |
+| audience | `audience` | VARCHAR(32) | NULL; legacy enum |
 | audienceId | `audience_id` | UUID | NULL, FK → `audiences.id`, ON DELETE SET NULL |
 | createdAt | `created_at` | TIMESTAMPTZ | NOT NULL |
 | updatedAt | `updated_at` | TIMESTAMPTZ | NOT NULL |
 
-**data_source enum:** `open_library` | `google_books` | `goodreads` | `manual`
+**Uniqueness:** `UNIQUE (user_id, catalog_edition_id)`.
 
-**audience enum (nullable):** `young_adult` | `new_adult` | `adult`
+**Relationships:** many-to-one `user`; many-to-one `catalogEdition`; optional one-to-one `override`; optional many-to-one `genre`; one-to-one `readingRecord`.
 
-**Uniqueness (application layer):** per user, duplicate blocked by `isbn_13` or (`data_source` + `external_provider_id`) — see `BooksService.assertNotDuplicate`.
-
-**Relationships:** many-to-one `user`; optional many-to-one `audience` via `audience_id`; optional many-to-one `genre` via `genre_id`; one-to-one `readingRecord`.
-
-**Index:** `idx_books_user_id` on `user_id`.
+**Index:** `idx_books_user_id` on `user_id`; `idx_books_catalog_edition_id` on `catalog_edition_id`.
 
 ### Audience
 
@@ -276,9 +304,11 @@ erDiagram
     }
 ```
 
-## Catalog (external, not persisted)
+## Catalog (shared + external)
 
-Search and cover endpoints return **transient** DTOs (`CatalogEdition`, `CoverOption`) from Open Library and Google Books. They are not stored until the user creates a `Book` via `POST /v1/books`.
+`catalog_editions` stores bibliographic metadata reused across users. `CatalogService` queries the local table before Open Library / Google Books; new API hits are upserted into `catalog_editions`. Search responses may include `catalog_edition_id` when persisted.
+
+User edits to bibliographic fields via `PATCH /v1/books/{id}` write to `user_book_overrides` and never mutate shared catalog rows. API `BookDto` fields are **effective** values (`override` > catalog).
 
 ## API field naming
 

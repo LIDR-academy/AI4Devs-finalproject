@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { BookMetadataResolver } from '../book-metadata.resolver';
 import { BookCoverSearchService } from './book-cover-search.service';
 import { CatalogService } from './catalog.service';
 import { EditionCoversService } from './edition-covers.service';
@@ -15,8 +16,20 @@ describe('BookCoverSearchService', () => {
   const ownedBook = {
     id: 'book-1',
     userId: 'user-1',
-    title: 'Fourth Wing',
-    authors: 'Rebecca Yarros',
+    catalogEdition: {
+      title: 'Fourth Wing',
+      authors: 'Rebecca Yarros',
+      isbn13: null,
+      isbn10: null,
+      coverImageUrl: null,
+      pageCount: null,
+      seriesName: null,
+      publicationYear: null,
+      catalogGenre: null,
+      dataSource: 'manual',
+      externalProviderId: null,
+    },
+    override: null,
   } as Book;
 
   beforeEach(async () => {
@@ -30,6 +43,7 @@ describe('BookCoverSearchService', () => {
         { provide: getRepositoryToken(Book), useValue: booksRepo },
         { provide: CatalogService, useValue: catalogService },
         { provide: EditionCoversService, useValue: editionCoversService },
+        BookMetadataResolver,
       ],
     }).compile();
 

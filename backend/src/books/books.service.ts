@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BookMetadataResolver } from './book-metadata.resolver';
 import {
   BookCreatedResponseDto,
   BookDto,
@@ -25,6 +26,8 @@ import {
 } from './dto/reading-record-response.dto';
 import { GoogleBooksClient } from './catalog/google-books.client';
 import { OpenLibraryEnrichmentService } from './catalog/open-library-enrichment.service';
+import { CatalogEditionsService } from './catalog/catalog-editions.service';
+import { UserBookOverridesService } from './user-book-overrides.service';
 import { AudiencesService } from '../audiences/audiences.service';
 import { FormatsService } from '../formats/formats.service';
 import { GenresService } from '../genres/genres.service';
@@ -33,6 +36,14 @@ import { TbrService } from '../lists/tbr.service';
 import { Book } from './entities/book.entity';
 import { ReadingRecord } from './entities/reading-record.entity';
 import { normalizeRating } from './validators/half-step-rating.validator';
+
+const BOOK_RELATIONS = [
+  'catalogEdition',
+  'override',
+  'genreRef',
+  'readingRecord',
+  'readingRecord.formatRef',
+] as const;
 
 @Injectable()
 export class BooksService {
@@ -43,6 +54,9 @@ export class BooksService {
     private readonly booksRepo: Repository<Book>,
     @InjectRepository(ReadingRecord)
     private readonly readingRepo: Repository<ReadingRecord>,
+    private readonly catalogEditions: CatalogEditionsService,
+    private readonly metadataResolver: BookMetadataResolver,
+    private readonly overridesService: UserBookOverridesService,
     private readonly openLibraryEnrichment: OpenLibraryEnrichmentService,
     private readonly googleBooksClient: GoogleBooksClient,
     private readonly audiencesService: AudiencesService,
@@ -55,7 +69,7 @@ export class BooksService {
   async listForUser(userId: string): Promise<BookListItemDto[]> {
     const books = await this.booksRepo.find({
       where: { userId },
-      relations: ['readingRecord', 'readingRecord.formatRef', 'genreRef'],
+      relations: [...BOOK_RELATIONS],
       order: { createdAt: 'DESC' },
     });
     return books.map((b) => ({
@@ -78,14 +92,18 @@ export class BooksService {
 
     const book = await this.booksRepo.findOne({
       where: { id: bookId, userId },
-      relations: ['readingRecord', 'readingRecord.formatRef'],
+      relations: [...BOOK_RELATIONS],
     });
-    if (!book?.readingRecord) {
+    if (!book?.readingRecord || !book.catalogEdition) {
       throw new NotFoundException('Book not found');
     }
 
     const reading = book.readingRecord;
     const previousStatus = reading.status;
+    const effectivePageCount = this.metadataResolver.resolveEffective(
+      book.catalogEdition,
+      book.override,
+    ).page_count;
 
     if (dto.status !== undefined) {
       reading.status = dto.status;
@@ -135,8 +153,8 @@ export class BooksService {
     }
 
     if (reading.status === 'leido' && previousStatus !== 'leido') {
-      if (book.pageCount != null) {
-        reading.currentPage = book.pageCount;
+      if (effectivePageCount != null) {
+        reading.currentPage = effectivePageCount;
         reading.progressPercent = '100.00';
       }
     }
@@ -185,7 +203,7 @@ export class BooksService {
 
     return {
       reading: this.toReadingRecordResource(readingForResponse),
-      book: { id: book.id, page_count: book.pageCount },
+      book: { id: book.id, page_count: effectivePageCount },
       ...(hasMeta ? { meta } : {}),
     };
   }
@@ -224,34 +242,27 @@ export class BooksService {
   }
 
   async create(userId: string, dto: CreateBookDto): Promise<BookCreatedResponseDto> {
-    await this.assertNotDuplicate(userId, dto);
+    const metadata = await this.resolveMetadata(dto);
+    const catalogEdition = await this.catalogEditions.upsertFromCreateDto({
+      ...dto,
+      page_count: metadata.page_count ?? dto.page_count ?? null,
+    });
+
+    await this.assertNotDuplicate(userId, catalogEdition.id, dto);
     const audienceId = await this.resolveAudienceId(userId, dto.audience_id);
     const genreId = await this.resolveGenreId(userId, dto.genre_id);
-    const metadata = await this.resolveMetadata(dto);
 
     const book = this.booksRepo.create({
       userId,
-      title: dto.title,
-      authors: dto.authors,
-      isbn13: dto.isbn_13 ?? null,
-      isbn10: dto.isbn_10 ?? null,
-      coverImageUrl: dto.cover_image_url ?? null,
-      pageCount: metadata.page_count,
+      catalogEditionId: catalogEdition.id,
       genreId,
-      seriesName: dto.series_name ?? null,
-      publicationYear: dto.publication_year ?? null,
-      dataSource: dto.data_source,
-      externalProviderId: dto.external_provider_id ?? null,
       notes: dto.notes ?? null,
       audience: dto.audience ?? null,
       audienceId,
     });
 
     const saved = await this.booksRepo.save(book);
-    const reloaded = await this.booksRepo.findOne({
-      where: { id: saved.id },
-      relations: ['genreRef'],
-    });
+    const reloaded = await this.findBookWithRelations(saved.id);
 
     const reading = this.readingRepo.create({
       bookId: saved.id,
@@ -272,6 +283,21 @@ export class BooksService {
 
     if (page_count) {
       return { page_count };
+    }
+
+    const existing =
+      (dto.isbn_13
+        ? await this.catalogEditions.findByIsbn(dto.isbn_13)
+        : null) ??
+      (dto.external_provider_id && dto.data_source
+        ? await this.catalogEditions.findByProvider(
+            dto.data_source,
+            dto.external_provider_id,
+          )
+        : null);
+
+    if (existing?.pageCount != null) {
+      return { page_count: existing.pageCount };
     }
 
     if (dto.data_source === 'open_library' && dto.external_provider_id) {
@@ -310,37 +336,35 @@ export class BooksService {
 
   private async assertNotDuplicate(
     userId: string,
+    catalogEditionId: string,
     dto: CreateBookDto,
   ): Promise<void> {
-    if (dto.isbn_13) {
-      const byIsbn = await this.booksRepo.findOne({
-        where: { userId, isbn13: dto.isbn_13 },
+    const byCatalog = await this.booksRepo.findOne({
+      where: { userId, catalogEditionId },
+    });
+    if (byCatalog) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: 'Este libro ya está en tu biblioteca',
+        code: 'BOOK_DUPLICATE',
+        existingBookId: byCatalog.id,
       });
-      if (byIsbn) {
-        throw new ConflictException({
-          statusCode: 409,
-          message: 'Este libro ya está en tu biblioteca',
-          code: 'BOOK_DUPLICATE',
-          existingBookId: byIsbn.id,
-        });
-      }
     }
 
-    if (dto.data_source && dto.external_provider_id) {
-      const byExternal = await this.booksRepo.findOne({
-        where: {
-          userId,
-          dataSource: dto.data_source,
-          externalProviderId: dto.external_provider_id,
-        },
-      });
-      if (byExternal) {
-        throw new ConflictException({
-          statusCode: 409,
-          message: 'Este libro ya está en tu biblioteca',
-          code: 'BOOK_DUPLICATE',
-          existingBookId: byExternal.id,
+    if (dto.isbn_13) {
+      const catalog = await this.catalogEditions.findByIsbn(dto.isbn_13);
+      if (catalog && catalog.id !== catalogEditionId) {
+        const byIsbn = await this.booksRepo.findOne({
+          where: { userId, catalogEditionId: catalog.id },
         });
+        if (byIsbn) {
+          throw new ConflictException({
+            statusCode: 409,
+            message: 'Este libro ya está en tu biblioteca',
+            code: 'BOOK_DUPLICATE',
+            existingBookId: byIsbn.id,
+          });
+        }
       }
     }
   }
@@ -348,6 +372,7 @@ export class BooksService {
   async findOneForUser(userId: string, bookId: string): Promise<Book> {
     const book = await this.booksRepo.findOne({
       where: { id: bookId, userId },
+      relations: [...BOOK_RELATIONS],
     });
     if (!book) {
       throw new NotFoundException('Book not found');
@@ -363,45 +388,46 @@ export class BooksService {
     this.assertPatchBookHasFields(dto);
 
     const book = await this.findOneForUser(userId, bookId);
+    if (!book.catalogEdition) {
+      throw new NotFoundException('Book not found');
+    }
 
-    if (dto.title !== undefined) {
-      book.title = dto.title;
-    }
-    if (dto.authors !== undefined) {
-      book.authors = dto.authors;
-    }
-    if (dto.cover_image_url !== undefined) {
-      book.coverImageUrl = dto.cover_image_url;
-    }
-    if (dto.page_count !== undefined) {
-      book.pageCount = dto.page_count;
-    }
+    await this.overridesService.applyBibliographicPatch(
+      bookId,
+      book.catalogEdition,
+      dto,
+    );
+
+    const bookUpdates: Partial<Book> = {};
     if (dto.genre_id !== undefined) {
-      book.genreId = await this.resolveGenreId(userId, dto.genre_id);
-      book.genreRef = null;
-    }
-    if (dto.series_name !== undefined) {
-      book.seriesName = dto.series_name;
-    }
-    if (dto.publication_year !== undefined) {
-      book.publicationYear = dto.publication_year;
+      bookUpdates.genreId = await this.resolveGenreId(userId, dto.genre_id);
     }
     if (dto.audience !== undefined) {
-      book.audience = dto.audience;
+      bookUpdates.audience = dto.audience;
     }
     if (dto.audience_id !== undefined) {
-      book.audienceId = await this.resolveAudienceId(userId, dto.audience_id);
+      bookUpdates.audienceId = await this.resolveAudienceId(
+        userId,
+        dto.audience_id,
+      );
     }
     if (dto.notes !== undefined) {
-      book.notes = dto.notes;
+      bookUpdates.notes = dto.notes;
     }
 
-    const saved = await this.booksRepo.save(book);
-    const reloaded = await this.booksRepo.findOne({
-      where: { id: saved.id },
-      relations: ['genreRef'],
+    if (Object.keys(bookUpdates).length > 0) {
+      await this.booksRepo.update(bookId, bookUpdates);
+    }
+
+    const reloaded = await this.findBookWithRelations(bookId);
+    return this.toBookDto(reloaded ?? book);
+  }
+
+  private async findBookWithRelations(bookId: string): Promise<Book | null> {
+    return this.booksRepo.findOne({
+      where: { id: bookId },
+      relations: [...BOOK_RELATIONS],
     });
-    return this.toBookDto(reloaded ?? saved);
   }
 
   private assertPatchBookHasFields(dto: PatchBookDto): void {
@@ -422,27 +448,14 @@ export class BooksService {
   }
 
   toBookDto(book: Book): BookDto {
-    return {
-      id: book.id,
-      user_id: book.userId,
-      title: book.title,
-      authors: book.authors,
-      isbn_13: book.isbn13,
-      isbn_10: book.isbn10,
-      cover_image_url: book.coverImageUrl,
-      page_count: book.pageCount,
-      genre: book.genreRef?.name ?? null,
-      genre_id: book.genreId,
-      series_name: book.seriesName,
-      publication_year: book.publicationYear,
-      data_source: book.dataSource,
-      external_provider_id: book.externalProviderId,
-      notes: book.notes,
-      audience: book.audience,
-      audience_id: book.audienceId,
-      created_at: book.createdAt.toISOString(),
-      updated_at: book.updatedAt.toISOString(),
-    };
+    if (!book.catalogEdition) {
+      throw new Error(`Book ${book.id} is missing catalog edition relation`);
+    }
+    return this.metadataResolver.toBookDto(
+      book,
+      book.catalogEdition,
+      book.override,
+    );
   }
 
   private async resolveAudienceId(

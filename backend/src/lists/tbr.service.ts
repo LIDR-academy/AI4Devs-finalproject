@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Book } from '../books/entities/book.entity';
+import { BookMetadataResolver } from '../books/book-metadata.resolver';
 import {
   MonthlyTbrListDto,
   MonthlyTbrResponseDto,
@@ -25,6 +26,7 @@ export class TbrService {
     private readonly entryRepo: Repository<TbrEntry>,
     @InjectRepository(Book)
     private readonly booksRepo: Repository<Book>,
+    private readonly metadataResolver: BookMetadataResolver,
   ) {}
 
   async getOrCreateMonthlyTbr(
@@ -58,7 +60,12 @@ export class TbrService {
 
     const entries = await this.entryRepo.find({
       where: { monthlyTbrId: list.id },
-      relations: ['book', 'book.readingRecord'],
+      relations: [
+        'book',
+        'book.catalogEdition',
+        'book.override',
+        'book.readingRecord',
+      ],
       order: { sortOrder: 'ASC' },
     });
 
@@ -78,7 +85,7 @@ export class TbrService {
 
     const book = await this.booksRepo.findOne({
       where: { id: bookId, userId },
-      relations: ['readingRecord'],
+      relations: ['readingRecord', 'catalogEdition', 'override'],
     });
     if (!book) {
       throw new NotFoundException('Book not found');
@@ -250,6 +257,10 @@ export class TbrService {
 
   private toEntryDto(entry: TbrEntry): TbrEntryDto {
     const status = entry.book?.readingRecord?.status ?? 'pendiente';
+    const catalog = entry.book?.catalogEdition;
+    const effective = catalog
+      ? this.metadataResolver.resolveEffective(catalog, entry.book.override)
+      : null;
     return {
       id: entry.id,
       book_id: entry.bookId,
@@ -259,9 +270,9 @@ export class TbrService {
       added_at: entry.addedAt.toISOString(),
       book: {
         id: entry.book.id,
-        title: entry.book.title,
-        authors: entry.book.authors,
-        cover_image_url: entry.book.coverImageUrl,
+        title: effective?.title ?? '',
+        authors: effective?.authors ?? '',
+        cover_image_url: effective?.cover_image_url ?? null,
         reading_status: status,
       },
     };

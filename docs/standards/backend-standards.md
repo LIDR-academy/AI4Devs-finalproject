@@ -171,7 +171,8 @@ Located under `backend/src/books/catalog/`:
 
 Rules:
 
-- Catalog responses are **not** persisted until `POST /v1/books`.
+- Catalog search checks `catalog_editions` locally before external APIs; API hits are upserted into shared catalog.
+- `BookMetadataResolver` merges `catalog_editions` + `user_book_overrides` for all library reads; user PATCH writes overrides only.
 - Handle upstream timeouts/errors gracefully; return empty `items` or partial covers when appropriate.
 - Unit-test pure helpers (`cover-utils`, enrichment) with mocks for HTTP.
 

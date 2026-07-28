@@ -9,6 +9,7 @@ import {
   BookCoverSearchEditionDto,
   BookCoverSearchResponseDto,
 } from '../dto/book-cover-search.dto';
+import { BookMetadataResolver } from '../book-metadata.resolver';
 import { Book } from '../entities/book.entity';
 import { CatalogService } from './catalog.service';
 import { EditionCoversService } from './edition-covers.service';
@@ -22,6 +23,7 @@ export class BookCoverSearchService {
     private readonly booksRepo: Repository<Book>,
     private readonly catalogService: CatalogService,
     private readonly editionCoversService: EditionCoversService,
+    private readonly metadataResolver: BookMetadataResolver,
   ) {}
 
   async searchForBook(
@@ -31,14 +33,20 @@ export class BookCoverSearchService {
   ): Promise<BookCoverSearchResponseDto> {
     const book = await this.booksRepo.findOne({
       where: { id: bookId, userId },
+      relations: ['catalogEdition', 'override'],
     });
-    if (!book) {
+    if (!book?.catalogEdition) {
       throw new NotFoundException('Book not found');
     }
 
+    const effective = this.metadataResolver.resolveEffective(
+      book.catalogEdition,
+      book.override,
+    );
+
     const query = BookCoverSearchService.resolveQuery(
-      book.title,
-      book.authors,
+      effective.title,
+      effective.authors,
       queryOverride,
     );
 

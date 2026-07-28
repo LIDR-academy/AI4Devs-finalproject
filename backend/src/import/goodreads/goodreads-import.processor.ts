@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BookMetadataResolver } from '../../books/book-metadata.resolver';
+import { CatalogEditionsService } from '../../books/catalog/catalog-editions.service';
 import { Book } from '../../books/entities/book.entity';
 import { ReadingRecord } from '../../books/entities/reading-record.entity';
 import { FormatsService } from '../../formats/formats.service';
@@ -28,6 +30,8 @@ export class GoodreadsImportProcessor {
     @InjectRepository(ReadingRecord)
     private readonly readingRepo: Repository<ReadingRecord>,
     private readonly catalogEnrichment: ImportCatalogEnrichmentService,
+    private readonly catalogEditions: CatalogEditionsService,
+    private readonly metadataResolver: BookMetadataResolver,
     private readonly formatsService: FormatsService,
   ) {}
 
@@ -153,8 +157,16 @@ export class GoodreadsImportProcessor {
     for (const failure of failures) {
       const book = await this.booksRepo.findOne({
         where: { id: failure.book_id },
+        relations: ['catalogEdition', 'override', 'genreRef'],
       });
-      if (!book || (book.coverImageUrl && book.genreId)) {
+      if (!book?.catalogEdition) {
+        continue;
+      }
+      const effective = this.metadataResolver.resolveEffective(
+        book.catalogEdition,
+        book.override,
+      );
+      if (effective.cover_image_url && book.genreId) {
         continue;
       }
 
@@ -176,12 +188,26 @@ export class GoodreadsImportProcessor {
   ): Promise<Map<string, string>> {
     const books = await this.booksRepo.find({
       where: { userId },
-      select: ['id', 'isbn13', 'title', 'authors'],
+      relations: ['catalogEdition', 'override'],
     });
 
     const index = new Map<string, string>();
     for (const book of books) {
-      index.set(buildGoodreadsDedupKeyFromLibraryBook(book), book.id);
+      if (!book.catalogEdition) {
+        continue;
+      }
+      const effective = this.metadataResolver.resolveEffective(
+        book.catalogEdition,
+        book.override,
+      );
+      index.set(
+        buildGoodreadsDedupKeyFromLibraryBook({
+          isbn13: effective.isbn_13,
+          title: effective.title,
+          authors: effective.authors,
+        }),
+        book.id,
+      );
     }
     return index;
   }
@@ -192,19 +218,21 @@ export class GoodreadsImportProcessor {
   ): Promise<Book> {
     const { book: bookDraft, reading_record: readingDraft } = row;
 
-    const book = this.booksRepo.create({
-      userId,
+    const catalogEdition = await this.catalogEditions.upsert({
       title: bookDraft.title,
       authors: bookDraft.authors,
-      isbn13: bookDraft.isbn13,
-      isbn10: bookDraft.isbn10,
-      pageCount: bookDraft.page_count,
-      publicationYear: bookDraft.publication_year,
-      dataSource: bookDraft.data_source,
-      externalProviderId: bookDraft.external_provider_id,
-      coverImageUrl: null,
+      isbn_13: bookDraft.isbn13,
+      isbn_10: bookDraft.isbn10,
+      page_count: bookDraft.page_count,
+      publication_year: bookDraft.publication_year,
+      data_source: bookDraft.data_source,
+      external_provider_id: bookDraft.external_provider_id,
+    });
+
+    const book = this.booksRepo.create({
+      userId,
+      catalogEditionId: catalogEdition.id,
       genreId: null,
-      seriesName: null,
       notes: null,
       audience: null,
     });

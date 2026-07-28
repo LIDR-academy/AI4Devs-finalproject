@@ -6,6 +6,8 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { Repository } from 'typeorm';
 import { Book } from '../src/books/entities/book.entity';
+import { CatalogEdition } from '../src/books/entities/catalog-edition.entity';
+import { UserBookOverride } from '../src/books/entities/user-book-override.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { Audience } from '../src/audiences/entities/audience.entity';
 import { Format } from '../src/formats/entities/format.entity';
@@ -14,6 +16,7 @@ import { FormatsModule } from '../src/formats/formats.module';
 import { AuthModule } from '../src/auth/auth.module';
 import { User } from '../src/users/user.entity';
 import { UsersModule } from '../src/users/users.module';
+import { seedCatalogBook } from './catalog-book-seed';
 
 describe('Formats API (integration)', () => {
   let app: INestApplication<App>;
@@ -21,6 +24,7 @@ describe('Formats API (integration)', () => {
   let userId: string;
   let readingRepo: Repository<ReadingRecord>;
   let bookRepo: Repository<Book>;
+  let catalogRepo: Repository<CatalogEdition>;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -29,13 +33,13 @@ describe('Formats API (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Book, ReadingRecord, Audience, Format, Genre],
+          entities: [User, Book, CatalogEdition, UserBookOverride, ReadingRecord, Audience, Format, Genre],
           synchronize: true,
         }),
         UsersModule,
         AuthModule,
         FormatsModule,
-        TypeOrmModule.forFeature([Book, ReadingRecord]),
+        TypeOrmModule.forFeature([Book, CatalogEdition, UserBookOverride, ReadingRecord]),
       ],
     }).compile();
 
@@ -54,6 +58,7 @@ describe('Formats API (integration)', () => {
     userId = login.body.user.id;
     readingRepo = moduleRef.get(getRepositoryToken(ReadingRecord));
     bookRepo = moduleRef.get(getRepositoryToken(Book));
+    catalogRepo = moduleRef.get(getRepositoryToken(CatalogEdition));
   });
 
   afterAll(async () => {
@@ -102,22 +107,13 @@ describe('Formats API (integration)', () => {
     const target = list.body.find((item: { name: string }) => item.name === 'Físico');
     expect(target).toBeDefined();
 
-    const book = await bookRepo.save(
-      bookRepo.create({
-        userId,
-        title: 'Physical Book',
-        authors: 'Author',
-        dataSource: 'manual',
-      }),
-    );
+    const book = await seedCatalogBook(catalogRepo, bookRepo, readingRepo, {
+      userId,
+      title: 'Physical Book',
+      authors: 'Author',
+    });
 
-    await readingRepo.save(
-      readingRepo.create({
-        bookId: book.id,
-        status: 'pendiente',
-        formatId: target.id,
-      }),
-    );
+    await readingRepo.update({ bookId: book.id }, { formatId: target.id });
 
     const res = await request(app.getHttpServer())
       .get(`/v1/formats/${target.id}/affected-readings`)
@@ -136,22 +132,13 @@ describe('Formats API (integration)', () => {
     const target = list.body.find((item: { name: string }) => item.name === 'Ebook');
     expect(target).toBeDefined();
 
-    const book = await bookRepo.save(
-      bookRepo.create({
-        userId,
-        title: 'Ebook Book',
-        authors: 'Author',
-        dataSource: 'manual',
-      }),
-    );
+    const book = await seedCatalogBook(catalogRepo, bookRepo, readingRepo, {
+      userId,
+      title: 'Ebook Book',
+      authors: 'Author',
+    });
 
-    await readingRepo.save(
-      readingRepo.create({
-        bookId: book.id,
-        status: 'pendiente',
-        formatId: target.id,
-      }),
-    );
+    await readingRepo.update({ bookId: book.id }, { formatId: target.id });
 
     await request(app.getHttpServer())
       .delete(`/v1/formats/${target.id}`)

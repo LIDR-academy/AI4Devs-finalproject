@@ -12,6 +12,8 @@ import { Genre } from '../src/genres/entities/genre.entity';
 import { AuthModule } from '../src/auth/auth.module';
 import { BooksModule } from '../src/books/books.module';
 import { Book } from '../src/books/entities/book.entity';
+import { CatalogEdition } from '../src/books/entities/catalog-edition.entity';
+import { UserBookOverride } from '../src/books/entities/user-book-override.entity';
 import { ReadingRecord } from '../src/books/entities/reading-record.entity';
 import { GoalsModule } from '../src/goals/goals.module';
 import { AnnualReadingGoal } from '../src/goals/entities/annual-reading-goal.entity';
@@ -159,6 +161,8 @@ describe('Stats API (integration)', () => {
           entities: [
             User,
             Book,
+            CatalogEdition,
+            UserBookOverride,
             ReadingRecord,
             Audience,
             Format,

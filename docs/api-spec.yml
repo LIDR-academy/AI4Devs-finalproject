@@ -1550,6 +1550,14 @@ components:
         user_id:
           type: string
           format: uuid
+        catalog_edition_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Shared catalog edition reference
+        has_overrides:
+          type: boolean
+          description: True when the user has bibliographic overrides
         title:
           type: string
         authors:
@@ -1770,6 +1778,10 @@ components:
           $ref: '#/components/schemas/CatalogDataSource'
         external_provider_id:
           type: string
+        catalog_edition_id:
+          type: string
+          format: uuid
+          description: Present when the edition is persisted in catalog_editions
 
     CatalogSearchResponse:
       type: object

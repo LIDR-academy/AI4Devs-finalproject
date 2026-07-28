@@ -175,7 +175,10 @@ async function auditBook(
   book: Book,
   normalizer: GenreNormalizerService,
 ): Promise<BookAuditRow> {
-  const isbn = book.isbn13 ?? book.isbn10;
+  const catalog = book.catalogEdition;
+  const title = catalog?.title ?? '';
+  const authors = catalog?.authors ?? '';
+  const isbn = catalog?.isbn13 ?? catalog?.isbn10;
   const apiNotes: string[] = [];
   let olSearchSubjects: string[] = [];
   let olWorkSubjects: string[] = [];
@@ -204,8 +207,8 @@ async function auditBook(
   );
   const isbnHasGenreData = rawFromIsbn.length > 0;
 
-  if (!isbnHasGenreData && book.title.trim() && book.authors.trim()) {
-    const query = `title:${book.title} author:${book.authors}`;
+  if (!isbnHasGenreData && title.trim() && authors.trim()) {
+    const query = `title:${title} author:${authors}`;
     const ol = await fetchOpenLibrarySearch(query);
     if (ol.workKey) {
       const titleWorkSubjects = await fetchOpenLibraryWorkSubjects(ol.workKey);
@@ -220,7 +223,7 @@ async function auditBook(
     }
     olSearchSubjects = [...olSearchSubjects, ...ol.subjects];
   } else if (!isbn) {
-    const query = `title:${book.title} author:${book.authors}`;
+    const query = `title:${title} author:${authors}`;
     const ol = await fetchOpenLibrarySearch(query);
     olSearchSubjects = ol.subjects;
     apiNotes.push(...ol.notes);
@@ -254,8 +257,8 @@ async function auditBook(
 
   return {
     id: book.id,
-    title: book.title,
-    authors: book.authors,
+    title,
+    authors,
     isbn,
     raw_genres: rawGenres,
     normalized,
@@ -334,6 +337,7 @@ async function main(): Promise<void> {
         genreId: IsNull(),
         ...(options.userId ? { userId: options.userId } : {}),
       },
+      relations: ['catalogEdition'],
       order: { createdAt: 'DESC' },
       take: options.limit,
     });
@@ -350,7 +354,9 @@ async function main(): Promise<void> {
     const rows: BookAuditRow[] = [];
     for (let i = 0; i < books.length; i += 1) {
       const book = books[i];
-      process.stdout.write(`[${i + 1}/${books.length}] ${book.title.slice(0, 50)}...\n`);
+      const catalog = book.catalogEdition;
+      const displayTitle = catalog?.title ?? book.id;
+      process.stdout.write(`[${i + 1}/${books.length}] ${displayTitle.slice(0, 50)}...\n`);
       rows.push(await auditBook(book, normalizer));
       if (i < books.length - 1) {
         await sleep(options.delayMs);

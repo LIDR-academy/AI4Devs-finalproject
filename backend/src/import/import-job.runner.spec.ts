@@ -10,6 +10,7 @@ describe('ImportJobRunner', () => {
       ImportJobService,
       | 'getJobForUser'
       | 'getCsvContent'
+      | 'getGenreResolutions'
       | 'updateProgress'
       | 'markCompleted'
       | 'markFailed'
@@ -22,6 +23,7 @@ describe('ImportJobRunner', () => {
     importJobService = {
       getJobForUser: jest.fn(),
       getCsvContent: jest.fn(),
+      getGenreResolutions: jest.fn().mockResolvedValue({}),
       updateProgress: jest.fn(),
       markCompleted: jest.fn(),
       markFailed: jest.fn(),
