@@ -24,11 +24,22 @@ Aplicación web desktop-first para lectoras intensivas que quieren registrar lec
 
 ### **0.4. URL del proyecto:**
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+**Entorno local (entrega máster):** la aplicación no está desplegada en producción; se ejecuta en local siguiendo [§1.4](#14-instrucciones-de-instalación).
+
+| Servicio | URL |
+| --- | --- |
+| Frontend (SPA) | http://localhost:5173 |
+| API REST (`/v1`) | http://localhost:3000/v1 |
+
+Tras `npm run start:dev` (backend) y `npm run dev` (frontend), abrir `/login` y usar **dev-login** con un email de prueba.
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+**Repositorio público:** https://github.com/CeliaMerino/AI4devs-finalproject
+
+```bash
+git clone https://github.com/CeliaMerino/AI4devs-finalproject.git
+```
 
 
 ---
@@ -76,13 +87,16 @@ Aplicación web desktop-first para lectoras intensivas que quieren registrar lec
 
 ### **1.4. Instrucciones de instalación:**
 
-Stack previsto: **frontend** React y TypeScript; **backend** Node.js con NestJS; **base de datos** PostgreSQL. Los pasos concretos (`package.json`, scripts, migraciones y semillas) dependerán del repositorio cuando el código esté en el árbol; como guía típica en local:
+Stack implementado: **frontend** React 19 + Vite + TypeScript; **backend** NestJS 11 + TypeORM; **base de datos** PostgreSQL (Docker Compose en puerto **5433**). Guía detallada en [`docs/development_guide.md`](docs/development_guide.md).
 
-1. **Requisitos:** Node.js (LTS), npm o pnpm, PostgreSQL instalado o vía Docker, y Git.
-2. **Base de datos:** crear una base y un usuario; configurar la URL en un archivo `.env` del backend (por ejemplo `DATABASE_URL` o variables que use TypeORM/Prisma según se elija).
-3. **Backend:** clonar el repositorio, entrar en la carpeta del API, instalar dependencias, ejecutar migraciones y, si existen, semillas (`npm install`, `npm run migration:run`, `npm run seed`, u homólogos).
-4. **Frontend:** en la carpeta del cliente, instalar dependencias y arrancar en desarrollo (`npm install`, `npm run dev` o `npm start`), apuntando la URL del API en variables de entorno (por ejemplo `VITE_*` o `REACT_APP_*`).
-5. **Servicios externos (opcional):** claves para Open Library / Google Books si el backend las requiere para cuotas o configuración.
+1. **Requisitos:** Node.js 20+, npm 9+, Docker y Docker Compose, Git.
+2. **Clonar:** `git clone https://github.com/CeliaMerino/AI4devs-finalproject.git && cd AI4Devs-finalproject`
+3. **Base de datos:** desde la raíz, `docker compose up -d` (PostgreSQL en `localhost:5433`, base `reading_analytics`, usuario/contraseña `postgres`).
+4. **Backend:** `cd backend && cp .env.example .env && npm install && npm run migration:run && npm run start:dev` → API en `http://localhost:3000/v1`.
+5. **Frontend:** `cd frontend && cp .env.example .env && npm install && npm run dev` → SPA en `http://localhost:5173` (`VITE_API_URL=http://localhost:3000/v1`).
+6. **Acceso:** abrir `/login`, pulsar dev-login con un email; redirige al Book Tracker.
+7. **Tests (opcional):** `cd backend && npm test && npm run test:integration`.
+8. **Servicios externos (opcional):** `GOOGLE_BOOKS_API_KEY` en `backend/.env` mejora el fallback de catálogo cuando Open Library no devuelve resultados.
 
 ---
 
@@ -90,9 +104,9 @@ Stack previsto: **frontend** React y TypeScript; **backend** Node.js con NestJS;
 
 ### **2.1. Diagrama de arquitectura**
 
-La plataforma sigue un modelo **cliente-servidor**: una SPA en el navegador consume una **API REST** stateless; el backend concentra la lógica de negocio por dominios (alineados con los casos de uso del [PRD](PRD.md) y [`documents/use-cases.md`](documents/use-cases.md)); **PostgreSQL** es la fuente de verdad para biblioteca, lecturas, listas, metas y agregados analíticos. La resolución de metadatos de libros pasa por **Open Library** primero y **Google Books** en **fallback secuencial** (UC-01).
+La plataforma sigue un modelo **cliente-servidor**: una SPA en el navegador consume una **API REST** stateless; el backend concentra la lógica de negocio por dominios (alineados con los casos de uso del [PRD](PRD.md) y [`docs/product/use-cases.md`](docs/product/use-cases.md)); **PostgreSQL** es la fuente de verdad para biblioteca, lecturas, listas, metas y agregados analíticos. La resolución de metadatos de libros pasa por **Open Library** primero y **Google Books** en **fallback secuencial** (UC-01).
 
-![Diagrama de arquitectura del sistema](documents/architecture_diagram.png)
+![Diagrama de arquitectura del sistema](docs/product/diagrams/architecture_diagram.png)
 
 ```mermaid
 flowchart TB
@@ -151,10 +165,10 @@ La aplicación se organiza en **capas** sobre un **monolito modular NestJS** y u
 
 | Componente | Responsabilidad | Tecnología | Dependencias clave |
 | --- | --- | --- | --- |
-| **Capa de presentación (SPA)** | Rutas y vistas por módulo de producto (Home, Book Tracker, Reading Stats, Lists/TBR, Goals, Library, Recap/Insights, Import/Export, Perfil); estado de UI, formularios, tablas y gráficos; consumo de la API REST. | React 18+, TypeScript, enrutador (p. ej. React Router), cliente HTTP (p. ej. TanStack Query + `fetch`/`axios`), librería de gráficos según diseño. | API REST del backend (`apps/api`); tipos compartidos opcionales (`packages/shared`). |
+| **Capa de presentación (SPA)** | Rutas y vistas por módulo de producto (Home, Book Tracker, Reading Stats, Lists/TBR, Goals, Library, Recap/Insights, Import/Export, Perfil); estado de UI, formularios, tablas y gráficos; consumo de la API REST. | React 19, TypeScript, React Router 7, TanStack Query 5 + `fetch`, Recharts para gráficos. | API REST del backend (`backend/`); cliente tipado en `frontend/src/api/`. |
 | **Capa de API (HTTP)** | Exponer recursos REST versionados; validar entrada (DTOs + `class-validator`); autenticación/autorización por usuaria; traducir HTTP ↔ dominio; códigos de error homogéneos. | NestJS (`Controllers`, `Guards`, `Interceptors`, `Pipes`). | Servicios de dominio del mismo proceso; sin lógica de negocio pesada en controladores. |
 | **Capa de servicios de dominio** | Reglas de negocio: libros y lecturas, listas y TBR, metas, agregados analíticos, importación, generación de exportaciones visuales; orquestación entre repositorios y proveedores externos. | NestJS `Providers` / `@Injectable()` servicios por módulo funcional. | Repositorios ORM, otros servicios del monolito, clientes HTTP a catálogos externos. |
-| **Capa de acceso a datos** | Persistencia relacional, transacciones, consultas para estadísticas y biblioteca; migraciones y esquema coherente con una sola fuente de verdad. | PostgreSQL; **TypeORM** (o Prisma) con **entidades** y repositorios inyectables. | Solo desde servicios de dominio (no desde controladores). |
+| **Capa de acceso a datos** | Persistencia relacional, transacciones, consultas para estadísticas y biblioteca; migraciones y esquema coherente con una sola fuente de verdad. | PostgreSQL; **TypeORM** con entidades y repositorios inyectables; migraciones en `backend/src/migrations/`. | Solo desde servicios de dominio (no desde controladores). |
 | **Servicios externos (catálogo)** | Búsqueda y enriquecimiento de metadatos de libros con política de fallback. | APIs públicas: **Open Library** (primaria), **Google Books** (fallback). | Cliente HTTP (p. ej. `axios`/`fetch`) encapsulado en el módulo de catálogo; reintentos y degradación a alta manual (UC-01). |
 
 #### Servicios de dominio y módulos Nest (alineación PRD / UC)
@@ -186,61 +200,49 @@ La aplicación se organiza en **capas** sobre un **monolito modular NestJS** y u
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-Patrón elegido: **monorepo** con dos aplicaciones (`apps/web`, `apps/api`) y un paquete opcional de tipos compartidos. El backend sigue **módulos verticales NestJS** (controller / service / entity por dominio); el frontend sigue **features** por módulo de producto más **carpetas transversales** (`components`, `hooks`, `services`).
+Patrón elegido: **repositorio con dos aplicaciones** (`backend/`, `frontend/`) en la raíz. El backend sigue **módulos verticales NestJS** (controller / service / entity por dominio); el frontend organiza **páginas por ruta** más **componentes transversales** (`components/`, `api/`, `theme/`).
 
 ```text
-reading-analytics/                 # raíz del monorepo
-├── apps/
-│   ├── api/                       # Backend NestJS + Node.js (API REST)
-│   │   ├── src/
-│   │   │   ├── main.ts            # bootstrap HTTP, prefijos globales, validación
-│   │   │   ├── app.module.ts      # importa módulos de dominio y configuración
-│   │   │   ├── common/            # guards, pipes, filters, decorators, utilidades HTTP
-│   │   │   ├── config/            # carga y validación de variables de entorno
-│   │   │   ├── database/          # data source TypeORM, suscripción a migraciones
-│   │   │   └── modules/
-│   │   │       ├── auth/          # autenticación, JWT, estrategias
-│   │   │       ├── users/         # perfil, preferencias y ajustes (Perfil)
-│   │   │       ├── books/         # tracker, estados, progreso, ratings, biblioteca; clientes catálogo OL/GB (UC-01…04, UC-09)
-│   │   │       ├── lists/         # TBR mensual, listas personalizadas, favoritos, retos (UC-05)
-│   │   │       ├── goals/         # meta anual y forecast (UC-06)
-│   │   │       ├── stats/         # agregados y endpoints para dashboards (UC-07, datos Recap)
-│   │   │       ├── import/        # Excel, CSV, Goodreads (UC-08)
-│   │   │       └── export/        # PNG, PDF, story 9:16 (UC-10)
-│   │   │       # convención Nest por módulo: *.module.ts, *.controller.ts, *.service.ts, entities/, dto/
-│   │   ├── test/                  # e2e y tests de integración API
-│   │   └── package.json
-│   │
-│   └── web/                       # Frontend React + TypeScript (SPA desktop-first)
-│       ├── src/
-│       │   ├── main.tsx           # entrada React, providers (router, query client)
-│       │   ├── app/               # layout raíz, sidebar PRD, rutas principales
-│       │   ├── features/
-│       │   │   ├── home/          # Home: KPIs, lecturas en curso, TBR actual, meta
-│       │   │   ├── book-tracker/  # tabla, filtros, alta libro, estados (UC-01, UC-02, UC-03, UC-04)
-│       │   │   ├── reading-stats/ # dashboards y comparativas (UC-07)
-│       │   │   ├── lists/         # TBR y listas (UC-05)
-│       │   │   ├── goals/         # meta anual (UC-06)
-│       │   │   ├── library/       # histórico y búsqueda avanzada (UC-09)
-│       │   │   ├── recap/         # resúmenes mensuales/anuales y disparo de export (UC-10)
-│       │   │   ├── import-export/ # importaciones y descargas (UC-08, export)
-│       │   │   └── profile/       # perfil y ajustes
-│       │   │   # por feature: pages/, components/, hooks, cliente API local (p. ej. api.ts)
-│       │   ├── components/        # UI reutilizable (botones, modales, tablas, charts envoltorio)
-│       │   ├── hooks/             # hooks transversales (auth, media query, debounce)
-│       │   ├── services/          # cliente API REST tipado, una función por recurso
-│       │   ├── lib/               # utilidades puras, formateo fechas, constantes
-│       │   └── types/             # tipos TS del front si no usas paquete shared
-│       ├── public/
-│       └── package.json
-│
-├── packages/
-│   └── shared/                    # opcional: DTOs/tipos de contrato API compartidos entre web y api
-│       └── src/
-│
-├── package.json                   # workspaces del monorepo (npm/pnpm/yarn)
-├── turbo.json / nx.json           # opcional: orquestación de build en monorepo
-└── README.md
+AI4Devs-finalproject/              # raíz del repositorio
+├── backend/                       # API NestJS 11 + TypeORM + PostgreSQL
+│   ├── src/
+│   │   ├── main.ts                # bootstrap HTTP, prefijo /v1, CORS, validación
+│   │   ├── app.module.ts
+│   │   ├── auth/                  # JWT, dev-login
+│   │   ├── users/                 # usuarias
+│   │   ├── books/                 # tracker, catálogo OL/GB, reading records (UC-01…04)
+│   │   ├── lists/                 # TBR mensual (UC-05)
+│   │   ├── goals/                 # metas anuales (UC-06)
+│   │   ├── stats/                 # KPIs e insights (UC-07)
+│   │   ├── genres/                # géneros configurables por usuaria
+│   │   ├── formats/               # formatos de lectura
+│   │   ├── audiences/             # audiencias / edad objetivo
+│   │   ├── import/                # importación Goodreads CSV (UC-08)
+│   │   ├── preferences/           # tema y preferencias de perfil
+│   │   └── migrations/            # migraciones TypeORM versionadas
+│   ├── test/                      # tests de integración (Supertest + Postgres)
+│   └── package.json
+├── frontend/                      # SPA React 19 + Vite + TypeScript
+│   ├── src/
+│   │   ├── main.tsx               # entrada React, providers
+│   │   ├── App.tsx                # router, QueryClient, auth
+│   │   ├── pages/                 # Home, BookTracker, Stats, Lists, Goals, Settings…
+│   │   ├── components/            # layout, modales, charts, tarjetas Home
+│   │   ├── api/                   # cliente REST tipado (client.ts, types.ts, errors.ts)
+│   │   ├── contexts/              # AuthContext
+│   │   ├── theme/                 # tokens de diseño (paleta PRD)
+│   │   └── lib/                   # locale es-ES, utilidades
+│   └── package.json
+├── docs/                          # documentación unificada (ver docs/README.md)
+│   ├── product/                   # user stories, use cases, diagramas
+│   ├── standards/                 # estándares backend/frontend/docs/OpenSpec
+│   ├── api-spec.yml               # contrato OpenAPI /v1
+│   ├── data-model.md              # esquema PostgreSQL
+│   └── development_guide.md       # instalación local
+├── openspec/                      # especificaciones por cambio (tickets KAN-*)
+├── docker-compose.yml             # PostgreSQL en puerto host 5433
+├── PRD.md
+└── readme.md                      # documento de entrega (este fichero)
 ```
 
 ### **2.4. Infraestructura y despliegue**
@@ -261,7 +263,7 @@ No se asume app móvil nativa ni tráfico social; el modelo **cliente → API RE
 
 #### Diagrama Mermaid — pipeline de despliegue (Git → producción)
 
-![Pipeline CI/CD — desarrollo, GitHub Actions, despliegue y producción](documents/despliegue.png)
+![Pipeline CI/CD — desarrollo, GitHub Actions, despliegue y producción](docs/product/diagrams/despliegue.png)
 
 ```mermaid
 flowchart LR
@@ -308,11 +310,11 @@ flowchart LR
 
 #### Proceso paso a paso
 
-1. **Desarrollo local:** la fundadora trabaja en el monorepo (`apps/web`, `apps/api`), con PostgreSQL local o una base de desarrollo en la nube; variables sensibles solo en `.env` local (nunca en Git).
+1. **Desarrollo local:** la fundadora trabaja en `backend/` y `frontend/`, con PostgreSQL vía Docker Compose (puerto 5433) o instancia local; variables sensibles solo en `.env` (nunca en Git).
 2. **Push a GitHub:** al integrar cambios en `main` (o al etiquetar una release, según política del equipo), se dispara el workflow de GitHub Actions.
 3. **CI — calidad:** se ejecutan **lint**, **typecheck** y **tests** (Jest en API, Vitest en web) para fallar rápido si se rompe el contrato o la lógica crítica.
 4. **CI — artefactos:** se construye la **imagen Docker** del API (o el bundle Node según plataforma) y el **build estático** del frontend (`vite build` o equivalente).
-5. **CD — base de datos:** contra el PostgreSQL de **producción** (o un entorno `staging` previo) se aplican **migraciones** de TypeORM/Prisma de forma ordenada, normalmente como paso explícito en el pipeline o como comando de release previo al arranque del contenedor.
+5. **CD — base de datos:** contra el PostgreSQL de **producción** (o un entorno `staging` previo) se aplican **migraciones TypeORM** (`npm run migration:run`) de forma ordenada, normalmente como paso explícito en el pipeline o como comando de release previo al arranque del contenedor.
 6. **CD — API:** el proveedor cloud **tira de la nueva imagen** o del nuevo commit, reinicia el servicio NestJS con las variables de entorno de producción (`DATABASE_URL`, `JWT_SECRET`, claves de catálogo si aplica).
 7. **CD — frontend:** se sube el directorio de salida del build a Vercel/Netlify/Pages; la SPA queda servida por HTTPS con **CORS** apuntando solo al origen del API de producción.
 8. **Verificación:** smoke manual o comprobación automatizada (healthcheck `GET /health`, una petición autenticada de prueba) y revisión de logs del primer despliegue.
@@ -352,7 +354,7 @@ La accesibilidad **WCAG 2.1/2.2 AA** se cubre en **diseño y QA** (contraste, fo
 | --- | --- | --- |
 | **Backend — unitario** | **Jest** | Servicios Nest con dependencias **mockeadas** (`BookService`, `StatsService`, `ImportService`, clientes HTTP de catálogo). |
 | **Backend — integración API** | **Jest** + **Supertest** | App Nest levantada en memoria o contra **PostgreSQL de test** (Testcontainers o BD efímera en CI); contrato HTTP real sin mockear el ORM si se busca fidelidad. |
-| **Frontend — unitario / componentes** | **Vitest** + **React Testing Library** | Componentes y hooks aislados; alineado con Vite en el `apps/web`. Alternativa equivalente: Jest + RTL si el proyecto unifica en Jest. |
+| **Frontend — unitario / componentes** | **Vitest** + **React Testing Library** (previsto) | Componentes y hooks aislados; alineado con Vite en `frontend/`. Hoy la verificación principal es manual + tests de backend. |
 | **E2E** | **Playwright** | Navegador real; flujos críticos UC-01, UC-02 y vistas que dependen de **UC-07**; ejecutable en CI contra **staging** o entorno docker-compose `api + web + postgres`. |
 
 **Pirámide:** muchas pruebas **rápidas** (unitarias), un conjunto mediano de **integración** sobre API + BD, y un número **reducido** pero **estable** de E2E que cubran el camino feliz y regresiones del MVP. Los datos de test deben ser **deterministas** (fixtures por `userId`) para que estadísticas (UC-07) sean reproducibles.
@@ -373,9 +375,17 @@ La accesibilidad **WCAG 2.1/2.2 AA** se cubre en **diseño y QA** (contraste, fo
 
 ### **3.1. Diagrama del modelo de datos:**
 
-Modelo lógico **PostgreSQL** alineado con el PRD: biblioteca por usuaria, registro de lectura 1:1 por libro, TBR mensual único por mes, metas anuales e histórico de progreso por sesiones.
+Modelo lógico **PostgreSQL** alineado con el PRD: biblioteca por usuaria, registro de lectura 1:1 por libro, TBR mensual único por mes, metas anuales y tablas de configuración (géneros, formatos, audiencias).
 
-![Diagrama entidad–relación del modelo de datos (Reading Analytics Platform)](documents/data_model.png)
+> **Nota de implementación (julio 2026):** el esquema canónico implementado está en [`docs/data-model.md`](docs/data-model.md). Respecto al diagrama original de este apartado: `books.genre` (texto) migró a `genre_id` → tabla `genres`; existen `formats`, `audiences`, `import_jobs` y `user_profiles`. **Tags** y progreso por sesiones no están en el MVP. En el frontend, `/library` y `/recap` son placeholders (UC-09 y export visual UC-10 pendientes).
+
+| Área | Estado MVP |
+| --- | --- |
+| UC-01…UC-08 | Implementados (alta catálogo, tracker, TBR, metas, stats, import Goodreads) |
+| UC-09 Library | Ruta placeholder; búsqueda avanzada pendiente |
+| UC-10 Recap/export | Ruta placeholder; export PNG/PDF/story pendiente |
+
+![Diagrama entidad–relación del modelo de datos (Reading Analytics Platform)](docs/product/diagrams/data_model.png)
 
 ```mermaid
 erDiagram
@@ -1735,9 +1745,9 @@ Accept: application/json
 
 ## 5. Historias de Usuario
 
-Las historias de usuario del **Reading Analytics Platform** están redactadas en formato **Como / Quiero / Para**, con **criterios de aceptación en estilo BDD** (Dado–Cuando–Entonces), **estimación** (S/M/L) y **revisión INVEST**, alineadas con el [PRD](PRD.md) y con los casos de uso técnicos de [`documents/use-cases.md`](documents/use-cases.md).
+Las historias de usuario del **Reading Analytics Platform** están redactadas en formato **Como / Quiero / Para**, con **criterios de aceptación en estilo BDD** (Dado–Cuando–Entonces), **estimación** (S/M/L) y **revisión INVEST**, alineadas con el [PRD](PRD.md) y con los casos de uso técnicos de [`docs/product/use-cases.md`](docs/product/use-cases.md).
 
-**Documento fuente:** el listado completo (cinco historias) vive en [`documents/user-stories.md`](documents/user-stories.md).
+**Documento fuente:** el listado completo (seis historias) vive en [`docs/product/user-stories.md`](docs/product/user-stories.md).
 
 A continuación se documentan **tres historias principales** del MVP: alta de libros con metadatos automáticos, organización mensual mediante TBR y seguimiento del objetivo anual.
 
@@ -1815,32 +1825,139 @@ A continuación se documentan **tres historias principales** del MVP: alta de li
 
 ### Más historias en el repositorio
 
-En [`documents/user-stories.md`](documents/user-stories.md) están además, con el mismo nivel de detalle (escenarios BDD completos y tablas INVEST):
+En [`docs/product/user-stories.md`](docs/product/user-stories.md) están además, con el mismo nivel de detalle (escenarios BDD completos y tablas INVEST):
 
-- **User Story 4** — Visualización de estadísticas mensuales (*Reading Stats*, estimación L).
-- **User Story 5** — Insights automáticos (generación de mensajes analíticos sobre el periodo, estimación M).
+- **User Story 4 (US-04)** — Gestionar estado, puntuación y fechas en Book Tracker: selector inline de estado, fechas de inicio/fin, estrellas y modal de finalización al pasar a `leido` (KAN-12).
+- **User Story 5 (US-05)** — Visualización de estadísticas mensuales en *Reading Stats*: KPIs, gráficos por género/formato/audiencia y selector de periodo (KAN-15, KAN-38).
+- **User Story 6 (US-06)** — Insights automáticos: mensajes analíticos generados a partir de los agregados del periodo (KAN-16).
 
 ---
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+Tres tickets representativos del desarrollo incremental (backend, frontend y base de datos), alineados con Jira **KAN-*** y los artefactos OpenSpec archivados en `openspec/changes/archive/`.
 
-**Ticket 1**
+### Ticket 1 — Backend · KAN-9 · Alta de libro con búsqueda de catálogo
 
-**Ticket 2**
+| Campo | Detalle |
+| --- | --- |
+| **Jira** | [KAN-9](https://privaterelay-team-ymuts08n.atlassian.net/browse/KAN-9) — US-01 · Añadir libro con autocompletado |
+| **Tipo** | Backend (NestJS) |
+| **UC** | UC-01 |
+| **PR** | [#9](https://github.com/CeliaMerino/AI4devs-finalproject/pull/9) |
 
-**Ticket 3**
+**Descripción:** Implementar el flujo de alta de libros desde catálogo externo: búsqueda autenticada, fallback Open Library → Google Books, selección de edición y portada, persistencia en `books` + `reading_records` con estado inicial `pendiente`.
+
+**Tareas técnicas:**
+
+1. Crear módulo `books` con entidades TypeORM `Book`, `ReadingRecord` y migración inicial.
+2. Implementar `CatalogService` con providers OL/GB, timeout 12 s y DTO unificado `CatalogEdition`.
+3. Exponer `GET /v1/books/catalog/search`, `GET /v1/books/catalog/covers`, `POST /v1/books`, `GET /v1/books`.
+4. Deduplicación por ISBN-13 o `data_source` + `external_provider_id` → HTTP 409.
+5. Enriquecimiento de género y páginas vía `work.json` / `editions.json` de Open Library.
+6. Tests unitarios del fallback de catálogo; test de integración `POST /books` crea registro `pendiente`.
+7. Documentar contrato en `docs/api-spec.yml` y manual en `backend/README-KAN-9.md`.
+
+**Criterios de aceptación:** escenarios BDD 1–3 de KAN-9; JWT obligatorio; respuestas validadas con `class-validator`.
+
+**Definición de hecho:** migración aplicada, tests verdes, OpenSpec archivado (`kan-9-add-book-auto-search`).
+
+---
+
+### Ticket 2 — Frontend · KAN-12 · Ciclo de vida de lectura en Book Tracker
+
+| Campo | Detalle |
+| --- | --- |
+| **Jira** | [KAN-12](https://privaterelay-team-ymuts08n.atlassian.net/browse/KAN-12) — US-04 · Estado, fechas y puntuación |
+| **Tipo** | Frontend (React + Vite) |
+| **UC** | UC-02, UC-04 (parcial) |
+| **PR** | [#11](https://github.com/CeliaMerino/AI4devs-finalproject/pull/11) (incluye también KAN-10 TBR en el mismo merge) |
+
+**Descripción:** Hacer interactivo el Book Tracker: edición inline del registro de lectura y modal de finalización al marcar un libro como `leido`, consumiendo `PATCH /v1/books/{bookId}/reading-record`.
+
+**Tareas técnicas:**
+
+1. Extender tipos en `frontend/src/api/types.ts` con campos `started_on`, `finished_on`, `rating`, `read_format`.
+2. Añadir `patchReadingRecord` en `api/client.ts` con invalidación de caché TanStack Query.
+3. Componentes: selector de estado, date pickers, estrellas (pasos de 0,5), `CompletionModal` al recibir `meta.openCompletionModal`.
+4. Manejo de errores 422 (fechas incoherentes) con mensajes en español vía `api/errors.ts`.
+5. Actualizar filas de la tabla sin recargar la página tras cada PATCH exitoso.
+6. Checklist manual según `openspec/changes/archive/2026-06-09-kan-12-reading-record-lifecycle/`.
+
+**Criterios de aceptación:** escenarios 1–7 de KAN-12; transiciones de estado validadas en servidor; modal solo al pasar a `leido`.
+
+**Definición de hecho:** flujo verificado en local con dev-login; specs publicadas en `openspec/specs/reading-record-patch/` y `book-tracker-lifecycle-ui/`.
+
+---
+
+### Ticket 3 — Base de datos · KAN-59 · Modelo relacional de géneros
+
+| Campo | Detalle |
+| --- | --- |
+| **Jira** | [KAN-59](https://privaterelay-team-ymuts08n.atlassian.net/browse/KAN-59) — Genres data model |
+| **Tipo** | Base de datos + backend (migración TypeORM) |
+| **Épica** | KAN-58 (géneros configurables) |
+| **PR** | [#63](https://github.com/CeliaMerino/AI4devs-finalproject/pull/63) |
+
+**Descripción:** Sustituir el campo texto `books.genre` por un modelo relacional `genres` por usuaria, con migración de datos existentes y semilla de 7 géneros por defecto al registrar una usuaria nueva.
+
+**Tareas técnicas:**
+
+1. Crear tabla `genres` (`id`, `user_id`, `name`, índice único case-insensitive por usuaria).
+2. Añadir `books.genre_id` FK → `genres.id`; migrar valores legacy de `books.genre`; eliminar columna texto.
+3. Migración TypeORM reversible documentada en `backend/src/migrations/`.
+4. `GenresService.seedDefaultsForUser()` invocado en registro/dev-login.
+5. `BooksService` resuelve string `genre` en API ↔ `genre_id` internamente (contrato REST sin breaking change).
+6. Actualizar `StatsService` (distribución por género) e import Goodreads para usar `genres.name`.
+7. Sincronizar [`docs/data-model.md`](docs/data-model.md).
+
+**Criterios de aceptación:** libros existentes conservan género tras migración; API sigue aceptando/devolviendo `genre` como string; tests de integración verdes.
+
+**Definición de hecho:** `npm run migration:run` en BD limpia y con datos de prueba; PR mergeado; KAN-60 (CRUD en Ajustes) puede construirse encima.
 
 ---
 
 ## 7. Pull Requests
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+Tres pull requests representativas del historial de desarrollo (fundación MVP, ciclo de lectura + TBR, y pulido de entrega).
 
-**Pull Request 1**
+### Pull Request 1 — feat(KAN-9): Add book with catalog search, cover picker, and Book Tracker UI
 
-**Pull Request 2**
+| Campo | Detalle |
+| --- | --- |
+| **URL** | https://github.com/CeliaMerino/AI4devs-finalproject/pull/9 |
+| **Ticket** | KAN-9 (US-01) |
+| **Alcance** | Primer vertical slice ejecutable del producto |
 
-**Pull Request 3**
+**Resumen:** Introduce el backend NestJS (`/v1`, JWT, TypeORM) y el frontend React con la página Book Tracker. Incluye búsqueda de catálogo con fallback OL→GB, selector de portada, `POST /v1/books` con deduplicación, `docker-compose.yml` (Postgres 5433), tests y specs OpenSpec archivadas.
+
+**Por qué es relevante:** desbloquea todo el MVP — sin biblioteca no hay tracker, TBR ni estadísticas.
+
+---
+
+### Pull Request 2 — feat(KAN-10, KAN-12): reading lifecycle, monthly TBR, and add-to-TBR
+
+| Campo | Detalle |
+| --- | --- |
+| **URL** | https://github.com/CeliaMerino/AI4devs-finalproject/pull/11 |
+| **Tickets** | KAN-12 (US-04), KAN-10 (US-02) |
+| **Alcance** | Full-stack: API + UI de lectura y listas |
+
+**Resumen:** Añade `PATCH /v1/books/:id/reading-record` con reglas de transición y modal de finalización; módulo Lists con TBR mensual (`monthly_tbr_lists`, `tbr_entries`), auto-completado al marcar `leido`, página `/lists` y `AddToTbrModal` (pestañas Biblioteca y Búsqueda).
+
+**Por qué es relevante:** convierte el tracker de solo lectura en herramienta de seguimiento real y conecta lecturas con la organización mensual (escenario 8 de US-02).
+
+---
+
+### Pull Request 3 — feat: Spanish UI and functional home dashboard
+
+| Campo | Detalle |
+| --- | --- |
+| **URL** | https://github.com/CeliaMerino/AI4devs-finalproject/pull/69 |
+| **Estado** | Mergeado (julio 2026) |
+| **Alcance** | Frontend + mensajes API en español |
+
+**Resumen:** Localiza toda la UI visible al español (`lang="es"`, `locale.ts`, errores API). Implementa el Home funcional: tarjeta de libros en curso (portadas `leyendo`), KPIs mensuales, meta anual y TBR del mes en layout de dos columnas; extrae componentes `HomeReadingCard`, `HomeMonthlyKpisCard`, `HomeTbrCard`.
+
+**Por qué es relevante:** cierra la experiencia de entrega del máster — dashboard de bienvenida coherente con el PRD y producto en español para evaluación.
 

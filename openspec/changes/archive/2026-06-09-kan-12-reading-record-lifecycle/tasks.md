@@ -66,4 +66,4 @@
 ## 11. Update technical documentation (mandatory)
 
 - [x] 11.1 Confirm `docs/api-spec.yml` matches implemented PATCH and list fields
-- [x] 11.2 Update `docs/frontend-standards.md` Book Tracker section with lifecycle components (brief)
+- [x] 11.2 Update `docs/standards/frontend-standards.md` Book Tracker section with lifecycle components (brief)

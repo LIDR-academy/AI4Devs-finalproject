@@ -8,7 +8,7 @@ Before writing or implementing OpenSpec artifacts, read:
 
 1. [PRD.md](../PRD.md)
 2. [readme.md](../readme.md)
-3. [documents/use-cases.md](../documents/use-cases.md) / [documents/user-stories.md](../documents/user-stories.md)
+3. [docs/product/use-cases.md](../docs/product/use-cases.md) / [docs/product/user-stories.md](../docs/product/user-stories.md)
 
 OpenSpec deltas must align with UC IDs and MVP scope from those documents. If a change contradicts the PRD, stop and clarify with the user.
 
@@ -42,7 +42,7 @@ openspec/
 | Verify | `/opsx-verify` or manual steps in `tasks.md` |
 | Archive | `/opsx-archive` |
 
-See [docs/openspec-tasks-mandatory-steps.md](../docs/openspec-tasks-mandatory-steps.md) for required `tasks.md` steps.
+See [docs/standards/openspec-tasks-mandatory-steps.md](../docs/standards/openspec-tasks-mandatory-steps.md) for required `tasks.md` steps.
 
 ## Jira
 

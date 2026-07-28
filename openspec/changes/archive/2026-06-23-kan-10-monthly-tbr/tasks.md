@@ -85,5 +85,5 @@
 ## 13. Update technical documentation (mandatory)
 
 - [x] 13.1 Confirm `docs/api-spec.yml` and `docs/data-model.md` match implementation
-- [x] 13.2 Update `docs/frontend-standards.md` with Lists/TBR page patterns (brief)
-- [x] 13.3 Add KAN-10 Jira link on US-02 row in `documents/user-stories.md`
+- [x] 13.2 Update `docs/standards/frontend-standards.md` with Lists/TBR page patterns (brief)
+- [x] 13.3 Add KAN-10 Jira link on US-02 row in `docs/product/user-stories.md`

@@ -60,5 +60,5 @@
 
 ## 9. Update technical documentation (mandatory)
 
-- [x] 9.1 Update `documents/user-stories.md`: US-04 scenario 9 dependency from KAN-11 → **KAN-14** (KAN-11 = infra; KAN-14 = side effect)
+- [x] 9.1 Update `docs/product/user-stories.md`: US-04 scenario 9 dependency from KAN-11 → **KAN-14** (KAN-11 = infra; KAN-14 = side effect)
 - [x] 9.2 Confirm no doc references to non-existent `recomputeProgress` or `GET /v1/stats` for this scenario

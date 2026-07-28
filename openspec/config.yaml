@@ -6,7 +6,7 @@ context: |
   ## Product source of truth (read first)
   - PRD.md — vision, MVP, personas, feature areas
   - readme.md — architecture, data model summary, API index, delivery sections
-  - documents/user-stories.md, documents/use-cases.md — UC-01 through UC-10
+  - docs/product/user-stories.md, docs/product/use-cases.md — UC-01 through UC-10
 
   OpenSpec artifacts MUST NOT contradict the PRD or use cases. ai-specs/ is supporting tooling only.
 
@@ -17,9 +17,9 @@ context: |
   - Auth MVP: POST /v1/auth/dev-login, JWT on /v1/books/*
 
   ## Engineering docs
-  - docs/base-standards.md, docs/backend-standards.md, docs/frontend-standards.md
+  - docs/standards/base-standards.md, docs/standards/backend-standards.md, docs/standards/frontend-standards.md
   - docs/api-spec.yml, docs/data-model.md, docs/development_guide.md
-  - docs/openspec-tasks-mandatory-steps.md
+  - docs/standards/openspec-tasks-mandatory-steps.md
   - AGENTS.md (repository root — agent rules and precedence)
 
   ## Code paths
@@ -34,14 +34,14 @@ context: |
 
 rules:
   _global:
-    - Read PRD.md and relevant documents/use-cases.md sections before proposing scope
-    - Read docs/base-standards.md and AGENTS.md before creating artifacts
-    - Backend: docs/backend-standards.md; nest modules and TypeORM entities
-    - Frontend: docs/frontend-standards.md; frontend/src/api/client.ts
+    - Read PRD.md and relevant docs/product/use-cases.md sections before proposing scope
+    - Read docs/standards/base-standards.md and AGENTS.md before creating artifacts
+    - Backend: docs/standards/backend-standards.md; nest modules and TypeORM entities
+    - Frontend: docs/standards/frontend-standards.md; frontend/src/api/client.ts
     - Keep docs/api-spec.yml and docs/data-model.md consistent with implementation
     - Do not introduce LTI/ATS, Express, or Prisma patterns — this project uses NestJS and TypeORM
   proposal:
-    - Reference UC-ID(s) from documents/use-cases.md when applicable
+    - Reference UC-ID(s) from docs/product/use-cases.md when applicable
     - State non-goals if scope is narrowed vs PRD
   tasks:
     - Concrete paths under backend/src/ and frontend/src/

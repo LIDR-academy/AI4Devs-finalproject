@@ -87,7 +87,7 @@ During `/opsx:apply`, audit existing code against specs. If KAN-10 already imple
 1. Verify or implement backend hook and frontend invalidation.
 2. Run integration tests.
 3. Manual Book Tracker → Lists pass.
-4. Update `documents/user-stories.md` scenario 8 dependency to KAN-13.
+4. Update `docs/product/user-stories.md` scenario 8 dependency to KAN-13.
 5. Archive updates main `reading-record-patch` spec (removes "no TBR" requirement).
 
 ## Open Questions

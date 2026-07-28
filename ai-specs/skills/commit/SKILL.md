@@ -61,7 +61,7 @@ If the user **explicitly** requested no git operations (e.g. "no PR", "only comm
 
 ## 3. Commit message
 
-- Write the commit message **in English** (per `docs/base-standards.md`).
+- Write the commit message **in English** (per `docs/standards/base-standards.md`).
 - Make it **descriptive** (per Git Workflow in `backend-standards.md` and `frontend-standards.md`).
 - Structure it so that:
   - **Subject line**: Short, imperative summary (e.g. "Add edition cover picker to add-book flow", "Fix catalog search limit validation"). Optionally prefix with a ticket id (e.g. `KAN-9: Add edition cover picker`).
@@ -89,8 +89,8 @@ If the user **explicitly** requested no git operations (e.g. "no PR", "only comm
 
 # References
 
-- `docs/base-standards.md`: English-only for commit messages and technical artifacts.
-- `docs/backend-standards.md` and `docs/frontend-standards.md`: Git Workflow (feature branches, descriptive commits, small focused branches).
+- `docs/standards/base-standards.md`: English-only for commit messages and technical artifacts.
+- `docs/standards/backend-standards.md` and `docs/standards/frontend-standards.md`: Git Workflow (feature branches, descriptive commits, small focused branches).
 - Repository git workflow conventions: Use `gh` for GitHub and PR creation; optional ticket-based branch and PR linking.
 
 # Notes

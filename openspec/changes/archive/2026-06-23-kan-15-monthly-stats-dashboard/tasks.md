@@ -76,5 +76,5 @@
 
 - [x] 11.1 Update `docs/api-spec.yml`: added `Stats` tag, `/stats/{year}/{month}` path, and `MonthlyStatsResponse` / `GenreCount` / `FormatCount` schemas
 - [x] 11.2 Update `docs/data-model.md`: added "Computed (not persisted)" note for monthly stats; removed "stats aggregates" from planned tables
-- [x] 11.3 Update `documents/user-stories.md` (US-05 implementation status row); add `MANUAL-TEST-KAN-15.md` checklist in the change folder
+- [x] 11.3 Update `docs/product/user-stories.md` (US-05 implementation status row); add `MANUAL-TEST-KAN-15.md` checklist in the change folder
 - [x] 11.4 Verified `docs/api-spec.yml` parses as valid YAML; docs consistent with the implemented endpoint and DTO

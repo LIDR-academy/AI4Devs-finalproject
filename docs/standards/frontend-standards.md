@@ -24,7 +24,7 @@ alwaysApply: true
 
 ## Overview
 
-The frontend is a **Vite + React 19 + TypeScript** SPA for **Reading Analytics Platform**. Current MVP surfaces: **dev login**, **Book Tracker** (library list, add-book modal with catalog search and cover picker, inline reading lifecycle: status, dates, rating, completion modal on `leido`), **Lists / TBR** (`/lists` — monthly TBR with month navigation, empty state, **AddToTbrModal** with Library tab (pending books only) and Search tab (catalog → create pendiente book → add entry), completed styling). Future areas (Home, Stats, Goals) follow the same patterns documented here.
+The frontend is a **Vite + React 19 + TypeScript** SPA for **Reading Analytics Platform**. Current MVP surfaces: **dev login**, **Home** (books in progress, monthly KPIs, annual goal, current TBR), **Book Tracker** (library list, add-book modal with catalog search and cover picker, inline reading lifecycle: status, dates, rating, completion modal on `leido`), **Reading Stats** (`/stats` — KPIs, charts, insights, period selector), **Lists / TBR** (`/lists` — monthly TBR with month navigation, empty state, **AddToTbrModal** with Library tab (pending books only) and Search tab (catalog → create pendiente book → add entry), completed styling), **Goals** (`/goals`), **Settings** (genres, formats, audiences, theme), and **Goodreads import**. Placeholder routes: `/library`, `/recap` (UC-09/UC-10 not yet implemented).
 
 ## Technology Stack
 
@@ -77,7 +77,7 @@ frontend/
 
 ### Language and naming
 
-- **English only** for code, comments, and user-facing error strings (`docs/base-standards.md`).
+- **English only** for code, comments, and user-facing error strings (`docs/standards/base-standards.md`).
 - Components/pages: **PascalCase** files (`AddBookModal.tsx`).
 - Functions/variables: **camelCase** (`listBooks`, `isAuthenticated`).
 - CSS classes: **kebab-case** (`book-tracker`, `add-book-modal`).

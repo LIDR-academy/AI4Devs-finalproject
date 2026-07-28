@@ -1,6 +1,6 @@
 # AI Specs — Reading Analytics Platform
 
-Supporting configuration for AI-assisted development in **Cursor**. Product and scope are defined in **[PRD.md](../PRD.md)**, **[readme.md](../readme.md)**, and **[documents/](../documents/)** — those take precedence over this folder.
+Supporting configuration for AI-assisted development in **Cursor**. Product and scope are defined in **[PRD.md](../PRD.md)**, **[readme.md](../readme.md)**, and **[docs/product/](../docs/product/)** — those take precedence over this folder.
 
 ## When to use `ai-specs/`
 
@@ -14,8 +14,8 @@ Supporting configuration for AI-assisted development in **Cursor**. Product and 
 
 | Area | Location |
 |------|----------|
-| Product | `PRD.md`, `readme.md`, `documents/user-stories.md`, `documents/use-cases.md` |
-| Engineering | `docs/backend-standards.md`, `docs/frontend-standards.md`, `docs/api-spec.yml` |
+| Product | `PRD.md`, `readme.md`, `docs/product/user-stories.md`, `docs/product/use-cases.md` |
+| Engineering | `docs/standards/backend-standards.md`, `docs/standards/frontend-standards.md`, `docs/api-spec.yml` |
 | Agent rules | `AGENTS.md` (root) |
 | OpenSpec | `openspec/config.yaml`, `openspec/changes/`, `openspec/specs/` |
 | Backend | NestJS + TypeORM — `backend/src/` |

@@ -71,4 +71,4 @@
 ## 11. Update technical documentation (mandatory)
 
 - [x] 11.1 Confirm `docs/api-spec.yml` and `docs/data-model.md` match implementation
-- [x] 11.2 Update `documents/user-stories.md` — link US-03 / US-04 scenario 9 to KAN-11
+- [x] 11.2 Update `docs/product/user-stories.md` — link US-03 / US-04 scenario 9 to KAN-11

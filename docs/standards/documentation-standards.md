@@ -7,12 +7,12 @@ alwaysApply: true
 
 ## Introduction
 
-Technical documentation describes how the project is structured, runs, and operates. **Product documentation** (`PRD.md`, `readme.md`, `documents/`) defines what to build; **`docs/`** defines how to implement it consistently.
+All project documentation lives under **`docs/`**. **Product** docs (`PRD.md`, `readme.md`, `docs/product/`) define what to build; **engineering** docs under `docs/` define how to implement it consistently. See [docs/README.md](../README.md).
 
 | Layer | Paths |
 |-------|--------|
-| Product | `PRD.md`, `readme.md`, `documents/` |
-| Engineering | `docs/data-model.md`, `docs/api-spec.yml`, `docs/*-standards.md`, `docs/development_guide.md` |
+| Product | `PRD.md`, `readme.md`, `docs/product/` (stories, use cases, diagrams) |
+| Engineering | `docs/data-model.md`, `docs/api-spec.yml`, `docs/standards/*`, `docs/development_guide.md` |
 | Agent rules | `AGENTS.md` (root) |
 | Change specs | `openspec/` (must align with product docs) |
 | AI helpers | `ai-specs/` (supporting only) |
@@ -30,7 +30,7 @@ When updating documentation, I will:
 2. Identify which documentation files need updates based on the changes. Some clear examples:
    - For data model changes: Update `docs/data-model.md` and readme §3 if user-facing
    - For API changes: Update `docs/api-spec.yml` and readme §4 if user-facing
-   - For changes in libraries, database migrations, or anything that changes the installation process, update *-standards.md
+   - For changes in libraries, database migrations, or anything that changes the installation process, update `docs/standards/*`
 3. Update each affected documentation file in English, maintaining consistency with existing documentation
 4. Ensure all documentation is properly formatted and follows the established structure
 5. Verify that all changes are accurately reflected in the documentation

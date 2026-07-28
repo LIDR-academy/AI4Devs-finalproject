@@ -10,7 +10,7 @@ KAN-12 (US-04) shipped the reading-record lifecycle but explicitly deferred **sc
 - **PATCH response:** Include `meta.tbrAutoCompleted: true` when an entry was completed; omit otherwise.
 - **Frontend cache:** When `tbrAutoCompleted` is true, invalidate TanStack Query `['tbr', year, month]` so `/lists` reflects completion without manual refresh.
 - **Specs sync:** Replace KAN-12 "no TBR side effects" requirement in `reading-record-patch` with TBR auto-complete rules; extend `book-tracker-lifecycle-ui` cache coherence for TBR queries.
-- **Tests & docs:** Integration tests for with/without TBR entry; manual checklist `MANUAL-TEST-KAN-13.md`; link KAN-13 on US-04 scenario 8 in `documents/user-stories.md`.
+- **Tests & docs:** Integration tests for with/without TBR entry; manual checklist `MANUAL-TEST-KAN-13.md`; link KAN-13 on US-04 scenario 8 in `docs/product/user-stories.md`.
 
 **Non-goals:**
 
@@ -35,6 +35,6 @@ _(none — integration hook only; no new REST endpoints or pages)_
 - **Backend:** `backend/src/books/books.service.ts`, `backend/src/books/books.module.ts`, `backend/src/lists/tbr.service.ts`, `backend/src/books/dto/reading-record-response.dto.ts`.
 - **Frontend:** `frontend/src/pages/BookTrackerPage.tsx`, `frontend/src/components/BookTrackerRow.tsx`, `frontend/src/api/types.ts`.
 - **Tests:** `backend/test/books.integration-spec.ts`.
-- **Docs:** `docs/api-spec.yml` (confirm `tbrAutoCompleted` documented), `documents/user-stories.md` (scenario 8 → KAN-13).
+- **Docs:** `docs/api-spec.yml` (confirm `tbrAutoCompleted` documented), `docs/product/user-stories.md` (scenario 8 → KAN-13).
 - **Dependencies:** KAN-10 (`lists` module, `monthly_tbr_lists`, `tbr_entries`); KAN-12 (`PATCH /v1/books/{bookId}/reading-record`).
 - **Product refs:** US-04 scenario 8, US-02 scenario 3, UC-02 §3b, UC-05; Jira **KAN-13**.

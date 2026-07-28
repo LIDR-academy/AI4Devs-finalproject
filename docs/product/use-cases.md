@@ -3,7 +3,7 @@
 **Versión:** 1.0
 **Owner:** Celia (Founder / Product Owner)
 **Fecha:** abril 2026
-**Estado:** Ready for UX & Technical Design
+**Estado:** MVP implementado (julio 2026) — UC-01…UC-08 en código; UC-09/UC-10 parciales (placeholders en frontend)
 
 ---
 
@@ -77,7 +77,7 @@ La usuaria puede editar los metadatos manualmente tras seleccionar el resultado 
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-01 Buscar y añadir un libro](UC-01.png)
+![Diagrama de secuencia — UC-01 Buscar y añadir un libro](diagrams/UC-01.png)
 
 ```plantuml
 @startuml
@@ -202,7 +202,7 @@ Al marcarlo como `Leído`, el sistema lo marca automáticamente como completado 
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-02 Registrar estado de lectura](UC-02.png)
+![Diagrama de secuencia — UC-02 Registrar estado de lectura](diagrams/UC-02.png)
 
 ```plantuml
 @startuml
@@ -290,7 +290,7 @@ El sistema muestra un aviso de validación e impide guardar el valor.
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-03 Actualizar progreso de lectura](UC-03.png)
+![Diagrama de secuencia — UC-03 Actualizar progreso de lectura](diagrams/UC-03.png)
 
 ```plantuml
 @startuml
@@ -381,7 +381,7 @@ El libro queda en estado `Leído` pero sin rating, formato ni tags. La usuaria p
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-04 Puntuar y etiquetar un libro](UC-04.png)
+![Diagrama de secuencia — UC-04 Puntuar y etiquetar un libro](diagrams/UC-04.png)
 
 ```plantuml
 @startuml
@@ -473,7 +473,7 @@ La usuaria puede buscarlo y añadirlo directamente a la biblioteca y al TBR en e
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-05 Gestionar TBR mensual](UC-05.png)
+![Diagrama de secuencia — UC-05 Gestionar TBR mensual](diagrams/UC-05.png)
 
 ```plantuml
 @startuml
@@ -572,7 +572,7 @@ El sistema muestra el número de libros adicionales por semana/mes necesarios pa
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-06 Definir y seguir meta anual](UC-06.png)
+![Diagrama de secuencia — UC-06 Definir y seguir meta anual](diagrams/UC-06.png)
 
 ```plantuml
 @startuml
@@ -656,7 +656,7 @@ Puede activar la vista de comparativa para ver ambos periodos en paralelo (funci
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-07 Ver estadísticas básicas](UC-07.png)
+![Diagrama de secuencia — UC-07 Ver estadísticas básicas](diagrams/UC-07.png)
 
 ```plantuml
 @startuml
@@ -748,7 +748,7 @@ El sistema alerta sobre los duplicados y permite a la usuaria elegir si sobreesc
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-08 Importar datos históricos](UC-08.png)
+![Diagrama de secuencia — UC-08 Importar datos históricos](diagrams/UC-08.png)
 
 ```plantuml
 @startuml
@@ -848,7 +848,7 @@ El sistema muestra un mensaje claro indicando que no hay resultados y sugiere am
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-09 Buscar y filtrar en la biblioteca](UC-09.png)
+![Diagrama de secuencia — UC-09 Buscar y filtrar en la biblioteca](diagrams/UC-09.png)
 
 ```plantuml
 @startuml
@@ -933,7 +933,7 @@ Puede seleccionar qué estadísticas mostrar u ocultar antes de generar la image
 
 ### Diagrama UML
 
-![Diagrama de secuencia — UC-10 Exportar story de wrap-up](UC-10.png)
+![Diagrama de secuencia — UC-10 Exportar story de wrap-up](diagrams/UC-10.png)
 
 ```plantuml
 @startuml

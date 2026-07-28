@@ -1,8 +1,71 @@
-> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
-Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
+# prompts.md — Uso de IA en el ciclo de desarrollo
+
+**Proyecto:** Reading Analytics Platform  
+**Autor:** Celia Merino Valladolid  
+**Herramienta principal:** Cursor (agente de código + skills + MCP Jira)
+
+Este documento describe **cómo se usó la IA** a lo largo del máster, no los prompts literales. En clase se enfatizó que lo relevante hoy es el **proceso** (contexto, precedencia documental, skills y automatización), no memorizar plantillas de prompt. Por sección se resumen **hasta 3 interacciones clave** y **cómo se guió al asistente**.
+
+---
+
+## Evolución del proceso (visión global)
+
+El trabajo con IA no fue estático: evolucionó en **tres etapas**, alineadas con lo aprendido en el máster.
+
+### Etapa 1 — Prompts «de forma normal»
+
+Al inicio (definición de producto y primer diseño técnico) se trabajó con **conversaciones libres** en el asistente:
+
+- Se pegaba contexto (idea de producto, paleta, pantallas deseadas).
+- Se pedían entregables concretos: PRD, secciones del `readme.md`, diagramas Mermaid, borradores de API.
+- La calidad dependía sobre todo de **cuánto contexto** se daba en cada mensaje y de **revisar a mano** el resultado.
+
+Útil para arrancar documentación y alinear la visión, pero **frágil** para implementar features: el modelo reinventaba stack, inventaba entidades o contradecía el PRD si no se le recordaba en cada turno.
+
+### Etapa 2 — OpenSpec + `ai-specs`
+
+Conforme avanzó el máster se incorporó el flujo **spec-driven** del entorno académico:
 
 
-## Índice
+| Pieza                               | Rol                                                                                                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openspec/`                         | Cambios acotados (`proposal` → `design` → `specs` → `tasks` → apply → archive). Cada ticket Jira `KAN-*` deja un rastro de requisitos verificables.            |
+| `ai-specs/`                         | Material de apoyo creado/mantenido en el ecosistema de la academia (skills, agentes de planificación, Specboot). **No sustituye** al PRD ni a `docs/product/`. |
+| `AGENTS.md` **+** `docs/standards/` | Precedencia fija: producto → código → contratos → OpenSpec → ai-specs. El agente lee reglas del repo antes de inventar.                                        |
+
+
+Skills habituales en esta fase: `enrich-us` (enriquecer ticket Jira), `openspec-propose` / `openspec-apply-change` / `openspec-archive-change`, `commit`, `update-docs`.
+
+**Cómo se guiaba al asistente:** se pedía seguir el skill concreto, leer el PRD/UC, generar artefactos OpenSpec y **solo entonces** tocar código (TDD, NestJS + TypeORM, contratos en `docs/api-spec.yml`).
+
+### Etapa 3 — `kan-pipeline` (automatización del flujo deseado)
+
+Para reducir trabajo repetitivo se definió la skill `kan-pipeline` (`.cursor/skills/kan-pipeline` / `ai-specs/skills/kan-pipeline`) y una cola en `ai-specs/queues/kan-implementation-queue.yaml`.
+
+El pipeline orquesta, en orden, lo que antes se disparaba a mano:
+
+1. `enrich-us` — enriquecer el ticket Jira
+2. `openspec-propose` — propuesta + design + specs + tasks
+3. `openspec-apply-change` — implementación contra las tasks
+4. **Commit + PR** al fork (`CeliaMerino/AI4Devs-finalproject`)
+5. **Puerta humana** — revision manual + merge de github
+6. `openspec-archive-change` — archivar el cambio y pasar al siguiente ticket
+
+**Cómo se guiaba al asistente:** un mensaje corto «`/kan-pipeline next`» y «/kan-pipeline continue» basta; la skill impone remotos, rama, pasos y estado en `kan-pipeline-state.json`. El ahorro está en **no reexplicar el proceso en cada ticket**.
+
+```mermaid
+flowchart LR
+  A[Prompts libres<br/>PRD / README] --> B[OpenSpec + ai-specs<br/>ticket a ticket]
+  B --> C[kan-pipeline<br/>cola KAN-*]
+```
+
+
+
+---
+
+
+
+## Índice (por fases del entregable)
 
 1. [Descripción general del producto](#1-descripción-general-del-producto)
 2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
@@ -14,313 +77,162 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 ---
 
+
+
 ## 1. Descripción general del producto
 
-**Prompt 1:**
+**Fase dominante:** Etapa 1 (prompts libres) → revisión manual en `PRD.md` / `readme.md` §1.
 
-Ayúdame a redactar un PRD en Markdown para una aplicación web **desktop-first** llamada *Reading Analytics Platform*: usuarias son lectoras intensivas que hoy usan Excel para trackear libros; el producto debe centrarse en **analítica** (dashboards, metas, TBR, wrap-ups), no en red social. Incluye objetivos funcionales, de experiencia y de negocio sin monetización en esta fase. Idioma del documento: español.
-Documentación actual del proyecto:
 
-Estilo visual:
-Paleta de colores:
-- veranda blue: #6BB1AD
-- Sky cloud: #A7BCBD
-- Lychee #ECECDB
-- Melon: #E5A9A9
-- Cupid pink: #E6748E
-Los colores deberemos asignarlos a diferentes elementos visuales de forma coherente y cohesiva. Importante tener en cuenta el contraste entre los diferentes colores de forma que se cumplan los estándares de accesibilidad
-Nnormativa de accesibilidad web en España, impulsada por la Ley 11/2023 y el Real Decreto 193/2023: estándar UNE-EN 301 549 (WCAG 2.1/2.2 nivel AA) 
+| #   | Interacción clave (intención)                                                                                                                             | Cómo se guió al asistente                                                                                          |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 1   | Redactar el **PRD** a partir de la visión (desktop-first, analítica vs red social, pantallas Home / Tracker / Stats / Listas, paleta y accesibilidad ES). | Se aportó el brief de producto y se pidió Markdown listo para repo; se iteró corrigiendo alcance MVP vs evolución. |
+| 2   | Extraer **características principales** y prioridades MVP para el README.                                                                                 | Se ancló la respuesta al PRD ya escrito («no inventes módulos fuera de documento»).                                |
+| 3   | Documentar **diseño y UX** (sidebar, estilo soft feminine / coquette, WCAG / Ley 11/2023).                                                                | Se forzó coherencia con la paleta y con las rutas del PRD; sin pantallas inventadas.                               |
 
-Pagina inicio
-- te muestra los libros que estás leyendo en este momento
-- debajo el nº de libros que llevas leídos este mes y el nº de páginas
-- debajo la lista de “TBR de febrero” en modo checklist mostrando cuales han sido leidos y cuales quedan por leer
 
-Página book Tracker
-- se puede filtrar por años o mostrar todos los datos. Por defecto aparecen solo los del año actual.
-- Arriba del todo hay un boton para añadir un nuevo libro. Esto abre un modal que pide al usuario los datos. Se buscará por titulo y/o autor/a y se busacrá el libro para recuperar los datos. Si existen varias ediciones se le permite al usuario elegir cuál está leyendo. Si no se encuentra el libro habrá una opción para añadir a mano los datos. Se puede marcar como ya leído, en cuyo caso pedirá fecha de inicio, fecha de fin y puntuación o como leyendo actualmente, de forma que la fecha de inicio se autocompleta a la fecha de hoy, la fecha de fin queda vacía y la puntuacion también.
-- vista tipo “excel”, de todos los libros. Cada fila representa un libro y tiene:
-    - titulo
-    - autor
-    - imagen de portada
-    - genero
-    - etiquetas (subgeneros, tropes…)
-    - formato leído (físico, audio, ebook)
-    - audiencia (Young Adult, New Adult, Adult)
-    - puntuación (si se ha puntuado por el usuario)
-    - fecha inicio
-    - fecha fin
-- cada fila tiene un lápiz al final que al hacer click se abre un modal para editar los datos del libro
-
-Página my reading stats
-- se puede filtrar por años o mostrar todos los datos. Por defecto aparecen solo los del año actual
-- vista con gráficos que representan los datos de los libros
-    - generos: grafico tipo “quesito” de los géneros de los libros leídos
-    - formato: grafico tipo “quesito” de los formatos de los libros leídos
-    - audiencia: grafico tipo “quesito” de la audiencia de los libros leídos
-    - puntuaciones: grafico tipo “quesito” de las puntuaciones dadas a los libros leídos
-    - año en libros: gráfico de barras, eje Y es el número de libros y el eje X el mes. 
-        - si estamos en vista global, en el eje X en vez de mes se representa el año
-    - año en páginas: igual que el anterior pero de nº de páginas
-
-Página listas
-- permite al usuario crear listas de libros 
-- con un mes de antelación (es decir, el 1 de enero se crea la de febrero) por defecto se crea una lista para cada mes del año llamada “TBR enero/febrero etc dependiendo del mes”
-    - si esta lista esta vacia anima al usuario a incluir que libros querrá leer ese mes
-- la lista del TBR del mes en curso se ve la primera y debajo la del mes siguiente. El resto de meses a pasado y futuro están ocultas, un boton permite mostrarlas
-- debajo esta la funcionalidad para crear mas listas, se permite al usuario cambiar el nombre y añadir o eliminar libros en cualquier momento de cualquier lista
-
-**Prompt 2:**
-
-A partir del PRD, genera el apartado de **características principales** para el README: lista con viñetas (Book Tracker, Reading Stats, TBR, Goals, Library, import/export, etc.) y enlázalo con prioridades MVP vs evolución.
-
-**Prompt 3:**
-
-Define en el README la sección **1.3 Diseño y experiencia de usuario**: navegación por sidebar alineada con el PRD, principios de interfaz (tarjetas, tipografía editorial, accesibilidad orientada a WCAG 2.1 AA y normativa española de accesibilidad). Sé concreto pero sin inventar pantallas que contradigan el PRD.
+**Nota:** Aquí no había OpenSpec todavía; la «fuente de verdad» era el propio PRD generado y revisado.
 
 ---
 
-## 2. Arquitectura del Sistema
-**Prompt 1:**
-Para la Reading Analytics Platform (React + NestJS + PostgreSQL, aplicación 
-desktop-first sin app móvil nativa, sin red social, con cumplimiento WCAG 
-2.1/2.2 AA y normativa española Ley 11/2023), documenta en tres bloques:
 
-BLOQUE 1 — Infraestructura y despliegue:
-- Propón una infraestructura cloud sencilla y adecuada al tamaño del proyecto 
-  (una sola fundadora, fase MVP).
-- Genera un diagrama Mermaid del pipeline de despliegue (desde push en git 
-  hasta producción).
-- Describe el proceso paso a paso.
 
-BLOQUE 2 — Seguridad:
-- Lista las prácticas de seguridad esenciales para este tipo de aplicación 
-  (autenticación, autorización, protección de datos personales de lectura, 
-  CORS, rate limiting en llamadas a APIs externas, validación de imports CSV).
-- Para cada práctica, añade una línea de ejemplo concreto o referencia 
-  a un módulo del sistema.
+## 2. Arquitectura del sistema
 
-BLOQUE 3 — Tests:
-- Propón la estrategia de testing adecuada al stack (Jest para backend, 
-  Vitest o Jest + Testing Library para frontend, Cypress o Playwright para E2E).
-- Describe 4-5 tests representativos: al menos uno por capa (unitario de 
-  servicio, integración de API, componente UI, E2E de flujo crítico).
-- Prioriza los flujos más críticos según el PRD: alta de libro (UC-01), 
-  cambio de estado (UC-02) y cálculo de estadísticas (UC-07).
+**Fase dominante:** Etapa 1 (documentación) + Etapa 2 (cuando el código real fijó NestJS / Vite / TypeORM).
 
-El resultado debe poder copiarse directamente en el README, sin placeholders.
+
+| #   | Interacción clave (intención)                                                                     | Cómo se guió al asistente                                                                        |
+| --- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 1   | Diagrama de arquitectura cliente → API → PostgreSQL + catálogo OL/GB.                             | Contexto de stack y UC; salida Mermaid + PNG en `docs/product/diagrams/`.                        |
+| 2   | Bloques de **infraestructura, seguridad y tests** para el README.                                 | Se pidió propuesta MVP realista (sin over-engineering) y ejemplos ligados a módulos del sistema. |
+| 3   | Ajustar la estructura de carpetas al repo real (`backend/` + `frontend/`, no monorepo inventado). | Etapa 2+: se apuntó a `AGENTS.md` y al código existente para corregir drift documental.          |
+
+
+**Nota de proceso:** la arquitectura «en papel» se escribió pronto; al implementar, OpenSpec y estándares evitaron que cada feature reinventara Express/Prisma u otras plantillas ajenas al proyecto.
 
 ---
 
-**Prompt 2:**
-Para la Reading Analytics Platform (React + NestJS + PostgreSQL, aplicación 
-desktop-first sin app móvil nativa, sin red social, con cumplimiento WCAG 
-2.1/2.2 AA y normativa española Ley 11/2023), documenta en tres bloques:
 
-BLOQUE 1 — Infraestructura y despliegue:
-- Propón una infraestructura cloud sencilla y adecuada al tamaño del proyecto 
-  (una sola fundadora, fase MVP).
-- Genera un diagrama Mermaid del pipeline de despliegue (desde push en git 
-  hasta producción).
-- Describe el proceso paso a paso.
 
-BLOQUE 2 — Seguridad:
-- Lista las prácticas de seguridad esenciales para este tipo de aplicación 
-  (autenticación, autorización, protección de datos personales de lectura, 
-  CORS, rate limiting en llamadas a APIs externas, validación de imports CSV).
-- Para cada práctica, añade una línea de ejemplo concreto o referencia 
-  a un módulo del sistema.
+## 3. Modelo de datos
 
-BLOQUE 3 — Tests:
-- Propón la estrategia de testing adecuada al stack (Jest para backend, 
-  Vitest o Jest + Testing Library para frontend, Cypress o Playwright para E2E).
-- Describe 4-5 tests representativos: al menos uno por capa (unitario de 
-  servicio, integración de API, componente UI, E2E de flujo crítico).
-- Prioriza los flujos más críticos según el PRD: alta de libro (UC-01), 
-  cambio de estado (UC-02) y cálculo de estadísticas (UC-07).
+**Fase dominante:** Etapa 1 (modelo lógico en README) → Etapa 2 (migraciones TypeORM + `docs/data-model.md` como contrato).
 
-El resultado debe poder copiarse directamente en el README, sin placeholders.
----
-### 3. Modelo de Datos
 
-**Prompt 1:**
-Eres un arquitecto de bases de datos senior. A partir del PRD, los casos de 
-uso UC-01 a UC-10 y las historias de usuario adjuntas, diseña el modelo de 
-datos completo para la Reading Analytics Platform.
+| #   | Interacción clave (intención)                                                         | Cómo se guió al asistente                                                                           |
+| --- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 1   | Generar **erDiagram** Mermaid a partir de PRD y UC-01…UC-10.                          | Lista explícita de entidades esperadas; salida pegable en README.                                   |
+| 2   | Tablas de atributos (tipos, FK, índices) por entidad.                                 | Se pidió coherencia con flujos UC (p. ej. `finished_on` para stats).                                |
+| 3   | Evolución del esquema (géneros, formatos, audiencias, `import_jobs`) vía tickets KAN. | Etapa 2/3: cada cambio actualiza `docs/data-model.md` en las tasks OpenSpec; tags siguen «planned». |
 
-Stack: PostgreSQL como base de datos relacional.
 
-Entidades que debes cubrir obligatoriamente, inferidas de la documentación:
-- Usuario / perfil (con preferencias y objetivos)
-- Libro (metadatos: título, autora, ISBN, portada, páginas, género, fuente 
-  de datos)
-- Registro de lectura (estado: Leyendo / Leído / DNF / Pendiente; progreso; 
-  rating; formato; fecha inicio / fin)
-- Tag (etiquetas personalizadas por usuaria)
-- Relación libro ↔ tag
-- Lista TBR mensual (con mes/año, estado de cada entrada)
-- Entrada TBR (libro + orden + completado)
-- Meta anual (año, objetivo numérico)
-- Sesión de lectura (página actual, timestamp, para histórico de progreso)
-
-Genera un diagrama en sintaxis Mermaid (erDiagram) con el máximo detalle 
-posible:
-- Claves primarias (PK) y foráneas (FK) explícitas
-- Tipos de dato de cada atributo (UUID, VARCHAR, INTEGER, DATE, etc.)
-- Cardinalidad de todas las relaciones (||--o{, etc.)
-- Restricciones relevantes indicadas como comentarios o en nombres de campo
-
-El diagrama debe poder copiarse directamente en el README.md.
-
-**Prompt 2:**
-A partir del modelo de datos que acabas de generar (o del diagrama Mermaid 
-adjunto) y de la documentación del proyecto —PRD, casos de uso y user 
-stories—, documenta en detalle cada entidad del modelo.
-
-Para cada entidad, genera una tabla con las siguientes columnas:
-| Atributo | Tipo | Restricciones | Descripción |
-
-Y debajo de la tabla, una sección breve con:
-- Clave primaria y estrategia de generación (UUID v4, autoincremental…)
-- Claves foráneas y entidad a la que referencian
-- Relaciones y su tipo (1:1, 1:N, N:M)
-- Índices recomendados para las consultas más frecuentes del producto
-
-Entidades a documentar (en este orden):
-1. User
-2. Book
-3. ReadingEntry (registro de lectura de una usuaria sobre un libro)
-4. Tag y BookTag (tabla pivote)
-5. MonthlyTBR y TBREntry
-6. AnnualGoal
-7. ReadingSession (historial de progreso por página)
-
-Condiciones:
-- Los atributos deben ser coherentes con los flujos UC-01 a UC-10 
-  (por ejemplo, ReadingEntry necesita: status, current_page, rating, 
-  format, start_date, end_date).
-- Indica qué campos son obligatorios (NOT NULL) y cuáles opcionales, 
-  justificando brevemente los opcionales clave (por ejemplo, rating es 
-  opcional porque UC-04 permite cerrar el modal sin puntuar).
-- El resultado debe poder copiarse directamente en el README.md.
----
-
-### 4. Especificación de la API
-
-**Prompt 1:**
-Basándote en el UC-01 de documents/use-cases.md, la entidad Book del modelo 
-de datos de readme.md (sección 3.2) y el stack técnico definido en el PRD, 
-genera la especificación OpenAPI 3.1 del endpoint POST /books.
-
-Incluye DTO de request con validaciones, respuestas 201/400/401/409, y un 
-ejemplo real de request y response body en JSON.
-**Prompt 2:**
-Basándote en los UC-02 y UC-03 de documents/use-cases.md y la entidad 
-ReadingRecord (tabla reading_records) descrita en readme.md sección 3.2,
-genera la especificación OpenAPI 3.1 del endpoint 
-PATCH /books/{bookId}/reading-record.
-
-Ten en cuenta las reglas de negocio del UC-02 (efectos al pasar a "leido") 
-y las validaciones del UC-03 (current_page vs page_count). Incluye dos 
-ejemplos de request/response: uno para actualizar página y otro para 
-marcar como "leido".
-**Prompt 3:**
-Basándote en el UC-07 de documents/use-cases.md, los KPIs descritos en 
-la User Story 4 de documents/user-stories.md y la arquitectura del 
-StatsService en readme.md sección 2.2, genera la especificación OpenAPI 3.1 
-del endpoint GET /stats.
-
-El endpoint debe soportar los tres tipos de periodo del UC-07 (mes, año y 
-rango personalizado). Usa schemas reutilizables para los objetos de 
-distribución e incluye un ejemplo de request y response con los insights 
-automáticos rellenos.
+**Cómo se guió en implementación:** «no inventes tablas fuera de OpenSpec / data-model»; migraciones versionadas en `backend/src/migrations/`.
 
 ---
 
-### 5. Historias de Usuario
 
-**Prompt 1:**
 
-Actúa como product owner (perfil técnico). A partir de **`documents/use-cases.md` · UC-01** (flujo principal: Book Tracker → «Añadir libro» → búsqueda por título o autora → Open Library como fuente principal → selección de edición → guardado en biblioteca → visibilidad en tracker con estado **Pendiente**) y del [PRD](PRD.md), redacta **solo la User Story 1** para el fichero **`documents/user-stories.md`**.
+## 4. Especificación de la API
 
-Requisitos del entregable (deben coincidir con lo ya publicado en el repo):
+**Fase dominante:** Etapa 1 (borradores OpenAPI en README) → Etapa 2 (contrato vivo en `docs/api-spec.yml` sincronizado con código).
 
-- Cabecera del documento si es la primera historia del fichero: título *User stories · Reading Analytics Platform*, versión 1.0, Owner Celia, fecha abril 2026.
-- Bloque **User Story 1 · Añadir libro mediante búsqueda automática** con tabla de campo **Título** = «Añadir libro con autocompletado y selección de edición».
-- Historia en formato **Como / quiero / para** con rol **lectora orientada a datos**.
-- **Exactamente tres escenarios BDD** etiquetados «Escenario 1…3», con redacción equivalente a: (1) en *Book Tracker*, al pulsar «Añadir libro», modal con buscador por título o autora; (2) si hay varias ediciones, selección de la edición concreta; (3) tras confirmar, el libro aparece en el tracker con **portada, autora, páginas y género**.
-- **Estimación:** M.
-- Tabla **INVEST** con criterios Independent, Negotiable, Valuable, Estimable, Small, Testable y valoraciones alineadas al tono del documento (p. ej. fuente de datos negociable, alto valor).
 
-**Importante:** no añadas en esta historia escenarios de **entrada manual** ni de error de APIs; esos flujos alternativos de UC-01 deben quedar **solo** en `use-cases.md`, no duplicados en la user story.
+| #   | Interacción clave (intención)                           | Cómo se guió al asistente                                               |
+| --- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1   | Especificar **POST /books** (UC-01, catálogo, 201/409). | Anclado a UC-01 + entidad Book; validaciones y ejemplos JSON.           |
+| 2   | Especificar **PATCH …/reading-record** (UC-02/04).      | Reglas de transición y side-effects (`openCompletionModal`, luego TBR). |
+| 3   | Especificar **GET /stats** (UC-07, periodos mes/año).   | Schemas reutilizables; insights como parte del contrato.                |
 
----
 
-**Prompt 2:**
-
-Usando **`documents/use-cases.md` · UC-05** solo como **comprobación de coherencia** (módulo Lists, completado automático al pasar a `Leído`), genera **la User Story 2 · Gestión de TBR mensual** para **`documents/user-stories.md`**.
-
-El contenido debe reflejar fielmente el documento existente, sin exigir en la historia detalles que **no** aparecen en las user stories (por ejemplo **no** incluyas drag & drop ni la regla del «día anterior al mes» en los escenarios BDD de esta historia; eso vive en UC-05 para diseño técnico).
-
-Incluye:
-
-- Tabla con **Título** = «Crear y gestionar TBR mensual automático».
-- Historia **Como lectora frecuente / quiero tener una lista TBR mensual creada automáticamente / para organizar qué libros quiero leer cada mes**.
-- **Tres escenarios BDD** equivalentes a: (1) al comenzar un nuevo mes, al acceder a *Lists*, lista «TBR [mes siguiente]» ya creada; (2) si la lista está vacía, mensaje que anima a añadir libros; (3) al marcar un libro del TBR del mes como leído, se marca como completado en la checklist.
-- **Estimación:** M y tabla **INVEST** (p. ej. dependencia solo del modelo de listas; copy negociable).
+**Etapa 2+:** al aplicar un cambio OpenSpec, una task típica es «actualizar `docs/api-spec.yml`»; el asistente no debe devolver DTOs que no estén en el spec.
 
 ---
 
-**Prompt 3:**
 
-Genera en **`documents/user-stories.md`** las **User Stories 3, 4 y 5** y el **índice markdown** numerado con anclas a cada historia (como en el fichero del repositorio). Alineación obligatoria con **`documents/use-cases.md`**:
 
-- **User Story 3 · Meta anual de lectura** (UC-06, Goals/Home): título «Definir y visualizar objetivo anual»; historia como **lectora que sigue su progreso**; tres escenarios: configurar meta desde Home (p. ej. 50 libros), card «20 / 50» y porcentaje, **predicción de cumplimiento** con datos suficientes; estimación **S**; INVEST.
-- **User Story 4 · Visualización de estadísticas mensuales** (UC-07, Reading Stats): título «Consultar dashboard de estadísticas mensuales»; historia como **lectora apasionada por los datos**; tres escenarios: libros y **páginas** leídas en el mes en *Reading Stats*, **gráfico de distribución por géneros**, **cambio de filtro de mes** que actualiza gráficos; estimación **L**; INVEST (p. ej. complejidad alta pero clara).
-- **User Story 5 · Insights automáticos** (UC-07 criterio «al menos 3 insights»): título «Generación automática de insights de lectura»; historia como **lectora que disfruta analizando patrones**; tres escenarios: en *Reading Stats*, **al menos 3 insights**; si el mes actual supera al anterior, un insight con **incremento porcentual**; si un género domina, insight que lo **destaca como tendencia**; estimación **M**; INVEST.
+## 5. Historias de usuario
 
-Cierra el documento con la línea de cierre *Documento alineado con el PRD · Reading Analytics Platform*.
+**Fase dominante:** Etapa 1 (redacción BDD/INVEST) → Etapa 2 (`enrich-us` alinea Jira con US/UC).
 
-**Salida adicional:** prepara el texto para **`readme.md` sección 5**: párrafo introductorio (formato BDD, INVEST, enlace a PRD y `use-cases.md`), mención de que el listado completo de **cinco** historias está en `documents/user-stories.md`, y **resumen** de las historias 1–3 en tablas como en el README (sin contradecir el documento largo).
 
----
+| #   | Interacción clave (intención)                                                         | Cómo se guió al asistente                                                                      |
+| --- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1   | Redactar **US-01** (alta con catálogo) con exactamente 3 escenarios BDD.              | Fuente: UC-01; sin mezclar entrada manual en la US.                                            |
+| 2   | Redactar **US-02** (TBR mensual) y **US-03** (meta anual).                            | Coherencia con UC-05/UC-06; detalle técnico solo en use cases.                                 |
+| 3   | Ampliar a **US-04…US-06** (ciclo de lectura, stats, insights) y resumen en README §5. | Etapa 2: tickets KAN enlazados en la propia US; `enrich-us` evita reescribir criterios a mano. |
 
-### 6. Tickets de Trabajo
-
-**Prompt 1:**
-
-Redacta un **ticket de trabajo backend** listo para pegar en **`readme.md` · sección 6 · Tickets de Trabajo** (Ticket 1). Debe describir de principio a fin la implementación en **NestJS** del **UC-01** según `documents/use-cases.md`: cliente a **Open Library API** como fuente principal, **fallback automático** a **Google Books** si no hay resultados o error, normalización de metadatos (portada, título, autora, género, páginas, ISBN), persistencia en **PostgreSQL** alineada con las entidades **`books`** y registro de lectura con estado inicial coherente con **UC-02** (`pendiente`), **aislamiento por `userId`**, DTOs con **class-validator**, tests **Jest + Supertest** del endpoint de alta (p. ej. `POST /books` o ruta equivalente descrita en el README §4).
-
-Incluye: contexto, alcance fuera de alcance (no UI), criterios de aceptación verificables, definición de hecho, riesgos (cuotas APIs externas), dependencias (migraciones, contrato OpenAPI si aplica).
 
 ---
 
-**Prompt 2:**
 
-Redacta un **ticket de trabajo frontend** para **`readme.md` §6 · Ticket 2**: implementación en **React + TypeScript** de la **User Story 1** (`documents/user-stories.md`), consumiendo la API documentada en **README §4**.
 
-Detalla: vista **Book Tracker**, botón **«Añadir libro»**, **modal** con campo de búsqueda por título o autora (**debounce**), lista de resultados con **metadatos visibles** (portada, título, autora, género, páginas, ISBN si viene del backend), flujo de **selección de edición** cuando hay varias coincidencias, confirmación y actualización optimista o invalidación de caché (**TanStack Query** u patrón equivalente del README §2.2), manejo de vacíos y errores de red sin contradecir UC-01 (mensajes genéricos si el backend agrega entrada manual en otra iteración).
+## 6. Tickets de trabajo
 
-Incluye: mocks o contrato de API a respetar, criterios de aceptación enlazados a los tres escenarios BDD de la US1, accesibilidad básica (foco en modal, etiquetas), definición de hecho.
+**Fase dominante:** Etapa 2 (Jira + OpenSpec) → Etapa 3 (`kan-pipeline`).
+
+
+| #   | Interacción clave (intención)                                                        | Cómo se guió al asistente                                                 |
+| --- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| 1   | Convertir una US/UC en **ticket backend** implementable (alcance, AC, DoD, riesgos). | Primero en README (entrega); luego en Jira `KAN-`* con el mismo espíritu. |
+| 2   | Ticket **frontend** (modal, Query, accesibilidad básica).                            | Contrato API + escenarios BDD de la US.                                   |
+| 3   | Ticket **BD/migración** (schema mínimo MVP, luego géneros KAN-59, etc.).             | Sin entidades futuras en el mismo ticket.                                 |
+
+
+**Etapa 3 — ejemplo de guía mínima:**
+
+> Usa `kan-pipeline next` sobre la cola. No saltes el enrich ni el propose. Para en la puerta de merge humano.
+
+El detalle del ticket ya no se reescribe en el chat: vive en Jira + `openspec/changes/kan-…/`.
+
+Referencias de proceso en repo: `ai-specs/queues/kan-implementation-queue.yaml`, skill `kan-pipeline`, `openspec/README.md`.
 
 ---
 
-**Prompt 3:**
 
-Redacta un **ticket de trabajo de bases de datos** para **`readme.md` §6 · Ticket 3**: **PostgreSQL** + **TypeORM** (o el ORM indicado en el README), **solo** tablas y relaciones que ya figuran en **`readme.md` §3** (diagrama Mermaid y tablas de atributos).
 
-Propón un alcance acotado al **MVP de UC-01 + UC-02**: migraciones que creen **`users`** (o reutilicen esquema auth existente), **`books`** con `user_id` FK, **`reading_records`** 1:1 con `book_id` PK/FK, restricciones `CHECK` de `status` (`leyendo|leido|dnf|pendiente`), índices por **`user_id`** en `books`, semilla o script de rollback, orden de migraciones y comprobaciones (`UNIQUE` email si aplica).
+## 7. Pull requests
 
-No inventes entidades extra (p. ej. TBR o goals) en este ticket si no son necesarias para cerrar UC-01; si las mencionas, márcalas como **fuera de alcance** o ticket futuro enlazado a UC-05/UC-06.
+**Fase dominante:** Etapa 2 (PRs por cambio OpenSpec) → Etapa 3 (PR abierto automáticamente por el pipeline).
 
-Incluye: criterios de aceptación (migración up/down, datos de prueba mínimos), riesgos (pérdida de datos en entornos compartidos), definición de hecho.
+
+| #   | Interacción clave (intención)                                                             | Cómo se guió al asistente                                              |
+| --- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 1   | Abrir PR con resumen, plan de pruebas y enlace Jira (p. ej. KAN-9 primer vertical slice). | Skill `commit` + plantilla de PR; remoto **solo el fork**.             |
+| 2   | PRs full-stack (p. ej. lifecycle + TBR) tras apply de OpenSpec.                           | Tasks marcadas; tests de integración mencionados en el body.           |
+| 3   | Tras merge: archivar OpenSpec y actualizar estado de cola.                                | `/kan-pipeline continue` — no archivar a mano olvidando el state JSON. |
+
+
+**Política de guía fija (AGENTS / kan-pipeline):** pushes y `gh pr` contra `CeliaMerino/AI4Devs-finalproject`; nunca PR al upstream del aula salvo sync explícito.
+
+Ejemplos documentados también en `readme.md` §7: [#9](https://github.com/CeliaMerino/AI4Devs-finalproject/pull/9), [#11](https://github.com/CeliaMerino/AI4Devs-finalproject/pull/11), [#69](https://github.com/CeliaMerino/AI4Devs-finalproject/pull/69).
 
 ---
 
-### 7. Pull Requests
 
-**Prompt 1:**
 
-**Prompt 2:**
+## Resumen: qué aportó cada capa de IA
 
-**Prompt 3:**
+
+| Capa                | Aporta                                         | Limita / evita                                 |
+| ------------------- | ---------------------------------------------- | ---------------------------------------------- |
+| Prompts libres      | Velocidad al definir producto y docs iniciales | Drift, stack inventado, repetición de contexto |
+| OpenSpec + ai-specs | Requisitos por ticket, TDD, sync docs/código   | Implementar sin spec previa                    |
+| kan-pipeline        | Repetibilidad, menos fricción operativa        | Saltar la revisión humana del PR               |
+
+
+La ingeniería de prompts «perfectos» dejó de ser el cuello de botella: el valor está en **documentación canónica + skills + cola de tickets**, con el humano validando producto y merges.
+
+---
+
+
+
+## Referencias en el repositorio
+
+- Precedencia y reglas de agente: `[AGENTS.md](AGENTS.md)`
+- Producto: `[PRD.md](PRD.md)`, `[docs/product/](docs/product/)`
+- Contratos: `[docs/api-spec.yml](docs/api-spec.yml)`, `[docs/data-model.md](docs/data-model.md)`
+- OpenSpec: `[openspec/README.md](openspec/README.md)`
+- AI specs / skills: `[ai-specs/README.md](ai-specs/README.md)`
+- Cola y pipeline: `[ai-specs/queues/kan-implementation-queue.yaml](ai-specs/queues/kan-implementation-queue.yaml)`, skill `kan-pipeline`
+

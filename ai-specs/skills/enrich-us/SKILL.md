@@ -28,8 +28,8 @@ Follow these steps:
    - Documentation and unit test updates
    - Non-functional requirements (security, performance, observability, etc.)
 5. If the story lacks enough technical detail for autonomous implementation, provide an improved version that is clearer, more specific, and concise, aligned with step 4. Use project context in this order:
-   - `PRD.md`, `readme.md`, `documents/use-cases.md`, `documents/user-stories.md`
-   - `docs/api-spec.yml`, `docs/data-model.md`, `docs/backend-standards.md`, `docs/frontend-standards.md`
+   - `PRD.md`, `readme.md`, `docs/product/use-cases.md`, `docs/product/user-stories.md`
+   - `docs/api-spec.yml`, `docs/data-model.md`, `docs/standards/backend-standards.md`, `docs/standards/frontend-standards.md`
    - Active OpenSpec change under `openspec/changes/` when one exists for this ticket (e.g. `KAN-9`)
    - `AGENTS.md` for process rules only
    Return the result in markdown.

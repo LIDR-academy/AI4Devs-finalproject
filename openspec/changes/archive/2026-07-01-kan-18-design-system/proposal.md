@@ -7,7 +7,7 @@ Every page and modal currently defines its own colors and spacing (Vite starter 
 - **Design tokens:** central CSS variables for PRD palette, typography, spacing (4/8 grid), radii, shadows, and focus rings in `frontend/src/theme/`.
 - **Shared UI components:** Button, Card, Table (+ scroll wrapper), Input, Select, Modal, Badge, StarRating, ChartCard, PageHeader, SidebarItem under `frontend/src/components/ui/`.
 - **Global wiring:** replace Vite starter variables; load tokens app-wide via `main.tsx` / `index.css`.
-- **Documentation:** `docs/design-system-palette.md` mapping PRD colors to semantic tokens; update `docs/frontend-standards.md`.
+- **Documentation:** `docs/design-system-palette.md` mapping PRD colors to semantic tokens; update `docs/standards/frontend-standards.md`.
 - **Accessibility:** keyboard-operable interactive components; WCAG 2.1 AA contrast documented for primary token pairs.
 
 **Non-goals:**
@@ -30,6 +30,6 @@ Every page and modal currently defines its own colors and spacing (Vite starter 
 ## Impact
 
 - **Frontend:** new `theme/` and `components/ui/` trees; `index.html` font links; refactor `StarRating` to live under `ui/` with backward-compatible re-export.
-- **Docs:** `docs/design-system-palette.md`, `docs/frontend-standards.md`.
+- **Docs:** `docs/design-system-palette.md`, `docs/standards/frontend-standards.md`.
 - **Product refs:** KAN-18, PRD §6, README §1.3.
 - **Dependencies:** unblocks KAN-19, KAN-20 epic page restyles.

@@ -7,7 +7,7 @@
 - [x] 1.3 Wire theme in `main.tsx` and update `index.css` to remove Vite starter palette
 - [x] 1.4 Add Google Fonts (Cormorant Garamond + Nunito) in `index.html`
 - [x] 1.5 Create `docs/design-system-palette.md` with token mapping and WCAG notes
-- [x] 1.6 Update `docs/frontend-standards.md` with design-system paths
+- [x] 1.6 Update `docs/standards/frontend-standards.md` with design-system paths
 
 ## 2. UI components
 

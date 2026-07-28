@@ -1,7 +1,8 @@
 # monthly-stats-api Specification
 
 ## Purpose
-TBD - created by archiving change kan-15-monthly-stats-dashboard. Update Purpose after archive.
+
+Expose month-scoped reading aggregates for the authenticated user via `GET /v1/stats/{year}/{month}`, computed on read from `reading_records` and `books` (UC-07, KAN-15). No persisted statistics table.
 ## Requirements
 ### Requirement: Get monthly reading statistics
 
