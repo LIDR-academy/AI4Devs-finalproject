@@ -519,12 +519,12 @@
       "error": null
     },
     "KAN-63": {
-      "status": "in_progress",
+      "status": "awaiting_merge",
       "failed_step": null,
       "change_name": "kan-63-smart-genre-mapping",
       "branch": "feature/KAN-63-smart-genre-mapping",
-      "pr_url": null,
-      "pr_number": null,
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/67",
+      "pr_number": 67,
       "archived_at": null,
       "error": null
     }
