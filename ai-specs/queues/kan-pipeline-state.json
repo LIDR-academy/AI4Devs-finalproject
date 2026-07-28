@@ -2,8 +2,8 @@
   "version": 1,
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
-  "last_completed": "KAN-61",
-  "current_ticket": "KAN-62",
+  "last_completed": "KAN-62",
+  "current_ticket": null,
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -509,13 +509,13 @@
       "error": null
     },
     "KAN-62": {
-      "status": "awaiting_merge",
+      "status": "done",
       "failed_step": null,
       "change_name": "kan-62-genre-delete-confirmation",
       "branch": "feature/KAN-62-genre-delete-confirmation",
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/66",
       "pr_number": 66,
-      "archived_at": null,
+      "archived_at": "2026-07-28T08:40:00Z",
       "error": null
     }
   }
