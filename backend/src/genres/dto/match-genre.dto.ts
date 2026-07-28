@@ -1,4 +1,4 @@
-import { GenreMatchResult } from './genre-matcher.service';
+import { GenreMatchResult } from '../genre-matcher.service';
 
 import { IsArray, IsString, MaxLength, MinLength } from 'class-validator';
 
