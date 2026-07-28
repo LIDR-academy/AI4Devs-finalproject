@@ -121,16 +121,17 @@ class _SyncPendingBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFFCEFE0),
+        color: colorScheme.tertiaryContainer,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         'Pendiente',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: const Color(0xFFF4A259),
+              color: colorScheme.onTertiaryContainer,
               fontWeight: FontWeight.w600,
             ),
       ),

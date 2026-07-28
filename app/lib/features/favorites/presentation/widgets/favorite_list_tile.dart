@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/player_initial_avatar.dart';
 import 'package:la_pocha/features/favorites/domain/entities/favorite_player.dart';
 
 class FavoriteListTile extends StatelessWidget {
@@ -16,24 +17,14 @@ class FavoriteListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = favorite.displayName.isNotEmpty
-        ? favorite.displayName[0].toUpperCase()
-        : '?';
-
     return ListTile(
       tileColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      leading: CircleAvatar(
-        backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
-        child: Text(
-          initial,
-          style: const TextStyle(
-            color: AppTheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      leading: PlayerInitialAvatar(
+        name: favorite.displayName,
+        colorIndex: 0,
       ),
       title: Text(favorite.displayName),
       subtitle: Text(

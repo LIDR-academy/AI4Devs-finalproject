@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
-import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/pocha_app_bar.dart';
+import 'package:la_pocha/core/widgets/primary_button.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/game_setup_bloc.dart';
 import 'package:la_pocha/features/game_setup/presentation/widgets/game_overflow_menu.dart';
@@ -44,7 +45,12 @@ class _GameSetupView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Header(gameId: gameId, onBack: () => context.pop()),
+              PochaAppBar(
+                title: 'Orden de mesa',
+                subtitle: 'Arrastra para reordenar',
+                onBack: () => context.pop(),
+                actions: [GameOverflowMenu(gameId: gameId)],
+              ),
               Expanded(
                 child: BlocBuilder<GameSetupBloc, GameSetupState>(
                   builder: (context, state) {
@@ -131,75 +137,17 @@ class _LoadedBody extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: FilledButton(
-            onPressed: isComplete && !isStarting
+          child: PrimaryButton(
+            label: '▶ Empezar partida',
+            isLoading: isStarting,
+            onPressed: isComplete
                 ? () => context
                     .read<GameSetupBloc>()
                     .add(const StartGameRequested())
                 : null,
-            child: isStarting
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('▶ Empezar partida'),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.gameId, required this.onBack});
-
-  final String gameId;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.primary,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Orden de mesa',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  Text(
-                    'Arrastra para reordenar',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            GameOverflowMenu(gameId: gameId),
-          ],
-        ),
-      ),
     );
   }
 }

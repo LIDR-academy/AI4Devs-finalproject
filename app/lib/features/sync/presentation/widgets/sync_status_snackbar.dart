@@ -9,9 +9,6 @@ class SyncStatusSnackbar extends StatelessWidget {
 
   final Widget child;
 
-  static const Color _warningBackground = Color(0xFFFCEFE0);
-  static const Color _warningText = Color(0xFFF4A259);
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<GameSyncBloc, GameSyncState>(
@@ -21,6 +18,8 @@ class SyncStatusSnackbar extends StatelessWidget {
           return;
         }
         messenger.hideCurrentSnackBar();
+
+        final colorScheme = Theme.of(context).colorScheme;
 
         switch (state) {
           case GameSyncSuccess():
@@ -40,14 +39,14 @@ class SyncStatusSnackbar extends StatelessWidget {
                 content: const Text(
                   'No se pudo sincronizar; se reintentará',
                 ),
-                backgroundColor: _warningBackground,
+                backgroundColor: colorScheme.tertiaryContainer,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 action: SnackBarAction(
                   label: 'OK',
-                  textColor: _warningText,
+                  textColor: colorScheme.onTertiaryContainer,
                   onPressed: messenger.hideCurrentSnackBar,
                 ),
               ),

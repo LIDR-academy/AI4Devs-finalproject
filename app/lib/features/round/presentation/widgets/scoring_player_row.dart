@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/player_initial_avatar.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
-import 'package:la_pocha/features/game_setup/presentation/widgets/player_slot.dart';
 import 'package:la_pocha/features/round/presentation/widgets/trick_input_stepper.dart';
 
 class ScoringPlayerRow extends StatelessWidget {
@@ -38,15 +38,9 @@ class ScoringPlayerRow extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: playerAvatarColorForIndex(index),
-                  child: Text(
-                    player.displayName.characters.first.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                PlayerInitialAvatar(
+                  name: player.displayName,
+                  colorIndex: index,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

@@ -1,17 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/player_initial_avatar.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
-
-const List<Color> playerAvatarColors = [
-  Color(0xFF2E7D5B),
-  Color(0xFFF4A259),
-  Color(0xFF4A7FBF),
-  Color(0xFF9B7BB8),
-];
-
-Color playerAvatarColorForIndex(int index) {
-  return playerAvatarColors[index % playerAvatarColors.length];
-}
 
 class PlayerSlot extends StatelessWidget {
   const PlayerSlot({
@@ -97,11 +87,6 @@ class _FilledPlayerSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarColor = playerAvatarColorForIndex(index);
-    final initial = player.displayName.isNotEmpty
-        ? player.displayName[0].toUpperCase()
-        : '?';
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
@@ -117,13 +102,9 @@ class _FilledPlayerSlot extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: avatarColor,
-            foregroundColor: Colors.white,
-            child: Text(
-              initial,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+          PlayerInitialAvatar(
+            name: player.displayName,
+            colorIndex: index,
           ),
           const SizedBox(width: 12),
           Expanded(

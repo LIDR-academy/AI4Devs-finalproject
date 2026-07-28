@@ -8,6 +8,8 @@ import 'package:la_pocha/core/di/injection.dart';
 
 import 'package:la_pocha/core/theme/app_theme.dart';
 
+import 'package:la_pocha/core/widgets/pocha_app_bar.dart';
+
 import 'package:la_pocha/features/history/domain/entities/game_detail.dart';
 
 import 'package:la_pocha/features/history/domain/entities/game_history_source.dart';
@@ -158,12 +160,10 @@ class _GameDetailView extends StatelessWidget {
 
                   children: [
 
-                    _Header(
-
+                    PochaAppBar(
                       title: 'Detalle de partida',
-
+                      expanded: true,
                       onBack: () => context.pop(),
-
                     ),
 
                     const Expanded(
@@ -182,12 +182,10 @@ class _GameDetailView extends StatelessWidget {
 
                   children: [
 
-                    _Header(
-
+                    PochaAppBar(
                       title: 'Detalle de partida',
-
+                      expanded: true,
                       onBack: () => context.pop(),
-
                     ),
 
                     Expanded(
@@ -314,16 +312,12 @@ class _LoadedBody extends StatelessWidget {
 
       children: [
 
-        _Header(
-
+        PochaAppBar(
           title: 'Detalle de partida',
-
           subtitle: formattedDate,
-
+          expanded: true,
           onBack: () => context.pop(),
-
-          trailing: SourceBadge(source: detail.source),
-
+          actions: [SourceBadge(source: detail.source)],
         ),
 
         if (detail.duration != null)
@@ -470,122 +464,5 @@ class _LoadedBody extends StatelessWidget {
 
 }
 
-
-
-class _Header extends StatelessWidget {
-
-  const _Header({
-
-    required this.title,
-
-    required this.onBack,
-
-    this.subtitle,
-
-    this.trailing,
-
-  });
-
-
-
-  final String title;
-
-  final VoidCallback onBack;
-
-  final String? subtitle;
-
-  final Widget? trailing;
-
-
-
-  @override
-
-  Widget build(BuildContext context) {
-
-    return Container(
-
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-
-      padding: const EdgeInsets.all(24),
-
-      decoration: BoxDecoration(
-
-        color: AppTheme.primary,
-
-        borderRadius: BorderRadius.circular(20),
-
-      ),
-
-      child: Row(
-
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-
-          IconButton(
-
-            onPressed: onBack,
-
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-
-          ),
-
-          Expanded(
-
-            child: Column(
-
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-
-                Text(
-
-                  title,
-
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-
-                    color: Colors.white,
-
-                    fontWeight: FontWeight.bold,
-
-                  ),
-
-                ),
-
-                if (subtitle != null) ...[
-
-                  const SizedBox(height: 4),
-
-                  Text(
-
-                    subtitle!,
-
-                    style: Theme.of(
-
-                      context,
-
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-
-                  ),
-
-                ],
-
-              ],
-
-            ),
-
-          ),
-
-          ?trailing,
-
-        ],
-
-      ),
-
-    );
-
-  }
-
-}
 
 

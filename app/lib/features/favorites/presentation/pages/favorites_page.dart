@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/pocha_app_bar.dart';
 import 'package:la_pocha/features/favorites/domain/entities/favorite_player.dart';
 import 'package:la_pocha/features/favorites/presentation/bloc/favorites_bloc.dart';
 import 'package:la_pocha/features/favorites/presentation/widgets/add_favorite_fab.dart';
@@ -43,7 +44,10 @@ class _FavoritesView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Header(onBack: () => context.pop()),
+            PochaAppBar(
+              title: 'Mis favoritos',
+              onBack: () => context.pop(),
+            ),
             Expanded(
               child: BlocBuilder<FavoritesBloc, FavoritesState>(
                 builder: (context, state) {
@@ -141,43 +145,6 @@ class _EmptyFavoritesView extends StatelessWidget {
               onPressed: () => showAddFavoriteBottomSheet(context),
               icon: const Icon(Icons.add),
               label: const Text('Añadir favorito'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.primary,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
-            Expanded(
-              child: Text(
-                'Mis favoritos',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
             ),
           ],
         ),

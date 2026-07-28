@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
-import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/primary_button.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
-import 'package:la_pocha/features/game_setup/presentation/widgets/game_overflow_menu.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_event.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_state.dart';
 import 'package:la_pocha/features/round/presentation/widgets/bidding_player_row.dart';
+import 'package:la_pocha/features/round/presentation/widgets/round_header.dart';
 import 'package:la_pocha/features/round/presentation/widgets/tricks_balance_indicator.dart';
 
 class BiddingPage extends StatelessWidget {
@@ -56,10 +56,12 @@ class _BiddingView extends StatelessWidget {
                 builder: (context, state) {
                   final cardsInRound =
                       state is BiddingLoaded ? state.round.cardsInRound : null;
-                  return _Header(
+                  return RoundHeader(
                     gameId: gameId,
                     roundNumber: roundNumber,
                     cardsInRound: cardsInRound,
+                    subtitle: 'Apuestas',
+                    repeatRoundNumber: roundNumber,
                   );
                 },
               ),
@@ -194,87 +196,17 @@ class _LoadedBody extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: FilledButton(
-            onPressed: state.canClose && !state.isClosing
+          child: PrimaryButton(
+            label: 'Cerrar apuestas',
+            isLoading: state.isClosing,
+            onPressed: state.canClose
                 ? () => context.read<BiddingBloc>().add(
                       const CloseBiddingRequested(),
                     )
                 : null,
-            child: state.isClosing
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Cerrar apuestas'),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.gameId,
-    required this.roundNumber,
-    required this.cardsInRound,
-  });
-
-  final String gameId;
-  final int roundNumber;
-  final int? cardsInRound;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = cardsInRound == null
-        ? 'Ronda $roundNumber'
-        : 'Ronda $roundNumber · $cardsInRound cartas';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.primary,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  Text(
-                    'Apuestas',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            GameOverflowMenu(
-              gameId: gameId,
-              repeatRoundNumber: roundNumber,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

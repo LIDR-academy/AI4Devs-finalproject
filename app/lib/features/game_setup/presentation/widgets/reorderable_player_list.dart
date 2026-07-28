@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/player_initial_avatar.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
 import 'package:la_pocha/features/game_setup/presentation/widgets/dealer_selector.dart';
-import 'package:la_pocha/features/game_setup/presentation/widgets/player_slot.dart';
 
 class ReorderablePlayerList extends StatelessWidget {
   const ReorderablePlayerList({
@@ -56,11 +56,6 @@ class _PlayerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarColor = playerAvatarColorForIndex(index);
-    final initial = player.displayName.isNotEmpty
-        ? player.displayName[0].toUpperCase()
-        : '?';
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -104,13 +99,9 @@ class _PlayerRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          CircleAvatar(
-            backgroundColor: avatarColor,
-            foregroundColor: Colors.white,
-            child: Text(
-              initial,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+          PlayerInitialAvatar(
+            name: player.displayName,
+            colorIndex: index,
           ),
           const SizedBox(width: 12),
           Expanded(

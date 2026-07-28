@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
-import 'package:la_pocha/features/game_setup/presentation/widgets/player_slot.dart';
+import 'package:la_pocha/core/widgets/player_initial_avatar.dart';
 import 'package:la_pocha/features/round/domain/entities/ranking_entry.dart';
 import 'package:la_pocha/features/round/presentation/widgets/score_delta_chip.dart';
 
@@ -47,15 +47,9 @@ class RankingList extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: playerAvatarColorForIndex(playerIndex),
-                  child: Text(
-                    entry.player.displayName.characters.first.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                PlayerInitialAvatar(
+                  name: entry.player.displayName,
+                  colorIndex: playerIndex,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

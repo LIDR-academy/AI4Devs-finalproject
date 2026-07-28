@@ -13,6 +13,8 @@ abstract final class AppTheme {
       surface: surface,
       onSurface: onSurface,
       onSurfaceVariant: onSurfaceVariant,
+      tertiaryContainer: const Color(0xFFFCEFE0),
+      onTertiaryContainer: const Color(0xFFD9772E),
     );
 
     return ThemeData(

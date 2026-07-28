@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/pocha_app_bar.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/add_players_bloc.dart';
 import 'package:la_pocha/features/game_setup/presentation/widgets/add_player_bottom_sheet.dart';
@@ -41,7 +42,20 @@ class _AddPlayersView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Header(onBack: () => context.pop()),
+              BlocBuilder<AddPlayersBloc, AddPlayersState>(
+                builder: (context, state) {
+                  final subtitle = switch (state) {
+                    AddPlayersLoaded(:final players, :final playerCount) =>
+                      '${players.length} de $playerCount añadidos',
+                    _ => null,
+                  };
+                  return PochaAppBar(
+                    title: 'Jugadores',
+                    subtitle: subtitle,
+                    onBack: () => context.pop(),
+                  );
+                },
+              ),
               Expanded(
                 child: BlocBuilder<AddPlayersBloc, AddPlayersState>(
                   builder: (context, state) {
@@ -145,67 +159,6 @@ class _LoadedBody extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AddPlayersBloc, AddPlayersState>(
-      builder: (context, state) {
-        final subtitle = switch (state) {
-          AddPlayersLoaded(:final players, :final playerCount) =>
-            '${players.length} de $playerCount añadidos',
-          _ => '',
-        };
-
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppTheme.primary,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Jugadores',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      if (subtitle.isNotEmpty)
-                        Text(
-                          subtitle,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

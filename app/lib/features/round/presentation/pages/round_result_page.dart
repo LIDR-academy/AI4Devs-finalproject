@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
+import 'package:la_pocha/core/widgets/primary_button.dart';
 import 'package:la_pocha/features/round/domain/entities/round_result.dart';
 import 'package:la_pocha/features/round/presentation/bloc/round_result_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/round_result_event.dart';
@@ -161,34 +162,22 @@ class _LoadedBody extends StatelessWidget {
         if (!readOnly)
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: FilledButton(
-              onPressed: isAdvancing
-                  ? null
-                  : () {
-                      if (result.isLastRound) {
-                        context.read<RoundResultBloc>().add(
-                              const FinishGameRequested(),
-                            );
-                      } else {
-                        context.read<RoundResultBloc>().add(
-                              const AdvanceToNextRoundRequested(),
-                            );
-                      }
-                    },
-              child: isAdvancing
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      result.isLastRound
-                          ? 'Ver resultado final'
-                          : 'Siguiente ronda',
-                    ),
+            child: PrimaryButton(
+              label: result.isLastRound
+                  ? 'Ver resultado final'
+                  : 'Siguiente ronda',
+              isLoading: isAdvancing,
+              onPressed: () {
+                if (result.isLastRound) {
+                  context.read<RoundResultBloc>().add(
+                        const FinishGameRequested(),
+                      );
+                } else {
+                  context.read<RoundResultBloc>().add(
+                        const AdvanceToNextRoundRequested(),
+                      );
+                }
+              },
             ),
           ),
       ],

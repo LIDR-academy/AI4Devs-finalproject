@@ -2052,3 +2052,225 @@ que queda fuera del alcance actual.
 
 flutter analyze sin errores tras los cambios.
 
+--------------------
+
+FASE 1 — ANÁLISIS (no toques nada todavía):
+
+Analiza todas las pantallas del proyecto en lib/features/
+y lib/core/ e identifica los componentes de UI que se
+repiten en 3 o más pantallas. Para cada componente
+repetido, lista:
+
+- Nombre del componente/widget
+- Ficheros donde aparece
+- Parámetros que varían entre usos
+- Parámetros que son siempre iguales (candidatos a defaults)
+
+Busca específicamente:
+
+1. AppBar — ¿cómo está implementada en cada pantalla?
+   ¿Tienen todas el mismo estilo o varían?
+2. Cabecera verde extendida del ciclo de ronda —
+   ¿está duplicada o ya es un widget compartido?
+3. Botón primario de ancho completo — ¿hay un widget
+   compartido o cada pantalla lo implementa inline?
+4. Filas de jugador (PlayerListTile o similar) — ¿existe
+   ya como widget reutilizable o está duplicado?
+5. Banner de advertencia/aviso (ámbar) — ¿hay un widget
+   compartido o está duplicado?
+6. Avatar circular con inicial — ¿widget compartido o
+   duplicado?
+
+Muéstrame el resultado del análisis en formato tabla:
+| Componente | Aparece en | Compartido? | Acción |
+antes de proponer ningún cambio.
+
+-----------------------
+
+
+Rediseña completamente add_players_page.dart y sus widgets
+asociados siguiendo el diseño validado en Claude Design
+(capturas en el historial de conversación).
+
+USA los componentes atómicos ya disponibles en core/widgets/:
+
+- PochaAppBar (no implementes cabecera nueva)
+- PlayerInitialAvatar (no implementes avatar nuevo)
+- PrimaryButton (no implementes botón nuevo)
+- WarningBanner si necesitas algún aviso
+
+═══════════════════════════════════════
+
+1. APPBAR
+═══════════════════════════════════════
+
+PochaAppBar(
+  title: 'Añadir jugadores',
+  subtitle: '${players.length} de $playerCount añadidos',
+  actions: [
+    IconButton(
+      icon: Icon(Icons.search),
+      onPressed: // abrir search_player_stub (ya existe)
+    ),
+    // menú tres puntos: "Cancelar partida"
+    // usa CancelGameCubit ya implementado en LPT-24
+  ],
+  onBack: // mostrar diálogo de confirmación:
+  // "¿Descartar esta partida? Se perderá la configuración."
+  // Al confirmar: DeleteGameUseCase + navigate to Home
+  showBackConfirmation: true,
+  backConfirmationMessage:
+    '¿Descartar esta partida? Se perderá la configuración actual.',
+)
+
+═══════════════════════════════════════
+2. CHIP GRID DE FAVORITOS
+═══════════════════════════════════════
+
+Sección con label "FAVORITOS" en texto pequeño mayúsculas
+(labelSmall, onSurfaceVariant).
+
+Wrap de FilterChip con los favoritos de FavoriteRepository.
+
+COMPORTAMIENTO REACTIVO CRÍTICO — gestionar en AddPlayersBloc:
+
+- Un chip solo es visible si ese favorito NO está ya
+  añadido a la partida (ocultar, no deshabilitar)
+- Al tocar un chip: AddPlayerUseCase con los datos del
+  favorito, chip desaparece inmediatamente
+- Si no hay chips visibles (todos añadidos o lista vacía):
+  texto pequeño gris:
+  "Añade jugadores frecuentes con ⭐"
+
+═══════════════════════════════════════
+3. LISTA DE JUGADORES
+═══════════════════════════════════════
+
+Label "JUGADORES EN LA PARTIDA" (misma tipografía que
+"FAVORITOS").
+
+Container con fondo Colors.white / colorScheme.surface,
+BorderRadius.circular(12), que agrupa TODAS las filas.
+Divider fino entre filas.
+
+FILA DE JUGADOR AÑADIDO (en reposo, ~56dp):
+
+- PlayerInitialAvatar(name: player.displayName,
+    colorIndex: player.seatOrder, radius: 16)
+- Column: displayName (bodyMedium bold) +
+  "Jugador registrado" o "Invitado" (labelSmall, gris)
+- Trailing Row:
+  - IconButton estrella ⭐/☆ (24dp, color ámbar si favorito,
+    onSurfaceVariant si no)
+  - IconButton Icons.close (24dp, color onSurfaceVariant)
+
+COMPORTAMIENTO ESTRELLA (REACTIVO en AddPlayersBloc):
+
+- Al pulsar ☆ vacía:
+  - AddFavoriteUseCase(player) → estrella rellena ⭐
+  - Chip de ese jugador desaparece del grid
+- Al pulsar ⭐ rellena:
+  - RemoveFavoriteUseCase(player) → estrella vacía ☆
+  - Chip de ese jugador reaparece en el grid
+- Determinar si un jugador es favorito: comparar
+  player.userId (si registrado) o player.displayName
+  (si invitado) contra la lista de FavoriteRepository
+
+COMPORTAMIENTO ✕:
+
+- RemovePlayerUseCase(player.id)
+- Si ese jugador era favorito → su chip reaparece en grid
+- El slot vuelve a estado vacío
+
+SLOT VACÍO (~56dp):
+
+- Icono Icons.add_circle_outline en color onSurfaceVariant
+- Texto "Añadir jugador" en labelMedium gris
+- InkWell que activa el modo edición inline en ese slot
+
+FILA EN EDICIÓN INLINE (al tocar slot vacío):
+
+- TextField con hint "Nombre del jugador"
+  underline en color primary, autofocus: true
+- IconButton Icons.check_circle en color primary
+  a la derecha para confirmar
+- Al confirmar con nombre no vacío y no duplicado:
+  AddPlayerUseCase(PlayerEmbed(
+    displayName: name, isGuest: true, userId: null))
+- Solo un slot en modo edición a la vez
+- Al pulsar fuera o back del teclado: cancelar edición,
+  volver a slot vacío (no añadir jugador)
+
+═══════════════════════════════════════
+4. BLOQUE DE ESTADO DEL BLOC
+═══════════════════════════════════════
+
+AddPlayersBloc debe gestionar en UN ÚNICO estado:
+
+- players: List<PlayerEmbed> (jugadores de la partida)
+- favorites: List<FavoritePlayer> (de FavoriteRepository)
+- activeEditIndex: int? (slot en modo edición, null = ninguno)
+- isLoading: bool
+
+Nuevos eventos necesarios:
+
+- FavoriteChipTapped(FavoritePlayer favorite)
+- PlayerFavoriteToggled(String playerId)
+- EditSlotActivated(int index)
+- EditSlotCancelled()
+- PlayerNameConfirmed(int index, String name)
+
+Reutilizar use cases existentes:
+
+- AddPlayerUseCase, RemovePlayerUseCase (LPT-6)
+- AddFavoriteUseCase, RemoveFavoriteUseCase (LPT-18)
+- FavoriteRepository para cargar favorites al iniciar
+
+═══════════════════════════════════════
+5. BOTÓN INFERIOR FIJO
+═══════════════════════════════════════
+
+PrimaryButton(
+  label: players.length == playerCount
+    ? 'Continuar'
+    : 'Faltan ${playerCount - players.length} jugadores',
+  onPressed: players.length == playerCount
+    ? () => context.go('/games/$gameId/setup')
+    : null, // null = deshabilitado automáticamente
+)
+
+═══════════════════════════════════════
+6. LAYOUT GENERAL
+═══════════════════════════════════════
+
+Scaffold
+└── Column
+    ├── PochaAppBar(...)
+    └── Expanded
+        └── SingleChildScrollView (fallback si no cabe)
+            └── Padding(16)
+                └── Column
+                    ├── // sección FAVORITOS
+                    ├── SizedBox(height: 16)
+                    └── // sección JUGADORES EN LA PARTIDA
+
+Sin scroll si el contenido cabe — para partidas de 4
+jugadores debe caber sin scroll en pantallas de 390px.
+Para 7-8 jugadores, SingleChildScrollView como fallback.
+
+═══════════════════════════════════════
+7. DEFINICIÓN DE HECHO
+═══════════════════════════════════════
+
+- [ ] Chip desaparece al añadir favorito a la partida
+- [ ] Chip reaparece al eliminar jugador favorito
+- [ ] Estrella toggle actualiza FavoriteRepository y grid
+      en la misma acción sin reload
+- [ ] Edición inline sin diálogo intermedio
+- [ ] ✕ elimina jugador y reactiva chip si era favorito
+- [ ] Botón deshabilitado hasta completar todos los slots
+- [ ] Volver atrás muestra confirmación de descarte
+- [ ] flutter analyze sin errores
+
+Usa modo Plan antes de ejecutar. Es un rediseño completo
+— el plan debe listar todos los ficheros afectados.

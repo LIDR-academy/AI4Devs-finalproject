@@ -1,0 +1,8 @@
+- Como principio de diseño debe procurarse que la pantalla no necesite scroll, y que se muestre toda la informacion en esa misma pantalla.
+- La tarjeta de encabezameiieento ocupa mucho espacio. Creo que se podria optimizar utilizando una appbar standar y ajustando el tamaño de la tipografía.
+- Desde la pantalla de añadir jugadores no deja navegar hacia atrás, debe permitirse volver a la pantalla inicial descartando la partida actual.
+- La gestión de favoritos no es ágil. Yo incluiría un carrusel horizontal de jugadores en la pantalla de añadir los jugadores, sobre el listado de los jugadores de la partida (En caso de no haber favoritos aun, un pequeño texto explicativo de como añadirlos).
+  En vez del chip de invitado, incluiria un iconbutton de una estrella, que permitiera convertir a ese jugador en favorito. En caso de ser favorito la estrella ya saldria rellena. En caso de jugador libre, la estrella saldria vacía. 
+  Al pulsar en una estrella vacía, el jugador se añadiría a la lista de favoritos. En caso de pulsar en una estrella llena, el jugador dejaría de ser favorito. Limitaria el número de favoritos a 8 o 10 para no tener problemas de espacio en el carrusel.
+- El buscador de usuarios registrados está implementado? Si no, hay que implementarlo.
+- Al pulsar en la terjeta para añadir un nuevo jugador, debería cambiar su diseño para editar el nombre directamente en la tarjeta, sin tener que pasar por un diálogo intermedio. Para acceder al buscador de usuarios registrados podemos incluir una lupa en el action de la appbar.

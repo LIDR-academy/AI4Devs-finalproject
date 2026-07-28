@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/pocha_app_bar.dart';
+import 'package:la_pocha/core/widgets/warning_banner.dart';
 import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:la_pocha/features/history/domain/entities/game_history_item.dart';
 import 'package:la_pocha/features/history/presentation/bloc/delete_game_from_history_cubit.dart';
@@ -90,7 +92,11 @@ class _HistoryListView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Header(onBack: () => context.pop()),
+            PochaAppBar(
+              title: 'Historial',
+              expanded: true,
+              onBack: () => context.pop(),
+            ),
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {
                 if (authState is! Authenticated) {
@@ -166,64 +172,16 @@ class _HistoryListView extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppTheme.primary,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-          ),
-          Expanded(
-            child: Text(
-              'Historial',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _OfflineSyncBanner extends StatelessWidget {
   const _OfflineSyncBanner();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFCEFE0),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.cloud_off, color: Color(0xFFF4A259)),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Sin conexión: mostrando solo partidas locales.',
-              style: TextStyle(color: Color(0xFFF4A259)),
-            ),
-          ),
-        ],
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: WarningBanner(
+        message: 'Sin conexión: mostrando solo partidas locales.',
+        icon: Icons.cloud_off,
       ),
     );
   }
