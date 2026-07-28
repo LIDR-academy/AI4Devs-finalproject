@@ -11,7 +11,7 @@ describe('InvestmentCalculator', () => {
       years: 30,
       inflation: 0.02,
     });
-    expect(scenario.name).toBe('moderate');
+    expect(scenario.name).toBe('moderado (6%)');
     expect(scenario.nominalValue).toBeGreaterThan(scenario.totalContributed);
     expect(scenario.realValue).toBeLessThan(scenario.nominalValue);
   });
@@ -29,6 +29,6 @@ describe('InvestmentCalculator', () => {
   it('generates 3 scenarios', () => {
     const all = calc.generateAllScenarios({ monthlyContribution: 300, years: 30, inflation: 0.02 });
     expect(all).toHaveLength(3);
-    expect(all.map((s) => s.name)).toEqual(['conservative', 'moderate', 'aggressive']);
+    expect(all.map((s) => s.name)).toEqual(['conservador (4%)', 'moderado (6%)', 'agresivo (8%)']);
   });
 });

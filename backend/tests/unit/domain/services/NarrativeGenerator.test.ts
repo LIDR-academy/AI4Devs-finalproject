@@ -7,9 +7,10 @@ const baseAmort = {
   totalPaid: 259200,
   totalInterest: 99200,
   yearsToPayoff: 30,
+  yearsReduced: 0,
   monthlyExtra: 0,
 };
-const lightAmort = { ...baseAmort, name: 'light' as const, yearsToPayoff: 25, totalInterest: 73000, monthlyExtra: 100 };
+const lightAmort = { ...baseAmort, name: 'light' as const, yearsToPayoff: 25, yearsReduced: 5, totalInterest: 73000, monthlyExtra: 100 };
 
 describe('NarrativeGenerator', () => {
   const gen = new NarrativeGenerator();

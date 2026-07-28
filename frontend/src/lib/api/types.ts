@@ -89,26 +89,25 @@ export interface TimelineMilestone {
   documentsNeeded: string[];
 }
 
-export type AmortizationScenarioName = 'baseline' | 'light' | 'moderate' | 'aggressive';
-export type InvestmentScenarioName = 'conservative' | 'moderate' | 'aggressive';
-export type Persona = 'conservador' | 'equilibrado' | 'arriesgado';
-
 export interface AmortizationScenario {
-  name: AmortizationScenarioName;
+  name: string;
   monthlyPayment: number;
   totalPaid: number;
   totalInterest: number;
   yearsToPayoff: number;
+  yearsReduced: number;
   monthlyExtra: number;
 }
 
 export interface InvestmentScenario {
-  name: InvestmentScenarioName;
+  name: string;
   annualReturn: number;
   nominalValue: number;
   realValue: number;
   totalContributed: number;
 }
+
+export type Persona = 'conservador' | 'equilibrado' | 'arriesgado';
 
 export interface HiddenCostItem {
   concept: string;

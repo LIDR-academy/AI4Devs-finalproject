@@ -20,12 +20,15 @@ export class AmortizationCalculator {
     const yearsToPayoff = monthsToPayoff / MONTHS_PER_YEAR;
 
     const name = this.scenarioName(input.monthlyExtra);
+    const baselineYears = input.years;
+    const yearsReduced = baselineYears - yearsToPayoff;
     return {
       name,
       monthlyPayment: basePayment,
       totalPaid,
       totalInterest,
       yearsToPayoff,
+      yearsReduced,
       monthlyExtra: input.monthlyExtra,
     };
   }
@@ -52,9 +55,9 @@ export class AmortizationCalculator {
   }
 
   private scenarioName(extra: number): AmortizationScenario['name'] {
-    if (extra === 0) return 'baseline';
-    if (extra <= 150) return 'light';
-    if (extra <= 400) return 'moderate';
-    return 'aggressive';
+    if (extra === 0) return 'sin amortizar';
+    if (extra <= 150) return 'ligera (+100€/mes)';
+    if (extra <= 400) return 'moderada (+300€/mes)';
+    return 'agresiva (+500€/mes)';
   }
 }

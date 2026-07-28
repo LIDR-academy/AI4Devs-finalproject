@@ -38,8 +38,8 @@ export class InvestmentCalculator {
   }
 
   private scenarioName(r: number): InvestmentScenario['name'] {
-    if (r <= 0.05) return 'conservative';
-    if (r <= 0.07) return 'moderate';
-    return 'aggressive';
+    if (r <= 0.05) return 'conservador (4%)';
+    if (r <= 0.07) return 'moderado (6%)';
+    return 'agresivo (8%)';
   }
 }

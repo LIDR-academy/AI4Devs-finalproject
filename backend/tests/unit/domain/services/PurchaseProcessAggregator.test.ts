@@ -24,11 +24,11 @@ describe('PurchaseProcessAggregator', () => {
     expect(result!.hiddenCosts.total).toBeGreaterThan(0);
     expect(result!.amortizationScenarios).toHaveLength(4);
     expect(result!.amortizationScenarios.map((s) => s.name)).toEqual([
-      'baseline', 'light', 'moderate', 'aggressive',
+      'sin amortizar', 'ligera (+100€/mes)', 'moderada (+300€/mes)', 'agresiva (+500€/mes)',
     ]);
     expect(result!.investmentScenarios).toHaveLength(3);
     expect(result!.investmentScenarios.map((s) => s.name)).toEqual([
-      'conservative', 'moderate', 'aggressive',
+      'conservador (4%)', 'moderado (6%)', 'agresivo (8%)',
     ]);
   });
 

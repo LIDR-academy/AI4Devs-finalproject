@@ -10,11 +10,12 @@ export interface AmortizationInput {
 }
 
 export interface AmortizationScenario {
-  name: 'baseline' | 'light' | 'moderate' | 'aggressive';
+  name: string;
   monthlyPayment: number;
   totalPaid: number;
   totalInterest: number;
   yearsToPayoff: number;
+  yearsReduced: number;
   monthlyExtra: number;
 }
 
@@ -26,7 +27,7 @@ export interface InvestmentInput {
 }
 
 export interface InvestmentScenario {
-  name: 'conservative' | 'moderate' | 'aggressive';
+  name: string;
   annualReturn: number;
   nominalValue: number;
   realValue: number;

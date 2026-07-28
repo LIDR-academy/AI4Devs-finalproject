@@ -149,9 +149,11 @@
     step = next;
   }
 
-  $: moderateAmort = computed?.amortizationScenarios.find((s) => s.name === 'moderate') ?? null;
-  $: baselineAmort = computed?.amortizationScenarios.find((s) => s.name === 'baseline') ?? null;
-  $: moderateInvest = computed?.investmentScenarios.find((s) => s.name === 'moderate') ?? null;
+  $: amortization = computed?.amortizationScenarios ?? [];
+  $: investment = computed?.investmentScenarios ?? [];
+  $: moderateAmort = amortization.find((s) => s.monthlyExtra === 300) ?? null;
+  $: baselineAmort = amortization.find((s) => s.monthlyExtra === 0) ?? null;
+  $: moderateInvest = investment.find((s) => s.name.startsWith('moderado')) ?? null;
 </script>
 
 <div class="container">
@@ -306,12 +308,11 @@
       <div class="insight">
         <strong>💡 Idea destacada:</strong>
         {#if moderateAmort && baselineAmort && moderateInvest}
-          Si amortizas {formatCurrency(moderateAmort.monthlyExtra)}/mes,
-          reduces {Math.round(baselineAmort.yearsToPayoff - moderateAmort.yearsToPayoff)} años
+          Amortizando {formatCurrency(moderateAmort.monthlyExtra)}/mes eliminas {Math.round(moderateAmort.yearsReduced)} años de hipoteca
           y ahorras {formatCurrency(baselineAmort.totalInterest - moderateAmort.totalInterest)} en intereses.
-          Si inviertes esa misma cantidad al {(moderateInvest.annualReturn * 100).toFixed(0)}%, acumularías
-          {formatCurrency(moderateInvest.nominalValue)} en 30 años
-          (valor real: {formatCurrency(moderateInvest.realValue)}).
+          Si en lugar de amortizar inviertes esos {formatCurrency(moderateAmort.monthlyExtra)}/mes al {(moderateInvest.annualReturn * 100).toFixed(0)}%,
+          acumularías {formatCurrency(moderateInvest.nominalValue)} en 30 años
+          ({formatCurrency(moderateInvest.realValue)} en valor actual).
         {/if}
       </div>
       <div class="toggle-row">
@@ -326,13 +327,21 @@
         {showRealValue}
       />
       <details class="investment-narrative">
+        <summary>¿Amortizar hipoteca o invertir? ¿Qué conviene más?</summary>
+        <div class="narrative-content">
+          <p><strong>Amortizar</strong> reduce la deuda con el banco: acortas años de hipoteca y ahorras intereses seguros. Es un ahorro <em>garantizado</em> porque cada euro que amortizas deja de generar intereses al tipo de tu hipoteca (ej. 3,5%).</p>
+          <p><strong>Invertir</strong> destina ese mismo dinero a activos financieros. A largo plazo (30 años), la rentabilidad media de una cartera diversificada (~6%) supera el coste del interés hipotecario (~3,5%). Pero implica <em>riesgo</em>: no hay garantía de rentabilidades futuras.</p>
+          <p class="highlight">💡 <strong>Regla general:</strong> si tu tipo de interés es bajo (&lt;3%), suele salir mejor invertir. Si es alto (&gt;5%), conviene amortizar. Entre 3% y 5%, depende de tu tolerancia al riesgo y tus objetivos.</p>
+        </div>
+      </details>
+      <details class="investment-narrative">
         <summary>¿Qué representa cada escenario de inversión?</summary>
         <ul>
-          <li><strong>Conservador (4%):</strong> Renta fija, depósitos bancarios, letras del tesoro. Bajo riesgo, rentabilidad modesta pero predecible.</li>
-          <li><strong>Moderado (6%):</strong> Fondos indexados globales (MSCI World, ~7% histórico anual ajustado por inflación). Riesgo medio, diversificación global.</li>
-          <li><strong>Agresivo (8%):</strong> Cartera diversificada con sesgo a renta variable (S&P 500, ~10% histórico nominal). Mayor volatilidad, mayor rentabilidad esperada a largo plazo.</li>
+          <li><strong>Conservador (4%):</strong> Renta fija, depósitos, letras del tesoro. Riesgo bajo, rentabilidad modesta pero predecible.</li>
+          <li><strong>Moderado (6%):</strong> Fondos indexados globales (MSCI World). Riesgo medio, diversificación mundial.</li>
+          <li><strong>Agresivo (8%):</strong> Cartera con sesgo a renta variable (S&P 500). Más volatilidad, más potencial a largo plazo.</li>
         </ul>
-        <p class="text-muted">En cualquiera de los tres casos, la inversión está sujeta a tributación (~19-26% sobre ganancias) y no garantiza rentabilidades futuras.</p>
+        <p class="text-muted">Las rentabilidades pasadas no garantizan futuras. Tributación: ~19-26% sobre ganancias. Esto no es consejo financiero.</p>
       </details>
       <p class="disclaimer">
         ⚠️ Las rentabilidades pasadas no garantizan futuras. Los beneficios están sujetos a tributación
@@ -545,5 +554,16 @@
   .investment-narrative li {
     margin-bottom: 0.4rem;
     line-height: 1.4;
+  }
+  .narrative-content p {
+    font-size: 0.83rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+  .narrative-content .highlight {
+    background: var(--color-bg-soft);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
   }
 </style>
