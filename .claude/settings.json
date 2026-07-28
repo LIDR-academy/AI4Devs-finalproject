@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/david/projects/ai4devs/Proyecto/.claude/hooks/log-chat.js\" 2>/dev/null || true",
+            "timeout": 15,
+            "statusMessage": "Guardando log de la conversación..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,13 +1,13 @@
 ## Índice
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+0. [Ficha del proyecto](0-ficha-del-proyecto.md)
+1. [Descripción general del producto](1-descripcion-general-del-producto.md)
+2. [Arquitectura del sistema](2-arquitectura-del-sistema.md)
+3. [Modelo de datos](3-modelo-de-datos.md)
+4. [Especificación de la API](4-especificaciones-de-la-api.md)
+5. [Historias de usuario](5-historias-de-usuario.md)
+6. [Tickets de trabajo](6-tickets-de-trabajo.md)
+7. [Pull requests](7-pull-requests.md)
 
 ---
 
@@ -131,4 +131,3 @@
 **Pull Request 2**
 
 **Pull Request 3**
-
