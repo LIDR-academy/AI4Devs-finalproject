@@ -2274,3 +2274,70 @@ Para 7-8 jugadores, SingleChildScrollView como fallback.
 
 Usa modo Plan antes de ejecutar. Es un rediseño completo
 — el plan debe listar todos los ficheros afectados.
+
+--------------
+
+Aplica las siguientes correcciones a add_players_page.dart
+y a PochaAppBar en core/widgets/pocha_app_bar.dart:
+
+CORRECCIÓN 1 — PochaAppBar (afecta a todas las pantallas):
+
+a) Eliminar el BorderRadius de la cabecera verde — usar
+   un Container sin radius (edge-to-edge) para que encaje
+   correctamente con la status bar del dispositivo.
+   Cambio en pocha_app_bar.dart: eliminar borderRadius del
+   Container exterior.
+
+b) Reducir tipografía del título:
+
+- Compact (default): headlineSmall → titleLarge
+- Expanded: headlineMedium → headlineSmall
+   Esto afecta a todas las pantallas que usan PochaAppBar
+   — verificar que ningún título se corta tras el cambio.
+
+CORRECCIÓN 2 — Título de add_players_page:
+
+Cambiar el título de PochaAppBar de 'Añadir jugadores'
+a 'Jugadores' — más corto y suficientemente descriptivo
+dado que el subtitle ya dice 'X de N añadidos'.
+
+CORRECCIÓN 3 — Edición inline de jugador ya añadido:
+
+Al tocar una fila de jugador ya añadido (no un slot vacío),
+activar el modo edición inline con el nombre actual
+pre-rellenado:
+
+- El mismo estado de edición que ya existe
+  (activeEditIndex en AddPlayersBloc), pero aplicado
+  a filas de jugador existentes, no solo a slots vacíos.
+- El TextField se pre-rellena con player.displayName.
+- Al confirmar con un nombre distinto al actual:
+  UpdatePlayerNameUseCase(playerId, newName) o equivalente
+  — si no existe el use case, actualizar directamente
+  el PlayerEmbed en GameRepository.
+- Al confirmar con el mismo nombre: no hacer nada,
+  salir del modo edición.
+- Al cancelar (pulsar fuera o back del teclado):
+  restaurar el nombre original sin cambios.
+- La estrella y el ✕ no deben ser visibles mientras
+  la fila está en modo edición — solo el TextField
+  y el botón de confirmar ✓.
+
+NUEVO EVENTO en AddPlayersBloc:
+
+- PlayerEditActivated(String playerId) — activa edición
+  en fila de jugador existente con nombre pre-rellenado
+- PlayerNameUpdated(String playerId, String newName)
+  — confirma el cambio de nombre
+
+VERIFICACIÓN:
+
+- flutter analyze sin errores
+- PochaAppBar sin BorderRadius en ninguna pantalla
+- Títulos visibles sin truncar en todas las pantallas
+  que usan PochaAppBar
+- Al tocar fila de jugador: TextField con nombre actual
+- Al confirmar: nombre actualizado en la lista
+- Al cancelar: nombre original restaurado
+
+Usa modo Plan antes de ejecutar.

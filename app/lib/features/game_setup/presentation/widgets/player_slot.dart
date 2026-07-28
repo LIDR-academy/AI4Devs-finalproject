@@ -30,11 +30,21 @@ class PlayerSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (player != null && isEditing) {
+      return _InlineEditPlayerSlot(
+        initialName: player!.displayName,
+        onCancel: onCancelEdit,
+        onConfirm: onConfirmName,
+        isBusy: isBusy,
+      );
+    }
+
     if (player != null) {
       return _FilledPlayerSlot(
         player: player!,
         colorIndex: player!.seatOrder,
         isFavorite: isFavorite,
+        onTap: isBusy ? null : onActivateEdit,
         onToggleFavorite: isBusy ? null : onToggleFavorite,
         onRemove: isBusy ? null : onRemove,
       );
@@ -95,8 +105,10 @@ class _InlineEditPlayerSlot extends StatefulWidget {
     required this.onCancel,
     required this.onConfirm,
     required this.isBusy,
+    this.initialName,
   });
 
+  final String? initialName;
   final VoidCallback? onCancel;
   final ValueChanged<String>? onConfirm;
   final bool isBusy;
@@ -106,13 +118,14 @@ class _InlineEditPlayerSlot extends StatefulWidget {
 }
 
 class _InlineEditPlayerSlotState extends State<_InlineEditPlayerSlot> {
-  final _controller = TextEditingController();
+  late final TextEditingController _controller;
   final _focusNode = FocusNode();
   bool _didCancelOnBlur = false;
 
   @override
   void initState() {
     super.initState();
+    _controller = TextEditingController(text: widget.initialName ?? '');
     _focusNode.addListener(_onFocusChanged);
   }
 
@@ -136,6 +149,7 @@ class _InlineEditPlayerSlotState extends State<_InlineEditPlayerSlot> {
       return;
     }
     final name = _controller.text.trim();
+    _didCancelOnBlur = true;
     widget.onConfirm?.call(name);
   }
 
@@ -183,6 +197,7 @@ class _FilledPlayerSlot extends StatelessWidget {
     required this.player,
     required this.colorIndex,
     required this.isFavorite,
+    this.onTap,
     this.onToggleFavorite,
     this.onRemove,
   });
@@ -190,6 +205,7 @@ class _FilledPlayerSlot extends StatelessWidget {
   final PlayerEmbed player;
   final int colorIndex;
   final bool isFavorite;
+  final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onRemove;
 
@@ -198,47 +214,53 @@ class _FilledPlayerSlot extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          PlayerInitialAvatar(
-            name: player.displayName,
-            colorIndex: colorIndex,
-            radius: 16,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  player.displayName,
-                  style: textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              PlayerInitialAvatar(
+                name: player.displayName,
+                colorIndex: colorIndex,
+                radius: 16,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      player.displayName,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      player.isGuest ? 'Invitado' : 'Jugador registrado',
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  player.isGuest ? 'Invitado' : 'Jugador registrado',
-                  style: textTheme.labelSmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                onPressed: onToggleFavorite,
+                icon: Icon(isFavorite ? Icons.star : Icons.star_border),
+                color: isFavorite ? Colors.amber : colors.onSurfaceVariant,
+              ),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.close),
+                color: colors.onSurfaceVariant,
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: onToggleFavorite,
-            icon: Icon(isFavorite ? Icons.star : Icons.star_border),
-            color: isFavorite ? Colors.amber : colors.onSurfaceVariant,
-          ),
-          IconButton(
-            onPressed: onRemove,
-            icon: const Icon(Icons.close),
-            color: colors.onSurfaceVariant,
-          ),
-        ],
+        ),
       ),
     );
   }

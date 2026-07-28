@@ -27,6 +27,7 @@ import 'package:la_pocha/features/game_setup/domain/usecases/remove_player_useca
 import 'package:la_pocha/features/game_setup/domain/usecases/reorder_players_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/set_first_dealer_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/start_game_usecase.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/update_player_name_usecase.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/add_players_bloc.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/cancel_game_cubit.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/create_game_bloc.dart';
@@ -429,6 +430,10 @@ Future<void> configureDependencies() async {
     () => RemovePlayerUseCase(getIt<GameRepository>()),
   );
 
+  getIt.registerFactory<UpdatePlayerNameUseCase>(
+    () => UpdatePlayerNameUseCase(getIt<GameRepository>()),
+  );
+
   getIt.registerFactory<ReorderPlayersUseCase>(
     () => const ReorderPlayersUseCase(),
   );
@@ -468,6 +473,7 @@ Future<void> configureDependencies() async {
       addPlayer: getIt<AddPlayerUseCase>(),
       addPlayerFromFavorite: getIt<AddPlayerFromFavoriteUseCase>(),
       removePlayer: getIt<RemovePlayerUseCase>(),
+      updatePlayerName: getIt<UpdatePlayerNameUseCase>(),
       addFavorite: getIt<AddFavoriteUseCase>(),
       removeFavorite: getIt<RemoveFavoriteUseCase>(),
     ),

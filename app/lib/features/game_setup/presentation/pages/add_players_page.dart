@@ -91,7 +91,7 @@ class _AddPlayersView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   PochaAppBar(
-                    title: 'Añadir jugadores',
+                    title: 'Jugadores',
                     subtitle: '${state.players.length} de ${state.playerCount} añadidos',
                     showBackConfirmation: true,
                     backConfirmationMessage:
@@ -135,9 +135,14 @@ class _AddPlayersView extends StatelessWidget {
                               isLoading: state.isLoading,
                               isFavoritePlayer: (player) =>
                                   _isFavoritePlayer(player, state.favorites),
-                              onEditActivated: (index) {
+                              onEmptySlotEditActivated: (index) {
                                 context.read<AddPlayersBloc>().add(
                                       EditSlotActivated(index: index),
+                                    );
+                              },
+                              onPlayerEditActivated: (playerId) {
+                                context.read<AddPlayersBloc>().add(
+                                      PlayerEditActivated(playerId: playerId),
                                     );
                               },
                               onEditCancelled: () {
@@ -145,9 +150,17 @@ class _AddPlayersView extends StatelessWidget {
                                       const EditSlotCancelled(),
                                     );
                               },
-                              onNameConfirmed: (index, name) {
+                              onEmptySlotNameConfirmed: (index, name) {
                                 context.read<AddPlayersBloc>().add(
                                       PlayerNameConfirmed(index: index, name: name),
+                                    );
+                              },
+                              onPlayerNameUpdated: (playerId, name) {
+                                context.read<AddPlayersBloc>().add(
+                                      PlayerNameUpdated(
+                                        playerId: playerId,
+                                        newName: name,
+                                      ),
                                     );
                               },
                               onFavoriteToggle: (playerId) {

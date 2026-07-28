@@ -10,9 +10,11 @@ class PlayersRosterSection extends StatelessWidget {
     required this.activeEditIndex,
     required this.isLoading,
     required this.isFavoritePlayer,
-    this.onEditActivated,
+    this.onEmptySlotEditActivated,
+    this.onPlayerEditActivated,
     this.onEditCancelled,
-    this.onNameConfirmed,
+    this.onEmptySlotNameConfirmed,
+    this.onPlayerNameUpdated,
     this.onFavoriteToggle,
     this.onRemovePlayer,
   });
@@ -22,9 +24,11 @@ class PlayersRosterSection extends StatelessWidget {
   final int? activeEditIndex;
   final bool isLoading;
   final bool Function(PlayerEmbed player) isFavoritePlayer;
-  final ValueChanged<int>? onEditActivated;
+  final ValueChanged<int>? onEmptySlotEditActivated;
+  final ValueChanged<String>? onPlayerEditActivated;
   final VoidCallback? onEditCancelled;
-  final void Function(int index, String name)? onNameConfirmed;
+  final void Function(int index, String name)? onEmptySlotNameConfirmed;
+  final void Function(String playerId, String name)? onPlayerNameUpdated;
   final ValueChanged<String>? onFavoriteToggle;
   final ValueChanged<String>? onRemovePlayer;
 
@@ -54,12 +58,24 @@ class PlayersRosterSection extends StatelessWidget {
               final slot = PlayerSlot(
                 index: index,
                 player: player,
-                isEditing: player == null && activeEditIndex == index,
+                isEditing: activeEditIndex == index,
                 isFavorite: player != null && isFavoritePlayer(player),
                 isBusy: isLoading,
-                onActivateEdit: () => onEditActivated?.call(index),
+                onActivateEdit: () {
+                  if (player != null) {
+                    onPlayerEditActivated?.call(player.id);
+                  } else {
+                    onEmptySlotEditActivated?.call(index);
+                  }
+                },
                 onCancelEdit: onEditCancelled,
-                onConfirmName: (name) => onNameConfirmed?.call(index, name),
+                onConfirmName: (name) {
+                  if (player != null) {
+                    onPlayerNameUpdated?.call(player.id, name);
+                  } else {
+                    onEmptySlotNameConfirmed?.call(index, name);
+                  }
+                },
                 onToggleFavorite:
                     player == null ? null : () => onFavoriteToggle?.call(player.id),
                 onRemove: player == null ? null : () => onRemovePlayer?.call(player.id),

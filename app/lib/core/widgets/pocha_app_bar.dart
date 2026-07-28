@@ -23,11 +23,6 @@ class PochaAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final bool expanded;
 
-  static const BorderRadius _bottomRadius = BorderRadius.only(
-    bottomLeft: Radius.circular(20),
-    bottomRight: Radius.circular(20),
-  );
-
   @override
   Size get preferredSize {
     if (expanded) {
@@ -73,8 +68,8 @@ class PochaAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final titleStyle = (expanded
-            ? Theme.of(context).textTheme.headlineMedium
-            : Theme.of(context).textTheme.headlineSmall)
+            ? Theme.of(context).textTheme.headlineSmall
+            : Theme.of(context).textTheme.titleLarge)
         ?.copyWith(
       color: Colors.white,
       fontWeight: FontWeight.bold,
@@ -92,7 +87,6 @@ class PochaAppBar extends StatelessWidget implements PreferredSizeWidget {
     final bar = Container(
       decoration: const BoxDecoration(
         color: AppTheme.primary,
-        borderRadius: _bottomRadius,
       ),
       padding: expanded
           ? const EdgeInsets.all(24)

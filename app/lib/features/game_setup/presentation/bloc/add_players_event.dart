@@ -65,3 +65,22 @@ class PlayerNameConfirmed extends AddPlayersEvent {
   @override
   List<Object?> get props => [index, name];
 }
+
+class PlayerEditActivated extends AddPlayersEvent {
+  const PlayerEditActivated({required this.playerId});
+
+  final String playerId;
+
+  @override
+  List<Object?> get props => [playerId];
+}
+
+class PlayerNameUpdated extends AddPlayersEvent {
+  const PlayerNameUpdated({required this.playerId, required this.newName});
+
+  final String playerId;
+  final String newName;
+
+  @override
+  List<Object?> get props => [playerId, newName];
+}

@@ -8,11 +8,11 @@ import 'dart:async' as _i5;
 import 'package:la_pocha/features/favorites/domain/entities/favorite_player.dart'
     as _i3;
 import 'package:la_pocha/features/favorites/domain/usecases/add_favorite_usecase.dart'
-    as _i10;
+    as _i11;
 import 'package:la_pocha/features/favorites/domain/usecases/get_favorites_usecase.dart'
     as _i6;
 import 'package:la_pocha/features/favorites/domain/usecases/remove_favorite_usecase.dart'
-    as _i11;
+    as _i12;
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart' as _i2;
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_from_favorite_usecase.dart'
     as _i8;
@@ -22,6 +22,8 @@ import 'package:la_pocha/features/game_setup/domain/usecases/get_game_by_id_usec
     as _i4;
 import 'package:la_pocha/features/game_setup/domain/usecases/remove_player_usecase.dart'
     as _i9;
+import 'package:la_pocha/features/game_setup/domain/usecases/update_player_name_usecase.dart'
+    as _i10;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -167,11 +169,52 @@ class MockRemovePlayerUseCase extends _i1.Mock
           as _i5.Future<_i2.Game?>);
 }
 
+/// A class which mocks [UpdatePlayerNameUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockUpdatePlayerNameUseCase extends _i1.Mock
+    implements _i10.UpdatePlayerNameUseCase {
+  @override
+  _i5.Future<_i2.Game> call({
+    required String? gameId,
+    required String? playerId,
+    required String? newName,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#call, [], {
+              #gameId: gameId,
+              #playerId: playerId,
+              #newName: newName,
+            }),
+            returnValue: _i5.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#call, [], {
+                  #gameId: gameId,
+                  #playerId: playerId,
+                  #newName: newName,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i5.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#call, [], {
+                  #gameId: gameId,
+                  #playerId: playerId,
+                  #newName: newName,
+                }),
+              ),
+            ),
+          )
+          as _i5.Future<_i2.Game>);
+}
+
 /// A class which mocks [AddFavoriteUseCase].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAddFavoriteUseCase extends _i1.Mock
-    implements _i10.AddFavoriteUseCase {
+    implements _i11.AddFavoriteUseCase {
   @override
   _i5.Future<_i3.FavoritePlayer> call({
     required String? displayName,
@@ -208,7 +251,7 @@ class MockAddFavoriteUseCase extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRemoveFavoriteUseCase extends _i1.Mock
-    implements _i11.RemoveFavoriteUseCase {
+    implements _i12.RemoveFavoriteUseCase {
   @override
   _i5.Future<void> call(String? id) =>
       (super.noSuchMethod(

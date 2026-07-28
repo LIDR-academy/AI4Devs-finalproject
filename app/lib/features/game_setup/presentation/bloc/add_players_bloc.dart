@@ -9,6 +9,7 @@ import 'package:la_pocha/features/game_setup/domain/usecases/add_player_from_fav
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/get_game_by_id_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/remove_player_usecase.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/update_player_name_usecase.dart';
 
 part 'add_players_event.dart';
 part 'add_players_state.dart';
@@ -20,6 +21,7 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
     required this._addPlayer,
     required this._addPlayerFromFavorite,
     required this._removePlayer,
+    required this._updatePlayerName,
     required this._addFavorite,
     required this._removeFavorite,
   }) : super(const AddPlayersInitial()) {
@@ -30,6 +32,8 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
     on<EditSlotActivated>(_onEditSlotActivated);
     on<EditSlotCancelled>(_onEditSlotCancelled);
     on<PlayerNameConfirmed>(_onPlayerNameConfirmed);
+    on<PlayerEditActivated>(_onPlayerEditActivated);
+    on<PlayerNameUpdated>(_onPlayerNameUpdated);
   }
 
   final GetGameByIdUseCase _getGameById;
@@ -37,6 +41,7 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
   final AddPlayerUseCase _addPlayer;
   final AddPlayerFromFavoriteUseCase _addPlayerFromFavorite;
   final RemovePlayerUseCase _removePlayer;
+  final UpdatePlayerNameUseCase _updatePlayerName;
   final AddFavoriteUseCase _addFavorite;
   final RemoveFavoriteUseCase _removeFavorite;
 
@@ -247,6 +252,77 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
     emit(current.copyWith(isLoading: true, errorMessage: null));
     try {
       final game = await _addPlayer(gameId: current.gameId, name: trimmedName);
+      emit(
+        current.copyWith(
+          players: game.players,
+          isLoading: false,
+          clearActiveEditIndex: true,
+          errorMessage: null,
+        ),
+      );
+    } catch (error) {
+      emit(current.copyWith(isLoading: false, errorMessage: error.toString()));
+    }
+  }
+
+  void _onPlayerEditActivated(
+    PlayerEditActivated event,
+    Emitter<AddPlayersState> emit,
+  ) {
+    final current = state;
+    if (current is! AddPlayersLoaded) {
+      return;
+    }
+    final index = current.players.indexWhere((player) => player.id == event.playerId);
+    if (index < 0) {
+      return;
+    }
+    emit(
+      current.copyWith(
+        activeEditIndex: index,
+        clearError: true,
+      ),
+    );
+  }
+
+  Future<void> _onPlayerNameUpdated(
+    PlayerNameUpdated event,
+    Emitter<AddPlayersState> emit,
+  ) async {
+    final current = state;
+    if (current is! AddPlayersLoaded) {
+      return;
+    }
+
+    PlayerEmbed? player;
+    for (final item in current.players) {
+      if (item.id == event.playerId) {
+        player = item;
+        break;
+      }
+    }
+    if (player == null) {
+      return;
+    }
+
+    final trimmedName = event.newName.trim();
+    if (trimmedName.isEmpty) {
+      emit(current.copyWith(errorMessage: 'El nombre no puede estar vacío'));
+      return;
+    }
+
+    if (trimmedName.toLowerCase() == player.displayName.toLowerCase()) {
+      emit(current.copyWith(clearActiveEditIndex: true, clearError: true));
+      return;
+    }
+
+    emit(current.copyWith(isLoading: true, errorMessage: null));
+    try {
+      final game = await _updatePlayerName(
+        gameId: current.gameId,
+        playerId: event.playerId,
+        newName: trimmedName,
+      );
       emit(
         current.copyWith(
           players: game.players,

@@ -10,6 +10,7 @@ import 'package:la_pocha/features/game_setup/domain/usecases/add_player_from_fav
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/get_game_by_id_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/remove_player_usecase.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/update_player_name_usecase.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/add_players_bloc.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -23,6 +24,7 @@ import 'add_players_bloc_test.mocks.dart';
   MockSpec<AddPlayerUseCase>(),
   MockSpec<AddPlayerFromFavoriteUseCase>(),
   MockSpec<RemovePlayerUseCase>(),
+  MockSpec<UpdatePlayerNameUseCase>(),
   MockSpec<AddFavoriteUseCase>(),
   MockSpec<RemoveFavoriteUseCase>(),
 ])
@@ -32,6 +34,7 @@ void main() {
   late MockAddPlayerUseCase addPlayer;
   late MockAddPlayerFromFavoriteUseCase addPlayerFromFavorite;
   late MockRemovePlayerUseCase removePlayer;
+  late MockUpdatePlayerNameUseCase updatePlayerName;
   late MockAddFavoriteUseCase addFavorite;
   late MockRemoveFavoriteUseCase removeFavorite;
 
@@ -53,6 +56,7 @@ void main() {
     addPlayer = MockAddPlayerUseCase();
     addPlayerFromFavorite = MockAddPlayerFromFavoriteUseCase();
     removePlayer = MockRemovePlayerUseCase();
+    updatePlayerName = MockUpdatePlayerNameUseCase();
     addFavorite = MockAddFavoriteUseCase();
     removeFavorite = MockRemoveFavoriteUseCase();
   });
@@ -63,6 +67,7 @@ void main() {
         addPlayer: addPlayer,
         addPlayerFromFavorite: addPlayerFromFavorite,
         removePlayer: removePlayer,
+        updatePlayerName: updatePlayerName,
         addFavorite: addFavorite,
         removeFavorite: removeFavorite,
       );
@@ -330,6 +335,118 @@ void main() {
       ),
       isA<AddPlayersLoaded>()
           .having((s) => s.players.length, 'players', 1)
+          .having((s) => s.activeEditIndex, 'activeEditIndex', null)
+          .having((s) => s.isLoading, 'isLoading', false),
+    ],
+  );
+
+  blocTest<AddPlayersBloc, AddPlayersState>(
+    'activates inline edit for existing player',
+    build: buildBloc,
+    seed: () => AddPlayersLoaded(
+      gameId: 'game-1',
+      playerCount: 4,
+      players: [
+        PlayerEmbed(
+          id: 'p1',
+          displayName: 'Ana',
+          isGuest: true,
+          userId: null,
+          seatOrder: 0,
+          totalScore: 0,
+          joinedAt: DateTime(2026),
+        ),
+      ],
+      favorites: const [],
+      activeEditIndex: null,
+      isLoading: false,
+    ),
+    act: (bloc) => bloc.add(const PlayerEditActivated(playerId: 'p1')),
+    expect: () => [
+      isA<AddPlayersLoaded>().having((s) => s.activeEditIndex, 'activeEditIndex', 0),
+    ],
+  );
+
+  blocTest<AddPlayersBloc, AddPlayersState>(
+    'exits edit without update when name is unchanged',
+    build: buildBloc,
+    seed: () => AddPlayersLoaded(
+      gameId: 'game-1',
+      playerCount: 4,
+      players: [
+        PlayerEmbed(
+          id: 'p1',
+          displayName: 'Ana',
+          isGuest: true,
+          userId: null,
+          seatOrder: 0,
+          totalScore: 0,
+          joinedAt: DateTime(2026),
+        ),
+      ],
+      favorites: const [],
+      activeEditIndex: 0,
+      isLoading: false,
+    ),
+    act: (bloc) =>
+        bloc.add(const PlayerNameUpdated(playerId: 'p1', newName: ' Ana ')),
+    expect: () => [
+      isA<AddPlayersLoaded>()
+          .having((s) => s.activeEditIndex, 'activeEditIndex', null)
+          .having((s) => s.players.first.displayName, 'name', 'Ana'),
+    ],
+    verify: (_) {
+      verifyNever(
+        updatePlayerName(
+          gameId: anyNamed('gameId'),
+          playerId: anyNamed('playerId'),
+          newName: anyNamed('newName'),
+        ),
+      );
+    },
+  );
+
+  blocTest<AddPlayersBloc, AddPlayersState>(
+    'updates existing player name from inline edit',
+    build: buildBloc,
+    seed: () => AddPlayersLoaded(
+      gameId: 'game-1',
+      playerCount: 4,
+      players: [
+        PlayerEmbed(
+          id: 'p1',
+          displayName: 'Ana',
+          isGuest: true,
+          userId: null,
+          seatOrder: 0,
+          totalScore: 0,
+          joinedAt: DateTime(2026),
+        ),
+      ],
+      favorites: const [],
+      activeEditIndex: 0,
+      isLoading: false,
+    ),
+    setUp: () {
+      final updated = PlayerEmbed(
+        id: 'p1',
+        displayName: 'Anita',
+        isGuest: true,
+        userId: null,
+        seatOrder: 0,
+        totalScore: 0,
+        joinedAt: DateTime(2026),
+      );
+      when(
+        updatePlayerName(gameId: 'game-1', playerId: 'p1', newName: 'Anita'),
+      ).thenAnswer((_) async => baseGame.copyWith(players: [updated]));
+    },
+    act: (bloc) =>
+        bloc.add(const PlayerNameUpdated(playerId: 'p1', newName: 'Anita')),
+    expect: () => [
+      isA<AddPlayersLoaded>().having((s) => s.isLoading, 'loading', true),
+      isA<AddPlayersLoaded>()
+          .having((s) => s.players.first.displayName, 'name', 'Anita')
           .having((s) => s.activeEditIndex, 'activeEditIndex', null)
           .having((s) => s.isLoading, 'isLoading', false),
     ],
