@@ -11,7 +11,7 @@ test.describe('Realista — full flow', () => {
     // Navigate to listing-lens
     await page.getByText('Analizar un anuncio').first().click();
     await expect(page).toHaveURL(/\/listing-lens/);
-    await expect(page.getByRole('heading', { name: 'Analizar anuncio' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Analizar un anuncio' })).toBeVisible();
   });
 
   test('user can see AI disclaimer on listing-lens', async ({ page }) => {
