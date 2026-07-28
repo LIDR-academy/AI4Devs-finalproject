@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { getPreferences, updatePreferences } from '../api/client';
+import { getUserIdFromAccessToken } from '../auth/token';
 import { useAuth } from '../auth/AuthContext';
 import { applyThemeById, clearAppliedTheme } from './applyTheme';
 import {
@@ -32,10 +33,12 @@ function readCachedPalette(userId: string): ThemePaletteId | null {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated, userId } = useAuth();
+  const { isAuthenticated, userId, token } = useAuth();
+  const cacheUserId = userId ?? getUserIdFromAccessToken(token);
+
   const [paletteId, setPaletteIdState] = useState<ThemePaletteId>(() => {
-    if (userId) {
-      return readCachedPalette(userId) ?? DEFAULT_THEME_PALETTE_ID;
+    if (cacheUserId) {
+      return readCachedPalette(cacheUserId) ?? DEFAULT_THEME_PALETTE_ID;
     }
     return DEFAULT_THEME_PALETTE_ID;
   });
@@ -43,13 +46,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !userId) {
+    if (!isAuthenticated) {
       clearAppliedTheme();
       setPaletteIdState(DEFAULT_THEME_PALETTE_ID);
       return;
     }
 
-    const cached = readCachedPalette(userId);
+    const cached = cacheUserId ? readCachedPalette(cacheUserId) : null;
     if (cached) {
       setPaletteIdState(applyThemeById(cached));
     } else {
@@ -65,7 +68,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         const resolved = applyThemeById(prefs.theme_palette_id);
         setPaletteIdState(resolved);
-        localStorage.setItem(themeCacheKey(userId), resolved);
+        if (cacheUserId) {
+          localStorage.setItem(themeCacheKey(cacheUserId), resolved);
+        }
       })
       .catch(() => {
         if (!cancelled) {
@@ -79,15 +84,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, userId]);
+  }, [isAuthenticated, cacheUserId]);
 
   const setPaletteId = useCallback(
     async (nextPaletteId: ThemePaletteId) => {
       const previous = paletteId;
       setPaletteIdState(nextPaletteId);
       applyThemeById(nextPaletteId);
-      if (userId) {
-        localStorage.setItem(themeCacheKey(userId), nextPaletteId);
+      if (cacheUserId) {
+        localStorage.setItem(themeCacheKey(cacheUserId), nextPaletteId);
       }
       setError(null);
 
@@ -95,20 +100,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const prefs = await updatePreferences({ theme_palette_id: nextPaletteId });
         const resolved = applyThemeById(prefs.theme_palette_id);
         setPaletteIdState(resolved);
-        if (userId) {
-          localStorage.setItem(themeCacheKey(userId), resolved);
+        if (cacheUserId) {
+          localStorage.setItem(themeCacheKey(cacheUserId), resolved);
         }
       } catch {
         setPaletteIdState(previous);
         applyThemeById(previous);
-        if (userId) {
-          localStorage.setItem(themeCacheKey(userId), previous);
+        if (cacheUserId) {
+          localStorage.setItem(themeCacheKey(cacheUserId), previous);
         }
         setError('No se pudo guardar el tema. Inténtalo de nuevo.');
         throw new Error('theme save failed');
       }
     },
-    [paletteId, userId],
+    [paletteId, cacheUserId],
   );
 
   const value = useMemo(

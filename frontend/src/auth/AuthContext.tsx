@@ -8,6 +8,17 @@ import {
   type ReactNode,
 } from 'react';
 import { devLogin, setOnUnauthorized } from '../api/client';
+import { getUserIdFromAccessToken } from './token';
+
+function readStoredUserId(token: string | null): string | null {
+  const stored = localStorage.getItem('user_id');
+  if (stored) return stored;
+  const fromToken = getUserIdFromAccessToken(token);
+  if (fromToken) {
+    localStorage.setItem('user_id', fromToken);
+  }
+  return fromToken;
+}
 
 interface AuthState {
   token: string | null;
@@ -28,8 +39,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.getItem('user_email'),
   );
   const [userId, setUserId] = useState<string | null>(() =>
-    localStorage.getItem('user_id'),
+    readStoredUserId(localStorage.getItem('access_token')),
   );
+
+  useEffect(() => {
+    if (!token) {
+      if (userId) setUserId(null);
+      return;
+    }
+    const resolved = readStoredUserId(token);
+    if (resolved !== userId) {
+      setUserId(resolved);
+    }
+  }, [token, userId]);
 
   const login = useCallback(async (userEmail: string) => {
     const res = await devLogin(userEmail);
