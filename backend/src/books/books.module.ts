@@ -16,6 +16,7 @@ import { OpenLibraryEnrichmentService } from './catalog/open-library-enrichment.
 import { OpenLibraryCoversService } from './catalog/open-library-covers.service';
 import { GoogleBooksClient } from './catalog/google-books.client';
 import { OpenLibraryClient } from './catalog/open-library.client';
+import { CATALOG_HTTP_HEADERS } from './catalog/catalog-http.constants';
 import { GenreNormalizerService } from './genre-normalizer.service';
 import { Book } from './entities/book.entity';
 import { ReadingRecord } from './entities/reading-record.entity';
@@ -24,10 +25,7 @@ import { ReadingRecord } from './entities/reading-record.entity';
   imports: [
     HttpModule.register({
       timeout: 12_000,
-      headers: {
-        'User-Agent': 'ReadingAnalyticsPlatform/1.0 (educational)',
-        Accept: 'application/json',
-      },
+      headers: CATALOG_HTTP_HEADERS,
     }),
     TypeOrmModule.forFeature([Book, ReadingRecord]),
     forwardRef(() => ListsModule),

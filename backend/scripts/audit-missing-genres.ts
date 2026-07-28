@@ -13,6 +13,7 @@ import { IsNull } from 'typeorm';
 import dataSource from '../src/data-source';
 import { Book } from '../src/books/entities/book.entity';
 import { pickGenreFromSubjects } from '../src/books/catalog/open-library-enrichment';
+import { CATALOG_HTTP_HEADERS } from '../src/books/catalog/catalog-http.constants';
 import { GenreNormalizerService } from '../src/books/genre-normalizer.service';
 import type { CanonicalGenre } from '../src/books/genre-normalizer.map';
 
@@ -74,7 +75,7 @@ async function fetchOpenLibrarySearch(
   try {
     const { data } = await axios.get<{ docs?: Record<string, unknown>[] }>(
       'https://openlibrary.org/search.json',
-      { params: { q: query, limit: 1 }, timeout: 10_000 },
+      { params: { q: query, limit: 1 }, timeout: 10_000, headers: CATALOG_HTTP_HEADERS },
     );
     const doc = data.docs?.[0];
     if (!doc) {
@@ -104,7 +105,7 @@ async function fetchOpenLibraryWorkSubjects(workKey: string): Promise<string[]> 
     const path = workKey.startsWith('/works/') ? workKey : `/works/${workKey}`;
     const { data } = await axios.get<{ subjects?: string[]; subject?: string[] }>(
       `https://openlibrary.org${path}.json`,
-      { timeout: 10_000 },
+      { timeout: 10_000, headers: CATALOG_HTTP_HEADERS },
     );
     return [...(data.subjects ?? []), ...(data.subject ?? [])];
   } catch {
