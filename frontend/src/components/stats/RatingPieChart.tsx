@@ -6,9 +6,10 @@ import './PieChart.css';
 
 interface RatingPieChartProps {
   distribution: RatingCount[];
+  periodUnit: 'mes' | 'año';
 }
 
-export function RatingPieChart({ distribution }: RatingPieChartProps) {
+export function RatingPieChart({ distribution, periodUnit }: RatingPieChartProps) {
   if (distribution.length === 0) {
     return null;
   }
@@ -23,7 +24,7 @@ export function RatingPieChart({ distribution }: RatingPieChartProps) {
     <ChartCard
       className="rating-pie-chart"
       title="Distribución de puntuaciones"
-      subtitle="Valoraciones asignadas en el período."
+      subtitle={`Valoraciones asignadas en el ${periodUnit}.`}
     >
       <PieChart slices={slices} />
     </ChartCard>

@@ -13,9 +13,10 @@ function genreLabel(genre: string): string {
 
 interface GenrePieChartProps {
   distribution: GenreCount[];
+  periodUnit: 'mes' | 'año';
 }
 
-export function GenrePieChart({ distribution }: GenrePieChartProps) {
+export function GenrePieChart({ distribution, periodUnit }: GenrePieChartProps) {
   if (distribution.length === 0) {
     return null;
   }
@@ -30,7 +31,7 @@ export function GenrePieChart({ distribution }: GenrePieChartProps) {
     <ChartCard
       className="genre-pie-chart"
       title="Distribución por género"
-      subtitle="Comparativa de libros leídos por género en el período."
+      subtitle={`Comparativa de libros leídos por género en el ${periodUnit}.`}
     >
       <PieChart slices={slices} />
     </ChartCard>

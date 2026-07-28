@@ -24,7 +24,7 @@ export function HomeMonthlyKpisCard() {
   return (
     <Card
       className="home-card home-monthly-kpis"
-      title="Indicadores del mes"
+      title="Datos del mes"
       subtitle={periodLabel}
     >
       {isLoading ? (

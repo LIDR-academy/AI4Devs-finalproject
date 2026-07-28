@@ -17,11 +17,13 @@ function formatLabel(format: string): string {
 interface FormatPieChartProps {
   distribution: FormatCount[];
   predominantFormat: string | null;
+  periodUnit: 'mes' | 'año';
 }
 
 export function FormatPieChart({
   distribution,
   predominantFormat,
+  periodUnit,
 }: FormatPieChartProps) {
   if (distribution.length === 0) {
     return null;
@@ -38,7 +40,7 @@ export function FormatPieChart({
     <ChartCard
       className="format-pie-chart"
       title="Formato de lectura"
-      subtitle="Resumen de formatos usados en el período."
+      subtitle={`Resumen de formatos leídos en el ${periodUnit}.`}
     >
       <PieChart slices={slices} />
     </ChartCard>

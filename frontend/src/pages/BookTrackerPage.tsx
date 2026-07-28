@@ -88,7 +88,7 @@ export function BookTrackerPage() {
   return (
     <div className="book-tracker">
       <PageHeader
-        title="Seguimiento de libros"
+        title="Todos mis libros"
         actions={
           <Button type="button" onClick={() => setModalOpen(true)}>
             Añadir libro

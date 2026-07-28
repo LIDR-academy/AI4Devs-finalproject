@@ -68,7 +68,11 @@ export function PagesBarChart({
       title={mode === 'year' ? 'Páginas por año' : 'Páginas por mes'}
       subtitle="Evolución de páginas leídas."
     >
-      <BarChart bars={bars} valueLabel="páginas leídas" />
+      <BarChart
+        bars={bars}
+        valueLabel="páginas leídas"
+        bucketUnit={mode === 'year' ? 'año' : 'mes'}
+      />
     </ChartCard>
   );
 }

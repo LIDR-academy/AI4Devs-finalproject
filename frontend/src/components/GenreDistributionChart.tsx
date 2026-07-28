@@ -3,6 +3,7 @@ import { ChartCard } from './ui';
 
 interface GenreDistributionChartProps {
   distribution: GenreCount[];
+  periodUnit?: 'mes' | 'año';
 }
 
 const GENRE_LABELS: Record<string, string> = {
@@ -15,6 +16,7 @@ function genreLabel(genre: string): string {
 
 export function GenreDistributionChart({
   distribution,
+  periodUnit = 'mes',
 }: GenreDistributionChartProps) {
   if (distribution.length === 0) {
     return null;
@@ -26,7 +28,7 @@ export function GenreDistributionChart({
     <ChartCard
       className="genre-chart"
       title="Distribución por género"
-      subtitle="Comparativa de libros leídos por género en el período."
+      subtitle={`Comparativa de libros leídos por género en el ${periodUnit}.`}
     >
       <ul className="genre-chart__list">
         {distribution.map((entry) => {

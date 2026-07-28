@@ -28,6 +28,7 @@ import {
   toMonthInputValue,
   type StatsPeriod,
 } from '../lib/statsPeriodStorage';
+import { statsPeriodUnit } from '../lib/statsPeriodUnit';
 import { APP_LOCALE } from '../lib/locale';
 import { formatAverageRating } from '../lib/rating';
 import './StatsPage.css';
@@ -94,6 +95,7 @@ export function StatsPage() {
 
   const isEmpty = data !== undefined && data.books_read === 0;
   const periodScope = periodLabel(period);
+  const periodUnit = statsPeriodUnit(period);
 
   return (
     <div className="stats-page">
@@ -190,11 +192,14 @@ export function StatsPage() {
                 periodScope={periodScope}
                 genreChart={
                   data.genre_distribution.length > 0 ? (
-                    <GenrePieChart distribution={data.genre_distribution} />
+                    <GenrePieChart
+                      distribution={data.genre_distribution}
+                      periodUnit={periodUnit}
+                    />
                   ) : (
                     <ChartSlotPlaceholder
                       title="Distribución por género"
-                      subtitle="Comparativa de libros leídos por género."
+                      subtitle={`Comparativa de libros leídos por género en el ${periodUnit}.`}
                       slotLabel="Gráfico de géneros"
                     />
                   )
@@ -204,11 +209,12 @@ export function StatsPage() {
                     <FormatPieChart
                       distribution={data.format_distribution}
                       predominantFormat={data.predominant_format}
+                      periodUnit={periodUnit}
                     />
                   ) : (
                     <ChartSlotPlaceholder
                       title="Formato de lectura"
-                      subtitle="Resumen de formatos usados en el período."
+                      subtitle={`Resumen de formatos leídos en el ${periodUnit}.`}
                       slotLabel="Gráfico de formatos"
                     />
                   )
@@ -221,18 +227,21 @@ export function StatsPage() {
                   ) : (
                     <ChartSlotPlaceholder
                       title="Distribución por público objetivo"
-                      subtitle="Etiquetas configuradas en Ajustes."
+                      subtitle="Público objetivo de tus lecturas."
                       slotLabel="Gráfico de público objetivo"
                     />
                   )
                 }
                 ratingChart={
                   data.rating_distribution.length > 0 ? (
-                    <RatingPieChart distribution={data.rating_distribution} />
+                    <RatingPieChart
+                      distribution={data.rating_distribution}
+                      periodUnit={periodUnit}
+                    />
                   ) : (
                     <ChartSlotPlaceholder
                       title="Distribución de puntuaciones"
-                      subtitle="Valoraciones asignadas en el período."
+                      subtitle={`Valoraciones asignadas en el ${periodUnit}.`}
                       slotLabel="Gráfico de puntuaciones"
                     />
                   )

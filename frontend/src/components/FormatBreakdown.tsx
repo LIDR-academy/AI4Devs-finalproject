@@ -4,6 +4,7 @@ import { ChartCard } from './ui';
 interface FormatBreakdownProps {
   distribution: FormatCount[];
   predominantFormat: string | null;
+  periodUnit?: 'mes' | 'año';
 }
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -20,6 +21,7 @@ function formatLabel(format: string): string {
 export function FormatBreakdown({
   distribution,
   predominantFormat,
+  periodUnit = 'mes',
 }: FormatBreakdownProps) {
   if (distribution.length === 0) {
     return null;
@@ -29,7 +31,7 @@ export function FormatBreakdown({
     <ChartCard
       className="format-breakdown"
       title="Formato de lectura"
-      subtitle="Resumen de formatos usados en el período."
+      subtitle={`Resumen de formatos leídos en el ${periodUnit}.`}
     >
       {predominantFormat && (
         <p className="format-breakdown__predominant">

@@ -30,7 +30,7 @@ export function AudiencePieChart({ distribution }: AudiencePieChartProps) {
     <ChartCard
       className="audience-pie-chart"
       title="Distribución por público objetivo"
-      subtitle="Etiquetas configuradas en Ajustes."
+      subtitle="Público objetivo de tus lecturas."
     >
       <PieChart slices={slices} />
     </ChartCard>

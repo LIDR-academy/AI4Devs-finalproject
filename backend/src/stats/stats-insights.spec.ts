@@ -50,8 +50,26 @@ describe('generateStatsInsights', () => {
     const insights = generateStatsInsights(baseInput);
     const volume = insights.find((insight) => insight.kind === 'volume_delta');
     expect(volume).toBeDefined();
+    expect(volume?.title).toContain('mes anterior');
+    expect(volume?.body).toContain('Este mes');
     expect(volume?.body).toContain('+300');
     expect(volume?.data?.deltaPercent).toBe(300);
+  });
+
+  it('uses año wording when periodMode is year', () => {
+    const insights = generateStatsInsights({
+      ...baseInput,
+      scopeKey: 'year:2025',
+      periodMode: 'year',
+      month: undefined,
+      previousBooksRead: 2,
+      baselineLabel: '2024',
+    });
+    const volume = insights.find((insight) => insight.kind === 'volume_delta');
+    const pages = insights.find((insight) => insight.kind === 'pages_milestone');
+    expect(volume?.title).toContain('año anterior');
+    expect(volume?.body).toContain('Este año');
+    expect(pages?.body).toContain('en este año');
   });
 
   it('includes a dominant genre insight', () => {

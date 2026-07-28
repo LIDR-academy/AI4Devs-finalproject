@@ -69,10 +69,16 @@ function formatLabel(format: string): string {
   return FORMAT_LABELS[format] ?? format;
 }
 
+/** Spanish unit noun for the active stats filter (`mes` / `año`). */
+export function periodUnitLabel(periodMode: 'month' | 'year'): string {
+  return periodMode === 'year' ? 'año' : 'mes';
+}
+
 function buildVolumeDeltaInsight(
   input: InsightGenerationInput,
 ): StatsInsightDto {
   const { booksRead, previousBooksRead, baselineLabel } = input;
+  const unit = periodUnitLabel(input.periodMode);
   const deltaPercent =
     previousBooksRead === 0
       ? booksRead > 0
@@ -86,13 +92,13 @@ function buildVolumeDeltaInsight(
   let body: string;
 
   if (booksRead > previousBooksRead) {
-    title = 'Subiste el ritmo respecto al periodo anterior';
-    body = `Este periodo cerraste ${booksRead} libros frente a ${previousBooksRead} en ${baselineLabel}: un +${formatPercent(deltaPercent)} % de volumen.`;
+    title = `Subiste el ritmo respecto al ${unit} anterior`;
+    body = `Este ${unit} cerraste ${booksRead} libros frente a ${previousBooksRead} en ${baselineLabel}: un +${formatPercent(deltaPercent)} % de volumen.`;
   } else if (booksRead < previousBooksRead) {
-    title = 'Ritmo más pausado que el periodo anterior';
-    body = `Este periodo cerraste ${booksRead} libros frente a ${previousBooksRead} en ${baselineLabel}: un ${formatPercent(deltaPercent)} % de volumen.`;
+    title = `Ritmo más pausado que el ${unit} anterior`;
+    body = `Este ${unit} cerraste ${booksRead} libros frente a ${previousBooksRead} en ${baselineLabel}: un ${formatPercent(deltaPercent)} % de volumen.`;
   } else {
-    title = 'Mismo volumen que el periodo anterior';
+    title = `Mismo volumen que el ${unit} anterior`;
     body = `Cerraste ${booksRead} libros, igual que en ${baselineLabel}.`;
   }
 
@@ -130,7 +136,7 @@ function buildGenreTrendInsight(
       top.genre === 'unknown'
         ? 'Lecturas sin género dominante claro'
         : `${label} marca el periodo`,
-    body: `${top.count} de ${input.booksRead} lecturas (${percent} %) fueron ${label}: es tu tendencia principal del periodo.`,
+    body: `${top.count} de ${input.booksRead} lecturas (${percent} %) fueron ${label}: es tu tendencia principal del ${periodUnitLabel(input.periodMode)}.`,
     data: {
       dominantGenre: top.genre,
       count: top.count,
@@ -177,7 +183,7 @@ function buildPagesMilestoneInsight(
     id: insightId('pages_milestone', input.scopeKey),
     kind: 'pages_milestone',
     title: 'Hito de páginas',
-    body: `Acumulaste ${input.pagesRead.toLocaleString('es-ES')} páginas leídas en este periodo.`,
+    body: `Acumulaste ${input.pagesRead.toLocaleString('es-ES')} páginas leídas en este ${periodUnitLabel(input.periodMode)}.`,
     data: {
       pagesRead: input.pagesRead,
     },
@@ -194,7 +200,7 @@ function buildRatingPatternInsight(
   return {
     id: insightId('rating_pattern', input.scopeKey),
     kind: 'rating_pattern',
-    title: 'Valoración media del periodo',
+    title: `Valoración media del ${periodUnitLabel(input.periodMode)}`,
     body: `Tu valoración media fue de ${formatPercent(input.averageRating)} sobre 5 en las lecturas puntuadas.`,
     data: {
       averageRating: input.averageRating,
@@ -226,7 +232,7 @@ export function generateStatsInsights(
       id: insightId('other', `${input.scopeKey}:${insights.length}`),
       kind: 'other',
       title: 'Sigue explorando tus estadísticas',
-      body: `Tienes ${input.booksRead} lecturas registradas en este periodo. Cambia el filtro para comparar otros meses o años.`,
+      body: `Tienes ${input.booksRead} lecturas registradas en este ${periodUnitLabel(input.periodMode)}. Cambia el filtro para comparar otros meses o años.`,
       data: {
         booksRead: input.booksRead,
       },

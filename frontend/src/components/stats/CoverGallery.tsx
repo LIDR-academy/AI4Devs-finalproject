@@ -16,7 +16,7 @@ export function CoverGallery({ books, periodScope }: CoverGalleryProps) {
       className="cover-gallery"
       aria-label={`Portadas de libros leídos ${periodScope}`}
     >
-      <h2 className="cover-gallery__heading">Galería visual</h2>
+      <h2 className="cover-gallery__heading">Galería</h2>
       <p className="cover-gallery__subtitle">
         Libros terminados {periodScope} ({books.length})
       </p>
