@@ -110,13 +110,13 @@
         <ul>
           {#each group.items as item}
             <li class:completed={item.completed}>
-              <label>
+              <label class="check-row">
                 <input
                   type="checkbox"
                   checked={item.completed}
                   on:change={() => toggleItem(item)}
                 />
-                <div class="item-text">
+                <div class="check-body">
                   <span class="item-title">{item.title}</span>
                   {#if item.description}
                     <span class="item-desc">{item.description}</span>
@@ -125,10 +125,10 @@
                     <span class="docs">📄 {item.documentsNeeded.join(', ')}</span>
                   {/if}
                 </div>
+                {#if item.estimatedDays > 0}
+                  <span class="days">~{item.estimatedDays}d</span>
+                {/if}
               </label>
-              {#if item.estimatedDays > 0}
-                <span class="days" title="Duración estimada">~{item.estimatedDays}d</span>
-              {/if}
             </li>
           {/each}
         </ul>
@@ -182,57 +182,62 @@
     margin: 0;
   }
   li {
-    display: flex;
-    align-items: flex-start;
-    padding: 0.6rem 0;
+    padding: 0;
     border-bottom: 1px solid var(--color-border);
-    gap: 0.5rem;
   }
   li:last-child {
     border-bottom: none;
   }
   li.completed {
-    opacity: 0.6;
+    opacity: 0.55;
   }
-  label {
-    display: flex;
-    align-items: flex-start;
+  .check-row {
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
     gap: 0.5rem;
-    flex: 1;
-    margin: 0;
+    align-items: flex-start;
+    padding: 0.6rem 0;
     cursor: pointer;
+    margin: 0;
+    width: 100%;
   }
   input[type='checkbox'] {
-    margin-top: 0.15rem;
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    cursor: pointer;
     flex-shrink: 0;
   }
-  .item-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    flex: 1;
+  .check-body {
+    min-width: 0;
   }
   .item-title {
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    line-height: 1.35;
   }
   .completed .item-title {
     text-decoration: line-through;
   }
   .item-desc {
-    font-size: 0.78rem;
+    display: block;
+    font-size: 0.76rem;
     color: var(--color-text-muted);
+    line-height: 1.4;
+    margin-top: 0.15rem;
   }
   .docs {
+    display: block;
     font-size: 0.72rem;
     color: var(--color-text-muted);
+    margin-top: 0.15rem;
   }
   .days {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--color-text-muted);
     white-space: nowrap;
     flex-shrink: 0;
-    margin-top: 0.15rem;
+    padding-top: 4px;
   }
   section {
     margin-bottom: 1rem;
