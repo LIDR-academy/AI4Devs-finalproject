@@ -2341,3 +2341,94 @@ VERIFICACIÓN:
 - Al cancelar: nombre original restaurado
 
 Usa modo Plan antes de ejecutar.
+
+-------------------
+
+Añade un panel de debug en home_page.dart visible SOLO
+cuando kDebugMode == true.
+
+El panel debe aparecer en la parte inferior de la pantalla
+de Home, claramente diferenciado del contenido real de la
+app (por ejemplo, con fondo amarillo claro o un borde
+discontinuo, y un label "⚙️ DEBUG" en la esquina).
+
+CONTENIDO DEL PANEL:
+
+1. Row con Switch + label "Modo partida corta"
+   - Switch vinculado a kShortGameMode de
+     app/lib/core/config/debug_config.dart
+   - Al activar: kShortGameMode = true
+   - Al desactivar: kShortGameMode = false
+   - El cambio debe aplicarse en tiempo real sin
+     necesidad de hot restart
+
+2. TextField editable con la secuencia de rondas
+   - Solo visible/editable cuando el Switch está activo
+   - Valor inicial: kShortRoundSequence formateado
+     como texto "1,4,8,8,4,1"
+   - Al editar y confirmar (teclado done / botón aplicar):
+     parsear el texto como List<int> y actualizar
+     kShortRoundSequence en runtime
+   - Validación básica: solo números separados por comas,
+     mínimo 1 valor, máximo 22 valores
+   - Si el formato es inválido: borde rojo + mensaje
+     "Formato inválido. Usa números separados por comas."
+
+IMPLEMENTACIÓN:
+
+Dado que kShortGameMode y kShortRoundSequence son const
+en debug_config.dart (no modificables en runtime),
+necesitas un mecanismo alternativo para el estado en
+runtime. Usa un ValueNotifier o un DebugConfigNotifier
+en core/config/:
+
+```dart
+// app/lib/core/config/debug_config_notifier.dart
+class DebugConfigNotifier extends ChangeNotifier {
+  bool shortGameMode = false;
+  List<int> shortRoundSequence = [1, 4, 8, 8, 4, 1];
+  
+  void toggleShortGameMode(bool value) {
+    shortGameMode = value;
+    notifyListeners();
+  }
+  
+  void updateSequence(List<int> sequence) {
+    shortRoundSequence = sequence;
+    notifyListeners();
+  }
+}
+```
+
+Registra DebugConfigNotifier como singleton en core/di/
+junto al resto de dependencias.
+
+Modifica RoundSequenceBuilder para que en kDebugMode
+lea de DebugConfigNotifier en vez de las constantes:
+
+- Si debugConfigNotifier.shortGameMode == true:
+  devolver debugConfigNotifier.shortRoundSequence
+- Si false: comportamiento normal (secuencia real del PRD)
+
+ASPECTO VISUAL DEL PANEL:
+
+- Container con color: Colors.amber.withOpacity(0.15)
+- Border: Border.all(color: Colors.amber, width: 1)
+- BorderRadius.circular(8)
+- Padding: 12
+- Label "⚙️ MODO DEBUG" en labelSmall bold ámbar
+- Solo visible con kDebugMode (envuelto en
+  if (kDebugMode) ... en el build method)
+
+VERIFICACIÓN:
+
+- En release (flutter build apk --release): el panel
+  NO aparece (kDebugMode = false en release)
+- En debug: el Switch activa/desactiva la secuencia
+  corta sin hot restart
+- Al cambiar la secuencia y empezar una partida nueva,
+  se usan las rondas configuradas en el panel
+- flutter analyze sin errores
+
+No uses modo Plan para este cambio — es autónomo
+y no toca ficheros críticos del flujo de partida.

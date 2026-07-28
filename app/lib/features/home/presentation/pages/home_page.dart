@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/widgets/pocha_app_bar.dart';
 import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:la_pocha/features/home/presentation/widgets/debug_config_panel.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -60,6 +62,7 @@ class HomePage extends StatelessWidget {
                 ),
               ),
             ),
+            if (kDebugMode) const DebugConfigPanel(),
           ],
         ),
       ),

@@ -1,11 +1,6 @@
-import 'package:flutter/foundation.dart';
-
-/// Flag de debug para probar el flujo completo de partida sin jugar
-/// todas las rondas reales. Solo activo en modo debug (kDebugMode).
-/// En release siempre se usa la secuencia real del PRD.
+/// Default short-round sequence used to seed DebugConfigNotifier.
 ///
-/// Para activar: cambia kShortGameMode a true y define la secuencia
-/// en kShortRoundSequence. Ejemplo: [1, 4, 8, 8, 4, 1] = 6 rondas.
-const bool kShortGameMode = kDebugMode && true;
-const List<int> kShortRoundSequence = [1, 3, 1];
-// const List<int> kShortRoundSequence = [1, 4, 8, 8, 4, 1];
+/// Runtime toggles live in DebugConfigNotifier (see Home debug panel).
+/// These constants are only defaults; prefer the notifier in debug builds.
+const bool kShortGameMode = false;
+const List<int> kShortRoundSequence = [1, 4, 8, 8, 4, 1];

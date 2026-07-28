@@ -1,3 +1,4 @@
+import 'package:la_pocha/core/config/debug_config_notifier.dart';
 import 'package:la_pocha/features/game_setup/domain/services/round_sequence_builder.dart';
 import 'package:la_pocha/features/game_setup/domain/value_objects/game_deck_config.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -51,6 +52,37 @@ void main() {
       );
       expect(sequence.first.roundNumber, 1);
       expect(sequence.last.roundNumber, 22);
+    });
+
+    test('uses short sequence when debug short game mode is enabled', () {
+      final debugConfig = DebugConfigNotifier()
+        ..toggleShortGameMode(true)
+        ..updateSequence([1, 3, 1]);
+
+      final sequence = buildRoundSequence(
+        maxCardsPerRound: 10,
+        playerCount: 4,
+        debugConfig: debugConfig,
+      );
+
+      expect(
+        sequence.map((round) => round.cardsPerPlayer).toList(),
+        [1, 3, 1],
+      );
+      expect(sequence.map((round) => round.roundNumber).toList(), [1, 2, 3]);
+    });
+
+    test('ignores debug config when short game mode is disabled', () {
+      final debugConfig = DebugConfigNotifier()
+        ..updateSequence([1, 3, 1]);
+
+      final sequence = buildRoundSequence(
+        maxCardsPerRound: 10,
+        playerCount: 4,
+        debugConfig: debugConfig,
+      );
+
+      expect(sequence.length, 22);
     });
   });
 }

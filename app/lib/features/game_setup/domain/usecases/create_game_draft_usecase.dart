@@ -1,3 +1,4 @@
+import 'package:la_pocha/core/config/debug_config_notifier.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game_status.dart';
 import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart';
@@ -6,10 +7,15 @@ import 'package:la_pocha/features/game_setup/domain/value_objects/game_deck_conf
 import 'package:uuid/uuid.dart';
 
 class CreateGameDraftUseCase {
-  CreateGameDraftUseCase(this._repository, {Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  CreateGameDraftUseCase(
+    this._repository, {
+    Uuid? uuid,
+    this.debugConfig,
+  }) : _uuid = uuid ?? const Uuid();
 
   final GameRepository _repository;
   final Uuid _uuid;
+  final DebugConfigNotifier? debugConfig;
 
   Future<Game> call({required int playerCount}) async {
     if (playerCount < 3 || playerCount > 8) {
@@ -24,6 +30,7 @@ class CreateGameDraftUseCase {
     final roundSequence = buildRoundSequence(
       maxCardsPerRound: config.maxCardsPerRound,
       playerCount: playerCount,
+      debugConfig: debugConfig,
     );
     final now = DateTime.now();
 

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:la_pocha/core/config/debug_config.dart';
+import 'package:la_pocha/core/config/debug_config_notifier.dart';
+import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
 
 class GameConfigPreview extends StatelessWidget {
@@ -16,6 +18,10 @@ class GameConfigPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final debugConfig = kDebugMode && getIt.isRegistered<DebugConfigNotifier>()
+        ? getIt<DebugConfigNotifier>()
+        : null;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -33,33 +39,49 @@ class GameConfigPreview extends StatelessWidget {
               suffix: 'cartas',
             ),
             const SizedBox(height: 16),
-            _PreviewRow(
-              label: 'Total de rondas',
-              value: '$totalRounds',
-              suffix: 'rondas',
-              trailing: kShortGameMode
-                  ? Container(
-                      margin: const EdgeInsets.only(left: 8, bottom: 4),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '⚡ Modo debug',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    )
-                  : null,
-            ),
+            if (debugConfig != null)
+              ListenableBuilder(
+                listenable: debugConfig,
+                builder: (context, _) {
+                  return _PreviewRow(
+                    label: 'Total de rondas',
+                    value: '$totalRounds',
+                    suffix: 'rondas',
+                    trailing: debugConfig.shortGameMode
+                        ? _debugBadge(context)
+                        : null,
+                  );
+                },
+              )
+            else
+              _PreviewRow(
+                label: 'Total de rondas',
+                value: '$totalRounds',
+                suffix: 'rondas',
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _debugBadge(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8, bottom: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        '⚡ Modo debug',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppTheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
       ),
     );
   }

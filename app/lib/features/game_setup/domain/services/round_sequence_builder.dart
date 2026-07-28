@@ -1,17 +1,22 @@
-import 'package:la_pocha/core/config/debug_config.dart';
+import 'package:flutter/foundation.dart';
+import 'package:la_pocha/core/config/debug_config_notifier.dart';
 
 import '../entities/round_definition.dart';
 
 List<RoundDefinition> buildRoundSequence({
   required int maxCardsPerRound,
   required int playerCount,
+  DebugConfigNotifier? debugConfig,
 }) {
-  if (kShortGameMode) {
+  if (kDebugMode &&
+      debugConfig != null &&
+      debugConfig.shortGameMode) {
+    final sequence = debugConfig.shortRoundSequence;
     return [
-      for (var i = 0; i < kShortRoundSequence.length; i++)
+      for (var i = 0; i < sequence.length; i++)
         RoundDefinition(
           roundNumber: i + 1,
-          cardsPerPlayer: kShortRoundSequence[i],
+          cardsPerPlayer: sequence[i],
         ),
     ];
   }
