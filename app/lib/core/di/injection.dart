@@ -464,9 +464,12 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<AddPlayersBloc>(
     () => AddPlayersBloc(
       getGameById: getIt<GetGameByIdUseCase>(),
+      getFavorites: getIt<GetFavoritesUseCase>(),
       addPlayer: getIt<AddPlayerUseCase>(),
       addPlayerFromFavorite: getIt<AddPlayerFromFavoriteUseCase>(),
       removePlayer: getIt<RemovePlayerUseCase>(),
+      addFavorite: getIt<AddFavoriteUseCase>(),
+      removeFavorite: getIt<RemoveFavoriteUseCase>(),
     ),
   );
 

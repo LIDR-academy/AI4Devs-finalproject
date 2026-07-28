@@ -20,6 +20,8 @@ class AddPlayersLoaded extends AddPlayersState {
     required this.gameId,
     required this.playerCount,
     required this.players,
+    required this.favorites,
+    required this.activeEditIndex,
     required this.isLoading,
     this.errorMessage,
   });
@@ -27,6 +29,8 @@ class AddPlayersLoaded extends AddPlayersState {
   final String gameId;
   final int playerCount;
   final List<PlayerEmbed> players;
+  final List<FavoritePlayer> favorites;
+  final int? activeEditIndex;
   final bool isLoading;
   final String? errorMessage;
 
@@ -38,6 +42,9 @@ class AddPlayersLoaded extends AddPlayersState {
     String? gameId,
     int? playerCount,
     List<PlayerEmbed>? players,
+    List<FavoritePlayer>? favorites,
+    int? activeEditIndex,
+    bool clearActiveEditIndex = false,
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
@@ -46,6 +53,9 @@ class AddPlayersLoaded extends AddPlayersState {
       gameId: gameId ?? this.gameId,
       playerCount: playerCount ?? this.playerCount,
       players: players ?? this.players,
+      favorites: favorites ?? this.favorites,
+      activeEditIndex:
+          clearActiveEditIndex ? null : (activeEditIndex ?? this.activeEditIndex),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
@@ -56,6 +66,8 @@ class AddPlayersLoaded extends AddPlayersState {
         gameId,
         playerCount,
         players,
+        favorites,
+        activeEditIndex,
         isLoading,
         errorMessage,
       ];
@@ -68,13 +80,4 @@ class AddPlayersFailure extends AddPlayersState {
 
   @override
   List<Object?> get props => [message];
-}
-
-class AddPlayersNavigateToSetup extends AddPlayersState {
-  const AddPlayersNavigateToSetup({required this.gameId});
-
-  final String gameId;
-
-  @override
-  List<Object?> get props => [gameId];
 }

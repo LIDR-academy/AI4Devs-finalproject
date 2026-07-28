@@ -1,4 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:la_pocha/features/favorites/domain/entities/favorite_player.dart';
+import 'package:la_pocha/features/favorites/domain/usecases/add_favorite_usecase.dart';
+import 'package:la_pocha/features/favorites/domain/usecases/get_favorites_usecase.dart';
+import 'package:la_pocha/features/favorites/domain/usecases/remove_favorite_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game_status.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
@@ -15,15 +19,21 @@ import 'add_players_bloc_test.mocks.dart';
 
 @GenerateNiceMocks([
   MockSpec<GetGameByIdUseCase>(),
+  MockSpec<GetFavoritesUseCase>(),
   MockSpec<AddPlayerUseCase>(),
   MockSpec<AddPlayerFromFavoriteUseCase>(),
   MockSpec<RemovePlayerUseCase>(),
+  MockSpec<AddFavoriteUseCase>(),
+  MockSpec<RemoveFavoriteUseCase>(),
 ])
 void main() {
   late MockGetGameByIdUseCase getGameById;
+  late MockGetFavoritesUseCase getFavorites;
   late MockAddPlayerUseCase addPlayer;
   late MockAddPlayerFromFavoriteUseCase addPlayerFromFavorite;
   late MockRemovePlayerUseCase removePlayer;
+  late MockAddFavoriteUseCase addFavorite;
+  late MockRemoveFavoriteUseCase removeFavorite;
 
   final baseGame = Game(
     id: 'game-1',
@@ -39,43 +49,61 @@ void main() {
 
   setUp(() {
     getGameById = MockGetGameByIdUseCase();
+    getFavorites = MockGetFavoritesUseCase();
     addPlayer = MockAddPlayerUseCase();
     addPlayerFromFavorite = MockAddPlayerFromFavoriteUseCase();
     removePlayer = MockRemovePlayerUseCase();
+    addFavorite = MockAddFavoriteUseCase();
+    removeFavorite = MockRemoveFavoriteUseCase();
   });
 
   AddPlayersBloc buildBloc() => AddPlayersBloc(
         getGameById: getGameById,
+        getFavorites: getFavorites,
         addPlayer: addPlayer,
         addPlayerFromFavorite: addPlayerFromFavorite,
         removePlayer: removePlayer,
+        addFavorite: addFavorite,
+        removeFavorite: removeFavorite,
       );
 
+  final favoriteAna = FavoritePlayer(
+    id: 'fav-ana',
+    displayName: 'Ana',
+    userId: null,
+    createdAt: DateTime(2026),
+  );
+
   blocTest<AddPlayersBloc, AddPlayersState>(
-    'loads game on start',
+    'loads game and favorites on start',
     build: buildBloc,
     setUp: () {
       when(getGameById('game-1')).thenAnswer((_) async => baseGame);
+      when(getFavorites()).thenAnswer((_) async => [favoriteAna]);
     },
     act: (bloc) => bloc.add(const AddPlayersStarted(gameId: 'game-1')),
     expect: () => [
       const AddPlayersLoading(),
-      const AddPlayersLoaded(
+      AddPlayersLoaded(
         gameId: 'game-1',
         playerCount: 4,
         players: [],
+        favorites: [favoriteAna],
+        activeEditIndex: null,
         isLoading: false,
       ),
     ],
   );
 
   blocTest<AddPlayersBloc, AddPlayersState>(
-    'adds player and updates state',
+    'adds player from favorite chip and updates players',
     build: buildBloc,
-    seed: () => const AddPlayersLoaded(
+    seed: () => AddPlayersLoaded(
       gameId: 'game-1',
       playerCount: 4,
       players: [],
+      favorites: [favoriteAna],
+      activeEditIndex: null,
       isLoading: false,
     ),
     setUp: () {
@@ -91,15 +119,20 @@ void main() {
       when(addPlayer(gameId: 'game-1', name: 'Ana')).thenAnswer(
         (_) async => baseGame.copyWith(players: [player]),
       );
+      when(
+        addPlayerFromFavorite(gameId: 'game-1', favoriteId: 'fav-ana'),
+      ).thenAnswer((_) async => baseGame.copyWith(players: [player]));
     },
     act: (bloc) => bloc.add(
-      const PlayerAdded(name: 'Ana', type: PlayerAddType.guest),
+      FavoriteChipTapped(favorite: favoriteAna),
     ),
     expect: () => [
-      const AddPlayersLoaded(
+      AddPlayersLoaded(
         gameId: 'game-1',
         playerCount: 4,
         players: [],
+        favorites: [favoriteAna],
+        activeEditIndex: null,
         isLoading: true,
       ),
       AddPlayersLoaded(
@@ -116,64 +149,189 @@ void main() {
             joinedAt: DateTime(2026),
           ),
         ],
+        favorites: [favoriteAna],
+        activeEditIndex: null,
         isLoading: false,
       ),
     ],
   );
 
   blocTest<AddPlayersBloc, AddPlayersState>(
-    'isComplete only when all slots are filled',
+    'toggles player favorite on and off',
     build: buildBloc,
-    setUp: () {
-      when(getGameById('game-1')).thenAnswer((_) async => baseGame);
-    },
-    act: (bloc) => bloc.add(const AddPlayersStarted(gameId: 'game-1')),
-    verify: (bloc) {
-      final state = bloc.state as AddPlayersLoaded;
-      expect(state.isComplete, isFalse);
-      expect(state.remainingCount, 4);
-    },
-  );
-
-  blocTest<AddPlayersBloc, AddPlayersState>(
-    'navigates to setup only when roster is complete',
-    build: buildBloc,
-    seed: () {
-      final players = List.generate(
-        4,
-        (index) => PlayerEmbed(
-          id: 'p$index',
-          displayName: 'Player $index',
+    seed: () => AddPlayersLoaded(
+      gameId: 'game-1',
+      playerCount: 4,
+      players: [
+        PlayerEmbed(
+          id: 'p1',
+          displayName: 'Ana',
           isGuest: true,
           userId: null,
-          seatOrder: index,
+          seatOrder: 0,
           totalScore: 0,
           joinedAt: DateTime(2026),
         ),
+      ],
+      favorites: const [],
+      activeEditIndex: null,
+      isLoading: false,
+    ),
+    setUp: () {
+      when(addFavorite(displayName: 'Ana', userId: null)).thenAnswer(
+        (_) async => favoriteAna,
       );
-      return AddPlayersLoaded(
-        gameId: 'game-1',
-        playerCount: 4,
-        players: players,
-        isLoading: false,
-      );
+      when(removeFavorite('fav-ana')).thenAnswer((_) async {});
     },
-    act: (bloc) => bloc.add(const ContinueRequested()),
+    act: (bloc) async {
+      bloc.add(const PlayerFavoriteToggled(playerId: 'p1'));
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const PlayerFavoriteToggled(playerId: 'p1'));
+    },
     expect: () => [
-      const AddPlayersNavigateToSetup(gameId: 'game-1'),
+      isA<AddPlayersLoaded>().having((s) => s.isLoading, 'loading', true),
+      isA<AddPlayersLoaded>()
+          .having((s) => s.favorites.length, 'favorites', 1)
+          .having((s) => s.isLoading, 'loading', false),
+      isA<AddPlayersLoaded>().having((s) => s.isLoading, 'loading', true),
+      isA<AddPlayersLoaded>()
+          .having((s) => s.favorites.isEmpty, 'favorites', true)
+          .having((s) => s.isLoading, 'loading', false),
     ],
   );
 
   blocTest<AddPlayersBloc, AddPlayersState>(
-    'does not navigate when roster is incomplete',
+    'removes player and keeps favorite to re-show chip',
+    build: buildBloc,
+    seed: () => AddPlayersLoaded(
+      gameId: 'game-1',
+      playerCount: 4,
+      players: [
+        PlayerEmbed(
+          id: 'p1',
+          displayName: 'Ana',
+          isGuest: true,
+          userId: null,
+          seatOrder: 0,
+          totalScore: 0,
+          joinedAt: DateTime(2026),
+        ),
+      ],
+      favorites: [favoriteAna],
+      activeEditIndex: null,
+      isLoading: false,
+    ),
+    setUp: () {
+      when(removePlayer(gameId: 'game-1', playerId: 'p1')).thenAnswer(
+        (_) async => baseGame.copyWith(players: const []),
+      );
+    },
+    act: (bloc) => bloc.add(const PlayerRemoved(playerId: 'p1')),
+    expect: () => [
+      AddPlayersLoaded(
+        gameId: 'game-1',
+        playerCount: 4,
+        players: [
+          PlayerEmbed(
+            id: 'p1',
+            displayName: 'Ana',
+            isGuest: true,
+            userId: null,
+            seatOrder: 0,
+            totalScore: 0,
+            joinedAt: DateTime(2026),
+          ),
+        ],
+        favorites: [favoriteAna],
+        activeEditIndex: null,
+        isLoading: true,
+      ),
+      AddPlayersLoaded(
+        gameId: 'game-1',
+        playerCount: 4,
+        players: [],
+        favorites: [favoriteAna],
+        activeEditIndex: null,
+        isLoading: false,
+      ),
+    ],
+  );
+
+  blocTest<AddPlayersBloc, AddPlayersState>(
+    'activates and cancels inline edit slot',
     build: buildBloc,
     seed: () => const AddPlayersLoaded(
       gameId: 'game-1',
       playerCount: 4,
       players: [],
+      favorites: [],
+      activeEditIndex: null,
       isLoading: false,
     ),
-    act: (bloc) => bloc.add(const ContinueRequested()),
-    expect: () => [],
+    act: (bloc) async {
+      bloc.add(const EditSlotActivated(index: 0));
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const EditSlotCancelled());
+    },
+    expect: () => [
+      const AddPlayersLoaded(
+        gameId: 'game-1',
+        playerCount: 4,
+        players: [],
+        favorites: [],
+        activeEditIndex: 0,
+        isLoading: false,
+      ),
+      const AddPlayersLoaded(
+        gameId: 'game-1',
+        playerCount: 4,
+        players: [],
+        favorites: [],
+        activeEditIndex: null,
+        isLoading: false,
+      ),
+    ],
+  );
+
+  blocTest<AddPlayersBloc, AddPlayersState>(
+    'confirms player name from inline edit',
+    build: buildBloc,
+    seed: () => const AddPlayersLoaded(
+      gameId: 'game-1',
+      playerCount: 4,
+      players: [],
+      favorites: [],
+      activeEditIndex: 0,
+      isLoading: false,
+    ),
+    setUp: () {
+      final player = PlayerEmbed(
+        id: 'p1',
+        displayName: 'Ana',
+        isGuest: true,
+        userId: null,
+        seatOrder: 0,
+        totalScore: 0,
+        joinedAt: DateTime(2026),
+      );
+      when(addPlayer(gameId: 'game-1', name: 'Ana')).thenAnswer(
+        (_) async => baseGame.copyWith(players: [player]),
+      );
+    },
+    act: (bloc) => bloc.add(const PlayerNameConfirmed(index: 0, name: 'Ana')),
+    expect: () => [
+      const AddPlayersLoaded(
+        gameId: 'game-1',
+        playerCount: 4,
+        players: [],
+        favorites: [],
+        activeEditIndex: 0,
+        isLoading: true,
+      ),
+      isA<AddPlayersLoaded>()
+          .having((s) => s.players.length, 'players', 1)
+          .having((s) => s.activeEditIndex, 'activeEditIndex', null)
+          .having((s) => s.isLoading, 'isLoading', false),
+    ],
   );
 }

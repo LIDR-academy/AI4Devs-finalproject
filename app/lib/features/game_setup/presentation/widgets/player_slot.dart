@@ -1,31 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:la_pocha/core/theme/app_theme.dart';
 import 'package:la_pocha/core/widgets/player_initial_avatar.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
 
 class PlayerSlot extends StatelessWidget {
   const PlayerSlot({
     super.key,
-    this.player,
     required this.index,
-    this.onTap,
+    this.player,
+    this.isEditing = false,
+    this.isFavorite = false,
+    this.isBusy = false,
+    this.onActivateEdit,
+    this.onCancelEdit,
+    this.onConfirmName,
+    this.onToggleFavorite,
     this.onRemove,
   });
 
-  final PlayerEmbed? player;
   final int index;
-  final VoidCallback? onTap;
+  final PlayerEmbed? player;
+  final bool isEditing;
+  final bool isFavorite;
+  final bool isBusy;
+  final VoidCallback? onActivateEdit;
+  final VoidCallback? onCancelEdit;
+  final ValueChanged<String>? onConfirmName;
+  final VoidCallback? onToggleFavorite;
   final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
-    if (player == null) {
-      return _EmptyPlayerSlot(onTap: onTap);
+    if (player != null) {
+      return _FilledPlayerSlot(
+        player: player!,
+        colorIndex: player!.seatOrder,
+        isFavorite: isFavorite,
+        onToggleFavorite: isBusy ? null : onToggleFavorite,
+        onRemove: isBusy ? null : onRemove,
+      );
     }
-    return _FilledPlayerSlot(
-      player: player!,
-      index: index,
-      onRemove: onRemove,
+
+    if (isEditing) {
+      return _InlineEditPlayerSlot(
+        onCancel: onCancelEdit,
+        onConfirm: onConfirmName,
+        isBusy: isBusy,
+      );
+    }
+
+    return _EmptyPlayerSlot(
+      onTap: isBusy ? null : onActivateEdit,
     );
   }
 }
@@ -37,38 +61,118 @@ class _EmptyPlayerSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: CustomPaint(
-          painter: _DashedBorderPainter(
-            color: AppTheme.onSurfaceVariant,
-            radius: 12,
-          ),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.add,
-                  color: AppTheme.onSurfaceVariant,
-                  size: 20,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.add_circle_outline,
+                color: colors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Añadir jugador',
+                style: textTheme.labelMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Añadir jugador',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppTheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _InlineEditPlayerSlot extends StatefulWidget {
+  const _InlineEditPlayerSlot({
+    required this.onCancel,
+    required this.onConfirm,
+    required this.isBusy,
+  });
+
+  final VoidCallback? onCancel;
+  final ValueChanged<String>? onConfirm;
+  final bool isBusy;
+
+  @override
+  State<_InlineEditPlayerSlot> createState() => _InlineEditPlayerSlotState();
+}
+
+class _InlineEditPlayerSlotState extends State<_InlineEditPlayerSlot> {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+  bool _didCancelOnBlur = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (!_focusNode.hasFocus && !_didCancelOnBlur) {
+      _didCancelOnBlur = true;
+      widget.onCancel?.call();
+    }
+  }
+
+  void _onSubmit() {
+    if (widget.isBusy) {
+      return;
+    }
+    final name = _controller.text.trim();
+    widget.onConfirm?.call(name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              focusNode: _focusNode,
+              controller: _controller,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _onSubmit(),
+              decoration: InputDecoration(
+                hintText: 'Nombre del jugador',
+                isDense: true,
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: colors.primary),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: colors.primary, width: 2),
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: widget.isBusy ? null : _onSubmit,
+            icon: Icon(
+              Icons.check_circle,
+              color: colors.primary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -77,34 +181,31 @@ class _EmptyPlayerSlot extends StatelessWidget {
 class _FilledPlayerSlot extends StatelessWidget {
   const _FilledPlayerSlot({
     required this.player,
-    required this.index,
+    required this.colorIndex,
+    required this.isFavorite,
+    this.onToggleFavorite,
     this.onRemove,
   });
 
   final PlayerEmbed player;
-  final int index;
+  final int colorIndex;
+  final bool isFavorite;
+  final VoidCallback? onToggleFavorite;
   final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
           PlayerInitialAvatar(
             name: player.displayName,
-            colorIndex: index,
+            colorIndex: colorIndex,
+            radius: 16,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -113,105 +214,32 @@ class _FilledPlayerSlot extends StatelessWidget {
               children: [
                 Text(
                   player.displayName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                const SizedBox(height: 4),
-                _PlayerBadge(isGuest: player.isGuest),
+                const SizedBox(height: 2),
+                Text(
+                  player.isGuest ? 'Invitado' : 'Jugador registrado',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
           IconButton(
+            onPressed: onToggleFavorite,
+            icon: Icon(isFavorite ? Icons.star : Icons.star_border),
+            color: isFavorite ? Colors.amber : colors.onSurfaceVariant,
+          ),
+          IconButton(
             onPressed: onRemove,
             icon: const Icon(Icons.close),
-            color: AppTheme.onSurfaceVariant,
+            color: colors.onSurfaceVariant,
           ),
         ],
       ),
     );
-  }
-}
-
-class _PlayerBadge extends StatelessWidget {
-  const _PlayerBadge({required this.isGuest});
-
-  final bool isGuest;
-
-  @override
-  Widget build(BuildContext context) {
-    if (isGuest) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.onSurfaceVariant.withValues(alpha: 0.4)),
-        ),
-        child: Text(
-          'Invitado',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppTheme.onSurfaceVariant,
-              ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD7ECE0),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        'Registrado',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppTheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-      ),
-    );
-  }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  _DashedBorderPainter({required this.color, required this.radius});
-
-  final Color color;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          Radius.circular(radius),
-        ),
-      );
-
-    const dashWidth = 6.0;
-    const dashSpace = 4.0;
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = distance + dashWidth;
-        canvas.drawPath(
-          metric.extractPath(distance, next.clamp(0, metric.length)),
-          paint,
-        );
-        distance = next + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.radius != radius;
   }
 }
