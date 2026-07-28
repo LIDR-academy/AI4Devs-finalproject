@@ -60,7 +60,7 @@ En lugar de ASP.NET Core Identity (muy complejo), quiero un sistema de autentica
 
 1. Tabla Usuarios con: Id, Email, PasswordHash, Nombre, Rol (Usuario/Admin)
 2. Servicio de autenticación que:
-   - Hashee la contraseña con SHA256 o BCrypt
+   - Hashee la contraseña con BCrypt, Argon2id o PBKDF2 (hash adaptativo requerido)
    - Guarde sesión en Session["UserId"] y Session["UserRole"]
    - Middleware custom para verificar autenticación
 3. Controladores protegidos con atributo [Authorize] custom
@@ -74,7 +74,8 @@ Definir arquitectura de autenticación simple pero segura sin Identity.
 **Herramienta Usada:** Claude Code + referencia a mejores prácticas
 
 **Notas de Guía:**
-- Usar BCrypt en lugar de SHA256 (más seguro)
+- Usar BCrypt, Argon2id o PBKDF2 (hashes adaptativos requeridos para contraseñas)
+- NO usar SHA256 ni MD5 para contraseñas (inseguro)
 - Crear atributo [AuthorizeUser] y [AuthorizeAdmin] reutilizable
 - Middleware para verificar sesión en cada request
 
@@ -288,12 +289,14 @@ Entrada (ViewModel):
 Procesos:
 1. Validar usuario autenticado
 2. Validar Reserva:
-   - Fecha >= hoy + 1 día
-   - Horario dentro de Horarios.HoraInicio-Fin
-   - Hora + duración <= HoraFin
+   - Fecha >= hoy (consistente con HU-003 en README)
+   - Horario dentro de Horarios.MinutoInicio-MinutoFin (minutos from midnight)
+   - MinutoInicio + DuracionMinutos <= MinutoFin
    - No exista overlap con Reserva aprobada en mismo slot
-3. Calcular precio: Pista.Precio * (DuracionMinutos/60)
+3. Calcular precio: Pista.Precio * (DuracionMinutos / 60.0) → usar división decimal
+   - Ejemplo: 90 minutos = 90/60.0 = 1.5 horas (no 1)
 4. Crear Reserva con Estado=Pendiente
+   - Guardar DuracionMinutos y PrecioAplicado como snapshot
 5. Guardar en BD
 6. Enviar email: "Tu reserva fue solicitada, pendiente aprobación"
 7. Mostrar confirmation page con número de reserva
@@ -484,8 +487,11 @@ GET /Admin/Reservas?estado=Pendiente:
 Acciones:
 1. POST /Admin/Reservas/{id}/Aprobar
    - Validar Reserva.Estado = Pendiente
-   - Actualizar Estado = Aprobada
-   - Guardar FechaAprobacion, AdminId
+   - **CRÍTICO: Re-validar overlaps**
+     - Consultar Reservas aprobadas en Pista, Fecha, MinutoInicio:MinutoFin
+     - Si existe overlap → rechazar aprobación
+   - Ejecutar dentro de transacción atómica (locking o isolation level)
+   - Actualizar Estado = Aprobada, FechaAprobacion = ahora, AdminId = actual
    - Enviar email usuario: "Tu reserva fue aprobada. Detalles: ..."
 
 2. POST /Admin/Reservas/{id}/Rechazar
@@ -496,6 +502,7 @@ Acciones:
 Validaciones:
 - Solo Pendiente puede pasar a Aprobada
 - Motivo requerido para rechazo
+- **Evitar double-bookings: validar overlaps en transacción**
 
 Vista: tabla with Bootstrap, botones con confirmación, modal rechazo.
 ```

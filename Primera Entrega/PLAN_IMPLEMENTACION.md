@@ -4,7 +4,7 @@
 
 ### Distribución por Entrega
 
-```
+```text
 Entrega 1 (22 Julio) - DOCUMENTACIÓN - 3 horas ✅
 ├── README.md completo
 ├── Prompts.md
@@ -32,11 +32,13 @@ Entrega 3 (29 Septiembre) - FINAL COMPLETA - 12 horas
 ├── Tests E2E - 1h
 ├── Despliegue AWS - 1h
 └── Pull Request finalproject-MPP
+
+TOTAL: 3 + 15 + 12 = 30 horas ✓
 ```
 
 ---
 
-## 🎯 Entrega 1: Documentación (Hoy - 22 Julio) ✅
+## 🎯 Entrega 1: Documentación (Completada el 27 de Julio de 2026) ✅
 
 ### Artefactos Completados
 - [x] README.md (ficha, objetivo, características, arquitectura, BD, historias, API)
@@ -68,26 +70,21 @@ git checkout -b feature-entrega1-MPP
 ```
 
 #### 4️⃣ Copiar Archivos de Documentación
-Copia estos 2 archivos a la raíz del repositorio:
-- `C:\Proyectos\Jefatura\Jefatura\IA\Claude\ReservasPistas-MPP\README.md` → `/README.md`
-- `C:\Proyectos\Jefatura\Jefatura\IA\Claude\ReservasPistas-MPP\prompts.md` → `/prompts.md`
-
-También crea:
-- `/docs/ARCHITECTURE.md` (copia el diagrama ER del README)
-- `/docs/USER_STORIES.md` (copia historias de usuario)
+Copia estos archivos a la raíz del repositorio:
+- `Primera Entrega/README.md` → `/README.md`
+- `Primera Entrega/prompts.md` → `/prompts.md`
+- `Primera Entrega/PLAN_IMPLEMENTACION.md` → `/PLAN_IMPLEMENTACION.md`
 
 #### 5️⃣ Hacer Commit
 ```bash
-git add README.md prompts.md docs/
-git commit -m "docs: Documentación técnica Entrega 1 - SportsPlex
+git add README.md prompts.md PLAN_IMPLEMENTACION.md
+git commit -m "docs: Documentación técnica Entrega 1 - SportsPlex" -m "Artefactos entregados:
+- README.md: Ficha, objetivo, características, arquitectura, BD, API, historias, tickets
+- prompts.md: 20 prompts clave documentados
+- PLAN_IMPLEMENTACION.md: Timeline y plan detallado de 3 entregas
 
-- Descripción del producto y características
-- Arquitectura MVC + Service Layer
-- Modelo de datos (6 tablas, relaciones, constraints)
-- API endpoints completos
-- 9 historias de usuario con criterios de aceptación
-- 20 prompts documentados
-- Plan de implementación 3 entregas"
+Stack: .NET + Razor + SQLite + AWS
+Funcionalidades: Búsqueda, reservas, aprobación admin, reportes, email"
 ```
 
 #### 6️⃣ Hacer Push

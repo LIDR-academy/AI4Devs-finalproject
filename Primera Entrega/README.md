@@ -48,7 +48,7 @@ Proporcionar a usuarios una plataforma intuitiva para reservar pistas deportivas
 ## 🏗️ Arquitectura
 
 ### Vista General
-```
+```text
 ┌─────────────────────────────────────────┐
 │         Frontend (Razor MVC)             │
 │   (HTML, CSS, JavaScript Vanilla)       │
@@ -99,13 +99,13 @@ Usuario Autenticado
 
 ### Diagrama ER (Entity-Relationship)
 
-```
+```text
 ┌─────────────────────────┐
 │      USUARIOS           │
 ├─────────────────────────┤
 │ ID (PK)                 │
 │ Email (UNIQUE)          │
-│ Contraseña (Hashed)     │
+│ PasswordHash            │
 │ Nombre                  │
 │ Rol (Usuario/Admin)     │
 │ FechaCreacion           │
@@ -114,53 +114,55 @@ Usuario Autenticado
               │
               │ 1:N (Reservas)
               │
-┌─────────────▼───────────┐
-│      RESERVAS           │
-├─────────────────────────┤
-│ ID (PK)                 │
-│ UsuarioID (FK)          │
-│ PistaID (FK)            │
-│ Fecha                   │
-│ HoraInicio              │
-│ HoraFin                 │
-│ Estado (Pendiente/....) │
-│ FechaCreacion           │
-│ FechaAprobacion         │
-│ AdminID (FK) [Nullable] │
-└───────────┬─────────────┘
+┌─────────────▼────────────────┐
+│      RESERVAS                │
+├────────────────────────────────┤
+│ ID (PK)                        │
+│ UsuarioID (FK)                 │
+│ PistaID (FK)                   │
+│ Fecha                          │
+│ MinutoInicio (0-1440)          │
+│ DuracionMinutos (snapshot)     │
+│ PrecioAplicado (snapshot)      │
+│ Estado (Pendiente/Aprobada...) │
+│ FechaCreacion                  │
+│ FechaAprobacion                │
+│ AdminID (FK) [Nullable]        │
+│ Motivo                         │
+└───────────┬────────────────────┘
             │
             │ N:1 (Pistas)
             │
-    ┌───────▼─────────┐
-    │     PISTAS      │
-    ├─────────────────┤
-    │ ID (PK)         │
-    │ Nombre          │
-    │ DeporteID (FK)  │
-    │ CiudadID (FK)   │
-    │ PrecioPorHora   │
-    │ Activa          │
-    └────┬────────┬───┘
+    ┌───────▼──────────┐
+    │     PISTAS       │
+    ├──────────────────┤
+    │ ID (PK)          │
+    │ Nombre           │
+    │ DeporteID (FK)   │
+    │ CiudadID (FK)    │
+    │ PrecioPorHora    │
+    │ Activa           │
+    └────┬────────┬────┘
          │        │
-    ┌────▼──┐  ┌──▼─────────────┐
-    │DEPORTES   │      CIUDADES      │
-    ├──────────┤├─────────────────────┤
-    │ ID (PK)  │ │ ID (PK)            │
-    │ Nombre   │ │ Nombre             │
-    │ Duracion │ │ Pais               │
-    │ (minutos)│ │ FechaCreacion      │
-    └──────────┘ └─────────────────────┘
+    ┌────▼──┐  ┌──▼──────────┐
+    │DEPORTES   │   CIUDADES  │
+    ├──────────┤├─────────────┤
+    │ ID (PK)  │ │ ID (PK)    │
+    │ Nombre   │ │ Nombre     │
+    │ Duracion │ │ Pais       │
+    │ (minutos)│ │ FechaCreac │
+    └──────────┘ └────────────┘
 
-┌─────────────────────────────┐
-│       HORARIOS              │
-├─────────────────────────────┤
-│ ID (PK)                     │
-│ PistaID (FK)                │
-│ DiaSemana (0-6: Lun-Dom)    │
-│ HoraInicio (8, 9, etc)      │
-│ HoraFin (22, 20, etc)       │
-│ Activo                      │
-└─────────────────────────────┘
+┌──────────────────────────┐
+│       HORARIOS           │
+├──────────────────────────┤
+│ ID (PK)                  │
+│ PistaID (FK)             │
+│ DiaSemana (0-6)          │
+│ MinutoInicio (0-1440)    │
+│ MinutoFin (0-1440)       │
+│ Activo                   │
+└──────────────────────────┘
 ```
 
 ### Tablas Detalladas
@@ -168,106 +170,106 @@ Usuario Autenticado
 #### USUARIOS
 ```sql
 CREATE TABLE Usuarios (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Email NVARCHAR(255) NOT NULL UNIQUE,
-    PasswordHash NVARCHAR(255) NOT NULL,
-    Nombre NVARCHAR(255) NOT NULL,
-    Rol NVARCHAR(50) NOT NULL CHECK(Rol IN ('Usuario', 'Admin')),
-    FechaCreacion DATETIME NOT NULL DEFAULT GETDATE(),
-    Activo BIT NOT NULL DEFAULT 1
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Email TEXT NOT NULL UNIQUE,
+    PasswordHash TEXT NOT NULL,
+    Nombre TEXT NOT NULL,
+    Rol TEXT NOT NULL CHECK(Rol IN ('Usuario', 'Admin')),
+    FechaCreacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Activo INTEGER NOT NULL DEFAULT 1
 );
 ```
 
 #### DEPORTES
 ```sql
 CREATE TABLE Deportes (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Nombre NVARCHAR(100) NOT NULL UNIQUE,
-    DuracionMinutos INT NOT NULL, -- 90 (Tenis), 120 (Fútbol), etc
-    FechaCreacion DATETIME NOT NULL DEFAULT GETDATE()
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Nombre TEXT NOT NULL UNIQUE,
+    DuracionMinutos INTEGER NOT NULL, -- 90 (Tenis), 120 (Fútbol), etc
+    FechaCreacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Datos iniciales
-INSERT INTO Deportes VALUES ('Tenis', 90, GETDATE());
-INSERT INTO Deportes VALUES ('Fútbol', 120, GETDATE());
-INSERT INTO Deportes VALUES ('Pádel', 60, GETDATE());
-INSERT INTO Deportes VALUES ('Básquetbol', 120, GETDATE());
+INSERT INTO Deportes VALUES (1, 'Tenis', 90, CURRENT_TIMESTAMP);
+INSERT INTO Deportes VALUES (2, 'Fútbol', 120, CURRENT_TIMESTAMP);
+INSERT INTO Deportes VALUES (3, 'Pádel', 60, CURRENT_TIMESTAMP);
+INSERT INTO Deportes VALUES (4, 'Básquetbol', 120, CURRENT_TIMESTAMP);
 ```
 
 #### CIUDADES
 ```sql
 CREATE TABLE Ciudades (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Nombre NVARCHAR(100) NOT NULL,
-    Pais NVARCHAR(100) NOT NULL,
-    FechaCreacion DATETIME NOT NULL DEFAULT GETDATE()
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Nombre TEXT NOT NULL,
+    Pais TEXT NOT NULL,
+    FechaCreacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Datos iniciales
-INSERT INTO Ciudades VALUES ('Madrid', 'España', GETDATE());
-INSERT INTO Ciudades VALUES ('Barcelona', 'España', GETDATE());
-INSERT INTO Ciudades VALUES ('Valencia', 'España', GETDATE());
-INSERT INTO Ciudades VALUES ('Bilbao', 'España', GETDATE());
-INSERT INTO Ciudades VALUES ('Sevilla', 'España', GETDATE());
+INSERT INTO Ciudades VALUES (1, 'Madrid', 'España', CURRENT_TIMESTAMP);
+INSERT INTO Ciudades VALUES (2, 'Barcelona', 'España', CURRENT_TIMESTAMP);
+INSERT INTO Ciudades VALUES (3, 'Valencia', 'España', CURRENT_TIMESTAMP);
+INSERT INTO Ciudades VALUES (4, 'Bilbao', 'España', CURRENT_TIMESTAMP);
+INSERT INTO Ciudades VALUES (5, 'Sevilla', 'España', CURRENT_TIMESTAMP);
 ```
 
 #### PISTAS
 ```sql
 CREATE TABLE Pistas (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Nombre NVARCHAR(255) NOT NULL,
-    DeporteId INT NOT NULL,
-    CiudadId INT NOT NULL,
-    PrecioPorHora DECIMAL(10,2) NOT NULL,
-    Activa BIT NOT NULL DEFAULT 1,
-    FechaCreacion DATETIME NOT NULL DEFAULT GETDATE(),
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Nombre TEXT NOT NULL,
+    DeporteId INTEGER NOT NULL,
+    CiudadId INTEGER NOT NULL,
+    PrecioPorHora REAL NOT NULL,
+    Activa INTEGER NOT NULL DEFAULT 1,
+    FechaCreacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (DeporteId) REFERENCES Deportes(Id),
     FOREIGN KEY (CiudadId) REFERENCES Ciudades(Id)
 );
 
 -- Datos iniciales
-INSERT INTO Pistas VALUES ('Pista Tenis Centro Madrid', 1, 1, 25.00, 1, GETDATE());
-INSERT INTO Pistas VALUES ('Pista Fútbol 5 Madrid', 2, 1, 30.00, 1, GETDATE());
--- ... más pistas
+INSERT INTO Pistas VALUES (1, 'Pista Tenis Centro Madrid', 1, 1, 25.00, 1, CURRENT_TIMESTAMP);
+INSERT INTO Pistas VALUES (2, 'Pista Fútbol 5 Madrid', 2, 1, 30.00, 1, CURRENT_TIMESTAMP);
 ```
 
 #### HORARIOS
 ```sql
 CREATE TABLE Horarios (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    PistaId INT NOT NULL,
-    DiaSemana INT NOT NULL CHECK(DiaSemana BETWEEN 0 AND 6), -- 0=Lun, 6=Dom
-    HoraInicio INT NOT NULL,
-    HoraFin INT NOT NULL,
-    Activo BIT NOT NULL DEFAULT 1,
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    PistaId INTEGER NOT NULL,
+    DiaSemana INTEGER NOT NULL CHECK(DiaSemana BETWEEN 0 AND 6), -- 0=Lun, 6=Dom
+    MinutoInicio INTEGER NOT NULL, -- Minutos desde medianoche (ej: 480 = 8:00, 540 = 9:00)
+    MinutoFin INTEGER NOT NULL,    -- Minutos desde medianoche (ej: 1320 = 22:00, 1200 = 20:00)
+    Activo INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY (PistaId) REFERENCES Pistas(Id),
     UNIQUE(PistaId, DiaSemana)
 );
 
--- Datos iniciales (Lun-Vie: 8-22, Sab-Dom: 9-20)
-INSERT INTO Horarios VALUES (1, 0, 8, 22, 1); -- Lunes
-INSERT INTO Horarios VALUES (1, 1, 8, 22, 1); -- Martes
-INSERT INTO Horarios VALUES (1, 2, 8, 22, 1); -- Miércoles
-INSERT INTO Horarios VALUES (1, 3, 8, 22, 1); -- Jueves
-INSERT INTO Horarios VALUES (1, 4, 8, 22, 1); -- Viernes
-INSERT INTO Horarios VALUES (1, 5, 9, 20, 1); -- Sábado
-INSERT INTO Horarios VALUES (1, 6, 9, 20, 1); -- Domingo
+-- Datos iniciales (Lun-Vie: 8-22 = 480-1320 min, Sab-Dom: 9-20 = 540-1200 min)
+INSERT INTO Horarios VALUES (1, 0, 480, 1320, 1); -- Lunes 8:00-22:00
+INSERT INTO Horarios VALUES (1, 1, 480, 1320, 1); -- Martes
+INSERT INTO Horarios VALUES (1, 2, 480, 1320, 1); -- Miércoles
+INSERT INTO Horarios VALUES (1, 3, 480, 1320, 1); -- Jueves
+INSERT INTO Horarios VALUES (1, 4, 480, 1320, 1); -- Viernes
+INSERT INTO Horarios VALUES (1, 5, 540, 1200, 1); -- Sábado 9:00-20:00
+INSERT INTO Horarios VALUES (1, 6, 540, 1200, 1); -- Domingo
 ```
 
 #### RESERVAS
 ```sql
 CREATE TABLE Reservas (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    UsuarioId INT NOT NULL,
-    PistaId INT NOT NULL,
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    UsuarioId INTEGER NOT NULL,
+    PistaId INTEGER NOT NULL,
     Fecha DATE NOT NULL,
-    HoraInicio INT NOT NULL,
-    HoraFin INT NOT NULL,
-    Estado NVARCHAR(50) NOT NULL CHECK(Estado IN ('Pendiente', 'Aprobada', 'Cancelada', 'Completada')),
-    FechaCreacion DATETIME NOT NULL DEFAULT GETDATE(),
+    MinutoInicio INTEGER NOT NULL, -- Minutos desde medianoche
+    DuracionMinutos INTEGER NOT NULL, -- Duración snapshot (90, 120, etc.)
+    PrecioAplicado REAL NOT NULL, -- Precio snapshot en el momento de la reserva
+    Estado TEXT NOT NULL CHECK(Estado IN ('Pendiente', 'Aprobada', 'Cancelada', 'Completada')),
+    FechaCreacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FechaAprobacion DATETIME NULL,
-    AdminId INT NULL,
-    Motivo NVARCHAR(500) NULL, -- Motivo de cancelación/rechazo
+    AdminId INTEGER NULL,
+    Motivo TEXT NULL, -- Motivo de cancelación/rechazo
     FOREIGN KEY (UsuarioId) REFERENCES Usuarios(Id),
     FOREIGN KEY (PistaId) REFERENCES Pistas(Id),
     FOREIGN KEY (AdminId) REFERENCES Usuarios(Id)
