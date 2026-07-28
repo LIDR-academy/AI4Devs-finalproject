@@ -11,13 +11,13 @@ When product behavior, scope, or UX conflict with templates in `ai-specs/` or `o
 
 1. **[PRD.md](./PRD.md)** — product vision, MVP scope, personas, functional areas
 2. **[readme.md](./readme.md)** — delivery index, architecture, data model summary, API overview, install notes
-3. **[documents/](./documents/)** — [user-stories.md](./documents/user-stories.md), [use-cases.md](./documents/use-cases.md) (UC-01…UC-10)
+3. **[docs/product/](./docs/product/)** — [user-stories.md](./docs/product/user-stories.md), [use-cases.md](./docs/product/use-cases.md) (UC-01…UC-10)
 4. **Implemented code** — `backend/src/`, `frontend/src/`
-5. **[docs/](./docs/)** — engineering standards and contracts aligned with the codebase
+5. **[docs/](./docs/)** — contracts (`api-spec.yml`, `data-model.md`), [standards/](./docs/standards/), [development_guide.md](./docs/development_guide.md)
 6. **`openspec/`** — change-scoped specs and tasks (must not contradict 1–4)
 7. **`ai-specs/`** — optional workflows, planning agents, and skills (supporting material only)
 
-`ai-specs/` and `openspec/` were added externally to assist development; they do not override the PRD or `documents/`.
+All project documentation lives under **`docs/`** (product + engineering). `ai-specs/` and `openspec/` were added externally to assist development; they do not override the PRD or `docs/product/`.
 
 ## 1. Core principles
 
@@ -32,7 +32,7 @@ When product behavior, scope, or UX conflict with templates in `ai-specs/` or `o
 
 **English only** for code, comments, logs, API errors, OpenSpec artifacts, `docs/`, commit messages, and tests.
 
-Product docs (`PRD.md`, `readme.md`, `documents/`) may stay in Spanish where already written; **new technical artifacts** added by agents should be in English unless the user asks otherwise.
+Product docs (`PRD.md`, `readme.md`, `docs/product/`) may stay in Spanish where already written; **new technical artifacts** added by agents should be in English unless the user asks otherwise.
 
 ## 3. Stack and repository layout
 
@@ -44,14 +44,16 @@ Product docs (`PRD.md`, `readme.md`, `documents/`) may stay in Spanish where alr
 | Database | Users, books, reading_records | `docs/data-model.md` |
 | Local DB | Docker Compose Postgres (port **5433**) | `docker-compose.yml` |
 
-## 4. Engineering standards (`docs/`)
+## 4. Documentation (`docs/`)
 
-- [docs/base-standards.md](./docs/base-standards.md) — same rules as this file, paths relative to `docs/`
-- [docs/backend-standards.md](./docs/backend-standards.md) — NestJS, TypeORM, catalog, auth
-- [docs/frontend-standards.md](./docs/frontend-standards.md) — Vite, React, `frontend/src/api/`
-- [docs/documentation-standards.md](./docs/documentation-standards.md) — how to maintain technical docs
+Index: [docs/README.md](./docs/README.md).
+
+- [docs/standards/base-standards.md](./docs/standards/base-standards.md) — same rules as this file
+- [docs/standards/backend-standards.md](./docs/standards/backend-standards.md) — NestJS, TypeORM, catalog, auth
+- [docs/standards/frontend-standards.md](./docs/standards/frontend-standards.md) — Vite, React, `frontend/src/api/`
+- [docs/standards/documentation-standards.md](./docs/standards/documentation-standards.md) — how to maintain docs
 - [docs/development_guide.md](./docs/development_guide.md) — local setup and scripts
-- [docs/openspec-tasks-mandatory-steps.md](./docs/openspec-tasks-mandatory-steps.md) — checklist for OpenSpec `tasks.md`
+- [docs/standards/openspec-tasks-mandatory-steps.md](./docs/standards/openspec-tasks-mandatory-steps.md) — checklist for OpenSpec `tasks.md`
 
 Keep `docs/api-spec.yml` and `docs/data-model.md` in sync with code when APIs or schema change.
 

@@ -9,7 +9,7 @@ KAN-12 (US-04) shipped the reading-record lifecycle but explicitly deferred **sc
 - **Verify compute-on-GET pattern:** Progress remains derived from `reading_records` via `GoalsService.getGoalWithProgress()` on `GET /v1/goals/{year}` — no backend `BooksService → GoalsService` hook (per KAN-11 design).
 - **Frontend cache coherence:** Extend Book Tracker PATCH success handling to invalidate `['goals', year]` on transition **to** `leido`, transition **from** `leido`, and when `finished_on` changes the UTC goal year(s).
 - **Specs sync:** Extend `book-tracker-lifecycle-ui` cache coherence requirements for goals invalidation edge cases; confirm `annual-reading-goal-api` scenario for progress after PATCH.
-- **Tests & docs:** Integration tests for increment, decrement, and year-boundary cases; manual checklist `MANUAL-TEST-KAN-14.md`; link KAN-14 on US-04 scenario 9 in `documents/user-stories.md`.
+- **Tests & docs:** Integration tests for increment, decrement, and year-boundary cases; manual checklist `MANUAL-TEST-KAN-14.md`; link KAN-14 on US-04 scenario 9 in `docs/product/user-stories.md`.
 
 **Non-goals:**
 
@@ -33,6 +33,6 @@ _(none — frontend cache coherence and test coverage only; no new REST endpoint
 
 - **Frontend:** `frontend/src/pages/BookTrackerPage.tsx`, `frontend/src/components/BookTrackerRow.tsx`.
 - **Backend:** No structural changes expected; integration tests in `backend/test/goals.integration-spec.ts`.
-- **Docs:** `documents/user-stories.md` (scenario 9 → KAN-14).
+- **Docs:** `docs/product/user-stories.md` (scenario 9 → KAN-14).
 - **Dependencies:** KAN-11 (`goals` module, `annual_reading_goals`, Home + `AnnualGoalCard`); KAN-12 (`PATCH /v1/books/{bookId}/reading-record`).
 - **Product refs:** US-04 scenario 9, US-03 scenarios 2–3, UC-02 (side effect), UC-06; Jira **KAN-14** (subtask of KAN-11).

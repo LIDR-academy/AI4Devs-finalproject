@@ -1,7 +1,8 @@
 # monthly-stats-ui Specification
 
 ## Purpose
-TBD - created by archiving change kan-15-monthly-stats-dashboard. Update Purpose after archive.
+
+Authenticated `/stats` dashboard: period selector (year/month), KPI cards, distribution charts, and insights panel consuming the monthly-stats API (UC-07, KAN-15, KAN-38).
 ## Requirements
 ### Requirement: Reading Stats dashboard route
 

@@ -34,6 +34,6 @@ KAN-12 (US-04) delivers reliable `leido` + `finished_on` data, but readers still
 
 - **Backend:** new `backend/src/goals/` module; migration; register in `app.module.ts`.
 - **Frontend:** `HomePage`, `AnnualGoalCard`, `api/client.ts` + `api/types.ts`, route `/` in `App.tsx`; extend Book Tracker PATCH handler for goals cache invalidation.
-- **Docs:** `docs/data-model.md`, `docs/api-spec.yml`, `documents/user-stories.md` (link KAN-11 on US-03 / US-04 scenario 9).
+- **Docs:** `docs/data-model.md`, `docs/api-spec.yml`, `docs/product/user-stories.md` (link KAN-11 on US-03 / US-04 scenario 9).
 - **Product refs:** US-03, UC-06; Jira **KAN-11** (épica KAN-6).
 - **Dependencies:** KAN-12 (`reading_records` with `status = leido` and `finished_on`). Recommended after KAN-13 (TBR hook stable).

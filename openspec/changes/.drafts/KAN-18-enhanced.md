@@ -42,7 +42,7 @@ frontend/index.html                    # font links
 frontend/src/index.css                 # consume tokens
 frontend/src/main.tsx                  # import theme/base
 docs/design-system-palette.md
-docs/frontend-standards.md             # design-system section
+docs/standards/frontend-standards.md             # design-system section
 frontend/src/components/StarRating.tsx # re-export from ui/ (compat)
 ```
 

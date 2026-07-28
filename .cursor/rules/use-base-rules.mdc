@@ -7,8 +7,8 @@ alwaysApply: true
 
 Follow **[AGENTS.md](../../AGENTS.md)** at the repository root.
 
-**Product precedence:** [PRD.md](../../PRD.md) → [readme.md](../../readme.md) → [documents/](../../documents/) → code → [docs/](../../docs/) → `openspec/` → `ai-specs/`.
+**Product precedence:** [PRD.md](../../PRD.md) → [readme.md](../../readme.md) → [docs/product/](../../docs/product/) → code → [docs/](../../docs/) → `openspec/` → `ai-specs/`.
 
-**Engineering detail:** [docs/base-standards.md](../../docs/base-standards.md), [docs/backend-standards.md](../../docs/backend-standards.md), [docs/frontend-standards.md](../../docs/frontend-standards.md).
+**Engineering detail:** [docs/standards/base-standards.md](../../docs/standards/base-standards.md), [docs/standards/backend-standards.md](../../docs/standards/backend-standards.md), [docs/standards/frontend-standards.md](../../docs/standards/frontend-standards.md).
 
 Do not use Express, Prisma, or LTI/ATS patterns — this repo uses **NestJS**, **TypeORM**, and **Vite + React**.

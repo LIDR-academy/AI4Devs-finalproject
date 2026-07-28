@@ -36,7 +36,7 @@ This repository uses **symbolic links** or **naming conventions** to support mul
 - **`AGENTS.md`** → Project agent rules (use this in Cursor; product precedence in §0)
 - **`codex.md`** / **`GEMINI.md`** → Optional other copilots
 
-All these files reference the same core rules in `docs/base-standards.md`, ensuring consistency across different AI tools while allowing copilot-specific customizations.
+All these files reference the same core rules in `docs/standards/base-standards.md`, ensuring consistency across different AI tools while allowing copilot-specific customizations.
 
 ### Why This Approach?
 
@@ -110,8 +110,8 @@ Prompt example to automate this with your copilot:
 Update my openspec config.yml context to reference this repository's docs and ai-specs structure.
 
 Requirements:
-- Use docs/base-standards.md as the single source of truth.
-- Include docs/backend-standards.md, docs/frontend-standards.md, docs/documentation-standards.md.
+- Use docs/standards/base-standards.md as the single source of truth.
+- Include docs/standards/backend-standards.md, docs/standards/frontend-standards.md, docs/standards/documentation-standards.md.
 - Include docs/api-spec.yml and docs/data-model.md.
 - Tell the agent to adopt ai-specs/agents/backend-developer.md for backend work and ai-specs/agents/frontend-developer.md for frontend work.
 - Mention ai-specs/skills as workflow guidance.
@@ -126,16 +126,16 @@ context: |
   Tech stack: TypeScript, NestJS 11, TypeORM, PostgreSQL, React 19, Vite, TanStack Query
   API prefix: /v1 — catalog: Open Library, Google Books; auth: JWT (dev-login for local)
   Jira keys: KAN-* (Atlassian MCP: user-atlassian)
-  Product docs: documents/user-stories.md, documents/use-cases.md, README.md
+  Product docs: docs/product/user-stories.md, docs/product/use-cases.md, README.md
   All code, comments, documentation, and technical artifacts must be in English
 
   Project specs (single source of truth): Read and apply when creating or implementing:
-  - docs/base-standards.md — core principles, TDD, OpenSpec post-apply rules
-  - docs/backend-standards.md — NestJS/TypeORM patterns (backend changes)
-  - docs/frontend-standards.md — React/Vite patterns (frontend changes)
+  - docs/standards/base-standards.md — core principles, TDD, OpenSpec post-apply rules
+  - docs/standards/backend-standards.md — NestJS/TypeORM patterns (backend changes)
+  - docs/standards/frontend-standards.md — React/Vite patterns (frontend changes)
   - docs/api-spec.yml — API contracts
   - docs/data-model.md — books, reading records, users
-  - docs/documentation-standards.md — docs structure
+  - docs/standards/documentation-standards.md — docs structure
   - ai-specs/README.md — agent and skill index
   Agents: ai-specs/agents/backend-developer.md (backend), ai-specs/agents/frontend-developer.md (frontend)
   Skills: ai-specs/skills/ (canonical); mirror via sync-agent-symlinks
@@ -145,9 +145,9 @@ context: |
 rules:
   # Global: apply ai-specs when creating any artifact
   _global:
-    - Before creating any artifact, read and apply docs/base-standards.md
-    - For backend-related artifacts, read docs/backend-standards.md and adopt guidelines from ai-specs/agents/backend-developer.md
-    - For frontend-related artifacts, read docs/frontend-standards.md and adopt guidelines from ai-specs/agents/frontend-developer.md
+    - Before creating any artifact, read and apply docs/standards/base-standards.md
+    - For backend-related artifacts, read docs/standards/backend-standards.md and adopt guidelines from ai-specs/agents/backend-developer.md
+    - For frontend-related artifacts, read docs/standards/frontend-standards.md and adopt guidelines from ai-specs/agents/frontend-developer.md
     - Use docs/api-spec.yml and docs/data-model.md for API and data consistency in specs and tasks
 ```
 
@@ -157,7 +157,7 @@ Do this after completing the setup steps above.
 
 Your AI copilot should automatically load:
 
-- **Cursor**: `AGENTS.md` + `.cursor/rules/` → `docs/` and `PRD.md` / `documents/`
+- **Cursor**: `AGENTS.md` + `.cursor/rules/` → `docs/` and `PRD.md` / `docs/product/`
 - **Other copilots**: `codex.md` or `GEMINI.md` if present
 
 All paths and rules are configured to work seamlessly without manual adjustments.
@@ -226,7 +226,7 @@ Other active skills in this repository: `commit`, `explain`, `meta-prompt`, `upd
 
 ## 📖 Core Development Rules
 
-All development follows principles defined in `docs/base-standards.md`:
+All development follows principles defined in `docs/standards/base-standards.md`:
 
 ### Key Principles
 
@@ -240,17 +240,17 @@ All development follows principles defined in `docs/base-standards.md`:
 
 ### Specific Standards
 
-- **Backend Standards**: `docs/backend-standards.md`
+- **Backend Standards**: `docs/standards/backend-standards.md`
   - API development patterns
   - Database best practices
   - Security guidelines
   - Testing requirements
-- **Frontend Standards**: `docs/frontend-standards.md`
+- **Frontend Standards**: `docs/standards/frontend-standards.md`
   - React component patterns
   - UI/UX guidelines
   - State management
   - Component testing
-- **Documentation Standards**: `docs/documentation-standards.md`
+- **Documentation Standards**: `docs/standards/documentation-standards.md`
   - Technical documentation structure
   - API documentation (OpenAPI)
   - Code documentation
@@ -295,7 +295,7 @@ All development follows principles defined in `docs/base-standards.md`:
 2. **Adapt agents in `ai-specs/agents`**: Adjust agent definitions to your project's roles and workflows
 3. **Extend skills in `ai-specs/skills`**: Define battle-tested prompts and workflows in reusable skills
 4. **Link Resources**: Reference your project's specific documentation or tasks using MCPs
-5. **Keep the symlink structure**: Mirror `ai-specs/skills` into `.cursor/skills` (see `sync-agent-symlinks` skill). Product docs (`PRD.md`, `documents/`) override template defaults.
+5. **Keep the symlink structure**: Mirror `ai-specs/skills` into `.cursor/skills` (see `sync-agent-symlinks` skill). Product docs (`PRD.md`, `docs/product/`) override template defaults.
 
 ### Prompt Example: Adapt Technical Context
 
@@ -331,7 +331,7 @@ Keep these aligned with the codebase:
 - **API Specification**: `docs/api-spec.yml` — `/v1/books`, catalog search/covers, auth
 - **Data Models**: `docs/data-model.md` — `Book`, `ReadingRecord`, `User` (TypeORM)
 - **Development Guide**: `docs/development_guide.md` — update from LTI template to NestJS + Vite setup
-- **Product**: `documents/use-cases.md`, `documents/user-stories.md`, `README.md`
+- **Product**: `docs/product/use-cases.md`, `docs/product/user-stories.md`, `README.md`
 - **AI index**: `ai-specs/README.md`
 
 ## 🤝 Contributing

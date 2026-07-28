@@ -296,10 +296,10 @@ Monthly reading statistics (UC-07, KAN-15) are **computed on read** from `readin
 
 ## Planned extensions (not in schema yet)
 
-Document in OpenSpec before adding tables: tags, import batches. Keep `docs/data-model.md` and `docs/api-spec.yml` in sync when implementing.
+Document in OpenSpec before adding tables: **tags** (custom labels per book). The `import_jobs` table is implemented for Goodreads CSV import. Keep `docs/data-model.md` and `docs/api-spec.yml` in sync when implementing.
 
 ## Related documentation
 
 - `docs/api-spec.yml` — REST operations
-- `documents/use-cases.md` — product flows (UC-01 add book, etc.)
+- `docs/product/use-cases.md` — product flows (UC-01 add book, etc.)
 - `backend/src/books/entities/` — TypeORM source of truth

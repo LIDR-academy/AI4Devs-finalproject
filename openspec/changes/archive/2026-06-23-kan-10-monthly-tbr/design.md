@@ -143,4 +143,4 @@ Add `@nestjs/schedule` if not present; register `ScheduleModule.forRoot()` in `A
 ## Open Questions
 
 - Require `@nestjs/schedule` or use a simple `setInterval` in dev-only? **Default:** `@nestjs/schedule` for production pattern.
-- Spanish vs English Lists page copy? **Default:** English strings per `docs/frontend-standards.md`; product may localize later.
+- Spanish vs English Lists page copy? **Default:** English strings per `docs/standards/frontend-standards.md`; product may localize later.

@@ -93,7 +93,7 @@ Add scenarios to `backend/test/goals.integration-spec.ts`:
 1. Audit existing KAN-11 goals invalidation in frontend.
 2. Implement cache-coherence gaps and integration tests.
 3. Manual Book Tracker → Home pass per `MANUAL-TEST-KAN-14.md`.
-4. Update `documents/user-stories.md` scenario 9 → KAN-14.
+4. Update `docs/product/user-stories.md` scenario 9 → KAN-14.
 5. Archive merges delta specs into main `openspec/specs/`.
 
 ## Open Questions

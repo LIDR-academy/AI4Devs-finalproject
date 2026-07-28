@@ -10,4 +10,4 @@ Use it when this workflow is required in the project.
 
 ## Instructions
 
-Use `docs/documentation-standards.md` to update whatever documentation is needed according to the changes made
+Use `docs/standards/documentation-standards.md` to update whatever documentation is needed according to the changes made

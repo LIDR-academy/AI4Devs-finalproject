@@ -36,6 +36,6 @@ KAN-11/KAN-14 give readers annual goals and reliable `leido` + `finished_on` dat
 
 - **Backend:** new `backend/src/stats/` module (controller, service, DTO, spec); register `StatsModule` in `app.module.ts`. Reads existing `books` + `reading_records` (uses `idx_books_user_id`); no migration.
 - **Frontend:** new `StatsPage` + dashboard components, `getMonthlyStats` in `api/client.ts`, types in `api/types.ts`, `/stats` route in `App.tsx`, nav link from `HomePage`; extend Book Tracker PATCH handler for stats cache invalidation. Charting library decision (e.g. `recharts` vs CSS bars) settled in design.
-- **Docs:** `docs/api-spec.yml` (new `Stats` tag + path/schema), `docs/data-model.md` (computed stats note), `documents/user-stories.md` (link KAN-15 on US-05).
+- **Docs:** `docs/api-spec.yml` (new `Stats` tag + path/schema), `docs/data-model.md` (computed stats note), `docs/product/user-stories.md` (link KAN-15 on US-05).
 - **Product refs:** US-05, UC-07; Jira **KAN-15**.
 - **Dependencies:** KAN-12 (`reading_records` with `status = leido` and `finished_on`); aligns with KAN-11/KAN-14 read definitions.

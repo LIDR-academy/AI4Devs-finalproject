@@ -47,4 +47,4 @@
 ## 8. Update technical documentation (mandatory)
 
 - [x] 8.1 Confirm `docs/api-spec.yml` 422 on TBR POST
-- [x] 8.2 Brief note in `docs/frontend-standards.md` on TBR add modal tabs
+- [x] 8.2 Brief note in `docs/standards/frontend-standards.md` on TBR add modal tabs

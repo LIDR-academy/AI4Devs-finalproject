@@ -9,7 +9,7 @@
 - `backend/src/books/books.service.ts`: wrap TBR auto-complete in try/catch with `Logger.warn` (PATCH succeeds even if TBR update fails).
 - `frontend/src/pages/BookTrackerPage.tsx`: invalidate TBR cache using UTC month of `finished_on` when provided.
 - `frontend/src/components/BookTrackerRow.tsx`: pass `finished_on` to `onUpdated`.
-- `documents/user-stories.md`: scenario 8 → KAN-13; updated technical note for `meta.tbrAutoCompleted`.
+- `docs/product/user-stories.md`: scenario 8 → KAN-13; updated technical note for `meta.tbrAutoCompleted`.
 
 ## Database baseline (pre-test)
 

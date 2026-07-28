@@ -1,19 +1,19 @@
 ---
-description: Core development rules for Reading Analytics Platform (paths relative to docs/).
+description: Core development rules for Reading Analytics Platform (paths relative to docs/standards/).
 alwaysApply: true
 ---
 
 # Base development standards
 
-This file mirrors [AGENTS.md](../AGENTS.md) at the repository root. Cursor loads both; keep them aligned.
+This file mirrors [AGENTS.md](../../AGENTS.md) at the repository root. Cursor loads both; keep them aligned.
 
 ## Source of truth (precedence)
 
-1. [PRD.md](../PRD.md)
-2. [readme.md](../readme.md)
-3. [documents/user-stories.md](../documents/user-stories.md), [documents/use-cases.md](../documents/use-cases.md)
+1. [PRD.md](../../PRD.md)
+2. [readme.md](../../readme.md)
+3. [user-stories.md](../product/user-stories.md), [use-cases.md](../product/use-cases.md)
 4. `backend/src/`, `frontend/src/`
-5. `docs/` (this folder)
+5. `docs/` (this documentation tree)
 6. `openspec/`
 7. `ai-specs/` (supporting only)
 

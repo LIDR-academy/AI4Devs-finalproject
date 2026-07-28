@@ -8,7 +8,9 @@
 
 **Fecha:** abril 2026
 
-**Estado:** Ready for UX & Technical Design
+**Estado:** MVP implementado (julio 2026)
+
+**Implementación:** aplicación ejecutable en local (`backend/` + `frontend/` + PostgreSQL). Cubre UC-01 a UC-08; UC-09 (Library) y UC-10 (Recap/export visual) permanecen como placeholders en el frontend. Detalle de entrega en [`readme.md`](readme.md) y contratos en [`docs/`](docs/).
 
 ---
 

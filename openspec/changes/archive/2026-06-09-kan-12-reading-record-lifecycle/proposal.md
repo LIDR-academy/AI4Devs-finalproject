@@ -34,6 +34,6 @@ KAN-12 (US-04) is the critical next step after KAN-9: books enter the library as
 
 - **Backend (`backend/src/books/`):** new route on `BooksController`, `PatchReadingRecordDto`, service method `patchReadingRecord`, extended `BookListItemDto` / `listForUser`.
 - **Frontend (`frontend/src/`):** `BookTrackerPage`, new components (`CompletionModal`, status/date/rating controls), `patchReadingRecord` in `api/client.ts` and `api/types.ts`.
-- **Docs:** `docs/api-spec.yml`, optionally `docs/frontend-standards.md` (tracker patterns).
-- **Product refs:** `documents/user-stories.md` US-04, `documents/use-cases.md` UC-02, UC-04 (partial), Jira **KAN-12** (épica KAN-4).
+- **Docs:** `docs/api-spec.yml`, optionally `docs/standards/frontend-standards.md` (tracker patterns).
+- **Product refs:** `docs/product/user-stories.md` US-04, `docs/product/use-cases.md` UC-02, UC-04 (partial), Jira **KAN-12** (épica KAN-4).
 - **Dependencies:** KAN-9 complete (`books` + `reading_records` schema exists). Blocks accurate data for KAN-15/KAN-16 stats until shipped.

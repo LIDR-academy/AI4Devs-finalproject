@@ -28,6 +28,6 @@ KAN-9 (US-01) es el flujo crítico del MVP: sin búsqueda automática de metadat
 
 - **Backend (`backend/`):** módulo `books`, clientes HTTP a Open Library y Google Books, DTOs con `class-validator`, entidades TypeORM `books` / `reading_records`, guards JWT, prefijo global `/v1`.
 - **Frontend (`frontend/`):** página Book Tracker, componentes de modal/búsqueda, cliente API y caché (TanStack Query u equivalente).
-- **Documentación de referencia:** `documents/use-cases.md` UC-01, `documents/user-stories.md` US-01, `readme.md` §3–4, Jira **KAN-9** (épica KAN-4).
+- **Documentación de referencia:** `docs/product/use-cases.md` UC-01, `docs/product/user-stories.md` US-01, `readme.md` §3–4, Jira **KAN-9** (épica KAN-4).
 - **Dependencias externas:** APIs públicas Open Library y Google Books (cuotas y timeouts gestionados en servidor).
 - **Jira:** KAN-9 — criterios de aceptación y notas técnicas vinculados a este cambio.

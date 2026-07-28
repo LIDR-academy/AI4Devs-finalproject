@@ -36,6 +36,6 @@ KAN-10 (US-02, UC-05 partial) delivers the monthly TBR workflow that the PRD and
 
 - **Backend:** new `backend/src/lists/` module; migration; `BooksModule` imports `ListsModule` for `TBRService`; optional `@nestjs/schedule` cron for auto-create job.
 - **Frontend:** `ListsPage`, TBR components, `api/client.ts` + `api/types.ts`, route and nav link in `App.tsx`.
-- **Docs:** `docs/data-model.md`, `docs/api-spec.yml`, `documents/user-stories.md` (link KAN-10 on US-02).
+- **Docs:** `docs/data-model.md`, `docs/api-spec.yml`, `docs/product/user-stories.md` (link KAN-10 on US-02).
 - **Product refs:** US-02, UC-05 (partial), Jira **KAN-10** (épica KAN-5).
 - **Dependencies:** requires KAN-12 (`PATCH` reading record + `leido` transitions). Blocks Home TBR widget until a follow-up ticket.

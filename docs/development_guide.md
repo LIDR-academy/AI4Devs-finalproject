@@ -12,7 +12,7 @@ Step-by-step setup for **Reading Analytics Platform** local development and test
 ## 1. Clone and install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/CeliaMerino/AI4devs-finalproject.git
 cd AI4Devs-finalproject
 ```
 
@@ -158,5 +158,5 @@ Project context: `openspec/config.yaml`. Active changes live under `openspec/cha
 
 - `docs/api-spec.yml` — REST contracts
 - `docs/data-model.md` — entities and relationships
-- `docs/backend-standards.md` / `docs/frontend-standards.md` — coding conventions
+- `docs/standards/backend-standards.md` / `docs/standards/frontend-standards.md` — coding conventions
 - `README.md` — product overview and palette

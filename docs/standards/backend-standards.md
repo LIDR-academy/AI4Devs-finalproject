@@ -112,7 +112,7 @@ backend/
 
 ### Language and naming
 
-- **English only** for code, comments, errors, and logs (`docs/base-standards.md`).
+- **English only** for code, comments, errors, and logs (`docs/standards/base-standards.md`).
 - TypeScript: explicit types on public methods; avoid `any`.
 - Files: `kebab-case` or Nest convention (`books.service.ts`, `book.entity.ts`).
 - Enums in DB/API: reading `status`, `data_source`, `read_format` — keep aligned with migration CHECK constraints.
@@ -190,7 +190,7 @@ Rules:
 | Integration | `test/*.integration-spec.ts` | `npm run test:integration` |
 | E2E | `test/app.e2e-spec.ts` | `npm run test:e2e` |
 
-Practices (aligned with `docs/base-standards.md`):
+Practices (aligned with `docs/standards/base-standards.md`):
 
 - **TDD** for new behavior: failing test first when tasks require it.
 - Mock external catalog HTTP in unit tests.

@@ -63,5 +63,5 @@
 ## 10. Update technical documentation (mandatory)
 
 - [x] 10.1 Confirm `docs/api-spec.yml` PATCH reading-record description mentions `meta.tbrAutoCompleted`
-- [x] 10.2 Update `documents/user-stories.md`: US-04 scenario 8 dependency from KAN-10 → **KAN-13**; add Jira link on scenario 8 row if applicable
+- [x] 10.2 Update `docs/product/user-stories.md`: US-04 scenario 8 dependency from KAN-10 → **KAN-13**; add Jira link on scenario 8 row if applicable
 - [x] 10.3 Remove or update US-04 technical note "ignore meta.tbrAutoCompleted in this historia" if still present
