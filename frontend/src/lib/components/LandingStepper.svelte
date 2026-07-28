@@ -2,7 +2,7 @@
   const STEPS = [
     { num: 1, label: 'Analiza un anuncio' },
     { num: 2, label: 'Simula tu hipoteca' },
-    { num: 3, label: 'Sigue el cronograma' },
+    { num: 3, label: 'Sigue tu proceso' },
     { num: 4, label: 'No pierdas ningún documento' },
   ];
 </script>

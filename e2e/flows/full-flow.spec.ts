@@ -21,13 +21,13 @@ test.describe('Realista — full flow', () => {
 
   test('timeline shows milestones', async ({ page }) => {
     await page.goto('/timeline');
-    await expect(page.getByRole('heading', { name: 'Cronograma del proceso' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Proceso de compra' })).toBeVisible();
     // The list of milestones is rendered
     const dot = page.locator('.dot').first();
     await expect(dot).toBeVisible();
   });
 
-  test('user can complete the full happy path: analyze (API) → dashboard (UI) → mortgage compass (UI) → checklist (UI)', async ({ page, request }) => {
+  test('user can complete the full happy path: analyze (API) → dashboard (UI) → mortgage compass (UI) → proceso de compra (UI)', async ({ page, request }) => {
     // Clean session for a deterministic run
     await page.goto('/mi-proceso');
     await page.evaluate(() => localStorage.clear());
@@ -71,8 +71,8 @@ test.describe('Realista — full flow', () => {
     const mortgageHeading = page.getByRole('heading', { name: /hipotecario/i }).first();
     await expect(mortgageHeading).toBeVisible();
 
-    // 6. Navigate to timeline+checklist
+    // 6. Navigate to timeline (combined timeline+checklist)
     await page.goto('/timeline');
-    await expect(page.getByRole('heading', { name: /Cronograma/i }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Proceso de compra' }).first()).toBeVisible();
   });
 });

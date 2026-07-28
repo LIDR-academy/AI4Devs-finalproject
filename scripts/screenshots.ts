@@ -4,10 +4,9 @@ const BASE = 'https://realista.up.railway.app';
 const pages = [
   { path: '/', name: '01-landing', label: 'Landing page' },
   { path: '/listing-lens', name: '02-listing-lens', label: 'Listing Lens' },
-  { path: '/mi-proceso', name: '03-dashboard', label: 'Dashboard — estado vacío' },
+  { path: '/mi-proceso', name: '03-dashboard', label: 'Dashboard' },
   { path: '/mortgage-compass', name: '04-mortgage-compass', label: 'Perfil hipotecario' },
-  { path: '/timeline', name: '05-timeline', label: 'Cronograma' },
-  { path: '/checklist', name: '06-checklist', label: 'Checklist documental' },
+  { path: '/timeline', name: '05-proceso-compra', label: 'Proceso de compra' },
 ];
 
 async function main() {

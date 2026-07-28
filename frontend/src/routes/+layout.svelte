@@ -10,7 +10,7 @@
   const STEPS = [
     { id: 'listing', label: 'Anuncio', href: '/listing-lens' },
     { id: 'mortgage', label: 'Hipoteca', href: '/mortgage-compass' },
-    { id: 'timeline', label: 'Cronograma', href: '/timeline' },
+    { id: 'timeline', label: 'Proceso', href: '/timeline' },
   ];
 
   const PATH_TO_STEP: Record<string, string> = {

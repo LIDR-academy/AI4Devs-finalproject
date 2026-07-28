@@ -91,7 +91,7 @@
 </script>
 
 <div class="container">
-  <h1>Cronograma de compra</h1>
+  <h1>Proceso de compra</h1>
   <AIDisclaimer />
 
   {#if loading}

@@ -63,8 +63,7 @@ Acompañar al comprador primerizo de vivienda en España con tres herramientas q
 | Mortgage Compass | Perfil financiero → gastos ocultos → simulador de amortización vs inversión → narrativa educativa + **gráfico visual** comparativo | 🥇 Must-Have |
 | Dashboard | Historial de análisis, perfil financiero, **vista agregada en 1 llamada**, **diff de re-análisis**, acceso a herramientas | 🥇 Must-Have |
 | **Negotiation Assistant** | Tras el análisis, genera **5-8 preguntas concretas** para hacer al inmobiliario, basadas en las red flags detectadas | 🔶 Should-Have |
-| Cronograma interactivo | Línea temporal 60-90 días del proceso de compra (arras → escritura), filtrada por `currentStage` | 🔶 Should-Have |
-| Checklist documental | Documentos por etapa, progreso, **sugerencia de avance de etapa** al completar | 🔶 Should-Have |
+| Proceso de compra | Cronograma visual con hitos + checklist documental por etapa. Progreso por fase, documentos necesarios, fechas estimadas | 🔶 Should-Have |
 
 ### **1.3. Diseño y experiencia de usuario:**
 
@@ -198,8 +197,7 @@ frontend/
 │   │   ├── +page.svelte  # Dashboard
 │   │   ├── listing-lens/ # Análisis de anuncios
 │   │   ├── mortgage-compass/ # Simulador hipotecario
-│   │   ├── timeline/     # Cronograma interactivo
-│   │   ├── checklist/    # Checklist documental
+│   │   ├── timeline/     # Proceso de compra (cronograma + checklist unificado)
 │   │   └── +layout.svelte
 │   ├── lib/              # Stores, API client, utils
 │   └── app.css
@@ -652,23 +650,13 @@ Criterios de aceptación:
 
 ---
 
-**Historia de Usuario 5 — Cronograma Interactivo: Saber Qué Viene Después (P3, Should-Have)**
+**Historia de Usuario 5 — Proceso de Compra: Cronograma + Checklist Unificado (P3, Should-Have)**
 
-Como comprador primerizo, quiero ver una línea temporal del proceso de compra para entender qué pasa en cada etapa y cuándo.
-
-Criterios de aceptación:
-1. Cuando abro la página del cronograma, entonces veo una línea temporal visual con hitos desde arras hasta escritura, con duraciones estimadas
-2. Cuando pulso un hito, entonces veo información detallada (qué pasa, documentos necesarios, duración típica)
-
----
-
-**Historia de Usuario 6 — Checklist Documental: Que No Se Te Escape Nada (P3, Should-Have)**
-
-Como comprador primerizo, quiero hacer seguimiento de qué documentos tengo y qué me falta para cada etapa del proceso.
+Como comprador primerizo, quiero ver una línea temporal del proceso de compra con los documentos que necesito en cada etapa para no perderme en el papeleo.
 
 Criterios de aceptación:
-1. Cuando abro el checklist, los ítems se agrupan por etapa con un porcentaje de progreso por etapa
-2. Cuando marco un ítem como completado, el porcentaje se actualiza y el estado persiste entre sesiones
+1. Cuando abro la página del proceso de compra, entonces veo una línea temporal visual con hitos desde arras hasta escritura, con duraciones estimadas y los documentos necesarios anidados en cada etapa
+2. Cuando marco un ítem como completado, el porcentaje de progreso se actualiza instantáneamente y el estado persiste entre sesiones
 3. Cuando completo todos los ítems de una etapa, la UI sugiere avanzar a la siguiente etapa del proceso
 
 ---
@@ -750,7 +738,7 @@ Criterios de aceptación:
 
 **Descripción:** Esta PR añade todos los artefactos de la fase de planificación de Realista: el plan de implementación con la arquitectura hexagonal + DDD y stack SvelteKit/Express/Prisma; el documento de investigación con 7 decisiones técnicas justificadas (OpenRouter, Cheerio, PWA, sesiones, etc.); el modelo de datos con el schema Prisma y value objects del dominio; los contratos de la API REST; y una guía de quickstart para setup y validación. Verifica el cumplimiento de los 6 principios de la constitución del proyecto.
 
-**Relación con historias de usuario:** Soporta las 6 historias (US1–US6) sentando las bases arquitectónicas, de datos y de API.
+**Relación con historias de usuario:** Soporta las 5 historias (US1–US5) sentando las bases arquitectónicas, de datos y de API.
 
 **Impacto:** Solo se añaden archivos nuevos — no hay cambios en código de producción. La constitución de 6 principios se valida contra el diseño propuesto.
 
@@ -764,7 +752,7 @@ Criterios de aceptación:
 
 **Hash de commit:** `a8fd5d7` (versión original de 91 tareas, ampliada a 127 en commits posteriores con T023a-f, T030a-b, T032a-d → T032a-b (Vision eliminado), T037a-f, T042a, T050a-e, T057a, T058a, T066a-i (Negotiation Assistant), T033a (AI Reasoning), T062a-c (UX polish), T070a-f, T087a, T091a, T091b para cubrir críticos, importantes, menores del review y el nuevo US-04)
 
-**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 127 tareas distribuidas en 9 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Negotiation Assistant, US5 Timeline, US6 Checklist y Polish. Cada historia de usuario incluye sus tests primero (TDD, ~25 tareas de test tras las ampliaciones), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US6]` para trazabilidad con las historias.
+**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 127 tareas distribuidas en 9 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Negotiation Assistant, US5 Proceso de Compra y Polish. Cada historia de usuario incluye sus tests primero (TDD, ~25 tareas de test tras las ampliaciones), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US5]` para trazabilidad con las historias.
 
 **Relación con historias de usuario:** Trazabilidad directa — cada tarea está mapeada a una historia específica.
 
@@ -798,7 +786,7 @@ Criterios de aceptación:
 
 **Descripción:** Esta PR contiene el MVP funcional completo de Realista con 236 archivos (+33,290 líneas). Incluye backend hexagonal (Express + TypeScript + Prisma), frontend SvelteKit PWA con 6 páginas, base de datos PostgreSQL con 8 modelos y 2 migraciones, y suites de tests unitarios (64 backend + 14 frontend) y E2E (7 tests Playwright). CI/CD operativo con GitHub Actions. Features: Listing Lens con streaming SSE y diff de re-análisis, Mortgage Compass con gráficos de amortización vs inversión, Dashboard con vista agregada, Negotiation Assistant, Timeline interactiva y Checklist documental. Documentación de uso de IA ampliada en `prompts.md` (sección 9: AI Engineering).
 
-**Relación con historias de usuario:** US1 (Listing Lens), US2 (Mortgage Compass), US3 (Dashboard), US4 (Negotiation Assistant), US5 (Timeline), US6 (Checklist) — todas implementadas.
+**Relación con historias de usuario:** US1 (Listing Lens), US2 (Mortgage Compass), US3 (Dashboard), US4 (Negotiation Assistant), US5 (Proceso de Compra) — todas implementadas.
 
 **Impacto:** Primera entrega de código funcional. Todas las fases de `tasks.md` (1-9) completadas.
 
@@ -914,7 +902,7 @@ cat .opencode/harness/README.md
 ### 8.7. Estado final del proyecto
 
 - **127 tareas** completadas en 9 fases (tasks.md)
-- **6 historias de usuario** implementadas: Listing Lens, Mortgage Compass, Dashboard, Negotiation Assistant, Timeline, Checklist
+- **5 historias de usuario** implementadas: Listing Lens, Mortgage Compass, Dashboard, Negotiation Assistant, Proceso de Compra (cronograma + checklist unificado)
 - **186 tests** pasando (122 backend + 51 frontend + 13 E2E)
 - **7 ADRs** documentando decisiones arquitectónicas
 - **CI/CD** operativo con GitHub Actions
@@ -931,6 +919,6 @@ cat .opencode/harness/README.md
 |---------|-------------|-----------|
 | ![Landing](screenshots/01-landing.png) | ![Listing Lens](screenshots/02-listing-lens.png) | ![Dashboard](screenshots/03-dashboard.png) |
 
-| Mortgage Compass | Cronograma | Checklist |
-|------------------|------------|-----------|
-| ![Mortgage](screenshots/04-mortgage-compass.png) | ![Timeline](screenshots/05-timeline.png) | ![Checklist](screenshots/06-checklist.png) |
+| Mortgage Compass | Proceso de compra |
+|------------------|-------------------|
+| ![Mortgage](screenshots/04-mortgage-compass.png) | ![Proceso](screenshots/05-proceso-compra.png) |

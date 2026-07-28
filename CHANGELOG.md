@@ -7,8 +7,7 @@
 - **Mortgage Compass**: Cálculo de gastos ocultos (ITP/IVA, notaría, registro, gestoría, tasación), 4 escenarios de amortización vs 3 alternativas de inversión con valor real ajustado a inflación
 - **Dashboard**: Vista agregada en una sola llamada, estado vacío con CTAs, diff de re-análisis, stats
 - **Negotiation Assistant**: 5-8 preguntas concretas basadas en red flags para hacer al inmobiliario
-- **Timeline**: Cronograma interactivo del proceso de compra (60-90 días)
-- **Checklist**: Documentos por etapa con progreso y sugerencia de avance
+- **Proceso de Compra**: Cronograma interactivo unificado con checklist documental por etapa (progreso, documentos, fechas estimadas)
 
 ### Architecture
 - Hexagonal + DDD táctico (dominio sin dependencias de frameworks)
@@ -50,7 +49,7 @@
 
 - MVP funcional completo
 - 236 archivos, +33,290 líneas
-- 6 US implementadas
+- 5 US implementadas
 - CI/CD operativo
 - Sistema de AI Engineering (.opencode/)
 

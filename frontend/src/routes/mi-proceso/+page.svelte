@@ -79,12 +79,12 @@
 
     {#if data.checklist}
       <section class="card">
-        <h2>Checklist documental</h2>
+        <h2>Proceso de compra</h2>
         <p>
-          {data.checklist.completedItems} de {data.checklist.totalItems} documentos completados
+          {data.checklist.completedItems} de {data.checklist.totalItems} gestiones completadas
         </p>
         <progress value={data.checklist.progress} max="1" />
-        <a href="/checklist">Ver checklist</a>
+        <a href="/timeline">Ver proceso de compra</a>
       </section>
     {/if}
   {/if}

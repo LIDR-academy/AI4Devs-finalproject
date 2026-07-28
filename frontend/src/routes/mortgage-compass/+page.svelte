@@ -384,7 +384,7 @@
           {loading ? 'Recalculando…' : 'Recalcular'}
         </button>
       </div>
-      <a href="/timeline" class="btn-primary cta-timeline">📋 Ver cronograma y checklist →</a>
+      <a href="/timeline" class="btn-primary cta-timeline">📋 Ver proceso de compra →</a>
     </section>
   {/if}
 

@@ -51,7 +51,7 @@
         <nav aria-label="Navegación principal">
         <a href="/listing-lens" on:click={close}>Analizar anuncio</a>
         <a href="/mortgage-compass" on:click={close}>Simular hipoteca</a>
-        <a href="/timeline" on:click={close}>Cronograma y checklist</a>
+        <a href="/timeline" on:click={close}>Proceso de compra</a>
         <hr class="divider" />
         <a href="/mi-proceso" on:click={close}>Mi proceso</a>
       </nav>

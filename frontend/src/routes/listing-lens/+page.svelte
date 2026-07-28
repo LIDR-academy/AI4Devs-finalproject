@@ -155,7 +155,7 @@
           Calcular hipoteca →
         </a>
         <a href="/timeline" class="btn-secondary">
-          Ver cronograma
+          Ver proceso de compra
         </a>
         <a href="/mi-proceso" class="btn-secondary">
           Ir al dashboard
