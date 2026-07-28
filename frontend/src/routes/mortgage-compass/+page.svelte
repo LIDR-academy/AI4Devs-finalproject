@@ -318,7 +318,7 @@
       <div class="toggle-row">
         <label>
           <input type="checkbox" bind:checked={showRealValue} />
-          Mostrar valor real (ajustado por inflación)
+          Mostrar valor real de la inversión (ajustado por inflación)
         </label>
       </div>
       <AmortizationVsInvestmentChart
@@ -326,6 +326,29 @@
         investment={computed.investmentScenarios}
         {showRealValue}
       />
+      <div class="comparison">
+        <strong>💰 ¿Qué sale mejor?</strong>
+        {#if baselineAmort && moderateInvest}
+          <p>
+            Sin amortizar, pagas {formatCurrency(baselineAmort.totalInterest)} en intereses durante {baselineAmort.yearsToPayoff} años.
+            Invirtiendo {formatCurrency(300)}/mes al {(moderateInvest.annualReturn * 100).toFixed(0)}%, acumularías
+            {showRealValue ? formatCurrency(moderateInvest.realValue) : formatCurrency(moderateInvest.nominalValue)}
+            {showRealValue ? '(valor real)' : '(valor nominal)'}.
+            <strong>Ganancia neta: {formatCurrency((showRealValue ? moderateInvest.realValue : moderateInvest.nominalValue) - 108000)}</strong> (valor acumulado − {formatCurrency(108000)} invertidos).
+          </p>
+        {/if}
+        {#if moderateAmort && baselineAmort && moderateInvest}
+          <p class="verdict">
+            {#if (showRealValue ? moderateInvest.realValue : moderateInvest.nominalValue) - 108000 > baselineAmort.totalInterest - moderateAmort.totalInterest}
+              ✅ A largo plazo (30 años), la inversión supera a la amortización.
+              Ganas ~{formatCurrency((showRealValue ? moderateInvest.realValue : moderateInvest.nominalValue) - 108000 - (baselineAmort.totalInterest - moderateAmort.totalInterest))} más que amortizando.
+            {:else}
+              ✅ Amortizar te ahorra más intereses de lo que ganarías invirtiendo.
+              El ahorro en intereses ({formatCurrency(baselineAmort.totalInterest - moderateAmort.totalInterest)}) supera la ganancia de inversión.
+            {/if}
+          </p>
+        {/if}
+      </div>
       <details class="investment-narrative">
         <summary>¿Amortizar hipoteca o invertir? ¿Qué conviene más?</summary>
         <div class="narrative-content">
@@ -565,5 +588,21 @@
     padding: 0.5rem 0.75rem;
     border-radius: var(--radius-sm);
     font-size: 0.82rem;
+  }
+  .comparison {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+  }
+  .comparison p {
+    margin: 0.4rem 0;
+    line-height: 1.5;
+  }
+  .verdict {
+    font-weight: 500;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-border);
   }
 </style>
