@@ -40,6 +40,9 @@ export class ImportJob {
   @Column({ name: 'csv_content', type: 'text' })
   csvContent: string;
 
+  @Column({ name: 'genre_resolutions', type: 'json', nullable: true })
+  genreResolutions: Record<string, unknown> | null;
+
   @Column({ type: 'json', nullable: true })
   result: GoodreadsImportResult | null;
 

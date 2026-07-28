@@ -15,6 +15,9 @@ import type {
   FormatAffectedReadingsResponse,
   Genre,
   GenreAffectedBooksResponse,
+  GenreMatchResponse,
+  GenreResolutionMap,
+  GoodreadsImportPreviewResponse,
   GoodreadsImportResponse,
   ImportJobAcceptedResponse,
   ImportJobStatusResponse,
@@ -137,6 +140,42 @@ export async function getGenreAffectedBookCount(
 
 export async function deleteGenre(genreId: string): Promise<void> {
   return request(`/genres/${genreId}`, { method: 'DELETE' });
+}
+
+export async function matchGenre(rawGenre: string): Promise<GenreMatchResponse> {
+  return request('/genres/match', {
+    method: 'POST',
+    body: JSON.stringify({ raw_genre: rawGenre }),
+  });
+}
+
+export async function previewGoodreadsImport(
+  file: File,
+): Promise<GoodreadsImportPreviewResponse> {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('file', file, file.name);
+
+  const headers: HeadersInit = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}/import/goodreads/preview`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as ApiError;
+    if (res.status === 401) {
+      onUnauthorized?.();
+    }
+    throw new ApiRequestError(res.status, body);
+  }
+
+  return (await res.json()) as GoodreadsImportPreviewResponse;
 }
 
 export async function searchCatalog(
@@ -313,10 +352,16 @@ export interface ImportGoodreadsCsvOptions {
   onProgress?: (status: ImportJobStatusResponse) => void;
 }
 
-export async function startGoodreadsImport(file: File): Promise<string> {
+export async function startGoodreadsImport(
+  file: File,
+  genreResolutions?: GenreResolutionMap,
+): Promise<string> {
   const token = getToken();
   const formData = new FormData();
   formData.append('file', file, file.name);
+  if (genreResolutions && Object.keys(genreResolutions).length > 0) {
+    formData.append('genre_resolutions', JSON.stringify(genreResolutions));
+  }
 
   const headers: HeadersInit = {};
   if (token) {
@@ -350,9 +395,9 @@ export async function startGoodreadsImport(file: File): Promise<string> {
 
 export async function importGoodreadsCsv(
   file: File,
-  options?: ImportGoodreadsCsvOptions,
+  options?: ImportGoodreadsCsvOptions & { genreResolutions?: GenreResolutionMap },
 ): Promise<GoodreadsImportResponse> {
-  const jobId = await startGoodreadsImport(file);
+  const jobId = await startGoodreadsImport(file, options?.genreResolutions);
   options?.onJobAccepted?.(jobId);
   return pollImportJobUntilComplete(jobId, options?.onProgress);
 }

@@ -3,12 +3,16 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import {
   importGoodreadsCsv,
   pollImportJobUntilComplete,
+  previewGoodreadsImport,
 } from '../api/client';
 import { messageFromUnknownError } from '../api/errors';
 import type {
+  GenreResolutionMap,
+  GoodreadsImportPreviewResponse,
   GoodreadsImportResponse,
   ImportJobStatusResponse,
 } from '../api/types';
+import { ImportGenreResolutionStep } from '../components/import/ImportGenreResolutionStep';
 import { ImportProgress } from '../components/import/ImportProgress';
 import { ImportSummary } from '../components/import/ImportSummary';
 import { Button, Card, PageHeader } from '../components/ui';
@@ -33,6 +37,9 @@ export function ImportExportPage() {
     null,
   );
   const [resumeError, setResumeError] = useState<string | null>(null);
+  const [previewResult, setPreviewResult] =
+    useState<GoodreadsImportPreviewResponse | null>(null);
+  const [showGenreResolution, setShowGenreResolution] = useState(false);
 
   function invalidateLibraryCaches() {
     void queryClient.invalidateQueries({ queryKey: ['books'] });
@@ -57,8 +64,15 @@ export function ImportExportPage() {
   }
 
   const importMutation = useMutation({
-    mutationFn: (file: File) =>
+    mutationFn: ({
+      file,
+      genreResolutions,
+    }: {
+      file: File;
+      genreResolutions?: GenreResolutionMap;
+    }) =>
       importGoodreadsCsv(file, {
+        genreResolutions,
         onJobAccepted: (jobId) => {
           storeImportJobId(jobId);
           setResumeError(null);
@@ -67,6 +81,18 @@ export function ImportExportPage() {
       }),
     onSuccess: handleImportSuccess,
     onError: handleImportFailure,
+  });
+
+  const previewMutation = useMutation({
+    mutationFn: (file: File) => previewGoodreadsImport(file),
+    onSuccess: (preview, file) => {
+      setPreviewResult(preview);
+      if (preview.unresolved_genres.length > 0) {
+        setShowGenreResolution(true);
+        return;
+      }
+      importMutation.mutate({ file });
+    },
   });
 
   const resumeMutation = useMutation({
@@ -90,14 +116,18 @@ export function ImportExportPage() {
   }, []);
 
   const isImporting = importMutation.isPending || resumeMutation.isPending;
+  const isPreviewing = previewMutation.isPending;
   const fileValidation = validateGoodreadsCsvFile(selectedFile);
-  const canSubmit = fileValidation.valid && !isImporting;
+  const canSubmit = fileValidation.valid && !isImporting && !isPreviewing;
 
   function handleFileChange(file: File | null) {
     setImportResult(null);
     setJobProgress(null);
     setResumeError(null);
     importMutation.reset();
+    previewMutation.reset();
+    setPreviewResult(null);
+    setShowGenreResolution(false);
     setSelectedFile(file);
 
     if (!file) {
@@ -114,6 +144,8 @@ export function ImportExportPage() {
     setImportResult(null);
     setJobProgress(null);
     setResumeError(null);
+    setPreviewResult(null);
+    setShowGenreResolution(false);
 
     const result = validateGoodreadsCsvFile(selectedFile);
     if (!result.valid || !selectedFile) {
@@ -125,10 +157,22 @@ export function ImportExportPage() {
       return;
     }
 
-    importMutation.mutate(selectedFile);
+    previewMutation.mutate(selectedFile);
   }
 
-  const mutationError = importMutation.error ?? resumeMutation.error;
+  function handleGenreResolutionsConfirmed(resolutions: GenreResolutionMap) {
+    if (!selectedFile) return;
+    setShowGenreResolution(false);
+    importMutation.mutate({ file: selectedFile, genreResolutions: resolutions });
+  }
+
+  function handleGenreResolutionCancel() {
+    setShowGenreResolution(false);
+    setPreviewResult(null);
+  }
+
+  const mutationError =
+    importMutation.error ?? resumeMutation.error ?? previewMutation.error;
 
   return (
     <div className="import-export-page">
@@ -140,7 +184,7 @@ export function ImportExportPage() {
       <main className="import-export-main" aria-label="Import and export options">
         <Card
           title="Importar desde Goodreads"
-          subtitle="Sube el CSV que exportas desde tu cuenta de Goodreads. La importación es directa, sin previsualización."
+          subtitle="Sube el CSV que exportas desde tu cuenta de Goodreads. Revisaremos los géneros del catálogo antes de importar."
           className="import-export-card"
         >
           <form
@@ -183,6 +227,25 @@ export function ImportExportPage() {
               </p>
             ) : null}
 
+            {showGenreResolution && previewResult ? (
+              <ImportGenreResolutionStep
+                unresolvedGenres={previewResult.unresolved_genres}
+                disabled={isImporting}
+                onConfirm={handleGenreResolutionsConfirmed}
+                onBack={handleGenreResolutionCancel}
+              />
+            ) : null}
+
+            {isPreviewing ? (
+              <p
+                className="import-export-alert import-export-alert--progress"
+                role="status"
+                aria-live="polite"
+              >
+                Analizando géneros del catálogo…
+              </p>
+            ) : null}
+
             {isImporting && jobProgress ? (
               <ImportProgress
                 phase={jobProgress.phase}
@@ -216,8 +279,12 @@ export function ImportExportPage() {
             {importResult ? <ImportSummary result={importResult} /> : null}
 
             <div className="goodreads-import-form__actions">
-              <Button type="submit" disabled={!canSubmit}>
-                {isImporting ? 'Importando…' : 'Importar biblioteca'}
+              <Button type="submit" disabled={!canSubmit || showGenreResolution}>
+                {isPreviewing
+                  ? 'Analizando…'
+                  : isImporting
+                    ? 'Importando…'
+                    : 'Importar biblioteca'}
               </Button>
             </div>
           </form>

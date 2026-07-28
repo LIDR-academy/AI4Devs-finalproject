@@ -10,7 +10,9 @@ describe('ImportCatalogEnrichmentService', () => {
     Pick<CatalogService, 'lookupByIsbn' | 'lookupByTitleAuthor'>
   >;
   let rateLimiter: jest.Mocked<Pick<CatalogRateLimiter, 'throttle'>>;
-  let genresService: jest.Mocked<Pick<GenresService, 'findOrCreateByName'>>;
+  let genresService: jest.Mocked<
+    Pick<GenresService, 'resolveImportedGenre' | 'findOwnedById'>
+  >;
   let booksRepo: jest.Mocked<Pick<Repository<Book>, 'save' | 'find'>>;
   let service: ImportCatalogEnrichmentService;
 
@@ -42,9 +44,13 @@ describe('ImportCatalogEnrichmentService', () => {
     };
     rateLimiter = { throttle: jest.fn().mockResolvedValue(undefined) };
     genresService = {
-      findOrCreateByName: jest.fn(async (_userId, name) => ({
-        id: genreIdByName[name] ?? `genre-${name.toLowerCase()}`,
-        name,
+      resolveImportedGenre: jest.fn(async (_userId, rawGenre) => {
+        if (!rawGenre) return null;
+        return genreIdByName[rawGenre] ?? null;
+      }),
+      findOwnedById: jest.fn(async (_userId, genreId) => ({
+        id: genreId,
+        name: Object.entries(genreIdByName).find(([, id]) => id === genreId)?.[0] ?? 'Unknown',
         userId: 'user-1',
         isDefault: false,
       })),

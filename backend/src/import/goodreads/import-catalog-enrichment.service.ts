@@ -6,6 +6,7 @@ import type { CatalogIsbnLookupResult } from '../../books/catalog/catalog-isbn-l
 import { CatalogRateLimiter } from '../../books/catalog/catalog-rate-limiter.service';
 import { Book } from '../../books/entities/book.entity';
 import { GenresService } from '../../genres/genres.service';
+import type { GenreResolutionMap } from '../../genres/genre-resolution.types';
 
 export interface ImportEnrichmentResult {
   book: Book;
@@ -30,7 +31,10 @@ export class ImportCatalogEnrichmentService {
     private readonly booksRepo: Repository<Book>,
   ) {}
 
-  async enrichBook(book: Book): Promise<ImportEnrichmentResult> {
+  async enrichBook(
+    book: Book,
+    genreResolutions: GenreResolutionMap = {},
+  ): Promise<ImportEnrichmentResult> {
     if (book.coverImageUrl && book.genreId) {
       return { book, enrichment_failed: false };
     }
@@ -73,14 +77,21 @@ export class ImportCatalogEnrichmentService {
       }
 
       if (!book.genreId && lookup.genre) {
-        const genre = await this.genresService.findOrCreateByName(
+        const genreId = await this.genresService.resolveImportedGenre(
           book.userId,
           lookup.genre,
+          genreResolutions,
         );
-        if (genre) {
-          book.genreId = genre.id;
-          book.genreRef = genre;
-          changed = true;
+        if (genreId) {
+          const genre = await this.genresService.findOwnedById(
+            book.userId,
+            genreId,
+          );
+          if (genre) {
+            book.genreId = genre.id;
+            book.genreRef = genre;
+            changed = true;
+          }
         }
       }
 

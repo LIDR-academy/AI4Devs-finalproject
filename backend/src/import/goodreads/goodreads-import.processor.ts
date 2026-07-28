@@ -10,6 +10,7 @@ import {
 } from './goodreads-dedup.util';
 import { ImportCatalogEnrichmentService } from './import-catalog-enrichment.service';
 import type { GoodreadsImportProgressUpdate } from '../import-job.types';
+import type { GenreResolutionMap } from '../../genres/genre-resolution.types';
 import type {
   GoodreadsEnrichmentFailedRow,
   GoodreadsImportProcessOptions,
@@ -63,6 +64,8 @@ export class GoodreadsImportProcessor {
       });
     };
 
+    const genreResolutions = options?.genreResolutions ?? {};
+
     for (const row of mappedRows) {
       const dedupKey = buildGoodreadsDedupKey(row.book);
       if (batchKeys.has(dedupKey)) {
@@ -95,7 +98,10 @@ export class GoodreadsImportProcessor {
       await reportProgress('importing');
       const savedBook = await this.persistRow(userId, row);
       await reportProgress('enriching');
-      const enrichment = await this.catalogEnrichment.enrichBook(savedBook);
+      const enrichment = await this.catalogEnrichment.enrichBook(
+        savedBook,
+        genreResolutions,
+      );
       if (enrichment.enrichment_failed) {
         enrichment_failed.push({
           row_number: row.row_number,
@@ -113,6 +119,7 @@ export class GoodreadsImportProcessor {
     const retriedFailures = await this.retryFailedEnrichments(
       enrichment_failed,
       reportProgress,
+      genreResolutions,
     );
     enrichment_failed.length = 0;
     enrichment_failed.push(...retriedFailures);
@@ -135,6 +142,7 @@ export class GoodreadsImportProcessor {
     reportProgress: (
       phase: GoodreadsImportProgressUpdate['phase'],
     ) => Promise<void>,
+    genreResolutions: GenreResolutionMap,
   ): Promise<GoodreadsEnrichmentFailedRow[]> {
     if (failures.length === 0) {
       return [];
@@ -151,7 +159,10 @@ export class GoodreadsImportProcessor {
       }
 
       await reportProgress('enriching');
-      const enrichment = await this.catalogEnrichment.enrichBook(book);
+      const enrichment = await this.catalogEnrichment.enrichBook(
+        book,
+        genreResolutions,
+      );
       if (enrichment.enrichment_failed) {
         stillFailed.push(failure);
       }

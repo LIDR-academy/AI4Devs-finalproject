@@ -9,6 +9,9 @@ import { Book } from '../books/entities/book.entity';
 import { DEFAULT_GENRE_NAMES } from './genres.constants';
 import { AffectedBooksResponseDto } from './dto/affected-books-response.dto';
 import { GenreResponseDto, toGenreResponse } from './dto/genre-response.dto';
+import { GenreMatcherService } from './genre-matcher.service';
+import type { GenreMatchResult } from './genre-matcher.service';
+import type { GenreResolutionMap } from './genre-resolution.types';
 import { Genre } from './entities/genre.entity';
 
 @Injectable()
@@ -18,6 +21,7 @@ export class GenresService {
     private readonly genresRepo: Repository<Genre>,
     @InjectRepository(Book)
     private readonly booksRepo: Repository<Book>,
+    private readonly genreMatcher: GenreMatcherService,
   ) {}
 
   async hasGenres(userId: string): Promise<boolean> {
@@ -37,6 +41,62 @@ export class GenresService {
       order: { name: 'ASC' },
     });
     return rows.map(toGenreResponse);
+  }
+
+  private async listOwnedRefs(userId: string): Promise<Array<{ id: string; name: string }>> {
+    const rows = await this.genresRepo.find({
+      where: { userId },
+      order: { name: 'ASC' },
+    });
+    return rows.map((row) => ({ id: row.id, name: row.name }));
+  }
+
+  async matchRawGenre(
+    userId: string,
+    rawGenre: string | null | undefined,
+  ): Promise<GenreMatchResult> {
+    const userGenres = await this.listOwnedRefs(userId);
+    return this.genreMatcher.match(rawGenre, userGenres);
+  }
+
+  async matchRawGenres(
+    userId: string,
+    rawGenres: string[],
+  ): Promise<GenreMatchResult[]> {
+    const userGenres = await this.listOwnedRefs(userId);
+    return this.genreMatcher.matchMany(rawGenres, userGenres);
+  }
+
+  async resolveImportedGenre(
+    userId: string,
+    rawGenre: string | null | undefined,
+    resolutions: GenreResolutionMap = {},
+  ): Promise<string | null> {
+    const match = await this.matchRawGenre(userId, rawGenre);
+    if (match.status === 'matched') {
+      return match.genre_id;
+    }
+
+    if (match.status !== 'unresolved') {
+      return null;
+    }
+
+    const resolution = resolutions[match.raw_genre];
+    if (!resolution) {
+      return null;
+    }
+
+    if (resolution.action === 'skip') {
+      return null;
+    }
+
+    if (resolution.action === 'assign') {
+      const owned = await this.findOwnedById(userId, resolution.genre_id);
+      return owned?.id ?? null;
+    }
+
+    const created = await this.createForUser(userId, match.raw_genre);
+    return created.id;
   }
 
   async createForUser(userId: string, name: string): Promise<GenreResponseDto> {

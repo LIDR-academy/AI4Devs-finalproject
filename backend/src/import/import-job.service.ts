@@ -7,6 +7,7 @@ import type {
   ImportJobStatusResponse,
 } from './import-job.types';
 import type { GoodreadsImportResult } from './import.types';
+import type { GenreResolutionMap } from '../genres/genre-resolution.types';
 
 @Injectable()
 export class ImportJobService {
@@ -18,11 +19,13 @@ export class ImportJobService {
   async createQueuedJob(
     userId: string,
     csvContent: string,
+    genreResolutions?: GenreResolutionMap,
   ): Promise<ImportJobAcceptedResponse> {
     const job = await this.jobsRepo.save(
       this.jobsRepo.create({
         userId,
         csvContent,
+        genreResolutions: genreResolutions ?? null,
         status: 'queued',
         phase: 'queued',
         processedCount: 0,
@@ -92,6 +95,20 @@ export class ImportJobService {
       phase: 'failed',
       errorMessage,
     });
+  }
+
+  async getGenreResolutions(
+    userId: string,
+    jobId: string,
+  ): Promise<GenreResolutionMap> {
+    const job = await this.jobsRepo.findOne({
+      where: { id: jobId, userId },
+      select: ['genreResolutions'],
+    });
+    if (!job) {
+      throw new NotFoundException('Import job not found');
+    }
+    return (job.genreResolutions as GenreResolutionMap | null) ?? {};
   }
 
   async getCsvContent(userId: string, jobId: string): Promise<string> {

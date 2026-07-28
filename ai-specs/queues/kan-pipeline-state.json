@@ -3,7 +3,7 @@
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
   "last_completed": "KAN-62",
-  "current_ticket": null,
+  "current_ticket": "KAN-63",
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -516,6 +516,16 @@
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/66",
       "pr_number": 66,
       "archived_at": "2026-07-28T08:40:00Z",
+      "error": null
+    },
+    "KAN-63": {
+      "status": "in_progress",
+      "failed_step": null,
+      "change_name": "kan-63-smart-genre-mapping",
+      "branch": "feature/KAN-63-smart-genre-mapping",
+      "pr_url": null,
+      "pr_number": null,
+      "archived_at": null,
       "error": null
     }
   }

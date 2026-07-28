@@ -180,10 +180,7 @@ export class CatalogService {
   }
 
   private normalizeEditionGenre(edition: CatalogEditionDto): CatalogEditionDto {
-    return {
-      ...edition,
-      genre: this.genreNormalizer.normalize(edition.genre),
-    };
+    return edition;
   }
 
   private async fillGenreFromGoogleBooksIfMissing(

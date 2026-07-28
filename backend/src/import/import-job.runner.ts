@@ -55,6 +55,10 @@ export class ImportJobRunner {
     });
 
     const csvContent = await this.importJobService.getCsvContent(userId, jobId);
+    const genreResolutions = await this.importJobService.getGenreResolutions(
+      userId,
+      jobId,
+    );
     const parsed = parseGoodreadsCsv(csvContent);
     const totalCount = parsed.mapped_rows.length;
 
@@ -78,6 +82,7 @@ export class ImportJobRunner {
             totalCount: progress.total_count,
           });
         },
+        genreResolutions,
       },
     );
 

@@ -138,6 +138,31 @@ describe('Genres API (integration)', () => {
     expect(res.body).toEqual({ affected_book_count: 0 });
   });
 
+  it('POST /v1/genres/match resolves owned genre via synonym', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/v1/genres/match')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ raw_genre: 'Fantasy fiction' })
+      .expect(201);
+
+    expect(res.body.status).toBe('matched');
+    expect(res.body.genre_name).toBe('Fantasía');
+    expect(res.body.genre_id).toBeDefined();
+  });
+
+  it('POST /v1/genres/match returns unresolved for unknown genre', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/v1/genres/match')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ raw_genre: 'Cooking' })
+      .expect(201);
+
+    expect(res.body).toEqual({
+      status: 'unresolved',
+      raw_genre: 'Cooking',
+    });
+  });
+
   it('DELETE /v1/genres/{id} removes genre and clears books.genre_id', async () => {
     const list = await request(app.getHttpServer())
       .get('/v1/genres')
