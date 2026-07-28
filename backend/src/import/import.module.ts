@@ -8,6 +8,7 @@ import { ReadingRecord } from '../books/entities/reading-record.entity';
 import { ImportJob } from './entities/import-job.entity';
 import { GoodreadsImportProcessor } from './goodreads/goodreads-import.processor';
 import { ImportCatalogEnrichmentService } from './goodreads/import-catalog-enrichment.service';
+import { GoodreadsGenrePreviewService } from './goodreads/goodreads-genre-preview.service';
 import { ImportController } from './import.controller';
 import { ImportJobRunner } from './import-job.runner';
 import { ImportJobService } from './import-job.service';
@@ -27,6 +28,7 @@ import { ImportService } from './import.service';
     ImportJobRunner,
     GoodreadsImportProcessor,
     ImportCatalogEnrichmentService,
+    GoodreadsGenrePreviewService,
   ],
   exports: [ImportService],
 })

@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Book } from '../books/entities/book.entity';
 import { DEFAULT_GENRE_NAMES } from './genres.constants';
+import { GenreMatcherService } from './genre-matcher.service';
 import { GenresService } from './genres.service';
 import { Genre } from './entities/genre.entity';
 
@@ -19,6 +20,10 @@ describe('GenresService', () => {
   };
   let booksRepo: {
     count: jest.Mock;
+  };
+  let genreMatcher: {
+    match: jest.Mock;
+    matchMany: jest.Mock;
   };
   let queryBuilder: {
     where: jest.Mock;
@@ -62,11 +67,17 @@ describe('GenresService', () => {
       count: jest.fn(),
     };
 
+    genreMatcher = {
+      match: jest.fn(),
+      matchMany: jest.fn(),
+    };
+
     const module = await Test.createTestingModule({
       providers: [
         GenresService,
         { provide: getRepositoryToken(Genre), useValue: repo },
         { provide: getRepositoryToken(Book), useValue: booksRepo },
+        { provide: GenreMatcherService, useValue: genreMatcher },
       ],
     }).compile();
 

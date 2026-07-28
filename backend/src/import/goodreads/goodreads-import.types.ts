@@ -33,11 +33,13 @@ export interface GoodreadsMappingWarning {
 }
 
 import type { GoodreadsImportProgressUpdate } from '../import-job.types';
+import type { GenreResolutionMap } from '../../genres/genre-resolution.types';
 
 export interface GoodreadsImportProcessOptions {
   onProgress?: (
     progress: GoodreadsImportProgressUpdate,
   ) => void | Promise<void>;
+  genreResolutions?: GenreResolutionMap;
 }
 
 export interface GoodreadsMappingResult {

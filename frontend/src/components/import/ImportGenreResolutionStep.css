@@ -1,0 +1,11 @@
+.import-genre-resolution {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.import-genre-resolution__progress {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

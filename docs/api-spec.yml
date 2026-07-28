@@ -166,6 +166,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /genres/match:
+    post:
+      summary: Match a raw external genre to user-owned genres
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchGenreRequest'
+      responses:
+        '201':
+          description: Match result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreMatchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /genres/match-batch:
+    post:
+      summary: Match multiple raw genres
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchGenresBatchRequest'
+      responses:
+        '201':
+          description: Batch match results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreMatchBatchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /genres/{id}/affected-books:
     get:
       summary: Count books assigned to a genre
@@ -863,13 +907,10 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /import/goodreads:
+  /import/goodreads/preview:
     post:
-      summary: Start Goodreads library CSV import job
-      description: >-
-        Accepts a multipart CSV file (`file`) from Goodreads library export and
-        enqueues a background job that parses, imports, dedupes, and enriches
-        books. Poll `GET /import/jobs/{jobId}` for progress and final result.
+      summary: Preview Goodreads import unresolved catalog genres
+      description: Parses the CSV and probes catalog metadata to list distinct unresolved genre values before import.
       tags: [Import]
       security:
         - bearerAuth: []
@@ -884,6 +925,49 @@ paths:
                 file:
                   type: string
                   format: binary
+      responses:
+        '200':
+          description: Preview summary with grouped unresolved genres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoodreadsImportPreviewResponse'
+        '400':
+          description: Missing file, invalid CSV, or missing headers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: CSV exceeds size limit
+
+  /import/goodreads:
+    post:
+      summary: Start Goodreads library CSV import job
+      description: >-
+        Accepts a multipart CSV file (`file`) from Goodreads library export and
+        enqueues a background job that parses, imports, dedupes, and enriches
+        books. Optional `genre_resolutions` JSON maps unresolved catalog genres
+        to assign/create/skip actions. Poll `GET /import/jobs/{jobId}` for progress.
+      tags: [Import]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                genre_resolutions:
+                  type: string
+                  description: JSON map of raw genre to resolution action
       responses:
         '202':
           description: Import job accepted
@@ -1285,6 +1369,75 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+
+    MatchGenreRequest:
+      type: object
+      required: [raw_genre]
+      properties:
+        raw_genre:
+          type: string
+          minLength: 1
+          maxLength: 255
+
+    MatchGenresBatchRequest:
+      type: object
+      required: [raw_genres]
+      properties:
+        raw_genres:
+          type: array
+          items:
+            type: string
+
+    GenreMatchResponse:
+      type: object
+      required: [status, raw_genre]
+      properties:
+        status:
+          type: string
+          enum: [matched, unresolved, empty]
+        raw_genre:
+          type: string
+          nullable: true
+        genre_id:
+          type: string
+          format: uuid
+          nullable: true
+        genre_name:
+          type: string
+          nullable: true
+
+    GenreMatchBatchResponse:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenreMatchResponse'
+
+    GoodreadsImportPreviewResponse:
+      type: object
+      required: [unresolved_genres, meta]
+      properties:
+        unresolved_genres:
+          type: array
+          items:
+            type: object
+            required: [raw_genre, book_count]
+            properties:
+              raw_genre:
+                type: string
+              book_count:
+                type: integer
+                minimum: 0
+        meta:
+          type: object
+          required: [mapped_rows, warnings]
+          properties:
+            mapped_rows:
+              type: integer
+            warnings:
+              type: integer
 
     AffectedBooksResponse:
       type: object

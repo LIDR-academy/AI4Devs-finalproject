@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   catalogEditionToCreatePayload,
   createBook,
   fetchEditionCovers,
-  listGenres,
   searchCatalog,
 } from '../api/client';
 import { messageFromUnknownError } from '../api/errors';
 import type { CatalogEdition, CoverOption } from '../api/types';
 import { AudienceSelect } from './AudienceSelect';
 import { CoverPicker } from './CoverPicker';
+import { GenreResolutionPanel, resolveGenreIdFromCatalog } from './GenreResolutionPanel';
 import { GenreSelect } from './GenreSelect';
 import './AddBookModal.css';
 
@@ -21,15 +20,6 @@ interface AddBookModalProps {
   onClose: () => void;
   onSaved: () => void;
   onCreateManual?: () => void;
-}
-
-function matchGenreId(
-  catalogGenre: string | null,
-  genres: Array<{ id: string; name: string }>,
-): string | null {
-  if (!catalogGenre) return null;
-  const needle = catalogGenre.trim().toLowerCase();
-  return genres.find((g) => g.name.toLowerCase() === needle)?.id ?? null;
 }
 
 export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBookModalProps) {
@@ -47,12 +37,8 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
   const [error, setError] = useState<string | null>(null);
   const [audienceId, setAudienceId] = useState<string | null>(null);
   const [genreId, setGenreId] = useState<string | null>(null);
-
-  const { data: genres = [] } = useQuery({
-    queryKey: ['genres'],
-    queryFn: listGenres,
-    enabled: open,
-  });
+  const [unresolvedRawGenre, setUnresolvedRawGenre] = useState<string | null>(null);
+  const [genreMatching, setGenreMatching] = useState(false);
 
   const resetState = useCallback(() => {
     setStep('search');
@@ -69,6 +55,8 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
     setError(null);
     setAudienceId(null);
     setGenreId(null);
+    setUnresolvedRawGenre(null);
+    setGenreMatching(false);
   }, []);
 
   useEffect(() => {
@@ -144,12 +132,29 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
     (edition: CatalogEdition) => {
       setSelectedEdition(edition);
       setAudienceId(null);
-      setGenreId(matchGenreId(edition.genre, genres));
+      setGenreId(null);
+      setUnresolvedRawGenre(null);
       setStep('covers');
       setError(null);
+      setGenreMatching(true);
       void loadCovers(edition);
+      void resolveGenreIdFromCatalog(edition.genre)
+        .then((resolved) => {
+          if (resolved.needsResolution && resolved.rawGenre) {
+            setUnresolvedRawGenre(resolved.rawGenre);
+            setGenreId(null);
+            return;
+          }
+          setUnresolvedRawGenre(null);
+          setGenreId(resolved.genreId);
+        })
+        .catch(() => {
+          setUnresolvedRawGenre(null);
+          setGenreId(null);
+        })
+        .finally(() => setGenreMatching(false));
     },
-    [genres, loadCovers],
+    [loadCovers],
   );
 
   const handleBackToSearch = () => {
@@ -159,10 +164,14 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
     setSelectedCover(null);
     setCoversError(null);
     setGenreId(null);
+    setUnresolvedRawGenre(null);
   };
 
   const canSave =
-    !!selectedEdition && (covers.length === 0 || selectedCover !== null);
+    !!selectedEdition &&
+    (covers.length === 0 || selectedCover !== null) &&
+    !unresolvedRawGenre &&
+    !genreMatching;
 
   const handleSave = useCallback(async () => {
     if (!selectedEdition) return;
@@ -309,13 +318,28 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
               onRetry={() => loadCovers(selectedEdition)}
               editionTitle={selectedEdition.title}
             />
-            <GenreSelect
-              id="add-book-genre"
-              label="Género"
-              value={genreId}
-              onChange={setGenreId}
-              disabled={saving}
-            />
+            {genreMatching ? (
+              <p className="modal-hint">Comprobando género del catálogo…</p>
+            ) : null}
+            {unresolvedRawGenre ? (
+              <GenreResolutionPanel
+                rawGenre={unresolvedRawGenre}
+                disabled={saving}
+                onResolved={(_choice, resolvedGenreId) => {
+                  setGenreId(resolvedGenreId);
+                  setUnresolvedRawGenre(null);
+                }}
+                onCancel={handleBackToSearch}
+              />
+            ) : (
+              <GenreSelect
+                id="add-book-genre"
+                label="Género"
+                value={genreId}
+                onChange={setGenreId}
+                disabled={saving || genreMatching}
+              />
+            )}
             <AudienceSelect
               id="add-book-audience"
               label="Público objetivo"

@@ -40,6 +40,30 @@ export interface AudienceAffectedBooksResponse {
 
 export type GenreAffectedBooksResponse = AudienceAffectedBooksResponse;
 
+export type GenreMatchStatus = 'matched' | 'unresolved' | 'empty';
+
+export interface GenreMatchResponse {
+  status: GenreMatchStatus;
+  raw_genre: string | null;
+  genre_id?: string;
+  genre_name?: string;
+}
+
+export type GenreResolution =
+  | { action: 'assign'; genre_id: string }
+  | { action: 'create' }
+  | { action: 'skip' };
+
+export type GenreResolutionMap = Record<string, GenreResolution>;
+
+export interface GoodreadsImportPreviewResponse {
+  unresolved_genres: Array<{ raw_genre: string; book_count: number }>;
+  meta: {
+    mapped_rows: number;
+    warnings: number;
+  };
+}
+
 export interface FormatAffectedReadingsResponse {
   affected_reading_count: number;
 }
