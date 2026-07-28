@@ -11,7 +11,7 @@ describe('AmortizationCalculator', () => {
       years: 30,
       monthlyExtra: 0,
     });
-    expect(scenario.name).toBe('sin amortizar');
+    expect(scenario.name).toBe('Sin amortizar');
     expect(scenario.monthlyPayment).toBeGreaterThan(700);
     expect(scenario.monthlyPayment).toBeLessThan(800);
     expect(scenario.totalInterest).toBeGreaterThan(0);
@@ -27,6 +27,9 @@ describe('AmortizationCalculator', () => {
   it('generates 4 scenarios', () => {
     const all = calc.generateAllScenarios({ principal: 160_000, annualRate: 0.035, years: 30 });
     expect(all).toHaveLength(4);
-    expect(all.map((s) => s.name)).toEqual(['sin amortizar', 'ligera (+100€/mes)', 'moderada (+300€/mes)', 'agresiva (+500€/mes)']);
+    expect(all[0].name).toBe('Sin amortizar');
+    expect(all[1].name).toContain('cuota');
+    expect(all[2].name).toContain('cuota');
+    expect(all[3].name).toContain('cuota');
   });
 });

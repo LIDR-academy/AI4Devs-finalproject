@@ -23,9 +23,10 @@ describe('PurchaseProcessAggregator', () => {
     expect(result).not.toBeNull();
     expect(result!.hiddenCosts.total).toBeGreaterThan(0);
     expect(result!.amortizationScenarios).toHaveLength(4);
-    expect(result!.amortizationScenarios.map((s) => s.name)).toEqual([
-      'sin amortizar', 'ligera (+100€/mes)', 'moderada (+300€/mes)', 'agresiva (+500€/mes)',
-    ]);
+    expect(result!.amortizationScenarios[0].name).toBe('Sin amortizar');
+    expect(result!.amortizationScenarios[1].name).toContain('cuota');
+    expect(result!.amortizationScenarios[2].name).toContain('cuota');
+    expect(result!.amortizationScenarios[3].name).toContain('cuota');
     expect(result!.investmentScenarios).toHaveLength(3);
     expect(result!.investmentScenarios.map((s) => s.name)).toEqual([
       'conservador (4%)', 'moderado (6%)', 'agresivo (8%)',

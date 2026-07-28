@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { NarrativeGenerator } from '../../../../src/domain/services/NarrativeGenerator';
 
 const baseAmort = {
-  name: 'baseline' as const,
+  name: 'Sin amortizar',
   monthlyPayment: 720,
   totalPaid: 259200,
   totalInterest: 99200,
@@ -10,7 +10,7 @@ const baseAmort = {
   yearsReduced: 0,
   monthlyExtra: 0,
 };
-const lightAmort = { ...baseAmort, name: 'light' as const, yearsToPayoff: 25, yearsReduced: 5, totalInterest: 73000, monthlyExtra: 100 };
+const lightAmort = { ...baseAmort, name: '3 cuotas extra/año (+100€/mes)', yearsToPayoff: 25, yearsReduced: 5, totalInterest: 73000, monthlyExtra: 100 };
 
 describe('NarrativeGenerator', () => {
   const gen = new NarrativeGenerator();

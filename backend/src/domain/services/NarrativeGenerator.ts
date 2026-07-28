@@ -79,7 +79,10 @@ export interface NarrativeInput {
 export class NarrativeGenerator {
   generate(input: NarrativeInput): string {
     const isInvestment = 'nominalValue' in input.scenario;
-    const key = `${input.persona}|${input.scenario.name}`;
+    const subkey = isInvestment
+      ? ((input.scenario as InvestmentScenario).annualReturn <= 0.05 ? 'conservative' : (input.scenario as InvestmentScenario).annualReturn <= 0.07 ? 'moderate' : 'aggressive')
+      : ((input.scenario as AmortizationScenario).monthlyExtra === 0 ? 'baseline' : (input.scenario as AmortizationScenario).monthlyExtra <= 150 ? 'light' : (input.scenario as AmortizationScenario).monthlyExtra <= 400 ? 'moderate' : 'aggressive');
+    const key = `${input.persona}|${subkey}`;
     const template = TEMPLATES[key] ?? TEMPLATES['equilibrado|any'];
 
     const amort = isInvestment ? null : (input.scenario as AmortizationScenario);

@@ -153,7 +153,7 @@
   $: investment = computed?.investmentScenarios ?? [];
   $: moderateAmort = amortization.find((s) => s.monthlyExtra === 300) ?? null;
   $: baselineAmort = amortization.find((s) => s.monthlyExtra === 0) ?? null;
-  $: moderateInvest = investment.find((s) => s.name.startsWith('moderado')) ?? null;
+  $: moderateInvest = investment.find((s) => s.annualReturn === 0.06) ?? null;
 </script>
 
 <div class="container">
@@ -304,72 +304,66 @@
       <p class="text-muted">
         Cuota mensual con hipoteca a 30 años al {($financialProfile.interestRate * 100).toFixed(2)}%:
         <strong>{formatCurrency(computed.monthlyPayment30yr)}</strong>.
-      </p>
-      <div class="insight">
-        <strong>💡 Idea destacada:</strong>
-        {#if moderateAmort && baselineAmort && moderateInvest}
-          Amortizando {formatCurrency(moderateAmort.monthlyExtra)}/mes eliminas {Math.round(moderateAmort.yearsReduced)} años de hipoteca
-          y ahorras {formatCurrency(baselineAmort.totalInterest - moderateAmort.totalInterest)} en intereses.
-          Si en lugar de amortizar inviertes esos {formatCurrency(moderateAmort.monthlyExtra)}/mes al {(moderateInvest.annualReturn * 100).toFixed(0)}%,
-          acumularías {formatCurrency(moderateInvest.nominalValue)} en 30 años
-          ({formatCurrency(moderateInvest.realValue)} en valor actual).
+        {#if baselineAmort}
+          sin amortizar pagas {formatCurrency(baselineAmort.totalInterest)} en intereses totales.
         {/if}
-      </div>
-      <div class="toggle-row">
-        <label>
-          <input type="checkbox" bind:checked={showRealValue} />
-          Mostrar valor real de la inversión (ajustado por inflación)
-        </label>
-      </div>
+      </p>
+
       <AmortizationVsInvestmentChart
         amortization={computed.amortizationScenarios}
         investment={computed.investmentScenarios}
         {showRealValue}
       />
-      <div class="comparison">
-        <strong>💰 ¿Qué sale mejor?</strong>
-        {#if baselineAmort && moderateInvest}
+
+      <div class="toggle-row">
+        <label>
+          <input type="checkbox" bind:checked={showRealValue} />
+          Mostrar valor real de la inversión (descontando ~2% inflación anual)
+        </label>
+      </div>
+
+      {#if moderateAmort && baselineAmort && moderateInvest}
+        <div class="comparison">
+          <strong>💰 ¿Amortizar o invertir?</strong>
           <p>
-            Sin amortizar, pagas {formatCurrency(baselineAmort.totalInterest)} en intereses durante {baselineAmort.yearsToPayoff} años.
-            Invirtiendo {formatCurrency(300)}/mes al {(moderateInvest.annualReturn * 100).toFixed(0)}%, acumularías
-            {showRealValue ? formatCurrency(moderateInvest.realValue) : formatCurrency(moderateInvest.nominalValue)}
-            {showRealValue ? '(valor real)' : '(valor nominal)'}.
-            <strong>Ganancia neta: {formatCurrency((showRealValue ? moderateInvest.realValue : moderateInvest.nominalValue) - 108000)}</strong> (valor acumulado − {formatCurrency(108000)} invertidos).
+            Si <strong>amortizas {formatCurrency(moderateAmort.monthlyExtra)}/mes</strong>,
+            eliminas <strong>{Math.round(moderateAmort.yearsReduced)} años</strong> de hipoteca
+            y ahorras <strong>{formatCurrency(baselineAmort.totalInterest - moderateAmort.totalInterest)}</strong> en intereses.
           </p>
-        {/if}
-        {#if moderateAmort && baselineAmort && moderateInvest}
+          <p>
+            Si en lugar de amortizar <strong>inviertes {formatCurrency(moderateAmort.monthlyExtra)}/mes</strong> al {(moderateInvest.annualReturn * 100).toFixed(0)}%,
+            acumularías <strong>{showRealValue ? formatCurrency(moderateInvest.realValue) : formatCurrency(moderateInvest.nominalValue)}</strong>
+            {showRealValue ? '(valor real, ajustado por inflación)' : '(valor nominal)'}.
+          </p>
           <p class="verdict">
-            {#if (showRealValue ? moderateInvest.realValue : moderateInvest.nominalValue) - 108000 > baselineAmort.totalInterest - moderateAmort.totalInterest}
-              ✅ A largo plazo (30 años), la inversión supera a la amortización.
-              Ganas ~{formatCurrency((showRealValue ? moderateInvest.realValue : moderateInvest.nominalValue) - 108000 - (baselineAmort.totalInterest - moderateAmort.totalInterest))} más que amortizando.
+            {#if (showRealValue ? moderateInvest.realValue : moderateInvest.nominalValue) - moderateInvest.totalContributed > baselineAmort.totalInterest - moderateAmort.totalInterest}
+              ✅ A largo plazo, la inversión supera a la amortización.
+              Ganas ~{formatCurrency((showRealValue ? moderateInvest.realValue : moderateInvest.nominalValue) - moderateInvest.totalContributed - (baselineAmort.totalInterest - moderateAmort.totalInterest))} más.
             {:else}
               ✅ Amortizar te ahorra más intereses de lo que ganarías invirtiendo.
-              El ahorro en intereses ({formatCurrency(baselineAmort.totalInterest - moderateAmort.totalInterest)}) supera la ganancia de inversión.
             {/if}
           </p>
-        {/if}
-      </div>
+        </div>
+      {/if}
+
       <details class="investment-narrative">
-        <summary>¿Amortizar hipoteca o invertir? ¿Qué conviene más?</summary>
+        <summary>¿Por qué comparamos amortizar con invertir?</summary>
         <div class="narrative-content">
-          <p><strong>Amortizar</strong> reduce la deuda con el banco: acortas años de hipoteca y ahorras intereses seguros. Es un ahorro <em>garantizado</em> porque cada euro que amortizas deja de generar intereses al tipo de tu hipoteca (ej. 3,5%).</p>
-          <p><strong>Invertir</strong> destina ese mismo dinero a activos financieros. A largo plazo (30 años), la rentabilidad media de una cartera diversificada (~6%) supera el coste del interés hipotecario (~3,5%). Pero implica <em>riesgo</em>: no hay garantía de rentabilidades futuras.</p>
-          <p class="highlight">💡 <strong>Regla general:</strong> si tu tipo de interés es bajo (&lt;3%), suele salir mejor invertir. Si es alto (&gt;5%), conviene amortizar. Entre 3% y 5%, depende de tu tolerancia al riesgo y tus objetivos.</p>
+          <p>Amortizar e invertir son dos formas de usar el mismo dinero extra cada mes. La diferencia está en qué ganas con cada una:</p>
+          <p><strong>Amortizar</strong> reduce tu deuda. El ahorro es <em>garantizado</em>: cada euro que adelantas deja de generar intereses al tipo de tu hipoteca.</p>
+          <p><strong>Invertir</strong> pone ese dinero a trabajar en los mercados. A 30 años, la rentabilidad media (~6%) suele superar el coste hipotecario (~3%), pero con <em>riesgo</em>.</p>
+          <p class="highlight">💡 Si tu hipoteca está por debajo del 3%, suele salir mejor invertir. Por encima del 5%, conviene amortizar. Entre medias, depende de tus prioridades.</p>
         </div>
       </details>
       <details class="investment-narrative">
-        <summary>¿Qué representa cada escenario de inversión?</summary>
+        <summary>¿En qué invertirías al 4%, 6% u 8%?</summary>
         <ul>
-          <li><strong>Conservador (4%):</strong> Renta fija, depósitos, letras del tesoro. Riesgo bajo, rentabilidad modesta pero predecible.</li>
-          <li><strong>Moderado (6%):</strong> Fondos indexados globales (MSCI World). Riesgo medio, diversificación mundial.</li>
-          <li><strong>Agresivo (8%):</strong> Cartera con sesgo a renta variable (S&P 500). Más volatilidad, más potencial a largo plazo.</li>
+          <li><strong>Conservador (4%):</strong> Renta fija, depósitos, letras del tesoro.</li>
+          <li><strong>Moderado (6%):</strong> Fondos indexados globales (MSCI World).</li>
+          <li><strong>Agresivo (8%):</strong> Cartera con sesgo a renta variable (S&P 500).</li>
         </ul>
-        <p class="text-muted">Las rentabilidades pasadas no garantizan futuras. Tributación: ~19-26% sobre ganancias. Esto no es consejo financiero.</p>
       </details>
-      <p class="disclaimer">
-        ⚠️ Las rentabilidades pasadas no garantizan futuras. Los beneficios están sujetos a tributación
-        (~19-26% en España para ganancias patrimoniales). Esto no es consejo financiero.
-      </p>
+      <p class="disclaimer">⚠️ Esto no es consejo financiero. Rentabilidades pasadas no garantizan futuras.</p>
       <div class="actions">
         <button class="btn-secondary" on:click={() => setStep('costs')}>← Gastos ocultos</button>
         <button class="btn-secondary" on:click={recompute} disabled={loading}>
@@ -511,13 +505,6 @@
   .ok {
     color: var(--color-success);
     font-size: 0.85rem;
-  }
-  .insight {
-    background: var(--color-bg-soft);
-    padding: 0.75rem;
-    border-radius: var(--radius-md);
-    margin: 1rem 0;
-    font-size: 0.9rem;
   }
   .toggle-row {
     margin: 0.75rem 0;
