@@ -16,7 +16,11 @@ const createSchema = z.object({
       region: z.string().min(2),
       persona: z.enum(['conservador', 'equilibrado', 'arriesgado']).optional(),
       interestRate: z.number().min(0).max(1).optional(),
+      isFirstHome: z.boolean().optional(),
+      buyerAge: z.number().min(18).max(120).nullable().optional(),
+      isProtectedHousing: z.boolean().optional(),
     })
+    .passthrough()
     .optional(),
 });
 
@@ -60,9 +64,9 @@ purchaseProcessesRouter.post('/', async (req: Request, res: Response, next: Next
         userId: req.userId!,
         propertyPrice: propertyPrice ?? null,
         sourceListingId,
-        financialProfile: body.financialProfile ?? undefined,
+        financialProfile: (body.financialProfile as Record<string, unknown>) ?? undefined,
       },
-    });
+    } as never);
     res.status(201).json(process);
   } catch (err) {
     next(err);
@@ -93,7 +97,7 @@ purchaseProcessesRouter.patch('/:id', async (req: Request, res: Response, next: 
 
     const result = await prisma.purchaseProcess.updateMany({
       where: { id, userId: req.userId! },
-      data: body,
+      data: body as Record<string, unknown>,
     });
 
     if (result.count === 0) {
