@@ -59,8 +59,6 @@ Origen directo de las dos historias de roadmap sobre IoT: la carga automática d
 
 ### **2.4. Infraestructura y despliegue**
 
-Fuente: [chats/2026-07-27.md](chats/2026-07-27.md) (conversación con Claude Code).
-
 **Prompt 1:**
 
 > "escribe un CLAUDE.md conciso sobre qué va a ir el proyecto y dónde está cada cosa: backend, frontend, modelo de datos, user stories, tickets, diagramas. Además quiero que se haga un dockerfile para cada uno de los proyectos (backend y frontend) y un iac/local con un docker compose para arrancar ambos y una bbdd postgres"
@@ -84,8 +82,6 @@ Inicialización del repositorio y conexión al remoto ya creado por el usuario. 
 ---
 
 ## 3. Modelo de Datos
-
-Fuente: [chats/2026-07-27.md](chats/2026-07-27.md) y esta misma sesión (conversación con Claude Code).
 
 **Prompt 1:**
 
@@ -116,9 +112,6 @@ En vez de pedir el cambio directamente, el usuario pidió primero un contraste e
 ---
 
 ## 5. Historias de Usuario
-
-Fuente: [chats/2026-07-27.md](chats/2026-07-27.md) y [chats/2026-07-28.md](chats/2026-07-28.md) (conversación con Claude Code).
-
 **Prompt 1:**
 
 > "está bastante bien, me gustaría en docs, crear una carpeta para user stories e ir añadiendo ahí un archivo por userstory, otra carpeta de tickets y un archivo por ticket. En las historias de usuario quiero añadir más aunque no entren (las historias deben de ser del tipo 0.1 - Registrar cactus...) y las que no entren en el alcance tendrán que tener una codificación distinta para que estén al final del todo"
@@ -158,4 +151,3 @@ Corrección de prioridad sobre el prompt anterior: obligó a renumerar todo el b
 * Todo el trabajo de documentación (README, modelo de datos, historias, tickets, diagramas Mermaid) se ha generado con Claude Code, siempre a partir de instrucciones en español dadas de forma incremental, revisando cada resultado antes de pedir el siguiente cambio.
 * La fase de producto tuvo dos etapas, ambas antes de empezar a usar Claude Code: primero una lluvia de ideas abierta con ChatGPT ([chatgp1.txt](chats/chatgp1.txt) / [chat gpt 1.pdf](chats/chat%20gpt%201.pdf), y [chat gpt 2.pdf](chats/chat%20gpt%202.pdf)) para decidir el dominio, arrancada con el prompt "Tengo unos 500 cactus y como entenderás, gestionarlos todos es bastante lío [...]"; después un análisis formal con prompt estructurado de rol ([primera-definicion-producto.ms](chats/primera-definicion-producto.ms), sección 1 de este documento).
 * Ajuste humano constante: ninguna entidad o decisión de alcance se ha aceptado tal cual la propuso la IA sin al menos una pregunta de confirmación (tipo de relación de datos, alcance del MVP vs. roadmap, nombres de campos); varias funcionalidades sugeridas por ChatGPT (hardware IoT, riego físico automatizado, visión artificial) se descartaron explícitamente del MVP por exceder las ~30h disponibles.
-* No se ha hecho ningún commit ni push sin petición explícita del usuario en cada caso, incluso teniendo el repositorio y el remoto ya configurados.
