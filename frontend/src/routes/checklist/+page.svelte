@@ -73,18 +73,28 @@
   });
 
   async function toggleItem(item: ChecklistItem): Promise<void> {
+    if (!checklist) return;
+
+    const newCompleted = !item.completed;
+    checklist = {
+      ...checklist,
+      items: checklist.items.map((i) =>
+        i.id === item.id ? { ...i, completed: newCompleted } : i,
+      ),
+    };
+
     try {
-      const updated = await apiClient.patch<ChecklistItem>(`/api/checklist/items/${item.id}`, {
-        completed: !item.completed,
+      await apiClient.patch<ChecklistItem>(`/api/checklist/items/${item.id}`, {
+        completed: newCompleted,
       });
-      if (checklist) {
-        checklist = {
-          ...checklist,
-          items: checklist.items.map((i) => (i.id === updated.id ? updated : i)),
-        };
-      }
     } catch (e) {
       error = e instanceof ApiError ? e.message : 'Error al actualizar';
+      checklist = {
+        ...checklist,
+        items: checklist.items.map((i) =>
+          i.id === item.id ? { ...i, completed: item.completed } : i,
+        ),
+      };
     }
   }
 </script>
