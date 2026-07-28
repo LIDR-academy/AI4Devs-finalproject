@@ -266,24 +266,24 @@ docs/                     # Constitución, ADRs y eventos de dominio
 
 #### Variables de entorno necesarias en Railway
 
-| Variable | Servicio | Descripción |
-|----------|----------|-------------|
+| Variable | Servicio | Valor |
+|----------|----------|-------|
 | `DATABASE_URL` | realista-api | Automática (Railway PostgreSQL plugin) |
-| `OPENROUTER_API_KEY` | realista-api | API key de OpenRouter |
-| `FRONTEND_URL` | realista-api | URL del frontend en Railway |
+| `OPENROUTER_API_KEY` | realista-api | Tu API key de OpenRouter |
+| `FRONTEND_URL` | realista-api | `https://realista.up.railway.app` |
 | `NODE_ENV` | realista-api | `production` |
 | `REALISTA_USER_AGENT` | realista-api | `Realista/1.0 (analizador educativo)` |
-| `PLAYWRIGHT_ENABLED` | realista-api | `false` (Railway no soporta Chromium en free tier) |
-| `VITE_API_URL` | realista | URL del backend en Railway |
+| `PLAYWRIGHT_ENABLED` | realista-api | `false` |
+| `VITE_API_URL` | realista | `https://realista-api.up.railway.app` |
 
 #### Comandos de build y start
 
-**Backend:**
-- Build: `npm install && npm run build -w backend && npx prisma generate && npx prisma migrate deploy`
+**Backend (`realista-api`):**
+- Build: `npm install && npx prisma generate && cd backend && npm run build && npx prisma migrate deploy`
 - Start: `npm start -w backend`
 
-**Frontend:**
-- Build: `npm install && npm run build -w frontend`
+**Frontend (`realista`):**
+- Build: `npm install && cd frontend && npm run build`
 - Start: `node frontend/build/index.js`
 
 #### Pasos para desplegar
@@ -291,11 +291,17 @@ docs/                     # Constitución, ADRs y eventos de dominio
 1. Subir el repo a GitHub (rama `finalproject-DMM`)
 2. Crear proyecto en [Railway](https://railway.app) → "Deploy from GitHub repo"
 3. Añadir PostgreSQL plugin
-4. Crear servicio "realista-api" (Node.js) con los comandos de arriba + variables de entorno
-5. Crear servicio "realista" (Node.js) con los comandos de arriba + `VITE_API_URL`
-6. Railway asigna URLs automáticamente (`*.up.railway.app`)
+4. Crear servicio `realista-api` (Node.js):
+   - Build: `npm install && npx prisma generate && cd backend && npm run build && npx prisma migrate deploy`
+   - Start: `npm start -w backend`
+   - Variables: `OPENROUTER_API_KEY`, `FRONTEND_URL=https://realista.up.railway.app`, `NODE_ENV=production`, `PLAYWRIGHT_ENABLED=false`
+5. Crear servicio `realista` (Node.js):
+   - Build: `npm install && cd frontend && npm run build`
+   - Start: `node frontend/build/index.js`
+   - Variables: `VITE_API_URL=https://realista-api.up.railway.app`
+6. Railway asigna URLs automáticamente. Cada push a la rama conectada redeployea ambos servicios.
 
-> **Nota:** Playwright está deshabilitado en Railway (no soporta Chromium en el free tier). Los portales con DataDome (Idealista, Fotocasa) requerirán pegar el texto del anuncio manualmente. Para desarrollo local con Playwright, instala Chromium con `npx playwright install chromium`.
+> **Nota:** Playwright está deshabilitado en Railway. Los portales con DataDome (Idealista, Fotocasa) requerirán pegar el texto del anuncio manualmente. Para desarrollo local con Playwright, `PLAYWRIGHT_ENABLED=true` en `.env` y `npx playwright install chromium`.
 
 ---
 
