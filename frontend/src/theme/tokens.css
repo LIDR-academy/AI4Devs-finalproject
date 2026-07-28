@@ -30,6 +30,15 @@
   --color-border-strong: var(--palette-sky-cloud);
   --color-focus-ring: var(--palette-veranda-blue);
   --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-danger-border: #f5c2c0;
+  --color-success: #1b5e20;
+  --color-success-soft: #e8f5e9;
+  --color-success-border: #a5d6a7;
+  --color-info-soft: #e8f4fd;
+  --color-info-border: #b6d9f7;
+  --color-error-text: #c44;
+  --color-overlay: rgba(0, 0, 0, 0.35);
 
   /* Typography */
   --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;

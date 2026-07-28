@@ -3,7 +3,7 @@
   "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
   "started_at": "2026-07-01T19:00:00Z",
   "last_completed": "KAN-63",
-  "current_ticket": null,
+  "current_ticket": "KAN-80",
   "tickets": {
     "KAN-18": {
       "status": "done",
@@ -526,6 +526,16 @@
       "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/67",
       "pr_number": 67,
       "archived_at": "2026-07-28T09:10:00Z",
+      "error": null
+    },
+    "KAN-80": {
+      "status": "awaiting_merge",
+      "failed_step": null,
+      "change_name": "kan-80-user-theme-palettes",
+      "branch": "feature/KAN-80-user-theme-palettes",
+      "pr_url": null,
+      "pr_number": null,
+      "archived_at": null,
       "error": null
     }
   }

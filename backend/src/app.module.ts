@@ -20,6 +20,8 @@ import { Format } from './formats/entities/format.entity';
 import { FormatsModule } from './formats/formats.module';
 import { Genre } from './genres/entities/genre.entity';
 import { GenresModule } from './genres/genres.module';
+import { UserProfile } from './preferences/entities/user-profile.entity';
+import { PreferencesModule } from './preferences/preferences.module';
 import { User } from './users/user.entity';
 import { UsersModule } from './users/users.module';
 
@@ -33,7 +35,7 @@ import { UsersModule } from './users/users.module';
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         url: config.get<string>('DATABASE_URL'),
-        entities: [User, Book, ReadingRecord, MonthlyTbrList, TbrEntry, AnnualReadingGoal, ImportJob, Audience, Format, Genre],
+        entities: [User, UserProfile, Book, ReadingRecord, MonthlyTbrList, TbrEntry, AnnualReadingGoal, ImportJob, Audience, Format, Genre],
         migrations: [`${__dirname}/migrations/*{.ts,.js}`],
         migrationsRun: config.get('TYPEORM_MIGRATIONS_RUN') === 'true',
         synchronize: config.get('TYPEORM_SYNCHRONIZE') === 'true',
@@ -44,6 +46,7 @@ import { UsersModule } from './users/users.module';
     AudiencesModule,
     FormatsModule,
     GenresModule,
+    PreferencesModule,
     BooksModule,
     ListsModule,
     GoalsModule,

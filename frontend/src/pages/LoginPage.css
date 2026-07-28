@@ -3,11 +3,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
+  background: var(--color-background);
 }
 
 .login-card {
-  background: #ececdb;
+  background: var(--color-surface-card);
   padding: 2rem;
   border-radius: 16px;
   width: min(360px, 90vw);
@@ -18,14 +18,14 @@
 
 .login-card h1 {
   margin: 0;
-  color: #2d4a4a;
+  color: var(--color-text-heading);
   font-size: 1.4rem;
 }
 
 .login-sub {
   margin: 0;
   font-size: 0.85rem;
-  color: #5a6e6e;
+  color: var(--color-text-muted);
 }
 
 .login-card label {
@@ -38,12 +38,13 @@
 .login-card input {
   padding: 0.6rem;
   border-radius: 8px;
-  border: 1px solid #a7bcbd;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
 }
 
 .login-card button {
-  background: #6bb1ad;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border: none;
   padding: 0.65rem;
   border-radius: 8px;
@@ -52,7 +53,7 @@
 }
 
 .login-error {
-  color: #c44;
+  color: var(--color-error-text);
   margin: 0;
   font-size: 0.9rem;
 }

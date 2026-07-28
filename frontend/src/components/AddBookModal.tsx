@@ -232,6 +232,7 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
           </button>
         </header>
 
+        <div className="modal-body">
         {step === 'search' && (
           <>
             <label className="search-label">
@@ -355,6 +356,7 @@ export function AddBookModal({ open, onClose, onSaved, onCreateManual }: AddBook
             {error}
           </p>
         )}
+        </div>
 
         <footer className="modal-footer">
           <button type="button" className="btn-secondary" onClick={onClose}>

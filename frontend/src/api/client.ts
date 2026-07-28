@@ -28,6 +28,8 @@ import type {
   PatchReadingRecordPayload,
   ReadingRecordPatchedResponse,
   TbrEntry,
+  UpdateUserPreferencesPayload,
+  UserPreferences,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/v1';
@@ -77,6 +79,19 @@ export async function devLogin(email: string) {
     '/auth/dev-login',
     { method: 'POST', body: JSON.stringify({ email }) },
   );
+}
+
+export async function getPreferences(): Promise<UserPreferences> {
+  return request('/me/preferences');
+}
+
+export async function updatePreferences(
+  payload: UpdateUserPreferencesPayload,
+): Promise<UserPreferences> {
+  return request('/me/preferences', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function listAudiences(): Promise<Audience[]> {

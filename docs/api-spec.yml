@@ -19,6 +19,8 @@ servers:
 tags:
   - name: Auth
     description: Authentication (MVP dev login)
+  - name: Preferences
+    description: User profile preferences (theme, future settings)
   - name: Audiences
     description: User-configurable audience labels (Settings)
   - name: Formats
@@ -63,6 +65,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationError'
+
+  /me/preferences:
+    get:
+      summary: Get current user preferences
+      tags: [Preferences]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User preferences (defaults when profile row is missing)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '401':
+          description: Unauthorized
+    patch:
+      summary: Update current user preferences
+      tags: [Preferences]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserPreferencesRequest'
+      responses:
+        '200':
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '400':
+          description: Invalid preference value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Unauthorized
 
   /audiences:
     get:
@@ -1152,6 +1196,40 @@ components:
             email:
               type: string
               format: email
+
+    UserPreferences:
+      type: object
+      required: [theme_palette_id]
+      properties:
+        theme_palette_id:
+          type: string
+          enum:
+            - veranda
+            - primavera
+            - strawberry
+            - lotus-pond
+            - ocean-deep
+            - pool-party
+            - sunset
+            - pastel-dream
+            - fresh-green
+          example: veranda
+
+    UpdateUserPreferencesRequest:
+      type: object
+      properties:
+        theme_palette_id:
+          type: string
+          enum:
+            - veranda
+            - primavera
+            - strawberry
+            - lotus-pond
+            - ocean-deep
+            - pool-party
+            - sunset
+            - pastel-dream
+            - fresh-green
 
     DataSource:
       type: string
