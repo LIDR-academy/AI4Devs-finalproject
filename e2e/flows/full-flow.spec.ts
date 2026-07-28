@@ -71,8 +71,8 @@ test.describe('Realista — full flow', () => {
     const mortgageHeading = page.getByRole('heading', { name: /hipotecario/i }).first();
     await expect(mortgageHeading).toBeVisible();
 
-    // 6. Navigate to checklist
-    await page.goto('/checklist');
-    await expect(page.getByRole('heading', { name: /Checklist|Documentos/i }).first()).toBeVisible();
+    // 6. Navigate to timeline+checklist
+    await page.goto('/timeline');
+    await expect(page.getByRole('heading', { name: /Cronograma/i }).first()).toBeVisible();
   });
 });

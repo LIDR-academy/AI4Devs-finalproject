@@ -384,6 +384,7 @@
           {loading ? 'Recalculando…' : 'Recalcular'}
         </button>
       </div>
+      <a href="/timeline" class="btn-primary cta-timeline">📋 Ver cronograma y checklist →</a>
     </section>
   {/if}
 
@@ -543,6 +544,13 @@
   }
   .actions button {
     flex: 1;
+  }
+  .cta-timeline {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    text-decoration: none;
   }
   .persona-card {
     margin-top: 1rem;

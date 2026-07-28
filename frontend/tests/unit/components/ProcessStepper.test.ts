@@ -7,15 +7,14 @@ describe('ProcessStepper', () => {
     { id: 'listing', label: 'Anuncio', href: '/listing-lens' },
     { id: 'mortgage', label: 'Hipoteca', href: '/mortgage-compass' },
     { id: 'timeline', label: 'Cronograma', href: '/timeline' },
-    { id: 'checklist', label: 'Checklist', href: '/checklist' },
   ];
 
-  it('renderiza 4 pasos', () => {
+  it('renderiza 3 pasos', () => {
     const { container } = render(ProcessStepper, {
       props: { steps, currentStep: 'listing', completedSteps: new Set<string>() },
     });
     const items = container.querySelectorAll('[data-step-id]');
-    expect(items.length).toBe(4);
+    expect(items.length).toBe(3);
   });
 
   it('marca el paso actual con la clase "current"', () => {
