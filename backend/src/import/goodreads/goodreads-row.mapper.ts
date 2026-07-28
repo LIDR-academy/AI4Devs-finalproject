@@ -147,11 +147,59 @@ function mapFinishedOn(
   return dateRead;
 }
 
+/** Strip trailing Goodreads volume markers such as `, #1` or `#0.5`. */
+function stripSeriesVolumeMarker(value: string): string {
+  return value.replace(/,?\s*#\d+(?:\.\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?\s*$/u, '').trim();
+}
+
+/**
+ * Split a Goodreads Title into a clean title and optional series_name.
+ * Removes trailing `(…)` groups only; mid-title parentheses are kept.
+ */
+export function parseGoodreadsTitle(rawTitle: string): {
+  title: string;
+  series_name: string | null;
+} {
+  const trimmed = rawTitle.trim();
+  if (!trimmed) {
+    return { title: trimmed, series_name: null };
+  }
+
+  const trailingParen = /\s*\(([^()]*)\)\s*$/u;
+  const extracted: string[] = [];
+  let working = trimmed;
+
+  while (true) {
+    const match = trailingParen.exec(working);
+    if (!match) {
+      break;
+    }
+    extracted.push(match[1].trim());
+    working = working.slice(0, match.index).trimEnd();
+  }
+
+  if (!working) {
+    return { title: trimmed, series_name: null };
+  }
+
+  if (extracted.length === 0) {
+    return { title: working, series_name: null };
+  }
+
+  // Leftmost trailing group is the series label (extras like Kindle Edition stay out).
+  const seriesGroups = extracted.reverse();
+  const seriesLabel = stripSeriesVolumeMarker(seriesGroups[0]);
+  return {
+    title: working,
+    series_name: seriesLabel || null,
+  };
+}
+
 export function mapGoodreadsRow(
   row: GoodreadsParsedRow,
 ): { mapped: GoodreadsMappedRow | null; warning: GoodreadsMappingWarning | null } {
-  const title = row.title.trim();
-  if (!title) {
+  const rawTitle = row.title.trim();
+  if (!rawTitle) {
     return {
       mapped: null,
       warning: {
@@ -161,6 +209,8 @@ export function mapGoodreadsRow(
       },
     };
   }
+
+  const { title, series_name } = parseGoodreadsTitle(rawTitle);
 
   const status = mapExclusiveShelfToStatus(row.exclusive_shelf);
   if (!status) {
@@ -190,6 +240,7 @@ export function mapGoodreadsRow(
           row.original_publication_year,
           row.year_published,
         ),
+        series_name,
         data_source: 'goodreads',
         external_provider_id: row.book_id.trim() || null,
       },

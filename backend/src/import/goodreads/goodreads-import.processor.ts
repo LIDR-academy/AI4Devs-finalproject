@@ -225,6 +225,7 @@ export class GoodreadsImportProcessor {
       isbn_10: bookDraft.isbn10,
       page_count: bookDraft.page_count,
       publication_year: bookDraft.publication_year,
+      series_name: bookDraft.series_name,
       data_source: bookDraft.data_source,
       external_provider_id: bookDraft.external_provider_id,
     });

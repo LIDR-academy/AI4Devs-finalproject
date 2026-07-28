@@ -34,6 +34,7 @@ describe('GoodreadsImportProcessor', () => {
       isbn13: '9780618640157',
       page_count: 320,
       publication_year: 1937,
+      series_name: null,
       data_source: 'goodreads',
       external_provider_id: '1001',
     },
@@ -123,6 +124,12 @@ describe('GoodreadsImportProcessor', () => {
 
     expect(result.meta.imported_count).toBe(1);
     expect(result.imported[0]).toEqual({ row_number: 2, book_id: 'book-1' });
+    expect(catalogEditions.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'The Hobbit',
+        series_name: null,
+      }),
+    );
     expect(readingRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'leido',
@@ -136,6 +143,28 @@ describe('GoodreadsImportProcessor', () => {
     );
     expect(result.enrichment_failed).toEqual([]);
     expect(result.meta.enrichment_failed_count).toBe(0);
+  });
+
+  it('persists series_name from mapped draft on catalog upsert', async () => {
+    const seriesRow: GoodreadsMappedRow = {
+      ...sampleRow,
+      book: {
+        ...sampleRow.book,
+        title: 'The Raven Scholar',
+        series_name: 'Eternal Path Trilogy',
+        isbn10: null,
+        isbn13: null,
+      },
+    };
+
+    await processor.processImport('user-1', [seriesRow], []);
+
+    expect(catalogEditions.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'The Raven Scholar',
+        series_name: 'Eternal Path Trilogy',
+      }),
+    );
   });
 
   it('records enrichment failures from catalog enrichment', async () => {

@@ -27,6 +27,7 @@ export function buildGoodreadsDedupKeyFromLibraryBook(book: {
     isbn13: book.isbn13,
     page_count: null,
     publication_year: null,
+    series_name: null,
     data_source: 'goodreads',
     external_provider_id: null,
   });

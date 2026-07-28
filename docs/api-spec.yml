@@ -2495,6 +2495,14 @@ components:
           oneOf:
             - type: integer
             - type: 'null'
+        series_name:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: >
+            Series label extracted from trailing parentheses in the Goodreads Title
+            (volume markers such as `, #1` removed). Null when Title has no trailing
+            parenthetical series annotation.
         data_source:
           type: string
           enum: [goodreads]

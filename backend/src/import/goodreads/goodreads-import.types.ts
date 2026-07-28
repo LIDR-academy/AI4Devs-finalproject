@@ -8,6 +8,7 @@ export interface GoodreadsImportBookDraft {
   isbn13: string | null;
   page_count: number | null;
   publication_year: number | null;
+  series_name: string | null;
   data_source: DataSourceType;
   external_provider_id: string | null;
 }

@@ -78,6 +78,8 @@ Shared canonical metadata for a book edition. Not scoped by `user_id`. Populated
 
 **Uniqueness:** partial unique on `isbn_13` (when not null) and on `(data_source, external_provider_id)` (when provider id set).
 
+**Goodreads import title normalization:** When mapping the Goodreads `Title` column, trailing parenthetical groups (e.g. `The Raven Scholar (Eternal Path Trilogy, #1)`) are stripped into a clean `title` plus optional `series_name` (volume markers like `, #1` removed). Mid-title parentheses are kept.
+
 ### UserBookOverride
 
 Sparse per-user bibliographic overrides. `overridden_fields` tracks which columns are active; unset fields inherit from `catalog_editions`.

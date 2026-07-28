@@ -7,12 +7,39 @@ import {
   mapGoodreadsRating,
   mapGoodreadsRow,
   parseGoodreadsDate,
+  parseGoodreadsTitle,
 } from './goodreads-row.mapper';
+import type { GoodreadsParsedRow } from './goodreads-csv.types';
 
 const minFixturePath = join(
   __dirname,
   '../../../test/fixtures/goodreads_library_export.min.csv',
 );
+
+function baseParsedRow(overrides: Partial<GoodreadsParsedRow>): GoodreadsParsedRow {
+  return {
+    row_number: 99,
+    book_id: '9999',
+    title: 'Sample',
+    author: 'Test Author',
+    additional_authors: '',
+    isbn: null,
+    isbn13: null,
+    my_rating: '0',
+    average_rating: '',
+    publisher: '',
+    binding: 'Paperback',
+    number_of_pages: '',
+    year_published: '',
+    original_publication_year: '',
+    date_read: '',
+    date_added: '2024/01/01',
+    exclusive_shelf: 'to-read',
+    read_count: '0',
+    bookshelves: '',
+    ...overrides,
+  };
+}
 
 describe('parseGoodreadsDate', () => {
   it('converts Goodreads dates to ISO', () => {
@@ -23,6 +50,54 @@ describe('parseGoodreadsDate', () => {
   it('returns null for empty or invalid values', () => {
     expect(parseGoodreadsDate('')).toBeNull();
     expect(parseGoodreadsDate('not-a-date')).toBeNull();
+  });
+});
+
+describe('parseGoodreadsTitle', () => {
+  it('splits series-annotated titles', () => {
+    expect(
+      parseGoodreadsTitle('The Raven Scholar (Eternal Path Trilogy, #1)'),
+    ).toEqual({
+      title: 'The Raven Scholar',
+      series_name: 'Eternal Path Trilogy',
+    });
+  });
+
+  it('leaves plain titles unchanged', () => {
+    expect(parseGoodreadsTitle('Dune')).toEqual({
+      title: 'Dune',
+      series_name: null,
+    });
+  });
+
+  it('keeps original title when cleaning would be empty', () => {
+    expect(parseGoodreadsTitle('(Only Parens)')).toEqual({
+      title: '(Only Parens)',
+      series_name: null,
+    });
+  });
+
+  it('splits Spanish-style series titles', () => {
+    expect(parseGoodreadsTitle('Culpa tuya (Culpables, #2)')).toEqual({
+      title: 'Culpa tuya',
+      series_name: 'Culpables',
+    });
+  });
+
+  it('does not strip mid-title parentheses', () => {
+    expect(parseGoodreadsTitle('Book (Subtitle) and More')).toEqual({
+      title: 'Book (Subtitle) and More',
+      series_name: null,
+    });
+  });
+
+  it('strips multiple trailing groups and uses the leftmost for series', () => {
+    expect(
+      parseGoodreadsTitle('Some Book (My Series, #1) (Kindle Edition)'),
+    ).toEqual({
+      title: 'Some Book',
+      series_name: 'My Series',
+    });
   });
 });
 
@@ -75,6 +150,7 @@ describe('mapGoodreadsRow', () => {
         isbn13: '9780618640157',
         page_count: 320,
         publication_year: 1937,
+        series_name: null,
         data_source: 'goodreads',
         external_provider_id: '1001',
       },
@@ -97,6 +173,7 @@ describe('mapGoodreadsRow', () => {
       read_format: 'fisico',
       rating: 4,
     });
+    expect(dune?.book.series_name).toBeNull();
   });
 
   it('omits empty-title rows with a mapping warning', () => {
@@ -144,5 +221,21 @@ describe('mapGoodreadsRow', () => {
     const result = mapGoodreadsRow(row!);
     expect(result.mapped).toBeNull();
     expect(result.warning?.code).toBe('MISSING_TITLE');
+  });
+
+  it('maps series-annotated titles onto title and series_name', () => {
+    const result = mapGoodreadsRow(
+      baseParsedRow({
+        title: 'The Raven Scholar (Eternal Path Trilogy, #1)',
+        author: 'Antonia Hodgson',
+        exclusive_shelf: 'to-read',
+      }),
+    );
+    expect(result.warning).toBeNull();
+    expect(result.mapped?.book).toMatchObject({
+      title: 'The Raven Scholar',
+      series_name: 'Eternal Path Trilogy',
+      authors: 'Antonia Hodgson',
+    });
   });
 });
