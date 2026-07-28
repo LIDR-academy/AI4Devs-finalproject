@@ -12,6 +12,8 @@ Production deployment for **Reading Analytics Platform** using **free tiers** (N
 
 **How to try the app:** open https://reading-analytics.vercel.app → `/login` → use **dev-login** with any email → explore Book Tracker, Home, Lists, Stats, Goals.
 
+> To visualize a text user with populated data, login with email lectora@example.com
+
 > **Free-tier note:** the Render API **spins down after ~15 minutes of inactivity**. The first request after idle time may take **30–90 seconds** (cold start). Refresh or wait once; subsequent requests are fast.
 
 ---
@@ -110,6 +112,8 @@ If the repo does not appear under **Settings → Build → Source**:
 | **Build Command** | `npm run build` (default) |
 | **Output Directory** | `dist` |
 
+`frontend/vercel.json` rewrites all routes to `index.html` so React Router deep links (e.g. `/book-tracker`) work on refresh.
+
 ### Environment variables (Vercel)
 
 | Variable | Value |
@@ -148,6 +152,7 @@ Then open https://reading-analytics.vercel.app/login and sign in with the same f
 
 | Symptom | Fix |
 |---------|-----|
+| **404 on refresh** (e.g. `/book-tracker`) | Add `frontend/vercel.json` SPA rewrites to `index.html`; redeploy Vercel |
 | API very slow first time | Render free tier cold start — normal |
 | CORS error in browser | `CORS_ORIGIN` must match Vercel URL exactly (no trailing slash) |
 | Frontend calls `localhost` | Wrong/missing `VITE_API_URL`; redeploy Vercel after fix |
