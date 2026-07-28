@@ -19,7 +19,8 @@ docs/
 ├── api-spec.yml             # OpenAPI REST contracts (/v1)
 ├── data-model.md            # PostgreSQL schema (implemented)
 ├── design-system-palette.md # PRD colors → CSS tokens
-└── development_guide.md     # Local setup, scripts, troubleshooting
+├── development_guide.md     # Local setup, scripts, troubleshooting
+└── deployment.md            # Production URLs (Vercel + Render + Neon)
 ```
 
 ## Precedence
@@ -31,6 +32,7 @@ See [AGENTS.md](../AGENTS.md): `PRD.md` → `readme.md` → `docs/product/` → 
 | Need | File |
 |------|------|
 | Install locally | [development_guide.md](./development_guide.md) |
+| **Production deploy** | [deployment.md](./deployment.md) |
 | User stories | [product/user-stories.md](./product/user-stories.md) |
 | Use cases UC-01…10 | [product/use-cases.md](./product/use-cases.md) |
 | API contract | [api-spec.yml](./api-spec.yml) |

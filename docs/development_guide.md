@@ -159,4 +159,5 @@ Project context: `openspec/config.yaml`. Active changes live under `openspec/cha
 - `docs/api-spec.yml` — REST contracts
 - `docs/data-model.md` — entities and relationships
 - `docs/standards/backend-standards.md` / `docs/standards/frontend-standards.md` — coding conventions
+- `docs/deployment.md` — production URLs and hosting setup
 - `README.md` — product overview and palette

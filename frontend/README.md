@@ -15,6 +15,15 @@ npm run dev
 
 App URL: `http://localhost:5173` — open `/login` and use dev-login (backend must be running).
 
+## Production
+
+| | URL |
+|---|-----|
+| **Live app** | https://reading-analytics.vercel.app |
+| **API** | https://reading-analytics-api.onrender.com/v1 |
+
+Deploy settings: [`docs/deployment.md`](../docs/deployment.md) (`VITE_API_URL` on Vercel, root `frontend/`).
+
 ## Routes (MVP)
 
 | Route | Page |

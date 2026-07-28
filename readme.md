@@ -24,14 +24,27 @@ Aplicación web desktop-first para lectoras intensivas que quieren registrar lec
 
 ### **0.4. URL del proyecto:**
 
-**Entorno local (entrega máster):** la aplicación no está desplegada en producción; se ejecuta en local siguiendo [§1.4](#14-instrucciones-de-instalación).
+**Aplicación en producción (demo):**
 
 | Servicio | URL |
+| --- | --- |
+| **Aplicación web** | https://reading-analytics.vercel.app |
+| **API REST** (`/v1`) | https://reading-analytics-api.onrender.com/v1 |
+
+Abrir la app → `/login` → **dev-login** con un email de prueba. Flujo recomendado: añadir libro en Book Tracker, cambiar estado, revisar Home / Lists / Stats.
+
+Para visualizar un usuario con datos ya poblados, entrar con lectora@example.com
+
+> **Nota free tier:** la API en Render se duerme tras ~15 min sin uso; la primera petición puede tardar **30–90 s** (cold start).
+
+**Entorno local** (desarrollo): ver [§1.4](#14-instrucciones-de-instalación).
+
+| Servicio | URL local |
 | --- | --- |
 | Frontend (SPA) | http://localhost:5173 |
 | API REST (`/v1`) | http://localhost:3000/v1 |
 
-Tras `npm run start:dev` (backend) y `npm run dev` (frontend), abrir `/login` y usar **dev-login** con un email de prueba.
+**Configuración de despliegue:** [docs/deployment.md](docs/deployment.md) (Neon + Render + Vercel, variables de entorno, orden de despliegue).
 
 ### 0.5. URL o archivo comprimido del repositorio
 
@@ -260,6 +273,20 @@ Para la fase **MVP** conviene minimizar coste fijo y operación, manteniendo **s
 | **Dominio y TLS** | Dominio propio + certificados gestionados por el proveedor del front y del API | HTTPS obligatorio en tránsito. |
 
 No se asume app móvil nativa ni tráfico social; el modelo **cliente → API REST → PostgreSQL** es suficiente. Si más adelante el **RenderService** (export PNG/PDF) consume mucha CPU, se puede extraer a un **worker** en la misma plataforma o a un job en cola sin cambiar el diseño lógico.
+
+#### Implementación actual (julio 2026, free tier)
+
+Despliegue real documentado en [`docs/deployment.md`](docs/deployment.md):
+
+| Pieza | Implementado | URL / notas |
+| --- | --- | --- |
+| **Frontend** | Vercel (rama `main`, root `frontend/`) | https://reading-analytics.vercel.app |
+| **API NestJS** | Render Web Service free (root `backend/`) | https://reading-analytics-api.onrender.com/v1 |
+| **PostgreSQL** | Neon (región UE) | `DATABASE_URL` solo en secretos de Render |
+| **CI/CD automático** | Deploy on push vía integración GitHub de Vercel y Render | Sin GitHub Actions en repo aún |
+| **Secretos** | `JWT_SECRET`, `DATABASE_URL` en Render; `VITE_API_URL` en Vercel | Nunca en Git |
+
+Variables clave en producción: `CORS_ORIGIN=https://reading-analytics.vercel.app`, `TYPEORM_MIGRATIONS_RUN=true`, `VITE_API_URL=https://reading-analytics-api.onrender.com/v1`, `NODE_VERSION=20` en Render. Arranque API: `node dist/src/main.js` (ver `backend/package.json` → `start:prod`).
 
 #### Diagrama Mermaid — pipeline de despliegue (Git → producción)
 

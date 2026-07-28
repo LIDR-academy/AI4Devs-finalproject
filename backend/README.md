@@ -19,6 +19,8 @@ npm run start:dev
 
 API base: `http://localhost:3000/v1`
 
+**Production API:** https://reading-analytics-api.onrender.com/v1 — see [`docs/deployment.md`](../docs/deployment.md).
+
 **Dev login:** `POST /v1/auth/dev-login` with `{ "email": "you@example.com" }`.
 
 ## Modules
