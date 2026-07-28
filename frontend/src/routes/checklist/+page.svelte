@@ -18,6 +18,16 @@
     items: ChecklistItem[];
   }
 
+  const STAGE_LABELS: Record<string, string> = {
+    pre_arras: 'Antes de las arras',
+    post_arras: 'Después de las arras',
+    pre_escritura: 'Antes de la escritura',
+    post_escritura: 'Después de la escritura',
+    arras: 'Contrato de arras',
+    mortgage: 'Hipoteca',
+    notary: 'Notaría',
+  };
+
   let checklist: Checklist | null = null;
   let loading = true;
   let error: string | null = null;
@@ -28,11 +38,14 @@
     for (const item of checklist.items) {
       (groups[item.stage] ??= []).push(item);
     }
-    return Object.entries(groups).map(([stage, items]) => ({
-      stage,
-      items,
-      progress: items.filter((i) => i.completed).length / items.length,
-    }));
+    return Object.entries(groups)
+      .map(([stage, items]) => ({
+        stage,
+        label: STAGE_LABELS[stage] ?? stage.replace(/_/g, ' '),
+        items,
+        progress: items.filter((i) => i.completed).length / items.length,
+      }))
+      .sort((a, b) => a.stage.localeCompare(b.stage));
   })();
 
   onMount(async () => {
@@ -78,24 +91,33 @@
   {:else if checklist}
     {#each groupedItems as group}
       <section class="card">
-        <h2>{group.stage.replace(/_/g, ' ')}</h2>
+        <div class="stage-header">
+          <h2>{group.label}</h2>
+          <span class="badge">{Math.round(group.progress * 100)}%</span>
+        </div>
         <progress value={group.progress} max="1" />
-        <p class="text-muted">
-          {Math.round(group.progress * 100)}% completado
-        </p>
+
         <ul>
           {#each group.items as item}
-            <li>
+            <li class:completed={item.completed}>
               <label>
                 <input
                   type="checkbox"
                   checked={item.completed}
                   on:change={() => toggleItem(item)}
                 />
-                <span class:completed={item.completed}>{item.title}</span>
+                <div class="item-text">
+                  <span class="item-title">{item.title}</span>
+                  {#if item.description}
+                    <span class="item-desc">{item.description}</span>
+                  {/if}
+                  {#if item.documentsNeeded.length > 0}
+                    <span class="docs">📄 {item.documentsNeeded.join(', ')}</span>
+                  {/if}
+                </div>
               </label>
               {#if item.estimatedDays > 0}
-                <span class="days">{item.estimatedDays}d</span>
+                <span class="days" title="Duración estimada">~{item.estimatedDays}d</span>
               {/if}
             </li>
           {/each}
@@ -106,44 +128,96 @@
 </div>
 
 <style>
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+  }
   h2 {
     text-transform: capitalize;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    margin: 0;
+  }
+  .badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-bg-soft);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
   }
   progress {
     width: 100%;
-    height: 6px;
-    margin: 0.5rem 0;
+    height: 4px;
+    margin: 0.25rem 0 0.75rem;
+    border-radius: 2px;
+  }
+  progress::-webkit-progress-bar {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+  progress::-webkit-progress-value {
+    background: var(--color-primary);
+    border-radius: 2px;
   }
   ul {
     list-style: none;
     padding: 0;
-    margin: 0.5rem 0 0;
+    margin: 0;
   }
   li {
     display: flex;
-    align-items: center;
-    padding: 0.5rem 0;
+    align-items: flex-start;
+    padding: 0.6rem 0;
     border-bottom: 1px solid var(--color-border);
+    gap: 0.5rem;
   }
   li:last-child {
     border-bottom: none;
   }
+  li.completed {
+    opacity: 0.6;
+  }
   label {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.5rem;
     flex: 1;
     margin: 0;
     cursor: pointer;
   }
-  .completed {
+  input[type='checkbox'] {
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+  }
+  .item-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+  }
+  .item-title {
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+  .completed .item-title {
     text-decoration: line-through;
+  }
+  .item-desc {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+  }
+  .docs {
+    font-size: 0.72rem;
     color: var(--color-text-muted);
   }
   .days {
     font-size: 0.75rem;
     color: var(--color-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
   }
   section {
     margin-bottom: 1rem;

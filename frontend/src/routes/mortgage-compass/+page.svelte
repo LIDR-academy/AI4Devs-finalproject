@@ -27,11 +27,13 @@
   let showRealValue = false;
   let saving = false;
   let priceManuallyEdited = false;
+  let booting = true;
 
   onMount(async () => {
     try {
       const dash = await apiClient.get<DashboardResponse>('/api/dashboard');
       if (dash.empty) {
+        booting = false;
         return;
       }
       const detail = await apiClient.get<PurchaseProcessDetail>(
@@ -61,6 +63,8 @@
     } catch (e) {
       console.error(e);
       error = 'No se pudo cargar tu proceso anterior. Puedes continuar desde cero.';
+    } finally {
+      booting = false;
     }
   });
 
@@ -144,6 +148,10 @@
 <div class="container">
   <h1>Perfil hipotecario</h1>
   <AIDisclaimer />
+
+  {#if booting}
+    <p class="text-muted">Cargando tu perfil…</p>
+  {:else}
 
   {#if sourceListingId}
     <p class="source-banner">
@@ -337,6 +345,7 @@
       </div>
     </section>
   {/if}
+{/if}
 </div>
 
 <style>

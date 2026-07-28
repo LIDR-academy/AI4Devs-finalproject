@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import AIDisclaimer from '$lib/components/AIDisclaimer.svelte';
   import ListingTabs from '$lib/components/ListingTabs.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
@@ -7,6 +8,7 @@
   import { ApiError } from '$lib/api/client';
   import { analyzeListingStream } from '$lib/api/streamingClient';
   import { session } from '$lib/stores/session';
+  import { lastAnalysis } from '$lib/stores/lastAnalysis';
   import { formatCurrency, formatDate, scoreColor } from '$lib/utils/format';
   import type { AnalyzeListingResponse } from '$lib/api/types';
 
@@ -18,11 +20,23 @@
   let result: AnalyzeListingResponse | null = null;
   let currentStep: 'fetching_html' | 'resolving_location' | 'analyzing' | 'cross_referencing_cadastro' | null = null;
 
+  onMount(() => {
+    const prev = $lastAnalysis;
+    if (prev) {
+      url = prev.url;
+      manualText = prev.manualText;
+    }
+  });
+
   async function handleAnalyze(data: { url: string; manualText: string }): Promise<void> {
+    url = data.url;
+    manualText = data.manualText;
     loading = true;
     error = null;
     result = null;
     currentStep = 'fetching_html';
+
+    lastAnalysis.set({ url: data.url, manualText: data.manualText });
 
     try {
       result = await analyzeListingStream(

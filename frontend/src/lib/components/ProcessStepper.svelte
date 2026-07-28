@@ -35,10 +35,10 @@
             <span class="label">{step.label}</span>
           </span>
         {:else}
-          <span class="step-link disabled" aria-disabled="true">
+          <a href={step.href} class="step-link" aria-label="Ir a {step.label}">
             <span class="circle future">{i + 1}</span>
             <span class="label">{step.label}</span>
-          </span>
+          </a>
         {/if}
       </div>
     </div>
@@ -97,9 +97,6 @@
     text-decoration: none;
     color: inherit;
     min-width: 60px;
-  }
-  .step-link.disabled {
-    cursor: default;
   }
   .circle {
     width: 28px;
