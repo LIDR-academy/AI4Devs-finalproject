@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Realista — full flow', () => {
   test('user can land on dashboard, see empty state, and navigate to listing-lens', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/mi-proceso');
 
     // Empty state CTAs
     await expect(page.getByText('Analizar un anuncio')).toBeVisible();
@@ -29,7 +29,7 @@ test.describe('Realista — full flow', () => {
 
   test('user can complete the full happy path: analyze (API) → dashboard (UI) → mortgage compass (UI) → checklist (UI)', async ({ page, request }) => {
     // Clean session for a deterministic run
-    await page.goto('/');
+    await page.goto('/mi-proceso');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
 
@@ -63,12 +63,12 @@ test.describe('Realista — full flow', () => {
     expect(negBody.points.length).toBeGreaterThanOrEqual(3);
 
     // 4. Dashboard now shows the latest listing (re-load to pick up the new analysis)
-    await page.goto('/');
+    await page.goto('/mi-proceso');
     await expect(page.getByText(/bandera/i).first()).toBeVisible({ timeout: 10_000 });
 
     // 5. Navigate to mortgage-compass
     await page.goto('/mortgage-compass');
-    const mortgageHeading = page.getByRole('heading', { name: /Mortgage Compass|Asesor hipotecario|hipotecario/i }).first();
+    const mortgageHeading = page.getByRole('heading', { name: /hipotecario/i }).first();
     await expect(mortgageHeading).toBeVisible();
 
     // 6. Navigate to checklist

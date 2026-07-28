@@ -4,7 +4,7 @@ test.describe('UX redesign', () => {
   test('landing visible en /', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /ojos abiertos/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Pon a prueba tu casa/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Analizar un anuncio/i })).toBeVisible();
   });
 
   test('header sticky con logo', async ({ page }) => {
