@@ -66,7 +66,7 @@ export function BooksBarChart({
       title={mode === 'year' ? 'Libros por año' : 'Libros por mes'}
       subtitle="Evolución del volumen de lecturas."
     >
-      <BarChart bars={bars} valueLabel="Books read" />
+      <BarChart bars={bars} valueLabel="libros leídos" />
     </ChartCard>
   );
 }

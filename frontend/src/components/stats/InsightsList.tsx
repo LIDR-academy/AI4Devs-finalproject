@@ -16,7 +16,7 @@ export function InsightsList({ insights, periodScope }: InsightsListProps) {
       className="insights-list"
       aria-label={`Insights automáticos ${periodScope}`}
     >
-      <h2 className="insights-list__heading">Insights</h2>
+      <h2 className="insights-list__heading">Insights automáticos</h2>
       <ul className="insights-list__items">
         {insights.map((insight) => (
           <li key={insight.id}>

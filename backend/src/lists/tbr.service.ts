@@ -88,7 +88,7 @@ export class TbrService {
     if (status !== 'pendiente') {
       throw new UnprocessableEntityException({
         statusCode: 422,
-        message: 'Only pending books can be added to TBR',
+            message: 'Solo se pueden añadir libros pendientes a la lista TBR',
         code: 'TBR_BOOK_NOT_PENDING',
       });
     }
@@ -102,7 +102,7 @@ export class TbrService {
     if (existing) {
       throw new ConflictException({
         statusCode: 409,
-        message: 'Book already exists in this TBR list',
+        message: 'Este libro ya está en esta lista TBR',
         code: 'TBR_ENTRY_DUPLICATE',
       });
     }

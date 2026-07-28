@@ -78,7 +78,7 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
           <h2 id={titleId} className="ui-modal__title">
             {title}
           </h2>
-          <button type="button" className="ui-modal__close" aria-label="Close dialog" onClick={onClose}>
+          <button type="button" className="ui-modal__close" aria-label="Cerrar diálogo" onClick={onClose}>
             ×
           </button>
         </div>
@@ -96,8 +96,8 @@ export type ConfirmModalProps = Omit<ModalProps, 'footer'> & {
 };
 
 export function ConfirmModal({
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar',
   onConfirm,
   onClose,
   ...rest

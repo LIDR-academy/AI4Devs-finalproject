@@ -39,7 +39,7 @@ function describeSlice(
 
 function buildAriaSummary(slices: PieSlice[], total: number): string {
   const parts = slices.map((s) => `${s.label}: ${s.count}`);
-  return `Distribution of ${total} total. ${parts.join('; ')}.`;
+  return `Distribución de ${total} en total. ${parts.join('; ')}.`;
 }
 
 export interface PieChartProps {

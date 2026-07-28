@@ -12,15 +12,15 @@ export function ProfilePage() {
   return (
     <div className="profile-page">
       <PageHeader
-        title="Profile / Settings"
+        title="Perfil / Ajustes"
         subtitle="Gestiona tu cuenta y personaliza cómo clasificas tus lecturas."
       />
 
-      <main className="profile-page__main" aria-label="Profile and settings">
+      <main className="profile-page__main" aria-label="Perfil y ajustes">
         <Card title="Cuenta" className="profile-page__card">
           <dl className="profile-page__account">
             <div>
-              <dt>Email</dt>
+              <dt>Correo electrónico</dt>
               <dd>{email ?? '—'}</dd>
             </div>
           </dl>

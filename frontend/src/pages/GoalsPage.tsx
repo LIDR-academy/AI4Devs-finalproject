@@ -18,12 +18,12 @@ export function GoalsPage() {
   return (
     <div className="goals-page">
       <PageHeader
-        title="Goals"
+        title="Metas"
         subtitle="Configura tu meta anual y sigue tu progreso lector."
       />
 
-      <main className="goals-main" aria-label="Annual goals overview">
-        <section className="goals-main__primary" aria-label={`Goal details ${year}`}>
+      <main className="goals-main" aria-label="Resumen de metas anuales">
+        <section className="goals-main__primary" aria-label={`Detalle de la meta ${year}`}>
           <AnnualGoalCard
             year={year}
             data={data}
@@ -32,7 +32,7 @@ export function GoalsPage() {
           />
         </section>
 
-        <Card title="Forecast" className="goals-side-card">
+        <Card title="Previsión" className="goals-side-card">
           <p className="goals-side-card__text">
             Esta vista centraliza tu objetivo anual con la misma lógica que Home,
             para que puedas revisar rápidamente tu ritmo y ajustar la meta cuando lo necesites.

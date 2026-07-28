@@ -154,7 +154,7 @@ export function parseGoodreadsCsv(content: string): GoodreadsParsedUploadResult 
       warnings.push({
         row_number: rowNumber,
         code: 'COLUMN_COUNT_MISMATCH',
-        message: `Expected ${expectedColumnCount} columns but found ${values.length}`,
+        message: `Se esperaban ${expectedColumnCount} columnas pero se encontraron ${values.length}`,
       });
       continue;
     }

@@ -1,4 +1,5 @@
 import { Button } from './ui';
+import './TbrShared.css';
 
 interface TbrEmptyStateProps {
   onAddBooks: () => void;
@@ -7,9 +8,12 @@ interface TbrEmptyStateProps {
 export function TbrEmptyState({ onAddBooks }: TbrEmptyStateProps) {
   return (
     <div className="tbr-empty-state">
-      <p>Your TBR list is empty. Add books from your library to plan what to read this month.</p>
+      <p>
+        Tu lista TBR está vacía. Añade libros de tu biblioteca para planificar qué
+        leer este mes.
+      </p>
       <Button type="button" onClick={onAddBooks}>
-        Add books
+        Añadir libros
       </Button>
     </div>
   );

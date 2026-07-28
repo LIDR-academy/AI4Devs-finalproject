@@ -1,0 +1,67 @@
+.home-monthly-kpis.ui-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.home-monthly-kpis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.home-monthly-kpis__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+.home-monthly-kpis__status,
+.home-monthly-kpis__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.home-monthly-kpis__error {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}
+
+.home-monthly-kpis__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.home-monthly-kpis__grid .kpi-card {
+  min-height: auto;
+  padding: var(--space-3) var(--space-4);
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home-monthly-kpis__grid .kpi-card__value {
+  font-size: var(--font-size-xl);
+  order: 2;
+}
+
+.home-monthly-kpis__grid .kpi-card__label {
+  font-size: var(--font-size-sm);
+  order: 1;
+}
+
+.home-monthly-kpis__footer {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.home-monthly-kpis__footer a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}

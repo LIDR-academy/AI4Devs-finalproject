@@ -28,6 +28,7 @@ import {
   toMonthInputValue,
   type StatsPeriod,
 } from '../lib/statsPeriodStorage';
+import { APP_LOCALE } from '../lib/locale';
 import { formatAverageRating } from '../lib/rating';
 import './StatsPage.css';
 
@@ -37,7 +38,7 @@ function periodLabel(period: StatsPeriod): string {
   }
   const monthName = new Date(
     Date.UTC(period.year, period.month - 1, 1),
-  ).toLocaleString(undefined, { month: 'long', timeZone: 'UTC' });
+  ).toLocaleString(APP_LOCALE, { month: 'long', timeZone: 'UTC' });
   return `de ${monthName} ${period.year}`;
 }
 
@@ -97,7 +98,7 @@ export function StatsPage() {
   return (
     <div className="stats-page">
       <PageHeader
-        title="Reading Stats"
+        title="Estadísticas de lectura"
         subtitle="Visualiza tus métricas y distribuciones de lectura por año o mes."
         actions={
           <div className="stats-period-filter" role="group" aria-label="Filtro de periodo">

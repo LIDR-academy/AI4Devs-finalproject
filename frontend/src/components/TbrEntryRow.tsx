@@ -1,12 +1,19 @@
 import type { TbrEntry } from '../api/types';
+import './TbrShared.css';
 
 interface TbrEntryRowProps {
   entry: TbrEntry;
-  onRemove: (entryId: string) => void;
+  onRemove?: (entryId: string) => void;
   removing?: boolean;
+  readOnly?: boolean;
 }
 
-export function TbrEntryRow({ entry, onRemove, removing }: TbrEntryRowProps) {
+export function TbrEntryRow({
+  entry,
+  onRemove,
+  removing,
+  readOnly = false,
+}: TbrEntryRowProps) {
   const rowClass = entry.completed
     ? 'tbr-entry tbr-entry--completed'
     : 'tbr-entry';
@@ -29,15 +36,17 @@ export function TbrEntryRow({ entry, onRemove, removing }: TbrEntryRowProps) {
         <span className="tbr-entry__title">{entry.book.title}</span>
         <span className="tbr-entry__authors">{entry.book.authors}</span>
       </div>
-      <button
-        type="button"
-        className="tbr-entry__remove"
-        onClick={() => onRemove(entry.id)}
-        disabled={removing}
-        aria-label={`Remove ${entry.book.title} from TBR`}
-      >
-        Remove
-      </button>
+      {!readOnly && onRemove ? (
+        <button
+          type="button"
+          className="tbr-entry__remove"
+          onClick={() => onRemove(entry.id)}
+          disabled={removing}
+          aria-label={`Quitar ${entry.book.title} de la TBR`}
+        >
+          Quitar
+        </button>
+      ) : null}
     </li>
   );
 }

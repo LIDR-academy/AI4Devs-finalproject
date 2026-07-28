@@ -109,7 +109,7 @@ export class GenresService {
     if (duplicate) {
       throw new ConflictException({
         statusCode: 409,
-        message: 'A genre with this name already exists',
+        message: 'Ya existe un género con este nombre',
         code: 'GENRE_DUPLICATE',
       });
     }
@@ -136,7 +136,7 @@ export class GenresService {
     if (!genre) {
       throw new NotFoundException({
         statusCode: 404,
-        message: 'Genre not found',
+        message: 'Género no encontrado',
         code: 'GENRE_NOT_FOUND',
       });
     }
@@ -156,7 +156,7 @@ export class GenresService {
     if (!genre) {
       throw new NotFoundException({
         statusCode: 404,
-        message: 'Genre not found',
+        message: 'Género no encontrado',
         code: 'GENRE_NOT_FOUND',
       });
     }

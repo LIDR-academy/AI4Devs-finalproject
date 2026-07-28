@@ -30,7 +30,7 @@ export function LoginPage() {
         <h1>Reading Analytics</h1>
         <p className="login-sub">Acceso de desarrollo (sin contraseña)</p>
         <label>
-          Email
+          Correo electrónico
           <input
             type="email"
             value={email}
