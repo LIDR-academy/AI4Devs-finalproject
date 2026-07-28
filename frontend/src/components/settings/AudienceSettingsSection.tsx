@@ -146,7 +146,7 @@ export function AudienceSettingsSection() {
           label="Nuevo elemento"
           value={name}
           maxLength={100}
-          placeholder="Ej. Young Adult"
+          placeholder="Ej. Juvenil"
           onChange={(event) => setName(event.target.value)}
         />
         {formError ? (

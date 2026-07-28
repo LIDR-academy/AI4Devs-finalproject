@@ -72,7 +72,7 @@ export class GoodreadsImportProcessor {
         skipped_rows.push({
           row_number: row.row_number,
           code: 'DUPLICATE_IN_BATCH',
-          message: 'Duplicate row in the same CSV upload',
+          message: 'Fila duplicada en el mismo archivo CSV',
         });
         skipped_duplicate_count += 1;
         processed_count += 1;
@@ -86,7 +86,7 @@ export class GoodreadsImportProcessor {
         skipped_rows.push({
           row_number: row.row_number,
           code: 'DUPLICATE_EXISTING',
-          message: 'Book already exists in library',
+          message: 'El libro ya existe en la biblioteca',
           existing_book_id: existingBookId,
         });
         skipped_duplicate_count += 1;
@@ -107,7 +107,7 @@ export class GoodreadsImportProcessor {
           row_number: row.row_number,
           book_id: enrichment.book.id,
           code: 'ENRICHMENT_CATALOG_MISS',
-          message: 'Catalog returned no metadata for enrichment',
+          message: 'El catálogo no devolvió metadatos para enriquecer el libro',
         });
       }
       batchKeys.add(dedupKey);

@@ -56,29 +56,6 @@
   gap: var(--space-4);
 }
 
-.kpi-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-4) var(--space-5);
-  min-height: 6.5rem;
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.kpi-card__value {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-heading);
-}
-
-.kpi-card__label {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
 .stats-empty {
   color: var(--color-text-muted);
   font-style: italic;

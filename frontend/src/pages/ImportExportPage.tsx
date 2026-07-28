@@ -177,11 +177,11 @@ export function ImportExportPage() {
   return (
     <div className="import-export-page">
       <PageHeader
-        title="Import / Export"
+        title="Importar / Exportar"
         subtitle="Importa tu biblioteca desde Goodreads. La exportación a Excel o PDF llegará más adelante."
       />
 
-      <main className="import-export-main" aria-label="Import and export options">
+      <main className="import-export-main" aria-label="Opciones de importación y exportación">
         <Card
           title="Importar desde Goodreads"
           subtitle="Sube el CSV que exportas desde tu cuenta de Goodreads. Revisaremos los géneros del catálogo antes de importar."
@@ -211,7 +211,7 @@ export function ImportExportPage() {
               />
               <p className="goodreads-import-form__hint" id={`${fileInputId}-hint`}>
                 Formato CSV, máximo 10 MB. Puedes exportarlo desde Goodreads en
-                «My Books» → «Import and export».
+                «Mis libros» → «Importar y exportar».
               </p>
             </div>
 

@@ -6,22 +6,8 @@ import { AddToTbrModal } from '../components/AddToTbrModal';
 import { TbrEmptyState } from '../components/TbrEmptyState';
 import { TbrEntryRow } from '../components/TbrEntryRow';
 import { Button, PageHeader } from '../components/ui';
+import { formatMonthName, formatMonthYear } from '../lib/locale';
 import './ListsPage.css';
-
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
 
 function currentYearMonth(): { year: number; month: number } {
   const now = new Date();
@@ -64,7 +50,7 @@ export function ListsPage() {
     });
   };
 
-  const title = `TBR ${MONTH_NAMES[month - 1]} ${year}`;
+  const title = `TBR ${formatMonthYear(month, year)}`;
 
   return (
     <div className="lists-page">
@@ -74,39 +60,39 @@ export function ListsPage() {
         actions={
           data && data.entries.length > 0 ? (
             <Button type="button" onClick={() => setAddModalOpen(true)}>
-              Add books
+              Añadir libros
             </Button>
           ) : null
         }
       />
       <header className="lists-header">
-        <div className="lists-month-nav" role="group" aria-label="Month navigation">
+        <div className="lists-month-nav" role="group" aria-label="Navegación por mes">
           <Button
             type="button"
             variant="secondary"
             onClick={() => shiftMonth(-1)}
-            aria-label="Previous month"
+            aria-label="Mes anterior"
           >
             ←
           </Button>
           <span className="lists-month-nav__label">
-            {MONTH_NAMES[month - 1]} {year}
+            {formatMonthName(month)} {year}
           </span>
           <Button
             type="button"
             variant="secondary"
             onClick={() => shiftMonth(1)}
-            aria-label="Next month"
+            aria-label="Mes siguiente"
           >
             →
           </Button>
         </div>
       </header>
 
-      {isLoading && <p>Loading TBR…</p>}
+      {isLoading && <p>Cargando TBR…</p>}
       {error && (
         <p className="lists-error" role="alert">
-          Could not load TBR list.
+          No se pudo cargar la lista TBR.
         </p>
       )}
       {removeMutation.isError && (

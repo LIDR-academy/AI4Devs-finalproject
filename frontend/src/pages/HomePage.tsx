@@ -1,7 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { getAnnualGoal } from '../api/client';
 import { AnnualGoalCard } from '../components/AnnualGoalCard';
-import { Badge, Card, PageHeader } from '../components/ui';
+import { HomeMonthlyKpisCard } from '../components/HomeMonthlyKpisCard';
+import { HomeReadingCard } from '../components/HomeReadingCard';
+import { HomeTbrCard } from '../components/HomeTbrCard';
+import { PageHeader } from '../components/ui';
 import './HomePage.css';
 
 function currentUtcYear(): number {
@@ -19,41 +22,35 @@ export function HomePage() {
   return (
     <div className="home-page">
       <PageHeader
-        title="Reading Analytics"
+        title="Analítica de lectura"
         subtitle="Resumen visual de tu progreso lector actual."
       />
 
       <main className="home-main" aria-label="Resumen de inicio">
-        <section className="home-grid" aria-label="Secciones principales">
-          <Card className="home-card" title="Libros en curso">
-            <Badge variant="accent">Próximamente</Badge>
-            <p className="home-card__text">
-              Este bloque mostrará tus lecturas activas y su progreso.
-            </p>
-          </Card>
+        <section className="home-layout" aria-label="Secciones principales">
+          <div className="home-layout__reading">
+            <HomeReadingCard />
+          </div>
 
-          <Card className="home-card" title="KPIs del mes">
-            <Badge variant="kpi">Próximamente</Badge>
-            <p className="home-card__text">
-              Aquí verás páginas leídas, ritmo mensual y comparativas rápidas.
-            </p>
-          </Card>
+          <div className="home-layout__side">
+            <div className="home-layout__top">
+              <HomeMonthlyKpisCard />
 
-          <section className="home-card home-card--goal" aria-label={`Meta anual ${year}`}>
-            <AnnualGoalCard
-              year={year}
-              data={data}
-              isLoading={isLoading}
-              error={error}
-            />
-          </section>
+              <section
+                className="home-card home-card--goal"
+                aria-label={`Meta anual ${year}`}
+              >
+                <AnnualGoalCard
+                  year={year}
+                  data={data}
+                  isLoading={isLoading}
+                  error={error}
+                />
+              </section>
+            </div>
 
-          <Card className="home-card" title="TBR actual">
-            <Badge variant="default">Próximamente</Badge>
-            <p className="home-card__text">
-              Este bloque conectará con tu lista mensual para priorizar próximas lecturas.
-            </p>
-          </Card>
+            <HomeTbrCard />
+          </div>
         </section>
       </main>
     </div>

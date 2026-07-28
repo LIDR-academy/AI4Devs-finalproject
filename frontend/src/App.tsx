@@ -44,8 +44,8 @@ function AppRoutes() {
           path="library"
           element={
             <PlaceholderPage
-              title="Library"
-              description="Your full reading history with advanced search and filters will live here."
+              title="Biblioteca"
+              description="Tu historial completo de lectura con búsqueda avanzada y filtros estará aquí."
             />
           }
         />
@@ -53,8 +53,8 @@ function AppRoutes() {
           path="recap"
           element={
             <PlaceholderPage
-              title="Recap / Insights"
-              description="Monthly and annual reading recaps and automatic insights will live here."
+              title="Resumen e insights"
+              description="Los resúmenes mensuales y anuales y los insights automáticos estarán aquí."
             />
           }
         />

@@ -20,7 +20,7 @@ export function StarRating({
   value,
   onChange,
   disabled,
-  'aria-label': ariaLabel = 'Rating',
+  'aria-label': ariaLabel = 'Puntuación',
 }: StarRatingProps) {
   const labelId = useId();
   const current = value ?? 0;

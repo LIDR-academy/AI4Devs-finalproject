@@ -43,7 +43,7 @@ export class AudiencesService {
     if (duplicate) {
       throw new ConflictException({
         statusCode: 409,
-        message: 'An audience with this name already exists',
+        message: 'Ya existe un elemento con este nombre',
         code: 'AUDIENCE_DUPLICATE',
       });
     }
@@ -76,7 +76,7 @@ export class AudiencesService {
     if (!audience) {
       throw new NotFoundException({
         statusCode: 404,
-        message: 'Audience not found',
+        message: 'Público objetivo no encontrado',
         code: 'AUDIENCE_NOT_FOUND',
       });
     }
@@ -96,7 +96,7 @@ export class AudiencesService {
     if (!audience) {
       throw new NotFoundException({
         statusCode: 404,
-        message: 'Audience not found',
+        message: 'Público objetivo no encontrado',
         code: 'AUDIENCE_NOT_FOUND',
       });
     }

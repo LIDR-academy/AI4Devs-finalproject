@@ -157,7 +157,7 @@ export function mapGoodreadsRow(
       warning: {
         row_number: row.row_number,
         code: 'MISSING_TITLE',
-        message: 'Row omitted from mapped_rows because title is empty',
+        message: 'Fila omitida porque el título está vacío',
       },
     };
   }
@@ -169,7 +169,7 @@ export function mapGoodreadsRow(
       warning: {
         row_number: row.row_number,
         code: 'UNKNOWN_EXCLUSIVE_SHELF',
-        message: `Unsupported exclusive shelf: ${row.exclusive_shelf}`,
+        message: `Estantería exclusiva no reconocida: ${row.exclusive_shelf}`,
       },
     };
   }

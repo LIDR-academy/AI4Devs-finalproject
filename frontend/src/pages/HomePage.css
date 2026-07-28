@@ -7,12 +7,44 @@
   width: 100%;
 }
 
-.home-grid {
+.home-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  grid-template-columns: minmax(12rem, 20rem) minmax(0, 1fr);
   gap: var(--space-5);
   width: 100%;
   min-width: 0;
+  align-items: stretch;
+}
+
+.home-layout__reading {
+  min-width: 0;
+  min-height: 0;
+}
+
+.home-layout__reading > .home-reading-card {
+  height: 100%;
+}
+
+.home-layout__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  min-height: 0;
+}
+
+.home-layout__top {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.home-layout__top > .home-monthly-kpis,
+.home-layout__top > .home-card--goal {
+  height: 100%;
+  min-height: 0;
 }
 
 .home-card {
@@ -36,8 +68,21 @@
   box-shadow: none;
 }
 
-@media (max-width: 768px) {
-  .home-grid {
+.home-card--goal .annual-goal-card {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .home-layout__reading > .home-reading-card {
+    height: auto;
+  }
+
+  .home-layout__top {
     grid-template-columns: 1fr;
   }
 }

@@ -86,7 +86,7 @@ export function AddToTbrModal({
       })
       .catch(() => {
         if (!cancelled) {
-          setError('Could not search the catalog. Check your connection and try again.');
+          setError('No se pudo buscar en el catálogo. Comprueba la conexión e inténtalo de nuevo.');
         }
       })
       .finally(() => {
@@ -149,7 +149,7 @@ export function AddToTbrModal({
           const library = await listBooks();
           const existing = library.find((b) => b.id === existingId);
           if (existing && (existing.reading_status ?? 'pendiente') !== 'pendiente') {
-            setError('Only pending books can be added to TBR.');
+            setError('Solo se pueden añadir libros pendientes a la lista TBR.');
             setSubmitting(false);
             return;
           }
@@ -161,7 +161,7 @@ export function AddToTbrModal({
       await addBookToTbr(bookId);
     } catch (err) {
       if (err instanceof ApiRequestError && err.body.code === 'TBR_BOOK_NOT_PENDING') {
-        setError('Only pending books can be added to TBR.');
+        setError('Solo se pueden añadir libros pendientes a la lista TBR.');
       } else {
         setError(messageFromUnknownError(err));
       }
@@ -190,9 +190,9 @@ export function AddToTbrModal({
         onClick={(e) => e.stopPropagation()}
       >
         <header className="add-tbr-modal__header">
-          <h2 id="add-tbr-title">Add book to TBR</h2>
+          <h2 id="add-tbr-title">Añadir libro a la TBR</h2>
           <button type="button" className="add-tbr-modal__close" onClick={onClose}>
-            Close
+            Cerrar
           </button>
         </header>
 
@@ -207,7 +207,7 @@ export function AddToTbrModal({
               setError(null);
             }}
           >
-            Library
+            Biblioteca
           </button>
           <button
             type="button"
@@ -219,7 +219,7 @@ export function AddToTbrModal({
               setError(null);
             }}
           >
-            Search
+            Buscar
           </button>
         </div>
 
@@ -231,10 +231,10 @@ export function AddToTbrModal({
 
         {tab === 'library' && (
           <div role="tabpanel">
-            {isLoading && <p>Loading library…</p>}
+            {isLoading && <p>Cargando biblioteca…</p>}
             {!isLoading && pendingBooks.length === 0 && (
               <p className="add-tbr-modal__hint">
-                No pending books in your library. Search for a title to add.
+                No hay libros pendientes en tu biblioteca. Busca un título para añadirlo.
               </p>
             )}
             <ul className="add-tbr-modal__list">
@@ -263,15 +263,15 @@ export function AddToTbrModal({
             <input
               type="search"
               className="add-tbr-modal__search-input"
-              placeholder="Search by title, author, or ISBN…"
+              placeholder="Buscar por título, autora o ISBN…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               minLength={2}
             />
-            {searchLoading && <p>Searching catalog…</p>}
+            {searchLoading && <p>Buscando en el catálogo…</p>}
             {!searchLoading && debouncedQuery.length >= 2 && searchResults.length === 0 && (
               <p className="add-tbr-modal__hint">
-                No catalog results. Try another query.
+                Sin resultados en el catálogo. Prueba otra búsqueda.
               </p>
             )}
             <ul className="add-tbr-modal__list">
@@ -300,14 +300,14 @@ export function AddToTbrModal({
 
         <footer className="add-tbr-modal__footer">
           <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
-            Cancel
+            Cancelar
           </Button>
           <Button
             type="button"
             disabled={!canConfirm || submitting}
             onClick={handleConfirm}
           >
-            Add to list
+            Añadir a la lista
           </Button>
         </footer>
       </div>

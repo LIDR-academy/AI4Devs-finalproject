@@ -10,9 +10,9 @@ function buildAriaSummary(bars: BarChartBar[], valueLabel: string): string {
     .filter((bar) => bar.value > 0)
     .map((bar) => `${bar.label}: ${bar.value}`);
   if (parts.length === 0) {
-    return `No ${valueLabel} recorded in this period.`;
+    return `No hay registros de ${valueLabel} en este periodo.`;
   }
-  return `${valueLabel} by period. ${parts.join('; ')}.`;
+  return `${valueLabel} por periodo. ${parts.join('; ')}.`;
 }
 
 export interface BarChartProps {

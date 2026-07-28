@@ -42,7 +42,7 @@ export class FormatsService {
     if (duplicate) {
       throw new ConflictException({
         statusCode: 409,
-        message: 'A format with this name already exists',
+        message: 'Ya existe un formato con este nombre',
         code: 'FORMAT_DUPLICATE',
       });
     }
@@ -75,7 +75,7 @@ export class FormatsService {
     if (!format) {
       throw new NotFoundException({
         statusCode: 404,
-        message: 'Format not found',
+        message: 'Formato no encontrado',
         code: 'FORMAT_NOT_FOUND',
       });
     }
@@ -98,7 +98,7 @@ export class FormatsService {
     if (!format) {
       throw new NotFoundException({
         statusCode: 404,
-        message: 'Format not found',
+        message: 'Formato no encontrado',
         code: 'FORMAT_NOT_FOUND',
       });
     }

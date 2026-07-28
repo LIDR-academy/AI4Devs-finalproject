@@ -43,15 +43,17 @@ export function starFillState(star: number, value: number): StarFillState {
   return 'empty';
 }
 
+import { APP_LOCALE } from './locale';
+
 export function formatRatingLabel(value: number | null | undefined): string {
   if (value == null || value < MIN_RATING) {
-    return 'No rating';
+    return 'Sin puntuación';
   }
   const hasHalf = !Number.isInteger(value);
-  return `${value.toLocaleString(undefined, {
+  return `${value.toLocaleString(APP_LOCALE, {
     minimumFractionDigits: hasHalf ? 1 : 0,
     maximumFractionDigits: 1,
-  })} out of 5 stars`;
+  })} de 5 estrellas`;
 }
 
 export function formatAverageRating(value: number | null | undefined): string {
@@ -61,7 +63,7 @@ export function formatAverageRating(value: number | null | undefined): string {
   const hasHalf = Math.abs(value * 2 - Math.round(value * 2)) > 1e-9
     ? true
     : !Number.isInteger(value);
-  return value.toLocaleString(undefined, {
+  return value.toLocaleString(APP_LOCALE, {
     minimumFractionDigits: hasHalf ? 1 : 0,
     maximumFractionDigits: 2,
   });

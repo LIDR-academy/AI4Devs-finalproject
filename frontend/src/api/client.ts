@@ -345,7 +345,7 @@ export async function pollImportJobUntilComplete(
       if (!status.result?.meta) {
         throw new ApiRequestError(500, {
           statusCode: 500,
-          message: 'Import job completed without a result payload',
+          message: 'La importación terminó sin datos de resultado',
         });
       }
       return status.result;
@@ -354,7 +354,7 @@ export async function pollImportJobUntilComplete(
     if (status.status === 'failed') {
       throw new ApiRequestError(500, {
         statusCode: 500,
-        message: status.error_message ?? 'Import job failed',
+        message: status.error_message ?? 'La importación ha fallado',
       });
     }
 
@@ -404,7 +404,7 @@ export async function startGoodreadsImport(
 
   throw new ApiRequestError(500, {
     statusCode: 500,
-    message: 'Expected async import job response',
+    message: 'Se esperaba una respuesta de importación asíncrona',
   });
 }
 

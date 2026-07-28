@@ -68,7 +68,7 @@ export function PagesBarChart({
       title={mode === 'year' ? 'Páginas por año' : 'Páginas por mes'}
       subtitle="Evolución de páginas leídas."
     >
-      <BarChart bars={bars} valueLabel="Pages read" />
+      <BarChart bars={bars} valueLabel="páginas leídas" />
     </ChartCard>
   );
 }

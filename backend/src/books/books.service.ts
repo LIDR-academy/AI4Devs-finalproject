@@ -107,7 +107,7 @@ export class BooksService {
         if (!format) {
           throw new BadRequestException({
             statusCode: 400,
-            message: 'Format not found for this user',
+            message: 'Formato no encontrado para este usuario',
             code: 'FORMAT_NOT_FOUND',
           });
         }
@@ -148,7 +148,7 @@ export class BooksService {
     ) {
       throw new UnprocessableEntityException({
         statusCode: 422,
-        message: 'Finish date cannot be before start date',
+        message: 'La fecha de fin no puede ser anterior a la de inicio',
         code: 'FINISHED_BEFORE_STARTED',
       });
     }
@@ -319,7 +319,7 @@ export class BooksService {
       if (byIsbn) {
         throw new ConflictException({
           statusCode: 409,
-          message: 'Book already exists in your library',
+          message: 'Este libro ya está en tu biblioteca',
           code: 'BOOK_DUPLICATE',
           existingBookId: byIsbn.id,
         });
@@ -337,7 +337,7 @@ export class BooksService {
       if (byExternal) {
         throw new ConflictException({
           statusCode: 409,
-          message: 'Book already exists in your library',
+          message: 'Este libro ya está en tu biblioteca',
           code: 'BOOK_DUPLICATE',
           existingBookId: byExternal.id,
         });
@@ -457,7 +457,7 @@ export class BooksService {
     if (!audience) {
       throw new BadRequestException({
         statusCode: 400,
-        message: 'Audience not found for this user',
+        message: 'Público objetivo no encontrado para este usuario',
         code: 'AUDIENCE_NOT_FOUND',
       });
     }
@@ -477,7 +477,7 @@ export class BooksService {
     if (!genre) {
       throw new BadRequestException({
         statusCode: 400,
-        message: 'Genre not found for this user',
+        message: 'Género no encontrado para este usuario',
         code: 'GENRE_NOT_FOUND',
       });
     }
