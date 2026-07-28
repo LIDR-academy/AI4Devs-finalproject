@@ -33,11 +33,12 @@ describe('PurchaseProcessAggregator', () => {
     ]);
   });
 
-  it('computes monthly payment for 200k @ 3.5% over 30yr between 800-1000€', () => {
+  it('computes loan amount and monthly payment (propertyPrice - savings)', () => {
     const result = agg.compute(200_000, profile);
+    expect(result!.loanAmount).toBe(155_000);
     const baseline = result!.amortizationScenarios[0];
-    expect(baseline.monthlyPayment).toBeGreaterThan(800);
-    expect(baseline.monthlyPayment).toBeLessThan(1000);
+    expect(baseline.monthlyPayment).toBeGreaterThan(600);
+    expect(baseline.monthlyPayment).toBeLessThan(750);
   });
 
   it('totalCash = propertyPrice + hiddenCosts.total', () => {

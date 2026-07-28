@@ -268,7 +268,9 @@
     <section class="card">
       <h2>Gastos ocultos de compra</h2>
       <p class="text-muted">
-        Coste real de la compra, además del precio del anuncio.
+        Para una vivienda de {formatCurrency($financialProfile.propertyPrice ?? 0)},
+        necesitas tener ahorrado <strong>{formatCurrency(computed.totalCash)}</strong> en total
+        (precio + gastos).
       </p>
       <ul class="breakdown">
         {#each computed.hiddenCosts.breakdown as item}
@@ -282,6 +284,13 @@
           <strong>{formatCurrency(computed.totalCash)}</strong>
         </li>
       </ul>
+      {#if computed.loanAmount > 0}
+        <p class="info">
+          Con {formatCurrency($financialProfile.savings)} ahorrados, necesitas una hipoteca de
+          <strong>{formatCurrency(computed.loanAmount)}</strong>
+          ({(computed.loanAmount / ($financialProfile.propertyPrice ?? 1) * 100).toFixed(0)}% del precio).
+        </p>
+      {/if}
       {#if computed.gap < 0}
         <p class="warning">
           Te faltan <strong>{formatCurrency(Math.abs(computed.gap))}</strong> para cubrir precio + gastos.
@@ -302,10 +311,15 @@
     <section class="card">
       <h2>Amortizar vs invertir</h2>
       <p class="text-muted">
-        Cuota mensual con hipoteca a 30 años al {($financialProfile.interestRate * 100).toFixed(2)}%:
-        <strong>{formatCurrency(computed.monthlyPayment30yr)}</strong>.
+        {#if computed.loanAmount > 0}
+          Hipoteca de <strong>{formatCurrency(computed.loanAmount)}</strong> a 30 años al {($financialProfile.interestRate * 100).toFixed(2)}%:
+          cuota mensual <strong>{formatCurrency(computed.monthlyPayment30yr)}</strong>.
+        {:else}
+          Cuota mensual con hipoteca a 30 años al {($financialProfile.interestRate * 100).toFixed(2)}%:
+          <strong>{formatCurrency(computed.monthlyPayment30yr)}</strong>.
+        {/if}
         {#if baselineAmort}
-          sin amortizar pagas {formatCurrency(baselineAmort.totalInterest)} en intereses totales.
+          Sin amortizar pagas {formatCurrency(baselineAmort.totalInterest)} en intereses totales.
         {/if}
       </p>
 
@@ -497,6 +511,13 @@
     font-weight: 600;
     border-bottom: none;
     padding-top: 0.6rem;
+  }
+  .info {
+    background: var(--color-bg-soft);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
   }
   .warning {
     color: var(--color-danger);

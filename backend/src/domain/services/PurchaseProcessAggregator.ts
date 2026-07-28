@@ -15,6 +15,7 @@ export interface ComputedMortgage {
   hiddenCosts: HiddenCosts;
   totalCash: number;
   gap: number;
+  loanAmount: number;
   monthlyPayment30yr: number;
   amortizationScenarios: AmortizationScenario[];
   investmentScenarios: InvestmentScenario[];
@@ -36,16 +37,22 @@ export class PurchaseProcessAggregator {
   ): ComputedMortgage | null {
     if (propertyPrice === null || propertyPrice <= 0) return null;
 
+    const savings = financialProfile?.savings ?? 0;
     const region = (financialProfile?.region ?? 'Madrid') as Region;
     const interestRate = financialProfile?.interestRate ?? DEFAULT_INTEREST_RATE;
+    const loanAmount = Math.round(Math.max(0, propertyPrice - savings));
+
     const hiddenCosts = this.hidden.calculate(propertyPrice, region, false, {
       isFirstHome: financialProfile?.isFirstHome ?? false,
       buyerAge: financialProfile?.buyerAge ?? undefined,
       isProtectedHousing: financialProfile?.isProtectedHousing ?? false,
     });
 
+    const totalCash = propertyPrice + hiddenCosts.total;
+    const gap = savings - totalCash;
+
     const amortizationScenarios = this.amort.generateAllScenarios({
-      principal: propertyPrice,
+      principal: loanAmount > 0 ? loanAmount : propertyPrice,
       annualRate: interestRate,
       years: DEFAULT_TERM_YEARS,
     });
@@ -56,14 +63,11 @@ export class PurchaseProcessAggregator {
       inflation: INFLATION,
     });
 
-    const totalCash = propertyPrice + hiddenCosts.total;
-    const savings = financialProfile?.savings ?? 0;
-    const gap = savings - totalCash;
-
     return {
       hiddenCosts,
       totalCash,
       gap,
+      loanAmount,
       monthlyPayment30yr: amortizationScenarios[0].monthlyPayment,
       amortizationScenarios,
       investmentScenarios,

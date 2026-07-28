@@ -128,6 +128,7 @@ export interface ComputedMortgage {
   hiddenCosts: HiddenCosts;
   totalCash: number;
   gap: number;
+  loanAmount: number;
   monthlyPayment30yr: number;
   amortizationScenarios: AmortizationScenario[];
   investmentScenarios: InvestmentScenario[];
