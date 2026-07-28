@@ -147,6 +147,9 @@ export interface PurchaseProcessDetail {
     region: string;
     persona?: Persona;
     interestRate?: number;
+    isFirstHome?: boolean;
+    buyerAge?: number | null;
+    isProtectedHousing?: boolean;
   } | null;
   computed: ComputedMortgage | null;
   createdAt: string;

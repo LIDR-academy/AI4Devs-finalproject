@@ -31,6 +31,9 @@ export class FinancialProfile {
     public readonly region: Region,
     public readonly persona: Persona | null,
     public readonly interestRate: number | null,
+    public readonly isFirstHome: boolean,
+    public readonly buyerAge: number | null,
+    public readonly isProtectedHousing: boolean,
   ) {}
 
   static create(input: {
@@ -40,6 +43,9 @@ export class FinancialProfile {
     region: string;
     persona?: Persona;
     interestRate?: number;
+    isFirstHome?: boolean;
+    buyerAge?: number;
+    isProtectedHousing?: boolean;
   }): FinancialProfile {
     if (input.savings < 0) throw new Error('Savings must be non-negative');
     if (input.monthlyIncome < 0) throw new Error('Income must be non-negative');
@@ -48,6 +54,9 @@ export class FinancialProfile {
     if (input.interestRate !== undefined && input.interestRate < 0) {
       throw new Error('Interest rate must be non-negative');
     }
+    if (input.buyerAge !== undefined && (input.buyerAge < 18 || input.buyerAge > 120)) {
+      throw new Error('Age must be between 18 and 120');
+    }
     return new FinancialProfile(
       input.savings,
       input.monthlyIncome,
@@ -55,6 +64,9 @@ export class FinancialProfile {
       input.region as Region,
       input.persona ?? null,
       input.interestRate ?? null,
+      input.isFirstHome ?? false,
+      input.buyerAge ?? null,
+      input.isProtectedHousing ?? false,
     );
   }
 
@@ -66,6 +78,9 @@ export class FinancialProfile {
       region: this.region,
       persona: this.persona,
       interestRate: this.interestRate,
+      isFirstHome: this.isFirstHome,
+      buyerAge: this.buyerAge,
+      isProtectedHousing: this.isProtectedHousing,
     };
   }
 

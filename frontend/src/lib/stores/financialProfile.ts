@@ -15,6 +15,9 @@ export interface FinancialProfileForm {
   region: string;
   persona: Persona | null;
   interestRate: number;
+  isFirstHome: boolean;
+  buyerAge: number | null;
+  isProtectedHousing: boolean;
 }
 
 const DEFAULT: FinancialProfileForm = {
@@ -25,6 +28,9 @@ const DEFAULT: FinancialProfileForm = {
   region: 'Madrid',
   persona: null,
   interestRate: 0.035,
+  isFirstHome: true,
+  buyerAge: null,
+  isProtectedHousing: false,
 };
 
 function load(): FinancialProfileForm {

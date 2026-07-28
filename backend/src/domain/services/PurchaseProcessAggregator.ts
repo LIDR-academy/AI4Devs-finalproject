@@ -38,7 +38,11 @@ export class PurchaseProcessAggregator {
 
     const region = (financialProfile?.region ?? 'Madrid') as Region;
     const interestRate = financialProfile?.interestRate ?? DEFAULT_INTEREST_RATE;
-    const hiddenCosts = this.hidden.calculate(propertyPrice, region, false);
+    const hiddenCosts = this.hidden.calculate(propertyPrice, region, false, {
+      isFirstHome: financialProfile?.isFirstHome ?? false,
+      buyerAge: financialProfile?.buyerAge ?? undefined,
+      isProtectedHousing: financialProfile?.isProtectedHousing ?? false,
+    });
 
     const amortizationScenarios = this.amort.generateAllScenarios({
       principal: propertyPrice,

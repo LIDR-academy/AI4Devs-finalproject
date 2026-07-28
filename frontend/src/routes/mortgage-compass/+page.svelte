@@ -55,6 +55,9 @@
               region: detail.financialProfile.region ?? p.region,
               persona: detail.financialProfile.persona ?? p.persona,
               interestRate: detail.financialProfile.interestRate ?? p.interestRate,
+              isFirstHome: detail.financialProfile.isFirstHome ?? p.isFirstHome,
+              buyerAge: detail.financialProfile.buyerAge ?? p.buyerAge,
+              isProtectedHousing: detail.financialProfile.isProtectedHousing ?? p.isProtectedHousing,
             }
           : {}),
       }));
@@ -81,6 +84,9 @@
         region: fp.region,
         persona: fp.persona ?? undefined,
         interestRate: fp.interestRate,
+        isFirstHome: fp.isFirstHome,
+        buyerAge: fp.buyerAge ?? undefined,
+        isProtectedHousing: fp.isProtectedHousing,
       };
       if (processId) {
         await apiClient.patch(`/api/purchase-processes/${processId}`, {
@@ -119,6 +125,9 @@
           region: fp.region,
           persona: fp.persona ?? undefined,
           interestRate: fp.interestRate,
+          isFirstHome: fp.isFirstHome,
+          buyerAge: fp.buyerAge ?? undefined,
+          isProtectedHousing: fp.isProtectedHousing,
         },
       });
       const detail = await apiClient.get<PurchaseProcessDetail>(
@@ -217,15 +226,34 @@
           {/each}
         </select>
       </div>
+      <div class="field-inline">
+        <input type="checkbox" id="firstHome" bind:checked={$financialProfile.isFirstHome} />
+        <label for="firstHome">Vivienda habitual (aplica bonificaciones ITP)</label>
+      </div>
+      {#if $financialProfile.isFirstHome}
+        <div class="field">
+          <label for="buyerAge">Edad del comprador</label>
+          <input id="buyerAge" type="number" min="18" max="99" bind:value={$financialProfile.buyerAge} />
+          <small class="hint">Muchas CCAA bonifican el ITP a menores de 35-40 años</small>
+        </div>
+        <div class="field-inline">
+          <input type="checkbox" id="protectedHousing" bind:checked={$financialProfile.isProtectedHousing} />
+          <label for="protectedHousing">Vivienda protegida (VPO)</label>
+        </div>
+      {/if}
       <div class="field">
-        <label for="rate">Tipo de interés (proporción, ej. 0.035 = 3,5%)</label>
+        <label for="rate">TIN (%)</label>
         <input
           id="rate"
           type="number"
           min="0"
-          max="1"
-          step="0.001"
-          bind:value={$financialProfile.interestRate}
+          max="15"
+          step="0.01"
+          value={$financialProfile.interestRate * 100}
+          on:input={(e) => {
+            const pct = parseFloat(e.currentTarget.value);
+            if (!isNaN(pct)) financialProfile.update((p) => ({ ...p, interestRate: pct / 100 }));
+          }}
         />
       </div>
       <button class="btn-primary" type="submit" disabled={saving}>
@@ -272,7 +300,7 @@
     <section class="card">
       <h2>Amortizar vs invertir</h2>
       <p class="text-muted">
-        Cuota mensual con hipoteca a 30 años al {(($financialProfile.interestRate ?? 0.035) * 100).toFixed(2)}%:
+        Cuota mensual con hipoteca a 30 años al {($financialProfile.interestRate * 100).toFixed(2)}%:
         <strong>{formatCurrency(computed.monthlyPayment30yr)}</strong>.
       </p>
       <div class="insight">
@@ -297,6 +325,15 @@
         investment={computed.investmentScenarios}
         {showRealValue}
       />
+      <details class="investment-narrative">
+        <summary>¿Qué representa cada escenario de inversión?</summary>
+        <ul>
+          <li><strong>Conservador (4%):</strong> Renta fija, depósitos bancarios, letras del tesoro. Bajo riesgo, rentabilidad modesta pero predecible.</li>
+          <li><strong>Moderado (6%):</strong> Fondos indexados globales (MSCI World, ~7% histórico anual ajustado por inflación). Riesgo medio, diversificación global.</li>
+          <li><strong>Agresivo (8%):</strong> Cartera diversificada con sesgo a renta variable (S&P 500, ~10% histórico nominal). Mayor volatilidad, mayor rentabilidad esperada a largo plazo.</li>
+        </ul>
+        <p class="text-muted">En cualquiera de los tres casos, la inversión está sujeta a tributación (~19-26% sobre ganancias) y no garantiza rentabilidades futuras.</p>
+      </details>
       <p class="disclaimer">
         ⚠️ Las rentabilidades pasadas no garantizan futuras. Los beneficios están sujetos a tributación
         (~19-26% en España para ganancias patrimoniales). Esto no es consejo financiero.
@@ -381,6 +418,21 @@
   }
   .field {
     margin-bottom: 0.75rem;
+  }
+  .field-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+  }
+  .field-inline input[type='checkbox'] {
+    width: auto;
+    margin: 0;
+  }
+  .field-inline label {
+    margin: 0;
+    display: inline;
   }
   label {
     display: block;
@@ -475,5 +527,23 @@
   }
   .error {
     border-color: var(--color-danger);
+  }
+  .investment-narrative {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+  }
+  .investment-narrative summary {
+    cursor: pointer;
+    color: var(--color-primary);
+    font-weight: 500;
+    padding: 0.25rem 0;
+  }
+  .investment-narrative ul {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+  }
+  .investment-narrative li {
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
   }
 </style>

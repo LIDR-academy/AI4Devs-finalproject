@@ -28,6 +28,16 @@
     notary: 'Notaría',
   };
 
+  const STAGE_ICONS: Record<string, string> = {
+    pre_arras: '📋',
+    post_arras: '✍️',
+    pre_escritura: '📑',
+    post_escritura: '🏠',
+    arras: '💰',
+    mortgage: '🏦',
+    notary: '⚖️',
+  };
+
   let checklist: Checklist | null = null;
   let loading = true;
   let error: string | null = null;
@@ -92,7 +102,7 @@
     {#each groupedItems as group}
       <section class="card">
         <div class="stage-header">
-          <h2>{group.label}</h2>
+          <h2>{STAGE_ICONS[group.stage] ?? '📌'} {group.label}</h2>
           <span class="badge">{Math.round(group.progress * 100)}%</span>
         </div>
         <progress value={group.progress} max="1" />
@@ -133,6 +143,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.25rem;
+    position: sticky;
+    top: 56px;
+    background: var(--color-bg);
+    z-index: 5;
+    padding: 0.5rem 0;
   }
   h2 {
     text-transform: capitalize;
