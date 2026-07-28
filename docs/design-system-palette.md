@@ -44,4 +44,24 @@ Semantic mapping from PRD §6 raw colors to CSS tokens. Components MUST use **se
 ## Source files
 
 - Tokens: `frontend/src/theme/tokens.css`
+- Palette registry: `frontend/src/theme/palettes.ts`
+- Runtime apply: `frontend/src/theme/applyTheme.ts`, `ThemeProvider`
 - Components: `frontend/src/components/ui/`
+
+## User-selectable palettes (KAN-80)
+
+Nine preset palettes map five raw slots to semantic tokens. Default: **veranda** (PRD §6). Users change palette in Profile / Settings; choice persists in `user_profiles.preferences.theme_palette_id` and applies via CSS variables on `document.documentElement`.
+
+| Slug | UI label (es) |
+|------|----------------|
+| `veranda` | Veranda |
+| `primavera` | Primavera |
+| `strawberry` | Fresa |
+| `lotus-pond` | Estanque de loto |
+| `ocean-deep` | Océano profundo |
+| `pool-party` | Fiesta en la piscina |
+| `sunset` | Atardecer |
+| `pastel-dream` | Sueño pastel |
+| `fresh-green` | Verde fresco |
+
+Component CSS MUST use `var(--color-*)` only; hex literals belong in `tokens.css` defaults and `palettes.ts`.

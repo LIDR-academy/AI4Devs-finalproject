@@ -41,14 +41,14 @@
 
 .book-form__error {
   margin: 0 0 1rem;
-  color: #b33;
+  color: var(--color-danger);
   font-size: 0.875rem;
 }
 
 .book-form__field-error {
   grid-column: 1 / -1;
   margin: -0.35rem 0 0;
-  color: #b33;
+  color: var(--color-danger);
   font-size: 0.8125rem;
 }
 

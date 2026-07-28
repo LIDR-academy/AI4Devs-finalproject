@@ -34,6 +34,14 @@ export interface Genre {
   updated_at: string;
 }
 
+export interface UserPreferences {
+  theme_palette_id: string;
+}
+
+export interface UpdateUserPreferencesPayload {
+  theme_palette_id?: string;
+}
+
 export interface AudienceAffectedBooksResponse {
   affected_book_count: number;
 }

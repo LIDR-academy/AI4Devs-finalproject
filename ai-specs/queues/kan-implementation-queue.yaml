@@ -251,3 +251,14 @@ phases:
         depends_on: [KAN-62]
         epic: KAN-58
         relates: [KAN-43, KAN-48]
+
+  - id: phase-12-theme-settings
+    name: "Phase 12 — User theme palettes"
+    note: >
+      Profile / Settings visual theme presets (KAN-80). Builds on KAN-18 design tokens;
+      centralize stray hex in component CSS so palette swaps apply app-wide.
+    tickets:
+      - id: KAN-80
+        summary: "Theme palette settings — preset selection + per-user persistence"
+        depends_on: [KAN-18, KAN-63]
+        relates: [KAN-19]

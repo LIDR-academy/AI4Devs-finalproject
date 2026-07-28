@@ -2,6 +2,7 @@ import { useAuth } from '../auth/AuthContext';
 import { AudienceSettingsSection } from '../components/settings/AudienceSettingsSection';
 import { FormatSettingsSection } from '../components/settings/FormatSettingsSection';
 import { GenreSettingsSection } from '../components/settings/GenreSettingsSection';
+import { ThemeSettingsSection } from '../components/settings/ThemeSettingsSection';
 import { Card, PageHeader } from '../components/ui';
 import './ProfilePage.css';
 
@@ -25,6 +26,7 @@ export function ProfilePage() {
           </dl>
         </Card>
 
+        <ThemeSettingsSection />
         <AudienceSettingsSection />
         <FormatSettingsSection />
         <GenreSettingsSection />

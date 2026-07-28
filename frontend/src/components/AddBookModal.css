@@ -1,7 +1,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,14 +9,15 @@
 }
 
 .modal {
-  background: #ececdb;
+  background: var(--color-surface-card);
   border-radius: 16px;
   width: min(640px, 92vw);
   max-height: 85vh;
   display: flex;
   flex-direction: column;
   padding: 1.25rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 .modal-header {
@@ -24,19 +25,27 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.15rem;
 }
 
 .modal-header h2 {
   margin: 0;
   font-size: 1.35rem;
-  color: #2d4a4a;
+  color: var(--color-text-heading);
 }
 
 .modal-back {
   align-self: flex-start;
   border: none;
   background: transparent;
-  color: #6bb1ad;
+  color: var(--color-primary);
   cursor: pointer;
   font-size: 0.9rem;
   padding: 0 0 0.5rem;
@@ -50,7 +59,7 @@
 .edition-summary {
   margin: 0 0 0.75rem;
   font-size: 0.9rem;
-  color: #3d5a5a;
+  color: var(--color-text);
   line-height: 1.45;
 }
 
@@ -60,6 +69,7 @@
   font-size: 1.5rem;
   cursor: pointer;
   line-height: 1;
+  color: var(--color-text-heading);
 }
 
 .search-label {
@@ -67,24 +77,25 @@
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.9rem;
-  color: #2d4a4a;
+  color: var(--color-text-heading);
 }
 
 .search-label input {
   padding: 0.65rem 0.75rem;
-  border: 1px solid #a7bcbd;
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
   font-size: 1rem;
+  background: var(--color-surface);
 }
 
 .modal-hint {
-  color: #5a6e6e;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   margin: 0.5rem 0 0;
 }
 
 .modal-error {
-  color: #c44;
+  color: var(--color-error-text);
   font-size: 0.9rem;
   margin: 0.5rem 0 0;
 }
@@ -92,8 +103,8 @@
 .modal-error-global {
   margin: 0.75rem 0 0;
   padding: 0.65rem 0.75rem;
-  background: #fff5f5;
-  border: 1px solid #e5a9a9;
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-highlight);
   border-radius: 8px;
   font-weight: 500;
 }
@@ -102,8 +113,6 @@
   list-style: none;
   margin: 1rem 0 0;
   padding: 0;
-  overflow-y: auto;
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -117,13 +126,13 @@
   padding: 0.6rem;
   border: 2px solid transparent;
   border-radius: 10px;
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
 }
 
 .edition-card.selected {
-  border-color: #6bb1ad;
-  background: #f8faf9;
+  border-color: var(--color-primary);
+  background: var(--color-surface-muted);
 }
 
 .edition-cover {
@@ -139,8 +148,8 @@
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
-  background: #ddd;
-  color: #666;
+  background: var(--color-border);
+  color: var(--color-text-muted);
 }
 
 .edition-meta {
@@ -148,11 +157,11 @@
   flex-direction: column;
   gap: 0.2rem;
   font-size: 0.85rem;
-  color: #444;
+  color: var(--color-text);
 }
 
 .edition-meta strong {
-  color: #2d4a4a;
+  color: var(--color-text-heading);
 }
 
 .edition-meta-detail {
@@ -163,7 +172,7 @@
 
 .edition-meta-tag {
   font-size: 0.8rem;
-  color: #3d5a5a;
+  color: var(--color-text-muted);
 }
 
 .modal-footer {
@@ -172,7 +181,8 @@
   gap: 0.5rem;
   margin-top: 1rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #a7bcbd;
+  border-top: 1px solid var(--color-border-strong);
+  flex-shrink: 0;
 }
 
 .btn-primary,
@@ -185,8 +195,8 @@
 }
 
 .btn-primary {
-  background: #6bb1ad;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .btn-primary:disabled {
@@ -195,8 +205,8 @@
 }
 
 .btn-secondary {
-  background: #a7bcbd;
-  color: #2d4a4a;
+  background: var(--color-secondary);
+  color: var(--color-secondary-text);
 }
 
 .manual-create-fallback {
@@ -210,18 +220,18 @@
 .btn-manual-create {
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  border: 1px solid #6bb1ad;
+  border: 1px solid var(--color-primary);
   background: transparent;
-  color: #2d4a4a;
+  color: var(--color-text-heading);
   cursor: pointer;
   font-size: 0.95rem;
 }
 
 .btn-manual-create:hover {
-  background: rgba(107, 177, 173, 0.15);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .btn-manual-create:focus-visible {
-  outline: 2px solid #6bb1ad;
+  outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }

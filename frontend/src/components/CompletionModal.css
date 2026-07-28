@@ -1,7 +1,7 @@
 .completion-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,16 +9,16 @@
 }
 
 .completion-modal {
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 1.5rem;
   width: min(400px, 90vw);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-lg);
 }
 
 .completion-modal h2 {
   margin: 0 0 1rem;
-  color: #2d4a4a;
+  color: var(--color-text-heading);
   font-size: 1.25rem;
 }
 
@@ -28,14 +28,15 @@
   gap: 0.35rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
-  color: #2d4a4a;
+  color: var(--color-text-heading);
 }
 
 .completion-field input,
 .completion-field select {
   padding: 0.5rem;
-  border: 1px solid #c5d4d4;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
+  background: var(--color-surface);
 }
 
 .completion-actions {
@@ -46,8 +47,8 @@
 }
 
 .btn-primary {
-  background: #6bb1ad;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -61,8 +62,8 @@
 
 .btn-secondary {
   background: transparent;
-  color: #2d4a4a;
-  border: 1px solid #c5d4d4;
+  color: var(--color-text-heading);
+  border: 1px solid var(--color-border);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;

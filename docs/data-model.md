@@ -16,8 +16,9 @@ Data model for **Reading Analytics Platform**: personal reading library, progres
 | **Audience** | `audiences` | User-configurable audience label (e.g. Adulto, Juvenil, Infantil) |
 | **Format** | `formats` | User-configurable read format label (e.g. Físico, Ebook, Audio) |
 | **Genre** | `genres` | User-configurable genre label (e.g. Fantasía, Thriller) |
+| **UserProfile** | `user_profiles` | Per-user preferences (theme palette, future UI settings) |
 
-All user-owned books are scoped by `user_id`. Deleting a user cascades to books, reading records, TBR lists, annual goals, import jobs, audiences, formats, and genres.
+All user-owned books are scoped by `user_id`. Deleting a user cascades to books, reading records, TBR lists, annual goals, import jobs, audiences, formats, genres, and user profile.
 
 ## Entity definitions
 
@@ -33,7 +34,24 @@ Represents a reader account.
 | createdAt | `created_at` | TIMESTAMPTZ | NOT NULL |
 | updatedAt | `updated_at` | TIMESTAMPTZ | NOT NULL |
 
-**Relationships:** one user has many `books`.
+**Relationships:** one user has many `books`; one user has one `user_profiles` row (optional until first preferences access).
+
+### UserProfile
+
+Stores per-user UI preferences (KAN-80).
+
+| Field | Column | Type | Constraints |
+|-------|--------|------|-------------|
+| userId | `user_id` | UUID | PK, FK → `users.id`, ON DELETE CASCADE |
+| preferences | `preferences` | JSONB | NOT NULL, default `{}` |
+| createdAt | `created_at` | TIMESTAMPTZ | NOT NULL |
+| updatedAt | `updated_at` | TIMESTAMPTZ | NOT NULL |
+
+**`preferences` keys (MVP):**
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `theme_palette_id` | string enum | `veranda` | Preset palette slug applied app-wide |
 
 ### Book
 
