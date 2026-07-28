@@ -9,6 +9,7 @@
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
 8. [AI Engineering Setup](#8-ai-engineering-setup)
+9. [Capturas del sistema](#9-capturas-del-sistema)
 
 ---
 
@@ -913,3 +914,17 @@ cat .opencode/harness/README.md
 - **CI/CD** operativo con GitHub Actions
 - **Despliegue** en Railway (backend + frontend + PostgreSQL)
 - **Tag de release:** `v1.0-final-DMM`
+
+---
+
+## 9. Capturas del sistema
+
+*(Mobile-first, 390×844, PWA instalable)*
+
+| Landing | Listing Lens | Dashboard |
+|---------|-------------|-----------|
+| ![Landing](screenshots/01-landing.png) | ![Listing Lens](screenshots/02-listing-lens.png) | ![Dashboard](screenshots/03-dashboard.png) |
+
+| Mortgage Compass | Cronograma | Checklist |
+|------------------|------------|-----------|
+| ![Mortgage](screenshots/04-mortgage-compass.png) | ![Timeline](screenshots/05-timeline.png) | ![Checklist](screenshots/06-checklist.png) |
