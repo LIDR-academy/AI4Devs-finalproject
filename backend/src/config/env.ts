@@ -12,9 +12,11 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default("15m"),
   JWT_REFRESH_TTL: z.string().default("7d"),
   COACH_FINANCIAL_ENCRYPTION_KEY: z.string().length(32),
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: z.string().optional(),
-  GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: z.string().optional(),
-  GOOGLE_CALENDAR_ID: z.string().optional(),
+  GOOGLE_CALENDAR_SA_EMAIL: z.string().optional(),
+  GOOGLE_CALENDAR_SA_KEY_PATH: z.string().optional(),
+  GOOGLE_CALENDAR_ID_DEV: z.string().optional(),
+  GOOGLE_CALENDAR_ID_STAGING: z.string().optional(),
+  GOOGLE_CALENDAR_ID_PROD: z.string().optional(),
   FCM_SERVER_KEY: z.string().optional(),
 });
 
@@ -31,4 +33,15 @@ if (!result.success) {
   throw new Error(`Environment validation failed: ${result.error.message}`);
 }
 
-export const env = result.data;
+const env = result.data;
+
+function resolveCalendarId(): string | undefined {
+  const calendarMap: Record<string, string | undefined> = {
+    development: env.GOOGLE_CALENDAR_ID_DEV,
+    production: env.GOOGLE_CALENDAR_ID_PROD,
+    test: env.GOOGLE_CALENDAR_ID_DEV,
+  };
+  return calendarMap[env.NODE_ENV];
+}
+
+export { env, resolveCalendarId };

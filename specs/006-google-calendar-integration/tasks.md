@@ -21,8 +21,8 @@
 
 **Purpose**: Environment configuration and port interface foundation
 
-- [ ] T001 Update env.ts Zod schema with Google Calendar env vars (GOOGLE_CALENDAR_SA_EMAIL, GOOGLE_CALENDAR_SA_KEY_PATH, GOOGLE_CALENDAR_ID_DEV, GOOGLE_CALENDAR_ID_STAGING, GOOGLE_CALENDAR_ID_PROD) including environment-aware calendar ID resolver in backend/src/config/env.ts
-- [ ] T002 [P] Create CalendarProvider port interface with createEvent, updateEvent, deleteEvent, queryFreeBusy methods in backend/src/domain/ports/CalendarProvider.ts
+- [X] T001 Update env.ts Zod schema with Google Calendar env vars (GOOGLE_CALENDAR_SA_EMAIL, GOOGLE_CALENDAR_SA_KEY_PATH, GOOGLE_CALENDAR_ID_DEV, GOOGLE_CALENDAR_ID_STAGING, GOOGLE_CALENDAR_ID_PROD) including environment-aware calendar ID resolver in backend/src/config/env.ts
+- [X] T002 [P] Create CalendarProvider port interface with createEvent, updateEvent, deleteEvent, queryFreeBusy methods in backend/src/domain/ports/CalendarProvider.ts
 
 ---
 
@@ -34,13 +34,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Implement GoogleCalendarAdapter class with Service Account JWT authentication (load SA key path from env) in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
-- [ ] T004 [US1] Implement createEvent method on GoogleCalendarAdapter — calls Google Calendar v3 API events.insert, returns google_event_id in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
-- [ ] T005 [P] [US1] Implement updateEvent method on GoogleCalendarAdapter — calls Google Calendar v3 API events.patch in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
-- [ ] T006 [P] [US1] Implement deleteEvent method on GoogleCalendarAdapter — calls Google Calendar v3 API events.delete in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
-- [ ] T007 [US1] Wrap all Google Calendar API errors in ServiceUnavailableError with crypto.randomUUID() ref — do not leak Google API error details to client in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
-- [ ] T008 [P] [US1] Write unit test for GoogleCalendarAdapter — verify createEvent, updateEvent, deleteEvent, and error wrapping (mock googleapis) in backend/src/__tests__/GoogleCalendarAdapter.test.ts
-- [ ] T009 [US1] Write integration test for GoogleCalendarAdapter — verify real Google Calendar CRUD operations (run against dev calendar) in backend/src/__tests__/GoogleCalendarAdapter.int.test.ts
+- [X] T003 [US1] Implement GoogleCalendarAdapter class with Service Account JWT authentication (load SA key path from env) in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
+- [X] T004 [US1] Implement createEvent method on GoogleCalendarAdapter — calls Google Calendar v3 API events.insert, returns google_event_id in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
+- [X] T005 [P] [US1] Implement updateEvent method on GoogleCalendarAdapter — calls Google Calendar v3 API events.patch in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
+- [X] T006 [P] [US1] Implement deleteEvent method on GoogleCalendarAdapter — calls Google Calendar v3 API events.delete in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
+- [X] T007 [US1] Wrap all Google Calendar API errors in ServiceUnavailableError with crypto.randomUUID() ref — do not leak Google API error details to client in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
+- [X] T008 [P] [US1] Write unit test for GoogleCalendarAdapter — verify createEvent, updateEvent, deleteEvent, and error wrapping (mock googleapis) in backend/src/__tests__/GoogleCalendarAdapter.test.ts
+- [X] T009 [US1] Write integration test for GoogleCalendarAdapter — verify real Google Calendar CRUD operations (run against dev calendar) in backend/src/__tests__/GoogleCalendarAdapter.int.test.ts
 
 **Checkpoint**: Calendar events can be created, updated, and deleted on Google Calendar. Errors return 503 with UUID ref.
 
@@ -54,9 +54,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T010 [US3] Implement queryFreeBusy method on GoogleCalendarAdapter — calls Google Calendar v3 API freebusy.query, returns busy intervals in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
-- [ ] T011 [US3] Write unit test for queryFreeBusy — verify correct busy intervals returned (mock googleapis) in backend/src/__tests__/GoogleCalendarAdapter.test.ts
-- [ ] T012 [US3] Write integration test for queryFreeBusy — verify real free/busy against dev calendar in backend/src/__tests__/GoogleCalendarAdapter.int.test.ts
+- [X] T010 [US3] Implement queryFreeBusy method on GoogleCalendarAdapter — calls Google Calendar v3 API freebusy.query, returns busy intervals in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
+- [X] T011 [US3] Write unit test for queryFreeBusy — verify correct busy intervals returned (mock googleapis) in backend/src/__tests__/GoogleCalendarAdapter.test.ts
+- [X] T012 [US3] Write integration test for queryFreeBusy — verify real free/busy against dev calendar in backend/src/__tests__/GoogleCalendarAdapter.int.test.ts
 
 **Checkpoint**: Free/busy queries work server-side. No Google API credentials in browser.
 
@@ -70,23 +70,23 @@
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Create CreateTrainingClass use case — accepts class data, calls adapter.createEvent, persists trainingClass with google_event_id returned in backend/src/application/use-cases/CreateTrainingClass.ts
-- [ ] T014 [US2] Create UpdateTrainingClass use case — accepts class data + existing google_event_id, calls adapter.updateEvent in backend/src/application/use-cases/UpdateTrainingClass.ts
-- [ ] T015 [US2] Create DeleteTrainingClass use case — accepts class id, deletes training class + calls adapter.deleteEvent with google_event_id in backend/src/application/use-cases/DeleteTrainingClass.ts
-- [ ] T016 [US2] Create ListTrainingClasses use case — returns all training classes (no calendar interaction) in backend/src/application/use-cases/ListTrainingClasses.ts
-- [ ] T017 [US2] Implement POST /api/v1/classes route — calls CreateTrainingClass use case, returns 201 with class data in backend/src/infrastructure/routes/classes.ts
-- [ ] T018 [US2] Implement GET /api/v1/classes route — calls ListTrainingClasses use case in backend/src/infrastructure/routes/classes.ts
-- [ ] T019 [US2] Implement DELETE /api/v1/classes/:id route — calls DeleteTrainingClass use case in backend/src/infrastructure/routes/classes.ts
-- [ ] T020 [P] [US2] Implement PUT /api/v1/classes/:id route — calls UpdateTrainingClass use case in backend/src/infrastructure/routes/classes.ts
-- [ ] T021 [US2] Create CreateBlock use case — accepts block data, calls adapter.createEvent, persists block with google_event_id in backend/src/application/use-cases/CreateBlock.ts
-- [ ] T022 [US2] Create DeleteBlock use case — accepts block id, deletes block + calls adapter.deleteEvent with google_event_id in backend/src/application/use-cases/DeleteBlock.ts
-- [ ] T023 [US2] Create ListBlocks use case — returns all blocks (no calendar interaction) in backend/src/application/use-cases/ListBlocks.ts
-- [ ] T024 [US2] Implement POST /api/v1/blocks route — calls CreateBlock use case in backend/src/infrastructure/routes/blocks.ts
-- [ ] T025 [US2] Implement GET /api/v1/blocks route — calls ListBlocks use case in backend/src/infrastructure/routes/blocks.ts
-- [ ] T026 [US2] Implement DELETE /api/v1/blocks/:id route — calls DeleteBlock use case in backend/src/infrastructure/routes/blocks.ts
-- [ ] T027 [US2] Wire all calendar dependencies (CalendarProvider, use cases) in DI container in backend/src/config/container.ts
-- [ ] T028 [US2] Ensure all event titles use format `<ClassType> - <LevelName>` with zero PII — no coach name, coachee name, email, or phone in title or description in backend/src/application/use-cases/
-- [ ] T029 [US2] Write integration test for class creation/deletion with real Google Calendar in backend/src/__tests__/classes.int.test.ts
+- [X] T013 [US2] Create CreateTrainingClass use case — accepts class data, calls adapter.createEvent, persists trainingClass with google_event_id returned in backend/src/application/use-cases/CreateTrainingClass.ts
+- [X] T014 [US2] Create UpdateTrainingClass use case — accepts class data + existing google_event_id, calls adapter.updateEvent in backend/src/application/use-cases/UpdateTrainingClass.ts
+- [X] T015 [US2] Create DeleteTrainingClass use case — accepts class id, deletes training class + calls adapter.deleteEvent with google_event_id in backend/src/application/use-cases/DeleteTrainingClass.ts
+- [X] T016 [US2] Create ListTrainingClasses use case — returns all training classes (no calendar interaction) in backend/src/application/use-cases/ListTrainingClasses.ts
+- [X] T017 [US2] Implement POST /api/v1/classes route — calls CreateTrainingClass use case, returns 201 with class data in backend/src/infrastructure/routes/classes.ts
+- [X] T018 [US2] Implement GET /api/v1/classes route — calls ListTrainingClasses use case in backend/src/infrastructure/routes/classes.ts
+- [X] T019 [US2] Implement DELETE /api/v1/classes/:id route — calls DeleteTrainingClass use case in backend/src/infrastructure/routes/classes.ts
+- [X] T020 [P] [US2] Implement PUT /api/v1/classes/:id route — calls UpdateTrainingClass use case in backend/src/infrastructure/routes/classes.ts
+- [X] T021 [US2] Create CreateBlock use case — accepts block data, calls adapter.createEvent, persists block with google_event_id in backend/src/application/use-cases/CreateBlock.ts
+- [X] T022 [US2] Create DeleteBlock use case — accepts block id, deletes block + calls adapter.deleteEvent with google_event_id in backend/src/application/use-cases/DeleteBlock.ts
+- [X] T023 [US2] Create ListBlocks use case — returns all blocks (no calendar interaction) in backend/src/application/use-cases/ListBlocks.ts
+- [X] T024 [US2] Implement POST /api/v1/blocks route — calls CreateBlock use case in backend/src/infrastructure/routes/blocks.ts
+- [X] T025 [US2] Implement GET /api/v1/blocks route — calls ListBlocks use case in backend/src/infrastructure/routes/blocks.ts
+- [X] T026 [US2] Implement DELETE /api/v1/blocks/:id route — calls DeleteBlock use case in backend/src/infrastructure/routes/blocks.ts
+- [X] T027 [US2] Wire all calendar dependencies (CalendarProvider, use cases) in DI container in backend/src/config/container.ts
+- [X] T028 [US2] Ensure all event titles use format `<ClassType> - <LevelName>` with zero PII — no coach name, coachee name, email, or phone in title or description in backend/src/application/use-cases/
+- [X] T029 [US2] Write integration test for class creation/deletion with real Google Calendar in backend/src/__tests__/classes.int.test.ts
 
 **Checkpoint**: Creating a class or block syncs to Google Calendar. Titles are PII-free.
 
@@ -100,11 +100,11 @@
 
 ### Implementation for User Story 5
 
-- [ ] T030 [US5] Implement CalendarHealthMonitor with rolling 5-minute window — recordCall(success), getHealth() returns { status, failureRate, totalCalls, windowMinutes } in backend/src/infrastructure/adapters/calendar/CalendarHealthMonitor.ts
-- [ ] T031 [US5] Wire CalendarHealthMonitor to GoogleCalendarAdapter — call recordCall after every API attempt (success or failure) in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
-- [ ] T032 [US5] Expose calendar health status via GET /api/v1/health endpoint — include calendar status, failure rate, and total calls in response in backend/src/infrastructure/routes/health.ts
-- [ ] T033 [US5] Log alert via Pino logger when failure rate exceeds 5% within the rolling 5-minute window in backend/src/infrastructure/adapters/calendar/CalendarHealthMonitor.ts
-- [ ] T034 [US5] Write unit test for CalendarHealthMonitor — verify rolling window, failure rate calculation, and alert threshold in backend/src/__tests__/CalendarHealthMonitor.test.ts
+- [X] T030 [US5] Implement CalendarHealthMonitor with rolling 5-minute window — recordCall(success), getHealth() returns { status, failureRate, totalCalls, windowMinutes } in backend/src/infrastructure/adapters/calendar/CalendarHealthMonitor.ts
+- [X] T031 [US5] Wire CalendarHealthMonitor to GoogleCalendarAdapter — call recordCall after every API attempt (success or failure) in backend/src/infrastructure/adapters/calendar/GoogleCalendarAdapter.ts
+- [X] T032 [US5] Expose calendar health status via GET /api/v1/health endpoint — include calendar status, failure rate, and total calls in response in backend/src/infrastructure/routes/health.ts
+- [X] T033 [US5] Log alert via Pino logger when failure rate exceeds 5% within the rolling 5-minute window in backend/src/infrastructure/adapters/calendar/CalendarHealthMonitor.ts
+- [X] T034 [US5] Write unit test for CalendarHealthMonitor — verify rolling window, failure rate calculation, and alert threshold in backend/src/__tests__/CalendarHealthMonitor.test.ts
 
 **Checkpoint**: Health endpoint returns calendar status. Alert logged on high failure rate.
 
@@ -114,10 +114,10 @@
 
 **Purpose**: Verification, documentation, and final validation
 
-- [ ] T035 [P] Run quickstart.md validation scenarios to verify all acceptance criteria
-- [ ] T036 Run full test suite — biome check, tsc --noEmit, vitest run — to ensure no regressions
-- [ ] T037 Run npm audit --audit-level=high to verify dependency integrity
-- [ ] T038 Clean up any remaining 501 stub routes in classes.ts and blocks.ts that are not yet implemented (mark them as TODO rather than 501)
+- [X] T035 [P] Run quickstart.md validation scenarios to verify all acceptance criteria
+- [X] T036 Run full test suite — biome check, tsc --noEmit, vitest run — to ensure no regressions
+- [X] T037 Run npm audit --audit-level=high to verify dependency integrity
+- [X] T038 Clean up any remaining 501 stub routes in classes.ts and blocks.ts that are not yet implemented (mark them as TODO rather than 501)
 
 ---
 
