@@ -1,0 +1,9 @@
+{
+  "name": "regenerate-evidence-index",
+  "description": "Regenerate docs/evidence/INDEX.md by scanning all .md files in docs/evidence/ and grouping by date.",
+  "main": "regenerate-evidence-index.js",
+  "scripts": {
+    "start": "node regenerate-evidence-index.js"
+  },
+  "private": true
+}

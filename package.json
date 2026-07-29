@@ -1,0 +1,27 @@
+{
+  "name": "realista",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Realista — AI-powered educational assistant for first-time home buyers in Spain",
+  "workspaces": ["backend", "frontend", "e2e"],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "lint": "npm run lint -w backend && npm run lint -w frontend",
+    "typecheck": "npm run typecheck -w backend && npm run check -w frontend",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:seed": "npm run db:seed -w backend",
+    "check:hexagonal": "bash .opencode/skills/hexagonal-check/run.sh",
+    "evidence:regenerate": "node .opencode/hooks/scripts/regenerate-evidence-index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

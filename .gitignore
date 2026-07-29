@@ -1,0 +1,48 @@
+# Node
+node_modules/
+dist/
+build/
+.svelte-kit/
+.vite/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Prisma
+backend/prisma/migrations/dev.db*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Coverage
+coverage/
+*.lcov
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Playwright
+e2e/playwright-report/
+e2e/test-results/
+frontend/playwright-report/
+frontend/test-results/
+
+# OS-specific
+backend/dist/
+frontend/build/
+
+# Superpowers brainstorming (visual companion artifacts)
+.superpowers/
