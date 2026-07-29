@@ -268,7 +268,6 @@
     font-size: 0.82rem;
   }
   .check-row.done .check-title {
-    text-decoration: line-through;
     color: var(--color-text-muted);
   }
   .check-body {
