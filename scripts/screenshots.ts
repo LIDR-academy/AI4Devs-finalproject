@@ -30,7 +30,7 @@ async function main() {
   }
 
   await browser.close();
-  console.log('\nDone. 6 screenshots saved to screenshots/');
+  console.log('\nDone. 5 screenshots saved to screenshots/');
 }
 
 main().catch((err) => {
