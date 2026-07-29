@@ -150,3 +150,9 @@ https://linear.app/ai4devs/issue/COACHER-58/t-211-set-up-google-cloud-project-ca
 Have you included all the tasks? please if not, do so 
 
 [/speckit.implement]
+
+[plan mode] 
+Provide me with a very detailed and specific guide, step by step of all the things I should set up manually. For example, create an acccount by loging into this website, and get a specific key by going here or doing that. 
+---
+
+# 11 - OpenCode - DeepSeek V4 Flash Free 

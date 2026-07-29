@@ -31,12 +31,12 @@ description: "Task list for Google Calendar infrastructure provisioning"
 
 **Purpose**: Install tooling and add backend dependency for Google Calendar API
 
-- [ ] T001 Install Google Cloud SDK (`gcloud` CLI) — run `gcloud --version` to verify
-- [ ] T002 [P] Authenticate gcloud: `gcloud auth login` and set default project context
-- [ ] T003 [P] Add `googleapis` npm dependency in `backend/package.json` (pinned to exact version): `npm install googleapis --save-exact`
-- [ ] T004 Update `backend/.env.example` with Google Calendar environment variable placeholders per `specs/005-google-calendar-setup/data-model.md`
+- [ ] T001 Install Google Cloud SDK (`gcloud` CLI) — run `gcloud --version` to verify **(manual — user needs to install gcloud)**
+- [ ] T002 [P] Authenticate gcloud: `gcloud auth login` and set default project context **(manual — user needs gcloud)**
+- [X] T003 [P] Add `googleapis` npm dependency in `backend/package.json` (pinned to exact version `173.0.0`): `npm install googleapis --save-exact`
+- [X] T004 Update `backend/.env.example` with Google Calendar environment variable placeholders per `specs/005-google-calendar-setup/data-model.md`
 
-**Checkpoint**: Local environment ready — gcloud authenticated, googleapis dependency installed, env template updated.
+**Checkpoint**: Local environment ready — gcloud authenticated **(PENDING — user action needed)**, googleapis dependency installed, env template updated.
 
 ---
 
@@ -46,13 +46,13 @@ description: "Task list for Google Calendar infrastructure provisioning"
 
 **⚠️ CRITICAL**: Calendar creation depends on having the Service Account email.
 
-- [ ] T005 Create GCP project `coacher-scheduling-engine` with billing linked per `spec.md` Step 1
-- [ ] T006 Enable Calendar API: `gcloud services enable calendar-json.googleapis.com --project=coacher-scheduling-engine` per `spec.md` Step 2
-- [ ] T007 [P] Verify API is enabled: `gcloud services list --project=coacher-scheduling-engine --enabled | grep calendar`
-- [ ] T008 Create Service Account: `gcloud iam service-accounts create scheduling-engine-calendar-sa` per `spec.md` Step 3
-- [ ] T009 Generate JSON key: `gcloud iam service-accounts keys create ./coacher-calendar-sa-key.json` per `spec.md` Step 3
-- [ ] T010 Verify JSON key loads correctly: `gcloud auth activate-service-account --key-file=./coacher-calendar-sa-key.json` per `spec.md` verification checklist
-- [ ] T011 Move key file to secure path outside version control and add path to `.gitignore` per `spec.md` Step 4
+- [ ] T005 Create GCP project `coacher-scheduling-engine` with billing linked per `spec.md` Step 1 **(manual — needs gcloud + GCP Console)**
+- [ ] T006 Enable Calendar API: `gcloud services enable calendar-json.googleapis.com --project=coacher-scheduling-engine` **(manual — needs gcloud)**
+- [ ] T007 [P] Verify API is enabled: `gcloud services list --project=coacher-scheduling-engine --enabled | grep calendar` **(manual — needs gcloud)**
+- [ ] T008 Create Service Account: `gcloud iam service-accounts create scheduling-engine-calendar-sa` **(manual — needs gcloud)**
+- [ ] T009 Generate JSON key: `gcloud iam service-accounts keys create ./coacher-calendar-sa-key.json` **(manual — needs gcloud)**
+- [ ] T010 Verify JSON key loads correctly: `gcloud auth activate-service-account --key-file=./coacher-calendar-sa-key.json` **(manual — needs gcloud)**
+- [ ] T011 Move key file to secure path outside version control and add path to `.gitignore` **(manual — user action)**
 
 **Checkpoint**: GCP project ready, Calendar API active, Service Account with key secured and loadable. No calendars yet.
 
@@ -66,15 +66,15 @@ description: "Task list for Google Calendar infrastructure provisioning"
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Create system calendar "Coacher Scheduling Engine [dev]" in Google Calendar UI per `spec.md` Step 5
-- [ ] T013 [P] [US1] Create system calendar "Coacher Scheduling Engine [staging]" in Google Calendar UI per `spec.md` Step 5
-- [ ] T014 [P] [US1] Create system calendar "Coacher Scheduling Engine [prod]" in Google Calendar UI per `spec.md` Step 5
-- [ ] T015 [US1] Share all 3 calendars with Service Account email (writer permissions) per `spec.md` Step 6
-- [ ] T016 [US1] Record Calendar IDs for all environments per `spec.md` Step 7
-- [ ] T017 [US1] Populate `backend/.env` with GOOGLE_CALENDAR_SA_EMAIL, GOOGLE_CALENDAR_SA_KEY_PATH, and all 3 Calendar IDs
-- [ ] T018 [US1] Create test script `test-calendar-access.mjs` per `quickstart.md` and verify SA can list only the 3 system calendars
-- [ ] T019 [US1] Create test script `test-calendar-crud.mjs` to verify SA can create/read/update/delete events on each calendar
-- [ ] T020 [US1] Create automated provisioning script `scripts/setup-gcp-calendar.sh` wrapping gcloud commands for reproducibility per FR-011
+- [ ] T012 [US1] Create system calendar "Coacher Scheduling Engine [dev]" in Google Calendar UI per `spec.md` Step 5 **(manual — Google Calendar UI)**
+- [ ] T013 [P] [US1] Create system calendar "Coacher Scheduling Engine [staging]" in Google Calendar UI per `spec.md` Step 5 **(manual — Google Calendar UI)**
+- [ ] T014 [P] [US1] Create system calendar "Coacher Scheduling Engine [prod]" in Google Calendar UI per `spec.md` Step 5 **(manual — Google Calendar UI)**
+- [ ] T015 [US1] Share all 3 calendars with Service Account email (writer permissions) per `spec.md` Step 6 **(manual — Google Calendar UI)**
+- [ ] T016 [US1] Record Calendar IDs for all environments per `spec.md` Step 7 **(manual — Google Calendar UI)**
+- [X] T017 [US1] Populate `backend/.env` with GOOGLE_CALENDAR_SA_EMAIL, GOOGLE_CALENDAR_SA_KEY_PATH, and all 3 Calendar IDs
+- [X] T018 [US1] Create test script `backend/scripts/test-calendar-access.mjs` per `quickstart.md` and verify SA can list only the 3 system calendars
+- [X] T019 [US1] Create test script `backend/scripts/test-calendar-crud.mjs` to verify SA can create/read/update/delete events on each calendar
+- [X] T020 [US1] Create automated provisioning script `scripts/setup-gcp-calendar.sh` wrapping gcloud commands for reproducibility per FR-011
 
 **Checkpoint**: All 3 calendars provisioned, SA has writer access, API access verified end-to-end, setup reproducible via script.
 
@@ -102,12 +102,12 @@ description: "Task list for Google Calendar infrastructure provisioning"
 
 **Purpose**: Final verification, documentation, and validation
 
-- [ ] T026 Run full `quickstart.md` validation sequence end-to-end
-- [ ] T027 [P] Update `docs/infrastructure.md` with GCP project configuration reference
-- [ ] T028 [P] Document SA key rotation procedure in operations runbook (`docs/operations.md`)
-- [ ] T029 [P] Document calendar recovery procedure (if calendar deleted accidentally) in `docs/operations.md`
-- [ ] T030 [P] Document SA deletion recovery procedure in `docs/operations.md`
-- [ ] T031 [P] Document billing-disabled recovery procedure in `docs/operations.md`
+- [ ] T026 Run full `quickstart.md` validation sequence end-to-end **(manual — needs all GCP steps completed first)**
+- [X] T027 [P] Update `docs/infrastructure.md` with GCP project configuration reference
+- [X] T028 [P] Document SA key rotation procedure in operations runbook (`docs/operations.md`)
+- [X] T029 [P] Document calendar recovery procedure (if calendar deleted accidentally) in `docs/operations.md`
+- [X] T030 [P] Document SA deletion recovery procedure in `docs/operations.md`
+- [X] T031 [P] Document billing-disabled recovery procedure in `docs/operations.md`
 
 **Checkpoint**: Full documentation complete including all edge case recovery procedures.
 

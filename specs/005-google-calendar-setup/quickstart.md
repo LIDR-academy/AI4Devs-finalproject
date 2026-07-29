@@ -40,35 +40,29 @@ gcloud auth activate-service-account --key-file=/path/to/coacher-calendar-sa-key
 # Expected: Activated service account credentials for [...]
 ```
 
-## Validate Calendar API Access (with a test script)
+## Validate Calendar API Access
 
-Create a file `test-calendar-access.mjs`:
+**Note:** Service Accounts cannot use `calendarList.list()` on non-Google-Workspace accounts (see [Google issue tracker](https://issuetracker.google.com/issues/36810541)). Instead, access is verified by querying each calendar directly by its known Calendar ID.
 
-```javascript
-import { google } from 'googleapis';
-import { readFileSync } from 'fs';
-
-const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(readFileSync('/path/to/coacher-calendar-sa-key.json', 'utf-8')),
-  scopes: ['https://www.googleapis.com/auth/calendar'],
-});
-
-const calendar = google.calendar({ version: 'v3', auth });
-
-// List calendars the SA can access
-const res = await calendar.calendarList.list();
-console.log('Accessible calendars:', res.data.items.map(c => c.summary));
-
-// Expected output should include all 3 system calendars:
-// "Coacher Scheduling Engine [dev]"
-// "Coacher Scheduling Engine [staging]"
-// "Coacher Scheduling Engine [prod]"
-```
-
-Run:
+Two validation scripts are available in `backend/scripts/`:
 
 ```bash
-node test-calendar-access.mjs
+# Verify each of the 3 calendars is accessible by Calendar ID
+cd backend && node scripts/test-calendar-access.mjs
+
+# Verify the SA can create, read, update, and delete events on each calendar
+cd backend && node scripts/test-calendar-crud.mjs
+```
+
+Expected output for `test-calendar-access.mjs`:
+```
+Verifying access to each system calendar by Calendar ID:
+
+  ✓ [dev] Access OK — "Coacher Scheduling Engine [dev]"
+  ✓ [staging] Access OK — "Coacher Scheduling Engine [staging]"
+  ✓ [prod] Access OK — "Coacher Scheduling Engine [prod]"
+
+All 3 system calendars accessible. Verification PASSED.
 ```
 
 ## Verify No Key in Git History

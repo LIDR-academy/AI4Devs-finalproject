@@ -7,3 +7,5 @@ build/
 .DS_Store
 .prisma/
 coverage/
+secrets/
+*.key
