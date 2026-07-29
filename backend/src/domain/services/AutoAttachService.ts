@@ -24,18 +24,14 @@ export class AutoAttachService {
     const existing = await this.repo.findActiveByUserId(input.userId);
 
     if (existing) {
-      if (existing.propertyPrice === null && input.propertyPrice !== null) {
+      const price = input.propertyPrice ?? existing.propertyPrice;
+      if (input.propertyPrice !== null && input.propertyPrice !== existing.propertyPrice) {
         await this.repo.updatePropertyPrice(existing.id, input.propertyPrice);
-        return {
-          processId: existing.id,
-          isNewProcess: false,
-          propertyPrice: input.propertyPrice,
-        };
       }
       return {
         processId: existing.id,
         isNewProcess: false,
-        propertyPrice: existing.propertyPrice,
+        propertyPrice: price,
       };
     }
 
