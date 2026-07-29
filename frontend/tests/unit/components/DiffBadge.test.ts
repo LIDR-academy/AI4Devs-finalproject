@@ -43,7 +43,7 @@ describe('DiffBadge', () => {
   it('muestra banderas rojas añadidas', () => {
     const diff: ListingDiff = {
       unchanged: false,
-      addedRedFlags: [{ category: 'vague_location', question: '', rationale: '' }],
+      addedRedFlags: [{ flag: 'vague_location', severity: 'medium', reasoning: '' }],
       removedRedFlags: [],
     };
     const { container } = render(DiffBadge, { props: { diff } });
@@ -55,8 +55,8 @@ describe('DiffBadge', () => {
       unchanged: false,
       addedRedFlags: [],
       removedRedFlags: [
-        { category: 'vague_location', question: '', rationale: '' },
-        { category: 'missing_energy_certificate', question: '', rationale: '' },
+        { flag: 'vague_location', severity: 'medium', reasoning: '' },
+        { flag: 'missing_energy_certificate', severity: 'medium', reasoning: '' },
       ],
     };
     const { container } = render(DiffBadge, { props: { diff } });
@@ -67,7 +67,7 @@ describe('DiffBadge', () => {
     const diff: ListingDiff = {
       unchanged: false,
       priceDelta: -5000,
-      addedRedFlags: [{ category: 'inflated_square_meters', question: '', rationale: '' }],
+      addedRedFlags: [{ flag: 'inflated_square_meters', severity: 'medium', reasoning: '' }],
       removedRedFlags: [],
     };
     const { container } = render(DiffBadge, { props: { diff } });
