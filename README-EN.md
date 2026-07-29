@@ -220,17 +220,34 @@ The system requires:
 
 ### Environment Variables
 
-Create a `.env` file:
+Copy `.env.example` to `.env` and adjust:
 
 ```env
-DATABASE_URL=postgresql://auditcare:auditcare@localhost:5433/auditcare
+DATABASE_URL=postgresql://auditcare:auditcare@localhost:5433/auditcare_app
+
+# Statewave (contextual memory + traceability)
 STATEWAVE_URL=http://localhost:8100
+STATEWAVE_API_KEY=
+
+# AI extraction LLM (optional, OpenAI-compatible). Empty = rule-based fallback.
+LLM_BASE_URL=
+LLM_API_KEY=
+LLM_MODEL=gpt-4o-mini
 ```
 
 ### PostgreSQL
 
 ```bash
 docker compose up postgres -d
+```
+
+The app uses a dedicated database, `auditcare_app`, separate from Statewave's
+data. It is created on the first initialization of the volume
+(`infra/postgres/init.sql`). The schema is managed with **Alembic**: the backend
+runs `alembic upgrade head` automatically on startup. To apply it manually:
+
+```bash
+cd backend && alembic upgrade head
 ```
 
 ### Statewave
@@ -411,13 +428,17 @@ The architecture follows a layered approach separating:
 
 * PostgreSQL
 
-### Contextual Memory
+### Contextual Memory & Traceability
 
-* Statewave
+* Statewave (v1 API: episodes, memory compilation, context assembly)
 
 ### Artificial Intelligence
 
-* Statewave LLM (LiteLLM)
+* Clinical event extraction via a configurable OpenAI-compatible LLM
+  (`LLM_BASE_URL` / `LLM_API_KEY`).
+* Deterministic rule-based fallback when no LLM is configured, so the flow is
+  always executable.
+* Statewave provides the longitudinal patient context (it is not an LLM provider).
 
 ---
 
@@ -467,11 +488,10 @@ Railway / Render / Vercel
 
 ## 2.6. Testing Strategy
 
-The project will include:
-
-* Unit tests.
-* Integration tests.
-* End-to-End tests for the main workflow.
+Implemented (backend, `pytest`): health check, patient CRUD, rule-based
+extractor and the full E2E flow (patient → encounter → extract-events →
+timeline) on SQLite. Run with `cd backend && python -m pytest -q`.
+Playwright UI E2E scaffolding lives in `e2e/`.
 
 ---
 
@@ -610,7 +630,7 @@ Encounter model.
 
 ### BE-004
 
-AI extraction via Statewave LLM integration.
+AI extraction via a configurable OpenAI-compatible LLM (with rule-based fallback).
 
 ### BE-005
 
@@ -677,7 +697,7 @@ Includes:
 
 Status:
 
-🔄 Planned
+✅ Completed
 
 ---
 
@@ -689,14 +709,14 @@ Extract clinical events from medical notes.
 
 Includes:
 
-* Statewave LLM integration
+* Configurable LLM integration (OpenAI-compatible) + rule-based fallback
 * Prompt engineering
 * Structured parsing
 * Unit tests
 
 Status:
 
-🔄 Planned
+✅ Completed
 
 ---
 
@@ -714,7 +734,7 @@ Includes:
 
 Status:
 
-🔄 Planned
+✅ Completed
 
 ---
 
@@ -732,4 +752,4 @@ Includes:
 
 Status:
 
-🔄 Planned
+✅ Completed

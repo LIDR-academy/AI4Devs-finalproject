@@ -212,17 +212,37 @@ El sistema requiere:
 
 ### Variables de entorno
 
-Crear archivo `.env`:
+Copia `.env.example` a `.env` y ajústalo:
 
 ```env
-DATABASE_URL=postgresql://auditcare:auditcare@localhost:5433/auditcare
+DATABASE_URL=postgresql://auditcare:auditcare@localhost:5433/auditcare_app
+
+# Statewave (memoria contextual + trazabilidad)
 STATEWAVE_URL=http://localhost:8100
+STATEWAVE_API_KEY=
+
+# LLM para extracción IA (opcional, compatible con OpenAI).
+# Si se deja vacío, el backend usa un extractor determinista por reglas,
+# de modo que el MVP es ejecutable sin conexión ni claves.
+LLM_BASE_URL=
+LLM_API_KEY=
+LLM_MODEL=gpt-4o-mini
 ```
 
 ### PostgreSQL
 
 ```bash
 docker compose up postgres -d
+```
+
+La aplicación usa una base de datos dedicada, `auditcare_app`, separada de los
+datos de Statewave. Se crea automáticamente en el primer arranque del volumen
+(`infra/postgres/init.sql`). El esquema se gestiona con **Alembic**: el backend
+ejecuta `alembic upgrade head` automáticamente al arrancar. Para aplicarlo a
+mano:
+
+```bash
+cd backend && alembic upgrade head
 ```
 
 ### Statewave
@@ -325,9 +345,12 @@ http://localhost:8081
 
 Si todos los servicios responden correctamente, el entorno está preparado para ejecutar el MVP.
 
-### Checklist rápido (Statewave-only)
+### Checklist rápido (flujo E2E)
 
-Ejecuta estos 3 comandos para validar extracción IA 100% por Statewave:
+Ejecuta estos comandos para validar el flujo completo: paciente → encuentro →
+extracción IA → timeline. La extracción usa el LLM configurado o, si no hay
+ninguno, el extractor determinista por reglas (el checklist funciona en ambos
+casos). Statewave se consulta como memoria contextual cuando está disponible:
 
 ```bash
 curl -sS http://localhost:8000/health && echo
@@ -427,13 +450,18 @@ Arquitectura por capas con separación entre:
 
 * PostgreSQL
 
-### Memoria contextual
+### Memoria contextual y trazabilidad
 
-* Statewave
+* Statewave (episodios, compilación de memorias y ensamblado de contexto vía API v1)
 
 ### Inteligencia Artificial
 
-* Statewave LLM (LiteLLM)
+* Extracción de eventos mediante un LLM configurable compatible con OpenAI
+  (`LLM_BASE_URL` / `LLM_API_KEY`).
+* Fallback determinista basado en reglas clínicas cuando no hay LLM configurado,
+  para que el flujo sea siempre ejecutable.
+* Statewave aporta el contexto longitudinal del paciente que enriquece la
+  extracción (no actúa como proveedor de LLM).
 
 ---
 
@@ -483,11 +511,20 @@ Railway / Render / Vercel
 
 ## 2.6. Tests
 
-Se implementarán:
+Implementados (backend, `pytest`):
 
-* Tests unitarios.
-* Tests de integración.
-* Tests End-to-End del flujo principal.
+* `test_health` — health check.
+* `test_patients` — creación/listado de pacientes y validación de encuentro sin paciente.
+* `test_extraction` — extractor por reglas y flujo E2E (paciente → encuentro →
+  extract-events → timeline) sobre SQLite.
+
+Ejecución:
+
+```bash
+cd backend && python -m pytest -q
+```
+
+E2E de UI con Playwright (`e2e/`) preparado para ampliación.
 
 ---
 
@@ -673,7 +710,7 @@ Incluye:
 - API CRUD
 
 Estado:
-🔄 Planificado
+✅ Completado
 
 ---
 
@@ -690,7 +727,7 @@ Incluye:
 - Tests unitarios
 
 Estado:
-🔄 Planificado
+✅ Completado
 
 ---
 
@@ -706,7 +743,7 @@ Incluye:
 - Recuperación de contexto
 
 Estado:
-🔄 Planificado
+✅ Completado
 
 ---
 
@@ -722,4 +759,4 @@ Incluye:
 - Integración backend
 
 Estado:
-🔄 Planificado
+✅ Completado

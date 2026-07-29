@@ -20,9 +20,14 @@ services:
     depends_on:
       - postgres
     environment:
-      DATABASE_URL: postgresql://auditcare:auditcare@postgres:5432/auditcare
+      DATABASE_URL: postgresql://auditcare:auditcare@postgres:5432/auditcare_app
       STATEWAVE_URL: http://host.docker.internal:8100
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      STATEWAVE_API_KEY: ${STATEWAVE_API_KEY:-}
+      # Optional LLM for AI extraction (any OpenAI-compatible endpoint).
+      # Leave empty to use the deterministic rule-based fallback.
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
     ports:
       - "8000:8000"
 

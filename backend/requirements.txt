@@ -1,5 +1,8 @@
 fastapi==0.115.6
 uvicorn[standard]==0.32.1
 pydantic-settings==2.7.0
-pytest==8.3.4
+sqlalchemy==2.0.36
+alembic==1.14.0
+psycopg2-binary==2.9.10
 httpx==0.28.1
+pytest==8.3.4

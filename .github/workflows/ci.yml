@@ -34,7 +34,7 @@ jobs:
         working-directory: backend
         env:
           PYTHONPATH: ${{ github.workspace }}/backend
-        run: python -m pytest tests/unit/test_health.py
+        run: python -m pytest -q
 
   frontend:
     runs-on: ubuntu-latest

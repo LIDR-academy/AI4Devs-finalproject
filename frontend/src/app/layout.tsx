@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
+import { Navigation } from "../components/Navigation";
 
 export const metadata: Metadata = {
   title: "AuditCare Timeline",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <Navigation />
+        {children}
+      </body>
     </html>
   );
 }

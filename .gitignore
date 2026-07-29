@@ -3,10 +3,12 @@
 # Python
 backend/venv/
 backend/.venv/
-backend/__pycache__/
+**/__pycache__/
+*.py[cod]
 backend/.pytest_cache/
 backend/.ruff_cache/
 backend/.coverage
+*.db
 
 # Next.js / Node.js
 frontend/node_modules/
