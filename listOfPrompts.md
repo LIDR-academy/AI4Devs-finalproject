@@ -2432,3 +2432,93 @@ VERIFICACIÓN:
 
 No uses modo Plan para este cambio — es autónomo
 y no toca ficheros críticos del flujo de partida.
+
+-----------------
+
+Corrige los siguientes dos bugs detectados en dispositivo:
+
+═══════════════════════════════════════
+BUG 1 — Panel de debug: campo de secuencia no visible
+═══════════════════════════════════════
+
+En home_page.dart, el TextField de secuencia de rondas
+no aparece cuando el Switch de "Modo partida corta"
+está activado.
+
+Diagnóstico probable: el widget que muestra el TextField
+no está escuchando los cambios de DebugConfigNotifier,
+o hay un problema de condicional que impide renderizarlo.
+
+Fix:
+
+- Localiza el panel de debug en home_page.dart
+- Verifica que el TextField está envuelto en un
+  AnimatedSwitcher o Visibility/if condicional que
+  depende de debugConfigNotifier.shortGameMode
+- Si usa ValueListenableBuilder o ListenableBuilder,
+  verifica que el listener cubre tanto el Switch como
+  el TextField (no solo uno de los dos)
+- El TextField debe ser visible inmediatamente al
+  activar el Switch, sin necesidad de hot restart
+- Ejemplo de estructura correcta:
+
+  ListenableBuilder(
+    listenable: debugConfigNotifier,
+    builder: (context, _) => Column(
+      children: [
+        Row(children: [Switch(...), Text(...)]),
+        if (debugConfigNotifier.shortGameMode)
+          TextField(...), // solo si shortGameMode activo
+      ],
+    ),
+  )
+
+═══════════════════════════════════════
+BUG 2 — Pantalla en blanco tras cancelar partida
+desde Jugadores
+═══════════════════════════════════════
+
+Al pulsar volver atrás en add_players_page, confirmar
+el diálogo de descarte, la app navega a Home pero la
+pantalla aparece vacía — solo se ve la AppBar.
+
+Diagnóstico probable: al eliminar el Game borrador
+de Drift (DeleteGameUseCase o CancelGameUseCase) y
+navegar a Home, el BLoC de Home intenta recargar
+el estado pero recibe un error o un estado vacío
+que no renderiza el contenido.
+
+Causas posibles:
+A) La navegación usa context.pop() en vez de
+   context.go('/') — si hay varias rutas apiladas,
+   pop puede llevar a una pantalla intermedia vacía
+B) HomeBloc emite un estado de error silencioso
+   al intentar cargar partidas tras el borrado
+C) El widget de Home no maneja correctamente el
+   estado de "sin partidas" y muestra un Container
+   vacío en vez del empty state
+
+Fix:
+
+- Verifica que tras confirmar el descarte la
+  navegación usa context.go('/') o equivalente
+  en go_router (no context.pop() ni Navigator.pop())
+- En HomeBloc: verifica que tras recargar el
+  historial con 0 partidas emite un estado
+  HomeLoaded(games: []) y no HomeError
+- En home_page.dart: verifica que el estado
+  HomeLoaded con lista vacía renderiza el empty
+  state correcto ("Sin partidas recientes"), no
+  un Container/SizedBox vacío
+
+VERIFICACIÓN:
+
+- Activar Switch en panel debug → TextField aparece
+- Desactivar Switch → TextField desaparece
+- Cancelar partida desde Jugadores → Home se ve
+  completo con empty state o historial según corresponda
+- flutter analyze sin errores
+
+No uses modo Plan — son fixes puntuales.
+
+----------------

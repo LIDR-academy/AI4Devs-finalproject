@@ -13,10 +13,10 @@ class DebugConfigPanel extends StatefulWidget {
   final DebugConfigNotifier? debugConfig;
 
   @override
-  State<DebugConfigPanel> createState() => _DebugConfigPanelState();
+  State<DebugConfigPanel> createState() => DebugConfigPanelState();
 }
 
-class _DebugConfigPanelState extends State<DebugConfigPanel> {
+class DebugConfigPanelState extends State<DebugConfigPanel> {
   late final DebugConfigNotifier _debugConfig;
   late final TextEditingController _sequenceController;
   String? _sequenceError;
@@ -28,38 +28,36 @@ class _DebugConfigPanelState extends State<DebugConfigPanel> {
     _sequenceController = TextEditingController(
       text: _debugConfig.shortRoundSequence.join(','),
     );
-    _debugConfig.addListener(_onDebugConfigChanged);
-  }
-
-  void _onDebugConfigChanged() {
-    if (!mounted) {
-      return;
-    }
-    setState(() {});
   }
 
   @override
   void dispose() {
-    _debugConfig.removeListener(_onDebugConfigChanged);
     _sequenceController.dispose();
     super.dispose();
   }
 
-  void _applySequence() {
-    final parsed =
-        DebugConfigNotifier.parseRoundSequence(_sequenceController.text);
+  /// Parses and applies the current text field value into [_debugConfig].
+  ///
+  /// Returns `true` when either `shortGameMode` is disabled (no-op)
+  /// or when the current sequence text is valid and has been committed.
+  bool commitSequence() {
+    if (!_debugConfig.shortGameMode) {
+      return true;
+    }
+
+    final parsed = DebugConfigNotifier.parseRoundSequence(_sequenceController.text);
     if (parsed == null) {
       setState(() {
-        _sequenceError =
-            'Formato inválido. Usa números separados por comas.';
+        _sequenceError = 'Formato inválido. Usa números separados por comas.';
       });
-      return;
+      return false;
     }
 
     setState(() => _sequenceError = null);
     _debugConfig.updateSequence(parsed);
+    // Normalize formatting once the user explicitly commits.
     _sequenceController.text = parsed.join(',');
-    FocusScope.of(context).unfocus();
+    return true;
   }
 
   @override
@@ -74,94 +72,99 @@ class _DebugConfigPanelState extends State<DebugConfigPanel> {
         border: Border.all(color: Colors.amber, width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '⚙️ MODO DEBUG',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: Colors.amber.shade800,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
+      child: AnimatedBuilder(
+        animation: _debugConfig,
+        builder: (context, _) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Switch(
-                value: _debugConfig.shortGameMode,
-                onChanged: _debugConfig.toggleShortGameMode,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Modo partida corta',
-                  style: theme.textTheme.bodyMedium,
+              Text(
+                '⚙️ MODO DEBUG',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: Colors.amber.shade800,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
-          ),
-          if (_debugConfig.shortGameMode) ...[
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _sequenceController,
-                    decoration: InputDecoration(
-                      labelText: 'Secuencia de rondas',
-                      hintText: '1,4,8,8,4,1',
-                      isDense: true,
-                      errorText: _sequenceError,
-                      border: const OutlineInputBorder(),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: _sequenceError != null
-                              ? Colors.red
-                              : Colors.amber.shade700,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: _sequenceError != null
-                              ? Colors.red
-                              : Colors.amber.shade900,
-                          width: 2,
-                        ),
-                      ),
-                      errorBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red),
-                      ),
-                      focusedErrorBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red, width: 2),
-                      ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Switch(
+                    value: _debugConfig.shortGameMode,
+                    onChanged: _debugConfig.toggleShortGameMode,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Modo partida corta',
+                      style: theme.textTheme.bodyMedium,
                     ),
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9,\s]')),
-                    ],
-                    onChanged: (_) {
-                      if (_sequenceError != null) {
-                        setState(() => _sequenceError = null);
-                      }
-                    },
-                    onSubmitted: (_) => _applySequence(),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: FilledButton(
-                    onPressed: _applySequence,
-                    child: const Text('Aplicar'),
-                  ),
+                ],
+              ),
+              if (_debugConfig.shortGameMode) ...[
+                const SizedBox(height: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _sequenceController,
+                      decoration: InputDecoration(
+                        labelText: 'Secuencia de rondas',
+                        hintText: '1,4,8,8,4,1',
+                        isDense: true,
+                        errorText: _sequenceError,
+                        border: const OutlineInputBorder(),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: _sequenceError != null
+                                ? Colors.red
+                                : Colors.amber.shade700,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: _sequenceError != null
+                                ? Colors.red
+                                : Colors.amber.shade900,
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red, width: 2),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[0-9,\s]'),
+                        ),
+                      ],
+                      onChanged: (_) {
+                        // No validation while typing; clear any previous error.
+                        if (_sequenceError != null) {
+                          setState(() => _sequenceError = null);
+                        }
+                      },
+                      onSubmitted: (_) {
+                        final committed = commitSequence();
+                        if (!committed) {
+                          return;
+                        }
+                        FocusScope.of(context).unfocus();
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ],
+            ],
+          );
+        },
       ),
     );
   }

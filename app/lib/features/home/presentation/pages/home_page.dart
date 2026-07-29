@@ -6,15 +6,22 @@ import 'package:la_pocha/core/widgets/pocha_app_bar.dart';
 import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:la_pocha/features/home/presentation/widgets/debug_config_panel.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final GlobalKey<DebugConfigPanelState> _debugPanelKey =
+      GlobalKey<DebugConfigPanelState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ListView(
           children: [
             PochaAppBar(
               title: 'La Pocha',
@@ -39,30 +46,43 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FilledButton.icon(
-                        onPressed: () => context.push('/games/new'),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Nueva partida'),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => context.push('/history'),
-                        icon: const Icon(Icons.history),
-                        label: const Text('Ver historial'),
-                      ),
-                    ],
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FilledButton.icon(
+                    onPressed: () {
+                      if (kDebugMode) {
+                        final committed =
+                            _debugPanelKey.currentState?.commitSequence() ??
+                                true;
+                        if (!committed) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Secuencia inválida. Revisa el formato.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                      }
+                      context.push('/games/new');
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Nueva partida'),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.push('/history'),
+                    icon: const Icon(Icons.history),
+                    label: const Text('Ver historial'),
+                  ),
+                ],
               ),
             ),
-            if (kDebugMode) const DebugConfigPanel(),
+            if (kDebugMode) DebugConfigPanel(key: _debugPanelKey),
           ],
         ),
       ),
