@@ -1,6 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { apiClient } from '$lib/api/client';
+  import { lastAnalysis } from '$lib/stores/lastAnalysis';
+  import { financialProfile } from '$lib/stores/financialProfile';
 
   let deleting = false;
 
@@ -11,6 +13,8 @@
     } catch {
       // non-blocking: navigate anyway
     }
+    lastAnalysis.clear();
+    financialProfile.reset();
     goto('/listing-lens');
   }
 </script>
