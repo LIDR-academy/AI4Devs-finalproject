@@ -37,7 +37,7 @@ Abrir la app → `/login` → **dev-login** con un email de prueba. Flujo recome
 
 Para visualizar un usuario con datos ya poblados, entrar con lectora@example.com
 
-**Cómo usar la app:** guía paso a paso de todas las secciones (con huecos para screenshots) en [`docs/product/user-guide.md`](docs/product/user-guide.md).
+**Cómo usar la app:** guía paso a paso con capturas de pantalla en [`docs/product/user-guide.md`](docs/product/user-guide.md).
 
 > **Nota free tier:** la API en Render se duerme tras ~15 min sin uso; la primera petición puede tardar **30–90 s** (cold start).
 
@@ -75,19 +75,19 @@ git clone https://github.com/CeliaMerino/AI4devs-finalproject.git
 
 ### **1.2. Características y funcionalidades principales:**
 
-Detalle orientado a la usuaria final (qué hace cada pantalla, flujos y dónde colocar capturas): **[Guía de usuario](docs/product/user-guide.md)**.
+Detalle orientado a la usuaria final (qué hace cada pantalla, flujos y capturas): **[Guía de usuario](docs/product/user-guide.md)**.
 
-- **Registro y seguimiento de lecturas:** añadir libros con búsqueda que enriquece metadatos (con fallback entre fuentes: Open Library, Google Books, Goodreads y entrada manual); progreso por página o porcentaje; lecturas simultáneas.
-- **Home:** vista con libros en curso, progreso, meta anual, KPIs del mes y TBR actual.
-- **Book Tracker:** tabla visual, filtros, búsqueda interna, edición y altas.
-- **Reading Stats:** dashboards, gráficos, comparativas e insights.
-- **Listas y TBR:** TBR mensual, listas personalizadas, favoritos y retos; apoyo a flujos tipo drag and drop (según diseño).
-- **Goals:** meta anual, forecast y evolución.
-- **Biblioteca (Library):** histórico completo con búsqueda avanzada y filtros (autora, género, trope, saga, año, formato, rating, etc.).
-- **Recap / Insights:** resúmenes mensuales y anuales; exportación.
-- **Import / Export:** Excel, CSV, export de Goodreads; export en PNG, PDF y formato story 9:16.
-- **Tags personalizados:** etiquetas propias (por ejemplo géneros de nicho o book club).
-- **Perfil y ajustes:** preferencias, temas visuales, fuentes de datos y objetivos.
+- **Registro y seguimiento de lecturas:** añadir libros con búsqueda que enriquece metadatos (fallback Open Library → Google Books, entrada manual e import Goodreads); estados de lectura y lecturas simultáneas. Progreso por página en modelo de datos; **UI de progreso pendiente** (UC-03).
+- **Home:** libros en curso, KPIs del mes, meta anual y TBR actual.
+- **Book Tracker:** tabla editable con alta por catálogo, estados, fechas, formato, puntuación y edición de metadatos.
+- **Reading Stats:** dashboards por mes o año, KPIs, gráficos, insights automáticos y galería de portadas del periodo.
+- **Listas y TBR:** TBR mensual (añadir desde biblioteca o catálogo, completado automático al marcar leído). Listas personalizadas, favoritos, retos y drag & drop **pendientes**.
+- **Goals:** meta anual, progreso, forecast y previsión a fin de año.
+- **Biblioteca (Library):** galería de portadas de toda la biblioteca. Búsqueda avanzada y filtros (autora, género, saga, año, formato, rating…) **pendientes** (UC-09 parcial).
+- **Recap / Insights:** página placeholder; los insights del periodo están en **Estadísticas de lectura**. Export visual (PNG, PDF, story 9:16) **pendiente** (UC-10).
+- **Import / Export:** importación desde CSV de Goodreads implementada. Export a Excel, CSV o redes **pendiente**.
+- **Tags personalizados:** **pendientes** en UI (el modelo admite evolución futura).
+- **Perfil y ajustes:** tema visual, catálogos de género/formato/público y preferencias de perfil.
 
 **Prioridades de producto (referencia PRD):** MVP centrado en alta automática de libros, listas TBR, meta anual e insights automáticos; en evolución, comparativas, export story, búsqueda avanzada y tags. Lo disponible hoy frente a lo planificado está desglosado en la [guía de usuario §14](docs/product/user-guide.md#14-qué-está-planificado-aún-no-disponible).
 
@@ -214,8 +214,8 @@ La aplicación se organiza en **capas** sobre un **monolito modular NestJS** y u
 | UC-06 | Goals | `goals` |
 | UC-07 | Reading Stats / Home | `stats` |
 | UC-08 | Import / Export | `import` |
-| UC-09 | Library | `books` (consultas filtradas) |
-| UC-10 | Recap / Insights | `export` (`RenderService`) + `stats` |
+| UC-09 | Library | `books` (galería; filtros avanzados pendientes) |
+| UC-10 | Recap / Insights | placeholder en UI; insights en `stats`; export **pendiente** |
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -239,13 +239,13 @@ AI4Devs-finalproject/              # raíz del repositorio
 │   │   ├── import/                # importación Goodreads CSV (UC-08)
 │   │   ├── preferences/           # tema y preferencias de perfil
 │   │   └── migrations/            # migraciones TypeORM versionadas
-│   ├── test/                      # tests de integración (Supertest + Postgres)
+│   ├── test/                      # tests unitarios, integración (Supertest + SQLite) y e2e
 │   └── package.json
 ├── frontend/                      # SPA React 19 + Vite + TypeScript
 │   ├── src/
 │   │   ├── main.tsx               # entrada React, providers
 │   │   ├── App.tsx                # router, QueryClient, auth
-│   │   ├── pages/                 # Home, BookTracker, Stats, Lists, Goals, Settings…
+│   │   ├── pages/                 # Home, BookTracker, Stats, Lists, Goals, Library, Profile…
 │   │   ├── components/            # layout, modales, charts, tarjetas Home
 │   │   ├── api/                   # cliente REST tipado (client.ts, types.ts, errors.ts)
 │   │   ├── contexts/              # AuthContext
@@ -289,12 +289,15 @@ Despliegue real documentado en [`docs/deployment.md`](docs/deployment.md):
 | **Frontend** | Vercel (rama `main`, root `frontend/`) | https://reading-analytics.vercel.app |
 | **API NestJS** | Render Web Service free (root `backend/`) | https://reading-analytics-api.onrender.com/v1 |
 | **PostgreSQL** | Neon (región UE) | `DATABASE_URL` solo en secretos de Render |
-| **CI/CD automático** | Deploy on push vía integración GitHub de Vercel y Render | Sin GitHub Actions en repo aún |
+| **CD (deploy)** | Push a `main` → build automático en Vercel y Render | Sin workflow de GitHub Actions en el repo |
+| **CI (tests en pipeline)** | Ejecución manual/local (`npm test`, `npm run test:integration`) | GitHub Actions previsto; ver diagrama objetivo más abajo |
 | **Secretos** | `JWT_SECRET`, `DATABASE_URL` en Render; `VITE_API_URL` en Vercel | Nunca en Git |
 
 Variables clave en producción: `CORS_ORIGIN=https://reading-analytics.vercel.app`, `TYPEORM_MIGRATIONS_RUN=true`, `VITE_API_URL=https://reading-analytics-api.onrender.com/v1`, `NODE_VERSION=20` en Render. Arranque API: `node dist/src/main.js` (ver `backend/package.json` → `start:prod`).
 
-#### Diagrama Mermaid — pipeline de despliegue (Git → producción)
+#### Diagrama objetivo — pipeline de despliegue (Git → producción)
+
+El diagrama y el flujo paso a paso describen la **arquitectura objetivo** del MVP (CI con GitHub Actions + CD). Hoy el despliegue en producción funciona vía integraciones nativas Vercel/Render al hacer merge en `main`.
 
 ![Pipeline CI/CD — desarrollo, GitHub Actions, despliegue y producción](docs/product/diagrams/despliegue.png)
 
@@ -341,16 +344,16 @@ flowchart LR
   CDN -->|HTTPS REST| API
 ```
 
-#### Proceso paso a paso
+#### Proceso paso a paso (objetivo con CI/CD completo)
 
 1. **Desarrollo local:** la fundadora trabaja en `backend/` y `frontend/`, con PostgreSQL vía Docker Compose (puerto 5433) o instancia local; variables sensibles solo en `.env` (nunca en Git).
-2. **Push a GitHub:** al integrar cambios en `main` (o al etiquetar una release, según política del equipo), se dispara el workflow de GitHub Actions.
-3. **CI — calidad:** se ejecutan **lint**, **typecheck** y **tests** (Jest en API, Vitest en web) para fallar rápido si se rompe el contrato o la lógica crítica.
-4. **CI — artefactos:** se construye la **imagen Docker** del API (o el bundle Node según plataforma) y el **build estático** del frontend (`vite build` o equivalente).
-5. **CD — base de datos:** contra el PostgreSQL de **producción** (o un entorno `staging` previo) se aplican **migraciones TypeORM** (`npm run migration:run`) de forma ordenada, normalmente como paso explícito en el pipeline o como comando de release previo al arranque del contenedor.
-6. **CD — API:** el proveedor cloud **tira de la nueva imagen** o del nuevo commit, reinicia el servicio NestJS con las variables de entorno de producción (`DATABASE_URL`, `JWT_SECRET`, claves de catálogo si aplica).
-7. **CD — frontend:** se sube el directorio de salida del build a Vercel/Netlify/Pages; la SPA queda servida por HTTPS con **CORS** apuntando solo al origen del API de producción.
-8. **Verificación:** smoke manual o comprobación automatizada (healthcheck `GET /health`, una petición autenticada de prueba) y revisión de logs del primer despliegue.
+2. **Push a GitHub:** al integrar cambios en `main`, el pipeline objetivo dispara **GitHub Actions**; hoy el merge en `main` activa directamente los deploys de Vercel y Render.
+3. **CI — calidad (objetivo):** lint, typecheck y tests (Jest en API; Vitest en web cuando se añada).
+4. **CI — artefactos (objetivo):** build del API y `vite build` del frontend.
+5. **CD — base de datos:** migraciones TypeORM en Neon (`TYPEORM_MIGRATIONS_RUN=true` en Render al arrancar).
+6. **CD — API:** Render despliega el servicio NestJS con variables de producción.
+7. **CD — frontend:** Vercel publica la SPA con `VITE_API_URL` apuntando al API de Render.
+8. **Verificación:** smoke manual en producción o healthcheck automatizado cuando exista el workflow de CI.
 
 Entornos recomendados en MVP: al menos **producción** + opcional **preview** por PR (frontend) y **staging** (API + BD clonada o esquema aparte) cuando el volumen de cambios lo justifique.
 
@@ -380,6 +383,18 @@ La accesibilidad **WCAG 2.1/2.2 AA** se cubre en **diseño y QA** (contraste, fo
 ---
 
 ### **2.6. Tests**
+
+#### Estado implementado (julio 2026)
+
+| Capa | Herramienta | Estado |
+| --- | --- | --- |
+| **Backend — unitario** | Jest | **185 tests** en servicios, catálogo, import, stats, géneros, etc. |
+| **Backend — integración API** | Jest + Supertest + SQLite `:memory:` | **117 tests** (`books`, `stats`, `tbr`, `goals`, `import`, `genres`, `formats`, `audiences`, `preferences`, cover search) |
+| **Backend — e2e** | Jest (`test:e2e`) | Plantilla NestJS heredada (`GET /`); **sustituir** por flujo API del MVP |
+| **Frontend** | Vitest + RTL | **No implementado**; verificación manual + integración backend |
+| **E2E navegador** | Playwright | **Previsto**; no configurado en el repo |
+
+Comandos: `cd backend && npm test` · `npm run test:integration` · `npm run test:e2e`.
 
 #### Estrategia de testing (stack React + NestJS + PostgreSQL)
 
@@ -415,8 +430,8 @@ Modelo lógico **PostgreSQL** alineado con el PRD: biblioteca por usuaria, regis
 | Área | Estado MVP |
 | --- | --- |
 | UC-01…UC-08 | Implementados (alta catálogo, tracker, TBR, metas, stats, import Goodreads) |
-| UC-09 Library | Ruta placeholder; búsqueda avanzada pendiente |
-| UC-10 Recap/export | Ruta placeholder; export PNG/PDF/story pendiente |
+| UC-09 Library | Galería de portadas en `/library`; búsqueda y filtros avanzados pendientes |
+| UC-10 Recap/export | Página placeholder en `/recap`; insights en Stats; export PNG/PDF/story pendiente |
 
 ![Diagrama entidad–relación del modelo de datos (Reading Analytics Platform)](docs/product/diagrams/data_model.png)
 
@@ -1952,7 +1967,7 @@ Tres tickets representativos del desarrollo incremental (backend, frontend y bas
 
 ## 7. Pull Requests
 
-Tres pull requests representativas del historial de desarrollo (fundación MVP, ciclo de lectura + TBR, y pulido de entrega).
+Seis pull requests representativas del historial (fundación MVP, ciclo de lectura + TBR, localización, stats/metas y cierre de entrega). El historial completo está en el repositorio (~80 PRs mergeados).
 
 ### Pull Request 1 — feat(KAN-9): Add book with catalog search, cover picker, and Book Tracker UI
 
@@ -1993,4 +2008,46 @@ Tres pull requests representativas del historial de desarrollo (fundación MVP, 
 **Resumen:** Localiza toda la UI visible al español (`lang="es"`, `locale.ts`, errores API). Implementa el Home funcional: tarjeta de libros en curso (portadas `leyendo`), KPIs mensuales, meta anual y TBR del mes en layout de dos columnas; extrae componentes `HomeReadingCard`, `HomeMonthlyKpisCard`, `HomeTbrCard`.
 
 **Por qué es relevante:** cierra la experiencia de entrega del máster — dashboard de bienvenida coherente con el PRD y producto en español para evaluación.
+
+---
+
+### Pull Request 4 — Improve stats period copy and goals year-end projection
+
+| Campo | Detalle |
+| --- | --- |
+| **URL** | https://github.com/CeliaMerino/AI4devs-finalproject/pull/78 |
+| **Estado** | Mergeado (julio 2026) |
+| **Alcance** | Stats + Goals |
+
+**Resumen:** Mejora el copy de periodos en estadísticas (mes/año) y añade la tarjeta de previsión a fin de año en Metas según el ritmo de lectura actual.
+
+**Por qué es relevante:** refina la analítica y el seguimiento de metas, núcleo del producto.
+
+---
+
+### Pull Request 5 — Theme palette UI utilization and library cover gallery
+
+| Campo | Detalle |
+| --- | --- |
+| **URL** | https://github.com/CeliaMerino/AI4devs-finalproject/pull/79 |
+| **Estado** | Mergeado (julio 2026) |
+| **Alcance** | Frontend — tema + Biblioteca |
+
+**Resumen:** Aplica los tokens de paleta de tema en chrome y componentes compartidos; sustituye el placeholder de `/library` por una galería de portadas de toda la biblioteca.
+
+**Por qué es relevante:** cierra UC-09 de forma parcial (vista visual) y mejora la personalización del producto.
+
+---
+
+### Pull Request 6 — User guide with screenshots and doc cross-links
+
+| Campo | Detalle |
+| --- | --- |
+| **URL** | https://github.com/CeliaMerino/AI4devs-finalproject/pull/80 |
+| **Estado** | Mergeado (julio 2026) |
+| **Alcance** | Documentación de producto |
+
+**Resumen:** Añade `docs/product/user-guide.md` con capturas de todas las secciones implementadas y enlaces desde README, PRD y `docs/product/`.
+
+**Por qué es relevante:** documenta el MVP para evaluación y usuarias finales sin depender solo del README técnico.
 
