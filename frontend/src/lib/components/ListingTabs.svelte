@@ -7,7 +7,7 @@
   export let manualText: string = '';
   export let urlBlocked: boolean = false;
   export let disabled: boolean = false;
-  export let onAnalize: (data: { url: string; manualText: string }) => void;
+  export let onAnalyze: (data: { url: string; manualText: string }) => void;
 
   let activeTab: 'text' | 'url' = 'text';
   let showGuide = false;
@@ -27,13 +27,13 @@
     if (activeTab === 'text' && manualText.trim()) {
       showExtraction = true;
     } else {
-      onAnalize({ url, manualText });
+      onAnalyze({ url, manualText });
     }
   }
 
   function confirmAndAnalyze() {
     showExtraction = false;
-    onAnalize({ url, manualText });
+    onAnalyze({ url, manualText });
   }
 
   function editExtraction() {

@@ -83,9 +83,9 @@ specs/
     ├── data-model.md          # Prisma models + value objects
     ├── contracts/             # API design
     ├── research.md            # 8 technical decisions
-    └── tasks.md               # 127 tasks, 8 phases
+    └── tasks.md               # 127 tasks, 9 phases
 docs/
-├── domain-events.md           # 16 domain events identified
+├── domain-events.md           # 20+ domain events identified
 └── adr/                       # Architecture Decision Records
     ├── 001-hexagonal.md
     ├── 002-avena-score.md          # (deprecated — see ADR-004)

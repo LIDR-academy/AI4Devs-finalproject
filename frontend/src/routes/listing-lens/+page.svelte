@@ -83,7 +83,7 @@
       bind:manualText
       bind:urlBlocked
       disabled={loading}
-      onAnalize={handleAnalyze}
+      onAnalyze={handleAnalyze}
     />
   {/if}
 

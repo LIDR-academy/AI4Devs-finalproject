@@ -1,10 +1,9 @@
 /**
- * LocationResolver service — chains DeclaredLocationAdapter + GeocodingAdapter
- * to produce Coordinates. Implements the LocationResolverPort.
+ * LocationResolver service — delegates to GeocodingAdapter to produce Coordinates.
+ * Implements the LocationResolverPort.
  *
- * This service is in the domain because it composes adapters without any
- * orchestration logic — it's pure delegation. The use case depends on the
- * LocationResolverPort interface, not on the individual adapters.
+ * Known: imports concrete GeocodingAdapter instead of depending on a port interface.
+ * This violates hexagonal architecture (domain depends on adapter). Acceptable for MVP.
  */
 import { Coordinates } from '../value-objects/Coordinates';
 import type { LocationResolverPort, ParsedListing } from '../ports/LocationResolverPort';

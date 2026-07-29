@@ -1,6 +1,6 @@
 /**
  * LocationResolverPort (T030a, FR-016).
- * Chain: DeclaredLocationAdapter → GeocodingAdapter.
+ * Resolves coordinates from a parsed listing via GeocodingAdapter.
  * Returns Coordinates or null if no address can be resolved.
  */
 import type { Coordinates } from '../value-objects/Coordinates';

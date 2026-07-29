@@ -167,14 +167,14 @@ export interface NegotiationPoint {
 }
 
 export type ListingDiff =
-  | { unchanged: true; addedRedFlags: NegotiationPoint[]; removedRedFlags: NegotiationPoint[] }
+  | { unchanged: true; addedRedFlags: RedFlagItem[]; removedRedFlags: RedFlagItem[] }
   | {
       unchanged: false;
       priceDelta?: number;
       squareMetersDelta?: number;
       yearBuiltChanged?: boolean;
-      addedRedFlags: NegotiationPoint[];
-      removedRedFlags: NegotiationPoint[];
+      addedRedFlags: RedFlagItem[];
+      removedRedFlags: RedFlagItem[];
     };
 
 export type ProgressEventName =

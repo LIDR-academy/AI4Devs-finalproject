@@ -39,4 +39,4 @@ In CI, the steps above are orchestrated by `.github/workflows/ci.yml`.
   - Dashboard empty state visible
   - Listing Lens AI disclaimer present
   - Timeline shows milestones
-  - **Happy path** (new): dashboard → analyze listing → see result → mortgage-compass → checklist
+  - **Happy path** (new): dashboard → analyze listing → see result → mortgage-compass → timeline

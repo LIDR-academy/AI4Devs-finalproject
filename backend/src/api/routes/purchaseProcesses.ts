@@ -47,15 +47,16 @@ purchaseProcessesRouter.post('/', async (req: Request, res: Response, next: Next
   try {
     const body = createSchema.parse(req.body);
 
-    let propertyPrice = body.propertyPrice;
+    const propertyPrice = body.propertyPrice;
     const sourceListingId = body.analyzedListingId ?? null;
 
     if (body.analyzedListingId) {
       const listing = await prisma.analyzedListing.findUnique({
         where: { id: body.analyzedListingId },
       });
-      if (listing) {
-        propertyPrice = listing.transparencyScore > 0 ? body.propertyPrice : undefined;
+      if (!listing) {
+        res.status(400).json({ error: 'LISTING_NOT_FOUND' });
+        return;
       }
     }
 

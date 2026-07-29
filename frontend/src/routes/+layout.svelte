@@ -17,15 +17,12 @@
     '/listing-lens': 'listing',
     '/mortgage-compass': 'mortgage',
     '/timeline': 'timeline',
-    '/checklist': 'timeline',
   };
 
   const ROUTES_WITH_STEPPER = new Set([
-    '/mi-proceso',
     '/listing-lens',
     '/mortgage-compass',
     '/timeline',
-    '/checklist',
   ]);
 
   $: currentStep = PATH_TO_STEP[$page.url.pathname] ?? 'listing';

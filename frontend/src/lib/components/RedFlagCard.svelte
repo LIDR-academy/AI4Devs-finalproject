@@ -18,7 +18,7 @@
   };
 </script>
 
-<div class="red-flag" class:high={flag.severity === 'high'} class:medium={flag.severity === 'medium'}>
+<div class="red-flag" class:high={flag.severity === 'high'} class:medium={flag.severity === 'medium'} class:low={flag.severity === 'low'}>
   <div class="header">
     <span class="category">{LABELS_ES[flag.flag] ?? flag.flag}</span>
     <span class="severity">{flag.severity}</span>
@@ -39,6 +39,9 @@
   }
   .red-flag.medium {
     border-left-color: var(--color-warning);
+  }
+  .red-flag.low {
+    border-left-color: var(--color-success);
   }
   .header {
     display: flex;

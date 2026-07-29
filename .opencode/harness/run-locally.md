@@ -126,7 +126,7 @@ npm run dev
 
 ## 8. Verify
 
-Open http://localhost:5173 in your browser. You should see the Realista dashboard.
+Open http://localhost:5173 in your browser. You should see the Realista landing page.
 
 Test the API:
 
@@ -142,7 +142,7 @@ Test the full flow:
 3. Wait 8-15 seconds for the analysis
 4. Verify the transparency score, red flags, and cadastral comparison appear
 5. Navigate to "Mortgage Compass" and complete the form
-6. Navigate to "Dashboard" and verify the data is reflected
+6. Navigate to "Tu proceso" and verify the data is reflected
 
 ## 9. Run the test suite
 

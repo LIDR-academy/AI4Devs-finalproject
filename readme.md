@@ -131,10 +131,8 @@ Stack: SvelteKit (PWA) + Node.js/Express + TypeScript + PostgreSQL + Prisma + Op
 │                                                              │
 │  OpenRouterAdapter        → LLM gateway (análisis semántico) │
 │  CheerioAdapter           → HTML parsing server-side         │
-│  DeclaredLocationAdapter  → Extracción de dirección del HTML │
 │  GeocodingAdapter         → Nominatim OSM (coordenadas GPS)  │
 │  CatastroAdapter          → API Sede Electrónica del Catastro│
-│  MiraTuZonaAdapter        → Enlace contextual por barrio     │
 └─────────────────────────────────────────────────────────────┘
 
 ┌──────────┐     ┌──────────────────┐     ┌──────────────────┐
@@ -183,9 +181,8 @@ backend/
 │   ├── adapters/         # Implementaciones de puertos
 │   │   ├── openrouter/   # OpenRouterAdapter (análisis LLM)
 │   │   ├── cheerio/      # CheerioAdapter (parseo HTML)
-│   │   ├── location/     # DeclaredLocationAdapter, GeocodingAdapter
+│   │   ├── location/     # GeocodingAdapter (Nominatim)
 │   │   ├── catastro/     # CatastroAdapter (API catastral)
-│   │   └── miratuzona/   # MiraTuZonaAdapter (enlace contextual)
 │   ├── api/              # Express routes, controllers, middleware
 │   ├── infrastructure/   # Prisma schema, config, constants
 │   └── index.ts
@@ -194,7 +191,8 @@ backend/
 frontend/
 ├── src/
 │   ├── routes/           # SvelteKit file-based routing
-│   │   ├── +page.svelte  # Dashboard
+│   │   ├── +page.svelte  # Landing
+│   │   ├── mi-proceso/    # Dashboard / resumen de proceso
 │   │   ├── listing-lens/ # Análisis de anuncios
 │   │   ├── mortgage-compass/ # Simulador hipotecario
 │   │   ├── timeline/     # Proceso de compra (cronograma + checklist unificado)

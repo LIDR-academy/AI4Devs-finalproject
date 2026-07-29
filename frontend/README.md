@@ -31,12 +31,13 @@ npm run dev                      # http://localhost:5173
 ```
 src/
 ├── routes/              # SvelteKit file-based routing
-│   ├── +layout.svelte   # Shell with nav tabs
-│   ├── +page.svelte     # Dashboard
-│   ├── listing-lens/    # US1
-│   ├── mortgage-compass/# US2
-│   ├── timeline/        # US5
-│   └── checklist/       # US6
+│   ├── +layout.svelte   # Shell con Header + ProcessStepper
+│   ├── +page.svelte     # Landing
+│   ├── mi-proceso/      # Dashboard / resumen de proceso
+│   ├── listing-lens/    # Análisis de anuncios
+│   ├── mortgage-compass/# Simulador hipotecario
+│   ├── timeline/        # Cronograma + checklist unificado
+│   └── checklist/       # Redirect → /timeline
 ├── lib/
 │   ├── stores/          # Svelte writable stores
 │   ├── api/             # Backend client

@@ -70,9 +70,8 @@ backend/
 │   ├── adapters/
 │   │   ├── openrouter/         # OpenRouterAdapter (LLM analysis)
 │   │   ├── cheerio/            # CheerioAdapter (HTML parsing)
-│   │   ├── location/           # DeclaredLocationAdapter, GeocodingAdapter, LLMVisionLocationAdapter
-│   │   ├── catastro/           # CatastroAdapter (cadastral API)
-│   │   └── miratuzona/         # MiraTuZonaAdapter (location link)
+│   │   ├── location/           # GeocodingAdapter (Nominatim)
+│   │   └── catastro/           # CatastroAdapter (cadastral API)
 │   ├── api/
 │   │   ├── routes/             # Express routes
 │   │   ├── middleware/         # Session UUID, rate limiting, error handling
@@ -88,18 +87,16 @@ backend/
 frontend/
 ├── src/
 │   ├── routes/                 # SvelteKit file-based routing
-│   │   ├── +page.svelte        # Dashboard
+│   │   ├── +page.svelte        # Landing
+│   │   ├── mi-proceso/
+│   │   │   └── +page.svelte    # Dashboard / resumen de proceso
 │   │   ├── listing-lens/
-│   │   │   ├── +page.svelte    # Listing Lens UI
-│   │   │   └── +page.server.ts # Server-side proxy to backend API
+│   │   │   └── +page.svelte    # Listing Lens UI
 │   │   ├── mortgage-compass/
-│   │   │   ├── +page.svelte    # Mortgage Compass UI
-│   │   │   └── +page.server.ts
+│   │   │   └── +page.svelte    # Mortgage Compass UI
 │   │   ├── timeline/
-│   │   │   └── +page.svelte    # Interactive timeline
-│   │   ├── checklist/
-│   │   │   └── +page.svelte    # Document checklist
-│   │   └── +layout.svelte      # Mobile-first shell + nav
+│   │   │   └── +page.svelte    # Cronograma + checklist unificado
+│   │   └── +layout.svelte      # Shell con Header + ProcessStepper
 │   ├── lib/
 │   │   ├── stores/             # Svelte stores (session, listings, profile)
 │   │   ├── api/                # Backend API client
