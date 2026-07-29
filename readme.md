@@ -1645,3 +1645,18 @@ documentadas (Drift vs Hive, setup vs lobby), instrucciones de instalación
 y prompts.md completo de Entrega 2.
 
 **Rama:** `feature-entrega2-JMGS` → `main`
+
+---
+
+### Pull Request 3 — Entrega Final
+
+**URL:** [se añadirá tras crear la PR]
+
+**Descripción:** Tickets Should-Have (LPT-8, 13, 16, 17, 18, 25),
+refactor Atomic Design (PochaAppBar, PrimaryButton,
+PlayerInitialAvatar, WarningBanner en core/widgets/),
+rediseño de add_players_page con Claude Design, panel de
+debug en runtime (DebugConfigNotifier), resolución de bugs
+en Samsung A26 y Xiaomi Mi A1.
+
+**Rama:** finalproject-entregafinal-JMGS → main
