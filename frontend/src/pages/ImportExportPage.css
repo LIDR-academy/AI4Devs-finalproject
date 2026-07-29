@@ -1,0 +1,81 @@
+.import-export-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.import-export-main {
+  display: grid;
+  gap: var(--space-5);
+  max-width: 42rem;
+}
+
+.import-export-card__text {
+  margin: 0;
+  color: var(--color-text);
+  line-height: var(--line-height-relaxed);
+}
+
+.import-export-card--muted .import-export-card__text {
+  color: var(--color-text-muted);
+}
+
+.goodreads-import-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.goodreads-import-form__file {
+  cursor: pointer;
+}
+
+.goodreads-import-form__file:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.goodreads-import-form__hint {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-relaxed);
+}
+
+.goodreads-import-form__filename {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.goodreads-import-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.import-export-alert {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+}
+
+.import-export-alert--error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger-border);
+}
+
+.import-export-alert--success {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
+}
+
+.import-export-alert--progress {
+  background: var(--color-info-soft);
+  color: var(--color-text);
+  border: 1px solid var(--color-info-border);
+}

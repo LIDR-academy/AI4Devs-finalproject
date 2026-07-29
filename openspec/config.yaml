@@ -1,0 +1,50 @@
+schema: spec-driven
+
+context: |
+  Project: Reading Analytics Platform — desktop-first personal reading analytics (not a social network).
+
+  ## Product source of truth (read first)
+  - PRD.md — vision, MVP, personas, feature areas
+  - readme.md — architecture, data model summary, API index, delivery sections
+  - docs/product/user-stories.md, docs/product/use-cases.md — UC-01 through UC-10
+
+  OpenSpec artifacts MUST NOT contradict the PRD or use cases. ai-specs/ is supporting tooling only.
+
+  ## Tech stack
+  - Backend: TypeScript, NestJS 11, TypeORM, PostgreSQL, Jest, class-validator, Passport JWT
+  - Frontend: TypeScript, React 19, Vite, React Router, TanStack Query, fetch in frontend/src/api/
+  - API prefix: /v1 — catalog: Open Library, Google Books
+  - Auth MVP: POST /v1/auth/dev-login, JWT on /v1/books/*
+
+  ## Engineering docs
+  - docs/standards/base-standards.md, docs/standards/backend-standards.md, docs/standards/frontend-standards.md
+  - docs/api-spec.yml, docs/data-model.md, docs/development_guide.md
+  - docs/standards/openspec-tasks-mandatory-steps.md
+  - AGENTS.md (repository root — agent rules and precedence)
+
+  ## Code paths
+  - backend/src/ (modules: auth, users, books, books/catalog)
+  - frontend/src/ (pages, components, api, auth)
+
+  ## Workflow
+  - Jira: KAN-* (Atlassian MCP: user-atlassian in Cursor)
+  - Changes: openspec/changes/<name>/; archive when done
+  - English for new specs, tasks, and code comments
+  - Post-apply fixes: update change specs/tasks before code (AGENTS.md §8)
+
+rules:
+  _global:
+    - Read PRD.md and relevant docs/product/use-cases.md sections before proposing scope
+    - Read docs/standards/base-standards.md and AGENTS.md before creating artifacts
+    - Backend: docs/standards/backend-standards.md; nest modules and TypeORM entities
+    - Frontend: docs/standards/frontend-standards.md; frontend/src/api/client.ts
+    - Keep docs/api-spec.yml and docs/data-model.md consistent with implementation
+    - Do not introduce LTI/ATS, Express, or Prisma patterns — this project uses NestJS and TypeORM
+  proposal:
+    - Reference UC-ID(s) from docs/product/use-cases.md when applicable
+    - State non-goals if scope is narrowed vs PRD
+  tasks:
+    - Concrete paths under backend/src/ and frontend/src/
+    - TDD-friendly steps; manual test notes for UI/catalog flows
+    - Link Jira KAN-* when applicable
+    - Use npm scripts from docs/development_guide.md (migration:run, start:dev, npm test)

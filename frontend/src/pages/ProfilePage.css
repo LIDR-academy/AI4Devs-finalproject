@@ -1,0 +1,22 @@
+.profile-page__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 42rem;
+}
+
+.profile-page__account {
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.profile-page__account dt {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.profile-page__account dd {
+  margin: 0.25rem 0 0;
+  font-weight: 500;
+}

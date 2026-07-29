@@ -1,0 +1,118 @@
+.add-tbr-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.add-tbr-modal {
+  background: var(--color-surface);
+  border-radius: 8px;
+  width: min(480px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.add-tbr-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.add-tbr-modal__header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.add-tbr-modal__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.add-tbr-modal__tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.add-tbr-modal__tabs button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.add-tbr-modal__tab--active {
+  border-bottom-color: var(--color-text-heading) !important;
+  font-weight: 600;
+}
+
+.add-tbr-modal__error {
+  color: var(--color-danger);
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.add-tbr-modal__hint {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+
+.add-tbr-modal__search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.add-tbr-modal__search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  background: var(--color-surface);
+}
+
+.add-tbr-modal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  max-height: 40vh;
+}
+
+.add-tbr-modal__option {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+
+.add-tbr-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}

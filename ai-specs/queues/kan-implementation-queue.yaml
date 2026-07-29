@@ -1,0 +1,264 @@
+# KAN implementation queue — Reading Analytics Platform
+# Processed sequentially by the kan-pipeline skill (.cursor/skills/kan-pipeline).
+# Edit this file to reorder, skip, or add tickets. State lives in kan-pipeline-state.json.
+
+repo:
+  owner: CeliaMerino
+  name: AI4Devs-finalproject
+  full_name: CeliaMerino/AI4Devs-finalproject
+  git_remote: origin # fork — NEVER use upstream (LIDR-academy/AI4Devs-finalproject) for PRs or pushes
+  default_branch: main
+
+pull_request:
+  base: main
+  # All gh pr commands MUST pass: --repo CeliaMerino/AI4Devs-finalproject
+  target: CeliaMerino/AI4Devs-finalproject:main
+
+merge:
+  auto_merge: false # human reviews and merges on GitHub
+  human_gate: true # pipeline pauses after PR; resume with /kan-pipeline continue
+
+branch_pattern: "feature/{ticket}-{slug}" # slug derived from Jira summary
+
+change_name_pattern: "kan-{number}-{slug}" # OpenSpec change directory name
+
+phases:
+  - id: phase-1-ui-foundation
+    name: "Phase 1 — UI foundations (unblocks all visual work)"
+    tickets:
+      - id: KAN-18
+        summary: "Design tokens + base components"
+      - id: KAN-19
+        summary: "Unified sidebar"
+
+  - id: phase-2-book-tracker-data
+    name: "Phase 2 — Book Tracker data integrity (backend can run parallel to Phase 1)"
+    tickets:
+      - id: KAN-35
+        summary: "Audience column + API (blocks form and charts)"
+      - id: KAN-26
+        summary: "Manual add/edit — entry point"
+      - id: KAN-27
+        summary: "Manual add/edit — part 2"
+        depends_on: [KAN-26]
+      - id: KAN-28
+        summary: "Manual add/edit — part 3"
+        depends_on: [KAN-27]
+      - id: KAN-29
+        summary: "Manual add/edit — part 4"
+        depends_on: [KAN-28]
+      - id: KAN-30
+        summary: "Selectable format"
+
+  - id: phase-3-page-restyle
+    name: "Phase 3 — Page-by-page restyle (form + new columns in place)"
+    note: "KAN-20 is the restyle epic; implement child tickets in this order."
+    tickets:
+      - id: KAN-22
+        summary: "Book Tracker page restyle"
+      - id: KAN-21
+        summary: "Home page restyle"
+      - id: KAN-23
+        summary: "Reading Stats page restyle"
+      - id: KAN-24
+        summary: "Lists page restyle"
+      - id: KAN-25
+        summary: "Goals page restyle"
+
+  - id: phase-4-reading-stats-features
+    name: "Phase 4 — Reading Stats functionality"
+    tickets:
+      - id: KAN-38
+        summary: "Year filter (enables following work)"
+      - id: KAN-31
+        summary: "Star averages — entry"
+      - id: KAN-32
+        summary: "Star averages — part 2"
+        depends_on: [KAN-31]
+      - id: KAN-33
+        summary: "Star averages — part 3"
+        depends_on: [KAN-32]
+      - id: KAN-34
+        summary: "Star averages — part 4"
+        depends_on: [KAN-33]
+      - id: KAN-40
+        summary: "Chart set — container"
+      - id: KAN-41
+        summary: "Pie charts"
+        depends_on: [KAN-40]
+      - id: KAN-42
+        summary: "Bar charts"
+        depends_on: [KAN-40]
+      - id: KAN-39
+        summary: "Cover gallery (uses period filter)"
+
+  - id: phase-5-insights
+    name: "Phase 5 — Resume"
+    tickets:
+      - id: KAN-16
+        summary: "Automatic insights (requires stable stats data)"
+
+  - id: phase-6-goodreads-import
+    name: "Phase 6 — Goodreads CSV import (KAN-8 epic)"
+    note: "US-13 KAN-43 → US-14 KAN-48 → US-15 KAN-52. Implement subtasks in order; epics tracked in Jira only."
+    tickets:
+      - id: KAN-44
+        summary: "Backend — robust Goodreads CSV parser + upload endpoint"
+        epic: KAN-43
+      - id: KAN-45
+        summary: "Backend — Goodreads field mapping rules"
+        depends_on: [KAN-44]
+        epic: KAN-43
+      - id: KAN-46
+        summary: "Backend — validation + deduplication"
+        depends_on: [KAN-45]
+        epic: KAN-43
+      - id: KAN-47
+        summary: "Frontend — Goodreads upload screen"
+        depends_on: [KAN-46]
+        epic: KAN-43
+      - id: KAN-49
+        summary: "Backend — enrich imports by ISBN (reuses KAN-9 catalog)"
+        depends_on: [KAN-47]
+        epic: KAN-48
+        relates: [KAN-9]
+      - id: KAN-50
+        summary: "Backend — title+author fallback + genre enrichment"
+        depends_on: [KAN-49]
+        epic: KAN-48
+      - id: KAN-51
+        summary: "Backend — background job + rate limiting + progress"
+        depends_on: [KAN-50]
+        epic: KAN-48
+      - id: KAN-52
+        summary: "Import progress and final summary (US-15)"
+        depends_on: [KAN-51]
+        epic: KAN-48
+
+  - id: phase-7-genre-enrichment
+    name: "Phase 7 — Genre enrichment (KAN-53 epic)"
+    note: "KAN-53 epic; implement subtasks KAN-54 → KAN-55 → KAN-56 in order. Improves catalog genre for book creation and import (UC-01, UC-07)."
+    tickets:
+      - id: KAN-54
+        summary: "Backend — Google Books genre fallback when Open Library has no subject (Option B)"
+        epic: KAN-53
+        relates: [KAN-9]
+      - id: KAN-55
+        summary: "Backend — Open Library work subjects genre fallback (Option A)"
+        depends_on: [KAN-54]
+        epic: KAN-53
+      - id: KAN-56
+        summary: "Backend — normalize genre to closed taxonomy (Option C)"
+        depends_on: [KAN-55]
+        epic: KAN-53
+
+  - id: phase-8-audience-settings
+    name: "Phase 8 — Configurable audience (KAN-64 epic)"
+    note: >
+      First in the configurable-list pattern. Purely additive (no migration of existing data).
+      Serves as the template reused by Format (phase 9) and Genre (phase 11).
+    tickets:
+      - id: KAN-65
+        summary: "Audiences model + seed"
+        epic: KAN-64
+      - id: KAN-66
+        summary: "CRUD in Settings"
+        depends_on: [KAN-65]
+        epic: KAN-64
+      - id: KAN-67
+        summary: "Selector in add/edit book modal"
+        depends_on: [KAN-66]
+        epic: KAN-64
+      - id: KAN-68
+        summary: "Delete with confirmation"
+        depends_on: [KAN-67]
+        epic: KAN-64
+      - id: KAN-69
+        summary: "audienceDistribution in Reading Stats"
+        depends_on: [KAN-68]
+        epic: KAN-64
+
+  - id: phase-9-format-settings
+    name: "Phase 9 — Configurable read format (KAN-70 epic)"
+    note: >
+      Reuses the audience pattern from phase 8. Higher risk: migrates existing read_format CHECK
+      and touches production stats calculations (predominantReadFormat, formatDistribution).
+    tickets:
+      - id: KAN-71
+        summary: "Formats model + read_format migration"
+        epic: KAN-70
+        depends_on: [KAN-69]
+      - id: KAN-72
+        summary: "CRUD in Settings"
+        depends_on: [KAN-71]
+        epic: KAN-70
+      - id: KAN-73
+        summary: "Selector in reading flow"
+        depends_on: [KAN-72]
+        epic: KAN-70
+      - id: KAN-74
+        summary: "Delete with confirmation"
+        depends_on: [KAN-73]
+        epic: KAN-70
+      - id: KAN-75
+        summary: "Adapt predominantReadFormat and formatDistribution"
+        depends_on: [KAN-74]
+        epic: KAN-70
+
+  - id: phase-10-cover-picker
+    name: "Phase 10 — Cover picker in book edit (KAN-76 epic)"
+    note: >
+      Independent subsystem (catalog/covers — not Settings). Can be interleaved without blocking
+      or being blocked by phases 8–9 and 11.
+    tickets:
+      - id: KAN-77
+        summary: "Backend — search by title and author"
+        epic: KAN-76
+      - id: KAN-78
+        summary: "Frontend — picker button and cover grid"
+        depends_on: [KAN-77]
+        epic: KAN-76
+      - id: KAN-79
+        summary: "Persist cover_image_url selection"
+        depends_on: [KAN-78]
+        epic: KAN-76
+
+  - id: phase-11-genre-settings
+    name: "Phase 11 — Configurable genre (KAN-58 epic)"
+    note: >
+      Last in the configurable-list rollout. Benefits from phase 8 components and from genre
+      enrichment (KAN-53 → KAN-54/55/56). KAN-63 adds smart import mapping on top.
+    tickets:
+      - id: KAN-59
+        summary: "Genres model + books.genre migration + seed"
+        epic: KAN-58
+        depends_on: [KAN-56]
+        relates: [KAN-53]
+      - id: KAN-60
+        summary: "CRUD in Settings"
+        depends_on: [KAN-59]
+        epic: KAN-58
+      - id: KAN-61
+        summary: "Selector in add/edit book modal"
+        depends_on: [KAN-60]
+        epic: KAN-58
+      - id: KAN-62
+        summary: "Delete with confirmation"
+        depends_on: [KAN-61]
+        epic: KAN-58
+      - id: KAN-63
+        summary: "Smart genre mapping on import"
+        depends_on: [KAN-62]
+        epic: KAN-58
+        relates: [KAN-43, KAN-48]
+
+  - id: phase-12-theme-settings
+    name: "Phase 12 — User theme palettes"
+    note: >
+      Profile / Settings visual theme presets (KAN-80). Builds on KAN-18 design tokens;
+      centralize stray hex in component CSS so palette swaps apply app-wide.
+    tickets:
+      - id: KAN-80
+        summary: "Theme palette settings — preset selection + per-user persistence"
+        depends_on: [KAN-18, KAN-63]
+        relates: [KAN-19]

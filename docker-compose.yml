@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: reading-analytics-db
+    restart: unless-stopped
+    ports:
+      # 5433 evita conflicto si ya tienes Postgres en 5432 (Homebrew, Postgres.app, etc.)
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: reading_analytics
+    volumes:
+      - reading_analytics_pg:/var/lib/postgresql/data
+
+volumes:
+  reading_analytics_pg:

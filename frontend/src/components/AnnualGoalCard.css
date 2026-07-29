@@ -1,0 +1,142 @@
+.annual-goal-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  width: 100%;
+  max-width: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.annual-goal-card--error {
+  border-color: var(--color-danger);
+}
+
+.annual-goal-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.annual-goal-card__header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  color: var(--color-text-heading);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  padding: 0;
+  text-decoration: underline;
+}
+
+.btn-link:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.annual-goal-form label {
+  display: block;
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-2);
+  color: var(--color-text);
+}
+
+.annual-goal-form__row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.annual-goal-form input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.annual-goal-form input:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.annual-goal-form button[type='submit'] {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-primary-text);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+}
+
+.annual-goal-form button[type='submit']:hover:enabled {
+  background: var(--color-primary-hover);
+}
+
+.annual-goal-form button[type='submit']:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.annual-goal-form button[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.annual-goal-error {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-2);
+}
+
+.annual-goal-progress {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.annual-goal-progress__count {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-heading);
+}
+
+.annual-goal-progress__percent {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+}
+
+.annual-goal-bar {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+}
+
+.annual-goal-bar__fill {
+  background: var(--color-primary);
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.annual-goal-forecast {
+  font-size: var(--font-size-sm);
+  margin: 0;
+  color: var(--color-text);
+}
+
+.annual-goal-forecast--muted {
+  color: var(--color-text-muted);
+}

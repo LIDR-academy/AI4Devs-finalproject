@@ -1,0 +1,70 @@
+.bar-chart {
+  width: 100%;
+  min-width: 0;
+}
+
+.bar-chart__plot {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  min-height: 10rem;
+  padding-top: var(--space-2);
+}
+
+.bar-chart__column {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.bar-chart__value {
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  min-height: 1rem;
+}
+
+.bar-chart__bar-track {
+  width: 100%;
+  max-width: 2.5rem;
+  height: 7rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.bar-chart__bar {
+  width: 70%;
+  min-height: 2px;
+  background: var(--color-secondary);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: height 0.2s ease;
+}
+
+.bar-chart__bar--emphasized {
+  background: var(--color-primary);
+}
+
+.bar-chart__axis-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .bar-chart__plot {
+    overflow-x: auto;
+    padding-bottom: var(--space-1);
+  }
+
+  .bar-chart__column {
+    flex: 0 0 2.25rem;
+  }
+}

@@ -1,0 +1,167 @@
+.book-tracker {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.tracker-status,
+.tracker-empty {
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.tracker-error {
+  color: var(--color-danger);
+  margin: 0 0 var(--space-4);
+}
+
+.books-table-scroll {
+  box-shadow: var(--shadow-md);
+  /* Keep the wide table inside a scrollport so it cannot widen the page
+     (Android Chrome otherwise zooms out to fit the full table width). */
+  max-width: 100%;
+}
+
+.books-table {
+  min-width: 72rem;
+  table-layout: fixed;
+}
+
+.books-table .col-cover {
+  width: 3.5rem;
+}
+
+.books-table .col-title {
+  min-width: 10rem;
+  width: 12rem;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.books-table .col-author {
+  min-width: 6rem;
+  width: 8rem;
+}
+
+.books-table .col-genre {
+  min-width: 6rem;
+  width: 7rem;
+}
+
+.books-table .col-audience {
+  min-width: 7.5rem;
+  width: 8.5rem;
+}
+
+.books-table .col-pages {
+  width: 4.5rem;
+  text-align: center;
+}
+
+.books-table .col-status {
+  min-width: 7.5rem;
+  width: 8.5rem;
+}
+
+.books-table .col-date {
+  min-width: 9rem;
+  width: 9.5rem;
+}
+
+.books-table .col-format {
+  min-width: 7rem;
+  width: 8rem;
+}
+
+.books-table .col-rating {
+  min-width: 7rem;
+  width: 8rem;
+}
+
+.books-table .col-actions {
+  width: 3rem;
+  text-align: center;
+}
+
+.table-cover {
+  display: block;
+  width: 2.5rem;
+  height: 3.75rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.no-cover {
+  color: var(--color-text-muted);
+}
+
+.tracker-select,
+.tracker-date {
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  max-width: 100%;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.tracker-select:focus-visible,
+.tracker-date:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.row-error {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}
+
+.row-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.row-edit-btn:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+}
+
+.row-edit-btn:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.row-edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.row-edit-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

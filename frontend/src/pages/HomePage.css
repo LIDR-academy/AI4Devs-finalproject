@@ -1,0 +1,88 @@
+.home-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.home-main {
+  width: 100%;
+}
+
+.home-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 20rem) minmax(0, 1fr);
+  gap: var(--space-5);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.home-layout__reading {
+  min-width: 0;
+  min-height: 0;
+}
+
+.home-layout__reading > .home-reading-card {
+  height: 100%;
+}
+
+.home-layout__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  min-height: 0;
+}
+
+.home-layout__top {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.home-layout__top > .home-monthly-kpis,
+.home-layout__top > .home-card--goal {
+  height: 100%;
+  min-height: 0;
+}
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.home-card__text {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.home-card--goal {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.home-card--goal .annual-goal-card {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .home-layout__reading > .home-reading-card {
+    height: auto;
+  }
+
+  .home-layout__top {
+    grid-template-columns: 1fr;
+  }
+}

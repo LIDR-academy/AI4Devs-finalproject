@@ -1,0 +1,18 @@
+.genre-select .ui-field {
+  margin: 0;
+}
+
+.genre-select .ui-select {
+  min-width: 8.5rem;
+  font-size: var(--font-size-xs);
+  padding: var(--space-1) var(--space-2);
+}
+
+.genre-select--empty {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.genre-select__empty-notice {
+  margin: 0;
+}

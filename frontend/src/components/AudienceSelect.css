@@ -1,0 +1,30 @@
+.audience-select .ui-field {
+  margin: 0;
+}
+
+.audience-select .ui-select {
+  min-width: 8.5rem;
+  font-size: var(--font-size-xs);
+  padding: var(--space-1) var(--space-2);
+}
+
+.audience-select--inline .ui-field__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.audience-select--empty {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.audience-select__empty-notice {
+  margin: 0;
+}

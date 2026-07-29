@@ -1,0 +1,542 @@
+{
+  "version": 1,
+  "queue_file": "ai-specs/queues/kan-implementation-queue.yaml",
+  "started_at": "2026-07-01T19:00:00Z",
+  "last_completed": "KAN-80",
+  "current_ticket": null,
+  "tickets": {
+    "KAN-18": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-18-design-system",
+      "branch": "feature/KAN-18-design-system",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/18",
+      "pr_number": 18,
+      "archived_at": "2026-07-01T17:05:00Z",
+      "error": null
+    },
+    "KAN-19": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-19-unified-sidebar",
+      "branch": "feature/KAN-19-unified-sidebar",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/19",
+      "pr_number": 19,
+      "archived_at": "2026-07-01T17:30:00Z",
+      "error": null
+    },
+    "KAN-35": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-35-audience-column-api",
+      "branch": "feature/KAN-35-audience-column-api",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/20",
+      "pr_number": 20,
+      "archived_at": "2026-07-01T17:50:00Z",
+      "error": null
+    },
+    "KAN-26": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-26-manual-book-edit-entry",
+      "branch": "feature/KAN-26-manual-book-edit-entry",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/21",
+      "pr_number": 21,
+      "archived_at": "2026-07-01T18:00:00Z",
+      "error": null
+    },
+    "KAN-27": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-27-book-patch-api",
+      "branch": "feature/KAN-27-book-patch-api",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/22",
+      "pr_number": 22,
+      "archived_at": "2026-07-01T18:05:00Z",
+      "error": null
+    },
+    "KAN-28": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-28-book-form-ui",
+      "branch": "feature/KAN-28-book-form-ui",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/23",
+      "pr_number": 23,
+      "archived_at": "2026-07-01T18:25:00Z",
+      "error": null
+    },
+    "KAN-29": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-29-manual-create-from-search",
+      "branch": "feature/KAN-29-manual-create-from-search",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/24",
+      "pr_number": 24,
+      "archived_at": "2026-07-01T18:30:00Z",
+      "error": null
+    },
+    "KAN-30": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-30-selectable-read-format",
+      "branch": "feature/KAN-30-selectable-read-format",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/25",
+      "pr_number": 25,
+      "archived_at": "2026-07-01T19:10:00Z",
+      "error": null
+    },
+    "KAN-22": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-22-book-tracker-restyle",
+      "branch": "feature/KAN-22-book-tracker-restyle",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/26",
+      "pr_number": 26,
+      "archived_at": "2026-07-02T07:57:52Z",
+      "error": null
+    },
+    "KAN-21": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-21-home-restyle",
+      "branch": "feature/KAN-21-home-restyle",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/27",
+      "pr_number": 27,
+      "archived_at": "2026-07-02T08:27:59Z",
+      "error": null
+    },
+    "KAN-23": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-23-reading-stats-restyle",
+      "branch": "feature/KAN-23-reading-stats-restyle",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/28",
+      "pr_number": 28,
+      "archived_at": "2026-07-02T09:15:02Z",
+      "error": null
+    },
+    "KAN-24": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-24-lists-tbr-restyle",
+      "branch": "feature/KAN-24-lists-tbr-restyle",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/29",
+      "pr_number": 29,
+      "archived_at": "2026-07-02T09:27:07Z",
+      "error": null
+    },
+    "KAN-25": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-25-goals-page-restyle",
+      "branch": "feature/KAN-25-goals-page-restyle",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/30",
+      "pr_number": 30,
+      "archived_at": "2026-07-02T10:15:29Z",
+      "error": null
+    },
+    "KAN-38": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-38-reading-stats-year-filter",
+      "branch": "feature/KAN-38-reading-stats-year-filter",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/31",
+      "pr_number": 31,
+      "archived_at": "2026-07-02T13:55:00Z",
+      "error": null
+    },
+    "KAN-31": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-31-half-star-ratings",
+      "branch": "feature/KAN-31-half-star-ratings",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/32",
+      "pr_number": 32,
+      "archived_at": "2026-07-02T15:50:00Z",
+      "error": null
+    },
+    "KAN-32": {
+      "status": "skipped",
+      "failed_step": null,
+      "change_name": null,
+      "branch": null,
+      "pr_url": null,
+      "pr_number": null,
+      "archived_at": null,
+      "error": null,
+      "skip_reason": "Delivered in KAN-31 PR #32 (backend migration + validation)"
+    },
+    "KAN-33": {
+      "status": "skipped",
+      "failed_step": null,
+      "change_name": null,
+      "branch": null,
+      "pr_url": null,
+      "pr_number": null,
+      "archived_at": null,
+      "error": null,
+      "skip_reason": "Delivered in KAN-31 PR #32 (StarRating half-star UI)"
+    },
+    "KAN-34": {
+      "status": "skipped",
+      "failed_step": null,
+      "change_name": null,
+      "branch": null,
+      "pr_url": null,
+      "pr_number": null,
+      "archived_at": null,
+      "error": null,
+      "skip_reason": "Delivered in KAN-31 PR #32 (stats average half-stars)"
+    },
+    "KAN-40": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-40-stats-charts-grid",
+      "branch": "feature/KAN-40-stats-charts-grid",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/33",
+      "pr_number": 33,
+      "archived_at": "2026-07-02T19:10:00Z",
+      "error": null
+    },
+    "KAN-41": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-41-stats-pie-charts",
+      "branch": "feature/KAN-41-stats-pie-charts",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/34",
+      "pr_number": 34,
+      "archived_at": "2026-07-03T08:40:00Z",
+      "error": null
+    },
+    "KAN-42": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-42-stats-bar-charts",
+      "branch": "feature/KAN-42-stats-bar-charts",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/35",
+      "pr_number": 35,
+      "archived_at": "2026-07-03T08:58:00Z",
+      "error": null
+    },
+    "KAN-39": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-39-stats-cover-gallery",
+      "branch": "feature/KAN-39-stats-cover-gallery",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/36",
+      "pr_number": 36,
+      "archived_at": "2026-07-03T09:15:00Z",
+      "error": null
+    },
+    "KAN-16": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-16-stats-insights",
+      "branch": "feature/KAN-16-stats-insights",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/37",
+      "pr_number": 37,
+      "archived_at": "2026-07-04T09:20:00Z",
+      "error": null
+    },
+    "KAN-44": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-44-goodreads-csv-parser",
+      "branch": "feature/KAN-44-goodreads-csv-parser",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/38",
+      "pr_number": 38,
+      "archived_at": "2026-07-06T16:05:00Z",
+      "error": null
+    },
+    "KAN-45": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-45-goodreads-field-mapping",
+      "branch": "feature/KAN-45-goodreads-field-mapping",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/39",
+      "pr_number": 39,
+      "archived_at": "2026-07-06T16:10:00Z",
+      "error": null
+    },
+    "KAN-46": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-46-goodreads-import-validation-dedup",
+      "branch": "feature/KAN-46-goodreads-import-validation-dedup",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/40",
+      "pr_number": 40,
+      "archived_at": "2026-07-06T16:18:00Z",
+      "error": null
+    },
+    "KAN-47": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-47-goodreads-upload-ui",
+      "branch": "feature/KAN-47-goodreads-upload-ui",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/41",
+      "pr_number": 41,
+      "archived_at": "2026-07-06T16:35:00Z",
+      "error": null
+    },
+    "KAN-49": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-49-import-isbn-enrichment",
+      "branch": "feature/KAN-49-import-isbn-enrichment",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/42",
+      "pr_number": 42,
+      "archived_at": "2026-07-06T16:52:00Z",
+      "error": null
+    },
+    "KAN-50": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-50-import-title-author-enrichment",
+      "branch": "feature/KAN-50-import-title-author-enrichment",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/43",
+      "pr_number": 43,
+      "archived_at": "2026-07-06T16:59:00Z",
+      "error": null
+    },
+    "KAN-51": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-51-import-background-jobs",
+      "branch": "feature/KAN-51-import-background-jobs",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/44",
+      "pr_number": 44,
+      "archived_at": "2026-07-06T17:22:00Z",
+      "error": null
+    },
+    "KAN-52": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-52-import-progress-summary",
+      "branch": "feature/KAN-52-import-progress-summary",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/45",
+      "pr_number": 45,
+      "archived_at": "2026-07-06T17:35:00Z",
+      "error": null
+    },
+    "KAN-54": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-54-google-books-genre-fallback",
+      "branch": "feature/KAN-54-google-books-genre-fallback",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/46",
+      "pr_number": 46,
+      "archived_at": "2026-07-06T20:52:00Z",
+      "error": null
+    },
+    "KAN-55": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-55-ol-work-genre-fallback",
+      "branch": "feature/KAN-55-ol-work-genre-fallback",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/47",
+      "pr_number": 47,
+      "archived_at": "2026-07-07T08:49:00Z",
+      "error": null
+    },
+    "KAN-56": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-56-genre-taxonomy-normalizer",
+      "branch": "feature/KAN-56-genre-taxonomy-normalizer",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/48",
+      "pr_number": 48,
+      "archived_at": "2026-07-07T11:00:00Z",
+      "error": null
+    },
+    "KAN-65": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-65-audiences-model-seed",
+      "branch": "feature/KAN-65-audiences-model-seed",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/50",
+      "pr_number": 50,
+      "archived_at": "2026-07-07T13:10:00Z",
+      "error": null
+    },
+    "KAN-66": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-66-audiences-settings-crud",
+      "branch": "feature/KAN-66-audiences-settings-crud",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/51",
+      "pr_number": 51,
+      "archived_at": "2026-07-07T19:25:00Z",
+      "error": null
+    },
+    "KAN-67": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-67-audience-book-selector",
+      "branch": "feature/KAN-67-audience-book-selector",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/52",
+      "pr_number": 52,
+      "archived_at": "2026-07-07T19:35:00Z",
+      "error": null
+    },
+    "KAN-68": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-68-audience-delete-confirmation",
+      "branch": "feature/KAN-68-audience-delete-confirmation",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/53",
+      "pr_number": 53,
+      "archived_at": "2026-07-07T19:40:00Z",
+      "error": null
+    },
+    "KAN-69": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-69-stats-audience-distribution",
+      "branch": "feature/KAN-69-stats-audience-distribution",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/54",
+      "pr_number": 54,
+      "archived_at": "2026-07-07T19:50:00Z",
+      "error": null
+    },
+    "KAN-71": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-71-formats-model-migration",
+      "branch": "feature/KAN-71-formats-model-migration",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/55",
+      "pr_number": 55,
+      "archived_at": "2026-07-07T19:55:00Z",
+      "error": null
+    },
+    "KAN-72": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-72-formats-settings-crud",
+      "branch": "feature/KAN-72-formats-settings-crud",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/56",
+      "pr_number": 56,
+      "archived_at": "2026-07-08T09:36:00Z",
+      "error": null
+    },
+    "KAN-73": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-73-format-selector-reading-flow",
+      "branch": "feature/KAN-73-format-selector-reading-flow",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/57",
+      "pr_number": 57,
+      "archived_at": "2026-07-27T08:58:00Z",
+      "error": null
+    },
+    "KAN-74": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-74-format-delete-confirmation",
+      "branch": "feature/KAN-74-format-delete-confirmation",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/58",
+      "pr_number": 58,
+      "archived_at": "2026-07-27T09:14:00Z",
+      "error": null
+    },
+    "KAN-75": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-75-format-stats-distribution",
+      "branch": "feature/KAN-75-format-stats-distribution",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/59",
+      "pr_number": 59,
+      "archived_at": "2026-07-27T09:26:00Z",
+      "error": null
+    },
+    "KAN-77": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-77-book-cover-search",
+      "branch": "feature/KAN-77-book-cover-search",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/60",
+      "pr_number": 60,
+      "archived_at": "2026-07-27T09:34:00Z",
+      "error": null
+    },
+    "KAN-78": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-78-edit-book-cover-picker",
+      "branch": "feature/KAN-78-edit-book-cover-picker",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/61",
+      "pr_number": 61,
+      "archived_at": "2026-07-27T09:50:00Z",
+      "error": null
+    },
+    "KAN-79": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-79-persist-cover-selection",
+      "branch": "feature/KAN-79-persist-cover-selection",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/62",
+      "pr_number": 62,
+      "archived_at": "2026-07-27T13:30:00Z",
+      "error": null
+    },
+    "KAN-59": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-59-genres-data-model",
+      "branch": "feature/KAN-59-genres-data-model",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/63",
+      "pr_number": 63,
+      "archived_at": "2026-07-27T14:55:00Z",
+      "error": null
+    },
+    "KAN-60": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-60-genres-settings-crud",
+      "branch": "feature/KAN-60-genres-settings-crud",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/64",
+      "pr_number": 64,
+      "archived_at": "2026-07-27T20:30:00Z",
+      "error": null
+    },
+    "KAN-61": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-61-genre-book-selector",
+      "branch": "feature/KAN-61-genre-book-selector",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/65",
+      "pr_number": 65,
+      "archived_at": "2026-07-27T20:40:00Z",
+      "error": null
+    },
+    "KAN-62": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-62-genre-delete-confirmation",
+      "branch": "feature/KAN-62-genre-delete-confirmation",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/66",
+      "pr_number": 66,
+      "archived_at": "2026-07-28T08:40:00Z",
+      "error": null
+    },
+    "KAN-63": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-63-smart-genre-mapping",
+      "branch": "feature/KAN-63-smart-genre-mapping",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/67",
+      "pr_number": 67,
+      "archived_at": "2026-07-28T09:10:00Z",
+      "error": null
+    },
+    "KAN-80": {
+      "status": "done",
+      "failed_step": null,
+      "change_name": "kan-80-user-theme-palettes",
+      "branch": "feature/KAN-80-user-theme-palettes",
+      "pr_url": "https://github.com/CeliaMerino/AI4Devs-finalproject/pull/68",
+      "pr_number": 68,
+      "archived_at": "2026-07-28T09:45:00Z",
+      "error": null
+    }
+  }
+}

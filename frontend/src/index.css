@@ -1,0 +1,6 @@
+@import './theme/base.css';
+
+#root {
+  min-height: 100vh;
+  max-width: 100%;
+}

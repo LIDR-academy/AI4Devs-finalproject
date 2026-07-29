@@ -1,0 +1,38 @@
+.lists-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.lists-header {
+  margin-bottom: var(--space-5);
+}
+
+.lists-month-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: fit-content;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.lists-month-nav__label {
+  min-width: 10rem;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-heading);
+}
+
+.lists-error {
+  color: var(--color-danger);
+}
+
+@media (max-width: 640px) {
+  .lists-month-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

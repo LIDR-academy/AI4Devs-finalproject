@@ -1,0 +1,115 @@
+.home-reading-card.ui-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+}
+
+.home-reading-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+.home-reading-card__status,
+.home-reading-card__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.home-reading-card__error {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}
+
+.home-reading-card__grid {
+  display: grid;
+  flex: 1;
+  list-style: none;
+  padding: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  align-content: start;
+  align-items: start;
+}
+
+.home-reading-card__grid:has(.cover-gallery__item:only-child) {
+  grid-template-columns: 1fr;
+}
+
+.home-reading-card .cover-gallery__item {
+  min-width: 0;
+  width: 100%;
+}
+
+.home-reading-card .cover-gallery__tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  width: 100%;
+}
+
+.home-reading-card .cover-gallery__media {
+  border-radius: var(--radius-sm);
+}
+
+.home-reading-card .cover-gallery__image,
+.home-reading-card .cover-gallery__placeholder {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  height: auto;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+.home-reading-card .cover-gallery__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-reading-card__footer {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.home-reading-card__footer a,
+.home-reading-card__empty a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.home-reading-card .cover-gallery__caption {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  border: 0;
+  flex-shrink: 0;
+  opacity: 1;
+  max-height: none;
+  font-size: 0.625rem;
+  line-height: 1.2;
+}
+
+.home-reading-card .cover-gallery__title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+}
+
+.home-reading-card .cover-gallery__authors {
+  display: none;
+}

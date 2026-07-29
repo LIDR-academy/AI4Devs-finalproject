@@ -1,0 +1,2604 @@
+openapi: 3.0.3
+info:
+  title: Reading Analytics Platform API
+  description: |
+    REST API for personal reading tracking: library, catalog search, edition covers, and dev authentication.
+
+    - Base path: `/v1`
+    - JSON request/response bodies use **snake_case** field names
+    - Protected routes require `Authorization: Bearer <JWT>`
+    - Catalog integrates Open Library (primary) and Google Books (fallback when API key configured)
+  version: 0.1.0
+  contact:
+    name: Reading Analytics Platform
+
+servers:
+  - url: http://localhost:3000/v1
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Authentication (MVP dev login)
+  - name: Preferences
+    description: User profile preferences (theme, future settings)
+  - name: Audiences
+    description: User-configurable audience labels (Settings)
+  - name: Formats
+    description: User-configurable read format labels (Settings)
+  - name: Genres
+    description: User-configurable genre labels (Settings)
+  - name: Books
+    description: User library
+  - name: Catalog
+    description: External metadata search and covers (no persistence until book create)
+  - name: TBR
+    description: Monthly To Be Read lists (UC-05)
+  - name: Goals
+    description: Annual reading goals and progress (UC-06)
+  - name: Stats
+    description: Monthly reading statistics dashboard (UC-07)
+  - name: Import
+    description: Goodreads CSV import (US-13)
+
+paths:
+  /auth/dev-login:
+    post:
+      summary: Dev login (local MVP)
+      description: Creates or finds user by email and returns JWT. No password in MVP.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DevLoginRequest'
+      responses:
+        '201':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevLoginResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /me/preferences:
+    get:
+      summary: Get current user preferences
+      tags: [Preferences]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User preferences (defaults when profile row is missing)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '401':
+          description: Unauthorized
+    patch:
+      summary: Update current user preferences
+      tags: [Preferences]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserPreferencesRequest'
+      responses:
+        '200':
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '400':
+          description: Invalid preference value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Unauthorized
+
+  /audiences:
+    get:
+      summary: List audiences for current user
+      tags: [Audiences]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User audience labels ordered by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Audience'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Create audience label
+      tags: [Audiences]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAudienceRequest'
+      responses:
+        '201':
+          description: Audience created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audience'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Duplicate audience name (case-insensitive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /genres:
+    get:
+      summary: List genres for current user
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User genre labels ordered by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Genre'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Create genre label
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGenreRequest'
+      responses:
+        '201':
+          description: Genre created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Genre'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Duplicate genre name (case-insensitive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /genres/match:
+    post:
+      summary: Match a raw external genre to user-owned genres
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchGenreRequest'
+      responses:
+        '201':
+          description: Match result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreMatchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /genres/match-batch:
+    post:
+      summary: Match multiple raw genres
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchGenresBatchRequest'
+      responses:
+        '201':
+          description: Batch match results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreMatchBatchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /genres/{id}/affected-books:
+    get:
+      summary: Count books assigned to a genre
+      description: Returns how many of the user's books reference this genre before delete confirmation.
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Affected book count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AffectedBooksResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Genre not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /genres/{id}:
+    delete:
+      summary: Delete genre label
+      description: Removes the genre for the current user. Books referencing it have `genre_id` set to null.
+      tags: [Genres]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Genre deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Genre not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /formats:
+    get:
+      summary: List formats for current user
+      tags: [Formats]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User read format labels ordered by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Format'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Create format label
+      tags: [Formats]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFormatRequest'
+      responses:
+        '201':
+          description: Format created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Format'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Duplicate format name (case-insensitive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /formats/{id}/affected-readings:
+    get:
+      summary: Count reading records assigned to a format
+      description: Returns how many of the user's reading records reference this format before delete confirmation.
+      tags: [Formats]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Affected reading count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AffectedReadingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Format not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /formats/{id}:
+    delete:
+      summary: Delete format label
+      description: Removes the format for the current user. Reading records referencing it have `format_id` set to null.
+      tags: [Formats]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Format deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Format not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /audiences/{id}/affected-books:
+    get:
+      summary: Count books assigned to an audience
+      description: Returns how many of the user's books reference this audience before delete confirmation.
+      tags: [Audiences]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Affected book count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AffectedBooksResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Audience not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /audiences/{id}:
+    delete:
+      summary: Delete audience label
+      description: Removes the audience for the current user. Books referencing it have `audience_id` set to null.
+      tags: [Audiences]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Audience deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Audience not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /books:
+    get:
+      summary: List books for current user
+      tags: [Books]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User library with reading status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookListItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Add book to library
+      description: |
+        Creates book and initial reading record (`pendiente`).
+        Rejects duplicates by `isbn_13` or (`data_source` + `external_provider_id`) per user.
+        May enrich `genre` / `page_count` from Open Library or Google Books when missing.
+      tags: [Books]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+      responses:
+        '201':
+          description: Book created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCreatedResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Duplicate book in library
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDuplicateError'
+
+  /books/{bookId}:
+    patch:
+      summary: Update book metadata
+      description: Partial update of user-owned book fields (metadata for manual edit). KAN-35 audience; KAN-27 full book fields.
+      tags: [Books]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchBookRequest'
+      responses:
+        '200':
+          description: Book updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          description: Validation error or empty body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Book not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /books/{bookId}/cover-search:
+    get:
+      summary: Search catalog covers for an owned book
+      description: >-
+        Searches external catalog using the saved book title and authors by default
+        (or optional `q`), then resolves cover options per edition via the same
+        logic as `GET /books/catalog/covers`. Returns only editions with at least one cover.
+      tags: [Books, Catalog]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 500
+          description: Optional search override; defaults to saved book title and authors
+      responses:
+        '200':
+          description: Cover search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCoverSearchResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Book not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /books/{bookId}/reading-record:
+    patch:
+      summary: Update reading status, dates, rating, or format
+      description: |
+        Partial update of the 1:1 `reading_records` row (UC-02, partial UC-04).
+        Returns `meta.openCompletionModal: true` when status transitions to `leido`.
+        Returns `meta.tbrAutoCompleted: true` when the book is marked completed in the active month's TBR.
+      tags: [Books]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchReadingRecordRequest'
+      responses:
+        '200':
+          description: Reading record updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadingRecordPatchedResponse'
+        '400':
+          description: Validation error or empty body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Book not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Business rule violation (e.g. finish before start)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableErrorResponse'
+
+  /tbr/{year}/{month}:
+    get:
+      summary: Get or create monthly TBR
+      description: Returns the user's TBR for the given calendar month, creating an empty list if none exists.
+      tags: [TBR]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1970
+            maximum: 2100
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      responses:
+        '200':
+          description: Monthly TBR with entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyTbrResponse'
+        '400':
+          description: Invalid year or month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /tbr/{year}/{month}/entries:
+    post:
+      summary: Add book to monthly TBR
+      tags: [TBR]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTbrEntryRequest'
+      responses:
+        '201':
+          description: Entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TbrEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Book not found or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Book already in list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Book reading status is not pendiente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableErrorResponse'
+              example:
+                statusCode: 422
+                message: Only pending books can be added to TBR
+                code: TBR_BOOK_NOT_PENDING
+
+  /tbr/{year}/{month}/entries/{entryId}:
+    delete:
+      summary: Remove book from monthly TBR
+      tags: [TBR]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Entry removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /goals/{year}:
+    get:
+      summary: Get annual goal with progress and forecast
+      description: Returns the user's annual reading goal for the given year, books read count, progress percentage, and optional pace forecast. Always 200; `goal` is null when unset.
+      tags: [Goals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1970
+            maximum: 2100
+      responses:
+        '200':
+          description: Annual goal snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnnualGoalResponse'
+        '400':
+          description: Invalid year
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      summary: Create or update annual goal
+      tags: [Goals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1970
+            maximum: 2100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertGoalRequest'
+      responses:
+        '200':
+          description: Goal saved with updated progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnnualGoalResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /stats:
+    get:
+      summary: Get reading statistics by period query
+      description: >-
+        Returns read-only reading statistics for the authenticated user for a
+        calendar year (`period=year`) or month (`period=month` with `month`).
+        Year mode uses the same aggregate fields as monthly stats without `month`.
+        Results are computed on read; empty periods return zeroed totals.
+      tags: [Stats]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [year, month]
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1970
+            maximum: 2100
+        - name: month
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          description: Required when `period=month`
+      responses:
+        '200':
+          description: Period statistics snapshot
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/MonthlyStatsResponse'
+                  - $ref: '#/components/schemas/YearlyStatsResponse'
+        '400':
+          description: Invalid period parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /stats/{year}/{month}:
+    get:
+      summary: Get monthly reading statistics
+      description: >-
+        Returns read-only reading statistics for the authenticated user for the
+        given calendar month, computed from `reading_records` joined to `books`.
+        A book counts when `status = leido` and `finished_on` is within the
+        month. Always 200; an empty month returns zeroed totals and empty
+        distributions. No statistics are persisted.
+      tags: [Stats]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1970
+            maximum: 2100
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      responses:
+        '200':
+          description: Monthly statistics snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyStatsResponse'
+        '400':
+          description: Invalid year or month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /import/goodreads/preview:
+    post:
+      summary: Preview Goodreads import unresolved catalog genres
+      description: Parses the CSV and probes catalog metadata to list distinct unresolved genre values before import.
+      tags: [Import]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Preview summary with grouped unresolved genres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoodreadsImportPreviewResponse'
+        '400':
+          description: Missing file, invalid CSV, or missing headers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: CSV exceeds size limit
+
+  /import/goodreads:
+    post:
+      summary: Start Goodreads library CSV import job
+      description: >-
+        Accepts a multipart CSV file (`file`) from Goodreads library export and
+        enqueues a background job that parses, imports, dedupes, and enriches
+        books. Optional `genre_resolutions` JSON maps unresolved catalog genres
+        to assign/create/skip actions. Poll `GET /import/jobs/{jobId}` for progress.
+      tags: [Import]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                genre_resolutions:
+                  type: string
+                  description: JSON map of raw genre to resolution action
+      responses:
+        '202':
+          description: Import job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJobAcceptedResponse'
+        '400':
+          description: Missing file, invalid CSV, or missing headers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: CSV exceeds size limit
+
+  /import/jobs/{jobId}:
+    get:
+      summary: Get Goodreads import job status
+      description: Returns progress (`processed_count`, `total_count`, `phase`) and the full import `result` when completed.
+      tags: [Import]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Import job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJobStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Job not found for user
+
+  /import/reenrich-pending:
+    post:
+      summary: Re-enrich books missing genre or cover
+      description: >-
+        Re-runs catalog enrichment for the authenticated user's books that still
+        lack `genre` or `cover_image_url`. Idempotent; respects catalog rate limits.
+      tags: [Import]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Re-enrichment summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReenrichPendingSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /books/catalog/search:
+    get:
+      summary: Search external catalog
+      description: Queries Open Library first; may fall back to Google Books. Results are not stored.
+      tags: [Catalog]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: Search query (title, author, ISBN)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 40
+            default: 20
+      responses:
+        '200':
+          description: Catalog editions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogSearchResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /books/catalog/covers:
+    get:
+      summary: List cover options for a catalog edition
+      tags: [Catalog]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: data_source
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [open_library, google_books]
+        - name: external_provider_id
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 256
+        - name: hint_cover_url
+          in: query
+          schema:
+            type: string
+            format: uri
+            maxLength: 2048
+          description: Optional cover URL from search result to include as default/hint
+      responses:
+        '200':
+          description: Cover options
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionCoversResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid JWT
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+
+  schemas:
+    DevLoginRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          example: reader@example.com
+
+    DevLoginResponse:
+      type: object
+      required: [access_token, user]
+      properties:
+        access_token:
+          type: string
+        user:
+          type: object
+          required: [id, email]
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+
+    UserPreferences:
+      type: object
+      required: [theme_palette_id]
+      properties:
+        theme_palette_id:
+          type: string
+          enum:
+            - veranda
+            - primavera
+            - strawberry
+            - lotus-pond
+            - ocean-deep
+            - pool-party
+            - sunset
+            - pastel-dream
+            - fresh-green
+          example: veranda
+
+    UpdateUserPreferencesRequest:
+      type: object
+      properties:
+        theme_palette_id:
+          type: string
+          enum:
+            - veranda
+            - primavera
+            - strawberry
+            - lotus-pond
+            - ocean-deep
+            - pool-party
+            - sunset
+            - pastel-dream
+            - fresh-green
+
+    DataSource:
+      type: string
+      enum: [open_library, google_books, goodreads, manual]
+
+    BookAudience:
+      type: string
+      nullable: true
+      enum: [young_adult, new_adult, adult]
+
+    CatalogDataSource:
+      type: string
+      enum: [open_library, google_books]
+
+    ReadingStatus:
+      type: string
+      enum: [pendiente, leyendo, leido, dnf]
+
+    ReadFormat:
+      type: string
+      enum: [fisico, ebook, audio]
+
+    PatchReadingRecordRequest:
+      type: object
+      minProperties: 1
+      properties:
+        status:
+          $ref: '#/components/schemas/ReadingStatus'
+        started_on:
+          type: string
+          format: date
+        finished_on:
+          type: string
+          format: date
+        rating:
+          type: number
+          minimum: 0.5
+          maximum: 5
+          multipleOf: 0.5
+          description: Half-star rating from 0.5 to 5 in 0.5 steps.
+        format_id:
+          oneOf:
+            - type: string
+              format: uuid
+            - type: 'null'
+
+    ReadingRecordResource:
+      type: object
+      required: [book_id, status, updated_at]
+      properties:
+        book_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ReadingStatus'
+        current_page:
+          type: integer
+          nullable: true
+        progress_percent:
+          type: string
+          nullable: true
+        rating:
+          type: number
+          nullable: true
+          minimum: 0.5
+          maximum: 5
+          multipleOf: 0.5
+        format_id:
+          type: string
+          format: uuid
+          nullable: true
+        read_format:
+          oneOf:
+            - $ref: '#/components/schemas/ReadFormat'
+            - type: 'null'
+        started_on:
+          type: string
+          format: date
+          nullable: true
+        finished_on:
+          type: string
+          format: date
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+
+    PatchSideEffectsMeta:
+      type: object
+      properties:
+        openCompletionModal:
+          type: boolean
+        tbrAutoCompleted:
+          type: boolean
+          description: true when an open entry in the active month's TBR was marked completed
+
+    ReadingRecordPatchedResponse:
+      type: object
+      required: [reading, book]
+      properties:
+        reading:
+          $ref: '#/components/schemas/ReadingRecordResource'
+        book:
+          type: object
+          required: [id, page_count]
+          properties:
+            id:
+              type: string
+              format: uuid
+            page_count:
+              type: integer
+              nullable: true
+        meta:
+          $ref: '#/components/schemas/PatchSideEffectsMeta'
+
+    UnprocessableErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            code:
+              type: string
+              example: FINISHED_BEFORE_STARTED
+
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+        code:
+          type: string
+
+    Audience:
+      type: object
+      required: [id, name, is_default, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateAudienceRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    Format:
+      type: object
+      required: [id, name, is_default, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateFormatRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    Genre:
+      type: object
+      required: [id, name, is_default, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateGenreRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    MatchGenreRequest:
+      type: object
+      required: [raw_genre]
+      properties:
+        raw_genre:
+          type: string
+          minLength: 1
+          maxLength: 255
+
+    MatchGenresBatchRequest:
+      type: object
+      required: [raw_genres]
+      properties:
+        raw_genres:
+          type: array
+          items:
+            type: string
+
+    GenreMatchResponse:
+      type: object
+      required: [status, raw_genre]
+      properties:
+        status:
+          type: string
+          enum: [matched, unresolved, empty]
+        raw_genre:
+          type: string
+          nullable: true
+        genre_id:
+          type: string
+          format: uuid
+          nullable: true
+        genre_name:
+          type: string
+          nullable: true
+
+    GenreMatchBatchResponse:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenreMatchResponse'
+
+    GoodreadsImportPreviewResponse:
+      type: object
+      required: [unresolved_genres, meta]
+      properties:
+        unresolved_genres:
+          type: array
+          items:
+            type: object
+            required: [raw_genre, book_count]
+            properties:
+              raw_genre:
+                type: string
+              book_count:
+                type: integer
+                minimum: 0
+        meta:
+          type: object
+          required: [mapped_rows, warnings]
+          properties:
+            mapped_rows:
+              type: integer
+            warnings:
+              type: integer
+
+    AffectedBooksResponse:
+      type: object
+      required: [affected_book_count]
+      properties:
+        affected_book_count:
+          type: integer
+          minimum: 0
+
+    AffectedReadingsResponse:
+      type: object
+      required: [affected_reading_count]
+      properties:
+        affected_reading_count:
+          type: integer
+          minimum: 0
+
+    Book:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - authors
+        - data_source
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        catalog_edition_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Shared catalog edition reference
+        has_overrides:
+          type: boolean
+          description: True when the user has bibliographic overrides
+        title:
+          type: string
+        authors:
+          type: string
+        isbn_13:
+          type: string
+          nullable: true
+        isbn_10:
+          type: string
+          nullable: true
+        cover_image_url:
+          type: string
+          format: uri
+          nullable: true
+        page_count:
+          type: integer
+          nullable: true
+        genre:
+          type: string
+          nullable: true
+          description: Display name resolved from the book's genre_id
+        genre_id:
+          type: string
+          format: uuid
+          nullable: true
+        series_name:
+          type: string
+          nullable: true
+        publication_year:
+          type: integer
+          nullable: true
+        data_source:
+          $ref: '#/components/schemas/DataSource'
+        external_provider_id:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        audience:
+          $ref: '#/components/schemas/BookAudience'
+        audience_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    BookListItem:
+      allOf:
+        - $ref: '#/components/schemas/Book'
+        - type: object
+          required: [reading_status]
+          properties:
+            reading_status:
+              $ref: '#/components/schemas/ReadingStatus'
+            started_on:
+              type: string
+              format: date
+              nullable: true
+            finished_on:
+              type: string
+              format: date
+              nullable: true
+            rating:
+              type: number
+              nullable: true
+              minimum: 0.5
+              maximum: 5
+              multipleOf: 0.5
+            format_id:
+              type: string
+              format: uuid
+              nullable: true
+            read_format:
+              oneOf:
+                - $ref: '#/components/schemas/ReadFormat'
+                - type: 'null'
+
+    CreateBookRequest:
+      type: object
+      required: [title, authors, data_source]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        authors:
+          type: string
+          minLength: 1
+        isbn_13:
+          type: string
+          nullable: true
+        isbn_10:
+          type: string
+          nullable: true
+        cover_image_url:
+          type: string
+          format: uri
+          nullable: true
+        page_count:
+          type: integer
+          minimum: 0
+          nullable: true
+        genre_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: User-owned genre id; null clears genre
+        series_name:
+          type: string
+          nullable: true
+        publication_year:
+          type: integer
+          minimum: 1000
+          maximum: 2100
+          nullable: true
+        data_source:
+          $ref: '#/components/schemas/DataSource'
+        external_provider_id:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        audience:
+          $ref: '#/components/schemas/BookAudience'
+        audience_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    PatchBookRequest:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+        authors:
+          type: string
+          minLength: 1
+        cover_image_url:
+          type: string
+          format: uri
+          nullable: true
+        page_count:
+          type: integer
+          minimum: 0
+          nullable: true
+        genre_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: User-owned genre id; null clears genre
+        series_name:
+          type: string
+          nullable: true
+        publication_year:
+          type: integer
+          minimum: 1000
+          maximum: 2100
+          nullable: true
+        audience:
+          $ref: '#/components/schemas/BookAudience'
+        audience_id:
+          type: string
+          format: uuid
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    BookCreatedResponse:
+      type: object
+      required: [book, reading]
+      properties:
+        book:
+          $ref: '#/components/schemas/Book'
+        reading:
+          type: object
+          required: [book_id, status]
+          properties:
+            book_id:
+              type: string
+              format: uuid
+            status:
+              $ref: '#/components/schemas/ReadingStatus'
+
+    CatalogEdition:
+      type: object
+      required: [title, authors, data_source, external_provider_id]
+      properties:
+        title:
+          type: string
+        authors:
+          type: string
+        cover_image_url:
+          type: string
+          format: uri
+          nullable: true
+        page_count:
+          type: integer
+          nullable: true
+        genre:
+          type: string
+          nullable: true
+        isbn_13:
+          type: string
+          nullable: true
+        isbn_10:
+          type: string
+          nullable: true
+        data_source:
+          $ref: '#/components/schemas/CatalogDataSource'
+        external_provider_id:
+          type: string
+        catalog_edition_id:
+          type: string
+          format: uuid
+          description: Present when the edition is persisted in catalog_editions
+
+    CatalogSearchResponse:
+      type: object
+      required: [items, source]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogEdition'
+        source:
+          type: string
+          enum: [open_library, google_books, none]
+          description: Provider that satisfied the search
+
+    CoverOption:
+      type: object
+      required: [id, url]
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          format: uri
+        label:
+          type: string
+          nullable: true
+
+    EditionCoversResponse:
+      type: object
+      required: [covers]
+      properties:
+        covers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoverOption'
+        default_cover_id:
+          type: string
+          nullable: true
+
+    BookCoverSearchEdition:
+      type: object
+      required:
+        - title
+        - authors
+        - data_source
+        - external_provider_id
+        - covers
+      properties:
+        title:
+          type: string
+        authors:
+          type: string
+        data_source:
+          type: string
+          enum: [open_library, google_books]
+        external_provider_id:
+          type: string
+        cover_image_url:
+          type: string
+          format: uri
+          nullable: true
+        covers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoverOption'
+        default_cover_id:
+          type: string
+          nullable: true
+
+    BookCoverSearchResponse:
+      type: object
+      required: [query, source, items]
+      properties:
+        query:
+          type: string
+          description: Query sent to catalog search (default or override)
+        source:
+          type: string
+          enum: [open_library, google_books, none]
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookCoverSearchEdition'
+
+    ErrorMessage:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/ErrorMessage'
+      example:
+        statusCode: 400
+        message: ['q must be longer than or equal to 2 characters']
+
+    MonthlyTbrList:
+      type: object
+      required: [id, year, month, auto_created, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        year:
+          type: integer
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        auto_created:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TbrBookSummary:
+      type: object
+      required: [id, title, authors, reading_status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        authors:
+          type: string
+        cover_image_url:
+          type: string
+          nullable: true
+        reading_status:
+          $ref: '#/components/schemas/ReadingStatus'
+
+    TbrEntry:
+      type: object
+      required: [id, book_id, sort_order, completed, added_at, book]
+      properties:
+        id:
+          type: string
+          format: uuid
+        book_id:
+          type: string
+          format: uuid
+        sort_order:
+          type: integer
+        completed:
+          type: boolean
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        added_at:
+          type: string
+          format: date-time
+        book:
+          $ref: '#/components/schemas/TbrBookSummary'
+
+    MonthlyTbrResponse:
+      type: object
+      required: [list, entries]
+      properties:
+        list:
+          $ref: '#/components/schemas/MonthlyTbrList'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/TbrEntry'
+
+    AddTbrEntryRequest:
+      type: object
+      required: [book_id]
+      properties:
+        book_id:
+          type: string
+          format: uuid
+
+    UpsertGoalRequest:
+      type: object
+      required: [target_book_count]
+      properties:
+        target_book_count:
+          type: integer
+          minimum: 1
+          maximum: 365
+          example: 50
+
+    GoalForecast:
+      type: object
+      required:
+        - projected_year_end_count
+        - on_track
+        - pace_books_per_week
+        - required_books_per_week
+        - status
+      properties:
+        projected_year_end_count:
+          type: integer
+        on_track:
+          type: boolean
+        pace_books_per_week:
+          type: number
+        required_books_per_week:
+          type: number
+        status:
+          type: string
+          enum: [ahead, on_track, behind]
+
+    AnnualGoalResource:
+      type: object
+      required: [id, target_book_count, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        target_book_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AnnualGoalResponse:
+      type: object
+      required: [year, goal, books_read, progress_percent, forecast]
+      properties:
+        year:
+          type: integer
+        goal:
+          oneOf:
+            - $ref: '#/components/schemas/AnnualGoalResource'
+            - type: 'null'
+        books_read:
+          type: integer
+        progress_percent:
+          oneOf:
+            - type: integer
+            - type: 'null'
+        forecast:
+          oneOf:
+            - $ref: '#/components/schemas/GoalForecast'
+            - type: 'null'
+
+    GenreCount:
+      type: object
+      required: [genre, count]
+      properties:
+        genre:
+          type: string
+          description: Genre name, or `unknown` when the book has no genre.
+        count:
+          type: integer
+
+    FormatCount:
+      type: object
+      required: [format, count]
+      properties:
+        format:
+          type: string
+          description: User format label name from `formats`, or `unknown` when `format_id` is unset.
+        count:
+          type: integer
+
+    AudienceCount:
+      type: object
+      required: [audience, count]
+      properties:
+        audience:
+          type: string
+          description: User audience label name from `audiences`, or `unknown` when `audience_id` is unset.
+        count:
+          type: integer
+
+    RatingCount:
+      type: object
+      required: [rating, count]
+      properties:
+        rating:
+          type: number
+          description: Rating value (0.5 step, 0.5–5).
+        count:
+          type: integer
+
+    MonthBucket:
+      type: object
+      required: [month, books_read, pages_read]
+      properties:
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        books_read:
+          type: integer
+        pages_read:
+          type: integer
+
+    YearBucket:
+      type: object
+      required: [year, books_read, pages_read]
+      properties:
+        year:
+          type: integer
+        books_read:
+          type: integer
+        pages_read:
+          type: integer
+
+    PeriodBookSummary:
+      type: object
+      required: [id, title, authors, cover_image_url, finished_on]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        authors:
+          type: string
+        cover_image_url:
+          oneOf:
+            - type: string
+            - type: 'null'
+        finished_on:
+          type: string
+          format: date
+          description: ISO date when the book was marked finished in the period.
+
+    StatsInsight:
+      type: object
+      required: [id, kind, title, body]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+            - volume_delta
+            - genre_trend
+            - format_mix
+            - pages_milestone
+            - rating_pattern
+            - other
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    MonthlyStatsResponse:
+      type: object
+      required:
+        - year
+        - month
+        - books_read
+        - pages_read
+        - average_rating
+        - genre_distribution
+        - format_distribution
+        - predominant_format
+        - audience_distribution
+        - rating_distribution
+        - monthly_breakdown
+        - books_in_period
+        - insights
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        books_read:
+          type: integer
+        pages_read:
+          type: integer
+        average_rating:
+          oneOf:
+            - type: number
+            - type: 'null'
+          description: Mean rating over rated books, rounded to two decimals; null when none rated.
+        genre_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenreCount'
+        format_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/FormatCount'
+        predominant_format:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Most frequent non-unknown format; null when no format recorded.
+        audience_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/AudienceCount'
+        rating_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingCount'
+        monthly_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthBucket'
+          description: Twelve month buckets for the response year (bar charts in month mode).
+        books_in_period:
+          type: array
+          items:
+            $ref: '#/components/schemas/PeriodBookSummary'
+          description: Books finished in the requested month, ordered by finished_on ascending.
+        insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatsInsight'
+          description: Deterministic automatic insights for the period; empty when no qualifying books.
+
+    YearlyStatsResponse:
+      type: object
+      required:
+        - year
+        - books_read
+        - pages_read
+        - average_rating
+        - genre_distribution
+        - format_distribution
+        - predominant_format
+        - audience_distribution
+        - rating_distribution
+        - yearly_breakdown
+        - books_in_period
+        - insights
+      properties:
+        year:
+          type: integer
+        books_read:
+          type: integer
+        pages_read:
+          type: integer
+        average_rating:
+          oneOf:
+            - type: number
+            - type: 'null'
+        genre_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenreCount'
+        format_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/FormatCount'
+        predominant_format:
+          oneOf:
+            - type: string
+            - type: 'null'
+        audience_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/AudienceCount'
+        rating_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingCount'
+        yearly_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/YearBucket'
+          description: Books and pages per calendar year up to the selected year (bar charts in year mode).
+        books_in_period:
+          type: array
+          items:
+            $ref: '#/components/schemas/PeriodBookSummary'
+          description: Books finished in the requested year, ordered by finished_on ascending.
+        insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatsInsight'
+          description: Deterministic automatic insights for the period; empty when no qualifying books.
+
+    GoodreadsParsedRow:
+      type: object
+      required:
+        - row_number
+        - book_id
+        - title
+        - author
+        - exclusive_shelf
+      properties:
+        row_number:
+          type: integer
+        book_id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
+        additional_authors:
+          type: string
+        isbn:
+          oneOf:
+            - type: string
+            - type: 'null'
+        isbn13:
+          oneOf:
+            - type: string
+            - type: 'null'
+        my_rating:
+          type: string
+        average_rating:
+          type: string
+        publisher:
+          type: string
+        binding:
+          type: string
+        number_of_pages:
+          type: string
+        year_published:
+          type: string
+        original_publication_year:
+          type: string
+        date_read:
+          type: string
+        date_added:
+          type: string
+        exclusive_shelf:
+          type: string
+        read_count:
+          type: string
+        bookshelves:
+          type: string
+
+    GoodreadsParseWarning:
+      type: object
+      required: [code, message]
+      properties:
+        row_number:
+          oneOf:
+            - type: integer
+            - type: 'null'
+        code:
+          type: string
+        message:
+          type: string
+
+    GoodreadsParseResponse:
+      type: object
+      required:
+        [rows, mapped_rows, warnings, mapping_warnings, imported, skipped_rows, enrichment_failed, meta]
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoodreadsParsedRow'
+        mapped_rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoodreadsMappedRow'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoodreadsParseWarning'
+        mapping_warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoodreadsMappingWarning'
+        imported:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoodreadsImportedRow'
+        skipped_rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoodreadsImportSkippedRow'
+        enrichment_failed:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoodreadsEnrichmentFailedRow'
+        meta:
+          type: object
+          required:
+            - total_rows
+            - parsed_rows
+            - skipped_rows
+            - mapped_rows
+            - imported_count
+            - skipped_duplicate_count
+            - skipped_invalid_count
+            - enrichment_failed_count
+          properties:
+            total_rows:
+              type: integer
+            parsed_rows:
+              type: integer
+            skipped_rows:
+              type: integer
+              description: CSV rows skipped during parse (column mismatch)
+            mapped_rows:
+              type: integer
+            imported_count:
+              type: integer
+            skipped_duplicate_count:
+              type: integer
+            skipped_invalid_count:
+              type: integer
+            enrichment_failed_count:
+              type: integer
+              description: Imported rows where catalog enrichment returned no metadata
+
+    GoodreadsEnrichmentFailedRow:
+      type: object
+      required: [row_number, book_id, code, message]
+      properties:
+        row_number:
+          type: integer
+        book_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          enum: [ENRICHMENT_CATALOG_MISS]
+        message:
+          type: string
+
+    ImportJobAcceptedResponse:
+      type: object
+      required: [job_id, status, phase]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, parsing, importing, enriching, completed, failed]
+        phase:
+          type: string
+          enum: [queued, parsing, importing, enriching, completed, failed]
+
+    ReenrichPendingSummary:
+      type: object
+      required: [processed, enriched, still_failed]
+      properties:
+        processed:
+          type: integer
+          description: Books scanned that were missing genre or cover.
+        enriched:
+          type: integer
+          description: Books where at least one missing field was filled.
+        still_failed:
+          type: integer
+          description: Books where catalog lookup was attempted but returned no usable metadata.
+
+    ImportJobStatusResponse:
+      type: object
+      required:
+        [job_id, status, phase, processed_count, total_count, result, error_message]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, parsing, importing, enriching, completed, failed]
+        phase:
+          type: string
+          enum: [queued, parsing, importing, enriching, completed, failed]
+        processed_count:
+          type: integer
+        total_count:
+          type: integer
+        result:
+          oneOf:
+            - $ref: '#/components/schemas/GoodreadsParseResponse'
+            - type: 'null'
+        error_message:
+          oneOf:
+            - type: string
+            - type: 'null'
+
+    GoodreadsImportBookDraft:
+      type: object
+      required: [title, authors, data_source]
+      properties:
+        title:
+          type: string
+        authors:
+          type: string
+        isbn10:
+          oneOf:
+            - type: string
+            - type: 'null'
+        isbn13:
+          oneOf:
+            - type: string
+            - type: 'null'
+        page_count:
+          oneOf:
+            - type: integer
+            - type: 'null'
+        publication_year:
+          oneOf:
+            - type: integer
+            - type: 'null'
+        series_name:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: >
+            Series label extracted from trailing parentheses in the Goodreads Title
+            (volume markers such as `, #1` removed). Null when Title has no trailing
+            parenthetical series annotation.
+        data_source:
+          type: string
+          enum: [goodreads]
+        external_provider_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+
+    GoodreadsImportReadingRecordDraft:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pendiente, leyendo, leido, dnf]
+        rating:
+          oneOf:
+            - type: number
+            - type: 'null'
+        read_format:
+          oneOf:
+            - type: string
+              enum: [fisico, ebook, audio]
+            - type: 'null'
+        started_on:
+          oneOf:
+            - type: string
+              format: date
+            - type: 'null'
+        finished_on:
+          oneOf:
+            - type: string
+              format: date
+            - type: 'null'
+
+    GoodreadsMappedRow:
+      type: object
+      required: [row_number, book, reading_record]
+      properties:
+        row_number:
+          type: integer
+        book:
+          $ref: '#/components/schemas/GoodreadsImportBookDraft'
+        reading_record:
+          $ref: '#/components/schemas/GoodreadsImportReadingRecordDraft'
+
+    GoodreadsMappingWarning:
+      type: object
+      required: [row_number, code, message]
+      properties:
+        row_number:
+          type: integer
+        code:
+          type: string
+        message:
+          type: string
+
+    GoodreadsImportedRow:
+      type: object
+      required: [row_number, book_id]
+      properties:
+        row_number:
+          type: integer
+        book_id:
+          type: string
+          format: uuid
+
+    GoodreadsImportSkippedRow:
+      type: object
+      required: [row_number, code, message]
+      properties:
+        row_number:
+          type: integer
+        code:
+          type: string
+        message:
+          type: string
+        existing_book_id:
+          oneOf:
+            - type: string
+              format: uuid
+            - type: 'null'
+
+    BookDuplicateError:
+      type: object
+      required: [statusCode, message, code, existingBookId]
+      properties:
+        statusCode:
+          type: integer
+          example: 409
+        message:
+          type: string
+          example: Book already exists in your library
+        code:
+          type: string
+          example: BOOK_DUPLICATE
+        existingBookId:
+          type: string
+          format: uuid
