@@ -212,33 +212,43 @@ La suite de pruebas automatizadas está diseñada para garantizar la resiliencia
 
 ### **3.1. Diagrama del modelo de datos:**
 
+> **Nota (Entrega 2):** los nombres de atributo se documentan en inglés porque así se han
+> implementado en el código (modelos SQLAlchemy, esquemas Pydantic y tipos TypeScript) — la
+> convención adoptada en esta entrega es identificadores de código en inglés y contenido/prosa en
+> español. Además, `email` pasa a ser opcional (el alta de paciente ya no lo pide) y se añaden los
+> campos `sex` (US-00) y `title`/`red_flag`/`alert_justification` en `medical_events` (US-05).
+
 ```mermaid
 erDiagram
     PATIENTS {
         uuid id PK
-        varchar nombre
-        varchar email UK
-        date fecha_nacimiento
+        varchar full_name
+        varchar email UK "nullable"
+        varchar sex
+        date date_of_birth
     }
     CLINICAL_BASELINE {
         uuid id PK
         uuid patient_id FK
-        varchar tipo
-        varchar concepto
-        varchar fecha_inicio
-        text detalles
+        varchar type
+        varchar concept
+        varchar start_date
+        text details
     }
     MEDICAL_EVENTS {
         uuid id PK
         uuid patient_id FK
-        varchar fecha
-        varchar tipo
-        text resumen_clinico
-        text notas_originales
-        varchar criticidad
-        varchar medico
-        varchar centro_medico
-        varchar departamento
+        varchar title
+        varchar date
+        varchar type
+        text clinical_summary
+        text original_notes
+        varchar severity
+        varchar doctor
+        varchar medical_center
+        varchar department
+        boolean red_flag
+        text alert_justification
     }
 
     PATIENTS ||--o{ CLINICAL_BASELINE : mantiene
@@ -250,37 +260,47 @@ erDiagram
 #### Entidad: `patients` (Pacientes)
 
 * **`id`** (`UUID`, Primary Key): Identificador único global e inviolable del usuario.
-* **`nombre`** (`VARCHAR(100)`, Not Null): Nombre completo del titular.
-* **`email`** (`VARCHAR(100)`, Unique, Not Null): Correo electrónico de acceso.
-* **`fecha_nacimiento`** (`DATE`, Not Null): Fecha de nacimiento para el cálculo de variables de edad relativas a síntomas por la IA.
+* **`full_name`** (`VARCHAR(100)`, Not Null): Nombre completo del titular.
+* **`email`** (`VARCHAR(100)`, Unique, Null): Correo electrónico opcional (el alta sin login de US-00 no lo solicita).
+* **`sex`** (`VARCHAR(20)`, Not Null): Sexo declarado por el paciente en el alta (`'Hombre'`, `'Mujer'`, `'Otro'`).
+* **`date_of_birth`** (`DATE`, Not Null): Fecha de nacimiento para el cálculo de variables de edad relativas a síntomas por la IA.
 
 #### Entidad: `clinical_baseline` (Perfil Crónico / De Fondo)
 
 * **`id`** (`UUID`, Primary Key): Identificador único del registro de fondo.
 * **`patient_id`** (`UUID`, Foreign Key, Not Null): Enlace referencial con `patients.id` (`ON DELETE CASCADE`).
-* **`tipo`** (`VARCHAR(50)`, Not Null): Discriminador de categoría (`'Condición Crónica'`, `'Tratamiento Prolongado'`, `'Alergia'`).
-* **`concepto`** (`VARCHAR(150)`, Not Null): Nombre clínico formal de la patología o fármaco (ej: "Talasemia Minor", "ERGE", "Lansoprazol").
-* **`fecha_inicio`** (`VARCHAR(50)`, Null): Expresión temporal vaga o fija de inicio (ej: "Desde la infancia", "Hace 5 años").
-* **`detalles`** (`TEXT`, Null): Dosificación, notas de gravedad o posología continuada.
+* **`type`** (`VARCHAR(50)`, Not Null): Discriminador de categoría (`'Condición Crónica'`, `'Tratamiento Prolongado'`, `'Alergia'`).
+* **`concept`** (`VARCHAR(150)`, Not Null): Nombre clínico formal de la patología o fármaco (ej: "Talasemia Minor", "ERGE", "Lansoprazol").
+* **`start_date`** (`VARCHAR(50)`, Null): Expresión temporal vaga o fija de inicio (ej: "Desde la infancia", "Hace 5 años").
+* **`details`** (`TEXT`, Null): Dosificación, notas de gravedad o posología continuada.
 
 #### Entidad: `medical_events` (Historial Temporal / Episodios)
 
 * **`id`** (`UUID`, Primary Key): Identificador único del suceso.
 * **`patient_id`** (`UUID`, Foreign Key, Not Null): Enlace referencial con `patients.id` (`ON DELETE CASCADE`).
-* **`fecha`** (`VARCHAR(50)`, Not Null): Fecha del suceso (ej: "2010", "2026-06-10").
-* **`tipo`** (`VARCHAR(50)`, Not Null): Categoría del hito (`'Cirugía'`, `'Urgencias'`, `'Consulta'`, `'Analítica'`, `'Síntoma'`).
-* **`resumen_clinico`** (`TEXT`, Not Null): Síntesis de los hechos estructurada limpiamente por la IA.
-* **`notas_originales`** (`TEXT`, Null): Transcripción completa en bruto de Whisper o el texto sin procesar del OCR para auditorías visuales.
-* **`criticidad`** (`VARCHAR(10)`, Not Null): Clasificación de riesgo determinada por el LLM (`'Alta'`, `'Media'`, `'Baja'`).
-* **`medico`** (`VARCHAR(100)`, Null): Facultativo firmante o tratante si consta en el informe.
-* **`centro_medico`** (`VARCHAR(100)`, Null): Hospital, centro de salud o clínica de ocurrencia.
-* **`departamento`** (`VARCHAR(100)`, Null): Especialidad médica del evento (ej: Otorrinolaringología, Neurología, Urgencias).
+* **`title`** (`VARCHAR(150)`, Not Null): Título corto y descriptivo del episodio (ej: "Cefalea Aguda Intensa y Síndrome Febril").
+* **`date`** (`VARCHAR(50)`, Not Null): Fecha del suceso (ej: "2010", "2026-06-10").
+* **`type`** (`VARCHAR(50)`, Not Null): Categoría del hito (`'Cirugía'`, `'Urgencias'`, `'Consulta'`, `'Analítica'`, `'Síntoma'`).
+* **`clinical_summary`** (`TEXT`, Not Null): Síntesis de los hechos estructurada limpiamente por la IA.
+* **`original_notes`** (`TEXT`, Null): Transcripción completa en bruto de Whisper o el texto sin procesar del OCR para auditorías visuales.
+* **`severity`** (`VARCHAR(10)`, Not Null): Clasificación de riesgo determinada por el LLM (`'Alta'`, `'Media'`, `'Baja'`).
+* **`doctor`** (`VARCHAR(100)`, Null): Facultativo firmante o tratante si consta en el informe.
+* **`medical_center`** (`VARCHAR(100)`, Null): Hospital, centro de salud o clínica de ocurrencia.
+* **`department`** (`VARCHAR(100)`, Null): Especialidad médica del evento (ej: Otorrinolaringología, Neurología, Urgencias).
+* **`red_flag`** (`BOOLEAN`, Not Null, Default `false`): Activada por la IA cuando el evento, cruzado con el historial longitudinal, puede enmascarar una complicación crítica de un antecedente pasado (US-05).
+* **`alert_justification`** (`TEXT`, Null): Explicación breve generada por la IA de por qué se activó `red_flag`.
 
 ---
 
 ## 4. Especificación de la API
 
-A continuación se detallan los tres endpoints neurálgicos del backend documentados bajo la especificación formal de OpenAPI (Swagger):
+> **Nota (Entrega 2):** al no existir login/autenticación (ver `US-00`), el paciente se identifica
+> mediante `patient_id` como parámetro de ruta. Se añade el endpoint de alta `POST /api/v1/patients`
+> (y su lectura `GET /api/v1/patients/{patient_id}`) y los tres endpoints originales pasan a colgar
+> de `/api/v1/patients/{patient_id}/...`. Las claves JSON van en inglés (código); los valores de
+> contenido clínico se mantienen en español.
+
+A continuación se detallan los endpoints neurálgicos del backend documentados bajo la especificación formal de OpenAPI (Swagger):
 
 ```json
 {
@@ -290,10 +310,58 @@ A continuación se detallan los tres endpoints neurálgicos del backend document
     "version": "1.0.0"
   },
   "paths": {
-    "/api/v1/health/process-voice": {
+    "/api/v1/patients": {
+      "post": {
+        "summary": "Registra un nuevo paciente (US-00, sin autenticación)",
+        "description": "Recibe los datos básicos de identidad del paciente (nombre, sexo, fecha de nacimiento) recogidos en la pantalla de onboarding y crea su registro. El patient_id devuelto se persiste en el dispositivo móvil (AsyncStorage) y se usa como identificador en el resto de endpoints.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["full_name", "sex", "date_of_birth"],
+                "properties": {
+                  "full_name": { "type": "string" },
+                  "sex": { "type": "string", "enum": ["Hombre", "Mujer", "Otro"] },
+                  "date_of_birth": { "type": "string", "format": "date" },
+                  "email": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Paciente creado correctamente.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "4a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+                  "full_name": "José Ignacio Álvarez Ruiz",
+                  "sex": "Hombre",
+                  "date_of_birth": "1990-01-01",
+                  "email": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patients/{patient_id}": {
+      "get": {
+        "summary": "Recupera los datos de identidad de un paciente",
+        "responses": {
+          "200": { "description": "Paciente encontrado." },
+          "404": { "description": "No existe un paciente con ese patient_id." }
+        }
+      }
+    },
+    "/api/v1/patients/{patient_id}/process-voice": {
       "post": {
         "summary": "Procesa ingesta de audio clínico",
-        "description": "Recibe un archivo binario de voz, invoca de manera interna a Whisper para STT, estructura clínicamente los datos con un LLM y los añade de forma automática al Timeline o Baseline del paciente.",
+        "description": "Recibe un archivo binario de voz, invoca de manera interna a Whisper para STT, estructura clínicamente los datos con un LLM (cruzándolos con el historial longitudinal del paciente para detectar red_flag) y los añade de forma automática al Timeline o Baseline del paciente.",
         "requestBody": {
           "required": true,
           "content": {
@@ -318,21 +386,26 @@ A continuación se detallan los tres endpoints neurálgicos del backend document
               "application/json": {
                 "example": {
                   "status": "success",
-                  "enrutamiento": "TIMELINE",
+                  "routing": "TIMELINE",
                   "data": {
-                    "fecha": "2026-06-10",
-                    "tipo": "Urgencias",
-                    "resumen_clinico": "El paciente presenta cefalea aguda intensa refractaria. Se activa alerta por riesgo neurológico cruzado.",
-                    "criticidad": "Alta"
+                    "title": "Cefalea Aguda Intensa y Síndrome Febril",
+                    "date": "2026-06-10",
+                    "type": "Urgencias",
+                    "clinical_summary": "El paciente presenta cefalea aguda intensa refractaria. Se activa alerta por riesgo neurológico cruzado.",
+                    "severity": "Alta",
+                    "red_flag": true,
+                    "alert_justification": "Antecedente de colesteatoma requiere descartar meningitis."
                   }
                 }
               }
             }
-          }
+          },
+          "404": { "description": "No existe un paciente con ese patient_id." },
+          "502": { "description": "Fallo del proveedor de IA o respuesta JSON inválida/incompleta." }
         }
       }
     },
-    "/api/v1/health/process-document": {
+    "/api/v1/patients/{patient_id}/process-document": {
       "post": {
         "summary": "Procesa imagen de informe clínico por Visión",
         "description": "Recibe una captura fotográfica en base64 de un informe, receta o analítica física, extrae la información relevante con un Vision LLM e impacta las tablas correspondientes.",
@@ -360,23 +433,25 @@ A continuación se detallan los tres endpoints neurálgicos del backend document
               "application/json": {
                 "example": {
                   "status": "success",
-                  "enrutamiento": "BASELINE",
+                  "routing": "BASELINE",
                   "data": {
-                    "tipo": "Tratamiento Prolongado",
-                    "concepto": "Lansoprazol 20mg",
-                    "detalles": "Uso continuo diario prescrito en ayunas para control de ERGE."
+                    "type": "Tratamiento Prolongado",
+                    "concept": "Lansoprazol 20mg",
+                    "details": "Uso continuo diario prescrito en ayunas para control de ERGE."
                   }
                 }
               }
             }
-          }
+          },
+          "404": { "description": "No existe un paciente con ese patient_id." },
+          "422": { "description": "image_base64 no es una cadena base64 válida." }
         }
       }
     },
-    "/api/v1/health/passport": {
+    "/api/v1/patients/{patient_id}/passport": {
       "get": {
         "summary": "Recupera el expediente médico longitudinal completo",
-        "description": "Extrae de forma consolidada todos los registros de la línea base y los eventos cronológicos del paciente autenticado, listos para la maquetación del pasaporte en PDF.",
+        "description": "Extrae de forma consolidada todos los registros de la línea base y los eventos cronológicos del paciente, listos para la maquetación del pasaporte en PDF.",
         "responses": {
           "200": {
             "description": "Expediente completo recuperado de forma exitosa.",
@@ -385,17 +460,18 @@ A continuación se detallan los tres endpoints neurálgicos del backend document
                 "example": {
                   "patient_id": "4a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
                   "baseline": [
-                    { "tipo": "Condición Crónica", "concepto": "Talasemia Minor", "fecha_inicio": "Infancia" },
-                    { "tipo": "Condición Crónica", "concepto": "ERGE", "fecha_inicio": "Hace varios años" }
+                    { "type": "Condición Crónica", "concept": "Talasemia Minor", "start_date": "Infancia" },
+                    { "type": "Condición Crónica", "concept": "ERGE", "start_date": "Hace varios años" }
                   ],
                   "timeline": [
-                    { "fecha": "2010", "tipo": "Cirugía", "resumen_clinico": "Mastoidectomía por colesteatoma izquierdo.", "centro_medico": "Complejo Hospitalario" },
-                    { "fecha": "2026-06-10", "tipo": "Urgencias", "resumen_clinico": "Cefalea intensa y fiebre.", "medico": "Dr. Torres" }
+                    { "title": "Mastoidectomía por Colesteatoma", "date": "2010", "type": "Cirugía", "clinical_summary": "Mastoidectomía por colesteatoma izquierdo.", "medical_center": "Complejo Hospitalario", "red_flag": false },
+                    { "title": "Cefalea Aguda Intensa y Síndrome Febril", "date": "2026-06-10", "type": "Urgencias", "clinical_summary": "Cefalea intensa y fiebre.", "doctor": "Dr. Torres", "red_flag": true, "alert_justification": "Antecedente de colesteatoma requiere descartar meningitis." }
                   ]
                 }
               }
             }
-          }
+          },
+          "404": { "description": "No existe un paciente con ese patient_id." }
         }
       }
     }
@@ -408,7 +484,19 @@ A continuación se detallan los tres endpoints neurálgicos del backend document
 
 ## 5. Historias de Usuario
 
-A continuación se detallan las 5 historias de usuario que componen el alcance del MVP, clasificadas bajo la metodología MoSCoW para asegurar el cumplimiento del flujo prioritario de extremo a extremo (E2E).
+A continuación se detallan las 6 historias de usuario que componen el alcance del MVP, clasificadas bajo la metodología MoSCoW para asegurar el cumplimiento del flujo prioritario de extremo a extremo (E2E). La `US-00` se incorpora en la Entrega 2 al detectarse que faltaba un paso previo imprescindible: sin saber quién es el paciente, la IA no tiene a quién atribuir el historial dictado.
+
+### **Historia de Usuario 0 (Must-Have)**
+* **ID:** `US-00`
+* **Título:** Registro Inicial de Identidad del Paciente sin Autenticación.
+* **Enunciado:** Como nuevo usuario de AEnEA, quiero indicar quién soy (nombre completo, sexo y fecha de nacimiento) la primera vez que abro la aplicación, para que el sistema pueda asociar mi historial médico a mi perfil sin necesidad de crear una contraseña ni iniciar sesión.
+* **Criterios de Aceptación:**
+  * **Dado** que el usuario abre la aplicación por primera vez (no existe `patient_id` guardado en el dispositivo):
+  * **Cuando** rellena el formulario de nombre completo, sexo y fecha de nacimiento y pulsa "Continuar",
+  * **Entonces** la aplicación debe invocar `POST /api/v1/patients`, persistir el `patient_id` devuelto en el almacenamiento local del dispositivo (AsyncStorage) y navegar a la pantalla principal (Timeline).
+  * **Dado** que el usuario ya completó el registro en una sesión anterior:
+  * **Cuando** vuelve a abrir la aplicación,
+  * **Entonces** debe omitirse el formulario de onboarding y navegar directamente a la pantalla principal, sin pedirle sus datos de nuevo.
 
 ### **Historia de Usuario 1 (Must-Have)**
 * **ID:** `US-01`
@@ -460,6 +548,12 @@ A continuación se detallan las 5 historias de usuario que componen el alcance d
 
 ## 6. Tickets de Trabajo
 
+> **Nota:** los tickets `TCK-B-01`, `TCK-F-01` y `TCK-D-01` corresponden a la Entrega 1 y fueron
+> puramente de diseño/documentación (no había código en el repositorio). Los tickets de la
+> **Entrega 2** (`TCK-*-02`), al final de esta sección, son los que reflejan la implementación de
+> código real: backend FastAPI funcional con tests en verde, frontend Expo compilable y
+> configuración de despliegue.
+
 #### **Ticket 1: [BACKEND] - Endpoint y Lógica de Orquestación del Servicio de IA**
 
 * **ID:** `TCK-B-01`
@@ -484,9 +578,47 @@ A continuación se detallan las 5 historias de usuario que componen el alcance d
 * **Descripción Técnica de la Tarea:** Definir e implementar el esquema físico de datos relacionales en PostgreSQL utilizando el ORM **SQLAlchemy** en el backend. Crear los modelos de clases de Python mapeando con exactitud las tres tablas core del MVP: `patients`, `clinical_baseline` y `medical_events`. Configurar de forma manual las restricciones estructurales: claves primarias de tipo UUID generadas de forma automática en servidor, claves foráneas indexadas para agilizar las búsquedas longitudinales, obligatoriedad de campos mediante restricciones `nullable=False`, y políticas de borrado en cascada `ondelete="CASCADE"` para evitar la orfandad de registros médicos sensibles.
 * **Criterios de Aceptación del Ticket:** Generar el archivo de migración inicial mediante la herramienta **Alembic**, verificar que la base de datos PostgreSQL local en Docker compile y cree el esquema físico de tablas relacionales sin errores de tipado o de sintaxis SQL.
 
+### Entrega 2 — Implementación de Código
+
+#### **Ticket 4: [BACKEND] - Onboarding sin Autenticación y Migración de Esquema Ampliado**
+
+* **ID:** `TCK-B-02`
+* **Épica/US:** Vinculado a `US-00`
+* **Prioridad:** Bloqueante / Alta
+* **Descripción Técnica de la Tarea:** Añadir el campo `sex` a `patients` (con `email` ahora nullable) y los campos `title`, `red_flag`, `alert_justification` a `medical_events`; generar y aplicar la migración de Alembic correspondiente. Implementar `POST /api/v1/patients` y `GET /api/v1/patients/{patient_id}`, y migrar `process-voice`, `process-document` y `passport` a colgar de `/api/v1/patients/{patient_id}/...` ya que no existe sesión/token que identifique al paciente.
+* **Criterios de Aceptación del Ticket:** `alembic upgrade head` aplica limpiamente contra Postgres; los tests de integración de repositorio y de API pasan en verde; el `patient_id` devuelto en el alta permite recuperar el passport correcto.
+
+#### **Ticket 5: [BACKEND] - AIOrchestratorService Real con Detección de Banderas Rojas**
+
+* **ID:** `TCK-B-03`
+* **Épica/US:** Vinculado a `US-01`, `US-02`, `US-03` y `US-05`
+* **Prioridad:** Alta
+* **Descripción Técnica de la Tarea:** Implementar `AIOrchestratorService` con un cliente OpenAI inyectable (`IOpenAIClient`) para desacoplar la lógica de negocio del SDK real, permitiendo tests unitarios con un doble de prueba (`FakeOpenAIClient`) sin tocar la red. El prompt del sistema inyecta un resumen textual del historial longitudinal del paciente para que el LLM pueda activar `red_flag`/`alert_justification` cuando corresponda (ver ejemplo del colesteatoma/meningitis en la Sección 1.2).
+* **Criterios de Aceptación del Ticket:** Tests unitarios cubren JSON válido (BASELINE y TIMELINE), JSON corrupto, JSON incompleto y errores de red del proveedor, todos mapeados a las excepciones (`AIResponseParsingError`, `AIProviderError`) y códigos HTTP (`502`) correctos. Un test E2E opcional (activo solo si hay `OPENAI_API_KEY`) verifica el flujo real contra Whisper con un audio de prueba.
+
+#### **Ticket 6: [FRONTEND] - Onboarding, Ingesta y Exportación PDF Funcionales**
+
+* **ID:** `TCK-F-02`
+* **Épica/US:** Vinculado a `US-00`, `US-01`, `US-02`, `US-04` y `US-05`
+* **Prioridad:** Alta
+* **Descripción Técnica de la Tarea:** Construir la app Expo Router completa: pantalla de onboarding (US-00) que persiste `patient_id` en `AsyncStorage`; pantalla de Timeline con cabecera de chips de baseline, banner de bandera roja, tarjetas de eventos y modal de detalle; grabación de voz con `expo-audio` y subida de fotos con `expo-image-picker`; exportación del pasaporte a PDF con `expo-print`/`expo-sharing` replicando el diseño del PDF de muestra del repositorio.
+* **Criterios de Aceptación del Ticket:** `npx tsc --noEmit` sin errores; `npx expo export` bundlea sin fallos; el flujo completo (onboarding → dictar nota → ver evento → exportar PDF) funciona contra el backend local.
+
+#### **Ticket 7: [DEVOPS] - Configuración de Despliegue (Render + Expo EAS)**
+
+* **ID:** `TCK-D-02`
+* **Épica/US:** Transversal (Sección 2.4)
+* **Prioridad:** Media
+* **Descripción Técnica de la Tarea:** Preparar `backend/Dockerfile`, `render.yaml` (Blueprint con servicio web Docker + Postgres gestionado) y `frontend/eas.json` (perfiles development/preview/production), junto con un documento de handoff (`DEPLOY.md`) con los comandos exactos de `render login`/`eas login`/`eas build` para que el autor del proyecto despliegue con sus propias credenciales.
+* **Criterios de Aceptación del Ticket:** El Blueprint de Render es válido sintácticamente y referencia correctamente el Dockerfile; `eas.json` valida contra el esquema de EAS CLI; `DEPLOY.md` no requiere que ningún asistente de IA tenga acceso a credenciales de terceros.
+
 ---
 
 ## 7. Pull Requests
+
+> **Nota:** las PRs `#01`-`#03` corresponden a la Entrega 1 (documentación/diseño, sin código en el
+> repositorio). Las PRs `#04`-`#06` de la **Entrega 2** son las que introducen el código real del
+> backend, frontend y configuración de despliegue sobre la rama `feature-entrega2-jiar`.
 
 #### **Pull Request 1: [INFRA & DB] Setup Inicial de la Capa de Datos Relacional**
 
@@ -508,3 +640,26 @@ A continuación se detallan las 5 historias de usuario que componen el alcance d
 * **Rama Origen:** `feature-entrega1-jiar/frontend-timeline-pdf`
 * **Descripción de Cambios:** Culmina el MVP de extremo a extremo en la capa cliente. Desarrollar los componentes visuales interactivos de React Native para pintar las tarjetas de hitos y la cabecera fija de perfil de salud crónico. Integra las librerías nativas de Expo `expo-print` y `expo-sharing` inyectando la maquetación HTML de alta fidelidad clínica para permitir la generación del archivo del Pasaporte Médico de Emergencia local compartible con un solo toque.
 * **Trazabilidad:** Completa con éxito el ticket frontend `TCK-F-01` y consolida el Happy Path prioritario del producto AEnEA.
+
+### Entrega 2 — Implementación de Código
+
+#### **Pull Request 4: [BACKEND] Onboarding sin Autenticación, Esquema Ampliado y AIOrchestratorService Real**
+
+* **ID de PR:** `PR #04`
+* **Rama Origen:** `feature-entrega2-jiar`
+* **Descripción de Cambios:** Implementa por primera vez el backend real de AEnEA en FastAPI: modelos SQLAlchemy (`Patient` con `sex`, `ClinicalBaseline`, `MedicalEvent` con `title`/`red_flag`/`alert_justification`) con tipo `GUID` agnóstico de Postgres/SQLite, migración inicial de Alembic aplicada contra Postgres en Docker, capa de repositorio (`IHealthRepository`/`SQLAlchemyHealthRepository`), `AIOrchestratorService` con cliente OpenAI inyectable y detección de banderas rojas, y los endpoints `POST /api/v1/patients`, `GET /api/v1/patients/{patient_id}`, `process-voice`, `process-document` y `passport`. Incluye batería de tests (unitarios, integración y E2E opcional) en verde.
+* **Trazabilidad:** Resuelve `TCK-B-02` y `TCK-B-03`.
+
+#### **Pull Request 5: [FRONTEND] App Expo Router: Onboarding, Timeline, Ingesta y Exportación PDF**
+
+* **ID de PR:** `PR #05`
+* **Rama Origen:** `feature-entrega2-jiar`
+* **Descripción de Cambios:** Construye la app móvil real con Expo Router y TypeScript: pantalla de onboarding (US-00) con persistencia de `patient_id` en `AsyncStorage`, pantalla de Timeline con cabecera de baseline, banner de bandera roja, tarjetas de eventos y modal de detalle, grabación de voz (`expo-audio`) y captura de documentos (`expo-image-picker`), y exportación del pasaporte a PDF (`expo-print`/`expo-sharing`) fiel al diseño de `pasaporte_medico_inteligente.pdf`. Verificado con `tsc --noEmit` y `expo export` sin errores.
+* **Trazabilidad:** Resuelve `TCK-F-02`.
+
+#### **Pull Request 6: [DEVOPS] Configuración de Despliegue en Render + Expo EAS**
+
+* **ID de PR:** `PR #06`
+* **Rama Origen:** `feature-entrega2-jiar`
+* **Descripción de Cambios:** Añade `backend/Dockerfile`, `render.yaml` (Blueprint de servicio web + Postgres gestionado) y `frontend/eas.json`, junto con `DEPLOY.md` documentando los pasos exactos de `render login`/`eas login`/`eas build` para que el propio autor despliegue con sus credenciales, sin que estas transiten por ningún asistente de IA.
+* **Trazabilidad:** Resuelve `TCK-D-02`.
