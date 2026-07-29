@@ -21,11 +21,11 @@ El branding (casa + arcoíris convergente) se trabajó con el usuario vía brain
 
 ### In scope (este design)
 
-1. Nueva **landing** en `/` (hero + stepper 4 pasos + CTA "Empezar por paso 1").
+1. Nueva **landing** en `/` (hero + stepper 3 pasos + CTA "Analizar un anuncio").
 2. Dashboard actual se mueve a **`/mi-proceso`** (decisión confirmada en review).
 3. Componente **`Logo`** (SVG inline) con la marca "casa-prisma arcoíris convergente" y wordmark "Realista" en Plus Jakarta Sans 800.
 4. Componente **`Header`** fijo arriba con solo el logo (YAGNI: sin hamburguesa, sin breadcrumb, sin contador).
-5. **`NavTabs` reemplazado por `ProcessStepper`** — los tabs dejan de ser iconos emoji y pasan a ser un stepper numerado conectado por flechas (4 pasos del proceso de compra).
+5. **`NavTabs` reemplazado por `ProcessStepper`** — los tabs dejan de ser iconos emoji y pasan a ser un stepper numerado conectado por flechas (3 pasos del proceso de compra).
 6. **`ListingLens` con tabs URL / Texto** — selector de modo; cuando la URL falla, se tacha con ✕ y el sistema salta automáticamente a Texto.
 7. **Backend `CheerioAdapter`** — User-Agent de Chrome real, headers de navegador (Accept, Accept-Encoding, Accept-Language, Sec-Fetch-*, Referer), reintentos con backoff exponencial.
 8. Tests unit (Vitest) y e2e (Playwright) para los componentes nuevos y los flujos modificados.
@@ -154,15 +154,15 @@ Decisión visual del brainstorming: **casa con paredes achatadas + 3 haces arco�
 
 Resultado: logo + espacio vacío a la derecha. Si en el futuro se añaden Ajustes, se reevalúa.
 
-### D3. Tabs de abajo = ProcessStepper (4 pasos)
+### D3. Tabs de abajo = ProcessStepper (3 pasos)
 
-**Decisión**: `NavTabs` se elimina. En su lugar va `ProcessStepper` con 4 círculos numerados (1·Anuncio, 2·Hipoteca, 3·Cronograma, 4·Checklist) conectados por líneas. El paso actual se resalta con el color primario; los completados se marcan con ✓; los pendientes quedan en gris claro.
+**Decisión**: `NavTabs` se elimina. En su lugar va `ProcessStepper` con 3 círculos numerados (1·Anuncio, 2·Hipoteca, 3·Proceso) conectados por líneas. El paso actual se resalta con el color primario; los completados se marcan con ✓; los pendientes quedan en gris claro.
 
 **Razonamiento**: el usuario mismo pidió "tabs inferiores numéricos, o dividen en pasos secuenciales en forma de flecha como un proceso de compra". Y descartó el breadcrumb para móvil ("poco usables en mobile"). El stepper es a la vez navegación y breadcrumb, lo cual resuelve el issue #3 de un solo golpe.
 
 **Modelo de estado**:
 - `currentStep` se obtiene de la ruta actual (`/listing-lens` → paso 1, `/mortgage-compass` → paso 2, etc.).
-- `completedSteps` se obtiene derivando del endpoint `/api/dashboard` (ya existe, lo consume el dashboard actual): paso 1 está completo si `data.latestListing !== null`; paso 2 si `data.process?.propertyPrice !== null` (el `FinancialProfile` se persiste en `PurchaseProcess`); paso 3 si `data.process?.currentStage !== null`; paso 4 si `data.checklist?.completedItems > 0`. Se cachea en el store `process.ts` que ya existe; se reusa el fetch del dashboard.
+- `completedSteps` se obtiene derivando del endpoint `/api/dashboard` (ya existe, lo consume el dashboard actual): paso 1 está completo si `data.latestListing !== null`; paso 2 si `data.process?.propertyPrice !== null` (el `FinancialProfile` se persiste en `PurchaseProcess`); paso 3 si `data.process?.currentStage !== null`. Se cachea en el store `process.ts` que ya existe; se reusa el fetch del dashboard.
 
 **Interacción**:
 - Click en un paso completado → navega a esa ruta.
@@ -173,7 +173,7 @@ Resultado: logo + espacio vacío a la derecha. Si en el futuro se añaden Ajuste
 
 **Decisión**: la landing es un único scroll vertical con tres bloques:
 1. **Hero**: H1 "Compra una casa con los ojos abiertos" + sub "Análisis honesto de anuncios y simulación de hipoteca. Sin humo." + botón primario "Empezar por el paso 1" + `AIDisclaimer` debajo.
-2. **Stepper visual**: 4 pasos numerados con el mismo visual que el `ProcessStepper` pero más grande, sin click, solo descriptivo ("1. Analiza un anuncio", "2. Simula tu hipoteca", "3. Sigue el cronograma", "4. No pierdas ningún documento").
+2. **Stepper visual**: 3 pasos numerados con el mismo visual que el `ProcessStepper` pero más grande, sin click, solo descriptivo ("1. Analiza un anuncio", "2. Simula tu hipoteca", "3. Sigue tu proceso").
 3. **Footer mini**: nota "⚠️ Análisis orientativo. No constituye asesoramiento financiero ni jurídico." (esto ya está en el `AIDisclaimer` global, se reitera aquí para que se vea sin scroll).
 
 **Razonamiento**: el usuario eligió opción C (la de stepper) en el brainstorming, frente a "minimal" y "hero + 3 funciones". El stepper visual anticipa el proceso, que es el "story" de la app. Se descartó la sección de 3 features separadas porque era redundante con el stepper (cada feature ya tiene su paso).
@@ -245,14 +245,14 @@ Upgrade-Insecure-Requests: 1
 - Añadir `frontend/src/lib/components/ProcessStepper.svelte`.
 - Eliminar `frontend/src/lib/components/NavTabs.svelte`.
 - Actualizar `+layout.svelte` para usar `<ProcessStepper :currentStep="..." :completedSteps="..." />`. `currentStep` se deriva de `$page.url.pathname`; `completedSteps` viene de un nuevo fetch a `/api/dashboard` (cachear con `+page.ts` load function o un store).
-- **Tests**: `ProcessStepper.test.ts` — renderiza 4 pasos, marca el actual, marca los completados, los pendientes están en gris, los completados son clickeables (navegan).
+- **Tests**: `ProcessStepper.test.ts` — renderiza 3 pasos, marca el actual, marca los completados, los pendientes están en gris, los completados son clickeables (navegan).
 - **E2E**: el test `full-flow.spec.ts` se actualiza para asertar que tras un análisis, el stepper muestra paso 1 como completado.
 
 ### Commit 4: Landing + dashboard reubicado
 
 - Crear `frontend/src/routes/mi-proceso/+page.svelte` con el contenido actual de `+page.svelte`.
 - Crear `frontend/src/lib/components/LandingHero.svelte` (H1 + sub + CTA + AIDisclaimer).
-- Crear `frontend/src/lib/components/LandingStepper.svelte` (4 pasos visuales, sin click, descriptivos).
+- Crear `frontend/src/lib/components/LandingStepper.svelte` (3 pasos visuales, sin click, descriptivos).
 - Reemplazar `frontend/src/routes/+page.svelte` por la nueva landing que renderiza `<LandingHero />` + `<LandingStepper />`.
 - **Tests**: `LandingHero.test.ts` y `LandingStepper.test.ts` — renderizan los elementos esperados.
 - **E2E**: nuevo test `ux-redesign.spec.ts` que visita `/`, ve el H1, ve el stepper, hace click en "Empezar por el paso 1" y verifica que navega a `/listing-lens`.
@@ -298,7 +298,7 @@ Upgrade-Insecure-Requests: 1
 - `Header.test.ts` — sticky, slot, contiene Logo.
 - `ProcessStepper.test.ts` — paso activo/completado/pendiente, click navega.
 - `LandingHero.test.ts` — H1, CTA apunta a `/listing-lens`, AIDisclaimer presente.
-- `LandingStepper.test.ts` — 4 pasos con número y label correctos.
+- `LandingStepper.test.ts` — 3 pasos con número y label correctos.
 - `ListingTabs.test.ts` — cambio de tab, prop `urlBlocked` marca la tab, foco.
 - `CheerioAdapter.headers.test.ts` — headers enviados.
 - `CheerioAdapter.retry.test.ts` — backoff exponencial, no retry en 4xx, abort tras N.
@@ -317,7 +317,7 @@ Upgrade-Insecure-Requests: 1
 4. `npm run build` en frontend sin warnings de iconos (los PWA icons ya existen).
 5. `npm run test:e2e` con backend levantado: el happy path completo sigue funcionando, y el nuevo test de paste fallback pasa.
 6. Smoke test manual en navegador: visitar `/` (ver landing), click CTA → `/listing-lens`, pegar URL conocida → resultado, simular bloqueo pegando una URL que sabemos que falla (o con un test que la mockee) → ver URL tachada → pegar texto → resultado.
-7. Comprobar el responsive en mobile (DevTools): header sticky, stepper 4 columnas, landing legible sin scroll horizontal, listing-lens tabs accesibles.
+7. Comprobar el responsive en mobile (DevTools): header sticky, stepper 3 columnas, landing legible sin scroll horizontal, listing-lens tabs accesibles.
 
 ## Open questions
 

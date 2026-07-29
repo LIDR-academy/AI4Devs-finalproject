@@ -369,16 +369,15 @@ describe('ProcessStepper', () => {
   const steps = [
     { id: 'listing', label: 'Anuncio', href: '/listing-lens' },
     { id: 'mortgage', label: 'Hipoteca', href: '/mortgage-compass' },
-    { id: 'timeline', label: 'Cronograma', href: '/timeline' },
-    { id: 'checklist', label: 'Checklist', href: '/checklist' },
+    { id: 'timeline', label: 'Proceso', href: '/timeline' },
   ];
 
-  it('renderiza 4 pasos', () => {
+  it('renderiza 3 pasos', () => {
     const { container } = render(ProcessStepper, {
       props: { steps, currentStep: 'listing', completedSteps: new Set() },
     });
     const items = container.querySelectorAll('[data-step-id]');
-    expect(items.length).toBe(4);
+    expect(items.length).toBe(3);
   });
 
   it('marca el paso actual con la clase "current"', () => {
@@ -794,10 +793,10 @@ import { describe, it, expect } from 'vitest';
 import LandingStepper from '$lib/components/LandingStepper.svelte';
 
 describe('LandingStepper', () => {
-  it('muestra 4 pasos con número y label', () => {
+  it('muestra 3 pasos con número y label', () => {
     const { container } = render(LandingStepper);
     const steps = container.querySelectorAll('[data-step-number]');
-    expect(steps.length).toBe(4);
+    expect(steps.length).toBe(3);
   });
 
   it('el paso 1 menciona Anuncio', () => {
@@ -825,12 +824,10 @@ Crear `frontend/src/lib/components/LandingStepper.svelte`:
   const STEPS = [
     { num: 1, label: 'Analiza un anuncio' },
     { num: 2, label: 'Simula tu hipoteca' },
-    { num: 3, label: 'Sigue el cronograma' },
-    { num: 4, label: 'No pierdas ningún documento' },
+    { num: 3, label: 'Sigue tu proceso' },
   ];
-</script>
 
-<section class="landing-stepper" aria-label="Los 4 pasos del proceso">
+<section class="landing-stepper" aria-label="Los 3 pasos del proceso">
   {#each STEPS as step, i}
     <div class="step" data-step-number={step.num}>
       {#if i > 0}
@@ -1387,11 +1384,11 @@ test.describe('UX redesign', () => {
     await expect(header.getByText('Realista')).toBeVisible();
   });
 
-  test('process stepper muestra 4 pasos', async ({ page }) => {
+  test('process stepper muestra 3 pasos', async ({ page }) => {
     await page.goto('/listing-lens');
     const stepper = page.locator('nav[aria-label="Pasos del proceso"]');
     await expect(stepper).toBeVisible();
-    await expect(stepper.locator('[data-step-id]')).toHaveCount(4);
+    await expect(stepper.locator('[data-step-id]')).toHaveCount(3);
   });
 
   test('listing-lens tiene tabs URL/Texto', async ({ page }) => {
@@ -1868,12 +1865,12 @@ Levantar backend y frontend, abrir DevTools, recorrer:
 1. `http://localhost:5173/` → landing visible, H1 "ojos abiertos", CTA apunta a `/listing-lens`
 2. Click CTA → navega a `/listing-lens`, ve tabs URL/Texto
 3. Header sticky visible con logo
-4. Stepper 4 pasos visible abajo, paso 1 marcado como current
+4. Stepper 3 pasos visible abajo, paso 1 marcado como current
 5. Pega una URL cualquiera y submit → ver loading → ver resultado (o error)
 6. Con dev tools, interceptar la respuesta para forzar un `code: 'PORTAL_BLOCKED'` → ver la tab URL tachada con ✕ y la tab Texto activa
 7. Pegar texto del anuncio → ver resultado correcto
 8. `http://localhost:5173/mi-proceso` → dashboard reubicado
-9. Responsive en mobile (DevTools iPhone SE): header sigue legible, stepper sigue 4 columnas (puede requerir scroll horizontal en pantallas muy estrechas)
+9. Responsive en mobile (DevTools iPhone SE): header sigue legible, stepper sigue 3 columnas (puede requerir scroll horizontal en pantallas muy estrechas)
 
 - [ ] **V6: Commit final con CHANGELOG o PR description**
 

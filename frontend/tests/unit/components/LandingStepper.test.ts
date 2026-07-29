@@ -3,10 +3,10 @@ import { describe, it, expect } from 'vitest';
 import LandingStepper from '$lib/components/LandingStepper.svelte';
 
 describe('LandingStepper', () => {
-  it('muestra 4 pasos con número y label', () => {
+  it('muestra 3 pasos con número y label', () => {
     const { container } = render(LandingStepper);
     const steps = container.querySelectorAll('[data-step-number]');
-    expect(steps.length).toBe(4);
+    expect(steps.length).toBe(3);
   });
 
   it('el paso 1 menciona Anuncio', () => {

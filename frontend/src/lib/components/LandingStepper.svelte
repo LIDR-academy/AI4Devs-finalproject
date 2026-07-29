@@ -3,11 +3,10 @@
     { num: 1, label: 'Analiza un anuncio' },
     { num: 2, label: 'Simula tu hipoteca' },
     { num: 3, label: 'Sigue tu proceso' },
-    { num: 4, label: 'No pierdas ningún documento' },
   ];
 </script>
 
-<section class="landing-stepper" aria-label="Los 4 pasos del proceso">
+<section class="landing-stepper" aria-label="Los 3 pasos del proceso">
   {#each STEPS as step, i}
     <div class="step" data-step-number={step.num}>
       {#if i > 0}
