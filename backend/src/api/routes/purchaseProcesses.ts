@@ -91,6 +91,17 @@ purchaseProcessesRouter.get('/:id', async (req: Request, res: Response, next: Ne
   }
 });
 
+purchaseProcessesRouter.delete('/active', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await prisma.purchaseProcess.deleteMany({
+      where: { userId: req.userId, status: 'ACTIVE' },
+    });
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 purchaseProcessesRouter.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = z.string().uuid().parse(req.params.id);

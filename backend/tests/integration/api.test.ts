@@ -5,7 +5,7 @@ const { mockPrisma } = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mock: any = {
     user: { upsert: vi.fn() },
-    purchaseProcess: { findFirst: vi.fn(), create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+    purchaseProcess: { findFirst: vi.fn(), create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn(), deleteMany: vi.fn() },
     analyzedListing: { findFirst: vi.fn(), create: vi.fn(), findUnique: vi.fn() },
     checklist: { findFirst: vi.fn(), create: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     checklistItem: { update: vi.fn(), findUnique: vi.fn() },
@@ -203,5 +203,39 @@ describe('GET /api/listings/:id', () => {
       .set('X-Session-Id', TEST_SESSION);
 
     expect(res.status).toBe(404);
+  });
+});
+
+// ─── DELETE /api/purchase-processes/active ─────────────────────
+
+describe('DELETE /api/purchase-processes/active', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prepare();
+  });
+
+  it('borra el proceso activo y responde 200 OK', async () => {
+    mockPrisma.purchaseProcess.deleteMany.mockResolvedValue({ count: 1 });
+
+    const res = await supertest(app)
+      .delete('/api/purchase-processes/active')
+      .set('X-Session-Id', TEST_SESSION);
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(mockPrisma.purchaseProcess.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'test-user', status: 'ACTIVE' },
+    });
+  });
+
+  it('responde 200 OK incluso sin proceso activo (idempotente)', async () => {
+    mockPrisma.purchaseProcess.deleteMany.mockResolvedValue({ count: 0 });
+
+    const res = await supertest(app)
+      .delete('/api/purchase-processes/active')
+      .set('X-Session-Id', TEST_SESSION);
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
   });
 });

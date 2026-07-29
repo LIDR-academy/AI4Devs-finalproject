@@ -15,9 +15,10 @@ describe('LandingHero', () => {
     expect(sub?.textContent).toContain('costes ocultos');
   });
 
-  it('el CTA apunta a /listing-lens', () => {
+  it('el CTA es un botón "Analizar un anuncio"', () => {
     const { container } = render(LandingHero);
-    const link = container.querySelector('a[href="/listing-lens"]');
-    expect(link).toBeTruthy();
+    const btn = container.querySelector('button');
+    expect(btn?.textContent).toContain('Analizar');
+    expect(btn?.classList).toContain('cta');
   });
 });
