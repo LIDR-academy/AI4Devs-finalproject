@@ -1,125 +1,149 @@
-> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
-Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
+# prompts.md
 
+# Registro de uso de IA
 
-## Índice
+## 1. Producto
 
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+### Prompt 1
 
----
+Actúa como Product Manager y diseña un MVP para una aplicación de healthcare patient timeline inspirada en Statewave.
 
-## 1. Descripción general del producto
+### Prompt 2
 
-**Prompt 1:**
+Identifica el flujo E2E mínimo que aporte valor completo al usuario.
 
-**Prompt 2:**
+### Prompt 3
 
-**Prompt 3:**
+Define historias Must-Have y Should-Have usando criterios de aceptación claros.
+
+### Nota de guía
+
+Se guió al asistente para priorizar un flujo clínico sencillo: paciente, encuentro, extracción de eventos y timeline auditado.
 
 ---
 
-## 2. Arquitectura del Sistema
+## 2. Arquitectura
 
-### **2.1. Diagrama de arquitectura:**
+### Prompt 1
 
-**Prompt 1:**
+Propón una arquitectura para una aplicación healthcare timeline con Next.js, FastAPI, PostgreSQL, OpenAI y Statewave.
 
-**Prompt 2:**
+### Prompt 2
 
-**Prompt 3:**
+Separa responsabilidades entre frontend, backend, persistencia, memoria contextual e IA.
 
-### **2.2. Descripción de componentes principales:**
+### Prompt 3
 
-**Prompt 1:**
+Identifica riesgos de seguridad y mitigaciones para un MVP educativo con datos sintéticos.
 
-**Prompt 2:**
+### Nota de guía
 
-**Prompt 3:**
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.4. Infraestructura y despliegue**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.5. Seguridad**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.6. Tests**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+Se decidió una arquitectura simple por capas para evitar complejidad innecesaria en la primera entrega.
 
 ---
 
-### 3. Modelo de Datos
+## 3. Modelo de datos
 
-**Prompt 1:**
+### Prompt 1
 
-**Prompt 2:**
+Diseña un modelo relacional para pacientes, encuentros clínicos, eventos y auditoría.
 
-**Prompt 3:**
+### Prompt 2
 
----
+Añade trazabilidad de fuente, confidence score y estado de revisión humana.
 
-### 4. Especificación de la API
+### Prompt 3
 
-**Prompt 1:**
+Genera un diagrama ER Mermaid para documentación.
 
-**Prompt 2:**
+### Nota de guía
 
-**Prompt 3:**
-
----
-
-### 5. Historias de Usuario
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+Se priorizó provenance y auditabilidad sobre funcionalidades clínicas avanzadas.
 
 ---
 
-### 6. Tickets de Trabajo
+## 4. API
 
-**Prompt 1:**
+### Prompt 1
 
-**Prompt 2:**
+Define endpoints REST para gestionar pacientes, encuentros, extracción IA y timeline.
 
-**Prompt 3:**
+### Prompt 2
+
+Propón contratos request/response mínimos para el MVP.
+
+### Prompt 3
+
+Añade un endpoint /health para validar despliegue y CI.
+
+### Nota de guía
+
+Se mantuvo una API pequeña para poder implementarla de forma progresiva.
 
 ---
 
-### 7. Pull Requests
+## 5. Backend
 
-**Prompt 1:**
+### Prompt 1
 
-**Prompt 2:**
+Crea un backend FastAPI mínimo con endpoint /health.
 
-**Prompt 3:**
+### Prompt 2
+
+Estructura el backend por carpetas: api, core, models, schemas, repositories y services.
+
+### Prompt 3
+
+Prepara servicios placeholder para OpenAI y Statewave.
+
+### Nota de guía
+
+La primera entrega prioriza estructura y ejecutabilidad antes que integración completa.
+
+---
+
+## 6. Frontend
+
+### Prompt 1
+
+Crea una página inicial en Next.js para presentar el producto AuditCare Timeline.
+
+### Prompt 2
+
+Diseña componentes futuros para pacientes, encuentros y timeline.
+
+### Prompt 3
+
+Prepara una estructura escalable de carpetas en TypeScript.
+
+### Nota de guía
+
+El frontend inicial sirve como landing técnica y será ampliado en siguientes entregas.
+
+---
+
+## 7. Testing
+
+### Prompt 1
+
+Genera un test unitario para validar el endpoint /health.
+
+### Prompt 2
+
+Prepara una estructura para tests unitarios, integración y E2E.
+
+### Prompt 3
+
+Define un flujo E2E futuro: crear paciente, crear encuentro, extraer eventos y visualizar timeline.
+
+### Nota de guía
+
+Se dejó preparado el camino para ampliar tests en la segunda y tercera entrega.
+
+---
+
+## 8. Ajustes humanos
+
+- Se limitó el uso a datos sintéticos.
+- Se priorizó trazabilidad y auditabilidad.
+- Se simplificó el MVP para poder entregarlo progresivamente.

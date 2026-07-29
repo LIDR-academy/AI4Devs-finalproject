@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: auditcare-postgres
+    environment:
+      POSTGRES_USER: auditcare
+      POSTGRES_PASSWORD: auditcare
+      POSTGRES_DB: auditcare
+    ports:
+      - "5433:5432"
+    volumes:
+      - auditcare_postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: auditcare-backend
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://auditcare:auditcare@postgres:5432/auditcare_app
+      STATEWAVE_URL: http://host.docker.internal:8100
+      STATEWAVE_API_KEY: ${STATEWAVE_API_KEY:-}
+      # Optional LLM for AI extraction (any OpenAI-compatible endpoint).
+      # Leave empty to use the deterministic rule-based fallback.
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: auditcare-frontend
+    depends_on:
+      - backend
+    environment:
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  auditcare_postgres_data:

@@ -1,0 +1,3 @@
+Generate a chronological patient timeline using only approved clinical events.
+Preserve provenance and source references.
+Do not add unsupported clinical conclusions.

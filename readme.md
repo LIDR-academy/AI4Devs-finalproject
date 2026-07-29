@@ -1,134 +1,762 @@
+# AI4Devs Final Project - AuditCare Timeline
+
 ## Índice
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+0. Ficha del proyecto
+1. Descripción general del producto
+2. Arquitectura del sistema
+3. Modelo de datos
+4. Especificación de la API
+5. Historias de usuario
+6. Tickets de trabajo
+7. Pull Requests
 
 ---
 
-## 0. Ficha del proyecto
+# 0. Ficha del proyecto
 
-### **0.1. Tu nombre completo:**
+### 0.1. Tu nombre completo
 
-### **0.2. Nombre del proyecto:**
+Miriam Diaz Hernandez
 
-### **0.3. Descripción breve del proyecto:**
+### 0.2. Nombre del proyecto
 
-### **0.4. URL del proyecto:**
+AuditCare Timeline
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+### 0.3. Descripción breve del proyecto
+
+AuditCare Timeline es una aplicación web que utiliza Inteligencia Artificial para construir una línea temporal clínica auditada a partir de notas médicas.
+
+El sistema permite registrar pacientes, almacenar encuentros clínicos, extraer eventos relevantes mediante IA y presentar una línea temporal cronológica revisable por profesionales.
+
+Statewave se utiliza como capa de memoria contextual y trazabilidad para mantener el contexto longitudinal del paciente y preservar la procedencia de la información generada.
+
+### 0.4. URL del proyecto
+
+https://github.com/MiriamDiazH/AI4Devs-finalproject
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+Repositorio GitHub:
+
+https://github.com/MiriamDiazH/AI4Devs-finalproject
+
+Archivo comprimido:
+
+AI4Devs-finalproject.zip
+
+---
+
+# 1. Descripción general del producto
+
+## 1.1. Objetivo
+
+AuditCare Timeline es una aplicación web orientada a profesionales sanitarios que permite reconstruir y visualizar la evolución clínica de un paciente mediante una línea temporal generada con Inteligencia Artificial.
+
+El objetivo principal es reducir el tiempo necesario para revisar historiales clínicos extensos y facilitar la identificación de eventos relevantes, manteniendo al mismo tiempo un alto nivel de trazabilidad y transparencia sobre la información utilizada.
+
+Para ello, el sistema combina:
+
+* Inteligencia Artificial para extraer eventos clínicos desde texto libre.
+* Revisión humana para validar la información generada.
+* Statewave como capa de memoria contextual y trazabilidad.
+
+Statewave permite mantener una representación longitudinal del paciente a través de múltiples encuentros clínicos, preservando el contexto histórico utilizado por la IA y facilitando la construcción de timelines clínicos auditables.
+
+---
+
+## 1.2. Características y funcionalidades principales
+
+### MVP
+
+#### Gestión de pacientes
+
+* Registro de pacientes sintéticos.
+* Consulta de información básica del paciente.
+* Asociación de encuentros clínicos.
+
+#### Gestión de encuentros clínicos
+
+* Registro de consultas médicas.
+* Almacenamiento de notas clínicas en texto libre.
+* Relación entre encuentros y paciente.
+
+#### Extracción de eventos mediante IA
+
+* Procesamiento automático de notas clínicas.
+* Identificación de diagnósticos.
+* Identificación de síntomas.
+* Identificación de procedimientos.
+* Identificación de medicación.
+* Identificación de resultados clínicos relevantes.
+
+#### Memoria contextual mediante Statewave
+
+* Almacenamiento del contexto longitudinal del paciente.
+* Persistencia del historial clínico relevante.
+* Recuperación de contexto para enriquecer futuras extracciones.
+* Gestión de información contextual entre encuentros clínicos.
+
+#### Trazabilidad y provenance
+
+* Conservación de la fuente original de cada evento.
+* Registro del texto clínico utilizado por la IA.
+* Almacenamiento del nivel de confianza generado por el modelo.
+* Preparación para futuras revisiones humanas.
+
+#### Timeline clínico
+
+* Visualización cronológica de eventos clínicos.
+* Agrupación por fecha y encuentro.
+* Navegación simplificada por la historia clínica del paciente.
+
+---
+
+### Funcionalidades futuras
+
+#### Revisión humana
+
+* Aprobación de eventos generados por IA.
+* Corrección manual de información.
+* Rechazo de eventos incorrectos.
+
+#### Auditoría avanzada
+
+* Historial completo de modificaciones.
+* Registro de usuarios revisores.
+* Comparación entre versión IA y versión validada.
+
+#### Exportación
+
+* PDF clínico.
+* JSON estructurado.
+* Compartición de timelines.
+
+#### Interoperabilidad
+
+* Integración FHIR.
+* Integración con sistemas EHR.
+* Importación de documentos clínicos.
+
+#### Gestión avanzada
+
+* Multiusuario.
+* Gestión de roles.
+* Control de acceso.
+
+---
+
+## 1.2.1. Uso de Statewave
+
+Statewave constituye uno de los componentes centrales de la arquitectura del sistema.
+
+Su función principal es proporcionar una capa de memoria contextual para aplicaciones basadas en IA.
+
+En AuditCare Timeline, Statewave se utiliza para:
+
+* Mantener contexto longitudinal del paciente.
+* Relacionar múltiples encuentros clínicos.
+* Preservar la información relevante entre sesiones.
+* Facilitar la trazabilidad de la información utilizada por la IA.
+* Permitir la generación de timelines clínicos consistentes y auditables.
+
+A diferencia de una base de datos tradicional, Statewave aporta capacidades específicas para la gestión de memoria contextual orientada a sistemas inteligentes, mejorando la coherencia de los resultados generados por los modelos de lenguaje.
+
+---
+
+## 1.3. Diseño y experiencia de usuario
+
+### Flujo principal MVP
+
+1. Crear paciente.
+2. Registrar encuentro clínico.
+3. Introducir nota médica.
+4. Procesar nota mediante IA.
+5. Extraer eventos clínicos estructurados.
+6. Actualizar memoria contextual del paciente en Statewave.
+7. Recuperar contexto histórico relevante.
+8. Generar timeline clínico.
+9. Mostrar timeline cronológico auditado.
+
+### Experiencia de usuario
+
+El diseño del sistema prioriza:
+
+* Simplicidad de uso.
+* Visualización rápida de información clínica.
+* Reducción de carga cognitiva.
+* Transparencia sobre los resultados generados por IA.
+* Navegación eficiente por historiales extensos.
+
+Las capturas de pantalla, wireframes y vídeo demostrativo se incorporarán en las siguientes entregas del proyecto.
+
+---
+
+## 1.4. Instrucciones de instalación
+
+### Requisitos
+
+* Node.js 22+
+* Python 3.12+
+* PostgreSQL 16+
+* Docker y Docker Compose
+
+### Servicios necesarios
+
+El sistema requiere:
+
+* Frontend Next.js
+* Backend FastAPI
+* PostgreSQL
+* Statewave
+
+### Variables de entorno
+
+Copia `.env.example` a `.env` y ajústalo:
+
+```env
+DATABASE_URL=postgresql://auditcare:auditcare@localhost:5433/auditcare_app
+
+# Statewave (memoria contextual + trazabilidad)
+STATEWAVE_URL=http://localhost:8100
+STATEWAVE_API_KEY=
+
+# LLM para extracción IA (opcional, compatible con OpenAI).
+# Si se deja vacío, el backend usa un extractor determinista por reglas,
+# de modo que el MVP es ejecutable sin conexión ni claves.
+LLM_BASE_URL=
+LLM_API_KEY=
+LLM_MODEL=gpt-4o-mini
+```
+
+### PostgreSQL
+
+```bash
+docker compose up postgres -d
+```
+
+La aplicación usa una base de datos dedicada, `auditcare_app`, separada de los
+datos de Statewave. Se crea automáticamente en el primer arranque del volumen
+(`infra/postgres/init.sql`). El esquema se gestiona con **Alembic**: el backend
+ejecuta `alembic upgrade head` automáticamente al arrancar. Para aplicarlo a
+mano:
+
+```bash
+cd backend && alembic upgrade head
+```
+
+### Statewave
+
+Documentación oficial:
+
+https://www.statewave.ai/developers
+
+Repositorio oficial:
+
+https://github.com/smaramwbc/statewave
+
+Instalación:
+
+```bash
+git clone https://github.com/smaramwbc/statewave.git
+
+cd statewave
+
+cp .env.example .env
+
+docker compose up -d
+```
+
+Verificación:
+
+```bash
+curl http://localhost:8100/healthz
+
+curl http://localhost:8100/readyz
+```
+
+Panel administrativo:
+
+```text
+http://localhost:8081
+```
+
+### Backend
+
+```bash
+cd backend
+
+python -m venv venv
+
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+uvicorn app.main:app --reload
+```
+
+Verificación:
+
+```bash
+curl http://localhost:8000/health
+```
+
+### Frontend
+
+```bash
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+Aplicación:
+
+```text
+http://localhost:3000
+```
+
+### Verificación completa
+
+Frontend:
+
+```text
+http://localhost:3000
+```
+
+Backend:
+
+```text
+http://localhost:8000/docs
+```
+
+Statewave API:
+
+```text
+http://localhost:8100/healthz
+```
+
+Statewave Admin:
+
+```text
+http://localhost:8081
+```
+
+Si todos los servicios responden correctamente, el entorno está preparado para ejecutar el MVP.
+
+### Checklist rápido (flujo E2E)
+
+Ejecuta estos comandos para validar el flujo completo: paciente → encuentro →
+extracción IA → timeline. La extracción usa el LLM configurado o, si no hay
+ninguno, el extractor determinista por reglas (el checklist funciona en ambos
+casos). Statewave se consulta como memoria contextual cuando está disponible:
+
+```bash
+curl -sS http://localhost:8000/health && echo
+curl -sS http://localhost:8100/healthz && echo
+```
+
+```bash
+PATIENT_JSON=$(curl -sS -X POST http://localhost:8000/patients \
+   -H 'Content-Type: application/json' \
+   -d '{"name":"Checklist Statewave","birth_date":"1990-01-01","sex":"F"}')
+PID=$(echo "$PATIENT_JSON" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+
+ENCOUNTER_JSON=$(curl -sS -X POST http://localhost:8000/encounters \
+   -H 'Content-Type: application/json' \
+   -d '{"patient_id":"'"$PID"'","date":"2026-06-12","type":"consulta","note_text":"Paciente con cefalea, nausea y fotofobia. Se indica analgesia y control en 48 horas."}')
+EID=$(echo "$ENCOUNTER_JSON" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+
+curl -sS -X POST "http://localhost:8000/encounters/$EID/extract-events" | jq 'length'
+```
+
+```bash
+curl -sS "http://localhost:8000/patients/$PID/timeline" | jq '.events | length'
+```
+
+Resultado esperado:
+
+- `extract-events` devuelve un numero mayor que 0.
+- `timeline.events` devuelve el mismo numero de eventos o superior.
+
+### Evidencia de despliegue local (Entrega 1)
+
+Ejecucion de referencia para validar entorno funcional con Docker Compose:
+
+```bash
+docker compose up -d backend frontend
+curl -sS http://localhost:8000/health
+```
+
+Salida esperada del healthcheck:
+
+```json
+{"status":"ok","service":"auditcare-timeline-api","version":"0.1.0"}
+```
+
+URLs verificadas en entorno local:
+
+- Frontend: http://localhost:3000
+- Backend docs: http://localhost:8000/docs
+- Statewave API (stack externa): http://localhost:8100/healthz
+- Statewave Admin (stack externa): http://localhost:8081
 
 
 ---
 
-## 1. Descripción general del producto
+# 2. Arquitectura del Sistema
 
-> Describe en detalle los siguientes aspectos del producto:
+## 2.1. Diagrama de arquitectura
 
-### **1.1. Objetivo:**
+```mermaid
+flowchart LR
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+A[Next.js Frontend]
+--> B[FastAPI Backend]
 
-### **1.2. Características y funcionalidades principales:**
+B --> C[(PostgreSQL)]
 
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+B --> D[Statewave API :8100]
 
-### **1.3. Diseño y experiencia de usuario:**
+D --> B
+```
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+Arquitectura por capas con separación entre:
 
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
-
----
-
-## 2. Arquitectura del Sistema
-
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
-
-
-### **2.2. Descripción de componentes principales:**
-
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
-
-### **2.4. Infraestructura y despliegue**
-
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
-
-### **2.5. Seguridad**
-
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
-
-### **2.6. Tests**
-
-> Describe brevemente algunos de los tests realizados
+* Presentación
+* Lógica de negocio
+* Persistencia
+* Memoria contextual
+* Servicios de IA
 
 ---
 
-## 3. Modelo de Datos
+## 2.2. Componentes principales
 
-### **3.1. Diagrama del modelo de datos:**
+### Frontend
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+* Next.js
+* TypeScript
+* TailwindCSS
 
+### Backend
 
-### **3.2. Descripción de entidades principales:**
+* FastAPI
+* Python
+* Pydantic
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+### Persistencia
 
----
+* PostgreSQL
 
-## 4. Especificación de la API
+### Memoria contextual y trazabilidad
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+* Statewave (episodios, compilación de memorias y ensamblado de contexto vía API v1)
 
----
+### Inteligencia Artificial
 
-## 5. Historias de Usuario
-
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
-
-**Historia de Usuario 1**
-
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
-
----
-
-## 6. Tickets de Trabajo
-
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
-
-**Ticket 1**
-
-**Ticket 2**
-
-**Ticket 3**
+* Extracción de eventos mediante un LLM configurable compatible con OpenAI
+  (`LLM_BASE_URL` / `LLM_API_KEY`).
+* Fallback determinista basado en reglas clínicas cuando no hay LLM configurado,
+  para que el flujo sea siempre ejecutable.
+* Statewave aporta el contexto longitudinal del paciente que enriquece la
+  extracción (no actúa como proveedor de LLM).
 
 ---
 
-## 7. Pull Requests
+## 2.3. Estructura del proyecto
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+```text
+AI4Devs-finalproject
+│
+├── backend
+├── frontend
+├── docs
+├── infra
+├── e2e
+├── .github
+├── prompts.md
+└── README.md
+```
 
-**Pull Request 1**
+---
 
-**Pull Request 2**
+## 2.4. Infraestructura y despliegue
 
-**Pull Request 3**
+```text
+GitHub
+   │
+GitHub Actions
+   │
+Docker
+   │
+Railway / Render / Vercel
+```
 
+---
+
+## 2.5. Seguridad
+
+* Variables sensibles mediante `.env`.
+* GitHub Secrets.
+* Validación mediante Pydantic.
+* Uso de ORM para prevenir SQL Injection.
+* HTTPS en producción.
+* No se utilizan datos clínicos reales.
+* Todos los pacientes utilizados son sintéticos.
+* Statewave se utiliza únicamente con datos de prueba.
+
+---
+
+## 2.6. Tests
+
+Implementados (backend, `pytest`):
+
+* `test_health` — health check.
+* `test_patients` — creación/listado de pacientes y validación de encuentro sin paciente.
+* `test_extraction` — extractor por reglas y flujo E2E (paciente → encuentro →
+  extract-events → timeline) sobre SQLite.
+
+Ejecución:
+
+```bash
+cd backend && python -m pytest -q
+```
+
+E2E de UI con Playwright (`e2e/`) preparado para ampliación.
+
+---
+
+# 3. Modelo de Datos
+
+## 3.1. Diagrama
+
+```mermaid
+erDiagram
+
+PATIENT ||--o{ ENCOUNTER : has
+
+PATIENT ||--o{ CLINICAL_EVENT : generates
+
+ENCOUNTER ||--o{ CLINICAL_EVENT : contains
+
+CLINICAL_EVENT ||--o{ AUDIT_LOG : records
+```
+
+---
+
+## 3.2. Entidades principales
+
+### Patient
+
+* id
+* name
+* birthDate
+* sex
+
+### Encounter
+
+* id
+* patientId
+* date
+* type
+* noteText
+
+### ClinicalEvent
+
+* id
+* encounterId
+* category
+* title
+* description
+* confidence
+* sourceQuote
+
+### AuditLog
+
+* id
+* entityId
+* action
+* actor
+* timestamp
+
+---
+
+# 4. Especificación de la API
+
+## GET /health
+
+Verifica que el backend está activo.
+
+## POST /patients
+
+Crear paciente.
+
+## GET /patients
+
+Listar pacientes.
+
+## POST /encounters
+
+Crear encuentro clínico.
+
+## POST /encounters/{id}/extract-events
+
+Extraer eventos mediante IA.
+
+## GET /patients/{id}/timeline
+
+Obtener timeline clínico.
+
+---
+
+# 5. Historias de Usuario
+
+### HU01
+
+Como profesional sanitario quiero registrar un paciente para almacenar su historial clínico.
+
+### HU02
+
+Como profesional sanitario quiero registrar encuentros clínicos para documentar consultas médicas.
+
+### HU03
+
+Como profesional sanitario quiero que la IA extraiga eventos clínicos para reducir tiempo de revisión documental.
+
+### HU04
+
+Como profesional sanitario quiero visualizar una línea temporal para comprender rápidamente la evolución del paciente.
+
+---
+
+# 6. Tickets de Trabajo
+
+### BE-001
+
+Setup inicial FastAPI.
+
+### BE-002
+
+Modelo Patient.
+
+### BE-003
+
+Modelo Encounter.
+
+### BE-004
+
+Integración de extracción IA vía Statewave LLM.
+
+### BE-005
+
+Integración Statewave.
+
+### FE-001
+
+Setup inicial Next.js.
+
+### FE-002
+
+Pantalla listado pacientes.
+
+### FE-003
+
+Visualización timeline.
+
+### DB-001
+
+Diseño esquema PostgreSQL.
+
+### QA-001
+
+Test unitario Health Check.
+
+---
+
+# 7. Pull Requests
+
+## PR-001 Setup inicial proyecto
+
+Objetivo:
+Crear la estructura base del proyecto.
+
+Incluye:
+
+- FastAPI bootstrap
+- Next.js bootstrap
+- PostgreSQL
+- Docker Compose
+- GitHub Actions
+- Health Check
+- Documentación inicial
+
+Estado:
+✅ Completado
+
+---
+
+## PR-002 Persistencia de pacientes y encuentros
+
+Objetivo:
+Implementar almacenamiento de pacientes y encuentros clínicos.
+
+Incluye:
+
+- Modelo Patient
+- Modelo Encounter
+- Migraciones PostgreSQL
+- API CRUD
+
+Estado:
+✅ Completado
+
+---
+
+## PR-003 Extracción de eventos mediante IA
+
+Objetivo:
+Extraer eventos clínicos desde notas médicas.
+
+Incluye:
+
+- Integración Statewave LLM
+- Prompt engineering
+- Parsing estructurado
+- Tests unitarios
+
+Estado:
+✅ Completado
+
+---
+
+## PR-004 Integración Statewave
+
+Objetivo:
+Gestionar memoria contextual longitudinal del paciente.
+
+Incluye:
+
+- Statewave Client
+- Persistencia contextual
+- Recuperación de contexto
+
+Estado:
+✅ Completado
+
+---
+
+## PR-005 Timeline clínico MVP
+
+Objetivo:
+Visualizar la evolución clínica del paciente.
+
+Incluye:
+
+- Timeline UI
+- Filtros básicos
+- Integración backend
+
+Estado:
+✅ Completado
