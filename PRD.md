@@ -10,7 +10,9 @@
 
 **Estado:** MVP implementado (julio 2026)
 
-**Implementación:** aplicación ejecutable en local (`backend/` + `frontend/` + PostgreSQL). Cubre UC-01 a UC-08; UC-09 (Library) y UC-10 (Recap/export visual) permanecen como placeholders en el frontend. Detalle de entrega en [`readme.md`](readme.md) y contratos en [`docs/`](docs/).
+**Implementación:** aplicación ejecutable en local (`backend/` + `frontend/` + PostgreSQL). Cubre UC-01 a UC-08; UC-09 (Library) tiene galería básica (filtros avanzados pendientes) y UC-10 (Recap/export visual) permanece como placeholder en el frontend. Detalle de entrega en [`readme.md`](readme.md) y contratos en [`docs/`](docs/).
+
+**Guía de usuario:** explicación de todas las funcionalidades disponibles y huecos para capturas de pantalla en [`docs/product/user-guide.md`](docs/product/user-guide.md).
 
 ---
 

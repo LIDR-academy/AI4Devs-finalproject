@@ -11,7 +11,7 @@ All project documentation lives under **`docs/`**. **Product** docs (`PRD.md`, `
 
 | Layer | Paths |
 |-------|--------|
-| Product | `PRD.md`, `readme.md`, `docs/product/` (stories, use cases, diagrams) |
+| Product | `PRD.md`, `readme.md`, `docs/product/` (user guide, stories, use cases, diagrams) |
 | Engineering | `docs/data-model.md`, `docs/api-spec.yml`, `docs/standards/*`, `docs/development_guide.md` |
 | Agent rules | `AGENTS.md` (root) |
 | Change specs | `openspec/` (must align with product docs) |

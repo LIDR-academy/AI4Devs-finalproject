@@ -2,6 +2,8 @@
 
 Step-by-step setup for **Reading Analytics Platform** local development and testing.
 
+For how to use the running app (screens and flows), see the [user guide](./product/user-guide.md).
+
 ## Prerequisites
 
 - **Node.js** 20+ (OpenSpec recommends 20.19+)

@@ -9,6 +9,8 @@
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
 
+**Guía de usuario (funcionalidades y capturas):** [`docs/product/user-guide.md`](docs/product/user-guide.md)
+
 ---
 
 ## 0. Ficha del proyecto
@@ -34,6 +36,8 @@ Aplicación web desktop-first para lectoras intensivas que quieren registrar lec
 Abrir la app → `/login` → **dev-login** con un email de prueba. Flujo recomendado: añadir libro en Book Tracker, cambiar estado, revisar Home / Lists / Stats.
 
 Para visualizar un usuario con datos ya poblados, entrar con lectora@example.com
+
+**Cómo usar la app:** guía paso a paso de todas las secciones (con huecos para screenshots) en [`docs/product/user-guide.md`](docs/product/user-guide.md).
 
 > **Nota free tier:** la API en Render se duerme tras ~15 min sin uso; la primera petición puede tardar **30–90 s** (cold start).
 
@@ -71,6 +75,8 @@ git clone https://github.com/CeliaMerino/AI4devs-finalproject.git
 
 ### **1.2. Características y funcionalidades principales:**
 
+Detalle orientado a la usuaria final (qué hace cada pantalla, flujos y dónde colocar capturas): **[Guía de usuario](docs/product/user-guide.md)**.
+
 - **Registro y seguimiento de lecturas:** añadir libros con búsqueda que enriquece metadatos (con fallback entre fuentes: Open Library, Google Books, Goodreads y entrada manual); progreso por página o porcentaje; lecturas simultáneas.
 - **Home:** vista con libros en curso, progreso, meta anual, KPIs del mes y TBR actual.
 - **Book Tracker:** tabla visual, filtros, búsqueda interna, edición y altas.
@@ -83,7 +89,7 @@ git clone https://github.com/CeliaMerino/AI4devs-finalproject.git
 - **Tags personalizados:** etiquetas propias (por ejemplo géneros de nicho o book club).
 - **Perfil y ajustes:** preferencias, temas visuales, fuentes de datos y objetivos.
 
-**Prioridades de producto (referencia PRD):** MVP centrado en alta automática de libros, listas TBR, meta anual e insights automáticos; en evolución, comparativas, export story, búsqueda avanzada y tags.
+**Prioridades de producto (referencia PRD):** MVP centrado en alta automática de libros, listas TBR, meta anual e insights automáticos; en evolución, comparativas, export story, búsqueda avanzada y tags. Lo disponible hoy frente a lo planificado está desglosado en la [guía de usuario §14](docs/product/user-guide.md#14-qué-está-planificado-aún-no-disponible).
 
 ### **1.3. Diseño y experiencia de usuario:**
 
@@ -404,7 +410,7 @@ La accesibilidad **WCAG 2.1/2.2 AA** se cubre en **diseño y QA** (contraste, fo
 
 Modelo lógico **PostgreSQL** alineado con el PRD: biblioteca por usuaria, registro de lectura 1:1 por libro, TBR mensual único por mes, metas anuales y tablas de configuración (géneros, formatos, audiencias).
 
-> **Nota de implementación (julio 2026):** el esquema canónico implementado está en [`docs/data-model.md`](docs/data-model.md). Respecto al diagrama original de este apartado: `books.genre` (texto) migró a `genre_id` → tabla `genres`; existen `formats`, `audiences`, `import_jobs` y `user_profiles`. **Tags** y progreso por sesiones no están en el MVP. En el frontend, `/library` y `/recap` son placeholders (UC-09 y export visual UC-10 pendientes).
+> **Nota de implementación (julio 2026):** el esquema canónico implementado está en [`docs/data-model.md`](docs/data-model.md). Respecto al diagrama original de este apartado: `books.genre` (texto) migró a `genre_id` → tabla `genres`; existen `formats`, `audiences`, `import_jobs` y `user_profiles`. **Tags** y progreso por sesiones no están en el MVP. En el frontend, `/library` muestra galería básica (filtros UC-09 pendientes) y `/recap` es placeholder (export visual UC-10 pendiente). Recorrido de producto: [`docs/product/user-guide.md`](docs/product/user-guide.md).
 
 | Área | Estado MVP |
 | --- | --- |

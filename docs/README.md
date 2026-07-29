@@ -7,8 +7,10 @@ Single documentation tree for **Reading Analytics Platform**.
 ```text
 docs/
 ├── product/                 # Product requirements (stories, use cases, diagrams)
+│   ├── user-guide.md        # End-user guide (features + screenshot slots)
 │   ├── user-stories.md
 │   ├── use-cases.md
+│   ├── screenshots/         # Images referenced by the user guide
 │   └── diagrams/            # Architecture, ER, deployment, UC sequence diagrams
 ├── standards/               # Engineering conventions for agents and humans
 │   ├── base-standards.md
@@ -31,6 +33,7 @@ See [AGENTS.md](../AGENTS.md): `PRD.md` → `readme.md` → `docs/product/` → 
 
 | Need | File |
 |------|------|
+| **User guide (features + screenshots)** | [product/user-guide.md](./product/user-guide.md) |
 | Install locally | [development_guide.md](./development_guide.md) |
 | **Production deploy** | [deployment.md](./deployment.md) |
 | User stories | [product/user-stories.md](./product/user-stories.md) |

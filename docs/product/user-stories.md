@@ -4,6 +4,8 @@
 **Owner:** Celia (Founder / Product Owner)  
 **Fecha:** abril 2026
 
+**Guía de usuario (recorrido de la app y capturas):** [`user-guide.md`](./user-guide.md)
+
 ---
 
 ## Índice

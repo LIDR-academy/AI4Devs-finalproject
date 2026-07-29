@@ -5,6 +5,8 @@
 **Fecha:** abril 2026
 **Estado:** MVP implementado (julio 2026) — UC-01…UC-08 en código; UC-09/UC-10 parciales (placeholders en frontend)
 
+**Guía de usuario (cómo se usan estas funcionalidades en la app):** [`user-guide.md`](./user-guide.md)
+
 ---
 
 ## Índice
