@@ -155,4 +155,12 @@ Have you included all the tasks? please if not, do so
 Provide me with a very detailed and specific guide, step by step of all the things I should set up manually. For example, create an acccount by loging into this website, and get a specific key by going here or doing that. 
 ---
 
-# 11 - OpenCode - DeepSeek V4 Flash Free 
+# 11 - OpenCode - DeepSeek V4 Flash Free - Plan mode
+
+[/speckit.specify] I'm working with this project where I have just set up google calendar api. However, there are still more things to do. I'd like for you to do all the remaining tasks in this user story (only the 1rst task has been done):
+https://linear.app/ai4devs/issue/COACHER-16/us-21-google-calendar-as-scheduling-engine
+Ask me anything you need in order not to assume anything and to get the best result needed
+
+[/speckit.clarify]
+[/speckit.plan]
+[/speckit.tasks]
