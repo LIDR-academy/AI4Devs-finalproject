@@ -1,7 +1,6 @@
 > Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
 Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
 
-
 ## Índice
 
 1. [Descripción general del producto](#1-descripción-general-del-producto)
@@ -17,6 +16,10 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ## 1. Descripción general del producto
 
 **Prompt 1:**
+> Lee readme.md y prompts.md para hacerte una idea de lo que hay que construir. Dime qué
+> necesitas de mi parte, imagino que credenciales para Whisper.
+> Además, creo que olvidé poner que al principio de todo la app me pregunte quién soy (sexo,
+> nombre, edad) antes de empezar a dictarle a Whisper el historial médico.
 
 **Prompt 2:**
 
@@ -53,10 +56,22 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### **2.4. Infraestructura y despliegue**
 
 **Prompt 1:**
+> Frontend: React Native / Expo, tal como ya documenta el readme. Alcance: desplegado en
+> producción de verdad (Render + Expo EAS), preparando yo mismo la configuración pero haciendo tú
+> el login/deploy con tus propias cuentas.
 
 **Prompt 2:**
+> dices en el DEPLOY.md de hacer esto pero no funciona
+>
+> ➜  render blueprint launch
+> Error: unknown command "blueprint" for "render"
 
 **Prompt 3:**
+> me dice esto
+>
+> ➜  render blueprints validate ./render.yaml
+> Error: no workspace specified and no default workspace set. Use --workspace or run
+> 'render workspace set'
 
 ### **2.5. Seguridad**
 
@@ -79,6 +94,8 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+> Estoy viendo que estás metiendo nombres de atributos y demás en español, todo lo que sea código
+> lo quiero en inglés.
 
 **Prompt 2:**
 
@@ -89,6 +106,8 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### 4. Especificación de la API
 
 **Prompt 1:**
+> Ya voy probando la app y tengo preguntas: ¿cómo diferencias si le pido una tortilla de patatas
+> de si le digo que tengo 45 años y talasemia minor de siempre? ¿Usas LangChain?
 
 **Prompt 2:**
 
@@ -99,6 +118,11 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### 5. Historias de Usuario
 
 **Prompt 1:**
+> Creo que olvidé poner que al principio de todo la app me pregunte quién soy (sexo, nombre,
+> edad) antes de empezar a dictarle a Whisper el historial médico.
+>
+> *(Este mismo prompt es el origen directo de la historia de usuario US-00, añadida en esta
+> entrega — no existía en la documentación original de la Entrega 1.)*
 
 **Prompt 2:**
 
@@ -119,6 +143,7 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### 7. Pull Requests
 
 **Prompt 1:**
+> Créame el title y description del PR, que esto va para arriba.
 
 **Prompt 2:**
 
