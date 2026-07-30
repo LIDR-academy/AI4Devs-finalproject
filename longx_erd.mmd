@@ -1,0 +1,210 @@
+erDiagram
+
+  %% ============================================================
+  %% LongX MVP - consolidated ER model (Option B: real execution)
+  %% Domains: risk governance | connectivity & execution | behavioral
+  %% Conventions: Binance authoritative for positions/fills/balances;
+  %%              LongX authoritative for intents, rules, grades, events.
+  %% ============================================================
+
+  %% ---------- Risk governance ----------
+  USERS ||--|| RISK_PROFILES : has
+  RISK_TIERS ||--o{ RISK_PROFILES : bounds
+  USERS ||--o{ GUARDRAIL_CHANGES : requests
+  USERS ||--o{ SESSION_STATES : "tracked per session day"
+
+  %% ---------- Exchange connectivity & execution ----------
+  USERS ||--o{ EXCHANGE_CONNECTIONS : connects
+  EXCHANGE_CONNECTIONS ||--o{ ACCOUNT_SNAPSHOTS : "observes equity"
+  USERS ||--o{ TRADE_INTENTS : submits
+  TRADE_INTENTS ||--o{ VALIDATION_RESULTS : "validated at submit + confirm"
+  TRADE_INTENTS ||--o| POSITIONS : opens
+  EXCHANGE_CONNECTIONS ||--o{ POSITIONS : "executed via"
+  POSITIONS ||--o{ EXCHANGE_ORDERS : places
+  EXCHANGE_ORDERS ||--o{ ORDER_FILLS : "filled by"
+  POSITIONS ||--o{ STOP_ADJUSTMENTS : logs
+
+  %% ---------- Behavioral & coaching ----------
+  POSITIONS ||--o| TRADE_GRADES : "graded as"
+  POSITIONS ||--o{ JOURNAL_ENTRIES : "reflected in"
+  USERS ||--o{ BEHAVIORAL_EVENTS : emits
+  POSITIONS |o--o{ BEHAVIORAL_EVENTS : "may reference"
+  USERS ||--o{ COACH_MESSAGES : receives
+
+  %% ============================================================
+  %% Entities
+  %% ============================================================
+
+  USERS {
+    uuid id PK
+    string email
+    string status "active | suspended"
+    timestamp created_at
+  }
+
+  RISK_TIERS {
+    int id PK
+    string name
+    numeric min_risk_pct
+    numeric max_risk_pct
+    numeric max_leverage
+    int max_trades_per_day
+    numeric max_daily_loss_pct
+    numeric min_rr_ratio
+    int cooldown_minutes
+    int loosen_delay_hours "Ulysses delay for loosening"
+  }
+
+  RISK_PROFILES {
+    uuid id PK
+    uuid user_id FK
+    int tier_id FK
+    numeric chosen_risk_pct "within tier band"
+    numeric chosen_leverage "within tier band"
+    timestamp effective_from "engine resolves as-of now()"
+  }
+
+  GUARDRAIL_CHANGES {
+    uuid id PK
+    uuid user_id FK
+    string direction "tighten | loosen"
+    jsonb requested_values
+    timestamp applies_at "now() if tighten, delayed if loosen"
+    string status "pending | applied | cancelled | rejected"
+  }
+
+  SESSION_STATES {
+    uuid id PK
+    uuid user_id FK
+    date session_date
+    int trades_count
+    numeric realized_loss
+    int consecutive_losses
+    timestamp locked_until
+    string lock_reason "daily_loss | trade_count | consecutive_losses | cooldown"
+  }
+
+  EXCHANGE_CONNECTIONS {
+    uuid id PK
+    uuid user_id FK
+    string venue "binance_usdm (MVP)"
+    string encrypted_key_ref "KMS envelope reference, never raw"
+    jsonb permissions_snapshot "withdraw must be OFF"
+    string margin_mode "isolated (enforced)"
+    string position_mode "one_way (enforced)"
+    string status "active | suspended | revoked"
+    timestamp last_sync_at
+  }
+
+  ACCOUNT_SNAPSHOTS {
+    uuid id PK
+    uuid connection_id FK
+    numeric balance
+    numeric equity
+    timestamp captured_at "venue is authoritative; these are observations"
+  }
+
+  TRADE_INTENTS {
+    uuid id PK
+    uuid user_id FK
+    string symbol
+    string side "long | short"
+    numeric entry_price
+    numeric stop_price
+    numeric target_price
+    text thesis
+    string status "pending | approved | rejected | executed | expired"
+    timestamp submitted_at
+  }
+
+  VALIDATION_RESULTS {
+    uuid id PK
+    uuid intent_id FK
+    string stage "submit | confirm (confirm is authoritative)"
+    boolean passed
+    numeric computed_size "size is an OUTPUT of validation"
+    jsonb rule_outcomes "per-rule verdicts"
+    timestamp validated_at
+  }
+
+  POSITIONS {
+    uuid id PK
+    uuid intent_id FK
+    uuid connection_id FK
+    string venue
+    string symbol
+    string side
+    numeric size
+    numeric leverage
+    numeric avg_entry
+    numeric exit_price
+    numeric realized_pnl
+    string status "open | closed | liquidated"
+    timestamp opened_at
+    timestamp closed_at
+  }
+
+  EXCHANGE_ORDERS {
+    uuid id PK
+    uuid position_id FK
+    string purpose "entry | protective_stop | target | manual_close"
+    string client_order_id UK "derived from intent_id - idempotency key"
+    string exchange_order_id "Binance-assigned"
+    string order_type "market | limit | stop_market_reduce_only"
+    numeric qty
+    numeric price
+    string status "new | partially_filled | filled | cancelled | rejected"
+    timestamp last_update_at
+  }
+
+  ORDER_FILLS {
+    uuid id PK
+    uuid order_id FK
+    numeric qty
+    numeric price
+    numeric fee
+    timestamp filled_at
+  }
+
+  STOP_ADJUSTMENTS {
+    uuid id PK
+    uuid position_id FK
+    numeric old_stop
+    numeric new_stop
+    string source "longx | external (UC-11 interference)"
+    timestamp adjusted_at
+  }
+
+  TRADE_GRADES {
+    uuid id PK
+    uuid position_id FK
+    int dqs "0-100, hero metric"
+    jsonb components "per-dimension sub-scores + reasons"
+    string grading_version "formula versioning for comparability"
+    timestamp graded_at
+  }
+
+  JOURNAL_ENTRIES {
+    uuid id PK
+    uuid position_id FK
+    text content
+    timestamp created_at
+  }
+
+  BEHAVIORAL_EVENTS {
+    uuid id PK
+    uuid user_id FK
+    uuid position_id FK "nullable"
+    string event_type "intent_rejected | stop_widen_attempt | external_stop_cancel | external_position_change | lock_override_attempt | ..."
+    jsonb context
+    timestamp occurred_at
+  }
+
+  COACH_MESSAGES {
+    uuid id PK
+    uuid user_id FK
+    string trigger_type "grade | rejection_pattern | interference | onboarding | session_lock"
+    uuid source_event_id "provenance: grade or behavioral event"
+    text content
+    timestamp sent_at
+  }

@@ -1,0 +1,135 @@
+@startuml LongX_System_Architecture
+' LongX — selected architecture (Option B):
+' Python modular monolith + dedicated connectivity worker,
+' Supabase retained as managed data/auth layer.
+' Includes day-one scalability decisions (sharding, partitioning, egress).
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam component {
+  BackgroundColor #EEEDFE
+  BorderColor #534AB7
+}
+skinparam node {
+  BackgroundColor #FAFAF7
+  BorderColor #87867F
+}
+skinparam database {
+  BackgroundColor #E1F5EE
+  BorderColor #0F6E56
+}
+skinparam cloud {
+  BackgroundColor #FFF1E7
+  BorderColor #B85C00
+}
+skinparam queue {
+  BackgroundColor #E1F5EE
+  BorderColor #0F6E56
+}
+
+actor "Trader\n(mobile-first)" as trader
+
+node "Client" {
+  component "React PWA\n(shadcn/ui, useT() i18n,\nTanStack Query)" as pwa
+}
+
+node "API — FastAPI modular monolith (Python)" as api {
+  component "HTTP API\n(routes, authz)" as routes
+  component "Discipline engine\n(pure rule library)" as engine
+  component "Analysis & repair\n(ATR/RSI/EMA, R:R,\nrepair algorithm)" as analysis
+  component "Scoring (DQS)\n+ consistency" as scoring
+  component "Coach orchestration" as coach
+  component "Accounts, tiers,\nguardrail workflow" as accounts
+}
+
+node "Connectivity worker (Python + CCXT Pro)" as worker {
+  component "Command consumer\n(stateless, consumer group)" as cmd
+  component "Stream listeners\n(sharded by connection_id)" as listeners
+  component "Reconciler\n(periodic truth-sync)" as recon
+}
+
+cloud "Supabase (managed)" {
+  database "Postgres\n(system of record;\nappend-only tables\npartitioned monthly)" as pg
+  component "Auth\n(JWT, RLS)" as auth
+  component "Realtime\n(client push)" as realtime
+}
+
+database "Redis" as redis
+queue "Redis Streams\n(outbox relay:\ncommands + events)" as streams
+
+node "AWS KMS" as kms
+node "NAT gateway\n(stable egress IPs\nfor key whitelisting)" as nat
+
+cloud "Binance USDT-M" {
+  component "REST API\n(orders; per-IP\nrate budget)" as brest
+  component "User-data stream\n(fills, interference)" as bstream
+  component "Market stream\n(prices)" as bmarket
+}
+
+cloud "LLM provider\n(coach narration,\ntemplate fallback)" as llm
+
+' ---------- Client plane ----------
+trader --> pwa
+pwa --> routes : HTTPS (intents, repairs,\nguardrails, journal)
+pwa --> auth : sign-in (JWT)
+realtime --> pwa : push (positions,\nlocks, grades)
+
+' ---------- API internals ----------
+routes --> engine : validate intent\n(submit + confirm)
+routes --> accounts
+engine --> analysis : R:R, stop-vs-ATR,\nrepair candidates
+coach --> llm : narrate (async,\nnever in order path)
+scoring --> coach : grade.computed
+
+' ---------- Data plane ----------
+routes --> pg : writes + outbox\n(one transaction)
+engine --> redis : hot session state\n(sync rebuild on miss)
+pg ..> streams : outbox relay
+streams --> cmd : execute / cancel\ncommands
+streams --> scoring : position.closed
+streams --> coach : behavioral events,\nrejection patterns
+
+' ---------- Worker plane ----------
+cmd --> kms : decrypt key\n(in-memory only)
+cmd --> nat
+listeners --> nat
+recon --> nat
+nat --> brest : place orders\n(idempotent clientOrderId)\n+ resting protective stops
+bstream --> listeners : fills, external\ninterference (UC-11)
+bmarket --> listeners : ticks
+cmd --> pg : orders, fills
+listeners --> pg : fills, behavioral\nevents, snapshots
+recon --> pg : drift corrections
+listeners --> redis : price fan-out\n(NOT through Postgres)
+
+note right of engine
+  Single chokepoint: every intent
+  (user, coach repair, copied call)
+  passes here. Deterministic, pure,
+  no I/O imports (CI-enforced).
+end note
+
+note bottom of worker
+  Only process that ever sees a
+  decrypted Binance key. Shard-aware
+  from day one: listeners keyed by
+  connection_id, jittered reconnect
+  with global rate budget.
+end note
+
+note bottom of brest
+  Protective stops REST ON THE VENUE
+  (reduce-only stop-market orders).
+  LongX downtime degrades coaching
+  and new entries — never protection.
+end note
+
+note bottom of pg
+  Binance authoritative for positions,
+  fills, balances. LongX authoritative
+  for intents, rules, grades, events.
+  Reconciler closes the gap.
+end note
+
+@enduml
