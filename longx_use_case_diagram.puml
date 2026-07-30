@@ -1,0 +1,99 @@
+@startuml LongX_MVP_Use_Cases
+' LongX — disciplined trading gateway (MVP, Option B: real execution on Binance)
+' Use case overview: 11 use cases, 2 subsystems, 4 actors
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #EEEDFE
+  BorderColor #534AB7
+  ArrowColor #534AB7
+}
+skinparam actor {
+  BackgroundColor #E1F5EE
+  BorderColor #0F6E56
+}
+
+actor "Trader" as trader
+actor "Binance\n(external exchange)" as binance
+actor "Market data feed" as feed
+actor "LLM provider" as llm
+
+rectangle "LongX — disciplined trading gateway" {
+
+  package "Trading core" {
+    usecase "UC-01\nSubmit & validate\ntrade intent" as UC01
+    usecase "UC-02\nReject intent &\nrecord behavior" as UC02
+    usecase "UC-03\nExecute & manage\nreal position" as UC03
+    usecase "UC-04\nModify stop\n(tighten-only)" as UC04
+    usecase "UC-05\nTrip circuit breaker /\nsession lockout" as UC05
+  }
+
+  package "Behavioral & governance layer" {
+    usecase "UC-06\nGrade closed trade\n(DQS)" as UC06
+    usecase "UC-07\nDeliver coach\nfeedback" as UC07
+    usecase "UC-08\nRequest guardrail\nchange (Ulysses)" as UC08
+    usecase "UC-09\nOnboard trader &\nconnect Binance" as UC09
+    usecase "UC-10\nJournal & review\nperformance" as UC10
+    usecase "UC-11\nObserve external\ninterference" as UC11
+  }
+}
+
+' ---- Primary actor associations ----
+trader --> UC01
+trader --> UC03 : confirms\nexecution
+trader --> UC04
+trader --> UC08
+trader --> UC09
+trader --> UC10
+
+' ---- Secondary / external actor associations ----
+UC01 -- feed : price context for\nsizing & R:R
+UC03 -- binance : orders + protective\nstops rest on venue
+UC03 -- feed
+UC09 -- binance : verify key permissions\n(withdraw OFF, isolated, one-way)
+binance --> UC11 : user-data stream\nevent initiates
+UC07 -- llm
+
+' ---- Include relationships (always happen) ----
+UC03 ..> UC01 : <<include>>\nre-validate at confirm
+UC03 ..> UC06 : <<include>>\non position close
+UC09 ..> UC01 : <<include>>\nguided first intent
+
+' ---- Extend relationships (conditional) ----
+UC02 ..> UC01 : <<extend>>\n[any rule fails]
+UC05 ..> UC03 : <<extend>>\n[session threshold\nbreached on close]
+UC07 ..> UC06 : <<extend>>\n[grade computed]
+UC07 ..> UC02 : <<extend>>\n[rejection pattern\ndetected]
+UC07 ..> UC11 : <<extend>>\n[interference\ndetected]
+UC10 ..> UC06 : <<extend>>\n[journaling adds\nadherence credit]
+
+' ---- Notes on cross-cutting behavior ----
+note bottom of UC02
+  Rejection is a domain event, not an error:
+  persists BEHAVIORAL_EVENTS with rule
+  outcomes + session context.
+end note
+
+note bottom of UC04
+  Widen/remove attempt is BLOCKED and
+  recorded as a behavioral event;
+  tighten applies immediately.
+  Tightening stays allowed during lockout.
+end note
+
+note bottom of UC11
+  Per product principle: interference is
+  observed and graded (DQS impact, coach
+  response) -- not fought. LongX is a
+  commitment device, not a prison.
+end note
+
+note bottom of UC08
+  Asymmetric by design:
+  tighten -> applies_at = now()
+  loosen -> applies_at = now() + 24-72h
+  Loosening during lockout -> auto-reject.
+end note
+
+@enduml
