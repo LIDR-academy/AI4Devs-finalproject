@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "AEnEA",
+    "slug": "aenea-passport",
+    "scheme": "aenea",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "AEnEA necesita acceso al micrófono para dictar tus notas médicas por voz.",
+        "NSCameraUsageDescription": "AEnEA necesita acceso a la cámara para fotografiar informes médicos.",
+        "NSPhotoLibraryUsageDescription": "AEnEA necesita acceso a tu galería para adjuntar fotos de informes médicos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
+      "package": "com.neonigma.aeneapassport"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "AEnEA necesita acceso al micrófono para dictar tus notas médicas por voz."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "AEnEA necesita acceso a la cámara para fotografiar informes médicos.",
+          "photosPermission": "AEnEA necesita acceso a tu galería para adjuntar fotos de informes médicos."
+        }
+      ],
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4b79385f-672a-4bc5-8701-223be3e5e3d4"
+      }
+    },
+    "owner": "neonigma"
+  }
+}
