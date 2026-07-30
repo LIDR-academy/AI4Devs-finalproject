@@ -1,6 +1,4 @@
 > Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o los de corrección o adición de funcionalidades que consideres más relevantes.
->
-> Los prompts y respuestas han sido editados para brevedad, pero mantienen la esencia de las conversaciones reales.
 
 ---
 
@@ -18,9 +16,8 @@
 
 ## 1. Descripción general del producto
 
-### **Prompt 1: Definición de propuesta de valor**
+**Prompt 1: Definición de propuesta de valor**
 
-**Prompt:**
 ```
 Estoy creando una app de gamificación para limpieza del hogar dirigida a personas 
 neurodivergentes, profesionales independientes y familias. El core es un "Shopping 
@@ -33,7 +30,7 @@ Define:
 4. MVP scope: cuáles entran en 8 semanas
 ```
 
-**Respuesta (Extracto):**
+**Respuesta:**
 ```
 Propuesta diferenciadora:
 - Onboarding sin fricción (trivia game, no formularios)
@@ -49,18 +46,16 @@ Fuera: F9 (social), campañas estacionales completas, tienda premium
 
 ---
 
-### **Prompt 2: Arquetipos de usuario y presets automáticos**
+**Prompt 2: Arquetipos de usuario y presets**
 
-**Prompt:**
 ```
 Para cada arquetipo de hogar, define espacios, frequencies y presets:
 - Solo Pro, Recién casados, Familia 3, Familia 5, Roommates
 - Espacios predefinidos, frequencies, equipamiento inicial, tareas base
-
 Incluye JSON reutilizable para seed de BD.
 ```
 
-**Respuesta (JSON):**
+**Respuesta:**
 ```json
 {
   "archetypes": [
@@ -70,19 +65,7 @@ Incluye JSON reutilizable para seed de BD.
       "spaces": [
         {"type": "bathroom", "frequency_days": 3},
         {"type": "kitchen", "frequency_days": 2},
-        {"type": "bedroom", "frequency_days": 7},
-        {"type": "living_room", "frequency_days": 5}
-      ],
-      "initial_equipment_level": 1
-    },
-    {
-      "id": "family_5",
-      "name": "Familia de 5",
-      "spaces": [
-        {"type": "bathroom", "frequency_days": 2},
-        {"type": "kitchen", "frequency_days": 1},
-        {"type": "kids_room", "frequency_days": 5},
-        {"type": "laundry", "frequency_days": 3}
+        {"type": "bedroom", "frequency_days": 7}
       ],
       "initial_equipment_level": 1
     }
@@ -92,9 +75,8 @@ Incluye JSON reutilizable para seed de BD.
 
 ---
 
-### **Prompt 3: Sistema de gamificación sostenible**
+**Prompt 3: Sistema de gamificación**
 
-**Prompt:**
 ```
 Diseña gamificación para 6–8 meses de engagement:
 - Mapeo tiempo → XP (ej: 10 min = 3 XP)
@@ -103,7 +85,7 @@ Diseña gamificación para 6–8 meses de engagement:
 - Evita fatiga de gamificación
 ```
 
-**Respuesta (Extracto):**
+**Respuesta:**
 ```
 XP formula: XP = max(1, int(1 + minutes * 0.2))
 - 10 min = 3 XP, 30 min = 7 XP, 60 min = 13 XP
@@ -111,7 +93,7 @@ XP formula: XP = max(1, int(1 + minutes * 0.2))
 Personajes: Gold (5/5), Intermediate (3–4/5), Novice (<3/5)
 Niveles: 1–50, curve es 100 * (nivel - 1) XP requerido
 
-Campañas: Thanksgiving, Vuelta a clases, Primavera, etc.
+Campañas: Thanksgiving, Vuelta a clases, Primavera
 Duración: 4–6 semanas cada una, renovar narrativa sin obligación
 ```
 
@@ -119,9 +101,8 @@ Duración: 4–6 semanas cada una, renovar narrativa sin obligación
 
 ## 2. Arquitectura del Sistema
 
-### **Prompt 1: Decisiones técnicas (ADRs)**
+**Prompt 1: Decisiones técnicas (ADRs)**
 
-**Prompt:**
 ```
 Justifica decisiones técnicas para MVP 8 semanas, 1 developer:
 
@@ -135,7 +116,7 @@ Justifica decisiones técnicas para MVP 8 semanas, 1 developer:
 Incluye trade-offs.
 ```
 
-**Respuesta (Tabla ADRs):**
+**Respuesta:**
 ```
 Database: PostgreSQL db.t4g.micro ($15/mes)
 - Razón: Modelo relacional natural, ACID, fácil escalamiento a Aurora
@@ -147,27 +128,22 @@ Backend: Lambda per endpoint + Layer compartida
 
 API: HTTP API ($0.40/M vs $3.50/M REST)
 - Razón: 10x cheaper, Cognito JWT nativo
-- Trade-off: No RESTful puro, pero suficiente
 
 Auth: Cognito
 - Razón: Integración nativa API Gateway, free 50K MAUs
-- Trade-off: Vendor lock-in AWS
 
 IaC: CDK (Python)
 - Razón: Mismo lenguaje backend, testeable, programable
-- Trade-off: Learning curve vs poder
 
 IA: Claude Haiku + Sonnet
 - Haiku: tips ($0.0001/call)
 - Sonnet: suggest-cart ($0.02/call, cacheado 24h)
-- Razón: Caching reduce costos 80%, razonamiento superior
 ```
 
 ---
 
-### **Prompt 2: Diseño de CDK stacks**
+**Prompt 2: Diseño de CDK stacks**
 
-**Prompt:**
 ```
 Diseña 8 stacks CDK con orden explícito de despliegue:
 vpc → database → lambda/ci → api → auth; storage → cdn
@@ -175,13 +151,14 @@ vpc → database → lambda/ci → api → auth; storage → cdn
 Define dependencias y argumentos entre stacks.
 ```
 
-**Respuesta (Orden de deploy):**
+**Respuesta:**
 ```
+Orden de despliegue:
 1. vpc_stack (VPC, subnets, NAT, security groups)
-2. database_stack (RDS, RDS Proxy, Secrets Manager) [depende vpc]
+2. database_stack (RDS, RDS Proxy, Secrets) [depende vpc]
 3. ci_stack (GitHub Actions OIDC rol) [depende database]
 4. lambda_stack (Lambdas + Layer) [depende vpc + database]
-5. api_stack (HTTP API Gateway, rutas) [depende lambda]
+5. api_stack (HTTP API Gateway) [depende lambda]
 6. auth_stack (Cognito, JWT authorizer) [depende api]
 7. storage_stack (S3 buckets)
 8. cdn_stack (CloudFront) [depende storage]
@@ -189,9 +166,8 @@ Define dependencias y argumentos entre stacks.
 
 ---
 
-### **Prompt 3: Error handling y API contract**
+**Prompt 3: Error handling y API contract**
 
-**Prompt:**
 ```
 Define error envelope estándar y API contract para 24 Lambdas:
 - Base URL, error format, status codes
@@ -199,9 +175,9 @@ Define error envelope estándar y API contract para 24 Lambdas:
 - Auth routes vs protected vs admin
 ```
 
-**Respuesta (Contract):**
+**Respuesta:**
 ```
-Base URL: https://api.aida.local/v1 (por entorno)
+Base URL: https://api.aida.local/v1
 
 Error envelope:
 {
@@ -217,7 +193,6 @@ Admin: require cognito:groups = aida-admins
 Rate limit:
 - API Gateway: 10K requests/min
 - IA: 3 suggest-cart + 5 tips per user per day
-- Cache hits no cuentan
 
 CORS: Server-side allowlist per entorno, NUNCA *
 ```
@@ -226,9 +201,8 @@ CORS: Server-side allowlist per entorno, NUNCA *
 
 ## 3. Modelo de Datos
 
-### **Prompt 1: Schema PostgreSQL**
+**Prompt 1: Schema PostgreSQL**
 
-**Prompt:**
 ```
 Diseña schema PostgreSQL (9 tablas) para Aida:
 users, spaces, task_catalog, products, user_equipment, carts, 
@@ -238,10 +212,10 @@ Para cada tabla: PK (UUID), FK (ON DELETE CASCADE?), índices, JSONB fields.
 Decisiones: ¿cleanliness stored o computed? ¿task_catalog global o per-user?
 ```
 
-**Respuesta (Decisiones clave):**
+**Respuesta:**
 ```
 users: PKs UUID, cognito_sub UNIQUE, email UNIQUE, is_suspended
-spaces: FK users CASCADE, UNIQUE(user_id, space_type), cleanliness COMPUTED (no stored)
+spaces: FK users CASCADE, UNIQUE(user_id, space_type), cleanliness COMPUTED
 task_catalog: GLOBAL (admin-managed, users only read/select)
 products: GLOBAL (admin-managed), level 0–2
 carts: FK users CASCADE, status (active/completed/abandoned)
@@ -252,17 +226,13 @@ ai_suggestions_cache: TTL 24h, context_hash (SHA-256) para dedup
 
 Decisión cleanliness: COMPUTED en query
   SELECT MAX(0, 100 - (days_since * decay_rate))
-  Razón: Evita crons, siempre fresco, no duplica data
-
-Decisión task_catalog: GLOBAL
-  Razón: Reduce redundancia, admin centralizado, usuarios solo seleccionan
+  Razón: Evita crons, siempre fresco
 ```
 
 ---
 
-### **Prompt 2: Decisión de cómo cachear respuestas IA**
+**Prompt 2: Caching de respuestas IA**
 
-**Prompt:**
 ```
 Para fn_ai_tip: cada tarea tiene tips generados por Claude.
 
@@ -281,7 +251,7 @@ Recomendación: Opción C (cache con context_hash)
 
 Trade-offs:
 A) Latency: instant, Cost: high upfront, Freshness: stale
-B) Latency: 30s, Cost: highest (every request), Freshness: fresh
+B) Latency: 30s, Cost: highest, Freshness: fresh
 C) Latency: vary (cache hit = instant), Cost: medium, Freshness: 24h
 
 Implementación:
@@ -295,11 +265,39 @@ Resultado: ~70–80% hit rate, reduce costos IA 70%
 
 ---
 
+**Prompt 3: Índices y queries optimizadas**
+
+```
+Diseña índices y queries para operaciones frecuentes:
+- Listar tareas disponibles filtradas por user_equipment_level
+- Obtener cart activo del usuario
+- Calcular cleanliness en tiempo real
+- Cache de sugerencias IA con TTL
+
+¿Cuáles índices crear? ¿Cuáles queries parametrizar?
+```
+
+**Respuesta:**
+```
+Índices clave:
+- idx_spaces_user: (user_id) en spaces
+- idx_carts_user_status: (user_id, status) en carts
+- idx_cart_items_cart: (cart_id) en cart_items
+- idx_ai_cache_key: (user_id, suggestion_type, context_hash) en cache
+- idx_xp_events_user: (user_id) en xp_events
+
+Queries parametrizadas (SQLAlchemy ORM):
+- SELECT * FROM tasks WHERE required_level <= ? AND space_id = ?
+- SELECT * FROM carts WHERE user_id = ? AND status = 'active'
+- SELECT MAX(...) cleanliness FROM spaces WHERE user_id = ? (dinámico)
+```
+
+---
+
 ## 4. Especificación de la API
 
-### **Prompt 1: Endpoints principales**
+**Prompt 1: Endpoints principales**
 
-**Prompt:**
 ```
 Especifica 3 endpoints clave en OpenAPI format:
 - POST /v1/cart (crear carrito)
@@ -309,7 +307,7 @@ Especifica 3 endpoints clave en OpenAPI format:
 Incluye request/response, status codes, auth, rate limit.
 ```
 
-**Respuesta (OpenAPI extracto):**
+**Respuesta:**
 ```yaml
 POST /v1/cart:
   requestBody:
@@ -338,9 +336,8 @@ POST /v1/ai/suggest-cart:
 
 ---
 
-### **Prompt 2: Pydantic schemas v2**
+**Prompt 2: Pydantic schemas v2**
 
-**Prompt:**
 ```
 Define Pydantic v2 DTOs para cart creation:
 - CartCreateRequest (input)
@@ -356,16 +353,7 @@ class CartCreateRequest(BaseModel):
     items: list[CartItemInput]
     suggested_by_ai: bool = False
     
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "items": [
-                    {"task_id": "uuid", "space_id": "uuid"}
-                ],
-                "suggested_by_ai": True
-            }
-        }
-    )
+    model_config = ConfigDict(forbid='forbid')
 
 class CartItemResponse(BaseModel):
     task_id: UUID
@@ -375,17 +363,46 @@ class CartItemResponse(BaseModel):
     xp_reward: int
 
 class CartCreateResponse(BaseModel):
-    data: dict = Field(..., description="Cart with items, total_time, total_xp")
+    data: dict = Field(..., description="Cart with items")
     meta: dict = Field(..., description="request_id, timestamp")
+```
+
+---
+
+**Prompt 3: Rate limiting y caching**
+
+```
+Implementa rate limiting para:
+- API Gateway: 10K requests/min global
+- IA endpoint: 3 suggest-cart + 5 tips per user per day
+- Cache: 24h TTL para ai_suggestions_cache
+
+¿Cómo trackear usage? ¿Cómo manejar rate-limit exceeded?
+```
+
+**Respuesta:**
+```
+Rate limiting:
+- API Gateway: throttling nativo (Throttle: 10000 requests/min)
+- IA: track en DB (xp_events + timestamp), check before calling Claude
+- Cache: expires_at TIMESTAMPTZ con trigger cleanup
+
+Response 429 Too Many Requests:
+{
+  "error": "Rate limit exceeded",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "retry_after_seconds": 3600
+}
+
+Cache key: SHA-256(user_id + suggestion_type + context)
 ```
 
 ---
 
 ## 5. Historias de Usuario
 
-### **Prompt 1: User stories en formato Gherkin**
+**Prompt 1: User stories en Gherkin**
 
-**Prompt:**
 ```
 Escribe 3 user stories principales en Gherkin (BDD):
 
@@ -400,10 +417,10 @@ Feature: [nombre]
     When [acción]
     Then [resultado]
 
-Incluye 3–5 scenarios por historia, criterios testables.
+Incluye 3–5 scenarios por historia.
 ```
 
-**Respuesta (HU-1 ejemplo):**
+**Respuesta:**
 ```gherkin
 Feature: Onboarding sin fricción
   Scenario: Usuario nuevo completa trivia en 2 minutos
@@ -415,20 +432,83 @@ Feature: Onboarding sin fricción
     And tiempo total es < 2 minutos
 
   Scenario: Usuario se registra tras onboarding
-    Given usuario completó trivia y vio personaje
-    When procede a registrarse con email/password
+    Given usuario completó trivia
+    When procede a registrarse
     Then Cognito crea cuenta
-    And perfil en BD se crea con datos del trivia
-    And spaces se precargan según arquetipo
+    And espacios se precargan según arquetipo
+```
+
+---
+
+**Prompt 2: Criterios de aceptación detallados**
+
+```
+Para HU-2 (Shopping Cart), define criterios de aceptación SMART:
+- Qué ve el usuario
+- Qué puede hacer
+- Qué validaciones existen
+- Qué pasa al completar
+
+Incluye edge cases (sin equipamiento, tareas inválidas, etc.)
+```
+
+**Respuesta:**
+```
+HU-2: Shopping Cart
+
+Criterios de aceptación:
+1. Usuario ve catálogo de tareas por espacio
+2. Puede agregar/quitar del carrito sin restricción
+3. Carrito muestra: tareas, tiempo total, XP total
+4. Confirmar carrito inicia ejecución con timer
+5. Completar tarea gana XP (visible en tiempo real)
+6. Completar carrito → registra en historial, actualiza XP usuario
+
+Edge cases:
+- Si usuario no tiene equipamiento L1 → solo tareas L0
+- Si carrito vacío → botón confirmar desactivado
+- Si tarea toma >180 min → warning (cansancio cognitivo)
+```
+
+---
+
+**Prompt 3: Mapping de HU a tickets**
+
+```
+Para cada HU, mapea a tickets técnicos (backend, frontend, mobile):
+
+HU-1 Onboarding → AID-52 (backend), AID-XX (mobile), AID-XX (web)
+HU-2 Shopping Cart → AID-78 (backend), AID-XX (mobile)
+HU-3 Realismo conductual → AID-80 (backend)
+
+Define dependencias: ¿qué se hace primero?
+```
+
+**Respuesta:**
+```
+HU-1 Onboarding:
+- AID-52: Backend trivia endpoints
+- AID-25: Mobile trivia UI + state management
+- AID-90: Admin dashboard para presets (opcional)
+
+HU-2 Shopping Cart:
+- AID-78: Backend fn_cart_create + complete
+- AID-26: Mobile cart UI + selection
+- AID-27: Mobile task execution + timer
+
+HU-3 Realismo conductual:
+- AID-80: Backend home_summary con recálculo dinámico
+- AID-28: Mobile smooth re-entry UX
+
+Orden: HU-1 → HU-2 → HU-3 (dependencias)
 ```
 
 ---
 
 ## 6. Tickets de Trabajo
 
-### **Prompt 1: Especificación de AID-52 (Onboarding backend)**
+**Prompt 1: Especificación de AID-52**
 
-**Prompt:**
 ```
 Soy backend engineer. Necesito especificación para AID-52:
 - Implementar fn_onboard_trivia_questions, fn_onboard_trivia, fn_onboard_archetype
@@ -438,107 +518,158 @@ Soy backend engineer. Necesito especificación para AID-52:
 Asuma Clean Architecture + TDD.
 ```
 
-**Respuesta (Especificación):**
+**Respuesta:**
 ```
 AID-52: Backend — Onboarding trivia
 
-Endpoint specs:
+Endpoints:
 - GET /onboarding/trivia/questions → TriviaquestionsResponse
-- POST /onboarding/trivia → TriviaevaluateResponse (character_type, score)
-- POST /onboarding/archetype → ArchetypeResponse (spaces)
+- POST /onboarding/trivia → TriviaevaluateResponse
+- POST /onboarding/archetype → ArchetypeResponse
 
-Use case logic:
-- EvaluateTrivia: calcula character_type (gold=5/5, intermediate=3–4/5, novice=<3/5)
+Use cases:
+- EvaluateTrivia: calcula character_type
 - ApplyArchetype: genera presets de espacios
 
-Pydantic:
-- TriviaquestionsRequest / Response
-- TriviaevaluateRequest / Response
-- ArchetypeRequest / Response
-
 Tests:
-- Scoring logic (unit)
+- Scoring logic (unit, sin BD)
 - Character assignment (unit)
 - Archetype preset generation (unit)
-- Handler thin (no BD) (integration)
+- Handler thin (no DB, inyección)
 
 Acceptance:
-- Tests ≥95% coverage en use_cases/onboarding/
+- Coverage ≥95% en use_cases/onboarding/
 - Endpoints e2e testeados
-- Sin hardcoded secrets
+```
+
+---
+
+**Prompt 2: Especificación de AID-78**
+
+```
+Especificación de AID-78 (Backend — Shopping Cart):
+- fn_cart_create, fn_cart_active, fn_cart_complete
+- Validaciones, cálculos de XP, transacciones
+
+¿Qué edge cases testear? ¿Cómo evitar race conditions?
+```
+
+**Respuesta:**
+```
+AID-78: Shopping Cart core
+
+Funciones:
+- CreateCartUseCase: valida tareas, filtra por level, calcula time/xp
+- CompleteCartUseCase: transacción atómica (cart, xp_events, spaces)
+
+Edge cases:
+- Carrito vacío → error 400
+- Tarea no válida para level → error 400
+- Carrito ya completado → error 409 (conflict)
+- Concurrent completes → database-level uniqueness constraint
+
+Tests:
+- Happy path: crear → agregar → completar
+- Invalid tasks
+- Concurrency (simular 2 requests simultáneamente)
+```
+
+---
+
+**Prompt 3: Especificación de AID-96 (Web)**
+
+```
+Especificación de AID-96 (Web — Admin CRUD tareas):
+- TasksPage (tabla + filtros)
+- TaskEditForm (create/update)
+- API hooks (/v1/admin/tasks)
+- Tests (Vitest + MSW)
+
+¿Qué validaciones en UI vs servidor?
+```
+
+**Respuesta:**
+```
+AID-96: Admin Dashboard — Tasks
+
+Componentes:
+- TasksPage: tabla, filtros (space_type, is_active), botones
+- TaskEditForm: campos con validación (client + server)
+- API hooks: GET /admin/tasks, POST, PUT, DELETE
+
+Validaciones:
+- Client (UX): campo requerido, formato, min/max length
+- Server (seguridad): re-valida TODO en Pydantic, admin check
+
+Tests:
+- Rendering: tabla visible, filtros funcionales
+- Form: submit, validación, error display
+- MSW mocks: intercepta /v1/admin/tasks
+
+Coverage: ≥90%
 ```
 
 ---
 
 ## 7. Pull Requests
 
-### **Prompt 1: Code review + security checklist**
+**Prompt 1: Code review + security checklist**
 
-**Prompt:**
 ```
 Voy a hacer code review de PR #32 (Backend — Auth + Onboarding).
 Dame un checklist de security + code quality:
 
 Security:
 - Secretos no hardcodeados?
-- SQL injection (parametrized queries)?
-- IDOR (queries filtradas por user_id)?
+- SQL injection?
+- IDOR?
 - Token validation?
 - Logging sin PII?
-- Errores sin stack traces?
 
 Code Quality:
-- Clean Architecture respetada?
-- Pydantic v2 para DTOs?
-- Error envelope estándar?
+- Clean Architecture?
+- Pydantic v2?
 - Type hints?
-- Tests sin BD?
+- Tests?
 - Coverage ≥95%?
-- Linters green?
-
-Aplica a PR #32.
 ```
 
-**Respuesta (Checklist completado):**
+**Respuesta:**
 ```
-Security Review — PR #32 ✅
+✅ Security Review — PR #32
 
-✓ Secretos: DB_PASSWORD via Secrets Manager, no en .env
-✓ SQL injection: Todas queries via SQLAlchemy ORM, no string concat
-✓ IDOR: fn_register crea user con cognito_sub del JWT (imposible forjar)
-✓ Token validation: get_user_id_from_event extrae sub del event
-✓ Logging: Usa cognito_sub, NUNCA email ni passwords
-✓ Errores: "Invalid credentials", nunca "User email not found" (enumeration prevention)
+✓ Secretos: Secrets Manager (no .env)
+✓ SQL injection: SQLAlchemy ORM parametrizado
+✓ IDOR: user_id del JWT (imposible forjar)
+✓ Token validation: event['requestContext']['authorizer']['jwt']['claims']
+✓ Logging: cognito_sub only, no email/passwords
+✓ Errors: "Invalid credentials", no enumeration
 
-Code Quality Review ✅
+✅ Code Quality
 
-✓ Clean Architecture: handler thin (5 líneas) → use case → repository
-✓ Pydantic v2: RegisterRequest con validators (email unique, password strength)
-✓ Error envelope: success_response() y handle_domain_error()
-✓ Type hints: 100% en use cases y repositories
-✓ Tests: Handler sin BD (fake repo), use case con fakes
-✓ Coverage: 96% en use_cases/auth/
-✓ Linters: ruff, black, mypy, bandit, pip-audit — all green
+✓ Clean Architecture: handler thin → use case → repository
+✓ Pydantic v2: RegisterRequest con validators
+✓ Type hints: 100% en use cases y repos
+✓ Tests: sin BD (fakes), coverage 96%
+✓ Linters: ruff, black, mypy, bandit — all green
 
-Status: ✅ APPROVED (1 approval + CI green)
+Status: ✅ APPROVED
 ```
 
 ---
 
-### **Prompt 2: Generación de conventional commits**
+**Prompt 2: Conventional commits**
 
-**Prompt:**
 ```
-Escribí feature para fn_cart_complete. Genera conventional commit:
+Escribí feature para fn_cart_create. Genera conventional commit:
 
 Cambios:
-- Agregué use case CreateCartUseCase
-- Handler fn_cart_complete/handler.py
-- Tests en backend/tests/unit/use_cases/cart/
-- Coverage 96%, XP registrado, cleanliness actualizado
+- Use case CreateCartUseCase
+- Handler fn_cart_create
+- Tests (coverage 96%)
 - 250 líneas total
 
-Es para PR #38.
+Es para PR #38 (AID-78).
 ```
 
 **Respuesta:**
@@ -547,16 +678,53 @@ feat(backend): fn_cart_create con validación y cálculo de XP
 
 - Agregada use case CreateCartUseCase (Clean Architecture)
 - Handler thin valida input y delega a use case
-- Calcula tiempo total + XP estimado por items
-- Validación anti-IDOR: queries filtradas por user_id
+- Calcula tiempo total + XP estimado
 - Tests unitarios (fakes) + integration (testcontainers)
 - Coverage: 96% en use_cases/cart/
 
 Closes #AID-78
+```
 
-Formato: conventional commit (feat) con scope (backend), descripción clara,
-breaking changes (none), references a task AID-78. Facilita changelog automático
-y git blame legible.
+---
+
+**Prompt 3: PR description template**
+
+```
+Crea un template para PRs que sea reutilizable y siga las convenciones:
+- Título corto (<70 chars)
+- Descripción: qué, por qué, cómo
+- Testing: qué se testeó
+- Security: checklist
+- Breaking changes
+
+Usa formato markdown.
+```
+
+**Respuesta:**
+```markdown
+## Summary
+[1–3 bullet points de qué cambió]
+
+## Related Issues
+Closes #AID-XX
+
+## Testing
+- [ ] Unit tests: ...
+- [ ] Integration tests: ...
+- [ ] Coverage: ≥95%
+- [ ] Linters: ruff, black, mypy, bandit ✓
+
+## Security
+- [ ] No hardcoded secrets
+- [ ] SQL injection check (parametrized)
+- [ ] IDOR check (filtered by user_id)
+- [ ] PII in logs check
+
+## Breaking Changes
+None / [describe if any]
+
+## Related PRs
+[link if dependencies exist]
 ```
 
 ---
@@ -564,8 +732,8 @@ y git blame legible.
 **Conclusión:**
 
 Claude Code fue crítico en todas las fases: product (propuesta, usuarios, features), 
-architecture (ADRs, stacks, API contract), backend (schema, clean architecture), 
-testing (TDD, checklists), code quality (conventional commits, security review).
+architecture (ADRs, stacks, API contract), backend (schema, clean architecture, TDD), 
+testing (checklists, security), code quality (conventional commits).
 
 Resultado: MVP completo, testeable, documentado, deployable en 8 semanas con 1 developer.
 
