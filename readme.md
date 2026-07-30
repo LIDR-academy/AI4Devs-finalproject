@@ -1,6 +1,15 @@
 # AEnEA - Tu Pasaporte Médico Inteligente
 **Historial Digital Clínico Longitudinal Aumentado por IA**
 
+## 📌 Evidencias del proyecto en producción
+
+* 🎥 [**Vídeo de demostración**](./evidences/video.mp4) — flujo completo de la app funcionando contra el backend real desplegado.
+* 🖼️ [Swagger UI del backend en producción](./evidences/001.png) (`aenea-backend.onrender.com/docs`) — endpoints de `patients` y `health` documentados y operativos.
+* 🖼️ [Historial de despliegues en Render](./evidences/002.png) — deploys en estado `live` disparados automáticamente por los commits de la rama `feature-entrega2-jiar`.
+* 🖼️ [Builds de la app en EAS](./evidences/003.png) — build Android (`preview`) generado y distribuido vía Expo Application Services.
+
+---
+
 ## Índice
 
 0. [Ficha del proyecto](#0-ficha-del-proyecto)
