@@ -54,6 +54,13 @@ class AIOrchestratorService:
     def _persist(
         self, patient_id: uuid.UUID, result: AIStructuredResult, original_notes: str | None
     ) -> dict:
+        if result.routing == Routing.IRRELEVANT:
+            return {
+                "status": "ignored",
+                "routing": Routing.IRRELEVANT.value,
+                "data": None,
+            }
+
         if result.routing == Routing.BASELINE:
             assert result.baseline is not None
             item = self._repository.add_baseline_item(

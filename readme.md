@@ -298,7 +298,11 @@ erDiagram
 > mediante `patient_id` como parámetro de ruta. Se añade el endpoint de alta `POST /api/v1/patients`
 > (y su lectura `GET /api/v1/patients/{patient_id}`) y los tres endpoints originales pasan a colgar
 > de `/api/v1/patients/{patient_id}/...`. Las claves JSON van en inglés (código); los valores de
-> contenido clínico se mantienen en español.
+> contenido clínico se mantienen en español. El campo `routing` admite un tercer valor,
+> `IRRELEVANT`, para cuando la IA determina que el audio/imagen no contiene ninguna información
+> clínica aprovechable (p.ej. el paciente pide una tortilla de patatas o dicta algo sin sentido) —
+> en ese caso no se persiste nada en `clinical_baseline` ni `medical_events` y el endpoint responde
+> `200 OK` (en lugar de `201 Created`) con `"status": "ignored"`.
 
 A continuación se detallan los endpoints neurálgicos del backend documentados bajo la especificación formal de OpenAPI (Swagger):
 
@@ -400,6 +404,14 @@ A continuación se detallan los endpoints neurálgicos del backend documentados 
               }
             }
           },
+          "200": {
+            "description": "El contenido dictado no era clínicamente relevante; no se ha persistido nada.",
+            "content": {
+              "application/json": {
+                "example": { "status": "ignored", "routing": "IRRELEVANT", "data": null }
+              }
+            }
+          },
           "404": { "description": "No existe un paciente con ese patient_id." },
           "502": { "description": "Fallo del proveedor de IA o respuesta JSON inválida/incompleta." }
         }
@@ -440,6 +452,14 @@ A continuación se detallan los endpoints neurálgicos del backend documentados 
                     "details": "Uso continuo diario prescrito en ayunas para control de ERGE."
                   }
                 }
+              }
+            }
+          },
+          "200": {
+            "description": "El documento fotografiado no era clínicamente relevante; no se ha persistido nada.",
+            "content": {
+              "application/json": {
+                "example": { "status": "ignored", "routing": "IRRELEVANT", "data": null }
               }
             }
           },

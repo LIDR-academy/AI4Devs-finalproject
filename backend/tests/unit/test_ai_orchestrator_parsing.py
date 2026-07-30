@@ -85,6 +85,24 @@ def test_process_voice_persists_red_flag(orchestrator, patient_id, repository, f
     assert "meningitis" in events[0].alert_justification
 
 
+def test_process_voice_ignores_irrelevant_content(orchestrator, patient_id, repository, fake_openai_client):
+    fake_openai_client.classification_response = json.dumps(
+        {
+            "routing": "IRRELEVANT",
+            "baseline": None,
+            "event": None,
+            "red_flag": {"active": False, "justification": None},
+        }
+    )
+
+    result = orchestrator.process_voice(patient_id, b"fake-audio-bytes", "note.wav")
+
+    assert result["status"] == "ignored"
+    assert result["routing"] == "IRRELEVANT"
+    assert repository.get_baseline(patient_id) == []
+    assert repository.get_events(patient_id) == []
+
+
 def test_malformed_json_raises_parsing_error(orchestrator, patient_id, fake_openai_client):
     fake_openai_client.classification_response = "this is not json"
 

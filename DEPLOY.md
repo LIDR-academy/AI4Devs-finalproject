@@ -7,19 +7,24 @@ los pasos que tienes que ejecutar tú mismo, con tus propias cuentas — nunca c
 ## 1. Backend + Base de datos en Render
 
 1. Crea una cuenta en [render.com](https://render.com) si no tienes una.
-2. Instala la CLI (opcional, también puedes hacerlo desde el dashboard web):
+2. Instala la CLI (opcional — la creación del Blueprint se hace desde el dashboard web, pero la
+   CLI es útil después para validar el YAML, ver logs, deploys, etc.):
    ```bash
    brew install render
    render login
+   render workspace set   # selector interactivo: elige tu workspace
    ```
-3. Desde la raíz del repo (donde está `render.yaml`), crea el Blueprint:
+   Puedes validar la sintaxis de `render.yaml` con:
    ```bash
-   render blueprint launch
+   render blueprints validate ./render.yaml
    ```
-   Esto crea el servicio web `aenea-backend` y la base de datos gestionada `aenea-db` a partir de
-   `render.yaml`. Si prefieres el dashboard web: "New +" → "Blueprint" → conecta tu repo de GitHub.
-4. En el dashboard de Render, entra en el servicio `aenea-backend` → pestaña **Environment** →
-   añade la variable `OPENAI_API_KEY` con tu clave real de OpenAI (marcada como `sync: false` en
+3. La **creación** de los recursos a partir del Blueprint se hace desde el dashboard web de Render
+   (la CLI v2.x no tiene un comando para esto): entra en [dashboard.render.com](https://dashboard.render.com),
+   pulsa **"New +"** → **"Blueprint"** → conecta tu repositorio de GitHub → Render detecta
+   `render.yaml` automáticamente y te muestra un preview de los recursos (`aenea-backend` +
+   `aenea-db`) antes de crearlos.
+4. En el dashboard, entra en el servicio `aenea-backend` → pestaña **Environment** → añade la
+   variable `OPENAI_API_KEY` con tu clave real de OpenAI (marcada como `sync: false` en
    `render.yaml`, así que Render te la pedirá explícitamente y no queda versionada en el repo).
 5. Verifica el despliegue visitando `https://<tu-servicio>.onrender.com/docs` (Swagger UI) y
    `https://<tu-servicio>.onrender.com/health`.

@@ -54,6 +54,25 @@ def test_process_voice_then_passport_reflects_it(client):
     assert len(body["timeline"]) == 1
 
 
+def test_process_voice_with_irrelevant_content_returns_200_and_persists_nothing(client, fake_openai_client):
+    patient_id = _create_patient(client)
+    fake_openai_client.classification_response = (
+        '{"routing": "IRRELEVANT", "baseline": null, "event": null, '
+        '"red_flag": {"active": false, "justification": null}}'
+    )
+
+    files = {"file": ("note.wav", io.BytesIO(b"fake-audio-bytes"), "audio/wav")}
+    voice_response = client.post(f"/api/v1/patients/{patient_id}/process-voice", files=files)
+
+    assert voice_response.status_code == 200
+    assert voice_response.json()["status"] == "ignored"
+
+    passport_response = client.get(f"/api/v1/patients/{patient_id}/passport")
+    body = passport_response.json()
+    assert body["baseline"] == []
+    assert body["timeline"] == []
+
+
 def test_process_document(client):
     patient_id = _create_patient(client)
 

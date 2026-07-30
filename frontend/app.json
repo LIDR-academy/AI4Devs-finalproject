@@ -23,7 +23,14 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["RECORD_AUDIO", "CAMERA"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
+      "package": "com.neonigma.aeneapassport"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,6 +53,13 @@
       "expo-sharing",
       "@react-native-community/datetimepicker",
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4b79385f-672a-4bc5-8701-223be3e5e3d4"
+      }
+    },
+    "owner": "neonigma"
   }
 }

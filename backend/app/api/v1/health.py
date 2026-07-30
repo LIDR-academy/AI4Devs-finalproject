@@ -2,7 +2,7 @@ import base64
 import binascii
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
 from app.core.deps import get_ai_orchestrator, get_repository
@@ -30,19 +30,25 @@ def _handle_orchestrator_errors(exc: PatientNotFoundError | AIProviderError | AI
 async def process_voice(
     patient_id: uuid.UUID,
     file: UploadFile,
+    response: Response,
     orchestrator: AIOrchestratorService = Depends(get_ai_orchestrator),
 ) -> dict:
     audio_bytes = await file.read()
     try:
-        return orchestrator.process_voice(patient_id, audio_bytes, file.filename or "audio.wav")
+        result = orchestrator.process_voice(patient_id, audio_bytes, file.filename or "audio.wav")
     except (PatientNotFoundError, AIProviderError, AIResponseParsingError) as exc:
         _handle_orchestrator_errors(exc)
+        return {}
+    if result["status"] == "ignored":
+        response.status_code = 200
+    return result
 
 
 @router.post("/process-document", status_code=201)
 def process_document(
     patient_id: uuid.UUID,
     payload: DocumentPayload,
+    response: Response,
     orchestrator: AIOrchestratorService = Depends(get_ai_orchestrator),
 ) -> dict:
     try:
@@ -51,9 +57,13 @@ def process_document(
         raise HTTPException(status_code=422, detail="image_base64 is not valid base64") from exc
 
     try:
-        return orchestrator.process_document(patient_id, payload.image_base64)
+        result = orchestrator.process_document(patient_id, payload.image_base64)
     except (PatientNotFoundError, AIProviderError, AIResponseParsingError) as exc:
         _handle_orchestrator_errors(exc)
+        return {}
+    if result["status"] == "ignored":
+        response.status_code = 200
+    return result
 
 
 @router.get("/passport", response_model=PassportResponse)

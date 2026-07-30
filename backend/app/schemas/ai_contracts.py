@@ -6,6 +6,7 @@ from pydantic import BaseModel, model_validator
 class Routing(str, Enum):
     BASELINE = "BASELINE"
     TIMELINE = "TIMELINE"
+    IRRELEVANT = "IRRELEVANT"
 
 
 class RedFlag(BaseModel):
@@ -36,7 +37,10 @@ class AIStructuredResult(BaseModel):
 
     Either `baseline` or `event` must be populated depending on `routing` —
     validated below so a malformed/incomplete LLM response fails fast and
-    is surfaced as an AIResponseParsingError by the orchestrator.
+    is surfaced as an AIResponseParsingError by the orchestrator. `routing`
+    can also be `IRRELEVANT`: the dictation/document contained no clinical
+    content (e.g. "quiero una tortilla de patatas"), in which case neither
+    `baseline` nor `event` is populated and nothing is persisted.
     """
 
     routing: Routing

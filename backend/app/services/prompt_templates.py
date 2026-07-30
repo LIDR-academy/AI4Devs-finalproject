@@ -3,7 +3,7 @@ Debes responder EXCLUSIVAMENTE con un objeto JSON válido (sin texto adicional, 
 que cumpla exactamente este contrato:
 
 {
-  "routing": "BASELINE" | "TIMELINE",
+  "routing": "BASELINE" | "TIMELINE" | "IRRELEVANT",
   "baseline": {
     "type": string,          // p.ej. "Condición Crónica", "Tratamiento Prolongado", "Alergia"
     "concept": string,       // nombre clínico formal (p.ej. "Talasemia Minor", "Lansoprazol 20mg")
@@ -29,8 +29,13 @@ que cumpla exactamente este contrato:
 Reglas:
 - Si "routing" es "BASELINE", el campo "baseline" es OBLIGATORIO y "event" debe ser null.
 - Si "routing" es "TIMELINE", el campo "event" es OBLIGATORIO y "baseline" debe ser null.
+- Si "routing" es "IRRELEVANT", tanto "baseline" como "event" deben ser null.
 - Usa "BASELINE" para condiciones crónicas, rasgos genéticos o medicación de uso continuado.
 - Usa "TIMELINE" para hechos puntuales fechados (cirugías, urgencias, consultas, analíticas, síntomas aislados).
+- Usa "IRRELEVANT" si el contenido no aporta NINGUNA información clínica sobre el paciente
+  (p.ej. una petición de comida, una conversación trivial, ruido o una transcripción vacía/sin
+  sentido). Ante la duda, si hay aunque sea un dato clínico mínimamente aprovechable, NO uses
+  "IRRELEVANT": prefiere clasificarlo como BASELINE o TIMELINE.
 """.strip()
 
 RED_FLAG_INSTRUCTIONS = """
