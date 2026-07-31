@@ -6,7 +6,7 @@
 3. [Modelo de datos](#3-modelo-de-datos)
 4. [Historias de usuario](#4-historias-de-usuario)
 5. [Tickets de trabajo](#5-tickets-de-trabajo)
-6. [Pull requests](#6-pull-requests)
+6. [Specs](#6-specs)
 
 ---
 
@@ -23,7 +23,6 @@ Proveer a personas naturales, jurídicas y terceros interesados una plataforma d
 
 ### **0.4. URL del proyecto:**
 
-### 0.5. URL o archivo comprimido del repositorio
 
 ---
 
@@ -39,7 +38,7 @@ Los usuarios de la CCB necesitan obtener certificados mercantiles (existencia, r
 
 ## 2. Arquitectura del Sistema
 
-[ARQUITECTURA_PROPUESTA](docs/ARQUITECTURA_PROPUESTA.md)
+[ARQUITECTURA_PROPUESTA](docs/ARQUITECTURA_PROPUESTA_JAVA.md)
 
 ---
 
@@ -61,11 +60,11 @@ Los usuarios de la CCB necesitan obtener certificados mercantiles (existencia, r
 
 ---
 
-## 6. Pull Requests
+## 6. Specs
 
-**Pull Request 1**
-
-**Pull Request 2**
-
-**Pull Request 3**
-
+[001-andamiaje-monorepo](specs/001-andamiaje-monorepo/spec.md)
+[002-nucleo-compartido-seguridad](specs/002-nucleo-compartido-seguridad/spec.md)
+[004-infraestructura-config-cicd](specs/004-infraestructura-config-cicd/spec.md)
+[005-modelo-datos-verificaciones](specs/005-modelo-datos-verificaciones/spec.md)
+[006-servicio-publico-verificacion](specs/006-servicio-publico-verificacion/spec.md)
+[007-portal-verificacion](specs/007-portal-verificacion/spec.md)

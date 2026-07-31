@@ -55,6 +55,25 @@ En las tareas técnicas de cada ticket, las filas marcadas con 🔴 se ejecutan 
 
 ---
 
+
+## Estado de implementación (actualizado 2026-07-31)
+
+| Ticket | Título | Estado |
+|--------|--------|--------|
+| TKT-001 | Inicializar proyecto multi-módulo Gradle | ✅ Implementado (`specs/001-andamiaje-monorepo`) |
+| TKT-002 | Módulos `shared-kernel` y `shared-auth` | ✅ Implementado (`specs/002-nucleo-compartido-seguridad`) |
+| TKT-003 | Clientes SOAP (PUP, TiendaWS, SHD) | ⏳ Pendiente (`specs/003-integraciones-soap-legacy` en Draft) |
+| TKT-004 | Infraestructura local Docker Compose | ✅ Implementado (`specs/004-infraestructura-config-cicd`) |
+| TKT-005 | Modelo de datos Liquibase verificaciones | ✅ Implementado (`specs/005-modelo-datos-verificaciones`) |
+| TKT-006 | Pipeline CI/CD Azure DevOps | ✅ Implementado (artefactos en repo; Variable Groups/Environments en Azure DevOps fuera del repo) |
+| TKT-007 | `application.yml` por ambiente | ✅ Implementado (`specs/004-infraestructura-config-cicd`) |
+| TKT-010 | Endpoint de validación de código | ✅ Implementado (`specs/006-servicio-publico-verificacion`) |
+| TKT-011 | Endpoint de descarga de PDF (Base64) | ✅ Implementado (`specs/006-servicio-publico-verificacion`) |
+| TKT-012 | Endpoint de registro de verificación | ✅ Implementado (`specs/006-servicio-publico-verificacion`) |
+| TKT-013 | Rate limiting verificación pública | ✅ Implementado (`specs/006-servicio-publico-verificacion`) |
+| TKT-067 | Portal de Verificación (FE) | ✅ Implementado (`specs/007-portal-verificacion`) |
+| TKT-020+ | EPIC-03 … EPIC-05, EPIC-06 (resto), EPIC-07 | ⏳ Pendiente |
+
 ## Índice de Épicas
 
 | Épica | Nombre | Fase | HUs relacionadas |
@@ -75,11 +94,12 @@ En las tareas técnicas de cada ticket, las filas marcadas con 🔴 se ejecutan 
 
 ---
 
-### TKT-001 — Inicializar proyecto multi-módulo Gradle (Clean Architecture)
+### TKT-001 — Inicializar proyecto multi-módulo Gradle (Clean Architecture) ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-001 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-01 |
 | **Tipo** | Task |
 | **HU** | — |
@@ -123,11 +143,11 @@ certificados-electronicos/
 
 **Tareas técnicas** _(ciclo TDD: el primer commit del proyecto es siempre un test de arquitectura que falla; el segundo commit es el scaffold que lo hace pasar)_**:**
 
-- [ ] 🔴 Escribir `ArchitectureTest.java` en `shared-kernel` con reglas ArchUnit: (a) clases en `*-domain` no usan paquetes de Spring, (b) clases en `*-infrastructure` no acceden directamente a `*-api`, (c) dependencias solo fluyen hacia adentro (anti-corruption layer) — este test **falla** porque el proyecto aún no existe
-- [ ] 🟢 Crear estructura Gradle multi-módulo: `settings.gradle.kts`, `build.gradle.kts` raíz, `gradle/libs.versions.toml` con versiones (Java 25, Spring Boot 4.1.x, Apache CXF 4.x, AWS SDK 2.x, Bucket4j 8.x, Liquibase 4.x, JUnit 5, Testcontainers, ArchUnit)
-- [ ] 🟢 Crear `build.gradle.kts` de cada submódulo respetando reglas de dependencia: domain (Java puro), application (domain + shared-kernel), infrastructure (application + Spring JDBC + CXF), api (infrastructure + Spring Boot)
-- [ ] 🟢 Configurar plugin `wsdl2java` en `solicitudes-infrastructure`; crear clase base `Application.java` en cada módulo `*-api`
-- [ ] Verificar que `./gradlew build` pasa y `ArchitectureTest` está en verde
+- [x] 🔴 Escribir `ArchitectureTest.java` en `shared-kernel` con reglas ArchUnit: (a) clases en `*-domain` no usan paquetes de Spring, (b) clases en `*-infrastructure` no acceden directamente a `*-api`, (c) dependencias solo fluyen hacia adentro (anti-corruption layer) — este test **falla** porque el proyecto aún no existe
+- [x] 🟢 Crear estructura Gradle multi-módulo: `settings.gradle.kts`, `build.gradle.kts` raíz, `gradle/libs.versions.toml` con versiones (Java 25, Spring Boot 4.1.x, Apache CXF 4.x, AWS SDK 2.x, Bucket4j 8.x, Liquibase 4.x, JUnit 5, Testcontainers, ArchUnit)
+- [x] 🟢 Crear `build.gradle.kts` de cada submódulo respetando reglas de dependencia: domain (Java puro), application (domain + shared-kernel), infrastructure (application + Spring JDBC + CXF), api (infrastructure + Spring Boot)
+- [x] 🟢 Configurar plugin `wsdl2java` en `solicitudes-infrastructure`; crear clase base `Application.java` en cada módulo `*-api`
+- [x] Verificar que `./gradlew build` pasa y `ArchitectureTest` está en verde
 
 ♻️ **Refactorizar** tras ciclos en verde: asegurar que el `version catalog` es la **única** fuente de verdad para versiones — sin versiones hardcodeadas en ningún `build.gradle.kts`
 
@@ -141,35 +161,36 @@ certificados-electronicos/
 
 ---
 
-### TKT-002 — Implementar módulos `shared-kernel` y `shared-auth`
+### TKT-002 — Implementar módulos `shared-kernel` y `shared-auth` ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-002 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-01 |
 | **Tipo** | Task |
 | **HU** | — |
-| **RF** | RNF-12, RNF-17 |
+| **RF** | RF-15A, RNF-12, RNF-17 |
 | **Prioridad** | Alta |
 | **Estimación** | 8 pts |
 | **Fase** | 0 |
 
 **Descripción**  
-Implementar las clases base compartidas por todos los microservicios: manejo de resultados (`Result<T>`), excepciones de dominio, entidad base, filtro de Correlation ID, configuración de Spring Security para JWT MAUC y configuración CORS.
+Implementar las clases base compartidas por todos los microservicios: manejo de resultados (`Result<T>`), excepciones de dominio, entidad base, filtro de Correlation ID, configuración de Spring Security como OAuth2 Resource Server con JWT de AWS Cognito (User Pool parametrizable por ambiente) y configuración CORS. MAUC **no** interviene aquí: es solo el login de afiliados (ver TKT-040).
 
 **Tareas técnicas** _(ciclo TDD: 🔴 Red → 🟢 Green → ♻️ Refactor por cada unidad)_**:**
 
 `shared-kernel`:
-- [ ] 🔴 Escribir `ResultTest`: (a) `Result.success(value)` → `isSuccess()=true`, `getValue()=value`, (b) `Result.failure(error)` → `isFailure()=true`, `getError()=error`, (c) no lanza checked exceptions en ningún caso
-- [ ] 🟢 Implementar `Result<T>`
-- [ ] 🔴 Escribir `GlobalExceptionHandlerTest` con `@WebMvcTest`: `RecursoNoEncontradoException` → 404; `ConflictoEstadoException` → 409; `ReglaNegocioException` → 422; excepción inesperada → 500
-- [ ] 🟢 Implementar `DomainException` y subclases, `ApiResponse<T>`, `GlobalExceptionHandler`
+- [x] 🔴 Escribir `ResultTest`: (a) `Result.success(value)` → `isSuccess()=true`, `getValue()=value`, (b) `Result.failure(error)` → `isFailure()=true`, `getError()=error`, (c) no lanza checked exceptions en ningún caso
+- [x] 🟢 Implementar `Result<T>`
+- [x] 🔴 Escribir `GlobalExceptionHandlerTest` con `@WebMvcTest`: `RecursoNoEncontradoException` → 404; `ConflictoEstadoException` → 409; `ReglaNegocioException` → 422; excepción inesperada → 500
+- [x] 🟢 Implementar `DomainException` y subclases, `ApiResponse<T>`, `GlobalExceptionHandler`
 
 `shared-auth`:
-- [ ] 🔴 Escribir `CorrelationIdFilterTest`: request sin header `X-Correlation-Id` → se genera UUID; request con header → se propaga; el valor está en MDC durante el request
-- [ ] 🟢 Implementar `CorrelationIdFilter`
-- [ ] 🔴 Escribir `SecurityConfigTest`: request a `/actuator/health` sin JWT → 200; request a `/api/**` sin JWT → 401; request a `/api/**` con JWT inválido → 401; CORS desde `https://malicio.so` → rechazado; CORS desde `https://portal.ccb.org.co` → permitido
-- [ ] 🟢 Implementar `SecurityConfig`, `JwtDecoder` (validación contra JWKS endpoint de MAUC)
+- [x] 🔴 Escribir `CorrelationIdFilterTest`: request sin header `X-Correlation-Id` → se genera UUID; request con header → se propaga; el valor está en MDC durante el request
+- [x] 🟢 Implementar `CorrelationIdFilter`
+- [x] 🔴 Escribir `SecurityConfigTest`: request a `/actuator/health` sin JWT → 200; request a `/api/**` sin JWT → 401; request a `/api/**` con JWT inválido → 401; CORS desde `https://malicio.so` → rechazado; CORS desde `https://portal.ccb.org.co` → permitido
+- [x] 🟢 Implementar `SecurityConfig`, `CognitoProperties` (`@ConfigurationProperties` con region, userPoolId, issuer-uri, jwk-set-uri, client-id/audience, scopes) y `JwtDecoder` (validación de firma contra el JWKS del User Pool de Cognito + validación de issuer y audiencia)
 
 ♻️ **Refactorizar** tras ciclos en verde: revisar si `MatriculaFormatter` y `NitFormatter` deben estar en `shared-kernel` (ya que TKT-030 y TKT-048 los necesitan) en lugar de en `solicitudes-domain`
 
@@ -223,11 +244,12 @@ Obtener los WSDLs de los servicios WCF legacy (PUP, TiendaWS, SHD), versionarlos
 
 ---
 
-### TKT-004 — Configurar infraestructura local (Docker Compose, SQL Server, Redis)
+### TKT-004 — Configurar infraestructura local (Docker Compose, SQL Server, Redis) ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-004 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-01 |
 | **Tipo** | Task |
 | **HU** | — |
@@ -240,12 +262,12 @@ Crear los `Dockerfile` para cada microservicio y el `docker-compose.yml` que per
 
 **Tareas técnicas** _(ciclo TDD: los smoke tests se escriben antes de escribir los Dockerfiles — el test verifica que el contenedor arranca y responde health check)_**:**
 
-- [ ] 🔴 Escribir `DockerSmokeTest.sh` (o test de integración con Testcontainers): (a) imagen de `solicitudes` arranca en < 60s y `/actuator/health` retorna 200, (b) imagen de `descargas` arranca y salud OK, (c) imagen de `verificacion` arranca y salud OK — estos tests fallan porque las imágenes aún no existen
-- [ ] 🟢 Crear `Dockerfile.solicitudes` (base `eclipse-temurin:25-jre-alpine`, `-Xmx1024m`, G1GC, profile `production`), `Dockerfile.descargas` (`-Xmx512m`, ZGC), `Dockerfile.verificacion` (`-Xmx512m`, G1GC)
-- [ ] 🟢 Crear `docker-compose.yml` con servicios: solicitudes (8081), descargas (8082), verificacion (8083), sql-server (1433), redis (6379); health checks para SQL Server y Redis
-- [ ] 🟢 Crear `docker-compose.override.yml` para desarrollo (bind mounts, debug ports)
-- [ ] 🟢 Documentar variables de entorno en `.env.example` (sin valores reales); crear `deploy/scripts/deploy.sh`
-- [ ] Verificar que los smoke tests pasan: `docker compose up` en < 3 minutos, 3 servicios con 200 en health
+- [x] 🔴 Escribir `DockerSmokeTest.sh` (o test de integración con Testcontainers): (a) imagen de `solicitudes` arranca en < 60s y `/actuator/health` retorna 200, (b) imagen de `descargas` arranca y salud OK, (c) imagen de `verificacion` arranca y salud OK — estos tests fallan porque las imágenes aún no existen
+- [x] 🟢 Crear `Dockerfile.solicitudes` (base `eclipse-temurin:25-jre-alpine`, `-Xmx1024m`, G1GC, profile `production`), `Dockerfile.descargas` (`-Xmx512m`, ZGC), `Dockerfile.verificacion` (`-Xmx512m`, G1GC)
+- [x] 🟢 Crear `docker-compose.yml` con servicios: solicitudes (8081), descargas (8082), verificacion (8083), sql-server (1433), redis (6379); health checks para SQL Server y Redis
+- [x] 🟢 Crear `docker-compose.override.yml` para desarrollo (bind mounts, debug ports)
+- [x] 🟢 Documentar variables de entorno en `.env.example` (sin valores reales); crear `deploy/scripts/deploy.sh`
+- [x] Verificar que los smoke tests pasan: `docker compose up` en < 3 minutos, 3 servicios con 200 en health
 
 ♻️ **Refactorizar** tras ciclos en verde: revisar parámetros JVM por ambiente (DEV puede tener menos memoria); consolidar las variables compartidas entre microservicios en el `docker-compose.yml`
 
@@ -259,83 +281,87 @@ Crear los `Dockerfile` para cada microservicio y el `docker-compose.yml` que per
 
 ---
 
-### TKT-005 — Implementar modelo de datos y migraciones Liquibase para verificaciones
+### TKT-005 — Implementar modelo de datos y migraciones Liquibase para verificaciones ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-005 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-01 |
 | **Tipo** | Task |
 | **HU** | — |
-| **RF** | RF-25, RF-26, RF-27, RF-29 |
+| **RF** | RF-25, RF-26, RF-29 |
 | **Prioridad** | Alta |
 | **Estimación** | 5 pts |
 | **Fase** | 0 |
 
 **Descripción**  
-Crear los scripts de migración Liquibase **exclusivamente para las tablas del módulo de verificaciones** en SQL Server 2022. Las tablas de solicitudes, cotizaciones, trazabilidad, catálogos y demás estructuras existentes **no se crean, modifican ni migran** — se consumen tal como están en la base de datos actual. Solo las tablas de `CodigoVerificacion` y `RegistroVerificacion` son nuevas en SQL Server, ya que provienen del sistema legado (MySQL) y deben trasladarse a esta base de datos.
+Crear los scripts de migración Liquibase **exclusivamente para las tablas del módulo de verificaciones** en SQL Server 2022. Las tablas de solicitudes, cotizaciones, trazabilidad, catálogos y demás estructuras existentes **no se crean, modifican ni migran** — se consumen tal como están. Se crean en `dbo` las tablas legacy MySQL `certificados` y `certificados_verificacion` (lift-and-shift), para que el SOAP de generación de certificados pueda re-apuntarse sin cambios.
 
-> **Alcance:** Solo esquema `verificaciones` con sus dos tablas e índices asociados. El resto de la base de datos existente permanece intacto.
+> **Alcance:** Solo `dbo.certificados` y `dbo.certificados_verificacion` (+ índices). `ta_trazabilidad_api_verificarCertificados` y SPs `SCISP_*` de verificación quedan **deprecados** (no se usan desde el microservicio nuevo).
 
 **Tareas técnicas** _(ciclo TDD: los tests de migración Testcontainers se escriben antes de crear los changelogs Liquibase — el test verifica que la migración crea exactamente lo esperado)_**:**
 
-- [ ] **[SPIKE]** Revisar el esquema actual de las tablas de verificaciones en el sistema legado (MySQL) para asegurar equivalencia en SQL Server
-- [ ] 🔴 Escribir `LiquibaseMigrationIT` con Testcontainers (SQL Server 2022): (a) ejecutar las migraciones → tablas `CodigoVerificacion` y `RegistroVerificacion` creadas con la estructura esperada, (b) ejecutar dos veces → idempotente, sin errores, (c) verificar que los 3 índices existen, (d) verificar que **no existen** tablas de solicitudes ni catálogos en el esquema — este test falla porque los changelogs aún no existen
-- [ ] 🟢 Crear estructura `db/changelog/` con `db.changelog-master.xml` — **solo en el módulo `verificacion-infrastructure`**
-- [ ] `001-create-schema-verificaciones.xml` — crear esquema `verificaciones` si no existe
-- [ ] `002-create-tables-verificaciones.xml` — tablas:
+- [x] **[SPIKE]** Revisar el esquema actual de las tablas de verificaciones en el sistema legado (MySQL) para asegurar equivalencia en SQL Server
+- [x] 🔴 Escribir `LiquibaseMigrationIT` con Testcontainers (SQL Server 2022): (a) ejecutar las migraciones → tablas `certificados` y `certificados_verificacion` creadas con la estructura esperada, (b) ejecutar dos veces → idempotente, sin errores, (c) verificar índices, (d) verificar que **no existen** tablas de solicitudes ni catálogos ni el modelo normalizado descartado
+- [x] 🟢 Crear estructura `db/changelog/` con `db.changelog-master.xml` — **solo en el módulo `verificacion-infrastructure`**
+- [x] `001-create-tables-certificados.xml` — tablas:
   ```sql
-  CREATE TABLE verificaciones.CodigoVerificacion (
-      id           BIGINT IDENTITY(1,1) PRIMARY KEY,
-      codigo       VARCHAR(14)   NOT NULL UNIQUE,
-      solicitud_id BIGINT        NOT NULL,
-      matricula    VARCHAR(20),
-      tipo_certificado INT,
-      nombre_archivo   VARCHAR(500) NOT NULL,
-      fecha_cargue     DATETIME2 DEFAULT GETDATE(),
-      fecha_vencimiento DATE      NOT NULL,
-      max_verificaciones     INT  DEFAULT 999,
-      verificaciones_realizadas INT DEFAULT 0
+  CREATE TABLE dbo.certificados (
+      cod_verificacion   VARCHAR(64)  NOT NULL PRIMARY KEY,
+      num_recibo         CHAR(10)     NULL,
+      nom_archivo        VARCHAR(30)  NULL,
+      fec_cargue         DATETIME2    NOT NULL DEFAULT GETDATE(),
+      ctr_verificado     BIT          NULL DEFAULT 0,
+      ctr_anulado        BIT          NULL DEFAULT 0,
+      fec_anulado        DATETIME2    NULL,
+      ctr_vencido        BIT          NULL DEFAULT 0,
+      fec_vencido        DATETIME2    NULL,
+      fec_vencimiento    DATETIME2    NULL,
+      cnt_verificaciones INT          NULL
   );
 
-  CREATE TABLE verificaciones.RegistroVerificacion (
-      id                      BIGINT IDENTITY(1,1) PRIMARY KEY,
-      codigo_verificacion_id  BIGINT NOT NULL
-          REFERENCES verificaciones.CodigoVerificacion(id),
-      ip_verificador          VARCHAR(45) NOT NULL,
-      fecha                   DATETIME2 DEFAULT GETDATE()
+  CREATE TABLE dbo.certificados_verificacion (
+      cod_verificacion  VARCHAR(64) NOT NULL,
+      id_verificacion   INT IDENTITY(1,1) NOT NULL,
+      fec_verificacion  DATETIME2   NULL,
+      ip_verificacion   VARCHAR(45) NULL,
+      PRIMARY KEY (cod_verificacion, id_verificacion),
+      FOREIGN KEY (cod_verificacion) REFERENCES dbo.certificados(cod_verificacion)
   );
   ```
-- [ ] `003-create-indexes-verificaciones.xml` — índices:
-  - `IX_CodigoVerificacion_codigo` sobre `codigo` (búsqueda principal)
-  - `IX_CodigoVerificacion_fecha_vencimiento` sobre `fecha_vencimiento` (filtro de vigencia)
-  - `IX_RegistroVerificacion_codigo_id` sobre `codigo_verificacion_id`
-- [ ] Configurar Liquibase **únicamente** en `verificacion-api/application.yml` (no en solicitudes ni descargas)
-- [ ] **[SPIKE]** Definir estrategia de migración de datos existentes desde MySQL hacia las nuevas tablas en SQL Server (script de ETL o carga inicial)
-- [ ] Tests de migración con Testcontainers (SQL Server 2022): verificar que las migraciones son idempotentes
+- [x] `002-create-indexes-certificados.xml` — índices:
+  - `IX_certificados_num_recibo` sobre `num_recibo`
+  - `IX_certificados_verificacion_cod` sobre `cod_verificacion`
+- [x] Configurar Liquibase **únicamente** en `verificacion-api/application.yml` (changelog en `dbo`, sin schema `verificaciones`)
+- [x] **[SPIKE]** Definir estrategia de migración de datos existentes desde MySQL (lift-and-shift 1:1) hacia las mismas tablas en SQL Server
+- [x] Tests de migración con Testcontainers (SQL Server 2022): verificar que las migraciones son idempotentes
 
 **Restricciones importantes:**
-- ❌ **No crear** esquemas `solicitudes` ni `catalogos` en SQL Server
-- ❌ **No tocar** tablas existentes de solicitudes, cotizaciones, trazabilidad ni catálogos
+- ❌ **No crear** esquemas `solicitudes`, `catalogos` ni `verificaciones`
+- ❌ **No tocar** tablas existentes de solicitudes, cotizaciones, trazabilidad ni catálogos (salvo crear las dos tablas nuevas en `dbo`)
 - ❌ **No agregar** Liquibase a los módulos `solicitudes-infrastructure` ni `descargas-infrastructure`
+- ❌ **No usar** `ta_trazabilidad_api_verificarCertificados` / SPs `SCISP_*` desde el microservicio nuevo (deprecados)
 - ✅ Los microservicios de solicitudes y descargas consumen las tablas existentes mediante JDBC, apuntando a la BD actual sin Liquibase
+- ✅ Escritura de códigos: solo SOAP legacy re-apuntado; el microservicio `verificacion` solo lee `certificados` y escribe auditoría en `certificados_verificacion`
 
 **Criterios de aceptación:**
-- `./gradlew :verificacion:verificacion-infrastructure:liquibaseUpdate` crea el esquema y las dos tablas sin errores en SQL Server 2022
+- `./gradlew :verificacion:verificacion-infrastructure:liquibaseUpdate` crea las dos tablas sin errores en SQL Server 2022
 - Las migraciones son idempotentes: ejecutar dos veces no genera errores
-- Los índices `IX_CodigoVerificacion_codigo` y `IX_CodigoVerificacion_fecha_vencimiento` están creados
-- Liquibase genera `DATABASECHANGELOG` solo en el contexto de verificaciones
-- Las tablas existentes de la base de datos actual no son alteradas en ningún momento
+- Los índices `IX_certificados_num_recibo` e `IX_certificados_verificacion_cod` están creados
+- Liquibase genera `DATABASECHANGELOG` en `dbo`
+- Las tablas existentes ajenas a esta feature no son alteradas
 
 **Dependencias:** TKT-001, TKT-004
 
 ---
 
-### TKT-006 — Configurar pipeline CI/CD en Azure DevOps (DEV → QAS → STG → PRD)
+### TKT-006 — Configurar pipeline CI/CD en Azure DevOps (DEV → QAS → STG → PRD) ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-006 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-01 |
 | **Tipo** | Task |
 | **HU** | — |
@@ -366,54 +392,54 @@ Configurar el pipeline de CI/CD en **Azure DevOps** para compilación, tests, an
 **Tareas técnicas** _(ciclo TDD aplicado al pipeline: primero se define el quality gate que debe pasar — cobertura ≥ 80%, ArchUnit verde, OWASP sin críticos — y luego se configura el YAML que lo verifica)_**:**
 
 Estructura de archivos:
-- [ ] Crear `azure-pipelines.yml` en la raíz del repositorio (pipeline principal)
-- [ ] Crear `deploy/azure-devops/templates/` con templates YAML reutilizables:
+- [x] Crear `azure-pipelines.yml` en la raíz del repositorio (pipeline principal)
+- [x] Crear `deploy/azure-devops/templates/` con templates YAML reutilizables:
   - `build-and-test.yml` — stages de CI compartidos
-  - `docker-build-push.yml` — build y push a ACR parametrizado por ambiente
+  - `docker-build-push.yml` — build y push a Amazon ECR parametrizado por ambiente
   - `deploy-environment.yml` — deploy parametrizado por ambiente y servicio
   - `smoke-test.yml` — verificación de salud post-deploy
 
 Pipeline — **CI (Integración Continua):** se activa en cada PR y push a `develop` / `main`
-- [ ] **Stage 1 — Compilación:** `./gradlew compileJava compileTestJava`
+- [x] **Stage 1 — Compilación:** `./gradlew compileJava compileTestJava`
   - Agente: `ubuntu-latest` con Java 25 (Eclipse Temurin)
   - Caché de Gradle con tarea `Cache@2` (`$(Pipeline.Workspace)/.gradle`)
-- [ ] **Stage 2 — Tests unitarios:** `./gradlew test`
+- [x] **Stage 2 — Tests unitarios:** `./gradlew test`
   - Reporte de cobertura JaCoCo publicado en Azure DevOps (pestaña "Tests")
   - Quality gate: cobertura < 80% en módulos `*-domain` y `*-application` → pipeline falla
   - Publicar con `PublishTestResults@2` (JUnit XML) y `PublishCodeCoverageResults@2`
-- [ ] **Stage 3 — Tests de integración:** `./gradlew integrationTest`
+- [x] **Stage 3 — Tests de integración:** `./gradlew integrationTest`
   - Testcontainers requiere Docker en el agente
   - Jobs paralelos por microservicio (solicitudes, descargas, verificacion)
-- [ ] **Stage 4 — Análisis de seguridad:** OWASP Dependency Check
+- [x] **Stage 4 — Análisis de seguridad:** OWASP Dependency Check
   - Publicar reporte como artefacto del pipeline
   - Falla si hay vulnerabilidades de severidad **Critical**
-- [ ] **Stage 5 — Build de imágenes Docker:**
+- [x] **Stage 5 — Build de imágenes Docker:**
   - `docker build` para los 3 microservicios
-  - Push a **Azure Container Registry (ACR)** con tags: `{servicio}:{commitSHA}` y `{servicio}:develop-latest` / `{servicio}:main-latest` según rama
-  - Tarea `Docker@2` con `command: buildAndPush`
+  - Push a **Amazon Elastic Container Registry (ECR)** con tags: `{servicio}:{commitSHA}` y `{servicio}:develop-latest` / `{servicio}:main-latest` según rama
+  - Login a ECR con `aws ecr get-login-password | docker login` (credenciales AWS de la service connection); build/push por servicio
 
 Pipeline — **CD (Entrega Continua):** stages de deploy activados tras CI exitoso
 
-- [ ] **Stage 6 — Deploy a DEV** _(automático, rama `develop`)_
+- [x] **Stage 6 — Deploy a DEV** _(automático, rama `develop`)_
   - Usa Variable Group `vg-dev`
   - Rolling deployment en servidores DEV
   - Smoke test: `GET /health` de los 3 servicios → 200 OK
   - Rollback automático si smoke test falla
 
-- [ ] **Stage 7 — Deploy a QAS** _(automático si DEV exitoso, rama `develop`)_
+- [x] **Stage 7 — Deploy a QAS** _(automático si DEV exitoso, rama `develop`)_
   - Usa Variable Group `vg-qas`
   - Rolling deployment en servidores QAS
   - Smoke test idéntico al de DEV
   - Rollback automático si smoke test falla
 
-- [ ] **Stage 8 — Deploy a STG** _(manual, rama `main`, requiere aprobación del responsable técnico)_
+- [x] **Stage 8 — Deploy a STG** _(manual, rama `main`, requiere aprobación del responsable técnico)_
   - Environment `STG` en Azure DevOps con approval gate configurado
   - Usa Variable Group `vg-stg`
   - Rolling deployment en servidores STG
   - Smoke test extendido: health + prueba de endpoint de verificación
   - Rollback automático si smoke test falla
 
-- [ ] **Stage 9 — Deploy a PRD** _(manual, rama `main`, requiere doble aprobación)_
+- [x] **Stage 9 — Deploy a PRD** _(manual, rama `main`, requiere doble aprobación)_
   - Environment `PRD` en Azure DevOps con approval gate de dos aprobadores (responsable técnico + Gerencia TI)
   - Usa Variable Group `vg-prd`
   - Rolling deployment: una instancia a la vez para garantizar zero-downtime (RNF-29)
@@ -422,17 +448,17 @@ Pipeline — **CD (Entrega Continua):** stages de deploy activados tras CI exito
   - Notificación a canal de Teams/email al completar deploy exitoso en PRD
 
 Configuración adicional:
-- [ ] Crear **4 Variable Groups** en Azure DevOps (uno por ambiente) con los secrets correspondientes — nunca en el YAML:
-  - `vg-dev`: URLs de servicios DEV, credenciales BD DEV, Redis DEV, MAUC DEV
-  - `vg-qas`: URLs de servicios QAS, credenciales BD QAS, Redis QAS, MAUC QAS
-  - `vg-stg`: URLs de servicios STG, credenciales BD STG, Redis STG, MAUC STG
-  - `vg-prd`: URLs de servicios PRD, credenciales BD PRD, Redis PRD, MAUC PRD
-  - Variables comunes a todos: `ACR_NAME`, `DYNATRACE_API_TOKEN`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-- [ ] Configurar **branch policies** en Azure DevOps:
+- [x] Crear **4 Variable Groups** en Azure DevOps (uno por ambiente) con los secrets correspondientes — nunca en el YAML:
+  - `vg-dev`: URLs de servicios DEV, credenciales BD DEV, Redis DEV, Cognito DEV (User Pool), login MAUC DEV
+  - `vg-qas`: URLs de servicios QAS, credenciales BD QAS, Redis QAS, Cognito QAS (User Pool), login MAUC QAS
+  - `vg-stg`: URLs de servicios STG, credenciales BD STG, Redis STG, Cognito STG (User Pool), login MAUC STG
+  - `vg-prd`: URLs de servicios PRD, credenciales BD PRD, Redis PRD, Cognito PRD (User Pool), login MAUC PRD
+  - Variables comunes a todos: `ECR_REGISTRY` (`<acct>.dkr.ecr.<region>.amazonaws.com`), `AWS_REGION`, `DYNATRACE_API_TOKEN`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- [x] Configurar **branch policies** en Azure DevOps:
   - Rama `develop`: requiere PR con pipeline CI verde + 1 revisor
   - Rama `main`: requiere PR con pipeline CI verde + 2 revisores + policy de merge desde `develop`
-- [ ] Crear **Environments** en Azure DevOps: `DEV` (sin aprobación), `QAS` (sin aprobación), `STG` (1 aprobador), `PRD` (2 aprobadores con timeout de 4h)
-- [ ] Documentar el pipeline en `deploy/azure-devops/README.md` con: flujo de ramas, ambientes, cómo aprobar un deploy, cómo ejecutar rollback manual
+- [x] Crear **Environments** en Azure DevOps: `DEV` (sin aprobación), `QAS` (sin aprobación), `STG` (1 aprobador), `PRD` (2 aprobadores con timeout de 4h)
+- [x] Documentar el pipeline en `deploy/azure-devops/README.md` con: flujo de ramas, ambientes, cómo aprobar un deploy, cómo ejecutar rollback manual
 
 **Estructura del `azure-pipelines.yml`:**
 ```yaml
@@ -446,7 +472,8 @@ pr:
 
 variables:
   GRADLE_USER_HOME: $(Pipeline.Workspace)/.gradle
-  ACR_NAME: 'ccbcertificadosacr'
+  ECR_REGISTRY: '$(ECR_REGISTRY)'   # p. ej. 123456789012.dkr.ecr.us-east-1.amazonaws.com
+  AWS_REGION: '$(AWS_REGION)'
 
 stages:
 
@@ -472,20 +499,28 @@ stages:
           - task: PublishPipelineArtifact@1
             inputs: { artifactName: 'security-report' }
 
-  # ── Docker Build + Push ───────────────────────────────────────────────
+  # ── Docker Build + Push a Amazon ECR ──────────────────────────────────
   - stage: Docker_Build
-    displayName: 'Build imágenes Docker → ACR'
+    displayName: 'Build imágenes Docker → Amazon ECR'
     dependsOn: CI_Build_Test
     jobs:
       - job: Docker_Push
         steps:
-          - task: Docker@2
+          - task: AWSShellScript@1          # AWS Toolkit for Azure DevOps
+            displayName: 'Login a ECR + build/push por servicio'
             inputs:
-              command: buildAndPush
-              containerRegistry: 'sc-acr-ccb'
-              tags: |
-                $(Build.SourceVersion)
-                $(Build.SourceBranchName)-latest
+              awsCredentials: 'sc-aws-ccb'  # service connection AWS
+              regionName: '$(AWS_REGION)'
+              scriptType: 'inline'
+              inlineScript: |
+                aws ecr get-login-password --region "$(AWS_REGION)" \
+                  | docker login --username AWS --password-stdin "$(ECR_REGISTRY)"
+                for s in solicitudes descargas verificacion; do
+                  docker build -f deploy/docker/Dockerfile.$s \
+                    -t "$(ECR_REGISTRY)/$s:$(Build.SourceVersion)" \
+                    -t "$(ECR_REGISTRY)/$s:$(Build.SourceBranchName)-latest" .
+                  docker push --all-tags "$(ECR_REGISTRY)/$s"
+                done
 
   # ── Deploy DEV (rama develop) ─────────────────────────────────────────
   - stage: Deploy_DEV
@@ -556,7 +591,7 @@ stages:
 - Pipeline CI completo ejecuta en < 15 minutos (SLO §10.2)
 - PR sin pipeline CI verde **no puede** hacer merge en ninguna rama protegida
 - Cobertura < 80% en módulos `*-domain` y `*-application` → pipeline falla en Stage CI
-- Imágenes Docker en ACR etiquetadas con SHA del commit y con alias de rama (`develop-latest`, `main-latest`)
+- Imágenes Docker en Amazon ECR etiquetadas con SHA del commit y con alias de rama (`develop-latest`, `main-latest`)
 - Deploy automático DEV → QAS al hacer merge en `develop`
 - Deploy a STG y PRD solo con aprobación manual en Azure DevOps; el pipeline espera hasta 4h antes de expirar
 - Zero-downtime en todos los ambientes: una instancia actualizada a la vez (RNF-29)
@@ -568,11 +603,12 @@ stages:
 
 ---
 
-### TKT-007 — Implementar `application.yml` por ambiente y gestión de secrets
+### TKT-007 — Implementar `application.yml` por ambiente y gestión de secrets ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-007 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-01 |
 | **Tipo** | Task |
 | **HU** | — |
@@ -597,7 +633,7 @@ Configurar los archivos `application.yml` y los perfiles Spring Boot para los cu
 **Tareas técnicas** _(ciclo TDD: antes de crear los archivos `application-*.yml`, se escribe un test que verifica que el contexto de Spring Boot arranca correctamente con cada perfil y que no hay propiedades requeridas faltantes)_**:**
 
 Archivos base (comunes a todos los ambientes):
-- [ ] `application.yml` — propiedades base; todos los valores sensibles como `${VARIABLE}` sin valor por defecto:
+- [x] `application.yml` — propiedades base; todos los valores sensibles como `${VARIABLE}` sin valor por defecto:
   ```yaml
   spring:
     datasource:
@@ -619,8 +655,16 @@ Archivos base (comunes a todos los ambientes):
     shd.url: ${SHD_WSDL_URL}
     shd.timeout-ms: ${SHD_TIMEOUT_MS:8000}
     inscritos.url: ${INSCRITOS_REST_URL}
-    mauc.jwk-set-uri: ${MAUC_JWK_URI}
+    mauc.login-url: ${MAUC_LOGIN_URL}          # Login SSO de afiliados (no protege endpoints)
+    mauc.signout-url: ${MAUC_SIGNOUT_URL}
     encriptacion.url: ${AWS_ENCRYPT_URL}
+  security.cognito:                            # Auth de endpoints (Resource Server) — parametrizable
+    region: ${COGNITO_REGION}
+    user-pool-id: ${COGNITO_USER_POOL_ID}
+    issuer-uri: ${COGNITO_ISSUER_URI}
+    jwk-set-uri: ${COGNITO_JWK_SET_URI}
+    client-id: ${COGNITO_CLIENT_ID}
+    scopes: ${COGNITO_SCOPES}
   aws.s3:
     bucket: ${S3_BUCKET}
     region: ${S3_REGION:us-east-1}
@@ -631,23 +675,23 @@ Archivos base (comunes a todos los ambientes):
   ```
 
 Perfil por ambiente — solo sobrescribe lo que cambia entre ambientes:
-- [ ] `application-dev.yml` — apunta a servicios DEV de PUP/TiendaWS/SHD; nivel de log `DEBUG` para paquetes `co.org.ccb`; `show-details: always` en health
-- [ ] `application-qas.yml` — apunta a servicios QAS; nivel de log `INFO`; `show-details: when-authorized`
-- [ ] `application-stg.yml` — apunta a servicios STG (datos similares a PRD); nivel de log `INFO`; configuración de Dynatrace activa; pool Hikari igual a PRD
-- [ ] `application-prd.yml` — apunta a servicios PRD; nivel de log `WARN`; pool Hikari máximo; Dynatrace activo; `show-details: never` en health
+- [x] `application-dev.yml` — apunta a servicios DEV de PUP/TiendaWS/SHD; nivel de log `DEBUG` para paquetes `co.org.ccb`; `show-details: always` en health
+- [x] `application-qas.yml` — apunta a servicios QAS; nivel de log `INFO`; `show-details: when-authorized`
+- [x] `application-stg.yml` — apunta a servicios STG (datos similares a PRD); nivel de log `INFO`; configuración de Dynatrace activa; pool Hikari igual a PRD
+- [x] `application-prd.yml` — apunta a servicios PRD; nivel de log `WARN`; pool Hikari máximo; Dynatrace activo; `show-details: never` en health
 
 Configuración adicional:
-- [ ] Configurar compresión HTTP: `mime-types: application/json,application/xml,text/plain`
-- [ ] Configurar Micrometer + Dynatrace en perfiles `stg` y `prd`:
+- [x] Configurar compresión HTTP: `mime-types: application/json,application/xml,text/plain`
+- [x] Configurar Micrometer + Dynatrace en perfiles `stg` y `prd`:
   ```yaml
   management.metrics.export.dynatrace:
     api-token: ${DYNATRACE_API_TOKEN}
     uri: ${DYNATRACE_ENVIRONMENT_URL}
     v2.metric-key-prefix: certificados-electronicos
   ```
-- [ ] Crear `.env.example` en la raíz del proyecto con **todas** las variables requeridas (sin valores reales), usado exclusivamente para entorno local con Docker Compose
-- [ ] Documentar en `README.md` la tabla completa de variables por microservicio y por ambiente
-- [ ] Validar que el perfil activo se pasa correctamente desde el script de deploy: `-Dspring.profiles.active=dev|qas|stg|prd`
+- [x] Crear `.env.example` en la raíz del proyecto con **todas** las variables requeridas (sin valores reales), usado exclusivamente para entorno local con Docker Compose
+- [x] Documentar en `README.md` la tabla completa de variables por microservicio y por ambiente
+- [x] Validar que el perfil activo se pasa correctamente desde el script de deploy: `-Dspring.profiles.active=dev|qas|stg|prd`
 
 **Criterios de aceptación:**
 - `grep -r "password\|secret\|token" src/main/resources/` no retorna ningún valor hardcodeado
@@ -669,63 +713,64 @@ Configuración adicional:
 
 ---
 
-### TKT-010 — Implementar endpoint de validación de código de verificación
+### TKT-010 — Implementar endpoint de validación de código de verificación ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-010 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-02 |
 | **Tipo** | Feature |
 | **HU** | HU-14 |
-| **RF** | RF-25, RF-26, RF-27, RF-30 |
+| **RF** | RF-25, RF-26, RF-30 |
 | **RN** | RN-01, RN-07 |
 | **Prioridad** | Alta |
 | **Estimación** | 8 pts |
 | **Fase** | 1 |
 
 **Descripción**  
-Implementar `GET /api/v1/verificaciones/{codigo}` que valida un código de verificación de 14 caracteres alfanuméricos sin requerir autenticación, aplicando las reglas de negocio de vigencia (60 días) y límite de verificaciones.
+Implementar `GET /api/v1/verificaciones/{codigo}` que valida un código de verificación de 14 caracteres alfanuméricos sin requerir autenticación, aplicando la regla de negocio de vigencia (60 días).
 
 **Tareas técnicas** _(ciclo TDD: 🔴 Red → 🟢 Green → ♻️ Refactor por cada unidad)_**:**
 
 `verificacion-domain`:
-- [ ] 🔴 Escribir `CodigoVerificacionTest`: casos para `estaVigente()` — código dentro de los 60 días con verificaciones disponibles (true), código vencido (false), verificaciones agotadas (false), combinación de ambas condiciones
-- [ ] 🟢 Implementar Value Object `CodigoVerificacion`: atributos `codigo`, `fechaVencimiento`, `maxVerificaciones`, `verificacionesRealizadas`, `nombreArchivo` y método `estaVigente(): boolean`
-- [ ] 🔴 Escribir tests para excepciones de dominio: `CodigoExpiradoException`, `LimiteVerificacionesException`, `CodigoNoEncontradoException` — verificar mensajes y jerarquía
-- [ ] 🟢 Implementar las tres excepciones extendiendo `DomainException` (shared-kernel)
+- [x] 🔴 Escribir `CodigoVerificacionTest`: casos para `estaVigente()` — código dentro de los 60 días (true), código vencido (false)
+- [x] 🟢 Implementar Value Object `CodigoVerificacion`: atributos `codigo`, `fechaVencimiento`, `nombreArchivo` y método `estaVigente(): boolean`
+- [x] 🔴 Escribir tests para excepciones de dominio: `CodigoExpiradoException`, `CodigoNoEncontradoException` — verificar mensajes y jerarquía
+- [x] 🟢 Implementar las dos excepciones extendiendo `DomainException` (shared-kernel)
 
 `verificacion-application`:
-- [ ] 🔴 Escribir `ValidarCodigoHandlerTest` con Mockito: (a) código válido → retorna resultado con `{valido:true, archivo}`, (b) código expirado → lanza `CodigoExpiradoException`, (c) verificaciones agotadas → lanza `LimiteVerificacionesException`, (d) código inexistente → lanza `CodigoNoEncontradoException`
-- [ ] 🟢 Implementar `ValidarCodigoQuery(String codigo)` y `ValidarCodigoHandler`: consulta repositorio mock, aplica reglas de dominio, retorna resultado
+- [x] 🔴 Escribir `ValidarCodigoHandlerTest` con Mockito: (a) código válido → retorna resultado con `{valido:true, archivo}`, (b) código expirado → lanza `CodigoExpiradoException`, (c) código inexistente → lanza `CodigoNoEncontradoException`
+- [x] 🟢 Implementar `ValidarCodigoQuery(String codigo)` y `ValidarCodigoHandler`: consulta repositorio mock, aplica reglas de dominio, retorna resultado
 
 `verificacion-infrastructure`:
-- [ ] 🔴 Escribir `CodigoVerificacionRepositoryIT` con Testcontainers (SQL Server): (a) código existente → retorna el objeto correctamente mapeado, (b) código inexistente → `Optional.empty()`
-- [ ] 🟢 Implementar `CodigoVerificacionRepository.findByCodigo()` con query JDBC: `SELECT codigo, fecha_vencimiento, max_verificaciones, verificaciones_realizadas, nombre_archivo FROM verificaciones.CodigoVerificacion WHERE codigo = :codigo`
+- [x] 🔴 Escribir `CodigoVerificacionRepositoryIT` con Testcontainers (SQL Server): (a) código existente → retorna el objeto correctamente mapeado, (b) código inexistente → `Optional.empty()`
+- [x] 🟢 Implementar `CodigoVerificacionRepository.findByCodigo()` con query JDBC: `SELECT codigo, fecha_vencimiento, nombre_archivo FROM verificaciones.CodigoVerificacion WHERE codigo = :codigo`
 
 `verificacion-api`:
-- [ ] 🔴 Escribir `VerificacionesControllerTest` con `@WebMvcTest` + MockMvc: (a) código válido → 200 con `{valido:true, archivo}`, (b) código inexistente → 404, (c) código expirado → 410, (d) verificaciones agotadas → 410, (e) código con formato inválido (≠14 chars) → 400
-- [ ] 🟢 Implementar `VerificacionesController.GET /{codigo}` con las respuestas HTTP correctas y validación de formato de código
-- [ ] 🔴 Escribir `ArchitectureTest`: `verificacion-domain` no depende de `org.springframework..` ni de `..infrastructure..`
-- [ ] 🟢 Corregir cualquier violación de arquitectura detectada (debe ser cero desde el inicio)
+- [x] 🔴 Escribir `VerificacionesControllerTest` con `@WebMvcTest` + MockMvc: (a) código válido → 200 con `{valido:true, archivo}`, (b) código inexistente → 404, (c) código expirado → 410, (d) código con formato inválido (≠14 chars) → 400
+- [x] 🟢 Implementar `VerificacionesController.GET /{codigo}` con las respuestas HTTP correctas y validación de formato de código
+- [x] 🔴 Escribir `ArchitectureTest`: `verificacion-domain` no depende de `org.springframework..` ni de `..infrastructure..`
+- [x] 🟢 Corregir cualquier violación de arquitectura detectada (debe ser cero desde el inicio)
 
 ♻️ **Refactorizar** tras ciclos en verde: revisar duplicación en mapeo de excepciones → códigos HTTP en el `GlobalExceptionHandler`; extraer constante para el patrón de validación del código (14 chars alfanuméricos)
 
 **Criterios de aceptación (derivados de HU-14):**
 - CA-14.1: Código válido retorna 200 `{valido: true, archivo: "nombre.pdf"}`
 - CA-14.2: Código expirado (> 60 días) retorna 410 con mensaje orientativo
-- CA-14.3: Verificaciones agotadas retorna 410 con mensaje orientativo
-- CA-14.4: Código inexistente retorna 404 sin revelar información extra
+- CA-14.3: Código inexistente retorna 404 sin revelar información extra
 - Latencia P95 < 500ms (RNF-03)
 
 **Dependencias:** TKT-001, TKT-002, TKT-005
 
 ---
 
-### TKT-011 — Implementar endpoint de descarga de PDF para verificación
+### TKT-011 — Implementar endpoint de descarga de PDF para verificación ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-011 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-02 |
 | **Tipo** | Feature |
 | **HU** | HU-14 |
@@ -741,16 +786,16 @@ Implementar `GET /api/v1/verificaciones/{codigo}/documento` que descarga el PDF 
 **Tareas técnicas** _(ciclo TDD: 🔴 Red → 🟢 Green → ♻️ Refactor por cada unidad)_**:**
 
 `verificacion-infrastructure`:
-- [ ] 🔴 Escribir `S3StorageServiceIT` con Testcontainers + Localstack: (a) archivo existente → retorna string Base64 no vacío, (b) archivo inexistente → lanza `ArchivoNoEncontradoException`, (c) S3 no disponible → lanza excepción mapeada a 503
-- [ ] 🟢 Implementar `S3StorageService.descargarComoBase64(String nombreArchivo)` con AWS SDK v2; configurar `S3Client` con credenciales desde variables de entorno; mapear `NoSuchKeyException` → `ArchivoNoEncontradoException`
+- [x] 🔴 Escribir `S3StorageServiceIT` con Testcontainers + Localstack: (a) archivo existente → retorna string Base64 no vacío, (b) archivo inexistente → lanza `ArchivoNoEncontradoException`, (c) S3 no disponible → lanza excepción mapeada a 503
+- [x] 🟢 Implementar `S3StorageService.descargarComoBase64(String nombreArchivo)` con AWS SDK v2; configurar `S3Client` con credenciales desde variables de entorno; mapear `NoSuchKeyException` → `ArchivoNoEncontradoException`
 
 `verificacion-application`:
-- [ ] 🔴 Escribir `ObtenerDocumentoHandlerTest` con Mockito: (a) código válido con PDF en S3 → retorna Base64, (b) código válido pero archivo no existe en S3 → lanza `ArchivoNoEncontradoException`, (c) S3 no disponible → lanza excepción de infraestructura
-- [ ] 🟢 Implementar `ObtenerDocumentoQuery(String codigo)` y `ObtenerDocumentoHandler`: reutilizar validación de código de TKT-010, luego invocar `StorageService`
+- [x] 🔴 Escribir `ObtenerDocumentoHandlerTest` con Mockito: (a) código válido con PDF en S3 → retorna Base64, (b) código válido pero archivo no existe en S3 → lanza `ArchivoNoEncontradoException`, (c) S3 no disponible → lanza excepción de infraestructura
+- [x] 🟢 Implementar `ObtenerDocumentoQuery(String codigo)` y `ObtenerDocumentoHandler`: reutilizar validación de código de TKT-010, luego invocar `StorageService`
 
 `verificacion-api`:
-- [ ] 🔴 Escribir `DocumentoControllerTest` con MockMvc: (a) código válido → 200 con `{contenido, tipo:"application/pdf"}`, (b) archivo no encontrado → 404, (c) S3 no disponible → 503 con mensaje amigable
-- [ ] 🟢 Implementar `GET /{codigo}/documento` en `VerificacionesController`
+- [x] 🔴 Escribir `DocumentoControllerTest` con MockMvc: (a) código válido → 200 con `{contenido, tipo:"application/pdf"}`, (b) archivo no encontrado → 404, (c) S3 no disponible → 503 con mensaje amigable
+- [x] 🟢 Implementar `GET /{codigo}/documento` en `VerificacionesController`
 
 ♻️ **Refactorizar** tras ciclos en verde: extraer método de validación de código compartido entre `ValidarCodigoHandler` y `ObtenerDocumentoHandler` hacia un servicio de dominio reutilizable
 
@@ -764,11 +809,12 @@ Implementar `GET /api/v1/verificaciones/{codigo}/documento` que descarga el PDF 
 
 ---
 
-### TKT-012 — Implementar endpoint de registro de verificación
+### TKT-012 — Implementar endpoint de registro de verificación ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-012 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-02 |
 | **Tipo** | Feature |
 | **HU** | HU-14 |
@@ -779,61 +825,57 @@ Implementar `GET /api/v1/verificaciones/{codigo}/documento` que descarga el PDF 
 | **Fase** | 1 |
 
 **Descripción**  
-Implementar `POST /api/v1/verificaciones/{codigo}/registros` que registra cada verificación realizada con la IP del verificador, la fecha/hora y el incremento del contador.
+Implementar `POST /api/v1/verificaciones/{codigo}/registros` que registra cada verificación realizada con la IP del verificador y la fecha/hora.
 
 **Tareas técnicas** _(ciclo TDD: 🔴 Red → 🟢 Green → ♻️ Refactor por cada unidad)_**:**
 
-`verificacion-domain`:
-- [ ] 🔴 Ampliar `CodigoVerificacionTest`: caso `registrarVerificacion()` — verificar que `verificacionesRealizadas` aumenta en 1 tras cada llamada
-- [ ] 🟢 Implementar método `registrarVerificacion()` en `CodigoVerificacion`
-
 `verificacion-infrastructure`:
-- [ ] 🔴 Escribir `RegistrarVerificacionRepositoryIT` con Testcontainers (SQL Server): (a) registro exitoso → `RegistroVerificacion` insertado + contador incrementado, (b) fallo en UPDATE → rollback completo del INSERT (atomicidad)
-- [ ] 🟢 Implementar `RegistrarVerificacionRepository` con `@Transactional`: INSERT en `verificaciones.RegistroVerificacion` + UPDATE de `verificaciones_realizadas` en `CodigoVerificacion`
+- [x] 🔴 Escribir `RegistrarVerificacionRepositoryIT` con Testcontainers (SQL Server): (a) registro exitoso → `RegistroVerificacion` insertado, (b) IP y fecha almacenadas correctamente
+- [x] 🟢 Implementar `RegistrarVerificacionRepository`: INSERT en `verificaciones.RegistroVerificacion`
 
 `verificacion-api`:
-- [ ] 🔴 Escribir `RegistrosControllerTest` con MockMvc: (a) POST con IP válida → 201 Created, (b) extracción correcta de IP desde `X-Forwarded-For`, (c) extracción de IP directa cuando no hay proxy
-- [ ] 🟢 Implementar `POST /{codigo}/registros` con lógica de extracción de IP real
+- [x] 🔴 Escribir `RegistrosControllerTest` con MockMvc: (a) POST con IP válida → 201 Created, (b) extracción correcta de IP desde `X-Forwarded-For`, (c) extracción de IP directa cuando no hay proxy
+- [x] 🟢 Implementar `POST /{codigo}/registros` con lógica de extracción de IP real
 
 ♻️ **Refactorizar** tras ciclos en verde: extraer `IpExtractorUtil` como componente compartido reutilizable en futuros endpoints que requieran IP del cliente
 
 **Criterios de aceptación:**
-- Verificación registrada: `verificaciones_realizadas` se incrementa en 1 en BD
+- Verificación registrada: fila insertada en `RegistroVerificacion` con IP y fecha
 - IP del verificador almacenada correctamente (considerando load balancer)
-- Operación es atómica: si falla el UPDATE del contador, se hace rollback del INSERT
 - Registro siempre se guarda (RNF-20: audit trail)
 
 **Dependencias:** TKT-010
 
 ---
 
-### TKT-013 — Implementar rate limiting para verificación pública
+### TKT-013 — Implementar rate limiting para verificación pública ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-013 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-02 |
 | **Tipo** | Feature |
-| **HU** | HU-14 (CA-14.5) |
+| **HU** | HU-14 (CA-14.4) |
 | **RF** | RNF-15 |
 | **Prioridad** | Alta |
 | **Estimación** | 5 pts |
 | **Fase** | 1 |
 
 **Descripción**  
-Implementar rate limiting de 100 requests/segundo por IP usando Bucket4j + Redis para proteger el endpoint público de verificación contra abuso (RNF-15, CA-14.5).
+Implementar rate limiting de 100 requests/segundo por IP usando Bucket4j + Redis para proteger el endpoint público de verificación contra abuso (RNF-15, CA-14.4).
 
 **Tareas técnicas** _(ciclo TDD: 🔴 Red → 🟢 Green → ♻️ Refactor por cada unidad)_**:**
 
-- [ ] 🔴 Escribir `RateLimitFilterTest`: (a) primer request desde IP → pasa (200), (b) request número 101 en el mismo segundo desde misma IP → 429 con header `Retry-After: 1`, (c) requests desde IPs distintas → no se afectan entre sí, (d) Redis caído → permite el request (fallback graceful, no bloquea)
-- [ ] 🟢 Implementar `RateLimitConfig` con `Bucket4j` + `LettuceConnectionFactory` (Redis): capacity=100, refill 100 tokens/segundo por IP; key Redis `rate:verificacion:{ip}`
-- [ ] 🟢 Implementar `RateLimitFilter extends OncePerRequestFilter`: extrae IP desde `X-Forwarded-For`, consulta/crea bucket en Redis, retorna 429 con `Retry-After: 1` si agotado; aplica solo a `/api/v1/verificaciones/**`
-- [ ] 🔴 Escribir `RateLimitIntegrationTest` con `@SpringBootTest` + Redis Testcontainer: simular ráfaga de 110 requests seguidos y verificar que los primeros 100 pasan y los restantes reciben 429
+- [x] 🔴 Escribir `RateLimitFilterTest`: (a) primer request desde IP → pasa (200), (b) request número 101 en el mismo segundo desde misma IP → 429 con header `Retry-After: 1`, (c) requests desde IPs distintas → no se afectan entre sí, (d) Redis caído → permite el request (fallback graceful, no bloquea)
+- [x] 🟢 Implementar `RateLimitConfig` con `Bucket4j` + `LettuceConnectionFactory` (Redis): capacity=100, refill 100 tokens/segundo por IP; key Redis `rate:verificacion:{ip}`
+- [x] 🟢 Implementar `RateLimitFilter extends OncePerRequestFilter`: extrae IP desde `X-Forwarded-For`, consulta/crea bucket en Redis, retorna 429 con `Retry-After: 1` si agotado; aplica solo a `/api/v1/verificaciones/**`
+- [x] 🔴 Escribir `RateLimitIntegrationTest` con `@SpringBootTest` + Redis Testcontainer: simular ráfaga de 110 requests seguidos y verificar que los primeros 100 pasan y los restantes reciben 429
 
 ♻️ **Refactorizar** tras ciclos en verde: extraer la lógica de extracción de IP y creación de bucket key a métodos privados con nombres expresivos en el filter
 
 **Criterios de aceptación:**
-- CA-14.5: Request número 101 desde la misma IP en el mismo segundo retorna HTTP 429
+- CA-14.4: Request número 101 desde la misma IP en el mismo segundo retorna HTTP 429
 - Respuesta 429 incluye header `Retry-After` con segundos de espera
 - Rate limit es por IP: IPs distintas no se afectan entre sí
 - Redis caído → fallback graceful (permitir requests en lugar de bloquear todo)
@@ -883,7 +925,7 @@ Implementar `GET /api/v1/certificados` que retorna el historial paginado de soli
 
 `descargas-api`:
 - [ ] 🔴 Escribir `CertificadosControllerTest` con `@WebMvcTest` + MockMvc: (a) sin JWT → 401, (b) con JWT + documento válido → 200 con lista paginada, (c) sin número de documento → 400, (d) respuesta incluye estado legible por cada solicitud
-- [ ] 🟢 Implementar `CertificadosController.GET /certificados` con validación Jakarta y autenticación JWT MAUC obligatoria
+- [ ] 🟢 Implementar `CertificadosController.GET /certificados` con validación Jakarta y autenticación JWT AWS Cognito obligatoria
 
 ♻️ **Refactorizar** tras ciclos en verde: revisar si el filtro de 365 días debe ser una constante configurable en `application.yml`; simplificar el `RowMapper` de `CertificadoDescargable` extrayendo métodos de mapeo de estado
 
@@ -1375,7 +1417,7 @@ Implementar `GET /api/v1/catalogos/{tipo}` que retorna catálogos estáticos (ti
 | **Fase** | 4 |
 
 **Descripción**  
-Implementar la autenticación completa vía MAUC SSO (OIDC/JWT): validación de token JWT con firma verificada, validación de representante legal, validación pre-pago del token y cierre de sesión.
+Implementar el **login del usuario afiliado** vía MAUC SSO (OIDC/JWT): validación de token JWT con firma verificada, validación de representante legal, validación pre-pago del token y cierre de sesión. MAUC se usa **solo** para autenticar al afiliado dentro del flujo de negocio; **no** protege los endpoints del API (esa responsabilidad es del Resource Server de AWS Cognito, ver TKT-002).
 
 **Tareas técnicas** _(ciclo TDD: 🔴 Red → 🟢 Green → ♻️ Refactor por cada unidad)_**:**
 
@@ -1396,7 +1438,7 @@ Implementar la autenticación completa vía MAUC SSO (OIDC/JWT): validación de 
 - [ ] 🔴 Escribir `TokenMaucControllerTest` con MockMvc: (a) token válido → 200 `{esAfiliado, saldoDisponible}`, (b) MAUC no disponible → 503 con mensaje para flujo estándar (CA-03A.3)
 - [ ] 🟢 Implementar `POST /auth/token-mauc`
 
-♻️ **Refactorizar** tras ciclos en verde: crear `JwtVerifier` como componente desacoplado que encapsule toda la lógica de verificación JWKS, usable también en el security filter general
+♻️ **Refactorizar** tras ciclos en verde: crear `JwtVerifier` como componente desacoplado que encapsule la verificación JWKS del token **de MAUC** (issuer/JWKS de MAUC). Es independiente del Resource Server de Cognito, que valida los tokens de acceso al API con su propio issuer/JWKS (TKT-002)
 
 **Criterios de aceptación:**
 - CA-03A.1: Autenticación exitosa + representante legal → flujo de beneficio habilitado
@@ -1664,7 +1706,7 @@ Implementar el sistema de autenticación OAuth propio para el módulo de depósi
 - [ ] 🔴 Escribir `DepositosAuthControllerTest` con MockMvc: (a) credenciales válidas → 200 con `{access_token, token_type:"Bearer", expires_in:28800}`, (b) credenciales inválidas → 401 `{error:"invalid_grant"}` (CA-07A.2), (c) tipo cédula con letras → 400, (d) email vacío → 400
 - [ ] 🟢 Implementar `POST /auth/depositos` y filtro de validación de token expirado → 401 en subsiguientes requests
 
-♻️ **Refactorizar** tras ciclos en verde: unificar `JwtTokenGenerator` con el componente de generación JWT de MAUC si la estructura de claims es compatible
+♻️ **Refactorizar** tras ciclos en verde: mantener `JwtTokenGenerator` acotado al módulo de depósitos (OAuth propio). No confundir con MAUC (login externo de afiliados, no genera tokens en este sistema) ni con Cognito (autenticación de endpoints del API)
 
 **Criterios de aceptación:**
 - CA-07A.1: Credenciales válidas → access_token JWT 8h, navegación a matrículas vinculadas
@@ -2087,11 +2129,12 @@ Implementar la pantalla de historial de certificados disponibles para descarga, 
 
 ---
 
-### TKT-067 — Setup y feature completa del Portal de Verificación (FE)
+### TKT-067 — Setup y feature completa del Portal de Verificación (FE) ✅
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | TKT-067 |
+| **Estado** | ✅ Implementado |
 | **Épica** | EPIC-06 |
 | **Tipo** | Feature |
 | **HU** | HU-14 |
@@ -2102,27 +2145,28 @@ Implementar la pantalla de historial de certificados disponibles para descarga, 
 | **Fase** | 5 (inicia en Fase 1) |
 
 **Descripción**  
-Implementar el Portal de Verificación como SPA pública sin autenticación: ingreso de código, validación, visor de PDF con pdf.js y registro de verificación.
+Implementar el Portal de Verificación como SPA pública sin autenticación: ingreso de código, validación, visor de PDF con pdf.js y registro de verificación. La UI debe conservar la **imagen corporativa del Servicio Virtual CCB** del sitio actual (ver [IMAGEN_CORPORATIVA_PORTAL_VERIFICACION.md](./IMAGEN_CORPORATIVA_PORTAL_VERIFICACION.md) y ADR-0001).
 
 **Tareas técnicas** _(ciclo TDD: 🔴 Red → 🟢 Green → ♻️ Refactor)_**:**
 
-- [ ] `ng new portal-verificacion --standalone --routing` — sin interceptor de JWT; sin sesión persistida
-- [ ] 🔴 Escribir `verificacion.service.spec.ts`: (a) código válido → retorna datos del certificado, (b) 404 → observable con mensaje "código no existe", (c) 410 expirado → "ha expirado", (d) 410 límite → "límite de verificaciones alcanzado"
-- [ ] 🟢 Implementar `VerificacionService`
-- [ ] 🔴 Escribir `verificacion.component.spec.ts`: (a) código con caracteres no alfanuméricos → error inline sin llamar al servicio (CA-14.4), (b) código de < 14 chars → error inline, (c) código válido → `PdfViewerComponent` renderiza PDF + `registrarVerificacion()` invocado automáticamente
-- [ ] 🟢 Implementar `VerificacionComponent` con validación de formato
-- [ ] 🔴 Escribir `pdf-viewer.component.spec.ts`: recibe Base64 → `pdf.js` invocado con los bytes correctos; prop vacía → no renderiza
-- [ ] 🟢 Implementar `PdfViewerComponent` con pdf.js
+- [x] `ng new portal-verificacion --standalone --routing` — sin interceptor de JWT; sin sesión persistida
+- [x] Portar activos y tema corporativo CCB (`public/assets/brand/`, `src/styles/ccb/`, shell en `app.html`) — guía en `docs/IMAGEN_CORPORATIVA_PORTAL_VERIFICACION.md`
+- [x] 🔴 Escribir `verificacion.service.spec.ts`: (a) código válido → retorna datos del certificado, (b) 404 → observable con mensaje "código no existe", (c) 410 expirado → "ha expirado"
+- [x] 🟢 Implementar `VerificacionService`
+- [x] 🔴 Escribir `verificacion.component.spec.ts`: (a) código con caracteres no alfanuméricos → error inline sin llamar al servicio, (b) código de < 14 chars → error inline, (c) código válido → `PdfViewerComponent` renderiza PDF + `registrarVerificacion()` invocado automáticamente
+- [x] 🟢 Implementar `VerificacionComponent` con validación de formato **usando clases corporativas** (`.rotulo`, `.alert-info`, `.lista`, `.btn`, `.btn-icon-text`, breadcrumb)
+- [x] 🔴 Escribir `pdf-viewer.component.spec.ts`: recibe Base64 → `pdf.js` invocado con los bytes correctos; prop vacía → no renderiza
+- [x] 🟢 Implementar `PdfViewerComponent` con pdf.js y contenedor `.pdf-viewer-frame`
 
 ♻️ **Refactorizar** tras ciclos en verde: verificar que el bundle del portal de verificación cargue en < 3s en 3G; si no, separar pdf.js en un chunk lazy-loaded
 
 **Criterios de aceptación:**
 - CA-14.1: Código válido → visor PDF + registro de verificación
 - CA-14.2: Código expirado → mensaje "ha expirado" (no muestra PDF)
-- CA-14.3: Límite alcanzado → mensaje "límite de verificaciones" (no muestra PDF)
-- CA-14.4: Código inexistente → mensaje "no existe"
+- CA-14.3: Código inexistente → mensaje "no existe"
 - Carga del portal < 3s en 3G (RNF-32)
 - WCAG 2.1 nivel AA (RNF-33)
+- Imagen corporativa: logo CCB + "Servicio Virtual" + barra `#033864` + tipografía TradeGothicLTPro (o fallback) + botones/alertas con tokens `--ccb-*` (checklist §6 de la guía de imagen corporativa)
 
 **Dependencias:** TKT-010, TKT-011, TKT-012, TKT-013
 
@@ -2275,7 +2319,7 @@ Ejecutar el checklist de seguridad y pruebas de penetración para verificar el c
 - [ ] API de backoffice no expuesta públicamente, requiere credenciales (RNF-18)
 - [ ] PDFs en S3 no accesibles sin URL pre-firmada (bucket no público) (RNF-19)
 - [ ] Audit trail de operaciones de escritura (RNF-20)
-- [ ] Enumeración de códigos de verificación: 404 no revela info adicional (CA-14.4)
+- [ ] Enumeración de códigos de verificación: 404 no revela info adicional (CA-14.3)
 - [ ] OWASP Top 10 checklist completado
 
 **Criterios de aceptación:**
@@ -2362,12 +2406,12 @@ Validar el deployment sin downtime mediante rolling deployment o blue-green, eje
 
 | Épica | Tickets | Total estimación |
 |-------|---------|-----------------|
-| EPIC-01 Fundación | TKT-001 al TKT-007 | 57 pts |
-| EPIC-02 Verificación | TKT-010 al TKT-013 | 21 pts |
+| EPIC-01 Fundación | TKT-001 al TKT-007 (6/7 ✅; TKT-003 pendiente) | 57 pts |
+| EPIC-02 Verificación | TKT-010 al TKT-013 (4/4 ✅) | 21 pts |
 | EPIC-03 Descargas | TKT-020 al TKT-022 | 19 pts |
 | EPIC-04 Solicitudes Core | TKT-030 al TKT-037 | 57 pts |
 | EPIC-05 Módulos Especiales | TKT-040 al TKT-051 | 87 pts |
-| EPIC-06 Frontends | TKT-060 al TKT-067 | 86 pts |
+| EPIC-06 Frontends | TKT-060 al TKT-067 (1/8 ✅; TKT-067) | 86 pts |
 | EPIC-07 Hardening | TKT-070 al TKT-075 | 52 pts |
 | **TOTAL** | **36 tickets** | **~379 pts** |
 

@@ -830,9 +830,9 @@
 
 #### CA-14.1 — Verificación exitosa de código válido (Happy Path)
 
-**Dado** que el tercero verificador posee un código de verificación de 14 caracteres alfanuméricos correspondiente a un certificado emitido hace menos de 60 días y con verificaciones disponibles,  
+**Dado** que el tercero verificador posee un código de verificación de 14 caracteres alfanuméricos correspondiente a un certificado emitido hace menos de 60 días,  
 **Cuando** ingresa el código en el portal público de verificación,  
-**Entonces** el sistema confirma la validez del certificado (`{valido: true}`), muestra el PDF del certificado mediante el visor integrado (pdf.js), registra la verificación con la IP del verificador y la fecha/hora, e incrementa el contador de verificaciones realizadas.
+**Entonces** el sistema confirma la validez del certificado (`{valido: true}`), muestra el PDF del certificado mediante el visor integrado (pdf.js) y registra la verificación con la IP del verificador y la fecha/hora.
 
 #### CA-14.2 — Código de verificación expirado (Error)
 
@@ -840,19 +840,13 @@
 **Cuando** el sistema valida el código,  
 **Entonces** retorna HTTP 410 con el mensaje "El código de verificación ha expirado. La vigencia es de 60 días desde la expedición" y NO permite visualizar el PDF ni registra la verificación.
 
-#### CA-14.3 — Código con verificaciones agotadas (Error)
-
-**Dado** que el código de verificación ha alcanzado el máximo de verificaciones permitidas (`verificaciones_realizadas >= max_verificaciones`),  
-**Cuando** el tercero verificador ingresa el código,  
-**Entonces** retorna HTTP 410 con el mensaje "Se ha alcanzado el límite de verificaciones permitidas para este certificado" y NO muestra el PDF.
-
-#### CA-14.4 — Código inexistente (Error)
+#### CA-14.3 — Código inexistente (Error)
 
 **Dado** que el tercero verificador ingresa un código de 14 caracteres que no existe en la base de datos,  
 **Cuando** el sistema busca el código,  
 **Entonces** retorna HTTP 404 con el mensaje "El código de verificación ingresado no existe" sin revelar información adicional que pueda facilitar ataques de enumeración.
 
-#### CA-14.5 — Rate limiting por IP excedido (Edge Case)
+#### CA-14.4 — Rate limiting por IP excedido (Edge Case)
 
 **Dado** que desde una misma IP se han realizado más de 100 requests por segundo al endpoint de verificación,  
 **Cuando** se recibe el request número 101 en el mismo segundo,  
@@ -876,7 +870,7 @@
 
 **Dado** que el motor de generación ha producido el PDF del certificado, lo ha almacenado en S3 y posee el número de orden y los códigos de verificación,  
 **Cuando** invoca `PUT /api/v1/solicitudes/{id}/estado` con el nombre de archivo, número de orden y códigos de verificación (14 caracteres cada uno),  
-**Entonces** el sistema actualiza el estado de la solicitud a CERTIFICADO_EMITIDO, inserta los códigos de verificación con vigencia de 60 días y max_verificaciones asignadas, envía un email de notificación al solicitante con instrucciones de descarga, y retorna HTTP 200.
+**Entonces** el sistema actualiza el estado de la solicitud a CERTIFICADO_EMITIDO, inserta los códigos de verificación con vigencia de 60 días, envía un email de notificación al solicitante con instrucciones de descarga, y retorna HTTP 200.
 
 #### CA-15.2 — Solicitud no encontrada o no pagada (Error)
 
@@ -950,16 +944,16 @@
 ### Historia
 
 **Como** sistema de backoffice o servicio de generación de certificados,  
-**Quiero** consultar los certificados asociados a un número de orden de pago específico, obteniendo sus códigos de verificación y el estado de verificaciones realizadas,  
+**Quiero** consultar los certificados asociados a un número de orden de pago específico, obteniendo sus códigos de verificación y el número de verificaciones realizadas,  
 **Para** validar que los certificados de una orden fueron correctamente registrados en el sistema y monitorear el uso de sus códigos de verificación.
 
 ### Criterios de aceptación
 
 #### CA-17.1 — Consulta exitosa con certificados registrados (Happy Path)
 
-**Dado** que una orden de pago con número `ORD-2026-001234` tiene 3 certificados registrados en el sistema, cada uno con su código de verificación y contadores de verificación,  
+**Dado** que una orden de pago con número `ORD-2026-001234` tiene 3 certificados registrados en el sistema, cada uno con su código de verificación,  
 **Cuando** se invoca `GET api/CertificadosOrden?numOrden=ORD-2026-001234`,  
-**Entonces** el sistema retorna HTTP 200 con una lista de 3 objetos, cada uno conteniendo: `codVerificacion` (código de 14 caracteres), `cntVerificaciones` (máximo de verificaciones permitidas) y `cntVerificados` (verificaciones realizadas hasta el momento).
+**Entonces** el sistema retorna HTTP 200 con una lista de 3 objetos, cada uno conteniendo: `codVerificacion` (código de 14 caracteres) y `cntVerificados` (verificaciones realizadas hasta el momento).
 
 #### CA-17.2 — Orden sin certificados registrados (Edge Case)
 

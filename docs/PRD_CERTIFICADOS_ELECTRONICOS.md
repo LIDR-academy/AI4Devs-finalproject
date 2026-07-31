@@ -279,14 +279,12 @@ FE -> API : GET /api/v1/verificaciones/{codigo}
 activate API
 
 API -> DB : Consultar código verificación
-DB --> API : {vigencia, maxVerif, verificRealizadas, archivo}
+DB --> API : {vigencia, archivo}
 
 alt Código no existe
     API --> FE : 404 "Código no existe"
 else Código vencido (> 60 días)
     API --> FE : 410 "Código expirado"
-else Verificaciones agotadas
-    API --> FE : 410 "Límite alcanzado"
 else Válido
     API --> FE : 200 {valido: true, archivo}
 end
@@ -421,9 +419,9 @@ state OrdenPagoGenerada {
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **Actor principal** | Solicitante público                                                                                                                   |
 | **Precondiciones**  | Sector de costumbre disponible en catálogo                                                                                            |
-| **Trigger**         | Usuario accede al módulo de costumbres mercantiles                                                                                    |
+| **Trigger**         | Usuario accede al módulo de costumbre mercantil                                                                                       |
 | **Flujo principal** | 1. Consultar sectores disponibles (TiendaWS tipo 506) → 2. Seleccionar certificados → 3. Liquidar estándar (servicioId=36) → 4. Pagar |
-| **Postcondiciones** | Solicitud estándar con certificados de costumbres                                                                                     |
+| **Postcondiciones** | Solicitud estándar con certificados de costumbre                                                                                      |
 
 
 
@@ -436,10 +434,10 @@ state OrdenPagoGenerada {
 | **Actor principal**   | Tercero verificador                                                                                                                                                                      |
 | **Precondiciones**    | Posee código de verificación de 14 caracteres                                                                                                                                            |
 | **Trigger**           | Ingresa código en portal público de verificación                                                                                                                                         |
-| **Flujo principal**   | 1. Ingresar código → 2. Sistema valida: a) código existe, b) vigencia ≤ 60 días, c) verificaciones disponibles → 3. Mostrar PDF del certificado → 4. Registrar verificación (IP + fecha) |
+| **Flujo principal**   | 1. Ingresar código → 2. Sistema valida: a) código existe, b) vigencia ≤ 60 días → 3. Mostrar PDF del certificado → 4. Registrar verificación (IP + fecha) |
 | **Flujo alternativo** | Código inválido o no encontrado → mensaje de error al usuario                                                                                                                            |
-| **Postcondiciones**   | Verificación registrada. Contador incrementado                                                                                                                                           |
-| **Reglas de negocio** | Vigencia: 60 días calendario desde expedición. Verificaciones: según campo `cnt_verificaciones` asignado en generación                                                                   |
+| **Postcondiciones**   | Verificación registrada (IP + fecha). PDF del certificado mostrado al verificador                                                                                                        |
+| **Reglas de negocio** | Vigencia: 60 días calendario desde expedición. La verificación es ilimitada durante ese período                                                                                          |
 
 
 
@@ -493,7 +491,8 @@ state OrdenPagoGenerada {
 
 | ID    | Requisito                                                                                        | Prioridad |
 | ----- | ------------------------------------------------------------------------------------------------ | --------- |
-| RF-16 | El sistema debe integrar MAUC SSO como mecanismo de autenticación para afiliados                 | Alta      |
+| RF-15A | El sistema debe proteger todos los endpoints autenticados del portal mediante tokens JWT emitidos por AWS Cognito (OAuth2 Resource Server, modelo M2M), con la configuración del User Pool (region, userPoolId, issuer, JWK, client-id/audience, scopes) parametrizable por ambiente. MAUC **no** protege endpoints | Alta      |
+| RF-16 | El sistema debe integrar MAUC SSO **únicamente** como login del usuario afiliado (no como protección de endpoints) | Alta      |
 | RF-17 | El sistema debe validar que el token MAUC corresponda al número de documento del solicitante     | Alta      |
 | RF-18 | El sistema debe soportar login OAuth propio para módulo de depósitos (documento + clave + email) | Alta      |
 | RF-19 | El sistema debe verificar que el solicitante afiliado sea representante legal de la matrícula    | Alta      |
@@ -522,7 +521,6 @@ state OrdenPagoGenerada {
 | ----- | ----------------------------------------------------------------------------------------------- | --------- |
 | RF-25 | El sistema debe permitir validar un código de verificación de 14 caracteres sin autenticación   | Alta      |
 | RF-26 | El sistema debe verificar que el código no haya expirado (vigencia: 60 días calendario)         | Alta      |
-| RF-27 | El sistema debe verificar que el código no haya superado el máximo de verificaciones permitidas | Alta      |
 | RF-28 | El sistema debe mostrar el PDF del certificado verificado usando un visor integrado (pdf.js)    | Alta      |
 | RF-29 | El sistema debe registrar cada verificación con la IP del verificador y fecha/hora              | Alta      |
 | RF-30 | El sistema debe mostrar un mensaje de error cuando el código de verificación no sea válido      | Alta      |
@@ -711,6 +709,7 @@ cloud "Servicios CCB" {
 cloud "AWS" {
     [S3\nStorage PDFs] as S3
     [Lambda\nEncriptación] as LAMBDA
+    [Cognito\nUser Pool] as COGNITO
 }
 
 database "SQL Server" as DB
@@ -723,7 +722,9 @@ bo --> [Solicitudes API]
 [Solicitudes API] --> TIENDA : SOAP
 [Solicitudes API] --> SHD : SOAP
 [Solicitudes API] --> REST : HTTP
-[Solicitudes API] --> MAUC : JWT
+[Solicitudes API] --> MAUC : Login afiliados
+[Portal Certificados] --> COGNITO : OAuth2 (client credentials)
+[Solicitudes API] --> COGNITO : Valida JWT (Resource Server)
 [Solicitudes API] --> LAMBDA : HTTPS
 [Portal Certificados] --> PAY : Redirect
 [Solicitudes API] --> DB
@@ -746,7 +747,8 @@ bo --> [Solicitudes API]
 | **TiendaWS**          | WCF/SOAP      | Catálogo certificados, precios, saldo afiliado   | < 8s timeout         |
 | **SHD**               | WCF/SOAP      | Consulta matrícula principal de establecimientos | < 8s timeout         |
 | **REST Inscritos**    | HTTP POST     | Búsqueda de inscritos en registro mercantil      | < 5s timeout         |
-| **MAUC SSO**          | JWT/OIDC      | Autenticación unificada para afiliados           | 99.9% disponibilidad |
+| **AWS Cognito**       | OAuth2/JWT (OIDC) | Autenticación de endpoints del API (Resource Server, M2M) — parametrizable por ambiente | 99.9% (SLA AWS) |
+| **MAUC SSO**          | JWT/OIDC      | Login del usuario afiliado (no protege endpoints) | 99.9% disponibilidad |
 | **Pasarela de pagos** | Redirect HTTP | Cobro electrónico (servicioId=36)                | Gestionada por CCB   |
 | **Amazon S3**         | AWS SDK       | Almacenamiento y descarga de PDFs                | 99.99% (SLA AWS)     |
 | **AWS Lambda**        | HTTPS         | Encriptación de solicitudId para pasarela        | < 2s timeout         |
@@ -769,7 +771,7 @@ bo --> [Solicitudes API]
 | 1   | Los servicios WCF legacy (PUP, TiendaWS, SHD) no se modificarán en el corto plazo; el sistema debe adaptarse a sus interfaces actuales |
 | 2   | La pasarela de pagos es un sistema externo que no se puede modificar; la integración es por redirect con servicioId=36                 |
 | 3   | Amazon S3 es el storage definitivo de PDFs (ya en producción)                                                                          |
-| 4   | MAUC SSO es el estándar institucional de autenticación y no es negociable                                                              |
+| 4   | MAUC SSO es el estándar institucional para el login de afiliados y no es negociable. La autenticación de endpoints del API se realiza con AWS Cognito (parametrizable por ambiente) |
 | 5   | El motor de generación de PDFs es un sistema externo separado; este sistema solo almacena, distribuye y verifica                       |
 | 6   | SQL Server es la base de datos institucional                                                                                           |
 
@@ -783,7 +785,7 @@ bo --> [Solicitudes API]
 | --- | ---------------------------------------------------------------------------------------------------------- |
 | 1   | El volumen se mantendrá en el rango de 12K-25K certificados/día en los próximos 3 años                     |
 | 2   | Los WSDLs de PUP, TiendaWS y SHD se mantendrán estables o con cambios backward-compatible                  |
-| 3   | MAUC soportará los flujos de autenticación requeridos para todos los tipos de usuario                      |
+| 3   | MAUC soportará el login de los usuarios afiliados; AWS Cognito soportará la autenticación de los endpoints del API |
 | 4   | La CCB mantendrá la infraestructura de red actual entre los servidores de aplicación y los servicios WCF   |
 | 5   | El equipo de desarrollo tendrá acceso a ambientes de QA de PUP, TiendaWS y SHD para pruebas de integración |
 
@@ -873,7 +875,7 @@ bo --> [Solicitudes API]
 | 1   | Servicios WCF legacy (PUP) con alta latencia o caídas                      | Alto    | Media        | Circuit breaker + retry + fallback con mensaje al usuario                       |
 | 2   | Cambios en WSDLs de PUP/TiendaWS sin previo aviso                          | Alto    | Baja         | Versionado de WSDLs en repo + contract tests                                    |
 | 3   | Volumen superior al proyectado en temporada alta                           | Medio   | Media        | Auto-scaling + load testing previo                                              |
-| 4   | Inconsistencia entre mensaje "ilimitado" y límite numérico en verificación | Medio   | Alta         | Definir regla unificada con producto y comunicar al usuario                     |
+| 4   | Inconsistencia entre mensaje "ilimitado" y límite numérico en verificación | Bajo    | Baja         | **Resuelto:** se eliminó la regla de máximo de verificaciones. La verificación es ilimitada durante la vigencia de 60 días (ver RN-01)                                  |
 | 5   | Migración de datos desde MySQL (tabla certificados) con posible pérdida    | Alto    | Baja         | Script de migración + validación cruzada + rollback plan                        |
 | 6   | Dependencia de MAUC para afiliados (single point of failure)               | Alto    | Baja         | Monitoreo de MAUC + graceful degradation (permitir flujo de pago sin beneficio) |
 
@@ -940,7 +942,8 @@ flowchart TB
     end
 
     subgraph authServices["Servicios de Autenticacion y Pago"]
-        mauc["MAUC SSO<br/><i>Autenticacion Unificada<br/>JWT/OIDC</i>"]
+        cognito["AWS Cognito<br/><i>Autenticacion de endpoints<br/>OAuth2/JWT - M2M</i>"]
+        mauc["MAUC SSO<br/><i>Login de afiliados<br/>JWT/OIDC</i>"]
         pasarela["Pasarela de Pagos<br/><i>Cobro electronico<br/>redirect HTTP</i>"]
     end
 
@@ -959,7 +962,8 @@ flowchart TB
     certSystem -- "Liquida solicitudes<br/>SOAP" --> pup
     certSystem -- "Consulta catalogo<br/>SOAP" --> tiendaWS
     certSystem -- "Consulta matricula<br/>SOAP" --> shd
-    certSystem -- "Valida tokens JWT" --> mauc
+    certSystem -- "Valida tokens JWT<br/>Resource Server" --> cognito
+    certSystem -- "Login afiliados" --> mauc
     certSystem -- "Redirect cobro" --> pasarela
     certSystem -- "Busca inscritos<br/>HTTP/REST" --> inscritos
     certSystem -- "Almacena/descarga PDFs<br/>AWS SDK" --> s3
@@ -997,7 +1001,7 @@ flowchart TB
             portalVerif["Portal Verificacion<br/><i>Angular 22, pdf.js</i><br/>Verificacion de codigo,<br/>visualizacion PDF"]
         end
 
-        lb{{"Load Balancer<br/><i>Nginx / HAProxy / ALB</i><br/>SSL termination, routing"}}
+        lb{{"Load Balancer<br/><i>AWS Application Load Balancer (ALB)</i><br/>SSL termination, routing"}}
 
         subgraph services["Microservicios - Java 25, Spring Boot 4.1"]
             solicitudesApi["Solicitudes Service<br/><i>Solicitudes, liquidacion PUP,<br/>cotizacion, trazabilidad, catalogos</i>"]
@@ -1018,7 +1022,8 @@ flowchart TB
     end
 
     subgraph otherExt["Servicios Externos"]
-        mauc["MAUC SSO<br/><i>JWT/OIDC</i>"]
+        cognito["AWS Cognito<br/><i>Auth endpoints OAuth2/JWT</i>"]
+        mauc["MAUC SSO<br/><i>Login afiliados JWT/OIDC</i>"]
         pasarela["Pasarela Pagos<br/><i>Cobro electronico</i>"]
         inscritos["REST Inscritos<br/><i>Registro mercantil</i>"]
         s3[("Amazon S3<br/>Storage PDFs")]
@@ -1042,10 +1047,12 @@ flowchart TB
     solicitudesApi -- "SOAP" --> tiendaWS
     solicitudesApi -- "SOAP" --> shd
     solicitudesApi -- "HTTP" --> inscritos
-    solicitudesApi -- "JWT" --> mauc
+    solicitudesApi -- "Valida JWT" --> cognito
+    solicitudesApi -- "Login afiliados" --> mauc
 
     descargasApi -- "JDBC" --> sqlServer
     descargasApi -- "AWS SDK" --> s3
+    descargasApi -- "Valida JWT" --> cognito
 
     verificacionApi -- "JDBC" --> sqlServer
     verificacionApi -- "AWS SDK" --> s3
@@ -1077,7 +1084,7 @@ flowchart TB
 
     subgraph solicitudes["Solicitudes Service - Java 25, Spring Boot 4.1"]
         subgraph filters["Seguridad y Trazabilidad"]
-            securityFilter["Security Config<br/><i>Spring Security OAuth2<br/>JWT MAUC, CORS</i>"]
+            securityFilter["Security Config<br/><i>Spring Security OAuth2<br/>JWT AWS Cognito, CORS</i>"]
             correlationFilter["Correlation ID Filter<br/><i>X-Correlation-Id</i>"]
         end
 
@@ -1113,13 +1120,15 @@ flowchart TB
     tiendaWS["TiendaWS<br/><i>SOAP/WCF</i>"]
     shd["SHD<br/><i>SOAP/WCF</i>"]
     inscritos["REST Inscritos"]
-    mauc["MAUC SSO<br/><i>JWT/OIDC</i>"]
+    cognito["AWS Cognito<br/><i>Auth endpoints OAuth2/JWT</i>"]
+    mauc["MAUC SSO<br/><i>Login afiliados JWT/OIDC</i>"]
 
     portalCert -- "HTTPS/JSON" --> securityFilter
     backoffice -- "HTTPS/JSON" --> solicitudCtrl
 
     securityFilter --> inscritosCtrl & liquidacionCtrl & solicitudCtrl & catalogosCtrl & afiliadosCtrl & authCtrl
-    securityFilter -. "Valida JWT" .-> mauc
+    securityFilter -. "Valida JWT" .-> cognito
+    authCtrl -. "Login afiliados" .-> mauc
 
     liquidacionCtrl --> liquidarHandler
     solicitudCtrl --> notificarHandler
@@ -1162,7 +1171,7 @@ flowchart TB
     portalCert(["Portal Certificados<br/><i>Angular 22</i>"])
 
     subgraph descargas["Descargas Service - Java 25, Spring Boot 4.1"]
-        secFilter2["Security Config<br/><i>Spring Security OAuth2<br/>JWT MAUC obligatorio</i>"]
+        secFilter2["Security Config<br/><i>Spring Security OAuth2<br/>JWT AWS Cognito obligatorio</i>"]
 
         subgraph ctrl2["Controller"]
             certCtrl["Certificados Controller<br/><i>GET /certificados<br/>GET /certificados/id/archivo<br/>GET /certificados/id/url</i>"]
@@ -1181,11 +1190,11 @@ flowchart TB
 
     sqlServer2[("SQL Server 2022")]
     s3store2[("Amazon S3<br/>Storage PDFs")]
-    mauc2["MAUC SSO<br/><i>JWT/OIDC</i>"]
+    cognito2["AWS Cognito<br/><i>Auth endpoints OAuth2/JWT</i>"]
 
     portalCert -- "HTTPS/JSON" --> secFilter2
     secFilter2 --> certCtrl
-    secFilter2 -. "Valida JWT" .-> mauc2
+    secFilter2 -. "Valida JWT" .-> cognito2
 
     certCtrl --> listarHandler
     certCtrl --> descargarHandler
@@ -1224,9 +1233,9 @@ flowchart TB
         end
 
         subgraph handlers3["Application Layer"]
-            validarHandler["ValidarCodigoHandler<br/><i>Valida existencia,<br/>vigencia 60 dias,<br/>verificaciones disponibles</i>"]
+            validarHandler["ValidarCodigoHandler<br/><i>Valida existencia,<br/>vigencia 60 dias</i>"]
             documentoHandler["ObtenerDocumentoHandler<br/><i>Descarga PDF desde S3,<br/>retorna Base64 para pdf.js</i>"]
-            registroHandler["RegistrarVerificacionHandler<br/><i>Registra verificacion con<br/>IP, fecha, incrementa contador</i>"]
+            registroHandler["RegistrarVerificacionHandler<br/><i>Registra verificacion con<br/>IP y fecha</i>"]
         end
 
         subgraph infra3["Infrastructure Layer"]
@@ -1277,7 +1286,7 @@ flowchart TB
     end
 
     subgraph dmz["DMZ - Zona Desmilitarizada"]
-        lb["Load Balancer<br/><i>Nginx / HAProxy / F5</i><br/>TLS 1.3 + HSTS + WAF"]
+        lb["Load Balancer<br/><i>AWS Application Load Balancer (ALB)</i><br/>TLS 1.3 + HSTS + WAF"]
     end
 
     subgraph appZone["Zona de Aplicaciones - Red interna CCB"]
@@ -1352,7 +1361,7 @@ flowchart TB
 | Validación        | Jakarta Validation (Hibernate Validator)     | 3.x       | Estándar Jakarta EE                                                                         |
 | Acceso a datos    | Spring JDBC + NamedParameterJdbcTemplate     | Built-in  | Control total sobre SQL, alto rendimiento, sin overhead ORM                                 |
 | Migraciones BD    | Liquibase                                    | 4.x       | Migraciones versionadas y auditables                                                        |
-| Autenticación     | Spring Security + OAuth2 Resource Server     | 7.x       | JWT MAUC nativo                                                                             |
+| Autenticación     | Spring Security + OAuth2 Resource Server     | 7.x       | JWT AWS Cognito (M2M, parametrizable); MAUC solo para login de afiliados                    |
 | Clientes SOAP     | Apache CXF (JAX-WS) + wsdl2java              | 4.x       | Cliente SOAP más maduro en Java, genera clientes tipados                                    |
 | Clientes HTTP     | Spring RestClient (blocking)                 | Built-in  | Cliente HTTP declarativo                                                                    |
 | Storage           | AWS SDK for Java v2 (S3)                     | 2.x       | Acceso a S3 desde Java                                                                      |
@@ -1370,21 +1379,23 @@ flowchart TB
 ### 15.2 Frontend (2 aplicaciones Angular)
 
 
-| Capa        | Tecnología                         | Versión     |
-| ----------- | ---------------------------------- | ----------- |
-| Framework   | Angular                            | 22 (Active) |
-| Build       | Angular CLI (esbuild)              | 22.x        |
-| UI          | Tailwind CSS                       | 4.x         |
-| Componentes | PrimeNG o Angular Material         | Latest      |
-| State       | Angular Signals + NgRx SignalStore | Built-in    |
-| HTTP        | HttpClient + interceptors          | Built-in    |
-| PDF viewer  | pdf.js                             | 4.x         |
+| Capa        | Tecnología                                | Versión     |
+| ----------- | ----------------------------------------- | ----------- |
+| Framework   | Angular                                   | 22 (Active) |
+| Build       | Angular CLI (esbuild)                     | 22.x        |
+| UI          | Tailwind CSS                              | 4.x         |
+| Componentes | PrimeNG (modo *unstyled* / headless)      | 22.x        |
+| State       | Angular Signals + NgRx SignalStore        | Built-in    |
+| HTTP        | HttpClient + interceptors                 | Built-in    |
+| PDF viewer  | pdf.js                                     | 4.x         |
+
+> **Decisión de arquitectura (ver [ADR-0001](adr/ADR-0001-libreria-componentes-frontend.md)):** se selecciona **PrimeNG 22 en modo *unstyled*** frente a Angular Material. Al ser una **migración** cuyo **estilo corporativo CCB no puede modificarse** (identidad propia sobre Bootstrap: fuente `TradeGothicLTPro`, paleta `#033864` / `#1864a1` / `#d11848`, logo y layout off-canvas), el criterio decisivo es reproducir el diseño existente pixel a pixel. El modo unstyled aporta solo comportamiento y accesibilidad, dejando el 100 % del CSS al equipo, y conserva los componentes transaccionales complejos (tabla server-side, stepper, carrito). Angular Material queda descartado porque impondría el lenguaje visual de Material Design. La accesibilidad (RNF-33, WCAG 2.1 AA) se refuerza con `axe-core` en CI, y debe confirmarse la licencia web de la fuente `TradeGothicLTPro` antes de producción.
 
 
 
 | Aplicación              | Dominio                   | Autenticación          | Alcance                                                    |
 | ----------------------- | ------------------------- | ---------------------- | ---------------------------------------------------------- |
-| **Portal Certificados** | `certificados.ccb.org.co` | JWT MAUC (obligatorio) | Búsqueda, carrito, liquidación, pago, historial, descargas |
+| **Portal Certificados** | `certificados.ccb.org.co` | JWT AWS Cognito (obligatorio) | Búsqueda, carrito, liquidación, pago, historial, descargas |
 | **Portal Verificación** | `verificacion.ccb.org.co` | Ninguna (público)      | Verificación de código, visor PDF, registro                |
 
 
@@ -1397,12 +1408,12 @@ flowchart TB
 | ------------------------ | --------------------------------------- |
 | Servidor de aplicaciones | Embedded Tomcat (Spring Boot)           |
 | Despliegue               | Docker + Docker Compose                 |
-| Load Balancer            | Nginx / HAProxy / F5 / ALB              |
+| Load Balancer            | AWS Application Load Balancer (ALB)     |
 | Base de datos            | SQL Server 2022 (driver `mssql-jdbc`)   |
 | Cache                    | Redis 7                                 |
 | Storage                  | Amazon S3                               |
-| Secrets                  | HashiCorp Vault o AWS Secrets Manager   |
-| CI/CD                    | Jenkins / GitHub Actions / Azure DevOps |
+| Secrets                  | AWS Secrets Manager                     |
+| CI/CD                    | Azure DevOps                            |
 | IaC                      | Terraform o Ansible                     |
 | Observabilidad           | Dynatrace (APM corporativo CCB)         |
 | Logs centralizados       | Dynatrace Log Management (vía OneAgent) |
@@ -1443,7 +1454,7 @@ certificados-electronicos/
 │
 ├── shared/
 │   ├── shared-kernel/                      ← Result, DomainException, Entity base
-│   ├── shared-auth/                        ← JWT filter, SecurityConfig (MAUC)
+│   ├── shared-auth/                        ← Resource Server Cognito (SecurityConfig) + login MAUC afiliados
 │   └── shared-contracts/                   ← DTOs compartidos, interfaces S3
 │
 ├── frontend/
@@ -1482,7 +1493,7 @@ El módulo `domain` no tiene dependencias externas (solo Java puro). La capa de 
 
 | Método | Ruta                                           | Función                                     |
 | ------ | ---------------------------------------------- | ------------------------------------------- |
-| POST   | `/api/v1/auth/token-mauc`                      | Validar sesión MAUC                         |
+| POST   | `/api/v1/auth/token-mauc`                      | Validar sesión MAUC (login afiliado, no protege el API) |
 | GET    | `/api/v1/inscritos`                            | Buscar inscritos (matrícula, NIT, nombre)   |
 | GET    | `/api/v1/inscritos/{matricula}/principal`      | Matrícula principal (SHD)                   |
 | GET    | `/api/v1/inscritos/{matricula}/certificados`   | Tipos de certificado disponibles            |
@@ -1536,13 +1547,13 @@ El módulo `domain` no tiene dependencias externas (solo Java puro). La capa de 
 
 | Capa              | Mecanismo                  | Implementación                                    |
 | ----------------- | -------------------------- | ------------------------------------------------- |
-| Perímetro         | WAF                        | AWS WAF o ModSecurity en Nginx                    |
-| Transporte        | TLS 1.3 + HSTS             | Terminación SSL en Load Balancer                  |
+| Perímetro         | WAF                        | AWS WAF asociado al ALB                            |
+| Transporte        | TLS 1.3 + HSTS             | Terminación SSL en el ALB                          |
 | Rate limiting     | Bucket4j + Redis           | 100 req/s por IP (verificación pública)           |
-| Autenticación     | OAuth2 Resource Server     | JWT MAUC validado por Spring Security             |
-| Autorización      | Claims-based               | `@PreAuthorize` con claims de MAUC                |
+| Autenticación     | OAuth2 Resource Server     | JWT AWS Cognito validado por Spring Security (User Pool parametrizable) |
+| Autorización      | Claims-based               | `@PreAuthorize` con scopes/grupos de Cognito      |
 | Validación        | Jakarta Validation         | `@Valid`, `@NotNull`, `@Size` en DTOs             |
-| Secrets           | Vault / Secrets Manager    | Credenciales inyectadas como variables de entorno |
+| Secrets           | AWS Secrets Manager        | Credenciales inyectadas como variables de entorno |
 | Cifrado en reposo | TDE + SSE                  | SQL Server TDE + S3 Server-Side Encryption        |
 | Red               | VPC + Security Groups      | Aislamiento de servicios por zona de red          |
 | Auditoría         | MDC + logging estructurado | Correlation ID propagado en cada request          |
@@ -1553,7 +1564,7 @@ El módulo `domain` no tiene dependencias externas (solo Java puro). La capa de 
 
 ### 18.2 Configuración Spring Security
 
-La verificación pública (`/api/v1/verificaciones/**`) no requiere autenticación. Todos los demás endpoints requieren JWT MAUC válido. El servicio de backoffice usa credenciales de servicio dedicadas.
+La verificación pública (`/api/v1/verificaciones/**`) no requiere autenticación. Todos los demás endpoints requieren un JWT de **AWS Cognito** válido (Resource Server, configuración de User Pool parametrizable por ambiente). El módulo de depósitos conserva su login OAuth propio y el servicio de backoffice usa credenciales de servicio dedicadas. **MAUC se usa solo como login del usuario afiliado**, no como mecanismo de protección de endpoints.
 
 ---
 
@@ -1634,5 +1645,6 @@ El sistema se despliega mediante **Docker Compose** con réplicas por servicio. 
 | 2.1     | Junio 2026 | [Arquitecto de Software] | Actualización del stack: Java 25 LTS, Spring Boot 4.1.x, Spring Framework 7.x, Gradle 9.x, Flyway 12.x                                                                                                                                                            |
 | 2.2     | Junio 2026 | [Arquitecto de Software] | Reemplazo de Flyway por Liquibase 4.x como herramienta de migraciones de base de datos, alineando con el estándar de la CCB                                                                                                                                       |
 | 2.3     | Junio 2026 | [Product Manager]        | Nueva regla de negocio RN-16: la consulta del historial de órdenes devuelve únicamente el último año calendario (365 días) para prevenir bloqueos por volumen excesivo. Actualización de RF-21 y adición de RF-37 en el módulo de Descargas.                      |
+| 2.4     | Julio 2026 | [Arquitecto de Software] | Decisión de librería de componentes frontend (ADR-0001): se adopta **PrimeNG 22 en modo *unstyled*** en lugar de Angular Material, para reproducir fielmente el estilo corporativo CCB inmutable de la migración. Actualización del stack frontend (§15.2).       |
 
 
