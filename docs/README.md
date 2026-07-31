@@ -18,6 +18,7 @@ La documentación está organizada cronológicamente en 5 fases coincidentes con
 * [04_restostock_architecture_diagram.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/04_restostock_architecture_diagram.md): Diagrama C4 de contenedores de arquitectura física y lógica en Mermaid.
 * [05_restostock_components_description.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/05_restostock_components_description.md): Descripción de responsabilidades e inyección de dependencias por capas.
 * [06_restostock_folder_structure.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/06_restostock_folder_structure.md): Jerarquía física de directorios combinando Vertical Slices y Arquitectura Hexagonal.
+* [adr/](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/adr/): Registro de Decisiones de Arquitectura (ADR - Architecture Decision Records) tomadas durante el ciclo de vida del proyecto.
 
 ### 03. Gobernanza, Calidad y Seguridad (`docs/03_governance_and_quality/`)
 * [07_restostock_security_strategy.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/07_restostock_security_strategy.md): Estrategia de seguridad OWASP Top 10, sanitización, JWT y cumplimiento regulatorio.

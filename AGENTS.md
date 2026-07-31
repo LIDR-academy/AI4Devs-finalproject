@@ -34,6 +34,11 @@ This project strictly enforces **Hexagonal Architecture** organized in **Vertica
 
 For any technical task or new feature request, you must follow the **Verified Spec-Driven Development (VSDD)** loop. Do not write code immediately.
 
+### Architectural Decision Records (ADRs):
+- Whenever a major architectural choice, framework selection, safety implementation, or design pattern is chosen, the agent must document it by creating a new **Architecture Decision Record (ADR)** inside `docs/02_architecture_design/adr/ADR-XXX-name.md`.
+- All ADRs must follow a standardized structure: **Title**, **Status** (Proposed/Approved/Rejected/Superseded), **Context**, **Decision**, and **Consequences**.
+- **Important:** Newly proposed ADRs must be explicitly presented to the USER (Specialist) for review and approved before the related code is implemented.
+
 ### Protocol for Modifying/Adding Features (Cascading Protocol):
 Before coding, you must sequentially update the specifications in the following order (as guided by `.prompts/nuevas_ideas_cascada.md`):
 1. **Impact Assessment:** Answer what layers, files, databases, and APIs are affected.
