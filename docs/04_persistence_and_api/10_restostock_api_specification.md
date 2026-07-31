@@ -81,7 +81,8 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
     {
       "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
       "quantity": "2.0000",
-      "unit": "Horma"
+      "unit": "Horma",
+      "toLocation": "KITCHEN_FRIDGE"
     }
     ```
 *   **Response Success (`201 Created` - `RecordExtractionResponse`):**
