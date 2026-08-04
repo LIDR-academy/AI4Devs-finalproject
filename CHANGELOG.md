@@ -7,8 +7,15 @@ Todos los cambios notables en este proyecto de especificación técnica y diseñ
 ## [Unreleased]
 
 ### Added
+*   **Plantilla de Configuración (`.env.example`):** Estructuración de las variables de entorno necesarias para la base de datos, el puerto Express y secretos JWT.
+*   **Reglas del Agente (`.agents/rules/`):**
+    *   Creación de directivas específicas para `backend-rules.md`, `domain-rules.md`, `testing-rules.md`, `frontend-rules.md` (con diseño HSL premium e interactividad), `security-rules.md` y `git-rules.md` para automatizar y guiar el desarrollo con IA de forma consistente.
 
 ### Changed
+*   **Estandarización de Directorios de IA:** Renombrado completo de `.prompts/` a `.agents/` para habilitar el autodescubrimiento nativo en herramientas de IA, actualizando todas las referencias del proyecto.
+*   **Desactivación Temporal del CI:** Renombrado temporal de `.github/workflows/ci.yml` a `.github/workflows/ci.yml.disabled` para prevenir fallos falsos en GitHub Actions antes del andamiaje físico.
+*   **Actualización del Manual de Operaciones:** Rediseño de `.agents/README.md` como manual de configuración unificado (Rules + Skills).
+
 
 ---
 
