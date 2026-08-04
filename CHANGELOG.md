@@ -28,7 +28,7 @@ Esta versión marca la integración de la especificación de Reporte de Mermas (
 *   **Estandarización de Precisiones Decimales:**
     *   Actualización de los contratos API (`POST /api/stock/extraction` y `GET /api/kitchen/remanentes`) en [docs/04_persistence_and_api/10_restostock_api_specification.md](docs/04_persistence_and_api/10_restostock_api_specification.md) para exigir y retornar cantidades físicas serializadas como cadenas de texto (`string`), previniendo errores de precisión flotante.
 *   **Gobernanza de Historial de Integraciones:**
-    *   Actualización del instructivo de PRs en [.prompts/skills/specs/05_agile_planning/SK-14_pull_requests.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.prompts/skills/specs/05_agile_planning/SK-14_pull_requests.md) para exigir la retención íntegra de metadatos (título y rama) recuperados de GitHub, impidiendo normalizaciones artificiales y permitiendo identificar de forma no destructiva las no conformidades.
+    *   Actualización del instructivo de PRs en [.agents/skills/specs/05_agile_planning/SK-14_pull_requests.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/specs/05_agile_planning/SK-14_pull_requests.md) para exigir la retención íntegra de metadatos (título y rama) recuperados de GitHub, impidiendo normalizaciones artificiales y permitiendo identificar de forma no destructiva las no conformidades.
 
 ---
 

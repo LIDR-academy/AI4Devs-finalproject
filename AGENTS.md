@@ -40,7 +40,7 @@ For any technical task or new feature request, you must follow the **Verified Sp
 - **Important:** Newly proposed ADRs must be explicitly presented to the USER (Specialist) for review and approved before the related code is implemented.
 
 ### Protocol for Modifying/Adding Features (Cascading Protocol):
-Before coding, you must sequentially update the specifications in the following order (as guided by `.prompts/nuevas_ideas_cascada.md`):
+Before coding, you must sequentially update the specifications in the following order (as guided by `.agents/nuevas_ideas_cascada.md`):
 1. **Impact Assessment:** Answer what layers, files, databases, and APIs are affected.
 2. **PRD & Design Docs:** Update `docs/01_product_definition/02_restostock_prd.md` and `docs/02_architecture_design/03_restostock_design.md` if business logic or systems change.
 3. **Database Schema:** If database changes are needed, update `prisma/schema.prisma` and the logical model in `docs/04_persistence_and_api/09_restostock_database_schema.md`.

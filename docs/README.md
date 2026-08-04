@@ -2,7 +2,7 @@
 
 Este directorio contiene toda la documentación técnica, especificaciones de arquitectura, contratos de API, estrategias de seguridad, testing y gestión del backlog de RestoStock.
 
-La documentación está organizada cronológicamente en 5 fases coincidentes con el catálogo de habilidades de IA (`.prompts/skills/specs/`):
+La documentación está organizada cronológicamente en 5 fases coincidentes con el catálogo de habilidades de IA (`.agents/skills/specs/`):
 
 ---
 
