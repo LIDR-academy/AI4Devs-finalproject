@@ -17,9 +17,14 @@ Los commits deben seguir estrictamente el estándar de Conventional Commits con 
 
 ---
 
-## 🌿 2. Ramas de Trabajo
-*   **Nombre de Ramas:** Las ramas de trabajo deben crearse a partir de `main` con el formato `feature-XXXX` (donde XXXX es el hito o ticket, ej: `feature-entrega1-JDLM`).
+## 🌿 2. Ramas de Trabajo y Entregas
+*   **Formatos de Rama Obligatorios (LIDR):** Las ramas del proyecto se deben estructurar según la fase de la entrega:
+    *   **Entrega 1 (Especificaciones):** `feature-entrega1-[iniciales]` (Ej: `feature-entrega1-JDLM`).
+    *   **Entrega 2 (Código Funcional):** `feature-entrega2-[iniciales]` (Ej: `feature-entrega2-JDLM`).
+    *   **Entrega Final:** `finalproject-[iniciales]` (Ej: `finalproject-JDLM`).
+*   **Restricción del Agente de IA:** El agente de IA **nunca** debe crear, renombrar o eliminar ramas de Git de forma autónoma. La creación y el cambio (`checkout`) de ramas es una tarea de control reservada exclusivamente para el desarrollador humano.
 *   **Limpieza de Conflictos:** Antes de abrir un Pull Request, la rama de funcionalidad debe estar sincronizada y sin conflictos con `main`.
+
 
 ---
 
