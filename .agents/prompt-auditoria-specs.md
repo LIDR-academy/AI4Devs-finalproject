@@ -3,7 +3,6 @@
 Audita únicamente los documentos. No mira código, no propone implementación.
 La pregunta que responde: **¿esta spec se puede implementar sin inventar nada?**
 
-Sustituye al fichero anterior (`prompt-auditoria-sdd.md`), que mezclaba specs y código.
 
 ---
 
