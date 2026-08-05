@@ -10,6 +10,7 @@ Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Drive
 *   **[Mapa y Trazo Maestro VSDD](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/trazo_maestro_vsdd.md):** Diagrama de secuencia y explicación end-to-end desde la idea inicial hasta el commit atómico en Git.
 *   **[Protocolo de Especificación en Cascada (Nuevas Ideas / Specs)](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/nuevas_ideas_cascada.md):** Guía paso a paso para analizar el impacto, actualizar el PRD, modelar la base de datos, adaptar el contrato OpenAPI y registrar los tickets de Agile de forma secuencial (`Idea ➔ docs/`).
 *   **[Protocolo de Desarrollo en Cascada (Codificación / Tickets)](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/desarrollo_cascada.md):** Guía paso a paso para ejecutar un ticket técnico desde la extracción de reglas, migraciones, TDD, verificación de linter, pruebas visuales y commit atómico (`TK-XXX ➔ apps/`).
+*   **[Prompt de Auditoría de Especificaciones VSDD](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/prompt-auditoria-specs.md):** Meta-prompt de auditoría en 7 fases para auditar la suficiencia de la documentación viva antes de codificar.
 
 ---
 
