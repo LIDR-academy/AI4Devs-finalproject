@@ -437,57 +437,74 @@ Se han definido detalladamente las siguientes 9 historias de usuario críticas (
 
 ## 6. Tickets de Trabajo
 
-El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo](docs/05_agile_planning/tickets/indice_tickets.md)) contiene las especificaciones exactas para el desarrollo del sprint:
+El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo](docs/05_agile_planning/tickets/indice_tickets.md)) contiene las especificaciones exactas para el desarrollo de cada sprint, organizados en subcarpetas por módulo/epic (ej: `tickets/{modulo}/backend/` y `tickets/{modulo}/frontend/`):
 
-### **6.1. TK-001: Configuración del Core del Backend y Base de Datos (Base de Datos)**
-*   **Descripción:** Configuración inicial del monorepo Express, Prisma Client, inyección síncrona segura de variables de entorno y middleware global de excepciones y validación de esquemas Zod.
-*   **Capas Afectadas:** `shared/domain`, `shared/infrastructure`.
-*   **DoD:** Build de typescript exitoso en CI, conexión segura TLS verificada en la base de datos de test efímera.
+### ⚙️ 6.1. Tickets de Backend (en subcarpetas `docs/05_agile_planning/tickets/{modulo}/backend/`)
 
-### **6.2. TK-002: Implementación de Autenticación de Operarios por PIN (Backend)**
-*   **Descripción:** Implementación de la API `/api/auth/pin` integrando el caso de uso `AuthenticateByPin` y la validación de hash `bcrypt` (10 salt rounds).
-*   **Capas Afectadas:** `auth/domain`, `auth/application`, `auth/infrastructure`.
-*   **DoD:** Test unitario pasando con el 100% de cobertura y aserción de que el PIN plano nunca se retorna ni se guarda.
 
-### **6.3. TK-003: Implementación de Extracciones de Bodega (Backend & Log)**
-*   **Descripción:** Lógica transaccional que reduce stock consolidado y genera un remanente activo calculando su vida útil acotada.
-*   **Capas Afectadas:** `stock/domain`, `stock/application`, `stock/infrastructure`.
-*   **DoD:** Garantía transaccional de base de datos verificada: si el débito de stock o la creación del remanente falla, toda la transacción debe revertirse (rollback).
+*   **TK-001: Configuración del Core del Backend y Base de Datos (Base de Datos)**
+    *   **Descripción:** Configuración inicial del monorepo Express, Prisma Client, inyección síncrona segura de variables de entorno y middleware global de excepciones y validación de esquemas Zod.
+    *   **Capas Afectadas:** `shared/domain`, `shared/infrastructure`.
+    *   **DoD:** Build de typescript exitoso en CI, conexión segura TLS verificada en la base de datos de test efímera.
+*   **TK-002: Implementación de Autenticación de Operarios por PIN (Backend)**
+    *   **Descripción:** Implementación de la API `/api/auth/pin` integrando el caso de uso `AuthenticateByPin` y la validación de hash `bcrypt` (10 salt rounds).
+    *   **Capas Afectadas:** `auth/domain`, `auth/application`, `auth/infrastructure`.
+    *   **DoD:** Test unitario pasando con el 100% de cobertura y aserción de que el PIN plano nunca se retorna ni se guarda.
+*   **TK-003: Implementación de Extracciones de Bodega (Backend & Log)**
+    *   **Descripción:** Lógica transaccional que reduce stock consolidado y genera un remanente activo calculando su vida útil acotada.
+    *   **Capas Afectadas:** `stock/domain`, `stock/application`, `stock/infrastructure`.
+    *   **DoD:** Garantía transaccional de base de datos verificada: si el débito de stock o la creación del remanente falla, toda la transacción debe revertirse (rollback).
+*   **TK-004: Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO) (Backend)**
+    *   **Descripción:** Exposición de una consulta optimizada para obtener los remanentes abiertos y disponibles en cocina ordenados por vencimiento de menor a mayor (FEFO).
+    *   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Test unitario del caso de uso utilizando un repositorio en memoria para validar que el resultado del caso de uso retorne la lista ordenada cronológicamente; autenticación JWT con rol mínimo `OPERATOR` requerida.
+*   **TK-005: Implementación del Slice de Consumo Parcial de Remanentes (Backend)**
+    *   **Descripción:** Funcionalidad para descontar cantidades de insumos abiertos (remanentes). Si el consumo reduce la cantidad de un remanente a cero exacto, el sistema debe cambiar automáticamente su estado a agotado (`CONSUMED`).
+    *   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Tests unitarios verificando transiciones del flujo (consumo parcial, consumo agotador y rechazo por saldo insuficiente) pasando en verde; uso estricto de la librería `decimal.js` para toda aritmética decimal.
+*   **TK-006: Implementación del Slice de Descarte y Mermas de Cocina (Backend)**
+    *   **Descripción:** Permite retirar del inventario activo ingredientes abiertos e inservibles (vencidos, dañados, etc.). La cantidad remanente se pone en cero, el estado cambia a descartado (`DISCARDED`) y se crea una entrada de auditoría en la tabla `stock_movements`.
+    *   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Validar en dominio e impedir doble descarte sobre remanentes consumidos o descartados; requerimiento de autenticación JWT con rol mínimo `OPERATOR`.
+*   **TK-008: Implementación de Recetas y Descuento FEFO en Cascadas (Backend)**
+    *   **Descripción:** Implementa el flujo de descuento rápido de ingredientes en cocina basado en recetas maestras, buscando remanentes activos de cada ingrediente y debitando la cantidad en cascada FEFO de forma atómica.
+    *   **Capas Afectadas:** `catalog/domain`, `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Pruebas unitarias en rojo del caso de uso `ConsumeRecipeUseCase` antes de codificar la lógica del dominio; ejecución de la cascada completa dentro de una única transacción Prisma (`$transaction`).
+*   **TK-009: Implementación de Cierre de Turno y Conciliación en Cocina (Backend)**
+    *   **Descripción:** Proceso guiado de cierre de turno y conciliación física. Marca automáticamente como `DISCARDED` remanentes vencidos y permite reportar cantidades físicas reales restantes registrando variaciones de stock (varianzas).
+    *   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Escribir pruebas unitarias en rojo del caso de uso antes del código de producción; optimización SQL mediante actualizaciones por lote (`updateMany`) en una transacción atómica.
+*   **TK-010: Implementación del Módulo de Reportes y Analítica de Mermas (Backend)**
+    *   **Descripción:** Endpoint REST `GET /api/reports/waste` que permite al administrador consultar la cantidad total de inventario desechado (mermas físicas) agrupado por ingrediente y motivo en un rango de fechas.
+    *   **Capas Afectadas:** `reports/domain`, `reports/application`, `reports/infrastructure`.
+    *   **DoD:** Pruebas de integración para `GetWasteReportUseCase` verificando la sumatoria y el rango de fechas; autenticación JWT con rol requerido `ADMIN`.
 
-### **6.4. TK-004: Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO) (Backend)**
-*   **Descripción:** Exposición de una consulta optimizada para obtener los remanentes abiertos y disponibles en cocina ordenados por vencimiento de menor a mayor (FEFO).
-*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Test unitario del caso de uso utilizando un repositorio en memoria para validar que el resultado del caso de uso retorne la lista ordenada cronológicamente; autenticación JWT con rol mínimo `OPERATOR` requerida.
+### 🖥️ 6.2. Tickets de Frontend (en subcarpetas `docs/05_agile_planning/tickets/{modulo}/frontend/`)
 
-### **6.5. TK-005: Implementación del Slice de Consumo Parcial de Remanentes (Backend)**
-*   **Descripción:** Funcionalidad para descontar cantidades de insumos abiertos (remanentes). Si el consumo reduce la cantidad de un remanente a cero exacto, el sistema debe cambiar automáticamente su estado a agotado (`CONSUMED`).
-*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Tests unitarios verificando transiciones del flujo (consumo parcial, consumo agotador y rechazo por saldo insuficiente) pasando en verde; uso estricto de la librería `decimal.js` para toda aritmética decimal.
-
-### **6.6. TK-006: Implementación del Slice de Descarte y Mermas de Cocina (Backend)**
-*   **Descripción:** Permite retirar del inventario activo ingredientes abiertos e inservibles (vencidos, dañados, etc.). La cantidad remanente se pone en cero, el estado cambia a descartado (`DISCARDED`) y se crea una entrada de auditoría en la tabla `stock_movements`.
-*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Validar en dominio e impedir doble descarte sobre remanentes consumidos o descartados; requerimiento de autenticación JWT con rol mínimo `OPERATOR`.
-
-### **6.7. TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas en Frontend (Frontend)**
-*   **Descripción:** Pantalla táctil de notificaciones en el cliente y lógica de renderizado del feed de alertas críticas en la tablet, calculando dinámicamente vencimientos FEFO, stock mínimo en línea y estado de red offline.
-*   **Capas Afectadas:** `/app/kitchen/notifications/page.tsx`, `features/kitchen/components`.
-*   **DoD:** Banner offline y alertas críticas diseñadas bajo estándares de accesibilidad táctil; simular estado offline mediante tests unitarios en React para validar la renderización del banner.
-
-### **6.8. TK-008: Implementación de Recetas y Descuento FEFO en Cascadas (Backend)**
-*   **Descripción:** Implementa el flujo de descuento rápido de ingredientes en cocina basado en recetas maestras, buscando remanentes activos de cada ingrediente y debitando la cantidad en cascada FEFO de forma atómica.
-*   **Capas Afectadas:** `catalog/domain`, `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Pruebas unitarias en rojo del caso de uso `ConsumeRecipeUseCase` antes de codificar la lógica del dominio; ejecución de la cascada completa dentro de una única transacción Prisma (`$transaction`).
-
-### **6.9. TK-009: Implementación de Cierre de Turno y Conciliación en Cocina (Backend)**
-*   **Descripción:** Proceso guiado de cierre de turno y conciliación física. Marca automáticamente como `DISCARDED` remanentes vencidos y permite reportar cantidades físicas reales restantes registrando variaciones de stock (varianzas).
-*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Escribir pruebas unitarias en rojo del caso de uso antes del código de producción; optimización SQL mediante actualizaciones por lote (`updateMany`) en una transacción atómica.
-
-### **6.10. TK-010: Implementación del Módulo de Reportes y Analítica de Mermas (Backend)**
-*   **Descripción:** Endpoint REST `GET /api/reports/waste` que permite al administrador consultar la cantidad total de inventario desechado (mermas físicas) agrupado por ingrediente y motivo en un rango de fechas.
-*   **Capas Afectadas:** `reports/domain`, `reports/application`, `reports/infrastructure`.
-*   **DoD:** Pruebas de integración para `GetWasteReportUseCase` verificando la sumatoria y el rango de fechas; autenticación JWT con rol requerido `ADMIN`; cantidades devueltas estrictamente como cadenas de texto en formato JSON.
+*   **TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas (Frontend)**
+    *   **Descripción:** Pantalla táctil de notificaciones en el cliente y lógica de renderizado del feed de alertas críticas en la tablet, calculando dinámicamente vencimientos FEFO, stock mínimo en línea y estado de red offline.
+    *   **Capas Afectadas:** `/app/kitchen/notifications/page.tsx`, `features/kitchen/components`.
+    *   **DoD:** Banner offline y alertas críticas diseñadas bajo estándares de accesibilidad táctil; simular estado offline mediante IndexedDB.
+*   **TK-007-B: Pantalla de Login por PIN (Frontend)**
+    *   **Descripción:** Interfaz de teclado numérico táctil (`PinPad`) optimizado para pantallas de cocina para el inicio de sesión rápido, guardando el JWT devuelto.
+    *   **Capas Afectadas:** `features/auth/components`, `/app/login/page.tsx`.
+    *   **DoD:** Botones táctiles de mínimo `64px`, máscara de dígitos y pruebas unitarias de interactividad.
+*   **TK-007-C: Interfaz de Consumo de Recetas (Frontend)**
+    *   **Descripción:** Panel de visualización de recetas maestras en cocina con disparadores táctiles para registrar la preparación de porciones y descuento FEFO.
+    *   **Capas Afectadas:** `features/kitchen/components`, `/app/kitchen/recipes/page.tsx`.
+    *   **DoD:** Control de inventario restante en cliente, botón de acción rápida de al menos `54px` e integración con cola IndexedDB.
+*   **TK-007-D: Formulario de Reconciliación de Turno (Frontend)**
+    *   **Descripción:** Wizard táctil paso a paso para reportar stock real en cocina y autorizar/ingresar variaciones de inventario al fin de turno.
+    *   **Capas Afectadas:** `features/kitchen/components`, `/app/kitchen/reconciliation/page.tsx`.
+    *   **DoD:** Advertencia de color rojo y checkbox de confirmación especial para variaciones de inventario físico mayores al 50%.
+*   **TK-007-E: Dashboard de Reportes de Desperdicio y Eficiencia FEFO (Frontend)**
+    *   **Descripción:** Panel web para administradores que visualiza mediante gráficos interactivos y donas las pérdidas de stock consolidado y motivos.
+    *   **Capas Afectadas:** `features/reports/components`, `/app/admin/reports/page.tsx`.
+    *   **DoD:** Autenticación y control de rutas JWT para rol `ADMIN`, gráficos interactivos optimizados y selectores de rango temporal.
+*   **TK-007-F: Pantalla de Registro de Extracciones de Bodega (Frontend)**
+    *   **Descripción:** Formulario táctil ergonómico para registrar el paso de insumos de bodega a cocina abriendo los empaques de fábrica.
+    *   **Capas Afectadas:** `features/stock/components`, `/app/stock/extraction/page.tsx`.
+    *   **DoD:** Deshabilitación de doble clic para evitar transacciones repetidas, validación de inputs mayores a cero y mapeo a `POST /api/stock/extraction`.
 
 ---
 

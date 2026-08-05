@@ -45,7 +45,7 @@ Before coding, you must sequentially update the specifications in the following 
 2. **PRD & Design Docs:** Update `docs/01_product_definition/02_restostock_prd.md` and `docs/02_architecture_design/03_restostock_design.md` if business logic or systems change.
 3. **Database Schema:** If database changes are needed, update `prisma/schema.prisma` and the logical model in `docs/04_persistence_and_api/09_restostock_database_schema.md`.
 4. **API Contract:** Update the OpenAPI 3.0 specs in `docs/04_persistence_and_api/10_restostock_api_specification.md`.
-5. **Agile Planning:** Create/update the corresponding User Story (`US-XXX.md`) and Technical Ticket (`TK-XXX.md`) in `docs/05_agile_planning/`.
+5. **Agile Planning:** Create/update the corresponding User Story (`US-XXX.md`) and Technical Ticket (`TK-XXX.md`) in their respective module subfolders within `docs/05_agile_planning/user_stories/{modulo}/` and `docs/05_agile_planning/tickets/{modulo}/{backend|frontend}/`.
 6. **Traceability:** Update the traceability matrix in `docs/05_agile_planning/matriz_trazabilidad.md` and the backlog map in `docs/05_agile_planning/backlog_map.md`.
 
 ---
@@ -57,6 +57,7 @@ To mark a ticket as **Done**, you must guarantee:
 2. **InMemory Fakes:** Do not mock databases using complex mock libraries. Implement clean, memory-based fake implementations of your repository interfaces (e.g., `InMemoryUserRepository`).
 3. **Safety & Sanitization:** Use Zod schemas in all controllers. No un-sanitized raw database inputs.
 4. **Build & Lint Verification:** Always run `pnpm run build` and `pnpm run lint` before committing. There must be 0 errors and 0 warnings.
+5. **Atomic Git Commits:** Always perform git commits on a per-ticket basis (exactly one commit per technical ticket/TK-XXX) to maintain a clean, structured, and traceable version control history. Never mix multiple tickets in a single commit.
 
 ---
 

@@ -31,7 +31,7 @@ Este documento detalla el resultado de la auditoría técnica y funcional exhaus
     *   `physicalQuantity Decimal` (Cantidad Física reportada)
     *   `theoreticalQuantity Decimal` (Cantidad Teórica en el sistema)
     *   `variance Decimal` (La diferencia calculada)
-*   **Historia de Usuario (`docs/05_agile_planning/user_stories/US-008.md`):** El escenario 2 ilustra el cálculo de forma exacta con la firma de datos:
+*   **Historia de Usuario (`docs/05_agile_planning/user_stories/kitchen/US-008.md`):** El escenario 2 ilustra el cálculo de forma exacta con la firma de datos:
     *   *Teórica:* `1.5000 KG`
     *   *Física:* `1.2000 KG`
     *   *Varianza:* `-0.3000 KG` (`1.2000 - 1.5000 = -0.3000`)

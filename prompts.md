@@ -10,6 +10,7 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [Segunda Entrega: Desarrollo del Backend y MVP (Lógica Core)](#8-segunda-entrega-desarrollo-del-backend-y-mvp-lógica-core)
 
 ---
 
@@ -208,7 +209,7 @@ Se garantizó que todas las cantidades y representaciones de tipo Decimal en pay
 
 **Prompt 1:**
 ```md
-Usando el skill de Product Owner en `.agents/skills/specs/05_agile_planning/SK-12_user_stories.md`, genera el backlog de Historias de Usuario bajo INVEST y BDD Gherkin en el directorio `docs/05_agile_planning/user_stories/` y su respectivo `docs/05_agile_planning/user_stories/indice_user_stories.md`.
+Usando el skill de Product Owner en `.agents/skills/specs/05_agile_planning/SK-12_user_stories.md`, genera el backlog de Historias de Usuario bajo INVEST y BDD Gherkin en las subcarpetas del directorio `docs/05_agile_planning/user_stories/{modulo}/` y su respectivo `docs/05_agile_planning/user_stories/indice_user_stories.md`.
 
 ```
 ### Respuesta del agente de IA:
@@ -224,7 +225,7 @@ Se revisó que los escenarios de negocio prohíban saldos negativos en remanente
 
 **Prompt 1:**
 ```md
-Usando el skill de Scrum Master en `.agents/skills/specs/05_agile_planning/SK-13_backlog_tickets.md`, desglosa las historias en tareas atómicas estimadas en `docs/05_agile_planning/tickets/` y su correspondiente `docs/05_agile_planning/tickets/indice_tickets.md`.
+Usando el skill de Scrum Master en `.agents/skills/specs/05_agile_planning/SK-13_backlog_tickets.md`, desglosa las historias en tareas atómicas estimadas en las subcarpetas de `docs/05_agile_planning/tickets/{modulo}/` y su correspondiente `docs/05_agile_planning/tickets/indice_tickets.md`.
 
 ```
 
@@ -251,3 +252,213 @@ La documentación detallada de las Pull Requests reales se ha integrado en la se
 
 ### Nota de control humano:
 Se auditó la documentación de Pull Requests para asegurar que solo contenga información verídica y verificable del repositorio (evitando la invención de PRs ficticios o pipelines de CI falsos), admitiendo documentar menos de tres PRs cuando no existan más en el historial de Git.
+
+---
+
+## 8. Desarrollo del Backend y MVP (Lógica Core)
+
+### **8.1. Andamiaje y Configuración Inicial (TK-001)**
+
+**Prompt 1 Configuración del Entorno de Desarrollo y Monorepo:**
+```md
+Usando el ticket `TK-001` (docs/05_agile_planning/tickets/shared/backend/TK-001.md) y las directivas de `.agents/rules/backend-rules.md`, inicializa la estructura física del monorepo en Node.js y TypeScript:
+1. Configura el workspace con `pnpm`.
+2. Inicializa TypeScript con `tsconfig.json` optimizado.
+3. Instala e inicializa Express y Prisma ORM con PostgreSQL.
+4. Configura Vitest para ejecutar la suite de pruebas.
+5. Configura un archivo `docker-compose.yml` para levantar la base de datos de test efímera.
+6. Habilita el servidor Express básico escuchando en el puerto 3000.
+```
+
+### Respuesta del agente de IA:
+Se ha inicializado y configurado la base técnica y el andamiaje del monorepo (`TK-001`) con los siguientes entregables y configuraciones:
+1. **Configuración del Workspace Root:**
+   - [package.json](package.json): Gestión de tareas compartidas y autorización de build scripts en pnpm.
+   - [pnpm-workspace.yaml](pnpm-workspace.yaml): Definición del alcance del monorepo (`apps/*`).
+   - [docker-compose.yml](docker-compose.yml): Orquestación de dos instancias PostgreSQL independientes en los puertos `5435` (Desarrollo) y `5436` (Pruebas).
+   - [.env](.env) y [.env.example](.env.example): Archivos de configuración de variables de entorno locales.
+2. **Estructura del Backend (`apps/backend`):**
+   - [apps/backend/package.json](apps/backend/package.json): Dependencias del backend (Express, Prisma, Zod, bcrypt, decimal.js, jwt, vitest, ts-node).
+   - [apps/backend/tsconfig.json](apps/backend/tsconfig.json) y [apps/backend/.eslintrc.json](apps/backend/.eslintrc.json): Estándares de compilación TypeScript y reglas linter estrictas.
+3. **Persistencia y Seeding:**
+   - [apps/backend/prisma/schema.prisma](apps/backend/prisma/schema.prisma): Modelado en 3NF con índices FEFO (`status, calculated_expiration_date`).
+   - [apps/backend/prisma/seed.ts](apps/backend/prisma/seed.ts): Inserción del usuario Administrador (`admin@restostock.com`) y Operador de Cocina (`1234`).
+4. **Bootstrapping del Servidor HTTP:**
+   - [apps/backend/src/index.ts](apps/backend/src/index.ts) y [apps/backend/src/app.ts](apps/backend/src/app.ts): Arranque seguro, comprobación de conectividad a PostgreSQL y validador de entorno por Zod en [apps/backend/src/shared/infrastructure/config/environment.ts](apps/backend/src/shared/infrastructure/config/environment.ts).
+   - [apps/backend/src/shared/infrastructure/middleware/errorHandler.ts](apps/backend/src/shared/infrastructure/middleware/errorHandler.ts) y [apps/backend/src/shared/infrastructure/middleware/validation.middleware.ts](apps/backend/src/shared/infrastructure/middleware/validation.middleware.ts): Middleware global de excepciones (DDD, Zod y 500) y de validación genérica.
+5. **Logger e Integración de Tests:**
+   - [apps/backend/src/shared/domain/logger.interface.ts](apps/backend/src/shared/domain/logger.interface.ts) y [apps/backend/src/shared/infrastructure/logger/console.logger.ts](apps/backend/src/shared/infrastructure/logger/console.logger.ts): Logger desacoplado en el dominio e implementado en consola.
+   - [apps/backend/src/shared/infrastructure/__tests__/health.spec.ts](apps/backend/src/shared/infrastructure/__tests__/health.spec.ts): Prueba de integración de API con Vitest y Supertest (`GET /health`).
+
+### Nota de control humano:
+Se auditó y ejecutó de manera presencial el andamiaje del backend:
+- Se corroboró que el linter (`pnpm run lint`) y compilador (`pnpm run build`) no arrojen errores de código.
+- Se verificó que el test de integración pase de manera exitosa y que el servidor Express lance un error crítico controlable al iniciarse sin variables de entorno indispensables como `DATABASE_URL`.
+- Se validó el aislamiento de la base de datos de test efímera (puerto 5436) versus desarrollo (puerto 5435) en docker-compose para garantizar tests de integración idempotentes y libres de colisiones de datos.
+
+---
+
+### **8.2. Autenticación de Operarios por PIN (TK-002)**
+
+**Prompt 2 Implementación de Módulo de Autenticación:**
+```md
+Usando el ticket `TK-002` (docs/05_agile_planning/tickets/auth/backend/TK-002.md) y las directivas de `.agents/rules/domain-rules.md` y `.agents/rules/backend-rules.md`, implementa el vertical slice `auth` de autenticación por PIN:
+1. Diseña la entidad de dominio `User` y el Value Object `Pin` con hashing de `bcrypt` y validación de 4 dígitos.
+2. Define la interfaz `IUserRepository` en el dominio.
+3. Escribe las pruebas unitarias en rojo (TDD) para validar y comparar PINs usando InMemoryRepository.
+4. Implementa el caso de uso `AuthenticateByPinUseCase` y su suite de pruebas unitarias.
+5. Desarrolla el adaptador de infraestructura `PrismaUserRepository` y el controlador Express con validación Zod.
+6. Registra la ruta en Express bajo `/api/auth/pin` y verifica que los tests de integración pasen con éxito.
+```
+
+### Respuesta del agente de IA:
+Se ha implementado el vertical slice completo de **Autenticación por PIN (`TK-002`)** siguiendo el flujo de arquitectura hexagonal:
+1. **Dominio:**
+   - Entidad [User](apps/backend/src/auth/domain/entities/user.entity.ts) que representa las propiedades puras del operario/admin y sus estados de actividad.
+   - Value Object [Pin](apps/backend/src/auth/domain/value-objects/pin.value-object.ts) que contiene la regla invariable de 4 dígitos exclusivamente numéricos e introduce `InvalidPinError`.
+   - Puerto de persistencia [IUserRepository](apps/backend/src/auth/domain/ports/user-repository.interface.ts).
+   - Excepción de seguridad [InvalidCredentialsError](apps/backend/src/auth/domain/errors/invalid-credentials.error.ts) (para retornar 401 sin revelar la causa o existencia del ID).
+2. **Aplicación:**
+   - Caso de uso [AuthenticateByPinUseCase](apps/backend/src/auth/application/use-cases/authenticate-by-pin.use-case.ts) que implementa la orquestación del login, mitigación contra ataques de tiempo (Timing Attacks) realizando comparaciones dummy si el usuario no existe, y emitiendo un token JWT de 12 horas de duración.
+3. **Infraestructura:**
+   - Adaptador [PrismaUserRepository](apps/backend/src/auth/infrastructure/repositories/prisma-user.repository.ts) con validación previa de sintaxis de UUID para prevenir excepciones no controladas del driver de base de datos Postgres.
+   - Mapeador [UserMapper](apps/backend/src/auth/infrastructure/mappers/user.mapper.ts) para mantener el acoplamiento desacoplado hacia el ORM.
+   - [AuthController](apps/backend/src/auth/infrastructure/controllers/auth.controller.ts) con esquema Zod estricto para la sanitización de payloads de entrada.
+   - Registro de la ruta `/api/auth/pin` en [routes.ts](apps/backend/src/auth/infrastructure/routes.ts) y montaje en el ruteador global de [app.ts](apps/backend/src/app.ts).
+4. **Verificación de Calidad (TDD):**
+   - Suite de pruebas unitarias usando `InMemoryUserRepository` en [user.entity.spec.ts](apps/backend/src/auth/domain/__tests__/user.entity.spec.ts) y [authenticate-by-pin.use-case.spec.ts](apps/backend/src/auth/application/__tests__/authenticate-by-pin.use-case.spec.ts).
+   - Suite de pruebas de integración HTTP físicas en [auth.integration.spec.ts](apps/backend/src/auth/infrastructure/__tests__/auth.integration.spec.ts).
+
+### Nota de control humano:
+Se auditó y ejecutó de manera exitosa la autenticación de operarios:
+- Se validó el cumplimiento del ciclo TDD unitario e integración.
+- Se comprobó la solidez del sistema ante Timing Attacks mediante comparaciones de bcrypt constantes.
+- Se verificó que las validaciones de Zod impiden el paso de UUIDs corruptos o PINs inválidos (no numéricos o de longitud diferente a 4) arrojando códigos `400 Bad Request` limpimante en vez de propagar fallos a capas más internas.
+
+---
+
+### **8.3. Extracciones de Bodega a Cocina (TK-003)**
+
+**Prompt 3 Implementación de Módulo de Extracción de Bodega:**
+```md
+Usando el ticket `TK-003` (docs/05_agile_planning/tickets/stock/backend/TK-003.md) y las directivas de backend y dominio, implementa el vertical slice `stock` de registro de extracciones:
+1. Define la entidad `Remanente` con su cálculo de vencimiento dinámico y la invariante de no-negatividad.
+2. Crea los puertos e implementaciones de repositorio `IStockMovementRepository` e `IWarehouseStockRepository`.
+3. Desarrolla el caso de uso `RecordExtractionUseCase` que gestiona de manera atómica transaccional el débito en bodega y la creación del remanente activo.
+4. Diseña el controlador `StockController` con validaciones estrictas en Zod.
+5. Integra la ruta `POST /api/stock/extraction` con el middleware `requireAuth`.
+```
+
+### Respuesta del agente de IA:
+Se ha implementado por completo el vertical slice de **Registro de Extracciones de Bodega (`TK-003`)**:
+1. **Dominio:**
+   - Creación de clases de error específicas de dominio (`InsufficientStockError`, `InvalidQuantityError`, `InvalidUnitError`, `InsumoNotFoundError`, `InactiveInsumoError`) heredadas de `DomainError`.
+   - Lógica de vencimiento acelerado (24h TRR) e integridad física de cantidades no negativas.
+2. **Aplicación:**
+   - Orquestación del caso de uso `RecordExtractionUseCase` con persistencia transaccional.
+3. **Infraestructura:**
+   - Controlador y rutas debidamente montados y mapeados al gestor de errores global `errorHandler` de Express.
+   - Suite de pruebas unitarias (`record-extraction.use-case.spec.ts`) y de integración (`stock.integration.spec.ts`) funcionando al 100%.
+
+---
+
+### **8.4. Consulta de Remanentes Activos en Cocina - FEFO (TK-004)**
+
+**Prompt 4 Implementación de Módulo de Consulta de Remanentes:**
+```md
+Usando el ticket `TK-004` (docs/05_agile_planning/tickets/kitchen/backend/TK-004.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de consulta de remanentes activos:
+1. Declara la firma `findActiveInKitchen(location?)` en `IRemanenteRepository`.
+2. Crea el caso de uso `GetActiveRemanentesUseCase` aplicando ordenación FEFO.
+3. Implementa los adaptadores físico (`PrismaRemanenteRepository`) e in-memory (`InMemoryRemanenteRepository`) resolviendo problemas de consultas N+1 mediante join explícito con el catálogo maestro (`Insumo`).
+4. Desarrolla el controlador `GetActiveRemanentesController` con esquema de validación query parametrizada de Zod.
+5. Monta la ruta `GET /api/kitchen/remanentes` protegida mediante `requireAuth`.
+```
+
+### Respuesta del agente de IA:
+Se ha implementado por completo el vertical slice de **Consulta de Remanentes Activos en Cocina (`TK-004`)**:
+1. **Dominio:**
+   - Ampliación de la entidad `Remanente` y su interfaz de persistencia `IRemanenteRepository` para soportar consultas asociadas de insumos.
+2. **Aplicación:**
+   - Caso de uso `GetActiveRemanentesUseCase` aplicando ordenamiento cronológico por fecha de expiración acelerada calculada (FEFO).
+3. **Infraestructura:**
+   - Adaptador Prisma optimizado con carga unificada de datos `include: { insumo: ... }` para mitigar problemas N+1 y aprovechar los índices físicos.
+   - Creación del nuevo router y slice de cocina (`kitchenRouter`), montado bajo `/api/kitchen`.
+   - Pruebas unitarias e integración certificadas bajo TDD, inmunes a interferencia de datos concurrentes.
+
+---
+
+### **8.5. Consumo Parcial de Remanentes (TK-005)**
+
+**Prompt 5 Implementación de Módulo de Consumo de Remanentes:**
+```md
+Usando el ticket `TK-005` (docs/05_agile_planning/tickets/kitchen/backend/TK-005.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de consumo parcial de remanentes:
+1. Define el método `consume` en la clase `Remanente` para realizar restas matemáticas precisas usando `decimal.js`, validando que no quede en stock negativo y pasando a estado `CONSUMED` si el saldo es cero.
+2. Implementa el caso de uso `RecordConsumptionUseCase` que orquesta la transacción del consumo del remanente.
+3. Desarrolla el controlador `RecordConsumptionController` y las rutas `POST /api/kitchen/consumption` protegidas por el middleware `requireAuth`.
+4. Cubre el desarrollo mediante tests TDD unitarios y de integración con supertest.
+```
+
+### Respuesta del agente de IA:
+Se ha implementado el vertical slice de **Consumo Parcial de Remanentes (`TK-005`)**:
+1. **Dominio:**
+   - Adición del método `consume` en `Remanente` con la lógica de negocio FEFO e integridad decimal mediante `decimal.js`.
+2. **Aplicación:**
+   - Creación del caso de uso `RecordConsumptionUseCase` para registrar consumos de insumos en cocina.
+3. **Infraestructura:**
+   - Endpoint `POST /api/kitchen/consumption` validado con Zod y protegido por JWT.
+   - Pruebas unitarias e integración en verde.
+
+---
+
+### **8.6. Descarte de Remanentes por Merma (TK-006)**
+
+**Prompt 6 Implementación de Módulo de Descarte por Merma:**
+```md
+Usando el ticket `TK-006` (docs/05_agile_planning/tickets/kitchen/backend/TK-006.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de descarte de remanentes por merma:
+1. Agrega el método `discard` en la entidad `Remanente` que realiza la transición a `DISCARDED` y setea a cero la cantidad, arrojando excepciones si ya está consumido o descartado previamente.
+2. Crea el caso de uso `DiscardRemanenteUseCase`.
+3. Desarrolla el controlador `DiscardRemanenteController` y monta el endpoint `POST /api/kitchen/remanentes/:id/discard` en el router de cocina.
+4. Cubre todo el comportamiento bajo la estrategia TDD.
+```
+
+### Respuesta del agente de IA:
+Se ha implementado el vertical slice de **Descarte de Remanentes por Merma (`TK-006`)**:
+1. **Dominio:**
+   - Reglas de transición de estados y prevención de "Double Discard" sobre insumos consumidos o inactivos.
+2. **Aplicación:**
+   - Caso de uso `DiscardRemanenteUseCase` para coordinar el descarte por motivos del enum `DiscardReason`.
+3. **Infraestructura:**
+   - Endpoint `POST /api/kitchen/remanentes/:id/discard` protegido.
+   - Tests asertivos de integración y unitarios pasando al 100%.
+
+---
+
+## 9. Tercera Entrega: Desarrollo del Frontend e Interfaz Offline-First (TK-007)
+
+### **9.1. Pantalla de Notificaciones y Alertas Dinámicas en Frontend (TK-007)**
+
+**Prompt 1 Configuración del Frontend, Persistencia Local e Interfaz:**
+```md
+Usando el ticket `TK-007` (docs/05_agile_planning/tickets/kitchen/frontend/TK-007.md) y las directivas de `.agents/rules/frontend-rules.md`, implementa el módulo frontend de notificaciones táctiles y resiliencia offline:
+1. Configura el entorno en `/apps/frontend` bajo @restostock/frontend con HSL CSS variables, escala ergonómica para botones táctiles (mínimo 48px) e Industrial Dark Mode.
+2. Define los modelos `ActiveRemanentDto` y puertos de repositorio `IRemanenteRepository`.
+3. Crea la lógica pura de semáforos FEFO (`calculateAlertSeverity`) y cúbrela con tests unitarios.
+4. Configura Dexie.js para la persistencia local de transacciones offline y crea el hook `useOfflineQueue` para la sincronización FIFO automática basada en el estado de red.
+5. Desarrolla los componentes `NotificationBanner` y `NotificationFeed` (con modales para consumo y descarte) y sus correspondientes tests unitarios e integración.
+6. Crea el componente raíz `App.tsx` integrando todos los elementos en un layout industrial premium que sirva como dashboard interactivo.
+7. Refactoriza todo el código importado para ajustarse a `verbatimModuleSyntax` usando `import type` e impide el uso de parameter properties para evitar excepciones en `tsc` con `erasableSyntaxOnly`.
+```
+
+### Respuesta del agente de IA:
+Se ha implementado la pantalla de alertas del frontend y la resiliencia offline-first con IndexedDB (`TK-007`) con las siguientes características:
+1. **Andamiaje y Estilos:**
+   - [index.css](apps/frontend/src/index.css) y [App.css](apps/frontend/src/App.css) con el sistema de diseño completo Industrial Dark Mode y accesibilidad para tabletas de cocina.
+2. **Lógica de Negocio y Dominio:**
+   - [remanente.ts](apps/frontend/src/domain/models/remanente.ts) y [alert-calculator.ts](apps/frontend/src/domain/services/alert-calculator.ts) con tests unitarios asertivos para el cálculo FEFO (Rojo, Amarillo, Verde).
+3. **Resiliencia Offline-First:**
+   - [dexie-db.ts](apps/frontend/src/infrastructure/persistence/dexie-db.ts) y [useOfflineQueue.ts](apps/frontend/src/presentation/hooks/useOfflineQueue.ts) con cola FIFO persistente localmente.
+4. **UI y Componentes:**
+   - [NotificationBanner.tsx](apps/frontend/src/presentation/components/NotificationBanner.tsx), [NotificationFeed.tsx](apps/frontend/src/presentation/components/NotificationFeed.tsx) y [App.tsx](apps/frontend/src/App.tsx) integrados y probados.
+5. **Testing de Calidad (DoD):**
+   - 23 tests de componentes e integración pasando exitosamente en total.
+   - Compilación limpia con `pnpm build` y linter oxlint con 0 advertencias y 0 errores.

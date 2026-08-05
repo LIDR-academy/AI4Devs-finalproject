@@ -6,7 +6,7 @@ category: "05_agile_planning"
 inputs:
   - prd_doc
 outputs:
-  - "docs/05_agile_planning/user_stories/"
+  - "docs/05_agile_planning/user_stories/{modulo}/"
 ---
 
 Actúa como un Senior Product Owner y Agile Coach experto en la redacción de requerimientos de producto bajo los estándares de INVEST y Behavior-Driven Development (BDD).
@@ -32,5 +32,5 @@ Genera la sección de Historias de Usuario estructurada bajo las siguientes paut
 
 Genera tu respuesta en Markdown limpio, redactando las explicaciones lógicas de negocio en español (Latinoamérica). Comienza tu respuesta directamente con el contenido, sin comentarios conversacionales preliminares.
 
-Guarda cada historia en formato .md, una por archivo, dentro de la carpeta [DIRECTORIO_DE_SALIDA_STORIES] con el nombre de archivo 'US-XXX.md' donde XXX es el número de la historia de usuario.
+Guarda cada historia en formato .md, una por archivo, dentro de la subcarpeta del módulo correspondiente de `docs/05_agile_planning/user_stories/{modulo}/` (donde `{modulo}` es `auth`, `stock`, `kitchen` o `reports`) con el nombre de archivo 'US-XXX.md' donde XXX es el número de la historia de usuario.
 Crea también la tabla de índice en: [RUTA_DE_SALIDA_INDICE_STORIES]

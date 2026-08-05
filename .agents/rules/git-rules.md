@@ -15,6 +15,10 @@ Los commits deben seguir estrictamente el estándar de Conventional Commits con 
 *   `test`: Añadir o modificar suites de pruebas.
 *   `chore`: Tareas de mantenimiento, configuración de compilación o dependencias.
 
+### Granularidad y Trazabilidad (Commits por Ticket):
+*   **Commits por Ticket:** Se debe realizar exactamente un commit (o una serie de commits atómicos acotados) por cada ticket técnico (`TK-XXX`) resuelto, evitando mezclar múltiples tickets en una sola confirmación.
+*   **Referencia al Ticket:** El mensaje de commit debe referenciar explícitamente el ticket técnico de Agile al final del mensaje entre paréntesis (ej: `feat(kitchen): implement active remanentes query with FEFO ordering (TK-004)`).
+
 ---
 
 ## 🌿 2. Ramas de Trabajo y Entregas

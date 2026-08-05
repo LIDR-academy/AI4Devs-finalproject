@@ -25,7 +25,7 @@ Esta versión marca la integración de la especificación de Reporte de Mermas (
 
 ### Added
 *   **Especificación de Dashboard y Reporte de Mermas (US-009/TK-010):**
-    *   Diseño funcional ([docs/05_agile_planning/user_stories/US-009.md](docs/05_agile_planning/user_stories/US-009.md)) y técnico ([docs/05_agile_planning/tickets/TK-010.md](docs/05_agile_planning/tickets/TK-010.md)) para permitir a los administradores visualizar pérdidas físicas consolidadas en cocina.
+    *   Diseño funcional ([docs/05_agile_planning/user_stories/reports/US-009.md](docs/05_agile_planning/user_stories/reports/US-009.md)) y técnico ([docs/05_agile_planning/tickets/reports/backend/TK-010.md](docs/05_agile_planning/tickets/reports/backend/TK-010.md)) para permitir a los administradores visualizar pérdidas físicas consolidadas en cocina.
     *   Especificación del endpoint `GET /api/reports/waste` con soporte para agrupación por ingrediente y motivo en un rango de fechas ([docs/04_persistence_and_api/10_restostock_api_specification.md](docs/04_persistence_and_api/10_restostock_api_specification.md)).
     *   Diseño estructural de la arquitectura hexagonal en el slice vertical de reportes (`reports/`) en [docs/02_architecture_design/03_restostock_design.md](docs/02_architecture_design/03_restostock_design.md) y [docs/02_architecture_design/06_restostock_folder_structure.md](docs/02_architecture_design/06_restostock_folder_structure.md).
 *   **Gobernanza y Aseguramiento:**

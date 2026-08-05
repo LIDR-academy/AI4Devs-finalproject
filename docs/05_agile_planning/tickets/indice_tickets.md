@@ -1,41 +1,63 @@
 # 📖 Índice de Tickets de Trabajo (Sprint Backlog)
 
-Este documento centraliza el backlog técnico y funcional del Producto Mínimo Viable (MVP) para **RestoStock**. Permite realizar un seguimiento claro de la trazabilidad desde las historias de usuario hasta el desarrollo físico en la base de código.
+Este documento centraliza el backlog técnico y funcional del Producto Mínimo Viable (MVP) para **RestoStock**, organizado por **Epic/Módulo** y separado en **Backend** y **Frontend**. Permite realizar un seguimiento claro de la trazabilidad desde las historias de usuario hasta el desarrollo físico en la base de código.
 
 ---
 
-## 📊 1. Matriz de Trazabilidad del Backlog
+## 📊 1. Matriz de Trazabilidad del Sprint Backlog
 
-| ID Ticket | ID US Relacionada | Título del Ticket | Módulo / Slice Afectado | Estimación (SP) | Prioridad MoSCoW |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[TK-001](TK-001.md)** | N/A (Técnico) | Configuración del Core del Backend y Base de Datos | `shared` | 3 | Must Have |
-| **[TK-002](TK-002.md)** | [US-001](../user_stories/US-001.md) | Implementación de Autenticación de Operarios por PIN | `auth` | 3 | Must Have |
-| **[TK-003](TK-003.md)** | [US-002](../user_stories/US-002.md) | Implementación del Slice de Registro de Extracciones de Bodega | `stock` | 5 | Must Have |
-| **[TK-004](TK-004.md)** | [US-003](../user_stories/US-003.md) | Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO) | `kitchen` | 3 | Must Have |
-| **[TK-005](TK-005.md)** | [US-004](../user_stories/US-004.md) | Implementación del Slice de Consumo Parcial de Remanentes | `kitchen` | 3 | Must Have |
-| **[TK-006](TK-006.md)** | [US-005](../user_stories/US-005.md) | Implementación del Slice de Descarte y Mermas de Cocina | `kitchen` | 3 | Must Have |
-| **[TK-007](TK-007.md)** | [US-006](../user_stories/US-006.md) | Implementación de Pantalla de Notificaciones y Alertas Dinámicas en Frontend | `kitchen` | 3 | Should Have |
-| **[TK-008](TK-008.md)** | [US-007](../user_stories/US-007.md) | Implementación de Recetas y Descuento FEFO en Cascadas | `catalog`/`kitchen` | 5 | Should Have |
-| **[TK-009](TK-009.md)** | [US-008](../user_stories/US-008.md) | Implementación de Cierre de Turno y Conciliación en Cocina | `kitchen` | 5 | Should Have |
-| **[TK-010](TK-010.md)** | [US-009](../user_stories/US-009.md) | Implementación del Módulo de Reportes y Analítica de Mermas | `reports` | 3 | Should Have |
+### ⚙️ Tickets de Backend
 
+| ID Ticket | ID US Relacionada | Título del Ticket | Módulo / Slice Afectado | Estimación (SP) | Prioridad MoSCoW | Ruta del Fichero |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TK-001** | N/A (Técnico) | Configuración del Core del Backend y Base de Datos | `shared` | 3 | Must Have | [shared/backend/TK-001.md](shared/backend/TK-001.md) |
+| **TK-002** | [US-001](../user_stories/auth/US-001.md) | Implementación de Autenticación de Operarios por PIN | `auth` | 3 | Must Have | [auth/backend/TK-002.md](auth/backend/TK-002.md) |
+| **TK-003** | [US-002](../user_stories/stock/US-002.md) | Implementación del Slice de Registro de Extracciones de Bodega | `stock` | 5 | Must Have | [stock/backend/TK-003.md](stock/backend/TK-003.md) |
+| **TK-004** | [US-003](../user_stories/kitchen/US-003.md) | Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO) | `kitchen` | 3 | Must Have | [kitchen/backend/TK-004.md](kitchen/backend/TK-004.md) |
+| **TK-005** | [US-004](../user_stories/kitchen/US-004.md) | Implementación del Slice de Consumo Parcial de Remanentes | `kitchen` | 3 | Must Have | [kitchen/backend/TK-005.md](kitchen/backend/TK-005.md) |
+| **TK-006** | [US-005](../user_stories/kitchen/US-005.md) | Implementación del Slice de Descarte y Mermas de Cocina | `kitchen` | 3 | Must Have | [kitchen/backend/TK-006.md](kitchen/backend/TK-006.md) |
+| **TK-008** | [US-007](../user_stories/kitchen/US-007.md) | Implementación de Recetas y Descuento FEFO en Cascadas | `catalog`/`kitchen` | 5 | Should Have | [kitchen/backend/TK-008.md](kitchen/backend/TK-008.md) |
+| **TK-009** | [US-008](../user_stories/kitchen/US-008.md) | Implementación de Cierre de Turno y Conciliación en Cocina | `kitchen` | 5 | Should Have | [kitchen/backend/TK-009.md](kitchen/backend/TK-009.md) |
+| **TK-010** | [US-009](../user_stories/reports/US-009.md) | Implementación del Módulo de Reportes y Analítica de Mermas | `reports` | 3 | Should Have | [reports/backend/TK-010.md](reports/backend/TK-010.md) |
+
+### 🖥️ Tickets de Frontend
+
+| ID Ticket | ID US Relacionada | Título del Ticket | Módulo / Slice Afectado | Estimación (SP) | Prioridad MoSCoW | Ruta del Fichero |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TK-007** | [US-006](../user_stories/kitchen/US-006.md) | Implementación de Pantalla de Notificaciones y Alertas Dinámicas | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-007.md](kitchen/frontend/TK-007.md) |
+| **TK-007-B** | [US-001](../user_stories/auth/US-001.md) | Pantalla de Login por PIN | `auth` | 3 | Must Have | [auth/frontend/TK-007-B.md](auth/frontend/TK-007-B.md) |
+| **TK-007-C** | [US-007](../user_stories/kitchen/US-007.md) | Interfaz de Consumo de Recetas | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-007-C.md](kitchen/frontend/TK-007-C.md) |
+| **TK-007-D** | [US-008](../user_stories/kitchen/US-008.md) | Formulario de Reconciliación de Turno | `kitchen` | 5 | Should Have | [kitchen/frontend/TK-007-D.md](kitchen/frontend/TK-007-D.md) |
+| **TK-007-E** | [US-009](../user_stories/reports/US-009.md) | Dashboard de Reportes de Desperdicio y Eficiencia FEFO | `reports` | 3 | Should Have | [reports/frontend/TK-007-E.md](reports/frontend/TK-007-E.md) |
+| **TK-007-F** | [US-002](../user_stories/stock/US-002.md) | Pantalla de Registro de Extracciones de Bodega | `stock` | 3 | Must Have | [stock/frontend/TK-007-F.md](stock/frontend/TK-007-F.md) |
 
 *SP = Story Points (Puntos de Historia basados en escala Fibonacci).*
 
-
 ---
 
-## 🗂️ 2. Resumen de Fichas Técnicas de Tickets
+## 🗂️ 2. Resumen de Fichas Técnicas de Tickets por Módulo
 
-*   **[TK-001: Configuración del Core del Backend y Base de Datos](TK-001.md)**: Inicialización del monorepo, configuración de Prisma ORM, conexión segura cifrada a base de datos y middlewares globales de validación Zod y manejo de excepciones.
-*   **[TK-002: Implementación de Autenticación de Operarios por PIN](TK-002.md)**: Flujo completo de login rápido a la terminal táctil a través de la API `POST /api/auth/pin` haciendo uso de hashing `bcrypt`.
-*   **[TK-003: Implementación del Slice de Registro de Extracciones de Bodega](TK-003.md)**: Lógica transaccional de débito de stock cerrado de bodega y registro de un remanente activo con expiración acelerada.
-*   **[TK-004: Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO)](TK-004.md)**: Endpoint `GET /api/kitchen/remanentes` que lista insumos abiertos ordenados por proximidad de vencimiento haciendo uso de índices de base de datos.
-*   **[TK-005: Implementación del Slice de Consumo Parcial de Remanentes](TK-005.md)**: Registro de consumos aplicados a preparaciones que debita existencias y actualiza el estado de activo a agotado (`CONSUMED`) de forma atómica.
-*   **[TK-006: Implementación del Slice de Descarte y Mermas de Cocina](TK-006.md)**: Flujo de descarte total por expiración u otros motivos, actualizando las cantidades a cero y guardando logs de auditoría.
-*   **[TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas en Frontend](TK-007.md)**: Pantalla táctil en la terminal de cocina que calcula y muestra notificaciones semafóricas (FEFO, stock bajo en línea y avisos de estado offline de red).
-*   **[TK-008: Implementación de Recetas y Descuento FEFO en Cascadas](TK-008.md)**: Lógica transaccional para definir recetas y procesar el consumo rápido de stock en cascada FEFO sobre remanentes activos.
-*   **[TK-009: Implementación de Cierre de Turno y Conciliación en Cocina](TK-009.md)**: Flujo de fin de turno con auto-descarte de insumos caducados (>24h TRR) y registro de auditoría de diferencias físicas.
-*   **[TK-010: Implementación del Módulo de Reportes y Analítica de Mermas](TK-010.md)**: Endpoint para consultar mermas físicas consolidadas agrupadas por ingrediente y motivo en un rango de fechas.
+### 🛠️ Shared / Transversal
+*   **[TK-001: Configuración del Core del Backend y Base de Datos](shared/backend/TK-001.md)**: Inicialización del monorepo, configuración de Prisma ORM, conexión segura cifrada a base de datos y middlewares globales.
 
+### 🔐 Autenticación (`auth/`)
+*   **[TK-002: Implementación de Autenticación de Operarios por PIN](auth/backend/TK-002.md)** (Backend)
+*   **[TK-007-B: Pantalla de Login por PIN](auth/frontend/TK-007-B.md)** (Frontend)
 
+### 📦 Bodega y Stock (`stock/`)
+*   **[TK-003: Implementación del Slice de Registro de Extracciones de Bodega](stock/backend/TK-003.md)** (Backend)
+*   **[TK-007-F: Pantalla de Registro de Extracciones](stock/frontend/TK-007-F.md)** (Frontend)
+
+### 🍳 Cocina (`kitchen/`)
+*   **[TK-004: Consulta de Remanentes Activos en Cocina (FEFO)](kitchen/backend/TK-004.md)** (Backend)
+*   **[TK-005: Consumo Parcial de Remanentes](kitchen/backend/TK-005.md)** (Backend)
+*   **[TK-006: Descarte y Mermas de Cocina](kitchen/backend/TK-006.md)** (Backend)
+*   **[TK-008: Recetas y Descuento FEFO en Cascadas](kitchen/backend/TK-008.md)** (Backend)
+*   **[TK-009: Cierre de Turno y Conciliación en Cocina](kitchen/backend/TK-009.md)** (Backend)
+*   **[TK-007: Alertas y Notificaciones](kitchen/frontend/TK-007.md)** (Frontend)
+*   **[TK-007-C: Interfaz de Consumo de Recetas](kitchen/frontend/TK-007-C.md)** (Frontend)
+*   **[TK-007-D: Formulario de Reconciliación de Turno](kitchen/frontend/TK-007-D.md)** (Frontend)
+
+### 📊 Reportes (`reports/`)
+*   **[TK-010: Módulo de Reportes y Analítica de Mermas](reports/backend/TK-010.md)** (Backend)
+*   **[TK-007-E: Dashboard de Reportes de Mermas](reports/frontend/TK-007-E.md)** (Frontend)
