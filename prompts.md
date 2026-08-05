@@ -261,7 +261,7 @@ Se auditó la documentación de Pull Requests para asegurar que solo contenga in
 
 **Prompt 1 Configuración del Entorno de Desarrollo y Monorepo:**
 ```md
-Usando el ticket `TK-001` (docs/05_agile_planning/tickets/shared/backend/TK-001.md) y las directivas de `.agents/rules/backend-rules.md`, inicializa la estructura física del monorepo en Node.js y TypeScript:
+Usando el ticket `TK-001` (docs/05_agile_planning/tickets/shared/backend/TK-001.md) y las directivas de `docs/03_governance_and_quality/rules/backend-rules.md`, inicializa la estructura física del monorepo en Node.js y TypeScript:
 1. Configura el workspace con `pnpm`.
 2. Inicializa TypeScript con `tsconfig.json` optimizado.
 3. Instala e inicializa Express y Prisma ORM con PostgreSQL.
@@ -302,7 +302,7 @@ Se auditó y ejecutó de manera presencial el andamiaje del backend:
 
 **Prompt 2 Implementación de Módulo de Autenticación:**
 ```md
-Usando el ticket `TK-002` (docs/05_agile_planning/tickets/auth/backend/TK-002.md) y las directivas de `.agents/rules/domain-rules.md` y `.agents/rules/backend-rules.md`, implementa el vertical slice `auth` de autenticación por PIN:
+Usando el ticket `TK-002` (docs/05_agile_planning/tickets/auth/backend/TK-002.md) y las directivas de `docs/03_governance_and_quality/rules/domain-rules.md` y `docs/03_governance_and_quality/rules/backend-rules.md`, implementa el vertical slice `auth` de autenticación por PIN:
 1. Diseña la entidad de dominio `User` y el Value Object `Pin` con hashing de `bcrypt` y validación de 4 dígitos.
 2. Define la interfaz `IUserRepository` en el dominio.
 3. Escribe las pruebas unitarias en rojo (TDD) para validar y comparar PINs usando InMemoryRepository.
@@ -439,7 +439,7 @@ Se ha implementado el vertical slice de **Descarte de Remanentes por Merma (`TK-
 
 **Prompt 1 Configuración del Frontend, Persistencia Local e Interfaz:**
 ```md
-Usando el ticket `TK-007` (docs/05_agile_planning/tickets/kitchen/frontend/TK-007.md) y las directivas de `.agents/rules/frontend-rules.md`, implementa el módulo frontend de notificaciones táctiles y resiliencia offline:
+Usando el ticket `TK-007` (docs/05_agile_planning/tickets/kitchen/frontend/TK-007.md) y las directivas de `docs/03_governance_and_quality/rules/frontend-rules.md`, implementa el módulo frontend de notificaciones táctiles y resiliencia offline:
 1. Configura el entorno en `/apps/frontend` bajo @restostock/frontend con HSL CSS variables, escala ergonómica para botones táctiles (mínimo 48px) e Industrial Dark Mode.
 2. Define los modelos `ActiveRemanentDto` y puertos de repositorio `IRemanenteRepository`.
 3. Crea la lógica pura de semáforos FEFO (`calculateAlertSeverity`) y cúbrela con tests unitarios.

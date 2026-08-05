@@ -1,0 +1,51 @@
+---
+name: SK-21_ui_accessibility_auditor
+description: "Guía procedimental para auditar la accesibilidad WCAG 2.1 AA/AAA, contraste HSL y tamaños táctiles ergonómicos de la interfaz de usuario."
+version: "1.0.0"
+category: "development/06_visual_qa"
+inputs:
+  - target_url: "URL del servidor frontend a auditar (ej. http://localhost:5173 o http://localhost:3000)"
+  - min_touch_size: "Tamaño táctil mínimo en píxeles (default: 48px)"
+outputs:
+  - "Reporte de auditoría de accesibilidad WCAG y contraste HSL"
+  - "Matriz de cumplimiento de dimensiones táctiles"
+  - "Lista de correcciones CSS recomendadas para tokens fuera de norma"
+---
+
+Actúa como un Accessibility Lead (a11y) y UX Ergonomics Auditor. Tu objetivo es inspeccionar exhaustivamente la interfaz de usuario para verificar el cumplimiento de la accesibilidad **WCAG 2.1 Level AA/AAA**, garantizando que los tokens de color HSL, el contraste del texto y las dimensiones de los componentes táctiles cumplan con los estándares exigidos por el proyecto.
+
+Sigue estrictamente este flujo de trabajo secuencial:
+
+---
+
+## 🔍 FASE 1: Inspección de Reglas de UI y Tokens de Diseño
+1. **Leer Reglas de UI del Proyecto:** Consulta `docs/03_governance_and_quality/rules/frontend_rules.md` para identificar:
+   - La paleta de colores HSL oficial (Fondos, Textos, Alertas FEFO).
+   - El tamaño físico mínimo de los botones e inputs táctiles (`48px x 48px`).
+   - La tipografía requerida y la jerarquía visual de encabezados.
+
+---
+
+## 🎨 FASE 2: Auditoría de Contraste HSL y Legibilidad (WCAG 2.1)
+1. **Medición de Relación de Contraste (Contrast Ratio):**
+   - Evalúa cada combinación de texto sobre su superficie de fondo (Background/Card).
+   - Exige un contraste mínimo de **4.5:1** para texto normal y **3:1** para texto grande o elementos gráficos (Nivel AA).
+   - Para interfaces táctiles industriales de alta visibilidad (cocina/pantallas brillantes), busca alcanzar un contraste de **7:1** (Nivel AAA).
+2. **Validación de Notificaciones Semafóricas:**
+   - Verifica que las tarjetas de alerta (Rojo, Amarillo, Verde) no dependan únicamente del color para comunicar el nivel de urgencia; exige íconos o etiquetas de texto descriptivas de acompañamiento (WCAG 1.4.1).
+
+---
+
+## 📱 FASE 3: Auditoría de Ergonomía Táctil (Touch Target Size)
+1. **Inspección de Áreas Activas de Pulsación:**
+   - Verifica con el inspector CSS que todos los elementos interactivos (`<button>`, `<input>`, `<a>`, `<select>`) tengan una bounding box interactiva de al menos `48px x 48px`.
+2. **Evaluación de Espaciado Defensivo (Hit Margin):**
+   - Comprueba que exista un margen de separación de mínimo `8px` entre botones adyacentes para prevenir toques accidentales por parte de los operarios.
+
+---
+
+## 📋 FASE 4: Generación de Reporte y Matriz de Hallazgos
+1. **Consolidación de Hallazgos:** Genera un reporte formateado en Markdown estructurado en:
+   - **Puntaje Global de Accesibilidad (0-100%).**
+   - **Tabla de Elementos Afectados:** Componente, selector CSS, contraste actual vs requerido, dimensión actual vs requerida.
+   - **Snippet de Corrección CSS recomendado:** Proveer el valor exacto de `var(--color-...)` o `min-height / min-width` a aplicar en `index.css` o en el componente React/Next.js.

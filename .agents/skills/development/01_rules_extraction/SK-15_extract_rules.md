@@ -1,0 +1,48 @@
+---
+name: SK-15_extract_rules
+description: "Analiza la documentación técnica del proyecto (PRDs, Arquitectura, Esquemas, ADRs) y deduce/genera automáticamente las reglas de gobernanza y codificación del proyecto en docs/03_governance_and_quality/rules/."
+version: "1.0.0"
+category: "development/01_rules_extraction"
+inputs:
+  - docs_path: "Ruta raíz de la documentación técnica (ej. docs/)"
+outputs:
+  - "Carpeta docs/03_governance_and_quality/rules/ creada y poblada con los estándares de codificación inferidos del proyecto"
+---
+
+Actúa como un Principal Software Architect y Lead Technical Governance Officer. Tu objetivo es analizar la documentación del proyecto en `docs_path` y deducir de forma automatizada todas las reglas de codificación, persistencia, seguridad, UI y pruebas que deben regir el desarrollo, guardándolas en `docs/03_governance_and_quality/rules/`.
+
+Sigue strictly este flujo de trabajo secuencial:
+
+---
+
+## 🔍 FASE 1: Análisis e Inspección de la Documentación
+Lee y analiza minuciosamente los siguientes artefactos en `docs/`:
+1. **Definición de Producto:** `docs/01_product_definition/` (PRD, reglas de negocio e invariantes).
+2. **Diseño de Arquitectura:** `docs/02_architecture_design/` (Capas de software, estructura de carpetas, patrones Hexagonales / Clean y ADRs).
+3. **Persistencia y API:** `docs/04_persistence_and_api/` (Esquemas de base de datos, ORM, precisión matemática y especificación OpenAPI).
+4. **Calidad y Seguridad:** `docs/03_governance_and_quality/` (Estrategias de testing, mitigación OWASP y seguridad).
+
+---
+
+## 🧠 FASE 2: Deducción de Estándares Tecnológicos
+Infiere y sintetiza las reglas específicas para cada una de las siguientes áreas:
+*   **Reglas de Dominio (`domain_rules.md`):** Nivel de pureza tecnológica, gestión de inmutabilidad, tratamiento de precisión matemática (ej. decimales), invariantes de negocio y clases de excepciones.
+*   **Reglas de Backend e Infraestructura (`backend_rules.md`):** Framework web, estrategia de inyección de dependencias, validación de DTOs/Payloads, manejo de concurrencia y transacciones, serialización de tipos.
+*   **Reglas de Base de Datos (`database_rules.md`):** ORM utilizado, convenciones de nombres físicos (snake_case/camelCase), claves primarias/foráneas, índices y manejo de queries seguras.
+*   **Reglas de Frontend y UX/UI (`frontend_rules.md`):** Framework visual, tokens de diseño (paleta de colores HSL, temas), ergonomía de la interfaz (tamaños táctiles mínimos), estados defensivos (Loading/Error/Empty/Offline) e integración de repositorios UI.
+*   **Reglas de Testing y QA (`testing_rules.md`):** Estrategia de pruebas (TDD), políticas de simulación/fakes, librerías de prueba y Quality Gates de compilación.
+*   **Reglas de Ciberseguridad (`security_rules.md`):** Cifrado de credenciales/PINs, autenticación (JWT/Tokens), sanitización de entradas y prevención de OWASP Top 10.
+*   **Reglas de Git y Workflow (`git_rules.md`):** Formato de commits, atomicidad por ticket e integración continua.
+
+---
+
+## 📝 FASE 3: Generación de Archivos de Reglas y Contrato del Agente
+1. Crea el directorio objetivo `docs/03_governance_and_quality/rules/` si no existe.
+2. Escribe cada uno de los 7 archivos de reglas (`domain_rules.md`, `backend_rules.md`, `database_rules.md`, `frontend_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) redactados de forma profesional en formato Markdown.
+3. **Encabezado de Pila Tecnológica:** Todo archivo de reglas DEBE incluir una sección inicial `## 🛠️ Pila Tecnológica Detectada` detallando expresamente los frameworks, librerías y estándares identificados en la documentación.
+4. **Generación/Actualización de AGENTS.md:** Genera o sincroniza el archivo `AGENTS.md` en la raíz del proyecto, vinculando el contexto del producto, la pila tecnológica, la Arquitectura Hexagonal y la directiva innegociable de leer las reglas en `docs/03_governance_and_quality/rules/` y seguir los protocolos de cascada `.agents/nuevas_ideas_cascada.md` y `.agents/desarrollo_cascada.md`.
+
+---
+
+## ✅ FASE 4: Confirmación y Reporte
+Presenta un informe resumen indicando las reglas inferidas y los archivos generados en `docs/03_governance_and_quality/rules/`, listos para ser consumidos por los desarrolladores y las habilidades de desarrollo.

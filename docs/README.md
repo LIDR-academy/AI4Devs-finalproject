@@ -23,8 +23,8 @@ La documentación está organizada cronológicamente en 5 fases coincidentes con
 ### 03. Gobernanza, Calidad y Seguridad (`docs/03_governance_and_quality/`)
 * [07_restostock_security_strategy.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/07_restostock_security_strategy.md): Estrategia de seguridad OWASP Top 10, sanitización, JWT y cumplimiento regulatorio.
 * [08_restostock_testing_strategy.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/08_restostock_testing_strategy.md): Directiva de testing TDD (Red-Green-Refactor) y cobertura obligatoria.
-* [guia_redaccion_tecnica.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/guia_redaccion_tecnica.md): Guía de estilo, convenciones de nomenclatura y redacción técnica para IA.
-* [audit_report.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/audit_report.md): Reporte de auditoría integral y hallazgos.
+* [09_restostock_technical_writing_guide.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/09_restostock_technical_writing_guide.md): Guía de estilo, convenciones de nomenclatura y redacción técnica para IA.
+* [audits/](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/audits/): Directorio de reportes de auditoría integral y hallazgos.
 
 ### 04. Modelo Físico y Contratos API (`docs/04_persistence_and_api/`)
 * [09_restostock_database_schema.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/04_persistence_and_api/09_restostock_database_schema.md): Esquema declarativo de base de datos Prisma (`schema.prisma`) en 3NF.

@@ -29,7 +29,7 @@ Esta versión marca la integración de la especificación de Reporte de Mermas (
     *   Especificación del endpoint `GET /api/reports/waste` con soporte para agrupación por ingrediente y motivo en un rango de fechas ([docs/04_persistence_and_api/10_restostock_api_specification.md](docs/04_persistence_and_api/10_restostock_api_specification.md)).
     *   Diseño estructural de la arquitectura hexagonal en el slice vertical de reportes (`reports/`) en [docs/02_architecture_design/03_restostock_design.md](docs/02_architecture_design/03_restostock_design.md) y [docs/02_architecture_design/06_restostock_folder_structure.md](docs/02_architecture_design/06_restostock_folder_structure.md).
 *   **Gobernanza y Aseguramiento:**
-    *   Creación de [docs/03_governance_and_quality/audit_report.md](docs/03_governance_and_quality/audit_report.md) para registrar los resultados de la auditoría de coherencia y resolver contradicciones entre la base de datos y la API.
+    *   Creación de [docs/audits/specs-2026-07-31.md](docs/audits/specs-2026-07-31.md) para registrar los resultados de la auditoría de coherencia y resolver contradicciones entre la base de datos y la API.
 
 ### Changed
 *   **Estandarización de Precisiones Decimales:**

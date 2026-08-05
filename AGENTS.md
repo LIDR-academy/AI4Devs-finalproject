@@ -52,12 +52,13 @@ Before coding, you must sequentially update the specifications in the following 
 
 ## 🧪 4. Coding & Quality Gates (DoD)
 
-To mark a ticket as **Done**, you must guarantee:
-1. **TDD Compliance:** Write a failing test (RED) asserting the requirements before writing production code. Achieve green status (GREEN), then refactor.
-2. **InMemory Fakes:** Do not mock databases using complex mock libraries. Implement clean, memory-based fake implementations of your repository interfaces (e.g., `InMemoryUserRepository`).
-3. **Safety & Sanitization:** Use Zod schemas in all controllers. No un-sanitized raw database inputs.
-4. **Build & Lint Verification:** Always run `pnpm run build` and `pnpm run lint` before committing. There must be 0 errors and 0 warnings.
-5. **Atomic Git Commits:** Always perform git commits on a per-ticket basis (exactly one commit per technical ticket/TK-XXX) to maintain a clean, structured, and traceable version control history. Never mix multiple tickets in a single commit.
+To mark a ticket as **Done**, you must follow `.agents/desarrollo_cascada.md` and guarantee:
+1. **Dynamic Rule Discovery:** Before writing code for any ticket, you MUST read the corresponding derived rules in `docs/03_governance_and_quality/rules/` (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`).
+2. **TDD Compliance:** Write a failing test (RED) asserting the requirements before writing production code. Achieve green status (GREEN), then refactor.
+3. **InMemory Fakes:** Do not mock databases using complex mock libraries. Implement clean, memory-based fake implementations of your repository interfaces (e.g., `InMemoryUserRepository`).
+4. **Safety & Sanitization:** Use Zod schemas in all controllers. No un-sanitized raw database inputs.
+5. **Build & Lint Verification:** Always run `pnpm run build` and `pnpm run lint` before committing. There must be 0 errors and 0 warnings.
+6. **Atomic Git Commits:** Always perform git commits on a per-ticket basis (exactly one commit per technical ticket/TK-XXX) to maintain a clean, structured, and traceable version control history. Never mix multiple tickets in a single commit.
 
 ---
 

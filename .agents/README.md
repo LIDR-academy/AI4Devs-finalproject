@@ -5,22 +5,22 @@ Este directorio contiene las meta-directivas, reglas de gobernanza y habilidades
 ---
 
 ## 💡 1. Meta-Protocolos de Trabajo (Master Workflows)
-Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Driven Development (VSDD)**, el agente debe seguir estrictamente este flujo maestro antes de escribir código:
+Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Driven Development (VSDD)**, el agente debe seguir estrictamente estos dos flujos maestros y su mapa de trazabilidad:
 
-*   **[Protocolo de Integración en Cascada](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/nuevas_ideas_cascada.md):** Guía paso a paso para analizar el impacto, actualizar el PRD, modelar la base de datos, adaptar el contrato OpenAPI y registrar los tickets de Agile de forma secuencial y sin "vibe coding".
+*   **[Mapa y Trazo Maestro VSDD](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/trazo_maestro_vsdd.md):** Diagrama de secuencia y explicación end-to-end desde la idea inicial hasta el commit atómico en Git.
+*   **[Protocolo de Especificación en Cascada (Nuevas Ideas / Specs)](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/nuevas_ideas_cascada.md):** Guía paso a paso para analizar el impacto, actualizar el PRD, modelar la base de datos, adaptar el contrato OpenAPI y registrar los tickets de Agile de forma secuencial (`Idea ➔ docs/`).
+*   **[Protocolo de Desarrollo en Cascada (Codificación / Tickets)](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/desarrollo_cascada.md):** Guía paso a paso para ejecutar un ticket técnico desde la extracción de reglas, migraciones, TDD, verificación de linter, pruebas visuales y commit atómico (`TK-XXX ➔ apps/`).
 
 ---
 
-## 🔴 2. Reglas del Entorno (Workspace Rules)
-Las reglas son directrices innegociables cargadas automáticamente en el contexto de la IA según el directorio de trabajo activo. Su objetivo es garantizar la consistencia técnica y de diseño:
+## 🔴 2. Reglas y Estándares del Proyecto (Project Specifications)
+Toda regla de arquitectura, base de datos, ciberseguridad, testing y frontend es **dinámica y agnóstica**, e inferida directamente por las habilidades a partir de la documentación viva del proyecto en `docs/`:
 
-*   **[Reglas del Dominio](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/rules/domain-rules.md):** Preservación de la pureza de la capa Domain (TypeScript puro, uso obligatorio de `decimal.js`, cero dependencias de infraestructura).
-*   **[Reglas de Backend](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/rules/backend-rules.md):** Estándares de inyección de dependencias, controladores Express, validación estricta con Zod y serialización de decimales como strings en JSON.
-*   **[Reglas de Base de Datos y Persistencia](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/rules/database-rules.md):** Estándares de nombres snake_case en BD, tipos Decimal de alta precisión para cocina, integridad referencial y definición de índices en Prisma.
-*   **[Reglas de Frontend y UX/UI](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/rules/frontend-rules.md):** Directivas para pantallas táctiles (botones ≥48px), código semafórico de alertas FEFO y persistencia/banner de estado offline.
-*   **[Reglas de Ciberseguridad](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/rules/security-rules.md):** Mitigación OWASP, hashing de PINs con `bcrypt`, duración de JWT (12 horas) y protección de fuga de datos en logs.
-*   **[Reglas de Git y Workflow](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/rules/git-rules.md):** Estándar de Conventional Commits y validación de Quality Gates en Pull Requests.
-*   **[Reglas de Testing y TDD](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/rules/testing-rules.md):** Flujo RED-GREEN-REFACTOR obligatorio y uso de InMemory Fakes en lugar de mocks tradicionales de base de datos.
+*   **Alcance y Producto:** `docs/01_product_definition/` (PRDs y Reglas de Negocio).
+*   **Arquitectura y Diseño:** `docs/02_architecture_design/` (Capas, Mappers, ADRs y Estructura).
+*   **Gobernanza y Calidad:** `docs/03_governance_and_quality/` (Estrategias de prueba, seguridad e informes).
+*   **Persistencia y APIs:** `docs/04_persistence_and_api/` (Esquemas de Base de Datos y OpenAPI 3.0).
+*   **Gestión Ágil:** `docs/05_agile_planning/` (User Stories INVEST y Tickets Técnicos).
 
 ---
 
@@ -35,10 +35,13 @@ Las habilidades son runbooks especializados organizados por fases que la IA carg
 *   **05_agile_planning:** [Historias de Usuario (INVEST)](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/specs/05_agile_planning/SK-12_user_stories.md), [Planificación de Tickets](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/specs/05_agile_planning/SK-13_backlog_tickets.md) y [Registro de PRs](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/specs/05_agile_planning/SK-14_pull_requests.md).
 
 ### Fase de Codificación (Development)
-*   **backend:** [Desarrollo de Backend desde Tickets](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/backend/SK-dev-backend-ticket.md) (entidades de dominio, casos de uso, controladores REST, adaptadores Prisma y tests unitarios).
-*   **frontend:** [Desarrollo de Frontend desde Tickets](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/frontend/SK-dev-frontend-ticket.md) (componentes UI táctiles, alertas FEFO, estado local/global, offline).
-*   **testing_and_qa:** Pruebas unitarias de dominio, integración HTTP, fakes.
-*   **devops_and_env:** Docker, migraciones Prisma.
+*   **01_rules_extraction:** [SK-15 Extracción de Reglas](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/01_rules_extraction/SK-15_extract_rules.md) (Genera `docs/03_governance_and_quality/rules/` analizando la documentación en `docs/`).
+*   **02_backend_development:** [SK-16 Desarrollo de Backend desde Tickets](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/02_backend_development/SK-16_backend_ticket.md) (Lógica de dominio, aplicación e infraestructura con TDD).
+*   **03_frontend_development:** [SK-17 Desarrollo de Frontend desde Tickets](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/03_frontend_development/SK-17_frontend_ticket.md) (Componentes de interfaz táctil, estado y enrutamiento).
+*   **04_persistence_and_db:** [SK-18 Migraciones de Base de Datos](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/04_persistence_and_db/SK-18_db_migration.md) (Actualización del esquema ORM y migraciones).
+*   **05_quality_and_lint:** [SK-19 Refactorización y Lints](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/05_quality_and_lint/SK-19_refactor_lint.md), [SK-22 Autorrecuperación de Errores](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/05_quality_and_lint/SK-22_agent_troubleshooting.md) y [SK-23 Seguridad en Dependencias Anti-Slopsquatting](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/05_quality_and_lint/SK-23_dependency_security_guard.md).
+*   **06_visual_qa:** [SK-20 Pruebas de Calidad Visual (Visual QA)](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/06_visual_qa/SK-20_browser_qa.md) y [SK-21 Auditoría de Accesibilidad UI y Ergonomía (a11y)](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/06_visual_qa/SK-21_ui_accessibility_auditor.md).
+*   **Patrones de Oro (Few-Shot):** [Plantillas y Ejemplos de Referencia](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/examples/FEW_SHOT_PATTERNS.md).
 
 ---
 

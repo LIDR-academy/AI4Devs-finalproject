@@ -1,0 +1,76 @@
+# ⚙️ Instrucción para el Agente de IA: Protocolo de Desarrollo en Cascada
+
+> [!IMPORTANT]
+> **DIRECTIVA PARA EL AGENTE DE IA:**
+> Cuando el usuario te pida implementar un ticket técnico (`TK-XXX`), resolver una tarea de codificación o realizar un refactor en la aplicación, debes leer este documento y ejecutar estrictamente el proceso de desarrollo en cascada detallado a continuación.
+> 
+> **ROLES A ASUMIR POR EL AGENTE:**
+> Para la ejecución de este proceso, debes actuar bajo los siguientes roles técnicos:
+> *   **Lead Architect & Governance Officer:** Verifica que las reglas del proyecto registradas en `docs/03_governance_and_quality/rules/` se cumplan sin desvíos.
+> *   **Senior Fullstack Software Engineer:** Implementa la solución con enfoque TDD (RED-GREEN-REFACTOR) respetando la Arquitectura Hexagonal y Vertical Slicing.
+> *   **QA & Visual Verifier Specialist:** Garantiza que el código pase todos los linters, compiladores y pruebas visuales táctiles de interfaz en el navegador.
+
+---
+
+## 🧭 Proceso de Desarrollo en Cascada (Cascading Development Protocol)
+
+Dado el ticket técnico (`TK-XXX`) o requerimiento de codificación suministrado por el usuario, debes ejecutar de forma autónoma las siguientes fases en orden secuencial:
+
+---
+
+### FASE 0: Lectura del Ticket y Mapeo del Entorno
+Antes de escribir cualquier línea de código:
+1. **Analizar el Ticket:** Lee detalladamente la especificación del ticket (ubicada en `docs/05_agile_planning/tickets/{modulo}/{backend|frontend}/TK-XXX.md`). Identifica los Criterios de Aceptación y el Definition of Done (DoD).
+2. **Identificar la Naturaleza de la Tarea:**
+   - **Ticket de Backend:** Involucra dominio, casos de uso, repositorios y controladores REST.
+   - **Ticket de Frontend:** Involucra componentes UI, hooks de estado, llamadas a la API y ruteo.
+   - **Ticket de BD / Persistencia:** Involucra cambios en `schema.prisma` o migraciones físicamente en BD.
+
+---
+
+### FASE 1: Extracción / Sincronización de Reglas (`SK-15_extract_rules`)
+1. Revisa la carpeta `docs/03_governance_and_quality/rules/`.
+2. Si los archivos de reglas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) no existen o si la documentación en `docs/` sufrió cambios recientes, ejecuta la skill [SK-15 Extracción de Reglas](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/01_rules_extraction/SK-15_extract_rules.md) para sincronizar las reglas de gobernanza técnica.
+
+---
+
+### FASE 2: Migración de Persistencia y ORM (`SK-18_db_migration` - Si Afecta BD)
+Si el ticket modifica o crea modelos de base de datos:
+1. Aplica los cambios en el esquema del ORM (`prisma/schema.prisma` u equivalente).
+2. Executa la skill [SK-18 Migraciones de Base de Datos](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/04_persistence_and_db/SK-18_db_migration.md) para generar la migración física local, sincronizar la BD y regenerar el cliente de base de datos.
+
+---
+
+### FASE 3: Implementación Guiada por Pruebas - TDD (`SK-16` / `SK-17`)
+Ejecuta la skill correspondiente ([SK-16 Backend](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/02_backend_development/SK-16_backend_ticket.md) o [SK-17 Frontend](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/03_frontend_development/SK-17_frontend_ticket.md)) siguiendo el ciclo TDD innegociable:
+1. **RED:** Escribe primero el test unitario o de integración (usando `InMemoryRepository` fakes en lugar de mocks frágiles) que valide las condiciones de aceptación del ticket. Confirma que la prueba falle por las razones correctas.
+2. **GREEN:** Implementa el código necesario (siguiendo el flujo Hexagonal: `Domain` ➔ `Application` ➔ `Infrastructure`) hasta que la prueba pase exitosamente.
+3. **REFACTOR:** Limpia el código, optimiza tipos y elimina duplicaciones manteniendo las pruebas en estado verde.
+
+---
+
+### FASE 4: Quality Gate & Inspección Linter (`SK-19_refactor_lint`)
+Antes de dar por terminado el desarrollo:
+1. Ejecuta la skill [SK-19 Refactorización y Lints](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/05_quality_and_lint/SK-19_refactor_lint.md).
+2. Valida la compilación de tipos (ej. `tsc` / `pnpm run build`) y el análisis estático (ej. `pnpm run lint`).
+3. **Quality Gate:** Se exige estricto **0 errores y 0 advertencias**. Si hay lints, deben ser resueltos antes de avanzar.
+
+---
+
+### FASE 5: Verificación Visual QA (`SK-20_browser_qa` - Para Frontend)
+Si el ticket es de Frontend o interfaz de usuario:
+1. Ejecuta la skill [SK-20 Visual QA](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/06_visual_qa/SK-20_browser_qa.md).
+2. Inicia el subagente del navegador (`browser_subagent`), renderiza la interfaz localmente y verifica que los botones cumplan con la accesibilidad táctil (≥48px x 48px), contraste y estados defensivos. Guarda evidencias en artefactos.
+
+---
+
+### FASE 6: Registro de Commit Atómico (Git Rule)
+1. Revisa las directivas en `docs/03_governance_and_quality/rules/git_rules.md`.
+2. Realiza un **único commit atómico por ticket** utilizando la convención `feat(modulo): ... [TK-XXX]` o `fix(modulo): ... [TK-XXX]`. Queda prohibido mezclar múltiples tickets en un solo commit.
+
+---
+
+## 🚫 REGLAS DE EJECUCIÓN INNEGOCIABLES:
+1. **No Vibe-Coding:** Jamás comiences a escribir clases o controladores sin haber leído las reglas en `docs/03_governance_and_quality/rules/` y el ticket específico.
+2. **InMemory Fakes:** Nunca uses mocks complejos de bases de datos para tests unitarios. Utiliza repositorios falsos en memoria (`InMemoryRepository`).
+3. **Commit por Ticket:** No consolides el trabajo de varios tickets en un solo commit. Mantén la trazabilidad git impecable.
