@@ -47,6 +47,11 @@ export class AuthService {
     }
   }
 
+  public static saveSession(token: string, user: { id: string; name: string; role: string }): void {
+    localStorage.setItem(AuthService.STORAGE_KEY, token);
+    localStorage.setItem(AuthService.USER_KEY, JSON.stringify(user));
+  }
+
   public static logout(): void {
     localStorage.removeItem(AuthService.STORAGE_KEY);
     localStorage.removeItem(AuthService.USER_KEY);

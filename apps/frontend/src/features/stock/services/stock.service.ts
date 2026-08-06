@@ -1,0 +1,70 @@
+export interface ExtractionRequest {
+  insumoId: string;
+  quantity: number | string;
+  toLocation?: string;
+}
+
+export interface ExtractionResult {
+  remanenteId: string;
+  insumoId: string;
+  insumoName: string;
+  quantityExtracted: string;
+  remainingWarehouseStock: string;
+  location: string;
+  expirationDate: string;
+  status: string;
+}
+
+export class StockService {
+  private static mockWarehouseStocks: Record<string, { name: string; stock: number; unit: string }> = {
+    'ins-1': { name: 'Queso Mozzarella', stock: 15.5, unit: 'KG' },
+    'ins-2': { name: 'Salsa Pomodoro', stock: 25.0, unit: 'L' },
+    'ins-3': { name: 'Masa de Pizza', stock: 40.0, unit: 'UNITS' },
+  };
+
+  public static async recordExtraction(data: ExtractionRequest): Promise<ExtractionResult> {
+    try {
+      const response = await fetch('/api/v1/stock/extraction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        return (await response.json()) as ExtractionResult;
+      }
+    } catch {
+      // Fallback a modo demo en memoria
+    }
+
+    const item = this.mockWarehouseStocks[data.insumoId] || {
+      name: 'Insumo Cocina',
+      stock: 10.0,
+      unit: 'KG',
+    };
+    const qty = Number(data.quantity);
+    item.stock = Math.max(0, item.stock - qty);
+
+    const now = new Date();
+    const expirationDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+    return {
+      remanenteId: `rem-${Date.now()}`,
+      insumoId: data.insumoId,
+      insumoName: item.name,
+      quantityExtracted: qty.toFixed(4),
+      remainingWarehouseStock: item.stock.toFixed(4),
+      location: data.toLocation || 'KITCHEN_FRIDGE',
+      expirationDate: expirationDate.toISOString(),
+      status: 'ACTIVE',
+    };
+  }
+
+  public static getAvailableInsumos() {
+    return [
+      { id: 'ins-1', name: 'Queso Mozzarella', stock: 15.5, unit: 'KG' },
+      { id: 'ins-2', name: 'Salsa Pomodoro', stock: 25.0, unit: 'L' },
+      { id: 'ins-3', name: 'Masa de Pizza', stock: 40.0, unit: 'UNITS' },
+    ];
+  }
+}

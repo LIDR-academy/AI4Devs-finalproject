@@ -12,7 +12,7 @@ describe('TK-001-FE: Frontend Core & Design System TDD', () => {
 
   it('debe renderizar el encabezado principal de RestoStock', () => {
     render(<App />);
-    const heading = screen.getByText(/RestoStock - Control de Inventario FEFO/i);
+    const heading = screen.getByText(/RestoStock FEFO Dashboard/i);
     expect(heading).toBeInTheDocument();
   });
 
@@ -23,11 +23,11 @@ describe('TK-001-FE: Frontend Core & Design System TDD', () => {
     expect(syncButton).toHaveClass('btn-touch');
   });
 
-  it('debe renderizar el boton de descarte de merma con la clase de peligro .btn-danger', () => {
+  it('debe renderizar el boton de extraccion de bodega con la clase de accion principal .btn-primary', () => {
     render(<App />);
-    const wasteButton = screen.getByRole('button', { name: /Registrar Descarte de Merma/i });
-    expect(wasteButton).toBeInTheDocument();
-    expect(wasteButton).toHaveClass('btn-touch');
-    expect(wasteButton).toHaveClass('btn-danger');
+    const extractionButton = screen.getByRole('button', { name: /Extraer Insumo de Bodega/i });
+    expect(extractionButton).toBeInTheDocument();
+    expect(extractionButton).toHaveClass('btn-touch');
+    expect(extractionButton).toHaveClass('btn-primary');
   });
 });

@@ -1,10 +1,47 @@
-import React, { useState } from 'react';
-import { Package, AlertTriangle, ShieldCheck, RefreshCw, LogOut, User } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Package,
+  AlertTriangle,
+  RefreshCw,
+  LogOut,
+  User,
+  PlusCircle,
+  Clock,
+  ShieldCheck,
+} from 'lucide-react';
 import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
 import { AuthService } from './features/auth/services/auth.service.js';
+import { KitchenService, RemanenteFEFOItem } from './features/kitchen/services/kitchen.service.js';
+import { ActiveRemanentesList } from './features/kitchen/components/ActiveRemanentesList.js';
+import { WarehouseExtractionModal } from './features/stock/components/WarehouseExtractionModal.js';
+import { DiscardModal } from './features/kitchen/components/DiscardModal.js';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState(AuthService.getStoredUser());
+  const [remanentes, setRemanentes] = useState<RemanenteFEFOItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Modales
+  const [isExtractionOpen, setIsExtractionOpen] = useState(false);
+  const [discardTarget, setDiscardTarget] = useState<RemanenteFEFOItem | null>(null);
+
+  const loadRemanentes = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const items = await KitchenService.fetchActiveRemanentes();
+      setRemanentes(items);
+    } catch {
+      // Manejo silencioso
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadRemanentes();
+    }
+  }, [currentUser, loadRemanentes]);
 
   const handleLoginSuccess = () => {
     setCurrentUser(AuthService.getStoredUser());
@@ -15,24 +52,40 @@ export const App: React.FC = () => {
     setCurrentUser(null);
   };
 
+  const handleConsume = async (id: string, qty: number) => {
+    await KitchenService.consumeRemanente(id, qty);
+    await loadRemanentes();
+  };
+
   if (!currentUser) {
     return <PinLoginModal onSuccess={handleLoginSuccess} />;
   }
 
+  const criticalCount = remanentes.filter((r) => r.hoursRemaining < 24).length;
+
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header Principal */}
-      <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', minHeight: '100vh' }}>
+      {/* Header Principal Ergonomico */}
+      <header
+        style={{
+          marginBottom: '24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
+      >
         <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-            RestoStock - Control de Inventario FEFO
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Package style={{ color: 'var(--color-primary)' }} /> RestoStock FEFO Dashboard - Control de Inventario FEFO
           </h1>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Sistema Táctil de Cocina & Bodega (Dark Petrol Dashboard)
+          <p style={{ color: 'var(--text-secondary)', marginTop: '4px', fontSize: '0.9rem' }}>
+            Sistema Táctil de Inventario en Tiempo Real para Cocinas Industriales
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {/* Badge del Usuario Autenticado */}
           <div
             style={{
@@ -52,8 +105,14 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          <button className="btn-touch btn-primary" id="btn-sync-remanentes">
-            <RefreshCw size={20} />
+          <button
+            className="btn-touch btn-secondary"
+            onClick={loadRemanentes}
+            disabled={isLoading}
+            id="btn-sync-remanentes"
+            title="Sincronizar Remanentes"
+          >
+            <RefreshCw size={20} className={isLoading ? 'spin' : ''} />
             Sincronizar
           </button>
 
@@ -64,57 +123,100 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Rejilla de Tarjetas (Dashboard Grid) */}
-      <main style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-        {/* Tarjeta 1: Remanentes Activos */}
-        <section className="card-dashboard">
+      {/* Barra de Acciones Rapidas & Resumen FEFO */}
+      <section
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '16px',
+          marginBottom: '28px',
+        }}
+      >
+        {/* Tarjeta 1: Total Remanentes */}
+        <div className="card-dashboard">
           <div className="card-header">
             <div className="card-badge-icon">
-              <Package size={20} />
+              <Clock size={20} />
             </div>
-            <h2 className="card-title">Remanentes Activos FEFO</h2>
+            <h2 className="card-title">Remanentes Abiertos</h2>
           </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-            24 <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>porciones</span>
+          <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--color-primary)' }}>
+            {remanentes.length}{' '}
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>lotes FEFO</span>
           </div>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '8px', fontSize: '0.9rem' }}>
-            Consumo guiado por expiración próxima
-          </p>
-        </section>
+        </div>
 
-        {/* Tarjeta 2: Alertas Críticas < 24h */}
-        <section className="card-dashboard">
+        {/* Tarjeta 2: Alertas Críticas */}
+        <div className="card-dashboard">
           <div className="card-header">
-            <div className="card-badge-icon" style={{ backgroundColor: 'rgba(255, 42, 42, 0.15)', color: 'var(--color-danger)' }}>
+            <div
+              className="card-badge-icon"
+              style={{ backgroundColor: 'rgba(255, 42, 42, 0.15)', color: 'var(--color-danger)' }}
+            >
               <AlertTriangle size={20} />
             </div>
-            <h2 className="card-title">Alertas por Vencer (&lt; 24h)</h2>
+            <h2 className="card-title">Vencimiento Próximo (&lt;24h)</h2>
           </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-danger)' }}>
-            3 <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>lotes críticos</span>
+          <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--color-danger)' }}>
+            {criticalCount}{' '}
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>lotes críticos</span>
           </div>
-          <div style={{ marginTop: '16px' }}>
-            <button className="btn-touch btn-danger" id="btn-descarte-merma" style={{ width: '100%' }}>
-              Registrar Descarte de Merma
-            </button>
-          </div>
-        </section>
+        </div>
 
-        {/* Tarjeta 3: Ergonomía & Salud */}
-        <section className="card-dashboard">
-          <div className="card-header">
-            <div className="card-badge-icon">
-              <ShieldCheck size={20} />
-            </div>
-            <h2 className="card-title">Ergonomía Táctil Certified</h2>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-            <div>✔️ Áreas interactivas de mínimo <strong>48px x 48px</strong>.</div>
-            <div>✔️ Teclado PinPad táctil de <strong>64px x 64px</strong>.</div>
-            <div>✔️ Sesión JWT válida por 12 horas.</div>
-          </div>
-        </section>
+        {/* Tarjeta 3: Accion de Extraccion Bodega */}
+        <div
+          className="card-dashboard"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 210, 190, 0.05)',
+            border: '1px dashed var(--color-primary)',
+          }}
+        >
+          <button
+            className="btn-touch btn-primary"
+            onClick={() => setIsExtractionOpen(true)}
+            style={{ width: '100%', height: '56px', fontSize: '1rem', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
+            id="btn-open-extraction"
+          >
+            <PlusCircle size={22} />
+            Extraer Insumo de Bodega
+          </button>
+        </div>
+      </section>
+
+      {/* Titulo del Tablero de Cocina */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShieldCheck style={{ color: 'var(--color-primary)' }} /> Tablero FEFO de Cocina (Prioridad por Expiración)
+        </h2>
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+          Botones táctiles optimizados a <strong>&ge;48px</strong>
+        </span>
+      </div>
+
+      {/* Lista de Remanentes Activos FEFO */}
+      <main>
+        <ActiveRemanentesList
+          items={remanentes}
+          onConsume={handleConsume}
+          onDiscard={(item) => setDiscardTarget(item)}
+        />
       </main>
+
+      {/* Modales */}
+      <WarehouseExtractionModal
+        isOpen={isExtractionOpen}
+        onClose={() => setIsExtractionOpen(false)}
+        onSuccess={loadRemanentes}
+      />
+
+      <DiscardModal
+        remanente={discardTarget}
+        onClose={() => setDiscardTarget(null)}
+        onSuccess={loadRemanentes}
+      />
     </div>
   );
 };

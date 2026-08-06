@@ -73,7 +73,7 @@ describe('TK-007-FE: Tactile PIN Login Screen TDD Suite', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/RestoStock - Control de Inventario FEFO/i)).toBeInTheDocument();
+      expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument();
       expect(screen.getByText(/Carlos Gomez \(Cocina\)/i)).toBeInTheDocument();
     });
 
