@@ -64,10 +64,13 @@ Para guiar al asistente de IA en cada etapa del ciclo de vida del producto, util
 
 ### 🟢 FASE 1: Especificación y Documentación Viva (Idea Inicial ➔ `docs/`)
 * **Propósito:** Transformar la concepción inicial en PRD, arquitectura C4, esquemas de BD, OpenAPI 3.0, Historias de Usuario INVEST y Tickets Técnicos `TK-XXX`.
-* **Habilidades involucradas:** `SK-02` a `SK-14`.
+* **Habilidades involucradas:** `SK-02` a `SK-14` (incluyendo `SK-05-B` para UI/UX).
 
-> **Prompt para la Fase 1:**
+> **Prompt General para la Fase 1 (Cascada Completa):**
 > *"Agente, ejecuta el protocolo de especificación en cascada (`.agents/workflows/01_cascading_spec_workflow.md`) analizando `docs/01_product_definition/01_idea_inicial.md` para generar el PRD y actualizar la documentación viva en `docs/`, incluyendo arquitectura, modelo de base de datos, contrato OpenAPI, historias de usuario INVEST y tickets técnicos `TK-XXX`."*
+
+> **Prompt Especializado para Co-Diseño Visual de UI/UX (SK-05-B):**
+> *"Agente, ejecuta la habilidad de Asistente de Diseño UI/UX Frontend (`.agents/skills/specs/02_architecture_design/SK-05-B_frontend_ui_ux_guide.md`) para iniciar la sesión interactiva de co-diseño visual, recibir mis imágenes de referencia y cristalizar el Design System en `docs/02_architecture_design/04_ui_ux_design_system.md` y `frontend_rules.md`."*
 
 ---
 
