@@ -24,6 +24,7 @@ Este documento centraliza el backlog técnico y funcional del Producto Mínimo V
 
 | ID Ticket | ID US Relacionada | Título del Ticket | Módulo / Slice Afectado | Estimación (SP) | Prioridad MoSCoW | Ruta del Fichero |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TK-001-FE** | N/A (Técnico) | Configuración del Workspace Frontend y Design System Base | `shared` | 3 | Must Have | [shared/frontend/TK-001-FE.md](shared/frontend/TK-001-FE.md) |
 | **TK-007** | [US-006](../user_stories/kitchen/US-006.md) | Implementación de Pantalla de Notificaciones y Alertas Dinámicas | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-007.md](kitchen/frontend/TK-007.md) |
 | **TK-007-B** | [US-001](../user_stories/auth/US-001.md) | Pantalla de Login por PIN | `auth` | 3 | Must Have | [auth/frontend/TK-007-B.md](auth/frontend/TK-007-B.md) |
 | **TK-007-C** | [US-007](../user_stories/kitchen/US-007.md) | Interfaz de Consumo de Recetas | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-007-C.md](kitchen/frontend/TK-007-C.md) |
@@ -39,6 +40,8 @@ Este documento centraliza el backlog técnico y funcional del Producto Mínimo V
 
 ### 🛠️ Shared / Transversal
 *   **[TK-001: Configuración del Core del Backend y Base de Datos](shared/backend/TK-001.md)**: Inicialización del monorepo, configuración de Prisma ORM, conexión segura cifrada a base de datos y middlewares globales.
+*   **[TK-001-FE: Configuración del Workspace Frontend y Design System Base](shared/frontend/TK-001-FE.md)**: Inicialización de Vite+React, tokens de diseño HSL, ergonomía táctil (botones ≥ 48px) e infraestructura de pruebas.
+
 
 ### 🔐 Autenticación (`auth/`)
 *   **[TK-002: Implementación de Autenticación de Operarios por PIN](auth/backend/TK-002.md)** (Backend)

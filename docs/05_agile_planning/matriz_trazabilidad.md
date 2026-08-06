@@ -24,4 +24,4 @@ Este documento establece la trazabilidad completa y bidireccional del sistema **
 
 1. **Cero Orfandad:** Cada Ticket Técnico debe tener asignada al menos 1 Historia de Usuario válida (`US-XXX`) y 1 Endpoint REST documentado en OpenAPI.
 2. **Consistencia de Entidades:** Toda tabla listada en la columna *Prisma* debe corresponder exactamente a una declaración `model` en `schema.prisma`.
-3. **Control de Cambios:** Cualquier modificación sobre un requerimiento debe propagarse verticalmente siguiendo el [Protocolo de Integración en Cascada](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/nuevas_ideas_cascada.md).
+3. **Control de Cambios:** Cualquier modificación sobre un requerimiento debe propagarse verticalmente siguiendo el [Protocolo de Integración en Cascada](../../.agents/workflows/01_cascading_spec_workflow.md).
