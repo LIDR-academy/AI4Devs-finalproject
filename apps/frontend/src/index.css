@@ -1,0 +1,103 @@
+:root {
+  /* Fondo Principal y Contenedores Pizarra */
+  --bg-root: hsl(205, 38%, 7%);             /* #0b1319 - Dark Petrol Charcoal */
+  --bg-card: hsl(205, 38%, 10%);            /* #101c24 - Pizarra Petróleo */
+  --border-card: hsl(205, 25%, 18%);        /* #192a36 - Borde sutil */
+
+  /* Colores Primarios y Acentos */
+  --color-primary: hsl(173, 100%, 33%);     /* #00a896 - Turquesa Petrol (Teal) */
+  --color-primary-hover: hsl(173, 100%, 40%); /* #02c39a */
+  --color-secondary: hsl(43, 89%, 60%);     /* #e9c46a - Amarillo Miel */
+
+  /* Indicadores Tri-Color FEFO & Alertas (Gauge Dial) */
+  --color-danger: hsl(0, 100%, 58%);        /* #ff2a2a - Rojo Neón Intenso (< 12h FEFO) */
+  --color-warning: hsl(43, 89%, 60%);       /* #f4a261 - Amarillo Calidez (< 24h FEFO) */
+  --color-success: hsl(173, 100%, 33%);     /* #00a896 - Verde Turquesa (Fresco) */
+
+  /* Tipografía y Textos */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --text-primary: hsl(0, 0%, 98%);        /* #fafafa - Blanco Puro */
+  --text-secondary: hsl(205, 15%, 70%);    /* #94a3b8 - Gris Azulado */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Regla de Ergonomía Táctil Innegociable (Touch Target >= 48px x 48px) */
+.btn-touch {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease-in-out;
+  touch-action: manipulation;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+/* Estructura de Tarjetas (Dark Petrol Cards) */
+.card-dashboard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.card-badge-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(0, 168, 150, 0.15);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}

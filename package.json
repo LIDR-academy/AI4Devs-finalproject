@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "pnpm --filter ./apps/* run build",
-    "lint": "pnpm --filter ./apps/* run lint",
-    "test": "pnpm --filter ./apps/* run test"
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test"
   },
   "devDependencies": {
     "typescript": "^5.3.3"
