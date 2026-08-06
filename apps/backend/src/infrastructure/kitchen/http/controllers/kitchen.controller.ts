@@ -2,15 +2,21 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { GetActiveRemanentesUseCase } from '../../../../application/kitchen/use-cases/GetActiveRemanentesUseCase.js';
 import { ConsumeRemanenteUseCase } from '../../../../application/kitchen/use-cases/ConsumeRemanenteUseCase.js';
+import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cases/DiscardRemanenteUseCase.js';
 
 export const consumeRemanenteSchema = z.object({
   quantity: z.union([z.number().positive('La cantidad a consumir debe ser positiva.'), z.string().min(1)]),
 });
 
+export const discardRemanenteSchema = z.object({
+  reason: z.string().min(1, 'El motivo de descarte es obligatorio.'),
+});
+
 export class KitchenController {
   constructor(
     private readonly getActiveRemanentesUseCase: GetActiveRemanentesUseCase,
-    private readonly consumeRemanenteUseCase?: ConsumeRemanenteUseCase
+    private readonly consumeRemanenteUseCase?: ConsumeRemanenteUseCase,
+    private readonly discardRemanenteUseCase?: DiscardRemanenteUseCase
   ) {}
 
   public getActiveRemanentes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -35,6 +41,33 @@ export class KitchenController {
       const result = await this.consumeRemanenteUseCase.execute({
         remanenteId: id,
         quantityToConsume: parsedBody.quantity,
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          error: 'ValidationError',
+          details: error.errors.map((e) => e.message),
+        });
+        return;
+      }
+      next(error);
+    }
+  };
+
+  public discardRemanente = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const parsedBody = discardRemanenteSchema.parse(req.body);
+
+      if (!this.discardRemanenteUseCase) {
+        throw new Error('DiscardRemanenteUseCase no configurado.');
+      }
+
+      const result = await this.discardRemanenteUseCase.execute({
+        remanenteId: id,
+        reason: parsedBody.reason,
       });
 
       res.status(200).json(result);

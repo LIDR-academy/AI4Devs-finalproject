@@ -93,4 +93,19 @@ export class Remanente {
       this.props.status = 'EXHAUSTED';
     }
   }
+
+  public discard(): DecimalQuantity {
+    if (this.props.status !== 'ACTIVE') {
+      throw new ExcessConsumptionException(
+        'Descarte de remanente',
+        '0.0000 (El remanente ya esta inactivo)'
+      );
+    }
+
+    const discardedQuantity = this.props.currentQuantity;
+    this.props.currentQuantity = new DecimalQuantity('0.0000');
+    this.props.status = 'DISCARDED';
+
+    return discardedQuantity;
+  }
 }
