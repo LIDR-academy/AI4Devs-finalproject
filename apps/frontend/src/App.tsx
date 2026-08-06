@@ -1,7 +1,24 @@
-import React from 'react';
-import { Package, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Package, AlertTriangle, ShieldCheck, RefreshCw, LogOut, User } from 'lucide-react';
+import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
+import { AuthService } from './features/auth/services/auth.service.js';
 
 export const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState(AuthService.getStoredUser());
+
+  const handleLoginSuccess = () => {
+    setCurrentUser(AuthService.getStoredUser());
+  };
+
+  const handleLogout = () => {
+    AuthService.logout();
+    setCurrentUser(null);
+  };
+
+  if (!currentUser) {
+    return <PinLoginModal onSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header Principal */}
@@ -14,10 +31,37 @@ export const App: React.FC = () => {
             Sistema Táctil de Cocina & Bodega (Dark Petrol Dashboard)
           </p>
         </div>
-        <button className="btn-touch btn-primary" id="btn-sync-remanentes">
-          <RefreshCw size={20} />
-          Sincronizar Remanentes
-        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Badge del Usuario Autenticado */}
+          <div
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-card)',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}
+          >
+            <User size={18} style={{ color: 'var(--color-primary)' }} />
+            <div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{currentUser.name}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentUser.role}</div>
+            </div>
+          </div>
+
+          <button className="btn-touch btn-primary" id="btn-sync-remanentes">
+            <RefreshCw size={20} />
+            Sincronizar
+          </button>
+
+          <button className="btn-touch btn-danger" onClick={handleLogout} id="btn-logout">
+            <LogOut size={20} />
+            Cerrar Sesión
+          </button>
+        </div>
       </header>
 
       {/* Rejilla de Tarjetas (Dashboard Grid) */}
@@ -66,8 +110,8 @@ export const App: React.FC = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
             <div>✔️ Áreas interactivas de mínimo <strong>48px x 48px</strong>.</div>
-            <div>✔️ Contrastes HSL WCAG 2.1 AAA.</div>
-            <div>✔️ Modo Oscuro Industrial para Cocina.</div>
+            <div>✔️ Teclado PinPad táctil de <strong>64px x 64px</strong>.</div>
+            <div>✔️ Sesión JWT válida por 12 horas.</div>
           </div>
         </section>
       </main>
