@@ -1,0 +1,16 @@
+export interface ActiveRemanenteDTO {
+  id: string;
+  insumoId: string;
+  insumoName: string;
+  unitOfMeasure: string;
+  currentQuantity: string;
+  initialQuantity: string;
+  location: string;
+  expirationDate: Date;
+  status: string;
+  createdAt: Date;
+}
+
+export interface IRemanenteQueryRepository {
+  findActiveRemanentes(location?: string): Promise<ActiveRemanenteDTO[]>;
+}
