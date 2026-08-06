@@ -6,15 +6,15 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 
 ## 🛠️ Pila Tecnológica Detectada
 * **Framework Core:** React / Next.js (TypeScript)
-* **Estilos & Diseño:** Vanilla CSS con variables HSL (Industrial Dark Mode + Glassmorphism)
+* **Estilos & Diseño:** Vanilla CSS con variables HSL centralizadas en `index.css` (Paleta *Dark Petrol & Charcoal*: `--bg-root: #0b1319`, `--bg-card: #101c24`, `--color-primary: #00a896`, `--color-secondary: #e9c46a`)
 * **Persistencia Offline:** Dexie.js (IndexedDB / Cola FIFO local)
 * **Testing UI & QA Visual:** Vitest / React Testing Library / SK-21 a11y Auditor
 
 ---
 
 ## 📱 1. Ergonomía Táctil y Layout
-* **Objetivos Táctiles:** Botones e inputs interactivos deben medir mínimo **48px x 48px** con **8px** de margen alrededor.
-* **Tokens de Diseño (Industrial Dark Mode):** Usar variables CSS del tema oscuro HSL de alto contraste definidas en el sistema de diseño.
+* **Objetivos Táctiles:** Botones e inputs interactivos deben medir mínimo **48px x 48px** con **8px** de margen alrededor. Teclado de PIN: **64px x 64px**.
+* **Tokens de Diseño (Dark Petrol Dashboard):** Usar variables CSS del tema oscuro HSL con encabezados de tarjeta con badge circular turquesa a la izquierda y separador de 1px.
 
 ---
 
