@@ -19,7 +19,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🔍 FASE 1: Descubrimiento de Guías de UI, SOLID y Reglas
 1. **Analizar el Ticket:** Lee el ticket en `{ticket_path}` y comprende los criterios de aceptación.
-2. **Descubrir Reglas de UX/UI:** Consulta `docs/03_governance_and_quality/rules/frontend_rules.md` para identificar:
+2. **Descubrir Reglas de UX/UI y Design System:** Consulta obligatoriamente `docs/02_architecture_design/04_ui_ux_design_system.md`, las imágenes en `docs/02_architecture_design/assets/ui_mockups/` y `docs/03_governance_and_quality/rules/frontend_rules.md` para identificar:
    - Botones táctiles de mínimo **48px x 48px** con **8px** de margen.
    - Tokens HSL oficial (Industrial Dark Mode + Glassmorphism).
    - Estándares de accesibilidad **WCAG 2.1 AA/AAA** (Contraste min `4.5:1` / `7:1`).
