@@ -38,7 +38,8 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ---
 
-## 🚨 FASE 4: Verificación Final (Quality Gate: 0 Errors / 0 Warnings)
+## 🚨 FASE 4: Verificación Final (Quality Gate: 0 Errors / 0 Warnings & Mutation Score $\ge 70\%$)
 1. **Verificar Tipos y Compilación:** Ejecuta `pnpm run build` para asegurar 0 errores TypeScript.
 2. **Asegurar Cero Advertencias:** Ejecuta `pnpm run lint`. La refactorización sólo se da por completada con **0 errores y 0 advertencias**.
-3. **Tests de Regresión:** Vuelve a correr la suite de pruebas para asegurar 100% de regresión exitosa.
+3. **Mutation Testing Anti-Tautología:** Ejecutar `@stryker-mutator/core` sobre los módulos de dominio/casos de uso. Exigir un **Mutation Score $\ge 70\%$** (matar mutantes). Pruebas sin aserciones reales rebotan la Quality Gate.
+4. **Tests de Regresión:** Vuelve a correr la suite de pruebas para asegurar 100% de regresión exitosa.

@@ -1,14 +1,15 @@
-# 🔒 Reglas de Ciberseguridad - Deducción de Especificaciones
+# 🔒 Reglas de Ciberseguridad y Sandboxing - Deducción de Especificaciones
 
-Esta directiva rige la seguridad técnica según los lineamientos OWASP del proyecto.
+Esta directiva rige la seguridad técnica, sanitización activa y ejecución segura en entornos aislados (Sandboxing).
 
 ---
 
 ## 🛠️ Pila Tecnológica Detectada
 * **Cifrado de Credenciales:** Bcrypt (10 salt rounds)
 * **Gestión de Sesión:** Tokens JWT (Bearer Token HTTP Header)
-* **Sanitización Activa:** Zod Schema Validation (Mass Assignment & Payload injection defense)
-* **Auditoría de Dependencias:** `pnpm audit` & SAST en CI/CD
+* **Sanitización Activa:** Zod Schema Validation
+* **Ejecución en Entorno Aislado:** Sandboxed Execution (Docker / Restricciones de Sistema)
+* **Defensa Anti-Prompt Injection:** Desinfección de inputs externos no confiables
 
 ---
 
@@ -21,3 +22,9 @@ Esta directiva rige la seguridad técnica según los lineamientos OWASP del proy
 ## 🛡️ 2. Protección de Datos y Sanitización
 * **Sanitización Input:** Toda entrada debe ser validada con esquemas Zod. Prohibidas las SQL injection y raw queries inseguras.
 * **Tokenización PII:** Toda información de identificación personal se someterá a de-identificación previa en logs y exportaciones.
+
+---
+
+## 🧪 3. Sandboxing y Protección Anti-Prompt Injection
+* **Sandboxed Command Execution:** Todas las ejecuciones de comandos en terminal local (tests, builds, migraciones) deben operar dentro del workspace del repositorio sin permisos de escritura fuera del proyecto.
+* **Prevención de Injection Indirecta:** Los datos recuperados de fuentes externas no confiables (p. ej. issues, payloads de terceos, HTTP headers de clientes) no deben ser evaluados como código ejecutable ni introducidos directamente a los prompts del agente sin sanitización previa.

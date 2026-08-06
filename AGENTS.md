@@ -40,7 +40,7 @@ For any technical task or new feature request, you must follow the **Verified Sp
 - **Important:** Newly proposed ADRs must be explicitly presented to the USER (Specialist) for review and approved before the related code is implemented.
 
 ### Protocol for Modifying/Adding Features (Cascading Protocol):
-Before coding, you must sequentially update the specifications in the following order (as guided by `.agents/nuevas_ideas_cascada.md`):
+Before coding, you must sequentially update the specifications in the following order (as guided by `.agents/workflows/01_cascading_spec_workflow.md`):
 1. **Impact Assessment:** Answer what layers, files, databases, and APIs are affected.
 2. **PRD & Design Docs:** Update `docs/01_product_definition/02_restostock_prd.md` and `docs/02_architecture_design/03_restostock_design.md` if business logic or systems change.
 3. **Database Schema:** If database changes are needed, update `prisma/schema.prisma` and the logical model in `docs/04_persistence_and_api/09_restostock_database_schema.md`.
@@ -52,13 +52,15 @@ Before coding, you must sequentially update the specifications in the following 
 
 ## 🧪 4. Coding & Quality Gates (DoD)
 
-To mark a ticket as **Done**, you must follow `.agents/desarrollo_cascada.md` and guarantee:
+To mark a ticket as **Done**, you must follow `.agents/workflows/02_cascading_dev_workflow.md` and guarantee:
 1. **Dynamic Rule Discovery:** Before writing code for any ticket, you MUST read the corresponding derived rules in `docs/03_governance_and_quality/rules/` (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`).
 2. **TDD Compliance:** Write a failing test (RED) asserting the requirements before writing production code. Achieve green status (GREEN), then refactor.
 3. **InMemory Fakes:** Do not mock databases using complex mock libraries. Implement clean, memory-based fake implementations of your repository interfaces (e.g., `InMemoryUserRepository`).
 4. **Safety & Sanitization:** Use Zod schemas in all controllers. No un-sanitized raw database inputs.
 5. **Build & Lint Verification:** Always run `pnpm run build` and `pnpm run lint` before committing. There must be 0 errors and 0 warnings.
-6. **Atomic Git Commits:** Always perform git commits on a per-ticket basis (exactly one commit per technical ticket/TK-XXX) to maintain a clean, structured, and traceable version control history. Never mix multiple tickets in a single commit.
+6. **Mutation Testing & Anti-Drift:** Enforce Mutation Testing (`@stryker-mutator/core`) with a minimum score of 70% on domain/use-cases to eliminate test tautology. Run `spectral lint` and `prisma validate` to prevent architectural drift between code and specs in `docs/`.
+7. **Atomic Git Commits:** Always perform git commits on a per-ticket basis (exactly one commit per technical ticket/TK-XXX) to maintain a clean, structured, and traceable version control history. Never mix multiple tickets in a single commit.
+8. **Cross-Validation & Independent Adversarial Reviewer:** The agent executing the technical ticket (`SK-16` / `SK-17`) MUST NOT self-approve the Quality Gates verdict. Before committing, an independent Reviewer role/subagent must perform an adversarial review over the changes using `.agents/workflows/04_dev_audit_prompt.md`, verifying 0 linter errors (`SK-19`), WCAG 2.1 compliance (`SK-21`), Zod sanitization, and SOLID adherence. Only upon explicit approval from the Reviewer may the atomic commit proceed.
 
 ---
 
