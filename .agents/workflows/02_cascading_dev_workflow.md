@@ -30,19 +30,19 @@ Antes de escribir cualquier línea de código:
 
 ### FASE 1: Extracción / Sincronización de Reglas (`SK-15_extract_rules`)
 1. Revisa la carpeta `docs/03_governance_and_quality/rules/`.
-2. Si los archivos de reglas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) no existen o si la documentación en `docs/` sufrió cambios recientes, ejecuta la skill [SK-15 Extracción de Reglas](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/01_rules_extraction/SK-15_extract_rules.md) para sincronizar las reglas de gobernanza técnica.
+2. Si los archivos de reglas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) no existen o si la documentación en `docs/` sufrió cambios recientes, ejecuta la skill [SK-15 Extracción de Reglas](../skills/development/01_rules_extraction/SK-15_extract_rules.md) para sincronizar las reglas de gobernanza técnica.
 
 ---
 
 ### FASE 2: Migración de Persistencia y ORM (`SK-18_db_migration` - Si Afecta BD)
 Si el ticket modifica o crea modelos de base de datos:
 1. Aplica los cambios en el esquema del ORM (`prisma/schema.prisma` u equivalente).
-2. Executa la skill [SK-18 Migraciones de Base de Datos](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/04_persistence_and_db/SK-18_db_migration.md) para generar la migración física local, sincronizar la BD y regenerar el cliente de base de datos.
+2. Executa la skill [SK-18 Migraciones de Base de Datos](../skills/development/04_persistence_and_db/SK-18_db_migration.md) para generar la migración física local, sincronizar la BD y regenerar el cliente de base de datos.
 
 ---
 
 ### FASE 3: Implementación Guiada por Pruebas - TDD (`SK-16` / `SK-17`)
-Ejecuta la skill correspondiente ([SK-16 Backend](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/02_backend_development/SK-16_backend_ticket.md) o [SK-17 Frontend](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/03_frontend_development/SK-17_frontend_ticket.md)) siguiendo el ciclo TDD innegociable:
+Ejecuta la skill correspondiente ([SK-16 Backend](../skills/development/02_backend_development/SK-16_backend_ticket.md) o [SK-17 Frontend](../skills/development/03_frontend_development/SK-17_frontend_ticket.md)) siguiendo el ciclo TDD innegociable:
 1. **RED:** Escribe primero el test unitario o de integración (usando `InMemoryRepository` fakes en lugar de mocks frágiles) que valide las condiciones de aceptación del ticket. Confirma que la prueba falle por las razones correctas.
 2. **GREEN:** Implementa el código necesario (siguiendo el flujo Hexagonal: `Domain` ➔ `Application` ➔ `Infrastructure`) hasta que la prueba pase exitosamente.
 3. **REFACTOR:** Limpia el código, optimiza tipos y elimina duplicaciones manteniendo las pruebas en estado verde.
@@ -51,15 +51,26 @@ Ejecuta la skill correspondiente ([SK-16 Backend](file:///home/lacruzjd/entrgafi
 
 ### FASE 4: Quality Gate & Inspección Linter (`SK-19_refactor_lint`)
 Antes de dar por terminado el desarrollo:
-1. Ejecuta la skill [SK-19 Refactorización y Lints](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/05_quality_and_lint/SK-19_refactor_lint.md).
+1. Ejecuta la skill [SK-19 Refactorización y Lints](../skills/development/05_quality_and_lint/SK-19_refactor_lint.md).
 2. Valida la compilación de tipos (ej. `tsc` / `pnpm run build`) y el análisis estático (ej. `pnpm run lint`).
 3. **Quality Gate:** Se exige estricto **0 errores y 0 advertencias**. Si hay lints, deben ser resueltos antes de avanzar.
 
 ---
 
+### FASE 4.B: Validación Cruzada (Reviewer Independiente Adversarial)
+> [!IMPORTANT]
+> **REGLA DE SEPARACIÓN DE ROLES:**
+> El agente desarrollador (`SK-16`/`SK-17`) no puede auto-aprobar las Quality Gates. Se debe invocar a un **Reviewer Independiente** (subagente aislado) que realice una revisión adversarial sobre la rama de características:
+> 1. Inspecciona el diff del código buscando ausencia de `any`, cumplimiento de SOLID y sanitización Zod.
+> 2. Verifica la ejecución exitosa de pruebas TDD y linter (`SK-19`).
+> 3. En tickets UI, verifica la auditoría de accesibilidad WCAG 2.1 y ergonomía táctil de 48px (`SK-21`).
+> 4. Emite un veredicto formal (**APROBADO** / **RECHAZADO**). Solo con veredicto APROBADO se procede al commit.
+
+---
+
 ### FASE 5: Verificación Visual QA (`SK-20_browser_qa` - Para Frontend)
 Si el ticket es de Frontend o interfaz de usuario:
-1. Ejecuta la skill [SK-20 Visual QA](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/development/06_visual_qa/SK-20_browser_qa.md).
+1. Ejecuta la skill [SK-20 Visual QA](../skills/development/06_visual_qa/SK-20_browser_qa.md).
 2. Inicia el subagente del navegador (`browser_subagent`), renderiza la interfaz localmente y verifica que los botones cumplan con la accesibilidad táctil (≥48px x 48px), contraste y estados defensivos. Guarda evidencias en artefactos.
 
 ---

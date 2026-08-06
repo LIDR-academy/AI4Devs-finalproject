@@ -261,7 +261,7 @@ Se auditó la documentación de Pull Requests para asegurar que solo contenga in
 
 **Prompt 1 Configuración del Entorno de Desarrollo y Monorepo:**
 ```md
-Usando el ticket `TK-001` (docs/05_agile_planning/tickets/shared/backend/TK-001.md) y las directivas de `docs/03_governance_and_quality/rules/backend-rules.md`, inicializa la estructura física del monorepo en Node.js y TypeScript:
+Usando el ticket `TK-001` (docs/05_agile_planning/tickets/shared/backend/TK-001.md) y las directivas de `docs/03_governance_and_quality/rules/backend_rules.md`, inicializa la estructura física del monorepo en Node.js y TypeScript:
 1. Configura el workspace con `pnpm`.
 2. Inicializa TypeScript con `tsconfig.json` optimizado.
 3. Instala e inicializa Express y Prisma ORM con PostgreSQL.
@@ -302,7 +302,7 @@ Se auditó y ejecutó de manera presencial el andamiaje del backend:
 
 **Prompt 2 Implementación de Módulo de Autenticación:**
 ```md
-Usando el ticket `TK-002` (docs/05_agile_planning/tickets/auth/backend/TK-002.md) y las directivas de `docs/03_governance_and_quality/rules/domain-rules.md` y `docs/03_governance_and_quality/rules/backend-rules.md`, implementa el vertical slice `auth` de autenticación por PIN:
+Usando el ticket `TK-002` (docs/05_agile_planning/tickets/auth/backend/TK-002.md) y las directivas de `docs/03_governance_and_quality/rules/domain_rules.md` y `docs/03_governance_and_quality/rules/backend_rules.md`, implementa el vertical slice `auth` de autenticación por PIN:
 1. Diseña la entidad de dominio `User` y el Value Object `Pin` con hashing de `bcrypt` y validación de 4 dígitos.
 2. Define la interfaz `IUserRepository` en el dominio.
 3. Escribe las pruebas unitarias en rojo (TDD) para validar y comparar PINs usando InMemoryRepository.
@@ -462,3 +462,26 @@ Se ha implementado la pantalla de alertas del frontend y la resiliencia offline-
 5. **Testing de Calidad (DoD):**
    - 23 tests de componentes e integración pasando exitosamente en total.
    - Compilación limpia con `pnpm build` y linter oxlint con 0 advertencias y 0 errores.
+
+---
+
+## 10. Gobernanza VSDD y Flujos Maestros de Desarrollo
+
+Para garantizar el cumplimiento de los flujos de desarrollo industrializado y las 3 Quality Gates Enterprise:
+
+### **10.1. Flujos Maestros Reorganizados (`.agents/workflows/`)**
+1. **[00_master_vsdd_workflow.md](.agents/workflows/00_master_vsdd_workflow.md):** Trazo máster end-to-end (Idea ➔ PRD ➔ Rules ➔ TDD ➔ Reviewer ➔ Commit).
+2. **[01_cascading_spec_workflow.md](.agents/workflows/01_cascading_spec_workflow.md):** Protocolo de especificación en cascada.
+3. **[02_cascading_dev_workflow.md](.agents/workflows/02_cascading_dev_workflow.md):** Protocolo de desarrollo guiado por tickets técnicos.
+4. **[03_spec_audit_prompt.md](.agents/workflows/03_spec_audit_prompt.md):** Prompt de auditoría de especificaciones VSDD en 7 fases (`docs/`).
+5. **[04_dev_audit_prompt.md](.agents/workflows/04_dev_audit_prompt.md):** Prompt de auditoría de código y calidad VSDD en 7 fases (`apps/`).
+
+### **10.2. Prompt para Ejecución de Tickets con Reviewer Independiente y Quality Gates Enterprise:**
+```md
+Agente, ejecuta el ticket técnico TK-XXX siguiendo el protocolo `.agents/workflows/02_cascading_dev_workflow.md`:
+1. Sincroniza las reglas de gobernanza en `docs/03_governance_and_quality/rules/`.
+2. Aplica TDD (RED-GREEN-REFACTOR) usando repositorios InMemory.
+3. Supera la Quality Gate (0 errores linter/compilador y Mutation Score >= 70% con @stryker-mutator/core).
+4. Invoca la revisión adversarial del Reviewer Independiente (Validación Cruzada).
+5. Tras dictamen APROBADO, realiza un único commit atómico.
+```

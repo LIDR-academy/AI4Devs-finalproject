@@ -6,18 +6,24 @@ Todos los cambios notables en este proyecto de especificación técnica y diseñ
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-05
+
+Esta versión marca la industrialización completa de la Gobernanza VSDD, el motor de habilidades agénticas y la auditoría formal de especificaciones.
+
 ### Added
-*   **Plantilla de Configuración (`.env.example`):** Estructuración de las variables de entorno necesarias para la base de datos, el puerto Express y secretos JWT.
-*   **Reglas del Agente (`.agents/rules/`):**
-    *   Creación de directivas específicas para `backend-rules.md`, `domain-rules.md`, `testing-rules.md`, `frontend-rules.md` (con diseño HSL premium e interactividad), `security-rules.md` y `git-rules.md` para automatizar y guiar el desarrollo con IA de forma consistente.
+* **Industrialización del Motor de Agentes y Gobernanza VSDD:**
+    * Consolidación de los 7 archivos de reglas en `docs/03_governance_and_quality/rules/` (`domain_rules`, `backend_rules`, `database_rules`, `frontend_rules`, `testing_rules`, `security_rules`, `git_rules`) inyectando Pila Tecnológica Detectada, Principios SOLID, WCAG 2.1 AA/AAA, ergonomía táctil (48px) y sanitización Zod.
+    * Extensión del catálogo a 23 Habilidades en `.agents/skills/`, agregando la habilidad de autorrecuperación de errores ([SK-22_agent_troubleshooting](.agents/skills/development/05_quality_and_lint/SK-22_agent_troubleshooting.md)) y seguridad de dependencias ([SK-23_dependency_security_guard](.agents/skills/development/05_quality_and_lint/SK-23_dependency_security_guard.md)).
+    * Inclusión de plantillas agnósticas en pseudocódigo dentro de `.agents/examples/` ([FEW_SHOT_PATTERNS.md](.agents/examples/FEW_SHOT_PATTERNS.md)).
+    * Creación y ejecución de la auditoría formal de especificaciones en [docs/audits/specs-2026-08-05.md](docs/audits/specs-2026-08-05.md) obteniendo el veredicto oficial **IMPLEMENTABLE**.
+    * Optimización del prompt de auditoría de especificaciones VSDD en [.agents/workflows/03_spec_audit_prompt.md](.agents/workflows/03_spec_audit_prompt.md).
 
 ### Changed
-*   **Estandarización de Directorios de IA:** Renombrado completo de `.prompts/` a `.agents/` para habilitar el autodescubrimiento nativo en herramientas de IA, actualizando todas las referencias del proyecto.
-*   **Desactivación Temporal del CI:** Renombrado temporal de `.github/workflows/ci.yml` a `.github/workflows/ci.yml.disabled` para prevenir fallos falsos en GitHub Actions antes del andamiaje físico.
-*   **Actualización del Manual de Operaciones:** Rediseño de `.agents/README.md` como manual de configuración unificado (Rules + Skills).
+*   **Sincronización de Contratos y Manuales:**
+    * Sincronización del contrato maestro [AGENTS.md](AGENTS.md) con la directiva innegociable *Dynamic Rule Discovery*.
+    * Actualización del manual de operaciones [.agents/README.md](.agents/README.md) con enlaces verificados hacia el catálogo completo de 23 habilidades.
 
-
----
+----
 
 ## [0.2.0] - 2026-07-11
 
@@ -35,7 +41,7 @@ Esta versión marca la integración de la especificación de Reporte de Mermas (
 *   **Estandarización de Precisiones Decimales:**
     *   Actualización de los contratos API (`POST /api/stock/extraction` y `GET /api/kitchen/remanentes`) en [docs/04_persistence_and_api/10_restostock_api_specification.md](docs/04_persistence_and_api/10_restostock_api_specification.md) para exigir y retornar cantidades físicas serializadas como cadenas de texto (`string`), previniendo errores de precisión flotante.
 *   **Gobernanza de Historial de Integraciones:**
-    *   Actualización del instructivo de PRs en [.agents/skills/specs/05_agile_planning/SK-14_pull_requests.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents/skills/specs/05_agile_planning/SK-14_pull_requests.md) para exigir la retención íntegra de metadatos (título y rama) recuperados de GitHub, impidiendo normalizaciones artificiales y permitiendo identificar de forma no destructiva las no conformidades.
+    *   Actualización del instructivo de PRs en [.agents/skills/specs/05_agile_planning/SK-14_pull_requests.md](.agents/skills/specs/05_agile_planning/SK-14_pull_requests.md) para exigir la retención íntegra de metadatos (título y rama) recuperados de GitHub, impidiendo normalizaciones artificiales y permitiendo identificar de forma no destructiva las no conformidades.
 
 ---
 

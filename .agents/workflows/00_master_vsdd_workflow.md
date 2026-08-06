@@ -8,7 +8,7 @@ Este documento describe el flujo de trabajo end-to-end ejecutado por el asistent
 
 ```mermaid
 flowchart TD
-    subgraph STAGE1 ["ETAPA 1: ESPECIFICACION (nuevas_ideas_cascada.md)"]
+    subgraph STAGE1 ["ETAPA 1: ESPECIFICACION (01_cascading_spec_workflow.md)"]
         UserIdea["Idea de Negocio / Nuevo Requerimiento"] --> SK_PRD["SK-01 y SK-02: PRD y Alcance"]
         SK_PRD --> SK_Arch["SK-03 a SK-06: Arquitectura C4 y Carpetas"]
         SK_Arch --> SK_DB_API["SK-10 y SK-11: Prisma Schema y OpenAPI"]
@@ -20,7 +20,7 @@ flowchart TD
         SK15 --> RulesFolder["Genera o Sincroniza: docs/03_governance_and_quality/rules/"]
     end
 
-    subgraph STAGE3 ["ETAPA 3: DESARROLLO TDD (desarrollo_cascada.md)"]
+    subgraph STAGE3 ["ETAPA 3: DESARROLLO TDD (02_cascading_dev_workflow.md)"]
         Ticket["Ticket Tecnico TK-XXX"] --> SK18["SK-18: Migraciones de BD y ORM"]
         SK18 --> SK16_17["SK-16 y SK-17: Codificacion TDD Hexagonal"]
         RulesFolder --> SK16_17

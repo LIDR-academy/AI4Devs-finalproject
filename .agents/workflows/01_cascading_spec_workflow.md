@@ -42,7 +42,8 @@ Responde en tu primer turno con un breve reporte estructural:
    * Redacta al menos 2 escenarios BDD Gherkin (Happy Path y Edge Case).
    * Enlaza esta historia en `docs/05_agile_planning/user_stories/indice_user_stories.md`.
 2. **Tickets Técnicos (Backend/Frontend):**
-   * Desglosa la historia en tickets atómicos y guárdalos en las subcarpetas de Epic/Módulo correspondientes de `docs/05_agile_planning/tickets/` (ej. `tickets/{modulo}/backend/TK-NNN.md` y `tickets/{modulo}/frontend/TK-NNN-X.md`, donde `{modulo}` es `auth`, `stock`, `kitchen`, `reports` o `shared`).
+   * **Garantía de Core:** Asegura que en `docs/05_agile_planning/tickets/shared/` existan siempre los tickets habilitadores de infraestructura base: `shared/backend/TK-001.md` (Core Backend Monorepo & DB) y `shared/frontend/TK-001-FE.md` (Core Frontend Workspace & Design System Base).
+   * Desglosa las historias de usuario en tickets atómicos y guárdalos en las subcarpetas de Epic/Módulo correspondientes de `docs/05_agile_planning/tickets/` (ej. `tickets/{modulo}/backend/TK-NNN.md` y `tickets/{modulo}/frontend/TK-NNN-X.md`, donde `{modulo}` es `auth`, `stock`, `kitchen`, `reports` o `shared`).
    * Para cada ticket, indica la estimación en Story Points, prioridad MoSCoW, capas de código afectadas y Definition of Done (DoD) estricto (exigiendo TDD y cumplimiento de estrategias de seguridad/ergonomía táctil).
    * Enlaza los tickets creados en el archivo `docs/05_agile_planning/tickets/indice_tickets.md`.
 3. **Mapa del Backlog (docs/05_agile_planning/backlog_map.md):** Actualiza el diagrama Mermaid para incluir el nuevo nodo de la Epic (si corresponde), la nueva User Story (`US-NNN`) y sus respectivos Tickets Técnicos de Backend y Frontend, definiendo sus relaciones. Agrega la fila correspondiente en la **Tabla de Navegación del Backlog (Alternativa)** inferior para garantizar la navegabilidad.

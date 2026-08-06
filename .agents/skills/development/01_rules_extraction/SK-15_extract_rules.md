@@ -40,7 +40,7 @@ Infiere y sintetiza las reglas específicas para cada una de las siguientes áre
 1. Crea el directorio objetivo `docs/03_governance_and_quality/rules/` si no existe.
 2. Escribe cada uno de los 7 archivos de reglas (`domain_rules.md`, `backend_rules.md`, `database_rules.md`, `frontend_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) redactados de forma profesional en formato Markdown.
 3. **Encabezado de Pila Tecnológica:** Todo archivo de reglas DEBE incluir una sección inicial `## 🛠️ Pila Tecnológica Detectada` detallando expresamente los frameworks, librerías y estándares identificados en la documentación.
-4. **Generación/Actualización de AGENTS.md:** Genera o sincroniza el archivo `AGENTS.md` en la raíz del proyecto, vinculando el contexto del producto, la pila tecnológica, la Arquitectura Hexagonal y la directiva innegociable de leer las reglas en `docs/03_governance_and_quality/rules/` y seguir los protocolos de cascada `.agents/nuevas_ideas_cascada.md` y `.agents/desarrollo_cascada.md`.
+4. **Generación/Actualización de AGENTS.md:** Genera o sincroniza el archivo `AGENTS.md` en la raíz del proyecto, vinculando el contexto del producto, la pila tecnológica, la Arquitectura Hexagonal y la directiva innegociable de leer las reglas en `docs/03_governance_and_quality/rules/` y seguir los protocolos de cascada `.agents/workflows/01_cascading_spec_workflow.md` y `.agents/workflows/02_cascading_dev_workflow.md`.
 
 ---
 
