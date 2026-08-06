@@ -12,6 +12,11 @@ export class InMemoryStockRepository implements IStockRepository {
     return found ? found : null;
   }
 
+  public async findRemanenteById(id: string): Promise<Remanente | null> {
+    const found = this.remanentes.get(id);
+    return found ? found : null;
+  }
+
   public async saveInsumo(insumo: Insumo): Promise<void> {
     this.insumos.set(insumo.id, insumo);
   }
@@ -26,5 +31,9 @@ export class InMemoryStockRepository implements IStockRepository {
 
   public seedInsumo(insumo: Insumo): void {
     this.insumos.set(insumo.id, insumo);
+  }
+
+  public seedRemanente(remanente: Remanente): void {
+    this.remanentes.set(remanente.id, remanente);
   }
 }

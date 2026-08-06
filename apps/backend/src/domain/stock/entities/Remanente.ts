@@ -1,4 +1,5 @@
 import { DecimalQuantity } from '../value-objects/DecimalQuantity.js';
+import { ExcessConsumptionException } from '../../kitchen/errors/ExcessConsumptionException.js';
 
 export type RemanenteStatusType = 'ACTIVE' | 'EXHAUSTED' | 'DISCARDED';
 
@@ -68,5 +69,28 @@ export class Remanente {
 
   public get expirationDate(): Date {
     return this.props.expirationDate;
+  }
+
+  public consumeQuantity(quantityToConsume: DecimalQuantity): void {
+    if (this.props.status !== 'ACTIVE') {
+      throw new ExcessConsumptionException(
+        quantityToConsume.toString(),
+        '0.0000 (Remanente no esta activo)'
+      );
+    }
+
+    if (!this.props.currentQuantity.isGreaterThanOrEqualTo(quantityToConsume)) {
+      throw new ExcessConsumptionException(
+        quantityToConsume.toString(),
+        this.props.currentQuantity.toString()
+      );
+    }
+
+    const remaining = this.props.currentQuantity.subtract(quantityToConsume);
+    this.props.currentQuantity = remaining;
+
+    if (remaining.toNumber() === 0) {
+      this.props.status = 'EXHAUSTED';
+    }
   }
 }

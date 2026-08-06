@@ -42,7 +42,10 @@ export function createApp(options: AppOptions = {}): Express {
 
   // Rutas de Servicio y Remanentes de Cocina
   if (options.remanenteQueryRepository) {
-    app.use('/api/v1/kitchen', createKitchenRouter(options.remanenteQueryRepository));
+    app.use(
+      '/api/v1/kitchen',
+      createKitchenRouter(options.remanenteQueryRepository, options.stockRepository)
+    );
   }
 
   // Middleware global de errores

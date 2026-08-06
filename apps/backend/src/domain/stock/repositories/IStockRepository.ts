@@ -12,6 +12,7 @@ export interface StockMovementRecord {
 
 export interface IStockRepository {
   findInsumoById(id: string): Promise<Insumo | null>;
+  findRemanenteById(id: string): Promise<Remanente | null>;
   saveInsumo(insumo: Insumo): Promise<void>;
   saveRemanente(remanente: Remanente): Promise<void>;
   recordMovement(movement: StockMovementRecord): Promise<void>;

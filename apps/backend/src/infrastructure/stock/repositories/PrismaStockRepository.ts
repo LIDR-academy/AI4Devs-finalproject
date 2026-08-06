@@ -25,6 +25,24 @@ export class PrismaStockRepository implements IStockRepository {
     });
   }
 
+  public async findRemanenteById(id: string): Promise<Remanente | null> {
+    const raw = await this.prisma.remanente.findUnique({
+      where: { id },
+    });
+    if (!raw) return null;
+
+    return new Remanente({
+      id: raw.id,
+      insumoId: raw.insumoId,
+      currentQuantity: new DecimalQuantity(raw.currentQuantity.toString()),
+      initialQuantity: new DecimalQuantity(raw.initialQuantity.toString()),
+      location: raw.location,
+      status: raw.status as RemanenteStatusType,
+      expirationDate: raw.expirationDate,
+      createdAt: raw.createdAt,
+    });
+  }
+
   public async saveInsumo(insumo: Insumo): Promise<void> {
     const stockQty = insumo.warehouseStock.toDecimal();
 
@@ -61,8 +79,13 @@ export class PrismaStockRepository implements IStockRepository {
   }
 
   public async saveRemanente(remanente: Remanente): Promise<void> {
-    await this.prisma.remanente.create({
-      data: {
+    await this.prisma.remanente.upsert({
+      where: { id: remanente.id },
+      update: {
+        currentQuantity: remanente.currentQuantity.toDecimal(),
+        status: remanente.status as RemanenteStatusType,
+      },
+      create: {
         id: remanente.id,
         insumoId: remanente.insumoId,
         currentQuantity: remanente.currentQuantity.toDecimal(),
