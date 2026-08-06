@@ -34,6 +34,10 @@ This project strictly enforces **Hexagonal Architecture** organized in **Vertica
 
 For any technical task or new feature request, you must follow the **Verified Spec-Driven Development (VSDD)** loop. Do not write code immediately.
 
+### ✋ Rule of Mandatory Proposal & User Approval (Human-in-the-Loop):
+- **INNEGOCIABLE:** Before creating or modifying ANY file, documentation, architecture design, ADR, design system, or code component, the agent MUST explicitly present the proposed idea, structure, or diff summary to the USER (Specialist) for review.
+- The agent MAY NOT save or apply changes to disk without first receiving explicit user confirmation or approval on the proposal.
+
 ### Architectural Decision Records (ADRs):
 - Whenever a major architectural choice, framework selection, safety implementation, or design pattern is chosen, the agent must document it by creating a new **Architecture Decision Record (ADR)** inside `docs/02_architecture_design/adr/ADR-XXX-name.md`.
 - All ADRs must follow a standardized structure: **Title**, **Status** (Proposed/Approved/Rejected/Superseded), **Context**, **Decision**, and **Consequences**.
