@@ -1,0 +1,89 @@
+import { PrismaClient } from '@prisma/client';
+import { Insumo } from '../../../domain/stock/entities/Insumo.js';
+import { Remanente, RemanenteStatusType } from '../../../domain/stock/entities/Remanente.js';
+import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
+import { IStockRepository, StockMovementRecord } from '../../../domain/stock/repositories/IStockRepository.js';
+
+export class PrismaStockRepository implements IStockRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  public async findInsumoById(id: string): Promise<Insumo | null> {
+    const raw = await this.prisma.insumo.findUnique({
+      where: { id },
+      include: { warehouseStocks: true },
+    });
+    if (!raw) return null;
+
+    const mainStock = raw.warehouseStocks.find((s) => s.location === 'MAIN_WAREHOUSE');
+    const quantity = mainStock ? mainStock.quantity.toString() : '0';
+
+    return new Insumo({
+      id: raw.id,
+      name: raw.name,
+      unitOfMeasure: raw.unitOfMeasure,
+      warehouseStock: new DecimalQuantity(quantity),
+    });
+  }
+
+  public async saveInsumo(insumo: Insumo): Promise<void> {
+    const stockQty = insumo.warehouseStock.toDecimal();
+
+    await this.prisma.insumo.upsert({
+      where: { id: insumo.id },
+      update: {
+        name: insumo.name,
+        unitOfMeasure: insumo.unitOfMeasure,
+        warehouseStocks: {
+          upsert: {
+            where: { id: `${insumo.id}_MAIN_WAREHOUSE` },
+            update: { quantity: stockQty },
+            create: {
+              id: `${insumo.id}_MAIN_WAREHOUSE`,
+              location: 'MAIN_WAREHOUSE',
+              quantity: stockQty,
+            },
+          },
+        },
+      },
+      create: {
+        id: insumo.id,
+        name: insumo.name,
+        unitOfMeasure: insumo.unitOfMeasure,
+        warehouseStocks: {
+          create: {
+            id: `${insumo.id}_MAIN_WAREHOUSE`,
+            location: 'MAIN_WAREHOUSE',
+            quantity: stockQty,
+          },
+        },
+      },
+    });
+  }
+
+  public async saveRemanente(remanente: Remanente): Promise<void> {
+    await this.prisma.remanente.create({
+      data: {
+        id: remanente.id,
+        insumoId: remanente.insumoId,
+        currentQuantity: remanente.currentQuantity.toDecimal(),
+        initialQuantity: remanente.initialQuantity.toDecimal(),
+        location: remanente.location,
+        status: remanente.status as RemanenteStatusType,
+        expirationDate: remanente.expirationDate,
+      },
+    });
+  }
+
+  public async recordMovement(movement: StockMovementRecord): Promise<void> {
+    await this.prisma.stockMovement.create({
+      data: {
+        id: movement.id,
+        insumoId: movement.insumoId,
+        type: movement.type,
+        quantity: movement.quantity,
+        fromLoc: movement.fromLoc,
+        toLoc: movement.toLoc,
+      },
+    });
+  }
+}

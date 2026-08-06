@@ -20,6 +20,12 @@ enum UserStatus {
   BLOCKED
 }
 
+enum RemanenteStatus {
+  ACTIVE
+  EXHAUSTED
+  DISCARDED
+}
+
 model User {
   id             String     @id @default(uuid())
   name           String
@@ -29,6 +35,50 @@ model User {
   failedAttempts Int        @default(0)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+}
+
+model Insumo {
+  id              String           @id @default(uuid())
+  name            String
+  unitOfMeasure   String           @default("KG")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  warehouseStocks WarehouseStock[]
+  remanentes      Remanente[]
+  stockMovements  StockMovement[]
+}
+
+model WarehouseStock {
+  id        String   @id @default(uuid())
+  insumoId  String
+  location  String   @default("MAIN_WAREHOUSE")
+  quantity  Decimal  @default(0) @db.Decimal(12, 4)
+  updatedAt DateTime @updatedAt
+  insumo    Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+}
+
+model Remanente {
+  id              String          @id @default(uuid())
+  insumoId        String
+  currentQuantity Decimal         @default(0) @db.Decimal(12, 4)
+  initialQuantity Decimal         @default(0) @db.Decimal(12, 4)
+  location        String          @default("KITCHEN_FRIDGE")
+  status          RemanenteStatus @default(ACTIVE)
+  expirationDate  DateTime
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  insumo          Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+}
+
+model StockMovement {
+  id        String   @id @default(uuid())
+  insumoId  String
+  type      String   // EXTRACTION, DISCARD, RECONCILIATION
+  quantity  Decimal  @db.Decimal(12, 4)
+  fromLoc   String
+  toLoc     String
+  createdAt DateTime @default(now())
+  insumo    Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
 }
 
 model SystemHealth {
