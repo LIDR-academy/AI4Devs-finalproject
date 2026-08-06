@@ -1,0 +1,13 @@
+{
+  "name": "restostock-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter ./apps/* run build",
+    "lint": "pnpm --filter ./apps/* run lint",
+    "test": "pnpm --filter ./apps/* run test"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
