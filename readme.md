@@ -65,29 +65,31 @@ La aplicación de cocina está diseñada bajo una estética oscura de alto contr
 #### Pasos para la puesta en marcha local
 1.  **Clonar el repositorio:**
     ```bash
-    Sin definir aun.
+    git clone https://github.com/usuario/restostock.git
+    cd AI4Devs-finalproject
     ```
 2.  **Instalar dependencias del monorepo:**
     ```bash
-    Sin definir aun.
+    pnpm install
     ```
 3.  **Configurar Variables de Entorno:**
-    Cree un archivo `.env` en el directorio `apps/backend/` con las siguientes llaves:
-    ```env
-    Sin definir aun.
-    ```
-4.  **Levantar Base de Datos (Docker Compose):**
+    Copie la plantilla de variables de entorno en el backend y frontend:
     ```bash
-    Sin definir aun.
+    cp apps/backend/.env.example apps/backend/.env
+    cp apps/frontend/.env.example apps/frontend/.env
     ```
-5.  **Ejecutar Migraciones y Seed en Prisma:**
+4.  **Ejecutar Pruebas Automatizadas:**
     ```bash
-    Sin definir aun.
+    pnpm test
+    ```
+5.  **Compilación del Proyecto:**
+    ```bash
+    pnpm build
     ```
 6.  **Iniciar Servidores en modo Desarrollo:**
     Desde la raíz del monorepo:
-    ```
-    Sin definir aun.
+    ```bash
+    pnpm --filter @restostock/frontend dev
     ```
 
 ---
@@ -520,4 +522,13 @@ A continuación se registra el histórico de Pull Requests de este repositorio:
     *   Revisión y aprobación de la auditoría documental por el oráculo de IA.
     *   Formato Markdown y sintaxis de diagramas Mermaid validados.
     *   Pipeline inicial de integración continua (`ci.yml`) configurado.
+
+### 🔄 PR #2: `feat: implement RestoStock MVP backend/frontend slices, TDD suite & env setup`
+*   **Ramas:** `feature/mvp-implementation` ➡️ `main`
+*   **Tickets Relacionados:** `TK-001` a `TK-010`, `TK-007-B` a `TK-007-F`
+*   **Descripción del Cambio:** Implementación de la arquitectura Hexagonal en Node.js/TypeScript y React/Vite. Incluye casos de uso de Autenticación PIN, Extracciones de Bodega, Tablero FEFO de Remanentes, Consumo de Recetas en Cascadas, Cierre de Turno con Conciliación Física, Dashboard de Reportes de Mermas y validación de entornos Zod Fail-Fast.
+*   **Quality Gates (DoD):** 
+    *   100% de la suite de pruebas automatizadas pasando (36/36 tests en verde).
+    *   Compilación TypeScript (`pnpm build`) y linter (`pnpm lint`) con 0 errores.
+    *   Plantillas de entorno `.env.example` generadas y configuradas.
 

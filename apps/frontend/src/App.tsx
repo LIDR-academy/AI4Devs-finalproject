@@ -8,6 +8,9 @@ import {
   PlusCircle,
   Clock,
   ShieldCheck,
+  Utensils,
+  ClipboardCheck,
+  BarChart3,
 } from 'lucide-react';
 import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
 import { AuthService } from './features/auth/services/auth.service.js';
@@ -15,6 +18,9 @@ import { KitchenService, RemanenteFEFOItem } from './features/kitchen/services/k
 import { ActiveRemanentesList } from './features/kitchen/components/ActiveRemanentesList.js';
 import { WarehouseExtractionModal } from './features/stock/components/WarehouseExtractionModal.js';
 import { DiscardModal } from './features/kitchen/components/DiscardModal.js';
+import { RecipeSelectorModal } from './features/kitchen/components/RecipeSelectorModal.js';
+import { ShiftReconciliationWizard } from './features/kitchen/components/ShiftReconciliationWizard.js';
+import { ReportsDashboard } from './features/reports/components/ReportsDashboard.js';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState(AuthService.getStoredUser());
@@ -23,6 +29,9 @@ export const App: React.FC = () => {
 
   // Modales
   const [isExtractionOpen, setIsExtractionOpen] = useState(false);
+  const [isRecipeOpen, setIsRecipeOpen] = useState(false);
+  const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
+  const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [discardTarget, setDiscardTarget] = useState<RemanenteFEFOItem | null>(null);
 
   const loadRemanentes = useCallback(async () => {
@@ -107,6 +116,26 @@ export const App: React.FC = () => {
 
           <button
             className="btn-touch btn-secondary"
+            onClick={() => setIsReconciliationOpen(true)}
+            id="btn-open-reconciliation"
+            title="Cierre de Turno y Conciliación"
+          >
+            <ClipboardCheck size={20} />
+            Conciliar Turno
+          </button>
+
+          <button
+            className="btn-touch btn-secondary"
+            onClick={() => setIsReportsOpen(true)}
+            id="btn-open-reports"
+            title="Reportes de Mermas"
+          >
+            <BarChart3 size={20} />
+            Reportes
+          </button>
+
+          <button
+            className="btn-touch btn-secondary"
             onClick={loadRemanentes}
             disabled={isLoading}
             id="btn-sync-remanentes"
@@ -127,7 +156,7 @@ export const App: React.FC = () => {
       <section
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '16px',
           marginBottom: '28px',
         }}
@@ -184,6 +213,28 @@ export const App: React.FC = () => {
             Extraer Insumo de Bodega
           </button>
         </div>
+
+        {/* Tarjeta 4: Preparar Receta en Cascada FEFO */}
+        <div
+          className="card-dashboard"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(255, 170, 0, 0.05)',
+            border: '1px dashed var(--color-warning)',
+          }}
+        >
+          <button
+            className="btn-touch btn-warning"
+            onClick={() => setIsRecipeOpen(true)}
+            style={{ width: '100%', height: '56px', fontSize: '1rem', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
+            id="btn-open-recipe"
+          >
+            <Utensils size={22} />
+            Preparar Receta FEFO
+          </button>
+        </div>
       </section>
 
       {/* Titulo del Tablero de Cocina */}
@@ -212,10 +263,30 @@ export const App: React.FC = () => {
         onSuccess={loadRemanentes}
       />
 
+      <RecipeSelectorModal
+        isOpen={isRecipeOpen}
+        onClose={() => setIsRecipeOpen(false)}
+        onSuccess={loadRemanentes}
+      />
+
       <DiscardModal
         remanente={discardTarget}
         onClose={() => setDiscardTarget(null)}
         onSuccess={loadRemanentes}
+      />
+
+      <ShiftReconciliationWizard
+        isOpen={isReconciliationOpen}
+        remanentes={remanentes}
+        operatorId={currentUser.id}
+        onClose={() => setIsReconciliationOpen(false)}
+        onSuccess={loadRemanentes}
+      />
+
+      <ReportsDashboard
+        isOpen={isReportsOpen}
+        userRole={currentUser.role}
+        onClose={() => setIsReportsOpen(false)}
       />
     </div>
   );

@@ -120,6 +120,28 @@ export class KitchenService {
     }
   }
 
+  public static async consumeRecipe(recipeId: string, portions: number): Promise<void> {
+    try {
+      const response = await fetch(`/api/v1/kitchen/recipes/${recipeId}/consume`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ portions }),
+      });
+      if (response.ok) return;
+    } catch {
+      // Fallback offline
+    }
+
+    // Descuento simulado offline sobre mockRemanentes
+    if (this.mockRemanentes.length > 0) {
+      const first = this.mockRemanentes[0];
+      const current = parseFloat(first.currentQuantity);
+      const next = Math.max(0, current - 0.15 * portions);
+      first.currentQuantity = next.toFixed(4);
+      if (next === 0) first.status = 'EXHAUSTED';
+    }
+  }
+
   public static addLocalRemanente(item: RemanenteFEFOItem): void {
     this.mockRemanentes.unshift(item);
   }

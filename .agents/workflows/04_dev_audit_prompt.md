@@ -46,10 +46,11 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 
 ---
 
-### FASE 4: Auditoría de Seguridad, Sanitización y Sandboxing
+### FASE 4: Auditoría de Seguridad, Sanitización, Entornos y Sandboxing
 1. Sanitización de Entradas: Valida que todo payload externo sea filtrado con esquemas de validación estrictos (ej. Zod) en el controlador.
-2. Ausencia de Tipos Inseguros: Comprueba que no existan tipos `any`, casting inseguro o raw queries vulnerables.
-3. Sandboxed Execution: Confirma que la ejecución de scripts y comandos se haya mantenido dentro del workspace aislado.
+2. Gestión de Entornos & Secretos: Confirma que no existan credenciales o llaves secretas incrustadas en duro en el código (*hardcoded*), que `.env` esté ignorado en Git y que se aplique la validación estricta Fail-Fast con Zod (`env.config.ts`).
+3. Ausencia de Tipos Inseguros: Comprueba que no existan tipos `any`, casting inseguro o raw queries vulnerables.
+4. Sandboxed Execution: Confirma que la ejecución de scripts y comandos se haya mantenido dentro del workspace aislado.
 
 ---
 
@@ -59,12 +60,14 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 
 ---
 
-### FASE 6: Emisión del Veredicto Formal de Código
+### FASE 6: Emisión y Persistencia del Veredicto Formal de Código
 
-Genera un informe final con la siguiente estructura:
+1. Genera el informe final en pantalla.
+2. **MANDATORIO:** Guarda obligatoriamente el informe completo como un archivo Markdown en `docs/audits/AUDIT-XXX-[ticket-id]-quality-report.md`.
 
 # 📊 Informe de Auditoría de Código VSDD - Ticket [TK-XXX]
 
+* **ID Auditoría:** AUDIT-XXX
 * **Fecha de Auditoría:** [YYYY-MM-DD]
 * **Reviewer:** Subagente Independiente
 * **Ticket Evaluado:** [TK-XXX]
@@ -74,7 +77,7 @@ Genera un informe final con la siguiente estructura:
 - Fase 1 (Mutation Testing >= 70%): [PASÓ / FALLÓ]
 - Fase 2 (Arquitectura Hexagonal / SOLID): [PASÓ / FALLÓ]
 - Fase 3 (Anti-Drift Arquitectónico): [PASÓ / FALLÓ]
-- Fase 4 (Seguridad y Sanitización): [PASÓ / FALLÓ]
+- Fase 4 (Seguridad, Entornos y Sanitización): [PASÓ / FALLÓ]
 - Fase 5 (UI / WCAG 2.1 Ergonomía Táctil): [N/A / PASÓ / FALLÓ]
 
 ## 🚨 Defectos Detectados (Si los hay):

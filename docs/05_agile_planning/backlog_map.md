@@ -102,15 +102,15 @@ graph TD
 
 ## 🔗 Tabla de Navegación del Backlog (Alternativa)
 
-| Epic / Módulo | Historia de Usuario (US) | Ticket Técnico (Backend) | Ticket Técnico (Frontend) |
-| :--- | :--- | :--- | :--- |
-| **🛠️ Shared Kernel** | *N/A (Habilitador Técnico)* | [TK-001: Configuración Core y BD](tickets/shared/backend/TK-001.md) | N/A |
-| **🔐 Autenticación (`auth`)** | [US-001: Autenticación por PIN](user_stories/auth/US-001.md) | [TK-002: Implementación Auth PIN](tickets/auth/backend/TK-002.md) | [TK-007-B: Login por PIN](tickets/auth/frontend/TK-007-B.md) |
-| **📦 Bodega (`stock`)** | [US-002: Extracción de Bodega](user_stories/stock/US-002.md) | [TK-003: Implementación Extracciones](tickets/stock/backend/TK-003.md) | [TK-007-F: Registro Extracciones](tickets/stock/frontend/TK-007-F.md) |
-| **🍳 Cocina (`kitchen`)** | [US-003: Consulta Remanentes FEFO](user_stories/kitchen/US-003.md) | [TK-004: Consulta Remanentes](tickets/kitchen/backend/TK-004.md) | [TK-007: Alertas y Notificaciones](tickets/kitchen/frontend/TK-007.md) |
-| | [US-004: Consumo Parcial](user_stories/kitchen/US-004.md) | [TK-005: Consumo Parcial](tickets/kitchen/backend/TK-005.md) | [TK-007: Alertas y Notificaciones](tickets/kitchen/frontend/TK-007.md) |
-| | [US-005: Registro de Descartes](user_stories/kitchen/US-005.md) | [TK-006: Descarte y Mermas](tickets/kitchen/backend/TK-006.md) | [TK-007: Alertas y Notificaciones](tickets/kitchen/frontend/TK-007.md) |
-| | [US-006: Consulta de Alertas](user_stories/kitchen/US-006.md) | N/A *(Cross-cutting)* | [TK-007: Alertas y Notificaciones](tickets/kitchen/frontend/TK-007.md) |
-| | [US-007: Consumo por Recetas](user_stories/kitchen/US-007.md) | [TK-008: Recetas y Cascada FEFO](tickets/kitchen/backend/TK-008.md) | [TK-007-C: Consumo Recetas](tickets/kitchen/frontend/TK-007-C.md) |
-| | [US-008: Cierre y Conciliación](user_stories/kitchen/US-008.md) | [TK-009: Cierre y Conciliación](tickets/kitchen/backend/TK-009.md) | [TK-007-D: Conciliación Turno](tickets/kitchen/frontend/TK-007-D.md) |
-| **📊 Reportes (`reports`)** | [US-009: Dashboard de Mermas](user_stories/reports/US-009.md) | [TK-010: Módulo de Reportes](tickets/reports/backend/TK-010.md) | [TK-007-E: Dashboard Reportes](tickets/reports/frontend/TK-007-E.md) |
+| Epic / Módulo | Historia de Usuario (US) | Ticket Técnico (Backend) | Ticket Técnico (Frontend) | Estado |
+| :--- | :--- | :--- | :--- | :---: |
+| **🛠️ Shared Kernel** | *N/A (Habilitador Técnico)* | [TK-001: Configuración Core y BD](tickets/shared/backend/TK-001.md) | N/A | ✅ Done |
+| **🔐 Autenticación (`auth`)** | [US-001: Autenticación por PIN](user_stories/auth/US-001.md) | [TK-002: Implementación Auth PIN](tickets/auth/backend/TK-002.md) | [TK-007-B: Login por PIN](tickets/auth/frontend/TK-007-B.md) | ✅ Done |
+| **📦 Bodega (`stock`)** | [US-002: Extracción de Bodega](user_stories/stock/US-002.md) | [TK-003: Implementación Extracciones](tickets/stock/backend/TK-003.md) | [TK-007-F: Registro Extracciones](tickets/stock/frontend/TK-007-F.md) | ✅ Done |
+| **🍳 Cocina (`kitchen`)** | [US-003: Consulta Remanentes FEFO](user_stories/kitchen/US-003.md) | [TK-004: Consulta Remanentes](tickets/kitchen/backend/TK-004.md) | [TK-007: Alertas y Notificaciones](tickets/kitchen/frontend/TK-007.md) | ✅ Done |
+| | [US-004: Consumo Parcial](user_stories/kitchen/US-004.md) | [TK-005: Consumo Parcial](tickets/kitchen/backend/TK-005.md) | [TK-007: Alertas y Notificaciones](tickets/kitchen/frontend/TK-007.md) | ✅ Done |
+| | [US-005: Registro de Descartes](user_stories/kitchen/US-005.md) | [TK-006: Descarte y Mermas](tickets/kitchen/backend/TK-006.md) | [TK-007: Alertas y Notificaciones](tickets/kitchen/frontend/TK-007.md) | ✅ Done |
+| | [US-006: Consulta de Alertas](user_stories/kitchen/US-006.md) | N/A *(Cross-cutting)* | [TK-007: Alertas y Notificaciones](tickets/kitchen/frontend/TK-007.md) | ✅ Done |
+| | [US-007: Consumo por Recetas](user_stories/kitchen/US-007.md) | [TK-008: Recetas y Cascada FEFO](tickets/kitchen/backend/TK-008.md) | [TK-007-C: Consumo Recetas](tickets/kitchen/frontend/TK-007-C.md) | ✅ Done |
+| | [US-008: Cierre y Conciliación](user_stories/kitchen/US-008.md) | [TK-009: Cierre y Conciliación](tickets/kitchen/backend/TK-009.md) | [TK-007-D: Conciliación Turno](tickets/kitchen/frontend/TK-007-D.md) | ✅ Done |
+| **📊 Reportes (`reports`)** | [US-009: Dashboard de Mermas](user_stories/reports/US-009.md) | [TK-010: Módulo de Reportes](tickets/reports/backend/TK-010.md) | [TK-007-E: Dashboard Reportes](tickets/reports/frontend/TK-007-E.md) | ✅ Done |

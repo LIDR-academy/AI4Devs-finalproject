@@ -43,6 +43,32 @@ export class PrismaStockRepository implements IStockRepository {
     });
   }
 
+  public async findActiveRemanentesByInsumoId(insumoId: string): Promise<Remanente[]> {
+    const list = await this.prisma.remanente.findMany({
+      where: {
+        insumoId,
+        status: 'ACTIVE',
+      },
+      orderBy: {
+        expirationDate: 'asc',
+      },
+    });
+
+    return list.map(
+      (raw) =>
+        new Remanente({
+          id: raw.id,
+          insumoId: raw.insumoId,
+          currentQuantity: new DecimalQuantity(raw.currentQuantity.toString()),
+          initialQuantity: new DecimalQuantity(raw.initialQuantity.toString()),
+          location: raw.location,
+          status: raw.status as RemanenteStatusType,
+          expirationDate: raw.expirationDate,
+          createdAt: raw.createdAt,
+        })
+    );
+  }
+
   public async saveInsumo(insumo: Insumo): Promise<void> {
     const stockQty = insumo.warehouseStock.toDecimal();
 

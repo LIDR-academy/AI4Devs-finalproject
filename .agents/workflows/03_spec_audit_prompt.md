@@ -169,7 +169,7 @@ pero búscalo de verdad antes de declararlo.
 
 # FORMATO DE SALIDA
 
-Escribe el informe en `docs/audits/specs-<AAAA-MM-DD>.md`:
+Escribe el informe obligatoriamente en `docs/audits/AUDIT-SPEC-XXX-[nombre-feature]-report.md`:
 
 1. **Veredicto** (3 líneas): IMPLEMENTABLE / NO IMPLEMENTABLE + motivo dominante.
 2. **Decisiones que habría que inventar** (fase 5.1). Va segunda a propósito:

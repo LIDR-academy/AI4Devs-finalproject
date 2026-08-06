@@ -4,14 +4,18 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { createAuthRouter } from './routes/auth.routes.js';
 import { createStockRouter } from '../stock/http/routes/stock.routes.js';
 import { createKitchenRouter } from '../kitchen/http/routes/kitchen.routes.js';
+import { createReportsRouter } from '../reports/http/routes/reports.routes.js';
+import { InMemoryReportRepository } from '../reports/repositories/InMemoryReportRepository.js';
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
 import { IStockRepository } from '../../domain/stock/repositories/IStockRepository.js';
 import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
+import { IReportRepository } from '../../domain/reports/repositories/IReportRepository.js';
 
 export interface AppOptions {
   userRepository?: IUserRepository;
   stockRepository?: IStockRepository;
   remanenteQueryRepository?: IRemanenteQueryRepository;
+  reportRepository?: IReportRepository;
   jwtSecret?: string;
 }
 
@@ -47,6 +51,10 @@ export function createApp(options: AppOptions = {}): Express {
       createKitchenRouter(options.remanenteQueryRepository, options.stockRepository)
     );
   }
+
+  // Rutas de Reportes
+  const reportRepo = options.reportRepository ?? new InMemoryReportRepository();
+  app.use('/api/v1/reports', createReportsRouter(reportRepo));
 
   // Middleware global de errores
   app.use(errorHandler);
