@@ -161,11 +161,19 @@ openssl rand -base64 48   # generar el secreto
 
 ### 5.6 Cadena de conexión de Neon en formato Npgsql
 
-Neon entrega una URI (`postgresql://...`); Npgsql necesita el formato de palabras clave **con SSL**:
+Neon entrega una URI (`postgresql://...`); Npgsql necesita el formato de palabras clave **con SSL**. Estos son los pares que hay que componer:
 
-```
-Host=ep-xxx-pooler.us-east-2.aws.neon.tech;Port=5432;Database=neondb;Username=neondb_owner;Password=***;SSL Mode=Require;Trust Server Certificate=true
-```
+| Clave | Valor |
+|---|---|
+| `Host` | `ep-xxx-pooler.us-east-2.aws.neon.tech` |
+| `Port` | `5432` |
+| `Database` | `neondb` |
+| `Username` | el usuario que entrega Neon |
+| `Password` | la contraseña que entrega Neon |
+| `SSL Mode` | `Require` |
+| `Trust Server Certificate` | `true` |
+
+Se unen con `;` en una sola línea y el resultado va **únicamente** en la variable de entorno `ConnectionStrings__DefaultConnection` del proveedor — nunca en un archivo del repositorio.
 
 Usa siempre el endpoint **`-pooler`** (pgBouncer) para no agotar conexiones.
 
