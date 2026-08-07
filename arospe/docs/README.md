@@ -8,7 +8,8 @@ Technical documentation for this Laravel 13 + Livewire 4 application, kept in sy
 
 ## Workflow
 
-- [Workflow](workflow.md) — the required multi-agent orchestration process (Three Amigos + TDD + security audit + code review + continuous docs) the project's Claude Code agents follow to carry a task from definition to closure, phase by phase.
+- [Workflow](workflow.md) — the required multi-agent orchestration process (Three Amigos + TDD + security audit + code review + continuous docs) the project's Claude Code agents follow to carry a task from definition to closure, phase by phase, including the three-stage task-storage convention (`ai-spec/tasks/` → `in-progress/` → `done/`).
+- [`.claude/skills/three-amigos-debate/SKILL.md`](../.claude/skills/three-amigos-debate/SKILL.md) — the skill that automates [Phase 1](workflow.md#phase-1--three-amigos-debate) of that workflow: `/three-amigos-debate epic <n>` decomposes a [PRD](PRD/PRD.md) epic into candidate stories (pausing for your confirmation), `/three-amigos-debate story <description>` debates a single ad-hoc story, and either way it convenes the expert/QA/database agents and writes one User Story file per story to `./ai-spec/tasks/`. It stops at Phase 1 — no code, no INVEST check, no TDD.
 
 ## Product Requirements
 
@@ -48,4 +49,4 @@ Technical documentation for this Laravel 13 + Livewire 4 application, kept in sy
 
 - [Errors log](errors-log.md) — structured record of real mistakes and the rule adopted to avoid repeating them. Empty so far.
 
-_Last updated: 2026-07-21 — Referenced the new ADR 0001 (UUID primary keys) in Decisions; corrected the Authorization index line — `HasRoles` is attached to `User` today._
+_Last updated: 2026-08-07 — Indexed the new `three-amigos-debate` skill under Workflow, and noted the now three-stage task-storage convention in the Workflow entry._

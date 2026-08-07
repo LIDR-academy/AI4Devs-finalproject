@@ -22,9 +22,10 @@ Follow `docs/contracts.md`'s Uncertainty Handling Rule exactly:
 
 ## Task lifecycle
 
-- Create one markdown file per task in `./ai-spec/tasks/in-progress/` while work on it is active, with a short descriptive filename. Each file holds the requirement, its Gherkin scenarios, and any open questions.
+- Create one markdown file per task in `./ai-spec/tasks/`, with a short descriptive filename, as soon as the task is defined (this is the Three Amigos / Phase 1 output). Each file holds the requirement, its Gherkin scenarios, and any open questions. This is the **new** stage — the task is defined but implementation hasn't started.
+- When `backend-expert`/`frontend-expert` starts implementing the task (TDD, Phase 3), move its file from `./ai-spec/tasks/` to `./ai-spec/tasks/in-progress/`.
 - When a task is finished, move its file from `./ai-spec/tasks/in-progress/` to `./ai-spec/tasks/done/`.
-- Create `./ai-spec/` and its `tasks/in-progress/` and `tasks/done/` subfolders if they don't exist yet.
+- Create `./ai-spec/` and its `tasks/`, `tasks/in-progress/`, and `tasks/done/` subfolders if they don't exist yet.
 
 ## Solution design and PRDs
 

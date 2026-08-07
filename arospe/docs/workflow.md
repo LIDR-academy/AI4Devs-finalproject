@@ -19,7 +19,7 @@ previous one is met.
 
 | Agent | Responsibility |
 |---|---|
-| `product-owner` | Analyzes the request, leads the Three Amigos debate, writes the User Story, moves the task to `./ai-spec/tasks/done/` on closure. |
+| `product-owner` | Analyzes the request, leads the Three Amigos debate, writes the User Story, moves the task through `./ai-spec/tasks/` → `in-progress/` → `done/` as it advances. |
 | `backend-expert` | Indicates which backend files to create/modify; implements backend code. |
 | `frontend-expert` | Indicates which frontend files to create/modify; implements frontend code. |
 | `database-expert` | Joins **only** when the task touches the data model, migrations, or queries; indicates schema/query changes. |
@@ -29,8 +29,11 @@ previous one is met.
 | `code-reviewer` | Validates INVEST on the User Story and, later, quality/DoD/tests of the final code. |
 | `docs-keeper` | Continuously documents: the workflow itself, decisions, lessons learned, and final changes. |
 
-> **Task-storage convention:** task files live in `./ai-spec/tasks/in-progress/` while active
-> and move to `./ai-spec/tasks/done/` on closure — this reconciles the workflow with
+> **Task-storage convention:** task files have three stages. Phase 1 writes the User Story to
+> `./ai-spec/tasks/<id>-<slug>.md` (**new** — defined, not yet picked up for implementation).
+> When `backend-expert`/`frontend-expert` starts Phase 3 implementation, the file moves to
+> `./ai-spec/tasks/in-progress/<id>-<slug>.md` (**in-progress**). On Phase 7 closure it moves
+> to `./ai-spec/tasks/done/<id>-<slug>.md` (**done**). This reconciles the workflow with
 > `product-owner`'s existing task-lifecycle convention defined in
 > `.claude/agents/product-owner.md`.
 
@@ -60,7 +63,7 @@ flowchart TD
     B["Task classification<br/>FE / BE / full-stack / DB"]
     C["Three Amigos debate<br/>expert + qa (+ db-expert)"]
     D["User story + INVEST check<br/>code-reviewer validates vs @docs"]
-    E["TDD: red test → green code<br/>qa writes test, expert implements"]
+    E["TDD: red test → green code<br/>qa writes test, expert implements<br/>ai-spec/tasks → in-progress"]
     F["Security audit<br/>appsec-auditor"]
     G["Final code review<br/>criteria, DoD and tests"]
     H["Final documentation<br/>docs-keeper updates @docs"]
@@ -101,7 +104,17 @@ Each participant must contribute:
 3. **Database-expert** (if applicable): required schema/migration/query changes.
 
 **Output of phase 1:** `product-owner` writes the User Story (see template below) and saves
-it as a file at `./ai-spec/tasks/in-progress/<id>-<slug>.md`.
+it as a file at `./ai-spec/tasks/<id>-<slug>.md` (**new** stage — not yet in progress).
+
+> **Automated by a skill.** This phase — and only this phase — is automated by the
+> [`three-amigos-debate`](../.claude/skills/three-amigos-debate/SKILL.md) skill, invoked as
+> `/three-amigos-debate epic <n>` or `/three-amigos-debate story <description>`. In epic mode it
+> first decomposes a [PRD](PRD/PRD.md) epic into candidate stories and **stops for user
+> confirmation** before debating any of them; in story mode it skips decomposition. It applies
+> the [Task classification rule](#task-classification-rule) to pick participants, convenes the
+> agents above, and writes one User Story file per story to `./ai-spec/tasks/` (the **new**
+> stage). It never writes application code and never advances a story past Phase 1 — Phases 2–7
+> below stay manually orchestrated.
 
 ## Phase 2 — INVEST validation and documentation check
 
@@ -116,6 +129,9 @@ it as a file at `./ai-spec/tasks/in-progress/<id>-<slug>.md`.
 
 ## Phase 3 — TDD (mandatory, in this order)
 
+0. Before writing the first test, `product-owner` moves the task file from
+   `./ai-spec/tasks/<id>-<slug>.md` to `./ai-spec/tasks/in-progress/<id>-<slug>.md` — this is
+   the point implementation actually starts.
 1. `backend-qa`/`frontend-qa` writes the tests defined in the User Story. Tests **must
    fail** at this point (red).
 2. The task passes to `backend-expert`/`frontend-expert` to implement the minimal code
@@ -232,4 +248,9 @@ What should be observable/working once done.
 - Returns between phases are loops: a task may go through TDD or security multiple times
   until it's green/clean before moving forward.
 
-_Last updated: 2026-07-21 — Cross-referenced the User Story Gherkin template to `testing/frontend/gherkin-guidelines.md`'s actor/single-action rules after the incident logged in `errors-log.md`._
+_Last updated: 2026-08-07 — Split the task-storage convention into three stages: Phase 1 now
+writes the User Story to `./ai-spec/tasks/<id>-<slug>.md` (new), and the file only moves to
+`./ai-spec/tasks/in-progress/` at the start of Phase 3 (TDD), when implementation actually
+begins; `./ai-spec/tasks/done/` on Phase 7 closure is unchanged. Updated the responsibility
+table, flow diagram, and Phase 1/3 sections accordingly. Also cross-referenced the new
+`three-amigos-debate` skill from Phase 1, which automates that phase (and only that phase)._
