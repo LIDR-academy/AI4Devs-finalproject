@@ -49,7 +49,7 @@ Arospe es un **backoffice de administración** para una operación de ecommerce:
 
 ### **1.2. Características y funcionalidades principales:**
 
-> Estado actual: en el código solo está implementada la capa de autenticación (Fortify: registro, login, verificación de email, 2FA, passkeys). El resto de funcionalidades descritas a continuación son el alcance funcional definido en el PRD (`docs/PRD/PRD.md`) y constituyen la hoja de ruta del backoffice.
+> Estado actual: en el código están implementadas la capa de autenticación (Fortify: registro, login, verificación de email, 2FA, passkeys) y la **capa de backend/infraestructura** de Usuarios, Roles y Permisos: `RolePermissionSeeder` siembra 2 roles (`Super Admin` y `Administrator`) y un catálogo de 38 permisos, los middleware `role`/`permission`/`role_or_permission` están registrados en `bootstrap/app.php`, y el `Super Admin` dispone de un bypass de permisos vía `Gate::before`. Lo que **todavía no existe** es la UI de gestión de esa épica (CRUD de roles, pantalla de usuarios, asignación de permisos desde el panel), ni ninguna ruta o componente Livewire protegido aún por un permiso del catálogo. El resto de funcionalidades descritas a continuación son el alcance funcional definido en el PRD (`docs/PRD/PRD.md`) y constituyen la hoja de ruta del backoffice.
 
 - **Usuarios, Roles y Permisos** — CRUD completo de roles personalizados con permisos granulares por módulo (vía `spatie/laravel-permission`, ya instalado), sustituyendo el desplegable de rol fijo del prototipo. Es la base de la que dependen el resto de épicas.
 - **Catálogo de Productos** — productos con categorías propias (CRUD completo, taxonomía distinta a la del blog) y **variantes configurables**: tipos de atributo (Talla, Color, Material…) definidos por el administrador, cada combinación con su propio SKU, precio, stock e imagen destacada opcional.
@@ -126,6 +126,16 @@ Para reconstruir la base de datos desde cero:
 ```bash
 ./vendor/bin/sail artisan migrate:fresh --seed
 ```
+
+**El seed no es opcional.** `database/seeders/RolePermissionSeeder.php` es la **única** fuente de los roles y del catálogo de permisos contra los que autoriza la aplicación: sin él la app no funciona correctamente (ver la nota de despliegue en [`arospe/docs/architecture/overview.md`](arospe/docs/architecture/overview.md)). En cualquier despliegue —producción incluida— es un paso **obligatorio**, y conviene usar la forma explícita en lugar de un `db:seed` genérico, para que ningún seeder de fixtures añadido después pueda llegar a producción:
+
+```bash
+./vendor/bin/sail artisan db:seed --class=RolePermissionSeeder
+```
+
+El seeder es idempotente: re-ejecutarlo no duplica nada y restaura permisos revocados manualmente al rol `Administrator`.
+
+**Variable de entorno opcional `SUPER_ADMIN_EMAIL`.** Define el email del usuario al que `RolePermissionSeeder` asigna el rol `Super Admin` (ver `.env.example` para la descripción completa). Si se deja sin definir, el rol se siembra sin asignar a nadie. Si coincide con un usuario existente **verificado**, ese usuario recibe el rol. Si no coincide con ningún usuario, el seeder **aprovisiona** una cuenta nueva con contraseña aleatoria y envía un enlace de reseteo para que el operador la reclame vía "He olvidado mi contraseña". Si coincide con un usuario existente **sin verificar**, o si el valor no es una dirección de email bien formada, el seeder **aborta** ese bootstrap de forma ruidosa y no concede el rol a nadie (el resto del seed sí continúa). El valor se normaliza a minúsculas, así que `Admin@Example.com` y `admin@example.com` son la misma dirección.
 
 **7. Ejecutar los tests**
 
@@ -212,7 +222,7 @@ flowchart LR
 - **Modelos Eloquent (`app/Models/**`)** — capa de datos; usan atributos PHP 8 (`#[Fillable]`, `#[Hidden]`) y un método `casts()` en vez de las propiedades clásicas `$fillable`/`$hidden`/`$casts`.
 - **Autenticación — `laravel/fortify` (^1.37)**: registro, login, reset de contraseña, verificación de email y 2FA.
 - **Passkeys — `@laravel/passkeys` / `laravel/passkeys`**: soporte WebAuthn, consumido desde `App\Livewire\Settings\Security`.
-- **Autorización — `spatie/laravel-permission` (^8.3)**: roles y permisos; el trait `HasRoles` ya está adjunto a `User` (`assignRole()`, `hasRole()`, `hasPermissionTo()` son llamables), pero ningún rol/permiso está aún sembrado, asignado o comprobado en la app (sin seeders de roles, sin middleware `role:`/`permission:` registrado).
+- **Autorización — `spatie/laravel-permission` (^8.3)**: roles y permisos; el trait `HasRoles` está adjunto a `User` y la base de autorización **ya está operativa**: `database/seeders/RolePermissionSeeder.php` siembra 2 roles (`Super Admin` y `Administrator`, guard `web`) y un catálogo de 38 permisos (9 módulos × 4 acciones CRUD, más `roles.manage` y `roles.manage-administrators`); los middleware `role`, `permission` y `role_or_permission` están registrados como alias en `bootstrap/app.php`; y `App\Providers\AppServiceProvider` instala el bypass del `Super Admin` vía `Gate::before`. Detalle completo en [`arospe/docs/architecture/authorization.md`](arospe/docs/architecture/authorization.md).
 - **Base de datos — MySQL 8.4** (contenedor `mysql` en `compose.yaml`), también backend de sesiones, caché y colas (driver `database` para los tres).
 - **Frontend — Vite ^8 + Tailwind CSS v4** (vía `@tailwindcss/vite`) + **Flux UI (Livewire Flux, free)** como librería de componentes visuales.
 - **Entorno de desarrollo — Laravel Sail**, que orquesta los contenedores `laravel.test` (PHP 8.5 + Vite dev server), `mysql` y `redis` vía Docker Compose.
@@ -235,7 +245,7 @@ config/               Configuración de Laravel y paquetes (fortify.php, permiss
 database/
   factories/
   migrations/
-  seeders/
+  seeders/          DatabaseSeeder + RolePermissionSeeder (roles, catálogo de permisos, bootstrap del Super Admin)
 resources/
   views/
     components/       Componentes Blade
@@ -244,7 +254,7 @@ resources/
     partials/
 routes/                web.php, settings.php (sin api.php todavía)
 tests/
-  Feature/             Espeja la estructura de app/ (Auth/, Settings/...)
+  Feature/             Espeja la estructura de app/ (Auth/, Settings/, Models/, Authorization/, Seeders/)
   Unit/
 docker/                Assets de Docker para Sail (p. ej. aprovisionamiento de BD de test)
 docs/                  Documentación del proyecto (arquitectura, BD, convenciones, decisiones)
@@ -258,13 +268,36 @@ El proyecto sigue estrictamente la organización por capas de Laravel (no hay es
 
 ### **2.5. Seguridad**
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+**Autenticación (`laravel/fortify`).** Registro, login, verificación de email y reseteo de contraseña delegados en Fortify, con acciones propias en `app/Actions/Fortify/` y reglas de validación centralizadas en traits (`app/Concerns/PasswordValidationRules.php`, `ProfileValidationRules.php`) para que ninguna ruta de entrada se quede con una política más laxa que las demás. Sobre esa base:
+
+- **2FA (TOTP)** con confirmación explícita: el usuario no queda protegido hasta enviar un código válido; si el flujo se abandona a medias, `App\Livewire\Settings\Security::mount()` limpia proactivamente el estado semi-activado. Los códigos de recuperación viven encriptados en la BD (`two_factor_secret` y `two_factor_recovery_codes` son `Hidden` y encriptados).
+- **Passkeys (WebAuthn)** vía `laravel/passkeys`, gestionadas desde el mismo componente `Security`.
+- **Reconfirmación de contraseña** (`password.confirm`) obligatoria en la pantalla que gestiona 2FA y passkeys, además de `auth` y `verified`.
+- **Emails canónicamente en minúsculas** (`lowercase_usernames` en `config/fortify.php`), de modo que la comparación de identidades no dependa de mayúsculas.
+- **Política de contraseñas endurecida solo en producción** (`AppServiceProvider`: mínimo 12 caracteres, mayúsculas/minúsculas, números, símbolos y comprobación `uncompromised()` contra filtraciones conocidas).
+
+**Modelo de autorización (`spatie/laravel-permission`).** Roles y permisos sembrados por `RolePermissionSeeder` con una convención de nombres canónica `<módulo>.<acción>`; el rol `Administrator` recibe 37 de los 38 permisos (todos menos `roles.manage-administrators`) y el rol `Super Admin` recibe **cero** permisos explícitos: autoriza exclusivamente por el bypass `Gate::before` instalado en `AppServiceProvider`. Ese bypass tiene un alcance deliberadamente acotado y documentado:
+
+- La closure devuelve `true` o `null`, **nunca `false`**, para no denegar en bloque a los demás usuarios antes de consultar sus permisos reales.
+- Comprueba el rol con el guard `web` explícito, de modo que un rol homónimo creado en otro guard no puede conceder el bypass.
+- Solo cubre las comprobaciones que pasan por el Gate (`can()`, `authorize()`, `@can`, middleware `permission:` y `role_or_permission:`). **No** cubre `hasRole()`, `hasPermissionTo()` ni el middleware `role:`, que consultan el modelo directamente. De ahí la convención dura del proyecto: **gatear siempre por permiso, nunca por nombre de rol**.
+
+**Prácticas derivadas del proceso de auditoría.** El flujo de trabajo del proyecto incluye una fase de auditoría de seguridad (`appsec-auditor`) cuyos hallazgos con valor duradero se convierten en reglas escritas en [`arospe/docs/security/README.md`](arospe/docs/security/README.md). Algunas de las que ya están aplicadas en el código:
+
+- **Exigir `email_verified_at` antes de conceder un rol privilegiado por email configurado.** Como el registro es abierto y cualquier usuario autenticado puede cambiar su email desde su perfil, la mera existencia de una fila con la dirección de `SUPER_ADMIN_EMAIL` no prueba nada: alguien podría *ocupar* esa dirección por adelantado y recibir el rol en el siguiente seed. La verificación forma parte de la propia condición de búsqueda (`->whereNotNull('email_verified_at')`), y si la dirección está ocupada por una cuenta sin verificar el bootstrap aborta sin conceder el rol a nadie.
+- **Aislamiento por entorno de los datos de fixture.** `DatabaseSeeder` crea la cuenta `test@example.com` solo bajo una **lista blanca** explícita de entornos (`app()->environment(['local', 'testing'])`), no bajo un "todo lo que no sea producción": `db:seed` sí se ejecuta en producción (no está entre los comandos que bloquea `DB::prohibitDestructiveCommands`), y entornos como `staging`, `demo` o `qa` suelen ser alcanzables desde internet.
+- **Flush explícito de la caché de permisos, y también *después* del commit.** El seeder corre bajo `WithoutModelEvents`, que suprime el flush automático de Spatie; además, la caché de permisos vive en el store `database` compartido por todos los workers con un TTL de 24 h, así que un flush hecho solo *dentro* de la transacción deja una ventana en la que otro worker puede cachear el estado previo al commit. Por eso hay dos llamadas a `forgetCachedPermissions()` y ninguna sustituye a la otra.
+- **Abortar sin lanzar excepción dentro de la transacción**: un bootstrap de privilegio que falla degrada a "sin concesión", nunca a "sin catálogo de permisos".
+- **Trazabilidad de la concesión de privilegios**: toda concesión, aprovisionamiento o rechazo del rol `Super Admin` se escribe en el log de aplicación (con `email`, `user_id` y un `outcome` legible por máquina), no solo por consola — y nunca incluye la contraseña generada, que jamás se imprime, registra ni almacena en claro.
+
+El detalle completo de cada regla, con el razonamiento y los ejemplos ✅/❌ extraídos del código real, está en [`arospe/docs/security/README.md`](arospe/docs/security/README.md).
 
 ### **2.6. Tests**
 
 Suite de test basada en **Pest 4** (`pestphp/pest` + `pest-plugin-laravel`), organizada en `tests/Feature/` (mayoría de los tests, espejando `app/`) y `tests/Unit/`.
 
 - **Tests de backend (Feature/Unit)** — cubren, hoy, el flujo de autenticación de Fortify (registro, login, verificación de email, reset de contraseña, 2FA) y los componentes Livewire de `Settings`. Usan factories (`database/factories/`) en lugar de crear modelos a mano.
+- **Suites de la base de autorización** — `tests/Feature/Seeders/` verifica el sembrado (2 roles, 38 permisos, guard `web`, idempotencia del re-seed, doble flush de caché y las cinco ramas del bootstrap de `SUPER_ADMIN_EMAIL`: no-op, formato inválido, cuenta verificada, ocupante sin verificar y aprovisionamiento). `tests/Feature/Authorization/` fija el comportamiento del bypass del `Super Admin` y de los middleware: qué comprobaciones llegan al Gate y cuáles no, que la closure devuelve `null` (no `false`) para el resto de usuarios, y que un rol homónimo en otro guard no concede el bypass.
 - **Tests de navegador (`tests/Browser/`)** — vía **Pest Browser Plugin** (`pest-plugin-browser` ^4.3), que dirige **Playwright** (^1.61) para pruebas end-to-end reales sobre navegador. El flujo de trabajo documentado va de historia de usuario → escenario Gherkin → test Pest (ver `docs/testing/frontend/`), con ejemplos ya escritos para login, borrado de passkeys y el reto de 2FA. Esta suite y su integración en CI **aún no están conectadas** (ver `docs/testing/frontend/playwright-setup.md`).
 - **Filosofía de testing** — documentada en `docs/testing/philosophy.md` y `docs/testing/qa/` (pensamiento de riesgo, qué no testear, checklist de cobertura), pensada para evitar tests frágiles o redundantes.
 - **Puertas de calidad, en este orden, antes de dar un cambio por terminado:**
@@ -293,7 +326,7 @@ erDiagram
     ROLE_HAS_PERMISSIONS }o--|| PERMISSIONS : permission_id
 
     USERS {
-        bigint id PK
+        uuid id PK
         string name
         string email UK
         timestamp email_verified_at
@@ -305,7 +338,7 @@ erDiagram
     }
     PASSKEYS {
         bigint id PK
-        bigint user_id FK
+        uuid user_id FK
         string name
         string credential_id UK
         json credential
@@ -313,7 +346,7 @@ erDiagram
     }
     SESSIONS {
         string id PK
-        bigint user_id FK
+        uuid user_id FK
         string ip_address
         text user_agent
         longtext payload
@@ -332,12 +365,12 @@ erDiagram
     MODEL_HAS_ROLES {
         bigint role_id FK
         string model_type
-        bigint model_id
+        uuid model_uuid
     }
     MODEL_HAS_PERMISSIONS {
         bigint permission_id FK
         string model_type
-        bigint model_id
+        uuid model_uuid
     }
     ROLE_HAS_PERMISSIONS {
         bigint permission_id FK
@@ -345,11 +378,13 @@ erDiagram
     }
 ```
 
-Las relaciones de `MODEL_HAS_ROLES`/`MODEL_HAS_PERMISSIONS` con `USERS` son **polimórficas** (`model_type` + `model_id`, provistas por `spatie/laravel-permission`) — `User` es hoy el único modelo morfable de la aplicación.
+Las relaciones de `MODEL_HAS_ROLES`/`MODEL_HAS_PERMISSIONS` con `USERS` son **polimórficas** (`model_type` + `model_uuid`, provistas por `spatie/laravel-permission`) — `User` es hoy el único modelo morfable de la aplicación. La columna de la clave morfológica es `model_uuid` (tipada como `uuid`), renombrada desde el `model_id` (bigint) por defecto del paquete al pasar `users.id` a UUID.
 
 Tablas de infraestructura sin claves foráneas (no aparecen en el diagrama): `password_reset_tokens`, `cache`, `jobs`.
 
-> **Planificado, no implementado todavía ([ADR 0001](arospe/docs/decisions/0001-uuid-primary-keys.md)):** `users.id` migrará de `bigint` autoincremental a **UUID v7** (vía el trait nativo `HasUuids` de Laravel 13) durante la Epic 1. Es una migración de ruptura con backfill de datos que arrastra en cascada a `passkeys.user_id`, `sessions.user_id` (retipados a `foreignUuid`) y a la clave polimórfica `model_id` de `model_has_roles`/`model_has_permissions` (renombrada a `model_uuid` y retipada a `uuid`). Todas las tablas de dominio futuras (productos, variantes y categorías de producto; categorías, etiquetas y posts de blog — Epics 2 y 4) nacerán directamente con PK UUID, sin esa complejidad de migración por ser tablas nuevas. El diagrama de arriba refleja el estado **real actual** (`bigint`), no el planificado.
+> **Ya implementado ([ADR 0001](arospe/docs/decisions/0001-uuid-primary-keys.md)):** `users.id` **ya es** un **UUID v7** (vía el trait nativo `HasUuids` de Laravel 13), migrado desde el `bigint` autoincremental original durante la Epic 1. Fue una migración de ruptura con backfill de datos, resuelta en 5 migraciones de alteración (`2026_07_22_100001..100005_*.php`) que arrastraron en cascada a `passkeys.user_id`, `sessions.user_id` (retipados a `uuid`) y a la clave polimórfica `model_id` de `model_has_roles`/`model_has_permissions` (renombrada a `model_uuid` y retipada a `uuid`). El diagrama de arriba refleja ese estado **real actual**.
+>
+> **Sigue pendiente:** las otras seis entidades con PK UUID del ADR 0001 (productos, variantes y categorías de producto — Epic 2; categorías, etiquetas y posts de blog — Epic 4) **todavía no existen en código**. Nacerán directamente con PK UUID, sin la complejidad de migración anterior por ser tablas nuevas.
 
 ### **3.2. Descripción de entidades principales:**
 
@@ -357,7 +392,7 @@ Tablas de infraestructura sin claves foráneas (no aparecen en el diagrama): `pa
 
 | Columna | Tipo | Notas |
 | --- | --- | --- |
-| `id` | bigint, PK | |
+| `id` | uuid (v7), PK | `CHAR(36)`, generado por `HasUuids` — ver [ADR 0001](arospe/docs/decisions/0001-uuid-primary-keys.md) |
 | `name` | string | |
 | `email` | string | **unique** |
 | `email_verified_at` | timestamp, nullable | se pone a `null` de nuevo al cambiar el email |
@@ -367,14 +402,14 @@ Tablas de infraestructura sin claves foráneas (no aparecen en el diagrama): `pa
 | `two_factor_confirmed_at` | timestamp, nullable | |
 | `remember_token` | string, nullable | `Hidden` |
 
-Relaciones: `hasMany` → `passkeys` (vía `PasskeyAuthenticatable`); `hasMany` → `sessions` (informal, por `user_id`); `morphToMany` polimórfico → `roles`/`permissions` vía `HasRoles` (**ya adjunto** a `User` — `assignRole()`/`hasRole()`/`hasPermissionTo()` son llamables, aunque todavía no se usan en ningún punto de la aplicación).
+Relaciones: `hasMany` → `passkeys` (vía `PasskeyAuthenticatable`); `hasMany` → `sessions` (informal, por `user_id`); `morphToMany` polimórfico → `roles`/`permissions` vía `HasRoles` (**ya adjunto** a `User`, con roles y permisos sembrados y en uso real — ver [`arospe/docs/architecture/authorization.md`](arospe/docs/architecture/authorization.md)).
 
 **`passkeys`** — provista por `laravel/passkeys`
 
 | Columna | Tipo | Notas |
 | --- | --- | --- |
-| `id` | bigint, PK | |
-| `user_id` | bigint, **FK → `users.id`** | `cascadeOnDelete()` |
+| `id` | bigint, PK | la PK propia de la passkey sigue siendo `bigint`; solo cambió la FK |
+| `user_id` | uuid, **FK → `users.id`** | `CHAR(36)`, `cascadeOnDelete()` |
 | `name` | string | etiqueta elegida por el usuario |
 | `credential_id` | string | **unique**, ID de credencial WebAuthn |
 | `credential` | json | payload completo de la credencial WebAuthn |
@@ -385,7 +420,7 @@ Relaciones: `hasMany` → `passkeys` (vía `PasskeyAuthenticatable`); `hasMany` 
 | Columna | Tipo | Notas |
 | --- | --- | --- |
 | `id` | string, PK | |
-| `user_id` | bigint, FK → `users.id` | |
+| `user_id` | uuid, FK → `users.id` | `CHAR(36)` |
 | `ip_address` | string | |
 | `user_agent` | text | |
 | `payload` | longtext | |
@@ -399,11 +434,11 @@ Relaciones: `hasMany` → `passkeys` (vía `PasskeyAuthenticatable`); `hasMany` 
 | `name` | string | |
 | `guard_name` | string | |
 
-**`model_has_roles` / `model_has_permissions`** — tablas pivote polimórficas: `role_id`/`permission_id` (FK) + `model_type` + `model_id` (identifican el modelo asignado, hoy solo `User`).
+**`model_has_roles` / `model_has_permissions`** — tablas pivote polimórficas: `role_id`/`permission_id` (FK) + `model_type` + `model_uuid` (identifican el modelo asignado, hoy solo `User`; renombrada desde el `model_id` por defecto del paquete y retipada a `uuid`).
 
 **`role_has_permissions`** — tabla pivote con clave primaria compuesta: `permission_id` (FK) + `role_id` (FK).
 
-Instaladas, migradas y con `HasRoles` **ya conectado** al modelo `User`, pero sin ningún rol/permiso sembrado, asignado ni comprobado en el resto de la aplicación todavía — no hay seeder de roles, ni middleware `role:`/`permission:` registrado en las rutas (ver `docs/architecture/authorization.md`).
+Instaladas, migradas, con `HasRoles` **ya conectado** al modelo `User` y **ya sembradas**: [`database/seeders/RolePermissionSeeder.php`](arospe/database/seeders/RolePermissionSeeder.php) crea 2 roles (`Super Admin` y `Administrator`, ambos en el guard `web`) y un catálogo de 38 permisos (9 módulos × 4 acciones CRUD, más `roles.manage` y `roles.manage-administrators`). Los middleware `role`, `permission` y `role_or_permission` de Spatie están registrados como alias en `bootstrap/app.php`. El detalle completo — catálogo de permisos, reparto de grants por rol, bypass del `Super Admin` vía `Gate::before` y bootstrap por `SUPER_ADMIN_EMAIL` — está en [`arospe/docs/architecture/authorization.md`](arospe/docs/architecture/authorization.md).
 
 ---
 
