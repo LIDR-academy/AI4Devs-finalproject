@@ -1,0 +1,312 @@
+# [0006] Non-active user status blocks sign-in (Fortify integration)
+
+## Description
+Enforce the `users.status` value inside the authentication flow so a user whose status is
+*Inactivo* or *Suspendido* can never obtain a session: sign-in is refused and they are told the
+account is not active. Enforcement covers all three paths that grant a **fresh** session —
+email+password (including two-factor accounts), passkey sign-in, and remember-me cookie
+re-authentication. Restoring a user's status to *Activo* restores sign-in on their next attempt.
+The `status` column itself is **not** created here — it is owned by sibling story **0003**.
+
+## Type
+backend | includes database-expert: **no**
+
+## Gherkin
+```gherkin
+Feature: Non-active account status blocks sign-in
+
+  # --- Core blocking / restoring ---
+
+  Scenario Outline: A non-active user cannot sign in
+    Given a registered user whose status is "<status>"
+    When that user tries to sign in with their correct credentials
+    Then sign-in is refused and no session is granted
+    And they are told the account is not active
+
+    Examples:
+      | status     |
+      | Inactivo   |
+      | Suspendido |
+
+  Scenario: An active user signs in normally
+    Given a registered user whose status is "Activo"
+    When that user signs in with their correct credentials
+    Then they reach their dashboard
+
+  Scenario: Reactivating a user restores sign-in
+    Given a registered user who was blocked from signing in because their status was "Suspendido"
+      and whose status a user administrator has since set back to "Activo"
+    When that user tries to sign in with their correct credentials
+    Then they reach their dashboard
+
+  # --- Two-factor authentication path ---
+
+  Scenario: A non-active user with two-factor authentication never reaches the code step
+    Given a registered user whose status is "Suspendido" and who has two-factor authentication enabled
+    When that user tries to sign in with their correct credentials
+    Then sign-in is refused before the two-factor authentication code step is ever offered
+    And no pending two-factor challenge is left behind for them
+
+  Scenario: A user suspended mid-challenge is refused at the two-factor code step
+    Given a registered user with a pending two-factor challenge whose status became "Suspendido"
+      after the password step
+    When that user submits a valid authentication code
+    Then sign-in is refused and no session is granted
+
+  # --- Passkey path ---
+
+  Scenario: A non-active user cannot sign in with a passkey
+    Given a registered user whose status is "Suspendido" and who owns a registered passkey
+    When that user tries to sign in with that passkey
+    Then sign-in is refused and no session is granted
+
+  # --- Remember-me path ---
+
+  Scenario: A remember-me cookie stops granting access once the user is suspended
+    Given a registered user who signed in choosing to be remembered, whose session has since ended
+      and whose status a user administrator then set to "Suspendido"
+    When that user returns to the dashboard carrying only their remember-me cookie
+    Then access is refused and no session is granted
+
+  # --- Account-disclosure boundary ---
+
+  Scenario Outline: A wrong password reveals nothing about account status
+    Given a registered user whose status is "<status>"
+    When that user tries to sign in with an incorrect password
+    Then they are told only that the credentials are invalid, with no mention of account status
+
+    Examples:
+      | status     |
+      | Inactivo   |
+      | Suspendido |
+
+  Scenario: The refusal message does not reveal which non-active status applies
+    Given a registered user whose status is "Suspendido"
+    When that user tries to sign in with their correct credentials
+    Then the message states only that the account is not active, naming no specific status
+
+  # --- Abuse protection ---
+
+  Scenario: Blocked sign-in attempts count toward the sign-in rate limit
+    Given a registered user whose status is "Suspendido"
+    When that user exceeds the allowed number of sign-in attempts with correct credentials
+    Then further attempts are throttled exactly as repeated failed sign-ins are
+```
+
+## Files to create/modify
+
+- `app/Enums/UserStatus.php` — **not created here.** Owned by story 0003; consumed by this story.
+  This story only requires that a single "active" sentinel case exists and that `$user->status`
+  is comparable against it by enum identity.
+- `app/Actions/Fortify/AuthenticateUser.php` — **new.** Single-purpose invokable action,
+  `__invoke(Request $request): ?User`. Resolves and verifies credentials through the guard's
+  `UserProvider` (`retrieveByCredentials()` + `validateCredentials()` + `rehashPasswordIfRequired()`),
+  then enforces `$user->isActive()`. Returns `null` for bad credentials so Fortify's existing
+  generic `auth.failed` message and rate-limiter increment run unchanged; throws
+  `ValidationException::withMessages([Fortify::username() => [__('…')]])` **only** when credentials
+  are valid but the status blocks sign-in.
+  > Replicating `rehashPasswordIfRequired()` is **required, not optional**: `Fortify::authenticateUsing`
+  > bypasses `guard->attempt()`, so today's implicit password-rehash-on-login is silently lost if the
+  > action hand-rolls a `User::where()` + `Hash::check()` instead of going through the provider.
+  > Constructor injection is used here (matching Fortify's own `AttemptToAuthenticate` /
+  > `RedirectIfTwoFactorAuthenticatable`), a deliberate, justified departure from this repo's
+  > Livewire per-method-injection convention — this is not a Livewire component action.
+- `app/Listeners/RejectNonActiveUserLogin.php` — **new.** Listener on
+  `Illuminate\Auth\Events\Login` that logs the user back out and invalidates the session when
+  `$user->isActive()` is false. Exists **specifically** to cover remember-me/recaller
+  re-authentication, which reaches neither of the two callbacks below (it resolves the user via
+  `retrieveByToken()`), and which fires `Login` on the recaller path. It is a safety net, not the
+  primary mechanism — see [Functional decisions](#functional-decisions).
+- `app/Providers/FortifyServiceProvider.php` — register
+  `Fortify::authenticateUsing(app(AuthenticateUser::class));` in `configureActions()`, and add a
+  passkey configuration step calling
+  `Passkeys::authorizeLoginUsing(fn ($request, $user, $passkey) => $user->isActive())`
+  (`Laravel\Passkeys\Passkeys`).
+  > **Pass an object instance, not a class string.** Unlike `createUsersUsing()` /
+  > `resetUserPasswordsUsing()`, `authenticateUsing()` stores the raw callable and later calls
+  > `call_user_func($callback, $request)` — a bare class string is not a valid target there.
+- `app/Models/User.php` — add `public function isActive(): bool` comparing `$this->status`
+  against the enum's active case, mirroring the existing `initials()` /
+  `hasEnabledTwoFactorAuthentication()` shape. The `@property` line for `status` is added by
+  story 0003. **This file is also touched by 0003 — sequence 0003 first and rebase this story on
+  top.**
+- `app/Providers/AppServiceProvider.php` (or the app's event discovery) — wire the listener to
+  `Illuminate\Auth\Events\Login`. Exact registration point is the Phase 3 implementer's call,
+  following whatever this app already does for event wiring.
+- `tests/Feature/Auth/AuthenticationTest.php` — extend (do **not** create a parallel file); it
+  already owns the login-refusal convention (`assertSessionHasErrorsIn('email')`).
+- `tests/Feature/Auth/TwoFactorChallengeTest.php` — extend for the two-factor cases.
+- New test file for the passkey and remember-me paths — path to be agreed with `backend-qa` in
+  Phase 3. No passkey **sign-in** test or harness exists in the repo today (`SecurityTest.php`
+  covers passkey *management* only).
+
+Not touched: `config/fortify.php` (no config surface for this), `routes/*` (no new routes),
+`database/migrations/*` (the column is 0003's).
+
+## Tests to perform
+
+- [ ] Happy path: an *Activo* user signs in normally — `assertSessionHasNoErrors()`,
+      `assertRedirect(route('dashboard'))`, `assertAuthenticated()`. Control case proving the
+      check does not block legitimate sign-in.
+- [ ] Happy path: status restored to *Activo* → the **next** attempt succeeds. Proves the check
+      is re-evaluated per attempt and is not cached or session-sticky.
+- [ ] Negative (dataset over *Inactivo* / *Suspendido*): sign-in refused with correct
+      credentials — `assertGuest()`, error present on the `email` key, and
+      `assertDatabaseMissing('sessions', ['user_id' => $user->id])` so the assertion proves no
+      session row was ever persisted rather than merely that the redirect looked like a failure.
+- [ ] Negative (dataset over *Inactivo* / *Suspendido*): a non-active user with two-factor
+      authentication enabled is refused **before** the challenge — response is not a redirect to
+      `two-factor.login`, `assertGuest()`, and the pending-challenge session key Fortify's
+      `RedirectIfTwoFactorAuthenticatable` sets (`login.id`) is absent. Its absence is what proves
+      the block ran before that pipe, not after.
+- [ ] Negative: a seeded pending two-factor challenge for a now-*Suspendido* user, submitted with
+      a valid authentication code, still refuses — `assertGuest()`. Defense-in-depth for the
+      status-changed-mid-challenge race.
+- [ ] Negative: passkey sign-in refused for a non-active user. A full WebAuthn ceremony is not
+      practical here; assert against the enforcement point (`Passkeys::allowsLogin()` /
+      the registered `authorizeLoginUsing` callback) with a non-active user's passkey rather than
+      fabricating a fake assertion payload through `POST /passkeys/login`.
+- [ ] Negative: remember-me recall refused — sign in as *Activo* with `remember: true`, capture
+      the recaller cookie, flush the server-side session, set status to *Suspendido*, then request
+      `/dashboard` carrying only that cookie → `assertRedirect(route('login'))`, `assertGuest()`.
+- [ ] Negative/disclosure (dataset over *Inactivo* / *Suspendido*): wrong password + non-active
+      status returns a message **byte-identical** to the existing wrong-password message asserted
+      in `AuthenticationTest`'s "users can not authenticate with invalid password" — reuse that
+      test's expected string as the baseline.
+- [ ] Edge: blocked attempts count toward Fortify's login limiter
+      (`Limit::perMinute(5)` in `FortifyServiceProvider::configureRateLimiting()`) — five
+      correct-credential attempts against a *Suspendido* user, sixth is throttled.
+- [ ] Edge: password rehash on login still occurs through `AuthenticateUser` (guard against the
+      `rehashPasswordIfRequired()` regression noted above).
+- [ ] Regression — run the **full** suite (`php artisan test --compact`), not just
+      `tests/Feature/Auth/**`. At-risk files: `tests/Feature/Auth/AuthenticationTest.php`,
+      `tests/Feature/Auth/TwoFactorChallengeTest.php` (both post to `login.store` with
+      factory-made users), and secondarily `PasswordResetTest.php`, `RegistrationTest.php`,
+      `EmailVerificationTest.php`. All break unless `UserFactory`'s default status is the active
+      case — see [Dependencies](#dependencies-risks--open-questions).
+- [ ] Regression: `tests/Feature/Settings/**` and every other `actingAs()`-based test must stay
+      green **unchanged** — they bypass the login flow entirely, and this story's scope
+      deliberately leaves them unaffected. A break there signals the enforcement leaked into
+      per-request territory, which is out of scope.
+
+## Expected outcome
+A user whose status is *Inactivo* or *Suspendido* cannot obtain a session by any means that
+grants a fresh one: the login form refuses them with "the account is not active", a two-factor
+account never reaches the code step, a passkey sign-in is rejected, and a remember-me cookie no
+longer resurrects access. An administrator setting the status back to *Activo* restores sign-in on
+the very next attempt, with no cache to clear or session to reset. Everything about an *Activo*
+user's sign-in — messages, redirects, throttling, password rehashing — is byte-for-byte unchanged.
+
+## Acceptance criteria
+- [ ] A user whose status is not the active case cannot obtain a session via email+password,
+      including accounts with two-factor authentication enabled.
+- [ ] The two-factor block happens **before** the challenge is offered — no pending-challenge
+      session state is created, and no authentication code is consumed.
+- [ ] Passkey sign-in is blocked for a non-active user, via `Passkeys::authorizeLoginUsing()`
+      (passkey login does not pass through Fortify's pipeline and is not covered by
+      `authenticateUsing`).
+- [ ] Remember-me/recaller re-authentication is blocked for a non-active user, via the
+      `Login`-event listener.
+- [ ] Restoring the status to the active case restores sign-in on the next attempt, with no
+      further administrative step.
+- [ ] Wrong credentials produce today's generic message unchanged, whatever the user's status; the
+      "account is not active" message is reached **only** after credentials verify correct, and
+      never names which non-active status applies.
+- [ ] The refusal message is wrapped in `__()` and surfaces on the `email` field via Fortify's
+      standard `ValidationException` convention — no new UI wiring in
+      `resources/views/livewire/auth/login.blade.php`.
+- [ ] Password rehash-on-login behavior is preserved through the custom callback.
+- [ ] Already-authenticated live sessions are **not** terminated by this story (explicitly out of
+      scope — see Functional decisions).
+
+## Definition of Done
+- [ ] Tests written and green (new cases + the full-suite regression run).
+- [ ] Code reviewed (code-reviewer).
+- [ ] No security findings (appsec-auditor) — with the disclosure tradeoff below reviewed
+      explicitly as an intentional, PRD-mandated decision rather than a candidate finding.
+- [ ] Documentation updated (docs-keeper) — `docs/architecture/authentication.md` gains the
+      status check as part of the real sign-in flow, covering all three enforcement points.
+- [ ] Acceptance criteria met.
+- [ ] Story 0003 merged first; this story rebased on top of it.
+
+---
+
+## Functional decisions
+
+1. **Three enforcement points, not one.** `Fortify::authenticateUsing()` covers email+password
+   *and* two-factor accounts, because `RedirectIfTwoFactorAuthenticatable::validateCredentials()`
+   consults the same callback before it writes the pending-challenge session state — verified
+   against the installed vendor code. Passkey login bypasses Fortify's pipeline entirely and needs
+   `Passkeys::authorizeLoginUsing()`. Remember-me recall reaches neither and needs the
+   `Login`-event listener. *Rejected:* using the `Login` listener as the **primary** mechanism —
+   it fires only after a session is granted, so on the two-factor path it would force-log-out a
+   momentarily-real session after the user already spent a valid authentication code, instead of
+   preventing the session. *Rejected:* `Fortify::authenticateThrough()` — it replaces the whole
+   pipeline array, so we would hand-maintain `EnsureLoginIsNotThrottled`, `CanonicalizeUsername`,
+   the two-factor conditional and `PrepareAuthenticatedSession` ourselves, risking silent loss of
+   throttling on a Fortify upgrade. *Rejected:* a custom guard/`UserProvider` — affects every
+   `Auth::user()` resolution app-wide for a login-time concern.
+2. **Credentials first, status second.** Status is only consulted once credentials have verified
+   correct. A wrong email or wrong password takes Fortify's existing generic-failure path
+   unchanged, so this story adds no new account-enumeration signal there.
+3. **The "account is not active" message is a deliberate, PRD-mandated disclosure.** It tells
+   someone who already holds valid credentials that the account exists but is blocked. This is
+   required verbatim by `docs/PRD/PRD.md` ("And they are told the account is not active"). The
+   leak is narrowed by decision 2 (valid credentials required to see it) and by not naming which
+   non-active status applies. Flag to `appsec-auditor` in Phase 4 as intentional.
+4. **Already-live sessions are out of scope** (human-confirmed). Suspending a user prevents them
+   obtaining a *new* session; it does not terminate one they already hold. The PRD Gherkin speaks
+   only of sign-in time ("tries to sign in", "on their next attempt"), and per-request enforcement
+   would touch virtually every `actingAs()`-based feature test — a distinct piece of scope that
+   would fail INVEST "Small" if bundled here. Recorded as a follow-up story below.
+5. **Scenarios and tests are written against the `UserStatus` enum, not raw strings**
+   (human-confirmed), for type safety at every comparison site. Gherkin keeps the business labels
+   *Activo* / *Inactivo* / *Suspendido* because those are the terms the PRD and the Users screen
+   use.
+
+## Dependencies, risks & open questions
+
+**Hard dependency — story 0003 must ship first.** This story creates no column, no enum and no
+migration. From 0003 it needs:
+
+- `users.status`, **NOT NULL**, defaulting to the active case, so no legacy row is ever `NULL`
+  and `isActive()` never has to decide what `NULL` means.
+- A backed enum `App\Enums\UserStatus` with three cases covering Activo / Inactivo / Suspendido,
+  cast in `User::casts()`. **Exact case names and backing values are 0003's to finalize** — this
+  story consumes whatever it defines and needs only a single "active" sentinel case to compare
+  against. Note this would be the repo's first PHP enum; `docs/conventions/code-style.md` requires
+  TitleCase enum keys.
+- `UserFactory`: the default status must be the active case, plus state helpers following the
+  file's existing `unverified()` / `withTwoFactor()` convention (e.g. `inactive()`, `suspended()`,
+  or one parametrized `status()`).
+
+**Risk — factory default is the single point of mass regression.** Every existing auth test builds
+users with `User::factory()->create()` and no status. If 0003's default is anything but the active
+case, `AuthenticationTest` and `TwoFactorChallengeTest` fail the moment this story's check lands.
+This is why the full suite, not just `tests/Feature/Auth/**`, is in the DoD.
+
+**Risk — the passkey path is the easy one to miss.** An implementer who reads only "integrate with
+Fortify's authentication pipeline" will register `authenticateUsing` alone and ship a silent
+bypass, because passkey login has its own controller. The passkey acceptance criterion is listed
+separately for exactly this reason.
+
+**Known gap, accepted:** a suspended user holding a live session keeps it until it expires
+naturally (decision 4).
+
+**Open question deferred to Phase 3, not blocking:** the test path/harness for passkey sign-in.
+No passkey-login test exists in the repo, and a full WebAuthn ceremony in Pest is disproportionate;
+the recommendation is to assert against the enforcement callback directly. `backend-qa` and
+`backend-expert` settle the exact shape when they write it.
+
+## Technical tasks for the backlog
+
+1. Add `isActive()` to `App\Models\User` (after 0003 lands).
+2. Build `App\Actions\Fortify\AuthenticateUser`, preserving `rehashPasswordIfRequired()`.
+3. Register `Fortify::authenticateUsing()` with an **instance** in `FortifyServiceProvider`.
+4. Register `Passkeys::authorizeLoginUsing()` for the passkey path.
+5. Build and wire `RejectNonActiveUserLogin` on `Illuminate\Auth\Events\Login` for remember-me.
+6. Extend `AuthenticationTest` / `TwoFactorChallengeTest`; add passkey + remember-me coverage.
+7. **Follow-up story (not this one):** immediately terminate the live sessions of a user who
+   becomes non-active — per-request `EnsureUserIsActive` middleware, or deleting the user's rows
+   in the `sessions` table (`sessions.user_id` already supports this per
+   `docs/database/schema.md`).
