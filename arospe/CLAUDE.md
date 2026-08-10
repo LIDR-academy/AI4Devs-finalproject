@@ -177,27 +177,16 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 ## Project documentation
 Full index: @docs/README.md
 
-## Contracts documentation
-Mandatory reading: @docs/contracts.md
+## Mandatory reading
+Read regardless of the task: @docs/contracts.md, @docs/workflow.md, @docs/architecture/*, @docs/conventions/base-standards.md
 
-## Workflow documentation
-Mandatory reading: @docs/workflow.md
-
-## Architecture documentation
-Mandatory reading: @docs/architecture/*
-
-## Database documentation
+## Conditional reading
+If you gate access, or touch auth, roles/permissions, seeders or secrets, read @docs/security/
 If you need the schema, read @docs/database/schema.md
 If you need migration conventions, read @docs/database/migrations.md
-
-## API documentation
 If you need route/Livewire contracts, read @docs/api/routes.md
-
-## Conventions documentation
-Mandatory reading: @docs/conventions/base-standards.md
 If you need code-style examples, read @docs/conventions/code-style.md
 If you need naming conventions, read @docs/conventions/naming.md
-
-## Decisions & errors log
+If you write or review tests, read @docs/testing/README.md
 If you need past architectural context, read @docs/decisions/
 Before repeating a past mistake, read @docs/errors-log.md

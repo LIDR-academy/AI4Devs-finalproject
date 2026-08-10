@@ -84,7 +84,8 @@ For a more detailed breakdown of conventions per folder, see [`docs/conventions/
 - [Laravel Fortify documentation](https://laravel.com/docs/13.x/fortify)
 - [Flux UI documentation](https://fluxui.dev/docs)
 - [Pest documentation](https://pestphp.com/docs)
-- [Project documentation index](docs/README.md) — architecture, database schema, API/route contracts, and coding conventions specific to this repo
+- [Project documentation index](docs/README.md) — architecture, database schema, API/route contracts, security rules, and coding conventions specific to this repo
+- [Authorization](docs/architecture/authorization.md) — the seeded roles, the permission catalog, and how to gate a route or component
 - [Multi-agent development workflow](docs/workflow.md) — the Three Amigos + TDD + security + docs orchestration process the project's Claude Code agents follow from task definition to closure
 
 ## Prerequisites
@@ -137,6 +138,16 @@ The environment is defined in `compose.yaml`. Bringing it up starts the followin
 > - **Docker Desktop must be running (started)** before you bring up the services with `sail up`.
 > - **Docker Desktop must have WSL2 integration enabled for the Ubuntu distro you are using.** Enable it under **Settings → Resources → WSL Integration** and toggle on your corresponding distro. Without this, `./vendor/bin/sail` cannot reach the Docker daemon.
 
+### 6. Migrate and seed the database
+
+```bash
+./vendor/bin/sail artisan migrate --seed
+```
+
+**Seeding is required, not optional.** `RolePermissionSeeder` is the only source of the application's roles and permission catalog (two roles, 38 permissions), so the app cannot authorize anything until it has run — this holds on every environment, deployments included. Locally, `--seed` also creates a `test@example.com` / `password` fixture account; that fixture is created **only** in `local` and `testing`, never in staging or production.
+
+Optionally, set `SUPER_ADMIN_EMAIL` in `.env` before seeding to bootstrap a Super Admin account. If it matches a registered, email-verified user, that user is granted the role; if it matches no account at all, the seeder creates one and emails a password-reset link so you can claim it. See [`docs/architecture/authorization.md`](docs/architecture/authorization.md#super-admin-bootstrap) for all five branches, including the two that abort with an operator-facing error.
+
 ## Additional useful commands
 
 All commands below run through Sail so they execute inside the container. If you have a local PHP/Composer/Node toolchain, you can drop the `./vendor/bin/sail` prefix where applicable.
@@ -153,7 +164,7 @@ Install and build (or watch) frontend assets:
 
 ### Database
 
-Run migrations, and optionally seed the database:
+Run migrations and seed the database (see [step 6](#6-migrate-and-seed-the-database) — seeding is required):
 
 ```bash
 ./vendor/bin/sail artisan migrate
@@ -165,6 +176,12 @@ Rebuild the database from scratch:
 
 ```bash
 ./vendor/bin/sail artisan migrate:fresh --seed
+```
+
+On a deployed environment, seed with the narrow form so that no local-only fixture seeder can ever be picked up:
+
+```bash
+php artisan db:seed --class=RolePermissionSeeder
 ```
 
 ### Tests

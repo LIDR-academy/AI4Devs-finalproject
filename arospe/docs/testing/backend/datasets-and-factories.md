@@ -68,4 +68,13 @@ When a new model needs its own state variant (e.g. a future `expired()` state), 
 
 ## Seeders
 
-[`database/seeders/DatabaseSeeder.php`](../../../database/seeders/DatabaseSeeder.php) creates a single fixed `test@example.com` user — it's meant for local/dev seeding (`php artisan migrate:fresh --seed`), not for feature tests. Don't rely on it inside a test; `RefreshDatabase` gives each test a clean, unseeded schema (see [database-strategy.md](database-strategy.md)), and a test that implicitly depends on the seeder having run is a hidden coupling that breaks the moment someone runs a single test file in isolation. Create exactly the data a given test needs, via factories, inside that test (or its `beforeEach()`).
+[`database/seeders/DatabaseSeeder.php`](../../../database/seeders/DatabaseSeeder.php) does two different things, and only one of them is fixture data:
+
+- A single fixed `test@example.com` user, created **only** when `app()->environment(['local', 'testing'])` — local/dev seeding (`php artisan migrate:fresh --seed`), not feature-test input.
+- `$this->call(RolePermissionSeeder::class)`, unconditionally in every environment — the roles and 38-permission catalog the app authorizes against (see [architecture/authorization.md](../../architecture/authorization.md#seeding)).
+
+Don't rely on either inside a test by default; `RefreshDatabase` gives each test a clean, unseeded schema (see [database-strategy.md](database-strategy.md)), and a test that implicitly depends on the seeder having run is a hidden coupling that breaks the moment someone runs a single test file in isolation. Create exactly the data a given test needs, via factories, inside that test (or its `beforeEach()`).
+
+The one legitimate exception is a test **about** authorization: a permission check against an unseeded name throws `PermissionDoesNotExist`, so such a test must seed the catalog explicitly (`$this->seed(RolePermissionSeeder::class)`) rather than fabricate ad-hoc `Role`/`Permission` rows — see `tests/Feature/Authorization/`. When it does, flush the permission cache in `beforeEach()` with `app(PermissionRegistrar::class)->forgetCachedPermissions()`, or role/permission lookups leak across tests through the shared cache store.
+
+_Last updated: 2026-08-10 — Task 0002: `DatabaseSeeder` now environment-gates the `test@example.com` fixture and unconditionally calls `RolePermissionSeeder`; documented the one legitimate case for seeding inside a test (authorization tests) and the required permission-cache flush._

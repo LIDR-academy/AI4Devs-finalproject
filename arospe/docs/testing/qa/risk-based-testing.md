@@ -18,7 +18,7 @@ List the ways this code path can go wrong before writing the happy-path test. Fo
 **3. What happens if this runs twice, out of order, or concurrently?**
 - Deleting the same passkey twice (`Security::deletePasskey()`) — does the second call throw, no-op, or corrupt state?
 - Two requests racing to verify the same email — does `email_verified_at` end up in a consistent state?
-- If a test passes only when run after another specific test, it's not actually isolated — see [DoD checklist](../testing/README.md) and `--random` execution in [ci/commands.md](../ci/commands.md#running-tests).
+- If a test passes only when run after another specific test, it's not actually isolated — see [DoD checklist](../README.md) and `--random` execution in [ci/commands.md](../ci/commands.md#running-tests).
 
 **4. What happens if the user doesn't have permission / the resource doesn't exist?**
 This codebase gates access via route middleware (`auth`, `verified`, `password.confirm` — see [`routes/settings.php`](../../../routes/settings.php) and [architecture/authorization.md](../../architecture/authorization.md)), not yet via Policies/Gates (`spatie/laravel-permission` is installed and migrated but not attached to `User` — see that same doc). So today, "no permission" tests look like `DashboardTest`'s guest-redirect case; "resource doesn't exist" looks like calling `deletePasskey()` for a passkey ID that doesn't belong to the acting user and asserting a 404/`ModelNotFoundException`, not silent success.

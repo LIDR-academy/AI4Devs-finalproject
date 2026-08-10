@@ -19,7 +19,7 @@ Technical documentation for this Laravel 13 + Livewire 4 application, kept in sy
 
 - [Overview](architecture/overview.md) — what this app is today, the real request lifecycle (routes → Livewire → actions → models → DB), and runtime dependencies (MySQL, database-backed session/cache/queue).
 - [Authentication](architecture/authentication.md) — Fortify-based registration, login, password reset, two-factor authentication, and passkeys; the single source of truth for how auth works.
-- [Authorization](architecture/authorization.md) — `spatie/laravel-permission` roles & permissions: `HasRoles` is attached to `User` (API callable), but no roles/permissions are seeded, assigned, or checked anywhere in the app yet.
+- [Authorization](architecture/authorization.md) — `spatie/laravel-permission` roles & permissions, now a working foundation: the two seeded roles (`Super Admin`, `Administrator`), the 38-permission `<module-slug>.<action>` catalog and who holds what, the seeder (including the five-branch Super Admin bootstrap driven by `SUPER_ADMIN_EMAIL`), the `Gate::before` Super Admin bypass with its coverage gap and the "gate on permissions, never role names" convention, and the three middleware aliases.
 
 ## Database
 
@@ -41,12 +41,16 @@ Technical documentation for this Laravel 13 + Livewire 4 application, kept in sy
 - [Testing index](testing/README.md) — how to write, review, and run tests in this repo: testing philosophy and anti-patterns, a QA risk-based thinking guide, Pest 4 backend conventions, and CI commands/coverage. Start there; it links out to `.claude/skills/pest-testing/SKILL.md` for basic Pest syntax rather than duplicating it.
 - [Frontend / browser testing guide](testing/frontend/README.md) — QA-oriented guide for browser-level tests: the tooling decision (Pest 4 browser testing, not a separate Playwright/BDD runner), the user-story → Gherkin → Pest workflow and reference prompt, setup status, Gherkin guidelines + domain glossary, a browser-specific quality checklist, the frontend coverage policy, and worked scenario/test examples.
 
+## Security
+
+- [Security knowledge base](security/README.md) — durable security rules established by `appsec-auditor` during Phase 4 audits, each with a real code example from this repo. Two pages so far: [authorization patterns](security/authorization-patterns.md) (what the Super Admin `Gate::before` bypass does and does not cover, permission-cache flush ordering around a transaction, always passing the guard to `hasRole()`, `Gate::before` closures guarding with `instanceof`, why `config($key, $default)` alone cannot cover a present-but-`null` key) and [seeder safety](security/seeder-safety.md) (why `db:seed` is production-reachable here, environment allow-lists over deny-lists for fixture data, and the rules for bootstrapping a privileged account from a configured email address).
+
 ## Decisions
 
 - [Decision records](decisions/README.md) — ADR format and folder purpose. First ADR recorded: [0001 — UUID primary keys](decisions/0001-uuid-primary-keys.md) (UUIDv7 via `HasUuids` for `users` and PRD Epic 2/4 domain entities).
 
 ## Errors log
 
-- [Errors log](errors-log.md) — structured record of real mistakes and the rule adopted to avoid repeating them. Empty so far.
+- [Errors log](errors-log.md) — structured record of real mistakes and the rule adopted to avoid repeating them. Two entries: the Gherkin actor/single-action convention violation, and the Super Admin bootstrap treating an existing `users` row as proof of mailbox ownership.
 
-_Last updated: 2026-08-07 — Indexed the new `three-amigos-debate` skill under Workflow, and noted the now three-stage task-storage convention in the Workflow entry._
+_Last updated: 2026-08-10 — Task 0002 (roles & permissions foundation): rewrote the Authorization entry to the real seeded state, indexed the new `docs/security/` knowledge base, and refreshed the Errors log entry._
