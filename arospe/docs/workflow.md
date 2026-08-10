@@ -55,6 +55,33 @@ starting the debate:
   `database-expert` is added to the debate and to the implementation, without replacing
   backend/frontend-expert.
 
+## Task ordering rule
+
+When a full-stack task is split per the rule above, **the backend task is numbered before its
+paired frontend task** (lower `<id>`), and `product-owner` sequences `./ai-spec/tasks/` so the
+backend task is picked up for Phase 3 first. The frontend task's Blade/Livewire markup binds to
+an interface contract (component public properties, computed properties, actions) that only the
+backend task defines — building or testing the view first means building against a contract that
+does not exist yet, and the view work is blocked until it does. This mirrors call-site-before-
+definition ordering in the code itself: a frontend view is a *consumer* of the backend
+component's public surface, not an independent artifact.
+
+This ordering rule extends to any task pair connected by a hard dependency even without a shared
+`related_task_id` — e.g. a task whose Livewire component consumes a model/scope/policy another
+task defines, or a route-gating task that decorates a route another task registers. In general,
+**order tasks so a dependency's number is lower than its dependents' numbers**, following the
+same reasoning: implement and test the thing being depended on before the thing depending on it.
+
+When renumbering existing task files to restore this order, update every cross-reference to the
+affected task numbers across `./ai-spec/tasks/` (`related_task_id`, `[<id>]` headers, filenames,
+and prose mentions in `Description`/`Dependencies`/`Gherkin` sections) — including in files under
+`in-progress/` and `done/` that mention a renumbered id, even though those files themselves are
+not renumbered or moved. Take particular care with any range notation (e.g. "0003–0008"): a
+renumbering is a permutation, not a uniform shift, so a token-by-token substitution can silently
+turn a correct range into one that includes or excludes the wrong stories — recompute the
+intended set of ids and re-express it as a range (or list) after mapping, rather than
+substituting the range's endpoints in place.
+
 ## Flow diagram
 
 ```mermaid
@@ -248,7 +275,14 @@ What should be observable/working once done.
 - Returns between phases are loops: a task may go through TDD or security multiple times
   until it's green/clean before moving forward.
 
-_Last updated: 2026-08-07 — Split the task-storage convention into three stages: Phase 1 now
+_Last updated: 2026-08-09 — Added the "Task ordering rule" section: for a full-stack task split
+into a backend/frontend pair (or any hard-dependency pair), the depended-upon task is numbered
+and sequenced before its dependent. Applied it by renumbering the ten pending Epic 1 tasks in
+`./ai-spec/tasks/` (backend now precedes its paired frontend in all three FE/BE pairs: Users,
+Roles & Permissions, module/sidebar gating), and documented the range-notation pitfall found
+while updating the still-in-progress `0002` task's cross-references to those ids._
+
+_Previously, 2026-08-07 — Split the task-storage convention into three stages: Phase 1 now
 writes the User Story to `./ai-spec/tasks/<id>-<slug>.md` (new), and the file only moves to
 `./ai-spec/tasks/in-progress/` at the start of Phase 3 (TDD), when implementation actually
 begins; `./ai-spec/tasks/done/` on Phase 7 closure is unchanged. Updated the responsibility
