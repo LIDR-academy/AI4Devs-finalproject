@@ -6,6 +6,7 @@
 - [Request lifecycle](#request-lifecycle)
 - [Runtime dependencies](#runtime-dependencies)
 - [Cross-cutting concerns](#cross-cutting-concerns)
+- [Deployment note](#deployment-note)
 - [Where things live](#where-things-live)
 
 ## What this application is
@@ -15,7 +16,7 @@
 Two concerns are layered on top of the starter kit baseline:
 
 - **Authentication** via `laravel/fortify` (registration, login, password reset, email verification, 2FA, passkeys). See [Authentication](authentication.md).
-- **Authorization** via `spatie/laravel-permission` (roles & permissions), added in `database/migrations/2026_07_12_181045_create_permission_tables.php`. See [Authorization](authorization.md).
+- **Authorization** via `spatie/laravel-permission` (roles & permissions): two seeded roles, a 38-permission catalog, the `role`/`permission`/`role_or_permission` middleware aliases registered in [`bootstrap/app.php`](../../bootstrap/app.php), and a `Gate::before` Super Admin bypass installed by `AppServiceProvider`. See [Authorization](authorization.md).
 
 The domain layer beyond `App\Models\User` does not exist yet in the current codebase — `app/Models/` contains only `User.php`. This document (and this skill) will grow new `architecture/<module>.md` files as real domain modules land.
 
@@ -76,6 +77,11 @@ Documented once, linked everywhere else — do not duplicate these explanations 
 - **Roles & permissions** → [architecture/authorization.md](authorization.md)
 - **Database schema** → [database/schema.md](../database/schema.md)
 - **Route/component contracts** → [api/routes.md](../api/routes.md)
+- **Security rules from audits** → [security/README.md](../security/README.md)
+
+## Deployment note
+
+`php artisan db:seed --class=RolePermissionSeeder` is a **required** step on every deploy, not a developer convenience: `RolePermissionSeeder` is the only source of the roles and permissions the app authorizes against. Prefer that targeted form over a bare `db:seed` — see [authorization.md](authorization.md#seeding).
 
 ## Where things live
 
@@ -88,5 +94,7 @@ Documented once, linked everywhere else — do not duplicate these explanations 
 | Models | `app/Models/**` |
 | Views | `resources/views/livewire/**`, `resources/views/layouts/**` |
 | Migrations | `database/migrations/**` |
+| Seeders | `database/seeders/**` (`RolePermissionSeeder` is deploy-critical — see above) |
+| Middleware aliases & exception rendering | `bootstrap/app.php` |
 
-_Last updated: 2026-07-19 — Corrected the database driver from SQLite to MySQL (`mysql:8.4` via `compose.yaml`), matching the real `.env`._
+_Last updated: 2026-08-10 — Task 0002: the authorization bullet now describes the real seeded foundation (roles, catalog, middleware aliases, `Gate::before` bypass), added a Deployment note that `db:seed --class=RolePermissionSeeder` is a required deploy step, linked the new `docs/security/` knowledge base, and listed seeders/`bootstrap/app.php` under "Where things live"._

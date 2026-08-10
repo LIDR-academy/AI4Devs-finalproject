@@ -80,6 +80,10 @@ Validation rules are centralized so every entry point (registration, password re
 - [`app/Concerns/ProfileValidationRules.php`](../../app/Concerns/ProfileValidationRules.php) — `name`/`email` rules, with a unique-email-ignoring-self variant for profile updates.
 - [`app/Concerns/PasswordValidationRules.php`](../../app/Concerns/PasswordValidationRules.php) — `passwordRules()` (uses `Password::default()`) and `currentPasswordRules()` (uses the `current_password` rule).
 
+One non-HTTP caller reuses this same reset flow: when `database/seeders/RolePermissionSeeder.php` **provisions** a Super Admin account it calls `Password::broker()->sendResetLink([...])` — the identical broker behind the `password.request` route — so the operator claims the account through the normal **Forgot password** screen. There is no bespoke invite token, notification, or route; the seeder only triggers the flow documented above. See [authorization.md](authorization.md#super-admin-bootstrap) for when that branch runs.
+
+> Email addresses are canonically lowercase across the app: `config/fortify.php` sets `'lowercase_usernames' => true`, so Fortify's registration, login and forgot-password controllers all normalize before writing. One app-owned path does **not**: `App\Livewire\Settings\Profile::updateProfileInformation()` writes the submitted address verbatim, and nulls `email_verified_at` on change while leaving the new address live on the row immediately. Both are known gaps with their own follow-up stories — see [security/seeder-safety.md](../security/seeder-safety.md#a-matching-row-is-not-proof-of-ownership).
+
 ## Two-factor authentication flow
 
 Managed entirely from `App\Livewire\Settings\Security` ([`app/Livewire/Settings/Security.php`](../../app/Livewire/Settings/Security.php)), which composes four Fortify action classes injected per-method rather than one large service:
@@ -194,4 +198,4 @@ public function deleteUser(Logout $logout): void
 | Passkeys table migration | `database/migrations/2024_01_01_000000_create_passkeys_table.php` |
 | Feature tests | `tests/Feature/Auth/**`, `tests/Feature/Settings/SecurityTest.php` |
 
-_Last updated: 2026-07-12 — Initial scaffold of the documentation set by the docs-maintainer skill._
+_Last updated: 2026-08-10 — Noted that `RolePermissionSeeder`'s Super Admin provisioning reuses this app's existing Fortify password-reset broker (no bespoke invite flow), and recorded the canonical-lowercase-email invariant plus its one unguarded write path (task 0002)._

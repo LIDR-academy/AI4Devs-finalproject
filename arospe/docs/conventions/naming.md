@@ -8,6 +8,7 @@ Real naming patterns observed across the codebase. For migration file naming spe
 - [Livewire components and views](#livewire-components-and-views)
 - [Traits and their methods](#traits-and-their-methods)
 - [Route names](#route-names)
+- [Permission names](#permission-names)
 - [Boolean properties](#boolean-properties)
 
 ## Classes
@@ -75,6 +76,32 @@ Route::livewire('settings/security', Security::class)->name('security.edit');
 
 Full real route names, including the ones Fortify registers, are listed in [api/routes.md](../api/routes.md).
 
+## Permission names
+
+Same dot notation as route names, one level lower: `<module-slug>.<action>`, where the module slug is **kebab-case** and the action is a bare verb. Verified in `database/seeders/RolePermissionSeeder.php`, which owns the canonical catalog:
+
+```php
+// database/seeders/RolePermissionSeeder.php
+public const MODULES = [
+    'users', 'products', 'sales-regions', 'shipping', 'payment-methods',
+    'customers', 'orders', 'blog', 'store-languages',
+];
+
+public const ACTIONS = ['view', 'create', 'edit', 'delete'];
+
+/**
+ * Non-CRUD permissions that sit outside the module x action grid.
+ *
+ * @var array<int, string>
+ */
+public const ROLE_PERMISSIONS = ['roles.manage', 'roles.manage-administrators'];
+```
+
+✅ Good — `sales-regions.delete`, `payment-methods.view`, `roles.manage-administrators`: kebab-case slug, dot separator, verb (or verb phrase, itself kebab-cased) after the dot.
+❌ Bad — do not write `salesRegions.delete`, `sales_regions.delete`, `delete-sales-regions`, or a prose form like `'manage administrator-level roles/users'`. A permission name that isn't in the seeded catalog makes `can()` / `hasPermissionTo()` throw `PermissionDoesNotExist` at runtime, so this is a correctness rule, not just a style preference.
+
+A permission that a new feature needs is added to the constants above — never as a string only one component knows about. The catalog, the two seeded roles, and which of them hold what are documented in [architecture/authorization.md](../architecture/authorization.md#permission-catalog).
+
 ## Boolean properties
 
 Livewire component boolean properties are named as a predicate, prefixed `can`/`is`/`show`/`requires` — never a bare noun. Verified in `app/Livewire/Settings/Security.php`:
@@ -91,4 +118,4 @@ public bool $showDeleteModal;
 
 Two patterns coexist in this file: `can*`/`requires*`/`show*` for capability/UI-state flags, and a bare past-participle (`twoFactorEnabled`) for a fact about the authenticated user's current state. Follow whichever of the two fits: use `can`/`requires`/`show` for UI/permission flags you're introducing, and a plain past-participle only for a mirrored model/domain fact (as `twoFactorEnabled` mirrors `User::hasEnabledTwoFactorAuthentication()`).
 
-_Last updated: 2026-07-12 — Initial scaffold of the documentation set by the docs-maintainer skill._
+_Last updated: 2026-08-10 — Added the "Permission names" section: task 0002 established `<module-slug>.<action>` dot notation as a real, enforced convention (an unseeded name throws `PermissionDoesNotExist`), cited from `RolePermissionSeeder`'s canonical constants._
