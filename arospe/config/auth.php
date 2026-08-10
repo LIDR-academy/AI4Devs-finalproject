@@ -114,4 +114,20 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Super Admin
+    |--------------------------------------------------------------------------
+    |
+    | The role name the Gate::before bypass hook checks, and the email address
+    | RolePermissionSeeder assigns that role to. Leaving SUPER_ADMIN_EMAIL unset
+    | is a safe no-op: the role exists but nobody holds it.
+    |
+    */
+
+    'super_admin' => [
+        'role' => 'Super Admin',
+        'email' => env('SUPER_ADMIN_EMAIL'),
+    ],
+
 ];
