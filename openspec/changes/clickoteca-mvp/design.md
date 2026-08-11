@@ -119,7 +119,7 @@ base de una futura tabla de valoración legal.
 
 ### D10 — Modelo de datos (entidades y esquema Prisma)
 El modelo de datos completo del MVP se documenta en `documents/PRD.md` §15 y se
-implementa en `backend/prisma/schema.prisma` (PostgreSQL + Prisma). Entidades por
+implementa en `prisma/schema.prisma` (PostgreSQL + Prisma). Entidades por
 anillos de importancia:
 - **Núcleo del circuito:** `User`, `Set`, `Copy`, `Subscription`, `Rental`,
   `ReservationQueueEntry`, `ReservationOffer`.

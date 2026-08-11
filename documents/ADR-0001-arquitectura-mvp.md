@@ -50,7 +50,7 @@ Elecciones concretas:
 Base relacional por la naturaleza fuertemente transaccional y relacional del
 dominio (colas, ofertas, transiciones auditadas). Prisma como ORM por su
 tipado end-to-end en TypeScript, migraciones y velocidad de desarrollo.
-El esquema (20 modelos, 16 enums) vive en `backend/prisma/schema.prisma`.
+El esquema (20 modelos, 16 enums) vive en `prisma/schema.prisma`.
 
 > **Nota de versión:** el esquema usa `url = env("DATABASE_URL")`, válido en
 > Prisma ≤6. Prisma 7 lo mueve a `prisma.config.ts`. **Pinnear Prisma 6** en el

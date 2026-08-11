@@ -1,0 +1,39 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production build
+/build
+/dist
+
+# prisma — cliente generado (se regenera con `prisma generate`)
+/src/generated
+
+# testing
+/coverage
+/playwright-report
+/test-results
+/blob-report
+/playwright/.cache
+
+# env — nunca commitear secretos; usar .env.example como plantilla
+.env
+.env*.local
+
+# misc
+*.pem
+.DS_Store
+*.tsbuildinfo
+.eslintcache
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+

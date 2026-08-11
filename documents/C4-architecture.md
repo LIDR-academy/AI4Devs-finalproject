@@ -8,7 +8,7 @@
 > Los diagramas siguen el [modelo C4](https://c4model.com/) (Contexto →
 > Contenedores → Componentes) en notación Mermaid. Se documentan los niveles 1
 > a 3; el nivel 4 (código) se omite por convención C4 (lo cubre el propio código
-> y `backend/prisma/schema.prisma`).
+> y `prisma/schema.prisma`).
 >
 > **Stack confirmado:** **Next.js full-stack** (App Router, TypeScript) para
 > front + API REST (Route Handlers en `app/api/*`, OpenAPI), **PostgreSQL +

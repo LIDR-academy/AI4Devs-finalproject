@@ -505,7 +505,7 @@ flowchart LR
 
 Modelo de datos del MVP para **PostgreSQL + Prisma** (ver stack en `AGENTS.md`). Los
 nombres de modelo van en inglés (convención Prisma) con el término del PRD entre
-paréntesis. El esquema ejecutable vive en `backend/prisma/schema.prisma`.
+paréntesis. El esquema ejecutable vive en `prisma/schema.prisma`.
 
 Las entidades se organizan en **tres anillos por orden de importancia**:
 

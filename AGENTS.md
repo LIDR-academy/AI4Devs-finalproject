@@ -55,7 +55,7 @@ project. Read it at the start of every session.
   negocio quedaron marcados como pendientes ahí (no inventados).
 - **Modelo de datos (definido 2026-07-04):** documentado en `documents/PRD.md` §15
   (tres anillos de importancia + diagramas ER Mermaid + máquina de estados de
-  `Copy`) e implementado en `backend/prisma/schema.prisma` (20 modelos + 16 enums,
+  `Copy`) e implementado en `prisma/schema.prisma` (20 modelos + 16 enums,
   PostgreSQL). Reflejado también en `readme.md` §3. Modelos en inglés (convención
   Prisma) que mapean a los términos de dominio en español de las specs. Decisiones
   clave añadidas a `design.md`: **D10** (catálogo de entidades + `User` único con
@@ -68,9 +68,9 @@ project. Read it at the start of every session.
   sincronizados (Requirement "Orden de cola por entrada efectiva inmutable" en
   `reservation-queue`; `tasks.md` 1.2/6.2);
   `openspec validate clickoteca-mvp --strict` en verde. **Nota de versión:**
-  el esquema usa la forma clásica `url = env("DATABASE_URL")`, válida en Prisma ≤6;
-  Prisma 7 exige moverla a `prisma.config.ts` — pinnear Prisma 6 al fijar el
-  `package.json` del backend, o migrar la config del datasource.
+  el esquema aún trae la forma clásica `url = env("DATABASE_URL")`; con la decisión
+  de **Prisma 7** (ver hecho más abajo) hay que **migrar el datasource a
+  `prisma.config.ts`** al inicializar el backend.
 - **Arquitectura C4 + ADR (2026-07-04):** `documents/C4-architecture.md`
   (diagramas C4 niveles 1–3 en Mermaid: contexto, contenedores, componentes de la
   API por capability + capas) y `documents/ADR-0001-arquitectura-mvp.md` (ADR de
@@ -99,12 +99,55 @@ project. Read it at the start of every session.
   autenticado") y `catalog-inventory` (Requirement "Proyección pública del
   catálogo"); PRD §3/§4.1/§14.1 (UC-P02 ya no muestra disponibilidad al visitante);
   historia **HU-00** en `documents/user_stories.md`; tareas 2.7 y 3.6.
+- **Stack de UI (decidido 2026-08-11):** **Tailwind CSS + shadcn/ui** (componentes
+  sobre **Radix UI**, copiados al repo en `components/ui/*`, sin lock-in y con
+  tree-shaking perfecto). Elegido por: peso mínimo en móvil (Tailwind purga clases,
+  **cero runtime CSS-in-JS**), accesibilidad AA de serie vía Radix (foco/ARIA/teclado
+  — alineado con el objetivo WCAG 2.1 AA), estética moderna y encaje nativo con App
+  Router/RSC. Theming por CSS variables (encaja con el modelo `Theme`). Iconos con
+  **lucide-react**. Formularios con **react-hook-form + Zod**, **compartiendo los
+  esquemas Zod con la API** (Route Handlers → OpenAPI). Descartados MUI/Chakra
+  (runtime CSS-in-JS, fricción con RSC) y Mantine (más bundle, menos idiomático RSC).
+- **Stack de tests (decidido 2026-08-11):** **Vitest** (unit/integración, ESM-nativo),
+  **Playwright** (E2E — recorridos de tareas 5.7/8.4 y checks de accesibilidad) y
+  **Testcontainers** para levantar **Postgres real** en integración (evita mocks de
+  Prisma; prueba de verdad las transiciones de estado de `Copy` y el CAS/orden de la
+  cola). "Tests no negociables": priorizar caminos de error y casos límite.
+- **Versión de Prisma (decidido 2026-08-11):** **Prisma 7.** Implica **migrar la
+  config del datasource** de `url = env("DATABASE_URL")` (forma clásica en el
+  `schema.prisma` actual) a **`prisma.config.ts`**, requisito de Prisma 7. Hacerlo al
+  inicializar el backend (afecta a la tarea 1.2). Supersede la nota previa de "pinnear
+  Prisma 6".
+- **Scaffolding hecho (tarea 1.1, 2026-08-11):** proyecto **Next.js 16** (App Router,
+  TS, `type: module`) en la **raíz** del repo (no `backend/`; el schema se movió a
+  `prisma/schema.prisma`). Stack instalado: **React 19.2, Tailwind v4** (config
+  CSS-first en `app/globals.css`, sin `tailwind.config`), **shadcn/ui** (new-york,
+  base neutral; `components.json`; `lib/utils.ts` con `cn`; primer componente
+  `components/ui/button.tsx`), **Prisma 7.9** (generator nuevo `prisma-client` →
+  `src/generated/prisma`, gitignored; **driver adapter** `@prisma/adapter-pg`; URL en
+  `prisma.config.ts`), **Zod 4 + react-hook-form**. Estructura: route groups
+  `app/(public)` (landing pública), `app/(portal)/portal`, `app/(backoffice)/backoffice`;
+  API `app/api/health`; **`proxy.ts`** (Next 16 renombró `middleware`→`proxy`) como
+  esqueleto de auth por rol; capas `src/domain` (incl. `reservation-queue/ordering.ts`
+  puro, alineado con D11), `src/use-cases`, `src/repositories` (READMEs con la regla de
+  dependencias), `src/db/prisma.ts` (singleton con adapter); `scheduler/index.ts`
+  (proceso node-cron aparte). Tests: **Vitest** (jsdom + Testing Library; 6 tests humo
+  en verde) + **Playwright** (`e2e/smoke.spec.ts`; falta `npx playwright install`).
+  Scripts npm: `dev/build/start/lint/typecheck/test/test:e2e/db:generate/db:migrate/
+  db:seed/scheduler`. **Verificado en verde:** `prisma generate`, `tsc --noEmit`,
+  `eslint .`, `next build` (5 rutas), `vitest run`, y runtime real (`/api/health` →
+  `{status:"ok"}`, landing y `/portal` 200). `.gitattributes` fuerza LF.
+  **Caveats:** (1) `testcontainers@12` pide **Node ≥22.22** (hay 22.19) → subir Node
+  antes de los tests de integración con Postgres; (2) ESLint 9: `eslint-config-next` 16
+  se importa como **flat config nativo** (`eslint-config-next/core-web-vitals` +
+  `/typescript`), **no** vía `FlatCompat` (daba error de estructura circular).
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
 
-- _(Ninguna abierta de arquitectura.)_ Pendiente solo el detalle de librerías de
-  UI/estilos y stack de tests, a fijar durante el scaffolding (tarea 1.1).
+- _(Ninguna abierta.)_ Arquitectura, hosting, auth, UI, tests y versión de Prisma
+  cerrados; scaffolding (1.1) hecho y verificado. Siguiente: tarea 1.2 (afinar el
+  schema para Prisma 7 y primera migración) y 1.3 (semillas).
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

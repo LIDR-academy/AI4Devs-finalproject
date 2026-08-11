@@ -455,3 +455,44 @@ deploy `next build` standalone + systemd. Docs actualizados: `ADR-0001` (Estado�
 contenedor Next + scheduler aparte; nivel 3 = Route Handlers), `AGENTS.md` (hecho de
 stack, separación de superficies, **Open questions de arquitectura cerradas**),
 `tasks.md` 1.1. `openspec validate clickoteca-mvp --strict` en verde.
+
+### [2026-08-11] — Cierre de librerías: UI, tests y versión de Prisma
+**Prompt:** "Empecemos. ¿Qué recomiendas como librerías de UI? Algo ligero para
+móviles, pero potente para web, con aspecto moderno" → (tras elegir) stack de tests
+y versión de Prisma.
+**Resumen de la respuesta:** Se cerraron las tres decisiones de librerías que
+bloqueaban el scaffolding (tarea 1.1), sin abrir temas de arquitectura. **UI:**
+**Tailwind CSS + shadcn/ui** (componentes sobre **Radix UI**, copiados al repo en
+`components/ui/*`), elegido por peso mínimo en móvil (purga de clases, cero runtime
+CSS-in-JS), accesibilidad AA de serie vía Radix (alineado con WCAG 2.1 AA), estética
+moderna y encaje nativo con App Router/RSC; theming por CSS variables (encaja con el
+modelo `Theme`), iconos **lucide-react**, formularios **react-hook-form + Zod**
+compartiendo los esquemas Zod con la API. Descartados MUI/Chakra (runtime CSS-in-JS,
+fricción con RSC) y Mantine (más bundle, menos idiomático RSC). **Tests:** **Vitest**
+(unit/integración), **Playwright** (E2E), **Testcontainers** para Postgres real en
+integración (prueba real de transiciones de `Copy` y CAS/orden de cola). **Prisma:**
+se decidió **Prisma 7**, lo que obliga a migrar la config del datasource de
+`url = env("DATABASE_URL")` a `prisma.config.ts` al inicializar el backend (afecta a
+la tarea 1.2; supersede la nota previa de pinnear Prisma 6). Registrado en `AGENTS.md`
+(hechos + Open questions cerradas).
+
+### [2026-08-11] — Scaffolding del proyecto Next.js (tarea 1.1)
+**Prompt:** "Empecemos. ¿Qué recomiendas como librerías de UI? Algo ligero para
+móviles, pero potente para web, con aspecto moderno" → (tras cerrar UI/tests/Prisma y
+elegir layout) ejecución del scaffolding.
+**Resumen de la respuesta:** Se generó y **verificó** el esqueleto de la app (tarea
+1.1). Layout elegido: **app en la raíz** del repo (proyecto único Next.js), moviendo
+`backend/prisma/schema.prisma` → **`prisma/schema.prisma`** y actualizando las refs en
+los docs vivos (README, PRD, C4, ADR-0001, design, tasks, AGENTS); `prompts.md` se dejó
+como log histórico. Stack cableado: **Next 16 + React 19.2 + Tailwind v4 + shadcn/ui
+(Radix) + Prisma 7 (generator `prisma-client` + driver adapter `@prisma/adapter-pg`,
+URL en `prisma.config.ts`) + Zod 4/react-hook-form + Vitest/Playwright/Testcontainers**.
+Estructura en capas (route groups public/portal/backoffice, `app/api/health`,
+`proxy.ts` de auth —Next 16 renombró middleware→proxy—, `src/domain` con
+`reservation-queue/ordering.ts` puro alineado con D11, `src/use-cases`,
+`src/repositories`, `src/db/prisma.ts`, `scheduler/` node-cron aparte). Verificado en
+verde: `prisma generate`, `tsc --noEmit`, `eslint .`, `next build` (5 rutas),
+`vitest run` (6 tests humo) y runtime real (`/api/health`, landing, `/portal`).
+Caveats registrados en AGENTS.md: Node ≥22.22 para Testcontainers (hay 22.19) y uso del
+flat config nativo de `eslint-config-next` 16 en vez de `FlatCompat`. Decisiones de
+librerías (UI/tests/Prisma) documentadas en `AGENTS.md`; `tasks.md` 1.1 marcada [x].

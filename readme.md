@@ -118,7 +118,7 @@ los monta, los devuelve y pide el siguiente—.
 
 > **Estado actual del repositorio.** El proyecto está en fase de **diseño y
 > especificación completos**: el modelo de datos ya está implementado en Prisma
-> (`backend/prisma/schema.prisma`, 20 modelos / 16 enums) y toda la arquitectura
+> (`prisma/schema.prisma`, 20 modelos / 16 enums) y toda la arquitectura
 > está decidida y documentada (ver §2 y `documents/ADR-0001`/`ADR-0002`). El
 > scaffolding de la aplicación Next.js aún no está generado, por lo que las
 > instrucciones siguientes describen el arranque **previsto** según la
@@ -329,7 +329,7 @@ Casos de test previstos como prioritarios:
 ## 3. Modelo de Datos
 
 Capa de datos en **PostgreSQL + Prisma**. El esquema ejecutable vive en
-[`backend/prisma/schema.prisma`](backend/prisma/schema.prisma) y su especificación
+[`prisma/schema.prisma`](prisma/schema.prisma) y su especificación
 detallada (con diagramas por anillos de importancia y decisiones de modelado) en
 [`documents/PRD.md` §15](documents/PRD.md). Los modelos van en inglés (convención
 Prisma) y mapean a los términos de dominio en español.
@@ -857,7 +857,7 @@ Tickets derivados de las historias anteriores y de las tareas del cambio OpenSpe
 **Ticket 3 — Base de datos · Esquema Prisma de cola y ofertas (soporte de HU-04/HU-05)**
 
 - **Contexto:** modelar la cola y las ofertas con la forma inmutable de D11 y la
-  concurrencia por CAS de D12. *(Ya implementado en `backend/prisma/schema.prisma`.)*
+  concurrencia por CAS de D12. *(Ya implementado en `prisma/schema.prisma`.)*
 - **Tareas:**
   1. `ReservationQueueEntry` con `enqueuedAt`, `appliedBonus`, `effectiveEntryAt`
      (inmutable), `priorityPenalty` y `status` (WAITING/OFFERED/CONFIRMED/EXPIRED/LEFT).
