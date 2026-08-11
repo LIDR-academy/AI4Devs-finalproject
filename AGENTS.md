@@ -236,6 +236,27 @@ project. Read it at the start of every session.
   **Aviso para pruebas manuales:** Git Bash en este equipo envía los literales
   no-ASCII mal codificados; para probar acentos hay que mandar el payload con
   `--data-binary @fichero`. La app sí maneja UTF-8 correctamente (comprobado).
+- **Tarea 2.4 hecha — auditoría (2026-08-11):** las **dos vías de D10**, que no se
+  solapan (una baja de copia se registra como transición, **no** como `AuditLog`).
+  (a) **Transiciones de copia:** `applyTransition` en `copy.repository.prisma.ts` es
+  el **único camino** por el que cambia el estado de una copia — une el CAS de D12 y
+  la escritura de `CopyStateTransition` en un solo movimiento dentro de la
+  transacción. Mientras todo pase por ahí, es imposible dejar una copia en estado
+  nuevo sin saber quién la movió; y como la firma exige `actorId`, tampoco cabe
+  registrar de forma anónima. Las tareas 3.x deben reutilizarlo en vez de escribir
+  `copy.update({state})` a pelo.
+  (b) **Acciones administrativas:** `src/domain/audit/actions.ts` con **uniones
+  cerradas** (9 acciones, 5 tipos de entidad) pese a que la columna es `String`, para
+  que el valor signifique lo mismo dentro de un año; puerto `AuditRepository` +
+  adaptador Prisma; `metadata` guarda el **antes/después** (sin ella la auditoría
+  diría que algo cambió pero no qué).
+  **Estado:** el `AuditLog` genérico **todavía no tiene emisores** — las acciones que
+  lo usarán (configurar reglas/planes, gestionar empleados, publicar sets) son 4.x y
+  8.2. Está verificado contra la base real (escritura, orden descendente, aislamiento
+  por entidad, `metadata` nula, round-trip de acentos) para que no llegue sin probar.
+  **Truco de verificación:** los adaptadores Prisma no los cubren los dobles; se
+  comprueban con un script `tsx` temporal **dentro** del proyecto (los alias `@/` no
+  resuelven si el script vive fuera) que limpia sus propias filas al terminar.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -243,9 +264,9 @@ project. Read it at the start of every session.
 - _(Ninguna abierta.)_ Arquitectura, hosting, auth, UI, tests y versión de Prisma
   cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
-  (autenticación), 2.2 (matriz de permisos) y 2.3 (baja de copia solo admin) hechas.
-  Siguiente: 2.4 (auditoría "quién/cuándo" generalizada — la transición a `BAJA` ya la
-  registra; falta el `AuditLog` genérico de acciones admin).
+  2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
+  (auditoría) hechas. Siguiente: 2.5 (alta de suscriptor: adulto + tarjeta simulada +
+  dirección obligatoria + condiciones).
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle
