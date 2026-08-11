@@ -201,6 +201,20 @@ project. Read it at the start of every session.
   real contra la base sembrada — login, cookie, hash en BD (nunca el token), 401/422
   con `application/problem+json`, redirección por rol en ambos sentidos y logout que
   **borra la fila** de sesión.
+- **Tarea 2.2 hecha — matriz de permisos (2026-08-11):**
+  `src/domain/auth/permissions.ts` es la **fuente única de verdad** de la
+  autorización: 15 permisos (`portal.access`, `copy.retire`, `settings.manage`…)
+  mapeados a los 3 roles según la tabla de **PRD §3**. `ADMIN` se construye
+  extendiendo `OPERATOR` (`[...OPERATOR_PERMISSIONS, …]`), de modo que una acción
+  nueva del operador no puede quedarse sin dársela al admin. `roles.ts` ya **no**
+  tiene su propia tabla rol→superficie: `canEnterSurface` se deriva de la matriz
+  (`portal.access` / `backoffice.access`) — la dependencia `roles.ts → permissions.ts`
+  es de runtime y la de vuelta es **solo de tipo** (`import type { Role }`), así que
+  no hay ciclo. Guarda `requirePermission()` en `src/http/auth-context.ts`: los
+  handlers preguntan por la **acción**, nunca por el rol. `GET /api/auth/session`
+  devuelve también `permissions[]` (conveniencia de interfaz; el servidor los
+  recomprueba en cada petición). Tests: la matriz completa, permitidos **y**
+  denegados, más la invariante admin ⊇ operador y "sin rol, ningún permiso".
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -208,8 +222,9 @@ project. Read it at the start of every session.
 - _(Ninguna abierta.)_ Arquitectura, hosting, auth, UI, tests y versión de Prisma
   cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
-  (autenticación) hecha. Siguiente: 2.2 (matriz de permisos por acción, sobre la
-  frontera rol→superficie que ya existe en `src/domain/auth/roles.ts`).
+  (autenticación) y 2.2 (matriz de permisos) hechas. Siguiente: 2.3 (baja de copia
+  restringida a admin), que ya tiene su permiso `copy.retire` y su guarda
+  `requirePermission`; falta la acción de dominio sobre `Copy`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

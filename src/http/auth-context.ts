@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { can, type Permission } from "@/domain/auth/permissions";
 import {
   canEnterSurface,
   homeSurface,
@@ -45,6 +46,24 @@ export async function requireSurface(surface: Surface): Promise<AuthenticatedSes
   const session = await requireSession();
   if (!canEnterSurface(session.user.role, surface)) {
     throw new ForbiddenError("Tu rol no tiene acceso a esta sección.");
+  }
+  return session;
+}
+
+/**
+ * Exige un **permiso concreto** (matriz de PRD §3). Es el guarda que deben usar los
+ * Route Handlers: preguntan por la acción, no por el rol, de modo que un cambio en la
+ * matriz no obliga a repasar los handlers uno a uno.
+ *
+ * 401 si no hay sesión y 403 si la hay pero no alcanza: son cosas distintas y el
+ * cliente reacciona distinto (ir al login vs. avisar de que no se puede).
+ */
+export async function requirePermission(
+  permission: Permission
+): Promise<AuthenticatedSession> {
+  const session = await requireSession();
+  if (!can(session.user.role, permission)) {
+    throw new ForbiddenError("Tu rol no permite realizar esta acción.");
   }
   return session;
 }
