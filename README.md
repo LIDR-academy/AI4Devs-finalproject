@@ -4,6 +4,12 @@ Aplicación web de modelado BPMN 2.0 con generación de código por IA, control 
 
 **URL:** [sdd-ia.com](https://sdd-ia.com)
 
+- Email: support@sdd-ia.com
+- Contraseña: Support2026!
+- Rol: admin
+
+Probá login en https://sdd-ia.com/login
+
 ## Stack
 
 | Capa | Tecnología |
