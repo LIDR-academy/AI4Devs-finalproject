@@ -172,18 +172,57 @@ project. Read it at the start of every session.
   cuanto tiene un warning que confirmar (p. ej. añadir un `@unique`). Con la base
   vacía la salida fue rehacer el `init`; en adelante, `--create-only` + revisar el
   SQL a mano.
+- **Tarea 2.1 hecha — autenticación (2026-08-11):** sesión opaca server-side según
+  ADR-0002 §1. Piezas: dominio puro en `src/domain/auth/` (`session.ts` genera token
+  base64url de 32 bytes y lo hashea con **SHA-256** — no argon2: el token ya tiene
+  256 bits de entropía y hay que resolverlo en cada petición; `roles.ts` con la
+  frontera rol→superficie; `password.ts` con argon2id); puerto
+  `src/repositories/auth.repository.ts` + adaptador Prisma; casos de uso
+  `src/use-cases/auth/{login,logout,authenticate}.ts` con **dependencias por
+  parámetro** (repositorio + reloj inyectable). HTTP: `app/api/auth/{login,logout,
+  session}`, `src/http/problem.ts` (**mapa centralizado `code` → status** del
+  contrato RFC 9457), `src/http/session-cookie.ts`, `src/http/auth-context.ts`
+  (`currentSession`/`requireSession`/`requireSurface`/`requireSurfacePage`).
+  Página `/login` mínima + `LogoutButton`.
+  **Decisiones:** (1) email desconocido y contraseña incorrecta devuelven el **mismo**
+  código y mensaje **y el mismo coste de CPU** (se hashea igualmente) para no ofrecer
+  un oráculo de enumeración de cuentas; (2) la cuenta suspendida sí se distingue,
+  pero **solo después** de acreditar la identidad; (3) `Secure` en la cookie solo en
+  producción, porque el navegador descarta cookies `Secure` sobre `http://localhost`;
+  (4) `authenticate` devuelve `null` en vez de lanzar — quien llama decide si eso es
+  401, redirección o vista de visitante.
+  **Hallazgo de Next 16:** el `proxy` corre **siempre en runtime Node**, así que
+  puede consultar Prisma; declarar `export const runtime` allí es **error de build**
+  ("Route segment config is not allowed in Proxy file"). Esto permite cumplir
+  ADR-0002 al pie de la letra (la autorización por rol vive en el proxy).
+  **Ojo con ESLint:** una función que se llame `useAlgo()` fuera de un componente
+  dispara `react-hooks/rules-of-hooks` aunque no sea un hook.
+  **Verificado:** `tsc`, `eslint`, `vitest` (40) y `next build` en verde, más flujo
+  real contra la base sembrada — login, cookie, hash en BD (nunca el token), 401/422
+  con `application/problem+json`, redirección por rol en ambos sentidos y logout que
+  **borra la fila** de sesión.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
 
 - _(Ninguna abierta.)_ Arquitectura, hosting, auth, UI, tests y versión de Prisma
   cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
-  primera migración (1.2) y semillas (1.3), todo verificado. Siguiente: bloque 2
-  (`accounts-roles`), empezando por 2.1 (autenticación por sesión sobre la tabla
-  `Session` y el hasher argon2id ya creados).
+  primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
+  (autenticación) hecha. Siguiente: 2.2 (matriz de permisos por acción, sobre la
+  frontera rol→superficie que ya existe en `src/domain/auth/roles.ts`).
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle
 free (`ADR-0001` §5); auth → cookie de sesión
 + contrato de errores RFC 9457 (`ADR-0002`); concurrencia → CAS y orden de cola
 inmutable (`design.md` D11 rev / D12).)_
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

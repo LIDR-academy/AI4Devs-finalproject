@@ -1,17 +1,28 @@
+import { LogoutButton } from "@/components/auth/logout-button";
+import { requireSurfacePage } from "@/http/auth-context";
+
 /**
- * Portal del Suscriptor (rol SUBSCRIBER). El acceso se protegerá con el middleware
- * de auth (tarea 2.1/2.2); el code-splitting por ruta de Next mantiene el código de
- * back-office fuera de este bundle (ADR-0001 §2-§3).
+ * Portal del Suscriptor (rol SUBSCRIBER). El `proxy` ya corta el acceso antes de
+ * llegar aquí; `requireSurfacePage` lo vuelve a comprobar para que ninguna página
+ * protegida se renderice sin sesión aunque el matcher del proxy cambie (ADR-0001
+ * §2-§3). El code-splitting por ruta mantiene el código de back-office fuera de
+ * este bundle.
  */
-export default function PortalLayout({
+export default async function PortalLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const { user } = await requireSurfacePage("portal");
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="mb-6 border-b pb-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)]">
-          Portal del suscriptor
-        </p>
+      <div className="mb-6 flex items-center justify-between border-b pb-4">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)]">
+            Portal del suscriptor
+          </p>
+          <p className="text-sm font-medium">{user.fullName}</p>
+        </div>
+        <LogoutButton />
       </div>
       {children}
     </div>

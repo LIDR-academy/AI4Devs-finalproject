@@ -234,7 +234,7 @@ C4Container
     Person(backoffice, "Operador / Admin", "Back-office")
 
     System_Boundary(clickoteca, "Clickoteca — VM única (Oracle Ampere free, mismo origen)") {
-        Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + middleware). API REST pública en app/api/* con OpenAPI; capas: Route Handlers → casos de uso → repositorios → dominio.")
+        Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + proxy.ts). API REST pública en app/api/* con OpenAPI; capas: Route Handlers → casos de uso → repositorios → dominio.")
         Container(scheduler, "Procesos programados", "TypeScript, proceso Node aparte (node-cron)", "Caducidad de ventanas de oferta y recordatorios. El orden de cola NO se recalcula (D11).")
         ContainerDb(db, "Base de datos", "PostgreSQL + Prisma; local (localhost)", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones.")
     }
@@ -303,9 +303,10 @@ AI4Devs-finalproject-xvm/
 │   └── globals.css           # Tailwind v4, config CSS-first
 ├── proxy.ts                  # Auth/autorización por rol (Next 16 renombró middleware→proxy)
 ├── src/
-│   ├── domain/               # Entidades y políticas TS puras (máquina de estados, cola)
+│   ├── domain/               # Entidades y políticas TS puras (auth, máquina de estados, cola)
 │   ├── use-cases/            # Casos de uso por capability
 │   ├── repositories/         # Acceso a datos por agregado (encapsula Prisma)
+│   ├── http/                 # Adaptador HTTP: contrato RFC 9457, cookie y contexto de sesión
 │   ├── db/prisma.ts          # Cliente Prisma singleton (driver adapter pg)
 │   └── generated/prisma/     # Cliente Prisma generado (gitignored)
 ├── components/ui/            # shadcn/ui (new-york, base neutral)
@@ -378,8 +379,11 @@ Decidido en `documents/ADR-0002`:
   `Secure` + `SameSite=Lax`; el estado de sesión se persiste en Postgres. La
   **revocación es trivial** (se borra la sesión) — por eso no JWT.
 - **Passwords con argon2id** (bcrypt como alternativa aceptable).
-- **Autorización por rol en middleware server-side:** es la frontera de seguridad
+- **Autorización por rol en `proxy.ts` server-side:** es la frontera de seguridad
   real; la segmentación por rutas de Next es *defense-in-depth* / UX, no seguridad.
+  En Next 16 el `proxy` corre siempre en runtime Node, así que resuelve la sesión
+  contra Postgres antes de que se ejecute ninguna página. Como el `proxy` no cubre
+  `/api/*`, cada Route Handler vuelve a exigir sesión y rol por su cuenta.
 - **CSRF:** cubierto por `SameSite=Lax` y por el despliegue **mismo origen** (sin
   POST cross-site en el MVP).
 - **Contrato de errores estable (RFC 9457, Problem Details):**

@@ -1,19 +1,63 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { canEnterSurface, surfacePath, type Surface } from "@/domain/auth/roles";
+import { SESSION_COOKIE_NAME } from "@/http/session-cookie";
+import { prismaAuthRepository } from "@/repositories/auth.repository.prisma";
+import { authenticate } from "@/use-cases/auth/authenticate";
+
 /**
- * Proxy de auth (esqueleto — tarea 2.1/2.2). En Next 16 el antiguo `middleware` se
- * llama `proxy`.
+ * Proxy de auth (Next 16 renombró `middleware` → `proxy`).
  *
- * Traza la frontera de superficies por rol (ADR-0001 §2-§3):
- *   - /portal/*      → requiere sesión con rol SUBSCRIBER
- *   - /backoffice/*  → requiere sesión con rol OPERATOR o ADMIN
+ * Es la **frontera de autorización por superficie** (ADR-0002 §1): resuelve la cookie
+ * de sesión contra la base y decide antes de que se ejecute ninguna página.
  *
- * Aún NO hay autenticación implementada, así que de momento deja pasar todo. La
- * lógica real (leer cookie de sesión — ADR-0002, resolver rol, redirigir a login o
- * responder 401/403) se conecta al implementar `accounts-roles`.
+ *   /portal/*      → sesión con rol SUBSCRIBER
+ *   /backoffice/*  → sesión con rol OPERATOR o ADMIN
+ *
+ * No cubre `/api/*` a propósito: allí cada handler exige lo suyo con
+ * `requireSession`/`requireSurface`, que es donde debe estar la comprobación cuando
+ * la llamada no pasa por una navegación.
+ *
+ * Puede consultar la base porque en Next 16 el `proxy` corre **siempre** en el
+ * runtime Node —a diferencia del antiguo `middleware`, que era Edge por defecto y
+ * donde Prisma no funcionaba—. Declarar `runtime` aquí es, de hecho, un error de
+ * build.
  */
-export function proxy(_request: NextRequest) {
-  // TODO(2.1): validar cookie de sesión y autorizar por rol antes de continuar.
+
+const SURFACE_BY_PREFIX: ReadonlyArray<[string, Surface]> = [
+  ["/portal", "portal"],
+  ["/backoffice", "backoffice"],
+];
+
+function surfaceFor(pathname: string): Surface | null {
+  const match = SURFACE_BY_PREFIX.find(([prefix]) => pathname.startsWith(prefix));
+  return match ? match[1] : null;
+}
+
+function redirectToLogin(request: NextRequest): NextResponse {
+  const url = new URL("/login", request.url);
+  // Se conserva el destino para volver ahí tras entrar; solo la ruta relativa, para
+  // que un `next` manipulado no pueda convertirse en un *open redirect*.
+  url.searchParams.set("next", request.nextUrl.pathname);
+  return NextResponse.redirect(url);
+}
+
+export async function proxy(request: NextRequest) {
+  const surface = surfaceFor(request.nextUrl.pathname);
+  if (!surface) return NextResponse.next();
+
+  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = await authenticate({ repository: prismaAuthRepository }, token);
+
+  if (!session) return redirectToLogin(request);
+
+  if (!canEnterSurface(session.user.role, surface)) {
+    // Autenticado pero en la superficie equivocada: se le manda a la suya en vez de
+    // enseñarle un 403 seco, que sería un callejón sin salida.
+    const home = session.user.role === "SUBSCRIBER" ? "portal" : "backoffice";
+    return NextResponse.redirect(new URL(surfacePath(home), request.url));
+  }
+
   return NextResponse.next();
 }
 

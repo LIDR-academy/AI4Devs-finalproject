@@ -9,7 +9,7 @@
 - [x] 1.3 Semillas/datos de prueba (sets, copias, usuarios de cada rol); catálogo semilla desde el dataset público de Rebrickable (nombre, año, tema, nº piezas, foto de la caja); edad recomendada y dificultad curadas a mano para el subconjunto semilla. **Hecho:** `prisma/seed.ts` idempotente + `prisma/seed-data/sets.json` (35 sets reales de Rebrickable, commiteado para sembrar sin red). Siembra 2 planes (D9), 7 `SystemSetting`, 5 usuarios (uno por rol + 3 suscriptores con antigüedades distintas para ejercitar D7), 20 temas, 35 sets y 61 copias con su auditoría de transición. Hashing argon2id en `src/domain/auth/password.ts` (ADR-0002 §1)
 
 ## 2. Cuentas y roles (`accounts-roles`)
-- [ ] 2.1 Autenticación y modelo de 3 roles (suscriptor/operador/admin)
+- [x] 2.1 Autenticación y modelo de 3 roles (suscriptor/operador/admin). **Hecho:** sesión opaca server-side (ADR-0002 §1) — cookie `httpOnly`/`SameSite=Lax` con token aleatorio del que la tabla `Session` solo guarda el **hash**; login/logout/session en `app/api/auth/*`; dominio en `src/domain/auth/{session,roles,password}.ts`; puerto `AuthRepository` + adaptador Prisma; casos de uso `login`/`logout`/`authenticate`. El **`proxy`** resuelve la sesión y corta por superficie (`/portal` → SUBSCRIBER, `/backoffice` → OPERATOR|ADMIN), con `requireSurfacePage` en los layouts como respaldo y `requireSession`/`requireSurface` para `/api`. Contrato de errores **RFC 9457** centralizado en `src/http/problem.ts` (mapa `code` → status). Página `/login` mínima. 34 tests nuevos (40 en total)
 - [ ] 2.2 Autorización por acción según matriz de permisos
 - [ ] 2.3 Baja de copia restringida a admin
 - [ ] 2.4 Registro de auditoría "quién/cuándo" en transiciones y acciones admin
