@@ -442,6 +442,32 @@ cd backend && dotnet run --seed        # primera vez: migra + seed → luego dot
 cd frontend && npm ci && npm start     # http://localhost:4200
 ```
 
+#### 🔑 Cuentas para iniciar sesión (datos del seed)
+
+Una vez levantado el proyecto, entra en **http://localhost:4200** y usa cualquiera de estas cuentas. **Todas comparten la misma contraseña: `Test1234!`**
+
+**Clientes** — es el rol recomendado para recorrer el producto completo (buscar → comparar → cotizar → reservar → pagar → calificar):
+
+| Nombre | Email | Contraseña |
+|---|---|---|
+| Camila Rojas | `camila.rojas@example.cl` | `Test1234!` |
+| Diego Fuentes | `diego.fuentes@example.cl` | `Test1234!` |
+| Valentina Soto | `valentina.soto@example.cl` | `Test1234!` |
+| Sofía Alarcón | `sofia.alarcon@example.cl` | `Test1234!` |
+| Tomás Muñoz | `tomas.munoz@example.cl` | `Test1234!` |
+| Javiera Rojas | `javiera.rojas@example.cl` | `Test1234!` |
+| Camilo Reyes | `camilo.reyes@example.cl` | `Test1234!` |
+
+> 💡 **Cada cliente del seed ya trae datos listos para evaluar**: reservas completadas con reseña (visibles en *Mis reservas*) y **una reserva completada sin reseña**, para poder probar el flujo de calificación (US0013) sin tener que reservar y pagar primero.
+
+**Artistas** (mismo password) — para ver la aplicación desde el otro lado: `matias.ink@example.cl`, `fernanda.tattoo@example.cl`, `cristobal.art@example.cl`, `antonia.lines@example.cl`, `javier.dotwork@example.cl`. El seed crea **14 artistas** en total; el listado completo con estilos, comuna y slug está en [login-samples.md](login-samples.md). Perfil público de cada uno en `/artista/{slug}` (ej. [`/artista/matias-herrera`](http://localhost:4200/artista/matias-herrera)).
+
+**Administrador**: `admin@inklink.cl`.
+
+> ⚠️ Estas credenciales **solo existen en el entorno local** que crea `dotnet run --seed` ([`backend/Seed/DatabaseSeeder.cs`](backend/Seed/DatabaseSeeder.cs)). No son cuentas de ningún entorno real.
+>
+> El seed incluye además un cliente con un correo real del autor, necesario porque el sandbox de Flow valida el email del pagador y rechaza los dominios `@example.cl` (error 1620). Solo es relevante si vas a probar pagos reales contra el sandbox; para todo lo demás, usa las cuentas de la tabla.
+
 **Pruebas de pago contra el sandbox de Flow**: flujo end-to-end, configuración segura de credenciales (nunca en el repo) y confirmación manual del webhook en local: **[docs/flow-sandbox-testing.md](docs/flow-sandbox-testing.md)**. Tarjetas de prueba (Webpay/Transbank, ambiente de integración):
 
 | Resultado | Tarjeta | Número | CVV | Vencimiento |
