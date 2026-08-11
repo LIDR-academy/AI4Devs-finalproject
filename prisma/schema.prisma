@@ -2,7 +2,7 @@
 // Stack: PostgreSQL + Prisma (ver AGENTS.md). Especificación en documents/PRD.md §15.
 //
 // Anillos por orden de importancia:
-//   1. Núcleo del circuito E2E : User, Set, Copy, Subscription, Rental,
+//   1. Núcleo del circuito E2E : User, Session, Set, Copy, Subscription, Rental,
 //                                ReservationQueueEntry, ReservationOffer
 //   2. Operación y trazabilidad: ConditionReport, Incident, CopyStateTransition,
 //                                AuditLog, Notification, Shipment
@@ -151,6 +151,7 @@ model User {
   updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
 
   addresses        Address[]
+  sessions         Session[]
   subscriptions    Subscription[]
   rentals          Rental[]
   queueEntries     ReservationQueueEntry[]
@@ -185,6 +186,26 @@ model Address {
 
   @@index([userId])
   @@map("addresses")
+}
+
+/// Sesión server-side (ADR-0002 §1). La cookie httpOnly transporta un token opaco
+/// aleatorio; aquí se guarda solo su **hash**, de modo que un volcado de la tabla no
+/// permite suplantar sesiones. Revocar = borrar la fila.
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique // SHA-256 del token que viaja en la cookie
+  expiresAt  DateTime  @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  lastSeenAt DateTime? @db.Timestamptz(6)
+  userAgent  String?
+  ipAddress  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt]) // barrido de sesiones caducadas
+  @@map("sessions")
 }
 
 /// Plan de suscripción configurable (PRD §4.3). El bono de cola es aditivo (§7).
@@ -237,6 +258,7 @@ model Theme {
 model Set {
   id             String  @id @default(uuid()) @db.Uuid
   themeId        String  @db.Uuid
+  setNum         String? @unique // referencia del dataset de Rebrickable (p. ej. "75192-1"); null si es alta manual
   name           String
   year           Int?
   pieceCount     Int

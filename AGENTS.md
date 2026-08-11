@@ -55,7 +55,7 @@ project. Read it at the start of every session.
   negocio quedaron marcados como pendientes ahí (no inventados).
 - **Modelo de datos (definido 2026-07-04):** documentado en `documents/PRD.md` §15
   (tres anillos de importancia + diagramas ER Mermaid + máquina de estados de
-  `Copy`) e implementado en `prisma/schema.prisma` (20 modelos + 16 enums,
+  `Copy`) e implementado en `prisma/schema.prisma` (22 modelos + 18 enums,
   PostgreSQL). Reflejado también en `readme.md` §3. Modelos en inglés (convención
   Prisma) que mapean a los términos de dominio en español de las specs. Decisiones
   clave añadidas a `design.md`: **D10** (catálogo de entidades + `User` único con
@@ -141,13 +141,46 @@ project. Read it at the start of every session.
   antes de los tests de integración con Postgres; (2) ESLint 9: `eslint-config-next` 16
   se importa como **flat config nativo** (`eslint-config-next/core-web-vitals` +
   `/typescript`), **no** vía `FlatCompat` (daba error de estructura circular).
+- **Postgres local con Docker (2026-08-11):** `docker-compose.yml` en la raíz levanta
+  **postgres:16-alpine** con las credenciales de `.env.example`
+  (`clickoteca:clickoteca@localhost:5432/clickoteca`), volumen `pgdata` y puerto
+  publicado **solo en `127.0.0.1`** (ADR-0001 §5). Uso: `docker compose up -d`;
+  `down -v` borra los datos. La instalación local de Node es **v24.19**, así que el
+  caveat de Testcontainers (≥22.22) queda resuelto.
+- **Tareas 1.2 y 1.3 hechas (2026-08-11):** schema afinado y **primera migración**
+  `init` aplicada (22 modelos / 18 enums, 22 tablas). Cambios sobre el borrador:
+  (1) **`Session`** — la tabla de sesiones que exige ADR-0002 §1 faltaba; guarda el
+  **hash** del token de cookie, no el token; (2) **`Set.setNum`** único y opcional,
+  referencia de Rebrickable para trazar la procedencia y hacer idempotente la
+  semilla; (3) **índice único parcial** `reservation_offers_one_active_per_copy`
+  (`WHERE status = 'PENDING'`) escrito **a mano en el SQL de la migración**, porque
+  Prisma no expresa índices parciales — es el invariante multi-fila de D12.
+  **Semilla** (`prisma/seed.ts`, idempotente vía upsert/find-si-falta): 2 planes,
+  7 `SystemSetting`, 5 usuarios (uno por rol; suscriptores con 8 meses / 1 mes / sin
+  suscripción para ejercitar D7), 20 temas, 35 sets y 61 copias con su
+  `CopyStateTransition`. Solo se siembran estados de copia que existen **sin**
+  `Rental` (INTAKE/DISPONIBLE/INCOMPLETA/BAJA). El catálogo real vive commiteado en
+  `prisma/seed-data/sets.json` (extraído de los CSV públicos de Rebrickable) para
+  sembrar **sin red**; edad/dificultad/valor son curados a mano.
+  **Hashing**: `@node-rs/argon2` (prebuilds, sin compilador) en
+  `src/domain/auth/password.ts` — argon2id con parámetros OWASP explícitos. Ojo:
+  `Algorithm` es un `const enum` ambiente y con `isolatedModules` hay que importarlo
+  como tipo y usar el literal `2`.
+  **Verificado en verde:** `tsc --noEmit`, `eslint .`, `vitest run` (6), `next build`,
+  y la semilla relanzada dos veces sin duplicar filas.
+  **Caveat de flujo:** `prisma migrate dev` **aborta en entorno no interactivo** en
+  cuanto tiene un warning que confirmar (p. ej. añadir un `@unique`). Con la base
+  vacía la salida fue rehacer el `init`; en adelante, `--create-only` + revisar el
+  SQL a mano.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
 
 - _(Ninguna abierta.)_ Arquitectura, hosting, auth, UI, tests y versión de Prisma
-  cerrados; scaffolding (1.1) hecho y verificado. Siguiente: tarea 1.2 (afinar el
-  schema para Prisma 7 y primera migración) y 1.3 (semillas).
+  cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
+  primera migración (1.2) y semillas (1.3), todo verificado. Siguiente: bloque 2
+  (`accounts-roles`), empezando por 2.1 (autenticación por sesión sobre la tabla
+  `Session` y el hasher argon2id ya creados).
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

@@ -118,7 +118,7 @@ los monta, los devuelve y pide el siguiente—.
 
 > **Estado actual del repositorio.** El **scaffolding Next.js 16 está generado**
 > (App Router, TypeScript, en la raíz del repo) y el modelo de datos está
-> implementado en Prisma (`prisma/schema.prisma`, 20 modelos / 16 enums). Toda la
+> implementado en Prisma (`prisma/schema.prisma`, 22 modelos / 18 enums). Toda la
 > arquitectura está decidida y documentada (ver §2 y
 > `documents/ADR-0001`/`ADR-0002`). Las funcionalidades de negocio están **en
 > desarrollo**: los pasos siguientes levantan el entorno y la app, pero las
@@ -146,8 +146,8 @@ docker compose up -d
 npm run db:migrate          # crea las tablas a partir de schema.prisma
 npm run db:generate         # genera el cliente tipado en src/generated/prisma
 
-# 5. (Previsto) semillas del catálogo desde el dataset público de Rebrickable
-#    npm run db:seed
+# 5. Semillas: catálogo, planes, parámetros y usuarios de prueba
+npm run db:seed             # idempotente: se puede relanzar sin duplicar nada
 
 # 6. Levantar la app Next.js full-stack + el scheduler
 npm run dev                 # front (SSR/RSC) + API REST en /api → http://localhost:3000
@@ -156,6 +156,26 @@ npm run scheduler           # proceso Node aparte (node-cron), en otra terminal
 
 Comprobación rápida de que todo está en pie: `GET http://localhost:3000/api/health`
 debe devolver `{"status":"ok"}`.
+
+#### Datos de prueba
+
+`npm run db:seed` deja el entorno listo para trastear: los 2 planes de §D9, los 7
+parámetros configurables del sistema, **35 sets reales** del dataset público de
+Rebrickable con sus temas, **61 copias** repartidas por estado (disponibles,
+incompletas, en alta y de baja) y **5 cuentas**, una por rol:
+
+| Cuenta | Rol | Situación |
+| --- | --- | --- |
+| `admin@clickoteca.test` | ADMIN | Configuración y bajas de copia |
+| `operador@clickoteca.test` | OPERATOR | Cola de trabajo del back-office |
+| `ana@example.test` | SUBSCRIBER | Premium con 8 meses — supera la antigüedad mínima |
+| `bruno@example.test` | SUBSCRIBER | Basic con 1 mes — **no** llega a la antigüedad mínima |
+| `carla@example.test` | SUBSCRIBER | Sin suscripción — cubre el alquiler puntual |
+
+Contraseña común: `clickoteca` (solo desarrollo). Las tres antigüedades distintas
+están elegidas para poder ejercitar la regla de sets restringidos (D7) sin tocar la
+base a mano. La procedencia del catálogo y qué campos son curados a mano se detallan
+en [`prisma/seed-data/README.md`](prisma/seed-data/README.md).
 
 #### Base de datos local con Docker
 
@@ -216,7 +236,7 @@ C4Container
     System_Boundary(clickoteca, "Clickoteca — VM única (Oracle Ampere free, mismo origen)") {
         Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + middleware). API REST pública en app/api/* con OpenAPI; capas: Route Handlers → casos de uso → repositorios → dominio.")
         Container(scheduler, "Procesos programados", "TypeScript, proceso Node aparte (node-cron)", "Caducidad de ventanas de oferta y recordatorios. El orden de cola NO se recalcula (D11).")
-        ContainerDb(db, "Base de datos", "PostgreSQL + Prisma; local (localhost)", "20 modelos / 16 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones.")
+        ContainerDb(db, "Base de datos", "PostgreSQL + Prisma; local (localhost)", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones.")
     }
 
     System_Ext(payments, "Pasarela de pagos (SIMULADA)", "Mock")
@@ -260,7 +280,7 @@ C4Container
 | **Repositorios** | Prisma | Acceso a datos por agregado; encapsula Prisma tras interfaces. |
 | **Scheduler** | Node + node-cron | Caducidad de ofertas y recordatorios; reutiliza los mismos casos de uso. |
 | **Adaptadores de infra** | Mocks / manual | Pagos simulados, logística manual y despacho de notificaciones (in-app; email mockeado). |
-| **Base de datos** | PostgreSQL + Prisma | 20 modelos / 16 enums; incluye tabla de sesiones. |
+| **Base de datos** | PostgreSQL + Prisma | 22 modelos / 18 enums; incluye tabla de sesiones. |
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -292,8 +312,10 @@ AI4Devs-finalproject-xvm/
 ├── lib/utils.ts              # Helper `cn`
 ├── scheduler/index.ts        # Proceso node-cron aparte
 ├── prisma/
-│   ├── schema.prisma         # Modelo de datos ejecutable (20 modelos / 16 enums)
-│   └── seed.ts               # Semillas
+│   ├── schema.prisma         # Modelo de datos ejecutable (22 modelos / 18 enums)
+│   ├── migrations/           # Historial de migraciones SQL
+│   ├── seed.ts               # Semillas idempotentes
+│   └── seed-data/sets.json   # Catálogo semilla (subconjunto de Rebrickable)
 ├── prisma.config.ts          # URL de conexión (requisito de Prisma 7)
 ├── tests/ · e2e/             # Vitest (unit/integración) · Playwright (E2E)
 ├── documents/
@@ -947,7 +969,7 @@ Tickets derivados de las historias anteriores y de las tareas del cambio OpenSpe
 > equivaldrían a sendas PRs.
 
 **Pull Request 1 — Modelo de datos** (`7c37834`)
-Esquema Prisma (20 modelos / 16 enums), PRD §15 (tres anillos de importancia +
+Esquema Prisma (22 modelos / 18 enums), PRD §15 (tres anillos de importancia +
 diagramas ER + máquina de estados de la copia) y sincronización con las specs.
 
 **Pull Request 2 — Arquitectura** (`7985b78`)

@@ -509,8 +509,8 @@ paréntesis. El esquema ejecutable vive en `prisma/schema.prisma`.
 
 Las entidades se organizan en **tres anillos por orden de importancia**:
 
-- **Anillo 1 — Núcleo del circuito E2E:** `User`, `Set`, `Copy`, `Subscription`,
-  `Rental`, `ReservationQueueEntry`, `ReservationOffer`.
+- **Anillo 1 — Núcleo del circuito E2E:** `User`, `Session`, `Set`, `Copy`,
+  `Subscription`, `Rental`, `ReservationQueueEntry`, `ReservationOffer`.
 - **Anillo 2 — Operación y trazabilidad:** `ConditionReport`, `Incident`,
   `CopyStateTransition`, `AuditLog`, `Notification`, `Shipment`.
 - **Anillo 3 — Configuración y pagos (simulados):** `Plan`, `SystemSetting`,
@@ -524,6 +524,12 @@ Las entidades se organizan en **tres anillos por orden de importancia**:
 - **Un único `User` con `role`** (`SUBSCRIBER | OPERATOR | ADMIN`): no se modela una
   entidad `Employee` aparte en el MVP; solo se separaría si hicieran falta datos
   laborales (turnos, etc.).
+- **`Session` para la sesión server-side** (`ADR-0002` §1): la cookie `httpOnly`
+  transporta un token opaco y la tabla guarda solo su **hash**, de modo que un
+  volcado de la base no permite suplantar sesiones. Revocar es borrar la fila.
+- **`Set.setNum` (referencia de Rebrickable, único y opcional)**: conserva la
+  procedencia de cada ficha del catálogo semilla y hace idempotente la carga de
+  datos; `null` en los sets dados de alta a mano desde el back-office.
 - **Orden de cola por `effectiveEntryAt` inmutable** (`design.md` D11): al encolar se
   congela el bono de plan (`appliedBonus`) y se calcula, una sola vez,
   `effectiveEntryAt = enqueuedAt − appliedBonus`. El orden es `effectiveEntryAt ASC`

@@ -83,7 +83,7 @@ C4Container
     System_Boundary(clickoteca, "Clickoteca — VM única (Oracle Ampere free, mismo origen)") {
         Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript; proceso Node tras el reverse proxy", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + middleware). API REST pública en app/api/* documentada en OpenAPI; arquitectura en capas: Route Handlers → casos de uso → repositorios → dominio.")
         Container(scheduler, "Procesos programados", "TypeScript, proceso Node aparte (node-cron)", "Caducidad de ventanas de oferta y recordatorios de retención y de mitad de ventana. Disparan notificaciones y ofertas. Proceso separado para no duplicarse con el modelo multi-instancia de Next. El orden de cola NO se recalcula (D11).")
-        ContainerDb(db, "Base de datos", "PostgreSQL + Prisma; local en la VM (localhost)", "20 modelos / 16 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones persistidas.")
+        ContainerDb(db, "Base de datos", "PostgreSQL + Prisma; local en la VM (localhost)", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones persistidas.")
     }
 
     System_Ext(payments, "Pasarela de pagos (SIMULADA)", "Mock")
