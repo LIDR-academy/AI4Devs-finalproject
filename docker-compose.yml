@@ -1,0 +1,24 @@
+# Postgres local para desarrollo. Credenciales alineadas con DATABASE_URL de .env:
+#   postgresql://clickoteca:clickoteca@localhost:5432/clickoteca
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: clickoteca-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: clickoteca
+      POSTGRES_PASSWORD: clickoteca
+      POSTGRES_DB: clickoteca
+    ports:
+      # Solo en localhost: nunca expuesto en la IP de la máquina (ver ADR-0001 §5).
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clickoteca -d clickoteca"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

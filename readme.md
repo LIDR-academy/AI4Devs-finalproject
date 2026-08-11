@@ -116,37 +116,81 @@ los monta, los devuelve y pide el siguiente—.
 
 ### **1.4. Instrucciones de instalación:**
 
-> **Estado actual del repositorio.** El proyecto está en fase de **diseño y
-> especificación completos**: el modelo de datos ya está implementado en Prisma
-> (`prisma/schema.prisma`, 20 modelos / 16 enums) y toda la arquitectura
-> está decidida y documentada (ver §2 y `documents/ADR-0001`/`ADR-0002`). El
-> scaffolding de la aplicación Next.js aún no está generado, por lo que las
-> instrucciones siguientes describen el arranque **previsto** según la
-> arquitectura confirmada.
+> **Estado actual del repositorio.** El **scaffolding Next.js 16 está generado**
+> (App Router, TypeScript, en la raíz del repo) y el modelo de datos está
+> implementado en Prisma (`prisma/schema.prisma`, 20 modelos / 16 enums). Toda la
+> arquitectura está decidida y documentada (ver §2 y
+> `documents/ADR-0001`/`ADR-0002`). Las funcionalidades de negocio están **en
+> desarrollo**: los pasos siguientes levantan el entorno y la app, pero las
+> pantallas y endpoints de dominio se van añadiendo por fases.
 
-Requisitos previstos: **Node.js 20+**, **PostgreSQL 16** y **Prisma 6** (pinneado;
-el esquema usa `url = env("DATABASE_URL")`, forma válida en Prisma ≤6).
+Requisitos: **Node.js 22.22+** (Next 16 admite 20.9+, pero Testcontainers 12 —
+usado en los tests de integración — exige ≥22.22), **Docker** (para el Postgres
+local) y **npm**. La base de datos es **PostgreSQL 16**; el ORM es **Prisma 7**,
+que configura la URL de conexión en `prisma.config.ts` (no en el `datasource` del
+`schema.prisma`).
 
 ```bash
 # 1. Clonar e instalar dependencias
 git clone https://github.com/xaviverges/AI4Devs-finalproject-xvm
 cd AI4Devs-finalproject-xvm
+npm install
 
-# 2. Configurar la base de datos (variable DATABASE_URL en el .env del backend)
-#    Ej.: postgresql://user:pass@localhost:5432/clickoteca
+# 2. Variables de entorno
+cp .env.example .env        # ajustar si hace falta; DATABASE_URL ya apunta al Postgres de Docker
 
-# 3. Aplicar el esquema y generar el cliente Prisma
-cd backend
-npx prisma migrate dev      # crea las tablas a partir de schema.prisma
-npx prisma generate         # genera el cliente tipado
+# 3. Levantar PostgreSQL en local (ver detalle más abajo)
+docker compose up -d
 
-# 4. (Previsto) semillas del catálogo desde el dataset público de Rebrickable
-#    npx prisma db seed
+# 4. Aplicar el esquema y generar el cliente Prisma
+npm run db:migrate          # crea las tablas a partir de schema.prisma
+npm run db:generate         # genera el cliente tipado en src/generated/prisma
 
-# 5. (Previsto) levantar la app Next.js full-stack + el scheduler
-#    npm run dev             # front (SSR/RSC) + API REST en /api
-#    npm run scheduler       # proceso Node aparte (node-cron)
+# 5. (Previsto) semillas del catálogo desde el dataset público de Rebrickable
+#    npm run db:seed
+
+# 6. Levantar la app Next.js full-stack + el scheduler
+npm run dev                 # front (SSR/RSC) + API REST en /api → http://localhost:3000
+npm run scheduler           # proceso Node aparte (node-cron), en otra terminal
 ```
+
+Comprobación rápida de que todo está en pie: `GET http://localhost:3000/api/health`
+debe devolver `{"status":"ok"}`.
+
+#### Base de datos local con Docker
+
+El fichero `docker-compose.yml` de la raíz levanta **PostgreSQL 16** con las
+credenciales que espera el `DATABASE_URL` de `.env.example`
+(`clickoteca:clickoteca@localhost:5432/clickoteca`). El puerto se publica **solo en
+`127.0.0.1`**, nunca en la IP de la máquina — misma regla que en producción (ver
+ADR-0001 §5). Los datos persisten en el volumen `pgdata`, así que sobreviven a
+parar y recrear el contenedor.
+
+```bash
+docker compose up -d        # arrancar (la primera vez descarga la imagen)
+docker compose ps           # estado y healthcheck
+docker compose logs -f db   # logs
+docker compose stop         # parar conservando el contenedor
+docker compose down         # eliminar el contenedor (los datos siguen en el volumen)
+docker compose down -v      # ⚠️ eliminar TAMBIÉN el volumen: borra la base de datos
+docker compose exec db psql -U clickoteca -d clickoteca   # consola SQL
+```
+
+En el día a día basta con `docker compose up -d` antes de `npm run dev`. El
+servicio usa `restart: unless-stopped`, por lo que vuelve a arrancar solo al
+iniciar Docker Desktop.
+
+#### Comandos de desarrollo
+
+| Comando | Qué hace |
+| --- | --- |
+| `npm run dev` | App Next.js (front + `/api`) en modo desarrollo |
+| `npm run scheduler` | Proceso node-cron (recálculo de score, caducidad de ofertas, recordatorios) |
+| `npm run build` / `npm start` | Build de producción y arranque del servidor |
+| `npm run lint` / `npm run typecheck` | ESLint 9 (flat config) y `tsc --noEmit` |
+| `npm test` / `npm run test:watch` | Vitest (unit + integración) |
+| `npm run test:e2e` | Playwright (requiere `npx playwright install` la primera vez) |
+| `npm run db:migrate` / `db:generate` / `db:seed` | Migraciones, cliente Prisma y semillas |
 
 ---
 
@@ -202,16 +246,15 @@ C4Container
 - **Scheduler en proceso aparte** porque el modelo multi-instancia de Next
   duplicaría un cron in-process.
 - **Sacrificios:** se pasa a **ops propio** (TLS, parches, firewall, backups) y a
-  un **punto único de fallo** — aceptable en un MVP de demo. Prisma 6 pinneado deja
-  una deuda de migración a Prisma 7.
+  un **punto único de fallo** — aceptable en un MVP de demo.
 
 ### **2.2. Descripción de componentes principales:**
 
 | Componente | Tecnología | Responsabilidad |
 |---|---|---|
-| **Aplicación Next.js (front + API)** | Next.js App Router, TypeScript | Sirve el front SSR/RSC (Portal del Suscriptor + Back-office segmentados por rol con route groups + middleware) y la API REST pública en `app/api/*`. |
+| **Aplicación Next.js (front + API)** | Next.js App Router, TypeScript | Sirve el front SSR/RSC (Portal del Suscriptor + Back-office segmentados por rol con route groups + `proxy.ts`) y la API REST pública en `app/api/*`. |
 | **Capa HTTP (Route Handlers)** | Next `app/api/*` + **Zod** + OpenAPI | Enrutado, validación de request/response contra el contrato OpenAPI (Zod alimenta el spec) y serialización. |
-| **Auth y autorización** | Middleware server-side | Sesión por cookie y control de acceso por rol (`SUBSCRIBER/OPERATOR/ADMIN`) — la frontera de seguridad real. |
+| **Auth y autorización** | `proxy.ts` server-side (Next 16; antes `middleware`) | Sesión por cookie y control de acceso por rol (`SUBSCRIBER/OPERATOR/ADMIN`) — la frontera de seguridad real. |
 | **Casos de uso (Application)** | TypeScript puro | Una porción por capability: cuentas, catálogo, suscripciones, alquileres/devoluciones, cola, notificaciones. |
 | **Dominio** | Entidades + políticas TS | Máquina de estados de la Copia (9 estados), política de cola aditiva con entrada efectiva inmutable, elegibilidad y auditoría. |
 | **Repositorios** | Prisma | Acceso a datos por agregado; encapsula Prisma tras interfaces. |
@@ -221,17 +264,38 @@ C4Container
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-El repositorio sigue hoy una estructura **documentation-first** (specs y modelo de
-datos antes que código). Estructura actual y prevista:
+El repositorio nació **documentation-first** (specs y modelo de datos antes que
+código) y hoy aloja además la app Next.js en la **raíz** — no hay carpeta
+`backend/`: el proyecto full-stack *es* el repositorio.
 
 ```
 AI4Devs-finalproject-xvm/
 ├── README.md                 # Este entregable
 ├── AGENTS.md                 # Memoria y acuerdos de trabajo del proyecto
 ├── prompts.md                # Log de prompts de la generación asistida
-├── backend/
-│   └── prisma/
-│       └── schema.prisma     # Modelo de datos ejecutable (20 modelos / 16 enums)
+├── docker-compose.yml        # PostgreSQL 16 local para desarrollo
+├── app/                      # Next.js App Router
+│   ├── (public)/             # Landing pública
+│   ├── (portal)/portal/      # Portal del Suscriptor
+│   ├── (backoffice)/backoffice/   # Back-office (operador/admin)
+│   ├── api/                  # Route Handlers REST (health + endpoints de dominio)
+│   ├── layout.tsx
+│   └── globals.css           # Tailwind v4, config CSS-first
+├── proxy.ts                  # Auth/autorización por rol (Next 16 renombró middleware→proxy)
+├── src/
+│   ├── domain/               # Entidades y políticas TS puras (máquina de estados, cola)
+│   ├── use-cases/            # Casos de uso por capability
+│   ├── repositories/         # Acceso a datos por agregado (encapsula Prisma)
+│   ├── db/prisma.ts          # Cliente Prisma singleton (driver adapter pg)
+│   └── generated/prisma/     # Cliente Prisma generado (gitignored)
+├── components/ui/            # shadcn/ui (new-york, base neutral)
+├── lib/utils.ts              # Helper `cn`
+├── scheduler/index.ts        # Proceso node-cron aparte
+├── prisma/
+│   ├── schema.prisma         # Modelo de datos ejecutable (20 modelos / 16 enums)
+│   └── seed.ts               # Semillas
+├── prisma.config.ts          # URL de conexión (requisito de Prisma 7)
+├── tests/ · e2e/             # Vitest (unit/integración) · Playwright (E2E)
 ├── documents/
 │   ├── PRD.md                # PRD completo (incluye §15 modelo de datos)
 │   ├── C4-architecture.md    # Diagramas C4 niveles 1–3 (Mermaid)
@@ -246,10 +310,10 @@ AI4Devs-finalproject-xvm/
                               # notifications
 ```
 
-Estructura **prevista** de la app Next.js (según `ADR-0001` §2–§3): `app/(portal)/…`
-y `app/(backoffice)/…` (route groups por rol), `app/api/*` (Route Handlers REST), y
-una **capa compartida** (dominio, casos de uso, cliente OpenAPI, tipos) factorizada
-para dejar barata una futura extracción de la API.
+La separación en `src/domain` → `src/use-cases` → `src/repositories` materializa la
+**regla de dependencias** de `ADR-0001` §2–§3 (cada carpeta lleva su README): el
+dominio no conoce ni a Next ni a Prisma, lo que deja barata una futura extracción
+de la API a un servicio propio.
 
 ### **2.4. Infraestructura y despliegue**
 
@@ -306,13 +370,18 @@ Decidido en `documents/ADR-0002`:
 
 ### **2.6. Tests**
 
-> **Pendiente de implementación.** La estrategia de tests está definida pero aún no
-> escrita (la app no está scaffoldeada). El **criterio de éxito del MVP** (PRD §10)
-> es precisamente la **cobertura de caminos de error**, no KPIs de escala. El diseño
-> lo habilita: el dominio (máquina de estados, política de cola) es un módulo TS
-> puro testable de forma aislada, sin levantar infraestructura.
+**Stack:** **Vitest** (unit e integración), **Playwright** (E2E y checks de
+accesibilidad) y **Testcontainers** para levantar un **Postgres real** en los tests
+de integración — evita mockear Prisma y prueba de verdad las transiciones de estado
+de `Copy` y el orden de la cola. Se ejecutan con `npm test` y `npm run test:e2e`.
 
-Casos de test previstos como prioritarios:
+> **Estado:** el arnés está montado y en verde con tests de humo; la batería de
+> casos de dominio se escribe junto a cada capability. El **criterio de éxito del
+> MVP** (PRD §10) es la **cobertura de caminos de error**, no KPIs de escala, y el
+> diseño lo habilita: el dominio (máquina de estados, política de cola) es un
+> módulo TS puro testable sin levantar infraestructura.
+
+Casos de test prioritarios:
 
 - **Máquina de estados de la copia:** solo se aceptan las transiciones válidas; una
   transición inválida o sobre un estado ya cambiado devuelve **409** (CAS).
