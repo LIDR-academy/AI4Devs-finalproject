@@ -29,8 +29,10 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### **2.1. Diagrama de arquitectura:**
 
 **Prompt 1:**
+Como analista experto y basándote en el punto 1.2 del fichero readme.md del proyecto quiero que diseñes la arquitectura del proyecto. Debe representar los componentes principales y las tecnologías utilizadas en la aplicación. Si usas un patrón definido explícalo, justifica la arquitectura elegida destacando los beneficios y deficiencias que implica. El resultado de todo ello tiene que ser un arhivo arquitectura.md dentro de una carpeta documentos.
 
 **Prompt 2:**
+Hay algún problema en la codificación de arquitectura.md ya que hay caracteres extraños en vocales acentuadas.
 
 **Prompt 3:**
 
@@ -79,6 +81,10 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+Como experto en base de datos y diagramas mermaid necesito que me crees el modelo de datos de la aplicación. Para ello, y basándote en el archivo arquitectura.md dentro de documentos, deberás crear un archivo modeloDatos.md dentro de documentos con: 
+- Diagrama del modelo con el máximo detalle (PKs, FKs...) usando mermaid
+- Descripción de las entidades principales con el máximo detalle
+Pregunta si necesitas información de algo.
 
 **Prompt 2:**
 
@@ -89,6 +95,8 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### 4. Especificación de la API
 
 **Prompt 1:**
+Como programador en backend y APIs, y basándote en el archivo arquitectura.md dentro de documentos, necesito que realices la especificición de la API describiendo los endpoints principales en formato OpenAPI de la aplicación con algún ejemplo de petición y respuesta. El resultado documentalo en apis.md dentro de documentos.
+Si necesitas más información pregunta.
 
 **Prompt 2:**
 
@@ -99,6 +107,7 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### 5. Historias de Usuario
 
 **Prompt 1:**
+Como dueño del producto, y basándote en los archivos arquitectura.md, modeloDatos.md y apis.md de documentos, necesito que documentes 3 de las historias principales para el proyecto. Es necesario que tengas en cuenta las buenas prácticas de producto al respecto. El resultado incorpóralo en historiasUsuario.md dentro de documentos. Si tienes alguna duda pregunta.
 
 **Prompt 2:**
 
@@ -109,6 +118,8 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### 6. Tickets de Trabajo
 
 **Prompt 1:**
+Como dueño del producto, y básandote en la documentación contenida en documentos, quiero que documentes 3 de los tickets de trabajo principales del desarrollo de la historia de usuario HU-01. Uno del backend, uno del frontend y uno de la base de datos. Incluye todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. El resultado documentalo en tickets.md dentro de documentos.
+Si tienes alguna duda pregunta
 
 **Prompt 2:**
 
