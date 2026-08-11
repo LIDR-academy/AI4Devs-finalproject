@@ -215,6 +215,27 @@ project. Read it at the start of every session.
   devuelve también `permissions[]` (conveniencia de interfaz; el servidor los
   recomprueba en cada petición). Tests: la matriz completa, permitidos **y**
   denegados, más la invariante admin ⊇ operador y "sin rol, ningún permiso".
+- **Tarea 2.3 hecha — baja de copia solo admin (2026-08-11):** `POST
+  /api/copies/{copyId}/retire`. El permiso se comprueba **dos veces**: en el borde
+  (`requirePermission("copy.retire")`) y dentro del caso de uso, porque
+  `retireCopy` también es invocable desde el scheduler u otro caso de uso, donde no
+  hay handler que haya filtrado. **Primer uso real del patrón CAS de D12**: el
+  adaptador Prisma lee el estado, hace `updateMany({where:{id, state: leído}})` y si
+  `count === 0` devuelve conflicto → 409 `COPY_STATE_CONFLICT`; la
+  `CopyStateTransition` se escribe en la **misma transacción** que la baja.
+  El repositorio devuelve un **tipo discriminado** (`retired | not_found |
+  already_retired | conflict`) en vez de lanzar: quién traduce eso a HTTP es el caso
+  de uso. Motivo de baja **obligatorio** (mín. 3 caracteres): es parte del rastro de
+  auditoría, no un adorno. `src/domain/copy/lifecycle.ts` declara los 9 estados y
+  `canRetire` (cualquiera salvo `BAJA`, terminal) — la tabla completa de transiciones
+  es la 3.2.
+  **Verificado en caliente:** 403 al operador (sin tocar la BD), 401 sin sesión, 422
+  sin motivo, baja correcta con `retiredAt` y auditoría (autor + motivo + fecha), 409
+  al repetir, y **carrera de 5 peticiones simultáneas → 1 baja, 4 conflictos y una
+  sola fila de auditoría**.
+  **Aviso para pruebas manuales:** Git Bash en este equipo envía los literales
+  no-ASCII mal codificados; para probar acentos hay que mandar el payload con
+  `--data-binary @fichero`. La app sí maneja UTF-8 correctamente (comprobado).
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -222,9 +243,9 @@ project. Read it at the start of every session.
 - _(Ninguna abierta.)_ Arquitectura, hosting, auth, UI, tests y versión de Prisma
   cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
-  (autenticación) y 2.2 (matriz de permisos) hechas. Siguiente: 2.3 (baja de copia
-  restringida a admin), que ya tiene su permiso `copy.retire` y su guarda
-  `requirePermission`; falta la acción de dominio sobre `Copy`.
+  (autenticación), 2.2 (matriz de permisos) y 2.3 (baja de copia solo admin) hechas.
+  Siguiente: 2.4 (auditoría "quién/cuándo" generalizada — la transición a `BAJA` ya la
+  registra; falta el `AuditLog` genérico de acciones admin).
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle
