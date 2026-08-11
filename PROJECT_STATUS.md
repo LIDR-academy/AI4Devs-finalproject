@@ -1,16 +1,16 @@
 # PROJECT_STATUS — INKSPIRE
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-23 — 🏷️ **[v1.1.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.1.0)** publicado: rediseño Figma Premium mergeado a main + rebrand INKSPIRE + fix de puerto Postgres (5434) + análisis competitivo LatAm (PRs #24, #25, #27).
+> Última actualización: 2026-08-11 — 🏷️ **[v1.2.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.2.0)** publicado: rama de entrega final (`finalproject-RACC`) consolidada en `main` + **guía de despliegue** (`docs/despliegue.md`) con 3 opciones de hosting comparadas y los 7 ajustes de código previos al deploy + plantilla del PR de cierre (`docs/pr-entrega-final.md`).
 > **Fixes aplicados (sesión 2026-07-18):** issues 008–019 resueltos (imágenes, scroll, carrusel, pagos, mapa, cuenta, reseñas, chatbot general, reserva con JWT expirado).
-> Hito previo: 🏷️ **[v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0)** (backlog completo 13 US / 80 SP · 235 tests en verde · Flow validado e2e contra sandbox · documentación de entrega consolidada — PRs #21 y #22)
+> Hitos previos: 🏷️ **[v1.1.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.1.0)** (rediseño Figma Premium + rebrand INKSPIRE + fix de puerto Postgres 5434 + análisis competitivo LatAm — PRs #24, #25, #27) · 🏷️ **[v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0)** (backlog completo 13 US / 80 SP · 235 tests en verde · Flow validado e2e contra sandbox · documentación de entrega consolidada — PRs #21 y #22)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
 
 | Aspecto | Estado |
 |---|---|
-| Versión estable | 🏷️ **v1.1.0** (tag + release en GitHub, 2026-07-23) — anterior: [v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0) |
+| Versión estable | 🏷️ **v1.2.0** (tag + release en GitHub, 2026-08-11) — anteriores: [v1.1.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.1.0) · [v1.0.0](https://github.com/rchamycruz/AI4Devs-finalproject/releases/tag/v1.0.0) |
 | Entrega 1 (documentación) | ✅ Completa (inconsistencias de `fixs/issue-004.md` resueltas; notas de vigencia en `docs/documentacion.md` — PR #22) |
 | Entrega 2 (implementación) | ✅ **Backlog completo** — Fase 0 + las 13 US (9 Must-Have 52 SP + 4 Should-Have 28 SP) mergeadas a main |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
@@ -19,6 +19,7 @@
 | Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web; perfil `seed-images` para imágenes de muestra) |
 | CI/CD | ✅ `.github/workflows/ci.yml` (build + tests backend y frontend) |
 | API oficial | ✅ `docs/api-spec.yml` v2.0.0 sincronizada con backlog y modelo |
+| Despliegue a producción | ⬜ Pendiente — guía comparativa y plan listos en `docs/despliegue.md` (opción recomendada: Netlify + Render + Neon + Cloudflare R2, ≈US$ 0/mes + dominio) |
 
 ## Estado por Historia de Usuario
 
@@ -71,6 +72,8 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 |---|---|
 | `readme.md` | Ficha del proyecto, descripción del producto y secciones 2–7 de la entrega (incluye tarjetas de prueba del sandbox en §2.6) |
 | `docs/flow-sandbox-testing.md` | Guía de pruebas del sandbox de Flow: levantar proyecto, credenciales, flujo e2e |
+| `docs/despliegue.md` | **Guía de despliegue**: inventario de piezas, 3 opciones de hosting comparadas, los 7 ajustes de código previos y pasos de puesta en producción |
+| `docs/pr-entrega-final.md` | Título y body listos para abrir el PR de cierre del proyecto |
 | `docs/documentacion.md` | Documentación técnica v1: Lean Canvas, casos de uso, modelo, C4 |
 | `docs/data-model.md` | Modelo de datos vigente (13 entidades) |
 | `docs/api-spec.yml` | **Especificación oficial de la API** (OpenAPI 3.0) |
@@ -86,5 +89,6 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **Preparación de la entrega final**: revisar y consolidar la documentación (`readme.md` §2–7, diagramas, PRs enumerados en §7) y grabar/preparar la demo
-2. **Mejoras opcionales (post-backlog)**: `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`) · `fixs/issue-005.md` (foto de reseña no se persiste) · upload de imágenes de referencia del chatbot a Object Storage (misma limitación que issue-005)
+1. **Despliegue a producción**: aplicar los 7 ajustes de código de `docs/despliegue.md` §5 (URL base de imágenes hardcodeada, CORS, puerto dinámico, migraciones + `CREATE EXTENSION postgis` + seed, secretos por variables de entorno) y publicar con la opción A
+2. **Entrega final**: abrir el PR de cierre usando `docs/pr-entrega-final.md`, revisar `readme.md` §2–7 (diagramas, PRs de §7) y grabar la demo
+3. **Mejoras opcionales (post-backlog)**: `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`) · `fixs/issue-005.md` (foto de reseña no se persiste) · upload de imágenes de referencia del chatbot a Object Storage (misma limitación que issue-005)
