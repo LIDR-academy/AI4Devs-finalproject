@@ -466,7 +466,7 @@ Una vez levantado el proyecto, entra en **http://localhost:4200** y usa cualquie
 
 > ⚠️ Estas credenciales **solo existen en el entorno local** que crea `dotnet run --seed` ([`backend/Seed/DatabaseSeeder.cs`](backend/Seed/DatabaseSeeder.cs)). No son cuentas de ningún entorno real.
 >
-> El seed incluye además un cliente con un correo real del autor, necesario porque el sandbox de Flow valida el email del pagador y rechaza los dominios `@example.cl` (error 1620). Solo es relevante si vas a probar pagos reales contra el sandbox; para todo lo demás, usa las cuentas de la tabla.
+> Para probar **pagos reales contra el sandbox de Flow** necesitas una cuenta con un correo real: Flow valida el email del pagador y rechaza los dominios `@example.cl` (error 1620). Cambia el email de cualquier cliente del seed por uno propio antes de esa prueba. Para todo lo demás, las cuentas de la tabla funcionan tal cual.
 
 **Pruebas de pago contra el sandbox de Flow**: flujo end-to-end, configuración segura de credenciales (nunca en el repo) y confirmación manual del webhook en local: **[docs/flow-sandbox-testing.md](docs/flow-sandbox-testing.md)**. Tarjetas de prueba (Webpay/Transbank, ambiente de integración):
 

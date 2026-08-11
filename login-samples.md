@@ -19,11 +19,10 @@ Rol recomendado para recorrer el producto completo (buscar → comparar → coti
 | Tomás Muñoz | `tomas.munoz@example.cl` | Client |
 | Javiera Rojas | `javiera.rojas@example.cl` | Client |
 | Camilo Reyes | `camilo.reyes@example.cl` | Client |
-| Rodrigo Chamy | `rodrigo@syntaxis.cl` | Client |
 
 **Qué datos trae cada cliente**: reservas completadas **con** reseña (visibles en *Mis reservas*) y **una reserva completada sin reseña**, para probar el flujo de calificación (US0013) sin tener que reservar y pagar primero.
 
-> ℹ️ `rodrigo@syntaxis.cl` es un correo real del autor y está en el seed a propósito: el sandbox de Flow valida el email del pagador y rechaza los dominios `@example.cl` (error 1620). Úsalo **solo** si vas a probar pagos reales contra el sandbox; para todo lo demás, cualquier cliente de la tabla sirve.
+> ℹ️ **Pagos reales contra el sandbox de Flow**: Flow valida el email del pagador y rechaza los dominios `@example.cl` (error 1620), así que esa prueba concreta necesita una cuenta con un correo real. Cambia el email de cualquier cliente del seed por uno propio (en `DatabaseSeeder.cs` antes de sembrar, o con un `UPDATE` sobre la tabla `users`). Ver [docs/flow-sandbox-testing.md](docs/flow-sandbox-testing.md).
 
 ---
 
