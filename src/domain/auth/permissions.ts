@@ -28,7 +28,9 @@ export const PERMISSIONS = [
   "offer.respond",
   "return.initiate",
 
-  // Operación del inventario.
+  // Operación del inventario y del catálogo.
+  "set.manage",
+  "set.publish",
   "copy.create",
   "copy.advance_lifecycle",
   "incident.mark",
@@ -56,6 +58,9 @@ const SUBSCRIBER_PERMISSIONS = [
 
 const OPERATOR_PERMISSIONS = [
   "backoffice.access",
+  // Catalogar sets es trabajo de inventario; **publicarlos** no, porque decide qué ve
+  // el público y la spec lo pone en manos del admin.
+  "set.manage",
   "copy.create",
   "copy.advance_lifecycle",
   "incident.mark",
@@ -70,6 +75,8 @@ const OPERATOR_PERMISSIONS = [
  */
 const ADMIN_PERMISSIONS = [
   ...OPERATOR_PERMISSIONS,
+  // "WHEN el admin intenta publicar un Set…" (spec `catalog-inventory`).
+  "set.publish",
   "customer.read_full",
   // Decisión con impacto económico: el operador detecta y marca, el admin confirma (D6).
   "copy.retire",

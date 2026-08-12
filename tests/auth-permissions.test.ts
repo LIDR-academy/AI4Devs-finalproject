@@ -23,6 +23,9 @@ const MATRIX: Record<Permission, readonly Role[]> = {
   "offer.respond": ["SUBSCRIBER"],
   "return.initiate": ["SUBSCRIBER"],
 
+  "set.manage": ["OPERATOR", "ADMIN"],
+  // Publicar decide qué ve el público: la spec lo reserva al admin.
+  "set.publish": ["ADMIN"],
   "copy.create": ["OPERATOR", "ADMIN"],
   "copy.advance_lifecycle": ["OPERATOR", "ADMIN"],
   "incident.mark": ["OPERATOR", "ADMIN"],

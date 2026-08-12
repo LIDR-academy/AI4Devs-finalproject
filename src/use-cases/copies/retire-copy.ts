@@ -1,21 +1,16 @@
-import { can } from "@/domain/auth/permissions";
-import type { Role } from "@/domain/auth/roles";
 import type { CopyState } from "@/domain/copy/lifecycle";
-import {
-  ForbiddenError,
-  InvariantViolationError,
-  NotFoundError,
-} from "@/domain/errors";
-import type { CopyRepository } from "@/repositories/copy.repository";
 
-export interface RetireCopyDeps {
-  repository: CopyRepository;
-  now?: () => Date;
-}
+import {
+  transitionCopy,
+  type TransitionCopyDeps,
+  type TransitionCopyInput,
+} from "./transition-copy";
+
+export type RetireCopyDeps = TransitionCopyDeps;
 
 export interface RetireCopyInput {
   copyId: string;
-  actor: { id: string; role: Role };
+  actor: TransitionCopyInput["actor"];
   /** Causa de la baja: daño irreparable, pérdida o sustracción (HU-15). */
   reason: string;
 }
@@ -28,42 +23,22 @@ export interface RetireCopyResult {
 /**
  * Da de baja una copia — **solo ADMIN** (D6, HU-15).
  *
- * El permiso se comprueba aquí y no solo en el borde HTTP: este caso de uso también
- * es invocable desde el scheduler o desde otro caso de uso, donde no hay handler que
- * haya filtrado nada. La comprobación del handler es la primera barrera; esta es la
- * que no se puede rodear.
+ * Es la transición a `BAJA` de la máquina de estados, no un camino aparte: pasa por
+ * la misma tabla, el mismo CAS y la misma auditoría que el resto. Se conserva como
+ * caso de uso propio porque la baja tiene endpoint y semántica propios, pero toda la
+ * lógica —incluido que solo se puede retirar desde `EN_INSPECCION`, `INCOMPLETA` o
+ * `ALQUILADA`— vive en un único sitio.
  */
 export async function retireCopy(
-  { repository, now = () => new Date() }: RetireCopyDeps,
+  deps: RetireCopyDeps,
   input: RetireCopyInput
 ): Promise<RetireCopyResult> {
-  if (!can(input.actor.role, "copy.retire")) {
-    // El operador detecta y marca la copia como incompleta o dañada; confirmar la
-    // baja —que tiene impacto económico— es del admin.
-    throw new ForbiddenError("Solo un administrador puede dar de baja una copia.");
-  }
-
-  const result = await repository.retire({
+  const result = await transitionCopy(deps, {
     copyId: input.copyId,
-    actorId: input.actor.id,
+    toState: "BAJA",
+    actor: input.actor,
     reason: input.reason,
-    at: now(),
   });
 
-  switch (result.outcome) {
-    case "retired":
-      return { copyId: input.copyId, fromState: result.fromState };
-    case "not_found":
-      throw new NotFoundError("La copia no existe.");
-    case "already_retired":
-      throw new InvariantViolationError(
-        "COPY_STATE_CONFLICT",
-        "La copia ya está dada de baja."
-      );
-    case "conflict":
-      throw new InvariantViolationError(
-        "COPY_STATE_CONFLICT",
-        "El estado de la copia ha cambiado; vuelve a intentarlo."
-      );
-  }
+  return { copyId: result.copyId, fromState: result.fromState };
 }

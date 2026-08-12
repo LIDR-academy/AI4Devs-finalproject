@@ -1,4 +1,4 @@
-import type { PublicSet } from "@/domain/catalog/public-projection";
+import type { AuthenticatedSet, PublicSet } from "@/domain/catalog/public-projection";
 
 /** Puerto de lectura del catálogo (capability `catalog-inventory`). */
 
@@ -24,6 +24,16 @@ export interface CatalogRepository {
   }>;
 
   findPublicSetById(id: string): Promise<PublicSet | null>;
+
+  /**
+   * Igual que `findPublicSetById` pero con disponibilidad y cola, para quien tiene
+   * sesión. Recibe el usuario porque la **posición en cola es suya**: es el único dato
+   * de la proyección que depende de quién pregunta.
+   */
+  findAuthenticatedSetById(input: {
+    setId: string;
+    userId: string;
+  }): Promise<AuthenticatedSet | null>;
 
   /** Planes activos con sus condiciones, visibles sin sesión. */
   listPublicPlans(): Promise<readonly PublicPlan[]>;

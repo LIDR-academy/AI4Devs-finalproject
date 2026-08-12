@@ -1,55 +1,40 @@
 import { z } from "zod";
 
-import { ValidationError } from "@/domain/errors";
-import { requirePermission } from "@/http/auth-context";
+import { requireSession } from "@/http/auth-context";
+import { parseJsonBody } from "@/http/parse-body";
 import { toProblemResponse } from "@/http/problem";
 import { prismaCopyRepository } from "@/repositories/copy.repository.prisma";
 import { retireCopy } from "@/use-cases/copies/retire-copy";
 
 const RetireSchema = z.object({
-  // Obligatoria: la baja tiene impacto económico y su motivo es parte del rastro de
-  // auditoría, no un adorno. Sin motivo, el registro no explicaría nada.
+  // Obligatoria, a diferencia del endpoint genérico de transiciones: la baja tiene
+  // impacto económico y su motivo es parte del rastro de auditoría, no un adorno.
   reason: z.string().trim().min(3, "Indica el motivo de la baja."),
 });
 
+/**
+ * Da de baja una copia — solo admin (HU-15).
+ *
+ * Es la transición a `BAJA` de la máquina de estados, con endpoint propio por su
+ * semántica: exige motivo y solo se puede llegar desde `EN_INSPECCION`, `INCOMPLETA` o
+ * `ALQUILADA` (PRD §15.5). La lógica vive en `transitionCopy`, no duplicada aquí.
+ */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ copyId: string }> }
 ) {
   const { copyId } = await params;
-  const instance = `/api/copies/${copyId}/retire`;
-
   try {
-    const session = await requirePermission("copy.retire");
-
-    const raw: unknown = await request.json().catch(() => {
-      throw new ValidationError(
-        [{ field: "body", issue: "Se esperaba un cuerpo JSON." }],
-        "Petición mal formada."
-      );
-    });
-
-    const parsed = RetireSchema.safeParse(raw);
-    if (!parsed.success) {
-      throw new ValidationError(
-        parsed.error.issues.map((issue) => ({
-          field: issue.path.join(".") || "body",
-          issue: issue.message,
-        }))
-      );
-    }
+    const { user } = await requireSession();
+    const { reason } = await parseJsonBody(request, RetireSchema);
 
     const result = await retireCopy(
       { repository: prismaCopyRepository },
-      {
-        copyId,
-        actor: { id: session.user.id, role: session.user.role },
-        reason: parsed.data.reason,
-      }
+      { copyId, actor: { id: user.id, role: user.role }, reason }
     );
 
     return Response.json({ copyId: result.copyId, from: result.fromState, state: "BAJA" });
   } catch (error) {
-    return toProblemResponse(error, instance);
+    return toProblemResponse(error, `/api/copies/${copyId}/retire`);
   }
 }

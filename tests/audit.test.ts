@@ -1,36 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  AUDIT_ACTIONS,
-  AUDIT_ENTITY_TYPES,
-  type AuditEntry,
-} from "@/domain/audit/actions";
-import type { AuditRepository } from "@/repositories/audit.repository";
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/domain/audit/actions";
 
-/** Doble en memoria del puerto de auditoría. */
-class FakeAuditRepository implements AuditRepository {
-  readonly entries: Array<AuditEntry & { id: string }> = [];
-  private sequence = 0;
-
-  async record(entry: AuditEntry) {
-    this.entries.push({ id: `audit-${++this.sequence}`, ...entry });
-  }
-
-  async findByEntity({
-    entityType,
-    entityId,
-    limit = 50,
-  }: {
-    entityType: AuditEntry["entityType"];
-    entityId: string;
-    limit?: number;
-  }) {
-    return this.entries
-      .filter((e) => e.entityType === entityType && e.entityId === entityId)
-      .sort((a, b) => b.at.getTime() - a.at.getTime())
-      .slice(0, limit);
-  }
-}
+import { FakeAuditRepository } from "./fakes/audit-repository";
 
 const ADMIN = "admin-1";
 

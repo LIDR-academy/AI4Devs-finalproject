@@ -267,7 +267,10 @@ model Set {
   pieceCount     Int
   recommendedAge String? // curado a mano para el subconjunto semilla
   difficulty     String? // curado a mano
-  referenceValue Decimal @db.Decimal(10, 2) // base para alquiler puntual y reclamaciones
+  // Opcional a propósito: un Set puede catalogarse antes de tasarlo, pero **no puede
+  // publicarse sin este dato** (spec `catalog-inventory`). Si fuese obligatorio en la
+  // base, esa regla de negocio no existiría — sería imposible llegar a infringirla.
+  referenceValue Decimal? @db.Decimal(10, 2) // base para alquiler puntual y reclamaciones
   boxPhotoUrl    String?
   restricted     Boolean @default(false) // sujeto a antigüedad mínima
   published      Boolean @default(false)

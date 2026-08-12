@@ -1,4 +1,4 @@
-import type { PublicSet } from "@/domain/catalog/public-projection";
+import type { AuthenticatedSet, PublicSet } from "@/domain/catalog/public-projection";
 import { NotFoundError } from "@/domain/errors";
 import type { CatalogRepository, PublicPlan } from "@/repositories/catalog.repository";
 
@@ -49,6 +49,22 @@ export async function viewPublicSet(
   id: string
 ): Promise<PublicSet> {
   const set = await repository.findPublicSetById(id);
+  if (!set) throw new NotFoundError("El set no existe o no está publicado.");
+  return set;
+}
+
+/**
+ * Detalle de un Set para quien tiene sesión: lo público **más** disponibilidad y cola.
+ *
+ * Un mismo Set, dos proyecciones, y la elección entre ellas la hace el llamante según
+ * haya sesión o no. Devolver una u otra desde el mismo caso de uso con un `if` interno
+ * sería mucho más fácil de equivocar.
+ */
+export async function viewSetAsSubscriber(
+  { repository }: CatalogDeps,
+  input: { setId: string; userId: string }
+): Promise<AuthenticatedSet> {
+  const set = await repository.findAuthenticatedSetById(input);
   if (!set) throw new NotFoundError("El set no existe o no está publicado.");
   return set;
 }

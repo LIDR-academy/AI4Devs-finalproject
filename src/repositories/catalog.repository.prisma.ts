@@ -67,6 +67,40 @@ export const prismaCatalogRepository: CatalogRepository = {
     return row ? toPublicSet(row) : null;
   },
 
+  async findAuthenticatedSetById({ setId, userId }) {
+    const row = await prisma.set.findFirst({
+      where: { id: setId, ...PUBLISHED },
+      select: { ...PUBLIC_SET_SELECT, restricted: true },
+    });
+    if (!row) return null;
+
+    const { restricted, ...publicPart } = row;
+
+    // La cola se lee ordenada por entrada efectiva (D11) y se busca la posición del
+    // usuario en memoria: son unas pocas filas por set y así el orden es exactamente
+    // el mismo que usa el motor de ofertas, sin duplicar el criterio en SQL.
+    const [availableCopies, totalCopies, queue] = await Promise.all([
+      prisma.copy.count({ where: { setId, state: "DISPONIBLE" } }),
+      prisma.copy.count({ where: { setId, state: { not: "BAJA" } } }),
+      prisma.reservationQueueEntry.findMany({
+        where: { setId, status: { in: ["WAITING", "OFFERED"] } },
+        select: { userId: true },
+        orderBy: [{ effectiveEntryAt: "asc" }, { id: "asc" }],
+      }),
+    ]);
+
+    const index = queue.findIndex((entry) => entry.userId === userId);
+
+    return {
+      ...toPublicSet(publicPart),
+      availableCopies,
+      totalCopies,
+      queueLength: queue.length,
+      queuePosition: index === -1 ? null : index + 1,
+      restricted,
+    };
+  },
+
   async listPublicPlans() {
     const rows = await prisma.plan.findMany({
       where: { active: true },
@@ -84,7 +118,8 @@ export const prismaCatalogRepository: CatalogRepository = {
       (row): PublicPlan => ({
         code: row.code,
         name: row.name,
-        monthlyPrice: row.monthlyPrice.toString(),
+        // `toFixed(2)` y no `toString()`: este último daría "15" para 15.00.
+        monthlyPrice: row.monthlyPrice.toFixed(2),
         maxSimultaneousSets: row.maxSimultaneousSets,
         queueBonusDays: row.queueBonus,
       })

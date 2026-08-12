@@ -2,29 +2,44 @@ import type { CopyState } from "@/domain/copy/lifecycle";
 
 /** Puerto de persistencia de las copias (capability `catalog-inventory`). */
 
+export interface CopySummary {
+  id: string;
+  setId: string;
+  state: CopyState;
+  acquiredAt: Date;
+  retiredAt: Date | null;
+}
+
 /**
- * Resultado de una retirada. Es un tipo **discriminado** en vez de excepciones
- * porque cada desenlace se traduce a una respuesta HTTP distinta y quien decide eso
- * es el caso de uso, no el repositorio.
+ * Resultado de una transición. Tipo **discriminado** en vez de excepciones porque
+ * cada desenlace se traduce a una respuesta HTTP distinta y quien decide eso es el
+ * caso de uso, no el repositorio.
  */
-export type RetireCopyOutcome =
-  | { outcome: "retired"; fromState: CopyState }
+export type TransitionCopyOutcome =
+  | { outcome: "transitioned"; fromState: CopyState }
   | { outcome: "not_found" }
-  /** Ya estaba de baja: la precondición no se cumple de entrada. */
-  | { outcome: "already_retired" }
+  /** El estado leído no admite esa transición (tabla de PRD §15.5). */
+  | { outcome: "invalid_transition"; fromState: CopyState }
   /** Otro proceso cambió el estado entre la lectura y la escritura (CAS, D12). */
   | { outcome: "conflict" };
 
 export interface CopyRepository {
+  findById(copyId: string): Promise<CopySummary | null>;
+
+  listBySet(setId: string): Promise<readonly CopySummary[]>;
+
+  create(input: { setId: string; acquiredAt: Date }): Promise<CopySummary>;
+
   /**
-   * Transita una copia a `BAJA` de forma **atómica y condicionada al estado leído**
+   * Mueve una copia de estado de forma **atómica y condicionada al estado leído**
    * (compare-and-swap, D12), registrando la transición con su autor en el mismo
-   * movimiento: la copia nunca queda retirada sin su rastro de auditoría.
+   * movimiento: una copia nunca cambia de estado sin dejar rastro de quién la movió.
    */
-  retire(input: {
+  transition(input: {
     copyId: string;
+    toState: CopyState;
     actorId: string;
-    reason: string;
+    reason: string | null;
     at: Date;
-  }): Promise<RetireCopyOutcome>;
+  }): Promise<TransitionCopyOutcome>;
 }

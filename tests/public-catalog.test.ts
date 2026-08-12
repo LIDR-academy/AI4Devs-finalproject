@@ -11,6 +11,7 @@ import {
   browsePublicCatalog,
   listMembershipPlans,
   viewPublicSet,
+  viewSetAsSubscriber,
   MAX_PAGE_SIZE,
 } from "@/use-cases/catalog/browse-public-catalog";
 
@@ -43,6 +44,19 @@ function fakeRepository(options: { published?: PublicSet[]; total?: number } = {
     },
     async findPublicSetById(id) {
       return published.find((s) => s.id === id) ?? null;
+    },
+    async findAuthenticatedSetById({ setId, userId }) {
+      const set = published.find((s) => s.id === setId);
+      if (!set) return null;
+      return {
+        ...set,
+        availableCopies: 2,
+        totalCopies: 3,
+        queueLength: 4,
+        // Solo "ana" está en la cola, en tercera posición.
+        queuePosition: userId === "ana" ? 3 : null,
+        restricted: true,
+      };
     },
     async listPublicPlans() {
       return PLANS;
@@ -126,6 +140,56 @@ describe("detalle público de un Set", () => {
     const { repository } = fakeRepository({ published: [] });
     await expect(viewPublicSet({ repository }, "set-1")).rejects.toBeInstanceOf(NotFoundError);
     await expect(viewPublicSet({ repository }, "no-existe")).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("proyección autenticada frente a la pública", () => {
+  it("añade disponibilidad y cola sobre lo que ya veía el visitante", async () => {
+    const { repository } = fakeRepository();
+    const authenticated = await viewSetAsSubscriber({ repository }, { setId: "set-1", userId: "ana" });
+    const publicSet = await viewPublicSet({ repository }, "set-1");
+
+    // Todo lo público sigue estando, con el mismo valor.
+    for (const [key, value] of Object.entries(publicSet)) {
+      expect(authenticated[key as keyof typeof publicSet]).toEqual(value);
+    }
+    expect(authenticated).toMatchObject({
+      availableCopies: 2,
+      totalCopies: 3,
+      queueLength: 4,
+    });
+  });
+
+  it("da la posición en cola de quien pregunta, y null si no está encolado", async () => {
+    const { repository } = fakeRepository();
+    const ana = await viewSetAsSubscriber({ repository }, { setId: "set-1", userId: "ana" });
+    const bruno = await viewSetAsSubscriber({ repository }, { setId: "set-1", userId: "bruno" });
+
+    expect(ana.queuePosition).toBe(3);
+    expect(bruno.queuePosition).toBeNull();
+    // La longitud de la cola sí es la misma para ambos: es un dato del set.
+    expect(bruno.queueLength).toBe(ana.queueLength);
+  });
+
+  it("no expone el estado de cada copia, solo cuántas hay", async () => {
+    const { repository } = fakeRepository();
+    const set = await viewSetAsSubscriber({ repository }, { setId: "set-1", userId: "ana" });
+    // Qué copia está en higienización es back-office, no información de suscriptor.
+    expect(Object.keys(set)).not.toContain("copies");
+    expect(Object.keys(set)).not.toContain("state");
+  });
+
+  it("tampoco revela el valor de referencia a un suscriptor", async () => {
+    const { repository } = fakeRepository();
+    const set = await viewSetAsSubscriber({ repository }, { setId: "set-1", userId: "ana" });
+    expect(Object.keys(set)).not.toContain("referenceValue");
+  });
+
+  it("un set sin publicar es 404 también para quien tiene sesión", async () => {
+    const { repository } = fakeRepository({ published: [] });
+    await expect(
+      viewSetAsSubscriber({ repository }, { setId: "set-1", userId: "ana" })
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 });
 

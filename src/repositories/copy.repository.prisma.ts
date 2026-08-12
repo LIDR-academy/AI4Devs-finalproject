@@ -1,11 +1,22 @@
 import { prisma } from "@/db/prisma";
-import { canRetire, type CopyState } from "@/domain/copy/lifecycle";
-import type { CopyRepository, RetireCopyOutcome } from "@/repositories/copy.repository";
+import { canTransition, type CopyState } from "@/domain/copy/lifecycle";
+import type {
+  CopyRepository,
+  CopySummary,
+  TransitionCopyOutcome,
+} from "@/repositories/copy.repository";
 
 /** Adaptador Prisma del puerto `CopyRepository`. */
 
-/** Cliente dentro de una transacción de Prisma. */
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+const COPY_SELECT = {
+  id: true,
+  setId: true,
+  state: true,
+  acquiredAt: true,
+  retiredAt: true,
+} as const;
 
 /**
  * **Único camino** por el que cambia el estado de una copia.
@@ -13,8 +24,8 @@ type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
  * Une en un solo movimiento las dos cosas que nunca deben separarse: el
  * compare-and-swap de D12 y el registro de auditoría de PRD §7. Mientras todas las
  * transiciones pasen por aquí, es imposible dejar una copia en un estado nuevo sin
- * saber quién la movió — y como la firma exige `actorId`, tampoco se puede registrar
- * de forma anónima.
+ * saber quién la movió — y como la firma exige `actorId`, tampoco cabe registrarla de
+ * forma anónima.
  *
  * Devuelve `false` si la precondición de estado falló; quien llama decide qué error
  * de dominio corresponde.
@@ -28,7 +39,6 @@ async function applyTransition(
     actorId: string;
     reason: string | null;
     at: Date;
-    /** Campos extra de la copia que acompañan a la transición (p. ej. `retiredAt`). */
     copyData?: Record<string, unknown>;
   }
 ): Promise<boolean> {
@@ -56,9 +66,33 @@ async function applyTransition(
 }
 
 export const prismaCopyRepository: CopyRepository = {
-  async retire({ copyId, actorId, reason, at }): Promise<RetireCopyOutcome> {
-    // Transacción: la baja y su auditoría entran juntas o no entra ninguna. Una copia
-    // retirada sin rastro de quién fue sería peor que no retirarla.
+  async findById(copyId) {
+    const copy = await prisma.copy.findUnique({ where: { id: copyId }, select: COPY_SELECT });
+    return copy as CopySummary | null;
+  },
+
+  async listBySet(setId) {
+    const copies = await prisma.copy.findMany({
+      where: { setId },
+      select: COPY_SELECT,
+      orderBy: { acquiredAt: "asc" },
+    });
+    return copies as CopySummary[];
+  },
+
+  async create({ setId, acquiredAt }) {
+    // Toda copia nace en INTAKE (PRD §15.5): es el estado inicial de la máquina, y el
+    // `default` del modelo lo respalda.
+    const copy = await prisma.copy.create({
+      data: { setId, acquiredAt },
+      select: COPY_SELECT,
+    });
+    return copy as CopySummary;
+  },
+
+  async transition({ copyId, toState, actorId, reason, at }): Promise<TransitionCopyOutcome> {
+    // Transacción: el cambio de estado y su auditoría entran juntos o no entra
+    // ninguno. Una copia movida sin rastro de quién fue sería peor que no moverla.
     return prisma.$transaction(async (tx) => {
       const copy = await tx.copy.findUnique({
         where: { id: copyId },
@@ -67,20 +101,24 @@ export const prismaCopyRepository: CopyRepository = {
       if (!copy) return { outcome: "not_found" as const };
 
       const fromState = copy.state as CopyState;
-      if (!canRetire(fromState)) return { outcome: "already_retired" as const };
+      if (!canTransition(fromState, toState)) {
+        return { outcome: "invalid_transition" as const, fromState };
+      }
 
       const applied = await applyTransition(tx, {
         copyId,
         fromState,
-        toState: "BAJA",
+        toState,
         actorId,
         reason,
         at,
-        copyData: { retiredAt: at },
+        // La baja marca además la fecha de retirada; el resto de transiciones solo
+        // cambian el estado.
+        copyData: toState === "BAJA" ? { retiredAt: at } : undefined,
       });
       if (!applied) return { outcome: "conflict" as const };
 
-      return { outcome: "retired" as const, fromState };
+      return { outcome: "transitioned" as const, fromState };
     });
   },
 };

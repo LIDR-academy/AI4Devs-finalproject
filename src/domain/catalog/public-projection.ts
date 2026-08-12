@@ -44,3 +44,26 @@ export const PUBLIC_SET_FIELDS = [
  * detalle estético.
  */
 export const NON_PUBLIC_SET_FIELDS = ["referenceValue", "published", "restricted"] as const;
+
+/**
+ * Proyección **autenticada**: lo mismo que ve el visitante **más** la disponibilidad
+ * y la situación de la cola (spec `catalog-inventory`).
+ *
+ * Sigue sin exponer el estado de cada `Copy` una por una —eso es back-office—: al
+ * suscriptor le sirve saber *cuántas* hay libres, no cuál está en higienización.
+ */
+export interface AuthenticatedSet extends PublicSet {
+  /** Copias listas para prestar ahora mismo. */
+  availableCopies: number;
+  /** Copias en circulación (sin contar las dadas de baja). */
+  totalCopies: number;
+  /** Cuánta gente espera por este set. */
+  queueLength: number;
+  /**
+   * Posición de quien pregunta en la cola, empezando en 1; `null` si no está
+   * encolado. Nunca revela quién ocupa las demás posiciones.
+   */
+  queuePosition: number | null;
+  /** Si el set exige antigüedad mínima de suscripción (D7). */
+  restricted: boolean;
+}

@@ -294,6 +294,34 @@ project. Read it at the start of every session.
   congelaba unos precios que el admin puede cambiar (D9); de paso, `next build` deja de
   necesitar base de datos.
   **Estado: 111 tests / 12 ficheros**, con los cinco casos que pide 2.7 cubiertos.
+- **Bloque 3 completo — `catalog-inventory` (2026-08-12):**
+  **Corrección importante de la 2.3:** aquella permitía dar de baja desde *cualquier*
+  estado salvo `BAJA`. La tabla de **PRD §15.5** solo contempla la baja desde
+  `EN_INSPECCION`, `INCOMPLETA` y `ALQUILADA`, y la spec dice que se rechaza toda
+  transición no contemplada. Ahora `canRetireFrom` deriva de la tabla. **Consecuencia:
+  una copia `DISPONIBLE` que aparece rota NO se retira de golpe** — pasa por el camino
+  de inspección, que es donde queda registrado el porqué. Si se quisiera una baja
+  directa desde almacén, habría que **cambiar la spec**, no el código.
+  Por lo mismo, el **seed ya no siembra `INCOMPLETA` ni `BAJA`**: a esos estados solo
+  se llega pasando por un alquiler, así que sembrarlos creaba copias con un historial
+  imposible. Ahora siembra `INTAKE` (11) y `DISPONIBLE` (48) — las de `INTAKE` son
+  trabajo real de catalogación para el operador.
+  **Piezas:** `COPY_TRANSITIONS` (14 transiciones con motivo, `driver` y permiso) es la
+  fuente única; `transitionCopy` lee el estado → identifica la transición → comprueba
+  **ese** permiso → CAS. No se puede validar el permiso antes de leer, porque depende
+  del par origen→destino. Las transiciones con `driver: "system"` (cola y alquiler)
+  **se rechazan desde el endpoint de back-office** aunque las pida un admin: moverlas a
+  mano dejaría una copia `ALQUILADA` sin alquiler detrás.
+  `POST /api/copies/{id}/transitions` es el endpoint genérico; `/retire` se mantiene
+  por su semántica (motivo obligatorio) pero **delega** en `transitionCopy`.
+  **`Set.referenceValue` ahora es opcional** (migración): si la base lo exigiera, la
+  regla "no se publica sin valor de referencia" sería inalcanzable. Publicar/retirar
+  del catálogo escribe `AuditLog` — **primeros emisores** del registro creado en 2.4.
+  **Decimales:** usar `toFixed(2)` y no `toString()` al sacar un `Decimal` de Prisma;
+  `toString()` devuelve `"99.9"` para 99.90.
+  **Trampa de migración:** `npm run db:migrate -- --name X` **se cuelga** (el `--` con
+  el `&&` del script). Camino fiable: `npx prisma migrate dev --name X --create-only`,
+  revisar el SQL, `npx prisma migrate deploy` y `npx prisma generate`.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -303,8 +331,9 @@ project. Read it at the start of every session.
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
-  **bloque 2 completo**. Siguiente: bloque 3 (`catalog-inventory`), empezando por 3.1
-  (CRUD de Set y Copia). Reutilizar `applyTransition` para cualquier cambio de estado.
+  **bloque 2 completo**. **Bloque 3 (`catalog-inventory`) completo** también.
+  Siguiente: bloque 4 (`subscriptions`). Para cualquier cambio de estado de una copia,
+  usar `transitionCopy` / `applyTransition`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

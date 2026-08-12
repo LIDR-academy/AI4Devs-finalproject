@@ -160,14 +160,19 @@ async function seedSets(sets: SeedSet[], themeIdBySet: Map<string, string>) {
  * Reparto determinista de copias, pensado para que el back-office tenga trabajo
  * visible desde el primer arranque.
  *
- * Solo se siembran estados que existen **sin** un alquiler asociado: `ALQUILADA`,
- * `EN_DEVOLUCION` y `EN_INSPECCION` implican un `Rental`, y fabricarlos aquí dejaría
- * el histórico incoherente. Esos estados aparecen al ejercitar el circuito.
+ * Solo se siembran los dos estados a los que se llega **por un camino legal** sin
+ * inventar historia: `INTAKE`, que es el estado inicial, y `DISPONIBLE`, al que se
+ * llega con la única transición que sale de él (PRD §15.5). Todos los demás
+ * —`INCOMPLETA`, `BAJA`, `EN_INSPECCION`…— exigen haber pasado por un alquiler, así
+ * que sembrarlos dejaría copias cuyo historial de transiciones sería imposible.
+ * Aparecen al ejercitar el circuito.
+ *
+ * Las copias en `INTAKE` son trabajo real para el operador: están pendientes de
+ * catalogar (tarea 3.3).
  */
-function planCopies(index: number): Array<"INTAKE" | "DISPONIBLE" | "INCOMPLETA" | "BAJA"> {
+function planCopies(index: number): Array<"INTAKE" | "DISPONIBLE"> {
   if (index % 7 === 0) return ["DISPONIBLE", "DISPONIBLE", "INTAKE"]; // set muy solicitado
-  if (index % 5 === 0) return ["DISPONIBLE", "INCOMPLETA"]; // pendiente de reposición
-  if (index % 11 === 0) return ["DISPONIBLE", "BAJA"]; // una copia retirada
+  if (index % 5 === 0) return ["DISPONIBLE", "INTAKE"]; // una recién llegada
   if (index % 3 === 0) return ["DISPONIBLE", "DISPONIBLE"];
   return ["DISPONIBLE"];
 }
@@ -184,17 +189,13 @@ async function seedCopies(operatorId: string) {
     if (set._count.copies > 0) continue; // ya sembrado
 
     for (const state of planCopies(index)) {
-      const copy = await prisma.copy.create({
-        data: {
-          setId: set.id,
-          state,
-          retiredAt: state === "BAJA" ? new Date() : null,
-        },
-      });
+      const copy = await prisma.copy.create({ data: { setId: set.id, state } });
       created++;
 
-      // Toda copia entra por INTAKE; si nace en otro estado, dejamos la transición
-      // registrada para que la auditoría (PRD §7) sea coherente desde el arranque.
+      // Toda copia entra por INTAKE. Las que nacen ya catalogadas dejan registrada su
+      // transición INTAKE → DISPONIBLE, que es la única que sale del estado inicial:
+      // así el historial de auditoría (PRD §7) es coherente desde el arranque y no
+      // contiene ningún salto que la máquina de estados prohibiría.
       if (state !== "INTAKE") {
         await prisma.copyStateTransition.create({
           data: {
