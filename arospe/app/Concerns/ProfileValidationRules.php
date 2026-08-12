@@ -34,6 +34,11 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate user emails.
      *
+     * The address must be unused as any user's `email` (ignoring the record
+     * being edited) and not already held as another user's `pending_email`,
+     * so the profile screen and 0004's editor cannot drift apart on which
+     * columns a "this address is taken" check spans.
+     *
      * @return array<int, ValidationRule|array<mixed>|string>
      */
     protected function emailRules(?string $userId = null): array
@@ -46,6 +51,9 @@ trait ProfileValidationRules
             $userId === null
                 ? Rule::unique(User::class)
                 : Rule::unique(User::class)->ignore($userId),
+            $userId === null
+                ? Rule::unique(User::class, 'pending_email')
+                : Rule::unique(User::class, 'pending_email')->ignore($userId),
         ];
     }
 }
