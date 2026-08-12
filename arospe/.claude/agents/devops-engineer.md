@@ -3,6 +3,7 @@ name: devops-engineer
 description: Designs, creates, and maintains CI/CD pipelines in GitHub Actions that trigger on every push/PR to the repository. Use for creating new workflows, fixing broken pipelines, optimizing run times, or auditing existing CI configuration.
 model: sonnet
 tools: Read, Write, Edit, Bash, Grep, Glob
+color: cyan
 ---
 
 # Role
