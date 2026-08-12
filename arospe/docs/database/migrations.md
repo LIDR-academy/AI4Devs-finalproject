@@ -127,6 +127,47 @@ public function down(): void
 
 ✅ Good — `after(...)` keeps column order deliberate and readable; `down()` drops exactly the columns `up()` added, nothing more.
 
+### When the new column's default is wrong for existing rows, backfill in the same `up()`
+
+`ALTER TABLE ... DEFAULT` also writes that default into every pre-existing row, so a default chosen for *new* rows can silently mis-state the *old* ones. When it does, the fix is a second statement in the same `up()`, not a different default:
+
+```php
+// database/migrations/2026_08_11_175426_add_status_to_users_table.php
+use App\Enums\UserStatus;   // importing an app class from a migration follows 2026_07_22_100004_*
+
+public function up(): void
+{
+    Schema::table('users', function (Blueprint $table): void {
+        $table->string('status', 20)->after('email_verified_at')->default(UserStatus::Inactive->value);
+    });
+
+    DB::table('users')
+        ->whereNotNull('email_verified_at')
+        ->update(['status' => UserStatus::Active->value]);
+}
+```
+
+✅ Good — three things this example establishes:
+
+- **`string(20)`, not bare `string()`.** A bare `string()` is `VARCHAR(255)` for a 10-character token, and would make any future index a 1020-byte utf8mb4 key.
+- **`string` + a PHP enum over a native MySQL `enum`** — a native `enum` needs DDL for each new value and orders by ordinal rather than alphabetically; `Rule::enum(UserStatus::class)` is the validation boundary, so the database need not re-enforce the value set. The enum class is imported straight into the migration, matching `2026_07_22_100004_*`.
+- **The conditional backfill is why `up()` is two statements.** Applying the `inactive` default blindly would have flipped every already-verified account — the Super Admin included — to `inactive`.
+
+### Drop a unique index explicitly before its column
+
+```php
+// database/migrations/2026_08_11_175427_add_pending_email_to_users_table.php
+public function down(): void
+{
+    Schema::table('users', function (Blueprint $table): void {
+        $table->dropUnique(['pending_email']);
+        $table->dropColumn('pending_email');
+    });
+}
+```
+
+✅ Good — dropping the column first leaves the engine to infer the index drop, which is version-dependent; being explicit keeps `migrate:rollback` deterministic. This is the same "be explicit about indexes" instinct as the manual `$table->index('user_id')` in `create_passkeys_table` above.
+
 ## UUID primary keys
 
 > **Implemented for `users` (Epic 1); the greenfield pattern below is still the target for future tables.** Per [ADR 0001 — UUID primary keys](../decisions/0001-uuid-primary-keys.md), the seven UUID-keyed entities are `users` (**done** — converted by the 5 alteration migrations `2026_07_22_100001..100005_*.php`) plus the greenfield Products / Product Variants / Product Categories (PRD Epic 2) and Blog Categories / Blog Tags / Blog Posts (PRD Epic 4), which **do not exist in code yet**. The `create_products_table` snippet below is the *target* greenfield pattern (not a citation of an existing file); the `users` conversion — which was an alteration, not a `create_table` — is described further down and its real files are cited there.
@@ -175,4 +216,4 @@ throw_if(empty($tableNames), 'Error: config/permission.php not loaded. Run [php 
 
 When vendoring a package migration like this, keep that defensive `throw_if` pattern — it turns a silent misconfiguration into an immediate, actionable migration failure.
 
-_Last updated: 2026-07-22 — The `users` UUIDv7 conversion is now implemented (Epic 1): retitled the subsection to "UUID primary keys", and replaced the hypothetical `users` description with a table citing the 5 real alteration migrations (`2026_07_22_100001..100005_*.php`); the greenfield `create_products_table` pattern remains the target for the still-future Epic 2/4 tables._
+_Last updated: 2026-08-12 — Task 0003: added two subsections to "Adding a column to an existing table" — backfilling in the same `up()` when the new column's default is wrong for existing rows (`add_status_to_users_table`), and dropping a unique index explicitly before its column in `down()` (`add_pending_email_to_users_table`)._

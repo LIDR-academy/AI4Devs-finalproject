@@ -84,3 +84,15 @@ Evaluate this only if suite run time becomes a real bottleneck; the current suit
 | Parallel run | Requires `composer require brianium/paratest --dev` first, then `php artisan test --parallel` |
 | Static analysis (adjacent quality gate) | `composer types:check` (Larastan, see [conventions/base-standards.md](../../conventions/base-standards.md#quality-gates)) |
 | Formatting (adjacent quality gate) | `vendor/bin/pint --dirty --format agent` |
+
+## Environment note: PHPStan and the PHP memory limit
+
+`composer types:check` runs `phpstan analyse`, which analyses in parallel worker processes. On this project's WSL2 dev setup the default CLI `memory_limit` is not enough and the workers crash mid-run (an internal error, not a list of type errors). Raise the limit for that one invocation rather than editing `php.ini`:
+
+```bash
+php -d memory_limit=3G vendor/bin/phpstan analyse
+```
+
+This is an environment quirk, not a project requirement — CI runs the plain `composer types:check` successfully. If you see PHPStan die without reporting errors, try this before assuming the analysis is broken.
+
+_Last updated: 2026-08-12 — Task 0003: recorded the `php -d memory_limit=3G` workaround for PHPStan's parallel workers crashing on this project's WSL2 dev setup._

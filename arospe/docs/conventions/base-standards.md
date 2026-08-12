@@ -6,6 +6,7 @@ Baseline stack versions and project-structure standards for this Laravel + Livew
 
 - [Stack versions](#stack-versions)
 - [Directory structure](#directory-structure)
+  - [Controllers sit in front of actions, not instead of them](#controllers-sit-in-front-of-actions-not-instead-of-them)
 - [Model conventions](#model-conventions)
 - [Livewire component convention: class-based, not single-file](#livewire-component-convention-class-based-not-single-file)
 - [Artisan-first workflow](#artisan-first-workflow)
@@ -37,17 +38,22 @@ Real top-level layout — stick to it; don't create new base folders without app
 ```
 app/
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords)
+  Actions/Users/       Domain actions for the Users area (RequestEmailChange, ConfirmEmailChange)
   Concerns/            Shared traits (validation rule sets)
   Console/Commands/    Artisan commands
-  Http/Controllers/    Empty abstract base only — no domain controllers yet
+  Enums/               Backed enums for domain value sets (UserStatus)
+  Http/Controllers/    Abstract base + domain controllers used as HTTP boundaries in front of actions
+  Listeners/           Event listeners (ActivateVerifiedUser), registered in AppServiceProvider
   Livewire/            Livewire components, grouped by area (Settings/, Settings/TwoFactor/, Actions/)
   Models/              Eloquent models
+  Notifications/       Notification classes (PendingEmailVerification)
   Providers/           Service providers (AppServiceProvider, FortifyServiceProvider)
 config/                Laravel + package config (fortify.php, permission.php, ...)
 database/
   factories/
   migrations/
   seeders/
+lang/                   Published translation files, one folder per locale (en/, es/)
 resources/
   views/
     components/        Blade components
@@ -56,12 +62,49 @@ resources/
     partials/
 routes/                 web.php, settings.php (no api.php yet)
 tests/
-  Feature/              Feature tests, mirrors app structure (Auth/, Settings/)
-  Unit/
+  Feature/              Feature tests, mirrors app structure (Auth/, Settings/, Seeders/, ...)
+  Unit/                 Mirrors app structure too (Enums/, Listeners/, Models/)
   Pest.php, TestCase.php
 ```
 
-`app/Actions/` currently holds only `Fortify/`. If a future action isn't Fortify-specific, it belongs directly under `app/Actions/`, not nested under an unrelated subfolder — follow the existing one-subfolder-per-concern pattern rather than flattening or over-nesting.
+`app/Enums/`, `app/Listeners/`, `app/Notifications/` and `lang/` are all **stock Laravel locations** (`make:enum`, `make:listener`, `make:notification`, `lang:publish`), not new base folders — creating one of them needs no approval; inventing a folder Laravel doesn't ship does.
+
+`app/Actions/` groups by concern, one subfolder per area: `Fortify/` holds the framework-contract implementations, `Users/` the app's own Users-domain actions. A new action goes in the subfolder for its domain (or directly under `app/Actions/` if it belongs to none) — never nested under an unrelated one.
+
+### Controllers sit in front of actions, not instead of them
+
+`App\Http\Controllers\ConfirmEmailChangeController` is this repo's first domain controller, and it exists for a specific reason worth generalizing: **a controller is added only when there is an HTTP-specific concern — route-parameter binding, building a redirect response — that an `app/Actions/` class should not absorb.** The action stays a plain domain operation; the controller adapts HTTP to it.
+
+✅ Good — the real controller: it turns the URL's `{hash}` segment into a verified address, delegates, and branches on the action's `bool` result to pick a redirect:
+
+```php
+// app/Http/Controllers/ConfirmEmailChangeController.php
+public function __invoke(User $user, string $hash, ConfirmEmailChange $confirmEmailChange): RedirectResponse
+{
+    if ($user->pending_email === null || ! hash_equals(sha1($user->pending_email), $hash)) {
+        return redirect()->route('profile.edit')->with('status', __('users.email_change.refused'));
+    }
+
+    if (! $confirmEmailChange($user, $user->pending_email)) {
+        return redirect()->route('profile.edit')->with('status', __('users.email_change.refused'));
+    }
+
+    return redirect()->route('profile.edit')->with('status', __('users.email_change.confirmed'));
+}
+```
+
+Note the action is injected as a **trailing container-resolved parameter**, after the route parameters — the same per-method action-injection convention the Livewire components use (see [code-style.md](code-style.md#inject-single-purpose-actions-per-method)).
+
+❌ Bad — routing the action class directly (adapted to illustrate; this is what the controller exists to avoid):
+
+```php
+// anti-pattern — do not do this
+Route::get('settings/email/confirm/{user}/{hash}', ConfirmEmailChange::class);
+```
+
+`ConfirmEmailChange::__invoke(User $user, string $email)` takes the *address*, while the URL's second segment is `{hash}`. Laravel binds non-class-typed parameters positionally against the remaining route parameters, so the hash would land in `$email` and the equality check could never succeed — silently, with no error. On top of that, the action returns `bool`, which cannot be a response.
+
+Corollary: don't invert this either. A controller that re-implements the domain logic instead of delegating to an action puts business rules somewhere the Livewire components and future admin screens can't reuse them.
 
 ## Model conventions
 
@@ -97,6 +140,8 @@ class Post extends Model
 }
 ```
 Mixing both styles in the same codebase makes it unclear which one governs a given model at a glance.
+
+`casts()` also carries enum casts (`'status' => UserStatus::class`), and the **omission** of a column from `#[Fillable]` *is* this codebase's mass-assignment guard: `users.status` and `users.pending_email` are deliberately absent from `User`'s `#[Fillable]` list, so the only way to write them is an explicit `forceFill()` in an action. When you add a column that no form may set, leave it out of `#[Fillable]` and write it from one named place — don't add it and then filter the input at each call site.
 
 Every property is documented with a `@property` PHPDoc block above the class, matching the actual database columns (see the block above `class User` in `app/Models/User.php`) — keep this block in sync with the migration whenever a column is added or removed (this is exactly the kind of drift the `docs-maintainer` skill and this file exist to catch).
 
@@ -175,4 +220,4 @@ Every PHP change in this repo should pass, in this order, before being considere
 2. `vendor/bin/pint --dirty --format agent` — auto-fixes formatting against the `laravel` preset (`pint.json`).
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
-_Last updated: 2026-07-22 — `User` is now a real UUID-PK model (Epic 1, ADR 0001): retitled the subsection to "UUID primary keys", corrected the "not yet in the repo" framing, and replaced the illustrative `Product` example with the real `app/Models/User.php` shape (Epic 2/4 models still follow this convention once built)._
+_Last updated: 2026-08-12 — Task 0003: added `app/Actions/Users/`, `app/Enums/`, `app/Listeners/`, `app/Notifications/` and `lang/` to the directory listing, rewrote the `app/Http/Controllers/` line now that `ConfirmEmailChangeController` is the repo's first domain controller (with the "controller in front of an action" convention it establishes), and recorded that omission from `#[Fillable]` is the mass-assignment guard for `status` / `pending_email`._

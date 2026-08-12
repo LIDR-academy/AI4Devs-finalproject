@@ -9,6 +9,7 @@ Real naming patterns observed across the codebase. For migration file naming spe
 - [Traits and their methods](#traits-and-their-methods)
 - [Route names](#route-names)
 - [Permission names](#permission-names)
+- [Translation keys](#translation-keys)
 - [Boolean properties](#boolean-properties)
 
 ## Classes
@@ -21,7 +22,19 @@ One class per file, `StudlyCase`, filename matches class name exactly (PSR-4). V
 | `App\Livewire\Settings\TwoFactor\RecoveryCodes` | `app/Livewire/Settings/TwoFactor/RecoveryCodes.php` |
 | `App\Livewire\Actions\Logout` | `app/Livewire/Actions/Logout.php` |
 
-Single-purpose invokable actions are named as an imperative verb phrase, not suffixed with `Action` or `Service`: `Logout`, `CreateNewUser`, `ResetUserPassword` (Fortify's own convention, followed consistently by this app's own `Logout` action).
+Single-purpose invokable actions are named as an imperative verb phrase, not suffixed with `Action` or `Service`: `Logout`, `CreateNewUser`, `ResetUserPassword`, `RequestEmailChange`, `ConfirmEmailChange` (Fortify's own convention, followed consistently by this app's own actions in `app/Actions/Users/`).
+
+Controllers, by contrast, **are** suffixed `Controller`, and are named after the action they front: `ConfirmEmailChange` (the action) → `ConfirmEmailChangeController` (the invokable controller in front of it). Same for listeners and notifications, which are named as a statement about what happened rather than a command: `ActivateVerifiedUser`, `PendingEmailVerification`.
+
+| Class | File |
+| --- | --- |
+| `App\Actions\Users\ConfirmEmailChange` | `app/Actions/Users/ConfirmEmailChange.php` |
+| `App\Http\Controllers\ConfirmEmailChangeController` | `app/Http/Controllers/ConfirmEmailChangeController.php` |
+| `App\Listeners\ActivateVerifiedUser` | `app/Listeners/ActivateVerifiedUser.php` |
+| `App\Notifications\PendingEmailVerification` | `app/Notifications/PendingEmailVerification.php` |
+| `App\Enums\UserStatus` | `app/Enums/UserStatus.php` |
+
+Enum cases use TitleCase keys with lowercase backing values — `case Active = 'active';` in `App\Enums\UserStatus`, matching the project `CLAUDE.md` rule.
 
 ## Livewire components and views
 
@@ -55,9 +68,9 @@ trait PasswordValidationRules
 // app/Concerns/ProfileValidationRules.php
 trait ProfileValidationRules
 {
-    protected function profileRules(?int $userId = null): array { /* ... */ }
+    protected function profileRules(?string $userId = null): array { /* ... */ }
     protected function nameRules(): array { /* ... */ }
-    protected function emailRules(?int $userId = null): array { /* ... */ }
+    protected function emailRules(?string $userId = null): array { /* ... */ }
 }
 ```
 
@@ -102,6 +115,31 @@ public const ROLE_PERMISSIONS = ['roles.manage', 'roles.manage-administrators'];
 
 A permission that a new feature needs is added to the constants above — never as a string only one component knows about. The catalog, the two seeded roles, and which of them hold what are documented in [architecture/authorization.md](../architecture/authorization.md#permission-catalog).
 
+## Translation keys
+
+`lang/<locale>/<domain>.php` — one file per domain area, keys grouped by feature, every segment `snake_case`. Verified in [`lang/en/users.php`](../../lang/en/users.php) and its Spanish counterpart, which must stay key-for-key identical:
+
+```php
+// lang/en/users.php
+'statuses' => [
+    'active' => 'Active',
+    // ...
+],
+
+'email_change' => [
+    'notification_subject' => 'Confirm your new email address',
+    'pending_notice' => 'A change to :email is pending. Use the link sent to that address to confirm it.',
+    'confirmed' => 'Your email address has been updated.',
+    'refused' => 'This email verification link is no longer valid.',
+    'throttled' => 'Too many email change requests. Please try again later.',
+],
+```
+
+✅ Good — `users.statuses.active`, `users.email_change.throttled`: domain file, feature group, snake_case leaf. Values that interpolate use Laravel's `:placeholder` form (`:email`).
+❌ Bad — do not write `users.emailChange.throttled` (camelCase segment), a flat `users.email_change_throttled` (no group), or a literal string inline in a component instead of a key. `App\Enums\UserStatus::label()` resolves `__('users.statuses.'.$this->value)` by convention, so a status label that isn't in the `statuses` group renders as its own raw key.
+
+Note `APP_LOCALE=en` today, so everything renders in English until the interface language switcher exists — an accepted, documented consequence of the English-source decision, not a defect. Adding a key means adding it to **both** `lang/en/` and `lang/es/` in the same change.
+
 ## Boolean properties
 
 Livewire component boolean properties are named as a predicate, prefixed `can`/`is`/`show`/`requires` — never a bare noun. Verified in `app/Livewire/Settings/Security.php`:
@@ -118,4 +156,4 @@ public bool $showDeleteModal;
 
 Two patterns coexist in this file: `can*`/`requires*`/`show*` for capability/UI-state flags, and a bare past-participle (`twoFactorEnabled`) for a fact about the authenticated user's current state. Follow whichever of the two fits: use `can`/`requires`/`show` for UI/permission flags you're introducing, and a plain past-participle only for a mirrored model/domain fact (as `twoFactorEnabled` mirrors `User::hasEnabledTwoFactorAuthentication()`).
 
-_Last updated: 2026-08-10 — Added the "Permission names" section: task 0002 established `<module-slug>.<action>` dot notation as a real, enforced convention (an unseeded name throws `PermissionDoesNotExist`), cited from `RolePermissionSeeder`'s canonical constants._
+_Last updated: 2026-08-12 — Task 0003: recorded the controller/listener/notification/enum naming patterns introduced by the first domain controller and the activation listener, and added the "Translation keys" section now that `lang/en/` and `lang/es/` exist._
