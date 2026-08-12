@@ -50,17 +50,22 @@ High-level layout of the codebase:
 ```
 app/
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords, ...)
+  Actions/Users/       Users-domain actions (RequestEmailChange, ConfirmEmailChange)
   Concerns/            Shared traits (e.g. validation rule sets)
   Console/Commands/    Artisan commands
-  Http/Controllers/    Controllers
+  Enums/               Backed enums for domain value sets (UserStatus)
+  Http/Controllers/    Abstract base + domain controllers (HTTP boundary in front of an action)
+  Listeners/           Event listeners (ActivateVerifiedUser)
   Livewire/            Livewire components, grouped by area (Actions/, Settings/, ...)
   Models/              Eloquent models
+  Notifications/       Notification classes (PendingEmailVerification)
   Providers/           Service providers
 config/                Laravel + package configuration
 database/
   factories/
   migrations/
   seeders/
+lang/                   Translation files, one folder per locale (en/, es/)
 resources/
   views/
     components/         Blade components
@@ -147,6 +152,8 @@ The environment is defined in `compose.yaml`. Bringing it up starts the followin
 **Seeding is required, not optional.** `RolePermissionSeeder` is the only source of the application's roles and permission catalog (two roles, 38 permissions), so the app cannot authorize anything until it has run — this holds on every environment, deployments included. Locally, `--seed` also creates a `test@example.com` / `password` fixture account; that fixture is created **only** in `local` and `testing`, never in staging or production.
 
 Optionally, set `SUPER_ADMIN_EMAIL` in `.env` before seeding to bootstrap a Super Admin account. If it matches a registered, email-verified user, that user is granted the role; if it matches no account at all, the seeder creates one and emails a password-reset link so you can claim it. See [`docs/architecture/authorization.md`](docs/architecture/authorization.md#super-admin-bootstrap) for all five branches, including the two that abort with an operator-facing error.
+
+> **Accounts start `inactive`.** A newly registered user's `users.status` is `inactive` until their email is verified — completing Fortify's verification, setting a password from an invitation link, or confirming a pending email change all activate the account through the same listener. Changing an email address never rewrites `users.email` on the spot: the new address is held as `pending_email` until the signed link sent to it is used. Mail runs on the `log` driver locally (`MAIL_MAILER=log`), so verification links show up in `storage/logs/laravel.log` — tail them with `sail artisan pail`. The email-change notification is queued and `QUEUE_CONNECTION=database`, so a worker has to be running (`composer dev`, or `sail artisan queue:work`) for the link to be written out at all. See [`docs/architecture/authentication.md`](docs/architecture/authentication.md#account-status-and-activation).
 
 ## Additional useful commands
 

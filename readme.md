@@ -49,7 +49,7 @@ Arospe es un **backoffice de administración** para una operación de ecommerce:
 
 ### **1.2. Características y funcionalidades principales:**
 
-> Estado actual: en el código están implementadas la capa de autenticación (Fortify: registro, login, verificación de email, 2FA, passkeys) y la **capa de backend/infraestructura** de Usuarios, Roles y Permisos: `RolePermissionSeeder` siembra 2 roles (`Super Admin` y `Administrator`) y un catálogo de 38 permisos, los middleware `role`/`permission`/`role_or_permission` están registrados en `bootstrap/app.php`, y el `Super Admin` dispone de un bypass de permisos vía `Gate::before`. Lo que **todavía no existe** es la UI de gestión de esa épica (CRUD de roles, pantalla de usuarios, asignación de permisos desde el panel), ni ninguna ruta o componente Livewire protegido aún por un permiso del catálogo. El resto de funcionalidades descritas a continuación son el alcance funcional definido en el PRD (`docs/PRD/PRD.md`) y constituyen la hoja de ruta del backoffice.
+> Estado actual: en el código están implementadas la capa de autenticación (Fortify: registro, login, verificación de email, 2FA, passkeys), la **capa de backend/infraestructura** de Usuarios, Roles y Permisos (`RolePermissionSeeder` siembra 2 roles —`Super Admin` y `Administrator`— y un catálogo de 38 permisos, los middleware `role`/`permission`/`role_or_permission` están registrados en `bootstrap/app.php`, y el `Super Admin` dispone de un bypass de permisos vía `Gate::before`) y el **ciclo de vida de la cuenta**: la columna `users.status` (`activo`/`inactivo`/`suspendido`, vía el enum `App\Enums\UserStatus`), la invariante de **no autoactivación** (ninguna cuenta llega a `activo` por su propia acción sin probar su email: registro, invitación y confirmación de cambio de correo convergen en un único listener `ActivateVerifiedUser`) y el mecanismo de **cambio de email pendiente** (un cambio de dirección nunca reescribe `users.email` en el momento: se aparca en `users.pending_email` y solo se aplica al usar el enlace firmado de 60 minutos enviado a la nueva dirección). Lo que **todavía no existe** es la UI de gestión de esa épica (CRUD de roles, pantalla de usuarios, asignación de permisos desde el panel), ninguna ruta o componente Livewire protegido aún por un permiso del catálogo, ni el bloqueo de inicio de sesión para las cuentas no activas. El resto de funcionalidades descritas a continuación son el alcance funcional definido en el PRD (`docs/PRD/PRD.md`) y constituyen la hoja de ruta del backoffice.
 
 - **Usuarios, Roles y Permisos** — CRUD completo de roles personalizados con permisos granulares por módulo (vía `spatie/laravel-permission`, ya instalado), sustituyendo el desplegable de rol fijo del prototipo. Es la base de la que dependen el resto de épicas.
 - **Catálogo de Productos** — productos con categorías propias (CRUD completo, taxonomía distinta a la del blog) y **variantes configurables**: tipos de atributo (Talla, Color, Material…) definidos por el administrador, cada combinación con su propio SKU, precio, stock e imagen destacada opcional.
@@ -216,10 +216,13 @@ flowchart LR
 
 ### **2.2. Descripción de componentes principales:**
 
-- **Rutas (`routes/web.php`, `routes/settings.php`)** — puntos de entrada HTTP. No existe `routes/api.php` todavía.
+- **Rutas (`routes/web.php`, `routes/settings.php`)** — puntos de entrada HTTP. No existe `routes/api.php` todavía. Todas las rutas de `settings/*` cuelgan de un grupo `auth`, salvo una excepción deliberada: `email-change.confirm`, cuya lista completa de middleware es `signed` + `throttle:6,1` (lo que prueba el enlace es el control del buzón, no una sesión iniciada).
 - **Componentes Livewire (`app/Livewire/**`)** — lógica de UI con estado, en clases PHP + vista Blade emparejada (convención *class-based*, no single-file component), agrupados por área (`Settings/`, `Actions/`...).
-- **Acciones de Fortify (`app/Actions/Fortify/**`)** — implementaciones de los contratos de `laravel/fortify` para registro, reseteo de contraseña, etc.
-- **Modelos Eloquent (`app/Models/**`)** — capa de datos; usan atributos PHP 8 (`#[Fillable]`, `#[Hidden]`) y un método `casts()` en vez de las propiedades clásicas `$fillable`/`$hidden`/`$casts`.
+- **Acciones (`app/Actions/**`)** — una carpeta por concern: `Fortify/` implementa los contratos de `laravel/fortify` (registro, reseteo de contraseña); `Users/` contiene las acciones de dominio propias (`RequestEmailChange`, `ConfirmEmailChange`). Son clases invocables de un solo propósito, inyectadas por método en el componente o controlador que las usa.
+- **Controladores (`app/Http/Controllers/**`)** — `ConfirmEmailChangeController` es el primer controlador de dominio del repo. La convención que fija: un controlador solo aparece cuando hay una preocupación específica de HTTP (binding de parámetros de ruta, construir la respuesta de redirección) delante de una acción de `app/Actions/`; la lógica de dominio se queda en la acción.
+- **Enums, listeners y notificaciones (`app/Enums/`, `app/Listeners/`, `app/Notifications/`)** — `UserStatus` (estado de cuenta), `ActivateVerifiedUser` (único punto de activación, registrado en `AppServiceProvider`) y `PendingEmailVerification` (el correo con el enlace firmado).
+- **Traducciones (`lang/en/`, `lang/es/`)** — copia de la aplicación separada del código: etiquetas de estado de usuario y textos del flujo de cambio de correo.
+- **Modelos Eloquent (`app/Models/**`)** — capa de datos; usan atributos PHP 8 (`#[Fillable]`, `#[Hidden]`) y un método `casts()` en vez de las propiedades clásicas `$fillable`/`$hidden`/`$casts`. La *omisión* de una columna en `#[Fillable]` es la propia protección contra asignación masiva: `status` y `pending_email` solo se escriben con `forceFill()` desde una acción concreta.
 - **Autenticación — `laravel/fortify` (^1.37)**: registro, login, reset de contraseña, verificación de email y 2FA.
 - **Passkeys — `@laravel/passkeys` / `laravel/passkeys`**: soporte WebAuthn, consumido desde `App\Livewire\Settings\Security`.
 - **Autorización — `spatie/laravel-permission` (^8.3)**: roles y permisos; el trait `HasRoles` está adjunto a `User` y la base de autorización **ya está operativa**: `database/seeders/RolePermissionSeeder.php` siembra 2 roles (`Super Admin` y `Administrator`, guard `web`) y un catálogo de 38 permisos (9 módulos × 4 acciones CRUD, más `roles.manage` y `roles.manage-administrators`); los middleware `role`, `permission` y `role_or_permission` están registrados como alias en `bootstrap/app.php`; y `App\Providers\AppServiceProvider` instala el bypass del `Super Admin` vía `Gate::before`. Detalle completo en [`arospe/docs/architecture/authorization.md`](arospe/docs/architecture/authorization.md).
@@ -235,17 +238,22 @@ Estructura real de `arospe/`, siguiendo la convención estándar de un proyecto 
 ```
 app/
   Actions/Fortify/    Implementaciones de contratos de Fortify (CreateNewUser, ResetUserPassword...)
+  Actions/Users/      Acciones de dominio de Usuarios (RequestEmailChange, ConfirmEmailChange)
   Concerns/           Traits compartidos (p. ej. conjuntos de reglas de validación)
   Console/Commands/   Comandos Artisan
-  Http/Controllers/   Solo el controlador base abstracto; sin controladores de dominio todavía
+  Enums/              Enums respaldados por string (UserStatus)
+  Http/Controllers/   Controlador base abstracto + controladores de dominio (frontera HTTP ante una acción)
+  Listeners/          Listeners de eventos (ActivateVerifiedUser)
   Livewire/           Componentes Livewire, agrupados por área (Settings/, Actions/...)
   Models/             Modelos Eloquent (actualmente solo User)
+  Notifications/      Notificaciones (PendingEmailVerification)
   Providers/          Service providers (AppServiceProvider, FortifyServiceProvider)
 config/               Configuración de Laravel y paquetes (fortify.php, permission.php...)
 database/
   factories/
   migrations/
   seeders/          DatabaseSeeder + RolePermissionSeeder (roles, catálogo de permisos, bootstrap del Super Admin)
+lang/                 Ficheros de traducción, una carpeta por idioma (en/, es/)
 resources/
   views/
     components/       Componentes Blade
@@ -255,7 +263,7 @@ resources/
 routes/                web.php, settings.php (sin api.php todavía)
 tests/
   Feature/             Espeja la estructura de app/ (Auth/, Settings/, Models/, Authorization/, Seeders/)
-  Unit/
+  Unit/                También espeja app/ (Enums/, Listeners/, Models/)
 docker/                Assets de Docker para Sail (p. ej. aprovisionamiento de BD de test)
 docs/                  Documentación del proyecto (arquitectura, BD, convenciones, decisiones)
 ```
@@ -273,8 +281,18 @@ El proyecto sigue estrictamente la organización por capas de Laravel (no hay es
 - **2FA (TOTP)** con confirmación explícita: el usuario no queda protegido hasta enviar un código válido; si el flujo se abandona a medias, `App\Livewire\Settings\Security::mount()` limpia proactivamente el estado semi-activado. Los códigos de recuperación viven encriptados en la BD (`two_factor_secret` y `two_factor_recovery_codes` son `Hidden` y encriptados).
 - **Passkeys (WebAuthn)** vía `laravel/passkeys`, gestionadas desde el mismo componente `Security`.
 - **Reconfirmación de contraseña** (`password.confirm`) obligatoria en la pantalla que gestiona 2FA y passkeys, además de `auth` y `verified`.
-- **Emails canónicamente en minúsculas** (`lowercase_usernames` en `config/fortify.php`), de modo que la comparación de identidades no dependa de mayúsculas.
+- **Emails canónicamente en minúsculas**, en tres capas: `lowercase_usernames` en `config/fortify.php`, normalización *antes* de `validate()` en `App\Livewire\Settings\Profile` (para que la regla de unicidad vea el valor que realmente se va a guardar) y normalización como primera sentencia de `App\Actions\Users\RequestEmailChange`. `User` expone además un accessor de solo lectura que devuelve el email en minúsculas.
 - **Política de contraseñas endurecida solo en producción** (`AppServiceProvider`: mínimo 12 caracteres, mayúsculas/minúsculas, números, símbolos y comprobación `uncompromised()` contra filtraciones conocidas).
+
+**Ciclo de vida de la cuenta y cambio de correo verificado.** Ninguna cuenta llega a `activo` **por su propia acción** sin probar el control de su buzón: el registro parte de `inactivo` (valor por defecto de la columna) y la única transición automática a `activo` ocurre en un solo sitio, `App\Listeners\ActivateVerifiedUser`, al que llegan por igual la verificación de email de Fortify, el flujo de invitación/reset y la confirmación de un cambio de correo. Ese listener nunca reactiva una cuenta `suspendida`. Sobre esa base, un cambio de dirección de correo —propio o hecho por un administrador sobre otra cuenta— **nunca reescribe `users.email` en el momento**:
+
+- La nueva dirección se aparca en `users.pending_email` y se envía un enlace **firmado, ligado a esa dirección concreta (`sha1`), de un solo uso y con 60 minutos de caducidad**, solo a la dirección nueva; jamás a la antigua.
+- Solo al usar el enlace se escribe `users.email` y se marca `email_verified_at`. Reproducir, manipular, caducar, sustituir o cancelar un enlace deja la cuenta exactamente como estaba.
+- La solicitud está limitada a **3 peticiones por hora y usuario destino** (`RateLimiter` dentro de la acción, compartido por la pantalla de perfil y el futuro editor de administración), y la ruta de confirmación lleva su propio `throttle:6,1`.
+- `bootstrap/app.php` reordena globalmente el middleware para que `ValidateSignature` se ejecute **antes** que `SubstituteBindings`: sin eso, manipular el segmento `{user}` daría 404 (fallo de binding) mientras que manipular cualquier otro daría 403, lo que sería un oráculo para averiguar si un identificador de usuario existe.
+- Todas las ramas de rechazo muestran **exactamente el mismo mensaje**, para no revelar *cuál* comprobación falló (en particular, que la dirección ya pertenece a otra cuenta).
+
+Esto cierra la vía de suplantación registrada en `docs/errors-log.md`: hasta esta tarea, cualquier usuario autenticado podía apuntar su cuenta a una dirección que no controlaba. Ahora **`users.email` junto con un `email_verified_at` no nulo** sí prueba el control del buzón, que es exactamente el par del que depende la búsqueda del bootstrap del `Super Admin`.
 
 **Modelo de autorización (`spatie/laravel-permission`).** Roles y permisos sembrados por `RolePermissionSeeder` con una convención de nombres canónica `<módulo>.<acción>`; el rol `Administrator` recibe 37 de los 38 permisos (todos menos `roles.manage-administrators`) y el rol `Super Admin` recibe **cero** permisos explícitos: autoriza exclusivamente por el bypass `Gate::before` instalado en `AppServiceProvider`. Ese bypass tiene un alcance deliberadamente acotado y documentado:
 
@@ -289,6 +307,8 @@ El proyecto sigue estrictamente la organización por capas de Laravel (no hay es
 - **Flush explícito de la caché de permisos, y también *después* del commit.** El seeder corre bajo `WithoutModelEvents`, que suprime el flush automático de Spatie; además, la caché de permisos vive en el store `database` compartido por todos los workers con un TTL de 24 h, así que un flush hecho solo *dentro* de la transacción deja una ventana en la que otro worker puede cachear el estado previo al commit. Por eso hay dos llamadas a `forgetCachedPermissions()` y ninguna sustituye a la otra.
 - **Abortar sin lanzar excepción dentro de la transacción**: un bootstrap de privilegio que falla degrada a "sin concesión", nunca a "sin catálogo de permisos".
 - **Trazabilidad de la concesión de privilegios**: toda concesión, aprovisionamiento o rechazo del rol `Super Admin` se escribe en el log de aplicación (con `email`, `user_id` y un `outcome` legible por máquina), no solo por consola — y nunca incluye la contraseña generada, que jamás se imprime, registra ni almacena en claro.
+- **Normalizar antes de firmar/hashear, nunca después.** Cuando un enlace queda ligado a un valor mediante `sha1()`, el valor persistido y el hasheado deben ser la misma cadena normalizada; hacerlo al revés no lanza ninguna excepción: simplemente todos los enlaces de una petición con mayúsculas quedan silenciosamente rechazados.
+- **Una comprobación previa no es una protección contra carreras.** `ConfirmEmailChange` bloquea la fila (`lockForUpdate()`), revalida la disponibilidad de la dirección y, aun así, deja la última palabra al índice único de la base de datos (SQLSTATE `23000`), porque dos usuarios confirmando a la vez bloquean filas *distintas* y ninguno frena al otro.
 
 El detalle completo de cada regla, con el razonamiento y los ejemplos ✅/❌ extraídos del código real, está en [`arospe/docs/security/README.md`](arospe/docs/security/README.md).
 
@@ -297,6 +317,7 @@ El detalle completo de cada regla, con el razonamiento y los ejemplos ✅/❌ ex
 Suite de test basada en **Pest 4** (`pestphp/pest` + `pest-plugin-laravel`), organizada en `tests/Feature/` (mayoría de los tests, espejando `app/`) y `tests/Unit/`.
 
 - **Tests de backend (Feature/Unit)** — cubren, hoy, el flujo de autenticación de Fortify (registro, login, verificación de email, reset de contraseña, 2FA) y los componentes Livewire de `Settings`. Usan factories (`database/factories/`) en lugar de crear modelos a mano.
+- **Suite del ciclo de vida de la cuenta** — `tests/Feature/Settings/EmailChangeTest.php` recorre el cambio de correo pendiente de punta a punta: mecánica del enlace firmado (reproducción, manipulación, caducidad, sustitución, cancelación), el *throttle* por usuario, las colisiones de unicidad en las dos columnas, la carrera resuelta dentro de la transacción de confirmación y los avisos mostrados al volver al perfil. `tests/Unit/Enums/` y `tests/Unit/Listeners/` fijan el enum de estado y las tres ramas del listener de activación (inactivo → activo, suspendido intacto, activo sin efecto).
 - **Suites de la base de autorización** — `tests/Feature/Seeders/` verifica el sembrado (2 roles, 38 permisos, guard `web`, idempotencia del re-seed, doble flush de caché y las cinco ramas del bootstrap de `SUPER_ADMIN_EMAIL`: no-op, formato inválido, cuenta verificada, ocupante sin verificar y aprovisionamiento). `tests/Feature/Authorization/` fija el comportamiento del bypass del `Super Admin` y de los middleware: qué comprobaciones llegan al Gate y cuáles no, que la closure devuelve `null` (no `false`) para el resto de usuarios, y que un rol homónimo en otro guard no concede el bypass.
 - **Tests de navegador (`tests/Browser/`)** — vía **Pest Browser Plugin** (`pest-plugin-browser` ^4.3), que dirige **Playwright** (^1.61) para pruebas end-to-end reales sobre navegador. El flujo de trabajo documentado va de historia de usuario → escenario Gherkin → test Pest (ver `docs/testing/frontend/`), con ejemplos ya escritos para login, borrado de passkeys y el reto de 2FA. Esta suite y su integración en CI **aún no están conectadas** (ver `docs/testing/frontend/playwright-setup.md`).
 - **Filosofía de testing** — documentada en `docs/testing/philosophy.md` y `docs/testing/qa/` (pensamiento de riesgo, qué no testear, checklist de cobertura), pensada para evitar tests frágiles o redundantes.
@@ -312,7 +333,7 @@ Suite de test basada en **Pest 4** (`pestphp/pest` + `pest-plugin-laravel`), org
 
 ### **3.1. Diagrama del modelo de datos:**
 
-> El dominio de ecommerce del PRD (productos, pedidos, blog, impuestos, envíos...) todavía no está implementado en base de datos — el esquema actual solo cubre autenticación y autorización. Este diagrama se ampliará conforme se construyan esos módulos.
+> El dominio de ecommerce del PRD (productos, pedidos, blog, impuestos, envíos...) todavía no está implementado en base de datos — el esquema actual solo cubre autenticación, autorización y el ciclo de vida de la cuenta (`users.status`, `users.pending_email`). Este diagrama se ampliará conforme se construyan esos módulos.
 
 ```mermaid
 erDiagram
@@ -329,7 +350,9 @@ erDiagram
         uuid id PK
         string name
         string email UK
+        string pending_email UK
         timestamp email_verified_at
+        string status
         string password
         text two_factor_secret
         text two_factor_recovery_codes
@@ -394,8 +417,10 @@ Tablas de infraestructura sin claves foráneas (no aparecen en el diagrama): `pa
 | --- | --- | --- |
 | `id` | uuid (v7), PK | `CHAR(36)`, generado por `HasUuids` — ver [ADR 0001](arospe/docs/decisions/0001-uuid-primary-keys.md) |
 | `name` | string | |
-| `email` | string | **unique** |
-| `email_verified_at` | timestamp, nullable | se pone a `null` de nuevo al cambiar el email |
+| `email` | string | **unique**; canónicamente en minúsculas. Un *cambio* de esta columna solo se aplica al usar su enlace de verificación |
+| `pending_email` | string, nullable | **unique**; dirección a la espera de confirmación. **No** es asignable en masa: solo se escribe con `forceFill()` desde `RequestEmailChange`/`ConfirmEmailChange` |
+| `email_verified_at` | timestamp, nullable | prueba del control del buzón. **Ya no** se pone a `null` al cambiar el email: la dirección no se mueve hasta estar verificada |
+| `status` | `VARCHAR(20)`, por defecto `inactive` | casteado a `App\Enums\UserStatus` (`active`/`inactive`/`suspended`). **No** es asignable en masa. Sin índice: la tabla es de 10²–10³ filas y un índice costaría una escritura en cada alta/edición |
 | `password` | string | hasheado (`cast`), oculto en serialización (`Hidden`) |
 | `two_factor_secret` | text, nullable | encriptado, `Hidden` |
 | `two_factor_recovery_codes` | text, nullable | JSON encriptado, `Hidden` |
@@ -403,6 +428,10 @@ Tablas de infraestructura sin claves foráneas (no aparecen en el diagrama): `pa
 | `remember_token` | string, nullable | `Hidden` |
 
 Relaciones: `hasMany` → `passkeys` (vía `PasskeyAuthenticatable`); `hasMany` → `sessions` (informal, por `user_id`); `morphToMany` polimórfico → `roles`/`permissions` vía `HasRoles` (**ya adjunto** a `User`, con roles y permisos sembrados y en uso real — ver [`arospe/docs/architecture/authorization.md`](arospe/docs/architecture/authorization.md)).
+
+`users.pending_email` es `unique` y nullable a propósito: tanto MySQL como SQLite permiten `NULL`s ilimitados en un índice único, así que la restricción solo ata a las filas que realmente tienen un cambio en curso, convirtiendo "dos cuentas no pueden esperar la misma dirección" en una invariante de base de datos y no solo de validación.
+
+> **Deuda conocida:** `users` arrastra un índice `users_uuid_unique` **redundante** sobre `id` (verificado con `php artisan db:table users`), heredado de la conversión a UUID: la migración que renombró la columna a `id` y la promovió a PRIMARY no llegó a eliminar el índice único que la columna transitoria tenía. No rompe nada, pero cuesta una escritura de índice `CHAR(36)` en cada alta. Pendiente de una tarea de limpieza; documentado en `arospe/docs/errors-log.md`.
 
 **`passkeys`** — provista por `laravel/passkeys`
 
