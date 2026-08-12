@@ -43,7 +43,11 @@ export type IneligibilityReason =
   | "NO_ACTIVE_SUBSCRIPTION"
   | "PLAN_LIMIT_REACHED"
   | "RETURN_IN_PROGRESS"
-  | "SUBSCRIPTION_TOO_RECENT";
+  | "SUBSCRIPTION_TOO_RECENT"
+  /** Sin suscripción, un set restringido no está al alcance del alquiler puntual. */
+  | "RESTRICTED_SET_REQUIRES_SUBSCRIPTION"
+  /** El set no está tasado, así que no se puede cobrar un alquiler puntual. */
+  | "SET_NOT_PRICED";
 
 export type Eligibility =
   | { eligible: true }
@@ -115,6 +119,60 @@ export function checkEligibility(input: EligibilityInput): Eligibility {
         detail: `Este set requiere ${input.restrictedSetMinMonths} meses de antigüedad de suscripción; llevas ${months}.`,
       };
     }
+  }
+
+  return { eligible: true };
+}
+
+export interface OneOffEligibilityInput {
+  currentCopyStates: readonly CopyState[];
+  set: { restricted: boolean; hasReferenceValue: boolean };
+}
+
+/**
+ * Elegibilidad para el **alquiler puntual**, sin suscripción (spec `subscriptions`).
+ *
+ * Es una vía distinta, no una excepción a la anterior: quien no está suscrito no tiene
+ * plan ni antigüedad, así que las reglas que se le aplican son otras.
+ *
+ *  - **Un set a la vez.** Sin plan que fije el tope, uno es el límite prudente.
+ *  - **Los sets restringidos quedan fuera.** La antigüedad mínima existe para no
+ *    entregar los sets más valiosos a quien no tiene historial (D7); un alquiler
+ *    puntual es exactamente ese caso, así que dejarlos pasar vaciaría la regla.
+ *  - **El set debe estar tasado**, porque el precio se calcula sobre su valor de
+ *    referencia.
+ */
+export function checkOneOffEligibility(input: OneOffEligibilityInput): Eligibility {
+  if (input.set.restricted) {
+    return {
+      eligible: false,
+      reason: "RESTRICTED_SET_REQUIRES_SUBSCRIPTION",
+      detail: "Este set solo está disponible para suscriptores con antigüedad.",
+    };
+  }
+
+  if (!input.set.hasReferenceValue) {
+    return {
+      eligible: false,
+      reason: "SET_NOT_PRICED",
+      detail: "Este set todavía no tiene precio de alquiler puntual.",
+    };
+  }
+
+  const occupied = input.currentCopyStates.filter(occupiesPlanSlot);
+  if (occupied.length > 0) {
+    const returning = occupied.some((state) => state !== "ALQUILADA");
+    return returning
+      ? {
+          eligible: false,
+          reason: "RETURN_IN_PROGRESS",
+          detail: "Tu devolución anterior aún no está completada.",
+        }
+      : {
+          eligible: false,
+          reason: "PLAN_LIMIT_REACHED",
+          detail: "Ya tienes un set alquilado. Devuélvelo para alquilar otro.",
+        };
   }
 
   return { eligible: true };

@@ -348,6 +348,31 @@ project. Read it at the start of every session.
      van en `metadata`, nunca en `entityId`.
   **Mensajes de Zod:** poner siempre el texto explícito (`.min(1, "…")`); si no, el
   mensaje en inglés de Zod acaba llegando al usuario dentro de `errors[]`.
+- **Bloque 5 completo — `rentals-returns` (2026-08-12):**
+  **Decisión estructural:** `applyTransition` (ahora en `src/repositories/
+  copy-transitions.ts`, compartido) **sincroniza el `Rental` dentro de la misma
+  transacción** que el cambio de estado de la `Copy`. Al derivarse uno del otro, no
+  existe el instante en que la copia ya volvió pero el alquiler sigue diciendo que
+  está fuera. Solo tres estados mueven el alquiler: `EN_DEVOLUCION` →
+  `RETURN_INITIATED`, `EN_INSPECCION` → `IN_INSPECTION`, `DISPONIBLE`/`BAJA` →
+  `COMPLETED`.
+  **Asignación:** recorre las copias libres por antigüedad y reserva con CAS; si otro
+  se adelanta, **reintenta con la siguiente** en vez de fallar. Sin copias responde
+  200 con `canQueue`, no un 4xx: la spec dice que se le *ofrece* la cola.
+  **Conformidad tácita: no se persiste.** Es la ausencia de discrepancia pasada la
+  ventana y se deduce de lo ya registrado; guardarla obligaría a un proceso que la
+  escribiera y a mantenerla en sincronía sin añadir información.
+  **A1 (D3):** la oferta a la cola se dispara **solo** al quedar `DISPONIBLE`, nunca
+  durante la inspección — ofrecer antes obligaría a des-prometer el set si resultara
+  estar incompleto. El recorrido salta a los no elegibles **sin sacarlos de la cola**.
+  **Hueco que encontró un test:** `requestSet` aplicaba `checkEligibility`, que exige
+  suscripción activa, así que **el alquiler puntual era imposible**. Ahora son dos
+  vías: `checkEligibility` (plan) y `checkOneOffEligibility` (un set a la vez, set
+  tasado, y **sets restringidos fuera** — la antigüedad mínima existe para no entregar
+  lo más valioso a quien no tiene historial, y un alquiler puntual es justo ese caso).
+  **Fakes:** `FakeCopyRepository.onTransition` reproduce la sincronización del
+  alquiler que en el adaptador real ocurre dentro de `applyTransition`; sin ese
+  cableado los dobles mienten sobre el comportamiento real.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -357,11 +382,12 @@ project. Read it at the start of every session.
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
-  **bloques 2, 3 y 4 completos** (`accounts-roles`, `catalog-inventory`,
-  `subscriptions`). Siguiente: bloque 5 (`rentals-returns`), que es donde por fin se
-  crean `Rental` de verdad y se usan las transiciones de `driver: "system"`. Para
-  cualquier cambio de estado de una copia, usar `transitionCopy` / `applyTransition`;
-  nunca `copy.update({state})`.
+  **bloques 2, 3, 4 y 5 completos** (`accounts-roles`, `catalog-inventory`,
+  `subscriptions`, `rentals-returns`). Siguiente: bloque 6 (`reservation-queue`) —
+  ya existen `QueueRepository.findWaitingEntries`/`offerCopyTo` y la oferta al cabeza
+  de cola (5.6); faltan encolado, aceptar/rechazar, caducidad y límite de colas. Para
+  cualquier cambio de estado de una copia, usar `advanceCopyLifecycle` /
+  `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

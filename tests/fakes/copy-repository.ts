@@ -23,6 +23,13 @@ export class FakeCopyRepository implements CopyRepository {
   }> = [];
 
   forceConflict = false;
+
+  /**
+   * Se invoca tras cada transición aplicada. Reproduce lo que en el adaptador real
+   * hace `applyTransition`: sincronizar el alquiler dentro de la misma operación.
+   */
+  onTransition: ((copyId: string, toState: CopyState, at: Date) => void) | null = null;
+
   private sequence = 0;
 
   constructor(private readonly copies: CopySummary[] = []) {}
@@ -66,6 +73,7 @@ export class FakeCopyRepository implements CopyRepository {
     copy.state = input.toState;
     if (input.toState === "BAJA") copy.retiredAt = input.at;
     this.transitions.push(input);
+    this.onTransition?.(input.copyId, input.toState, input.at);
 
     return { outcome: "transitioned", fromState };
   }

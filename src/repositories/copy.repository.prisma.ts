@@ -1,5 +1,6 @@
 import { prisma } from "@/db/prisma";
 import { canTransition, type CopyState } from "@/domain/copy/lifecycle";
+import { applyTransition } from "@/repositories/copy-transitions";
 import type {
   CopyRepository,
   CopySummary,
@@ -8,8 +9,6 @@ import type {
 
 /** Adaptador Prisma del puerto `CopyRepository`. */
 
-type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
-
 const COPY_SELECT = {
   id: true,
   setId: true,
@@ -17,53 +16,6 @@ const COPY_SELECT = {
   acquiredAt: true,
   retiredAt: true,
 } as const;
-
-/**
- * **Único camino** por el que cambia el estado de una copia.
- *
- * Une en un solo movimiento las dos cosas que nunca deben separarse: el
- * compare-and-swap de D12 y el registro de auditoría de PRD §7. Mientras todas las
- * transiciones pasen por aquí, es imposible dejar una copia en un estado nuevo sin
- * saber quién la movió — y como la firma exige `actorId`, tampoco cabe registrarla de
- * forma anónima.
- *
- * Devuelve `false` si la precondición de estado falló; quien llama decide qué error
- * de dominio corresponde.
- */
-async function applyTransition(
-  tx: Tx,
-  input: {
-    copyId: string;
-    fromState: CopyState;
-    toState: CopyState;
-    actorId: string;
-    reason: string | null;
-    at: Date;
-    copyData?: Record<string, unknown>;
-  }
-): Promise<boolean> {
-  // El estado esperado va en el WHERE: si otro proceso lo movió entre la lectura y
-  // esta escritura, `count` es 0 y el perdedor falla de forma determinista, sin
-  // bloqueos ni serialización global (D12).
-  const { count } = await tx.copy.updateMany({
-    where: { id: input.copyId, state: input.fromState },
-    data: { state: input.toState, ...input.copyData },
-  });
-  if (count === 0) return false;
-
-  await tx.copyStateTransition.create({
-    data: {
-      copyId: input.copyId,
-      actorId: input.actorId,
-      fromState: input.fromState,
-      toState: input.toState,
-      reason: input.reason,
-      createdAt: input.at,
-    },
-  });
-
-  return true;
-}
 
 export const prismaCopyRepository: CopyRepository = {
   async findById(copyId) {
@@ -91,8 +43,8 @@ export const prismaCopyRepository: CopyRepository = {
   },
 
   async transition({ copyId, toState, actorId, reason, at }): Promise<TransitionCopyOutcome> {
-    // Transacción: el cambio de estado y su auditoría entran juntos o no entra
-    // ninguno. Una copia movida sin rastro de quién fue sería peor que no moverla.
+    // Transacción: el cambio de estado, su auditoría y la sincronización del alquiler
+    // entran juntos o no entra ninguno.
     return prisma.$transaction(async (tx) => {
       const copy = await tx.copy.findUnique({
         where: { id: copyId },
@@ -112,8 +64,6 @@ export const prismaCopyRepository: CopyRepository = {
         actorId,
         reason,
         at,
-        // La baja marca además la fecha de retirada; el resto de transiciones solo
-        // cambian el estado.
         copyData: toState === "BAJA" ? { retiredAt: at } : undefined,
       });
       if (!applied) return { outcome: "conflict" as const };

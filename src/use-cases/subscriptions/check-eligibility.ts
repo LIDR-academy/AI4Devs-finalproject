@@ -2,6 +2,7 @@ import { NotFoundError } from "@/domain/errors";
 import { computeOneOffPrice, type OneOffPrice } from "@/domain/subscriptions/pricing";
 import {
   checkEligibility,
+  checkOneOffEligibility,
   type Eligibility,
 } from "@/domain/subscriptions/eligibility";
 import type { SettingsRepository } from "@/repositories/settings.repository";
@@ -44,21 +45,26 @@ export async function checkSetEligibility(
     settings.load(),
   ]);
 
-  const eligibility = checkEligibility({
-    subscription: subscription
-      ? {
+  const hasActiveSubscription = subscription?.status === "ACTIVE";
+
+  // Misma bifurcación que en la solicitud: con suscripción rigen las reglas del plan;
+  // sin ella, las del alquiler puntual.
+  const eligibility = hasActiveSubscription
+    ? checkEligibility({
+        subscription: {
           status: subscription.status,
           startedAt: subscription.startedAt,
           maxSimultaneousSets: subscription.maxSimultaneousSets,
-        }
-      : null,
-    currentCopyStates,
-    set: { restricted: set.restricted },
-    restrictedSetMinMonths: config.restrictedSetMinMonths,
-    now: now(),
-  });
-
-  const hasActiveSubscription = subscription?.status === "ACTIVE";
+        },
+        currentCopyStates,
+        set: { restricted: set.restricted },
+        restrictedSetMinMonths: config.restrictedSetMinMonths,
+        now: now(),
+      })
+    : checkOneOffEligibility({
+        currentCopyStates,
+        set: { restricted: set.restricted, hasReferenceValue: set.referenceValue !== null },
+      });
   const oneOffPrice =
     !hasActiveSubscription && set.referenceValue
       ? computeOneOffPrice({

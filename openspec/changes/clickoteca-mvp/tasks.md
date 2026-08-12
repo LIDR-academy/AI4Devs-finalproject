@@ -35,13 +35,13 @@
 - [x] 4.7 Tests: límites de plan, bloqueos de elegibilidad, antigüedad, cancelación bloqueada, precio por plan, cálculo de precio del alquiler puntual. **Hecho:** 47 tests nuevos (**199** en total). Encontraron tres fallos reales: `Number(null) === 0` colaba como configuración válida, la auditoría de planes registraba el valor nuevo como anterior, y el motivo de bloqueo confundía "lo tienes en casa" con "tu devolución no ha terminado"
 
 ## 5. Alquileres y devoluciones (`rentals-returns`)
-- [ ] 5.1 Solicitud y asignación de copia (camino con disponibilidad)
-- [ ] 5.2 Registro de condición en la entrega (checklist/foto) antes del envío + confirmación tácita o discrepancia del suscriptor
-- [ ] 5.3 Inicio de devolución + registro de recogida (logística simulada)
-- [ ] 5.4 Recepción e inspección por operador
-- [ ] 5.5 Higienización como paso separado
-- [ ] 5.6 Liberación que dispara oferta a cola tras inspección OK (A1)
-- [ ] 5.7 Tests: E2E entrega(+condición)→alquiler→devolución→inspección→higiene→disponible; discrepancia en la entrega genera incidencia sin imputar al suscriptor; recepción registra operador
+- [x] 5.1 Solicitud y asignación de copia (camino con disponibilidad). **Hecho:** `POST /api/sets/{id}/rentals`. La asignación recorre las copias libres **de la más antigua a la más nueva** y reserva con CAS; si otro se adelanta, se reintenta con la siguiente en vez de fallar — una carrera que el sistema puede resolver solo no debe llegar al usuario. Sin copias libres responde **200 con la opción de encolarse**, no un error. Snapshot inmutable de la dirección (D10)
+- [x] 5.2 Registro de condición en la entrega (checklist/foto) antes del envío + confirmación tácita o discrepancia del suscriptor. **Hecho:** `POST/GET /api/rentals/{id}/delivery` y `POST /api/rentals/{id}/discrepancy`. La **conformidad tácita no se persiste**: es la ausencia de discrepancia pasada la ventana, y se deduce de lo ya registrado. La discrepancia abre incidencia para el back-office **sin imputar nada** al suscriptor
+- [x] 5.3 Inicio de devolución + registro de recogida (logística simulada). **Hecho:** `POST /api/rentals/{id}/return` — transición de sistema, solo el dueño del alquiler, con `Shipment` de recogida
+- [x] 5.4 Recepción e inspección por operador. **Hecho:** recepción vía el endpoint de transiciones e inspección documentada en `POST /api/rentals/{id}/inspection`. El estado del `Rental` se deriva del de la `Copy` **dentro de la misma transacción**, así que no existe el instante en que la copia volvió pero el alquiler dice que sigue fuera
+- [x] 5.5 Higienización como paso separado. **Hecho:** `EN_INSPECCION → EN_HIGIENIZACION → DISPONIBLE`, con el alquiler cerrándose al volver a circulación
+- [x] 5.6 Liberación que dispara oferta a cola tras inspección OK (A1). **Hecho:** `advanceCopyLifecycle` ofrece al cabeza de cola **solo** cuando la copia queda `DISPONIBLE`, nunca durante la inspección (D3). El recorrido **salta** a quien no es elegible ahora mismo sin sacarlo de la cola
+- [x] 5.7 Tests: E2E entrega(+condición)→alquiler→devolución→inspección→higiene→disponible; discrepancia en la entrega genera incidencia sin imputar al suscriptor; recepción registra operador. **Hecho:** 22 tests nuevos (**221** en total) incluido el E2E completo, más el circuito real contra Postgres con sus 7 transiciones auditadas. El test destapó que **el alquiler puntual era imposible**: la elegibilidad exigía suscripción activa siempre
 
 ## 6. Cola de reservas (`reservation-queue`)
 - [ ] 6.1 Encolado por Set con marca de tiempo
