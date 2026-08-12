@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\UserStatus;
 use App\Livewire\Settings\Profile;
 use App\Models\User;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Livewire;
 
 test('profile page is displayed', function () {
@@ -10,8 +12,10 @@ test('profile page is displayed', function () {
     $this->get('/settings/profile')->assertOk();
 });
 
-test('profile information can be updated', function () {
-    $user = User::factory()->create();
+test('a name change applies immediately, while an email change is held as pending', function () {
+    $user = User::factory()->create(['status' => UserStatus::Active]);
+    $originalEmail = $user->getRawOriginal('email');
+    $originalVerifiedAt = $user->email_verified_at;
 
     $this->actingAs($user);
 
@@ -24,9 +28,40 @@ test('profile information can be updated', function () {
 
     $user->refresh();
 
-    expect($user->name)->toEqual('Test User');
-    expect($user->email)->toEqual('test@example.com');
-    expect($user->email_verified_at)->toBeNull();
+    expect($user->name)->toEqual('Test User')
+        ->and($user->getRawOriginal('email'))->toBe($originalEmail)
+        ->and($user->email_verified_at)->toEqual($originalVerifiedAt)
+        ->and($user->pending_email)->toBe('test@example.com');
+});
+
+test('changing a name alongside an email applies the name immediately, leaving the email pending', function () {
+    $user = User::factory()->create(['name' => 'Original Name', 'status' => UserStatus::Active]);
+    $originalEmail = $user->getRawOriginal('email');
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('name', 'New Name')
+        ->set('email', 'new-address@example.com')
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    $user->refresh();
+
+    expect($user->name)->toBe('New Name')
+        ->and($user->getRawOriginal('email'))->toBe($originalEmail)
+        ->and($user->pending_email)->toBe('new-address@example.com');
+});
+
+test('a self-service profile update cannot mass-assign a status', function () {
+    $user = User::factory()->create(['status' => UserStatus::Active]);
+
+    $this->actingAs($user);
+
+    expect(fn () => Livewire::test(Profile::class)->set('status', 'suspended'))
+        ->toThrow(PublicPropertyNotFoundException::class);
+
+    expect($user->fresh()->status)->toBe(UserStatus::Active);
 });
 
 test('email verification status is unchanged when email address is unchanged', function () {
@@ -41,7 +76,8 @@ test('email verification status is unchanged when email address is unchanged', f
 
     $response->assertHasNoErrors();
 
-    expect($user->refresh()->email_verified_at)->not->toBeNull();
+    expect($user->refresh()->email_verified_at)->not->toBeNull()
+        ->and($user->pending_email)->toBeNull();
 });
 
 test('saving your own unchanged email still passes the uniqueness check', function () {

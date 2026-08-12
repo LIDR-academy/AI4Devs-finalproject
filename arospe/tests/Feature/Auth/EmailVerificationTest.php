@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Event;
@@ -35,6 +36,21 @@ test('email can be verified', function () {
 
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
     $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
+});
+
+test('completing Fortifys own verification flow flips a previously inactive user to active', function () {
+    $user = User::factory()->unverified()->create();
+    expect($user->status)->toBe(UserStatus::Inactive);
+
+    $verificationUrl = URL::temporarySignedRoute(
+        'verification.verify',
+        now()->addMinutes(60),
+        ['id' => $user->id, 'hash' => sha1($user->email)],
+    );
+
+    $this->actingAs($user)->get($verificationUrl);
+
+    expect($user->fresh()->status)->toBe(UserStatus::Active);
 });
 
 test('email is not verified with invalid hash', function () {
