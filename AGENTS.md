@@ -393,6 +393,29 @@ project. Read it at the start of every session.
   las mismas filas y separarlos duplicaría el sondeo.
   `NotificationRepository` mínimo creado aquí para el recordatorio de oferta; el motor
   por eventos es el bloque 7.
+- **Bloque 7 completo — `notifications` (2026-08-12):**
+  **La no-duplicación no depende del código.** Cada aviso lleva una `dedupeKey`
+  derivada del evento (`QUEUE_TURN:<offerId>:<userId>`) y un **índice único** en
+  `notifications` la rechaza (migración `notification_dedupe_key`). El adaptador
+  traduce el P2002 a `false`, que quien llama distingue de "enviada". Comprobar antes
+  de insertar dejaría una ventana en la que dos ejecuciones simultáneas verían "no
+  existe" a la vez.
+  **Excepción deliberada:** `RETENTION_REMINDER` lleva el **ciclo** en la clave
+  (`:2026-08-12`), porque ese aviso *debe* repetirse cada X días; sigue impidiendo dos
+  envíos dentro del mismo ciclo.
+  **`emit()` nunca propaga errores.** Notificar es un efecto secundario: que no se
+  pueda avisar no puede tumbar el alquiler, la devolución o la baja que ya ocurrieron.
+  Los emisores reciben `emit?` **opcional**, así los tests que no lo necesitan no se
+  acoplan al motor.
+  El mapa evento→avisos es una **función pura** (`notificationsFor`), lo que permite
+  testear el catálogo entero sin base ni transporte.
+  **Cuidado con los rodeos:** al principio el aviso `QUEUE_TURN` sacaba el nombre del
+  set del último alquiler de la copia, y eso rompía el re-ofertado (una copia puede no
+  tener historial). El nombre sale ahora de la propia entrada de cola
+  (`QueueEntryCandidate.setName`).
+  **Migración con índice único:** vuelve a disparar el prompt interactivo de
+  `migrate dev`; se escribió el SQL a mano en `prisma/migrations/` y se aplicó con
+  `migrate deploy`.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -402,12 +425,10 @@ project. Read it at the start of every session.
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
-  **bloques 2 a 6 completos** (`accounts-roles`, `catalog-inventory`, `subscriptions`,
-  `rentals-returns`, `reservation-queue`). Siguiente: bloque 7 (`notifications`) — ya
-  existe `NotificationRepository` con dos emisores (recordatorio de retención y de
-  oferta); falta el motor por eventos de dominio y el resto de tipos. Para cualquier
-  cambio de estado de una copia, usar `advanceCopyLifecycle` / `transitionCopy`; nunca
-  `copy.update({state})`.
+  **bloques 2 a 7 completos**. Siguiente y último: bloque 8 (back-office y cierre) —
+  panel de operador y de admin, lectura limitada de cliente, recorrido E2E demostrable
+  con Playwright y `openspec validate --strict`. Para cualquier cambio de estado de una
+  copia, usar `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

@@ -52,10 +52,10 @@
 - [x] 6.6 Tests: basic adelanta a premium con el tiempo, empates, rechazo libera al instante, caducidad re-encola, salto de no elegibles. **Hecho:** 29 tests nuevos (**250** en total), más la verificación contra Postgres: un BASIC con 12 días de espera adelanta a un PREMIUM recién encolado (bono 10)
 
 ## 7. Notificaciones (`notifications`)
-- [ ] 7.1 Motor de notificaciones dirigido por eventos de dominio
-- [ ] 7.2 Eventos al suscriptor (te toca, recordatorios, devolución recibida/completada, confirmación)
-- [ ] 7.3 Eventos internos (incompleta detectada, baja)
-- [ ] 7.4 Tests: cada evento dispara su notificación; no se duplican/pierden
+- [x] 7.1 Motor de notificaciones dirigido por eventos de dominio. **Hecho:** `notificationsFor(evento)` es una **función pura** (evento → avisos a crear), lo que permite comprobar el mapa completo sin base de datos. `emit()` la ejecuta, resuelve el abanico al back-office y **nunca propaga errores**: notificar es un efecto secundario y no puede tumbar el alquiler o la baja que ya ocurrieron. `GET /api/notifications` + `POST /api/notifications/{id}/read`
+- [x] 7.2 Eventos al suscriptor (te toca, recordatorios, devolución recibida/completada, confirmación). **Hecho:** `QUEUE_TURN` (que **incluye hasta cuándo puede confirmar** — avisar sin decirlo obligaría a entrar en la app para saber si aún se está a tiempo), `OFFER_REMINDER`, `OFFER_EXPIRED`, `RENTAL_CONFIRMED`, `RETURN_RECEIVED`, `RETURN_COMPLETED` y `RETENTION_REMINDER`
+- [x] 7.3 Eventos internos (incompleta detectada, baja). **Hecho:** `COPY_INCOMPLETE`, `COPY_RETIRED` y `DELIVERY_DISCREPANCY_REPORTED` se reparten a **todos** los operadores y admins activos, cada uno con su propio aviso
+- [x] 7.4 Tests: cada evento dispara su notificación; no se duplican/pierden. **Hecho:** 21 tests nuevos (**265** en total). La no-duplicación **no depende de la disciplina del código**: cada aviso lleva una clave de idempotencia derivada del evento y un **índice único** en la base la rechaza (migración `notification_dedupe_key`). El recordatorio de retención lleva el ciclo en la clave, porque ese sí debe repetirse cada X días
 
 ## 8. Back-office y cierre
 - [ ] 8.1 Panel de operador (cola de trabajo de copias por estado)

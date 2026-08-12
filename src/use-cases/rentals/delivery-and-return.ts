@@ -14,10 +14,13 @@ import type {
 } from "@/repositories/rental.repository";
 import type { SettingsRepository } from "@/repositories/settings.repository";
 
+import type { Emitter } from "../notifications/notify";
+
 export interface RentalFlowDeps {
   rentals: RentalRepository;
   copies: CopyRepository;
   settings: SettingsRepository;
+  emit?: Emitter;
   now?: () => Date;
 }
 
@@ -121,7 +124,7 @@ export async function getDeliveryStatus(
  * durante el alquiler, y ante la duda la carga de la prueba es nuestra.
  */
 export async function reportDeliveryDiscrepancy(
-  { rentals, settings, now = () => new Date() }: RentalFlowDeps,
+  { rentals, settings, emit, now = () => new Date() }: RentalFlowDeps,
   input: { rentalId: string; actor: Actor; notes: string }
 ): Promise<{ incidentId: string }> {
   const rental = await loadRental(rentals, input.rentalId);
@@ -171,6 +174,16 @@ export async function reportDeliveryDiscrepancy(
     type: "DELIVERY_DISCREPANCY",
     notes: input.notes,
     at,
+  });
+
+  // El back-office tiene que enterarse: la incidencia sin aviso se quedaría esperando
+  // a que alguien mirase la lista por casualidad.
+  await emit?.({
+    type: "delivery.discrepancy",
+    copyId: rental.copyId,
+    rentalId: rental.id,
+    setName: rental.setName,
+    notes: input.notes,
   });
 
   return { incidentId: incident.id };

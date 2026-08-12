@@ -277,7 +277,13 @@ export const prismaQueueRepository: QueueRepository = {
       where: { setId, status: "WAITING" },
       // Orden de servicio de D11: menor entrada efectiva primero, desempate por id.
       orderBy: [{ effectiveEntryAt: "asc" }, { id: "asc" }],
-      select: { id: true, userId: true, setId: true, effectiveEntryAt: true },
+      select: {
+        id: true,
+        userId: true,
+        setId: true,
+        effectiveEntryAt: true,
+        set: { select: { name: true } },
+      },
     });
     if (entries.length === 0) return [];
 
@@ -325,6 +331,7 @@ export const prismaQueueRepository: QueueRepository = {
         entryId: entry.id,
         userId: entry.userId,
         setId: entry.setId,
+        setName: entry.set.name,
         effectiveEntryAt: entry.effectiveEntryAt,
         subscription: subscription
           ? {

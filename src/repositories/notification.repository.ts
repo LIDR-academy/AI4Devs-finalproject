@@ -1,28 +1,38 @@
-/**
- * Puerto de notificaciones. El motor completo dirigido por eventos de dominio es el
- * bloque 7; aquí está solo lo que necesitan los flujos ya implementados.
- */
+import type { NotificationType } from "@/domain/notifications/events";
+
+export interface NotificationView {
+  id: string;
+  type: NotificationType | string;
+  payload: Record<string, unknown> | null;
+  sentAt: Date;
+  readAt: Date | null;
+}
+
+/** Puerto de notificaciones (capability `notifications`). */
 export interface NotificationRepository {
+  /**
+   * Crea la notificación **si no existe ya** una con la misma clave de idempotencia.
+   * Devuelve `false` cuando se descartó por duplicada, para que quien llama pueda
+   * distinguir "enviada" de "ya estaba".
+   */
   create(input: {
     userId: string;
-    /** Tipo del catálogo de notificaciones (se cierra como unión en el bloque 7). */
     type: string;
     payload?: Record<string, unknown> | null;
     relatedEntityType?: string | null;
     relatedEntityId?: string | null;
+    dedupeKey?: string | null;
     at: Date;
-  }): Promise<{ id: string }>;
+  }): Promise<boolean>;
+
+  /** Destinatarios del back-office (operadores y admins) para los avisos internos. */
+  listStaffRecipients(): Promise<readonly string[]>;
 
   listForUser(
     userId: string,
     options?: { unreadOnly?: boolean; limit?: number }
-  ): Promise<
-    ReadonlyArray<{
-      id: string;
-      type: string;
-      payload: Record<string, unknown> | null;
-      sentAt: Date;
-      readAt: Date | null;
-    }>
-  >;
+  ): Promise<readonly NotificationView[]>;
+
+  /** Marca como leída una notificación **del propio usuario**. */
+  markRead(input: { notificationId: string; userId: string; at: Date }): Promise<boolean>;
 }

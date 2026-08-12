@@ -5,7 +5,13 @@ import { prismaRentalRepository } from "@/repositories/rental.repository.prisma"
 import { prismaSettingsRepository } from "@/repositories/settings.repository.prisma";
 import { prismaSubscriptionRepository } from "@/repositories/subscription.repository.prisma";
 
+import { emitterFor } from "../notifications/notify";
 import type { OfferDeps } from "./respond-to-offer";
+
+/** Emisor de eventos de dominio cableado a la base. */
+export function emitter() {
+  return emitterFor({ notifications: prismaNotificationRepository });
+}
 
 /**
  * Cableado de los flujos de oferta. Se centraliza porque lo comparten los Route
@@ -19,15 +25,6 @@ export function offerDeps(): OfferDeps {
     subscriptions: prismaSubscriptionRepository,
     settings: prismaSettingsRepository,
     repository: prismaCopyRepository,
-    notify: async ({ userId, setId, setName, offerId, at }) => {
-      await prismaNotificationRepository.create({
-        userId,
-        type: "OFFER_REMINDER",
-        payload: { setId, setName },
-        relatedEntityType: "ReservationOffer",
-        relatedEntityId: offerId,
-        at,
-      });
-    },
+    emit: emitter(),
   };
 }

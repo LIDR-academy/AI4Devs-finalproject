@@ -7,6 +7,8 @@ export interface QueueEntryCandidate {
   entryId: string;
   userId: string;
   setId: string;
+  /** Nombre del Set, para el texto del aviso «te toca». */
+  setName: string;
   effectiveEntryAt: Date;
   /** Situación del usuario, para saltar a quien no sea elegible ahora mismo (D5). */
   subscription: {

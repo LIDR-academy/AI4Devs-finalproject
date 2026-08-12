@@ -6,6 +6,7 @@ import { toProblemResponse } from "@/http/problem";
 import { prismaCopyRepository } from "@/repositories/copy.repository.prisma";
 import { prismaRentalRepository } from "@/repositories/rental.repository.prisma";
 import { prismaSettingsRepository } from "@/repositories/settings.repository.prisma";
+import { emitter } from "@/use-cases/queue/deps";
 import { reportDeliveryDiscrepancy } from "@/use-cases/rentals/delivery-and-return";
 
 const DiscrepancySchema = z.object({
@@ -33,6 +34,7 @@ export async function POST(
         rentals: prismaRentalRepository,
         copies: prismaCopyRepository,
         settings: prismaSettingsRepository,
+        emit: emitter(),
       },
       { rentalId, actor: { id: user.id, role: user.role }, notes }
     );

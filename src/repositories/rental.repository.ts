@@ -48,6 +48,14 @@ export interface RentalRepository {
   listForUser(userId: string, options?: { activeOnly?: boolean }): Promise<readonly RentalSummary[]>;
 
   /**
+   * Alquiler más reciente de una copia, esté abierto o recién cerrado. Es lo que
+   * permite saber **a quién avisar** tras una transición: cuando la copia vuelve a
+   * `DISPONIBLE` el alquiler ya está completado, así que buscar solo los activos
+   * dejaría sin aviso justo al evento que más le interesa al suscriptor.
+   */
+  findLatestByCopy(copyId: string): Promise<RentalSummary | null>;
+
+  /**
    * Asigna **una** copia disponible del Set y abre el alquiler, todo en una
    * transacción y con compare-and-swap sobre el estado de la copia (D12).
    *

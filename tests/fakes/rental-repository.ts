@@ -36,6 +36,13 @@ export class FakeRentalRepository implements RentalRepository {
     return copy ? { ...rental, copyState: copy.state } : rental;
   }
 
+  async findLatestByCopy(copyId: string) {
+    const rental = [...this.rentals].reverse().find((r) => r.copyId === copyId);
+    if (!rental) return null;
+    const copy = await this.copies.findById(copyId);
+    return copy ? { ...rental, copyState: copy.state } : rental;
+  }
+
   async listForUser(userId: string, options: { activeOnly?: boolean } = {}) {
     return this.rentals.filter(
       (r) => r.userId === userId && (!options.activeOnly || r.status !== "COMPLETED")

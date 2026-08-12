@@ -71,6 +71,15 @@ export const prismaRentalRepository: RentalRepository = {
     return rows.map((row) => toRental(row as RentalRow));
   },
 
+  async findLatestByCopy(copyId) {
+    const row = await prisma.rental.findFirst({
+      where: { copyId },
+      select: RENTAL_SELECT,
+      orderBy: { startedAt: "desc" },
+    });
+    return row ? toRental(row as RentalRow) : null;
+  },
+
   async assignAvailableCopy(input): Promise<AssignCopyOutcome> {
     // Se recorren las copias libres de la más antigua a la más nueva y se intenta
     // reservar cada una con CAS. Rotar por antigüedad reparte el desgaste en vez de

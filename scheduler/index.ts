@@ -2,7 +2,7 @@ import "dotenv/config";
 import cron from "node-cron";
 
 import { prismaRetentionRepository } from "@/repositories/retention.repository.prisma";
-import { offerDeps } from "@/use-cases/queue/deps";
+import { emitter, offerDeps } from "@/use-cases/queue/deps";
 import { expireOffers, sendOfferReminders } from "@/use-cases/queue/respond-to-offer";
 import { sendRetentionReminders } from "@/use-cases/subscriptions/retention-reminders";
 
@@ -45,7 +45,10 @@ async function runRetentionReminders() {
   }
   retentionRunning = true;
   try {
-    const result = await sendRetentionReminders({ retention: prismaRetentionRepository });
+    const result = await sendRetentionReminders({
+      retention: prismaRetentionRepository,
+      emit: emitter(),
+    });
     console.log(
       `[scheduler] Recordatorios de retención: ${result.sent} enviados de ${result.candidates} candidatos.`
     );

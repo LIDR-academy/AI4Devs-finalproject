@@ -87,7 +87,9 @@ function offerDepsFor(settingsRepo: SettingsRepository = settings, now = () => A
     subscriptions: subscriptionsFor(),
     settings: settingsRepo,
     repository: copies as unknown as CopyRepository,
-    notify: async ({ userId }) => { notified.push(userId); },
+    emit: async (event) => {
+      if ("userId" in event) notified.push(`${event.type}:${event.userId}`);
+    },
     now,
   };
 }
@@ -274,7 +276,7 @@ describe("ventana de confirmación (6.4)", () => {
     expect((await sendOfferReminders(offerDepsFor(settings, () => AT))).sent).toBe(0);
 
     expect((await sendOfferReminders(offerDepsFor(settings, () => half))).sent).toBe(1);
-    expect(notified).toEqual(["ana"]);
+    expect(notified).toEqual(["offer.reminder:ana"]);
 
     // Segunda pasada: ya está marcado, no se repite.
     expect((await sendOfferReminders(offerDepsFor(settings, () => half))).sent).toBe(0);

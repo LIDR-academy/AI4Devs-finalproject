@@ -5,6 +5,7 @@ import type { RentalRepository } from "@/repositories/rental.repository";
 import type { SettingsRepository } from "@/repositories/settings.repository";
 import type { SubscriptionRepository } from "@/repositories/subscription.repository";
 
+import type { Emitter } from "../notifications/notify";
 import { offerToHeadOfQueue } from "../rentals/advance-lifecycle";
 
 export interface OfferDeps {
@@ -14,13 +15,7 @@ export interface OfferDeps {
   settings: SettingsRepository;
   /** Para reofertar al siguiente; se pasa aparte porque el flujo lo comparte con 5.6. */
   repository: import("@/repositories/copy.repository").CopyRepository;
-  notify?: (input: {
-    userId: string;
-    setId: string;
-    setName: string;
-    offerId: string;
-    at: Date;
-  }) => Promise<void>;
+  emit?: Emitter;
   now?: () => Date;
 }
 
@@ -68,6 +63,14 @@ export async function acceptOffer(
       "La oferta ha dejado de estar vigente; vuelve a intentarlo."
     );
   }
+
+  await deps.emit?.({
+    type: "rental.confirmed",
+    userId: input.userId,
+    rentalId: result.rentalId,
+    setId: offer.setId,
+    setName: offer.setName,
+  });
 
   return result;
 }
@@ -133,6 +136,14 @@ export async function expireOffers(deps: OfferDeps): Promise<ExpireOffersResult>
       if (!closed) continue;
       closedCount++;
 
+      await deps.emit?.({
+        type: "offer.expired",
+        userId: offer.userId,
+        offerId: offer.offerId,
+        setId: offer.setId,
+        setName: offer.setName,
+      });
+
       // Se excluye a quien acaba de dejarla caducar: si fuera el único en la cola se
       // la volveríamos a ofrecer al instante, en bucle.
       if (await passToNext(deps, { ...closed, excludeEntryId: offer.entryId })) reoffered++;
@@ -152,7 +163,7 @@ export interface OfferRemindersResult {
 
 /** Recordatorio a mitad de ventana (D5). También lo invoca el scheduler. */
 export async function sendOfferReminders(deps: OfferDeps): Promise<OfferRemindersResult> {
-  const { queue, notify, now = () => new Date() } = deps;
+  const { queue, emit, now = () => new Date() } = deps;
 
   const at = now();
   const candidates = await queue.findOffersNeedingReminder(at);
@@ -163,12 +174,12 @@ export async function sendOfferReminders(deps: OfferDeps): Promise<OfferReminder
     if (at.getTime() < reminderAt.getTime()) continue;
 
     try {
-      await notify?.({
+      await emit?.({
+        type: "offer.reminder",
         userId: offer.userId,
+        offerId: offer.offerId,
         setId: offer.setId,
         setName: offer.setName,
-        offerId: offer.offerId,
-        at,
       });
       // Se marca aunque no haya notificador conectado: el recordatorio se considera
       // procesado y no debe repetirse en cada pasada.
@@ -188,7 +199,14 @@ async function passToNext(
   closed: { copyId: string; setId: string; excludeEntryId?: string }
 ): Promise<boolean> {
   const offer = await offerToHeadOfQueue(
-    { repository: deps.repository, queue: deps.queue, settings: deps.settings, now: deps.now },
+    {
+      repository: deps.repository,
+      queue: deps.queue,
+      settings: deps.settings,
+      rentals: deps.rentals,
+      emit: deps.emit,
+      now: deps.now,
+    },
     closed
   );
   return offer !== null;

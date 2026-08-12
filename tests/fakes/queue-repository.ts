@@ -94,6 +94,7 @@ export class FakeQueueRepository implements QueueRepository {
           entryId: e.id,
           userId: e.userId,
           setId: e.setId,
+          setName: e.setName,
           effectiveEntryAt: e.effectiveEntryAt,
           subscription: e.subscription,
           currentCopyStates: e.currentCopyStates,

@@ -465,6 +465,10 @@ model Notification {
   id                String    @id @default(uuid()) @db.Uuid
   userId            String    @db.Uuid
   type              String    // QUEUE_TURN | OFFER_REMINDER | RENTAL_CONFIRMED | ...
+  /// Clave de idempotencia (p. ej. "QUEUE_TURN:<offerId>:<userId>"). El índice único
+  /// es lo que garantiza que un evento reintentado no genere dos avisos: sin él,
+  /// "no se duplican" dependería de que ningún camino se ejecutara dos veces.
+  dedupeKey         String?   @unique
   payload           Json?
   relatedEntityType String?
   relatedEntityId   String?   @db.Uuid

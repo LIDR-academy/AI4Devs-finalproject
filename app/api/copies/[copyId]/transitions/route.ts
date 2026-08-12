@@ -6,7 +6,9 @@ import { parseJsonBody } from "@/http/parse-body";
 import { toProblemResponse } from "@/http/problem";
 import { prismaCopyRepository } from "@/repositories/copy.repository.prisma";
 import { prismaQueueRepository } from "@/repositories/queue.repository.prisma";
+import { prismaRentalRepository } from "@/repositories/rental.repository.prisma";
 import { prismaSettingsRepository } from "@/repositories/settings.repository.prisma";
+import { emitter } from "@/use-cases/queue/deps";
 import { advanceCopyLifecycle } from "@/use-cases/rentals/advance-lifecycle";
 
 const TransitionSchema = z.object({
@@ -38,6 +40,8 @@ export async function POST(
         repository: prismaCopyRepository,
         queue: prismaQueueRepository,
         settings: prismaSettingsRepository,
+        rentals: prismaRentalRepository,
+        emit: emitter(),
       },
       { copyId, toState: to, actor: { id: user.id, role: user.role }, reason }
     );

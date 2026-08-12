@@ -6,10 +6,14 @@ import type { AuditRepository } from "@/repositories/audit.repository";
 import type { RetentionConfig, RetentionRepository } from "@/repositories/retention.repository";
 import type { SetRepository } from "@/repositories/set.repository";
 
+import type { Emitter } from "../notifications/notify";
+
 export interface RetentionDeps {
   retention: RetentionRepository;
   sets?: SetRepository;
   audit?: AuditRepository;
+  /** Si se aporta, los recordatorios salen por el motor de notificaciones (7.1). */
+  emit?: Emitter;
   now?: () => Date;
 }
 
@@ -63,6 +67,7 @@ export interface RetentionRunResult {
  */
 export async function sendRetentionReminders({
   retention,
+  emit,
   now = () => new Date(),
 }: RetentionDeps): Promise<RetentionRunResult> {
   const at = now();
@@ -86,6 +91,15 @@ export async function sendRetentionReminders({
         setId: candidate.setId,
         setName: candidate.setName,
         at,
+      });
+      // El ciclo va en el evento: este aviso **debe** repetirse cada X días, así que
+      // su clave de idempotencia tiene que cambiar de un ciclo al siguiente.
+      await emit?.({
+        type: "retention.reminder",
+        userId: candidate.userId,
+        rentalId: candidate.rentalId,
+        setName: candidate.setName,
+        cycle: at.toISOString().slice(0, 10),
       });
       sent++;
     } catch (error) {

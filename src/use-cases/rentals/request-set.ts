@@ -10,11 +10,14 @@ import type { SetRepository } from "@/repositories/set.repository";
 import type { SettingsRepository } from "@/repositories/settings.repository";
 import type { SubscriptionRepository } from "@/repositories/subscription.repository";
 
+import type { Emitter } from "../notifications/notify";
+
 export interface RequestSetDeps {
   rentals: RentalRepository;
   subscriptions: SubscriptionRepository;
   sets: SetRepository;
   settings: SettingsRepository;
+  emit?: Emitter;
   now?: () => Date;
 }
 
@@ -33,7 +36,7 @@ export type RequestSetResult =
  * que no toca la base evita reservar una copia para luego tener que soltarla.
  */
 export async function requestSet(
-  { rentals, subscriptions, sets, settings, now = () => new Date() }: RequestSetDeps,
+  { rentals, subscriptions, sets, settings, emit, now = () => new Date() }: RequestSetDeps,
   input: { userId: string; setId: string }
 ): Promise<RequestSetResult> {
   const set = await sets.findById(input.setId);
@@ -102,5 +105,14 @@ export async function requestSet(
   if (result.outcome === "no_copy_available") {
     return { outcome: "no_copy_available", canQueue: true };
   }
+
+  await emit?.({
+    type: "rental.confirmed",
+    userId: input.userId,
+    rentalId: result.rental.id,
+    setId: input.setId,
+    setName: set.name,
+  });
+
   return { outcome: "assigned", rental: result.rental };
 }

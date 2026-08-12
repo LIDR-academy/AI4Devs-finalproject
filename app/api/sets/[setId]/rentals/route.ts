@@ -4,6 +4,7 @@ import { prismaRentalRepository } from "@/repositories/rental.repository.prisma"
 import { prismaSetRepository } from "@/repositories/set.repository.prisma";
 import { prismaSettingsRepository } from "@/repositories/settings.repository.prisma";
 import { prismaSubscriptionRepository } from "@/repositories/subscription.repository.prisma";
+import { emitter } from "@/use-cases/queue/deps";
 import { requestSet } from "@/use-cases/rentals/request-set";
 
 /**
@@ -27,6 +28,7 @@ export async function POST(
         subscriptions: prismaSubscriptionRepository,
         sets: prismaSetRepository,
         settings: prismaSettingsRepository,
+        emit: emitter(),
       },
       { userId: user.id, setId }
     );

@@ -3,14 +3,20 @@ import type { CopyState } from "@/domain/copy/lifecycle";
 import { checkEligibility } from "@/domain/subscriptions/eligibility";
 import type { CopyRepository } from "@/repositories/copy.repository";
 import type { CreatedOffer, QueueRepository } from "@/repositories/queue.repository";
+import type { RentalRepository } from "@/repositories/rental.repository";
 import type { SettingsRepository } from "@/repositories/settings.repository";
 
 import { transitionCopy, type TransitionCopyResult } from "../copies/transition-copy";
+import type { Emitter } from "../notifications/notify";
 
 export interface AdvanceLifecycleDeps {
   repository: CopyRepository;
   queue: QueueRepository;
   settings: SettingsRepository;
+  /** Para resolver a quién avisar tras la transición. */
+  rentals?: RentalRepository;
+  /** Emisor de eventos de dominio; opcional para no acoplar los tests que no lo usan. */
+  emit?: Emitter;
   now?: () => Date;
 }
 
@@ -43,12 +49,77 @@ export async function advanceCopyLifecycle(
     input
   );
 
+  await announceTransition(deps, { copyId: input.copyId, toState: result.toState, reason: input.reason });
+
   if (result.toState !== "DISPONIBLE") return { ...result, offer: null };
 
   const copy = await deps.repository.findById(input.copyId);
   const offer = copy ? await offerToHeadOfQueue(deps, { copyId: copy.id, setId: copy.setId }) : null;
 
   return { ...result, offer };
+}
+
+/**
+ * Publica el evento de dominio que corresponde al nuevo estado.
+ *
+ * Se hace **después** de que la transición esté confirmada: un aviso de "devolución
+ * recibida" que se enviara antes de recibirla de verdad sería peor que no enviarlo.
+ */
+async function announceTransition(
+  deps: AdvanceLifecycleDeps,
+  input: { copyId: string; toState: CopyState; reason?: string | null }
+): Promise<void> {
+  if (!deps.emit || !deps.rentals) return;
+
+  const rental = await deps.rentals.findLatestByCopy(input.copyId);
+  const setName = rental?.setName ?? "el set";
+
+  switch (input.toState) {
+    case "EN_INSPECCION":
+      if (rental) {
+        await deps.emit({
+          type: "return.received",
+          userId: rental.userId,
+          rentalId: rental.id,
+          setName,
+        });
+      }
+      return;
+
+    case "DISPONIBLE":
+      // Solo si venía de una devolución: una copia recién catalogada no tiene a quién
+      // avisar, y el alquiler más reciente ya estará cerrado.
+      if (rental?.status === "COMPLETED") {
+        await deps.emit({
+          type: "return.completed",
+          userId: rental.userId,
+          rentalId: rental.id,
+          setName,
+        });
+      }
+      return;
+
+    case "INCOMPLETA":
+      await deps.emit({
+        type: "copy.incomplete",
+        copyId: input.copyId,
+        setName,
+        rentalId: rental?.id ?? null,
+      });
+      return;
+
+    case "BAJA":
+      await deps.emit({
+        type: "copy.retired",
+        copyId: input.copyId,
+        setName,
+        reason: input.reason ?? null,
+      });
+      return;
+
+    default:
+      return;
+  }
 }
 
 /**
@@ -59,7 +130,7 @@ export async function advanceCopyLifecycle(
  * conserva su turno para la próxima vez (D5).
  */
 export async function offerToHeadOfQueue(
-  { queue, settings, now = () => new Date() }: AdvanceLifecycleDeps,
+  { queue, settings, emit, now = () => new Date() }: AdvanceLifecycleDeps,
   input: {
     copyId: string;
     setId: string;
@@ -104,8 +175,20 @@ export async function offerToHeadOfQueue(
     });
     // `null` significa que otro proceso se llevó la copia mientras recorríamos la
     // cola: no hay nada que ofrecer y tampoco un error que reportar.
-    if (offer) return offer;
-    return null;
+    if (!offer) return null;
+
+    await emit?.({
+      type: "offer.created",
+      userId: offer.userId,
+      offerId: offer.offerId,
+      setId: input.setId,
+      // El nombre viene de la propia entrada de cola: buscarlo a través del alquiler
+      // de la copia sería un rodeo que además falla en una copia sin historial.
+      setName: entry.setName,
+      windowExpiresAt: offer.windowExpiresAt,
+    });
+
+    return offer;
   }
 
   return null;
