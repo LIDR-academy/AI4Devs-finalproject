@@ -18,6 +18,14 @@ beforeEach(function () {
 
 test('seeding a production environment creates no test@example.com fixture user', function () {
     app()->instance('env', 'production');
+    // Isolate this assertion from whatever SUPER_ADMIN_EMAIL happens to be set to locally: when
+    // it is unset, RolePermissionSeeder::bootstrapSuperAdmin() is a no-op (`! filled($email)`),
+    // so only DatabaseSeeder's own environment gate is under test here. Without this, a local
+    // .env that (coincidentally, as in this repo's dev setup) sets SUPER_ADMIN_EMAIL to the same
+    // address as the fixture user makes bootstrapSuperAdmin's *provision* branch create a
+    // test@example.com row through a completely different code path, producing a false failure
+    // that has nothing to do with the fixture gate this test exists to check.
+    config(['auth.super_admin.email' => null]);
 
     (new DatabaseSeeder)();
 
@@ -46,6 +54,10 @@ test('seeding the default non-production test environment still creates the test
 
 test('seeding a staging environment creates no test@example.com fixture user', function () {
     app()->instance('env', 'staging');
+    // Same isolation as the production case above: neutralize the ambient SUPER_ADMIN_EMAIL so
+    // this test checks only DatabaseSeeder's own fixture gate, not RolePermissionSeeder's
+    // separate (and unconditional-by-design) Super Admin provisioning path.
+    config(['auth.super_admin.email' => null]);
 
     (new DatabaseSeeder)();
 
