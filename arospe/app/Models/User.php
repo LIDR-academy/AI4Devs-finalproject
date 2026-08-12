@@ -3,9 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -21,7 +23,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $id
  * @property string $name
  * @property string $email
+ * @property string|null $pending_email
  * @property Carbon|null $email_verified_at
+ * @property UserStatus $status
  * @property string $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -47,7 +51,26 @@ class User extends Authenticatable implements PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'status' => UserStatus::class,
         ];
+    }
+
+    /**
+     * Lowercase the email address on read.
+     *
+     * This is a read-only consistency layer for any row that could carry a
+     * mixed-case address; it deliberately does not replace the
+     * normalise-before-validation step performed by the callers that write
+     * to this column (see App\Actions\Users\RequestEmailChange and
+     * App\Livewire\Settings\Profile).
+     *
+     * @return Attribute<string, never>
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            get: fn (string $value): string => strtolower($value),
+        );
     }
 
     /**

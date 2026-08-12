@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Listeners\ActivateVerifiedUser;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -27,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureAuthorization();
+        $this->configureEventListeners();
     }
 
     /**
@@ -77,5 +81,13 @@ class AppServiceProvider extends ServiceProvider
 
             return $user->hasRole($superAdminRoleName, 'web') ? true : null;
         });
+    }
+
+    /**
+     * Register application event listeners.
+     */
+    protected function configureEventListeners(): void
+    {
+        Event::listen(Verified::class, ActivateVerifiedUser::class);
     }
 }
