@@ -26,13 +26,13 @@
 - [x] 3.6 Proyección pública vs. autenticada del catálogo (la pública oculta disponibilidad y cola y solo muestra Sets publicados) + tests. **Hecho:** `GET /api/catalog/{setId}` devuelve **un recurso con dos proyecciones** según haya sesión. La autenticada añade `availableCopies`, `totalCopies`, `queueLength` y `queuePosition` —la posición es **de quien pregunta**, nunca revela quién ocupa las demás— y sigue sin exponer el estado de cada copia ni el valor de referencia
 
 ## 4. Suscripciones (`subscriptions`)
-- [ ] 4.1 Planes basic/premium, límites de sets simultáneos y precio mensual configurable por plan
-- [ ] 4.2 Regla "no nuevo set hasta devolución completada"
-- [ ] 4.3 Antigüedad mínima para sets restringidos (configurable)
-- [ ] 4.4 No cancelar/pausar con set fuera
-- [ ] 4.5 Recordatorios de retención (configurable por set/admin)
-- [ ] 4.6 Alquiler puntual sin suscripción (precio = % configurable del valor de referencia del Set)
-- [ ] 4.7 Tests: límites de plan, bloqueos de elegibilidad, antigüedad, cancelación bloqueada, precio por plan, cálculo de precio del alquiler puntual
+- [x] 4.1 Planes basic/premium, límites de sets simultáneos y precio mensual configurable por plan. **Hecho:** `PATCH /api/plans/{code}` (solo admin) para precio, límite de sets y bono de cola, con auditoría del **antes y el después**. El límite se aplica en `checkEligibility`
+- [x] 4.2 Regla "no nuevo set hasta devolución completada". **Hecho:** no es una comprobación aparte — la plaza del plan **no se libera al iniciar la devolución** sino cuando la copia vuelve a `DISPONIBLE` (`OCCUPYING_COPY_STATES`), así que la regla se cae del propio límite. El motivo devuelto distingue `RETURN_IN_PROGRESS` de `PLAN_LIMIT_REACHED`, porque lo que debe hacer el suscriptor es distinto en cada caso
+- [x] 4.3 Antigüedad mínima para sets restringidos (configurable). **Hecho:** `monthsBetween` cuenta meses completos y el umbral sale de `restrictedSetMinMonths`. El mensaje dice cuánto le falta
+- [x] 4.4 No cancelar/pausar con set fuera. **Hecho:** `PUT /api/subscriptions/me` — siempre sobre la suscripción del usuario en sesión, nunca por id. Bloquea solo por copias **en su poder** (`ALQUILADA`/`EN_DEVOLUCION`): una copia ya en inspección significa que el suscriptor cumplió con devolverla. Reactivar no exige nada
+- [x] 4.5 Recordatorios de retención (configurable por set/admin). **Hecho:** `PUT /api/sets/{id}/retention-reminder` (solo admin) + política pura `isReminderDue` + job diario en el **scheduler**. Solo se recuerda si hay **cola**: sin nadie esperando, meter prisa solo molesta. La última fecha se deduce de las notificaciones ya enviadas, sin columna extra que mantener
+- [x] 4.6 Alquiler puntual sin suscripción (precio = % configurable del valor de referencia del Set). **Hecho:** `computeOneOffPrice` calcula en **céntimos enteros** con mínimo configurable, y el presupuesto se ofrece justo a quien no tiene suscripción activa
+- [x] 4.7 Tests: límites de plan, bloqueos de elegibilidad, antigüedad, cancelación bloqueada, precio por plan, cálculo de precio del alquiler puntual. **Hecho:** 47 tests nuevos (**199** en total). Encontraron tres fallos reales: `Number(null) === 0` colaba como configuración válida, la auditoría de planes registraba el valor nuevo como anterior, y el motivo de bloqueo confundía "lo tienes en casa" con "tu devolución no ha terminado"
 
 ## 5. Alquileres y devoluciones (`rentals-returns`)
 - [ ] 5.1 Solicitud y asignación de copia (camino con disponibilidad)

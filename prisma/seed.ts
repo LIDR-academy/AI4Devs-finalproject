@@ -87,6 +87,9 @@ async function seedSystemSettings() {
     retentionReminderCadenceDays: 7,
     // D9 — alquiler puntual como % del valor de referencia del Set.
     oneOffRentalPricePercent: 15,
+    // D9 — importe mínimo del alquiler puntual: un porcentaje sobre un set barato no
+    // llegaría a cubrir el envío.
+    oneOffRentalMinPrice: 9.99,
   };
 
   let created = 0;

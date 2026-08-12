@@ -322,6 +322,32 @@ project. Read it at the start of every session.
   **Trampa de migración:** `npm run db:migrate -- --name X` **se cuelga** (el `--` con
   el `&&` del script). Camino fiable: `npx prisma migrate dev --name X --create-only`,
   revisar el SQL, `npx prisma migrate deploy` y `npx prisma generate`.
+- **Bloque 4 completo — `subscriptions` (2026-08-12):**
+  **Idea central:** la regla "no hay set nuevo hasta completar la devolución" **no es
+  una comprobación aparte**. La plaza del plan no se libera al iniciar la devolución
+  sino cuando la copia vuelve a `DISPONIBLE` (`OCCUPYING_COPY_STATES` = `ALQUILADA` +
+  los tres estados de retorno), así que la regla se cae del propio límite. El motivo
+  devuelto sí distingue `RETURN_IN_PROGRESS` de `PLAN_LIMIT_REACHED`, porque la acción
+  que resuelve cada caso es distinta. Ojo: **solo `ALQUILADA` significa "lo tienes en
+  casa"**; cualquier otro estado que ocupe plaza es una devolución en marcha.
+  Para **pausar/cancelar** el conjunto es más estrecho (`HELD_COPY_STATES` =
+  `ALQUILADA` + `EN_DEVOLUCION`): si la copia ya está en inspección, el suscriptor
+  cumplió y retenerle la suscripción por nuestro proceso interno sería injusto.
+  `SystemSetting` se lee por `resolveSettings`, **tipado y con valores por defecto**:
+  un dato corrupto en la base no puede dejar sin criterio a una regla de negocio.
+  Scheduler: primer job real (recordatorios de retención, diario a las 10:00, con
+  guarda anti-solape). La última fecha de recordatorio se **deduce de las
+  notificaciones** ya enviadas, sin columna extra que mantener en sincronía.
+  **Tres fallos que solo aparecieron al probar:**
+  1. `Number(null) === 0` — un `null` en `SystemSetting` se colaba como 0 válido y
+     ponía un parámetro a cero. `toUsableNumber` descarta `null`/`undefined`/`""`.
+  2. La auditoría de planes registraba el valor **nuevo** como anterior, porque
+     `before` era una referencia al objeto que el repositorio mutaba. Ahora se copia.
+  3. **`AuditLog.entityId` es una columna UUID**: pasarle `"PREMIUM"` reventaba la
+     inserción con un 500 *después* de haber actualizado el plan. Las claves legibles
+     van en `metadata`, nunca en `entityId`.
+  **Mensajes de Zod:** poner siempre el texto explícito (`.min(1, "…")`); si no, el
+  mensaje en inglés de Zod acaba llegando al usuario dentro de `errors[]`.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -331,9 +357,11 @@ project. Read it at the start of every session.
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
-  **bloque 2 completo**. **Bloque 3 (`catalog-inventory`) completo** también.
-  Siguiente: bloque 4 (`subscriptions`). Para cualquier cambio de estado de una copia,
-  usar `transitionCopy` / `applyTransition`; nunca `copy.update({state})`.
+  **bloques 2, 3 y 4 completos** (`accounts-roles`, `catalog-inventory`,
+  `subscriptions`). Siguiente: bloque 5 (`rentals-returns`), que es donde por fin se
+  crean `Rental` de verdad y se usan las transiciones de `driver: "system"`. Para
+  cualquier cambio de estado de una copia, usar `transitionCopy` / `applyTransition`;
+  nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

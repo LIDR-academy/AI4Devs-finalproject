@@ -53,7 +53,13 @@ export interface AuditEntry {
   actorId: string;
   action: AuditAction;
   entityType: AuditEntityType;
-  /** Identificador de la entidad afectada; nulo en acciones sin entidad concreta. */
+  /**
+   * Identificador de la entidad afectada; nulo en acciones sin entidad concreta.
+   *
+   * Debe ser un **UUID**: la columna lo es, y pasar una clave natural (p. ej. el
+   * código de un plan) hace fallar la inserción. Esos identificadores legibles van en
+   * `metadata`.
+   */
   entityId?: string | null;
   /** Contexto adicional (valores antes/después, motivo…). Nunca datos sensibles. */
   metadata?: Record<string, unknown> | null;
