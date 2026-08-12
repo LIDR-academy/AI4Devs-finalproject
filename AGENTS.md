@@ -416,6 +416,28 @@ project. Read it at the start of every session.
   **Migración con índice único:** vuelve a disparar el prompt interactivo de
   `migrate dev`; se escribió el SQL a mano en `prisma/migrations/` y se aplicó con
   `migrate deploy`.
+- **Bloque 8 completo — back-office y cierre (2026-08-12). MVP terminado: 45/45.**
+  Pantallas: `/backoffice` (cola de trabajo por estado, lo más antiguo primero),
+  `/backoffice/clientes[/:id]`, `/backoffice/configuracion`, `/backoffice/empleados` y
+  `/portal` (sets, colas, ofertas y avisos del suscriptor).
+  **El recorte de la ficha de cliente vive en el caso de uso** (`projectCustomer`), no
+  en las páginas: si cada pantalla decidiera qué ocultar, bastaría con olvidarlo una
+  vez. El operador ve situación e historial —lo que necesita para soporte— pero no
+  email, dirección ni fecha de alta.
+  **Un admin no puede cambiarse el rol ni suspenderse a sí mismo**: dejaría el sistema
+  sin nadie capaz de deshacerlo.
+  **E2E:** `e2e/circuito-completo.spec.ts`, 8 tests, con el circuito entero por
+  interfaz. Corre **en serie** (`describe.configure({ mode: "serial" })`) contra la base
+  sembrada, porque comparte estado; paralelizarlo haría que dos pruebas se disputaran
+  las mismas copias. Tras ejecutarlo hay que **limpiar y resembrar**: deja alquileres,
+  ofertas y notificaciones.
+  **Orden de borrado por claves foráneas** al limpiar: offers → queue_entries →
+  shipments → condition_reports → incidents → rentals → notifications → audit_logs →
+  sessions → copy_state_transitions → copies.
+  **CLI de OpenSpec:** el paquete es **`@fission-ai/openspec`** (el `openspec` de npm es
+  un placeholder 0.0.0). Añadido como devDependency; `npm run spec:validate`.
+  **Prisma:** dentro de un objeto `as const`, un array literal se vuelve `readonly` y
+  Prisma lo rechaza en un filtro `in`; hay que referenciar una variable `Type[]`.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -425,10 +447,11 @@ project. Read it at the start of every session.
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
-  **bloques 2 a 7 completos**. Siguiente y último: bloque 8 (back-office y cierre) —
-  panel de operador y de admin, lectura limitada de cliente, recorrido E2E demostrable
-  con Playwright y `openspec validate --strict`. Para cualquier cambio de estado de una
-  copia, usar `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
+  **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
+  (265 tests unitarios + 8 E2E, `openspec validate --strict` en verde). Lo que queda
+  fuera del MVP: **diseño visual y UX** (PRD §9, sigue pendiente a propósito) y el
+  despliegue en la VM. Para cualquier cambio de estado de una copia, usar
+  `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle
