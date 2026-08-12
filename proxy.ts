@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { canEnterSurface, surfacePath, type Surface } from "@/domain/auth/roles";
+import { decideSurfaceAccess } from "@/domain/auth/access";
+import { surfacePath, type Surface } from "@/domain/auth/roles";
 import { SESSION_COOKIE_NAME } from "@/http/session-cookie";
 import { prismaAuthRepository } from "@/repositories/auth.repository.prisma";
 import { authenticate } from "@/use-cases/auth/authenticate";
@@ -49,16 +50,18 @@ export async function proxy(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = await authenticate({ repository: prismaAuthRepository }, token);
 
-  if (!session) return redirectToLogin(request);
+  // La política vive en el dominio (`decideSurfaceAccess`), que es puro y testable;
+  // aquí solo se ejecuta la decisión.
+  const decision = decideSurfaceAccess(session?.user.role, surface);
 
-  if (!canEnterSurface(session.user.role, surface)) {
-    // Autenticado pero en la superficie equivocada: se le manda a la suya en vez de
-    // enseñarle un 403 seco, que sería un callejón sin salida.
-    const home = session.user.role === "SUBSCRIBER" ? "portal" : "backoffice";
-    return NextResponse.redirect(new URL(surfacePath(home), request.url));
+  switch (decision.kind) {
+    case "allow":
+      return NextResponse.next();
+    case "authenticate":
+      return redirectToLogin(request);
+    case "redirect":
+      return NextResponse.redirect(new URL(surfacePath(decision.to), request.url));
   }
-
-  return NextResponse.next();
 }
 
 export const config = {

@@ -3,9 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Terms } from "@/components/terms";
 import { Button } from "@/components/ui/button";
-
-import { Terms } from "./terms";
 
 interface FieldIssue {
   field: string;

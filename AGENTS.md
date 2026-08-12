@@ -277,6 +277,23 @@ project. Read it at the start of every session.
      devolvía 500. `isUniqueEmailViolation` cubre las dos formas y está testeada.
   **Lección:** `tsc` + `build` + tests con dobles **no** detectan estos fallos; los
   adaptadores Prisma hay que ejercitarlos contra Postgres.
+- **Tareas 2.6 y 2.7 hechas — bloque 2 completo (2026-08-11):** superficie pública del
+  visitante (D13): `GET /api/catalog`, `/api/catalog/{setId}`, páginas `/catalogo` y
+  `/planes`. **La proyección pública se define en el `select` de la consulta**, no
+  filtrando después: `referenceValue` (coste de reposición), `published`, `restricted`
+  y todo lo de nivel `Copy` no llegan siquiera a salir de la base, así que no pueden
+  escaparse por descuido más arriba. Un Set **sin publicar responde 404 igual que uno
+  inexistente**, para que no se pueda sondear el catálogo antes de publicarlo.
+  El gating se extrajo del `proxy` a **`decideSurfaceAccess`** (`src/domain/auth/
+  access.ts`): función pura rol×superficie → `allow | authenticate | redirect`, que se
+  puede probar entera —incluido el visitante— sin levantar Next; el `proxy` solo
+  ejecuta la decisión.
+  `Terms` vive en `components/terms.tsx` porque lo usan `/registro` y `/planes`. **Ojo
+  con el alias:** `@/` apunta a `src/`, no a la raíz, así que `@/app/...` no resuelve.
+  **`/planes` lleva `dynamic = "force-dynamic"`**: Next la prerenderizaba en el build y
+  congelaba unos precios que el admin puede cambiar (D9); de paso, `next build` deja de
+  necesitar base de datos.
+  **Estado: 111 tests / 12 ficheros**, con los cinco casos que pide 2.7 cubiertos.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -285,8 +302,9 @@ project. Read it at the start of every session.
   cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
-  (auditoría) y 2.5 (alta de suscriptor) hechas. Siguiente: 2.6 (acceso público del
-  visitante: proyección pública del catálogo + gating), que se apoya en D13.
+  (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
+  **bloque 2 completo**. Siguiente: bloque 3 (`catalog-inventory`), empezando por 3.1
+  (CRUD de Set y Copia). Reutilizar `applyTransition` para cualquier cambio de estado.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

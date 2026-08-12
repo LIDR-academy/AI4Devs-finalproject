@@ -15,10 +15,15 @@ export default function PublicLayout({
           Clickoteca
         </Link>
         <nav className="flex items-center gap-4 text-sm">
+          <Link href="/catalogo" className="hover:underline">
+            Catálogo
+          </Link>
           <Link href="/planes" className="hover:underline">
             Planes
           </Link>
-          <Link href="/portal" className="hover:underline">
+          {/* A `/login` y no a `/portal`: el proxy acabaría redirigiendo igual, pero
+              mandar a alguien a una ruta protegida para que rebote es un rodeo. */}
+          <Link href="/login" className="hover:underline">
             Acceder
           </Link>
         </nav>
