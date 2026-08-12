@@ -1,4 +1,4 @@
-# [0006] Non-active user status blocks sign-in (Fortify integration)
+# [0007] Non-active user status blocks sign-in (Fortify integration)
 
 ## Description
 Enforce the `users.status` value inside the authentication flow so a user whose status is
@@ -10,6 +10,13 @@ The `status` column itself is **not** created here — it is owned by sibling st
 
 ## Type
 backend | includes database-expert: **no**
+
+> **Dependency scope, confirmed.** This story depends on story **0003** only — the `users.status`
+> column, the `App\Enums\UserStatus` enum and cast, and `UserFactory`'s status states. It does
+> **not** depend on story **0004** (the Users CRUD screen): nothing here reads, calls or renders
+> that component, and an administrator being able to *set* a status is a separate capability from
+> the login flow *honouring* it. 0007 can therefore be implemented and shipped as soon as 0003
+> lands, in parallel with 0004.
 
 ## Gherkin
 ```gherkin
@@ -128,8 +135,9 @@ Feature: Non-active account status blocks sign-in
 - `app/Models/User.php` — add `public function isActive(): bool` comparing `$this->status`
   against the enum's active case, mirroring the existing `initials()` /
   `hasEnabledTwoFactorAuthentication()` shape. The `@property` line for `status` is added by
-  story 0003. **This file is also touched by 0003 — sequence 0003 first and rebase this story on
-  top.**
+  story 0003. **This file is also touched by 0003 and 0004 — sequence 0003 first and rebase this
+  story on top; 0004 touches a disjoint part of the same file (no `@property`/`casts()` conflict),
+  so the two can proceed independently.**
 - `app/Providers/AppServiceProvider.php` (or the app's event discovery) — wire the listener to
   `Illuminate\Auth\Events\Login`. Exact registration point is the Phase 3 implementer's call,
   following whatever this app already does for event wiring.
@@ -227,7 +235,7 @@ user's sign-in — messages, redirects, throttling, password rehashing — is by
 - [ ] Documentation updated (docs-keeper) — `docs/architecture/authentication.md` gains the
       status check as part of the real sign-in flow, covering all three enforcement points.
 - [ ] Acceptance criteria met.
-- [ ] Story 0003 merged first; this story rebased on top of it.
+- [ ] Story 0003 merged first; this story rebased on top of it. Story 0004 is **not** a prerequisite.
 
 ---
 
@@ -267,22 +275,33 @@ user's sign-in — messages, redirects, throttling, password rehashing — is by
 ## Dependencies, risks & open questions
 
 **Hard dependency — story 0003 must ship first.** This story creates no column, no enum and no
-migration. From 0003 it needs:
+migration. From 0003 it needs, and 0003 now definitively provides:
 
-- `users.status`, **NOT NULL**, defaulting to the active case, so no legacy row is ever `NULL`
-  and `isActive()` never has to decide what `NULL` means.
-- A backed enum `App\Enums\UserStatus` with three cases covering Activo / Inactivo / Suspendido,
-  cast in `User::casts()`. **Exact case names and backing values are 0003's to finalize** — this
-  story consumes whatever it defines and needs only a single "active" sentinel case to compare
-  against. Note this would be the repo's first PHP enum; `docs/conventions/code-style.md` requires
-  TitleCase enum keys.
-- `UserFactory`: the default status must be the active case, plus state helpers following the
-  file's existing `unverified()` / `withTwoFactor()` convention (e.g. `inactive()`, `suspended()`,
-  or one parametrized `status()`).
+- `users.status`, **NOT NULL**, `VARCHAR(20)`, so no row is ever `NULL` and `isActive()` never has
+  to decide what `NULL` means. **The column default is `inactive`, not `active`** — a human
+  decision recorded in 0003, following the inactive-until-verified invariant. That is the *column*
+  default, which governs rows created outside the application (and Fortify self-registration); it
+  is deliberately **not** the same as the factory default below.
+- `App\Enums\UserStatus`, a backed string enum cast in `User::casts()`, with the three cases now
+  finalized by 0003: `Active = 'active'`, `Inactive = 'inactive'`, `Suspended = 'suspended'`
+  (TitleCase keys per `docs/conventions/code-style.md`). `isActive()` compares against
+  `UserStatus::Active`.
+- `UserFactory`: `definition()` defaults to `UserStatus::Active` (paired with the existing
+  `'email_verified_at' => now()`, so the default fixture is a coherent verified-and-active
+  account), plus `inactive()` and `suspended()` states in the existing `unverified()` /
+  `withTwoFactor()` shape. 0003 also changes **`unverified()` to set `status => Inactive`**, so
+  that state can no longer construct an active-but-unverified user.
 
-**Risk — factory default is the single point of mass regression.** Every existing auth test builds
-users with `User::factory()->create()` and no status. If 0003's default is anything but the active
-case, `AuthenticationTest` and `TwoFactorChallengeTest` fail the moment this story's check lands.
+**Risk — the factory default is the single point of mass regression, and the column default is a
+decoy.** Every existing auth test builds users with `User::factory()->create()` and no status; they
+stay green only because 0003's *factory* default is the active case, even though the *column*
+default is `inactive`. Two concrete consequences for this story:
+- Do not "simplify" by reading the column default and assuming fixtures inherit it — they do not.
+- 0003's `unverified()` change means every existing caller of that state now produces an `Inactive`
+  user. Those tests authenticate with `actingAs()` rather than through the login form, so this
+  story's check does not reach them — but any *new* test here that reaches for `unverified()`
+  expecting a signed-in-capable user will fail, correctly.
+
 This is why the full suite, not just `tests/Feature/Auth/**`, is in the DoD.
 
 **Risk — the passkey path is the easy one to miss.** An implementer who reads only "integrate with
@@ -300,7 +319,7 @@ the recommendation is to assert against the enforcement callback directly. `back
 
 ## Technical tasks for the backlog
 
-1. Add `isActive()` to `App\Models\User` (after 0003 lands).
+1. Add `isActive()` to `App\Models\User` (after 0003 lands), comparing `$this->status` against `UserStatus::Active`.
 2. Build `App\Actions\Fortify\AuthenticateUser`, preserving `rehashPasswordIfRequired()`.
 3. Register `Fortify::authenticateUsing()` with an **instance** in `FortifyServiceProvider`.
 4. Register `Passkeys::authorizeLoginUsing()` for the passkey path.

@@ -1,4 +1,4 @@
-# [0008] Roles & Permissions management — backend (component logic, CRUD, cascading permission changes)
+# [0009] Roles & Permissions management — backend (component logic, CRUD, cascading permission changes)
 
 ## Description
 Build the Livewire component class that backs the Roles & Permissions management area: create,
@@ -8,21 +8,21 @@ while the role still has holders (message states the exact count), and the whole
 server-side on the `roles.manage` permission.
 
 ## Type
-backend | fullstack (related_task_id: 0010 — the Blade view / UI sibling) | includes database-expert: no
+backend | fullstack (related_task_id: 0011 — the Blade view / UI sibling) | includes database-expert: no
 
 Depends on **0002** (roles & permission catalog seeder, which defines the `<module-slug>.<action>`
 permission naming convention, the `roles.manage` and `roles.manage-administrators` permissions, the
 seeded baseline `Administrator` role and the `Super Admin` role) — assumed done.
 
 Boundaries with siblings, referenced and never redefined here:
-- **0010** owns the Blade view, the component's UI shape, and browser tests.
-- **0007** owns `app/Models/Role.php`, the shared `selectable()` scope, the `config/permission.php`
+- **0011** owns the Blade view, the component's UI shape, and browser tests.
+- **0008** owns `app/Models/Role.php`, the shared `selectable()` scope, the `config/permission.php`
   model repoint, and every Super Admin invariant (undeletable / uneditable / non-downgradable,
   enforced via model events and overrides of `syncPermissions()`/`givePermissionTo()`/
   `revokePermissionTo()`).
-- **0009** owns the authorization rule for who may grant `roles.manage-administrators`.
-- **0003** owns requiring `roles.manage-administrators` to promote a user to `Administrator`.
-- **0012** owns the sidebar entry; until it lands the screen is reached directly at `/roles`.
+- **0010** owns the authorization rule for who may grant `roles.manage-administrators`.
+- **0004** owns requiring `roles.manage-administrators` to promote a user to `Administrator`.
+- **0013** owns the sidebar entry; until it lands the screen is reached directly at `/roles`.
 
 > Note on vocabulary: the PRD's human phrase "manage roles & permissions" is Gherkin prose. The
 > **technical permission name is `roles.manage`**, per 0002's confirmed `<module-slug>.<action>`
@@ -121,7 +121,7 @@ Feature: Roles and permissions management
 
 ## Files to create/modify
 - `app/Livewire/Roles/Index.php` — **create**. The component class this story owns. Class name and
-  namespace are **fixed by sibling 0010**, which registers `Route::livewire('roles', Index::class)`
+  namespace are **fixed by sibling 0011**, which registers `Route::livewire('roles', Index::class)`
   and owns the paired view `resources/views/livewire/roles/index.blade.php`. Class-based (not
   single-file) per `docs/conventions/base-standards.md`, declares `#[Title(...)]`, `#[Locked]` on
   everything the browser must not set, boolean naming per `docs/conventions/naming.md`.
@@ -135,23 +135,23 @@ Feature: Roles and permissions management
   public array $selectedPermissionIds = [];
   #[Locked] public ?int $editingRoleId = null;   // null => create mode
   #[Locked] public ?int $deletingRoleId = null;
-  #[Locked] public bool $canGrantAdministratorLevel = false; // passthrough for story 0009
+  #[Locked] public bool $canGrantAdministratorLevel = false; // passthrough for story 0010
   ```
   Actions: `openCreateModal()`, `openEditModal(int $roleId)`, `saveRole()`, `confirmDeleteRole(int $roleId)`,
   `deleteRole()`, `closeModal()`/`closeDeleteModal()`. A `#[Computed] roles()` property backs the
   list, built through `Role::query()->selectable()->withCount('users')` so one query serves both the
   listing's holder badge and the delete-block check.
-- `routes/roles.php` — **create** (shared with 0010; whichever lands first creates it). Mirrors
+- `routes/roles.php` — **create** (shared with 0011; whichever lands first creates it). Mirrors
   `routes/settings.php`: an `['auth', 'verified']` group containing
   `Route::livewire('roles', Index::class)->middleware('can:roles.manage')->name('roles.index');`
 - `routes/web.php` — **modify**. Add `require __DIR__.'/roles.php';` beside the existing
   `require __DIR__.'/settings.php';`.
-- `app/Models/Role.php` — **consume, created by 0007**. This story uses its `selectable()` scope and
+- `app/Models/Role.php` — **consume, created by 0008**. This story uses its `selectable()` scope and
   `withCount('users')`. It additionally registers a `static::deleting()` holder-count guard **alongside**
-  0007's Super Admin guards — Laravel allows multiple listeners on one model event, so these are
-  additive and must not be written as competing/overwriting closures. If 0008 is scheduled before
-  0007, 0008 creates the class with just `selectable()` + its own guard and 0007 extends it.
-- `config/permission.php` — **not modified by this story**; 0007 repoints `models.role`.
+  0008's Super Admin guards — Laravel allows multiple listeners on one model event, so these are
+  additive and must not be written as competing/overwriting closures. If this story is scheduled
+  before 0008, it creates the class with just `selectable()` + its own guard and 0008 extends it.
+- `config/permission.php` — **not modified by this story**; 0008 repoints `models.role`.
 - `app/Concerns/RoleValidationRules.php` — **create**. Follows the existing `<Noun>ValidationRules`
   + `<noun>Rules()` pattern of `app/Concerns/ProfileValidationRules.php`:
   ```php
@@ -212,21 +212,21 @@ Feature: Roles and permissions management
   implementation detail, not a documented contract — so `saveRole()` and `deleteRole()` each also
   assert `abort_unless(Auth::user()->can('roles.manage'), 403);`, matching the `abort_unless` style
   already used in `app/Livewire/Settings/Security.php`. Both layers are required; neither suffices alone.
-- **Super Admin exclusion.** Every listing/selector query goes through 0007's shared
+- **Super Admin exclusion.** Every listing/selector query goes through 0008's shared
   `Role::query()->selectable()` scope; this component never targets that role for edit or delete.
-  0007's model-layer guards are the actual enforcement against a forged id — the scope is defense
+  0008's model-layer guards are the actual enforcement against a forged id — the scope is defense
   in depth.
 - **Administrator-level toggle.** The component exposes `#[Locked] public bool $canGrantAdministratorLevel`,
-  computed in `mount()` from whatever check **0009** defines, purely so 0010's view can render the
+  computed in `mount()` from whatever check **0010** defines, purely so 0011's view can render the
   toggle conditionally. `saveRole()` additionally refuses to include `roles.manage-administrators`
   in the sync payload when the flag is false, as a tamper check against a forged `wire:model`
-  payload. The authorization *rule* is entirely 0009's and is not reimplemented here.
-- **No conflict with 0003.** This story writes only to `roles` and `role_has_permissions`;
-  `syncPermissions()` never touches `model_has_roles`. 0003's rule — requiring
+  payload. The authorization *rule* is entirely 0010's and is not reimplemented here.
+- **No conflict with 0004.** This story writes only to `roles` and `role_has_permissions`;
+  `syncPermissions()` never touches `model_has_roles`. 0004's rule — requiring
   `roles.manage-administrators` to promote a user to `Administrator` — only *reads* the acting
   user's permissions and writes role *assignments*, so the two stories touch disjoint tables. The
   one shared object is the `roles.manage-administrators` permission row, created by 0002 and
-  read-only from 0003's side.
+  read-only from 0004's side.
 
 ## Tests to perform
 All are Feature tests (`RefreshDatabase`, real DB) unless noted — this domain is almost entirely
@@ -235,7 +235,7 @@ DB-backed, so genuine no-DB unit tests are rare here.
 - [ ] Integration test: creating a role persists exactly the selected permissions — assert the full
       sorted permission-name set, not a superset/subset.
 - [ ] Integration test: a newly created role appears immediately in `Role::selectable()`.
-- [ ] Integration test: a role created with zero permissions is a legal, inert state (0010 decision 3).
+- [ ] Integration test: a role created with zero permissions is a legal, inert state (0011 decision 3).
 - [ ] Integration test: renaming a role leaves its permission id set identical (compare against the
       pre-rename set captured beforehand, not just a count).
 - [ ] Integration test (cache invalidation — revoke): 3 holders, **warm the cache first** by asserting
@@ -255,7 +255,7 @@ DB-backed, so genuine no-DB unit tests are rare here.
 - [ ] Negative test: `$role->delete()` called directly on a role with holders — bypassing the
       component entirely — is also blocked by the model-event guard.
 - [ ] Negative test (validation dataset): blank name; exact duplicate name; case-only duplicate;
-      surrounding-whitespace duplicate (0010 decision 2); a permission id absent from the catalog.
+      surrounding-whitespace duplicate (0011 decision 2); a permission id absent from the catalog.
       Each persists nothing — and for an edit, the role's existing permission set is provably
       **unchanged**, so a rejected payload never partially applies.
 - [ ] Negative test: a guest visiting `/roles` is redirected to sign-in.
@@ -268,7 +268,7 @@ DB-backed, so genuine no-DB unit tests are rare here.
 - [ ] Edge case test: `Role::query()->selectable()` omits exactly the Super Admin role when both it
       and other roles exist (Feature, not Unit — `tests/Unit/` gets no DB trait in this repo).
 - [ ] Edge case test: targeting the Super Admin role by forged id in `saveRole()`/`deleteRole()` is
-      refused. Assert the refusal only — 0007 owns the invariant's mechanism and messaging.
+      refused. Assert the refusal only — 0008 owns the invariant's mechanism and messaging.
 
 **Test-arrangement notes for Phase 3:**
 - Spatie's `Role`/`Permission` have no factories in this repo. Arrange directly
@@ -297,14 +297,14 @@ The Super Admin role is absent from every list and selector this component produ
 - [ ] A role with one or more holders cannot be deleted — hard block, no confirm-and-proceed path —
       and the error message states the exact holder count.
 - [ ] The block is enforced by a model-event guard as well as in the component, additively with
-      0007's guards on the same model.
+      0008's guards on the same model.
 - [ ] Access requires `roles.manage`, enforced by `can:` route middleware **and** by an explicit
       check inside every mutating component method.
-- [ ] Every role listing/selector query in this component goes through 0007's `selectable()` scope.
+- [ ] Every role listing/selector query in this component goes through 0008's `selectable()` scope.
 - [ ] Role name is required, trimmed and unique; permission ids are validated against the catalog,
       so a forged id never reaches `syncPermissions()`.
-- [ ] The component exposes 0009's administrator-level grant flag and refuses to sync
-      `roles.manage-administrators` when it is false, implementing none of 0009's rule itself.
+- [ ] The component exposes 0010's administrator-level grant flag and refuses to sync
+      `roles.manage-administrators` when it is false, implementing none of 0010's rule itself.
 - [ ] No migration and no `bootstrap/app.php` change are introduced by this story.
 - [ ] Pint clean and Larastan level 7 clean.
 
@@ -317,9 +317,9 @@ The Super Admin role is absent from every list and selector this component produ
 
 ## Open questions
 Resolved during this debate, recorded so they are not reopened: the route (`routes/roles.php`,
-`/roles`, `roles.index`), the component class (`App\Livewire\Roles\Index`, fixed by 0010), the
+`/roles`, `roles.index`), the component class (`App\Livewire\Roles\Index`, fixed by 0011), the
 gating mechanism (`can:roles.manage` + per-method `abort_unless`, no alias registration), and the
-scope name (0007's `selectable()`, not a synonym). The following remain open and should be answered
+scope name (0008's `selectable()`, not a synonym). The following remain open and should be answered
 before Phase 3 — none block Phase 2 INVEST review.
 
 **A. Message language for the holder-count block** — literal English now, or `lang/` keys?
@@ -331,9 +331,9 @@ before Phase 3 — none block Phase 2 INVEST review.
 
 **B. Singular/plural grammar for the 1-holder message** — the PRD says only "states how many users
 hold it". Recommend the tests assert on the numeral and the non-zero branch rather than an exact
-grammatical string until copy is confirmed; the wording itself is 0010's copy decision.
+grammatical string until copy is confirmed; the wording itself is 0011's copy decision.
 
-**C. Shared `RoleFactory` / `PermissionFactory`** — stories 0002, 0008, 0007 and 0009 will each
+**C. Shared `RoleFactory` / `PermissionFactory`** — stories 0002, 0008, 0009 and 0010 will each
 hand-roll near-identical `Role::create(...)->syncPermissions(...)` arrangement code.
 - **C1 (recommended)** — ask `database-expert` to add thin `database/factories/RoleFactory.php` and
   `PermissionFactory.php` following the existing `UserFactory` pattern, once the first of these
@@ -347,10 +347,10 @@ overridden per table/connection. Verify the actual `roles.name` collation before
 case-sensitive, add an explicit lowercase comparison rather than relying on the driver.
 
 **E. Who tests the role selector?** "Becomes selectable when assigning a role to a user" points at
-the Users screen (0005/0003), not this component.
-- **E1 (recommended)** — 0008 proves the `selectable()` scope is correct; each consumer tests its
+the Users screen (0004/0006), not this component.
+- **E1 (recommended)** — this story proves the `selectable()` scope is correct; each consumer tests its
   own use of it. Lowest coupling, matches this story never redefining siblings' concerns.
-- E2 — 0008 also asserts a component-level selector list, in case 0005/0003 land later. Likely
+- E2 — this story also asserts a component-level selector list, in case 0004/0006 land later. Likely
   redundant once they exist.
-- Either way, `code-reviewer` should check at Phase 5 that 0005/0003 reuse `selectable()` rather
+- Either way, `code-reviewer` should check at Phase 5 that 0004/0006 reuse `selectable()` rather
   than reinventing a Super Admin filter — that is where a silent gap could open.

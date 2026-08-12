@@ -1,4 +1,4 @@
-# [0012] Module/sidebar access gating — UI (hide inaccessible modules)
+# [0013] Module/sidebar access gating — UI (hide inaccessible modules)
 
 ## Description
 Restructure the dashboard sidebar into permission-gated, grouped navigation: each nav entry
@@ -6,10 +6,10 @@ renders only when the signed-in user's role grants that entry's permission, and 
 every entry is hidden renders no heading at all. Epic 1 delivers the generic, registry-driven
 gating **mechanism** plus the two entries that can be meaningfully gated today (Users, Roles &
 Permissions); later epics plug their modules into the same registry. Server-side denial of direct
-URL access is **not** in this story — see related task 0011.
+URL access is **not** in this story — see related task 0012.
 
 ## Type
-frontend (related_task_id: 0011) | includes database-expert: no
+frontend (related_task_id: 0012) | includes database-expert: no
 
 ## Gherkin
 ```gherkin
@@ -199,7 +199,7 @@ no empty group headings and no leftover starter-kit nav. A user without the rele
 never sees the entry; a Super Admin sees them all via the Gate bypass. Adding a future module means
 appending one entry to `config/modules.php`.
 **Hiding an entry is presentation only** — the server-side denial that makes it real is task
-**0011**; neither story is complete without the other.
+**0012**; neither story is complete without the other.
 
 ## Acceptance criteria
 - [ ] Sidebar entries and group headings are driven by a single declarative registry, not by
@@ -230,18 +230,18 @@ appending one entry to `config/modules.php`.
 ## Dependencies
 - **Task 0002** — seeded role/permission catalog **and** the Super Admin `Gate::before` bypass.
   This story consumes both and registers neither.
-- **Task 0003** — must land `users.index` in `routes/web.php`.
-- **Task 0008** — must land `roles.index` in a new `routes/roles.php`.
+- **Task 0004** — must land `users.index` in `routes/web.php`.
+- **Task 0009** — must land `roles.index` in a new `routes/roles.php`.
 - **Blocking, not advisory:** `route('users.index')` / `route('roles.index')` throw
   `RouteNotFoundException` at render time if unregistered — a hard failure, not a soft one. A
-  red-then-green TDD cycle for 0012 **cannot execute** until 0003 and 0008 have landed both route
-  names. Schedule 0012 after them.
-- ⚠️ If `roles.index` truly lives in a new `routes/roles.php`, task 0008 must also add
+  red-then-green TDD cycle for 0013 **cannot execute** until 0004 and 0009 have landed both route
+  names. Schedule 0013 after them.
+- ⚠️ If `roles.index` truly lives in a new `routes/roles.php`, task 0009 must also add
   `require __DIR__.'/roles.php';` to `routes/web.php` (mirroring the existing `settings.php`
-  require). `frontend-expert` read 0008's current draft and found it still lists `routes/web.php`
-  as the file to modify, with no `routes/roles.php` mentioned. That is 0008's file to fix, but
-  0012's registry entry stays inert until it is — flagged so it isn't lost between the two stories.
-- **Task 0011** — the server-side half of the same PRD criterion. This story is UI-only and must
+  require). `frontend-expert` read 0009's current draft and found it still lists `routes/web.php`
+  as the file to modify, with no `routes/roles.php` mentioned. That is 0009's file to fix, but
+  0013's registry entry stays inert until it is — flagged so it isn't lost between the two stories.
+- **Task 0012** — the server-side half of the same PRD criterion. This story is UI-only and must
   not be reviewed as if it enforced access.
 
 ## Open questions

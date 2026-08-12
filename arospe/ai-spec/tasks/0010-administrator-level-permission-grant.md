@@ -1,11 +1,11 @@
-# [0009] Administrator-level permission — role-level enforcement + Super-Admin-only grant visibility
+# [0010] Administrator-level permission — role-level enforcement + Super-Admin-only grant visibility
 
 ## Description
 Enforce, server-side, that **editing or deleting the seeded baseline "Administrator" role itself**
-requires the distinct `manage administrator-level roles/users` permission, and implement the
+requires the distinct `roles.manage-administrators` permission, and implement the
 meta-rule that the control to **grant** that permission to a role is available **only to the Super
 Admin** — never to any other administrator, however broad their permissions. Exposes a stable
-authorization check that story 0010's frontend consumes to conditionally render the toggle, and
+authorization check that story 0011's frontend consumes to conditionally render the toggle, and
 rejects tampered role-save payloads that try to bypass it.
 
 ## Type
@@ -13,16 +13,19 @@ backend | includes database-expert: **no**
 
 > **Dependencies (do not re-implement here).**
 > - **0002** seeds the `Super Admin` role, the baseline `Administrator` role, and the
->   `manage roles & permissions` / `manage administrator-level roles/users` permissions, **and owns
->   the global Super-Admin `Gate::before` bypass hook.** 0009 consumes both; it registers neither.
-> - **0008** (Roles & Permissions management — backend) owns the action that persists a role's
->   name/permissions and the role-delete action. 0009 hooks its enforcement into those call sites;
->   it does not create a competing role-CRUD path.
-> - **0010** (frontend) renders the permission toggles and consumes the check defined below.
-> - **0004** owns the *user*-side rule (an administrator lacking the permission cannot delete or
->   downgrade a **user** holding the `Administrator` role). **0003** owns the promotion side
->   (assigning a user *into* the `Administrator` role is gated by the same permission). Both are
->   cross-referenced, not duplicated here.
+>   `roles.manage` / `roles.manage-administrators` permissions, **and owns
+>   the global Super-Admin `Gate::before` bypass hook.** This story consumes both; it registers neither.
+> - **0009** (Roles & Permissions management — backend) owns the action that persists a role's
+>   name/permissions and the role-delete action. This story hooks its enforcement into those call
+>   sites; it does not create a competing role-CRUD path.
+> - **0011** (frontend) renders the permission toggles and consumes the check defined below.
+> - **0004** owns the whole *user*-side rule in `App\Policies\UserPolicy`: it **defines and calls**
+>   `promoteToAdministrator()` (assigning a user *into* the `Administrator` role), `downgrade()` and
+>   `delete()`. **0005** later extends `delete()`/`downgrade()` with soft-delete semantics. **This
+>   story defines none of them** — its scope is `App\Policies\RolePolicy`, i.e. the *role* object,
+>   not user↔role assignments. The two policies are disjoint and neither delegates to the other.
+>   Earlier drafts split the user-side rule between two stories; that attribution was wrong and is
+>   corrected here.
 >
 > **Confirmed decision — role identity.** The seeded `Administrator` role's **name is locked and
 > uneditable** (decided centrally, consistently across Epic 1 stories). It is therefore identified
@@ -158,26 +161,36 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   keeps "what counts as administrator-level" in exactly one place and is reusable from any future
   call site (`$this->authorize(...)`, `@can`, middleware).
 
+  > **Permission literals corrected to story 0002's real catalog.** Earlier drafts of this story
+  > used the prose strings `'manage administrator-level roles/users'` and
+  > `'manage roles & permissions'`. **Neither is seeded**, and `can()` / `hasPermissionTo()` against
+  > an unseeded name throws `PermissionDoesNotExist` at runtime — so this was a correctness bug, not
+  > a naming preference. 0002's task file flagged it explicitly as an outstanding correction. The
+  > canonical names are **`roles.manage-administrators`** and **`roles.manage`**, per
+  > [`docs/conventions/naming.md`](../../docs/conventions/naming.md#permission-names). The Gherkin
+  > above keeps the human phrases, which are business prose rather than code literals.
+
   ```php
   final class RolePolicy
   {
       public const SUPER_ADMIN_ROLE = 'Super Admin';
       public const ADMINISTRATOR_ROLE = 'Administrator';
-      public const ADMINISTRATOR_LEVEL_PERMISSION = 'manage administrator-level roles/users';
+      public const ADMINISTRATOR_LEVEL_PERMISSION = 'roles.manage-administrators';
+      public const ROLE_MANAGEMENT_PERMISSION = 'roles.manage';
 
       public function update(User $user, Role $role): bool
       {
           return $this->isAdministratorLevel($role)
               ? $user->can(self::ADMINISTRATOR_LEVEL_PERMISSION)
-              : $user->can('manage roles & permissions');
+              : $user->can(self::ROLE_MANAGEMENT_PERMISSION);
       }
 
       public function delete(User $user, Role $role): bool { /* same shape as update() */ }
 
-      /** The Super-Admin-only meta-rule consumed by story 0010. */
+      /** The Super-Admin-only meta-rule consumed by story 0011. */
       public function grantAdministratorPermission(User $user): bool
       {
-          return $user->hasRole(self::SUPER_ADMIN_ROLE);
+          return $user->hasRole(self::SUPER_ADMIN_ROLE, 'web');
       }
 
       private function isAdministratorLevel(Role $role): bool
@@ -187,9 +200,14 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   }
   ```
 
-  > The `Super Admin` role's *own* categorical immutability is a separate sibling story that also
-  > touches `update`/`delete`. Coordination rule: **the Super-Admin-role check runs first and
-  > unconditionally**, before this story's administrator-level check.
+  > `hasRole()` is called **with its guard** (`'web'`) per
+  > [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md) — an
+  > unguarded call resolves against the default guard, which is not guaranteed to be the one the role
+  > was seeded under.
+
+  > The `Super Admin` role's *own* categorical immutability is **story 0008**, which also touches
+  > `update`/`delete` on this same model. Coordination rule: **the Super-Admin-role check runs first
+  > and unconditionally**, before this story's administrator-level check.
 
 - `app/Providers/AppServiceProvider.php` — **modify `boot()`.** Register
   `Gate::policy(Role::class, RolePolicy::class)` explicitly (this app has no `AuthServiceProvider`,
@@ -198,7 +216,7 @@ Feature: Administrator-level role management and its Super-Admin-only grant
 
 - `app/Actions/Roles/EnforceAdministratorPermissionGrant.php` — **new**, single-purpose invokable
   action following the "inject single-purpose actions per-method" convention; `Roles/` mirrors the
-  existing `Actions/Fortify/` one-subfolder-per-concern layout. Composed into story 0008's role-save
+  existing `Actions/Fortify/` one-subfolder-per-concern layout. Composed into story 0009's role-save
   path. Throws `AuthorizationException` (403) rather than silently stripping the permission, because
   the toggle is never rendered to a non-Super-Admin, so the only way this input arises is tampering
   — and Epic 1's Gherkin consistently specifies "the action is denied server-side".
@@ -213,12 +231,12 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   public function __invoke(User $actor, array $permissionNames): array
   ```
 
-- **Call sites owned by story 0008** (coordination note, not files this story authors): 0008's
+- **Call sites owned by story 0009** (coordination note, not files this story authors): 0009's
   role update/delete actions add `$this->authorize('update', $role)` / `$this->authorize('delete',
   $role)`, and its save path invokes `EnforceAdministratorPermissionGrant` before syncing
   permissions.
 
-### Contract consumed by story 0010 (frontend)
+### Contract consumed by story 0011 (frontend)
 
 Unambiguous mechanism — the toggle is rendered only when this is true:
 
@@ -226,7 +244,7 @@ Unambiguous mechanism — the toggle is rendered only when this is true:
 Gate::allows('grantAdministratorPermission', \Spatie\Permission\Models\Role::class)
 ```
 
-Story 0010 wraps it in its own component property:
+Story 0011 wraps it in its own component property:
 
 ```php
 #[Computed]
@@ -246,42 +264,43 @@ policy independently correct if the bypass hook is ever refactored.
 - [ ] Unit test: `RolePolicy` identifies the seeded `Administrator` role by exact, case-sensitive name.
 - [ ] Integration test: the Super Admin edits the seeded `Administrator` role's permissions successfully.
 - [ ] Integration test: the Super Admin deletes the unassigned seeded `Administrator` role successfully.
-- [ ] Integration test: an administrator granted `manage administrator-level roles/users` edits the seeded `Administrator` role successfully.
-- [ ] Integration test: an administrator granted `manage administrator-level roles/users` deletes the unassigned seeded `Administrator` role successfully.
+- [ ] Integration test: an administrator granted `roles.manage-administrators` edits the seeded `Administrator` role successfully.
+- [ ] Integration test: an administrator granted `roles.manage-administrators` deletes the unassigned seeded `Administrator` role successfully.
 - [ ] Integration test: the Super Admin succeeds even though the `Super Admin` role holds no explicit administrator-level permission row (exercises the bypass, not a grant).
-- [ ] Integration test: the Super Admin grants a custom role `manage administrator-level roles/users` and the target role's permission set reflects it.
+- [ ] Integration test: the Super Admin grants a custom role `roles.manage-administrators` and the target role's permission set reflects it.
 - [ ] Integration test: a grant made through the real save path takes effect without a manual permission-cache clear.
 - [ ] Integration test: a revoke made through the real save path takes effect immediately.
-- [ ] Negative/edge case test: a broad administrator (holds only `manage roles & permissions`) is denied editing the seeded `Administrator` role; its permission set is unchanged.
+- [ ] Negative/edge case test: a broad administrator (holds only `roles.manage`) is denied editing the seeded `Administrator` role; its permission set is unchanged.
 - [ ] Negative/edge case test: a broad administrator is denied deleting the seeded `Administrator` role; the role still exists.
 - [ ] Negative/edge case test: a broad administrator *can* delete an unassigned custom role `Blog Editor` (guards against over-broad matching).
 - [ ] Negative/edge case test: a broad administrator *can* delete an unassigned custom role `Administrador Regional`.
 - [ ] Negative/edge case test: a broad administrator *can* delete an unassigned custom role named `administrator` in lowercase (guards against case-insensitive matching).
-- [ ] Negative/edge case test: a tampered role-save payload from a non-Super-Admin holding `manage roles & permissions` that includes `manage administrator-level roles/users` is denied and never persisted.
+- [ ] Negative/edge case test: a tampered role-save payload from a non-Super-Admin holding `roles.manage` that includes `roles.manage-administrators` is denied and never persisted.
 - [ ] Negative/edge case test: the same tampered payload targeting the actor's **own** role is denied (self-escalation).
-- [ ] Negative/edge case test: an actor who *holds* `manage administrator-level roles/users` but is not the Super Admin cannot grant it via a crafted payload.
+- [ ] Negative/edge case test: an actor who *holds* `roles.manage-administrators` but is not the Super Admin cannot grant it via a crafted payload.
 - [ ] Delete-path tests use a role held by **zero** users, to isolate this permission check from the unrelated "a role in use cannot be deleted" hard block.
 
-> Not tested here: the *user*-side delete/downgrade rule (story **0004**), promotion into the
-> `Administrator` role (story **0003**), and whether the toggle is actually rendered in the DOM
-> (story **0010**). The general "no `manage roles & permissions` at all" gate belongs to 0002/0008.
+> Not tested here: the entire *user*-side rule — delete, downgrade **and** promotion into the
+> `Administrator` role — which lives in `UserPolicy` and belongs to story **0004** (extended by
+> **0005**); and whether the toggle is actually rendered in the DOM (story **0011**). The general
+> "no `roles.manage` at all" gate belongs to 0002/0009.
 
 ## Expected outcome
 Editing or deleting the seeded `Administrator` role is refused server-side for any administrator
-lacking `manage administrator-level roles/users`, and succeeds for the Super Admin or for a role the
+lacking `roles.manage-administrators`, and succeeds for the Super Admin or for a role the
 Super Admin has explicitly granted that permission. Every other custom role — including ones with
 admin-sounding or differently-cased names — remains governed only by the general
-`manage roles & permissions` permission. The grant control itself is exposed to the frontend through
+`roles.manage` permission. The grant control itself is exposed to the frontend through
 a single named Gate ability that is true only for the Super Admin, and a forged role-save payload
 carrying that permission is rejected with a 403 rather than partially applied.
 
 ## Acceptance criteria
-- [ ] Deleting or editing the seeded `Administrator` role requires `manage administrator-level roles/users`; denial happens server-side, not merely by hiding UI.
+- [ ] Deleting or editing the seeded `Administrator` role requires `roles.manage-administrators`; denial happens server-side, not merely by hiding UI.
 - [ ] "Administrator-level" resolves to exactly the seeded `Administrator` role, matched by exact case-sensitive name; no other custom role qualifies.
 - [ ] The Super Admin can perform both actions without holding an explicit administrator-level permission row.
-- [ ] A role the Super Admin has granted `manage administrator-level roles/users` can perform both actions; revoking it removes that ability immediately.
-- [ ] `Gate::allows('grantAdministratorPermission', Role::class)` returns true **only** when the acting user holds the `Super Admin` role, and is documented as the contract story 0010 consumes.
-- [ ] A non-Super-Admin — including one holding `manage roles & permissions`, and including one holding `manage administrator-level roles/users` — cannot grant that permission to any role, including their own, even via a tampered payload; the attempt fails with a 403 and nothing is persisted.
+- [ ] A role the Super Admin has granted `roles.manage-administrators` can perform both actions; revoking it removes that ability immediately.
+- [ ] `Gate::allows('grantAdministratorPermission', Role::class)` returns true **only** when the acting user holds the `Super Admin` role, and is documented as the contract story 0011 consumes.
+- [ ] A non-Super-Admin — including one holding `roles.manage`, and including one holding `roles.manage-administrators` — cannot grant that permission to any role, including their own, even via a tampered payload; the attempt fails with a 403 and nothing is persisted.
 - [ ] No Super-Admin `Gate::before` hook is registered by this story (story 0002 owns it) and no migration is introduced.
 - [ ] The canonical role/permission strings are referenced from shared constants, not re-typed per call site.
 

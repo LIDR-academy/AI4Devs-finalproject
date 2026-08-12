@@ -1,4 +1,4 @@
-# [0007] Super Admin role invariants — categorically undeletable, uneditable, non-downgradable, invisible
+# [0008] Super Admin role invariants — categorically undeletable, uneditable, non-downgradable, invisible
 
 ## Description
 Enforce, at the model/policy/authorization layer rather than by hiding controls in the UI, that the
@@ -6,7 +6,7 @@ Enforce, at the model/policy/authorization layer rather than by hiding controls 
 application — including by a crafted request that never touches the dashboard. Also provide the one
 shared query mechanism that every roles list and role selector in the app must use, so the Super
 Admin role is never returned to the frontend. This story does **not** seed the Super Admin role
-(story 0002) and does **not** build the roles CRUD screens (stories 0010/0008); it builds the
+(story 0002) and does **not** build the roles CRUD screens (stories 0009/0011); it builds the
 guarantees those code paths cannot violate.
 
 ## Type
@@ -145,7 +145,7 @@ identification safe and removes any need for a new flag column (and therefore fo
   a subclass:
   - `scopeSelectable(Builder $query): Builder` — the **shared local scope** this story owns. Every
     roles-list and role-selector query in the app must call it (`Role::query()->selectable()`), and
-    stories 0010/0008 consume it rather than re-filtering.
+    stories 0009/0011 consume it rather than re-filtering.
   - `booted()` registering `static::deleting(...)` and `static::updating(...)` guards that throw when
     the row is the Super Admin role. This is the layer that catches a code path which never calls
     `Gate`/`authorize()`.
@@ -153,12 +153,12 @@ identification safe and removes any need for a new flag column (and therefore fo
     Super Admin role — mandatory per the pivot-mutation fact above.
 - `app/Enums/RoleName.php` (**new** — see [Open questions](#open-questions) Q1) — backed string enum of
   well-known role names, `SuperAdmin = 'Super Admin'`, so identification is one typed reference rather
-  than a string literal repeated across 0002/0010/0008. Enum key is TitleCase per project `CLAUDE.md`.
+  than a string literal repeated across 0002/0009/0011. Enum key is TitleCase per project `CLAUDE.md`.
 - `app/Exceptions/ImmutableRoleException.php` (**new** — see Q1) — `extends RuntimeException` with a
   `render()` method returning **403**, so it converges on the same status the policy produces.
 - `app/Policies/RolePolicy.php` (**new** — see Q1; scaffold with
   `php artisan make:policy RolePolicy --model=Role --no-interaction`) — `update()` and `delete()` deny
-  for the Super Admin role. This is the layer 0010/0008 call via `authorize()`, and where the UI-facing
+  for the Super Admin role. This is the layer 0009/0011 call via `authorize()`, and where the UI-facing
   403 originates.
 - `app/Providers/AppServiceProvider.php` (**modify**) — register
   `Gate::policy(Role::class, RolePolicy::class);` in `boot()`. Laravel's convention-based discovery
@@ -169,7 +169,7 @@ identification safe and removes any need for a new flag column (and therefore fo
 Confirmed **not** needed, recorded so reviewers don't re-open them: no change to `bootstrap/app.php`
 (story **0002** registers the `role` / `permission` / `role_or_permission` middleware aliases in its
 `withMiddleware()` closure — *this* story adds nothing to it, since route gating belongs to
-0010/0008); no `app/Observers/`
+0009/0011); no `app/Observers/`
 class (the two guards live in `Role::booted()`, mirroring the package's own
 `HasPermissions::bootHasPermissions()`); no migration and no new column.
 
@@ -210,7 +210,8 @@ working untouched. Ordinary custom roles remain fully manageable.
 - [ ] No security findings (appsec-auditor)
 - [ ] Documentation updated (docs-keeper) — `docs/architecture/authorization.md` gains the real Super
       Admin invariant mechanism, and `docs/conventions/base-standards.md`'s directory-structure section
-      gains whichever of `app/Enums/`, `app/Policies/`, `app/Exceptions/` are approved in Q1.
+      gains `app/Exceptions/` if it is approved in Q1 (`app/Enums/` and `app/Policies/` are already
+      documented by stories 0003 and 0004 respectively).
 - [ ] Acceptance criteria met
 - [ ] **Known limitation — query-builder mass mutations are not covered (must be recorded, not
       silently accepted):** `Role::where(...)->delete()`, `Role::query()->delete()`, and any raw
@@ -230,15 +231,25 @@ Per [`docs/contracts.md`](../../docs/contracts.md)'s Uncertainty Handling Rule, 
 answer before Phase 3 begins. None of them changes the scenarios or acceptance criteria above — they
 are placement and depth decisions.
 
-**Q1 — May Phase 3 create `app/Enums/`, `app/Policies/`, and `app/Exceptions/`?** None of the three
-exists today, and project `CLAUDE.md` says "don't create new base folders without approval", while
-`docs/conventions/base-standards.md`'s directory listing does not mention them.
+**Q1 — May Phase 3 create `app/Enums/`, `app/Policies/`, and `app/Exceptions/`?**
+
+> **Partly answered by the renumbering.** Story **0003** now creates `app/Enums/` (for
+> `App\Enums\UserStatus`) and story **0004** creates `app/Policies/` (for `App\Policies\UserPolicy`),
+> each with the corresponding `docs/conventions/base-standards.md` line in their own Phase 6. Both
+> are numbered ahead of this story, so by the time it runs those two directories already exist and
+> are documented. **Only `app/Exceptions/` remains genuinely new here.** The question below is
+> retained because the *approval* is still the human's to give, but its scope has narrowed to one
+> folder.
+
+None of the three existed when this story was written, and project `CLAUDE.md` says "don't create
+new base folders without approval", while `docs/conventions/base-standards.md`'s directory listing
+does not mention them.
 - **(recommended)** Create all three. They are stock Laravel locations produced by
   `php artisan make:enum` / `make:policy` / `make:exception`, so this follows the artisan-first
   convention rather than inventing structure, and each holds a genuinely distinct concern.
 - Alternative: avoid new folders by putting the name constant on `App\Models\Role` as a class constant
   and throwing a bare `RuntimeException`. Cheaper, but reintroduces a magic string, loses the typed
-  enum that 0002/0010/0008 would share, and still needs `app/Policies/` for the policy.
+  enum that 0002/0009/0011 would share, and still needs `app/Policies/` for the policy.
 
 **Q2 — Confirm that blocking permission *additions* is intended.** The PRD's scenario title says
 "cannot be edited **or downgraded**", but its prose and acceptance criterion say "categorically

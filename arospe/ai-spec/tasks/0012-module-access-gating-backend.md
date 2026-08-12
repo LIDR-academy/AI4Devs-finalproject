@@ -1,14 +1,14 @@
-# [0011] Module/sidebar access gating — backend (server-side route denial)
+# [0012] Module/sidebar access gating — backend (server-side route denial)
 
 ## Description
 Gate the two Epic-1 module routes (`users.index`, `roles.index`) with `spatie/laravel-permission`'s
 permission middleware, so a user who types either URL directly is refused server-side regardless of
 whether the sidebar hides the link. This is the security half of the PRD criterion whose UI half is
-task 0012 — hiding a nav entry is presentation, not a control. The story also fixes the per-route
+task 0013 — hiding a nav entry is presentation, not a control. The story also fixes the per-route
 middleware wiring **pattern** that every later epic's module routes will copy.
 
 ## Type
-backend (related_task_id: 0012) | includes database-expert: no
+backend (related_task_id: 0013) | includes database-expert: no
 
 ## Gherkin
 ```gherkin
@@ -87,7 +87,7 @@ Feature: Server-side module access gating
 ## Files to create/modify
 
 - `routes/web.php` — **modify**. Chain the permission middleware onto the two module routes
-  **already registered by their own stories** (0003 for `users.index`, 0010/0008 for `roles.index`).
+  **already registered by their own stories** (0004 for `users.index`, 0009/0011 for `roles.index`).
   This story adds the middleware only; it does not register, rename, or move either route.
 
   ```php
@@ -130,7 +130,7 @@ Feature: Server-side module access gating
 - **No Super Admin special-casing anywhere in this story.** `PermissionMiddleware` resolves through
   `canAny()` → Laravel's `Gate`, and 0002's `Gate::before` bypass runs ahead of every Gate ability
   check — so the Super Admin passes both routes with no permission rows and no code here, mirroring
-  how 0012's sidebar inherits the same bypass.
+  how 0013's sidebar inherits the same bypass.
 
 - **No exception-rendering work is in scope.** `UnauthorizedException::forPermissions()` extends
   Symfony's `HttpException` with status 403, and `config/permission.php` has
@@ -177,7 +177,7 @@ story owns a cross-cutting pattern rather than either module's feature area.
       a two-route one.
 
 **Anti-patterns to avoid:**
-- Asserting on sidebar markup (`assertSee` / `assertDontSee` on nav HTML) — that is 0012's job.
+- Asserting on sidebar markup (`assertSee` / `assertDontSee` on nav HTML) — that is 0013's job.
   This story asserts status and redirect target only.
 - `assertStatus(403)` / `assertStatus(302)` instead of `assertForbidden()` / `assertRedirect(...)`.
 - Inspecting `Route::current()->middleware()` for the literal middleware string — that tests how the
@@ -186,7 +186,7 @@ story owns a cross-cutting pattern rather than either module's feature area.
 - Hardcoding a guessed permission name instead of referencing story 0002's seeded catalog.
 
 ## Expected outcome
-Typing `/users` or `/roles` (or whatever URIs 0003 and 0010/0008 settle on) without the required
+Typing `/users` or `/roles` (or whatever URIs 0004 and 0009/0011 settle on) without the required
 permission returns a generic 403 that names no permission, whether or not the sidebar ever showed the
 link; a guest is sent to sign in instead; the Super Admin reaches both with no permission rows. A
 revoked permission closes the module on the very next request. Later epics gate a new module by
@@ -222,9 +222,9 @@ chaining one `permission:` middleware onto its route — no new mechanism to inv
 - **Task 0002** — seeded permission catalog, the `permission` / `role` / `role_or_permission`
   middleware aliases in `bootstrap/app.php`, and the Super Admin `Gate::before` bypass. **Hard
   blocker**: without the alias registration the middleware string does not resolve at all.
-- **Task 0003** — registers `users.index`. This story only decorates it.
-- **Task 0010 / 0008** — registers `roles.index`. Same.
-- **Task 0012** — the UI half of the same PRD criterion. 0012 must not be reviewed as if it enforced
+- **Task 0004** — registers `users.index`. This story only decorates it.
+- **Task 0009 / 0011** — registers `roles.index`. Same.
+- **Task 0013** — the UI half of the same PRD criterion. 0013 must not be reviewed as if it enforced
   access, and this story must not be reviewed as if it hid anything. Neither is complete alone.
 
 ## Open questions
@@ -233,28 +233,28 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
 1. **Literal permission strings for `users.index`'s any-of list.** The PRD names the "Users & Roles"
    module but only ever spells out "manage roles & permissions" and "manage administrator-level
    roles/users" literally, and story 0002 has no file yet.
-   - **(recommended)** This story references "the same permission set 0012's `config/modules.php`
+   - **(recommended)** This story references "the same permission set 0013's `config/modules.php`
      `users` entry uses" and both stories bind the literal strings to 0002's catalog at Phase 3.
      Keeps one source of truth and prevents two stories drifting apart on invented names.
    - Fix literal strings now in this story. Rejected: it would pre-empt 0002's catalog design and
      guarantee a rename.
 2. **Does "manage roles & permissions" count toward the "any Users & Roles permission" gate?** This
    story is written assuming **not**.
-   - **(recommended)** Keep the two sets fully disjoint — matches 0012's two-independent-lists
+   - **(recommended)** Keep the two sets fully disjoint — matches 0013's two-independent-lists
      registry design and makes the cross-gate scenarios above meaningful.
    - Treat role management as a superset that implies user-module access. This would invalidate the
      "role-management permission does not open the Users screen" scenario, so it must be settled
      explicitly with 0002, not discovered in Phase 3.
-3. **Where `roles.index` physically lives.** Story 0008's own open question A recommends **A1,
+3. **Where `roles.index` physically lives.** Story 0009's own open question A recommends **A1,
    `routes/web.php`**; the brief for this story mentioned a new `routes/roles.php`. The pattern
    documented above is written assuming `routes/web.php`.
-   - **(recommended)** Confirm 0008's A1 (`routes/web.php`) and let this story simply follow it —
+   - **(recommended)** Confirm 0009's A1 (`routes/web.php`) and let this story simply follow it —
      the repo has only `web.php` + `settings.php` today, and one file per domain is not yet earned.
-   - Extract `routes/roles.php`. Workable, but it is 0008's decision to make, not this story's; 0011
+   - Extract `routes/roles.php`. Workable, but it is 0009's decision to make, not this story's; 0012
      adopts whatever lands and only needs the middleware chained onto the route.
-4. **Test-ownership split with 0008 for the `roles.index` denial.** 0008's test list already contains
+4. **Test-ownership split with 0009 for the `roles.index` denial.** 0009's test list already contains
    "a user without 'manage roles & permissions' gets a 403 on the area's route."
-   - **(recommended)** 0011 owns the HTTP/route-middleware assertion for both routes; 0008 narrows
+   - **(recommended)** 0012 owns the HTTP/route-middleware assertion for both routes; 0009 narrows
      its own to the *component-method* layer (e.g. an unauthorized `Livewire::test(...)->call(...)`),
      so the two cover the two defense-in-depth layers instead of duplicating one.
    - Keep both as-is, accepting deliberate redundancy. Functionally fine — flagged so it is a

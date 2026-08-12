@@ -1,4 +1,4 @@
-# [0010] Roles & Permissions management — UI (custom role CRUD + granular permission toggles)
+# [0011] Roles & Permissions management — UI (custom role CRUD + granular permission toggles)
 
 ## Description
 Build the Livewire view/Blade layer for the Roles & Permissions management area (PRD Epic 1,
@@ -7,22 +7,22 @@ grouped by module, and a delete action that hard-blocks with a holder count when
 assigned to users. The Super Admin role is never rendered anywhere, and the
 "manage administrator-level roles/users" toggle is rendered only for a signed-in Super Admin.
 This story owns markup and UI state only — all queries, persistence, and authorization come from
-sibling backend story 0008.
+sibling backend story 0009.
 
 ## Type
-frontend (related_task_id: 0008) | includes database-expert: no
+frontend (related_task_id: 0009) | includes database-expert: no
 
 **Dependencies (must land first or in parallel):**
 - **0002** — seeds the roles/permission catalog and the per-module permissions this UI iterates.
-- **0008** — the backend component logic behind the same component class (queries, persistence,
+- **0009** — the backend component logic behind the same component class (queries, persistence,
   validation, the Super-Admin-excluding role query, the holder count, and the
   `$canGrantAdministratorLevel` flag). This story consumes them; it never re-derives them.
-- **0007** — Super Admin invariants (categorically undeletable/uneditable). This UI simply never
-  renders it, relying on 0008/0007's query exclusion.
-- **0009** — the authorization logic deciding who may grant administrator-level permissions. This
-  UI only consumes the boolean flag 0009's backend exposes.
-- **0012** — sidebar permission-based visibility, including the "Roles & Permissions" nav entry.
-  Out of scope here; until 0012 lands the screen is reached directly at `/roles`.
+- **0008** — Super Admin invariants (categorically undeletable/uneditable). This UI simply never
+  renders it, relying on 0009/0008's query exclusion.
+- **0010** — the authorization logic deciding who may grant administrator-level permissions. This
+  UI only consumes the boolean flag 0010's backend exposes.
+- **0013** — sidebar permission-based visibility, including the "Roles & Permissions" nav entry.
+  Out of scope here; until 0013 lands the screen is reached directly at `/roles`.
 
 **Confirmed product decisions (human-approved during Phase 1, previously undefined in the PRD):**
 1. A role has **no description field** — the form is role name + permission toggles only.
@@ -123,14 +123,14 @@ Feature: Roles & permissions management UI
 
 ## Files to create/modify
 
-> **Shared-surface warning.** Stories 0010 and 0008 touch the same component class. The split is
-> strict: **0010 owns the Blade view and the component's UI-state properties**; **0008 owns every
-> query, mutation, validation rule, and authorization decision**. 0010 must not add an Eloquent
+> **Shared-surface warning.** Stories 0011 and 0009 touch the same component class. The split is
+> strict: **0011 owns the Blade view and the component's UI-state properties**; **0009 owns every
+> query, mutation, validation rule, and authorization decision**. 0011 must not add an Eloquent
 > query, a `Role`/`Permission` write, or a permission check to the component.
 
 - `routes/roles.php` — **new file**. Registers `Route::livewire('roles', Index::class)->name('roles.index')`
   inside a `Route::middleware(['auth', 'verified'])->group(...)`, mirroring `routes/settings.php`'s
-  shape. The permission middleware gating this route is **0008/0012's** to add, not this story's:
+  shape. The permission middleware gating this route is **0009/0012's** to add, not this story's:
   ```php
   Route::middleware(['auth', 'verified'])->group(function () {
       Route::livewire('roles', Index::class)->name('roles.index');
@@ -142,7 +142,7 @@ Feature: Roles & permissions management UI
   `conventions/base-standards.md`: class-based, never single-file), carrying a `#[Title(...)]`
   attribute. **This story's share** is the UI-state surface only, named per `conventions/naming.md`'s
   boolean-predicate rule — e.g. `$showRoleModal`, `$showDeleteModal`, `$editingRoleId`, and the
-  bound `$selectedPermissions` array. It consumes, without re-deriving, two things 0008 exposes:
+  bound `$selectedPermissions` array. It consumes, without re-deriving, two things 0009 exposes:
   the Super-Admin-excluding roles collection, and a `$canGrantAdministratorLevel` boolean.
 - `resources/views/livewire/roles/index.blade.php` — **the core deliverable** (kebab-case mirror of
   the class, per `conventions/naming.md`). Contains the list, the create/edit modal, and the delete
@@ -165,7 +165,7 @@ Presentational rules the view must honor:
   "no confirm-and-proceed path" expressed in markup.
 - **The Super Admin row is never special-cased in the view.** The view renders whatever collection
   the backend hands it; there is no `@if ($role->name !== 'Super Admin')` guard, because that would
-  duplicate an invariant that belongs to 0008/0007.
+  duplicate an invariant that belongs to 0009/0008.
 
 ## Tests to perform
 
@@ -229,7 +229,7 @@ DOM only for the Super Admin.
 - [ ] The "manage administrator-level roles/users" toggle is absent from the DOM for anyone who is
       not the Super Admin, including a holder of the general "manage roles & permissions"
       permission — absent, not hidden or disabled.
-- [ ] The view re-derives no authorization: it consumes 0008/0009's collection and boolean flag.
+- [ ] The view re-derives no authorization: it consumes 0009/0010's collection and boolean flag.
 - [ ] Component is class-based with a `#[Title(...)]` attribute and a kebab-case mirrored view, per
       `conventions/base-standards.md` and `conventions/naming.md`.
 
@@ -240,5 +240,5 @@ DOM only for the Super Admin.
       toggle being absent rather than hidden, since a leak there is privilege-escalation-adjacent
 - [ ] Documentation updated (docs-keeper) — `docs/api/routes.md` gains the new `roles.index` route
 - [ ] Acceptance criteria met
-- [ ] Sibling stories 0002, 0008, 0007, 0009 landed (this story is not independently shippable —
-      it is the view layer of a component whose logic is 0008's)
+- [ ] Sibling stories 0002, 0008, 0009, 0010 landed (this story is not independently shippable —
+      it is the view layer of a component whose logic is 0009's)

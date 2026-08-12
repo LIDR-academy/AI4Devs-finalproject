@@ -123,7 +123,7 @@ permission gate in Epics 2–5 — build on.
 - **This story owns the canonical permission slugs.** The strings defined by
   `RolePermissionSeeder::MODULES`, `::ACTIONS` and `::ROLE_PERMISSIONS` are the *only* permission
   names that exist in the database. Every other story that references a role or permission —
-  0003–0006, 0008–0010, and everything in Epics 2–5 — must use those slugs verbatim
+  0003–0007, 0009–0011, and everything in Epics 2–5 — must use those slugs verbatim
   (`roles.manage`, `roles.manage-administrators`, `products.delete`, …), never a prose restatement
   of the same concept. A `can()` / `hasPermissionTo()` call against an unseeded string throws
   `PermissionDoesNotExist`, so a mismatched literal is a runtime failure, not a naming preference.
@@ -131,13 +131,13 @@ permission gate in Epics 2–5 — build on.
 **Out of scope — owned by sibling stories.** Do not implement these here:
 
 - The Super Admin role's dashboard invariants (undeletable, uneditable, invisible in the roles
-  list and user role selector) → **story 0007**. The dependency runs that way round: this story is
-  self-sufficient and 0007 *later hardens* the `"Super Admin"` role it creates, adding the
+  list and user role selector) → **story 0008**. The dependency runs that way round: this story is
+  self-sufficient and 0008 *later hardens* the `"Super Admin"` role it creates, adding the
   dashboard-level invariants on top of the role-name string the bypass is keyed on.
 - Enforcement of `roles.manage-administrators` and its "only the Super Admin can see the grant
-  control" meta-rule → **story 0009**. This story only seeds the permission.
+  control" meta-rule → **story 0010**. This story only seeds the permission.
 - The Roles & Permissions management UI, the Users screen, user `status`, and user soft-deletes →
-  stories 0003–0006, 0008 and 0010. The `users` table has no `status` or `deleted_at` column yet; nothing here
+  stories 0003–0007, 0009 and 0011. The `users` table has no `status` or `deleted_at` column yet; nothing here
   may depend on them.
 
 ## Type
@@ -552,8 +552,8 @@ public const ROLE_PERMISSIONS = ['roles.manage', 'roles.manage-administrators'];
 ```
 
 > 📌 **These constants are canonical** (see *Confirmed decisions* above). `roles.manage` and
-> `roles.manage-administrators` in particular are already referenced by stories 0003, 0008 and
-> 0009; those stories consume these exact literals rather than defining their own. Any story that
+> `roles.manage-administrators` in particular are already referenced by stories 0004, 0009 and
+> 0010; those stories consume these exact literals rather than defining their own. Any story that
 > needs a new permission adds it *here*, in this catalog, rather than introducing a string only its
 > own code knows about.
 
@@ -970,7 +970,7 @@ address — see the accent note in the F3 section.
 ### No migration
 `database-expert` verdict: all five Spatie tables already exist with the correct UUID-aware
 `model_uuid` morph key. "Exactly one Super Admin role" cannot be expressed in MySQL and is an
-application-layer invariant (story 0007); Spatie's existing `unique(name, guard_name)` index plus
+application-layer invariant (story 0008); Spatie's existing `unique(name, guard_name)` index plus
 `firstOrCreate` is the right level here. The 38-row catalog needs no additional index.
 
 ### Test files — **create**
@@ -1145,7 +1145,7 @@ routed through the Gate. Know which side of this line any given check falls on b
 Consequence: a Super Admin **is refused** by a route or Blade block gated on a bare role name, even
 though they bypass every permission. That is the specified behavior (pinned by a test in the
 middleware block above), not a defect to be "fixed" by teaching the bypass about roles — doing that
-would mean intercepting `hasRole()` itself, which would in turn break story **0007**'s Super Admin
+would mean intercepting `hasRole()` itself, which would in turn break story **0008**'s Super Admin
 invariants and any legitimate "does this user literally hold role X" query the roles UI needs.
 
 **Hard convention for this story and all of Epics 2–5:** gate routes, middleware and UI on
@@ -1229,14 +1229,19 @@ the kind of gap that is invisible until it silently locks the Super Admin out of
       re-run again after this pass, not skipped).
 
 ## Open follow-ups (product-owner — do not block Phase 3 of this story)
-- [ ] **Story 0009 uses non-canonical permission literals.**
-      `ai-spec/tasks/0009-administrator-level-permission-grant.md` currently hardcodes
+- [x] **Story 0010 uses non-canonical permission literals.**
+      `ai-spec/tasks/0010-administrator-level-permission-grant.md` (renumbered from 0009 when story
+      0003 was split — see that story's Provenance) currently hardcodes
       `'manage administrator-level roles/users'` and `'manage roles & permissions'` (e.g. its
       `ADMINISTRATOR_LEVEL_PERMISSION` constant and its Gherkin), which this catalog does not seed —
-      any `can()` against them would throw `PermissionDoesNotExist`. 0009 must be corrected to
+      any `can()` against them would throw `PermissionDoesNotExist`. 0010 must be corrected to
       `roles.manage-administrators` and `roles.manage` before *it* enters Phase 3. Out of scope for
       0002; recorded here because 0002 owns the canonical names.
-- [ ] **The lowercase-email invariant has one unguarded write path.**
+      ✅ **Resolved — 2026-08-10, during the 0003 split.** `0010-administrator-level-permission-grant.md`
+      now defines `public const ADMINISTRATOR_LEVEL_PERMISSION = 'roles.manage-administrators';`; the
+      Gherkin's quoted prose (`"manage administrator-level roles/users"`) is business-readable phrasing
+      in `Given`/`Then` steps, not a code-level literal — the canonical string is what the code uses.
+- [x] **The lowercase-email invariant has one unguarded write path.**
       `App\Livewire\Settings\Profile::updateProfileInformation()` bypasses Fortify's
       `ProfileInformationController` (which *would* lowercase, since
       `config('fortify.lowercase_usernames')` is `true`) and writes the submitted address verbatim
@@ -1248,7 +1253,10 @@ the kind of gap that is invisible until it silently locks the Super Admin out of
       own story: normalize in `ProfileValidationRules`/`Profile` (or a `User` mutator so every write
       path is covered at once), plus a decision on backfilling existing rows with `LOWER(email)`.
       **Do not fix it inside 0002.**
-- [ ] **Changing your own email address does not require re-verifying it (N1's root cause).**
+      ✅ **Resolved — 2026-08-10, by story 0003** (`0003-users-status-and-email-verification-lifecycle.md`):
+      the email is normalized to lowercase before validation on the profile path, and `App\Models\User`
+      additionally exposes a read-only lowercasing accessor on `email` as a consistency layer.
+- [x] **Changing your own email address does not require re-verifying it (N1's root cause).**
       Separately from the lowercase question above, `Profile::updateProfileInformation()` nulls
       `email_verified_at` on an address change but leaves the *new* address live on the row
       immediately — so any signed-in user can move their account onto an arbitrary address they do
@@ -1258,6 +1266,10 @@ the kind of gap that is invisible until it silently locks the Super Admin out of
       remedies for its own story — hold the change in a pending-email column until the new address
       is verified, or require password confirmation plus immediate re-verification. **Out of scope
       for 0002; do not fix it here**, and do not treat fixing it as grounds to relax N1.
+      ✅ **Resolved — 2026-08-10, by story 0003** (`0003-users-status-and-email-verification-lifecycle.md`):
+      implements the predicted "pending-email column" remedy exactly — an email change (self-service or
+      administrative, any role) is held as `users.pending_email` and only applied to `users.email` /
+      `email_verified_at` once its own signed verification link is used.
 
 ## Definition of Done
 - [x] Tests written and green
@@ -1325,8 +1337,10 @@ note), with supporting updates to `docs/README.md`, `docs/architecture/authentic
 mailbox ownership.
 
 The three items under [Open follow-ups](#open-follow-ups-product-owner--do-not-block-phase-3-of-this-story)
-remain **deliberately unticked** — all three are out of scope for 0002 and were verified still open at
-closure: story 0009 still hardcodes non-canonical permission literals, and
-`App\Livewire\Settings\Profile` still neither lowercases a submitted address nor requires
-re-verification after an email change. None blocks this story (the seeder normalizes its own input and
-N1 defends the grant path regardless), but each needs its own story.
+were **deliberately left unticked at the time of this closure (2026-08-10)** — all three were out of
+scope for 0002 and were verified still open then: story 0009 (since renumbered 0010) still hardcoded
+non-canonical permission literals, and `App\Livewire\Settings\Profile` still neither lowercased a
+submitted address nor required re-verification after an email change. None blocked this story (the
+seeder normalizes its own input and N1 defends the grant path regardless). All three were later
+resolved by story 0003 (`0003-users-status-and-email-verification-lifecycle.md`, itself the result of
+splitting the original story 0003) and story 0010 — see the ticked boxes above.
