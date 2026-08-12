@@ -10,6 +10,16 @@
             <div>
                 <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
 
+                @if ($this->pendingEmail)
+                    <flux:text class="mt-4">
+                        {{ __('users.email_change.pending_notice', ['email' => $this->pendingEmail]) }}
+
+                        <flux:link class="text-sm cursor-pointer" wire:click.prevent="cancelEmailChange">
+                            {{ __('Cancel this change.') }}
+                        </flux:link>
+                    </flux:text>
+                @endif
+
                 @if ($this->hasUnverifiedEmail)
                     <div>
                         <flux:text class="mt-4">
