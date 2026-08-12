@@ -2,6 +2,8 @@ import "dotenv/config";
 import cron from "node-cron";
 
 import { prismaRetentionRepository } from "@/repositories/retention.repository.prisma";
+import { offerDeps } from "@/use-cases/queue/deps";
+import { expireOffers, sendOfferReminders } from "@/use-cases/queue/respond-to-offer";
 import { sendRetentionReminders } from "@/use-cases/subscriptions/retention-reminders";
 
 /**
@@ -13,12 +15,18 @@ import { sendRetentionReminders } from "@/use-cases/subscriptions/retention-remi
  * (D11): al ser la prioridad aditiva, es invariante en el tiempo.
  *
  * Responsabilidades:
- *   - Recordatorios de retención (tarea 4.5) — implementado.
- *   - Caducidad de ventanas de confirmación de ofertas (tarea 6.4) — pendiente.
- *   - Recordatorio a mitad de ventana de confirmación (tarea 6.4) — pendiente.
+ *   - Recordatorios de retención (tarea 4.5).
+ *   - Caducidad de ventanas de confirmación de ofertas (tarea 6.4).
+ *   - Recordatorio a mitad de ventana de confirmación (tarea 6.4).
  */
 
 const TIMEZONE = "Europe/Madrid";
+
+/**
+ * Cada 5 minutos. La ventana de confirmación se mide en horas, así que este grano da
+ * una caducidad puntual sin castigar a la base con un sondeo por minuto.
+ */
+const OFFERS_SCHEDULE = "*/5 * * * *";
 
 /**
  * Una vez al día a las 10:00. La cadencia real la marca la configuración de cada Set;
@@ -49,9 +57,38 @@ async function runRetentionReminders() {
   }
 }
 
+let offersRunning = false;
+
+/**
+ * Caduca las ofertas vencidas —re-encolando a quien no respondió, sin expulsarlo— y
+ * envía los recordatorios de mitad de ventana. Van juntos porque miran las mismas
+ * filas y separarlos solo duplicaría el sondeo.
+ */
+async function runOfferJobs() {
+  if (offersRunning) {
+    console.warn("[scheduler] Ofertas: la ejecución anterior sigue en curso.");
+    return;
+  }
+  offersRunning = true;
+  try {
+    const deps = offerDeps();
+    const expired = await expireOffers(deps);
+    const reminders = await sendOfferReminders(deps);
+    if (expired.expired > 0 || reminders.sent > 0) {
+      console.log(
+        `[scheduler] Ofertas: ${expired.expired} caducadas (${expired.reoffered} reofertadas), ${reminders.sent} recordatorios.`
+      );
+    }
+  } catch (error) {
+    console.error("[scheduler] Fallo en el barrido de ofertas:", error);
+  } finally {
+    offersRunning = false;
+  }
+}
+
 function registerJobs() {
   cron.schedule(RETENTION_SCHEDULE, runRetentionReminders, { timezone: TIMEZONE });
-  // TODO(6.4): caducidad de ofertas y recordatorio a mitad de ventana.
+  cron.schedule(OFFERS_SCHEDULE, runOfferJobs, { timezone: TIMEZONE });
 }
 
 function main() {

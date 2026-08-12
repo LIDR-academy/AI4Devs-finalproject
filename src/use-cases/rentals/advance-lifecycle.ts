@@ -60,7 +60,17 @@ export async function advanceCopyLifecycle(
  */
 export async function offerToHeadOfQueue(
   { queue, settings, now = () => new Date() }: AdvanceLifecycleDeps,
-  input: { copyId: string; setId: string }
+  input: {
+    copyId: string;
+    setId: string;
+    /**
+     * Entrada a la que **no** volver a ofrecer en esta ronda. Se usa al caducar una
+     * oferta: quien acaba de dejarla pasar vuelve a la cola, y si resultara ser el
+     * único que espera se le ofrecería otra vez en el acto, en bucle y vaciando de
+     * sentido la penalización. "Pasa al siguiente" significa al siguiente.
+     */
+    excludeEntryId?: string;
+  }
 ): Promise<CreatedOffer | null> {
   const [entries, config] = await Promise.all([
     queue.findWaitingEntries(input.setId),
@@ -72,6 +82,8 @@ export async function offerToHeadOfQueue(
   const windowExpiresAt = new Date(at.getTime() + config.offerConfirmationWindowHours * HOUR_MS);
 
   for (const entry of entries) {
+    if (entry.entryId === input.excludeEntryId) continue;
+
     const eligibility = checkEligibility({
       subscription: entry.subscription,
       currentCopyStates: entry.currentCopyStates,

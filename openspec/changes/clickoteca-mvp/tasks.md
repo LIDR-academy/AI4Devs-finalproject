@@ -44,12 +44,12 @@
 - [x] 5.7 Tests: E2E entrega(+condición)→alquiler→devolución→inspección→higiene→disponible; discrepancia en la entrega genera incidencia sin imputar al suscriptor; recepción registra operador. **Hecho:** 22 tests nuevos (**221** en total) incluido el E2E completo, más el circuito real contra Postgres con sus 7 transiciones auditadas. El test destapó que **el alquiler puntual era imposible**: la elegibilidad exigía suscripción activa siempre
 
 ## 6. Cola de reservas (`reservation-queue`)
-- [ ] 6.1 Encolado por Set con marca de tiempo
-- [ ] 6.2 Ordenación por `effectiveEntryAt` inmutable (`enqueuedAt − bono_aplicado`), calculada al encolar, sin recálculo periódico (ver design.md D11)
-- [ ] 6.3 Elegibilidad al ofrecer (saltar no elegibles)
-- [ ] 6.4 Ventana de confirmación: aceptar/rechazar, recordatorio a mitad, caducidad → final con prioridad reducida
-- [ ] 6.5 Límite de colas simultáneas por usuario (configurable)
-- [ ] 6.6 Tests: basic adelanta a premium con el tiempo, empates, rechazo libera al instante, caducidad re-encola, salto de no elegibles
+- [x] 6.1 Encolado por Set con marca de tiempo. **Hecho:** `POST /api/sets/{id}/queue`, `GET /api/queue` y `DELETE /api/queue/{entryId}`. Se comprueba la **antigüedad** al encolar (dejar entrar a quien nunca podrá aceptar solo alarga la cola a costa de los demás) pero **no** el tope de plan: encolarse para más adelante es legítimo, y la elegibilidad se vuelve a mirar al ofrecer
+- [x] 6.2 Ordenación por `effectiveEntryAt` inmutable (`enqueuedAt − bono_aplicado`), calculada al encolar, sin recálculo periódico (ver design.md D11). **Hecho:** `effectiveEntryOnEnqueue` congela el bono vigente; el orden sale del índice `(setId, status, effectiveEntryAt, id)`. **No hay ningún job de recálculo**
+- [x] 6.3 Elegibilidad al ofrecer (saltar no elegibles). **Hecho:** el recorrido salta a quien no puede recibir el set ahora mismo **sin sacarlo de la cola**: conserva su turno
+- [x] 6.4 Ventana de confirmación: aceptar/rechazar, recordatorio a mitad, caducidad → final con prioridad reducida. **Hecho:** `POST /api/offers/{id}` con `ACCEPT`/`REJECT`, más dos jobs en el scheduler cada 5 min. El rechazo libera **al instante**; la caducidad re-encola con penalización y **excluye de esa ronda a quien la dejó pasar** — si fuera el único en la cola se le reofertaría en bucle, vaciando de sentido la penalización
+- [x] 6.5 Límite de colas simultáneas por usuario (configurable). **Hecho:** `maxQueuesPerUser` de `SystemSetting`, con `QUEUE_LIMIT_EXCEEDED`
+- [x] 6.6 Tests: basic adelanta a premium con el tiempo, empates, rechazo libera al instante, caducidad re-encola, salto de no elegibles. **Hecho:** 29 tests nuevos (**250** en total), más la verificación contra Postgres: un BASIC con 12 días de espera adelanta a un PREMIUM recién encolado (bono 10)
 
 ## 7. Notificaciones (`notifications`)
 - [ ] 7.1 Motor de notificaciones dirigido por eventos de dominio

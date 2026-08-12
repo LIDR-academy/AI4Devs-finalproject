@@ -373,6 +373,26 @@ project. Read it at the start of every session.
   **Fakes:** `FakeCopyRepository.onTransition` reproduce la sincronización del
   alquiler que en el adaptador real ocurre dentro de `applyTransition`; sin ese
   cableado los dobles mienten sobre el comportamiento real.
+- **Bloque 6 completo — `reservation-queue` (2026-08-12):**
+  **Al encolar sí se comprueba la antigüedad, pero no el tope de plan.** Encolarse
+  para más adelante es legítimo aunque ahora tengas el máximo fuera; la elegibilidad
+  se vuelve a mirar al ofrecer (D5), que es cuando importa. En cambio dejar entrar a
+  quien nunca podrá aceptar el set solo alarga la cola a costa de los demás.
+  **Re-encolado tras caducar:** `effectiveEntryOnRequeue = ahora + penalización`, y
+  **sin volver a aplicar el bono del plan** — el bono premia entrar en la cola, no
+  volver tras desatender un turno; sumarlo podría colocar a un premium por delante de
+  quien no ha fallado a nada.
+  **Bug que encontró un test:** al caducar una oferta, la copia se le **volvía a
+  ofrecer a la misma persona** que no había respondido, porque tras re-encolarse era
+  la única en espera → bucle infinito que vaciaba la penalización.
+  `offerToHeadOfQueue` acepta ahora `excludeEntryId`: "pasa al siguiente" significa al
+  siguiente.
+  **Rechazo vs caducidad:** rechazar saca de la cola (dijo que no); caducar re-encola
+  (no responder no es renunciar). Los dos liberan la copia en el acto.
+  El scheduler corre `expireOffers` + `sendOfferReminders` juntos cada 5 min: miran
+  las mismas filas y separarlos duplicaría el sondeo.
+  `NotificationRepository` mínimo creado aquí para el recordatorio de oferta; el motor
+  por eventos es el bloque 7.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -382,12 +402,12 @@ project. Read it at the start of every session.
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
-  **bloques 2, 3, 4 y 5 completos** (`accounts-roles`, `catalog-inventory`,
-  `subscriptions`, `rentals-returns`). Siguiente: bloque 6 (`reservation-queue`) —
-  ya existen `QueueRepository.findWaitingEntries`/`offerCopyTo` y la oferta al cabeza
-  de cola (5.6); faltan encolado, aceptar/rechazar, caducidad y límite de colas. Para
-  cualquier cambio de estado de una copia, usar `advanceCopyLifecycle` /
-  `transitionCopy`; nunca `copy.update({state})`.
+  **bloques 2 a 6 completos** (`accounts-roles`, `catalog-inventory`, `subscriptions`,
+  `rentals-returns`, `reservation-queue`). Siguiente: bloque 7 (`notifications`) — ya
+  existe `NotificationRepository` con dos emisores (recordatorio de retención y de
+  oferta); falta el motor por eventos de dominio y el resto de tipos. Para cualquier
+  cambio de estado de una copia, usar `advanceCopyLifecycle` / `transitionCopy`; nunca
+  `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle

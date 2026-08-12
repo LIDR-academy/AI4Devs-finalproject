@@ -47,3 +47,38 @@ export function compareQueueEntries(
 export function orderQueue<T extends QueueOrderable>(entries: readonly T[]): T[] {
   return [...entries].sort(compareQueueEntries);
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export function daysToMs(days: number): number {
+  return Math.max(0, days) * DAY_MS;
+}
+
+/**
+ * Entrada efectiva al **encolarse**: se congela el bono del plan vigente en ese
+ * momento (D11). Un cambio posterior del bono por el admin no reordena la cola, solo
+ * afecta a quien se encole después.
+ */
+export function effectiveEntryOnEnqueue(enqueuedAt: Date, planBonusDays: number): Date {
+  return computeEffectiveEntryAt(enqueuedAt, daysToMs(planBonusDays));
+}
+
+/**
+ * Entrada efectiva al **volver a la cola tras dejar caducar una oferta** (D5).
+ *
+ * Se sitúa en `ahora + penalización`: por delante no queda nadie, porque todos los que
+ * esperan entraron antes, y la penalización lo retrasa además unos días. **No se
+ * vuelve a aplicar el bono del plan**: el bono premia entrar en la cola, no volver a
+ * ella después de haber desatendido un turno; sumarlo aquí podría colocar a un premium
+ * por delante de alguien que acaba de encolarse sin haber fallado a nada.
+ *
+ * No es una expulsión: conserva su sitio en la cola, solo que al final.
+ */
+export function effectiveEntryOnRequeue(now: Date, penaltyDays: number): Date {
+  return new Date(now.getTime() + daysToMs(penaltyDays));
+}
+
+/** Instante del recordatorio a mitad de ventana de una oferta (D5). */
+export function offerReminderAt(offeredAt: Date, expiresAt: Date): Date {
+  return new Date(offeredAt.getTime() + (expiresAt.getTime() - offeredAt.getTime()) / 2);
+}
