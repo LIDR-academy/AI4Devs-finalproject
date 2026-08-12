@@ -146,6 +146,9 @@ model User {
   role         Role       @default(SUBSCRIBER)
   fullName     String
   isAdult      Boolean    @default(false) // declaración de mayoría de edad (PRD §4.1)
+  // Instante en que se aceptaron las condiciones. Mostrarlas sin dejar constancia de
+  // la aceptación no probaría nada; en el MVP el texto es lorem ipsum, el registro no.
+  acceptedTermsAt DateTime? @db.Timestamptz(6)
   status       UserStatus @default(ACTIVE)
   createdAt    DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt    DateTime   @updatedAt @db.Timestamptz(6)

@@ -257,6 +257,26 @@ project. Read it at the start of every session.
   **Truco de verificación:** los adaptadores Prisma no los cubren los dobles; se
   comprueban con un script `tsx` temporal **dentro** del proyecto (los alias `@/` no
   resuelven si el script vive fuera) que limpia sus propias filas al terminar.
+- **Tarea 2.5 hecha — alta de suscriptor (2026-08-11):** `POST /api/auth/register` +
+  página `/registro` (la landing ya la enlazaba y daba **404**). Usuario, dirección y
+  método de pago se crean **en una transacción**. Los tres requisitos del alta
+  (mayoría de edad, condiciones, dirección de envío) se validan también en el caso de
+  uso, y los fallos se **acumulan** en `errors[]` en vez de devolver el primero.
+  Nuevo `User.acceptedTermsAt` (migración `user_accepted_terms`). La tarjeta es
+  simulada y **nunca se pide el PAN**; el "contacto" de la spec lo cubre el email del
+  usuario, así que no se añadió columna de teléfono. El email duplicado se responde
+  como `VALIDATION_ERROR` del campo `email` — se acepta que revela qué emails existen,
+  porque en un alta es inevitable y, a diferencia del login, no hay credencial que
+  proteger.
+  **Dos trampas encontradas (ambas solo visibles en runtime):**
+  1. **`prisma migrate dev` NO regenera el cliente** en Prisma 7 → la app falla con
+     "Unknown argument" pese a que `tsc` y `next build` pasan. Arreglado de raíz:
+     `db:migrate` es ahora `prisma migrate dev && prisma generate`.
+  2. **Con driver adapter, el error P2002 no trae `meta.target`**, solo
+     `meta.modelName` — la detección del email duplicado por `target` nunca acertaba y
+     devolvía 500. `isUniqueEmailViolation` cubre las dos formas y está testeada.
+  **Lección:** `tsc` + `build` + tests con dobles **no** detectan estos fallos; los
+  adaptadores Prisma hay que ejercitarlos contra Postgres.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -265,8 +285,8 @@ project. Read it at the start of every session.
   cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
-  (auditoría) hechas. Siguiente: 2.5 (alta de suscriptor: adulto + tarjeta simulada +
-  dirección obligatoria + condiciones).
+  (auditoría) y 2.5 (alta de suscriptor) hechas. Siguiente: 2.6 (acceso público del
+  visitante: proyección pública del catálogo + gating), que se apoya en D13.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle
