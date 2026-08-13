@@ -22,6 +22,7 @@ Declared in [`routes/web.php`](../../routes/web.php) and [`routes/settings.php`]
 | --- | --- | --- | --- | --- |
 | GET | `/` | `home` | — | `view('welcome')` |
 | GET | `/dashboard` | `dashboard` | `auth`, `verified` | `view('dashboard')` |
+| GET | `/users` | `users.index` | `auth`, `verified`, `can:users.view` | `App\Livewire\Users\Index` |
 | ANY | `/settings` | — | `auth` | redirect → `settings/profile` |
 | GET | `/settings/profile` | `profile.edit` | `auth` | `App\Livewire\Settings\Profile` |
 | GET | `/settings/appearance` | `appearance.edit` | `auth`, `verified` | `App\Livewire\Settings\Appearance` |
@@ -39,6 +40,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
 ```
 
 `security.edit` is the only route with the extra `password.confirm` requirement, because it manages 2FA and passkeys (see [architecture/authentication.md](../architecture/authentication.md)).
+
+### `users.index` — the first permission-gated route
+
+Every other app-owned route gates on *being signed in*; this one is the first to gate on a **catalog permission**. It lives in [`routes/web.php`](../../routes/web.php), inside the existing `auth` + `verified` group:
+
+```php
+// routes/web.php
+Route::livewire('users', UsersIndex::class)
+    ->middleware(['can:users.view'])
+    ->name('users.index');
+```
+
+**`can:users.view`, not `permission:users.view`** — the two express the same rule but are not interchangeable on a `Route::livewire(...)` route. Livewire re-applies route middleware to `/livewire/update` round-trips only for classes on its `PersistentMiddleware` allow-list, which carries Laravel's `Authorize` (`can:`) but not Spatie's `PermissionMiddleware`; gating with `permission:` would protect the initial `GET /users` only, leaving every `save()` / `deleteUser()` unauthorized at the route layer. The route file carries an inline comment saying so — do not "normalise" it. See [architecture/authorization.md](../architecture/authorization.md#gating-a-livewire-route-use-can-never-permission).
+
+Two consequences for anyone reading this table as a contract:
+
+- **The middleware column understates what protects this route.** `verified` is *also* not on that allow-list, so route middleware alone is not what secures the component's actions. [`App\Livewire\Users\Index`](../../app/Livewire/Users/Index.php) re-authorizes in `mount()` and as the first statement of every mutating method; that, not the table row, is the real contract. See [security/livewire-authorization.md](../security/livewire-authorization.md).
+- **The view behind it is a placeholder.** `resources/views/livewire/users.blade.php` renders only the summary line today — the list table, modals and status badges are sibling story 0006's. The component's public surface (`$users` rows of `{id, name, email, pendingEmail, role, status}`, `usersSummary()`, `roleOptions()`) is the locked interface that view will consume.
 
 ### `email-change.confirm` — the first app-owned route deliberately outside `auth`
 
@@ -101,4 +120,4 @@ Not listed: asset/dev-tool routes with no domain meaning (`flux/*`, `livewire-*/
 
 When `routes/api.php` and API resource controllers appear, replace this file's structure with one `api/<resource>.md` per resource, each documenting real request/response JSON pulled from the controller/resource classes — do not add one preemptively.
 
-_Last updated: 2026-08-12 — Task 0003: documented `email-change.confirm`, the first app-owned route deliberately registered outside the `auth` groups (`signed` + `throttle:6,1` only), its two response shapes, and the `ValidateSignature`/`SubstituteBindings` priority change it required._
+_Last updated: 2026-08-13 — Task 0004: added `users.index`, the first permission-gated route, with the `can:` vs `permission:` rule that governs every future Livewire route and the caveat that its middleware column understates what actually protects the component's actions._

@@ -12,6 +12,7 @@ Cross-cutting concern — single source of truth for roles & permissions. Other 
 - [Super Admin bootstrap](#super-admin-bootstrap)
 - [The Super Admin bypass](#the-super-admin-bypass)
 - [Middleware aliases](#middleware-aliases)
+- [Policies](#policies)
 - [Configuration](#configuration)
 - [How to gate something](#how-to-gate-something)
 - [Where it lives](#where-it-lives)
@@ -33,14 +34,16 @@ class User extends Authenticatable implements PasskeyUser
 
 ## Current state
 
-The authorization foundation is **live**: roles and permissions are seeded, the package's middleware aliases are registered, and a `Gate::before` hook grants the Super Admin role a blanket bypass.
+The authorization foundation is **live and in real use**: roles and permissions are seeded, the package's middleware aliases are registered, a `Gate::before` hook grants the Super Admin role a blanket bypass, and — since task 0004 — the first gated route and the first policy exist.
 
 - Two roles are seeded — `Super Admin` and `Administrator` — both on the `web` guard.
 - A 38-permission catalog is seeded under the `<module-slug>.<action>` convention.
 - `role`, `permission`, and `role_or_permission` are registered as middleware aliases in [`bootstrap/app.php`](../../bootstrap/app.php) and enforce server-side (403).
 - `App\Providers\AppServiceProvider::configureAuthorization()` installs the Super Admin `Gate::before` bypass.
+- **`users.index` (`GET /users`) is the first permission-gated route**, and it is gated with **`can:users.view`** rather than Spatie's `permission:` middleware — a Livewire-specific correctness requirement, not a style choice. See [How to gate something](#gating-a-livewire-route-use-can-never-permission).
+- **[`App\Policies\UserPolicy`](../../app/Policies/UserPolicy.php) is the first policy** in the app, called from [`App\Livewire\Users\Index`](../../app/Livewire/Users/Index.php). See [Policies](#policies).
 
-What is **not** here yet: no route in [`routes/web.php`](../../routes/web.php) or [`routes/settings.php`](../../routes/settings.php) carries a `permission:` / `role:` gate, and no Livewire component calls `can()` against a catalog permission. The plumbing exists so that the Users, Roles & Permissions and module screens (PRD Epics 1–5) can gate without further infrastructure work — when the first gated route lands, document it here.
+Still **ungated**: every route in [`routes/settings.php`](../../routes/settings.php) and the `dashboard` route, which carry only `auth` / `verified` / `password.confirm`. Those are per-user settings screens with no catalog permission behind them; the module screens of PRD Epics 2–5 will gate the same way `users.index` does.
 
 ## Permission catalog
 
@@ -271,6 +274,47 @@ Registered in [`bootstrap/app.php`](../../bootstrap/app.php):
 
 All three throw `UnauthorizedException` for an unauthenticated request, which renders as a bare 403 rather than a redirect to login — so a gated route must **also** carry `auth` (and `verified`, matching the existing groups in `routes/web.php`). See [security/authorization-patterns.md](../security/authorization-patterns.md#permission-and-role-middleware-are-not-a-substitute-for-auth).
 
+## Policies
+
+Permissions answer "may this actor do this *kind* of thing at all". A **policy** answers the question a permission cannot: "may this actor do it *to this particular record*". [`App\Policies\UserPolicy`](../../app/Policies/UserPolicy.php) (task 0004) is the first one in the app, and the template for the rest.
+
+**Registration: none.** Laravel 13 auto-discovers `App\Policies\<Model>Policy` for `App\Models\<Model>`, so `UserPolicy` is wired to `User` by naming alone. This repo has **no `AuthServiceProvider`**, and one should not be added to register a conventionally-named policy.
+
+### `UserPolicy` abilities
+
+| Ability | Signature | Rule |
+| --- | --- | --- |
+| `viewAny` | `(User $actor)` | holds `users.view` |
+| `create` | `(User $actor)` | holds `users.create` |
+| `update` | `(User $actor, User $target)` | `false` if `$target` holds `Super Admin`; otherwise holds `users.edit` |
+| `updateSensitiveAttributes` | `(User $actor, User $target)` | passes `update`, **and** — if `$target` holds `Administrator` — holds `roles.manage-administrators` |
+| `promoteToAdministrator` | `(User $actor, ?User $target = null)` | holds `roles.manage-administrators` |
+| `downgrade` | `(User $actor, User $target)` | `true` if `$target` does **not** hold `Administrator`; otherwise holds `roles.manage-administrators` |
+| `delete` | `(User $actor, User $target)` | `false` if `$target` holds `Super Admin`; holds `users.delete`, **plus** `roles.manage-administrators` when `$target` holds `Administrator` |
+
+Four properties of this policy are load-bearing and generalize to every policy added later:
+
+**1. The policy calls `hasPermissionTo()`, and that is correct here** — even though [the bypass table](#bypass-coverage--what-it-does-not-cover) marks `hasPermissionTo()` as *not* reaching `Gate::before`. A policy method is only ever reached *through* the Gate, and `Gate::before` runs first: a Super Admin is granted before `UserPolicy` is consulted at all, so the direct query inside it never runs for them. This is why `tests/Feature/Policies/UserPolicyTest.php` can assert a Super Admin passes every ability while holding **zero** permission rows.
+
+> The "gate on permissions, never role names" convention still governs the **call sites** (`Gate::authorize(...)`, `can:` middleware). Inside a policy body, both `hasPermissionTo()` and `hasRole()` are appropriate — the latter for asking a literal question about the *target*, which is exactly what the Super Admin and Administrator exclusions do.
+
+**2. `hasRole()` is always passed the guard.** All five `hasRole()` calls in `UserPolicy` pass `'web'` explicitly (`hasRole('Super Admin', 'web')`, `hasRole('Administrator', 'web')`), never the one-argument form, per [security/authorization-patterns.md](../security/authorization-patterns.md#always-pass-the-guard-to-hasrole--hasanyrole).
+
+**3. `promoteToAdministrator()`'s `$target` is nullable, and that is not decoration.** It is invoked two ways — with an instance on the edit path, and **class-level** on the create path, where no target exists yet:
+
+```php
+// app/Livewire/Users/Index.php — the create path
+Gate::authorize('promoteToAdministrator', User::class);
+```
+
+`Gate::callPolicyMethod()` **drops the first argument when it is a class-string**, so the class-level call reaches the method with `$actor` alone. A non-nullable `User $target` parameter would throw `ArgumentCountError` at runtime rather than allowing or denying anything — and it would pass every instance-level test, failing only at that one call site.
+
+**4. `updateSensitiveAttributes` exists because a rule keyed on the *operation* was incomplete.** The Administrator-level guard originally covered only the *role* change; a security audit (task 0004, finding F1) found that `status` and `email` reach the same effect without passing any guard — an actor holding `users.edit` but not `roles.manage-administrators` could suspend another Administrator, or seize their account by pointing its email at an address they control. The general rule this established, with the real ✅/❌ pair, is in [security/authorization-patterns.md](../security/authorization-patterns.md#an-ability-must-cover-every-attribute-that-achieves-its-effect-not-only-the-operation-it-is-named-after) — it is not repeated here.
+
+### `Gate::authorize` at the call site, not only at the route
+
+`can:users.view` on the route proves only the **page-level** ability. Every method of `App\Livewire\Users\Index` that mutates re-authorizes as its **first statement** (`Gate::authorize('create', User::class)`, `Gate::authorize('update', $target)`, `Gate::authorize('delete', $target)`), and `mount()` re-checks `viewAny` on its own. That is mandatory rather than defensive: `Livewire::test()` and the `/livewire/update` endpoint both reach the component **without ever running route middleware**. The full rule set — including which route middleware silently does *not* follow a component, and why `#[Locked]` is what keeps the authorized identity and the written identity the same — is in [security/livewire-authorization.md](../security/livewire-authorization.md).
+
 ## Configuration
 
 Teams support is **disabled** (single-tenant permission model):
@@ -306,28 +350,46 @@ Permission checks are cached for 24 hours (`config/permission.php`, `'cache'` se
 
 ## How to gate something
 
-```php
-// ✅ Good — gate on a permission; the Super Admin bypass applies
-Route::livewire('roles', Index::class)
-    ->middleware(['auth', 'verified', 'permission:roles.manage'])
-    ->name('roles.index');
-```
+✅ Good — the real, currently-gated route: a permission gate (so the Super Admin bypass applies), inside the existing `auth` + `verified` group:
 
 ```php
-// ❌ Bad — a bare role gate locks the Super Admin out (hasAnyRole() never reaches the Gate)
-Route::livewire('roles', Index::class)
-    ->middleware(['auth', 'verified', 'role:Administrator'])
-    ->name('roles.index');
+// routes/web.php
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::livewire('users', UsersIndex::class)
+        ->middleware(['can:users.view'])
+        ->name('users.index');
+});
 ```
 
-(Both snippets are illustrative of the convention — no route in this app is gated yet; see [Current state](#current-state).)
+❌ Bad — a bare role gate locks the Super Admin out, because `hasAnyRole()` never reaches the Gate (adapted from the route above to illustrate; not present in the repo):
 
-In PHP and Blade, the same rule applies:
+```php
+// anti-pattern — do not do this
+Route::livewire('users', UsersIndex::class)->middleware(['role:Administrator']);
+```
+
+### Gating a Livewire route: use `can:`, never `permission:`
+
+On a **`Route::livewire(...)` route the two are not interchangeable**, even though they express the same rule. Livewire re-applies route middleware to `/livewire/update` round-trips only for the classes hardcoded in `PersistentMiddleware::$persistentMiddleware`. That allow-list contains Laravel's `Illuminate\Auth\Middleware\Authorize` (which backs `can:`) but **not** Spatie's `PermissionMiddleware`:
+
+```php
+// ❌ anti-pattern on a Livewire route — protects only the initial GET /users;
+// every save()/deleteUser() round-trip runs unauthorized at the route layer
+Route::livewire('users', UsersIndex::class)->middleware(['permission:users.view']);
+```
+
+Spatie registers every permission as a Gate ability, so `can:users.view` carries exactly the same meaning — including the Super Admin bypass — and **is** re-applied on every action. This is why [`routes/web.php`](../../routes/web.php) carries an inline comment warning against the swap, and why a later story must not "normalise" this route onto `permission:`. The verified allow-list, plus the three other middlewares that silently do not follow a component (`verified`, `password.confirm`, `throttle:`), are in [security/livewire-authorization.md](../security/livewire-authorization.md#livewireupdate-is-a-second-entry-point-and-only-an-allow-listed-subset-of-route-middleware-follows-the-component-there).
+
+Route middleware is never the whole story for a Livewire screen regardless — see [`Gate::authorize` at the call site](#gateauthorize-at-the-call-site-not-only-at-the-route).
+
+### In PHP and Blade
 
 ```php
 $user->can('products.delete');        // ✅ Gate — Super Admin passes
 $user->hasPermissionTo('products.delete'); // ❌ direct query — Super Admin fails
 ```
+
+The one place `hasPermissionTo()` is correct is **inside a policy body**, which is only ever reached through the Gate — see [Policies](#policies).
 
 ## Where it lives
 
@@ -341,7 +403,10 @@ $user->hasPermissionTo('products.delete'); // ❌ direct query — Super Admin f
 | Middleware aliases | `bootstrap/app.php` |
 | Super Admin bypass | `app/Providers/AppServiceProvider.php` |
 | Trait usage | `app/Models/User.php` |
-| Tests | `tests/Feature/Seeders/`, `tests/Feature/Authorization/` |
+| Policies | `app/Policies/UserPolicy.php` (auto-discovered; no provider registration) |
+| The only gated route | `routes/web.php` (`users.index`, `can:users.view`) |
+| Per-action `Gate::authorize` call sites | `app/Livewire/Users/Index.php` |
+| Tests | `tests/Feature/Seeders/`, `tests/Feature/Authorization/`, `tests/Feature/Policies/`, `tests/Feature/Users/` |
 | Security rules derived from this foundation | [`docs/security/`](../security/README.md) |
 
-_Last updated: 2026-08-10 — Task 0002 turned `spatie/laravel-permission` from installed-but-inert into a working foundation: replaced the "nothing exercises roles or permissions yet" warning with the real state — the two seeded roles and their 37/38 vs 0/38 grants, the `<module-slug>.<action>` catalog, the seeding/idempotency/cache-flush rules, the five-branch Super Admin bootstrap, the `Gate::before` bypass with its coverage gap and the "gate on permissions, never role names" convention, and the three middleware aliases._
+_Last updated: 2026-08-13 — Task 0004 (Users list + create/edit backend): recorded the first permission-gated route (`users.index`) and the first policy, added a **Policies** section documenting `UserPolicy`'s seven abilities (why `hasPermissionTo()` inside a policy body is correct, why `promoteToAdministrator`'s `$target` must be nullable, and the audit finding behind `updateSensitiveAttributes`), rewrote **How to gate something** around the real route, and added the `can:` vs `permission:` rule for Livewire routes._

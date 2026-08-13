@@ -46,7 +46,8 @@ app/
   Listeners/           Event listeners (ActivateVerifiedUser), registered in AppServiceProvider
   Livewire/            Livewire components, grouped by area (Settings/, Settings/TwoFactor/, Actions/)
   Models/              Eloquent models
-  Notifications/       Notification classes (PendingEmailVerification)
+  Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
+  Policies/            Eloquent model policies (UserPolicy), auto-discovered by name
   Providers/           Service providers (AppServiceProvider, FortifyServiceProvider)
 config/                Laravel + package config (fortify.php, permission.php, ...)
 database/
@@ -67,7 +68,9 @@ tests/
   Pest.php, TestCase.php
 ```
 
-`app/Enums/`, `app/Listeners/`, `app/Notifications/` and `lang/` are all **stock Laravel locations** (`make:enum`, `make:listener`, `make:notification`, `lang:publish`), not new base folders — creating one of them needs no approval; inventing a folder Laravel doesn't ship does.
+`app/Enums/`, `app/Listeners/`, `app/Notifications/`, `app/Policies/` and `lang/` are all **stock Laravel locations** (`make:enum`, `make:listener`, `make:notification`, `make:policy`, `lang:publish`), not new base folders — creating one of them needs no approval; inventing a folder Laravel doesn't ship does.
+
+`app/Policies/` in particular is **registration-free**: Laravel 13 auto-discovers `App\Policies\<Model>Policy` for `App\Models\<Model>`, so `UserPolicy` binds to `User` by naming alone. This repo has no `AuthServiceProvider` and does not need one — do not add one to register a conventionally-named policy. What each ability means lives in [architecture/authorization.md](../architecture/authorization.md#policies), not here.
 
 `app/Actions/` groups by concern, one subfolder per area: `Fortify/` holds the framework-contract implementations, `Users/` the app's own Users-domain actions. A new action goes in the subfolder for its domain (or directly under `app/Actions/` if it belongs to none) — never nested under an unrelated one.
 
@@ -220,4 +223,4 @@ Every PHP change in this repo should pass, in this order, before being considere
 2. `vendor/bin/pint --dirty --format agent` — auto-fixes formatting against the `laravel` preset (`pint.json`).
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
-_Last updated: 2026-08-12 — Task 0003: added `app/Actions/Users/`, `app/Enums/`, `app/Listeners/`, `app/Notifications/` and `lang/` to the directory listing, rewrote the `app/Http/Controllers/` line now that `ConfirmEmailChangeController` is the repo's first domain controller (with the "controller in front of an action" convention it establishes), and recorded that omission from `#[Fillable]` is the mass-assignment guard for `status` / `pending_email`._
+_Last updated: 2026-08-13 — Task 0004: added `app/Policies/` to the directory listing as the one folder that story introduces, with the note that policies here are auto-discovered and need no `AuthServiceProvider`._
