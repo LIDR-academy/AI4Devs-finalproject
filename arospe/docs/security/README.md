@@ -29,6 +29,13 @@ repo must follow — always with a real code example pulled from this repository
   pipeline), why a value bound into a link by `sha1()` must be normalised as the action's first
   statement, why `lockForUpdate()` plus an availability re-check is not a race guard without the
   unique index and its SQLSTATE `23000` catch, and why every refusal branch must flash identical copy.
+- [Livewire component authorization](livewire-authorization.md) — the rules governing this repo's first
+  permission-gated Livewire screen (`App\Livewire\Users\Index`, task 0004): the verified
+  `PersistentMiddleware` allow-list and what it silently drops on `/livewire/update` (Spatie's
+  `permission:`, but also `verified`, `password.confirm` and `throttle:`), why every method that mutates
+  **or discloses** re-authorizes as its first statement, why `#[Locked]` plus a database-read assignment
+  is what keeps `Rule::unique()->ignore()` safe, why server-derived properties must be locked too, and
+  why a privilege rule enforced only in the component is bypassed by every other call site of the action.
 
-_Last updated: 2026-08-12 — Added `signed-link-verification.md` from the Phase 4 audit of task 0003
-(user status & email-verification lifecycle)._
+_Last updated: 2026-08-13 — Added `livewire-authorization.md` from the Phase 4 audit of task 0004
+(Users list + create/edit backend)._
