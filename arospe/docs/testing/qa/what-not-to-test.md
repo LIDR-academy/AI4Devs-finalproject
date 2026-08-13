@@ -22,10 +22,12 @@ A pure string-formatting helper like `initials()` is worth *one* test with a cou
 ## Not reasonable to skip — always test
 
 - **Business rules and validations** — anything in `App\Concerns\*ValidationRules` or an Action's `Validator::make()` call. This is exactly the kind of rule that breaks silently if untested (see [risk-based-testing.md #6](risk-based-testing.md)).
-- **Authorization** — currently route-middleware-based (`auth`, `verified`, `password.confirm`); once Policies/Gates exist (`spatie/laravel-permission` is installed but not yet wired to `User` — see [architecture/authorization.md](../../architecture/authorization.md)), every Policy method needs both an allow and a deny test.
+- **Authorization** — all three of its layers: route middleware (`auth`, `verified`, `password.confirm`, `can:`), permissions (`spatie/laravel-permission`, seeded and in use), and policies (`app/Policies/`). Every policy ability needs **both an allow and a deny test**, and for a Livewire screen the component's own `Gate::authorize()` calls need their own tests — route-level tests never exercise them. See [architecture/authorization.md](../../architecture/authorization.md) and [backend/feature-integration-tests.md](../backend/feature-integration-tests.md#authorization-tests).
 - **Edge cases identified via [risk-based-testing.md](risk-based-testing.md)** — empty/null/boundary/duplicate input, concurrent/repeated actions.
 - **Error and exception handling** — e.g. what `CreateNewUser::create()` does when validation fails (`ValidationException`), not just what it does when it succeeds.
 
 ## The rule of thumb
 
 Skipping a test should save real effort without giving up a real safety net. If you're skipping a test *because* it would push coverage over an arbitrary threshold rather than because the code genuinely can't fail in a meaningful way, that's chasing a number, not writing tests — see [philosophy.md](../philosophy.md) and [ci/pipeline-integration.md](../ci/pipeline-integration.md) on treating 80% as a floor.
+
+_Last updated: 2026-08-13 — Task 0004: corrected the Authorization bullet, which still said `spatie/laravel-permission` was "not yet wired to `User`" (false since task 0002) and treated policies as hypothetical; it now names the three real layers and the Livewire-action tests route-level tests never reach._

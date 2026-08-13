@@ -18,10 +18,12 @@ List the ways this code path can go wrong before writing the happy-path test. Fo
 **3. What happens if this runs twice, out of order, or concurrently?**
 - Deleting the same passkey twice (`Security::deletePasskey()`) — does the second call throw, no-op, or corrupt state?
 - Two requests racing to verify the same email — does `email_verified_at` end up in a consistent state?
-- If a test passes only when run after another specific test, it's not actually isolated — see [DoD checklist](../README.md) and `--random` execution in [ci/commands.md](../ci/commands.md#running-tests).
+- If a test passes only when run after another specific test, it's not actually isolated — see [DoD checklist](../README.md) and the run commands in [ci/commands.md](../ci/commands.md). (Order-randomised runs are the way to surface this; note that [ci/commands.md](../ci/commands.md) does not document a `--random` recipe today, so reach for Pest's ordering flags directly.)
 
 **4. What happens if the user doesn't have permission / the resource doesn't exist?**
-This codebase gates access via route middleware (`auth`, `verified`, `password.confirm` — see [`routes/settings.php`](../../../routes/settings.php) and [architecture/authorization.md](../../architecture/authorization.md)), not yet via Policies/Gates (`spatie/laravel-permission` is installed and migrated but not attached to `User` — see that same doc). So today, "no permission" tests look like `DashboardTest`'s guest-redirect case; "resource doesn't exist" looks like calling `deletePasskey()` for a passkey ID that doesn't belong to the acting user and asserting a 404/`ModelNotFoundException`, not silent success.
+This codebase gates access via route middleware (`auth`, `verified`, `password.confirm` on the settings screens; `can:users.view` on `users.index` — see [`routes/settings.php`](../../../routes/settings.php), [`routes/web.php`](../../../routes/web.php) and [architecture/authorization.md](../../architecture/authorization.md)), **and** via seeded permissions plus policies (`app/Policies/UserPolicy.php`). So a "no permission" test is now the guest-redirect case of `DashboardTest` *and* a signed-in user lacking the permission getting a 403, asserted at both the route and the Livewire-action layer; "resource doesn't exist" looks like calling `deletePasskey()` (or `openEditModal()` with an unknown UUID) and asserting a 404/`ModelNotFoundException`, not silent success.
+
+Ask specifically: **is the deny path reachable by a route the allow-path test never touches?** A Livewire action arrives at `/livewire/update` without re-running most route middleware, so a screen can be locked at the route and wide open per action.
 
 **5. What external dependency could fail (network, queue, third-party API), and how should the system behave?**
 This app currently has no outbound HTTP/third-party API calls and `QUEUE_CONNECTION=sync` in tests (see [`phpunit.xml`](../../../phpunit.xml)) — so today this mostly applies to `Mail`/`Notification` (e.g. password-reset, two-factor recovery-code emails). Ask: if `Notification::fake()` weren't there and the mailer actually failed, would the user-facing action (e.g. password reset) still complete, or does it silently swallow the failure? See [backend/mocking-and-fakes.md](../backend/mocking-and-fakes.md).
@@ -35,3 +37,5 @@ The single highest-signal check. Before closing out a bug fix, `git stash` the f
 ## Using this as a reviewer
 
 This checklist doubles as a review tool independent of the code: read the PR description, and for each risk category above, ask "is there a test for this?" without looking at the diff first. Then check the diff. A mismatch between what you expected and what's actually tested is the gap to raise. For the PR-approval-specific version of this, see [coverage-review-checklist.md](coverage-review-checklist.md).
+
+_Last updated: 2026-08-13 — Task 0004: corrected question 4, which still described this codebase as gating "not yet via Policies/Gates" with `spatie/laravel-permission` "not attached to `User`" — both false since tasks 0002 and 0004 — and added the deny-path-reachability question a Livewire screen makes necessary._
