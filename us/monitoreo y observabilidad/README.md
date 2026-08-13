@@ -35,3 +35,5 @@ This folder contains user stories to incorporate **Prometheus** and **Grafana** 
 ## Relationship to existing product
 
 These stories do **not** change workshop business flows (clients, vehicles, work orders). They add an **operations** capability so admins/devs can answer: *Is the API up? Is latency rising? Are 5xx increasing? Is Postgres reachable?*
+
+**Frontend (`apps/web`):** out of scope for US-O1…O5. Operator UI is Prometheus/Grafana. See [`docs/plans/US-O_observability_frontend.md`](../../docs/plans/US-O_observability_frontend.md).
