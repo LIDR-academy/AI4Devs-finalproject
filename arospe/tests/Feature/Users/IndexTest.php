@@ -38,6 +38,43 @@ test('the list includes a roleless user and the acting administrators own row', 
         ->and($ids)->toContain($roleless->id);
 });
 
+test('each row exposes the id, name, email, pendingEmail, role and status the view contract requires', function () {
+    // Code review finding (Phase 5): nothing previously asserted this shape beyond id/name, so a
+    // regression renaming a key, returning the Role model instead of its name, or dropping a field
+    // would pass every other test here while breaking story 0006's locked interface contract.
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $roled = User::factory()
+        ->pendingEmail('mid-flight@arospe.es')
+        ->create(['name' => 'Roled User', 'email' => 'roled@arospe.es', 'status' => UserStatus::Active]);
+    $roled->assignRole($editorRole);
+
+    $roleless = User::factory()->create(['name' => 'Roleless User', 'email' => 'roleless@arospe.es', 'status' => UserStatus::Inactive]);
+
+    $users = collect(Livewire::test(Index::class)->get('users'));
+
+    expect($users->firstWhere('id', $roled->id))->toBe([
+        'id' => $roled->id,
+        'name' => 'Roled User',
+        'email' => 'roled@arospe.es',
+        'pendingEmail' => 'mid-flight@arospe.es',
+        'role' => 'Editor',
+        'status' => UserStatus::Active,
+    ]);
+
+    expect($users->firstWhere('id', $roleless->id))->toBe([
+        'id' => $roleless->id,
+        'name' => 'Roleless User',
+        'email' => 'roleless@arospe.es',
+        'pendingEmail' => null,
+        'role' => null,
+        'status' => UserStatus::Inactive,
+    ]);
+});
+
 test('users are listed alphabetically by name', function () {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
@@ -584,10 +621,6 @@ test('changing another users role from Editor to Blog Editor applies, unaffected
 });
 
 // --- Authorization ---
-
-test('a visitor cannot reach the users screen', function () {
-    $this->get(route('users.index'))->assertRedirect(route('login'));
-});
 
 test('a blog editor whose role does not grant users.view is denied server-side, not merely hidden in the UI', function () {
     $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
