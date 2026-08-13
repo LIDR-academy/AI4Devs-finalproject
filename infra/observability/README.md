@@ -1,11 +1,12 @@
-# MecaTrack observability (Prometheus)
+# MecaTrack observability (Prometheus + Grafana)
 
-Optional Docker Compose profile that scrapes the NestJS API metrics endpoint added in **US-O2**.
+Optional Docker Compose profile that scrapes NestJS API metrics (**US-O2**) and visualizes them in Grafana (**US-O4**).
 
 ## Prerequisites
 
 - Docker Compose stack with services `postgres`, `api`, and `web` (root `docker-compose.yml`).
 - API image includes `GET /api/metrics` (US-O2) and preferably `GET /api/health/ready` (US-O1).
+- Host `.env` must define `GRAFANA_ADMIN_PASSWORD` (required when starting Grafana). See `.env.example`.
 
 ## Start with observability
 
@@ -15,7 +16,7 @@ From the repository root (or the production deploy copy that uses this compose f
 docker compose --profile observability up -d
 ```
 
-Core workshop services (`postgres`, `api`, `web`) start as usual. Prometheus starts only when the `observability` profile is enabled.
+Core workshop services (`postgres`, `api`, `web`) start as usual. Prometheus and Grafana start only when the `observability` profile is enabled.
 
 ## Prometheus
 
@@ -44,18 +45,43 @@ Lifecycle is enabled (`--web.enable-lifecycle`). After editing `prometheus.yml` 
 curl -X POST http://127.0.0.1:9090/-/reload
 ```
 
+## Grafana (US-O4)
+
+| Item | Value |
+|------|--------|
+| Container | `mecatrack-grafana` |
+| Image | `grafana/grafana:11.2.0` (pinned) |
+| UI (host loopback only) | http://127.0.0.1:3001 |
+| Admin user | `GRAFANA_ADMIN_USER` (default `admin`) |
+| Admin password | `GRAFANA_ADMIN_PASSWORD` (**required**, no weak default in compose) |
+| Datasource | Provisioned Prometheus at `http://prometheus:9090` (uid `mecatrack-prometheus`) |
+| Dashboard | **MecaTrack API Overview** (uid `mecatrack-api-overview`) |
+| Data volume | `mecatrack_grafana_data` |
+
+Sign-up is disabled (`GF_USERS_ALLOW_SIGN_UP=false`). On shared hosts, change the admin password after first login.
+
+### Verify
+
+1. Open http://127.0.0.1:3001 and log in with admin credentials from `.env`.
+2. Dashboards → folder **MecaTrack** → **MecaTrack API Overview** (no manual import).
+3. Generate API traffic; panels for UP, RPS, 5xx, and p95 should move.
+4. Restart Grafana; the provisioned dashboard remains available.
+
+Cold start of dashboards comes from files under `infra/observability/grafana/` (not from a committed `grafana.db`).
+
 ## API readiness healthcheck
 
 The `api` service healthcheck calls `GET /api/health/ready` with Node’s built-in `fetch` (Alpine image has no `wget`). Healthy = HTTP 2xx from readiness.
 
 ## Security notes
 
-- Prometheus UI binds to `127.0.0.1:9090` only (not published on all interfaces).
-- Do not mount the app `.env` into Prometheus.
+- Prometheus UI binds to `127.0.0.1:9090`; Grafana UI to `127.0.0.1:3001` (not published on all interfaces).
+- Do not mount the app `.env` into Prometheus/Grafana beyond the Compose-injected Grafana admin vars.
 - Prefer scraping on the Docker network; do not publish a dedicated host port for `/api/metrics`.
-- Default TSDB retention is fine for a local workshop; override with `--storage.tsdb.retention.time` (e.g. `15d`) if needed.
+- Default Prometheus TSDB retention is fine for a local workshop; override with `--storage.tsdb.retention.time` (e.g. `15d`) if needed.
 
 ## Out of scope here
 
-- Grafana dashboards → **US-O4**
 - Alert rules / runbooks → **US-O5**
+- SSO / OAuth / LDAP for Grafana
+- Business dashboards (work orders per day, etc.)

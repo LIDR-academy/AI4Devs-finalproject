@@ -619,19 +619,19 @@ flowchart LR
 | **Base de datos** | Contenedor `mecatrack-postgres` con imagen `postgres:16-alpine` | Almacena usuarios, clientes, vehículos, órdenes de trabajo, tareas e historial en la BD `mecatrack` |
 | **Persistencia** | Volumen Docker `mecatrack_pg_data` | Conserva los datos de PostgreSQL entre reinicios o recreaciones de contenedores |
 | **Orquestación** | Archivo `docker-compose.yml` del entorno productivo | Coordina construcción, variables de entorno, dependencias y puertos publicados |
-| **Observabilidad (opcional)** | Profile `observability` → contenedor `mecatrack-prometheus` (`prom/prometheus:v2.54.1`) | Scrapea `GET /api/metrics` en la red Docker (`api:4000`); UI solo en `127.0.0.1:9090` (US-O3). Guía: `infra/observability/README.md` |
+| **Observabilidad (opcional)** | Profile `observability` → `mecatrack-prometheus` + `mecatrack-grafana` | Prometheus scrapea `GET /api/metrics` (`api:4000`); Grafana en `127.0.0.1:3001` con dashboard provisionado (US-O3/US-O4). Guía: `infra/observability/README.md` |
 
 #### Proceso de despliegue actual
 
 El despliegue productivo se levanta desde un `docker-compose.yml` que construye y arranca `postgres`, `api` y `web`. PostgreSQL se inicia primero, publica el puerto `5434` **solo en `127.0.0.1`** y declara un `healthcheck` con `pg_isready`. La API depende de que la base esté saludable, declara un `healthcheck` contra `GET /api/health/ready` (US-O1) y recibe por variables de entorno (archivo `.env` del host, sin fallbacks inseguros) la cadena `DATABASE_URL`, los secretos JWT y los tiempos de expiración de sesión.
 
-Para métricas (US-O2/US-O3):
+Para métricas y dashboards (US-O2/US-O3/US-O4), define `GRAFANA_ADMIN_PASSWORD` en el `.env` del host y ejecuta:
 
 ```bash
 docker compose --profile observability up -d
 ```
 
-Prometheus queda en http://127.0.0.1:9090 (loopback). Detalle en [`infra/observability/README.md`](infra/observability/README.md).
+Prometheus: http://127.0.0.1:9090 · Grafana: http://127.0.0.1:3001 (loopback). Detalle en [`infra/observability/README.md`](infra/observability/README.md).
 
 La imagen de la API se construye en múltiples etapas: instala dependencias, genera el cliente Prisma, compila NestJS y artefactos de bootstrap/seed opcionales. Al arrancar, `docker-entrypoint.sh` ejecuta `prisma migrate deploy`, puede correr un **bootstrap de admin opcional** solo si `ENABLE_ADMIN_BOOTSTRAP=true` (BD vacía), **no ejecuta el seed de desarrollo**, e inicia la aplicación como usuario no privilegiado (`nestjs`).
 
@@ -645,7 +645,7 @@ En la operación actual existen dos configuraciones distintas. **Producción** u
 
 - El puerto **`3000`** es la entrada principal del sistema para el usuario final; la API no se expone directamente al host en el despliegue productivo actual.
 - El puerto **`5434`** queda bound a **localhost** para herramientas locales (pgAdmin/DBeaver); no debe publicarse en todas las interfaces.
-- El puerto **`9090`** (Prometheus, profile `observability`) queda bound a **`127.0.0.1`**; no es necesario para el flujo diario del taller.
+- El puerto **`9090`** (Prometheus) y **`3001`** (Grafana), con profile `observability`, quedan bound a **`127.0.0.1`**; no son necesarios para el flujo diario del taller.
 - El volumen **`mecatrack_pg_data`** es crítico: ahí persisten los datos reales aunque el contenedor de PostgreSQL se reinicie o se recree.
 - La API depende de PostgreSQL con validación de salud, pero el frontend solo depende del contenedor `api` a nivel de arranque; por ello, un fallo del backend impacta inmediatamente las rutas `/api` aunque el frontend siga respondiendo HTML.
 - El **seed de desarrollo no forma parte del arranque productativo**; datos demo solo vía comandos explícitos (`db:seed:dev`) fuera de `NODE_ENV=production`.
