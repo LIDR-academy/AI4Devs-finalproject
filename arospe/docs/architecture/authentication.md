@@ -91,7 +91,18 @@ Validation rules are centralized so every entry point (registration, password re
 - [`app/Concerns/ProfileValidationRules.php`](../../app/Concerns/ProfileValidationRules.php) — `name`/`email` rules, with a unique-email-ignoring-self variant for profile updates.
 - [`app/Concerns/PasswordValidationRules.php`](../../app/Concerns/PasswordValidationRules.php) — `passwordRules()` (uses `Password::default()`) and `currentPasswordRules()` (uses the `current_password` rule).
 
-One non-HTTP caller reuses this same reset flow: when `database/seeders/RolePermissionSeeder.php` **provisions** a Super Admin account it calls `Password::broker()->sendResetLink([...])` — the identical broker behind the `password.request` route — so the operator claims the account through the normal **Forgot password** screen. There is no bespoke invite token, notification, or route; the seeder only triggers the flow documented above. See [authorization.md](authorization.md#super-admin-bootstrap) for when that branch runs.
+### Two non-HTTP callers reuse this reset flow
+
+Neither introduces a second password-setting mechanism: both mint a standard broker token and land the recipient on the existing `password.reset` route, where `ResetUserPassword` above runs unchanged.
+
+| Caller | Token | Notification | Why |
+| --- | --- | --- | --- |
+| `RolePermissionSeeder::bootstrapSuperAdmin()` (provision branch) | `Password::broker()->sendResetLink([...])` | the framework's own `ResetPassword` | the operator claims the account through the normal **Forgot password** screen; no bespoke invite token, notification or route. See [authorization.md](authorization.md#super-admin-bootstrap) |
+| [`App\Actions\Users\CreateUser`](../../app/Actions/Users/CreateUser.php) (task 0004) | `Password::broker()->createToken($user)` | [`App\Notifications\UserInvitation`](../../app/Notifications/UserInvitation.php) (`ShouldQueue`) | an administrator creating a user needs *invitation* wording, not reset wording |
+
+The split on that second row is deliberate and worth not undoing. `sendResetLink()` would have been the shorter call, but it bundles the framework's `ResetPassword` notification, whose wording can only be changed globally (`toMailUsing()`) — re-wording every genuine password reset in the app as a side effect. It is also subject to the 60-second `passwords.users.throttle`, which would silently no-op the second of two rapid account creations. Minting the token directly and attaching an own notification avoids both, while still producing a link to the same `password.reset` route.
+
+An administrator-created account therefore starts with **a random unusable password, `email_verified_at = null`, and `pending_email = null`**: the address is the account's *initial* address, not a change, so the pending-email mechanism below does not apply to it. The invitation link is what proves the mailbox — completing it verifies the address and activates the account through the same `ResetUserPassword` → `Verified` → `ActivateVerifiedUser` chain as every other path.
 
 > **Email addresses are canonically lowercase across the app**, now in three layers: `config/fortify.php` sets `'lowercase_usernames' => true` (registration, login, forgot-password); `App\Livewire\Settings\Profile` normalizes `$this->email` **before** `validate()` runs, so the uniqueness rule sees the value that will actually be stored; and `App\Actions\Users\RequestEmailChange` lowercases as its very first statement. `App\Models\User` additionally exposes a **read-only** lowercasing accessor on `email` — a consistency layer for rows that could already carry a mixed-case address, deliberately *not* a write mutator and no substitute for normalizing before validation (an accessor runs far too late for a uniqueness check). One consequence every test must respect: `$user->email` always returns lowercase, so an assertion about the *stored bytes* has to go through `$user->getRawOriginal('email')`.
 
@@ -148,7 +159,7 @@ Two guards in that listener are load-bearing and must survive any refactor: the 
 
 ## Pending email changes
 
-Changing an email address **never** rewrites `users.email` on the spot. Today the only caller is the profile screen (`App\Livewire\Settings\Profile`); the mechanism is deliberately built as a reusable action so the administrative user editor, when it exists, changes another user's address through the same path rather than writing the column directly. The new address is parked in `users.pending_email` and a signed link goes to that address alone; only using the link applies it. This is the mechanism that closes the impersonation vector recorded in [errors-log.md](../errors-log.md): `users.email` **together with a non-null `email_verified_at`** now means the address has been proven, because no *change* to `users.email` can land without its own verification.
+Changing an email address **never** rewrites `users.email` on the spot. There are two callers today — the profile screen (`App\Livewire\Settings\Profile`) and, since task 0004, the administrative user editor via [`App\Actions\Users\UpdateUser`](../../app/Actions/Users/UpdateUser.php) — and they share **one** mechanism rather than each writing the column their own way. That holds in every direction: an administrator changing someone else's address, and an administrator changing their own, both go through it. The new address is parked in `users.pending_email` and a signed link goes to that address alone; only using the link applies it. This is the mechanism that closes the impersonation vector recorded in [errors-log.md](../errors-log.md): `users.email` **together with a non-null `email_verified_at`** now means the address has been proven, because no *change* to `users.email` can land without its own verification.
 
 ```mermaid
 sequenceDiagram
@@ -185,12 +196,23 @@ Real behavior worth knowing before touching any of it:
 
 The security rules this flow established — the global `ValidateSignature`-before-`SubstituteBindings` middleware priority, why normalization must precede hashing, why `lockForUpdate()` plus an availability re-check still needs the unique index to have the last word, and why every refusal must be indistinguishable — are documented once in [security/signed-link-verification.md](../security/signed-link-verification.md) and are not repeated here.
 
-### The two call sites behave differently on a same-address submission — deliberately
+### The action and its callers behave differently on a same-address submission — deliberately
 
 This asymmetry is easy to mistake for a bug, so it is written down rather than rediscovered:
 
-- **`RequestEmailChange` itself** treats a call whose address equals the user's current one as an **implicit cancel**: it clears any pending address and returns without sending anything. Anything calling the action directly — including the administrative user editor — hits this branch.
-- **`App\Livewire\Settings\Profile`** never lets that branch run. It only calls the action when the submitted address genuinely differs from the stored one:
+- **`RequestEmailChange` itself** treats a call whose address equals the user's current one as an **implicit cancel**: it clears any pending address and returns without sending anything. Anything calling the action directly hits this branch.
+- **Neither real caller lets that branch run.** Both compare the submitted address against `getRawOriginal('email')` (lowercased on both sides) and call the action only when it genuinely differs — `App\Livewire\Settings\Profile` for the owner's own row, and `App\Actions\Users\UpdateUser` for the admin editor, whose guard reads:
+
+```php
+// app/Actions/Users/UpdateUser.php
+$currentEmail = Str::lower((string) $user->getRawOriginal('email'));
+
+if ($email !== $currentEmail) {
+    $requestEmailChange($user, $email);
+}
+```
+
+The profile screen's version of the same guard:
 
 ```php
 // app/Livewire/Settings/Profile.php
@@ -201,7 +223,9 @@ if (Str::lower($validated['email']) !== Str::lower((string) $user->getRawOrigina
 $this->email = $user->email;
 ```
 
-Reason: on the profile form the email field is always submitted, so a name-only save would resubmit the current stored address and silently cancel an unrelated pending change. Only the explicit Cancel control (`cancelEmailChange()`) may drop a pending change from that screen. The trailing resync from `users.email` keeps the bound property from carrying a stale pending value into a later save.
+Reason: on both forms the email field is always submitted, so a name-only save would resubmit the current stored address and silently cancel an unrelated pending change. Only the explicit Cancel control (`cancelEmailChange()`) may drop a pending change from the profile screen. The profile's trailing resync from `users.email` keeps the bound property from carrying a stale pending value into a later save.
+
+> A related consequence on the admin editor: `UpdateUser` writes **name** (plus role and status, when the target is not the acting user) but never touches `email` or `email_verified_at` at all — those columns move only through `ConfirmEmailChange`. Editing another user's address leaves their account exactly as it was until the recipient uses the link.
 
 ## Two-factor authentication flow
 
@@ -326,4 +350,4 @@ public function deleteUser(Logout $logout): void
 | Feature tests | `tests/Feature/Auth/**`, `tests/Feature/Settings/SecurityTest.php`, `tests/Feature/Settings/EmailChangeTest.php` |
 | Unit tests | `tests/Unit/Enums/UserStatusTest.php`, `tests/Unit/Listeners/ActivateVerifiedUserTest.php`, `tests/Unit/Models/UserTest.php` |
 
-_Last updated: 2026-08-12 — Task 0003 (user status & email-verification lifecycle): added the "Account status and activation" section (the `UserStatus` enum, the no-self-activation invariant, and the single `ActivateVerifiedUser` listener all three verification paths converge on) and the "Pending email changes" section (signed address-bound link, throttling, refusal shapes, and the deliberate call-site asymmetry on a same-address submission); updated the `ResetUserPassword` snippet to its real invitation-path shape and replaced the now-false note about the profile screen writing an unverified address straight into `users.email`._
+_Last updated: 2026-08-13 — Task 0004: documented the second non-HTTP caller of the reset flow (`CreateUser` + the `UserInvitation` notification, and why it mints its own token instead of calling `sendResetLink()`), and corrected the pending-email section, which still described the administrative user editor as hypothetical and claimed it would hit the action's implicit-cancel branch — it exists, and it guards against a same-address submission exactly as the profile screen does._
