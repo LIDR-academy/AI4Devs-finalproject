@@ -496,6 +496,8 @@ Microservicios no se consideran adecuados en esta fase: el volumen, el equipo y 
 | `task-notes` | US-007 | Diagnósticos, reparaciones y observaciones |
 | `delivery` | US-008 | Panel de vehículos listos para entrega |
 | `history` | US-009 | Historial de vehículos y clientes |
+| `health` | US-O1 | Probes públicos de liveness/readiness (`/api/health/*`) |
+| `metrics` | US-O2 | Exposición Prometheus (`/api/metrics`) e instrumentación HTTP RED |
 | `notifications` | D1, D2 (V2) | Contacto al propietario y envío de correo (interfaz desde V1) |
 | `reminders` | D4 (V2) | Panel de recordatorios y job programado |
 
@@ -594,6 +596,8 @@ flowchart LR
     subgraph Host [Host local]
         Web[Contenedor web\nNext.js standalone\npuerto 3000]
         PG[Contenedor postgres\nPostgreSQL 16\npuerto host 5434]
+        Prom[Prometheus opcional\n127.0.0.1:9090]
+        Graf[Grafana opcional\n127.0.0.1:3001]
     end
 
     subgraph Docker [Red interna Docker Compose]
@@ -608,6 +612,8 @@ flowchart LR
     API -->|Prisma / SQL| DB
     DB --- Volume
     PG --- DB
+    Prom -->|scrape /api/metrics| API
+    Graf -->|datasource| Prom
 ```
 
 #### Componentes de infraestructura
@@ -625,7 +631,7 @@ flowchart LR
 
 El despliegue productivo se levanta desde un `docker-compose.yml` que construye y arranca `postgres`, `api` y `web`. PostgreSQL se inicia primero, publica el puerto `5434` **solo en `127.0.0.1`** y declara un `healthcheck` con `pg_isready`. La API depende de que la base esté saludable, declara un `healthcheck` contra `GET /api/health/ready` (US-O1) y recibe por variables de entorno (archivo `.env` del host, sin fallbacks inseguros) la cadena `DATABASE_URL`, los secretos JWT y los tiempos de expiración de sesión.
 
-Para métricas y dashboards (US-O2/US-O3/US-O4), define `GRAFANA_ADMIN_PASSWORD` en el `.env` del host y ejecuta:
+Para métricas, dashboards y alertas (US-O2 … US-O5), define `GRAFANA_ADMIN_PASSWORD` en el `.env` del host y ejecuta:
 
 ```bash
 docker compose --profile observability up -d
@@ -1177,7 +1183,7 @@ model WorkOrderTask {
 
 ## 4. Especificación de la API
 
-La API de MecaTrack se expone como un backend REST bajo el prefijo `/api` y cubre el flujo completo del MVP: autenticación, gestión de usuarios, clientes, vehículos, órdenes de trabajo, tareas, entrega e historial. La documentación OpenAPI del proyecto está separada por dominio para mantener cada módulo autocontenido y facilitar su evolución independiente.
+La API de MecaTrack se expone como un backend REST bajo el prefijo `/api` y cubre el flujo completo del MVP (autenticación, usuarios, clientes, vehículos, órdenes de trabajo, tareas, entrega e historial) más endpoints de **operaciones** para salud y métricas (US-O1 / US-O2). La documentación OpenAPI del proyecto está separada por dominio para mantener cada módulo autocontenido y facilitar su evolución independiente. Resumen técnico en inglés: [`docs/observability.md`](docs/observability.md).
 
 ### Especificaciones OpenAPI disponibles
 
@@ -1190,6 +1196,8 @@ La API de MecaTrack se expone como un backend REST bajo el prefijo `/api` y cubr
 | `docs/api-spec.work-orders.yml` | Órdenes de trabajo, tareas y notas técnicas | `POST /work-orders`, `GET /work-orders/{id}`, `POST/PATCH /work-orders/{id}/tasks`, `PATCH /work-orders/{id}/visit-notes` |
 | `docs/api-spec.delivery.yml` | Entrega | `GET /delivery/ready`, `GET /delivery/ready/{workOrderId}`, `PATCH /delivery/ready/{workOrderId}/deliver` |
 | `docs/api-spec.history.yml` | Historial | `GET /vehicles/{vehicleId}/history`, `GET /clients/{clientId}` |
+| `docs/api-spec.health.yml` | Salud (ops) | `GET /health/live`, `GET /health/ready` |
+| `docs/api-spec.metrics.yml` | Métricas (ops) | `GET /metrics` |
 
 ### Endpoints representativos del MVP
 
@@ -1351,6 +1359,24 @@ En conjunto, la API permite cubrir el recorrido principal del sistema: un usuari
 ---
 
 ## 5. Historias de Usuario
+
+---
+
+### Observabilidad (US-O1 … US-O5)
+
+Epic de operaciones (Prometheus / Grafana). Historias enriquecidas y criterios detallados:
+
+[`us/monitoreo y observabilidad/`](us/monitoreo%20y%20observabilidad/) · resumen técnico: [`docs/observability.md`](docs/observability.md) · guía Compose: [`infra/observability/README.md`](infra/observability/README.md)
+
+| ID | Título | Entrega |
+|----|--------|---------|
+| US-O1 | Health (liveness / readiness) | `GET /api/health/live`, `GET /api/health/ready` |
+| US-O2 | Métricas Prometheus | `GET /api/metrics` + RED HTTP |
+| US-O3 | Prometheus en Compose | Profile `observability`, scrape `api:4000` |
+| US-O4 | Dashboards Grafana | UI `127.0.0.1:3001`, dashboard API Overview |
+| US-O5 | Alertas básicas | Reglas Prometheus + runbook |
+
+**Roles:** Operador / desarrollador de despliegue | **Prioridad:** Alta (ops)
 
 ---
 

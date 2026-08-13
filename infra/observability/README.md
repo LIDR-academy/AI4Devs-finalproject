@@ -1,6 +1,9 @@
 # MecaTrack observability (Prometheus + Grafana)
 
-Optional Docker Compose profile that scrapes NestJS API metrics (**US-O2**) and visualizes them in Grafana (**US-O4**).
+Optional Docker Compose profile that scrapes NestJS API metrics (**US-O2**) and visualizes them in Grafana (**US-O4**), with alert rules (**US-O5**).
+
+English technical overview: [`docs/observability.md`](../../docs/observability.md).  
+User stories: [`us/monitoreo y observabilidad/`](../../us/monitoreo%20y%20observabilidad/).
 
 ## Prerequisites
 

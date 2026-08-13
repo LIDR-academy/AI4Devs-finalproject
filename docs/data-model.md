@@ -1,6 +1,6 @@
 # Data Model Documentation
 
-> **MecaTrack:** The implemented schema lives in `apps/api/prisma/schema.prisma`. See `readme.md` §3 for the full domain model. US-001 introduces the `User` entity with `UserRole` (`ADMIN`, `MECHANIC`).
+> **MecaTrack:** The implemented schema lives in `apps/api/prisma/schema.prisma`. See `readme.md` §3 for the full domain model. US-001 introduces the `User` entity with `UserRole` (`ADMIN`, `MECHANIC`). Observability (US-O1…US-O5) does **not** change the Prisma schema; see [`docs/observability.md`](observability.md).
 
 ---
 
