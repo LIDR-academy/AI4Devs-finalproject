@@ -50,15 +50,16 @@ High-level layout of the codebase:
 ```
 app/
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords, ...)
-  Actions/Users/       Users-domain actions (RequestEmailChange, ConfirmEmailChange)
+  Actions/Users/       Users-domain actions (RequestEmailChange, ConfirmEmailChange, CreateUser, UpdateUser)
   Concerns/            Shared traits (e.g. validation rule sets)
   Console/Commands/    Artisan commands
   Enums/               Backed enums for domain value sets (UserStatus)
   Http/Controllers/    Abstract base + domain controllers (HTTP boundary in front of an action)
   Listeners/           Event listeners (ActivateVerifiedUser)
-  Livewire/            Livewire components, grouped by area (Actions/, Settings/, ...)
+  Livewire/            Livewire components, grouped by area (Actions/, Settings/, Users/, ...)
   Models/              Eloquent models
-  Notifications/       Notification classes (PendingEmailVerification)
+  Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
+  Policies/            Model policies (UserPolicy), auto-discovered by name
   Providers/           Service providers
 config/                Laravel + package configuration
 database/
