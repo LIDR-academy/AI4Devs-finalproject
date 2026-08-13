@@ -326,6 +326,9 @@ En V2, un administrador podrá marcarse con un **flag de mecánico** (`canActAsM
 
 > Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
 
+Las imágenes de como luce para los usuarios el sistema se pueden ver en el folder: /docs/Diseño y experiencia de usuario
+
+
 ### **1.4. Instrucciones de instalación:**
 
 #### Requisitos
