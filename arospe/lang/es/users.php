@@ -20,6 +20,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pantalla de listado de usuarios
+    |--------------------------------------------------------------------------
+    |
+    | Textos de la pantalla de listado de usuarios (App\Livewire\Users\Index).
+    | La historia 0006 posee el marcado completo; esta clave la usa tanto la
+    | vista provisional de esta historia como la definitiva de 0006.
+    |
+    */
+
+    'index' => [
+        'summary' => ':total usuarios · :active activos',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cambio de correo pendiente
     |--------------------------------------------------------------------------
     |

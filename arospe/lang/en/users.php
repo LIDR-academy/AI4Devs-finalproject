@@ -20,6 +20,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Users Index Screen
+    |--------------------------------------------------------------------------
+    |
+    | Copy for the Users list screen (App\Livewire\Users\Index). Story 0006
+    | owns the full markup; this key is used by both this story's placeholder
+    | view and 0006's real one.
+    |
+    */
+
+    'index' => [
+        'summary' => ':total users · :active active',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Pending Email Change
     |--------------------------------------------------------------------------
     |
