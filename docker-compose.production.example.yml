@@ -1,0 +1,71 @@
+# Production-oriented compose EXAMPLE for later deployment approval (US-011).
+# Do not treat this file as the live production stack.
+# Copy/adapt to the production folder only after explicit approval.
+#
+# Required host env vars (no insecure fallbacks):
+#   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+#   JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
+# Optional:
+#   WEB_PORT (default 3000)
+#   ENABLE_ADMIN_BOOTSTRAP=false (recommended)
+
+name: mecatrack
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mecatrack-postgres
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:5434:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - mecatrack_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: mecatrack-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 7d
+      PORT: 4000
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:3000
+      COOKIE_SECURE: 'false'
+      ENABLE_ADMIN_BOOTSTRAP: ${ENABLE_ADMIN_BOOTSTRAP:-false}
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: /api
+    container_name: mecatrack-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      API_PROXY_TARGET: http://api:4000
+      NEXT_PUBLIC_API_URL: /api
+    ports:
+      - '0.0.0.0:${WEB_PORT:-3000}:3000'
+
+volumes:
+  mecatrack_pg_data:

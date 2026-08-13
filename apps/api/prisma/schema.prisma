@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MECHANIC
+}
+
+enum WorkOrderStatus {
+  EN_PROCESO
+  LISTA_PARA_ENTREGA
+  OWNER_CONTACTED
+  ENTREGADA
+}
+
+enum WorkOrderTaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  passwordHash          String
+  fullName              String
+  role                  UserRole
+  canActAsMechanic      Boolean   @default(false)
+  active                Boolean   @default(true)
+  sessionVersion        Int       @default(0)
+  refreshTokenHash      String?
+  refreshTokenExpiresAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  excludedVehicles    Vehicle[]    @relation("ExcludedBy")
+  workOrdersCreated   WorkOrder[]  @relation("CreatedBy")
+  workOrdersAssigned  WorkOrder[]  @relation("AssignedMechanic")
+  workOrdersContacted WorkOrder[]  @relation("OwnerContactedBy")
+}
+
+model Client {
+  id         String   @id @default(uuid())
+  fullName   String
+  nationalId String   @unique
+  phone      String?
+  email      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  ownerships  VehicleOwnership[]
+  workOrders  WorkOrder[]
+
+  @@index([fullName])
+  @@index([phone])
+}
+
+model Vehicle {
+  id                   String    @id @default(uuid())
+  licensePlate         String    @unique
+  brand                String
+  model                String
+  year                 Int
+  color                String?
+  excludeFromReminders Boolean   @default(false)
+  excludedAt           DateTime?
+  excludedById         String?
+  lastReminderSentAt   DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  excludedBy User?              @relation("ExcludedBy", fields: [excludedById], references: [id])
+  ownerships VehicleOwnership[]
+  workOrders WorkOrder[]
+
+  @@index([licensePlate])
+}
+
+model VehicleOwnership {
+  id        String    @id @default(uuid())
+  vehicleId String
+  clientId  String
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  client  Client  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId, validTo])
+  @@index([clientId])
+}
+
+model WorkOrder {
+  id                   String          @id @default(uuid())
+  vehicleId            String
+  ownerClientId        String?
+  status               WorkOrderStatus @default(EN_PROCESO)
+  entryReason          String
+  mileage              Int?
+  assignedMechanicId   String?
+  createdById          String
+  checkedInAt          DateTime        @default(now())
+  deliveredAt          DateTime?
+  ownerContactedAt     DateTime?
+  ownerContactedById   String?
+  broughtByName        String?
+  broughtByPhone       String?
+  visitDiagnosis       String?         @db.Text
+  visitRepairSummary   String?         @db.Text
+  visitPartsUsed       String?         @db.Text
+  visitAdditionalNotes String?         @db.Text
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  vehicle          Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  ownerClient      Client?         @relation(fields: [ownerClientId], references: [id], onDelete: Restrict)
+  assignedMechanic User?           @relation("AssignedMechanic", fields: [assignedMechanicId], references: [id])
+  createdBy        User            @relation("CreatedBy", fields: [createdById], references: [id])
+  ownerContactedBy User?           @relation("OwnerContactedBy", fields: [ownerContactedById], references: [id])
+  tasks            WorkOrderTask[]
+
+  @@index([vehicleId, status])
+  @@index([checkedInAt])
+}
+
+model WorkOrderTask {
+  id              String              @id @default(uuid())
+  workOrderId     String
+  description     String
+  status          WorkOrderTaskStatus @default(PENDING)
+  cost            Decimal?            @db.Decimal(12, 2)
+  costNotes       String?
+  diagnosis       String?             @db.Text
+  repairPerformed String?             @db.Text
+  partsUsed       String?             @db.Text
+  additionalNotes String?             @db.Text
+  sortOrder       Int                 @default(0)
+  completedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([workOrderId])
+}

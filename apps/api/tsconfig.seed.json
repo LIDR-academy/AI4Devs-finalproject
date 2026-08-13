@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2021",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./prisma/dist-seed",
+    "rootDir": "."
+  },
+  "include": [
+    "prisma/seed.ts",
+    "prisma/seed-dev.ts",
+    "prisma/bootstrap-admin.ts",
+    "src/common/utils/admin-bootstrap.ts"
+  ]
+}
