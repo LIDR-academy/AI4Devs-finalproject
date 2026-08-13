@@ -867,6 +867,112 @@ test('saving an existing Administrator without changing their role is not a role
         ->and($target->fresh()->hasRole('Administrator'))->toBeTrue();
 });
 
+// --- Security audit finding F1 (Phase 4): status/email on an Administrator target ---
+// require roles.manage-administrators too, not only a role change -- suspending or
+// seizing an Administrator's account is the same effect a role-change guard exists
+// to prevent.
+
+test('changing an Administrators status without the stricter permission is denied, and that users status is left unchanged', function () {
+    $this->withoutExceptionHandling();
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $this->actingAs($administrator);
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+    $target = User::factory()->create(['status' => UserStatus::Active]);
+    $target->assignRole($administratorRole);
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $target->id);
+
+    expect(fn () => $component->set('status', UserStatus::Suspended)->call('save'))
+        ->toThrow(AuthorizationException::class);
+
+    expect($target->fresh()->status)->toBe(UserStatus::Active);
+});
+
+test('changing an Administrators status with the stricter permission succeeds', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators');
+    $this->actingAs($administrator);
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+    $target = User::factory()->create(['status' => UserStatus::Active]);
+    $target->assignRole($administratorRole);
+
+    Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->set('status', UserStatus::Suspended)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($target->fresh()->status)->toBe(UserStatus::Suspended);
+});
+
+test('changing an Administrators email without the stricter permission is denied, and that users email is left unchanged', function () {
+    $this->withoutExceptionHandling();
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $this->actingAs($administrator);
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+    $target = User::factory()->create(['email' => 'admin.target@arospe.es']);
+    $target->assignRole($administratorRole);
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $target->id);
+
+    expect(fn () => $component->set('email', 'attacker@arospe.es')->call('save'))
+        ->toThrow(AuthorizationException::class);
+
+    expect($target->fresh()->email)->toBe('admin.target@arospe.es')
+        ->and($target->fresh()->pending_email)->toBeNull();
+});
+
+test('changing an Administrators email with the stricter permission succeeds and holds it as pending', function () {
+    Notification::fake();
+
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators');
+    $this->actingAs($administrator);
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+    $target = User::factory()->create(['email' => 'admin.target@arospe.es']);
+    $target->assignRole($administratorRole);
+
+    Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->set('email', 'new.address@arospe.es')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($target->fresh()->email)->toBe('admin.target@arospe.es')
+        ->and($target->fresh()->pending_email)->toBe('new.address@arospe.es');
+
+    Notification::assertSentOnDemandTimes(PendingEmailVerification::class, 1);
+});
+
+// Over-blocking regression: a non-Administrator target's status/email changes must not
+// require the stricter permission -- only an Administrator-holding target does.
+
+test('changing a non-Administrators status does not require the stricter permission', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $this->actingAs($administrator);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create(['status' => UserStatus::Active]);
+    $target->assignRole($editorRole);
+
+    Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->set('status', UserStatus::Suspended)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($target->fresh()->status)->toBe(UserStatus::Suspended);
+});
+
 test('a Super Admin actor can promote a user to Administrator without holding roles.manage-administrators explicitly', function () {
     $superAdmin = User::factory()->create();
     $superAdmin->assignRole('Super Admin');

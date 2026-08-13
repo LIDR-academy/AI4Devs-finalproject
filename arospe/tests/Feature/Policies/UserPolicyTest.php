@@ -56,6 +56,52 @@ test('update returns false against a Super Admin target regardless of the actors
     expect(Gate::forUser($actor)->allows('update', $superAdminTarget))->toBeFalse();
 });
 
+// --- updateSensitiveAttributes: security audit finding F1 (Phase 4, story 0004) ---
+// status/email on an Administrator target require the same permission a role change does.
+
+test('updateSensitiveAttributes denies an actor lacking roles.manage-administrators against an Administrator target, and allows one holding it', function () {
+    $target = User::factory()->create();
+    $target->assignRole('Administrator');
+
+    $deniedActor = User::factory()->create();
+    $deniedActor->givePermissionTo('users.edit');
+
+    $allowedActor = User::factory()->create();
+    $allowedActor->givePermissionTo(['users.edit', 'roles.manage-administrators']);
+
+    expect(Gate::forUser($deniedActor)->allows('updateSensitiveAttributes', $target))->toBeFalse()
+        ->and(Gate::forUser($allowedActor)->allows('updateSensitiveAttributes', $target))->toBeTrue();
+});
+
+test('updateSensitiveAttributes allows an actor lacking roles.manage-administrators when the target holds no Administrator role', function () {
+    $target = User::factory()->create();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('users.edit');
+
+    expect(Gate::forUser($actor)->allows('updateSensitiveAttributes', $target))->toBeTrue();
+});
+
+test('updateSensitiveAttributes returns false against a Super Admin target regardless of the actors permissions', function () {
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(['users.edit', 'roles.manage-administrators']);
+
+    $superAdminTarget = User::factory()->create();
+    $superAdminTarget->assignRole('Super Admin');
+
+    expect(Gate::forUser($actor)->allows('updateSensitiveAttributes', $superAdminTarget))->toBeFalse();
+});
+
+test('updateSensitiveAttributes is denied outright when the actor lacks users.edit, even holding roles.manage-administrators', function () {
+    $target = User::factory()->create();
+    $target->assignRole('Administrator');
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('roles.manage-administrators');
+
+    expect(Gate::forUser($actor)->allows('updateSensitiveAttributes', $target))->toBeFalse();
+});
+
 // --- promoteToAdministrator / downgrade / delete key on roles.manage-administrators ---
 
 test('promoteToAdministrator denies an actor lacking roles.manage-administrators against an Administrator target, and allows one holding it', function () {

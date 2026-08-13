@@ -300,6 +300,14 @@ class Index extends Component
      * email always goes through UpdateUser, which decides on its own
      * whether it changed.
      *
+     * A status or email change on another Administrator-holding user
+     * requires roles.manage-administrators, same as a role change: both
+     * achieve the same effect a role/delete guard exists to prevent —
+     * suspending or seizing an Administrator's account. Security audit
+     * finding F1 (Phase 4, story 0004). Scoped to $applyRoleAndStatus (i.e.
+     * another user, not a self-edit): an Administrator changing their own
+     * email carries no such risk and needs no extra permission.
+     *
      * @param  array<string, mixed>  $validated
      */
     private function updateExistingUser(UpdateUser $updateUser, RequestEmailChange $requestEmailChange, User $target, array $validated): void
@@ -308,6 +316,13 @@ class Index extends Component
 
         if ($applyRoleAndStatus) {
             $this->authorizeRoleChange($target, (int) $validated['roleId']);
+
+            $emailChanged = Str::lower((string) $validated['email']) !== Str::lower((string) $target->getRawOriginal('email'));
+            $statusChanged = $validated['status'] !== $target->status;
+
+            if ($emailChanged || $statusChanged) {
+                Gate::authorize('updateSensitiveAttributes', $target);
+            }
         }
 
         $updateUser(

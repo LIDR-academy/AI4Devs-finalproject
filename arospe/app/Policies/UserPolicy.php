@@ -39,6 +39,32 @@ class UserPolicy
     }
 
     /**
+     * Determine whether the actor can change the target's status or email
+     * address.
+     *
+     * These two fields achieve the same practical effect as a delete
+     * (suspending an Administrator locks them out just as surely as removing
+     * them, and rewriting their email is a path to full account takeover),
+     * so an Administrator-holding target requires the same
+     * roles.manage-administrators permission the delete/downgrade/promote
+     * abilities require — a bare users.edit is not enough. Security audit
+     * finding F1 (Phase 4, story 0004): the role-change guard alone left
+     * status and email unauthorized for any Administrator-level actor.
+     */
+    public function updateSensitiveAttributes(User $actor, User $target): bool
+    {
+        if (! $this->update($actor, $target)) {
+            return false;
+        }
+
+        if (! $target->hasRole('Administrator', 'web')) {
+            return true;
+        }
+
+        return $actor->hasPermissionTo('roles.manage-administrators');
+    }
+
+    /**
      * Determine whether the actor can assign the Administrator role.
      *
      * $target is null on the create path, where no user exists to target
