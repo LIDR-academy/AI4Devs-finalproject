@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { apiPost, apiPut, apiDelete } from '../lib/api-client';
+import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api-client';
 import type { CartContextValue, CartItemUI, CartResponse } from '../types/cart';
 
 const CART_STORAGE_KEY = 'runmarket_cart';
@@ -22,8 +22,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Hydrate from localStorage on mount (optimistic cache — prevents flicker)
+  // Hydrate from localStorage on mount (optimistic cache — prevents flicker),
+  // then reconcile with the backend: it's the only source of truth for
+  // subtotal/shipping/total, which the optimistic cache never carries.
   useEffect(() => {
+    let cancelled = false;
+
     try {
       const raw = localStorage.getItem(CART_STORAGE_KEY);
       if (raw) {
@@ -35,6 +39,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Corrupted cache — silently ignore and start empty
     }
+
+    apiGet<CartResponse>('/cart')
+      .then((response) => {
+        if (cancelled) return;
+        setItems(response.items);
+        setSubtotal(response.subtotal);
+        setShipping(response.shipping);
+        setTotal(response.total);
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(response.items));
+      })
+      .catch(() => {
+        // Backend unreachable — keep the optimistic cache from localStorage
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const addItem = useCallback(
