@@ -310,11 +310,20 @@ carrying that permission is rejected with a 403 rather than partially applied.
 - [ ] No security findings (appsec-auditor)
 - [ ] Documentation updated (docs-keeper)
 - [ ] Acceptance criteria met
-- [ ] **Follow-up from story 0004's Phase 4 security audit (findings F2/F3):** `App\Livewire\Users\Index`
-      matches the `Administrator` role by literal name to decide when `roles.manage-administrators` is
-      required, and that decision is enforced only in the Livewire component — `App\Actions\Users\
-      CreateUser`/`UpdateUser` apply whatever role/status they are handed with no authorization of their
-      own. Once this story defines the general administrator-level-permission mechanism, evaluate
-      routing 0004's role/status/email guards through it (or an equivalent stable identifier, not a
-      name match) so the rule travels with the action rather than depending on every future caller
-      re-implementing it in its own component. See also the matching note left on story 0008.
+- [ ] **Follow-up from story 0004's Phase 4 security audit (findings F2/F3, sharpened by F15 during the
+      re-audit):** `App\Policies\UserPolicy` (`promoteToAdministrator`, `downgrade`, `delete`,
+      `updateSensitiveAttributes`) all key on `$target->hasRole('Administrator', 'web')` — matching by
+      **role identity**, not by the **privilege set** the guard actually exists to protect. Renaming the
+      role breaks it (F2/F3); but the sharper problem F15 found is that a target who holds
+      `roles.manage-administrators` through a *different* mechanism — a direct `model_has_permissions`
+      grant, or a custom role that is not literally named `Administrator` — is **not** covered by any of
+      these four abilities at all, regardless of naming. That is inert today (the seeded catalog grants
+      no permission directly to a user and ships only two roles) and becomes live the moment this story
+      lets operators build administrator-equivalent custom roles, which is its purpose. **Do not close
+      this by swapping the name match for a stable identifier alone** (e.g. a `Role::isAdministratorLevel()`
+      flag) — that fixes F2/F3 but leaves F15 open. The guard must be re-derived from the actor/target's
+      actual permission set (e.g. "does the target hold any permission the acting-level rule protects?"),
+      not from which role row they happen to hold. `App\Actions\Users\CreateUser`/`UpdateUser` also apply
+      whatever role/status/email they are handed with no authorization of their own (F2) — route the
+      centralised rule through them too, not only through the Livewire component. See the matching note
+      on story 0008.

@@ -65,7 +65,13 @@ Feature: Users CRUD backend hardening
 **F7 — authorize the disclosure paths, not only the mutating ones** (`app/Livewire/Users/Index.php`)
 - `openCreateModal()`: `Gate::authorize('create', User::class)` as the first statement.
 - `openEditModal(string $userId)`: `Gate::authorize('update', $target)` right after resolving
-  `$target`, before copying its attributes into public state.
+  `$target`, before copying its attributes into public state. **Sharpened during the Phase 4
+  re-audit**: when `$target` holds the `Administrator` role, this must be
+  `Gate::authorize('updateSensitiveAttributes', $target)` instead of plain `update` — `email` and
+  `status` are exactly the attributes F1 declared sensitive, and `openEditModal()` discloses both
+  into public component state. A plain `update` check would let a `users.edit` holder without
+  `roles.manage-administrators` read an Administrator's `pending_email`/`status` from the modal even
+  though `save()` would refuse to write them.
 - `confirmDelete(string $userId)`: `Gate::authorize('delete', $target)` right after resolving
   `$target`.
 
@@ -105,7 +111,31 @@ Feature: Users CRUD backend hardening
   changes instead of leaving them partially applied while the operator sees a validation error.
   Keep the `RequestEmailChange` call itself outside the transaction (or behind `DB::afterCommit()`
   if it must run inside it) — it already has its own error handling and should not be retried by a
-  transaction retry.
+  transaction retry. **The F1 `updateSensitiveAttributes` guard must keep preceding this transaction,
+  not move inside it** — it already does today (both `Gate::authorize()` calls run before `UpdateUser`
+  is invoked at all), and wrapping the sequence must not change that ordering, or a transaction retry
+  could re-run a check that should only ever run once per request.
+
+**F17 — the email guard's scope is keyed off a variable named for something else** (`app/Livewire/Users/Index.php`)
+- `updateExistingUser()`'s `$emailChanged` check for F1 is scoped inside `if ($applyRoleAndStatus)`,
+  a flag whose documented meaning is "the target is not the acting user" but whose name says "apply
+  role and status" — email is neither. Extract the self-edit check to its own named variable
+  (`$isSelfEdit = $target->is(Auth::user());`, then `$applyRoleAndStatus = ! $isSelfEdit;`) and use
+  `$isSelfEdit`/`! $isSelfEdit` explicitly for the email guard's scope, so a future change to the
+  self-edit rule for role/status cannot silently move the email guard's scope as a side effect. Found
+  during the Phase 4 re-audit of F1; add a test that fixes "a self-edit of email never requires
+  `roles.manage-administrators`" as an intentional property, since nothing pins it today.
+
+**F18 — the Users editor cannot cancel an in-flight email change** (`app/Actions/Users/UpdateUser.php`)
+- `RequestEmailChange` clears `pending_email` when handed the address already on the account
+  (`RequestEmailChange.php:34-40`), but `UpdateUser` only calls it when the submitted address
+  *differs* from the current one, so that branch is unreachable from this screen —
+  `App\Livewire\Settings\Profile` can reach it, this editor cannot. Not a vulnerability (a missing
+  remediation capability, not an attack path); decide whether an administrator should be able to
+  abort another user's pending email change from the Users screen, and if so, expose a way to submit
+  the current address explicitly (the form already prefills it, so this may already work once F8's
+  status retyping is in and the difference is only what UI affordance surfaces it — confirm before
+  treating this as a code change).
 
 **F9 — do not queue a plaintext password-set token** (`app/Notifications/UserInvitation.php`)
 - Either drop `ShouldQueue` (Fortify's own `ResetPassword` notification is not queued either, and
@@ -164,7 +194,9 @@ privileged actions leave an audit trail.
 ## Acceptance criteria
 - [ ] `$users` and `$deletingUserName` are `#[Locked]`.
 - [ ] `openCreateModal()`, `openEditModal()`, `confirmDelete()` each authorize before disclosing or
-      preparing state, using the same abilities `save()`/`deleteUser()` already use.
+      preparing state. `openEditModal()` uses `updateSensitiveAttributes` (not plain `update`) when
+      the target holds the `Administrator` role, matching what `save()` itself requires to write
+      those same fields — the disclosure check must not be weaker than the write check it precedes.
 - [ ] `deleteUser()` no-ops against the acting user's own row, for every role including Super Admin.
 - [ ] `authorizeRoleChange()`'s administrator comparison cannot be satisfied by two `null`s.
 - [ ] A forged `status` value is a validation error, not a 500.
@@ -176,6 +208,11 @@ privileged actions leave an audit trail.
 - [ ] Privileged actions (create, role/status change, delete) are logged with actor, target, and
       what changed — never a password or token.
 - [ ] The step-up-authentication question (F13) has an explicit, recorded decision either way.
+- [ ] The email guard's self-edit scope is named for what it means (`$isSelfEdit`), not borrowed from
+      an unrelated flag, and a test pins "a self-edit of email never requires
+      `roles.manage-administrators`" as intentional (F17).
+- [ ] The ability to cancel another user's in-flight email change from this screen — or the decision
+      not to add one — is recorded (F18).
 
 ## Definition of Done
 - [ ] Tests written and green, plus the full existing suite.
@@ -217,6 +254,11 @@ Phase 3.
 - No dependency on stories 0005–0013; touches only files story 0004 created.
 
 ## Provenance
-Raised by `appsec-auditor` during story 0004's Phase 4 security audit
+F4–F13 raised by `appsec-auditor` during story 0004's Phase 4 security audit
 (`ai-spec/tasks/in-progress/0004-users-list-editor-backend.md` at the time of the audit), consolidated
-into one follow-up task per human decision rather than filed as ten separate micro-tasks.
+into one follow-up task per human decision rather than filed as ten separate micro-tasks. F17/F18 and
+the F7 sharpening were added by the same auditor's Phase 4 **re-audit**, run after the F1 fix landed —
+the re-audit also produced F15 (the guard is role-shaped where it should be privilege-shaped, a sharper
+restatement of F2/F3) and F16 (informational, no action needed), both recorded on story 0010 rather
+than here since they concern the not-yet-built administrator-level-permission mechanism, not this
+story's own code.
