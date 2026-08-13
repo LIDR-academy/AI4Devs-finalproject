@@ -496,6 +496,8 @@ Microservicios no se consideran adecuados en esta fase: el volumen, el equipo y 
 | `task-notes` | US-007 | Diagnósticos, reparaciones y observaciones |
 | `delivery` | US-008 | Panel de vehículos listos para entrega |
 | `history` | US-009 | Historial de vehículos y clientes |
+| `health` | US-O1 | Probes públicos de liveness/readiness (`/api/health/*`) |
+| `metrics` | US-O2 | Exposición Prometheus (`/api/metrics`) e instrumentación HTTP RED |
 | `notifications` | D1, D2 (V2) | Contacto al propietario y envío de correo (interfaz desde V1) |
 | `reminders` | D4 (V2) | Panel de recordatorios y job programado |
 
@@ -585,7 +587,7 @@ Esta estructura facilita que cada historia de usuario se implemente de forma inc
 
 ### **2.4. Infraestructura y despliegue**
 
-La infraestructura actual de MecaTrack se apoya en **Docker Compose** para orquestar los componentes principales del sistema en el entorno productivo local. El despliegue sigue un esquema de **tres servicios**: un contenedor para PostgreSQL, un contenedor para la API NestJS y un contenedor para el frontend Next.js. El navegador del usuario solo se conecta al frontend; este reenvía las solicitudes `/api` al backend dentro de la red interna de Docker, y la API persiste la información en PostgreSQL.
+La infraestructura actual de MecaTrack se apoya en **Docker Compose** para orquestar los componentes principales del sistema en el entorno productivo local. El despliegue sigue un esquema de **tres servicios base**: un contenedor para PostgreSQL, un contenedor para la API NestJS y un contenedor para el frontend Next.js. El navegador del usuario solo se conecta al frontend; este reenvía las solicitudes `/api` al backend dentro de la red interna de Docker, y la API persiste la información en PostgreSQL. De forma **opcional**, el profile Compose `observability` (US-O3) añade Prometheus para scrapear `http://api:4000/api/metrics` sin publicar métricas al exterior.
 
 ```mermaid
 flowchart LR
@@ -594,6 +596,8 @@ flowchart LR
     subgraph Host [Host local]
         Web[Contenedor web\nNext.js standalone\npuerto 3000]
         PG[Contenedor postgres\nPostgreSQL 16\npuerto host 5434]
+        Prom[Prometheus opcional\n127.0.0.1:9090]
+        Graf[Grafana opcional\n127.0.0.1:3001]
     end
 
     subgraph Docker [Red interna Docker Compose]
@@ -608,6 +612,8 @@ flowchart LR
     API -->|Prisma / SQL| DB
     DB --- Volume
     PG --- DB
+    Prom -->|scrape /api/metrics| API
+    Graf -->|datasource| Prom
 ```
 
 #### Componentes de infraestructura
@@ -619,10 +625,19 @@ flowchart LR
 | **Base de datos** | Contenedor `mecatrack-postgres` con imagen `postgres:16-alpine` | Almacena usuarios, clientes, vehículos, órdenes de trabajo, tareas e historial en la BD `mecatrack` |
 | **Persistencia** | Volumen Docker `mecatrack_pg_data` | Conserva los datos de PostgreSQL entre reinicios o recreaciones de contenedores |
 | **Orquestación** | Archivo `docker-compose.yml` del entorno productivo | Coordina construcción, variables de entorno, dependencias y puertos publicados |
+| **Observabilidad (opcional)** | Profile `observability` → Prometheus + Grafana + reglas de alerta | Scrapeo `GET /api/metrics`, dashboard API Overview, alertas básicas (`MecaTrackApiDown` / 5xx / p95). Guía: `infra/observability/README.md`; runbook: `infra/observability/runbooks/alerts.md` |
 
 #### Proceso de despliegue actual
 
-El despliegue productivo se levanta desde un `docker-compose.yml` que construye y arranca `postgres`, `api` y `web`. PostgreSQL se inicia primero, publica el puerto `5434` **solo en `127.0.0.1`** y declara un `healthcheck` con `pg_isready`. La API depende de que la base esté saludable y recibe por variables de entorno (archivo `.env` del host, sin fallbacks inseguros) la cadena `DATABASE_URL`, los secretos JWT y los tiempos de expiración de sesión.
+El despliegue productivo se levanta desde un `docker-compose.yml` que construye y arranca `postgres`, `api` y `web`. PostgreSQL se inicia primero, publica el puerto `5434` **solo en `127.0.0.1`** y declara un `healthcheck` con `pg_isready`. La API depende de que la base esté saludable, declara un `healthcheck` contra `GET /api/health/ready` (US-O1) y recibe por variables de entorno (archivo `.env` del host, sin fallbacks inseguros) la cadena `DATABASE_URL`, los secretos JWT y los tiempos de expiración de sesión.
+
+Para métricas, dashboards y alertas (US-O2 … US-O5), define `GRAFANA_ADMIN_PASSWORD` en el `.env` del host y ejecuta:
+
+```bash
+docker compose --profile observability up -d
+```
+
+Prometheus: http://127.0.0.1:9090 · Grafana: http://127.0.0.1:3001 (loopback). Detalle en [`infra/observability/README.md`](infra/observability/README.md).
 
 La imagen de la API se construye en múltiples etapas: instala dependencias, genera el cliente Prisma, compila NestJS y artefactos de bootstrap/seed opcionales. Al arrancar, `docker-entrypoint.sh` ejecuta `prisma migrate deploy`, puede correr un **bootstrap de admin opcional** solo si `ENABLE_ADMIN_BOOTSTRAP=true` (BD vacía), **no ejecuta el seed de desarrollo**, e inicia la aplicación como usuario no privilegiado (`nestjs`).
 
@@ -636,6 +651,7 @@ En la operación actual existen dos configuraciones distintas. **Producción** u
 
 - El puerto **`3000`** es la entrada principal del sistema para el usuario final; la API no se expone directamente al host en el despliegue productivo actual.
 - El puerto **`5434`** queda bound a **localhost** para herramientas locales (pgAdmin/DBeaver); no debe publicarse en todas las interfaces.
+- El puerto **`9090`** (Prometheus) y **`3001`** (Grafana), con profile `observability`, quedan bound a **`127.0.0.1`**; no son necesarios para el flujo diario del taller.
 - El volumen **`mecatrack_pg_data`** es crítico: ahí persisten los datos reales aunque el contenedor de PostgreSQL se reinicie o se recree.
 - La API depende de PostgreSQL con validación de salud, pero el frontend solo depende del contenedor `api` a nivel de arranque; por ello, un fallo del backend impacta inmediatamente las rutas `/api` aunque el frontend siga respondiendo HTML.
 - El **seed de desarrollo no forma parte del arranque productativo**; datos demo solo vía comandos explícitos (`db:seed:dev`) fuera de `NODE_ENV=production`.
@@ -1167,7 +1183,7 @@ model WorkOrderTask {
 
 ## 4. Especificación de la API
 
-La API de MecaTrack se expone como un backend REST bajo el prefijo `/api` y cubre el flujo completo del MVP: autenticación, gestión de usuarios, clientes, vehículos, órdenes de trabajo, tareas, entrega e historial. La documentación OpenAPI del proyecto está separada por dominio para mantener cada módulo autocontenido y facilitar su evolución independiente.
+La API de MecaTrack se expone como un backend REST bajo el prefijo `/api` y cubre el flujo completo del MVP (autenticación, usuarios, clientes, vehículos, órdenes de trabajo, tareas, entrega e historial) más endpoints de **operaciones** para salud y métricas (US-O1 / US-O2). La documentación OpenAPI del proyecto está separada por dominio para mantener cada módulo autocontenido y facilitar su evolución independiente. Resumen técnico en inglés: [`docs/observability.md`](docs/observability.md).
 
 ### Especificaciones OpenAPI disponibles
 
@@ -1180,6 +1196,8 @@ La API de MecaTrack se expone como un backend REST bajo el prefijo `/api` y cubr
 | `docs/api-spec.work-orders.yml` | Órdenes de trabajo, tareas y notas técnicas | `POST /work-orders`, `GET /work-orders/{id}`, `POST/PATCH /work-orders/{id}/tasks`, `PATCH /work-orders/{id}/visit-notes` |
 | `docs/api-spec.delivery.yml` | Entrega | `GET /delivery/ready`, `GET /delivery/ready/{workOrderId}`, `PATCH /delivery/ready/{workOrderId}/deliver` |
 | `docs/api-spec.history.yml` | Historial | `GET /vehicles/{vehicleId}/history`, `GET /clients/{clientId}` |
+| `docs/api-spec.health.yml` | Salud (ops) | `GET /health/live`, `GET /health/ready` |
+| `docs/api-spec.metrics.yml` | Métricas (ops) | `GET /metrics` |
 
 ### Endpoints representativos del MVP
 
@@ -1341,6 +1359,24 @@ En conjunto, la API permite cubrir el recorrido principal del sistema: un usuari
 ---
 
 ## 5. Historias de Usuario
+
+---
+
+### Observabilidad (US-O1 … US-O5)
+
+Epic de operaciones (Prometheus / Grafana). Historias enriquecidas y criterios detallados:
+
+[`us/monitoreo y observabilidad/`](us/monitoreo%20y%20observabilidad/) · resumen técnico: [`docs/observability.md`](docs/observability.md) · guía Compose: [`infra/observability/README.md`](infra/observability/README.md)
+
+| ID | Título | Entrega |
+|----|--------|---------|
+| US-O1 | Health (liveness / readiness) | `GET /api/health/live`, `GET /api/health/ready` |
+| US-O2 | Métricas Prometheus | `GET /api/metrics` + RED HTTP |
+| US-O3 | Prometheus en Compose | Profile `observability`, scrape `api:4000` |
+| US-O4 | Dashboards Grafana | UI `127.0.0.1:3001`, dashboard API Overview |
+| US-O5 | Alertas básicas | Reglas Prometheus + runbook |
+
+**Roles:** Operador / desarrollador de despliegue | **Prioridad:** Alta (ops)
 
 ---
 
@@ -1680,7 +1716,7 @@ Esta sección resume tres tickets técnicos representativos del desarrollo de Me
 
 **Pull Request 1* https://github.com/LIDR-academy/AI4Devs-finalproject/pull/198*
 
-**Pull Request 2**
+**Pull Request 2* https://github.com/LIDR-academy/AI4Devs-finalproject/pull/301*
 
 **Pull Request 3**
 

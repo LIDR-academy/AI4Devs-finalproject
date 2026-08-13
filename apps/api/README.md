@@ -1,6 +1,6 @@
 # MecaTrack API
 
-NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration, US-005: work order creation, US-006: work order task management, US-007: technical notes, US-008: delivery panel, US-009: vehicle and client history).
+NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration, US-005: work order creation, US-006: work order task management, US-007: technical notes, US-008: delivery panel, US-009: vehicle and client history, US-O1: health probes, US-O2: Prometheus metrics).
 
 ## Prerequisites
 
@@ -41,6 +41,58 @@ npm run dev
 ```
 
 API base URL: `http://localhost:4000/api`
+
+## Health probes (US-O1)
+
+Public ops endpoints (no JWT). Custom lightweight Nest module (not `@nestjs/terminus`).
+Readiness uses the existing Prisma connection pool with a ~2.5s timeout; failures never leak connection strings or stack traces.
+
+| Method | Path | Meaning | Database |
+|--------|------|---------|----------|
+| `GET` | `/api/health/live` | Process is running | Not queried |
+| `GET` | `/api/health/ready` | Ready for traffic | `SELECT 1` via Prisma |
+
+| Ready outcome | HTTP | Body |
+|---------------|------|------|
+| Healthy | `200` | `{ "status": "ok", "checks": { "database": "up" } }` |
+| Unhealthy | `503` | `{ "status": "error", "checks": { "database": "down" } }` |
+
+```bash
+curl http://localhost:4000/api/health/live
+curl http://localhost:4010/api/health/ready
+```
+
+Use these probes from Docker Compose / orchestration and (later) Prometheus/Grafana. Prefer **ready** for traffic readiness and **live** for process liveness so a DB outage can mark the instance unready without immediately killing the process.
+
+OpenAPI fragment: [`docs/api-spec.health.yml`](../../docs/api-spec.health.yml)
+
+## Metrics (US-O2)
+
+Public Prometheus exposition (no JWT). Uses `prom-client` with HTTP RED metrics and default Node process metrics (`mecatrack_` prefix). A global HTTP metrics **middleware** records requests on response `finish`; **`/api/metrics` itself is excluded** from HTTP RED counters/histograms to avoid scrape noise.
+
+| Method | Path | Content-Type |
+|--------|------|--------------|
+| `GET` | `/api/metrics` | Prometheus text exposition (`text/plain`) |
+
+| Metric | Type | Labels |
+|--------|------|--------|
+| `mecatrack_http_requests_total` | Counter | `method`, `route`, `status_code` |
+| `mecatrack_http_request_duration_seconds` | Histogram | `method`, `route`, `status_code` |
+| `mecatrack_*` (defaults) | process/Node | via `collectDefaultMetrics` |
+
+**Label policy:** `route` uses Nest path templates (e.g. `/api/work-orders/:id`). Unknown paths use `unmatched`. Never put UUIDs, license plates, emails, tokens, or request bodies in labels.
+
+```bash
+# DEV (typical host port)
+curl http://localhost:4010/api/metrics
+
+# Docker Compose internal scrape target (US-O3)
+# http://api:4000/api/metrics
+```
+
+Do **not** publish a dedicated host port only for metrics in production; scrape on the Docker network. Do not expose `/api/metrics` on the public internet without network restriction.
+
+OpenAPI fragment: [`docs/api-spec.metrics.yml`](../../docs/api-spec.metrics.yml)
 
 ## Seed users (development only)
 

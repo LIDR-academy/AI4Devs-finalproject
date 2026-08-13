@@ -1,5 +1,11 @@
 # Development Guide
 
+> **MecaTrack note:** This file still contains legacy LTI ATS setup examples. For the current MecaTrack monorepo (`apps/api`, `apps/web`, root `docker-compose.yml`), use:
+>
+> - Root [`readme.md`](../readme.md) §2.4 (infrastructure)
+> - [`apps/api/README.md`](../apps/api/README.md)
+> - Observability: [`docs/observability.md`](observability.md) and [`infra/observability/README.md`](../infra/observability/README.md)
+
 This guide provides step-by-step instructions for setting up the development environment and running tests for the LTI ATS system.
 
 ## 🚀 Setup Instructions
