@@ -224,6 +224,16 @@ working untouched. Ordinary custom roles remain fully manageable.
       is the accepted cost of rejecting a global scope (which would have broken the seeder, role
       assignment, the permission cache, and the Super Admin's own authorization). Mitigated by naming
       the scope unambiguously here and by Phase 5 code review.
+- [ ] **Follow-up from story 0004's Phase 4 security audit (findings F2/F3):** `App\Livewire\Users\Index`
+      and `App\Policies\UserPolicy` currently identify the `Administrator` and `Super Admin` roles by
+      literal name (`->whereNot('name', 'Super Admin')`, `hasRole('Administrator', 'web')`), and the
+      Administrator-level guard (`roles.manage-administrators`) is enforced only inside the Livewire
+      component, not in `App\Actions\Users\CreateUser`/`UpdateUser` themselves. Whoever implements this
+      story should evaluate centralising both concerns behind a stable, non-name-based identifier (e.g.
+      a `Role::isAdministratorLevel()` concept or a flag column) rather than leaving name-matching as
+      the mechanism 0004 introduced — a role rename would silently disarm every guard that matches on
+      it. If the guard moves to a shared location, `Index`, `CreateUser` and `UpdateUser` should all
+      call it, not just the component.
 
 ## Open questions
 

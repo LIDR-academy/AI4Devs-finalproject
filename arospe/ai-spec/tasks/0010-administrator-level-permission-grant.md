@@ -310,3 +310,11 @@ carrying that permission is rejected with a 403 rather than partially applied.
 - [ ] No security findings (appsec-auditor)
 - [ ] Documentation updated (docs-keeper)
 - [ ] Acceptance criteria met
+- [ ] **Follow-up from story 0004's Phase 4 security audit (findings F2/F3):** `App\Livewire\Users\Index`
+      matches the `Administrator` role by literal name to decide when `roles.manage-administrators` is
+      required, and that decision is enforced only in the Livewire component — `App\Actions\Users\
+      CreateUser`/`UpdateUser` apply whatever role/status they are handed with no authorization of their
+      own. Once this story defines the general administrator-level-permission mechanism, evaluate
+      routing 0004's role/status/email guards through it (or an equivalent stable identifier, not a
+      name match) so the rule travels with the action rather than depending on every future caller
+      re-implementing it in its own component. See also the matching note left on story 0008.
