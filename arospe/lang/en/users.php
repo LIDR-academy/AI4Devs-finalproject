@@ -40,4 +40,21 @@ return [
         'throttled' => 'Too many email change requests. Please try again later.',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | User Invitation
+    |--------------------------------------------------------------------------
+    |
+    | Copy for the invitation mailed to a user created by an administrator
+    | from the Users screen, inviting them to set their own password.
+    |
+    */
+
+    'invitation' => [
+        'subject' => 'You have been invited to Arospe',
+        'line' => 'An administrator created an account for you. Click below to set your password and get started.',
+        'action' => 'Set Your Password',
+        'expire' => 'This invitation link will expire soon.',
+    ],
+
 ];

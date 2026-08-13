@@ -41,4 +41,22 @@ return [
         'throttled' => 'Demasiadas solicitudes de cambio de correo. Inténtalo de nuevo más tarde.',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Invitación de usuario
+    |--------------------------------------------------------------------------
+    |
+    | Textos de la invitación enviada a un usuario creado por un
+    | administrador desde la pantalla de Usuarios, invitándole a establecer
+    | su propia contraseña.
+    |
+    */
+
+    'invitation' => [
+        'subject' => 'Has sido invitado a Arospe',
+        'line' => 'Un administrador ha creado una cuenta para ti. Haz clic abajo para establecer tu contraseña y comenzar.',
+        'action' => 'Establecer contraseña',
+        'expire' => 'Este enlace de invitación caducará pronto.',
+    ],
+
 ];
