@@ -42,6 +42,15 @@ Open `http://localhost:3000`.
 4. On API `401`, `apiClient` retries once after refresh; failure → `/login?session=expired`
 5. Logout → `POST /api/auth/logout` and clear local session
 
+## Responsive navigation (US-F1)
+
+Authenticated layouts use `AppChrome` (`AppHeader` + `RoleNav` + `MobileNavDrawer`):
+
+- **`< md` (768px):** hamburger in the header opens a left drawer with the same role links; the horizontal strip is hidden (avoids nav horizontal scroll).
+- **`≥ md`:** existing horizontal role tabs; hamburger and drawer are hidden.
+- Implemented with React state + Tailwind only (no new UI dependencies).
+- Playwright smoke: `e2e/mobile-nav.spec.ts`.
+
 ## E2E tests
 
 Requires API + database running:

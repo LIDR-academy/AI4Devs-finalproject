@@ -1,8 +1,7 @@
 'use client';
 
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
-import { AppHeader } from '@/shared/components/AppHeader';
-import { RoleNav } from '@/shared/components/RoleNav';
+import { AppChrome } from '@/shared/components/AppChrome';
 
 export default function AdminLayout({
   children,
@@ -11,11 +10,7 @@ export default function AdminLayout({
 }) {
   return (
     <ProtectedRoute allowedRoles={['ADMIN']}>
-      <div className="min-h-screen bg-slate-50">
-        <AppHeader />
-        <RoleNav />
-        <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
-      </div>
+      <AppChrome maxWidthClassName="max-w-6xl">{children}</AppChrome>
     </ProtectedRoute>
   );
 }

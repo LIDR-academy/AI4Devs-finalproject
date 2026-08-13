@@ -24,7 +24,8 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: /users\.spec\.ts|clients\.spec\.ts|vehicles\.spec\.ts/,
+      testIgnore:
+        /users\.spec\.ts|clients\.spec\.ts|vehicles\.spec\.ts|mobile-nav\.spec\.ts/,
     },
     {
       name: 'chromium-admin',
@@ -33,6 +34,13 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'e2e/.auth/admin.json',
+      },
+    },
+    {
+      name: 'chromium-mobile-nav',
+      testMatch: /mobile-nav\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
       },
     },
     {
@@ -105,7 +113,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
+    command: 'npx next dev -p 3010',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

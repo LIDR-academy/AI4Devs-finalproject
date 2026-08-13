@@ -4,24 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { cn } from '@/shared/lib/cn';
+import {
+  getNavAriaLabel,
+  getNavItemsForRole,
+  getShellMaxWidthClassName,
+} from './nav-items';
 
-const ADMIN_NAV = [
-  { href: '/admin/dashboard', label: 'Panel' },
-  { href: '/admin/users', label: 'Usuarios' },
-  { href: '/admin/delivery', label: 'Listos para entrega' },
-  { href: '/clients', label: 'Clientes' },
-  { href: '/vehicles', label: 'Vehículos' },
-  { href: '/work-orders/new', label: 'Nueva OT' },
-];
+type RoleNavProps = {
+  maxWidthClassName?: string;
+};
 
-const MECHANIC_NAV = [
-  { href: '/mechanic/dashboard', label: 'Panel' },
-  { href: '/clients', label: 'Clientes' },
-  { href: '/vehicles', label: 'Vehículos' },
-  { href: '/work-orders/new', label: 'Nueva OT' },
-];
-
-export function RoleNav() {
+export function RoleNav({ maxWidthClassName }: RoleNavProps = {}) {
   const { user } = useAuth();
   const pathname = usePathname();
 
@@ -29,15 +22,15 @@ export function RoleNav() {
     return null;
   }
 
-  const items = user.role === 'ADMIN' ? ADMIN_NAV : MECHANIC_NAV;
-  const ariaLabel = user.role === 'ADMIN' ? 'Administración' : 'Mecánico';
-  const maxWidth = user.role === 'ADMIN' ? 'max-w-6xl' : 'max-w-5xl';
+  const items = getNavItemsForRole(user.role);
+  const ariaLabel = getNavAriaLabel(user.role);
+  const maxWidth = maxWidthClassName ?? getShellMaxWidthClassName(user.role);
 
   return (
-    <div className="border-b border-slate-200 bg-white">
+    <div className="hidden border-b border-slate-200 bg-white md:block">
       <nav
         aria-label={ariaLabel}
-        className={cn('mx-auto flex gap-1 px-6', maxWidth)}
+        className={cn('mx-auto flex gap-1 px-4 md:px-6', maxWidth)}
       >
         {items.map((item) => {
           const isActive =
