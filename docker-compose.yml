@@ -42,6 +42,16 @@ services:
       COOKIE_SECURE: 'false'
       ENABLE_ADMIN_BOOTSTRAP: ${ENABLE_ADMIN_BOOTSTRAP:-false}
       ENABLE_HSTS: ${ENABLE_HSTS:-false}
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(''http://127.0.0.1:4000/api/health/ready'').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   web:
     build:
@@ -59,5 +69,24 @@ services:
     ports:
       - '0.0.0.0:${WEB_PORT:-3000}:3000'
 
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: mecatrack-prometheus
+    profiles: ['observability']
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./infra/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/observability/prometheus/rules:/etc/prometheus/rules:ro
+      - mecatrack_prometheus_data:/prometheus
+    ports:
+      - '127.0.0.1:9090:9090'
+    depends_on:
+      - api
+
 volumes:
   mecatrack_pg_data:
+  mecatrack_prometheus_data:
