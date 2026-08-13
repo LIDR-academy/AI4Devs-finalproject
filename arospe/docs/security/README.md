@@ -16,7 +16,9 @@ repo must follow — always with a real code example pulled from this repository
   actually covers (and which it silently does not), why the permission-cache flush must happen after the
   transaction commits, why `hasRole()` must always be passed a guard, why a `Gate::before` closure must
   guard with `instanceof` rather than a type hint, why `config($key, $default)` alone cannot protect
-  against a present-but-`null` key, and why the seeded catalog is safe from role-name collisions.
+  against a present-but-`null` key, why an ability must cover every **attribute** whose mutation
+  achieves the effect it forbids (not only the operation it is named after — task 0004's finding F1),
+  and why the seeded catalog is safe from role-name collisions.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -38,4 +40,5 @@ repo must follow — always with a real code example pulled from this repository
   why a privilege rule enforced only in the component is bypassed by every other call site of the action.
 
 _Last updated: 2026-08-13 — Added `livewire-authorization.md` from the Phase 4 audit of task 0004
-(Users list + create/edit backend)._
+(Users list + create/edit backend), then extended `authorization-patterns.md` and
+`livewire-authorization.md` during the same task's Phase 4 **re-audit** of finding F1's fix._

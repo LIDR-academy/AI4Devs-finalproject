@@ -175,6 +175,7 @@ Contrast the two exclusions that *do* survive a second call site, and note why:
 | "Super Admin is never assignable" | `UserValidationRules::roleRules()` — `Rule::exists(...)->whereNot('name', 'Super Admin')` | ✅ yes, if the caller validates |
 | "a Super Admin holder is not editable" | `UserPolicy::update()` | ✅ yes, if the caller gates |
 | "adding/removing `Administrator` needs `roles.manage-administrators`" | `App\Livewire\Users\Index::authorizeRoleChange()` | ❌ **no** |
+| "changing an `Administrator`'s `status`/`email` needs `roles.manage-administrators`" | `UserPolicy::updateSensitiveAttributes()`, but the **decision that a change occurred** lives in `App\Livewire\Users\Index::updateExistingUser()` | ⚠️ partial — the ability travels, the call site does not |
 
 The rule for this repo: **a privilege rule about *which* role may be assigned belongs in the policy or
 the validation rule set, not in the screen that happens to be the only caller today.** A Livewire
@@ -183,5 +184,13 @@ sibling screen calling the same action inherits none of its `Gate::authorize()` 
 left in the component for scope reasons, say so in the action's docblock so the next caller has to
 read it.
 
+The `updateSensitiveAttributes` row above is the finer-grained case: the *rule* was correctly pushed
+into the policy, but the **trigger** — comparing the submitted `email`/`status` against the stored
+ones to decide whether the ability applies at all — stayed in the component. A second caller of
+`UpdateUser` therefore inherits nothing, exactly as with `authorizeRoleChange()`. The general
+principle behind that guard is in
+[authorization-patterns.md](authorization-patterns.md#an-ability-must-cover-every-attribute-that-achieves-its-effect-not-only-the-operation-it-is-named-after).
+
 _Last updated: 2026-08-13 — Created from the Phase 4 audit of task 0004 (Users list + create/edit
-backend), the repo's first permission-gated Livewire screen._
+backend), the repo's first permission-gated Livewire screen; extended in the same task's Phase 4
+re-audit with the `updateSensitiveAttributes` guard added by finding F1's fix._

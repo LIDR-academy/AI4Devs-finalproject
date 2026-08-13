@@ -13,6 +13,7 @@ make these distinctions explicit.
 - [Read the Super Admin role name with a literal default](#read-the-super-admin-role-name-with-a-literal-default)
 - [Gate::before closures must tolerate any authenticatable](#gatebefore-closures-must-tolerate-any-authenticatable)
 - [permission: and role: middleware are not a substitute for auth](#permission-and-role-middleware-are-not-a-substitute-for-auth)
+- [An ability must cover every attribute that achieves its effect, not only the operation it is named after](#an-ability-must-cover-every-attribute-that-achieves-its-effect-not-only-the-operation-it-is-named-after)
 - [Confirmed safe: role-name collision is closed by the database, not by PHP](#confirmed-safe-role-name-collision-is-closed-by-the-database-not-by-php)
 
 ## The Super Admin bypass does not cover every check
@@ -247,6 +248,87 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 });
 ```
 
+## An ability must cover every attribute that achieves its effect, not only the operation it is named after
+
+Established by finding **F1** of task 0004's Phase 4 audit, and the most transferable rule that audit
+produced. `App\Policies\UserPolicy` gates three *operations* on an `Administrator`-holding target
+behind `roles.manage-administrators` — `promoteToAdministrator`, `downgrade`, `delete`. The Users
+editor enforced all three faithfully. It was still bypassable, because two plain **columns** on the
+same edit form reach the same outcome without going through any of them:
+
+- `status` → set an `Administrator` to `Suspended` and story 0007 refuses their sign-in. Functionally
+  a `delete`, reached through `users.edit`.
+- `email` → park a new address in `pending_email`; the attacker controls the mailbox the confirmation
+  link is sent to, so completing it hands them the account. Functionally a takeover, again through
+  `users.edit`.
+
+The guard set was drawn around the *verbs the policy names* rather than around the *effects the
+policy exists to prevent*. The rule:
+
+> When you write an ability that protects a class of target, enumerate every writable attribute of
+> that target and ask, for each one, "does changing this achieve what the ability forbids?" Every
+> `yes` belongs behind the same ability.
+
+✅ Good — the shipped fix, an ability that composes the base check and then applies the same
+target-class rule the operation-shaped abilities apply:
+
+```php
+// app/Policies/UserPolicy.php
+public function updateSensitiveAttributes(User $actor, User $target): bool
+{
+    if (! $this->update($actor, $target)) {
+        return false;
+    }
+
+    if (! $target->hasRole('Administrator', 'web')) {
+        return true;
+    }
+
+    return $actor->hasPermissionTo('roles.manage-administrators');
+}
+```
+
+Two details of the call site that are load-bearing, not incidental
+([`app/Livewire/Users/Index.php`](../../app/Livewire/Users/Index.php), `updateExistingUser()`):
+
+- **The change-detection comparison must use the same normalisation on both sides, and the same one
+  the writer uses to decide whether it is writing.** The guard fires only when an attribute actually
+  changed, so a comparison that is *stricter* than the writer's leaves an unguarded write:
+
+  ```php
+  $emailChanged = Str::lower((string) $validated['email']) !== Str::lower((string) $target->getRawOriginal('email'));
+  ```
+
+  Both sides are lowercased, and `getRawOriginal()` is used rather than `$target->email` because
+  `User`'s `email` accessor lowercases on read — reading through the accessor on one side and the raw
+  column on the other is exactly how a false "unchanged" verdict gets manufactured. This is
+  byte-identical to the comparison `App\Actions\Users\UpdateUser` itself makes before delegating to
+  `RequestEmailChange`, which is what guarantees the guard cannot disagree with the write.
+
+- **The guard runs before the action, so a denial cannot leave a partial write.** `UpdateUser` is not
+  transactional today; both `Gate::authorize()` calls precede it.
+
+❌ Bad — the pre-fix shape: only the role comparison is gated, so an unchanged `roleId` (which is what
+the edit modal prefills) short-circuits `authorizeRoleChange()` and nothing else is checked:
+
+```php
+// anti-pattern — the shape F1 found
+if ($applyRoleAndStatus) {
+    $this->authorizeRoleChange($target, (int) $validated['roleId']);
+}
+
+$updateUser($target, $name, $email, $roleId, $status, $applyRoleAndStatus, $requestEmailChange);
+```
+
+**Known residual, deliberately deferred** (tracked on stories 0008/0010, extending findings F2/F3):
+the predicate is *role*-shaped (`hasRole('Administrator', 'web')`) while the privilege it protects is
+*permission*-shaped. A target holding `roles.manage-administrators` through a direct
+`model_has_permissions` grant, or through a custom role that is not literally named `Administrator`,
+is **not** covered by any of these four abilities. That is inert today — the seeded catalog grants no
+permission directly to a user and ships only two roles — and becomes live the moment story 0010 lets
+operators build administrator-equivalent roles. Whoever centralises the administrator-level rule must
+key it on the privilege, not on the role name.
+
 ## Confirmed safe: role-name collision is closed by the database, not by PHP
 
 Worth recording because the reasoning is non-obvious and someone will re-open the question. The
@@ -265,7 +347,12 @@ by lowercasing or trimming the comparison — that would *widen* the set of matc
 property above. The remaining hardening is guard-scoping (see
 [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-09 — Updated during the Phase 4 **re-audit** of task 0002: the `Gate::before`
+_Last updated: 2026-08-13 — Added "An ability must cover every attribute that achieves its effect"
+during the Phase 4 **re-audit** of task 0004 (finding F1's fix), including the normalisation rule for
+the change-detection comparison that arms such a guard and the deferred role-shaped-predicate
+residual._
+
+_2026-08-09 — Updated during the Phase 4 **re-audit** of task 0002: the `Gate::before`
 snippets now show the shipped guard-scoped, `instanceof`-guarded closure; the guest-handling guidance was
 corrected (a `mixed` parameter admits guests, so the body must guard, not the type hint); and the
 literal-default section now documents why `config($key, $default)` alone does not cover a
