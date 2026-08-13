@@ -619,7 +619,7 @@ flowchart LR
 | **Base de datos** | Contenedor `mecatrack-postgres` con imagen `postgres:16-alpine` | Almacena usuarios, clientes, vehículos, órdenes de trabajo, tareas e historial en la BD `mecatrack` |
 | **Persistencia** | Volumen Docker `mecatrack_pg_data` | Conserva los datos de PostgreSQL entre reinicios o recreaciones de contenedores |
 | **Orquestación** | Archivo `docker-compose.yml` del entorno productivo | Coordina construcción, variables de entorno, dependencias y puertos publicados |
-| **Observabilidad (opcional)** | Profile `observability` → `mecatrack-prometheus` + `mecatrack-grafana` | Prometheus scrapea `GET /api/metrics` (`api:4000`); Grafana en `127.0.0.1:3001` con dashboard provisionado (US-O3/US-O4). Guía: `infra/observability/README.md` |
+| **Observabilidad (opcional)** | Profile `observability` → Prometheus + Grafana + reglas de alerta | Scrapeo `GET /api/metrics`, dashboard API Overview, alertas básicas (`MecaTrackApiDown` / 5xx / p95). Guía: `infra/observability/README.md`; runbook: `infra/observability/runbooks/alerts.md` |
 
 #### Proceso de despliegue actual
 

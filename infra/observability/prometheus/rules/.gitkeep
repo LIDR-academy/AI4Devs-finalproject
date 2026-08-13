@@ -1,3 +1,0 @@
-# Placeholder for Prometheus recording/alert rules (US-O5).
-# Keep this directory so Compose can mount it; enable `rule_files` in
-# prometheus.yml when alert rules are added.

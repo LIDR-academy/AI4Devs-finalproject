@@ -82,6 +82,22 @@ The `api` service healthcheck calls `GET /api/health/ready` with Node’s built-
 
 ## Out of scope here
 
-- Alert rules / runbooks → **US-O5**
 - SSO / OAuth / LDAP for Grafana
 - Business dashboards (work orders per day, etc.)
+- PagerDuty / Alertmanager multi-channel receivers (MVP is Prometheus rules + UI only)
+
+## Alert rules (US-O5)
+
+Prometheus loads `infra/observability/prometheus/rules/mecatrack.yml` via `rule_files`.
+
+| Alert | Meaning |
+|-------|---------|
+| `MecaTrackApiDown` | Scrape target down for >2m |
+| `MecaTrackHighHttp5xx` | 5xx ratio >5% for >5m |
+| `MecaTrackHighLatencyP95` | p95 latency >2s for >10m |
+
+- Rules UI: http://127.0.0.1:9090/rules (group `mecatrack.api`)
+- Alerts UI: http://127.0.0.1:9090/alerts
+- Operator runbook (Spanish): [`runbooks/alerts.md`](runbooks/alerts.md)
+
+Notification MVP: **Prometheus/Grafana UI only** (no Alertmanager service in Compose).
