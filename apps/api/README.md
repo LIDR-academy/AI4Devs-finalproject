@@ -42,6 +42,30 @@ npm run dev
 
 API base URL: `http://localhost:4000/api`
 
+## Health probes (US-O1)
+
+Public ops endpoints (no JWT). Custom lightweight Nest module (not `@nestjs/terminus`).
+Readiness uses the existing Prisma connection pool with a ~2.5s timeout; failures never leak connection strings or stack traces.
+
+| Method | Path | Meaning | Database |
+|--------|------|---------|----------|
+| `GET` | `/api/health/live` | Process is running | Not queried |
+| `GET` | `/api/health/ready` | Ready for traffic | `SELECT 1` via Prisma |
+
+| Ready outcome | HTTP | Body |
+|---------------|------|------|
+| Healthy | `200` | `{ "status": "ok", "checks": { "database": "up" } }` |
+| Unhealthy | `503` | `{ "status": "error", "checks": { "database": "down" } }` |
+
+```bash
+curl http://localhost:4000/api/health/live
+curl http://localhost:4010/api/health/ready
+```
+
+Use these probes from Docker Compose / orchestration and (later) Prometheus/Grafana. Prefer **ready** for traffic readiness and **live** for process liveness so a DB outage can mark the instance unready without immediately killing the process.
+
+OpenAPI fragment: [`docs/api-spec.health.yml`](../../docs/api-spec.health.yml)
+
 ## Seed users (development only)
 
 | Email | Password | Role |
