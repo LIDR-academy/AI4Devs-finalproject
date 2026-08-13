@@ -33,6 +33,9 @@ Controllers, by contrast, **are** suffixed `Controller`, and are named after the
 | `App\Listeners\ActivateVerifiedUser` | `app/Listeners/ActivateVerifiedUser.php` |
 | `App\Notifications\PendingEmailVerification` | `app/Notifications/PendingEmailVerification.php` |
 | `App\Enums\UserStatus` | `app/Enums/UserStatus.php` |
+| `App\Policies\UserPolicy` | `app/Policies/UserPolicy.php` |
+
+Policies are named `<Model>Policy` — and here the name is not merely a convention but a binding: Laravel 13 auto-discovers `App\Policies\UserPolicy` for `App\Models\User` by that exact name, so renaming it silently unbinds every `Gate::authorize()` call against a `User` (see [base-standards.md](base-standards.md#directory-structure)). Policy **methods** are named after the ability, as a bare verb phrase in camelCase and without a `can` prefix: `viewAny`, `update`, `promoteToAdministrator`, `updateSensitiveAttributes` — matching how they read at the call site, `Gate::authorize('promoteToAdministrator', $target)`.
 
 Enum cases use TitleCase keys with lowercase backing values — `case Active = 'active';` in `App\Enums\UserStatus`, matching the project `CLAUDE.md` rule.
 
@@ -48,6 +51,31 @@ Component class is `StudlyCase`; its Blade view is the **kebab-case** version of
 
 ✅ Good — `DeleteUserForm` → `delete-user-form.blade.php` (each word boundary becomes a hyphen).
 ❌ Bad — do not use `deleteuserform.blade.php` or `DeleteUserForm.blade.php`; Livewire's convention-based view resolution expects the kebab-case mirror.
+
+### Exception: a component named `Index` resolves to its **parent folder's** name
+
+The mirror rule above has one exception, and it is Livewire's, not this project's. A component class named `Index` inside a subfolder drops the `.index` segment entirely and resolves to the **subfolder name**:
+
+| Component | View — actual | View — what the mirror rule would predict |
+| --- | --- | --- |
+| `App\Livewire\Users\Index` | `resources/views/livewire/users.blade.php` | ~~`resources/views/livewire/users/index.blade.php`~~ |
+
+This is explicit in the installed vendor source:
+
+```php
+// vendor/livewire/livewire/src/Finder/Finder.php — Finder::generateNameFromClass()
+// If using an index component in a sub folder, remove the '.index' so the name is the subfolder name...
+if ($fullName->endsWith('.index')) {
+    $fullName = $fullName->replaceLast('.index', '');
+}
+```
+
+So `App\Livewire\Users\Index` becomes the component name `users`, and `users` resolves to `livewire/users`. The nested path is still *offered* as a fallback (`Finder` also probes `<folder>/index.blade.php` and `<folder>/<folder>.blade.php`), but the flat file is what this repo uses and what a reader should expect to find.
+
+✅ Good — the real pairing in this repo: `app/Livewire/Users/Index.php` ↔ `resources/views/livewire/users.blade.php`.
+❌ Bad — assuming the mirror rule holds and looking for (or creating) `resources/views/livewire/users/index.blade.php`. It is not the path Livewire reports as the component's view, and a second file there is a silently unused duplicate.
+
+Practical consequence when adding the next module screen: an `Index` component for a new area lands at `resources/views/livewire/<area>.blade.php`, one level *shallower* than its class. Any other component in that same subfolder (`App\Livewire\Users\Editor` → `livewire/users/editor.blade.php`) follows the normal mirror rule, so the two live at different depths — that asymmetry is expected, not a mistake.
 
 Note: `resources/views/livewire/auth/*.blade.php` (login, register, forgot-password, etc.) are **plain Blade views**, not Livewire components — they live under `livewire/` for directory consistency but are bound directly as Fortify's auth views, e.g. `Fortify::loginView(fn () => view('livewire.auth.login'))` in [`app/Providers/FortifyServiceProvider.php`](../../app/Providers/FortifyServiceProvider.php). Don't assume every file under `resources/views/livewire/` has a matching PHP component class — check for one before citing it.
 
@@ -74,7 +102,16 @@ trait ProfileValidationRules
 }
 ```
 
-When adding a new validation concern, follow this exact pattern: `<Noun>ValidationRules` trait, `<noun>Rules()` methods — don't introduce a differently-named alternative (e.g. `getPasswordValidation()`).
+```php
+// app/Concerns/UserValidationRules.php
+trait UserValidationRules
+{
+    protected function roleRules(): array { /* ... */ }
+    protected function statusRules(): array { /* ... */ }
+}
+```
+
+When adding a new validation concern, follow this exact pattern: `<Noun>ValidationRules` trait, `<noun>Rules()` methods — don't introduce a differently-named alternative (e.g. `getPasswordValidation()`). Traits stay **flat and single-concern**, composed at the consumer (`use ProfileValidationRules, UserValidationRules;` in `App\Livewire\Users\Index`, mirroring `CreateNewUser`'s `use PasswordValidationRules, ProfileValidationRules;`) — no trait in `app/Concerns/` `use`s another.
 
 ## Route names
 
@@ -156,4 +193,4 @@ public bool $showDeleteModal;
 
 Two patterns coexist in this file: `can*`/`requires*`/`show*` for capability/UI-state flags, and a bare past-participle (`twoFactorEnabled`) for a fact about the authenticated user's current state. Follow whichever of the two fits: use `can`/`requires`/`show` for UI/permission flags you're introducing, and a plain past-participle only for a mirrored model/domain fact (as `twoFactorEnabled` mirrors `User::hasEnabledTwoFactorAuthentication()`).
 
-_Last updated: 2026-08-12 — Task 0003: recorded the controller/listener/notification/enum naming patterns introduced by the first domain controller and the activation listener, and added the "Translation keys" section now that `lang/en/` and `lang/es/` exist._
+_Last updated: 2026-08-13 — Task 0004: documented the `<Model>Policy` / bare-verb-ability naming that Laravel's policy auto-discovery makes load-bearing, added `UserValidationRules` and the flat-composition rule to the traits section, and recorded Livewire's `Index`-in-a-subfolder exception to the component ↔ view mirror rule (`App\Livewire\Users\Index` → `livewire/users.blade.php`)._
