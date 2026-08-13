@@ -57,6 +57,14 @@ test('users are listed alphabetically by name', function () {
 });
 
 test('usersSummary reports accurate totals computed independently of the users property, and counts a Super Admin holder in the total', function () {
+    // Baseline against whatever already exists after the beforeEach seed, rather than
+    // asserting an absolute count: RolePermissionSeeder's bootstrap provisions an extra
+    // Super Admin user whenever the ambient SUPER_ADMIN_EMAIL config is set (this repo's
+    // .env sets it), which a hardcoded expected total would miss. See docs/errors-log.md's
+    // SUPER_ADMIN_EMAIL entry.
+    $baselineTotal = User::count();
+    $baselineActive = User::where('status', UserStatus::Active)->count();
+
     $administrator = User::factory()->create(['status' => UserStatus::Active]);
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
@@ -67,14 +75,14 @@ test('usersSummary reports accurate totals computed independently of the users p
     $superAdmin = User::factory()->create(['status' => UserStatus::Active]);
     $superAdmin->assignRole('Super Admin');
 
-    // total: administrator + 3 active + 2 inactive + super admin = 7
-    // active: administrator + 3 active + super admin = 5
+    // added: administrator + 3 active + 2 inactive + super admin = 7
+    // added active: administrator + 3 active + super admin = 5
     $component = Livewire::test(Index::class)->set('users', []);
 
     $summary = $component->get('usersSummary');
 
-    expect($summary['total'])->toBe(7)
-        ->and($summary['active'])->toBe(5);
+    expect($summary['total'])->toBe($baselineTotal + 7)
+        ->and($summary['active'])->toBe($baselineActive + 5);
 });
 
 test('roleOptions excludes the Super Admin role', function () {
@@ -97,12 +105,19 @@ test('the list query does not N plus 1 as the number of users grows', function (
 
     User::factory()->count(5)->create()->each(fn (User $user) => $user->assignRole($editorRole));
 
+    // Warm Spatie's permission cache with a throwaway call before measuring: the first
+    // Gate::authorize() in a process cold-loads and caches all permission/role data (a
+    // fixed one-time cost, unrelated to the user count), which would otherwise be
+    // miscounted as part of the list query's own cost and break the comparison below.
+    Livewire::test(Index::class)->get('users');
+
     DB::enableQueryLog();
     Livewire::test(Index::class)->get('users');
     $smallQueryCount = count(DB::getQueryLog());
     DB::flushQueryLog();
 
     User::factory()->count(5)->create()->each(fn (User $user) => $user->assignRole($editorRole));
+    DB::flushQueryLog();
 
     Livewire::test(Index::class)->get('users');
     $largeQueryCount = count(DB::getQueryLog());
@@ -586,6 +601,10 @@ test('a blog editor whose role does not grant users.view is denied server-side, 
 });
 
 test('mounting the component directly is forbidden for a user lacking users.view, even though route middleware never ran', function () {
+    // Livewire::test() dispatches through the full HTTP kernel, so without this
+    // the framework's exception handler converts the AuthorizationException into
+    // a 403 response instead of letting it propagate to toThrow().
+    $this->withoutExceptionHandling();
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -593,6 +612,7 @@ test('mounting the component directly is forbidden for a user lacking users.view
 });
 
 test('authorization for editing is re-checked inside save, not only at mount', function () {
+    $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
@@ -636,6 +656,7 @@ test('submitting the Super Admin role id is refused server-side, and that users 
 });
 
 test('editing a user who holds the Super Admin role is refused, and that user is unchanged', function () {
+    $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $administrator->givePermissionTo('roles.manage-administrators');
@@ -656,6 +677,7 @@ test('editing a user who holds the Super Admin role is refused, and that user is
 // --- Administrator-level guards ---
 
 test('creating a user holding the seeded Administrator role is denied without the stricter permission, and no user is created', function () {
+    $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
     $this->actingAs($administrator);
@@ -698,6 +720,7 @@ test('creating a user holding the seeded Administrator role succeeds with the st
 });
 
 test('promoting a user to Administrator without the stricter permission is denied, and that users role is left unchanged', function () {
+    $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
@@ -737,6 +760,7 @@ test('promoting a user to Administrator with the stricter permission succeeds', 
 });
 
 test('downgrading an Administrator without the stricter permission is denied, and that users role is left unchanged', function () {
+    $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
@@ -776,6 +800,7 @@ test('downgrading an Administrator with the stricter permission succeeds', funct
 });
 
 test('deleting a user holding the Administrator role without the stricter permission is denied, and that user still exists', function () {
+    $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
