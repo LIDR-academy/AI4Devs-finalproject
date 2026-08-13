@@ -27,13 +27,13 @@ graph LR
 
     %% 3. CAPA DE DATOS
     subgraph Capa_Datos ["Persistencia (PostgreSQL)"]
-        VectorStore[(pgvector: runbooks)]:::db
+        VectorStore[(pgvector: runbook_chunks)]:::db
         RelationalStore[(ACID: incident_logs)]:::db
     end
 
-    %% 4. CAPA DE INTELIGENCIA EXTERNA
-    subgraph Capa_AI ["Modelos AI (Cloud)"]
-        LLM[LLM Provider API]:::ext
+    %% 4. CAPA DE INTELIGENCIA (LOCAL POR DEFECTO / CLOUD OPCIONAL)
+    subgraph Capa_AI ["Modelos AI (Ollama local / Cloud opcional)"]
+        LLM[LLM Provider]:::ext
     end
 
     %% --- FLUJO DE INTERACCIONES DIRECTAS Y ORTOGONALES ---
@@ -57,10 +57,10 @@ graph LR
 
 ### **Explicación de Decisiones de Diseño Arquitectónico (Visión Senior):**
 #### Persistencia Híbrida (PostgreSQL + pgvector):
-En lugar de añadir complejidad operativa introduciendo una base de datos vectorial dedicada (como Pinecone o Milvus), se opta por pgvector. Esto permite mantener en una misma transacción ACID los datos relacionales del incidente (incident_logs) y la representación vectorial de la base de conocimiento (runbooks), reduciendo la latencia de red y simplificando el despliegue a un solo contenedor Docker.
+En lugar de añadir complejidad operativa introduciendo una base de datos vectorial dedicada (como Pinecone o Milvus), se opta por pgvector. Esto permite mantener en una misma transacción ACID los datos relacionales del incidente (incident_logs) y la representación vectorial de la base de conocimiento, fragmentada en la tabla `runbook_chunks` (ver [#3-modelo-de-datos.md](#3-modelo-de-datos.md)), reduciendo la latencia de red y simplificando el despliegue a un solo contenedor Docker.
 
 #### Orquestación Desacoplada con Spring AI:
-El backend no se acopla a las SDKs nativas de los proveedores (como OpenAI SDK). Usar la abstracción de ChatClient de Spring AI asegura que si en el futuro se desea migrar el modelo del agente a un LLM local (ej. Llama 3 vía Ollama), el cambio se reduce a una sola línea en el archivo de propiedades (application.properties) sin alterar la lógica de negocio.
+El backend no se acopla a las SDKs nativas de los proveedores (como el SDK de OpenAI). Usar la abstracción de `ChatClient`/`EmbeddingModel` de Spring AI permite que el proveedor activo se seleccione con una sola propiedad (`spring.ai.model.chat` / `spring.ai.model.embedding`), sin alterar la lógica de negocio. Esto ya se materializa en el proyecto: **Ollama local (Llama 3.1 + nomic-embed-text) es el proveedor por defecto** para desarrollo y CI, mientras que **OpenAI queda disponible como perfil opcional** (`SPRING_PROFILES_ACTIVE=...,openai`) pensado para despliegues cloud.
 
 ### Arquitectura RAG Dirigida por Eventos Semánticos:
 Cuando ingresa un log amorfo, el LogParserService utiliza BeanOutputConverter para obligar al LLM a devolver un JSON estricto que mapee con un POJO de Java. Una vez vectorizada la firma del error, se realiza una consulta de distancia coseno (<=>) optimizada mediante un índice HNSW (Hierarchical Navigable Small World) directamente en base de datos.
@@ -123,7 +123,7 @@ Es el núcleo operativo del sistema. Está construido sobre un enfoque corporati
 
 * **Embedding Service (Embed):**
 * **Tecnología:** Spring AI `EmbeddingClient`.
-* **Detalle Técnico:** Convierte el texto estructurado del error en un vector matemático (un array de números flotantes). Su única responsabilidad es procesar los strings mediante llamadas a modelos optimizados de representación semántica (ej: `text-embedding-3-small` de OpenAI). Actúa como la capa de abstracción necesaria para poblar e interrogar al almacén vectorial.
+* **Detalle Técnico:** Convierte el texto estructurado del error en un vector matemático (un array de números flotantes). Su única responsabilidad es procesar los strings mediante llamadas a modelos optimizados de representación semántica — por defecto `nomic-embed-text` vía Ollama local (768 dimensiones), u opcionalmente `text-embedding-3-small` de OpenAI (1536 dimensiones) si el perfil cloud está activo. Actúa como la capa de abstracción necesaria para poblar e interrogar al almacén vectorial. Cambiar de proveedor con datos ya persistidos requiere backfill/re-embedding.
 
 
 * **Remediation Service (Remediation):**
@@ -138,9 +138,9 @@ Es el núcleo operativo del sistema. Está construido sobre un enfoque corporati
 
 Para simplificar el despliegue a un único contenedor y optimizar el presupuesto de desarrollo, se descartan soluciones multi-base de datos en favor de un motor convergente.
 
-* **VectorStore (`runbooks`):**
+* **VectorStore (`runbook_chunks`):**
 * **Tecnología:** **PostgreSQL con la extensión `pgvector**`, integrada mediante la abstracción `PgVectorStore` de Spring AI.
-* **Detalle Técnico:** Almacena la base de conocimientos de SRE. La columna clave de esta tabla es de tipo `VECTOR(1536)`. Para garantizar que las búsquedas se realicen en milisegundos bajo cargas de producción, se implementa un índice de tipo **HNSW** (*Hierarchical Navigable Small World*). Las consultas de similitud se realizan utilizando el operador nativo de distancia coseno (`<=>`), abstrayendo toda la complejidad matemática en una sola consulta SQL generada automáticamente por Spring Data.
+* **Detalle Técnico:** Almacena los fragmentos vectorizados de la base de conocimientos de SRE (la tabla `runbooks` guarda solo la cabecera/metadato; ver [#3-modelo-de-datos.md](#3-modelo-de-datos.md)). La columna clave de esta tabla es de tipo `VECTOR(N)`, donde N depende del proveedor de embeddings activo (768 con Ollama/`nomic-embed-text` por defecto, 1536 con OpenAI/`text-embedding-3-small` si el perfil cloud está activo). Para garantizar que las búsquedas se realicen en milisegundos bajo cargas de producción, se implementa un índice de tipo **HNSW** (*Hierarchical Navigable Small World*). Las consultas de similitud se realizan utilizando el operador nativo de distancia coseno (`<=>`), abstrayendo toda la complejidad matemática en una sola consulta SQL generada automáticamente por Spring Data.
 
 
 * **RelationalStore (`incident_logs`):**
@@ -151,11 +151,11 @@ Para simplificar el despliegue a un único contenedor y optimizar el presupuesto
 
 ---
 
-### 4. Capa de Inteligencia Externa (Modelos Cloud)
+### 4. Capa de Inteligencia (Local por Defecto / Cloud Opcional)
 
-* **LLM Provider API:**
-* **Tecnología:** APIs REST de **OpenAI** (Modelos `gpt-4o` / `text-embedding-3-small`) o **Anthropic Claude**.
-* **Detalle Técnico:** Infraestructura externa de cómputo masivo proveída bajo modalidad *Serverless*. El backend de Spring AI interactúa con ellos de forma segura y cifrada a través de HTTPS utilizando variables de entorno de sistema (`SPRING_AI_OPENAI_API_KEY`) para la inyección dinámica de secretos, protegiendo las credenciales contra filtraciones en los repositorios de código.
+* **LLM Provider:**
+* **Tecnología:** **Ollama** local (`llama3.1` + `nomic-embed-text`) como proveedor por defecto para desarrollo y CI, corriendo en su propio contenedor Docker sin requerir credenciales. Como perfil opcional, APIs REST de **OpenAI** (Modelos `gpt-4o` / `text-embedding-3-small`) u **Anthropic Claude**, pensadas para despliegues cloud (ver sección 2.4).
+* **Detalle Técnico:** El backend de Spring AI selecciona el proveedor activo mediante una propiedad de configuración (`spring.ai.model.chat` / `spring.ai.model.embedding`) sin cambiar código. Cuando el perfil cloud está activo, interactúa con el proveedor externo de forma segura y cifrada a través de HTTPS utilizando variables de entorno de sistema (`SPRING_AI_OPENAI_API_KEY`) para la inyección dinámica de secretos, protegiendo las credenciales contra filtraciones en los repositorios de código.
 
 ## **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 ### Estructura del Backend

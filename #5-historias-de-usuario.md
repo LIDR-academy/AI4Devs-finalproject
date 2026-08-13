@@ -78,7 +78,7 @@ Escenario: Rechazo de ingesta por datos incompletos
 ```gherkin
 Escenario: Recuperación exitosa de fragmentos de Runbooks por similitud semántica
 
-  Dado que la base de datos contiene chunks indexados con vectores de dimensión 1536
+  Dado que la base de datos contiene chunks indexados con vectores de la dimensión del modelo de embeddings activo (768 por defecto con Ollama/`nomic-embed-text`; 1536 si el perfil `openai` está activo)
 
   Cuando el servicio interno ejecuta la búsqueda por coseno usando el embedding del log del incidente
 
@@ -90,7 +90,7 @@ Escenario: Recuperación exitosa de fragmentos de Runbooks por similitud semánt
 
 ### Especificación Técnica de Implementación
 
-* **Capa de Servicio (Java):** Cliente HTTP (utilizando `RestClient` de Spring Boot 3) que envía el `rawLogSnapshot` al modelo de embeddings de OpenAI (`text-embedding-3-small` o similar, configurando dimensiones fijas de 1536).
+* **Capa de Servicio (Java):** `EmbeddingModel` de Spring AI, configurado por defecto contra Ollama local (`nomic-embed-text`, dimensión 768) y opcionalmente contra OpenAI (`text-embedding-3-small`, dimensión 1536) vía el perfil `openai`. Cambiar de proveedor luego de tener datos persistidos requiere backfill/re-embedding.
 * **Capa de Datos (SQL Nativo en JPA):** Uso del operador de distancia de coseno `<=>` provisto por la extensión `pgvector` de PostgreSQL.
 * **Consulta SQL de Referencia:**
 ```sql

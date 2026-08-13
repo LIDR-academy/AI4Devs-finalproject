@@ -147,7 +147,7 @@ Segmentos vectorizados de los runbooks. Utiliza el tipo nativo `vector` provisto
 | `id` | UUID | PRIMARY KEY | Identificador exclusivo del fragmento. |
 | `runbook_id` | UUID | FOREIGN KEY ➔ `runbooks(id)` ON DELETE CASCADE | Relación de pertenencia con el Runbook padre. |
 | `content` | TEXT | NOT NULL | Texto crudo del fragmento (párrafos aislados de la solución). |
-| `embedding` | VECTOR(1536) | NOT NULL | Vector embebido. Dimensión fija 1536 (Estándar OpenAI). |
+| `embedding` | VECTOR(N) | NOT NULL | Vector embebido. Dimensión N según el proveedor de embeddings activo: 768 con Ollama/`nomic-embed-text` (default) o 1536 con OpenAI/`text-embedding-3-small` (perfil opcional). |
 | `created_at` | TIMESTAMP | DEFAULT NOW() | Fecha de procesamiento vectorial. |
 
 ---

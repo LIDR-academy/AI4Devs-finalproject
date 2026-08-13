@@ -38,3 +38,13 @@ Criterios de Aceptación Técnicos:
 * Crear clases de transferencia de datos de entrada (IncidentRequest) y salida (IncidentResponse) inmutables.
 
 * Garantizar mediante pruebas unitarias que el controlador web nunca interactúe o exponga la entidad JPA pura de base de datos.
+
+
+**Ticket 5**: LOG-CORE-INFRA-01: Proveedor de IA Local por Defecto (Ollama) con OpenAI como Perfil Opcional
+Descripción: Hardening de infraestructura sobre la integración de IA existente: evitar que el desarrollo local y el CI dependan de una API key real de un proveedor cloud, introduciendo Ollama como proveedor de IA local por defecto (chat + embeddings) y preservando OpenAI como perfil opcional para despliegues cloud.
+
+Criterios de Aceptación Técnicos:
+
+* Agregar el starter de Ollama de Spring AI y separar la configuración de IA en perfiles Spring Boot ortogonales al entorno (`ollama` por defecto, `openai` opcional).
+
+* `docker-compose.yml` levanta un servicio `ollama` local; ningún flujo de desarrollo local ni de CI debe requerir una API key de proveedor cloud.

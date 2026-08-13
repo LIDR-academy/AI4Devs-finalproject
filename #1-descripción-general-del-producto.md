@@ -30,7 +30,7 @@ Para poner en marcha el proyecto completo de manera local de extremo a extremo (
 **Prerrequisitos:**
 
 * Tener instalado **Docker** y **Docker Compose** en tu sistema.
-* Contar con una API Key válida del proveedor de modelo de lenguaje utilizado (configurada en el archivo de entorno).
+* Por defecto no se requiere ninguna API Key: el proyecto usa **Ollama** local (modelos de chat y embeddings corriendo en su propio contenedor) como proveedor de IA por defecto. Solo si se opta por un proveedor cloud (ej. OpenAI) hace falta una API Key válida, configurada en el archivo de entorno.
 
 **Paso 1: Configuración del entorno**
 En la raíz del proyecto, duplica el archivo de plantilla de configuración y renómbralo a `.env`:
@@ -40,9 +40,10 @@ cp .env.example .env
 
 ```
 
-Abre el archivo `.env` y define tu clave de acceso de IA:
+Abre el archivo `.env`. Por defecto no necesitas definir nada para el proveedor de IA (Ollama local no requiere clave); si en cambio querés usar un proveedor cloud como OpenAI, definí su clave de acceso:
 
 ```env
+# Opcional — solo si se activa el perfil de proveedor cloud (ej. OpenAI)
 AI_PROVIDER_API_KEY=tu_api_key_aqui
 
 ```

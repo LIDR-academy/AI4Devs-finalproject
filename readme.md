@@ -128,7 +128,88 @@
 
 **Pull Request 1**
 
+## Summary
+- Añade el esquema `runbook_chunks` (pgvector, columna `vector(768)`, índice HNSW `vector_cosine_ops`) vía migración Flyway, sin usar el `VectorStore`/`PgVectorStore` autoconfigurado de Spring AI (Opción B, decisión documentada en el ledger de orquestación).
+- Implementa la búsqueda semántica con query nativa JPA (operador `<=>`) y un fallback automático a Full-Text (`tsvector`/`ts_rank`) cuando falla la llamada al proveedor de embeddings, garantizando que la búsqueda nunca retorne vacío por esa causa.
+- Parametriza el Top K de resultados vía `logsentinel.rag.top-k` (default 3), verificado como genuinamente configurable con un valor forzado distinto en los tests de integración.
+- Alinea documentación (`tickets.md`, user story US2, `agents.md`, skills de IA) para reflejar el modelo de tabla única y la arquitectura elegida.
+
+## Changes
+- `V3__create_runbook_chunks_table.sql`: extensión `vector`, tabla `runbook_chunks`, índice HNSW.
+- `V4__add_fulltext_search_to_runbook_chunks.sql`: columna `content_tsv tsvector` generada + índice GIN para el fallback Full-Text.
+- `RunbookChunk` (dominio), `RunbookSearchPort` (puerto de salida).
+- `PgVectorRunbookSearchAdapter` / `FullTextRunbookSearchAdapter`, `RunbookChunkJpaEntity`/`RunbookChunkJpaRepository` con las queries nativas de búsqueda por coseno y por texto completo.
+- `VectorType`: `UserType` de Hibernate para mapear `vector(N)` con `pgvector-java`.
+- Suite de tests: unitarios (Mockito) para ambos adaptadores + integración real con Testcontainers (`pgvector/pgvector:pg16`) cubriendo esquema, ranking por coseno, activación del fallback y Top K parametrizable.
+
+## Test plan
+- [x] `mvn test` (suite completa backend, incl. Testcontainers) — BUILD SUCCESS
+- [x] Cobertura JaCoCo ≥ 95% (gate `LOG-CORE-BE-00`)
+- [x] `verify-clean-arch` (checks 1, 2, 4, 5 aplicables al alcance) — sin violaciones
+- [x] Auditoría anti-H2 en tests de integración (0 referencias — todo Testcontainers real)
+
+🤖 Generado con [Claude Code](https://claude.com/claude-code)
+
 **Pull Request 2**
+## Resumen
+
+Implementa US3 completa (Emisión en Streaming del Diagnóstico de Causa Raíz):
+
+- **LOG-US3-BE-01**: endpoint `GET /api/v1/incidents/{id}/diagnostic/stream` vía `SseEmitter`, orquestando `ChatClient` con `stream=true` (provider-agnostic ollama/openai).
+- **LOG-US3-DB-02**: persistencia del diagnóstico consolidado en `incident_diagnostics` (1:1 con `incidents`) al cerrar el stream, con test de integración Testcontainers.
+- **LOG-US3-FE-03**: terminal interactiva en React que consume el stream vía `EventSource`, renderiza Markdown sanitizado (`marked` + `DOMPurify`), con reconexión por backoff exponencial y auto-scroll inteligente.
+
+## Criterios de aceptación (Gherkin)
+
+- [x] Conexión GET a `/incidents/{id}/diagnostic/stream` con `Content-Type: text/event-stream`
+- [x] Persistencia del texto completo del diagnóstico en `incident_diagnostics` al finalizar la transmisión
+- [x] Consumo interactivo desde el frontend vía `EventSource`, actualizando el estado progresivamente
+
+## Deuda técnica registrada (no bloqueante)
+
+`DEBT-001` (`docs/deuda-tecnica.md`): el backend no emite una señal SSE explícita de cierre (`event: complete`/`error`); el frontend resuelve esto con una heurística (chunk recibido antes de `onerror` ⇒ completado, cero chunks ⇒ falla real con backoff). Se sugiere un ticket futuro para agregar la señal de protocolo explícita.
+
+## Validación
+
+- Backend: `mvn test` → 93 tests, 0 fallos
+- Frontend: `npm run build` OK, `npm test -- --run` → 49 tests, 0 fallos
+- `verify-clean-arch`: checks 1–8 sobre el código de US3 → OK
+
+## Test plan
+
+- [x] Suite backend (`mvn test`)
+- [x] Build + suite frontend (`npm run build && npm test -- --run`)
+- [x] Checks de arquitectura/DevSecOps (`verify-clean-arch`)
+
 
 **Pull Request 3**
 
+## Resumen
+
+Implementa la US4 completa (ejecución controlada y auditoría de scripts de remediación sugeridos por la IA), más dos refactors de contrato aguas arriba (US3) detectados como drift durante la orquestación.
+
+- Sandbox de ejecución con allowlist de comandos y aislamiento no-root (`ProcessBuilder` + watchdog).
+- Endpoint `POST /incidents/{id}/remediations`: crea el registro de auditoría en `EXECUTING` (transacción A, commit inmediato) y lo cierra en `SUCCESS`/`FAILED` (transacción B) según el código de salida, actualizando el incidente a `RESOLVED` si es 0.
+- Captura diferenciada de `stdout_log`/`stderr_log` en columnas independientes (reemplaza el diseño original de un único `execution_log`).
+- Matriz de 5 vectores de inyección Bash (`|`, `&&`, `$(...)`, backticks, `>`) cubierta por tests dedicados.
+- `GET /incidents/{id}`: endpoint de detalle consolidado (incluye `analyses[].suggestedScript`), requerido para que el panel de remediación tenga de dónde leer el script sugerido.
+- Panel de autorización en frontend con modal de doble confirmación y terminal de salida stdout/stderr, montado en el dashboard del incidente.
+- E2E Playwright del happy-path completo (siembra de fixture → ejecución → verificación de auditoría en base).
+- Persistencia estructurada del script sugerido al momento de generar el diagnóstico (US3), en vez de parsearlo en el momento de ejecutar.
+
+## Tickets
+
+`LOG-US4-BE-01`, `LOG-US4-BE-02`, `LOG-US4-TEST-03`, `LOG-US4-BE-02B`, `LOG-US4-FE-03`, `LOG-US4-BE-03`, `LOG-US4-FE-04`, `LOG-US4-E2E-04`, más el ticket de soporte `LOG-US3-DB-02B`.
+
+## Validación
+
+- [x] Backend: 170/170 tests (`mvn test`)
+- [x] Frontend: build OK + 109/109 tests
+- [x] `verify-clean-arch`: 13/13 checks PASS (arquitectura hexagonal, sin Lombok, DTOs inmutables, sandbox validado, `SseEmitter.complete()` en `finally`, sin secrets, Dockerfile no-root, CI con `permissions:`/Actions pineadas, contrato OpenAPI sin drift sin resolver)
+- [x] E2E Playwright happy-path (headed + automatizado)
+
+## Deuda técnica registrada (no bloqueante)
+
+`DEBT-002` (firma de auditoría del autorizador), `DEBT-004` (gaps `tokensUsed`/`updatedAt`), `DEBT-005` (arranque en frío de Ollama dockerizado) — ver `docs/deuda-tecnica.md`.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
