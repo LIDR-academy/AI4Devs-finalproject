@@ -1,0 +1,218 @@
+name: CI/CD
+
+# Disparo manual unicamente (ver docs/DEPLOYMENT-STRATEGY.md): proyecto
+# academico (TFM) sin evolucion continua prevista mas alla de correcciones
+# puntuales, sin flujo constante de nuevas user stories que justifique
+# desplegar en cada push/PR.
+on:
+  workflow_dispatch: {}
+
+# Serializa ejecuciones de deploy: sin esto, dos "Run workflow" simultaneos
+# podrian aplicar Terraform a la vez sobre el mismo estado. Sustituye a una
+# tabla DynamoDB de locking aparte para este caso de uso (un unico pipeline
+# manual, sin necesidad de coordinar con applies concurrentes desde fuera).
+concurrency:
+  group: runmarket-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: runmarket
+          POSTGRES_PASSWORD: runmarket
+          POSTGRES_DB: runmarket_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U runmarket -d runmarket_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://runmarket:runmarket@localhost:5432/runmarket_test
+      CORS_ORIGIN: http://localhost:3000
+      ASSETS_BASE_URL: http://localhost:4000
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `npm ci` no genera el cliente de Prisma por si solo, y `tsc` necesita
+      # sus tipos (Category, Prisma.ProductWhereInput...) para compilar - el
+      # mismo problema de orden que ya se resolvio en backend/Dockerfile
+      # (generate antes de build). `migrate deploy` mas abajo aplica SQL
+      # contra la BD, pero no genera el cliente por si solo.
+      - name: Generate Prisma Client
+        run: npx prisma generate --schema=backend/prisma/schema.prisma
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Apply Prisma migrations
+        run: npx prisma migrate deploy --schema=backend/prisma/schema.prisma
+
+      - name: Build
+        run: npm run build
+
+      - name: Backend tests
+        run: npm test --workspace=backend
+
+      - name: Frontend tests
+        run: npm test --workspace=frontend
+
+  deploy:
+    name: deploy
+    needs: test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      AWS_REGION: eu-west-1
+      GHCR_BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/runmarket-backend
+      GHCR_FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/runmarket-frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Autenticacion AWS con credenciales estaticas de un usuario IAM
+      # dedicado (creado a mano una vez, fuera de Terraform - ver
+      # docs/DEPLOYMENT-RUNBOOK.md). Se prefirio a OIDC por simplicidad: para
+      # un proyecto de un solo desarrollador y un solo repositorio, el coste
+      # de mantener el proveedor OIDC + rol + trust policy no compensaba
+      # frente al riesgo, ya acotado, de una access key con permisos
+      # limitados guardada como GitHub Secret cifrado.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Las imagenes se construyen aqui, en el runner - nunca en la EC2 (ver
+      # docs/DEPLOYMENT-STRATEGY.md). NEXT_PUBLIC_API_URL/ASSETS_BASE_URL usan
+      # los valores por defecto del Dockerfile del frontend (rutas relativas
+      # /api, /images servidas por nginx en el mismo origen), sin necesitar
+      # conocer la IP publica en tiempo de build.
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.GHCR_BACKEND_IMAGE }}:latest
+            ${{ env.GHCR_BACKEND_IMAGE }}:${{ github.sha }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.GHCR_FRONTEND_IMAGE }}:latest
+            ${{ env.GHCR_FRONTEND_IMAGE }}:${{ github.sha }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~> 1.10'
+
+      - name: Terraform init
+        working-directory: infra
+        run: terraform init -input=false
+
+      # Idempotente: si la EC2 ya existe y no hay cambios de configuracion,
+      # no la recrea (ver lifecycle.ignore_changes en infra/ec2.tf).
+      - name: Terraform apply
+        id: tf
+        working-directory: infra
+        env:
+          TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
+          TF_VAR_github_repository_owner: ${{ github.repository_owner }}
+        run: |
+          terraform apply -auto-approve -input=false
+          echo "ip=$(terraform output -raw instance_public_ip)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy via SSH (redeploy.sh)
+        env:
+          EC2_HOST: ${{ steps.tf.outputs.ip }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          SSH="ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ec2-user@$EC2_HOST"
+
+          # sshd esta disponible mucho antes de que user_data.sh.tpl termine
+          # (dnf update + Docker + pull de imagenes en un t3.micro tarda
+          # varios minutos en el primer arranque) - sin esto, redeploy.sh
+          # todavia no existe y el step falla con "No such file or directory".
+          # En arranques posteriores el marcador ya existe y este bucle pasa
+          # a la primera.
+          echo "Esperando a que termine el primer arranque de la instancia..."
+          for i in $(seq 1 60); do
+            if $SSH 'test -f /opt/runmarket/.user-data-complete'; then
+              echo "Primer arranque completado"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "user_data no completo tras 10 minutos - revisar /var/log/user-data.log en la instancia"
+              exit 1
+            fi
+            sleep 10
+          done
+
+          $SSH 'bash /opt/runmarket/redeploy.sh'
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+      - name: Health check
+        env:
+          EC2_HOST: ${{ steps.tf.outputs.ip }}
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "http://$EC2_HOST/api/health"; then
+              echo "Health check OK"
+              exit 0
+            fi
+            echo "Esperando a que la app responda... ($i/30)"
+            sleep 5
+          done
+          echo "Health check fallido tras 30 intentos"
+          exit 1

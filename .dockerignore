@@ -1,0 +1,49 @@
+# Contexto de build = raíz del monorepo (workspaces npm), compartido por
+# backend/Dockerfile y frontend/Dockerfile. Solo deben llegar al daemon los
+# manifests de cada workspace y el código fuente que cada Dockerfile copia
+# explícitamente — todo lo demás se excluye para acelerar el build y evitar
+# que secretos o artefactos locales entren en el contexto.
+
+# Control de versiones, IDE, sistema
+.git/
+.github/
+.claude/
+.idea/
+.vscode/
+.DS_Store
+
+# Documentación y ficheros del proyecto no necesarios para construir imágenes
+docs/
+readme.md
+prompts*.md
+*.log
+
+# Dependencias y artefactos de build — se regeneran dentro del propio build
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.next/
+**/.next/
+coverage/
+**/coverage/
+*.tsbuildinfo
+backend/prisma/*.js
+
+# Infraestructura y estado de Terraform — nada de esto entra en las imágenes
+infra/
+
+# e2e: los Dockerfiles solo necesitan su package.json (resolución de
+# workspaces npm), nunca las specs de Playwright ni sus artefactos
+e2e/*
+!e2e/package.json
+
+# Secretos — nunca deben llegar al contexto de build
+.env
+.env.*
+!.env.example
+
+# Config/tests de la raíz no usados por los Dockerfiles
+/tests/
+/jest.config.js
+/tsconfig.json

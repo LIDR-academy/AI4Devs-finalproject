@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Validates that the commit message follows Conventional Commits.
+# Activate with: git config core.hooksPath .githooks
+
+MSG_FILE="$1"
+MSG=$(head -1 "$MSG_FILE")
+
+# Allow merge commits and fixup!/squash! commits
+if echo "$MSG" | grep -qE "^(Merge|Revert|fixup!|squash!)"; then
+  exit 0
+fi
+
+PATTERN="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\(.+\))!?: .{1,}"
+
+if ! echo "$MSG" | grep -qE "$PATTERN"; then
+  echo ""
+  echo "  Commit message does not follow Conventional Commits."
+  echo ""
+  echo "  Expected:  type(scope): short description"
+  echo "  Examples:"
+  echo "    feat(catalog): add surface-type filter"
+  echo "    fix(cart): prevent negative quantity on update"
+  echo "    docs(sdd): update workflow phases"
+  echo ""
+  echo "  Valid types: feat fix docs style refactor test chore perf ci build"
+  echo "  Your message: $MSG"
+  echo ""
+  exit 1
+fi
+
+# Warn if subject line exceeds 72 characters
+LENGTH=${#MSG}
+if [ "$LENGTH" -gt 72 ]; then
+  echo ""
+  echo "  Warning: subject line is $LENGTH characters (recommended max: 72)."
+  echo "  Consider moving details to the commit body."
+  echo ""
+fi
+
+exit 0
