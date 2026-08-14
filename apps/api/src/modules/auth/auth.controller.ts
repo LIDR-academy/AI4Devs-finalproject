@@ -21,6 +21,11 @@ import type { AuthenticatedUser } from '../../common/decorators/current-user.dec
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import {
+  isMobileClient,
+  resolveRefreshToken,
+} from './utils/mobile-client.util';
 
 @Controller('auth')
 export class AuthController {
@@ -32,22 +37,28 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 900_000 } })
   async login(
     @Body() dto: LoginDto,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
     const { refreshToken, ...result } = await this.authService.login(dto);
     this.setRefreshCookie(response, refreshToken);
+    if (isMobileClient(request.headers as Record<string, unknown>)) {
+      return { ...result, refreshToken };
+    }
     return result;
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
+    @Body() dto: RefreshTokenDto = {},
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = request.cookies?.[REFRESH_COOKIE_NAME] as
+    const cookieToken = request.cookies?.[REFRESH_COOKIE_NAME] as
       | string
       | undefined;
+    const refreshToken = resolveRefreshToken(cookieToken, dto.refreshToken);
 
     if (!refreshToken) {
       throw new UnauthorizedException('Unauthorized');
@@ -56,6 +67,12 @@ export class AuthController {
     const { refreshToken: rotatedRefreshToken, ...result } =
       await this.authService.refresh(refreshToken);
     this.setRefreshCookie(response, rotatedRefreshToken);
+    if (
+      dto.refreshToken?.trim() ||
+      isMobileClient(request.headers as Record<string, unknown>)
+    ) {
+      return { ...result, refreshToken: rotatedRefreshToken };
+    }
     return result;
   }
 

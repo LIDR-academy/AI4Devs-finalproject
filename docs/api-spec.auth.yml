@@ -26,6 +26,14 @@ paths:
                   format: email
                 password:
                   type: string
+      parameters:
+        - in: header
+          name: X-MecaTrack-Client
+          required: false
+          schema:
+            type: string
+            enum: [mobile]
+          description: Native clients send `mobile` to receive `refreshToken` in the JSON body (web keeps the httpOnly cookie only).
       responses:
         '200':
           description: Successful login
@@ -40,12 +48,13 @@ paths:
                 properties:
                   accessToken:
                     type: string
+                  refreshToken:
+                    type: string
+                    description: Present only when X-MecaTrack-Client is `mobile`
                   user:
                     $ref: '#/components/schemas/UserPayload'
         '401':
-          description: Invalid credentials
-        '403':
-          description: Inactive account
+          description: Invalid credentials (including inactive accounts; generic message)
         '429':
           description: Rate limit exceeded
 
@@ -53,6 +62,23 @@ paths:
     post:
       summary: Refresh access token
       tags: [Auth]
+      parameters:
+        - in: header
+          name: X-MecaTrack-Client
+          required: false
+          schema:
+            type: string
+            enum: [mobile]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: Native clients send the refresh token in the body; the web client uses the httpOnly cookie.
       responses:
         '200':
           description: New access token
@@ -63,8 +89,11 @@ paths:
                 properties:
                   accessToken:
                     type: string
+                  refreshToken:
+                    type: string
+                    description: Rotated refresh token; present when the request used a body token or the mobile client header
         '401':
-          description: Missing or invalid refresh cookie
+          description: Missing or invalid refresh cookie or body token
 
   /auth/logout:
     post:

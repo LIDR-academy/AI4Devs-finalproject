@@ -14,8 +14,10 @@ export class MeResponseDto extends UserPayloadDto {
 export class AuthResponseDto {
   accessToken!: string;
   user!: UserPayloadDto;
+  refreshToken?: string;
 }
 
 export class RefreshResponseDto {
   accessToken!: string;
+  refreshToken?: string;
 }
