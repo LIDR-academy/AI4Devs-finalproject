@@ -11,7 +11,9 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { WorkOrderIntakeMode } from './constants/intake-mode';
+import { ACTIVE_WORK_ORDER_STATUSES } from './constants/work-order-status';
 import { WorkOrdersService } from './work-orders.service';
+import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 
 describe('WorkOrdersService', () => {
   let workOrdersService: WorkOrdersService;
@@ -32,6 +34,8 @@ describe('WorkOrdersService', () => {
     };
     workOrder: {
       findFirst: jest.Mock;
+      findMany: jest.Mock;
+      count: jest.Mock;
       findUnique: jest.Mock;
       create: jest.Mock;
       update: jest.Mock;
@@ -115,6 +119,8 @@ describe('WorkOrdersService', () => {
       },
       workOrder: {
         findFirst: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
         findUnique: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
@@ -204,6 +210,159 @@ describe('WorkOrdersService', () => {
       await expect(
         workOrdersService.findActiveByVehicle(vehicleId),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('findInProgress', () => {
+    const adminUser: AuthenticatedUser = {
+      userId: createdById,
+      email: 'admin@taller.com',
+      role: UserRole.ADMIN,
+    };
+    const mechanicUser: AuthenticatedUser = {
+      userId: mechanicId,
+      email: 'mechanic@taller.com',
+      role: UserRole.MECHANIC,
+    };
+
+    const inProgressRow = {
+      id: workOrderId,
+      status: WorkOrderStatus.EN_PROCESO,
+      entryReason: 'Oil change',
+      checkedInAt: new Date('2026-06-19T10:00:00.000Z'),
+      updatedAt: new Date('2026-06-19T12:00:00.000Z'),
+      broughtByName: null,
+      vehicle: {
+        id: vehicleId,
+        licensePlate: 'ABC123',
+        brand: 'Toyota',
+        model: 'Corolla',
+      },
+      ownerClient: {
+        fullName: 'Juan Pérez',
+        nationalId: '1-2345-6789',
+      },
+      assignedMechanic: {
+        id: mechanicId,
+        fullName: 'Workshop Mechanic',
+        role: UserRole.MECHANIC,
+      },
+    };
+
+    it('lists all active work orders for admin without assignee filter', async () => {
+      prisma.workOrder.findMany.mockResolvedValue([inProgressRow]);
+      prisma.workOrder.count.mockResolvedValue(1);
+
+      const result = await workOrdersService.findInProgress(adminUser, {
+        limit: 5,
+        offset: 0,
+      });
+
+      expect(prisma.workOrder.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: { in: ACTIVE_WORK_ORDER_STATUSES } },
+          skip: 0,
+          take: 5,
+          orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+        }),
+      );
+      expect(result.total).toBe(1);
+      expect(result.limit).toBe(5);
+      expect(result.offset).toBe(0);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]).toMatchObject({
+        id: workOrderId,
+        status: WorkOrderStatus.EN_PROCESO,
+        intakeMode: WorkOrderIntakeMode.OWNER,
+        owner: {
+          fullName: 'Juan Pérez',
+          nationalId: '1-2345-6789',
+        },
+        vehicle: {
+          id: vehicleId,
+          licensePlate: 'ABC123',
+        },
+        assignedMechanic: {
+          id: mechanicId,
+          fullName: 'Workshop Mechanic',
+        },
+      });
+    });
+
+    it('filters by assignedMechanicId for mechanic role', async () => {
+      prisma.workOrder.findMany.mockResolvedValue([inProgressRow]);
+      prisma.workOrder.count.mockResolvedValue(1);
+
+      await workOrdersService.findInProgress(mechanicUser, {});
+
+      expect(prisma.workOrder.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            status: { in: ACTIVE_WORK_ORDER_STATUSES },
+            assignedMechanicId: mechanicId,
+          },
+          skip: 0,
+          take: 20,
+        }),
+      );
+      expect(prisma.workOrder.count).toHaveBeenCalledWith({
+        where: {
+          status: { in: ACTIVE_WORK_ORDER_STATUSES },
+          assignedMechanicId: mechanicId,
+        },
+      });
+    });
+
+    it('returns empty list with echoed pagination defaults', async () => {
+      prisma.workOrder.findMany.mockResolvedValue([]);
+      prisma.workOrder.count.mockResolvedValue(0);
+
+      const result = await workOrdersService.findInProgress(adminUser, {});
+
+      expect(result).toEqual({
+        items: [],
+        total: 0,
+        limit: 20,
+        offset: 0,
+      });
+    });
+
+    it('uses offset/limit for skip/take and total from count', async () => {
+      prisma.workOrder.findMany.mockResolvedValue([inProgressRow]);
+      prisma.workOrder.count.mockResolvedValue(12);
+
+      const result = await workOrdersService.findInProgress(adminUser, {
+        limit: 5,
+        offset: 10,
+      });
+
+      expect(prisma.workOrder.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 10, take: 5 }),
+      );
+      expect(result.total).toBe(12);
+      expect(result.items).toHaveLength(1);
+    });
+
+    it('maps null owner and broughtBy as THIRD_PARTY intake', async () => {
+      prisma.workOrder.findMany.mockResolvedValue([
+        {
+          ...inProgressRow,
+          ownerClient: null,
+          broughtByName: 'External Tech',
+          assignedMechanic: null,
+        },
+      ]);
+      prisma.workOrder.count.mockResolvedValue(1);
+
+      const result = await workOrdersService.findInProgress(adminUser, {
+        limit: 5,
+        offset: 0,
+      });
+
+      expect(result.items[0].owner).toBeNull();
+      expect(result.items[0].broughtByName).toBe('External Tech');
+      expect(result.items[0].intakeMode).toBe(WorkOrderIntakeMode.THIRD_PARTY);
+      expect(result.items[0].assignedMechanic).toBeNull();
     });
   });
 

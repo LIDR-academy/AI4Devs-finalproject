@@ -35,7 +35,7 @@ paths:
       summary: Get active work order for vehicle
       description: |
         Returns the active work order for a vehicle, if any.
-        Active statuses: EN_PROCESO, LISTA_PARA_ENTREGA.
+        Active statuses: EN_PROCESO, LISTA_PARA_ENTREGA, OWNER_CONTACTED.
       tags: [Work Orders]
       security:
         - bearerAuth: []
@@ -59,6 +59,47 @@ paths:
           description: Unauthorized
         '404':
           description: Vehicle not found
+
+  /work-orders/in-progress:
+    get:
+      summary: List in-progress (active) work orders
+      description: |
+        Paginated list of active work orders for dashboards (US-D10).
+        Active statuses: EN_PROCESO, LISTA_PARA_ENTREGA, OWNER_CONTACTED.
+        ADMIN sees all; MECHANIC sees only work orders assigned to them.
+        Ordered by updatedAt desc, then id desc.
+      tags: [Work Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated active work orders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InProgressWorkOrdersResponse'
+        '400':
+          description: Invalid limit or offset
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
 
   /work-orders:
     post:
@@ -358,6 +399,89 @@ components:
         - id
         - status
         - checkedInAt
+
+    InProgressWorkOrdersResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InProgressWorkOrderItem'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+      required:
+        - items
+        - total
+        - limit
+        - offset
+
+    InProgressWorkOrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [EN_PROCESO, LISTA_PARA_ENTREGA, OWNER_CONTACTED]
+        entryReason:
+          type: string
+        checkedInAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        vehicle:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            licensePlate:
+              type: string
+            brand:
+              type: string
+            model:
+              type: string
+          required:
+            - id
+            - licensePlate
+            - brand
+            - model
+        owner:
+          nullable: true
+          type: object
+          properties:
+            fullName:
+              type: string
+            nationalId:
+              type: string
+        broughtByName:
+          type: string
+          nullable: true
+        intakeMode:
+          type: string
+          enum: [OWNER, THIRD_PARTY]
+        assignedMechanic:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/MechanicSummary'
+      required:
+        - id
+        - status
+        - entryReason
+        - checkedInAt
+        - updatedAt
+        - vehicle
+        - owner
+        - broughtByName
+        - intakeMode
+        - assignedMechanic
 
     CreateWorkOrderRequest:
       type: object

@@ -2,6 +2,7 @@ import { apiClient } from '@/shared/lib/apiClient';
 import type {
   ActiveWorkOrderResponse,
   CreateWorkOrderRequest,
+  InProgressWorkOrdersResponse,
   LinkWorkOrderOwnerResponse,
   MechanicSummary,
   TaskTechnicalNotesResponse,
@@ -23,6 +24,23 @@ export const workOrdersApi = {
   getActiveByVehicle(vehicleId: string): Promise<ActiveWorkOrderResponse> {
     return apiClient<ActiveWorkOrderResponse>(
       `/work-orders/active?vehicleId=${encodeURIComponent(vehicleId)}`,
+    );
+  },
+
+  getInProgress(params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<InProgressWorkOrdersResponse> {
+    const search = new URLSearchParams();
+    if (params?.limit !== undefined) {
+      search.set('limit', String(params.limit));
+    }
+    if (params?.offset !== undefined) {
+      search.set('offset', String(params.offset));
+    }
+    const query = search.toString();
+    return apiClient<InProgressWorkOrdersResponse>(
+      `/work-orders/in-progress${query ? `?${query}` : ''}`,
     );
   },
 

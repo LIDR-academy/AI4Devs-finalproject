@@ -216,6 +216,68 @@ describe('WorkOrdersController (e2e)', () => {
       .expect(400);
   });
 
+  it('GET /api/work-orders/in-progress returns paginated shape for admin', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/work-orders/in-progress')
+      .query({ limit: 5, offset: 0 })
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        items: expect.any(Array),
+        total: expect.any(Number),
+        limit: 5,
+        offset: 0,
+      }),
+    );
+  });
+
+  it('GET /api/work-orders/in-progress as mechanic returns only assigned work orders', async () => {
+    const meResponse = await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${mechanicAccessToken}`)
+      .expect(200);
+
+    const loggedInMechanicId = meResponse.body.id as string;
+
+    const vehicleId = await createVehicleForWorkOrder(
+      app,
+      adminAccessToken,
+      juanClientId,
+    );
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/work-orders')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        vehicleId,
+        entryReason: 'In-progress list visibility check',
+        assignedMechanicId: loggedInMechanicId,
+        initialTasks: [{ description: 'Inspect' }],
+      })
+      .expect(201);
+
+    const workOrderId = createResponse.body.id as string;
+
+    const mechanicList = await request(app.getHttpServer())
+      .get('/api/work-orders/in-progress')
+      .set('Authorization', `Bearer ${mechanicAccessToken}`)
+      .expect(200);
+
+    expect(
+      mechanicList.body.items.some(
+        (item: { id: string }) => item.id === workOrderId,
+      ),
+    ).toBe(true);
+  });
+
+  it('GET /api/work-orders/in-progress without token returns 401', async () => {
+    await request(app.getHttpServer())
+      .get('/api/work-orders/in-progress')
+      .expect(401);
+  });
+
   it('POST /api/work-orders valid as ADMIN returns 201 with tasks', async () => {
     const vehicleId = await createVehicleForWorkOrder(
       app,

@@ -18,6 +18,8 @@ import {
 } from './constants/work-order-status';
 import { ActiveWorkOrderResponseDto } from './dto/active-work-order-response.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
+import { InProgressWorkOrdersQueryDto } from './dto/in-progress-work-orders-query.dto';
+import { InProgressWorkOrdersResponseDto } from './dto/in-progress-work-orders-response.dto';
 import { LinkWorkOrderOwnerDto } from './dto/link-work-order-owner.dto';
 import { LinkWorkOrderOwnerResponseDto } from './dto/link-work-order-owner-response.dto';
 import { MechanicSummaryDto } from './dto/mechanic-summary.dto';
@@ -33,9 +35,11 @@ import {
 } from './mappers/work-order.mapper';
 import { assignableMechanicWhere } from './utils/assignable-mechanic';
 import {
+  deriveIntakeMode,
   normalizeBroughtByName,
   normalizeBroughtByPhone,
 } from './utils/intake-mode';
+import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 
 const ACTIVE_OWNERSHIP_INCLUDE = {
   ownerships: {
@@ -87,6 +91,94 @@ export class WorkOrdersService {
     });
 
     return { activeWorkOrder };
+  }
+
+  async findInProgress(
+    user: AuthenticatedUser,
+    query: InProgressWorkOrdersQueryDto,
+  ): Promise<InProgressWorkOrdersResponseDto> {
+    const limit = query.limit ?? 20;
+    const offset = query.offset ?? 0;
+
+    const where = {
+      status: { in: ACTIVE_WORK_ORDER_STATUSES },
+      ...(user.role === UserRole.MECHANIC
+        ? { assignedMechanicId: user.userId }
+        : {}),
+    };
+
+    const [rows, total] = await Promise.all([
+      this.prisma.workOrder.findMany({
+        where,
+        select: {
+          id: true,
+          status: true,
+          entryReason: true,
+          checkedInAt: true,
+          updatedAt: true,
+          broughtByName: true,
+          vehicle: {
+            select: {
+              id: true,
+              licensePlate: true,
+              brand: true,
+              model: true,
+            },
+          },
+          ownerClient: {
+            select: {
+              fullName: true,
+              nationalId: true,
+            },
+          },
+          assignedMechanic: {
+            select: {
+              id: true,
+              fullName: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+        skip: offset,
+        take: limit,
+      }),
+      this.prisma.workOrder.count({ where }),
+    ]);
+
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        status: row.status,
+        entryReason: row.entryReason,
+        checkedInAt: row.checkedInAt,
+        updatedAt: row.updatedAt,
+        vehicle: {
+          id: row.vehicle.id,
+          licensePlate: row.vehicle.licensePlate,
+          brand: row.vehicle.brand,
+          model: row.vehicle.model,
+        },
+        owner: row.ownerClient
+          ? {
+              fullName: row.ownerClient.fullName,
+              nationalId: row.ownerClient.nationalId,
+            }
+          : null,
+        broughtByName: row.broughtByName,
+        intakeMode: deriveIntakeMode(row.broughtByName),
+        assignedMechanic: row.assignedMechanic
+          ? {
+              id: row.assignedMechanic.id,
+              fullName: row.assignedMechanic.fullName,
+              role: row.assignedMechanic.role,
+            }
+          : null,
+      })),
+      total,
+      limit,
+      offset,
+    };
   }
 
   async findById(id: string): Promise<WorkOrderDetailResponseDto> {

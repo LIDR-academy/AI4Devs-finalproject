@@ -104,6 +104,31 @@ export interface ActiveWorkOrderResponse {
   activeWorkOrder: ActiveWorkOrder | null;
 }
 
+export interface InProgressWorkOrderItem {
+  id: string;
+  status: WorkOrderStatus;
+  entryReason: string;
+  checkedInAt: string;
+  updatedAt: string;
+  vehicle: {
+    id: string;
+    licensePlate: string;
+    brand: string;
+    model: string;
+  };
+  owner: { fullName: string; nationalId: string } | null;
+  broughtByName: string | null;
+  intakeMode: WorkOrderIntakeMode;
+  assignedMechanic: AssignedMechanicSummary | null;
+}
+
+export interface InProgressWorkOrdersResponse {
+  items: InProgressWorkOrderItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface UpdateTaskRequest {
   status: WorkOrderTaskStatus;
   cost?: number;

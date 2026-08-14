@@ -21,6 +21,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ActiveWorkOrderResponseDto } from './dto/active-work-order-response.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
+import { InProgressWorkOrdersQueryDto } from './dto/in-progress-work-orders-query.dto';
+import { InProgressWorkOrdersResponseDto } from './dto/in-progress-work-orders-response.dto';
 import { LinkWorkOrderOwnerDto } from './dto/link-work-order-owner.dto';
 import { LinkWorkOrderOwnerResponseDto } from './dto/link-work-order-owner-response.dto';
 import { MechanicSummaryDto } from './dto/mechanic-summary.dto';
@@ -47,6 +49,14 @@ export class WorkOrdersController {
     @Query('vehicleId', ParseUUIDPipe) vehicleId: string,
   ): Promise<ActiveWorkOrderResponseDto> {
     return this.workOrdersService.findActiveByVehicle(vehicleId);
+  }
+
+  @Get('in-progress')
+  findInProgress(
+    @Query() query: InProgressWorkOrdersQueryDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<InProgressWorkOrdersResponseDto> {
+    return this.workOrdersService.findInProgress(user, query);
   }
 
   @Post()
