@@ -25,7 +25,7 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       testIgnore:
-        /users\.spec\.ts|clients\.spec\.ts|vehicles\.spec\.ts|mobile-nav\.spec\.ts/,
+        /users\.spec\.ts|clients\.spec\.ts|vehicles\.spec\.ts|mobile-nav\.spec\.ts|work-orders-in-progress\.spec\.ts|reminders\.spec\.ts/,
     },
     {
       name: 'chromium-admin',
@@ -39,6 +39,20 @@ export default defineConfig({
     {
       name: 'chromium-mobile-nav',
       testMatch: /mobile-nav\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+    {
+      name: 'chromium-work-orders-in-progress',
+      testMatch: /work-orders-in-progress\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+    {
+      name: 'chromium-reminders',
+      testMatch: /reminders\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
       },

@@ -234,6 +234,8 @@ El administrador podrá marcar individualmente cualquier vehículo con la opció
 
 > **Consideración técnica:** el cálculo de vehículos elegibles puede resolverse mediante una consulta programada (job o cron) que actualice la lista periódicamente, o como una consulta en tiempo real al cargar la vista. Se recomienda evaluar el volumen esperado de registros para elegir el enfoque más adecuado. Esta funcionalidad comparte la dependencia de servicio de correo transaccional descrita en D2.
 
+> **UX Dashboard (alineado a D10):** además del panel `/admin/reminders`, el **Dashboard de administración** mostrará un resumen de hasta **~5 vehículos** elegibles con enlace **“Ver más”** a la lista completa.
+
 > **Consideración de modelo de datos:** se requiere soporte para registrar el estado de exclusión por vehículo (`no_recordar`, `fecha_exclusion`, `excluido_por`) y el historial de recordatorios enviados (fecha, usuario que ejecutó el envío, vehículos incluidos). Ambos elementos deben contemplarse al diseñar el modelo de datos desde la V1.
 
 #### D5. Búsqueda de Clientes por Correo Electrónico
@@ -310,6 +312,21 @@ En V2, un administrador podrá marcarse con un **flag de mecánico** (`canActAsM
 - Desactivar el flag o la cuenta quita al usuario de futuros listados; las OT históricas conservan la referencia al usuario asignado.
 
 > **Consideración de modelo de datos:** añadir booleano en `User` (p. ej. `canActAsMechanic Boolean @default(false)`). La FK `WorkOrder.assignedMechanicId` puede seguir apuntando a `User` sin cambio estructural; solo cambia la regla de elegibilidad en servicio y UI.
+
+#### D10. Órdenes Activas en el Dashboard
+
+Hoy los paneles `/admin/dashboard` y `/mechanic/dashboard` solo muestran un saludo. En V2 deberán ofrecer un resumen operativo de **órdenes de trabajo en curso**.
+
+**Comportamiento previsto en V2:**
+
+- En el Dashboard, un cuadro **“Órdenes en curso”** con **máximo 5** OT activas (más recientes primero), cada una con enlace al detalle.
+- Estados considerados activos: `EN_PROCESO`, `LISTA_PARA_ENTREGA` y `OWNER_CONTACTED` (misma familia que las OT que impiden abrir otra visita sobre el mismo vehículo).
+- Enlace **“Ver todas”** hacia una pantalla dedicada de listado completo (p. ej. `/work-orders/in-progress`), con paginación.
+- **Administrador:** ve todas las OT activas del taller. **Mecánico:** solo las asignadas a sí mismo.
+- Si no hay OT activas: mensaje claro (*“No hay órdenes en curso.”*) y, opcionalmente, acceso a crear una nueva OT.
+- Entrada de navegación **“En curso”** (o equivalente) en el menú por rol.
+
+> **Consideración técnica:** hoy solo existe consulta de OT activa **por vehículo** (`GET /api/work-orders/active?vehicleId=`). Hará falta un endpoint de listado de OT activas (con `limit` / paginación y filtro por rol). No sustituye el panel de entrega (US-008).
 
 ---
 
@@ -473,8 +490,8 @@ Microservicios no se consideran adecuados en esta fase: el volumen, el equipo y 
 |---------|---------|
 | **Tecnología** | Next.js 14+ (App Router), TypeScript, Tailwind CSS, React Query |
 | **Responsabilidad** | Interfaz para empleados del taller: login, dashboards por rol, CRUD de clientes y vehículos, gestión de OT y tareas, panel de entrega (solo admin), consulta de historial |
-| **Organización** | Carpetas por **feature** (`auth`, `users`, `clients`, `vehicles`, `work-orders`, `delivery-panel`, `history`) |
-| **Estado** | El servidor es la fuente de verdad; estado local solo en formularios y UI transitoria |
+| **Organización** | Carpetas por **feature** (`auth`, `users`, `clients`, `vehicles`, `work-orders`, `delivery-panel`, `history`); shell compartido `AppChrome` (`AppHeader` + `RoleNav` + `MobileNavDrawer`, US-F1) |
+| **Estado** | El servidor es la fuente de verdad; estado local solo en formularios y UI transitoria (p. ej. menú móvil abierto/cerrado) |
 | **Seguridad UI** | Guards de ruta por rol; la autorización definitiva la valida el backend |
 
 #### Backend (capa de aplicación)
@@ -521,7 +538,7 @@ Microservicios no se consideran adecuados en esta fase: el volumen, el equipo y 
 
 | Aspecto | Detalle |
 |---------|---------|
-| **Mecanismo** | JWT de acceso de corta duración + refresh token en cookie `httpOnly` |
+| **Mecanismo** | JWT de acceso de corta duración + refresh token en cookie `httpOnly` (web) o en el cuerpo JSON para clientes nativos (`X-MecaTrack-Client: mobile`) |
 | **Contraseñas** | Hash con bcrypt o Argon2 |
 | **Roles** | `ADMIN`, `MECHANIC` — aplicados mediante guards en cada endpoint |
 | **Cuentas inactivas** | Rechazo en login; datos históricos conservados |
@@ -535,7 +552,7 @@ Microservicios no se consideran adecuados en esta fase: el volumen, el equipo y 
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-El repositorio sigue un **monorepo** con aplicaciones separadas para API y web, más configuración compartida de contenedores. El patrón es **feature folders** en el frontend y **módulos verticales** en el backend (cada módulo agrupa controller, service y acceso a datos de su dominio).
+El repositorio sigue un **monorepo** con aplicaciones separadas para API, web y Android, más configuración compartida de contenedores. El patrón es **feature folders** en el frontend y **módulos verticales** en el backend (cada módulo agrupa controller, service y acceso a datos de su dominio).
 
 ```
 mecatrack/
@@ -560,12 +577,14 @@ mecatrack/
 │   │   │   ├── migrations/
 │   │   │   └── seed.ts
 │   │   └── test/
-│   └── web/                          # Frontend Next.js
-│       ├── src/
-│       │   ├── app/                  # rutas App Router
-│       │   ├── features/             # auth, users, clients, vehicles, ...
-│       │   └── shared/               # cliente API, contexto auth, componentes UI
-│       └── public/
+│   ├── web/                          # Frontend Next.js
+│   │   ├── src/
+│   │   │   ├── app/                  # rutas App Router
+│   │   │   ├── features/             # auth, users, clients, vehicles, ...
+│   │   │   └── shared/               # cliente API, contexto auth, componentes UI
+│   │   └── public/
+│   └── android/                      # Native Android client (Kotlin + Compose)
+
 ├── packages/
 │   └── shared-types/                 # opcional: DTOs y tipos compartidos
 ├── docker-compose.yml                # PostgreSQL + api + web en desarrollo
@@ -579,7 +598,8 @@ mecatrack/
 | `apps/api/src/modules/` | Lógica de negocio por dominio; cada carpeta es un módulo NestJS autocontenido |
 | `apps/api/prisma/` | Esquema de base de datos, migraciones y datos semilla |
 | `apps/web/src/features/` | Pantallas y flujos de usuario agrupados por funcionalidad |
-| `apps/web/src/shared/` | Utilidades transversales (cliente HTTP, layout, componentes reutilizables) |
+| `apps/web/src/shared/` | Utilidades transversales (cliente HTTP, shell `AppChrome` / nav responsive US-F1, componentes reutilizables) |
+| `apps/android/` | Cliente nativo Android (Kotlin + Jetpack Compose) que consume la misma API |
 | `packages/shared-types/` | Contratos TypeScript compartidos entre API y web (opcional) |
 | `docker-compose.yml` | Orquestación local: base de datos, API y frontend con un solo comando |
 
@@ -728,7 +748,7 @@ La estrategia de pruebas de MecaTrack combina **pruebas unitarias**, **pruebas e
 |-----------------|-------------|----------------------|------------|
 | **Unitarias backend** | Jest | `apps/api/src/**/**.spec.ts` | Reglas de negocio, validaciones, transiciones de estado, normalización de datos y respuestas de servicios |
 | **E2E backend** | Jest + Supertest | `apps/api/test/*.e2e-spec.ts` | Endpoints reales de la API, autenticación, autorización, persistencia y flujos HTTP completos contra la aplicación NestJS |
-| **E2E frontend** | Playwright | `apps/web/e2e/*.spec.ts` | Flujos de usuario en navegador: login, navegación por rol, formularios, órdenes de trabajo, entrega e historial |
+| **E2E frontend** | Playwright | `apps/web/e2e/*.spec.ts` | Flujos de usuario en navegador: login, navegación por rol (incl. menú hamburguesa móvil US-F1), formularios, órdenes de trabajo, entrega e historial |
 
 #### Cobertura actual por capa
 
@@ -736,13 +756,13 @@ En el **backend**, las pruebas unitarias cubren módulos y servicios clave como 
 
 Las **pruebas end-to-end del backend** ejercitan la API NestJS con la aplicación real inicializada, `ValidationPipe`, filtros HTTP y persistencia contra PostgreSQL. Las suites actuales cubren autenticación (`auth.e2e-spec.ts`), gestión de usuarios, clientes y vehículos, creación de órdenes de trabajo, gestión de tareas, notas técnicas, panel de entrega e historial. Con ello se validan respuestas HTTP, restricciones por rol, estados de sesión, mensajes de error, payloads de entrada y continuidad entre operaciones encadenadas.
 
-En el **frontend**, Playwright valida el comportamiento funcional de la interfaz Next.js desde la perspectiva del usuario final. Las suites cubren autenticación, usuarios, clientes, vehículos, creación de órdenes de trabajo, gestión de tareas, notas técnicas, panel de entrega e historial. Estas pruebas confirman redirecciones por rol, mensajes de error, bloqueo de accesos, navegación entre pantallas, formularios con datos reales y flujos completos como registrar un vehículo, crear una orden de trabajo, completar tareas o consultar historial.
+En el **frontend**, Playwright valida el comportamiento funcional de la interfaz Next.js desde la perspectiva del usuario final. Las suites cubren autenticación, usuarios, clientes, vehículos, creación de órdenes de trabajo, gestión de tareas, notas técnicas, panel de entrega, historial y navegación responsive (`mobile-nav.spec.ts`, US-F1). Estas pruebas confirman redirecciones por rol, mensajes de error, bloqueo de accesos, navegación entre pantallas (barra horizontal en desktop y drawer hamburguesa en viewport estrecho), formularios con datos reales y flujos completos como registrar un vehículo, crear una orden de trabajo, completar tareas o consultar historial.
 
 #### Organización y ejecución de las suites
 
 La API usa los scripts `npm test` para unitarias y `npm run test:e2e` para pruebas end-to-end. Las suites E2E del backend emplean `jest-e2e.json`, levantan la aplicación NestJS con su configuración real y preparan la base de datos de prueba ejecutando `prisma migrate deploy` y `prisma db seed` antes de correr los casos.
 
-El frontend usa `npm run test:e2e` con Playwright. La configuración define proyectos separados por dominio (`chromium-admin`, `chromium-clients`, `chromium-vehicles`, `chromium-work-orders`, `chromium-work-order-tasks`, `chromium-technical-notes`, `chromium-delivery-panel`, `chromium-history`) y utiliza `globalSetup` para sembrar datos, además de archivos `storageState` distintos para sesiones de administrador y mecánico. El servidor web se inicia automáticamente con `webServer` cuando es necesario.
+El frontend usa `npm run test:e2e` con Playwright. La configuración define proyectos separados por dominio (`chromium-admin`, `chromium-clients`, `chromium-vehicles`, `chromium-work-orders`, `chromium-work-order-tasks`, `chromium-technical-notes`, `chromium-delivery-panel`, `chromium-history`, `chromium-mobile-nav`) y utiliza `globalSetup` para sembrar datos, además de archivos `storageState` distintos para sesiones de administrador y mecánico en la mayoría de proyectos. El servidor web se inicia automáticamente con `webServer` (`next dev` en el puerto `3010`) cuando es necesario. Detalle del shell responsive: [`apps/web/README.md`](apps/web/README.md) (sección *Responsive navigation*) y [`docs/responsive-navigation.md`](docs/responsive-navigation.md).
 
 #### Pruebas de regresión
 
@@ -754,7 +774,7 @@ Como validación de regresión amplia antes de integrar cambios mayores, convien
 
 - La cobertura es sólida sobre el **MVP funcional** (US-001 a US-009), pero no implica cobertura exhaustiva de cada combinación posible de errores o datos extremos.
 - Las pruebas E2E dependen de una base de datos accesible y de semillas consistentes; por tanto, el entorno debe mantenerse alineado con migraciones y datos de prueba.
-- Playwright cubre los flujos más importantes por dominio, pero no sustituye pruebas exploratorias manuales sobre UX fina, responsividad o comportamiento visual fuera de los casos automatizados.
+- Playwright cubre los flujos más importantes por dominio y un smoke de nav responsive (US-F1), pero no sustituye pruebas exploratorias manuales sobre UX fina, tablas densas en móvil u otros comportamientos visuales fuera de los casos automatizados.
 - La regresión completa del sistema requiere coordinar backend, base de datos y frontend, por lo que el costo de ejecución es mayor que el de las pruebas unitarias aisladas.
 
 ---

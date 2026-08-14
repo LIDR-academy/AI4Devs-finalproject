@@ -1,6 +1,6 @@
 # MecaTrack API
 
-NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration, US-005: work order creation, US-006: work order task management, US-007: technical notes, US-008: delivery panel, US-009: vehicle and client history, US-O1: health probes, US-O2: Prometheus metrics).
+NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration, US-005: work order creation, US-006: work order task management, US-007: technical notes, US-008: delivery panel, US-009: vehicle and client history, US-D4: maintenance reminders, US-O1: health probes, US-O2: Prometheus metrics).
 
 ## Prerequisites
 
@@ -106,8 +106,8 @@ OpenAPI fragment: [`docs/api-spec.metrics.yml`](../../docs/api-spec.metrics.yml)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/auth/login` | Login; returns `accessToken` + sets `refreshToken` httpOnly cookie |
-| `POST` | `/api/auth/refresh` | New access token from refresh cookie |
+| `POST` | `/api/auth/login` | Login; returns `accessToken` + sets `refreshToken` httpOnly cookie. Native clients send `X-MecaTrack-Client: mobile` to also receive `refreshToken` in JSON |
+| `POST` | `/api/auth/refresh` | New access token from refresh cookie, or `{ "refreshToken" }` in the body for native apps |
 | `POST` | `/api/auth/logout` | Revoke refresh token (Bearer required) |
 | `GET` | `/api/auth/me` | Current user profile (Bearer required) |
 
@@ -200,6 +200,7 @@ All `/api/work-orders` routes require a valid Bearer token with role `ADMIN` or 
 |--------|------|-------------|
 | `GET` | `/api/work-orders/mechanics` | List assignable users: active `MECHANIC` + active `ADMIN` with `canActAsMechanic` (includes `role`) |
 | `GET` | `/api/work-orders/active?vehicleId=` | Active work order for vehicle (or `null`) |
+| `GET` | `/api/work-orders/in-progress` | Paginated active OTs for dashboards (US-D10); ADMIN=all, MECHANIC=assigned only (`limit`/`offset`) |
 | `POST` | `/api/work-orders` | Create work order + initial tasks (transactional); `mileage` optional; `intakeMode` `OWNER` (default) or `THIRD_PARTY` with `broughtByName` (+ optional `broughtByPhone`) |
 | `GET` | `/api/work-orders/:id` | Work order detail with tasks, `totalAmount`, `assignedMechanic`, nullable `owner`, `broughtBy*`, derived `intakeMode` |
 | `PATCH` | `/api/work-orders/:id/link-owner` | Link a client to an ownerless work order (US-D9); never silently transfers vehicle ownership |
@@ -269,6 +270,27 @@ curl -X PATCH -H "Authorization: Bearer $TOKEN" \
 > **Note:** The readme `task-notes` logical module is implemented as `work-order-technical-notes` inside the `work-orders` Nest module.
 
 OpenAPI fragment: [`docs/api-spec.work-orders.yml`](../../docs/api-spec.work-orders.yml)
+
+## Maintenance reminders (US-D4, admin only)
+
+ADMIN-only module to list vehicles due for preventive outreach and batch-send reminder emails via shared `EmailPort` (console adapter). No schema migration — uses existing `Vehicle` reminder columns.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/reminders/eligible` | Paginated eligible list (`limit`/`offset`; dashboard uses `limit=5`) |
+| `POST` | `/api/reminders/send` | Batch send (partial success `200`) |
+| `POST` | `/api/reminders/:vehicleId/opt-out` | Exclude from reminders |
+| `POST` | `/api/reminders/:vehicleId/opt-in` | Clear exclusion |
+| `GET` | `/api/reminders/opted-out` | Manage exclusions |
+
+| Env | Default | Purpose |
+|-----|---------|---------|
+| `REMINDER_INACTIVE_DAYS` | `180` | Days since last `ENTREGADA` delivery |
+| `EMAIL_ENABLED` | `false` | Master switch for sending |
+| `EMAIL_PROVIDER` | `console` | Console adapter (SMTP deferred to US-D2) |
+| `WORKSHOP_NAME` / `WORKSHOP_PHONE` / `WORKSHOP_ADMIN_EMAIL` | — | Template + CC |
+
+OpenAPI: [`docs/api-spec.reminders.yml`](../../docs/api-spec.reminders.yml)
 
 ## Delivery panel (US-008, admin only)
 

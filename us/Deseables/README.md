@@ -15,6 +15,7 @@ This folder contains the high-priority V2 desirable features documented in `read
 | US-D7 | `US-D7-kilometraje-opcional-orden-trabajo.md` | Kilometraje Opcional en la Orden de Trabajo |
 | US-D8 | `US-D8-administradores-capacidad-mecanico.md` | Administradores con Capacidad de Mecánico |
 | US-D9 | `US-D9-ingreso-sin-propietario-mecanico-externo.md` | Ingreso sin Propietario (Vehículo Traído por Mecánico Externo) |
+| US-D10 | `US-D10-ordenes-activas-dashboard.md` | Órdenes Activas en el Dashboard (Resumen + Lista en Curso) |
 
 ## Delivery branch (entrega 2)
 
@@ -35,6 +36,7 @@ For each story, implement **backend first**, then **frontend** (same branch):
 | US-D7 | `docs/plans/US-D7_backend.md` | `docs/plans/US-D7_frontend.md` |
 | US-D8 | `docs/plans/US-D8_backend.md` | `docs/plans/US-D8_frontend.md` |
 | US-D9 | `docs/plans/US-D9_backend.md` | `docs/plans/US-D9_frontend.md` |
+| US-D10 | `docs/plans/US-D10_backend.md` | `docs/plans/US-D10_frontend.md` |
 
 ## Suggested delivery order (business priority)
 
@@ -45,8 +47,16 @@ For each story, implement **backend first**, then **frontend** (same branch):
 5. **US-D1** — Extends delivery panel (depends on US-008).
 6. **US-D2** — Builds on D1 + email provider.
 7. **US-D3** — Ownership historicity (model may already exist from V1).
-8. **US-D4** — Reminders panel + email (shares mail stack with D2).
+8. **US-D4** — Reminders panel + email (shares mail stack with D2); admin dashboard widget (~5) + Ver más (enriched 2026-08-13).
 9. **US-D9** — Third-party intake without owner; nullable `ownerClientId` + `broughtBy*`; coordinates with D1/D3.
+10. **US-D10** — Dashboard “Órdenes en curso” (max 5) + full in-progress list page; fills empty admin/mechanic home.
+
+## Delivery status (snapshot)
+
+| ID | Status (codebase) |
+|----|-------------------|
+| US-D1, D6, D7, D8, D9 | Implemented |
+| US-D2, D3, D4, D5, D10 | Pending |
 
 ## Cross-cutting Dependencies
 

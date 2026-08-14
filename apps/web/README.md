@@ -50,6 +50,19 @@ Authenticated layouts use `AppChrome` (`AppHeader` + `RoleNav` + `MobileNavDrawe
 - **`≥ md`:** existing horizontal role tabs; hamburger and drawer are hidden.
 - Implemented with React state + Tailwind only (no new UI dependencies).
 - Playwright smoke: `e2e/mobile-nav.spec.ts`.
+- Project overview (English): [`docs/responsive-navigation.md`](../../docs/responsive-navigation.md).
+
+## Dashboard in-progress work orders (US-D10)
+
+Authenticated dashboards (`/admin/dashboard`, `/mechanic/dashboard`) show an **Órdenes en curso** widget (max 5 rows) fed by `GET /api/work-orders/in-progress`. **Ver todas** and nav **En curso** open `/work-orders/in-progress` (paginated list). Mechanics only receive OTs assigned to them (enforced by the API).
+
+Playwright smoke: `e2e/work-orders-in-progress.spec.ts`.
+
+## Maintenance reminders (US-D4)
+
+Admin dashboard shows a **Recordatorios** widget (max 5 eligible vehicles) from `GET /api/reminders/eligible?limit=5`. **Ver más** and nav **Recordatorios** open `/admin/reminders` (eligible list, batch send, opt-out/in). ADMIN only — not shown on the mechanic dashboard.
+
+Playwright smoke: `e2e/reminders.spec.ts`.
 
 ## E2E tests
 
@@ -79,6 +92,8 @@ npm run test:e2e
 | `/vehicles/new` | ADMIN, MECHANIC (`?clientId=` prefill) |
 | `/vehicles/[id]` | ADMIN, MECHANIC |
 | `/work-orders/new` | ADMIN, MECHANIC (`?vehicleId=` prefill) |
+| `/work-orders/in-progress` | ADMIN, MECHANIC (active OT list, US-D10) |
+| `/admin/reminders` | ADMIN (maintenance reminders panel, US-D4) |
 | `/work-orders/[id]` | ADMIN, MECHANIC (full task management detail) |
 | `/mechanic/dashboard` | MECHANIC |
 | `/403` | Forbidden |
