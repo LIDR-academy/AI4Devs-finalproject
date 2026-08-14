@@ -23,7 +23,7 @@ test('a malformed non-uuid identifier 404s via model-not-found rather than a 500
 });
 
 test('a stale integer-style identifier 404s via model-not-found rather than a 500', function () {
-    $this->assertDatabaseMissing('users', ['id' => 1]);
+    $this->assertDatabaseMissing('users', ['id' => '1']);
 
     $this->get('/__test/users/1')->assertNotFound();
 });
@@ -35,7 +35,10 @@ test('a well-formed but nonexistent uuid 404s', function () {
 test('User::find() returns null for stale bigint-style lookups', function () {
     User::factory()->create();
 
-    $this->assertDatabaseMissing('users', ['id' => 1]);
+    // Must be the string '1', not the int 1: MySQL numerically coerces a CHAR column
+    // against an unquoted integer literal, and a UUIDv7 minted today can start with
+    // digits that coerce to exactly 1 (e.g. '01a0...' -> 1), producing a false match.
+    $this->assertDatabaseMissing('users', ['id' => '1']);
 
     expect(User::find(1))->toBeNull()
         ->and(User::find('1'))->toBeNull();
