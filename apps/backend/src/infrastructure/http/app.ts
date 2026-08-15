@@ -22,6 +22,11 @@ import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRe
 import { IReportRepository } from '../../domain/reports/repositories/IReportRepository.js';
 import { IRecipeRepository } from '../../domain/catalog/repositories/IRecipeRepository.js';
 
+import path from 'path';
+import fs from 'fs';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+
 export interface AppOptions {
   userRepository?: IUserRepository;
   stockRepository?: IStockRepository;
@@ -37,11 +42,27 @@ export function createApp(options: AppOptions = {}): Express {
   app.use(cors());
   app.use(express.json());
 
+  // Swagger UI - Documentación Interactiva de API REST (OpenAPI 3.1)
+  const openApiPath = path.resolve(process.cwd(), 'docs/03_persistence_and_api/openapi.yaml');
+  const fallbackPath = path.resolve(process.cwd(), '../../docs/03_persistence_and_api/openapi.yaml');
+  const finalOpenApiPath = fs.existsSync(openApiPath) ? openApiPath : (fs.existsSync(fallbackPath) ? fallbackPath : null);
+
+  if (finalOpenApiPath) {
+    try {
+      const swaggerDocument = YAML.load(finalOpenApiPath);
+      app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+      app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    } catch (err) {
+      console.warn('⚠️ No se pudo cargar Swagger UI desde openapi.yaml:', err);
+    }
+  }
+
   // Endpoint de salud
   app.get('/health', (_req, res) => {
     res.status(200).json({
       status: 'ok',
       system: 'RestoStock Backend Core',
+      docs: '/docs',
       timestamp: new Date().toISOString(),
     });
   });
