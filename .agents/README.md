@@ -1,3 +1,12 @@
+---
+framework: ".agents / VSDD Governance Framework"
+version: "2.1.0 (Stack-Agnostic Edition)"
+author: "Jose Lacruz <lacruzjd@gmail.com>"
+program: "AI4Devs - Final Project"
+methodology: "Verified Spec-Driven Development (VSDD)"
+transparency: "EU AI Act Compliant / Synthetic AI-Driven Architecture"
+---
+
 # 🤖 Manual de Operaciones y Configuración del Agente de IA (.agents)
 
 Este directorio contiene las meta-directivas, reglas de gobernanza y habilidades procedimentales que guían el comportamiento de los asistentes de desarrollo basados en Inteligencia Artificial (Google Antigravity, Gemini, etc.) en el proyecto.
