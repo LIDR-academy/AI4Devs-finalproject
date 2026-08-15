@@ -5,6 +5,7 @@ author: "Jose Lacruz <lacruzjd@gmail.com>"
 program: "AI4Devs - Final Project"
 methodology: "Verified Spec-Driven Development (VSDD)"
 transparency: "EU AI Act Compliant / Synthetic AI-Driven Architecture"
+license: "MIT"
 ---
 
 # 🤖 Manual de Operaciones y Configuración del Agente de IA (.agents)
@@ -115,3 +116,9 @@ Para verificar autónomamente que el arnés `.agents/` no contenga enlaces rotos
 ```bash
 bash .agents/scripts/validate_agents.sh
 ```
+
+---
+
+## 📜 7. Licencia y Reutilización
+
+Este marco de gobernanza y habilidades (`.agents/`) se distribuye bajo la **Licencia MIT**. Es 100% abierto, portátil y reutilizable en cualquier proyecto o repositorio comercial o privado sin restricciones de tipo Copyleft / GPL.
