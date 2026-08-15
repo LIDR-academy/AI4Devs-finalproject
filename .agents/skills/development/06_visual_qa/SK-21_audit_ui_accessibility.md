@@ -20,7 +20,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🔍 FASE 1: Inspección de Reglas de UI y Tokens de Diseño
 1. **Leer Reglas de UI del Proyecto:** Consulta `docs/04_governance_and_quality/rules/frontend_rules.md` para identificar:
-   - La paleta de colores HSL oficial (Fondos, Textos, Alertas FEFO).
+   - La paleta de colores HSL oficial (Fondos, Textos, Alertas/Estados de Severidad).
    - El tamaño físico mínimo de los botones e inputs táctiles (`48px x 48px`).
    - La tipografía requerida y la jerarquía visual de encabezados.
 
