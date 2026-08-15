@@ -11,6 +11,7 @@ Execute commands autonomously from workspace root using exact flags:
 - **Run Linter & Static Analysis:** `pnpm run lint`
 - **Validate DB Schema:** `npx prisma validate --schema=apps/backend/prisma/schema.prisma`
 - **Validate OpenAPI Spec:** `npx -y @stoplight/spectral-cli lint docs/03_persistence_and_api/openapi.yaml`
+- **Validate DESIGN.md Spec:** `npx -y @google/design.md lint DESIGN.md`
 - **Validate Agents Framework Integrity:** `bash .agents/scripts/validate_agents.sh`
 
 
