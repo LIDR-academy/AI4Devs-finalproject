@@ -19,8 +19,8 @@ export class KitchenService {
       insumoId: 'ins-1',
       insumoName: 'Queso Mozzarella',
       unitOfMeasure: 'KG',
-      currentQuantity: '1.7500',
-      initialQuantity: '2.0000',
+      currentQuantity: '1.750',
+      initialQuantity: '2.000',
       location: 'KITCHEN_FRIDGE',
       expirationDate: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
       hoursRemaining: 2.0,
@@ -32,8 +32,8 @@ export class KitchenService {
       insumoId: 'ins-2',
       insumoName: 'Salsa Pomodoro',
       unitOfMeasure: 'L',
-      currentQuantity: '4.5000',
-      initialQuantity: '5.0000',
+      currentQuantity: '4.500',
+      initialQuantity: '5.000',
       location: 'KITCHEN_FRIDGE',
       expirationDate: new Date(Date.now() + 14 * 60 * 60 * 1000).toISOString(),
       hoursRemaining: 14.0,
@@ -45,8 +45,8 @@ export class KitchenService {
       insumoId: 'ins-3',
       insumoName: 'Masa de Pizza',
       unitOfMeasure: 'UNITS',
-      currentQuantity: '12.0000',
-      initialQuantity: '15.0000',
+      currentQuantity: '12.000',
+      initialQuantity: '15.000',
       location: 'KITCHEN_PREP',
       expirationDate: new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(),
       hoursRemaining: 22.0,
@@ -94,7 +94,7 @@ export class KitchenService {
       const current = parseFloat(found.currentQuantity);
       const sub = parseFloat(quantity.toString());
       const next = Math.max(0, current - sub);
-      found.currentQuantity = next.toFixed(4);
+      found.currentQuantity = next.toFixed(3);
       if (next === 0) {
         found.status = 'EXHAUSTED';
       }
@@ -115,7 +115,7 @@ export class KitchenService {
 
     const found = this.mockRemanentes.find((r) => r.id === remanenteId);
     if (found) {
-      found.currentQuantity = '0.0000';
+      found.currentQuantity = '0.000';
       found.status = 'DISCARDED';
     }
   }
@@ -137,7 +137,7 @@ export class KitchenService {
       const first = this.mockRemanentes[0];
       const current = parseFloat(first.currentQuantity);
       const next = Math.max(0, current - 0.15 * portions);
-      first.currentQuantity = next.toFixed(4);
+      first.currentQuantity = next.toFixed(3);
       if (next === 0) first.status = 'EXHAUSTED';
     }
   }

@@ -103,7 +103,7 @@ export class PerformShiftReconciliationUseCase {
           id: `mov-recon-${Date.now()}-${remanente.id}`,
           insumoId: remanente.insumoId,
           type: 'SHIFT_RECONCILIATION_VARIANCE',
-          quantity: varianceDecimal.toFixed(4),
+          quantity: varianceDecimal.toFixed(3),
           fromLoc: remanente.location,
           toLoc: 'KITCHEN_ADJUSTMENT',
         });
@@ -114,7 +114,7 @@ export class PerformShiftReconciliationUseCase {
         insumoId: remanente.insumoId,
         physicalQuantity: physicalQuantity.toString(),
         theoreticalQuantity: theoreticalQuantity.toString(),
-        variance: varianceDecimal.toFixed(4),
+        variance: varianceDecimal.toFixed(3),
       });
     }
 

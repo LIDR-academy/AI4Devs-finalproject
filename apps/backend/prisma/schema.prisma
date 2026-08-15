@@ -52,7 +52,7 @@ model WarehouseStock {
   id        String   @id @default(uuid())
   insumoId  String
   location  String   @default("MAIN_WAREHOUSE")
-  quantity  Decimal  @default(0) @db.Decimal(12, 4)
+  quantity  Decimal  @default(0) @db.Decimal(12, 3)
   updatedAt DateTime @updatedAt
   insumo    Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
 }
@@ -60,8 +60,8 @@ model WarehouseStock {
 model Remanente {
   id              String          @id @default(uuid())
   insumoId        String
-  currentQuantity Decimal         @default(0) @db.Decimal(12, 4)
-  initialQuantity Decimal         @default(0) @db.Decimal(12, 4)
+  currentQuantity Decimal         @default(0) @db.Decimal(12, 3)
+  initialQuantity Decimal         @default(0) @db.Decimal(12, 3)
   location        String          @default("KITCHEN_FRIDGE")
   status          RemanenteStatus @default(ACTIVE)
   expirationDate  DateTime
@@ -74,7 +74,7 @@ model StockMovement {
   id        String   @id @default(uuid())
   insumoId  String
   type      String   // EXTRACTION, DISCARD, RECONCILIATION
-  quantity  Decimal  @db.Decimal(12, 4)
+  quantity  Decimal  @db.Decimal(12, 3)
   fromLoc   String
   toLoc     String
   createdAt DateTime @default(now())

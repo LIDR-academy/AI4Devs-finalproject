@@ -133,7 +133,7 @@ export const ShiftReconciliationWizard: React.FC<ShiftReconciliationWizardProps>
                           marginTop: '2px',
                         }}
                       >
-                        Varianza: {diff > 0 ? `+${diff.toFixed(4)}` : diff.toFixed(4)} {r.unitOfMeasure}
+                        Varianza: {diff > 0 ? `+${diff.toFixed(3)}` : diff.toFixed(3)} {r.unitOfMeasure}
                         {isItemCritical && ' ⚠️ (>50% de desvío)'}
                       </div>
                     )}

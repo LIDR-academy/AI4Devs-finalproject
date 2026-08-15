@@ -18,8 +18,8 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     activeRemanente = new Remanente({
       id: 'rem-salsa-1',
       insumoId: 'ins-salsa',
-      currentQuantity: new DecimalQuantity('1.7500'),
-      initialQuantity: new DecimalQuantity('1.7500'),
+      currentQuantity: new DecimalQuantity('1.750'),
+      initialQuantity: new DecimalQuantity('1.750'),
       location: 'KITCHEN_FRIDGE',
       status: 'ACTIVE',
       expirationDate: new Date(Date.now() + 12 * 60 * 60 * 1000),
@@ -28,30 +28,30 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     stockRepo.seedRemanente(activeRemanente);
   });
 
-  it('debe registrar exitosamente un consumo parcial (1.7500 -> 1.5000) manteniendo el estado ACTIVE (200 OK)', async () => {
+  it('debe registrar exitosamente un consumo parcial (1.750 -> 1.500) manteniendo el estado ACTIVE (200 OK)', async () => {
     const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
-      .send({ quantity: '0.2500' });
+      .send({ quantity: '0.250' });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('consumedQuantity', '0.2500');
-    expect(response.body).toHaveProperty('remainingQuantity', '1.5000');
+    expect(response.body).toHaveProperty('consumedQuantity', '0.250');
+    expect(response.body).toHaveProperty('remainingQuantity', '1.500');
     expect(response.body).toHaveProperty('status', 'ACTIVE');
     expect(response.body).toHaveProperty('isExhausted', false);
 
     // Verificar en repositorio
     const updated = await stockRepo.findRemanenteById('rem-salsa-1');
-    expect(updated?.currentQuantity.toString()).toBe('1.5000');
+    expect(updated?.currentQuantity.toString()).toBe('1.500');
   });
 
   it('debe cambiar automaticamente el estado a EXHAUSTED si la cantidad restante llega a 0 (200 OK)', async () => {
-    // Sembrar remanente con 0.2500 kg
+    // Sembrar remanente con 0.250 kg
     const lowRemanente = new Remanente({
       id: 'rem-low-1',
       insumoId: 'ins-salsa',
-      currentQuantity: new DecimalQuantity('0.2500'),
-      initialQuantity: new DecimalQuantity('0.2500'),
+      currentQuantity: new DecimalQuantity('0.250'),
+      initialQuantity: new DecimalQuantity('0.250'),
       location: 'KITCHEN_FRIDGE',
       status: 'ACTIVE',
       expirationDate: new Date(Date.now() + 12 * 60 * 60 * 1000),
@@ -61,11 +61,11 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-low-1/consume')
-      .send({ quantity: '0.2500' });
+      .send({ quantity: '0.250' });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('consumedQuantity', '0.2500');
-    expect(response.body).toHaveProperty('remainingQuantity', '0.0000');
+    expect(response.body).toHaveProperty('consumedQuantity', '0.250');
+    expect(response.body).toHaveProperty('remainingQuantity', '0.000');
     expect(response.body).toHaveProperty('status', 'EXHAUSTED');
     expect(response.body).toHaveProperty('isExhausted', true);
 
@@ -77,7 +77,7 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
-      .send({ quantity: '5.0000' });
+      .send({ quantity: '5.000' });
 
     expect(response.status).toBe(422);
     expect(response.body).toHaveProperty('error', 'ExcessConsumptionException');
@@ -85,6 +85,6 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
 
     // Garantizar que la cantidad del remanente NO cambio
     const updated = await stockRepo.findRemanenteById('rem-salsa-1');
-    expect(updated?.currentQuantity.toString()).toBe('1.7500');
+    expect(updated?.currentQuantity.toString()).toBe('1.750');
   });
 });

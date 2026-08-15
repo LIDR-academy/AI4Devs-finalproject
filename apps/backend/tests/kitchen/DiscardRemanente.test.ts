@@ -18,8 +18,8 @@ describe('TK-006: Waste and Discard Recording TDD Suite', () => {
     activeRemanente = new Remanente({
       id: 'rem-mozzarella-discard',
       insumoId: 'ins-mozzarella',
-      currentQuantity: new DecimalQuantity('1.5000'),
-      initialQuantity: new DecimalQuantity('1.5000'),
+      currentQuantity: new DecimalQuantity('1.500'),
+      initialQuantity: new DecimalQuantity('1.500'),
       location: 'KITCHEN_FRIDGE',
       status: 'ACTIVE',
       expirationDate: new Date(Date.now() - 2 * 60 * 60 * 1000), // Vencido hace 2 horas
@@ -36,19 +36,19 @@ describe('TK-006: Waste and Discard Recording TDD Suite', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('remanenteId', 'rem-mozzarella-discard');
-    expect(response.body).toHaveProperty('discardedQuantity', '1.5000');
+    expect(response.body).toHaveProperty('discardedQuantity', '1.500');
     expect(response.body).toHaveProperty('reason', 'EXPIRATION');
     expect(response.body).toHaveProperty('status', 'DISCARDED');
 
     // Verificar en repositorio
     const updated = await stockRepo.findRemanenteById('rem-mozzarella-discard');
     expect(updated?.status).toBe('DISCARDED');
-    expect(updated?.currentQuantity.toString()).toBe('0.0000');
+    expect(updated?.currentQuantity.toString()).toBe('0.000');
 
     // Verificar registro de auditoria de merma
     expect(stockRepo.movements.length).toBe(1);
     expect(stockRepo.movements[0].type).toBe('DISCARD_EXPIRATION');
-    expect(stockRepo.movements[0].quantity).toBe('1.5000');
+    expect(stockRepo.movements[0].quantity).toBe('1.500');
   });
 
   it('debe rechazar con 422 Unprocessable Entity si se intenta descartar un remanente ya inactivo', async () => {

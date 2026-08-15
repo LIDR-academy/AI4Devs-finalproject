@@ -75,7 +75,7 @@ describe('TK-009: PerformShiftReconciliationUseCase TDD Suite', () => {
       operatorId: 'user-op-1',
       notes: 'Cierre de turno noche',
       items: [
-        { remanenteId: 'rem-val', physicalQuantity: '1.8000' }
+        { remanenteId: 'rem-val', physicalQuantity: '1.800' }
       ],
     });
 
@@ -85,10 +85,10 @@ describe('TK-009: PerformShiftReconciliationUseCase TDD Suite', () => {
     expect(updatedExpired?.status).toBe('DISCARDED');
 
     const updatedValid = await stockRepo.findRemanenteById('rem-val');
-    expect(updatedValid?.currentQuantity.toString()).toBe('1.8000');
+    expect(updatedValid?.currentQuantity.toString()).toBe('1.800');
 
     const reconciliations = await reconRepo.findAll();
     expect(reconciliations.length).toBe(1);
-    expect(reconciliations[0].items[0].variance.toFixed(4)).toBe('-0.2000');
+    expect(reconciliations[0].items[0].variance.toFixed(3)).toBe('-0.200');
   });
 });

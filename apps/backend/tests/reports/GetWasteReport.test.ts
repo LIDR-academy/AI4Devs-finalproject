@@ -19,7 +19,7 @@ describe('TK-010: GetWasteReportUseCase TDD Suite', () => {
 
     expect(result.length).toBeGreaterThan(0);
     expect(typeof result[0].totalDiscardedQuantity).toBe('string');
-    expect(result[0].totalDiscardedQuantity).toBe('3.5000');
+    expect(result[0].totalDiscardedQuantity).toBe('3.500');
   });
 
   it('debe rechazar la consulta si startDate es posterior a endDate', async () => {

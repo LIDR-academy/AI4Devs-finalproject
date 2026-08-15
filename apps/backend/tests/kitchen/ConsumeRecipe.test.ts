@@ -56,7 +56,7 @@ describe('TK-008: ConsumeRecipeUseCase TDD Suite', () => {
     const result = await useCase.execute({ recipeId: 'rec-pizza-1', portions: 1 });
 
     expect(result.recipeName).toBe('Pizza Margarita');
-    expect(result.ingredientsConsumed[0].totalConsumed).toBe('0.1500');
+    expect(result.ingredientsConsumed[0].totalConsumed).toBe('0.150');
 
     // Remanente A debe haber sido totalmente consumido (0.0000) y quedar EXHAUSTED
     const updatedRemA = await stockRepo.findRemanenteById('rem-a');

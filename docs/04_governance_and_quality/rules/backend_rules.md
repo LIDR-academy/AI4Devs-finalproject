@@ -43,4 +43,4 @@ Esta directiva rige la implementación de Casos de Uso (Aplicación) y Adaptador
 
 ## 🔑 5. Precisión y Serialización JSON
 * **Hashing de Credenciales:** Pines y passwords deben ser hasheados con `bcrypt`.
-* **Serialización String:** Las cantidades decimales retornadas en JSON deben serializarse obligatoriamente como cadenas de texto (`string`) en formato formateado (ej. `.toFixed(4)`).
+* **Serialización String:** Las cantidades decimales retornadas en JSON deben serializarse obligatoriamente como cadenas de texto (`string`) en formato formateado a 3 decimales (ej. `.toFixed(3)`).

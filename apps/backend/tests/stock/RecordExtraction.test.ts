@@ -15,32 +15,32 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       id: 'ins-mozzarella-1',
       name: 'Queso Mozzarella',
       unitOfMeasure: 'KG',
-      warehouseStock: new DecimalQuantity('5.0000'),
+      warehouseStock: new DecimalQuantity('5.000'),
     });
     stockRepo.seedInsumo(insumoMozzarella);
   });
 
-  it('debe registrar exitosamente la extraccion de 2.0000 kg y crear remanente activo FEFO (201 Created)', async () => {
+  it('debe registrar exitosamente la extraccion de 2.000 kg y crear remanente activo FEFO (201 Created)', async () => {
     const app = createApp({ stockRepository: stockRepo });
     const response = await request(app)
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'ins-mozzarella-1',
-        quantity: '2.0000',
+        quantity: '2.000',
         toLocation: 'KITCHEN_FRIDGE',
       });
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('remanenteId');
     expect(response.body).toHaveProperty('insumoName', 'Queso Mozzarella');
-    expect(response.body).toHaveProperty('quantityExtracted', '2.0000');
-    expect(response.body).toHaveProperty('remainingWarehouseStock', '3.0000');
+    expect(response.body).toHaveProperty('quantityExtracted', '2.000');
+    expect(response.body).toHaveProperty('remainingWarehouseStock', '3.000');
     expect(response.body).toHaveProperty('status', 'ACTIVE');
     expect(response.body).toHaveProperty('expirationDate');
 
     // Verificar actualizacion en repositorio
     const updatedInsumo = await stockRepo.findInsumoById('ins-mozzarella-1');
-    expect(updatedInsumo?.warehouseStock.toString()).toBe('3.0000');
+    expect(updatedInsumo?.warehouseStock.toString()).toBe('3.000');
     expect(stockRepo.remanentes.size).toBe(1);
     expect(stockRepo.movements.length).toBe(1);
   });
@@ -51,7 +51,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'ins-mozzarella-1',
-        quantity: '10.0000',
+        quantity: '10.000',
       });
 
     expect(response.status).toBe(422);
@@ -60,7 +60,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
 
     // Garantizar que el stock NO fue alterado
     const updatedInsumo = await stockRepo.findInsumoById('ins-mozzarella-1');
-    expect(updatedInsumo?.warehouseStock.toString()).toBe('5.0000');
+    expect(updatedInsumo?.warehouseStock.toString()).toBe('5.000');
     expect(stockRepo.remanentes.size).toBe(0);
   });
 
@@ -70,7 +70,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'insumo-inexistente',
-        quantity: '1.0000',
+        quantity: '1.000',
       });
 
     expect(response.status).toBe(404);

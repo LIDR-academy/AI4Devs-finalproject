@@ -31,7 +31,7 @@ export class DecimalQuantity {
   }
 
   public toString(): string {
-    return this.value.toFixed(4);
+    return this.value.toFixed(3);
   }
 
   public toDecimal(): Decimal {
