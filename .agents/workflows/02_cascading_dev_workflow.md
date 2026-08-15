@@ -28,9 +28,9 @@ Antes de escribir cualquier línea de código:
 
 ---
 
-### FASE 1: Extracción / Sincronización de Reglas (`SK-15_extract_rules`)
+### FASE 1: Extracción / Sincronización de Reglas (`SK-27_extract_rules`)
 1. Revisa la carpeta `docs/04_governance_and_quality/rules/`.
-2. Si los archivos de reglas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) no existen o si la documentación en `docs/` sufrió cambios recientes, ejecuta la skill [SK-15 Extracción de Reglas](../skills/development/01_rules_extraction/SK-15_extract_project_rules.md) para sincronizar las reglas de gobernanza técnica.
+2. Si los archivos de reglas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) no existen o si la documentación en `docs/` sufrió cambios recientes, ejecuta la skill [SK-27 Extracción de Reglas](../skills/development/01_rules_extraction/SK-27_extract_project_rules.md) para sincronizar las reglas de gobernanza técnica.
 
 ---
 

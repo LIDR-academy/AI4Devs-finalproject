@@ -15,9 +15,9 @@ flowchart TD
         SK_DB_API --> SK_Backlog["SK-12 a SK-14: User Stories y Tickets TK-XXX"]
     end
 
-    subgraph STAGE2 ["ETAPA 2: EXTRACCION DE REGLAS (SK-15_extract_project_rules.md)"]
-        SK_Backlog --> SK15["SK-15: Extraccion de Reglas de Gobernanza"]
-        SK15 --> RulesFolder["Genera o Sincroniza: docs/04_governance_and_quality/rules/"]
+    subgraph STAGE2 ["ETAPA 2: EXTRACCION DE REGLAS (SK-27_extract_project_rules.md)"]
+        SK_Backlog --> SK27["SK-27: Extraccion de Reglas de Gobernanza"]
+        SK27 --> RulesFolder["Genera o Sincroniza: docs/04_governance_and_quality/rules/"]
     end
 
     subgraph STAGE3 ["ETAPA 3: DESARROLLO TDD (02_cascading_dev_workflow.md)"]
@@ -48,9 +48,9 @@ flowchart TD
 
 ---
 
-### 🟡 ETAPA 2: Extracción Dinámica de Reglas (`SK-15_extract_project_rules.md`)
+### 🟡 ETAPA 2: Extracción Dinámica de Reglas (`SK-27_extract_project_rules.md`)
 1. **Entrada:** Inicio de la fase de desarrollo.
-2. **Acción de la IA:** La skill `SK-15` lee la documentación recién actualizada en `docs/` y traduce las directivas técnicas a **archivos de reglas de gobernanza** en `docs/04_governance_and_quality/rules/`:
+2. **Acción de la IA:** La skill `SK-27` lee la documentación recién actualizada en `docs/` y traduce las directivas técnicas a **archivos de reglas de gobernanza** en `docs/04_governance_and_quality/rules/`:
    - `domain_rules.md` (Pureza TypeScript, `decimal.js`).
    - `backend_rules.md` (Express, Zod, Controllers, Lock pesimista).
    - `frontend_rules.md` (Botones ≥48px, Modo Oscuro HSL, Offline).

@@ -2,7 +2,8 @@
 import os
 import re
 
-project_root = "/home/lacruzjd/entrgafinal/AI4Devs-finalproject"
+# Portable: derive project root from script location (.agents/scripts/ -> project root)
+project_root = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 agents_dir = os.path.join(project_root, ".agents")
 
 # Replace relative links pointing to docs from inside .agents/skills/specs/

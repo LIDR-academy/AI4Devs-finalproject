@@ -3,7 +3,7 @@ import os
 import re
 import sys
 
-agents_dir = "/home/lacruzjd/entrgafinal/AI4Devs-finalproject/.agents"
+agents_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 broken_count = 0
 checked_count = 0
 

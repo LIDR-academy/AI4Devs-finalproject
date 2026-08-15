@@ -479,8 +479,52 @@ Para garantizar el cumplimiento de los flujos de desarrollo industrializado y la
 3. **[02_cascading_dev_workflow.md](.agents/workflows/02_cascading_dev_workflow.md):** Protocolo de desarrollo guiado por tickets técnicos.
 4. **[03_spec_audit_prompt.md](.agents/workflows/03_spec_audit_prompt.md):** Prompt de auditoría de especificaciones VSDD en 7 fases (`docs/`).
 5. **[04_dev_audit_prompt.md](.agents/workflows/04_dev_audit_prompt.md):** Prompt de auditoría de código y calidad VSDD en 7 fases (`apps/`).
+6. **[05_test_runner_agent.md](.agents/workflows/05_test_runner_agent.md):** Subagente autónomo de Testing TDD (Red-Green-Refactor).
+7. **[06_full_qa_pipeline.md](.agents/workflows/06_full_qa_pipeline.md):** Pipeline QA Completo SOTA v2.1 con Stryker Mutation Score ≥ 70% y veredicto JSON Schema.
 
-### **10.2. Prompt para Ejecución de Tickets con Reviewer Independiente y Quality Gates Enterprise:**
+### **10.2. Catálogo Completo de Skills (`.agents/skills/` — 27 Skills)**
+
+#### Fase Documental (`specs/`)
+| ID | Skill | Archivo |
+|:---|:------|:--------|
+| SK-01 | Descubrimiento de Producto | `specs/01_product_definition/SK-01_discover_product_vision.md` |
+| SK-02 | Generación del PRD | `specs/01_product_definition/SK-02_generate_prd.md` |
+| SK-03 | Modelo de Dominio | `specs/02_architecture_design/SK-03_design_domain_model.md` |
+| SK-04 | Diseño Técnico | `specs/02_architecture_design/SK-04_design_technical_architecture.md` |
+| SK-05 | Asistente UI/UX | `specs/02_architecture_design/SK-05_design_ui_ux_system.md` |
+| SK-06 | Esquema de Base de Datos | `specs/03_persistence_and_api/SK-06_design_database_schema.md` |
+| SK-07 | Especificación API REST | `specs/03_persistence_and_api/SK-07_design_api_specification.md` |
+| SK-08 | Estrategia de Seguridad | `specs/04_governance_and_quality/SK-08_define_security_strategy.md` |
+| SK-09 | Estrategia de Pruebas | `specs/04_governance_and_quality/SK-09_define_testing_strategy.md` |
+| SK-10 | Pipeline CI/CD | `specs/04_governance_and_quality/SK-10_configure_cicd_pipeline.md` |
+| SK-11 | Historias de Usuario (INVEST) | `specs/05_agile_planning/SK-11_generate_user_stories.md` |
+| SK-12 | Planificación de Tickets | `specs/05_agile_planning/SK-12_generate_backlog_tickets.md` |
+| SK-13 | Matriz de Trazabilidad | `specs/05_agile_planning/SK-13_generate_traceability_matrix.md` |
+| SK-14 | Mapa del Backlog | `specs/05_agile_planning/SK-14_generate_backlog_map.md` |
+| SK-15 | Registro de PRs | `specs/05_agile_planning/SK-15_document_pull_requests.md` |
+
+#### Fase de Codificación (`development/`)
+| ID | Skill | Archivo |
+|:---|:------|:--------|
+| SK-16 | Desarrollo Backend & Entidades | `development/02_backend_development/SK-16_develop_backend_ticket.md` |
+| SK-17 | Desarrollo Frontend & Touch UI | `development/03_frontend_development/SK-17_develop_frontend_ticket.md` |
+| SK-18 | Migraciones, Seeds & Anti-Orfandad | `development/04_persistence_and_db/SK-18_execute_db_migration.md` |
+| SK-19 | Refactor & Anti-N+1 / Anti-Mass-Assignment | `development/05_quality_and_lint/SK-19_refactor_and_lint.md` |
+| SK-20 | Browser Visual QA | `development/06_visual_qa/SK-20_execute_browser_qa.md` |
+| SK-21 | Auditoría Accesibilidad UI/a11y | `development/06_visual_qa/SK-21_audit_ui_accessibility.md` |
+| SK-22 | DBA Log Analysis & Troubleshooting | `development/05_quality_and_lint/SK-22_agent_troubleshooting.md` |
+| SK-23 | Seguridad Anti-Slopsquatting | `development/05_quality_and_lint/SK-23_audit_dependency_security.md` |
+| SK-24 | Characterization Testing | `development/05_quality_and_lint/SK-24_execute_characterization_testing.md` |
+| SK-25 | Auditoría de Validación de Contratos | `development/05_quality_and_lint/SK-25_audit_contract_validation.md` |
+| SK-26 | Recuperador Dinámico Few-Shot | `development/05_quality_and_lint/SK-26_retrieve_few_shot_context.md` |
+| SK-27 | Extracción de Reglas Legacy | `development/01_rules_extraction/SK-27_extract_project_rules.md` |
+
+### **10.3. Integridad del Framework y Scripts de Validación**
+- **Validar integridad:** `bash .agents/scripts/validate_agents.sh` — verifica directorios, cuenta skills/workflows y audita 0 enlaces rotos.
+- **Auditar enlaces:** `python3 .agents/scripts/check_links.py` — resolución portable vía `__file__` (sin rutas hardcodeadas).
+- **Auto-reparar enlaces:** `python3 .agents/scripts/fix_links.py` — corrige enlaces rotos que apunten a `docs/`.
+
+### **10.4. Prompt para Ejecución de Tickets con Reviewer Independiente y Quality Gates Enterprise:**
 ```md
 Agente, ejecuta el ticket técnico TK-XXX siguiendo el protocolo `.agents/workflows/02_cascading_dev_workflow.md`:
 1. Sincroniza las reglas de gobernanza en `docs/04_governance_and_quality/rules/` y `DESIGN.md`.

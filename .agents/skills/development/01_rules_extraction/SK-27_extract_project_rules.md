@@ -1,5 +1,5 @@
 ---
-name: SK-15_extract_project_rules
+name: SK-27_extract_project_rules
 description: "Analiza la documentación técnica del proyecto (PRDs, Arquitectura, Esquemas, ADRs) y deduce/genera automáticamente las reglas de gobernanza y codificación del proyecto en docs/04_governance_and_quality/rules/."
 version: "1.0.0"
 category: "development/01_rules_extraction"
