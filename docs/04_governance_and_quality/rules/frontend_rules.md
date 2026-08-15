@@ -6,7 +6,7 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 
 ## 🛠️ Pila Tecnológica Detectada
 * **Framework Core:** React / Next.js (TypeScript)
-* **Estilos & Diseño:** Vanilla CSS con variables HSL centralizadas en `index.css` (Paleta *Dark Petrol & Charcoal*: `--bg-root: #0b1319`, `--bg-card: #101c24`, `--color-primary: #00a896`, `--color-secondary: #e9c46a`)
+* **Estilos & Sistema de Diseño:** Vanilla CSS con variables HSL centralizadas en `index.css` y exportadas al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`).
 * **Persistencia Offline:** Dexie.js (IndexedDB / Cola FIFO local)
 * **Testing UI & QA Visual:** Vitest / React Testing Library / SK-21 a11y Auditor
 

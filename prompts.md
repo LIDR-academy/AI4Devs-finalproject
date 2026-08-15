@@ -104,8 +104,12 @@ Usando el skill de Asistente UI/UX y Capas en `.agents/skills/specs/02_architect
 ```
 
 #### Respuesta del agente de IA:
+La especificación completa del sistema de diseño UI/UX, tokens HSL, ergonomía táctil y exportación al estándar [`DESIGN.md`](DESIGN.md) de Google Labs se encuentra en:
+* [docs/02_architecture_design/05_ui_ux_design_system.md](docs/02_architecture_design/05_ui_ux_design_system.md)
+* [DESIGN.md](DESIGN.md)
 
 #### Nota de control humano:
+Se auditó la generación de `DESIGN.md` utilizando el linter oficial de Google Labs (`npx @google/design.md lint DESIGN.md`), verificando 0 errores, 0 advertencias y pleno cumplimiento de WCAG 2.2 AA en contrastes de color y áreas táctiles de 48px.
 
 ---
 
@@ -479,9 +483,9 @@ Para garantizar el cumplimiento de los flujos de desarrollo industrializado y la
 ### **10.2. Prompt para Ejecución de Tickets con Reviewer Independiente y Quality Gates Enterprise:**
 ```md
 Agente, ejecuta el ticket técnico TK-XXX siguiendo el protocolo `.agents/workflows/02_cascading_dev_workflow.md`:
-1. Sincroniza las reglas de gobernanza en `docs/03_governance_and_quality/rules/`.
+1. Sincroniza las reglas de gobernanza en `docs/04_governance_and_quality/rules/` y `DESIGN.md`.
 2. Aplica TDD (RED-GREEN-REFACTOR) usando repositorios InMemory.
-3. Supera la Quality Gate (0 errores linter/compilador y Mutation Score >= 70% con @stryker-mutator/core).
+3. Supera las Quality Gates: 0 errores linter/compilador (`pnpm run lint`), `npx @google/design.md lint DESIGN.md` (0 errores/warnings) y Mutation Score >= 70% con @stryker-mutator/core.
 4. Invoca la revisión adversarial del Reviewer Independiente (Validación Cruzada).
 5. Tras dictamen APROBADO, realiza un único commit atómico.
 ```

@@ -1,6 +1,6 @@
 ---
 document: ui_ux_design_system
-version: 1.2.0
+version: 1.4.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
@@ -16,6 +16,9 @@ inputs:
 
 ## 📝 Visión General y Estilo Visual
 Basado en la referencia de tablero de control industrial de alta precisión (**Dark Petrol Analytics Dashboard**), el sistema de interfaz de **RestoStock** utiliza un tema oscuro elegante (*Dark Petrol & Charcoal*) con contraste acentuado en turquesa reluciente, amarillo miel y alertas tri-color para la gestión táctil e intuitiva del método FEFO en cocina.
+
+> **Integración con Google Labs & Arnés `.agents`:**  
+> Este documento actúa como la **SSoT de UI/UX** coordinada por la Habilidad [`SK-05_design_ui_ux_system.md`](../../.agents/skills/specs/02_architecture_design/SK-05_design_ui_ux_system.md) (v3.5.0). Sus tokens cromáticos y reglas táctiles son exportados automáticamente al estándar machine-readable [`/DESIGN.md`](../../DESIGN.md) en la raíz del proyecto y auditados con la CLI de Google Labs (`npx -y @google/design.md lint DESIGN.md`).
 
 ---
 
