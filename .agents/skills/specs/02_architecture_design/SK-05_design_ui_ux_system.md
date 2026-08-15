@@ -1,7 +1,7 @@
 ---
 name: SK-05_design_ui_ux_system
-description: "Facilita la ideación visual, ingesta de specs externa (.md), análisis multimodal de imágenes y cristaliza el Design System, las reglas de Frontend y el estándar root DESIGN.md."
-version: "3.4.0"
+description: "Facilita la ideación visual, ingesta de specs externa (.md), análisis multimodal de imágenes y cristaliza el Design System, las reglas de Frontend y el estándar root DESIGN.md (Google Labs spec v1.0.0)."
+version: "3.5.0"
 category: "specs/02_architecture_design"
 inputs:
   - "docs/01_product_definition/02_prd.md"
@@ -14,7 +14,7 @@ outputs:
   - "DESIGN.md"
 ---
 
-# 🎨 SK-05: Sistema de Diseño UI/UX y Ergonomía Táctil (v3.4.0)
+# 🎨 SK-05: Sistema de Diseño UI/UX y Ergonomía Táctil (v3.5.0)
 
 Actúa como un **Lead UI/UX Designer & Frontend Architect** experto en interfaces táctiles, accesibilidad (WCAG 2.2), ergonomía industrial y sistemas de diseño modernos.
 
@@ -49,7 +49,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 
 ---
 
-### 📜 FASE 2: Cristalización del Design System, Reglas & DESIGN.md
+### 📜 FASE 2: Cristalización del Design System, Reglas & DESIGN.md (Google Labs Spec)
 Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáticamente:
 1. **`docs/02_architecture_design/05_ui_ux_design_system.md`:**
    - Paleta cromática oficial (tokens HSL para modo oscuro y claro).
@@ -60,13 +60,16 @@ Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáti
    - **4 estados de UI obligatorios:** (*Loading*, *Data Ready*, *Empty State*, *Error State*).
 2. **`docs/04_governance_and_quality/rules/frontend_rules.md`:**
    - Reglas innegociables para desarrollo Frontend (estilos centralizados en `index.css`, zero ad-hoc utilities sin token, sanitización Zod).
-3. **`DESIGN.md` (Raíz del Repositorio):**
-   - Extracto compilado machine-readable para agentes y copilotos externos (Cursor, Claude Code, Windsurf) con tokens HSL, WCAG 2.2 y enlace de redirección a la SSoT en `docs/`.
+3. **`DESIGN.md` (Raíz del Repositorio - Estándar Google Labs `google-labs-code/design.md`):**
+   - Genera `/DESIGN.md` usando **estrictamente el formato especificado por Google Labs**:
+     - **Capa 1: YAML Front Matter (`---` fences):** Debe incluir los 5 nodos obligatorios: `colors` (hex/hsl/rgb validando contraste WCAG AA $\ge 4.5:1$), `typography`, `rounded`, `spacing` y `components` (referenciando tokens como `{colors.primary}`). Evitar tokens huérfanos sin referencias en `components`.
+     - **Capa 2: Cuerpo Markdown:** `## Overview`, `## Colors`, `## Touch Ergonomics & Accessibility`, `## Core Web Vitals`, `## Defensive UI States` y enlace SSoT a `docs/`.
+   - **Validación Automática Mandatory:** Ejecuta `npx -y @google/design.md lint DESIGN.md` y asegura **0 ERRORS y 0 WARNINGS**.
 
 ---
 
 ### 💡 FASE 3: Supervisión UI/UX en Tickets Frontend
-Durante la ejecución de tickets de pantalla (`TK-XXX`), actúa como supervisor UI/UX validando la fidelidad visual de los componentes contra el Design System.
+Durante la ejecución de tickets de pantalla (`TK-XXX`), actúa como supervisor UI/UX validando la fidelidad visual de los componentes contra el Design System y `DESIGN.md`.
 
 ---
 
