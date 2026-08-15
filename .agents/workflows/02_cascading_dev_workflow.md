@@ -41,11 +41,11 @@ Si el ticket modifica o crea modelos de base de datos:
 
 ---
 
-### FASE 3: Implementación Guiada por Pruebas - TDD (`SK-16` / `SK-17`)
-Ejecuta la skill correspondiente ([SK-16 Backend](../skills/development/02_backend_development/SK-16_develop_backend_ticket.md) o [SK-17 Frontend](../skills/development/03_frontend_development/SK-17_develop_frontend_ticket.md)) siguiendo el ciclo TDD innegociable:
-1. **RED:** Escribe primero el test unitario o de integración (usando `InMemoryRepository` fakes en lugar de mocks frágiles) que valide las condiciones de aceptación del ticket. Confirma que la prueba falle por las razones correctas.
-2. **GREEN:** Implementa el código necesario (siguiendo el flujo Hexagonal: `Domain` ➔ `Application` ➔ `Infrastructure`) hasta que la prueba pase exitosamente.
-3. **REFACTOR:** Limpia el código, optimiza tipos y elimina duplicaciones manteniendo las pruebas en estado verde.
+### FASE 3: Implementación Guiada por Pruebas - TDD (`SK-16` / `SK-17` & `05_test_runner_agent`)
+Ejecuta la skill correspondiente ([SK-16 Backend](../skills/development/02_backend_development/SK-16_develop_backend_ticket.md) o [SK-17 Frontend](../skills/development/03_frontend_development/SK-17_develop_frontend_ticket.md)) delegando el bucle determinista de pruebas al subagente [05_test_runner_agent.md](05_test_runner_agent.md):
+1. **RED:** Escribir primero el test unitario o de integración usando `InMemoryRepository` fakes, confirmando el estado de fallo explícito.
+2. **GREEN:** Implementar el código mínimo en capas Hexagonales (`Domain` ➔ `Application` ➔ `Infrastructure`) hasta pasar el test.
+3. **REFACTOR & MUTATION:** Limpiar código e invocar la verificación de mutación según el umbral definido en `docs/04_governance_and_quality/rules/testing_rules.md`.
 
 ---
 
