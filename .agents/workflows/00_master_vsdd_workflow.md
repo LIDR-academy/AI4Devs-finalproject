@@ -17,7 +17,7 @@ flowchart TD
 
     subgraph STAGE2 ["ETAPA 2: EXTRACCION DE REGLAS (SK-15_extract_rules.md)"]
         SK_Backlog --> SK15["SK-15: Extraccion de Reglas de Gobernanza"]
-        SK15 --> RulesFolder["Genera o Sincroniza: docs/03_governance_and_quality/rules/"]
+        SK15 --> RulesFolder["Genera o Sincroniza: docs/04_governance_and_quality/rules/"]
     end
 
     subgraph STAGE3 ["ETAPA 3: DESARROLLO TDD (02_cascading_dev_workflow.md)"]
@@ -27,7 +27,7 @@ flowchart TD
     end
 
     subgraph STAGE4 ["ETAPA 4: QUALITY GATE Y COMMIT"]
-        SK16_17 --> SK19["SK-19: Quality Gate y Linter (0 Warnings)"]
+        SK19["SK-19: Quality Gate y Linter (0 Warnings)"]
         SK19 --> SK20["SK-20: Pruebas Visuales Browser QA"]
         SK20 --> GitCommit["Commit Atomico en Git"]
     end
@@ -37,20 +37,20 @@ flowchart TD
 
 ## 🔍 Descripción Detallada de las Etapas
 
-### 🟢 ETAPA 1: De la Idea a la Especificación Técnica (`nuevas_ideas_cascada.md`)
+### 🟢 ETAPA 1: De la Idea a la Especificación Técnica (`01_cascading_spec_workflow.md`)
 1. **Entrada:** Requerimiento de negocio suministrado por el usuario en lenguaje natural.
-2. **Acción de la IA:** Asume los roles de **Software Architect** y **Product Owner** e invoca la secuencia de skills de `specs/` (de `SK-01` a `SK-14`):
-   - **`SK-02`:** Registra las reglas de negocio en `docs/01_product_definition/02_restostock_prd.md`.
-   - **`SK-03` / `SK-06`:** Adapta las capas de arquitectura y estructura en `docs/02_architecture_design/`.
-   - **`SK-10` / `SK-11`:** Modifica el modelo físico en `prisma/schema.prisma` y los contratos HTTP en `docs/04_persistence_and_api/10_restostock_api_specification.md`.
-   - **`SK-12` / `SK-13`:** Crea la User Story (`US-NNN.md`) y los Tickets Técnicos (`TK-NNN.md`) atómicos en `docs/05_agile_planning/`.
-3. **Resultado:** El backlog y la documentación en `docs/` quedan 100% actualizados y trazables en el mapa Mermaid de `backlog_map.md`.
+2. **Acción de la IA:** Asume los roles de **Software Architect** y **Product Owner** e invoca la secuencia de skills de `specs/` (de `SK-01` a `SK-15`):
+   - **`SK-02`:** Registra las reglas de negocio en `docs/01_product_definition/` (PRD del producto).
+   - **`SK-03` / `SK-05`:** Adapta las capas de arquitectura y estructura en `docs/02_architecture_design/`.
+   - **`SK-06` / `SK-07`:** Modifica el modelo físico en `prisma/schema.prisma` y los contratos HTTP en `docs/03_persistence_and_api/` (Especificación de API y `openapi.yaml`).
+   - **`SK-11` / `SK-12`:** Crea la User Story (`US-NNN.md`) y los Tickets Técnicos (`TK-NNN.md`) atómicos en `docs/05_agile_planning/`.
+3. **Resultado:** El backlog y la documentación en `docs/` quedan 100% actualizados y trazables en el mapa Mermaid de `14_backlog_map.md`.
 
 ---
 
 ### 🟡 ETAPA 2: Extracción Dinámica de Reglas (`SK-15_extract_rules.md`)
 1. **Entrada:** Inicio de la fase de desarrollo.
-2. **Acción de la IA:** La skill `SK-15` lee la documentación recién actualizada en `docs/` y traduce las directivas técnicas a **archivos de reglas de gobernanza** en `docs/03_governance_and_quality/rules/`:
+2. **Acción de la IA:** La skill `SK-15` lee la documentación recién actualizada en `docs/` y traduce las directivas técnicas a **archivos de reglas de gobernanza** en `docs/04_governance_and_quality/rules/`:
    - `domain_rules.md` (Pureza TypeScript, `decimal.js`).
    - `backend_rules.md` (Express, Zod, Controllers, Lock pesimista).
    - `frontend_rules.md` (Botones ≥48px, Modo Oscuro HSL, Offline).

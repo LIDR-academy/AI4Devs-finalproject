@@ -1,0 +1,39 @@
+---
+document: matriz_trazabilidad
+version: 1.2.0
+status: approved
+inputs:
+  - docs/01_product_definition/02_prd.md
+  - docs/02_architecture_design/04_technical_design.md
+  - docs/03_persistence_and_api/06_database_schema.md
+  - docs/03_persistence_and_api/07_api_specification.md
+---
+
+# 📊 Matriz de Trazabilidad End-to-End (Verified Spec-Driven Development - VSDD)
+
+> **Navegación del Framework SDD:**  
+> [⬅️ Volver a Índice de Tickets (12_tickets/12_indice_tickets.md)](./12_tickets/12_indice_tickets.md) | [📖 Glosario & Reglas](../01_product_definition/01_glosario_y_reglas_negocio.md) | [Siguiente: Mapa Jerárquico del Backlog (14_backlog_map.md) ➡️](./14_backlog_map.md)
+
+---
+
+## 🗺️ Matriz de Trazabilidad del MVP
+
+| ID Req. | Módulo / Slice | Tabla / Modelo Prisma | Endpoint API REST | Historia de Usuario | Ticket Técnico (Backend) | Ticket Técnico (Frontend) | Estado | Skill de IA Asociada |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :---: | :--- |
+| **REQ-001** | `auth` | `User`, `Role` | `POST /api/auth/pin` | [US-001](11_user_stories/auth/US-001.md) | [TK-002](12_tickets/auth/backend/TK-002.md) | [TK-007-B](12_tickets/auth/frontend/TK-007-B.md) | ✅ Done | [SK-01_product_discovery.md](../../.agents/skills/specs/01_product_definition/SK-01_product_discovery.md) |
+| **REQ-002** | `stock` | `StockMovement`, `ActiveRemanent` | `POST /api/stock/extraction` | [US-002](11_user_stories/stock/US-002.md) | [TK-003](12_tickets/stock/backend/TK-003.md) | [TK-007-F](12_tickets/stock/frontend/TK-007-F.md) | ✅ Done | [SK-06_database_schema.md](../../.agents/skills/specs/03_persistence_and_api/SK-06_database_schema.md) |
+| **REQ-003** | `kitchen` | `ActiveRemanent`, `Item` | `GET /api/kitchen/remanentes` | [US-003](11_user_stories/kitchen/US-003.md) | [TK-004](12_tickets/kitchen/backend/TK-004.md) | [TK-007](12_tickets/kitchen/frontend/TK-007.md) | ✅ Done | [SK-07_api_specification.md](../../.agents/skills/specs/03_persistence_and_api/SK-07_api_specification.md) |
+| **REQ-004** | `kitchen` | `ActiveRemanent`, `PartialUsage` | `POST /api/kitchen/consume` | [US-004](11_user_stories/kitchen/US-004.md) | [TK-005](12_tickets/kitchen/backend/TK-005.md) | [TK-007](12_tickets/kitchen/frontend/TK-007.md) | ✅ Done | [SK-04_technical_design.md](../../.agents/skills/specs/02_architecture_design/SK-04_technical_design.md) |
+| **REQ-005** | `kitchen` | `ActiveRemanent`, `WasteLog` | `POST /api/kitchen/discard` | [US-005](11_user_stories/kitchen/US-005.md) | [TK-006](12_tickets/kitchen/backend/TK-006.md) | [TK-007](12_tickets/kitchen/frontend/TK-007.md) | ✅ Done | [SK-08_security_strategy.md](../../.agents/skills/specs/04_governance_and_quality/SK-08_security_strategy.md) |
+| **REQ-006** | `kitchen` | `ActiveRemanent`, `Notification` | `GET /api/kitchen/alerts` | [US-006](11_user_stories/kitchen/US-006.md) | N/A *(Cross-cutting)* | [TK-007](12_tickets/kitchen/frontend/TK-007.md) | ✅ Done | [SK-04_technical_design.md](../../.agents/skills/specs/02_architecture_design/SK-04_technical_design.md) |
+| **REQ-007** | `catalog`/`kitchen` | `Recipe`, `RecipeIngredient` | `POST /api/kitchen/recipe-consume` | [US-007](11_user_stories/kitchen/US-007.md) | [TK-008](12_tickets/kitchen/backend/TK-008.md) | [TK-007-C](12_tickets/kitchen/frontend/TK-007-C.md) | ✅ Done | [SK-03_domain_model.md](../../.agents/skills/specs/02_architecture_design/SK-03_domain_model.md) |
+| **REQ-008** | `kitchen` | `ShiftReconciliation`, `WasteLog` | `POST /api/kitchen/shift-reconciliation` | [US-008](11_user_stories/kitchen/US-008.md) | [TK-009](12_tickets/kitchen/backend/TK-009.md) | [TK-007-D](12_tickets/kitchen/frontend/TK-007-D.md) | ✅ Done | [SK-09_testing_strategy.md](../../.agents/skills/specs/04_governance_and_quality/SK-09_testing_strategy.md) |
+| **REQ-009** | `reports` | `WasteLog`, `Item` | `GET /api/reports/waste` | [US-009](11_user_stories/reports/US-009.md) | [TK-010](12_tickets/reports/backend/TK-010.md) | [TK-007-E](12_tickets/reports/frontend/TK-007-E.md) | ✅ Done | [SK-12_backlog_tickets.md](../../.agents/skills/specs/05_agile_planning/SK-12_backlog_tickets.md) |
+
+---
+
+## 🔍 Reglas de Cobertura Documental
+
+1. **Cero Orfandad:** Cada Ticket Técnico debe tener asignada al menos 1 Historia de Usuario válida (`US-XXX`) y 1 Endpoint REST documentado en OpenAPI.
+2. **Consistencia de Entidades:** Toda tabla listada en la columna *Prisma* debe corresponder exactamente a una declaración `model` en `schema.prisma`.
+3. **Control de Cambios:** Cualquier modificación sobre un requerimiento debe propagarse verticalmente siguiendo el [Protocolo de Integración en Cascada](../../.agents/workflows/01_cascading_spec_workflow.md).

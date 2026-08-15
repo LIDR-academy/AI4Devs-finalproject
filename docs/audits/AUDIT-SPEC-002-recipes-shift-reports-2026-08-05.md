@@ -70,7 +70,7 @@ Tras evaluar exhaustivamente toda la documentación sin acceso al código fuente
 ## 7. Sin Evidencia y Cobertura Declarada
 
 * **Documentos Auditados:**
-  1. `docs/01_product_definition/02_restostock_prd.md`
+  1. `docs/01_product_definition/03_restostock_prd.md`
   2. `docs/02_architecture_design/03_restostock_design.md`
   3. `docs/03_governance_and_quality/rules/` (7 reglas de gobernanza)
   4. `docs/04_persistence_and_api/09_restostock_database_schema.md`

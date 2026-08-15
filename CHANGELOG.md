@@ -51,7 +51,7 @@ Esta versión marca la consolidación de la **Concepción del Producto (Discover
 
 ### Added
 *   **Requerimientos del MVP (PRD):**
-    *   Especificación de requerimientos core, alcance, modelo de usuarios y límites del MVP ([docs/01_product_definition/02_restostock_prd.md](docs/01_product_definition/02_restostock_prd.md)).
+    *   Especificación de requerimientos core, alcance, modelo de usuarios y límites del MVP ([docs/01_product_definition/03_restostock_prd.md](docs/01_product_definition/03_restostock_prd.md)).
     *   Priorización MoSCoW del backlog de desarrollo.
 *   **Arquitectura de Software y Diseño:**
     *   Diagrama de contenedores C4 y flujos de datos en Mermaid ([docs/02_architecture_design/04_restostock_architecture_diagram.md](docs/02_architecture_design/04_restostock_architecture_diagram.md)).

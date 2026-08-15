@@ -32,7 +32,7 @@ RestoStock es un sistema de trazabilidad de cocina en tiempo real diseñado para
 
 ## 📋 4. Inventario de Artefactos Evaluados (Fase 0)
 
-1. **Definición de Producto (`docs/01_product_definition/`)**: PRD y alcance MVP (`02_restostock_prd.md`).
+1. **Definición de Producto (`docs/01_product_definition/`)**: PRD y alcance MVP (`03_restostock_prd.md`).
 2. **Diseño Arquitectónico (`docs/02_architecture_design/`)**: Visión de sistema, diagramas C4 y registros ADR (`03_restostock_design.md`).
 3. **Gobernanza y Reglas (`docs/03_governance_and_quality/rules/`)**: 7 archivos de directivas técnicas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`).
 4. **Base de Datos y API (`docs/04_persistence_and_api/`)**: Esquema Prisma relacional (`09_restostock_database_schema.md`) y OpenAPI 3.0 (`10_restostock_api_specification.md`).
