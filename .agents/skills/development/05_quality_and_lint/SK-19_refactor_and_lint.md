@@ -18,7 +18,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 ---
 
 ## 🔍 FASE 1: Descubrimiento de Herramientas de Calidad y Reglas
-1. **Identificar Linters & Typecheck:** Verifica `tsconfig.json`, `.eslintrc`, `oxlint` o scripts de `package.json` (`pnpm run lint`, `pnpm run build`).
+1. **Identificar Linters & Typecheck:** Verifica los comandos y herramientas de análisis estático, linter y compilación declarados en `AGENTS.md` y en los manifest del proyecto.
 2. **Descubrir Reglas de Gobernanza:** Lee `docs/04_governance_and_quality/rules/` (`backend_rules.md`, `frontend_rules.md`, `domain_rules.md`, etc.).
 
 ---
@@ -33,14 +33,14 @@ Sigue estrictamente este flujo de trabajo secuencial:
 1. **Refactorización SOLID:**
    - **SRP:** Extraer funciones o clases con múltiples responsabilidades.
    - **DIP:** Reemplazar instancias concretas por inyecciones de dependencias vía interfaz.
-2. **Eliminar `any` y Código Muerto:** Reemplazar tipos `any` por tipos explícitos o `import type`, eliminar imports no usados y funciones obsoletas.
-3. **Formateo Estricto:** Ejecutar el linter y formateador oficial para unificar la sintaxis.
+2. **Eliminar Tipos Inseguros y Código Muerto:** Reemplazar tipos dinámicos o inseguros (ej. `any`, `Object`, unvalidated casting) por tipos o estructuras explícitas y estrictas, eliminar imports o módulos no usados y funciones obsoletas.
+3. **Formateo Estricto:** Ejecutar el linter y formateador oficial declarado en `AGENTS.md` para unificar la sintaxis.
 
 ---
 
 ## 🚨 FASE 4: Verificación Final (Quality Gate: 0 Errors / 0 Warnings & Mutation Score $\ge 70\%$)
-1. **Verificar Tipos y Compilación:** Ejecuta `pnpm run build` para asegurar 0 errores TypeScript.
-2. **Asegurar Cero Advertencias:** Ejecuta `pnpm run lint`. La refactorización sólo se da por completada con **0 errores y 0 advertencias**.
-3. **Mutation Testing Anti-Tautología:** Ejecutar `@stryker-mutator/core` sobre los módulos de dominio/casos de uso. Exigir un **Mutation Score $\ge 70\%$** (matar mutantes). Pruebas sin aserciones reales rebotan la Quality Gate.
-4. **Tests de Regresión:** Vuelve a correr la suite de pruebas para asegurar 100% de regresión exitosa.
+1. **Verificar Tipos y Compilación:** Ejecuta el comando de compilación o verificación de tipos declarado en `AGENTS.md` para asegurar 0 errores de compilación/análisis estático.
+2. **Asegurar Cero Advertencias:** Ejecuta el comando de linter oficial declarado en `AGENTS.md`. La refactorización sólo se da por completada con **0 errores y 0 advertencias**.
+3. **Mutation Testing Anti-Tautología:** Ejecutar el runner de Mutation Testing del proyecto (ej. Stryker, Mutmut, PITest, cargo-mutants) sobre los módulos de dominio/casos de uso. Exigir un **Mutation Score $\ge 70\%$** (matar mutantes). Pruebas sin aserciones reales rebotan la Quality Gate.
+4. **Tests de Regresión:** Vuelve a correr la suite de pruebas mediante el comando de test declarado en `AGENTS.md` para asegurar 100% de regresión exitosa.
 5. **Reporte al Humano:** Presentar los archivos refactorizados y las métricas de mutación estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

@@ -19,29 +19,25 @@ Sigue estrictamente este árbol de decisión procedimental:
 
 ## 🔍 FASE 1: Clasificación del Error
 1. **Identificar la Naturaleza del Error:**
-   - **Error de Tipos / Compilación (ej. TS2307, TS2339):** Fallo en interfaces o módulos desactualizados.
-   - **Error de Migración de BD (ej. Prisma P3009, lock de migración):** Tablas desincronizadas o migraciones fallidas.
-   - **Error de Dependencias (ej. Module Not Found):** Paquete de monorepo no construido.
+   - **Error de Tipos / Compilación (ej. faltantes de módulos, inconsistencias de tipos/interfaces):** Módulos o declaraciones desactualizadas.
+   - **Error de Persistencia / Migración de BD (ej. locks de migración, esquemas desalineados):** Tablas desincronizadas o clientes ORM no generados.
+   - **Error de Dependencias o Monorepo:** Módulo compartido no construido o faltante en el árbol del paquete.
 
 ---
 
 ## 🛠️ FASE 2: Algoritmo de Autorrecuperación
 
 ### Caso A: Fallo de Compilación en Monorepo / Módulos Compartidos
-1. **Acción:** Recompilar todos los paquetes del monorepo en orden de dependencia:
-   - Ejecutar `pnpm run build` desde la raíz del proyecto para regenerar las declaraciones `.d.ts` de librerías compartidas.
+1. **Acción:** Recompilar todos los paquetes del monorepo en orden de dependencia usando el comando de `build` declarado en `AGENTS.md`.
 
-### Caso B: Desincronización de Base de Datos o Prisma Schema
-1. **Acción:** Regenerar el cliente del ORM y forzar la sincronización del esquema local:
-   - Ejecutar `pnpm --filter @restostock/backend exec prisma generate`.
-   - Si la BD local está corrupta en entorno dev efímero, ejecutar `pnpm --filter @restostock/backend exec prisma db push --skip-generate`.
+### Caso B: Desincronización de Base de Datos o Esquema ORM
+1. **Acción:** Regenerar el cliente del ORM y forzar la sincronización del esquema local según los comandos oficiales declarados en `AGENTS.md` (ej. generación de cliente ORM o sincronización de esquema local de desarrollo).
 
-### Caso C: Choque de Tipos o Caché del Linter
-1. **Acción:** Limpiar la caché de compilación:
-   - Eliminar carpetas `dist/`, `.next/`, `node_modules/.cache` e invocar el comprobador de tipos `pnpm run build`.
+### Caso C: Choque de Tipos o Caché de Build/Linter
+1. **Acción:** Limpiar la caché de compilación y artefactos generados (carpetas de salida del compilador ej. `dist/`, `build/`, `.cache/`, artefactos del framework) e invocar el comprobador de tipos u orden de `build` oficial de `AGENTS.md`.
 
 ---
 
 ## 🚨 FASE 3: Verificación de Recuperación
 1. **Confirmar Corrección:** Ejecutar nuevamente el comando que había fallado inicialmente.
-2. **Validar Calidad:** Ejecutar `pnpm run test` y `pnpm run lint` para asegurar 0 errores y 0 regresiones.
+2. **Validar Calidad:** Ejecutar los comandos oficiales de `test` y `lint` declarados en `AGENTS.md` para asegurar 0 errores y 0 regresiones.
