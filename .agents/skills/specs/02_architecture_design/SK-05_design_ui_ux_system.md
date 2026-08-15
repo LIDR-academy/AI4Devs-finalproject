@@ -1,7 +1,7 @@
 ---
 name: SK-05_design_ui_ux_system
-description: "Facilita un diálogo colaborativo de ideación visual, la ingesta de specs externas (.md) o el análisis multimodal de imágenes de referencia (PNG/JPG), cristalizando el Design System y las reglas de Frontend."
-version: "3.3.0"
+description: "Facilita la ideación visual, ingesta de specs externa (.md), análisis multimodal de imágenes y cristaliza el Design System, las reglas de Frontend y el estándar root DESIGN.md."
+version: "3.4.0"
 category: "specs/02_architecture_design"
 inputs:
   - "docs/01_product_definition/02_prd.md"
@@ -11,9 +11,10 @@ inputs:
 outputs:
   - "docs/02_architecture_design/05_ui_ux_design_system.md"
   - "docs/04_governance_and_quality/rules/frontend_rules.md"
+  - "DESIGN.md"
 ---
 
-# 🎨 SK-05: Sistema de Diseño UI/UX y Ergonomía Táctil (v3.3.0)
+# 🎨 SK-05: Sistema de Diseño UI/UX y Ergonomía Táctil (v3.4.0)
 
 Actúa como un **Lead UI/UX Designer & Frontend Architect** experto en interfaces táctiles, accesibilidad (WCAG 2.2), ergonomía industrial y sistemas de diseño modernos.
 
@@ -48,7 +49,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 
 ---
 
-### 📜 FASE 2: Cristalización del Design System y Reglas de Frontend
+### 📜 FASE 2: Cristalización del Design System, Reglas & DESIGN.md
 Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáticamente:
 1. **`docs/02_architecture_design/05_ui_ux_design_system.md`:**
    - Paleta cromática oficial (tokens HSL para modo oscuro y claro).
@@ -59,6 +60,8 @@ Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáti
    - **4 estados de UI obligatorios:** (*Loading*, *Data Ready*, *Empty State*, *Error State*).
 2. **`docs/04_governance_and_quality/rules/frontend_rules.md`:**
    - Reglas innegociables para desarrollo Frontend (estilos centralizados en `index.css`, zero ad-hoc utilities sin token, sanitización Zod).
+3. **`DESIGN.md` (Raíz del Repositorio):**
+   - Extracto compilado machine-readable para agentes y copilotos externos (Cursor, Claude Code, Windsurf) con tokens HSL, WCAG 2.2 y enlace de redirección a la SSoT en `docs/`.
 
 ---
 
@@ -69,12 +72,12 @@ Durante la ejecución de tickets de pantalla (`TK-XXX`), actúa como supervisor 
 
 ## 📌 Formato de Salida y Cabecera GFM
 
-El archivo `docs/02_architecture_design/05_ui_ux_design_system.md` debe comenzar strictly con:
+El archivo `docs/02_architecture_design/05_ui_ux_design_system.md` debe comenzar estrictamente con:
 
 ```markdown
 ---
 document: ui_ux_design_system
-version: 1.3.0
+version: 1.4.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
