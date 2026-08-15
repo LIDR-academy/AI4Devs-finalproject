@@ -1,5 +1,5 @@
 ---
-name: SK-25_contract_validator_audit
+name: SK-25_audit_contract_validation
 description: "Ejecuta una auditoría diferencial adversarial entre el Contrato de API (ej. OpenAPI, AsyncAPI, GraphQL) y los validadores de runtime DTO/Schema, clasificando y ordenando las discrepancias por nivel de gravedad (CRÍTICA, ALTA, MEDIA, BAJA)."
 version: "1.3.0"
 category: "development/05_quality_and_lint"

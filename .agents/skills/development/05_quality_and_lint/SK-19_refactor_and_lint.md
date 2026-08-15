@@ -1,5 +1,5 @@
 ---
-name: SK-19_refactor_lint
+name: SK-19_refactor_and_lint
 description: "Guía el proceso de refactorización de código, resolución de advertencias de compilación, alineación con SOLID y limpieza de errores del linter."
 version: "2.1.0"
 category: "development/05_quality_and_lint"

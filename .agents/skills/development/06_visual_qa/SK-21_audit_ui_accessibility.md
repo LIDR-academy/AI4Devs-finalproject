@@ -1,5 +1,5 @@
 ---
-name: SK-21_ui_accessibility_auditor
+name: SK-21_audit_ui_accessibility
 description: "Guía procedimental para auditar la accesibilidad WCAG 2.1 AA/AAA, contraste HSL y tamaños táctiles ergonómicos de la interfaz de usuario."
 version: "1.0.0"
 category: "development/06_visual_qa"

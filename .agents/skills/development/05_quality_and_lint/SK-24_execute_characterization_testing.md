@@ -1,5 +1,5 @@
 ---
-name: SK-24_characterization_testing
+name: SK-24_execute_characterization_testing
 description: "Ejecuta Pruebas de Caracterización (Characterization Testing) sobre código legacy o existente sin tests para congelar su comportamiento actual en verde antes de refactorizar hacia la Arquitectura Hexagonal."
 version: "1.2.0"
 category: "development/05_quality_and_lint"

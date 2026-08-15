@@ -1,5 +1,5 @@
 ---
-name: SK-20_browser_qa
+name: SK-20_execute_browser_qa
 description: "Guía al subagente de navegación de la IA para ejecutar pruebas visuales, de accesibilidad táctil y funcionales sobre la interfaz de usuario local."
 version: "1.0.0"
 category: "development/06_visual_qa"

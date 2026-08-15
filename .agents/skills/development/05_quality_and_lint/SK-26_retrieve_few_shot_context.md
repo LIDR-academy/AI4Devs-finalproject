@@ -1,5 +1,5 @@
 ---
-name: SK-26_few_shot_retriever
+name: SK-26_retrieve_few_shot_context
 description: "Realiza una búsqueda semántica de patrones de código reales en el repositorio actual para inyectar ejemplos Few-Shot dinámicos antes de la fase de codificación."
 version: "1.2.0"
 category: "development/05_quality_and_lint"

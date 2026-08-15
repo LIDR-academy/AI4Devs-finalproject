@@ -1,5 +1,5 @@
 ---
-name: SK-23_dependency_security_guard
+name: SK-23_audit_dependency_security
 description: "Guía de seguridad para prevenir alucinaciones de paquetes (Slopsquatting), auditar dependencias vulnerables y bloquear instalaciones de terceros no autorizadas."
 version: "1.0.0"
 category: "development/05_quality_and_lint"

@@ -23,8 +23,8 @@ Tu objetivo es analizar el PRD (`docs/01_product_definition/02_prd.md`), el Glos
 
 Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 1. **No escribir código fuente:** No crear archivos `.ts`, `.tsx`, `.js`, ni código de aplicación.
-2. **No modelar base de datos en detalle:** El modelado 3NF y esquemas DDL/Prisma son responsabilidad exclusiva de **`SK-06_database_schema.md`**.
-3. **No redactar contratos de API REST:** La especificación de endpoints y payloads JSON es responsabilidad exclusiva de **`SK-07_api_specification.md`**.
+2. **No modelar base de datos en detalle:** El modelado 3NF y esquemas DDL/Prisma son responsabilidad exclusiva de **`SK-06_design_database_schema.md`**.
+3. **No redactar contratos de API REST:** La especificación de endpoints y payloads JSON es responsabilidad exclusiva de **`SK-07_design_api_specification.md`**.
 4. **No saltarse el protocolo HitL:** No guardar el documento en disco en la Fase 1 sin la confirmación explícita del humano sobre el Stack Tecnológico.
 5. **No generar sintaxis Mermaid sin escapar:** Prohibido usar paréntesis `()`, corchetes `[]` o barras `/` en las etiquetas de los nodos sin encerrar la cadena en comillas dobles (`"..."`).
 

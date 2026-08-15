@@ -1,5 +1,5 @@
 ---
-name: SK-18_db_migration
+name: SK-18_execute_db_migration
 description: "Guía el proceso de modificación de esquemas de datos, ejecución de migraciones y actualización del cliente de persistencia de forma segura y agnóstica."
 version: "2.1.0"
 category: "development/04_persistence_and_db"

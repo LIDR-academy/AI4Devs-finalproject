@@ -1,5 +1,5 @@
 ---
-name: SK-16_backend_ticket
+name: SK-16_develop_backend_ticket
 description: "Guía el desarrollo atómico de un ticket backend respetando la Arquitectura Hexagonal en Vertical Slices, TDD, sanitización activa de DTOs, precisión matemática de punto fijo, Eager Loading (Anti-N+1), CRUDs de entidades secundarias/pivotes, transacciones de BD, alineación de contrato y mutation score >= 70%."
 version: "3.7.0"
 category: "development/02_backend_development"
