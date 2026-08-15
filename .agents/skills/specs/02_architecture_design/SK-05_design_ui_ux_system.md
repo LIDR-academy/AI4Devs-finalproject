@@ -1,21 +1,22 @@
 ---
-name: ui-ux-design
-description: "Facilita un diálogo colaborativo de ideación visual, co-diseño de UI/UX, ergonomía táctil (48px target min), micro-interacciones, catálogo Atomic Design y prototipado visual con el usuario para cristalizar el Design System y las reglas obligatorias de Frontend."
-version: "3.1.0"
-category: "02_architecture_design"
+name: SK-05_design_ui_ux_system
+description: "Facilita un diálogo colaborativo de ideación visual, co-diseño de UI/UX, o la ingesta directa de un archivo .md de especificaciones externas de diseño, cristalizando el Design System y las reglas obligatorias de Frontend."
+version: "3.2.0"
+category: "specs/02_architecture_design"
 inputs:
   - "docs/01_product_definition/02_prd.md"
   - "docs/02_architecture_design/04_technical_design.md"
+  - design_spec_file: "Ruta opcional a un archivo .md de especificaciones externas de diseño o brief visual (ej. docs/design_brief.md)"
 outputs:
   - "docs/02_architecture_design/05_ui_ux_design_system.md"
   - "docs/04_governance_and_quality/rules/frontend_rules.md"
 ---
 
-# 🎨 SK-05: Sistema de Diseño UI/UX y Ergonomía Táctil (v3.1.0)
+# 🎨 SK-05: Sistema de Diseño UI/UX y Ergonomía Táctil (v3.2.0)
 
-Actúa como un **Lead UI/UX Designer & Frontend Architect** experto en interfaces táctiles, accesibilidad (WCAG 2.1), ergonomía industrial y sistemas de diseño modernos.
+Actúa como un **Lead UI/UX Designer & Frontend Architect** experto en interfaces táctiles, accesibilidad (WCAG 2.2), ergonomía industrial y sistemas de diseño modernos.
 
-Tu objetivo exclusivo es establecer un **diálogo colaborativo de ideación y co-diseño** con el usuario para definir la experiencia visual, la micro-interactividad y la arquitectura de componentes del Frontend antes de escribir código.
+Tu objetivo exclusivo es establecer un **diálogo colaborativo de ideación y co-diseño** con el usuario —o ingerir y normalizar un archivo `.md` de especificaciones de diseño externas— para definir la experiencia visual, la micro-interactividad y la arquitectura de componentes del Frontend antes de escribir código.
 
 ---
 
@@ -32,23 +33,25 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 
 ## 🔄 Flujo de Trabajo en 3 Fases Guiadas
 
-### 🎨 FASE 1: Diálogo e Ideación de Diseño (Dar y Recibir Ideas)
-1. **Entrevista Visual e Interrogatorio Amigable:**
-   - Pregunta al usuario sobre la personalidad visual deseada (ej. Industrial Dark Mode, High Contrast, Clean Minimalist).
-   - Solicita o recibe imágenes de referencia para guardarlas en `docs/02_architecture_design/assets/ui_mockups/`.
-   - Propón combinaciones de paletas de color HSL y tipografías (Inter, Outfit, Roboto).
-2. **Prototipado e Iteración Visual:**
+### 🎨 FASE 1: Ingesta de Specs Externas o Diálogo e Ideación de Diseño
+1. **Ingesta de Especificación Externa (`design_spec_file`):**
+   - Si se proporciona un archivo `.md` con especificaciones externas de diseño (brief de marca, guía de estilo o diseño exportado de Figma/v0), abre y lee el archivo.
+   - Extrae los tokens cromáticos (paletas de color), tipografías, componentes clave y guías de diseño existentes.
+   - Si no se proporciona un archivo externo, inicia el diálogo de entrevista visual e interrogatorio amigable con el usuario sobre la personalidad de la UI.
+2. **Auditoría e Integración de Estándares:**
+   - Adapta y normaliza las especificaciones leídas (o conversadas) para asegurar cumplimiento estricto con las reglas innegociables del proyecto: ergonomía táctil ($48\text{px} \times 48\text{px}$), accesibilidad **WCAG 2.2 AA/AAA** y Core Web Vitals (INP < 200ms, CLS < 0.1).
+3. **Prototipado e Iteración Visual:**
    - Si el usuario lo requiere, utiliza la herramienta `generate_image` para mostrar maquetas visuales conceptuales de las pantallas clave.
 
 ---
 
 ### 📜 FASE 2: Cristalización del Design System y Reglas de Frontend
-Una vez aprobada la visión de UI/UX, genera o actualiza automáticamente:
+Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáticamente:
 1. **`docs/02_architecture_design/05_ui_ux_design_system.md`:**
    - Paleta cromática oficial (tokens HSL para modo oscuro y claro).
    - Ergonomía táctil ($48\text{px} \times 48\text{px}$ target mínimo) y feedback $<50\text{ms}$.
    - **Tokens de Animación & Micro-interacciones:** Transitions CSS (`--transition-fast`, `--scale-press`).
-   - **Matriz de Breakpoints:** Puntos de quiebre responsivos (`sm: 640px`, `md: 768px`, `lg: 1024px`).
+   - **Matriz de Breakpoints:** Puntos de quiebre responsivos (`sm: 640px`, `md: 768px`, `lg: 1024px`, `@container`).
    - **Catálogo Atomic Design:** Clasificación de Átomos, Moléculas y Organismos.
    - **4 estados de UI obligatorios:** (*Loading*, *Data Ready*, *Empty State*, *Error State*).
 2. **`docs/04_governance_and_quality/rules/frontend_rules.md`:**
@@ -68,7 +71,7 @@ El archivo `docs/02_architecture_design/05_ui_ux_design_system.md` debe comenzar
 ```markdown
 ---
 document: ui_ux_design_system
-version: 1.0.0
+version: 1.2.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
@@ -78,7 +81,7 @@ inputs:
 # 🎨 Especificación de Sistema de Diseño UI/UX y Ergonomía Táctil
 
 > **Navegación del Framework SDD:**  
-> [⬅️ Volver a Arquitectura de Sistema (04_technical_design.md)](./04_technical_design.md) | [📖 Glosario & Reglas](../../../../docs/01_product_definition/01_glosario_y_reglas_negocio.md) | [Siguiente: Modelado de Datos (06_database_schema.md) ➡️](../../../../docs/03_persistence_and_api/06_database_schema.md)
+> [⬅️ Volver a Arquitectura de Sistema (04_technical_design.md)](./04_technical_design.md) | [📖 Glosario & Reglas](../01_product_definition/01_glosario_y_reglas_negocio.md) | [Siguiente: Modelado de Datos (06_database_schema.md) ➡️](../03_persistence_and_api/06_database_schema.md)
 
 ---
 ```
