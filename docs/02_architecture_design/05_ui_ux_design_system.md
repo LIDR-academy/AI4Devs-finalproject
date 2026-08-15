@@ -95,3 +95,17 @@ Basado en la referencia de tablero de control industrial de alta precisión (**D
    - **Loading State:** Skeletons animados pulsantes sobre `--bg-card`.
    - **Empty State:** Ilustración minimalista turquesa con mensaje descriptivo ("No hay remanentes en riesgo").
    - **Error State:** Banner con borde rojo `--color-danger` y botón táctil de reintento.
+
+---
+
+## 🔢 Formateo Inteligente de Cantidades y Adaptación por Unidad (UX Anti-Ambigüedad)
+
+1. **Insumos Discretos/Contables (`UNITS`, `UNIDADES`, `PZA`, `PACK`):**
+   - Renderizado en números enteros directos sin decimales (ej. **`12 Ud.`** en lugar de `12.000 UNITS`) cuando el valor es entero.
+   - Etiqueta de unidad localizada en español: `UNITS` $\rightarrow$ **`Ud.`**
+   - Controles de consumo rápido táctiles adaptativos: **`-1`**, **`-2`**, **`-5`**.
+
+2. **Insumos Continuos por Peso/Volumen (`KG`, `L`, `ML`, `G`):**
+   - Supresión de ceros no significativos a la derecha (*trim trailing zeros*) (ej. **`1,75 KG`** en lugar de `1.750 KG`, **`4,5 L`** en lugar de `4.500 L`).
+   - Controles de consumo rápido táctiles fraccionales: **`-0.25`**, **`-0.5`**, **`-1.0`**.
+

@@ -28,3 +28,11 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 * **Abstracción por Repositorios (DIP):** Componentes React consumen la API mediante interfaces de repositorio (`IRemanenteRepository`), soportando repositorios HTTP o InMemory (Mock).
 * **Custom Hooks (SRP):** Encapsular la lógica de estado o colas de eventos en Custom Hooks dedicados.
 * **Estados Obligatorios:** Implementar obligatoriamente Skeletons (Loading), Empty State, Error State con reintento, y Banner Offline.
+
+---
+
+## 🔢 4. Formateo de Cantidades sin Ambigüedad Cognitiva
+* **Formateador Inteligente (`formatQuantity`):** Los componentes de UI deben usar obligatoriamente helpers de formateo para renderizar valores numéricos.
+* **Insumos Contables:** Para unidades discretas (`UNITS`, `UNIDADES`, `PZA`), mostrar enteros simples en español (ej. `12 Ud.`) evitando ceros decimales que se confundan con separadores de miles (`12.000`).
+* **Botones Adaptativos:** Adaptar los decrementos rápidos según la unidad (`-1`, `-2`, `-5` para `UNITS` frente a `-0.25`, `-0.5`, `-1.0` para `KG`/`L`).
+
