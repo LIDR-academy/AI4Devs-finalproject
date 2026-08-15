@@ -19,7 +19,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🔍 FASE 1: Descubrimiento de Herramientas de Calidad y Reglas
 1. **Identificar Linters & Typecheck:** Verifica `tsconfig.json`, `.eslintrc`, `oxlint` o scripts de `package.json` (`pnpm run lint`, `pnpm run build`).
-2. **Descubrir Reglas de Gobernanza:** Lee `docs/03_governance_and_quality/rules/` (`backend_rules.md`, `frontend_rules.md`, `domain_rules.md`, etc.).
+2. **Descubrir Reglas de Gobernanza:** Lee `docs/04_governance_and_quality/rules/` (`backend_rules.md`, `frontend_rules.md`, `domain_rules.md`, etc.).
 
 ---
 
@@ -43,3 +43,4 @@ Sigue estrictamente este flujo de trabajo secuencial:
 2. **Asegurar Cero Advertencias:** Ejecuta `pnpm run lint`. La refactorización sólo se da por completada con **0 errores y 0 advertencias**.
 3. **Mutation Testing Anti-Tautología:** Ejecutar `@stryker-mutator/core` sobre los módulos de dominio/casos de uso. Exigir un **Mutation Score $\ge 70\%$** (matar mutantes). Pruebas sin aserciones reales rebotan la Quality Gate.
 4. **Tests de Regresión:** Vuelve a correr la suite de pruebas para asegurar 100% de regresión exitosa.
+5. **Reporte al Humano:** Presentar los archivos refactorizados y las métricas de mutación estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

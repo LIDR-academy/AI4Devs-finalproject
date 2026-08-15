@@ -3,7 +3,7 @@
 > **DIRECTIVA PARA EL AGENTE REVIEWER DE IA:**  
 > Este documento contiene el meta-prompt oficial de auditoría de código y calidad. Cuando actúes en el rol de **Reviewer Independiente (Validación Cruzada)** para evaluar la implementación de un ticket técnico (`TK-XXX`), debes ejecutar estrictamente esta auditoría en 7 fases y emitir un veredicto formal (**APROBADO PARA COMMIT** / **RECHAZADO CON DEFECTOS**).
 > 
-> **PRINCIPIO AGNÓSTICO:** Este prompt deduce dinámicamente las herramientas de compilación, linters, runners de pruebas y esquemas de persitencia a partir de los archivos de gobernanza ubicados en `docs/03_governance_and_quality/rules/`.
+> **PRINCIPIO AGNÓSTICO:** Este prompt deduce dinámicamente las herramientas de compilación, linters, runners de pruebas y esquemas de persitencia a partir de los archivos de gobernanza ubicados en `docs/04_governance_and_quality/rules/`.
 
 ---
 
@@ -19,7 +19,7 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 ---
 
 ### FASE 0: Descubrimiento Dinámico de Reglas del Proyecto
-1. Inspecciona la carpeta `docs/03_governance_and_quality/rules/`.
+1. Inspecciona la carpeta `docs/04_governance_and_quality/rules/`.
 2. Lee las directivas activas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`).
 3. Identifica el runner de pruebas del proyecto, el motor de linters/compiladores y los estándares de sanitización.
 

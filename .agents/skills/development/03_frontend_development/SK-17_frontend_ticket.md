@@ -19,7 +19,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🔍 FASE 1: Descubrimiento de Guías de UI, SOLID y Reglas
 1. **Analizar el Ticket:** Lee el ticket en `{ticket_path}` y comprende los criterios de aceptación.
-2. **Descubrir Reglas de UX/UI y Design System:** Consulta obligatoriamente `docs/02_architecture_design/04_ui_ux_design_system.md`, las imágenes en `docs/02_architecture_design/assets/ui_mockups/` y `docs/03_governance_and_quality/rules/frontend_rules.md` para identificar:
+2. **Descubrir Reglas de UX/UI y Design System:** Consulta obligatoriamente `docs/02_architecture_design/04_ui_ux_design_system.md`, las imágenes en `docs/02_architecture_design/assets/ui_mockups/` y `docs/04_governance_and_quality/rules/frontend_rules.md` para identificar:
    - Botones táctiles de mínimo **48px x 48px** con **8px** de margen.
    - Tokens HSL oficial (Industrial Dark Mode + Glassmorphism).
    - Estándares de accesibilidad **WCAG 2.1 AA/AAA** (Contraste min `4.5:1` / `7:1`).
@@ -55,4 +55,4 @@ Antes de entregar el ticket, ejecuta esta lista de cotejo interna:
 ## 🚨 FASE 5: Verificación y Calidad
 1. **Compilación & Types:** Corre `pnpm run build` para asegurar 0 errores de compilación TypeScript.
 2. **Análisis Estático:** Ejecuta `pnpm run lint` cumpliendo 0 errores y 0 advertencias.
-3. **Reporte:** Presenta los archivos creados o modificados y confirma el cumplimiento de ergonomía y accesibilidad.
+3. **Reporte al Humano:** Presentar los componentes creados/modificados y los resultados del pase de calidad estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

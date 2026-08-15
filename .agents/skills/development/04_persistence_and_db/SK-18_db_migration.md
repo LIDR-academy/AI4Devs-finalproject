@@ -18,7 +18,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 ---
 
 ## 🔍 FASE 1: Descubrimiento de Reglas y ORM
-1. **Descubrir Reglas de Base de Datos:** Lee `docs/03_governance_and_quality/rules/database_rules.md`. Identifica:
+1. **Descubrir Reglas de Base de Datos:** Lee `docs/04_governance_and_quality/rules/database_rules.md`. Identifica:
    - Convenciones físicas: Tablas y columnas en `snake_case`.
    - Modelos Prisma en `PascalCase` con `@map()` y `@@map()`.
    - Tipos de datos decimales obligatorios `Decimal(12, 4)` para cantidades o costos.
@@ -42,4 +42,4 @@ Sigue estrictamente este flujo de trabajo secuencial:
 ## 🧪 FASE 4: Verificación y Datos de Prueba (Seeding)
 1. **Validar Estado de la DB:** Verifica la sincronización del esquema local.
 2. **Ejecutar Seed:** Corre `pnpm --filter @restostock/backend exec prisma db seed` para garantizar datos base consistentes.
-3. **Reporte:** Detalla las migraciones generadas y el estado de la base de datos.
+3. **Reporte al Humano:** Detallar las migraciones generadas y el estado de la base de datos estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

@@ -20,7 +20,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🔍 FASE 1: Descubrimiento de Configuración Local y UX
 1. **Identificar la URL de Desarrollo:** Si no se provee `target_url`, lee los archivos de configuración del frontend (ej. `package.json`, `vite.config.ts`, `next.config.js`) para descubrir en qué puerto corre el servidor local.
-2. **Descubrir Reglas Visuales del Proyecto:** Busca y lee las directivas de frontend y accesibilidad táctil en `docs/03_governance_and_quality/rules/` o en `docs/`. Identifica:
+2. **Descubrir Reglas Visuales del Proyecto:** Busca y lee las directivas de frontend y accesibilidad táctil en `docs/04_governance_and_quality/rules/` o en `docs/`. Identifica:
    - El tamaño mínimo de elementos interactivos (táctil).
    - La paleta de colores y variables CSS oficiales (Design Tokens).
    - Los estados defensivos requeridos (Carga, Vacío, Error, Desconexión).
@@ -51,4 +51,4 @@ Utiliza el subagente de navegación para ejecutar el `{user_flow}` paso a paso y
 ## 📹 FASE 4: Documentación y Cierre de Procesos
 1. **Registrar Evidencia:** Genera capturas de pantalla (screenshots) o grabaciones de video de los puntos clave del flujo interactivo y del Visual QA.
 2. **Cierre:** Detiene de forma segura los servidores y procesos que abriste localmente.
-3. **Reportar Resultados:** Detalla los hallazgos visuales, adjunta las rutas de las capturas guardadas en la carpeta de artefactos y confirma si la interfaz cumple con la guía de diseño del proyecto.
+3. **Reporte al Humano:** Detallar los hallazgos visuales y las rutas de las capturas guardadas estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

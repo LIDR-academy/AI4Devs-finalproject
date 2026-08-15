@@ -19,7 +19,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 ---
 
 ## 🔍 FASE 1: Inspección de Reglas de UI y Tokens de Diseño
-1. **Leer Reglas de UI del Proyecto:** Consulta `docs/03_governance_and_quality/rules/frontend_rules.md` para identificar:
+1. **Leer Reglas de UI del Proyecto:** Consulta `docs/04_governance_and_quality/rules/frontend_rules.md` para identificar:
    - La paleta de colores HSL oficial (Fondos, Textos, Alertas FEFO).
    - El tamaño físico mínimo de los botones e inputs táctiles (`48px x 48px`).
    - La tipografía requerida y la jerarquía visual de encabezados.
@@ -45,7 +45,4 @@ Sigue estrictamente este flujo de trabajo secuencial:
 ---
 
 ## 📋 FASE 4: Generación de Reporte y Matriz de Hallazgos
-1. **Consolidación de Hallazgos:** Genera un reporte formateado en Markdown estructurado en:
-   - **Puntaje Global de Accesibilidad (0-100%).**
-   - **Tabla de Elementos Afectados:** Componente, selector CSS, contraste actual vs requerido, dimensión actual vs requerida.
-   - **Snippet de Corrección CSS recomendado:** Proveer el valor exacto de `var(--color-...)` o `min-height / min-width` a aplicar en `index.css` o en el componente React/Next.js.
+1. **Consolidación de Hallazgos:** Presentar el puntaje de accesibilidad (0-100%), la tabla de elementos afectados y las correcciones recomendadas estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.
