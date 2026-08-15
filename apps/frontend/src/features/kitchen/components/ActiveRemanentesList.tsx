@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, AlertTriangle, MinusCircle, Trash2, CheckCircle2 } from 'lucide-react';
 import { RemanenteFEFOItem } from '../services/kitchen.service.js';
+import { formatQuantity, formatUnitLabel } from '../../../utils/formatters.js';
 
 interface ActiveRemanentesListProps {
   items: RemanenteFEFOItem[];
@@ -34,6 +35,9 @@ export const ActiveRemanentesList: React.FC<ActiveRemanentesListProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {items.map((item, index) => {
         const isCritical = item.hoursRemaining < 24;
+        const isDiscrete = ['UNITS', 'UNIDADES', 'PZA', 'PACK', 'UD', 'UDS'].includes(
+          item.unitOfMeasure.toUpperCase()
+        );
 
         return (
           <div
@@ -96,50 +100,50 @@ export const ActiveRemanentesList: React.FC<ActiveRemanentesListProps> = ({
               </div>
             </div>
 
-            {/* Cantidad Actual Disponible */}
+            {/* Cantidad Actual Disponible Formateada */}
             <div style={{ textAlign: 'right', minWidth: '140px' }}>
               <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {item.currentQuantity}{' '}
+                {formatQuantity(item.currentQuantity, item.unitOfMeasure)}{' '}
                 <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  {item.unitOfMeasure}
+                  {formatUnitLabel(item.unitOfMeasure)}
                 </span>
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                Inicial: {item.initialQuantity} {item.unitOfMeasure}
+                Inicial: {formatQuantity(item.initialQuantity, item.unitOfMeasure)} {formatUnitLabel(item.unitOfMeasure)}
               </div>
             </div>
 
-            {/* Botones Tactiles de Consumo Rapido y Descarte */}
+            {/* Botones Tactiles de Consumo Rapido Adaptativos y Descarte */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 className="btn-touch btn-secondary"
-                onClick={() => onConsume(item.id, 0.25)}
+                onClick={() => onConsume(item.id, isDiscrete ? 1 : 0.25)}
                 style={{ minWidth: '70px', height: '48px', padding: '0 12px', fontSize: '0.9rem', fontWeight: 700 }}
-                title="Consumir 0.25 porciones"
+                title={isDiscrete ? 'Consumir 1 unidad' : 'Consumir 0.25 porciones'}
                 id={`btn-consume-025-${item.id}`}
               >
-                -0.25
+                {isDiscrete ? '-1' : '-0.25'}
               </button>
 
               <button
                 className="btn-touch btn-secondary"
-                onClick={() => onConsume(item.id, 0.5)}
+                onClick={() => onConsume(item.id, isDiscrete ? 2 : 0.5)}
                 style={{ minWidth: '70px', height: '48px', padding: '0 12px', fontSize: '0.9rem', fontWeight: 700 }}
-                title="Consumir 0.5 porciones"
+                title={isDiscrete ? 'Consumir 2 unidades' : 'Consumir 0.5 porciones'}
                 id={`btn-consume-050-${item.id}`}
               >
-                -0.5
+                {isDiscrete ? '-2' : '-0.5'}
               </button>
 
               <button
                 className="btn-touch btn-primary"
-                onClick={() => onConsume(item.id, 1.0)}
+                onClick={() => onConsume(item.id, isDiscrete ? 5 : 1.0)}
                 style={{ minWidth: '75px', height: '48px', padding: '0 12px', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
-                title="Consumir 1.0 porcion"
+                title={isDiscrete ? 'Consumir 5 unidades' : 'Consumir 1.0 porcion'}
                 id={`btn-consume-100-${item.id}`}
               >
                 <MinusCircle size={16} />
-                -1.0
+                {isDiscrete ? '-5' : '-1.0'}
               </button>
 
               <button

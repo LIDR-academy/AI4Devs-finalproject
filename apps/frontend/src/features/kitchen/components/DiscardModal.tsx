@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
 import { KitchenService, RemanenteFEFOItem } from '../services/kitchen.service.js';
+import { formatQuantity, formatUnitLabel } from '../../../utils/formatters.js';
 
 interface DiscardModalProps {
   remanente: RemanenteFEFOItem | null;
@@ -46,7 +47,7 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, 
         </div>
 
         <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '0.95rem' }}>
-          Se dará de baja el insumo <strong>{remanente.insumoName}</strong> ({remanente.currentQuantity} {remanente.unitOfMeasure}) del inventario activo.
+          Se dará de baja el insumo <strong>{remanente.insumoName}</strong> ({formatQuantity(remanente.currentQuantity, remanente.unitOfMeasure)} {formatUnitLabel(remanente.unitOfMeasure)}) del inventario activo.
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

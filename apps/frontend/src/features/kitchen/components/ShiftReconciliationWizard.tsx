@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ClipboardCheck, AlertOctagon, CheckSquare, X, Plus, Minus } from 'lucide-react';
 import { RemanenteFEFOItem } from '../services/kitchen.service.js';
 import { ReconciliationService } from '../services/reconciliation.service.js';
+import { formatQuantity, formatUnitLabel } from '../../../utils/formatters.js';
 
 interface ShiftReconciliationWizardProps {
   isOpen: boolean;
@@ -122,7 +123,7 @@ export const ShiftReconciliationWizard: React.FC<ShiftReconciliationWizardProps>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{r.insumoName}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      Teórico: {r.currentQuantity} {r.unitOfMeasure} | Expira en {r.hoursRemaining}h
+                      Teórico: {formatQuantity(r.currentQuantity, r.unitOfMeasure)} {formatUnitLabel(r.unitOfMeasure)} | Expira en {r.hoursRemaining}h
                     </div>
                     {diff !== 0 && (
                       <div
@@ -133,7 +134,7 @@ export const ShiftReconciliationWizard: React.FC<ShiftReconciliationWizardProps>
                           marginTop: '2px',
                         }}
                       >
-                        Varianza: {diff > 0 ? `+${diff.toFixed(3)}` : diff.toFixed(3)} {r.unitOfMeasure}
+                        Varianza: {diff > 0 ? `+${formatQuantity(diff, r.unitOfMeasure)}` : formatQuantity(diff, r.unitOfMeasure)} {formatUnitLabel(r.unitOfMeasure)}
                         {isItemCritical && ' ⚠️ (>50% de desvío)'}
                       </div>
                     )}
