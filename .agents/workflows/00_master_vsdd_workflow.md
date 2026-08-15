@@ -42,7 +42,7 @@ flowchart TD
 2. **Acción de la IA:** Asume los roles de **Software Architect** y **Product Owner** e invoca la secuencia de skills de `specs/` (de `SK-01` a `SK-15`):
    - **`SK-02`:** Registra las reglas de negocio en `docs/01_product_definition/` (PRD del producto).
    - **`SK-03` / `SK-05`:** Adapta las capas de arquitectura y estructura en `docs/02_architecture_design/`.
-   - **`SK-06` / `SK-07`:** Modifica el modelo físico en `prisma/schema.prisma` y los contratos HTTP en `docs/03_persistence_and_api/` (Especificación de API y `openapi.yaml`).
+   - **`SK-06` / `SK-07`:** Modifica el modelo físico en la declaración del esquema ORM y los contratos HTTP en `docs/03_persistence_and_api/` (Especificación de API y `openapi.yaml`).
    - **`SK-11` / `SK-12`:** Crea la User Story (`US-NNN.md`) y los Tickets Técnicos (`TK-NNN.md`) atómicos en `docs/05_agile_planning/`.
 3. **Resultado:** El backlog y la documentación en `docs/` quedan 100% actualizados y trazables en el mapa Mermaid de `14_backlog_map.md`.
 
@@ -50,21 +50,14 @@ flowchart TD
 
 ### 🟡 ETAPA 2: Extracción Dinámica de Reglas (`SK-27_extract_project_rules.md`)
 1. **Entrada:** Inicio de la fase de desarrollo.
-2. **Acción de la IA:** La skill `SK-27` lee la documentación recién actualizada en `docs/` y traduce las directivas técnicas a **archivos de reglas de gobernanza** en `docs/04_governance_and_quality/rules/`:
-   - `domain_rules.md` (Pureza TypeScript, `decimal.js`).
-   - `backend_rules.md` (Express, Zod, Controllers, Lock pesimista).
-   - `frontend_rules.md` (Botones ≥48px, Modo Oscuro HSL, Offline).
-   - `database_rules.md` (`snake_case`, `Decimal(12,4)`).
-   - `testing_rules.md` (TDD, `InMemoryRepository` fakes).
-   - `security_rules.md` (Bcrypt, JWT, OWASP).
-   - `git_rules.md` (Conventional Commits).
+2. **Acción de la IA:** La skill `SK-27` lee la documentación recién actualizada en `docs/` y traduce las directivas técnicas a **archivos de reglas de gobernanza** en `docs/04_governance_and_quality/rules/` (ej. `domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) infiriendo dinámicamente los estándares del proyecto actual.
 
 ---
 
 ### 🔵 ETAPA 3: De Ticket a Código Probado (`desarrollo_cascada.md`)
 1. **Entrada:** Orden de implementar un ticket técnico específico (ej. *"Desarrolla el ticket TK-001"*).
 2. **Acción de la IA:**
-   - **Migración (`SK-18`):** Si el ticket cambia la BD, modifica `schema.prisma`, corre la migración local y regenera el cliente ORM.
+   - **Migración (`SK-18`):** Si el ticket cambia la BD, modifica el esquema de persistencia u ORM del proyecto, corre la migración local y regenera el cliente ORM.
    - **Codificación TDD (`SK-16` / `SK-17`):**
      - **RED:** Escribe primero la prueba automatizada que falla (usando `InMemoryRepository` en lugar de mocks frágiles).
      - **GREEN:** Escribe la implementación en las capas Hexagonales (`Domain` ➔ `Application` ➔ `Infrastructure`) hasta pasar el test.
@@ -73,7 +66,7 @@ flowchart TD
 ---
 
 ### 🟣 ETAPA 4: Quality Gate, QA Visual y Commit
-1. **Inspección de Código (`SK-19`):** Pasa el compilador de tipos (`tsc`) y linter (`eslint`/`oxlint`). Se exige estricto **0 errores y 0 advertencias**.
+1. **Inspección de Código (`SK-19`):** Ejecuta los compiladores de tipos y linters oficiales declarados en `AGENTS.md`. Se exige estricto **0 errores y 0 advertencias**.
 2. **QA Visual en Navegador (`SK-20`):** Si es un ticket de UI, abre el subagente de navegación interactivo, prueba los clics táctiles en botones de 48px y registra evidencias.
 3. **Commit Atómico:** Realiza exactamente **1 commit en Git** vinculado al ticket `TK-XXX`.
 

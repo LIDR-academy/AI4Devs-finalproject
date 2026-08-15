@@ -37,11 +37,11 @@ Este workflow ejecuta el pipeline de aseguramiento de calidad de forma interacti
 
 ---
 
-## 🔄 Paso 3 — Bucle TDD & Auto-Loop de Mutación Stryker ($\ge 70\%$)
+## 🔄 Paso 3 — Bucle TDD & Auto-Loop de Pruebas de Mutación ($\ge 70\%$)
 1. **RED:** Escribir primero las pruebas y asertar explícitamente el estado de fallo en consola.
 2. **GREEN:** Implementar el código mínimo necesario para poner la suite en verde usando los comandos de `AGENTS.md`.
-3. **STRYKER AUTO-LOOP:** Ejecutar la prueba de mutación. Si el **Stryker Mutation Score es < 70%**, el agente ejecutará iteraciones autónomas (hasta 3 ciclos) agregando casos borde adicionales hasta matar a todos los mutantes sintéticos.
-4. **VEREDICTO ESTRUCTURADO (JSON SCHEMA ENFORCEMENT):** El Reviewer Adversarial emitirá su veredicto estrictamente bajo este formato JSON:
+3. **MUTATION AUTO-LOOP:** Ejecutar el runner de Mutation Testing del proyecto (ej. Stryker, Mutmut, PITest, cargo-mutants). Si el **Mutation Score es < 70%**, el agente ejecutará iteraciones autónomas (hasta 3 ciclos) agregando casos borde adicionales hasta matar a todos los mutantes sintéticos.
+4. **VEREDICTO ESTRUCTURADO (JSON SCHEMA ENFORCEMENT):** El Reviewer Adversarial emitirá su veredicto strictly bajo este formato JSON:
 
 ```json
 {
