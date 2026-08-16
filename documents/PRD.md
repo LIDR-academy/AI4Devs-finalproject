@@ -24,8 +24,8 @@ a circulación), tanto desde la cara del **suscriptor** como desde el
 
 Los sets de Lego son caros, se montan una vez y luego ocupan espacio: coste +
 almacenamiento + "ya me aburrí". Clickoteca resuelve ese dolor con un modelo de
-préstamo: se paga una cuota mensual (o un alquiler puntual) para disfrutar sets
-sin comprarlos ni quedárselos.
+préstamo: se paga una cuota mensual para disfrutar sets sin comprarlos ni
+quedárselos.
 
 ## 3. Usuarios y roles
 
@@ -81,17 +81,30 @@ realizó y **cuándo** (auditoría).
   piezas, foto de caja); edad recomendada y dificultad curadas a mano para el
   subconjunto semilla (no cubiertas por ese dataset).
 
-### 4.3 Suscripciones y alquiler puntual
+### 4.3 Suscripciones
 
 | Plan | Sets simultáneos | Precio/mes |
 |---|---|---|
 | BASIC | 1 | 14,99 € (configurable) |
 | PREMIUM | hasta 2 | 24,99 € (configurable) |
-| Alquiler puntual (sin suscripción) | 1, por periodo pactado | % configurable del valor de referencia del Set, con mínimo configurable |
 
 Precios anclados a Brick Borrow (UK), el competidor con estructura más
 parecida (1 set / 2 sets simultáneos con cambios ilimitados) — detalle del
 benchmarking en `design.md` D9.
+
+**Decisión 2026-08-16 (revisión de flujos, `ux-flows.md` §8.1):**
+
+- **Alquilar exige plan.** El **alquiler puntual sin suscripción sale del
+  alcance** (§5); la tabla ya no lo recoge y desaparecen sus dos parámetros
+  configurables (% sobre el valor de referencia y mínimo).
+- **La elección de plan forma parte del alta** (§4.1): no existe el estado
+  "cuenta creada sin plan". Usuario, dirección, método de pago y suscripción se
+  crean en la misma transacción.
+- **Cambio de plan** entre BASIC y PREMIUM, sobre una suscripción existente:
+  inmediato al subir; al bajar, **rechazado mientras el suscriptor tenga más
+  sets ocupando plaza de los que permite el plan nuevo** (mismo criterio que
+  pausar/cancelar). El bono de cola ya aplicado **no se recalcula**: se congela
+  al encolar (D11), así que subir de plan no adelanta esperas en curso.
 
 Reglas adicionales:
 - No se puede solicitar un nuevo set hasta que la devolución del anterior esté
@@ -159,30 +172,33 @@ Al back-office: devolución incompleta detectada, copia dada de baja.
 - Verificación de identidad real y redacción legal real (texto *lorem ipsum*;
   el titular debe declarar ser adulto con tarjeta de crédito).
 - Penalización económica por pérdida de piezas.
+- **Alquiler puntual sin suscripción** (fuera desde el 2026-08-16): alquilar
+  exige un plan activo. Ver §4.3 y `ux-flows.md` §8.1.
 
 ## 6. Flujo end-to-end del suscriptor
 
-1. **Alta**: se registra, declara mayoría de edad, aporta tarjeta (simulada),
-   dirección de envío/contacto, acepta condiciones.
-2. **Elige plan** (BASIC/PREMIUM) o entra sin suscripción para un alquiler
-   puntual.
-3. **Solicita un Set** del catálogo → asignación directa si hay copia
+1. **Alta**: se registra, declara mayoría de edad, **elige plan (BASIC o
+   PREMIUM)**, aporta tarjeta (simulada), dirección de envío/contacto, acepta
+   condiciones. La cuenta nace con suscripción activa.
+2. **Solicita un Set** del catálogo → asignación directa si hay copia
    disponible, o entra en cola si no.
-4. **En cola** (si aplica): espera su turno; el score combina antigüedad en
+3. **En cola** (si aplica): espera su turno; el score combina antigüedad en
    cola y bono de plan.
-5. **Le toca**: recibe la oferta con ventana de confirmación → acepta,
+4. **Le toca**: recibe la oferta con ventana de confirmación → acepta,
    rechaza, o la deja caducar (con recordatorio a mitad de ventana).
-6. **Entrega**: un operador registra la condición de la copia antes de
+5. **Entrega**: un operador registra la condición de la copia antes de
    enviarla; el suscriptor confirma conformidad o reporta discrepancia al
    recibirla.
-7. **Disfruta el set**: consultable en "Mis sets"; si hay cola para ese set y
+6. **Disfruta el set**: consultable en "Mis sets"; si hay cola para ese set y
    el admin activó recordatorios, los recibe periódicamente.
-8. **Inicia devolución** cuando quiere cambiar de set.
-9. **Operador recibe e inspecciona**: completo → higienización → disponible
+7. **Inicia devolución** cuando quiere cambiar de set.
+8. **Operador recibe e inspecciona**: completo → higienización → disponible
    (u ofrecida si hay cola); incompleto → incidencia de back-office; daño
    irreparable o pérdida → un admin da la copia de baja.
-10. **Nuevo set**: solo puede solicitarlo cuando su devolución anterior está
-    completada (copia en `DISPONIBLE`).
+9. **Nuevo set**: solo puede solicitarlo cuando su devolución anterior está
+   completada (copia en `DISPONIBLE`).
+10. **Cambio de plan** (opcional): BASIC ⇄ PREMIUM; bajar exige no tener más
+    sets fuera de los que permite el plan nuevo.
 11. **Cancelación** (opcional, camino feliz): solo sin copias en su poder ni
     pendientes.
 
@@ -218,11 +234,21 @@ lanzamiento real necesitaría, como mínimo:
 
 ## 9. Diseño y experiencia de usuario
 
-**Pendiente** — no hay mockups ni wireframes todavía (`readme.md` §1.3 sigue
-vacío). Recomendado producirlos como siguiente paso, una vez cerrado el stack
-de frontend (la librería de componentes elegida condiciona el sistema de
-diseño). No se inventan pantallas en este PRD para no dar una falsa sensación
-de que el UX ya está decidido.
+**En curso.** El primer entregable está hecho: **[`ux-flows.md`](ux-flows.md)** —
+actores y superficies, mapa de navegación y flujos de tarea por rol (visitante,
+suscriptor, operador, admin y el sistema), con la tabla de cobertura historia →
+flujo → pantalla y las decisiones que quedan por tomar.
+
+Ese cruce entre las historias y el código implementado deja un dato que este PRD
+debe recoger: **8 de 18 historias tienen recorrido completo por interfaz**; el
+resto existe en la API sin pantalla desde la que ejecutarse, y **contratar un
+plan (HU-02) no existe en ninguna capa** — las únicas suscripciones del sistema
+son las de la semilla (ver §5 sobre el alcance y `ux-flows.md` §8.1).
+
+**Pendiente:** sistema de diseño (paleta, tipografía y vocabulario visual de
+estados) y wireframes; `readme.md` §1.3 sigue vacío. Se mantiene el criterio de
+no inventar pantallas antes de que las decisiones de `ux-flows.md` §8 estén
+cerradas.
 
 ## 10. Criterios de éxito del MVP
 
@@ -308,7 +334,7 @@ estándar:
 | UC-P02 | Ver detalle de set | Visitante | Consulta la ficha del set (foto, nº de piezas, tema, dificultad). La **disponibilidad y la posición en cola** solo son visibles para suscriptores autenticados (proyección pública vs. autenticada, `design.md` D13). |
 | UC-P03 | Registrarse | Visitante | Alta como suscriptor: datos personales, declaración de mayoría de edad, tarjeta simulada, dirección de envío (obligatoria) y aceptación de condiciones. |
 | UC-P04 | Iniciar sesión | Visitante | Autenticación con credenciales. Precondición implícita de todos los UCs del Suscriptor. |
-| UC-P05 | Activar / cambiar plan | Suscriptor | Contrata o cambia entre plan BASIC (14,99 €/mes, 1 set) y PREMIUM (24,99 €/mes, hasta 2 sets simultáneos). También cubre el alta de alquiler puntual. |
+| UC-P05 | Cambiar de plan | Suscriptor | Cambia entre BASIC (14,99 €/mes, 1 set) y PREMIUM (24,99 €/mes, hasta 2 sets simultáneos). La contratación inicial ocurre en el alta (UC-P03); bajar de plan se rechaza si tiene más sets fuera de los que permite el plan nuevo. |
 | UC-P06 | Solicitar un set | Suscriptor | Solicita el alquiler de un set. Si hay copia `DISPONIBLE`, se asigna directamente. Si no, se ofrece unirse a la cola (UC-P07). |
 | UC-P07 | Unirse a la cola de reservas | Suscriptor | Se añade a la cola del set cuando no hay copias disponibles. Sujeto al límite de colas simultáneas por usuario (configurable, default 1). |
 | UC-P08 | Confirmar oferta de cola | Suscriptor | Acepta la asignación de la copia dentro de la ventana de confirmación. La copia pasa a `ALQUILADA` y el suscriptor abandona la cola. |
@@ -428,7 +454,7 @@ flowchart LR
 | UC-B07 | Marcar copia incompleta o dañada | Operador | Detecta y registra la incidencia tras inspección. La copia queda en `INCOMPLETA` pendiente de reposición o baja por Admin. |
 | UC-B08 | Consultar historial limitado del cliente | Operador | Vista de lectura parcial del historial del suscriptor para atención y soporte telefónico/email (sin datos sensibles completos). |
 | UC-B09 | Dar de baja una copia | **Admin** | Transita la copia a `BAJA` (daño irreparable, pérdida o sustracción). Acción exclusiva del Admin por su impacto económico. |
-| UC-B10 | Configurar planes y precios | **Admin** | Ajusta el precio mensual de BASIC y PREMIUM y los parámetros del alquiler puntual (% y mínimo sobre el valor de referencia del Set). |
+| UC-B10 | Configurar planes y precios | **Admin** | Ajusta el precio mensual, los sets simultáneos y el bono de cola de BASIC y PREMIUM. |
 | UC-B11 | Configurar reglas del sistema | **Admin** | Establece: bono de cola premium, duración de ventana de confirmación, antigüedad mínima para sets restringidos, límite de colas simultáneas por usuario. |
 | UC-B12 | Activar recordatorios de retención | **Admin** | Habilita recordatorios periódicos para un Set concreto que acumula cola, enviados al suscriptor que lo retiene. |
 | UC-B13 | Gestionar empleados | **Admin** | Crea, modifica y desactiva cuentas de Operadores. |
@@ -539,8 +565,12 @@ Las entidades se organizan en **tres anillos por orden de importancia**:
   `effectiveEntryAt` al encolar.
 - **`Rental.shippingAddress` como snapshot JSON** (no FK a `Address`): cambiar la
   dirección afecta a envíos futuros, no a los ya registrados (§4.1).
-- **`Subscription` opcional en `Rental`** (`type = ONE_OFF`): cubre el alquiler
-  puntual sin suscripción.
+- **`Subscription` opcional en `Rental`** (`type = ONE_OFF`): cubría el alquiler
+  puntual sin suscripción. **Desde el 2026-08-16 esa vía está fuera de alcance**
+  (§4.3/§5), así que el `RentalType` del MVP es siempre `SUBSCRIPTION`. Las columnas
+  se mantienen —quitarlas cuesta una migración y no estorban— pero **no deben
+  poblarse**: un alquiler sin suscripción ya no es un estado alcanzable. Lo mismo
+  vale para `Rental.price` y la relación con `Payment` en los diagramas de abajo.
 - **`ReservationOffer` separada de `ReservationQueueEntry`**: una entrada en cola
   puede recibir varias ofertas (aceptar/rechazar/caducar y re-encolar); modelarlas
   aparte hace triviales la ventana de confirmación y la auditoría.

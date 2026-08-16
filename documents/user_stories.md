@@ -7,7 +7,9 @@
 > No se inventan pantallas ni reglas nuevas: donde la documentación deja algo
 > abierto, la historia lo refleja como tal.
 >
-> Última actualización: 2026-07-05.
+> Última actualización: 2026-08-16 — HU-01 absorbe la elección de plan, HU-02 pasa a
+> ser **cambio** de plan y el **alquiler puntual sale del alcance**
+> (ver `ux-flows.md` §8.1).
 
 ## Cómo leer este documento
 
@@ -57,17 +59,26 @@ Las historias se agrupan por las tres superficies de actores del sistema
 
 ---
 
-### HU-01 · Alta de suscriptor `Must`
+### HU-01 · Alta de suscriptor, con plan `Must`
 **Como** visitante mayor de edad
-**quiero** registrarme aportando mi tarjeta, mi dirección de envío y aceptando las condiciones
-**para** poder contratar un plan y empezar a alquilar sets.
+**quiero** registrarme eligiendo plan y aportando mi tarjeta, mi dirección de envío y aceptando las condiciones
+**para** quedar listo para alquilar sets sin ningún paso intermedio.
 
-- **Trazabilidad:** UC-P03 · `accounts-roles` · `PRD.md` §4.1
+- **Trazabilidad:** UC-P03 / UC-P05 · `accounts-roles` / `subscriptions` · `PRD.md` §4.1, §4.3
+- **Decisión (2026-08-16):** la **elección de plan forma parte del alta**. No existe
+  el estado "cuenta creada pero sin plan": el alta que no elige plan no se completa.
+  Ver `ux-flows.md` §8.1.
 - **Criterios de aceptación:**
   - **Dado** un visitante que rellena el formulario de alta,
-    **cuando** declara ser mayor de edad, aporta una tarjeta (simulada), una
-    dirección de envío/contacto y acepta las condiciones (*lorem ipsum*),
-    **entonces** se crea su cuenta con rol `SUBSCRIBER`.
+    **cuando** declara ser mayor de edad, **elige BASIC o PREMIUM**, aporta una
+    tarjeta (simulada), una dirección de envío/contacto y acepta las condiciones
+    (*lorem ipsum*),
+    **entonces** se crea su cuenta con rol `SUBSCRIBER` **y su suscripción activa
+    en el plan elegido**, en la misma transacción.
+  - **Dado** un alta **sin plan elegido**,
+    **cuando** intenta completarse,
+    **entonces** el sistema **rechaza** el alta indicando que el plan es
+    obligatorio, junto con el resto de errores de validación.
   - **Dado** un alta sin dirección de envío,
     **cuando** intenta completarse,
     **entonces** el sistema **rechaza** el alta indicando que la dirección es
@@ -78,24 +89,35 @@ Las historias se agrupan por las tres superficies de actores del sistema
 
 ---
 
-### HU-02 · Activar o cambiar de plan `Must`
-**Como** suscriptor
-**quiero** contratar BASIC o PREMIUM (o un alquiler puntual sin suscripción)
-**para** ajustar cuántos sets simultáneos puedo tener y a qué precio.
+### HU-02 · Cambiar de plan `Must`
+**Como** suscriptor con un plan activo
+**quiero** pasar de BASIC a PREMIUM o al revés
+**para** ajustar cuántos sets simultáneos puedo tener y cuánto pago.
 
 - **Trazabilidad:** UC-P05 · `subscriptions` · `PRD.md` §4.3
+- **Decisión (2026-08-16):** esta historia ya **no** cubre la contratación inicial
+  (pasa a HU-01) **ni el alquiler puntual**, que sale del alcance del MVP. El cambio
+  es siempre **entre BASIC y PREMIUM**, sobre una suscripción existente.
 - **Criterios de aceptación:**
-  - **Dado** un suscriptor sin plan,
-    **cuando** contrata **BASIC**, **entonces** puede tener **1** set simultáneo
-    a la cuota configurada (por defecto 14,99 €/mes).
-  - **Dado** un suscriptor,
-    **cuando** contrata **PREMIUM**, **entonces** puede tener **hasta 2** sets
-    simultáneos a la cuota configurada (por defecto 24,99 €/mes) y obtiene el
-    bono de prioridad de cola.
-  - **Dado** un usuario sin suscripción,
-    **cuando** elige un **alquiler puntual**, **entonces** el precio se calcula
-    como un **% configurable del valor de referencia del Set**, con un mínimo
-    configurable.
+  - **Dado** un suscriptor **BASIC**,
+    **cuando** pasa a **PREMIUM**, **entonces** puede tener **hasta 2** sets
+    simultáneos a la cuota configurada (por defecto 24,99 €/mes) y obtiene el bono
+    de prioridad de cola. El cambio es **inmediato**.
+  - **Dado** un suscriptor **PREMIUM** con **menos sets fuera de los que permite
+    BASIC**,
+    **cuando** pasa a **BASIC**, **entonces** el cambio se aplica y su límite pasa
+    a 1 set simultáneo.
+  - **Dado** un suscriptor **PREMIUM con 2 sets en su poder**,
+    **cuando** intenta bajar a **BASIC**, **entonces** la acción es **rechazada**
+    indicando cuántos sets debe devolver primero — mismo criterio que el de
+    pausar/cancelar (HU-09): primero devuelves, luego cambias.
+  - **Dado** un suscriptor que ya está en el plan que solicita,
+    **cuando** lo pide otra vez, **entonces** la acción no tiene efecto y no se
+    registra un cambio.
+  - **Dado** un suscriptor con entradas de cola vivas,
+    **cuando** cambia de plan, **entonces** el bono de esas entradas **no se
+    recalcula**: `appliedBonus` se congeló al encolar (D11) y el plan nuevo solo
+    afecta a las colas en las que entre a partir de ahora.
 
 ---
 
@@ -356,10 +378,11 @@ Las historias se agrupan por las tres superficies de actores del sistema
 - **Criterios de aceptación:**
   - **Dado** un admin,
     **cuando** edita la configuración,
-    **entonces** puede fijar: precio de BASIC/PREMIUM y parámetros del alquiler
-    puntual (% y mínimo), **bono de cola** premium, **duración de la ventana de
-    confirmación**, **antigüedad mínima** para sets restringidos y **límite de
-    colas simultáneas** por usuario.
+    **entonces** puede fijar: precio de BASIC/PREMIUM, **bono de cola** premium,
+    **duración de la ventana de confirmación**, **antigüedad mínima** para sets
+    restringidos y **límite de colas simultáneas** por usuario.
+    *(Los parámetros del alquiler puntual —% y mínimo— desaparecen con la decisión
+    del 2026-08-16.)*
   - **Dado** un admin,
     **cuando** activa los recordatorios de retención para un Set con cola,
     **entonces** el suscriptor que lo retiene recibe recordatorios periódicos
@@ -406,11 +429,13 @@ Las historias se agrupan por las tres superficies de actores del sistema
   (visibilidad) → HU-09 (cierre), con HU-17 como motor de equidad transversal.
 - **Fuera de alcance** (no generan historia, `PRD.md` §5): pasarela de pago
   real, logística real, marketplace P2P, reposición automática de piezas,
-  verificación de identidad real, penalización económica por pérdida.
-- **Pendiente en la documentación** (no inventado aquí): diseño/UX y wireframes
-  (`PRD.md` §9) y valores por defecto de ventana de confirmación y cadencia de
-  recordatorios (`PRD.md` §12) — condicionan la redacción fina de algunos
-  criterios, marcados como *configurables*.
+  verificación de identidad real, penalización económica por pérdida, y —desde el
+  **2026-08-16**— el **alquiler puntual sin suscripción**: alquilar exige plan.
+- **Pendiente en la documentación** (no inventado aquí): sistema de diseño y
+  wireframes (`PRD.md` §9; los **flujos por rol** ya están en `ux-flows.md`) y
+  valores por defecto de ventana de confirmación y cadencia de recordatorios
+  (`PRD.md` §12) — condicionan la redacción fina de algunos criterios, marcados
+  como *configurables*.
 - **Para `readme.md` §5** (3 historias): se recomiendan las marcadas con ⭐ —
   **HU-04** (cola justa), **HU-05** (ventana de confirmación) y **HU-11+HU-13**
   (registro de condición + doble paso inspección/higiene) — por ser los rasgos

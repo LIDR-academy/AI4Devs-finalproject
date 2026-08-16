@@ -438,6 +438,81 @@ project. Read it at the start of every session.
   un placeholder 0.0.0). Añadido como devDependency; `npm run spec:validate`.
   **Prisma:** dentro de un objeto `as const`, un array literal se vuelve `readonly` y
   Prisma lo rechaza en un filtro `in`; hay que referenciar una variable `Type[]`.
+- **Flujos por rol — primer entregable de UX (2026-08-16):**
+  `documents/ux-flows.md` (actores y superficies, mapa de navegación, **15 diagramas
+  Mermaid** de flujo por rol + el scheduler como actor invisible, tabla de cobertura
+  HU → flujo → pantalla, decisiones pendientes). Método: cruzar `user_stories.md` ×
+  specs/PRD × **el código de `app/`**; ese tercer eje es el que aporta información
+  nueva. `PRD.md` §9 pasa de "pendiente" a apuntar aquí.
+  **Lo que reveló el cruce — solo 8 de 18 historias tienen recorrido por interfaz:**
+  1. **HU-02 (contratar plan) no existe en ninguna capa.** `PUT
+     /api/subscriptions/me` solo cambia el estado (`ACTIVE|PAUSED|CANCELLED`) de una
+     suscripción **ya existente**, y `register-subscriber.ts` **no crea ninguna**:
+     las únicas suscripciones del sistema son las de `prisma/seed.ts`. Un usuario que
+     se registre en la app real nunca podrá alquilar. Es funcionalidad ausente, no un
+     hueco de diseño — **decidir si entra en alcance**.
+  2. **No hay ficha de set `/catalogo/:id`.** El catálogo es una rejilla sin destino,
+     así que `POST /api/sets/:id/rentals` y `POST /api/sets/:id/queue` (HU-03/HU-04,
+     el flujo central) no tienen desde dónde ejecutarse, y D13 —la frontera entre la
+     proyección pública y la autenticada— no se hace visible en ninguna pantalla.
+  3. **Sin UI:** registro de condición (HU-11) y discrepancia (HU-07) — que solo
+     tienen sentido como par—, pausar/cancelar (HU-09), alta de set y de copia
+     (HU-10, no hay pantalla de catálogo en back-office), edición de planes y
+     recordatorios de retención (HU-16), historial y posición en cola (HU-06).
+  4. **Las copias `ALQUILADA` pendientes de envío no salen en la cola de trabajo**
+     (`ORDER` en `app/(backoffice)/backoffice/page.tsx` no incluye ese estado): el
+     operador no tiene forma de saber que hay un set esperando a prepararse.
+  **Decisiones de UX ya tomadas en el código que el diseño debe respetar, no
+  reinventar:** rol equivocado → **redirección** a su superficie, nunca un 403 sin
+  salida; al operador se le **muestra** "Dar de baja" y recibe 403 al pulsarlo (mejor
+  que esconder acciones sin explicar); los errores del alta se **acumulan** en
+  `errors[]`; "sin copias" responde **200 con la oferta de cola**, no un 4xx.
+  **Validación de diagramas:** no hay mermaid en el repo; se valida aparte con
+  `mermaid.parse` + `jsdom` (mermaid necesita DOM; sin él falla con
+  "DOMPurify.addHook is not a function").
+- **Decisión de alcance (2026-08-16) — el plan entra en el alta y el alquiler puntual
+  sale:** primera decisión salida de la revisión de flujos (`ux-flows.md` §8.1).
+  (1) **HU-01 absorbe la elección de plan**: no existe "cuenta sin plan"; usuario,
+  dirección, método de pago **y suscripción** se crean en la misma transacción.
+  (2) **HU-02 pasa a ser *cambio* de plan** BASIC ⇄ PREMIUM sobre una suscripción
+  existente: inmediato al subir; al bajar, **rechazado mientras tenga más sets
+  ocupando plaza de los que permite el plan nuevo** —mismo criterio que
+  pausar/cancelar, y por la misma razón: se cae del límite de plazas—. El
+  `appliedBonus` de las colas vivas **no se recalcula** (D11), así que subir de plan
+  no adelanta esperas en curso.
+  (3) **El alquiler puntual sin suscripción sale del alcance**: alquilar exige plan.
+  **Documentos ya sincronizados:** `user_stories.md` (HU-01/HU-02/HU-16 + notas),
+  `PRD.md` (§1, §4.3, §5, §6, UC-P05, UC-B10, §15 rationale) y `ux-flows.md`.
+  **Recogida en OpenSpec (2026-08-16)** como el cambio **`plan-obligatorio-en-alta`**
+  (proposal + 3 delta specs + design + 18 tareas, `validate --strict` en verde,
+  **sin implementar**). Deltas: `subscriptions` (ADDED "Suscripción activa desde el
+  alta", "Cambio de plan" y "Precio de los planes"; REMOVED "Alquiler puntual sin
+  suscripción" y "Precio de los planes y del alquiler puntual"), `rentals-returns`
+  (MODIFIED "Solicitud y asignación de un set" → exige suscripción activa) y
+  `accounts-roles` (MODIFIED "Titularidad adulta" → el alta incluye elegir plan).
+  Decisiones de `design.md` que no están en las specs: el downgrade se mide con
+  **`OCCUPYING_COPY_STATES`**, no con el conjunto más estrecho de pausar/cancelar
+  —si no, un BASIC podría quedarse por encima de su propio límite—; la suscripción se
+  crea **dentro** de la transacción del alta delegando en el caso de uso de
+  suscripciones; y **el esquema no se toca**: `Rental.subscriptionId`, `Rental.price`
+  y `Payment` se quedan y simplemente dejan de poblarse (`RentalType` siempre
+  `SUBSCRIPTION`).
+- **OpenSpec: el MVP ya está archivado y hay línea base (2026-08-16).** `clickoteca-mvp`
+  se archivó en `openspec/changes/archive/2026-08-16-clickoteca-mvp/` y sus **32
+  requisitos** pasaron a `openspec/specs/` (6 capabilities). Antes de esto `specs/`
+  estaba **vacío**, así que ningún delta de tipo MODIFIED/REMOVED podía validarse: si
+  vuelve a hacer falta un cambio, **archivar primero** el completo.
+  **Caveats aprendidos:**
+  (1) `npx openspec archive <name> --yes` aplica los deltas y mueve el directorio en
+      un solo paso; deja el `## Purpose` de cada spec como `TBD - ... Update Purpose
+      after archive` → **hay que rellenarlo a mano** (ya hecho para las 6).
+  (2) El validador **rechaza RENAMED junto a MODIFIED sobre el mismo requisito**. Para
+      renombrar *y* cambiar contenido, usar **REMOVED + ADDED** con nombres distintos
+      (así se hizo con "Precio de los planes").
+  (3) `MODIFIED` exige **copiar el bloque entero** del requisito (cabecera + todos los
+      escenarios) y editarlo; con contenido parcial se pierde detalle al archivar.
+  (4) `npm run spec:validate` apuntaba al cambio ya archivado y **fallaba**; ahora es
+      `openspec validate --all --strict`.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -449,8 +524,12 @@ project. Read it at the start of every session.
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
   (265 tests unitarios + 8 E2E, `openspec validate --strict` en verde). Lo que queda
-  fuera del MVP: **diseño visual y UX** (PRD §9, sigue pendiente a propósito) y el
-  despliegue en la VM. Para cualquier cambio de estado de una copia, usar
+  fuera del MVP: **diseño visual y UX** —en curso: los **flujos por rol** ya están en
+  `documents/ux-flows.md`; faltan sistema de diseño y wireframes— y el despliegue en
+  la VM. **Tras el análisis de flujos:** la decisión de alcance sobre el plan y el
+  alquiler puntual está **tomada** (ver el hecho del 2026-08-16) pero **sin ejecutar
+  en specs ni en código**. Sigue abierto cuáles de los recorridos que hoy son solo
+  API reciben pantalla (`ux-flows.md` §8.2). Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en

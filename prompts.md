@@ -496,3 +496,73 @@ verde: `prisma generate`, `tsc --noEmit`, `eslint .`, `next build` (5 rutas),
 Caveats registrados en AGENTS.md: Node ≥22.22 para Testcontainers (hay 22.19) y uso del
 flat config nativo de `eslint-config-next` 16 en vez de `FlatCompat`. Decisiones de
 librerías (UI/tests/Prisma) documentadas en `AGENTS.md`; `tasks.md` 1.1 marcada [x].
+
+### [2026-08-16] — Flujos de usuario por rol (primer entregable de UX)
+**Prompt:** "¿Cómo me puedes ayudar en el diseño de la UX?" → "Flujos por rol".
+**Resumen de la respuesta:** Primer entregable de `PRD.md` §9, que seguía vacío a
+propósito: **`documents/ux-flows.md`** con actores y superficies, **mapa de navegación**
+y **15 diagramas Mermaid** de flujo por rol (visitante, suscriptor, operador, admin y
+el sistema/scheduler como actor invisible), más una tabla de cobertura HU → flujo →
+pantalla. El método fue cruzar tres fuentes: `user_stories.md` (qué debería poder
+hacerse), las specs/PRD (bajo qué reglas) y **el código de `app/`** (qué se puede hacer
+hoy). Ese tercer cruce es el que aporta información nueva: **solo 8 de 18 historias
+tienen recorrido completo por interfaz**; el resto existe en la API pero **sin pantalla
+desde la que ejecutarse** (solicitar set, encolarse, registro de condición,
+discrepancia, pausar/cancelar, alta de set/copia, editar planes). Hallazgo crítico:
+**contratar un plan (HU-02) no existe en ninguna capa** — `PUT /api/subscriptions/me`
+solo cambia el estado de una suscripción ya existente y `register-subscriber.ts` no
+crea ninguna, así que las únicas suscripciones del sistema son las de la semilla y un
+usuario registrado en la app real nunca podría alquilar. Otros huecos: no hay ficha de
+set `/catalogo/:id` (la pantalla que desbloquea el flujo central y donde D13 se hace
+visible), y las copias `ALQUILADA` pendientes de envío no aparecen en la cola de
+trabajo del operador. El documento cierra con siete decisiones a tomar antes de dibujar
+pantallas y el orden propuesto para las fases siguientes (sistema de diseño →
+wireframes → implementación → verificación de accesibilidad). Los 15 diagramas se
+validaron con el parser real de Mermaid.
+
+### [2026-08-16] — Decisión de alcance: el plan entra en el alta, fuera el alquiler puntual
+**Prompt:** "La selección de plan debe realizarse en HU-01. HU-02 debería ser un
+cambio de plan" (+ respuestas: solo BASIC/PREMIUM en el alta, eliminando el alquiler
+puntual como opción; el downgrade con sets fuera se rechaza hasta devolver).
+**Resumen de la respuesta:** Primera decisión salida de la revisión de flujos, que
+cierra el callejón detectado en `ux-flows.md` §8.1. **HU-01** absorbe la elección de
+plan —usuario, dirección, método de pago y **suscripción** en la misma transacción, sin
+estado intermedio "cuenta sin plan"—; **HU-02** pasa a ser **cambio** de plan BASIC ⇄
+PREMIUM, inmediato al subir y **rechazado al bajar mientras tenga más sets ocupando
+plaza de los que permite el plan nuevo** (mismo criterio que pausar/cancelar: la regla
+se cae del límite de plazas, no es una comprobación aparte); y el **alquiler puntual
+sin suscripción sale del alcance**. Se documentó además que el `appliedBonus` de las
+colas vivas **no se recalcula** al cambiar de plan (D11), así que subir a premium no
+adelanta esperas en curso — algo que hay que decir en pantalla *antes* de pagar.
+Sincronizados `user_stories.md` (HU-01, HU-02, HU-16 y notas de alcance), `PRD.md`
+(§1, §4.3, §5, §6, UC-P05, UC-B10 y el rationale del modelo de datos) y `ux-flows.md`
+(flujos V2 y S5 redibujados, tabla de cobertura y §8.1). **No** se tocaron specs ni
+código: retirar el alquiler puntual es un cambio de comportamiento que debe ir por
+propuesta OpenSpec, y quedó inventariado qué deja sin uso (`checkOneOffEligibility`,
+`computeOneOffPrice`, la bifurcación de `requestSet`, dos `SystemSetting`) y qué falta
+crear (la suscripción en `register-subscriber.ts` y el cambio de plan en
+`PUT /api/subscriptions/me`, que hoy solo acepta `status`).
+
+### [2026-08-16] — OpenSpec: archivado del MVP y cambio `plan-obligatorio-en-alta`
+**Prompt:** "actualiza openspec antes de seguir".
+**Resumen de la respuesta:** Se llevó a OpenSpec la decisión de alcance anterior, en dos
+pasos. **(1) Archivado del MVP:** `clickoteca-mvp` estaba ✓ Complete (45/45) pero sin
+archivar, así que `openspec/specs/` estaba **vacío** y ningún delta de tipo
+MODIFIED/REMOVED podía validarse contra una línea base inexistente. `openspec archive`
+aplicó los deltas y promovió **32 requisitos** a 6 capabilities; se rellenaron a mano
+los `## Purpose` que el archivado deja como TBD. **(2) Cambio nuevo
+`plan-obligatorio-en-alta`** con sus cuatro artefactos: proposal, tres delta specs
+—`subscriptions` (ADDED "Suscripción activa desde el alta", "Cambio de plan" y "Precio
+de los planes"; REMOVED "Alquiler puntual sin suscripción" y el requisito de precio que
+lo agrupaba), `rentals-returns` (MODIFIED: solicitar exige suscripción activa) y
+`accounts-roles` (MODIFIED: el alta incluye elegir plan)—, `design.md` con seis
+decisiones razonadas y `tasks.md` con 18 tareas en cuatro bloques. Dos detalles de
+diseño que no estaban en la conversación previa: el downgrade se mide con
+**`OCCUPYING_COPY_STATES`** y no con el conjunto más estrecho de pausar/cancelar (si
+no, un BASIC podría quedarse por encima de su propio límite), y el orden de las tareas
+abre el camino nuevo **antes** de cerrar el viejo, porque al revés habría un momento sin
+ninguna forma de conseguir una suscripción. Aprendido del validador: **RENAMED y
+MODIFIED no pueden coincidir** sobre el mismo requisito, así que un renombrado con
+cambio de contenido se expresa como REMOVED + ADDED. Se corrigió además
+`npm run spec:validate`, que apuntaba al cambio ya archivado y fallaba, por
+`openspec validate --all --strict`. Todo en verde: **7 items, 0 fallos**.
