@@ -8,6 +8,7 @@
 /storage/framework/views
 /storage/logs
 /storage/pail
+/tests/Browser/Screenshots
 /vendor
 .env
 .env.backup
