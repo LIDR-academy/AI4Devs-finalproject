@@ -63,6 +63,8 @@ test('each row exposes the id, name, email, pendingEmail, role and status the vi
         'pendingEmail' => 'mid-flight@arospe.es',
         'role' => 'Editor',
         'status' => UserStatus::Active,
+        'canEdit' => true,
+        'canDelete' => true,
     ]);
 
     expect($users->firstWhere('id', $roleless->id))->toBe([
@@ -72,7 +74,60 @@ test('each row exposes the id, name, email, pendingEmail, role and status the vi
         'pendingEmail' => null,
         'role' => null,
         'status' => UserStatus::Inactive,
+        'canEdit' => true,
+        'canDelete' => true,
     ]);
+});
+
+// --- canEdit / canDelete per row ---
+
+test('canEdit and canDelete mirror what UserPolicy would actually authorize for each row', function () {
+    // An Administrator holds users.edit/users.delete but not roles.manage-administrators
+    // (RolePermissionSeeder), so this exercises every branch UserPolicy::update()/delete() has:
+    // an ordinary target (both true), an Administrator-holding target (edit true, delete false --
+    // delete requires roles.manage-administrators for that target), and the Super Admin target
+    // (both false, regardless of permissions).
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $ordinaryTarget = User::factory()->create(['name' => 'Ordinary Target']);
+    $ordinaryTarget->assignRole($editorRole);
+
+    $administratorTarget = User::factory()->create(['name' => 'Administrator Target']);
+    $administratorTarget->assignRole('Administrator');
+
+    $superAdminTarget = User::factory()->create(['name' => 'Super Admin Target']);
+    $superAdminTarget->assignRole('Super Admin');
+
+    $users = collect(Livewire::test(Index::class)->get('users'));
+
+    expect($users->firstWhere('id', $ordinaryTarget->id))
+        ->canEdit->toBeTrue()
+        ->canDelete->toBeTrue();
+
+    expect($users->firstWhere('id', $administratorTarget->id))
+        ->canEdit->toBeTrue()
+        ->canDelete->toBeFalse();
+
+    expect($users->firstWhere('id', $superAdminTarget->id))
+        ->canEdit->toBeFalse()
+        ->canDelete->toBeFalse();
+});
+
+test('an actor without users.edit or users.delete sees every row as not editable and not deletable', function () {
+    $viewer = User::factory()->create();
+    $viewer->givePermissionTo('users.view');
+    $this->actingAs($viewer);
+
+    $target = User::factory()->create();
+
+    $users = collect(Livewire::test(Index::class)->get('users'));
+
+    expect($users->firstWhere('id', $target->id))
+        ->canEdit->toBeFalse()
+        ->canDelete->toBeFalse();
 });
 
 test('users are listed alphabetically by name', function () {
@@ -215,6 +270,27 @@ test('creating a user via the form persists the user with the submitted role and
         ->and($created->hasRole('Editor'))->toBeTrue();
 });
 
+// Regression test: the create form's roleId/status must never be genuine PHP `null`, only
+// `''` (roleId) or a real UserStatus case (status). A native <select>'s wire:model sync
+// assigns the dehydrated property value straight to the DOM select's `.value`; assigning the
+// JS value `null` (rather than `""`) desyncs the browser's `selectedIndex` from its literal,
+// disabled `selected` placeholder option. In real browser use this made the select silently
+// auto-land on its first real option (id order, not the placeholder) while $roleId/$status
+// stayed null server-side -- so picking that exact same option produced no `change` event and
+// the pick was silently dropped, failing "The role id/status field is required." with the
+// right-looking value still shown selected. See tests/Browser/UsersIndexTest.php for the
+// browser-level reproduction of the failure this prevents.
+test('opening the create form never leaves roleId or status as null', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->assertSet('roleId', '')
+        ->assertSet('status', UserStatus::Inactive);
+});
+
 test('creating a user with invalid details is rejected and no user is created', function (Closure $overridesFactory) {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
@@ -244,10 +320,6 @@ test('creating a user with invalid details is rejected and no user is created', 
     'no role chosen' => [fn () => ['roleId' => null]],
     'a role that does not exist' => [fn () => ['roleId' => '999999999']],
     'the Super Admin role' => [fn () => ['roleId' => (string) Role::where('name', 'Super Admin')->where('guard_name', 'web')->value('id')]],
-    // The status property is typed `?UserStatus`, so an out-of-set raw value cannot survive
-    // Livewire's enum hydration; null is the closest reachable equivalent and still exercises
-    // the 'required' branch of statusRules() with no user created.
-    'a status outside the allowed set' => [fn () => ['status' => null]],
 ]);
 
 test('creating a user with an address held as another users pending email is rejected', function () {
