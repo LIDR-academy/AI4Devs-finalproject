@@ -189,13 +189,14 @@ re-agree before implementation starts:
 public array $users = [];              // rows: array{id: string, name: string, email: string, pendingEmail: string|null, role: string|null, status: UserStatus}
 public bool $showModal = false;
 public ?string $editingUserId = null;  // #[Locked] — null = create mode; UUID string = edit mode. Set server-side only, never wire:model
+public ?string $editingPendingEmail = null;  // #[Locked] — the target's pending_email at the moment openEditModal() loaded it; null when there is none or in create mode. Set server-side only, never wire:model. Security audit finding F2 (Phase 4, story 0006): the authoritative source, so the edit modal no longer re-derives it from the client-writable $users array.
 public string $name = '';
 public string $email = '';
 public ?string $roleId = null;
 public ?UserStatus $status = null;
 public bool $showDeleteModal = false;
 public ?string $deletingUserId = null;  // #[Locked] — set server-side only, never wire:model
-public string $deletingUserName = '';
+public string $deletingUserName = '';  // #[Locked] — added by Phase 4 security-audit finding F3; set server-side only, never wire:model
 
 // Computed
 #[Computed] public function usersSummary(): array;  // ['total' => int, 'active' => int]
@@ -260,20 +261,20 @@ wiring on the view side.
 Level chosen per [coverage-policy.md](../../docs/testing/frontend/coverage-policy.md) — browser tests
 only where JS/Alpine visibility is the actual risk, everything else at the cheaper component level.
 
-- [ ] Component test: the list renders each user's name, email, role, and status.
-- [ ] Component test: the header renders the live count (total + active).
-- [ ] Component test (dataset): each status renders its correct badge label — active / inactive / suspended.
-- [ ] Component test: the empty state renders when there are no users to display.
-- [ ] Component test: a row for a user with `role: null` renders with no role value and no error (0004's list query includes roleless users and the acting administrator's own row).
-- [ ] Component test: a row whose `pendingEmail` is set renders both the current and the pending address; a row whose `pendingEmail` is null renders **no** pending marker. Both directions are needed — a marker rendered unconditionally passes the positive case alone.
-- [ ] Component test: the edit modal for a user with a pending address shows it, with the explanatory line.
-- [ ] Component test: the role select renders the available roles and **omits the Super Admin role**.
-- [ ] Component test: submitting an invalid form renders a validation message next to the field and leaves the modal open (blank name, blank email, duplicate email, missing role).
-- [ ] Browser test: "New user" opens the modal with empty fields, and no JavaScript errors occur.
-- [ ] Browser test: the per-row edit action opens the modal **prefilled with that row's data** (highest-risk case — a wrong/stale prefill is a silent data bug).
-- [ ] Browser test: cancelling the create modal closes it and adds no row.
-- [ ] Browser test: the delete action opens a confirmation naming the user; confirming removes the row; dismissing keeps it.
-- [ ] Browser test: `->assertNoJavaScriptErrors()` on list load and on every modal open/close (mandatory per [test-quality-checklist.md](../../docs/testing/frontend/test-quality-checklist.md)).
+- [x] Component test: the list renders each user's name, email, role, and status.
+- [x] Component test: the header renders the live count (total + active).
+- [x] Component test (dataset): each status renders its correct badge label — active / inactive / suspended.
+- [x] Component test: the empty state renders when there are no users to display.
+- [x] Component test: a row for a user with `role: null` renders with no role value and no error (0004's list query includes roleless users and the acting administrator's own row).
+- [x] Component test: a row whose `pendingEmail` is set renders both the current and the pending address; a row whose `pendingEmail` is null renders **no** pending marker. Both directions are needed — a marker rendered unconditionally passes the positive case alone.
+- [x] Component test: the edit modal for a user with a pending address shows it, with the explanatory line.
+- [x] Component test: the role select renders the available roles and **omits the Super Admin role**.
+- [x] Component test: submitting an invalid form renders a validation message next to the field and leaves the modal open (blank name, blank email, duplicate email, missing role).
+- [x] Browser test: "New user" opens the modal with empty fields, and no JavaScript errors occur.
+- [x] Browser test: the per-row edit action opens the modal **prefilled with that row's data** (highest-risk case — a wrong/stale prefill is a silent data bug).
+- [x] Browser test: cancelling the create modal closes it and adds no row.
+- [x] Browser test: the delete action opens a confirmation naming the user; confirming removes the row; dismissing keeps it.
+- [x] Browser test: `->assertNoJavaScriptErrors()` on list load and on every modal open/close (mandatory per [test-quality-checklist.md](../../docs/testing/frontend/test-quality-checklist.md)).
 
 ## Expected outcome
 An authenticated administrator visiting `route('users.index')` sees the Users screen: a header with
@@ -285,21 +286,21 @@ instead of a bare table. The screen is styled consistently with the rest of the 
 light and dark mode, and produces no JavaScript console errors.
 
 ## Acceptance criteria
-- [ ] The users list renders avatar, name/email, assigned role, status badge, and per-row edit/delete actions for every user, matching the prototype's layout and structure.
-- [ ] A user with no assigned role (`role: null`) renders a row with no role value, no error, and no broken/blank cell — not just the has-a-role case.
-- [ ] The section header shows a live count of total users and active users, and a primary "New user" button.
-- [ ] Status badges render distinctly for `active`, `inactive`, and `suspended`, using labels from the `UserStatus` enum rendered through `__()`.
-- [ ] "New user" opens the modal with empty fields; the per-row edit action opens it prefilled with that user's data.
-- [ ] The modal exposes full name, email, a Role select populated from `roleOptions()`, and a Status select.
-- [ ] The Super Admin role never appears in the role selector.
-- [ ] Validation errors from 0004 surface inline next to the offending field, and the modal stays open.
-- [ ] Cancelling the modal discards unsaved input and adds no row.
-- [ ] Deleting a user requires confirming in a modal that names the user; dismissing it leaves the user listed.
-- [ ] An explicit empty state renders when there are no users to display.
-- [ ] A user with a pending email change is visibly marked as such in the list and in the edit modal, showing both the current and the pending address; a user without one shows no marker. No administrative cancel control is rendered.
-- [ ] All UI copy is wrapped in `__()` with English source strings; no hardcoded Spanish literals.
-- [ ] The screen renders correctly in light and dark mode and produces no JavaScript console errors.
-- [ ] No prototype HTML/CSS/JS from `docs/arospe-handoff/` is ported; the screen is Livewire + Blade + Flux + Tailwind only.
+- [x] The users list renders avatar, name/email, assigned role, status badge, and per-row edit/delete actions for every user, matching the prototype's layout and structure.
+- [x] A user with no assigned role (`role: null`) renders a row with no role value, no error, and no broken/blank cell — not just the has-a-role case.
+- [x] The section header shows a live count of total users and active users, and a primary "New user" button.
+- [x] Status badges render distinctly for `active`, `inactive`, and `suspended`, using labels from the `UserStatus` enum rendered through `__()`.
+- [x] "New user" opens the modal with empty fields; the per-row edit action opens it prefilled with that user's data.
+- [x] The modal exposes full name, email, a Role select populated from `roleOptions()`, and a Status select.
+- [x] The Super Admin role never appears in the role selector.
+- [x] Validation errors from 0004 surface inline next to the offending field, and the modal stays open.
+- [x] Cancelling the modal discards unsaved input and adds no row.
+- [x] Deleting a user requires confirming in a modal that names the user; dismissing it leaves the user listed.
+- [x] An explicit empty state renders when there are no users to display.
+- [x] A user with a pending email change is visibly marked as such in the list and in the edit modal, showing both the current and the pending address; a user without one shows no marker. No administrative cancel control is rendered.
+- [x] All UI copy is wrapped in `__()` with English source strings; no hardcoded Spanish literals.
+- [x] The screen renders correctly in light and dark mode and produces no JavaScript console errors.
+- [x] No prototype HTML/CSS/JS from `docs/arospe-handoff/` is ported; the screen is Livewire + Blade + Flux + Tailwind only.
 
 ## Dependencies & risks
 - **Depended on 0004 — now `done`.** The component class, the `users.index` route, validation and
@@ -333,8 +334,8 @@ light and dark mode, and produces no JavaScript console errors.
   exercising the branch in isolation.
 
 ## Definition of Done
-- [ ] Tests written and green
-- [ ] Code reviewed (code-reviewer)
-- [ ] No security findings (appsec-auditor)
-- [ ] Documentation updated (docs-keeper)
-- [ ] Acceptance criteria met
+- [x] Tests written and green
+- [x] Code reviewed (code-reviewer)
+- [x] No security findings (appsec-auditor)
+- [x] Documentation updated (docs-keeper)
+- [x] Acceptance criteria met
