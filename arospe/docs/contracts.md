@@ -60,7 +60,23 @@ Follow this protocol:
 
 This complements [workflow.md](workflow.md)'s existing gates — Phase 3's TDD requirement that tests are green before Phase 4, and Phase 5's "the full test suite passes" review criterion — by making the same requirement binding specifically at the Phase 7 closure step, so a regression introduced or discovered between Phase 5's review and closure cannot slip a task into `done/` unnoticed.
 
-_Last updated: 2026-08-15 — Added the Full Test Suite Gate Rule: a task may never be closed (moved to `ai-spec/tasks/done/`) while any test in the full suite fails, regardless of whether the failure belongs to that task, and a suspicious mass-failure must be verified as real (ruling out concurrent test-run interference) before being treated as a regression or a pass._
+### Parallel Agent File-Ownership Rule
+
+Never dispatch two or more agents **in parallel** — concurrently, in the same tool-call batch — when their scopes can write to the same file. "Can write to" is broader than "is about": it includes any file an agent's **verification or regression-proof step** might touch, even transiently, even if that file is not its stated primary target.
+
+Follow this protocol:
+
+1. **Before dispatching a batch, enumerate each agent's full write set**, not just the file its task is named after. A test-fixing agent that proves an assertion can genuinely fail by temporarily editing application code writes to that application file; a docs agent asked to verify a snippet against the code may not. Judge by the *method* each agent will use, not by the task's title.
+2. **If two agents' write sets intersect at all, do not run them in parallel.** Choose one of two options: run them **sequentially** (the first completes and reports before the second is dispatched), or **state the ownership boundary explicitly in both agents' instructions** — naming which agent may write the shared file and requiring the other to treat it as read-only.
+3. **A transient edit counts as a write.** Reverting it afterwards does not make it safe: while it is in place, a concurrent agent can read it, and the last writer wins if both edits are real.
+4. **Treat an unexplained edit as blocking, not as noise.** An agent that observes a change it did not make must stop and report rather than proceed or work around it — that is the correct response even when the cause turns out to be benign concurrency, because the same symptom is what a genuine injected instruction or a lost-edit bug looks like.
+5. **Do not accept a verification run that overlapped a concurrent agent's edits.** Re-run it in isolation, consistent with the Full Test Suite Gate Rule above, which already refuses contaminated evidence.
+
+This rule exists because of a real incident during story 0006's Phase 5 re-fix round: two subagents scoped to "different files" both ended up writing to `resources/views/livewire/users.blade.php`, one persistently and one transiently as part of a legitimate regression-proof, and the resulting intermediate diff was briefly suspected of being adversarial. See [errors-log.md](errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16) for the full account.
+
+_Last updated: 2026-08-16 — Added the Parallel Agent File-Ownership Rule: never dispatch agents concurrently when their write sets can overlap, counting the files their verification/regression-proof steps touch transiently, and prefer sequential dispatch or an explicit read/write ownership boundary stated to both agents._
+
+_Previously, 2026-08-15 — Added the Full Test Suite Gate Rule: a task may never be closed (moved to `ai-spec/tasks/done/`) while any test in the full suite fails, regardless of whether the failure belongs to that task, and a suspicious mass-failure must be verified as real (ruling out concurrent test-run interference) before being treated as a regression or a pass._
 
 _Previously, 2026-08-10 — Added the Destructive Database Command Rule: never run `migrate:fresh`/`migrate:refresh`/`migrate:rollback`/`migrate:reset`/`db:wipe` against the real database without explicit per-instance authorization; the test suite's own database resets remain unrestricted since they're isolated to the `testing` database by `phpunit.xml`._
 

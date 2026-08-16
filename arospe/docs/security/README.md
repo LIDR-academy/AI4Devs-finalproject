@@ -56,8 +56,22 @@ repo must follow — always with a real code example pulled from this repository
   Flux credentials to disk, why git-ignoring `tests/Browser/Screenshots` is only sufficient while no
   workflow uploads artifacts, and the verification that `DB_DATABASE=testing` still covers the new
   `Browser` suite because the app under test shares the test process.
+- [Blade / Livewire output encoding](blade-livewire-output-encoding.md) — where `{{ }}` stops being
+  enough, established by task 0006's Users list markup: why a value interpolated inside a `wire:*`
+  directive lands in a **JavaScript** evaluator (`x-on:` → `Alpine.evaluateRaw` → `new AsyncFunction`)
+  and why Blade's `&#039;` is decoded back to `'` by the HTML parser before Livewire reads it, making
+  `@js(...)` the only correct encoder for a directive argument; why a public property with no
+  `wire:model` is still client-writable unless `#[Locked]` — which is why `$deletingUserName` now
+  carries it and why `$users` staying unlocked is an accepted residual with a stated reopening
+  condition; why a modal must read authoritative values from the model rather than back out of a
+  client-writable array; plus the list
+  of template patterns verified already safe (no `{!! !!}`, Flux's own escaping, literal-only `__()`
+  keys, and why `@close="closeModal"` is not a dead handler).
 
-_Last updated: 2026-08-16 — Added `ci-workflow-hardening.md` from the Phase 4 audit of task 0006b
+_Last updated: 2026-08-16 — Added `blade-livewire-output-encoding.md` from the Phase 4 audit of task
+0006 (Users list + create/edit modal UI)._
+
+_Previously: 2026-08-16 — Added `ci-workflow-hardening.md` from the Phase 4 audit of task 0006b
 (browser-test infrastructure setup)._
 
 _Previously: 2026-08-14 — Added `soft-delete-patterns.md` from the Phase 4 audit of task 0005

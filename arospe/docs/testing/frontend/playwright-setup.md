@@ -54,12 +54,13 @@ tests/
   Unit/        Pure logic, no DB (no RefreshDatabase)
   Feature/     Full request/Livewire lifecycle, real DB (RefreshDatabase applied via tests/Pest.php)
   Browser/     Real-browser end-to-end tests (Pest browser plugin), RefreshDatabase applied too;
-               first test: tests/Browser/Auth/LoginSmokeTest.php
+               tests/Browser/Auth/LoginSmokeTest.php (the pipeline canary) and
+               tests/Browser/UsersIndexTest.php (the Users screen, task 0006)
 ```
 
 The suite is wired up (task 0006b). All four pieces are real and verifiable right now:
 
-- **`tests/Browser/` exists**, holding `Auth/LoginSmokeTest.php` — a deliberately assertion-light canary that visits `/login`, asserts its user-visible text renders, and calls `assertNoJavaScriptErrors()`. Its job is proving the pipeline runs end to end, **not** covering sign-in behavior (that belongs to `tests/Feature/Auth/AuthenticationTest.php` and to whichever story owns sign-in browser coverage). Don't grow product assertions into it.
+- **`tests/Browser/` exists**, holding `Auth/LoginSmokeTest.php` (plus `UsersIndexTest.php` since task 0006) — a deliberately assertion-light canary that visits `/login`, asserts its user-visible text renders, and calls `assertNoJavaScriptErrors()`. Its job is proving the pipeline runs end to end, **not** covering sign-in behavior (that belongs to `tests/Feature/Auth/AuthenticationTest.php` and to whichever story owns sign-in browser coverage). Don't grow product assertions into it.
 - **`phpunit.xml` declares a third `Browser` testsuite** alongside `Unit` and `Feature`:
 
   ```xml
@@ -84,7 +85,7 @@ The suite is wired up (task 0006b). All four pieces are real and verifiable righ
 
 - **`.gitignore` ignores `/tests/Browser/Screenshots`** — the repo-root-anchored path matching `Pest\Browser\Support\Screenshot::dir()`, which hardcodes `rootPath.'/tests/Browser/Screenshots'`. Confirmed against that source and with `git check-ignore -v`, not guessed from the directory name. Worth knowing when you write a browser test: Pest auto-captures a screenshot on **any** failed browser assertion, not only when you call `->screenshot()` explicitly.
 
-Mirror the app structure inside `tests/Browser/` (e.g. `tests/Browser/Auth/`, `tests/Browser/Settings/`) exactly as `tests/Feature/` already does — `Auth/LoginSmokeTest.php` establishes that. Note the artisan-first workflow used everywhere else needs one manual step here: `php artisan make:test --pest LoginBrowserTest` still places the file under `tests/Feature/`, so move it into `tests/Browser/` after generating it.
+Mirror the app structure inside `tests/Browser/` (e.g. `tests/Browser/Auth/`, `tests/Browser/Settings/`) exactly as `tests/Feature/` already does — `Auth/LoginSmokeTest.php` establishes that. One file already departs from it: task 0006 shipped `tests/Browser/UsersIndexTest.php` **flat**, where the mirror would put it at `tests/Browser/Users/IndexTest.php` (its component-level counterpart *is* at `tests/Feature/Users/IndexRenderingTest.php`). That path came from the story file and is recorded here as the real current state, not as a second convention — put the next browser test in its mirrored subfolder. Note the artisan-first workflow used everywhere else needs one manual step here: `php artisan make:test --pest LoginBrowserTest` still places the file under `tests/Feature/`, so move it into `tests/Browser/` after generating it.
 
 ## Real syntax
 
@@ -206,6 +207,8 @@ it('signs an existing user in and lands them on the dashboard', function () {
 });
 ```
 
-_Last updated: 2026-08-16 — Task 0006b (wire up the `tests/Browser/` suite): flipped all four pending bullets to their real done state (suite folder + `Auth/LoginSmokeTest.php`, the `Browser` testsuite in `phpunit.xml`, `RefreshDatabase` extended to `Browser` with the in-process-kernel reason it is correct, and the verified `/tests/Browser/Screenshots` ignore), updated the folder-structure block, and rewrote **CI integration**: CI now does run the browser suite, Chromium-only, via the new `Install Playwright Browser (Chromium)` step — with the trigger-policy and cross-browser questions explicitly still open._
+_Last updated: 2026-08-16 — Task 0006 (Users list + create/edit modal UI): recorded the suite's second real file, `tests/Browser/UsersIndexTest.php`, in the folder-structure block and the inventory bullet, and noted that it sits flat rather than in the mirrored `Users/` subfolder the convention calls for._
+
+_Previously: 2026-08-16 — Task 0006b (wire up the `tests/Browser/` suite): flipped all four pending bullets to their real done state (suite folder + `Auth/LoginSmokeTest.php`, the `Browser` testsuite in `phpunit.xml`, `RefreshDatabase` extended to `Browser` with the in-process-kernel reason it is correct, and the verified `/tests/Browser/Screenshots` ignore), updated the folder-structure block, and rewrote **CI integration**: CI now does run the browser suite, Chromium-only, via the new `Install Playwright Browser (Chromium)` step — with the trigger-policy and cross-browser questions explicitly still open._
 
 _Previously, 2026-07-19 — Flipped setup status to installed (pest-plugin-browser ^4.3.1, playwright ^1.61.1, `npx playwright install` confirmed); added the missing-system-libraries caveat; kept the Browser suite/folder/CI wiring marked pending._
