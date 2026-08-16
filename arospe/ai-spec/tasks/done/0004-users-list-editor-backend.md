@@ -352,7 +352,7 @@ Feature: Backoffice user administration
     passes it on the edit path. If a future story ever adds target-dependent logic here, it must
     handle `$target === null` explicitly as the create case rather than dereferencing it.
   - **Always pass the guard to `hasRole()`** (`'web'`) per
-    [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md) —
+    [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md) —
     an unguarded call resolves against the default guard, which is not guaranteed to be the one the
     role was seeded under.
   - **No self-targeting exception** on `downgrade`/`delete`: the same rule applies when `$actor` and

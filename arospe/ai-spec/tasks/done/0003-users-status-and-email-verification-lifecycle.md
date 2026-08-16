@@ -372,7 +372,7 @@ Shape confirmed by `database-expert`; **default revised by the human to `inactiv
      nobody can use.
   2. **The Super Admin bootstrap could never match them.** `RolePermissionSeeder` looks up the
      configured address with `whereNotNull('email_verified_at')` (see
-     [`docs/errors-log.md`](../../docs/errors-log.md)). An operator who provisions the Super Admin
+     [`docs/errors-log.md`](../../../docs/errors-log.md)). An operator who provisions the Super Admin
      account by invitation would complete the invitation and still be skipped by the seeder, with no
      obvious reason why.
 
@@ -390,7 +390,7 @@ Shape confirmed by `database-expert`; **default revised by the human to `inactiv
 
 This is the part that replaces the old "reset `email_verified_at` on email change" behaviour, in
 **both** the self-service and the administrative direction. It exists to close the vector already
-recorded in [`docs/errors-log.md`](../../docs/errors-log.md): today
+recorded in [`docs/errors-log.md`](../../../docs/errors-log.md): today
 `App\Livewire\Settings\Profile::updateProfileInformation()` writes an arbitrary new address straight
 into `users.email` and merely nulls `email_verified_at`, so any signed-in user can point their
 account at an address they do not control — including the one an operator intends to configure as
@@ -677,7 +677,7 @@ address has been proven, because no *change* to `users.email` can ever land with
 verification link being used, and every path that sets `email_verified_at` requires proof of mailbox
 control. `RolePermissionSeeder`'s `whereNotNull('email_verified_at')` lookup depends on the pair, not
 on `users.email` alone, so its security property holds unchanged (see
-[`docs/errors-log.md`](../../docs/errors-log.md)).
+[`docs/errors-log.md`](../../../docs/errors-log.md)).
 
 ## Acceptance criteria
 - [x] `users.status` exists (`VARCHAR(20)`, non-nullable, default `inactive`), cast to `App\Enums\UserStatus`, and is **not** mass-assignable. Pre-existing rows are backfilled to `active` when already verified, `inactive` otherwise.

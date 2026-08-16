@@ -1,7 +1,7 @@
 # [0006] Users list + create/edit modal — UI
 
 ## Description
-Build the Livewire **view layer** for the Users screen of [PRD Epic 1](../../docs/PRD/PRD.md#epic-1--users-roles--permissions):
+Build the Livewire **view layer** for the Users screen of [PRD Epic 1](../../../docs/PRD/PRD.md#epic-1--users-roles--permissions):
 a list of users (avatar, name/email, assigned role, status badge, per-row edit/delete actions, a
 live count and a primary "New user" button) plus a create/edit modal (full name, email, a **Role**
 select fed by the dynamic roles list, and a **Status** select), and a delete-confirmation modal.
@@ -24,13 +24,13 @@ frontend (related_task_id: **0004**) | includes database-expert: **no**
 
 | # | Question | Decision |
 |---|---|---|
-| 1 | UI string language | **English source strings wrapped in `__()`**, matching the existing convention (`resources/views/livewire/settings/profile.blade.php` uses `{{ __('Save') }}`). `lang/es.json` and the Spanish/English switcher arrive with Epic 5 ([PRD assumption 14](../../docs/PRD/PRD.md)). The PRD's Spanish copy ("Nuevo usuario", "6 usuarios · 4 activos", "Activo/Inactivo/Suspendido") is therefore **reference copy, not literal requirement** for this story — "matching the prototype" means layout and structure, not Spanish text, until Epic 5. |
+| 1 | UI string language | **English source strings wrapped in `__()`**, matching the existing convention (`resources/views/livewire/settings/profile.blade.php` uses `{{ __('Save') }}`). `lang/es.json` and the Spanish/English switcher arrive with Epic 5 ([PRD assumption 14](../../../docs/PRD/PRD.md)). The PRD's Spanish copy ("Nuevo usuario", "6 usuarios · 4 activos", "Activo/Inactivo/Suspendido") is therefore **reference copy, not literal requirement** for this story — "matching the prototype" means layout and structure, not Spanish text, until Epic 5. |
 | 2 | `status` representation | **Backed enum `App\Enums\UserStatus`** with values `active \| inactive \| suspended`; display labels rendered through `__()`. The enum file and the migration are **0003's** deliverables; this view only binds to them. |
 | 3 | Delete confirmation | **Confirm modal**, mirroring the existing passkey-deletion pattern in `App\Livewire\Settings\Security` (`showDeleteModal` / `confirmDelete` / `deleteUser` / `closeDeleteModal`). |
 | 4 | Route & sidebar ownership | **0004 registers `users.index`** (it owns the permission middleware). 0006 only links via `route('users.index')` and adds a **static, not-yet-permission-gated** sidebar entry; permission-based sidebar hiding belongs to the Roles & Permissions story. |
 | 5 | Browser-test infrastructure | **[0006b] Wire up the `tests/Browser/` suite** bootstraps the `tests/Browser/` testsuite; 0006 **depends on it** (see [Dependencies & risks](#dependencies--risks)). Find it under whichever of `ai-spec/tasks/`, `ai-spec/tasks/in-progress/` or `ai-spec/tasks/done/` currently holds `0006b-browser-test-infra-setup.md`, per its own lifecycle stage. |
 
-Resolved directly from the docs, no decision needed: **avatar** is initials derived from the name via `flux:avatar :name="..."` (no `avatar` column exists or is planned per [schema.md](../../docs/database/schema.md), and the prototype derives initials the same way); **no pagination** (the prototype has no pager and no acceptance criterion asks for one); **naming** follows [naming.md](../../docs/conventions/naming.md)'s **`Index`-in-a-subfolder exception** — `App\Livewire\Users\Index` ↔ the **flat** `resources/views/livewire/users.blade.php`, **not** a nested `users/index.blade.php` (naming.md documents that exact nested path as the wrong guess to avoid).
+Resolved directly from the docs, no decision needed: **avatar** is initials derived from the name via `flux:avatar :name="..."` (no `avatar` column exists or is planned per [schema.md](../../../docs/database/schema.md), and the prototype derives initials the same way); **no pagination** (the prototype has no pager and no acceptance criterion asks for one); **naming** follows [naming.md](../../../docs/conventions/naming.md)'s **`Index`-in-a-subfolder exception** — `App\Livewire\Users\Index` ↔ the **flat** `resources/views/livewire/users.blade.php`, **not** a nested `users/index.blade.php` (naming.md documents that exact nested path as the wrong guess to avoid).
 
 ## Gherkin
 
@@ -143,7 +143,7 @@ Feature: Users screen — list and create/edit modal
     Then "Diego Ferrer" still appears in the users list
 ```
 
-> Scenarios follow [gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md) rules 1
+> Scenarios follow [gherkin-guidelines.md](../../../docs/testing/frontend/gherkin-guidelines.md) rules 1
 > (named business-role actor, never "I") and 3 (exactly one `When` per scenario). Status names are
 > the **English display labels** per decision 1; the stored values are `active` / `inactive` /
 > `suspended` (decision 2).
@@ -152,8 +152,8 @@ Feature: Users screen — list and create/edit modal
 
 **Owned by this story:**
 
-- `resources/views/livewire/users.blade.php` — **modify.** This is 0004's placeholder view (it currently renders only the `usersSummary` line, with its own comment handing the rest to this story) — this story replaces its content entirely: section header (live count + primary "New user" button), the users table, the create/edit modal, the delete-confirmation modal, and the empty state. **Do not create `resources/views/livewire/users/index.blade.php`** — that nested path is not what Livewire resolves for `App\Livewire\Users\Index` (the `Index`-in-a-subfolder exception, [naming.md](../../docs/conventions/naming.md#livewire-components-and-views)) and would be a silently unused duplicate.
-- `resources/views/layouts/app/sidebar.blade.php` — **modify.** Add one `<flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>` inside the existing `flux:sidebar.group :heading="__('Platform')"` group. Static and always visible for now; permission gating and the final nav grouping are deferred ([PRD](../../docs/PRD/PRD.md) states the prototype sidebar is not the final navigation).
+- `resources/views/livewire/users.blade.php` — **modify.** This is 0004's placeholder view (it currently renders only the `usersSummary` line, with its own comment handing the rest to this story) — this story replaces its content entirely: section header (live count + primary "New user" button), the users table, the create/edit modal, the delete-confirmation modal, and the empty state. **Do not create `resources/views/livewire/users/index.blade.php`** — that nested path is not what Livewire resolves for `App\Livewire\Users\Index` (the `Index`-in-a-subfolder exception, [naming.md](../../../docs/conventions/naming.md#livewire-components-and-views)) and would be a silently unused duplicate.
+- `resources/views/layouts/app/sidebar.blade.php` — **modify.** Add one `<flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>` inside the existing `flux:sidebar.group :heading="__('Platform')"` group. Static and always visible for now; permission gating and the final nav grouping are deferred ([PRD](../../../docs/PRD/PRD.md) states the prototype sidebar is not the final navigation).
 - `tests/Feature/Users/IndexRenderingTest.php` — **new.** Livewire component-level tests for what this story owns: rendering, badges, the pending-email marker, the empty state, and inline validation display (mirrors `tests/Feature/Settings/SecurityTest.php`'s structure).
 - `tests/Browser/UsersIndexTest.php` — **new.** Pest 4 browser tests for the JS-driven behavior. Gated on the browser-suite infra task (decision 5).
 
@@ -258,7 +258,7 @@ wiring on the view side.
 
 ## Tests to perform
 
-Level chosen per [coverage-policy.md](../../docs/testing/frontend/coverage-policy.md) — browser tests
+Level chosen per [coverage-policy.md](../../../docs/testing/frontend/coverage-policy.md) — browser tests
 only where JS/Alpine visibility is the actual risk, everything else at the cheaper component level.
 
 - [x] Component test: the list renders each user's name, email, role, and status.
@@ -274,7 +274,7 @@ only where JS/Alpine visibility is the actual risk, everything else at the cheap
 - [x] Browser test: the per-row edit action opens the modal **prefilled with that row's data** (highest-risk case — a wrong/stale prefill is a silent data bug).
 - [x] Browser test: cancelling the create modal closes it and adds no row.
 - [x] Browser test: the delete action opens a confirmation naming the user; confirming removes the row; dismissing keeps it.
-- [x] Browser test: `->assertNoJavaScriptErrors()` on list load and on every modal open/close (mandatory per [test-quality-checklist.md](../../docs/testing/frontend/test-quality-checklist.md)).
+- [x] Browser test: `->assertNoJavaScriptErrors()` on list load and on every modal open/close (mandatory per [test-quality-checklist.md](../../../docs/testing/frontend/test-quality-checklist.md)).
 
 ## Expected outcome
 An authenticated administrator visiting `route('users.index')` sees the Users screen: a header with

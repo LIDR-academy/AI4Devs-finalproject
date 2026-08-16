@@ -5,7 +5,7 @@ The Pest 4 browser-testing tooling is installed (`pestphp/pest-plugin-browser` `
 `^1.61.1`, browser binaries downloaded) but **no browser suite is wired up**: `tests/Browser/` does
 not exist, `phpunit.xml` declares only `Unit` and `Feature`, `tests/Pest.php` applies
 `RefreshDatabase` only to `Feature`, and `.gitignore` does not ignore browser screenshots — all four
-listed as still pending in [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md).
+listed as still pending in [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md).
 This story closes that gap with the smallest possible change: the suite declaration, the
 `RefreshDatabase` decision, the screenshot ignore, and **one** canary browser test that proves the
 pipeline runs end to end. It writes no product behavior and no product tests.
@@ -13,7 +13,7 @@ pipeline runs end to end. It writes no product behavior and no product tests.
 > **Numbering.** This story is deliberately `0006b`, not the next sequential id. Story
 > **[0006] Users list + create/edit modal — UI** already exists in the **new** stage and declares a
 > hard dependency on "a separate infra task" for its `tests/Browser/UsersIndexTest.php`
-> (0006's decision 5 and its *Dependencies & risks* section). [workflow.md](../../docs/workflow.md)'s
+> (0006's decision 5 and its *Dependencies & risks* section). [workflow.md](../../../docs/workflow.md)'s
 > **Task ordering rule** asks that "a dependency's number is lower than its dependents' numbers"; a
 > letter suffix keeps this story adjacent to the one it unblocks **without** renumbering 0006–0015
 > and without disturbing the cross-references renumbering would drag along (`related_task_id`, range
@@ -51,14 +51,14 @@ cannot, because `php artisan test` would never discover it.
 
 | # | Question | Decision | Reasoning |
 |---|---|---|---|
-| 1 | Does the `Browser` suite get `RefreshDatabase`? | **Yes** — extend the existing `tests/Pest.php` call from `->in('Feature')` to `->in('Feature', 'Browser')`. | This is the bullet [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md) explicitly marks "**still undecided** … don't assume it's inherited". Browser tests in this repo will use `actingAs()` and model factories (the doc's own "Laravel helpers work inside browser tests" section says to prefer them over driving the UI), so they need exactly the same per-test isolation `Feature` already has. One call, one trait, same shape as `Feature` — no second `pest()->extend(...)` block. |
-| 2 | Which browsers are in scope? | **Chromium only** (Pest's default driver). | [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md)'s *Known caveat* records that Firefox/WebKit are **unverified on this host** because system libraries are missing, and that fixing it needs `sudo npx playwright install --with-deps` — an OS-level change requiring separate approval, explicitly out of scope there. This story does not change that, does not assert cross-browser reliability, and does not add a cross-browser acceptance criterion. |
-| 3 | Does this story wire browser tests into CI? | **Amended during Phase 3 (was originally "No").** OQ-1 confirmed the naive "no" would break CI, so the *minimum* fix — installing Chromium — is now in scope; the *broader* CI strategy question stays out. | Originally scoped "No — out of scope" on the reasoning that `.github/workflows/tests.yml` installed neither the browser binaries nor anything else Playwright needs, and that wiring it properly needed an undecided trigger-policy call (every push vs. schedule/label). Phase 3 then proved empirically (OQ-1) that leaving CI untouched isn't neutral — it turns the pipeline red on all three PHP matrix legs the moment `Browser` is declared, which is worse than "no coverage yet". The user chose option (a): add one `npx playwright install --with-deps chromium` step to `tests.yml`, matching decision 2's Chromium-only scope, and leaving decision 3's original larger questions (every-push vs. scheduled runs, cross-browser in CI) genuinely still open — see the amended [Open questions](#open-questions) OQ-1 for the exact change. [ci/pipeline-integration.md](../../docs/testing/ci/pipeline-integration.md)'s coverage-gate proposal is unaffected. |
+| 1 | Does the `Browser` suite get `RefreshDatabase`? | **Yes** — extend the existing `tests/Pest.php` call from `->in('Feature')` to `->in('Feature', 'Browser')`. | This is the bullet [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md) explicitly marks "**still undecided** … don't assume it's inherited". Browser tests in this repo will use `actingAs()` and model factories (the doc's own "Laravel helpers work inside browser tests" section says to prefer them over driving the UI), so they need exactly the same per-test isolation `Feature` already has. One call, one trait, same shape as `Feature` — no second `pest()->extend(...)` block. |
+| 2 | Which browsers are in scope? | **Chromium only** (Pest's default driver). | [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md)'s *Known caveat* records that Firefox/WebKit are **unverified on this host** because system libraries are missing, and that fixing it needs `sudo npx playwright install --with-deps` — an OS-level change requiring separate approval, explicitly out of scope there. This story does not change that, does not assert cross-browser reliability, and does not add a cross-browser acceptance criterion. |
+| 3 | Does this story wire browser tests into CI? | **Amended during Phase 3 (was originally "No").** OQ-1 confirmed the naive "no" would break CI, so the *minimum* fix — installing Chromium — is now in scope; the *broader* CI strategy question stays out. | Originally scoped "No — out of scope" on the reasoning that `.github/workflows/tests.yml` installed neither the browser binaries nor anything else Playwright needs, and that wiring it properly needed an undecided trigger-policy call (every push vs. schedule/label). Phase 3 then proved empirically (OQ-1) that leaving CI untouched isn't neutral — it turns the pipeline red on all three PHP matrix legs the moment `Browser` is declared, which is worse than "no coverage yet". The user chose option (a): add one `npx playwright install --with-deps chromium` step to `tests.yml`, matching decision 2's Chromium-only scope, and leaving decision 3's original larger questions (every-push vs. scheduled runs, cross-browser in CI) genuinely still open — see the amended [Open questions](#open-questions) OQ-1 for the exact change. [ci/pipeline-integration.md](../../../docs/testing/ci/pipeline-integration.md)'s coverage-gate proposal is unaffected. |
 | 4 | Does the implementer update `docs/testing/frontend/playwright-setup.md`? | **No — that doc is Phase 6 (`docs-keeper`) work**, recorded here so it is not lost. | Per this project's docs ownership convention, `docs/` is `docs-keeper`'s at Phase 6, not the implementer's at Phase 3. What must be flipped once this lands: the four "still pending and must not be described as done" bullets (`tests/Browser/` does not exist / no `Browser` testsuite / `RefreshDatabase` undecided / `.gitignore`), the folder-structure code block's "NOT created yet" annotation, and the *CI integration* section — which must **stay** accurate, i.e. still say CI does not run browser tests (decision 3), while noting the new suite exists. Do **not** let a docs pass turn "suite wired" into "CI runs browser tests". |
-| 5 | Which route does the canary visit? | **`/login`.** | It is unauthenticated (no `actingAs`, no session/password-confirmation setup), config-independent, already exists, and has real user-visible text and a `data-test="login-button"` hook per [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md)'s selector-strategy section. Critically it does **not** depend on story 0006's not-yet-built Users UI, so this story stays independent of the story that depends on it — otherwise the two would deadlock. |
+| 5 | Which route does the canary visit? | **`/login`.** | It is unauthenticated (no `actingAs`, no session/password-confirmation setup), config-independent, already exists, and has real user-visible text and a `data-test="login-button"` hook per [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md)'s selector-strategy section. Critically it does **not** depend on story 0006's not-yet-built Users UI, so this story stays independent of the story that depends on it — otherwise the two would deadlock. |
 | 6 | What is the canary allowed to assert? | **Assertion-light: the page renders and throws no JavaScript errors.** | Its job is proving the wiring (browser launches, page loads, `RefreshDatabase` runs, the test is discovered), **not** covering `/login` behavior — that belongs to `tests/Feature/Auth/AuthenticationTest.php` and to whichever story owns sign-in browser coverage. A canary that grows real login assertions becomes a duplicate test with an infra story's name on it. |
-| 7 | Where does the canary file live? | `tests/Browser/Auth/LoginSmokeTest.php`. | Mirrors the app structure inside the suite exactly as `tests/Feature/Auth/` already does, which is what [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md) instructs ("Mirror the app structure inside it (e.g. `tests/Browser/Auth/`, `tests/Browser/Settings/`)"). Establishing the folder convention with the first file is cheaper than relocating later. |
-| 8 | Are Pest groups (`smoke` / `regression`) adopted here? | **No.** | [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md) records tagging as a *proposal, not yet in place*, with a standing TODO to decide it and record an ADR. Adopting a tag convention as a side effect of an infra story would enact an undecided team convention. Listed in [Technical tasks for later backlog](#technical-tasks-for-later-backlog) instead. |
+| 7 | Where does the canary file live? | `tests/Browser/Auth/LoginSmokeTest.php`. | Mirrors the app structure inside the suite exactly as `tests/Feature/Auth/` already does, which is what [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md) instructs ("Mirror the app structure inside it (e.g. `tests/Browser/Auth/`, `tests/Browser/Settings/`)"). Establishing the folder convention with the first file is cheaper than relocating later. |
+| 8 | Are Pest groups (`smoke` / `regression`) adopted here? | **No.** | [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md) records tagging as a *proposal, not yet in place*, with a standing TODO to decide it and record an ADR. Adopting a tag convention as a side effect of an infra story would enact an undecided team convention. Listed in [Technical tasks for later backlog](#technical-tasks-for-later-backlog) instead. |
 
 ## Gherkin
 
@@ -96,7 +96,7 @@ Feature: Browser test suite wired into the project's test runner
     Then the screenshot is ignored and offered for neither staging nor commit
 ```
 
-> Scenarios follow [gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md) rules 1
+> Scenarios follow [gherkin-guidelines.md](../../../docs/testing/frontend/gherkin-guidelines.md) rules 1
 > (a named actor — here **a backend developer**, since this story has no end-user actor; the same
 > shape as the actor-less system phrasing used by infra story **0014**) and 3 (exactly one `When`
 > per scenario). They are unavoidably more technical than a product scenario — the deliverable *is*
@@ -114,7 +114,7 @@ Feature: Browser test suite wired into the project's test runner
   ```
 
   Nothing else in the file changes — in particular the `<php>` env block (which pins
-  `DB_DATABASE=testing`, the isolation the [Destructive Database Command Rule](../../docs/contracts.md)
+  `DB_DATABASE=testing`, the isolation the [Destructive Database Command Rule](../../../docs/contracts.md)
   depends on) and the `<source>` coverage block stay exactly as they are.
 
 - `tests/Pest.php` — **modify.** Extend the single existing binding, decision 1:
@@ -134,7 +134,7 @@ Feature: Browser test suite wired into the project's test runner
 - `tests/Browser/Auth/LoginSmokeTest.php` — **new** (creates the `tests/Browser/` root and its first
   `Auth/` subfolder). One canary test, decisions 5–7: visit `/login`, assert its user-visible text
   renders, assert no JavaScript errors. Only the documented Pest browser API from
-  [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md) — `visit()`, `assertSee()`,
+  [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md) — `visit()`, `assertSee()`,
   `assertNoJavaScriptErrors()` — no invented methods. Named for the behavior, not `it('works')`.
 
 - `.github/workflows/tests.yml` — **modify (added during Phase 3, per OQ-1's decision).** One new
@@ -163,7 +163,7 @@ Feature: Browser test suite wired into the project's test runner
   browser-matrix config, a `--browser` flag, or a Playwright config file. Fewer knobs now; the
   cross-browser question is backlog.
 - **No paratest, no sharding.** Neither `brianium/paratest` nor Pest sharding is installed
-  ([playwright-setup.md](../../docs/testing/frontend/playwright-setup.md), *Parallelization*). This
+  ([playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md), *Parallelization*). This
   story installs no dependency and adds no parallel runner — which is also why the
   same-invocation-interference test below is a real risk worth asserting rather than a formality.
 
@@ -191,7 +191,7 @@ Feature: Browser test suite wired into the project's test runner
 - [x] Artifact hygiene: after a deliberately failing browser test writes a screenshot, `git status`
       shows it as **ignored** — verified by running the command, not by eyeballing `.gitignore`.
 - [x] Full-suite gate: `php artisan test --compact` across all suites reports the pre-change total
-      plus the canary, with zero failures ([Full Test Suite Gate Rule](../../docs/contracts.md)).
+      plus the canary, with zero failures ([Full Test Suite Gate Rule](../../../docs/contracts.md)).
 
 ## QA test cases
 
@@ -200,11 +200,11 @@ Feature: Browser test suite wired into the project's test runner
 | QA-1 | Happy | Run `php artisan test` after the `phpunit.xml` change | The canary's test name appears in the output | The whole point of the story; a green summary alone cannot distinguish "ran and passed" from "silently ran nothing" |
 | QA-2 | Happy | Compare the total test count against the pre-change baseline | Total increases by exactly the number of browser tests added (one) | Catches the "wired but silently 0-item suite" mistake QA-1 could still miss if the name check is done loosely. **Re-measure the baseline at the start of Phase 3** — see [OQ-2](#open-questions) |
 | QA-3 | Negative | Revert only the suite-wiring change, rerun `--testsuite=Browser` | Fails: suite not found / zero tests run | Proves the canary is genuinely discovered *by this story's change* and not by an incidental path |
-| QA-4 | Negative | Inject a deliberate JavaScript error into the visited page, rerun the canary | The canary fails, naming the JS error | Proves `assertNoJavaScriptErrors()` is a live assertion against a real browser, not decoration. Mandatory per [test-quality-checklist.md](../../docs/testing/frontend/test-quality-checklist.md)'s insistence on the check being in every browser test — a check that can't fail is worse than none |
+| QA-4 | Negative | Inject a deliberate JavaScript error into the visited page, rerun the canary | The canary fails, naming the JS error | Proves `assertNoJavaScriptErrors()` is a live assertion against a real browser, not decoration. Mandatory per [test-quality-checklist.md](../../../docs/testing/frontend/test-quality-checklist.md)'s insistence on the check being in every browser test — a check that can't fail is worse than none |
 | QA-5 | Edge | Run the full suite twice back-to-back | Identical results both runs; no residual rows | `RefreshDatabase` newly applies to a suite whose HTTP requests run outside the test process — the classic place isolation silently breaks |
-| QA-6 | Edge | Run `Browser` and `Feature` in one invocation | Both complete; no duplicate-table / connection / lock errors | Real risk with no parallel runner installed; also the exact shape the [Full Test Suite Gate Rule](../../docs/contracts.md)'s "suspicious mass-failure" clause warns about |
+| QA-6 | Edge | Run `Browser` and `Feature` in one invocation | Both complete; no duplicate-table / connection / lock errors | Real risk with no parallel runner installed; also the exact shape the [Full Test Suite Gate Rule](../../../docs/contracts.md)'s "suspicious mass-failure" clause warns about |
 | QA-7 | Negative | Force a browser-test failure so a screenshot is written, then run `git status` | The screenshot is untracked **and ignored** | `.gitignore` correctness is only observable by running the tool; a path typo reads fine and ignores nothing |
-| QA-8 | Gate | `php artisan test --compact` (all suites) | Baseline + 1 passing, 0 failing | The literal Definition of Done per [contracts.md](../../docs/contracts.md) |
+| QA-8 | Gate | `php artisan test --compact` (all suites) | Baseline + 1 passing, 0 failing | The literal Definition of Done per [contracts.md](../../../docs/contracts.md) |
 
 **QA scoping notes:**
 
@@ -292,7 +292,7 @@ application changes; no user-visible behavior is added, removed, or altered.
   `tests/Browser/UsersIndexTest.php` cannot exist without it. 0006's component-level tests do not
   depend on this story; only its browser tests do.
 - **Depends on nothing.** The tooling it needs is already installed (verified in
-  [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md) against `composer.json`,
+  [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md) against `composer.json`,
   `composer.lock` and `package.json`). It touches no story's files, needs no schema, and its canary
   targets `/login`, which has existed since before story 0001 — so it can be implemented at any time,
   independent of 0004/0005 or anything else in flight.
@@ -350,7 +350,7 @@ application changes; no user-visible behavior is added, removed, or altered.
 > `Install Node Dependencies` and before the Flux/Composer steps, on all three PHP matrix legs. This
 > keeps decision 3 (no *other* CI scope change — trigger policy, cross-browser, coverage gating —
 > stays out of scope) while making the pipeline honest about the suite it now runs. `--with-deps`
-> installs the OS-level libraries the [Known caveat](../../docs/testing/frontend/playwright-setup.md#known-caveat-missing-system-libraries-on-this-host)
+> installs the OS-level libraries the [Known caveat](../../../docs/testing/frontend/playwright-setup.md#known-caveat-missing-system-libraries-on-this-host)
 > flags as missing on the local dev host — safe here because a GitHub-hosted runner is a fresh,
 > disposable VM each run, not a persistent machine needing separate approval for a system change.
 > **Not yet verified by an actual CI run** — that verification happens naturally the next time this
@@ -372,7 +372,7 @@ Deliberately **not** part of this story; each is a decision or a system change n
    its runtime. Requires OS-level approval.
 3. **Decide the Pest group convention** (`smoke` / `regression` / `browser`) for selective runs, and
    record it as an ADR — this is the standing TODO already written into
-   [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md), not a new idea.
+   [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md), not a new idea.
 4. **Revisit parallelization** (`brianium/paratest` or Pest sharding) if and only if real suite
    runtime becomes painful once browser tests are numerous — gated on measured pain, per the same
    doc.
@@ -383,7 +383,7 @@ Deliberately **not** part of this story; each is a decision or a system change n
 ## Definition of Done
 - [x] Tests written and green — the canary plus the verification steps in *Tests to perform*, and
       the **full** suite (`php artisan test`, all three testsuites, unfiltered) at 100% passing per
-      [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule. Re-confirmed at Phase 5:
+      [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule. Re-confirmed at Phase 5:
       299/299 passing, 671 assertions, run twice.
 - [x] OQ-1 resolved empirically and its answer recorded in this file before Phase 5. Hard-fail
       confirmed; user chose option (a) (install Chromium in CI); implemented in

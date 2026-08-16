@@ -274,7 +274,7 @@ with `php artisan make:migration add_soft_deletes_to_users_table --no-interactio
   3. **`forceFill()` rather than direct property assignment** — an earlier draft assigned
      `$this->pending_email = null` directly. `users.pending_email` and `users.status` are deliberately
      omitted from `User`'s `#[Fillable]`, and
-     [`docs/conventions/base-standards.md`](../../docs/conventions/base-standards.md#model-conventions)
+     [`docs/conventions/base-standards.md`](../../../docs/conventions/base-standards.md#model-conventions)
      states the convention as "written only via an explicit `forceFill()` in an action". Using
      `forceFill()` here keeps the one convention intact rather than opening a second accepted way to
      write those columns. Note the convention's wording says *"in an action"* and this is a **model
@@ -379,7 +379,7 @@ with `php artisan make:migration add_soft_deletes_to_users_table --no-interactio
   `'manage administrator-level roles/users'`. That string is **not** in story 0002's seeded catalog
   and `hasPermissionTo()` would throw `PermissionDoesNotExist` against it. The canonical names are
   **`roles.manage-administrators`** and **`users.delete`**, per
-  [`docs/conventions/naming.md`](../../docs/conventions/naming.md#permission-names). The Gherkin below
+  [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#permission-names). The Gherkin below
   keeps the human phrase because it is business prose, not a code literal.
 
   No self-targeting exception: the same rule applies when `$actor` and `$target` are the same user.
@@ -483,7 +483,7 @@ once the model uses `SoftDeletes`).
       `AuthorizationException` — this is the test that actually proves the PRD's "denied server-side,
       not merely hidden in the UI" wording.
 - [x] Regression (stay green): **the full suite**, `php artisan test --compact`, per
-      [`docs/testing/ci/commands.md`](../../docs/testing/ci/commands.md). Do **not** substitute an
+      [`docs/testing/ci/commands.md`](../../../docs/testing/ci/commands.md). Do **not** substitute an
       enumerated list of suites here — an earlier draft did, and it went stale within one story (it
       predated 0004 and omitted `tests/Feature/Users/*`, `tests/Feature/Authorization/*` and
       `tests/Feature/Seeders/*` entirely). Adding `SoftDeletes` installs a global scope that silently
@@ -584,7 +584,7 @@ that installing the `SoftDeletes` global scope did not weaken any of it.
         abilities", which over-stated the change: after this revision the story adds exactly one new
         authorization rule. That rule is still genuinely an authorization rule — `delete()` gains a
         branch that denies a trashed target — so the Policies section's `delete()` description does go
-        stale without a touch, and per [`docs/errors-log.md`](../../docs/errors-log.md)'s rule about
+        stale without a touch, and per [`docs/errors-log.md`](../../../docs/errors-log.md)'s rule about
         claims outliving the code, a doc that describes an ability must describe all of its branches.
         Confine the edit to that: **do not** re-document the Administrator-level matrix, which is
         unchanged and already correct there.

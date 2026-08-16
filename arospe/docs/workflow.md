@@ -27,7 +27,7 @@ previous one is met.
 | `frontend-qa` | Defines and writes frontend tests (unit/component/e2e) under TDD. |
 | `appsec-auditor` | Audits the security of the implemented code. |
 | `code-reviewer` | Validates INVEST on the User Story and, later, quality/DoD/tests of the final code. |
-| `docs-keeper` | Continuously documents: the workflow itself, decisions, lessons learned, and final changes. |
+| `docs-keeper` | Continuously documents: the workflow itself, decisions, lessons learned, and final changes; verifies a task file's internal links on every stage move (see below). |
 
 > **Task-storage convention:** task files have three stages. Phase 1 writes the User Story to
 > `./ai-spec/tasks/<id>-<slug>.md` (**new** — defined, not yet picked up for implementation).
@@ -40,6 +40,25 @@ previous one is met.
 `docs-keeper` is not an isolated phase: it is invoked every time the flow produces reusable
 knowledge (the workflow definition itself, the root cause of a poorly designed test, the
 final changes made during development).
+
+## Link-integrity check on every stage move
+
+`./ai-spec/tasks/<file>.md` sits two directory levels below the repo root, but
+`./ai-spec/tasks/in-progress/<file>.md` and `./ai-spec/tasks/done/<file>.md` sit **three** — one
+deeper. A relative link written for the `new` stage (e.g. `../../docs/PRD/PRD.md`, correct from
+`ai-spec/tasks/`) silently breaks the moment the file moves to `in-progress/` or `done/`, because
+it now resolves one directory too shallow (`ai-spec/docs/PRD/PRD.md`, which doesn't exist)
+instead of `../../../docs/PRD/PRD.md`. Nothing about the move itself signals this — the file's
+own content is untouched, and the link only fails when someone actually clicks it.
+
+**Every time `product-owner` moves a task file between stages** (Phase 3 step 0, and Phase 7),
+`docs-keeper` checks every relative link the moved file contains — both that the path still
+resolves to a real file and, for a link carrying a `#fragment`, that the anchor still matches a
+real heading in the target — and fixes any that don't, as part of the same move.
+
+This is not hypothetical: six already-`done` task files (`0002`–`0006b`) were found with exactly
+this break and fixed; see [errors-log.md](errors-log.md) for the incident and the concrete fix
+pattern.
 
 ## Task classification rule
 
@@ -158,7 +177,8 @@ it as a file at `./ai-spec/tasks/<id>-<slug>.md` (**new** stage — not yet in p
 
 0. Before writing the first test, `product-owner` moves the task file from
    `./ai-spec/tasks/<id>-<slug>.md` to `./ai-spec/tasks/in-progress/<id>-<slug>.md` — this is
-   the point implementation actually starts.
+   the point implementation actually starts. `docs-keeper` then runs the
+   [link-integrity check](#link-integrity-check-on-every-stage-move) the move requires.
 1. `backend-qa`/`frontend-qa` writes the tests defined in the User Story. Tests **must
    fail** at this point (red).
 2. The task passes to `backend-expert`/`frontend-expert` to implement the minimal code
@@ -202,7 +222,8 @@ with the changes made.
 ## Phase 7 — Closure
 
 `product-owner` moves the task file from `./ai-spec/tasks/in-progress/` to
-`./ai-spec/tasks/done/`.
+`./ai-spec/tasks/done/`. `docs-keeper` then runs the
+[link-integrity check](#link-integrity-check-on-every-stage-move) the move requires.
 
 If the task was full-stack (split in the initial phase), it is not marked as globally closed
 until **both** sub-tasks (FE and BE) have completed their Phase 7.
@@ -275,7 +296,14 @@ What should be observable/working once done.
 - Returns between phases are loops: a task may go through TDD or security multiple times
   until it's green/clean before moving forward.
 
-_Last updated: 2026-08-09 — Added the "Task ordering rule" section: for a full-stack task split
+_Last updated: 2026-08-17 — Added the "Link-integrity check on every stage move" section and
+`docs-keeper` responsibility: a task file's relative links are written for its current directory
+depth, and `in-progress/`/`done/` sit one level deeper than the root `new` stage, so a link that
+resolved correctly before a move (e.g. `../../docs/PRD/PRD.md`) silently breaks after it. Found
+and fixed the real break across six already-`done` task files (`0002`–`0006b`); recorded as a new
+[errors-log.md](errors-log.md) entry. Cross-referenced from Phase 3 step 0 and Phase 7._
+
+_Previously, 2026-08-09 — Added the "Task ordering rule" section: for a full-stack task split
 into a backend/frontend pair (or any hard-dependency pair), the depended-upon task is numbered
 and sequenced before its dependent. Applied it by renumbering the ten pending Epic 1 tasks in
 `./ai-spec/tasks/` (backend now precedes its paired frontend in all three FE/BE pairs: Users,

@@ -55,7 +55,7 @@ permission gate in Epics 2–5 — build on.
 
 - **Permission naming**: `<module-slug>.<action>` dot notation, matching this repo's documented
   `<resource>.<action>` route-naming convention in
-  [`docs/conventions/naming.md`](../../docs/conventions/naming.md#route-names).
+  [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#route-names).
 - **`users.*` and `roles.*` are separate namespaces**, because the PRD gates them separately with
   different default holders.
 - **Coarse per-module granularity**: `products.*` covers categories & variants, `blog.*` covers
@@ -693,7 +693,7 @@ Points that are load-bearing, not stylistic:
   credential into shell history and CI logs, which is the whole class of problem F1 also addresses.
 - **The reset link uses the app's already-implemented Fortify flow** — `Password::broker()
   ->sendResetLink(...)`, the same broker behind the `password.request` route documented in
-  [`docs/architecture/authentication.md`](../../docs/architecture/authentication.md#registration--password-reset).
+  [`docs/architecture/authentication.md`](../../../docs/architecture/authentication.md#registration--password-reset).
   No bespoke invite token, no new route, no new notification class.
 - **The send happens after `COMMIT`, never inside the transaction.** Mail dispatched inside a
   transaction that later rolls back produces a live reset email whose token no longer exists.
@@ -1153,7 +1153,7 @@ invariants and any legitimate "does this user literally hold role X" query the r
 unavoidable, write `role_or_permission:Super Admin|<permission>` instead of bare `role:`, so the
 Super Admin is admitted by the role branch and everyone else by the permission branch. `docs-keeper`
 must carry this table and this rule into
-[`docs/architecture/authorization.md`](../../docs/architecture/authorization.md) in Phase 6 — it is
+[`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md) in Phase 6 — it is
 the kind of gap that is invisible until it silently locks the Super Admin out of a screen.
 
 ## Acceptance criteria
@@ -1290,7 +1290,7 @@ the kind of gap that is invisible until it silently locks the Super Admin out of
       application log for audit (N3); and the corrected environment allow-list for the fixture user —
       `local` and `testing` only, explicitly **not** staging (N4) — which supersedes any
       "non-production" wording. Worth an entry in
-      [`docs/errors-log.md`](../../docs/errors-log.md) too: "an existing row with the right email is
+      [`docs/errors-log.md`](../../../docs/errors-log.md) too: "an existing row with the right email is
       not proof of mailbox ownership — bootstrap privilege grants must require `email_verified_at`."
 - [x] Acceptance criteria met
 
