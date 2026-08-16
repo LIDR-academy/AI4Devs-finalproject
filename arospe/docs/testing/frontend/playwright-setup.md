@@ -34,12 +34,16 @@ The browser-testing plugin is now a real dependency of this project. The two ins
    npx playwright install
    ```
 
+4. ✅ **The `tests/Browser/` suite is wired up** (task 0006b) — the suite is declared in `phpunit.xml`, gets `RefreshDatabase` through `tests/Pest.php`, ignores its own screenshots, and holds a first real test. Details in [Folder structure](#folder-structure) below; CI's side of it in [CI integration](#ci-integration).
+
 ### Known caveat: missing system libraries on this host
 
 During `npx playwright install`, host validation warned that several system libraries are missing on this machine — `libgtk-4`, various GStreamer libraries, `libflite`, `libmanette`, `libsecret`, and others (mostly WebKit/Firefox media/UI dependencies). This is **not a broken install**:
 
 - **Chromium** — the default browser Pest drives — does not appear to need these libraries, so the default browser-test path works.
 - **Firefox / WebKit** runs may be unreliable on this host until those libraries are present. Installing them is done with `sudo npx playwright install --with-deps`, which installs OS-level system packages. That is a **system change requiring separate approval** and was **not run** as part of this setup — it is out of scope here. Treat Firefox/WebKit runs as unverified on this machine until it is.
+
+> This caveat is about **this developer host only**, and task 0006b did not change it. CI is a different machine and a different answer: the workflow step added by that task runs `npx --no playwright install --with-deps chromium`, so the GitHub-hosted runner installs its own OS-level packages on a fresh, disposable VM each run — no approval question there, because nothing persists. It installs them for **Chromium only**, so it is not evidence that Firefox/WebKit work anywhere.
 
 ## Folder structure
 
@@ -49,17 +53,38 @@ Browser tests live in `tests/Browser/`, a sibling of the existing suites. This m
 tests/
   Unit/        Pure logic, no DB (no RefreshDatabase)
   Feature/     Full request/Livewire lifecycle, real DB (RefreshDatabase applied via tests/Pest.php)
-  Browser/     Real-browser end-to-end tests (Pest browser plugin) — NOT created yet (see pending work below)
+  Browser/     Real-browser end-to-end tests (Pest browser plugin), RefreshDatabase applied too;
+               first test: tests/Browser/Auth/LoginSmokeTest.php
 ```
 
-The plugin is installed, but the suite is **not yet wired up**. The following are still pending and must not be described as done:
+The suite is wired up (task 0006b). All four pieces are real and verifiable right now:
 
-- `tests/Browser/` **does not exist yet** — no browser test files have been created.
-- `phpunit.xml` still declares only the `Unit` and `Feature` testsuites — there is **no `Browser` testsuite** yet.
-- `tests/Pest.php` still applies `RefreshDatabase` only to the `Feature` suite. Whether browser tests should also get `RefreshDatabase` (they usually should) is **still undecided** and must be wired in `tests/Pest.php` when the suite is added — don't assume it's inherited.
-- `.gitignore` does not yet ignore `tests/Browser/Screenshots`.
+- **`tests/Browser/` exists**, holding `Auth/LoginSmokeTest.php` — a deliberately assertion-light canary that visits `/login`, asserts its user-visible text renders, and calls `assertNoJavaScriptErrors()`. Its job is proving the pipeline runs end to end, **not** covering sign-in behavior (that belongs to `tests/Feature/Auth/AuthenticationTest.php` and to whichever story owns sign-in browser coverage). Don't grow product assertions into it.
+- **`phpunit.xml` declares a third `Browser` testsuite** alongside `Unit` and `Feature`:
 
-When the suite is created, use the same artisan-first workflow used everywhere else — `php artisan make:test --pest LoginBrowserTest` places the file under `tests/Feature/` by default, so move browser tests into `tests/Browser/` (or configure the suite). Mirror the app structure inside it (e.g. `tests/Browser/Auth/`, `tests/Browser/Settings/`) exactly as `tests/Feature/` already does.
+  ```xml
+  <!-- phpunit.xml -->
+  <testsuite name="Browser">
+      <directory>tests/Browser</directory>
+  </testsuite>
+  ```
+
+  So `php artisan test` discovers browser tests automatically, and `php artisan test --testsuite=Browser` runs only them.
+
+- **`RefreshDatabase` applies to `Browser` too** — decided **yes**, and wired through the single existing binding in `tests/Pest.php` rather than a second `pest()->extend(...)` block:
+
+  ```php
+  // tests/Pest.php
+  pest()->extend(TestCase::class)
+      ->use(RefreshDatabase::class)
+      ->in('Feature', 'Browser');
+  ```
+
+  It is correct here for a specific, verified reason: Pest's browser plugin dispatches the page's requests through the **same in-process Laravel kernel** (`vendor/pestphp/pest-plugin-browser/src/Drivers/LaravelHttpServer.php` resolves `HttpKernel` and calls `$kernel->handle(...)`), not a separate server process — so the test's open transaction is visible to the page under test, exactly as it is for `Feature`. That is what makes `actingAs()` and model factories usable from a browser test at all.
+
+- **`.gitignore` ignores `/tests/Browser/Screenshots`** — the repo-root-anchored path matching `Pest\Browser\Support\Screenshot::dir()`, which hardcodes `rootPath.'/tests/Browser/Screenshots'`. Confirmed against that source and with `git check-ignore -v`, not guessed from the directory name. Worth knowing when you write a browser test: Pest auto-captures a screenshot on **any** failed browser assertion, not only when you call `->screenshot()` explicitly.
+
+Mirror the app structure inside `tests/Browser/` (e.g. `tests/Browser/Auth/`, `tests/Browser/Settings/`) exactly as `tests/Feature/` already does — `Auth/LoginSmokeTest.php` establishes that. Note the artisan-first workflow used everywhere else needs one manual step here: `php artisan make:test --pest LoginBrowserTest` still places the file under `tests/Feature/`, so move it into `tests/Browser/` after generating it.
 
 ## Real syntax
 
@@ -135,13 +160,22 @@ Rationale: a test that asserts "the user sees `Remove passkey`" survives markup 
 
 ## CI integration
 
-`.github/workflows/tests.yml` currently runs a plain `php artisan test` across a PHP 8.3/8.4/8.5 matrix (see [../ci/pipeline-integration.md](../ci/pipeline-integration.md#current-state-real-as-of-this-writing)). It does **not**:
+**CI runs the browser suite — on Chromium only.** `.github/workflows/tests.yml` runs a plain `php artisan test` across a PHP 8.3/8.4/8.5 matrix (see [../ci/pipeline-integration.md](../ci/pipeline-integration.md#current-state-real-as-of-this-writing)), and since the `Browser` testsuite is declared in `phpunit.xml`, that single command now executes browser tests too. Task 0006b added the step that makes this possible, on all three matrix legs, immediately after `Install Node Dependencies`:
 
-- install the Pest browser plugin,
-- install Playwright browser binaries, or
-- run any browser tests.
+```yaml
+# .github/workflows/tests.yml
+- name: Install Playwright Browser (Chromium)
+  run: npx --no playwright install --with-deps chromium
+```
 
-Adding browser tests to CI is a **follow-up**, not something already wired up — even though the plugin itself is now installed. It would require: a step to install browser binaries (`npx playwright install`, and likely `npx playwright install --with-deps` on a fresh runner so the WebKit/Firefox system libraries noted in the [known caveat](#known-caveat-missing-system-libraries-on-this-host) are present), and a decision on whether browser tests run on every push or only on a schedule/label to keep the pipeline fast. Do not claim CI runs browser tests until `tests.yml` actually does.
+This step was not optional politeness: without it the pipeline would **hard-fail**, not skip. Verified empirically during task 0006b by hiding the browser binaries and rerunning the canary — the plugin throws (`PlaywrightOutdatedException`) and the run exits non-zero; it has no graceful-degradation path. Declaring a `Browser` testsuite and leaving `tests.yml` alone would have turned three green matrix legs red. The `--no` flag is a deliberate supply-chain guard — see [../../security/ci-workflow-hardening.md](../../security/ci-workflow-hardening.md) for why bare `npx` was rejected.
+
+Two things this does **not** mean — do not overstate them:
+
+- **It is not cross-browser CI coverage.** Only Chromium is installed and only Chromium is exercised. Firefox and WebKit remain unverified everywhere, per the [known caveat](#known-caveat-missing-system-libraries-on-this-host). Whether cross-browser runs are worth their runtime is still an open backlog decision.
+- **There is no browser-specific trigger policy.** Browser tests simply inherit whatever `tests.yml` already does for everything else — every push/PR to `develop`/`main`/`master`/`workos`. Nobody has decided whether a growing browser suite should instead run on a schedule or behind a label to keep the pipeline fast; that question is still open and was explicitly left out of task 0006b's scope.
+
+Coverage gating is a separate, still-unenacted proposal — see [../ci/pipeline-integration.md](../ci/pipeline-integration.md); adding the browser suite did not change it.
 
 ## Correct vs. incorrect examples
 
@@ -172,4 +206,6 @@ it('signs an existing user in and lands them on the dashboard', function () {
 });
 ```
 
-_Last updated: 2026-07-19 — Flipped setup status to installed (pest-plugin-browser ^4.3.1, playwright ^1.61.1, `npx playwright install` confirmed); added the missing-system-libraries caveat; kept the Browser suite/folder/CI wiring marked pending._
+_Last updated: 2026-08-16 — Task 0006b (wire up the `tests/Browser/` suite): flipped all four pending bullets to their real done state (suite folder + `Auth/LoginSmokeTest.php`, the `Browser` testsuite in `phpunit.xml`, `RefreshDatabase` extended to `Browser` with the in-process-kernel reason it is correct, and the verified `/tests/Browser/Screenshots` ignore), updated the folder-structure block, and rewrote **CI integration**: CI now does run the browser suite, Chromium-only, via the new `Install Playwright Browser (Chromium)` step — with the trigger-policy and cross-browser questions explicitly still open._
+
+_Previously, 2026-07-19 — Flipped setup status to installed (pest-plugin-browser ^4.3.1, playwright ^1.61.1, `npx playwright install` confirmed); added the missing-system-libraries caveat; kept the Browser suite/folder/CI wiring marked pending._

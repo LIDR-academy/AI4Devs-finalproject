@@ -4,9 +4,9 @@
  * Hand translation of examples/login.feature into a Pest 4 browser test.
  *
  * SKELETON — this file lives under docs/ as a worked example, not in tests/Browser/.
- * pestphp/pest-plugin-browser is now installed (see ../playwright-setup.md), but the
- * tests/Browser/ suite does not exist yet. Once it is set up, copy the it() blocks into
- * tests/Browser/Auth/LoginTest.php.
+ * The tests/Browser/ suite is wired up (see ../playwright-setup.md), so these it() blocks
+ * can be copied into tests/Browser/Auth/LoginTest.php and will run as-is. They stay here
+ * as documentation; nothing under docs/ is executed by the test runner.
  *
  * Given/When/Then -> it() body mapping is documented in ../gherkin-guidelines.md.
  * Syntax (visit/fill/click/assertSee/assertNoJavaScriptErrors) is from

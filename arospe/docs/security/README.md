@@ -47,6 +47,18 @@ repo must follow — always with a real code example pulled from this repository
   `SoftDeletes` silently flipped `spatie/laravel-permission` into **keeping** role grants on deleted
   accounts, why a UUID-derived placeholder written into a `UNIQUE` column still needs the SQLSTATE
   `23000` catch every other writer in this repo has, and the list of paths confirmed already covered.
+- [CI workflow hardening](ci-workflow-hardening.md) — the rules governing `.github/workflows/*.yml`,
+  established by task 0006b's `npx playwright install --with-deps chromium` step (this repo's first
+  CI step that downloads and executes a third-party binary): why the SHA-pinning convention covers
+  `uses:` but not `run:`, why `npx <pkg>` must be written so a missing local install fails instead of
+  silently fetching `@latest`, why `npm ci` rather than `npm i` is what makes `package-lock.json` an
+  actual pin, why every step executing third-party code must sit **above** the step that writes the
+  Flux credentials to disk, why git-ignoring `tests/Browser/Screenshots` is only sufficient while no
+  workflow uploads artifacts, and the verification that `DB_DATABASE=testing` still covers the new
+  `Browser` suite because the app under test shares the test process.
 
-_Last updated: 2026-08-14 — Added `soft-delete-patterns.md` from the Phase 4 audit of task 0005
+_Last updated: 2026-08-16 — Added `ci-workflow-hardening.md` from the Phase 4 audit of task 0006b
+(browser-test infrastructure setup)._
+
+_Previously: 2026-08-14 — Added `soft-delete-patterns.md` from the Phase 4 audit of task 0005
 (soft-delete users + administrator-level protection guard)._

@@ -3,9 +3,10 @@
 /*
  * Hand translation of examples/passkey-deletion.feature into a Pest 4 browser test.
  *
- * SKELETON — worked example under docs/, not in tests/Browser/. The browser plugin is
- * now installed (see ../playwright-setup.md), but the tests/Browser/ suite does not exist
- * yet. Once it is set up, move the it() block into tests/Browser/Settings/PasskeyTest.php.
+ * SKELETON — worked example under docs/, not in tests/Browser/. The suite is wired up
+ * (see ../playwright-setup.md), so this it() block can be moved into
+ * tests/Browser/Settings/PasskeyTest.php and will run as-is. It stays here as
+ * documentation; nothing under docs/ is executed by the test runner.
  *
  * Given/When/Then -> it() mapping: ../gherkin-guidelines.md.
  * Grounded in: app/Livewire/Settings/Security.php::deletePasskey(),

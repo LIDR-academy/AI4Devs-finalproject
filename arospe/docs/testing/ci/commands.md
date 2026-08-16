@@ -14,7 +14,15 @@ Per the [pest-testing skill](../../../.claude/skills/pest-testing/SKILL.md), use
 php artisan test --compact
 ```
 
-This runs both suites declared in [`phpunit.xml`](../../../phpunit.xml) (`Unit` → `tests/Unit`, `Feature` → `tests/Feature`).
+This runs all three suites declared in [`phpunit.xml`](../../../phpunit.xml) (`Unit` → `tests/Unit`, `Feature` → `tests/Feature`, `Browser` → `tests/Browser`). Since task 0006b, a plain `php artisan test` therefore launches a real browser — it needs the Playwright binaries present on the machine (`npx playwright install`, see [frontend/playwright-setup.md](../frontend/playwright-setup.md)); without them the run **fails**, it does not skip.
+
+## Run one suite
+
+```bash
+php artisan test --compact --testsuite=Browser
+```
+
+Useful for the browser suite in particular, which is the slow one; `--testsuite=Unit` / `--testsuite=Feature` skip the browser entirely.
 
 ## Run a single file
 
@@ -69,13 +77,14 @@ composer require brianium/paratest --dev
 php artisan test --parallel
 ```
 
-Evaluate this only if suite run time becomes a real bottleneck; the current suite (3 test files) doesn't need it.
+Evaluate this only if suite run time becomes a real bottleneck. It isn't one today, and note that the browser suite — the obvious candidate for wanting parallelism — drives a real browser, so it is the part least likely to benefit from naively forking processes. Pest's own test **sharding** is likewise not configured here (see [frontend/playwright-setup.md](../frontend/playwright-setup.md#test-tagging-naming-and-parallelization)).
 
 ## Summary table
 
 | Task | Command |
 | --- | --- |
-| Run everything | `php artisan test --compact` |
+| Run everything (`Unit` + `Feature` + `Browser`) | `php artisan test --compact` |
+| Run one suite | `php artisan test --compact --testsuite=Browser` |
 | Run one file | `php artisan test --compact tests/Feature/DashboardTest.php` |
 | Run one test by name | `php artisan test --compact --filter="<test description>"` |
 | Coverage summary (terminal) | `php artisan test --coverage` |
@@ -95,4 +104,6 @@ php -d memory_limit=3G vendor/bin/phpstan analyse
 
 This is an environment quirk, not a project requirement — CI runs the plain `composer types:check` successfully. If you see PHPStan die without reporting errors, try this before assuming the analysis is broken.
 
-_Last updated: 2026-08-12 — Task 0003: recorded the `php -d memory_limit=3G` workaround for PHPStan's parallel workers crashing on this project's WSL2 dev setup._
+_Last updated: 2026-08-16 — Task 0006b: `php artisan test` now runs three suites, not two (the `Browser` suite launches a real browser and needs the Playwright binaries present); added the `--testsuite=` command and refreshed the stale "3 test files" parallelization note._
+
+_Previously, 2026-08-12 — Task 0003: recorded the `php -d memory_limit=3G` workaround for PHPStan's parallel workers crashing on this project's WSL2 dev setup._

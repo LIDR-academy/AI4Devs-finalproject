@@ -23,6 +23,8 @@
 
 A coverage driver (`xdebug`) is already installed by the `setup-php` step, but **the `Run Tests` step does not currently request coverage or enforce a threshold** — it's a plain `php artisan test`. There is no coverage gate blocking merges today. This file documents what adding one would look like; it is a proposal, not a change that has been made to `tests.yml`.
 
+> Note that since task 0006b, that plain `php artisan test` also runs the `Browser` testsuite, which is why the workflow carries an `Install Playwright Browser (Chromium)` step (elided from the excerpt above) between `Install Node Dependencies` and the Composer steps. Coverage gating is unaffected by it either way — see [frontend/playwright-setup.md](../frontend/playwright-setup.md#ci-integration) for what CI does and does not cover on the browser side, and [security/ci-workflow-hardening.md](../../security/ci-workflow-hardening.md) for that step's supply-chain constraints.
+
 ## Proposed: adding a coverage gate
 
 To make the [`--min=80` floor](commands.md#enforce-a-minimum-coverage-threshold) actually block merges, the `Run Tests` step would change to:

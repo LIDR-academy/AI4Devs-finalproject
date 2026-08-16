@@ -2,7 +2,7 @@
 
 ## What counts as "unit" here
 
-In `tests/Unit/`, with no `RefreshDatabase` applied (see [`tests/Pest.php`](../../../tests/Pest.php) — the trait is only bound `->in('Feature')`). If your test needs the database, a route, or a Livewire mount, it isn't a unit test in this codebase — put it in `tests/Feature/` instead (see [feature-integration-tests.md](feature-integration-tests.md)).
+In `tests/Unit/`, with no `RefreshDatabase` applied (see [`tests/Pest.php`](../../../tests/Pest.php) — the trait is bound `->in('Feature', 'Browser')`, and `Unit` is the one suite left out). If your test needs the database, a route, or a Livewire mount, it isn't a unit test in this codebase — put it in `tests/Feature/` instead (see [feature-integration-tests.md](feature-integration-tests.md)).
 
 A unit test targets one class or method, with its collaborators either genuinely absent (pure functions) or trivial enough not to need faking.
 

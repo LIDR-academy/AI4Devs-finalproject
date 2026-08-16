@@ -2,15 +2,16 @@
 
 ## What this repo actually does
 
-[`tests/Pest.php`](../../../tests/Pest.php) binds `RefreshDatabase` to every test in `tests/Feature/`, and only that suite:
+[`tests/Pest.php`](../../../tests/Pest.php) binds `RefreshDatabase` to every test in `tests/Feature/` and `tests/Browser/`, through a single call:
 
 ```php
+// tests/Pest.php
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature');
+    ->in('Feature', 'Browser');
 ```
 
-`tests/Unit/` gets no database trait at all — by design (see [unit-tests.md](unit-tests.md)). There is no use of Laravel's transaction-only `DatabaseTransactions` trait anywhere in this codebase today; `RefreshDatabase` is the one strategy in use.
+`tests/Unit/` gets no database trait at all — by design (see [unit-tests.md](unit-tests.md)). There is no use of Laravel's transaction-only `DatabaseTransactions` trait anywhere in this codebase today; `RefreshDatabase` is the one strategy in use, and it is deliberately the **same** strategy for both database-backed suites — Pest's browser plugin serves the page under test through the same in-process Laravel kernel, so the test's open transaction is visible to it exactly as it is for a `Feature` test (see [frontend/playwright-setup.md](../frontend/playwright-setup.md#folder-structure)).
 
 ## What `RefreshDatabase` gives you here
 

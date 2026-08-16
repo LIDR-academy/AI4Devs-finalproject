@@ -31,7 +31,7 @@ From [`composer.json`](../../composer.json):
 | `larastan/larastan` (dev) | `^3.9` |
 | `laravel/pint` (dev) | `^1.27` |
 
-Frontend: Tailwind CSS v4 + Vite (see [`vite.config.js`](../../vite.config.js), [`package.json`](../../package.json)). `pest-plugin-browser` drives real-browser tests through Playwright (`playwright` `^1.61.1` in `package.json` `devDependencies`); its install status, one-time browser-binary setup, and pending suite wiring live in [../testing/frontend/playwright-setup.md](../testing/frontend/playwright-setup.md).
+Frontend: Tailwind CSS v4 + Vite (see [`vite.config.js`](../../vite.config.js), [`package.json`](../../package.json)). `pest-plugin-browser` drives real-browser tests through Playwright (`playwright` `^1.61.1` in `package.json` `devDependencies`); the wired-up `tests/Browser/` suite, its one-time browser-binary setup, and what CI does and does not cover live in [../testing/frontend/playwright-setup.md](../testing/frontend/playwright-setup.md).
 
 ## Directory structure
 
@@ -67,6 +67,7 @@ routes/                 web.php, settings.php (no api.php yet)
 tests/
   Feature/              Feature tests, mirrors app structure (Auth/, Settings/, Seeders/, ...)
   Unit/                 Mirrors app structure too (Enums/, Listeners/, Models/)
+  Browser/              Pest browser tests, mirrors app structure too (Auth/)
   Pest.php, TestCase.php
 ```
 
@@ -245,4 +246,6 @@ Every PHP change in this repo should pass, in this order, before being considere
 2. `vendor/bin/pint --dirty --format agent` — auto-fixes formatting against the `laravel` preset (`pint.json`).
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
-_Last updated: 2026-08-14 — Task 0005: widened the `forceFill()` mass-assignment note from "in an action" to "from one named place" now that `User::delete()` is a second such writer, and added the "deleting a user goes through the model, not the query builder" convention with its ✅/❌ pair._
+_Last updated: 2026-08-16 — Task 0006b: added `tests/Browser/` to the directory-structure listing and corrected the browser-testing sentence, which still described the suite wiring as pending._
+
+_Previously, 2026-08-14 — Task 0005: widened the `forceFill()` mass-assignment note from "in an action" to "from one named place" now that `User::delete()` is a second such writer, and added the "deleting a user goes through the model, not the query builder" convention with its ✅/❌ pair._

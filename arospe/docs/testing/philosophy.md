@@ -8,16 +8,16 @@ The practical test: **if I revert the fix this test was written for, does at lea
 
 ## Unit vs. integration vs. feature, in this codebase
 
-Pest doesn't enforce these categories — this repo's own convention does, via `tests/Unit/` and `tests/Feature/` (wired in [`tests/Pest.php`](../../tests/Pest.php)) plus the `Testsuites` split in [`phpunit.xml`](../../phpunit.xml). Note that only `Feature` gets `RefreshDatabase` applied automatically:
+Pest doesn't enforce these categories — this repo's own convention does, via `tests/Unit/`, `tests/Feature/` and `tests/Browser/` (wired in [`tests/Pest.php`](../../tests/Pest.php)) plus the three-way `Testsuites` split in [`phpunit.xml`](../../phpunit.xml). Note that `Unit` is the one suite that gets **no** `RefreshDatabase`:
 
 ```php
 // tests/Pest.php
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature');
+    ->in('Feature', 'Browser');
 ```
 
-That one line encodes the boundary: if your test needs the database, it belongs in `Feature`, not `Unit`.
+That one line encodes the boundary: if your test needs the database, it belongs in `Feature` (or `Browser`), not `Unit`. Browser tests are covered separately in [frontend/playwright-setup.md](frontend/playwright-setup.md) — the table below is about the backend split.
 
 | Type | What it exercises | Real example in this codebase | Directory |
 | --- | --- | --- | --- |
