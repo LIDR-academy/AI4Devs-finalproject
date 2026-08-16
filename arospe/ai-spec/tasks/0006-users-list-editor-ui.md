@@ -13,6 +13,13 @@ the `UserStatus` enum). Soft-delete semantics are story **0005**.
 ## Type
 frontend (related_task_id: **0004**) | includes database-expert: **no**
 
+> **Why this stays one story (INVEST — Small).** It is large by AC count (list, badges, pending-email
+> marker, create/edit modal, delete modal, empty state, sidebar entry, two test files), but every
+> candidate split (list vs. modal vs. delete) lands in the **same single Blade file**,
+> `resources/views/livewire/users.blade.php`. Splitting it would mean a second story editing the
+> first story's markup — exactly the two-stories-one-file collision this story's own test-ownership
+> note (`tests/Feature/Users/IndexTest.php` vs. `IndexRenderingTest.php`) already works to avoid.
+
 ## Debate decisions (confirmed before writing this story)
 
 | # | Question | Decision |
@@ -21,9 +28,9 @@ frontend (related_task_id: **0004**) | includes database-expert: **no**
 | 2 | `status` representation | **Backed enum `App\Enums\UserStatus`** with values `active \| inactive \| suspended`; display labels rendered through `__()`. The enum file and the migration are **0003's** deliverables; this view only binds to them. |
 | 3 | Delete confirmation | **Confirm modal**, mirroring the existing passkey-deletion pattern in `App\Livewire\Settings\Security` (`showDeleteModal` / `confirmDelete` / `deleteUser` / `closeDeleteModal`). |
 | 4 | Route & sidebar ownership | **0004 registers `users.index`** (it owns the permission middleware). 0006 only links via `route('users.index')` and adds a **static, not-yet-permission-gated** sidebar entry; permission-based sidebar hiding belongs to the Roles & Permissions story. |
-| 5 | Browser-test infrastructure | A **separate infra task** bootstraps the `tests/Browser/` testsuite; 0006 **depends on it** (see [Dependencies & risks](#dependencies--risks)). |
+| 5 | Browser-test infrastructure | **[0006b] Wire up the `tests/Browser/` suite** bootstraps the `tests/Browser/` testsuite; 0006 **depends on it** (see [Dependencies & risks](#dependencies--risks)). Find it under whichever of `ai-spec/tasks/`, `ai-spec/tasks/in-progress/` or `ai-spec/tasks/done/` currently holds `0006b-browser-test-infra-setup.md`, per its own lifecycle stage. |
 
-Resolved directly from the docs, no decision needed: **avatar** is initials derived from the name via `flux:avatar :name="..."` (no `avatar` column exists or is planned per [schema.md](../../docs/database/schema.md), and the prototype derives initials the same way); **no pagination** (the prototype has no pager and no acceptance criterion asks for one); **naming** follows [naming.md](../../docs/conventions/naming.md) — `App\Livewire\Users\Index` ↔ `resources/views/livewire/users/index.blade.php`.
+Resolved directly from the docs, no decision needed: **avatar** is initials derived from the name via `flux:avatar :name="..."` (no `avatar` column exists or is planned per [schema.md](../../docs/database/schema.md), and the prototype derives initials the same way); **no pagination** (the prototype has no pager and no acceptance criterion asks for one); **naming** follows [naming.md](../../docs/conventions/naming.md)'s **`Index`-in-a-subfolder exception** — `App\Livewire\Users\Index` ↔ the **flat** `resources/views/livewire/users.blade.php`, **not** a nested `users/index.blade.php` (naming.md documents that exact nested path as the wrong guess to avoid).
 
 ## Gherkin
 
@@ -57,6 +64,11 @@ Feature: Users screen — list and create/edit modal
     Given a user administrator, with no users to display
     When they open the users screen
     Then an explicit empty state is shown instead of an empty table
+
+  Scenario: A user with no assigned role is listed without a role value
+    Given a user administrator, with a user who has no role assigned
+    When they open the users screen
+    Then that user's row shows no role, with no error and no blank/broken cell
 
   Scenario: A user with a pending email change is marked as such in the list
     Given a user administrator, with a user whose email change is awaiting confirmation
@@ -140,7 +152,7 @@ Feature: Users screen — list and create/edit modal
 
 **Owned by this story:**
 
-- `resources/views/livewire/users/index.blade.php` — **new.** The whole screen: section header (live count + primary "New user" button), the users table, the create/edit modal, the delete-confirmation modal, and the empty state. Named to mirror `App\Livewire\Users\Index` per [naming.md](../../docs/conventions/naming.md#livewire-components-and-views).
+- `resources/views/livewire/users.blade.php` — **modify.** This is 0004's placeholder view (it currently renders only the `usersSummary` line, with its own comment handing the rest to this story) — this story replaces its content entirely: section header (live count + primary "New user" button), the users table, the create/edit modal, the delete-confirmation modal, and the empty state. **Do not create `resources/views/livewire/users/index.blade.php`** — that nested path is not what Livewire resolves for `App\Livewire\Users\Index` (the `Index`-in-a-subfolder exception, [naming.md](../../docs/conventions/naming.md#livewire-components-and-views)) and would be a silently unused duplicate.
 - `resources/views/layouts/app/sidebar.blade.php` — **modify.** Add one `<flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>` inside the existing `flux:sidebar.group :heading="__('Platform')"` group. Static and always visible for now; permission gating and the final nav grouping are deferred ([PRD](../../docs/PRD/PRD.md) states the prototype sidebar is not the final navigation).
 - `tests/Feature/Users/IndexRenderingTest.php` — **new.** Livewire component-level tests for what this story owns: rendering, badges, the pending-email marker, the empty state, and inline validation display (mirrors `tests/Feature/Settings/SecurityTest.php`'s structure).
 - `tests/Browser/UsersIndexTest.php` — **new.** Pest 4 browser tests for the JS-driven behavior. Gated on the browser-suite infra task (decision 5).
@@ -174,25 +186,25 @@ re-agree before implementation starts:
 
 ```php
 // State
-public array $users = [];              // rows: [{id, name, email, pendingEmail, role, status}, ...]
+public array $users = [];              // rows: array{id: string, name: string, email: string, pendingEmail: string|null, role: string|null, status: UserStatus}
 public bool $showModal = false;
-public ?string $editingUserId = null;  // null = create mode; UUID string = edit mode
+public ?string $editingUserId = null;  // #[Locked] — null = create mode; UUID string = edit mode. Set server-side only, never wire:model
 public string $name = '';
 public string $email = '';
 public ?string $roleId = null;
 public ?UserStatus $status = null;
 public bool $showDeleteModal = false;
-public ?string $deletingUserId = null;
+public ?string $deletingUserId = null;  // #[Locked] — set server-side only, never wire:model
 public string $deletingUserName = '';
 
 // Computed
 #[Computed] public function usersSummary(): array;  // ['total' => int, 'active' => int]
-#[Computed] public function roleOptions(): array;   // [{id, name}, ...] — excludes Super Admin
+#[Computed] public function roleOptions(): array;   // [{id: int, name: string}, ...] — excludes Super Admin; id is int, cast when comparing to $roleId (string)
 
 // Actions
 public function openCreateModal(): void;
 public function openEditModal(string $userId): void;
-public function save(): void;                       // creates or updates per $editingUserId
+public function save(CreateUser $createUser, UpdateUser $updateUser, RequestEmailChange $requestEmailChange): void;  // per-method action injection (code-style.md); wire:click="save" is unaffected
 public function closeModal(): void;
 public function confirmDelete(string $userId): void;
 public function deleteUser(): void;
@@ -202,6 +214,19 @@ public function closeDeleteModal(): void;
 Validation errors must land in Livewire's standard `$errors` bag keyed by `name` / `email` /
 `roleId` / `status`, so `flux:input` and `flux:select` render them automatically with no extra
 wiring on the view side.
+
+> **Three runtime traps the markup must not fall into**, verified against the live `app/Livewire/Users/Index.php`:
+> 1. **`$users[n]['status']` is a `UserStatus` enum instance, not a string.** The badge must call
+>    `->label()` and switch/match on the enum cases (`UserStatus::Active`, etc.) — a
+>    `$user['status'] === 'active'` string comparison is always false.
+> 2. **`roleOptions()`'s `id` is `int`; `$roleId` is `?string`.** `openEditModal()` casts to string
+>    on the way in, so the edit modal's "selected" comparison against `roleOptions()` must cast too
+>    (`(string) $option['id'] === $this->roleId`) — a strict/typed compare here silently never marks
+>    the current role selected, which is exactly the wrong-prefill failure this story's own
+>    highest-risk browser test targets.
+> 3. **`$editingUserId` / `$deletingUserId` are `#[Locked]`.** They are set only by
+>    `openEditModal()`/`confirmDelete()`, never by a `wire:model` binding — binding one throws
+>    `CannotUpdateLockedPropertyException` on the next round-trip.
 
 > **One change to the previously locked contract, and its UI consequence.** Each row now also
 > carries `pendingEmail` (`?string`). Story **0003** made an email change *pending* rather than
@@ -239,6 +264,7 @@ only where JS/Alpine visibility is the actual risk, everything else at the cheap
 - [ ] Component test: the header renders the live count (total + active).
 - [ ] Component test (dataset): each status renders its correct badge label — active / inactive / suspended.
 - [ ] Component test: the empty state renders when there are no users to display.
+- [ ] Component test: a row for a user with `role: null` renders with no role value and no error (0004's list query includes roleless users and the acting administrator's own row).
 - [ ] Component test: a row whose `pendingEmail` is set renders both the current and the pending address; a row whose `pendingEmail` is null renders **no** pending marker. Both directions are needed — a marker rendered unconditionally passes the positive case alone.
 - [ ] Component test: the edit modal for a user with a pending address shows it, with the explanatory line.
 - [ ] Component test: the role select renders the available roles and **omits the Super Admin role**.
@@ -260,6 +286,7 @@ light and dark mode, and produces no JavaScript console errors.
 
 ## Acceptance criteria
 - [ ] The users list renders avatar, name/email, assigned role, status badge, and per-row edit/delete actions for every user, matching the prototype's layout and structure.
+- [ ] A user with no assigned role (`role: null`) renders a row with no role value, no error, and no broken/blank cell — not just the has-a-role case.
 - [ ] The section header shows a live count of total users and active users, and a primary "New user" button.
 - [ ] Status badges render distinctly for `active`, `inactive`, and `suspended`, using labels from the `UserStatus` enum rendered through `__()`.
 - [ ] "New user" opens the modal with empty fields; the per-row edit action opens it prefilled with that user's data.
@@ -275,8 +302,19 @@ light and dark mode, and produces no JavaScript console errors.
 - [ ] No prototype HTML/CSS/JS from `docs/arospe-handoff/` is ported; the screen is Livewire + Blade + Flux + Tailwind only.
 
 ## Dependencies & risks
-- **Depends on 0004** for the component class, the `users.index` route, validation and persistence, and transitively on **0003** for the `UserStatus` enum, the `users.status` / `users.pending_email` columns and the pending-email mechanism. **This UI story cannot be implemented or tested before 0004's public interface exists** — the contract above is the agreed boundary; any deviation invalidates both this story's tests and its markup.
-- **Depends on the browser-test infra task** (decision 5): `tests/Browser/` does not exist, `phpunit.xml` declares only `Unit` and `Feature` testsuites, and `.gitignore` lacks `tests/Browser/Screenshots` — all still pending per [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md). The component-level tests above can run without it; the browser tests cannot. **Risk:** if that task slips, the modal open/prefill/close behavior — the core of this story — ships untested.
+- **Depended on 0004 — now `done`.** The component class, the `users.index` route, validation and
+  persistence all exist at `app/Livewire/Users/Index.php`, verified against this story's Interface
+  contract section during Phase 2 (zero drift). Transitively depended on **0003** (also `done`) for
+  the `UserStatus` enum, the `users.status` / `users.pending_email` columns and the pending-email
+  mechanism.
+- **Depended on [0006b]** (`0006b-browser-test-infra-setup.md`) — now `done`. `tests/Browser/` exists
+  (`tests/Browser/Auth/LoginSmokeTest.php`), `phpunit.xml` declares a `Browser` testsuite,
+  `tests/Pest.php` applies `RefreshDatabase` to it, `.gitignore` ignores
+  `/tests/Browser/Screenshots`, and CI installs Chromium. This story's `tests/Browser/UsersIndexTest.php`
+  can now be written and run — the risk this section originally flagged ("if that task slips") is
+  discharged.
+- **Depended on 0005 — now `done`** (soft-delete semantics; referenced in the scope-boundary table
+  above, not otherwise load-bearing for this story's markup).
 - **Risk:** the sidebar entry is deliberately ungated. Until the Roles & Permissions story lands, every authenticated user sees the Users link. This is a cosmetic leak, not an access one: server-side access control is enforced by **0004's** `can:users.view` route middleware on `users.index` (0004 registers that route; 0003 registers no route touching this screen). This must not be forgotten.
 
 ## Resolved questions
