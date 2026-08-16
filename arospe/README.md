@@ -214,7 +214,9 @@ Real-browser end-to-end tests run through the Pest browser plugin, which drives 
 npx playwright install
 ```
 
-On some Linux hosts a few system libraries needed by Firefox/WebKit may be missing; Chromium (the default) still works. To install the OS-level dependencies as well, use `sudo npx playwright install --with-deps`. The `tests/Browser/` suite and its CI integration are not wired up yet — see [docs/testing/frontend/playwright-setup.md](docs/testing/frontend/playwright-setup.md) for current status.
+On some Linux hosts a few system libraries needed by Firefox/WebKit may be missing; Chromium (the default) still works. To install the OS-level dependencies as well, use `sudo npx playwright install --with-deps`.
+
+The `tests/Browser/` suite is wired into `phpunit.xml`, so a plain `php artisan test` runs it alongside `Unit` and `Feature` — which means the binaries above are a prerequisite for the **full** suite, not just for browser-specific runs. To skip them, run a single suite: `php artisan test --testsuite=Feature`. See [docs/testing/frontend/playwright-setup.md](docs/testing/frontend/playwright-setup.md) for the full status, including what CI covers (Chromium only).
 
 ### Code quality
 
