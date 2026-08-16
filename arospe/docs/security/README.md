@@ -38,7 +38,15 @@ repo must follow — always with a real code example pulled from this repository
   **or discloses** re-authorizes as its first statement, why `#[Locked]` plus a database-read assignment
   is what keeps `Rule::unique()->ignore()` safe, why server-derived properties must be locked too, and
   why a privilege rule enforced only in the component is bypassed by every other call site of the action.
+- [Soft-delete security patterns](soft-delete-patterns.md) — the rules that follow from putting
+  `SoftDeletes` on this app's only authenticatable model (`App\Models\User`, task 0005): why the
+  `SoftDeletingScope` *is* the sign-in refusal rather than one check among several, why
+  `laravel/passkeys`' `$passkey->user` relation is the single place that scope can be lost silently
+  (and what must land alongside any `withTrashed()` there), why freeing an email address also
+  obliges you to revoke everything keyed by that string (`password_reset_tokens`), how adding
+  `SoftDeletes` silently flipped `spatie/laravel-permission` into **keeping** role grants on deleted
+  accounts, why a UUID-derived placeholder written into a `UNIQUE` column still needs the SQLSTATE
+  `23000` catch every other writer in this repo has, and the list of paths confirmed already covered.
 
-_Last updated: 2026-08-13 — Added `livewire-authorization.md` from the Phase 4 audit of task 0004
-(Users list + create/edit backend), then extended `authorization-patterns.md` and
-`livewire-authorization.md` during the same task's Phase 4 **re-audit** of finding F1's fix._
+_Last updated: 2026-08-14 — Added `soft-delete-patterns.md` from the Phase 4 audit of task 0005
+(soft-delete users + administrator-level protection guard)._

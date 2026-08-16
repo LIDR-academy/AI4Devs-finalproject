@@ -235,6 +235,70 @@ test('a Super Admin actor passes every UserPolicy ability while holding zero per
         ->and(Gate::forUser($superAdmin)->allows('delete', $administratorTarget))->toBeTrue();
 });
 
+// --- Story 0005 regression edges (N1): the three delete-matrix cases not already
+// covered above -- a roles.manage-only actor, a target holding Administrator
+// alongside another role, and the last-remaining-Administrator headcount. These
+// already pass against 0004's shipped policy; they are re-proved here because the
+// SoftDeletes global scope story 0005 installs rewrites the queries underneath
+// every hasRole()/hasPermissionTo() check. Not expected to go red.
+
+test('delete denies an actor holding only the general roles.manage permission against an Administrator target', function () {
+    $target = User::factory()->create();
+    $target->assignRole('Administrator');
+
+    // Holds users.delete and the general roles.manage permission, but not the
+    // stricter roles.manage-administrators -- proving the two are not conflated.
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(['users.delete', 'roles.manage']);
+
+    expect(Gate::forUser($actor)->allows('delete', $target))->toBeFalse();
+});
+
+test('delete denies an actor lacking roles.manage-administrators against a target holding Administrator alongside another role', function () {
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+
+    $target = User::factory()->create();
+    $target->assignRole('Administrator');
+    $target->assignRole($editorRole);
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('users.delete');
+
+    expect(Gate::forUser($actor)->allows('delete', $target))->toBeFalse();
+});
+
+test('deleting the last remaining Administrator is not specially protected', function () {
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole('Super Admin');
+
+    $lastAdministrator = User::factory()->create();
+    $lastAdministrator->assignRole('Administrator');
+
+    expect(User::role('Administrator', 'web')->count())->toBe(1)
+        ->and(Gate::forUser($superAdmin)->allows('delete', $lastAdministrator))->toBeTrue();
+});
+
+// --- Story 0005 (new — must go red first): delete() refuses an already
+// soft-deleted target, so a withTrashed() call site cannot re-run the
+// obfuscation and rewrite the placeholder on a trashed row. Nothing in the
+// shipped policy satisfies this yet -- there is no SoftDeletes trait, no
+// trashed() method, and no trashed-target branch in UserPolicy::delete().
+
+test('delete denies a target that is already soft-deleted, so the obfuscated placeholder cannot be rewritten', function () {
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('users.delete');
+
+    // Goes through the real delete() flow rather than poking `deleted_at`
+    // directly: Laravel 13's base Factory class has no built-in trashed()
+    // state (confirmed against the installed vendor/laravel/framework
+    // source -- only SoftDeletes::trashed(), an instance method, exists),
+    // so this also does not depend on one existing.
+    $target = User::factory()->create();
+    $target->delete();
+
+    expect(Gate::forUser($actor)->allows('delete', $target))->toBeFalse();
+});
+
 // --- Denial is enforced server-side, not merely hidden in the UI ---
 
 test('authorize throws AuthorizationException when delete is denied', function () {

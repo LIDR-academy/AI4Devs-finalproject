@@ -100,13 +100,21 @@ class UserPolicy
     /**
      * Determine whether the actor can delete the target user.
      *
-     * This story defines only the minimal, permission-keyed shape; story
-     * 0005 extends this method with soft-delete and email-obfuscation
-     * semantics.
+     * Denies a target that is already soft-deleted, so a withTrashed() call
+     * site cannot re-run User::delete()'s email-obfuscation write and
+     * overwrite the placeholder on an already-trashed row (story 0005). This
+     * check is policy-level: a Super Admin actor bypasses it via
+     * Gate::before, same as every other ability here — accepted, since the
+     * placeholder is deterministic from the immutable UUID and re-running it
+     * is harmless in that one case.
      */
     public function delete(User $actor, User $target): bool
     {
         if ($target->hasRole('Super Admin', 'web')) {
+            return false;
+        }
+
+        if ($target->trashed()) {
             return false;
         }
 

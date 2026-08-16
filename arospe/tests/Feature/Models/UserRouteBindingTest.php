@@ -32,6 +32,13 @@ test('a well-formed but nonexistent uuid 404s', function () {
     $this->get('/__test/users/'.Str::uuid7())->assertNotFound();
 });
 
+test('a soft-deleted user route parameter is rejected as not found', function () {
+    $user = User::factory()->create();
+    $user->delete();
+
+    $this->get('/__test/users/'.$user->id)->assertNotFound();
+});
+
 test('User::find() returns null for stale bigint-style lookups', function () {
     User::factory()->create();
 

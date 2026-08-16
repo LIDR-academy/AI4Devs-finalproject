@@ -93,6 +93,33 @@ test('users are listed alphabetically by name', function () {
     expect($names)->toBe(['Ana Gil', 'Diego Ferrer', 'Zoe Marin']);
 });
 
+// Story 0005 (verification only -- no component edit permitted). Both
+// Index::loadUsers() and Index::usersSummary() run a bare User::query(), so
+// the SoftDeletingScope installed on App\Models\User covers list rows and
+// summary counts automatically. This proves that, it does not implement it.
+test('a soft-deleted user is absent from the active users list and from both summary counts', function () {
+    $baselineTotal = User::count();
+    $baselineActive = User::where('status', UserStatus::Active)->count();
+
+    $administrator = User::factory()->create(['status' => UserStatus::Active]);
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $target = User::factory()->create(['name' => 'Diego Ferrer', 'status' => UserStatus::Active]);
+    $target->delete();
+
+    $component = Livewire::test(Index::class);
+
+    $ids = collect($component->get('users'))->pluck('id');
+    $summary = $component->get('usersSummary');
+
+    // Only the administrator was added to the baseline -- the deleted target
+    // must not appear in the list or inflate either count.
+    expect($ids)->not->toContain($target->id)
+        ->and($summary['total'])->toBe($baselineTotal + 1)
+        ->and($summary['active'])->toBe($baselineActive + 1);
+});
+
 test('usersSummary reports accurate totals computed independently of the users property, and counts a Super Admin holder in the total', function () {
     // Baseline against whatever already exists after the beforeEach seed, rather than
     // asserting an absolute count: RolePermissionSeeder's bootstrap provisions an extra

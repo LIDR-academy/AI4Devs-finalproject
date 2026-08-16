@@ -8,6 +8,7 @@ Cross-cutting concern — this is the single source of truth for how authenticat
 - [Enabled features](#enabled-features)
 - [Registration & password reset](#registration--password-reset)
 - [Account status and activation](#account-status-and-activation)
+  - [A deleted account stops authenticating, by scope rather than by check](#a-deleted-account-stops-authenticating-by-scope-rather-than-by-check)
 - [Pending email changes](#pending-email-changes)
 - [Two-factor authentication flow](#two-factor-authentication-flow)
 - [Passkeys](#passkeys)
@@ -156,6 +157,10 @@ Two guards in that listener are load-bearing and must survive any refactor: the 
 > The invariant constrains **automatic** activation, not an administrator's authority. An administrator creating a user in the Users editor may deliberately set `Active` with the address still unverified; that is an authorized, human-audited act, not a self-activation.
 
 `App\Models\User` does **not** implement `MustVerifyEmail` today (the import is commented out at the top of the file), so the `verified` middleware currently blocks nobody — status, not that middleware, is where account usability will be enforced.
+
+### A deleted account stops authenticating, by scope rather than by check
+
+Since task 0005, deleting a user soft-deletes the row (see [database/schema.md](../database/schema.md#soft-deletes) for what that rewrites). Its effect on authentication is total and worth stating here, because **no code in `app/` refuses a deleted user's sign-in**: `Illuminate\Auth\EloquentUserProvider` resolves every credential lookup through `$model->newQuery()`, which applies the `SoftDeletingScope`. That one fact is why password login fails, an in-flight session stops authenticating on its next request, a remember-me cookie is inert, a password-reset or invitation link resolves no user, and the vendor passkey relation returns `null` for a trashed owner. Deletion is therefore an authentication control, not only a data state — treat any code that lifts the scope for a `User` accordingly. The rules that follow (including what must be added if a future login path stops going through the user provider) are in [security/soft-delete-patterns.md](../security/soft-delete-patterns.md#the-global-scope-is-the-sign-in-refusal--there-is-no-second-check).
 
 ## Pending email changes
 
@@ -350,4 +355,6 @@ public function deleteUser(Logout $logout): void
 | Feature tests | `tests/Feature/Auth/**`, `tests/Feature/Settings/SecurityTest.php`, `tests/Feature/Settings/EmailChangeTest.php` |
 | Unit tests | `tests/Unit/Enums/UserStatusTest.php`, `tests/Unit/Listeners/ActivateVerifiedUserTest.php`, `tests/Unit/Models/UserTest.php` |
 
-_Last updated: 2026-08-13 — Task 0004: documented the second non-HTTP caller of the reset flow (`CreateUser` + the `UserInvitation` notification, and why it mints its own token instead of calling `sendResetLink()`), and corrected the pending-email section, which still described the administrative user editor as hypothetical and claimed it would hit the action's implicit-cancel branch — it exists, and it guards against a same-address submission exactly as the profile screen does._
+_Last updated: 2026-08-14 — Task 0005: recorded that a soft-deleted account stops authenticating on every path, and that the refusal comes from the `SoftDeletingScope` in the user provider rather than from any check in `app/`._
+
+_Previously: 2026-08-13 — Task 0004: documented the second non-HTTP caller of the reset flow (`CreateUser` + the `UserInvitation` notification, and why it mints its own token instead of calling `sendResetLink()`), and corrected the pending-email section, which still described the administrative user editor as hypothetical and claimed it would hit the action's implicit-cancel branch — it exists, and it guards against a same-address submission exactly as the profile screen does._

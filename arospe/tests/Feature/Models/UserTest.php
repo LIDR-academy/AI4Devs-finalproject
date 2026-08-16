@@ -64,7 +64,14 @@ test("a user's passkeys relation is isolated to that user", function () {
         ->and($userA->passkeys()->first()->id)->toBe($passkeyA->id);
 });
 
-test('deleting a user cascades to delete their passkey rows', function () {
+// Story 0005 (soft-delete): this used to assert a physical-delete cascade
+// removed the passkey row. That is no longer the intended behavior --
+// deleting a user now soft-deletes it (an UPDATE, not a DELETE), so the
+// passkeys.user_id cascadeOnDelete() FK never fires and the row must
+// survive. See tests/Feature/Models/UserSoftDeleteTest.php for the fuller
+// soft-delete-mechanics coverage; this one stays here because it is the
+// direct flip of the old assertion in the same spot.
+test('deleting a user does not cascade to delete their passkey rows', function () {
     $user = User::factory()->create();
 
     $passkey = $user->passkeys()->create([
@@ -75,7 +82,7 @@ test('deleting a user cascades to delete their passkey rows', function () {
 
     $user->delete();
 
-    $this->assertDatabaseMissing('passkeys', ['id' => $passkey->id]);
+    $this->assertDatabaseHas('passkeys', ['id' => $passkey->id]);
 });
 
 test('signing in records the session user_id as the uuid string', function () {

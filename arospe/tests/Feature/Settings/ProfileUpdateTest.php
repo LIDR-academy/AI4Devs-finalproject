@@ -97,6 +97,7 @@ test('saving your own unchanged email still passes the uniqueness check', functi
 
 test('user can delete their account', function () {
     $user = User::factory()->create();
+    $id = $user->id;
 
     $this->actingAs($user);
 
@@ -108,7 +109,16 @@ test('user can delete their account', function () {
         ->assertHasNoErrors()
         ->assertRedirect('/');
 
-    expect($user->fresh())->toBeNull();
+    // Story 0005: account deletion is a soft delete, not a hard delete --
+    // fresh() bypasses the SoftDeletingScope, so the row is retained (not
+    // null) but trashed, with its email obfuscated. See
+    // tests/Feature/Models/UserSoftDeleteTest.php for the equivalent
+    // model-level coverage this mirrors.
+    $trashed = User::withTrashed()->find($id);
+
+    expect($trashed)->not->toBeNull()
+        ->and($trashed->trashed())->toBeTrue()
+        ->and($trashed->getRawOriginal('email'))->toBe("deleted+{$id}@deleted.invalid");
     expect(auth()->check())->toBeFalse();
 });
 

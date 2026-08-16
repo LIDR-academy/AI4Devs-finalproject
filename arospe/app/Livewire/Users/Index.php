@@ -170,9 +170,9 @@ class Index extends Component
     /**
      * Authorize and delete the confirmed user.
      *
-     * This story's UserPolicy::delete() is the minimal permission rule; the
-     * semantics of what User::delete() does (soft delete plus email
-     * obfuscation) are story 0005's — until it lands this is a hard delete.
+     * UserPolicy::delete() is the permission rule; the soft delete plus email
+     * obfuscation (and password_reset_tokens revocation) happen via the
+     * App\Models\User::delete() override added by story 0005.
      */
     public function deleteUser(): void
     {

@@ -8,6 +8,8 @@ Baseline stack versions and project-structure standards for this Laravel + Livew
 - [Directory structure](#directory-structure)
   - [Controllers sit in front of actions, not instead of them](#controllers-sit-in-front-of-actions-not-instead-of-them)
 - [Model conventions](#model-conventions)
+  - [Deleting a user goes through the model, not the query builder](#deleting-a-user-goes-through-the-model-not-the-query-builder)
+  - [UUID primary keys](#uuid-primary-keys)
 - [Livewire component convention: class-based, not single-file](#livewire-component-convention-class-based-not-single-file)
 - [Artisan-first workflow](#artisan-first-workflow)
 - [Quality gates](#quality-gates)
@@ -144,9 +146,29 @@ class Post extends Model
 ```
 Mixing both styles in the same codebase makes it unclear which one governs a given model at a glance.
 
-`casts()` also carries enum casts (`'status' => UserStatus::class`), and the **omission** of a column from `#[Fillable]` *is* this codebase's mass-assignment guard: `users.status` and `users.pending_email` are deliberately absent from `User`'s `#[Fillable]` list, so the only way to write them is an explicit `forceFill()` in an action. When you add a column that no form may set, leave it out of `#[Fillable]` and write it from one named place — don't add it and then filter the input at each call site.
+`casts()` also carries enum casts (`'status' => UserStatus::class`, `'deleted_at' => 'datetime'`), and the **omission** of a column from `#[Fillable]` *is* this codebase's mass-assignment guard: `users.status` and `users.pending_email` are deliberately absent from `User`'s `#[Fillable]` list, so the only way to write them is an explicit `forceFill()` **from one named place** — today the `app/Actions/Users/` actions that own the email-change flow, plus `User::delete()`'s obfuscation write (see below), each of which is the single writer of the columns it touches. When you add a column that no form may set, leave it out of `#[Fillable]` and write it that way — don't add it and then filter the input at each call site.
 
 Every property is documented with a `@property` PHPDoc block above the class, matching the actual database columns (see the block above `class User` in `app/Models/User.php`) — keep this block in sync with the migration whenever a column is added or removed (this is exactly the kind of drift the `docs-maintainer` skill and this file exist to catch).
+
+### Deleting a user goes through the model, not the query builder
+
+`App\Models\User` is the one model using `Illuminate\Database\Eloquent\SoftDeletes` today (task 0005), and it overrides `delete()` so that a delete also obfuscates the account's email, nulls `email_verified_at` / `pending_email`, and revokes the account's `password_reset_tokens` rows — all in one transaction. What those semantics *are* belongs to [database/schema.md](../database/schema.md#soft-deletes); the convention here is narrower and easy to break by accident: **an override on `delete()` only runs for instance deletes**, so the query builder is not an equivalent shortcut.
+
+✅ Good — delete a resolved instance, which is what every call site in the repo does:
+
+```php
+// app/Livewire/Users/Index.php — deleteUser()
+$target->delete();
+```
+
+❌ Bad — a bulk delete through the builder (adapted to illustrate; not present in the repo):
+
+```php
+// anti-pattern — never do this against users
+User::whereIn('id', $ids)->delete();
+```
+
+`Builder::delete()` never instantiates a model, so it silently skips the override entirely: the rows are stamped `deleted_at` while keeping their live email addresses and their still-valid password-reset tokens. Same trap for any future model that puts real behavior on `delete()` — put the behavior on the model, then keep every call site on instances.
 
 ### UUID primary keys
 
@@ -223,4 +245,4 @@ Every PHP change in this repo should pass, in this order, before being considere
 2. `vendor/bin/pint --dirty --format agent` — auto-fixes formatting against the `laravel` preset (`pint.json`).
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
-_Last updated: 2026-08-13 — Task 0004: added `app/Policies/` to the directory listing as the one folder that story introduces, with the note that policies here are auto-discovered and need no `AuthServiceProvider`._
+_Last updated: 2026-08-14 — Task 0005: widened the `forceFill()` mass-assignment note from "in an action" to "from one named place" now that `User::delete()` is a second such writer, and added the "deleting a user goes through the model, not the query builder" convention with its ✅/❌ pair._
