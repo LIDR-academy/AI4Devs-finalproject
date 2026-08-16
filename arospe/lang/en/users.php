@@ -31,6 +31,7 @@ return [
 
     'index' => [
         'summary' => ':total users · :active active',
+        'action_not_allowed' => 'Action not allowed',
     ],
 
     /*
@@ -50,6 +51,7 @@ return [
         'notification_action' => 'Confirm Email Address',
         'notification_expire' => 'This verification link will expire in 60 minutes.',
         'pending_notice' => 'A change to :email is pending. Use the link sent to that address to confirm it.',
+        'pending_notice_admin' => 'A change to :email is pending confirmation from the account holder.',
         'confirmed' => 'Your email address has been updated.',
         'refused' => 'This email verification link is no longer valid.',
         'throttled' => 'Too many email change requests. Please try again later.',

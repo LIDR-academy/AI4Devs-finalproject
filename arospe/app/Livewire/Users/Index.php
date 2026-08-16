@@ -35,12 +35,15 @@ class Index extends Component
     use ProfileValidationRules, UserValidationRules;
 
     /**
-     * @var array<int, array{id: string, name: string, email: string, pendingEmail: string|null, role: string|null, status: UserStatus}>
+     * @var array<int, array{id: string, name: string, email: string, pendingEmail: string|null, role: string|null, status: UserStatus, canEdit: bool, canDelete: bool}>
      */
     public array $users = [];
 
     #[Locked]
     public ?string $editingUserId = null;
+
+    #[Locked]
+    public ?string $editingPendingEmail = null;
 
     #[Locked]
     public ?string $deletingUserId = null;
@@ -51,12 +54,28 @@ class Index extends Component
 
     public string $email = '';
 
-    public ?string $roleId = null;
+    /**
+     * Never `null` -- an empty string is the "nothing chosen yet" sentinel for the create
+     * form's role `<select>`. Livewire's wire:model sync assigns this property's dehydrated
+     * value directly to the DOM select's `.value`; assigning the JS value `null` (rather than
+     * `""`) desyncs a native `<select>`'s `selectedIndex` from its literal, disabled
+     * `selected` placeholder option, so a later real pick that happens to match the browser's
+     * resulting auto-selected option produces no `change` event and is silently dropped.
+     */
+    public string $roleId = '';
 
-    public ?UserStatus $status = null;
+    /**
+     * Defaults to `Inactive` (matching `users.status`'s own column default) rather than a
+     * nullable "unset" state, for the same reason `$roleId` above is a plain string and not
+     * `?string`: assigning a JS `null` into the status `<select>` corrupts its native
+     * selection state, so this property must never actually be null while bound via
+     * wire:model.
+     */
+    public UserStatus $status = UserStatus::Inactive;
 
     public bool $showDeleteModal = false;
 
+    #[Locked]
     public string $deletingUserName = '';
 
     /**
@@ -79,7 +98,7 @@ class Index extends Component
      */
     public function openCreateModal(): void
     {
-        $this->reset(['editingUserId', 'name', 'email', 'roleId', 'status']);
+        $this->reset(['editingUserId', 'editingPendingEmail', 'name', 'email', 'roleId', 'status']);
         $this->showModal = true;
     }
 
@@ -99,9 +118,10 @@ class Index extends Component
         $currentRoleId = $target->roles()->value('roles.id');
 
         $this->editingUserId = $target->id;
+        $this->editingPendingEmail = $target->pending_email;
         $this->name = $target->name;
         $this->email = $target->email;
-        $this->roleId = $currentRoleId !== null ? (string) $currentRoleId : null;
+        $this->roleId = $currentRoleId !== null ? (string) $currentRoleId : '';
         $this->status = $target->status;
         $this->showModal = true;
     }
@@ -152,7 +172,7 @@ class Index extends Component
     public function closeModal(): void
     {
         $this->showModal = false;
-        $this->reset(['editingUserId', 'name', 'email', 'roleId', 'status']);
+        $this->reset(['editingUserId', 'editingPendingEmail', 'name', 'email', 'roleId', 'status']);
     }
 
     /**
@@ -246,6 +266,14 @@ class Index extends Component
      * tiebreaker keeps the order deterministic when names collide, and is a
      * meaningful creation-order tiebreaker since `id` is a time-ordered
      * UUIDv7. The acting administrator's own row is not filtered out.
+     *
+     * `canEdit`/`canDelete` mirror `UserPolicy::update()`/`delete()` exactly
+     * (`Gate::allows()` runs the same policy method `save()`/`deleteUser()`
+     * authorize with) so the row actions' disabled state can never drift
+     * from what actually happens if they were clicked — a Super Admin
+     * target, an already-trashed target, or an Administrator-holding target
+     * without `roles.manage-administrators` all resolve to `false` here the
+     * same way they would 403 there.
      */
     private function loadUsers(): void
     {
@@ -265,6 +293,8 @@ class Index extends Component
                     'pendingEmail' => $user->pending_email,
                     'role' => $role?->name,
                     'status' => $user->status,
+                    'canEdit' => Gate::allows('update', $user),
+                    'canDelete' => Gate::allows('delete', $user),
                 ];
             })
             ->all();

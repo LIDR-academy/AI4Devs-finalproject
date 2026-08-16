@@ -31,6 +31,7 @@ return [
 
     'index' => [
         'summary' => ':total usuarios · :active activos',
+        'action_not_allowed' => 'Acción no permitida',
     ],
 
     /*
@@ -51,6 +52,7 @@ return [
         'notification_action' => 'Confirmar dirección de correo',
         'notification_expire' => 'Este enlace de verificación caduca en 60 minutos.',
         'pending_notice' => 'Hay un cambio pendiente a :email. Usa el enlace enviado a esa dirección para confirmarlo.',
+        'pending_notice_admin' => 'Hay un cambio pendiente a :email, a la espera de confirmación por parte del titular de la cuenta.',
         'confirmed' => 'Tu dirección de correo ha sido actualizada.',
         'refused' => 'Este enlace de verificación de correo ya no es válido.',
         'throttled' => 'Demasiadas solicitudes de cambio de correo. Inténtalo de nuevo más tarde.',
