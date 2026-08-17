@@ -62,9 +62,42 @@ body {
   transform: translateY(-1px);
 }
 
-.btn-danger {
-  background-color: var(--color-danger);
-  color: #ffffff;
+.btn-secondary {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-warning {
+  background-color: var(--color-secondary);
+  color: var(--bg-root);
+}
+
+.btn-warning:hover {
+  filter: brightness(1.1);
+}
+
+.input-touch {
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background-color: var(--bg-root);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  font-size: 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input-touch:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 168, 150, 0.2);
 }
 
 /* Estructura de Tarjetas (Dark Petrol Cards) */
@@ -100,4 +133,54 @@ body {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+/* 🪟 Sistema de Ventanas Emergentes Flotantes (Glassmorphism Floating Overlays) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(11, 19, 25, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeInOverlay 0.2s ease-out;
+}
+
+.modal-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 168, 150, 0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 100%;
+  animation: scaleUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUpModal {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }

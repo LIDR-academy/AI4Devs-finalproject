@@ -109,3 +109,19 @@ Basado en la referencia de tablero de control industrial de alta precisión (**D
    - Supresión de ceros no significativos a la derecha (*trim trailing zeros*) (ej. **`1,75 KG`** en lugar de `1.750 KG`, **`4,5 L`** en lugar de `4.500 L`).
    - Controles de consumo rápido táctiles fraccionales: **`-0.25`**, **`-0.5`**, **`-1.0`**.
 
+---
+
+## 🪟 Sistema de Ventanas Emergentes Flotantes (Glassmorphism Floating Overlays)
+
+Todas las ventanas modales de interacción secundaria (`WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard` y `ReportsDashboard`) se abren de forma **flotante sobre el tablero principal de la pantalla**:
+
+1. **Capa Oscura Flotante de Fondo (`.modal-overlay`):**
+   - Cobertura fija (`position: fixed; inset: 0; z-index: 1000;`).
+   - Fondo oscuro semitransparente con desenfoque de cristal borroso (`backdrop-filter: blur(8px); background-color: rgba(11, 19, 25, 0.75)`).
+   - Mantiene la visibilidad borrosa del contexto del tablero FEFO al fondo.
+
+2. **Tarjeta Emergente Flotante (`.modal-card`):**
+   - Posicionamiento centrado en viewport con sombras proyectadas de alta profundidad (`box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 168, 150, 0.15)`).
+   - Esquinas redondeadas suaves (`border-radius: 16px`) sobre superficie Pizarra Petróleo (`--bg-card`).
+   - Animación de entrada suave tipo *scale-up* (`transform: scale(0.95) -> scale(1)` en $200\text{ms}$).
+
