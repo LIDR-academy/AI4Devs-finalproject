@@ -10,12 +10,6 @@ import { InMemoryStockRepository } from '../stock/repositories/InMemoryStockRepo
 import { InMemoryRemanenteQueryRepository } from '../kitchen/repositories/InMemoryRemanenteQueryRepository.js';
 import { InMemoryReportRepository } from '../reports/repositories/InMemoryReportRepository.js';
 import { InMemoryRecipeRepository } from '../catalog/repositories/InMemoryRecipeRepository.js';
-import { User } from '../../domain/auth/entities/User.js';
-import { Pin } from '../../domain/auth/value-objects/Pin.js';
-import { Insumo } from '../../domain/stock/entities/Insumo.js';
-import { Recipe } from '../../domain/catalog/entities/Recipe.js';
-import { RecipeIngredient } from '../../domain/catalog/entities/RecipeIngredient.js';
-import { DecimalQuantity } from '../../domain/stock/value-objects/DecimalQuantity.js';
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
 import { IStockRepository } from '../../domain/stock/repositories/IStockRepository.js';
 import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
@@ -27,6 +21,8 @@ import fs from 'fs';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 
+import { runSeed } from '../seeds/seed.js';
+
 export interface AppOptions {
   userRepository?: IUserRepository;
   stockRepository?: IStockRepository;
@@ -34,6 +30,7 @@ export interface AppOptions {
   reportRepository?: IReportRepository;
   recipeRepository?: IRecipeRepository;
   jwtSecret?: string;
+  enableDevSeeding?: boolean;
 }
 
 export function createApp(options: AppOptions = {}): Express {
@@ -75,125 +72,13 @@ export function createApp(options: AppOptions = {}): Express {
   const reportRepo = options.reportRepository ?? new InMemoryReportRepository();
   const recipeRepo = options.recipeRepository ?? new InMemoryRecipeRepository();
 
-  // Sembrar usuarios iniciales si se usan repositorios en memoria por defecto
-  if (!options.userRepository && userRepo instanceof InMemoryUserRepository) {
-    userRepo.seedUser(
-      new User({
-        id: 'usr-carlos-1',
-        name: 'Carlos Gomez (Cocina)',
-        role: 'KITCHEN_STAFF',
-        pin: Pin.createFromRaw('1234'),
-        status: 'ACTIVE',
-        failedAttempts: 0,
-      })
-    );
-    userRepo.seedUser(
-      new User({
-        id: 'usr-maria-2',
-        name: 'Maria Silva (Administrador)',
-        role: 'ADMIN',
-        pin: Pin.createFromRaw('1234'),
-        status: 'ACTIVE',
-        failedAttempts: 0,
-      })
-    );
-  }
-
-  // Sembrar insumos de bodega si se usan repositorios en memoria por defecto
-  if (!options.stockRepository && stockRepo instanceof InMemoryStockRepository) {
-    stockRepo.seedInsumo(
-      new Insumo({
-        id: 'ins-1',
-        name: 'Queso Mozzarella',
-        unitOfMeasure: 'KG',
-        warehouseStock: new DecimalQuantity('50.0000'),
-      })
-    );
-    stockRepo.seedInsumo(
-      new Insumo({
-        id: 'ins-2',
-        name: 'Salsa Pomodoro',
-        unitOfMeasure: 'L',
-        warehouseStock: new DecimalQuantity('50.0000'),
-      })
-    );
-    stockRepo.seedInsumo(
-      new Insumo({
-        id: 'ins-3',
-        name: 'Masa de Pizza',
-        unitOfMeasure: 'UNITS',
-        warehouseStock: new DecimalQuantity('100.0000'),
-      })
-    );
-  }
-
-  // Sembrar recetas si se usa repositorio de recetas en memoria por defecto
-  if (!options.recipeRepository && recipeRepo instanceof InMemoryRecipeRepository) {
-    const pizzaRecipe = new Recipe(
-      'rec-pizza-margarita',
-      'Pizza Margarita',
-      'PIZZA',
-      [
-        new RecipeIngredient('ing-1', 'rec-pizza-margarita', 'ins-1', new DecimalQuantity('0.1500')),
-        new RecipeIngredient('ing-2', 'rec-pizza-margarita', 'ins-2', new DecimalQuantity('0.1000')),
-        new RecipeIngredient('ing-3', 'rec-pizza-margarita', 'ins-3', new DecimalQuantity('1.0000')),
-      ],
-      'Pizza clásica con salsa pomodoro, queso mozzarella y albaca'
-    );
-    recipeRepo.save(pizzaRecipe);
-
-    const pizzaRec1 = new Recipe(
-      'rec-1',
-      'Pizza Margarita',
-      'PIZZA',
-      [
-        new RecipeIngredient('ing-1', 'rec-1', 'ins-1', new DecimalQuantity('0.1500')),
-        new RecipeIngredient('ing-2', 'rec-1', 'ins-2', new DecimalQuantity('0.1000')),
-        new RecipeIngredient('ing-3', 'rec-1', 'ins-3', new DecimalQuantity('1.0000')),
-      ]
-    );
-    recipeRepo.save(pizzaRec1);
-  }
-
-  // Sembrar remanentes iniciales para visualización inmediata en dev
-  if (!options.remanenteQueryRepository && remanenteQueryRepo instanceof InMemoryRemanenteQueryRepository) {
-    const now = new Date();
-    remanenteQueryRepo.seedRemanente({
-      id: 'rem-101',
-      insumoId: 'ins-1',
-      insumoName: 'Queso Mozzarella',
-      unitOfMeasure: 'KG',
-      currentQuantity: '1.7500',
-      initialQuantity: '2.0000',
-      location: 'KITCHEN_FRIDGE',
-      expirationDate: new Date(now.getTime() + 2 * 60 * 60 * 1000),
-      status: 'ACTIVE',
-      createdAt: now,
-    });
-    remanenteQueryRepo.seedRemanente({
-      id: 'rem-102',
-      insumoId: 'ins-2',
-      insumoName: 'Salsa Pomodoro',
-      unitOfMeasure: 'L',
-      currentQuantity: '4.5000',
-      initialQuantity: '5.0000',
-      location: 'KITCHEN_FRIDGE',
-      expirationDate: new Date(now.getTime() + 14 * 60 * 60 * 1000),
-      status: 'ACTIVE',
-      createdAt: now,
-    });
-    remanenteQueryRepo.seedRemanente({
-      id: 'rem-103',
-      insumoId: 'ins-3',
-      insumoName: 'Masa de Pizza',
-      unitOfMeasure: 'UNITS',
-      currentQuantity: '12.0000',
-      initialQuantity: '15.0000',
-      location: 'KITCHEN_PREP',
-      expirationDate: new Date(now.getTime() + 22 * 60 * 60 * 1000),
-      status: 'ACTIVE',
-      createdAt: now,
-    });
+  // Sembrado de Datos Desacoplado e Idempotente (SK-28)
+  const shouldSeed = options.enableDevSeeding ?? (!options.userRepository && process.env.NODE_ENV !== 'test');
+  if (shouldSeed) {
+    runSeed(
+      { userRepo, stockRepo, remanenteQueryRepo, recipeRepo },
+      { includeSyntheticFixtures: process.env.NODE_ENV !== 'production' }
+    ).catch((err) => console.warn('⚠️ Advertencia ejecutando seeding:', err));
   }
 
   // Rutas de Autenticacion
