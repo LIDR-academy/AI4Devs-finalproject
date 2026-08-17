@@ -9,7 +9,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "node dist/infrastructure/http/server.js",
-    "dev": "tsx watch src/infrastructure/http/server.ts"
+    "dev": "tsx watch src/infrastructure/http/server.ts",
+    "seed": "tsx prisma/seed.ts",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.10.2",
