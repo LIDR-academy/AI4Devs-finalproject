@@ -236,6 +236,44 @@ test('confirming a pending email applies the activation rule for the accounts st
     'suspended stays suspended' => ['suspended', 'suspended'],
 ]);
 
+// Phase 4 security audit follow-up (F5, story 0007): the dataset test above
+// forces email_verified_at to null on both rows, so its "inactive becomes
+// active" case only exercises a user who has never verified before — never
+// the exploit shape the F1 fix actually guards against. This test drives
+// that shape through real Eloquent and the real ConfirmEmailChange action
+// (no hand-built model double): a user who was genuinely Active and verified
+// in the past, then deactivated by an administrator (status flipped to
+// Inactive directly — status isn't mass-assignable, see User's #[Fillable]
+// and how App\Actions\Users\UpdateUser writes it), still carries that old,
+// non-null email_verified_at. Confirming a pending email change for them
+// must not silently reactivate the account.
+test('confirming a pending email change does not reactivate a user who was deactivated after a genuine prior verification', function () {
+    $user = User::factory()
+        ->pendingEmail('new-address@example.com')
+        ->inactive()
+        ->create();
+
+    // The factory's base state already sets a genuine email_verified_at
+    // (now()); ->inactive() only overrides status, leaving that prior
+    // verification timestamp in place — exactly the "was Active and
+    // verified, then deactivated" history the exploit relies on.
+    expect($user->email_verified_at)->not->toBeNull();
+
+    $url = URL::temporarySignedRoute(
+        'email-change.confirm',
+        now()->addMinutes(60),
+        ['user' => $user->id, 'hash' => sha1('new-address@example.com')],
+    );
+
+    $this->get($url)->assertRedirect(route('profile.edit'));
+
+    $fresh = $user->fresh();
+
+    expect($fresh->status)->toBe(UserStatus::Inactive)
+        ->and($fresh->getRawOriginal('email'))->toBe('new-address@example.com')
+        ->and($fresh->pending_email)->toBeNull();
+});
+
 test('the confirmation route is reachable while signed out', function () {
     $user = User::factory()->pendingEmail('new-address@example.com')->create([
         'status' => UserStatus::Inactive,
