@@ -25,7 +25,7 @@ Implement Google Calendar as the internal scheduling engine, class CRUD with bus
 - [ ] `CalendarProvider` port interface defined in domain layer (decoupled from Google)
 - [ ] `GoogleCalendarAdapter` implements the port (create, update, delete events, free/busy query)
 - [ ] Free/busy is queried server-side only (no browser-to-Google API calls)
-- [ ] Google Calendar event titles contain only class type and level (no PII)
+- [ ] Google Calendar event titles identify the class: individual = "coachee name - level", group = "Group class - level"; description includes coach, recurrence status, notes, and enrolled coachees (group)
 - [ ] Google Calendar errors are caught and return 503 with a unique error ref
 - [ ] Calendar health monitoring tracks failure rate (>5% in 5 min → alert)
 

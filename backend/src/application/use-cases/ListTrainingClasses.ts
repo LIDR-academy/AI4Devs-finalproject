@@ -8,7 +8,8 @@ export class ListTrainingClasses {
       include: {
         assignedCoach: true,
         level: true,
-        enrollments: true,
+        enrollments: { include: { coachee: true } },
+        waitingLists: true,
       },
       orderBy: { start_time: "asc" },
     });

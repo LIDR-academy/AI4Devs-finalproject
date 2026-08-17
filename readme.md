@@ -697,7 +697,7 @@ Creates a new class (individual or group) or a weekly recurring series. Validate
 - Weekly recurrence generates instances for the same day/time.
 - Notification #2 sent to coachees in reach (group class with open spots).
 - Notification #8 sent to assigned coachee (individual class).
-- Google Calendar event title contains only class type and level (no PII).
+- Google Calendar event title: individual = "coachee name - level", group = "Group class - level"; description includes assigned coach, recurrence status, notes, and enrolled coachees (group).
 
 ### GET /classes
 

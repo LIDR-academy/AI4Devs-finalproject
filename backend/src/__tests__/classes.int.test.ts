@@ -28,7 +28,7 @@ describe.runIf(hasCredentials)("TrainingClass Calendar Sync Integration", () => 
   let listTrainingClasses: ListTrainingClasses;
   let createdClassId: string | null = null;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     const calendarId = resolveCalendarId();
     if (!calendarId || !env.GOOGLE_CALENDAR_SA_EMAIL || !env.GOOGLE_CALENDAR_SA_KEY_PATH) {
       throw new Error("Missing Google Calendar credentials in env");
@@ -43,22 +43,40 @@ describe.runIf(hasCredentials)("TrainingClass Calendar Sync Integration", () => 
     listTrainingClasses = new ListTrainingClasses(prisma);
   });
 
-  it("should create a class and persist google_event_id", async () => {
+  it("should create an individual class and persist google_event_id", async () => {
     const adminUser = await prisma.user.findFirst({ where: { role: "ADMIN" } });
     const coach = await prisma.user.findFirst({ where: { role: "COACH" } });
+    let coachee = await prisma.user.findFirst({ where: { role: "COACHEE", status: "ACTIVE" } });
+    if (!coachee) {
+      const existing = await prisma.level.findFirst();
+      coachee = await prisma.user.create({
+        data: {
+          email: `int-test-coachee-${Date.now()}@example.com`,
+          password_hash: "not-used",
+          name: "Integration Coachee",
+          phone: "+34 600 000 000",
+          role: "COACHEE",
+          status: "ACTIVE",
+          level_id: existing?.id ?? null,
+        },
+      });
+    }
 
     const startTime = new Date();
     startTime.setDate(startTime.getDate() + 14);
-    startTime.setHours(10, 0, 0, 0);
+    startTime.setUTCHours(9, 0, 0, 0);
 
-    const trainingClass = await createTrainingClass.execute({
-      classType: "GROUP",
+    const result = await createTrainingClass.execute({
+      classType: "INDIVIDUAL",
+      coacheeIds: [coachee.id],
       assignedCoachId: coach?.id ?? "00000000-0000-0000-0000-000000000000",
-      startTime,
+      startDateTime: startTime,
       description: "Integration test class — safe to delete",
       createdBy: adminUser?.id ?? "00000000-0000-0000-0000-000000000000",
     });
 
+    expect(result.instances).toHaveLength(1);
+    const trainingClass = result.instances[0];
     expect(trainingClass.id).toBeTruthy();
     expect(trainingClass.google_event_id).toBeTruthy();
     expect(typeof trainingClass.google_event_id).toBe("string");

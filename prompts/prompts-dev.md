@@ -175,3 +175,40 @@ Please review all 6 subissues in the user story and o whatever you haven't done 
 ---
 
 # 12 - OpenCode - DeepSeek V4 Flash Free - Plan mode
+
+Let's continue working on this project. We now should tackle this US: https://linear.app/ai4devs/issue/COACHER-18/us-22-class-creation-individual-group-recurring  Ask me anything you need in order to do this the best way possible
+
+
+[Agent mode]
+let's do this
+
+---
+
+When I open the modal to add a class, in the select of the Assigned coach, should also appear the admins, since they are also coaches and by default should be the logged in user selected. 
+Also, when I select a date, evverything breaks and I get this error: Unexpected Application Error!
+Invalid time value
+RangeError: Invalid time value
+    at Date.toISOString (<anonymous>)
+    at http://localhost:5173/src/ui/components/CreateClassModal.tsx?t=1786977710273:315:131
+    at Array.map (<anonymous>)
+    at CreateClassModal (http://localhost:5173/src/ui/components/CreateClassModal.tsx?t=1786977710273:309:29)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=56d69b4a:11596:26)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=56d69b4a:14630:28)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=56d69b4a:15972:22)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=56d69b4a:19806:22)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=56d69b4a:19251:20)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=56d69b4a:19190:13) 
+
+----
+
+Now it works. However, I'd like for the event created in the Google Calendar to:
+- if it's an individual class: the title should be the coachee name and surname/lastname + category
+- if it's a group class: just put "Group class" + category as title and add the info of all the coachees that are taking that class in the description of the event.
+- In the description of the event, I also want to have the info of the coach who is doing the class, if it's a recurrent class or not and any description that might have been added when creating the class.  
+
+---
+
+Great. Now we only have to make sure the time of the classes are properly manage. 
+In the creation modal, the times appear with (IND+GRP) text after the time. I have selected 15.00 to create a class, but then in the google calendar I see that the class it's actually created at 17.00. I guess this issue is something related to the server time or similar. Maybe the best way to manage this would be to send the times in ISO_TIME strings? Or what do you think is the best approach for this?
+
+# 13 - OpenCode - DeepSeek V4 Flash Free - Plan mode

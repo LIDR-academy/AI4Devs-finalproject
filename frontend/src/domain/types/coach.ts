@@ -27,6 +27,11 @@ export interface CoachUpdateData {
   specialities?: string;
 }
 
+export interface AssignableCoach {
+  id: string;
+  name: string;
+}
+
 export interface CoachFinancialData {
   id: string;
   name: string;

@@ -296,24 +296,30 @@ All error responses follow this shape:
   - `recurrence.enabled`: if true, creates a `RecurrenceSeries` and generates recurring class instances.
   - `recurrence.dayOfWeek`: 0=Sunday, 1=Monday, ... 6=Saturday. Required if `recurrence.enabled` is true.
   - `recurrence.startDate`: first occurrence date. Required if `recurrence.enabled` is true.
+  - `startDateTime`: ISO 8601 instant (e.g., `2026-08-17T13:00:00.000Z` or with offset). The frontend interprets the user-entered wall-clock time in the gym timezone (`Europe/Madrid`), so a class entered as 15:00 in the UI is sent as 13:00Z in summer (CEST) or 14:00Z in winter (CET).
 - **Success Response:** `201 Created`
   ```json
   {
-    "id": "uuid",
-    "classType": "individual | group",
-    "assignedCoach": { "id": "uuid", "name": "string" },
-    "level": { "id": "uuid", "name": "string", "color": "string" } | null,
-    "startTime": "string (ISO 8601)",
-    "durationMinutes": 60,
-    "status": "active",
-    "description": "string",
-    "enrolledCoachees": [ { "id": "uuid", "name": "string" } ],
+    "seriesId": "uuid | null",
     "recurrence": {
-      "seriesId": "uuid | null",
       "enabled": false
-    }
+    },
+    "instances": [
+      {
+        "id": "uuid",
+        "classType": "individual | group",
+        "assignedCoach": { "id": "uuid", "name": "string" },
+        "level": { "id": "uuid", "name": "string", "color": "string" } | null,
+        "startTime": "string (ISO 8601)",
+        "durationMinutes": 60,
+        "status": "active",
+        "description": "string",
+        "enrolledCoachees": [ { "id": "uuid", "name": "string" } ]
+      }
+    ]
   }
   ```
+  When `recurrence.enabled` is true, `seriesId` is the created series ID and `instances` contains the generated weekly instances (12 by default). When disabled, `seriesId` is null and `instances` contains a single class.
 - **Error Responses:**
   - `400 VALIDATION_ERROR` — schema validation failure (wrong coachee count for type, missing level for group, etc.).
   - `403 FORBIDDEN` — Coachee role cannot create classes.
@@ -331,7 +337,7 @@ All error responses follow this shape:
   - Notification #2 sent to all coachees within reach of the class level when a group class with open spots is created.
   - Notification #8 sent to the assigned coachee when an individual class is created.
   - Notification #12 sent to assigned coach if a different coach from the creator is selected.
-  - Google Calendar event title contains only class type and level (no PII — PRD Section 10.4).
+  - Google Calendar event title: individual classes use the coachee name + level (e.g., "Juan Pérez - Intermedio"), group classes use "Group class" + level (e.g., "Group class - Intermedio"); the event description includes the assigned coach name, recurrence status, user-added notes, and (for group classes) the enrolled coachees (PRD Section 10.4).
 
 ---
 
@@ -521,6 +527,7 @@ All error responses follow this shape:
   }
   ```
   `capacityAvailable` indicates what the slot can accommodate given gym-level capacity (max 2 individual + 1 group per hour).
+  `start`/`end` are Madrid wall-clock hours (`Europe/Madrid`); the backend enumerates slots by gym-local hour and converts them to absolute instants internally for free/busy and overlap checks (DST-aware).
 - **Error Responses:**
   - `400 VALIDATION_ERROR` — missing required query params.
   - `503 SERVICE_UNAVAILABLE` — Google Calendar free/busy API error.
@@ -528,6 +535,26 @@ All error responses follow this shape:
   - Google Calendar free/busy is queried server-side only (PRD Section 8, Architecture Section 3).
   - Result accounts for existing classes, personal blocks, and gym-wide blocks.
   - Gym capacity (2 individual + 1 group per hour) is factored into availability.
+
+---
+
+### GET /classes/assignable-coaches
+
+- **Description:** Returns the list of users that may be assigned as the coach of a class (active Admins and active Coaches, since Admins also act as coaches). Used to populate the Assigned Coach selector in the Add Class modal.
+- **Auth/Role:** Authenticated (Admin or Coach).
+- **Path Params:** None.
+- **Query Params:** None.
+- **Request Body:** None.
+- **Success Response:** `200 OK`
+  ```json
+  {
+    "data": [
+      { "id": "uuid", "name": "string" }
+    ]
+  }
+  ```
+- **Error Responses:**
+  - `403 FORBIDDEN` — caller is not an Admin or Coach.
 
 ---
 
@@ -653,7 +680,7 @@ All error responses follow this shape:
   - Gym-wide blocks block all classes for the entire gym during the specified time (PRD Section 5).
   - Personal blocks prevent class assignment to the specified coach (PRD Section 5).
   - No notifications are required for blocks (PRD Section 9, Resolved).
-  - Google Calendar event created with no PII in title.
+  - Google Calendar event created for the block.
 
 ---
 
@@ -1238,6 +1265,7 @@ All error responses follow this shape:
 | POST | `/classes/:id/enrollment` | Coachee | Join a group class |
 | DELETE | `/classes/:id/enrollment` | Coachee | Cancel own class attendance |
 | GET | `/classes/available-slots` | Admin, Coach | Get available time slots |
+| GET | `/classes/assignable-coaches` | Admin, Coach | List active Admins and Coaches assignable to a class |
 | GET | `/coachee/dashboard` | Coachee | Home screen data (next class, joinable classes) |
 | GET | `/blocks` | Admin, Coach | List blocks in date range |
 | POST | `/blocks` | Admin, Coach | Create a block |

@@ -51,7 +51,8 @@ export class UpdateTrainingClass {
       include: {
         assignedCoach: true,
         level: true,
-        enrollments: true,
+        enrollments: { include: { coachee: true } },
+        waitingLists: true,
       },
     });
   }

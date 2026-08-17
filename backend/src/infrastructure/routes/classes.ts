@@ -3,8 +3,10 @@ import type { NextFunction, Request, Response } from "express";
 import { Router } from "express";
 import { z } from "zod";
 import { container } from "../../config/container.js";
-import { ValidationError } from "../errors.js";
+import { toTrainingClassDTO } from "../dto/trainingClassDto.js";
+import { NotFoundError, ValidationError } from "../errors.js";
 import { authenticate, requireRole } from "../middleware/auth.js";
+import { validate } from "../middleware/validate.js";
 
 const router = Router();
 
@@ -16,139 +18,96 @@ const availableSlotsQuerySchema = z.object({
   }),
 });
 
-router.get("/classes", async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    const classes = await container.listTrainingClasses.execute();
-    res.json({ data: classes, meta: { total: classes.length } });
-  } catch (error) {
-    next(error);
-  }
-});
+const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be ISO format (YYYY-MM-DD)");
 
-router.post("/classes", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!container.createTrainingClass) {
-      res.status(503).json({
-        error: {
-          code: "SERVICE_UNAVAILABLE",
-          message: "Calendar service is not configured",
-          ref: crypto.randomUUID(),
-        },
-      });
-      return;
+const recurrenceSchema = z
+  .object({
+    enabled: z.boolean(),
+    dayOfWeek: z.number().int().min(0).max(6).optional(),
+    startDate: dateString.optional(),
+  })
+  .strict();
+
+const createClassSchema = z
+  .object({
+    classType: z.enum(["INDIVIDUAL", "GROUP"], {
+      errorMap: () => ({ message: "classType must be INDIVIDUAL or GROUP" }),
+    }),
+    assignedCoachId: z.string().uuid("assignedCoachId must be a valid UUID").optional(),
+    coacheeIds: z
+      .array(z.string().uuid("Each coachee ID must be a valid UUID"))
+      .min(1, "At least one coachee is required"),
+    levelId: z.string().uuid("levelId must be a valid UUID").nullable().optional(),
+    startDateTime: z.string().datetime({ offset: true }),
+    description: z
+      .string()
+      .max(500, "description must be at most 500 characters")
+      .nullable()
+      .optional(),
+    recurrence: recurrenceSchema.optional(),
+  })
+  .strict();
+
+const updateClassSchema = z
+  .object({
+    classType: z.enum(["INDIVIDUAL", "GROUP"]).optional(),
+    levelId: z.string().uuid().nullable().optional(),
+    startDateTime: z.string().datetime({ offset: true }).optional(),
+    description: z.string().max(500).nullable().optional(),
+  })
+  .strict();
+
+router.get(
+  "/classes",
+  authenticate,
+  requireRole(UserRole.ADMIN, UserRole.COACH),
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const classes = await container.listTrainingClasses.execute();
+      res.json({ data: classes.map(toTrainingClassDTO), meta: { total: classes.length } });
+    } catch (error) {
+      next(error);
     }
-    const trainingClass = await container.createTrainingClass.execute({
-      classType: req.body.class_type,
-      assignedCoachId: req.body.assigned_coach_id as string,
-      levelId: req.body.level_id as string | undefined,
-      startTime: new Date(req.body.start_time as string),
-      description: req.body.description as string | undefined,
-      recurrenceSeriesId: req.body.recurrence_series_id as string | undefined,
-      createdBy: req.user?.id ?? (req.body.created_by as string),
-    });
-    res.status(201).json(trainingClass);
-  } catch (error) {
-    next(error);
-  }
-});
+  },
+);
 
-router.get("/classes/:id", async (req: Request, res: Response, next: NextFunction) => {
-  const classId = req.params.id as string;
-  try {
-    const trainingClass = await container.prisma.trainingClass.findUnique({
-      where: { id: classId },
-      include: {
-        assignedCoach: true,
-        level: true,
-        enrollments: true,
-      },
-    });
-    if (!trainingClass) {
-      res.status(404).json({
-        error: { code: "NOT_FOUND", message: "Class not found", ref: crypto.randomUUID() },
+router.post(
+  "/classes",
+  authenticate,
+  requireRole(UserRole.ADMIN, UserRole.COACH),
+  validate(createClassSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!container.createTrainingClass) {
+        res.status(503).json({
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Calendar service is not configured",
+            ref: crypto.randomUUID(),
+          },
+        });
+        return;
+      }
+      const result = await container.createTrainingClass.execute({
+        classType: req.body.classType,
+        coacheeIds: req.body.coacheeIds,
+        assignedCoachId: req.body.assignedCoachId,
+        levelId: req.body.levelId ?? undefined,
+        startDateTime: new Date(req.body.startDateTime),
+        description: req.body.description ?? null,
+        recurrence: req.body.recurrence,
+        createdBy: req.user?.id ?? "",
       });
-      return;
-    }
-    res.json(trainingClass);
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.put("/classes/:id", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!container.updateTrainingClass) {
-      res.status(503).json({
-        error: {
-          code: "SERVICE_UNAVAILABLE",
-          message: "Calendar service is not configured",
-          ref: crypto.randomUUID(),
-        },
+      res.status(201).json({
+        seriesId: result.seriesId,
+        recurrence: result.recurrence,
+        instances: result.instances.map(toTrainingClassDTO),
       });
-      return;
+    } catch (error) {
+      next(error);
     }
-    const classId = req.params.id as string;
-    const trainingClass = await container.updateTrainingClass.execute(classId, {
-      classType: req.body.class_type,
-      levelId: req.body.level_id,
-      startTime: req.body.start_time ? new Date(req.body.start_time) : undefined,
-      description: req.body.description,
-    });
-    res.json(trainingClass);
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.delete("/classes/:id", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!container.deleteTrainingClass) {
-      res.status(503).json({
-        error: {
-          code: "SERVICE_UNAVAILABLE",
-          message: "Calendar service is not configured",
-          ref: crypto.randomUUID(),
-        },
-      });
-      return;
-    }
-    const classId = req.params.id as string;
-    await container.deleteTrainingClass.execute(classId);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.delete("/recurring-series/:id", (_req: Request, res: Response) => {
-  res.status(501).json({
-    error: {
-      code: "NOT_IMPLEMENTED",
-      message: "Recurring series deletion is not yet implemented.",
-      ref: crypto.randomUUID(),
-    },
-  });
-});
-
-router.post("/classes/:id/enrollment", (_req: Request, res: Response) => {
-  res.status(501).json({
-    error: {
-      code: "NOT_IMPLEMENTED",
-      message: "Enrollment management is not yet implemented.",
-      ref: crypto.randomUUID(),
-    },
-  });
-});
-
-router.delete("/classes/:id/enrollment", (_req: Request, res: Response) => {
-  res.status(501).json({
-    error: {
-      code: "NOT_IMPLEMENTED",
-      message: "Enrollment management is not yet implemented.",
-      ref: crypto.randomUUID(),
-    },
-  });
-});
+  },
+);
 
 router.get(
   "/classes/available-slots",
@@ -177,6 +136,151 @@ router.get(
     } catch (error) {
       next(error);
     }
+  },
+);
+
+router.get(
+  "/classes/assignable-coaches",
+  authenticate,
+  requireRole(UserRole.ADMIN, UserRole.COACH),
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const coaches = await container.prisma.user.findMany({
+        where: { role: { in: [UserRole.ADMIN, UserRole.COACH] }, status: "ACTIVE" },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      });
+      res.json({ data: coaches });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.get(
+  "/classes/:id",
+  authenticate,
+  requireRole(UserRole.ADMIN, UserRole.COACH),
+  async (req: Request, res: Response, next: NextFunction) => {
+    const classId = req.params.id as string;
+    try {
+      const trainingClass = await container.prisma.trainingClass.findUnique({
+        where: { id: classId },
+        include: {
+          assignedCoach: true,
+          level: true,
+          enrollments: { include: { coachee: true } },
+          waitingLists: true,
+        },
+      });
+      if (!trainingClass) {
+        throw new NotFoundError("Class not found.");
+      }
+      res.json(toTrainingClassDTO(trainingClass));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.put(
+  "/classes/:id",
+  authenticate,
+  requireRole(UserRole.ADMIN, UserRole.COACH),
+  validate(updateClassSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!container.updateTrainingClass) {
+        res.status(503).json({
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Calendar service is not configured",
+            ref: crypto.randomUUID(),
+          },
+        });
+        return;
+      }
+      const classId = req.params.id as string;
+      const trainingClass = await container.updateTrainingClass.execute(classId, {
+        classType: req.body.classType,
+        levelId: req.body.levelId,
+        startTime: req.body.startDateTime ? new Date(req.body.startDateTime) : undefined,
+        description: req.body.description,
+      });
+      res.json(toTrainingClassDTO(trainingClass));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.delete(
+  "/classes/:id",
+  authenticate,
+  requireRole(UserRole.ADMIN, UserRole.COACH),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!container.deleteTrainingClass) {
+        res.status(503).json({
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Calendar service is not configured",
+            ref: crypto.randomUUID(),
+          },
+        });
+        return;
+      }
+      const classId = req.params.id as string;
+      await container.deleteTrainingClass.execute(classId);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.delete(
+  "/recurring-series/:id",
+  authenticate,
+  requireRole(UserRole.ADMIN, UserRole.COACH),
+  (_req: Request, res: Response) => {
+    res.status(501).json({
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Recurring series deletion is not yet implemented.",
+        ref: crypto.randomUUID(),
+      },
+    });
+  },
+);
+
+router.post(
+  "/classes/:id/enrollment",
+  authenticate,
+  requireRole(UserRole.COACHEE),
+  (_req: Request, res: Response) => {
+    res.status(501).json({
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Enrollment management is not yet implemented.",
+        ref: crypto.randomUUID(),
+      },
+    });
+  },
+);
+
+router.delete(
+  "/classes/:id/enrollment",
+  authenticate,
+  requireRole(UserRole.COACHEE),
+  (_req: Request, res: Response) => {
+    res.status(501).json({
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Enrollment management is not yet implemented.",
+        ref: crypto.randomUUID(),
+      },
+    });
   },
 );
 

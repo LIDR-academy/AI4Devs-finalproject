@@ -20,11 +20,12 @@ Personal Training Management Platform — a gym class scheduling app with 3 role
 1. All files in PascalCase for components/entities, camelCase for utilities
 2. Class duration is ALWAYS 60 minutes
 3. Gym capacity: max 2 individual + 1 group simultaneous
-4. Google Calendar event titles: class type + level only (no PII)
+4. Google Calendar event titles: individual = "coachee name - level", group = "Group class - level"; description includes assigned coach, recurrence status, notes, and enrolled coachees (group)
 5. Error responses: `{ error: { code, message, ref } }` — no stack traces
 6. All dependencies pinned to EXACT versions (no ranges)
 7. No raw SQL — Prisma parameterized queries only
 8. API under `/api/v1/` prefix
+9. Class times are stored as UTC instants; user-entered wall-clock times are interpreted in the gym timezone (Europe/Madrid, DST-aware). Google Calendar events carry `timeZone: Europe/Madrid`; recurrence windows and available-slots math use Madrid wall-clock hours (see `TimeZoneMath.ts` / frontend `gymDateTime.ts`)
 
 ## Commands
 ### Backend
@@ -38,6 +39,14 @@ Personal Training Management Platform — a gym class scheduling app with 3 role
 - `npm run db:migrate` — Run pending Prisma migrations
 - `npm run db:seed` — Seed database with initial levels (5 levels, colors)
 - `npm run build` — Compile TypeScript to `dist/`
+
+### Frontend
+- `npm run dev` — Start Vite dev server (port 5173, proxies `/api` to localhost:3001)
+- `npm test` — Run Vitest tests once
+- `npm run lint` — Check with Biome (`biome check src/`)
+- `npm run lint:fix` — Auto-fix with Biome
+- `npm run typecheck` — `tsc --noEmit`
+- `npm run build` — Typecheck + Vite production build (PWA)
 
 ### Spec-kit
 - `/speckit.specify` — Create or refine a feature specification

@@ -47,7 +47,7 @@ Specific MUST items:
 - All Zod schemas MUST reject unexpected fields (`strict()` or `.strip()` only with explicit
   justification)
 - No secrets, stack traces, or internal paths in error responses
-- Google Calendar event titles MUST contain only class type + level (zero PII)
+- Google Calendar event titles identify the class: individual classes use "coachee name - level", group classes use "Group class - level"; the event description includes the assigned coach, recurrence status, user notes, and (for group classes) the enrolled coachees
 - Coach financial data MUST be AES-256-GCM encrypted at rest
 
 ### IV. API Contract Consistency

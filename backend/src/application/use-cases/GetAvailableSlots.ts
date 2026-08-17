@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import type { CalendarProvider } from "../../domain/ports/CalendarProvider.js";
+import { zonedDateTimeToUtc } from "../../domain/services/TimeZoneMath.js";
 
 export interface GetAvailableSlotsInput {
   date: string;
@@ -31,8 +32,8 @@ export class GetAvailableSlots {
   async execute(input: GetAvailableSlotsInput): Promise<GetAvailableSlotsOutput> {
     const { date, coachId, classType } = input;
 
-    const dayStart = new Date(`${date}T00:00:00.000Z`);
-    const dayEnd = new Date(`${date}T23:59:59.999Z`);
+    const dayStart = zonedDateTimeToUtc(date, "00:00");
+    const dayEnd = zonedDateTimeToUtc(date, "23:59");
 
     const [freeBusyResult, existingClasses, blocks, allActiveClasses] = await Promise.all([
       this.calendar.queryFreeBusy({ timeMin: dayStart, timeMax: dayEnd }),
@@ -66,8 +67,8 @@ export class GetAvailableSlots {
       const startTimeStr = `${String(hour).padStart(2, "0")}:00`;
       const endTimeStr = `${String(hour + 1).padStart(2, "0")}:00`;
 
-      const slotStart = new Date(`${date}T${startTimeStr}:00.000Z`);
-      const slotEnd = new Date(`${date}T${endTimeStr}:00.000Z`);
+      const slotStart = zonedDateTimeToUtc(date, `${startTimeStr}`);
+      const slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
 
       if (busyOverlapChecker(slotStart, slotEnd)) continue;
 

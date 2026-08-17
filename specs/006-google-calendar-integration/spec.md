@@ -115,7 +115,7 @@ As an admin, I want the system to track Google Calendar API call success/failure
 - **FR-005**: The `updateEvent` method MUST accept a Google event ID and updated event data, then update the corresponding event on Google Calendar
 - **FR-006**: The `deleteEvent` method MUST accept a Google event ID and delete the corresponding event from Google Calendar
 - **FR-007**: The `queryFreeBusy` method MUST accept a time range (start, end) and optional list of calendar IDs, then return busy intervals from Google Calendar
-- **FR-008**: All Google Calendar event titles MUST contain ONLY: the class type name and the level name (e.g., "Yoga - Beginner"); no personal data (coach name, coachee name, email, phone, or any PII) may be included in the title or description
+- **FR-008**: Google Calendar event titles MUST identify the class: individual classes use the coachee name + level (e.g., "Juan Pérez - Intermedio"), group classes use "Group class" + level (e.g., "Group class - Intermedio"); the event description MUST include the assigned coach name, recurrence status, user-added notes, and (for group classes) the list of enrolled coachees
 - **FR-009**: All Google Calendar API errors MUST be caught by the adapter and wrapped in a `ServiceUnavailableError` (HTTP 503) with a unique UUID error reference following the standard error envelope format
 - **FR-010**: When a class or block is created, the system MUST create a corresponding Google Calendar event and persist the returned `google_event_id` on the database record; if the Google Calendar API call fails, the entire operation MUST be rolled back (no partial state)
 - **FR-011**: When a class or block with an existing `google_event_id` is updated, the system MUST update the corresponding Google Calendar event
@@ -129,7 +129,7 @@ As an admin, I want the system to track Google Calendar API call success/failure
 
 - **CalendarProvider (Port)**: A domain-layer interface that abstracts calendar operations. Decouples the scheduling engine from any specific calendar service provider. Methods: `createEvent`, `updateEvent`, `deleteEvent`, `queryFreeBusy`.
 - **GoogleCalendarAdapter (Adapter)**: An infrastructure-layer implementation of the CalendarProvider port. Uses the `googleapis` library and Service Account credentials to interact with Google Calendar v3 API. Resolves the active calendar ID based on the current environment (dev/staging/prod).
-- **Google Calendar Event**: A remote resource on Google Calendar representing a class session or time block. Identified by a Google event ID string. Contains title (type + level only), start/end times, and timezone.
+- **Google Calendar Event**: A remote resource on Google Calendar representing a class session or time block. Identified by a Google event ID string. Contains a title (individual: coachee name + level; group: "Group class" + level), start/end times, timezone, and a description with coach, recurrence status, notes, and (group) enrolled coachees.
 - **Calendar Health Monitor**: An infrastructure component that records API call outcomes, computes rolling failure rates, and exposes health status. Runs in-process (no external monitoring service required for v1).
 
 ## Success Criteria *(mandatory)*
@@ -143,7 +143,7 @@ As an admin, I want the system to track Google Calendar API call success/failure
 - **SC-005**: No Google API credentials, tokens, or SDKs are present in any browser-delivered JavaScript bundle (verified by code inspection and frontend build analysis)
 - **SC-006**: A simulated Google Calendar API failure during class creation results in a 503 error with a unique UUID `ref`, and no class record is persisted to the database
 - **SC-007**: A simulated 6% failure rate over a 5-minute window triggers a health alert (logged) and the health endpoint reports degraded status with the failure rate
-- **SC-008**: All Google Calendar event titles inspected on the system calendar contain only the pattern `<ClassType> - <Level>` with no personal data
+- **SC-008**: All Google Calendar event titles inspected on the system calendar follow the pattern "coachee name - level" for individual classes and "Group class - level" for group classes, with the event description containing the assigned coach, recurrence status, notes, and (for group classes) the enrolled coachees
 
 ## Assumptions
 
