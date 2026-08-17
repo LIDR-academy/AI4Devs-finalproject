@@ -584,6 +584,31 @@ Two reasons it is bounded this way rather than left as a completion gate:
 others when this story adds `app/Exceptions/ImmutableRoleException.php`. Recorded here so it is not
 rediscovered as a question; not a change to make before Phase 6.
 
+**Post-closure PRD alignment check (2026-08-18), requested by the human after closure.** Re-read
+[`docs/PRD/PRD.md`](../../../docs/PRD/PRD.md)'s Epic 1 "Super Admin role" prose (around its "Managing
+roles at all is a gated permission" / "A stricter, separate permission gates administrator-level
+management" paragraphs) and its "Roles & Permissions" Gherkin block against every decision recorded in
+this file (Q1-Q4, the config-vs-enum source-of-truth call, and the Phase 4 security-audit fixes). No
+divergence found — every decision here is an implementation choice about *how* to build a requirement
+the PRD already states, not a change to *what* it requires:
+
+- The PRD's "[the Super Admin role] is assignable **only via direct database access or a seeder**,
+  never through the dashboard" is exactly what the Phase 4 `Role::firstOrCreateSuperAdminRole()` fix
+  (the F3 finding) closes — the security audit brought the implementation into fuller alignment with an
+  existing PRD requirement the original Phase 1 spec had not fully enforced, rather than introducing a
+  new one.
+- Q2's "categorically unmodifiable in every direction, including additions" matches the PRD's "it can
+  never be modified or removed at all" verbatim.
+- The PRD's Super Admin-grant-visibility scenarios ("Only the Super Admin sees the
+  administrator-management grant option", "A broad administrator never sees the … toggle", "The Super
+  Admin grants a role administrator-management permission") are UI-facing and correctly out of this
+  story's backend-only scope — deferred to stories 0009/0011 (roles CRUD screens), not overlooked.
+- Story 0008a's decision to move the Administrator-level guard into `CreateUser`/`UpdateUser` (so every
+  caller is covered, not only the Livewire component) is a stricter reading of the PRD's "the action is
+  denied server-side" scenarios, which don't specify a mechanism — not a divergence from them.
+
+No PRD update was made as a result of this story; none was needed.
+
 ## Open questions
 
 Per [`docs/contracts.md`](../../../docs/contracts.md)'s Uncertainty Handling Rule, these need a human
