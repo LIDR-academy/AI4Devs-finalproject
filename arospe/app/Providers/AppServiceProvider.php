@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Listeners\ActivateVerifiedUser;
 use App\Listeners\RejectNonActiveUserLogin;
+use App\Models\Role;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Authenticated;
@@ -63,7 +64,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureAuthorization(): void
     {
-        Gate::before(function (mixed $user): ?bool {
+        Gate::before(function (mixed $user, string $ability, array $arguments = []): ?bool {
             // F7 — Gate::before invokes the closure without consulting its type hint
             // (canBeCalledWithUser() does not), so any non-User authenticatable would
             // otherwise reach ->hasRole() and fatal. Decline instead of assuming.
@@ -71,18 +72,28 @@ class AppServiceProvider extends ServiceProvider
                 return null;
             }
 
-            // F6 — literal fallback: a missing, explicitly-null, or renamed config key
-            // must fail *safe* (no bypass), not throw a TypeError that breaks every check
-            // app-wide. The `?? 'Super Admin'` is required in addition to the config()
-            // default: Laravel's config() only substitutes its own default when the key is
-            // absent, not when the key exists with a null value (Arr::exists() considers a
-            // present-but-null key to exist), so an explicitly-null config value would
-            // otherwise still reach hasRole(null, ...) and throw.
+            // Story 0008 re-audit F6 — when the check's own target IS the Super Admin role,
+            // defer to RolePolicy instead of short-circuiting true/false here. Without this,
+            // a Super Admin actor's Gate::authorize('delete', $superAdminRole) legitimately
+            // passed this bypass before RolePolicy was ever consulted, making the policy
+            // layer not "independently effective" for that one actor -- contradicting the
+            // story's own acceptance criterion. The model-level guards on App\Models\Role
+            // still refuse the mutation either way; this closes the policy-layer gap on top
+            // of them. See RolePolicyTest for the inverted assertion this produces.
+            $target = $arguments[0] ?? null;
+            if ($target instanceof Role && $target->name === Role::superAdminName()) {
+                return null;
+            }
+
+            // Story 0008 — Role::superAdminName() is the single implementation of
+            // this resolution (config()'s default plus the `??` fallback for a
+            // present-but-null key -- see docs/security/authorization-patterns.md), shared
+            // with the selectable() scope, the model-level immutability guards, RolePolicy
+            // and the seeder, so the role that bypasses every permission check can never
+            // drift from the role that is protected/hidden.
             // F5 — the 'web' guard is explicit, so a same-named role created on another
             // guard can never satisfy the bypass.
-            $superAdminRoleName = config('auth.super_admin.role', 'Super Admin') ?? 'Super Admin';
-
-            return $user->hasRole($superAdminRoleName, 'web') ? true : null;
+            return $user->hasRole(Role::superAdminName(), 'web') ? true : null;
         });
     }
 

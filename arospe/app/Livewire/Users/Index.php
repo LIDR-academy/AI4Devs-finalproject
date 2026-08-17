@@ -8,6 +8,7 @@ use App\Actions\Users\UpdateUser;
 use App\Concerns\ProfileValidationRules;
 use App\Concerns\UserValidationRules;
 use App\Enums\UserStatus;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +17,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Permission\Models\Role;
 
 /**
  * Backoffice Users screen: list, create, edit and delete.
@@ -243,7 +243,9 @@ class Index extends Component
 
     /**
      * The roles assignable from the create/edit form — the Super Admin role
-     * is never offered.
+     * is never offered, via the shared selectable() scope (story 0008)
+     * rather than a hardcoded literal, so it moves with
+     * config('auth.super_admin.role') instead of drifting from it.
      *
      * @return array<int, array{id: int, name: string}>
      */
@@ -252,7 +254,7 @@ class Index extends Component
     {
         return Role::query()
             ->where('guard_name', 'web')
-            ->whereNot('name', 'Super Admin')
+            ->selectable()
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (Role $role): array => ['id' => (int) $role->id, 'name' => $role->name])

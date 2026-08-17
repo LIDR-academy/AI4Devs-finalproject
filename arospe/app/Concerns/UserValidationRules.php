@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use App\Enums\UserStatus;
+use App\Models\Role;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
@@ -13,7 +14,12 @@ trait UserValidationRules
      *
      * The Super Admin role is excluded server-side, in the rule itself — not
      * merely omitted from the dropdown — so a forged submission cannot
-     * assign it.
+     * assign it. Resolved via Role::superAdminName() (story 0008) rather
+     * than the literal 'Super Admin', so this exclusion always matches
+     * whichever role config('auth.super_admin.role') actually grants the
+     * Gate::before bypass to — otherwise an overridden config value would
+     * make this rule exclude an ordinary role while permitting assignment
+     * of the real Super Admin role.
      *
      * @return array<int, ValidationRule|array<mixed>|string>
      */
@@ -21,7 +27,7 @@ trait UserValidationRules
     {
         return [
             'required',
-            Rule::exists('roles', 'id')->where('guard_name', 'web')->whereNot('name', 'Super Admin'),
+            Rule::exists('roles', 'id')->where('guard_name', 'web')->whereNot('name', Role::superAdminName()),
         ];
     }
 

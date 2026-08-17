@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RoleName;
 use App\Models\User;
 
 return [
@@ -126,7 +127,7 @@ return [
     */
 
     'super_admin' => [
-        'role' => 'Super Admin',
+        'role' => RoleName::SuperAdmin->value,
         'email' => env('SUPER_ADMIN_EMAIL'),
     ],
 

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -9,7 +10,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Throwable;
 
@@ -45,9 +45,10 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         $provisionedEmail = DB::transaction(function (): ?string {
-            $superAdminRole = Role::firstOrCreate(
-                ['name' => 'Super Admin', 'guard_name' => 'web'],
-            );
+            // firstOrCreateSuperAdminRole() is the one sanctioned way to bring this role into
+            // existence -- it bypasses the `creating` guard (App\Models\Role::boot()) that
+            // otherwise refuses any role acquiring the Super Admin name (story 0008 F3).
+            $superAdminRole = Role::firstOrCreateSuperAdminRole();
 
             $administratorRole = Role::firstOrCreate(
                 ['name' => 'Administrator', 'guard_name' => 'web'],
