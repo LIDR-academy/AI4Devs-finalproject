@@ -36,6 +36,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sign-in
+    |--------------------------------------------------------------------------
+    |
+    | Copy shown to a user with otherwise-valid credentials whose account
+    | status blocks sign-in (App\Actions\Fortify\AuthenticateUser). Must
+    | never name which non-active status applies.
+    |
+    */
+
+    'login' => [
+        'not_active' => 'This account is not active. Please contact an administrator.',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Pending Email Change
     |--------------------------------------------------------------------------
     |

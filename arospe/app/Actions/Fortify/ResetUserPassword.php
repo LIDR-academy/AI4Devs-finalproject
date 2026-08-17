@@ -36,6 +36,10 @@ class ResetUserPassword implements ResetsUserPasswords
             // commented-out import in app/Models/User.php), but the event's
             // constructor has no native type hint, so this is safe at runtime and is
             // exactly how Fortify's own verification controller fires it.
+            //
+            // App\Listeners\ActivateVerifiedUser relies on the save() above being
+            // the last dirty write to email_verified_at before this event fires --
+            // do not insert another save() between them.
             // @phpstan-ignore argument.type
             event(new Verified($user));
         }

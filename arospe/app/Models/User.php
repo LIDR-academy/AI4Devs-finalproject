@@ -158,4 +158,12 @@ class User extends Authenticatable implements PasskeyUser
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
     }
+
+    /**
+     * Determine if the user's account status allows them to sign in.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === UserStatus::Active;
+    }
 }

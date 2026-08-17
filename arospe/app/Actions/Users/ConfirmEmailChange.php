@@ -55,6 +55,10 @@ class ConfirmEmailChange
             }
 
             // See the identical note in app/Actions/Fortify/ResetUserPassword.php.
+            //
+            // App\Listeners\ActivateVerifiedUser relies on the save() above being
+            // the last dirty write to email_verified_at before this event fires --
+            // do not insert another save() between them.
             // @phpstan-ignore argument.type
             event(new Verified($locked));
 

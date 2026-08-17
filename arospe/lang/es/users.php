@@ -36,6 +36,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Inicio de sesión
+    |--------------------------------------------------------------------------
+    |
+    | Texto mostrado a un usuario con credenciales por lo demás válidas cuyo
+    | estado de cuenta bloquea el inicio de sesión
+    | (App\Actions\Fortify\AuthenticateUser). No debe indicar nunca qué
+    | estado no activo aplica.
+    |
+    */
+
+    'login' => [
+        'not_active' => 'Esta cuenta no está activa. Contacta con un administrador.',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cambio de correo pendiente
     |--------------------------------------------------------------------------
     |
