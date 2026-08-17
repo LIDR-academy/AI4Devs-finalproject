@@ -43,11 +43,12 @@ app/
   Actions/Users/       Domain actions for the Users area (RequestEmailChange, ConfirmEmailChange)
   Concerns/            Shared traits (validation rule sets)
   Console/Commands/    Artisan commands
-  Enums/               Backed enums for domain value sets (UserStatus)
+  Enums/               Backed enums for domain value sets (UserStatus, RoleName)
+  Exceptions/          Domain exceptions that render their own response (ImmutableRoleException)
   Http/Controllers/    Abstract base + domain controllers used as HTTP boundaries in front of actions
   Listeners/           Event listeners (ActivateVerifiedUser), registered in AppServiceProvider
   Livewire/            Livewire components, grouped by area (Settings/, Settings/TwoFactor/, Actions/)
-  Models/              Eloquent models
+  Models/              Eloquent models (User; Role, which subclasses the package's role model)
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
   Policies/            Eloquent model policies (UserPolicy), auto-discovered by name
   Providers/           Service providers (AppServiceProvider, FortifyServiceProvider)
@@ -66,12 +67,12 @@ resources/
 routes/                 web.php, settings.php (no api.php yet)
 tests/
   Feature/              Feature tests, mirrors app structure (Auth/, Settings/, Seeders/, ...)
-  Unit/                 Mirrors app structure too (Enums/, Listeners/, Models/)
+  Unit/                 Mirrors app structure too (Enums/, Exceptions/, Listeners/, Models/), plus ArchitectureTest.php
   Browser/              Pest browser tests, mirrors app structure too (Auth/)
   Pest.php, TestCase.php
 ```
 
-`app/Enums/`, `app/Listeners/`, `app/Notifications/`, `app/Policies/` and `lang/` are all **stock Laravel locations** (`make:enum`, `make:listener`, `make:notification`, `make:policy`, `lang:publish`), not new base folders — creating one of them needs no approval; inventing a folder Laravel doesn't ship does.
+`app/Enums/`, `app/Exceptions/`, `app/Listeners/`, `app/Notifications/`, `app/Policies/` and `lang/` are all **stock Laravel locations** (`make:enum`, `make:exception`, `make:listener`, `make:notification`, `make:policy`, `lang:publish`), not new base folders — creating one of them needs no approval; inventing a folder Laravel doesn't ship does.
 
 `app/Policies/` in particular is **registration-free**: Laravel 13 auto-discovers `App\Policies\<Model>Policy` for `App\Models\<Model>`, so `UserPolicy` binds to `User` by naming alone. This repo has no `AuthServiceProvider` and does not need one — do not add one to register a conventionally-named policy. What each ability means lives in [architecture/authorization.md](../architecture/authorization.md#policies), not here.
 
@@ -246,6 +247,8 @@ Every PHP change in this repo should pass, in this order, before being considere
 2. `vendor/bin/pint --dirty --format agent` — auto-fixes formatting against the `laravel` preset (`pint.json`).
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
-_Last updated: 2026-08-16 — Task 0006b: added `tests/Browser/` to the directory-structure listing and corrected the browser-testing sentence, which still described the suite wiring as pending._
+_Last updated: 2026-08-18 — Task 0008: added `app/Exceptions/` to the directory listing and folded it into the "stock Laravel locations … needs no approval" sentence alongside `app/Enums/` and `app/Policies/`; noted `App\Models\Role` beside `User`, `RoleName` beside `UserStatus`, and `tests/Unit/`'s new `Exceptions/` folder and `ArchitectureTest.php`. What the role model's guards do lives in [architecture/authorization.md](../architecture/authorization.md#the-super-admin-roles-invariants), not here._
+
+_Previously, 2026-08-16 — Task 0006b: added `tests/Browser/` to the directory-structure listing and corrected the browser-testing sentence, which still described the suite wiring as pending._
 
 _Previously, 2026-08-14 — Task 0005: widened the `forceFill()` mass-assignment note from "in an action" to "from one named place" now that `User::delete()` is a second such writer, and added the "deleting a user goes through the model, not the query builder" convention with its ✅/❌ pair._

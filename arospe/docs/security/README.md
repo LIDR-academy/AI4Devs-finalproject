@@ -18,7 +18,10 @@ repo must follow — always with a real code example pulled from this repository
   guard with `instanceof` rather than a type hint, why `config($key, $default)` alone cannot protect
   against a present-but-`null` key, why an ability must cover every **attribute** whose mutation
   achieves the effect it forbids (not only the operation it is named after — task 0004's finding F1),
-  and why the seeded catalog is safe from role-name collisions.
+  why a model-level guard reading a row's protected identity must separate "column not hydrated" from
+  "hydrated but null" with `array_key_exists` rather than `??` (task 0008's finding R1 — a working
+  rename bypass that survived its own first fix), and why role-name collision is closed by the
+  `creating`/`updating` guards rather than by the unique index alone.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -81,7 +84,11 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-17 — Phase 4 re-audit of task 0007: expanded the `login-status-enforcement.md`
+_Last updated: 2026-08-17 — Third Phase 4 pass on task 0008: expanded the `authorization-patterns.md`
+entry for the partially-hydrated-identity rule (finding R1) and for role-name acquisition now being
+closed by the `creating`/`updating` guards rather than the unique index (finding F3)._
+
+_Previously: 2026-08-17 — Phase 4 re-audit of task 0007: expanded the `login-status-enforcement.md`
 entry for the `getPrevious()`-not-`getOriginal()` rule (which replaced that page's own disproven
 first recommendation) and the nullable passkey-callback rule._
 

@@ -14,7 +14,8 @@ make these distinctions explicit.
 - [Gate::before closures must tolerate any authenticatable](#gatebefore-closures-must-tolerate-any-authenticatable)
 - [permission: and role: middleware are not a substitute for auth](#permission-and-role-middleware-are-not-a-substitute-for-auth)
 - [An ability must cover every attribute that achieves its effect, not only the operation it is named after](#an-ability-must-cover-every-attribute-that-achieves-its-effect-not-only-the-operation-it-is-named-after)
-- [Confirmed safe: role-name collision is closed by the database, not by PHP](#confirmed-safe-role-name-collision-is-closed-by-the-database-not-by-php)
+- [A guard that reads a row's protected identity must distinguish "not hydrated" from "hydrated but null"](#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null)
+- [Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone](#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone)
 
 ## The Super Admin bypass does not cover every check
 
@@ -187,6 +188,12 @@ $user->hasRole($superAdminRoleName, 'web');
 
 Do not "simplify" this to one of the two. They cover different failure modes.
 
+Since task 0008 the shipped instance of this pattern lives in exactly one place —
+`App\Models\Role::superAdminName()` — and `AppServiceProvider`'s `Gate::before` bypass calls it rather
+than inlining its own copy, so the snippet above is now the *rule*, not a quotation of the code. That
+centralisation is itself the point: with two copies, dropping the `??` from one would have left the
+bypass granting the role while every guard, scope, policy and seeder protected nothing.
+
 ## Gate::before closures must tolerate any authenticatable
 
 Laravel decides whether to invoke a before-callback **before** PHP type-checks it:
@@ -329,25 +336,143 @@ permission directly to a user and ships only two roles — and becomes live the 
 operators build administrator-equivalent roles. Whoever centralises the administrator-level rule must
 key it on the privilege, not on the role name.
 
-## Confirmed safe: role-name collision is closed by the database, not by PHP
+## A guard that reads a row's protected identity must distinguish "not hydrated" from "hydrated but null"
+
+Established by task 0008's Phase 4 **re-audit** (finding R1), which was a working, executable bypass of
+the Super Admin role's immutability guard — found *after* a first fix for the adjacent case had already
+shipped and been reviewed. The rule generalises to every model-level guard this repo adds from here on.
+
+A model event guard answers "is the row being mutated the protected one?" by reading an attribute. Three
+different sources are available at guard time and they disagree with each other in exactly the situation
+an attacker controls:
+
+| Source | On a rename, mid-`updating` | On a partially-hydrated instance |
+| --- | --- | --- |
+| `$this->getAttribute('name')` | the **new**, attacker-supplied name | the new name |
+| `$this->getOriginal('name')` | the persisted name ✅ | `null` — the column was never selected |
+| database read-back | the persisted name ✅ | the persisted name ✅ |
+
+`getOriginal('name')` is the right source, but it returns `null` for **two different reasons** — "the
+persisted value is null" and "the column was never hydrated" — and `??` cannot tell them apart. That is
+what made the first fix wrong:
+
+❌ Bad — the shipped-then-fixed form. The database read-back was added deliberately for the unhydrated
+case, and `??` short-circuits before ever reaching it:
+
+```php
+// anti-pattern — this is the exact code finding R1 bypassed
+$name = $this->getOriginal('name') ?? $this->getAttribute('name');
+```
+
+On `Role::query()->select('id')->whereKey($id)->firstOrFail()->update(['name' => 'Pwned'])`, `fill()`
+has already run by the time `updating` fires, so `getOriginal('name')` is `null` (never selected) while
+`getAttribute('name')` is `'Pwned'` — non-null, so the `??` returns the attacker's own new name, the
+comparison against `superAdminName()` fails, and the rename of the Super Admin role succeeds. Note the
+near miss: the same partially-hydrated instance mutating **`guard_name`** *is* caught by the broken form,
+because `getAttribute('name')` is then `null` and the `??` falls through. A test covering only the
+`guard_name` case passes on the vulnerable code — the identifying attribute must be the one under test.
+
+✅ Good — the current form in [`app/Models/Role.php`](../../app/Models/Role.php). `array_key_exists()`
+asks the question `??` cannot, and the in-memory attribute is never consulted for a persisted row:
+
+```php
+private function isSuperAdminRole(): bool
+{
+    if ($this->exists && $this->getKey() !== null) {
+        $name = array_key_exists('name', $this->getOriginal())
+            ? $this->getOriginal('name')
+            : static::query()->whereKey($this->getKey())->value('name');
+    } else {
+        $name = $this->getAttribute('name');
+    }
+
+    return $name === self::superAdminName();
+}
+```
+
+Four things about this shape are load-bearing:
+
+- **`array_key_exists`, not `isset`/`??`.** All three of `isset()`, `?:` and `??` collapse "absent" and
+  "null" into one branch; only `array_key_exists()` separates them.
+- **The `$this->exists && $this->getKey() !== null` gate is what keeps the `creating` path from
+  attempting a keyless lookup.** Verified by query log: creating an ordinary role issues an `INSERT` and
+  the permission-cache flush, and no `SELECT`.
+- **Keep the "what name is being written" check as a separate method.** `guardAgainstAssumingSuperAdminName()`
+  deliberately *does* read the in-memory attribute, because its job is refusing a create/rename **into**
+  the protected name. Two guards, two sources, opposite directions — merging them reintroduces R1.
+- **Verify with a rename, not with a delete.** Delete and `guard_name` mutation both pass on the
+  vulnerable form.
+
+The same trap has now bitten this repo twice from different directions: see also
+[login-status-enforcement.md](login-status-enforcement.md)'s `getPrevious()`-not-`getOriginal()` rule,
+where the pre-save value a listener needed had already been overwritten by `syncOriginal()`. Whenever a
+security decision depends on a model's **pre-mutation** state, name the exact source and prove it holds
+on a partially-hydrated instance — Eloquent offers several plausible-looking readers and they diverge
+precisely under attacker control.
+
+Residual, recorded rather than fixed (unreachable today, non-escalating): `App\Policies\RolePolicy` and
+the `Gate::before` deferral in `AppServiceProvider` both compare `$role->name` — the in-memory attribute
+— so a *partially-hydrated* Super Admin role passed to `Gate::authorize()` is not recognised at the
+policy layer and the check returns the actor's ordinary `roles.manage` answer instead of a categorical
+`false`. Verified to have no exploitable consequence: the model-level guard above still refuses the
+mutation, and no call site passes a `Role` to `authorize()` yet (the roles screens are stories
+0009/0011). Whoever builds those must either resolve the target through a fully-hydrated read or route
+the policy's identity check through the same persisted-identity helper.
+
+## Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone
 
 Worth recording because the reasoning is non-obvious and someone will re-open the question. The
 Super Admin bypass keys on a **name string**, which invites the question "can an attacker create a
-colliding role?". The two layers move in opposite directions and, together, close it:
+colliding role?". Two facts about string comparison still hold and are worth keeping in mind:
 
-- **PHP side** — `Collection::contains('name', 'Super Admin')` compares with `==`, which for two
-  non-numeric strings in PHP 8 is a byte-exact, case-sensitive comparison. `super admin`,
-  `SUPER ADMIN`, and `Super Admin ` (trailing space) all **fail** to match.
-- **Database side** — `roles` carries `unique(name, guard_name)` under `utf8mb4_unicode_ci`
+- **PHP-side comparisons are byte-exact.** `==`/`===` against a non-numeric string in PHP 8 is
+  case-sensitive with no normalisation. `super admin`, `SUPER ADMIN`, and `Super Admin ` (trailing
+  space) all **fail** to match `'Super Admin'`.
+- **Database-side, `roles` carries `unique(name, guard_name)`** under `utf8mb4_unicode_ci`
   (`config/database.php`), which is case- **and** accent-insensitive. Any variant that PHP *would*
-  match must be byte-identical, and any byte-identical row is rejected as a duplicate.
+  match must be byte-identical, and any byte-identical row on the *same* `(name, guard_name)` pair is
+  rejected as a duplicate.
 
-So the only string that grants the bypass is already occupied by the seeded row. Do not "harden" this
-by lowercasing or trimming the comparison — that would *widen* the set of matching names and break the
-property above. The remaining hardening is guard-scoping (see
-[Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
+**What this does NOT close on its own — corrected during task 0008's Phase 4 re-audit (finding F3).**
+An earlier version of this section concluded "the only string that grants the bypass is already
+occupied by the seeded row," reasoning from the unique index alone. That conclusion stopped being true
+the moment `config('auth.super_admin.role')` became overridable (task 0008): the unique index only
+forbids a *second* row sharing an already-occupied `(name, guard_name)` pair — it says nothing about a
+role being created or renamed to match whatever name `superAdminName()` currently resolves to, and
+before task 0008's Phase 3 landed, nothing else stopped that either. Verified directly: with no guard
+in place, both `Role::create(['name' => 'Super Admin', ...])` and renaming an ordinary role into that
+name succeeded and the resulting role inherited the full `Gate::before` bypass — reachable on a fresh
+install before seeding, or whenever the config names a role that hasn't been seeded yet.
 
-_Last updated: 2026-08-13 — Added "An ability must cover every attribute that achieves its effect"
+**What actually closes it today.** `App\Models\Role::boot()` registers a `creating` listener and the
+post-mutation half of its `updating` listener (`guardAgainstAssumingSuperAdminName()`), both of which
+throw `ImmutableRoleException` when a role's in-memory `name` equals `Role::superAdminName()` at save
+time — refusing the role from ever being *created with*, or *renamed into*, the currently-configured
+Super Admin name. The one sanctioned exception is `Role::firstOrCreateSuperAdminRole()`
+(`RolePermissionSeeder`'s call site), which bypasses model events via `withoutEvents()` specifically to
+create the real row. The database's `unique(name, guard_name)` index remains a second, independent
+backstop for the narrower case these two facts above describe (an exact-byte-match duplicate on an
+*already-occupied* pair) — it is not what stops acquisition of a currently-unoccupied configured name.
+Do not "harden" the name comparisons themselves by lowercasing or trimming — that would *widen* the set
+of matching names and break the property the byte-exact match above relies on. The remaining hardening
+is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
+
+_Last updated: 2026-08-18 — Task 0008 Phase 6 (docs sync): noted in "Read the Super Admin role name with
+a literal default" that the shipped instance of that double fallback now lives solely in
+`App\Models\Role::superAdminName()`, so its snippet reads as the rule rather than a code quotation._
+
+_Previously, 2026-08-17 — Task 0008's **third** Phase 4 pass (finding R1): added "A guard that reads a
+row's protected identity must distinguish 'not hydrated' from 'hydrated but null'", the rule behind a
+working rename bypass of the Super Admin immutability guard that survived the first fix, plus the
+recorded policy-layer residual under partial hydration._
+
+_Previously, 2026-08-17 — Corrected during task 0008's Phase 4 **re-audit** (finding F3): the section
+previously claimed the unique index alone closed role-name acquisition of the Super Admin name: it does
+not, once `config('auth.super_admin.role')` is overridable. Documents the `creating`/`updating` guards
+on `App\Models\Role` that actually close it, and the sanctioned `firstOrCreateSuperAdminRole()`
+exception the seeder uses._
+
+_Previously, 2026-08-13 — Added "An ability must cover every attribute that achieves its effect"
 during the Phase 4 **re-audit** of task 0004 (finding F1's fix), including the normalisation rule for
 the change-detection comparison that arms such a guard and the deferred role-shaped-predicate
 residual._

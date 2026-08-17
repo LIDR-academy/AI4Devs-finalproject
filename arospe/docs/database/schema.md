@@ -169,6 +169,10 @@ Source: `database/migrations/2024_01_01_000000_create_passkeys_table.php`. Provi
 
 Source: `database/migrations/2026_07_12_181045_create_permission_tables.php` (`spatie/laravel-permission`, teams disabled — see [config/permission.php](../../config/permission.php)). Column shapes follow the package defaults; see the migration file for the exact `Schema::create` calls, including the composite primary keys on the pivot tables.
 
+Models: `permissions` is the package's own `Spatie\Permission\Models\Permission`; `roles` is [`App\Models\Role`](../../app/Models/Role.php) since task 0008 (`config/permission.php`'s `models.role` binding), a subclass adding the Super Admin role's immutability guards and the `selectable()` scope — **no schema change, no migration, and no new column**. Application code must never reach the `roles` table through the package class, which carries none of those guards; see [architecture/authorization.md](../architecture/authorization.md#one-role-model-class-in-application-code).
+
+`roles` carries `unique(name, guard_name)`, which is what makes name-based identification of the Super Admin role safe at row level — but it is *not* what prevents a role acquiring that name, since the index only forbids a duplicate of an already-occupied pair. See [security/authorization-patterns.md](../security/authorization-patterns.md#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone).
+
 **Populated by [`database/seeders/RolePermissionSeeder.php`](../../database/seeders/RolePermissionSeeder.php)**, which is the only source of this data — the app is non-functional until it has run, so seeding is a required deployment step:
 
 | Table | Seeded rows | Notes |
@@ -194,14 +198,16 @@ No foreign keys, not part of the ER diagram:
 
 ## Notes
 
-- No domain model exists beyond `User` as of this writing — `app/Models/` has a single model. This file will grow a new section per model as the domain layer is built.
+- No domain model exists beyond `User` as of this writing. `app/Models/` also holds `Role`, but that is a `spatie/laravel-permission` subclass over the package's existing `roles` table rather than a new domain entity — it adds no column and no migration (see [architecture/authorization.md](../architecture/authorization.md#the-super-admin-roles-invariants)). This file will grow a new section per model as the domain layer is built.
 - For migration authoring conventions (naming, `down()` requirements, real examples), see [database/migrations.md](migrations.md).
 - **UUID (v7) primary keys ([ADR 0001](../decisions/0001-uuid-primary-keys.md)).** Status is split:
   - **Done:** `users.id` is a UUID (v7) `CHAR(36)` PK (Epic 1), applied by the 5 alteration migrations `2026_07_22_100001..100005_*.php`. The cascade is complete: `passkeys.user_id`, `sessions.user_id`, and the `spatie/laravel-permission` `model_has_roles` / `model_has_permissions` morph key (renamed `model_id` → `model_uuid`, retyped to `uuid`) all match. The ER diagram and tables above reflect this real, current state.
   - **Still future:** the other six UUID entities from PRD Epics 2 and 4 (products, product variants, product categories, blog categories, blog tags, blog posts — see [../PRD/PRD.md](../PRD/PRD.md)) do not exist in code yet. They will be created with UUID PKs from the start — greenfield, with no migration complexity.
   - The model-side convention (`HasUuids`, `@property string $id`) is in [conventions/base-standards.md](../conventions/base-standards.md#uuid-primary-keys); the migration-side pattern is in [database/migrations.md](migrations.md#uuid-primary-keys).
 
-_Last updated: 2026-08-17 — Task 0014 (drop the redundant `users_uuid_unique` index): removed the "known schema debt" note above — `database/migrations/2026_08_17_132646_drop_redundant_uuid_unique_index_from_users_table.php` drops it, so `users.id` now carries a single `PRIMARY` index. See [errors-log.md](../errors-log.md) for the closed entry._
+_Last updated: 2026-08-18 — Task 0008 (Super Admin role invariants): recorded that the `roles` table's model is now `App\Models\Role` with **no schema change**, that its `unique(name, guard_name)` index is not what prevents name acquisition, and corrected the stale "`app/Models/` has a single model" claim in Notes._
+
+_Previously: 2026-08-17 — Task 0014 (drop the redundant `users_uuid_unique` index): removed the "known schema debt" note above — `database/migrations/2026_08_17_132646_drop_redundant_uuid_unique_index_from_users_table.php` drops it, so `users.id` now carries a single `PRIMARY` index. See [errors-log.md](../errors-log.md) for the closed entry._
 
 _Previously: 2026-08-17 — Task 0007 (non-active status blocks sign-in): recorded that `users.status` is now an authentication control rather than a descriptive label, cross-referenced to the sign-in block in `architecture/authentication.md`, and noted that this does not change the column's deliberate index omission (the block reads `status` off a row already fetched by the `email` unique index)._
 
