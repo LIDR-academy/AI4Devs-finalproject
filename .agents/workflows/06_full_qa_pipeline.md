@@ -21,7 +21,7 @@ Este workflow ejecuta el pipeline de aseguramiento de calidad de forma interacti
 1. Escanear los cambios en el código (`git diff` o archivo objetivo).
 2. **Auditoría Anti-N+1:** Verificar que las consultas ORM utilicen Eager Loading (`.preload()`, `.include`, `joinedload()`, etc.).
 3. **Auditoría Anti-Mass-Assignment:** Verificar que ninguna entidad ORM reciba entradas HTTP no sanitizadas.
-4. Si existe un contrato OpenAPI/API spec y un validador de contratos (`SK-25`), ejecutar la auditoría de esquemas para detectar discrepancias de DTOs.
+4. **Validación de Contrato Runtime:** Verificar que los payloads de respuesta HTTP coincidan exactamente con la especificación OpenAPI/GraphQL (`docs/03_persistence_and_api/`).
 5. Entregar matriz de riesgos ordenada por severidad.
 6. 🛑 **PAUSA OBLIGATORIA (Gate 1):** Esperar confirmación del usuario para avanzar al Paso 2.
 
@@ -33,14 +33,16 @@ Este workflow ejecuta el pipeline de aseguramiento de calidad de forma interacti
    - Happy path.
    - Casos borde (Unicode, nulos, rangos extremales).
    - Errores estandarizados RFC 7807.
+   - Snapshots de regresión visual (`toHaveScreenshot()`) en componentes UI táctiles/móviles si aplica.
 3. 🛑 **PAUSA OBLIGATORIA (Gate 2):** Esperar confirmación del usuario para avanzar al Paso 3.
 
 ---
 
-## 🔄 Paso 3 — Bucle TDD & Auto-Loop de Pruebas de Mutación (`05_test_runner_agent`)
+## 🔄 Paso 3 — Bucle TDD, Performance & Auto-Loop de Pruebas de Mutación (`05_test_runner_agent`)
 1. **DELEGACIÓN A SUBAGENTE DE TESTING:** Invocar el subagente especializado [05_test_runner_agent.md](05_test_runner_agent.md) para ejecutar el ciclo RED-GREEN-REFACTOR.
-2. **MUTATION AUTO-LOOP:** Ejecutar el runner de Mutation Testing del proyecto especificado en `AGENTS.md`. Si el **Mutation Score es menor al umbral de `testing_rules.md` (default: 70%)**, el subagente ejecutará iteraciones autónomas (hasta 3 ciclos) agregando casos borde adicionales hasta matar a todos los mutantes sintéticos.
-3. **VEREDICTO ESTRUCTURADO (JSON SCHEMA ENFORCEMENT):** El Reviewer Adversarial emitirá su veredicto estrictamente bajo este formato JSON:
+2. **VERIFICACIÓN DE SLAS DE RENDIMIENTO:** Invocar `SK-29_load_and_performance_testing` para validar que los percentiles de latencia cumplan los criterios (p95 < 200ms).
+3. **MUTATION AUTO-LOOP:** Ejecutar el runner de Mutation Testing del proyecto especificado en `AGENTS.md`. Si el **Mutation Score es menor al umbral de `testing_rules.md` (default: 70%)**, el subagente ejecutará iteraciones autónomas (hasta 3 ciclos) agregando casos borde adicionales hasta matar a todos los mutantes sintéticos.
+4. **VEREDICTO ESTRUCTURADO (JSON SCHEMA ENFORCEMENT):** El Reviewer Adversarial emitirá su veredicto estrictamente bajo este formato JSON:
 
 ```json
 {
@@ -51,6 +53,8 @@ Este workflow ejecuta el pipeline de aseguramiento de calidad de forma interacti
   "contract_compliance": "100%",
   "anti_n_plus_one_status": "PASSED",
   "mass_assignment_protection": "PASSED",
+  "visual_regression_status": "PASSED",
+  "latency_p95_ms": 142.5,
   "violations": []
 }
 ```
