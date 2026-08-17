@@ -15,6 +15,13 @@ export const ERROR_CODES = [
   "QUEUE_LIMIT_EXCEEDED",
   "OFFER_EXPIRED",
   "NOT_ELIGIBLE",
+  // Alquilar exige plan activo. Se separa de `NOT_ELIGIBLE` porque la acción que lo
+  // resuelve es otra: contratar o reactivar la suscripción, no devolver un set.
+  "NO_ACTIVE_SUBSCRIPTION",
+  // Bajar de plan con más sets ocupando plaza de los que permitiría el plan nuevo.
+  // Es un código propio, y no `NOT_ELIGIBLE`, porque lo que resuelve cada caso es
+  // distinto: aquí hay que devolver sets, allí hace falta un plan activo.
+  "PLAN_DOWNGRADE_BLOCKED",
   "INTERNAL",
 ] as const;
 

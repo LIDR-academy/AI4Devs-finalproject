@@ -1,10 +1,5 @@
 import { InvariantViolationError, NotFoundError, ValidationError } from "@/domain/errors";
-import { computeOneOffPrice } from "@/domain/subscriptions/pricing";
-import {
-  checkEligibility,
-  checkOneOffEligibility,
-  type Eligibility,
-} from "@/domain/subscriptions/eligibility";
+import { checkEligibility } from "@/domain/subscriptions/eligibility";
 import type { RentalRepository, RentalSummary } from "@/repositories/rental.repository";
 import type { SetRepository } from "@/repositories/set.repository";
 import type { SettingsRepository } from "@/repositories/settings.repository";
@@ -32,6 +27,11 @@ export type RequestSetResult =
 /**
  * Solicitud de un set por un suscriptor (spec `rentals-returns`).
  *
+ * **Alquilar exige plan activo.** No hay vía paralela: quien no tiene suscripción no
+ * puede llevarse un set, y el rechazo lo dice con su propio código para que el cliente
+ * lo distinga del tope de plan — lo que resuelve cada caso es distinto (contratar o
+ * reactivar un plan, frente a devolver un set).
+ *
  * El orden es deliberado: elegibilidad → dirección → asignación. Comprobar primero lo
  * que no toca la base evita reservar una copia para luego tener que soltarla.
  */
@@ -49,31 +49,40 @@ export async function requestSet(
   ]);
 
   const at = now();
-  const isSubscription = subscription?.status === "ACTIVE";
 
-  // Dos vías distintas, no una con excepciones: quien no está suscrito no tiene plan
-  // ni antigüedad, así que las reglas que se le aplican son otras (alquiler puntual).
-  const eligibility: Eligibility = isSubscription
-    ? checkEligibility({
-        subscription: {
+  const eligibility = checkEligibility({
+    subscription: subscription
+      ? {
           status: subscription.status,
           startedAt: subscription.startedAt,
           maxSimultaneousSets: subscription.maxSimultaneousSets,
-        },
-        currentCopyStates,
-        set: { restricted: set.restricted },
-        restrictedSetMinMonths: config.restrictedSetMinMonths,
-        now: at,
-      })
-    : checkOneOffEligibility({
-        currentCopyStates,
-        set: { restricted: set.restricted, hasReferenceValue: set.referenceValue !== null },
-      });
+        }
+      : null,
+    currentCopyStates,
+    set: { restricted: set.restricted },
+    restrictedSetMinMonths: config.restrictedSetMinMonths,
+    now: at,
+  });
 
   if (!eligibility.eligible) {
     // Aquí sí es un rechazo: el usuario pidió una acción concreta y no cumple los
-    // requisitos. El `code` estable permite al cliente reaccionar sin leer el texto.
-    throw new InvariantViolationError("NOT_ELIGIBLE", eligibility.detail);
+    // requisitos. El `code` estable permite al cliente reaccionar sin leer el texto,
+    // y la falta de plan tiene el suyo propio porque se arregla de otra manera.
+    throw new InvariantViolationError(
+      eligibility.reason === "NO_ACTIVE_SUBSCRIPTION"
+        ? "NO_ACTIVE_SUBSCRIPTION"
+        : "NOT_ELIGIBLE",
+      eligibility.detail
+    );
+  }
+
+  // Ser elegible implica tener suscripción activa —es lo primero que mira
+  // `checkEligibility`—; el guard está para que el tipo lo refleje.
+  if (!subscription) {
+    throw new InvariantViolationError(
+      "NO_ACTIVE_SUBSCRIPTION",
+      "Necesitas una suscripción activa para llevarte un set."
+    );
   }
 
   const shippingAddress = await rentals.findDefaultAddress(input.userId);
@@ -83,21 +92,14 @@ export async function requestSet(
     ]);
   }
 
-  const price =
-    !isSubscription && set.referenceValue
-      ? computeOneOffPrice({
-          referenceValue: set.referenceValue,
-          percent: config.oneOffRentalPricePercent,
-          minimum: config.oneOffRentalMinPrice,
-        }).amount
-      : null;
-
   const result = await rentals.assignAvailableCopy({
     setId: input.setId,
     userId: input.userId,
-    subscriptionId: isSubscription ? subscription.id : null,
-    type: isSubscription ? "SUBSCRIPTION" : "ONE_OFF",
-    price,
+    subscriptionId: subscription.id,
+    // Sin alquiler puntual, todo alquiler nace de un plan. `price` se queda vacío: la
+    // columna sigue en el esquema (design.md §3) pero ya no se puebla.
+    type: "SUBSCRIPTION",
+    price: null,
     shippingAddress,
     at,
   });

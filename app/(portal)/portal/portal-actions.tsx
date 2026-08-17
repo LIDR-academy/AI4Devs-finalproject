@@ -11,12 +11,12 @@ function useAction() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function run(url: string, body?: unknown) {
+  async function run(url: string, body?: unknown, method: "POST" | "PUT" = "POST") {
     setPending(true);
     setError(null);
     try {
       const response = await fetch(url, {
-        method: "POST",
+        method,
         ...(body ? { headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {}),
       });
       if (!response.ok) {
@@ -50,6 +50,47 @@ export function ReturnButton({ rentalId }: { rentalId: string }) {
       <Button size="sm" disabled={pending} onClick={() => run(`/api/rentals/${rentalId}/return`)}>
         {pending ? "Enviando…" : "Devolver"}
       </Button>
+      <ActionError error={error} />
+    </div>
+  );
+}
+
+/**
+ * Cambio de plan desde el portal.
+ *
+ * El aviso sobre las colas no es decorativo: el bono se congela al encolar (D11), así
+ * que hacerse premium **no** adelanta una espera ya empezada. Descubrirlo después de
+ * pagar sería la queja evitable más probable de este cambio, y por eso se dice aquí,
+ * antes de confirmar, y no en una ayuda aparte.
+ */
+export function PlanSwitcher({
+  options,
+}: {
+  options: ReadonlyArray<{ code: string; name: string; monthlyPrice: string }>;
+}) {
+  const { run, pending, error } = useAction();
+  if (options.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm text-[var(--muted-foreground)]">
+        Cambiar de plan es inmediato. Si bajas de plan, antes tendrás que devolver los
+        sets que no quepan en el nuevo. Las colas en las que ya estás no se reordenan:
+        la ventaja del plan se aplica al entrar en la cola, no después.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => (
+          <Button
+            key={option.code}
+            size="sm"
+            variant="outline"
+            disabled={pending}
+            onClick={() => run("/api/subscriptions/me", { planCode: option.code }, "PUT")}
+          >
+            {pending ? "Cambiando…" : `Cambiar a ${option.name} (${option.monthlyPrice} €/mes)`}
+          </Button>
+        ))}
+      </div>
       <ActionError error={error} />
     </div>
   );

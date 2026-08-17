@@ -39,6 +39,54 @@ test("una ruta reservada redirige al login", async ({ page }) => {
   await expect(page).toHaveURL(/\/login\?next=%2Fportal/);
 });
 
+test("el alta sin plan se rechaza junto al resto de errores", async ({ page }) => {
+  await page.goto("/registro");
+  // Sin pasar por /planes no hay plan preseleccionado: elegirlo es una decisión del
+  // visitante, no un valor por defecto silencioso.
+  await page.getByRole("button", { name: "Crear cuenta" }).click();
+  await expect(page.getByText("Debes elegir un plan de suscripción.")).toBeVisible();
+});
+
+test("el alta con plan deja la cuenta operativa y el plan se cambia desde el portal", async ({
+  page,
+}) => {
+  // Email único: el alta escribe en la base sembrada y la prueba debe poder repetirse.
+  const email = `alta-${Date.now()}@example.test`;
+
+  // ── 1. El plan elegido en /planes viaja hasta el formulario ─────────────────
+  await page.goto("/planes");
+  await page.getByRole("link", { name: "Empezar con Basic" }).click();
+  await expect(page).toHaveURL(/\/registro\?plan=BASIC/);
+  await expect(page.getByRole("radio", { name: /Basic/ })).toBeChecked();
+
+  // ── 2. …y se puede cambiar sin volver atrás ────────────────────────────────
+  await page.getByRole("radio", { name: /Premium/ }).check();
+
+  await page.getByLabel("Nombre y apellidos").fill("Nueva Suscriptora");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Contraseña").fill(PASSWORD);
+  await page.getByLabel("Dirección").fill("Calle Nueva 1");
+  await page.getByLabel("Localidad").fill("Girona");
+  await page.getByLabel("Código postal").fill("17001");
+  await page.getByLabel("Marca (p. ej. VISA)").fill("VISA");
+  await page.getByLabel("Últimos 4 dígitos").fill("4242");
+  await page.getByLabel("Mes de caducidad").fill("12");
+  await page.getByLabel("Año de caducidad").fill("2030");
+  await page.getByLabel(/mayor de edad/).check();
+  await page.getByLabel(/acepto las condiciones/).check();
+
+  await page.getByRole("button", { name: "Crear cuenta" }).click();
+  await page.waitForURL("/login");
+
+  // ── 3. La cuenta nace con suscripción activa: sin pasos intermedios ─────────
+  await login(page, email);
+  await expect(page.getByText(/Plan actual: Premium/)).toBeVisible();
+
+  // ── 4. Cambio de plan desde el portal ──────────────────────────────────────
+  await page.getByRole("button", { name: /Cambiar a Basic/ }).click();
+  await expect(page.getByText(/Plan actual: Basic/)).toBeVisible();
+});
+
 test("el suscriptor entra en su portal y el operador en el back-office", async ({ page }) => {
   await login(page, "ana@example.test");
   await expect(page.getByRole("heading", { name: /Hola, Ana/i })).toBeVisible();

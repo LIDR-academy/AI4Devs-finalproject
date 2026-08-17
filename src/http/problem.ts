@@ -36,6 +36,8 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   QUEUE_LIMIT_EXCEEDED: 409,
   OFFER_EXPIRED: 409,
   NOT_ELIGIBLE: 409,
+  NO_ACTIVE_SUBSCRIPTION: 409,
+  PLAN_DOWNGRADE_BLOCKED: 409,
   INTERNAL: 500,
 };
 
@@ -49,6 +51,8 @@ const TITLE_BY_CODE: Record<ErrorCode, string> = {
   QUEUE_LIMIT_EXCEEDED: "Límite de colas superado",
   OFFER_EXPIRED: "La oferta ha caducado",
   NOT_ELIGIBLE: "No cumples los requisitos",
+  NO_ACTIVE_SUBSCRIPTION: "Necesitas un plan activo",
+  PLAN_DOWNGRADE_BLOCKED: "Tienes más sets de los que permite ese plan",
   INTERNAL: "Error interno",
 };
 

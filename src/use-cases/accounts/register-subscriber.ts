@@ -1,11 +1,18 @@
 import { hashPassword } from "@/domain/auth/password";
 import { ValidationError } from "@/domain/errors";
 import type { SubscriberRepository } from "@/repositories/subscriber.repository";
+import type { SubscriptionRepository } from "@/repositories/subscription.repository";
 
 import { normalizeEmail } from "../auth/login";
 
 export interface RegisterSubscriberDeps {
   repository: SubscriberRepository;
+  /**
+   * Puerto de suscripciones. El alta **orquesta, no reimplementa**: qué planes existen
+   * y cuáles se pueden contratar lo sigue decidiendo la capability `subscriptions`, y
+   * aquí solo se consulta para traducir el código elegido a su plan.
+   */
+  subscriptions: SubscriptionRepository;
   now?: () => Date;
 }
 
@@ -19,22 +26,26 @@ export interface RegisterSubscriberInput {
   acceptsTerms: boolean;
   address: { line1: string; city: string; postalCode: string; country?: string };
   card: { brand: string; last4: string; expMonth: number; expYear: number };
+  /** Plan elegido (`BASIC` / `PREMIUM`). Sin plan no hay alta. */
+  planCode: string;
 }
 
 export interface RegisterSubscriberResult {
   userId: string;
+  /** Plan con el que queda suscrito; el alta ya deja la cuenta operativa. */
+  planCode: string;
 }
 
 /**
  * Alta de suscriptor (spec `accounts-roles`).
  *
- * Las tres condiciones del alta —ser adulto, aceptar las condiciones y aportar
- * dirección de envío— se comprueban **aquí** y no solo con el esquema del borde: son
- * requisitos de negocio, no de formato, y este caso de uso tiene que rechazarlos
- * venga de donde venga la llamada.
+ * Las cuatro condiciones del alta —ser adulto, aceptar las condiciones, aportar
+ * dirección de envío y elegir plan— se comprueban **aquí** y no solo con el esquema
+ * del borde: son requisitos de negocio, no de formato, y este caso de uso tiene que
+ * rechazarlos venga de donde venga la llamada.
  */
 export async function registerSubscriber(
-  { repository, now = () => new Date() }: RegisterSubscriberDeps,
+  { repository, subscriptions, now = () => new Date() }: RegisterSubscriberDeps,
   input: RegisterSubscriberInput
 ): Promise<RegisterSubscriberResult> {
   const issues = [];
@@ -49,13 +60,31 @@ export async function registerSubscriber(
   if (!input.address?.line1?.trim()) {
     issues.push({ field: "address.line1", issue: "La dirección de envío es obligatoria." });
   }
+
+  // El plan se valida como **un error más del formulario** (design.md §1), no con un
+  // 404 aparte: quien rellena el alta merece ver de una vez todo lo que le falta.
+  const plan = (await subscriptions.listPlans()).find(
+    (candidate) => candidate.code === input.planCode && candidate.active
+  );
+  if (!plan) {
+    issues.push({
+      field: "planCode",
+      issue: input.planCode?.trim()
+        ? "El plan elegido no está disponible."
+        : "Debes elegir un plan de suscripción.",
+    });
+    // Sin plan no hay nada que crear, y `issues` ya lleva acumulado el resto.
+    throw new ValidationError(issues);
+  }
+
   if (issues.length > 0) throw new ValidationError(issues);
 
+  const startedAt = now();
   const result = await repository.createSubscriber({
     email: normalizeEmail(input.email),
     passwordHash: await hashPassword(input.password),
     fullName: input.fullName.trim(),
-    acceptedTermsAt: now(),
+    acceptedTermsAt: startedAt,
     address: {
       line1: input.address.line1.trim(),
       city: input.address.city.trim(),
@@ -63,6 +92,7 @@ export async function registerSubscriber(
       country: input.address.country?.trim() || "ES",
     },
     card: input.card,
+    subscription: { planId: plan.id, startedAt },
   });
 
   if (result.outcome === "email_taken") {
@@ -74,5 +104,5 @@ export async function registerSubscriber(
     ]);
   }
 
-  return { userId: result.userId };
+  return { userId: result.userId, planCode: plan.code };
 }

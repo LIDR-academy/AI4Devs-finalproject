@@ -43,11 +43,7 @@ export type IneligibilityReason =
   | "NO_ACTIVE_SUBSCRIPTION"
   | "PLAN_LIMIT_REACHED"
   | "RETURN_IN_PROGRESS"
-  | "SUBSCRIPTION_TOO_RECENT"
-  /** Sin suscripción, un set restringido no está al alcance del alquiler puntual. */
-  | "RESTRICTED_SET_REQUIRES_SUBSCRIPTION"
-  /** El set no está tasado, así que no se puede cobrar un alquiler puntual. */
-  | "SET_NOT_PRICED";
+  | "SUBSCRIPTION_TOO_RECENT";
 
 export type Eligibility =
   | { eligible: true }
@@ -124,58 +120,44 @@ export function checkEligibility(input: EligibilityInput): Eligibility {
   return { eligible: true };
 }
 
-export interface OneOffEligibilityInput {
-  currentCopyStates: readonly CopyState[];
-  set: { restricted: boolean; hasReferenceValue: boolean };
-}
+export type PlanChangeVerdict =
+  | { allowed: true }
+  /** Cuántos sets tiene que devolver antes de que el plan nuevo le quepa. */
+  | { allowed: false; mustReturn: number; detail: string };
 
 /**
- * Elegibilidad para el **alquiler puntual**, sin suscripción (spec `subscriptions`).
+ * ¿Le cabe al suscriptor lo que ya ocupa dentro del plan al que quiere cambiar?
  *
- * Es una vía distinta, no una excepción a la anterior: quien no está suscrito no tiene
- * plan ni antigüedad, así que las reglas que se le aplican son otras.
+ * No es una comprobación paralela a la elegibilidad: es **el mismo límite de plazas**
+ * medido contra el `maxSimultaneousSets` del plan destino, con el mismo conjunto de
+ * estados (`OCCUPYING_COPY_STATES`). Así no puede desincronizarse de la regla que
+ * decide si puede llevarse un set más.
  *
- *  - **Un set a la vez.** Sin plan que fije el tope, uno es el límite prudente.
- *  - **Los sets restringidos quedan fuera.** La antigüedad mínima existe para no
- *    entregar los sets más valiosos a quien no tiene historial (D7); un alquiler
- *    puntual es exactamente ese caso, así que dejarlos pasar vaciaría la regla.
- *  - **El set debe estar tasado**, porque el precio se calcula sobre su valor de
- *    referencia.
+ * Vale igual para subir y para bajar —una subida nunca reduce el límite, así que pasa
+ * sola— y por eso no hay ninguna bifurcación por dirección del cambio.
+ *
+ * Se usa el conjunto ancho y **no** `HELD_COPY_STATES` (el de pausar/cancelar): allí lo
+ * que importa es si el suscriptor ya cumplió su parte devolviendo; aquí, cuántas plazas
+ * está ocupando. Con el conjunto estrecho, un `BASIC` podría acabar por encima de su
+ * propio límite con una copia en casa y otra en inspección.
  */
-export function checkOneOffEligibility(input: OneOffEligibilityInput): Eligibility {
-  if (input.set.restricted) {
-    return {
-      eligible: false,
-      reason: "RESTRICTED_SET_REQUIRES_SUBSCRIPTION",
-      detail: "Este set solo está disponible para suscriptores con antigüedad.",
-    };
-  }
+export function canSwitchToPlan(
+  currentCopyStates: readonly CopyState[],
+  targetMaxSimultaneousSets: number
+): PlanChangeVerdict {
+  const occupied = currentCopyStates.filter(occupiesPlanSlot).length;
+  if (occupied <= targetMaxSimultaneousSets) return { allowed: true };
 
-  if (!input.set.hasReferenceValue) {
-    return {
-      eligible: false,
-      reason: "SET_NOT_PRICED",
-      detail: "Este set todavía no tiene precio de alquiler puntual.",
-    };
-  }
-
-  const occupied = input.currentCopyStates.filter(occupiesPlanSlot);
-  if (occupied.length > 0) {
-    const returning = occupied.some((state) => state !== "ALQUILADA");
-    return returning
-      ? {
-          eligible: false,
-          reason: "RETURN_IN_PROGRESS",
-          detail: "Tu devolución anterior aún no está completada.",
-        }
-      : {
-          eligible: false,
-          reason: "PLAN_LIMIT_REACHED",
-          detail: "Ya tienes un set alquilado. Devuélvelo para alquilar otro.",
-        };
-  }
-
-  return { eligible: true };
+  // Un número es accionable; "tienes sets pendientes" no dice cuántos ni cuándo acaba.
+  const mustReturn = occupied - targetMaxSimultaneousSets;
+  return {
+    allowed: false,
+    mustReturn,
+    detail:
+      mustReturn === 1
+        ? "Ese plan permite menos sets de los que tienes ahora. Devuelve 1 set para poder cambiarte."
+        : `Ese plan permite menos sets de los que tienes ahora. Devuelve ${mustReturn} sets para poder cambiarte.`,
+  };
 }
 
 /**

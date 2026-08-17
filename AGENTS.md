@@ -513,6 +513,40 @@ project. Read it at the start of every session.
       escenarios) y editarlo; con contenido parcial se pierde detalle al archivar.
   (4) `npm run spec:validate` apuntaba al cambio ya archivado y **fallaba**; ahora es
       `openspec validate --all --strict`.
+- **`plan-obligatorio-en-alta` implementado (2026-08-17) — 18/18 tareas.** El alta crea
+  usuario, dirección, tarjeta **y suscripción `ACTIVE`** en la misma transacción; existe
+  el cambio de plan `BASIC ⇄ PREMIUM`; y el alquiler puntual sale entero (dominio,
+  ajustes e interfaz). **275 tests unitarios + 10 E2E en verde**, `tsc`, `eslint`,
+  `next build` y `openspec validate --all --strict` también.
+  **Desviación consciente sobre `design.md` §1:** el diseño pedía "delegar en el caso de
+  uso de suscripciones" la creación de la suscripción, pero la transacción vive en el
+  **adaptador** `subscriber.repository.prisma.ts` y meter un caso de uso dentro de un
+  `$transaction` de Prisma rompería la dirección de dependencias. Lo que se hizo: el
+  alta resuelve y valida el plan contra el **puerto** `SubscriptionRepository.listPlans()`
+  y le pasa al adaptador un `subscription: { planId, startedAt }` ya resuelto; el
+  adaptador solo escribe. El alta orquesta sin reimplementar, y la atomicidad es real.
+  **Dos códigos de error nuevos** (`ErrorCode` es cerrado, así que ampliarlo es la vía):
+  `NO_ACTIVE_SUBSCRIPTION` (409, alquilar sin plan) y `PLAN_DOWNGRADE_BLOCKED` (409,
+  bajar de plan con sets fuera; el detalle **dice cuántos devolver**). Separarlos de
+  `NOT_ELIGIBLE` importa porque lo que resuelve cada caso es distinto.
+  **`canSwitchToPlan` no bifurca por dirección del cambio**: compara lo que ocupa plaza
+  (`OCCUPYING_COPY_STATES`) con el `maxSimultaneousSets` del plan **destino**, así que
+  subir pasa solo y bajar se mide con el mismo criterio que la elegibilidad.
+  **Trampa de Zod encontrada con el E2E:** `planCode: z.string(msg)` deja pasar la
+  cadena vacía, así que el error del plan **no** salía junto al resto —el esquema del
+  borde cortaba antes de llegar al caso de uso—. Hace falta `.min(1, msg)`; el mensaje
+  del caso de uso ("El plan elegido no está disponible.") queda para el código
+  desconocido o retirado, que sí llega hasta él.
+  **Semilla:** Carla pasa a tener suscripción **CANCELLED** (no "sin ninguna fila"):
+  desde este cambio no existe la cuenta de suscriptor sin suscripción, así que sembrarla
+  sin ninguna contradiría la spec. Es el fixture del rechazo `NO_ACTIVE_SUBSCRIPTION`.
+  Las filas viejas de `SystemSetting` del puntual **siguen en la base** pero son
+  inertes: `resolveSettings` solo lee el catálogo y `updateSetting` rechaza claves
+  fuera de `SYSTEM_SETTING_KEYS`.
+  **Trampa de verificación (perdida de tiempo evitable):** `playwright.config.ts` tiene
+  `reuseExistingServer`, así que si queda un `next start` (build de producción) ocupando
+  el 3000, el E2E prueba **el build viejo** y los fallos no tienen sentido. Matar el
+  puerto 3000 antes de lanzar Playwright.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -526,10 +560,11 @@ project. Read it at the start of every session.
   (265 tests unitarios + 8 E2E, `openspec validate --strict` en verde). Lo que queda
   fuera del MVP: **diseño visual y UX** —en curso: los **flujos por rol** ya están en
   `documents/ux-flows.md`; faltan sistema de diseño y wireframes— y el despliegue en
-  la VM. **Tras el análisis de flujos:** la decisión de alcance sobre el plan y el
-  alquiler puntual está **tomada** (ver el hecho del 2026-08-16) pero **sin ejecutar
-  en specs ni en código**. Sigue abierto cuáles de los recorridos que hoy son solo
-  API reciben pantalla (`ux-flows.md` §8.2). Para cualquier cambio de estado de una copia, usar
+  la VM. La decisión de alcance sobre el plan y el alquiler puntual está **tomada y
+  ejecutada** (cambio `plan-obligatorio-en-alta`, 2026-08-17); queda **archivarlo** en
+  OpenSpec para que sus deltas pasen a `specs/`. Sigue abierto cuáles de los recorridos
+  que hoy son solo API reciben pantalla (`ux-flows.md` §8.2) —con este cambio ya tienen
+  interfaz el alta con plan y el cambio de plan—. Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en

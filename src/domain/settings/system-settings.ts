@@ -20,10 +20,6 @@ export const SYSTEM_SETTINGS = {
   restrictedSetMinMonths: 3,
   /** D7 — cadencia por defecto de los recordatorios de retención, en días. */
   retentionReminderCadenceDays: 7,
-  /** D9 — alquiler puntual como % del valor de referencia del Set. */
-  oneOffRentalPricePercent: 15,
-  /** D9 — importe mínimo del alquiler puntual, en euros. */
-  oneOffRentalMinPrice: 9.99,
 } as const;
 
 export type SystemSettingKey = keyof typeof SYSTEM_SETTINGS;

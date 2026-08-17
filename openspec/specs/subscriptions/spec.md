@@ -2,7 +2,6 @@
 
 ## Purpose
 Define el acceso al servicio por suscripción: los planes y su precio, la suscripción que nace con el alta, el cambio de plan, y las reglas de elegibilidad que determinan cuándo un suscriptor puede llevarse otro set o dejar de pagar.
-
 ## Requirements
 ### Requirement: Planes de suscripción
 El sistema SHALL ofrecer dos planes: `BASIC` (hasta 1 set en alquiler simultáneo) y
@@ -15,22 +14,6 @@ El sistema SHALL ofrecer dos planes: `BASIC` (hasta 1 set en alquiler simultáne
 #### Scenario: Límite de sets del plan premium
 - **WHEN** un suscriptor `PREMIUM` tiene 2 sets en alquiler
 - **THEN** no puede solicitar ni recibir un tercer set hasta liberar uno
-
-### Requirement: Precio de los planes y del alquiler puntual
-El sistema SHALL asociar un precio mensual configurable a cada plan (`BASIC`,
-`PREMIUM`) y una fórmula de precio para el alquiler puntual, usados para reportes
-y para poder evaluar si el suscriptor está "al corriente de pago" (el cobro real
-queda fuera de alcance del MVP, ver `proposal.md`).
-
-#### Scenario: Precio de planes por defecto
-- **WHEN** se configura el sistema por primera vez
-- **THEN** el plan `BASIC` tiene un precio por defecto de 14,99€/mes y el plan
-  `PREMIUM` de 24,99€/mes, ambos configurables por el admin
-
-#### Scenario: Precio del alquiler puntual
-- **WHEN** un usuario no suscrito solicita un alquiler puntual de un Set
-- **THEN** el precio se calcula como un porcentaje configurable del valor de
-  referencia del Set (ver `catalog-inventory`), con un mínimo configurable
 
 ### Requirement: Devolución previa obligatoria para nuevo set
 El sistema SHALL impedir que un suscriptor solicite un nuevo set mientras una
@@ -71,11 +54,65 @@ tenga alguna copia en su poder; la devolución es obligatoria.
 - **WHEN** un suscriptor con una copia `ALQUILADA` intenta cancelar o pausar
 - **THEN** la acción es rechazada y se le indica que debe devolver primero
 
-### Requirement: Alquiler puntual sin suscripción
-El sistema SHALL ofrecer, como opción extra, el alquiler puntual de un set por un
-periodo determinado sin necesidad de suscripción.
+### Requirement: Suscripción activa desde el alta
+El sistema SHALL exigir la elección de un plan (`BASIC` o `PREMIUM`) como parte del
+alta de suscriptor, y crear la cuenta y su suscripción **en la misma transacción**.
+No existe el estado "cuenta de suscriptor sin suscripción".
 
-#### Scenario: Alquiler puntual
-- **WHEN** un usuario no suscrito alquila un set de forma puntual
-- **THEN** recibe la copia por el periodo pactado y debe devolverla al finalizar
+#### Scenario: Alta con plan
+- **WHEN** un visitante completa el alta eligiendo un plan
+- **THEN** se crean su cuenta con rol `SUBSCRIBER` y una suscripción `ACTIVE` en el
+  plan elegido, en la misma transacción
+- **AND** puede solicitar un set sin ningún paso intermedio
+
+#### Scenario: Alta sin plan
+- **WHEN** un visitante intenta completar el alta sin elegir plan
+- **THEN** el alta es rechazada indicando que el plan es obligatorio, junto con el
+  resto de errores de validación del formulario
+
+#### Scenario: Fallo al crear la suscripción
+- **WHEN** la creación de la suscripción falla durante el alta
+- **THEN** no se crea la cuenta: la transacción se deshace entera y el usuario puede
+  reintentar sin haber dejado una cuenta inservible
+
+### Requirement: Cambio de plan
+El sistema SHALL permitir a un suscriptor cambiar entre `BASIC` y `PREMIUM` sobre su
+suscripción existente. El cambio tiene efecto inmediato, salvo que rebaje el límite
+por debajo de los sets que el suscriptor ya ocupa.
+
+#### Scenario: Subir de plan
+- **WHEN** un suscriptor `BASIC` cambia a `PREMIUM`
+- **THEN** su límite pasa a 2 sets simultáneos de inmediato
+
+#### Scenario: Bajar de plan sin exceso
+- **WHEN** un suscriptor `PREMIUM` con 1 o ningún set ocupando plaza cambia a `BASIC`
+- **THEN** el cambio se aplica y su límite pasa a 1 set simultáneo
+
+#### Scenario: Bajar de plan con más sets de los que permite el plan nuevo
+- **WHEN** un suscriptor `PREMIUM` con 2 sets ocupando plaza intenta cambiar a `BASIC`
+- **THEN** la acción es rechazada indicando cuántos sets debe devolver primero
+- **AND** el criterio de "ocupar plaza" es el mismo que el del límite de plan: la
+  copia sigue ocupando hasta volver a `DISPONIBLE`
+
+#### Scenario: Cambio al mismo plan
+- **WHEN** un suscriptor solicita el plan que ya tiene
+- **THEN** la acción no tiene efecto y no se registra un cambio
+
+#### Scenario: El cambio de plan no reordena las colas
+- **WHEN** un suscriptor con entradas de cola vivas cambia de plan
+- **THEN** el `appliedBonus` de esas entradas **no** se recalcula: se congeló al
+  encolar, así que el orden de las colas en curso no varía
+- **AND** el bono del plan nuevo solo se aplica a las colas en las que entre a partir
+  de ese momento
+
+### Requirement: Precio de los planes
+El sistema SHALL asociar un precio mensual configurable a cada plan (`BASIC`,
+`PREMIUM`), usado para reportes y para poder evaluar si el suscriptor está "al
+corriente de pago" (el cobro real queda fuera de alcance del MVP, ver
+`proposal.md`).
+
+#### Scenario: Precio de planes por defecto
+- **WHEN** se configura el sistema por primera vez
+- **THEN** el plan `BASIC` tiene un precio por defecto de 14,99€/mes y el plan
+  `PREMIUM` de 24,99€/mes, ambos configurables por el admin
 

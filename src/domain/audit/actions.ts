@@ -19,6 +19,8 @@ export const AUDIT_ACTIONS = [
   // Configuración del sistema y planes.
   "settings.updated",
   "plan.updated",
+  /** Cambio de plan de un suscriptor sobre su propia suscripción (BASIC ⇄ PREMIUM). */
+  "subscription.plan_changed",
 
   // Catálogo.
   "set.published",
@@ -40,6 +42,7 @@ export const AUDIT_ENTITY_TYPES = [
   "Set",
   "RetentionReminderConfig",
   "User",
+  "Subscription",
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];

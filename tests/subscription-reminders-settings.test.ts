@@ -1,47 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { resolveSettings, SYSTEM_SETTINGS } from "@/domain/settings/system-settings";
-import { computeOneOffPrice } from "@/domain/subscriptions/pricing";
 import { isReminderDue, nextReminderAt } from "@/domain/subscriptions/retention-reminder";
 
-describe("precio del alquiler puntual (D9)", () => {
-  it("aplica el porcentaje sobre el valor de referencia", () => {
-    expect(computeOneOffPrice({ referenceValue: "849.99", percent: 15, minimum: 9.99 })).toEqual({
-      amount: "127.50",
-      minimumApplied: false,
-    });
-  });
-
-  it("aplica el mínimo cuando el porcentaje se queda corto", () => {
-    // Un 15 % de 19,99 € son 3 €: no cubriría ni el envío.
-    expect(computeOneOffPrice({ referenceValue: "19.99", percent: 15, minimum: 9.99 })).toEqual({
-      amount: "9.99",
-      minimumApplied: true,
-    });
-  });
-
-  it("no arrastra errores de coma flotante", () => {
-    // 14.99 × 3 en coma flotante da 44.969999999999999.
-    const { amount } = computeOneOffPrice({ referenceValue: "14.99", percent: 300, minimum: 0 });
-    expect(amount).toBe("44.97");
-  });
-
-  it("devuelve siempre dos decimales", () => {
-    expect(computeOneOffPrice({ referenceValue: "100.00", percent: 15, minimum: 0 }).amount).toBe("15.00");
-    expect(computeOneOffPrice({ referenceValue: "200.00", percent: 10, minimum: 0 }).amount).toBe("20.00");
-  });
-
-  it("respeta el porcentaje configurado por el admin", () => {
-    const base = { referenceValue: "100.00", minimum: 0 };
-    expect(computeOneOffPrice({ ...base, percent: 15 }).amount).toBe("15.00");
-    expect(computeOneOffPrice({ ...base, percent: 25 }).amount).toBe("25.00");
-  });
-
-  it("no devuelve importes negativos ni se rompe con datos absurdos", () => {
-    expect(computeOneOffPrice({ referenceValue: "-50", percent: 15, minimum: 0 }).amount).toBe("0.00");
-    expect(computeOneOffPrice({ referenceValue: "no-es-un-numero", percent: 15, minimum: 5 }).amount).toBe("5.00");
-  });
-});
+/**
+ * El bloque de precio del alquiler puntual vivía aquí. Con la retirada de esa vía
+ * (`plan-obligatorio-en-alta`) desaparecen la fórmula y sus dos parámetros; el
+ * comportamiento que la sustituye —rechazar la solicitud sin plan activo— se prueba en
+ * `rental-circuit.test.ts`, que es donde está la solicitud.
+ */
 
 describe("recordatorios de retención (D7)", () => {
   const NOW = new Date("2026-06-15T10:00:00.000Z");
@@ -103,11 +70,13 @@ describe("parámetros configurables del sistema", () => {
     // Un dato malo en la base no puede dejar sin criterio a una regla de negocio.
     const settings = resolveSettings({
       restrictedSetMinMonths: "tres",
-      oneOffRentalPricePercent: null,
+      // `Number(null)` vale 0: sin el descarte explícito se colaría como configuración
+      // válida y dejaría el parámetro a cero sin que nadie lo pidiera.
+      expiredOfferPenaltyDays: null,
       maxQueuesPerUser: -5,
     });
     expect(settings.restrictedSetMinMonths).toBe(SYSTEM_SETTINGS.restrictedSetMinMonths);
-    expect(settings.oneOffRentalPricePercent).toBe(SYSTEM_SETTINGS.oneOffRentalPricePercent);
+    expect(settings.expiredOfferPenaltyDays).toBe(SYSTEM_SETTINGS.expiredOfferPenaltyDays);
     expect(settings.maxQueuesPerUser).toBe(SYSTEM_SETTINGS.maxQueuesPerUser);
   });
 

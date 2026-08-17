@@ -2,11 +2,11 @@
 
 ## Purpose
 Cubre el circuito completo de un préstamo: solicitud y asignación de una copia, registro de su condición antes del envío, devolución iniciada por el suscriptor, y recepción, inspección e higienización por parte del operador.
-
 ## Requirements
 ### Requirement: Solicitud y asignación de un set
 El sistema SHALL permitir a un suscriptor elegible solicitar un set disponible y
-asignarle una copia concreta.
+asignarle una copia concreta. La elegibilidad exige **suscripción activa**: no hay
+forma de alquilar sin plan.
 
 #### Scenario: Solicitud con copia disponible
 - **WHEN** un suscriptor elegible solicita un Set con al menos una copia
@@ -17,6 +17,12 @@ asignarle una copia concreta.
 - **WHEN** un suscriptor elegible solicita un Set sin copias disponibles
 - **THEN** se le ofrece entrar en la cola de reservas del Set (ver
   `reservation-queue`)
+
+#### Scenario: Solicitud sin suscripción activa
+- **WHEN** un usuario sin suscripción activa —nunca la tuvo, la pausó o la canceló—
+  solicita un Set
+- **THEN** la solicitud es rechazada indicando que necesita un plan activo
+- **AND** no se le asigna copia ni se le ofrece la cola
 
 ### Requirement: Registro de condición en la entrega
 El sistema SHALL registrar el estado de la copia en el momento de la entrega, antes

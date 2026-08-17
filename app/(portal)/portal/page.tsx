@@ -5,8 +5,9 @@ import { requireSurfacePage } from "@/http/auth-context";
 import { prismaNotificationRepository } from "@/repositories/notification.repository.prisma";
 import { prismaQueueRepository } from "@/repositories/queue.repository.prisma";
 import { prismaRentalRepository } from "@/repositories/rental.repository.prisma";
+import { prismaSubscriptionRepository } from "@/repositories/subscription.repository.prisma";
 
-import { OfferButtons, ReturnButton } from "./portal-actions";
+import { OfferButtons, PlanSwitcher, ReturnButton } from "./portal-actions";
 
 export const metadata = { title: "Mi portal · Clickoteca" };
 
@@ -24,7 +25,7 @@ const RETURNABLE = "ALQUILADA";
 export default async function PortalPage() {
   const { user } = await requireSurfacePage("portal");
 
-  const [rentals, queueEntries, notifications, offers] = await Promise.all([
+  const [rentals, queueEntries, notifications, offers, subscription, plans] = await Promise.all([
     prismaRentalRepository.listForUser(user.id, { activeOnly: true }),
     prismaQueueRepository.listEntriesForUser(user.id),
     prismaNotificationRepository.listForUser(user.id, { limit: 10 }),
@@ -38,7 +39,13 @@ export default async function PortalPage() {
         queueEntry: { select: { set: { select: { name: true } } } },
       },
     }),
+    prismaSubscriptionRepository.findCurrentSubscription(user.id),
+    prismaSubscriptionRepository.listPlans(),
   ]);
+
+  const currentPlan = plans.find((plan) => plan.code === subscription?.planCode);
+  // Solo los planes a los que puede cambiarse: el que ya tiene no es una opción.
+  const otherPlans = plans.filter((plan) => plan.active && plan.code !== subscription?.planCode);
 
   return (
     <section className="flex flex-col gap-8">
@@ -65,6 +72,28 @@ export default async function PortalPage() {
           ))}
         </div>
       ) : null}
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Tu plan</h2>
+        {subscription && subscription.status === "ACTIVE" && currentPlan ? (
+          <div className="space-y-3 rounded-md border p-4">
+            <p className="text-sm">
+              Plan actual: <strong>{currentPlan.name}</strong> · {currentPlan.monthlyPrice} €/mes ·{" "}
+              {currentPlan.maxSimultaneousSets === 1
+                ? "1 set a la vez"
+                : `${currentPlan.maxSimultaneousSets} sets a la vez`}
+            </p>
+            <PlanSwitcher options={otherPlans} />
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--muted-foreground)]">
+            No tienes ningún plan activo, así que no puedes llevarte sets.{" "}
+            <Link href="/planes" className="hover:underline">
+              Ver los planes
+            </Link>
+          </p>
+        )}
+      </div>
 
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">Mis sets</h2>

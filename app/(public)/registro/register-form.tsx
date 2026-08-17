@@ -5,11 +5,14 @@ import { useState } from "react";
 
 import { Terms } from "@/components/terms";
 import { Button } from "@/components/ui/button";
+import type { PublicPlan } from "@/repositories/catalog.repository";
 
 interface FieldIssue {
   field: string;
   issue: string;
 }
+
+const EUR = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 
 /**
  * Definido a nivel de módulo, no dentro del formulario: un componente creado durante
@@ -59,14 +62,30 @@ function Field({
 
 /**
  * Alta de suscriptor. Deliberadamente sobria: la capa visual llega con el diseño de
- * UX (PRD §9); aquí lo que importa es que los tres requisitos del alta —mayoría de
- * edad, condiciones y dirección de envío— se piden y se validan.
+ * UX (PRD §9); aquí lo que importa es que los cuatro requisitos del alta —mayoría de
+ * edad, condiciones, dirección de envío y plan— se piden y se validan.
+ *
+ * El plan llega preseleccionado desde `/planes` (`?plan=PREMIUM`) pero se puede
+ * cambiar aquí mismo: obligar a volver atrás para corregirlo sería un callejón. Si no
+ * viene ninguno **no se preselecciona**: elegir plan es una decisión del visitante, y
+ * un valor por defecto silencioso le contrataría algo que no ha mirado.
  */
-export function RegisterForm() {
+export function RegisterForm({
+  plans,
+  preselectedPlan,
+}: {
+  plans: readonly PublicPlan[];
+  preselectedPlan?: string;
+}) {
   const router = useRouter();
   const [issues, setIssues] = useState<FieldIssue[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [planCode, setPlanCode] = useState(
+    // Solo si el código de la URL corresponde a un plan real: un `?plan=` inventado no
+    // debe dejar el formulario con una selección que el servidor rechazaría.
+    plans.some((plan) => plan.code === preselectedPlan) ? preselectedPlan! : ""
+  );
 
   const issueFor = (field: string) => issues.find((i) => i.field === field)?.issue;
 
@@ -100,6 +119,7 @@ export function RegisterForm() {
             expMonth: Number(text("expMonth")),
             expYear: Number(text("expYear")),
           },
+          planCode,
         }),
       });
 
@@ -127,6 +147,41 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-md flex-col gap-6">
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-2 text-sm font-semibold">Tu plan</legend>
+        {plans.map((plan) => (
+          <label
+            key={plan.code}
+            className="flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm has-checked:border-[var(--foreground)]"
+          >
+            <input
+              type="radio"
+              name="planCode"
+              value={plan.code}
+              className="mt-1"
+              checked={planCode === plan.code}
+              onChange={() => setPlanCode(plan.code)}
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="font-medium">
+                {plan.name} · {EUR.format(Number(plan.monthlyPrice))} / mes
+              </span>
+              <span className="text-[var(--muted-foreground)]">
+                {plan.maxSimultaneousSets === 1
+                  ? "1 set en casa a la vez"
+                  : `${plan.maxSimultaneousSets} sets en casa a la vez`}
+                {plan.queueBonusDays > 0
+                  ? ` · ${plan.queueBonusDays} días de ventaja en las colas`
+                  : ""}
+              </span>
+            </span>
+          </label>
+        ))}
+        {issueFor("planCode") ? (
+          <p className="text-sm text-red-600">{issueFor("planCode")}</p>
+        ) : null}
+      </fieldset>
+
       <fieldset className="flex flex-col gap-4">
         <legend className="mb-2 text-sm font-semibold">Tus datos</legend>
         <Field name="fullName" label="Nombre y apellidos" autoComplete="name" issue={anyIssueFor("fullName")} />

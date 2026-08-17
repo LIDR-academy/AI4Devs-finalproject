@@ -58,6 +58,7 @@ function subscriptionsFor(subscription: ActiveSubscription | null = SUBSCRIPTION
     async findCurrentSubscription() { return subscription; },
     async currentCopyStates() { return []; },
     async updateStatus() { return null; },
+    async changePlan() { return null; },
     async listPlans() { return []; },
     async updatePlan() { return null; },
   };

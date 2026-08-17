@@ -85,11 +85,6 @@ async function seedSystemSettings() {
     restrictedSetMinMonths: 3,
     // D7 — cadencia por defecto de los recordatorios de retención.
     retentionReminderCadenceDays: 7,
-    // D9 — alquiler puntual como % del valor de referencia del Set.
-    oneOffRentalPricePercent: 15,
-    // D9 — importe mínimo del alquiler puntual: un porcentaje sobre un set barato no
-    // llegaría a cubrir el envío.
-    oneOffRentalMinPrice: 9.99,
   };
 
   let created = 0;
@@ -225,7 +220,12 @@ type SeedUser = {
   role: "ADMIN" | "OPERATOR" | "SUBSCRIBER";
   address?: { line1: string; city: string; postalCode: string };
   /** Antigüedad de la suscripción, para ejercitar la regla de sets restringidos (D7). */
-  subscription?: { plan: "BASIC" | "PREMIUM"; startedMonthsAgo: number };
+  subscription?: {
+    plan: "BASIC" | "PREMIUM";
+    startedMonthsAgo: number;
+    /** Por defecto `ACTIVE`; `CANCELLED` sirve para ejercitar el rechazo sin plan. */
+    status?: "ACTIVE" | "CANCELLED";
+  };
 };
 
 const USERS: SeedUser[] = [
@@ -252,7 +252,11 @@ const USERS: SeedUser[] = [
     fullName: "Carla Nieto",
     role: "SUBSCRIBER",
     address: { line1: "Avenida del Puerto 44", city: "Valencia", postalCode: "46023" },
-    // Sin suscripción: cubre el caso de alquiler puntual (D9).
+    // Se dio de baja. Desde que el plan es obligatorio en el alta no existe la "cuenta
+    // de suscriptor sin suscripción", así que quien no tiene plan activo es alguien
+    // que lo canceló: es el fixture del rechazo `NO_ACTIVE_SUBSCRIPTION` al solicitar
+    // un set. Sembrarla sin ninguna fila de suscripción contradiría la propia spec.
+    subscription: { plan: "BASIC", startedMonthsAgo: 6, status: "CANCELLED" },
   },
 ];
 
@@ -300,18 +304,22 @@ async function seedUsers() {
     }
 
     if (seed.subscription) {
-      const existing = await prisma.subscription.findFirst({
-        where: { userId: user.id, status: "ACTIVE" },
-      });
+      // Cualquier suscripción, no solo las activas: una cancelada también es la
+      // suscripción de esa cuenta, y volver a crearla en cada pasada duplicaría filas.
+      const existing = await prisma.subscription.findFirst({ where: { userId: user.id } });
       if (!existing) {
         const plan = await prisma.plan.findUniqueOrThrow({
           where: { code: seed.subscription.plan },
         });
+        const status = seed.subscription.status ?? "ACTIVE";
+        const startedAt = monthsAgo(seed.subscription.startedMonthsAgo);
         await prisma.subscription.create({
           data: {
             userId: user.id,
             planId: plan.id,
-            startedAt: monthsAgo(seed.subscription.startedMonthsAgo),
+            status,
+            startedAt,
+            cancelledAt: status === "CANCELLED" ? monthsAgo(1) : null,
           },
         });
       }

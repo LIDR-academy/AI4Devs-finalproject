@@ -25,6 +25,20 @@ export interface NewSubscriber {
     expMonth: number;
     expYear: number;
   };
+  /**
+   * Plan contratado en el alta. La suscripción entra en la **misma transacción** que
+   * la cuenta (spec `subscriptions` → "Suscripción activa desde el alta"): no existe
+   * el estado "cuenta de suscriptor sin suscripción", así que tampoco puede existir el
+   * instante intermedio en que la cuenta ya está creada y la suscripción no.
+   *
+   * Llega resuelto a `planId` —UUID— porque el código del plan ya lo validó el caso de
+   * uso contra el puerto de suscripciones; el adaptador no vuelve a decidir qué planes
+   * son contratables.
+   */
+  subscription: {
+    planId: string;
+    startedAt: Date;
+  };
 }
 
 export type CreateSubscriberOutcome =
@@ -34,9 +48,10 @@ export type CreateSubscriberOutcome =
 
 export interface SubscriberRepository {
   /**
-   * Crea la cuenta con su dirección y su método de pago **en una transacción**: un
-   * suscriptor sin dirección de envío no es un alta a medias, es un alta inválida
-   * (la spec la rechaza), así que las tres filas entran juntas o no entra ninguna.
+   * Crea la cuenta con su dirección, su método de pago y su suscripción **en una
+   * transacción**: un suscriptor sin dirección de envío —o sin plan— no es un alta a
+   * medias, es un alta inválida (la spec la rechaza), así que las cuatro filas entran
+   * juntas o no entra ninguna.
    */
   createSubscriber(input: NewSubscriber): Promise<CreateSubscriberOutcome>;
 }

@@ -66,7 +66,9 @@ export default async function PlansPage() {
               </li>
             </ul>
             <Button asChild className="mt-auto">
-              <Link href="/registro">Empezar con {plan.name}</Link>
+              {/* El plan viaja en la URL: quien lo eligió aquí no debería tener que
+                  volver a elegirlo en el alta. Se puede cambiar allí igualmente. */}
+              <Link href={`/registro?plan=${plan.code}`}>Empezar con {plan.name}</Link>
             </Button>
           </li>
         ))}

@@ -48,9 +48,9 @@ Repositorio público en GitHub: https://github.com/xaviverges/AI4Devs-finalproje
 
 Los sets de Lego son caros, se montan una vez y luego ocupan espacio: coste +
 almacenamiento + "ya me aburrí". **Clickoteca** resuelve ese dolor con un modelo
-de **biblioteca por suscripción**: el usuario paga una cuota mensual (o un
-alquiler puntual) para disfrutar sets sin comprarlos ni quedárselos —los recibe,
-los monta, los devuelve y pide el siguiente—.
+de **biblioteca por suscripción**: el usuario paga una cuota mensual para
+disfrutar sets sin comprarlos ni quedárselos —los recibe, los monta, los devuelve
+y pide el siguiente—.
 
 - **Para quién:** aficionados al Lego (adultos) que quieren rotar sets sin
   acumularlos, y el equipo de **back-office** (operadores y admin) que gestiona el
@@ -73,9 +73,12 @@ los monta, los devuelve y pide el siguiente—.
   dificultad), consulta los planes y puede darse de alta. La **disponibilidad** y
   todo lo de nivel copia/cola exigen login.
 - **Alta y suscripción:** registro con declaración de mayoría de edad, tarjeta
-  (simulada), dirección de envío obligatoria y aceptación de condiciones. Planes
-  **BASIC** (1 set simultáneo) y **PREMIUM** (hasta 2 + bono de cola), o
-  **alquiler puntual** sin suscripción.
+  (simulada), dirección de envío obligatoria, aceptación de condiciones y
+  **elección de plan** —**BASIC** (1 set simultáneo) o **PREMIUM** (hasta 2 + bono
+  de cola)—, todo en la misma transacción: no existe la cuenta sin plan. El plan se
+  puede cambiar después (`BASIC ⇄ PREMIUM`), y bajar exige haber devuelto los sets
+  que no quepan en el nuevo. **Alquilar exige plan activo**: el alquiler puntual sin
+  suscripción salió del alcance el 2026-08-16.
 - **Catálogo e inventario en dos niveles:** **Set** (modelo de catálogo, no
   publicable sin valor de referencia) vs. **Copia** (unidad física con su propio
   ciclo de vida de 9 estados: `INTAKE → DISPONIBLE ⇄ OFRECIDA → ALQUILADA →
@@ -170,7 +173,7 @@ incompletas, en alta y de baja) y **5 cuentas**, una por rol:
 | `operador@clickoteca.test` | OPERATOR | Cola de trabajo del back-office |
 | `ana@example.test` | SUBSCRIBER | Premium con 8 meses — supera la antigüedad mínima |
 | `bruno@example.test` | SUBSCRIBER | Basic con 1 mes — **no** llega a la antigüedad mínima |
-| `carla@example.test` | SUBSCRIBER | Sin suscripción — cubre el alquiler puntual |
+| `carla@example.test` | SUBSCRIBER | Suscripción **cancelada** — sin plan activo, no puede alquilar |
 
 Contraseña común: `clickoteca` (solo desarrollo). Las tres antigüedades distintas
 están elegidas para poder ejercitar la regla de sets restringidos (D7) sin tocar la
@@ -680,7 +683,7 @@ Claves: **PK** primaria, **FK** foránea, **UK** única. Todos los `id` son `uui
 | **Set** | Modelo de catálogo (semilla Rebrickable). No publicable sin `referenceValue`. | `referenceValue` **not null**, `restricted`, `published`; FK `themeId`. 1—N con `Copy` y `ReservationQueueEntry`. |
 | **Copy** | Unidad física concreta de un Set; portadora del estado del ciclo de vida (9 estados). | `state` (enum `CopyState`); FK `setId`. 1—N con `Rental`, `ConditionReport`, `Incident`, `CopyStateTransition`. |
 | **Subscription** | Suscripción de un usuario a un plan. | `status` (ACTIVE/PAUSED/CANCELLED); FK `userId`, `planId`. |
-| **Rental** | Alquiler de una copia por un usuario. `subscriptionId` nulo ⇒ alquiler puntual. | `type` (SUBSCRIPTION/ONE_OFF), `shippingAddress` (snapshot JSON inmutable), `price` (solo puntual); FK `copyId`, `userId`, `subscriptionId?`. 1—1 opcional con `ReservationOffer`. |
+| **Rental** | Alquiler de una copia por un usuario; siempre nace de una suscripción. | `type` (siempre `SUBSCRIPTION` desde 2026-08-16), `shippingAddress` (snapshot JSON inmutable), `price` (heredado del puntual, ya no se puebla); FK `copyId`, `userId`, `subscriptionId?`. 1—1 opcional con `ReservationOffer`. |
 | **ReservationQueueEntry** | Entrada en la cola de un Set. Una cola por Set. | `effectiveEntryAt` **inmutable** (`enqueuedAt − appliedBonus`; orden sin recálculo, D11), `appliedBonus`, `priorityPenalty`, `status`; FK `setId`, `userId`. |
 | **ReservationOffer** | Oferta de una copia al cabeza de cola dentro de la ventana de confirmación. Una entrada puede recibir varias ofertas. | `windowExpiresAt`, `status`; FK `queueEntryId`, `copyId`, `rentalId?` **UK**. |
 

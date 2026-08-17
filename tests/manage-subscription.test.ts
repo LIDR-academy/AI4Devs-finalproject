@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CopyState } from "@/domain/copy/lifecycle";
 import { ForbiddenError, InvariantViolationError, NotFoundError, ValidationError } from "@/domain/errors";
+import { effectiveEntryOnEnqueue, orderQueue } from "@/domain/reservation-queue/ordering";
 import type {
   ActiveSubscription,
   PlanConfig,
@@ -9,6 +10,7 @@ import type {
 } from "@/repositories/subscription.repository";
 import type { RetentionCandidate, RetentionConfig, RetentionRepository } from "@/repositories/retention.repository";
 import {
+  changePlan,
   changeSubscriptionStatus,
   updatePlanConfig,
 } from "@/use-cases/subscriptions/manage-subscription";
@@ -42,6 +44,18 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   async updateStatus(_id: string, status: "ACTIVE" | "PAUSED" | "CANCELLED") {
     if (!this.subscription) return null;
     this.subscription = { ...this.subscription, status };
+    return this.subscription;
+  }
+  async changePlan(_id: string, planId: string) {
+    if (!this.subscription) return null;
+    const plan = this.plans.find((p) => p.id === planId);
+    if (!plan) return null;
+    this.subscription = {
+      ...this.subscription,
+      planCode: plan.code,
+      maxSimultaneousSets: plan.maxSimultaneousSets,
+      queueBonusDays: plan.queueBonusDays,
+    };
     return this.subscription;
   }
   async listPlans() {
@@ -112,6 +126,105 @@ describe("pausar o cancelar la suscripción", () => {
     await expect(
       changeSubscriptionStatus(deps(null), { userId: "user-1", status: "PAUSED" })
     ).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("cambio de plan", () => {
+  const PREMIUM: ActiveSubscription = {
+    ...SUBSCRIPTION,
+    planCode: "PREMIUM",
+    maxSimultaneousSets: 2,
+    queueBonusDays: 10,
+  };
+
+  it("subir de plan es inmediato aunque tenga sets fuera", async () => {
+    const d = deps(SUBSCRIPTION, ["ALQUILADA"]);
+    const updated = await changePlan(d, { userId: "user-1", planCode: "PREMIUM" });
+
+    expect(updated).toMatchObject({ planCode: "PREMIUM", maxSimultaneousSets: 2 });
+  });
+
+  it("bajar de plan se permite si lo que ocupa cabe en el plan nuevo", async () => {
+    const d = deps(PREMIUM, ["ALQUILADA"]);
+    const updated = await changePlan(d, { userId: "user-1", planCode: "BASIC" });
+
+    expect(updated).toMatchObject({ planCode: "BASIC", maxSimultaneousSets: 1 });
+  });
+
+  it("bajar de plan con exceso se rechaza diciendo cuántos sets devolver", async () => {
+    const d = deps(PREMIUM, ["ALQUILADA", "ALQUILADA"]);
+    const error = await changePlan(d, { userId: "user-1", planCode: "BASIC" }).catch(
+      (caught: unknown) => caught
+    );
+
+    expect(error).toBeInstanceOf(InvariantViolationError);
+    // Código propio: lo que resuelve esto es devolver un set, no reactivar un plan.
+    expect((error as InvariantViolationError).code).toBe("PLAN_DOWNGRADE_BLOCKED");
+    expect((error as InvariantViolationError).message).toContain("1 set");
+    // Y no se ha cambiado nada.
+    expect((await d.subscriptions.findCurrentSubscription())?.planCode).toBe("PREMIUM");
+  });
+
+  it("una copia en devolución sigue ocupando plaza y también bloquea la bajada", async () => {
+    // La plaza no se libera al iniciar la devolución, sino al volver a DISPONIBLE.
+    const d = deps(PREMIUM, ["ALQUILADA", "EN_INSPECCION"]);
+    await expect(
+      changePlan(d, { userId: "user-1", planCode: "BASIC" })
+    ).rejects.toBeInstanceOf(InvariantViolationError);
+  });
+
+  it("pedir el plan que ya se tiene no cambia nada ni deja rastro de auditoría", async () => {
+    const d = deps(SUBSCRIPTION, []);
+    const updated = await changePlan(d, { userId: "user-1", planCode: "BASIC" });
+
+    expect(updated).toMatchObject({ planCode: "BASIC" });
+    expect(d.audit.entries).toHaveLength(0);
+  });
+
+  it("registra el cambio con el antes y el después", async () => {
+    const d = deps(SUBSCRIPTION, []);
+    await changePlan(d, { userId: "user-1", planCode: "PREMIUM" });
+
+    expect(d.audit.entries[0]).toMatchObject({
+      action: "subscription.plan_changed",
+      entityType: "Subscription",
+      entityId: "sub-1",
+      actorId: "user-1",
+    });
+    const metadata = d.audit.entries[0].metadata as {
+      before: { planCode: string };
+      after: { planCode: string };
+    };
+    expect(metadata.before.planCode).toBe("BASIC");
+    expect(metadata.after.planCode).toBe("PREMIUM");
+  });
+
+  it("404 si no hay suscripción que cambiar", async () => {
+    await expect(
+      changePlan(deps(null), { userId: "user-1", planCode: "PREMIUM" })
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("no reordena las colas vivas: el bono se congeló al encolar (D11)", async () => {
+    const enqueuedAt = new Date("2026-06-01T10:00:00.000Z");
+    // Se encoló siendo BASIC, así que su bono aplicado fue 0.
+    const mine = { id: "entry-2", effectiveEntryAt: effectiveEntryOnEnqueue(enqueuedAt, 0) };
+    const whoWaitedLonger = {
+      id: "entry-1",
+      effectiveEntryAt: new Date("2026-05-30T10:00:00.000Z"),
+    };
+
+    const d = deps(SUBSCRIPTION, []);
+    await changePlan(d, { userId: "user-1", planCode: "PREMIUM" });
+
+    // El caso de uso no recibe siquiera un puerto de colas: no hay por dónde
+    // recalcular. La entrada conserva la entrada efectiva que se fijó al encolar…
+    expect(mine.effectiveEntryAt).toEqual(enqueuedAt);
+    // …y quien llevaba más esperando sigue delante, pese a los 10 días del plan nuevo.
+    expect(orderQueue([mine, whoWaitedLonger]).map((entry) => entry.id)).toEqual([
+      "entry-1",
+      "entry-2",
+    ]);
   });
 });
 

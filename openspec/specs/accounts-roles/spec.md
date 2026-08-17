@@ -2,7 +2,6 @@
 
 ## Purpose
 Define quién puede hacer qué en Clickoteca: los tres roles de cuenta (SUBSCRIBER, OPERATOR, ADMIN), el visitante como actor no autenticado, los requisitos del alta de suscriptor y el rastro de auditoría de las acciones administrativas.
-
 ## Requirements
 ### Requirement: Roles del sistema
 El sistema SHALL soportar tres roles: `SUSCRIPTOR`, `OPERADOR` y `ADMIN`. Cada
@@ -73,6 +72,7 @@ legales se muestran como texto de relleno.
 #### Scenario: Alta de suscriptor
 - **WHEN** un usuario se da de alta como suscriptor
 - **THEN** debe declarar ser mayor de edad y aportar una tarjeta (simulada)
+- **AND** debe elegir un plan de suscripción (ver `subscriptions`)
 - **AND** se le presentan las condiciones legales (texto *lorem ipsum* en el MVP)
 
 ### Requirement: Datos de envío del suscriptor

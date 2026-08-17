@@ -26,6 +26,19 @@ export const prismaSubscriberRepository: SubscriberRepository = {
           data: { userId: created.id, ...input.card, isDefault: true },
         });
 
+        // La suscripción, aquí dentro: si su inserción falla, la transacción deshace
+        // también la cuenta y el usuario reintenta. Fuera de la transacción quedaría
+        // una cuenta que no puede alquilar y que nadie sabe reparar desde la interfaz
+        // — justo el estado que este cambio elimina (design.md §1).
+        await tx.subscription.create({
+          data: {
+            userId: created.id,
+            planId: input.subscription.planId,
+            status: "ACTIVE",
+            startedAt: input.subscription.startedAt,
+          },
+        });
+
         return created;
       });
 

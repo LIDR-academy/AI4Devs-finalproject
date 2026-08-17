@@ -74,6 +74,7 @@ function subscriptionsFor(
     async findCurrentSubscription() { return subscription; },
     async currentCopyStates() { return states as never; },
     async updateStatus() { return null; },
+    async changePlan() { return null; },
     async listPlans() { return []; },
     async updatePlan() { return null; },
   };
@@ -167,23 +168,53 @@ describe("solicitud y asignación (5.1)", () => {
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 
-  it("permite el alquiler puntual a quien no tiene suscripción, y lo cobra", async () => {
-    await requestSet(
+  // ── Alquilar exige plan activo ─────────────────────────────────────────────
+  // Estos tres reemplazan a los del alquiler puntual: la vía sin suscripción se retiró
+  // (`plan-obligatorio-en-alta`) y lo que hay que fijar ahora es el rechazo.
+
+  it("rechaza a quien no tiene ninguna suscripción, sin tocar el inventario", async () => {
+    const error = await requestSet(
       { rentals, subscriptions: subscriptionsFor([], null), sets, settings, now: () => AT },
       { userId: "user-1", setId: "set-1" }
-    );
-    // 15 % de 100 € = 15 €, por encima del mínimo.
-    expect(rentals.rentals[0]).toMatchObject({ type: "ONE_OFF", price: "15.00" });
+    ).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InvariantViolationError);
+    // Código propio: esto se arregla contratando un plan, no devolviendo un set.
+    expect((error as InvariantViolationError).code).toBe("NO_ACTIVE_SUBSCRIPTION");
+    expect((await copies.findById("copy-1"))?.state).toBe("DISPONIBLE");
+    expect(rentals.rentals).toHaveLength(0);
   });
 
-  it("el alquiler puntual admite un set a la vez", async () => {
-    const withOne = subscriptionsFor(["ALQUILADA"], null);
-    await expect(
-      requestSet({ rentals, subscriptions: withOne, sets, settings, now: () => AT }, {
-        userId: "user-1",
-        setId: "set-1",
-      })
-    ).rejects.toBeInstanceOf(InvariantViolationError);
+  it("rechaza también a quien la pausó o la canceló", async () => {
+    for (const status of ["PAUSED", "CANCELLED"] as const) {
+      const inactive = subscriptionsFor([], { ...SUBSCRIPTION, status });
+      const error = await requestSet(
+        { rentals, subscriptions: inactive, sets, settings, now: () => AT },
+        { userId: "user-1", setId: "set-1" }
+      ).catch((caught: unknown) => caught);
+
+      expect((error as InvariantViolationError).code).toBe("NO_ACTIVE_SUBSCRIPTION");
+    }
+  });
+
+  it("el tope de plan se distingue de la falta de plan", async () => {
+    // La acción que resuelve cada caso es distinta, así que el código también.
+    const atLimit = subscriptionsFor(["ALQUILADA", "ALQUILADA"]);
+    const error = await requestSet(
+      { rentals, subscriptions: atLimit, sets, settings, now: () => AT },
+      { userId: "user-1", setId: "set-1" }
+    ).catch((caught: unknown) => caught);
+
+    expect((error as InvariantViolationError).code).toBe("NOT_ELIGIBLE");
+  });
+
+  it("todo alquiler nace de un plan: sin precio y con su suscripción", async () => {
+    await requestSet(
+      { rentals, subscriptions: subscriptionsFor(), sets, settings, now: () => AT },
+      { userId: "user-1", setId: "set-1" }
+    );
+    // `price` sigue existiendo en el esquema (design.md §3) pero ya no se puebla.
+    expect(rentals.rentals[0]).toMatchObject({ type: "SUBSCRIPTION", price: null });
   });
 });
 

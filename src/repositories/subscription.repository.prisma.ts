@@ -97,6 +97,20 @@ export const prismaSubscriptionRepository: SubscriptionRepository = {
     return row ? toSubscription(row as SubscriptionRow) : null;
   },
 
+  async changePlan(subscriptionId, planId) {
+    const { count } = await prisma.subscription.updateMany({
+      where: { id: subscriptionId },
+      data: { planId },
+    });
+    if (count === 0) return null;
+
+    const row = await prisma.subscription.findUnique({
+      where: { id: subscriptionId },
+      select: SUBSCRIPTION_SELECT,
+    });
+    return row ? toSubscription(row as SubscriptionRow) : null;
+  },
+
   async listPlans() {
     const rows = await prisma.plan.findMany({ orderBy: { monthlyPrice: "asc" } });
     return rows.map(toPlan);

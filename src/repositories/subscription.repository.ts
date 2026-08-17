@@ -40,6 +40,14 @@ export interface SubscriptionRepository {
     at: Date
   ): Promise<ActiveSubscription | null>;
 
+  /**
+   * Mueve la suscripción a otro plan. Devuelve `null` si ya no existe.
+   *
+   * No toca las entradas de cola: `appliedBonus` y `effectiveEntryAt` se congelan al
+   * encolar (D11), así que cambiar de plan no reordena ninguna cola en curso.
+   */
+  changePlan(subscriptionId: string, planId: string): Promise<ActiveSubscription | null>;
+
   listPlans(): Promise<readonly PlanConfig[]>;
 
   updatePlan(

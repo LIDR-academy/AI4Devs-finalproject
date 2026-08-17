@@ -13,8 +13,6 @@ const LABELS: Record<string, string> = {
   maxQueuesPerUser: "Colas simultáneas por usuario",
   restrictedSetMinMonths: "Antigüedad mínima para sets restringidos (meses)",
   retentionReminderCadenceDays: "Cadencia de los recordatorios de retención (días)",
-  oneOffRentalPricePercent: "Alquiler puntual (% del valor de referencia)",
-  oneOffRentalMinPrice: "Importe mínimo del alquiler puntual (€)",
 };
 
 export function SettingsForm({ settings }: { settings: Record<string, number> }) {

@@ -6,7 +6,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/domain/errors";
-import { canEndSubscription } from "@/domain/subscriptions/eligibility";
+import { canEndSubscription, canSwitchToPlan } from "@/domain/subscriptions/eligibility";
 import type { AuditRepository } from "@/repositories/audit.repository";
 import type {
   ActiveSubscription,
@@ -50,6 +50,64 @@ export async function changeSubscriptionStatus(
 
   const updated = await subscriptions.updateStatus(subscription.id, input.status, now());
   if (!updated) throw new NotFoundError("No tienes ninguna suscripción activa.");
+  return updated;
+}
+
+/**
+ * Cambia de plan la suscripción del propio usuario (spec `subscriptions` → "Cambio de
+ * plan").
+ *
+ * Subir es inmediato. Bajar se rechaza mientras ocupe más plazas de las que permite el
+ * plan destino, y no porque exista una comprobación aparte: es el **mismo** límite de
+ * plazas medido contra el plan nuevo (`canSwitchToPlan`).
+ *
+ * Lo que **no** hace, deliberadamente: recalcular las colas. `appliedBonus` se congela
+ * al encolar (D11), así que hacerse premium no adelanta una espera ya empezada.
+ */
+export async function changePlan(
+  { subscriptions, audit, now = () => new Date() }: ManageSubscriptionDeps,
+  input: { userId: string; planCode: "BASIC" | "PREMIUM" }
+): Promise<ActiveSubscription> {
+  const subscription = await subscriptions.findCurrentSubscription(input.userId);
+  if (!subscription) throw new NotFoundError("No tienes ninguna suscripción activa.");
+
+  // Pedir el plan que ya se tiene no es un error: simplemente no pasa nada, y sobre
+  // todo no se escribe una entrada de auditoría de un cambio que no ha ocurrido.
+  if (subscription.planCode === input.planCode) return subscription;
+
+  const target = (await subscriptions.listPlans()).find(
+    (plan) => plan.code === input.planCode && plan.active
+  );
+  if (!target) throw new NotFoundError("El plan no existe o ya no se ofrece.");
+
+  const states = await subscriptions.currentCopyStates(input.userId);
+  const verdict = canSwitchToPlan(states, target.maxSimultaneousSets);
+  if (!verdict.allowed) {
+    throw new InvariantViolationError("PLAN_DOWNGRADE_BLOCKED", verdict.detail);
+  }
+
+  // Copia, no referencia: si el repositorio actualizara la suscripción mutando el
+  // mismo objeto, la auditoría registraría el plan nuevo como si fuera el anterior
+  // (trampa ya encontrada al auditar los planes).
+  const before = { ...subscription };
+
+  const updated = await subscriptions.changePlan(subscription.id, target.id);
+  if (!updated) throw new NotFoundError("No tienes ninguna suscripción activa.");
+
+  await audit.record({
+    actorId: input.userId,
+    action: "subscription.plan_changed",
+    entityType: "Subscription",
+    // UUID de la suscripción; el código legible del plan va en `metadata`, porque
+    // `AuditLog.entityId` es una columna UUID y un "PREMIUM" revienta la inserción.
+    entityId: updated.id,
+    metadata: {
+      before: { planCode: before.planCode, maxSimultaneousSets: before.maxSimultaneousSets },
+      after: { planCode: updated.planCode, maxSimultaneousSets: updated.maxSimultaneousSets },
+    },
+    at: now(),
+  });
+
   return updated;
 }
 

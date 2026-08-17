@@ -566,3 +566,40 @@ MODIFIED no pueden coincidir** sobre el mismo requisito, así que un renombrado 
 cambio de contenido se expresa como REMOVED + ADDED. Se corrigió además
 `npm run spec:validate`, que apuntaba al cambio ya archivado y fallaba, por
 `openspec validate --all --strict`. Todo en verde: **7 items, 0 fallos**.
+
+### [2026-08-17] — Implementación de `plan-obligatorio-en-alta` (18/18)
+**Prompt:** "sigamos".
+**Resumen de la respuesta:** Se implementó entero el cambio que estaba propuesto y sin
+ejecutar. **(1) Alta con plan:** `registerSubscriber` acepta `planCode`, lo valida
+contra los planes activos y acumula el fallo en `errors[]`; la suscripción `ACTIVE` se
+crea **dentro de la transacción existente** del alta (usuario + dirección + tarjeta +
+suscripción, o ninguna de las cuatro). Interfaz: selector de plan en `/registro` con los
+planes leídos de la base, plan preseleccionado por `?plan=` desde `/planes` y cambiable
+sin volver atrás; **sin valor por defecto**, para que elegir plan siga siendo una
+decisión y no un descuido. **(2) Cambio de plan:** caso de uso `changePlan` +
+`PUT /api/subscriptions/me` ampliado con `planCode` (sigue resolviendo siempre la
+suscripción del usuario en sesión), sección "Tu plan" en el portal con el aviso de que
+las colas vivas **no** se reordenan (D11), y auditoría con el antes/después copiado.
+**(3) Retirada del alquiler puntual:** fuera `checkOneOffEligibility`,
+`computeOneOffPrice` (fichero borrado), la bifurcación de `requestSet`, los dos
+`SystemSetting` y sus campos en el formulario del admin; los tests que probaban la vía
+puntual se **convirtieron** en pruebas del rechazo. **(4) Semilla y cierre:** Carla pasa
+a tener suscripción **CANCELLED** —desde este cambio no existe la cuenta de suscriptor
+sin suscripción, así que sembrarla sin ninguna contradiría la spec— y el E2E arranca en
+un alta con plan y cambia de plan en el portal.
+**Decisiones tomadas al implementar:** (a) la creación de la suscripción se delega en el
+**puerto** de suscripciones (validación del plan) y la escribe el adaptador dentro del
+`$transaction`, en vez de invocar un caso de uso dentro de la transacción, que invertiría
+la dirección de dependencias; (b) **dos códigos de error nuevos**,
+`NO_ACTIVE_SUBSCRIPTION` y `PLAN_DOWNGRADE_BLOCKED`, porque lo que resuelve cada rechazo
+es distinto —contratar plan, o devolver un set—, y el segundo dice **cuántos** devolver;
+(c) `canSwitchToPlan` no bifurca por dirección del cambio: mide lo que ocupa plaza contra
+el límite del plan destino, así que subir pasa solo.
+**Lo que encontró el E2E y no encontraron los unitarios:** con `planCode: z.string(msg)`
+la cadena vacía pasaba el esquema del borde, así que el error del plan **no** aparecía
+junto al resto del formulario; hizo falta `.min(1, msg)`. Verificado además contra la
+base sembrada: alta sin plan y con plan inexistente (422 con mensajes distintos), alta
+correcta con suscripción activa, subida y bajada de plan, cuenta sin plan activo
+rechazada al pedir un set (409) y bajada bloqueada con dos sets fuera (409).
+**Verde:** `tsc`, `eslint`, 275 tests unitarios, 10 E2E, `next build` y
+`openspec validate --all --strict`.

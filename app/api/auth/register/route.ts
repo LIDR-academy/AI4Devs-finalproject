@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ValidationError } from "@/domain/errors";
 import { toProblemResponse } from "@/http/problem";
 import { prismaSubscriberRepository } from "@/repositories/subscriber.repository.prisma";
+import { prismaSubscriptionRepository } from "@/repositories/subscription.repository.prisma";
 import { registerSubscriber } from "@/use-cases/accounts/register-subscriber";
 
 const INSTANCE = "/api/auth/register";
@@ -33,6 +34,18 @@ const RegisterSchema = z.object({
     expMonth: z.number().int().min(1).max(12),
     expYear: z.number().int().min(2026).max(2100),
   }),
+
+  // El plan es obligatorio: el alta deja la cuenta operativa o no es un alta (spec
+  // `subscriptions` → "Suscripción activa desde el alta").
+  //
+  // Aquí solo se exige que sea texto. **Qué planes son contratables lo decide la tabla
+  // de planes**, no una lista repetida en el borde: con un `z.enum` fijo, un plan
+  // retirado por el admin seguiría pasando la validación, y "no has elegido plan" y
+  // "ese plan ya no se ofrece" acabarían dando el mismo mensaje.
+  // El `min(1)` es lo que hace que "no has elegido plan" salga **junto** al resto de
+  // errores del formulario: sin él, un `planCode` vacío pasaría el esquema del borde y
+  // el fallo llegaría solo, en una segunda vuelta, cuando el caso de uso lo mirara.
+  planCode: z.string("Debes elegir un plan de suscripción.").trim().min(1, "Debes elegir un plan de suscripción."),
 });
 
 export async function POST(request: Request) {
@@ -54,14 +67,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const { userId } = await registerSubscriber(
-      { repository: prismaSubscriberRepository },
+    const { userId, planCode } = await registerSubscriber(
+      {
+        repository: prismaSubscriberRepository,
+        subscriptions: prismaSubscriptionRepository,
+      },
       parsed.data
     );
 
     // 201 con el destino: no se abre sesión automáticamente, el alta y el acceso son
     // dos pasos distintos.
-    return Response.json({ userId, redirectTo: "/login" }, { status: 201 });
+    return Response.json({ userId, planCode, redirectTo: "/login" }, { status: 201 });
   } catch (error) {
     return toProblemResponse(error, INSTANCE);
   }
