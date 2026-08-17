@@ -67,8 +67,28 @@ repo must follow — always with a real code example pulled from this repository
   client-writable array; plus the list
   of template patterns verified already safe (no `{!! !!}`, Flux's own escaping, literal-only `__()`
   keys, and why `@close="closeModal"` is not a dead handler).
+- [Login-time account-status enforcement](login-status-enforcement.md) — the rules that follow from
+  task 0007 turning `users.status` into an authentication control: why every `Inactive` → `Active`
+  transition is now a privilege grant (and why `ActivateVerifiedUser`'s `Suspended`-only guard does
+  not cover an administrator's *deactivation*), the four vendor `$guard->login()` call sites and which
+  of the three enforcement points reaches each, why a custom `Fortify::authenticateUsing()` callback
+  must resolve credentials through the guard's `UserProvider` (soft-delete scope + password rehash),
+  why the refusal must be thrown only *after* credentials verify and must never name the status, why a
+  status-blocked attempt counts toward the limiter only because `fortify.limiters.login` moves it to
+  route middleware, why rejecting on the `Login` event alone is silently undone by
+  `SessionGuard::login()`'s very next line, and — from the re-audit — why the pre-save value a
+  `Verified` listener needs is `getPrevious()` and **never** `getOriginal()` (`finishSave()` calls
+  `syncOriginal()` after every successful save), with the four constraints that come with it, plus
+  the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-16 — Added `blade-livewire-output-encoding.md` from the Phase 4 audit of task
+_Last updated: 2026-08-17 — Phase 4 re-audit of task 0007: expanded the `login-status-enforcement.md`
+entry for the `getPrevious()`-not-`getOriginal()` rule (which replaced that page's own disproven
+first recommendation) and the nullable passkey-callback rule._
+
+_Previously: 2026-08-17 — Added `login-status-enforcement.md` from the Phase 4 audit of task 0007
+(non-active status blocks sign-in)._
+
+_Previously: 2026-08-16 — Added `blade-livewire-output-encoding.md` from the Phase 4 audit of task
 0006 (Users list + create/edit modal UI)._
 
 _Previously: 2026-08-16 — Added `ci-workflow-hardening.md` from the Phase 4 audit of task 0006b

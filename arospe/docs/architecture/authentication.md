@@ -9,6 +9,9 @@ Cross-cutting concern — this is the single source of truth for how authenticat
 - [Registration & password reset](#registration--password-reset)
 - [Account status and activation](#account-status-and-activation)
   - [A deleted account stops authenticating, by scope rather than by check](#a-deleted-account-stops-authenticating-by-scope-rather-than-by-check)
+- [Sign-in: the account-status block](#sign-in-the-account-status-block)
+  - [What the refusal does and does not disclose](#what-the-refusal-does-and-does-not-disclose)
+  - [What is deliberately not covered](#what-is-deliberately-not-covered)
 - [Pending email changes](#pending-email-changes)
 - [Two-factor authentication flow](#two-factor-authentication-flow)
 - [Passkeys](#passkeys)
@@ -85,7 +88,9 @@ public function reset(User $user, array $input): void
 }
 ```
 
-The `$wasUnverified` branch is what makes this action double as the **invitation** path. Fortify's reset flow does not mark emails verified, so without it an invitee who set their password would stay `email_verified_at = null` forever — which would (a) leave them `Inactive` and, once the sign-in block story lands, permanently unable to log in, and (b) make them invisible to `RolePermissionSeeder`'s `whereNotNull('email_verified_at')` Super Admin lookup. An *already-verified* user doing a genuine forgot-password reset is untouched on both columns. The `Verified` event it fires is what performs the status transition — see [Account status and activation](#account-status-and-activation) below.
+The `$wasUnverified` branch is what makes this action double as the **invitation** path. Fortify's reset flow does not mark emails verified, so without it an invitee who set their password would stay `email_verified_at = null` forever — which would (a) leave them `Inactive` and therefore, since task 0007, permanently **unable to sign in at all** (see [Sign-in: the account-status block](#sign-in-the-account-status-block)), and (b) make them invisible to `RolePermissionSeeder`'s `whereNotNull('email_verified_at')` Super Admin lookup. An *already-verified* user doing a genuine forgot-password reset is untouched on both columns. The `Verified` event it fires is what performs the status transition — see [Account status and activation](#account-status-and-activation) below.
+
+> The `save()` immediately above that `event(new Verified($user))` is load-bearing, and both this action and `ConfirmEmailChange` carry a comment saying so: `ActivateVerifiedUser` reads the pre-save `email_verified_at` out of `getPrevious()`, which the *next* dirty save would overwrite. Do not insert another `save()` between the write and the event.
 
 Validation rules are centralized so every entry point (registration, password reset, profile update, in-settings password change) stays consistent:
 
@@ -131,6 +136,14 @@ public function handle(Verified $event): void
         return;
     }
 
+    $previous = $user->getPrevious();
+
+    $neverVerified = array_key_exists('email_verified_at', $previous) && is_null($previous['email_verified_at']);
+
+    if (! $neverVerified) {
+        return;
+    }
+
     $user->status = UserStatus::Active;
     $user->save();
 }
@@ -141,7 +154,8 @@ Three flows converge on this single listener rather than each re-implementing th
 ```mermaid
 stateDiagram-v2
     [*] --> Inactive: self-registration (column default)
-    Inactive --> Active: Verified event → ActivateVerifiedUser
+    Inactive --> Active: Verified event, first verification only
+    Inactive --> Inactive: Verified event, previously verified (no-op)
     Active --> Active: Verified event (no-op)
     Suspended --> Suspended: Verified event (never reactivates)
     note right of Inactive
@@ -149,18 +163,121 @@ stateDiagram-v2
         - Fortify's verification.verify
         - ResetUserPassword (invitation)
         - ConfirmEmailChange (pending email)
+        Only Active grants a session — see
+        Sign-in: the account-status block
     end note
 ```
 
-Two guards in that listener are load-bearing and must survive any refactor: the `instanceof User` check (the `Verified` event's constructor has no native type hint, so a non-`User` authenticatable would otherwise reach `->status`), and the `Inactive`-only condition, which is what stops a verification from silently undoing an administrator's suspension.
+**Three** guards in that listener are load-bearing and must survive any refactor. Since task 0007 they are not merely correctness details: `Inactive` now denies sign-in, so this listener is the only code in the app that can lift an administrator's block, and every guard below is a privilege-escalation control.
+
+1. **`instanceof User`.** The `Verified` event's constructor has no native type hint, so a non-`User` authenticatable would otherwise reach `->status`.
+2. **The `Inactive`-only condition.** This one protects `Suspended` (and makes the listener a no-op on an already-`Active` user) — it does **not**, on its own, stop a verification undoing an administrator's decision, because `Inactive` is equally a state an administrator can set from the Users editor. Getting that distinction wrong is exactly what guard 3 exists to fix.
+3. **The `getPrevious()['email_verified_at']` never-verified check.** `Inactive` carries two meanings this schema does not distinguish — "has never proved their mailbox" (self-registration, invitation) and "an administrator turned this account off". Only the first is activation-worthy, and proof of mailbox control says nothing about the second. Without this check, a deactivated user could reactivate themselves with nothing but a still-valid pending-email link, which needs no session at all.
+
+The pre-change value must come from **`getPrevious()`, never `getOriginal()`** — `Model::save()` ends in `finishSave()`, which calls `syncOriginal()` after every successful save, so by the time a listener runs `getOriginal()` already holds the value that was just written. The full derivation, the four constraints `getPrevious()` imposes (fail closed on an absent key, one dirty save between the write and the event, empty after an insert, lost by a queued listener), and the reason this is a security rule rather than a modelling nit are in [security/login-status-enforcement.md](../security/login-status-enforcement.md#status-is-now-an-access-control-state--every-inactive--active-transition-is-a-privilege-grant) — not repeated here.
 
 > The invariant constrains **automatic** activation, not an administrator's authority. An administrator creating a user in the Users editor may deliberately set `Active` with the address still unverified; that is an authorized, human-audited act, not a self-activation.
 
-`App\Models\User` does **not** implement `MustVerifyEmail` today (the import is commented out at the top of the file), so the `verified` middleware currently blocks nobody — status, not that middleware, is where account usability will be enforced.
+`App\Models\User` does **not** implement `MustVerifyEmail` today (the import is commented out at the top of the file), so the `verified` middleware blocks nobody, on any route that carries it. Account usability is enforced by `status` at sign-in instead — see the next section.
 
 ### A deleted account stops authenticating, by scope rather than by check
 
 Since task 0005, deleting a user soft-deletes the row (see [database/schema.md](../database/schema.md#soft-deletes) for what that rewrites). Its effect on authentication is total and worth stating here, because **no code in `app/` refuses a deleted user's sign-in**: `Illuminate\Auth\EloquentUserProvider` resolves every credential lookup through `$model->newQuery()`, which applies the `SoftDeletingScope`. That one fact is why password login fails, an in-flight session stops authenticating on its next request, a remember-me cookie is inert, a password-reset or invitation link resolves no user, and the vendor passkey relation returns `null` for a trashed owner. Deletion is therefore an authentication control, not only a data state — treat any code that lifts the scope for a `User` accordingly. The rules that follow (including what must be added if a future login path stops going through the user provider) are in [security/soft-delete-patterns.md](../security/soft-delete-patterns.md#the-global-scope-is-the-sign-in-refusal--there-is-no-second-check).
+
+## Sign-in: the account-status block
+
+Since task 0007, `users.status` is an **authentication control**, not a label: only `Active` obtains a session. An `Inactive` or `Suspended` user is refused on every path that grants a *fresh* session, and is told the account is not active (`users.login.not_active`, one key for both statuses). Restoring the status to `Active` restores sign-in on the very next attempt — there is no cache to clear and no session to reset.
+
+There is no single hook that covers this. Four vendor call sites grant a session, and enforcement is split across **three** points accordingly:
+
+```mermaid
+flowchart TD
+    Pw["POST /login\nemail + password"]
+    TwoFa["POST /two-factor-challenge\nauthentication code"]
+    Pk["POST /passkeys/login"]
+    Recall["Any request carrying only\na remember-me cookie"]
+
+    Auth["Fortify::authenticateUsing()\napp/Actions/Fortify/AuthenticateUser.php"]
+    Pkey["Passkeys::authorizeLoginUsing()\napp/Providers/FortifyServiceProvider.php"]
+    Listener["RejectNonActiveUserLogin\nLogin + Authenticated events"]
+
+    Session(["Session granted"])
+    Refused(["Refused — no session"])
+
+    Pw --> Auth
+    TwoFa -->|"password step\nalready passed"| Listener
+    Pk --> Pkey
+    Recall --> Listener
+
+    Auth -->|"isActive()"| Session
+    Auth -->|"not active"| Refused
+    Pkey -->|"isActive()"| Session
+    Pkey -->|"not active / null owner"| Refused
+    Listener -->|"active"| Session
+    Listener -->|"not active"| Refused
+```
+
+**1. `Fortify::authenticateUsing()` — email + password, including two-factor accounts.** [`App\Actions\Fortify\AuthenticateUser`](../../app/Actions/Fortify/AuthenticateUser.php) replaces `$guard->attempt()` for both Fortify pipes, so a two-factor account is refused *before* a challenge is ever offered and no `login.id` pending-challenge state is written:
+
+```php
+// app/Actions/Fortify/AuthenticateUser.php
+if (! $user->isActive()) {
+    throw ValidationException::withMessages([
+        Fortify::username() => [__('users.login.not_active')],
+    ]);
+}
+
+return $user;
+```
+
+Because it replaces `attempt()`, the action must redo everything `attempt()` did on the way to a `User` — it resolves and verifies credentials through the guard's own `UserProvider` (`retrieveByCredentials()` → `validateCredentials()` → `rehashPasswordIfRequired()`) rather than hand-rolling a `User::where()`. Two controls ride on that choice: the password rehash-on-login upgrade, and the `SoftDeletingScope` refusal described [above](#a-deleted-account-stops-authenticating-by-scope-rather-than-by-check), which lives entirely in the provider's query.
+
+It is registered as an **instance**, which is not interchangeable with the class-string form used two lines above it:
+
+```php
+// app/Providers/FortifyServiceProvider.php
+Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+Fortify::createUsersUsing(CreateNewUser::class);
+Fortify::authenticateUsing(app(AuthenticateUser::class));
+```
+
+Unlike the other two, `authenticateUsing()` stores the raw callable and later invokes it with `call_user_func($callback, $request)` — a bare class string is not a valid target there.
+
+**2. `Passkeys::authorizeLoginUsing()` — passkey sign-in.** Passkey login has its own controller and never enters Fortify's pipeline, so point 1 does not reach it. This is the easiest of the three to ship a silent bypass on:
+
+```php
+// app/Providers/FortifyServiceProvider.php — configurePasskeys()
+Passkeys::authorizeLoginUsing(
+    fn (Request $request, ?User $user, Passkey $passkey): bool => $user !== null && ! $user->trashed() && $user->isActive()
+);
+```
+
+The `?User` is required, not defensive style: `Passkeys::allowsLogin()` passes `$passkey->user` unchecked, and that `BelongsTo` is soft-delete-scoped, so it resolves `null` for a trashed owner. A non-nullable parameter turns a clean refusal into a `TypeError`.
+
+**3. [`App\Listeners\RejectNonActiveUserLogin`](../../app/Listeners/RejectNonActiveUserLogin.php) — remember-me recall, and the mid-challenge race.** Registered on **two** events, alongside the activation listener:
+
+```php
+// app/Providers/AppServiceProvider.php
+Event::listen(Login::class, RejectNonActiveUserLogin::class);
+Event::listen(Authenticated::class, [RejectNonActiveUserLogin::class, 'handleAuthenticated']);
+```
+
+Two events, because one is not enough. `SessionGuard::login()` fires `Login` and then calls `setUser($user)` on the very next line, which resurrects a session the `Login` handler just logged out. So the `Login` handler is the real fix only for the recaller path (`SessionGuard::user()` fires `Login` last, with no `setUser()` after it, and the logout there also clears the recaller cookie and rotates `remember_token`); on every `$guard->login()` path it instead records the detected user's identifier on `request()->attributes`, and the `Authenticated` handler — which necessarily runs *inside* `setUser()` — performs the logout that sticks. That second hook is what closes the case of a user suspended *between* the password step and the two-factor code step, since Fortify's `TwoFactorAuthenticatedSessionController` resolves the challenged user from the session and never re-consults point 1.
+
+One deliberate exemption: the `Login` handler skips a user with `wasRecentlyCreated === true`, so Fortify signing a freshly self-registered (and by design `Inactive`) account straight in still works. Registration is not sign-in, and every other path receives a model hydrated from an existing row, for which the flag is always `false`.
+
+The mechanics behind all three — the vendor call-site map any *new* login mechanism must be checked against, why the refusal still counts toward the login rate limiter, why the `Authenticated` flag carries an identifier rather than a boolean, and why `forceLogout()` guards its `session()->invalidate()` — are documented once in [security/login-status-enforcement.md](../security/login-status-enforcement.md) and are not repeated here.
+
+### What the refusal does and does not disclose
+
+Telling a user the account is not active is a **deliberate, PRD-mandated disclosure**, kept narrow by two structural properties rather than by wording:
+
+- **Credentials first, status second.** `AuthenticateUser` returns `null` for a bad email or password, which hands control back to Fortify's own failure path and produces the byte-identical `trans('auth.failed')` message an active account produces. The status message is reachable only by someone who already holds valid credentials.
+- **The message names no status.** `users.login.not_active` is a single key covering both `Inactive` and `Suspended`, in [`lang/en/users.php`](../../lang/en/users.php) and [`lang/es/users.php`](../../lang/es/users.php) alike, and both files carry a comment saying it must stay that way.
+
+### What is deliberately not covered
+
+**An already-live session is not terminated.** Suspending a user prevents them obtaining a *new* session; a session they already hold survives until it expires. This is an accepted, human-confirmed scope boundary of task 0007, and it is why the `Authenticated` handler acts only when this same request's `Login` handler flagged the user — an ordinary subsequent request from a signed-in user fires `Authenticated` alone, and the listener is a no-op there. Terminating live sessions (per-request middleware, or deleting the user's `sessions` rows) is recorded as a follow-up story. The boundary is pinned by a test of its own — "an already-authenticated user who becomes non-active keeps their live session" in `tests/Feature/Auth/AuthenticationTest.php` — so a future change that leaks enforcement into per-request territory fails loudly rather than quietly breaking every `actingAs()`-based test.
 
 ## Pending email changes
 
@@ -337,12 +454,15 @@ public function deleteUser(Logout $logout): void
 | --- | --- |
 | Fortify config | `config/fortify.php` |
 | Register/reset actions | `app/Actions/Fortify/CreateNewUser.php`, `app/Actions/Fortify/ResetUserPassword.php` |
-| Account status enum | `app/Enums/UserStatus.php` |
+| Account status enum | `app/Enums/UserStatus.php`, plus `User::isActive()` in `app/Models/User.php` |
 | Activation listener | `app/Listeners/ActivateVerifiedUser.php` (registered in `app/Providers/AppServiceProvider.php`) |
+| Sign-in status check (password + 2FA) | `app/Actions/Fortify/AuthenticateUser.php` (registered in `app/Providers/FortifyServiceProvider.php::configureActions()`) |
+| Sign-in status check (passkey) | `app/Providers/FortifyServiceProvider.php::configurePasskeys()` |
+| Sign-in status check (remember-me, mid-challenge) | `app/Listeners/RejectNonActiveUserLogin.php` (registered on `Login` **and** `Authenticated` in `app/Providers/AppServiceProvider.php`) |
 | Email-change actions | `app/Actions/Users/RequestEmailChange.php`, `app/Actions/Users/ConfirmEmailChange.php` |
 | Email-change HTTP boundary | `app/Http/Controllers/ConfirmEmailChangeController.php`, route `email-change.confirm` in `routes/settings.php` |
 | Email-change notification | `app/Notifications/PendingEmailVerification.php` |
-| Status / email-change copy | `lang/en/users.php`, `lang/es/users.php` |
+| Status / sign-in / email-change copy | `lang/en/users.php`, `lang/es/users.php` |
 | Profile settings UI | `app/Livewire/Settings/Profile.php`, `resources/views/livewire/settings/profile.blade.php` |
 | Security settings UI | `app/Livewire/Settings/Security.php`, `resources/views/livewire/settings/security.blade.php` |
 | Recovery codes UI | `app/Livewire/Settings/TwoFactor/RecoveryCodes.php` |
@@ -355,6 +475,8 @@ public function deleteUser(Logout $logout): void
 | Feature tests | `tests/Feature/Auth/**`, `tests/Feature/Settings/SecurityTest.php`, `tests/Feature/Settings/EmailChangeTest.php` |
 | Unit tests | `tests/Unit/Enums/UserStatusTest.php`, `tests/Unit/Listeners/ActivateVerifiedUserTest.php`, `tests/Unit/Models/UserTest.php` |
 
-_Last updated: 2026-08-14 — Task 0005: recorded that a soft-deleted account stops authenticating on every path, and that the refusal comes from the `SoftDeletingScope` in the user provider rather than from any check in `app/`._
+_Last updated: 2026-08-17 — Task 0007 (non-active status blocks sign-in): added the **Sign-in: the account-status block** section covering all three enforcement points (`Fortify::authenticateUsing()` for password/2FA, `Passkeys::authorizeLoginUsing()` for passkeys, and the `Login`/`Authenticated` listener pair for remember-me and the mid-challenge race), what the refusal discloses, and the deliberate live-session scope boundary. Also corrected three stale statements this story invalidated: the "once the sign-in block story lands" future tense in the invitation note, the `ActivateVerifiedUser` code quote (which predated the `getPrevious()` guard), and the claim that the listener's `Inactive`-only condition is what stops a verification undoing an administrator's decision — it covers `Suspended`, and the never-verified check is what covers `Inactive`._
+
+_Previously: 2026-08-14 — Task 0005: recorded that a soft-deleted account stops authenticating on every path, and that the refusal comes from the `SoftDeletingScope` in the user provider rather than from any check in `app/`._
 
 _Previously: 2026-08-13 — Task 0004: documented the second non-HTTP caller of the reset flow (`CreateUser` + the `UserInvitation` notification, and why it mints its own token instead of calling `sendResetLink()`), and corrected the pending-email section, which still described the administrative user editor as hypothetical and claimed it would hit the action's implicit-cancel branch — it exists, and it guards against a same-address submission exactly as the profile screen does._

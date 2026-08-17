@@ -49,13 +49,14 @@ High-level layout of the codebase:
 
 ```
 app/
-  Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords, ...)
+  Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords)
+                      plus AuthenticateUser, the Fortify::authenticateUsing() callback
   Actions/Users/       Users-domain actions (RequestEmailChange, ConfirmEmailChange, CreateUser, UpdateUser)
   Concerns/            Shared traits (e.g. validation rule sets)
   Console/Commands/    Artisan commands
   Enums/               Backed enums for domain value sets (UserStatus)
   Http/Controllers/    Abstract base + domain controllers (HTTP boundary in front of an action)
-  Listeners/           Event listeners (ActivateVerifiedUser)
+  Listeners/           Event listeners (ActivateVerifiedUser, RejectNonActiveUserLogin)
   Livewire/            Livewire components, grouped by area (Actions/, Settings/, Users/, ...)
   Models/              Eloquent models
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
@@ -154,7 +155,7 @@ The environment is defined in `compose.yaml`. Bringing it up starts the followin
 
 Optionally, set `SUPER_ADMIN_EMAIL` in `.env` before seeding to bootstrap a Super Admin account. If it matches a registered, email-verified user, that user is granted the role; if it matches no account at all, the seeder creates one and emails a password-reset link so you can claim it. See [`docs/architecture/authorization.md`](docs/architecture/authorization.md#super-admin-bootstrap) for all five branches, including the two that abort with an operator-facing error.
 
-> **Accounts start `inactive`.** A newly registered user's `users.status` is `inactive` until their email is verified — completing Fortify's verification, setting a password from an invitation link, or confirming a pending email change all activate the account through the same listener. Changing an email address never rewrites `users.email` on the spot: the new address is held as `pending_email` until the signed link sent to it is used. Mail runs on the `log` driver locally (`MAIL_MAILER=log`), so verification links show up in `storage/logs/laravel.log` — tail them with `sail artisan pail`. The email-change notification is queued and `QUEUE_CONNECTION=database`, so a worker has to be running (`composer dev`, or `sail artisan queue:work`) for the link to be written out at all. See [`docs/architecture/authentication.md`](docs/architecture/authentication.md#account-status-and-activation).
+> **Accounts start `inactive`, and only an `active` account can sign in.** A newly registered user's `users.status` is `inactive` until their email is verified — completing Fortify's verification, setting a password from an invitation link, or confirming a pending email change all activate the account through the same listener. Until then, signing in is refused on **every** path (password, two-factor, passkey, remember-me) with "this account is not active", even though the credentials are correct; the one exception is the sign-in Fortify performs immediately after registration, which still works. So if a freshly created local account cannot log in, verify its email first (see the log-driver note below) rather than reaching for the password. Changing an email address never rewrites `users.email` on the spot: the new address is held as `pending_email` until the signed link sent to it is used. Mail runs on the `log` driver locally (`MAIL_MAILER=log`), so verification links show up in `storage/logs/laravel.log` — tail them with `sail artisan pail`. The email-change notification is queued and `QUEUE_CONNECTION=database`, so a worker has to be running (`composer dev`, or `sail artisan queue:work`) for the link to be written out at all. See [`docs/architecture/authentication.md`](docs/architecture/authentication.md#account-status-and-activation), and [the sign-in block](docs/architecture/authentication.md#sign-in-the-account-status-block) for where the status is enforced.
 
 ## Additional useful commands
 
