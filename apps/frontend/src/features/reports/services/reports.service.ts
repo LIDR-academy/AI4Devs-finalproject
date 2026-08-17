@@ -14,8 +14,8 @@ export class ReportsService {
         throw new Error('Error al obtener el reporte de mermas.');
       }
       return await response.json();
-    } catch {
-      // Mock fallback
+    } catch (err) {
+      console.error('[ReportsService] Error al obtener el reporte de mermas, usando mock fallback:', err);
       return [
         {
           insumoId: 'ins-queso-1',

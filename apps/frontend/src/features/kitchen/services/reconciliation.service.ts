@@ -23,7 +23,8 @@ export class ReconciliationService {
       if (!response.ok) {
         throw new Error('Error al guardar la conciliación de turno.');
       }
-    } catch {
+    } catch (err) {
+      console.error('[ReconciliationService] Fallo en la comunicación de conciliación de turno con backend:', err);
       // Fallback local para desarrollo / demo mock sin backend live
       return Promise.resolve();
     }

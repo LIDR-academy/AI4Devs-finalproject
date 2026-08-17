@@ -33,8 +33,8 @@ export class AuthService {
         try {
           const errData = await response.json();
           errMessage = errData.message || errData.error || errMessage;
-        } catch {
-          // Fallthrough
+        } catch (errDataError) {
+          console.warn('[AuthService] No se pudo parsear cuerpo JSON de error:', errDataError);
         }
         throw new Error(errMessage);
       }
@@ -68,7 +68,8 @@ export class AuthService {
     if (!raw) return null;
     try {
       return JSON.parse(raw);
-    } catch {
+    } catch (parseErr) {
+      console.warn('[AuthService] Error parseando datos de usuario de localStorage:', parseErr);
       return null;
     }
   }

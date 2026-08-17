@@ -74,8 +74,8 @@ export const ShiftReconciliationWizard: React.FC<ShiftReconciliationWizardProps>
 
       onSuccess();
       onClose();
-    } catch {
-      // Manejo silencioso en UI
+    } catch (err) {
+      console.error('[ShiftReconciliationWizard] Error durante la conciliacion de turno:', err);
     } finally {
       setIsSubmitting(false);
     }

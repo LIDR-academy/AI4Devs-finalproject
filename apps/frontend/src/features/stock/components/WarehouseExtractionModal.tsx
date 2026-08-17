@@ -54,7 +54,8 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
 
       onSuccess();
       onClose();
-    } catch {
+    } catch (err) {
+      console.error('[WarehouseExtractionModal] Error registrando la extraccion de bodega:', err);
       alert('Error registrando extraccion de bodega');
     } finally {
       setIsSubmitting(false);

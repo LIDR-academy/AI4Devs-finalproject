@@ -39,8 +39,8 @@ export const App: React.FC = () => {
     try {
       const items = await KitchenService.fetchActiveRemanentes();
       setRemanentes(items);
-    } catch {
-      // Manejo silencioso
+    } catch (err) {
+      console.error('[App] Error cargando remanentes activos:', err);
     } finally {
       setIsLoading(false);
     }

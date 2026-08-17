@@ -23,7 +23,8 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, 
       await KitchenService.discardRemanente(remanente.id, reason);
       onSuccess();
       onClose();
-    } catch {
+    } catch (err) {
+      console.error('[DiscardModal] Error registrando el descarte:', err);
       alert('Error registrando el descarte');
     } finally {
       setIsSubmitting(false);

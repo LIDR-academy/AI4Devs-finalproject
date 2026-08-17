@@ -33,8 +33,8 @@ export class StockService {
       if (response.ok) {
         return (await response.json()) as ExtractionResult;
       }
-    } catch {
-      // Fallback a modo demo en memoria
+    } catch (err) {
+      console.error('[StockService] Error en llamada HTTP recordExtraction, usando modo demo:', err);
     }
 
     const item = this.mockWarehouseStocks[data.insumoId] || {

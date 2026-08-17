@@ -34,7 +34,7 @@ export function createAuthenticateJWTMiddleware(jwtSecret: string) {
       };
       req.user = decoded;
       next();
-    } catch {
+    } catch (jwtErr) {
       res.status(401).json({
         type: 'https://restostock.com/errors/invalid-token',
         title: 'InvalidTokenException',
