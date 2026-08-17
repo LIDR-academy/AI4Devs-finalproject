@@ -18,9 +18,15 @@ export class StockController {
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        const detailMsg = error.errors.map((e) => e.message).join('; ');
         res.status(400).json({
+          type: 'https://restostock.com/errors/validation-error',
+          title: 'ValidationError',
+          status: 400,
+          detail: detailMsg,
+          instance: req.originalUrl || req.url,
           error: 'ValidationError',
-          details: error.errors.map((e) => e.message),
+          message: detailMsg,
         });
         return;
       }

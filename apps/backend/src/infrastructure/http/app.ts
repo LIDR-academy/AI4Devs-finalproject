@@ -23,14 +23,20 @@ import YAML from 'yamljs';
 
 import { runSeed } from '../seeds/seed.js';
 
+import { createAuthenticateJWTMiddleware } from './middlewares/authenticateJWT.js';
+import { IShiftReconciliationRepository } from '../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
+import { InMemoryShiftReconciliationRepository } from '../kitchen/repositories/InMemoryShiftReconciliationRepository.js';
+
 export interface AppOptions {
   userRepository?: IUserRepository;
   stockRepository?: IStockRepository;
   remanenteQueryRepository?: IRemanenteQueryRepository;
   reportRepository?: IReportRepository;
   recipeRepository?: IRecipeRepository;
+  reconciliationRepository?: IShiftReconciliationRepository;
   jwtSecret?: string;
   enableDevSeeding?: boolean;
+  requireAuth?: boolean;
 }
 
 export function createApp(options: AppOptions = {}): Express {
@@ -39,7 +45,7 @@ export function createApp(options: AppOptions = {}): Express {
   app.use(cors());
   app.use(express.json());
 
-  // Swagger UI - Documentación Interactiva de API REST (OpenAPI 3.1)
+  // Swagger UI - Documentacion Interactiva de API REST (OpenAPI 3.1)
   const openApiPath = path.resolve(process.cwd(), 'docs/03_persistence_and_api/openapi.yaml');
   const fallbackPath = path.resolve(process.cwd(), '../../docs/03_persistence_and_api/openapi.yaml');
   const finalOpenApiPath = fs.existsSync(openApiPath) ? openApiPath : (fs.existsSync(fallbackPath) ? fallbackPath : null);
@@ -64,13 +70,21 @@ export function createApp(options: AppOptions = {}): Express {
     });
   });
 
-  // Repositorios e inyección de dependencias por defecto para dev/standalone
+  // Fail-Fast Environment Validation for JWT Secret (Guard 14)
+  if (process.env.NODE_ENV === 'production' && !options.jwtSecret && !process.env.JWT_SECRET) {
+    throw new Error(
+      'CONFIG FATAL: Variable de entorno JWT_SECRET es obligatoria en entorno de produccion (Guard 14 Fail-Fast Secrets).'
+    );
+  }
+
+  // Repositorios e inyeccion de dependencias por defecto para dev/standalone
   const userRepo = options.userRepository ?? new InMemoryUserRepository();
-  const jwtSecret = options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-super-secret-jwt-key-2026';
+  const jwtSecret = options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-dev-jwt-secret-key-2026';
   const stockRepo = options.stockRepository ?? new InMemoryStockRepository();
   const remanenteQueryRepo = options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository();
   const reportRepo = options.reportRepository ?? new InMemoryReportRepository();
   const recipeRepo = options.recipeRepository ?? new InMemoryRecipeRepository();
+  const reconciliationRepo = options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository();
 
   // Sembrado de Datos Desacoplado e Idempotente (SK-28)
   const shouldSeed = options.enableDevSeeding ?? (!options.userRepository && process.env.NODE_ENV !== 'test');
@@ -81,17 +95,22 @@ export function createApp(options: AppOptions = {}): Express {
     ).catch((err) => console.warn('⚠️ Advertencia ejecutando seeding:', err));
   }
 
+  const authMiddleware = createAuthenticateJWTMiddleware(jwtSecret);
+  const isAuthRequired = options.requireAuth ?? (process.env.NODE_ENV === 'production');
+
   // Rutas de Autenticacion
   app.use('/api/v1/auth', createAuthRouter(userRepo, jwtSecret));
 
-  // Rutas de Control de Bodega y Stock
-  app.use('/api/v1/stock', createStockRouter(stockRepo));
-
-  // Rutas de Servicio y Remanentes de Cocina
-  app.use('/api/v1/kitchen', createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo));
-
-  // Rutas de Reportes
-  app.use('/api/v1/reports', createReportsRouter(reportRepo));
+  // Rutas Protegidas de Control de Bodega y Stock (Guard 15)
+  if (isAuthRequired) {
+    app.use('/api/v1/stock', authMiddleware, createStockRouter(stockRepo));
+    app.use('/api/v1/kitchen', authMiddleware, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
+    app.use('/api/v1/reports', authMiddleware, createReportsRouter(reportRepo));
+  } else {
+    app.use('/api/v1/stock', createStockRouter(stockRepo));
+    app.use('/api/v1/kitchen', createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
+    app.use('/api/v1/reports', createReportsRouter(reportRepo));
+  }
 
   // Middleware global de errores
   app.use(errorHandler);

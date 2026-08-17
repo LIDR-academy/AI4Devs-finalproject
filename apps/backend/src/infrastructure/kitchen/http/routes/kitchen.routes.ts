@@ -11,10 +11,13 @@ import { IRecipeRepository } from '../../../../domain/catalog/repositories/IReci
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
 import { InMemoryShiftReconciliationRepository } from '../../repositories/InMemoryShiftReconciliationRepository.js';
 
+import { IShiftReconciliationRepository } from '../../../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
+
 export function createKitchenRouter(
   remanenteQueryRepository: IRemanenteQueryRepository,
   stockRepository?: IStockRepository,
-  recipeRepository?: IRecipeRepository
+  recipeRepository?: IRecipeRepository,
+  reconciliationRepository?: IShiftReconciliationRepository
 ): Router {
   const router = Router();
   const getActiveUseCase = new GetActiveRemanentesUseCase(remanenteQueryRepository);
@@ -25,7 +28,7 @@ export function createKitchenRouter(
       ? new ConsumeRecipeUseCase(recipeRepository, stockRepository)
       : undefined;
 
-  const reconciliationRepo = new InMemoryShiftReconciliationRepository();
+  const reconciliationRepo = reconciliationRepository ?? new InMemoryShiftReconciliationRepository();
   const performShiftReconciliationUseCase = stockRepository
     ? new PerformShiftReconciliationUseCase(stockRepository, remanenteQueryRepository, reconciliationRepo)
     : undefined;

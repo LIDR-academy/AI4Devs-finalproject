@@ -1,3 +1,5 @@
+import Decimal from 'decimal.js';
+
 export interface RemanenteFEFOItem {
   id: string;
   insumoId: string;
@@ -64,8 +66,9 @@ export class KitchenService {
       if (response.ok) {
         return (await response.json()) as RemanenteFEFOItem[];
       }
-    } catch {
-      // Fallback offline
+      console.warn(`[KitchenService] API respondio con estatus ${response.status}. Usando fallback offline.`);
+    } catch (err) {
+      console.error('[KitchenService] Error en fetchActiveRemanentes, cayendo a modo offline:', err);
     }
 
     let list = [...this.mockRemanentes].filter((r) => r.status === 'ACTIVE');
@@ -85,17 +88,19 @@ export class KitchenService {
         body: JSON.stringify({ quantity }),
       });
       if (response.ok) return;
-    } catch {
-      // Fallback offline
+      console.warn(`[KitchenService] consumeRemanente HTTP status ${response.status}`);
+    } catch (err) {
+      console.error('[KitchenService] Error de red en consumeRemanente:', err);
     }
 
+    // Aritmetica Decimal de Alta Precision con decimal.js (Guard 17)
     const found = this.mockRemanentes.find((r) => r.id === remanenteId);
     if (found) {
-      const current = parseFloat(found.currentQuantity);
-      const sub = parseFloat(quantity.toString());
-      const next = Math.max(0, current - sub);
-      found.currentQuantity = next.toFixed(3);
-      if (next === 0) {
+      const currentDec = new Decimal(found.currentQuantity);
+      const subDec = new Decimal(quantity.toString());
+      const nextDec = Decimal.max(0, currentDec.minus(subDec));
+      found.currentQuantity = nextDec.toFixed(3);
+      if (nextDec.isZero()) {
         found.status = 'EXHAUSTED';
       }
     }
@@ -109,8 +114,9 @@ export class KitchenService {
         body: JSON.stringify({ reason }),
       });
       if (response.ok) return;
-    } catch {
-      // Fallback offline
+      console.warn(`[KitchenService] discardRemanente HTTP status ${response.status}`);
+    } catch (err) {
+      console.error('[KitchenService] Error de red en discardRemanente:', err);
     }
 
     const found = this.mockRemanentes.find((r) => r.id === remanenteId);
@@ -128,17 +134,19 @@ export class KitchenService {
         body: JSON.stringify({ portions }),
       });
       if (response.ok) return;
-    } catch {
-      // Fallback offline
+      console.warn(`[KitchenService] consumeRecipe HTTP status ${response.status}`);
+    } catch (err) {
+      console.error('[KitchenService] Error de red en consumeRecipe:', err);
     }
 
-    // Descuento simulado offline sobre mockRemanentes
+    // Aritmetica Decimal de Alta Precision con decimal.js (Guard 17)
     if (this.mockRemanentes.length > 0) {
       const first = this.mockRemanentes[0];
-      const current = parseFloat(first.currentQuantity);
-      const next = Math.max(0, current - 0.15 * portions);
-      first.currentQuantity = next.toFixed(3);
-      if (next === 0) first.status = 'EXHAUSTED';
+      const currentDec = new Decimal(first.currentQuantity);
+      const portionDec = new Decimal('0.150').times(new Decimal(portions));
+      const nextDec = Decimal.max(0, currentDec.minus(portionDec));
+      first.currentQuantity = nextDec.toFixed(3);
+      if (nextDec.isZero()) first.status = 'EXHAUSTED';
     }
   }
 
