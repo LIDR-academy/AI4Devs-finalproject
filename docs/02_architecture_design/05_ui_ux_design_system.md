@@ -113,9 +113,9 @@ Basado en la referencia de tablero de control industrial de alta precisión (**D
 
 ## 🪟 Sistema de Ventanas Emergentes Flotantes (Glassmorphism Floating Overlays)
 
-Todas las ventanas modales de interacción secundaria (`WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard` y `ReportsDashboard`) se abren de forma **flotante sobre el tablero principal de la pantalla**:
+Todas las ventanas modales de la aplicación (`PinLoginModal`, `WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard` y `ReportsDashboard`) se abren de forma **flotante sobre el tablero principal de la pantalla**:
 
-1. **Capa Oscura Flotante de Fondo (`.modal-overlay`):**
+1. **Capa Oscura Flotante de Fondo (`.modal-overlay` / `.modal-backdrop`):**
    - Cobertura fija (`position: fixed; inset: 0; z-index: 1000;`).
    - Fondo oscuro semitransparente con desenfoque de cristal borroso (`backdrop-filter: blur(8px); background-color: rgba(11, 19, 25, 0.75)`).
    - Mantiene la visibilidad borrosa del contexto del tablero FEFO al fondo.
@@ -123,5 +123,5 @@ Todas las ventanas modales de interacción secundaria (`WarehouseExtractionModal
 2. **Tarjeta Emergente Flotante (`.modal-card`):**
    - Posicionamiento centrado en viewport con sombras proyectadas de alta profundidad (`box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 168, 150, 0.15)`).
    - Esquinas redondeadas suaves (`border-radius: 16px`) sobre superficie Pizarra Petróleo (`--bg-card`).
-   - Animación de entrada suave tipo *scale-up* (`transform: scale(0.95) -> scale(1)` en $200\text{ms}$).
+   - Animación de entrada suave tipo *scale-up* (`transform: scale(0.94) -> scale(1)` en $250\text{ms}$).
 

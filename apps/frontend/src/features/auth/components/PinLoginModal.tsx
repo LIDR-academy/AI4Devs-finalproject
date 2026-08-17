@@ -52,19 +52,8 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(11, 19, 25, 0.92)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-    >
-      <div className="card-dashboard" style={{ width: '100%', maxWidth: '420px', textAlign: 'center' }}>
+    <div className="modal-overlay">
+      <div className="modal-card" style={{ maxWidth: '420px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
           <div className="card-badge-icon" style={{ width: '56px', height: '56px' }}>
             <Lock size={28} />

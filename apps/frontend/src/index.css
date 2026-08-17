@@ -136,7 +136,8 @@ body {
 }
 
 /* 🪟 Sistema de Ventanas Emergentes Flotantes (Glassmorphism Floating Overlays) */
-.modal-overlay {
+.modal-overlay,
+.modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
