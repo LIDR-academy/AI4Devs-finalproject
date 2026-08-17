@@ -27,9 +27,10 @@ Esta directiva rige la implementación de Casos de Uso (Aplicación) y Adaptador
 
 ---
 
-## 🚦 3. Controladores REST y Express
+## 🚦 3. Controladores REST, Routers y Express
 * **Validación con Zod:** Todo payload de entrada (`req.body`, `req.params`, `req.query`) debe ser validado con esquemas Zod en el controlador antes de invocar el caso de uso.
-* **Manejo Centralizado de Errores:** Delegar excepciones al middleware global de Express para mapear `DomainError` a sus respectivos códigos HTTP.
+* **Inyección de Dependencias en Routers:** Queda prohibido instanciar repositorios o servicios concretos directamente dentro de las funciones creadoras de rutas (ej. `new InMemoryRepo()`). Todas las dependencias de persistencia y dominio deben inyectarse por parámetro.
+* **Respuestas de Error RFC 7807 Problem Details:** Todas las excepciones lanzadas o capturadas en controladores y middleware global DEBEN serializarse obligatoriamente bajo el estándar **RFC 7807 Problem Details** (`{ type, title, status, detail, instance }`).
 * **Puerto de Servicio:** El servidor Express escucha en `process.env.PORT` o cae en el puerto por defecto `3000`.
 
 ---

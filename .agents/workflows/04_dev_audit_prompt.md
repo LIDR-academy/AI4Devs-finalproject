@@ -39,18 +39,20 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 
 ---
 
-### FASE 3: Auditoría Anti-Drift Arquitectónico
+### FASE 3: Auditoría Anti-Drift Arquitectónico y Estructura de Artefactos (Build)
 1. Verifica que los esquemas físicos de persistencia/base de datos y los contratos de API expuestos coincidan de manera exacta con la especificación en `docs/`.
-2. Ejecuta los linters estáticos de API (ej. Spectral) y validadores de esquema de persistencia.
-3. Si se detectan cambios "en caliente" en el código que no estén reflejados en la documentación viva de `docs/`, marca la fase como DEFECTUOSA.
+2. Integridad del Artefacto de Build: Ejecuta `pnpm build` y confirma que la estructura generada en `dist/` coincida exactamente con el punto de entrada `package.json#main` (sin subdirectorios anidados causados por alterar `"rootDir"` en `tsconfig.json`).
+3. Coincidencia de Persistencia CLI: Confirma que scripts CLI de ORM (ej. `prisma/seed.ts`) usen clientes de persistencia relacional física (`PrismaClient` con `upsert`) y no mocks in-memory efímeros.
+4. Si se detectan cambios "en caliente" en el código que no estén reflejados en la documentación viva de `docs/`, marca la fase como DEFECTUOSA.
 
 ---
 
-### FASE 4: Auditoría de Seguridad, Sanitización, Entornos y Sandboxing
-1. Sanitización de Entradas: Valida que todo payload externo sea filtrado con esquemas de validación estrictos (ej. Zod) en el controlador.
-2. Gestión de Entornos & Secretos: Confirma que no existan credenciales o llaves secretas incrustadas en duro en el código (*hardcoded*), que `.env` esté ignorado en Git y que se aplique la validación estricta Fail-Fast con Zod (`env.config.ts`).
-3. Ausencia de Tipos Inseguros: Comprueba que no existan tipos `any`, casting inseguro o raw queries vulnerables.
-4. Sandboxed Execution: Confirma que la ejecución de scripts y comandos se haya mantenido dentro del workspace aislado.
+### FASE 4: Auditoría de Seguridad, Sanitización, Entornos y Resiliencia HTTP (Guards 14-19)
+1. Sanitización y Control de Acceso: Valida que todo payload externo sea filtrado con esquemas de validación estrictos (ej. Zod) y que todas las rutas de mutación/reportes contengan middleware de autenticación (JWT/Bearer) y rate limiting en autenticación.
+2. Gestión de Entornos & Secretos (Fail-Fast): Confirma que no existan credenciales o llaves secretas incrustadas en duro en el código ni fallbacks por defecto (`env.SECRET || 'default'`). Exige validación Fail-Fast.
+3. Precisión Aritmética Arbitraria: Confirma la ausencia de `parseFloat` o aritmética flotante primitiva en cálculos de inventarios/costos (uso obligatorio de `DecimalQuantity` / `decimal.js`).
+4. Inyección de Dependencias y RFC 7807: Valida que las rutas no instancien repositorios directamente (uso de DIP) y que las respuestas de error cumplan estrictamente con la norma RFC 7807 Problem Details.
+5. Sandboxed Execution & Error Swallowing: Confirma que no existan bloques `catch {}` vacíos y que la ejecución de comandos se mantenga dentro del workspace aislado.
 
 ---
 

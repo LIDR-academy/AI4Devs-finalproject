@@ -31,8 +31,14 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 
 ---
 
-## 🔢 4. Formateo de Cantidades sin Ambigüedad Cognitiva
+## 🔢 4. Formateo y Aritmética de Cantidades
+* **Prohibición de `parseFloat` en Cálculos de Inventario:** Queda estrictamente prohibido realizar operaciones aritméticas de punto flotante nativo (`parseFloat`, `+`, `-`, `*`, `/`) en servicios o componentes para modificar cantidades o stocks. Se deben utilizar librerías de precisión arbitraria (`decimal.js`) o manipulaciones de cadenas exactas.
 * **Formateador Inteligente (`formatQuantity`):** Los componentes de UI deben usar obligatoriamente helpers de formateo para renderizar valores numéricos.
 * **Insumos Contables:** Para unidades discretas (`UNITS`, `UNIDADES`, `PZA`), mostrar enteros simples en español (ej. `12 Ud.`) evitando ceros decimales que se confundan con separadores de miles (`12.000`).
 * **Botones Adaptativos:** Adaptar los decrementos rápidos según la unidad (`-1`, `-2`, `-5` para `UNITS` frente a `-0.25`, `-0.5`, `-1.0` para `KG`/`L`).
+
+---
+
+## 🚨 5. Manejo Activo de Errores en Servicios
+* **Prohibición de Excepciones Tragadas (*No Swallowed Catches*):** Queda estrictamente prohibido incluir bloques `catch {}` vacíos en servicios o componentes. Todo fallo de comunicación HTTP debe ser registrado con `console.error` o notificado a la interfaz del usuario.
 
