@@ -31,6 +31,8 @@ export interface SeedOptions {
  */
 export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}): Promise<void> {
   const includeFixtures = options.includeSyntheticFixtures ?? process.env.NODE_ENV !== 'production';
+  const kitchenPin = process.env.SEED_KITCHEN_PIN ?? '1234';
+  const adminPin = process.env.SEED_ADMIN_PIN ?? '1234';
 
   // 1. 🌱 ESSENTIAL SEEDS (Catálogo y Usuarios Estructurales del Sistema)
   const existingCarlos = await repos.userRepo.findById('usr-carlos-1');
@@ -40,7 +42,7 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
         id: 'usr-carlos-1',
         name: 'Carlos Gomez (Cocina)',
         role: 'KITCHEN_STAFF',
-        pin: Pin.createFromRaw('1234'),
+        pin: Pin.createFromRaw(kitchenPin),
         status: 'ACTIVE',
         failedAttempts: 0,
       })
@@ -54,7 +56,7 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
         id: 'usr-maria-2',
         name: 'Maria Silva (Administrador)',
         role: 'ADMIN',
-        pin: Pin.createFromRaw('1234'),
+        pin: Pin.createFromRaw(adminPin),
         status: 'ACTIVE',
         failedAttempts: 0,
       })

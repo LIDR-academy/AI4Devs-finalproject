@@ -37,10 +37,12 @@ Toda estrategia de datos semilla (*seeding*) creada en el proyecto DEBE cumplir 
    - El script o función de sembrado DEBE ser $100\%$ idempotente. Ejecutar el sembrado $N$ veces debe producir el mismo estado en la base de datos sin lanzar errores de clave duplicada (`upsert`, `ON CONFLICT DO UPDATE`, o verificación de existencia previa).
 
 3. **Desacoplamiento del Servidor de Producción (CLI Dedicated Runner):**
-   - Prohibido incluir semillas pesadas de prueba dentro del arranque del servidor de producción (`app.ts`). El sembrado debe ejecutarse a través de un comando CLI desacoplado (`db:seed` o runner dedicado).
+   - Prohibido incluir semillas pesadas de prueba dentro del arranque del servidor de producción (`app.ts`). El sembrado debe ejecutarse a través de comandos CLI desacoplados:
+     - `prisma/seed.ts` (vía `PrismaClient` con `upsert`) para la base física PostgreSQL.
+     - `src/infrastructure/seeds/seed.ts` (vía Repositorios) para entornos en memoria efímeros.
 
 4. **Aislamiento en Pruebas Automatizadas (Test Factories):**
    - Los tests unitarios e integración TDD NO deben depender de semillas globales mutadas. Cada test debe generar sus propios datos limpios e independientes usando el patrón *Test Factory* (`beforeEach`).
 
 5. **Gobernanza PII y Sanitización Sintética (EU AI Act & GDPR):**
-   - Las semillas de desarrollo DEBEN utilizar datos sintéticos anónimos. Queda estrictamente prohibido usar nombres, correos o teléfonos de clientes reales. Toda credencial o PIN de prueba debe almacenarse mediante hash seguro (Argon2id / bcrypt / Salted Hash).
+   - Las semillas de desarrollo DEBEN utilizar datos sintéticos anónimos. Queda strictly prohibido usar nombres, correos o teléfonos de clientes reales. Toda credencial o PIN de prueba debe soportar sobreescritura por variables de entorno (`SEED_ADMIN_PIN`, `SEED_KITCHEN_PIN`) y almacenarse mediante hash seguro (Argon2id / bcrypt / Salted Hash).

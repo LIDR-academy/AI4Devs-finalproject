@@ -28,18 +28,19 @@ Sigue secuencialmente este flujo procedimental:
 
 ## 🛠️ FASE 2: Diseño del Script de Sembrado Agnóstico e Idempotente
 1. **Garantizar Idempotencia Obligatoria:**
-   - En ORMs (Prisma, TypeORM, Drizzle): Utiliza `upsert({ where, update, create })`.
+   - En ORMs (Prisma, TypeORM, Drizzle): Utiliza `upsert({ where, update, create })` en `prisma/seed.ts`.
    - En SQL Nativo: Utiliza `INSERT INTO ... ON CONFLICT (...) DO UPDATE`.
    - En Repositorios InMemory/NoSQL: Comprueba la existencia por identificador único antes de sembrar.
 2. **Sanitización PII y Hashing Seguro:**
    - Asigna correos y nombres sintéticos (`admin@restostock.com`, `USER_SYNTHETIC_001`).
    - Cifra todas las credenciales o PINs con hashes realistas (`Argon2id` / `bcrypt` / `Salted Hash`).
+   - Permite siempre la sobreescritura de credenciales por variables de entorno (ej. `process.env.SEED_ADMIN_PIN`).
 
 ---
 
 ## 🚀 FASE 3: Desacoplamiento y Runner CLI
-1. **Crear o Actualizar el Runner CLI:** Ubica la semilla en un runner independiente (ej. `prisma/seed.ts` o un script CLI desacoplado).
-2. **Configurar el Comando de Ejecución:** Asegúrate de declarar el script ejecutable en `package.json` (ej. `"db:seed"`).
+1. **Crear o Actualizar el Runner CLI:** Ubica la semilla relacional física en `prisma/seed.ts` (usando `PrismaClient`) y la semilla efímera en `src/infrastructure/seeds/seed.ts`.
+2. **Configurar el Comando de Ejecución:** Asegúrate de declarar el script ejecutable en `package.json` (ej. `"seed": "tsx prisma/seed.ts"`, `"db:seed": "prisma db seed"`).
 3. **Desacoplar de Servidores Web:** Garantiza que el arranque del servidor de producción (`app.ts` / `server.ts`) NO ejecute semillas pesadas en tiempo de recepción de tráfico.
 
 ---
