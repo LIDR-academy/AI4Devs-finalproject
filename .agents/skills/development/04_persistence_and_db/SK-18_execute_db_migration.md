@@ -41,5 +41,5 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🧪 FASE 4: Verificación y Datos de Prueba (Seeding)
 1. **Validar Estado de la DB:** Verifica la sincronización del esquema local.
-2. **Ejecutar Seed:** Corre `pnpm --filter @restostock/backend exec prisma db seed` para garantizar datos base consistentes.
+2. **Ejecutar Seed Idempotente (SK-28):** Ejecuta la semilla declarativa siguiendo los 5 pilares de `SK-28_manage_database_seeding.md` (ej. `pnpm --filter @restostock/backend exec prisma db seed`).
 3. **Reporte al Humano:** Detallar las migraciones generadas y el estado de la base de datos estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.
