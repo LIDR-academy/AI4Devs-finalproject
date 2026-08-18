@@ -34,12 +34,12 @@ Sigue estrictamente este flujo de trabajo secuencial:
 ---
 
 ## 🚀 FASE 3: Generación y Ejecución de la Migración
-1. **Generar la Migración:** Ejecuta `pnpm --filter @restostock/backend exec prisma migrate dev --name <migration_name>`.
-2. **Regenerar el Cliente Prisma:** Corre `pnpm --filter @restostock/backend exec prisma generate` para sincronizar los tipos de TypeScript.
+1. **Generar la Migración:** Ejecuta el comando de migración ORM del proyecto (ej. `npx prisma migrate dev --name <migration_name>` o equivalente).
+2. **Regenerar el Cliente ORM:** Corre la actualización del cliente ORM del proyecto para sincronizar tipos.
 
 ---
 
 ## 🧪 FASE 4: Verificación y Datos de Prueba (Seeding)
 1. **Validar Estado de la DB:** Verifica la sincronización del esquema local.
-2. **Ejecutar Seed Idempotente (SK-28):** Ejecuta la semilla declarativa siguiendo los 5 pilares de `SK-28_manage_database_seeding.md` (ej. `pnpm --filter @restostock/backend exec prisma db seed`).
+2. **Ejecutar Seed Idempotente (SK-28):** Ejecuta la semilla declarativa siguiendo los 5 pilares de `SK-28_manage_database_seeding.md`.
 3. **Reporte al Humano:** Detallar las migraciones generadas y el estado de la base de datos estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

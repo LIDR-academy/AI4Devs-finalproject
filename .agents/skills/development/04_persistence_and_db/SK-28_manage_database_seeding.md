@@ -32,7 +32,7 @@ Sigue secuencialmente este flujo procedimental:
    - En SQL Nativo: Utiliza `INSERT INTO ... ON CONFLICT (...) DO UPDATE`.
    - En Repositorios InMemory/NoSQL: Comprueba la existencia por identificador único antes de sembrar.
 2. **Sanitización PII y Hashing Seguro:**
-   - Asigna correos y nombres sintéticos (`admin@restostock.com`, `USER_SYNTHETIC_001`).
+   - Asigna correos y nombres sintéticos (`admin@example.com`, `USER_SYNTHETIC_001`).
    - Cifra todas las credenciales o PINs con hashes realistas (`Argon2id` / `bcrypt` / `Salted Hash`).
    - Permite siempre la sobreescritura de credenciales por variables de entorno (ej. `process.env.SEED_ADMIN_PIN`).
 
@@ -46,6 +46,6 @@ Sigue secuencialmente este flujo procedimental:
 ---
 
 ## 🧪 FASE 4: Verificación y Reporte
-1. **Ejecutar el Runner:** Corre el comando de sembrado (ej. `pnpm --filter @restostock/backend exec prisma db seed` o runner equivalente).
+1. **Ejecutar el Runner:** Corre el comando de sembrado del proyecto (ej. `npx prisma db seed` o runner equivalente).
 2. **Probar Idempotencia:** Re-ejecuta el comando por segunda vez y confirma que termine con **0 errores** y **0 registros duplicados**.
 3. **Reportar al Humano:** Notifica el estado y los registros sembrados estructurados según `.agents/rules/00_output_reporting_standard.md`.

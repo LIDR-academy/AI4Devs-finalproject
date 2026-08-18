@@ -59,7 +59,7 @@ inputs:
   - docs/05_agile_planning/12_tickets/
 ---
 
-# 🗺️ Mapa Jerárquico del Backlog (RestoStock)
+# 🗺️ Mapa Jerárquico del Backlog (<ProjectName>)
 
 > **Navegación del Framework SDD:**  
 > [⬅️ Volver a Matriz de Trazabilidad (13_matriz_trazabilidad.md)](./13_matriz_trazabilidad.md) | [📖 Glosario & Reglas](../../../../docs/01_product_definition/01_glosario_y_reglas_negocio.md) | [Siguiente: Historial de Entregas (15_history.md) ➡️](./15_history.md)
