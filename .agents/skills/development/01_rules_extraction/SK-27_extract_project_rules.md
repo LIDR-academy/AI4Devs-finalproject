@@ -40,7 +40,7 @@ Infiere y sintetiza las reglas específicas para cada una de las siguientes áre
 1. Crea el directorio objetivo `docs/04_governance_and_quality/rules/` si no existe.
 2. Escribe cada uno de los 7 archivos de reglas (`domain_rules.md`, `backend_rules.md`, `database_rules.md`, `frontend_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) redactados de forma profesional en formato Markdown.
 3. **Encabezado de Pila Tecnológica:** Todo archivo de reglas DEBE incluir una sección inicial `## 🛠️ Pila Tecnológica Detectada` detallando expresamente los frameworks, librerías y estándares identificados en la documentación.
-4. **Generación/Actualización de AGENTS.md:** Genera o sincroniza el archivo `AGENTS.md` en la raíz del proyecto. El archivo generado DEBE incluir obligatoriamente la Sección 6 (**Universal Agnostic Quality & Security Guards**) con los 20 Guards innegociables (Fail-Fast Secrets, Auth JWT, Rate Limiting, Precision Decimal, RFC 7807, DI, Page Object Model E2E, Playwright CLI vs MCP balancing, etc.), vinculando el contexto del producto, la pila tecnológica y la directiva innegociable de leer las reglas en `docs/04_governance_and_quality/rules/`.
+4. **Generación/Actualización de AGENTS.md:** Genera o sincroniza el archivo `AGENTS.md` en la raíz del proyecto. El archivo generado DEBE incluir obligatoriamente la Sección 6 (**Universal Agnostic Quality & Security Guards**) con los 20 Guards innegociables (Fail-Fast Secrets & Environment Auditing via SK-33, Auth JWT, Rate Limiting, Precision Decimal, RFC 7807, DI, Page Object Model E2E, Playwright CLI vs MCP balancing, etc.), vinculando el contexto del producto, la pila tecnológica y la directiva innegociable de leer las reglas en `docs/04_governance_and_quality/rules/`.
 
 ---
 
