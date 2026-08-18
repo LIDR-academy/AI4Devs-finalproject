@@ -108,6 +108,7 @@ To mark a ticket as **Done**:
 18. **Dependency Injection & Route Decoupling Guard:** Prohibit instantiating concrete infrastructure repositories or services directly inside route definitions or controllers. All dependencies must be passed via factory functions or constructor injection.
 19. **RFC 7807 Standard Error Response Guard:** Require all HTTP error responses to strictly conform to the RFC 7807 Problem Details format (`type`, `title`, `status`, `detail`, `instance`).
 20. **Page Object Model (POM) & Multi-Layer Oracle E2E Guard:** Mandatory encapsulation of browser selectors and page interactions in reusable Page Object classes (e.g. `e2e/pages/*`) for all Playwright E2E test suites. Mandatory explicit code comment annotations for the 3 Oracles (`// ORACULO UI:`, `// ORACULO RED:`, `// ORACULO ESTADO:`) in all E2E test assertions to guarantee multi-layer verification without fragile inline selector duplication.
+21. **Test Directory Co-location & Hybrid Layer Architecture Guard:** Mandatory adherence to the hybrid co-location standard (`.agents/rules/02_testing_architecture_standard.md`). Domain/Value Object tests MUST be co-located in `src/domain/`, UseCases in `src/application/`, Integration tests in `tests/`, and E2E Playwright tests in `e2e/specs/` using Page Object Models (`e2e/pages/`).
 
 
 

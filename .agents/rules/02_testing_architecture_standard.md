@@ -4,35 +4,53 @@ Este documento instruye la estructura de carpetas, distribución de capas, patro
 
 ---
 
-## 🏛️ 1. Estructura de Carpetas y Ubicación de Pruebas
+## 🏛️ 1. Estructura de Carpetas y Ubicación de Pruebas (Directiva Agéntica)
 
-El marco `.agents` adopta un modelo híbrido basado en **Co-localización de Pruebas de Dominio/Componentes** y **Directorios Dedicados para Integración y E2E**:
+El marco `.agents` adopta un modelo híbrido basado en **Co-localización de Pruebas de Dominio/Componentes** y **Directorios Dedicados para Integración y E2E**.
+
+Todo agente de IA o desarrollador DEBE ubicar los nuevos archivos de prueba siguiendo este mapa estricto:
 
 ```text
 [raíz-del-proyecto]/
-├── src/                                # CÓDIGO FUENTE & PRUEBAS CO-LOCALIZADAS
-│   ├── domain/                         # 🟢 1. Unit Tests de Dominio (Co-localizados)
-│   │   └── [modulo]/
-│   │       ├── [Entity].ts
-│   │       └── [Entity].test.ts        # Pure TypeScript. Zero dependencias DB/HTTP. Execution < 5ms.
-│   ├── application/                    # 🟡 2. Tests de Casos de Uso (Co-localizados)
-│   │   └── use-cases/
-│   │       ├── [UseCase].ts
-│   │       └── [UseCase].test.ts       # Test de lógica de negocio usando InMemory Fakes.
-│   └── infrastructure/                 # 🔵 3. Tests de Componentes / Handlers
-│       └── http/routes/
-│           └── [route].test.ts         # Invocación HTTP Supertest / MSW.
-│
-├── tests/                              # PRUEBAS DE INTEGRACIÓN DE SERVICIOS (Cross-slice)
-│   ├── auth/
-│   ├── kitchen/
-│   └── fixtures/                       # Constructores Object Mother (SK-32)
-│
-└── e2e/                                # 🟣 4. PRUEBAS E2E / BROWSER (Playwright)
-    ├── pages/                          # Page Object Models (Encapsulación de Selectores - Guard 20)
-    │   └── [Page]Page.ts
-    └── specs/                          # Pruebas de Flujo Completo (RBT / MBT - SK-34)
-        └── [feature].spec.ts
+├── apps/
+│   ├── backend/
+│   │   ├── src/                         # 🟢 CÓDIGO FUENTE & UNIT TESTS CO-LOCALIZADOS
+│   │   │   ├── domain/                  # 1. Unit Tests de Dominio (Pure TS. Zero deps. Execution < 5ms)
+│   │   │   │   └── [modulo]/
+│   │   │   │       ├── [Entity].ts
+│   │   │   │       └── [Entity].test.ts <-- Co-located Unit Test
+│   │   │   ├── application/             # 2. Tests de Casos de Uso (Con InMemory Fakes)
+│   │   │   │   └── use-cases/
+│   │   │   │       ├── [UseCase].ts
+│   │   │   │       └── [UseCase].test.ts <-- Co-located UseCase Test
+│   │   │   └── infrastructure/          # 3. Tests de Handlers / Infraestructura
+│   │   │       └── db/
+│   │   │           ├── PrismaRepo.ts
+│   │   │           └── PrismaRepo.int.test.ts
+│   │   │
+│   │   └── tests/                       # 🔵 PRUEBAS DE INTEGRACIÓN DE SERVICIOS (Cross-Cutting)
+│   │       ├── auth/                    # Tests de Endpoints HTTP / Routers Express / Supertest
+│   │       │   └── AuthenticateWithPin.test.ts
+│   │       ├── kitchen/
+│   │       │   └── ConsumeRecipeRoute.test.ts
+│   │       ├── helpers/                 # Utilidades de Test (DB Reset, Test Server Setup)
+│   │       └── fixtures/                # Data Builders & Object Mothers (SK-32)
+│   │           └── StockMother.ts
+│   │
+│   └── frontend/
+│       ├── src/
+│       │   ├── components/              # 🟢 COMPONENT TESTS (React Testing Library)
+│       │   │   ├── TouchButton.tsx
+│       │   │   └── TouchButton.test.tsx <-- Component Test
+│       │   └── services/
+│       │
+│       └── e2e/                         # 🟣 PRUEBAS E2E / BROWSER (Playwright)
+│           ├── config/                  # Ambientes y VCR Mocks
+│           ├── fixtures/                # Test Data & Synthetic Auth Tokens
+│           ├── pages/                   # Page Object Models (POM - Guard 20)
+│           │   └── [Page]Page.ts
+│           └── specs/                   # Test Specs E2E (RBT / MBT - SK-34)
+│               └── [feature].spec.ts
 ```
 
 ---
