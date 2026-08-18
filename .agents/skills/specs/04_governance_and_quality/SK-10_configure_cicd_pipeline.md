@@ -1,7 +1,7 @@
 ---
 name: cicd-pipeline
-description: "Genera la automatización del pipeline de CI/CD en GitHub Actions para linters, verificación de tipos TypeScript, auditoría SAST de seguridad, ejecuciones de tests TDD y validación de OpenAPI."
-version: "3.3.0"
+description: "Genera la automatización del pipeline de CI/CD en GitHub Actions (Node 24 LTS, pnpm 9, GitHub Actions @v5, OIDC sin llaves estáticas, OpenTofu IaC MPL-2.0) para linters, auditoría SAST, TDD, validación OpenAPI y aprovisionamiento declarativo de infraestructura."
+version: "3.4.0"
 category: "04_governance_and_quality"
 inputs:
   - "docs/04_governance_and_quality/08_security_strategy.md"
@@ -11,41 +11,56 @@ outputs:
   - "docs/04_governance_and_quality/10_cicd_pipeline.md"
 ---
 
-# ⚙️ SK-10: Pipeline de CI/CD y Automatización DevSecOps (v3.3.0)
+# ⚙️ SK-10: Pipeline de CI/CD, DevSecOps y OpenTofu IaC (v3.4.0)
 
-Actúa como un **Principal DevOps Engineer** y **DevSecOps Architect** experto en GitHub Actions, Docker Compose, caching de pnpm/npm, linters de TypeScript y pipelines de Integración Continua de alta velocidad.
+Actúa como un **Principal DevOps Engineer** y **DevSecOps Architect** experto en **GitHub Actions @v5**, **Node 24 LTS**, **pnpm 9**, **OpenTofu (MPL-2.0)**, Docker Compose, y pipelines de Integración Continua de alta velocidad bajo los **Guards 22 y 23** de `AGENTS.md`.
 
-Tu objetivo es analizar las Estrategias de Seguridad (`08_security_strategy.md`) y Pruebas (`09_testing_strategy.md`) para generar el workflow ejecutable `.github/workflows/ci.yml` y documentar la arquitectura de CI/CD en `docs/04_governance_and_quality/10_cicd_pipeline.md`.
+Tu objetivo es analizar las Estrategias de Seguridad (`08_security_strategy.md`) y Pruebas (`09_testing_strategy.md`) para:
+1. Generar el workflow ejecutable `.github/workflows/ci.yml` (Node 24 LTS + OIDC + pnpm 9).
+2. Generar el módulo declarativo de infraestructura `infrastructure/opentofu/main.tf`.
+3. Documentar la arquitectura CI/CD en `docs/04_governance_and_quality/10_cicd_pipeline.md`.
 
 ---
 
 ## 🚫 Non-Goals de Ejecución del Agente (Guards)
 
 Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
-1. **No exponer secretos ni tokens en el YAML del workflow:** Prohibido hardcodear contraseñas de BD o API Keys en `ci.yml`; referenciar exclusivamente `${{ secrets.YOUR_KEY }}`.
+1. **No exponer secretos ni tokens en el YAML del workflow:** Prohibido hardcodear contraseñas de BD o API Keys en `ci.yml`; referenciar exclusivamente `${{ secrets.YOUR_KEY }}`. **Mandatorio OIDC** (Guard 23).
 2. **No omitir auditorías de seguridad ni linters:** Prohibido omitir `pnpm run lint` o `pnpm audit` para acelerar el pipeline.
 3. **No permitir merges automáticos con tests en rojo:** El workflow debe fallar de forma estricta ante cualquier desalineación de TypeScript, error de linting o falla en los unit/integration tests.
+4. **No usar Node.js < 24 LTS:** Prohibido configurar `node-version` con versiones anteriores a `lts/*` equivalente a Node 24 (Guard 23).
+5. **No almacenar credenciales cloud estáticas:** Prohibido usar `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` en secrets de GitHub Actions; mandatorio el uso de **OIDC con tokens efímeros** (Guard 23).
+6. **No aprovisionar infraestructura con scripts manuales:** Prohibido crear recursos cloud con `aws cli`, `gcloud` o scripts shell sin estado; mandatorio el uso de **módulos declarativos OpenTofu** en `infrastructure/opentofu/` (Guard 22).
 
 ---
 
-## 🔄 Pipeline de Ejecución Secuencial en 4 Jobs (GitHub Actions Workflow)
+## 🔄 Pipeline de Ejecución Secuencial en 5 Jobs (GitHub Actions Workflow)
+
+### 📍 Job 0: Governance Gate (1 min) ← Guard 22 & 23
+- Checkout de código con `actions/checkout@v5`.
+- Verificar integridad del arnés `.agents` con `bash .agents/scripts/validate_agents.sh`.
+- Verificar drift de contrato con `bash .agents/scripts/check_contract_drift.sh`.
+- Validar especificación DESIGN.md con `npx -y @google/design.md lint DESIGN.md` (si existe).
 
 ### 📍 Job 1: Lint & Static Analysis (2 min)
-- Checkout de código, setup de Node.js con cache de `pnpm`.
+- Setup de **Node 24 LTS** (`node-version: 'lts/*'`) con cache de **pnpm 9** (`cache: 'pnpm'`).
 - Ejecución de `pnpm run lint` y `npx tsc --noEmit` para verificar tipado estricto.
-- Validar especificación OpenAPI con `npx spectral lint docs/03_persistence_and_api/openapi.yaml` (si existe).
+- Validar especificación OpenAPI con `npx @stoplight/spectral-cli lint docs/03_persistence_and_api/openapi.yaml` (si existe).
 
 ### 📍 Job 2: Security & Dependency Audit (2 min)
 - Ejecución de escaneo de vulnerabilidades `pnpm audit --audit-level=high`.
 - Verificación de secretos mediante `gitleaks` o escaneo estático SAST.
+- Escaneo de imagen Docker con `trivy image` para CVEs de dependencias en contenedores.
 
 ### 📍 Job 3: Unit & Integration Test Suite (3-5 min)
-- Aprovisionamiento de base de datos Postgres efímera mediante Docker Service Container en GitHub Actions.
+- Aprovisionamiento de base de datos Postgres 15 efímera mediante Docker Service Container en GitHub Actions.
 - Aplicación de migraciones de base de datos (`npx prisma migrate deploy` o equivalentes).
 - Ejecución de la suite de pruebas unitarias y de integración `pnpm test`.
 
-### 📍 Job 4: Build Verification (2 min)
+### 📍 Job 4: Build & IaC Provisioning (3 min) ← Guard 22 & 23
 - Compilación del bundle de producción `pnpm run build`.
+- Autenticación en proveedor cloud mediante **OpenID Connect (OIDC)** — sin `AWS_SECRET_ACCESS_KEY` ni llaves estáticas.
+- Validación de módulos IaC: `tofu validate && tofu plan` en `infrastructure/opentofu/` (modo dry-run en PRs, `tofu apply` solo en `main`).
 
 ---
 

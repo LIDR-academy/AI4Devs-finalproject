@@ -104,13 +104,16 @@ Las 34 habilidades son runbooks especializados organizados por fases y roles té
 *   **Workflows de Auditoría Adversarial:** [Workflow 03 Auditoría de Especificaciones](workflows/03_spec_audit_prompt.md), [Workflow 04 Auditoría Adversarial DevSecOps](workflows/04_dev_audit_prompt.md) y [Workflow 07 Observabilidad en Producción Shift-Right](workflows/07_production_observability_agent.md).
 
 ### Fase de Codificación y Calidad (Developer, QA & Automation Roles)
-*   **01_rules_extraction:** [SK-27 Extracción de Reglas Legacy](skills/development/01_rules_extraction/SK-27_extract_project_rules.md).
+*   **01_rules_extraction:** [SK-27 Extracción de Reglas Legacy](skills/development/01_rules_extraction/SK-27_extract_project_rules.md), [SK-30 Extractor de Diagramas Legacy (C4/ERD)](skills/development/01_rules_extraction/SK-30_legacy_diagram_extractor.md), [SK-31 Indexador de Deuda Técnica](skills/development/01_rules_extraction/SK-31_technical_debt_indexer.md) y [SK-33 Auditoría de Configuración de Entorno Fail-Fast](skills/development/01_rules_extraction/SK-33_environment_configuration_auditor.md).
 *   **02_backend_development:** [SK-16 Desarrollo Backend & Entidades Secundarias](skills/development/02_backend_development/SK-16_develop_backend_ticket.md).
 *   **03_frontend_development:** [SK-17 Desarrollo Frontend & Touch UI](skills/development/03_frontend_development/SK-17_develop_frontend_ticket.md).
 *   **04_persistence_and_db:** [SK-18 Migraciones, Seeds & Anti-Orfandad](skills/development/04_persistence_and_db/SK-18_execute_db_migration.md) y [SK-28 Seeding Profesional Idempotente](skills/development/04_persistence_and_db/SK-28_manage_database_seeding.md).
-*   **05_quality_and_lint:** [SK-19 Refactor & Anti-N+1 / Anti-Mass-Assignment](skills/development/05_quality_and_lint/SK-19_refactor_and_lint.md), [SK-22 DBA Log Analysis & Troubleshooting](skills/development/05_quality_and_lint/SK-22_agent_troubleshooting.md), [SK-24 Characterization Testing](skills/development/05_quality_and_lint/SK-24_execute_characterization_testing.md) y [SK-26 Recuperador Dinámico Few-Shot](skills/development/05_quality_and_lint/SK-26_retrieve_few_shot_context.md).
+*   **05_quality_and_lint:** [SK-19 Refactor & Anti-N+1 / Anti-Mass-Assignment](skills/development/05_quality_and_lint/SK-19_refactor_and_lint.md), [SK-22 DBA Log Analysis & Troubleshooting](skills/development/05_quality_and_lint/SK-22_agent_troubleshooting.md), [SK-24 Characterization Testing](skills/development/05_quality_and_lint/SK-24_execute_characterization_testing.md), [SK-26 Recuperador Dinámico Few-Shot](skills/development/05_quality_and_lint/SK-26_retrieve_few_shot_context.md) y [SK-32 Test Fixture Builder (Object Mother)](skills/development/05_quality_and_lint/SK-32_test_fixture_builder.md).
 *   **06_visual_qa:** [SK-20 Browser Visual QA](skills/development/06_visual_qa/SK-20_execute_browser_qa.md) y [SK-21 Auditoría Accesibilidad UI/a11y](skills/development/06_visual_qa/SK-21_audit_ui_accessibility.md).
+*   **07_performance_and_observability:** [SK-29 Load & Performance Testing](skills/development/07_performance_and_observability/SK-29_load_and_performance_testing.md).
+*   **quality/01_testing:** [SK-34 Model-Based Testing Designer (MBT & Oracles)](skills/quality/01_testing/SK-34_model_based_testing_designer.md).
 *   **Patrones de Oro (Few-Shot):** [Plantillas y Ejemplos de Referencia](examples/FEW_SHOT_PATTERNS.md).
+
 
 ---
 
