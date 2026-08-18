@@ -1,4 +1,4 @@
-name: RestoStock CI Pipeline
+name: RestoStock CI Pipeline (2026 SOTA)
 
 on:
   push:
@@ -8,21 +8,21 @@ on:
 
 jobs:
   lint-and-validate:
-    name: Lint, Types & OpenAPI Validation
+    name: Lint, Types, OpenAPI & Agents Governance
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js (Node 24 LTS)
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 'lts/*'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Get pnpm store directory
@@ -47,6 +47,12 @@ jobs:
       - name: Validate OpenAPI Contract
         run: npx -y @stoplight/spectral-cli lint docs/03_persistence_and_api/openapi.yaml
 
+      - name: Validate Agents Framework Integrity
+        run: bash .agents/scripts/validate_agents.sh
+
+      - name: Validate DESIGN.md Spec
+        run: npx -y @google/design.md lint DESIGN.md
+
   test-and-build:
     name: Unit/Integration Tests & Production Build
     needs: lint-and-validate
@@ -69,17 +75,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js (Node 24 LTS)
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 'lts/*'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Get pnpm store directory
@@ -97,6 +103,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Validate DB Schema
+        run: npx prisma validate --schema=apps/backend/prisma/schema.prisma
 
       - name: Run Test Suite (Vitest)
         env:

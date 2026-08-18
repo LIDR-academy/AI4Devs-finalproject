@@ -136,7 +136,8 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
     }
 
     // Remanentes Activos FEFO Simulados (Persistidos en Repositorio de Stock y Query Model)
-    if (typeof (repos.remanenteQueryRepo as any).seedRemanente === 'function') {
+    const queryRepoWithSeed = repos.remanenteQueryRepo as { seedRemanente?: (item: any) => void; findActiveRemanentes: () => Promise<any[]> };
+    if (typeof queryRepoWithSeed.seedRemanente === 'function') {
       const activeRemanentes = await repos.remanenteQueryRepo.findActiveRemanentes();
       if (activeRemanentes.length === 0) {
         const now = new Date();
