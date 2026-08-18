@@ -3,6 +3,8 @@ import "temporal-polyfill/global";
 import type { TrainingClass } from "@/domain/types/class";
 import {
   addDays,
+  CANCELED_CLASS_COLOR,
+  CLASS_TYPE_COLORS,
   classEventTitle,
   gymTodayDate,
   weekBoundsOf,
@@ -75,7 +77,9 @@ function DayEvent({
   const end = Math.min(start + trainingClass.durationMinutes, WINDOW_END_MIN);
   const top = ((start - WINDOW_START_MIN) / 60) * HOUR_PX;
   const height = Math.max(((end - start) / 60) * HOUR_PX, 18);
-  const backgroundColor = canceled ? "#e5e7eb" : (trainingClass.level?.color ?? "#3b82f6");
+  const backgroundColor = canceled
+    ? CANCELED_CLASS_COLOR
+    : CLASS_TYPE_COLORS[trainingClass.classType];
   const subtitle = trainingClass.assignedCoach.name
     ? `${formatTime(trainingClass.startTime)} · ${trainingClass.assignedCoach.name}`
     : formatTime(trainingClass.startTime);
@@ -91,6 +95,11 @@ function DayEvent({
         canceled ? "opacity-70" : ""
       }`}
     >
+      {canceled && (
+        <span className="block truncate rounded bg-white/25 px-1 text-[9px] font-semibold uppercase leading-tight">
+          Canceled
+        </span>
+      )}
       <span className="block truncate text-[11px] font-semibold leading-tight">
         {classEventTitle(trainingClass)}
       </span>

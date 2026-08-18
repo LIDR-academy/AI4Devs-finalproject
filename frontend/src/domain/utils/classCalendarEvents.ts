@@ -3,6 +3,13 @@ import type { CalendarEventExternal } from "@schedule-x/calendar";
 import type { ClassType, TrainingClass } from "@/domain/types/class";
 import { GYM_TIMEZONE } from "@/domain/utils/gymDateTime";
 
+export const CLASS_TYPE_COLORS: Record<ClassType, string> = {
+  INDIVIDUAL: "#3b82f6",
+  GROUP: "#10b981",
+};
+
+export const CANCELED_CLASS_COLOR = "#6b7280";
+
 export function gymTodayDate(): string {
   return Temporal.Now.zonedDateTimeISO(GYM_TIMEZONE).toPlainDate().toString();
 }
@@ -44,6 +51,11 @@ export function toClassCalendarEvent(trainingClass: TrainingClass): CalendarEven
     .add({ minutes: trainingClass.durationMinutes })
     .toZonedDateTimeISO(GYM_TIMEZONE);
 
+  const cellColor =
+    trainingClass.status === "CANCELED"
+      ? CANCELED_CLASS_COLOR
+      : CLASS_TYPE_COLORS[trainingClass.classType];
+
   return {
     id: trainingClass.id,
     title: classEventTitle(trainingClass),
@@ -53,7 +65,7 @@ export function toClassCalendarEvent(trainingClass: TrainingClass): CalendarEven
     kind: "CLASS",
     classType: trainingClass.classType,
     coachName: trainingClass.assignedCoach.name,
-    levelColor: trainingClass.level?.color ?? null,
+    cellColor,
     levelName: trainingClass.level?.name ?? null,
     status: trainingClass.status,
     isRecurring: trainingClass.isRecurring,
@@ -66,7 +78,7 @@ export type ClassCalendarEventShape = CalendarEventExternal & {
   kind: "CLASS";
   classType: ClassType;
   coachName: string;
-  levelColor: string | null;
+  cellColor: string;
   levelName: string | null;
   status: "ACTIVE" | "CANCELED";
   isRecurring: boolean;

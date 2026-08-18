@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { TrainingClass } from "@/domain/types/class";
 import {
   addDays,
+  CANCELED_CLASS_COLOR,
+  CLASS_TYPE_COLORS,
   classEventTitle,
   currentGymWeekBounds,
   gymTodayDate,
@@ -51,7 +53,7 @@ describe("classCalendarEvents", () => {
     expect(durationMs).toBe(60 * 60 * 1000);
     expect(event.classType).toBe("INDIVIDUAL");
     expect(event.coachName).toBe("Ana Coach");
-    expect(event.levelColor).toBe("#50C878");
+    expect(event.cellColor).toBe("#3b82f6");
     expect(event.enrollmentCount).toBe(1);
   });
 
@@ -69,6 +71,34 @@ describe("classCalendarEvents", () => {
   it("keeps canceled status", () => {
     const event = toClassCalendarEvent(buildClass({ status: "CANCELED" }));
     expect(event.status).toBe("CANCELED");
+  });
+});
+
+describe("class type colors", () => {
+  it("derives the cell color from the class type for individual classes", () => {
+    const event = toClassCalendarEvent(buildClass());
+    expect(event.cellColor).toBe(CLASS_TYPE_COLORS.INDIVIDUAL);
+  });
+
+  it("derives a different cell color for group classes", () => {
+    const event = toClassCalendarEvent(buildClass({ classType: "GROUP" }));
+    expect(event.cellColor).toBe(CLASS_TYPE_COLORS.GROUP);
+    expect(event.cellColor).not.toBe(CLASS_TYPE_COLORS.INDIVIDUAL);
+  });
+
+  it("does not use the level color for the calendar cell", () => {
+    const event = toClassCalendarEvent(
+      buildClass({ level: { id: "lvl-1", name: "Basic", color: "#50C878", sortOrder: 1 } }),
+    );
+    expect(event.cellColor).toBe(CLASS_TYPE_COLORS.INDIVIDUAL);
+    expect(event.cellColor).not.toBe("#50C878");
+  });
+
+  it("resolves canceled classes to the gray color regardless of class type", () => {
+    const individual = toClassCalendarEvent(buildClass({ status: "CANCELED" }));
+    const group = toClassCalendarEvent(buildClass({ classType: "GROUP", status: "CANCELED" }));
+    expect(individual.cellColor).toBe(CANCELED_CLASS_COLOR);
+    expect(group.cellColor).toBe(CANCELED_CLASS_COLOR);
   });
 });
 

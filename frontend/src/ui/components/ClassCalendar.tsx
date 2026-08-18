@@ -9,6 +9,7 @@ import type { Block } from "@/domain/types/block";
 import type { ClassType } from "@/domain/types/class";
 import { toBlockCalendarEvent } from "@/domain/utils/blockCalendarEvents";
 import {
+  CANCELED_CLASS_COLOR,
   currentGymWeekBounds,
   gymTodayDate,
   toClassCalendarEvent,
@@ -47,16 +48,17 @@ function ClassEventBlock({ calendarEvent }: { calendarEvent: CalendarEventExtern
   const isGroup = calendarEvent.classType === "GROUP";
   return (
     <div
-      className={`flex h-full w-full flex-col justify-center overflow-hidden rounded px-1 ${
-        canceled ? "opacity-60" : ""
-      }`}
+      className="flex h-full w-full flex-col justify-center overflow-hidden rounded px-1"
       style={{
-        backgroundColor: canceled
-          ? "var(--sx-color-gray-200, #e5e7eb)"
-          : (calendarEvent.levelColor ?? "#3b82f6"),
+        backgroundColor: canceled ? CANCELED_CLASS_COLOR : (typed.cellColor ?? "#3b82f6"),
         color: "#fff",
       }}
     >
+      {canceled && (
+        <span className="truncate rounded bg-white/25 px-1 text-[9px] font-semibold uppercase leading-tight">
+          Canceled
+        </span>
+      )}
       <span className="truncate text-[11px] font-semibold leading-tight">
         {String(calendarEvent.title)}
       </span>
@@ -74,6 +76,7 @@ const customComponents = {
 type CalendarEventWithKind = CalendarEventExternal & {
   kind?: "CLASS" | "BLOCK";
   block?: Block;
+  cellColor?: string;
 };
 
 function ClassCalendarDesktop() {

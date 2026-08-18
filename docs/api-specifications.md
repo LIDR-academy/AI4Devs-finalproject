@@ -684,6 +684,7 @@ All error responses follow this shape:
   - Personal blocks prevent class assignment to the specified coach (PRD Section 5).
   - No notifications are required for blocks (PRD Section 9, Resolved).
   - Google Calendar event created for the block.
+  - UI note: the Add Class modal offers Individual / Group / Block; blocks are created through the modal's Block option (there is no standalone Add Block modal or button).
 
 ---
 
