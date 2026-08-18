@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import { createApp } from '../../src/infrastructure/http/app.js';
-import { InMemoryStockRepository } from '../../src/infrastructure/stock/repositories/InMemoryStockRepository.js';
-import { InMemoryRemanenteQueryRepository } from '../../src/infrastructure/kitchen/repositories/InMemoryRemanenteQueryRepository.js';
-import { Remanente } from '../../src/domain/stock/entities/Remanente.js';
-import { DecimalQuantity } from '../../src/domain/stock/value-objects/DecimalQuantity.js';
+import { createApp } from '../../../infrastructure/http/app.js';
+import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
+import { InMemoryRemanenteQueryRepository } from '../../../infrastructure/kitchen/repositories/InMemoryRemanenteQueryRepository.js';
+import { Remanente } from '../../../domain/stock/entities/Remanente.js';
+import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 
 describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
   let stockRepo: InMemoryStockRepository;

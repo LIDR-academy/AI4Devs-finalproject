@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import { createApp } from '../../src/infrastructure/http/app.js';
-import { InMemoryRemanenteQueryRepository } from '../../src/infrastructure/kitchen/repositories/InMemoryRemanenteQueryRepository.js';
+import { createApp } from '../../../infrastructure/http/app.js';
+import { InMemoryRemanenteQueryRepository } from '../../../infrastructure/kitchen/repositories/InMemoryRemanenteQueryRepository.js';
 
 describe('TK-004: FEFO Active Remanentes Query TDD Suite', () => {
   let queryRepo: InMemoryRemanenteQueryRepository;

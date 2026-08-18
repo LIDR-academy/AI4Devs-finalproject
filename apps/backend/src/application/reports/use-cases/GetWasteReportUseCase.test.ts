@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { GetWasteReportUseCase } from '../../src/application/reports/use-cases/GetWasteReportUseCase.js';
-import { InMemoryReportRepository } from '../../src/infrastructure/reports/repositories/InMemoryReportRepository.js';
+import { GetWasteReportUseCase } from './GetWasteReportUseCase.js';
+import { InMemoryReportRepository } from '../../../infrastructure/reports/repositories/InMemoryReportRepository.js';
 
 describe('TK-010: GetWasteReportUseCase TDD Suite', () => {
   let reportRepo: InMemoryReportRepository;

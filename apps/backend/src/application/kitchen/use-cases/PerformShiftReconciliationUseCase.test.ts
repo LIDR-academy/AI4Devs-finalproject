@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { PerformShiftReconciliationUseCase } from '../../src/application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
-import { InMemoryStockRepository } from '../../src/infrastructure/stock/repositories/InMemoryStockRepository.js';
-import { InMemoryShiftReconciliationRepository } from '../../src/infrastructure/kitchen/repositories/InMemoryShiftReconciliationRepository.js';
-import { ActiveRemanenteDTO, IRemanenteQueryRepository } from '../../src/domain/kitchen/repositories/IRemanenteQueryRepository.js';
-import { Remanente } from '../../src/domain/stock/entities/Remanente.js';
-import { DecimalQuantity } from '../../src/domain/stock/value-objects/DecimalQuantity.js';
+import { PerformShiftReconciliationUseCase } from './PerformShiftReconciliationUseCase.js';
+import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
+import { InMemoryShiftReconciliationRepository } from '../../../infrastructure/kitchen/repositories/InMemoryShiftReconciliationRepository.js';
+import { ActiveRemanenteDTO, IRemanenteQueryRepository } from '../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
+import { Remanente } from '../../../domain/stock/entities/Remanente.js';
+import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 
 class InMemoryRemanenteQueryRepository implements IRemanenteQueryRepository {
   constructor(private readonly stockRepo: InMemoryStockRepository) {}

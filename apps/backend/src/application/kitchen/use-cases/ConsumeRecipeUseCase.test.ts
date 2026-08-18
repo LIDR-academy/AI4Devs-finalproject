@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ConsumeRecipeUseCase } from '../../src/application/kitchen/use-cases/ConsumeRecipeUseCase.js';
-import { InMemoryRecipeRepository } from '../../src/infrastructure/catalog/repositories/InMemoryRecipeRepository.js';
-import { InMemoryStockRepository } from '../../src/infrastructure/stock/repositories/InMemoryStockRepository.js';
-import { Recipe } from '../../src/domain/catalog/entities/Recipe.js';
-import { RecipeIngredient } from '../../src/domain/catalog/entities/RecipeIngredient.js';
-import { Remanente } from '../../src/domain/stock/entities/Remanente.js';
-import { DecimalQuantity } from '../../src/domain/stock/value-objects/DecimalQuantity.js';
+import { ConsumeRecipeUseCase } from './ConsumeRecipeUseCase.js';
+import { InMemoryRecipeRepository } from '../../../infrastructure/catalog/repositories/InMemoryRecipeRepository.js';
+import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
+import { Recipe } from '../../../domain/catalog/entities/Recipe.js';
+import { RecipeIngredient } from '../../../domain/catalog/entities/RecipeIngredient.js';
+import { Remanente } from '../../../domain/stock/entities/Remanente.js';
+import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 
 describe('TK-008: ConsumeRecipeUseCase TDD Suite', () => {
   let recipeRepo: InMemoryRecipeRepository;
@@ -63,12 +63,12 @@ describe('TK-008: ConsumeRecipeUseCase TDD Suite', () => {
     // ORACULO ESTADO: Remanente A debe haber sido totalmente consumido (0.0000) y quedar EXHAUSTED (FEFO estricto)
     const updatedRemA = await stockRepo.findRemanenteById('rem-a');
     expect(updatedRemA?.status).toBe('EXHAUSTED');
-    expect(updatedRemA?.currentQuantity.value.toString()).toBe('0');
+    expect(updatedRemA?.currentQuantity.toString()).toBe('0.000');
 
     // ORACULO ESTADO: Remanente B debe quedar en ACTIVE con 0.1500 KG restante (0.2000 - 0.0500)
     const updatedRemB = await stockRepo.findRemanenteById('rem-b');
     expect(updatedRemB?.status).toBe('ACTIVE');
-    expect(updatedRemB?.currentQuantity.value.toString()).toBe('0.15');
+    expect(updatedRemB?.currentQuantity.toString()).toBe('0.150');
   });
 
   it('debe lanzar un error de stock insuficiente si la suma de remanentes es menor a la requerida', async () => {
