@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.local
+.env.*
+*.log
+.git/
+.gitignore
+Dockerfile
+.dockerignore
+*.md
+.prisma/
+secrets/
+*.key
+__tests__/

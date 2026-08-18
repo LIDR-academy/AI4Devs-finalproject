@@ -4,7 +4,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { container } from "../../config/container.js";
 import { toTrainingClassDTO } from "../dto/trainingClassDto.js";
-import { NotFoundError, ValidationError } from "../errors.js";
+import { ValidationError } from "../errors.js";
 import { authenticate, requireRole } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 
@@ -17,6 +17,21 @@ const availableSlotsQuerySchema = z.object({
     errorMap: () => ({ message: "classType must be INDIVIDUAL or GROUP" }),
   }),
 });
+
+const listClassesQuerySchema = z
+  .object({
+    start: z.string().datetime({ offset: true }),
+    end: z.string().datetime({ offset: true }),
+    classType: z
+      .enum(["INDIVIDUAL", "GROUP"], {
+        errorMap: () => ({ message: "classType must be INDIVIDUAL or GROUP" }),
+      })
+      .optional(),
+    coachId: z.string().uuid("coachId must be a valid UUID").optional(),
+    page: z.coerce.number().int().min(1).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  })
+  .strict();
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be ISO format (YYYY-MM-DD)");
 
@@ -57,19 +72,45 @@ const updateClassSchema = z
   })
   .strict();
 
-router.get(
-  "/classes",
-  authenticate,
-  requireRole(UserRole.ADMIN, UserRole.COACH),
-  async (_req: Request, res: Response, next: NextFunction) => {
-    try {
-      const classes = await container.listTrainingClasses.execute();
-      res.json({ data: classes.map(toTrainingClassDTO), meta: { total: classes.length } });
-    } catch (error) {
-      next(error);
+router.get("/classes", authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parsed = listClassesQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.message);
     }
-  },
-);
+    const { start, end, classType, coachId, page, limit } = parsed.data;
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (startDate > endDate) {
+      throw new ValidationError("start must not be after end.");
+    }
+
+    const result = await container.listTrainingClasses.execute({
+      start: startDate,
+      end: endDate,
+      classType,
+      coachId,
+      page,
+      limit,
+      viewerRole: req.user?.role ?? "COACHEE",
+      viewerId: req.user?.id ?? "",
+    });
+
+    res.json({
+      data: result.data.map(({ row, visibility }) =>
+        toTrainingClassDTO(row, {
+          viewerRole: req.user?.role,
+          viewerId: req.user?.id,
+          visibility,
+        }),
+      ),
+      meta: result.meta,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post(
   "/classes",
@@ -101,7 +142,7 @@ router.post(
       res.status(201).json({
         seriesId: result.seriesId,
         recurrence: result.recurrence,
-        instances: result.instances.map(toTrainingClassDTO),
+        instances: result.instances.map((trainingClass) => toTrainingClassDTO(trainingClass)),
       });
     } catch (error) {
       next(error);
@@ -160,23 +201,21 @@ router.get(
 router.get(
   "/classes/:id",
   authenticate,
-  requireRole(UserRole.ADMIN, UserRole.COACH),
   async (req: Request, res: Response, next: NextFunction) => {
     const classId = req.params.id as string;
     try {
-      const trainingClass = await container.prisma.trainingClass.findUnique({
-        where: { id: classId },
-        include: {
-          assignedCoach: true,
-          level: true,
-          enrollments: { include: { coachee: true } },
-          waitingLists: true,
-        },
+      const result = await container.getTrainingClass.execute({
+        id: classId,
+        viewerRole: req.user?.role ?? "COACHEE",
+        viewerId: req.user?.id ?? "",
       });
-      if (!trainingClass) {
-        throw new NotFoundError("Class not found.");
-      }
-      res.json(toTrainingClassDTO(trainingClass));
+      res.json(
+        toTrainingClassDTO(result.row, {
+          viewerRole: req.user?.role,
+          viewerId: req.user?.id,
+          coacheeStatus: result.coacheeStatus,
+        }),
+      );
     } catch (error) {
       next(error);
     }
@@ -214,25 +253,29 @@ router.put(
   },
 );
 
+const cancelClassQuerySchema = z
+  .object({
+    scope: z.enum(["single", "series"]).optional().default("single"),
+  })
+  .strict();
+
 router.delete(
   "/classes/:id",
   authenticate,
   requireRole(UserRole.ADMIN, UserRole.COACH),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!container.deleteTrainingClass) {
-        res.status(503).json({
-          error: {
-            code: "SERVICE_UNAVAILABLE",
-            message: "Calendar service is not configured",
-            ref: crypto.randomUUID(),
-          },
-        });
-        return;
+      const parsed = cancelClassQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error.message);
       }
       const classId = req.params.id as string;
-      await container.deleteTrainingClass.execute(classId);
-      res.status(204).send();
+      const result = await container.cancelTrainingClass.execute({
+        id: classId,
+        scope: parsed.data.scope,
+        actor: { id: req.user?.id ?? "", role: req.user?.role ?? "COACHEE" },
+      });
+      res.json(result);
     } catch (error) {
       next(error);
     }
@@ -243,14 +286,17 @@ router.delete(
   "/recurring-series/:id",
   authenticate,
   requireRole(UserRole.ADMIN, UserRole.COACH),
-  (_req: Request, res: Response) => {
-    res.status(501).json({
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Recurring series deletion is not yet implemented.",
-        ref: crypto.randomUUID(),
-      },
-    });
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const seriesId = req.params.id as string;
+      const result = await container.cancelRecurringSeries.execute({
+        seriesId,
+        actor: { id: req.user?.id ?? "", role: req.user?.role ?? "COACHEE" },
+      });
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   },
 );
 

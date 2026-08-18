@@ -7,3 +7,8 @@
   --color-avanzado: #E67E22;
   --color-experto: #E74C3C;
 }
+
+.sx-react-calendar-wrapper {
+  height: 720px;
+  max-height: calc(100vh - 220px);
+}

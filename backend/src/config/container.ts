@@ -1,14 +1,16 @@
 import { PrismaClient } from "@prisma/client";
+import { CancelRecurringSeries } from "../application/use-cases/CancelRecurringSeries.js";
+import { CancelTrainingClass } from "../application/use-cases/CancelTrainingClass.js";
 import { CreateBlock } from "../application/use-cases/CreateBlock.js";
 import { CreateCoach } from "../application/use-cases/CreateCoach.js";
 import { CreateCoachee } from "../application/use-cases/CreateCoachee.js";
 import { CreateTrainingClass } from "../application/use-cases/CreateTrainingClass.js";
 import { DeleteBlock } from "../application/use-cases/DeleteBlock.js";
-import { DeleteTrainingClass } from "../application/use-cases/DeleteTrainingClass.js";
 import { GetAvailableSlots } from "../application/use-cases/GetAvailableSlots.js";
 import { GetCoach } from "../application/use-cases/GetCoach.js";
 import { GetCoachee } from "../application/use-cases/GetCoachee.js";
 import { GetCoachFinancialData } from "../application/use-cases/GetCoachFinancialData.js";
+import { GetTrainingClass } from "../application/use-cases/GetTrainingClass.js";
 import { ListBlocks } from "../application/use-cases/ListBlocks.js";
 import { ListCoachees } from "../application/use-cases/ListCoachees.js";
 import { ListCoaches } from "../application/use-cases/ListCoaches.js";
@@ -19,6 +21,7 @@ import { UpdateCoacheeLevel } from "../application/use-cases/UpdateCoacheeLevel.
 import { UpdateCoacheeStatus } from "../application/use-cases/UpdateCoacheeStatus.js";
 import { UpdateCoachStatus } from "../application/use-cases/UpdateCoachStatus.js";
 import { UpdateTrainingClass } from "../application/use-cases/UpdateTrainingClass.js";
+import { ClassCancellationPolicy } from "../domain/services/ClassCancellationPolicy.js";
 import { CoacheeService } from "../domain/services/CoacheeService.js";
 import { CoachService } from "../domain/services/CoachService.js";
 import { CalendarHealthMonitor } from "../infrastructure/adapters/calendar/CalendarHealthMonitor.js";
@@ -80,9 +83,21 @@ export const container = {
   calendarHealthMonitor,
   createTrainingClass: calendarProvider ? new CreateTrainingClass(prisma, calendarProvider) : null,
   updateTrainingClass: calendarProvider ? new UpdateTrainingClass(prisma, calendarProvider) : null,
-  deleteTrainingClass: calendarProvider ? new DeleteTrainingClass(prisma, calendarProvider) : null,
+  cancelTrainingClass: new CancelTrainingClass(
+    prisma,
+    calendarProvider,
+    new ClassCancellationPolicy(),
+    auditLogger,
+  ),
+  cancelRecurringSeries: new CancelRecurringSeries(
+    prisma,
+    calendarProvider,
+    new ClassCancellationPolicy(),
+    auditLogger,
+  ),
   getAvailableSlots: calendarProvider ? new GetAvailableSlots(prisma, calendarProvider) : null,
   listTrainingClasses: new ListTrainingClasses(prisma),
+  getTrainingClass: new GetTrainingClass(prisma),
   createBlock: calendarProvider ? new CreateBlock(prisma, calendarProvider) : null,
   deleteBlock: calendarProvider ? new DeleteBlock(prisma, calendarProvider) : null,
   listBlocks: new ListBlocks(prisma),

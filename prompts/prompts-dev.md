@@ -211,4 +211,47 @@ Now it works. However, I'd like for the event created in the Google Calendar to:
 Great. Now we only have to make sure the time of the classes are properly manage. 
 In the creation modal, the times appear with (IND+GRP) text after the time. I have selected 15.00 to create a class, but then in the google calendar I see that the class it's actually created at 17.00. I guess this issue is something related to the server time or similar. Maybe the best way to manage this would be to send the times in ISO_TIME strings? Or what do you think is the best approach for this?
 
-# 13 - OpenCode - DeepSeek V4 Flash Free - Plan mode
+# 13 - claude.ia - Sonnet 5
+
+I want to design a calendar view with the best UX possible. It should be used in desktop and mobile. Specially mobile should be very practical, flexible and easy to see and use. 
+How can I see different options as skeletons?
+
+----
+
+I like these 2. Is there any good library that we could use to make them easily?
+
+# 14 - OpenCode - DeepSeek V4 Flash Free
+
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-17/us-23-class-viewing-and-cancellation
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
+----
+
+Can you review the tasks please? I think that https://linear.app/ai4devs/issue/COACHER-123/t-236-build-class-list-and-detail-views-with-cancel-action is actually not done.
+
+----
+
+Looks great! Could we remove the first hours from the calendar view? We know for sure that there won't be any class befor 6am. Could we not show those hour rows? from 0 to 6?
+
+----
+
+Admin coach is not appearing in the filter selector. Please make sure admins are also treated as coaches
+
+----
+
+Desktop looks good now but mobile is not like the image attached in the task
+
+----
+
+This is exactly what I asked for but now I realised that it would be better that instead of just the cards with the events, to have like a day view so it's easy to see when we have empty hours. Day view like google calendar. Could you update it?
+
+----
+
+Great. Now in desktop version, if I open the class details,it's show below the row of the calendar days and it looks weird
+
+----
+
+Can you now mark all the tasks as done if applies and the US In Review in Linear please?

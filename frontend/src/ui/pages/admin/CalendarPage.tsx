@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ClassCalendar } from "@/ui/components/ClassCalendar";
 import { CreateClassModal } from "@/ui/components/CreateClassModal";
 
 export function AdminCalendarPage() {
@@ -6,7 +7,7 @@ export function AdminCalendarPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="hidden items-center justify-between md:flex">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Calendar</h2>
           <p className="mt-2 text-gray-500">Manage your weekly class schedule here.</p>
@@ -19,6 +20,7 @@ export function AdminCalendarPage() {
           Add Class
         </button>
       </div>
+      <ClassCalendar onAddClass={() => setModalOpen(true)} />
       <CreateClassModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

@@ -1,5 +1,20 @@
 import type { ClassStatus, ClassType } from "@prisma/client";
 
+export type ClassVisibility = "blue" | "green" | "gray";
+
+export interface CoacheeStatusDTO {
+  isEnrolled: boolean;
+  isOnWaitingList: boolean;
+  isWithinReach: boolean;
+}
+
+export interface ListMetaDTO {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface AssignedCoachDTO {
   id: string;
   name: string;
@@ -33,6 +48,8 @@ export interface TrainingClassDTO {
   waitingListCount: number;
   isRecurring: boolean;
   recurrenceSeriesId: string | null;
+  visibility?: ClassVisibility;
+  coacheeStatus?: CoacheeStatusDTO;
 }
 
 export interface TrainingClassRowLike {
@@ -49,11 +66,31 @@ export interface TrainingClassRowLike {
   waitingLists: unknown[];
 }
 
-export function toTrainingClassDTO(row: TrainingClassRowLike): TrainingClassDTO {
-  const enrolledCoachees = row.enrollments.map((enrollment) => ({
-    id: enrollment.coachee.id,
-    name: enrollment.coachee.name,
-  }));
+export interface ToTrainingClassDTOOptions {
+  viewerRole?: string;
+  viewerId?: string;
+  visibility?: ClassVisibility;
+  coacheeStatus?: CoacheeStatusDTO;
+  revealCoacheeNames?: boolean;
+}
+
+export function toTrainingClassDTO(
+  row: TrainingClassRowLike,
+  options: ToTrainingClassDTOOptions = {},
+): TrainingClassDTO {
+  const { viewerRole, viewerId, visibility, coacheeStatus, revealCoacheeNames } = options;
+  const isOwnClass =
+    viewerRole === "COACHEE" &&
+    row.enrollments.some((enrollment) => enrollment.coachee.id === viewerId);
+  const canRevealNames =
+    revealCoacheeNames ?? (viewerRole !== "COACHEE" || isOwnClass || visibility === "blue");
+
+  const enrolledCoachees = canRevealNames
+    ? row.enrollments.map((enrollment) => ({
+        id: enrollment.coachee.id,
+        name: enrollment.coachee.name,
+      }))
+    : [];
 
   return {
     id: row.id,
@@ -75,11 +112,13 @@ export function toTrainingClassDTO(row: TrainingClassRowLike): TrainingClassDTO 
     status: row.status,
     description: row.description,
     enrolledCoachees,
-    enrollmentCount: enrolledCoachees.length,
+    enrollmentCount: canRevealNames ? enrolledCoachees.length : row.enrollments.length,
     capacity: row.class_type === "GROUP" ? 4 : 1,
     hasWaitingList: row.waitingLists.length > 0,
     waitingListCount: row.waitingLists.length,
     isRecurring: row.recurrence_series_id !== null,
     recurrenceSeriesId: row.recurrence_series_id,
+    ...(visibility ? { visibility } : {}),
+    ...(coacheeStatus ? { coacheeStatus } : {}),
   };
 }

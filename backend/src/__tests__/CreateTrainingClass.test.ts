@@ -268,6 +268,11 @@ describe("CreateTrainingClass", () => {
 
   describe("recurring series", () => {
     it("creates a recurrence series with 12 weekly instances and one calendar event each", async () => {
+      const utcDay = new Date().getUTCDay();
+      const daysUntilMonday = (8 - utcDay) % 7 || 7;
+      const seriesStart = new Date(
+        Date.now() + (14 + daysUntilMonday) * 24 * 60 * 60 * 1000,
+      ).toISOString();
       const result = await createTrainingClass.execute(
         baseData({
           classType: "GROUP",
@@ -276,7 +281,7 @@ describe("CreateTrainingClass", () => {
           recurrence: {
             enabled: true,
             dayOfWeek: 1,
-            startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            startDate: seriesStart.slice(0, 10),
           },
         }),
       );

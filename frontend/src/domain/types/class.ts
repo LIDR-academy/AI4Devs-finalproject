@@ -1,5 +1,34 @@
 export type ClassType = "INDIVIDUAL" | "GROUP";
 
+export type ClassVisibility = "blue" | "green" | "gray";
+
+export interface CoacheeStatus {
+  isEnrolled: boolean;
+  isOnWaitingList: boolean;
+  isWithinReach: boolean;
+}
+
+export interface ListMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ListClassesParams {
+  start: string;
+  end: string;
+  classType?: ClassType;
+  coachId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ListClassesResponse {
+  data: TrainingClass[];
+  meta: ListMeta;
+}
+
 export interface TrainingClass {
   id: string;
   classType: ClassType;
@@ -16,6 +45,16 @@ export interface TrainingClass {
   waitingListCount: number;
   isRecurring: boolean;
   recurrenceSeriesId: string | null;
+  visibility?: ClassVisibility;
+  coacheeStatus?: CoacheeStatus;
+}
+
+export type CancelClassScope = "single" | "series";
+
+export interface CancelClassResponse {
+  id: string;
+  status: "ACTIVE" | "CANCELED";
+  canceledInstances: number | null;
 }
 
 export interface RecurrenceInput {

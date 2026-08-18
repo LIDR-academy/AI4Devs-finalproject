@@ -1,8 +1,13 @@
 import type {
   AvailableSlot,
+  CancelClassResponse,
+  CancelClassScope,
   ClassType,
   CreateClassPayload,
   CreateClassResponse,
+  ListClassesParams,
+  ListClassesResponse,
+  TrainingClass,
 } from "@/domain/types/class";
 import type { AssignableCoach } from "@/domain/types/coach";
 import apiClient from "./apiClient";
@@ -10,6 +15,34 @@ import apiClient from "./apiClient";
 export const classesRepository = {
   async create(payload: CreateClassPayload): Promise<CreateClassResponse> {
     const { data } = await apiClient.post<CreateClassResponse>("/classes", payload);
+    return data;
+  },
+
+  async list(params: ListClassesParams): Promise<ListClassesResponse> {
+    const search = new URLSearchParams({
+      start: params.start,
+      end: params.end,
+      page: String(params.page ?? 1),
+      limit: String(params.limit ?? 20),
+    });
+    if (params.classType) {
+      search.set("classType", params.classType);
+    }
+    if (params.coachId) {
+      search.set("coachId", params.coachId);
+    }
+    const { data } = await apiClient.get<ListClassesResponse>(`/classes?${search}`);
+    return data;
+  },
+
+  async get(id: string): Promise<TrainingClass> {
+    const { data } = await apiClient.get<TrainingClass>(`/classes/${id}`);
+    return data;
+  },
+
+  async cancel(id: string, scope: CancelClassScope): Promise<CancelClassResponse> {
+    const search = new URLSearchParams({ scope });
+    const { data } = await apiClient.delete<CancelClassResponse>(`/classes/${id}?${search}`);
     return data;
   },
 
