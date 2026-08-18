@@ -27,14 +27,15 @@ Este workflow ejecuta el pipeline de aseguramiento de calidad de forma interacti
 
 ---
 
-## 🧪 Paso 2 — Diseño de Suite de Pruebas & Dynamic Few-Shot Retrieval (`SK-26`)
+## 🧪 Paso 2 — Diseño de Suite de Pruebas, Fixture Builders & Dynamic Few-Shot Retrieval (`SK-26` / `SK-32`)
 1. Invocar `SK-26_few_shot_retriever` para recuperar los 2 mejores patrones de tests/código existentes en la base de código actual.
-2. Diseñar la suite de prueba determinista incluyendo:
-   - Happy path.
+2. Invocar `SK-32_test_fixture_builder` para generar constructores de datos de prueba deterministas (Object Mother / Builder Pattern) para la fase *Arrange*.
+3. Diseñar la suite de prueba determinista incluyendo:
+   - Happy path (Camino feliz).
+   - Cobertura simétrica Sad Path (al menos 1 test de excepción RFC 7807 por cada flujo feliz).
    - Casos borde (Unicode, nulos, rangos extremales).
-   - Errores estandarizados RFC 7807.
    - Snapshots de regresión visual (`toHaveScreenshot()`) en componentes UI táctiles/móviles si aplica.
-3. 🛑 **PAUSA OBLIGATORIA (Gate 2):** Esperar confirmación del usuario para avanzar al Paso 3.
+4. 🛑 **PAUSA OBLIGATORIA (Gate 2):** Esperar confirmación del usuario para avanzar al Paso 3.
 
 ---
 
