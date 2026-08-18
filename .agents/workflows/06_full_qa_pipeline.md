@@ -17,25 +17,33 @@ Este workflow ejecuta el pipeline de aseguramiento de calidad de forma interacti
 
 ---
 
-## 🎯 Paso 1 — Análisis de Riesgo, Anti-N+1, Mass-Assignment & Contratos
+## 🎯 Paso 1 — Análisis de Riesgo RBT (6 Dimensiones), Anti-N+1, Mass-Assignment & Contratos
 1. Escanear los cambios en el código (`git diff` o archivo objetivo).
-2. **Auditoría Anti-N+1:** Verificar que las consultas ORM utilicen Eager Loading (`.preload()`, `.include`, `joinedload()`, etc.).
-3. **Auditoría Anti-Mass-Assignment:** Verificar que ninguna entidad ORM reciba entradas HTTP no sanitizadas.
-4. **Validación de Contrato Runtime:** Verificar que los payloads de respuesta HTTP coincidan exactamente con la especificación OpenAPI/GraphQL (`docs/03_persistence_and_api/`).
-5. Entregar matriz de riesgos ordenada por severidad.
+2. **Evaluación de Riesgos en 6 Dimensiones (Prompt 8 RBT Standard):**
+   - **UI:** Renderizado, feedback visual, micro-animaciones, ergonomic targets $\ge 48\text{px}$.
+   - **Estado:** Invariantes de modelo, máquinas de estado y transiciones no permitidas.
+   - **Persistencia:** Guardado en BD, transacciones atómicas y rollback ante fallos.
+   - **Integración Backend:** Contratos OpenAPI, serialización/deserialización, sanitización Zod.
+   - **Experiencia de Usuario (UX):** Latencia, estados defensivos (Loading/Error/Empty), idempotencia táctil.
+   - **Regresión:** Efectos colaterales en módulos adyacentes.
+3. **Estructura de Evaluación por Riesgo:**
+   - Descripción del riesgo | Impacto | Probabilidad (Alta/Media/Baja) | Severidad | Método de Detección (Oráculo) | Tipo de Prueba Recomendada.
+4. **Auditorías Específicas de Backend:** Anti-N+1 en ORM, Anti-Mass-Assignment y Validación de Contrato OpenAPI.
+5. Entregar la Matriz RBT estructurada sin generar código todavía.
 6. 🛑 **PAUSA OBLIGATORIA (Gate 1):** Esperar confirmación del usuario para avanzar al Paso 2.
 
 ---
 
-## 🧪 Paso 2 — Diseño de Suite de Pruebas, Fixture Builders & Dynamic Few-Shot Retrieval (`SK-26` / `SK-32`)
-1. Invocar `SK-26_few_shot_retriever` para recuperar los 2 mejores patrones de tests/código existentes en la base de código actual.
-2. Invocar `SK-32_test_fixture_builder` para generar constructores de datos de prueba deterministas (Object Mother / Builder Pattern) para la fase *Arrange*.
-3. Diseñar la suite de prueba determinista incluyendo:
+## 🧪 Paso 2 — Modelado MBT (`SK-34`), Fixture Builders (`SK-32`) & Few-Shot RAG (`SK-26`)
+1. Invocar `SK-34_model_based_testing_designer` para construir el modelo de máquina de estados (Estados, Transiciones, Guards, Invariantes).
+2. Invocar `SK-26_few_shot_retriever` para recuperar los 2 mejores patrones de tests/código existentes en la base de código actual.
+3. Invocar `SK-32_test_fixture_builder` para generar constructores de datos de prueba deterministas (Object Mother / Builder Pattern) para la fase *Arrange*.
+4. Diseñar la suite de prueba determinista especificando los 3 Oráculos con etiquetas explícitas (`// ORACULO UI:`, `// ORACULO RED:`, `// ORACULO ESTADO:`):
    - Happy path (Camino feliz).
    - Cobertura simétrica Sad Path (al menos 1 test de excepción RFC 7807 por cada flujo feliz).
    - Casos borde (Unicode, nulos, rangos extremales).
    - Snapshots de regresión visual (`toHaveScreenshot()`) en componentes UI táctiles/móviles si aplica.
-4. 🛑 **PAUSA OBLIGATORIA (Gate 2):** Esperar confirmación del usuario para avanzar al Paso 3.
+5. 🛑 **PAUSA OBLIGATORIA (Gate 2):** Esperar confirmación del usuario sobre el modelo MBT para avanzar al Paso 3 (Generación de Código).
 
 ---
 

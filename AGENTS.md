@@ -107,7 +107,7 @@ To mark a ticket as **Done**:
 17. **Strict Arbitrary-Precision Arithmetic Guard:** Prohibit primitive floating-point arithmetic (`parseFloat`, primitive `+`, `-`, `*`, `/`) for physical inventory stocks, quantities, or financial costs across all system layers. Mandatory use of domain Value Objects or arbitrary-precision libraries (`decimal.js`, `BigNumber`, etc.).
 18. **Dependency Injection & Route Decoupling Guard:** Prohibit instantiating concrete infrastructure repositories or services directly inside route definitions or controllers. All dependencies must be passed via factory functions or constructor injection.
 19. **RFC 7807 Standard Error Response Guard:** Require all HTTP error responses to strictly conform to the RFC 7807 Problem Details format (`type`, `title`, `status`, `detail`, `instance`).
-20. **Page Object Model (POM) E2E Guard:** Mandatory encapsulation of browser selectors and page interactions in reusable Page Object classes (e.g. `e2e/pages/*`) for all Playwright E2E test suites to avoid fragile inline selector duplication.
+20. **Page Object Model (POM) & Multi-Layer Oracle E2E Guard:** Mandatory encapsulation of browser selectors and page interactions in reusable Page Object classes (e.g. `e2e/pages/*`) for all Playwright E2E test suites. Mandatory explicit code comment annotations for the 3 Oracles (`// ORACULO UI:`, `// ORACULO RED:`, `// ORACULO ESTADO:`) in all E2E test assertions to guarantee multi-layer verification without fragile inline selector duplication.
 
 
 
