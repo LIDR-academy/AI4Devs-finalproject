@@ -9,6 +9,8 @@ export interface ActiveRemanenteDTO {
   expirationDate: Date;
   status: string;
   createdAt: Date;
+  hoursRemaining?: number;
+  isCriticalAlert?: boolean;
 }
 
 export interface IRemanenteQueryRepository {

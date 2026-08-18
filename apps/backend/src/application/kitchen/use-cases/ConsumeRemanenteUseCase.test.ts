@@ -29,20 +29,33 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
   });
 
   it('debe registrar exitosamente un consumo parcial (1.750 -> 1.500) manteniendo el estado ACTIVE (200 OK)', async () => {
-    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
+    // 1. ARRANGE
+    const connectedQueryRepo = new InMemoryRemanenteQueryRepository(stockRepo);
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: connectedQueryRepo });
+
+    // 2. ACT
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
       .send({ quantity: '0.250' });
 
+    // 3. ASSERT: Verificación con los 3 Oráculos (Guard 20)
+    // ORACULO RED / RESPUESTA: Payload de respuesta HTTP 200 OK
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('consumedQuantity', '0.250');
     expect(response.body).toHaveProperty('remainingQuantity', '1.500');
     expect(response.body).toHaveProperty('status', 'ACTIVE');
     expect(response.body).toHaveProperty('isExhausted', false);
 
-    // Verificar en repositorio
+    // ORACULO ESTADO: Persistencia en Write Model (StockRepository)
     const updated = await stockRepo.findRemanenteById('rem-salsa-1');
     expect(updated?.currentQuantity.toString()).toBe('1.500');
+
+    // ORACULO ESTADO & READ MODEL: Sincronización inmediata en el modelo de lectura (GET /remanentes-activos)
+    const getResponse = await request(app).get('/api/v1/kitchen/remanentes-activos');
+    expect(getResponse.status).toBe(200);
+    const activeItem = getResponse.body.find((item: any) => item.id === 'rem-salsa-1');
+    expect(activeItem).toBeDefined();
+    expect(activeItem.currentQuantity).toBe('1.500');
   });
 
   it('debe cambiar automaticamente el estado a EXHAUSTED si la cantidad restante llega a 0 (200 OK)', async () => {

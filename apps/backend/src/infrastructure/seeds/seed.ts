@@ -7,6 +7,7 @@ import { Pin } from '../../domain/auth/value-objects/Pin.js';
 import { Insumo } from '../../domain/stock/entities/Insumo.js';
 import { Recipe } from '../../domain/catalog/entities/Recipe.js';
 import { RecipeIngredient } from '../../domain/catalog/entities/RecipeIngredient.js';
+import { Remanente } from '../../domain/stock/entities/Remanente.js';
 import { DecimalQuantity } from '../../domain/stock/value-objects/DecimalQuantity.js';
 
 export interface SeedRepositories {
@@ -134,13 +135,57 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
       await repos.recipeRepo.save(pizzaRec1);
     }
 
-    // Remanentes Activos FEFO Simulados
+    // Remanentes Activos FEFO Simulados (Persistidos en Repositorio de Stock y Query Model)
     if (typeof (repos.remanenteQueryRepo as any).seedRemanente === 'function') {
       const activeRemanentes = await repos.remanenteQueryRepo.findActiveRemanentes();
       if (activeRemanentes.length === 0) {
         const now = new Date();
-        const seedRem = (repos.remanenteQueryRepo as any).seedRemanente.bind(repos.remanenteQueryRepo);
+        const exp1 = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        const exp2 = new Date(now.getTime() + 14 * 60 * 60 * 1000);
+        const exp3 = new Date(now.getTime() + 22 * 60 * 60 * 1000);
 
+        // 1. Guardar Entidades en StockRepository (Write Model)
+        await repos.stockRepo.saveRemanente(
+          new Remanente({
+            id: 'rem-101',
+            insumoId: 'ins-1',
+            currentQuantity: new DecimalQuantity('1.7500'),
+            initialQuantity: new DecimalQuantity('2.0000'),
+            location: 'KITCHEN_FRIDGE',
+            status: 'ACTIVE',
+            expirationDate: exp1,
+            createdAt: now,
+          })
+        );
+
+        await repos.stockRepo.saveRemanente(
+          new Remanente({
+            id: 'rem-102',
+            insumoId: 'ins-2',
+            currentQuantity: new DecimalQuantity('4.5000'),
+            initialQuantity: new DecimalQuantity('5.0000'),
+            location: 'KITCHEN_FRIDGE',
+            status: 'ACTIVE',
+            expirationDate: exp2,
+            createdAt: now,
+          })
+        );
+
+        await repos.stockRepo.saveRemanente(
+          new Remanente({
+            id: 'rem-103',
+            insumoId: 'ins-3',
+            currentQuantity: new DecimalQuantity('12.0000'),
+            initialQuantity: new DecimalQuantity('15.0000'),
+            location: 'KITCHEN_PREP',
+            status: 'ACTIVE',
+            expirationDate: exp3,
+            createdAt: now,
+          })
+        );
+
+        // 2. Sembrar en Query Model
+        const seedRem = (repos.remanenteQueryRepo as any).seedRemanente.bind(repos.remanenteQueryRepo);
         seedRem({
           id: 'rem-101',
           insumoId: 'ins-1',
@@ -149,7 +194,7 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
           currentQuantity: '1.7500',
           initialQuantity: '2.0000',
           location: 'KITCHEN_FRIDGE',
-          expirationDate: new Date(now.getTime() + 2 * 60 * 60 * 1000),
+          expirationDate: exp1,
           status: 'ACTIVE',
           createdAt: now,
         });
@@ -162,7 +207,7 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
           currentQuantity: '4.5000',
           initialQuantity: '5.0000',
           location: 'KITCHEN_FRIDGE',
-          expirationDate: new Date(now.getTime() + 14 * 60 * 60 * 1000),
+          expirationDate: exp2,
           status: 'ACTIVE',
           createdAt: now,
         });
@@ -175,7 +220,7 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
           currentQuantity: '12.0000',
           initialQuantity: '15.0000',
           location: 'KITCHEN_PREP',
-          expirationDate: new Date(now.getTime() + 22 * 60 * 60 * 1000),
+          expirationDate: exp3,
           status: 'ACTIVE',
           createdAt: now,
         });
