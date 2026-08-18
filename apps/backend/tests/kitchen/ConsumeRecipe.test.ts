@@ -52,18 +52,20 @@ describe('TK-008: ConsumeRecipeUseCase TDD Suite', () => {
     await stockRepo.saveRemanente(remanenteA);
     await stockRepo.saveRemanente(remanenteB);
 
-    // 3. Ejecutar caso de uso
+    // 3. ACT (Cuando): Ejecutar caso de uso
     const result = await useCase.execute({ recipeId: 'rec-pizza-1', portions: 1 });
 
+    // 4. ASSERT (Entonces): Verificación con los 3 Oráculos (Guard 20)
+    // ORACULO RED / RESPUESTA: Payload de salida retornado correctamente
     expect(result.recipeName).toBe('Pizza Margarita');
     expect(result.ingredientsConsumed[0].totalConsumed).toBe('0.150');
 
-    // Remanente A debe haber sido totalmente consumido (0.0000) y quedar EXHAUSTED
+    // ORACULO ESTADO: Remanente A debe haber sido totalmente consumido (0.0000) y quedar EXHAUSTED (FEFO estricto)
     const updatedRemA = await stockRepo.findRemanenteById('rem-a');
     expect(updatedRemA?.status).toBe('EXHAUSTED');
     expect(updatedRemA?.currentQuantity.value.toString()).toBe('0');
 
-    // Remanente B debe quedar en ACTIVE con 0.1500 KG restante (0.2000 - 0.0500)
+    // ORACULO ESTADO: Remanente B debe quedar en ACTIVE con 0.1500 KG restante (0.2000 - 0.0500)
     const updatedRemB = await stockRepo.findRemanenteById('rem-b');
     expect(updatedRemB?.status).toBe('ACTIVE');
     expect(updatedRemB?.currentQuantity.value.toString()).toBe('0.15');

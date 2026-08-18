@@ -28,7 +28,7 @@ Esta directiva rige la seguridad técnica, sanitización activa y ejecución seg
 ## 🔒 3. Gestión de Entornos y Secretos
 * **Aislamiento `.env`:** Los archivos `.env` reales con secretos deben permanecer ignorados en `.gitignore`.
 * **Plantillas `.env.example`:** Deben utilizar obligatoriamente la convención universal de placeholders `YOUR_..._HERE` (ej. `JWT_SECRET="YOUR_JWT_SECRET_KEY_HERE"`, `DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/YOUR_DB"`). Se prohíbe incrustar llaves o credenciales reales en las plantillas.
-* **Prohibición de Fallback Secrets (Fail-Fast):** Queda estrictamente prohibido incrustar cadenas clave por defecto en el código (ej. `env.JWT_SECRET || 'default_secret'`). Si falta una variable de entorno requerida en tiempo de ejecución, la aplicación DEBE fallar inmediatamente con una excepción explícita de configuración.
+* **Prohibición de Fallback Secrets & Entropía Estricta (Guard 14 & SK-33):** Queda estrictamente prohibido incrustar cadenas clave por defecto en el código (ej. `env.JWT_SECRET || 'default_secret'`). Si falta una variable de entorno requerida en tiempo de ejecución, la aplicación DEBE fallar inmediatamente (Fail-Fast). En entornos de producción (`NODE_ENV=production`), `JWT_SECRET` debe exigir una entropía mínima de 32 caracteres (256 bits) y `CORS_ALLOWED_ORIGINS` prohíbe el uso del comodín `*`.
 
 ---
 
