@@ -477,9 +477,9 @@ Para garantizar el cumplimiento de los flujos de desarrollo industrializado y la
 1. **[00_master_vsdd_workflow.md](.agents/workflows/00_master_vsdd_workflow.md):** Trazo máster end-to-end (Idea ➔ PRD ➔ Rules ➔ TDD ➔ Reviewer ➔ Commit).
 2. **[01_cascading_spec_workflow.md](.agents/workflows/01_cascading_spec_workflow.md):** Protocolo de especificación en cascada.
 3. **[02_cascading_dev_workflow.md](.agents/workflows/02_cascading_dev_workflow.md):** Protocolo de desarrollo guiado por tickets técnicos.
-4. **[03_spec_audit_prompt.md](.agents/workflows/03_spec_audit_prompt.md):** Prompt de auditoría de especificaciones VSDD en 7 fases (`docs/`).
-5. **[04_dev_audit_prompt.md](.agents/workflows/04_dev_audit_prompt.md):** Prompt de auditoría de código y calidad VSDD en 7 fases (`apps/`).
-6. **[05_test_runner_agent.md](.agents/workflows/05_test_runner_agent.md):** Subagente autónomo de Testing TDD (Red-Green-Refactor).
+4. **[03_spec_audit_workflow.md](.agents/workflows/03_spec_audit_workflow.md):** Prompt de auditoría de especificaciones VSDD en 7 fases (`docs/`).
+5. **[04_dev_audit_workflow.md](.agents/workflows/04_dev_audit_workflow.md):** Prompt de auditoría de código y calidad VSDD en 7 fases (`apps/`).
+6. **[05_test_runner_workflow.md](.agents/workflows/05_test_runner_workflow.md):** Subagente autónomo de Testing TDD (Red-Green-Refactor).
 7. **[06_full_qa_pipeline.md](.agents/workflows/06_full_qa_pipeline.md):** Pipeline QA Completo SOTA v2.1 con Stryker Mutation Score ≥ 70% y veredicto JSON Schema.
 
 ### **10.2. Catálogo Completo de Skills (`.agents/skills/` — 27 Skills)**

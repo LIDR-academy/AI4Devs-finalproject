@@ -543,22 +543,4 @@ A continuación se registra el histórico de Pull Requests de este repositorio:
     *   Formato Markdown y sintaxis de diagramas Mermaid validados.
     *   Pipeline inicial de integración continua (`ci.yml`) configurado.
 
-### 🔄 PR #2: `feat: implement RestoStock MVP backend/frontend slices, TDD suite & env setup`
-*   **Ramas:** `feature/mvp-implementation` ➡️ `main`
-*   **Tickets Relacionados:** `TK-001` a `TK-010`, `TK-007-B` a `TK-007-F`
-*   **Descripción del Cambio:** Implementación de la arquitectura Hexagonal en Node.js/TypeScript y React/Vite. Incluye casos de uso de Autenticación PIN, Extracciones de Bodega, Tablero FEFO de Remanentes, Consumo de Recetas en Cascadas, Cierre de Turno con Conciliación Física, Dashboard de Reportes de Mermas y validación de entornos Zod Fail-Fast.
-*   **Quality Gates (DoD):** 
-    *   100% de la suite de pruebas automatizadas pasando (36/36 tests en verde).
-    *   Compilación TypeScript (`pnpm build`) y linter (`pnpm lint`) con 0 errores.
-    *   Plantillas de entorno `.env.example` generadas y configuradas.
-
-### 🔄 PR #3: `fix & feat: live read-model consumption sync, 2026 Node 24 LTS CI/CD pipeline, OpenTofu IaC & .agents v2.3.0 governance`
-*   **Ramas:** `feature-entrega2-JDLM` ➡️ `main`
-*   **Tickets Relacionados:** `TK-018`, `TK-019`, `TK-020`, `TK-021`
-*   **Descripción del Cambio:** Solución de sincronización en tiempo real entre el Write Model (`StockRepository`) y Read Model (`RemanenteQueryRepository`) para refresco instantáneo del estado de consumos en la UI de cocina. Modernización del pipeline CI/CD a Node 24 LTS, GitHub Actions v5 y pnpm 9. Inclusión de módulo declarativo de IaC en OpenTofu (MPL-2.0). Actualización del arnés de gobernanza `.agents` a la versión v2.3.0 (34 Skills, 8 Workflows, Guards 22 y 23).
-*   **Quality Gates (DoD):** 
-    *   100% de la suite de pruebas automatizadas pasando (51/51 tests en verde).
-    *   Compilación TypeScript (`pnpm run build`) y linter (`pnpm run lint`) con 0 errores.
-    *   Validación exitosa del arnés `.agents` con `bash .agents/scripts/validate_agents.sh` (0 enlaces rotos).
-
 

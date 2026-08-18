@@ -83,7 +83,7 @@ To mark a ticket as **Done**:
 3. **Sanitization:** Active Zod schemas on all HTTP inputs.
 4. **Verification:** 0 errors in `pnpm run build` and `pnpm run lint`.
 5. **Atomic Commit:** Exactly 1 Git commit per technical ticket (`TK-XXX`).
-6. **Adversarial Audit:** Independent reviewer validation via `.agents/workflows/04_dev_audit_prompt.md`.
+6. **Adversarial Audit:** Independent reviewer validation via `.agents/workflows/04_dev_audit_workflow.md`.
 
 ---
 

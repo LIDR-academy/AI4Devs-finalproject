@@ -1,5 +1,5 @@
 ---
-name: 05_test_runner_agent
+name: 05_test_runner_workflow
 description: "Subagente especializado en el bucle autónomo de testing (Red-Green-Refactor). Lee specs BDD, genera tests unitarios/integración, ejecuta el test runner declarado en AGENTS.md y auto-corrige fallos de forma agnóstica."
 version: "2.0.0"
 category: "workflows/quality"

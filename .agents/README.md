@@ -59,28 +59,28 @@ flowchart TD
 |:---|:---|
 | **Diseñar Nueva Idea / Feature:** | `@.agents/workflows/01_cascading_spec_workflow.md Analiza e integra esta nueva idea: [descripción]` |
 | **Desarrollar Ticket Técnico:** | `@.agents/workflows/02_cascading_dev_workflow.md Implementa el ticket TK-XXX` |
-| **Auditar Especificaciones (Docs):** | `@.agents/workflows/03_spec_audit_prompt.md Audita las especificaciones en docs/` |
-| **Revisión por Reviewer Independiente:** | `@.agents/workflows/04_dev_audit_prompt.md Actúa como Reviewer y audita el ticket TK-XXX` |
-| **Ejecutar Bucle Autónomo TDD:** | `@.agents/workflows/05_test_runner_agent.md Corre la suite TDD para el ticket TK-XXX` |
+| **Auditar Especificaciones (Docs):** | `@.agents/workflows/03_spec_audit_workflow.md Audita las especificaciones en docs/` |
+| **Revisión por Reviewer Independiente:** | `@.agents/workflows/04_dev_audit_workflow.md Actúa como Reviewer y audita el ticket TK-XXX` |
+| **Ejecutar Bucle Autónomo TDD:** | `@.agents/workflows/05_test_runner_workflow.md Corre la suite TDD para el ticket TK-XXX` |
 | **Ejecutar Pipeline QA SOTA:** | `@.agents/workflows/06_full_qa_pipeline.md Ejecuta la verificación completa de QA` |
-| **Incidencia Producción → Ticket:** | `@.agents/workflows/07_production_observability_agent.md Analiza esta incidencia de producción: [stacktrace]` |
+| **Incidencia Producción → Ticket:** | `@.agents/workflows/07_production_observability_workflow.md Analiza esta incidencia de producción: [stacktrace]` |
 | **Validar Despliegue Post-Deploy:** | `@.agents/workflows/08_smoke_test_deploy_validation.md Valida el despliegue en: [URL]` |
 
 ---
 
 ## 💡 3. Meta-Protocolos de Trabajo (Master Workflows)
 
-Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Driven Development (VSDD)**, el agente debe seguir estrictamente estos flujos maestros:
+Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Driven Development (VSDD)**, el agente debe seguir strictly estos flujos maestros:
 
 *   **[Mapa y Trazo Maestro VSDD](workflows/00_master_vsdd_workflow.md):** Diagrama de secuencia y explicación end-to-end desde la idea inicial hasta el commit atómico en Git.
 *   **[Protocolo de Especificación en Cascada (Nuevas Ideas / Specs)](workflows/01_cascading_spec_workflow.md):** Guía paso a paso para analizar el impacto, actualizar el PRD, modelar la base de datos, adaptar el contrato OpenAPI y registrar los tickets de Agile de forma secuencial (`Idea ➔ docs/`).
 *   **[Protocolo de Desarrollo en Cascada (Codificación / Tickets)](workflows/02_cascading_dev_workflow.md):** Guía paso a paso para ejecutar un ticket técnico desde la extracción de reglas, migraciones, TDD, verificación de linter, pruebas visuales y commit atómico (`TK-XXX ➔ apps/`).
-*   **[Prompt de Auditoría de Especificaciones VSDD](workflows/03_spec_audit_prompt.md):** Meta-prompt de auditoría en 7 fases para auditar la suficiencia de la documentación viva antes de codificar (`docs/`).
-*   **[Prompt de Auditoría de Código y Calidad VSDD](workflows/04_dev_audit_prompt.md):** Meta-prompt de auditoría en 7 fases para la revisión adversarial del Reviewer Independiente sobre el código antes de hacer commit (`apps/`).
-*   **[Agente Autónomo de Testing](workflows/05_test_runner_agent.md):** Subagente especializado en el bucle autónomo TDD (Red-Green-Refactor).
-*   **[Pipeline QA Completo SOTA v2.1](workflows/06_full_qa_pipeline.md):** Pipeline QA completo con Mutation Score >= 70% y veredicto JSON Schema.
-*   **[Observabilidad en Producción Shift-Right v2.0](workflows/07_production_observability_agent.md):** Captura logs/stacktraces de producción, genera BDD Gherkin, pruebas de regresión y cierra el bucle convirtiendo incidencias en tickets `TK-XXX` del backlog (Paso 4 nuevo).
-*   **[Smoke Test & Deploy Validation](workflows/08_smoke_test_deploy_validation.md):** Valida post-despliegue ejecutando health checks, smoke tests de contratos HTTP (3 Oráculos) y verifica seguridad de cabeceras. Emite veredicto PASS/FAIL con rollback automático OpenTofu si falla.
+*   **[Auditoría de Especificaciones VSDD Workflow](workflows/03_spec_audit_workflow.md):** Meta-prompt de auditoría en 7 fases para auditar la suficiencia de la documentación viva antes de codificar (`docs/`).
+*   **[Auditoría de Código y Calidad VSDD Workflow](workflows/04_dev_audit_workflow.md):** Meta-prompt de auditoría en 7 fases para la revisión adversarial del Reviewer Independiente sobre el código antes de hacer commit (`apps/`).
+*   **[Agente Autónomo de Testing Workflow](workflows/05_test_runner_workflow.md):** Subagente especializado en el bucle autónomo TDD (Red-Green-Refactor).
+*   **[Pipeline QA Completo SOTA v2.1 Workflow](workflows/06_full_qa_pipeline.md):** Pipeline QA completo con Mutation Score >= 70% y veredicto JSON Schema.
+*   **[Observabilidad en Producción Shift-Right Workflow v2.0](workflows/07_production_observability_workflow.md):** Captura logs/stacktraces de producción, genera BDD Gherkin, pruebas de regresión y cierra el bucle convirtiendo incidencias en tickets `TK-XXX` del backlog.
+*   **[Smoke Test & Deploy Validation Workflow](workflows/08_smoke_test_deploy_validation.md):** Valida post-despliegue ejecutando health checks, smoke tests de contratos HTTP (3 Oráculos) y verifica seguridad de cabeceras. Emite veredicto PASS/FAIL con rollback automático OpenTofu si falla.
 
 ---
 
@@ -109,7 +109,7 @@ Las 34 habilidades son runbooks especializados organizados por fases y roles té
 
 ### Fase DevSecOps & Gobernanza de Seguridad (DevSecOps Lead & Auditor Roles)
 *   **Seguridad Shift-Left & CI/CD:** [SK-08 Estrategia de Seguridad](skills/specs/04_governance_and_quality/SK-08_define_security_strategy.md), [SK-10 Pipeline CI/CD Node 24 & OpenTofu IaC](skills/specs/04_governance_and_quality/SK-10_configure_cicd_pipeline.md), [SK-23 Seguridad en Dependencias Anti-Slopsquatting](skills/development/05_quality_and_lint/SK-23_audit_dependency_security.md) y [SK-25 Auditoría de Validación de Contratos](skills/development/05_quality_and_lint/SK-25_audit_contract_validation.md).
-*   **Workflows de Auditoría Adversarial:** [Workflow 03 Auditoría de Especificaciones](workflows/03_spec_audit_prompt.md), [Workflow 04 Auditoría Adversarial DevSecOps](workflows/04_dev_audit_prompt.md) y [Workflow 07 Observabilidad en Producción Shift-Right](workflows/07_production_observability_agent.md).
+*   **Workflows de Auditoría Adversarial:** [Workflow 03 Auditoría de Especificaciones](workflows/03_spec_audit_workflow.md), [Workflow 04 Auditoría Adversarial DevSecOps](workflows/04_dev_audit_workflow.md) y [Workflow 07 Observabilidad en Producción Shift-Right](workflows/07_production_observability_workflow.md).
 
 ### Fase de Codificación y Calidad (Developer, QA & Automation Roles)
 *   **01_rules_extraction:** [SK-27 Extracción de Reglas Legacy](skills/development/01_rules_extraction/SK-27_extract_project_rules.md), [SK-30 Extractor de Diagramas Legacy (C4/ERD)](skills/development/01_rules_extraction/SK-30_legacy_diagram_extractor.md), [SK-31 Indexador de Deuda Técnica](skills/development/01_rules_extraction/SK-31_technical_debt_indexer.md) y [SK-33 Auditoría de Configuración de Entorno Fail-Fast](skills/development/01_rules_extraction/SK-33_environment_configuration_auditor.md).
@@ -119,8 +119,8 @@ Las 34 habilidades son runbooks especializados organizados por fases y roles té
 *   **05_quality_and_lint:** [SK-19 Refactor & Anti-N+1 / Anti-Mass-Assignment](skills/development/05_quality_and_lint/SK-19_refactor_and_lint.md), [SK-22 DBA Log Analysis & Troubleshooting](skills/development/05_quality_and_lint/SK-22_agent_troubleshooting.md), [SK-24 Characterization Testing](skills/development/05_quality_and_lint/SK-24_execute_characterization_testing.md), [SK-26 Recuperador Dinámico Few-Shot](skills/development/05_quality_and_lint/SK-26_retrieve_few_shot_context.md) y [SK-32 Test Fixture Builder (Object Mother)](skills/development/05_quality_and_lint/SK-32_test_fixture_builder.md).
 *   **06_visual_qa:** [SK-20 Browser Visual QA](skills/development/06_visual_qa/SK-20_execute_browser_qa.md) y [SK-21 Auditoría Accesibilidad UI/a11y](skills/development/06_visual_qa/SK-21_audit_ui_accessibility.md).
 *   **07_performance_and_observability:** [SK-29 Load & Performance Testing](skills/development/07_performance_and_observability/SK-29_load_and_performance_testing.md).
-*   **quality/01_testing:** [SK-34 Model-Based Testing Designer (MBT & Oracles)](skills/quality/01_testing/SK-34_model_based_testing_designer.md).
-*   **Patrones de Oro (Few-Shot):** [Plantillas y Ejemplos de Referencia](examples/FEW_SHOT_PATTERNS.md).
+*   **08_testing:** [SK-34 Model-Based Testing Designer (MBT & Oracles)](skills/development/08_testing/SK-34_model_based_testing_designer.md).
+*   **Patrones de Oro (Few-Shot):** [Plantillas y Ejemplos de Referencia](examples/00_few_shot_patterns.md).
 
 
 ---

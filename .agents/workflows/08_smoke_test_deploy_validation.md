@@ -101,7 +101,7 @@ Si cualquier smoke test falla:
 🚨 DEPLOY FALLIDO — Iniciar protocolo de rollback:
 1. Ejecutar: tofu apply -target=[recurso_anterior]
 2. Notificar al equipo con el stacktrace del smoke test fallido.
-3. Abrir ticket de regresión invocando [07_production_observability_agent.md](07_production_observability_agent.md).
+3. Abrir ticket de regresión invocando [07_production_observability_workflow.md](07_production_observability_workflow.md).
 4. Registrar en docs/05_agile_planning/15_history.md como incidencia.
 ```
 
@@ -131,5 +131,5 @@ smoke-test:
 ## 📁 Script Asociado
 
 Este workflow genera el script de automatización en `.agents/scripts/smoke_test.sh`.  
-Invoca [05_test_runner_agent.md](05_test_runner_agent.md) si se detectan regresiones.  
-Invoca [07_production_observability_agent.md](07_production_observability_agent.md) si hay fallos en producción.
+Invoca [05_test_runner_workflow.md](05_test_runner_workflow.md) si se detectan regresiones.  
+Invoca [07_production_observability_workflow.md](07_production_observability_workflow.md) si hay fallos en producción.

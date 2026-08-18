@@ -1,5 +1,5 @@
 ---
-name: 07_production_observability_agent
+name: 07_production_observability_workflow
 description: "Workflow de observabilidad Shift-Right v2.0: captura logs/stacktraces de producción, traduce incidencias a escenarios BDD Gherkin, genera pruebas de regresión automáticas y cierra el bucle de feedback convirtiendo incidencias en tickets TK-XXX del backlog."
 version: "2.0.0"
 category: "workflows/observability"
@@ -33,7 +33,7 @@ Este workflow captura telemetría, errores y réplicas de producción para trans
 
 ## 🔄 Paso 3 — Integración en la Suite de Tests & Reparación TDD
 1. Crear la prueba de regresión fallida (RED) en la suite del proyecto (`apps/` o `tests/`).
-2. Invocar [05_test_runner_agent.md](05_test_runner_agent.md) para ejecutar la reparación autónoma mediante el ciclo RED-GREEN-REFACTOR.
+2. Invocar [05_test_runner_workflow.md](05_test_runner_workflow.md) para ejecutar la reparación autónoma mediante el ciclo RED-GREEN-REFACTOR.
 3. Validar con [06_full_qa_pipeline.md](06_full_qa_pipeline.md) que `0` regresiones hayan sido introducidas.
 
 ---

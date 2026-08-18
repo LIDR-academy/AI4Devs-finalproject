@@ -14,9 +14,9 @@ Esta versión marca la industrialización completa de la Gobernanza VSDD, el mot
 * **Industrialización del Motor de Agentes y Gobernanza VSDD:**
     * Consolidación de los 7 archivos de reglas en `docs/03_governance_and_quality/rules/` (`domain_rules`, `backend_rules`, `database_rules`, `frontend_rules`, `testing_rules`, `security_rules`, `git_rules`) inyectando Pila Tecnológica Detectada, Principios SOLID, WCAG 2.1 AA/AAA, ergonomía táctil (48px) y sanitización Zod.
     * Extensión del catálogo a 23 Habilidades en `.agents/skills/`, agregando la habilidad de autorrecuperación de errores ([SK-22_agent_troubleshooting](.agents/skills/development/05_quality_and_lint/SK-22_agent_troubleshooting.md)) y seguridad de dependencias ([SK-23_dependency_security_guard](.agents/skills/development/05_quality_and_lint/SK-23_audit_dependency_security.md)).
-    * Inclusión de plantillas agnósticas en pseudocódigo dentro de `.agents/examples/` ([FEW_SHOT_PATTERNS.md](.agents/examples/FEW_SHOT_PATTERNS.md)).
+    * Inclusión de plantillas agnósticas en pseudocódigo dentro de `.agents/examples/` ([00_few_shot_patterns.md](.agents/examples/00_few_shot_patterns.md)).
     * Creación y ejecución de la auditoría formal de especificaciones en [docs/audits/specs-2026-08-05.md](docs/audits/specs-2026-08-05.md) obteniendo el veredicto oficial **IMPLEMENTABLE**.
-    * Optimización del prompt de auditoría de especificaciones VSDD en [.agents/workflows/03_spec_audit_prompt.md](.agents/workflows/03_spec_audit_prompt.md).
+    * Optimización del prompt de auditoría de especificaciones VSDD en [.agents/workflows/03_spec_audit_workflow.md](.agents/workflows/03_spec_audit_workflow.md).
 
 ### Changed
 *   **Sincronización de Contratos y Manuales:**

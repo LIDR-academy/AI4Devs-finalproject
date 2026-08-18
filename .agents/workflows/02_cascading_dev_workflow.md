@@ -41,8 +41,8 @@ Si el ticket modifica o crea modelos de base de datos:
 
 ---
 
-### FASE 3: Implementación Guiada por Pruebas - TDD (`SK-16` / `SK-17` & `05_test_runner_agent`)
-Ejecuta la skill correspondiente ([SK-16 Backend](../skills/development/02_backend_development/SK-16_develop_backend_ticket.md) o [SK-17 Frontend](../skills/development/03_frontend_development/SK-17_develop_frontend_ticket.md)) delegando el bucle determinista de pruebas al subagente [05_test_runner_agent.md](05_test_runner_agent.md):
+### FASE 3: Implementación Guiada por Pruebas - TDD (`SK-16` / `SK-17` & `05_test_runner_workflow`)
+Ejecuta la skill correspondiente ([SK-16 Backend](../skills/development/02_backend_development/SK-16_develop_backend_ticket.md) o [SK-17 Frontend](../skills/development/03_frontend_development/SK-17_develop_frontend_ticket.md)) delegando el bucle determinista de pruebas al subagente [05_test_runner_workflow.md](05_test_runner_workflow.md):
 1. **RED:** Escribir primero el test unitario o de integración usando `InMemoryRepository` fakes, confirmando el estado de fallo explícito.
 2. **GREEN:** Implementar el código mínimo en capas Hexagonales (`Domain` ➔ `Application` ➔ `Infrastructure`) hasta pasar el test.
 3. **REFACTOR & MUTATION:** Limpiar código e invocar la verificación de mutación según el umbral definido en `docs/04_governance_and_quality/rules/testing_rules.md`.

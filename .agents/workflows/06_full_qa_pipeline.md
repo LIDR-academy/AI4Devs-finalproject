@@ -47,8 +47,8 @@ Este workflow ejecuta el pipeline de aseguramiento de calidad de forma interacti
 
 ---
 
-## 🔄 Paso 3 — Bucle TDD, Performance & Auto-Loop de Pruebas de Mutación (`05_test_runner_agent`)
-1. **DELEGACIÓN A SUBAGENTE DE TESTING:** Invocar el subagente especializado [05_test_runner_agent.md](05_test_runner_agent.md) para ejecutar el ciclo RED-GREEN-REFACTOR.
+## 🔄 Paso 3 — Bucle TDD, Performance & Auto-Loop de Pruebas de Mutación (`05_test_runner_workflow`)
+1. **DELEGACIÓN A SUBAGENTE DE TESTING:** Invocar el subagente especializado [05_test_runner_workflow.md](05_test_runner_workflow.md) para ejecutar el ciclo RED-GREEN-REFACTOR.
 2. **VERIFICACIÓN DE SLAS DE RENDIMIENTO:** Invocar `SK-29_load_and_performance_testing` para validar que los percentiles de latencia cumplan los criterios (p95 < 200ms).
 3. **MUTATION AUTO-LOOP:** Ejecutar el runner de Mutation Testing del proyecto especificado en `AGENTS.md`. Si el **Mutation Score es menor al umbral de `testing_rules.md` (default: 70%)**, el subagente ejecutará iteraciones autónomas (hasta 3 ciclos) agregando casos borde adicionales hasta matar a todos los mutantes sintéticos.
 4. **VEREDICTO ESTRUCTURADO (JSON SCHEMA ENFORCEMENT):** El Reviewer Adversarial emitirá su veredicto estrictamente bajo este formato JSON:
