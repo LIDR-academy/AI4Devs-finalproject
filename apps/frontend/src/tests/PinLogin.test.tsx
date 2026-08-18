@@ -54,6 +54,7 @@ describe('TK-007-FE: Tactile PIN Login Screen TDD Suite', () => {
   });
 
   it('debe autenticar exitosamente y redirigir al Dashboard de cocina con JWT', async () => {
+    // 1. ARRANGE (Dado)
     vi.spyOn(global, 'fetch').mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -64,6 +65,7 @@ describe('TK-007-FE: Tactile PIN Login Screen TDD Suite', () => {
 
     render(<App />);
 
+    // 2. ACT (Cuando)
     fireEvent.click(screen.getByRole('button', { name: '1' }));
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     fireEvent.click(screen.getByRole('button', { name: '3' }));
@@ -72,11 +74,14 @@ describe('TK-007-FE: Tactile PIN Login Screen TDD Suite', () => {
     const submitBtn = screen.getByRole('button', { name: /Ingresar a Cocina/i });
     fireEvent.click(submitBtn);
 
+    // 3. ASSERT (Entonces): Verificación con los 3 Oráculos (Guard 20)
+    // ORACULO UI: Redirección al Dashboard táctil de cocina y bienvenida a Carlos Gomez
     await waitFor(() => {
       expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument();
       expect(screen.getByText(/Carlos Gomez \(Cocina\)/i)).toBeInTheDocument();
     });
 
+    // ORACULO ESTADO: Token JWT persistido correctamente en localStorage
     expect(localStorage.getItem('restostock_jwt_token')).toBe('jwt_token_sample_123456');
   });
 });
