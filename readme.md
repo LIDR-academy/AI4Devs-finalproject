@@ -58,9 +58,9 @@ La aplicación de cocina está diseñada bajo una estética oscura de alto contr
 
 ### **1.4. Instrucciones de instalación:**
 #### Prerrequisitos
-*   Node.js (versión 18 o superior)
-*   Manejador de paquetes `pnpm` (versión 8 o superior)
-*   Motor de base de datos PostgreSQL
+*   Node.js (versión 24 LTS o superior)
+*   Manejador de paquetes `pnpm` (versión 9 o superior)
+*   OpenTofu (versión 1.6 o superior) / Docker Compose (PostgreSQL 15)
 
 #### Pasos para la puesta en marcha local
 1.  **Clonar el repositorio:**
@@ -171,11 +171,12 @@ restostock-monorepo/
 ```
 
 ### **2.4. Infraestructura y despliegue:**
-El despliegue está automatizado mediante **GitHub Actions** (`.github/workflows/ci.yml`). El pipeline de CI ejecuta:
-1.  Servicio PostgreSQL efímero y aislado en contenedor Docker para tests de integración.
-2.  Caché de dependencias `pnpm` para velocidad.
-3.  Comprobación de tipos con TypeScript, auditoría estática con linters (`pnpm lint`) y ejecución de la suite de pruebas unitarias y de integración.
-4.  Carga segura de credenciales utilizando GitHub Secrets.
+El despliegue y aprovisionamiento están automatizados mediante **GitHub Actions 2026 SOTA** (`.github/workflows/ci.yml`) y módulos declarativos de **OpenTofu** (`infrastructure/opentofu/main.tf` bajo licencia MPL-2.0). El pipeline de CI ejecuta:
+1.  Verificación de gobernanza agéntica con `bash .agents/scripts/validate_agents.sh` (0 enlaces rotos).
+2.  Entorno de ejecución Node 24 LTS con caché optimizada de `pnpm 9`.
+3.  Servicio PostgreSQL efímero y aislado en contenedor Docker para tests de integración.
+4.  Comprobación de tipos con TypeScript, auditoría estática con linters (`pnpm run lint`), linter de especificaciones `DESIGN.md` y ejecución de la suite de 51 pruebas automatizadas unitarias/integración.
+5.  Autenticación segura en la nube mediante OpenID Connect (OIDC) sin almacenamiento de llaves estáticas.
 
 ### **2.5. Seguridad:**
 *   **Validación Activa:** Todos los payloads que ingresan a la API son parseados síncronamente con **Zod** para prevenir inyección de payloads malformados (*Mass Assignment*).
@@ -183,10 +184,13 @@ El despliegue está automatizado mediante **GitHub Actions** (`.github/workflows
 *   **Cifrado de Datos:** Contraseñas y PINs cifrados con `bcrypt` factor de costo 10 en base de datos.
 *   **Mitigación SQLi:** Uso obligatorio de sentencias preparadas (Prepared Statements) a través del motor relacional de Prisma.
 
-### **2.6. Tests:**
-El proyecto sigue la directiva de **Desarrollo Guiado por Pruebas (TDD)**:
+### **2.6. Tests y Gobernanza Agéntica:**
+El proyecto sigue la directiva de **Desarrollo Guiado por Pruebas (TDD)** y **Gobernanza Agéntica v2.3.0**:
 *   Se prohíbe escribir código de producción sin un test unitario/integración que falle previamente (`RED` a `GREEN`).
-*   Uso de **Fake Repositories** en memoria para pruebas de la capa de aplicación, evitando mocks pesados de base de datos que acoplen los tests a la implementación física del ORM.
+*   Suite completa verificada: **51/51 tests activos al 100% de éxito**.
+*   Patrón de **3 Oráculos** (UI, RED, ESTADO) para aserciones deterministas en Playwright E2E y pruebas unitarias/integración.
+*   Uso de **Fake Repositories** en memoria para pruebas de la capa de aplicación con sincronización dinámica entre modelos de lectura y escritura.
+*   Cumplimiento de **Stryker Mutation Score $\ge 70\%$** para evitar pruebas tautológicas.
 
 ---
 
@@ -480,6 +484,22 @@ El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo
     *   **Descripción:** Endpoint REST `GET /api/reports/waste` que permite al administrador consultar la cantidad total de inventario desechado (mermas físicas) agrupado por ingrediente y motivo en un rango de fechas.
     *   **Capas Afectadas:** `reports/domain`, `reports/application`, `reports/infrastructure`.
     *   **DoD:** Pruebas de integración para `GetWasteReportUseCase` verificando la sumatoria y el rango de fechas; autenticación JWT con rol requerido `ADMIN`.
+*   **TK-018: Sincronización del Modelo de Consulta de Remanentes (Read-Model Sync)**
+    *   **Descripción:** Vinculación directa del `InMemoryRemanenteQueryRepository` con el `InMemoryStockRepository` para garantizar la actualización en tiempo real del estado consumido en la UI de cocina.
+    *   **Capas Afectadas:** `kitchen/infrastructure`, `stock/infrastructure`, `http/app`.
+    *   **DoD:** Prueba de integración del Oráculo de Estado en verde verificando impacto inmediato de `POST /consume` en `GET /remanentes-activos`.
+*   **TK-019: Modernización del Pipeline CI/CD SOTA y Módulo IaC OpenTofu**
+    *   **Descripción:** Actualización del workflow `.github/workflows/ci.yml` a Node 24 LTS, Actions v5, pnpm 9 e integración de módulo declarativo de infraestructura con OpenTofu (`infrastructure/opentofu/main.tf`).
+    *   **Capas Afectadas:** `.github/workflows`, `infrastructure/opentofu`.
+    *   **DoD:** Pipeline pasando exitosamente con `validate_agents.sh` y validación de `DESIGN.md`.
+*   **TK-020: Gobernanza Agéntica - Guards 22 (IaC OpenTofu) y 23 (CI/CD SOTA)**
+    *   **Descripción:** Codificación en `AGENTS.md` de los Guards Universales 22 y 23 para obligar la observancia de la infraestructura declarativa en OpenTofu y CI/CD en Node 24 LTS por parte del agente.
+    *   **Capas Afectadas:** `AGENTS.md`.
+    *   **DoD:** `validate_agents.sh` ejecutado exitosamente con 0 enlaces rotos.
+*   **TK-021: Actualización del Arnés .agents/README.md a v2.3.0**
+    *   **Descripción:** Actualización del manual de operaciones `.agents/README.md` reflejando 34 Skills, 8 Workflows y la versión 2.3.0 SOTA Enterprise 2026.
+    *   **Capas Afectadas:** `.agents/README.md`.
+    *   **DoD:** Integridad del framework verificada con 54 enlaces absolutos validados.
 
 ### 🖥️ 6.2. Tickets de Frontend (en subcarpetas `docs/05_agile_planning/tickets/{modulo}/frontend/`)
 
@@ -531,4 +551,14 @@ A continuación se registra el histórico de Pull Requests de este repositorio:
     *   100% de la suite de pruebas automatizadas pasando (36/36 tests en verde).
     *   Compilación TypeScript (`pnpm build`) y linter (`pnpm lint`) con 0 errores.
     *   Plantillas de entorno `.env.example` generadas y configuradas.
+
+### 🔄 PR #3: `fix & feat: live read-model consumption sync, 2026 Node 24 LTS CI/CD pipeline, OpenTofu IaC & .agents v2.3.0 governance`
+*   **Ramas:** `feature-entrega2-JDLM` ➡️ `main`
+*   **Tickets Relacionados:** `TK-018`, `TK-019`, `TK-020`, `TK-021`
+*   **Descripción del Cambio:** Solución de sincronización en tiempo real entre el Write Model (`StockRepository`) y Read Model (`RemanenteQueryRepository`) para refresco instantáneo del estado de consumos en la UI de cocina. Modernización del pipeline CI/CD a Node 24 LTS, GitHub Actions v5 y pnpm 9. Inclusión de módulo declarativo de IaC en OpenTofu (MPL-2.0). Actualización del arnés de gobernanza `.agents` a la versión v2.3.0 (34 Skills, 8 Workflows, Guards 22 y 23).
+*   **Quality Gates (DoD):** 
+    *   100% de la suite de pruebas automatizadas pasando (51/51 tests en verde).
+    *   Compilación TypeScript (`pnpm run build`) y linter (`pnpm run lint`) con 0 errores.
+    *   Validación exitosa del arnés `.agents` con `bash .agents/scripts/validate_agents.sh` (0 enlaces rotos).
+
 
