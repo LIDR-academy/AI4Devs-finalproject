@@ -161,16 +161,17 @@ model RecurrenceSeries {
 }
 
 model Block {
-  id              String    @id @default(uuid()) @db.Uuid
+  id              String      @id @default(uuid()) @db.Uuid
   block_type      BlockType
-  created_by      String    @db.Uuid
-  coach_id        String?   @db.Uuid
+  created_by      String      @db.Uuid
+  coach_id        String?     @db.Uuid
   start_time      DateTime
   end_time        DateTime
+  status          ClassStatus @default(ACTIVE)
   description     String?
   google_event_id String?
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
 
   createdBy User  @relation("BlockCreator", fields: [created_by], references: [id])
   coach     User? @relation("BlockedCoach", fields: [coach_id], references: [id])

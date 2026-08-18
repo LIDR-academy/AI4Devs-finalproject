@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import { CancelBlock } from "../application/use-cases/CancelBlock.js";
 import { CancelRecurringSeries } from "../application/use-cases/CancelRecurringSeries.js";
 import { CancelTrainingClass } from "../application/use-cases/CancelTrainingClass.js";
 import { CreateBlock } from "../application/use-cases/CreateBlock.js";
 import { CreateCoach } from "../application/use-cases/CreateCoach.js";
 import { CreateCoachee } from "../application/use-cases/CreateCoachee.js";
 import { CreateTrainingClass } from "../application/use-cases/CreateTrainingClass.js";
-import { DeleteBlock } from "../application/use-cases/DeleteBlock.js";
 import { GetAvailableSlots } from "../application/use-cases/GetAvailableSlots.js";
 import { GetCoach } from "../application/use-cases/GetCoach.js";
 import { GetCoachee } from "../application/use-cases/GetCoachee.js";
@@ -21,6 +21,7 @@ import { UpdateCoacheeLevel } from "../application/use-cases/UpdateCoacheeLevel.
 import { UpdateCoacheeStatus } from "../application/use-cases/UpdateCoacheeStatus.js";
 import { UpdateCoachStatus } from "../application/use-cases/UpdateCoachStatus.js";
 import { UpdateTrainingClass } from "../application/use-cases/UpdateTrainingClass.js";
+import { BlockPolicy } from "../domain/services/BlockPolicy.js";
 import { ClassCancellationPolicy } from "../domain/services/ClassCancellationPolicy.js";
 import { CoacheeService } from "../domain/services/CoacheeService.js";
 import { CoachService } from "../domain/services/CoachService.js";
@@ -98,7 +99,9 @@ export const container = {
   getAvailableSlots: calendarProvider ? new GetAvailableSlots(prisma, calendarProvider) : null,
   listTrainingClasses: new ListTrainingClasses(prisma),
   getTrainingClass: new GetTrainingClass(prisma),
-  createBlock: calendarProvider ? new CreateBlock(prisma, calendarProvider) : null,
-  deleteBlock: calendarProvider ? new DeleteBlock(prisma, calendarProvider) : null,
+  createBlock: calendarProvider
+    ? new CreateBlock(prisma, calendarProvider, new BlockPolicy(), auditLogger)
+    : null,
+  cancelBlock: new CancelBlock(prisma, calendarProvider, new BlockPolicy(), auditLogger),
   listBlocks: new ListBlocks(prisma),
 };

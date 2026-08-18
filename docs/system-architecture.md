@@ -440,6 +440,7 @@ erDiagram
         uuid coach_id FK "Nullable; for personal blocks, who is blocked"
         datetime start_time
         datetime end_time
+        string status "active, canceled"
         text description
         string google_event_id "Google Calendar event reference"
         datetime created_at
@@ -463,6 +464,7 @@ erDiagram
     User ||--o{ ClassEnrollment : "enrolled as coachee"
     User ||--o{ WaitingList : "on waiting list"
     User ||--o{ Block : "created block"
+    User ||--o{ Block : "blocked coach"
     User ||--o{ Notification : "receives notification"
     TrainingClass ||--o{ ClassEnrollment : "has enrollments"
     TrainingClass ||--o{ WaitingList : "has waiting list entries"

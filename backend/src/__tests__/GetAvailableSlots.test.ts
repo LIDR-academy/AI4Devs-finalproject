@@ -113,4 +113,63 @@ describe("GetAvailableSlots", () => {
     expect(groupSlot).toBeDefined();
     expect(groupSlot?.capacityAvailable).toBe("group");
   });
+
+  it("excludes a slot covered by an ACTIVE block", async () => {
+    const slot = zonedDateTimeToUtc("2026-08-17", "12:00");
+    const calendar = makeCalendar();
+    const prisma = {
+      trainingClass: {
+        findMany: vi
+          .fn()
+          .mockImplementation((args?: { include?: unknown }) => (args?.include ? [] : [])),
+      },
+      block: {
+        findMany: vi.fn().mockImplementation((args?: { where?: { status?: string } }) => {
+          if (args?.where?.status !== "ACTIVE") {
+            throw new Error("expected block findMany to filter status ACTIVE");
+          }
+          return [
+            {
+              block_type: "PERSONAL",
+              status: "ACTIVE",
+              start_time: slot,
+              end_time: new Date(slot.getTime() + 60 * 60 * 1000),
+            },
+          ];
+        }),
+      },
+    };
+
+    const useCase = new GetAvailableSlots(prisma as never, calendar);
+    const result = await useCase.execute({
+      date: "2026-08-17",
+      coachId: "coach-1",
+      classType: "INDIVIDUAL",
+    });
+
+    const starts = result.availableSlots.map((s) => s.start);
+    expect(starts).not.toContain("12:00");
+  });
+
+  it("requests only ACTIVE blocks so canceled blocks do not exclude slots", async () => {
+    const calendar = makeCalendar();
+    const blockFindMany = vi.fn().mockResolvedValue([]);
+    const prisma = {
+      trainingClass: { findMany: vi.fn().mockResolvedValue([]) },
+      block: { findMany: blockFindMany },
+    };
+
+    const useCase = new GetAvailableSlots(prisma as never, calendar);
+    await useCase.execute({
+      date: "2026-08-17",
+      coachId: "coach-1",
+      classType: "GROUP",
+    });
+
+    expect(blockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: "ACTIVE" }),
+      }),
+    );
+  });
 });

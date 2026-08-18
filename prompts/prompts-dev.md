@@ -255,3 +255,22 @@ Great. Now in desktop version, if I open the class details,it's show below the r
 ----
 
 Can you now mark all the tasks as done if applies and the US In Review in Linear please?
+
+# 14 - OpenCode - DeepSeek V4 Flash Free
+
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-19/us-24-calendar-block-management
+
+[/speckit.clarify]
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
+
+# 15 - OpenCode - DeepSeek V4 Flash Free
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-20/us-25-admincoach-calendar-ui
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
+----

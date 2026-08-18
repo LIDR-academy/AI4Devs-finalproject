@@ -612,7 +612,8 @@ All error responses follow this shape:
 - **Query Params:**
   - `start` (string, ISO 8601, required) — start of date range.
   - `end` (string, ISO 8601, required) — end of date range.
-  - `blockType` (string, optional) — filter: `personal`, `gym-wide`.
+  - `blockType` (string, optional) — filter: `personal`/`gym-wide`.
+  - `page` (int, optional, default 1), `limit` (int, optional, default 20, max 100).
 - **Request Body:** None.
 - **Success Response:** `200 OK`
   ```json
@@ -620,7 +621,7 @@ All error responses follow this shape:
     "data": [
       {
         "id": "uuid",
-        "blockType": "personal | gym-wide",
+        "blockType": "PERSONAL | GYM_WIDE",
         "createdBy": { "id": "uuid", "name": "string" },
         "coach": { "id": "uuid", "name": "string" } | null,
         "startTime": "string (ISO 8601)",
@@ -632,9 +633,11 @@ All error responses follow this shape:
   }
   ```
 - **Error Responses:**
-  - `400 VALIDATION_ERROR` — missing or invalid date range.
+  - `400 VALIDATION_ERROR` — missing or invalid date range, inverted range (`start > end`), invalid `blockType`, non-integer or out-of-range `page`/`limit`.
 - **Business Rules Applied:**
   - Personal blocks are assigned to a specific coach (coach field present); gym-wide blocks have no coach field (null).
+  - `GET /blocks` excludes canceled blocks — only `ACTIVE` blocks are returned (interval overlap: `start_time < end AND end_time > start`, ordered by start time).
+  - `blockType` is serialized as enum values (`PERSONAL`/`GYM_WIDE`).
 
 ---
 
@@ -655,7 +658,7 @@ All error responses follow this shape:
   }
   ```
   **Field rules:**
-  - `blockType`: required.
+  - `blockType`: required. Serialized as enum values `PERSONAL | GYM_WIDE`.
   - `coachId`: required when `blockType` is `personal` (the coach whose calendar is blocked). For Admin creating a personal block, this can be any coach; for Coach creating a personal block, this defaults to their own ID (or is set to self).
   - `startDateTime`/`endDateTime`: required, must be aligned to hour boundaries (blocks are 1-hour minimum).
   - `description`: optional.
@@ -686,23 +689,25 @@ All error responses follow this shape:
 
 ### DELETE /blocks/:id
 
-- **Description:** Cancels a block. Removes the corresponding Google Calendar event.
-- **Auth/Role:** Authenticated (Admin or the Coach who created the block).
+- **Description:** Soft-cancels a block (`status → CANCELED`). Removes the corresponding Google Calendar event and clears `google_event_id`. The record is retained but excluded from `GET /blocks` and availability.
+- **Auth/Role:** Authenticated (Admin or Coach). Admin can cancel any block; Coach can cancel only `PERSONAL` blocks they created.
 - **Path Params:**
   - `id` (uuid) — block ID.
 - **Query Params:** None.
 - **Request Body:** None.
 - **Success Response:** `200 OK`
   ```json
-  { "status": "canceled" }
+  { "id": "uuid", "status": "CANCELED" }
   ```
 - **Error Responses:**
   - `403 FORBIDDEN` — not the block creator and not an Admin.
   - `404 NOT_FOUND` — block does not exist.
-  - `400 VALIDATION_ERROR` — block is already canceled.
+  - `409 CONFLICT` — block is already canceled.
+  - `503 SERVICE_UNAVAILABLE` — Google Calendar API error (no DB change).
 - **Business Rules Applied:**
   - Admin can cancel any block; Coach can only cancel their own personal blocks.
   - No notifications are sent for block cancellation (PRD Section 9, Resolved).
+  - Audited: `block.cancel` SUCCESS (and DENIED on authorization rejection).
 
 ---
 

@@ -409,12 +409,31 @@ describe("CreateTrainingClass", () => {
           start_time: date,
           end_time: new Date(date.getTime() + 60 * 60 * 1000),
           created_by: admin.id,
+          status: "ACTIVE",
         },
       });
 
       await expect(createTrainingClass.execute(baseData())).rejects.toMatchObject({
         code: "OVERLAP_DETECTED",
       });
+    });
+
+    it("allows creation when the only overlapping block is CANCELED", async () => {
+      const date = baseData().startDateTime;
+      await prisma.block.create({
+        data: {
+          block_type: "PERSONAL",
+          coach_id: coach.id,
+          start_time: date,
+          end_time: new Date(date.getTime() + 60 * 60 * 1000),
+          created_by: admin.id,
+          status: "CANCELED",
+        },
+      });
+
+      const result = await createTrainingClass.execute(baseData());
+      expect(result.seriesId).toBeNull();
+      expect(result.recurrence.enabled).toBe(false);
     });
 
     it("rejects when the assigned coach is not an active coach", async () => {

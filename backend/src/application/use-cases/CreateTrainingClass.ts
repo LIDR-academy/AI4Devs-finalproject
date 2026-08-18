@@ -264,7 +264,7 @@ export class CreateTrainingClass {
         include: { enrollments: true },
       }),
       this.prisma.block.findMany({
-        where: { start_time: { gte: first, lte: rangeEnd } },
+        where: { status: "ACTIVE", start_time: { gte: first, lte: rangeEnd } },
       }),
     ]);
 

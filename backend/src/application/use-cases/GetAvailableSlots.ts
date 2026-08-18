@@ -46,6 +46,7 @@ export class GetAvailableSlots {
       }),
       this.prisma.block.findMany({
         where: {
+          status: "ACTIVE",
           start_time: { gte: dayStart, lte: dayEnd },
           OR: [{ block_type: "GYM_WIDE" }, { block_type: "PERSONAL", coach_id: coachId }],
         },

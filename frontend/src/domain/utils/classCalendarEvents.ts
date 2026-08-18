@@ -50,6 +50,7 @@ export function toClassCalendarEvent(trainingClass: TrainingClass): CalendarEven
     start: startInstant.toZonedDateTimeISO(GYM_TIMEZONE),
     end,
     _options: { disableDND: true, disableResize: true },
+    kind: "CLASS",
     classType: trainingClass.classType,
     coachName: trainingClass.assignedCoach.name,
     levelColor: trainingClass.level?.color ?? null,
@@ -62,6 +63,7 @@ export function toClassCalendarEvent(trainingClass: TrainingClass): CalendarEven
 }
 
 export type ClassCalendarEventShape = CalendarEventExternal & {
+  kind: "CLASS";
   classType: ClassType;
   coachName: string;
   levelColor: string | null;
