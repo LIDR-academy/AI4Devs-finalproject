@@ -63,6 +63,8 @@ flowchart TD
 | **Revisión por Reviewer Independiente:** | `@.agents/workflows/04_dev_audit_prompt.md Actúa como Reviewer y audita el ticket TK-XXX` |
 | **Ejecutar Bucle Autónomo TDD:** | `@.agents/workflows/05_test_runner_agent.md Corre la suite TDD para el ticket TK-XXX` |
 | **Ejecutar Pipeline QA SOTA:** | `@.agents/workflows/06_full_qa_pipeline.md Ejecuta la verificación completa de QA` |
+| **Incidencia Producción → Ticket:** | `@.agents/workflows/07_production_observability_agent.md Analiza esta incidencia de producción: [stacktrace]` |
+| **Validar Despliegue Post-Deploy:** | `@.agents/workflows/08_smoke_test_deploy_validation.md Valida el despliegue en: [URL]` |
 
 ---
 
@@ -77,7 +79,8 @@ Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Drive
 *   **[Prompt de Auditoría de Código y Calidad VSDD](workflows/04_dev_audit_prompt.md):** Meta-prompt de auditoría en 7 fases para la revisión adversarial del Reviewer Independiente sobre el código antes de hacer commit (`apps/`).
 *   **[Agente Autónomo de Testing](workflows/05_test_runner_agent.md):** Subagente especializado en el bucle autónomo TDD (Red-Green-Refactor).
 *   **[Pipeline QA Completo SOTA v2.1](workflows/06_full_qa_pipeline.md):** Pipeline QA completo con Mutation Score >= 70% y veredicto JSON Schema.
-*   **[Observabilidad en Producción Shift-Right](workflows/07_production_observability_agent.md):** Workflow de observabilidad: captura logs/stacktraces de producción y traduce incidencias a escenarios BDD.
+*   **[Observabilidad en Producción Shift-Right v2.0](workflows/07_production_observability_agent.md):** Captura logs/stacktraces de producción, genera BDD Gherkin, pruebas de regresión y cierra el bucle convirtiendo incidencias en tickets `TK-XXX` del backlog (Paso 4 nuevo).
+*   **[Smoke Test & Deploy Validation](workflows/08_smoke_test_deploy_validation.md):** Valida post-despliegue ejecutando health checks, smoke tests de contratos HTTP (3 Oráculos) y verifica seguridad de cabeceras. Emite veredicto PASS/FAIL con rollback automático OpenTofu si falla.
 
 ---
 
