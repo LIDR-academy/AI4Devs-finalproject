@@ -16,6 +16,11 @@ Este directorio contiene las meta-directivas, reglas de gobernanza y habilidades
 > **✋ REGLA INNEGOCIABLE DE APROBACIÓN PREVIA (HUMAN-IN-THE-LOOP):**
 > Antes de guardar cambios o crear cualquier archivo de especificación, diseño, sistema de color, arquitectura o código fuente, el Agente DEBE presentar primero su propuesta completa o borrador al Usuario (Especialista) y obtener su confirmación o aprobación explícita. Queda terminantemente prohibido modificar o crear archivos en disco sin previa autorización del usuario.
 
+> [!IMPORTANT]
+> **📦 FASE 0 OBLIGATORIA — LECTURA DEL STACK MANIFEST (Guard 24):**
+> Antes de ejecutar cualquier Skill que genere código, configuración o infraestructura, el agente DEBE leer `docs/00_stack_manifest.md` como **Fase 0**. Este archivo es la **Fuente Única de Verdad (SSoT)** del stack tecnológico aprobado por el humano. Si una herramienta, versión o comando no aparece en ese manifiesto → **DETENERSE e informar al humano**. Nunca asumir ni inventar decisiones tecnológicas.
+
+
 ---
 
 ## 🗺️ 1. Arquitectura del Arnés .agents
