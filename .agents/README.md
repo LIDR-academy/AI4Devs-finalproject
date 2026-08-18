@@ -1,6 +1,6 @@
 ---
 framework: ".agents / VSDD Governance Framework"
-version: "2.1.0 (Stack-Agnostic Edition)"
+version: "2.3.0 (SOTA Enterprise 2026 Edition)"
 author: "Jose Lacruz <lacruzjd@gmail.com>"
 program: "AI4Devs - Final Project"
 methodology: "Verified Spec-Driven Development (VSDD)"
@@ -72,24 +72,25 @@ Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Drive
 *   **[Prompt de Auditoría de Código y Calidad VSDD](workflows/04_dev_audit_prompt.md):** Meta-prompt de auditoría en 7 fases para la revisión adversarial del Reviewer Independiente sobre el código antes de hacer commit (`apps/`).
 *   **[Agente Autónomo de Testing](workflows/05_test_runner_agent.md):** Subagente especializado en el bucle autónomo TDD (Red-Green-Refactor).
 *   **[Pipeline QA Completo SOTA v2.1](workflows/06_full_qa_pipeline.md):** Pipeline QA completo con Mutation Score >= 70% y veredicto JSON Schema.
+*   **[Observabilidad en Producción Shift-Right](workflows/07_production_observability_agent.md):** Workflow de observabilidad: captura logs/stacktraces de producción y traduce incidencias a escenarios BDD.
 
 ---
 
 ## 🔴 4. Reglas y Estándares del Proyecto (Project Specifications)
 
-Toda regla de arquitectura, base de datos, ciberseguridad, testing y frontend es **dinámica y agnóstica**, e inferida directamente por las habilidades a partir de la documentación viva del proyecto en `docs/`:
+Toda regla de arquitectura, base de datos, ciberseguridad, testing e infraestructura IaC es **dinámica y agnóstica**, e inferida directamente por las habilidades a partir de la documentación viva del proyecto en `docs/`:
 
 *   **Alcance y Producto:** `docs/01_product_definition/` (PRDs y Reglas de Negocio).
 *   **Arquitectura y Diseño:** `docs/02_architecture_design/` (Capas, Mappers, ADRs y Estructura).
 *   **Persistencia y APIs:** `docs/03_persistence_and_api/` (Esquemas de Base de Datos y OpenAPI 3.0).
-*   **Gobernanza y Calidad:** `docs/04_governance_and_quality/` (Estrategias de prueba, seguridad e informes).
+*   **Gobernanza y Calidad:** `docs/04_governance_and_quality/` (Estrategias de prueba, seguridad, CI/CD e informes).
 *   **Gestión Ágil:** `docs/05_agile_planning/` (User Stories INVEST y Tickets Técnicos).
 
 ---
 
 ## 🔵 5. Catálogo de Skills por Fase y Rol Técnico
 
-Las 28 habilidades son runbooks especializados organizados por fases que la IA carga bajo demanda:
+Las 34 habilidades son runbooks especializados organizados por fases que la IA carga bajo demanda:
 
 ### Fase Documental (Product Owner & Architect Roles)
 *   **01_product_definition:** [SK-01 Descubrimiento de Producto](skills/specs/01_product_definition/SK-01_discover_product_vision.md) y [SK-02 Generación del PRD](skills/specs/01_product_definition/SK-02_generate_prd.md).
