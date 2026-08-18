@@ -109,6 +109,8 @@ To mark a ticket as **Done**:
 19. **RFC 7807 Standard Error Response Guard:** Require all HTTP error responses to strictly conform to the RFC 7807 Problem Details format (`type`, `title`, `status`, `detail`, `instance`).
 20. **Page Object Model (POM) & Multi-Layer Oracle E2E Guard:** Mandatory encapsulation of browser selectors and page interactions in reusable Page Object classes (e.g. `e2e/pages/*`) for all Playwright E2E test suites. Mandatory explicit code comment annotations for the 3 Oracles (`// ORACULO UI:`, `// ORACULO RED:`, `// ORACULO ESTADO:`) in all E2E test assertions to guarantee multi-layer verification without fragile inline selector duplication.
 21. **Test Directory Co-location & Hybrid Layer Architecture Guard:** Mandatory adherence to the hybrid co-location standard (`.agents/rules/02_testing_architecture_standard.md`). Domain/Value Object tests MUST be co-located in `src/domain/`, UseCases in `src/application/`, Integration tests in `tests/`, and E2E Playwright tests in `e2e/specs/` using Page Object Models (`e2e/pages/`).
+22. **Declarative IaC & OpenTofu Standard Guard:** Prohibit manual cloud resource provisioning or unversioned shell scripts. Mandate declarative OpenTofu (MPL-2.0) HCL modules (`infrastructure/opentofu/`) and Docker Compose containerization for 100% reproducible, zero-drift deployments across all environments.
+23. **Agentic CI/CD Pipeline & Node 24 LTS Guard:** Mandate Node 24 LTS (`node-version: 'lts/*'`), GitHub Actions `@v5`, `pnpm 9`, OpenID Connect (OIDC) cloud authentication without static secret keys, and mandatory automated execution of `.agents` governance checks (`validate_agents.sh`) on all pull requests.
 
 
 
