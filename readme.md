@@ -110,12 +110,26 @@ y pide el siguiente—.
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> **Pendiente.** El diseño visual, los wireframes y el videotutorial de la
-> experiencia de usuario quedan pendientes de la fase de implementación (ver
-> `documents/PRD.md` §9). La navegación funcional está definida como casos de uso
-> (PRD §14) y como historias de usuario (`documents/user_stories.md`, resumidas en
-> §5). Objetivos transversales de UX ya fijados: **responsive mobile-first** y
-> **accesibilidad WCAG 2.1 AA** (EN 301 549 / European Accessibility Act).
+> **En curso.** Dos entregables cerrados y uno pendiente:
+>
+> 1. **Flujos por rol** — [`documents/ux-flows.md`](documents/ux-flows.md): actores y
+>    superficies, mapa de navegación, 15 diagramas Mermaid de flujo y la tabla de
+>    cobertura historia → flujo → pantalla. De ahí salió la decisión de alcance de
+>    que el plan entra en el alta y el alquiler puntual sale.
+> 2. **Sistema de diseño** —
+>    [`documents/design-system.md`](documents/design-system.md): paleta en OKLCH con
+>    contrastes medidos, tipografía y ritmo, los cinco tonos de estado y el
+>    vocabulario que traduce los estados del dominio a lo que ve cada rol.
+>    Implementado en `app/globals.css` + `lib/status.ts`, y **verificado en la suite**
+>    (`tests/design-tokens.test.ts` mide el contraste contra el CSS real).
+> 3. **Wireframes** de las pantallas que hoy solo existen como API, y el videotutorial:
+>    pendientes (`documents/PRD.md` §9, `ux-flows.md` §9).
+>
+> La navegación funcional está definida como casos de uso (PRD §14) y como historias
+> de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales
+> de UX ya fijados: **responsive mobile-first** y **accesibilidad WCAG 2.1 AA**
+> (EN 301 549 / European Accessibility Act) — el contraste y el foco ya cumplen y se
+> comprueban solos; falta llevar `axe` al recorrido E2E.
 
 ### **1.4. Instrucciones de instalación:**
 
@@ -327,7 +341,9 @@ AI4Devs-finalproject-xvm/
 │   ├── C4-architecture.md    # Diagramas C4 niveles 1–3 (Mermaid)
 │   ├── ADR-0001-arquitectura-mvp.md   # Stack, capas, hosting, scheduler
 │   ├── ADR-0002-api-auth-errores.md   # Auth por sesión + contrato de errores
-│   └── user_stories.md       # Historias de usuario (Gherkin) HU-00..HU-17
+│   ├── user_stories.md       # Historias de usuario (Gherkin) HU-00..HU-17
+│   ├── ux-flows.md           # Flujos por rol (15 diagramas) + cobertura HU→pantalla
+│   └── design-system.md      # Tokens, tonos y vocabulario de estados
 └── openspec/
     └── changes/clickoteca-mvp/        # Cambio OpenSpec (fuente de verdad)
         ├── proposal.md · design.md (D1–D13) · tasks.md

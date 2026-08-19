@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { StatusBadge } from "@/components/status-badge";
+import { rentalStatus, subscriptionStatus } from "@/lib/status";
 import { requireSurfacePage } from "@/http/auth-context";
 import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
 import { prismaBackofficeRepository } from "@/repositories/backoffice.repository.prisma";
@@ -30,10 +32,12 @@ export default async function CustomerPage({
     <section className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{customer.fullName}</h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          {customer.planCode ?? "Sin suscripción"}
-          {customer.subscriptionStatus ? ` · ${customer.subscriptionStatus.toLowerCase()}` : ""}
-          {customer.email ? ` · ${customer.email}` : ""}
+        <p className="flex flex-wrap items-center gap-2 text-sm text-[var(--muted-foreground)]">
+          <span>{customer.planCode ?? "Sin suscripción"}</span>
+          {customer.subscriptionStatus ? (
+            <StatusBadge status={subscriptionStatus(customer.subscriptionStatus)} />
+          ) : null}
+          {customer.email ? <span>· {customer.email}</span> : null}
         </p>
         {customer.address ? (
           <p className="text-sm text-[var(--muted-foreground)]">{customer.address}</p>
@@ -59,7 +63,9 @@ export default async function CustomerPage({
                 {history.map((entry) => (
                   <tr key={entry.rentalId} className="border-t">
                     <td className="py-2 pr-4">{entry.setName}</td>
-                    <td className="py-2 pr-4">{entry.status}</td>
+                    <td className="py-2 pr-4">
+                      <StatusBadge status={rentalStatus(entry.status, "backoffice")} />
+                    </td>
                     <td className="py-2 pr-4">{DATE.format(entry.startedAt)}</td>
                     <td className="py-2">
                       {entry.completedAt ? DATE.format(entry.completedAt) : "—"}

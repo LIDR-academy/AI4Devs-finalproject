@@ -1,5 +1,13 @@
 import Link from "next/link";
 
+import { StatusBadge } from "@/components/status-badge";
+import {
+  copyStatus,
+  notificationLabel,
+  queueStatus,
+  simultaneousSets,
+  subscriptionStatus,
+} from "@/lib/status";
 import { prisma } from "@/db/prisma";
 import { requireSurfacePage } from "@/http/auth-context";
 import { prismaNotificationRepository } from "@/repositories/notification.repository.prisma";
@@ -58,8 +66,10 @@ export default async function PortalPage() {
         </p>
       </div>
 
+      {/* El único bloque del portal que reclama algo, y el único con tono de
+          aviso: si todo grita, no grita nada. La ventana caduca sola. */}
       {offers.length > 0 ? (
-        <div className="space-y-3 rounded-md border p-4">
+        <div className="space-y-3 rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning)] p-4 text-[var(--tone-warning-foreground)]">
           <h2 className="text-lg font-semibold">Te toca</h2>
           {offers.map((offer) => (
             <div key={offer.id} className="flex flex-wrap items-center justify-between gap-3">
@@ -77,21 +87,25 @@ export default async function PortalPage() {
         <h2 className="text-lg font-semibold">Tu plan</h2>
         {subscription && subscription.status === "ACTIVE" && currentPlan ? (
           <div className="space-y-3 rounded-md border p-4">
-            <p className="text-sm">
-              Plan actual: <strong>{currentPlan.name}</strong> · {currentPlan.monthlyPrice} €/mes ·{" "}
-              {currentPlan.maxSimultaneousSets === 1
-                ? "1 set a la vez"
-                : `${currentPlan.maxSimultaneousSets} sets a la vez`}
+            <p className="flex flex-wrap items-center gap-2 text-sm">
+              <StatusBadge status={subscriptionStatus(subscription.status)} />
+              <span>
+                <strong>{currentPlan.name}</strong> · {currentPlan.monthlyPrice} €/mes ·{" "}
+                {simultaneousSets(currentPlan.maxSimultaneousSets)}
+              </span>
             </p>
             <PlanSwitcher options={otherPlans} />
           </div>
         ) : (
-          <p className="text-sm text-[var(--muted-foreground)]">
-            No tienes ningún plan activo, así que no puedes llevarte sets.{" "}
-            <Link href="/planes" className="hover:underline">
-              Ver los planes
-            </Link>
-          </p>
+          <div className="space-y-2 rounded-md border p-4">
+            {subscription ? <StatusBadge status={subscriptionStatus(subscription.status)} /> : null}
+            <p className="text-sm text-[var(--muted-foreground)]">
+              No tienes ningún plan activo, así que no puedes llevarte sets.{" "}
+              <Link href="/planes" className="hover:underline">
+                Ver los planes
+              </Link>
+            </p>
+          </div>
         )}
       </div>
 
@@ -103,21 +117,29 @@ export default async function PortalPage() {
           </p>
         ) : (
           <ul className="space-y-3">
-            {rentals.map((rental) => (
-              <li
-                key={rental.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-4"
-              >
-                <div>
-                  <p className="font-medium">{rental.setName}</p>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    Desde el {DATE.format(rental.startedAt)} ·{" "}
-                    {rental.copyState === RETURNABLE ? "en tu poder" : "devolución en curso"}
-                  </p>
-                </div>
-                {rental.copyState === RETURNABLE ? <ReturnButton rentalId={rental.id} /> : null}
-              </li>
-            ))}
+            {rentals.map((rental) => {
+              // Al suscriptor no se le cuenta el estado exacto de la copia: los
+              // cuatro pasos del circuito de devolución son "devolución en curso".
+              const status = copyStatus(rental.copyState, "subscriber");
+              return (
+                <li
+                  key={rental.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-4"
+                >
+                  <div className="space-y-1">
+                    <p className="flex flex-wrap items-center gap-2 font-medium">
+                      {rental.setName}
+                      <StatusBadge status={status} />
+                    </p>
+                    <p className="text-sm text-[var(--muted-foreground)]">
+                      Desde el {DATE.format(rental.startedAt)}
+                      {status.hint ? ` · ${status.hint}` : ""}
+                    </p>
+                  </div>
+                  {rental.copyState === RETURNABLE ? <ReturnButton rentalId={rental.id} /> : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -129,9 +151,17 @@ export default async function PortalPage() {
         ) : (
           <ul className="space-y-2 text-sm">
             {queueEntries.map((entry) => (
-              <li key={entry.id} className="rounded-md border p-3">
-                <strong>{entry.setName}</strong> — desde el {DATE.format(entry.enqueuedAt)}
-                {entry.appliedBonusDays > 0 ? ` · ventaja de ${entry.appliedBonusDays} días` : ""}
+              <li key={entry.id} className="space-y-1 rounded-md border p-3">
+                <p className="flex flex-wrap items-center gap-2">
+                  <strong>{entry.setName}</strong>
+                  <StatusBadge status={queueStatus(entry.status, "subscriber")} />
+                </p>
+                <p className="text-[var(--muted-foreground)]">
+                  Desde el {DATE.format(entry.enqueuedAt)}
+                  {entry.appliedBonusDays > 0
+                    ? ` · ventaja de ${entry.appliedBonusDays} días`
+                    : ""}
+                </p>
               </li>
             ))}
           </ul>
@@ -146,7 +176,8 @@ export default async function PortalPage() {
           <ul className="space-y-2 text-sm">
             {notifications.map((notification) => (
               <li key={notification.id} className="rounded-md border p-3">
-                <span className="font-medium">{notification.type}</span>{" "}
+                {/* En la base el aviso se llama `QUEUE_TURN`; en pantalla, no. */}
+                <span className="font-medium">{notificationLabel(notification.type)}</span>{" "}
                 <span className="text-[var(--muted-foreground)]">
                   · {DATE.format(notification.sentAt)}
                 </span>

@@ -174,10 +174,10 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
   await login(page, "operador@clickoteca.test");
 
   await page.getByRole("button", { name: "Recepcionar" }).first().click();
-  await expect(page.getByRole("heading", { name: /Pendientes de inspección/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Por inspeccionar/i })).toBeVisible();
 
   await page.getByRole("button", { name: "Inspección OK" }).first().click();
-  await expect(page.getByRole("heading", { name: /Pendientes de higienizar/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Por higienizar/i })).toBeVisible();
 
   await page.getByRole("button", { name: "Higienizada" }).first().click();
 

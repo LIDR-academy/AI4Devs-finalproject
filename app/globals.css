@@ -3,52 +3,136 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Tokens de tema (shadcn/ui · base neutral). Light por defecto, dark override abajo.
-   Theming por CSS variables → encaja con el modelo `Theme` del dominio. */
+/* ---------------------------------------------------------------------------
+   Sistema de diseño de Clickoteca — `documents/design-system.md`.
+
+   Dos familias de tokens y una regla que las separa:
+
+   1. **Semánticos de superficie** (shadcn/ui): `background`, `primary`, `muted`…
+      Son el chasis de la interfaz. Sustituyen a los grises puros de fábrica por
+      una escala con croma (h≈258, azul) para que blancos y grises tengan familia
+      en vez de ser neutros de laboratorio.
+   2. **Tonos de estado** (`--tone-*`): el vocabulario con el que se pinta un
+      estado del dominio. Cinco y no más, porque son cinco lecturas distintas para
+      quien mira: nada que hacer, en marcha, hecho, te espera a ti, algo va mal.
+
+   Toda pareja texto/fondo de aquí abajo está medida: ≥4.5:1 para texto y ≥3:1
+   para bordes de control y foco (WCAG 2.1 AA, 1.4.3 y 1.4.11). La tabla completa
+   de ratios está en el documento; si tocas un valor, vuelve a medirlo.
+   --------------------------------------------------------------------------- */
+
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+
+  /* Tipografía: pila del sistema. No hay webfont a propósito — un `next/font`
+     descarga en build y ata el despliegue a la red; el cambio, si se quiere, es
+     una línea en `app/layout.tsx`. */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* Superficie */
+  --background: oklch(0.99 0.004 258);
+  --foreground: oklch(0.24 0.03 264);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.24 0.03 264);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.24 0.03 264);
+
+  /* Marca. `primary` es el azul de acción; `highlight` es el amarillo de la
+     marca y **no** es un color de acción: no lleva texto de botón encima ni
+     compite con `primary`, marca cosas (destacados, el acento de la cabecera). */
+  --primary: oklch(0.52 0.16 258);
+  --primary-foreground: oklch(0.985 0.006 258);
+  --secondary: oklch(0.955 0.012 258);
+  --secondary-foreground: oklch(0.32 0.05 258);
+  --muted: oklch(0.965 0.008 258);
+  --muted-foreground: oklch(0.52 0.028 258);
+  --accent: oklch(0.945 0.025 250);
+  --accent-foreground: oklch(0.32 0.06 255);
+  --highlight: oklch(0.82 0.155 82);
+  --highlight-foreground: oklch(0.28 0.06 70);
+
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.985 0.006 27);
+
+  /* `--border` separa bloques (decorativo, sin mínimo de contraste); `--input`
+     es el borde de un control y sí tiene que llegar a 3:1 contra el fondo, que
+     es lo que exige 1.4.11 y lo que fallaba con el token gris de fábrica. */
+  --border: oklch(0.895 0.014 258);
+  --input: oklch(0.63 0.03 258);
+  --ring: oklch(0.62 0.14 258);
+
+  /* Tonos de estado */
+  --tone-neutral: oklch(0.945 0.008 258);
+  --tone-neutral-foreground: oklch(0.4 0.025 258);
+  --tone-neutral-border: oklch(0.875 0.012 258);
+  --tone-info: oklch(0.935 0.027 250);
+  --tone-info-foreground: oklch(0.44 0.13 252);
+  --tone-info-border: oklch(0.86 0.05 250);
+  --tone-success: oklch(0.935 0.055 155);
+  --tone-success-foreground: oklch(0.42 0.098 155);
+  --tone-success-border: oklch(0.86 0.07 155);
+  --tone-warning: oklch(0.935 0.05 80);
+  --tone-warning-foreground: oklch(0.45 0.1 65);
+  --tone-warning-border: oklch(0.86 0.09 80);
+  --tone-danger: oklch(0.935 0.027 25);
+  --tone-danger-foreground: oklch(0.46 0.16 27);
+  --tone-danger-border: oklch(0.86 0.06 25);
 }
 
+/* Oscuro: no es el claro invertido. Los fondos de tono suben de luminosidad
+   (0.935 → 0.30) y los textos bajan de croma, porque un color saturado sobre
+   negro vibra. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --background: oklch(0.19 0.02 264);
+  --foreground: oklch(0.95 0.008 258);
+  --card: oklch(0.235 0.022 264);
+  --card-foreground: oklch(0.95 0.008 258);
+  --popover: oklch(0.235 0.022 264);
+  --popover-foreground: oklch(0.95 0.008 258);
+
+  --primary: oklch(0.72 0.14 256);
+  --primary-foreground: oklch(0.2 0.05 258);
+  --secondary: oklch(0.3 0.02 264);
+  --secondary-foreground: oklch(0.93 0.01 258);
+  --muted: oklch(0.28 0.02 264);
+  --muted-foreground: oklch(0.72 0.025 258);
+  --accent: oklch(0.32 0.04 258);
+  --accent-foreground: oklch(0.95 0.01 258);
+  --highlight: oklch(0.84 0.16 84);
+  --highlight-foreground: oklch(0.25 0.045 70);
+
+  --destructive: oklch(0.68 0.18 25);
+  --destructive-foreground: oklch(0.2 0.05 25);
+
+  --border: oklch(0.35 0.02 264);
+  --input: oklch(0.54 0.025 264);
+  --ring: oklch(0.6 0.12 258);
+
+  --tone-neutral: oklch(0.3 0.015 258);
+  --tone-neutral-foreground: oklch(0.85 0.02 258);
+  --tone-neutral-border: oklch(0.4 0.02 258);
+  --tone-info: oklch(0.3 0.06 252);
+  --tone-info-foreground: oklch(0.85 0.07 250);
+  --tone-info-border: oklch(0.42 0.08 252);
+  --tone-success: oklch(0.3 0.06 155);
+  --tone-success-foreground: oklch(0.85 0.1 155);
+  --tone-success-border: oklch(0.42 0.08 155);
+  --tone-warning: oklch(0.31 0.06 75);
+  --tone-warning-foreground: oklch(0.88 0.11 85);
+  --tone-warning-border: oklch(0.43 0.08 75);
+  --tone-danger: oklch(0.31 0.07 25);
+  --tone-danger-foreground: oklch(0.86 0.07 25);
+  --tone-danger-border: oklch(0.44 0.1 25);
 }
 
 @theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -63,10 +147,30 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-tone-neutral: var(--tone-neutral);
+  --color-tone-neutral-foreground: var(--tone-neutral-foreground);
+  --color-tone-neutral-border: var(--tone-neutral-border);
+  --color-tone-info: var(--tone-info);
+  --color-tone-info-foreground: var(--tone-info-foreground);
+  --color-tone-info-border: var(--tone-info-border);
+  --color-tone-success: var(--tone-success);
+  --color-tone-success-foreground: var(--tone-success-foreground);
+  --color-tone-success-border: var(--tone-success-border);
+  --color-tone-warning: var(--tone-warning);
+  --color-tone-warning-foreground: var(--tone-warning-foreground);
+  --color-tone-warning-border: var(--tone-warning-border);
+  --color-tone-danger: var(--tone-danger);
+  --color-tone-danger-foreground: var(--tone-danger-foreground);
+  --color-tone-danger-border: var(--tone-danger-border);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -81,5 +185,30 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+  /* El foco es la única pista de navegación de quien va por teclado, así que se
+     ve siempre —no solo en los componentes que lo declaran— y por fuera del
+     elemento, para que no lo tape un fondo de color. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Titulares algo más apretados que el cuerpo: a tamaño grande el interletraje
+     por defecto se abre demasiado. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

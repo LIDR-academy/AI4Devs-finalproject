@@ -12,9 +12,11 @@
 > cruce es el que aporta la información nueva: hay historias completas en la API que
 > **no tienen ninguna pantalla desde la que ejecutarse**.
 >
-> **Estado:** 2026-08-16. Revisado con el propietario; la primera decisión de alcance
-> —plan en el alta, HU-02 como cambio de plan, alquiler puntual fuera— está tomada y
-> registrada en **§8.1**.
+> **Estado:** 2026-08-16, revisado el 2026-08-19. La primera decisión de alcance
+> —plan en el alta, HU-02 como cambio de plan, alquiler puntual fuera— está tomada,
+> registrada en **§8.1** e **implementada**. Del §8.2 se ha cerrado el punto 5
+> (lenguaje visual de los estados) con [`design-system.md`](design-system.md), que es
+> el segundo entregable de UX; el siguiente son los wireframes (**§9**).
 
 ---
 
@@ -567,14 +569,14 @@ Ordenado por lo que bloquea a lo demás.
    sets y copias, o basta con el alta de copia sobre un set ya sembrado?
 4. **Dónde vive "mi suscripción".** El cambio de plan necesita sitio: ¿bloque en
    `/portal` o pantalla propia `/portal/suscripcion` junto al historial?
-5. **Lenguaje visual de los estados.** Los 9 estados de `Copy`, los de cola y los de
-   oferta se pintan hoy como texto en mayúsculas. Necesitan un vocabulario visual
-   común entre portal y back-office — pero **con distinto nivel de detalle**: el
-   operador necesita el estado exacto, el suscriptor necesita saber "en qué punto
-   está lo mío".
-6. **Vacíos, errores y esperas.** El contrato RFC 9457 ya devuelve `detail`
-   legible, y las pantallas lo muestran en rojo sin más. Los estados vacíos existen
-   pero son una frase suelta.
+5. ~~**Lenguaje visual de los estados.**~~ **Resuelto (2026-08-19)** en
+   [`design-system.md`](design-system.md) §5: vocabulario único en `lib/status.ts`,
+   con etiqueta y tono **por superficie** —el operador ve el estado exacto, el
+   suscriptor ve en qué punto está lo suyo— y una prueba contra `schema.prisma` que
+   impide que un estado nuevo llegue a pantalla sin traducir.
+6. ~~**Vacíos, errores y esperas.**~~ **Pauta fijada** en `design-system.md` §7. Sigue
+   abierta su aplicación pantalla a pantalla; lo que sí se corrigió ya es que los
+   errores usaban un rojo ajeno al tema que en modo oscuro no llegaba a AA.
 7. **Navegación del portal.** Hoy `/portal` es una sola página con cuatro bloques y
    ningún menú. En cuanto entren historial y suscripción, hace falta estructura.
 
@@ -584,12 +586,17 @@ Ordenado por lo que bloquea a lo demás.
 
 Con los flujos cerrados, el orden natural es:
 
-1. **Sistema de diseño** — paleta con croma real (los tokens de
-   [`globals.css`](../app/globals.css) son grises puros de fábrica), tipografía,
-   escala y el vocabulario de estados del punto 8.5.
+1. ~~**Sistema de diseño**~~ — **hecho (2026-08-19)**:
+   [`design-system.md`](design-system.md). Paleta OKLCH con croma y contrastes
+   medidos, tipografía y ritmo, cinco tonos de estado y el vocabulario del punto 8.5.
+   No es solo documento: está en `app/globals.css` y `lib/status.ts`, aplicado al
+   portal y al back-office, y sostenido por dos pruebas.
 2. **Wireframes** de las pantallas nuevas por prioridad: ficha de set → registro de
-   condición + discrepancia → gestión de catálogo → portal ampliado.
+   condición + discrepancia → gestión de catálogo → portal ampliado. ← **siguiente**
 3. **Implementación** superficie a superficie, trayendo los componentes de shadcn
-   que faltan (hoy solo hay `button`).
-4. **Verificación de accesibilidad** — WCAG 2.1 AA es objetivo declarado y no hay
-   ninguna comprobación automatizada; Playwright ya está montado para añadir axe.
+   que faltan (hoy hay `button` y `badge`; la lista de los que harán falta y para qué
+   pantalla está en `design-system.md` §6.2).
+4. **Verificación de accesibilidad** — WCAG 2.1 AA es objetivo declarado. El
+   contraste y el foco ya se comprueban solos (`tests/design-tokens.test.ts`), pero
+   **sigue sin haber `axe` en el recorrido E2E**, que es lo que detectaría los fallos
+   de estructura y etiquetado. Playwright ya está montado.

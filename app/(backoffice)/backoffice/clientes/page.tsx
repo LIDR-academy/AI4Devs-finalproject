@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { StatusBadge } from "@/components/status-badge";
+import { subscriptionStatus } from "@/lib/status";
 import { can } from "@/domain/auth/permissions";
 import { requireSurfacePage } from "@/http/auth-context";
 import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
@@ -56,10 +58,14 @@ export default async function CustomersPage() {
                   <td className="py-2 pr-4 text-[var(--muted-foreground)]">{customer.email}</td>
                 ) : null}
                 <td className="py-2 pr-4">
-                  {customer.planCode ?? "—"}
-                  {customer.subscriptionStatus && customer.subscriptionStatus !== "ACTIVE"
-                    ? ` (${customer.subscriptionStatus.toLowerCase()})`
-                    : ""}
+                  <span className="flex flex-wrap items-center gap-2">
+                    {customer.planCode ?? "—"}
+                    {/* La suscripción activa no se marca: es lo esperable, y una
+                        píldora verde en cada fila no distinguiría nada. */}
+                    {customer.subscriptionStatus && customer.subscriptionStatus !== "ACTIVE" ? (
+                      <StatusBadge status={subscriptionStatus(customer.subscriptionStatus)} />
+                    ) : null}
+                  </span>
                 </td>
                 <td className="py-2 pr-4">{customer.activeRentals}</td>
                 <td className="py-2 pr-4">{customer.queueEntries}</td>

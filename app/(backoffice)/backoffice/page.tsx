@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { StatusBadge } from "@/components/status-badge";
+import { copyStatus } from "@/lib/status";
 import { can } from "@/domain/auth/permissions";
 import { requireSurfacePage } from "@/http/auth-context";
 import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
@@ -10,16 +12,13 @@ import { WorkQueueActions } from "./work-queue-actions";
 
 export const metadata = { title: "Cola de trabajo · Clickoteca" };
 
-/** Etiquetas legibles de los estados que requieren intervención. */
-const STATE_LABELS: Record<string, string> = {
-  INTAKE: "Pendientes de catalogar",
-  EN_DEVOLUCION: "En camino de vuelta",
-  EN_INSPECCION: "Pendientes de inspección",
-  EN_HIGIENIZACION: "Pendientes de higienizar",
-  INCOMPLETA: "Incompletas",
-};
-
-const ORDER = ["EN_INSPECCION", "EN_HIGIENIZACION", "INCOMPLETA", "EN_DEVOLUCION", "INTAKE"];
+/**
+ * Orden de la cola: primero lo que bloquea a un cliente (una copia en inspección es
+ * un set que alguien está esperando), al final lo que solo engorda el inventario.
+ * Las etiquetas ya no viven aquí — salen del vocabulario común (`lib/status.ts`),
+ * que es el que garantiza que un estado se llame igual en toda la aplicación.
+ */
+const ORDER = ["EN_INSPECCION", "EN_HIGIENIZACION", "INCOMPLETA", "EN_DEVOLUCION", "INTAKE"] as const;
 
 const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "short", timeStyle: "short" });
 
@@ -73,10 +72,12 @@ export default async function BackofficePage() {
 
       {ORDER.filter((state) => byState.has(state)).map((state) => (
         <div key={state} className="space-y-3">
-          <h2 className="text-lg font-semibold">
-            {STATE_LABELS[state]}{" "}
-            <span className="text-sm font-normal text-[var(--muted-foreground)]">
-              ({byState.get(state)!.length})
+          {/* El grupo se titula con la propia píldora del estado: así el color
+              dice de un vistazo qué cubos queman y cuáles solo esperan. */}
+          <h2 className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={copyStatus(state, "backoffice")} className="text-sm" />
+            <span className="text-sm text-[var(--muted-foreground)]">
+              {byState.get(state)!.length} copia(s)
             </span>
           </h2>
           <div className="overflow-x-auto">

@@ -1,4 +1,5 @@
 import { LogoutButton } from "@/components/auth/logout-button";
+import { roleLabel } from "@/lib/status";
 import { requireSurfacePage } from "@/http/auth-context";
 
 /**
@@ -19,7 +20,7 @@ export default async function BackofficeLayout({
             Back-office
           </p>
           <p className="text-sm font-medium">
-            {user.fullName} · {user.role === "ADMIN" ? "Admin" : "Operador"}
+            {user.fullName} · {roleLabel(user.role)}
           </p>
         </div>
         <LogoutButton />

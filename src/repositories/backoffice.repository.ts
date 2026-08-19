@@ -32,7 +32,9 @@ export interface CustomerSummary {
 export interface CustomerHistoryEntry {
   rentalId: string;
   setName: string;
-  status: string;
+  /** El mismo conjunto cerrado que `RentalSummary.status`: la interfaz lo traduce
+   *  a etiqueta, así que aquí no puede ser un `string` cualquiera. */
+  status: "ACTIVE" | "RETURN_INITIATED" | "IN_INSPECTION" | "COMPLETED";
   startedAt: Date;
   completedAt: Date | null;
 }

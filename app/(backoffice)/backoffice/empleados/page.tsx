@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { StatusBadge } from "@/components/status-badge";
+import { roleLabel, userStatus } from "@/lib/status";
 import { can } from "@/domain/auth/permissions";
 import { requireSurfacePage } from "@/http/auth-context";
 import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
@@ -46,8 +48,10 @@ export default async function EmployeesPage() {
               <tr key={employee.id} className="border-t">
                 <td className="py-2 pr-4">{employee.fullName}</td>
                 <td className="py-2 pr-4 text-[var(--muted-foreground)]">{employee.email}</td>
-                <td className="py-2 pr-4">{employee.role}</td>
-                <td className="py-2 pr-4">{employee.status}</td>
+                <td className="py-2 pr-4">{roleLabel(employee.role)}</td>
+                <td className="py-2 pr-4">
+                  <StatusBadge status={userStatus(employee.status)} />
+                </td>
                 <td className="py-2">
                   {employee.id === user.id ? (
                     // Cambiarse el rol a uno mismo dejaría el sistema sin quien pueda

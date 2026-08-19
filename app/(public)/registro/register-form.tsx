@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Terms } from "@/components/terms";
 import { Button } from "@/components/ui/button";
+import { simultaneousSets } from "@/lib/status";
 import type { PublicPlan } from "@/repositories/catalog.repository";
 
 interface FieldIssue {
@@ -52,7 +53,7 @@ function Field({
         className="h-9 rounded-md border px-3 text-sm"
       />
       {issue ? (
-        <p id={`${name}-error`} className="text-sm text-red-600">
+        <p id={`${name}-error`} className="text-sm text-[var(--destructive)]">
           {issue}
         </p>
       ) : null}
@@ -167,9 +168,7 @@ export function RegisterForm({
                 {plan.name} · {EUR.format(Number(plan.monthlyPrice))} / mes
               </span>
               <span className="text-[var(--muted-foreground)]">
-                {plan.maxSimultaneousSets === 1
-                  ? "1 set en casa a la vez"
-                  : `${plan.maxSimultaneousSets} sets en casa a la vez`}
+                {simultaneousSets(plan.maxSimultaneousSets)}
                 {plan.queueBonusDays > 0
                   ? ` · ${plan.queueBonusDays} días de ventaja en las colas`
                   : ""}
@@ -178,7 +177,7 @@ export function RegisterForm({
           </label>
         ))}
         {issueFor("planCode") ? (
-          <p className="text-sm text-red-600">{issueFor("planCode")}</p>
+          <p className="text-sm text-[var(--destructive)]">{issueFor("planCode")}</p>
         ) : null}
       </fieldset>
 
@@ -219,7 +218,7 @@ export function RegisterForm({
           <span>Declaro que soy mayor de edad.</span>
         </label>
         {issueFor("isAdult") ? (
-          <p className="text-sm text-red-600">{issueFor("isAdult")}</p>
+          <p className="text-sm text-[var(--destructive)]">{issueFor("isAdult")}</p>
         ) : null}
 
         <Terms />
@@ -228,12 +227,12 @@ export function RegisterForm({
           <span>He leído y acepto las condiciones del servicio.</span>
         </label>
         {issueFor("acceptsTerms") ? (
-          <p className="text-sm text-red-600">{issueFor("acceptsTerms")}</p>
+          <p className="text-sm text-[var(--destructive)]">{issueFor("acceptsTerms")}</p>
         ) : null}
       </fieldset>
 
       {error ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-[var(--destructive)]">
           {error}
         </p>
       ) : null}

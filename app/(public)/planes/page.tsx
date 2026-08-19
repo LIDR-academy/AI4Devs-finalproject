@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Terms } from "@/components/terms";
 import { Button } from "@/components/ui/button";
+import { simultaneousSets } from "@/lib/status";
 import { prismaCatalogRepository } from "@/repositories/catalog.repository.prisma";
 import { listMembershipPlans } from "@/use-cases/catalog/browse-public-catalog";
 
@@ -53,11 +54,7 @@ export default async function PlansPage() {
               </p>
             </div>
             <ul className="space-y-1 text-sm text-[var(--muted-foreground)]">
-              <li>
-                {plan.maxSimultaneousSets === 1
-                  ? "1 set en casa a la vez"
-                  : `${plan.maxSimultaneousSets} sets en casa a la vez`}
-              </li>
+              <li>{simultaneousSets(plan.maxSimultaneousSets)}</li>
               <li>Cambios ilimitados mientras no tengas devoluciones pendientes</li>
               <li>
                 {plan.queueBonusDays > 0

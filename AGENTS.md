@@ -547,6 +547,51 @@ project. Read it at the start of every session.
   `reuseExistingServer`, así que si queda un `next start` (build de producción) ocupando
   el 3000, el E2E prueba **el build viejo** y los fallos no tienen sentido. Matar el
   puerto 3000 antes de lanzar Playwright.
+- **Sistema de diseño — segundo entregable de UX (2026-08-19):**
+  `documents/design-system.md`, implementado en `app/globals.css` (tokens),
+  `lib/status.ts` (vocabulario) y `components/ui/badge.tsx` + `components/status-badge.tsx`.
+  **Decisiones que hay que respetar, no reinventar:**
+  (1) **Dos familias de tokens y no se mezclan**: los semánticos de shadcn
+  (`--primary`, `--muted`…) son el chasis; los `--tone-*` son el vocabulario de
+  estados. Pintar una fila "pendiente" con `--destructive` convierte el rojo de
+  "esto ha fallado" en ruido.
+  (2) **Cinco tonos**: `neutral` (nada que hacer / archivado), `info` (en marcha, no
+  depende de ti), `success`, `warning` (**te espera a ti**) y `danger`. Cada uno con
+  tres tokens (fondo, texto, borde) porque en oscuro un fondo tintado sin borde
+  desaparece.
+  (3) **El tono mide la urgencia de quien lee, no el estado**: `EN_INSPECCION` es
+  `warning` para el operador e `info` para el suscriptor. Y **la granularidad depende
+  del rol**: los cuatro estados del circuito de devolución son un único "Devolución
+  en curso" para el suscriptor.
+  (4) `--highlight` (el amarillo de marca) **no es un color de acción**: no lleva
+  texto de botón ni compite con `primary`.
+  **Ninguna pantalla escribe la etiqueta de un estado a mano** — sale de
+  `lib/status.ts`, y `tests/status.test.tsx` lo comprueba **leyendo
+  `prisma/schema.prisma`**: un enum nuevo sin etiqueta pone la suite roja en vez de
+  sacar `EN_CUARENTENA` a producción.
+  **El contraste se mide, no se promete:** `tests/design-tokens.test.ts` parsea
+  `globals.css`, calcula OKLCH→sRGB→ratio WCAG y exige 4.5:1 (texto) / 3:1 (bordes de
+  control y foco) en **los dos temas**, más que todo color quepa en gamut sRGB y que
+  ningún token del claro se quede sin override en `.dark`.
+  **Dos fallos reales de accesibilidad que encontró y que ya están corregidos:**
+  `--input` (borde de control) no llegaba al 3:1 de WCAG 1.4.11 con el gris de
+  fábrica; y el botón destructivo llevaba `text-white` fijo, que en oscuro se queda
+  en **3.13:1** — de ahí el token nuevo `--destructive-foreground`. Además, los nueve
+  mensajes de error usaban `text-red-600` (color de Tailwind ajeno al tema, 3.82:1 en
+  oscuro) y ahora son `--destructive`.
+  **Trampas encontradas:** (a) a **L≥0.93 el gamut sRGB se estrecha muchísimo** —el
+  croma máximo del azul y el rojo cae a ~0.03, frente a 0.10 del verde—, así que los
+  fondos de tono se calcularon con un solver en vez de a ojo; (b) bajo **jsdom**,
+  Vitest reescribe `import.meta.url` a `http://…` y `fileURLToPath` lo rechaza: para
+  leer ficheros en un test hay que usar `resolve(process.cwd(), …)`; (c) un comentario
+  JSX **no puede ir entre `? (` y el elemento** de una ternaria.
+  **Sin webfont a propósito**: `next/font` descarga en build y ataría el despliegue a
+  la red (el destino es una VM libre de Oracle). Pila del sistema en `--font-sans`.
+  **El tema oscuro está definido y medido, pero no conmutable**: nadie pone la clase
+  `.dark` ni se lee `prefers-color-scheme`. Es deuda conocida.
+  **El E2E dependía del texto de la interfaz**: renombrar los grupos de la cola de
+  trabajo ("Pendientes de inspección" → "Por inspeccionar") rompía
+  `circuito-completo.spec.ts`; actualizado.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -558,13 +603,14 @@ project. Read it at the start of every session.
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
   (265 tests unitarios + 8 E2E, `openspec validate --strict` en verde). Lo que queda
-  fuera del MVP: **diseño visual y UX** —en curso: los **flujos por rol** ya están en
-  `documents/ux-flows.md`; faltan sistema de diseño y wireframes— y el despliegue en
-  la VM. La decisión de alcance sobre el plan y el alquiler puntual está **tomada y
-  ejecutada** (cambio `plan-obligatorio-en-alta`, 2026-08-17); queda **archivarlo** en
-  OpenSpec para que sus deltas pasen a `specs/`. Sigue abierto cuáles de los recorridos
-  que hoy son solo API reciben pantalla (`ux-flows.md` §8.2) —con este cambio ya tienen
-  interfaz el alta con plan y el cambio de plan—. Para cualquier cambio de estado de una copia, usar
+  fuera del MVP: **diseño visual y UX** —en curso: **flujos por rol**
+  (`documents/ux-flows.md`) y **sistema de diseño** (`documents/design-system.md`)
+  hechos; **faltan los wireframes**, la implementación de las pantallas que hoy solo
+  existen como API, y `axe` en el E2E— y el despliegue en la VM. La decisión de
+  alcance sobre el plan y el alquiler puntual está **tomada, ejecutada y archivada**
+  (cambio `plan-obligatorio-en-alta`, 2026-08-17). Sigue abierto cuáles de los
+  recorridos que hoy son solo API reciben pantalla (`ux-flows.md` §8.2) —con aquel
+  cambio ya tienen interfaz el alta con plan y el cambio de plan—. Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en

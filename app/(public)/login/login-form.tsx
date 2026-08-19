@@ -84,7 +84,7 @@ export function LoginForm({ next }: { next?: string }) {
       {error ? (
         // `role="alert"` para que un lector de pantalla anuncie el fallo sin que el
         // foco se mueva (objetivo WCAG 2.1 AA del PRD).
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-[var(--destructive)]">
           {error}
         </p>
       ) : null}

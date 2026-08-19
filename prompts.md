@@ -603,3 +603,47 @@ correcta con suscripción activa, subida y bajada de plan, cuenta sin plan activ
 rechazada al pedir un set (409) y bajada bloqueada con dos sets fuera (409).
 **Verde:** `tsc`, `eslint`, 275 tests unitarios, 10 E2E, `next build` y
 `openspec validate --all --strict`.
+
+### [2026-08-19] — Sistema de diseño: tokens, tonos y vocabulario de estados
+**Prompt:** "seguimos con la ux".
+**Resumen de la respuesta:** Se ejecutó el paso 1 del plan que dejó `ux-flows.md` §9
+—el **sistema de diseño**— y se implementó, no solo se escribió.
+**(1) Paleta.** Los tokens eran los grises puros de fábrica de shadcn (croma 0). Ahora
+la familia neutra lleva `h≈258` con croma bajísimo (los grises "van juntos" sin
+percibirse azules), hay un azul de acción `--primary` y un amarillo de marca
+`--highlight` **que no es color de acción** —no lleva texto de botón encima, para no
+acabar con dos primarios peleándose—. Todo en OKLCH y **calculado, no elegido a ojo**:
+un script propio de OKLCH→sRGB→ratio WCAG fijó cada valor.
+**(2) Cinco tonos de estado** (`--tone-*`, con fondo/texto/borde cada uno) separados a
+propósito de los semánticos de superficie: mezclarlos es lo que convierte el rojo de
+"esto ha fallado" en ruido de fondo.
+**(3) Vocabulario de estados** en `lib/status.ts` con dos reglas: la **granularidad
+depende de quién mira** —al operador el estado exacto, al suscriptor los cuatro pasos
+del circuito de devolución fundidos en "Devolución en curso"— y **el tono mide la
+urgencia de quien lee, no el estado**: `EN_INSPECCION` es `warning` para el operador e
+`info` para el suscriptor. Aplicado al portal, la cola de trabajo, clientes y personal:
+se acabaron los `EN_HIGIENIZACION` y los `QUEUE_TURN` en pantalla.
+**(4) Dos redes de seguridad.** `tests/design-tokens.test.ts` lee `globals.css` y mide
+los contrastes de verdad (4.5:1 texto / 3:1 controles, en los dos temas, todo dentro
+de gamut sRGB, ningún token sin override en `.dark`); `tests/status.test.tsx` lee
+**`prisma/schema.prisma`** y exige etiqueta para cada valor de cada enum en cada
+superficie. Un estado nuevo sin traducir pone la suite roja en vez de llegar a
+producción en MAYÚSCULAS.
+**Lo que encontraron esas pruebas y no había visto nadie:** el token `--input` (borde
+de control) no llegaba al 3:1 de WCAG 1.4.11; el botón destructivo llevaba
+`text-white` fijo, que sobre el rojo claro del tema oscuro se queda en **3.13:1** (de
+ahí `--destructive-foreground`); y los nueve mensajes de error usaban `text-red-600`,
+un color de Tailwind ajeno al tema que en oscuro da 3.82:1. Los tres corregidos.
+**Trampas técnicas:** a `L≥0.93` el gamut sRGB se estrecha tanto que el croma máximo
+del azul cae a ~0.03 mientras el verde admite 0.10 —los fondos de tono salieron de un
+solver, no de copiar un valor entre hues—; bajo jsdom, Vitest reescribe
+`import.meta.url` a `http://…` y `fileURLToPath` lo rechaza (hay que usar
+`process.cwd()`); y un comentario JSX no puede colocarse entre `? (` y el elemento.
+**Documentación sincronizada:** `documents/design-system.md` (nuevo, 10 apartados con
+las tablas de tokens y de ratios generadas desde el CSS real), `ux-flows.md` (§8.2
+punto 5 cerrado, §9 replanteado) y `readme.md` §1.3, que seguía diciendo que el diseño
+estaba entero pendiente.
+**Verde:** `tsc`, `eslint`, **344 tests** (275 → 344: +51 de tokens, +18 de
+vocabulario) y `next build`. El **E2E no se pudo ejecutar** —Docker y Postgres no
+estaban levantados en la máquina—, pero se actualizó `circuito-completo.spec.ts`, que
+afirmaba sobre los títulos viejos de la cola de trabajo.
