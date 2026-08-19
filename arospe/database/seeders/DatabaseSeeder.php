@@ -26,5 +26,10 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(RolePermissionSeeder::class);
+
+        // Required application data, not fixture data -- unconditional, outside the
+        // environment allow-list above. See docs/database/schema.md's "Populated by"
+        // note on the same reasoning for RolePermissionSeeder.
+        $this->call(SalesRegionSeeder::class);
     }
 }
