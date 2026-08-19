@@ -41,9 +41,13 @@ export default defineConfig({
   timeout: 60_000,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  // En desarrollo, en serie: es la única configuración en la que el pool de `next dev`
-  // aguanta el recorrido completo. Contra el build de producción vale el defecto.
-  workers: DEV ? 1 : undefined,
+  // El paralelismo lo limita la máquina, no la aplicación: cada worker es un Chromium
+  // entero y la auditoría de `axe` es cara en el navegador. Con el defecto (la mitad de
+  // los núcleos, 5 o 6 aquí) las navegaciones empiezan a agotar el tiempo esperando el
+  // evento `load` mientras el servidor contesta en milisegundos — es hambre de CPU y
+  // memoria, no un fallo de la aplicación. Tres van holgados: 21 pruebas en ~40 s.
+  // En desarrollo, uno: es lo único que aguanta el pool de compilación de `next dev`.
+  workers: DEV ? 1 : 3,
   reporter: "html",
   use: {
     baseURL: BASE_URL,

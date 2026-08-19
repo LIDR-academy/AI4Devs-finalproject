@@ -128,8 +128,9 @@ y pide el siguiente—.
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales
 > de UX ya fijados: **responsive mobile-first** y **accesibilidad WCAG 2.1 AA**
-> (EN 301 549 / European Accessibility Act) — el contraste y el foco ya cumplen y se
-> comprueban solos; falta llevar `axe` al recorrido E2E.
+> (EN 301 549 / European Accessibility Act) — el contraste y el foco se comprueban
+> solos contra el CSS real, y **`axe` audita las nueve pantallas** (públicas, portal y
+> back-office) en el E2E con las etiquetas WCAG 2.1 A/AA.
 
 ### **1.4. Instrucciones de instalación:**
 

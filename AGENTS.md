@@ -652,6 +652,32 @@ project. Read it at the start of every session.
   build en cada vuelta.
   El calentamiento (`e2e/warmup.ts`) ya no lleva el puerto a mano: lo lee del `baseURL`
   de la configuración.
+- **`axe` en el E2E: la accesibilidad se audita sola (2026-08-19).**
+  `e2e/accesibilidad.spec.ts` (con `@axe-core/playwright`) recorre **nueve pantallas**
+  —las cinco públicas, el portal del suscriptor y las cuatro del back-office— y sale
+  **limpia**. Detalles con los que no conviene pelearse:
+  (1) **Solo etiquetas de conformidad**: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`. Las
+  *best-practice* de axe quedan fuera a propósito — mezclar consejos con criterios
+  convierte el rojo en una opinión y deja de arreglarse.
+  (2) **El informe se formatea a mano** (regla, impacto, `helpUrl` y selector): un
+  `toEqual([])` a secas escupe el objeto entero de axe y hay que bucear para saber qué
+  elemento falla.
+  (3) **El back-office se audita con el admin** en una sola prueba con `test.step` por
+  pantalla: entre roles cambian los datos visibles, no la composición de la página.
+  (4) **Lo que esto cubre**: los fallos mecánicos, más o menos un tercio de los reales.
+  Verde aquí no es "es accesible": el recorrido por teclado y si el texto alternativo
+  describe algo siguen sin comprobarse. El contraste va aparte y en los dos temas
+  (`tests/design-tokens.test.ts`).
+  El inicio de sesión compartido salió de `circuito-completo.spec.ts` a **`e2e/sesion.ts`**
+  (`login`, `apiLogin`, `PASSWORD`) para no duplicarlo.
+- **El paralelismo del E2E lo limita la máquina: `workers: 3` (2026-08-19).** Con `axe`
+  dentro, el defecto de Playwright (la mitad de los núcleos: 5–6) volvió a dar timeouts
+  en `page.goto` —esta vez también contra el build autónomo, y hasta en el smoke—.
+  **No es el mismo fallo que el de `next dev`**: no hay 500 ni pool caído, es hambre de
+  CPU y memoria (cada worker es un Chromium entero y auditar con axe es caro en el
+  navegador; 12 núcleos y ~7 GB libres con Docker y el servidor encima). Con **3
+  workers, 21 pruebas en ~40 s**, verde repetido. Si aparecen timeouts sin sentido en
+  navegaciones, baja `workers` antes de buscar la causa en la aplicación.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -666,7 +692,7 @@ project. Read it at the start of every session.
   fuera del MVP: **diseño visual y UX** —en curso: **flujos por rol**
   (`documents/ux-flows.md`) y **sistema de diseño** (`documents/design-system.md`)
   hechos; **faltan los wireframes**, la implementación de las pantallas que hoy solo
-  existen como API, y `axe` en el E2E— y el despliegue en la VM. La decisión de
+  existen como API— y el despliegue en la VM. **`axe` ya está en el E2E.** La decisión de
   alcance sobre el plan y el alquiler puntual está **tomada, ejecutada y archivada**
   (cambio `plan-obligatorio-en-alta`, 2026-08-17). Sigue abierto cuáles de los
   recorridos que hoy son solo API reciben pantalla (`ux-flows.md` §8.2) —con aquel

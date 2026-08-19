@@ -596,7 +596,8 @@ Con los flujos cerrados, el orden natural es:
 3. **Implementación** superficie a superficie, trayendo los componentes de shadcn
    que faltan (hoy hay `button` y `badge`; la lista de los que harán falta y para qué
    pantalla está en `design-system.md` §6.2).
-4. **Verificación de accesibilidad** — WCAG 2.1 AA es objetivo declarado. El
-   contraste y el foco ya se comprueban solos (`tests/design-tokens.test.ts`), pero
-   **sigue sin haber `axe` en el recorrido E2E**, que es lo que detectaría los fallos
-   de estructura y etiquetado. Playwright ya está montado.
+4. ~~**Verificación de accesibilidad**~~ — **hecho (2026-08-19)**: además del
+   contraste y el foco, que ya se median solos (`tests/design-tokens.test.ts`),
+   `e2e/accesibilidad.spec.ts` pasa **axe** con las etiquetas WCAG 2.1 A/AA por las
+   nueve pantallas y sale limpio. Queda fuera de su alcance lo que axe no ve: el
+   recorrido por teclado del back-office y si los textos alternativos describen algo.

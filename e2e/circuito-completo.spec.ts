@@ -1,4 +1,5 @@
-import { expect, test, type Page, type APIRequestContext } from "./fixtures";
+import { expect, test } from "./fixtures";
+import { apiLogin, login, PASSWORD } from "./sesion";
 
 /**
  * Recorrido E2E completo del MVP (tarea 8.4): suscriptor + back-office.
@@ -8,24 +9,6 @@ import { expect, test, type Page, type APIRequestContext } from "./fixtures";
  * las mismas copias.
  */
 test.describe.configure({ mode: "serial" });
-
-const PASSWORD = "clickoteca";
-
-async function login(page: Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Contraseña").fill(PASSWORD);
-  await page.getByRole("button", { name: "Entrar" }).click();
-  await page.waitForURL(/\/(portal|backoffice)/);
-}
-
-/** Inicia sesión por API, para preparar estado sin pasar por la interfaz. */
-async function apiLogin(request: APIRequestContext, email: string) {
-  const response = await request.post("/api/auth/login", {
-    data: { email, password: PASSWORD },
-  });
-  expect(response.ok()).toBeTruthy();
-}
 
 test("el visitante ve el catálogo público pero no la disponibilidad", async ({ page }) => {
   await page.goto("/catalogo");

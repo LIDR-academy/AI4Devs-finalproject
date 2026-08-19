@@ -706,3 +706,30 @@ mientras se escribe una pantalla. El calentamiento ya no lleva el puerto a mano:
 del `baseURL` de la configuración.
 **Verde:** `tsc`, `eslint`, **344 unitarios**, `openspec validate --all --strict` y
 **14 E2E** en tres ejecuciones seguidas.
+
+### [2026-08-19] — `axe` entra en el E2E: la accesibilidad se comprueba sola
+**Prompt:** "continue".
+**Resumen de la respuesta:** Con el E2E ya estable se cerró el punto 4 del plan de UX
+(`ux-flows.md` §9), que llevaba abierto desde el sistema de diseño: **no había ninguna
+comprobación automatizada de accesibilidad**. Ahora `e2e/accesibilidad.spec.ts`
+(`@axe-core/playwright`) audita **nueve pantallas** —las cinco públicas, el portal y las
+cuatro del back-office— y **sale limpia a la primera**, lo que era de esperar después de
+haber medido el contraste de los tokens y haber puesto nombres accesibles a las regiones.
+**Se piden solo las etiquetas de conformidad** (`wcag2a`, `wcag2aa`, `wcag21a`,
+`wcag21aa`): las *best-practice* de axe son consejos razonables, pero mezclarlas con el
+criterio convierte el rojo en una opinión y se deja de arreglar. **El informe se formatea
+a mano** —regla, impacto, `helpUrl` y selector—, porque un `toEqual([])` a secas escupe el
+objeto entero de axe y obliga a bucear para saber qué elemento falla.
+**Alcance honesto:** axe encuentra los fallos mecánicos, del orden de un tercio de los
+reales; que esto esté verde no significa "es accesible" —el recorrido por teclado y la
+calidad de los textos alternativos siguen sin comprobarse, y así queda escrito en el
+propio fichero y en `design-system.md`.
+**Refactor menor:** `login`/`apiLogin`/`PASSWORD` salen de `circuito-completo.spec.ts` a
+`e2e/sesion.ts`, que ahora usan los dos recorridos.
+**Un hallazgo con el paralelismo:** al añadir axe volvieron los timeouts en `page.goto`
+con los workers por defecto, esta vez también contra el build autónomo y hasta en el
+smoke. **No es el fallo de `next dev`** —no hay 500 ni pool caído—: es hambre de recursos,
+cada worker es un Chromium entero y auditar con axe es caro en el navegador. Fijado
+`workers: 3`, con el porqué escrito en la configuración: **21 pruebas en ~40 s**, verde
+repetido.
+**Verde:** `tsc`, `eslint`, 344 unitarios y **21 E2E** en dos ejecuciones seguidas.

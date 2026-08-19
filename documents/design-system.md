@@ -431,11 +431,17 @@ Objetivo declarado: **WCAG 2.1 AA**.
 - Movimiento reducido: `prefers-reduced-motion` neutraliza animaciones y transiciones.
 - Idioma de la página (`lang="es"`) y títulos por pantalla.
 
-**Pendiente:**
+**Comprobado solo (2026-08-19):** `e2e/accesibilidad.spec.ts` pasa **axe-core** por las
+nueve pantallas —las cinco públicas, el portal y las cuatro del back-office— pidiendo
+exactamente las etiquetas `wcag2a`, `wcag2aa`, `wcag21a` y `wcag21aa`. Las
+*best-practice* de axe se dejan fuera a propósito: mezclar consejos con criterios de
+conformidad convierte el rojo en una opinión y nadie lo arregla. Sale en verde sin
+incidencias. **Lo que eso significa y lo que no:** axe cubre los fallos mecánicos
+(contraste, nombres accesibles, roles, etiquetas de formulario, orden de encabezados),
+que son del orden de un tercio de los reales; no dice si el recorrido funciona con
+teclado ni si un texto alternativo describe algo.
 
-- **No hay ninguna comprobación automatizada de accesibilidad.** Playwright ya está
-  montado; falta añadir `axe-core` al recorrido E2E. Es el punto 4 del plan de
-  `ux-flows.md` §9 y sigue abierto.
+**Pendiente:**
 - Recorrido completo por teclado del back-office (las tablas con acciones son lo más
   expuesto).
 - Modo oscuro sin interruptor (§3.7): quien lo necesite hoy no puede activarlo.
