@@ -81,7 +81,7 @@ Feature: Sidebar module visibility
   'users' => ['group' => null, 'label' => 'Users', 'icon' => 'users',
               'route' => 'users.index',  'permissions' => [/* Users & Roles permission set */]],
   'roles' => ['group' => null, 'label' => 'Roles & Permissions', 'icon' => 'shield-check',
-              'route' => 'roles.index',  'permissions' => ['manage roles & permissions']],
+              'route' => 'roles.index',  'permissions' => ['roles.manage']],
   ```
 
   **Scope boundary:** this file is **not** the permission catalog. The catalog — every permission
@@ -90,7 +90,7 @@ Feature: Sidebar module visibility
   screen ships, not when its permissions are seeded.
 
   **The two entries are gated differently, and this is load-bearing.** `users` is gated on the
-  Users & Roles permission set; `roles` on exactly the single distinct `manage roles & permissions`
+  Users & Roles permission set; `roles` on exactly the single distinct `roles.manage`
   permission. Required by the PRD's "Managing roles at all is a gated permission" paragraph and
   its `"Blog Editor" cannot manage roles at all` scenario. A coarse per-module blanket check would
   wrongly show the Roles & Permissions entry to a plain user-manager — reject any Phase 3
@@ -164,11 +164,11 @@ copy other Epic 1 stories add. Assert on the entry's resolved route URL
 `data-test="sidebar-link-users"` hook.
 
 - [ ] Happy path: a role holding any Users & Roles permission sees the Users entry.
-- [ ] Happy path: a role holding `manage roles & permissions` sees the Roles & Permissions entry.
+- [ ] Happy path: a role holding `roles.manage` sees the Roles & Permissions entry.
 - [ ] Negative: a role holding no Users & Roles permission never sees the Users entry.
 - [ ] **Gate-independence, direction 1**: a role holding Users & Roles permissions but **not**
-      `manage roles & permissions` never sees the Roles & Permissions entry.
-- [ ] **Gate-independence, direction 2**: a role holding **only** `manage roles & permissions`
+      `roles.manage` never sees the Roles & Permissions entry.
+- [ ] **Gate-independence, direction 2**: a role holding **only** `roles.manage`
       never sees the Users entry. This is the direction most likely to be skipped, and the only
       one that proves the gates are genuinely independent rather than one being a subset of the
       other. A single test granting both permissions together would pass even if someone wired
@@ -207,7 +207,7 @@ appending one entry to `config/modules.php`.
 - [ ] An entry renders only when the signed-in user's role grants that entry's configured
       permissions; a user without them never sees it.
 - [ ] The Users entry and the Roles & Permissions entry are gated **independently** — the latter on
-      the distinct `manage roles & permissions` permission.
+      the distinct `roles.manage` permission.
 - [ ] Visibility is resolved through the Gate (`canAny()`), so the Super Admin bypass is inherited
       with no sidebar-local special case; `hasAnyPermission()` is **not** used.
 - [ ] A group whose entries are all hidden renders no heading (filter-before-group).
