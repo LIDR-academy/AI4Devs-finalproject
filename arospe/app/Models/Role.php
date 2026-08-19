@@ -46,12 +46,32 @@ class Role extends SpatieRole
      * Gate::before bypass. Bypasses model events entirely (withoutEvents)
      * because this is the one legitimate case the `creating` guard must not
      * catch, and firstOrCreate() would otherwise fire it.
+     *
+     * Story 0008a's Phase 4 re-audit finding N3: `roles.name` carries a
+     * case-INSENSITIVE collation, so firstOrCreate() below would silently
+     * *adopt* a pre-existing row named e.g. "super admin" instead of
+     * creating one named exactly superAdminName() -- and every identity
+     * check in the app (isSuperAdminRoleRow(), the `Gate::before` bypass,
+     * this class's own boot() guards) is a byte-exact PHP comparison, so
+     * that adopted row would be treated as an ordinary, fully mutable role
+     * while still being the literal row every operator-facing "who is
+     * Super Admin" assumption points at. Fail loudly rather than seed that
+     * fail-open state.
      */
     public static function firstOrCreateSuperAdminRole(): self
     {
-        return static::withoutEvents(fn (): self => static::firstOrCreate(
+        $role = static::withoutEvents(fn (): self => static::firstOrCreate(
             ['name' => self::superAdminName(), 'guard_name' => 'web'],
         ));
+
+        throw_unless(
+            $role->getRawOriginal('name') === self::superAdminName(),
+            ImmutableRoleException::class,
+            'A role named "'.$role->getRawOriginal('name').'" already exists and collides '.
+            'case-insensitively with the Super Admin role name -- resolve the collision manually before reseeding.',
+        );
+
+        return $role;
     }
 
     /**
@@ -192,12 +212,79 @@ class Role extends SpatieRole
 
     /**
      * Whether this instance -- as it existed before whatever mutation is in
-     * flight -- is the Super Admin role.
+     * flight -- is the Super Admin role. Delegates to the public,
+     * row-shaped isSuperAdminRoleRow() below so there is one implementation
+     * of the comparison, not two.
+     */
+    private function isSuperAdminRole(): bool
+    {
+        return self::isSuperAdminRoleRow($this);
+    }
+
+    /**
+     * Whether the given role row is the configured Super Admin role, by
+     * exact comparison against its PERSISTED name -- the row-shaped
+     * counterpart to isAdministratorRole() below, for a caller (story
+     * 0008a's user-management actions) that holds a Role instance rather
+     * than being one of this model's own boot() guards. Story 0008a's
+     * appsec-auditor Phase 4 finding F1: assigning the Super Admin role
+     * through App\Actions\Users\CreateUser / UpdateUser was completely
+     * ungated, because isAdministratorRole() correctly answers false for
+     * it (the two tiers are not aliased) and nothing else in either action
+     * checked the Super Admin tier at all. Both actions call this to
+     * refuse that assignment outright, symmetrically with how they consult
+     * isAdministratorRole() for the other tier.
+     */
+    public static function isSuperAdminRoleRow(self $role): bool
+    {
+        return $role->persistedName() === self::superAdminName();
+    }
+
+    /**
+     * Whether the given role row is the seeded Administrator role, by exact,
+     * case-sensitive comparison against its PERSISTED name -- never LIKE,
+     * never case-insensitive, never a "contains" match. Unlike
+     * superAdminName(), there is no config key here: the Administrator
+     * tier's name is locked and uneditable (story 0008a's "locked-name
+     * decision"), so RoleName::Administrator->value *is* the source of
+     * truth and comparing against it directly is correct.
      *
-     * Persisted identity only, deliberately never $this->getAttribute('name'):
-     * by the time the `updating` event fires, Eloquent has already staged the
-     * new value onto the in-memory attribute (fill() runs before the event),
-     * so a rename mutation would otherwise read its own *new*,
+     * public static, not a private policy-local helper: this is the single
+     * shared implementation every Administrator-tier call site (UserPolicy,
+     * the user-management actions, and RolePolicy from story 0009) must
+     * consume rather than re-derive.
+     *
+     * Reads persisted identity via persistedName(), for the same reason
+     * isSuperAdminRole() does: a partially-hydrated instance
+     * (Role::query()->select('id')->find($id)) must not silently answer
+     * false because `name` was never selected, and a role renamed in memory
+     * but not yet saved must still answer by what is actually persisted.
+     *
+     * Deliberately guard-agnostic (matches on `name` only, not
+     * `guard_name`): a row is typically resolved unscoped
+     * (`Role::query()->find($id)`, with no `where('guard_name', ...)`), and
+     * that is fail-closed in both directions -- a foreign-guard match only
+     * makes this check *stricter* (demanding an ability the caller may not
+     * hold), while Spatie's own cross-guard assignment guard
+     * (`ensureModelSharesGuard()`) refuses granting a role on a foreign
+     * guard to a `web` user regardless, so nothing is ever actually
+     * assigned. See docs/architecture/authorization.md's "Known
+     * limitations" section.
+     */
+    public static function isAdministratorRole(self $role): bool
+    {
+        return $role->persistedName() === RoleName::Administrator->value;
+    }
+
+    /**
+     * This instance's *persisted* name -- as it existed before whatever
+     * mutation is in flight, or the in-memory attribute for a not-yet-
+     * persisted instance.
+     *
+     * Deliberately never $this->getAttribute('name') for an existing row: by
+     * the time an `updating` event fires, Eloquent has already staged the
+     * new value onto the in-memory attribute (fill() runs before the
+     * event), so a rename mutation would otherwise read its own *new*,
      * attacker-supplied name and silently miss itself -- this is exactly
      * what Phase 4 re-audit finding R1 caught: the earlier `??` version fell
      * back to getAttribute('name') whenever getOriginal('name') was absent,
@@ -219,17 +306,15 @@ class Role extends SpatieRole
      * checking what name is being written. Do not merge the two: they read
      * from different sources for different reasons.
      */
-    private function isSuperAdminRole(): bool
+    private function persistedName(): ?string
     {
         if ($this->exists && $this->getKey() !== null) {
-            $name = array_key_exists('name', $this->getOriginal())
+            return array_key_exists('name', $this->getOriginal())
                 ? $this->getOriginal('name')
                 : static::query()->whereKey($this->getKey())->value('name');
-        } else {
-            $name = $this->getAttribute('name');
         }
 
-        return $name === self::superAdminName();
+        return $this->getAttribute('name');
     }
 
     /**

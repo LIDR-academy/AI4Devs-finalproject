@@ -3,10 +3,13 @@
 namespace App\Actions\Users;
 
 use App\Enums\UserStatus;
+use App\Models\Role;
 use App\Models\User;
 use App\Notifications\UserInvitation;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -23,14 +26,38 @@ class CreateUser
      * invitation link is what proves the mailbox; completing it verifies the
      * address and activates the account through App\Listeners\
      * ActivateVerifiedUser.
+     *
+     * Authorizes the whole operation itself (story 0008a, hardened after its
+     * own Phase 4 finding F1) — this is a caller-independent guard, not only
+     * App\Livewire\Users\Index's: a future API endpoint, Artisan command or
+     * queued job calling this action directly is refused exactly as the
+     * dashboard is. `Gate::authorize('create', ...)` covers the base
+     * `users.create` ability; the Super Admin role can never be assigned
+     * through this action, by anyone, since no ability grants that (F1); the
+     * Administrator role additionally requires `promoteToAdministrator`.
      */
     public function __invoke(string $name, string $email, string $roleId, UserStatus $status): User
     {
+        Gate::authorize('create', User::class);
+
         // Defence in depth: the primary normalisation happens in the
         // component before validate() runs, so the uniqueness rule already
         // saw this lowercased value. Normalising again here keeps this
         // action correct even if a future caller skips that step.
         $email = Str::lower($email);
+
+        $submittedRole = Role::query()->find((int) $roleId);
+
+        if ($submittedRole !== null && Role::isSuperAdminRoleRow($submittedRole)) {
+            throw new AuthorizationException('The Super Admin role cannot be assigned.');
+        }
+
+        if ($submittedRole !== null && Role::isAdministratorRole($submittedRole)) {
+            // Class-level: no target exists yet on the create path, which is
+            // why UserPolicy::promoteToAdministrator()'s $target parameter
+            // defaults to null.
+            Gate::authorize('promoteToAdministrator', User::class);
+        }
 
         try {
             $user = DB::transaction(function () use ($name, $email, $roleId, $status): User {

@@ -10,7 +10,6 @@ use App\Concerns\UserValidationRules;
 use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -269,13 +268,28 @@ class Index extends Component
      * meaningful creation-order tiebreaker since `id` is a time-ordered
      * UUIDv7. The acting administrator's own row is not filtered out.
      *
-     * `canEdit`/`canDelete` mirror `UserPolicy::update()`/`delete()` exactly
+     * `canEdit`/`canDelete` mirror `UserPolicy::update()`/`delete()`
      * (`Gate::allows()` runs the same policy method `save()`/`deleteUser()`
-     * authorize with) so the row actions' disabled state can never drift
-     * from what actually happens if they were clicked — a Super Admin
-     * target, an already-trashed target, or an Administrator-holding target
-     * without `roles.manage-administrators` all resolve to `false` here the
-     * same way they would 403 there.
+     * authorize with), so the row actions' disabled state matches what a
+     * click would do for almost every actor/target combination — an
+     * already-trashed target, or an Administrator-holding target edited
+     * without `roles.manage-administrators` (delete only; `canEdit` needs
+     * only `users.edit`), both resolve to `false` here the same way they
+     * would 403 there.
+     *
+     * One combination has drifted since story 0008a and is a known,
+     * accepted gap rather than a bug to fix here: for a **Super Admin
+     * actor** viewing a **Super Admin-holding target**, `Gate::allows()`
+     * returns `true` (the `Gate::before` bypass grants it), so the row
+     * renders enabled — but `App\Actions\Users\UpdateUser` /
+     * `App\Livewire\Users\Index::deleteUser()` refuse that same actor on
+     * the mutating path: `UpdateUser` via a direct, non-`Gate`-mediated
+     * throw (deliberately outside `Gate`, since a Super Admin actor's own
+     * bypass would undo a `Gate`-mediated refusal), `deleteUser()` still
+     * only through `UserPolicy::delete()`'s policy-level exclusion (a
+     * `Gate::before`-bypassed gap `UpdateUser`'s guard does not cover — see
+     * docs/architecture/authorization.md's known limitations). The drift
+     * only ever runs enabled-then-refused, never the reverse.
      */
     private function loadUsers(): void
     {
@@ -303,19 +317,17 @@ class Index extends Component
     }
 
     /**
-     * Authorize and create the new user described by the create form.
+     * Create the new user described by the create form.
+     *
+     * Administrator-role-assignment authorization lives in
+     * App\Actions\Users\CreateUser itself (story 0008a) — the component no
+     * longer duplicates it, so a future non-dashboard caller of the action
+     * inherits the same guard.
      *
      * @param  array<string, mixed>  $validated
      */
     private function createNewUser(CreateUser $createUser, array $validated): void
     {
-        if ((int) $validated['roleId'] === $this->administratorRoleId()) {
-            // Class-level: no target exists yet on the create path, which is
-            // why UserPolicy::promoteToAdministrator()'s $target parameter
-            // must default to null.
-            Gate::authorize('promoteToAdministrator', User::class);
-        }
-
         $createUser(
             (string) $validated['name'],
             (string) $validated['email'],
@@ -325,87 +337,26 @@ class Index extends Component
     }
 
     /**
-     * Authorize (when needed) and apply the edit form to the target user.
+     * Apply the edit form to the target user.
      *
-     * Role and status are applied only when the target is not the acting
-     * user — this is the self-edit guard that prevents self-lockout. The
-     * email always goes through UpdateUser, which decides on its own
-     * whether it changed.
-     *
-     * A status or email change on another Administrator-holding user
-     * requires roles.manage-administrators, same as a role change: both
-     * achieve the same effect a role/delete guard exists to prevent —
-     * suspending or seizing an Administrator's account. Security audit
-     * finding F1 (Phase 4, story 0004). Scoped to $applyRoleAndStatus (i.e.
-     * another user, not a self-edit): an Administrator changing their own
-     * email carries no such risk and needs no extra permission.
+     * Every piece of authorization this used to perform — the self-edit
+     * guard, the promotion/downgrade gates, and the sensitive-attribute gate
+     * for a status or email change on another Administrator-holding user
+     * (security audit finding F1, Phase 4, story 0004) — lives in
+     * App\Actions\Users\UpdateUser itself now (story 0008a), so the
+     * component only submits the form.
      *
      * @param  array<string, mixed>  $validated
      */
     private function updateExistingUser(UpdateUser $updateUser, RequestEmailChange $requestEmailChange, User $target, array $validated): void
     {
-        $applyRoleAndStatus = ! $target->is(Auth::user());
-
-        if ($applyRoleAndStatus) {
-            $this->authorizeRoleChange($target, (int) $validated['roleId']);
-
-            $emailChanged = Str::lower((string) $validated['email']) !== Str::lower((string) $target->getRawOriginal('email'));
-            $statusChanged = $validated['status'] !== $target->status;
-
-            if ($emailChanged || $statusChanged) {
-                Gate::authorize('updateSensitiveAttributes', $target);
-            }
-        }
-
         $updateUser(
             $target,
             (string) $validated['name'],
             (string) $validated['email'],
             (string) $validated['roleId'],
             $validated['status'],
-            $applyRoleAndStatus,
             $requestEmailChange,
         );
-    }
-
-    /**
-     * Authorize an in-flight role change against the Administrator-level
-     * guards, comparing the submitted role against a fresh read of the
-     * target's current role — a query, not the (possibly stale) cached
-     * relation.
-     *
-     * A no-op re-save (the role is unchanged) is neither a promotion nor a
-     * downgrade and needs no extra gate; an unrelated role change (neither
-     * side is Administrator) is likewise unaffected.
-     */
-    private function authorizeRoleChange(User $target, int $newRoleId): void
-    {
-        $currentRoleId = $target->roles()->value('roles.id');
-        $currentRoleId = $currentRoleId !== null ? (int) $currentRoleId : null;
-
-        if ($currentRoleId === $newRoleId) {
-            return;
-        }
-
-        $administratorRoleId = $this->administratorRoleId();
-        $wasAdministrator = $currentRoleId === $administratorRoleId;
-        $willBeAdministrator = $newRoleId === $administratorRoleId;
-
-        if ($willBeAdministrator && ! $wasAdministrator) {
-            Gate::authorize('promoteToAdministrator', $target);
-        } elseif ($wasAdministrator && ! $willBeAdministrator) {
-            Gate::authorize('downgrade', $target);
-        }
-    }
-
-    /**
-     * The seeded Administrator role's id, read fresh on every call.
-     */
-    private function administratorRoleId(): ?int
-    {
-        return Role::query()
-            ->where('name', 'Administrator')
-            ->where('guard_name', 'web')
-            ->value('id');
     }
 }

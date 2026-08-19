@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\RoleName;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Throwable;
@@ -51,7 +53,25 @@ class RolePermissionSeeder extends Seeder
             $superAdminRole = Role::firstOrCreateSuperAdminRole();
 
             $administratorRole = Role::firstOrCreate(
-                ['name' => 'Administrator', 'guard_name' => 'web'],
+                ['name' => RoleName::Administrator->value, 'guard_name' => 'web'],
+            );
+
+            // Phase 4 audit finding F5 (story 0008a): roles.name carries a
+            // case-INSENSITIVE collation (utf8mb4_unicode_ci), so
+            // firstOrCreate() above would silently *adopt* a pre-existing
+            // row named e.g. "administrator" instead of creating one named
+            // exactly RoleName::Administrator->value -- and this seeder
+            // would go on to grant that row all 37 Administrator
+            // permissions below, while every identity check in the app
+            // (Role::isAdministratorRole(), UserPolicy's hasRole() calls) is
+            // a byte-exact PHP comparison and would treat that same row as
+            // an ordinary role: a full-privilege role assignable with a bare
+            // users.edit. Fail loudly rather than seed that fail-open state.
+            throw_unless(
+                $administratorRole->getRawOriginal('name') === RoleName::Administrator->value,
+                RuntimeException::class,
+                'A role named "'.$administratorRole->getRawOriginal('name').'" already exists and collides '.
+                'case-insensitively with the seeded Administrator role name -- resolve the collision manually before reseeding.',
             );
 
             $permissionNames = $this->allPermissionNames();

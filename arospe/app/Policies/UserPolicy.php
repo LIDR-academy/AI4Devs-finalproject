@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\RoleName;
+use App\Models\Role;
 use App\Models\User;
 
 class UserPolicy
@@ -31,7 +33,7 @@ class UserPolicy
      */
     public function update(User $actor, User $target): bool
     {
-        if ($target->hasRole('Super Admin', 'web')) {
+        if ($target->hasRole(Role::superAdminName(), 'web')) {
             return false;
         }
 
@@ -57,7 +59,7 @@ class UserPolicy
             return false;
         }
 
-        if (! $target->hasRole('Administrator', 'web')) {
+        if (! $target->hasRole(RoleName::Administrator->value, 'web')) {
             return true;
         }
 
@@ -90,7 +92,7 @@ class UserPolicy
      */
     public function downgrade(User $actor, User $target): bool
     {
-        if (! $target->hasRole('Administrator', 'web')) {
+        if (! $target->hasRole(RoleName::Administrator->value, 'web')) {
             return true;
         }
 
@@ -110,7 +112,7 @@ class UserPolicy
      */
     public function delete(User $actor, User $target): bool
     {
-        if ($target->hasRole('Super Admin', 'web')) {
+        if ($target->hasRole(Role::superAdminName(), 'web')) {
             return false;
         }
 
@@ -118,7 +120,7 @@ class UserPolicy
             return false;
         }
 
-        if (! $target->hasRole('Administrator', 'web')) {
+        if (! $target->hasRole(RoleName::Administrator->value, 'web')) {
             return $actor->hasPermissionTo('users.delete');
         }
 
