@@ -2,6 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GoogleCalendarAdapter } from "../infrastructure/adapters/calendar/GoogleCalendarAdapter.js";
 import { ServiceUnavailableError } from "../infrastructure/errors.js";
 
+type MockCalendarFactory = () => {
+  events: {
+    insert: ReturnType<typeof vi.fn>;
+    patch: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+  freebusy: { query: ReturnType<typeof vi.fn> };
+};
+
 vi.mock("googleapis", () => {
   const mockPatch = vi.fn().mockResolvedValue({ data: {} });
   const mockDelete = vi.fn().mockResolvedValue({ data: {} });
@@ -28,7 +37,10 @@ vi.mock("googleapis", () => {
   return {
     google: {
       auth: {
-        GoogleAuth: vi.fn().mockImplementation(() => ({})),
+        // biome-ignore lint/complexity/useArrowFunction: must be constructable for `new google.auth.GoogleAuth(...)`
+        GoogleAuth: vi.fn().mockImplementation(function () {
+          return {};
+        }),
       },
       calendar: vi.fn().mockReturnValue({
         events: mockEvents,
@@ -69,7 +81,7 @@ describe("GoogleCalendarAdapter", () => {
 
     it("should throw ServiceUnavailableError on API failure", async () => {
       const { google } = await import("googleapis");
-      const mockCalendar = google.calendar as ReturnType<typeof vi.fn>;
+      const mockCalendar = google.calendar as unknown as MockCalendarFactory;
       const mockInsert = mockCalendar().events.insert as ReturnType<typeof vi.fn>;
       mockInsert.mockRejectedValueOnce(new Error("API quota exceeded"));
 
@@ -98,7 +110,7 @@ describe("GoogleCalendarAdapter", () => {
 
     it("should throw ServiceUnavailableError on API failure", async () => {
       const { google } = await import("googleapis");
-      const mockCalendar = google.calendar as ReturnType<typeof vi.fn>;
+      const mockCalendar = google.calendar as unknown as MockCalendarFactory;
       const mockPatch = mockCalendar().events.patch as ReturnType<typeof vi.fn>;
       mockPatch.mockRejectedValueOnce(new Error("Not found"));
 
@@ -120,7 +132,7 @@ describe("GoogleCalendarAdapter", () => {
 
     it("should throw ServiceUnavailableError on API failure", async () => {
       const { google } = await import("googleapis");
-      const mockCalendar = google.calendar as ReturnType<typeof vi.fn>;
+      const mockCalendar = google.calendar as unknown as MockCalendarFactory;
       const mockDelete = mockCalendar().events.delete as ReturnType<typeof vi.fn>;
       mockDelete.mockRejectedValueOnce(new Error("Not found"));
 
@@ -143,7 +155,7 @@ describe("GoogleCalendarAdapter", () => {
 
     it("should throw ServiceUnavailableError on API failure", async () => {
       const { google } = await import("googleapis");
-      const mockCalendar = google.calendar as ReturnType<typeof vi.fn>;
+      const mockCalendar = google.calendar as unknown as MockCalendarFactory;
       const mockFreebusyQuery = mockCalendar().freebusy.query as ReturnType<typeof vi.fn>;
       mockFreebusyQuery.mockRejectedValueOnce(new Error("Network error"));
 
