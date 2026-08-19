@@ -69,7 +69,7 @@ describe('TK-004: FEFO Active Remanentes Query TDD Suite', () => {
   });
 
   it('debe retornar los remanentes activos ordenados estrictamente por FEFO (expirationDate ASC)', async () => {
-    const app = createApp({ remanenteQueryRepository: queryRepo });
+    const app = createApp({ remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app).get('/api/v1/kitchen/remanentes-activos');
 
     expect(response.status).toBe(200);
@@ -88,7 +88,7 @@ describe('TK-004: FEFO Active Remanentes Query TDD Suite', () => {
   });
 
   it('debe permitir filtrar remanentes activos por ubicacion especifica', async () => {
-    const app = createApp({ remanenteQueryRepository: queryRepo });
+    const app = createApp({ remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app).get('/api/v1/kitchen/remanentes-activos?location=KITCHEN_PREP');
 
     expect(response.status).toBe(200);

@@ -12,24 +12,25 @@ export class Pin {
     if (!/^\d{4,6}$/.test(rawPin)) {
       throw new InvalidPinException('El PIN debe ser numerico de 4 a 6 digitos.');
     }
-    const hash = Pin.hashPin(rawPin);
-    return new Pin(hash);
+    const saltHex = crypto.randomBytes(16).toString('hex');
+    const hashHex = Pin.hashPin(rawPin, saltHex);
+    return new Pin(`${saltHex}:${hashHex}`);
   }
 
   public static createFromHash(hash: string): Pin {
     return new Pin(hash);
   }
 
-  public static hashPin(rawPin: string): string {
-    const salt = 'restostock_pin_salt_static';
-    return crypto.scryptSync(rawPin, salt, 32).toString('hex');
+  public static hashPin(rawPin: string, saltHex: string): string {
+    return crypto.scryptSync(rawPin, Buffer.from(saltHex, 'hex'), 32).toString('hex');
   }
 
   public compareWithRaw(rawPin: string): boolean {
-    const computedHash = Pin.hashPin(rawPin);
+    const [saltHex, storedHashHex] = this.valueHash.split(':');
+    const computedHashHex = Pin.hashPin(rawPin, saltHex);
     return crypto.timingSafeEqual(
-      Buffer.from(this.valueHash, 'hex'),
-      Buffer.from(computedHash, 'hex')
+      Buffer.from(storedHashHex, 'hex'),
+      Buffer.from(computedHashHex, 'hex')
     );
   }
 

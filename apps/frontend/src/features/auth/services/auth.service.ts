@@ -28,35 +28,20 @@ export class AuthService {
         return data as LoginPinResponse;
       }
 
-      if (!response.ok) {
-        let errMessage = 'PIN de acceso invalido o incorrecto.';
-        try {
-          const errData = await response.json();
-          errMessage = errData.message || errData.error || errMessage;
-        } catch (errDataError) {
-          console.warn('[AuthService] No se pudo parsear cuerpo JSON de error:', errDataError);
-        }
-        throw new Error(errMessage);
+      let errMessage = 'PIN de acceso invalido o incorrecto.';
+      try {
+        const errData = await response.json();
+        errMessage = errData.message || errData.error || errMessage;
+      } catch (errDataError) {
+        console.warn('[AuthService] No se pudo parsear cuerpo JSON de error:', errDataError);
       }
-    } catch (err: any) {
-      if (err.message && (err.message.includes('PIN') || err.message.includes('invalido') || err.message.includes('bloqueado'))) {
-        throw err;
-      }
+      throw new Error(errMessage);
+    } catch (err) {
+      // Ningún error (de red, del servidor, o de validación de PIN) cae en una
+      // sesión local falsa — todo error real del backend o de la red se propaga
+      // tal cual al llamador, que es responsable de mostrarlo al usuario.
+      throw err instanceof Error ? err : new Error('Error de autenticación desconocido.');
     }
-
-    // Fallback demo local si falla la llamada remota o en desarrollo sin BD
-    if (pin.length >= 4) {
-      const userObj = {
-        id: userId,
-        name: userId.includes('carlos') ? 'Carlos Gomez (Cocina)' : 'Maria Silva (Administrador)',
-        role: userId.includes('maria') ? 'ADMIN' : 'OPERATOR',
-      };
-      const token = 'demo-mock-jwt-token-restostock';
-      AuthService.saveSession(token, userObj);
-      return { accessToken: token, user: userObj };
-    }
-
-    throw new Error('PIN incorrecto. Intente de nuevo.');
   }
 
   public static getToken(): string | null {

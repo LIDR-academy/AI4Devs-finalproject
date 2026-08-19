@@ -22,7 +22,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
 
   it('debe registrar exitosamente la extraccion de 2.000 kg y crear remanente activo FEFO (201 Created)', async () => {
     // 1. ARRANGE (Dado)
-    const app = createApp({ stockRepository: stockRepo });
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
 
     // 2. ACT (Cuando)
     const response = await request(app)
@@ -52,7 +52,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
 
   it('debe rechazar la extraccion si la cantidad supera el stock disponible en bodega (422 Unprocessable Entity)', async () => {
     // 1. ARRANGE (Dado)
-    const app = createApp({ stockRepository: stockRepo });
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
 
     // 2. ACT (Cuando)
     const response = await request(app)
@@ -75,7 +75,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
   });
 
   it('debe retornar 404 Not Found si el insumo no existe', async () => {
-    const app = createApp({ stockRepository: stockRepo });
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app)
       .post('/api/v1/stock/extraction')
       .send({

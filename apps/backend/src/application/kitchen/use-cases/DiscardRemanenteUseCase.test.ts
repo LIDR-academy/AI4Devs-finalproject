@@ -29,7 +29,7 @@ describe('TK-006: Waste and Discard Recording TDD Suite', () => {
   });
 
   it('debe descartar exitosamente un remanente vencido con motivo EXPIRATION y cambiar su estado a DISCARDED (200 OK)', async () => {
-    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-mozzarella-discard/discard')
       .send({ reason: 'EXPIRATION' });
@@ -56,7 +56,7 @@ describe('TK-006: Waste and Discard Recording TDD Suite', () => {
     activeRemanente.discard();
     stockRepo.seedRemanente(activeRemanente);
 
-    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-mozzarella-discard/discard')
       .send({ reason: 'DAMAGED' });
@@ -66,7 +66,7 @@ describe('TK-006: Waste and Discard Recording TDD Suite', () => {
   });
 
   it('debe retornar 404 Not Found si el ID de remanente no existe', async () => {
-    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/remanente-inexistente/discard')
       .send({ reason: 'EXPIRATION' });

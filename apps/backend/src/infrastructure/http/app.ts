@@ -70,16 +70,22 @@ export function createApp(options: AppOptions = {}): Express {
     });
   });
 
-  // Fail-Fast Environment Validation for JWT Secret (Guard 14)
-  if (process.env.NODE_ENV === 'production' && !options.jwtSecret && !process.env.JWT_SECRET) {
+  // Fail-Fast Environment Validation for JWT Secret (Guard 14).
+  // Solo "test" tiene excepción: Vitest fija NODE_ENV=test automáticamente y los
+  // tests de integración dependen de un secreto conocido sin tener que declararlo
+  // en cada suite. Cualquier otro entorno (development, staging, production, o
+  // NODE_ENV sin definir) exige un JWT_SECRET real — nunca un fallback hardcodeado
+  // en el repositorio, que sería trivialmente conocido por cualquiera con el código.
+  const isTestEnv = process.env.NODE_ENV === 'test';
+  if (!isTestEnv && !options.jwtSecret && !process.env.JWT_SECRET) {
     throw new Error(
-      'CONFIG FATAL: Variable de entorno JWT_SECRET es obligatoria en entorno de produccion (Guard 14 Fail-Fast Secrets).'
+      'CONFIG FATAL: Variable de entorno JWT_SECRET es obligatoria fuera del entorno de test (Guard 14 Fail-Fast Secrets).'
     );
   }
 
   // Repositorios e inyeccion de dependencias por defecto para dev/standalone
   const userRepo = options.userRepository ?? new InMemoryUserRepository();
-  const jwtSecret = options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-dev-jwt-secret-key-2026';
+  const jwtSecret = options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-test-only-jwt-secret';
   const stockRepo = options.stockRepository ?? new InMemoryStockRepository();
   const remanenteQueryRepo = options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository(stockRepo as InMemoryStockRepository);
   const reportRepo = options.reportRepository ?? new InMemoryReportRepository();
@@ -96,7 +102,11 @@ export function createApp(options: AppOptions = {}): Express {
   }
 
   const authMiddleware = createAuthenticateJWTMiddleware(jwtSecret);
-  const isAuthRequired = options.requireAuth ?? (process.env.NODE_ENV === 'production');
+  // Guard 15: las rutas protegidas exigen JWT SIEMPRE por defecto, sin importar NODE_ENV.
+  // Antes esto solo se activaba en NODE_ENV==='production', dejando cualquier despliegue
+  // de development/staging/sin-definir totalmente abierto. Un test de negocio que
+  // legítimamente necesite aislar la lógica de auth debe pasar requireAuth:false explícito.
+  const isAuthRequired = options.requireAuth ?? true;
 
   // Rutas de Autenticacion
   app.use('/api/v1/auth', createAuthRouter(userRepo, jwtSecret));

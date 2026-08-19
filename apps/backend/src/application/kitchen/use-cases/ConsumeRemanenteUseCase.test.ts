@@ -31,7 +31,7 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
   it('debe registrar exitosamente un consumo parcial (1.750 -> 1.500) manteniendo el estado ACTIVE (200 OK)', async () => {
     // 1. ARRANGE
     const connectedQueryRepo = new InMemoryRemanenteQueryRepository(stockRepo);
-    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: connectedQueryRepo });
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: connectedQueryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
 
     // 2. ACT
     const response = await request(app)
@@ -71,7 +71,7 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     });
     stockRepo.seedRemanente(lowRemanente);
 
-    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-low-1/consume')
       .send({ quantity: '0.250' });
@@ -87,7 +87,7 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
   });
 
   it('debe rechazar con 422 Unprocessable Entity si se intenta consumir una cantidad mayor a la disponible', async () => {
-    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo });
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
       .send({ quantity: '5.000' });
