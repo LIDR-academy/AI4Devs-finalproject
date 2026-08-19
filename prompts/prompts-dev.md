@@ -281,4 +281,21 @@ Can you now mark all the tasks as done if applies and the US In Review in Linear
 [/speckit.tasks]
 [/speckit.implement]
 
+
+# 17 - OpenCode - DeepSeek V4 Flash Free
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-22/us-32-coachee-dashboard-and-calendar
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
+For the cochees calendar page I think i'd be much better the view where you have a first row with the days and then instead of an acutal calendar grid, I'd put the cards for the clases that the coachee is actually enrolled or the ones that has the possibility to enroll. In the second case, the card should also have an Enroll button. Just change it for the coachee view. Also in the row of days, I'd like to have a small colored dot under the day number if that day has any class, enrolled or not
+
 ----
+
+The cards should only appear if they belong to the selected day in the row above.
+
+# 18 - OpenCode - DeepSeek V4 Flash Free
+
+
+<!-- Backend `npm audit` fails on pre-existing transitive dev-dep vulnerabilities (prisma 6→7 and vitest 2→4 are the only fixes, both major/breaking). -->

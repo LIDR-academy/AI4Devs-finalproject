@@ -1,5 +1,10 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/infrastructure/context/AuthContext";
+import {
+  PullToRefreshProvider,
+  usePullToRefreshContext,
+} from "@/infrastructure/context/PullToRefreshContext";
+import { PullToRefreshIndicator } from "@/ui/components/coachee/PullToRefreshIndicator";
 import { NotificationBell } from "@/ui/components/NotificationBell";
 
 const bottomNavItems = [
@@ -21,8 +26,17 @@ const bottomNavItems = [
 ];
 
 export function CoacheeLayout() {
+  return (
+    <PullToRefreshProvider>
+      <CoacheeLayoutInner />
+    </PullToRefreshProvider>
+  );
+}
+
+function CoacheeLayoutInner() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { scrollContainerRef, gesture } = usePullToRefreshContext();
 
   const handleLogout = async () => {
     await logout();
@@ -47,7 +61,8 @@ export function CoacheeLayout() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-4 pb-20">
+      <main ref={scrollContainerRef} className="flex-1 overflow-auto p-4 pb-20 relative">
+        <PullToRefreshIndicator gesture={gesture} />
         <Outlet />
       </main>
 

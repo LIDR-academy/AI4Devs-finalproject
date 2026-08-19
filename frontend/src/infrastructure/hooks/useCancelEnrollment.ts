@@ -8,6 +8,7 @@ export function useCancelEnrollment() {
     mutationFn: (id) => cancelClassEnrollment(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["classes"] });
+      queryClient.invalidateQueries({ queryKey: ["coachee", "dashboard"] });
     },
   });
 }

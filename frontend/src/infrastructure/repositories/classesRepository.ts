@@ -12,6 +12,7 @@ import type {
   TrainingClass,
 } from "@/domain/types/class";
 import type { AssignableCoach } from "@/domain/types/coach";
+import type { CoacheeDashboard } from "@/domain/types/coachee";
 import apiClient from "./apiClient";
 
 export const classesRepository = {
@@ -55,6 +56,11 @@ export const classesRepository = {
 
   async cancelEnrollment(id: string): Promise<CancelEnrollmentResponse> {
     const { data } = await apiClient.delete<CancelEnrollmentResponse>(`/classes/${id}/enrollment`);
+    return data;
+  },
+
+  async getCoacheeDashboard(): Promise<CoacheeDashboard> {
+    const { data } = await apiClient.get<CoacheeDashboard>("/coachee/dashboard");
     return data;
   },
 

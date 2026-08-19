@@ -62,11 +62,11 @@ describe("Error envelope", () => {
     });
   });
 
-  it("returns standard error format on 501 stub", async () => {
+  it("returns the standard error format when a non-Coachee hits the dashboard", async () => {
     const res = await request(app).get("/api/v1/coachee/dashboard");
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(403);
     expect(res.body).toMatchObject({
-      error: { code: expect.any(String), message: expect.any(String), ref: expect.any(String) },
+      error: { code: "FORBIDDEN", message: expect.any(String), ref: expect.any(String) },
     });
   });
 });

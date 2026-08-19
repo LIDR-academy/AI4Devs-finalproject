@@ -32,3 +32,41 @@ export interface Level {
   color: string;
   sort_order: number;
 }
+
+export interface CoacheeCoachRef {
+  id: string;
+  name: string;
+}
+
+export interface CoacheeLevelRef {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface CoacheeNextClass {
+  id: string;
+  classType: "INDIVIDUAL" | "GROUP";
+  startTime: string;
+  assignedCoach: CoacheeCoachRef;
+  level: CoacheeLevelRef | null;
+  status: "ACTIVE";
+}
+
+export interface CoacheeJoinableClass {
+  id: string;
+  classType: "GROUP";
+  startTime: string;
+  level: CoacheeLevelRef;
+  assignedCoach: CoacheeCoachRef;
+  enrollmentCount: number;
+  capacity: number;
+  isWithinReach: boolean;
+  hasOpenSpots: boolean;
+}
+
+export interface CoacheeDashboard {
+  nextClass: CoacheeNextClass | null;
+  joinableClasses: CoacheeJoinableClass[];
+  activeWaitingListCount: number;
+}

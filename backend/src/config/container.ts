@@ -10,6 +10,7 @@ import { CreateTrainingClass } from "../application/use-cases/CreateTrainingClas
 import { GetAvailableSlots } from "../application/use-cases/GetAvailableSlots.js";
 import { GetCoach } from "../application/use-cases/GetCoach.js";
 import { GetCoachee } from "../application/use-cases/GetCoachee.js";
+import { GetCoacheeDashboard } from "../application/use-cases/GetCoacheeDashboard.js";
 import { GetCoachFinancialData } from "../application/use-cases/GetCoachFinancialData.js";
 import { GetTrainingClass } from "../application/use-cases/GetTrainingClass.js";
 import { JoinTrainingClass } from "../application/use-cases/JoinTrainingClass.js";
@@ -25,6 +26,7 @@ import { UpdateCoachStatus } from "../application/use-cases/UpdateCoachStatus.js
 import { UpdateTrainingClass } from "../application/use-cases/UpdateTrainingClass.js";
 import { BlockPolicy } from "../domain/services/BlockPolicy.js";
 import { ClassCancellationPolicy } from "../domain/services/ClassCancellationPolicy.js";
+import { CoacheeDashboardPolicy } from "../domain/services/CoacheeDashboardPolicy.js";
 import { CoacheeService } from "../domain/services/CoacheeService.js";
 import { CoachService } from "../domain/services/CoachService.js";
 import { EnrollmentPolicy } from "../domain/services/EnrollmentPolicy.js";
@@ -49,6 +51,7 @@ const auditLogger = new AuditLogger(prisma);
 const calendarHealthMonitor = new CalendarHealthMonitor();
 
 const enrollmentPolicy = new EnrollmentPolicy();
+const coacheeDashboardPolicy = new CoacheeDashboardPolicy();
 
 const calendarId = resolveCalendarId();
 let calendarProvider: GoogleCalendarAdapter | null = null;
@@ -104,6 +107,7 @@ export const container = {
   getAvailableSlots: calendarProvider ? new GetAvailableSlots(prisma, calendarProvider) : null,
   listTrainingClasses: new ListTrainingClasses(prisma),
   getTrainingClass: new GetTrainingClass(prisma),
+  getCoacheeDashboard: new GetCoacheeDashboard(prisma, coacheeDashboardPolicy),
   joinTrainingClass: new JoinTrainingClass(prisma, enrollmentPolicy, auditLogger),
   cancelEnrollment: new CancelEnrollment(prisma, enrollmentPolicy, auditLogger),
   createBlock: calendarProvider

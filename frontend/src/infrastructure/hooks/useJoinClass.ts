@@ -8,6 +8,7 @@ export function useJoinClass() {
     mutationFn: (id) => joinClass(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["classes"] });
+      queryClient.invalidateQueries({ queryKey: ["coachee", "dashboard"] });
     },
   });
 }

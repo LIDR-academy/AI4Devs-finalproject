@@ -4,6 +4,7 @@ const MESSAGES: Record<string, string> = {
   OVERLAP_DETECTED: "You already have a class at this time.",
   ALREADY_ENROLLED: "You are already enrolled in this class.",
   NOT_FOUND: "The class or enrollment was not found.",
+  CANCELED_CLASS: "The class is canceled.",
   FORBIDDEN: "You don't have permission to do that.",
   VALIDATION_ERROR: "The action could not be completed. Please check the details and try again.",
 };

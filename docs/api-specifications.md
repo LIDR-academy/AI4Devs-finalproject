@@ -574,7 +574,7 @@ All error responses follow this shape:
       "startTime": "string (ISO 8601)",
       "assignedCoach": { "id": "uuid", "name": "string" },
       "level": { "id": "uuid", "name": "string", "color": "string" } | null,
-      "status": "active"
+      "status": "ACTIVE"
     } | null,
     "joinableClasses": [
       {

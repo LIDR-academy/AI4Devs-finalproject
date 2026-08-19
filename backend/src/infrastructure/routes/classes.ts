@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 import { Router } from "express";
 import { z } from "zod";
 import { container } from "../../config/container.js";
+import { toCoacheeDashboardDTO } from "../dto/coacheeDashboardDto.js";
 import { toTrainingClassDTO } from "../dto/trainingClassDto.js";
 import { ValidationError } from "../errors.js";
 import { authenticate, requireRole } from "../middleware/auth.js";
@@ -344,14 +345,21 @@ router.delete(
   },
 );
 
-router.get("/coachee/dashboard", (_req: Request, res: Response) => {
-  res.status(501).json({
-    error: {
-      code: "NOT_IMPLEMENTED",
-      message: "Coachee dashboard is not yet implemented.",
-      ref: crypto.randomUUID(),
-    },
-  });
-});
+router.get(
+  "/coachee/dashboard",
+  authenticate,
+  requireRole(UserRole.COACHEE),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await container.getCoacheeDashboard.execute({
+        coacheeId: req.user?.id ?? "",
+        now: new Date(),
+      });
+      res.json(toCoacheeDashboardDTO(result));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 export default router;
