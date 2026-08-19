@@ -4,6 +4,15 @@ Not a PRD-derived user story — deliberately outside the `00XX-` task numbering
 debating an Epic 2 story in Three Amigos Phase 1; confirmed here by reading the actual config,
 not taken on the reporting agent's word.
 
+> **Status: fixed — 2026-08-19.** MySQL is this project's only supported database; a SQLite
+> fallback was never a real option (confirmed by the project owner, not just inferred from
+> `docs/architecture/overview.md`). `.env.example`, `phpunit.xml` and
+> `.github/workflows/tests.yml` were updated to make MySQL the actual, working default end to
+> end — see [Recommended fix](#recommended-fix) below, which now describes what was **done**,
+> not a choice between options. `docs/testing/ci/pipeline-integration.md` and
+> `docs/testing/ci/commands.md` still need the doc pass noted in
+> [Files to change](#files-to-change).
+
 ## Problem
 
 Both a fresh local clone and CI (`.github/workflows/tests.yml`) start from `.env.example`,
@@ -60,47 +69,48 @@ on is broken, because nothing ever creates the file.
 
 ## Recommended fix
 
-Two parts, both needed — local dev/fresh-clone and CI are currently broken in different ways
-that happen to share the same root cause (`.env.example`).
+**MySQL only — a SQLite fallback was never on the table.** This project has exactly one
+supported database engine; an option that made SQLite "actually work" as a zero-dependency
+local fallback (considered in an earlier draft of this file) is rejected outright, not merely
+deprioritized — any database connection that isn't MySQL is wrong for this repo, full stop, per
+the same architecture `docs/architecture/overview.md` already names and this repo's
+schema/security docs already reason about (collation, MySQL-specific index costs) in ways
+SQLite wouldn't replicate anyway. Two parts, both needed, both **done**:
 
-1. **CI (`\.github/workflows/tests.yml`)**: add a MySQL service container (`mysql:8.4`, matching
-   `compose.yaml`), with a healthcheck, and set `DB_*` env vars for the job to match it (host
-   `127.0.0.1`, the service's mapped port, a database — `testing`, matching what `phpunit.xml`
-   already expects — a username/password). This reuses the same "testing" database name the
-   project's own `docker/mysql/create-testing-database.sh` already establishes as the
-   convention, so `phpunit.xml`'s existing `DB_DATABASE=testing` override becomes correct
-   instead of accidentally-almost-right. `docs/testing/ci/pipeline-integration.md` should be
-   updated once this lands, since it currently describes the `Run Tests` step without
-   mentioning DB provisioning at all.
-2. **`.env.example` / local fresh-clone path**: decide and document one of:
-   - Point `.env.example` at MySQL by default (matching the project's real architecture and
-     this developer's real `.env`), with `DB_HOST=127.0.0.1`/Sail defaults, and document that
-     `composer run setup` / a fresh clone requires either Sail (`compose.yaml`) or a locally
-     running MySQL instance before running migrations — no silent SQLite fallback.
-   - Or, if a zero-dependency local fallback is wanted, keep SQLite as the default but make it
-     actually work: point `DB_DATABASE` at a real path (`database/database.sqlite`), add that
-     file to `.gitignore`, and add a file-creation step (`touch database/database.sqlite`
-     equivalent) to both `composer.json`'s `setup` script and any onboarding docs — while
-     keeping CI on MySQL per (1) for architecture parity, since this repo's schema/security docs
-     already reason about MySQL-specific behavior (collation, index costs) that SQLite doesn't
-     replicate.
+1. **CI (`.github/workflows/tests.yml`)** — added a `services.mysql` container (`mysql:8.4`,
+   matching `compose.yaml`), with a `mysqladmin ping` healthcheck the runner waits on
+   automatically, and a job-level `env:` block pointing `DB_CONNECTION`/`DB_HOST`/`DB_PORT`/
+   `DB_DATABASE`/`DB_USERNAME`/`DB_PASSWORD` at it (`127.0.0.1:3306`, database `testing`, user
+   `root`, empty password via `MYSQL_ALLOW_EMPTY_PASSWORD`). Job-level env vars are real
+   process environment variables, so they take precedence over whatever `cp .env.example .env`
+   writes to disk — no `.env` edit needed in the workflow. Also fixed the pre-existing `npm i` →
+   `npm ci` gap in the same step this file's audit had already flagged as belonging to
+   "whichever change next touches this file" (see
+   [`docs/security/ci-workflow-hardening.md`](../../docs/security/ci-workflow-hardening.md)).
+2. **`.env.example`** — `DB_CONNECTION` changed from `sqlite` to `mysql`, and `DB_HOST`/
+   `DB_PORT` uncommented to Sail's real networking values (`mysql`/`3306` — the Docker service
+   name from `compose.yaml`, not a secret). `DB_DATABASE`/`DB_USERNAME`/`DB_PASSWORD` stay
+   commented deliberately: per `README.md`, working credentials are requested privately from
+   Angel, never guessed or invented into a committed file — Laravel's own `mysql` connection
+   defaults (`config/database.php`) are also non-functional placeholders, which is consistent
+   with that convention rather than a gap.
+3. **`phpunit.xml`** — added `<env name="DB_CONNECTION" value="mysql"/>` alongside the existing
+   `DB_DATABASE=testing` override, so every test run is pinned to MySQL regardless of what a
+   contributor's real `.env` says, the same way the database name already was.
 
-Either way, `.env.example`'s `DB_CONNECTION=sqlite` with everything else commented out must not
-remain the shipped default — it currently guarantees a first-migration failure with no
-recovery step documented anywhere in the repo.
+Verified locally post-fix: `sail artisan test --compact --filter=ExampleTest` passes against the
+Sail `mysql` container with the new `phpunit.xml` override in place.
 
 ## Files to change
 
-- `.env.example` — DB connection defaults (whichever option above is chosen).
-- `.github/workflows/tests.yml` — add a MySQL `services:` block + matching `DB_*` job/step env.
-- `composer.json` — `scripts.setup`, if the SQLite-fallback option is chosen (add file creation).
-- `.gitignore` — add `database/database.sqlite` (or equivalent), if the SQLite-fallback option
-  is chosen.
-- `docs/testing/ci/pipeline-integration.md` — document the real DB provisioning step once CI is
-  fixed; it currently omits DB setup entirely from its description of the `Run Tests` step.
-- `docs/testing/ci/commands.md` — cross-reference or note the DB prerequisite if not already
-  implied.
-- Possibly `README.md` — if it documents a non-Sail local setup path, it needs the same fix.
-
-Not fixed here — this file is a scoping/documentation pass only, per the requesting task. No
-application code, workflow YAML, or config was changed as part of writing this file.
+- [x] `.env.example` — `DB_CONNECTION=mysql`, `DB_HOST=mysql`, `DB_PORT=3306` uncommented;
+      `DB_DATABASE`/`DB_USERNAME`/`DB_PASSWORD` deliberately left as commented placeholders.
+- [x] `phpunit.xml` — added `DB_CONNECTION=mysql` next to the existing `DB_DATABASE=testing`.
+- [x] `.github/workflows/tests.yml` — added the MySQL `services:` block, job-level `DB_*` env,
+      and fixed `npm i` → `npm ci` in the same step.
+- [ ] `docs/testing/ci/pipeline-integration.md` — still needs to document the real DB
+      provisioning step; it currently describes the `Run Tests` step without mentioning it.
+- [ ] `docs/testing/ci/commands.md` — still needs a cross-reference/note of the DB prerequisite.
+- Not needed: `composer.json` / `.gitignore` (SQLite-fallback-only items, moot now that the
+  fallback option is rejected); `README.md` (already correctly documents the Sail/MySQL-only
+  local setup path and the "request credentials from Angel" convention — nothing to change).
