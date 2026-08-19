@@ -5,6 +5,7 @@ import { z } from "zod";
 import { container } from "../../config/container.js";
 import { toCoacheeDashboardDTO } from "../dto/coacheeDashboardDto.js";
 import { toTrainingClassDTO } from "../dto/trainingClassDto.js";
+import { toWaitingListListResponse } from "../dto/waitingListDto.js";
 import { ValidationError } from "../errors.js";
 import { authenticate, requireRole } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
@@ -29,6 +30,13 @@ const listClassesQuerySchema = z
       })
       .optional(),
     coachId: z.string().uuid("coachId must be a valid UUID").optional(),
+    page: z.coerce.number().int().min(1).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  })
+  .strict();
+
+const pageLimitQuerySchema = z
+  .object({
     page: z.coerce.number().int().min(1).optional().default(1),
     limit: z.coerce.number().int().min(1).max(100).optional().default(20),
   })
@@ -345,6 +353,48 @@ router.delete(
   },
 );
 
+router.post(
+  "/classes/:id/waiting-list",
+  authenticate,
+  requireRole(UserRole.COACHEE),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsed = classIdParamSchema.safeParse(req.params.id);
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error.message);
+      }
+      const result = await container.joinWaitingList.execute({
+        classId: parsed.data,
+        coacheeId: req.user?.id ?? "",
+      });
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.delete(
+  "/classes/:id/waiting-list",
+  authenticate,
+  requireRole(UserRole.COACHEE),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsed = classIdParamSchema.safeParse(req.params.id);
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error.message);
+      }
+      const result = await container.leaveWaitingList.execute({
+        classId: parsed.data,
+        coacheeId: req.user?.id ?? "",
+      });
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 router.get(
   "/coachee/dashboard",
   authenticate,
@@ -356,6 +406,28 @@ router.get(
         now: new Date(),
       });
       res.json(toCoacheeDashboardDTO(result));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.get(
+  "/waiting-lists",
+  authenticate,
+  requireRole(UserRole.COACHEE),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsedQuery = pageLimitQuerySchema.safeParse(req.query);
+      if (!parsedQuery.success) {
+        throw new ValidationError(parsedQuery.error.message);
+      }
+      const result = await container.listWaitingLists.execute({
+        coacheeId: req.user?.id ?? "",
+        page: parsedQuery.data.page,
+        limit: parsedQuery.data.limit,
+      });
+      res.json(toWaitingListListResponse(result));
     } catch (error) {
       next(error);
     }

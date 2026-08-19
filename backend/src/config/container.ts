@@ -14,10 +14,13 @@ import { GetCoacheeDashboard } from "../application/use-cases/GetCoacheeDashboar
 import { GetCoachFinancialData } from "../application/use-cases/GetCoachFinancialData.js";
 import { GetTrainingClass } from "../application/use-cases/GetTrainingClass.js";
 import { JoinTrainingClass } from "../application/use-cases/JoinTrainingClass.js";
+import { JoinWaitingList } from "../application/use-cases/JoinWaitingList.js";
+import { LeaveWaitingList } from "../application/use-cases/LeaveWaitingList.js";
 import { ListBlocks } from "../application/use-cases/ListBlocks.js";
 import { ListCoachees } from "../application/use-cases/ListCoachees.js";
 import { ListCoaches } from "../application/use-cases/ListCoaches.js";
 import { ListTrainingClasses } from "../application/use-cases/ListTrainingClasses.js";
+import { ListWaitingLists } from "../application/use-cases/ListWaitingLists.js";
 import { UpdateCoach } from "../application/use-cases/UpdateCoach.js";
 import { UpdateCoachee } from "../application/use-cases/UpdateCoachee.js";
 import { UpdateCoacheeLevel } from "../application/use-cases/UpdateCoacheeLevel.js";
@@ -30,6 +33,7 @@ import { CoacheeDashboardPolicy } from "../domain/services/CoacheeDashboardPolic
 import { CoacheeService } from "../domain/services/CoacheeService.js";
 import { CoachService } from "../domain/services/CoachService.js";
 import { EnrollmentPolicy } from "../domain/services/EnrollmentPolicy.js";
+import { WaitingListPolicy } from "../domain/services/WaitingListPolicy.js";
 import { CalendarHealthMonitor } from "../infrastructure/adapters/calendar/CalendarHealthMonitor.js";
 import { GoogleCalendarAdapter } from "../infrastructure/adapters/calendar/GoogleCalendarAdapter.js";
 import { Aes256GcmEncryptionService } from "../infrastructure/encryption/Aes256GcmEncryptionService.js";
@@ -109,6 +113,9 @@ export const container = {
   getTrainingClass: new GetTrainingClass(prisma),
   getCoacheeDashboard: new GetCoacheeDashboard(prisma, coacheeDashboardPolicy),
   joinTrainingClass: new JoinTrainingClass(prisma, enrollmentPolicy, auditLogger),
+  joinWaitingList: new JoinWaitingList(prisma, new WaitingListPolicy(), auditLogger),
+  leaveWaitingList: new LeaveWaitingList(prisma, new WaitingListPolicy(), auditLogger),
+  listWaitingLists: new ListWaitingLists(prisma, new WaitingListPolicy()),
   cancelEnrollment: new CancelEnrollment(prisma, enrollmentPolicy, auditLogger),
   createBlock: calendarProvider
     ? new CreateBlock(prisma, calendarProvider, new BlockPolicy(), auditLogger)
