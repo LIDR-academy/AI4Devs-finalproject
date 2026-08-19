@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Role as AppRole;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -307,4 +308,64 @@ test('authorize throws AuthorizationException when delete is denied', function (
 
     expect(fn () => Gate::forUser($actor)->authorize('delete', $target))
         ->toThrow(AuthorizationException::class);
+});
+
+// =====================================================================
+// Story 0008a — the two tiers must not be aliased onto one another. With
+// auth.super_admin.role overridden to a non-default value, update() and
+// delete()'s Super Admin branch must follow the CONFIGURED name (via
+// App\Models\Role::superAdminName()), while updateSensitiveAttributes(),
+// downgrade() and delete()'s Administrator branch must keep following
+// the LOCKED literal RoleName::Administrator, regardless of that config
+// value. Neither mechanism may resolve through the other's source of
+// truth.
+// =====================================================================
+
+test('with auth.super_admin.role overridden, update() and delete() follow the configured name, not the literal "Super Admin"', function () {
+    config(['auth.super_admin.role' => 'Something Else']);
+
+    // firstOrCreateSuperAdminRole() is the sanctioned way to bring the configured role into
+    // existence -- it bypasses the `creating` guard that otherwise refuses any role acquiring
+    // the configured Super Admin name (story 0008).
+    $configuredSuperAdminRole = AppRole::firstOrCreateSuperAdminRole();
+    $ordinaryRoleNamedSuperAdmin = Role::where('name', 'Super Admin')->where('guard_name', 'web')->firstOrFail();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(['users.edit', 'users.delete', 'roles.manage-administrators']);
+
+    $configuredTarget = User::factory()->create();
+    $configuredTarget->assignRole($configuredSuperAdminRole);
+
+    $literalTarget = User::factory()->create();
+    $literalTarget->assignRole($ordinaryRoleNamedSuperAdmin);
+
+    // The role actually configured as Super Admin is uneditable/undeletable...
+    expect(Gate::forUser($actor)->allows('update', $configuredTarget))->toBeFalse()
+        ->and(Gate::forUser($actor)->allows('delete', $configuredTarget))->toBeFalse()
+        // ...while a role that is merely literally named "Super Admin" (but is not the
+        // configured one) is fully ordinary.
+        ->and(Gate::forUser($actor)->allows('update', $literalTarget))->toBeTrue()
+        ->and(Gate::forUser($actor)->allows('delete', $literalTarget))->toBeTrue();
+});
+
+test('with auth.super_admin.role overridden, the Administrator-tier abilities still key on the locked literal name, unaffected by that config value', function () {
+    config(['auth.super_admin.role' => 'Something Else']);
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    $deniedActor = User::factory()->create();
+    $deniedActor->givePermissionTo('users.edit');
+
+    $allowedActor = User::factory()->create();
+    $allowedActor->givePermissionTo(['users.edit', 'users.delete', 'roles.manage-administrators']);
+
+    $target = User::factory()->create();
+    $target->assignRole($administratorRole);
+
+    expect(Gate::forUser($deniedActor)->allows('updateSensitiveAttributes', $target))->toBeFalse()
+        ->and(Gate::forUser($deniedActor)->allows('downgrade', $target))->toBeFalse()
+        ->and(Gate::forUser($deniedActor)->allows('delete', $target))->toBeFalse()
+        ->and(Gate::forUser($allowedActor)->allows('updateSensitiveAttributes', $target))->toBeTrue()
+        ->and(Gate::forUser($allowedActor)->allows('downgrade', $target))->toBeTrue()
+        ->and(Gate::forUser($allowedActor)->allows('delete', $target))->toBeTrue();
 });

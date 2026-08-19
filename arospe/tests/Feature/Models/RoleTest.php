@@ -390,3 +390,97 @@ test('removeFromModels() is refused against the Super Admin role, leaving its ex
 
     expect($existingHolder->fresh()->hasRole('Super Admin'))->toBeTrue();
 });
+
+// =====================================================================
+// Story 0008a — isAdministratorRole(): the shared, hydration-safe
+// identity check for the Administrator tier. Exact, case-sensitive
+// comparison against the row's PERSISTED name -- never LIKE, never
+// case-insensitive, never a "contains" match, and never fooled by an
+// in-memory rename that hasn't been saved.
+// =====================================================================
+
+test('isAdministratorRole() returns true for the seeded Administrator role', function () {
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
+
+    expect(Role::isAdministratorRole($administrator))->toBeTrue();
+});
+
+test('isAdministratorRole() returns false for an ordinary role', function () {
+    $custom = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+
+    expect(Role::isAdministratorRole($custom))->toBeFalse();
+});
+
+test('isAdministratorRole() returns false for the Super Admin role -- the two tiers are not aliased', function () {
+    $superAdmin = Role::where('name', 'Super Admin')->where('guard_name', 'web')->firstOrFail();
+
+    expect(Role::isAdministratorRole($superAdmin))->toBeFalse();
+});
+
+// --- Hydration-safety (the ⚠️ residual this story closes on its own side) ---
+
+test('isAdministratorRole() answers true for a partially-hydrated Administrator row (name column not selected)', function () {
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
+
+    $partiallyHydrated = Role::query()->select('id')->whereKey($administrator->id)->firstOrFail();
+
+    expect(Role::isAdministratorRole($partiallyHydrated))->toBeTrue();
+});
+
+test('isAdministratorRole() answers false for a partially-hydrated ordinary role (name column not selected)', function () {
+    $custom = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+
+    $partiallyHydrated = Role::query()->select('id')->whereKey($custom->id)->firstOrFail();
+
+    expect(Role::isAdministratorRole($partiallyHydrated))->toBeFalse();
+});
+
+test('isAdministratorRole() answers true for a role renamed in memory but not saved, because identity comes from the persisted name', function () {
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
+
+    $administrator->name = 'Something Else';
+
+    expect(Role::isAdministratorRole($administrator))->toBeTrue();
+
+    // Nothing was actually persisted by this test -- confirms the assertion above
+    // is exercising the in-memory/persisted split, not a database write.
+    expect(Role::where('id', $administrator->id)->value('name'))->toBe(RoleName::Administrator->value);
+});
+
+// --- Exact, case-sensitive match only ---
+
+test('isAdministratorRole() returns false for a role whose name merely resembles "Administrator"', function () {
+    $custom = Role::create(['name' => 'Administrador Regional', 'guard_name' => 'web']);
+
+    expect(Role::isAdministratorRole($custom))->toBeFalse();
+});
+
+// NOT persisted via Role::create(): the real roles.name column carries the
+// case-INSENSITIVE collation utf8mb4_unicode_ci (verified with `SHOW FULL
+// COLUMNS FROM roles`), so a row named "administrator" cannot coexist with
+// the already-seeded "Administrator" row at all -- MySQL's own unique index
+// on (name, guard_name) refuses it (RoleAlreadyExists / a 23000 duplicate
+// key, confirmed by attempting exactly this in an earlier draft of this
+// test), independently of anything this story's PHP-level `===` comparison
+// does. The Gherkin scenario "Administrator-level matching is case-sensitive
+// ... a custom role named 'administrator' in lowercase" is therefore
+// unreachable via role creation in this schema -- recorded in the task
+// file's "Phase 3/4/5 implementation record" (Phase 5 finding F3). What CAN
+// still be exercised, and is exercised below, is
+// the exact-match `===` comparison itself against a not-yet-persisted
+// instance -- the one case persistedName() legitimately reads the in-memory
+// attribute for (mirroring `guardAgainstAssumingSuperAdminName()`'s own
+// creating-path fallback above).
+test('isAdministratorRole() is case-sensitive: a not-yet-persisted role named "administrator" in lowercase is not administrator-level', function () {
+    $inMemory = new Role(['name' => 'administrator', 'guard_name' => 'web']);
+
+    expect(Role::isAdministratorRole($inMemory))->toBeFalse();
+});
+
+test('isAdministratorRole() returns false for a custom role holding every permission the seeded Administrator role holds', function () {
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
+    $deputy = Role::create(['name' => 'Deputy', 'guard_name' => 'web']);
+    $deputy->syncPermissions($administrator->permissions->pluck('name')->all());
+
+    expect(Role::isAdministratorRole($deputy))->toBeFalse();
+});

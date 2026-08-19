@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RoleName;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -84,6 +85,20 @@ test('the Super Admin role is granted zero explicit permissions', function () {
     $superAdmin = Role::findByName('Super Admin');
 
     expect($superAdmin->permissions)->toHaveCount(0);
+});
+
+// --- Story 0008a (Q1) — the seeded Administrator role's name must come from
+// RoleName::Administrator, not a re-typed 'Administrator' string literal in
+// this test -- otherwise the seeder and the test could drift together (both
+// hardcoding the same typo) without either ever going red. ---
+
+test('the seeded Administrator role is named after the RoleName enum value, and holds the same 37 permissions', function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->first();
+
+    expect($administrator)->not->toBeNull()
+        ->and($administrator->permissions)->toHaveCount(37);
 });
 
 // --- Seeder — edge cases ---
