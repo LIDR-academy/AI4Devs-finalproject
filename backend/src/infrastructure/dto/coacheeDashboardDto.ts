@@ -39,9 +39,22 @@ export interface JoinableClassDTO {
   hasOpenSpots: boolean;
 }
 
+export interface WaitlistEligibleClassDTO {
+  id: string;
+  classType: ClassType;
+  startTime: string;
+  level: LevelRefDTO;
+  assignedCoach: AssignedCoachDTO;
+  enrollmentCount: number;
+  capacity: number;
+  isWithinReach: boolean;
+  isOnWaitingList: boolean;
+}
+
 export interface CoacheeDashboardDTO {
   nextClass: NextClassDTO | null;
   joinableClasses: JoinableClassDTO[];
+  waitlistEligibleClasses: WaitlistEligibleClassDTO[];
   activeWaitingListCount: number;
 }
 
@@ -78,9 +91,29 @@ export function toCoacheeDashboardDTO(result: GetCoacheeDashboardResult): Coache
       hasOpenSpots: row.enrollments.length < GROUP_MAX_COACHEES,
     };
   });
+  const waitlistEligibleClasses = result.waitlistEligibleClasses.map(
+    (row: DashboardClassRow & { level: NonNullable<DashboardClassRow["level"]> }) => {
+      const withinReach = viewerSort !== null && isWithinReach(viewerSort, row.level.sort_order);
+      return {
+        id: row.id,
+        classType: row.class_type,
+        startTime: row.start_time.toISOString(),
+        level: { id: row.level.id, name: row.level.name, color: row.level.color },
+        assignedCoach: {
+          id: row.assignedCoach.id,
+          name: row.assignedCoach.name,
+        },
+        enrollmentCount: row.enrollments.length,
+        capacity: GROUP_MAX_COACHEES,
+        isWithinReach: withinReach,
+        isOnWaitingList: false,
+      };
+    },
+  );
   return {
     nextClass: result.nextClass ? toNextClassDTO(result.nextClass) : null,
     joinableClasses,
+    waitlistEligibleClasses,
     activeWaitingListCount: result.activeWaitingListCount,
   };
 }

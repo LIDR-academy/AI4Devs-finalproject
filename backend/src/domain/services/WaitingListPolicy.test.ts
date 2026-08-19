@@ -192,6 +192,36 @@ describe("WaitingListPolicy.assertJoinEligible", () => {
   });
 });
 
+describe("WaitingListPolicy.isEligibleForWaitingList", () => {
+  const eligible = (patch: Partial<JoinEligibilityInput> = {}): JoinEligibilityInput => ({
+    ...baseJoinInput(),
+    ...patch,
+  });
+
+  it("is true exactly when assertJoinEligible is ok (parity) for every verdict path", () => {
+    const cases: JoinEligibilityInput[] = [
+      eligible(),
+      eligible({ classType: "INDIVIDUAL", capacity: 1, enrollmentCount: 1 }),
+      eligible({ status: "CANCELED" }),
+      eligible({ classType: "INDIVIDUAL", capacity: 1, enrollmentCount: 0 }),
+      eligible({ enrollmentCount: 3 }),
+      eligible({ isAlreadyEnrolled: true }),
+      eligible({ isAlreadyOnWaitingList: true }),
+      eligible({ coacheeLevelSortOrder: null }),
+      eligible({ classLevelSortOrder: null }),
+      eligible({ classLevelSortOrder: 5 }),
+      eligible({ classLevelSortOrder: 4 }),
+      eligible({ classLevelSortOrder: 2 }),
+      eligible({ waitingListCount: 4 }),
+      eligible({ waitingListCount: 3 }),
+      eligible({ classType: "INDIVIDUAL", capacity: 1, enrollmentCount: 1, waitingListCount: 4 }),
+    ];
+    for (const input of cases) {
+      expect(policy.isEligibleForWaitingList(input)).toBe(policy.assertJoinEligible(input).ok);
+    }
+  });
+});
+
 describe("WaitingListPolicy.ownsEntry", () => {
   it("allows the waitlisted coachee to remove their own entry", () => {
     expect(policy.ownsEntry("coachee-1", "coachee-1")).toBe(true);

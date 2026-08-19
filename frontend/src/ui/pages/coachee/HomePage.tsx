@@ -5,6 +5,7 @@ import { MyWaitingLists } from "@/ui/components/coachee/MyWaitingLists";
 import { NextClassCard } from "@/ui/components/coachee/NextClassCard";
 import { ErrorStateWithRetry, LoadingState } from "@/ui/components/coachee/ViewState";
 import { WaitingListBadge } from "@/ui/components/coachee/WaitingListBadge";
+import { WaitingListOpportunities } from "@/ui/components/coachee/WaitingListOpportunities";
 
 export function CoacheeHomePage() {
   const dashboardQuery = useCoacheeDashboard();
@@ -42,6 +43,16 @@ export function CoacheeHomePage() {
         <JoinableClassList
           classes={dashboard.joinableClasses}
           isLoading={dashboardQuery.isFetching && dashboard.joinableClasses.length === 0}
+          isError={dashboardQuery.isError}
+          onRetry={refetch}
+        />
+      </div>
+
+      <div>
+        <h3 className="mb-2 font-semibold text-gray-900">Waiting List Opportunities</h3>
+        <WaitingListOpportunities
+          classes={dashboard.waitlistEligibleClasses}
+          isLoading={dashboardQuery.isFetching && dashboard.waitlistEligibleClasses.length === 0}
           isError={dashboardQuery.isError}
           onRetry={refetch}
         />

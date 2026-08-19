@@ -11,6 +11,7 @@ export type DashboardClassRow = Prisma.TrainingClassGetPayload<{
     assignedCoach: true;
     level: true;
     enrollments: true;
+    waitingLists: true;
   };
 }>;
 
@@ -21,6 +22,7 @@ export type DashboardJoinableClassRow = DashboardClassRow & {
 export interface GetCoacheeDashboardResult {
   nextClass: DashboardClassRow | null;
   joinableClasses: DashboardJoinableClassRow[];
+  waitlistEligibleClasses: DashboardJoinableClassRow[];
   activeWaitingListCount: number;
   viewerLevelSortOrder: number | null;
 }
@@ -29,6 +31,7 @@ const CLASS_INCLUDE = {
   assignedCoach: true,
   level: true,
   enrollments: true,
+  waitingLists: true,
 } satisfies Prisma.TrainingClassInclude;
 
 export class GetCoacheeDashboard {
@@ -78,6 +81,9 @@ export class GetCoacheeDashboard {
       candidates,
       viewerContext,
     ) as DashboardJoinableClassRow[];
+    const waitlistEligibleClasses = (
+      this.policy.filterWaitlistEligible(candidates, viewerContext) as DashboardJoinableClassRow[]
+    ).sort((a, b) => a.start_time.getTime() - b.start_time.getTime());
 
     const waitingLists = await this.prisma.waitingList.findMany({
       where: { coachee_id: coacheeId },
@@ -88,6 +94,7 @@ export class GetCoacheeDashboard {
     return {
       nextClass,
       joinableClasses,
+      waitlistEligibleClasses,
       activeWaitingListCount,
       viewerLevelSortOrder,
     };

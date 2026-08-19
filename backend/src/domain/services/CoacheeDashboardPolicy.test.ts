@@ -19,6 +19,7 @@ function cls(overrides: Partial<PolicyClass> = {}): PolicyClass {
     start_time: new Date("2026-08-19T10:00:00.000Z"),
     level: { sort_order: 3 },
     enrollments: [],
+    waitingLists: [],
     ...overrides,
   };
 }
@@ -167,6 +168,158 @@ describe("CoacheeDashboardPolicy.filterJoinable", () => {
     const a = cls({ id: "a", start_time: new Date("2026-03-25T10:00:00.000Z") });
     const b = cls({ id: "b", start_time: new Date("2026-03-26T10:00:00.000Z") });
     expect(policy.filterJoinable([b, a], viewer()).map((c) => c.id)).toEqual(["b", "a"]);
+  });
+});
+
+describe("CoacheeDashboardPolicy.isWaitlistEligible", () => {
+  const fullGroup = cls({ enrollments: threeSeats });
+
+  it("is true for a full ACTIVE GROUP class within reach with a free waiting-list slot", () => {
+    expect(policy.isWaitlistEligible(fullGroup, viewer())).toBe(true);
+  });
+
+  it("is true when the waiting list has 3 members", () => {
+    expect(
+      policy.isWaitlistEligible(
+        cls({
+          enrollments: threeSeats,
+          waitingLists: [{ coachee_id: "a" }, { coachee_id: "b" }, { coachee_id: "c" }],
+        }),
+        viewer(),
+      ),
+    ).toBe(true);
+  });
+
+  it("is false when the waiting list is full (4/4)", () => {
+    expect(
+      policy.isWaitlistEligible(
+        cls({ enrollments: threeSeats, waitingLists: threeSeats }),
+        viewer(),
+      ),
+    ).toBe(false);
+  });
+
+  it("is false for an individual class even when occupied", () => {
+    expect(
+      policy.isWaitlistEligible(
+        cls({
+          class_type: "INDIVIDUAL",
+          enrollments: [{ coachee_id: "a" }],
+          waitingLists: [],
+        }),
+        viewer(),
+      ),
+    ).toBe(false);
+  });
+
+  it("is false for a canceled group class", () => {
+    expect(
+      policy.isWaitlistEligible(cls({ status: "CANCELED", enrollments: threeSeats }), viewer()),
+    ).toBe(false);
+  });
+
+  it("is false for a group class that is not full (3/4)", () => {
+    const open = [{ coachee_id: "a" }, { coachee_id: "b" }, { coachee_id: "c" }];
+    expect(policy.isWaitlistEligible(cls({ enrollments: open }), viewer())).toBe(false);
+  });
+
+  it("is false when the Coachee is already enrolled", () => {
+    expect(
+      policy.isWaitlistEligible(
+        cls({
+          enrollments: [...threeSeats.slice(0, 3), { coachee_id: "viewer-1" }],
+        }),
+        viewer(),
+      ),
+    ).toBe(false);
+  });
+
+  it("is false when the Coachee is already on the waiting list", () => {
+    expect(
+      policy.isWaitlistEligible(
+        cls({
+          enrollments: threeSeats,
+          waitingLists: [{ coachee_id: "viewer-1" }],
+        }),
+        viewer(),
+      ),
+    ).toBe(false);
+  });
+
+  it("is false when the Coachee has no level", () => {
+    expect(policy.isWaitlistEligible(fullGroup, viewer({ viewerLevelSortOrder: null }))).toBe(
+      false,
+    );
+  });
+
+  it("is false when the class has no level", () => {
+    expect(policy.isWaitlistEligible(cls({ level: null, enrollments: threeSeats }), viewer())).toBe(
+      false,
+    );
+  });
+
+  it("is false when the class is two levels away", () => {
+    expect(
+      policy.isWaitlistEligible(
+        cls({ level: { sort_order: 5 }, enrollments: threeSeats }),
+        viewer(),
+      ),
+    ).toBe(false);
+  });
+
+  it("is true when the class is one level above the Coachee", () => {
+    expect(
+      policy.isWaitlistEligible(
+        cls({ level: { sort_order: 4 }, enrollments: threeSeats }),
+        viewer(),
+      ),
+    ).toBe(true);
+  });
+
+  it("is true when the class is one level below the Coachee", () => {
+    expect(
+      policy.isWaitlistEligible(
+        cls({ level: { sort_order: 2 }, enrollments: threeSeats }),
+        viewer(),
+      ),
+    ).toBe(true);
+  });
+
+  it("is mutually exclusive with isJoinable across full and open classes", () => {
+    const full = cls({ enrollments: threeSeats });
+    const open = cls({ enrollments: threeSeats.slice(0, 3) });
+    expect(policy.isWaitlistEligible(full, viewer())).toBe(true);
+    expect(policy.isJoinable(full, viewer())).toBe(false);
+    expect(policy.isWaitlistEligible(open, viewer())).toBe(false);
+    expect(policy.isJoinable(open, viewer())).toBe(true);
+  });
+});
+
+describe("CoacheeDashboardPolicy.filterWaitlistEligible", () => {
+  it("returns only the waitlist-eligible classes and preserves input order", () => {
+    const offered = [
+      cls({
+        id: "full-b",
+        start_time: new Date("2026-03-26T10:00:00.000Z"),
+        enrollments: threeSeats,
+      }),
+      cls({ id: "open", start_time: new Date("2026-03-25T10:00:00.000Z") }),
+      cls({
+        id: "full-a",
+        start_time: new Date("2026-03-25T11:00:00.000Z"),
+        enrollments: threeSeats,
+      }),
+      cls({ id: "individual", class_type: "INDIVIDUAL" }),
+    ];
+    expect(policy.filterWaitlistEligible(offered, viewer()).map((c) => c.id)).toEqual([
+      "full-b",
+      "full-a",
+    ]);
+  });
+
+  it("returns an empty array when nothing qualifies or the input is empty", () => {
+    expect(policy.filterWaitlistEligible([], viewer())).toEqual([]);
+    expect(policy.filterWaitlistEligible([cls({ status: "CANCELED" })], viewer())).toEqual([]);
   });
 });
 

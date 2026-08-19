@@ -65,6 +65,10 @@ export class WaitingListPolicy {
     return { ok: true };
   }
 
+  isEligibleForWaitingList(input: JoinEligibilityInput): boolean {
+    return this.assertJoinEligible(input).ok;
+  }
+
   ownsEntry(actorId: string, entryCoacheeId: string): boolean {
     return actorId === entryCoacheeId;
   }

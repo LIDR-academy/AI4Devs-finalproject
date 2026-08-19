@@ -65,8 +65,21 @@ export interface CoacheeJoinableClass {
   hasOpenSpots: boolean;
 }
 
+export interface CoacheeWaitlistEligibleClass {
+  id: string;
+  classType: "GROUP";
+  startTime: string;
+  level: CoacheeLevelRef;
+  assignedCoach: CoacheeCoachRef;
+  enrollmentCount: number;
+  capacity: number;
+  isWithinReach: boolean;
+  isOnWaitingList: boolean;
+}
+
 export interface CoacheeDashboard {
   nextClass: CoacheeNextClass | null;
   joinableClasses: CoacheeJoinableClass[];
+  waitlistEligibleClasses: CoacheeWaitlistEligibleClass[];
   activeWaitingListCount: number;
 }

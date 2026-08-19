@@ -303,6 +303,13 @@ The cards should only appear if they belong to the selected day in the row above
 [/speckit.tasks]
 [/speckit.implement]
 
+As a coachee, I should be able to see the potential group clases that I am able to join its waiting list
+
+----
+
+I know see that as a coach, when I click to see a class details I see if there's people in the waiting list but I can not see who are they. We should list them too
+
+
 # 18 - OpenCode - DeepSeek V4 Flash Free
 
 <!-- Backend `npm audit` fails on pre-existing transitive dev-dep vulnerabilities (prisma 6→7 and vitest 2→4 are the only fixes, both major/breaking). -->

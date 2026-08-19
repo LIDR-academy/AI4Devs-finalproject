@@ -74,6 +74,177 @@ const execute = (prisma: PrismaClient, params: GetCoacheeDashboardParams) =>
   new GetCoacheeDashboard(prisma, new CoacheeDashboardPolicy()).execute(params);
 
 describe("GetCoacheeDashboard", () => {
+  it("exposes waitlistEligibleClasses for full within-reach group classes with a free slot", async () => {
+    const full = classRow({
+      id: "cl-wl",
+      start_time: new Date("2026-08-25T10:00:00.000Z"),
+      enrollments: [
+        { id: "a", coachee_id: "other-1" },
+        { id: "b", coachee_id: "other-2" },
+        { id: "c", coachee_id: "other-3" },
+        { id: "d", coachee_id: "other-4" },
+      ],
+    });
+    const { prisma, trainingClassFindMany } = makePrismaStub({
+      viewer: { id: "coachee-1", level: { sort_order: 3 } },
+      candidates: [full],
+    });
+
+    const result = await execute(prisma, { coacheeId: "coachee-1", now: NOW });
+
+    expect(result.waitlistEligibleClasses.map((c) => c.id)).toEqual(["cl-wl"]);
+    expect(result.joinableClasses.map((c) => c.id)).toEqual([]);
+    expect(trainingClassFindMany.mock.calls[0][0].include).toMatchObject({ waitingLists: true });
+  });
+
+  it("excludes enrolled, on-list, list-full, out-of-reach, not-full, canceled and individual classes", async () => {
+    const cases: Array<{ id: string; row: Record<string, unknown> }> = [
+      {
+        id: "enrolled",
+        row: classRow({
+          id: "enrolled",
+          enrollments: [
+            { id: "a", coachee_id: "other-1" },
+            { id: "b", coachee_id: "other-2" },
+            { id: "c", coachee_id: "other-3" },
+            { id: "c2", coachee_id: "coachee-1" },
+          ],
+        }),
+      },
+      {
+        id: "on-list",
+        row: classRow({
+          id: "on-list",
+          enrollments: [
+            { id: "a", coachee_id: "other-1" },
+            { id: "b", coachee_id: "other-2" },
+            { id: "c", coachee_id: "other-3" },
+            { id: "d", coachee_id: "other-4" },
+          ],
+          waitingLists: [{ id: "w", coachee_id: "coachee-1" }],
+        }),
+      },
+      {
+        id: "list-full",
+        row: classRow({
+          id: "list-full",
+          enrollments: [
+            { id: "a", coachee_id: "other-1" },
+            { id: "b", coachee_id: "other-2" },
+            { id: "c", coachee_id: "other-3" },
+            { id: "d", coachee_id: "other-4" },
+          ],
+          waitingLists: [
+            { id: "w1", coachee_id: "coachee-1" },
+            { id: "w2", coachee_id: "coachee-2" },
+            { id: "w3", coachee_id: "coachee-3" },
+            { id: "w4", coachee_id: "coachee-4" },
+          ],
+        }),
+      },
+      {
+        id: "out-of-reach",
+        row: classRow({
+          id: "out-of-reach",
+          level: { id: "lv-5", name: "Extremo", color: "#000", sort_order: 5 },
+          enrollments: [
+            { id: "a", coachee_id: "other-1" },
+            { id: "b", coachee_id: "other-2" },
+            { id: "c", coachee_id: "other-3" },
+            { id: "d", coachee_id: "other-4" },
+          ],
+        }),
+      },
+      {
+        id: "not-full",
+        row: classRow({ id: "not-full", enrollments: [{ id: "a", coachee_id: "other-1" }] }),
+      },
+      { id: "canceled", row: classRow({ id: "canceled", status: "CANCELED" }) },
+      { id: "individual", row: classRow({ id: "individual", class_type: "INDIVIDUAL" }) },
+    ];
+    const { prisma } = makePrismaStub({
+      viewer: { id: "coachee-1", level: { sort_order: 3 } },
+      candidates: cases.map((c) => c.row),
+    });
+
+    const result = await execute(prisma, { coacheeId: "coachee-1", now: NOW });
+
+    expect(result.waitlistEligibleClasses).toEqual([]);
+  });
+
+  it("returns an empty waitlist-eligible list when the Coachee has no level", async () => {
+    const full = classRow({
+      id: "cl-wl",
+      enrollments: [
+        { id: "a", coachee_id: "other-1" },
+        { id: "b", coachee_id: "other-2" },
+        { id: "c", coachee_id: "other-3" },
+        { id: "d", coachee_id: "other-4" },
+      ],
+    });
+    const { prisma } = makePrismaStub({
+      viewer: { id: "coachee-1", level: null },
+      candidates: [full],
+    });
+
+    const result = await execute(prisma, { coacheeId: "coachee-1", now: NOW });
+
+    expect(result.waitlistEligibleClasses).toEqual([]);
+  });
+
+  it("preserves ascending start-time order in waitlistEligibleClasses", async () => {
+    const later = classRow({
+      id: "wl-later",
+      start_time: new Date("2026-08-27T10:00:00.000Z"),
+      enrollments: [
+        { id: "a", coachee_id: "other-1" },
+        { id: "b", coachee_id: "other-2" },
+        { id: "c", coachee_id: "other-3" },
+        { id: "d", coachee_id: "other-4" },
+      ],
+    });
+    const earlier = classRow({
+      id: "wl-earlier",
+      start_time: new Date("2026-08-25T10:00:00.000Z"),
+      enrollments: [
+        { id: "a", coachee_id: "other-1" },
+        { id: "b", coachee_id: "other-2" },
+        { id: "c", coachee_id: "other-3" },
+        { id: "d", coachee_id: "other-4" },
+      ],
+    });
+    const { prisma } = makePrismaStub({
+      viewer: { id: "coachee-1", level: { sort_order: 3 } },
+      candidates: [later, earlier],
+    });
+
+    const result = await execute(prisma, { coacheeId: "coachee-1", now: NOW });
+
+    expect(result.waitlistEligibleClasses.map((c) => c.id)).toEqual(["wl-earlier", "wl-later"]);
+  });
+
+  it("delegates the waitlist-eligible filter to CoacheeDashboardPolicy", async () => {
+    const full = classRow({
+      id: "cl-wl",
+      enrollments: [
+        { id: "a", coachee_id: "other-1" },
+        { id: "b", coachee_id: "other-2" },
+        { id: "c", coachee_id: "other-3" },
+        { id: "d", coachee_id: "other-4" },
+      ],
+    });
+    const policy = new CoacheeDashboardPolicy();
+    const filterWaitlistEligible = vi.spyOn(policy, "filterWaitlistEligible");
+    const { prisma } = makePrismaStub({
+      viewer: { id: "coachee-1", level: { sort_order: 3 } },
+      candidates: [full],
+    });
+
+    await new GetCoacheeDashboard(prisma, policy).execute({ coacheeId: "coachee-1", now: NOW });
+
+    expect(filterWaitlistEligible).toHaveBeenCalledOnce();
+  });
+
   it("returns the full dashboard on the happy path (next class, joinable list, active count)", async () => {
     const next = classRow({ id: "cl-next", start_time: new Date("2026-08-20T09:00:00.000Z") });
     const joinable = classRow({

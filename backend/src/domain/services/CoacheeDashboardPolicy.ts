@@ -6,6 +6,7 @@ import {
   zonedDateTimeToUtc,
   zonedWallClockParts,
 } from "./TimeZoneMath.js";
+import { type JoinEligibilityInput, WaitingListPolicy } from "./WaitingListPolicy.js";
 
 export type PolicyClassStatus = "ACTIVE" | "CANCELED";
 export type PolicyClassType = "GROUP" | "INDIVIDUAL";
@@ -17,6 +18,7 @@ export interface PolicyClass {
   start_time: Date;
   level: { sort_order: number } | null;
   enrollments: Array<{ coachee_id: string }>;
+  waitingLists?: Array<{ coachee_id: string }>;
 }
 
 export interface PolicyEnrolledClass {
@@ -40,6 +42,8 @@ export interface JoinableWindow {
 export const JOINABLE_WINDOW_DAYS = 10;
 
 export class CoacheeDashboardPolicy {
+  private readonly waitingListPolicy = new WaitingListPolicy();
+
   pickNextClass(enrolled: PolicyEnrolledClass[], now: Date): PolicyClass | null {
     const future = enrolled.filter(
       (entry) => entry.class.status === "ACTIVE" && entry.class.start_time >= now,
@@ -75,6 +79,32 @@ export class CoacheeDashboardPolicy {
 
   filterJoinable<T extends PolicyClass>(classes: T[], viewer: PolicyViewerContext): T[] {
     return classes.filter((cls) => this.isJoinable(cls, viewer));
+  }
+
+  isWaitlistEligible(cls: PolicyClass, viewer: PolicyViewerContext): boolean {
+    if (cls.class_type !== "GROUP") {
+      return false;
+    }
+    const input: JoinEligibilityInput = {
+      classType: cls.class_type,
+      status: cls.status,
+      enrollmentCount: cls.enrollments.length,
+      capacity: GROUP_MAX_COACHEES,
+      waitingListCount: (cls.waitingLists ?? []).length,
+      isAlreadyEnrolled: cls.enrollments.some(
+        (enrollment) => enrollment.coachee_id === viewer.viewerId,
+      ),
+      isAlreadyOnWaitingList: (cls.waitingLists ?? []).some(
+        (entry) => entry.coachee_id === viewer.viewerId,
+      ),
+      coacheeLevelSortOrder: viewer.viewerLevelSortOrder,
+      classLevelSortOrder: cls.level?.sort_order ?? null,
+    };
+    return this.waitingListPolicy.isEligibleForWaitingList(input);
+  }
+
+  filterWaitlistEligible<T extends PolicyClass>(classes: T[], viewer: PolicyViewerContext): T[] {
+    return classes.filter((cls) => this.isWaitlistEligible(cls, viewer));
   }
 
   countActiveWaitingLists(entries: PolicyWaitingListEntry[]): number {

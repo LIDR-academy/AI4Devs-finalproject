@@ -560,7 +560,7 @@ All error responses follow this shape:
 
 ### GET /coachee/dashboard
 
-- **Description:** Returns the coachee's next scheduled class and a list of upcoming joinable group classes within a 10-day window. This powers the Coachee Home screen.
+- **Description:** Returns the coachee's next scheduled class, a list of upcoming joinable group classes within a 10-day window, and a list of full group classes the coachee can join a waiting list for. This powers the Coachee Home screen.
 - **Auth/Role:** Authenticated (Coachee).
 - **Path Params:** None.
 - **Query Params:** None.
@@ -589,6 +589,19 @@ All error responses follow this shape:
         "hasOpenSpots": true
       }
     ],
+    "waitlistEligibleClasses": [
+      {
+        "id": "uuid",
+        "classType": "group",
+        "startTime": "string (ISO 8601)",
+        "level": { "id": "uuid", "name": "string", "color": "string" },
+        "assignedCoach": { "id": "uuid", "name": "string" },
+        "enrollmentCount": 4,
+        "capacity": 4,
+        "isWithinReach": true,
+        "isOnWaitingList": false
+      }
+    ],
     "activeWaitingListCount": 2
   }
   ```
@@ -596,8 +609,10 @@ All error responses follow this shape:
 - **Error Responses:**
   - `403 FORBIDDEN` — authenticated user is not a Coachee.
 - **Business Rules Applied:**
-  - 10-day window for upcoming joinable group classes (PRD Section 6.4).
-  - Only group classes within the coachee's reach with at least one open spot are included (PRD Section 6.4).
+  - 10-day window (Madrid wall-clock) for upcoming joinable and waitlist-eligible group classes (PRD Section 6.4).
+  - Only group classes within the coachee's reach with at least one open spot are included in `joinableClasses` (PRD Section 6.4).
+  - `waitlistEligibleClasses` contains ACTIVE group classes that are full (enrollmentCount === capacity), within reach, not enrollable (no open spots → mutually exclusive with `joinableClasses`), where the coachee is neither enrolled nor already on the waiting list, and whose waiting list has fewer than 4 entries. Ordered ascending by `startTime`.
+  - `isOnWaitingList` is always `false` for entries in `waitlistEligibleClasses` (a class only appears when the coachee is not on its list yet).
   - Next class is the soonest future class the coachee is enrolled in.
 
 ---
@@ -1272,7 +1287,7 @@ All error responses follow this shape:
 | DELETE | `/classes/:id/enrollment` | Coachee | Cancel own class attendance |
 | GET | `/classes/available-slots` | Admin, Coach | Get available time slots |
 | GET | `/classes/assignable-coaches` | Admin, Coach | List active Admins and Coaches assignable to a class |
-| GET | `/coachee/dashboard` | Coachee | Home screen data (next class, joinable classes) |
+| GET | `/coachee/dashboard` | Coachee | Home screen data (next class, joinable classes, waiting-list opportunities) |
 | GET | `/blocks` | Admin, Coach | List blocks in date range |
 | POST | `/blocks` | Admin, Coach | Create a block |
 | DELETE | `/blocks/:id` | Admin, Coach | Cancel a block |
