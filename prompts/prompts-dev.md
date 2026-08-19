@@ -297,5 +297,12 @@ The cards should only appear if they belong to the selected day in the row above
 
 # 18 - OpenCode - DeepSeek V4 Flash Free
 
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-23/us-33-waiting-list-joinleave
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
+# 18 - OpenCode - DeepSeek V4 Flash Free
 
 <!-- Backend `npm audit` fails on pre-existing transitive dev-dep vulnerabilities (prisma 6→7 and vitest 2→4 are the only fixes, both major/breaking). -->
