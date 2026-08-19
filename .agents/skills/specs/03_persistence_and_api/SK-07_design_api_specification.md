@@ -1,6 +1,6 @@
 ---
 name: api-specification
-description: "Diseña la especificación OpenAPI 3.1/REST Contract-First, YAML declarativo, JSON/Zod schemas, paginación estándar, rate limiting, versionado v1, idempotencia y envolventes RFC 7807."
+description: "Diseña la especificación OpenAPI 3.1/REST Contract-First, YAML declarativo, esquemas de validación tipada, paginación estándar, rate limiting, versionado v1, idempotencia y envolventes RFC 7807."
 version: "3.3.0"
 category: "03_persistence_and_api"
 inputs:
@@ -13,7 +13,7 @@ outputs:
 
 # 🔌 SK-07: Especificación de API REST y Contratos de Dominio (v3.3.0)
 
-Actúa como un **Senior API Architect** y **Contract-First Specialist** experto en RESTful APIs, OpenAPI 3.1, TypeScript Zod schemas, resiliencia distribuida y políticas de diseño API Enterprise.
+Actúa como un **Senior API Architect** y **Contract-First Specialist** experto en RESTful APIs, OpenAPI 3.1, esquemas de validación tipada (independiente del lenguaje/librería), resiliencia distribuida y políticas de diseño API Enterprise.
 
 Tu objetivo es analizar el PRD (`docs/01_product_definition/02_prd.md`) y el Esquema de Base de Datos (`docs/03_persistence_and_api/06_database_schema.md`) para redactar la especificación técnica en `docs/03_persistence_and_api/07_api_specification.md` y generar el contrato ejecutable en `docs/03_persistence_and_api/openapi.yaml`.
 
@@ -61,17 +61,17 @@ interface PaginatedResponse<T> {
 }
 ```
 
-### 📍 Fase 4: Detalle Contrato por Endpoint & JSON/Zod Schemas (15 min)
+### 📍 Fase 4: Detalle Contrato por Endpoint & Esquemas de Validación (15 min)
 Para cada endpoint:
 1. Declarar URL, Método, Nivel de Acceso y Descripción.
-2. Definir **Request Body Schema** y **Query Parameters** (con validaciones Zod/JSON Schema).
+2. Definir **Request Body Schema** y **Query Parameters** en JSON Schema (independiente de la librería de validación runtime que el backend declare en `docs/00_stack_manifest.md`, ej. Zod, Pydantic, Joi).
 3. Definir **Respuesta Exitosa** ($200, 201, 204$).
 4. Definir **Respuestas de Error** usando la Envolvente Estándar ($400, 401, 403, 404, 409, 422, 429, 500$).
 
 ### 📍 Fase 4.B: Diagrama de Comunicación Frontend ↔ Backend (`mermaid sequenceDiagram`)
 Generar un diagrama de secuencia en Mermaid que ilustre el flujo completo de extremo a extremo:
-1. Petición HTTP desde el cliente frontend React/Touch UI.
-2. Intercepción por Express Guards (JWT Auth & Zod Schema Fail-Fast).
+1. Petición HTTP desde el cliente frontend (Touch UI).
+2. Intercepción por el middleware del framework backend declarado en el stack manifest (JWT Auth & Validación de Esquema Fail-Fast).
 3. Invocación al Caso de Uso y Transacción Pesimista en Base de Datos.
 4. Mapeo DTO de Respuesta ($201$) o Envolvente RFC 7807 ($400, 401, 422$).
 5. Manejo defensivo de pérdida de conexión y fallback local (`IndexedDB`).

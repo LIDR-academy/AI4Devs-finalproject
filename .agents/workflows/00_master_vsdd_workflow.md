@@ -8,6 +8,24 @@ Este documento describe el flujo de trabajo end-to-end ejecutado por el asistent
 
 ```mermaid
 flowchart TD
+    subgraph STAGE0A ["ETAPA 0A: BOOTSTRAP GREENFIELD (00_greenfield_bootstrap_workflow.md) — una única vez"]
+        Idea["Idea de Negocio (repo vacío)"] --> SK_Discover["SK-01 MODO B/SK-02: Discovery + PRD"]
+        SK_Discover --> StackDecision["SK-04: Decisión de Stack (Human-in-the-Loop)"]
+        StackDecision --> Manifest["docs/00_stack_manifest.md"]
+        Manifest --> Scaffold["Scaffolding de repo + esqueleto docs/"]
+    end
+
+    subgraph STAGE0B ["ETAPA 0B: ADOPCIÓN BROWNFIELD (00_brownfield_adoption_workflow.md) — una única vez"]
+        Code["Código Existente (sin docs/)"] --> SK_Extract["SK-30/SK-33: Diagramas + Config"]
+        SK_Extract --> SK_DiscoverC["SK-01 MODO C/SK-02: Reconstrucción + Entrevista Humana"]
+        SK_DiscoverC --> StackDiscovery["SK-04: Descubrimiento de Stack (Human confirma)"]
+        StackDiscovery --> ManifestB["docs/00_stack_manifest.md"]
+        ManifestB --> RulesDebt["SK-27/SK-31: Reglas + Deuda Técnica"]
+    end
+
+    Scaffold -.->|"solo la primera vez"| UserIdea
+    RulesDebt -.->|"solo la primera vez"| UserIdea
+
     subgraph STAGE1 ["ETAPA 1: ESPECIFICACION (01_cascading_spec_workflow.md)"]
         UserIdea["Idea de Negocio / Nuevo Requerimiento"] --> SK_PRD["SK-01 y SK-02: PRD y Alcance"]
         SK_PRD --> SK_Arch["SK-03 a SK-06: Arquitectura C4 y Carpetas"]
@@ -36,6 +54,18 @@ flowchart TD
 ---
 
 ## 🔍 Descripción Detallada de las Etapas
+
+### ⚪ ETAPA 0A: Bootstrap Greenfield (`00_greenfield_bootstrap_workflow.md`) — solo la primera vez, repo vacío
+1. **Entrada:** Idea de negocio sobre un directorio sin código previo relevante ni `docs/00_stack_manifest.md`.
+2. **Acción de la IA:** Delega en `SK-01` (Modo B)/`SK-02` para el Discovery y el PRD inicial, propone opciones de stack tecnológico y espera confirmación humana explícita antes de escribir `docs/00_stack_manifest.md`, luego scaffoldea el repositorio y el esqueleto mínimo de `docs/` que la Etapa 1 necesita para poder leer sus índices.
+3. **Resultado:** Repositorio con stack aprobado, estructura base y `docs/` listo para que la Etapa 1 opere con normalidad.
+
+### ⚫ ETAPA 0B: Adopción Brownfield (`00_brownfield_adoption_workflow.md`) — solo la primera vez, código existente
+1. **Entrada:** Código existente y funcional, sin `docs/00_stack_manifest.md` (proyecto que adopta `.agents/` retroactivamente).
+2. **Acción de la IA:** Extrae diagramas y config con `SK-30`/`SK-33`, reconstruye el producto con `SK-01` (Modo C)/`SK-02` mediante entrevista humana obligatoria (el código dice el "qué", el humano dice el "por qué"), y usa `SK-04` en modo descubrimiento (nunca propone alternativas a tecnología ya en producción, solo detecta e inspecciona) para escribir `docs/00_stack_manifest.md` real. Cierra con `SK-27`/`SK-31` (reglas + deuda técnica) ahora que `docs/` tiene contenido real.
+3. **Resultado:** Igual que la Etapa 0A — repositorio con `docs/` completo y `docs/00_stack_manifest.md` reflejando lo que ya existe, listo para que la Etapa 1 opere. Ninguna de las dos Etapa 0 se repite — proyectos ya bootstrapeados/adoptados entran directo por la Etapa 1.
+
+---
 
 ### 🟢 ETAPA 1: De la Idea a la Especificación Técnica (`01_cascading_spec_workflow.md`)
 1. **Entrada:** Requerimiento de negocio suministrado por el usuario en lenguaje natural.

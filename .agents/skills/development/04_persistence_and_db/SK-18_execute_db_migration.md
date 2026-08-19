@@ -20,16 +20,16 @@ Sigue estrictamente este flujo de trabajo secuencial:
 ## 🔍 FASE 1: Descubrimiento de Reglas y ORM
 1. **Descubrir Reglas de Base de Datos:** Lee `docs/04_governance_and_quality/rules/database_rules.md`. Identifica:
    - Convenciones físicas: Tablas y columnas en `snake_case`.
-   - Modelos Prisma en `PascalCase` con `@map()` y `@@map()`.
-   - Tipos de datos decimales obligatorios `Decimal(12, 4)` para cantidades o costos.
+   - Modelos del ORM en el estilo de nomenclatura y anotaciones/mapeos que ese ORM use para traducir entre el nombre físico (`snake_case`) y el nombre lógico del código (ej. `@map()`/`@@map()` en Prisma, `Column(name=...)` en SQLAlchemy).
+   - Tipos de datos decimales obligatorios de precisión fija (equivalente a `Decimal(12, 4)`) para cantidades o costos — nunca `Float`/`Double`.
    - Restricciones de integridad referencial explicitas (`ON DELETE RESTRICT` o `CASCADE`).
-2. **Identificar ORM y Variables:** Verifica `prisma/schema.prisma` y las variables de conexión en `.env`.
+2. **Identificar ORM y Variables:** Verifica el archivo de esquema del ORM declarado en `docs/00_stack_manifest.md` (ej. `prisma/schema.prisma`, `models.py`) y las variables de conexión en `.env`.
 
 ---
 
 ## 🛠️ FASE 2: Modificación del Esquema Lógico/Físico
-1. **Editar el Fichero del Esquema:** Modifica `apps/backend/prisma/schema.prisma` integrando los campos o tablas requeridos en `schema_changes`.
-2. **Validar Convenciones:** Asegúrate de usar `Decimal(12, 4)`, UUIDs v4 como PK e índices compuestos para consultas FEFO (`status, calculated_expiration_date`).
+1. **Editar el Fichero del Esquema:** Modifica el archivo de esquema del ORM declarado en el stack manifest, integrando los campos o tablas requeridos en `schema_changes`.
+2. **Validar Convenciones:** Asegúrate de usar el tipo decimal de precisión fija, UUIDs v4 como PK, e índices compuestos para las consultas de negocio de mayor frecuencia declaradas en las reglas del dominio.
 
 ---
 

@@ -27,11 +27,11 @@ Tu objetivo es analizar las Historias de Usuario (`docs/05_agile_planning/11_use
 
 Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 1. **No exceder 5 Story Points por ticket:** Prohibido crear tickets gigantes o monolíticos; si una tarea supera 5 SP, debe dividirse obligatoriamente en submódulos atómicos.
-2. **No mezclar Backend y Frontend en un mismo ticket:** Separar estrictamente los tickets de Backend (persistencia, dominio, API REST, Zod) de los tickets de Frontend (componentes UI, ergonomía 48px, IndexedDB, estado).
+2. **No mezclar Backend y Frontend en un mismo ticket:** Separar estrictamente los tickets de Backend (persistencia, dominio, API REST, validación de esquemas) de los tickets de Frontend (componentes UI, ergonomía 48px, estado offline).
 3. **No omitir las capas Hexagonales:** Cada ticket debe declarar explícitamente qué capas (`Domain`, `Application`, `Infrastructure`) afectará la solución.
-4. **No omitir el Guard de Precisión Decimal:** Todo ticket que trate con saldos, pesos o cantidades debe exigir la librería `decimal.js` o tipo `Decimal(12,4)`.
+4. **No omitir el Guard de Precisión Decimal:** Todo ticket que trate con saldos, pesos o cantidades debe exigir la librería de precisión de punto fijo declarada en `docs/00_stack_manifest.md` (nunca `Float`/`Double` nativo).
 5. **Cabecera Frontmatter YAML y Navegación GFM Obligatorias:** Todo ticket DEBE comenzar con bloque Frontmatter YAML y barra de navegación lineal.
-6. **Bloque de Autonomía IA Obligatorio:** Todo ticket DEBE incluir la sección final `🤖 Instrucciones de Ejecución Autónoma para Agente IA` indicando archivos a editar, comandos TDD y comandos de verificación (`pnpm test`, `pnpm run build`).
+6. **Bloque de Autonomía IA Obligatorio:** Todo ticket DEBE incluir la sección final `🤖 Instrucciones de Ejecución Autónoma para Agente IA` indicando archivos a editar, comandos TDD y comandos de verificación declarados en `AGENTS.md`.
 
 ---
 
@@ -44,7 +44,7 @@ Antes de desglosar historias de usuario de negocio, generar en `docs/05_agile_pl
 
 ### 📍 Paso 1: Desglose por Slice Vertical (Backend vs. Frontend)
 Para cada Historia de Usuario (`US-XXX`), generar:
-- **Ticket Backend (`TK-XXX.md`):** Persistencia, entidades de dominio, DTOs Zod y endpoints REST.
+- **Ticket Backend (`TK-XXX.md`):** Persistencia, entidades de dominio, DTOs con el validador declarado en el stack manifest y endpoints REST.
 - **Ticket Frontend (`TK-XXX-FE.md`):** Componentes visuales táctiles, 4 estados de UI (*Loading*, *Ready*, *Empty*, *Error*), resiliencia local e integración API.
 
 ### 📍 Paso 2: Evaluación Multidimensional Cualitativa
@@ -96,7 +96,7 @@ inputs:
 ## 🔀 Alcance de Modificación (Hexagonal Layers)
 *   **Domain:** [Entidades, Value Objects e Interfaces de Repositorio]
 *   **Application:** [Casos de Uso e Intermediarios de Negocio]
-*   **Infrastructure:** [Endpoints REST, Esquemas Zod, Prisma ORM / UI React]
+*   **Infrastructure:** [Endpoints REST, esquemas de validación, ORM/persistencia / componentes UI — usando la librería/framework que declare `docs/00_stack_manifest.md`]
 
 ---
 
@@ -113,9 +113,9 @@ inputs:
 *   **Then** ...
 
 ### DoD Estricto:
-1. **TDD Compliance:** Desarrollar los tests con Vitest / RTL antes de la implementación.
-2. **Precisión Arithmetic:** Utilizar `decimal.js` en todas las cantidades físicas.
-3. **Verificación Total:** Zero errores en `pnpm test`, `pnpm run build` y `pnpm run lint`.
+1. **TDD Compliance:** Desarrollar los tests con el runner/librería de testing declarado en `docs/00_stack_manifest.md` antes de la implementación.
+2. **Precisión Aritmética:** Utilizar la librería de precisión de punto fijo declarada en el stack manifest en todas las cantidades físicas (nunca `Float`/`Double` nativo).
+3. **Verificación Total:** Zero errores en los comandos de test, build y lint declarados en `AGENTS.md`.
 
 ---
 
@@ -124,6 +124,6 @@ inputs:
    - `apps/backend/src/modules/{modulo}/domain/...`
    - `apps/backend/src/modules/{modulo}/application/...`
    - `apps/backend/src/modules/{modulo}/infrastructure/...`
-2. **Ejecutar TDD Suite:** `pnpm test apps/backend/src/modules/{modulo}`
-3. **Comando de Verificación Total:** `pnpm run build && pnpm run lint`
+2. **Ejecutar TDD Suite:** comando de test declarado en `AGENTS.md`, acotado al módulo `{modulo}`.
+3. **Comando de Verificación Total:** comandos de build y lint declarados en `AGENTS.md`.
 ```

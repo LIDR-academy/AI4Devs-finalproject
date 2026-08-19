@@ -25,7 +25,7 @@ Tu objetivo es inspeccionar el repositorio real mediante comandos Git (`git log`
 Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 1. **Prohibición Total de Invención de Historial:** Queda terminantemente prohibido inventar Pull Requests, ramas, IDs de tickets o resultados de pruebas. Todo registro debe estar respaldado por evidencia verificable en `git log`, GitHub CLI (`gh pr list`) o logs de CI/CD. Si un dato no se puede verificar, marcarlo explícitamente como `"No verificable"`.
 2. **No alterar títulos ni nombres de ramas verbatim:** Registrar exactamente el título y nombre de la rama tal como figura en Git/GitHub, sin normalizar ni reescribir metadatos pasados.
-3. **No registrar PRs con Quality Gates en rojo:** Si la suite de CI o las pruebas `pnpm test` fallaron en la integración, declarar la disconformidad en la ficha de la PR.
+3. **No registrar PRs con Quality Gates en rojo:** Si la suite de CI o el comando de test declarado en `AGENTS.md` fallaron en la integración, declarar la disconformidad en la ficha de la PR.
 
 ---
 
@@ -41,7 +41,7 @@ Para cada PR real verificada, estructurar la ficha de entregables:
 - **Ramas:** `[nombre-rama-origen]` ➡️ `main`.
 - **Ticket Relacionado:** ID del ticket en el backlog (`TK-XXX`).
 - **Descripción del Cambio:** Resumen de archivos modificados clasificados por capas Hexagonales (`Domain`, `Application`, `Infrastructure`).
-- **Quality Gates (Definition of Done):** Verificación de compilación limpia `pnpm run build`, linters passing y suite `pnpm test` en verde.
+- **Quality Gates (Definition of Done):** Verificación de compilación limpia, linters passing y suite de tests en verde, usando los comandos declarados en `AGENTS.md`.
 
 ### 📍 Paso 3: Actualización Documental
 1. Actualizar la sección de Histórico de Pull Requests en `README.md`.

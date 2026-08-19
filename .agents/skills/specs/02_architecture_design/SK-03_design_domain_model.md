@@ -21,7 +21,7 @@ Tu objetivo es analizar el PRD (`docs/01_product_definition/02_prd.md`) y el Glo
 ## 🚫 Non-Goals de Ejecución del Agente (Guards)
 
 Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
-1. **No mencionar librerías o frameworks:** Prohibido hacer referencia a Express, React, Node.js, Prisma, PostgreSQL o SQL.
+1. **No mencionar librerías o frameworks:** Prohibido hacer referencia a cualquier framework, ORM, motor de base de datos o lenguaje concreto (ej. Express, React, Node.js, Prisma, PostgreSQL, SQL) — el modelo de dominio es 100% agnóstico a la implementación, incluso antes de que el stack se decida en `SK-04`.
 2. **No incluir detalles de transporte:** No definir endpoints HTTP, JSON payloads ni cabeceras REST.
 3. **No escribir código de implementación:** No crear archivos `.ts` ni clases ejecutables en disco.
 4. **No generar sintaxis Mermaid sin escapar:** Prohibido usar paréntesis `()`, corchetes `[]` o barras `/` en las etiquetas de los nodos sin encerrar la cadena en comillas dobles.

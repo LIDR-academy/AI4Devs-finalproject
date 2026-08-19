@@ -37,9 +37,9 @@ Actúa como un Senior Product Manager y Principal Product Architect experto en m
 ---
 
 ## 🛑 NON-GOALS DE LA EJECUCIÓN DEL AGENTE (FUERA DE ALCANCE)
-1. **No escribir código de producción:** El agente NO debe generar código TypeScript/React/Express durante la ejecución de este skill.
-2. **No alterar el modelo de datos de infraestructura:** No crear schemas de Prisma ORM ni migraciones SQL.
-3. **No ejecutar ni modificar suites de pruebas:** La suite Vitest/Jest permanece intacta hasta la fase de desarrollo/codificación.
+1. **No escribir código de producción:** El agente NO debe generar código de aplicación en ningún lenguaje o framework durante la ejecución de este skill — el stack tecnológico todavía no ha sido decidido en este punto del ciclo (se decide después, en `SK-04`).
+2. **No alterar el modelo de datos de infraestructura:** No crear schemas de ORM ni migraciones SQL.
+3. **No ejecutar ni modificar suites de pruebas:** Ninguna suite de pruebas existente se toca hasta la fase de desarrollo/codificación.
 
 ---
 
@@ -100,7 +100,7 @@ sequenceDiagram
     participant DB as Dominio / DB
 
     U->>UI: Interacción (Trigger Caso de Uso)
-    UI->>API: Solicitud HTTP (Payload Zod)
+    UI->>API: Solicitud HTTP (Payload validado)
     API->>DB: Validación Invariante y Persistencia
     DB-->>API: Confirmación de Estado
     API-->>UI: Respuesta HTTP (200 OK / 201 Created)

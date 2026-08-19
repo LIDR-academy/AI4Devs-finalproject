@@ -1,0 +1,17 @@
+MSG_FILE="$1"
+MSG=$(head -n1 "$MSG_FILE")
+
+# Cero Vibe-Coding (VSDD): todo commit debe trazarse a un ticket TK-XXX del backlog.
+# Excepciones: merges/reverts automáticos de git, o bypass explícito con [skip-tk].
+if echo "$MSG" | grep -qE "^(Merge|Revert) "; then
+  exit 0
+fi
+if echo "$MSG" | grep -q "\[skip-tk\]"; then
+  exit 0
+fi
+if ! echo "$MSG" | grep -qE "TK-[0-9]+"; then
+  echo "❌ Commit rechazado: el mensaje debe referenciar un ticket TK-XXX (ej. '[TK-028]')."
+  echo "   Principio VSDD 'Cero Vibe-Coding': .agents/README.md — ningún cambio sin ticket trazable."
+  echo "   Si es una excepción deliberada, añade '[skip-tk]' al mensaje del commit."
+  exit 1
+fi

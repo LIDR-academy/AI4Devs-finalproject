@@ -475,14 +475,18 @@ Para garantizar el cumplimiento de los flujos de desarrollo industrializado y la
 
 ### **10.1. Flujos Maestros Reorganizados (`.agents/workflows/`)**
 1. **[00_master_vsdd_workflow.md](.agents/workflows/00_master_vsdd_workflow.md):** Trazo máster end-to-end (Idea ➔ PRD ➔ Rules ➔ TDD ➔ Reviewer ➔ Commit).
-2. **[01_cascading_spec_workflow.md](.agents/workflows/01_cascading_spec_workflow.md):** Protocolo de especificación en cascada.
-3. **[02_cascading_dev_workflow.md](.agents/workflows/02_cascading_dev_workflow.md):** Protocolo de desarrollo guiado por tickets técnicos.
-4. **[03_spec_audit_workflow.md](.agents/workflows/03_spec_audit_workflow.md):** Prompt de auditoría de especificaciones VSDD en 7 fases (`docs/`).
-5. **[04_dev_audit_workflow.md](.agents/workflows/04_dev_audit_workflow.md):** Prompt de auditoría de código y calidad VSDD en 7 fases (`apps/`).
-6. **[05_test_runner_workflow.md](.agents/workflows/05_test_runner_workflow.md):** Subagente autónomo de Testing TDD (Red-Green-Refactor).
-7. **[06_full_qa_pipeline.md](.agents/workflows/06_full_qa_pipeline.md):** Pipeline QA Completo SOTA v2.1 con Stryker Mutation Score ≥ 70% y veredicto JSON Schema.
+2. **[00_greenfield_bootstrap_workflow.md](.agents/workflows/00_greenfield_bootstrap_workflow.md):** Arranque de proyecto nuevo desde cero (Idea ➔ Stack aprobado ➔ Repositorio Operativo), una única vez por proyecto.
+3. **[00_brownfield_adoption_workflow.md](.agents/workflows/00_brownfield_adoption_workflow.md):** Adopción de `.agents/` en código existente sin `docs/` previo (Código Existente ➔ `.agents/` Operativo), una única vez por proyecto.
+4. **[01_cascading_spec_workflow.md](.agents/workflows/01_cascading_spec_workflow.md):** Protocolo de especificación en cascada.
+5. **[02_cascading_dev_workflow.md](.agents/workflows/02_cascading_dev_workflow.md):** Protocolo de desarrollo guiado por tickets técnicos.
+6. **[03_spec_audit_workflow.md](.agents/workflows/03_spec_audit_workflow.md):** Prompt de auditoría de especificaciones VSDD en 7 fases (`docs/`).
+7. **[04_dev_audit_workflow.md](.agents/workflows/04_dev_audit_workflow.md):** Prompt de auditoría de código y calidad VSDD en 7 fases (`apps/`).
+8. **[05_test_runner_workflow.md](.agents/workflows/05_test_runner_workflow.md):** Subagente autónomo de Testing TDD (Red-Green-Refactor).
+9. **[06_full_qa_pipeline.md](.agents/workflows/06_full_qa_pipeline.md):** Pipeline QA Completo SOTA v2.1 con Stryker Mutation Score ≥ 70% y veredicto JSON Schema.
+10. **[07_production_observability_workflow.md](.agents/workflows/07_production_observability_workflow.md):** Observabilidad en Producción Shift-Right — de incidencia a ticket `TK-XXX`.
+11. **[08_smoke_test_deploy_validation.md](.agents/workflows/08_smoke_test_deploy_validation.md):** Validación post-despliegue con veredicto PASS/FAIL y rollback automático OpenTofu.
 
-### **10.2. Catálogo Completo de Skills (`.agents/skills/` — 27 Skills)**
+### **10.2. Catálogo Completo de Skills (`.agents/skills/` — 35 Skills)**
 
 #### Fase Documental (`specs/`)
 | ID | Skill | Archivo |
@@ -502,6 +506,7 @@ Para garantizar el cumplimiento de los flujos de desarrollo industrializado y la
 | SK-13 | Matriz de Trazabilidad | `specs/05_agile_planning/SK-13_generate_traceability_matrix.md` |
 | SK-14 | Mapa del Backlog | `specs/05_agile_planning/SK-14_generate_backlog_map.md` |
 | SK-15 | Registro de PRs | `specs/05_agile_planning/SK-15_document_pull_requests.md` |
+| SK-35 | Generación del Contrato Operativo Raíz (AGENTS.md) | `specs/04_governance_and_quality/SK-35_generate_root_contract.md` |
 
 #### Fase de Codificación (`development/`)
 | ID | Skill | Archivo |
@@ -518,6 +523,13 @@ Para garantizar el cumplimiento de los flujos de desarrollo industrializado y la
 | SK-25 | Auditoría de Validación de Contratos | `development/05_quality_and_lint/SK-25_audit_contract_validation.md` |
 | SK-26 | Recuperador Dinámico Few-Shot | `development/05_quality_and_lint/SK-26_retrieve_few_shot_context.md` |
 | SK-27 | Extracción de Reglas Legacy | `development/01_rules_extraction/SK-27_extract_project_rules.md` |
+| SK-28 | Seeding Profesional Idempotente | `development/04_persistence_and_db/SK-28_manage_database_seeding.md` |
+| SK-29 | Load & Performance Testing | `development/07_performance_and_observability/SK-29_load_and_performance_testing.md` |
+| SK-30 | Extractor de Diagramas Legacy (C4/ERD) | `development/01_rules_extraction/SK-30_legacy_diagram_extractor.md` |
+| SK-31 | Indexador de Deuda Técnica | `development/01_rules_extraction/SK-31_technical_debt_indexer.md` |
+| SK-32 | Test Fixture Builder (Object Mother) | `development/05_quality_and_lint/SK-32_test_fixture_builder.md` |
+| SK-33 | Auditoría de Configuración de Entorno Fail-Fast | `development/01_rules_extraction/SK-33_environment_configuration_auditor.md` |
+| SK-34 | Model-Based Testing Designer (MBT & Oracles) | `development/08_testing/SK-34_model_based_testing_designer.md` |
 
 ### **10.3. Integridad del Framework y Scripts de Validación**
 - **Validar integridad:** `bash .agents/scripts/validate_agents.sh` — verifica directorios, cuenta skills/workflows y audita 0 enlaces rotos.

@@ -12,7 +12,7 @@ outputs:
 
 # 🧪 SK-09: Directiva de Pruebas TDD y Estrategia de Calidad (v3.3.0)
 
-Actúa como un **Principal QA Engineer** y **Test Architect** experto en Test-Driven Development (TDD), Testing Library, Vitest/Jest, In-Memory Fakes y pruebas de mutación (Stryker).
+Actúa como un **Principal QA Engineer** y **Test Architect** experto en Test-Driven Development (TDD), test runners y librerías de testing de componentes del ecosistema declarado en el stack, In-Memory Fakes y pruebas de mutación.
 
 Tu objetivo es analizar el PRD (`docs/01_product_definition/02_prd.md`) y las Reglas de Seguridad (`docs/04_governance_and_quality/08_security_strategy.md`) para redactar la directiva oficial de calidad en `docs/04_governance_and_quality/09_testing_strategy.md`.
 
@@ -45,7 +45,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
    - `REFACTOR`: Limpiar el código manteniendo la suite en verde.
 
 ### 📍 Fase 3: Especificación de Fakes In-Memory & Fixtures (5 min)
-1. Diseñar el patrón `InMemoryRepository` para aislar los tests de la base de datos PostgreSQL real durante la ejecución de la suite de desarrollo.
+1. Diseñar el patrón `InMemoryRepository` para aislar los tests de la base de datos real (la declarada en `docs/00_stack_manifest.md`) durante la ejecución de la suite de desarrollo.
 
 ### 📍 Fase 4: Pruebas de Seguridad y Casos de Borde (Edge Cases) (5 min)
 1. Derivar casos de prueba negativos desde `08_security_strategy.md` (intento de inyección, payloads malformados, desbordamientos de saldos).

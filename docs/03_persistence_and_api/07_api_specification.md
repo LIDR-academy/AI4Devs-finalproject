@@ -19,15 +19,15 @@ inputs:
 
 | Método | Endpoint | Payload (Input) | Respuesta (Output) | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| **POST** | `/api/auth/pin` | `AuthPinRequest` | `AuthPinResponse` | Autenticación de operarios de cocina en la tablet mediante PIN de 4 dígitos. |
-| **POST** | `/api/stock/extraction` | `RecordExtractionRequest` | `RecordExtractionResponse` | Registra el traslado de insumos cerrados desde la bodega principal hacia la cocina. |
-| **GET** | `/api/kitchen/remanentes` | *Ninguno (Query Params)* | `GetRemanentesResponse` | Obtiene la lista de remanentes activos en cocina ordenados bajo el principio FEFO. |
-| **POST** | `/api/kitchen/consumption` | `RecordConsumptionRequest` | `RecordConsumptionResponse` | Registra consumos parciales de insumos abiertos (remanentes) durante el servicio. |
-| **POST** | `/api/kitchen/remanentes/:id/discard`| `DiscardRemanenteRequest` | `DiscardRemanenteResponse` | Registra el descarte físico total de un remanente activo por merma o expiración. |
-| **POST** | `/api/catalog/recipes` | `CreateRecipeRequest` | `CreateRecipeResponse` | Crear una nueva receta de comida con sus ingredientes y proporciones. |
-| **GET** | `/api/kitchen/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas disponibles en cocina para consumo rápido. |
-| **POST** | `/api/kitchen/recipes/:id/consume` | `ConsumeRecipeRequest` | `ConsumeRecipeResponse` | Descuenta stock en cocina en cascada FEFO basado en los ingredientes de la receta. |
-| **POST** | `/api/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. |
+| **POST** | `/api/v1/auth/pin` | `AuthPinRequest` | `AuthPinResponse` | Autenticación de operarios de cocina en la tablet mediante PIN de 4 dígitos. |
+| **POST** | `/api/v1/stock/extraction` | `RecordExtractionRequest` | `RecordExtractionResponse` | Registra el traslado de insumos cerrados desde la bodega principal hacia la cocina. |
+| **GET** | `/api/v1/kitchen/remanentes` | *Ninguno (Query Params)* | `GetRemanentesResponse` | Obtiene la lista de remanentes activos en cocina ordenados bajo el principio FEFO. |
+| **POST** | `/api/v1/kitchen/consumption` | `RecordConsumptionRequest` | `RecordConsumptionResponse` | Registra consumos parciales de insumos abiertos (remanentes) durante el servicio. |
+| **POST** | `/api/v1/kitchen/remanentes/:id/discard`| `DiscardRemanenteRequest` | `DiscardRemanenteResponse` | Registra el descarte físico total de un remanente activo por merma o expiración. |
+| **POST** | `/api/catalog/recipes` 🚧 | `CreateRecipeRequest` | `CreateRecipeResponse` | *(Pendiente — ver TK-008)* Crear una nueva receta de comida con sus ingredientes y proporciones. No implementado aún; ausente de `openapi.yaml` hasta que exista un controller real. |
+| **GET** | `/api/v1/kitchen/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas disponibles en cocina para consumo rápido. |
+| **POST** | `/api/v1/kitchen/recipes/:id/consume` | `ConsumeRecipeRequest` | `ConsumeRecipeResponse` | Descuenta stock en cocina en cascada FEFO basado en los ingredientes de la receta. |
+| **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. |
 
 ---
 
@@ -46,7 +46,7 @@ sequenceDiagram
     Note over Cocinero, ClientHttp: Flujo de Petición HTTP (Request)
     Cocinero->>ClientHttp: Click "Registrar Extracción Insumo"
     ClientHttp->>AuthState: Obtiene Token JWT de sesión activa
-    ClientHttp->>Middleware: POST /api/stock/extraction<br/>Header: Bearer <JWT><br/>Payload: { itemId, qty: "2.0000", dest: "KITCHEN_FRIDGE" }
+    ClientHttp->>Middleware: POST /api/v1/stock/extraction<br/>Header: Bearer <JWT><br/>Payload: { itemId, qty: "2.0000", dest: "KITCHEN_FRIDGE" }
 
     Note over Middleware, UseCase: Capa de Seguridad & Sanitización Backend
     Middleware->>Middleware: 1. Valida Firma JWT & Expiración (12h)
@@ -76,7 +76,7 @@ sequenceDiagram
 
 ## 🛠️ 2. Detalle Técnico por Endpoint (OpenAPI Spec Blueprint)
 
-### 2.1. `POST /api/auth/pin`
+### 2.1. `POST /api/v1/auth/pin`
 *   **Descripción:** Permite a un operario de cocina iniciar su turno en la tablet táctil ingresando su código PIN de 4 dígitos asociado a su identificador de usuario.
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
@@ -124,7 +124,7 @@ sequenceDiagram
 
 ---
 
-### 2.2. `POST /api/stock/extraction`
+### 2.2. `POST /api/v1/stock/extraction`
 *   **Descripción:** Registra la salida física de un insumo desde la bodega principal. Este flujo debita el stock consolidado del depósito central y crea un nuevo remanente abierto en la cocina (en estado `ACTIVE`) con la fecha de expiración acelerada calculada (invariante de vida útil corta en bodega o el límite de 24h TRR si aplica).
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
@@ -165,7 +165,7 @@ sequenceDiagram
 
 ---
 
-### 2.3. `GET /api/kitchen/remanentes`
+### 2.3. `GET /api/v1/kitchen/remanentes`
 *   **Descripción:** Retorna el inventario activo actualmente disponible en la cocina para su uso en preparaciones. La salida está ordenada estrictamente bajo el principio FEFO (First Expired, First Out) según `calculatedExpirationDate` de menor a mayor para evitar mermas por vencimiento.
 *   **Cabeceras Requeridas:**
     *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR` u `ADMIN`)
@@ -205,7 +205,7 @@ sequenceDiagram
 
 ---
 
-### 2.4. `POST /api/kitchen/consumption`
+### 2.4. `POST /api/v1/kitchen/consumption`
 *   **Descripción:** Registra el consumo parcial (o total) de un remanente activo para la elaboración de platos en cocina. Si el consumo deja la cantidad remanente en `0.0000`, el estado del remanente cambia automáticamente a `CONSUMED`.
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
@@ -239,7 +239,7 @@ sequenceDiagram
 
 ---
 
-### 2.5. `POST /api/kitchen/remanentes/:id/discard`
+### 2.5. `POST /api/v1/kitchen/remanentes/:id/discard`
 *   **Descripción:** Registra la merma física (descarte) total del remanente especificado en el parámetro de la URL. Al realizar esta acción, el remanente cambia su estado a `DISCARDED` y sus existencias se ajustan a `0.0000`, guardando un registro de auditoría en la tabla de movimientos indicando la causa del desperdicio.
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
@@ -269,7 +269,7 @@ sequenceDiagram
     }
     ```
 
-### 2.6. `POST /api/catalog/recipes`
+### 2.6. `POST /api/catalog/recipes` 🚧 *(Pendiente de implementación — ver [TK-008](../05_agile_planning/12_tickets/kitchen/backend/TK-008.md); no existe en `openapi.yaml` ni tiene controller/router activo)*
 *   **Descripción:** Permite al administrador crear una nueva receta asociándole una lista de ingredientes e indicando las porciones necesarias expresadas en la unidad de consumo del ingrediente.
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
@@ -301,7 +301,7 @@ sequenceDiagram
 
 ---
 
-### 2.7. `GET /api/kitchen/recipes`
+### 2.7. `GET /api/v1/kitchen/recipes`
 *   **Descripción:** Retorna la lista de recetas activas configuradas en el catálogo maestro para su visualización y selección en la pantalla táctil de cocina.
 *   **Cabeceras Requeridas:**
     *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR`)
@@ -318,7 +318,7 @@ sequenceDiagram
 
 ---
 
-### 2.8. `POST /api/kitchen/recipes/:id/consume`
+### 2.8. `POST /api/v1/kitchen/recipes/:id/consume`
 *   **Descripción:** Ejecuta el descuento de stock rápido basado en la receta provista. El sistema buscará de manera automática todos los remanentes activos de los ingredientes requeridos y los debitará en orden FEFO (fecha de vencimiento más antigua primero).
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
@@ -340,7 +340,7 @@ sequenceDiagram
 
 ---
 
-### 2.9. `POST /api/kitchen/shift-reconciliation`
+### 2.9. `POST /api/v1/kitchen/shift-reconciliation`
 *   **Descripción:** Procesa el cierre de turno y la conciliación física de inventario de cocina. Auto-descarta todos los remanentes que hayan excedido el tiempo de vida TRR y registra las desviaciones reportadas por el conteo del operario.
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
@@ -368,7 +368,7 @@ sequenceDiagram
 
 ---
 
-### 2.10. `GET /api/reports/waste`
+### 2.10. `GET /api/v1/reports/waste`
 *   **Descripción:** Retorna el acumulado consolidado de existencias descartadas (mermas) en un rango de fechas especificado, agrupando el volumen físico total por ingrediente y motivo del descarte.
 *   **Cabeceras Requeridas:**
     *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)

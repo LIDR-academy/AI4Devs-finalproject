@@ -50,6 +50,13 @@ jobs:
       - name: Validate Agents Framework Integrity
         run: bash .agents/scripts/validate_agents.sh
 
+      - name: Check OpenAPI/Zod Contract Drift
+        run: bash .agents/scripts/check_contract_drift.sh
+
+      - name: Check Dynamic Rules Freshness (informational)
+        continue-on-error: true
+        run: bash .agents/scripts/check_rules_freshness.sh
+
       - name: Validate DESIGN.md Spec
         run: npx -y @google/design.md lint DESIGN.md
 
@@ -115,3 +122,17 @@ jobs:
 
       - name: Run Production Build
         run: pnpm run build
+
+      - name: Profile Test Suite Speed (informational)
+        continue-on-error: true
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/restostock_test?schema=public
+          JWT_SECRET: test-jwt-secret-key-12345
+        run: bash .agents/scripts/profile_test_suite.sh
+
+      - name: Mutation Testing — Domain & Application (informational, target 70%)
+        continue-on-error: true
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/restostock_test?schema=public
+          JWT_SECRET: test-jwt-secret-key-12345
+        run: pnpm --filter @restostock/backend run test:mutation

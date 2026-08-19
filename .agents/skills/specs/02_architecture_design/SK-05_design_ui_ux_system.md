@@ -25,7 +25,7 @@ Tu objetivo exclusivo es establecer un **diálogo colaborativo de ideación y co
 ## 🚫 Non-Goals de Ejecución del Agente (Guards)
 
 Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
-1. **No escribir código de componentes React/HTML/CSS:** No crear archivos `.tsx` ni componentes ejecutables en la aplicación.
+1. **No escribir código de componentes ejecutables:** No crear archivos de componentes (`.tsx`, `.vue`, `.svelte` o el formato del framework frontend declarado) ni HTML/CSS de producción.
 2. **No ignorar la regla de ergonomía táctil:** Prohibido definir botones o zonas interactivas inferiores a $48\text{px} \times 48\text{px}$.
 3. **No utilizar paletas genéricas:** Prohibido usar rojo/azul puro de navegador. Se deben definir tokens HSL curvados de contraste contrastado para modos oscuro y claro.
 4. **No omitir micro-interacciones:** Prohibido entregar el sistema sin tokens CSS de transición y feedback táctil instantáneo ($< 50\text{ms}$).
@@ -59,7 +59,7 @@ Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáti
    - **Catálogo Atomic Design:** Clasificación de Átomos, Moléculas y Organismos.
    - **4 estados de UI obligatorios:** (*Loading*, *Data Ready*, *Empty State*, *Error State*).
 2. **`docs/04_governance_and_quality/rules/frontend_rules.md`:**
-   - Reglas innegociables para desarrollo Frontend (estilos centralizados en `index.css`, zero ad-hoc utilities sin token, sanitización Zod).
+   - Reglas innegociables para desarrollo Frontend (estilos centralizados en `index.css`, zero ad-hoc utilities sin token, sanitización con la librería de validación declarada en `docs/00_stack_manifest.md`).
 3. **`DESIGN.md` (Raíz del Repositorio - Estándar Google Labs `google-labs-code/design.md`):**
    - Genera `/DESIGN.md` usando **estrictamente el formato especificado por Google Labs**:
      - **Capa 1: YAML Front Matter (`---` fences):** Debe incluir los 5 nodos obligatorios: `colors` (hex/hsl/rgb validando contraste WCAG AA $\ge 4.5:1$), `typography`, `rounded`, `spacing` y `components` (referenciando tokens como `{colors.primary}`). Evitar tokens huérfanos sin referencias en `components`.

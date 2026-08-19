@@ -1,6 +1,6 @@
 ---
 name: cicd-pipeline
-description: "Genera la automatización del pipeline de CI/CD en GitHub Actions (Node 24 LTS, pnpm 9, GitHub Actions @v5, OIDC sin llaves estáticas, OpenTofu IaC MPL-2.0) para linters, auditoría SAST, TDD, validación OpenAPI y aprovisionamiento declarativo de infraestructura."
+description: "Genera la automatización del pipeline de CI/CD usando la plataforma, runtime e IaC Engine declarados en docs/00_stack_manifest.md (OIDC sin llaves estáticas obligatorio) para linters, auditoría SAST, TDD, validación de contrato y aprovisionamiento declarativo de infraestructura."
 version: "3.4.0"
 category: "04_governance_and_quality"
 inputs:
@@ -13,12 +13,14 @@ outputs:
 
 # ⚙️ SK-10: Pipeline de CI/CD, DevSecOps y OpenTofu IaC (v3.4.0)
 
-Actúa como un **Principal DevOps Engineer** y **DevSecOps Architect** experto en **GitHub Actions @v5**, **Node 24 LTS**, **pnpm 9**, **OpenTofu (MPL-2.0)**, Docker Compose, y pipelines de Integración Continua de alta velocidad bajo los **Guards 22 y 23** de `AGENTS.md`.
+Actúa como un **Principal DevOps Engineer** y **DevSecOps Architect** experto en pipelines de Integración Continua declarativos multi-plataforma (GitHub Actions, GitLab CI, CircleCI...), runtimes modernos, IaC declarativo (OpenTofu, Pulumi, CDK...) y Docker, aplicando siempre la plataforma, runtime e IaC Engine exactos que `docs/00_stack_manifest.md` declare para este proyecto, bajo los **Guards 22 y 23** de `AGENTS.md`.
 
-Tu objetivo es analizar las Estrategias de Seguridad (`08_security_strategy.md`) y Pruebas (`09_testing_strategy.md`) para:
-1. Generar el workflow ejecutable `.github/workflows/ci.yml` (Node 24 LTS + OIDC + pnpm 9).
-2. Generar el módulo declarativo de infraestructura `infrastructure/opentofu/main.tf`.
+Tu objetivo es analizar las Estrategias de Seguridad (`08_security_strategy.md`), Pruebas (`09_testing_strategy.md`) y la sección "DevSecOps & Infraestructura" de `docs/00_stack_manifest.md` para:
+1. Generar el workflow ejecutable de CI en la sintaxis de la plataforma declarada (ej. `.github/workflows/ci.yml` si es GitHub Actions), con OIDC y sin llaves estáticas.
+2. Generar el módulo declarativo de infraestructura en la sintaxis del IaC Engine declarado.
 3. Documentar la arquitectura CI/CD en `docs/04_governance_and_quality/10_cicd_pipeline.md`.
+
+> **Nota de referencia:** los Jobs 0-4 abajo son la implementación de referencia para la combinación GitHub Actions + OpenTofu + pnpm (la más usada por proyectos gobernados por `.agents/` hasta la fecha). Si `docs/00_stack_manifest.md` declara una plataforma o gestor de paquetes distinto, adapta la sintaxis concreta de cada Job a esa plataforma manteniendo exactamente la misma secuencia de 5 Jobs y las mismas guardas de seguridad (OIDC, sin credenciales estáticas, sin merges con tests en rojo).
 
 ---
 

@@ -23,30 +23,47 @@ Este directorio contiene las meta-directivas, reglas de gobernanza y habilidades
 
 ---
 
+## 📥 0. Instalación en un Proyecto Nuevo
+
+Desde un repositorio que ya tenga `.agents/` (como este), instala una copia en otro proyecto:
+```bash
+bash .agents/scripts/install.sh /ruta/al/proyecto/destino
+```
+Copia `.agents/` completo y genera `AGENTS.md` (stub de arranque, no el contrato final), `CLAUDE.md` y `GEMINI.md` en el destino — sin sobrescribir nada si el destino ya tiene un `.agents/` o entrypoints propios. El stub de `AGENTS.md` indica al agente qué workflow de bootstrap invocar (`00_greenfield_bootstrap_workflow.md` o `00_brownfield_adoption_workflow.md`); ese workflow, vía `SK-35`, reemplaza el stub por el contrato operativo real.
+
+Si no tienes acceso a un repo con `.agents/` ya instalado, copia manualmente la carpeta `.agents/` completa al proyecto destino y crea a mano los 3 archivos de entrypoint con el contenido que genera `install.sh` — no hay dependencia de build ni paquete que instalar, son archivos markdown planos.
+
+---
+
 ## 🗺️ 1. Arquitectura del Arnés .agents
 
 El marco opera bajo una arquitectura desacoplada en 3 capas de responsabilidad:
 
 ```mermaid
 flowchart TD
-    subgraph CAPA1 ["1. CAPA DE ORQUESTACION (Workflows 00..06)"]
+    subgraph CAPA1 ["1. CAPA DE ORQUESTACION (11 Workflows)"]
+        W00["00_* Bootstrap/Adopción (una sola vez): master, greenfield, brownfield"]
         W01["01_cascading_spec_workflow.md"]
         W02["02_cascading_dev_workflow.md"]
-        W06["06_full_qa_pipeline.md"]
+        W0X["03..08: Auditoría, TDD, QA, Observabilidad, Deploy"]
     end
 
-    subgraph CAPA2 ["2. CAPA DE HABILIDADES PROCEDIMENTALES (Skills SK-01..27)"]
-        S_Spec["Skills de Specs (SK-01 a SK-15)"]
-        S_Dev["Skills de Dev (SK-16 a SK-27)"]
+    subgraph CAPA2 ["2. CAPA DE HABILIDADES PROCEDIMENTALES (35 Skills)"]
+        S_Spec["Skills de Specs (SK-01 a SK-15, SK-35)"]
+        S_Dev["Skills de Dev (SK-16 a SK-34)"]
     end
 
     subgraph CAPA3 ["3. CAPA DE GOBERNANZA VIVA (docs/ & AGENTS.md)"]
-        AGENTS["AGENTS.md (Comandos CLI)"]
-        Rules["docs/04_governance_and_quality/rules/"]
+        AGENTS["AGENTS.md (generado por SK-35, nunca a mano)"]
+        StackManifest["docs/00_stack_manifest.md (Guard 24, generado por SK-04)"]
+        Rules["docs/04_governance_and_quality/rules/ (generado por SK-27)"]
     end
 
+    W00 --> S_Spec
     W01 --> S_Spec
     W02 --> S_Dev
+    S_Spec --> AGENTS
+    S_Spec --> StackManifest
     S_Dev --> AGENTS
     S_Dev --> Rules
 ```
@@ -57,6 +74,8 @@ flowchart TD
 
 | Deseo / Tarea | Prompt de Invocación Recomendado |
 |:---|:---|
+| **Arrancar Proyecto Nuevo desde Cero (Greenfield):** | `@.agents/workflows/00_greenfield_bootstrap_workflow.md Arranca un proyecto nuevo a partir de esta idea: [descripción]` |
+| **Adoptar `.agents/` en Proyecto Existente (Brownfield):** | `@.agents/workflows/00_brownfield_adoption_workflow.md Adopta .agents/ en este código existente: [ruta]` |
 | **Diseñar Nueva Idea / Feature:** | `@.agents/workflows/01_cascading_spec_workflow.md Analiza e integra esta nueva idea: [descripción]` |
 | **Desarrollar Ticket Técnico:** | `@.agents/workflows/02_cascading_dev_workflow.md Implementa el ticket TK-XXX` |
 | **Auditar Especificaciones (Docs):** | `@.agents/workflows/03_spec_audit_workflow.md Audita las especificaciones en docs/` |
@@ -73,6 +92,8 @@ flowchart TD
 Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Driven Development (VSDD)**, el agente debe seguir strictly estos flujos maestros:
 
 *   **[Mapa y Trazo Maestro VSDD](workflows/00_master_vsdd_workflow.md):** Diagrama de secuencia y explicación end-to-end desde la idea inicial hasta el commit atómico en Git.
+*   **[Bootstrap de Proyecto Greenfield](workflows/00_greenfield_bootstrap_workflow.md):** Se ejecuta **una única vez por proyecto**, antes que cualquier otro workflow: decide el stack tecnológico con el humano, genera `docs/00_stack_manifest.md`, scaffoldea el repositorio y el esqueleto mínimo de `docs/` para que el resto de la cascada pueda operar (`Idea ➔ Repositorio Operativo`).
+*   **[Adopción de Proyecto Brownfield](workflows/00_brownfield_adoption_workflow.md):** El equivalente para código existente sin `docs/` previo — se ejecuta **una única vez por proyecto**: reconstruye producto, dominio y stack por ingeniería inversa + entrevista humana obligatoria (nunca por inferencia silenciosa), descubre (no decide) el stack real vía `SK-04`, y cataloga deuda técnica (`Código Existente ➔ .agents/ Operativo`).
 *   **[Protocolo de Especificación en Cascada (Nuevas Ideas / Specs)](workflows/01_cascading_spec_workflow.md):** Guía paso a paso para analizar el impacto, actualizar el PRD, modelar la base de datos, adaptar el contrato OpenAPI y registrar los tickets de Agile de forma secuencial (`Idea ➔ docs/`).
 *   **[Protocolo de Desarrollo en Cascada (Codificación / Tickets)](workflows/02_cascading_dev_workflow.md):** Guía paso a paso para ejecutar un ticket técnico desde la extracción de reglas, migraciones, TDD, verificación de linter, pruebas visuales y commit atómico (`TK-XXX ➔ apps/`).
 *   **[Auditoría de Especificaciones VSDD Workflow](workflows/03_spec_audit_workflow.md):** Meta-prompt de auditoría en 7 fases para auditar la suficiencia de la documentación viva antes de codificar (`docs/`).
@@ -104,7 +125,7 @@ Las 34 habilidades son runbooks especializados organizados por fases y roles té
 *   **01_product_definition:** [SK-01 Descubrimiento de Producto](skills/specs/01_product_definition/SK-01_discover_product_vision.md) y [SK-02 Generación del PRD](skills/specs/01_product_definition/SK-02_generate_prd.md).
 *   **02_architecture_design:** [SK-03 Modelo de Dominio](skills/specs/02_architecture_design/SK-03_design_domain_model.md), [SK-04 Diseño Técnico](skills/specs/02_architecture_design/SK-04_design_technical_architecture.md) y [SK-05 Asistente de Diseño UI/UX](skills/specs/02_architecture_design/SK-05_design_ui_ux_system.md).
 *   **03_persistence_and_api:** [SK-06 Esquema de Base de Datos](skills/specs/03_persistence_and_api/SK-06_design_database_schema.md) y [SK-07 Especificación API REST](skills/specs/03_persistence_and_api/SK-07_design_api_specification.md).
-*   **04_governance_and_quality:** [SK-08 Estrategia de Seguridad](skills/specs/04_governance_and_quality/SK-08_define_security_strategy.md), [SK-09 Estrategia de Pruebas](skills/specs/04_governance_and_quality/SK-09_define_testing_strategy.md) y [SK-10 Pipeline CI/CD & OpenTofu IaC](skills/specs/04_governance_and_quality/SK-10_configure_cicd_pipeline.md).
+*   **04_governance_and_quality:** [SK-08 Estrategia de Seguridad](skills/specs/04_governance_and_quality/SK-08_define_security_strategy.md), [SK-09 Estrategia de Pruebas](skills/specs/04_governance_and_quality/SK-09_define_testing_strategy.md), [SK-10 Pipeline CI/CD & OpenTofu IaC](skills/specs/04_governance_and_quality/SK-10_configure_cicd_pipeline.md) y [SK-35 Generación del Contrato Operativo Raíz (AGENTS.md)](skills/specs/04_governance_and_quality/SK-35_generate_root_contract.md).
 *   **05_agile_planning:** [SK-11 Historias de Usuario (INVEST)](skills/specs/05_agile_planning/SK-11_generate_user_stories.md), [SK-12 Planificación de Tickets](skills/specs/05_agile_planning/SK-12_generate_backlog_tickets.md), [SK-13 Matriz de Trazabilidad](skills/specs/05_agile_planning/SK-13_generate_traceability_matrix.md), [SK-14 Mapa del Backlog](skills/specs/05_agile_planning/SK-14_generate_backlog_map.md) y [SK-15 Registro de PRs](skills/specs/05_agile_planning/SK-15_document_pull_requests.md).
 
 ### Fase DevSecOps & Gobernanza de Seguridad (DevSecOps Lead & Auditor Roles)
@@ -137,4 +158,6 @@ bash .agents/scripts/validate_agents.sh
 
 ## 📜 7. Licencia y Reutilización
 
-Este marco de gobernanza y habilidades (`.agents/`) se distribuye bajo la **Licencia MIT**. Es 100% abierto, portátil y reutilizable en cualquier proyecto o repositorio comercial o privado sin restricciones de tipo Copyleft / GPL.
+Este marco de gobernanza y habilidades (`.agents/`) se distribuye bajo la **[Licencia MIT](LICENSE)**. Es 100% abierto, portátil y reutilizable en cualquier proyecto o repositorio comercial o privado sin restricciones de tipo Copyleft / GPL.
+
+Historial de cambios: [CHANGELOG.md](CHANGELOG.md). Guía para contribuir nuevas skills/workflows: [CONTRIBUTING.md](CONTRIBUTING.md). Política de versionado: [VERSIONING.md](VERSIONING.md).

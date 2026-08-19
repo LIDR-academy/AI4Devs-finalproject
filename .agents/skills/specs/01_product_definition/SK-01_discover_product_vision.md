@@ -5,6 +5,7 @@ version: "2.6.1"
 category: "01_product_definition"
 inputs:
   - product_idea_or_research_md
+  - codebase_path: "Opcional — ruta de un repositorio legacy existente sin docs/ previo, para reconstrucción retroactiva (MODO C)"
 outputs:
   - "docs/01_product_definition/01_product_discovery.md"
   - "docs/01_product_definition/01_glosario_y_reglas_negocio.md"
@@ -16,9 +17,9 @@ Tu objetivo es procesar la entrada proporcionada (`[product_idea_or_research_md]
 
 ---
 
-## 📌 PROTOCOLO BIMODAL DE EJECUCIÓN (DUAL MODE EXECUTION)
+## 📌 PROTOCOLO TRIMODAL DE EJECUCIÓN (TRIPLE MODE EXECUTION)
 
-Evalúa la naturaleza del parámetro de entrada `[product_idea_or_research_md]` y ejecuta el modo correspondiente:
+Evalúa la naturaleza del parámetro de entrada y ejecuta el modo correspondiente:
 
 ### 🟢 MODO A: REFINAMIENTO, NORMALIZACIÓN Y AUDITORÍA ADVERSARIAL (Insumo `00_research_human_notes.md`)
 1. **Preservación Incondicional del Insumo:** El archivo `00_research_human_notes.md` NO se sobreescribe ni se altera; permanece intacto como evidencia primaria del humano.
@@ -28,6 +29,12 @@ Evalúa la naturaleza del parámetro de entrada `[product_idea_or_research_md]` 
 ### 🔵 MODO B: INVESTIGACIÓN AUTÓNOMA Y GENERACIÓN DE DESCUBRIMIENTO (Idea Vaga)
 1. **Investigación Web Activa (`search_web`):** Mapea soluciones comerciales (SaaS), alternativas Open Source, métricas de la industria y restricciones normativas.
 2. **Evaluación Estratégica "Buy vs. Build":** Justifica el desarrollo propio frente a soluciones existentes y extrae el Core Diferencial (Ventaja Competitiva).
+
+### 🟠 MODO C: RECONSTRUCCIÓN RETROACTIVA DESDE CÓDIGO LEGACY (Insumo `codebase_path`, sin `docs/` previo)
+Usado exclusivamente por [`00_brownfield_adoption_workflow.md`](../../../workflows/00_brownfield_adoption_workflow.md) cuando un proyecto existente adopta `.agents/` por primera vez y no tiene documentación de producto previa.
+1. **Inspección de Evidencia de Producto:** Examina rutas HTTP/endpoints, entidades de dominio, textos de UI, nombres de tablas y mensajes de commit/PR históricos para inferir qué problema de negocio resuelve el sistema — nunca a partir de nombres de variables o clases aisladas.
+2. **Entrevista Estructurada al Humano (OBLIGATORIA):** El código revela el "qué" pero no el "por qué" — presenta tu hipótesis de negocio inferida y formula preguntas puntuales al humano sobre: usuarios reales, métricas de éxito actuales, y qué partes del comportamiento observado en el código son reglas de negocio deliberadas vs. deuda técnica accidental. No asumas silenciosamente ninguna hipótesis sin esta confirmación.
+3. **Preservación de la Verdad Operativa:** Si el comportamiento del código contradice lo que el humano describe como intención, documenta ambas versiones explícitamente en `01_product_discovery.md` (sección de Auditoría Adversarial) en vez de descartar una — es una discrepancia real que el negocio debe resolver, no un error de la IA.
 
 ---
 

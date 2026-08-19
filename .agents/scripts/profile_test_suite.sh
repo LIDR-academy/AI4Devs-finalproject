@@ -2,7 +2,9 @@
 
 # M-02: Script de profiling real de la suite de pruebas — emite métricas de tiempo por archivo.
 # Detecta tests lentos (>1000ms) que pueden causar regresiones de velocidad en CI.
-set -e
+# Sin -e a propósito: es un profiler informativo (wireado con continue-on-error en CI),
+# no un gate; debe imprimir el resumen completo incluso si una etapa intermedia falla.
+set -uo pipefail
 
 SLOW_THRESHOLD_MS=1000
 DRIFT_FOUND=0

@@ -34,6 +34,10 @@ pnpm-debug.log*
 coverage/
 .nyc_output/
 
+# Mutation Testing Reports (Stryker)
+reports/mutation/
+.stryker-tmp/
+
 # IDEs, Editors & Workspaces
 .vscode/
 !.vscode/settings.json
@@ -63,3 +67,4 @@ tmp/
 temp/
 .temp/
 .tmp/
+__pycache__/
