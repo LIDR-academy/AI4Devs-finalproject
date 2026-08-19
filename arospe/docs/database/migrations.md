@@ -57,8 +57,9 @@ return new class extends Migration
 
 ✅ Good — matches this pattern:
 - `foreignId(...)->constrained()->cascadeOnDelete()` for FKs that should disappear with their parent (passkeys belong to a user; no orphaned passkeys).
-- Explicit `$table->index('user_id')` even though `foreignId` already indexes it implicitly in some setups — this repo is explicit about it.
 - `down()` always exists and is the exact inverse of `up()`.
+
+⚠️ **The explicit `$table->index('user_id')` on the last line is *not* a pattern to copy** — it duplicates the index `constrained()` already causes InnoDB to create. It predates this repo's index discipline and is documented as a divergence, not a convention: see [An FK column does not also get an explicit index here](#an-fk-column-does-not-also-get-an-explicit-index-here).
 
 ❌ Bad — do not do this in this codebase:
 ```php
@@ -170,26 +171,56 @@ public function down(): void
 
 ## UUID primary keys
 
-> **Implemented for `users` (Epic 1); the greenfield pattern below is still the target for future tables.** Per [ADR 0001 — UUID primary keys](../decisions/0001-uuid-primary-keys.md), the seven UUID-keyed entities are `users` (**done** — converted by the 5 alteration migrations `2026_07_22_100001..100005_*.php`) plus the greenfield Products / Product Variants / Product Categories (PRD Epic 2) and Blog Categories / Blog Tags / Blog Posts (PRD Epic 4), which **do not exist in code yet**. The `create_products_table` snippet below is the *target* greenfield pattern (not a citation of an existing file); the `users` conversion — which was an alteration, not a `create_table` — is described further down and its real files are cited there.
+> **Two real cases now exist, and they are shaped differently.** `users` (Epic 1) was a **conversion** — a breaking alteration with a backfill, described further down. `sales_regions` (task 0016) is the repo's **first greenfield UUID `create_*` migration** and is the file to copy when adding a new UUID-keyed table. Per [ADR 0001 — UUID primary keys](../decisions/0001-uuid-primary-keys.md), the six remaining entities it names (Products / Product Variants / Product Categories, PRD Epic 2; Blog Categories / Blog Tags / Blog Posts, PRD Epic 4) still **do not exist in code yet**; `sales_regions` is not one of the ADR's seven at all — see [schema.md's Notes](schema.md#notes) for the policy it ships under and the deferred ADR amendment that will record it.
 
-Today's pattern (real, current):
-```php
-// database/migrations/0001_01_01_000000_create_users_table.php — current bigint PK
-$table->id();
-```
+✅ Good — the real greenfield pattern, quoted in full because every line of it is a decision:
 
-Upcoming pattern for a new UUID-keyed table (greenfield Epic 2/4 entities are created this way from day one):
 ```php
-// target pattern — a future create_products_table migration
-Schema::create('products', function (Blueprint $table) {
+// database/migrations/2026_08_19_204256_create_sales_regions_table.php
+Schema::create('sales_regions', function (Blueprint $table): void {
     $table->uuid('id')->primary();
-    $table->foreignUuid('product_category_id')->constrained()->cascadeOnDelete();
-    $table->string('name');
+    $table->string('slug', 64)->unique();
+    $table->string('code', 10)->nullable();
+    $table->string('name', 150);
+    $table->string('description', 255)->nullable();
+    $table->decimal('rate', 6, 3)->nullable();
+    $table->string('kind', 20);
+    $table->foreignUuid('parent_id')->nullable()->constrained('sales_regions')->restrictOnDelete();
+    $table->boolean('is_default')->default(false);
+    $table->boolean('is_active')->default(false);
+    $table->unsignedSmallInteger('sort_order')->default(0);
     $table->timestamps();
 });
+
+// down(): Schema::dropIfExists('sales_regions'); — the self-referencing FK drops with the table
 ```
 
-Key differences from today's `create_passkeys_table` FK pattern: `$table->uuid('id')->primary();` replaces `$table->id()`, and child tables use `foreignUuid(...)->constrained()->cascadeOnDelete()` instead of `foreignId(...)->constrained()->cascadeOnDelete()` so the FK column type matches the parent's UUID key. The model-side counterpart (the `HasUuids` trait, `@property string $id`, no `$keyType`/`$incrementing` properties) is documented in [conventions/base-standards.md](../conventions/base-standards.md#uuid-primary-keys).
+❌ Bad — what a `bigint`-era habit produces for the same table (adapted to illustrate; not present in the repo):
+
+```php
+// anti-pattern — do not write this for a new domain table
+$table->id();
+$table->foreignId('parent_id')->nullable()->constrained();  // wrong type AND infers a `parents` table
+$table->string('kind');                                     // VARCHAR(255) for a 20-char token
+$table->float('rate');                                      // cannot represent 21.00 exactly
+```
+
+Four things the real migration establishes beyond `$table->uuid('id')->primary();` replacing `$table->id()`:
+
+- **`foreignUuid(...)`, never `foreignId(...)`**, so the FK column type matches the parent's `CHAR(36)` key.
+- **`constrained()` takes the table name explicitly when the column name doesn't imply it.** `constrained('sales_regions')` is mandatory here: from `parent_id` alone, Laravel would infer a `parents` table that does not exist. A self-referencing FK inside `Schema::create` is fine on MySQL 8.4 — Laravel emits it as a separate `ALTER TABLE`.
+- **`restrictOnDelete()` where a cascade would destroy configured data**, in contrast to `create_passkeys_table`'s `cascadeOnDelete()`. Passkeys are worthless without their user; a fiscal territory's administrator-configured tax rate is not, so deleting its parent must be refused rather than silently propagate.
+- **Every string column is length-capped and every money-like column is `decimal`** — the same reasoning `add_status_to_users_table` established for `users.status` (a bare `string()` is `VARCHAR(255)`), extended to `decimal(6,3)` because binary floating point cannot represent a tax rate exactly.
+
+The model-side counterpart (the `HasUuids` trait, `@property string $id`, no `$keyType`/`$incrementing` properties) is documented in [conventions/base-standards.md](../conventions/base-standards.md#uuid-primary-keys); what each `sales_regions` column *means* lives in [schema.md](schema.md#sales_regions), not here.
+
+### An FK column does not also get an explicit index here
+
+`create_sales_regions_table` deliberately writes **no** `$table->index('parent_id')`, and this is the one place it diverges from [`create_passkeys_table`](#structure) above — which does write an explicit `$table->index('user_id')`. Do not "fix" the newer file to match the older one.
+
+InnoDB **requires** an index on a foreign key column and auto-creates one when no suitable index already exists, so `constrained()` alone always leaves the column indexed. Adding `index()` on top of it can therefore produce **two** indexes on the same column — write amplification on every insert, and precisely the shape of the redundant `users_uuid_unique` debt recorded in [errors-log.md](../errors-log.md). Verified rather than assumed: `php artisan db:table sales_regions` reports exactly three indexes — `primary` on `id`, `sales_regions_slug_unique`, and `sales_regions_parent_id_foreign` on `parent_id`.
+
+**Rule.** Let `constrained()` supply the FK's index, and confirm the result with `php artisan db:table <table>` after migrating — never by reading the migration, which cannot show you an index nobody wrote.
 
 ### The real `users` conversion (alteration, not `create_table`)
 
@@ -216,4 +247,6 @@ throw_if(empty($tableNames), 'Error: config/permission.php not loaded. Run [php 
 
 When vendoring a package migration like this, keep that defensive `throw_if` pattern — it turns a silent misconfiguration into an immediate, actionable migration failure.
 
-_Last updated: 2026-08-12 — Task 0003: added two subsections to "Adding a column to an existing table" — backfilling in the same `up()` when the new column's default is wrong for existing rows (`add_status_to_users_table`), and dropping a unique index explicitly before its column in `down()` (`add_pending_email_to_users_table`)._
+_Last updated: 2026-08-20 — Task 0016 (Sales Region catalog schema + seeder): rewrote the "UUID primary keys" section around the repo's first **real** greenfield UUID `create_*` migration (`create_sales_regions_table`), replacing the invented `create_products_table` target snippet, and added the four decisions it establishes (`foreignUuid`, an explicit table name on a self-referencing `constrained()`, `restrictOnDelete()` where a cascade would destroy configured data, length-capped strings and `decimal` over `float`). Added the "An FK column does not also get an explicit index here" subsection and flagged `create_passkeys_table`'s explicit `$table->index('user_id')` in the Structure section as a divergence rather than a pattern to copy._
+
+_Previously: 2026-08-12 — Task 0003: added two subsections to "Adding a column to an existing table" — backfilling in the same `up()` when the new column's default is wrong for existing rows (`add_status_to_users_table`), and dropping a unique index explicitly before its column in `down()` (`add_pending_email_to_users_table`)._
