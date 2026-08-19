@@ -4,6 +4,7 @@ interface ModalProps {
   maxWidth?: string;
   width?: string;
   textAlign?: React.CSSProperties['textAlign'];
+  padding?: string;
   children: React.ReactNode;
 }
 
@@ -13,10 +14,10 @@ interface ModalProps {
  * repetian este mismo par de <div> y RecipeSelectorModal lo reimplementaba con estilos
  * inline en vez de usar esas clases.
  */
-export const Modal: React.FC<ModalProps> = ({ maxWidth = '500px', width = '90%', textAlign, children }) => {
+export const Modal: React.FC<ModalProps> = ({ maxWidth = '500px', width = '90%', textAlign, padding, children }) => {
   return (
     <div className="modal-overlay">
-      <div className="modal-card" style={{ maxWidth, width, textAlign }}>
+      <div className="modal-card" style={{ maxWidth, width, textAlign, padding }}>
         {children}
       </div>
     </div>

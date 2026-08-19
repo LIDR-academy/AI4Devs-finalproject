@@ -28,6 +28,17 @@ describe('Modal — shell compartido de overlay + card (dedup de DiscardModal/Wa
     expect(card.style.textAlign).toBe('center');
   });
 
+  it('aplica un padding personalizado a la card cuando se especifica', () => {
+    const { container } = render(
+      <Modal padding="32px">
+        <p>x</p>
+      </Modal>
+    );
+
+    const card = container.querySelector('.modal-card') as HTMLElement;
+    expect(card.style.padding).toBe('32px');
+  });
+
   it('usa maxWidth 500px y width 90% por defecto si no se especifican', () => {
     const { container } = render(
       <Modal>

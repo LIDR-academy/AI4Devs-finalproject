@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ClipboardCheck, AlertOctagon, CheckSquare, X, Plus, Minus } from 'lucide-react';
+import { ClipboardCheck, AlertOctagon, CheckSquare, Plus, Minus } from 'lucide-react';
 import { RemanenteFEFOItem } from '../services/kitchen.service.js';
 import { ReconciliationService } from '../services/reconciliation.service.js';
 import { formatQuantity, formatUnitLabel } from '../../../utils/formatters.js';
+import { Modal } from '../../../shared/components/Modal.js';
+import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 
 interface ShiftReconciliationWizardProps {
   isOpen: boolean;
@@ -82,18 +84,17 @@ export const ShiftReconciliationWizard: React.FC<ShiftReconciliationWizardProps>
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card" style={{ maxWidth: '720px', width: '90%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <ClipboardCheck style={{ color: 'var(--color-primary)' }} /> Cierre de Turno y Conciliación de Stock
-          </h2>
-          <button className="btn-icon" onClick={onClose} id="btn-close-reconciliation">
-            <X size={20} />
-          </button>
-        </div>
+    <Modal maxWidth="720px" width="90%">
+      <ModalHeader
+        icon={<ClipboardCheck style={{ color: 'var(--color-primary)' }} />}
+        title="Cierre de Turno y Conciliación de Stock"
+        fontSize="1.4rem"
+        gap="10px"
+        marginBottom="20px"
+        onClose={onClose}
+      />
 
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
             Ingresa las cantidades reales medidas en cocina. Los insumos expirados serán descartados automáticamente.
           </p>
@@ -243,8 +244,7 @@ export const ShiftReconciliationWizard: React.FC<ShiftReconciliationWizardProps>
               {isSubmitting ? 'Guardando...' : 'Enviar Conciliación de Turno'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 };

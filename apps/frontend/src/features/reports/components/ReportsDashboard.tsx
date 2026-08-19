@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, ShieldAlert, Calendar, Trash2, PieChart, RefreshCw, X } from 'lucide-react';
 import { ReportsService, WasteSummaryItem } from '../services/reports.service.js';
+import { Modal } from '../../../shared/components/Modal.js';
 
 interface ReportsDashboardProps {
   userRole: string;
@@ -30,18 +31,16 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
 
   if (userRole !== 'ADMIN') {
     return (
-      <div className="modal-backdrop">
-        <div className="modal-card" style={{ maxWidth: '500px', textAlign: 'center', padding: '32px' }}>
-          <ShieldAlert size={48} style={{ color: 'var(--color-danger)', margin: '0 auto 16px auto' }} />
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Acceso Restringido</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
-            El módulo de Reportes y Analíticas de Mermas requiere rol de Administrador.
-          </p>
-          <button className="btn-touch btn-primary" onClick={onClose} style={{ width: '100%' }}>
-            Entendido - Volver al Tablero
-          </button>
-        </div>
-      </div>
+      <Modal maxWidth="500px" width="100%" textAlign="center" padding="32px">
+        <ShieldAlert size={48} style={{ color: 'var(--color-danger)', margin: '0 auto 16px auto' }} />
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Acceso Restringido</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
+          El módulo de Reportes y Analíticas de Mermas requiere rol de Administrador.
+        </p>
+        <button className="btn-touch btn-primary" onClick={onClose} style={{ width: '100%' }}>
+          Entendido - Volver al Tablero
+        </button>
+      </Modal>
     );
   }
 
@@ -53,8 +52,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
   const maxVal = Math.max(...data.map((d) => parseFloat(d.totalDiscardedQuantity || '0')), 1);
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card" style={{ maxWidth: '850px', width: '92%' }}>
+    <Modal maxWidth="850px" width="92%">
         {/* Header Dashboard */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
@@ -94,7 +92,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
               </button>
             </div>
 
-            <button className="btn-icon" onClick={onClose} id="btn-close-reports">
+            <button className="btn-touch btn-secondary btn-icon" onClick={onClose} id="btn-close-reports">
               <X size={20} />
             </button>
           </div>
@@ -172,7 +170,6 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

@@ -31,11 +31,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
         {icon} {title}
       </h2>
       {onClose && (
-        <button
-          onClick={onClose}
-          className="btn-touch btn-secondary"
-          style={{ width: '40px', height: '40px', padding: 0 }}
-        >
+        <button onClick={onClose} className="btn-touch btn-secondary btn-icon">
           <X size={20} />
         </button>
       )}

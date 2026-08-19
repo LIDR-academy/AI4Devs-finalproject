@@ -100,6 +100,18 @@ body {
   box-shadow: 0 0 0 2px rgba(0, 168, 150, 0.2);
 }
 
+/* Modificador de boton solo-icono (ej. cerrar modal); combinar con .btn-touch .btn-secondary */
+.btn-icon {
+  padding: 0;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
 /* Estructura de Tarjetas (Dark Petrol Cards) */
 .card-dashboard {
   background-color: var(--bg-card);
