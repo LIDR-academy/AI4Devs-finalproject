@@ -208,7 +208,10 @@ Feature: Roles and permissions management
           ->pluck('name')
           ->all();
 
-      $permissionNames = $enforceAdministratorPermissionGrant(Auth::user(), $permissionNames);
+      // $role is already in scope from the branch above -- null on create,
+      // the fully-hydrated row on update. 0009's action reads the "before"
+      // state from it directly (see the corrected signature note below).
+      $permissionNames = $enforceAdministratorPermissionGrant(Auth::user(), $permissionNames, $role);
 
       // ... persist name, then $role->syncPermissions($permissionNames);
   }
@@ -226,9 +229,10 @@ Feature: Roles and permissions management
 
   - **The target is resolved from the `#[Locked]` id and then handed to `Gate::authorize()` as a
     fully-hydrated row**, never as a partially-selected instance — `Role::query()->findOrFail($id)`,
-    not `Role::query()->select('id')->find($id)`. Combined with the persisted-identity helper this
-    story adds to `RolePolicy` (see the `app/Models/Role.php` and `app/Policies/RolePolicy.php`
-    bullets below), that closes the residual `docs/architecture/authorization.md` names this story in.
+    not `Role::query()->select('id')->find($id)`. Belt-and-braces alongside the hydration-safe identity
+    check `RolePolicy` already routes through (`Role::isSuperAdminRoleRow()` — see the corrected note
+    in the `app/Policies/RolePolicy.php` bullet below: 0009 closed that residual before this story's
+    Phase 3 began, not this story).
   - **The create path needs its own `create` ability; it cannot reuse `update` with a class name.**
     `Gate::authorize('update', Role::class)` would resolve `RolePolicy` from the class string and then
     call `update($user)` with **no second argument** — the class name is used to find the policy, not
@@ -282,110 +286,68 @@ Feature: Roles and permissions management
   > A test for this guard must assert the same thing 0008's does: after a refused delete, the
   > `model_has_roles` rows are **still there**, not merely that the `roles` row is.
 
-  **This story also adds one `public static` method to this file: a persisted-identity-safe
-  `isSuperAdminRole()`.** This is the second half of the fix described in the `RolePolicy` bullet
-  directly below — see there for *why*; what belongs here is the shape:
+  > **Already done — corrected 2026-08-19 against 0009's real, shipped work (Phase 5 review finding
+  > F-A).** This section originally specified that *this story* would promote 0008's private
+  > `isSuperAdminRole()` to a `public static isSuperAdminRole(self $role): bool`. That did not happen
+  > the way this section predicted: 0008a's own Phase 4 security audit rounds (not 0008a's Phase 1
+  > spec) built the equivalent helper first, under the name **`isSuperAdminRoleRow(self $role): bool`**
+  > — added while closing 0008a's re-audit finding N2 (a Super Admin actor could demote another Super
+  > Admin holder because nothing checked the *target's current* role, only the *submitted* one; the
+  > row-shaped, hydration-safe check this section describes is exactly what N2's fix needed). 0009 then
+  > consumed it directly in `RolePolicy::update()`/`delete()` during its own Phase 3, before this story
+  > ever reached implementation. **There is nothing left here for this story to do.** `persistedName()`
+  > exists too, as 0008a's own private extraction backing both `isSuperAdminRoleRow()` and
+  > `isAdministratorRole()`. Do not add a second, differently-named public static method that does the
+  > same thing — `Role::isSuperAdminRoleRow()` is the one and only implementation, and this story's
+  > `RolePolicy` bullet below already consumes it.
+
+- `app/Policies/RolePolicy.php` — **consume, created by 0008 (closed 2026-08-18) and extended by 0009
+  (closed 2026-08-19) — the class, its Administrator-level branch, and its hydration-safe Super Admin
+  check all already exist.** This story does not create the class, does not restructure it, and adds
+  exactly one thing to it: the two `viewAny`/`create` abilities below ("Edit 2"; there is no "Edit 1"
+  left — see the corrected note).
+
+  0008 built this policy, and 0009 gave it its first real call sites plus its Administrator-level
+  branch — but **neither wired it into a Livewire component**, since neither 0009 nor 0008 owns one.
+  **This story is what gives `RolePolicy` its first component call site** — every `Gate::authorize()`
+  in the component sketch above lands here. What is shipped today, verified against the real file
+  rather than assumed:
 
   ```php
-  // app/Models/Role.php -- promoted from 0008's private instance method
-  public static function isSuperAdminRole(self $role): bool
-  {
-      return $role->persistedName() === self::superAdminName();
-  }
-  ```
-
-  Four constraints on that change, all of which Phase 3 must honour:
-
-  - **It is a promotion of 0008's existing `private function isSuperAdminRole(): bool`, not a second
-    implementation.** PHP cannot carry a private instance method and a public static method under one
-    name, so the existing one is converted in place: signature becomes
-    `public static function isSuperAdminRole(self $role): bool`, and its two internal callers
-    (`guardAgainstSuperAdminMutation()`) become `self::isSuperAdminRole($this)`. Read
-    [`app/Models/Role.php`](../../app/Models/Role.php) before touching it — 0008's long docblock on
-    that method explains *why* it reads persisted identity and must move with the logic, and
-    `guardAgainstAssumingSuperAdminName()` must **not** be merged into it (it reads the in-memory
-    attribute deliberately; see
-    [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#the-two-identity-helpers-read-different-sources-and-must-never-be-merged)).
-  - **Behaviour-preserving.** 0008's guard tests (`creating`/`updating`/`deleting`, the
-    permission-pivot overrides, the `assignToModels()` family) must pass **unamended**. A diff to
-    those assertions is a regression to justify, not a test to update.
-  - **`persistedName()` is 0008a's extraction, and this is the second coordination point with that
-    story.** 0008a lifts the not-hydrated-aware body out of `isSuperAdminRole()` into a private
-    `persistedName(): ?string` so `isAdministratorRole()` can share it. **Whichever of 0008a and this
-    story reaches Phase 3 first performs that extraction; the other consumes it.** If this story lands
-    first, it does the extraction as part of the promotion above (same body, same
-    `array_key_exists('name', $this->getOriginal())` test — never `??`, per
-    [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null))
-    and 0008a then only adds `isAdministratorRole()` on top of it. Neither story writes a second copy.
-  - **`public static` taking a row, mirroring 0008a's `isAdministratorRole(self $role)` exactly.**
-    The two tier-identity predicates should read identically at their call sites, since `RolePolicy`
-    ends up calling both — `Role::isSuperAdminRole($role)` then `Role::isAdministratorRole($role)`.
-
-- `app/Policies/RolePolicy.php` — **consume, created by 0008 (closed 2026-08-18 — the class exists
-  now)**, plus two narrowly-scoped edits this story owns. **This story does not create the class, does
-  not restructure it, and does not add 0009's Administrator-level branch** — that branch belongs to
-  [0009](0009-administrator-level-permission-grant.md), which modifies these same two methods.
-
-  0008 built this policy specifically for this story: its class docblock says it is "the layer
-  0010/0011's dashboard screens call via `authorize()`", and
-  [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
-  records that it "has **no call site yet**". **This story is what gives it one** — every
-  `Gate::authorize()` in the component sketch above lands here. What 0008 shipped:
-
-  ```php
-  // app/Policies/RolePolicy.php -- the shipped 0008 version, both methods identical apart from the name
+  // app/Policies/RolePolicy.php -- current shipped shape (0008 + 0009), both methods identical apart from the name
   public function update(User $user, Role $role): bool
   {
-      if ($role->name === Role::superAdminName()) {
+      if (Role::isSuperAdminRoleRow($role)) {
           return false;
       }
 
-      return $user->hasPermissionTo('roles.manage');
+      return Role::isAdministratorRole($role)
+          ? $user->hasPermissionTo(self::ADMINISTRATOR_LEVEL_PERMISSION)
+          : $user->hasPermissionTo(self::ROLE_MANAGEMENT_PERMISSION);
   }
 
   public function delete(User $user, Role $role): bool { /* identical shape */ }
   ```
 
-  **Edit 1 — route the Super Admin identity check through the persisted-identity-safe helper
-  (human-confirmed decision).** Replace `$role->name === Role::superAdminName()` in **both** methods
-  with `Role::isSuperAdminRole($role)`, the `public static` helper specified in the
-  `app/Models/Role.php` bullet above. This closes the boxed ⚠️ residual in
-  [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#known-limitations--what-is-not-closed),
-  which names stories **0010/0011 by number** as the ones who must resolve it:
-
-  > *"`RolePolicy` and the `Gate::before` deferral both identify their target with the in-memory
-  > `$role->name` attribute — **not** the persisted-identity-safe `isSuperAdminRole()` helper the model
-  > guard uses. A partially-hydrated `Role` instance … passed to `Gate::authorize()` would therefore
-  > evade the **policy** layer … They must either resolve the target through a fully-hydrated read, or
-  > route the policy's identity check through the same persisted-identity helper the model guard
-  > uses."*
-
-  Of the two options that warning offers, **the helper is the one to take, not the fully-hydrated
-  read** — confirmed. A fully-hydrated read is a rule every present and future call site has to keep
-  remembering (and this story's own component sketch honours it anyway, as belt-and-braces); routing
-  the check through the helper makes the policy correct regardless of what any caller hands it. It is
-  also the same shape 0008a independently chose for the Administrator tier — its
-  `isAdministratorRole()` is hydration-safe *by construction*, with its own boxed note explaining why
-  the "callers must fully hydrate" alternative was rejected — so taking the helper keeps the two tiers
-  symmetric instead of leaving one hardened and one conventional.
-
-  The underlying bug class is not hypothetical: it is exactly 0008's Phase 4 re-audit finding **R1**,
-  a working rename bypass, documented with its mechanism in
-  [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null).
-
-  > **⚠ Coordination point with story 0009 — these are the same two method bodies.** 0009 appends an
-  > Administrator-level branch to `update()` and `delete()`; this story rewrites their Super Admin
-  > branch. **Whichever story reaches Phase 3 first builds `Role::isSuperAdminRole()` and converts
-  > both call sites; the other consumes it and must not revert them to `$role->name === …`.** Two
-  > invariants hold either way: the Super Admin refusal stays **first and unconditional** (it is what
-  > binds a Super Admin actor, since `Gate::before` defers on that target), and 0009's Administrator
-  > branch resolves its own identity through 0008a's `Role::isAdministratorRole()` — which is already
-  > persisted-identity-safe, so 0009 has no equivalent hardening left to do. 0009's task file has been
-  > updated to say so; its "Known residual inherited from 0008" note now points here rather than
-  > leaving both stories to decide the same thing independently. Per
-  > [`docs/contracts.md`](../../docs/contracts.md)'s Parallel Agent File-Ownership Rule, **0009 and
-  > 0010 must not be dispatched to concurrent agents** — this file is shared, and so is
-  > `app/Models/Role.php`.
+  > **Corrected 2026-08-19, against 0009's real, shipped work (Phase 5 review finding F-A) — "Edit 1"
+  > described below is already done and is not this story's job.** This section originally specified
+  > that *this story* would replace `$role->name === Role::superAdminName()` with a persisted-identity
+  > helper it would also build (`Role::isSuperAdminRole()`), closing the ⚠️ residual in
+  > [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)
+  > that named stories 0010/0011 by number. That did not happen the way this section predicted: 0008a's
+  > own Phase 4 audit rounds built the equivalent helper first, under the name
+  > `Role::isSuperAdminRoleRow(self $role): bool` (see the `app/Models/Role.php` bullet above), and 0009
+  > consumed it directly in both methods above during its own Phase 3 — closing that residual entirely,
+  > for both the `RolePolicy` half **and** the `Gate::before` deferral in `AppServiceProvider`, which
+  > 0009's own Phase 4 security audit also upgraded to the same helper (finding F4). The underlying bug
+  > class this residual was about is exactly 0008's Phase 4 re-audit finding **R1**, a working rename
+  > bypass, documented in
+  > [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null)
+  > — it is fully closed now, not partially. **This story touches neither method's Super Admin branch
+  > nor its Administrator-level branch.** The old coordination warning about 0009 and 0010 racing to
+  > build the same helper no longer applies (0009 already closed, so there is nothing left to race for),
+  > but the Parallel Agent File-Ownership Rule note is still worth honouring for Edit 2 below, since
+  > `app/Policies/RolePolicy.php` remains a file both stories touched.
 
   **Edit 2 — add the two abilities the component's non-edit paths need**, `viewAny(User $user): bool`
   and `create(User $user): bool`, each returning `$user->hasPermissionTo('roles.manage')`. Both take
@@ -575,9 +537,7 @@ Feature: Roles and permissions management
   ```
 
   **This story converts permission ids to permission names before the call (human-confirmed
-  decision).** 0009's action signature stays exactly as 0009 specifies it —
-  `__invoke(User $actor, array $permissionNames): array`, unchanged — and the id→name lookup happens
-  here, immediately before invoking it:
+  decision).** The id→name lookup happens here, immediately before invoking the action:
 
   ```php
   $permissionNames = Permission::query()
@@ -585,7 +545,7 @@ Feature: Roles and permissions management
       ->pluck('name')
       ->all();
 
-  $permissionNames = $enforceAdministratorPermissionGrant(Auth::user(), $permissionNames);
+  $permissionNames = $enforceAdministratorPermissionGrant(Auth::user(), $permissionNames, $role);
 
   $role->syncPermissions($permissionNames);
   ```
@@ -594,6 +554,43 @@ Feature: Roles and permissions management
   passed `Rule::exists('permissions', 'id')->where('guard_name', 'web')` — the lookup cannot silently
   drop a forged id, because a forged id never reaches it. `syncPermissions()` accepts names as readily
   as ids, so nothing downstream needs the ids back.
+
+  > **Corrected 2026-08-19, against 0009's real, shipped signature (Phase 5 review finding F-A) — the
+  > action takes THREE arguments, not two, and the third is required.** 0009's own Phase 1 draft (and
+  > this file's earlier revisions) described `__invoke(User $actor, array $permissionNames): array` as
+  > "unchanged" through 0009's Phase 3. That premise did not survive 0009's own Phase 4 security audit:
+  > taking only the submitted list meant the action could not tell a genuine new grant from a
+  > non-Super-Admin's payload merely *omitting* an already-granted permission (their toggle is never
+  > rendered to them at all), and comparing against a caller-supplied "before" array reopened the same
+  > hole one level up (a caller could assert an untrue prior state, or supply it in a shape that didn't
+  > match). 0009 shipped with `__invoke(User $actor, array $submittedPermissions, ?Role $role): array` —
+  > the action now reads the "before" state itself from `$role->permissions` (freshly reloaded), and
+  > `$role` carries **no default**: it must be passed explicitly as `null` on the create branch and as
+  > the resolved role on the update branch. Both snippets above already have `$role` in scope from the
+  > branch just above `saveRole()`'s `validate()` call — passing it is a one-argument change, not a
+  > restructure. Do not revert to the two-argument call this section originally specified.
+  >
+  > **Open design question this story's Phase 1/3 must settle before writing `saveRole()` (0009's
+  > Phase 5 review finding F-E, not yet decided) — should the action perform the sync itself?** As
+  > shipped, `EnforceAdministratorPermissionGrant` is a transformer, not a write: it returns the
+  > permission list to sync, and the caller (`saveRole()`, above) is the one that actually calls
+  > `$role->syncPermissions($permissionNames)`. Two latent gaps follow directly from that split, neither
+  > exploitable today (no caller exists yet) but both live the moment this story's `saveRole()` ships:
+  > a caller that drops the return-value assignment silently loses the whole guard (F1's silent revoke
+  > returns in full, with a 200 response); and a caller that syncs a *different* role than the one it
+  > passed as the third argument reopens the class of hole 0009's re-audit finding N2 closed. This is
+  > the same shape 0008a's story ruled on one story ago, in
+  > [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#the-guard-belongs-to-the-action-not-to-the-caller)'s
+  > "the guard belongs to the action, not to the caller" section — `CreateUser`/`UpdateUser` authorize
+  > and write inside one call for exactly this reason. Two ways to resolve it, in order of preference:
+  > **(a)** fold the write into the action for the update path (e.g.
+  > `$role !== null ? $role->syncPermissions($final) : $final` returned only on the create path, where
+  > this story still owns the actual `Role::create()` call) — the cheaper fix and the one that matches
+  > the house pattern, or **(b)** keep the current split and add two explicit, named review checks to
+  > this story's own Phase 5 review: the return value is assigned, and the `$role` instance passed in is
+  > the same one subsequently synced. Whichever is chosen, record the decision in this story's own
+  > implementation record — do not let it stay implicit the way this section was found to be by 0009's
+  > audit.
 
   > **⚠ Sequencing — can Phase 3 of this story genuinely run before 0009 exists? Stated unambiguously,
   > because "add the call site" is otherwise ambiguous about what happens when the callee is absent.**
@@ -605,7 +602,7 @@ Feature: Roles and permissions management
   > The two ways out and the one chosen:
   >
   > - **(recommended, and the decision taken) the Administrator-level permission-grant story
-  >   ([0009](0009-administrator-level-permission-grant.md)) lands first** — which is why it now
+  >   ([0009](done/0009-administrator-level-permission-grant.md)) lands first** — which is why it now
   >   carries the **lower** number: the two stories were renumbered on 2026-08-19 so the dependency
   >   precedes its dependent, per [`docs/workflow.md`](../../docs/workflow.md#task-ordering-rule)'s
   >   task-ordering rule. It is a small backend-only story whose only dependency this story has is
@@ -617,7 +614,7 @@ Feature: Roles and permissions management
   >   tracked follow-up to remove, which is exactly the kind of gap
   >   [`docs/errors-log.md`](../../docs/errors-log.md) exists to record. Rejected outright.
   >
-  > Practical consequence for the backlog: **[0009](0009-administrator-level-permission-grant.md) is a
+  > Practical consequence for the backlog: **[0009](done/0009-administrator-level-permission-grant.md) is a
   > hard, blocking, ordered dependency of this story's Phase 3**, not merely a sibling. If a human
   > decides to run *this* story first anyway, the correct minimal change is to descope the
   > administrator-level grant from this story entirely — omit the action
@@ -686,19 +683,19 @@ DB-backed, so genuine no-DB unit tests are rare here.
       test and a `Livewire::test()` one are **not** substitutes for each other here — the route
       middleware runs in one and not the other — per
       [`docs/testing/README.md`](../../docs/testing/README.md).
-- [ ] **The persisted-identity fix is provable, and fails on the pre-fix code.** Hand
-      `Gate::authorize('update', $role)` a **partially-hydrated** Super Admin role
-      (`Role::query()->select('id')->find($superAdminId)`) and assert it still refuses. Against the
-      shipped `$role->name === Role::superAdminName()` comparison this returns the actor's ordinary
-      `roles.manage` answer and the test fails — which is the point of writing it. Assert the mirror
-      case too (a partially-hydrated *ordinary* role is still permitted, so the hardening did not turn
-      into a blanket refusal), and the rename-in-flight case (a normally-loaded Super Admin role given
-      `$role->name = 'Something Else'` in memory **without saving** is still refused).
-- [ ] **Regression — 0008's `RolePolicy` and `App\Models\Role` guard tests pass unamended.** This
-      story rewrites the Super Admin branch of both policy methods and promotes a private model method
-      to `public static`; `tests/Feature/Policies/RolePolicyTest.php` and 0008's model-guard suite must
-      go green **without edits**. A diff to those assertions is a regression to justify, not a test to
-      update.
+- [x] **Already done, not this story's job (corrected 2026-08-20, Phase 5 review follow-up).** The
+      persisted-identity fix this bullet described — proving `Gate::authorize('update', $role)` still
+      refuses a partially-hydrated or mid-rename Super Admin role — is already shipped and already
+      tested. 0009 routed `RolePolicy::update()`/`delete()` through `Role::isSuperAdminRoleRow()` during
+      its own Phase 3, and `tests/Feature/Models/RoleTest.php` carries the partial-hydration and
+      rename-in-flight assertions this bullet asked for. This story adds no test for it.
+- [ ] **Regression — 0009's `RolePolicy` and `App\Models\Role` guard tests pass unamended.** This
+      story adds `viewAny`/`create` only; it does not touch `update()`/`delete()`'s Super Admin or
+      Administrator-level branches, and does not promote or rename any model method (both
+      `isSuperAdminRoleRow()` and `isAdministratorRole()` already exist as `public static`).
+      `tests/Feature/Policies/RolePolicyTest.php` and the model-guard suites in
+      `tests/Feature/Models/RoleTest.php` must go green **without edits**. A diff to those assertions is
+      a regression to justify, not a test to update.
 - [ ] The two new abilities are permission-gated, not open: `viewAny` / `create` each return `false`
       for an actor lacking `roles.manage` and `true` for one holding it.
 - [ ] Positive counterparts for every negative above — a holder of `roles.manage` succeeds at each
@@ -750,13 +747,16 @@ The Super Admin role is absent from every list this component produces, and is r
       Livewire's `PersistentMiddleware` allow-list and so would not survive `/livewire/update`.
 - [ ] `App\Policies\RolePolicy` gains a `viewAny` and a `create` ability, and **nothing else** — its
       shipped `update()`/`delete()` keep their categorical Super Admin refusal, first and
-      unconditional, and 0009's Administrator-level branch is not added by this story.
-- [ ] `RolePolicy`'s Super Admin identity check runs through the persisted-identity-safe
-      `App\Models\Role::isSuperAdminRole($role)` helper rather than the in-memory `$role->name`,
-      closing the ⚠️ residual
-      [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)
-      names stories 0010/0011 as the owners of — proven by a test that fails against the pre-fix
-      comparison.
+      unconditional, and their Administrator-level branch (already added by 0009, not by this story)
+      untouched.
+- [x] **Already true, not this story's job (corrected 2026-08-19, Phase 5 review finding F-A).**
+      `RolePolicy`'s Super Admin identity check already runs through the hydration-safe
+      `App\Models\Role::isSuperAdminRoleRow($role)` helper rather than the in-memory `$role->name` —
+      0009 made this change during its own Phase 3, and 0009's Phase 4 security audit (finding F4)
+      additionally upgraded the `Gate::before` deferral in `AppServiceProvider` to the same helper. The
+      ⚠️ residual this bullet used to name stories 0010/0011 as owners of is **fully closed**, not
+      partially — see the corrected note in the `app/Policies/RolePolicy.php` file bullet above. This
+      story adds no test for it (0009's `RolePolicyTest.php` already carries one).
 - [ ] Every role listing/selector query in this component goes through 0008's `selectable()` scope.
 - [ ] Role name is required, trimmed and unique **within `guard_name = 'web'`** (matching the
       composite `unique(['name', 'guard_name'])` index, not stricter than it); permission ids are
@@ -774,20 +774,22 @@ The Super Admin role is absent from every list this component produces, and is r
 - [ ] Tests written and green
 - [ ] Code reviewed (code-reviewer)
 - [ ] No security findings (appsec-auditor)
-- [ ] Documentation updated (docs-keeper) — including **narrowing** the ⚠️ residual in
-      [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)
-      (the one addressed to "whoever builds the roles CRUD screens (stories 0010/0011)") rather than
-      deleting it: the `RolePolicy` half is closed by this story; the `Gate::before` deferral still
-      reads the in-memory `$role->name`. That page's
-      [`RolePolicy` — the second policy](../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
-      section also goes stale the day this ships — it states the policy "has **no call site yet**",
-      lists only two abilities, and says it identifies its target with `$role->name`. All three
-      become false; per [`docs/errors-log.md`](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13),
-      correct them in the same pass rather than leaving a bare claim to go stale into a lie.
-      `docs/api/routes.md` also gains the `roles.index` route.
+- [ ] Documentation updated (docs-keeper). **Corrected 2026-08-19 (Phase 5 review finding F-A): the ⚠️
+      residual bullet above is stale, not this story's to narrow.** 0009 already closed both halves
+      (`RolePolicy` **and** the `Gate::before` deferral) during its own Phase 3/4, and 0009's own
+      `docs-keeper` pass is expected to have already corrected
+      [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)'s
+      residual note and its
+      [`RolePolicy` — the second policy`](../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
+      section (the "has no call site yet" / two-abilities / `$role->name` claims 0009 makes false)
+      before this story's Phase 1 begins — **verify that against the real page rather than assume it**,
+      since 0009's closure and this story's start may not be far apart in time. What genuinely *is*
+      this story's documentation job: recording that `RolePolicy` gains its **first component call
+      site** and its `viewAny`/`create` abilities (three abilities total after this story, not two),
+      and adding `docs/api/routes.md`'s `roles.index` route.
 - [ ] Acceptance criteria met
 - [ ] **Ordered dependency satisfied: the Administrator-level permission-grant story
-      ([0009](0009-administrator-level-permission-grant.md)) has landed** (it owns
+      ([0009](done/0009-administrator-level-permission-grant.md)) has landed** (it owns
       `App\Actions\Roles\EnforceAdministratorPermissionGrant`, which this story's `saveRole()` calls
       by type-hinted injection). See the ⚠ sequencing box in the Administrator-level grant section —
       this story must not stub that action, and if 0009 has *not* landed the correct move is to
@@ -848,8 +850,15 @@ a Super Admin filter — that is where a silent gap could open.
 **F. Should `RolePolicy::viewAny` / `create` be added by this story, or by 0008 retroactively?** This
 story specifies adding both (see the `app/Policies/RolePolicy.php` bullet), because it is the first
 call site that needs them and 0008 is closed. Flagged rather than assumed because it means **three**
-stories now edit that one file (0008 created it, 0010 adds two abilities and hardens the Super Admin
-check, 0009 adds the Administrator branch).
+stories now edit that one file (0008 created it; 0009 added the Administrator branch **and** — beyond
+its own original scope, per its Phase 4 security audit — the Super Admin check's hydration-safety
+upgrade; 0010 adds two abilities and nothing else in this file).
+
+**G. Should `EnforceAdministratorPermissionGrant` perform the sync itself, rather than only returning
+the list to sync?** Open, not yet decided — see the boxed note in the Administrator-level grant
+section of the `app/Actions/Roles/EnforceAdministratorPermissionGrant.php` file bullet above (Phase 5
+review finding F-E). Two remediation options are laid out there; this story's Phase 1/3 must pick one
+and record the decision before `saveRole()` is written.
 - **F1 (recommended)** — this story adds them. 0008 is closed, its own DoD is met, and reopening a
   closed story to add an ability its scope never needed is worse than a small additive edit here.
 - F2 — fold them into 0009, so `RolePolicy` is touched by exactly two stories. Only worth it if 0009

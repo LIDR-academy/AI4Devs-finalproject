@@ -15,12 +15,12 @@ backend | includes database-expert: **no**
 > - **0002** seeds the `Super Admin` role, the baseline `Administrator` role, and the
 >   `roles.manage` / `roles.manage-administrators` permissions, **and owns
 >   the global Super-Admin `Gate::before` bypass hook.** This story consumes both; it registers neither.
-> - **[0010](0010-role-permission-management-backend.md)** (Roles & Permissions management —
+> - **[0010](../0010-role-permission-management-backend.md)** (Roles & Permissions management —
 >   backend) owns the action that persists a role's name/permissions and the role-delete action.
 >   This story hooks its enforcement into those call sites; it does not create a competing role-CRUD
 >   path.
 >   **Sequencing: this story must land *before* the Roles & Permissions management backend story
->   ([0010](0010-role-permission-management-backend.md)) reaches its Phase 3 — which is exactly why
+>   ([0010](../0010-role-permission-management-backend.md)) reaches its Phase 3 — which is exactly why
 >   this story carries the lower number.** That story's `saveRole()` type-hints
 >   `App\Actions\Roles\EnforceAdministratorPermissionGrant` as an injected parameter, and a type-hinted
 >   parameter naming a class that does not exist throws `BindingResolutionException` on **every**
@@ -33,8 +33,8 @@ backend | includes database-expert: **no**
 >   `App\Enums\RoleName`, `App\Models\Role::superAdminName()` and — importantly for this story —
 >   **`App\Policies\RolePolicy` itself**, with working `update()`/`delete()` methods that already refuse
 >   the Super Admin role categorically. This story **modifies** that policy; it does not create it. Read
->   [`app/Policies/RolePolicy.php`](../../app/Policies/RolePolicy.php) and
->   [`app/Models/Role.php`](../../app/Models/Role.php) before Phase 3 — 0008's implementation grew
+>   [`app/Policies/RolePolicy.php`](../../../app/Policies/RolePolicy.php) and
+>   [`app/Models/Role.php`](../../../app/Models/Role.php) before Phase 3 — 0008's implementation grew
 >   substantially during its own Phase 4 security audit, beyond what its Phase 1 spec described.
 > - **0008a** (Centralize Administrator-level role identification) owns the shared
 >   `App\Models\Role::isAdministratorRole()` helper and the `App\Enums\RoleName::Administrator` case this
@@ -58,7 +58,7 @@ backend | includes database-expert: **no**
 >
 > **Where that comparison lives:** in exactly one shared place, `App\Models\Role::isAdministratorRole()`
 > — a `public static` helper specified by story
-> [0008a](done/0008a-centralize-administrator-role-identification.md), which centralizes the same tier's
+> [0008a](0008a-centralize-administrator-role-identification.md), which centralizes the same tier's
 > identity for the *user* side (`UserPolicy`, `App\Livewire\Users\Index`, `CreateUser`, `UpdateUser`).
 > **This story consumes that helper; it does not define its own.** Whichever of 0008a and 0009 reaches
 > Phase 3 first creates it on `App\Models\Role`; the other calls it. The literal string
@@ -191,12 +191,12 @@ Feature: Administrator-level role management and its Super-Admin-only grant
 ## Files to create/modify
 
 - `app/Policies/RolePolicy.php` — **modify. This file already exists** — story
-  [0008](done/0008-super-admin-role-invariants.md) created it, and it already has working `update()` and
+  [0008](0008-super-admin-role-invariants.md) created it, and it already has working `update()` and
   `delete()` methods. This story **adds an Administrator-level branch to those two existing methods** and
   **adds one new ability**, `grantAdministratorPermission`. It does not create the class, does not
   restructure it, and must not replace the Super Admin refusal already in it.
 
-  > **Read [`app/Policies/RolePolicy.php`](../../app/Policies/RolePolicy.php) before writing this.** The
+  > **Read [`app/Policies/RolePolicy.php`](../../../app/Policies/RolePolicy.php) before writing this.** The
   > text below is reconciled against the real shipped file as of 2026-08-19, but 0008's implementation
   > grew during its own Phase 4 security audit and may have moved again since.
 
@@ -279,7 +279,7 @@ Feature: Administrator-level role management and its Super-Admin-only grant
 
   **`Role::isAdministratorRole($role)`, not a private `isAdministratorLevel()` on this policy.** An
   earlier draft of this story defined the comparison as a policy-private helper. That is the same
-  concept story [0008a](done/0008a-centralize-administrator-role-identification.md) centralizes for the
+  concept story [0008a](0008a-centralize-administrator-role-identification.md) centralizes for the
   *user* side, and a private helper here would leave the codebase with two independent literal
   comparisons for one tier — precisely what 0008a exists to remove. The shared `public static`
   `App\Models\Role::isAdministratorRole(Role $role): bool` (exact, case-sensitive
@@ -303,11 +303,11 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   > an unseeded name throws `PermissionDoesNotExist` at runtime — so this was a correctness bug, not
   > a naming preference. 0002's task file flagged it explicitly as an outstanding correction. The
   > canonical names are **`roles.manage-administrators`** and **`roles.manage`**, per
-  > [`docs/conventions/naming.md`](../../docs/conventions/naming.md#permission-names). The Gherkin
+  > [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#permission-names). The Gherkin
   > above keeps the human phrases, which are business prose rather than code literals.
 
   > `hasRole()` is called **with its guard** (`'web'`) per
-  > [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#always-pass-the-guard-to-hasrole--hasanyrole)
+  > [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#always-pass-the-guard-to-hasrole--hasanyrole)
   > — an unguarded call resolves against the default guard, which is not guaranteed to be the one the
   > role was seeded under.
 
@@ -321,9 +321,9 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   > `$role->name` — the *in-memory* attribute — whereas the model-level guards deliberately read the
   > **persisted** identity, because by the time a rename is in flight the in-memory name is the
   > attacker-supplied new one.
-  > [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
+  > [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
   > records it as "the documented residual the roles-screen author must resolve", addressing stories
-  > 0010/0011. **Story [0010](0010-role-permission-management-backend.md) has taken ownership**, because
+  > 0010/0011. **Story [0010](../0010-role-permission-management-backend.md) has taken ownership**, because
   > it is the first story to add real `authorize()` call sites against `RolePolicy` and therefore the
   > first to make the residual reachable. Its resolution, which this story must preserve rather than
   > relitigate:
@@ -335,7 +335,7 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   > - **Whichever of 0010 and this story reaches Phase 3 first builds that helper and converts both
   >   call sites; the other consumes it** and must **not** revert them to `$role->name === …`. Both
   >   stories edit the same two method bodies, so per
-  >   [`docs/contracts.md`](../../docs/contracts.md)'s Parallel Agent File-Ownership Rule **0009 and
+  >   [`docs/contracts.md`](../../../docs/contracts.md)'s Parallel Agent File-Ownership Rule **0009 and
   >   0010 must not be dispatched to concurrent agents** — `app/Policies/RolePolicy.php` and
   >   `app/Models/Role.php` are both shared.
   > - **This story's Administrator-level branch needs no equivalent hardening of its own.** It resolves
@@ -346,7 +346,7 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   >   obligation on this point.
   >
   > The general rule behind all of it is in
-  > [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null).
+  > [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null).
 
   **No `Gate::policy()` registration, and no `app/Providers/AppServiceProvider.php` change.** An earlier
   draft of this story asked for an explicit `Gate::policy(Role::class, RolePolicy::class)` line, on the
@@ -354,8 +354,8 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   now factually wrong**: `App\Models\Role` has lived inside `app/Models/` since story 0008, and Laravel 13
   auto-discovers `App\Policies\RolePolicy` for it by naming convention alone — which is this repo's
   documented, registration-free convention
-  ([base-standards.md](../../docs/conventions/base-standards.md#directory-structure),
-  [naming.md](../../docs/conventions/naming.md#classes)). 0008's own Phase 2 review examined and
+  ([base-standards.md](../../../docs/conventions/base-standards.md#directory-structure),
+  [naming.md](../../../docs/conventions/naming.md#classes)). 0008's own Phase 2 review examined and
   explicitly rejected the registration, and the policy is working today without it. Do not reinstate the
   line. (Also unchanged from the earlier draft: **do not** add the Super-Admin `Gate::before` bypass here
   — story 0002 owns it.)
@@ -491,7 +491,7 @@ carrying that permission is rejected with a 403 rather than partially applied.
       only the literally-named seeded `Administrator` role is protected. This matches the PRD's explicit
       scope — *"'Administrator-level' refers specifically to the seeded baseline 'Administrator' role —
       no other custom role, however broad its permissions, counts as administrator-level"*
-      ([PRD.md](../../docs/PRD/PRD.md), Epic 1). It is a deliberate, PRD-scoped product decision, **not
+      ([PRD.md](../../../docs/PRD/PRD.md), Epic 1). It is a deliberate, PRD-scoped product decision, **not
       an oversight**: do not silently "fix" it by switching to permission-set-based matching without a
       new product decision, and do not let a future audit re-file it as an open finding without checking
       this bullet first.
@@ -502,7 +502,7 @@ carrying that permission is rejected with a 403 rather than partially applied.
       `roles.manage-administrators` via a direct `model_has_permissions` grant or via a differently-named
       custom role is not covered by `UserPolicy`'s Administrator branches at all. F16 from the same
       re-audit is **informational, requiring no action**. Both were recorded against this story rather
-      than against [0015](0015-harden-users-crud-security-posture.md) because they concern this
+      than against [0015](../0015-harden-users-crud-security-posture.md) because they concern this
       not-yet-built mechanism rather than 0015's own code (see 0015's *Provenance* section). The human
       decision above resolves F15 as **accepted, with the PRD as the authority** — the earlier draft of
       this bullet mandated re-deriving the guard from the actual permission set, and that requirement is
@@ -513,8 +513,120 @@ carrying that permission is rejected with a 403 rather than partially applied.
       are handed with no authorization of their own; the Administrator-level guard exists only inside
       `App\Livewire\Users\Index`, so every non-component caller is ungated. That half of F2/F3 is **not**
       withdrawn — it is simply not this story's work: it is owned end-to-end by story
-      [0008a](done/0008a-centralize-administrator-role-identification.md), which moves the authorization into
+      [0008a](0008a-centralize-administrator-role-identification.md), which moves the authorization into
       both actions and centralizes the five literal-name sites behind
       `App\Models\Role::isAdministratorRole()` / `App\Enums\RoleName::Administrator`. This story's
       obligation is only to consume that shared identity rather than add a sixth comparison of its own
       (see the `RolePolicy` bullet in [Files to create/modify](#files-to-createmodify)).
+
+---
+
+## Phase 3/4/5 implementation record
+
+**2026-08-19/20 — Phase 3 (implementation).** `App\Policies\RolePolicy::update()`/`delete()` gained an
+Administrator-level branch after the pre-existing, unconditional Super Admin refusal — and that refusal
+was itself upgraded in the same pass from `$role->name === Role::superAdminName()` to the hydration-safe
+`Role::isSuperAdminRoleRow($role)`. That helper was **not** built by this story: 0008a's own Phase 4
+security-audit rounds had already built it (closing 0008a's re-audit finding N2, an unrelated fix on the
+*user* side), so this story consumed it rather than inventing the differently-named `isSuperAdminRole()`
+its own Phase 1 draft had specified — see the "Corrected 2026-08-19/20" reconciliation notes threaded
+through [`0010-role-permission-management-backend.md`](../0010-role-permission-management-backend.md),
+which had inherited the same stale premise (Phase 5 finding F-A, below). `RolePolicy` also gained a third
+ability, `grantAdministratorPermission(User $user): bool` — the Super-Admin-only meta-rule story 0011's
+frontend will consume. `App\Actions\Roles\EnforceAdministratorPermissionGrant` was created new, meant to
+be composed into story 0010's (not yet built) role-save path. `App\Models\Role::superAdminName()` gained
+a guard refusing to ever resolve to the same name as the locked Administrator tier.
+
+**Phase 4 (`appsec-auditor`), three rounds — all on `EnforceAdministratorPermissionGrant`.**
+
+- **Round 1: FAIL.** F1 (Medium) — the action only checked whether the submitted payload *contained* the
+  administrator-level permission. Since `Role::syncPermissions()` replaces a role's entire permission
+  set, and story 0011's toggle is never rendered to a non-Super-Admin at all, a broad administrator's
+  unrelated edit to a role that already legitimately held the permission would submit a payload that
+  *omitted* it — silently revoking a Super Admin's grant with no error. The mirror case (permission
+  present in both lists, a genuine no-op re-save) incorrectly threw. **Closing this required a human
+  product decision, not a technical derivation**: asked explicitly mid-audit (via a clarifying question),
+  the human chose **preserve** — an omission of an already-granted permission is read as "the toggle
+  wasn't in this actor's form", never as an intentional revoke, unless the actor can actually revoke it.
+  F2 (Medium) — the membership check only recognized an exact name string; `Role::syncPermissions()`
+  itself accepts names, ids, or `Permission` instances, so submitting the permission's id bypassed the
+  check. F3 (Medium, **accepted, deferred to 0010** — see below) — the action is a validator composed
+  into a future caller, not the write path itself. F4 (Low, fixed) — `AppServiceProvider`'s `Gate::before`
+  Super Admin deferral wasn't upgraded to the hydration-safe helper in the same pass `RolePolicy` was. F5
+  (Low, **accepted, pre-existing** — not this story's to fix) — the permission literal is duplicated in
+  `UserPolicy` outside `RolePolicy`'s new constants. F6 (Low, fixed) — nothing prevented
+  `auth.super_admin.role` from ever being configured to collide with the locked Administrator name.
+- **Round 2: FAIL again.** The F1/F2 fix's first version took the "before" snapshot as a caller-supplied
+  `array $currentPermissionNames` parameter, which reopened the same class of hole one level up: N1
+  (Medium) — the membership-check normalization didn't flatten nested arrays/Collections the way
+  `Role::syncPermissions()`'s own vendor code does, proven live to bypass the guard entirely. N2 (Medium)
+  — nothing stopped a caller from asserting an untrue "before" state through that array parameter. N3
+  (Medium) — the two snapshots were normalized asymmetrically, silently defeating the diff. Fixed by
+  replacing `array $currentPermissionNames` with `?Role $role` — the action now reads the "before"
+  snapshot itself from the model, reloaded fresh (never the possibly-stale cached relation), eliminating
+  N2/N3 structurally rather than patching the demonstrated case.
+- **Round 3: PASS**, after live re-derivation of N1/N2/N3 found none still worked. One new finding (NR1,
+  fixed in the same pass) — the `?Role $role` parameter originally carried a `= null` default, so a
+  forgotten third argument at a future call site would silently mean "nothing currently granted"; fixed
+  by removing the default (the parameter stays nullable, just not optional).
+
+**Phase 5 (`code-reviewer`), two rounds.**
+
+- **Round 1: "changes needed."** F-A (Medium) — the action's real signature (three required params)
+  diverged from what [`0010-role-permission-management-backend.md`](../0010-role-permission-management-backend.md)
+  documented (two params, described as "unchanged" twice) and from its own component sketch, which never
+  passed the third argument — 0010 would have hit `ArgumentCountError` on every `saveRole()` call.
+  Investigating this further surfaced a **much larger** pre-existing inconsistency: substantial portions
+  of that file (its `app/Models/Role.php` bullet, most of its `app/Policies/RolePolicy.php` bullet
+  including its own "Edit 1", one acceptance criterion, and several Definition-of-Done-adjacent
+  bullets) were written on the premise that **story 0010 itself** would build the
+  `Role::isSuperAdminRoleRow()`-equivalent helper (under the guessed name `isSuperAdminRole()`) and
+  rewrite `RolePolicy`'s Super Admin branch to use it — a premise already false by the time this story
+  reached Phase 3, since 0008a's audit rounds built the real helper first and this story consumed it
+  directly. **All of it was rewritten** to reflect the real, shipped state, and a new open design
+  question (F-E, below) was recorded for 0010's own Phase 1/3 to decide rather than inherit silently. F-B
+  (Medium) — the F6 `RuntimeException` guard shipped with zero test coverage; two tests added
+  (exact-match and case-insensitive collision). F-C (Low, design) — throwing from `superAdminName()`
+  (called from `Gate::before` on nearly every authorization check in the app) was fail-closed but
+  *detected lazily*, wherever the first request happened to reach it; moved to an eager call at the top
+  of `AppServiceProvider::configureAuthorization()`, and the comparison was widened to case-insensitive.
+  F-D through F-I: docblock-accuracy, naming, and test-hygiene fixes (a false "written once" claim now
+  naming `UserPolicy`'s four outstanding literals; `$permissionNames` renamed to `$submittedPermissions`
+  since it can hold names, ids, or `Permission` instances; two misleadingly-named
+  `RolePolicyTest` cases renamed to describe what they actually prove; a duplicated content-scan test
+  folded into the existing shared dataset in `AdministratorRoleLiteralContentScanTest.php`; the action's
+  docblock trimmed of "round 2 finding N1-N3" narrative that described code which never shipped, in
+  favour of stating only the durable, shipped invariants).
+- **F-E (Medium, design, deliberately left open, not resolved by this story):**
+  `EnforceAdministratorPermissionGrant` is a transformer — it returns the list to sync rather than
+  performing the write itself — so a future caller could drop the return value or sync a different role
+  than the one it authorized against, silently reopening F1/N2. Resolving this properly means deciding
+  whether the action should fold in the actual `Role::syncPermissions()` call, which depends on story
+  0010's real `saveRole()` shape, which does not exist yet. Recorded as an explicit open design question
+  inside [`0010-role-permission-management-backend.md`](../0010-role-permission-management-backend.md)
+  (both a boxed note in the relevant file bullet and entry **G** in that file's `## Open questions`
+  section) — 0010's own Phase 1/3 must decide and record the decision.
+- **Round 2 (final): "Approved for closure."** Confirmed every round-1 finding genuinely resolved, full
+  suite green, Pint and Larastan level 7 clean. A handful of trivial residual nits were found and fixed
+  in the same pass: a stale pointer-comment file reference, a typo in `AppServiceProvider`'s new comment,
+  and three lines discovered on a full re-read of `0010-role-permission-management-backend.md` that still
+  asserted the pre-rewrite premise the F-A reconciliation had already corrected elsewhere in the same
+  file (a "Tests to perform" bullet instructing 0010 to prove a fix it doesn't own, a regression bullet
+  claiming 0010 "rewrites the Super Admin branch and promotes a private model method", and an "Open
+  questions" entry claiming 0010 "hardens the Super Admin check") — all corrected to state the real,
+  already-closed status and point at this story's own test coverage instead.
+
+**Known, accepted, permanently-not-fixed limitations — recorded here so a future audit does not re-file
+them as new findings:**
+
+- **F3** — the action's guard is caller-composed rather than being the write path itself. Accepted
+  because the action has no production caller yet; folding the write in is exactly F-E, deliberately
+  deferred to 0010's own Phase 1/3.
+- **F5** — the `roles.manage-administrators` permission literal is written four times in `UserPolicy`
+  outside `RolePolicy`'s named constants. Pre-existing (predates this story), not this story's to fix.
+- **F15/F16** (pre-existing, from story 0004's Phase 4 audit, reconfirmed by this story's own Definition
+  of Done above) — "administrator-level" is deliberately name-scoped; a custom role granted
+  `roles.manage-administrators` does not itself become protected the way the seeded `Administrator` role
+  is. A PRD-scoped product decision, not a gap.
+
+**Status: Phase 5 passed, documentation synced in the same pass as this record, ready for closure.**

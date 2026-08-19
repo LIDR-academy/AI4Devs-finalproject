@@ -15,7 +15,7 @@ checks in that policy move in one pass.
 > **The mechanism is deliberately *not* the config-driven one story 0008 built for the Super Admin
 > role.** The seeded Administrator role's **name is locked and uneditable** — decided centrally and
 > applied consistently across Epic 1, and recorded in story
-> [0009](../0009-administrator-level-permission-grant.md)'s "Confirmed decision — role identity" note. It is
+> [0009](0009-administrator-level-permission-grant.md)'s "Confirmed decision — role identity" note. It is
 > therefore identified at runtime by **exact, case-sensitive comparison against the literal name**
 > (`$role->name === 'Administrator'`), with **no config key and no override capability**. What this story
 > centralizes is *where that comparison lives*, not what it reads: five scattered literals collapse into
@@ -314,7 +314,7 @@ not write an `administratorName()` resolver mirroring `superAdminName()`.
   Five properties of this shape are load-bearing:
 
   - **`public static`, not a private policy-local helper.** Story
-    [0009](../0009-administrator-level-permission-grant.md) needs the identical predicate inside
+    [0009](0009-administrator-level-permission-grant.md) needs the identical predicate inside
     `App\Policies\RolePolicy::update()` / `delete()`, and its own draft spelled it as a **private**
     `isAdministratorLevel()` on that policy. A private helper on `RolePolicy` is invisible to this
     story's call sites (`UserPolicy`, `App\Livewire\Users\Index`, `CreateUser`, `UpdateUser`) and would
@@ -343,7 +343,7 @@ not write an `administratorName()` resolver mirroring `superAdminName()`.
   > would evade the policy-layer identity check — the column is simply not loaded, `name` reads as
   > `null`, and the guard returns the actor's ordinary answer instead of the protective one.
   > `RolePolicy::update()` / `delete()` already exist — 0008 shipped them with the Super Admin branch —
-  > and story [0009](../0009-administrator-level-permission-grant.md)'s planned edits add their Administrator
+  > and story [0009](0009-administrator-level-permission-grant.md)'s planned edits add their Administrator
   > branch, specified to call this helper. That makes them the
   > **first `Gate::authorize()` call sites in this app that pass a `Role` instance to a policy** — so the
   > scenario the ⚠️ was written for is exactly the one this story ships into. None of *this* story's own call sites is affected (all of them resolve a row
@@ -574,7 +574,7 @@ change to `bootstrap/app.php` or `config/permission.php`.
 - [ ] **Refusal happens before any write.** In the `UpdateUser` cases above, submit a **changed name** alongside the refused role/status change and assert the name is *also* unchanged afterwards. Without this, a check placed below `$user->save()` (line 47 today) passes every other bullet while still persisting half the edit.
 - [ ] **Self-lockout cannot be re-enabled by a caller (decision 3):** call `UpdateUser` directly against the acting user's own account with a different role id and a different status, and assert the caller's own role and status are unchanged. Confirm by signature inspection that `$applyRoleAndStatus` is no longer a parameter — a test that merely passes `false` proves nothing once the parameter is gone.
 - [ ] **Existing dashboard coverage still holds:** the `Livewire::test()`-driven refusals already in `tests/Feature/Users/IndexTest.php` and `tests/Feature/Users/CreateUserTest.php` must keep passing unchanged. Any diff to their assertions is a UX regression to justify, not a test to update — Livewire does not distinguish an exception thrown in the component from one bubbling up one call deeper in the same synchronous `save()`.
-- [ ] **Exact-match identity — a near-miss name is an ordinary role.** With an actor holding `users.edit` but **not** `roles.manage-administrators`, assigning a custom role named `"Administrador Regional"` to a user **succeeds**, and so does assigning one named `"administrator"` in lowercase (case-sensitivity). Same for deleting a user holding either. Mirrors story [0009](../0009-administrator-level-permission-grant.md)'s equivalent role-side bullets, so the two stories pin the same identity semantics from both sides. This is the test that fails if Phase 3 reaches for `LIKE`, `strcasecmp`, or a "contains" match.
+- [ ] **Exact-match identity — a near-miss name is an ordinary role.** With an actor holding `users.edit` but **not** `roles.manage-administrators`, assigning a custom role named `"Administrador Regional"` to a user **succeeds**, and so does assigning one named `"administrator"` in lowercase (case-sensitivity). Same for deleting a user holding either. Mirrors story [0009](0009-administrator-level-permission-grant.md)'s equivalent role-side bullets, so the two stories pin the same identity semantics from both sides. This is the test that fails if Phase 3 reaches for `LIKE`, `strcasecmp`, or a "contains" match.
 - [ ] **Permission-set-equivalent custom role is still not administrator-level.** A custom role holding every permission the seeded `Administrator` role holds is assignable by an actor with `users.edit` alone. This pins the deliberate, PRD-scoped limitation recorded in the Definition of Done (F15) as *tested behaviour* rather than an accident — so a later change to permission-set-based matching is a visible, deliberate test change rather than a silent redefinition.
 - [ ] **Seeder writes the enum's name (Q1).** Running `RolePermissionSeeder` creates a role named exactly `RoleName::Administrator->value` and grants it the same 37 permissions as today. Assert against the enum, not a re-typed `'Administrator'` string literal in the test — otherwise the test and the code can drift together without failing.
 - [ ] **All five `UserPolicy` call sites resolve through the centralized identities.** With `auth.super_admin.role` overridden to a non-default value (the Super Admin half is still config-driven — 0008's mechanism, unchanged here), exercise each of `update()`, `updateSensitiveAttributes()`, `downgrade()` and `delete()` (both of its branches) and assert: the two Super Admin branches follow the **configured** name and treat a role literally named `'Super Admin'` as ordinary, while the three Administrator branches follow the **locked literal** name regardless of that config value.
@@ -706,7 +706,7 @@ already correct and no renumbering is needed.
 
 ### Cross-story contract with 0009 — not an acceptance criterion of this story
 
-Story [0009](../0009-administrator-level-permission-grant.md) needs the identical predicate inside
+Story [0009](0009-administrator-level-permission-grant.md) needs the identical predicate inside
 `App\Policies\RolePolicy::update()` / `delete()`, and an earlier draft of it spelled that as a
 **private** `isAdministratorLevel()` on the policy. The two stories are reconciled: **the helper lives
 on `App\Models\Role`, and 0009 consumes it rather than defining its own** — whichever story reaches
@@ -780,7 +780,7 @@ asserted, because it was not executed during this debate.
 - **D1 (revised 2026-08-19 — supersedes the original) — Mechanism: literal name comparison, centralized;
   explicitly *not* config-driven. Approved.** The seeded Administrator role's name is **locked and
   uneditable** (decided centrally, consistently across Epic 1 stories, and recorded in story
-  [0009](../0009-administrator-level-permission-grant.md)'s "Confirmed decision — role identity" note). It is
+  [0009](0009-administrator-level-permission-grant.md)'s "Confirmed decision — role identity" note). It is
   therefore identified at runtime by exact, case-sensitive comparison against the literal name
   (`$role->name === 'Administrator'` — refined by **D5** below to compare the row's *persisted* name, an
   answer to a hydration hazard rather than a change of mechanism), centralized as
