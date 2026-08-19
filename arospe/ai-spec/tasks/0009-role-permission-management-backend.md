@@ -146,11 +146,45 @@ Feature: Roles and permissions management
   `Route::livewire('roles', Index::class)->middleware('can:roles.manage')->name('roles.index');`
 - `routes/web.php` — **modify**. Add `require __DIR__.'/roles.php';` beside the existing
   `require __DIR__.'/settings.php';`.
-- `app/Models/Role.php` — **consume, created by 0008**. This story uses its `selectable()` scope and
-  `withCount('users')`. It additionally registers a `static::deleting()` holder-count guard **alongside**
-  0008's Super Admin guards — Laravel allows multiple listeners on one model event, so these are
-  additive and must not be written as competing/overwriting closures. If this story is scheduled
-  before 0008, it creates the class with just `selectable()` + its own guard and 0008 extends it.
+- `app/Models/Role.php` — **consume, created by 0008 (closed 2026-08-18 — the class exists now)**. This
+  story uses its `selectable()` scope and `withCount('users')`. It additionally registers a
+  `static::deleting()` holder-count guard **alongside** 0008's guards — Laravel allows multiple listeners
+  on one model event, so these are additive and must not be written as competing/overwriting closures.
+
+  > **⚠ Register this guard inside 0008's existing `boot()`, not in a second registration point — and
+  > read the two docs below before writing it.** 0008's Phase 4 security audit found and fixed two
+  > non-obvious bugs in exactly this kind of guard, and a new one written from scratch can reintroduce
+  > either. Both are documented:
+  >
+  > 1. **Registration ordering.** 0008's listeners are registered in an overridden
+  >    `protected static function boot()` **before** `parent::boot()`, and that placement is the whole
+  >    point: `HasPermissions::bootHasPermissions()` registers its *own* `deleting` listener inside
+  >    `parent::boot()`, and it unconditionally detaches every `role_has_permissions` **and**
+  >    `model_has_roles` row for the role. A guard registered in `booted()`, in a separate observer, or
+  >    anywhere after `parent::boot()`, fires *after* that detach — and `Model::delete()` opens no
+  >    transaction, so the detach persists: the `roles` row survives (a naive "the role still exists"
+  >    assertion passes) while the role has silently lost all its permissions and all its holders. For a
+  >    holder-count guard that is doubly perverse, since the very holders it counts are what the
+  >    package's listener has just removed. Put this story's `deleting` closure in the **same** `boot()`
+  >    method, alongside 0008's, so registration order stays explicit and reviewable in one place. See
+  >    [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#layer-1-registration-order-is-the-whole-point)
+  >    (which shows the real `boot()` body, plus the `booted()` anti-pattern) and the mechanism overview
+  >    in the same page's
+  >    [Super Admin role's invariants](../../docs/architecture/authorization.md#the-super-admin-roles-invariants)
+  >    section.
+  > 2. **Reading the row's protected identity.** 0008's re-audit (finding R1) found a working bypass in a
+  >    guard that read an in-memory attribute where it needed the *persisted* one, and that used `??` to
+  >    fall back — which cannot distinguish "the column was never selected" from "the column is null".
+  >    A holder-count guard reads a relation rather than a name, so it is not the identical bug, but it
+  >    is the same class: **be explicit about what state you are reading and whether it is actually
+  >    hydrated.** `$role->users()->exists()` issues a fresh query and is the safe form; `$role->users`
+  >    (the cached relation, possibly loaded before the holders changed) and a `users_count` attribute
+  >    carried over from a `withCount()` on the *listing* query are both stale-by-construction inside a
+  >    `deleting` listener. The rule and its worked example are in
+  >    [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null).
+  >
+  > A test for this guard must assert the same thing 0008's does: after a refused delete, the
+  > `model_has_roles` rows are **still there**, not merely that the `roles` row is.
 - `config/permission.php` — **not modified by this story**; 0008 repoints `models.role`.
 - `app/Concerns/RoleValidationRules.php` — **create**. Follows the existing `<Noun>ValidationRules`
   + `<noun>Rules()` pattern of `app/Concerns/ProfileValidationRules.php`:
