@@ -45,8 +45,8 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
     try {
       const response = await AuthService.loginWithPin(selectedUserId, pin);
       onSuccess(response);
-    } catch (err: any) {
-      setError(err.message || 'PIN incorrecto. Intente de nuevo.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'PIN incorrecto. Intente de nuevo.');
       setPin(''); // Limpiar mascara de PIN en caso de error
     } finally {
       setIsLoading(false);
@@ -70,11 +70,15 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
 
       {/* Seleccion de Usuario */}
       <div style={{ marginBottom: '20px', textAlign: 'left' }}>
-        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>
+        <label
+          htmlFor="select-pin-login-user"
+          style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}
+        >
           Operario en Turno:
         </label>
         <div style={{ position: 'relative' }}>
           <select
+            id="select-pin-login-user"
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
             disabled={isLoading}

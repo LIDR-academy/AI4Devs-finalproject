@@ -20,7 +20,7 @@ describe('TK-001: Backend Core & Health Check TDD', () => {
       // DATABASE_URL y JWT_SECRET ausentes deliberadamente
     };
 
-    expect(() => getEnvironment(invalidEnv as any)).toThrowError(/Error de configuracion de entorno Fail-Fast/);
+    expect(() => getEnvironment(invalidEnv)).toThrowError(/Error de configuracion de entorno Fail-Fast/);
   });
 
   it('debe parsear correctamente un entorno valido', () => {

@@ -53,7 +53,7 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     // ORACULO ESTADO & READ MODEL: Sincronización inmediata en el modelo de lectura (GET /remanentes-activos)
     const getResponse = await request(app).get('/api/v1/kitchen/remanentes-activos');
     expect(getResponse.status).toBe(200);
-    const activeItem = getResponse.body.find((item: any) => item.id === 'rem-salsa-1');
+    const activeItem = getResponse.body.find((item: { id: string }) => item.id === 'rem-salsa-1');
     expect(activeItem).toBeDefined();
     expect(activeItem.currentQuantity).toBe('1.500');
   });

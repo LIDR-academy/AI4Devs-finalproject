@@ -49,7 +49,7 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, 
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
-          <label className="form-label">
+          <label htmlFor="select-discard-reason" className="form-label">
             Motivo del Descarte / Merma:
           </label>
           <select

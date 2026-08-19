@@ -217,7 +217,10 @@ export const ShiftReconciliationWizard: React.FC<ShiftReconciliationWizardProps>
           )}
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+            <label
+              htmlFor="input-reconciliation-notes"
+              style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}
+            >
               Notas del Cierre de Turno (Opcional)
             </label>
             <input

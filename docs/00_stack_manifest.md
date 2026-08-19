@@ -1,9 +1,9 @@
 ---
 document: stack_manifest
-version: 1.0.0
+version: 1.1.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
-approved_at: "2026-08-18"
+approved_at: "2026-08-19"
 authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agentes IA"
 ---
 
@@ -72,6 +72,18 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **E2E Browser** | Playwright | **1.x** | Page Object Model (POM) obligatorio |
 | **Mutation Testing** | Stryker | **8.x** | Score mínimo ≥70% |
 | **Comando de Tests** | `pnpm test` | — | Ejecuta todos los workspaces |
+
+---
+
+## 🔍 5.1 Calidad de Código y Linting
+
+| Componente | Tecnología | Versión | Notas |
+|:-----------|:-----------|:-------:|:------|
+| **Linter (Backend)** | ESLint | **9.x** (flat config) | `@eslint/js` recommended + `typescript-eslint` recommended |
+| **Linter (Frontend)** | ESLint | **9.x** (flat config) | + `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` (WCAG 2.2) |
+| **Comando de Lint** | `pnpm run lint` | — | `tsc --noEmit && eslint .` en cada workspace — el type-check NO reemplaza al linter |
+
+> **Nota histórica (TK-033):** hasta esta versión, `pnpm run lint` era un alias de `tsc --noEmit` sin ningún linter real detrás — el gate de calidad reportaba "0 errores" sin poder detectar duplicación de estilos, `any` inseguros, ni violaciones de accesibilidad. Corregido instalando ESLint real en ambos workspaces.
 
 ---
 

@@ -1,6 +1,9 @@
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
 import { IStockRepository } from '../../domain/stock/repositories/IStockRepository.js';
-import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
+import {
+  IRemanenteQueryRepository,
+  ActiveRemanenteDTO,
+} from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 import { IRecipeRepository } from '../../domain/catalog/repositories/IRecipeRepository.js';
 import { User } from '../../domain/auth/entities/User.js';
 import { Pin } from '../../domain/auth/value-objects/Pin.js';
@@ -136,7 +139,10 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
     }
 
     // Remanentes Activos FEFO Simulados (Persistidos en Repositorio de Stock y Query Model)
-    const queryRepoWithSeed = repos.remanenteQueryRepo as { seedRemanente?: (item: any) => void; findActiveRemanentes: () => Promise<any[]> };
+    const queryRepoWithSeed = repos.remanenteQueryRepo as {
+      seedRemanente?: (item: ActiveRemanenteDTO) => void;
+      findActiveRemanentes: () => Promise<ActiveRemanenteDTO[]>;
+    };
     if (typeof queryRepoWithSeed.seedRemanente === 'function') {
       const activeRemanentes = await repos.remanenteQueryRepo.findActiveRemanentes();
       if (activeRemanentes.length === 0) {
@@ -186,7 +192,7 @@ export async function runSeed(repos: SeedRepositories, options: SeedOptions = {}
         );
 
         // 2. Sembrar en Query Model
-        const seedRem = (repos.remanenteQueryRepo as any).seedRemanente.bind(repos.remanenteQueryRepo);
+        const seedRem = queryRepoWithSeed.seedRemanente!.bind(repos.remanenteQueryRepo);
         seedRem({
           id: 'rem-101',
           insumoId: 'ins-1',

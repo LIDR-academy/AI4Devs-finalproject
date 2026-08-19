@@ -78,7 +78,7 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
-          <label className="form-label">
+          <label htmlFor="select-insumo-extraction" className="form-label">
             Seleccionar Insumo de Bodega:
           </label>
           <select
@@ -96,7 +96,7 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
         </div>
 
         <div>
-          <label className="form-label">
+          <label htmlFor="select-location-extraction" className="form-label">
             Ubicación Destino en Cocina:
           </label>
           <select
@@ -112,7 +112,7 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
         </div>
 
         <div>
-          <label className="form-label">
+          <label htmlFor="input-quantity-extraction" className="form-label">
             Cantidad a Extraer:
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

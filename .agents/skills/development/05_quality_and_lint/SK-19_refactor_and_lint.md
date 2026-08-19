@@ -1,7 +1,7 @@
 ---
 name: SK-19_refactor_and_lint
 description: "Guía el proceso de refactorización de código, resolución de advertencias de compilación, alineación con SOLID y limpieza de errores del linter."
-version: "2.1.0"
+version: "2.2.0"
 category: "development/05_quality_and_lint"
 inputs:
   - target_files: "Lista de archivos o directorios a refactorizar/limpiar"
@@ -19,7 +19,8 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🔍 FASE 1: Descubrimiento de Herramientas de Calidad y Reglas
 1. **Identificar Linters & Typecheck:** Verifica los comandos y herramientas de análisis estático, linter y compilación declarados en `AGENTS.md` y en los manifest del proyecto.
-2. **Descubrir Reglas de Gobernanza:** Lee `docs/04_governance_and_quality/rules/` (`backend_rules.md`, `frontend_rules.md`, `domain_rules.md`, etc.).
+2. **Verificar que el Linter sea Real (obligatorio):** Confirma que el comando `lint` declarado invoque una herramienta de análisis estático genuina para el lenguaje declarado en `docs/00_stack_manifest.md` sección "Calidad de Código y Linting" (ej. ESLint/Biome para JS-TS, Ruff/Pylint para Python, golangci-lint para Go, Clippy para Rust) — nunca un alias o superset trivial del compilador/type-checker (ej. `tsc --noEmit` a secas no es un linter). Un gate de "0 errores/0 advertencias" contra una herramienta que no analiza estilo ni calidad es un gate que siempre pasa sin verificar nada. Si el comando declarado resulta ser un alias del type-checker, DETENTE y repórtalo al humano antes de continuar — no lo declares completado en silencio.
+3. **Descubrir Reglas de Gobernanza:** Lee `docs/04_governance_and_quality/rules/` (`backend_rules.md`, `frontend_rules.md`, `domain_rules.md`, etc.).
 
 ---
 

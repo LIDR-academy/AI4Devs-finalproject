@@ -63,8 +63,8 @@ export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
       await KitchenService.consumeRecipe(selectedRecipeId, portions);
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error al procesar el descuento por receta.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Error al procesar el descuento por receta.');
     } finally {
       setIsSubmitting(false);
     }
@@ -85,16 +85,25 @@ export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
 
       {/* Seleccion de Recetas Tàctil */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-        <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+        <span style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
           Selecciona la Receta a Preparar:
-        </label>
+        </span>
 
         {DEFAULT_RECIPES.map((recipe) => {
           const isSelected = selectedRecipeId === recipe.id;
           return (
             <div
               key={recipe.id}
+              role="button"
+              tabIndex={0}
+              aria-pressed={isSelected}
               onClick={() => setSelectedRecipeId(recipe.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedRecipeId(recipe.id);
+                }
+              }}
               style={{
                 padding: '16px',
                 borderRadius: '12px',
@@ -122,9 +131,9 @@ export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
 
       {/* Selector Tactil de Porciones */}
       <div style={{ marginBottom: '24px' }}>
-        <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
+        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
           Número de Porciones / Platillos:
-        </label>
+        </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             className="btn-touch btn-secondary"

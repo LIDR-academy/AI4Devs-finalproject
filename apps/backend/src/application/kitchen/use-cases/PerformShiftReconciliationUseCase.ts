@@ -3,7 +3,6 @@ import { IRemanenteQueryRepository } from '../../../domain/kitchen/repositories/
 import { IShiftReconciliationRepository } from '../../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
 import { ShiftReconciliation, ShiftReconciliationItem } from '../../../domain/kitchen/entities/ShiftReconciliation.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
-import Decimal from 'decimal.js';
 
 export interface PhysicalCountItemInput {
   remanenteId: string;
