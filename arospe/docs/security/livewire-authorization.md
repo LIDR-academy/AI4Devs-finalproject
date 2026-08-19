@@ -164,33 +164,41 @@ locked id the action will actually operate on.
 
 ## Authorization that lives only in the component is bypassed by every other call site of the action
 
-`app/Actions/Users/CreateUser.php` and `app/Actions/Users/UpdateUser.php` carry **no** authorization
-of their own: they apply whatever role and status they are handed. The administrator-level rules
-(`promoteToAdministrator`, `downgrade`) are enforced in `App\Livewire\Users\Index` alone.
+The rule for this repo: **a privilege rule about *which* role may be assigned belongs in the action,
+the policy, or the validation rule set — not in the screen that happens to be the only caller today.**
+A Livewire component is a delivery mechanism; an Artisan command, a queued job, a future REST
+controller or a sibling screen calling the same action inherits none of its `Gate::authorize()` calls.
 
-Contrast the two exclusions that *do* survive a second call site, and note why:
+**Task 0004's audit recorded this as an open gap on the Users screen; task 0008a closed it.** The
+before/after is worth keeping, because the *shape* of the gap recurs on every module screen:
 
-| Control | Where it lives | Survives a non-Livewire caller? |
+| Control | Where it lived (task 0004) | Where it lives now (task 0008a) |
 | --- | --- | --- |
-| "Super Admin is never assignable" | `UserValidationRules::roleRules()` — `Rule::exists(...)->whereNot('name', 'Super Admin')` | ✅ yes, if the caller validates |
-| "a Super Admin holder is not editable" | `UserPolicy::update()` | ✅ yes, if the caller gates |
-| "adding/removing `Administrator` needs `roles.manage-administrators`" | `App\Livewire\Users\Index::authorizeRoleChange()` | ❌ **no** |
-| "changing an `Administrator`'s `status`/`email` needs `roles.manage-administrators`" | `UserPolicy::updateSensitiveAttributes()`, but the **decision that a change occurred** lives in `App\Livewire\Users\Index::updateExistingUser()` | ⚠️ partial — the ability travels, the call site does not |
+| "Super Admin is never assignable" | `UserValidationRules::roleRules()` — survives, if the caller validates | **also** a direct `throw` in `CreateUser` / `UpdateUser`, which survives regardless |
+| "a Super Admin holder is not editable" | `UserPolicy::update()` — survives, if the caller gates | **also** a direct `throw` in `UpdateUser`, which additionally binds a Super Admin actor |
+| "adding/removing `Administrator` needs `roles.manage-administrators`" | ❌ `App\Livewire\Users\Index::authorizeRoleChange()` only | ✅ `UpdateUser` / `CreateUser` themselves; the component method is deleted |
+| "changing an `Administrator`'s `status`/`email` needs `roles.manage-administrators`" | ⚠️ the ability travelled (`UserPolicy::updateSensitiveAttributes()`) but the **decision that a change occurred** stayed in the component | ✅ both live in `UpdateUser`, which compares against `getRawOriginal()` |
 
-The rule for this repo: **a privilege rule about *which* role may be assigned belongs in the policy or
-the validation rule set, not in the screen that happens to be the only caller today.** A Livewire
-component is a delivery mechanism; an Artisan command, a queued job, a future REST controller or a
-sibling screen calling the same action inherits none of its `Gate::authorize()` calls. When a rule is
-left in the component for scope reasons, say so in the action's docblock so the next caller has to
-read it.
+That last row was the finer-grained case and the instructive one: pushing the *rule* into a policy is
+not enough while the **trigger** — comparing the submission against stored state to decide whether the
+ability applies at all — stays in the caller. A second caller inherits an ability nothing ever asks.
 
-The `updateSensitiveAttributes` row above is the finer-grained case: the *rule* was correctly pushed
-into the policy, but the **trigger** — comparing the submitted `email`/`status` against the stored
-ones to decide whether the ability applies at all — stayed in the component. A second caller of
-`UpdateUser` therefore inherits nothing, exactly as with `authorizeRoleChange()`. The general
-principle behind that guard is in
-[authorization-patterns.md](authorization-patterns.md#an-ability-must-cover-every-attribute-that-achieves-its-effect-not-only-the-operation-it-is-named-after).
+Two rules to carry forward, both proven by how this was closed:
 
-_Last updated: 2026-08-13 — Created from the Phase 4 audit of task 0004 (Users list + create/edit
+- **Move the check, don't duplicate it.** The component still authorizes `create` / `update` / `delete`
+  at its own call sites (defence in depth, and `deleteUser()` calls no action at all), but there is
+  exactly **one** implementation of each tier rule. Two copies drift.
+- **A caller-supplied flag is not a guard.** `UpdateUser` used to receive the self-lockout boolean from
+  the component; it now derives it from `Auth::user()` itself. See
+  [conventions/base-standards.md](../conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
+  for the convention, and
+  [authorization-patterns.md](authorization-patterns.md#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
+  for why the two Super Admin refusals are direct throws rather than `Gate` checks.
+
+_Last updated: 2026-08-19 — Task 0008a: rewrote this section, whose claim that `CreateUser` /
+`UpdateUser` "carry no authorization of their own" the story made false. The gap it documented is
+closed; the before/after table is kept because the shape recurs on every module screen._
+
+_Previously, 2026-08-13 — Created from the Phase 4 audit of task 0004 (Users list + create/edit
 backend), the repo's first permission-gated Livewire screen; extended in the same task's Phase 4
 re-audit with the `updateSensitiveAttributes` guard added by finding F1's fix._

@@ -54,13 +54,13 @@ app/
   Actions/Users/       Users-domain actions (RequestEmailChange, ConfirmEmailChange, CreateUser, UpdateUser)
   Concerns/            Shared traits (e.g. validation rule sets)
   Console/Commands/    Artisan commands
-  Enums/               Backed enums for domain value sets (UserStatus)
+  Enums/               Backed enums for domain value sets (UserStatus, RoleName)
   Http/Controllers/    Abstract base + domain controllers (HTTP boundary in front of an action)
   Listeners/           Event listeners (ActivateVerifiedUser, RejectNonActiveUserLogin)
   Livewire/            Livewire components, grouped by area (Actions/, Settings/, Users/, ...)
-  Models/              Eloquent models
+  Models/              Eloquent models (User; Role, a spatie/laravel-permission subclass)
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
-  Policies/            Model policies (UserPolicy), auto-discovered by name
+  Policies/            Model policies (UserPolicy, RolePolicy), auto-discovered by name
   Providers/           Service providers
 config/                Laravel + package configuration
 database/

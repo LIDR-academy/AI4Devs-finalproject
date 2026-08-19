@@ -20,8 +20,14 @@ repo must follow — always with a real code example pulled from this repository
   achieves the effect it forbids (not only the operation it is named after — task 0004's finding F1),
   why a model-level guard reading a row's protected identity must separate "column not hydrated" from
   "hydrated but null" with `array_key_exists` rather than `??` (task 0008's finding R1 — a working
-  rename bypass that survived its own first fix), and why role-name collision is closed by the
-  `creating`/`updating` guards rather than by the unique index alone.
+  rename bypass that survived its own first fix), why role-name collision is closed by the
+  `creating`/`updating` guards rather than by the unique index alone, and — from task 0008a's three
+  Phase 4 rounds — why a rule that must bind a **Super Admin actor** has to be a direct throw rather
+  than a `Gate` check (`Gate::before` decides before any policy method runs, so a `Gate`-mediated
+  invariant is inert for exactly the actor it exists to bind), why such a guard must check the target's
+  **current** state and not only the value being submitted, and why authorization that consults an
+  Eloquent relation must reload it *above* the first check that reads it — a caller's `->with('roles')`
+  hydration is attacker-influenced input, and the stale path fails open and silently.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -84,7 +90,13 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-17 — Third Phase 4 pass on task 0008: expanded the `authorization-patterns.md`
+_Last updated: 2026-08-19 — Task 0008a (centralize Administrator-level role identification): its three
+Phase 4 rounds added no new page — they expanded `authorization-patterns.md` with two durable rules
+(a rule that must bind a Super Admin actor is a direct throw, never a `Gate` check; authorization that
+consults a relation reloads it above the first check that reads it) and corrected two of that page's
+now-stale passages. The index entry above was widened accordingly._
+
+_Previously: 2026-08-17 — Third Phase 4 pass on task 0008: expanded the `authorization-patterns.md`
 entry for the partially-hydrated-identity rule (finding R1) and for role-name acquisition now being
 closed by the `creating`/`updating` guards rather than the unique index (finding F3)._
 

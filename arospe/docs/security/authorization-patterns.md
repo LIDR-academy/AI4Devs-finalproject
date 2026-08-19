@@ -15,6 +15,8 @@ make these distinctions explicit.
 - [permission: and role: middleware are not a substitute for auth](#permission-and-role-middleware-are-not-a-substitute-for-auth)
 - [An ability must cover every attribute that achieves its effect, not only the operation it is named after](#an-ability-must-cover-every-attribute-that-achieves-its-effect-not-only-the-operation-it-is-named-after)
 - [A guard that reads a row's protected identity must distinguish "not hydrated" from "hydrated but null"](#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null)
+- [A rule that must bind a Super Admin actor must be a direct throw, not a Gate check](#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
+- [Authorization that consults a relation must reload it before the first check reads it](#authorization-that-consults-a-relation-must-reload-it-before-the-first-check-reads-it)
 - [Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone](#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone)
 
 ## The Super Admin bypass does not cover every check
@@ -287,7 +289,7 @@ public function updateSensitiveAttributes(User $actor, User $target): bool
         return false;
     }
 
-    if (! $target->hasRole('Administrator', 'web')) {
+    if (! $target->hasRole(RoleName::Administrator->value, 'web')) {
         return true;
     }
 
@@ -295,28 +297,39 @@ public function updateSensitiveAttributes(User $actor, User $target): bool
 }
 ```
 
-Two details of the call site that are load-bearing, not incidental
-([`app/Livewire/Users/Index.php`](../../app/Livewire/Users/Index.php), `updateExistingUser()`):
+Two details of the call site that are load-bearing, not incidental. Task 0008a moved that call site out
+of the Livewire component and into the action itself
+([`app/Actions/Users/UpdateUser.php`](../../app/Actions/Users/UpdateUser.php),
+`authorizeRoleAndStatusChange()`), and both details survived the move — they are properties of the
+*comparison*, not of where it lives:
 
 - **The change-detection comparison must use the same normalisation on both sides, and the same one
   the writer uses to decide whether it is writing.** The guard fires only when an attribute actually
   changed, so a comparison that is *stricter* than the writer's leaves an unguarded write:
 
   ```php
-  $emailChanged = Str::lower((string) $validated['email']) !== Str::lower((string) $target->getRawOriginal('email'));
+  // app/Actions/Users/UpdateUser.php
+  $emailChanged = $email !== Str::lower((string) $user->getRawOriginal('email'));
+  $statusChanged = $status->value !== $user->getRawOriginal('status');
   ```
 
-  Both sides are lowercased, and `getRawOriginal()` is used rather than `$target->email` because
-  `User`'s `email` accessor lowercases on read — reading through the accessor on one side and the raw
-  column on the other is exactly how a false "unchanged" verdict gets manufactured. This is
-  byte-identical to the comparison `App\Actions\Users\UpdateUser` itself makes before delegating to
-  `RequestEmailChange`, which is what guarantees the guard cannot disagree with the write.
+  Both sides are lowercased (`$email` is normalised at the top of `__invoke()`), and `getRawOriginal()`
+  is used rather than `$user->email` / `$user->status` for two reasons that both produce a false
+  "unchanged" verdict: `User`'s `email` accessor lowercases on read, so reading through the accessor on
+  one side and the raw column on the other manufactures a mismatch — and, since the comparison now runs
+  *inside* the action, a caller that had already staged `$user->status = $status` before invoking it
+  would otherwise make the status comparison silently false, skipping the gate for a change that is
+  about to be persisted regardless (task 0008a's finding F2). The email comparison is byte-identical to
+  the one `UpdateUser` makes before delegating to `RequestEmailChange`, which is what guarantees the
+  guard cannot disagree with the write.
 
-- **The guard runs before the action, so a denial cannot leave a partial write.** `UpdateUser` is not
-  transactional today; both `Gate::authorize()` calls precede it.
+- **The guard runs before the first write, so a denial cannot leave a partial write.** Every
+  authorization check in `UpdateUser` precedes its `DB::transaction()` block, and `CreateUser`'s
+  precede its own.
 
-❌ Bad — the pre-fix shape: only the role comparison is gated, so an unchanged `roleId` (which is what
-the edit modal prefills) short-circuits `authorizeRoleChange()` and nothing else is checked:
+❌ Bad — the pre-fix shape (adapted from the deleted `Index::updateExistingUser()`): only the role
+comparison is gated, so an unchanged `roleId` — which is what the edit modal prefills — short-circuits
+the guard and nothing else is checked:
 
 ```php
 // anti-pattern — the shape F1 found
@@ -327,14 +340,25 @@ if ($applyRoleAndStatus) {
 $updateUser($target, $name, $email, $roleId, $status, $applyRoleAndStatus, $requestEmailChange);
 ```
 
-**Known residual, deliberately deferred** (tracked on stories 0008/0009, extending findings F2/F3):
-the predicate is *role*-shaped (`hasRole('Administrator', 'web')`) while the privilege it protects is
-*permission*-shaped. A target holding `roles.manage-administrators` through a direct
-`model_has_permissions` grant, or through a custom role that is not literally named `Administrator`,
-is **not** covered by any of these four abilities. That is inert today — the seeded catalog grants no
-permission directly to a user and ships only two roles — and becomes live the moment story 0009 lets
-operators build administrator-equivalent roles. Whoever centralises the administrator-level rule must
-key it on the privilege, not on the role name.
+That snippet carries a second, independent flaw task 0008a closed: the whole guard hangs off
+`$applyRoleAndStatus`, a **caller-supplied** boolean. See
+[the direct-throw rule below](#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check).
+
+**Known residual, now a confirmed product decision rather than a deferral** (findings F2/F3; settled by
+story 0008a): the predicate is *role*-shaped (`hasRole(RoleName::Administrator->value, 'web')`) while
+the privilege it protects is *permission*-shaped. A target holding `roles.manage-administrators`
+through a direct `model_has_permissions` grant, or through a custom role that is not literally named
+`Administrator`, is **not** covered by any of these four abilities. That is inert today — the seeded
+catalog grants no permission directly to a user and ships only two roles — and becomes live the moment
+story 0009 lets operators build administrator-equivalent roles.
+
+Story 0008a centralised the rule (one predicate, `App\Models\Role::isAdministratorRole()`) and
+deliberately **kept it keyed on the name**: administrator-level is defined by the role's identity, not
+by its permission set. That is a PRD-scoped limitation with the human decision recorded on story 0009,
+and it is pinned by a test — a custom role holding *every* permission the seeded `Administrator` holds
+is assignable with a bare `users.edit`. Re-opening it is a deliberate, visible change to that test, not
+a silent redefinition. See
+[architecture/authorization.md](../architecture/authorization.md#one-predicate-two-shapes).
 
 ## A guard that reads a row's protected identity must distinguish "not hydrated" from "hydrated but null"
 
@@ -373,22 +397,27 @@ because `getAttribute('name')` is then `null` and the `??` falls through. A test
 `guard_name` case passes on the vulnerable code — the identifying attribute must be the one under test.
 
 ✅ Good — the current form in [`app/Models/Role.php`](../../app/Models/Role.php). `array_key_exists()`
-asks the question `??` cannot, and the in-memory attribute is never consulted for a persisted row:
+asks the question `??` cannot, and the in-memory attribute is never consulted for a persisted row.
+Task 0008a extracted this resolution into `persistedName()` so that **every** identity check on this
+model shares one implementation — the Super Admin guards, the row-shaped `isSuperAdminRoleRow()`, and
+the Administrator tier's `isAdministratorRole()`:
 
 ```php
-private function isSuperAdminRole(): bool
+private function persistedName(): ?string
 {
     if ($this->exists && $this->getKey() !== null) {
-        $name = array_key_exists('name', $this->getOriginal())
+        return array_key_exists('name', $this->getOriginal())
             ? $this->getOriginal('name')
             : static::query()->whereKey($this->getKey())->value('name');
-    } else {
-        $name = $this->getAttribute('name');
     }
 
-    return $name === self::superAdminName();
+    return $this->getAttribute('name');
 }
 ```
+
+**Extending a guard is the moment to extract, not to copy.** A second tier needing the same
+"read this row's real name" logic is a second chance to get it subtly wrong, and the wrong version
+passes every test that doesn't specifically load a partial row.
 
 Four things about this shape are load-bearing:
 
@@ -410,14 +439,110 @@ security decision depends on a model's **pre-mutation** state, name the exact so
 on a partially-hydrated instance — Eloquent offers several plausible-looking readers and they diverge
 precisely under attacker control.
 
-Residual, recorded rather than fixed (unreachable today, non-escalating): `App\Policies\RolePolicy` and
-the `Gate::before` deferral in `AppServiceProvider` both compare `$role->name` — the in-memory attribute
-— so a *partially-hydrated* Super Admin role passed to `Gate::authorize()` is not recognised at the
-policy layer and the check returns the actor's ordinary `roles.manage` answer instead of a categorical
-`false`. Verified to have no exploitable consequence: the model-level guard above still refuses the
-mutation, and no call site passes a `Role` to `authorize()` yet (the roles screens are stories
-0010/0011). Whoever builds those must either resolve the target through a fully-hydrated read or route
-the policy's identity check through the same persisted-identity helper.
+Residual, **narrowed by task 0008a but not closed** (unreachable today, non-escalating):
+`App\Policies\RolePolicy`'s Super Admin branch and the `Gate::before` deferral in `AppServiceProvider`
+both compare `$role->name` — the in-memory attribute — so a *partially-hydrated* Super Admin role
+passed to `Gate::authorize()` is not recognised at the policy layer and the check returns the actor's
+ordinary `roles.manage` answer instead of a categorical `false`. Verified to have no exploitable
+consequence: the model-level guard above still refuses the mutation, and no call site passes a `Role`
+to `authorize()` yet (the roles screens are stories 0009/0010/0011).
+
+What 0008a changed is that the fix is now a *call*, not a design task: `Role::isSuperAdminRoleRow()`
+and `Role::isAdministratorRole()` are `public static` and both read `persistedName()`, so any policy
+branch routed through them is hydration-safe by construction. Whoever builds the roles screens must
+either resolve the target through a fully-hydrated read or route the remaining Super Admin branch
+through `isSuperAdminRoleRow()`.
+
+## A rule that must bind a Super Admin actor must be a direct throw, not a `Gate` check
+
+Established by task 0008a's Phase 4 audit (finding F1) and its re-audit (finding N2), both of which
+were live privilege paths through `App\Actions\Users\CreateUser` / `UpdateUser`.
+
+`Gate::before` runs **before any policy method**, and this app's bypass returns `true` for a Super
+Admin. So every `Gate::authorize()` / `Gate::allows()` / `$user->can()` call is, for that one actor, a
+guaranteed grant — no matter what the policy behind it says. A rule written as a `Gate` check is
+therefore a rule that **does not apply to the most privileged actor in the system**, which is usually
+the exact actor a categorical invariant exists to bind.
+
+❌ Bad — the shape N2 found. The intent is "nobody may demote the platform's own Super Admin", and it
+is inert for a Super Admin actor, who is the only actor who could otherwise reach it:
+
+```php
+// anti-pattern — Gate::before grants before UserPolicy::update() is ever consulted
+if ($target->hasRole(Role::superAdminName(), 'web')) {
+    Gate::authorize('update', $target);   // returns true for a Super Admin actor
+}
+```
+
+✅ Good — the shipped form in [`app/Actions/Users/UpdateUser.php`](../../app/Actions/Users/UpdateUser.php).
+The refusal is a statement, not a question, so nothing can grant past it:
+
+```php
+if ($currentRoles->contains(fn (Role $role): bool => Role::isSuperAdminRoleRow($role))) {
+    throw new AuthorizationException('A Super Admin holder cannot be modified through this action.');
+}
+```
+
+Three corollaries:
+
+- **Decide "must this bind the Super Admin too?" before choosing where the rule lives.** If yes, it
+  belongs in the model (a `boot()` guard or a method override) or in the action — never in a policy.
+  This is the same reasoning that puts the role model's own invariants in
+  [layers 1 and 2](../architecture/authorization.md#three-guard-layers) rather than in `RolePolicy`,
+  and why `UserPolicy::delete()`'s trashed-target refusal is knowingly *not* binding on a Super Admin.
+- **Throw `AuthorizationException`, so the refusal is indistinguishable from a policy denial** — the
+  caller still sees a 403, and a Livewire action still fails the same way at the same point.
+- **A `Gate::allows()`-driven UI hint cannot see such a rule**, so the disabled state of a row action
+  can legitimately drift from what a click does. Accept the drift in the *enabled-then-refused*
+  direction only, and record it; never "fix" it by moving the rule back under `Gate`. The live
+  instance is documented in
+  [architecture/authorization.md](../architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer).
+
+The mirror-image mistake is just as costly and was the *other* half of F1/N2: checking only the value
+being **submitted** and never the target's **current** state. `UpdateUser` originally refused assigning
+the Super Admin role but happily *removed* it, because `syncRoles()` replaces the entire role set — an
+irrecoverable lockout, since `Gate::before` is the only route to unrestricted access. **A guard on a
+protected identity must check both directions: what is being written, and what the row already is.**
+
+## Authorization that consults a relation must reload it before the first check reads it
+
+Established by task 0008a's Phase 4 re-audit (finding N1), which appeared *while fixing* an earlier
+finding — the reload existed, but it sat below the `Gate::authorize()` call that needed it.
+
+`$target->hasRole(...)` reads the roles collection **already loaded on the instance** when there is
+one, and only queries when there is not. A policy that identifies its target by role therefore reads
+whatever the caller hydrated. That is attacker-influenced input the moment the action is callable from
+anywhere but one trusted component: `->with('roles')` is the natural, performance-motivated idiom
+(`App\Livewire\Users\Index::loadUsers()` already uses it), so handing the action a deliberately stale
+collection is a one-line evasion of `UserPolicy::update()`'s Super Admin-target exclusion.
+
+✅ Good — the shipped form. The reload is the **literal first statement**, above even the `Gate` call:
+
+```php
+// app/Actions/Users/UpdateUser.php — __invoke()
+$user->load('roles');
+
+Gate::authorize('update', $user);
+```
+
+❌ Bad — the same two statements in the opposite order (adapted to illustrate; this is the ordering N1
+found):
+
+```php
+// anti-pattern — the Gate call resolves the policy against the caller's stale collection
+Gate::authorize('update', $user);
+
+$user->load('roles');   // too late: the exclusion has already been evaluated
+```
+
+**Rule.** In an action or policy-calling method, reload every relation an authorization decision
+depends on **before the first check that consults it** — not merely somewhere before the write. Two
+things make this easy to get wrong: the reload is usually added for a *different* reason (here, making
+"is the target an Administrator?" read the whole collection rather than an unordered `first()`), so its
+placement is chosen for that purpose and never re-examined against the checks above it; and the stale
+path fails **open** and silently, since a missing role is indistinguishable from a role the target
+genuinely does not hold. `load()` (not `loadMissing()`) is what the rule needs — `loadMissing()` is
+precisely a no-op when the caller already supplied the stale collection.
 
 ## Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone
 
@@ -457,7 +582,20 @@ Do not "harden" the name comparisons themselves by lowercasing or trimming — t
 of matching names and break the property the byte-exact match above relies on. The remaining hardening
 is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-18 — Task 0008 Phase 6 (docs sync): noted in "Read the Super Admin role name with
+_Last updated: 2026-08-19 — Task 0008a's three Phase 4 rounds: added "A rule that must bind a Super
+Admin actor must be a direct throw, not a `Gate` check" (findings F1/N2 — `Gate::before` grants before
+any policy method runs, so a `Gate`-mediated invariant is inert for exactly the actor it must bind;
+plus the mirror-image mistake of checking only the submitted value and never the target's current
+state) and "Authorization that consults a relation must reload it before the first check reads it"
+(finding N1 — a caller's `->with('roles')` hydration is attacker-influenced input, and the reload added
+for a different reason sat below the `Gate` call that needed it). Rewrote the "not hydrated" section's
+now-stale `isSuperAdminRole()` code quote for the extracted `persistedName()`, and narrowed its
+policy-layer residual: the fix is now a call to `Role::isSuperAdminRoleRow()` rather than a design
+task. Corrected the deferred role-shaped-predicate residual under "An ability must cover every
+attribute…" — 0008a centralised that rule and deliberately kept it keyed on the name, so it is a
+recorded product decision, not an open item._
+
+_Previously, 2026-08-18 — Task 0008 Phase 6 (docs sync): noted in "Read the Super Admin role name with
 a literal default" that the shipped instance of that double fallback now lives solely in
 `App\Models\Role::superAdminName()`, so its snippet reads as the rule rather than a code quotation._
 
