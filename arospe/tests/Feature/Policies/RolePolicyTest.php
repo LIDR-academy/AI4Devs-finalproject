@@ -139,3 +139,213 @@ test('with a present-but-null auth.super_admin.role config value, RolePolicy sti
 
     expect(Gate::forUser($actor)->allows('delete', $superAdmin))->toBeFalse();
 });
+
+// =====================================================================
+// Story 0009 — the Administrator-level branch: editing/deleting the
+// seeded "Administrator" role requires roles.manage-administrators, on
+// top of (never instead of) the categorical Super Admin refusal above.
+// Every check below resolves through the shared, hydration-safe
+// App\Models\Role::isAdministratorRole() / isSuperAdminRoleRow() helpers
+// -- this file defines no comparison of its own.
+// =====================================================================
+
+// The content-scan proving no literal role-name string survives in
+// app/Policies/RolePolicy.php lives in
+// tests/Feature/Users/AdministratorRoleLiteralContentScanTest.php, whose
+// $guardPathFiles dataset now includes that file -- see that test's own
+// rationale for why this is a raw-content scan and not an arch() rule.
+
+test('the Super Admin refusal is unconditional even for an actor holding roles.manage-administrators', function (string $ability) {
+    $superAdmin = Role::where('name', 'Super Admin')->where('guard_name', 'web')->firstOrFail();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(['roles.manage', 'roles.manage-administrators']);
+
+    expect(Gate::forUser($actor)->allows($ability, $superAdmin))->toBeFalse();
+})->with(['update', 'delete']);
+
+test('the Super Admin edits the seeded Administrator role\'s permissions successfully', function () {
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    $actingSuperAdmin = User::factory()->create();
+    $actingSuperAdmin->assignRole('Super Admin');
+
+    expect(Gate::forUser($actingSuperAdmin)->allows('update', $administrator))->toBeTrue();
+
+    $administrator->syncPermissions(['users.view', 'users.edit']);
+
+    expect($administrator->fresh()->permissions->pluck('name')->sort()->values()->all())
+        ->toBe(['users.edit', 'users.view']);
+});
+
+test('the Super Admin deletes the unassigned seeded Administrator role successfully', function () {
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    $actingSuperAdmin = User::factory()->create();
+    $actingSuperAdmin->assignRole('Super Admin');
+
+    expect(Gate::forUser($actingSuperAdmin)->allows('delete', $administrator))->toBeTrue();
+
+    $administrator->delete();
+
+    expect(Role::where('name', 'Administrator')->where('guard_name', 'web')->exists())->toBeFalse();
+});
+
+test('an administrator granted roles.manage-administrators edits the seeded Administrator role successfully', function () {
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(['roles.manage-administrators']);
+
+    expect(Gate::forUser($actor)->allows('update', $administrator))->toBeTrue();
+
+    $administrator->syncPermissions(['users.view']);
+
+    expect($administrator->fresh()->permissions->pluck('name')->all())->toBe(['users.view']);
+});
+
+test('an administrator granted roles.manage-administrators deletes the unassigned seeded Administrator role successfully', function () {
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(['roles.manage-administrators']);
+
+    expect(Gate::forUser($actor)->allows('delete', $administrator))->toBeTrue();
+
+    $administrator->delete();
+
+    expect(Role::where('name', 'Administrator')->where('guard_name', 'web')->exists())->toBeFalse();
+});
+
+test('the Super Admin succeeds even though the seeded Super Admin role holds no explicit roles.manage-administrators permission row', function () {
+    $superAdminRole = Role::where('name', 'Super Admin')->where('guard_name', 'web')->firstOrFail();
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    // The bypass, not a grant: the Super Admin role itself carries no
+    // permission rows at all (see RolePermissionSeederTest).
+    expect($superAdminRole->permissions->pluck('name')->all())->toBe([]);
+
+    $actingSuperAdmin = User::factory()->create();
+    $actingSuperAdmin->assignRole('Super Admin');
+
+    expect(Gate::forUser($actingSuperAdmin)->allows('update', $administrator))->toBeTrue()
+        ->and(Gate::forUser($actingSuperAdmin)->allows('delete', $administrator))->toBeTrue();
+});
+
+test('the broad administrator holding only roles.manage is denied editing the seeded Administrator role, and its permissions are unchanged', function () {
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+    $originalPermissions = $administrator->permissions->pluck('name')->sort()->values()->all();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('roles.manage');
+
+    expect(fn () => Gate::forUser($actor)->authorize('update', $administrator))
+        ->toThrow(AuthorizationException::class);
+
+    expect($administrator->fresh()->permissions->pluck('name')->sort()->values()->all())
+        ->toBe($originalPermissions);
+});
+
+test('the broad administrator holding only roles.manage is denied deleting the seeded Administrator role, and it still exists', function () {
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('roles.manage');
+
+    expect(fn () => Gate::forUser($actor)->authorize('delete', $administrator))
+        ->toThrow(AuthorizationException::class);
+
+    expect(Role::where('name', 'Administrator')->where('guard_name', 'web')->exists())->toBeTrue();
+});
+
+// =====================================================================
+// Narrowness — "administrator-level" is exactly the seeded Administrator
+// role, matched by exact case-sensitive name. A broad administrator (only
+// roles.manage) can freely manage every other role, including one whose
+// name merely resembles it.
+// =====================================================================
+
+test('the broad administrator can delete an unassigned custom role, including one whose name merely resembles "Administrator"', function (string $name) {
+    $custom = Role::create(['name' => $name, 'guard_name' => 'web']);
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('roles.manage');
+
+    expect(Gate::forUser($actor)->allows('delete', $custom))->toBeTrue();
+
+    $custom->delete();
+
+    expect(Role::where('name', $name)->where('guard_name', 'web')->exists())->toBeFalse();
+})->with(['Blog Editor', 'Administrador Regional']);
+
+// A role literally named "administrator" in lowercase is DELIBERATELY not reproduced here as a
+// Role::create() fixture: roles.name carries the case-INSENSITIVE collation utf8mb4_unicode_ci
+// (verified by story 0008a), so a row named "administrator" cannot coexist with the already-seeded
+// "Administrator" row at all -- MySQL's own unique index on (name, guard_name) refuses it before this
+// policy is ever reached. The exact-match `===` comparison this policy delegates to is already
+// exercised against a not-yet-persisted instance in tests/Feature/Models/RoleTest.php.
+
+// =====================================================================
+// grantAdministratorPermission() -- the Super-Admin-only meta-rule story
+// 0011's frontend consumes to conditionally render the toggle.
+// =====================================================================
+
+test('grantAdministratorPermission() returns true only for a Super Admin holder', function () {
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole('Super Admin');
+
+    $broadestHolder = User::factory()->create();
+    $broadestHolder->givePermissionTo(['roles.manage', 'roles.manage-administrators']);
+
+    $unprivileged = User::factory()->create();
+
+    expect(Gate::forUser($superAdmin)->allows('grantAdministratorPermission', Role::class))->toBeTrue()
+        ->and(Gate::forUser($broadestHolder)->allows('grantAdministratorPermission', Role::class))->toBeFalse()
+        ->and(Gate::forUser($unprivileged)->allows('grantAdministratorPermission', Role::class))->toBeFalse();
+});
+
+// =====================================================================
+// Granting/revoking roles.manage-administrators on a role takes effect
+// immediately, through the real permission-cache invalidation Spatie's own
+// model events perform -- no manual PermissionRegistrar::forgetCachedPermissions()
+// call in either test. These exercise the grant/revoke mechanism directly
+// (Role::givePermissionTo()/revokePermissionTo()), not the Super Admin
+// actor performing it through an authorized save -- there is no save path
+// to go through yet (story 0010); that half of this story's "grant made
+// through the real save path" checklist item is 0010's to cover once its
+// role-save action exists.
+// =====================================================================
+
+test('granting roles.manage-administrators to a role takes effect immediately', function () {
+    $custom = Role::create(['name' => 'Deputy', 'guard_name' => 'web']);
+    $custom->givePermissionTo('roles.manage');
+
+    $holder = User::factory()->create();
+    $holder->assignRole($custom);
+
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    expect(Gate::forUser($holder)->allows('update', $administrator))->toBeFalse();
+
+    $custom->givePermissionTo('roles.manage-administrators');
+
+    expect($custom->fresh()->permissions->pluck('name')->sort()->values()->all())
+        ->toBe(['roles.manage', 'roles.manage-administrators'])
+        ->and(Gate::forUser($holder->fresh())->allows('update', $administrator))->toBeTrue();
+});
+
+test('revoking roles.manage-administrators from a role takes effect immediately', function () {
+    $custom = Role::create(['name' => 'Deputy', 'guard_name' => 'web']);
+    $custom->givePermissionTo(['roles.manage', 'roles.manage-administrators']);
+
+    $holder = User::factory()->create();
+    $holder->assignRole($custom);
+
+    $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    expect(Gate::forUser($holder)->allows('delete', $administrator))->toBeTrue();
+
+    $custom->revokePermissionTo('roles.manage-administrators');
+
+    expect(Gate::forUser($holder->fresh())->allows('delete', $administrator))->toBeFalse();
+});

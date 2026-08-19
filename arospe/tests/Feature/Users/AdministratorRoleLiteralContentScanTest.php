@@ -21,6 +21,13 @@ $guardPathFiles = [
     'app/Livewire/Users/Index.php',
     'app/Actions/Users/CreateUser.php',
     'app/Actions/Users/UpdateUser.php',
+    // Story 0009 extended the guard path to the role side: RolePolicy's
+    // Administrator-level branch resolves through the same centralized
+    // Role::isAdministratorRole() rather than a literal of its own, and
+    // EnforceAdministratorPermissionGrant enforces the Super-Admin-only
+    // grant rule alongside it.
+    'app/Policies/RolePolicy.php',
+    'app/Actions/Roles/EnforceAdministratorPermissionGrant.php',
 ];
 
 test('no literal Administrator/Super Admin role-name string survives in the guard path', function (string $relativePath) {

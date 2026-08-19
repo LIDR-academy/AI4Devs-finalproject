@@ -40,6 +40,20 @@ test('a present-but-null auth.super_admin.role config value still falls back to 
     expect(Role::superAdminName())->toBe(RoleName::SuperAdmin->value);
 });
 
+// Story 0009 Phase 4 finding F6 — the two protected tiers must never be
+// able to resolve to the same name.
+test('superAdminName() refuses a config value colliding with the locked Administrator name', function () {
+    config(['auth.super_admin.role' => RoleName::Administrator->value]);
+
+    expect(fn () => Role::superAdminName())->toThrow(RuntimeException::class);
+});
+
+test('superAdminName() refuses a config value colliding with the Administrator name case-insensitively', function () {
+    config(['auth.super_admin.role' => 'administrator']);
+
+    expect(fn () => Role::superAdminName())->toThrow(RuntimeException::class);
+});
+
 // =====================================================================
 // selectable() — the shared local scope every roles list / role
 // selector must use. Excludes exactly the Super Admin role.
