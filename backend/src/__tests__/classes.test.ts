@@ -339,6 +339,8 @@ describe("GET /api/v1/classes/:id (detail contract)", () => {
     expect(res.body.capacity).toBe(4);
     expect(res.body.hasWaitingList).toBe(true);
     expect(res.body.waitingListCount).toBe(1);
+    expect(res.body.waitingListCoachees).toHaveLength(1);
+    expect(res.body.waitingListCoachees[0].name).toBe("Waitlisted Coachee");
     expect(res.body.isRecurring).toBe(false);
     expect(res.body).not.toHaveProperty("coacheeStatus");
   });
@@ -394,6 +396,8 @@ describe("GET /api/v1/classes/:id (detail contract)", () => {
       .set("Authorization", `Bearer ${viewerToken}`);
     expect(viewerRes.body.enrolledCoachees).toEqual([]);
     expect(viewerRes.body.enrollmentCount).toBe(1);
+    expect(viewerRes.body.waitingListCoachees).toEqual([]);
+    expect(viewerRes.body.waitingListCount).toBe(1);
   });
 });
 

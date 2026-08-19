@@ -26,6 +26,7 @@ function buildClass(overrides: Partial<TrainingClass> = {}): TrainingClass {
     capacity: 1,
     hasWaitingList: false,
     waitingListCount: 0,
+    waitingListCoachees: [],
     isRecurring: false,
     recurrenceSeriesId: null,
     ...overrides,

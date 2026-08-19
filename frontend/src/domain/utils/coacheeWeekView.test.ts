@@ -17,6 +17,7 @@ function classRow(overrides: Partial<TrainingClass> = {}): TrainingClass {
     capacity: 4,
     hasWaitingList: false,
     waitingListCount: 0,
+    waitingListCoachees: [],
     isRecurring: false,
     recurrenceSeriesId: null,
     visibility: "blue",

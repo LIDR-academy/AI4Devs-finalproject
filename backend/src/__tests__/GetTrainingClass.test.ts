@@ -12,6 +12,7 @@ describe("GetTrainingClass", () => {
   let coach: User;
   let enrolledCoachee: User;
   let otherCoachee: User;
+  let waitlistedCoachee: User;
   let levelId: string | null = null;
   let createdUserIds: string[] = [];
   const createdClassIds: string[] = [];
@@ -66,7 +67,24 @@ describe("GetTrainingClass", () => {
         level_id: levelId,
       },
     });
-    createdUserIds = [admin.id, coach.id, enrolledCoachee.id, otherCoachee.id];
+    waitlistedCoachee = await prisma.user.create({
+      data: {
+        email: `get-waitlisted-${Date.now()}@example.com`,
+        password_hash: "not-used",
+        name: "Get Waitlisted",
+        phone: "+34 600 000 405",
+        role: "COACHEE",
+        status: "ACTIVE",
+        level_id: levelId,
+      },
+    });
+    createdUserIds = [
+      admin.id,
+      coach.id,
+      enrolledCoachee.id,
+      otherCoachee.id,
+      waitlistedCoachee.id,
+    ];
 
     const group = await prisma.trainingClass.create({
       data: {
@@ -83,6 +101,9 @@ describe("GetTrainingClass", () => {
     createdClassIds.push(group.id);
     await prisma.classEnrollment.create({
       data: { class_id: group.id, coachee_id: enrolledCoachee.id },
+    });
+    await prisma.waitingList.create({
+      data: { class_id: group.id, coachee_id: waitlistedCoachee.id },
     });
 
     const individual = await prisma.trainingClass.create({
@@ -105,6 +126,7 @@ describe("GetTrainingClass", () => {
 
   afterAll(async () => {
     await prisma.classEnrollment.deleteMany({ where: { class_id: { in: createdClassIds } } });
+    await prisma.waitingList.deleteMany({ where: { class_id: { in: createdClassIds } } });
     await prisma.trainingClass.deleteMany({ where: { id: { in: createdClassIds } } });
     await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } });
     await prisma.$disconnect();
@@ -123,7 +145,8 @@ describe("GetTrainingClass", () => {
     expect(row.duration_minutes).toBe(60);
     expect(row.description).toBe("Group detail");
     expect(row.enrollments).toHaveLength(1);
-    expect(row.waitingLists).toHaveLength(0);
+    expect(row.waitingLists).toHaveLength(1);
+    expect(row.waitingLists[0].coachee.name).toBe(waitlistedCoachee.name);
 
     const dto = toTrainingClassDTO(row, { viewerRole: "ADMIN", viewerId: admin.id });
     expect(dto).toMatchObject({
@@ -134,15 +157,64 @@ describe("GetTrainingClass", () => {
       description: "Group detail",
       enrollmentCount: 1,
       capacity: 4,
-      hasWaitingList: false,
-      waitingListCount: 0,
+      hasWaitingList: true,
+      waitingListCount: 1,
       isRecurring: false,
       recurrenceSeriesId: null,
     });
     expect(dto.level).not.toBeNull();
     expect(dto.level?.name).toBeDefined();
     expect(dto.enrolledCoachees).toEqual([{ id: enrolledCoachee.id, name: enrolledCoachee.name }]);
+    expect(dto.waitingListCoachees).toEqual([
+      { id: waitlistedCoachee.id, name: waitlistedCoachee.name },
+    ]);
     expect(dto.coacheeStatus).toBeUndefined();
+  });
+
+  it("reveals waiting-list names for a coach viewer", async () => {
+    const { row } = await useCase.execute({
+      id: groupClassId,
+      viewerRole: "COACH",
+      viewerId: coach.id,
+    });
+    const dto = toTrainingClassDTO(row, { viewerRole: "COACH", viewerId: coach.id });
+    expect(dto.waitingListCoachees).toEqual([
+      { id: waitlistedCoachee.id, name: waitlistedCoachee.name },
+    ]);
+    expect(dto.waitingListCount).toBe(1);
+  });
+
+  it("keeps waiting-list names hidden from a non-entitled coachee", async () => {
+    const { row, coacheeStatus } = await useCase.execute({
+      id: groupClassId,
+      viewerRole: "COACHEE",
+      viewerId: otherCoachee.id,
+    });
+    const dto = toTrainingClassDTO(row, {
+      viewerRole: "COACHEE",
+      viewerId: otherCoachee.id,
+      coacheeStatus,
+    });
+    expect(dto.enrolledCoachees).toEqual([]);
+    expect(dto.waitingListCoachees).toEqual([]);
+    expect(dto.enrollmentCount).toBe(1);
+    expect(dto.waitingListCount).toBe(1);
+  });
+
+  it("reveals waiting-list names for a coachee entitled to see names", async () => {
+    const { row, coacheeStatus } = await useCase.execute({
+      id: groupClassId,
+      viewerRole: "COACHEE",
+      viewerId: enrolledCoachee.id,
+    });
+    const dto = toTrainingClassDTO(row, {
+      viewerRole: "COACHEE",
+      viewerId: enrolledCoachee.id,
+      coacheeStatus,
+    });
+    expect(dto.waitingListCoachees).toEqual([
+      { id: waitlistedCoachee.id, name: waitlistedCoachee.name },
+    ]);
   });
 
   it("adds coacheeStatus for a coachee viewer", async () => {

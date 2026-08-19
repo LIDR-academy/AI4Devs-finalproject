@@ -46,11 +46,16 @@ export interface TrainingClassDTO {
   capacity: number;
   hasWaitingList: boolean;
   waitingListCount: number;
+  waitingListCoachees: EnrolledCoacheeDTO[];
   isRecurring: boolean;
   recurrenceSeriesId: string | null;
   visibility?: ClassVisibility;
   coacheeStatus?: CoacheeStatusDTO;
 }
+
+export type WaitingListRowLike =
+  | { coachee: { id: string; name: string } }
+  | { id: string; class_id: string; coachee_id: string; joined_at: Date };
 
 export interface TrainingClassRowLike {
   id: string;
@@ -63,7 +68,7 @@ export interface TrainingClassRowLike {
   description: string | null;
   recurrence_series_id: string | null;
   enrollments: Array<{ coachee: { id: string; name: string } }>;
-  waitingLists: unknown[];
+  waitingLists: WaitingListRowLike[];
 }
 
 export interface ToTrainingClassDTOOptions {
@@ -92,6 +97,14 @@ export function toTrainingClassDTO(
       }))
     : [];
 
+  const waitingListCoachees = canRevealNames
+    ? row.waitingLists.flatMap((entry) =>
+        "coachee" in entry && entry.coachee
+          ? [{ id: entry.coachee.id, name: entry.coachee.name }]
+          : [],
+      )
+    : [];
+
   return {
     id: row.id,
     classType: row.class_type,
@@ -116,6 +129,7 @@ export function toTrainingClassDTO(
     capacity: row.class_type === "GROUP" ? 4 : 1,
     hasWaitingList: row.waitingLists.length > 0,
     waitingListCount: row.waitingLists.length,
+    waitingListCoachees,
     isRecurring: row.recurrence_series_id !== null,
     recurrenceSeriesId: row.recurrence_series_id,
     ...(visibility ? { visibility } : {}),

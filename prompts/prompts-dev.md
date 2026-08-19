@@ -312,4 +312,9 @@ I know see that as a coach, when I click to see a class details I see if there's
 
 # 18 - OpenCode - DeepSeek V4 Flash Free
 
+
+I have this task: https://linear.app/ai4devs/issue/COACHER-24/us-34-calendar-interactions-for-coachees 
+However, I'm not sure if it may be everything covered already. Please can you review and edit it accordingly with only what's left to do?
+Ask me anything you need
+
 <!-- Backend `npm audit` fails on pre-existing transitive dev-dep vulnerabilities (prisma 6→7 and vitest 2→4 are the only fixes, both major/breaking). -->

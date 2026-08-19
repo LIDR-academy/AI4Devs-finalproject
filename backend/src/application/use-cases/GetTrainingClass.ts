@@ -22,7 +22,7 @@ export type TrainingClassWithRelations = Prisma.TrainingClassGetPayload<{
     assignedCoach: true;
     level: true;
     enrollments: { include: { coachee: true } };
-    waitingLists: true;
+    waitingLists: { include: { coachee: true }; orderBy: { joined_at: "asc" } };
   };
 }>;
 
@@ -30,7 +30,7 @@ const CLASS_RELATIONS_INCLUDE = {
   assignedCoach: true,
   level: true,
   enrollments: { include: { coachee: true } },
-  waitingLists: true,
+  waitingLists: { include: { coachee: true }, orderBy: { joined_at: "asc" } },
 } satisfies Prisma.TrainingClassInclude;
 
 export class GetTrainingClass {

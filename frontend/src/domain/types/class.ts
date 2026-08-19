@@ -43,6 +43,7 @@ export interface TrainingClass {
   capacity: number;
   hasWaitingList: boolean;
   waitingListCount: number;
+  waitingListCoachees: Array<{ id: string; name: string }>;
   isRecurring: boolean;
   recurrenceSeriesId: string | null;
   visibility?: ClassVisibility;

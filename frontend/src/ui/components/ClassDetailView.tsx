@@ -151,6 +151,20 @@ export function ClassDetailView({ classId, onClose }: { classId: string; onClose
               )}
 
             {(user?.role === "ADMIN" || user?.role === "COACH") &&
+              trainingClass.waitingListCoachees.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-700">Waiting list coachees</h4>
+                  <ul className="mt-2 space-y-1">
+                    {trainingClass.waitingListCoachees.map((coachee) => (
+                      <li key={coachee.id} className="text-sm text-gray-700">
+                        {coachee.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+            {(user?.role === "ADMIN" || user?.role === "COACH") &&
               trainingClass.status === "ACTIVE" && (
                 <div className="mt-6 flex justify-end gap-3">
                   <button

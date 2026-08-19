@@ -365,6 +365,7 @@ All error responses follow this shape:
     "capacity": 4,
     "hasWaitingList": true,
     "waitingListCount": 2,
+    "waitingListCoachees": [ { "id": "uuid", "name": "string" } ],
     "recurrenceSeriesId": "uuid | null",
     "coacheeStatus": {                // Present only when role = coachee
       "isEnrolled": false,
@@ -377,7 +378,8 @@ All error responses follow this shape:
   - `404 NOT_FOUND` — class does not exist.
 - **Business Rules Applied:**
   - Coachee role sees `coacheeStatus` with reach calculation, enrollment, and waiting list status.
-  - Admin/Coach role sees full coachee names; Coachee role sees only coachee names for their own classes.
+  - Admin/Coach role sees full coachee names (enrolled + waiting list); Coachee role sees only coachee names for their own classes.
+  - `waitingListCoachees` follows the same privacy rule as `enrolledCoachees`: names are revealed for Admin/Coach, and for Coachee only when the viewer is enrolled or the class is highlighted to them. It is ordered by oldest join first. On list endpoints (which do not load member names) it is `[]` while `waitingListCount` remains accurate.
 
 ---
 
