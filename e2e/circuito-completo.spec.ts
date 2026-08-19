@@ -1,4 +1,4 @@
-import { expect, test, type Page, type APIRequestContext } from "@playwright/test";
+import { expect, test, type Page, type APIRequestContext } from "./fixtures";
 
 /**
  * Recorrido E2E completo del MVP (tarea 8.4): suscriptor + back-office.
@@ -80,11 +80,16 @@ test("el alta con plan deja la cuenta operativa y el plan se cambia desde el por
 
   // ── 3. La cuenta nace con suscripción activa: sin pasos intermedios ─────────
   await login(page, email);
-  await expect(page.getByText(/Plan actual: Premium/)).toBeVisible();
+  // Acotado a la región "Tu plan" en vez de a una frase suelta de la página: así la
+  // prueba sobrevive a los cambios de redacción y comprueba lo que de verdad importa
+  // —qué plan tiene y que la suscripción está activa—, no cómo está escrito.
+  const plan = page.getByRole("region", { name: "Tu plan" });
+  await expect(plan.getByText("Premium", { exact: true })).toBeVisible();
+  await expect(plan.getByText("Activa", { exact: true })).toBeVisible();
 
   // ── 4. Cambio de plan desde el portal ──────────────────────────────────────
-  await page.getByRole("button", { name: /Cambiar a Basic/ }).click();
-  await expect(page.getByText(/Plan actual: Basic/)).toBeVisible();
+  await plan.getByRole("button", { name: /Cambiar a Basic/ }).click();
+  await expect(plan.getByText("Basic", { exact: true })).toBeVisible();
 });
 
 test("el suscriptor entra en su portal y el operador en el back-office", async ({ page }) => {
@@ -197,4 +202,24 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
   // Tras aceptar, el set pasa a ser suyo y desaparece la oferta.
   await expect(page.getByRole("heading", { name: "Te toca" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Devolver" })).toBeVisible();
+
+  // ── 6. Cierre: la prueba devuelve el mundo como lo encontró ────────────────
+  // Sin esto el circuito **no es repetible**: terminaba con Bruno quedándose el set,
+  // así que la siguiente ejecución se lo encontraba en su límite de plazas y el
+  // rechazo que esperaba (`no_copy_available`) llegaba como `NOT_ELIGIBLE`. Una
+  // prueba contra base compartida que deja residuo solo pasa la primera vez.
+  await page.getByRole("button", { name: "Devolver" }).click();
+  await expect(page.getByRole("button", { name: "Devolver" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Salir" }).click();
+  await page.waitForURL("/");
+  await login(page, "operador@clickoteca.test");
+
+  // Acotado a la fila de *este* set: en la cola puede haber más copias esperando.
+  const row = () => page.getByRole("row").filter({ hasText: target!.name });
+  for (const action of ["Recepcionar", "Inspección OK", "Higienizada"]) {
+    await row().getByRole("button", { name: action }).click();
+  }
+  // De vuelta a DISPONIBLE: la copia sale de la cola de trabajo.
+  await expect(row()).toHaveCount(0);
 });

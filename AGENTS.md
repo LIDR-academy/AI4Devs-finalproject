@@ -592,11 +592,54 @@ project. Read it at the start of every session.
   **El E2E dependía del texto de la interfaz**: renombrar los grupos de la cola de
   trabajo ("Pendientes de inspección" → "Por inspeccionar") rompía
   `circuito-completo.spec.ts`; actualizado.
+- **El E2E, ejecutado de verdad contra Docker (2026-08-19).** Se levantó
+  `clickoteca-db` y se corrió Playwright, que llevaba sin ejecutarse desde el sistema
+  de diseño. Salieron **tres problemas, dos resueltos y uno abierto**:
+  (1) **Regresión de copia mía:** el portal ya no dice "Plan actual: Premium" y el test
+  lo afirmaba. Arreglado por el lado bueno: los bloques del portal son ahora
+  `<section aria-labelledby>` —regiones con nombre accesible— y el test usa
+  `getByRole("region", { name: "Tu plan" })`, así que sobrevive a los cambios de
+  redacción. **Lección: cambiar copia rompe E2E; hay que correrlo, no solo `tsc`.**
+  (2) **El circuito no era idempotente:** terminaba con Bruno quedándose el set, así
+  que la **segunda** ejecución le encontraba en su límite de plazas y el
+  `no_copy_available` que esperaba llegaba como `NOT_ELIGIBLE`. Sembrar no lo
+  arreglaba —la semilla es idempotente y no borra—. Ahora el test **cierra el
+  circuito** (Bruno devuelve; el operador recepciona, inspecciona e higieniza) y deja
+  la copia `DISPONIBLE`. Verificado corriéndolo varias veces seguidas.
+  Ojo: el residuo de ejecuciones viejas se limpió **por la API**, no con
+  `copy.update({state})`, que se saltaría la máquina de estados.
+  (3) **El proyecto `mobile` repetía el circuito entero** y competía con `chromium`
+  por la misma copia (uno alquila, al otro le dicen que no quedan). Acotado a
+  `testMatch: /smoke\.spec\.ts/`: lo que aporta el móvil es el viewport, no repetir un
+  recorrido con estado compartido.
+  **ABIERTO, pero con la causa localizada — el servidor de `next dev` se cae bajo la
+  carga del E2E.** El síntoma eran timeouts intermitentes (~50% de las ejecuciones con
+  los 5 workers por defecto) en `page.goto("/")` o `/catalogo`, esperando el evento
+  `load` aunque el propio log del servidor dijera `200 in 50ms`. La pista definitiva
+  llegó al pedir un endpoint a mano: `/api/catalog/:id` devolvía **HTML de error 500**
+  con el mensaje `Jest worker encountered 2 child process exceptions, exceeding retry
+  limit`. Es el **pool de workers interno de Next dev** muriéndose —probablemente por
+  memoria, con cinco Chromium + el servidor + Docker en la misma máquina—; una vez
+  degradado, unas rutas cuelgan y otras dan 500 hasta que se reinicia el servidor.
+  Descartados por el camino: el estado de la base, el CDN de Rebrickable (sus imágenes
+  ya se abortan en `e2e/fixtures.ts`) y el arranque en frío (hay `e2e/warmup.ts` y el
+  timeout está en 60 s). **Con `--workers=1` es estable y rápido (7 s el smoke).**
+  Dos salidas por probar: fijar `workers` bajo en `playwright.config.ts`, o correr el
+  E2E contra `next build && next start`, que no usa ese pool de dev —ojo entonces con
+  la trampa de `reuseExistingServer` y el build viejo—.
+  **Y una regla de higiene: si el E2E empieza a fallar raro, reinicia `next dev` antes
+  de investigar nada más.**
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
 
-- _(Ninguna abierta.)_ Arquitectura, hosting, auth, UI, tests y versión de Prisma
+- **El E2E es inestable con el paralelismo por defecto**: el pool de workers de
+  `next dev` se cae bajo la carga ("Jest worker … exceeding retry limit") y a partir de
+  ahí unas rutas cuelgan y otras dan 500. Diagnóstico completo en la entrada del
+  2026-08-19. Pendiente: fijar `workers` bajo en `playwright.config.ts` o correr contra
+  `next start`. Mientras tanto, `npx playwright test --workers=1` (y reiniciar el
+  servidor de dev si ya viene degradado).
+- **Estado general.** Arquitectura, hosting, auth, UI, tests y versión de Prisma
   cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test("la landing pública carga y muestra el CTA principal", async ({ page }) => {
   await page.goto("/");

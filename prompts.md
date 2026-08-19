@@ -647,3 +647,34 @@ estaba entero pendiente.
 vocabulario) y `next build`. El **E2E no se pudo ejecutar** —Docker y Postgres no
 estaban levantados en la máquina—, pero se actualizó `circuito-completo.spec.ts`, que
 afirmaba sobre los títulos viejos de la cola de trabajo.
+
+### [2026-08-19] — El E2E ejecutado de verdad: tres problemas y uno abierto
+**Prompt:** "puedes arrancar el docker?".
+**Resumen de la respuesta:** Docker ya estaba en marcha (`clickoteca-db` sano), así que
+se aprovechó para correr Playwright, que no se había podido ejecutar al cerrar el
+sistema de diseño. Aparecieron tres cosas.
+**(1) Una regresión propia:** al rehacer el bloque "Tu plan" del portal desapareció el
+literal "Plan actual: Premium" que el test afirmaba. Se arregló por el lado bueno: los
+bloques del portal pasan a ser `<section aria-labelledby>` —regiones con nombre
+accesible, que además es deuda que el propio sistema de diseño tenía anotada— y el test
+pasa a acotarse con `getByRole("region", { name: "Tu plan" })`, así que ya no depende de
+cómo esté redactada una frase. Lección clara: **cambiar copia rompe E2E**, y `tsc` +
+unitarios no lo ven.
+**(2) El circuito no era repetible:** terminaba con Bruno quedándose el set, así que la
+segunda ejecución le encontraba en su límite de plazas y el `no_copy_available` que
+esperaba llegaba como `NOT_ELIGIBLE`. Ahora el test **cierra el circuito** —Bruno
+devuelve, el operador recepciona, inspecciona e higieniza— y deja la copia
+`DISPONIBLE`. El residuo de las ejecuciones anteriores se limpió por la API de la
+aplicación, no tocando `copy.state` a mano, que se saltaría la máquina de estados.
+**(3) El proyecto `mobile` repetía el recorrido completo** y competía con `chromium`
+por la misma copia. Acotado al smoke: lo que aporta el móvil es el viewport pequeño, no
+duplicar un circuito con estado compartido.
+**Lo que queda abierto:** con los 5 workers por defecto el suite falla ~50% de las
+veces, siempre en `page.goto("/")` o `/catalogo`, agotando el tiempo esperando el
+evento `load` **aunque el servidor conteste el HTML en 50 ms**. Con `--workers=1` y un
+solo proyecto es estable y tarda 7 s. Descartado que sea estado, que sea el CDN de
+Rebrickable (se abortan sus imágenes en `e2e/fixtures.ts`) y que sea el servidor frío
+(hay `e2e/warmup.ts` y el timeout subió a 60 s). La siguiente prueba pendiente es bajar
+`workers` en la configuración y ver si a 1 o 2 se estabiliza.
+**Verde:** `tsc`, `eslint`, 344 unitarios, y el E2E **12/12 varias veces seguidas**
+cuando no le pega la inestabilidad de paralelismo.

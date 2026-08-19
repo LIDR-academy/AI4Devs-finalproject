@@ -6,7 +6,13 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./e2e",
+  // Compila las rutas públicas antes de arrancar; ver `e2e/warmup.ts`.
+  globalSetup: "./e2e/warmup.ts",
   fullyParallel: true,
+  // 30 s (el defecto) se quedan cortos cuando la primera navegación de una prueba
+  // dispara además la compilación de la ruta en `next dev`. Red de seguridad del
+  // calentamiento, no sustituto suyo.
+  timeout: 60_000,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
@@ -16,8 +22,17 @@ export default defineConfig({
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    // Móvil: objetivo mobile-first (ADR-0001) — smoke en un viewport pequeño.
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    // Móvil: objetivo mobile-first (ADR-0001) — **solo el smoke** en un viewport
+    // pequeño. El recorrido completo se queda fuera a propósito: comparte estado con
+    // la base sembrada (busca un set con una única copia y se la queda), así que
+    // ejecutarlo en dos proyectos a la vez es una carrera — uno alquila la copia y
+    // al otro le responden "no quedan". Lo que aporta el móvil es el viewport, no
+    // repetir el circuito.
+    {
+      name: "mobile",
+      use: { ...devices["Pixel 7"] },
+      testMatch: /smoke\.spec\.ts/,
+    },
   ],
   webServer: {
     command: "npm run dev",

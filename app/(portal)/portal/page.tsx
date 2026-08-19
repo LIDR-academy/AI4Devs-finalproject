@@ -56,7 +56,7 @@ export default async function PortalPage() {
   const otherPlans = plans.filter((plan) => plan.active && plan.code !== subscription?.planCode);
 
   return (
-    <section className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Hola, {user.fullName}</h1>
         <p className="text-sm text-[var(--muted-foreground)]">
@@ -69,8 +69,13 @@ export default async function PortalPage() {
       {/* El único bloque del portal que reclama algo, y el único con tono de
           aviso: si todo grita, no grita nada. La ventana caduca sola. */}
       {offers.length > 0 ? (
-        <div className="space-y-3 rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning)] p-4 text-[var(--tone-warning-foreground)]">
-          <h2 className="text-lg font-semibold">Te toca</h2>
+        <section
+          className="space-y-3 rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning)] p-4 text-[var(--tone-warning-foreground)]"
+          aria-labelledby="te-toca"
+        >
+          <h2 id="te-toca" className="text-lg font-semibold">
+            Te toca
+          </h2>
           {offers.map((offer) => (
             <div key={offer.id} className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm">
@@ -80,11 +85,11 @@ export default async function PortalPage() {
               <OfferButtons offerId={offer.id} />
             </div>
           ))}
-        </div>
+        </section>
       ) : null}
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Tu plan</h2>
+      <section className="space-y-3" aria-labelledby="portal-plan">
+        <h2 id="portal-plan" className="text-lg font-semibold">Tu plan</h2>
         {subscription && subscription.status === "ACTIVE" && currentPlan ? (
           <div className="space-y-3 rounded-md border p-4">
             <p className="flex flex-wrap items-center gap-2 text-sm">
@@ -107,10 +112,10 @@ export default async function PortalPage() {
             </p>
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Mis sets</h2>
+      <section className="space-y-3" aria-labelledby="portal-sets">
+        <h2 id="portal-sets" className="text-lg font-semibold">Mis sets</h2>
         {rentals.length === 0 ? (
           <p className="text-sm text-[var(--muted-foreground)]">
             No tienes ningún set ahora mismo.
@@ -142,10 +147,10 @@ export default async function PortalPage() {
             })}
           </ul>
         )}
-      </div>
+      </section>
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Mis colas</h2>
+      <section className="space-y-3" aria-labelledby="portal-colas">
+        <h2 id="portal-colas" className="text-lg font-semibold">Mis colas</h2>
         {queueEntries.length === 0 ? (
           <p className="text-sm text-[var(--muted-foreground)]">No estás en ninguna cola.</p>
         ) : (
@@ -166,10 +171,10 @@ export default async function PortalPage() {
             ))}
           </ul>
         )}
-      </div>
+      </section>
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Avisos</h2>
+      <section className="space-y-3" aria-labelledby="portal-avisos">
+        <h2 id="portal-avisos" className="text-lg font-semibold">Avisos</h2>
         {notifications.length === 0 ? (
           <p className="text-sm text-[var(--muted-foreground)]">Nada nuevo.</p>
         ) : (
@@ -185,7 +190,7 @@ export default async function PortalPage() {
             ))}
           </ul>
         )}
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
