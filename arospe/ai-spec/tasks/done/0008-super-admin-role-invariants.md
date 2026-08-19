@@ -569,7 +569,7 @@ Two reasons it is bounded this way rather than left as a completion gate:
 > cheaper now, but it leaves a known security finding tracked only inside a closed task file.
 > **Resolved — the follow-up story now exists.** The recommendation above was accepted: the work is
 > tracked as [`0008a` — Centralize Administrator-level role
-> identification](../in-progress/0008a-centralize-administrator-role-identification.md), written up as full
+> identification](0008a-centralize-administrator-role-identification.md), written up as full
 > Phase 1 output and sitting in the **new** stage (not yet picked up for implementation). It carries
 > the evaluation recorded in this section forward as its starting point, and it owns the three
 > deferred items listed above (`UserPolicy`'s `hasRole('Super Admin', 'web')` checks at lines 34 and

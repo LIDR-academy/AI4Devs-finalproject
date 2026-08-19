@@ -58,7 +58,7 @@ backend | includes database-expert: **no**
 >
 > **Where that comparison lives:** in exactly one shared place, `App\Models\Role::isAdministratorRole()`
 > — a `public static` helper specified by story
-> [0008a](in-progress/0008a-centralize-administrator-role-identification.md), which centralizes the same tier's
+> [0008a](done/0008a-centralize-administrator-role-identification.md), which centralizes the same tier's
 > identity for the *user* side (`UserPolicy`, `App\Livewire\Users\Index`, `CreateUser`, `UpdateUser`).
 > **This story consumes that helper; it does not define its own.** Whichever of 0008a and 0009 reaches
 > Phase 3 first creates it on `App\Models\Role`; the other calls it. The literal string
@@ -279,7 +279,7 @@ Feature: Administrator-level role management and its Super-Admin-only grant
 
   **`Role::isAdministratorRole($role)`, not a private `isAdministratorLevel()` on this policy.** An
   earlier draft of this story defined the comparison as a policy-private helper. That is the same
-  concept story [0008a](in-progress/0008a-centralize-administrator-role-identification.md) centralizes for the
+  concept story [0008a](done/0008a-centralize-administrator-role-identification.md) centralizes for the
   *user* side, and a private helper here would leave the codebase with two independent literal
   comparisons for one tier — precisely what 0008a exists to remove. The shared `public static`
   `App\Models\Role::isAdministratorRole(Role $role): bool` (exact, case-sensitive
@@ -513,7 +513,7 @@ carrying that permission is rejected with a 403 rather than partially applied.
       are handed with no authorization of their own; the Administrator-level guard exists only inside
       `App\Livewire\Users\Index`, so every non-component caller is ungated. That half of F2/F3 is **not**
       withdrawn — it is simply not this story's work: it is owned end-to-end by story
-      [0008a](in-progress/0008a-centralize-administrator-role-identification.md), which moves the authorization into
+      [0008a](done/0008a-centralize-administrator-role-identification.md), which moves the authorization into
       both actions and centralizes the five literal-name sites behind
       `App\Models\Role::isAdministratorRole()` / `App\Enums\RoleName::Administrator`. This story's
       obligation is only to consume that shared identity rather than add a sixth comparison of its own

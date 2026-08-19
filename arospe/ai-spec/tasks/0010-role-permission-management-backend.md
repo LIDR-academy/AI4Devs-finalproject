@@ -22,8 +22,8 @@ Boundaries with siblings, referenced and never redefined here:
   `config/permission.php` model repoint, `App\Policies\RolePolicy` **itself**, and every Super Admin
   invariant (undeletable / uneditable / non-downgradable, enforced via model events and overrides of
   `syncPermissions()`/`givePermissionTo()`/`revokePermissionTo()`).
-- **[0008a](in-progress/0008a-centralize-administrator-role-identification.md)** — **now in the
-  `in-progress` stage, i.e. being implemented ahead of this story.** It owns
+- **[0008a](done/0008a-centralize-administrator-role-identification.md)** — **now `done`, i.e. already
+  shipped ahead of this story.** It owns
   `App\Models\Role::isAdministratorRole()`, the `App\Enums\RoleName::Administrator` case, the shared
   private `persistedName()` extraction on `App\Models\Role`, and the *user*-side relocation of the
   Administrator guard into `CreateUser`/`UpdateUser`. **It also modifies `app/Models/Role.php`, which
