@@ -7,10 +7,20 @@ use App\Models\User;
 
 /**
  * Authorization for role management -- the layer 0009/0011's dashboard
- * screens call via `authorize()`. The Super Admin role is refused for
- * `update()`/`delete()` categorically, identified the same way every other
- * mechanism in this story identifies it: `Role::superAdminName()`, never a
- * direct comparison against `App\Enums\RoleName::SuperAdmin`.
+ * screens call via `authorize()`. Two tiers are refused independently of
+ * the general `roles.manage` permission, in this order:
+ *
+ * 1. The Super Admin role is refused for `update()`/`delete()`
+ *    categorically, identified via the hydration-safe, row-shaped
+ *    `Role::isSuperAdminRoleRow()` (never `$role->name === ...` directly --
+ *    see that method's own docblock for why a partially-hydrated or
+ *    mid-rename row must still answer correctly).
+ * 2. The seeded `Administrator` role requires the distinct
+ *    `roles.manage-administrators` permission on top of `roles.manage`,
+ *    identified via `Role::isAdministratorRole()` -- the same row-shaped
+ *    helper story 0008a centralizes for the *user* side
+ *    (`UserPolicy`, `CreateUser`, `UpdateUser`). Both helpers live on
+ *    `App\Models\Role`; this policy defines no comparison of its own.
  *
  * This is a *complement* to, not a substitute for, `App\Models\Role`'s own
  * guards: `AppServiceProvider::configureAuthorization()`'s `Gate::before`
@@ -25,15 +35,35 @@ use App\Models\User;
 class RolePolicy
 {
     /**
+     * The permission required to manage the seeded Administrator role --
+     * distinct from, and narrower than, the general roles.manage permission
+     * every other role is governed by. This policy and
+     * EnforceAdministratorPermissionGrant (plus their tests) read this
+     * constant rather than the literal. UserPolicy still writes the literal
+     * at four call sites of its own (Phase 4 finding F5, deferred to a
+     * future cleanup rather than this story's scope) -- point those here
+     * once F5 is closed, rather than assuming it already is.
+     */
+    public const ADMINISTRATOR_LEVEL_PERMISSION = 'roles.manage-administrators';
+
+    /**
+     * The general role-management permission that governs every role
+     * except the two protected tiers above.
+     */
+    public const ROLE_MANAGEMENT_PERMISSION = 'roles.manage';
+
+    /**
      * Determine whether the actor can update the target role.
      */
     public function update(User $user, Role $role): bool
     {
-        if ($role->name === Role::superAdminName()) {
+        if (Role::isSuperAdminRoleRow($role)) {
             return false;
         }
 
-        return $user->hasPermissionTo('roles.manage');
+        return Role::isAdministratorRole($role)
+            ? $user->hasPermissionTo(self::ADMINISTRATOR_LEVEL_PERMISSION)
+            : $user->hasPermissionTo(self::ROLE_MANAGEMENT_PERMISSION);
     }
 
     /**
@@ -41,10 +71,26 @@ class RolePolicy
      */
     public function delete(User $user, Role $role): bool
     {
-        if ($role->name === Role::superAdminName()) {
+        if (Role::isSuperAdminRoleRow($role)) {
             return false;
         }
 
-        return $user->hasPermissionTo('roles.manage');
+        return Role::isAdministratorRole($role)
+            ? $user->hasPermissionTo(self::ADMINISTRATOR_LEVEL_PERMISSION)
+            : $user->hasPermissionTo(self::ROLE_MANAGEMENT_PERMISSION);
+    }
+
+    /**
+     * Determine whether the actor may grant/revoke the
+     * roles.manage-administrators permission on any role -- the
+     * Super-Admin-only meta-rule consumed by story 0011's toggle visibility
+     * and enforced server-side by App\Actions\Roles\EnforceAdministratorPermissionGrant.
+     * Deliberately not itself gated by any permission: holding
+     * roles.manage-administrators grants the *managed* ability, never the
+     * right to grant it to someone else.
+     */
+    public function grantAdministratorPermission(User $user): bool
+    {
+        return $user->hasRole(Role::superAdminName(), 'web');
     }
 }

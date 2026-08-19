@@ -7,6 +7,8 @@ use App\Exceptions\ImmutableRoleException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use RuntimeException;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 /**
@@ -32,10 +34,43 @@ class Role extends SpatieRole
      * config() default only substitutes for a *missing* key, while `??`
      * covers a key that is present but null (e.g. an unset env var feeding
      * the config value) -- see docs/security/authorization-patterns.md.
+     *
+     * Story 0009 Phase 4 finding F6 — the two protected tiers must never be
+     * able to resolve to the same name. Unlike the Super Admin name, the
+     * Administrator name is locked and has no config override, so the only
+     * way they could ever collide is an operator misconfiguring
+     * auth.super_admin.role to 'Administrator' (or a case variant of it --
+     * compared case-insensitively here on purpose, wider than every other
+     * comparison in this file, because this check exists to catch an
+     * operator's typo before it becomes a live misconfiguration, not to
+     * decide role identity). Nothing else in this codebase would catch it:
+     * RolePolicy would stay fail-closed (its Super Admin branch runs
+     * first), but Gate::before's bypass would then hand the unrestricted
+     * bypass to every Administrator holder. Fail loudly rather than let
+     * that configuration silently take effect.
+     *
+     * Called eagerly from AppServiceProvider::configureAuthorization() for
+     * exactly this reason (Phase 5 review finding F-C): this method sits on
+     * the hottest authorization path in the app (Gate::before runs it on
+     * nearly every check), so leaving detection to whichever request
+     * happens to trigger it first turns a deploy-time configuration mistake
+     * into an arbitrary user's request failing with a stack trace pointing
+     * at a policy rather than at the config key.
+     *
+     * @throws RuntimeException if auth.super_admin.role collides with the locked Administrator name.
      */
     public static function superAdminName(): string
     {
-        return config('auth.super_admin.role', RoleName::SuperAdmin->value) ?? RoleName::SuperAdmin->value;
+        $name = config('auth.super_admin.role', RoleName::SuperAdmin->value) ?? RoleName::SuperAdmin->value;
+
+        throw_if(
+            Str::lower($name) === Str::lower(RoleName::Administrator->value),
+            RuntimeException::class,
+            'auth.super_admin.role cannot be configured to "'.RoleName::Administrator->value.'" -- '.
+            'that name is reserved for the locked, uneditable Administrator tier.',
+        );
+
+        return $name;
     }
 
     /**

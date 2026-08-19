@@ -64,6 +64,12 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureAuthorization(): void
     {
+        // Story 0009 Phase 5 review finding F-C — fail fast on a
+        // misconfigured auth.super_admin.role here, at boot, rather than
+        // leaving Role::superAdminName()'s own guard to be triggered
+        // lazily by whichever request happens to reach it first.
+        Role::superAdminName();
+
         Gate::before(function (mixed $user, string $ability, array $arguments = []): ?bool {
             // F7 — Gate::before invokes the closure without consulting its type hint
             // (canBeCalledWithUser() does not), so any non-User authenticatable would
@@ -80,8 +86,16 @@ class AppServiceProvider extends ServiceProvider
             // story's own acceptance criterion. The model-level guards on App\Models\Role
             // still refuse the mutation either way; this closes the policy-layer gap on top
             // of them. See RolePolicyTest for the inverted assertion this produces.
+            //
+            // Story 0009 Phase 4 finding F4 — this comparison must read the row's PERSISTED
+            // name via the same hydration-safe Role::isSuperAdminRoleRow() RolePolicy itself
+            // uses, not $target->name directly: a partially-hydrated (select('id')) or
+            // mid-rename Super Admin role used to short-circuit this bypass to true while
+            // RolePolicy::update()/delete() -- consulted only when this closure defers --
+            // would correctly have returned false, leaving the two to disagree for that one
+            // shape. See docs/security/authorization-patterns.md.
             $target = $arguments[0] ?? null;
-            if ($target instanceof Role && $target->name === Role::superAdminName()) {
+            if ($target instanceof Role && Role::isSuperAdminRoleRow($target)) {
                 return null;
             }
 
