@@ -273,4 +273,12 @@ Can you now mark all the tasks as done if applies and the US In Review in Linear
 [/speckit.tasks]
 [/speckit.implement]
 
+
+# 16 - OpenCode - DeepSeek V4 Flash Free
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-21/us-31-class-enrollment-and-cancellation
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
 ----

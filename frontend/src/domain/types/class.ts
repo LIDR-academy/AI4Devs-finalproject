@@ -57,6 +57,19 @@ export interface CancelClassResponse {
   canceledInstances: number | null;
 }
 
+export interface EnrollResponse {
+  id: string;
+  classId: string;
+  coacheeId: string;
+  joinedAt: string;
+}
+
+export interface CancelEnrollmentResponse {
+  message: string;
+  waitingListProcessed: boolean;
+  claimedByCoachee: string | null;
+}
+
 export interface RecurrenceInput {
   enabled: boolean;
   dayOfWeek?: number;

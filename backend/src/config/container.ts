@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { CancelBlock } from "../application/use-cases/CancelBlock.js";
+import { CancelEnrollment } from "../application/use-cases/CancelEnrollment.js";
 import { CancelRecurringSeries } from "../application/use-cases/CancelRecurringSeries.js";
 import { CancelTrainingClass } from "../application/use-cases/CancelTrainingClass.js";
 import { CreateBlock } from "../application/use-cases/CreateBlock.js";
@@ -11,6 +12,7 @@ import { GetCoach } from "../application/use-cases/GetCoach.js";
 import { GetCoachee } from "../application/use-cases/GetCoachee.js";
 import { GetCoachFinancialData } from "../application/use-cases/GetCoachFinancialData.js";
 import { GetTrainingClass } from "../application/use-cases/GetTrainingClass.js";
+import { JoinTrainingClass } from "../application/use-cases/JoinTrainingClass.js";
 import { ListBlocks } from "../application/use-cases/ListBlocks.js";
 import { ListCoachees } from "../application/use-cases/ListCoachees.js";
 import { ListCoaches } from "../application/use-cases/ListCoaches.js";
@@ -25,6 +27,7 @@ import { BlockPolicy } from "../domain/services/BlockPolicy.js";
 import { ClassCancellationPolicy } from "../domain/services/ClassCancellationPolicy.js";
 import { CoacheeService } from "../domain/services/CoacheeService.js";
 import { CoachService } from "../domain/services/CoachService.js";
+import { EnrollmentPolicy } from "../domain/services/EnrollmentPolicy.js";
 import { CalendarHealthMonitor } from "../infrastructure/adapters/calendar/CalendarHealthMonitor.js";
 import { GoogleCalendarAdapter } from "../infrastructure/adapters/calendar/GoogleCalendarAdapter.js";
 import { Aes256GcmEncryptionService } from "../infrastructure/encryption/Aes256GcmEncryptionService.js";
@@ -44,6 +47,8 @@ const encryptionService = new Aes256GcmEncryptionService(env.COACH_FINANCIAL_ENC
 const auditLogger = new AuditLogger(prisma);
 
 const calendarHealthMonitor = new CalendarHealthMonitor();
+
+const enrollmentPolicy = new EnrollmentPolicy();
 
 const calendarId = resolveCalendarId();
 let calendarProvider: GoogleCalendarAdapter | null = null;
@@ -99,6 +104,8 @@ export const container = {
   getAvailableSlots: calendarProvider ? new GetAvailableSlots(prisma, calendarProvider) : null,
   listTrainingClasses: new ListTrainingClasses(prisma),
   getTrainingClass: new GetTrainingClass(prisma),
+  joinTrainingClass: new JoinTrainingClass(prisma, enrollmentPolicy, auditLogger),
+  cancelEnrollment: new CancelEnrollment(prisma, enrollmentPolicy, auditLogger),
   createBlock: calendarProvider
     ? new CreateBlock(prisma, calendarProvider, new BlockPolicy(), auditLogger)
     : null,

@@ -300,18 +300,26 @@ router.delete(
   },
 );
 
+const classIdParamSchema = z.string().uuid("id must be a valid UUID");
+
 router.post(
   "/classes/:id/enrollment",
   authenticate,
   requireRole(UserRole.COACHEE),
-  (_req: Request, res: Response) => {
-    res.status(501).json({
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Enrollment management is not yet implemented.",
-        ref: crypto.randomUUID(),
-      },
-    });
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsed = classIdParamSchema.safeParse(req.params.id);
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error.message);
+      }
+      const result = await container.joinTrainingClass.execute({
+        classId: parsed.data,
+        coacheeId: req.user?.id ?? "",
+      });
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
   },
 );
 
@@ -319,14 +327,20 @@ router.delete(
   "/classes/:id/enrollment",
   authenticate,
   requireRole(UserRole.COACHEE),
-  (_req: Request, res: Response) => {
-    res.status(501).json({
-      error: {
-        code: "NOT_IMPLEMENTED",
-        message: "Enrollment management is not yet implemented.",
-        ref: crypto.randomUUID(),
-      },
-    });
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsed = classIdParamSchema.safeParse(req.params.id);
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error.message);
+      }
+      const result = await container.cancelEnrollment.execute({
+        classId: parsed.data,
+        coacheeId: req.user?.id ?? "",
+      });
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   },
 );
 

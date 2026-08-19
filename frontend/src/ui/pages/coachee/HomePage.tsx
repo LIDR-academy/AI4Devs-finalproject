@@ -1,5 +1,6 @@
 import { useLevels } from "@/infrastructure/hooks/useLevels";
 import { useMe } from "@/infrastructure/hooks/useMe";
+import { CoacheeClassList } from "@/ui/components/CoacheeClassList";
 
 export function CoacheeHomePage() {
   const { data: me } = useMe();
@@ -33,8 +34,8 @@ export function CoacheeHomePage() {
       </div>
 
       <div className="bg-white rounded-xl border p-6">
-        <h3 className="font-semibold text-gray-900 mb-2">Joinable Classes</h3>
-        <p className="text-sm text-gray-500">No available classes to join at the moment.</p>
+        <h3 className="font-semibold text-gray-900 mb-4">Joinable Classes</h3>
+        <CoacheeClassList />
       </div>
     </div>
   );

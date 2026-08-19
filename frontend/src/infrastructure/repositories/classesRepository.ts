@@ -2,9 +2,11 @@ import type {
   AvailableSlot,
   CancelClassResponse,
   CancelClassScope,
+  CancelEnrollmentResponse,
   ClassType,
   CreateClassPayload,
   CreateClassResponse,
+  EnrollResponse,
   ListClassesParams,
   ListClassesResponse,
   TrainingClass,
@@ -43,6 +45,16 @@ export const classesRepository = {
   async cancel(id: string, scope: CancelClassScope): Promise<CancelClassResponse> {
     const search = new URLSearchParams({ scope });
     const { data } = await apiClient.delete<CancelClassResponse>(`/classes/${id}?${search}`);
+    return data;
+  },
+
+  async join(id: string): Promise<EnrollResponse> {
+    const { data } = await apiClient.post<EnrollResponse>(`/classes/${id}/enrollment`);
+    return data;
+  },
+
+  async cancelEnrollment(id: string): Promise<CancelEnrollmentResponse> {
+    const { data } = await apiClient.delete<CancelEnrollmentResponse>(`/classes/${id}/enrollment`);
     return data;
   },
 
