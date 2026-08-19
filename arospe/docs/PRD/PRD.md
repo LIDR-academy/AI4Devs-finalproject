@@ -63,9 +63,9 @@ prototype is the visual/UX reference, not the final data model.
    roles** with granular per-module permissions — beyond the prototype's flat role dropdown.
    Every other epic depends on permissions existing, so Epic 1 is built first.
 4. **Sales Regions and Shipping zones are two independent catalogs.** Do not merge them. The
-   fiscal regions (Península / Baleares / Canarias / Ceuta y Melilla / Unión Europea /
-   Internacional, plus the ISO country list) used for tax are a separate concept from the
-   shipping zones used for carrier rates.
+   fiscal regions (the ISO country list, plus — for Spain — Península / Baleares / Canarias /
+   Ceuta / Melilla) used for tax are a separate concept from the shipping zones used for
+   carrier rates.
 5. **A tax rule *is* a Sales Region entry.** There is no separate parallel "tax rule" list.
    Each Sales Region catalog entry (a country — and for Spain, its special fiscal territories:
    Península, Baleares, Canarias, Ceuta, Melilla) carries its own **rate, description, and
@@ -76,7 +76,11 @@ prototype is the visual/UX reference, not the final data model.
    standard ISO country list and, for Spain, its special fiscal territories (because Canarias,
    Baleares, Ceuta and Melilla have different tax treatment than mainland Spain). Admins
    configure rate/description/status on existing seeded entries and flag exactly one as the
-   **default**; they do not invent new countries.
+   **default**; they do not invent new countries. **Every catalog entry is a single country, or
+   one of Spain's five fiscal territories — there are no supranational or catch-all "grouping"
+   entries** (confirmed with the product owner on 2026-08-18 during Epic 2's Three Amigos
+   debate: no seeded data records which countries belong to such a grouping, so a grouping could
+   only ever be matched by hand, which defeats its purpose).
 7. **Exactly one default tax rule.** Used as the fallback rate whenever a product's assigned
    region has no matching entry.
 8. **Products have their own category taxonomy (full CRUD)**, separate from the blog's
@@ -91,9 +95,12 @@ prototype is the visual/UX reference, not the final data model.
     (`storage/app/public`). No cloud storage (S3, etc.) this phase. Every uploaded image keeps
     its original format (`.png` / `.jpg` / `.jpeg`) and the system additionally generates and
     stores `.webp` and `.avif` variants of the same image.
-12. **Shipping matches the prototype almost as-is:** carriers with enable/disable toggle, and
-    per-carrier rate rules by shipping zone + weight range + price + delivery estimate. **No
-    real carrier API** — no live tracking, no label generation; manual configuration only.
+12. **Shipping matches the prototype almost as-is for carriers and rate rules:** carriers with
+    enable/disable toggle, and per-carrier rate rules by shipping zone + weight range + price +
+    delivery estimate. **No real carrier API** — no live tracking, no label generation; manual
+    configuration only. **The shipping zone catalog itself diverges from this** — see
+    [2.4 Shipping](#24-shipping) for the confirmed admin-editable zone catalog and its seeded
+    three-level geography backing (countries / comunidades autónomas / municipios).
 13. **Blog gets categories (full CRUD) and tags (full CRUD + create-on-the-fly from the post
     editor).** A post has one category and multiple tags. Both taxonomies are distinct from the
     product category taxonomy. This extends the prototype, which had a fixed category dropdown
@@ -505,7 +512,10 @@ This is the **biggest deliberate divergence from the prototype**. In the prototy
 flat, freely-created per-country list with no default flag and no region catalog. Here, a **tax
 rule *is* a Sales Region entry**: the region catalog is the single source of truth, each entry
 carries its own rate/description/code, exactly one entry is flagged default, and the catalog is
-**seeded and fixed** (admins configure existing entries, they don't invent countries).
+**seeded and fixed** (admins configure existing entries, they don't invent countries). Every
+entry is an **individual country**, or one of Spain's five fiscal territories — the catalog has
+**no supranational or catch-all grouping entries**, per
+[assumption 6](#assumptions--confirmed-decisions).
 
 ![Tax rates list (prototype)](images/09-impuestos-lista.png)
 *Prototype Taxes list: country/region code chip, name, description, and rate %, with edit/delete
@@ -529,8 +539,8 @@ Feature: Sales Regions and their tax rates
 
   Scenario: Marking a new default clears the previous one
     Given a tax administrator, with "España (Península)" flagged as the default entry
-    When they mark "Unión Europea" as the default
-    Then "Unión Europea" becomes the only default entry
+    When they mark "Francia" as the default
+    Then "Francia" becomes the only default entry
     And "España (Península)" is no longer the default
 
   Scenario: Disabling the current default region is blocked unless a new default is set
@@ -569,8 +579,9 @@ Feature: Sales Regions and their tax rates
 
 **Acceptance criteria — Sales Regions & Taxes**
 
-- [ ] The Sales Region catalog is seeded from the ISO country list plus Spain's fiscal
-      territories, and lives as a section **inside the Taxes area** (not a top-level sidebar item).
+- [ ] The Sales Region catalog is seeded from the ISO country list plus Spain's five fiscal
+      territories — individual entries only, **no grouping entries** — and lives as a section
+      **inside the Taxes area** (not a top-level sidebar item).
 - [ ] Each entry carries its own rate, description, and code; admins configure existing entries
       and can enable/disable them, but cannot create new countries from scratch.
 - [ ] Exactly one entry is the default at all times; setting a new default clears the old one.
@@ -812,9 +823,55 @@ Feature: Shared media gallery
 
 ### 2.4 Shipping
 
-Matches the prototype **almost as-is**: integrated carriers with an enable/disable toggle, and
-per-carrier rate rules by shipping zone + weight range + price + delivery estimate. **No carrier
-API integration** — configuration is manual.
+**Carriers and rate rules** match the prototype **almost as-is**: integrated carriers with an
+enable/disable toggle, and per-carrier rate rules by shipping zone + weight range + price +
+delivery estimate. **No carrier API integration** — configuration is manual.
+
+The **shipping zone catalog** is the one part of this section that does *not* follow the
+prototype: zones are **admin-created and fully editable**, built on top of a seeded geography
+catalog, rather than a short fixed list of badges.
+
+> **Deliberate divergence — the shipping zone catalog (decided 2026-08-17).** The prototype's zone
+> badges (Península / Baleares / Canarias / Unión Europea…), and this document's own
+> [assumption 12](#assumptions--confirmed-decisions) ("shipping matches the prototype almost
+> as-is"), read as though shipping zones were a small **fixed** list. They are not. Confirmed with
+> the product owner during **Epic 2's Three Amigos Phase 0 decomposition on 2026-08-17**, the zone
+> catalog became a **full admin-CRUD catalog** over a **seeded, fine-grained geography catalog**.
+> This is the same kind of deliberate, documented extension that
+> [assumption 5](#assumptions--confirmed-decisions) records for Sales-Region-as-tax-rule: the
+> prototype stays the visual reference, never the data model. Everything else in this section —
+> carriers, rate rules, validation, and the no-carrier-API boundary — is unchanged.
+
+**The seeded geography catalog.** Zones are assembled from a catalog seeded at three levels of
+granularity:
+
+- **All ISO countries** — the same country set the storefront would ever ship to.
+- **Spain's 17 autonomous communities** (comunidades autónomas).
+- **All ~8,100 Spanish municipalities** (municipios, INE granularity) — chosen deliberately over
+  the coarser alternatives (the 52 provinces, or provincial capitals only), because carrier rates
+  in Spain are commonly quoted at municipal level.
+
+The catalog ships as a **CSV/JSON fixture bundled in this repository** (under `database/data/`),
+sourced from INE data and chunk-seeded; no third-party package supplies it.
+
+**A shipping zone is a named, admin-created group.** A zone bundles **one or more geography-catalog
+entries at any level** — it can be as narrow as a handful of municipios ("Zona Norte") or as broad
+as an entire country. Admins create, rename, and delete zones freely; the geography catalog beneath
+them is seeded and fixed.
+
+**The zone's geography picker is a searchable, server-side-filtered multi-select.** With ~8,100
+municipios in the catalog, a plain `<select>` — and equally a client-side filter like the media
+gallery's — does not scale: the picker queries the server as the administrator types and returns a
+bounded, level-grouped result set. This is a **shared component**, the same one the product
+editor's Sales Region picker uses (see [2.2 Products](#22-products)).
+
+**This catalog stays genuinely independent from the Sales Region (fiscal) catalog**, reaffirming
+[assumption 4](#assumptions--confirmed-decisions): **no merge and no shared table**, even though
+both may ultimately read their country rows from the same bundled ISO-country source file. The two
+model different things — a Sales Region carries a tax rate, a default flag, and Spain's *fiscal*
+territories (Península, Baleares, Canarias, Ceuta, Melilla), which are neither ISO entities nor
+autonomous communities; the shipping geography catalog carries autonomous communities and
+municipios, which have no fiscal meaning. Editing one never affects the other.
 
 ![Shipping configuration](images/11-envios.png)
 *Shipping screen: carrier cards (SEUR, Correos, MRW, DHL) each with an enable/disable toggle and
@@ -825,6 +882,83 @@ delivery estimate.*
 ![New shipping rate modal](images/12-envios-modal.png)
 *New shipping rate modal: rate name, carrier select, geographic zone select, min/max weight
 (kg), price (€), and a delivery-time estimate.*
+
+```gherkin
+Feature: Shipping zones (extends the prototype)
+
+  Scenario: Create a shipping zone
+    Given a shipping administrator
+    When they create a shipping zone named "Zona Norte"
+    Then "Zona Norte" appears in the shipping zone list
+
+  Scenario: Rename a shipping zone
+    Given a shipping administrator, with a shipping zone "Zona Norte"
+    When they rename it to "Cornisa Cantábrica"
+    Then the zone is shown with its new name wherever it is used
+
+  Scenario: Delete a shipping zone no rate rule references
+    Given a shipping administrator, with a shipping zone "Zona Norte" referenced by no rate rule
+    When they delete "Zona Norte"
+    Then it no longer appears in the shipping zone list
+    And it is no longer offered in the shipping rate modal's zone selector
+
+  Scenario Outline: Assign geography entries to a zone at any level
+    Given a shipping administrator editing the shipping zone "Zona Norte",
+      with the geography catalog seeded
+    When they add <entry> to the zone
+    Then the zone covers <entry>
+
+    Examples:
+      | entry                                        |
+      | the country "Francia"                        |
+      | the autonomous community "Galicia"           |
+      | the municipios "Gijón", "Avilés" and "Siero" |
+
+  Scenario: The geography picker filters as the administrator searches
+    Given a shipping administrator editing a shipping zone, with the geography catalog seeded
+      with every country, Spain's 17 autonomous communities, and its ~8,100 municipios
+    When they type "Torrelav" into the zone's geography picker
+    Then only catalog entries matching that text are offered, grouped by level
+
+  Scenario: The geography picker shows an empty state when a search matches nothing
+    Given a shipping administrator editing a shipping zone
+    When they search the geography picker for a term that matches no catalog entry
+    Then a "no results" empty state is shown instead of a list of entries
+
+  Scenario: The geography catalog does not allow inventing new entries
+    Given a shipping administrator editing a shipping zone
+    When they look for a way to add a country, autonomous community, or municipio
+      that the catalog does not contain
+    Then no such option exists, and only seeded catalog entries can be added to a zone
+
+  Scenario: Creating a shipping zone leaves the Sales Region catalog untouched
+    Given a shipping administrator, with the Sales Region (fiscal) catalog seeded
+    When they create the shipping zone "Zona Norte"
+    Then "Zona Norte" appears only in the shipping zone list
+    And no Sales Region entry, rate, or default flag is changed
+```
+
+> **Pending Phase 1 confirmation — not a locked decision.** Unlike every other scenario in this
+> PRD, the single scenario below has **not** been confirmed with the product owner. Making shipping
+> zones deletable raised a question the fixed-list design never had: what happens to a zone a rate
+> rule still points at. The scenario states the **recommendation** — a hard block with a count,
+> mirroring the established convention for product categories in
+> [2.2 Products](#22-products) — so the Three Amigos debate for the shipping stories has something
+> concrete to accept or reject. Treat it as a proposal until that debate resolves it; the
+> alternative under consideration is blocking only until the affected rate rules are reassigned
+> through a guided flow.
+
+```gherkin
+Feature: Deleting a shipping zone still in use (pending Phase 1 confirmation)
+
+  Scenario: Deleting a shipping zone still referenced by a rate rule is hard-blocked with a count
+    Given a shipping administrator, with the zone "Península" referenced by 7 SEUR rate rules
+    When they try to delete "Península"
+    Then deletion is always blocked (no confirm-and-proceed path)
+    And the message states how many rate rules reference it
+      (e.g. "This zone is used by 7 shipping rates and cannot be deleted")
+    And they must reassign those rate rules' zone before it can be deleted
+```
 
 ```gherkin
 Feature: Shipping carriers and rates
@@ -861,7 +995,22 @@ Feature: Shipping carriers and rates
 - [ ] Rate rules are created/edited/deleted per carrier with zone, weight range, price (€), and
       delivery estimate, shown grouped by carrier as in the prototype.
 - [ ] Weight range (min ≤ max) and non-negative price are validated.
-- [ ] Shipping zones are managed as a catalog independent from the Sales Region (fiscal) catalog.
+- [ ] Shipping zones are a **full admin-CRUD catalog** — administrators create, rename, and delete
+      zones freely; zones are not a fixed seeded list.
+- [ ] A **geography catalog is seeded** at three levels — all ISO countries, Spain's 17 autonomous
+      communities, and all ~8,100 Spanish municipios (INE granularity) — from a CSV/JSON fixture
+      bundled in this repository (`database/data/`). Administrators cannot add entries to it.
+- [ ] A shipping zone is a **named group bundling one or more geography-catalog entries at any
+      level**; a zone may be as narrow as a few municipios or as broad as an entire country.
+- [ ] The zone's geography picker is a **searchable, server-side-filtered multi-select** with a
+      "no results" empty state — the same shared component the product editor's Sales Region picker
+      uses. A client-side filter is explicitly insufficient at this dataset's size.
+- [ ] Shipping zones and their geography catalog are kept **independent from the Sales Region
+      (fiscal) catalog** per [assumption 4](#assumptions--confirmed-decisions): no merge and no
+      shared table, even where both read country rows from the same bundled ISO-country file.
+- [ ] _(Pending Phase 1 confirmation)_ Deleting a zone still referenced by a rate rule is hard-
+      blocked, with a message stating how many rate rules reference it, requiring reassignment
+      first — mirroring the product-category convention in [2.2 Products](#22-products).
 - [ ] No external carrier API is called; all configuration is manual.
 
 ### 2.5 Payment Methods (Store Settings)
