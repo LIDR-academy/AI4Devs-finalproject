@@ -135,9 +135,10 @@ permission gate in Epics 2–5 — build on.
   self-sufficient and 0008 *later hardens* the `"Super Admin"` role it creates, adding the
   dashboard-level invariants on top of the role-name string the bypass is keyed on.
 - Enforcement of `roles.manage-administrators` and its "only the Super Admin can see the grant
-  control" meta-rule → **story 0010**. This story only seeds the permission.
+  control" meta-rule → **story 0009** (`0009-administrator-level-permission-grant.md`). This story
+  only seeds the permission.
 - The Roles & Permissions management UI, the Users screen, user `status`, and user soft-deletes →
-  stories 0003–0007, 0009 and 0011. The `users` table has no `status` or `deleted_at` column yet; nothing here
+  stories 0003–0007, 0010 and 0011. The `users` table has no `status` or `deleted_at` column yet; nothing here
   may depend on them.
 
 ## Type
@@ -1229,15 +1230,17 @@ the kind of gap that is invisible until it silently locks the Super Admin out of
       re-run again after this pass, not skipped).
 
 ## Open follow-ups (product-owner — do not block Phase 3 of this story)
-- [x] **Story 0010 uses non-canonical permission literals.**
-      `ai-spec/tasks/0010-administrator-level-permission-grant.md` (renumbered from 0009 when story
-      0003 was split — see that story's Provenance) currently hardcodes
+- [x] **The Administrator-level permission-grant story — today 0009 — uses non-canonical permission
+      literals.** `ai-spec/tasks/0009-administrator-level-permission-grant.md` (numbered 0009 when
+      this follow-up was written, renumbered to 0010 when story 0003 was split — see that story's
+      Provenance — and renumbered **back to 0009 on 2026-08-19** so it precedes the Roles &
+      Permissions management backend story that hard-depends on it) currently hardcodes
       `'manage administrator-level roles/users'` and `'manage roles & permissions'` (e.g. its
       `ADMINISTRATOR_LEVEL_PERMISSION` constant and its Gherkin), which this catalog does not seed —
-      any `can()` against them would throw `PermissionDoesNotExist`. 0010 must be corrected to
+      any `can()` against them would throw `PermissionDoesNotExist`. That story must be corrected to
       `roles.manage-administrators` and `roles.manage` before *it* enters Phase 3. Out of scope for
       0002; recorded here because 0002 owns the canonical names.
-      ✅ **Resolved — 2026-08-10, during the 0003 split.** `0010-administrator-level-permission-grant.md`
+      ✅ **Resolved — 2026-08-10, during the 0003 split.** `0009-administrator-level-permission-grant.md`
       now defines `public const ADMINISTRATOR_LEVEL_PERMISSION = 'roles.manage-administrators';`; the
       Gherkin's quoted prose (`"manage administrator-level roles/users"`) is business-readable phrasing
       in `Given`/`Then` steps, not a code-level literal — the canonical string is what the code uses.
@@ -1338,9 +1341,12 @@ mailbox ownership.
 
 The three items under [Open follow-ups](#open-follow-ups-product-owner--do-not-block-phase-3-of-this-story)
 were **deliberately left unticked at the time of this closure (2026-08-10)** — all three were out of
-scope for 0002 and were verified still open then: story 0009 (since renumbered 0010) still hardcoded
+scope for 0002 and were verified still open then: the Administrator-level permission-grant story
+(numbered 0009 at the time, 0010 after the 0003 split, and 0009 again since the 2026-08-19
+renumbering) still hardcoded
 non-canonical permission literals, and `App\Livewire\Settings\Profile` still neither lowercased a
 submitted address nor required re-verification after an email change. None blocked this story (the
 seeder normalizes its own input and N1 defends the grant path regardless). All three were later
 resolved by story 0003 (`0003-users-status-and-email-verification-lifecycle.md`, itself the result of
-splitting the original story 0003) and story 0010 — see the ticked boxes above.
+splitting the original story 0003) and by that Administrator-level permission-grant story
+(`0009-administrator-level-permission-grant.md`) — see the ticked boxes above.

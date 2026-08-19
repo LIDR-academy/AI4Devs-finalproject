@@ -262,7 +262,7 @@ Feature: Backoffice user administration
 > and would run **unauthorized**. This story therefore uses **`can:`** middleware (Spatie
 > registers permissions as Gate abilities, so it works with no extra setup) **plus** explicit
 > per-method authorization. Confirmed independently by `backend-expert` here and by story
-> **0009**'s debate.
+> **0010**'s debate.
 
 > **This story defines the user-side policy it calls.** It creates `App\Policies\UserPolicy` with
 > `viewAny`, `create`, `update`, `promoteToAdministrator`, **`downgrade` and `delete`** — the last
@@ -272,7 +272,7 @@ Feature: Backoffice user administration
 > This closes the inverted dependency `code-reviewer` flagged in Phase 2: every gate this story's
 > tests exercise is defined by this story, so its TDD cycle can go green on its own.
 >
-> Story **0010** owns the *role-level* administrator rule (who may edit or delete the
+> Story **0009** owns the *role-level* administrator rule (who may edit or delete the
 > `Administrator` **role** itself, and the Super-Admin-only grant meta-rule) in `RolePolicy` —
 > a different policy on a different model. The *user*-side promotion/downgrade/delete rules below
 > are this story's, and no other story defines them.
@@ -526,7 +526,7 @@ by `UserPolicy`. Every mutating path is authorized at the Livewire action, not o
 ## Definition of Done
 - [x] Tests written and green, plus the full existing suite (`tests/Feature/Settings/**`, `tests/Feature/Auth/**`). This story's own three test files (`UserPolicyTest.php`, `IndexTest.php`, `CreateUserTest.php`) are 100% green (85/85). The full suite briefly stood at 275/276 during this closure — a pre-existing, unrelated story-0001 test (`tests/Feature/Models/UserRouteBindingTest.php`) broken by a calendar-triggered MySQL UUID-integer-coercion issue (no 0004 file participates) — fixed directly (two `assertDatabaseMissing` calls compared the UUID `CHAR` column against an unquoted int literal `1`, which MySQL numerically coerces; changed to the string `'1'`). Full suite now 276/276.
 - [x] Code reviewed (code-reviewer). Confirmed by commit `419fff4` ("assert the full $users row contract, dedupe a guest test"), whose test explicitly cites "Code review finding (Phase 5)".
-- [x] No security findings (appsec-auditor) — specifically the `#[Locked]` target-swap vector, the Livewire-action authorization gap, and that the generated password is never logged or flashed. `#[Locked]` confirmed on `$editingUserId`/`$deletingUserId` (`app/Livewire/Users/Index.php`); `Gate::authorize` confirmed as the first statement of `mount()`, `save()` and `deleteUser()`; `CreateUser::__invoke()` passes `Str::password(32)` directly into `Hash::make()` with no intermediate variable, log call, or flash. The one finding this audit did raise (F1: status/email bypassing the administrator-level guard) was fixed in commit `78116db`, with its remaining findings triaged into follow-up stories 0008/0010/0015 rather than left open against 0004.
+- [x] No security findings (appsec-auditor) — specifically the `#[Locked]` target-swap vector, the Livewire-action authorization gap, and that the generated password is never logged or flashed. `#[Locked]` confirmed on `$editingUserId`/`$deletingUserId` (`app/Livewire/Users/Index.php`); `Gate::authorize` confirmed as the first statement of `mount()`, `save()` and `deleteUser()`; `CreateUser::__invoke()` passes `Str::password(32)` directly into `Hash::make()` with no intermediate variable, log call, or flash. The one finding this audit did raise (F1: status/email bypassing the administrator-level guard) was fixed in commit `78116db`, with its remaining findings triaged into follow-up stories 0008/0009/0015 rather than left open against 0004.
 - [x] Documentation updated (docs-keeper) — `docs/api/routes.md` (`users.index`), `docs/architecture/authorization.md` (first real permission-gated route, the `can:` vs `permission:` Livewire finding, and the new `UserPolicy` abilities), and `docs/conventions/base-standards.md`'s directory listing for the **one** folder this story introduces: **`app/Policies/`**.
   **Directory-documentation ownership — do not duplicate story 0003's entries.** `app/Actions/Users/` and `app/Notifications/` are **story 0003's** to document (it lands first and creates both folders, for `RequestEmailChange` / `ConfirmEmailChange` and `PendingEmailVerification`). By the time this story reaches Phase 6 those directory lines already exist in `base-standards.md`; this story adds `CreateUser`, `UpdateUser` and `UserInvitation` *inside* them, which needs no new entry. `app/Enums/`, `app/Listeners/`, `app/Http/Controllers/`'s "first domain controller" rewrite, and `lang/` are likewise 0003's.
 - [x] Acceptance criteria met.
@@ -538,7 +538,7 @@ by `UserPolicy`. Every mutating path is authorized at the Livewire action, not o
 - **Story 0005** — soft delete and email obfuscation. It **extends** the `UserPolicy::delete()` / `downgrade()` this story creates rather than defining them, and it overrides `User::delete()` so this story's `$user->delete()` call gains soft-delete semantics with no change here. Also: 0005's `deleted_at` must anchor `after('updated_at')`, and it must null `pending_email` alongside obfuscating `email`.
 - **Story 0007** — Fortify enforcement that a non-`active` status blocks sign-in. It depends on **0003** only (column + enum + factory), **not** on this story.
 - **Story 0008 (Super Admin role invariants)** — the exclusion of the `Super Admin` role from `roleOptions()` and from `roleRules()` is **local to this story for now**: this story hardcodes the exclusion in its own computed property and its own `Rule::exists(...)->whereNot('name', 'Super Admin')`. 0008 is expected to centralise that rule, e.g. as a `Role::selectable()` scope or an equivalent single source of truth. **Whoever implements 0008 must revisit these two call sites** and route them through the centralised rule rather than leaving a second, drifting copy of the exclusion. Nothing here should be generalised pre-emptively.
-- **Story 0010** — the role-level administrator rule (`RolePolicy`) and the Super-Admin-only grant meta-rule. Disjoint from this story's user-level `UserPolicy`; neither defines the other's abilities.
+- **Story 0009** — the role-level administrator rule (`RolePolicy`) and the Super-Admin-only grant meta-rule. Disjoint from this story's user-level `UserPolicy`; neither defines the other's abilities.
 - **Warning to any later story that touches this route.** `users.index` is gated with **`can:users.view`**, and that choice is load-bearing, not incidental — see the boxed note at the top of *Files to create/modify*. Livewire 4's `PersistentMiddleware` allowlist does not carry Spatie's `permission:` middleware, so swapping it would leave every `/livewire/update` round-trip unauthorized at the route layer. A later module-gating story must not rewrite this route's middleware to `permission:`; if it needs module-level gating semantics here, that must be re-agreed rather than substituted.
 - **Browser-test infra task** — `tests/Browser/` is not wired (`phpunit.xml` declares only `Unit` and `Feature`). No browser test is written here.
 
@@ -554,7 +554,7 @@ by `UserPolicy`. Every mutating path is authorized at the Livewire action, not o
   the inverted dependency that failed Phase 2, and the numbering is left intact — 0005 is not
   resequenced ahead of this story.
 - **`promoteToAdministrator()` is defined *and* called here.** The earlier prose attributing the
-  promotion rule to another story was wrong and blocked an implementer; story **0010** owns only the
+  promotion rule to another story was wrong and blocked an implementer; story **0009** owns only the
   role-level rule in `RolePolicy`.
 - **Email normalisation happens in the component before `validate()`**, with the actions' own
   lowercase call retained as defence in depth and the model's read-only accessor as a third layer.
@@ -575,7 +575,7 @@ silent-discard trap, the migration/ordering dependencies), `backend-expert` (the
 authorization gap, `#[Locked]`, the invitation-notification split, flat trait composition, the
 downgrade hole), and `backend-qa` (the Gherkin rule violations, the ignore-keyed-on-actor defect,
 the over-blocking regression, the sqlite/MySQL caveat). The Livewire `can:` vs `permission:` finding
-was independently confirmed by story 0009's debate.
+was independently confirmed by story 0010's debate.
 
 The human decisions listed in **Resolved directly with the human** above were confirmed directly and
 need no reviewer re-confirmation. The remaining technical detail is the amigos' and this rewrite's

@@ -6,10 +6,10 @@ non-blocking findings (F4–F13) in `App\Livewire\Users\Index`, `App\Actions\Use
 `App\Actions\Users\UpdateUser` and `App\Notifications\UserInvitation`. None of them are exploitable
 privilege escalation on their own against the seeded catalog — that is what made deferring them
 from 0004 acceptable — but each is a small, well-bounded hardening item worth closing before this
-screen carries more traffic (story 0006's real UI) or more roles (stories 0008/0010). This story
+screen carries more traffic (story 0006's real UI) or more roles (stories 0008/0009). This story
 consolidates F4–F13 into one pass rather than ten micro-tasks. Findings F2/F3 (name-based role
 matching, guard enforced only in the component) are tracked separately as notes on stories 0008 and
-0010, since they are naturally that work's concern. F14 was recorded as an accepted, working-as-
+0009, since they are naturally that work's concern. F14 was recorded as an accepted, working-as-
 designed control and needs no fix.
 
 ## Type
@@ -250,7 +250,7 @@ Phase 3.
 
 ## Dependencies and related work
 - **Follow-up from story 0004**'s Phase 4 security audit (findings F4–F13; F1 was fixed in 0004
-  itself; F2/F3 are tracked as notes on stories 0008 and 0010; F14 is accepted-as-designed).
+  itself; F2/F3 are tracked as notes on stories 0008 and 0009; F14 is accepted-as-designed).
 - No dependency on stories 0005–0013; touches only files story 0004 created.
 
 ## Provenance
@@ -259,6 +259,6 @@ F4–F13 raised by `appsec-auditor` during story 0004's Phase 4 security audit
 into one follow-up task per human decision rather than filed as ten separate micro-tasks. F17/F18 and
 the F7 sharpening were added by the same auditor's Phase 4 **re-audit**, run after the F1 fix landed —
 the re-audit also produced F15 (the guard is role-shaped where it should be privilege-shaped, a sharper
-restatement of F2/F3) and F16 (informational, no action needed), both recorded on story 0010 rather
+restatement of F2/F3) and F16 (informational, no action needed), both recorded on story 0009 rather
 than here since they concern the not-yet-built administrator-level-permission mechanism, not this
 story's own code.

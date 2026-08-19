@@ -7,20 +7,20 @@ grouped by module, and a delete action that hard-blocks with a holder count when
 assigned to users. The Super Admin role is never rendered anywhere, and the
 "manage administrator-level roles/users" toggle is rendered only for a signed-in Super Admin.
 This story owns markup and UI state only — all queries, persistence, and authorization come from
-sibling backend story 0009.
+sibling backend story 0010.
 
 ## Type
-frontend (related_task_id: 0009) | includes database-expert: no
+frontend (related_task_id: 0010) | includes database-expert: no
 
 **Dependencies (must land first or in parallel):**
 - **0002** — seeds the roles/permission catalog and the per-module permissions this UI iterates.
-- **0009** — the backend component logic behind the same component class (queries, persistence,
+- **0010** — the backend component logic behind the same component class (queries, persistence,
   validation, the Super-Admin-excluding role query, the holder count, and the
   `$canGrantAdministratorLevel` flag). This story consumes them; it never re-derives them.
 - **0008** — Super Admin invariants (categorically undeletable/uneditable). This UI simply never
-  renders it, relying on 0009/0008's query exclusion.
-- **0010** — the authorization logic deciding who may grant administrator-level permissions. This
-  UI only consumes the boolean flag 0010's backend exposes.
+  renders it, relying on 0010/0008's query exclusion.
+- **0009** — the authorization logic deciding who may grant administrator-level permissions. This
+  UI only consumes the boolean flag 0009's backend exposes.
 - **0013** — sidebar permission-based visibility, including the "Roles & Permissions" nav entry.
   Out of scope here; until 0013 lands the screen is reached directly at `/roles`.
 
@@ -123,26 +123,44 @@ Feature: Roles & permissions management UI
 
 ## Files to create/modify
 
-> **Shared-surface warning.** Stories 0011 and 0009 touch the same component class. The split is
-> strict: **0011 owns the Blade view and the component's UI-state properties**; **0009 owns every
+> **Shared-surface warning.** Stories 0011 and 0010 touch the same component class. The split is
+> strict: **0011 owns the Blade view and the component's UI-state properties**; **0010 owns every
 > query, mutation, validation rule, and authorization decision**. 0011 must not add an Eloquent
 > query, a `Role`/`Permission` write, or a permission check to the component.
+>
+> **File creation is 0010's, not this story's — one-directional, not "whichever lands first."**
+> [Story 0010](0010-role-permission-management-backend.md) **creates** both `routes/roles.php` and
+> `app/Livewire/Roles/Index.php`; this story **modifies** them. That follows from this story's own
+> Definition of Done, which states it "is not independently shippable — it is the view layer of a
+> component whose logic is 0010's" and requires 0010 to have landed first, so the two files always
+> exist by the time this story runs. An earlier draft of 0010 hedged with "whichever lands first
+> creates it" while this file declared both flatly **new**; that asymmetry is resolved here and in
+> 0010's own file-ownership note, which reads identically. Per
+> [`docs/contracts.md`](../../docs/contracts.md)'s Parallel Agent File-Ownership Rule, 0010 and 0011
+> must not be dispatched to concurrent agents.
 
-- `routes/roles.php` — **new file**. Registers `Route::livewire('roles', Index::class)->name('roles.index')`
-  inside a `Route::middleware(['auth', 'verified'])->group(...)`, mirroring `routes/settings.php`'s
-  shape. The permission middleware gating this route is **0009/0012's** to add, not this story's:
+- `routes/roles.php` — **created by 0010; not created here.** It already registers
+  `Route::livewire('roles', Index::class)->middleware('can:roles.manage')->name('roles.index')` inside
+  a `Route::middleware(['auth', 'verified'])->group(...)`, mirroring `routes/settings.php`'s shape.
+  The permission middleware gating this route is **0010/0012's**, not this story's. This story
+  verifies the route resolves and needs no edit to the file at all:
   ```php
+  // routes/roles.php -- 0010's file, shown for reference only
   Route::middleware(['auth', 'verified'])->group(function () {
-      Route::livewire('roles', Index::class)->name('roles.index');
+      Route::livewire('roles', Index::class)
+          ->middleware(['can:roles.manage'])
+          ->name('roles.index');
   });
   ```
-- `routes/web.php` — add `require __DIR__.'/roles.php';` beside the existing
-  `require __DIR__.'/settings.php';` (line 11).
-- `app/Livewire/Roles/Index.php` — **new class-based Livewire component** (per
-  `conventions/base-standards.md`: class-based, never single-file), carrying a `#[Title(...)]`
+- `routes/web.php` — **`require __DIR__.'/roles.php';` is added by 0010**, beside the existing
+  `require __DIR__.'/settings.php';`. Nothing to add here; verify it is present.
+- `app/Livewire/Roles/Index.php` — **created by 0010; modified here.** Class-based Livewire component
+  (per `conventions/base-standards.md`: class-based, never single-file), carrying a `#[Title(...)]`
   attribute. **This story's share** is the UI-state surface only, named per `conventions/naming.md`'s
-  boolean-predicate rule — e.g. `$showRoleModal`, `$showDeleteModal`, `$editingRoleId`, and the
-  bound `$selectedPermissions` array. It consumes, without re-deriving, two things 0009 exposes:
+  boolean-predicate rule — e.g. `$showRoleModal`, `$showDeleteModal`, and the bound
+  `$selectedPermissions` array. (Note `$editingRoleId` and `$deletingRoleId` are **0010's**, declared
+  `#[Locked]`, since they identify the row every authorization check resolves — this story reads them
+  but must not add, rename or unlock them.) It consumes, without re-deriving, two things 0010 exposes:
   the Super-Admin-excluding roles collection, and a `$canGrantAdministratorLevel` boolean.
 - `resources/views/livewire/roles/index.blade.php` — **the core deliverable** (kebab-case mirror of
   the class, per `conventions/naming.md`). Contains the list, the create/edit modal, and the delete
@@ -165,7 +183,7 @@ Presentational rules the view must honor:
   "no confirm-and-proceed path" expressed in markup.
 - **The Super Admin row is never special-cased in the view.** The view renders whatever collection
   the backend hands it; there is no `@if ($role->name !== 'Super Admin')` guard, because that would
-  duplicate an invariant that belongs to 0009/0008.
+  duplicate an invariant that belongs to 0010/0008.
 
 ## Tests to perform
 
@@ -209,8 +227,9 @@ The Super Admin role is nowhere on screen, and the administrator-level grant tog
 DOM only for the Super Admin.
 
 ## Acceptance criteria
-- [ ] `/roles` is registered as `roles.index` from a new `routes/roles.php`, required from
-      `routes/web.php` the same way `settings.php` is.
+- [ ] `/roles` resolves as `roles.index` from `routes/roles.php` (**created by 0010**), required from
+      `routes/web.php` the same way `settings.php` is. This story verifies the wiring; it does not
+      create the route file, the `require` line, or the component class.
 - [ ] The screen follows the established list + modal pattern (section header with a live count, a
       primary create button, per-row edit/delete actions), consistent with the Users/Products/Taxes
       prototype screens.
@@ -241,4 +260,4 @@ DOM only for the Super Admin.
 - [ ] Documentation updated (docs-keeper) — `docs/api/routes.md` gains the new `roles.index` route
 - [ ] Acceptance criteria met
 - [ ] Sibling stories 0002, 0008, 0009, 0010 landed (this story is not independently shippable —
-      it is the view layer of a component whose logic is 0009's)
+      it is the view layer of a component whose logic is 0010's)

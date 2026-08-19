@@ -327,12 +327,12 @@ if ($applyRoleAndStatus) {
 $updateUser($target, $name, $email, $roleId, $status, $applyRoleAndStatus, $requestEmailChange);
 ```
 
-**Known residual, deliberately deferred** (tracked on stories 0008/0010, extending findings F2/F3):
+**Known residual, deliberately deferred** (tracked on stories 0008/0009, extending findings F2/F3):
 the predicate is *role*-shaped (`hasRole('Administrator', 'web')`) while the privilege it protects is
 *permission*-shaped. A target holding `roles.manage-administrators` through a direct
 `model_has_permissions` grant, or through a custom role that is not literally named `Administrator`,
 is **not** covered by any of these four abilities. That is inert today — the seeded catalog grants no
-permission directly to a user and ships only two roles — and becomes live the moment story 0010 lets
+permission directly to a user and ships only two roles — and becomes live the moment story 0009 lets
 operators build administrator-equivalent roles. Whoever centralises the administrator-level rule must
 key it on the privilege, not on the role name.
 
@@ -416,7 +416,7 @@ the `Gate::before` deferral in `AppServiceProvider` both compare `$role->name` �
 policy layer and the check returns the actor's ordinary `roles.manage` answer instead of a categorical
 `false`. Verified to have no exploitable consequence: the model-level guard above still refuses the
 mutation, and no call site passes a `Role` to `authorize()` yet (the roles screens are stories
-0009/0011). Whoever builds those must either resolve the target through a fully-hydrated read or route
+0010/0011). Whoever builds those must either resolve the target through a fully-hydrated read or route
 the policy's identity check through the same persisted-identity helper.
 
 ## Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone

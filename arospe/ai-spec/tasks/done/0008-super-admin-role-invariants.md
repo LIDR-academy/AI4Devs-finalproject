@@ -6,7 +6,7 @@ Enforce, at the model/policy/authorization layer rather than by hiding controls 
 application — including by a crafted request that never touches the dashboard. Also provide the one
 shared query mechanism that every roles list and role selector in the app must use, so the Super
 Admin role is never returned to the frontend. This story does **not** seed the Super Admin role
-(story 0002) and does **not** build the roles CRUD screens (stories 0009/0011); it builds the
+(story 0002) and does **not** build the roles CRUD screens (stories 0010/0011); it builds the
 guarantees those code paths cannot violate.
 
 ## Type
@@ -221,7 +221,7 @@ demand has no such ordering hazard.
   directly — so they cannot drift from one another or from `AppServiceProvider::configureAuthorization()`:
   - `scopeSelectable(Builder $query): Builder` — the **shared local scope** this story owns. Every
     roles-list and role-selector query in the app must call it (`Role::query()->selectable()`), and
-    stories 0009/0011 consume it rather than re-filtering. It excludes `self::superAdminName()`, with an
+    stories 0010/0011 consume it rather than re-filtering. It excludes `self::superAdminName()`, with an
     exact match (`whereNot('name', self::superAdminName())`), never a `LIKE`. The name is resolved when
     the scope runs, i.e. at query-build time — not captured at boot or construction.
   - **A `deleting` / `updating` guard that throws for the Super Admin role, registered so that it runs
@@ -271,7 +271,7 @@ demand has no such ordering hazard.
   `php artisan make:policy RolePolicy --model=Role --no-interaction`) — `update()` and `delete()` deny
   for the Super Admin role, identified by calling **`App\Models\Role::superAdminName()`** like every
   other guard (this is why that method is `public static` rather than a private model helper — the
-  policy is a separate class and must not re-derive the config read). This is the layer 0009/0011 call
+  policy is a separate class and must not re-derive the config read). This is the layer 0010/0011 call
   via `authorize()`, and where the UI-facing 403 originates.
 
   **No `Gate::policy()` registration, and no `AppServiceProvider` change for the policy at all.**
@@ -363,7 +363,7 @@ exercise the guards; that is a test-quality obligation, not part of this invaria
 Confirmed **not** needed, recorded so reviewers don't re-open them: no change to `bootstrap/app.php`
 (story **0002** registers the `role` / `permission` / `role_or_permission` middleware aliases in its
 `withMiddleware()` closure — *this* story adds nothing to it, since route gating belongs to
-0009/0011); no `app/Observers/`
+0010/0011); no `app/Observers/`
 class (the two guards live on `App\Models\Role` itself, registered per the boxed note above — an
 overridden `boot()` before `parent::boot()`, or an overridden `delete()`; **not** `booted()`); no
 migration and no new column.
@@ -569,7 +569,7 @@ Two reasons it is bounded this way rather than left as a completion gate:
 > cheaper now, but it leaves a known security finding tracked only inside a closed task file.
 > **Resolved — the follow-up story now exists.** The recommendation above was accepted: the work is
 > tracked as [`0008a` — Centralize Administrator-level role
-> identification](../0008a-centralize-administrator-role-identification.md), written up as full
+> identification](../in-progress/0008a-centralize-administrator-role-identification.md), written up as full
 > Phase 1 output and sitting in the **new** stage (not yet picked up for implementation). It carries
 > the evaluation recorded in this section forward as its starting point, and it owns the three
 > deferred items listed above (`UserPolicy`'s `hasRole('Super Admin', 'web')` checks at lines 34 and
@@ -602,7 +602,7 @@ the PRD already states, not a change to *what* it requires:
 - The PRD's Super Admin-grant-visibility scenarios ("Only the Super Admin sees the
   administrator-management grant option", "A broad administrator never sees the … toggle", "The Super
   Admin grants a role administrator-management permission") are UI-facing and correctly out of this
-  story's backend-only scope — deferred to stories 0009/0011 (roles CRUD screens), not overlooked.
+  story's backend-only scope — deferred to stories 0010/0011 (roles CRUD screens), not overlooked.
 - Story 0008a's decision to move the Administrator-level guard into `CreateUser`/`UpdateUser` (so every
   caller is covered, not only the Livewire component) is a stricter reading of the PRD's "the action is
   denied server-side" scenarios, which don't specify a mechanism — not a divergence from them.
@@ -633,7 +633,7 @@ does not mention them.
   convention rather than inventing structure, and each holds a genuinely distinct concern.
 - Alternative: avoid new folders by putting the name constant on `App\Models\Role` as a class constant
   and throwing a bare `RuntimeException`. Cheaper, but reintroduces a magic string, loses the typed
-  enum that 0002/0009/0011 would share, and still needs `app/Policies/` for the policy.
+  enum that 0002/0010/0011 would share, and still needs `app/Policies/` for the policy.
 
 **Q2 — Confirm that blocking permission *additions* is intended.** The PRD's scenario title says
 "cannot be edited **or downgraded**", but its prose and acceptance criterion say "categorically

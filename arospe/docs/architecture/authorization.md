@@ -261,7 +261,7 @@ Two things changed here in task 0008:
 
 Consequence, deliberately accepted: apart from that one deferral, the bypass short-circuits `denies()` / `cannot()` and every Policy, which is what "the Super Admin bypasses permission checks entirely" means.
 
-> **Forward-looking warning for stories 0009/0011.** The deferral is keyed on the **target** being the Super Admin role, not on the ability being checked. So any *future* `RolePolicy` ability invoked against the Super Admin role — `viewAny`, `create`, `restore`, anything the roles-CRUD screens add — will be **denied by default for a Super Admin actor** if `RolePolicy` has no matching method, because the bypass has already stepped aside and `Gate` falls through to "no method, no grant". That is fail-closed and not a security concern, but it is a surprise if you expected the Super Admin to pass everything: add the ability to `RolePolicy` explicitly rather than relying on the bypass.
+> **Forward-looking warning for stories 0010/0011.** The deferral is keyed on the **target** being the Super Admin role, not on the ability being checked. So any *future* `RolePolicy` ability invoked against the Super Admin role — `viewAny`, `create`, `restore`, anything the roles-CRUD screens add — will be **denied by default for a Super Admin actor** if `RolePolicy` has no matching method, because the bypass has already stepped aside and `Gate` falls through to "no method, no grant". That is fail-closed and not a security concern, but it is a surprise if you expected the Super Admin to pass everything: add the ability to `RolePolicy` explicitly rather than relying on the bypass.
 
 ### Bypass coverage — what it does *not* cover
 
@@ -416,7 +416,7 @@ public function scopeSelectable(Builder $query): Builder
 }
 ```
 
-**Every roles list and role selector in the app must call it**, and stories 0009/0011 consume it rather than re-filtering. Its first (and today only) caller is `App\Livewire\Users\Index::roleOptions()`, which previously hardcoded `->whereNot('name', 'Super Admin')`.
+**Every roles list and role selector in the app must call it**, and stories 0010/0011 consume it rather than re-filtering. Its first (and today only) caller is `App\Livewire\Users\Index::roleOptions()`, which previously hardcoded `->whereNot('name', 'Super Admin')`.
 
 Two properties:
 
@@ -440,7 +440,7 @@ Enumerated deliberately rather than left as silent gaps. All of them require cod
 
 One more, recorded because it is the one a future story will actually walk into:
 
-> **⚠️ Whoever builds the roles CRUD screens (stories 0009/0011) must read this.** `RolePolicy` and the `Gate::before` deferral both identify their target with the in-memory `$role->name` attribute — **not** the persisted-identity-safe `isSuperAdminRole()` helper the model guard uses. A partially-hydrated `Role` instance (e.g. `Role::query()->select('id')->find($id)`) passed to `Gate::authorize()` would therefore evade the **policy** layer and return the actor's ordinary `roles.manage` answer instead of a categorical `false`. It is unreachable today — nothing in the app passes a `Role` to `authorize()` yet — and non-escalating, because the model guard still refuses the actual mutation. But the roles screens *will* be the first `authorize()` call sites against a `Role`. They must either **resolve the target through a fully-hydrated read**, or **route the policy's identity check through the same persisted-identity helper the model guard uses**.
+> **⚠️ Whoever builds the roles CRUD screens (stories 0010/0011) must read this.** `RolePolicy` and the `Gate::before` deferral both identify their target with the in-memory `$role->name` attribute — **not** the persisted-identity-safe `isSuperAdminRole()` helper the model guard uses. A partially-hydrated `Role` instance (e.g. `Role::query()->select('id')->find($id)`) passed to `Gate::authorize()` would therefore evade the **policy** layer and return the actor's ordinary `roles.manage` answer instead of a categorical `false`. It is unreachable today — nothing in the app passes a `Role` to `authorize()` yet — and non-escalating, because the model guard still refuses the actual mutation. But the roles screens *will* be the first `authorize()` call sites against a `Role`. They must either **resolve the target through a fully-hydrated read**, or **route the policy's identity check through the same persisted-identity helper the model guard uses**.
 
 ## Middleware aliases
 
@@ -508,7 +508,7 @@ Gate::authorize('promoteToAdministrator', User::class);
 
 ### `RolePolicy` — the second policy
 
-[`App\Policies\RolePolicy`](../../app/Policies/RolePolicy.php) (task 0008) has two abilities today. It has **no call site yet** — it exists so stories 0009/0011's roles screens have the layer to `authorize()` against, and so the Super Admin refusal is independently effective there:
+[`App\Policies\RolePolicy`](../../app/Policies/RolePolicy.php) (task 0008) has two abilities today. It has **no call site yet** — it exists so stories 0010/0011's roles screens have the layer to `authorize()` against, and so the Super Admin refusal is independently effective there:
 
 | Ability | Signature | Rule |
 | --- | --- | --- |

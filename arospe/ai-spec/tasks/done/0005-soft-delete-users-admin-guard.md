@@ -25,7 +25,7 @@ Related sibling stories (dependencies and scope boundaries — **not** implement
   story *extends* that existing file; it does not create it. See
   [Files to create/modify](#files-to-createmodify).
 - **0007** blocks a non-`active` user from signing in. Not this story.
-- **0010** owns **role-level** enforcement (editing/deleting the "Administrator" role itself) and the
+- **0009** owns **role-level** enforcement (editing/deleting the "Administrator" role itself) and the
   meta-rule about who may see/grant the permission. Not this story.
 
 ## Gherkin
@@ -620,7 +620,7 @@ that installing the `SoftDeletes` global scope did not weaken any of it.
       `remember_token` handling (**0007**'s login-blocking work, and worth surfacing to
       `appsec-auditor` in Phase 4 regardless); promotion-to-Administrator gating and the creation of
       `UserPolicy` itself (**0004**, at the `syncRoles()` call site); role-level protection of the
-      "Administrator" role itself and the "who may grant the permission" meta-rule (**0010**); the
+      "Administrator" role itself and the "who may grant the permission" meta-rule (**0009**); the
       `Gate::before` Super Admin bypass (**0002** — done and live; this story's Super Admin
       scenarios rely on it, not on any work still pending).
 - [x] **`password_reset_tokens` is not inert after obfuscation — it is actively revoked.** Phase 4

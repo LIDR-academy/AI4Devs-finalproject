@@ -764,7 +764,7 @@ open** and should be answered before Phase 3. None blocks Phase 2 INVEST review.
 **Q2 — Is an attribute type with zero values legal?** The PRD is silent; its only scenario defines a
 type *with* values.
 - **Q2a (recommended)** — legal and inert, matching this project's own sibling decision in story
-  0009 ("a role created with zero permissions is a legal, inert state"). The type simply contributes
+  0010 ("a role created with zero permissions is a legal, inert state"). The type simply contributes
   no options to 0029's combination builder.
 - Q2b — refuse with `min:1`, on the grounds that a valueless type can produce no variant and is
   indistinguishable from an abandoned draft. (`backend-expert` argued for this; the house precedent

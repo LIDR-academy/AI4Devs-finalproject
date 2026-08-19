@@ -108,12 +108,12 @@ rename, or move either route.
   ```
 
 - `routes/roles.php` — **modify, not create.** `roles.index` lives here, in a new file mirroring
-  `routes/settings.php` and `require`d from `routes/web.php`, created by whichever of 0009 / 0011
+  `routes/settings.php` and `require`d from `routes/web.php`, created by whichever of 0010 / 0011
   lands first (open question 3 below). This story chains the gate onto it *there*, not in
   `routes/web.php`.
 
   ```php
-  // routes/roles.php -- the file is 0009/0011's to create; this story owns only the middleware chain
+  // routes/roles.php -- the file is 0010/0011's to create; this story owns only the middleware chain
   Route::middleware(['auth', 'verified'])->group(function () {
       Route::livewire('roles', RolesIndex::class)
           ->middleware(['can:roles.manage'])
@@ -121,7 +121,7 @@ rename, or move either route.
   });
   ```
 
-  [Story 0009](0009-role-permission-management-backend.md) already writes exactly this gate
+  [Story 0010](0010-role-permission-management-backend.md) already writes exactly this gate
   (`->middleware('can:roles.manage')`) in its own *Files to create/modify*, having reached the
   `can:`-not-`permission:` conclusion independently. In practice this story verifies and documents
   that wiring rather than introducing it — which is why the test-ownership split in open question 4
@@ -175,8 +175,12 @@ rename, or move either route.
   - **Route middleware is never the only layer.** That allow-list is an internal Livewire
     implementation detail rather than a documented contract, and `mount()` runs once per page load
     while later actions hydrate from a snapshot. Every component method that mutates *or discloses*
-    re-authorizes for itself — `App\Livewire\Users\Index` already does, and 0009 specifies
-    `abort_unless(Auth::user()->can('roles.manage'), 403);` per method. Writing those per-method
+    re-authorizes for itself — `App\Livewire\Users\Index` already does, and 0010 specifies a
+    `Gate::authorize()` call against `App\Policies\RolePolicy` as the first statement of every
+    component method that mutates or discloses. (An earlier draft of 0010 wrote that as
+    `abort_unless(Auth::user()->can('roles.manage'), 403);`, citing a precedent in
+    `app/Livewire/Settings/Security.php` that does not exist — `abort_unless` appears nowhere in this
+    repository. 0010 has been corrected; do not reintroduce the form here.) Writing those per-method
     checks belongs to the owning story, not this one; this story owns the route layer. See
     [`docs/security/livewire-authorization.md`](../../docs/security/livewire-authorization.md).
   - Future epics follow `routes/settings.php`'s precedent — extract a domain's routes into their own
@@ -258,7 +262,7 @@ story owns a cross-cutting pattern rather than either module's feature area.
   refusal. A negative-only test suite cannot catch it — every gate needs its positive 200 case too.
 
 ## Expected outcome
-Typing `/users` or `/roles` (or whatever URIs 0004 and 0009/0011 settle on) without the required
+Typing `/users` or `/roles` (or whatever URIs 0004 and 0010/0011 settle on) without the required
 permission returns a generic 403 that names no permission, whether or not the sidebar ever showed the
 link; a guest is sent to sign in instead; the Super Admin reaches both with no permission rows. A
 revoked permission closes the module on the very next request. Later epics gate a new module by
@@ -304,9 +308,9 @@ middleware alias to register.
   `RolePermissionSeeder::MODULES` / `ACTIONS` / `ROLE_PERMISSIONS`, never invent one.
 - **Task 0004** — registers `users.index` in `routes/web.php`, already gated on `can:users.view`.
   This story only decorates it.
-- **Task 0009 / 0011** — registers `roles.index` in a new `routes/roles.php` (whichever lands first
+- **Task 0010 / 0011** — registers `roles.index` in a new `routes/roles.php` (whichever lands first
   creates the file and adds `require __DIR__.'/roles.php';` to `routes/web.php`), already gated on
-  `can:roles.manage` per 0009's own file list. Same.
+  `can:roles.manage` per 0010's own file list. Same.
 - **Task 0013** — the UI half of the same PRD criterion. 0013 must not be reviewed as if it enforced
   access, and this story must not be reviewed as if it hid anything. Neither is complete alone.
 
@@ -338,19 +342,19 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
    - Treat role management as a superset that implies user-module access. This would invalidate the
      "role-management permission does not open the Users screen" scenario, so it must be settled
      explicitly with 0002, not discovered in Phase 3.
-3. **~~Where `roles.index` physically lives.~~ RESOLVED by 0009 — a new `routes/roles.php`.**
-   [Story 0009](0009-role-permission-management-backend.md) settled this in its own debate and lists
+3. **~~Where `roles.index` physically lives.~~ RESOLVED by 0010 — a new `routes/roles.php`.**
+   [Story 0010](0010-role-permission-management-backend.md) settled this in its own debate and lists
    it among the decisions "recorded so they are not reopened": the route is
    `Route::livewire('roles', Index::class)->name('roles.index')` in a **new `routes/roles.php`**
    mirroring `routes/settings.php`, `require`d from `routes/web.php` beside the existing
-   `require __DIR__.'/settings.php';`, and created by whichever of 0009 / 0011 lands first.
+   `require __DIR__.'/settings.php';`, and created by whichever of 0010 / 0011 lands first.
    [Story 0011](0011-role-permission-management-ui.md) already assumes exactly that. This story does
    not choose the location and does not create the file — as stated in *Files to create/modify*, it
    only chains middleware onto a route someone else registers, so the pattern documented above
    applies to `routes/roles.php` for `roles.index` and to `routes/web.php` for `users.index`.
-4. **Test-ownership split with 0009 for the `roles.index` denial.** 0009's test list already contains
+4. **Test-ownership split with 0010 for the `roles.index` denial.** 0010's test list already contains
    "a user without 'manage roles & permissions' gets a 403 on the area's route."
-   - **(recommended)** 0012 owns the HTTP/route-middleware assertion for both routes; 0009 narrows
+   - **(recommended)** 0012 owns the HTTP/route-middleware assertion for both routes; 0010 narrows
      its own to the *component-method* layer (e.g. an unauthorized `Livewire::test(...)->call(...)`),
      so the two cover the two defense-in-depth layers instead of duplicating one.
    - Keep both as-is, accepting deliberate redundancy. Functionally fine — flagged so it is a
@@ -360,7 +364,7 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
    string; block finalizing that test case on 0002 landing.
 6. **How is `users.index`'s "any Users & Roles permission" gate expressed, now that the middleware is
    `can:` and not `permission:`?** ⚠️ **New, and it blocks Phase 3 for `users.index` only** —
-   `roles.index` is unaffected (a single ability, `can:roles.manage`, already settled by 0009).
+   `roles.index` is unaffected (a single ability, `can:roles.manage`, already settled by 0010).
    Laravel's `Authorize` middleware takes **exactly one** ability; everything after it in the
    middleware string is parsed as a model binding, so the `permission:a|b|c` OR form this story was
    originally written around has no `can:` equivalent. Three ways out:

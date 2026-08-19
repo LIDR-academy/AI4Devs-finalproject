@@ -231,15 +231,15 @@ appending one entry to `config/modules.php`.
 - **Task 0002** — seeded role/permission catalog **and** the Super Admin `Gate::before` bypass.
   This story consumes both and registers neither.
 - **Task 0004** — must land `users.index` in `routes/web.php`.
-- **Task 0009** — must land `roles.index` in a new `routes/roles.php`.
+- **Task 0010** — must land `roles.index` in a new `routes/roles.php`.
 - **Blocking, not advisory:** `route('users.index')` / `route('roles.index')` throw
   `RouteNotFoundException` at render time if unregistered — a hard failure, not a soft one. A
-  red-then-green TDD cycle for 0013 **cannot execute** until 0004 and 0009 have landed both route
+  red-then-green TDD cycle for 0013 **cannot execute** until 0004 and 0010 have landed both route
   names. Schedule 0013 after them.
-- ⚠️ If `roles.index` truly lives in a new `routes/roles.php`, task 0009 must also add
+- ⚠️ If `roles.index` truly lives in a new `routes/roles.php`, task 0010 must also add
   `require __DIR__.'/roles.php';` to `routes/web.php` (mirroring the existing `settings.php`
-  require). `frontend-expert` read 0009's current draft and found it still lists `routes/web.php`
-  as the file to modify, with no `routes/roles.php` mentioned. That is 0009's file to fix, but
+  require). `frontend-expert` read 0010's current draft and found it still lists `routes/web.php`
+  as the file to modify, with no `routes/roles.php` mentioned. That is 0010's file to fix, but
   0013's registry entry stays inert until it is — flagged so it isn't lost between the two stories.
 - **Task 0012** — the server-side half of the same PRD criterion. This story is UI-only and must
   not be reviewed as if it enforced access.
