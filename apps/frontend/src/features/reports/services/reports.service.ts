@@ -1,3 +1,5 @@
+import { apiRequest } from '../../../shared/http/apiClient.js';
+
 export interface WasteSummaryItem {
   insumoId: string;
   insumoName: string;
@@ -9,11 +11,9 @@ export interface WasteSummaryItem {
 export class ReportsService {
   public static async fetchWasteReport(startDate: string, endDate: string): Promise<WasteSummaryItem[]> {
     try {
-      const response = await fetch(`/api/v1/reports/waste?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`);
-      if (!response.ok) {
-        throw new Error('Error al obtener el reporte de mermas.');
-      }
-      return await response.json();
+      return await apiRequest<WasteSummaryItem[]>(
+        `/reports/waste?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+      );
     } catch (err) {
       console.error('[ReportsService] Error al obtener el reporte de mermas, usando mock fallback:', err);
       return [

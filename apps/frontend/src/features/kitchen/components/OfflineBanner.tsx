@@ -1,5 +1,5 @@
 import React from 'react';
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { useOnlineStatus } from '../../../shared/hooks/useOnlineStatus';
 
 export const OfflineBanner: React.FC = () => {
   const isOnline = useOnlineStatus();

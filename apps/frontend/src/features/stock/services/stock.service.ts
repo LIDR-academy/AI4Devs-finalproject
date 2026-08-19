@@ -1,3 +1,6 @@
+import { apiRequest } from '../../../shared/http/apiClient.js';
+import { DecimalQuantity } from '../../../shared/domain/DecimalQuantity.js';
+
 export interface ExtractionRequest {
   insumoId: string;
   quantity: number | string;
@@ -24,15 +27,7 @@ export class StockService {
 
   public static async recordExtraction(data: ExtractionRequest): Promise<ExtractionResult> {
     try {
-      const response = await fetch('/api/v1/stock/extraction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        return (await response.json()) as ExtractionResult;
-      }
+      return await apiRequest<ExtractionResult>('/stock/extraction', { method: 'POST', body: data });
     } catch (err) {
       console.error('[StockService] Error en llamada HTTP recordExtraction, usando modo demo:', err);
     }
@@ -42,8 +37,10 @@ export class StockService {
       stock: 10.0,
       unit: 'KG',
     };
-    const qty = Number(data.quantity);
-    item.stock = Math.max(0, item.stock - qty);
+    // Aritmetica Decimal de Alta Precision (Guard 17) via el VO compartido shared/domain/DecimalQuantity
+    // — en vez de `Math.max(0, item.stock - qty)` con primitivos de punto flotante.
+    const nextStock = new DecimalQuantity(item.stock).subtractClamped(data.quantity.toString());
+    item.stock = Number(nextStock.toFixed(3));
 
     const now = new Date();
     const expirationDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -52,8 +49,8 @@ export class StockService {
       remanenteId: `rem-${Date.now()}`,
       insumoId: data.insumoId,
       insumoName: item.name,
-      quantityExtracted: qty.toFixed(3),
-      remainingWarehouseStock: item.stock.toFixed(3),
+      quantityExtracted: new DecimalQuantity(data.quantity.toString()).toFixed(3),
+      remainingWarehouseStock: nextStock.toFixed(3),
       location: data.toLocation || 'KITCHEN_FRIDGE',
       expirationDate: expirationDate.toISOString(),
       status: 'ACTIVE',
