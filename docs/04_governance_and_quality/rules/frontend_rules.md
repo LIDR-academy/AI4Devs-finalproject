@@ -28,6 +28,12 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 * **Abstracción por Repositorios (DIP):** Componentes React consumen la API mediante interfaces de repositorio (`IRemanenteRepository`), soportando repositorios HTTP o InMemory (Mock).
 * **Custom Hooks (SRP):** Encapsular la lógica de estado o colas de eventos en Custom Hooks dedicados.
 * **Estados Obligatorios:** Implementar obligatoriamente Skeletons (Loading), Empty State, Error State con reintento, y Banner Offline.
+* **Capa de Reutilización Cross-Cutting (`src/shared/`):** Todo módulo usado por 2+ features vive en `src/shared/`, nunca duplicado dentro de `features/*`. Subcarpetas establecidas:
+  - `shared/http/apiClient.ts`: cliente HTTP único (`apiRequest<T>`), maneja el Bearer token y errores (`ApiError`). Ningún servicio de `features/*/services/` debe llamar `fetch()` directamente.
+  - `shared/domain/`: Value Objects de dominio compartidos entre features (ej. `DecimalQuantity` para aritmética de cantidades, ver sección 4).
+  - `shared/hooks/`: hooks transversales sin relación con un dominio de feature específico (ej. `useOnlineStatus`).
+  - `shared/components/`: primitivos de UI reutilizados por 2+ pantallas (ej. `Modal`, `ModalHeader`, `ModalFooterActions`, `ErrorBanner`).
+  - Antes de implementar un ticket que necesite HTTP, aritmética decimal, un hook transversal o un primitivo de UI, se debe verificar si ya existe en `shared/` antes de escribir una nueva copia (ver `SK-17` Fase 2, paso 4).
 
 ---
 

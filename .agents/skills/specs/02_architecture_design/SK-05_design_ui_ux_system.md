@@ -1,7 +1,7 @@
 ---
 name: SK-05_design_ui_ux_system
 description: "Facilita la ideación visual, ingesta de specs externa (.md), análisis multimodal de imágenes y cristaliza el Design System, las reglas de Frontend y el estándar root DESIGN.md (Google Labs spec v1.0.0)."
-version: "3.5.0"
+version: "3.6.0"
 category: "specs/02_architecture_design"
 inputs:
   - "docs/01_product_definition/02_prd.md"
@@ -60,6 +60,7 @@ Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáti
    - **4 estados de UI obligatorios:** (*Loading*, *Data Ready*, *Empty State*, *Error State*).
 2. **`docs/04_governance_and_quality/rules/frontend_rules.md`:**
    - Reglas innegociables para desarrollo Frontend (estilos centralizados en `index.css`, zero ad-hoc utilities sin token, sanitización con la librería de validación declarada en `docs/00_stack_manifest.md`).
+   - **Capa de Reutilización Cross-Cutting (`shared/` o equivalente):** Declarar explícitamente el directorio raíz donde deben vivir los módulos usados por 2+ features (cliente HTTP, Value Objects de dominio compartidos, hooks transversales, primitivos de UI como shells de modal/overlay). Este directorio es el punto de consulta obligatorio que `SK-17` audita antes de que un ticket implemente algo nuevo — sin esta convención declarada explícitamente, cada ticket reinventa su propia versión y la duplicación se vuelve invisible hasta una auditoría manual.
 3. **`DESIGN.md` (Raíz del Repositorio - Estándar Google Labs `google-labs-code/design.md`):**
    - Genera `/DESIGN.md` usando **estrictamente el formato especificado por Google Labs**:
      - **Capa 1: YAML Front Matter (`---` fences):** Debe incluir los 5 nodos obligatorios: `colors` (hex/hsl/rgb validando contraste WCAG AA $\ge 4.5:1$), `typography`, `rounded`, `spacing` y `components` (referenciando tokens como `{colors.primary}`). Evitar tokens huérfanos sin referencias en `components`.
