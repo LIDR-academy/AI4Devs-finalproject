@@ -41,6 +41,7 @@ Real top-level layout — stick to it; don't create new base folders without app
 ```
 app/
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords)
+  Actions/Roles/       Domain actions for the Roles area (EnforceAdministratorPermissionGrant)
   Actions/Users/       Domain actions for the Users area (RequestEmailChange, ConfirmEmailChange,
                        CreateUser, UpdateUser — the last two authorize their own operation)
   Concerns/            Shared traits (validation rule sets)
@@ -78,7 +79,7 @@ tests/
 
 `app/Policies/` in particular is **registration-free**: Laravel 13 auto-discovers `App\Policies\<Model>Policy` for `App\Models\<Model>`, so `UserPolicy` binds to `User` by naming alone. This repo has no `AuthServiceProvider` and does not need one — do not add one to register a conventionally-named policy. What each ability means lives in [architecture/authorization.md](../architecture/authorization.md#policies), not here.
 
-`app/Actions/` groups by concern, one subfolder per area: `Fortify/` holds the framework-contract implementations, `Users/` the app's own Users-domain actions. A new action goes in the subfolder for its domain (or directly under `app/Actions/` if it belongs to none) — never nested under an unrelated one.
+`app/Actions/` groups by concern, one subfolder per area: `Fortify/` holds the framework-contract implementations, `Users/` and `Roles/` the app's own domain actions for those areas. A new action goes in the subfolder for its domain (or directly under `app/Actions/` if it belongs to none) — never nested under an unrelated one. `Roles/` (task 0009) is the pattern to copy when a new module needs its first action: create the subfolder for the domain, even for a single class, rather than parking it in the nearest existing one.
 
 ### Controllers sit in front of actions, not instead of them
 
@@ -283,7 +284,9 @@ Every PHP change in this repo should pass, in this order, before being considere
 2. `vendor/bin/pint --dirty --format agent` — auto-fixes formatting against the `laravel` preset (`pint.json`).
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
-_Last updated: 2026-08-19 — Task 0008a: added the "An authorization rule belongs to the action, not to one of its callers" convention with its real ✅/❌ pair (the deleted `Index::createNewUser()` gate vs. `CreateUser`'s own first statement) and its three constraints — move the rule rather than copy it, derive a security-relevant flag internally rather than accept it as a parameter, and authorize before the first write against freshly-reloaded state. Noted `CreateUser` / `UpdateUser` in the `app/Actions/Users/` directory listing._
+_Last updated: 2026-08-20 — Task 0009: added `app/Actions/Roles/` (`EnforceAdministratorPermissionGrant`) to the directory listing, and recorded it in the "one subfolder per area" paragraph as the pattern to copy — a new domain gets its own subfolder even for a single action, rather than being parked in the nearest existing one._
+
+_Previously, 2026-08-19 — Task 0008a: added the "An authorization rule belongs to the action, not to one of its callers" convention with its real ✅/❌ pair (the deleted `Index::createNewUser()` gate vs. `CreateUser`'s own first statement) and its three constraints — move the rule rather than copy it, derive a security-relevant flag internally rather than accept it as a parameter, and authorize before the first write against freshly-reloaded state. Noted `CreateUser` / `UpdateUser` in the `app/Actions/Users/` directory listing._
 
 _Previously, 2026-08-18 — Task 0008: added `app/Exceptions/` to the directory listing and folded it into the "stock Laravel locations … needs no approval" sentence alongside `app/Enums/` and `app/Policies/`; noted `App\Models\Role` beside `User`, `RoleName` beside `UserStatus`, and `tests/Unit/`'s new `Exceptions/` folder and `ArchitectureTest.php`. What the role model's guards do lives in [architecture/authorization.md](../architecture/authorization.md#the-super-admin-roles-invariants), not here._
 

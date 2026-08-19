@@ -27,7 +27,13 @@ repo must follow — always with a real code example pulled from this repository
   invariant is inert for exactly the actor it exists to bind), why such a guard must check the target's
   **current** state and not only the value being submitted, and why authorization that consults an
   Eloquent relation must reload it *above* the first check that reads it — a caller's `->with('roles')`
-  hydration is attacker-influenced input, and the stale path fails open and silently.
+  hydration is attacker-influenced input, and the stale path fails open and silently. From task 0009's
+  three Phase 4 rounds it also carries the two rules governing a permission **grant**: why a full-replace
+  `sync*()` driven by a form that shows the actor only part of the set must **preserve** what they were
+  never shown rather than read its absence as a revoke (and why choosing preserve-vs-deny is a product
+  decision to escalate, not a security derivation), and why a check over a submitted list must accept
+  every input shape the write itself accepts *and* derive the "before" state from the model rather than
+  accept it as a parameter — the state a guard protects can never be an argument to it.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -90,7 +96,14 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-19 — Task 0008a (centralize Administrator-level role identification): its three
+_Last updated: 2026-08-20 — Task 0009 (Administrator-level permission grant): its three Phase 4 rounds
+again added no new page — they expanded `authorization-patterns.md` with two durable rules (a full-set
+sync behind a partially-visible form must preserve what the actor cannot see; a check over a submitted
+list must accept every shape the write accepts and derive the "before" state itself) and **closed** that
+page's policy-layer partial-hydration residual, now that `RolePolicy` and the `Gate::before` deferral
+both read `Role::isSuperAdminRoleRow()`. The index entry above was widened accordingly._
+
+_Previously: 2026-08-19 — Task 0008a (centralize Administrator-level role identification): its three
 Phase 4 rounds added no new page — they expanded `authorization-patterns.md` with two durable rules
 (a rule that must bind a Super Admin actor is a direct throw, never a `Gate` check; authorization that
 consults a relation reloads it above the first check that reads it) and corrected two of that page's

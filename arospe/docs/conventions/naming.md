@@ -33,6 +33,7 @@ Controllers, by contrast, **are** suffixed `Controller`, and are named after the
 | `App\Listeners\ActivateVerifiedUser` | `app/Listeners/ActivateVerifiedUser.php` |
 | `App\Notifications\PendingEmailVerification` | `app/Notifications/PendingEmailVerification.php` |
 | `App\Enums\UserStatus` | `app/Enums/UserStatus.php` |
+| `App\Actions\Roles\EnforceAdministratorPermissionGrant` | `app/Actions/Roles/EnforceAdministratorPermissionGrant.php` |
 | `App\Policies\UserPolicy` | `app/Policies/UserPolicy.php` |
 
 Policies are named `<Model>Policy` — and here the name is not merely a convention but a binding: Laravel 13 auto-discovers `App\Policies\UserPolicy` for `App\Models\User` by that exact name, so renaming it silently unbinds every `Gate::authorize()` call against a `User` (see [base-standards.md](base-standards.md#directory-structure)). Policy **methods** are named after the ability, as a bare verb phrase in camelCase and without a `can` prefix: `viewAny`, `update`, `promoteToAdministrator`, `updateSensitiveAttributes` — matching how they read at the call site, `Gate::authorize('promoteToAdministrator', $target)`.
@@ -154,6 +155,17 @@ public const ROLE_PERMISSIONS = ['roles.manage', 'roles.manage-administrators'];
 
 A permission that a new feature needs is added to the constants above — never as a string only one component knows about. The catalog, the two seeded roles, and which of them hold what are documented in [architecture/authorization.md](../architecture/authorization.md#permission-catalog).
 
+**Where a permission name is written in PHP, name it once on the class that owns the rule.** Task 0009 established this for the two role-management names, as `public const` on the policy that decides with them — read by the policy itself, by `App\Actions\Roles\EnforceAdministratorPermissionGrant`, and by both classes' tests:
+
+```php
+// app/Policies/RolePolicy.php
+public const ADMINISTRATOR_LEVEL_PERMISSION = 'roles.manage-administrators';
+public const ROLE_MANAGEMENT_PERMISSION = 'roles.manage';
+```
+
+✅ Good — `$user->hasPermissionTo(self::ADMINISTRATOR_LEVEL_PERMISSION)`, and `RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION` from a collaborator.
+❌ Bad — re-typing `'roles.manage-administrators'` at each call site. This is exactly what `App\Policies\UserPolicy` still does at four of its own call sites (task 0009's Phase 4 finding **F5**, pre-existing and deliberately deferred); it is a known cleanup candidate, not the pattern to copy. The constant name describes the *rule* (`ADMINISTRATOR_LEVEL_PERMISSION`), not the string, so a future catalog rename touches one line.
+
 ## Translation keys
 
 `lang/<locale>/<domain>.php` — one file per domain area, keys grouped by feature, every segment `snake_case`. Verified in [`lang/en/users.php`](../../lang/en/users.php) and its Spanish counterpart, which must stay key-for-key identical:
@@ -195,6 +207,8 @@ public bool $showDeleteModal;
 
 Two patterns coexist in this file: `can*`/`requires*`/`show*` for capability/UI-state flags, and a bare past-participle (`twoFactorEnabled`) for a fact about the authenticated user's current state. Follow whichever of the two fits: use `can`/`requires`/`show` for UI/permission flags you're introducing, and a plain past-participle only for a mirrored model/domain fact (as `twoFactorEnabled` mirrors `User::hasEnabledTwoFactorAuthentication()`).
 
-_Last updated: 2026-08-19 — Task 0008a: recorded that `App\Enums\RoleName`'s backing values are deliberately the persisted role names rather than lowercase (they are compared byte-for-byte against a row), and the `is<Thing>(self $x): bool` naming for a model's shared identity predicates — including why `isSuperAdminRoleRow()` carries a suffix its sibling does not, and why that is a wart to avoid repeating rather than a pattern to copy._
+_Last updated: 2026-08-20 — Task 0009: added the "name a permission once on the class that owns the rule" convention to **Permission names**, with `RolePolicy`'s two `public const` names as the ✅ example and `UserPolicy`'s four remaining literals as the deferred ❌ (finding F5), and listed `App\Actions\Roles\EnforceAdministratorPermissionGrant` in the class/file table — an imperative verb phrase with no `Action` suffix, matching the existing invokable-action rule._
+
+_Previously: 2026-08-19 — Task 0008a: recorded that `App\Enums\RoleName`'s backing values are deliberately the persisted role names rather than lowercase (they are compared byte-for-byte against a row), and the `is<Thing>(self $x): bool` naming for a model's shared identity predicates — including why `isSuperAdminRoleRow()` carries a suffix its sibling does not, and why that is a wart to avoid repeating rather than a pattern to copy._
 
 _Previously: 2026-08-13 — Task 0004: documented the `<Model>Policy` / bare-verb-ability naming that Laravel's policy auto-discovery makes load-bearing, added `UserValidationRules` and the flat-composition rule to the traits section, and recorded Livewire's `Index`-in-a-subfolder exception to the component ↔ view mirror rule (`App\Livewire\Users\Index` → `livewire/users.blade.php`)._

@@ -17,6 +17,8 @@ make these distinctions explicit.
 - [A guard that reads a row's protected identity must distinguish "not hydrated" from "hydrated but null"](#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null)
 - [A rule that must bind a Super Admin actor must be a direct throw, not a Gate check](#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
 - [Authorization that consults a relation must reload it before the first check reads it](#authorization-that-consults-a-relation-must-reload-it-before-the-first-check-reads-it)
+- [A full-set sync behind a partially-visible form must preserve what the actor cannot see](#a-full-set-sync-behind-a-partially-visible-form-must-preserve-what-the-actor-cannot-see)
+- [A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself](#a-check-over-a-submitted-list-must-accept-every-shape-the-write-accepts-and-derive-the-before-state-itself)
 - [Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone](#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone)
 
 ## The Super Admin bypass does not cover every check
@@ -439,19 +441,22 @@ security decision depends on a model's **pre-mutation** state, name the exact so
 on a partially-hydrated instance — Eloquent offers several plausible-looking readers and they diverge
 precisely under attacker control.
 
-Residual, **narrowed by task 0008a but not closed** (unreachable today, non-escalating):
+Residual, **narrowed by task 0008a and closed by task 0009** (finding F4). Through 0008a,
 `App\Policies\RolePolicy`'s Super Admin branch and the `Gate::before` deferral in `AppServiceProvider`
-both compare `$role->name` — the in-memory attribute — so a *partially-hydrated* Super Admin role
-passed to `Gate::authorize()` is not recognised at the policy layer and the check returns the actor's
-ordinary `roles.manage` answer instead of a categorical `false`. Verified to have no exploitable
-consequence: the model-level guard above still refuses the mutation, and no call site passes a `Role`
-to `authorize()` yet (the roles screens are stories 0009/0010/0011).
+both compared `$role->name` — the in-memory attribute — so a *partially-hydrated* or mid-rename Super
+Admin role passed to `Gate::authorize()` was not recognised at the policy layer and the check returned
+the actor's ordinary `roles.manage` answer instead of a categorical `false`. It was never exploitable
+(the model-level guard above still refused the mutation, and no call site passed a `Role` to
+`authorize()`), but it left two layers disagreeing about one row shape.
 
-What 0008a changed is that the fix is now a *call*, not a design task: `Role::isSuperAdminRoleRow()`
-and `Role::isAdministratorRole()` are `public static` and both read `persistedName()`, so any policy
-branch routed through them is hydration-safe by construction. Whoever builds the roles screens must
-either resolve the target through a fully-hydrated read or route the remaining Super Admin branch
-through `isSuperAdminRoleRow()`.
+Both sites now call `Role::isSuperAdminRoleRow($role)`, which reads `persistedName()` — so every
+identity question in the app is hydration-safe by construction. The generalisation worth keeping:
+**a fix for this class of bug is not finished until every layer that answers the same identity
+question has been converted.** 0008a fixed the model guard and extracted the helper; the policy and
+the `Gate::before` deferral kept the old attribute read for a further story, and a partial conversion
+is exactly the state in which two layers can be pointed at the same row and return different answers.
+When you extract an identity helper, grep for every remaining comparison against the same attribute
+in the same pass.
 
 ## A rule that must bind a Super Admin actor must be a direct throw, not a `Gate` check
 
@@ -544,6 +549,125 @@ path fails **open** and silently, since a missing role is indistinguishable from
 genuinely does not hold. `load()` (not `loadMissing()`) is what the rule needs — `loadMissing()` is
 precisely a no-op when the caller already supplied the stale collection.
 
+## A full-set sync behind a partially-visible form must preserve what the actor cannot see
+
+Established by task 0009's Phase 4 audit (finding F1), whose correct resolution required a **human
+product decision** rather than a derivation.
+
+Two facts that are individually reasonable combine into a privilege *loss*:
+
+- `Role::syncPermissions()` — like `syncRoles()`, and like every `sync*()` in Eloquent — **replaces the
+  entire set**. What is absent from the payload is removed, not left alone.
+- The `roles.manage-administrators` toggle is rendered **only** to the Super Admin
+  ([`RolePolicy::grantAdministratorPermission`](../architecture/authorization.md#who-may-grant-a-permission--the-meta-rule-layer)),
+  and rendered as *absent from the DOM*, not merely disabled.
+
+So a broad administrator holding `roles.manage`, editing an unrelated field on a role that legitimately
+holds the administrator-level permission, submits a payload that **omits** it — not as a decision, but
+because the field was never in their form. A guard that only asks "does the payload contain the
+protected permission?" passes that request happily, and the sync silently revokes a Super Admin's
+grant. Verified against the real vendor code, not reasoned about: `syncPermissions()` detaches
+everything not present.
+
+❌ Bad — the shape F1 found. It reads as a complete guard, and covers only half the diff:
+
+```php
+// anti-pattern — nothing here notices a REMOVAL the actor was never shown
+if (in_array($administratorLevelPermission, $submittedNames, true)) {
+    Gate::forUser($actor)->authorize('grantAdministratorPermission', Role::class);
+}
+```
+
+✅ Good — the shipped form in
+[`app/Actions/Roles/EnforceAdministratorPermissionGrant.php`](../../app/Actions/Roles/EnforceAdministratorPermissionGrant.php),
+which diffs both directions and re-adds what an unprivileged actor could not have meant to remove:
+
+```php
+if ($isSubmittedGranted && ! $wasGranted) {
+    Gate::forUser($actor)->authorize('grantAdministratorPermission', Role::class);
+}
+
+if ($wasGranted && ! $isSubmittedGranted && Gate::forUser($actor)->denies('grantAdministratorPermission', Role::class)) {
+    $submittedPermissions[] = RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION;
+}
+```
+
+**Rule.** Whenever a **full-replace** write is driven by a form that shows the actor only *part* of the
+set, absence in the payload does not mean "remove this" — it means "the actor had no opinion". Diff
+the submitted set against the current one and authorize **each direction separately**: adding a value
+the actor may not add, and removing a value the actor may not remove, are two different abilities that
+happen to share one form.
+
+Three corollaries:
+
+- **Which behaviour is correct is a product decision, not a security one.** *Preserve* (keep the value,
+  let the rest of the save succeed) and *deny* (refuse the whole request) are both defensible: the
+  first can hide from the actor that their submission was partly ignored, the second blocks routine
+  edits on any role that happens to hold a protected value. Task 0009 stopped mid-audit and asked the
+  human, who chose **preserve**. Record the choice next to the code — an unrecorded one reads as an
+  oversight to the next auditor, who will "fix" it in whichever direction they'd have picked.
+- **Preserve must not become "nobody can ever revoke it".** The re-add is conditional on the actor
+  *failing* the grant ability, so the Super Admin's own "remove it by omitting it" path still works.
+  A guard that preserves unconditionally converts a permission into an irrevocable one.
+- **The same shape applies to `syncRoles()`, and it has already bitten this repo once** — see the
+  mirror-image note under [A rule that must bind a Super Admin actor](#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check),
+  where `UpdateUser` refused *assigning* the Super Admin role while happily removing it.
+
+## A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself
+
+Established by task 0009's Phase 4 rounds 1–3 (findings F2, then N1/N2/N3 against the fix for F2, then
+NR1). Every round found the same hole one level further up.
+
+**Half one — shape.** `Role::syncPermissions()` accepts names, integer ids, `Permission` model
+instances, and arrays or `Collection`s of any of those, flattening the lot through
+`HasPermissions::collectPermissions()`. A membership check written against bare name strings therefore
+sees a different set than the write does: submitting the protected permission **by id**, or nested one
+level deep inside an array element, was proven live to bypass the guard while still being honoured by
+the sync.
+
+✅ Good — normalise with the *identical* flattening the write uses, then compare:
+
+```php
+// app/Actions/Roles/EnforceAdministratorPermissionGrant.php — normalizeNames()
+foreach (Collection::make($permissions)->flatten() as $permission) {
+    if ($permission instanceof Permission) {
+        $names[] = $permission->name;
+    } elseif (is_numeric($permission)) {
+        $ids[] = $permission;
+    } else {
+        $names[] = (string) $permission;
+    }
+}
+```
+
+**Half two — provenance.** The first fix for F1/F2 took the "before" snapshot as a caller-supplied
+`array $currentPermissionNames` parameter. That reopened the identical hole at the call site: a caller
+asserting an untrue "before" makes a genuine new grant look pre-existing (N2), and the two snapshots
+were normalised asymmetrically so the diff silently mismatched (N3). Replacing the parameter with
+`?Role $role` — from which the action loads the permissions itself — removed both **structurally**,
+not by adding a validation.
+
+```php
+// the action reads its own "before" state; a caller cannot assert one
+$role->load('permissions');
+$currentNames = $role->permissions->pluck('name')->all();
+```
+
+**Rule.** A guard must derive every input its decision depends on from an authoritative source it
+controls, and must interpret the submitted input **exactly** as the write that follows will. Concretely:
+
+- **Never accept "what the record currently is" as a parameter.** That is the state being guarded; a
+  caller that can assert it can defeat the guard. Take the model and read it — with `load()`, not
+  `loadMissing()`, per [the reload rule](#authorization-that-consults-a-relation-must-reload-it-before-the-first-check-reads-it).
+- **Read the vendor source for the accepted input shapes rather than assuming the well-behaved one.**
+  "Callers pass names" is a convention, and a convention is not a boundary.
+- **A nullable parameter that means "nothing yet" must not carry a default** (finding NR1). `?Role
+  $role` with `= null` turns a forgotten argument at a future call site into a silent "nothing is
+  currently granted" for what may be an existing, already-granted row. Nullable, but required.
+- **Re-audit the fix, not just the finding.** Three consecutive rounds here each found a flaw in the
+  *previous round's remediation*, all shipped past review because each fix was read against the finding
+  it answered rather than as new code with its own attack surface.
+
 ## Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone
 
 Worth recording because the reasoning is non-obvious and someone will re-open the question. The
@@ -582,7 +706,20 @@ Do not "harden" the name comparisons themselves by lowercasing or trimming — t
 of matching names and break the property the byte-exact match above relies on. The remaining hardening
 is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-19 — Task 0008a's three Phase 4 rounds: added "A rule that must bind a Super
+_Last updated: 2026-08-20 — Task 0009's three Phase 4 rounds: added "A full-set sync behind a
+partially-visible form must preserve what the actor cannot see" (finding F1 — `syncPermissions()`
+replaces the whole set while the administrator-level toggle is rendered only to the Super Admin, so an
+unprivileged actor's routine edit silently revoked a grant; the preserve-vs-deny resolution was a human
+product decision, recorded as such) and "A check over a submitted list must accept every shape the
+write accepts, and derive the 'before' state itself" (findings F2/N1 — id, model-instance and nested
+shapes evaded a name-only membership check the sync still honoured; N2/N3/NR1 — the first fix took the
+"before" snapshot as a caller-supplied array, reopening the hole one level up, closed structurally by
+taking the `Role` instead). **Closed** the policy-layer residual under "A guard that reads a row's
+protected identity…": `RolePolicy` and the `Gate::before` deferral both read `isSuperAdminRoleRow()`
+now (finding F4), and the paragraph carries the generalisation about finishing a partial identity-helper
+conversion in one pass._
+
+_Previously: 2026-08-19 — Task 0008a's three Phase 4 rounds: added "A rule that must bind a Super
 Admin actor must be a direct throw, not a `Gate` check" (findings F1/N2 — `Gate::before` grants before
 any policy method runs, so a `Gate`-mediated invariant is inert for exactly the actor it must bind;
 plus the mirror-image mistake of checking only the submitted value and never the target's current
