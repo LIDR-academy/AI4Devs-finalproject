@@ -624,28 +624,45 @@ project. Read it at the start of every session.
   Descartados por el camino: el estado de la base, el CDN de Rebrickable (sus imágenes
   ya se abortan en `e2e/fixtures.ts`) y el arranque en frío (hay `e2e/warmup.ts` y el
   timeout está en 60 s). **Con `--workers=1` es estable y rápido (7 s el smoke).**
-  Dos salidas por probar: fijar `workers` bajo en `playwright.config.ts`, o correr el
-  E2E contra `next build && next start`, que no usa ese pool de dev —ojo entonces con
-  la trampa de `reuseExistingServer` y el build viejo—.
-  **Y una regla de higiene: si el E2E empieza a fallar raro, reinicia `next dev` antes
-  de investigar nada más.**
+  **Resuelto ese mismo día** por la segunda vía —el E2E ya no se ejecuta contra
+  `next dev`—: ver la entrada siguiente.
+- **El E2E, estable: se prueba el artefacto de despliegue (2026-08-19).** La
+  inestabilidad del paralelismo estaba en `next dev`, no en las pruebas: su pool de
+  workers moría bajo la carga y dejaba el servidor degradado. **La configuración ya no
+  apunta a `next dev`**: `playwright.config.ts` hace `next build` y levanta el
+  **paquete autónomo** (`output: "standalone"`) en el **puerto 3100** vía
+  `npm run start:standalone` (`scripts/start-standalone.mjs`). Con eso, **14/14 en
+  ~35 s con los 5 workers por defecto**, repetido varias veces sin un solo fallo.
+  Cuatro decisiones que van juntas y no conviene deshacer por separado:
+  (1) **Puerto propio (3100) y `reuseExistingServer: false`** — así un `next dev`
+  abierto en el 3000 no puede colarse como servidor de pruebas, y un `start` viejo
+  ocupando el puerto falla en voz alta en vez de servir un build anterior. Muere la
+  trampa del build viejo.
+  (2) **Se levanta lo que se despliega, no `next start`.** `next start` avisa de que no
+  funciona con `output: standalone`, y con razón: el paquete autónomo **no incluye
+  `.next/static`** —copiarlo es trabajo del despliegue—. El script hace esa copia (y la
+  de `public` si existe) antes de arrancar `server.js`, que es exactamente el runbook de
+  la VM (ADR-0001 §5).
+  (3) **Hay una prueba que vigila esa copia** (`smoke.spec.ts`): si faltan los estáticos
+  las páginas siguen respondiendo 200 y el evento `load` no se entera —un chunk caído no
+  lo impide—, así que se mira el tráfico de `/_next/static/`. Verificado que no es vacua:
+  borrando el directorio, ese chunk pasa de 200 a 500.
+  (4) **`E2E_DEV=1`** sigue apuntando al servidor de desarrollo (puerto 3000, **un solo
+  worker**, que es lo único que aguantaba) para iterar sobre una pantalla sin pagar el
+  build en cada vuelta.
+  El calentamiento (`e2e/warmup.ts`) ya no lleva el puerto a mano: lo lee del `baseURL`
+  de la configuración.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
 
-- **El E2E es inestable con el paralelismo por defecto**: el pool de workers de
-  `next dev` se cae bajo la carga ("Jest worker … exceeding retry limit") y a partir de
-  ahí unas rutas cuelgan y otras dan 500. Diagnóstico completo en la entrada del
-  2026-08-19. Pendiente: fijar `workers` bajo en `playwright.config.ts` o correr contra
-  `next start`. Mientras tanto, `npx playwright test --workers=1` (y reiniciar el
-  servidor de dev si ya viene degradado).
 - **Estado general.** Arquitectura, hosting, auth, UI, tests y versión de Prisma
   cerrados; **bloque 1 (Fundaciones) completo**: scaffolding (1.1), modelo de datos y
   primera migración (1.2) y semillas (1.3), todo verificado. Bloque 2 en curso: 2.1
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
-  (265 tests unitarios + 8 E2E, `openspec validate --strict` en verde). Lo que queda
+  (hoy **344 tests unitarios + 14 E2E**, `openspec validate --strict` en verde). Lo que queda
   fuera del MVP: **diseño visual y UX** —en curso: **flujos por rol**
   (`documents/ux-flows.md`) y **sistema de diseño** (`documents/design-system.md`)
   hechos; **faltan los wireframes**, la implementación de las pantallas que hoy solo

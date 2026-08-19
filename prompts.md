@@ -678,3 +678,31 @@ Rebrickable (se abortan sus imágenes en `e2e/fixtures.ts`) y que sea el servido
 `workers` en la configuración y ver si a 1 o 2 se estabiliza.
 **Verde:** `tsc`, `eslint`, 344 unitarios, y el E2E **12/12 varias veces seguidas**
 cuando no le pega la inestabilidad de paralelismo.
+
+### [2026-08-19] — El E2E deja de probar `next dev` y pasa a probar lo que se despliega
+**Prompt:** "continue".
+**Resumen de la respuesta:** Se retomó el único punto abierto —el E2E inestable con el
+paralelismo por defecto— y se cerró por la vía buena. El diagnóstico previo ya decía que
+el culpable era el pool de workers de `next dev`, no las pruebas; en vez de esconderlo
+bajando `workers` a 1, **se cambió el objetivo**: `playwright.config.ts` hace `next build`
+y levanta el **paquete autónomo** (`output: "standalone"`) en el **puerto 3100**.
+Resultado: **14/14 en ~35 s con los 5 workers por defecto**, repetido sin un solo fallo.
+**Por qué el puerto 3100 y `reuseExistingServer: false`:** con el 3000 y la reutilización
+activada, un `next dev` abierto se colaba como servidor de pruebas y un `start` viejo
+servía un build anterior —la trampa que ya había costado una sesión—. Ahora el puerto
+ocupado falla en voz alta.
+**Por qué el paquete autónomo y no `next start`:** `next start` avisa de que no funciona
+con `output: standalone` y tiene razón —el paquete **no incluye `.next/static`**, copiarlo
+es trabajo del despliegue—. El nuevo `scripts/start-standalone.mjs` hace esa copia (y la
+de `public`) y arranca `server.js`, que es literalmente el runbook de la VM (ADR-0001 §5).
+Así el E2E cubre también el empaquetado, no solo la aplicación.
+**Prueba nueva que vigila justo eso:** si los estáticos faltan, las páginas siguen
+respondiendo 200 y el evento `load` no se entera —un chunk caído no lo impide—, así que
+el smoke mira el tráfico de `/_next/static/` y exige que haya alguno y que ninguno falle.
+Comprobado que no es una prueba vacua: borrando el directorio, el chunk pasa de 200 a 500.
+**Puerta de escape para iterar:** `E2E_DEV=1` sigue apuntando a `next dev` (puerto 3000,
+un worker), que es lo único que aquel pool aguantaba, para no pagar un build por vuelta
+mientras se escribe una pantalla. El calentamiento ya no lleva el puerto a mano: lo lee
+del `baseURL` de la configuración.
+**Verde:** `tsc`, `eslint`, **344 unitarios**, `openspec validate --all --strict` y
+**14 E2E** en tres ejecuciones seguidas.

@@ -224,9 +224,10 @@ iniciar Docker Desktop.
 | `npm run dev` | App Next.js (front + `/api`) en modo desarrollo |
 | `npm run scheduler` | Proceso node-cron (recálculo de score, caducidad de ofertas, recordatorios) |
 | `npm run build` / `npm start` | Build de producción y arranque del servidor |
+| `npm run start:standalone` | Arranca el **artefacto de despliegue** (`output: standalone`) copiándole los estáticos — lo mismo que corre en la VM |
 | `npm run lint` / `npm run typecheck` | ESLint 9 (flat config) y `tsc --noEmit` |
 | `npm test` / `npm run test:watch` | Vitest (unit + integración) |
-| `npm run test:e2e` | Playwright (requiere `npx playwright install` la primera vez) |
+| `npm run test:e2e` | Playwright contra el build autónomo en el puerto 3100 (requiere `npx playwright install` la primera vez y la base de datos levantada). `E2E_DEV=1` lo apunta a `next dev` |
 | `npm run db:migrate` / `db:generate` / `db:seed` | Migraciones, cliente Prisma y semillas |
 
 ---
@@ -419,6 +420,14 @@ Decidido en `documents/ADR-0002`:
 accesibilidad) y **Testcontainers** para levantar un **Postgres real** en los tests
 de integración — evita mockear Prisma y prueba de verdad las transiciones de estado
 de `Copy` y el orden de la cola. Se ejecutan con `npm test` y `npm run test:e2e`.
+
+**El E2E no prueba el servidor de desarrollo.** Playwright hace `next build` y levanta
+el **paquete autónomo** (`output: standalone`) en un puerto propio, el 3100: es el mismo
+artefacto que se despliega en la VM, y de paso cubre el empaquetado — hay una prueba que
+vigila que los estáticos, que ese paquete no incluye, se hayan copiado. La razón
+original fue de estabilidad: el pool de compilación de `next dev` se caía bajo la carga
+de varios navegadores y dejaba el servidor devolviendo 500 en unas rutas y colgando
+otras. `E2E_DEV=1` conserva el objetivo antiguo para iterar sobre una pantalla.
 
 > **Estado:** el arnés está montado y en verde con tests de humo; la batería de
 > casos de dominio se escribe junto a cada capability. El **criterio de éxito del
