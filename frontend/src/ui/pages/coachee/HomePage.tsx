@@ -1,6 +1,7 @@
 import { useCoacheeDashboard } from "@/infrastructure/hooks/useCoacheeDashboard";
 import { usePullToRefresh } from "@/infrastructure/hooks/usePullToRefresh";
 import { JoinableClassList } from "@/ui/components/coachee/JoinableClassList";
+import { MyWaitingLists } from "@/ui/components/coachee/MyWaitingLists";
 import { NextClassCard } from "@/ui/components/coachee/NextClassCard";
 import { ErrorStateWithRetry, LoadingState } from "@/ui/components/coachee/ViewState";
 import { WaitingListBadge } from "@/ui/components/coachee/WaitingListBadge";
@@ -47,6 +48,8 @@ export function CoacheeHomePage() {
       </div>
 
       <WaitingListBadge count={dashboard.activeWaitingListCount} />
+
+      {dashboard.activeWaitingListCount > 0 && <MyWaitingLists />}
     </div>
   );
 }

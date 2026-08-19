@@ -69,14 +69,14 @@ describe("deriveClassCardState", () => {
     ).toEqual({ action: "none", reason: "individual" });
   });
 
-  it("renders the waiting-list informational state when the Coachee is on the waiting list", () => {
+  it("offers Leave waiting list when the Coachee is on the waiting list", () => {
     expect(
       deriveClassCardState(
         group({
           coacheeStatus: { isEnrolled: false, isOnWaitingList: true, isWithinReach: true },
         }),
       ),
-    ).toEqual({ action: "none", reason: "waiting" });
+    ).toEqual({ action: "leave", reason: null });
   });
 
   it("offers the Waiting list affordance on a full class within reach (replaces Join)", () => {

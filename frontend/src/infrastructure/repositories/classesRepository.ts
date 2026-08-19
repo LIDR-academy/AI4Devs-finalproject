@@ -13,6 +13,11 @@ import type {
 } from "@/domain/types/class";
 import type { AssignableCoach } from "@/domain/types/coach";
 import type { CoacheeDashboard } from "@/domain/types/coachee";
+import type {
+  JoinWaitingListResponse,
+  LeaveWaitingListResponse,
+  WaitingListListResponse,
+} from "@/domain/types/waitingList";
 import apiClient from "./apiClient";
 
 export const classesRepository = {
@@ -56,6 +61,23 @@ export const classesRepository = {
 
   async cancelEnrollment(id: string): Promise<CancelEnrollmentResponse> {
     const { data } = await apiClient.delete<CancelEnrollmentResponse>(`/classes/${id}/enrollment`);
+    return data;
+  },
+
+  async joinWaitingList(id: string): Promise<JoinWaitingListResponse> {
+    const { data } = await apiClient.post<JoinWaitingListResponse>(`/classes/${id}/waiting-list`);
+    return data;
+  },
+
+  async leaveWaitingList(id: string): Promise<LeaveWaitingListResponse> {
+    const { data } = await apiClient.delete<LeaveWaitingListResponse>(
+      `/classes/${id}/waiting-list`,
+    );
+    return data;
+  },
+
+  async listWaitingLists(): Promise<WaitingListListResponse> {
+    const { data } = await apiClient.get<WaitingListListResponse>("/waiting-lists");
     return data;
   },
 

@@ -1,8 +1,8 @@
 import type { ClassType, ClassVisibility, CoacheeStatus } from "@/domain/types/class";
 
-export type ClassCardAction = "join" | "cancel" | "waiting-list" | "none";
+export type ClassCardAction = "join" | "cancel" | "waiting-list" | "leave" | "none";
 
-export type ClassCardReason = "canceled" | "individual" | "waiting" | "out-of-reach" | null;
+export type ClassCardReason = "canceled" | "individual" | "out-of-reach" | null;
 
 export interface ClassCardState {
   action: ClassCardAction;
@@ -46,7 +46,7 @@ export function deriveClassCardState(input: ClassCardStateInput): ClassCardState
     return { action: "cancel", reason: null };
   }
   if (isOnWaitingList) {
-    return { action: "none", reason: "waiting" };
+    return { action: "leave", reason: null };
   }
   if (input.classType === "INDIVIDUAL") {
     return { action: "none", reason: "individual" };
