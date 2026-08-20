@@ -46,17 +46,20 @@ app/
                        CreateUser, UpdateUser — the last two authorize their own operation)
   Concerns/            Shared traits (validation rule sets)
   Console/Commands/    Artisan commands
-  Enums/               Backed enums for domain value sets (UserStatus, RoleName)
+  Enums/               Backed enums for domain value sets (UserStatus, RoleName, SalesRegionKind)
   Exceptions/          Domain exceptions that render their own response (ImmutableRoleException)
   Http/Controllers/    Abstract base + domain controllers used as HTTP boundaries in front of actions
   Listeners/           Event listeners (ActivateVerifiedUser), registered in AppServiceProvider
   Livewire/            Livewire components, grouped by area (Settings/, Settings/TwoFactor/, Actions/)
-  Models/              Eloquent models (User; Role, which subclasses the package's role model)
+  Models/              Eloquent models (User, SalesRegion; Role, which subclasses the package's
+                       role model)
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
   Policies/            Eloquent model policies (UserPolicy), auto-discovered by name
   Providers/           Service providers (AppServiceProvider, FortifyServiceProvider)
 config/                Laravel + package config (fortify.php, permission.php, ...)
 database/
+  data/                 Bundled, version-controlled fixture data a seeder reads — not seeder
+                        classes (iso-3166-countries.json, plus its own README stating provenance)
   factories/
   migrations/
   seeders/
@@ -78,6 +81,8 @@ tests/
 `app/Enums/`, `app/Exceptions/`, `app/Listeners/`, `app/Notifications/`, `app/Policies/` and `lang/` are all **stock Laravel locations** (`make:enum`, `make:exception`, `make:listener`, `make:notification`, `make:policy`, `lang:publish`), not new base folders — creating one of them needs no approval; inventing a folder Laravel doesn't ship does.
 
 `app/Policies/` in particular is **registration-free**: Laravel 13 auto-discovers `App\Policies\<Model>Policy` for `App\Models\<Model>`, so `UserPolicy` binds to `User` by naming alone. This repo has no `AuthServiceProvider` and does not need one — do not add one to register a conventionally-named policy. What each ability means lives in [architecture/authorization.md](../architecture/authorization.md#policies), not here.
+
+`database/data/` is the one folder here that Laravel does **not** ship, so it needed the approval `CLAUDE.md` requires — it exists because [PRD §2.4](../PRD/PRD.md) mandates that the country list ship as a bundled fixture in this repository rather than as a Composer dependency (`league/iso3166`, `symfony/intl`). It holds **data a seeder reads**, never a seeder class and never generated output: today one JSON file plus [`database/data/README.md`](../../database/data/README.md), which states the fixture's provenance, its shape, what is deliberately excluded from it, and how to refresh it. A new file lands here only under the same test — bundled, reviewable in a diff, and read by something in `database/seeders/`.
 
 `app/Actions/` groups by concern, one subfolder per area: `Fortify/` holds the framework-contract implementations, `Users/` and `Roles/` the app's own domain actions for those areas. A new action goes in the subfolder for its domain (or directly under `app/Actions/` if it belongs to none) — never nested under an unrelated one. `Roles/` (task 0009) is the pattern to copy when a new module needs its first action: create the subfolder for the domain, even for a single class, rather than parking it in the nearest existing one.
 
@@ -187,6 +192,8 @@ Mixing both styles in the same codebase makes it unclear which one governs a giv
 
 `casts()` also carries enum casts (`'status' => UserStatus::class`, `'deleted_at' => 'datetime'`), and the **omission** of a column from `#[Fillable]` *is* this codebase's mass-assignment guard: `users.status` and `users.pending_email` are deliberately absent from `User`'s `#[Fillable]` list, so the only way to write them is an explicit `forceFill()` **from one named place** — today the `app/Actions/Users/` actions that own the email-change flow, plus `User::delete()`'s obfuscation write (see below), each of which is the single writer of the columns it touches. When you add a column that no form may set, leave it out of `#[Fillable]` and write it that way — don't add it and then filter the input at each call site.
 
+`SalesRegion` (task 0016) is the same convention at a larger scale and worth reading as the reference case: it declares `#[Fillable(['code', 'description', 'rate'])]` and leaves **eight** columns out, with `database/seeders/SalesRegionSeeder.php` as their single `forceFill()` writer. Two things generalise from it. First, the omission list is derived from *who may write the column*, not from how sensitive it looks: `slug` is omitted because a form that could change it would break the seeder's idempotency by duplicating the row, and `name` because a canonical name must stay refreshable on re-seed. Second, **columns coupled by an invariant are one mass-assignment decision, not two** — `is_active` is omitted *because* `is_default` is, since leaving one fillable invites exactly the split write the invariant forbids. See [security/seeder-safety.md](../security/seeder-safety.md#confirmed-safe-split-seeder-owned-from-administrator-configurable-columns-upsert-is-the-wrong-default).
+
 Every property is documented with a `@property` PHPDoc block above the class, matching the actual database columns (see the block above `class User` in `app/Models/User.php`) — keep this block in sync with the migration whenever a column is added or removed (this is exactly the kind of drift the `docs-maintainer` skill and this file exist to catch).
 
 ### Deleting a user goes through the model, not the query builder
@@ -211,7 +218,7 @@ User::whereIn('id', $ids)->delete();
 
 ### UUID primary keys
 
-> **`User` is the live example (Epic 1, done).** `App\Models\User` is now a real UUID-PK model — its `id` is a UUID (v7) string, per [ADR 0001 — UUID primary keys](../decisions/0001-uuid-primary-keys.md). This subsection documents the convention it follows, which **every new model** in PRD Epics 2 and 4 (products, product variants, product categories, blog categories, blog tags, blog posts) must also follow once those are built — they do not exist in code yet. The rationale and the `users`-table migration impact live in ADR 0001; this subsection is only the code-shape convention.
+> **Two live examples: `User` (Epic 1) and `SalesRegion` (task 0016).** Both are real UUID (v7) PK models. `User` got there by conversion, per [ADR 0001 — UUID primary keys](../decisions/0001-uuid-primary-keys.md); `SalesRegion` is the first model in this repo created that way from day one, and is the one to copy. The six remaining entities ADR 0001 names (products, product variants, product categories, blog categories, blog tags, blog posts) still do not exist in code. **Note the ADR's entity list is narrower than the code:** `sales_regions` is not one of its seven — it ships under a confirmed project-wide policy (UUID v7 for every new Epic 2 business entity, with a high-volume geography lookup table excepted and left `bigint`) that **amending ADR 0001 to record is a deferred follow-up task**. Until that lands, read the ADR for rationale and [database/schema.md's Notes](../database/schema.md#notes) for what is actually keyed this way. This subsection is only the code-shape convention.
 
 These models key on a UUID **version 7** generated by Laravel 13's native `HasUuids` trait (`Illuminate\Database\Eloquent\Concerns\HasUuids`), whose default `newUniqueId()` returns `Str::uuid7()` (time-ordered, not random UUIDv4). The convention:
 
@@ -285,6 +292,8 @@ Every PHP change in this repo should pass, in this order, before being considere
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
 _Last updated: 2026-08-20 — Task 0009: added `app/Actions/Roles/` (`EnforceAdministratorPermissionGrant`) to the directory listing, and recorded it in the "one subfolder per area" paragraph as the pattern to copy — a new domain gets its own subfolder even for a single action, rather than being parked in the nearest existing one._
+
+_Previously, 2026-08-20 — Task 0016 (Sales Region catalog schema + seeder): added `database/data/` to the directory listing with the paragraph explaining why a non-Laravel base folder was approved here (PRD-mandated bundled fixture) and what may go in it; noted `SalesRegion` beside `User` in `app/Models/` and `SalesRegionKind` in `app/Enums/`; added `SalesRegion` as the reference case for the `#[Fillable]`-omission guard (the omission list follows who may write the column, and invariant-coupled columns are one decision); and rewrote the UUID-primary-keys preamble, which claimed `User` was the only live example and implied ADR 0001's seven-entity list was exhaustive — `sales_regions` is an eighth, under a policy the ADR does not record until its deferred amendment lands._
 
 _Previously, 2026-08-19 — Task 0008a: added the "An authorization rule belongs to the action, not to one of its callers" convention with its real ✅/❌ pair (the deleted `Index::createNewUser()` gate vs. `CreateUser`'s own first statement) and its three constraints — move the rule rather than copy it, derive a security-relevant flag internally rather than accept it as a parameter, and authorize before the first write against freshly-reloaded state. Noted `CreateUser` / `UpdateUser` in the `app/Actions/Users/` directory listing._
 

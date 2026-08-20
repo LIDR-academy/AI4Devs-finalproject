@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\SalesRegionKind;
+use App\Models\SalesRegion;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\ProductionSeeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -39,6 +42,24 @@ test('seeding a production environment still populates the roles and permission 
 
     expect(Role::count())->toBe(2)
         ->and(Permission::count())->toBe(38);
+});
+
+// F-2 (Phase 5 review, story 0016): DatabaseSeeder::run() calls SalesRegionSeeder
+// unconditionally, deliberately OUTSIDE the ['local', 'testing'] allow-list a few lines
+// above it -- that placement is what AC9 ("the catalog is not environment-gated")
+// requires. Every other Sales Region production-environment test in this file goes
+// through ProductionSeeder, which has no environment gate to fall into at all, so none
+// of them would catch a regression that moved DatabaseSeeder's `$this->call(SalesRegionSeeder::class)`
+// line inside the allow-list block. This test drives DatabaseSeeder itself.
+
+test('seeding a production environment through DatabaseSeeder still populates the Sales Region catalog', function () {
+    app()->instance('env', 'production');
+    config(['auth.super_admin.email' => null]);
+
+    (new DatabaseSeeder)();
+
+    expect(SalesRegion::where('kind', SalesRegionKind::Country)->count())->toBeGreaterThanOrEqual(200)
+        ->and(SalesRegion::where('is_active', true)->count())->toBe(6);
 });
 
 test('seeding the default non-production test environment still creates the test@example.com fixture user', function () {
@@ -79,4 +100,41 @@ test('seeding a local environment still creates the test@example.com fixture use
     (new DatabaseSeeder)();
 
     expect(User::where('email', 'test@example.com')->exists())->toBeTrue();
+});
+
+// Story 0016 (D8): ProductionSeeder composes the required application catalogs
+// (RolePermissionSeeder + SalesRegionSeeder) into one class production is meant to
+// target forever, instead of the single targeted `--class=RolePermissionSeeder`
+// invocation story 0002's runbook documented -- a call that would now silently skip
+// the Sales Region catalog with no error at all. These cases mirror 0002's existing
+// production/staging pairs above, one level down.
+
+test('seeding a production environment populates the Sales Region catalog', function () {
+    app()->instance('env', 'production');
+    config(['auth.super_admin.email' => null]);
+
+    (new ProductionSeeder)();
+
+    expect(SalesRegion::where('kind', SalesRegionKind::Country)->count())->toBeGreaterThanOrEqual(200)
+        ->and(SalesRegion::where('is_active', true)->count())->toBe(6);
+});
+
+test('the production seeder also populates the roles and permission catalog', function () {
+    app()->instance('env', 'production');
+    config(['auth.super_admin.email' => null]);
+
+    (new ProductionSeeder)();
+
+    expect(Role::count())->toBe(2)
+        ->and(Permission::count())->toBe(38);
+});
+
+test('seeding a staging environment through the production seeder still populates the Sales Region catalog', function () {
+    app()->instance('env', 'staging');
+    config(['auth.super_admin.email' => null]);
+
+    (new ProductionSeeder)();
+
+    expect(SalesRegion::where('kind', SalesRegionKind::Country)->count())->toBeGreaterThanOrEqual(200)
+        ->and(SalesRegion::where('is_active', true)->count())->toBe(6);
 });

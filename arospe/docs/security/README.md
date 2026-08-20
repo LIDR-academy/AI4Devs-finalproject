@@ -39,7 +39,15 @@ repo must follow — always with a real code example pulled from this repository
   and the rules for bootstrapping a privileged account from a configured email address: canonical
   lowercase, format-validate before any lookup, mailbox-ownership proof (`email_verified_at`) before any
   grant, abort with a `return` rather than an exception so the catalog still commits, and a persisted
-  audit log that never carries the generated secret.
+  audit log that never carries the generated secret. Since task 0016 it also owns the rules for a
+  **required catalog seeder that is not a privilege bootstrap**: why the production runbook now names
+  `--class=ProductionSeeder` rather than any single catalog class (a pinned class silently skips a
+  catalog added later), why `WithoutModelEvents` on `DatabaseSeeder` but not `ProductionSeeder` makes
+  the same seeder run under two different event semantics, why `?->` on a structural lookup commits a
+  silently invalid catalog instead of failing, why a seeder idempotency key on a `utf8mb4_unicode_ci`
+  column is byte-exact in PHP and case-insensitive in the database (the `roles.name` trap, now on
+  `sales_regions.slug` — insert fails closed, `where()` fails open), and the confirmed-safe split
+  between seeder-owned and administrator-configurable columns that makes `upsert()` the wrong default.
 - [Signed-link verification patterns](signed-link-verification.md) — the rules governing this repo's
   first app-owned signed route (`email-change.confirm`, task 0003): why `ValidateSignature` is
   globally prioritised ahead of `SubstituteBindings` (and the side effects verified across the `web`
@@ -102,6 +110,11 @@ sync behind a partially-visible form must preserve what the actor cannot see; a 
 list must accept every shape the write accepts and derive the "before" state itself) and **closed** that
 page's policy-layer partial-hydration residual, now that `RolePolicy` and the `Gate::before` deferral
 both read `Role::isSuperAdminRoleRow()`. The index entry above was widened accordingly._
+
+_Previously: 2026-08-20 — Task 0016 (Sales Region catalog schema + seeder): added no new page — the
+audit expanded `seeder-safety.md` with four durable rules for required-catalog seeders and withdrew that
+page's now-wrong `--class=RolePermissionSeeder` production runbook line. The index entry above was
+widened accordingly._
 
 _Previously: 2026-08-19 — Task 0008a (centralize Administrator-level role identification): its three
 Phase 4 rounds added no new page — they expanded `authorization-patterns.md` with two durable rules
