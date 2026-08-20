@@ -64,6 +64,9 @@ const sets = {
   async update() { return null; },
   async setPublished() { return null; },
   async themeExists() { return true; },
+  // El circuito de alquiler no lista el catálogo; el puerto los exige y no se usan.
+  async listManaged() { throw new Error("no usado"); },
+  async listThemes() { return []; },
 };
 
 function subscriptionsFor(

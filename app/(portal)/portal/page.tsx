@@ -17,7 +17,7 @@ import { prismaSubscriptionRepository } from "@/repositories/subscription.reposi
 
 import { OfferButtons, PlanSwitcher, ReturnButton } from "./portal-actions";
 
-export const metadata = { title: "Mi portal · Clickoteca" };
+export const metadata = { title: "Mi portal" };
 
 const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" });
 

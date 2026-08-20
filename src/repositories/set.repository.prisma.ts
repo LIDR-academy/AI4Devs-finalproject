@@ -1,7 +1,10 @@
 import { prisma } from "@/db/prisma";
 import type {
   CreateSetInput,
+  ListManagedSetsInput,
   ManagedSet,
+  ManagedSetListItem,
+  ManagedSetsPage,
   SetRepository,
   UpdateSetInput,
 } from "@/repositories/set.repository";
@@ -85,6 +88,64 @@ export const prismaSetRepository: SetRepository = {
     const { count } = await prisma.set.updateMany({ where: { id: setId }, data: { published } });
     if (count === 0) return null;
     return this.findById(setId);
+  },
+
+  async listManaged({ search, published, limit, offset }: ListManagedSetsInput): Promise<ManagedSetsPage> {
+    const term = search?.trim();
+    // El filtro se construye una vez y se reutiliza en los tres consultas: si la
+    // lista y los recuentos de la cabecera no filtraran igual, la pantalla diría
+    // "35 sets" sobre una tabla de tres.
+    const where = {
+      ...(published === null || published === undefined ? {} : { published }),
+      ...(term
+        ? {
+            OR: [
+              { name: { contains: term, mode: "insensitive" as const } },
+              { setNum: { contains: term, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    };
+
+    const [rows, totalSets, totalCopies] = await Promise.all([
+      prisma.set.findMany({
+        where,
+        select: {
+          id: true,
+          setNum: true,
+          name: true,
+          published: true,
+          theme: { select: { name: true } },
+          // Se traen los estados y se cuentan en memoria: son unas pocas copias por
+          // set y una sola consulta. Dos `_count` filtrados costarían dos viajes más
+          // para el mismo número.
+          copies: { select: { state: true } },
+        },
+        orderBy: { name: "asc" },
+        skip: offset,
+        take: limit,
+      }),
+      prisma.set.count({ where }),
+      prisma.copy.count({ where: { set: where } }),
+    ]);
+
+    const items = rows.map(
+      (row): ManagedSetListItem => ({
+        id: row.id,
+        setNum: row.setNum,
+        name: row.name,
+        themeName: row.theme.name,
+        published: row.published,
+        totalCopies: row.copies.length,
+        availableCopies: row.copies.filter((copy) => copy.state === "DISPONIBLE").length,
+      })
+    );
+
+    return { items, totalSets, totalCopies };
+  },
+
+  async listThemes() {
+    return prisma.theme.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } });
   },
 
   async themeExists(themeId) {

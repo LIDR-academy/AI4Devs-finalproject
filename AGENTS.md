@@ -812,6 +812,45 @@ project. Read it at the start of every session.
   **Trampa de entorno, no de código:** con Docker Desktop recién arrancado, el E2E dio
   tres rojos en `page.goto` de páginas públicas intactas. Es el hambre de CPU documentada
   en `wireframes.md` §9.3, no una regresión: con el demonio ya estable, 29/29 en 20 s.
+- **W4 hecha — catálogo e inventario del back-office (2026-08-20):**
+  `/backoffice/catalogo` (lista) y `/backoffice/catalogo/:setId` (ficha) en
+  `app/(backoffice)/backoffice/catalogo/`, **Server Components leyendo el repositorio**:
+  no se escribió `GET /api/sets` y no hace falta (wireframes §2.1). **HU-10 en verde**;
+  13 de 18 historias con recorrido por interfaz. Se construyó **fuera del orden de
+  §9.2** (a petición del usuario): de las tres que quedaban era la única sin
+  bloqueantes. Capa de datos nueva: `SetRepository.listManaged` (filtro + paginación +
+  recuento de copias por set) y `listThemes`; `CopyRepository.listInventoryBySet` (copias
+  con el **tenedor** del alquiler vivo); casos de uso `browseManagedCatalog` /
+  `listThemeOptions` / `loadSetInventory`, todos con permiso `set.manage` — el mismo con
+  el que la barra decide enseñar el destino, para que lista, ficha y navegación no se
+  abran por puertas distintas.
+  **Hallazgo importante (arreglado):** el botón `[ Dar de baja ]` iba por el endpoint
+  **genérico** de transiciones con el motivo enlatado `"Acción desde la cola de
+  trabajo"`, saltándose que `POST /api/copies/:id/retire` **exige motivo**. Ahora la
+  baja abre un diálogo, pide el motivo y va a `/retire`, en el **componente compartido**
+  `components/backoffice/copy-actions.tsx` (antes `work-queue-actions.tsx`), así que lo
+  arregla también la cola de trabajo. Sus botones nombran su copia
+  (`aria-label="Catalogar: copia AB12"`).
+  **Defecto viejo destapado y corregido:** el layout raíz añade `· Clickoteca` con
+  `title.template` y **siete páginas lo repetían** en su `metadata` → "Cola de trabajo ·
+  Clickoteca · Clickoteca". La ficha de catálogo usa `generateMetadata` con el nombre del
+  set.
+  **Decisiones de componentes:** se trajeron de shadcn `dialog`, `input` y `label`
+  (reescritos al estilo de la casa: `var(--token)`, sin `dark:`); **no** `select` (el
+  tema es un `<select>` nativo: veinte opciones planas, mejor en móvil, sin JS), **no**
+  `alert-dialog` (la baja pide un dato, y `alertdialog` es para decidir) y **no** `table`
+  (habría dejado dos estilos de tabla en el back-office).
+  **Trampa de Playwright, anotada porque volverá:** `getByRole("alert")` casa también con
+  el **anunciador de rutas de Next** (`#__next-route-announcer__`), así que en cuanto hay
+  un error en pantalla la consulta es ambigua y salta *strict mode*. Anclar por texto.
+  **Y una lección de datos:** la semilla es idempotente **por existencia**, así que no
+  restaura estados — tras varias ejecuciones del E2E todas las copias acabaron
+  `DISPONIBLE` y ya no había ninguna `INCOMPLETA` con la que probar la baja. Por eso la
+  baja se prueba en `tests/copy-actions.test.tsx` (componente, con `fetch` simulado) y no
+  en el E2E. El E2E de W4 deja **un set de prueba sin publicar por ejecución**: el dominio
+  no contempla borrar un Set y la prueba no lo salta por detrás.
+  **Verificación:** 366 unitarios, `tsc`, `eslint`, `next build` y **33 E2E en dos
+  ejecuciones seguidas**; `axe` audita ya catorce pantallas más el diálogo de alta.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -822,13 +861,13 @@ project. Read it at the start of every session.
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
-  (hoy **354 tests unitarios + 29 E2E**, `openspec validate --strict` en verde). Lo que queda
+  (hoy **366 tests unitarios + 33 E2E**, `openspec validate --strict` en verde). Lo que queda
   fuera del MVP: **diseño visual y UX** —los **tres entregables de diseño están hechos**:
   flujos por rol (`documents/ux-flows.md`), sistema de diseño
   (`documents/design-system.md`) y **wireframes** (`documents/wireframes.md`, 2026-08-20);
-  de las cinco pantallas, **W1 (ficha de set) está construida** y **faltan las cuatro
-  restantes**; la **navegación de superficie** (paso 2) también está hecha, así que el
-  orden que queda de `wireframes.md` §9.2 es: **W5 → W2+W3 → W4**— y el despliegue en la VM. **`axe` ya está en el
+  de las cinco pantallas están construidas **W1 (ficha de set)** y **W4 (catálogo e
+  inventario)**, más la **navegación de superficie**; queda **W5** (sin bloqueantes) y
+  **W2+W3**, que siguen esperando a §8.1 y §8.2— y el despliegue en la VM. **`axe` ya está en el
   E2E.** La decisión de alcance sobre el plan y el alquiler puntual está **tomada,
   ejecutada y archivada** (cambio `plan-obligatorio-en-alta`, 2026-08-17). **`ux-flows.md`
   §8.2 ya no tiene nada abierto**: los wireframes cerraron los tres puntos que quedaban.

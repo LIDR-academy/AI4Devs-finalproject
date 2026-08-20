@@ -855,3 +855,43 @@ que antes no se podía hacer. Tres rojos intermedios en `page.goto` de páginas 
 intactas resultaron ser **hambre de CPU con Docker Desktop recién arrancado** (§9.3), no
 una regresión. Sincronizados `wireframes.md` (§8.5 resuelta, §9.2), `design-system.md`
 §6.1/§6.2 y `readme.md` §1.3 + árbol de ficheros.
+
+### [2026-08-20] — W4: catálogo e inventario del back-office
+**Prompt:** "Vamos a por W4".
+**Resumen de la respuesta:** Las dos pantallas de `wireframes.md` §6 —
+`/backoffice/catalogo` y `/backoffice/catalogo/:setId`— construidas como **Server
+Components que leen el repositorio**: no se escribió `GET /api/sets` porque la pantalla
+no lo necesita y la API pública se amplía cuando la pida alguien de fuera (§2.1).
+**HU-10 pasa a verde**: dar de alta un set, tasarlo, publicarlo y ponerle copias ya se
+hace desde el navegador — **13 de 18** historias con recorrido completo por interfaz.
+Se construyó **fuera del orden previsto**, a petición: de las tres pantallas que
+quedaban era la única sin bloqueantes.
+**La lista existe por los sets que no están publicados.** Un set recién creado nace sin
+publicar y el catálogo público responde 404 a propósito, así que sin esta lista no hay
+forma de volver a él; por eso el filtro por defecto es "Todos" y no "Publicados". La
+columna de copias enseña el caso que de verdad se cuela —publicado y con cero copias,
+que sale en el catálogo y no se puede alquilar nunca— sin abrir nada.
+**El hallazgo que solo aparece construyendo:** el botón `[ Dar de baja ]` de la cola de
+trabajo iba por el endpoint **genérico** de transiciones con un motivo enlatado,
+saltándose que `/retire` **exige** el motivo porque "la baja tiene impacto económico y
+su motivo es parte del rastro de auditoría". W4 reutilizaba ese componente y heredaba el
+atajo; se preguntó y se arregló **en el componente compartido**, así que la auditoría
+deja de tener bajas sin causa también en la cola de trabajo.
+**Tres decisiones de componente, en contra del dibujo:** el tenedor de la copia tiene
+columna propia —lo que deja sitio a la única acción que el dominio permite sobre una
+copia alquilada, la baja por pérdida, que no tenía interfaz en ninguna parte—; **no**
+se trajo `alert-dialog`, porque la baja pide un **dato** y `alertdialog` es para
+decidir, no para rellenar; y el tema es un `<select>` **nativo**, que en móvil es mejor
+y no necesita JavaScript. Sí se trajeron `dialog`, `input` y `label`.
+**Un defecto viejo destapado:** el layout raíz ya añade `· Clickoteca` con
+`title.template` y **siete páginas lo repetían**, así que la pestaña decía "Cola de
+trabajo · Clickoteca · Clickoteca". Corregido en todas.
+**Dos lecciones de pruebas:** `getByRole("alert")` casa también con el **anunciador de
+rutas de Next**, así que cualquier error en pantalla vuelve la consulta ambigua; y la
+semilla es idempotente **por existencia**, no restaura estados — tras varias ejecuciones
+del E2E ya no quedaba ninguna copia `INCOMPLETA` con la que probar la baja, así que esa
+prueba vive donde no depende del estado de la base: en un test de componente.
+**Verificación:** 366 unitarios, `tsc`, `eslint`, `next build` y **33 E2E en dos
+ejecuciones seguidas**, con `axe` auditando catorce pantallas más el diálogo de alta.
+Sincronizados `wireframes.md` (§6.6 nueva, §9.1, §9.2 y §9.4), `design-system.md`
+§6.1/§6.2 y `readme.md` §1.3 + árbol.

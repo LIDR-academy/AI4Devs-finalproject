@@ -8,7 +8,7 @@ import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
 import { prismaBackofficeRepository } from "@/repositories/backoffice.repository.prisma";
 import { listCustomers } from "@/use-cases/backoffice/manage-backoffice";
 
-export const metadata = { title: "Clientes · Clickoteca" };
+export const metadata = { title: "Clientes" };
 
 /**
  * Vista de clientes (8.3).

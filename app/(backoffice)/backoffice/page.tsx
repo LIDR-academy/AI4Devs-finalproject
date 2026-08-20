@@ -1,3 +1,4 @@
+import { CopyActions } from "@/components/backoffice/copy-actions";
 import { StatusBadge } from "@/components/status-badge";
 import { copyStatus } from "@/lib/status";
 import { requireSurfacePage } from "@/http/auth-context";
@@ -5,9 +6,7 @@ import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
 import { prismaBackofficeRepository } from "@/repositories/backoffice.repository.prisma";
 import { loadWorkQueue } from "@/use-cases/backoffice/manage-backoffice";
 
-import { WorkQueueActions } from "./work-queue-actions";
-
-export const metadata = { title: "Cola de trabajo · Clickoteca" };
+export const metadata = { title: "Cola de trabajo" };
 
 /**
  * Orden de la cola: primero lo que bloquea a un cliente (una copia en inspección es
@@ -81,7 +80,13 @@ export default async function BackofficePage() {
                       {DATE.format(item.since)}
                     </td>
                     <td className="py-2">
-                      <WorkQueueActions copyId={item.copyId} state={item.state} />
+                      {/* El nombre del set distingue un botón de otro al tabular:
+                          sin él, cuatro "Recepcionar" seguidos suenan igual. */}
+                      <CopyActions
+                        copyId={item.copyId}
+                        state={item.state}
+                        subject={item.setName}
+                      />
                     </td>
                   </tr>
                 ))}

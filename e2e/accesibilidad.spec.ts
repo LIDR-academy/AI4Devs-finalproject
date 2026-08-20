@@ -92,6 +92,7 @@ test("sin incidencias de accesibilidad: portal del suscriptor", async ({ page })
  */
 const PAGINAS_BACKOFFICE = [
   { ruta: "/backoffice", nombre: "cola de trabajo" },
+  { ruta: "/backoffice/catalogo", nombre: "catálogo" },
   { ruta: "/backoffice/clientes", nombre: "clientes" },
   { ruta: "/backoffice/configuracion", nombre: "configuración" },
   { ruta: "/backoffice/empleados", nombre: "empleados" },
@@ -105,4 +106,23 @@ test("sin incidencias de accesibilidad: back-office", async ({ page }) => {
       await auditar(page);
     });
   }
+});
+
+/**
+ * La ficha de catálogo y **su diálogo de alta**, que es la primera pantalla con un
+ * formulario dentro de un modal: axe solo ve lo que está en el DOM, así que un
+ * diálogo cerrado no se audita. Se abre a propósito.
+ */
+test("sin incidencias de accesibilidad: ficha de catálogo y alta de set", async ({ page }) => {
+  await login(page, "admin@clickoteca.test");
+  await page.goto("/backoffice/catalogo");
+
+  await page.getByRole("button", { name: "+ Nuevo set" }).click();
+  await expect(page.getByRole("dialog", { name: "Nuevo set" })).toBeVisible();
+  await auditar(page);
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("row").nth(1).getByRole("link").click();
+  await page.waitForURL(/\/backoffice\/catalogo\/[0-9a-f-]{36}$/);
+  await auditar(page);
 });

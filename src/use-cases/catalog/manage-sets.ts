@@ -6,7 +6,9 @@ import type { AuditRepository } from "@/repositories/audit.repository";
 import type {
   CreateSetInput,
   ManagedSet,
+  ManagedSetsPage,
   SetRepository,
+  ThemeOption,
   UpdateSetInput,
 } from "@/repositories/set.repository";
 
@@ -19,6 +21,76 @@ export interface ManageSetsDeps {
 export interface Actor {
   id: string;
   role: Role;
+}
+
+/**
+ * Sets por página en la lista del back-office. Es un número de pantalla, no de API:
+ * la tabla cabe de un vistazo y la paginación evita traerse el catálogo entero.
+ */
+export const CATALOG_PAGE_SIZE = 25;
+
+export interface BrowseManagedCatalogInput {
+  actor: Actor;
+  search?: string | null;
+  /** `null` = todos, **incluidos los no publicados**: es el defecto de la pantalla. */
+  published?: boolean | null;
+  /** Página pedida, 1-indexada. Se satura al rango válido en vez de rechazarse. */
+  page?: number;
+}
+
+export interface ManagedCatalogPage extends ManagedSetsPage {
+  page: number;
+  pageCount: number;
+  pageSize: number;
+}
+
+/**
+ * Catálogo completo para el back-office (`wireframes.md` §2.1 y §6.1).
+ *
+ * Incluye los **no publicados**, y esa es la razón de que la pantalla exista: un set
+ * recién creado nace sin publicar y el catálogo público lo devuelve como 404, así que
+ * sin esta lista no habría forma de volver a él.
+ *
+ * La página se **satura** igual que en el catálogo público: pedir la 99 de 2 devuelve
+ * la última, no un error. Un número de página fuera de rango es un enlace viejo, no
+ * una petición malintencionada.
+ */
+export async function browseManagedCatalog(
+  { repository }: ManageSetsDeps,
+  input: BrowseManagedCatalogInput
+): Promise<ManagedCatalogPage> {
+  requirePermission(input.actor, "set.manage");
+
+  const filter = {
+    search: input.search ?? null,
+    published: input.published ?? null,
+    limit: CATALOG_PAGE_SIZE,
+  };
+
+  const asked = Math.max(1, Number.isFinite(input.page) ? Math.trunc(input.page ?? 1) : 1);
+  const first = await repository.listManaged({ ...filter, offset: (asked - 1) * CATALOG_PAGE_SIZE });
+  const pageCount = Math.max(1, Math.ceil(first.totalSets / CATALOG_PAGE_SIZE));
+
+  // Solo se vuelve a consultar si la página pedida no existe —un enlace viejo, o el
+  // filtro que acaba de encoger la lista—; en el caso normal esto es una consulta.
+  if (asked <= pageCount) {
+    return { ...first, page: asked, pageCount, pageSize: CATALOG_PAGE_SIZE };
+  }
+
+  const last = await repository.listManaged({
+    ...filter,
+    offset: (pageCount - 1) * CATALOG_PAGE_SIZE,
+  });
+  return { ...last, page: pageCount, pageCount, pageSize: CATALOG_PAGE_SIZE };
+}
+
+/** Temas disponibles para el alta y la edición de un Set (§6.3). */
+export async function listThemeOptions(
+  { repository }: ManageSetsDeps,
+  actor: Actor
+): Promise<readonly ThemeOption[]> {
+  requirePermission(actor, "set.manage");
+  return repository.listThemes();
 }
 
 /** Alta de un Set en el catálogo. Nace **sin publicar**: publicar es un acto aparte. */

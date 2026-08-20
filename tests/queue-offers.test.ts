@@ -51,6 +51,9 @@ const sets = {
   async update() { return null; },
   async setPublished() { return null; },
   async themeExists() { return true; },
+  // La cola no lista el catálogo; el puerto los exige y aquí no se usan.
+  async listManaged() { throw new Error("no usado"); },
+  async listThemes() { return []; },
 };
 
 function subscriptionsFor(subscription: ActiveSubscription | null = SUBSCRIPTION): SubscriptionRepository {

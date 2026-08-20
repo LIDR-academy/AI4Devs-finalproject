@@ -7,7 +7,7 @@ import { prismaSubscriptionRepository } from "@/repositories/subscription.reposi
 
 import { SettingsForm } from "./settings-form";
 
-export const metadata = { title: "Configuración · Clickoteca" };
+export const metadata = { title: "Configuración" };
 
 const EUR = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 

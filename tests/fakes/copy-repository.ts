@@ -2,6 +2,7 @@ import { canTransition, type CopyState } from "@/domain/copy/lifecycle";
 import type {
   CopyRepository,
   CopySummary,
+  InventoryCopy,
   TransitionCopyOutcome,
 } from "@/repositories/copy.repository";
 
@@ -40,6 +41,15 @@ export class FakeCopyRepository implements CopyRepository {
 
   async listBySet(setId: string) {
     return this.copies.filter((c) => c.setId === setId);
+  }
+
+  /** Quién tiene cada copia, por id. Lo rellena el test que lo necesite. */
+  readonly holders = new Map<string, string>();
+
+  async listInventoryBySet(setId: string): Promise<readonly InventoryCopy[]> {
+    return this.copies
+      .filter((c) => c.setId === setId)
+      .map((copy) => ({ ...copy, holderName: this.holders.get(copy.id) ?? null }));
   }
 
   async create({ setId, acquiredAt }: { setId: string; acquiredAt: Date }) {

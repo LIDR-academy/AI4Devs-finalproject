@@ -3,12 +3,22 @@ import { describe, expect, it } from "vitest";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/domain/errors";
 import type {
   CreateSetInput,
+  ListManagedSetsInput,
   ManagedSet,
+  ManagedSetsPage,
   SetRepository,
   UpdateSetInput,
 } from "@/repositories/set.repository";
-import { createSet, publishSet, unpublishSet, updateSet } from "@/use-cases/catalog/manage-sets";
-import { addCopy, listCopiesOfSet } from "@/use-cases/copies/manage-copies";
+import {
+  browseManagedCatalog,
+  CATALOG_PAGE_SIZE,
+  createSet,
+  listThemeOptions,
+  publishSet,
+  unpublishSet,
+  updateSet,
+} from "@/use-cases/catalog/manage-sets";
+import { addCopy, listCopiesOfSet, loadSetInventory } from "@/use-cases/copies/manage-copies";
 
 import { FakeAuditRepository } from "./fakes/audit-repository";
 import { FakeCopyRepository } from "./fakes/copy-repository";
@@ -66,6 +76,31 @@ class FakeSetRepository implements SetRepository {
     if (!set) return null;
     set.published = published;
     return set;
+  }
+
+  /** Última petición de lista recibida: lo que la pantalla acaba pidiendo de verdad. */
+  lastQuery: ListManagedSetsInput | null = null;
+
+  async listManaged(input: ListManagedSetsInput): Promise<ManagedSetsPage> {
+    this.lastQuery = input;
+    const page = this.sets.slice(input.offset, input.offset + input.limit);
+    return {
+      items: page.map((set) => ({
+        id: set.id,
+        setNum: set.setNum,
+        name: set.name,
+        themeName: "Star Wars",
+        published: set.published,
+        totalCopies: 0,
+        availableCopies: 0,
+      })),
+      totalSets: this.sets.length,
+      totalCopies: 0,
+    };
+  }
+
+  async listThemes() {
+    return [{ id: "theme-1", name: "Star Wars" }];
   }
 
   async themeExists(themeId: string) {
@@ -232,6 +267,92 @@ describe("copias de un Set (D1)", () => {
     const d = copyDeps();
     await expect(
       addCopy(d, { setId: "fantasma", actor: OPERATOR })
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+/**
+ * La pantalla de catálogo del back-office (W4). Lo que se prueba aquí es lo que la
+ * pantalla **le pide al dominio**: quién puede mirar, y que el filtro y la página que
+ * escribe el usuario en la URL lleguen al repositorio saneados. Que el filtrado en sí
+ * funcione es cosa de Prisma, y lo cubre el E2E contra la base real.
+ */
+describe("catálogo del back-office", () => {
+  const manySets = (count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      ...BASE_SET,
+      id: `set-${index}`,
+      name: `Set ${index}`,
+    }));
+
+  it("el operador y el admin lo ven; el suscriptor no", async () => {
+    const d = deps(manySets(3));
+    await expect(browseManagedCatalog(d, { actor: OPERATOR })).resolves.toMatchObject({
+      totalSets: 3,
+    });
+    await expect(browseManagedCatalog(d, { actor: ADMIN })).resolves.toMatchObject({
+      totalSets: 3,
+    });
+    await expect(browseManagedCatalog(d, { actor: SUBSCRIBER })).rejects.toBeInstanceOf(
+      ForbiddenError
+    );
+    await expect(listThemeOptions(d, SUBSCRIBER)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("por defecto no filtra por publicación: es la razón de que la pantalla exista", async () => {
+    const d = deps(manySets(2));
+    await browseManagedCatalog(d, { actor: OPERATOR });
+    // `null` y no `false`: un set recién creado nace sin publicar, y si la lista
+    // filtrara por publicados no habría forma de volver a él.
+    expect(d.repository.lastQuery).toMatchObject({ published: null, search: null, offset: 0 });
+  });
+
+  it("pasa el filtro tal cual al repositorio", async () => {
+    const d = deps(manySets(2));
+    await browseManagedCatalog(d, { actor: OPERATOR, search: "halcón", published: false });
+    expect(d.repository.lastQuery).toMatchObject({ search: "halcón", published: false });
+  });
+
+  it("una página fuera de rango devuelve la última, no un error", async () => {
+    const d = deps(manySets(CATALOG_PAGE_SIZE + 1));
+    const page = await browseManagedCatalog(d, { actor: OPERATOR, page: 99 });
+
+    // Un número de página imposible es un enlace viejo —o un filtro que acaba de
+    // encoger la lista—, no una petición que merezca un 4xx.
+    expect(page).toMatchObject({ page: 2, pageCount: 2 });
+    expect(page.items).toHaveLength(1);
+  });
+
+  it("una página absurda no se traduce en un offset negativo", async () => {
+    const d = deps(manySets(3));
+    await browseManagedCatalog(d, { actor: OPERATOR, page: -7 });
+    expect(d.repository.lastQuery?.offset).toBe(0);
+  });
+
+  it("la ficha trae el set y sus copias con quién tiene cada una", async () => {
+    const copies = new FakeCopyRepository([
+      { id: "copy-a", setId: "set-1", state: "ALQUILADA", acquiredAt: AT, retiredAt: null },
+      { id: "copy-b", setId: "set-1", state: "DISPONIBLE", acquiredAt: AT, retiredAt: null },
+    ]);
+    copies.holders.set("copy-a", "Ana Ruiz");
+    const d = { copies, sets: new FakeSetRepository([{ ...BASE_SET }]), now: () => AT };
+
+    const inventory = await loadSetInventory(d, { setId: "set-1", actor: OPERATOR });
+
+    expect(inventory.set.name).toBe("Millennium Falcon");
+    expect(inventory.copies).toHaveLength(2);
+    expect(inventory.copies[0]).toMatchObject({ id: "copy-a", holderName: "Ana Ruiz" });
+    // Una copia que no está fuera no tiene tenedor: `null`, no el último que la tuvo.
+    expect(inventory.copies[1].holderName).toBeNull();
+  });
+
+  it("la ficha exige el permiso de la sección y 404 si el set no existe", async () => {
+    const d = { copies: new FakeCopyRepository([]), sets: new FakeSetRepository([{ ...BASE_SET }]) };
+    await expect(
+      loadSetInventory(d, { setId: "set-1", actor: SUBSCRIBER })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(
+      loadSetInventory(d, { setId: "fantasma", actor: ADMIN })
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 });

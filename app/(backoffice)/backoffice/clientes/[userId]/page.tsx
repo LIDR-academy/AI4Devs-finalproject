@@ -7,7 +7,7 @@ import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
 import { prismaBackofficeRepository } from "@/repositories/backoffice.repository.prisma";
 import { viewCustomer } from "@/use-cases/backoffice/manage-backoffice";
 
-export const metadata = { title: "Historial de cliente · Clickoteca" };
+export const metadata = { title: "Historial de cliente" };
 
 const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium" });
 

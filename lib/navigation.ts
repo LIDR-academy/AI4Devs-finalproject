@@ -41,10 +41,10 @@ const PORTAL: readonly NavDestination[] = [
   { href: "/portal/avisos", label: "Avisos", pending: true },
 ];
 
-/** Back-office. `Catálogo` llega con W4 (§6); el resto ya existe. */
+/** Back-office. Los cinco destinos existen desde W4 (§6). */
 const BACKOFFICE: readonly NavDestination[] = [
   { href: "/backoffice", label: "Cola de trabajo" },
-  { href: "/backoffice/catalogo", label: "Catálogo", permission: "set.manage", pending: true },
+  { href: "/backoffice/catalogo", label: "Catálogo", permission: "set.manage" },
   { href: "/backoffice/clientes", label: "Clientes", permission: "customer.read_limited" },
   {
     href: "/backoffice/configuracion",

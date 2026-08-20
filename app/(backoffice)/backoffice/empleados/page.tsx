@@ -10,7 +10,7 @@ import { listEmployees } from "@/use-cases/backoffice/manage-backoffice";
 
 import { EmployeeControls } from "./employee-controls";
 
-export const metadata = { title: "Personal · Clickoteca" };
+export const metadata = { title: "Personal" };
 
 /** Gestión de empleados — solo admin (8.2). */
 export default async function EmployeesPage() {

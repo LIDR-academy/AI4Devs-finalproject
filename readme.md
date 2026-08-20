@@ -139,16 +139,25 @@ y pide el siguiente—.
 > una sección a otra sin volver al centro. La del portal queda declarada y aparece
 > cuando lleguen sus rutas.
 >
-> **Pendiente:** las cuatro pantallas restantes y el videotutorial
+> **Construida también W4** (`wireframes.md` §6, 2026-08-20): el **catálogo e
+> inventario del back-office**, con su lista —que incluye los sets **sin publicar**, los
+> únicos a los que no se llega por ninguna otra puerta— y la ficha con el alta, la
+> edición, la publicación y las copias de cada set. **HU-10 pasa a verde**: dar de alta
+> un set, tasarlo, publicarlo y ponerle copias ya se hace desde el navegador. Con ella,
+> **13 de 18** historias tienen recorrido completo por interfaz.
+>
+> **Pendiente:** W5 (portal ampliado) y W2+W3 (registro de condición y discrepancia),
+> estas dos bloqueadas por `wireframes.md` §8.1 y §8.2; y el videotutorial
 > (`documents/PRD.md` §9, `wireframes.md` §9.2).
 >
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales
 > de UX ya fijados: **responsive mobile-first** y **accesibilidad WCAG 2.1 AA**
 > (EN 301 549 / European Accessibility Act) — el contraste y el foco se comprueban
-> solos contra el CSS real, y **`axe` audita doce pantallas** (las cinco públicas, la
-> ficha de set en sus dos proyecciones, el portal y las cuatro del back-office) en el
-> E2E con las etiquetas WCAG 2.1 A/AA.
+> solos contra el CSS real, y **`axe` audita catorce pantallas** (las cinco públicas, la
+> ficha de set en sus dos proyecciones, el portal, las cinco del back-office y la ficha
+> de catálogo) más el **diálogo de alta de set abierto**, en el E2E y con las etiquetas
+> WCAG 2.1 A/AA.
 
 ### **1.4. Instrucciones de instalación:**
 
@@ -346,8 +355,8 @@ AI4Devs-finalproject-xvm/
 │   ├── http/                 # Adaptador HTTP: contrato RFC 9457, cookie y contexto de sesión
 │   ├── db/prisma.ts          # Cliente Prisma singleton (driver adapter pg)
 │   └── generated/prisma/     # Cliente Prisma generado (gitignored)
-├── components/               # De producto (`surface-nav`, `status-badge`) …
-│   └── ui/                   # … y shadcn/ui (new-york, base neutral)
+├── components/               # De producto (`surface-nav`, `status-badge`, `backoffice/`) …
+│   └── ui/                   # … y shadcn/ui (button, badge, card, dialog, input, label)
 ├── lib/                      # Presentación: `status.ts`, `navigation.ts`, helper `cn`
 ├── scheduler/index.ts        # Proceso node-cron aparte
 ├── prisma/

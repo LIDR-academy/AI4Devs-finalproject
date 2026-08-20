@@ -4,6 +4,7 @@ import { applyTransition } from "@/repositories/copy-transitions";
 import type {
   CopyRepository,
   CopySummary,
+  InventoryCopy,
   TransitionCopyOutcome,
 } from "@/repositories/copy.repository";
 
@@ -30,6 +31,31 @@ export const prismaCopyRepository: CopyRepository = {
       orderBy: { acquiredAt: "asc" },
     });
     return copies as CopySummary[];
+  },
+
+  async listInventoryBySet(setId) {
+    const copies = await prisma.copy.findMany({
+      where: { setId },
+      select: {
+        ...COPY_SELECT,
+        // El alquiler vivo, si lo hay: es de donde sale el nombre de quien la tiene.
+        // `COMPLETED` queda fuera porque una copia devuelta ya no está en poder de
+        // nadie, por mucho que su último alquiler siga en el historial.
+        rentals: {
+          where: { status: { not: "COMPLETED" } },
+          select: { user: { select: { fullName: true } } },
+          take: 1,
+        },
+      },
+      orderBy: { acquiredAt: "asc" },
+    });
+
+    return copies.map(
+      ({ rentals, ...copy }): InventoryCopy => ({
+        ...(copy as CopySummary),
+        holderName: rentals[0]?.user.fullName ?? null,
+      })
+    );
   },
 
   async create({ setId, acquiredAt }) {

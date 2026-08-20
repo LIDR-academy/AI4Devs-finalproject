@@ -12,12 +12,13 @@ describe("navFor", () => {
     navFor(surface, role).map((destination) => destination.label);
 
   it("el operador solo ve las secciones cuyos permisos tiene", () => {
-    expect(labels("backoffice", "OPERATOR")).toEqual(["Cola de trabajo", "Clientes"]);
+    expect(labels("backoffice", "OPERATOR")).toEqual(["Cola de trabajo", "Catálogo", "Clientes"]);
   });
 
   it("el admin ve además configuración y personal", () => {
     expect(labels("backoffice", "ADMIN")).toEqual([
       "Cola de trabajo",
+      "Catálogo",
       "Clientes",
       "Configuración",
       "Personal",
@@ -37,8 +38,8 @@ describe("navFor", () => {
    * llegan con W5— y por eso su barra ni se pinta.
    */
   it("no ofrece los destinos cuya pantalla aún no existe", () => {
+    // El portal es hoy el único con pendientes: sus otras cuatro rutas llegan con W5.
     expect(labels("portal", "SUBSCRIBER")).toEqual(["Resumen"]);
-    expect(labels("backoffice", "ADMIN")).not.toContain("Catálogo");
   });
 
   it("un rol sin acceso a la superficie no ve ninguna sección con permiso", () => {

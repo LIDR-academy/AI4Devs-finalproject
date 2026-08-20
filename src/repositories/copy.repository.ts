@@ -23,10 +23,23 @@ export type TransitionCopyOutcome =
   /** Otro proceso cambió el estado entre la lectura y la escritura (CAS, D12). */
   | { outcome: "conflict" };
 
+/**
+ * Copia vista desde el inventario del back-office (`wireframes.md` §6.2): lo mismo
+ * que `CopySummary` **más quién la tiene**, que es el dato que convierte una fila
+ * "Alquilada" en una respuesta a "¿dónde está esta copia?".
+ */
+export interface InventoryCopy extends CopySummary {
+  /** Nombre del suscriptor con el alquiler vivo; `null` si no está fuera. */
+  holderName: string | null;
+}
+
 export interface CopyRepository {
   findById(copyId: string): Promise<CopySummary | null>;
 
   listBySet(setId: string): Promise<readonly CopySummary[]>;
+
+  /** Inventario de un Set con el tenedor de cada copia. Vista de back-office. */
+  listInventoryBySet(setId: string): Promise<readonly InventoryCopy[]>;
 
   create(input: { setId: string; acquiredAt: Date }): Promise<CopySummary>;
 

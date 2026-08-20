@@ -756,6 +756,46 @@ pantalla nuestra (§2.1).
   acciones de fila nombran su objeto — `aria-label="Catalogar la copia C9D4"` —, porque
   cuatro botones "Catalogar" seguidos son indistinguibles al tabular.
 
+### 6.6 Lo que salió de construirla
+
+**Hecha el 2026-08-20**: `/backoffice/catalogo` y `/backoffice/catalogo/:setId`
+(`app/(backoffice)/backoffice/catalogo/`), leyendo el repositorio desde Server
+Components — **sin `GET /api/sets`**, como decía §2.1. HU-10 pasa a verde y el
+destino `Catálogo` se enciende en la barra.
+
+**El hallazgo que solo aparece construyendo: la baja de copia se saltaba su propia
+regla.** `POST /api/copies/:id/retire` **exige** motivo —"la baja tiene impacto
+económico y su motivo es parte del rastro de auditoría, no un adorno"—, pero el botón
+`[ Dar de baja ]` de la cola de trabajo iba por el endpoint **genérico** de
+transiciones con el motivo enlatado `"Acción desde la cola de trabajo"`. Como W4
+reutiliza ese componente, heredaba el atajo. Arreglado **en el componente compartido**
+(`components/backoffice/copy-actions.tsx`): la baja abre un diálogo, pide el motivo y
+va a `/retire`. Lo gana también la cola de trabajo, que es donde llevaba abierto desde
+que existe.
+
+**Tres desviaciones del dibujo, cada una con su motivo:**
+
+- **El tenedor tiene columna propia.** El wireframe ponía "· Ana Pérez" en la celda de
+  acciones; separarlos deja sitio para la única acción que el dominio **sí** permite
+  sobre una copia alquilada —la baja por pérdida o sustracción (HU-15)—, que hasta
+  ahora no tenía interfaz en ninguna parte.
+- **No hizo falta `alert-dialog`.** §9.1 lo preveía para este botón, pero la baja pide
+  un **dato** (el motivo) y `alertdialog` es para interrumpir pidiendo una decisión, no
+  para recoger un campo. Se usa `dialog`, que además ya hacía falta para el alta.
+- **El tema es un `<select>` nativo**, no el de Radix: son veinte opciones planas, el
+  selector del sistema es mejor en móvil y no necesita JavaScript.
+
+**Y un defecto viejo que la pantalla destapó:** el layout raíz ya añade `· Clickoteca`
+con `title.template`, y **siete páginas lo repetían** en su `metadata`, así que la
+pestaña decía "Cola de trabajo · Clickoteca · Clickoteca". Corregido en todas; la ficha
+de catálogo, además, se titula con el nombre del set, porque con varias abiertas
+"Ficha de set" no distingue ninguna.
+
+**Residuo conocido:** el recorrido E2E deja **un set de prueba sin publicar** por
+ejecución. El dominio no contempla borrar un Set y la prueba no va a saltárselo por
+detrás; lo que sí hace es retirarlo del catálogo al terminar, para que el circuito
+completo —que busca un set con una única copia libre— no se lo encuentre.
+
 ---
 
 ## 7. W5 · Portal ampliado
@@ -1019,13 +1059,13 @@ componente sin uso es código muerto.
 | Componente | Lo pide |
 |---|---|
 | `card` | W1 (caja de decisión), W5 (plan y "ahora mismo") |
-| `input`, `label`, `form`, `textarea` | W2 (observaciones), W3 (notas), W4 (alta de set) |
+| ~~`input`, `label`~~ | **Traídos con W4** (2026-08-20). `form` y `textarea` siguen pendientes: los piden W2 y W3. |
 | `checkbox`, `radio-group` | W2 — la lista de comprobación y el resultado |
-| `select` | W4 — el tema, que es un `uuid` y nunca texto libre |
-| `dialog` | W3 (reportar), W4 (alta de set) |
-| `alert-dialog` | W5 — cancelar la suscripción. Y `[ Dar de baja ]` de W4 |
+| ~~`select`~~ | **No se trae**: el tema es un `<select>` nativo — veinte opciones planas, mejor en móvil y sin JavaScript. |
+| ~~`dialog`~~ | **Traído con W4** (alta y edición de set, y la baja de copia con su motivo). Lo reutiliza W3. |
+| `alert-dialog` | W5 — cancelar la suscripción. **Ya no** para `[ Dar de baja ]`: esa pide un motivo, y `alertdialog` es para decidir, no para rellenar (§6.6). |
 | `alert` | Los avisos de no elegibilidad (W1 §3.5) y de downgrade (W5 §7.4) |
-| `table` | W4 y el historial de W5 |
+| `table` | El historial de W5. W4 no lo trajo: sus tablas siguen el mismo `<table>` con tokens que las otras cuatro del back-office, y traerlo solo para una habría dejado cinco tablas con dos estilos. |
 | `skeleton` | Solo si el historial llega a paginarse |
 | `tabs` | **No** — la navegación del portal son rutas, no pestañas (§2.3) |
 
@@ -1041,8 +1081,9 @@ El mismo de `ux-flows.md` §9.2, con lo que cada paso obliga a arreglar antes:
    `/portal/sets` desde sus avisos de no elegibilidad. ← **siguiente**
 4. **W2 + W3.** Juntos, y **después de arreglar §8.1 y ratificar §8.2**: sin la puerta en
    la cola de trabajo y sin la lista de comprobaciones, no se pueden construir.
-5. **W4 · Catálogo e inventario.** El último de los cinco: es el que menos bloquea a un
-   cliente y el que más superficie tiene.
+5. ~~**W4 · Catálogo e inventario.**~~ **Hecha el 2026-08-20** (§6.6), fuera de orden
+   —a petición del usuario— porque era la única de las tres restantes sin bloqueantes:
+   W5 seguía disponible y W2/W3 siguen esperando a §8.1 y §8.2.
 
 ### 9.3 Cómo se verifica cada pantalla
 
@@ -1071,14 +1112,14 @@ No hace falta inventar nada; el andamiaje ya está montado y tiene sus reglas:
 Recontando la tabla de `ux-flows.md` §7 con la corrección de §8.7 (HU-01 y HU-02 ya
 están hechas desde el 17 de agosto):
 
-| | Hoy | Con W1–W5 |
-|---|---|---|
-| Historias con recorrido completo por interfaz | 9 de 18 | **16 de 18** |
-| De las seis ⭐ distintivas del producto | 3 de 6 (HU-05, HU-08, HU-13) | **6 de 6** |
-| ¿Se puede ser cliente de Clickoteca solo con el navegador? | **No** | **Sí** |
+| | Al dibujarlas | Hoy (con W1 y W4) | Con las cinco |
+|---|---|---|---|
+| Historias con recorrido completo por interfaz | 9 de 18 | **13 de 18** | **16 de 18** |
+| De las seis ⭐ distintivas del producto | 3 de 6 | **5 de 6** (falta HU-11, que trae W2) | **6 de 6** |
+| ¿Se puede ser cliente de Clickoteca solo con el navegador? | **No** | **Sí** | **Sí** |
 
-Las siete que cambian: HU-00 y HU-03/HU-04 con W1, HU-07 con W3, HU-09 con W5, HU-10 con
-W4 y HU-11 con W2.
+Las siete que cambian: HU-00 y HU-03/HU-04 con W1 y **HU-10 con W4** —las cuatro ya
+hechas—; quedan HU-07 con W3, HU-09 con W5 y HU-11 con W2.
 
 Las dos que seguirían sin cerrar, y por qué:
 
