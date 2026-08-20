@@ -13,6 +13,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
@@ -30,15 +31,27 @@ function rolesTestPermission(string $name): Permission
 }
 
 /**
- * A user holding `roles.manage`, the permission this screen's route
- * middleware and RolePolicy's viewAny()/create() gate on.
+ * A user holding `roles.manage` plus any given extra permissions -- extra
+ * permissions matter since story 0010's Phase 4 security-audit fix
+ * (finding F2, App\Actions\Roles\EnforceGrantorPermissionScope) refuses
+ * saveRole() from granting a role any permission the acting user does not
+ * themselves hold. Pass every permission a test's saveRole() call newly
+ * grants to a role; omit it for tests that only rename, delete, revoke, or
+ * grant a permission the target role already held.
+ *
+ * @param  array<int, string>  $extraPermissions
  */
-function rolesTestActor(): User
+function rolesTestActor(array $extraPermissions = []): User
 {
     rolesTestPermission('roles.manage');
 
     $actor = User::factory()->create();
     $actor->givePermissionTo('roles.manage');
+
+    foreach ($extraPermissions as $permission) {
+        rolesTestPermission($permission);
+        $actor->givePermissionTo($permission);
+    }
 
     return $actor;
 }
@@ -52,7 +65,7 @@ test('creating a role persists exactly the selected permissions', function () {
     $blogEdit = rolesTestPermission('blog.edit');
     rolesTestPermission('products.view'); // deliberately not selected
 
-    $this->actingAs(rolesTestActor());
+    $this->actingAs(rolesTestActor(['blog.view', 'blog.edit']));
 
     Livewire::test(Index::class)
         ->call('openCreateModal')
@@ -178,7 +191,7 @@ test('granting a permission to a role reaches all of its holders, proven against
         expect($holder->hasPermissionTo('products.view'))->toBeFalse();
     }
 
-    $this->actingAs(rolesTestActor());
+    $this->actingAs(rolesTestActor(['products.view']));
 
     Livewire::test(Index::class)
         ->call('openEditModal', $role->id)
@@ -574,4 +587,145 @@ test('a permission id belonging to a non-web guard is rejected and never reaches
         ->assertHasErrors(['selectedPermissionIds.0']);
 
     expect(Role::where('name', 'Blog Editor')->exists())->toBeFalse();
+});
+
+// =====================================================================
+// Phase 4 security audit finding F2 (self-escalation) — the component's
+// wiring of App\Actions\Roles\EnforceGrantorPermissionScope, distinct
+// from that action's own unit-style test file, which covers the rule
+// itself in isolation.
+// =====================================================================
+
+test('saveRole() refuses a payload that grants a permission the acting user does not themselves hold, and persists nothing', function () {
+    $this->withoutExceptionHandling();
+    $blogView = rolesTestPermission('blog.view');
+
+    $this->actingAs(rolesTestActor());
+
+    expect(fn () => Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', 'Blog Editor')
+        ->set('selectedPermissionIds', [$blogView->id])
+        ->call('saveRole'))
+        ->toThrow(AuthorizationException::class);
+
+    expect(Role::where('name', 'Blog Editor')->exists())->toBeFalse();
+});
+
+// =====================================================================
+// Phase 4 security audit finding F7 (self-lockout) — refusing a save
+// that would strip roles.manage from a role the acting user currently
+// holds.
+// =====================================================================
+
+test('saving a role the actor holds is refused if the payload would strip roles.manage from it, and the role is unchanged', function () {
+    $roleManage = rolesTestPermission('roles.manage');
+    $blogView = rolesTestPermission('blog.view');
+
+    $actor = rolesTestActor(['blog.view']);
+    $ownRole = Role::create(['name' => 'Custom Manager', 'guard_name' => 'web']);
+    $ownRole->syncPermissions([$roleManage->name, $blogView->name]);
+    $actor->assignRole($ownRole);
+
+    $this->actingAs($actor);
+
+    Livewire::test(Index::class)
+        ->call('openEditModal', $ownRole->id)
+        ->set('selectedPermissionIds', [$blogView->id])
+        ->call('saveRole')
+        ->assertHasErrors(['selectedPermissionIds']);
+
+    expect($ownRole->fresh()->permissions->pluck('name')->sort()->values()->all())
+        ->toBe(['blog.view', 'roles.manage']);
+});
+
+test('saving a role the actor does NOT hold is unaffected by the self-lockout guard, even when it strips roles.manage', function () {
+    $roleManage = rolesTestPermission('roles.manage');
+    $blogView = rolesTestPermission('blog.view');
+
+    $this->actingAs(rolesTestActor(['blog.view']));
+    $otherRole = Role::create(['name' => 'Someone Elses Role', 'guard_name' => 'web']);
+    $otherRole->syncPermissions([$roleManage->name, $blogView->name]);
+
+    Livewire::test(Index::class)
+        ->call('openEditModal', $otherRole->id)
+        ->set('selectedPermissionIds', [$blogView->id])
+        ->call('saveRole')
+        ->assertHasNoErrors();
+
+    expect($otherRole->fresh()->permissions->pluck('name')->all())->toBe(['blog.view']);
+});
+
+// =====================================================================
+// Phase 4 security audit finding F3 (soft-deleted holders) — the
+// component's deletion block, driven through the same withCount()
+// query the model-event guard mirrors.
+// =====================================================================
+
+test('deleting a role whose only holder is soft-deleted is still blocked, naming the holder', function () {
+    $role = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+    $holder = User::factory()->create();
+    $holder->assignRole($role);
+    $holder->delete();
+
+    $this->actingAs(rolesTestActor());
+
+    Livewire::test(Index::class)
+        ->call('confirmDeleteRole', $role->id)
+        ->call('deleteRole')
+        ->assertHasErrors(['deletingRoleId']);
+
+    expect(Role::find($role->id))->not->toBeNull();
+});
+
+// =====================================================================
+// Phase 4 security audit finding F8 (audit trail) — saveRole() and
+// deleteRole() each leave a structured log line naming the actor, the
+// role, and (for saveRole()) the permission diff.
+// =====================================================================
+
+test('saveRole() logs the actor, the role, and the permission diff', function () {
+    Log::spy();
+
+    $blogView = rolesTestPermission('blog.view');
+
+    $actor = rolesTestActor(['blog.view']);
+    $this->actingAs($actor);
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', 'Blog Editor')
+        ->set('selectedPermissionIds', [$blogView->id])
+        ->call('saveRole')
+        ->assertHasNoErrors();
+
+    $role = Role::where('name', 'Blog Editor')->firstOrFail();
+
+    Log::shouldHaveReceived('info')
+        ->withArgs(fn (string $message, array $context) => $message === 'Role saved'
+            && $context['actor_id'] === $actor->id
+            && $context['role_id'] === $role->id
+            && $context['permissions_granted'] === ['blog.view'])
+        ->once();
+});
+
+test('deleteRole() logs the actor and the deleted role', function () {
+    Log::spy();
+
+    $role = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+    $roleId = $role->id;
+
+    $actor = rolesTestActor();
+    $this->actingAs($actor);
+
+    Livewire::test(Index::class)
+        ->call('confirmDeleteRole', $roleId)
+        ->call('deleteRole')
+        ->assertHasNoErrors();
+
+    Log::shouldHaveReceived('info')
+        ->withArgs(fn (string $message, array $context) => $message === 'Role deleted'
+            && $context['actor_id'] === $actor->id
+            && $context['role_id'] === $roleId)
+        ->once();
 });

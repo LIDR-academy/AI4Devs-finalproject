@@ -498,3 +498,123 @@ test('isAdministratorRole() returns false for a custom role holding every permis
 
     expect(Role::isAdministratorRole($deputy))->toBeFalse();
 });
+
+// =====================================================================
+// Story 0010 Phase 4 security audit, finding F1, human-confirmed
+// decision — the Administrator role is never deletable (the same as
+// Super Admin) and its name is locked, but unlike Super Admin its
+// permission set stays editable (story 0009's whole point). Narrower
+// guards than the Super Admin ones, on purpose.
+// =====================================================================
+
+test('deleting the seeded Administrator role is refused with no authorization context at all, and the row survives', function () {
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
+
+    expect(fn () => $administrator->delete())->toThrow(ImmutableRoleException::class);
+
+    expect(Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->exists())->toBeTrue();
+});
+
+test('a refused delete leaves the Administrator role_has_permissions and model_has_roles rows intact', function () {
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
+    $holder = User::factory()->create();
+    $holder->assignRole($administrator);
+
+    $originalPermissionCount = $administrator->permissions()->count();
+
+    // Same ordering assertion as the Super Admin equivalent above: a
+    // booted()-registered guard would let Spatie's own `deleting` listener
+    // detach both pivot rows before this guard ever ran, since
+    // Model::delete() opens no transaction.
+    expect(fn () => $administrator->delete())->toThrow(ImmutableRoleException::class);
+
+    expect(Role::where('id', $administrator->id)->exists())->toBeTrue()
+        ->and($administrator->fresh()->permissions()->count())->toBe($originalPermissionCount)
+        ->and($holder->fresh()->hasRole(RoleName::Administrator->value))->toBeTrue();
+});
+
+test('renaming the seeded Administrator role is refused, and it keeps its original name', function () {
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
+
+    expect(fn () => $administrator->update(['name' => 'Not Administrator Anymore']))
+        ->toThrow(ImmutableRoleException::class);
+
+    expect($administrator->fresh()->name)->toBe(RoleName::Administrator->value);
+});
+
+test('renaming an ordinary role into the Administrator name is refused, and the role keeps its original name', function () {
+    $custom = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+
+    expect(fn () => $custom->update(['name' => RoleName::Administrator->value]))
+        ->toThrow(ImmutableRoleException::class);
+
+    expect($custom->fresh()->name)->toBe('Blog Editor');
+});
+
+test('the Administrator role permission set remains fully editable in every direction, unlike the Super Admin role', function () {
+    $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
+    expect($administrator->permissions()->count())->toBeGreaterThan(0);
+
+    $administrator->syncPermissions(['users.view']);
+    expect($administrator->fresh()->permissions->pluck('name')->all())->toBe(['users.view']);
+
+    $administrator->givePermissionTo('users.edit');
+    expect($administrator->fresh()->permissions)->toHaveCount(2);
+
+    $administrator->revokePermissionTo('users.view');
+    expect($administrator->fresh()->permissions->pluck('name')->all())->toBe(['users.edit']);
+});
+
+test('firstOrCreateAdministratorRole() is the sanctioned exception and bypasses the creating guard', function () {
+    // The beforeEach seeder already created the row via this exact method; calling it again
+    // proves it is idempotent (first-or-create) rather than throwing on the row it itself
+    // owns.
+    $role = Role::firstOrCreateAdministratorRole();
+
+    expect($role->name)->toBe(RoleName::Administrator->value)
+        ->and(Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->count())->toBe(1);
+});
+
+test('creating a role literally named "Administrator" while the seeded row already exists is refused by Spatie\'s own duplicate check, ahead of reaching the creating guard at all', function () {
+    // Same shape as the identical Super Admin test above: Spatie's own
+    // overridden Role::create() finds the existing row via findByParam()
+    // and throws RoleAlreadyExists before ever calling static::query()->create()
+    // -- the call that would fire our `creating` guard.
+    expect(fn () => Role::create(['name' => RoleName::Administrator->value, 'guard_name' => 'web']))
+        ->toThrow(RoleAlreadyExists::class);
+
+    expect(Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->count())->toBe(1);
+});
+
+test('creating a role named "Administrator" is refused by the creating guard itself when no colliding row exists yet', function () {
+    // Removed via the query builder, not an instance delete() (which is now
+    // categorically refused): the point here is only to produce a database
+    // state with no Administrator row, so Role::create() reaches our
+    // `creating` guard instead of Spatie's own duplicate check above.
+    DB::table('roles')->where('name', RoleName::Administrator->value)->where('guard_name', 'web')->delete();
+
+    expect(fn () => Role::create(['name' => RoleName::Administrator->value, 'guard_name' => 'web']))
+        ->toThrow(ImmutableRoleException::class);
+
+    expect(Role::where('name', RoleName::Administrator->value)->exists())->toBeFalse();
+});
+
+// =====================================================================
+// Story 0010 Phase 4 security audit, finding F3 — a soft-deleted holder
+// must still count as a holder, or the FK cascade on model_has_roles
+// silently destroys their role grant the moment the role is deleted.
+// =====================================================================
+
+test('a role with only a soft-deleted holder is still refused for deletion, via the model-event guard', function () {
+    $custom = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+    $holder = User::factory()->create();
+    $holder->assignRole($custom);
+    $holder->delete();
+
+    expect(User::withTrashed()->whereKey($holder->id)->firstOrFail()->trashed())->toBeTrue();
+
+    expect(fn () => $custom->delete())->toThrow(App\Exceptions\RoleInUseException::class);
+
+    expect(Role::where('id', $custom->id)->exists())->toBeTrue();
+    expect(DB::table('model_has_roles')->where('role_id', $custom->id)->exists())->toBeTrue();
+});

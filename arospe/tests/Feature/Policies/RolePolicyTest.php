@@ -178,7 +178,17 @@ test('the Super Admin edits the seeded Administrator role\'s permissions success
         ->toBe(['users.edit', 'users.view']);
 });
 
-test('the Super Admin deletes the unassigned seeded Administrator role successfully', function () {
+// Story 0010 Phase 4 security audit, finding F1, human-confirmed decision:
+// the Administrator role is never deletable, the same as the Super Admin
+// role. Gate::before only DEFERS (returns null) when the ability's TARGET
+// is the Super Admin role -- for a target that is merely Administrator, it
+// bypasses (true) unconditionally for a Super Admin actor, so
+// allows('delete', $administrator) staying true here is the bypass value,
+// not evidence the deletion itself is permitted. What actually stops a
+// Super Admin from deleting Administrator is App\Models\Role's own
+// guardAgainstAdministratorDeletion() -- see tests/Feature/Models/RoleTest.php
+// for that guard's own coverage.
+test('the Super Admin cannot actually delete the seeded Administrator role, despite the Gate bypass allowing the ability check', function () {
     $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
 
     $actingSuperAdmin = User::factory()->create();
@@ -186,9 +196,9 @@ test('the Super Admin deletes the unassigned seeded Administrator role successfu
 
     expect(Gate::forUser($actingSuperAdmin)->allows('delete', $administrator))->toBeTrue();
 
-    $administrator->delete();
+    expect(fn () => $administrator->delete())->toThrow(ImmutableRoleException::class);
 
-    expect(Role::where('name', 'Administrator')->where('guard_name', 'web')->exists())->toBeFalse();
+    expect(Role::where('name', 'Administrator')->where('guard_name', 'web')->exists())->toBeTrue();
 });
 
 test('an administrator granted roles.manage-administrators edits the seeded Administrator role successfully', function () {
@@ -204,17 +214,20 @@ test('an administrator granted roles.manage-administrators edits the seeded Admi
     expect($administrator->fresh()->permissions->pluck('name')->all())->toBe(['users.view']);
 });
 
-test('an administrator granted roles.manage-administrators deletes the unassigned seeded Administrator role successfully', function () {
+// Story 0010 Phase 4 security audit, finding F1: unlike the actor above,
+// this one is NOT the Super Admin, so Gate::before never bypasses at all --
+// the Gate check itself now reaches RolePolicy::delete(), whose categorical
+// Administrator refusal (added by this fix) is what the assertion below is
+// actually exercising, not a model-layer guard.
+test('an administrator granted roles.manage-administrators cannot delete the seeded Administrator role, and it survives', function () {
     $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
 
     $actor = User::factory()->create();
     $actor->givePermissionTo(['roles.manage-administrators']);
 
-    expect(Gate::forUser($actor)->allows('delete', $administrator))->toBeTrue();
+    expect(Gate::forUser($actor)->allows('delete', $administrator))->toBeFalse();
 
-    $administrator->delete();
-
-    expect(Role::where('name', 'Administrator')->where('guard_name', 'web')->exists())->toBeFalse();
+    expect(Role::where('name', 'Administrator')->where('guard_name', 'web')->exists())->toBeTrue();
 });
 
 test('the Super Admin succeeds even though the seeded Super Admin role holds no explicit roles.manage-administrators permission row', function () {
@@ -334,6 +347,12 @@ test('granting roles.manage-administrators to a role takes effect immediately', 
         ->and(Gate::forUser($holder->fresh())->allows('update', $administrator))->toBeTrue();
 });
 
+// Uses `update`, not `delete` -- story 0010's Phase 4 security audit
+// (finding F1) made delete() categorically refuse the Administrator role
+// regardless of any permission, so a revoke-then-recheck against `delete`
+// would prove nothing (it would read false both before and after). `update`
+// is still exactly the ability this permission's revoke/grant mechanism
+// governs.
 test('revoking roles.manage-administrators from a role takes effect immediately', function () {
     $custom = Role::create(['name' => 'Deputy', 'guard_name' => 'web']);
     $custom->givePermissionTo(['roles.manage', 'roles.manage-administrators']);
@@ -343,9 +362,9 @@ test('revoking roles.manage-administrators from a role takes effect immediately'
 
     $administrator = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
 
-    expect(Gate::forUser($holder)->allows('delete', $administrator))->toBeTrue();
+    expect(Gate::forUser($holder)->allows('update', $administrator))->toBeTrue();
 
     $custom->revokePermissionTo('roles.manage-administrators');
 
-    expect(Gate::forUser($holder->fresh())->allows('delete', $administrator))->toBeFalse();
+    expect(Gate::forUser($holder->fresh())->allows('update', $administrator))->toBeFalse();
 });
