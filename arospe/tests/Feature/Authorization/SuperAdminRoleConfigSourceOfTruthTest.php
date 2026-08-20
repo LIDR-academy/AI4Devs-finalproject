@@ -11,6 +11,13 @@ use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+    // Neutralize the ambient auth.super_admin.email a developer's local .env
+    // may set (this repo's own .env.example ships one) -- otherwise the
+    // seeder's bootstrap path provisions a second Super Admin holder this
+    // file's tests never account for, on top of whichever holder each test
+    // explicitly assigns itself. See docs/errors-log.md's 2026-08-12 entry
+    // on the same class of ambient-config sensitivity.
+    config(['auth.super_admin.email' => null]);
     $this->seed(RolePermissionSeeder::class);
 });
 
@@ -67,6 +74,14 @@ test('overriding auth.super_admin.role moves the Gate::before bypass, selectable
 
     $ordinaryRoleNamedSuperAdmin->update(['name' => 'Super Admin Renamed']);
     expect(Role::where('id', $ordinaryRoleNamedSuperAdmin->id)->value('name'))->toBe('Super Admin Renamed');
+
+    // story 0010's holder-count guard (App\Models\Role::guardAgainstHolders())
+    // now blocks deleting any role -- protected or ordinary -- while it still
+    // has holders; $holderOfLiteralSuperAdminName was assigned to this role
+    // above purely to exercise the Gate::before/can() behaviour, and plays no
+    // further part in this test, so it is unassigned before the deletion
+    // this test's own scenario is actually about.
+    $holderOfLiteralSuperAdminName->removeRole($ordinaryRoleNamedSuperAdmin);
 
     $ordinaryRoleNamedSuperAdmin->delete();
     expect(Role::where('id', $ordinaryRoleNamedSuperAdmin->id)->exists())->toBeFalse();
