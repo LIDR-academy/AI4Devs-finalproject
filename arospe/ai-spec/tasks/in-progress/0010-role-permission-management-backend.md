@@ -148,7 +148,7 @@ Feature: Roles and permissions management
 > one way. 0011 has been edited to match, and its shared-surface warning (0011 owns the Blade view and
 > the component's UI-state properties; 0010 owns every query, mutation, validation rule and
 > authorization decision) still governs *what* each story writes inside the component class.
-> [Story 0012](0012-module-access-gating-backend.md) still carries the older "created by whichever of
+> [Story 0012](../0012-module-access-gating-backend.md) still carries the older "created by whichever of
 > 0010 / 0011 lands first" wording in its own `routes/roles.php` bullet (its open question 3) — it
 > owns only the middleware chain, not the file, so nothing breaks, but it should be reconciled to
 > "created by 0010" when 0012 is next revised.
@@ -475,7 +475,7 @@ Feature: Roles and permissions management
   **not** `Spatie\Permission\Middleware\PermissionMiddleware`. So a `permission:`-gated route protects
   the initial `GET` only: every subsequent `saveRole()` / `deleteRole()` action request runs through
   **zero** permission middleware, silently, while the page-load check keeps passing. Sibling story
-  [0012](0012-module-access-gating-backend.md) states the identical rule for every future module
+  [0012](../0012-module-access-gating-backend.md) states the identical rule for every future module
   route, and [`docs/api/routes.md`](../../../docs/api/routes.md#usersindex--the-first-permission-gated-route)
   records it as an already-shipped project convention that must not be "normalised" away —
   `routes/web.php` carries it as an inline comment above `users.index`. Write the same comment above
@@ -650,50 +650,50 @@ Feature: Roles and permissions management
 All are Feature tests (`RefreshDatabase`, real DB) unless noted — this domain is almost entirely
 DB-backed, so genuine no-DB unit tests are rare here.
 
-- [ ] Integration test: creating a role persists exactly the selected permissions — assert the full
+- [x] Integration test: creating a role persists exactly the selected permissions — assert the full
       sorted permission-name set, not a superset/subset.
-- [ ] Integration test: a newly created role appears immediately in `Role::selectable()`.
-- [ ] Integration test: a role created with zero permissions is a legal, inert state (0011 decision 3).
-- [ ] Integration test: renaming a role leaves its permission id set identical (compare against the
+- [x] Integration test: a newly created role appears immediately in `Role::selectable()`.
+- [x] Integration test: a role created with zero permissions is a legal, inert state (0011 decision 3).
+- [x] Integration test: renaming a role leaves its permission id set identical (compare against the
       pre-rename set captured beforehand, not just a count).
-- [ ] Integration test (cache invalidation — revoke): 3 holders, **warm the cache first** by asserting
+- [x] Integration test (cache invalidation — revoke): 3 holders, **warm the cache first** by asserting
       `hasPermissionTo()` is `true` on each holder, drive the change through the component (never
       `syncPermissions()` directly), then re-assert on **freshly resolved** users. Both steps matter:
       without the warm-up there is no stale cache to catch, and without re-fetching, stale in-memory
       relations produce a false pass regardless of the cache.
-- [ ] Integration test (cache invalidation — grant): same design, asserting `false` before and `true` after.
-- [ ] Integration test: an unaffected permission on the same role survives the edit (guards against
+- [x] Integration test (cache invalidation — grant): same design, asserting `false` before and `true` after.
+- [x] Integration test: an unaffected permission on the same role survives the edit (guards against
       "sync wipes everything").
-- [ ] Integration test: editing one role does not affect an unrelated role's warm-cached holder.
-- [ ] Integration test: deleting a role with zero holders removes it and leaves no orphaned
+- [x] Integration test: editing one role does not affect an unrelated role's warm-cached holder.
+- [x] Integration test: deleting a role with zero holders removes it and leaves no orphaned
       `role_has_permissions` rows.
-- [ ] Negative test: deleting a role with 3 holders is refused, the message contains `3`, the role
+- [x] Negative test: deleting a role with 3 holders is refused, the message contains `3`, the role
       still exists, and all 3 users still hold it.
-- [ ] Edge case test: the 1-holder case is refused with a correct singular message.
-- [ ] Negative test: `$role->delete()` called directly on a role with holders — bypassing the
+- [x] Edge case test: the 1-holder case is refused with a correct singular message.
+- [x] Negative test: `$role->delete()` called directly on a role with holders — bypassing the
       component entirely — is also blocked by the model-event guard.
-- [ ] Negative test (validation dataset): blank name; exact duplicate name; case-only duplicate;
+- [x] Negative test (validation dataset): blank name; exact duplicate name; case-only duplicate;
       surrounding-whitespace duplicate (0011 decision 2); a permission id absent from the catalog.
       Each persists nothing — and for an edit, the role's existing permission set is provably
       **unchanged**, so a rejected payload never partially applies.
-- [ ] Negative test: a guest visiting `/roles` is redirected to sign-in.
-- [ ] Negative test: an authenticated user without `roles.manage` visiting `/roles` gets 403.
-- [ ] Happy-path counterpart: a user holding `roles.manage` gets 200 and the component mounts.
-- [ ] Negative test: a user without `roles.manage` calling `saveRole()` directly on the component —
+- [x] Negative test: a guest visiting `/roles` is redirected to sign-in.
+- [x] Negative test: an authenticated user without `roles.manage` visiting `/roles` gets 403.
+- [x] Happy-path counterpart: a user holding `roles.manage` gets 200 and the component mounts.
+- [x] Negative test: a user without `roles.manage` calling `saveRole()` directly on the component —
       bypassing `mount()` — is refused, **and** `assertDatabaseMissing` proves no side effect. The
       absent side effect, not the exception, is what proves the check runs on the action itself.
-- [ ] Negative test: same shape for `deleteRole()`; the role still exists afterwards.
-- [ ] Negative test: same shape for the **disclosure** paths, `openEditModal()` and
+- [x] Negative test: same shape for `deleteRole()`; the role still exists afterwards.
+- [x] Negative test: same shape for the **disclosure** paths, `openEditModal()` and
       `confirmDeleteRole()` — an actor without `roles.manage` is refused rather than being handed the
       target role's name and permission set in the component's public state.
-- [ ] Edge case test: `Role::query()->selectable()` omits exactly the Super Admin role when both it
+- [x] Edge case test: `Role::query()->selectable()` omits exactly the Super Admin role when both it
       and other roles exist (Feature, not Unit — `tests/Unit/` gets no DB trait in this repo).
-- [ ] Edge case test: targeting the Super Admin role by forged id in `saveRole()`/`deleteRole()` is
+- [x] Edge case test: targeting the Super Admin role by forged id in `saveRole()`/`deleteRole()` is
       refused. Assert the refusal only — 0008 owns the invariant's mechanism and messaging.
 
 **Tests for the authorization layer this story adds (`Gate::authorize()` + `RolePolicy`):**
 
-- [ ] For each of the four entry points (`mount()` → `viewAny`, `saveRole()` create → `create`,
+- [x] For each of the four entry points (`mount()` → `viewAny`, `saveRole()` create → `create`,
       `saveRole()` edit → `update`, `deleteRole()` → `delete`): the check runs on the **component
       method itself**, proven by driving `Livewire::test()` without ever hitting the route. An HTTP
       test and a `Livewire::test()` one are **not** substitutes for each other here — the route
@@ -705,27 +705,27 @@ DB-backed, so genuine no-DB unit tests are rare here.
       tested. 0009 routed `RolePolicy::update()`/`delete()` through `Role::isSuperAdminRoleRow()` during
       its own Phase 3, and `tests/Feature/Models/RoleTest.php` carries the partial-hydration and
       rename-in-flight assertions this bullet asked for. This story adds no test for it.
-- [ ] **Regression — 0009's `RolePolicy` and `App\Models\Role` guard tests pass unamended.** This
+- [ ] **NOT MET — see the implementation record's F-7 entry below. Regression — 0009's `RolePolicy` and `App\Models\Role` guard tests pass unamended.** This
       story adds `viewAny`/`create` only; it does not touch `update()`/`delete()`'s Super Admin or
       Administrator-level branches, and does not promote or rename any model method (both
       `isSuperAdminRoleRow()` and `isAdministratorRole()` already exist as `public static`).
       `tests/Feature/Policies/RolePolicyTest.php` and the model-guard suites in
       `tests/Feature/Models/RoleTest.php` must go green **without edits**. A diff to those assertions is
       a regression to justify, not a test to update.
-- [ ] The two new abilities are permission-gated, not open: `viewAny` / `create` each return `false`
+- [x] The two new abilities are permission-gated, not open: `viewAny` / `create` each return `false`
       for an actor lacking `roles.manage` and `true` for one holding it.
-- [ ] Positive counterparts for every negative above — a holder of `roles.manage` succeeds at each
+- [x] Positive counterparts for every negative above — a holder of `roles.manage` succeeds at each
       entry point. A negative-only suite passes just as happily against a misspelled ability, since
       Spatie's `Gate::before` swallows `PermissionDoesNotExist` and returns `false`.
 
 **Tests for the `guard_name` scoping (N3):**
 
-- [ ] A role name already taken **on another guard** does not collide: creating a `web` role whose
+- [x] A role name already taken **on another guard** does not collide: creating a `web` role whose
       name matches an existing non-`web` row succeeds, matching the composite
       `unique(['name', 'guard_name'])` index rather than being stricter than it.
-- [ ] A permission id belonging to a non-`web` permission is rejected by
+- [x] A permission id belonging to a non-`web` permission is rejected by
       `rolePermissionRules()` and never reaches `syncPermissions()`.
-- [ ] A role created through the component persists `guard_name = 'web'` explicitly.
+- [x] A role created through the component persists `guard_name = 'web'` explicitly.
 
 **Test-arrangement notes for Phase 3:**
 - Spatie's `Role`/`Permission` have no factories in this repo. Arrange directly
@@ -748,23 +748,29 @@ The Super Admin role is absent from every list this component produces, and is r
 `RolePolicy` even when a forged, partially-hydrated instance of it reaches `Gate::authorize()`.
 
 ## Acceptance criteria
-- [ ] The component creates, renames and deletes custom roles and syncs their permissions via
+- [x] The component creates, renames and deletes custom roles and syncs their permissions via
       Spatie's `syncPermissions()`.
-- [ ] A permission change on a role takes effect for all of its holders with no manual cache flush,
+- [x] A permission change on a role takes effect for all of its holders with no manual cache flush,
       covered by a test that would fail against a stale permission cache.
-- [ ] A role with one or more holders cannot be deleted — hard block, no confirm-and-proceed path —
+- [x] A role with one or more holders cannot be deleted — hard block, no confirm-and-proceed path —
       and the error message states the exact holder count.
-- [ ] The block is enforced by a model-event guard as well as in the component, additively with
+- [x] The block is enforced by a model-event guard as well as in the component, additively with
       0008's guards on the same model.
-- [ ] Access requires `roles.manage`, enforced by `can:roles.manage` route middleware **and** by a
+- [x] Access requires `roles.manage`, enforced by `can:roles.manage` route middleware **and** by a
       `Gate::authorize()` call against `App\Policies\RolePolicy` as the first statement of `mount()`
       and of every component method that mutates *or discloses*. Spatie's `permission:` alias is not
       used on this route — it is registered and would appear to work on page load, but is off
       Livewire's `PersistentMiddleware` allow-list and so would not survive `/livewire/update`.
-- [ ] `App\Policies\RolePolicy` gains a `viewAny` and a `create` ability, and **nothing else** — its
-      shipped `update()`/`delete()` keep their categorical Super Admin refusal, first and
-      unconditional, and their Administrator-level branch (already added by 0009, not by this story)
-      untouched.
+- [x] ~~`App\Policies\RolePolicy` gains a `viewAny` and a `create` ability, and **nothing else**~~ —
+      **amended 2026-08-20 by this story's own Phase 4 security audit (finding F1), not silently.**
+      `viewAny` and `create` were added exactly as specified, and the categorical Super Admin refusal in
+      `update()`/`delete()` is untouched and still runs first and unconditionally. But `delete()`'s
+      **Administrator-level branch did change**: it no longer gates that role on
+      `roles.manage-administrators`, it refuses it **categorically**, because the audit's human-confirmed
+      decision is that the seeded `Administrator` role is never deletable at all. That is a deliberate
+      divergence from `update()`, which keeps the permission-gated branch 0009 wrote. The "nothing else"
+      wording was written before the audit found the escalation path and could not have anticipated it;
+      it is recorded here as amended rather than quietly ticked.
 - [x] **Already true, not this story's job (corrected 2026-08-19, Phase 5 review finding F-A).**
       `RolePolicy`'s Super Admin identity check already runs through the hydration-safe
       `App\Models\Role::isSuperAdminRoleRow($role)` helper rather than the in-memory `$role->name` —
@@ -773,38 +779,61 @@ The Super Admin role is absent from every list this component produces, and is r
       ⚠️ residual this bullet used to name stories 0010/0011 as owners of is **fully closed**, not
       partially — see the corrected note in the `app/Policies/RolePolicy.php` file bullet above. This
       story adds no test for it (0009's `RolePolicyTest.php` already carries one).
-- [ ] Every role listing/selector query in this component goes through 0008's `selectable()` scope.
-- [ ] Role name is required, trimmed and unique **within `guard_name = 'web'`** (matching the
+- [x] Every role listing/selector query in this component goes through 0008's `selectable()` scope.
+- [x] Role name is required, trimmed and unique **within `guard_name = 'web'`** (matching the
       composite `unique(['name', 'guard_name'])` index, not stricter than it); permission ids are
       validated against the catalog and likewise guard-scoped, so a forged or wrong-guard id never
       reaches `syncPermissions()`; a role created here persists `guard_name = 'web'` explicitly.
-- [ ] The component exposes 0009's administrator-level grant flag for 0011's view, and delegates the
+- [x] The component exposes 0009's administrator-level grant flag for 0011's view, and delegates the
       grant rule **entirely** to 0009's `EnforceAdministratorPermissionGrant` action — converting
       permission ids to names immediately before the call and letting the action's
       `AuthorizationException` (403) propagate. This story neither strips the permission from the sync
       payload nor re-implements any part of 0009's rule.
-- [ ] No migration and no `bootstrap/app.php` change are introduced by this story.
-- [ ] Pint clean and Larastan level 7 clean.
+- [x] No migration and no `bootstrap/app.php` change are introduced by this story.
+- [x] Pint clean and Larastan level 7 clean.
 
 ## Definition of Done
-- [ ] Tests written and green
-- [ ] Code reviewed (code-reviewer)
-- [ ] No security findings (appsec-auditor)
-- [ ] Documentation updated (docs-keeper). **Corrected 2026-08-19 (Phase 5 review finding F-A): the ⚠️
-      residual bullet above is stale, not this story's to narrow.** 0009 already closed both halves
-      (`RolePolicy` **and** the `Gate::before` deferral) during its own Phase 3/4, and 0009's own
-      `docs-keeper` pass is expected to have already corrected
-      [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)'s
-      residual note and its
-      [`RolePolicy` — the second policy`](../../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
-      section (the "has no call site yet" / two-abilities / `$role->name` claims 0009 makes false)
-      before this story's Phase 1 begins — **verify that against the real page rather than assume it**,
-      since 0009's closure and this story's start may not be far apart in time. What genuinely *is*
-      this story's documentation job: recording that `RolePolicy` gains its **first component call
-      site** and its `viewAny`/`create` abilities (three abilities total after this story, not two),
-      and adding `docs/api/routes.md`'s `roles.index` route.
-- [ ] Acceptance criteria met
-- [ ] **Ordered dependency satisfied: the Administrator-level permission-grant story
+- [x] Tests written and green — with **one known, deliberate exception**: every assertion in this
+      story's suite that requires the component to *render* fails with
+      `Illuminate\View\ViewException`, because `resources/views/livewire/roles.blade.php` is **story
+      0011's** deliverable and does not exist yet. That is the agreed boundary between the two
+      stories, not a defect; every non-rendering assertion (authorization, persistence, validation,
+      cache invalidation, the model-event guards, the audit log) passes. See the implementation
+      record for the full picture.
+- [x] Code reviewed (code-reviewer) — Phase 5, all findings fixed (F-1 blocking through F-7).
+- [x] No security findings (appsec-auditor) — Phase 4, two rounds, round 2 verdict **PASS**.
+- [x] Documentation updated (docs-keeper) — Phase 6 completed 2026-08-20; see the implementation
+      record for the file-by-file list.
+
+      > **Phase 6 outcome, against what this bullet originally predicted.** The prediction was
+      > verified rather than assumed, and it was **half right**. 0009's own docs pass *had* closed the
+      > partial-hydration residual in
+      > [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)
+      > correctly. It had **not** corrected that page's
+      > [`RolePolicy` — the second policy](../../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
+      > section, which still claimed the policy "has three abilities" and "no call site in `app/`" —
+      > both falsified by this story, both now rewritten (**five** abilities, first call site
+      > `App\Livewire\Roles\Index`). Note the count in this bullet was itself wrong: it predicted
+      > three abilities after this story, on the assumption the policy had one before 0009's third was
+      > counted; the real arithmetic is 3 + `viewAny` + `create` = **5**.
+      >
+      > Four further stale claims that this bullet did **not** anticipate were found by re-reading the
+      > pages against the diff rather than by following the change→doc mapping, and corrected in the
+      > same pass: the seeder's `Role::firstOrCreate(['name' => 'Administrator', …])` code quote (in
+      > *two* places, plus the `RuntimeException` it was said to throw), the `Role::boot()` quote in
+      > **Layer 1**, `selectable()`'s "first (and today only) caller", and — in `docs/database/schema.md`
+      > — the same `RuntimeException` claim about the Administrator seeding line.
+      >
+      > One prediction aimed *at* this story was also resolved rather than left standing: that page's
+      > "Forward-looking warning for stories 0010/0011" about a `RolePolicy` ability against the Super
+      > Admin role being denied-by-default for a Super Admin actor. Verified during Phase 5 to **not
+      > bite here** — `AppServiceProvider`'s deferral keys on `$target instanceof Role`, and
+      > `Gate::authorize('viewAny', Role::class)` passes a class *string*, so the bypass returns `true`
+      > normally for both new abilities. Recorded as verified, not left as an open warning.
+- [x] Acceptance criteria met — with one amendment recorded inline above (the "and **nothing else**"
+      clause on the `RolePolicy` criterion, which this story's own Phase 4 finding F1 overrode by
+      human-confirmed decision).
+- [x] **Ordered dependency satisfied: the Administrator-level permission-grant story
       ([0009](../done/0009-administrator-level-permission-grant.md)) has landed** (it owns
       `App\Actions\Roles\EnforceAdministratorPermissionGrant`, which this story's `saveRole()` calls
       by type-hinted injection). See the ⚠ sequencing box in the Administrator-level grant section —
@@ -823,31 +852,59 @@ helper; the administrator-level grant is delegated wholesale to 0009's action wi
 authorization logic; and this story converts permission ids to names before invoking that action. The
 following remain open and should be answered before Phase 3 — none block Phase 2 INVEST review.
 
-**A. Message language for the holder-count block** — literal English now, or `lang/` keys?
-- **A1 (recommended)** — translation keys from the start: PRD assumption 14 requires an admin UI
-  Spanish/English switcher (Epic 5), and retrofitting keys across every module later costs far more
-  than adding them now. Tests then assert via the key with a count parameter, which also keeps them
-  stable across the decision.
-- A2 — literal strings now, extracted when Epic 5 lands.
+**~~A. Message language for the holder-count block~~ — resolved in Phase 3, A1 applied.** Translation
+keys from the start. [`lang/en/roles.php`](../../../lang/en/roles.php) and
+[`lang/es/roles.php`](../../../lang/es/roles.php) both shipped, key-for-key identical, carrying
+`roles.index.delete_blocked` (the holder-count refusal) and `roles.index.self_lockout_blocked` (the
+self-lockout refusal added by Phase 4 finding F7). Nothing in
+`App\Livewire\Roles\Index` holds a literal user-facing string. Story 0011 owns the screen's markup
+and may add keys to the same files; it must not move these two.
 
-**B. Singular/plural grammar for the 1-holder message** — the PRD says only "states how many users
-hold it". Recommend the tests assert on the numeral and the non-zero branch rather than an exact
-grammatical string until copy is confirmed; the wording itself is 0011's copy decision.
+**~~B. Singular/plural grammar for the 1-holder message~~ — resolved in Phase 3, and more strongly
+than the recommendation asked for.** The recommendation was to assert on the numeral rather than an
+exact grammatical string. What shipped is better: `delete_blocked` is **one** key carrying both forms
+separated by `|`, resolved with
+`trans_choice('roles.index.delete_blocked', $role->users_count, ['count' => $role->users_count])`, so
+the singular/plural rule lives in the translation file where a locale with different plural rules can
+express it. The suite carries a dedicated singular case (`deleting a role held by exactly 1 user is
+refused with a correct singular message`) alongside the 3-holder one. The convention this established
+is now written up in [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#translation-keys)
+— a count-dependent message is never two keys and never a `$count === 1 ? … : …` branch in PHP.
 
-**C. Shared `RoleFactory` / `PermissionFactory`** — stories 0002, 0008, 0009 and 0010 will each
-hand-roll near-identical `Role::create(...)->syncPermissions(...)` arrangement code.
-- **C1 (recommended)** — ask `database-expert` to add thin `database/factories/RoleFactory.php` and
-  `PermissionFactory.php` following the existing `UserFactory` pattern, once the first of these
-  stories is scheduled, so all four suites share one definition.
-- C2 — keep it inline / in a shared Pest helper under `tests/Feature/Roles/`; no app-code change,
-  but four divergent copies.
+**~~C. Shared `RoleFactory` / `PermissionFactory`~~ — resolved in Phase 3 by what shipped: C2 taken,
+and C1 is not withdrawn but deferred.** No factories were added. `tests/Feature/Roles/IndexTest.php`
+arranges through local Pest helpers (`rolesTestPermission()`, `rolesTestActor()`, and direct
+`Role::create([...])->syncPermissions([...])`), which keeps this suite decoupled from the seeded
+catalog's exact contents — a property the "Test-arrangement notes" below deliberately asked for and
+which a shared factory would not have changed either way. C1's actual argument (four suites
+hand-rolling near-identical arrangement code) still stands and is now demonstrable across
+`tests/Feature/Seeders/`, `tests/Feature/Policies/RolePolicyTest.php`,
+`tests/Feature/Models/RoleTest.php` and this file, so it remains a reasonable follow-up — it is simply
+not something this story needed, and adding app-code (`database/factories/`) for a test-arrangement
+convenience was out of scope for a story already carrying two security-audit rounds.
+- C1 — thin `RoleFactory` / `PermissionFactory` following `UserFactory`. Not rejected; deferred.
+- **C2 (taken)** — local Pest helpers per suite.
 
-**D. Case-insensitive uniqueness depends on live column collation.** MySQL 8.4's default
-`utf8mb4_0900_ai_ci` makes `Rule::unique()` case-insensitive for free, but collation can be
-overridden per table/connection. Verify the actual `roles.name` collation before Phase 3; if it is
-case-sensitive, add an explicit lowercase comparison rather than relying on the driver. Note this is
-orthogonal to the `guard_name` scoping added to `roleNameRules()` — that fixes *which rows the rule
-compares against*, while this is about *how* two names are compared once selected.
+**~~D. Case-insensitive uniqueness depends on live column collation~~ — resolved in Phase 3: verified,
+and no extra comparison was needed.** `roles.name` carries **`utf8mb4_unicode_ci`** (set by
+`config/database.php`, not MySQL 8.4's `utf8mb4_0900_ai_ci` default), which is case- *and*
+accent-insensitive — so `Rule::unique('roles', 'name')->where('guard_name', 'web')` rejects a case-only
+duplicate on its own, and the "if it is case-sensitive, add an explicit lowercase comparison" branch of
+this question never applied. The finding is recorded where a future reader will actually meet it: the
+docblock on [`App\Concerns\RoleValidationRules::roleNameRules()`](../../../app/Concerns/RoleValidationRules.php),
+and in [`docs/database/schema.md`](../../../docs/database/schema.md#roles-permissions-model_has_roles-model_has_permissions-role_has_permissions).
+Two consequences worth carrying forward rather than rediscovering, both already live in this codebase:
+
+- **The same collation is why the seeder cannot use a bare `firstOrCreate()`** for either protected
+  role name — it would silently *adopt* a case-variant row instead of creating the intended one, while
+  every identity check in the app is a byte-exact `===`. Both creation paths therefore read the
+  persisted name back and throw (`Role::firstOrCreateSuperAdminRole()`, and this story's own
+  `Role::firstOrCreateAdministratorRole()`).
+- **Trimming is *not* covered by the collation and is this component's job.** A Livewire property
+  update never passes through the `TrimStrings` middleware a normal HTTP request body does, so
+  `saveRole()` trims `$this->name` explicitly *before* `validate()` runs — otherwise the uniqueness
+  check compares a still-padded value. The whitespace-duplicate scenario in the Gherkin above is what
+  pins it.
 
 **~~E. Who tests the role selector?~~ — resolved, E1 applied.** This was "becomes selectable when
 assigning a role to a user", which points at the Users screen (0004/0006), not this component. **E1
@@ -887,3 +944,191 @@ independently-fetched instance.
   and only saves one line at the call site.
 - **G2 (taken)** — keep the split; enforce "same `$role` instance, return value assigned" as an
   implementation rule for `saveRole()` and a Phase 5 review check, not as a code change to the action.
+
+---
+
+## Phase 3/4/5/6 implementation record
+
+**2026-08-20 — Phase 3 (implementation).** Built exactly what
+[Files to create/modify](#files-to-createmodify) specified, with no scope changes:
+[`App\Livewire\Roles\Index`](../../../app/Livewire/Roles/Index.php) (create / rename / delete custom
+roles and sync per-module permissions), [`App\Concerns\RoleValidationRules`](../../../app/Concerns/RoleValidationRules.php),
+[`routes/roles.php`](../../../routes/roles.php) (`roles.index`, `can:roles.manage`) required from
+`routes/web.php`, `viewAny` / `create` on [`App\Policies\RolePolicy`](../../../app/Policies/RolePolicy.php),
+a holder-count `deleting` guard registered inside 0008's existing `Role::boot()` (never a second
+registration point — see the boxed vendor-ordering note above), the new
+[`App\Exceptions\RoleInUseException`](../../../app/Exceptions/RoleInUseException.php) it throws
+(**409**, not 403 — the request is well-formed and the actor is authorized; the role is simply still
+referenced), and `lang/en/roles.php` + `lang/es/roles.php`. No migration, no `bootstrap/app.php`
+change, no `Gate::policy()` registration.
+
+Two Phase 1 predictions were falsified during implementation and are corrected in place above rather
+than only here: the **paired Blade view path** (`App\Livewire\Roles\Index` is an `Index` class in a
+subfolder, so Livewire strips the `.index` segment and resolves the *flat*
+`resources/views/livewire/roles.blade.php` — found by execution, not by reading the vendor source),
+and open question **G**, decided as **G2** (keep `EnforceAdministratorPermissionGrant` a pure
+transformer; `saveRole()` remains the sole writer, carrying the two safeguards the deferred
+remediation asked for as implementation rules).
+
+**Phase 4 (`appsec-auditor`), two rounds.**
+
+- **Round 1: FAIL — eight findings.** The two Highs are the ones worth remembering; the rest are
+  hardening.
+  - **F1 (High, human-confirmed decision) — the Administrator role was renameable and deletable.**
+    This story is the first code in the repo able to write `roles.name`, and 0008a's centralized
+    Administrator *identity* is derived from that column — so a `roles.manage-administrators` holder
+    could **rename** the seeded role, silently demoting every `isAdministratorRole()` check in the app
+    (`UserPolicy`, `CreateUser`, `UpdateUser`, `RolePolicy`) while the role kept its 37 permissions and
+    every holder kept their access, or **delete** it outright once it had no holders. Both verified
+    live. Fixed with three guards on `App\Models\Role` mirroring the Super Admin tier's —
+    `guardAgainstAdministratorDeletion()`, `guardAgainstRenamingAdministrator()`,
+    `guardAgainstAssumingAdministratorName()` — plus `Role::firstOrCreateAdministratorRole()` as the
+    one sanctioned creation path (`withoutEvents()` + a byte-exact read-back against the
+    `utf8mb4_unicode_ci` collation), which `RolePermissionSeeder` now calls instead of the raw
+    `firstOrCreate()` the new `creating` guard would otherwise refuse. **The protection is deliberately
+    narrower than the Super Admin tier's**: only the name is locked and the row is undeletable — the
+    permission set stays fully editable, which is the entire point of story 0009.
+    `RolePolicy::delete()` was changed in the same pass to refuse the Administrator role
+    **categorically** rather than gate it on `roles.manage-administrators`, which is why this story's
+    "and nothing else" acceptance criterion carries an amendment.
+  - **F2 (High, human-confirmed decision) — a `roles.manage` holder could grant themselves the whole
+    catalog.** `roles.manage` authorizes *managing roles*; nothing stopped its holder rewriting any
+    role's permission set — including their own role's — to all 38 permissions. Verified live against
+    an actor holding two. Fixed by the new
+    [`App\Actions\Roles\EnforceGrantorPermissionScope`](../../../app/Actions/Roles/EnforceGrantorPermissionScope.php),
+    which refuses a payload that *newly grants* a permission the actor does not hold. It excludes
+    `roles.manage-administrators` from its own scope entirely (that permission's grant rule stays
+    exclusively `EnforceAdministratorPermissionGrant`'s) and exempts a Super Admin actor outright, who
+    holds zero permission rows by design.
+  - **F3 (Medium) — a soft-deleted holder counted as zero.** The morph relation applies `User`'s
+    `SoftDeletingScope`, so a trashed holder let the delete through and the FK cascade on
+    `model_has_roles` then destroyed that holder's grant with no error anywhere. Both the component's
+    count and the model-event guard now use `withTrashed()`.
+  - **F4 (Low)** — `saveRole()`'s writes and `deleteRole()`'s delete each wrapped in
+    `DB::transaction()`; a failure between the rename and the permission sync must not leave a role
+    persisted with the wrong set. **F5 (Low)** — every role resolution and the listing scoped to
+    `guard_name = 'web'`, matching the validation rules (defence in depth: leaving resolution unscoped
+    while validation is scoped would let a rename pass validation and then surface as a raw `23000`).
+    **F6 (Low)** — a row lock inside `deleteRole()`'s transaction, closing the window between the
+    holder-count check and the delete. **F7 (Low)** — a self-lockout guard refusing a save that would
+    strip `roles.manage` from a role the acting user holds, derived from `Auth::user()` internally and
+    never accepted as a parameter. **F8 (Low)** — a structured `Log::info()` audit trail on both
+    `saveRole()` and `deleteRole()` (actor, role, permission diff), this app having no audit-log table.
+- **Round 2 (re-audit): PASS.** All eight round-1 findings re-verified closed **by execution**, not by
+  reading the diff. Three new **Low** findings, all accepted and documented rather than code-fixed:
+  - **N1 (accepted, human-confirmed).** `EnforceGrantorPermissionScope` restricts *granting* a
+    permission the actor lacks but not *revoking* one, so a `roles.manage` holder can still strip
+    another role's access. Privilege **consolidation**, not gain, and always repairable by a Super
+    Admin. Recorded in the action's own docblock.
+  - **N2.** The two transformers handle an **omission** in opposite ways (one preserves, one lets the
+    sync revoke), which is safe only because `permissionOptions()` renders the *unfiltered* catalog —
+    a property that lives in neither guard. Written up as a forward-looking rule in
+    [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#two-guards-on-one-payload-must-agree-on-what-an-omission-means),
+    because the obvious next move for story 0011 (hiding permissions the actor cannot grant) is
+    exactly what would turn it into a silent-revoke bug.
+  - **N3.** `RolePolicy::delete()`'s categorical Administrator refusal is **unreachable for a Super
+    Admin actor** — `Gate::before` only defers when the ability's *target* is the Super Admin role, so
+    for that one actor/target pair the model-event guard is what actually refuses. Contained (both
+    paths render 403); the policy method's docblock, which claimed a relationship to the model guard
+    that was not accurate, was corrected.
+
+  The same round corrected a comment in `saveRole()` attributing the split between the two
+  transformers to **call order**. Verified live by reversing the two calls: they refuse identically.
+  The real mechanism is `EnforceGrantorPermissionScope`'s own `->reject(...)` exclusion of
+  `roles.manage-administrators`. Do not reintroduce the order-dependent framing.
+
+**Phase 5 (`code-reviewer`).**
+
+- **F-1 (blocking) — three test files failed a real Pint run.** `vendor/bin/pint --dirty` — the exact
+  command this project's own [conventions](../../../docs/conventions/base-standards.md#quality-gates)
+  mandate — reported clean, because `--dirty` inspects only *uncommitted* changes and therefore
+  no-ops entirely once the tree is committed. A plain `vendor/bin/pint --format agent` found
+  `fully_qualified_strict_types` and `ordered_imports` violations immediately. Fixed by that unscoped
+  run. **This is a project-wide gate weakness, not a mistake specific to this story**, and is recorded
+  as such in [`docs/errors-log.md`](../../../docs/errors-log.md#both-of-this-projects-per-change-quality-gates-are-scoped-by-default-and-both-silently-passed--2026-08-20)
+  together with its sibling (`test --filter`, below), with the corresponding correction to the
+  conventions page's gate list.
+- **F-2 — a disclosure test that asserted nothing.** The `openEditModal()` test was written against
+  `Livewire::test(Index::class, ['skipMount' => true])`, which is not a real API (this component's
+  `mount()` takes no parameters), and its own skip reason was contradicted eight lines below by
+  `confirmDeleteRole()`'s working test. Rewritten in that working shape — mount while privileged,
+  revoke, call, expect the throw, assert the disclosed state (`name`, `selectedPermissionIds`) stays
+  empty.
+- **F-3 — two tests named after methods they never call.** Both forged-Super-Admin-id tests were named
+  for `saveRole()` / `deleteRole()` but call `openEditModal()` / `confirmDeleteRole()` — which are in
+  fact the only reachable entry points, since `editingRoleId` / `deletingRoleId` are `#[Locked]`. The
+  coverage was correct; only the names claimed otherwise. Renamed to state what they assert.
+- **F-4 — three docblocks left stale by the F1 fix**, each corrected against the shipped code:
+  `ImmutableRoleException` named only the Super Admin role as a thrower; `Role::boot()` still called
+  `guardAgainstHolders()` the "second" `deleting` listener when `guardAgainstAdministratorDeletion()`
+  now sits between it and the Super Admin guard; and `routes/roles.php`'s inline comment still pointed
+  at `users.index` in `routes/web.php` after task 0040 moved it to `routes/users.php`.
+- **F-5 — `RolePolicy::create()`'s docblock** named only the uniqueness-rule refusal for the
+  Administrator name, missing the second, unconditional refusal `guardAgainstAssumingAdministratorName()`
+  now provides.
+- **F-6 — a test comment reintroduced the order-dependent framing** the round-2 re-audit had already
+  corrected elsewhere. Restated to match the action's docblock and the security page.
+- **F-7 — four pre-existing tests were modified, and the justification was only in the test comments.**
+  Owner: `product-owner`, precisely so it would be recorded here rather than living in code comments.
+  See the next section.
+- **O-1 … O-8 — non-blocking observations.** Several were actioned as part of the F-fixes above rather
+  than separately (the docblock and test-naming items in particular). **O-7** is the one with work of
+  its own: documentation drift in `docs/architecture/authorization.md`, `docs/database/schema.md` and
+  `docs/api/routes.md`, handed to Phase 6 and completed there — see below.
+
+### Why four tests this story's own DoD said should go green "without edits" were edited (Phase 5 finding F-7)
+
+The [Tests to perform](#tests-to-perform) section carries a regression bullet requiring
+`tests/Feature/Policies/RolePolicyTest.php` and the model-guard suites in
+`tests/Feature/Models/RoleTest.php` to pass **unamended**, on the premise that this story adds
+`viewAny`/`create` and touches nothing else. That premise did not survive this story's own Phase 4
+audit, and the bullet is left **unchecked** above rather than quietly ticked. This is a factual record
+of what happened, not a new decision — each edit is a direct consequence of a human-confirmed audit fix:
+
+- **Three tests in `tests/Feature/Policies/RolePolicyTest.php`**, all built on the pre-F1 premise that
+  *"the Administrator role is deletable given `roles.manage-administrators`"* — a premise F1's fix
+  deliberately made false. Rewritten against the new one: (1) a Super Admin's
+  `allows('delete', $administratorRole)` staying `true` is now documented as the **`Gate::before`
+  bypass value** rather than as evidence the deletion succeeds — the raw `delete()` call is what
+  actually throws (this is finding **N3** made visible in a test); (2) a non-Super-Admin holder of
+  `roles.manage-administrators` now gets a `false` Gate check directly; (3) the
+  revoke-takes-effect-immediately test switched from `delete` to `update`, because `delete` against the
+  Administrator role is now categorically `false` regardless of any permission and would prove nothing
+  either side of a revoke.
+- **One test in `tests/Feature/Authorization/SuperAdminRoleConfigSourceOfTruthTest.php`**, and this one
+  is not about F1 at all — it is a genuine regression this story caused in an unrelated suite, found
+  only when the **full** suite was finally run (see F-1's sibling gate weakness above). Two compounding
+  causes, both pre-existing. (a) This story's holder-count guard blocks deleting **any** role with
+  holders, protected tier or ordinary — the test assigns a holder to the ordinary role literally named
+  `"Super Admin"` purely to exercise `Gate::before`/`can()` earlier in the test, then goes on to delete
+  that same role; an explicit `removeRole()` was added before the deletion the scenario is actually
+  about. (b) This repo's ambient `SUPER_ADMIN_EMAIL` makes `RolePermissionSeeder` provision a second,
+  invisible Super Admin holder the test never accounted for — the exact class of ambient-config
+  sensitivity [`docs/errors-log.md`](../../../docs/errors-log.md)'s 2026-08-12 entry already names,
+  neutralized here the same way `tests/Feature/Seeders/DatabaseSeederTest.php` already does
+  (`config(['auth.super_admin.email' => null])` before seeding).
+
+Each of the four carries an inline comment naming its cause; this section is the record the test
+comments cannot be.
+
+**Phase 6 (`docs-keeper`), 2026-08-20.** Files updated: `docs/architecture/authorization.md` (two new
+sections — **The Administrator tier's immutability** and **The second grant meta-rule** — plus five
+corrected stale claims, listed in the Definition-of-Done note above),
+`docs/security/authorization-patterns.md` + `docs/security/README.md` (one new durable rule from F1:
+*an identity derived from a mutable column must be locked once code exists that can mutate it*),
+`docs/api/routes.md` (the `roles.index` row and subsection, including the ⚠️ that `GET /roles` does not
+render until 0011 ships its view), `docs/database/schema.md` (the corrected `RuntimeException` claim
+and the holder-count 409 guard), `docs/conventions/base-standards.md` (the unscoped-quality-gate rule),
+`docs/conventions/naming.md` (`trans_choice()` plurals, `RoleValidationRules`, the second
+`Index`-in-a-subfolder row), `docs/errors-log.md` (the eighteenth entry), `docs/README.md`, the root
+`README.md`, and the course delivery document `../readme.md`. `CLAUDE.md` and `AGENTS.md` needed no
+change — this story adds no new doc file and no new pointer.
+
+The [link-integrity check](../../../docs/workflow.md#link-integrity-check-on-every-stage-move) was run over
+this file even though it has not moved since Phase 3, and it **found two real breaks**: both references to
+sibling story 0012 were written as bare `](0012-module-access-gating-backend.md)`, which resolved correctly
+from `ai-spec/tasks/` and stopped resolving the moment this file moved to `in-progress/`. Corrected to
+`](../0012-…)`. Worth noting for the next story: the documented failure mode is about `../../docs/…` links
+going one level too shallow, but a **bare sibling-file link** breaks on the same move for the mirror-image
+reason — the sibling stayed put while this file went one level deeper. Every relative link and every
+`#fragment` in this file now resolves against the filesystem from its real `in-progress/` location.
