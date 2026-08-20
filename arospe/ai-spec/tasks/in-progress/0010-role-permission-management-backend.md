@@ -22,13 +22,13 @@ Boundaries with siblings, referenced and never redefined here:
   `config/permission.php` model repoint, `App\Policies\RolePolicy` **itself**, and every Super Admin
   invariant (undeletable / uneditable / non-downgradable, enforced via model events and overrides of
   `syncPermissions()`/`givePermissionTo()`/`revokePermissionTo()`).
-- **[0008a](done/0008a-centralize-administrator-role-identification.md)** — **now `done`, i.e. already
+- **[0008a](../done/0008a-centralize-administrator-role-identification.md)** — **now `done`, i.e. already
   shipped ahead of this story.** It owns
   `App\Models\Role::isAdministratorRole()`, the `App\Enums\RoleName::Administrator` case, the shared
   private `persistedName()` extraction on `App\Models\Role`, and the *user*-side relocation of the
   Administrator guard into `CreateUser`/`UpdateUser`. **It also modifies `app/Models/Role.php`, which
   this story modifies too** — different methods, so the two edits merge cleanly, but per
-  [`docs/contracts.md`](../../docs/contracts.md)'s Parallel Agent File-Ownership Rule the two stories
+  [`docs/contracts.md`](../../../docs/contracts.md)'s Parallel Agent File-Ownership Rule the two stories
   must **never be dispatched to concurrent agents**. Because 0008a is already in flight, the
   "whichever lands first" clause in the `app/Models/Role.php` bullet below will in practice resolve
   to **0008a builds `persistedName()`, and this story consumes it** — but Phase 3 must verify that
@@ -159,6 +159,22 @@ Feature: Roles and permissions management
   single-file) per `docs/conventions/base-standards.md`, declares `#[Title(...)]`, `#[Locked]` on
   everything the browser must not set, boolean naming per `docs/conventions/naming.md`.
 
+  > **Corrected 2026-08-20 (found while running this story's own test suite) — the paired view path
+  > quoted above is wrong; it is the flat file, not a nested one.** `App\Livewire\Roles\Index` is an
+  > `Index` class inside a subfolder (`Roles/`), which is exactly the case
+  > [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+  > documents as an exception to the normal class↔view mirror: Livewire's `Finder::generateNameFromClass()`
+  > strips a trailing `.index` segment, so the component resolves to the **flat**
+  > `resources/views/livewire/roles.blade.php` — the direct analogue of
+  > `App\Livewire\Users\Index` → `livewire/users.blade.php`, already shipped and documented. Verified by
+  > execution, not just by reading the vendor source: `Livewire::test(Index::class)` throws
+  > `Illuminate\View\ViewException: File does not exist at path
+  > .../resources/views/livewire/roles.blade.php` against this story's real component and test suite —
+  > it never even probes the nested path. **0011's own file bullet repeats the same wrong path** (its
+  > "core deliverable" line) and needs the identical correction; do not build the view at
+  > `resources/views/livewire/roles/index.blade.php`, and do not leave both files present as an
+  > accidental duplicate.
+
   **Ids are `int`, not UUID.** `roles.id` / `permissions.id` are bigint autoincrement
   (`$table->id()` in `2026_07_12_181045_create_permission_tables.php`); only `users` and the
   `model_uuid` morph key are UUID. So:
@@ -177,7 +193,7 @@ Feature: Roles and permissions management
 
   **Every mutating method opens with `Gate::authorize(...)` against `App\Policies\RolePolicy`**, and
   `mount()` opens with the `viewAny` equivalent — the house pattern, copied from
-  [`app/Livewire/Users/Index.php`](../../app/Livewire/Users/Index.php), which has eight real
+  [`app/Livewire/Users/Index.php`](../../../app/Livewire/Users/Index.php), which has eight real
   `Gate::authorize()` call sites plus two `Gate::allows()` UI hints. The full reasoning is under
   **Server-side gating, layer 2** in the *Technical approach* notes at the end of this section; the
   shape:
@@ -267,10 +283,10 @@ Feature: Roles and permissions management
   >    holder-count guard that is doubly perverse, since the very holders it counts are what the
   >    package's listener has just removed. Put this story's `deleting` closure in the **same** `boot()`
   >    method, alongside 0008's, so registration order stays explicit and reviewable in one place. See
-  >    [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#layer-1-registration-order-is-the-whole-point)
+  >    [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#layer-1-registration-order-is-the-whole-point)
   >    (which shows the real `boot()` body, plus the `booted()` anti-pattern) and the mechanism overview
   >    in the same page's
-  >    [Super Admin role's invariants](../../docs/architecture/authorization.md#the-super-admin-roles-invariants)
+  >    [Super Admin role's invariants](../../../docs/architecture/authorization.md#the-super-admin-roles-invariants)
   >    section.
   > 2. **Reading the row's protected identity.** 0008's re-audit (finding R1) found a working bypass in a
   >    guard that read an in-memory attribute where it needed the *persisted* one, and that used `??` to
@@ -281,7 +297,7 @@ Feature: Roles and permissions management
   >    (the cached relation, possibly loaded before the holders changed) and a `users_count` attribute
   >    carried over from a `withCount()` on the *listing* query are both stale-by-construction inside a
   >    `deleting` listener. The rule and its worked example are in
-  >    [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null).
+  >    [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null).
   >
   > A test for this guard must assert the same thing 0008's does: after a refused delete, the
   > `model_has_roles` rows are **still there**, not merely that the `roles` row is.
@@ -333,7 +349,7 @@ Feature: Roles and permissions management
   > described below is already done and is not this story's job.** This section originally specified
   > that *this story* would replace `$role->name === Role::superAdminName()` with a persisted-identity
   > helper it would also build (`Role::isSuperAdminRole()`), closing the ⚠️ residual in
-  > [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)
+  > [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)
   > that named stories 0010/0011 by number. That did not happen the way this section predicted: 0008a's
   > own Phase 4 audit rounds built the equivalent helper first, under the name
   > `Role::isSuperAdminRoleRow(self $role): bool` (see the `app/Models/Role.php` bullet above), and 0009
@@ -342,7 +358,7 @@ Feature: Roles and permissions management
   > 0009's own Phase 4 security audit also upgraded to the same helper (finding F4). The underlying bug
   > class this residual was about is exactly 0008's Phase 4 re-audit finding **R1**, a working rename
   > bypass, documented in
-  > [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null)
+  > [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null)
   > — it is fully closed now, not partially. **This story touches neither method's Super Admin branch
   > nor its Administrator-level branch.** The old coordination warning about 0009 and 0010 racing to
   > build the same helper no longer applies (0009 already closed, so there is nothing left to race for),
@@ -353,7 +369,7 @@ Feature: Roles and permissions management
   and `create(User $user): bool`, each returning `$user->hasPermissionTo('roles.manage')`. Both take
   **no `Role` argument** (there is no record yet), which is exactly why `mount()` and the create
   branch of `saveRole()` cannot reuse `update()` — see the note under the component sketch above.
-  This mirrors [`app/Policies/UserPolicy.php`](../../app/Policies/UserPolicy.php)'s `viewAny`/`create`
+  This mirrors [`app/Policies/UserPolicy.php`](../../../app/Policies/UserPolicy.php)'s `viewAny`/`create`
   pair, which `Users\Index::mount()` / `save()` authorize against identically.
 
   Three properties of the shipped file that this story must preserve rather than rediscover:
@@ -402,7 +418,7 @@ Feature: Roles and permissions management
   `Rule::unique('roles', 'name')` is *stricter* than the database — it would reject a name already
   taken on some other guard, a row the database would happily accept — while still not being the
   constraint the database actually enforces. The sibling precedent is explicit about this:
-  [`App\Concerns\UserValidationRules::roleRules()`](../../app/Concerns/UserValidationRules.php) writes
+  [`App\Concerns\UserValidationRules::roleRules()`](../../../app/Concerns/UserValidationRules.php) writes
   `Rule::exists('roles', 'id')->where('guard_name', 'web')->whereNot('name', Role::superAdminName())`.
   Same reasoning on the permissions side: a permission id is only meaningful against the guard it was
   seeded under, and syncing a non-`web` permission onto a `web` role is a silently inert grant.
@@ -413,7 +429,7 @@ Feature: Roles and permissions management
   `config('auth.defaults.guard')` to supply it implicitly would make the value environment-dependent
   for no benefit; write `['name' => …, 'guard_name' => 'web']` at the creation call site so the row
   and the validation rules above provably agree. See
-  [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#always-pass-the-guard-to-hasrole--hasanyrole)
+  [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#always-pass-the-guard-to-hasrole--hasanyrole)
   for the same "always name the guard" rule on the read side.
 - `tests/Feature/Roles/IndexTest.php` — **create** (backend-qa, Phase 3).
 - **No migration.** All five permission tables already exist; the catalog rows come from 0002.
@@ -444,10 +460,10 @@ Feature: Roles and permissions management
   There is exactly **one** reason for that choice, and it is not the one an earlier draft of this
   story gave. To kill the false version first, because it inverts the risk:
   `'permission:roles.manage'` **is** a valid middleware string in this application today —
-  [`bootstrap/app.php`](../../bootstrap/app.php)'s `withMiddleware()` is **not** empty; it registers
+  [`bootstrap/app.php`](../../../bootstrap/app.php)'s `withMiddleware()` is **not** empty; it registers
   `'role'`, `'permission'` and `'role_or_permission'` via `$middleware->alias([...])` (story 0002's
   work, documented in
-  [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#middleware-aliases)).
+  [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#middleware-aliases)).
   A route gated with `permission:roles.manage` would therefore boot fine, and a manual check of
   `GET /roles` would show it correctly refusing an unprivileged user. **That is precisely what makes
   it dangerous here** — it looks like it works.
@@ -460,7 +476,7 @@ Feature: Roles and permissions management
   the initial `GET` only: every subsequent `saveRole()` / `deleteRole()` action request runs through
   **zero** permission middleware, silently, while the page-load check keeps passing. Sibling story
   [0012](0012-module-access-gating-backend.md) states the identical rule for every future module
-  route, and [`docs/api/routes.md`](../../docs/api/routes.md#usersindex--the-first-permission-gated-route)
+  route, and [`docs/api/routes.md`](../../../docs/api/routes.md#usersindex--the-first-permission-gated-route)
   records it as an already-shipped project convention that must not be "normalised" away —
   `routes/web.php` carries it as an inline comment above `users.index`. Write the same comment above
   `roles.index`.
@@ -476,15 +492,15 @@ Feature: Roles and permissions management
   load (Livewire hydrates from a snapshot afterwards), and the `PersistentMiddleware` allow-list is an
   internal implementation detail rather than a documented contract. So `mount()` and **every** mutating
   method re-authorize as their first statement, per
-  [`docs/security/livewire-authorization.md`](../../docs/security/livewire-authorization.md).
+  [`docs/security/livewire-authorization.md`](../../../docs/security/livewire-authorization.md).
 
-  **This is `Gate::authorize()` against [`App\Policies\RolePolicy`](../../app/Policies/RolePolicy.php),
+  **This is `Gate::authorize()` against [`App\Policies\RolePolicy`](../../../app/Policies/RolePolicy.php),
   not a bare permission assertion.** An earlier draft of this story specified
   `abort_unless(Auth::user()->can('roles.manage'), 403);` per method, justified as "matching the
   `abort_unless` style already used in `app/Livewire/Settings/Security.php`". **That precedent does not
   exist** — `grep -rn "abort_unless" app/ tests/ routes/ database/` returns nothing; the function
   appears nowhere in this repository. The real house pattern is
-  [`app/Livewire/Users/Index.php`](../../app/Livewire/Users/Index.php), with eight `Gate::authorize()`
+  [`app/Livewire/Users/Index.php`](../../../app/Livewire/Users/Index.php), with eight `Gate::authorize()`
   call sites (`viewAny` in `mount()`, then `create` / `update` / `delete` /
   `promoteToAdministrator` / `updateSensitiveAttributes` on the mutating paths) plus two
   `Gate::allows()` per-row UI hints. Use it.
@@ -496,7 +512,7 @@ Feature: Roles and permissions management
   component would let a forged `editingRoleId` targeting the Super Admin role past this layer entirely
   and leave the model-event guard as the only thing standing, converting a clean 403 into an
   `ImmutableRoleException`. See
-  [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#gateauthorize-at-the-call-site-not-only-at-the-route).
+  [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#gateauthorize-at-the-call-site-not-only-at-the-route).
 
   The mapping — one authorize call per entry point, matching the sketch above:
 
@@ -510,7 +526,7 @@ Feature: Roles and permissions management
   `openEditModal()` / `confirmDeleteRole()` are **disclosure** paths rather than mutations, so they
   authorize too (`update` / `delete` on the resolved target) — gating every method that mutates *or
   discloses* is the rule in
-  [`docs/security/livewire-authorization.md`](../../docs/security/livewire-authorization.md), not an
+  [`docs/security/livewire-authorization.md`](../../../docs/security/livewire-authorization.md), not an
   extra. Both layers are required; neither suffices alone.
 - **Super Admin exclusion.** Every listing/selector query goes through 0008's shared
   `Role::query()->selectable()` scope; this component never targets that role for edit or delete.
@@ -580,7 +596,7 @@ Feature: Roles and permissions management
   > returns in full, with a 200 response); and a caller that syncs a *different* role than the one it
   > passed as the third argument reopens the class of hole 0009's re-audit finding N2 closed. This is
   > the same shape 0008a's story ruled on one story ago, in
-  > [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#the-guard-belongs-to-the-action-not-to-the-caller)'s
+  > [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#the-guard-belongs-to-the-action-not-to-the-caller)'s
   > "the guard belongs to the action, not to the caller" section — `CreateUser`/`UpdateUser` authorize
   > and write inside one call for exactly this reason. Two ways to resolve it, in order of preference:
   > **(a)** fold the write into the action for the update path (e.g.
@@ -602,9 +618,9 @@ Feature: Roles and permissions management
   > The two ways out and the one chosen:
   >
   > - **(recommended, and the decision taken) the Administrator-level permission-grant story
-  >   ([0009](done/0009-administrator-level-permission-grant.md)) lands first** — which is why it now
+  >   ([0009](../done/0009-administrator-level-permission-grant.md)) lands first** — which is why it now
   >   carries the **lower** number: the two stories were renumbered on 2026-08-19 so the dependency
-  >   precedes its dependent, per [`docs/workflow.md`](../../docs/workflow.md#task-ordering-rule)'s
+  >   precedes its dependent, per [`docs/workflow.md`](../../../docs/workflow.md#task-ordering-rule)'s
   >   task-ordering rule. It is a small backend-only story whose only dependency this story has is
   >   that one action class plus the policy branch. Sequencing it ahead removes the question entirely
   >   and matches 0011's DoD, which already requires 0002, 0008, 0009 **and** this story to have
@@ -612,9 +628,9 @@ Feature: Roles and permissions management
   > - **Rejected: a stub/interim marker in this story.** A no-op stub is an authorization control that
   >   silently permits — the worst possible failure mode for this specific rule — and it would need a
   >   tracked follow-up to remove, which is exactly the kind of gap
-  >   [`docs/errors-log.md`](../../docs/errors-log.md) exists to record. Rejected outright.
+  >   [`docs/errors-log.md`](../../../docs/errors-log.md) exists to record. Rejected outright.
   >
-  > Practical consequence for the backlog: **[0009](done/0009-administrator-level-permission-grant.md) is a
+  > Practical consequence for the backlog: **[0009](../done/0009-administrator-level-permission-grant.md) is a
   > hard, blocking, ordered dependency of this story's Phase 3**, not merely a sibling. If a human
   > decides to run *this* story first anyway, the correct minimal change is to descope the
   > administrator-level grant from this story entirely — omit the action
@@ -682,7 +698,7 @@ DB-backed, so genuine no-DB unit tests are rare here.
       method itself**, proven by driving `Livewire::test()` without ever hitting the route. An HTTP
       test and a `Livewire::test()` one are **not** substitutes for each other here — the route
       middleware runs in one and not the other — per
-      [`docs/testing/README.md`](../../docs/testing/README.md).
+      [`docs/testing/README.md`](../../../docs/testing/README.md).
 - [x] **Already done, not this story's job (corrected 2026-08-20, Phase 5 review follow-up).** The
       persisted-identity fix this bullet described — proving `Gate::authorize('update', $role)` still
       refuses a partially-hydrated or mid-rename Super Admin role — is already shipped and already
@@ -778,9 +794,9 @@ The Super Admin role is absent from every list this component produces, and is r
       residual bullet above is stale, not this story's to narrow.** 0009 already closed both halves
       (`RolePolicy` **and** the `Gate::before` deferral) during its own Phase 3/4, and 0009's own
       `docs-keeper` pass is expected to have already corrected
-      [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)'s
+      [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#known-limitations--what-is-not-closed)'s
       residual note and its
-      [`RolePolicy` — the second policy`](../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
+      [`RolePolicy` — the second policy`](../../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
       section (the "has no call site yet" / two-abilities / `$role->name` claims 0009 makes false)
       before this story's Phase 1 begins — **verify that against the real page rather than assume it**,
       since 0009's closure and this story's start may not be far apart in time. What genuinely *is*
@@ -789,7 +805,7 @@ The Super Admin role is absent from every list this component produces, and is r
       and adding `docs/api/routes.md`'s `roles.index` route.
 - [ ] Acceptance criteria met
 - [ ] **Ordered dependency satisfied: the Administrator-level permission-grant story
-      ([0009](done/0009-administrator-level-permission-grant.md)) has landed** (it owns
+      ([0009](../done/0009-administrator-level-permission-grant.md)) has landed** (it owns
       `App\Actions\Roles\EnforceAdministratorPermissionGrant`, which this story's `saveRole()` calls
       by type-hinted injection). See the ⚠ sequencing box in the Administrator-level grant section —
       this story must not stub that action, and if 0009 has *not* landed the correct move is to
@@ -855,11 +871,19 @@ its own original scope, per its Phase 4 security audit — the Super Admin check
 upgrade; 0010 adds two abilities and nothing else in this file).
 
 **G. Should `EnforceAdministratorPermissionGrant` perform the sync itself, rather than only returning
-the list to sync?** Open, not yet decided — see the boxed note in the Administrator-level grant
-section of the `app/Actions/Roles/EnforceAdministratorPermissionGrant.php` file bullet above (Phase 5
-review finding F-E). Two remediation options are laid out there; this story's Phase 1/3 must pick one
-and record the decision before `saveRole()` is written.
-- **F1 (recommended)** — this story adds them. 0008 is closed, its own DoD is met, and reopening a
-  closed story to add an ability its scope never needed is worse than a small additive edit here.
-- F2 — fold them into 0009, so `RolePolicy` is touched by exactly two stories. Only worth it if 0009
-  is going to land first anyway; it does not reduce the total number of edits, just their spread.
+the list to sync?** **Resolved 2026-08-20, Phase 1/3 of this story: G2 — keep the split.** The action
+stays exactly as 0009 shipped and closed it (a pure transformer: `array` in, `array` out, no write).
+`saveRole()` performs the actual `syncPermissions()` call itself, reusing the sketch already in this
+file above (the elided `// ... persist name, then $role->syncPermissions($permissionNames);` comment)
+— which already committed to this shape before G was ever raised, so G1 (folding the write into the
+action) would mean reopening 0009's already-closed, three-round-audited class to change its contract,
+for a benefit ("one fewer statement in `saveRole()`") that does not outweigh the cost. `saveRole()`'s
+implementation carries the two safeguards the deferred remediation option asked for instead: the
+action's return value is always assigned back to `$permissionNames` before use, and the same `$role`
+instance resolved by the authorization branch (or the row just created, on the create branch) is the
+one both passed into the action and the one `syncPermissions()` is finally called on — never a second,
+independently-fetched instance.
+- G1 — fold the write into the action for the update path. Rejected: changes 0009's closed contract
+  and only saves one line at the call site.
+- **G2 (taken)** — keep the split; enforce "same `$role` instance, return value assigned" as an
+  implementation rule for `saveRole()` and a Phase 5 review check, not as a code change to the action.

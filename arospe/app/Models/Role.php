@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\RoleName;
 use App\Exceptions\ImmutableRoleException;
+use App\Exceptions\RoleInUseException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -149,6 +150,18 @@ class Role extends SpatieRole
      * rename *into* the name, either of which would silently inherit the
      * Gate::before bypass. `firstOrCreateSuperAdminRole()` above is the one
      * sanctioned exception, via `withoutEvents()`.
+     *
+     * Story 0010 adds a second `deleting` listener, `guardAgainstHolders()`,
+     * for an unrelated reason but with the identical ordering requirement:
+     * it must also run -- and be registered -- before `parent::boot()`'s
+     * `HasPermissions::bootHasPermissions()` `deleting` listener, which
+     * unconditionally detaches every `role_has_permissions` row for the
+     * role regardless of whether the delete itself is later allowed to
+     * proceed. `fireModelEvent('deleting')` dispatches every registered
+     * listener in registration order and halts on the first one that
+     * returns `false` or throws, so as long as this listener is registered
+     * above the vendor one, a role that still has holders never reaches the
+     * detach at all -- its permission grants stay intact alongside the row.
      */
     protected static function boot(): void
     {
@@ -158,6 +171,10 @@ class Role extends SpatieRole
 
         static::deleting(function (self $role): void {
             $role->guardAgainstSuperAdminMutation();
+        });
+
+        static::deleting(function (self $role): void {
+            $role->guardAgainstHolders();
         });
 
         static::updating(function (self $role): void {
@@ -228,6 +245,23 @@ class Role extends SpatieRole
     {
         if ($this->isSuperAdminRole()) {
             throw new ImmutableRoleException('The Super Admin role cannot be modified.');
+        }
+    }
+
+    /**
+     * Throw when this role still has holders -- the model-event layer behind
+     * App\Livewire\Roles\Index::deleteRole()'s own holder-count check
+     * (story 0010), so a direct `$role->delete()` bypassing the component
+     * entirely is refused here too. Reads `users()->exists()` fresh rather
+     * than a cached `users` relation or a `withCount('users')` attribute,
+     * for the same reason `persistedName()` below never trusts an in-memory
+     * value for an identity check: a caller's hydration state is not this
+     * guard's source of truth for whether the role is still in use.
+     */
+    private function guardAgainstHolders(): void
+    {
+        if ($this->users()->exists()) {
+            throw new RoleInUseException('This role cannot be deleted while it still has holders.');
         }
     }
 
