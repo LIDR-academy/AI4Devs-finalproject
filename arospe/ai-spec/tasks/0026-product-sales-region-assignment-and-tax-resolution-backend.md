@@ -12,7 +12,7 @@ the searchable multi-select shell of story [0022](0022-searchable-multi-select-c
 > **Scope change — 2026-08-18 (two confirmed user decisions).**
 > **(1) Groupings are gone.** The supranational **grouping** entries (Unión Europea, Internacional)
 > have been removed from the Sales Region catalog project-wide by user decision — see
-> [0016](0016-sales-region-catalog-schema-and-seeder.md)'s own scope-change amendment and its **D11**.
+> [0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s own scope-change amendment and its **D11**.
 > The catalog holds only individual countries and Spain's fiscal sub-territories, so this story's
 > resolver loses its grouping tier entirely and **[OQ-1](#open-questions) is resolved as moot**. See
 > **D10**.
@@ -1021,7 +1021,7 @@ apart. `TaxRateResolutionTier` is an enum rather than a `bool $isExactMatch` bec
 (confirmed user decision; supersedes D4's second bullet and resolves OQ-1 as moot.)** The Sales Region
 catalog no longer contains supranational grouping entries at all: it holds individual countries and
 Spain's fiscal sub-territories, and nothing else — see
-[0016](0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and its D11, where
+[0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and its D11, where
 `SalesRegionKind` drops its `Grouping` case, leaving `country` / `fiscal_territory`.
 
 Consequences here, all subtractive:
@@ -1205,7 +1205,7 @@ Executed during this debate, against this repository.
 
 - **[0024](0024-products-core-crud-backend.md) — hard, blocking.** Creates `products`, `Product`,
   `ProductFactory` and `ProductValidationRules`, all of which this story extends.
-- **[0016](0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Creates
+- **[0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Creates
   `sales_regions`, `SalesRegion`, `SalesRegionKind` and `SalesRegionFactory`.
 - **[0017](0017-sales-region-tax-configuration-backend.md) — hard, blocking.** Nothing in this story
   calls its code, but the resolver's entire fallback tier rests on 0017's enforced "exactly one
@@ -1292,7 +1292,7 @@ Non-blocking for the schema; **confirm before Phase 3.**
 
 1. ✅ **OQ-1 — Does a grouping automatically cover its member countries? — RESOLVED 2026-08-18: moot.**
    **Groupings removed project-wide** by user decision, so neither option is live — see **D10** and
-   [0016](0016-sales-region-catalog-schema-and-seeder.md)'s amendment. The resolver matches assigned
+   [0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s amendment. The resolver matches assigned
    entries directly against the destination and falls back to the default; there is no grouping tier.
    Kept as a numbered, resolved item rather than deleted, so Phase 2 can see the question was answered
    rather than dropped.
@@ -1363,7 +1363,7 @@ Non-blocking for the schema; **confirm before Phase 3.**
 
 Phase 1 (Three Amigos) debate run on 2026-08-18 per
 [workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate), grounded in full readings of
-[0016](0016-sales-region-catalog-schema-and-seeder.md),
+[0016](done/0016-sales-region-catalog-schema-and-seeder.md),
 [0017](0017-sales-region-tax-configuration-backend.md),
 [0024](0024-products-core-crud-backend.md), [PRD](../../docs/PRD/PRD.md) §2.1 / §2.2 / §3.2, and this
 project's conventions, security and testing doc sets.

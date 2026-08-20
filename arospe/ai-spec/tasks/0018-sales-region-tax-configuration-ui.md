@@ -11,7 +11,7 @@ visibly clears the old one. The rate input accepts a Spanish-locale decimal comm
 **markup, interaction and rendering tests only**: the component class, policy, actions, validation
 trait, route and both `lang/*/sales-regions.php` files are sibling backend story
 [0017](0017-sales-region-tax-configuration-backend.md); the table, model, enum, factory and seeder are
-[0016](0016-sales-region-catalog-schema-and-seeder.md).
+[0016](done/0016-sales-region-catalog-schema-and-seeder.md).
 
 ## Type
 frontend (related_task_id: **0017**) | includes database-expert: **no**
@@ -50,7 +50,7 @@ and are **not** pre-decided here.
 | **D7** | **`SalesRegionKind::label()` stays deferred — this story does not add it, and does not touch `app/Enums/`.** | 0016 deferred it to "the first story that actually renders `kind`", and 0017 restated the deferral. On this screen `kind` drives *structure and styling* (indentation, chevron presence, grouping-row treatment) and is **never rendered as text** — so it still has no consumer, and 0016's own stated rule ("nothing renders it yet") still applies. Keeping it out also keeps 0018 purely view-layer + tests + lang, and removes the `app/Enums/SalesRegionKind.php` file-collision risk with 0017 that `frontend-expert` flagged. **Escape hatch:** if Phase 3's design does surface a textual `kind`, adding `label()` plus its two lang keys is pre-authorised in writing by 0016 and is not scope creep — but it must then be recorded, not slipped in. |
 | **D8** | **`data-test` row hooks: `edit-region-{id}`, `toggle-active-region-{id}`, `set-default-region-{id}`, plus `expand-region-{id}` on the chevron.** Present on **both** the enabled and the disabled branch of each control. | Extends the `edit-user-{id}` / `delete-user-{id}` convention verified in `resources/views/livewire/users.blade.php`. Mandatory here because these controls are icon-only and there may be ~255 rows, so no visible text uniquely identifies a row's action. Hook-on-both-branches is what lets a test select the same control regardless of whether it is enabled — the rule `docs/api/routes.md` records for the Users screen. |
 | **D9** | **UI copy is English source strings through `__()`**, added **additively** to the `lang/{en,es}/sales-regions.php` files 0017 creates, key-for-key identical across both. | The same decision [0006](done/0006-users-list-editor-ui.md) recorded: the PRD's Spanish copy is reference layout, not literal requirement, until Epic 5's language switcher. 0017 owns `errors.*`; 0018 adds `index.*` / `fields.*` / `labels.*`. |
-| **D10** | **The "grouping" catalog concept is removed — this screen renders no supranational entries (no "Unión Europea", no "Internacional").** *(scope decision, 2026-08-18)* | The Sales Region catalog holds only individual countries plus Spain's five fiscal sub-territories, per the same decision applied to [0016](0016-sales-region-catalog-schema-and-seeder.md). Consequences owned here: no top-level "grouping" siblings to render, no `kind === Grouping` branch anywhere in the markup, no `grouping()` factory state in test arrangement, and no separate "groupings" section or filter category in the list design — the list is countries + Spain's territories only. Row counts drop accordingly (see [Q1](#open-questions--confirm-before-phase-3): ~255 rows, of which **6** are business-relevant, not 8). **Spain's fiscal-territory *visual* grouping (D2/D3) is a different, unrelated concept and is deliberately unaffected.** |
+| **D10** | **The "grouping" catalog concept is removed — this screen renders no supranational entries (no "Unión Europea", no "Internacional").** *(scope decision, 2026-08-18)* | The Sales Region catalog holds only individual countries plus Spain's five fiscal sub-territories, per the same decision applied to [0016](done/0016-sales-region-catalog-schema-and-seeder.md). Consequences owned here: no top-level "grouping" siblings to render, no `kind === Grouping` branch anywhere in the markup, no `grouping()` factory state in test arrangement, and no separate "groupings" section or filter category in the list design — the list is countries + Spain's territories only. Row counts drop accordingly (see [Q1](#open-questions--confirm-before-phase-3): ~255 rows, of which **6** are business-relevant, not 8). **Spain's fiscal-territory *visual* grouping (D2/D3) is a different, unrelated concept and is deliberately unaffected.** |
 
 Resolved directly from the docs, no decision needed: the view path is the **flat**
 `resources/views/livewire/sales-regions.blade.php` per the
@@ -498,7 +498,7 @@ mutating control disabled and explained.
 
 **Dependencies**
 
-- **[Story 0016](0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Table, model,
+- **[Story 0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Table, model,
   enum, factory. Still at the **new** stage.
 - **[Story 0017](0017-sales-region-tax-configuration-backend.md) — hard, blocking.** The component
   class, the route, the policy, the actions, and the `lang/*/sales-regions.php` files this story grows.

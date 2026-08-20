@@ -20,7 +20,7 @@ where four separate stories' zero-call-site deliverables — `ProductPolicy`, `C
 
 > **Scope note — the grouping concept is gone.** The supranational Sales Region *grouping* entries
 > (Unión Europea, Internacional) were removed project-wide on 2026-08-18 (see
-> [0016](0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and
+> [0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and
 > [0026 D10](0026-product-sales-region-assignment-and-tax-resolution-backend.md)). The region picker
 > on this screen therefore shows **only individual countries and Spain's fiscal sub-territories**, as
 > a flat list with no group headings, and nothing on this screen expands, infers or implies

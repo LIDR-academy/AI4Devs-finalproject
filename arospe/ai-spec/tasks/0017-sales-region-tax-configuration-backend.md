@@ -8,7 +8,7 @@ Setting a new default clears the previous one, and the current default cannot be
 replacement is named in the same atomic operation. Rate input is validated (negative and non-numeric
 values are refused). This story owns the Livewire component class, its policy, its validation trait and
 its three single-writer actions — **no new migration**: it builds directly on the `sales_regions` table
-[story 0016](0016-sales-region-catalog-schema-and-seeder.md) creates.
+[story 0016](done/0016-sales-region-catalog-schema-and-seeder.md) creates.
 
 ## Type
 backend (related_task_id: **0018** — the paired Sales Regions UI story, not yet debated) | includes database-expert: **no**
@@ -42,7 +42,7 @@ reasoning in [Documented functional decisions](#documented-functional-decisions)
 
 **Out of scope — owned by sibling stories.** Do not implement these here:
 
-- The table, model, enum, ISO fixture, factory and seeder → **[story 0016](0016-sales-region-catalog-schema-and-seeder.md)**. This story adds **no migration** and changes no seeder.
+- The table, model, enum, ISO fixture, factory and seeder → **[story 0016](done/0016-sales-region-catalog-schema-and-seeder.md)**. This story adds **no migration** and changes no seeder.
 - The Blade/Flux markup, the parent-header rendering of the "España" row, the row-action layout and the "no way to add a country" affordance → **story 0018**.
 - Tax-rate **resolution** for a product/order, and what `rate IS NULL` means at resolution time → **story 0026**. PRD §2.1's *"The default rate applies when no region matches"* scenario is **0026's**, not this story's, even though it sits in the same PRD block.
 - Creating or deleting region entries. The catalog is fixed and seeded; there is no create path and no delete path, by design.
@@ -820,7 +820,7 @@ alternatives in [Locked decisions](#locked-decisions-confirmed-at-phase-1) rathe
 > 📌 **Amendment — 2026-08-18: the "grouping" concept was removed project-wide.** The product owner dropped
 > the supranational grouping entries (Unión Europea, Internacional) from the Sales Region catalog entirely;
 > the catalog is now **individual countries plus Spain's five fiscal territories** only, and
-> [story 0016](0016-sales-region-catalog-schema-and-seeder.md) owns that change at the schema/seeder level.
+> [story 0016](done/0016-sales-region-catalog-schema-and-seeder.md) owns that change at the schema/seeder level.
 > Nothing in this story's *behaviour* changes — the single-default invariant, the deactivation coupling, the
 > rate rules and the permission tier are all catalog-shape-independent — so this amendment touched **examples
 > only**: the Gherkin scenarios that used "Unión Europea" or "Internacional" as a concrete entry now use
@@ -832,7 +832,7 @@ alternatives in [Locked decisions](#locked-decisions-confirmed-at-phase-1) rathe
 
 **Dependencies**
 
-- **[Story 0016](0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** It creates the table,
+- **[Story 0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** It creates the table,
   model, enum and factory this story writes against. **0017 cannot start Phase 3 until 0016 is done.**
 - **[Story 0002](done/0002-seed-roles-permissions-catalog.md)** — for the `sales-regions.*` permission
   strings, which already exist. No code dependency.
@@ -950,7 +950,7 @@ would otherwise look arbitrary.
 convened for this story's Phase 1 debate, but **neither had returned its contribution when this document was
 composed**. Everything above is therefore the work of `product-owner` alone, derived from:
 
-- [story 0016](0016-sales-region-catalog-schema-and-seeder.md) read in full (the data contract),
+- [story 0016](done/0016-sales-region-catalog-schema-and-seeder.md) read in full (the data contract),
 - [PRD §2.1](../../docs/PRD/PRD.md#21-sales-regions--taxes),
 - the real shipped code this story mirrors — `app/Livewire/Users/Index.php`, `app/Policies/UserPolicy.php`,
   `app/Concerns/UserValidationRules.php`, `app/Actions/Users/UpdateUser.php`, `routes/web.php`,
