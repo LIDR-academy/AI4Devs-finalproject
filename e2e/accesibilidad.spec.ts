@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
+import { alquilar, cerrarCircuito } from "./alquileres";
 import { expect, test, type Page } from "./fixtures";
-import { login, registrarSuscriptora } from "./sesion";
+import { apiLogin, login, registrarSuscriptora } from "./sesion";
 
 /**
  * Auditoría automática de accesibilidad con axe-core.
@@ -131,6 +132,48 @@ test("sin incidencias de accesibilidad: cancelar la suscripción", async ({ page
   await expect(page.getByRole("alertdialog")).toBeVisible();
   await auditar(page);
   await page.getByRole("button", { name: "Volver" }).click();
+});
+
+/**
+ * El par W2 · W3: el registro de condición del operador y el aviso de discrepancia de
+ * la suscriptora. Las dos pantallas **necesitan una copia alquilada** para existir, así
+ * que la prueba la monta por API sobre una cuenta propia y cierra su circuito.
+ */
+test("sin incidencias de accesibilidad: registro de entrega y discrepancia", async ({
+  page,
+  request,
+}) => {
+  const email = `axe-entrega-${Date.now()}@example.test`;
+  const rental = await alquilar(request, email);
+
+  await test.step("registro de entrega (back-office)", async () => {
+    await login(page, "operador@clickoteca.test");
+    await page.goto(`/backoffice/copias/${rental.copyId}/entrega`);
+    await expect(page.getByRole("button", { name: "Guardar y preparar envío" })).toBeVisible();
+    await auditar(page);
+  });
+
+  await test.step("franja de revisión y diálogo de discrepancia (portal)", async () => {
+    await apiLogin(request, "operador@clickoteca.test");
+    const informe = await request.post(`/api/rentals/${rental.id}/delivery`, {
+      data: { result: "OK", checklist: { pieceCount: true, manual: true }, notes: null },
+    });
+    expect(informe.status(), await informe.text()).toBe(201);
+
+    await page.goto("/portal");
+    await page.getByRole("button", { name: "Salir", exact: true }).click();
+    await page.waitForURL("/");
+    await login(page, email);
+    await page.goto("/portal/sets");
+    await auditar(page);
+
+    await page.getByRole("button", { name: "Algo no coincide" }).click();
+    await expect(page.getByRole("dialog", { name: "¿Qué no coincide?" })).toBeVisible();
+    await auditar(page);
+    await page.keyboard.press("Escape");
+  });
+
+  await cerrarCircuito(request, email, rental);
 });
 
 /**

@@ -150,23 +150,29 @@ y pide el siguiente—.
 > y reactivar tenían API desde el principio y ningún sitio donde pulsarlas. Con ella,
 > **14 de 18** historias tienen recorrido completo por interfaz.
 >
-> **Desbloqueadas W2+W3** (2026-08-20): la cola de trabajo ya tiene el grupo **«Por
-> preparar»** —las copias adjudicadas que esperan a que se registre su condición, que
-> antes no aparecían en ninguna parte— y la **lista de comprobación** está ratificada
-> (recuento de piezas y manual) en un único módulo de dominio del que se deriva la
-> validación de los dos informes.
+> **Y W2+W3** (`wireframes.md` §4 y §5, 2026-08-20), las dos últimas y juntas, porque el
+> par condición → discrepancia solo tiene sentido completo: el operador **registra el
+> estado de la copia antes de enviarla** —con la lista de comprobación ratificada y sus
+> observaciones— y la suscriptora, mientras la ventana está abierta, ve **contra qué se
+> compara** lo que ha recibido y puede avisar de que algo no coincide sin que se le
+> impute nada. **HU-11 y HU-07 pasan a verde**, y con ellas **las seis ⭐ distintivas del
+> producto**: **16 de 18** historias tienen recorrido completo por interfaz y **las cinco
+> pantallas de los wireframes están construidas**.
 >
-> **Pendiente:** W2+W3 (registro de condición y discrepancia) y el videotutorial
-> (`documents/PRD.md` §9, `wireframes.md` §9.2).
+> **Pendiente:** el videotutorial (`documents/PRD.md` §9) y el despliegue en la VM. Las
+> dos historias que siguen sin cerrarse son **HU-06** —la posición en la cola, bloqueada
+> por `wireframes.md` §8.4, que se arregla en el repositorio y no en la pantalla— y
+> **HU-16** (planes y recordatorios de retención), que tiene API y no tiene interfaz.
 >
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales
 > de UX ya fijados: **responsive mobile-first** y **accesibilidad WCAG 2.1 AA**
 > (EN 301 549 / European Accessibility Act) — el contraste y el foco se comprueban
-> solos contra el CSS real, y **`axe` audita dieciocho pantallas** (las cinco públicas, la
-> ficha de set en sus dos proyecciones, las cinco del portal, las cinco del back-office
-> y la ficha de catálogo) más **dos diálogos abiertos** —el alta de set y la
-> cancelación de suscripción—, en el E2E y con las etiquetas WCAG 2.1 A/AA.
+> solos contra el CSS real, y **`axe` audita diecinueve pantallas** (las cinco públicas, la
+> ficha de set en sus dos proyecciones, las cinco del portal, las cinco del back-office,
+> la ficha de catálogo y el registro de entrega) más **tres diálogos abiertos** —alta de
+> set, cancelación de suscripción y aviso de discrepancia—, en el E2E y con las
+> etiquetas WCAG 2.1 A/AA.
 
 ### **1.4. Instrucciones de instalación:**
 

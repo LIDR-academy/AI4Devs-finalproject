@@ -246,6 +246,39 @@ describe("registro de condición en la entrega (5.2)", () => {
     );
   });
 
+  it("un alquiler tiene un único registro de entrega", async () => {
+    const rentalId = await withActiveRental();
+    await recordDeliveryCondition(flowDeps(), { rentalId, actor: OPERATOR, result: "OK" });
+
+    // El segundo crearía otro envío de salida y movería el reloj de la discrepancia,
+    // que ya está corriendo. La cola de trabajo lo evita, pero no es la única puerta.
+    await expect(
+      recordDeliveryCondition(flowDeps(), { rentalId, actor: OPERATOR, result: "OK" })
+    ).rejects.toMatchObject({ code: "COPY_STATE_CONFLICT" });
+  });
+
+  it("las observaciones se guardan recortadas", async () => {
+    const rentalId = await withActiveRental();
+    const { report } = await recordDeliveryCondition(flowDeps(), {
+      rentalId,
+      actor: OPERATOR,
+      result: "DAMAGED",
+      notes: "  Esquina de la caja golpeada  ",
+    });
+    expect(report.notes).toBe("Esquina de la caja golpeada");
+  });
+
+  it("unas observaciones en blanco son ausencia, no ruido", async () => {
+    const rentalId = await withActiveRental();
+    const { report } = await recordDeliveryCondition(flowDeps(), {
+      rentalId,
+      actor: OPERATOR,
+      result: "OK",
+      notes: "   ",
+    });
+    expect(report.notes).toBeNull();
+  });
+
   it("el suscriptor no registra el estado de entrega", async () => {
     const rentalId = await withActiveRental();
     await expect(

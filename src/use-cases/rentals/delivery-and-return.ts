@@ -50,6 +50,8 @@ export async function recordDeliveryCondition(
     actor: Actor;
     result: "OK" | "INCOMPLETE" | "DAMAGED";
     checklist?: ConditionChecklist | null;
+    /** Texto libre del operador; el catálogo de casillas es cerrado a propósito. */
+    notes?: string | null;
   }
 ): Promise<{ report: ConditionReportSummary; confirmationWindowHours: number }> {
   if (!can(input.actor.role, "copy.advance_lifecycle")) {
@@ -65,7 +67,20 @@ export async function recordDeliveryCondition(
   }
 
   const at = now();
-  const config = await settings.load();
+  const [config, reports] = await Promise.all([
+    settings.load(),
+    rentals.findConditionReports(rental.id),
+  ]);
+
+  // Un alquiler tiene **un** registro de entrega: el segundo crearía otro envío de
+  // salida y movería el reloj de la discrepancia, que ya está corriendo. La cola de
+  // trabajo excluye lo preparado, pero la pantalla no es la única puerta al endpoint.
+  if (reports.some((report) => report.kind === "DELIVERY")) {
+    throw new InvariantViolationError(
+      "COPY_STATE_CONFLICT",
+      "Esta entrega ya está registrada."
+    );
+  }
 
   const report = await rentals.recordConditionReport({
     rentalId: rental.id,
@@ -74,6 +89,7 @@ export async function recordDeliveryCondition(
     kind: "DELIVERY",
     result: input.result,
     checklist: input.checklist ?? null,
+    notes: input.notes?.trim() || null,
     at,
   });
 
@@ -244,6 +260,8 @@ export async function recordInspection(
     actor: Actor;
     result: "OK" | "INCOMPLETE" | "DAMAGED";
     checklist?: ConditionChecklist | null;
+    /** Texto libre del operador; el catálogo de casillas es cerrado a propósito. */
+    notes?: string | null;
   }
 ): Promise<ConditionReportSummary> {
   if (!can(input.actor.role, "copy.advance_lifecycle")) {
@@ -265,6 +283,7 @@ export async function recordInspection(
     kind: "INSPECTION",
     result: input.result,
     checklist: input.checklist ?? null,
+    notes: input.notes?.trim() || null,
     at: now(),
   });
 }

@@ -32,6 +32,8 @@ export interface ConditionReportInput {
   result: "OK" | "INCOMPLETE" | "DAMAGED";
   /** Catálogo cerrado (`domain/rentals/condition-checklist.ts`); `null` si no se registró. */
   checklist: ConditionChecklist | null;
+  /** Texto libre del operador: qué pieza falta, qué está roto. */
+  notes: string | null;
   at: Date;
 }
 
@@ -42,6 +44,13 @@ export interface ConditionReportSummary {
   result: "OK" | "INCOMPLETE" | "DAMAGED";
   operatorId: string;
   createdAt: Date;
+  /**
+   * Las casillas y las observaciones **salen** con el informe: el suscriptor tiene que
+   * poder ver contra qué se compara lo que ha recibido (W3, §5.3). Un "algo no coincide"
+   * sin saber qué registramos no significa nada.
+   */
+  checklist: ConditionChecklist | null;
+  notes: string | null;
 }
 
 export interface RentalRepository {

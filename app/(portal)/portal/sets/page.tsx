@@ -1,16 +1,27 @@
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { requireSurfacePage } from "@/http/auth-context";
-import { copyStatus, queueStatus } from "@/lib/status";
+import { conditionResult, copyStatus, queueStatus } from "@/lib/status";
+import { prismaCopyRepository } from "@/repositories/copy.repository.prisma";
 import { prismaQueueRepository } from "@/repositories/queue.repository.prisma";
 import { prismaRentalRepository } from "@/repositories/rental.repository.prisma";
+import { prismaSettingsRepository } from "@/repositories/settings.repository.prisma";
+import { getDeliveryStatus } from "@/use-cases/rentals/delivery-and-return";
 
 import { ReturnButton } from "../portal-actions";
+import { DiscrepancyDialog } from "./discrepancy-dialog";
 
 export const metadata = { title: "Mis sets" };
 
 const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium" });
+/**
+ * La fecha límite se escribe **completa** y no como cuenta atrás: "quedan 36 horas"
+ * obliga a un `aria-live` que interrumpe cada minuto y envejece mal en una página que
+ * no se recarga (`wireframes.md` §5.5).
+ */
+const LIMITE = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" });
 
 /** Único estado desde el que el suscriptor puede iniciar la devolución. */
 const RETURNABLE = "ALQUILADA";
@@ -30,6 +41,25 @@ export default async function PortalSetsPage() {
     prismaRentalRepository.listForUser(user.id, { activeOnly: true }),
     prismaQueueRepository.listEntriesForUser(user.id),
   ]);
+
+  // La revisión de la entrega (W3, §5.4): son como mucho dos o tres alquileres vivos,
+  // así que se resuelven en paralelo y no hace falta una consulta agregada.
+  const actor = { id: user.id, role: user.role };
+  const deliveries = new Map(
+    await Promise.all(
+      rentals.map(async (rental) => {
+        const status = await getDeliveryStatus(
+          {
+            rentals: prismaRentalRepository,
+            copies: prismaCopyRepository,
+            settings: prismaSettingsRepository,
+          },
+          { rentalId: rental.id, actor }
+        );
+        return [rental.id, status] as const;
+      })
+    )
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -52,6 +82,7 @@ export default async function PortalSetsPage() {
               // Al suscriptor no se le cuenta el estado exacto de la copia: los cuatro
               // pasos del circuito de devolución son "devolución en curso".
               const status = copyStatus(rental.copyState, "subscriber");
+              const revision = deliveries.get(rental.id);
               return (
                 <li
                   key={rental.id}
@@ -68,6 +99,43 @@ export default async function PortalSetsPage() {
                     </p>
                   </div>
                   {rental.copyState === RETURNABLE ? <ReturnButton rentalId={rental.id} /> : null}
+
+                  {/* La franja vive **dentro** de la tarjeta del set: es información
+                      sobre ese set concreto, y en cuanto la ventana se cierra
+                      desaparece sola (§5.2). */}
+                  {revision?.confirmation?.status === "pending" && revision.deliveryReport ? (
+                    <div className="w-full rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning)] p-3 text-sm text-[var(--tone-warning-foreground)]">
+                      <p className="font-medium">
+                        Revisa la entrega antes del{" "}
+                        {LIMITE.format(revision.confirmation.expiresAt)}
+                      </p>
+                      <p className="mt-1">
+                        Lo enviamos registrado como{" "}
+                        <strong>
+                          {conditionResult(revision.deliveryReport.result).label.toLowerCase()}
+                        </strong>
+                        . Si no coincide, dínoslo.
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <DiscrepancyDialog
+                          rentalId={rental.id}
+                          setName={rental.setName}
+                          registeredAs={conditionResult(revision.deliveryReport.result).label}
+                          registeredAt={LIMITE.format(revision.deliveryReport.createdAt)}
+                          checklist={revision.deliveryReport.checklist}
+                          notes={revision.deliveryReport.notes}
+                        />
+                        <span>Si no nos dices nada, damos la entrega por conforme.</span>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {revision?.confirmation?.status === "disputed" ? (
+                    <p className="flex w-full flex-wrap items-center gap-2 text-sm text-[var(--muted-foreground)]">
+                      <Badge tone="danger">Incidencia abierta</Badge>
+                      Lo estamos revisando.
+                    </p>
+                  ) : null}
                 </li>
               );
             })}

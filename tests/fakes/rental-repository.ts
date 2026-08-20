@@ -97,6 +97,8 @@ export class FakeRentalRepository implements RentalRepository {
       result: input.result,
       operatorId: input.operatorId,
       createdAt: input.at,
+      checklist: input.checklist,
+      notes: input.notes,
     };
     this.reports.push(report);
     return report;

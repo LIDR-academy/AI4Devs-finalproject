@@ -14,6 +14,7 @@ const InspectionSchema = z.object({
   // Las casillas salen del catálogo de dominio, no de un diccionario libre: los dos
   // informes de un mismo alquiler tienen que ser comparables (`wireframes.md` §4.3).
   checklist: ChecklistSchema,
+  notes: z.string().trim().max(1000).nullish(),
 });
 
 /**
@@ -43,6 +44,7 @@ export async function POST(
         actor: { id: user.id, role: user.role },
         result: data.result,
         checklist: data.checklist ?? null,
+        notes: data.notes ?? null,
       }
     );
 

@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { CopyActions } from "@/components/backoffice/copy-actions";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { workQueueGroup } from "@/lib/status";
 import { requireSurfacePage } from "@/http/auth-context";
@@ -90,13 +93,24 @@ export default async function BackofficePage() {
                       {DATE.format(item.since)}
                     </td>
                     <td className="py-2">
-                      {/* El nombre del set distingue un botón de otro al tabular:
-                          sin él, cuatro "Recepcionar" seguidos suenan igual. */}
-                      <CopyActions
-                        copyId={item.copyId}
-                        state={item.state}
-                        subject={item.setName}
-                      />
+                      <div className="flex flex-wrap items-start gap-2">
+                        {/* La puerta de W2: solo el grupo "Por preparar" la tiene, y es
+                            la única acción de una copia adjudicada que no es una baja. */}
+                        {item.state === "ALQUILADA" ? (
+                          <Button asChild size="sm">
+                            <Link href={`/backoffice/copias/${item.copyId}/entrega`}>
+                              Registrar y enviar
+                            </Link>
+                          </Button>
+                        ) : null}
+                        {/* El nombre del set distingue un botón de otro al tabular:
+                            sin él, cuatro "Recepcionar" seguidos suenan igual. */}
+                        <CopyActions
+                          copyId={item.copyId}
+                          state={item.state}
+                          subject={item.setName}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

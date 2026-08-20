@@ -965,3 +965,33 @@ comprueba que la copia adjudicada aparece y que **desaparece al registrar la con
 aunque siga en `ALQUILADA`, y cierra su circuito. Requisito nuevo en la spec
 `accounts-roles`; sincronizados `wireframes.md` (§4.1, §4.3, §7.7, §8.1, §8.2, §9.2) y
 `readme.md` §1.3.
+
+### [2026-08-20] — W2 y W3: registro de condición y discrepancia
+**Prompt:** "seguimos".
+**Resumen de la respuesta:** Las dos últimas pantallas, **juntas** porque el par solo
+tiene sentido completo: el aviso del suscriptor se compara contra lo que el operador
+registró, y sin ese registro previo no hay nada contra lo que comparar. **HU-11 y HU-07
+pasan a verde**, y con ellas **las seis ⭐** del producto: 16 de 18 historias con
+recorrido por interfaz y **las cinco pantallas de los wireframes construidas**.
+**El hueco que solo aparece construyendo: las observaciones no tenían dónde ir.** El
+wireframe dibuja "Observaciones (opcional)" y `ConditionReport` no tenía ningún campo de
+texto. El catálogo de casillas es cerrado a propósito, así que sin esa válvula un
+informe `Dañada` no puede decir **qué** está roto; y la asimetría era indefendible,
+porque el suscriptor sí podía escribir su versión. Se añadió la columna `notes`.
+**Un invariante que faltaba:** un alquiler tiene **un solo** registro de entrega. El
+segundo crearía otro envío de salida y movería el reloj de la discrepancia, que ya está
+corriendo. La cola de trabajo ya excluía lo preparado, pero **la pantalla no es la única
+puerta al endpoint**, así que la regla vive en el caso de uso.
+**Y el informe sale con sus casillas**, que no salían: el diálogo de W3 tiene que
+enseñar contra qué se compara lo recibido, porque "algo no coincide" sin eso no
+significa nada. En el orden del catálogo, no en el del JSON guardado.
+**Tres trampas del E2E, ya con reincidencia:** anclar por la fila del set no vale cuando
+dos pruebas en paralelo tienen dos copias del mismo set —se ancla por el enlace de la
+copia—; la limpieza del circuito va en un `finally` y es "haz lo que puedas", porque una
+prueba que falla a mitad dejaba la copia alquilada; y el montaje común vive ahora en
+`e2e/alquileres.ts` en vez de copiado en cada spec.
+**Verificación:** 385 unitarios, `tsc`, `eslint`, `next build` y **41 E2E en dos
+ejecuciones seguidas** dejando la base limpia, con el recorrido registro→discrepancia
+entero por interfaz. `axe` audita 19 pantallas y 3 diálogos. Sincronizados
+`wireframes.md` (§5.6 nueva, §9.1, §9.2 y §9.4), `design-system.md` §6.1/§6.2 y
+`readme.md` §1.3.

@@ -411,6 +411,9 @@ model ConditionReport {
   operatorId String              @db.Uuid
   kind       ConditionReportKind
   checklist  Json?
+  // Lo que no cabe en una casilla: qué pieza falta, qué está roto. El catálogo de
+  // comprobaciones es cerrado a propósito (wireframes §4.3) y esto es su válvula.
+  notes      String?
   result     ConditionResult
   createdAt  DateTime            @default(now()) @db.Timestamptz(6)
 

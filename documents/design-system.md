@@ -357,6 +357,7 @@ además rechaza cualquier etiqueta que siga siendo `MAYÚSCULAS_CON_GUIONES`.
 | `StatusBadge` | `components/status-badge.tsx` | Recibe el `StatusLabel` ya resuelto, no el estado crudo, para que la decisión de qué ve cada rol viva entera en `lib/status.ts`. |
 | `AlertDialog` | `components/ui/alert-dialog.tsx` | Traído con W5 (2026-08-20) para cancelar la suscripción. **No es un `Dialog`**: interrumpe pidiendo una decisión, no se cierra pinchando fuera y no lleva más campos que sus dos botones. Cuando hay que recoger un dato —el motivo de una baja—, el correcto es `Dialog`. Escrito a mano sobre Radix: el generador de shadcn insistía en sobrescribir `button.tsx`. |
 | `Dialog` | `components/ui/dialog.tsx` | Traído con W4 (2026-08-20). Radix pone lo que no se debe reimplementar: trampa de foco, cierre con `Esc`, `aria-modal` y el foco de vuelta al disparador. **Sí lleva sombra**, al contrario que `Card`: esto flota de verdad. `DialogTitle` es obligatorio o el diálogo no tiene nombre accesible. |
+| `Textarea` | `components/ui/textarea.tsx` | Traído con W2/W3 (2026-08-20): las observaciones del informe de condición y el "cuéntanos qué has encontrado" del aviso de discrepancia. Mismo criterio de borde y de error que `Input`. |
 | `Input`, `Label` | `components/ui/` | Traídos con W4. El borde del campo usa `--input` y no `--border`: es un control y su contorno necesita 3:1 (WCAG 1.4.11). El error se pinta desde `aria-invalid`, no desde una prop, para que el color y lo que anuncia el lector no puedan ir por caminos distintos. |
 | `CopyActions` | `components/backoffice/` | Acciones de ciclo de vida de una copia, compartidas por la cola de trabajo y la ficha de catálogo. Cada botón nombra su copia: cuatro «Catalogar» seguidos son indistinguibles al tabular. |
 | `SurfaceNav` | `components/surface-nav.tsx` | Barra de secciones de una superficie, en el layout (2026-08-20). Recibe los destinos **ya filtrados por permiso** desde el servidor; lo único que hace en cliente es marcar el activo con `aria-current`. En móvil, fila desplazable. |
@@ -369,7 +370,7 @@ Por orden de la primera pantalla que lo necesita (`ux-flows.md` §8.2):
 | Componente | Primera pantalla que lo pide |
 |---|---|
 | ~~`card`~~ | ~~Ficha de set~~ — **traído el 2026-08-20**, ver §6.1. |
-| `form`, `textarea` | Registro de condición (W2) y notas de discrepancia (W3). Son lo único que queda por traer. |
+| `form` | **No ha hecho falta**: los formularios son `<form>` con estado propio y los errores llegan por campo desde el contrato RFC 9457. Se traerá el día que haya validación en cliente que merezca la pena compartir. |
 | `alert` | Vacíos y errores con formato, en vez de un párrafo rojo suelto. |
 | `table` | Back-office: hoy son `<table>` con clases copiadas en cuatro sitios. |
 | `skeleton` | Esperas (§7.3). |
@@ -377,7 +378,8 @@ Por orden de la primera pantalla que lo necesita (`ux-flows.md` §8.2):
 No se traen por adelantado: shadcn copia el código al repo, y componentes sin uso son
 código muerto que hay que mantener.
 
-**Traídos el 2026-08-20 con W4:** `dialog`, `input` y `label` (§6.1). El **tema** del
+**Traídos el 2026-08-20:** `dialog`, `input` y `label` con W4, `alert-dialog` con W5 y
+`textarea` con W2/W3 (§6.1). El **tema** del
 alta de set se resolvió con un `<select>` **nativo** y no con el de Radix —veinte
 opciones planas, mejor en móvil y sin JavaScript—, y `table` sigue fuera: traerlo solo
 para las dos tablas de W4 habría dejado el back-office con dos estilos de tabla.

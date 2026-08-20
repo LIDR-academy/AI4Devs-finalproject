@@ -135,9 +135,19 @@ export const prismaRentalRepository: RentalRepository = {
         kind: input.kind,
         result: input.result,
         checklist: (input.checklist ?? undefined) as never,
+        notes: input.notes,
         createdAt: input.at,
       },
-      select: { id: true, rentalId: true, kind: true, result: true, operatorId: true, createdAt: true },
+      select: {
+        id: true,
+        rentalId: true,
+        kind: true,
+        result: true,
+        operatorId: true,
+        createdAt: true,
+        checklist: true,
+        notes: true,
+      },
     });
     return report as ConditionReportSummary;
   },
@@ -145,7 +155,18 @@ export const prismaRentalRepository: RentalRepository = {
   async findConditionReports(rentalId) {
     const rows = await prisma.conditionReport.findMany({
       where: { rentalId },
-      select: { id: true, rentalId: true, kind: true, result: true, operatorId: true, createdAt: true },
+      // Las casillas y las observaciones salen con el informe: son lo que el suscriptor
+      // ve en el diálogo de discrepancia para saber contra qué se compara (W3, §5.3).
+      select: {
+        id: true,
+        rentalId: true,
+        kind: true,
+        result: true,
+        operatorId: true,
+        createdAt: true,
+        checklist: true,
+        notes: true,
+      },
       orderBy: { createdAt: "asc" },
     });
     return rows as ConditionReportSummary[];

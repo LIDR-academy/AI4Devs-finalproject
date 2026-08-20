@@ -921,6 +921,35 @@ project. Read it at the start of every session.
   `openspec/specs/accounts-roles` ("Volver a suscribirse con una cuenta existente").
   **Verificación:** 382 unitarios, `tsc`, `eslint`, `next build` y **38 E2E en dos
   ejecuciones seguidas** (`e2e/preparacion.spec.ts` nuevo, que cierra su circuito).
+- **W2 + W3 hechas — las dos últimas pantallas (2026-08-20):**
+  `/backoffice/copias/:copyId/entrega` (registro de condición, HU-11) y la **franja de
+  revisión + diálogo de discrepancia** dentro de `/portal/sets` (HU-07). Con ellas,
+  **las cinco pantallas de los wireframes están construidas**: 16 de 18 historias con
+  recorrido por interfaz y **las seis ⭐ del producto**.
+  **Cambio de modelo:** `ConditionReport.notes` (migración `condition-report-notes`). El
+  wireframe pedía "Observaciones (opcional)" y el modelo no tenía dónde guardarlas; sin
+  esa válvula un informe `Dañada` no puede decir **qué** está roto, y la asimetría era
+  indefendible — el suscriptor sí podía escribir su versión (`Incident.notes`).
+  **Invariante nuevo:** un alquiler tiene **un solo** registro de entrega
+  (`recordDeliveryCondition` lo comprueba). El segundo crearía otro envío de salida y
+  movería el reloj de la discrepancia; la cola ya excluía lo preparado, pero la pantalla
+  no es la única puerta al endpoint.
+  **`ConditionReportSummary` sale ahora con `checklist` y `notes`**: el diálogo de W3
+  necesita enseñar **contra qué se compara** lo recibido. Se pintan en el orden del
+  catálogo, no en el del JSON, y las casillas de informes antiguos que ya no estén en el
+  catálogo van al final (son historia y no se reescriben).
+  **La URL de W2 va por copia** —es lo que el operador tiene en la mano y lo que enseña
+  la cola— y el alquiler se resuelve con `findLatestByCopy`; el nombre del suscriptor
+  sale de `backoffice.findCustomer`, porque `RentalSummary` solo trae `userId`.
+  **Tres trampas del E2E, ya con reincidencia:** (1) **anclar por la fila del set no
+  vale** — dos pruebas en paralelo pueden tener dos copias del mismo set; se ancla por
+  el enlace de la copia (`enlaceDeEntrega` en `e2e/alquileres.ts`); (2) la limpieza del
+  circuito va en un **`finally`** y es "haz lo que puedas", porque una prueba que falla a
+  mitad dejaba la copia alquilada y el residuo se paga al día siguiente; (3) el montaje
+  común (alquilar / cerrar circuito / buscar un set con copias de sobra) vive en
+  `e2e/alquileres.ts`, no copiado en cada spec.
+  **Verificación:** 385 unitarios, `tsc`, `eslint`, `next build` y **41 E2E en dos
+  ejecuciones seguidas** dejando la base limpia; `axe` audita 19 pantallas y 3 diálogos.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -931,13 +960,13 @@ project. Read it at the start of every session.
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
-  (hoy **382 tests unitarios + 38 E2E**, `openspec validate --strict` en verde). Lo que queda
+  (hoy **385 tests unitarios + 41 E2E**, `openspec validate --strict` en verde). Lo que queda
   fuera del MVP: **diseño visual y UX** —los **tres entregables de diseño están hechos**:
   flujos por rol (`documents/ux-flows.md`), sistema de diseño
   (`documents/design-system.md`) y **wireframes** (`documents/wireframes.md`, 2026-08-20);
-  de las cinco pantallas están construidas **W1 (ficha de set)**, **W4 (catálogo e
-  inventario)** y **W5 (portal ampliado)**, más la **navegación de superficie**; solo
-  quedan **W2+W3**, ya **desbloqueadas** (§8.1 y §8.2 resueltos)— y el despliegue en la VM. **`axe` ya está en el
+  **las cinco pantallas están construidas** (W1 ficha de set, W2 registro de
+  condición, W3 discrepancia, W4 catálogo e inventario, W5 portal ampliado) más la
+  **navegación de superficie**— y el despliegue en la VM. **`axe` ya está en el
   E2E.** La decisión de alcance sobre el plan y el alquiler puntual está **tomada,
   ejecutada y archivada** (cambio `plan-obligatorio-en-alta`, 2026-08-17). **`ux-flows.md`
   §8.2 ya no tiene nada abierto**: los wireframes cerraron los tres puntos que quedaban.

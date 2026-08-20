@@ -1,5 +1,6 @@
-import { expect, test, type APIRequestContext } from "./fixtures";
-import { apiLogin, login, registrarSuscriptora } from "./sesion";
+import { alquilar, cerrarCircuito, enlaceDeEntrega } from "./alquileres";
+import { expect, test } from "./fixtures";
+import { apiLogin, login } from "./sesion";
 
 /**
  * La puerta que le faltaba a la cola de trabajo — `wireframes.md` §8.1.
@@ -16,28 +17,6 @@ import { apiLogin, login, registrarSuscriptora } from "./sesion";
  * `DISPONIBLE` antes de terminar, o la segunda ejecución empezaría con residuo.
  */
 
-interface Rental {
-  id: string;
-  copyId: string;
-  setId: string;
-  setName: string;
-}
-
-/** Un set con copias de sobra: los de una sola copia se los disputa el circuito completo. */
-async function setConVariasCopias(request: APIRequestContext): Promise<string> {
-  const catalog = await request.get("/api/catalog?limit=48");
-  const { sets } = (await catalog.json()) as { sets: Array<{ id: string; name: string }> };
-
-  for (const candidate of sets) {
-    const detail = await request.get(`/api/catalog/${candidate.id}`);
-    const { set } = (await detail.json()) as {
-      set: { availableCopies: number; totalCopies: number; restricted: boolean };
-    };
-    if (set.availableCopies >= 2 && !set.restricted) return candidate.id;
-  }
-  throw new Error("hace falta un set con al menos dos copias libres");
-}
-
 test("una copia adjudicada espera en la cola hasta que se prepara su envío", async ({
   page,
   request,
@@ -45,20 +24,16 @@ test("una copia adjudicada espera en la cola hasta que se prepara su envío", as
   // Cuenta propia: Ana tiene dos plazas y el circuito completo, que corre en paralelo,
   // también se las gasta.
   const email = `preparacion-${Date.now()}@example.test`;
-  await registrarSuscriptora(request, email, "PREMIUM");
-  await apiLogin(request, email);
-  const setId = await setConVariasCopias(request);
-
-  const asignada = await request.post(`/api/sets/${setId}/rentals`);
-  expect(asignada.status(), await asignada.text()).toBe(201);
-  const { rental } = (await asignada.json()) as { rental: Rental };
+  const rental = await alquilar(request, email);
 
   await login(page, "operador@clickoteca.test");
-  const fila = () => page.getByRole("row").filter({ hasText: rental.setName });
+  // Anclado a la copia y no a la fila del set: otra prueba en paralelo puede tener otra
+  // copia del mismo set esperando en la cola.
+  const enCola = () => enlaceDeEntrega(page, rental.copyId);
 
   await test.step("aparece en «Por preparar», que es el grupo nuevo", async () => {
     await expect(page.getByRole("heading", { name: /Por preparar/ })).toBeVisible();
-    await expect(fila()).toHaveCount(1);
+    await expect(enCola()).toHaveCount(1);
   });
 
   await test.step("registrar la condición la saca de la cola", async () => {
@@ -72,30 +47,17 @@ test("una copia adjudicada espera en la cola hasta que se prepara su envío", as
 
     // La copia **sigue en ALQUILADA**; lo que la saca es tener envío de salida.
     await page.reload();
-    await expect(fila()).toHaveCount(0);
+    await expect(enCola()).toHaveCount(0);
   });
 
   await test.step("cierre: la copia vuelve a estar disponible", async () => {
-    await apiLogin(request, email);
-    expect((await request.post(`/api/rentals/${rental.id}/return`)).ok()).toBeTruthy();
-
-    await apiLogin(request, "operador@clickoteca.test");
-    for (const to of ["EN_INSPECCION", "EN_HIGIENIZACION", "DISPONIBLE"]) {
-      const movida = await request.post(`/api/copies/${rental.copyId}/transitions`, {
-        data: { to, reason: "Cierre de la prueba de preparación" },
-      });
-      expect(movida.ok(), await movida.text()).toBeTruthy();
-    }
+    await cerrarCircuito(request, email, rental);
   });
 });
 
 test("la lista de comprobación solo acepta el catálogo acordado", async ({ request }) => {
   const email = `checklist-${Date.now()}@example.test`;
-  await registrarSuscriptora(request, email, "PREMIUM");
-  await apiLogin(request, email);
-  const setId = await setConVariasCopias(request);
-  const asignada = await request.post(`/api/sets/${setId}/rentals`);
-  const { rental } = (await asignada.json()) as { rental: Rental };
+  const rental = await alquilar(request, email);
 
   await apiLogin(request, "operador@clickoteca.test");
 
@@ -114,15 +76,6 @@ test("la lista de comprobación solo acepta el catálogo acordado", async ({ req
   });
 
   await test.step("cierre: la copia vuelve a estar disponible", async () => {
-    await apiLogin(request, email);
-    expect((await request.post(`/api/rentals/${rental.id}/return`)).ok()).toBeTruthy();
-
-    await apiLogin(request, "operador@clickoteca.test");
-    for (const to of ["EN_INSPECCION", "EN_HIGIENIZACION", "DISPONIBLE"]) {
-      const movida = await request.post(`/api/copies/${rental.copyId}/transitions`, {
-        data: { to, reason: "Cierre de la prueba de comprobaciones" },
-      });
-      expect(movida.ok(), await movida.text()).toBeTruthy();
-    }
+    await cerrarCircuito(request, email, rental);
   });
 });

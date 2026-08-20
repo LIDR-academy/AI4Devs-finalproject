@@ -646,6 +646,39 @@ Los tres estados de `confirmation` mandan sobre lo que se ve:
 - La franja de aviso no depende del color: lleva el texto "Revisa la entrega antes
   del…".
 
+### 5.6 Lo que salió de construir W2 y W3
+
+**Hechas el 2026-08-20**, juntas, como decía el plan: el par condición → discrepancia
+solo tiene sentido completo. **HU-11 y HU-07 pasan a verde** y con ellas se cierran las
+seis ⭐ del producto.
+
+**El hueco de datos que solo aparece construyendo: las observaciones no tenían dónde
+ir.** §4.2 dibuja "Observaciones (opcional)" y el modelo `ConditionReport` no tenía
+ningún campo de texto — el catálogo de casillas es cerrado a propósito, y sin una
+válvula un informe `Dañada` no puede decir **qué** está roto. Se añadió la columna
+`notes` (migración `condition-report-notes`), y con ella el informe de entrega dice algo
+más que un resultado. La asimetría era además difícil de defender: el suscriptor podía
+escribir su versión —`Incident.notes`— y el operador no.
+
+**Un invariante que faltaba: un alquiler tiene un solo registro de entrega.** El segundo
+crearía otro envío de salida y movería el reloj de la discrepancia, que ya está
+corriendo. La cola de trabajo ya excluía lo preparado, pero **la pantalla no es la única
+puerta al endpoint**, así que la regla vive en el caso de uso y la pantalla se limita a
+explicarlo cuando se llega por un enlace viejo.
+
+**El informe sale con sus casillas.** `ConditionReportSummary` no las traía, así que el
+diálogo de W3 no podía enseñar contra qué se compara — y "algo no coincide" sin eso no
+significa nada. Se pintan **en el orden del catálogo**, no en el del JSON guardado, y las
+que un informe antiguo traiga y ya no existan van al final: son historia y no se
+reescriben.
+
+**Y una lección de pruebas que ya iba por la tercera vez:** anclar por la fila del set
+**no vale** cuando dos pruebas en paralelo tienen dos copias del mismo set. Se ancla por
+el enlace de la copia. La limpieza del circuito, además, pasó a un `finally` y a ser
+"haz lo que puedas": una prueba que falla a mitad dejaba la copia alquilada, y ese
+residuo se paga en la ejecución siguiente — que es exactamente lo que ocurrió mientras se
+escribía esto.
+
 ---
 
 ## 6. W4 · Catálogo e inventario — back-office
@@ -1130,7 +1163,7 @@ componente sin uso es código muerto.
 | Componente | Lo pide |
 |---|---|
 | `card` | W1 (caja de decisión), W5 (plan y "ahora mismo") |
-| ~~`input`, `label`~~ | **Traídos con W4** (2026-08-20). `form` y `textarea` siguen pendientes: los piden W2 y W3. |
+| ~~`input`, `label`, `textarea`~~ | **Traídos** con W4 y W2/W3 (2026-08-20). `form` sigue sin hacer falta: los formularios son `<form>` con estado propio y los errores llegan por campo del contrato RFC 9457. |
 | `checkbox`, `radio-group` | W2 — la lista de comprobación y el resultado |
 | ~~`select`~~ | **No se trae**: el tema es un `<select>` nativo — veinte opciones planas, mejor en móvil y sin JavaScript. |
 | ~~`dialog`~~ | **Traído con W4** (alta y edición de set, y la baja de copia con su motivo). Lo reutiliza W3. |
@@ -1150,9 +1183,8 @@ El mismo de `ux-flows.md` §9.2, con lo que cada paso obliga a arreglar antes:
    en el back-office; la del portal queda declarada y aparece cuando W5 traiga sus rutas.
 3. ~~**W5 · Portal ampliado.**~~ **Hecha el 2026-08-20** (§7.7). Con ella, los avisos de
    no elegibilidad de W1 dejan de apuntar a rutas que no existían.
-4. **W2 + W3.** Lo único que queda. **Desbloqueadas el 2026-08-20**: la cola de trabajo
-   ya tiene el grupo "Por preparar" (§8.1) y la lista de comprobaciones está ratificada y
-   en el dominio (§8.2). ← **siguiente**
+4. ~~**W2 + W3.**~~ **Hechas el 2026-08-20** (§5.6), juntas y después de desbloquear
+   §8.1 y §8.2. Con ellas, **las cinco pantallas están construidas**.
 5. ~~**W4 · Catálogo e inventario.**~~ **Hecha el 2026-08-20** (§6.6), fuera de orden
    —a petición del usuario— porque era la única de las tres restantes sin bloqueantes:
    W5 seguía disponible y W2/W3 siguen esperando a §8.1 y §8.2.
@@ -1184,14 +1216,14 @@ No hace falta inventar nada; el andamiaje ya está montado y tiene sus reglas:
 Recontando la tabla de `ux-flows.md` §7 con la corrección de §8.7 (HU-01 y HU-02 ya
 están hechas desde el 17 de agosto):
 
-| | Al dibujarlas | Hoy (con W1, W4 y W5) | Con las cinco |
-|---|---|---|---|
-| Historias con recorrido completo por interfaz | 9 de 18 | **14 de 18** | **16 de 18** |
-| De las seis ⭐ distintivas del producto | 3 de 6 | **5 de 6** (falta HU-11, que trae W2) | **6 de 6** |
-| ¿Se puede ser cliente de Clickoteca solo con el navegador? | **No** | **Sí** | **Sí** |
+| | Al dibujarlas | Hoy, con las cinco |
+|---|---|---|
+| Historias con recorrido completo por interfaz | 9 de 18 | **16 de 18** |
+| De las seis ⭐ distintivas del producto | 3 de 6 | **6 de 6** |
+| ¿Se puede ser cliente de Clickoteca solo con el navegador? | **No** | **Sí** |
 
-Las siete que cambian: HU-00 y HU-03/HU-04 con W1, **HU-10 con W4** y **HU-09 con W5**
-—las cinco ya hechas—; quedan HU-07 con W3 y HU-11 con W2.
+Las siete que cambiaron: HU-00 y HU-03/HU-04 con W1, HU-10 con W4, HU-09 con W5, y
+HU-11 y HU-07 con W2+W3. **Todas hechas.**
 
 Las dos que seguirían sin cerrar, y por qué:
 
