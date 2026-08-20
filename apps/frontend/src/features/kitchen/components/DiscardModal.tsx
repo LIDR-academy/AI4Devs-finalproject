@@ -12,6 +12,32 @@ interface DiscardModalProps {
   onSuccess: () => void;
 }
 
+const DISCARD_REASONS = [
+  { value: 'EXPIRATION', label: 'Producto Vencido (EXPIRATION)' },
+  { value: 'DAMAGED', label: 'Insumo Deteriorado / Caído (DAMAGED)' },
+  { value: 'QUALITY_FAIL', label: 'Fallo en Control de Calidad (QUALITY_FAIL)' },
+];
+
+interface DiscardReasonSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+const DiscardReasonSelect: React.FC<DiscardReasonSelectProps> = ({ value, onChange }) => (
+  <div>
+    <label htmlFor="select-discard-reason" className="form-label">
+      Motivo del Descarte / Merma:
+    </label>
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="input-touch" id="select-discard-reason">
+      {DISCARD_REASONS.map((reason) => (
+        <option key={reason.value} value={reason.value}>
+          {reason.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
 export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, onSuccess }) => {
   const [reason, setReason] = useState('EXPIRATION');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,21 +74,7 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, 
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div>
-          <label htmlFor="select-discard-reason" className="form-label">
-            Motivo del Descarte / Merma:
-          </label>
-          <select
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="input-touch"
-            id="select-discard-reason"
-          >
-            <option value="EXPIRATION">Producto Vencido (EXPIRATION)</option>
-            <option value="DAMAGED">Insumo Deteriorado / Caído (DAMAGED)</option>
-            <option value="QUALITY_FAIL">Fallo en Control de Calidad (QUALITY_FAIL)</option>
-          </select>
-        </div>
+        <DiscardReasonSelect value={reason} onChange={setReason} />
 
         <ModalFooterActions
           onCancel={onClose}

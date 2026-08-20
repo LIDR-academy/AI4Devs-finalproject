@@ -12,19 +12,181 @@ interface WarehouseExtractionModalProps {
   onSuccess: () => void;
 }
 
-export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> = ({
-  isOpen,
-  onClose,
-  onSuccess,
-}) => {
+interface Insumo {
+  id: string;
+  name: string;
+  stock: number;
+  unit: string;
+}
+
+interface ExtractionSelectFieldsProps {
+  insumos: Insumo[];
+  selectedInsumoId: string;
+  onInsumoChange: (id: string) => void;
+  location: string;
+  onLocationChange: (location: string) => void;
+}
+
+const ExtractionSelectFields: React.FC<ExtractionSelectFieldsProps> = ({
+  insumos,
+  selectedInsumoId,
+  onInsumoChange,
+  location,
+  onLocationChange,
+}) => (
+  <>
+    <div>
+      <label htmlFor="select-insumo-extraction" className="form-label">
+        Seleccionar Insumo de Bodega:
+      </label>
+      <select
+        value={selectedInsumoId}
+        onChange={(e) => onInsumoChange(e.target.value)}
+        className="input-touch"
+        id="select-insumo-extraction"
+      >
+        {insumos.map((i) => (
+          <option key={i.id} value={i.id}>
+            {i.name} (Stock Bodega: {i.stock} {i.unit})
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div>
+      <label htmlFor="select-location-extraction" className="form-label">
+        Ubicación Destino en Cocina:
+      </label>
+      <select value={location} onChange={(e) => onLocationChange(e.target.value)} className="input-touch" id="select-location-extraction">
+        <option value="KITCHEN_FRIDGE">Refrigerador Principal (KITCHEN_FRIDGE)</option>
+        <option value="KITCHEN_PREP">Mesa de Preparación (KITCHEN_PREP)</option>
+        <option value="KITCHEN_LINE">Línea de Servicio (KITCHEN_LINE)</option>
+      </select>
+    </div>
+  </>
+);
+
+interface QuantityStepperProps {
+  quantity: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+  onChange: (value: number) => void;
+}
+
+const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement, onDecrement, onChange }) => (
+  <div>
+    <label htmlFor="input-quantity-extraction" className="form-label">
+      Cantidad a Extraer:
+    </label>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <button
+        type="button"
+        className="btn-touch btn-secondary"
+        onClick={onDecrement}
+        style={{ width: '56px', height: '56px', fontSize: '1.5rem', fontWeight: 700 }}
+        id="btn-decrement-qty"
+      >
+        <Minus size={24} />
+      </button>
+
+      <input
+        type="number"
+        step="0.1"
+        value={quantity}
+        onChange={(e) => onChange(parseFloat(e.target.value) || 0.5)}
+        className="input-touch"
+        style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 700 }}
+        id="input-quantity-extraction"
+      />
+
+      <button
+        type="button"
+        className="btn-touch btn-secondary"
+        onClick={onIncrement}
+        style={{ width: '56px', height: '56px', fontSize: '1.5rem', fontWeight: 700 }}
+        id="btn-increment-qty"
+      >
+        <Plus size={24} />
+      </button>
+    </div>
+  </div>
+);
+
+const UNIT_BY_INSUMO_ID: Record<string, string> = { 'ins-2': 'L', 'ins-3': 'UNITS' };
+
+function resolveUnitOfMeasure(insumoId: string): string {
+  return UNIT_BY_INSUMO_ID[insumoId] ?? 'KG';
+}
+
+function buildLocalRemanenteFromExtraction(selectedInsumoId: string, result: Awaited<ReturnType<typeof StockService.recordExtraction>>) {
+  return {
+    id: result.remanenteId,
+    insumoId: result.insumoId,
+    insumoName: result.insumoName,
+    unitOfMeasure: resolveUnitOfMeasure(selectedInsumoId),
+    currentQuantity: result.quantityExtracted,
+    initialQuantity: result.quantityExtracted,
+    location: result.location,
+    expirationDate: result.expirationDate,
+    hoursRemaining: 24.0,
+    isCriticalAlert: true,
+    status: 'ACTIVE' as const,
+  };
+}
+
+interface ExtractionFormProps {
+  insumos: Insumo[];
+  selectedInsumoId: string;
+  onInsumoChange: (id: string) => void;
+  location: string;
+  onLocationChange: (location: string) => void;
+  quantity: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+  onQuantityChange: (value: number) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+  isSubmitting: boolean;
+}
+
+const ExtractionForm: React.FC<ExtractionFormProps> = ({
+  insumos,
+  selectedInsumoId,
+  onInsumoChange,
+  location,
+  onLocationChange,
+  quantity,
+  onIncrement,
+  onDecrement,
+  onQuantityChange,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+}) => (
+  <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <ExtractionSelectFields
+      insumos={insumos}
+      selectedInsumoId={selectedInsumoId}
+      onInsumoChange={onInsumoChange}
+      location={location}
+      onLocationChange={onLocationChange}
+    />
+
+    <QuantityStepper quantity={quantity} onIncrement={onIncrement} onDecrement={onDecrement} onChange={onQuantityChange} />
+
+    <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'rgba(0, 210, 190, 0.1)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
+      ⚠️ Al confirmar la extracción, el insumo pasará automáticamente al tablero de <strong>Remanentes Activos con vencimiento prioritario a 24 Horas FEFO</strong>.
+    </div>
+
+    <ModalFooterActions onCancel={onCancel} confirmLabel="Confirmar Extracción" submittingLabel="Procesando..." isSubmitting={isSubmitting} />
+  </form>
+);
+
+function useExtractionForm(onSuccess: () => void, onClose: () => void) {
   const [selectedInsumoId, setSelectedInsumoId] = useState('ins-1');
   const [quantity, setQuantity] = useState(1.0);
   const [location, setLocation] = useState('KITCHEN_FRIDGE');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  if (!isOpen) return null;
-
-  const insumos = StockService.getAvailableInsumos();
 
   const handleIncrement = () => setQuantity((prev) => Math.round((prev + 0.5) * 10) / 10);
   const handleDecrement = () => setQuantity((prev) => Math.max(0.5, Math.round((prev - 0.5) * 10) / 10));
@@ -34,27 +196,8 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
     setIsSubmitting(true);
 
     try {
-      const result = await StockService.recordExtraction({
-        insumoId: selectedInsumoId,
-        quantity: quantity.toString(),
-        toLocation: location,
-      });
-
-      // Añadir remanente en frontend
-      KitchenService.addLocalRemanente({
-        id: result.remanenteId,
-        insumoId: result.insumoId,
-        insumoName: result.insumoName,
-        unitOfMeasure: selectedInsumoId === 'ins-3' ? 'UNITS' : selectedInsumoId === 'ins-2' ? 'L' : 'KG',
-        currentQuantity: result.quantityExtracted,
-        initialQuantity: result.quantityExtracted,
-        location: result.location,
-        expirationDate: result.expirationDate,
-        hoursRemaining: 24.0,
-        isCriticalAlert: true,
-        status: 'ACTIVE',
-      });
-
+      const result = await StockService.recordExtraction({ insumoId: selectedInsumoId, quantity: quantity.toString(), toLocation: location });
+      KitchenService.addLocalRemanente(buildLocalRemanenteFromExtraction(selectedInsumoId, result));
       onSuccess();
       onClose();
     } catch (err) {
@@ -64,6 +207,20 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
       setIsSubmitting(false);
     }
   };
+
+  return { selectedInsumoId, setSelectedInsumoId, quantity, setQuantity, location, setLocation, isSubmitting, handleIncrement, handleDecrement, handleSubmit };
+}
+
+export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
+  const form = useExtractionForm(onSuccess, onClose);
+
+  if (!isOpen) return null;
+
+  const insumos = StockService.getAvailableInsumos();
 
   return (
     <Modal maxWidth="500px" width="90%">
@@ -76,89 +233,20 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
         onClose={onClose}
       />
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div>
-          <label htmlFor="select-insumo-extraction" className="form-label">
-            Seleccionar Insumo de Bodega:
-          </label>
-          <select
-            value={selectedInsumoId}
-            onChange={(e) => setSelectedInsumoId(e.target.value)}
-            className="input-touch"
-            id="select-insumo-extraction"
-          >
-            {insumos.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.name} (Stock Bodega: {i.stock} {i.unit})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="select-location-extraction" className="form-label">
-            Ubicación Destino en Cocina:
-          </label>
-          <select
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="input-touch"
-            id="select-location-extraction"
-          >
-            <option value="KITCHEN_FRIDGE">Refrigerador Principal (KITCHEN_FRIDGE)</option>
-            <option value="KITCHEN_PREP">Mesa de Preparación (KITCHEN_PREP)</option>
-            <option value="KITCHEN_LINE">Línea de Servicio (KITCHEN_LINE)</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="input-quantity-extraction" className="form-label">
-            Cantidad a Extraer:
-          </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              type="button"
-              className="btn-touch btn-secondary"
-              onClick={handleDecrement}
-              style={{ width: '56px', height: '56px', fontSize: '1.5rem', fontWeight: 700 }}
-              id="btn-decrement-qty"
-            >
-              <Minus size={24} />
-            </button>
-
-            <input
-              type="number"
-              step="0.1"
-              value={quantity}
-              onChange={(e) => setQuantity(parseFloat(e.target.value) || 0.5)}
-              className="input-touch"
-              style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 700 }}
-              id="input-quantity-extraction"
-            />
-
-            <button
-              type="button"
-              className="btn-touch btn-secondary"
-              onClick={handleIncrement}
-              style={{ width: '56px', height: '56px', fontSize: '1.5rem', fontWeight: 700 }}
-              id="btn-increment-qty"
-            >
-              <Plus size={24} />
-            </button>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'rgba(0, 210, 190, 0.1)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
-          ⚠️ Al confirmar la extracción, el insumo pasará automáticamente al tablero de <strong>Remanentes Activos con vencimiento prioritario a 24 Horas FEFO</strong>.
-        </div>
-
-        <ModalFooterActions
-          onCancel={onClose}
-          confirmLabel="Confirmar Extracción"
-          submittingLabel="Procesando..."
-          isSubmitting={isSubmitting}
-        />
-      </form>
+      <ExtractionForm
+        insumos={insumos}
+        selectedInsumoId={form.selectedInsumoId}
+        onInsumoChange={form.setSelectedInsumoId}
+        location={form.location}
+        onLocationChange={form.setLocation}
+        quantity={form.quantity}
+        onIncrement={form.handleIncrement}
+        onDecrement={form.handleDecrement}
+        onQuantityChange={form.setQuantity}
+        onSubmit={form.handleSubmit}
+        onCancel={onClose}
+        isSubmitting={form.isSubmitting}
+      />
     </Modal>
   );
 };

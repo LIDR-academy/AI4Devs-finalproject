@@ -14,6 +14,103 @@ const DEFAULT_USERS = [
   { id: 'usr-maria-2', name: 'Maria Silva (Administrador)' },
 ];
 
+interface UserSelectorProps {
+  selectedUserId: string;
+  onChange: (id: string) => void;
+  disabled: boolean;
+}
+
+const UserSelector: React.FC<UserSelectorProps> = ({ selectedUserId, onChange, disabled }) => (
+  <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+    <label
+      htmlFor="select-pin-login-user"
+      style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}
+    >
+      Operario en Turno:
+    </label>
+    <div style={{ position: 'relative' }}>
+      <select
+        id="select-pin-login-user"
+        value={selectedUserId}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        style={{
+          width: '100%',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          backgroundColor: 'var(--bg-root)',
+          border: '1px solid var(--border-card)',
+          color: 'var(--text-primary)',
+          fontSize: '1rem',
+          outline: 'none',
+        }}
+      >
+        {DEFAULT_USERS.map((user) => (
+          <option key={user.id} value={user.id}>
+            {user.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+);
+
+const PinDotsDisplay: React.FC<{ pinLength: number }> = ({ pinLength }) => (
+  <div
+    style={{
+      backgroundColor: 'var(--bg-root)',
+      border: '1px solid var(--border-card)',
+      borderRadius: '12px',
+      padding: '16px',
+      marginBottom: '16px',
+      minHeight: '56px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '12px',
+    }}
+  >
+    {Array.from({ length: Math.max(4, pinLength) }).map((_, idx) => (
+      <div
+        key={idx}
+        style={{
+          width: '16px',
+          height: '16px',
+          borderRadius: '50%',
+          backgroundColor: idx < pinLength ? 'var(--color-primary)' : 'var(--border-card)',
+          transition: 'all 0.15s ease',
+        }}
+      />
+    ))}
+  </div>
+);
+
+const PinLoginHeader: React.FC = () => (
+  <>
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+      <div className="card-badge-icon" style={{ width: '56px', height: '56px' }}>
+        <Lock size={28} />
+      </div>
+    </div>
+
+    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '4px' }}>Acceso Táctil de Operarios</h2>
+    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
+      Seleccione su perfil e ingrese su PIN de seguridad
+    </p>
+  </>
+);
+
+const PinSubmitButton: React.FC<{ disabled: boolean; isLoading: boolean; onClick: React.MouseEventHandler<HTMLButtonElement> }> = ({
+  disabled,
+  isLoading,
+  onClick,
+}) => (
+  <button type="button" disabled={disabled} onClick={onClick} className="btn-touch btn-primary" style={{ width: '100%', marginTop: '12px' }}>
+    <UserCheck size={20} />
+    {isLoading ? 'Verificando PIN...' : 'Ingresar a Cocina'}
+  </button>
+);
+
 export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
   const [selectedUserId, setSelectedUserId] = useState<string>(DEFAULT_USERS[0].id);
   const [pin, setPin] = useState<string>('');
@@ -55,101 +152,18 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
 
   return (
     <Modal maxWidth="420px" width="100%" textAlign="center">
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <div className="card-badge-icon" style={{ width: '56px', height: '56px' }}>
-          <Lock size={28} />
-        </div>
-      </div>
+      <PinLoginHeader />
 
-      <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '4px' }}>
-        Acceso Táctil de Operarios
-      </h2>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
-        Seleccione su perfil e ingrese su PIN de seguridad
-      </p>
+      <UserSelector selectedUserId={selectedUserId} onChange={setSelectedUserId} disabled={isLoading} />
+      <PinDotsDisplay pinLength={pin.length} />
 
-      {/* Seleccion de Usuario */}
-      <div style={{ marginBottom: '20px', textAlign: 'left' }}>
-        <label
-          htmlFor="select-pin-login-user"
-          style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}
-        >
-          Operario en Turno:
-        </label>
-        <div style={{ position: 'relative' }}>
-          <select
-            id="select-pin-login-user"
-            value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
-            disabled={isLoading}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              backgroundColor: 'var(--bg-root)',
-              border: '1px solid var(--border-card)',
-              color: 'var(--text-primary)',
-              fontSize: '1rem',
-              outline: 'none',
-            }}
-          >
-            {DEFAULT_USERS.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Mascara de PIN •••• */}
-      <div
-        style={{
-          backgroundColor: 'var(--bg-root)',
-          border: '1px solid var(--border-card)',
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '16px',
-          minHeight: '56px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-        }}
-      >
-        {Array.from({ length: Math.max(4, pin.length) }).map((_, idx) => (
-          <div
-            key={idx}
-            style={{
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              backgroundColor: idx < pin.length ? 'var(--color-primary)' : 'var(--border-card)',
-              transition: 'all 0.15s ease',
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Mensaje de Error */}
       {error && (
         <ErrorBanner message={error} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
       )}
 
-      {/* Teclado Numérico Tactil */}
       <PinPad onDigitPress={handleDigitPress} onDeletePress={handleDeletePress} disabled={isLoading} />
 
-      {/* Boton de Ingreso */}
-      <button
-        type="button"
-        disabled={isLoading || pin.length < 4}
-        onClick={handleLoginSubmit}
-        className="btn-touch btn-primary"
-        style={{ width: '100%', marginTop: '12px' }}
-      >
-        <UserCheck size={20} />
-        {isLoading ? 'Verificando PIN...' : 'Ingresar a Cocina'}
-      </button>
+      <PinSubmitButton disabled={isLoading || pin.length < 4} isLoading={isLoading} onClick={handleLoginSubmit} />
     </Modal>
   );
 };

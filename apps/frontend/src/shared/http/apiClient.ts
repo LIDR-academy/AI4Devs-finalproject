@@ -27,6 +27,18 @@ export interface ApiRequestOptions {
  * éxito silencioso — el fallback offline, si aplica, es decisión de cada
  * servicio en su propio catch, no algo que el cliente esconda).
  */
+async function parseErrorResponse(response: Response): Promise<never> {
+  let errorBody: unknown;
+  try {
+    errorBody = await response.json();
+  } catch {
+    errorBody = undefined;
+  }
+  const parsed = errorBody as { message?: string; error?: string } | undefined;
+  const message = parsed?.message || parsed?.error || `Error HTTP ${response.status}`;
+  throw new ApiError(response.status, message, errorBody);
+}
+
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const { method = 'GET', body, baseUrl = DEFAULT_BASE_URL } = options;
   const token = AuthService.getToken();
@@ -43,15 +55,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   });
 
   if (!response.ok) {
-    let errorBody: unknown;
-    try {
-      errorBody = await response.json();
-    } catch {
-      errorBody = undefined;
-    }
-    const parsed = errorBody as { message?: string; error?: string } | undefined;
-    const message = parsed?.message || parsed?.error || `Error HTTP ${response.status}`;
-    throw new ApiError(response.status, message, errorBody);
+    return parseErrorResponse(response);
   }
 
   if (response.status === 204) {

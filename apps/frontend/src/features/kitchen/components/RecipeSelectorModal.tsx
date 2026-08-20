@@ -44,6 +44,118 @@ interface RecipeSelectorModalProps {
   onSuccess: () => void;
 }
 
+interface RecipeCardProps {
+  recipe: RecipeItem;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isSelected, onSelect }) => (
+  <div
+    role="button"
+    tabIndex={0}
+    aria-pressed={isSelected}
+    onClick={() => onSelect(recipe.id)}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onSelect(recipe.id);
+      }
+    }}
+    style={{
+      padding: '16px',
+      borderRadius: '12px',
+      border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--border-card)',
+      backgroundColor: isSelected ? 'rgba(0, 210, 190, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+      cursor: 'pointer',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}
+  >
+    <div>
+      <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
+        {recipe.name}{' '}
+        <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-primary)', color: 'var(--color-primary)' }}>
+          {recipe.category}
+        </span>
+      </div>
+      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>{recipe.description}</div>
+    </div>
+    {isSelected && <CheckCircle size={22} style={{ color: 'var(--color-primary)' }} />}
+  </div>
+);
+
+interface PortionStepperProps {
+  portions: number;
+  onChange: (portions: number) => void;
+}
+
+interface RecipeListProps {
+  recipes: RecipeItem[];
+  selectedRecipeId: string;
+  onSelect: (id: string) => void;
+}
+
+const RecipeList: React.FC<RecipeListProps> = ({ recipes, selectedRecipeId, onSelect }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+    <span style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+      Selecciona la Receta a Preparar:
+    </span>
+    {recipes.map((recipe) => (
+      <RecipeCard key={recipe.id} recipe={recipe} isSelected={selectedRecipeId === recipe.id} onSelect={onSelect} />
+    ))}
+  </div>
+);
+
+interface PortionsSelectorProps {
+  portions: number;
+  onChange: (portions: number) => void;
+}
+
+const PortionsSelector: React.FC<PortionsSelectorProps> = ({ portions, onChange }) => (
+  <div style={{ marginBottom: '24px' }}>
+    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
+      Número de Porciones / Platillos:
+    </span>
+    <PortionStepper portions={portions} onChange={onChange} />
+  </div>
+);
+
+const PortionStepper: React.FC<PortionStepperProps> = ({ portions, onChange }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <button
+      className="btn-touch btn-secondary"
+      onClick={() => onChange(Math.max(1, portions - 1))}
+      style={{ width: '56px', height: '56px', fontSize: '1.4rem', fontWeight: 700 }}
+    >
+      -
+    </button>
+    <div
+      style={{
+        flex: 1,
+        textAlign: 'center',
+        fontSize: '1.8rem',
+        fontWeight: 800,
+        color: 'var(--color-primary)',
+        backgroundColor: 'var(--bg-primary)',
+        padding: '10px',
+        borderRadius: '8px',
+        border: '1px solid var(--border-card)',
+      }}
+    >
+      {portions} {portions === 1 ? 'porción' : 'porciones'}
+    </div>
+    <button
+      className="btn-touch btn-secondary"
+      onClick={() => onChange(portions + 1)}
+      style={{ width: '56px', height: '56px', fontSize: '1.4rem', fontWeight: 700 }}
+    >
+      +
+    </button>
+  </div>
+);
+
 export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
   isOpen,
   onClose,
@@ -83,77 +195,8 @@ export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
 
       {errorMsg && <ErrorBanner message={errorMsg} icon={<AlertTriangle size={18} />} />}
 
-      {/* Seleccion de Recetas Tàctil */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-        <span style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-          Selecciona la Receta a Preparar:
-        </span>
-
-        {DEFAULT_RECIPES.map((recipe) => {
-          const isSelected = selectedRecipeId === recipe.id;
-          return (
-            <div
-              key={recipe.id}
-              role="button"
-              tabIndex={0}
-              aria-pressed={isSelected}
-              onClick={() => setSelectedRecipeId(recipe.id)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setSelectedRecipeId(recipe.id);
-                }
-              }}
-              style={{
-                padding: '16px',
-                borderRadius: '12px',
-                border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--border-card)',
-                backgroundColor: isSelected ? 'rgba(0, 210, 190, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
-                  {recipe.name} <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-primary)', color: 'var(--color-primary)' }}>{recipe.category}</span>
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                  {recipe.description}
-                </div>
-              </div>
-              {isSelected && <CheckCircle size={22} style={{ color: 'var(--color-primary)' }} />}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Selector Tactil de Porciones */}
-      <div style={{ marginBottom: '24px' }}>
-        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
-          Número de Porciones / Platillos:
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            className="btn-touch btn-secondary"
-            onClick={() => setPortions((p) => Math.max(1, p - 1))}
-            style={{ width: '56px', height: '56px', fontSize: '1.4rem', fontWeight: 700 }}
-          >
-            -
-          </button>
-          <div style={{ flex: 1, textAlign: 'center', fontSize: '1.8rem', fontWeight: 800, color: 'var(--color-primary)', backgroundColor: 'var(--bg-primary)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-card)' }}>
-            {portions} {portions === 1 ? 'porción' : 'porciones'}
-          </div>
-          <button
-            className="btn-touch btn-secondary"
-            onClick={() => setPortions((p) => p + 1)}
-            style={{ width: '56px', height: '56px', fontSize: '1.4rem', fontWeight: 700 }}
-          >
-            +
-          </button>
-        </div>
-      </div>
+      <RecipeList recipes={DEFAULT_RECIPES} selectedRecipeId={selectedRecipeId} onSelect={setSelectedRecipeId} />
+      <PortionsSelector portions={portions} onChange={setPortions} />
 
       <ModalFooterActions
         onCancel={onClose}
