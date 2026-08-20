@@ -499,11 +499,11 @@ lógica de deduplicación en pantalla. La excepción deliberada es
 
 | HU | Historia | Flujo | Pantalla | Estado |
 |---|---|---|---|---|
-| HU-00 | Explorar como visitante | V1 | `/catalogo`, `/planes` | 🟡 falta la ficha del set |
-| HU-01 | Alta de suscriptor, con plan | V2 | `/registro` | 🟡 falta la elección de plan |
-| HU-02 | **Cambiar** de plan | S5 | — | 🔴 sin API ni UI |
-| HU-03 | Solicitar un set ⭐ | S1 | — | 🟡 solo API |
-| HU-04 | Unirse a la cola ⭐ | S1 | — | 🟡 solo API |
+| HU-00 | Explorar como visitante | V1 | `/catalogo`, `/catalogo/:id`, `/planes` | 🟢 desde 2026-08-20 |
+| HU-01 | Alta de suscriptor, con plan | V2 | `/registro` | 🟢 desde 2026-08-17 |
+| HU-02 | **Cambiar** de plan | S5 | `/portal` | 🟢 desde 2026-08-17 |
+| HU-03 | Solicitar un set ⭐ | S1 | `/catalogo/:id` | 🟢 desde 2026-08-20 |
+| HU-04 | Unirse a la cola ⭐ | S1 | `/catalogo/:id` | 🟢 desde 2026-08-20 |
 | HU-05 | Confirmar o rechazar oferta ⭐ | S2 | `/portal` | 🟢 |
 | HU-06 | Mis sets, historial y posición | S6 | `/portal` | 🟡 sin historial ni posición |
 | HU-07 | Reportar discrepancia | S4 | — | 🟡 solo API |
@@ -518,10 +518,18 @@ lógica de deduplicación en pantalla. La excepción deliberada es
 | HU-16 | Configurar reglas | A1 | `/backoffice/configuracion` | 🟡 planes y retención sin UI |
 | HU-17 | Equidad de la cola | Sistema | — | 🟢 sin UI por diseño |
 
-**Resumen: 7 de 18 historias tienen recorrido completo por interfaz** (HU-01 deja de
-contar al absorber la elección de plan). Las tres
-historias marcadas con ⭐ como distintivas del producto están repartidas: HU-05,
-HU-08 y HU-13 sí; HU-03, HU-04 y HU-11 no.
+**Resumen: 12 de 18 historias tienen recorrido completo por interfaz.** De las seis
+marcadas con ⭐ como distintivas del producto, están cubiertas HU-03, HU-04, HU-05,
+HU-08 y HU-13; falta HU-11.
+
+> **Corregido el 2026-08-20.** La primera versión de esta tabla se escribió el 16 de
+> agosto, un día antes de implementar `plan-obligatorio-en-alta`, y daba HU-01 como
+> incompleta y HU-02 como "sin API ni UI". Las dos están hechas desde el 17: el alta crea
+> la suscripción en la misma transacción y el portal tiene `PlanSwitcher` sobre
+> `PUT /api/subscriptions/me`. HU-09 (pausar/cancelar) sí sigue siendo solo API.
+> Y el 20 de agosto **W1 se construyó**: `/catalogo/:id` existe, así que HU-00, HU-03 y
+> HU-04 pasan a verde. Con las cuatro pantallas que faltan, esto llegaría a **16 de 18**
+> y **6 de 6** ⭐ — [`wireframes.md`](wireframes.md) §9.4.
 
 Que el MVP se diera por cerrado con esto es coherente — el criterio de éxito era el
 **circuito E2E demostrable**, y el E2E lo recorre entero mezclando interfaz y API.
@@ -561,14 +569,22 @@ borrado silencioso. Las columnas de base de datos (`Rental.subscriptionId` opcio
 
 Ordenado por lo que bloquea a lo demás.
 
-1. **La ficha de set `/catalogo/:id`.** Desbloquea HU-03 y HU-04 y es donde D13 se
-   hace visible. Es la pantalla con más peso de diseño del proyecto.
-2. **El par condición/discrepancia (O2 + S4).** Dos pantallas que solo tienen
-   sentido juntas.
-3. **Alcance del back-office de catálogo (O3).** ¿Pantalla completa de gestión de
-   sets y copias, o basta con el alta de copia sobre un set ya sembrado?
-4. **Dónde vive "mi suscripción".** El cambio de plan necesita sitio: ¿bloque en
-   `/portal` o pantalla propia `/portal/suscripcion` junto al historial?
+1. ~~**La ficha de set `/catalogo/:id`.**~~ **Dibujada (2026-08-20)**:
+   [`wireframes.md`](wireframes.md) §3 (W1), con sus cuatro estados —visitante,
+   elegible, sin copias y los cuatro motivos de no elegibilidad—.
+2. ~~**El par condición/discrepancia (O2 + S4).**~~ **Dibujado (2026-08-20)**:
+   `wireframes.md` §4 y §5 (W2 y W3). Salió de ahí que el suscriptor **no puede tener
+   un botón de "Todo correcto"**: la conformidad tácita no se persiste a propósito, así
+   que ese botón no llamaría a nada.
+3. ~~**Alcance del back-office de catálogo (O3).**~~ **Decidido (2026-08-20)**,
+   `wireframes.md` §2.1: **lista + ficha de set con su inventario**, y **sin endpoint
+   nuevo**. La API completa ya existe, así que la versión recortada no ahorraría
+   backend; y sin lista no hay forma de llegar a un set no publicado, que es como nace
+   todo set.
+4. ~~**Dónde vive "mi suscripción".**~~ **Decidido (2026-08-20)**, `wireframes.md`
+   §2.2: **pantalla propia `/portal/suscripcion`**, con el resumen enlazando desde
+   `/portal`. Ahí tienen que caber pausar, cancelar y reactivar, y cancelar no puede
+   ser un botón más en una lista de bloques.
 5. ~~**Lenguaje visual de los estados.**~~ **Resuelto (2026-08-19)** en
    [`design-system.md`](design-system.md) §5: vocabulario único en `lib/status.ts`,
    con etiqueta y tono **por superficie** —el operador ve el estado exacto, el
@@ -577,8 +593,15 @@ Ordenado por lo que bloquea a lo demás.
 6. ~~**Vacíos, errores y esperas.**~~ **Pauta fijada** en `design-system.md` §7. Sigue
    abierta su aplicación pantalla a pantalla; lo que sí se corrigió ya es que los
    errores usaban un rojo ajeno al tema que en modo oscuro no llegaba a AA.
-7. **Navegación del portal.** Hoy `/portal` es una sola página con cuatro bloques y
-   ningún menú. En cuanto entren historial y suscripción, hace falta estructura.
+7. ~~**Navegación del portal.**~~ **Decidido (2026-08-20)**, `wireframes.md` §2.3: la
+   navegación entra en `app/(portal)/portal/layout.tsx` —que ya existe— con cinco
+   destinos: Resumen · Mis sets · Historial · Suscripción · Avisos. Cabecera y no
+   `tabs`, porque son rutas de verdad. Al dibujarlo se vio que **la navegación del
+   back-office vive dentro de `backoffice/page.tsx`**, así que en `/backoffice/clientes`
+   no está y hay que volver al centro para saltar a otra sección; sube al layout por el
+   mismo motivo.
+
+**Con esto, §8.2 queda cerrado entero.**
 
 ---
 
@@ -591,11 +614,15 @@ Con los flujos cerrados, el orden natural es:
    medidos, tipografía y ritmo, cinco tonos de estado y el vocabulario del punto 8.5.
    No es solo documento: está en `app/globals.css` y `lib/status.ts`, aplicado al
    portal y al back-office, y sostenido por dos pruebas.
-2. **Wireframes** de las pantallas nuevas por prioridad: ficha de set → registro de
-   condición + discrepancia → gestión de catálogo → portal ampliado. ← **siguiente**
-3. **Implementación** superficie a superficie, trayendo los componentes de shadcn
-   que faltan (hoy hay `button` y `badge`; la lista de los que harán falta y para qué
-   pantalla está en `design-system.md` §6.2).
+2. ~~**Wireframes**~~ — **hechos (2026-08-20)**: [`wireframes.md`](wireframes.md), las
+   cinco pantallas (ficha de set, registro de condición, discrepancia, catálogo de
+   back-office y portal ampliado) con su disposición, sus datos, sus errores reales y
+   sus vacíos. Cierra además los tres puntos que quedaban de §8.2 y destapa **siete
+   huecos de implementación** (§8 de ese documento), dos de ellos bloqueantes.
+3. **Implementación** superficie a superficie, en el orden de `wireframes.md` §9.2:
+   W1 → los dos `layout.tsx` → W5 → W2+W3 → W4. Trayendo los componentes de shadcn que
+   faltan (hoy hay `button` y `badge`; la lista está en `design-system.md` §6.2, ampliada
+   en `wireframes.md` §9.1). ← **siguiente**
 4. ~~**Verificación de accesibilidad**~~ — **hecho (2026-08-19)**: además del
    contraste y el foco, que ya se median solos (`tests/design-tokens.test.ts`),
    `e2e/accesibilidad.spec.ts` pasa **axe** con las etiquetas WCAG 2.1 A/AA por las

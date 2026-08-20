@@ -10,15 +10,18 @@ describe("Button (shadcn/ui)", () => {
     expect(btn).toBeInTheDocument();
   });
 
-  it("con asChild delega en el hijo (p. ej. un enlace)", () => {
+  // El hijo es un `<a>` **externo** a propósito: es el caso en el que no cabe `Link` de
+  // `next/link`, y además evita que la regla `no-html-link-for-pages` marque el test en
+  // cuanto una ruta interna coincida con el `href` — le pasó a `/catalogo` al nacer
+  // `/catalogo/[setId]`.
+  it("con asChild delega en el hijo (p. ej. un enlace externo)", () => {
     render(
       <Button asChild>
-        <a href="/catalogo">Ver catálogo</a>
+        <a href="https://rebrickable.com/sets/">Ver la ficha en Rebrickable</a>
       </Button>
     );
-    expect(screen.getByRole("link", { name: "Ver catálogo" })).toHaveAttribute(
-      "href",
-      "/catalogo"
-    );
+    expect(
+      screen.getByRole("link", { name: "Ver la ficha en Rebrickable" })
+    ).toHaveAttribute("href", "https://rebrickable.com/sets/");
   });
 });

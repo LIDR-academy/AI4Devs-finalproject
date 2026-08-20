@@ -61,7 +61,13 @@ export default async function CatalogPage({
 
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sets.map((set) => (
-          <li key={set.id} className="flex flex-col gap-3 rounded-md border p-4">
+          // `relative` + el pseudoelemento del enlace hacen clicable la tarjeta entera
+          // sin anidar interactivos: hay **un solo** enlace por tarjeta, con el nombre
+          // del set como texto accesible, en vez de tres destinos idénticos seguidos.
+          <li
+            key={set.id}
+            className="relative flex flex-col gap-3 rounded-md border p-4 focus-within:border-[var(--ring)] hover:border-[var(--ring)]"
+          >
             {set.boxPhotoUrl ? (
               // Las fotos vienen del CDN de Rebrickable. Se usa `<img>` a propósito:
               // `next/image` necesita declarar dominios remotos y una estrategia de
@@ -77,7 +83,11 @@ export default async function CatalogPage({
               <div className="h-40 w-full rounded bg-[var(--muted)]" aria-hidden="true" />
             )}
             <div className="space-y-1">
-              <h2 className="font-medium leading-tight">{set.name}</h2>
+              <h2 className="font-medium leading-tight">
+                <Link href={`/catalogo/${set.id}`} className="after:absolute after:inset-0 hover:underline">
+                  {set.name}
+                </Link>
+              </h2>
               <p className="text-sm text-[var(--muted-foreground)]">
                 {set.theme}
                 {set.year ? ` · ${set.year}` : ""}

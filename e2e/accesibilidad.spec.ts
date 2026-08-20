@@ -53,6 +53,33 @@ for (const { ruta, nombre } of PAGINAS_PUBLICAS) {
   });
 }
 
+/**
+ * La ficha de set se audita **en sus dos proyecciones**: no es la misma página con un
+ * dato más, es composición distinta —la caja de decisión cambia entera— y solo la
+ * autenticada tiene píldora de estado y botones de acción (`wireframes.md` §3).
+ */
+async function irAUnaFicha(page: Page): Promise<void> {
+  await page.goto("/catalogo");
+  await page.getByRole("listitem").first().getByRole("link").click();
+  // Se espera a la **navegación**, no solo a que aparezca la región. `waitForURL` corre
+  // contra el reloj de la prueba (60 s); un `expect(...).toBeVisible()` a secas corre
+  // contra los 5 s de la aserción, y con tres workers la primera petición de esta ruta
+  // los agota — el fallo parecía "no existe la región" cuando era "aún no ha llegado".
+  await page.waitForURL(/\/catalogo\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("region", { name: "Disponibilidad" })).toBeVisible();
+}
+
+test("sin incidencias de accesibilidad: ficha de set (visitante)", async ({ page }) => {
+  await irAUnaFicha(page);
+  await auditar(page);
+});
+
+test("sin incidencias de accesibilidad: ficha de set (suscriptora)", async ({ page }) => {
+  await login(page, "ana@example.test");
+  await irAUnaFicha(page);
+  await auditar(page);
+});
+
 test("sin incidencias de accesibilidad: portal del suscriptor", async ({ page }) => {
   await login(page, "ana@example.test");
   await auditar(page);

@@ -137,20 +137,45 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
   }
   expect(target, "hace falta un set con una única copia disponible").not.toBeNull();
 
-  // ── 1. Ana alquila el set desde el catálogo ─────────────────────────────────
-  const rentalResponse = await request.post(`/api/sets/${target!.id}/rentals`);
-  expect(rentalResponse.status()).toBe(201);
-  await expect(rentalResponse.json()).resolves.toMatchObject({
-    rental: { status: "ACTIVE", copyState: "ALQUILADA" },
-  });
+  // Los dos pasos siguientes van **por la interfaz** y no por la API: son HU-03 y
+  // HU-04, las dos acciones que estrena la ficha de set (`wireframes.md` §3), y el
+  // circuito es el único sitio donde probarlas sin disputarse esta copia con otro
+  // fichero de pruebas.
+  const box = page.getByRole("region", { name: "Disponibilidad" });
 
-  // ── 2. Bruno se pone en la cola, porque ya no quedan copias ─────────────────
-  await apiLogin(request, "bruno@example.test");
-  const noCopy = await request.post(`/api/sets/${target!.id}/rentals`);
-  await expect(noCopy.json()).resolves.toMatchObject({ outcome: "no_copy_available" });
-  expect((await request.post(`/api/sets/${target!.id}/queue`)).status()).toBe(201);
+  // ── 1. Ana pide el set desde su ficha (HU-03) ──────────────────────────────
+  await login(page, "ana@example.test");
+  await page.goto(`/catalogo/${target!.id}`);
+  await expect(box.getByText("1 de 1 copia libre")).toBeVisible();
+  await box.getByRole("button", { name: "Pedir este set" }).click();
+  // Al asignarse, la acción lleva al portal: el set ya es suyo y es allí donde se
+  // gestiona.
+  await page.waitForURL("/portal");
+  await expect(page.getByText(target!.name)).toBeVisible();
+
+  // ── 2. Bruno encuentra la ficha sin copias y entra en la cola (HU-04) ──────
+  await page.getByRole("button", { name: "Salir" }).click();
+  await page.waitForURL("/");
+  await login(page, "bruno@example.test");
+  await page.goto(`/catalogo/${target!.id}`);
+
+  // Sin copias no se ofrece pedirlo, aunque la API lo toleraría: enseñar un botón que
+  // promete un set y contesta con una cola es peor que enseñar la cola de entrada.
+  await expect(box.getByText(/no queda ninguna libre/i)).toBeVisible();
+  await expect(box.getByRole("button", { name: "Pedir este set" })).toHaveCount(0);
+
+  await box.getByRole("button", { name: "Apuntarme a la cola" }).click();
+  // La posición sale de la proyección autenticada, y nunca dice quién ocupa las otras.
+  await expect(box.getByText(/Eres el nº 1 de 1 en la cola/)).toBeVisible();
+  await expect(box.getByRole("button", { name: "Salir de la cola" })).toBeVisible();
 
   // ── 3. Ana devuelve el set desde su portal ─────────────────────────────────
+  // Se vuelve al portal antes de cerrar sesión: el botón de salir vive en su layout,
+  // y en la ficha `name: "Salir"` encontraría **"Salir de la cola"** —Playwright busca
+  // por subcadena— y desharía el paso anterior en vez de cerrar la sesión.
+  await page.goto("/portal");
+  await page.getByRole("button", { name: "Salir", exact: true }).click();
+  await page.waitForURL("/");
   await login(page, "ana@example.test");
   await expect(page.getByText(target!.name)).toBeVisible();
   await page.getByRole("button", { name: "Devolver" }).first().click();

@@ -678,6 +678,112 @@ project. Read it at the start of every session.
   navegador; 12 núcleos y ~7 GB libres con Docker y el servidor encima). Con **3
   workers, 21 pruebas en ~40 s**, verde repetido. Si aparecen timeouts sin sentido en
   navegaciones, baja `workers` antes de buscar la causa en la aplicación.
+- **Wireframes — tercer entregable de UX (2026-08-20):** `documents/wireframes.md`, las
+  cinco pantallas que faltaban: **W1** ficha de set `/catalogo/:id`, **W2** registro de
+  condición, **W3** revisión de entrega + discrepancia, **W4** catálogo e inventario de
+  back-office y **W5** portal ampliado. Wireframes ASCII de **disposición y contenido**;
+  el estilo ya está resuelto en `design-system.md`. Cada pantalla lleva cuatro apartados
+  fijos: datos, acciones con sus respuestas reales, vacío/error/espera y accesibilidad.
+  **Método, otra vez el del cruce con el código.** Dibujar contra la forma real de los
+  datos y los `detail` reales de la API es lo que produce información nueva; contra una
+  idea de la pantalla no sale nada.
+  **Decisiones que hay que respetar, no reinventar:**
+  (1) **`/catalogo/:id` tiene una sola caja de decisión** que concentra todo lo que
+  cambia entre visitante, suscriptor elegible y no elegible. El resto de la página es
+  idéntico para todos porque es la proyección pública.
+  (2) **Los cuatro motivos de no elegibilidad se muestran con su `detail` literal y una
+  salida distinta cada uno** — es la razón de que `checkSetEligibility` devuelva 200 con
+  el veredicto. Y **no elegible ≠ no encolable**: con `PLAN_LIMIT_REACHED` **sí** se
+  puede entrar en la cola (`joinQueue` no mira el límite de plazas), así que se ofrecen
+  las dos cosas.
+  (3) **El botón de "Pedir este set" no se enseña cuando no hay copias**, aunque la API
+  lo toleraría (devuelve 200 `no_copy_available`): la API es tolerante porque tiene que
+  serlo, la pantalla es honesta con lo que sabe.
+  (4) **No existe un botón "Todo correcto"** al revisar la entrega. La conformidad tácita
+  no se persiste **a propósito** (`domain/rentals/delivery.ts`), así que ese botón no
+  llamaría a nada. Solo hay "Algo no coincide", y el silencio se explica.
+  (5) **`/portal/suscripcion` es pantalla propia** y **`/portal` se reparte en cinco
+  rutas** con `layout.tsx` (cabecera, no `tabs`: son URL de verdad).
+  (6) **El back-office de catálogo es lista + ficha, sin endpoint nuevo**: las pantallas
+  son Server Components que leen el repositorio. No escribir `GET /api/sets` pensando que
+  hace falta.
+  (7) El aviso de downgrade se enseña **antes** de pulsar, calculando `canSwitchToPlan`
+  al pintar; el 409 queda para la carrera. Pausar/cancelar mide `HELD_COPY_STATES` y el
+  cambio de plan mide `OCCUPYING_COPY_STATES` — con una copia en inspección se puede
+  pausar pero no bajar de plan, y el texto de cada bloque lo dice en sus términos.
+  **Siete huecos que destapó dibujar (§8 del documento), dos bloqueantes:**
+  (a) **`ALQUILADA` no está en `ACTIONABLE_STATES`** (`backoffice.repository.prisma.ts:17`),
+  así que W2 sería inalcanzable: hace falta un grupo "Por preparar" en la cola de trabajo
+  — y como registrar la condición **no cambia el estado de la copia** (crea el informe y
+  el `Shipment` `OUTBOUND` `PREPARADO`), ese grupo debe excluir las que ya tengan envío
+  de salida o lo preparado se queda en la cola para siempre.
+  (b) **El `checklist` es `z.record(z.string(), z.unknown())` libre** en entrega e
+  inspección: no hay catálogo de comprobaciones en ninguna capa. §4.3 propone cuatro
+  ítems, **pendientes de ratificar**; deben ser los mismos para los dos informes o no
+  serán comparables, que es lo único que justifica registrarlos.
+  (c) La ventana de discrepancia reutiliza **`offerConfirmationWindowHours`**: acortar el
+  plazo de las ofertas acorta sin querer el de reclamar una entrega.
+  (d) **`QueueEntrySummary` no trae la posición** en la cola, así que HU-06 se queda a
+  medias; se arregla en el repositorio, no en la pantalla.
+  (e) **La navegación de superficie no está en los layouts.** Los layouts existen
+  (`app/(portal)/portal/layout.tsx` y `app/(backoffice)/backoffice/layout.tsx`, con el
+  guarda de superficie, el ancho, el usuario y el botón de salir), pero el `<nav>` del
+  back-office vive dentro de `backoffice/page.tsx`: desde `/backoffice/clientes` hay que
+  volver al centro para ir a otra sección. Hub y radios aguanta con tres secciones, no
+  con las de W4 y W5.
+  (f) No hace falta `GET /api/sets`. (g) La tabla de cobertura de `ux-flows.md` §7 estaba
+  desfasada (se escribió un día antes de `plan-obligatorio-en-alta`); **corregida**.
+  **Cobertura: hoy 9 de 18 historias con recorrido por interfaz; con las cinco
+  construidas, 16 de 18 y 6 de 6 de las ⭐.** Orden de implementación (§9.2): W1 → los dos
+  `layout.tsx` → W5 → W2+W3 (después de resolver (a) y (b)) → W4.
+  **Documentos sincronizados:** `ux-flows.md` (§7, §8.2 cerrada entera, §9),
+  `design-system.md` §6.2, `PRD.md` §9, `readme.md` §1.3 y árbol.
+- **W1 construida — la ficha de set `/catalogo/:id` (2026-08-20).** Primera pantalla de
+  los wireframes: `app/(public)/catalogo/[setId]/page.tsx` + `set-actions.tsx`, con
+  `components/ui/card.tsx` traído de shadcn (sin sombra; `Card` y `CardTitle` con
+  `asChild` porque el título no puede fijar nivel de encabezado). El catálogo deja de ser
+  una rejilla sin destino: **HU-00, HU-03 y HU-04 pasan a verde** (12 de 18 historias con
+  recorrido por interfaz; 5 de las 6 ⭐).
+  **Cómo está resuelta, y por qué así:**
+  (1) **Un solo `loadView`** devuelve un tipo discriminado (`public` | `authenticated`) en
+  vez de repartir `if (session)` por la plantilla. La proyección la elige el llamante,
+  igual que hace el Route Handler.
+  (2) **Server Component**, no `fetch` desde el navegador: la página es pública y tiene
+  que servirse renderizada para ser indexable — es la razón de ser de D13.
+  (3) **A operador y admin no se les pide veredicto de elegibilidad** (`can(role,
+  "rental.request")`): les diría "necesitas una suscripción activa", que es cierto e
+  inútil. Ven la disponibilidad y una nota de que el alquiler es de suscriptores.
+  (4) **La ventana de confirmación y las plazas del plan salen de sus fuentes**
+  (`settings.load()`, `simultaneousSets()`), nunca escritas a mano.
+  (5) **La caja de decisión es `<section aria-labelledby aria-live="polite">`**: el E2E se
+  ancla por rol, y el cambio tras una acción se anuncia.
+  (6) **Tarjeta del catálogo clicable con un solo enlace** (`after:absolute after:inset-0`
+  sobre el nombre): tres enlaces al mismo destino serían tres paradas de tabulador.
+  **Dos correcciones que salieron de construirla:**
+  (a) **La cabecera pública ofrecía "Acceder" a quien ya tenía sesión.** No se notaba
+  porque nadie visitaba las páginas públicas estando dentro; con la ficha, un suscriptor
+  navega el catálogo desde dentro. Ahora enlaza a su superficie ("Mi portal" /
+  "Back-office"). Una pantalla nueva no solo añade: cambia quién pisa las viejas.
+  (b) "1 de 1 copias libres" estaba mal escrito; el texto pluraliza según el total.
+  **Dos trampas de Playwright, anotadas porque volverán:**
+  (i) **`getByRole("button", { name: "Salir" })` casa por subcadena** y en la ficha
+  encontraba **"Salir de la cola"**: el paso que creía cerrar sesión sacaba a Bruno de la
+  cola y deshacía el anterior. Ir al portal —donde vive el botón— antes de salir, o
+  `exact: true`.
+  (ii) **Esperar la navegación con `waitForURL`, no con un `expect` sobre el destino**: el
+  `expect` corre contra 5 s y con tres workers la primera petición de una ruta recién
+  estrenada los agota; el fallo miente ("no existe la región" cuando es "aún no ha
+  llegado"). Este fue el fallo que solo salía contra el build autónomo y no contra
+  `next dev`.
+  **Un no-fallo:** "6785 piezas" sin separador es **correcto** en español — CLDR usa
+  `minimumGroupingDigits: 2`, así que los números de cuatro cifras no se agrupan.
+  **Verificación:** 344 unitarios, `tsc`, `eslint`, y **27 E2E en dos ejecuciones
+  seguidas** dejando la base limpia (0 alquileres abiertos, 0 colas vivas). Los pasos 1 y
+  2 del circuito completo **ahora pasan por la interfaz** en vez de por la API, que es
+  donde se prueban HU-03 y HU-04 sin que dos ficheros se disputen la misma copia.
+  `axe` audita ya **doce pantallas** (la ficha cuenta como dos: sus dos proyecciones).
+  **Residuo:** una ejecución fallida dejó a Ana con una copia alquilada; se limpió **por
+  la API** (devolución + transiciones), nunca con `copy.update({state})`.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -688,15 +794,19 @@ project. Read it at the start of every session.
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
-  (hoy **344 tests unitarios + 14 E2E**, `openspec validate --strict` en verde). Lo que queda
-  fuera del MVP: **diseño visual y UX** —en curso: **flujos por rol**
-  (`documents/ux-flows.md`) y **sistema de diseño** (`documents/design-system.md`)
-  hechos; **faltan los wireframes**, la implementación de las pantallas que hoy solo
-  existen como API— y el despliegue en la VM. **`axe` ya está en el E2E.** La decisión de
-  alcance sobre el plan y el alquiler puntual está **tomada, ejecutada y archivada**
-  (cambio `plan-obligatorio-en-alta`, 2026-08-17). Sigue abierto cuáles de los
-  recorridos que hoy son solo API reciben pantalla (`ux-flows.md` §8.2) —con aquel
-  cambio ya tienen interfaz el alta con plan y el cambio de plan—. Para cualquier cambio de estado de una copia, usar
+  (hoy **344 tests unitarios + 27 E2E**, `openspec validate --strict` en verde). Lo que queda
+  fuera del MVP: **diseño visual y UX** —los **tres entregables de diseño están hechos**:
+  flujos por rol (`documents/ux-flows.md`), sistema de diseño
+  (`documents/design-system.md`) y **wireframes** (`documents/wireframes.md`, 2026-08-20);
+  de las cinco pantallas, **W1 (ficha de set) está construida** y **faltan las cuatro
+  restantes**, en el orden de `wireframes.md` §9.2: navegación en los layouts → W5 →
+  W2+W3 → W4— y el despliegue en la VM. **`axe` ya está en el
+  E2E.** La decisión de alcance sobre el plan y el alquiler puntual está **tomada,
+  ejecutada y archivada** (cambio `plan-obligatorio-en-alta`, 2026-08-17). **`ux-flows.md`
+  §8.2 ya no tiene nada abierto**: los wireframes cerraron los tres puntos que quedaban.
+  Antes de implementar W2 hay que resolver los dos bloqueantes de `wireframes.md` §8.1 y
+  §8.2 (la copia `ALQUILADA` fuera de la cola de trabajo, y la lista de comprobación
+  inexistente). Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en

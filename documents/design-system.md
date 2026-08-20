@@ -353,6 +353,7 @@ además rechaza cualquier etiqueta que siga siendo `MAYÚSCULAS_CON_GUIONES`.
 |---|---|---|
 | `Button` | `components/ui/button.tsx` | shadcn, 6 variantes × 4 tamaños. `asChild` para enlaces. |
 | `Badge` | `components/ui/badge.tsx` | **Un solo eje: el tono.** Ni tamaños ni formas: lo que distingue un estado es el color y, sobre todo, el texto. |
+| `Card` | `components/ui/card.tsx` | Traído con la ficha de set (2026-08-20). **Sin sombra**: la elevación es para lo que flota de verdad, y en oscuro no separa. `Card` y `CardTitle` aceptan `asChild` — el título no fija nivel de encabezado, lo pone quien la usa. |
 | `StatusBadge` | `components/status-badge.tsx` | Recibe el `StatusLabel` ya resuelto, no el estado crudo, para que la decisión de qué ve cada rol viva entera en `lib/status.ts`. |
 | `LogoutButton`, `Terms` | `components/` | De producto, no de sistema. |
 
@@ -362,7 +363,7 @@ Por orden de la primera pantalla que lo necesita (`ux-flows.md` §8.2):
 
 | Componente | Primera pantalla que lo pide |
 |---|---|
-| `card` | Ficha de set; tarjetas del catálogo. |
+| ~~`card`~~ | ~~Ficha de set~~ — **traído el 2026-08-20**, ver §6.1. |
 | `input`, `label`, `form` | Registro de condición; hoy los formularios son `<input>` a pelo con clases repetidas. |
 | `dialog` / `alert-dialog` | Confirmar una baja de copia y una cancelación de plan. |
 | `tabs` o `navigation-menu` | Portal ampliado con historial y suscripción (§8.7 de `ux-flows.md`). |
@@ -372,6 +373,11 @@ Por orden de la primera pantalla que lo necesita (`ux-flows.md` §8.2):
 
 No se traen por adelantado: shadcn copia el código al repo, y componentes sin uso son
 código muerto que hay que mantener.
+
+**Ampliado el 2026-08-20** con lo que confirman los wireframes:
+[`wireframes.md`](wireframes.md) §9.1 añade `textarea`, `checkbox`, `radio-group` y
+`select` —los pide el registro de condición y el alta de set— y descarta `tabs`: la
+navegación del portal son cinco **rutas**, no pestañas.
 
 ---
 

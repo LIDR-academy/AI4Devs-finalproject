@@ -110,7 +110,7 @@ y pide el siguiente—.
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> **En curso.** Dos entregables cerrados y uno pendiente:
+> **En curso.** Tres entregables cerrados; queda construirlos:
 >
 > 1. **Flujos por rol** — [`documents/ux-flows.md`](documents/ux-flows.md): actores y
 >    superficies, mapa de navegación, 15 diagramas Mermaid de flujo y la tabla de
@@ -122,15 +122,27 @@ y pide el siguiente—.
 >    vocabulario que traduce los estados del dominio a lo que ve cada rol.
 >    Implementado en `app/globals.css` + `lib/status.ts`, y **verificado en la suite**
 >    (`tests/design-tokens.test.ts` mide el contraste contra el CSS real).
-> 3. **Wireframes** de las pantallas que hoy solo existen como API, y el videotutorial:
->    pendientes (`documents/PRD.md` §9, `ux-flows.md` §9).
+> 3. **Wireframes** — [`documents/wireframes.md`](documents/wireframes.md): las cinco
+>    pantallas que hoy solo existen como API (ficha de set, registro de condición,
+>    discrepancia, catálogo de back-office y portal ampliado), con su disposición,
+>    de dónde sale cada dato, los errores reales de la API y qué se ve cuando no hay
+>    nada. Dibujarlas contra el código destapó siete huecos de implementación, dos
+>    bloqueantes.
+>
+> **Construida ya la primera**, la ficha de set `/catalogo/:id` (2026-08-20): con ella
+> el catálogo deja de ser una rejilla sin destino y **HU-00, HU-03 y HU-04 pasan a
+> verde** — solicitar un set y entrar en la cola ya se hacen desde el navegador.
+>
+> **Pendiente:** las cuatro pantallas restantes y el videotutorial
+> (`documents/PRD.md` §9, `wireframes.md` §9.2).
 >
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales
 > de UX ya fijados: **responsive mobile-first** y **accesibilidad WCAG 2.1 AA**
 > (EN 301 549 / European Accessibility Act) — el contraste y el foco se comprueban
-> solos contra el CSS real, y **`axe` audita las nueve pantallas** (públicas, portal y
-> back-office) en el E2E con las etiquetas WCAG 2.1 A/AA.
+> solos contra el CSS real, y **`axe` audita doce pantallas** (las cinco públicas, la
+> ficha de set en sus dos proyecciones, el portal y las cuatro del back-office) en el
+> E2E con las etiquetas WCAG 2.1 A/AA.
 
 ### **1.4. Instrucciones de instalación:**
 
@@ -345,7 +357,8 @@ AI4Devs-finalproject-xvm/
 │   ├── ADR-0002-api-auth-errores.md   # Auth por sesión + contrato de errores
 │   ├── user_stories.md       # Historias de usuario (Gherkin) HU-00..HU-17
 │   ├── ux-flows.md           # Flujos por rol (15 diagramas) + cobertura HU→pantalla
-│   └── design-system.md      # Tokens, tonos y vocabulario de estados
+│   ├── design-system.md      # Tokens, tonos y vocabulario de estados
+│   └── wireframes.md         # Las 5 pantallas que faltan, contra el código real
 └── openspec/
     └── changes/clickoteca-mvp/        # Cambio OpenSpec (fuente de verdad)
         ├── proposal.md · design.md (D1–D13) · tasks.md

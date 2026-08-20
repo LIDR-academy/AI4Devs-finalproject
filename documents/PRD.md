@@ -234,21 +234,34 @@ lanzamiento real necesitaría, como mínimo:
 
 ## 9. Diseño y experiencia de usuario
 
-**En curso.** El primer entregable está hecho: **[`ux-flows.md`](ux-flows.md)** —
-actores y superficies, mapa de navegación y flujos de tarea por rol (visitante,
-suscriptor, operador, admin y el sistema), con la tabla de cobertura historia →
-flujo → pantalla y las decisiones que quedan por tomar.
+**Tres entregables cerrados** (2026-08-16 / 08-19 / 08-20):
+
+1. **[`ux-flows.md`](ux-flows.md)** — actores y superficies, mapa de navegación y
+   flujos de tarea por rol (visitante, suscriptor, operador, admin y el sistema),
+   con la tabla de cobertura historia → flujo → pantalla.
+2. **[`design-system.md`](design-system.md)** — paleta OKLCH con contrastes
+   medidos, tipografía y ritmo, cinco tonos de estado y el vocabulario que traduce
+   los estados del dominio a lo que ve cada rol. No es solo documento: vive en
+   `app/globals.css` y `lib/status.ts`, y la suite mide el contraste contra el CSS
+   real en los dos temas.
+3. **[`wireframes.md`](wireframes.md)** — las cinco pantallas que faltaban (ficha
+   de set, registro de condición, discrepancia, catálogo de back-office y portal
+   ampliado), con su disposición, sus datos, sus errores reales y sus vacíos.
+
+**La primera pantalla ya está construida:** la ficha de set `/catalogo/:id`
+(2026-08-20), que es donde D13 se hace visible —el mismo recurso con dos
+proyecciones— y desde donde se solicita un set y se entra en la cola.
 
 Ese cruce entre las historias y el código implementado deja un dato que este PRD
-debe recoger: **8 de 18 historias tienen recorrido completo por interfaz**; el
-resto existe en la API sin pantalla desde la que ejecutarse, y **contratar un
-plan (HU-02) no existe en ninguna capa** — las únicas suscripciones del sistema
-son las de la semilla (ver §5 sobre el alcance y `ux-flows.md` §8.1).
+debe recoger: **hoy 12 de 18 historias tienen recorrido completo por interfaz**; el
+resto existe en la API sin pantalla desde la que ejecutarse. Construidas las cuatro
+pantallas que faltan serían 16 de 18 (`wireframes.md` §9.4).
 
-**Pendiente:** sistema de diseño (paleta, tipografía y vocabulario visual de
-estados) y wireframes; `readme.md` §1.3 sigue vacío. Se mantiene el criterio de
-no inventar pantallas antes de que las decisiones de `ux-flows.md` §8 estén
-cerradas.
+**Pendiente:** las **cuatro pantallas restantes** —en el orden de `wireframes.md`
+§9.2— y el videotutorial. Antes de W2 hay que resolver dos huecos bloqueantes que
+destapó dibujarlas: la copia `ALQUILADA` no aparece en la cola de trabajo del
+operador, y la lista de comprobación del registro de condición no existe en ninguna
+capa (`wireframes.md` §8.1 y §8.2).
 
 ## 10. Criterios de éxito del MVP
 

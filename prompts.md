@@ -733,3 +733,92 @@ cada worker es un Chromium entero y auditar con axe es caro en el navegador. Fij
 `workers: 3`, con el porqué escrito en la configuración: **21 pruebas en ~40 s**, verde
 repetido.
 **Verde:** `tsc`, `eslint`, 344 unitarios y **21 E2E** en dos ejecuciones seguidas.
+
+### [2026-08-20] — Wireframes: las cinco pantallas que faltan, dibujadas contra el código
+**Prompt:** "sigamos con ux" (formato elegido: Markdown en `documents/`; alcance: la
+tanda completa de cinco pantallas, cerrando de paso las decisiones abiertas).
+**Resumen de la respuesta:** Tercer entregable de UX —
+**[`documents/wireframes.md`](documents/wireframes.md)**, ~1.000 líneas — con las cinco
+pantallas que `ux-flows.md` §9.2 dejó pendientes: **W1** ficha de set `/catalogo/:id`,
+**W2** registro de condición (back-office), **W3** revisión de entrega y discrepancia
+(portal), **W4** catálogo e inventario (back-office) y **W5** portal ampliado. Wireframes
+ASCII de **disposición y contenido**, no de estilo: el color y la tipografía ya están
+resueltos y medidos en `design-system.md`. Cada pantalla lleva los mismos cuatro
+apartados —de dónde salen los datos, acciones con sus respuestas reales, vacío/error/
+espera, y accesibilidad—, que son justo los que se dejan para el final.
+**El método vuelve a ser el que dio resultado en `ux-flows.md`:** dibujar contra el
+**código que ya existe** —la forma real de las proyecciones, los veredictos reales del
+dominio, los `detail` reales de la API— en vez de contra una idea de lo que debería
+haber. Eso es lo que produce información nueva.
+**Se cierran los tres puntos que quedaban de `ux-flows.md` §8.2:** (3) el back-office de
+catálogo es **lista + ficha con inventario, sin endpoint nuevo** —la API completa ya
+existe y sin lista no hay forma de llegar a un set no publicado, que es como nace todo
+set—; (4) "mi suscripción" va a **pantalla propia** `/portal/suscripcion`, porque ahí
+tienen que caber pausar, cancelar y reactivar, y cancelar no puede ser un botón más en
+una lista de bloques; (7) la navegación del portal es un **`layout.tsx` con cinco rutas**,
+cabecera y no `tabs`, porque son URL de verdad.
+**Siete huecos de implementación que solo aparecen al intentar dibujar la pantalla**, dos
+bloqueantes: (1) **`ALQUILADA` no está en `ACTIONABLE_STATES`**, así que W2 sería una
+pantalla sin puerta — y registrar la condición no cambia el estado de la copia, luego el
+grupo nuevo de la cola de trabajo tiene que excluir las que ya tengan envío de salida;
+(2) el **`checklist` es un `Record<string, unknown>` libre** en los dos endpoints, no hay
+catálogo de comprobaciones en ninguna capa y una pantalla no se dibuja contra un
+diccionario (se proponen cuatro ítems, **a ratificar**); (3) la ventana de discrepancia
+reutiliza **`offerConfirmationWindowHours`**, así que acortar el plazo de las ofertas
+acorta sin querer el de reclamar una entrega; (4) **la posición en la cola no llega al
+portal** —`QueueEntrySummary` no la trae—, así que HU-06 se queda a medias hasta tocar el
+repositorio; (5) **la navegación de superficie no está en los layouts** —existen, pero el
+`<nav>` del back-office vive dentro de su portada—; (6) no hace falta `GET /api/sets`; (7) la tabla de cobertura de `ux-flows.md` estaba **desfasada** —
+se escribió un día antes de `plan-obligatorio-en-alta`.
+**La decisión de diseño que sale directamente del dominio:** el suscriptor **no puede
+tener un botón de "Todo correcto"** al revisar una entrega. La conformidad tácita no se
+persiste a propósito (es la ausencia de discrepancia pasada la ventana), así que ese
+botón no llamaría a nada y dejaría al usuario creyendo que ha dejado constancia. Solo hay
+una acción —"Algo no coincide"— y el silencio se explica en vez de disfrazarse.
+**Cobertura:** hoy **9 de 18** historias tienen recorrido completo por interfaz; con las
+cinco pantallas construidas serían **16 de 18** y **6 de 6** de las ⭐ distintivas — es
+decir, se podría ser cliente de Clickoteca usando solo el navegador, que hoy no se puede.
+**Sincronizados:** `ux-flows.md` (§7 corregida, §8.2 cerrada entera, §9 al día),
+`design-system.md` §6.2 (cuatro componentes más, `tabs` descartado), `PRD.md` §9 y
+`readme.md` §1.3 + árbol de ficheros.
+
+### [2026-08-20] — W1: la ficha de set, construida
+**Prompt:** "sigamos".
+**Resumen de la respuesta:** Primera pantalla de los wireframes, y la que más pesaba:
+**`/catalogo/:id`** (`app/(public)/catalogo/[setId]/page.tsx` + `set-actions.tsx`, con
+`Card` traído de shadcn). El catálogo deja de ser **una rejilla sin destino**: HU-00,
+HU-03 y HU-04 pasan a verde y ya se puede pedir un set y entrar en su cola desde el
+navegador — **12 de 18** historias con recorrido por interfaz, y 5 de las 6 ⭐.
+**La pantalla es donde D13 se hace visible:** la misma URL cuenta cosas distintas según
+quién mira, y eso se resuelve con **un `loadView` que devuelve un tipo discriminado**
+(`public` | `authenticated`) en vez de repartir `if (session)` por la plantilla. Todo lo
+que cambia vive en **una sola caja de decisión**, para que la página mantenga una única
+pregunta viva: ¿puedo llevármelo, y si no, por qué? Los cuatro motivos de no elegibilidad
+se muestran con **el `detail` literal del dominio** y una salida distinta cada uno; y con
+`PLAN_LIMIT_REACHED` se ofrecen **las dos cosas** —el aviso y la cola—, porque `joinQueue`
+no mira el límite de plazas. A operador y admin no se les pide veredicto: les diría
+"necesitas una suscripción activa", que es cierto e inútil.
+**Se decidió no enseñar "Pedir este set" sin copias libres** aunque la API lo toleraría
+(devuelve `200 no_copy_available`): esa tolerancia es para la carrera entre pintar y
+pulsar, no una forma de ahorrarse la decisión. Si la carrera ocurre, se explica en el
+sitio.
+**Dos correcciones que solo aparecen al construir:** (1) la **cabecera pública ofrecía
+"Acceder" a quien ya tenía sesión** — no se notaba porque nadie visitaba las páginas
+públicas estando dentro, y con la ficha un suscriptor navega el catálogo desde dentro;
+ahora enlaza a su superficie. Una pantalla nueva no solo añade: **cambia quién pisa las
+viejas**. (2) "1 de 1 copias libres" estaba mal escrito.
+**Dos trampas de Playwright que costaron una ejecución roja:** `getByRole("button",
+{ name: "Salir" })` casa **por subcadena** y en la ficha encontraba **"Salir de la
+cola"**, así que el paso que creía cerrar sesión deshacía el anterior; y esperar la
+navegación con un `expect` sobre el destino la somete al reloj de la aserción (5 s) en vez
+de al de la prueba — con tres workers, la primera petición de una ruta recién estrenada
+los agota y el fallo miente. Este último **solo salía contra el build autónomo**, no
+contra `next dev`.
+**Y un no-fallo que lo parecía:** "6785 piezas" sin separador de millares es **correcto**
+en español (CLDR usa `minimumGroupingDigits: 2`).
+**Verificación:** 344 unitarios, `tsc`, `eslint` y **27 E2E en dos ejecuciones seguidas**
+dejando la base limpia. Los pasos 1 y 2 del circuito completo **pasan ahora por la
+interfaz**, que es donde tocaba probar HU-03 y HU-04 sin que dos ficheros se disputen la
+misma copia; `axe` audita ya **doce pantallas** (la ficha cuenta como dos, una por
+proyección). Sincronizados `wireframes.md` (§3.10 nuevo), `ux-flows.md` §7,
+`design-system.md` §6.1, `PRD.md` §9 y `readme.md` §1.3.
