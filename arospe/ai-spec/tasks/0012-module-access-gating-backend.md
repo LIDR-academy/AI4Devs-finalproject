@@ -121,7 +121,7 @@ rename, or move either route.
   });
   ```
 
-  [Story 0010](0010-role-permission-management-backend.md) already writes exactly this gate
+  [Story 0010](done/0010-role-permission-management-backend.md) already writes exactly this gate
   (`->middleware('can:roles.manage')`) in its own *Files to create/modify*, having reached the
   `can:`-not-`permission:` conclusion independently. In practice this story verifies and documents
   that wiring rather than introducing it — which is why the test-ownership split in open question 4
@@ -343,7 +343,7 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
      "role-management permission does not open the Users screen" scenario, so it must be settled
      explicitly with 0002, not discovered in Phase 3.
 3. **~~Where `roles.index` physically lives.~~ RESOLVED by 0010 — a new `routes/roles.php`.**
-   [Story 0010](0010-role-permission-management-backend.md) settled this in its own debate and lists
+   [Story 0010](done/0010-role-permission-management-backend.md) settled this in its own debate and lists
    it among the decisions "recorded so they are not reopened": the route is
    `Route::livewire('roles', Index::class)->name('roles.index')` in a **new `routes/roles.php`**
    mirroring `routes/settings.php`, `require`d from `routes/web.php` beside the existing

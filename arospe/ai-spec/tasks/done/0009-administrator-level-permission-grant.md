@@ -15,12 +15,12 @@ backend | includes database-expert: **no**
 > - **0002** seeds the `Super Admin` role, the baseline `Administrator` role, and the
 >   `roles.manage` / `roles.manage-administrators` permissions, **and owns
 >   the global Super-Admin `Gate::before` bypass hook.** This story consumes both; it registers neither.
-> - **[0010](../0010-role-permission-management-backend.md)** (Roles & Permissions management —
+> - **[0010](0010-role-permission-management-backend.md)** (Roles & Permissions management —
 >   backend) owns the action that persists a role's name/permissions and the role-delete action.
 >   This story hooks its enforcement into those call sites; it does not create a competing role-CRUD
 >   path.
 >   **Sequencing: this story must land *before* the Roles & Permissions management backend story
->   ([0010](../0010-role-permission-management-backend.md)) reaches its Phase 3 — which is exactly why
+>   ([0010](0010-role-permission-management-backend.md)) reaches its Phase 3 — which is exactly why
 >   this story carries the lower number.** That story's `saveRole()` type-hints
 >   `App\Actions\Roles\EnforceAdministratorPermissionGrant` as an injected parameter, and a type-hinted
 >   parameter naming a class that does not exist throws `BindingResolutionException` on **every**
@@ -323,7 +323,7 @@ Feature: Administrator-level role management and its Super-Admin-only grant
   > attacker-supplied new one.
   > [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#rolepolicy--the-second-policy)
   > records it as "the documented residual the roles-screen author must resolve", addressing stories
-  > 0010/0011. **Story [0010](../0010-role-permission-management-backend.md) has taken ownership**, because
+  > 0010/0011. **Story [0010](0010-role-permission-management-backend.md) has taken ownership**, because
   > it is the first story to add real `authorize()` call sites against `RolePolicy` and therefore the
   > first to make the residual reachable. Its resolution, which this story must preserve rather than
   > relitigate:
@@ -530,7 +530,7 @@ was itself upgraded in the same pass from `$role->name === Role::superAdminName(
 security-audit rounds had already built it (closing 0008a's re-audit finding N2, an unrelated fix on the
 *user* side), so this story consumed it rather than inventing the differently-named `isSuperAdminRole()`
 its own Phase 1 draft had specified — see the "Corrected 2026-08-19/20" reconciliation notes threaded
-through [`0010-role-permission-management-backend.md`](../0010-role-permission-management-backend.md),
+through [`0010-role-permission-management-backend.md`](0010-role-permission-management-backend.md),
 which had inherited the same stale premise (Phase 5 finding F-A, below). `RolePolicy` also gained a third
 ability, `grantAdministratorPermission(User $user): bool` — the Super-Admin-only meta-rule story 0011's
 frontend will consume. `App\Actions\Roles\EnforceAdministratorPermissionGrant` was created new, meant to
@@ -573,7 +573,7 @@ a guard refusing to ever resolve to the same name as the locked Administrator ti
 **Phase 5 (`code-reviewer`), two rounds.**
 
 - **Round 1: "changes needed."** F-A (Medium) — the action's real signature (three required params)
-  diverged from what [`0010-role-permission-management-backend.md`](../0010-role-permission-management-backend.md)
+  diverged from what [`0010-role-permission-management-backend.md`](0010-role-permission-management-backend.md)
   documented (two params, described as "unchanged" twice) and from its own component sketch, which never
   passed the third argument — 0010 would have hit `ArgumentCountError` on every `saveRole()` call.
   Investigating this further surfaced a **much larger** pre-existing inconsistency: substantial portions
@@ -603,7 +603,7 @@ a guard refusing to ever resolve to the same name as the locked Administrator ti
   than the one it authorized against, silently reopening F1/N2. Resolving this properly means deciding
   whether the action should fold in the actual `Role::syncPermissions()` call, which depends on story
   0010's real `saveRole()` shape, which does not exist yet. Recorded as an explicit open design question
-  inside [`0010-role-permission-management-backend.md`](../0010-role-permission-management-backend.md)
+  inside [`0010-role-permission-management-backend.md`](0010-role-permission-management-backend.md)
   (both a boxed note in the relevant file bullet and entry **G** in that file's `## Open questions`
   section) — 0010's own Phase 1/3 must decide and record the decision.
 - **Round 2 (final): "Approved for closure."** Confirmed every round-1 finding genuinely resolved, full

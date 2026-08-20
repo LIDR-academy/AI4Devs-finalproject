@@ -129,7 +129,7 @@ Feature: Roles & permissions management UI
 > query, a `Role`/`Permission` write, or a permission check to the component.
 >
 > **File creation is 0010's, not this story's — one-directional, not "whichever lands first."**
-> [Story 0010](0010-role-permission-management-backend.md) **creates** both `routes/roles.php` and
+> [Story 0010](done/0010-role-permission-management-backend.md) **creates** both `routes/roles.php` and
 > `app/Livewire/Roles/Index.php`; this story **modifies** them. That follows from this story's own
 > Definition of Done, which states it "is not independently shippable — it is the view layer of a
 > component whose logic is 0010's" and requires 0010 to have landed first, so the two files always

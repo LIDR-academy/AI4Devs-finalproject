@@ -190,7 +190,7 @@ Feature: Shipping carriers
 - `lang/en/shipping.php` + `lang/es/shipping.php` — **new**, key-for-key identical. Carrier state
   labels (`statuses.active` / `statuses.inactive`) and screen copy. Keys from the start rather than
   literal strings, for the reason recorded in
-  [0010's open question A](0010-role-permission-management-backend.md): PRD assumption 14 requires an
+  [0010's open question A](done/0010-role-permission-management-backend.md): PRD assumption 14 requires an
   admin UI language switcher, and retrofitting keys module-by-module later costs far more.
 
 - **No policy.** `ShippingCarrierPolicy` would only re-wrap `hasPermissionTo('shipping.edit')`.
