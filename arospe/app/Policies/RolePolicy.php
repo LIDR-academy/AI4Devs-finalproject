@@ -53,6 +53,30 @@ class RolePolicy
     public const ROLE_MANAGEMENT_PERMISSION = 'roles.manage';
 
     /**
+     * Determine whether the actor can view the roles list -- the
+     * `mount()`-equivalent check for App\Livewire\Roles\Index (story 0010),
+     * this policy's first component call site.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->hasPermissionTo(self::ROLE_MANAGEMENT_PERMISSION);
+    }
+
+    /**
+     * Determine whether the actor can create a new role. Unlike update()/
+     * delete(), there is no target row yet, so neither protected-tier branch
+     * applies here -- a role cannot be created under the Super Admin name
+     * (App\Models\Role's own `creating` event guards that directly) or the
+     * Administrator name (already taken by the seeded row, so roleNameRules()'
+     * uniqueness rule refuses the duplicate before this ability is even
+     * relevant).
+     */
+    public function create(User $user): bool
+    {
+        return $user->hasPermissionTo(self::ROLE_MANAGEMENT_PERMISSION);
+    }
+
+    /**
      * Determine whether the actor can update the target role.
      */
     public function update(User $user, Role $role): bool
