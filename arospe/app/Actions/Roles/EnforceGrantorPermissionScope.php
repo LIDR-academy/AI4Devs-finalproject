@@ -25,17 +25,37 @@ class EnforceGrantorPermissionScope
      * EnforceAdministratorPermissionGrant's own audit history closed, see
      * docs/errors-log.md's 2026-08-20 entry). Removing a permission, or a
      * payload merely omitting one the actor cannot see, is never refused
-     * here.
+     * here -- deliberately (Phase 4 round 2 re-audit, finding N1,
+     * human-confirmed as an accepted asymmetry rather than a gap to close):
+     * a `roles.manage` holder can still strip another role's permissions
+     * down to nothing, which is a consolidation/denial concern, not a
+     * privilege gain, and a Super Admin (who bypasses this action entirely)
+     * can always repair it. See docs/security/authorization-patterns.md.
      *
      * roles.manage-administrators is deliberately excluded from this check
      * in both directions: whether an actor may grant it is not "do they
      * hold it themselves" -- that is entirely
      * EnforceAdministratorPermissionGrant's question, and
      * RolePolicy::grantAdministratorPermission()'s own rule is that holding
-     * it never confers the right to grant it onward. This action must run
-     * *before* that one in the caller (App\Livewire\Roles\Index::saveRole())
-     * -- excluding the name here, rather than after, is what keeps the two
-     * from disagreeing about it.
+     * it never confers the right to grant it onward. The `->reject(...)`
+     * exclusion below is what keeps the two actions from disagreeing about
+     * it -- NOT the call order in the caller
+     * (App\Livewire\Roles\Index::saveRole()); verified live that reordering
+     * the two calls there refuses identically.
+     *
+     * Coupled to permissionOptions() rendering the FULL, unfiltered catalog
+     * (Phase 4 round 2 re-audit, finding N2): every permission the actor
+     * cannot grant is still checked and returned unchanged by the actor's
+     * own current selection, so nothing here is ever "newly granted" by a
+     * value the actor never touched. If a future change (this action, or
+     * story 0011's view) ever filters that catalog down to what an actor
+     * may grant, an omitted-but-already-held permission would then read as
+     * a deliberate removal here and be silently stripped by
+     * syncPermissions() -- the exact shape story 0009's F1 closed for
+     * roles.manage-administrators. Give this action the same
+     * preserve-on-omission branch its sibling has before filtering the
+     * catalog, don't assume this docblock's "removal is never refused"
+     * line still means what it says today.
      *
      * A Super Admin actor is exempt entirely: RolePermissionSeeder grants
      * the Super Admin role no permissions of its own (Gate::before bypasses

@@ -174,17 +174,20 @@ class Index extends Component
             ? $role->load('permissions')->permissions->pluck('name')->all()
             : [];
 
-        // Two independent transformers, in this order deliberately.
-        // EnforceGrantorPermissionScope (story 0010 Phase 4 security audit
-        // finding F2) refuses a payload that newly grants a permission the
-        // actor does not themselves hold, and excludes
-        // roles.manage-administrators from its own scope entirely --
-        // EnforceAdministratorPermissionGrant (story 0009) owns that one
-        // permission's grant rule exclusively (holding it never confers the
-        // right to grant it onward), and running the two in the other order
-        // would let them disagree about it. Neither strips a permission nor
-        // re-derives the other's rule; both throw AuthorizationException
-        // (403) and let it propagate.
+        // Two independent transformers. EnforceGrantorPermissionScope
+        // (story 0010 Phase 4 security audit finding F2) refuses a payload
+        // that newly grants a permission the actor does not themselves
+        // hold. EnforceAdministratorPermissionGrant (story 0009) owns
+        // roles.manage-administrators' grant rule exclusively (holding it
+        // never confers the right to grant it onward). What keeps the two
+        // from disagreeing about that one permission is
+        // EnforceGrantorPermissionScope's own explicit exclusion of it from
+        // its scope (see that class's docblock) -- corrected 2026-08-20
+        // (Phase 4 round 2 re-audit, informational finding): call order
+        // here is NOT what enforces the split; verified live that running
+        // them in the other order refuses identically. Neither strips a
+        // permission nor re-derives the other's rule; both throw
+        // AuthorizationException (403) and let it propagate.
         $permissionNames = $enforceGrantorPermissionScope(Auth::user(), $permissionNames, $role);
         $permissionNames = $enforceAdministratorPermissionGrant(Auth::user(), $permissionNames, $role);
 

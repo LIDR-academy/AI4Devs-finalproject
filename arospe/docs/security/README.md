@@ -33,7 +33,14 @@ repo must follow — always with a real code example pulled from this repository
   never shown rather than read its absence as a revoke (and why choosing preserve-vs-deny is a product
   decision to escalate, not a security derivation), and why a check over a submitted list must accept
   every input shape the write itself accepts *and* derive the "before" state from the model rather than
-  accept it as a parameter — the state a guard protects can never be an argument to it.
+  accept it as a parameter — the state a guard protects can never be an argument to it. Task 0010's
+  Phase 4 re-audit adds the pipeline-level companion to those two: when **more than one** guard
+  transforms the same full-replace payload, they must agree on what an *omission* means — the roles
+  screen's two transformers deliberately disagree (one preserves, one ignores), which is safe only
+  because `permissionOptions()` renders the catalog unfiltered, so the safe-making property lives in a
+  view rather than in either guard. It carries the condition that would invalidate it, plus why the
+  two actions' call *order* is not the safety mechanism and why a grant-scope rule leaves revocation
+  unrestricted by construction.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -104,7 +111,16 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-20 — Task 0009 (Administrator-level permission grant): its three Phase 4 rounds
+_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend), Phase 4 re-audit
+(round 2, verdict PASS): added no new page — it expanded `authorization-patterns.md` with one durable
+rule, "Two guards on one payload must agree on what an omission means", the pipeline-level companion to
+task 0009's two grant rules. It is the first section on that page recording a **hazard rather than a
+bypass**: the roles screen's two transformer actions deliberately treat an omitted-but-already-granted
+permission in opposite ways, and the property that makes the combination safe (`permissionOptions()`
+returning the unfiltered catalog) lives in neither guard. The index entry above was widened accordingly.
+Round 1's eight findings were each re-verified closed by execution, not by reading._
+
+_Previously: 2026-08-20 — Task 0009 (Administrator-level permission grant): its three Phase 4 rounds
 again added no new page — they expanded `authorization-patterns.md` with two durable rules (a full-set
 sync behind a partially-visible form must preserve what the actor cannot see; a check over a submitted
 list must accept every shape the write accepts and derive the "before" state itself) and **closed** that

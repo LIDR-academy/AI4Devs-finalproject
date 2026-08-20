@@ -613,6 +613,75 @@ Three corollaries:
   mirror-image note under [A rule that must bind a Super Admin actor](#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check),
   where `UpdateUser` refused *assigning* the Super Admin role while happily removing it.
 
+## Two guards on one payload must agree on what an omission means
+
+Established by task 0010's Phase 4 re-audit, as a **forward-looking** rule: no live bypass exists
+today, and the condition that would create one is named below so it is caught before it ships.
+
+`App\Livewire\Roles\Index::saveRole()` runs two independent transformers over the same submitted
+permission list, in this order:
+
+```php
+// app/Livewire/Roles/Index.php
+$permissionNames = $enforceGrantorPermissionScope(Auth::user(), $permissionNames, $role);
+$permissionNames = $enforceAdministratorPermissionGrant(Auth::user(), $permissionNames, $role);
+```
+
+They answer the same question — "may this actor move this permission?" — but they treat an **omission**
+in opposite ways, and both are correct *for their own rule*:
+
+| Action | On a new grant the actor may not make | On an omission of something already granted |
+| --- | --- | --- |
+| [`EnforceAdministratorPermissionGrant`](../../app/Actions/Roles/EnforceAdministratorPermissionGrant.php) | throws | **preserves** — re-adds the permission to the payload |
+| [`EnforceGrantorPermissionScope`](../../app/Actions/Roles/EnforceGrantorPermissionScope.php) | throws | **ignores** — the sync revokes it |
+
+That divergence is safe only because of a property of a *different* file: `permissionOptions()` returns
+the **unfiltered** `web` catalog, so every permission a role currently holds is rendered as a checked
+box and comes back in the payload. The second action never has to preserve anything, because nothing is
+ever invisibly absent.
+
+⚠️ **The hazard.** The natural reaction to the finding `EnforceGrantorPermissionScope` closes ("an actor
+may not grant a permission they do not hold") is to stop rendering those checkboxes at all. Doing that —
+in `permissionOptions()`, or in the paired Blade view — turns the second row of that table into the
+exact silent-revoke bug the [section above](#a-full-set-sync-behind-a-partially-visible-form-must-preserve-what-the-actor-cannot-see)
+documents: a narrow `roles.manage` holder editing a role that legitimately holds `products.delete` would
+submit a payload omitting it, and `syncPermissions()` would strip it with no error anywhere.
+
+❌ Bad — filtering the catalog to what the actor can grant, while the scope action still only throws:
+
+```php
+// anti-pattern — do NOT pair this with a grant-only guard
+return Permission::query()
+    ->whereIn('name', $actor->getAllPermissions()->pluck('name'))
+    ->get(['id', 'name']);
+```
+
+✅ Good — either keep the catalog unfiltered (today's shipped state), or, if it is ever filtered, give
+`EnforceGrantorPermissionScope` the same preserve branch its sibling already has, conditional on the
+actor failing the ability rather than unconditional.
+
+**Rule.** When more than one guard transforms the same full-replace payload, write down what each one
+does with an **omission**, not only with an addition — and state the property of the form that makes the
+combination safe, in the guard, so that changing the form cannot quietly invalidate it. A guard whose
+correctness depends on a view rendering every value is only as safe as that view, and nothing in the
+guard's own file or test suite will fail when the view changes.
+
+Two corollaries verified during the same re-audit, both worth knowing before touching this pipeline:
+
+- **Their *ordering* is not the safety mechanism, despite reading like it.** The two were verified to
+  refuse identically when reversed. What keeps them from disagreeing about
+  `roles.manage-administrators` is that `EnforceGrantorPermissionScope` **excludes that name from its
+  own scope entirely** (`->reject(fn ($name) => $name === RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION)`),
+  deferring it to the action that owns it. Keep the exclusion; do not rely on call order.
+- **A grant-scope rule is one-directional by construction.** `EnforceGrantorPermissionScope` restricts
+  *granting* a permission the actor lacks; it deliberately does not restrict *revoking* one. A
+  `roles.manage` holder can therefore strip any permission — including `roles.manage` itself — from any
+  role they neither hold nor created, which is privilege *consolidation* rather than escalation
+  (the Super Admin, who holds no revocable role, can always repair it). The self-lockout guard in
+  `saveRole()` keys on `Auth::user()->hasRole($role->name, 'web')`, so it protects the actor's own
+  access and nobody else's. If that asymmetry ever stops being acceptable, the fix is a second diff
+  direction in the same action, not a new guard elsewhere.
+
 ## A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself
 
 Established by task 0009's Phase 4 rounds 1–3 (findings F2, then N1/N2/N3 against the fix for F2, then
@@ -706,7 +775,17 @@ Do not "harden" the name comparisons themselves by lowercasing or trimming — t
 of matching names and break the property the byte-exact match above relies on. The remaining hardening
 is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-20 — Task 0009's three Phase 4 rounds: added "A full-set sync behind a
+_Last updated: 2026-08-20 — Task 0010's Phase 4 re-audit (round 2): added "Two guards on one payload
+must agree on what an omission means". Unlike every other section on this page it documents **no live
+bypass** — the roles screen's two transformers handle omission in opposite ways, which is safe only
+because `permissionOptions()` renders the permission catalog unfiltered. It is written as a
+forward-looking rule because the obvious next step for the sibling UI story (hiding permissions the
+actor cannot grant) is exactly what would turn the divergence into the silent-revoke bug the section
+above it records. Also records that the two actions' call order is **not** what keeps them from
+disagreeing (verified by reversing them), and that a grant-scope rule leaves revocation unrestricted
+by construction._
+
+_Previously: 2026-08-20 — Task 0009's three Phase 4 rounds: added "A full-set sync behind a
 partially-visible form must preserve what the actor cannot see" (finding F1 — `syncPermissions()`
 replaces the whole set while the administrator-level toggle is rendered only to the Super Admin, so an
 unprivileged actor's routine edit silently revoked a grant; the preserve-vs-deny resolution was a human

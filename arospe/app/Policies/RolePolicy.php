@@ -98,9 +98,21 @@ class RolePolicy
      * refused categorically here, the same as the Super Admin role, rather
      * than gated by ADMINISTRATOR_LEVEL_PERMISSION -- it is never
      * deletable, only its permission set is editable. App\Models\Role's own
-     * guardAgainstAdministratorDeletion() refuses it too (defense in
-     * depth), the same relationship the Super Admin refusal already has
-     * between this policy and that model.
+     * guardAgainstAdministratorDeletion() refuses it too (defense in depth).
+     *
+     * Corrected 2026-08-20 (Phase 4 round 2 re-audit, finding N3): the
+     * relationship to the model guard is NOT identical to the Super Admin
+     * refusal's. AppServiceProvider's Gate::before closure only defers
+     * (returns null) when the ability's TARGET is the Super Admin role, so
+     * for a Super Admin actor targeting the Administrator role it bypasses
+     * (true) unconditionally -- this method's Administrator branch never
+     * runs for that actor at all, and the model-event guard is what
+     * actually refuses the delete. Both paths render as a 403
+     * (ImmutableRoleException::render() matches a policy refusal), so the
+     * behaviour is correct, but a story-0011 per-row Gate::allows() UI hint
+     * will render enabled for that one actor/target pair -- the same
+     * accepted drift shape already documented for the Users screen (see
+     * docs/api/routes.md#usersindex--the-first-permission-gated-route).
      */
     public function delete(User $user, Role $role): bool
     {
