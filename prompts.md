@@ -57,7 +57,7 @@ Usando el skill de Generación del PRD en `.agents/skills/specs/01_product_defin
 
 ### Respuesta del Agente de IA:
 El documento completo de requisitos de producto (PRD) se encuentra en:
-* [docs/01_product_definition/03_restostock_prd.md](docs/01_product_definition/03_restostock_prd.md)
+* [docs/01_product_definition/02_prd.md](docs/01_product_definition/02_prd.md)
 
 ### Nota de control humano:
 El PRD fue revisado y aprobado para comenzar con el desarrollo. Se unificó la meta de la Tasa de Rotación de Remanentes (TRR) a 24 horas para mantener consistencia con el documento de framing.
@@ -66,15 +66,15 @@ El PRD fue revisado y aprobado para comenzar con el desarrollo. Se unificó la m
 **Prompt 3 Especificación Técnica de Arquitectura y Persistencia:**
 
 ```md
-Usando el skill de Modelo de Dominio en `.agents/skills/specs/02_architecture_design/SK-03_design_domain_model.md`, analiza el PRD `docs/01_product_definition/03_restostock_prd.md` para generar la especificación técnica en `docs/02_architecture_design/03_restostock_design.md`.
+Usando el skill de Modelo de Dominio en `.agents/skills/specs/02_architecture_design/SK-03_design_domain_model.md`, analiza el PRD `docs/01_product_definition/02_prd.md` para generar la especificación técnica en `docs/02_architecture_design/03_domain_model.md`.
 ```
 
 ### Respuesta del agente de IA:
 El documento completo de diseño de arquitectura y persistencia se encuentra en:
-* [docs/02_architecture_design/03_restostock_design.md](docs/02_architecture_design/03_restostock_design.md)
+* [docs/02_architecture_design/03_domain_model.md](docs/02_architecture_design/03_domain_model.md)
 
 ### Nota de control humano:
-La revision del archivo docs/02_architecture_design/03_restostock_design.md fue completada y aprobada para continuar con las especificaciones tecnicas, para continuar a mas detalla con la seccion de Arquitectura del Sistema a continuacion.
+La revision del archivo docs/02_architecture_design/03_domain_model.md fue completada y aprobada para continuar con las especificaciones tecnicas, para continuar a mas detalla con la seccion de Arquitectura del Sistema a continuacion.
 
 ---
 
@@ -85,12 +85,12 @@ La revision del archivo docs/02_architecture_design/03_restostock_design.md fue 
 **Prompt 1:**
 Generación de Diagramas Mermaid Integrados
 ``` md 
-Usando el skill de Diseño Técnico en `.agents/skills/specs/02_architecture_design/SK-04_design_technical_architecture.md`, analiza los archivos `docs/01_product_definition/03_restostock_prd.md` y `docs/02_architecture_design/03_restostock_design.md` para generar el diagrama C4 de la arquitectura física y lógica en Mermaid en `docs/02_architecture_design/04_restostock_architecture_diagram.md`.
+Usando el skill de Diseño Técnico en `.agents/skills/specs/02_architecture_design/SK-04_design_technical_architecture.md`, analiza los archivos `docs/01_product_definition/02_prd.md` y `docs/02_architecture_design/03_domain_model.md` para generar el diagrama C4 de la arquitectura física y lógica en Mermaid en `docs/02_architecture_design/04_technical_design.md`.
 ```
 
 #### Respuesta del agente de IA:
 El diagrama completo de arquitectura física y lógica se encuentra en:
-* [docs/02_architecture_design/04_restostock_architecture_diagram.md](docs/02_architecture_design/04_restostock_architecture_diagram.md)
+* [docs/02_architecture_design/04_technical_design.md](docs/02_architecture_design/04_technical_design.md)
 
 --- 
 
@@ -99,7 +99,7 @@ El diagrama completo de arquitectura física y lógica se encuentra en:
 **Prompt 1:**
 Definición de Capas y UI/UX
 ```md 
-Usando el skill de Asistente UI/UX y Capas en `.agents/skills/specs/02_architecture_design/SK-05_design_ui_ux_system.md`, analiza `docs/01_product_definition/03_restostock_prd.md` y `docs/02_architecture_design/03_restostock_design.md` para estructurar la sección "2.2. Descripción de componentes principales" en `docs/02_architecture_design/05_restostock_components_description.md`.
+Usando el skill de Asistente UI/UX y Capas en `.agents/skills/specs/02_architecture_design/SK-05_design_ui_ux_system.md`, analiza `docs/01_product_definition/02_prd.md` y `docs/02_architecture_design/03_domain_model.md` para estructurar la sección "2.2. Descripción de componentes principales" en `docs/02_architecture_design/05_ui_ux_design_system.md`.
 
 ```
 
@@ -117,13 +117,13 @@ Se auditó la generación de `DESIGN.md` utilizando el linter oficial de Google 
 
 **Prompt 1:**
 ```md
-Usando el skill de Diseño Técnico en `.agents/skills/specs/02_architecture_design/SK-04_design_technical_architecture.md`, analiza los archivos de diseño y arquitectura en `./docs/` para generar la jerarquía exacta de ficheros combinando Vertical Slices y Arquitectura Hexagonal en `docs/02_architecture_design/06_restostock_folder_structure.md`.
+Usando el skill de Diseño Técnico en `.agents/skills/specs/02_architecture_design/SK-04_design_technical_architecture.md`, analiza los archivos de diseño y arquitectura en `./docs/` para generar la jerarquía exacta de ficheros combinando Vertical Slices y Arquitectura Hexagonal en `docs/02_architecture_design/04_technical_design.md`.
 
 ```
 
 #### Respuesta del agente de IA:
 La estructura completa del directorio del proyecto (monorepo con Frontend Next.js y Backend Express) se encuentra en:
-* [docs/02_architecture_design/06_restostock_folder_structure.md](docs/02_architecture_design/06_restostock_folder_structure.md)
+* [docs/02_architecture_design/04_technical_design.md](docs/02_architecture_design/04_technical_design.md)
 
 
 #### Nota de control humano:
@@ -151,12 +151,12 @@ La configuración detallada y limpia del pipeline de GitHub Actions se encuentra
 
 **Prompt 1:**
 ```md
-Usando el skill de Ciberseguridad en `.agents/skills/specs/04_governance_and_quality/SK-08_define_security_strategy.md`, analiza el PRD y el modelo de datos para generar la estrategia de seguridad y mitigación de vulnerabilidades en `docs/03_governance_and_quality/07_restostock_security_strategy.md`.
+Usando el skill de Ciberseguridad en `.agents/skills/specs/04_governance_and_quality/SK-08_define_security_strategy.md`, analiza el PRD y el modelo de datos para generar la estrategia de seguridad y mitigación de vulnerabilidades en `docs/04_governance_and_quality/08_security_strategy.md`.
 ```
 
 ### Respuesta del agente de IA:
 La estrategia de seguridad detallada y alineada con OWASP se encuentra en:
-* [docs/03_governance_and_quality/07_restostock_security_strategy.md](docs/03_governance_and_quality/07_restostock_security_strategy.md)
+* [docs/04_governance_and_quality/08_security_strategy.md](docs/04_governance_and_quality/08_security_strategy.md)
 
 ### Nota de control humano:
 
@@ -166,12 +166,12 @@ La estrategia de seguridad detallada y alineada con OWASP se encuentra en:
 
 **Prompt 1:**
 ```md
-Usando el skill de Estrategia de Pruebas en `.agents/skills/specs/04_governance_and_quality/SK-09_define_testing_strategy.md`, configura la directiva de pruebas y testing de TDD en `docs/03_governance_and_quality/08_restostock_testing_strategy.md`.
+Usando el skill de Estrategia de Pruebas en `.agents/skills/specs/04_governance_and_quality/SK-09_define_testing_strategy.md`, configura la directiva de pruebas y testing de TDD en `docs/04_governance_and_quality/09_testing_strategy.md`.
 ```
 
 ### Respuesta del agente de IA:
 La directiva y estrategia de testing detallada (TDD y mocks mínimos) se encuentra en:
-* [docs/03_governance_and_quality/08_restostock_testing_strategy.md](docs/03_governance_and_quality/08_restostock_testing_strategy.md)
+* [docs/04_governance_and_quality/09_testing_strategy.md](docs/04_governance_and_quality/09_testing_strategy.md)
 
 ### Nota de control humano:
 
@@ -181,12 +181,12 @@ La directiva y estrategia de testing detallada (TDD y mocks mínimos) se encuent
 
 **Prompt 1:**
 ```md
-Usando el skill de Base de Datos en `.agents/skills/specs/03_persistence_and_api/SK-06_design_database_schema.md`, genera el esquema declarativo de base de datos para Prisma en `docs/04_persistence_and_api/09_restostock_database_schema.md` a partir de `docs/01_product_definition/03_restostock_prd.md` y `docs/02_architecture_design/03_restostock_design.md`.
+Usando el skill de Base de Datos en `.agents/skills/specs/03_persistence_and_api/SK-06_design_database_schema.md`, genera el esquema declarativo de base de datos para Prisma en `docs/03_persistence_and_api/06_database_schema.md` a partir de `docs/01_product_definition/02_prd.md` y `docs/02_architecture_design/03_domain_model.md`.
 ```
 
 ### Respuesta del agente de IA:
 El esquema declarativo de base de datos para Prisma (`schema.prisma`) y su justificación técnica se encuentra en:
-* [docs/04_persistence_and_api/09_restostock_database_schema.md](docs/04_persistence_and_api/09_restostock_database_schema.md)
+* [docs/03_persistence_and_api/06_database_schema.md](docs/03_persistence_and_api/06_database_schema.md)
 
 ### Nota de control humano:
 Se validó que el archivo destinado a `schema.prisma` sea un archivo ejecutable con sintaxis pura de Prisma, sin bloques Markdown explicativos embebidos, y que cualquier justificación adicional de índices se mantenga en el artefacto de documentación separado.
@@ -197,12 +197,12 @@ Se validó que el archivo destinado a `schema.prisma` sea un archivo ejecutable 
 
 **Prompt 1:**
 ```md
-Usando el skill de Especificación API REST en `.agents/skills/specs/03_persistence_and_api/SK-07_design_api_specification.md`, diseña los contratos de endpoints REST en `docs/04_persistence_and_api/10_restostock_api_specification.md` basándote en el PRD y el esquema físico.
+Usando el skill de Especificación API REST en `.agents/skills/specs/03_persistence_and_api/SK-07_design_api_specification.md`, diseña los contratos de endpoints REST en `docs/03_persistence_and_api/07_api_specification.md` basándote en el PRD y el esquema físico.
 ```
 
 ### Respuesta del agente de IA:
 La especificación de la API detallada y alineada con OWASP se encuentra en:
-* [docs/04_persistence_and_api/10_restostock_api_specification.md](docs/04_persistence_and_api/10_restostock_api_specification.md)
+* [docs/03_persistence_and_api/07_api_specification.md](docs/03_persistence_and_api/07_api_specification.md)
 
 ### Nota de control humano:
 Se garantizó que todas las cantidades y representaciones de tipo Decimal en payloads JSON se serialicen de forma consistente y determinista exclusivamente como strings (cadenas de texto numéricas, ej: `"2.0000"`), indicando su precisión y escala.
@@ -213,12 +213,12 @@ Se garantizó que todas las cantidades y representaciones de tipo Decimal en pay
 
 **Prompt 1:**
 ```md
-Usando el skill de Historias de Usuario en `.agents/skills/specs/05_agile_planning/SK-11_generate_user_stories.md`, genera el backlog de Historias de Usuario bajo INVEST y BDD Gherkin en las subcarpetas del directorio `docs/05_agile_planning/user_stories/{modulo}/` y su respectivo `docs/05_agile_planning/user_stories/indice_user_stories.md`.
+Usando el skill de Historias de Usuario en `.agents/skills/specs/05_agile_planning/SK-11_generate_user_stories.md`, genera el backlog de Historias de Usuario bajo INVEST y BDD Gherkin en las subcarpetas del directorio `docs/05_agile_planning/11_user_stories/{modulo}/` y su respectivo `docs/05_agile_planning/11_user_stories/indice_user_stories.md`.
 
 ```
 ### Respuesta del agente de IA:
 Las historias de usuario detalladas (en formato INVEST y BDD Gherkin) y su correspondiente índice se encuentran en:
-* [docs/05_agile_planning/user_stories/indice_user_stories.md](docs/05_agile_planning/user_stories/indice_user_stories.md)
+* [docs/05_agile_planning/11_user_stories/indice_user_stories.md](docs/05_agile_planning/11_user_stories/indice_user_stories.md)
 
 ### Nota de control humano:
 Se revisó que los escenarios de negocio prohíban saldos negativos en remanentes, y que cualquier descarte sobre un remanente ya CONSUMED o DISCARDED sea explícitamente rechazado sin mutar la base de datos.
@@ -229,13 +229,13 @@ Se revisó que los escenarios de negocio prohíban saldos negativos en remanente
 
 **Prompt 1:**
 ```md
-Usando el skill de Planificación de Tickets en `.agents/skills/specs/05_agile_planning/SK-12_generate_backlog_tickets.md`, desglosa las historias en tareas atómicas estimadas en las subcarpetas de `docs/05_agile_planning/tickets/{modulo}/` y su correspondiente `docs/05_agile_planning/tickets/indice_tickets.md`.
+Usando el skill de Planificación de Tickets en `.agents/skills/specs/05_agile_planning/SK-12_generate_backlog_tickets.md`, desglosa las historias en tareas atómicas estimadas en las subcarpetas de `docs/05_agile_planning/12_tickets/{modulo}/` y su correspondiente `docs/05_agile_planning/12_tickets/indice_tickets.md`.
 
 ```
 
 ### Respuesta del agente de IA:
 La matriz de trazabilidad y las fichas técnicas detalladas de los tickets de trabajo del backlog se encuentran en:
-* [docs/05_agile_planning/tickets/indice_tickets.md](docs/05_agile_planning/tickets/indice_tickets.md)
+* [docs/05_agile_planning/12_tickets/indice_tickets.md](docs/05_agile_planning/12_tickets/indice_tickets.md)
 
 ### Nota de control humano:
 Se corroboró que el manejo de caídas de red en el frontend (TK-007) se mitigue mediante capturas explícitas de promesas asíncronas y actualización de estados de error de data-fetching locales, en lugar de Error Boundaries de React.
@@ -265,7 +265,7 @@ Se auditó la documentación de Pull Requests para asegurar que solo contenga in
 
 **Prompt 1 Configuración del Entorno de Desarrollo y Monorepo:**
 ```md
-Usando el ticket `TK-001` (docs/05_agile_planning/tickets/shared/backend/TK-001.md) y las directivas de `docs/03_governance_and_quality/rules/backend_rules.md`, inicializa la estructura física del monorepo en Node.js y TypeScript:
+Usando el ticket `TK-001` (docs/05_agile_planning/12_tickets/shared/backend/TK-001.md) y las directivas de `docs/04_governance_and_quality/rules/backend_rules.md`, inicializa la estructura física del monorepo en Node.js y TypeScript:
 1. Configura el workspace con `pnpm`.
 2. Inicializa TypeScript con `tsconfig.json` optimizado.
 3. Instala e inicializa Express y Prisma ORM con PostgreSQL.
@@ -306,7 +306,7 @@ Se auditó y ejecutó de manera presencial el andamiaje del backend:
 
 **Prompt 2 Implementación de Módulo de Autenticación:**
 ```md
-Usando el ticket `TK-002` (docs/05_agile_planning/tickets/auth/backend/TK-002.md) y las directivas de `docs/03_governance_and_quality/rules/domain_rules.md` y `docs/03_governance_and_quality/rules/backend_rules.md`, implementa el vertical slice `auth` de autenticación por PIN:
+Usando el ticket `TK-002` (docs/05_agile_planning/12_tickets/auth/backend/TK-002.md) y las directivas de `docs/04_governance_and_quality/rules/domain_rules.md` y `docs/04_governance_and_quality/rules/backend_rules.md`, implementa el vertical slice `auth` de autenticación por PIN:
 1. Diseña la entidad de dominio `User` y el Value Object `Pin` con hashing de `bcrypt` y validación de 4 dígitos.
 2. Define la interfaz `IUserRepository` en el dominio.
 3. Escribe las pruebas unitarias en rojo (TDD) para validar y comparar PINs usando InMemoryRepository.
@@ -345,7 +345,7 @@ Se auditó y ejecutó de manera exitosa la autenticación de operarios:
 
 **Prompt 3 Implementación de Módulo de Extracción de Bodega:**
 ```md
-Usando el ticket `TK-003` (docs/05_agile_planning/tickets/stock/backend/TK-003.md) y las directivas de backend y dominio, implementa el vertical slice `stock` de registro de extracciones:
+Usando el ticket `TK-003` (docs/05_agile_planning/12_tickets/stock/backend/TK-003.md) y las directivas de backend y dominio, implementa el vertical slice `stock` de registro de extracciones:
 1. Define la entidad `Remanente` con su cálculo de vencimiento dinámico y la invariante de no-negatividad.
 2. Crea los puertos e implementaciones de repositorio `IStockMovementRepository` e `IWarehouseStockRepository`.
 3. Desarrolla el caso de uso `RecordExtractionUseCase` que gestiona de manera atómica transaccional el débito en bodega y la creación del remanente activo.
@@ -370,7 +370,7 @@ Se ha implementado por completo el vertical slice de **Registro de Extracciones 
 
 **Prompt 4 Implementación de Módulo de Consulta de Remanentes:**
 ```md
-Usando el ticket `TK-004` (docs/05_agile_planning/tickets/kitchen/backend/TK-004.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de consulta de remanentes activos:
+Usando el ticket `TK-004` (docs/05_agile_planning/12_tickets/kitchen/backend/TK-004.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de consulta de remanentes activos:
 1. Declara la firma `findActiveInKitchen(location?)` en `IRemanenteRepository`.
 2. Crea el caso de uso `GetActiveRemanentesUseCase` aplicando ordenación FEFO.
 3. Implementa los adaptadores físico (`PrismaRemanenteRepository`) e in-memory (`InMemoryRemanenteRepository`) resolviendo problemas de consultas N+1 mediante join explícito con el catálogo maestro (`Insumo`).
@@ -395,7 +395,7 @@ Se ha implementado por completo el vertical slice de **Consulta de Remanentes Ac
 
 **Prompt 5 Implementación de Módulo de Consumo de Remanentes:**
 ```md
-Usando el ticket `TK-005` (docs/05_agile_planning/tickets/kitchen/backend/TK-005.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de consumo parcial de remanentes:
+Usando el ticket `TK-005` (docs/05_agile_planning/12_tickets/kitchen/backend/TK-005.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de consumo parcial de remanentes:
 1. Define el método `consume` en la clase `Remanente` para realizar restas matemáticas precisas usando `decimal.js`, validando que no quede en stock negativo y pasando a estado `CONSUMED` si el saldo es cero.
 2. Implementa el caso de uso `RecordConsumptionUseCase` que orquesta la transacción del consumo del remanente.
 3. Desarrolla el controlador `RecordConsumptionController` y las rutas `POST /api/kitchen/consumption` protegidas por el middleware `requireAuth`.
@@ -418,7 +418,7 @@ Se ha implementado el vertical slice de **Consumo Parcial de Remanentes (`TK-005
 
 **Prompt 6 Implementación de Módulo de Descarte por Merma:**
 ```md
-Usando el ticket `TK-006` (docs/05_agile_planning/tickets/kitchen/backend/TK-006.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de descarte de remanentes por merma:
+Usando el ticket `TK-006` (docs/05_agile_planning/12_tickets/kitchen/backend/TK-006.md) y las directivas de backend y dominio, implementa el vertical slice `kitchen` de descarte de remanentes por merma:
 1. Agrega el método `discard` en la entidad `Remanente` que realiza la transición a `DISCARDED` y setea a cero la cantidad, arrojando excepciones si ya está consumido o descartado previamente.
 2. Crea el caso de uso `DiscardRemanenteUseCase`.
 3. Desarrolla el controlador `DiscardRemanenteController` y monta el endpoint `POST /api/kitchen/remanentes/:id/discard` en el router de cocina.
@@ -443,7 +443,7 @@ Se ha implementado el vertical slice de **Descarte de Remanentes por Merma (`TK-
 
 **Prompt 1 Configuración del Frontend, Persistencia Local e Interfaz:**
 ```md
-Usando el ticket `TK-007` (docs/05_agile_planning/tickets/kitchen/frontend/TK-007.md) y las directivas de `docs/03_governance_and_quality/rules/frontend-rules.md`, implementa el módulo frontend de notificaciones táctiles y resiliencia offline:
+Usando el ticket `TK-007` (docs/05_agile_planning/12_tickets/kitchen/frontend/TK-007.md) y las directivas de `docs/04_governance_and_quality/rules/frontend_rules.md`, implementa el módulo frontend de notificaciones táctiles y resiliencia offline:
 1. Configura el entorno en `/apps/frontend` bajo @restostock/frontend con HSL CSS variables, escala ergonómica para botones táctiles (mínimo 48px) e Industrial Dark Mode.
 2. Define los modelos `ActiveRemanentDto` y puertos de repositorio `IRemanenteRepository`.
 3. Crea la lógica pura de semáforos FEFO (`calculateAlertSeverity`) y cúbrela con tests unitarios.
