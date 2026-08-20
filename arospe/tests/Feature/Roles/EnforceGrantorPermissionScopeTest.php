@@ -13,6 +13,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Policies\RolePolicy;
 use Illuminate\Auth\Access\AuthorizationException;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
@@ -24,7 +25,7 @@ beforeEach(function () {
  */
 function grantorScopeTestPermission(string $name): string
 {
-    \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
 
     return $name;
 }
@@ -123,9 +124,11 @@ test('roles.manage-administrators is never refused by this action, even for an a
 
     // This actor does NOT hold roles.manage-administrators, and this
     // action alone would otherwise refuse it as a newly granted permission
-    // it does not hold -- but that permission's grant rule belongs to
-    // EnforceAdministratorPermissionGrant, run afterwards in
-    // saveRole(), which is what actually refuses it.
+    // it does not hold -- but that permission's grant rule belongs
+    // entirely to EnforceAdministratorPermissionGrant, which excludes it
+    // from its own scope (see this class's docblock). Not a matter of call
+    // order in saveRole(): verified live that reversing the two calls
+    // there refuses identically.
     $result = $enforce($actor, [RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION], null);
 
     expect($result)->toBe([RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION]);

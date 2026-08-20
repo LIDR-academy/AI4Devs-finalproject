@@ -8,6 +8,7 @@
 // suite stays decoupled from the catalog's exact contents. The one place a
 // real permission string matters is the gate itself: 'roles.manage'.
 
+use App\Exceptions\RoleInUseException;
 use App\Livewire\Roles\Index;
 use App\Models\Role;
 use App\Models\User;
@@ -299,7 +300,7 @@ test('$role->delete() called directly, bypassing the component entirely, is also
     $holder = User::factory()->create();
     $holder->assignRole($role);
 
-    expect(fn () => $role->delete())->toThrow(App\Exceptions\RoleInUseException::class);
+    expect(fn () => $role->delete())->toThrow(RoleInUseException::class);
 
     expect(Role::find($role->id))->not->toBeNull();
 });
@@ -481,13 +482,20 @@ test('calling deleteRole() directly without roles.manage is refused and the role
 
 test('openEditModal() is refused for a user lacking roles.manage without disclosing the target role', function () {
     $this->withoutExceptionHandling();
-    $role = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+    $role = Role::create(['name' => 'Sensitive Role Name', 'guard_name' => 'web']);
 
-    $user = User::factory()->create();
-    $this->actingAs($user);
+    $actor = rolesTestActor();
+    $this->actingAs($actor);
 
-    expect(fn () => Livewire::test(Index::class, ['skipMount' => true]))->not->toThrow(); // guard: mount() itself already denies below
-})->skip('mount() already denies before openEditModal() is reachable -- see the dedicated mount() test above; this file does not construct the component with mount() bypassed.');
+    $component = Livewire::test(Index::class);
+
+    $actor->revokePermissionTo('roles.manage');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    expect(fn () => $component->call('openEditModal', $role->id))->toThrow(AuthorizationException::class);
+    expect($component->get('name'))->toBe('')
+        ->and($component->get('selectedPermissionIds'))->toBe([]);
+});
 
 test('confirmDeleteRole() is refused for a user lacking roles.manage without disclosing the target role name', function () {
     $this->withoutExceptionHandling();
@@ -521,7 +529,7 @@ test('the roles list excludes the Super Admin role', function () {
         ->and($names)->toContain('Blog Editor');
 });
 
-test('targeting the Super Admin role by forged id in saveRole() is refused', function () {
+test('targeting the Super Admin role by forged id via openEditModal() is refused -- the only reachable path into saveRole()\'s edit branch, since editingRoleId is #[Locked]', function () {
     $this->withoutExceptionHandling();
     $superAdmin = Role::firstOrCreateSuperAdminRole();
 
@@ -531,7 +539,7 @@ test('targeting the Super Admin role by forged id in saveRole() is refused', fun
         ->toThrow(AuthorizationException::class);
 });
 
-test('targeting the Super Admin role by forged id in deleteRole() is refused', function () {
+test('targeting the Super Admin role by forged id via confirmDeleteRole() is refused -- the only reachable path into deleteRole(), since deletingRoleId is #[Locked]', function () {
     $this->withoutExceptionHandling();
     $superAdmin = Role::firstOrCreateSuperAdminRole();
 
