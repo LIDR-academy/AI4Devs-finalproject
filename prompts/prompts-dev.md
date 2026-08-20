@@ -317,4 +317,24 @@ I have this task: https://linear.app/ai4devs/issue/COACHER-24/us-34-calendar-int
 However, I'm not sure if it may be everything covered already. Please can you review and edit it accordingly with only what's left to do?
 Ask me anything you need
 
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-24/us-34-calendar-interactions-for-coachees
+
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
+As a coachee, if I'm enrolled in one class, when I go to the calendar view and click on the View button of that class, the modal shown, should not show me the Join waiting list since it'a a class I'm already enrolled
+
+----
+
+Also, a coachee should not see any busy block from any class that is not relevant or related to the same coachee
+
+----
+
+And forr the group classes that a coachee has joined the waiting list, we shouldhave something in th card in the calendar view that says so. Maybe a tag saying waitlist or an icon? 
+
+----
+
+
 <!-- Backend `npm audit` fails on pre-existing transitive dev-dep vulnerabilities (prisma 6→7 and vitest 2→4 are the only fixes, both major/breaking). -->

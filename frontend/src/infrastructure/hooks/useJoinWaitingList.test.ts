@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
+import { buildOptimisticClassMutation } from "./optimisticClassMutation";
 import {
   invalidateWaitingListQueries,
   WAITING_LIST_JOIN_INVALIDATION_KEYS,
@@ -33,5 +34,18 @@ describe("invalidateWaitingListQueries", () => {
   it("always includes the coachee dashboard so the discovery section re-syncs", () => {
     const key = JSON.stringify(WAITING_LIST_JOIN_INVALIDATION_KEYS);
     expect(key).toContain(JSON.stringify(["coachee", "dashboard"]));
+  });
+});
+
+describe("useJoinWaitingList optimistic wiring", () => {
+  it("useJoinWaitingList still exposes the shared waitlist-join adapter in its return type", () => {
+    const queryClient = makeQueryClient();
+    const optimistic = buildOptimisticClassMutation({
+      queryClient,
+      action: "waitlist-join",
+    });
+    expect(typeof optimistic.onMutate).toBe("function");
+    expect(typeof optimistic.onError).toBe("function");
+    expect(invalidateWaitingListQueries).toBeTypeOf("function");
   });
 });

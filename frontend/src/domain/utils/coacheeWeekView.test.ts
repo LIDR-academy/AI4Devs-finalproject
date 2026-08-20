@@ -1,13 +1,23 @@
 import { describe, expect, it } from "vitest";
 import type { TrainingClass } from "@/domain/types/class";
-import { groupClassesByDay, gymDayKey, isCoacheeRelevant, weekDays } from "./coacheeWeekView";
+import {
+  groupClassesByDay,
+  gymDayKey,
+  isCalendarClass,
+  isOnWaitingListFor,
+  isRelevantBusyClass,
+  isWithinReach,
+  weekDays,
+} from "./coacheeWeekView";
+
+const baseLevel = { id: "lv-1", name: "Intermedio", color: "#fff", sortOrder: 3 };
 
 function classRow(overrides: Partial<TrainingClass> = {}): TrainingClass {
   return {
     id: "cl-1",
     classType: "GROUP",
     assignedCoach: { id: "coach-1", name: "Coach Uno" },
-    level: { id: "lv-1", name: "Intermedio", color: "#fff", sortOrder: 3 },
+    level: baseLevel,
     startTime: "2026-08-22T16:00:00.000Z",
     durationMinutes: 60,
     status: "ACTIVE",
@@ -53,15 +63,92 @@ describe("weekDays", () => {
   });
 });
 
-describe("isCoacheeRelevant", () => {
-  it("keeps enrolled (blue) and joinable (green) classes", () => {
-    expect(isCoacheeRelevant(classRow({ visibility: "blue" }))).toBe(true);
-    expect(isCoacheeRelevant(classRow({ visibility: "green" }))).toBe(true);
+describe("isCalendarClass", () => {
+  it("keeps enrolled (blue) classes, including canceled ones", () => {
+    expect(isCalendarClass(classRow({ visibility: "blue" }))).toBe(true);
+    expect(isCalendarClass(classRow({ visibility: "blue", status: "CANCELED" }))).toBe(true);
   });
 
-  it("excludes busy (gray) or unknown visibility classes", () => {
-    expect(isCoacheeRelevant(classRow({ visibility: "gray" }))).toBe(false);
-    expect(isCoacheeRelevant(classRow({ visibility: undefined }))).toBe(false);
+  it("keeps joinable (green) group classes", () => {
+    expect(isCalendarClass(classRow({ visibility: "green" }))).toBe(true);
+  });
+
+  it("keeps busy (gray) group classes that are within reach of the coachee", () => {
+    expect(
+      isCalendarClass(classRow({ visibility: "gray", level: { ...baseLevel, sortOrder: 3 } }), 3),
+    ).toBe(true);
+  });
+
+  it("drops busy (gray) group classes that are out of the coachee's reach", () => {
+    expect(
+      isCalendarClass(classRow({ visibility: "gray", level: { ...baseLevel, sortOrder: 5 } }), 3),
+    ).toBe(false);
+  });
+
+  it("drops busy (gray) individual classes even when in reach", () => {
+    expect(
+      isCalendarClass(
+        classRow({
+          classType: "INDIVIDUAL",
+          level: null,
+          visibility: "gray",
+        }),
+        3,
+      ),
+    ).toBe(false);
+  });
+
+  it("drops busy (gray) group classes when the coachee has no level", () => {
+    expect(isCalendarClass(classRow({ visibility: "gray" }))).toBe(false);
+    expect(isCalendarClass(classRow({ visibility: "gray" }), null)).toBe(false);
+  });
+
+  it("excludes classes with unknown visibility", () => {
+    expect(isCalendarClass(classRow({ visibility: undefined }))).toBe(false);
+  });
+});
+
+describe("isRelevantBusyClass", () => {
+  const group = classRow();
+
+  it("is true only for group classes within reach of the coachee's level", () => {
+    expect(isRelevantBusyClass(group, 3)).toBe(true);
+    expect(isRelevantBusyClass(group, 2)).toBe(true);
+    expect(isRelevantBusyClass(group, 4)).toBe(true);
+    expect(isRelevantBusyClass(group, 5)).toBe(false);
+  });
+
+  it("is false for individual classes, missing levels, or a coachee without a level", () => {
+    const individual = classRow({ classType: "INDIVIDUAL", level: null });
+    const noLevel = classRow({ level: null });
+    expect(isRelevantBusyClass(individual, 3)).toBe(false);
+    expect(isRelevantBusyClass(noLevel, 3)).toBe(false);
+    expect(isRelevantBusyClass(group, undefined)).toBe(false);
+    expect(isRelevantBusyClass(group, null)).toBe(false);
+  });
+});
+
+describe("isWithinReach", () => {
+  it("follows the ±1 reach rule", () => {
+    expect(isWithinReach(3, 3)).toBe(true);
+    expect(isWithinReach(3, 2)).toBe(true);
+    expect(isWithinReach(3, 4)).toBe(true);
+    expect(isWithinReach(3, 5)).toBe(false);
+    expect(isWithinReach(3, 1)).toBe(false);
+  });
+});
+
+describe("isOnWaitingListFor", () => {
+  const entries = [{ class: { id: "cl-1" } }, { class: { id: "cl-2" } }];
+
+  it("is true when the coachee is on the waiting list for the class", () => {
+    expect(isOnWaitingListFor(entries, "cl-1")).toBe(true);
+    expect(isOnWaitingListFor(entries, "cl-2")).toBe(true);
+  });
+
+  it("is false for classes not in the coachee's waiting lists", () => {
+    expect(isOnWaitingListFor(entries, "cl-3")).toBe(false);
+    expect(isOnWaitingListFor([], "cl-1")).toBe(false);
   });
 });
 

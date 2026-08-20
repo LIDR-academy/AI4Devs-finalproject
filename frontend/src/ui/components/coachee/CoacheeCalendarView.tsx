@@ -1,19 +1,22 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import "temporal-polyfill/global";
 import type { TrainingClass } from "@/domain/types/class";
-import { extractErrorCode } from "@/domain/utils/apiError";
 import { addDays, gymTodayDate } from "@/domain/utils/classCalendarEvents";
 import { COACHEE_VISIBILITY_COLORS, coacheeEventTitle } from "@/domain/utils/coacheeCalendarEvents";
-import { groupClassesByDay, isCoacheeRelevant, weekDays } from "@/domain/utils/coacheeWeekView";
-import { enrollmentErrorMessage } from "@/domain/utils/enrollmentErrorMessages";
+import {
+  groupClassesByDay,
+  isCalendarClass,
+  isOnWaitingListFor,
+  weekDays,
+} from "@/domain/utils/coacheeWeekView";
 import { toGymIsoDateTime } from "@/domain/utils/gymDateTime";
 import { formatNextClassTime } from "@/domain/utils/nextClassInfo";
-import { useToast } from "@/infrastructure/context/ToastContext";
-import { useCancelEnrollment } from "@/infrastructure/hooks/useCancelEnrollment";
-import { useJoinClass } from "@/infrastructure/hooks/useJoinClass";
+import { useLevels } from "@/infrastructure/hooks/useLevels";
 import { useListClasses } from "@/infrastructure/hooks/useListClasses";
+import { useMe } from "@/infrastructure/hooks/useMe";
+import { useMyWaitingLists } from "@/infrastructure/hooks/useMyWaitingLists";
 import { usePullToRefresh } from "@/infrastructure/hooks/usePullToRefresh";
+import { ClassInteractionModal } from "@/ui/components/coachee/ClassInteractionModal";
 import { EmptyState, ErrorStateWithRetry, LoadingState } from "@/ui/components/coachee/ViewState";
 
 const MAX_DOTS_PER_DAY = 3;
@@ -36,6 +39,7 @@ function dayNumber(day: string): string {
 export function CoacheeCalendarView({ week }: { week: { start: string; end: string } }) {
   const [weekStart, setWeekStart] = useState(week.start);
   const [selectedDay, setSelectedDay] = useState(() => gymTodayDate());
+  const [selectedClass, setSelectedClass] = useState<TrainingClass | null>(null);
 
   const shiftWeek = (nextStart: string) => {
     const days = weekDays(nextStart);
@@ -53,16 +57,35 @@ export function CoacheeCalendarView({ week }: { week: { start: string; end: stri
     page: 1,
     limit: 100,
   });
+  const meQuery = useMe();
+  const levelsQuery = useLevels();
+  const waitingListsQuery = useMyWaitingLists();
+  const waitingLists = waitingListsQuery.data?.data ?? [];
+  const coacheeLevelSortOrder = useMemo(() => {
+    const meLevelId = meQuery.data?.level?.id;
+    if (!meLevelId || !levelsQuery.data) {
+      return null;
+    }
+    return levelsQuery.data.find((level) => level.id === meLevelId)?.sort_order ?? null;
+  }, [meQuery.data, levelsQuery.data]);
   const refetch = () => classesQuery.refetch();
   usePullToRefresh({ refetch });
 
   const days = weekDays(weekStart);
-  const visible = (classesQuery.data?.data ?? []).filter(isCoacheeRelevant);
+  const visible = (classesQuery.data?.data ?? []).filter((trainingClass) =>
+    isCalendarClass(trainingClass, coacheeLevelSortOrder),
+  );
   const byDay = groupClassesByDay(visible, days);
   const today = gymTodayDate();
   const dayCards = byDay[selectedDay] ?? [];
 
-  if (classesQuery.isLoading) {
+  const isLoadingCalendar =
+    classesQuery.isLoading ||
+    meQuery.isLoading ||
+    levelsQuery.isLoading ||
+    waitingListsQuery.isLoading;
+
+  if (isLoadingCalendar) {
     return (
       <>
         <CalendarToolbar weekStart={weekStart} onShift={shiftWeek} onRefresh={refetch} />
@@ -118,11 +141,22 @@ export function CoacheeCalendarView({ week }: { week: { start: string; end: stri
         ) : (
           <div className="space-y-3">
             {dayCards.map((trainingClass) => (
-              <ClassCard key={trainingClass.id} trainingClass={trainingClass} />
+              <ClassCard
+                key={trainingClass.id}
+                trainingClass={trainingClass}
+                isOnWaitingList={isOnWaitingListFor(waitingLists, trainingClass.id)}
+                onTap={() => setSelectedClass(trainingClass)}
+              />
             ))}
           </div>
         )}
       </div>
+      {selectedClass && (
+        <ClassInteractionModal
+          trainingClass={selectedClass}
+          onClose={() => setSelectedClass(null)}
+        />
+      )}
     </>
   );
 }
@@ -247,42 +281,23 @@ function DayStrip({
   );
 }
 
-function ClassCard({ trainingClass }: { trainingClass: TrainingClass }) {
-  const { showToast } = useToast();
-  const queryClient = useQueryClient();
-  const joinMutation = useJoinClass();
-  const cancelMutation = useCancelEnrollment();
-
+function ClassCard({
+  trainingClass,
+  isOnWaitingList,
+  onTap,
+}: {
+  trainingClass: TrainingClass;
+  isOnWaitingList: boolean;
+  onTap: () => void;
+}) {
   const isCanceled = trainingClass.status === "CANCELED";
-  const joinable = trainingClass.visibility === "green";
-  const enrolled = trainingClass.visibility === "blue";
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["classes"] });
-    queryClient.invalidateQueries({ queryKey: ["coachee", "dashboard"] });
-  };
-
-  const handleJoin = async () => {
-    try {
-      await joinMutation.mutateAsync(trainingClass.id);
-      showToast("You joined the class.", "success");
-      refresh();
-    } catch (error: unknown) {
-      showToast(enrollmentErrorMessage(extractErrorCode(error)), "error");
-    }
-  };
-
-  const handleCancel = async () => {
-    try {
-      await cancelMutation.mutateAsync(trainingClass.id);
-      showToast("You left the class.", "success");
-      refresh();
-    } catch (error: unknown) {
-      showToast(enrollmentErrorMessage(extractErrorCode(error)), "error");
-    }
-  };
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4">
+    <button
+      type="button"
+      onClick={onTap}
+      className="flex w-full items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50"
+    >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span
@@ -293,6 +308,11 @@ function ClassCard({ trainingClass }: { trainingClass: TrainingClass }) {
           {isCanceled && (
             <span className="rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-gray-700">
               Canceled
+            </span>
+          )}
+          {isOnWaitingList && (
+            <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-700">
+              Waitlist
             </span>
           )}
         </div>
@@ -307,28 +327,9 @@ function ClassCard({ trainingClass }: { trainingClass: TrainingClass }) {
             : ""}
         </p>
       </div>
-      <div className="flex shrink-0 flex-col gap-2">
-        {joinable && (
-          <button
-            type="button"
-            onClick={handleJoin}
-            disabled={joinMutation.isPending}
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {joinMutation.isPending ? "Enrolling..." : "Enroll"}
-          </button>
-        )}
-        {enrolled && !isCanceled && (
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={cancelMutation.isPending}
-            className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {cancelMutation.isPending ? "Leaving..." : "Cancel enrollment"}
-          </button>
-        )}
-      </div>
-    </div>
+      <span className="shrink-0 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+        View
+      </span>
+    </button>
   );
 }
