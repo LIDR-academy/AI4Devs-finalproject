@@ -44,6 +44,9 @@ jobs:
       - name: Run Code Linter
         run: pnpm run lint
 
+      - name: Check Code Duplication (jscpd)
+        run: pnpm run duplication
+
       - name: Validate OpenAPI Contract
         run: npx -y @stoplight/spectral-cli lint docs/03_persistence_and_api/openapi.yaml
 

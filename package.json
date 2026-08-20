@@ -6,10 +6,12 @@
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint",
     "test": "pnpm -r run test",
+    "duplication": "jscpd apps/backend/src apps/frontend/src -c .jscpd.json",
     "prepare": "husky"
   },
   "devDependencies": {
     "husky": "^9.1.7",
+    "jscpd": "^5.0.16",
     "typescript": "^5.3.3"
   }
 }

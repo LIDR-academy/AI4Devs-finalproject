@@ -36,6 +36,7 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 1. Aislamiento del Dominio: Verifica que la capa de Dominio no importe frameworks HTTP, ORMs o librerías de infraestructura externa.
 2. Mappers de Persistencia: Comprueba que los objetos ORM/BD no se expongan directamente en la API o en los casos de uso (uso obligatorio de Mappers).
 3. Inversión de Dependencias (DIP): Verifica que los casos de uso dependan exclusivamente de interfaces o puertos abstractos.
+4. Duplicación y Complejidad (Guard de Métricas, TK-036): Ejecuta el comando de duplicación declarado en `docs/00_stack_manifest.md` (ej. `pnpm run duplication`) — es un **gate bloqueante real**, marca la fase como DEFECTUOSA si falla. Revisa las advertencias de `complexity`/`max-lines-per-function`/`max-depth` del linter como señal informativa de violaciones SRP; no son bloqueantes hoy por deuda preexistente, pero cualquier función nueva o modificada en el diff auditado que las dispare cuenta como hallazgo SRP real.
 
 ---
 

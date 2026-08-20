@@ -27,6 +27,20 @@ export default tseslint.config(
       // (App.tsx, ReportsDashboard.tsx). Corregirlo de verdad implica reestructurar el
       // flujo de carga de datos, no un fix mecanico de lint — decision deliberada, no omision.
       'react-hooks/set-state-in-effect': 'off',
+      // Informativas (TK-036): deuda preexistente medida en 14 archivos, sobre todo
+      // componentes donde JSX infla el conteo de lineas. No bloquean pnpm run lint
+      // hasta que se pague esa deuda — mismo criterio que Mutation Testing.
+      complexity: ['warn', 10],
+      'max-lines-per-function': ['warn', 60],
+      'max-depth': ['warn', 4],
+    },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      complexity: 'off',
+      'max-lines-per-function': 'off',
+      'max-depth': 'off',
     },
   }
 );

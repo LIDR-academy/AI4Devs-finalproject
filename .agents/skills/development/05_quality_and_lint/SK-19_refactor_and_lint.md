@@ -1,7 +1,7 @@
 ---
 name: SK-19_refactor_and_lint
 description: "Guía el proceso de refactorización de código, resolución de advertencias de compilación, alineación con SOLID y limpieza de errores del linter."
-version: "2.2.0"
+version: "2.3.0"
 category: "development/05_quality_and_lint"
 inputs:
   - target_files: "Lista de archivos o directorios a refactorizar/limpiar"
@@ -9,6 +9,7 @@ outputs:
   - "Código refactorizado sin romper la lógica existente"
   - "Cero errores de compilación o análisis estático de tipos"
   - "Linter y formateador ejecutados con éxito y con 0 advertencias/errores"
+  - "Gate de duplicación de código (jscpd) en verde; métricas de complejidad/longitud reportadas"
 ---
 
 Actúa como un Senior Software Engineer y QA Specialist en refactorización y análisis estático de código. Tu objetivo es limpiar y optimizar los archivos especificados en `target_files`, garantizando el cumplimiento de los **Principios SOLID**, **Clean Code** y las **Reglas de Gobernanza** del proyecto sin alterar su comportamiento de negocio.
@@ -44,4 +45,5 @@ Sigue estrictamente este flujo de trabajo secuencial:
 2. **Asegurar Cero Advertencias:** Ejecuta el comando de linter oficial declarado en `AGENTS.md`. La refactorización sólo se da por completada con **0 errores y 0 advertencias**.
 3. **Mutation Testing Anti-Tautología:** Ejecutar el runner de Mutation Testing del proyecto (ej. Stryker, Mutmut, PITest, cargo-mutants) sobre los módulos de dominio/casos de uso. Exigir un **Mutation Score $\ge 70\%$** (matar mutantes). Pruebas sin aserciones reales rebotan la Quality Gate.
 4. **Tests de Regresión:** Vuelve a correr la suite de pruebas mediante el comando de test declarado en `AGENTS.md` para asegurar 100% de regresión exitosa.
-5. **Reporte al Humano:** Presentar los archivos refactorizados y las métricas de mutación estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.
+5. **Métricas de Calidad de Código:** Ejecuta el comando de duplicación declarado en `docs/00_stack_manifest.md` (ej. `pnpm run duplication`) — **gate bloqueante**, sin excepciones. Revisa además las advertencias de complejidad ciclomática/longitud de función (`complexity`, `max-lines-per-function`, `max-depth`) que reporte el linter sobre `target_files` — son informativas mientras el proyecto pague la deuda preexistente declarada en `docs/00_stack_manifest.md`, pero cualquier función nueva o modificada en `target_files` que las dispare debe refactorizarse antes de cerrar el ticket.
+6. **Reporte al Humano:** Presentar los archivos refactorizados y las métricas de mutación y duplicación estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

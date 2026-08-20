@@ -1,6 +1,6 @@
 ---
 document: stack_manifest
-version: 1.1.0
+version: 1.2.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
 approved_at: "2026-08-19"
@@ -82,8 +82,11 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Linter (Backend)** | ESLint | **9.x** (flat config) | `@eslint/js` recommended + `typescript-eslint` recommended |
 | **Linter (Frontend)** | ESLint | **9.x** (flat config) | + `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` (WCAG 2.2) |
 | **Comando de Lint** | `pnpm run lint` | — | `tsc --noEmit && eslint .` en cada workspace — el type-check NO reemplaza al linter |
+| **Duplication Detector** | jscpd | **5.x** | Umbral 3% (`.jscpd.json`), **bloqueante** en CI vía `pnpm run duplication` |
 
 > **Nota histórica (TK-033):** hasta esta versión, `pnpm run lint` era un alias de `tsc --noEmit` sin ningún linter real detrás — el gate de calidad reportaba "0 errores" sin poder detectar duplicación de estilos, `any` inseguros, ni violaciones de accesibilidad. Corregido instalando ESLint real en ambos workspaces.
+>
+> **Nota histórica (TK-036):** `complexity`, `max-lines-per-function` (≤60) y `max-depth` (≤4) están activas en ambos `eslint.config.*` pero en severidad `warn` — **informativas, no bloqueantes**. Medición inicial: 8 advertencias reales en backend (`runSeed`, `ConsumeRecipeUseCase.execute`, `PerformShiftReconciliationUseCase.execute`, `createApp`, `InMemoryRemanenteQueryRepository.findActiveRemanentes`) y 15 en frontend (sobre todo componentes React donde JSX infla el conteo de líneas), por debajo del umbral solo tras excluir archivos de test. Pasan a bloqueantes cuando se pague esa deuda — mismo criterio que Mutation Testing. La duplicación de código (`jscpd`), en cambio, sí es bloqueante desde ya: el baseline real (1.68%) ya cumple el umbral con margen.
 
 ---
 
@@ -118,6 +121,9 @@ pnpm run build
 
 # Linter estático
 pnpm run lint
+
+# Detección de duplicación de código (umbral 3%)
+pnpm run duplication
 
 # Servidor de desarrollo backend
 pnpm --filter @restostock/backend dev
