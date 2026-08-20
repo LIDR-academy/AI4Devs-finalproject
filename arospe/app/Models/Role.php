@@ -111,6 +111,44 @@ class Role extends SpatieRole
     }
 
     /**
+     * The one sanctioned way to bring the Administrator role into existence
+     * -- used by RolePermissionSeeder only, the exact Administrator-tier
+     * counterpart to firstOrCreateSuperAdminRole() above, added by story
+     * 0010's Phase 4 security-audit fix for finding F1. Every other
+     * creation path is refused by the `creating` guard in boot() below, so
+     * no role-management screen (or any other application code) can create
+     * a second row under this locked name. Bypasses model events via
+     * withoutEvents() for the same reason the Super Admin method does: this
+     * is the one legitimate case guardAgainstAssumingAdministratorName()
+     * must not catch, and firstOrCreate() would otherwise fire it.
+     *
+     * Mirrors firstOrCreateSuperAdminRole()'s case-insensitive-collation
+     * guard too: `roles.name` is `utf8mb4_unicode_ci`, so an unguarded
+     * firstOrCreate() would silently *adopt* a pre-existing row named e.g.
+     * "administrator" instead of creating one named exactly
+     * RoleName::Administrator->value, and every identity check in this app
+     * (isAdministratorRole(), UserPolicy's hasRole() calls) is a byte-exact
+     * comparison that would then treat that adopted row as an ordinary,
+     * fully mutable role while the seeder still hands it all 37
+     * Administrator permissions.
+     */
+    public static function firstOrCreateAdministratorRole(): self
+    {
+        $role = static::withoutEvents(fn (): self => static::firstOrCreate(
+            ['name' => RoleName::Administrator->value, 'guard_name' => 'web'],
+        ));
+
+        throw_unless(
+            $role->getRawOriginal('name') === RoleName::Administrator->value,
+            ImmutableRoleException::class,
+            'A role named "'.$role->getRawOriginal('name').'" already exists and collides '.
+            'case-insensitively with the Administrator role name -- resolve the collision manually before reseeding.',
+        );
+
+        return $role;
+    }
+
+    /**
      * Exclude the Super Admin role from a roles list / role selector query,
      * by exact name match (never a LIKE, so a role merely resembling the
      * name -- e.g. "Super Admin Assistant" -- stays visible). A local scope,
@@ -162,11 +200,27 @@ class Role extends SpatieRole
      * returns `false` or throws, so as long as this listener is registered
      * above the vendor one, a role that still has holders never reaches the
      * detach at all -- its permission grants stay intact alongside the row.
+     *
+     * Story 0010's Phase 4 security audit (finding F1) added the
+     * Administrator-tier guards below, deliberately narrower than the
+     * Super Admin ones: only the *name* is locked and the row is never
+     * deletable -- its permission set stays editable via
+     * givePermissionTo()/syncPermissions()/revokePermissionTo(), which are
+     * NOT overridden for this tier, because the whole point of
+     * App\Actions\Roles\EnforceAdministratorPermissionGrant (story 0009) is
+     * that a Super-Admin-authorized actor *can* change what Administrator
+     * grants. Before this fix, nothing stopped a `roles.manage-administrators`
+     * holder from renaming the seeded Administrator role -- which silently
+     * demoted it to an ordinary role for every `isAdministratorRole()`
+     * check in the app (UserPolicy, CreateUser, UpdateUser) -- or from
+     * deleting it once it had no holders, both verified live during the
+     * audit. See docs/security/authorization-patterns.md.
      */
     protected static function boot(): void
     {
         static::creating(function (self $role): void {
             $role->guardAgainstAssumingSuperAdminName();
+            $role->guardAgainstAssumingAdministratorName();
         });
 
         static::deleting(function (self $role): void {
@@ -174,12 +228,18 @@ class Role extends SpatieRole
         });
 
         static::deleting(function (self $role): void {
+            $role->guardAgainstAdministratorDeletion();
+        });
+
+        static::deleting(function (self $role): void {
             $role->guardAgainstHolders();
         });
 
         static::updating(function (self $role): void {
-            $role->guardAgainstSuperAdminMutation();      // pre-mutation name: refuses editing the role AS IT IS today
-            $role->guardAgainstAssumingSuperAdminName();   // post-mutation name: refuses renaming INTO the role's name
+            $role->guardAgainstSuperAdminMutation();       // pre-mutation name: refuses editing the role AS IT IS today
+            $role->guardAgainstAssumingSuperAdminName();    // post-mutation name: refuses renaming INTO the role's name
+            $role->guardAgainstRenamingAdministrator();     // pre-mutation name: refuses renaming the role AS IT IS today
+            $role->guardAgainstAssumingAdministratorName(); // post-mutation name: refuses renaming INTO the role's name
         });
 
         parent::boot();
@@ -260,8 +320,50 @@ class Role extends SpatieRole
      */
     private function guardAgainstHolders(): void
     {
-        if ($this->users()->exists()) {
+        // withTrashed(): a soft-deleted holder still counts. The morph
+        // relation otherwise applies User's SoftDeletingScope, so a trashed
+        // holder would silently count as zero, this guard would let the
+        // delete through, and the FK cascade on model_has_roles would then
+        // destroy that holder's role grant with no error anywhere -- story
+        // 0010 Phase 4 security audit finding F3, verified live. Larastan
+        // cannot resolve this: withTrashed() is a local scope Eloquent
+        // forwards to the related User model's query builder via __call().
+        // @phpstan-ignore method.notFound
+        if ($this->users()->withTrashed()->exists()) {
             throw new RoleInUseException('This role cannot be deleted while it still has holders.');
+        }
+    }
+
+    /**
+     * Throw when this role still IS the Administrator role and the delete
+     * would remove it -- story 0010 Phase 4 security audit finding F1,
+     * human-confirmed decision: the Administrator role is never deletable,
+     * the same as the Super Admin role, since it is the base of the
+     * permission catalog and re-creating it manually (exact name, guard,
+     * 37 permissions) is error-prone. Deliberately its own guard rather
+     * than folded into guardAgainstSuperAdminMutation(): that guard also
+     * blocks every permission-pivot mutation, which must stay allowed for
+     * Administrator (see this class's boot() docblock).
+     */
+    private function guardAgainstAdministratorDeletion(): void
+    {
+        if (self::isAdministratorRole($this)) {
+            throw new ImmutableRoleException('The Administrator role cannot be deleted.');
+        }
+    }
+
+    /**
+     * Throw when this role still IS the Administrator role (by its
+     * PERSISTED, pre-mutation name -- isAdministratorRole() already reads
+     * persistedName() internally) and the name is the attribute being
+     * changed. Scoped to `isDirty('name')`, unlike the Super Admin
+     * mutation guard, because Administrator's permission set legitimately
+     * changes via story 0009's action -- only the name is locked here.
+     */
+    private function guardAgainstRenamingAdministrator(): void
+    {
+        if (self::isAdministratorRole($this) && $this->isDirty('name')) {
+            throw new ImmutableRoleException('The Administrator role cannot be renamed.');
         }
     }
 
@@ -276,6 +378,24 @@ class Role extends SpatieRole
     {
         if ($this->getAttribute('name') === self::superAdminName()) {
             throw new ImmutableRoleException('A role cannot be named or renamed to the Super Admin role.');
+        }
+    }
+
+    /**
+     * Throw when this role's *current, in-memory* name is the Administrator
+     * name -- the Administrator-tier counterpart to
+     * guardAgainstAssumingSuperAdminName() above, for the same two call
+     * sites. Mostly defense in depth: the composite unique(['name',
+     * 'guard_name']) index already refuses a duplicate while the seeded row
+     * exists, and guardAgainstAdministratorDeletion() now means that row
+     * never stops existing -- but this turns what would otherwise be a raw
+     * 23000 constraint violation into a deliberate, typed refusal, matching
+     * the Super Admin tier's own defense-in-depth guard.
+     */
+    private function guardAgainstAssumingAdministratorName(): void
+    {
+        if ($this->getAttribute('name') === RoleName::Administrator->value) {
+            throw new ImmutableRoleException('A role cannot be named or renamed to the Administrator role.');
         }
     }
 

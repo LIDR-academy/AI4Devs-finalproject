@@ -3,11 +3,15 @@
 namespace App\Livewire\Roles;
 
 use App\Actions\Roles\EnforceAdministratorPermissionGrant;
+use App\Actions\Roles\EnforceGrantorPermissionScope;
 use App\Concerns\RoleValidationRules;
 use App\Models\Role;
+use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -20,14 +24,22 @@ use Spatie\Permission\Models\Permission;
  * delete custom roles, and sync each role's per-module permission set.
  *
  * Class name and namespace are shared with sibling story 0011, which owns
- * the paired Blade view (resources/views/livewire/roles/index.blade.php)
- * and the component's UI-state properties; this story owns every query,
- * mutation, validation rule and authorization decision. Access is gated on
+ * the paired Blade view (resources/views/livewire/roles.blade.php) and the
+ * component's UI-state properties; this story owns every query, mutation,
+ * validation rule and authorization decision. Access is gated on
  * `roles.manage` (route middleware, `mount()`), with `App\Policies\RolePolicy`
  * re-checked as the first statement of every method that mutates or
  * discloses — Livewire 4's `PersistentMiddleware` allowlist does not carry
  * Spatie's `permission:` middleware, so route middleware alone does not
  * protect `/livewire/update` round-trips. See docs/architecture/authorization.md.
+ *
+ * Every role resolution and the listing below are scoped to
+ * `guard_name = 'web'`, matching the validation rules in
+ * App\Concerns\RoleValidationRules -- story 0010 Phase 4 security audit
+ * finding F5: this app defines only the `web` guard today, so this is
+ * defense in depth rather than a live gap, but leaving resolution unscoped
+ * while validation is scoped would let a rename pass validation and then
+ * hit the composite unique index as a raw, unhandled 23000.
  */
 #[Title('Roles & permissions')]
 class Index extends Component
@@ -81,9 +93,17 @@ class Index extends Component
 
     /**
      * Open the create-role form with empty fields.
+     *
+     * Authorizes even though it neither mutates nor discloses anything
+     * (saveRole() gates the actual write) -- kept for consistency with
+     * every other public method in this file authorizing as its first
+     * statement, so a future reader never has to reason about which
+     * methods are the one exception.
      */
     public function openCreateModal(): void
     {
+        Gate::authorize('create', Role::class);
+
         $this->reset(['editingRoleId', 'name', 'selectedPermissionIds']);
         $this->showModal = true;
     }
@@ -99,11 +119,11 @@ class Index extends Component
      */
     public function openEditModal(int $roleId): void
     {
-        $role = Role::query()->with('permissions')->findOrFail($roleId);
+        $role = Role::query()->where('guard_name', 'web')->with('permissions')->findOrFail($roleId);
 
         Gate::authorize('update', $role);
 
-        $this->editingRoleId = $role->id;
+        $this->editingRoleId = (int) $role->id;
         $this->name = $role->name;
         $this->selectedPermissionIds = $role->permissions->pluck('id')->all();
         $this->showModal = true;
@@ -119,13 +139,15 @@ class Index extends Component
      * the validation rule would let the uniqueness check see a
      * still-padded value.
      */
-    public function saveRole(EnforceAdministratorPermissionGrant $enforceAdministratorPermissionGrant): void
-    {
+    public function saveRole(
+        EnforceGrantorPermissionScope $enforceGrantorPermissionScope,
+        EnforceAdministratorPermissionGrant $enforceAdministratorPermissionGrant,
+    ): void {
         if ($this->editingRoleId === null) {
             Gate::authorize('create', Role::class);
             $role = null;
         } else {
-            $role = Role::query()->findOrFail($this->editingRoleId);
+            $role = Role::query()->where('guard_name', 'web')->findOrFail($this->editingRoleId);
             Gate::authorize('update', $role);
         }
 
@@ -136,35 +158,83 @@ class Index extends Component
             ...$this->rolePermissionRules(),
         ]);
 
-        // Ids in, NAMES out -- EnforceAdministratorPermissionGrant (story
-        // 0009) takes names. Safe to resolve after validate(): every id has
-        // already passed Rule::exists('permissions', 'id')->where('guard_name',
-        // 'web'), so a forged id never reaches this lookup.
+        // Ids in, NAMES out -- both transformer actions below take names.
+        // Safe to resolve after validate(): every id has already passed
+        // Rule::exists('permissions', 'id')->where('guard_name', 'web'), so
+        // a forged id never reaches this lookup.
         $permissionNames = Permission::query()
             ->whereIn('id', $validated['selectedPermissionIds'])
             ->pluck('name')
             ->all();
 
-        // $role is already in scope from the branch above -- null on
-        // create, the fully-hydrated row on update. The action reads the
-        // "before" state from it directly and throws AuthorizationException
-        // (403) on a genuine new grant a non-Super-Admin actor attempts;
-        // it neither strips the permission nor re-implements the rule here
-        // (human-confirmed decision, story 0009).
+        // Captured before either transformer runs, purely for the audit log
+        // below -- each action independently reloads $role->permissions
+        // fresh for its own decision and never trusts this snapshot.
+        $beforePermissionNames = $role !== null
+            ? $role->load('permissions')->permissions->pluck('name')->all()
+            : [];
+
+        // Two independent transformers, in this order deliberately.
+        // EnforceGrantorPermissionScope (story 0010 Phase 4 security audit
+        // finding F2) refuses a payload that newly grants a permission the
+        // actor does not themselves hold, and excludes
+        // roles.manage-administrators from its own scope entirely --
+        // EnforceAdministratorPermissionGrant (story 0009) owns that one
+        // permission's grant rule exclusively (holding it never confers the
+        // right to grant it onward), and running the two in the other order
+        // would let them disagree about it. Neither strips a permission nor
+        // re-derives the other's rule; both throw AuthorizationException
+        // (403) and let it propagate.
+        $permissionNames = $enforceGrantorPermissionScope(Auth::user(), $permissionNames, $role);
         $permissionNames = $enforceAdministratorPermissionGrant(Auth::user(), $permissionNames, $role);
 
-        // G2 (this story's Phase 1/3 decision, see the task file's open
-        // question G): the action stays a pure transformer; this method is
-        // the sole writer. The same $role instance authorized above -- or
-        // the row just created below -- is the one syncPermissions() is
-        // finally called on, never a second, independently-fetched instance.
-        if ($role === null) {
-            $role = Role::create(['name' => $validated['name'], 'guard_name' => 'web']);
-        } else {
-            $role->update(['name' => $validated['name']]);
+        // Self-lockout guard (story 0010 Phase 4 security audit finding
+        // F7): refuse a save that would strip roles.manage from a role the
+        // acting user currently holds. Derived from Auth::user() here,
+        // never accepted as a parameter -- see docs/errors-log.md's
+        // 2026-08-20 entry on a guard that took the state it was protecting
+        // as an argument. Deliberately conservative: this checks only
+        // whether *this* role grants roles.manage to the actor, not whether
+        // a second role would still cover them, so it can refuse a save
+        // that was actually safe -- erring toward refusal here costs one
+        // extra click, not a security gap.
+        if ($role !== null
+            && Auth::user()->hasRole($role->name, 'web')
+            && ! in_array(RolePolicy::ROLE_MANAGEMENT_PERMISSION, $permissionNames, true)
+        ) {
+            throw ValidationException::withMessages([
+                'selectedPermissionIds' => __('roles.index.self_lockout_blocked'),
+            ]);
         }
 
-        $role->syncPermissions($permissionNames);
+        // G2 (this story's Phase 1/3 decision, see the task file's open
+        // question G): the actions stay pure transformers; this method is
+        // the sole writer. The same $role instance authorized above -- or
+        // the row just created below -- is the one syncPermissions() is
+        // finally called on, never a second, independently-fetched
+        // instance. Wrapped in a transaction (Phase 4 finding F4): a
+        // failure between the rename and the permission sync must not
+        // leave a role persisted with the wrong permission set.
+        DB::transaction(function () use (&$role, $validated, $permissionNames): void {
+            if ($role === null) {
+                $role = Role::create(['name' => $validated['name'], 'guard_name' => 'web']);
+            } else {
+                $role->update(['name' => $validated['name']]);
+            }
+
+            $role->syncPermissions($permissionNames);
+        });
+
+        // Audit trail (Phase 4 finding F8) -- this app has no dedicated
+        // audit-log table; a structured log line is the minimum trace for
+        // the highest-value mutation this screen performs.
+        Log::info('Role saved', [
+            'actor_id' => Auth::id(),
+            'role_id' => $role->id,
+            'role_name' => $role->name,
+            'permissions_granted' => array_values(array_diff($permissionNames, $beforePermissionNames)),
+            'permissions_revoked' => array_values(array_diff($beforePermissionNames, $permissionNames)),
+        ]);
 
         unset($this->roles);
 
@@ -188,11 +258,11 @@ class Index extends Component
      */
     public function confirmDeleteRole(int $roleId): void
     {
-        $role = Role::query()->findOrFail($roleId);
+        $role = Role::query()->where('guard_name', 'web')->findOrFail($roleId);
 
         Gate::authorize('delete', $role);
 
-        $this->deletingRoleId = $role->id;
+        $this->deletingRoleId = (int) $role->id;
         $this->deletingRoleName = $role->name;
         $this->showDeleteModal = true;
     }
@@ -202,10 +272,13 @@ class Index extends Component
      *
      * Hard-blocked while the role still has holders -- no confirm-and-proceed
      * path exists. The holder count is read off the same `withCount('users')`
-     * query used for the block, so the count in the refusal message can
-     * never disagree with the query that decided to refuse. Defense in
-     * depth: App\Models\Role's own `deleting` guard throws
-     * RoleInUseException for any future call site that bypasses this method.
+     * query used for the block (including soft-deleted holders, Phase 4
+     * finding F3 -- a trashed holder must still count, or the FK cascade on
+     * `model_has_roles` silently destroys their role grant the moment this
+     * role is deleted), so the count in the refusal message can never
+     * disagree with the query that decided to refuse. Defense in depth:
+     * App\Models\Role's own `deleting` guard throws RoleInUseException for
+     * any future call site that bypasses this method.
      */
     public function deleteRole(): void
     {
@@ -213,7 +286,10 @@ class Index extends Component
             return;
         }
 
-        $role = Role::query()->withCount('users')->findOrFail($this->deletingRoleId);
+        $role = Role::query()
+            ->where('guard_name', 'web')
+            ->withCount(['users' => fn ($query) => $query->withTrashed()])
+            ->findOrFail($this->deletingRoleId);
 
         Gate::authorize('delete', $role);
 
@@ -223,7 +299,25 @@ class Index extends Component
             ]);
         }
 
-        $role->delete();
+        // Locked and re-checked inside a transaction (Phase 4 finding F6):
+        // a pre-flight check is not a race guard -- see
+        // docs/security/signed-link-verification.md for the same rule
+        // applied to a different flow. This closes the window between the
+        // holder-count check above and the delete below; App\Models\Role's
+        // own `guardAgainstHolders()` still re-checks at delete time too.
+        DB::transaction(function () use ($role): void {
+            Role::query()->whereKey($role->id)->lockForUpdate()->firstOrFail();
+
+            $role->delete();
+        });
+
+        // Audit trail (Phase 4 finding F8) -- see the identical note in
+        // saveRole() above.
+        Log::info('Role deleted', [
+            'actor_id' => Auth::id(),
+            'role_id' => $role->id,
+            'role_name' => $role->name,
+        ]);
 
         unset($this->roles);
 
@@ -243,10 +337,11 @@ class Index extends Component
      * The roles list -- the Super Admin role is never included, via 0008's
      * shared `selectable()` scope rather than a hardcoded exclusion, so it
      * moves with `config('auth.super_admin.role')` instead of drifting from
-     * it. `withCount('users')` serves both the listing's holder badge and
-     * `deleteRole()`'s block check off the same query shape; `permissions`
-     * is eager-loaded so the list can render each role's granted modules
-     * without an N+1.
+     * it. `withCount('users')` (soft-deleted holders included, matching
+     * `deleteRole()`'s own count -- Phase 4 finding F3) serves both the
+     * listing's holder badge and the block check off the same query shape;
+     * `permissions` is eager-loaded so the list can render each role's
+     * granted modules without an N+1.
      *
      * @return EloquentCollection<int, Role>
      */
@@ -254,9 +349,10 @@ class Index extends Component
     public function roles(): EloquentCollection
     {
         return Role::query()
+            ->where('guard_name', 'web')
             ->selectable()
             ->with('permissions')
-            ->withCount('users')
+            ->withCount(['users' => fn ($query) => $query->withTrashed()])
             ->orderBy('name')
             ->get();
     }

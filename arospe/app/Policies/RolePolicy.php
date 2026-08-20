@@ -92,16 +92,23 @@ class RolePolicy
 
     /**
      * Determine whether the actor can delete the target role.
+     *
+     * Diverges from update() on purpose (story 0010 Phase 4 security audit,
+     * finding F1, human-confirmed decision): the Administrator role is
+     * refused categorically here, the same as the Super Admin role, rather
+     * than gated by ADMINISTRATOR_LEVEL_PERMISSION -- it is never
+     * deletable, only its permission set is editable. App\Models\Role's own
+     * guardAgainstAdministratorDeletion() refuses it too (defense in
+     * depth), the same relationship the Super Admin refusal already has
+     * between this policy and that model.
      */
     public function delete(User $user, Role $role): bool
     {
-        if (Role::isSuperAdminRoleRow($role)) {
+        if (Role::isSuperAdminRoleRow($role) || Role::isAdministratorRole($role)) {
             return false;
         }
 
-        return Role::isAdministratorRole($role)
-            ? $user->hasPermissionTo(self::ADMINISTRATOR_LEVEL_PERMISSION)
-            : $user->hasPermissionTo(self::ROLE_MANAGEMENT_PERMISSION);
+        return $user->hasPermissionTo(self::ROLE_MANAGEMENT_PERMISSION);
     }
 
     /**

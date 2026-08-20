@@ -16,6 +16,7 @@ return [
 
     'index' => [
         'delete_blocked' => 'This role cannot be deleted while it is still held by :count user.|This role cannot be deleted while it is still held by :count users.',
+        'self_lockout_blocked' => 'You cannot remove the role-management permission from a role you hold yourself.',
     ],
 
 ];
