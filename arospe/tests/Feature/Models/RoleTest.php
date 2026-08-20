@@ -2,6 +2,7 @@
 
 use App\Enums\RoleName;
 use App\Exceptions\ImmutableRoleException;
+use App\Exceptions\RoleInUseException;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -613,7 +614,7 @@ test('a role with only a soft-deleted holder is still refused for deletion, via 
 
     expect(User::withTrashed()->whereKey($holder->id)->firstOrFail()->trashed())->toBeTrue();
 
-    expect(fn () => $custom->delete())->toThrow(App\Exceptions\RoleInUseException::class);
+    expect(fn () => $custom->delete())->toThrow(RoleInUseException::class);
 
     expect(Role::where('id', $custom->id)->exists())->toBeTrue();
     expect(DB::table('model_has_roles')->where('role_id', $custom->id)->exists())->toBeTrue();

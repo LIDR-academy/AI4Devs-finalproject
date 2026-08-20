@@ -10,10 +10,14 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * Thrown by `App\Models\Role`'s deletion/edit/permission-mutation guards
- * when the Super Admin role is the target — a categorical refusal reached
- * by code paths that never call `Gate`/`authorize()` (see
- * `App\Policies\RolePolicy` for the layer that does). Renders as a 403,
- * converging on the same status a policy denial produces.
+ * when the Super Admin role is the target, and — since story 0010's Phase 4
+ * security-audit fix (finding F1) — by its narrower deletion/rename/naming
+ * guards when the Administrator role is the target, and by
+ * `firstOrCreateAdministratorRole()`'s collation-collision guard. In every
+ * case a categorical refusal reached by code paths that never call
+ * `Gate`/`authorize()` (see `App\Policies\RolePolicy` for the layer that
+ * does). Renders as a 403, converging on the same status a policy denial
+ * produces.
  */
 class ImmutableRoleException extends RuntimeException
 {

@@ -67,9 +67,11 @@ class RolePolicy
      * delete(), there is no target row yet, so neither protected-tier branch
      * applies here -- a role cannot be created under the Super Admin name
      * (App\Models\Role's own `creating` event guards that directly) or the
-     * Administrator name (already taken by the seeded row, so roleNameRules()'
-     * uniqueness rule refuses the duplicate before this ability is even
-     * relevant).
+     * Administrator name. The Administrator case has two independent
+     * refusals since story 0010's Phase 4 security-audit fix (finding F1):
+     * `roleNameRules()`'s uniqueness rule refuses the duplicate while the
+     * seeded row exists, and `Role::guardAgainstAssumingAdministratorName()`
+     * refuses it unconditionally even if that row were ever absent.
      */
     public function create(User $user): bool
     {

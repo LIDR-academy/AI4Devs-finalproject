@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // `can:roles.manage`, not Spatie's `permission:` — same reason as
-    // `users.index` in routes/web.php: Livewire 4's PersistentMiddleware
+    // `users.index` in routes/users.php: Livewire 4's PersistentMiddleware
     // allowlist carries Laravel's `Authorize` (`can:`) but not Spatie's
     // `PermissionMiddleware`, so a `permission:`-gated route would protect
     // the initial GET only, leaving every saveRole()/deleteRole()

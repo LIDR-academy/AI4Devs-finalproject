@@ -189,17 +189,20 @@ class Role extends SpatieRole
      * Gate::before bypass. `firstOrCreateSuperAdminRole()` above is the one
      * sanctioned exception, via `withoutEvents()`.
      *
-     * Story 0010 adds a second `deleting` listener, `guardAgainstHolders()`,
+     * Story 0010 adds two more `deleting` listeners on top of the Super
+     * Admin one above -- `guardAgainstAdministratorDeletion()` (Phase 4
+     * security audit finding F1, see below) and `guardAgainstHolders()`,
      * for an unrelated reason but with the identical ordering requirement:
-     * it must also run -- and be registered -- before `parent::boot()`'s
-     * `HasPermissions::bootHasPermissions()` `deleting` listener, which
-     * unconditionally detaches every `role_has_permissions` row for the
-     * role regardless of whether the delete itself is later allowed to
-     * proceed. `fireModelEvent('deleting')` dispatches every registered
-     * listener in registration order and halts on the first one that
-     * returns `false` or throws, so as long as this listener is registered
-     * above the vendor one, a role that still has holders never reaches the
-     * detach at all -- its permission grants stay intact alongside the row.
+     * every one of them must run -- and be registered -- before
+     * `parent::boot()`'s `HasPermissions::bootHasPermissions()` `deleting`
+     * listener, which unconditionally detaches every `role_has_permissions`
+     * row for the role regardless of whether the delete itself is later
+     * allowed to proceed. `fireModelEvent('deleting')` dispatches every
+     * registered listener in registration order and halts on the first one
+     * that returns `false` or throws, so as long as every one of this
+     * class's own listeners is registered above the vendor one, a refused
+     * delete never reaches the detach at all -- its permission grants stay
+     * intact alongside the row.
      *
      * Story 0010's Phase 4 security audit (finding F1) added the
      * Administrator-tier guards below, deliberately narrower than the
