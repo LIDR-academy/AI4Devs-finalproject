@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Generado por SK-27 para: TypeScript + pnpm + ESLint 9.x (apps/backend, apps/frontend) —
+# ver docs/00_stack_manifest.md. No es portable verbatim a otro stack/linter sin volver a
+# correr SK-27 (TK-038: .agents/scripts/ solo contiene tooling agnóstico; los scripts
+# acoplados al stack del proyecto viven aquí, generados, no en el payload portable).
+#
 # TK-037: Gate de complejidad/longitud/profundidad ACOTADO al diff del ticket en curso.
 # Las reglas complexity/max-lines-per-function/max-depth son 'warn' globalmente en
 # eslint.config.* (informativas, por deuda preexistente — ver docs/00_stack_manifest.md).

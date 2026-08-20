@@ -45,7 +45,7 @@ Ejecuta siempre, desde la raíz del repo:
 ```bash
 bash .agents/scripts/validate_agents.sh
 ```
-Esto corre los tests unitarios de las propias herramientas de auditoría, verifica enlaces markdown, `required_rules` del frontmatter y unicidad de IDs. Un PR que lo rompe no se fusiona — está wireado en `ci.yml`.
+Esto corre los tests unitarios de las propias herramientas de auditoría, verifica enlaces markdown, `required_rules` del frontmatter, unicidad de IDs, **y que ningún script bajo `.agents/scripts/` se haya acoplado al stack de un proyecto (`check_agnosticism.py`, ver regla abajo)**. Un PR que lo rompe no se fusiona — está wireado en `ci.yml`.
 
 ## Qué NO hacer (Non-Goals)
 
@@ -53,6 +53,12 @@ Aplican las mismas guardas que rigen el código generado por las skills ([rules/
 - No hardcodear rutas o convenciones de un proyecto específico dentro de una skill/script si se puede inferir de `AGENTS.md` o `docs/` del proyecto consumidor — eso rompe la portabilidad.
 - No añadir una skill que duplique el alcance de otra existente; extiende la existente con una nueva fase antes de crear una paralela.
 - No fusionar una skill sin `required_rules` verificables ni un `output` concreto y verificable.
+
+### `.agents/scripts/` es SOLO tooling universal (regla permanente, `TK-038`)
+
+`install.sh` copia `.agents/` **verbatim** (`cp -R`) a cualquier proyecto nuevo, sin importar su stack — así que ningún archivo bajo `.agents/scripts/` puede depender del lenguaje, gestor de paquetes, test runner o layout de directorios que un proyecto consumidor haya elegido. Un script ahí solo puede operar sobre (a) la estructura propia de `.agents/` (skills, workflows, rules), o (b) la taxonomía fija de `docs/` que el propio framework VSDD impone a cualquier proyecto (ej. `docs/02_architecture_design/03_domain_model.md` — mismo path en cualquier stack).
+
+Cualquier script de gobernanza cuya lógica sí dependa del stack real (linter, test runner, contrato de API, layout de monorepo) **DEBE generarse por skill** (ej. `SK-27_extract_project_rules.md`) hacia el árbol del **proyecto consumidor** (ej. `docs/04_governance_and_quality/scripts/`), adaptado al stack declarado en `docs/00_stack_manifest.md` — nunca vivir como archivo estático en `.agents/scripts/`. Verificado automáticamente por `.agents/scripts/check_agnosticism.py` (wireado en `validate_agents.sh`), que falla si detecta binarios de gestor de paquetes (`npx`, `pnpm`, `npm`, `pip`, `cargo`...), extensiones de código fuente como glob literal, o rutas de proyecto hardcodeadas dentro de `.agents/scripts/*.sh`.
 
 ## Git hook `commit-msg`
 

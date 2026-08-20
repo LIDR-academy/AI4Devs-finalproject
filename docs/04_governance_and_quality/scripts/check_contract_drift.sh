@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Generado por SK-27 para: TypeScript + pnpm + Zod + OpenAPI — ver docs/00_stack_manifest.md.
+# No es portable verbatim a otro stack (lenguaje/validador de esquemas distinto) sin volver
+# a correr SK-27 (TK-038: .agents/scripts/ solo contiene tooling agnóstico; los scripts
+# acoplados al stack del proyecto viven aquí, generados, no en el payload portable).
+#
 # M-01: Script para verificar drift REAL entre la especificación OpenAPI y los controllers Zod del backend.
 # Detecta rutas documentadas en OpenAPI que no tienen un esquema Zod de validación activo.
 set -euo pipefail

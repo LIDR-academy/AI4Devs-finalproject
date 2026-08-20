@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Generado por SK-27 para: pnpm + Vitest (reporter verbose) — ver docs/00_stack_manifest.md.
+# No es portable verbatim a otro test runner (Jest, pytest, go test...) sin volver a correr
+# SK-27 (TK-038: .agents/scripts/ solo contiene tooling agnóstico; los scripts acoplados al
+# stack del proyecto viven aquí, generados, no en el payload portable).
+#
 # M-02: Script de profiling real de la suite de pruebas — emite métricas de tiempo por archivo.
 # Detecta tests lentos (>1000ms) que pueden causar regresiones de velocidad en CI.
 # Sin -e a propósito: es un profiler informativo (wireado con continue-on-error en CI),

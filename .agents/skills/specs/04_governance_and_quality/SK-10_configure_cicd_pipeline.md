@@ -1,7 +1,7 @@
 ---
 name: cicd-pipeline
 description: "Genera la automatización del pipeline de CI/CD usando la plataforma, runtime e IaC Engine declarados en docs/00_stack_manifest.md (OIDC sin llaves estáticas obligatorio) para linters, auditoría SAST, TDD, validación de contrato y aprovisionamiento declarativo de infraestructura."
-version: "3.4.0"
+version: "3.4.1"
 category: "04_governance_and_quality"
 inputs:
   - "docs/04_governance_and_quality/08_security_strategy.md"
@@ -41,7 +41,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 ### 📍 Job 0: Governance Gate (1 min) ← Guard 22 & 23
 - Checkout de código con `actions/checkout@v5`.
 - Verificar integridad del arnés `.agents` con `bash .agents/scripts/validate_agents.sh`.
-- Verificar drift de contrato con `bash .agents/scripts/check_contract_drift.sh`.
+- Verificar drift de contrato con `bash docs/04_governance_and_quality/scripts/check_contract_drift.sh`.
 - Validar especificación DESIGN.md con `npx -y @google/design.md lint DESIGN.md` (si existe).
 
 ### 📍 Job 1: Lint & Static Analysis (2 min)

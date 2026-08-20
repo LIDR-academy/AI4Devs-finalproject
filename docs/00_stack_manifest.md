@@ -1,6 +1,6 @@
 ---
 document: stack_manifest
-version: 1.3.0
+version: 1.4.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
 approved_at: "2026-08-19"
@@ -88,7 +88,9 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 >
 > **Nota histórica (TK-036):** `complexity`, `max-lines-per-function` (≤60) y `max-depth` (≤4) están activas en ambos `eslint.config.*` pero en severidad `warn` — **informativas a nivel de repositorio completo**, por deuda preexistente: 8 advertencias reales en backend (`runSeed`, `ConsumeRecipeUseCase.execute`, `PerformShiftReconciliationUseCase.execute`, `createApp`, `InMemoryRemanenteQueryRepository.findActiveRemanentes`) y 15 en frontend (sobre todo componentes React donde JSX infla el conteo de líneas). La duplicación de código (`jscpd`), en cambio, es bloqueante desde ya a nivel repositorio: el baseline real (1.68%) ya cumple el umbral con margen.
 >
-> **Nota histórica (TK-037):** activar `complexity`/`max-lines-per-function`/`max-depth` como bloqueantes a nivel repositorio rompería `pnpm run lint` para cualquier ticket futuro sin relación con la deuda existente. En su lugar, `.agents/scripts/check_ticket_code_quality.sh` las hace **bloqueantes acotadas al diff del ticket en curso** (archivos sin commitear — working tree + staged): deuda preexistente en archivos no tocados nunca bloquea, pero código nuevo/modificado sí se exige limpio. Wireado en `SK-16`, `SK-17`, `SK-19` y `04_dev_audit_workflow.md`. En una regeneración completa del proyecto desde cero, todo archivo es "nuevo" en el ticket que lo crea — este mecanismo, aplicado ticket a ticket, produce un repositorio limpio por construcción sin exigir pagar deuda retroactiva.
+> **Nota histórica (TK-037):** activar `complexity`/`max-lines-per-function`/`max-depth` como bloqueantes a nivel repositorio rompería `pnpm run lint` para cualquier ticket futuro sin relación con la deuda existente. En su lugar, `docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh` las hace **bloqueantes acotadas al diff del ticket en curso** (archivos sin commitear — working tree + staged): deuda preexistente en archivos no tocados nunca bloquea, pero código nuevo/modificado sí se exige limpio. Wireado en `SK-16`, `SK-17`, `SK-19` y `04_dev_audit_workflow.md`. En una regeneración completa del proyecto desde cero, todo archivo es "nuevo" en el ticket que lo crea — este mecanismo, aplicado ticket a ticket, produce un repositorio limpio por construcción sin exigir pagar deuda retroactiva.
+>
+> **Nota histórica (TK-038):** `check_contract_drift.sh`, `profile_test_suite.sh` y `check_ticket_code_quality.sh` viven en `docs/04_governance_and_quality/scripts/`, no en `.agents/scripts/` — están acoplados al stack de este proyecto (TypeScript, ESLint, Vitest) y `.agents/scripts/` es el payload que `install.sh` copia verbatim a cualquier proyecto nuevo sin importar su stack. Son generados por `SK-27` a partir de este manifiesto; regenerar tras un cambio de stack, no editar a mano asumiendo que sean portables.
 
 ---
 
@@ -128,7 +130,7 @@ pnpm run lint
 pnpm run duplication
 
 # Gate de complejidad/longitud/profundidad acotado al ticket en curso (sin commitear)
-bash .agents/scripts/check_ticket_code_quality.sh
+bash docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh
 
 # Servidor de desarrollo backend
 pnpm --filter @restostock/backend dev
@@ -146,7 +148,7 @@ npx ts-node apps/backend/prisma/seed.ts
 bash .agents/scripts/validate_agents.sh
 
 # Validar drift de contrato OpenAPI vs Zod
-bash .agents/scripts/check_contract_drift.sh
+bash docs/04_governance_and_quality/scripts/check_contract_drift.sh
 
 # Validar infraestructura OpenTofu (dry-run)
 tofu validate && tofu plan

@@ -1,7 +1,7 @@
 ---
 name: SK-17_develop_frontend_ticket
 description: "Guía el desarrollo atómico de tickets de Frontend aplicando Clean Architecture en cliente, SOLID (<150 líneas por componente), WCAG 2.2, Core Web Vitals (INP/LCP/CLS) y seguridad defensiva."
-version: "4.2.0"
+version: "4.2.1"
 category: "development/03_frontend_development"
 inputs:
   - ticket_id: "ID o ruta del ticket técnico de frontend (ej. TK-007 o docs/05_agile_planning/12_tickets/...)"
@@ -65,7 +65,7 @@ Antes de entregar el ticket, ejecuta esta lista de cotejo interna:
 
 ## 🚨 FASE 5: Verificación, Auditoría Visual y Quality Gate
 1. **Compilación del Proyecto:** Corre el comando de build oficial declarado en `AGENTS.md` para asegurar 0 errores de compilación.
-2. **Análisis Estático (Ticket-Scoped, obligatorio):** Ejecuta `bash .agents/scripts/check_ticket_code_quality.sh` — verifica, con `--max-warnings 0`, que los archivos sin commitear de este ticket no violen la regla de granularidad (`complexity`/`max-lines-per-function`/`max-depth`, alineada con la regla de ~150 líneas por componente de FASE 2). Deuda preexistente en archivos que este ticket no tocó no bloquea el cierre (ver `docs/00_stack_manifest.md`). Además, ejecuta el linter oficial de `AGENTS.md` sobre todo el proyecto para confirmar **0 errores**.
+2. **Análisis Estático (Ticket-Scoped, obligatorio):** Ejecuta `bash docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh` — verifica, con `--max-warnings 0`, que los archivos sin commitear de este ticket no violen la regla de granularidad (`complexity`/`max-lines-per-function`/`max-depth`, alineada con la regla de ~150 líneas por componente de FASE 2). Deuda preexistente en archivos que este ticket no tocó no bloquea el cierre (ver `docs/00_stack_manifest.md`). Además, ejecuta el linter oficial de `AGENTS.md` sobre todo el proyecto para confirmar **0 errores**.
 3. **Auditoría de Accesibilidad Opcional:** Ejecutar la verificación a11y mediante `.agents/skills/development/06_visual_qa/SK-21_audit_ui_accessibility.md`.
 4. **Duplicación:** Ejecuta primero `pnpm run duplication` (jscpd) — gate bloqueante real, umbral declarado en `docs/00_stack_manifest.md`. Complementa con un chequeo ligero manual: compara estructuralmente los archivos nuevos/modificados contra sus pares en features hermanas (mismos imports, mismos bloques de estilo/lógica repetidos con nombres distintos) — jscpd detecta copy-paste literal pero no el mismo patrón reescrito. Si detectas 2+ instancias del mismo patrón sin extraer, decide entre extraerlo ahora a la capa compartida o documentar la deuda explícitamente en el reporte del ticket. Para una auditoría exhaustiva multi-ángulo de reuso a nivel de todo el repositorio, el humano puede solicitar adicionalmente una revisión de código dedicada fuera del alcance atómico de este ticket.
 5. **Reporte al Humano:** Presentar los componentes creados/modificados y los resultados del pase de calidad estructurados estrictamente según la **Plantilla A** universal en `.agents/rules/00_output_reporting_standard.md`.

@@ -54,7 +54,7 @@ jobs:
         run: bash .agents/scripts/validate_agents.sh
 
       - name: Check OpenAPI/Zod Contract Drift
-        run: bash .agents/scripts/check_contract_drift.sh
+        run: bash docs/04_governance_and_quality/scripts/check_contract_drift.sh
 
       - name: Check Dynamic Rules Freshness (informational)
         continue-on-error: true
@@ -131,7 +131,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/restostock_test?schema=public
           JWT_SECRET: test-jwt-secret-key-12345
-        run: bash .agents/scripts/profile_test_suite.sh
+        run: bash docs/04_governance_and_quality/scripts/profile_test_suite.sh
 
       - name: Mutation Testing — Domain & Application (informational, target 70%)
         continue-on-error: true

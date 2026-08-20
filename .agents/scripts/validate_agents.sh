@@ -29,4 +29,7 @@ python3 -m unittest discover -s .agents/scripts/tests
 # Run Link Integrity Checker
 python3 .agents/scripts/check_links.py
 
+# Run Agnosticism Guard (TK-038): .agents/scripts/ nunca debe acoplarse al stack de un proyecto
+python3 .agents/scripts/check_agnosticism.py
+
 echo "🎉 Arnés .agents verificado exitosamente sin errores de integridad ni enlaces rotos."
