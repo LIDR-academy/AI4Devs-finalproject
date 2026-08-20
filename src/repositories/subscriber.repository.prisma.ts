@@ -51,6 +51,57 @@ export const prismaSubscriberRepository: SubscriberRepository = {
       throw error;
     }
   },
+
+  async resubscribe(input) {
+    return prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: input.userId },
+        select: { id: true },
+      });
+      if (!user) return { outcome: "not_found" as const };
+
+      // Dentro de la transacción: si dos altas simultáneas la vieran fuera, las dos
+      // creerían que no hay ninguna vigente y el cliente acabaría con dos.
+      const vigente = await tx.subscription.findFirst({
+        where: { userId: input.userId, status: { not: "CANCELLED" } },
+        select: { id: true },
+      });
+      if (vigente) return { outcome: "already_subscribed" as const };
+
+      await tx.user.update({
+        where: { id: input.userId },
+        // Las condiciones se vuelven a aceptar en el formulario, así que la fecha es
+        // la de ahora: es la que documenta a qué versión dijo que sí.
+        data: { fullName: input.fullName, acceptedTermsAt: input.acceptedTermsAt },
+      });
+
+      // La dirección y la tarjeta de entonces no se borran —pueden estar referenciadas
+      // por pagos y por el snapshot de un alquiler—, pero dejan de ser las de por defecto.
+      await tx.address.updateMany({ where: { userId: input.userId }, data: { isDefault: false } });
+      await tx.address.create({
+        data: { userId: input.userId, ...input.address, isDefault: true },
+      });
+
+      await tx.paymentMethod.updateMany({
+        where: { userId: input.userId },
+        data: { isDefault: false },
+      });
+      await tx.paymentMethod.create({
+        data: { userId: input.userId, ...input.card, isDefault: true },
+      });
+
+      await tx.subscription.create({
+        data: {
+          userId: input.userId,
+          planId: input.subscription.planId,
+          status: "ACTIVE",
+          startedAt: input.subscription.startedAt,
+        },
+      });
+
+      return { outcome: "resubscribed" as const };
+    });
+  },
 };
 
 /**

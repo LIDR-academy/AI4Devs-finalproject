@@ -84,4 +84,34 @@ test("suscripción: cambiar de plan, pausar, reactivar y cancelar", async ({ pag
     // Una suscripción cancelada ya no rige: la pantalla pasa al vacío con salida.
     await expect(page.getByText("No tienes ningún plan activo")).toBeVisible();
   });
+
+  /**
+   * Y se puede volver. Cancelar dejaba un callejón sin salida: no hay nada que
+   * reactivar y el alta rebotaba con "ya existe una cuenta". Ahora la **contraseña**
+   * es la que abre la puerta.
+   */
+  await test.step("con otra contraseña, el alta rebota", async () => {
+    const rechazada = await request.post("/api/auth/register", {
+      data: {
+        email,
+        password: "una-contraseña-que-no-es",
+        fullName: "Impostora",
+        isAdult: true,
+        acceptsTerms: true,
+        address: { line1: "Calle Otra 2", city: "Girona", postalCode: "17001" },
+        card: { brand: "VISA", last4: "1111", expMonth: 12, expYear: 2030 },
+        planCode: "BASIC",
+      },
+    });
+    expect(rechazada.status()).toBe(422);
+  });
+
+  await test.step("con la suya, se reabre la suscripción sobre la misma cuenta", async () => {
+    await registrarSuscriptora(request, email, "BASIC");
+
+    // La sesión sigue abierta: es la misma cuenta de siempre, no una nueva.
+    await page.reload();
+    await expect(actual.getByText("Basic", { exact: true })).toBeVisible();
+    await expect(actual.getByText("Activa", { exact: true })).toBeVisible();
+  });
 });

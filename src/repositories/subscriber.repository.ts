@@ -46,6 +46,25 @@ export type CreateSubscriberOutcome =
   /** Ya hay una cuenta con ese email. */
   | { outcome: "email_taken" };
 
+/**
+ * Vuelta de un cliente que canceló: la cuenta sigue ahí y lo que se rehace es la
+ * **suscripción**, con los datos de envío y pago que traiga el formulario nuevo.
+ */
+export interface Resubscription {
+  userId: string;
+  fullName: string;
+  acceptedTermsAt: Date;
+  address: NewSubscriber["address"];
+  card: NewSubscriber["card"];
+  subscription: NewSubscriber["subscription"];
+}
+
+export type ResubscribeOutcome =
+  | { outcome: "resubscribed" }
+  | { outcome: "not_found" }
+  /** Tiene una suscripción vigente: no hay nada que reabrir. */
+  | { outcome: "already_subscribed" };
+
 export interface SubscriberRepository {
   /**
    * Crea la cuenta con su dirección, su método de pago y su suscripción **en una
@@ -54,4 +73,14 @@ export interface SubscriberRepository {
    * juntas o no entra ninguna.
    */
   createSubscriber(input: NewSubscriber): Promise<CreateSubscriberOutcome>;
+
+  /**
+   * Reabre la suscripción de una cuenta existente, en una transacción y **con la
+   * comprobación de "no tiene otra vigente" dentro**: entre consultarlo y escribir
+   * cabe otra alta simultánea, y entonces el cliente acabaría con dos suscripciones.
+   *
+   * Actualiza también nombre, dirección y tarjeta con lo que traiga el formulario: si
+   * vuelve al cabo de un año, sus datos de envío son los nuevos, no los de entonces.
+   */
+  resubscribe(input: Resubscription): Promise<ResubscribeOutcome>;
 }

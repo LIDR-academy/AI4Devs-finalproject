@@ -20,6 +20,7 @@ import {
   simultaneousSets,
   subscriptionStatus,
   userStatus,
+  workQueueGroup,
   type StatusLabel,
 } from "@/lib/status";
 
@@ -134,6 +135,23 @@ describe("Vocabulario de estados — qué ve cada rol", () => {
   it("solo ALQUILADA significa 'lo tienes en casa'", () => {
     expect(copyStatus("ALQUILADA", "subscriber").label).toBe("En tu poder");
     expect(copyStatus("EN_DEVOLUCION", "subscriber").label).not.toBe("En tu poder");
+  });
+
+  /**
+   * La cola de trabajo lee `ALQUILADA` como trabajo pendiente y la ficha de catálogo
+   * como dónde está la copia. Es el mismo hecho con dos lecturas —igual que
+   * `EN_INSPECCION` es `warning` para el operador e `info` para el suscriptor— y lo
+   * que hace falta para que W2 tenga puerta (`wireframes.md` §4.1).
+   */
+  it("una copia adjudicada es «por preparar» en la cola y «con el cliente» en la ficha", () => {
+    expect(workQueueGroup("ALQUILADA")).toMatchObject({ label: "Por preparar", tone: "warning" });
+    expect(copyStatus("ALQUILADA", "backoffice").label).toBe("Con el cliente");
+  });
+
+  it("los demás grupos de la cola se llaman igual que en el resto del back-office", () => {
+    for (const state of ["INTAKE", "EN_INSPECCION", "EN_HIGIENIZACION", "INCOMPLETA"] as const) {
+      expect(workQueueGroup(state)).toEqual(copyStatus(state, "backoffice"));
+    }
   });
 
   it("las plazas del plan se dicen en singular cuando es una", () => {

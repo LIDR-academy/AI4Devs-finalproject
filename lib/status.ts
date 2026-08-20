@@ -83,6 +83,27 @@ const COPY_SUBSCRIBER = {
   BAJA: { label: "No disponible", tone: "neutral" },
 } as const satisfies Record<CopyState, StatusLabel>;
 
+/**
+ * El mismo estado, leído como **trabajo pendiente** (`wireframes.md` §4.1).
+ *
+ * Solo cambia una cosa, y por un motivo concreto: en la cola de trabajo una copia
+ * `ALQUILADA` **no está "con el cliente"** —está adjudicada y esperando a que alguien
+ * la prepare—, así que se titula "Por preparar" y en tono `warning`, que es el que la
+ * regla del sistema de diseño reserva para lo que espera una acción de quien lee. En la
+ * ficha de catálogo, donde no hay nada que hacer con ella, sigue siendo "Con el
+ * cliente". El resto de grupos se leen igual que en cualquier otra pantalla.
+ */
+export function workQueueGroup(state: CopyState): StatusLabel {
+  if (state === "ALQUILADA") {
+    return {
+      label: "Por preparar",
+      tone: "warning",
+      hint: "Adjudicada y todavía sin envío preparado.",
+    };
+  }
+  return copyStatus(state, "backoffice");
+}
+
 export function copyStatus(state: CopyState, surface: Surface): StatusLabel {
   return surface === "backoffice" ? COPY_BACKOFFICE[state] : COPY_SUBSCRIBER[state];
 }

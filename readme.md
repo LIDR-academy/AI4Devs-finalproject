@@ -150,9 +150,14 @@ y pide el siguiente—.
 > y reactivar tenían API desde el principio y ningún sitio donde pulsarlas. Con ella,
 > **14 de 18** historias tienen recorrido completo por interfaz.
 >
-> **Pendiente:** W2+W3 (registro de condición y discrepancia), bloqueadas por
-> `wireframes.md` §8.1 y §8.2; y el videotutorial (`documents/PRD.md` §9,
-> `wireframes.md` §9.2).
+> **Desbloqueadas W2+W3** (2026-08-20): la cola de trabajo ya tiene el grupo **«Por
+> preparar»** —las copias adjudicadas que esperan a que se registre su condición, que
+> antes no aparecían en ninguna parte— y la **lista de comprobación** está ratificada
+> (recuento de piezas y manual) en un único módulo de dominio del que se deriva la
+> validación de los dos informes.
+>
+> **Pendiente:** W2+W3 (registro de condición y discrepancia) y el videotutorial
+> (`documents/PRD.md` §9, `wireframes.md` §9.2).
 >
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales

@@ -1,4 +1,5 @@
 import type { CopyState } from "@/domain/copy/lifecycle";
+import type { ConditionChecklist } from "@/domain/rentals/condition-checklist";
 
 /** Puerto de alquileres y devoluciones (capability `rentals-returns`). */
 
@@ -29,7 +30,8 @@ export interface ConditionReportInput {
   operatorId: string;
   kind: "DELIVERY" | "INSPECTION";
   result: "OK" | "INCOMPLETE" | "DAMAGED";
-  checklist: Record<string, unknown> | null;
+  /** Catálogo cerrado (`domain/rentals/condition-checklist.ts`); `null` si no se registró. */
+  checklist: ConditionChecklist | null;
   at: Date;
 }
 

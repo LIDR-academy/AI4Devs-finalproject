@@ -1,4 +1,5 @@
 import { can } from "@/domain/auth/permissions";
+import type { ConditionChecklist } from "@/domain/rentals/condition-checklist";
 import type { Role } from "@/domain/auth/roles";
 import {
   ForbiddenError,
@@ -48,7 +49,7 @@ export async function recordDeliveryCondition(
     rentalId: string;
     actor: Actor;
     result: "OK" | "INCOMPLETE" | "DAMAGED";
-    checklist?: Record<string, unknown> | null;
+    checklist?: ConditionChecklist | null;
   }
 ): Promise<{ report: ConditionReportSummary; confirmationWindowHours: number }> {
   if (!can(input.actor.role, "copy.advance_lifecycle")) {
@@ -242,7 +243,7 @@ export async function recordInspection(
     rentalId: string;
     actor: Actor;
     result: "OK" | "INCOMPLETE" | "DAMAGED";
-    checklist?: Record<string, unknown> | null;
+    checklist?: ConditionChecklist | null;
   }
 ): Promise<ConditionReportSummary> {
   if (!can(input.actor.role, "copy.advance_lifecycle")) {

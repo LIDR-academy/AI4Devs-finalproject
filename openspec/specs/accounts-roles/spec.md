@@ -75,6 +75,32 @@ legales se muestran como texto de relleno.
 - **AND** debe elegir un plan de suscripción (ver `subscriptions`)
 - **AND** se le presentan las condiciones legales (texto *lorem ipsum* en el MVP)
 
+### Requirement: Volver a suscribirse con una cuenta existente
+El sistema SHALL permitir que quien canceló vuelva a contratar un plan **sobre su
+misma cuenta**, acreditando su identidad con la contraseña de esa cuenta. Una
+suscripción cancelada no se reactiva —ya no rige—: lo que se hace es abrir una nueva
+sobre la cuenta de siempre, con los datos de envío y pago que aporte en ese momento.
+
+#### Scenario: Vuelve con su contraseña
+- **WHEN** alguien se da de alta con un email que ya tiene cuenta y aporta la
+  contraseña de esa cuenta
+- **AND** esa cuenta no tiene ninguna suscripción vigente
+- **THEN** se abre una suscripción nueva con el plan elegido sobre esa misma cuenta
+- **AND** se actualizan su nombre, su dirección de envío y su método de pago con los
+  datos aportados
+
+#### Scenario: Vuelve sin la contraseña correcta
+- **WHEN** alguien se da de alta con un email que ya tiene cuenta y no aporta su
+  contraseña
+- **THEN** el alta se rechaza con el mismo mensaje que cualquier email ya registrado,
+  sin revelar nada más sobre esa cuenta
+
+#### Scenario: La cuenta ya tiene suscripción
+- **WHEN** alguien se da de alta con un email cuya cuenta ya tiene una suscripción
+  vigente, aun aportando la contraseña correcta
+- **THEN** el alta se rechaza y se le remite a su portal, donde se gestiona la que ya
+  tiene
+
 ### Requirement: Datos de envío del suscriptor
 El sistema SHALL requerir y mantener una dirección de envío y un contacto
 (teléfono o email) por suscriptor, usados para el registro de entrega y de

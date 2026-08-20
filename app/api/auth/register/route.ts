@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { ValidationError } from "@/domain/errors";
 import { toProblemResponse } from "@/http/problem";
+import { prismaAuthRepository } from "@/repositories/auth.repository.prisma";
 import { prismaSubscriberRepository } from "@/repositories/subscriber.repository.prisma";
 import { prismaSubscriptionRepository } from "@/repositories/subscription.repository.prisma";
 import { registerSubscriber } from "@/use-cases/accounts/register-subscriber";
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
       {
         repository: prismaSubscriberRepository,
         subscriptions: prismaSubscriptionRepository,
+        auth: prismaAuthRepository,
       },
       parsed.data
     );

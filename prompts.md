@@ -930,3 +930,38 @@ ejecuciones seguidas** dejando la base limpia. Las pruebas del portal crean **su
 cuenta**: pausar o cancelar cambia el estado del suscriptor entero y chocaría con el
 circuito completo, que corre en paralelo. Sincronizados `wireframes.md` (§7.7 nueva,
 §8.4, §9.1, §9.2 y §9.4), `design-system.md` §6.1/§6.2 y `readme.md` §1.3.
+
+### [2026-08-20] — Los dos bloqueantes de W2/W3, y la vuelta de quien canceló
+**Prompt:** "resolvamos los bloqueos" + "Añadir que si alguien se quiere dar de alta con
+un correo previamente cancelado, se debe poder dar de alta de nuevo (o si provee la
+password correcta, reactivar la suscripción)".
+**Resumen de la respuesta:** Los dos bloqueos eran de naturaleza distinta y se
+resolvieron distinto.
+**§8.1 era código.** La cola de trabajo no incluía las copias `ALQUILADA`, así que el
+operador no podía enterarse de que hay un set adjudicado esperando a prepararse y la
+pantalla de W2 habría sido **inalcanzable**. Ahora es el grupo **primero**, y con el
+matiz que de verdad importa: registrar la condición **no mueve la copia**, así que se
+excluyen las que ya tienen envío de salida — sin eso, lo preparado se quedaría en la cola
+para siempre. Y se titula **"Por preparar"**, no "Con el cliente": en la cola esa copia no
+está con nadie, está esperando. Es el mismo estado con dos lecturas, como `EN_INSPECCION`
+ya tenía dos según quién mire.
+**§8.2 era una decisión de operación**, y se preguntó. Ratificadas **dos**
+comprobaciones —recuento de piezas y manual—; fuera la caja, porque el embalaje es valor
+en un set de exposición y casi nada en uno de construcción, y una casilla única mentiría
+en la mitad de los casos. Viven en un módulo de dominio del que se deriva la validación
+de los **dos** informes: o están todas o ninguna, nada fuera del catálogo y booleanos.
+Dos casillas que siempre se rellenan valen más que cuatro que se marcan en bloque.
+**Y el callejón sin salida que destapó W5, cerrado:** darse de alta con un email que ya
+existe **reabre la suscripción** si viene con la contraseña de esa cuenta. Sin ella la
+respuesta es exactamente la de antes —no se revela nada nuevo—, pero sí añade un sitio
+donde probar contraseñas, igual que el login: cuando haya limitación de intentos tiene
+que cubrir los dos. La comprobación de "no tiene otra vigente" va **dentro de la
+transacción**, o dos altas simultáneas dejarían dos suscripciones; y los datos de envío y
+pago se actualizan con los nuevos sin borrar los viejos, que pueden estar referenciados
+por pagos y por el snapshot de un alquiler.
+**Verificación:** 382 unitarios, `tsc`, `eslint`, `next build` y **38 E2E en dos
+ejecuciones seguidas**, con `e2e/preparacion.spec.ts` nuevo — monta el caso por API,
+comprueba que la copia adjudicada aparece y que **desaparece al registrar la condición**
+aunque siga en `ALQUILADA`, y cierra su circuito. Requisito nuevo en la spec
+`accounts-roles`; sincronizados `wireframes.md` (§4.1, §4.3, §7.7, §8.1, §8.2, §9.2) y
+`readme.md` §1.3.

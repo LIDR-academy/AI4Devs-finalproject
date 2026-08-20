@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { verifyPassword } from "@/domain/auth/password";
+import { hashPassword, verifyPassword } from "@/domain/auth/password";
 import { ValidationError } from "@/domain/errors";
+import type { AuthRepository, AuthUserWithSecret } from "@/repositories/auth.repository";
 import type {
   CreateSubscriberOutcome,
   NewSubscriber,
+  Resubscription,
   SubscriberRepository,
 } from "@/repositories/subscriber.repository";
 import { isUniqueEmailViolation } from "@/repositories/subscriber.repository.prisma";
@@ -31,15 +33,36 @@ function fakeSubscriptions(plans: PlanConfig[] = PLANS): SubscriptionRepository 
   };
 }
 
+/**
+ * Puerto de autenticación reducido a lo que el alta necesita: resolver el email para
+ * comprobar la contraseña cuando la cuenta ya existe (la vuelta de quien canceló).
+ */
+function fakeAuth(user: AuthUserWithSecret | null = null): AuthRepository {
+  return {
+    async findUserByEmail() { return user; },
+    async createSession() { throw new Error("no usado"); },
+    async findSessionByTokenHash() { return null; },
+    async deleteSessionByTokenHash() {},
+    async deleteSessionsForUser() { return 0; },
+    async touchSession() {},
+    async deleteExpiredSessions() { return 0; },
+  };
+}
+
 function fakeRepository(outcome: CreateSubscriberOutcome = { outcome: "created", userId: "user-1" }) {
   const created: NewSubscriber[] = [];
+  const resubscriptions: Resubscription[] = [];
   const repository: SubscriberRepository = {
     async createSubscriber(input) {
       created.push(input);
       return outcome;
     },
+    async resubscribe(input) {
+      resubscriptions.push(input);
+      return { outcome: "resubscribed" as const };
+    },
   };
-  return { repository, created };
+  return { repository, created, resubscriptions };
 }
 
 const VALID = {
@@ -57,10 +80,11 @@ const VALID = {
 async function failedRegistration(
   repository: SubscriberRepository,
   input: Parameters<typeof registerSubscriber>[1],
-  subscriptions: SubscriptionRepository = fakeSubscriptions()
+  subscriptions: SubscriptionRepository = fakeSubscriptions(),
+  auth: AuthRepository = fakeAuth()
 ) {
   try {
-    await registerSubscriber({ repository, subscriptions }, input);
+    await registerSubscriber({ repository, subscriptions, auth }, input);
     throw new Error("Se esperaba que el alta fallara.");
   } catch (error) {
     expect(error).toBeInstanceOf(ValidationError);
@@ -71,9 +95,9 @@ async function failedRegistration(
 describe("alta de suscriptor", () => {
   it("crea la cuenta normalizando email y recortando espacios", async () => {
     const { repository, created } = fakeRepository();
-    const result = await registerSubscriber({ repository, subscriptions: fakeSubscriptions() }, VALID);
+    const result = await registerSubscriber({ repository, subscriptions: fakeSubscriptions(), auth: fakeAuth() }, VALID);
 
-    expect(result).toEqual({ userId: "user-1", planCode: "PREMIUM" });
+    expect(result).toEqual({ userId: "user-1", planCode: "PREMIUM", resubscribed: false });
     expect(created[0]).toMatchObject({
       email: "nueva@example.test",
       fullName: "Nuria Ejemplo",
@@ -83,7 +107,7 @@ describe("alta de suscriptor", () => {
 
   it("guarda la contraseña hasheada, nunca en claro", async () => {
     const { repository, created } = fakeRepository();
-    await registerSubscriber({ repository, subscriptions: fakeSubscriptions() }, VALID);
+    await registerSubscriber({ repository, subscriptions: fakeSubscriptions(), auth: fakeAuth() }, VALID);
 
     expect(created[0].passwordHash).not.toContain(VALID.password);
     expect(await verifyPassword(created[0].passwordHash, VALID.password)).toBe(true);
@@ -93,7 +117,7 @@ describe("alta de suscriptor", () => {
     const { repository, created } = fakeRepository();
     const at = new Date("2026-06-01T08:00:00.000Z");
     await registerSubscriber(
-      { repository, subscriptions: fakeSubscriptions(), now: () => at },
+      { repository, subscriptions: fakeSubscriptions(), auth: fakeAuth(), now: () => at },
       VALID
     );
 
@@ -103,7 +127,7 @@ describe("alta de suscriptor", () => {
 
   it("no pide ni propaga el número completo de la tarjeta", async () => {
     const { repository, created } = fakeRepository();
-    await registerSubscriber({ repository, subscriptions: fakeSubscriptions() }, VALID);
+    await registerSubscriber({ repository, subscriptions: fakeSubscriptions(), auth: fakeAuth() }, VALID);
 
     expect(created[0].card).toEqual({ brand: "VISA", last4: "4242", expMonth: 12, expYear: 2030 });
     expect(JSON.stringify(created[0].card)).not.toMatch(/\d{13,}/);
@@ -113,7 +137,7 @@ describe("alta de suscriptor", () => {
     const { repository, created } = fakeRepository();
     const at = new Date("2026-06-01T08:00:00.000Z");
     await registerSubscriber(
-      { repository, subscriptions: fakeSubscriptions(), now: () => at },
+      { repository, subscriptions: fakeSubscriptions(), auth: fakeAuth(), now: () => at },
       VALID
     );
 
@@ -208,13 +232,101 @@ describe("alta de suscriptor", () => {
     ]);
   });
 
-  it("informa del email ya registrado como error del campo email", async () => {
+  it("con el email cogido y sin la contraseña, el alta rebota sin decir más", async () => {
     const { repository } = fakeRepository({ outcome: "email_taken" });
     const error = await failedRegistration(repository, VALID);
 
-    expect(error.issues).toEqual([
-      { field: "email", issue: "Ya existe una cuenta con este email." },
-    ]);
+    // La respuesta no distingue "existe y no es tuya" de "existe y te has equivocado":
+    // es exactamente lo que el alta ya revelaba antes, ni un dato más.
+    expect(error.issues[0].field).toBe("email");
+    expect(error.issues[0].issue).toMatch(/Ya existe una cuenta con este email/);
+  });
+});
+
+/**
+ * La vuelta de quien canceló (2026-08-20). Cancelar dejaba un callejón sin salida: la
+ * suscripción cancelada ya no rige, así que no había nada que reactivar en el portal, y
+ * el alta rebotaba con "ya existe una cuenta". El cliente se quedaba fuera con su
+ * propia cuenta.
+ */
+describe("volver a suscribirse con una cuenta que ya existe", () => {
+  const CUENTA: AuthUserWithSecret = {
+    id: "user-vuelta",
+    email: "nueva@example.test",
+    fullName: "Nuria Ejemplo",
+    role: "SUBSCRIBER",
+    status: "ACTIVE",
+    passwordHash: "",
+  };
+
+  async function cuenta(overrides: Partial<AuthUserWithSecret> = {}) {
+    return { ...CUENTA, passwordHash: await hashPassword(VALID.password), ...overrides };
+  }
+
+  it("con la contraseña correcta se reabre la suscripción sobre la misma cuenta", async () => {
+    const { repository, resubscriptions } = fakeRepository({ outcome: "email_taken" });
+    const result = await registerSubscriber(
+      { repository, subscriptions: fakeSubscriptions(), auth: fakeAuth(await cuenta()) },
+      VALID
+    );
+
+    expect(result).toEqual({ userId: "user-vuelta", planCode: "PREMIUM", resubscribed: true });
+    // Con los datos **nuevos**: si vuelve al cabo de un año, su dirección es la de hoy.
+    expect(resubscriptions[0]).toMatchObject({
+      userId: "user-vuelta",
+      fullName: "Nuria Ejemplo",
+      address: { line1: "Calle Falsa 123", city: "Sevilla" },
+      subscription: { planId: "plan-premium-uuid" },
+    });
+  });
+
+  it("con la contraseña equivocada no se toca nada", async () => {
+    const { repository, resubscriptions } = fakeRepository({ outcome: "email_taken" });
+    const auth = fakeAuth(await cuenta({ passwordHash: await hashPassword("otra-cosa") }));
+
+    await expect(
+      registerSubscriber({ repository, subscriptions: fakeSubscriptions(), auth }, VALID)
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(resubscriptions).toHaveLength(0);
+  });
+
+  it("una cuenta del equipo no contrata plan, aunque acierte la contraseña", async () => {
+    const { repository } = fakeRepository({ outcome: "email_taken" });
+    const auth = fakeAuth(await cuenta({ role: "OPERATOR" }));
+
+    const error = await failedRegistration(repository, VALID, fakeSubscriptions(), auth);
+    expect(error.issues[0].issue).toMatch(/equipo de Clickoteca/);
+  });
+
+  it("una cuenta suspendida tampoco, y solo se le dice tras acreditar identidad", async () => {
+    const { repository } = fakeRepository({ outcome: "email_taken" });
+    const auth = fakeAuth(await cuenta({ status: "SUSPENDED" }));
+
+    const error = await failedRegistration(repository, VALID, fakeSubscriptions(), auth);
+    expect(error.issues[0].issue).toMatch(/suspendida/);
+  });
+
+  it("si ya tiene una suscripción vigente, se le manda a su portal", async () => {
+    const { created } = fakeRepository();
+    const repository: SubscriberRepository = {
+      async createSubscriber(input) {
+        created.push(input);
+        return { outcome: "email_taken" as const };
+      },
+      // La comprobación vive **dentro** de la transacción del repositorio: entre mirar
+      // y escribir cabe otra alta simultánea.
+      async resubscribe() {
+        return { outcome: "already_subscribed" as const };
+      },
+    };
+
+    const error = await failedRegistration(
+      repository,
+      VALID,
+      fakeSubscriptions(),
+      fakeAuth(await cuenta())
+    );
+    expect(error.issues[0].issue).toMatch(/ya tiene una suscripción/);
   });
 });
 
@@ -229,6 +341,10 @@ describe("atomicidad del alta", () => {
     readonly users: Array<{ id: string; planId: string }> = [];
 
     constructor(private readonly failOnPlanId: string | null = null) {}
+
+    async resubscribe(): Promise<never> {
+      throw new Error("no usado");
+    }
 
     async createSubscriber(input: NewSubscriber) {
       const pending = { id: "user-1", planId: input.subscription.planId };
@@ -245,7 +361,7 @@ describe("atomicidad del alta", () => {
     const repository = new TransactionalFakeRepository("plan-premium-uuid");
 
     await expect(
-      registerSubscriber({ repository, subscriptions: fakeSubscriptions() }, VALID)
+      registerSubscriber({ repository, subscriptions: fakeSubscriptions(), auth: fakeAuth() }, VALID)
     ).rejects.toThrow("fallo al crear la suscripción");
 
     expect(repository.users).toHaveLength(0);
@@ -253,7 +369,7 @@ describe("atomicidad del alta", () => {
 
   it("el alta correcta deja cuenta y suscripción", async () => {
     const repository = new TransactionalFakeRepository();
-    await registerSubscriber({ repository, subscriptions: fakeSubscriptions() }, VALID);
+    await registerSubscriber({ repository, subscriptions: fakeSubscriptions(), auth: fakeAuth() }, VALID);
 
     expect(repository.users).toEqual([{ id: "user-1", planId: "plan-premium-uuid" }]);
   });

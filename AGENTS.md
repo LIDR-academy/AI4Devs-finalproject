@@ -886,6 +886,41 @@ project. Read it at the start of every session.
   **Verificación:** 367 unitarios, `tsc`, `eslint`, `next build` y **36 E2E en dos
   ejecuciones seguidas** dejando la base limpia (0 alquileres abiertos, 0 colas vivas);
   `axe` audita 18 pantallas y 2 diálogos.
+- **Los dos bloqueantes de W2/W3, resueltos (2026-08-20):**
+  **§8.1 — la puerta que faltaba.** La cola de trabajo incluye ahora las copias
+  `ALQUILADA` **sin envío de salida** (`PENDING_DISPATCH` en
+  `backoffice.repository.prisma.ts`), como grupo **primero** y titulado **"Por
+  preparar"**. El matiz que hay que no olvidar: registrar la condición **no mueve la
+  copia** —crea el informe y el `Shipment` `OUTBOUND`, pero sigue en `ALQUILADA`—, así
+  que sin excluir las que ya tienen envío, lo preparado se quedaría en la cola para
+  siempre. Como en la cola esa copia **no está "con el cliente"**, `lib/status.ts` gana
+  **`workQueueGroup()`**: el mismo estado leído como trabajo pendiente (warning), sin
+  tocar la etiqueta que usa la ficha de catálogo. Falta solo su botón, que llega con W2.
+  **§8.2 — lista de comprobación ratificada por el usuario: DOS ítems**, `pieceCount`
+  (recuento de piezas) y `manual`. Fuera la caja —para un set de construcción el
+  embalaje casi no es valor y para uno de exposición sí— y las piezas sueltas, que se
+  ven en el recuento. Viven en **`src/domain/rentals/condition-checklist.ts`** y de ahí
+  se deriva **`src/http/condition-checklist-schema.ts`**, que validan los **dos**
+  endpoints: o están todas o ninguna, nada fuera del catálogo, y booleanos. El tipo
+  `ConditionChecklist` sustituye al `Record<string, unknown>` en el puerto y en los casos
+  de uso. **Añadir un ítem es tocar un fichero**; quitarlo, ojo: los informes guardados
+  lo seguirán trayendo.
+- **Volver a suscribirse tras cancelar (2026-08-20, a petición del usuario):** el alta
+  con un email que **ya existe** reabre la suscripción **si viene con la contraseña de
+  esa cuenta** (`registerSubscriber` → `resubscribeExisting`, puerto
+  `SubscriberRepository.resubscribe`). Cierra el callejón sin salida que destapó W5.
+  **Decisiones:** (1) sin la contraseña correcta la respuesta es **la misma de antes**,
+  así que no se revela nada nuevo — pero **sí añade un sitio donde probar contraseñas**,
+  igual que el login: cuando haya limitación de intentos tiene que cubrir los dos;
+  (2) cuenta del equipo y cuenta suspendida se distinguen **solo tras acreditar la
+  identidad**, mismo criterio que `login.ts`; (3) la comprobación de "no tiene otra
+  vigente" va **dentro de la transacción** del repositorio, o dos altas simultáneas
+  dejarían dos suscripciones; (4) se actualizan nombre, dirección y tarjeta con los
+  datos nuevos, y las anteriores dejan de ser las de por defecto **sin borrarse**
+  (pueden estar referenciadas por pagos y por el snapshot de un alquiler). Spec nueva en
+  `openspec/specs/accounts-roles` ("Volver a suscribirse con una cuenta existente").
+  **Verificación:** 382 unitarios, `tsc`, `eslint`, `next build` y **38 E2E en dos
+  ejecuciones seguidas** (`e2e/preparacion.spec.ts` nuevo, que cierra su circuito).
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -896,19 +931,19 @@ project. Read it at the start of every session.
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
-  (hoy **367 tests unitarios + 36 E2E**, `openspec validate --strict` en verde). Lo que queda
+  (hoy **382 tests unitarios + 38 E2E**, `openspec validate --strict` en verde). Lo que queda
   fuera del MVP: **diseño visual y UX** —los **tres entregables de diseño están hechos**:
   flujos por rol (`documents/ux-flows.md`), sistema de diseño
   (`documents/design-system.md`) y **wireframes** (`documents/wireframes.md`, 2026-08-20);
   de las cinco pantallas están construidas **W1 (ficha de set)**, **W4 (catálogo e
   inventario)** y **W5 (portal ampliado)**, más la **navegación de superficie**; solo
-  quedan **W2+W3**, bloqueadas por §8.1 y §8.2— y el despliegue en la VM. **`axe` ya está en el
+  quedan **W2+W3**, ya **desbloqueadas** (§8.1 y §8.2 resueltos)— y el despliegue en la VM. **`axe` ya está en el
   E2E.** La decisión de alcance sobre el plan y el alquiler puntual está **tomada,
   ejecutada y archivada** (cambio `plan-obligatorio-en-alta`, 2026-08-17). **`ux-flows.md`
   §8.2 ya no tiene nada abierto**: los wireframes cerraron los tres puntos que quedaban.
-  Antes de implementar W2 hay que resolver los dos bloqueantes de `wireframes.md` §8.1 y
-  §8.2 (la copia `ALQUILADA` fuera de la cola de trabajo, y la lista de comprobación
-  inexistente). Para cualquier cambio de estado de una copia, usar
+  Los dos bloqueantes de `wireframes.md` §8.1 y §8.2 están **resueltos**
+  (2026-08-20): la cola de trabajo tiene el grupo "Por preparar" y la lista de
+  comprobación está ratificada en el dominio. Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en

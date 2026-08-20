@@ -1,5 +1,6 @@
-import { hashPassword } from "@/domain/auth/password";
+import { hashPassword, verifyPassword } from "@/domain/auth/password";
 import { ValidationError } from "@/domain/errors";
+import type { AuthRepository } from "@/repositories/auth.repository";
 import type { SubscriberRepository } from "@/repositories/subscriber.repository";
 import type { SubscriptionRepository } from "@/repositories/subscription.repository";
 
@@ -13,6 +14,11 @@ export interface RegisterSubscriberDeps {
    * aquí solo se consulta para traducir el código elegido a su plan.
    */
   subscriptions: SubscriptionRepository;
+  /**
+   * Solo para el caso de la vuelta: comprobar la contraseña de una cuenta que ya
+   * existe. El alta normal no lo usa.
+   */
+  auth: AuthRepository;
   now?: () => Date;
 }
 
@@ -34,6 +40,8 @@ export interface RegisterSubscriberResult {
   userId: string;
   /** Plan con el que queda suscrito; el alta ya deja la cuenta operativa. */
   planCode: string;
+  /** `true` cuando lo que se hizo fue reabrir la suscripción de una cuenta existente. */
+  resubscribed: boolean;
 }
 
 /**
@@ -45,7 +53,7 @@ export interface RegisterSubscriberResult {
  * rechazarlos venga de donde venga la llamada.
  */
 export async function registerSubscriber(
-  { repository, subscriptions, now = () => new Date() }: RegisterSubscriberDeps,
+  { repository, subscriptions, auth, now = () => new Date() }: RegisterSubscriberDeps,
   input: RegisterSubscriberInput
 ): Promise<RegisterSubscriberResult> {
   const issues = [];
@@ -96,13 +104,85 @@ export async function registerSubscriber(
   });
 
   if (result.outcome === "email_taken") {
-    // Se admite que esto revela qué emails están dados de alta. En un alta es
-    // inevitable sin sacrificar la usabilidad, y a diferencia del login —donde sí se
-    // evita (ver `login.ts`)— aquí no hay credencial que proteger.
+    return resubscribeExisting({ repository, auth }, input, plan.id, plan.code, startedAt);
+  }
+
+  return { userId: result.userId, planCode: plan.code, resubscribed: false };
+}
+
+/**
+ * La vuelta de un cliente que canceló.
+ *
+ * Cancelar dejaba un callejón sin salida: la suscripción cancelada ya no rige, así que
+ * no hay nada que reactivar desde el portal, y el alta rebotaba con "ya existe una
+ * cuenta con este email". El cliente se quedaba fuera con su propia cuenta.
+ *
+ * **La contraseña es la que abre la puerta.** Con ella acreditada se reabre la
+ * suscripción sobre la cuenta de siempre —con el nombre, la dirección y la tarjeta que
+ * traiga el formulario nuevo—, y sin ella la respuesta es exactamente la de antes: no
+ * se revela nada que el alta no revelara ya. Lo que sí añade es un sitio más donde
+ * probar contraseñas, igual que el login: cuando haya limitación de intentos, tiene
+ * que cubrir los dos.
+ */
+async function resubscribeExisting(
+  { repository, auth }: Pick<RegisterSubscriberDeps, "repository" | "auth">,
+  input: RegisterSubscriberInput,
+  planId: string,
+  planCode: string,
+  startedAt: Date
+): Promise<RegisterSubscriberResult> {
+  const emailTaken = () =>
+    new ValidationError([
+      {
+        field: "email",
+        issue:
+          "Ya existe una cuenta con este email. Si es tuya, escribe su contraseña para volver a suscribirte.",
+      },
+    ]);
+
+  const account = await auth.findUserByEmail(normalizeEmail(input.email));
+  if (!account || !(await verifyPassword(account.passwordHash, input.password))) {
+    throw emailTaken();
+  }
+
+  // Estas dos sí se distinguen, pero **solo después** de acreditar la identidad — el
+  // mismo criterio que el login con una cuenta suspendida (`login.ts`).
+  if (account.role !== "SUBSCRIBER") {
     throw new ValidationError([
-      { field: "email", issue: "Ya existe una cuenta con este email." },
+      { field: "email", issue: "Esta cuenta es del equipo de Clickoteca, no de suscriptor." },
+    ]);
+  }
+  if (account.status === "SUSPENDED") {
+    throw new ValidationError([
+      { field: "email", issue: "Esta cuenta está suspendida y no puede contratar un plan." },
     ]);
   }
 
-  return { userId: result.userId, planCode: plan.code };
+  const outcome = await repository.resubscribe({
+    userId: account.id,
+    fullName: input.fullName.trim(),
+    acceptedTermsAt: startedAt,
+    address: {
+      line1: input.address.line1.trim(),
+      city: input.address.city.trim(),
+      postalCode: input.address.postalCode.trim(),
+      country: input.address.country?.trim() || "ES",
+    },
+    card: input.card,
+    subscription: { planId, startedAt },
+  });
+
+  if (outcome.outcome === "already_subscribed") {
+    throw new ValidationError([
+      {
+        field: "email",
+        issue: "Esta cuenta ya tiene una suscripción en marcha; entra en tu portal para gestionarla.",
+      },
+    ]);
+  }
+  // La cuenta existía hace un instante y ya no: es una carrera rarísima, y la respuesta
+  // honesta es la misma que si el email estuviera cogido.
+  if (outcome.outcome === "not_found") throw emailTaken();
+
+  return { userId: account.id, planCode, resubscribed: true };
 }

@@ -430,6 +430,14 @@ pasa a `PREPARADO` pero la copia **sigue en `ALQUILADA`**, así que hace falta e
 que ya tengan un `Shipment` `OUTBOUND`. Es una condición más en la consulta, no un estado
 nuevo — ver §8.1.
 
+**Hecho el 2026-08-20.** El grupo existe, va el primero y excluye lo ya preparado
+(`PENDING_DISPATCH` en `backoffice.repository.prisma.ts`). Se titula **"Por preparar"** y
+no "Con el cliente", que es como se llama `ALQUILADA` en el resto del back-office: en la
+cola de trabajo esa copia **no está con el cliente** —está adjudicada y esperando a que
+alguien la prepare—, así que `lib/status.ts` gana `workQueueGroup()`, que es el mismo
+estado leído como trabajo pendiente. Lo único que le falta al grupo es su botón
+`[ Registrar y enviar ]`, que llega con la pantalla de §4.2.
+
 ### 4.2 La pantalla — `/backoffice/copias/:copyId/entrega`
 
 Pantalla propia, no un diálogo: hay una lista de comprobación que se rellena con el set
@@ -469,20 +477,30 @@ formulario que se rellena entero y falla por lo primero.
 (W3) y el operador tiene que saber que a partir de ahí la copia queda documentada. Las
 "48 h" salen de `offerConfirmationWindowHours`, nunca escritas a mano.
 
-### 4.3 El hueco que hay que decidir: qué lleva la lista de comprobación
+### 4.3 ~~El hueco que hay que decidir~~: qué lleva la lista de comprobación
 
 `checklist` es `z.record(z.string(), z.unknown()).nullish()` en los **dos** endpoints
 —entrega e inspección—. Es decir: **no existe ningún catálogo de comprobaciones en
 ninguna capa**. La forma libre está bien para el almacenamiento, pero una pantalla no se
 puede dibujar contra un `Record<string, unknown>`.
 
-Las cuatro de arriba son una **propuesta**, no una decisión tomada: son las que se
-deducen de lo que ya distingue el dominio (`INCOMPLETE` mira piezas, `DAMAGED` mira
-estado) más el manual y el embalaje, que es lo que se toca al preparar un envío. **Hay
-que ratificarlas** — es una decisión de operación, no de diseño — y una vez fijadas deben
-vivir en un solo sitio, con la misma lista para entrega e inspección, para que los dos
-informes de un mismo alquiler sean comparables campo a campo. Un informe de entrada y
-otro de salida con casillas distintas no sirven para lo único que justifica registrarlos.
+Las cuatro de arriba eran una **propuesta**, no una decisión tomada: las que se deducen
+de lo que ya distingue el dominio (`INCOMPLETE` mira piezas, `DAMAGED` mira estado) más
+el manual y el embalaje, que es lo que se toca al preparar un envío.
+
+**Ratificadas el 2026-08-20, y son dos**: el **recuento de piezas** y el **manual de
+instrucciones**. Quedaron fuera el estado de la caja —para un set de construcción el
+embalaje casi no es valor y para uno de exposición sí, así que una casilla única mentiría
+en la mitad de los casos— y las piezas sueltas fuera de bolsa, que en la práctica acaba
+viéndose en el propio recuento. Dos casillas que siempre se rellenan valen más que cuatro
+que se marcan en bloque sin mirar.
+
+Viven en **`src/domain/rentals/condition-checklist.ts`**, y de ahí se deriva el esquema
+que validan los **dos** endpoints (`src/http/condition-checklist-schema.ts`). Tres reglas
+que la lista trae de serie: **o están todas o no está ninguna** —media lista no se puede
+comparar con la de la otra punta del alquiler—, **se rechaza lo que no esté en el
+catálogo** (antes entraba cualquier clave) y son **booleanos**: lo que no cabe en un sí/no
+va a observaciones, que es otro campo del informe.
 
 ### 4.4 De dónde salen los datos · acciones
 
@@ -951,13 +969,21 @@ sin decir a dónde, y §2.3 fija cinco destinos: no hay sexta ruta. Se resuelve 
 en una pantalla lo que el suscriptor tiene y lo que espera —una cola es lo mismo un
 paso antes—, y los dos "Ver todos" apuntan ahí.
 
-**El hallazgo: cancelar es un callejón sin salida.** `findCurrentSubscription` ignora
+**El hallazgo: cancelar era un callejón sin salida.** `findCurrentSubscription` ignora
 las canceladas —correctamente: una suscripción cancelada ya no rige—, así que después
-de cancelar **no hay nada que reactivar**, y `POST /api/auth/register` exige un email
-nuevo. O sea que un cliente que cancela no puede volver por la web. El texto del
-diálogo lo dice sin adornos ("es definitivo desde el portal") y empuja a **pausar**,
-que es lo que casi siempre se quiere; pero el hueco es de producto, no de pantalla, y
-sigue abierto: falta un "recontratar" que reabra suscripción para un usuario existente.
+de cancelar **no había nada que reactivar**, y `POST /api/auth/register` rebotaba con
+"ya existe una cuenta con este email". Un cliente que cancelaba se quedaba fuera con su
+propia cuenta.
+
+**Cerrado el mismo día:** el alta con un email que ya existe **reabre la suscripción**
+si viene con la contraseña de esa cuenta. La contraseña es la que abre la puerta, y sin
+ella la respuesta es exactamente la de antes —no se revela nada que el alta no revelara
+ya—; con ella acreditada se reabre sobre la cuenta de siempre, con el nombre, la
+dirección y la tarjeta del formulario nuevo, porque quien vuelve al cabo de un año no
+vive necesariamente donde vivía. Se distinguen, **solo tras acreditar la identidad**, la
+cuenta del equipo y la suspendida, igual que hace el login. Detalle en
+`register-subscriber.ts`; el diálogo sigue empujando a **pausar**, que es lo que casi
+siempre se quiere.
 
 **Dos textos que la pantalla obligó a corregir:** cancelar **no** saca al suscriptor de
 sus colas —las entradas siguen ahí y el recorrido las salta por no ser elegible (D5)—,
@@ -982,7 +1008,7 @@ suscripción esté activa.
 Igual que en `ux-flows.md`, cruzar el diseño con el código es lo que da información
 nueva. Siete cosas, ordenadas de "bloquea una pantalla" a "conviene saberlo".
 
-### 8.1 · Bloqueante — `ALQUILADA` no está en la cola de trabajo
+### 8.1 · ~~Bloqueante~~ **Resuelto** — `ALQUILADA` no estaba en la cola de trabajo
 
 `ACTIONABLE_STATES` no lo incluye
 ([`backoffice.repository.prisma.ts:17`](../src/repositories/backoffice.repository.prisma.ts)),
@@ -995,13 +1021,21 @@ copia** —crea el informe y el `Shipment` `OUTBOUND` `PREPARADO`, pero la copia
 `ALQUILADA`—, así que el grupo nuevo tiene que excluir las copias que ya tengan envío de
 salida. Si no, lo preparado se queda en la cola para siempre.
 
-### 8.2 · Bloqueante — el `checklist` no existe en ninguna parte
+**Resuelto el 2026-08-20** (§4.1). Lo cubre `e2e/preparacion.spec.ts`, que monta el caso
+por API y comprueba las dos mitades: que la copia adjudicada aparece, y que **desaparece
+al registrar la condición** aunque siga en `ALQUILADA` — que es justo el fallo que este
+matiz evita.
+
+### 8.2 · ~~Bloqueante~~ **Resuelto** — el `checklist` no existía en ninguna parte
 
 `z.record(z.string(), z.unknown()).nullish()` en entrega e inspección. No hay catálogo de
 comprobaciones, y una pantalla no se dibuja contra un diccionario libre. §4.3 propone
 cuatro ítems; **hay que ratificarlos** y ponerlos en un sitio único compartido por los
 dos informes, o los de entrada y salida de un mismo alquiler no serán comparables — que
 es lo único que justifica registrarlos.
+
+**Resuelto el 2026-08-20**: ratificadas **dos** —recuento de piezas y manual—, en un
+único módulo de dominio del que se deriva la validación de los dos endpoints (§4.3).
 
 ### 8.3 · Un ajuste con dos significados
 
@@ -1116,9 +1150,9 @@ El mismo de `ux-flows.md` §9.2, con lo que cada paso obliga a arreglar antes:
    en el back-office; la del portal queda declarada y aparece cuando W5 traiga sus rutas.
 3. ~~**W5 · Portal ampliado.**~~ **Hecha el 2026-08-20** (§7.7). Con ella, los avisos de
    no elegibilidad de W1 dejan de apuntar a rutas que no existían.
-4. **W2 + W3.** Lo único que queda, y sigue **bloqueado por §8.1 y §8.2**: sin la puerta
-   en la cola de trabajo y sin la lista de comprobaciones ratificada, no se pueden
-   construir. ← **siguiente**
+4. **W2 + W3.** Lo único que queda. **Desbloqueadas el 2026-08-20**: la cola de trabajo
+   ya tiene el grupo "Por preparar" (§8.1) y la lista de comprobaciones está ratificada y
+   en el dominio (§8.2). ← **siguiente**
 5. ~~**W4 · Catálogo e inventario.**~~ **Hecha el 2026-08-20** (§6.6), fuera de orden
    —a petición del usuario— porque era la única de las tres restantes sin bloqueantes:
    W5 seguía disponible y W2/W3 siguen esperando a §8.1 y §8.2.

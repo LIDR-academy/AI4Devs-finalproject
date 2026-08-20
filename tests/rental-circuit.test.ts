@@ -236,7 +236,8 @@ describe("registro de condición en la entrega (5.2)", () => {
       rentalId,
       actor: OPERATOR,
       result: "OK",
-      checklist: { piezas: "completas" },
+      // Las dos casillas del catálogo ratificado, no un diccionario libre (§4.3).
+      checklist: { pieceCount: true, manual: true },
     });
 
     expect(report).toMatchObject({ kind: "DELIVERY", result: "OK", operatorId: "operator-1" });

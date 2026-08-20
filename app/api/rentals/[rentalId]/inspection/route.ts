@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { requireSession } from "@/http/auth-context";
+import { ChecklistSchema } from "@/http/condition-checklist-schema";
 import { parseJsonBody } from "@/http/parse-body";
 import { toProblemResponse } from "@/http/problem";
 import { prismaCopyRepository } from "@/repositories/copy.repository.prisma";
@@ -10,7 +11,9 @@ import { recordInspection } from "@/use-cases/rentals/delivery-and-return";
 
 const InspectionSchema = z.object({
   result: z.enum(["OK", "INCOMPLETE", "DAMAGED"]),
-  checklist: z.record(z.string(), z.unknown()).nullish(),
+  // Las casillas salen del catálogo de dominio, no de un diccionario libre: los dos
+  // informes de un mismo alquiler tienen que ser comparables (`wireframes.md` §4.3).
+  checklist: ChecklistSchema,
 });
 
 /**

@@ -11,8 +11,8 @@ import type {
 /** Adaptador Prisma del puerto `BackofficeRepository`. */
 
 /**
- * Estados que exigen que alguien haga algo. `DISPONIBLE`, `ALQUILADA`, `OFRECIDA` y
- * `BAJA` no aparecen: no hay nada que el back-office deba hacer con ellos.
+ * Estados que exigen que alguien haga algo **por el estado en sí**. `DISPONIBLE`,
+ * `OFRECIDA` y `BAJA` no aparecen: no hay nada que el back-office deba hacer con ellos.
  */
 const ACTIONABLE_STATES = [
   "INTAKE",
@@ -22,10 +22,30 @@ const ACTIONABLE_STATES = [
   "INCOMPLETA",
 ] as const satisfies readonly CopyState[];
 
+/**
+ * `ALQUILADA` es el caso aparte, y era el bloqueo de W2 (`wireframes.md` §8.1): una
+ * copia adjudicada espera a que el operador registre su condición y prepare el envío,
+ * y sin esto **no había forma de enterarse** — la pantalla de registro era inalcanzable.
+ *
+ * No basta con añadir el estado: registrar la condición **no mueve la copia** —crea el
+ * informe y el envío `OUTBOUND`, pero sigue en `ALQUILADA`—, así que se excluyen las
+ * que ya tengan envío de salida. Si no, lo preparado se quedaría en la cola para
+ * siempre. Es una condición más en la consulta, no un estado nuevo.
+ */
+const PENDING_DISPATCH = {
+  state: "ALQUILADA",
+  rentals: {
+    some: {
+      status: { not: "COMPLETED" },
+      shipments: { none: { direction: "OUTBOUND" } },
+    },
+  },
+} as const;
+
 export const prismaBackofficeRepository: BackofficeRepository = {
   async findWorkQueue() {
     const copies = await prisma.copy.findMany({
-      where: { state: { in: [...ACTIONABLE_STATES] } },
+      where: { OR: [{ state: { in: [...ACTIONABLE_STATES] } }, PENDING_DISPATCH] },
       select: {
         id: true,
         state: true,

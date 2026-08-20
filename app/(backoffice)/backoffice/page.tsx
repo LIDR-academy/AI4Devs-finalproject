@@ -1,6 +1,6 @@
 import { CopyActions } from "@/components/backoffice/copy-actions";
 import { StatusBadge } from "@/components/status-badge";
-import { copyStatus } from "@/lib/status";
+import { workQueueGroup } from "@/lib/status";
 import { requireSurfacePage } from "@/http/auth-context";
 import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
 import { prismaBackofficeRepository } from "@/repositories/backoffice.repository.prisma";
@@ -13,8 +13,18 @@ export const metadata = { title: "Cola de trabajo" };
  * un set que alguien está esperando), al final lo que solo engorda el inventario.
  * Las etiquetas ya no viven aquí — salen del vocabulario común (`lib/status.ts`),
  * que es el que garantiza que un estado se llame igual en toda la aplicación.
+ *
+ * `ALQUILADA` va **el primero** de todos (`wireframes.md` §4.1): ahí hay alguien que ya
+ * tiene el set adjudicado y todavía no lo ha recibido, que es lo que más bloquea.
  */
-const ORDER = ["EN_INSPECCION", "EN_HIGIENIZACION", "INCOMPLETA", "EN_DEVOLUCION", "INTAKE"] as const;
+const ORDER = [
+  "ALQUILADA",
+  "EN_INSPECCION",
+  "EN_HIGIENIZACION",
+  "INCOMPLETA",
+  "EN_DEVOLUCION",
+  "INTAKE",
+] as const;
 
 const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "short", timeStyle: "short" });
 
@@ -54,7 +64,7 @@ export default async function BackofficePage() {
           {/* El grupo se titula con la propia píldora del estado: así el color
               dice de un vistazo qué cubos queman y cuáles solo esperan. */}
           <h2 className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={copyStatus(state, "backoffice")} className="text-sm" />
+            <StatusBadge status={workQueueGroup(state)} className="text-sm" />
             <span className="text-sm text-[var(--muted-foreground)]">
               {byState.get(state)!.length} copia(s)
             </span>
