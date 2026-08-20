@@ -16,7 +16,7 @@ Full current route list can always be regenerated with `php artisan route:list`.
 
 ## App-owned routes
 
-Declared in [`routes/web.php`](../../routes/web.php) and [`routes/settings.php`](../../routes/settings.php).
+Declared in [`routes/web.php`](../../routes/web.php) and the two per-area files it requires, [`routes/settings.php`](../../routes/settings.php) and [`routes/users.php`](../../routes/users.php).
 
 | Method | URI | Name | Middleware | Handler |
 | --- | --- | --- | --- | --- |
@@ -43,13 +43,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 ### `users.index` — the first permission-gated route
 
-Every other app-owned route gates on *being signed in*; this one is the first to gate on a **catalog permission**. It lives in [`routes/web.php`](../../routes/web.php), inside the existing `auth` + `verified` group:
+Every other app-owned route gates on *being signed in*; this one is the first to gate on a **catalog permission**. Since task 0040 it lives in its own [`routes/users.php`](../../routes/users.php) — one file per functional area, required from `web.php` exactly the way `settings.php` is — inside that file's own `auth` + `verified` group:
 
 ```php
-// routes/web.php
-Route::livewire('users', UsersIndex::class)
-    ->middleware(['can:users.view'])
-    ->name('users.index');
+// routes/users.php
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::livewire('users', UsersIndex::class)
+        ->middleware(['can:users.view'])
+        ->name('users.index');
+});
 ```
 
 **`can:users.view`, not `permission:users.view`** — the two express the same rule but are not interchangeable on a `Route::livewire(...)` route. Livewire re-applies route middleware to `/livewire/update` round-trips only for classes on its `PersistentMiddleware` allow-list, which carries Laravel's `Authorize` (`can:`) but not Spatie's `PermissionMiddleware`; gating with `permission:` would protect the initial `GET /users` only, leaving every `save()` / `deleteUser()` unauthorized at the route layer. The route file carries an inline comment saying so — do not "normalise" it. See [architecture/authorization.md](../architecture/authorization.md#gating-a-livewire-route-use-can-never-permission).
@@ -124,7 +126,9 @@ Not listed: asset/dev-tool routes with no domain meaning (`flux/*`, `livewire-*/
 
 When `routes/api.php` and API resource controllers appear, replace this file's structure with one `api/<resource>.md` per resource, each documenting real request/response JSON pulled from the controller/resource classes — do not add one preemptively.
 
-_Last updated: 2026-08-19 — Task 0008a (centralize Administrator-level role identification): recorded that the write path behind `users.index` is now authorized twice over — the Administrator-tier abilities moved out of the component and into `CreateUser` / `UpdateUser` — and corrected the row-action bullet's "the disabled state cannot drift" claim, which now carries the one accepted exception (a Super Admin actor viewing a Super Admin-holding target renders enabled and is refused on click)._
+_Last updated: 2026-08-20 — Task 0040 (move `users.index` into its own route file): `users.index` no longer lives in `routes/web.php` — it is declared in the new [`routes/users.php`](../../routes/users.php), required from `web.php` the same way `settings.php` is. Updated the app-owned-routes scope sentence, the subsection's "it lives in" sentence and its code quote (now showing the whole group, since the file's `auth` + `verified` group is its own). Pure relocation: the table row's URI, name and middleware are unchanged, and so is everything else this file says about the route._
+
+_Previously: 2026-08-19 — Task 0008a (centralize Administrator-level role identification): recorded that the write path behind `users.index` is now authorized twice over — the Administrator-tier abilities moved out of the component and into `CreateUser` / `UpdateUser` — and corrected the row-action bullet's "the disabled state cannot drift" claim, which now carries the one accepted exception (a Super Admin actor viewing a Super Admin-holding target renders enabled and is refused on click)._
 
 _Previously: 2026-08-16 — Task 0006 follow-up: recorded that each row's edit/delete action now renders enabled or disabled from the per-row `canEdit` / `canDelete` values `loadUsers()` derives from `UserPolicy` (with the `data-test` hook present on both branches), extended the `$users` array shape accordingly, and added the two markup rules the disabled branch established — why the tooltip is a written-out `flux:tooltip` wrapper instead of a conditionally-bound `tooltip` prop under Blaze, and why the `cursor-not-allowed!` class sits on that wrapper rather than on the `pointer-events-none` button._
 

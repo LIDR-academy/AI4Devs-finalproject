@@ -47,7 +47,7 @@ Read it for what is **absent**, not only for what is present:
 list:
 
 ```php
-// routes/web.php
+// routes/users.php
 Route::livewire('users', UsersIndex::class)
     ->middleware(['can:users.view'])
     ->name('users.index');
@@ -195,7 +195,12 @@ Two rules to carry forward, both proven by how this was closed:
   [authorization-patterns.md](authorization-patterns.md#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
   for why the two Super Admin refusals are direct throws rather than `Gate` checks.
 
-_Last updated: 2026-08-19 — Task 0008a: rewrote this section, whose claim that `CreateUser` /
+_Last updated: 2026-08-20 — Task 0040: the ✅ `can:`-gated route quote now cites
+[`routes/users.php`](../../routes/users.php), the per-area file `users.index` moved into. The rule it
+illustrates is untouched — the declaration, its middleware and the `PersistentMiddleware` allow-list
+behind it are byte-identical; only the file the route is declared in changed._
+
+_Previously, 2026-08-19 — Task 0008a: rewrote this section, whose claim that `CreateUser` /
 `UpdateUser` "carry no authorization of their own" the story made false. The gap it documented is
 closed; the before/after table is kept because the shape recurs on every module screen._
 

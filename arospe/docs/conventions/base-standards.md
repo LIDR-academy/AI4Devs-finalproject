@@ -70,7 +70,8 @@ resources/
     layouts/            Auth/app layout shells
     livewire/           Views for Livewire components AND plain auth Blade views (see naming.md)
     partials/
-routes/                 web.php, settings.php (no api.php yet)
+routes/                 web.php, plus one file per functional area that web.php requires
+                        (settings.php, roles.php, users.php) — no api.php yet
 tests/
   Feature/              Feature tests, mirrors app structure (Auth/, Settings/, Seeders/, ...)
   Unit/                 Mirrors app structure too (Enums/, Exceptions/, Listeners/, Models/), plus ArchitectureTest.php
@@ -83,6 +84,8 @@ tests/
 `app/Policies/` in particular is **registration-free**: Laravel 13 auto-discovers `App\Policies\<Model>Policy` for `App\Models\<Model>`, so `UserPolicy` binds to `User` by naming alone. This repo has no `AuthServiceProvider` and does not need one — do not add one to register a conventionally-named policy. What each ability means lives in [architecture/authorization.md](../architecture/authorization.md#policies), not here.
 
 `database/data/` is the one folder here that Laravel does **not** ship, so it needed the approval `CLAUDE.md` requires — it exists because [PRD §2.4](../PRD/PRD.md) mandates that the country list ship as a bundled fixture in this repository rather than as a Composer dependency (`league/iso3166`, `symfony/intl`). It holds **data a seeder reads**, never a seeder class and never generated output: today one JSON file plus [`database/data/README.md`](../../database/data/README.md), which states the fixture's provenance, its shape, what is deliberately excluded from it, and how to refresh it. A new file lands here only under the same test — bundled, reviewable in a diff, and read by something in `database/seeders/`.
+
+`routes/` follows the same one-per-area shape: `web.php` declares only the app-wide routes (`home`, `dashboard`) and then `require`s one file per functional area — `settings.php`, `roles.php`, and `users.php` since task 0040, which moved `users.index` out of `web.php` so it stops being the one route that didn't follow the pattern. A new area's routes go in a new `routes/<area>.php` with its own middleware group, appended as another `require` line rather than inlined into `web.php`; what each route contract actually is belongs to [api/routes.md](../api/routes.md).
 
 `app/Actions/` groups by concern, one subfolder per area: `Fortify/` holds the framework-contract implementations, `Users/` and `Roles/` the app's own domain actions for those areas. A new action goes in the subfolder for its domain (or directly under `app/Actions/` if it belongs to none) — never nested under an unrelated one. `Roles/` (task 0009) is the pattern to copy when a new module needs its first action: create the subfolder for the domain, even for a single class, rather than parking it in the nearest existing one.
 
@@ -291,7 +294,9 @@ Every PHP change in this repo should pass, in this order, before being considere
 2. `vendor/bin/pint --dirty --format agent` — auto-fixes formatting against the `laravel` preset (`pint.json`).
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
-_Last updated: 2026-08-20 — Task 0009: added `app/Actions/Roles/` (`EnforceAdministratorPermissionGrant`) to the directory listing, and recorded it in the "one subfolder per area" paragraph as the pattern to copy — a new domain gets its own subfolder even for a single action, rather than being parked in the nearest existing one._
+_Last updated: 2026-08-20 — Task 0040: corrected the `routes/` line of the directory listing (`web.php` plus one file per functional area — `settings.php`, `roles.php`, `users.php`) and added a new "one-per-area" paragraph stating the convention behind it: `web.php` holds only the app-wide routes and `require`s an area file per module, so a new area gets a new `routes/<area>.php` rather than another inline block. `users.index` was the one route not following that shape until this story moved it._
+
+_Previously, 2026-08-20 — Task 0009: added `app/Actions/Roles/` (`EnforceAdministratorPermissionGrant`) to the directory listing, and recorded it in the "one subfolder per area" paragraph as the pattern to copy — a new domain gets its own subfolder even for a single action, rather than being parked in the nearest existing one._
 
 _Previously, 2026-08-20 — Task 0016 (Sales Region catalog schema + seeder): added `database/data/` to the directory listing with the paragraph explaining why a non-Laravel base folder was approved here (PRD-mandated bundled fixture) and what may go in it; noted `SalesRegion` beside `User` in `app/Models/` and `SalesRegionKind` in `app/Enums/`; added `SalesRegion` as the reference case for the `#[Fillable]`-omission guard (the omission list follows who may write the column, and invariant-coupled columns are one decision); and rewrote the UUID-primary-keys preamble, which claimed `User` was the only live example and implied ADR 0001's seven-entity list was exhaustive — `sales_regions` is an eighth, under a policy the ADR does not record until its deferred amendment lands._
 
