@@ -13,6 +13,7 @@ Cross-cutting concern — single source of truth for roles & permissions. Other 
 - [The Super Admin bypass](#the-super-admin-bypass)
 - [The Super Admin role's invariants](#the-super-admin-roles-invariants)
 - [The Administrator tier's identity](#the-administrator-tiers-identity)
+  - [The Administrator tier's immutability](#the-administrator-tiers-immutability-name-locked-undeletable-permissions-still-editable)
 - [Middleware aliases](#middleware-aliases)
 - [Policies](#policies)
 - [Configuration](#configuration)
@@ -47,8 +48,9 @@ The authorization foundation is **live and in real use**: roles and permissions 
 - **Since task 0008 the `Super Admin` role itself is a fixed point of the system** — categorically undeletable, unrenameable, un-re-permissionable and absent from every roles list — enforced on [`App\Models\Role`](../../app/Models/Role.php), the app's own role model, which is now the **only** role model class application code may use. See [The Super Admin role's invariants](#the-super-admin-roles-invariants).
 - **Since task 0008a the Administrator tier has one identity and the tier's authorization lives in the actions**, not in the Livewire component: `App\Models\Role::isAdministratorRole()` is the single row-shaped predicate, and [`App\Actions\Users\CreateUser`](../../app/Actions/Users/CreateUser.php) / [`UpdateUser`](../../app/Actions/Users/UpdateUser.php) refuse an unprivileged caller on their own. See [The Administrator tier's identity](#the-administrator-tiers-identity).
 - **Since task 0009 the *role* side of the Administrator tier is enforced too, and a third authorization category exists**: `RolePolicy` gained an Administrator-level branch on `update()`/`delete()`, a Super-Admin-only `grantAdministratorPermission` ability, and [`App\Actions\Roles\EnforceAdministratorPermissionGrant`](../../app/Actions/Roles/EnforceAdministratorPermissionGrant.php) — which enforces a **meta**-rule (who may *grant* a permission, as opposed to who may exercise it). See [`RolePolicy`](#rolepolicy--the-second-policy) and [Who may grant a permission](#who-may-grant-a-permission--the-meta-rule-layer).
+- **Since task 0010 roles are managed from the application itself**, which changes three things at once. `roles.index` (`GET /roles`, gated `can:roles.manage`) is the **second** permission-gated route and [`App\Livewire\Roles\Index`](../../app/Livewire/Roles/Index.php) is `RolePolicy`'s **first call site** — so the policy stopped being a layer built ahead of its consumer. The `Administrator` role became **partially immutable** (name locked, never deletable, permission set still editable) now that code exists which could rename or delete it. And a second grant meta-rule shipped, [`App\Actions\Roles\EnforceGrantorPermissionScope`](../../app/Actions/Roles/EnforceGrantorPermissionScope.php), refusing a payload that newly grants a permission the actor does not hold. See [The Administrator tier's immutability](#the-administrator-tiers-immutability-name-locked-undeletable-permissions-still-editable) and [Who may grant a permission](#who-may-grant-a-permission--the-meta-rule-layer).
 
-Still **ungated**: every route in [`routes/settings.php`](../../routes/settings.php) and the `dashboard` route, which carry only `auth` / `verified` / `password.confirm`. Those are per-user settings screens with no catalog permission behind them; the module screens of PRD Epics 2–5 will gate the same way `users.index` does.
+Still **ungated**: every route in [`routes/settings.php`](../../routes/settings.php) and the `dashboard` route, which carry only `auth` / `verified` / `password.confirm`. Those are per-user settings screens with no catalog permission behind them; the module screens of PRD Epics 2–5 will gate the same way `users.index` and `roles.index` do.
 
 ## Permission catalog
 
@@ -109,21 +111,22 @@ Granularity is deliberately **coarse per module**: `products.*` covers categorie
 
 The `Super Admin` role is created and then left alone — its permissions are never synced, granted, or revoked, not even with an empty `syncPermissions([])`. Its zero-permission state is a consequence of never being granted anything. `syncPermissions()` has exactly one call site in the seeder, on `Administrator`, so re-running repairs drift on that role only.
 
-Since task 0008 that "left alone" is enforced rather than merely observed, and the seeder's own create call is the **one sanctioned exception** to the enforcement:
+Since task 0008 that "left alone" is enforced rather than merely observed, and the seeder's own create call is the **one sanctioned exception** to the enforcement. Task 0010 made the same true of `Administrator`, so both roles are now created through a named, guard-bypassing factory method rather than a raw `firstOrCreate()`:
 
 ```php
 // database/seeders/RolePermissionSeeder.php
-// firstOrCreateSuperAdminRole() is the one sanctioned way to bring this role into
-// existence -- it bypasses the `creating` guard (App\Models\Role::boot()) that
-// otherwise refuses any role acquiring the Super Admin name (story 0008 F3).
+// firstOrCreateSuperAdminRole() / firstOrCreateAdministratorRole() are the two
+// sanctioned ways to bring these roles into existence -- both bypass the
+// `creating` guard (App\Models\Role::boot()) that otherwise refuses any role
+// acquiring either locked name (story 0008 F3 for Super Admin; story 0010
+// Phase 4 finding F1 for Administrator), and both fail loudly on the
+// case-insensitive collation collision documented on each method.
 $superAdminRole = Role::firstOrCreateSuperAdminRole();
 
-$administratorRole = Role::firstOrCreate(
-    ['name' => 'Administrator', 'guard_name' => 'web'],
-);
+$administratorRole = Role::firstOrCreateAdministratorRole();
 ```
 
-Note the asymmetry: `Administrator` is still a plain `firstOrCreate()`, because only the Super Admin name is guarded. See [The Super Admin role's invariants](#the-super-admin-roles-invariants).
+The two methods are deliberate mirror images — same `withoutEvents()` bypass, same byte-exact read-back of the persisted name, same `ImmutableRoleException` on a collision. **The asymmetry that remains is narrower than it used to be**: both *names* are now locked, but only the Super Admin role's *permission set* is. See [The Super Admin role's invariants](#the-super-admin-roles-invariants) and [The Administrator tier's immutability](#the-administrator-tiers-immutability-name-locked-undeletable-permissions-still-editable).
 
 ## Seeding
 
@@ -272,7 +275,9 @@ And one more in task 0009 (Phase 4 finding F4):
 
 Consequence, deliberately accepted: apart from that one deferral, the bypass short-circuits `denies()` / `cannot()` and every Policy, which is what "the Super Admin bypasses permission checks entirely" means.
 
-> **Forward-looking warning for stories 0010/0011.** The deferral is keyed on the **target** being the Super Admin role, not on the ability being checked. So any *future* `RolePolicy` ability invoked against the Super Admin role — `viewAny`, `create`, `restore`, anything the roles-CRUD screens add — will be **denied by default for a Super Admin actor** if `RolePolicy` has no matching method, because the bypass has already stepped aside and `Gate` falls through to "no method, no grant". That is fail-closed and not a security concern, but it is a surprise if you expected the Super Admin to pass everything: add the ability to `RolePolicy` explicitly rather than relying on the bypass.
+> **The deferral is keyed on the target, not on the ability — and task 0010 verified what that means in practice.** Any `RolePolicy` ability invoked against a Super Admin role *instance* is **denied by default for a Super Admin actor** when `RolePolicy` has no matching method, because the bypass has already stepped aside and `Gate` falls through to "no method, no grant". Fail-closed, and not a security concern — but a surprise if you expected the Super Admin to pass everything, so add the ability to `RolePolicy` explicitly rather than relying on the bypass.
+>
+> **It does not bite the two abilities task 0010 added.** `viewAny` and `create` are asked **class-level** — `Gate::authorize('viewAny', Role::class)` — and the deferral's condition is `$target instanceof Role`. A class *string* is not an instance, so the closure never defers for them and a Super Admin passes normally. Verified during that story's Phase 5 review rather than assumed. The rule generalizes: this deferral can only ever fire for an ability that carries a resolved `Role` row, which today means `update` and `delete`.
 
 ### Bypass coverage — what it does *not* cover
 
@@ -380,11 +385,11 @@ Each catches a class of code path the others cannot. All three are needed.
 | 2 | Overrides of `givePermissionTo()` / `syncPermissions()` / `revokePermissionTo()`, and `assignToModels()` / `removeFromModels()` / `syncModels()` | pivot mutations on `role_has_permissions` and `model_has_roles` | these fire **no model event at all** — layer 1 cannot see them |
 | 3 | [`RolePolicy::update()` / `delete()`](#rolepolicy--the-second-policy) | dashboard call sites that `authorize()` | layers 1–2 only fire once a mutation is actually attempted, so without this a screen would have to provoke an exception to learn the answer |
 
-Layers 1 and 2 refuse by throwing [`App\Exceptions\ImmutableRoleException`](../../app/Exceptions/ImmutableRoleException.php), which carries a `render()` returning **403** — converging on the same status layer 3's policy denial produces, so the outcome is indistinguishable to a caller regardless of which layer caught it.
+Layers 1 and 2 refuse a **privilege** violation by throwing [`App\Exceptions\ImmutableRoleException`](../../app/Exceptions/ImmutableRoleException.php), which carries a `render()` returning **403** — converging on the same status layer 3's policy denial produces, so the outcome is indistinguishable to a caller regardless of which layer caught it. The one deliberate exception is task 0010's holder-count guard, which throws `RoleInUseException` → **409**: refusing to delete a role that is still in use is not an authorization decision, and flattening it into 403 would tell the actor they lack a permission they actually hold.
 
 #### Layer 1: registration order is the whole point
 
-The listeners are registered in an overridden `boot()`, **before** `parent::boot()`:
+The listeners are registered in an overridden `boot()`, **before** `parent::boot()`. Task 0010 added three more of them (two Administrator-tier guards and the holder-count guard) into the *same* method for exactly this reason — a second registration point would be a second, invisible ordering decision:
 
 ```php
 // app/Models/Role.php
@@ -392,20 +397,33 @@ protected static function boot(): void
 {
     static::creating(function (self $role): void {
         $role->guardAgainstAssumingSuperAdminName();
+        $role->guardAgainstAssumingAdministratorName();
     });
 
     static::deleting(function (self $role): void {
         $role->guardAgainstSuperAdminMutation();
     });
 
+    static::deleting(function (self $role): void {
+        $role->guardAgainstAdministratorDeletion();
+    });
+
+    static::deleting(function (self $role): void {
+        $role->guardAgainstHolders();
+    });
+
     static::updating(function (self $role): void {
-        $role->guardAgainstSuperAdminMutation();      // pre-mutation name: refuses editing the role AS IT IS today
-        $role->guardAgainstAssumingSuperAdminName();   // post-mutation name: refuses renaming INTO the role's name
+        $role->guardAgainstSuperAdminMutation();       // pre-mutation name: refuses editing the role AS IT IS today
+        $role->guardAgainstAssumingSuperAdminName();    // post-mutation name: refuses renaming INTO the role's name
+        $role->guardAgainstRenamingAdministrator();     // pre-mutation name: refuses renaming the role AS IT IS today
+        $role->guardAgainstAssumingAdministratorName(); // post-mutation name: refuses renaming INTO the role's name
     });
 
     parent::boot();
 }
 ```
+
+`guardAgainstHolders()` is the odd one out: it protects **every** role, not a privileged tier. It refuses a delete while the role still has holders — reading `$this->users()->withTrashed()->exists()` fresh, never a cached relation or a `withCount()` attribute carried over from a listing query, and counting soft-deleted holders because the FK cascade on `model_has_roles` would otherwise destroy a trashed holder's grant with no error anywhere (task 0010 Phase 4 finding F3). It throws [`App\Exceptions\RoleInUseException`](../../app/Exceptions/RoleInUseException.php), which renders **409** rather than 403 — the request is well-formed and the actor is authorized; the role is simply still referenced.
 
 ❌ Bad — `booted()`, the idiomatic-looking choice (adapted to illustrate; deliberately not in the repo):
 
@@ -419,7 +437,7 @@ protected static function booted(): void
 
 `Spatie\Permission\Traits\HasPermissions::bootHasPermissions()` registers its **own** `deleting` listener, and trait boots run inside `Model::boot()` → `bootTraits()`, which `bootIfNotBooted()` calls **before** `static::booted()`. `fireModelEvent('deleting')` dispatches in registration order, so a `booted()` guard fires *after* the package's listener has already detached every `role_has_permissions` **and** every `model_has_roles` row for the role — and `Model::delete()` opens no transaction, so that detach **persists**. Net effect: the `roles` row survives (a naive "the role still exists" assertion passes) while the Super Admin role has silently lost all its permissions and all its holders.
 
-Registering before `parent::boot()` puts this guard first, and it *throws* rather than returning `false`, halting the dispatch outright so the package's listener never runs. The test that proves it asserts the `role_has_permissions` and `model_has_roles` rows survive a refused delete — not merely that the `roles` row does.
+Registering before `parent::boot()` puts these guards first, and each *throws* rather than returning `false`, halting the dispatch outright so the package's listener never runs. The test that proves it asserts the `role_has_permissions` and `model_has_roles` rows survive a refused delete — not merely that the `roles` row does. **This applies to every one of the four `deleting` listeners, not only the Super Admin one**: task 0010's holder-count and Administrator guards inherit the identical requirement, and `tests/Feature/Models/RoleTest.php` carries the same "the grants survived" assertion for the Administrator case.
 
 #### The two identity helpers read different sources, and must never be merged
 
@@ -444,7 +462,7 @@ public function scopeSelectable(Builder $query): Builder
 }
 ```
 
-**Every roles list and role selector in the app must call it**, and stories 0010/0011 consume it rather than re-filtering. Its first (and today only) caller is `App\Livewire\Users\Index::roleOptions()`, which previously hardcoded `->whereNot('name', 'Super Admin')`.
+**Every roles list and role selector in the app must call it.** Two callers today: `App\Livewire\Users\Index::roleOptions()` (the role *selector*, which previously hardcoded `->whereNot('name', 'Super Admin')`) and, since task 0010, `App\Livewire\Roles\Index::roles()` (the roles *list*), which composes it with a `where('guard_name', 'web')` scope of its own. Story 0011's view consumes that same computed property rather than re-querying.
 
 Two properties:
 
@@ -476,16 +494,42 @@ Two more, recorded because they are the ones a future story will actually walk i
 
 ## The Administrator tier's identity
 
-Task 0008a. Where the section above makes the `Super Admin` **role** immutable, this one answers a narrower question that had five independent answers before the story landed: *is this role the Administrator tier?* The literal `'Administrator'` was written in `App\Livewire\Users\Index`, three times in `UserPolicy`, and in the seeder — so the tier's identity could be half-changed. It is now written **once**, and the authorization built on it moved out of the component and into the actions.
+Task 0008a, extended by task 0010. Where the section above makes the `Super Admin` **role** immutable, this one answers a narrower question that had five independent answers before 0008a landed: *is this role the Administrator tier?* The literal `'Administrator'` was written in `App\Livewire\Users\Index`, three times in `UserPolicy`, and in the seeder — so the tier's identity could be half-changed. It is now written **once**, and the authorization built on it moved out of the component and into the actions. Task 0010 then closed the gap that centralized identity left open: the row carrying that identity is now **immutable in name and undeletable**, because a screen that could rename or delete it finally exists.
 
 ### Why this tier is *not* config-driven, unlike the Super Admin one
 
 The asymmetry with [`superAdminName()`](#one-name-one-resolution-path) is a decision, not an oversight, and re-adding symmetry would be a regression:
 
 - `auth.super_admin.role` exists because the `Gate::before` bypass **already read a config key**. Leaving the guards on an independent literal meant an override could split them apart — the whole point of task 0008.
-- The Administrator role's name is **locked and uneditable** by product decision (recorded across Epic 1's stories), so there is no second source that could disagree. `RoleName::Administrator` *is* the source of truth.
+- The Administrator role's name is **locked and uneditable** by product decision (recorded across Epic 1's stories), so there is no second source that could disagree. `RoleName::Administrator` *is* the source of truth. Since task 0010 that lock is **enforced in code**, not merely asserted — see [the next subsection](#the-administrator-tiers-immutability-name-locked-undeletable-permissions-still-editable).
 
 **Do not add `config('auth.administrator.role')`, an `'administrator'` block in `config/auth.php`, or an `administratorName()` resolver.** A config key is an override capability, and the locked-name decision rules one out. A content-scan test (`tests/Feature/Users/AdministratorRoleLiteralContentScanTest.php`) fails if one reappears, alongside asserting no `'Administrator'` / `'Super Admin'` literal survives in the guard path.
+
+### The Administrator tier's immutability: name locked, undeletable, permissions still editable
+
+Task 0010, Phase 4 finding **F1** (human-confirmed decision). Through task 0009, the Administrator tier had a centralized *identity* but a fully mutable *row*: nothing locked its name and nothing blocked its deletion, because until 0010 no application code could reach either operation. The roles-management screen is that code, and the audit demonstrated both paths live — a `roles.manage-administrators` holder could **rename** the seeded role (silently demoting it for every `isAdministratorRole()` check in the app: `UserPolicy`, `CreateUser`, `UpdateUser`), or **delete** it once it had no holders.
+
+The protection is deliberately **narrower than the Super Admin role's**, and the difference is the whole point of the tier:
+
+| Operation | `Super Admin` | `Administrator` |
+| --- | --- | --- |
+| Delete the row | ❌ refused | ❌ refused (`guardAgainstAdministratorDeletion()`) |
+| Rename the row | ❌ refused | ❌ refused (`guardAgainstRenamingAdministrator()`) |
+| Create/rename another role **into** the name | ❌ refused | ❌ refused (`guardAgainstAssumingAdministratorName()`) |
+| `syncPermissions()` / `givePermissionTo()` / `revokePermissionTo()` | ❌ refused in every direction | ✅ **allowed** |
+| Assign the role to a user | ❌ refused | ✅ allowed, gated by `roles.manage-administrators` |
+
+The permission row is the load-bearing asymmetry: [`EnforceAdministratorPermissionGrant`](#who-may-grant-a-permission--the-meta-rule-layer) exists precisely so a Super-Admin-authorized actor **can** change what `Administrator` grants. That is why `guardAgainstAdministratorDeletion()` is its own guard rather than a branch folded into `guardAgainstSuperAdminMutation()` — the latter also blocks every permission-pivot mutation, which must stay open here.
+
+Three implementation details that are easy to get wrong:
+
+- **`guardAgainstRenamingAdministrator()` is scoped to `isDirty('name')`**, unlike the Super Admin mutation guard, which fires on any update. Without that scope it would refuse the ordinary saves that legitimately touch the row.
+- **The rename guard reads the row's *persisted* name** (`isAdministratorRole()` → `persistedName()`), while `guardAgainstAssumingAdministratorName()` reads the *in-memory* one. Same "two helpers pointing in opposite directions" rule as the Super Admin pair — see [the two identity helpers](#the-two-identity-helpers-read-different-sources-and-must-never-be-merged).
+- **`RolePolicy::delete()` diverges from `update()` for this tier.** `update()` gates the Administrator row on `roles.manage-administrators`; `delete()` refuses it **categorically**, like the Super Admin row, because it is never deletable at all. Do not "restore symmetry" between the two methods.
+
+⚠️ **`RolePolicy::delete()`'s Administrator branch is unreachable for a Super Admin actor** (task 0010 Phase 4 round-2 finding N3). The `Gate::before` closure only defers when the ability's *target* is the **Super Admin** role, so for a Super Admin actor targeting the Administrator row it returns `true` unconditionally and the policy method never runs — the **model-event guard** is what actually refuses that delete. Both paths render 403, so the behaviour is correct; the consequence is that story 0011's per-row `Gate::allows()` UI hint will render that one action enabled for that one actor. It is the same accepted enabled-then-refused drift already documented for the Users screen (see [`Gate::allows()` in a list query](#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer)), and the general rule behind it is that [a rule which must bind a Super Admin actor cannot go through `Gate`](#a-rule-that-must-bind-a-super-admin-actor-cannot-go-through-gate).
+
+The durable, generalizable rule this produced — an identity derived from a mutable column must be made immutable at the model layer as soon as code exists that can mutate it — is in [security/authorization-patterns.md](../security/authorization-patterns.md#an-identity-derived-from-a-mutable-column-must-be-locked-once-code-exists-that-can-mutate-it).
 
 ### One predicate, two shapes
 
@@ -557,20 +601,37 @@ Two consequences worth stating so neither is rediscovered as a surprise:
 
 ### The seeder writes the same name the guards read
 
+Task 0008a moved this line off the `'Administrator'` literal and onto `RoleName::Administrator->value`, with a `throw_unless()` read-back beside it in the seeder. **Task 0010 relocated both onto the model**, because its own `creating` guard would otherwise have refused the seeder's `firstOrCreate()` outright — the seeder now calls a sanctioned factory method that carries the read-back internally:
+
 ```php
 // database/seeders/RolePermissionSeeder.php
-$administratorRole = Role::firstOrCreate(
-    ['name' => RoleName::Administrator->value, 'guard_name' => 'web'],
-);
-
-throw_unless(
-    $administratorRole->getRawOriginal('name') === RoleName::Administrator->value,
-    RuntimeException::class,
-    // ...
-);
+$administratorRole = Role::firstOrCreateAdministratorRole();
 ```
 
-Behaviour is identical to the previous literal on a clean database; what the change buys is that the row the seeder *creates* and the row every guard *protects* stop being two independently-typed strings. The `throw_unless()` read-back is the compensating control for a real collation hazard: `roles.name` carries `utf8mb4_unicode_ci` (case- and accent-**insensitive**), so `firstOrCreate()` would silently **adopt** a pre-existing row named e.g. `administrator` and grant it all 37 Administrator permissions — while every identity check in the app is a byte-exact PHP comparison and would treat that same full-privilege row as an ordinary role, assignable with a bare `users.edit`. `Role::firstOrCreateSuperAdminRole()` carries the same read-back for the same reason, throwing `ImmutableRoleException` instead.
+```php
+// app/Models/Role.php
+public static function firstOrCreateAdministratorRole(): self
+{
+    $role = static::withoutEvents(fn (): self => static::firstOrCreate(
+        ['name' => RoleName::Administrator->value, 'guard_name' => 'web'],
+    ));
+
+    throw_unless(
+        $role->getRawOriginal('name') === RoleName::Administrator->value,
+        ImmutableRoleException::class,
+        // ...
+    );
+
+    return $role;
+}
+```
+
+The read-back is the compensating control for a real collation hazard, and it is why the seeder cannot simply write the enum value and move on: `roles.name` carries `utf8mb4_unicode_ci` (case- and accent-**insensitive**), so `firstOrCreate()` would silently **adopt** a pre-existing row named e.g. `administrator` and grant it all 37 Administrator permissions — while every identity check in the app is a byte-exact PHP comparison and would treat that same full-privilege row as an ordinary role, assignable with a bare `users.edit`. `Role::firstOrCreateSuperAdminRole()` is the exact mirror image, for the same reason.
+
+Two consequences of the 0010 relocation worth stating, since both changed:
+
+- **The exception type is now `ImmutableRoleException` on both paths**, not the `RuntimeException` the Administrator line used to throw. Both render 403.
+- **`withoutEvents()` is now mandatory here**, not merely tidy. `guardAgainstAssumingAdministratorName()` refuses any role whose in-memory name is the Administrator name, and it does not — and must not — carry an exception for "but this one is the seeder". Suppressing events for the one sanctioned creation is how that exception is expressed, exactly as it already was for the Super Admin role.
 
 The same collation is why the "a lowercase `administrator` role is an ordinary role" scenario cannot be exercised through role *creation* in this schema — the unique index refuses the row while the seeded `Administrator` exists. The `===` exactness is still tested, against a **not-yet-persisted** instance, because it is the correct guard if the collation is ever changed and because it is what makes the two read-back assertions meaningful.
 
@@ -653,13 +714,17 @@ Gate::authorize('promoteToAdministrator', User::class);
 
 ### `RolePolicy` — the second policy
 
-[`App\Policies\RolePolicy`](../../app/Policies/RolePolicy.php) (task 0008, extended by task 0009) has three abilities. It still has **no call site in `app/`** — it exists so stories 0010/0011's roles screens have the layer to `authorize()` against, so the Super Admin refusal is independently effective there, and (since 0009) so the Administrator tier is protected on the *role* side the way 0008a protected it on the *user* side:
+[`App\Policies\RolePolicy`](../../app/Policies/RolePolicy.php) (task 0008, extended by tasks 0009 and 0010) has **five** abilities, and since task 0010 it has a real call site: [`App\Livewire\Roles\Index`](../../app/Livewire/Roles/Index.php) authorizes against all five. It was built two stories ahead of that consumer, so the Super Admin refusal would be independently effective there from day one, and (since 0009) so the Administrator tier is protected on the *role* side the way 0008a protected it on the *user* side:
 
-| Ability | Signature | Rule |
-| --- | --- | --- |
-| `update` | `(User $actor, Role $role)` | `false` if `$role` is the Super Admin role; then, if `$role` is the seeded `Administrator` role, holds `roles.manage-administrators`; otherwise holds `roles.manage` |
-| `delete` | `(User $actor, Role $role)` | identical to `update` |
-| `grantAdministratorPermission` | `(User $actor)` | holds the `Super Admin` role on the `web` guard — nothing else grants it |
+| Ability | Signature | Rule | Authorized from |
+| --- | --- | --- | --- |
+| `viewAny` | `(User $actor)` | holds `roles.manage` | `Roles\Index::mount()` |
+| `create` | `(User $actor)` | holds `roles.manage` | `Roles\Index::openCreateModal()`, `saveRole()`'s create branch |
+| `update` | `(User $actor, Role $role)` | `false` if `$role` is the Super Admin role; then, if `$role` is the seeded `Administrator` role, holds `roles.manage-administrators`; otherwise holds `roles.manage` | `Roles\Index::openEditModal()`, `saveRole()`'s edit branch |
+| `delete` | `(User $actor, Role $role)` | `false` if `$role` is the Super Admin role **or** the seeded `Administrator` role; otherwise holds `roles.manage` | `Roles\Index::confirmDeleteRole()`, `deleteRole()` |
+| `grantAdministratorPermission` | `(User $actor)` | holds the `Super Admin` role on the `web` guard — nothing else grants it | `Roles\Index::mount()`, via `Gate::allows()`; enforced in `EnforceAdministratorPermissionGrant` |
+
+**`viewAny` and `create` take no `Role` argument, and that is why the component branches.** `Gate::authorize('update', Role::class)` would resolve the policy from the class string and then call `update($actor)` with **no** second argument — the class name finds the policy, it is not passed to the method — so the shipped `update(User $user, Role $role)` signature raises `ArgumentCountError` rather than denying. `saveRole()` therefore authorizes `create` on the create branch and `update` on the edit branch, mirroring `Users\Index::save()`.
 
 ```php
 // app/Policies/RolePolicy.php
@@ -675,10 +740,11 @@ public function update(User $user, Role $role): bool
 }
 ```
 
-Six notes, the first three of which differ from `UserPolicy` above:
+Seven notes, the first three of which differ from `UserPolicy` above:
 
 - **This is a complement to, not a substitute for, the model-level guards.** A policy only fires where someone calls `authorize()`; [layers 1 and 2](#three-guard-layers) catch the code paths that don't. Neither layer is redundant.
-- **Unlike every `UserPolicy` rule, the Super Admin branch binds the Super Admin actor too** — because the bypass [defers when the target is the Super Admin role](#the-super-admin-bypass). Compare `UserPolicy::delete()`'s trashed-target refusal, which a Super Admin still sails past. The Administrator branch is the opposite: it *is* behind the bypass, which is exactly how a Super Admin edits the seeded `Administrator` role while holding zero permission rows.
+- **Unlike every `UserPolicy` rule, the Super Admin branch binds the Super Admin actor too** — because the bypass [defers when the target is the Super Admin role](#the-super-admin-bypass). Compare `UserPolicy::delete()`'s trashed-target refusal, which a Super Admin still sails past. The Administrator branch is the opposite: it *is* behind the bypass, which is exactly how a Super Admin edits the seeded `Administrator` role while holding zero permission rows — and, for `delete()`, why that method's categorical Administrator refusal never runs for that actor (finding N3; the model guard refuses instead — see [The Administrator tier's immutability](#the-administrator-tiers-immutability-name-locked-undeletable-permissions-still-editable)).
+- **`delete()`'s Administrator branch is categorical; `update()`'s is permission-gated.** That divergence is task 0010's finding F1 and is deliberate: the row's permission set is editable, the row itself is not. Do not normalise the two methods back into the identical shape they used to share.
 - **Branch order is load-bearing, and is pinned by a test.** The categorical Super Admin refusal runs **first and unconditionally**; the Administrator branch is appended below it. A rewrite that puts the tier branch first would let an actor holding `roles.manage-administrators` edit the Super Admin role. `RolePolicyTest` asserts precisely that ordering rather than only the two happy paths.
 - **Both tier identities come from `App\Models\Role`, never from a comparison written here.** `Role::isSuperAdminRoleRow()` and `Role::isAdministratorRole()` are the [one predicate in two shapes](#one-predicate-two-shapes); the policy defines neither. A content-scan test (`tests/Feature/Users/AdministratorRoleLiteralContentScanTest.php`) covers this file and fails if a `'Administrator'` / `'Super Admin'` literal reappears in it.
 - **The two permission names are class constants, not repeated literals.** `RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION` (`roles.manage-administrators`) and `RolePolicy::ROLE_MANAGEMENT_PERMISSION` (`roles.manage`) are read by this policy, by `EnforceAdministratorPermissionGrant`, and by both classes' tests. Known, deliberately-deferred inconsistency (task 0009 Phase 4 finding **F5**, pre-existing): `UserPolicy` still writes the `roles.manage-administrators` literal at four call sites of its own. Point those at these constants when that cleanup happens — do not assume it already did.
@@ -723,15 +789,33 @@ Five properties, each of which a Phase 4 round put there:
 - **The membership check normalises every shape the write itself accepts.** `syncPermissions()` takes names, ids, `Permission` instances, and arrays/Collections of any of those, flattening them via `HasPermissions::collectPermissions()`. `normalizeNames()` applies the *identical* flattening, so nothing can be invisible to the check while still being honoured by the sync that follows.
 - **It throws rather than silently stripping a new-grant attempt**, matching Epic 1's "the action is denied server-side" and never returning HTTP 200 for a refused request.
 
-> **Known limitation, accepted and deferred to story 0010 (Phase 4 finding F3, Phase 5 finding F-E).** This action is a **transformer**: it returns the permission list to sync rather than performing the sync itself. A caller could therefore drop the return value, or sync a *different* role than the one it authorized against, reopening the hole it closes. It has **no production caller yet** (the role-save path is story 0010), and folding `syncPermissions()` into the action depends on 0010's real `saveRole()` shape. The decision is recorded as an explicit open question inside that story's task file, to be settled in its own Phase 1/3 — not inherited silently. Whoever wires the first call site owns it.
+> **✅ Resolved by task 0010 — the transformer-not-writer limitation was decided, not inherited (0009's Phase 4 finding F3 / Phase 5 finding F-E).** The action returns the permission list to sync rather than performing the sync, so a caller could drop the return value or sync a *different* role than the one it authorized against. Task 0010, which wired the first real call site, chose **option G2: keep the split.** Reopening a three-round-audited, already-closed class to save one statement was not worth it. The two safeguards it carries instead are implementation rules on `saveRole()`, pinned by review rather than by the type system: the return value is **always** assigned back before use, and the `$role` instance the authorization branch resolved (or the row just created) is the **same** instance passed to the action and later synced — never a second, independently-fetched one.
 
-The general rules this produced — preserve-don't-revoke on a partially-visible full-set sync, and normalise every shape the downstream write accepts — are in [security/authorization-patterns.md](../security/authorization-patterns.md#a-full-set-sync-behind-a-partially-visible-form-must-preserve-what-the-actor-cannot-see).
+### The second grant meta-rule: you cannot grant what you do not hold
+
+Task 0010's Phase 4 finding **F2** (High, human-confirmed decision) found a second, wider hole in the same place: `roles.manage` authorizes *managing roles*, and nothing stopped a holder of it from rewriting any role's permission set — **including their own role's** — to the full 38-permission catalog. Verified live during the audit against an actor holding two permissions.
+
+[`App\Actions\Roles\EnforceGrantorPermissionScope`](../../app/Actions/Roles/EnforceGrantorPermissionScope.php) closes it, with the same shape as its sibling: same `(User $actor, array $submittedPermissionNames, ?Role $role)` signature, same "read the before-state from the model, never from the caller" rule, same `AuthorizationException` on refusal. Four properties are specific to it:
+
+- **It diffs, then checks only the *newly granted* names against `$actor->getAllPermissions()`.** Revoking is never refused (see the asymmetry note below).
+- **It excludes `roles.manage-administrators` from its own scope entirely** (`->reject(...)`), deferring that one permission to `EnforceAdministratorPermissionGrant`. Without the exclusion the two actions would contradict each other: this action's rule is "do you hold it?", and `RolePolicy::grantAdministratorPermission()`'s rule is that holding it never confers the right to grant it onward. **The exclusion is the mechanism, not the call order** — verified by running the two in reverse, which refuses identically.
+- **A Super Admin actor is exempt outright.** They hold zero permission rows by design (the bypass is their authorization), so a literal "do you hold what you're granting" reading would refuse them from granting anything at all.
+- **A grant-scope rule is one-directional by construction.** It restricts granting, not revoking, so a `roles.manage` holder can still strip permissions from a role they neither hold nor created — privilege *consolidation*, not escalation, and always repairable by a Super Admin. Accepted deliberately (round-2 finding N1). The actor's **own** access is protected separately, by `saveRole()`'s self-lockout guard, which refuses a save that would strip `roles.manage` from a role the actor currently holds.
+
+⚠️ **The two actions treat an omission in opposite ways, and that is safe only because of a third file.** `EnforceAdministratorPermissionGrant` **preserves** an omitted-but-already-granted permission; `EnforceGrantorPermissionScope` **ignores** the omission and lets the sync revoke. The combination works because `Roles\Index::permissionOptions()` renders the **unfiltered** `web` catalog, so nothing a role holds is ever invisibly absent from the payload. Filtering that catalog down to what the actor may grant — the obvious next move for story 0011's view — would turn the second action into a silent-revoke bug. The full rule is in [security/authorization-patterns.md](../security/authorization-patterns.md#two-guards-on-one-payload-must-agree-on-what-an-omission-means).
+
+The general rules this layer produced — preserve-don't-revoke on a partially-visible full-set sync, normalise every shape the downstream write accepts, and the two-guards-one-payload rule above — are in [security/authorization-patterns.md](../security/authorization-patterns.md#a-full-set-sync-behind-a-partially-visible-form-must-preserve-what-the-actor-cannot-see).
 
 ### `Gate::authorize` at the call site, not only at the route
 
 `can:users.view` on the route proves only the **page-level** ability. Every method of `App\Livewire\Users\Index` that mutates re-authorizes as its **first statement** (`Gate::authorize('create', User::class)`, `Gate::authorize('update', $target)`, `Gate::authorize('delete', $target)`), and `mount()` re-checks `viewAny` on its own. That is mandatory rather than defensive: `Livewire::test()` and the `/livewire/update` endpoint both reach the component **without ever running route middleware**.
 
 Since task 0008a the two write actions authorize `create` / `update` again on their own (see [The guard belongs to the action, not to the caller](#the-guard-belongs-to-the-action-not-to-the-caller)), which makes the component's calls genuine defence in depth rather than the only layer — but does **not** make them removable: `deleteUser()` calls no action at all, and a component that stopped authorizing would be relying on every future collaborator to do it instead. The full rule set — including which route middleware silently does *not* follow a component, and why `#[Locked]` is what keeps the authorized identity and the written identity the same — is in [security/livewire-authorization.md](../security/livewire-authorization.md).
+
+[`App\Livewire\Roles\Index`](../../app/Livewire/Roles/Index.php) (task 0010) follows the identical shape and extends it in two ways worth copying on the next module screen:
+
+- **The disclosure paths authorize too, not just the mutations.** `openEditModal()` and `confirmDeleteRole()` hand the client a role's name and permission set, so each resolves its target and `Gate::authorize()`s `update` / `delete` before writing anything to the component's public state. `openCreateModal()` authorizes `create` even though it neither mutates nor discloses — deliberately, so no reader has to work out which method is the one exception.
+- **Every role resolution is `where('guard_name', 'web')`-scoped**, matching the validation rules (task 0010 Phase 4 finding F5). Defence in depth rather than a live gap — this app defines only the `web` guard — but leaving resolution unscoped while validation is scoped would let a rename pass validation and then hit the composite unique index as a raw, unhandled `23000`.
 
 ### `Gate::allows()` in a list query is a UI hint, not a layer
 
@@ -814,7 +898,7 @@ On a **`Route::livewire(...)` route the two are not interchangeable**, even thou
 Route::livewire('users', UsersIndex::class)->middleware(['permission:users.view']);
 ```
 
-Spatie registers every permission as a Gate ability, so `can:users.view` carries exactly the same meaning — including the Super Admin bypass — and **is** re-applied on every action. This is why [`routes/users.php`](../../routes/users.php) carries an inline comment warning against the swap — it moved with the route declaration in task 0040, because it documents *this route*, not the file it happens to sit in — and why a later story must not "normalise" this route onto `permission:`. The verified allow-list, plus the three other middlewares that silently do not follow a component (`verified`, `password.confirm`, `throttle:`), are in [security/livewire-authorization.md](../security/livewire-authorization.md#livewireupdate-is-a-second-entry-point-and-only-an-allow-listed-subset-of-route-middleware-follows-the-component-there).
+Spatie registers every permission as a Gate ability, so `can:users.view` carries exactly the same meaning — including the Super Admin bypass — and **is** re-applied on every action. This is why [`routes/users.php`](../../routes/users.php) carries an inline comment warning against the swap — it moved with the route declaration in task 0040, because it documents *this route*, not the file it happens to sit in — and why a later story must not "normalise" this route onto `permission:`. [`routes/roles.php`](../../routes/roles.php) (task 0010) carries the same comment above `roles.index`, naming the same reason and the same round-trip methods; **every future module route repeats it.** The verified allow-list, plus the three other middlewares that silently do not follow a component (`verified`, `password.confirm`, `throttle:`), are in [security/livewire-authorization.md](../security/livewire-authorization.md#livewireupdate-is-a-second-entry-point-and-only-an-allow-listed-subset-of-route-middleware-follows-the-component-there).
 
 Route middleware is never the whole story for a Livewire screen regardless — see [`Gate::authorize` at the call site](#gateauthorize-at-the-call-site-not-only-at-the-route).
 
@@ -834,10 +918,13 @@ The one place `hasPermissionTo()` is correct is **inside a policy body**, which 
 | Package config, incl. the `models.role` → `App\Models\Role` binding | `config/permission.php` |
 | Super Admin role name & bootstrap address | `config/auth.php` (`auth.super_admin.*`), `.env` (`SUPER_ADMIN_EMAIL`) |
 | The literal `'Super Admin'` (compiled-in default only) **and** `'Administrator'` (the locked identity itself) | `app/Enums/RoleName.php` |
-| Role model, `superAdminName()`, `isAdministratorRole()` / `isSuperAdminRoleRow()` / `persistedName()`, the guards and `selectable()` | `app/Models/Role.php` |
+| Role model, `superAdminName()`, `isAdministratorRole()` / `isSuperAdminRoleRow()` / `persistedName()`, the two `firstOrCreate*Role()` factories, the six guards and `selectable()` | `app/Models/Role.php` |
 | Administrator-tier and Super Admin-tier authorization on the write paths | `app/Actions/Users/CreateUser.php`, `app/Actions/Users/UpdateUser.php` |
 | The "who may *grant* administrator-level permission" meta-rule | `app/Actions/Roles/EnforceAdministratorPermissionGrant.php` (enforcement), `app/Policies/RolePolicy.php` (`grantAdministratorPermission`, the visibility contract) |
+| The "you cannot grant what you do not hold" meta-rule | `app/Actions/Roles/EnforceGrantorPermissionScope.php` |
+| Role name / permission-id validation rules, both `web`-guard-scoped | `app/Concerns/RoleValidationRules.php` |
 | The guards' 403-rendering exception | `app/Exceptions/ImmutableRoleException.php` |
+| The holder-count guard's 409-rendering exception | `app/Exceptions/RoleInUseException.php` |
 | Migration | `database/migrations/2026_07_12_181045_create_permission_tables.php` |
 | Catalog & role seeding | `database/seeders/RolePermissionSeeder.php` |
 | Seeder call order & fixture guard | `database/seeders/DatabaseSeeder.php` |
@@ -846,12 +933,15 @@ The one place `hasPermissionTo()` is correct is **inside a policy body**, which 
 | Trait usage | `app/Models/User.php` |
 | Policies | `app/Policies/UserPolicy.php`, `app/Policies/RolePolicy.php` (auto-discovered; no provider registration) |
 | The one-role-model `arch()` rules | `tests/Unit/ArchitectureTest.php` |
-| The only gated route | `routes/users.php` (`users.index`, `can:users.view`) |
-| Per-action `Gate::authorize` call sites, and the per-row `Gate::allows` UI hint | `app/Livewire/Users/Index.php` |
-| Tests | `tests/Feature/Seeders/`, `tests/Feature/Authorization/`, `tests/Feature/Policies/`, `tests/Feature/Users/` |
+| The two gated routes | `routes/users.php` (`users.index`, `can:users.view`), `routes/roles.php` (`roles.index`, `can:roles.manage`) |
+| Per-action `Gate::authorize` call sites, and the per-row `Gate::allows` UI hint | `app/Livewire/Users/Index.php`, `app/Livewire/Roles/Index.php` |
+| Roles-screen copy (the holder-count refusal and the self-lockout refusal) | `lang/en/roles.php`, `lang/es/roles.php` |
+| Tests | `tests/Feature/Seeders/`, `tests/Feature/Authorization/`, `tests/Feature/Policies/`, `tests/Feature/Users/`, `tests/Feature/Roles/`, `tests/Feature/Models/RoleTest.php` |
 | Security rules derived from this foundation | [`docs/security/`](../security/README.md) |
 
-_Last updated: 2026-08-20 — Task 0040 (move `users.index` into its own route file): the app's one gated route is now declared in [`routes/users.php`](../../routes/users.php) rather than `routes/web.php`. Rewrote **How to gate something**'s ✅ code quote for the new path and its own group, the `can:`-vs-`permission:` sentence naming the file that carries the inline warning comment (which moved verbatim with the declaration, since it documents the route and not its host file), and the **Where it lives** row. Nothing about the gate itself changed — same URI, route name, middleware and Super Admin bypass behaviour._
+_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend). Added **The Administrator tier's immutability** (the F1 fix: name locked and row undeletable while the permission set stays editable, the tier-vs-tier comparison table, the three implementation details, and the ⚠️ that `RolePolicy::delete()`'s Administrator branch is unreachable for a Super Admin actor — finding N3) and **The second grant meta-rule: you cannot grant what you do not hold** (`EnforceGrantorPermissionScope`, the F2 fix, including why the `roles.manage-administrators` exclusion rather than call order is what keeps the two transformers consistent, and the ⚠️ about their opposite treatment of an omission). Rewrote **`RolePolicy` — the second policy** for its five abilities, its first real call site, and the deliberate `update()`/`delete()` divergence. Corrected five now-false claims this story falsified, each verified against the real file: the seeder's `firstOrCreate()` code quote in **Seeded roles and their grants** and again in **The seeder writes the same name the guards read** (both now `firstOrCreateAdministratorRole()`, throwing `ImmutableRoleException` rather than `RuntimeException`), the `Role::boot()` quote in **Layer 1** (three new listeners), `selectable()`'s "first and today only caller", and the forward-looking `Gate::before` warning for stories 0010/0011 — recorded as **verified not to bite**, since `viewAny`/`create` are asked class-level and the deferral keys on `$target instanceof Role`. Marked 0009's transformer-not-writer limitation **resolved** (decision G2: keep the split, with two `saveRole()` implementation rules instead). Extended **`Gate::authorize` at the call site** with the roles screen's disclosure-path and guard-scoping rules, the 403-vs-409 note in **Three guard layers**, the `can:`-not-`permission:` note, the Current-state bullets and five **Where it lives** rows._
+
+_Previously: 2026-08-20 — Task 0040 (move `users.index` into its own route file): the app's one gated route is now declared in [`routes/users.php`](../../routes/users.php) rather than `routes/web.php`. Rewrote **How to gate something**'s ✅ code quote for the new path and its own group, the `can:`-vs-`permission:` sentence naming the file that carries the inline warning comment (which moved verbatim with the declaration, since it documents the route and not its host file), and the **Where it lives** row. Nothing about the gate itself changed — same URI, route name, middleware and Super Admin bypass behaviour._
 
 _Previously: 2026-08-20 — Task 0009 (Administrator-level permission grant): rewrote **`RolePolicy` — the second policy** for its third ability and its Administrator-level branch (branch ordering, the two class constants, why the Super Admin branch binds a Super Admin actor while the Administrator branch deliberately does not, and the deferred `UserPolicy` literal duplication, finding F5), and added **Who may grant a permission — the meta-rule layer** for `App\Actions\Roles\EnforceAdministratorPermissionGrant` — the preserve-don't-revoke product decision, why the "before" snapshot is read from the model rather than accepted from the caller, why `?Role $role` carries no default, the shape normalisation matching `syncPermissions()`, and the transformer-not-writer limitation deferred to story 0010. **Closed** the partial-hydration ⚠️ in **Known limitations**: both `RolePolicy`'s Super Admin branch and the `Gate::before` deferral now read `Role::isSuperAdminRoleRow()`. Rewrote two now-stale code quotes this story falsified — the `Gate::before` closure (target comparison plus the new eager boot-time call) and `Role::superAdminName()` (the `throw_if` refusing a name collision with the locked `Administrator` tier, finding F6, and why it is checked eagerly, finding F-C) — and updated the two "story 0009 will…" forward references in **The Administrator tier's identity** to the present tense._
 

@@ -40,7 +40,14 @@ repo must follow — always with a real code example pulled from this repository
   because `permissionOptions()` renders the catalog unfiltered, so the safe-making property lives in a
   view rather than in either guard. It carries the condition that would invalidate it, plus why the
   two actions' call *order* is not the safety mechanism and why a grant-scope rule leaves revocation
-  unrestricted by construction.
+  unrestricted by construction. From the same story's round 1 it also carries the rule that closes the
+  loop on task 0008a's centralization work: **an identity derived from a mutable column must be locked
+  once code exists that can mutate it** — the roles screen made `roles.name` writable, which silently
+  turned a rename of the seeded `Administrator` role into a way to strip every Administrator-tier
+  protection in the app, and a delete into a way to remove the catalog's base role outright. It names
+  the review question that catches this class ("which existing invariants does this screen's write
+  surface newly reach?"), why the lock must cover exactly the identity and not the row's whole surface,
+  and why a `creating` guard without a sanctioned bypass breaks seeding in production.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -111,7 +118,15 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend), Phase 4 re-audit
+_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend), Phase 6 docs sync:
+still no new page — `authorization-patterns.md` gained a second rule from this story, "An identity
+derived from a mutable column must be locked once code exists that can mutate it" (Phase 4 round-1
+finding **F1**, High). Round 1's other seven findings each already had a home on that page or were
+screen-specific hardening with no generalizable lesson; F1's did not, and it is the one most likely to
+recur — every future module screen widens the set of columns application code can write, and some of
+those columns are read as identities elsewhere. The index entry above was widened accordingly._
+
+_Previously: 2026-08-20 — Task 0010, Phase 4 re-audit
 (round 2, verdict PASS): added no new page — it expanded `authorization-patterns.md` with one durable
 rule, "Two guards on one payload must agree on what an omission means", the pipeline-level companion to
 task 0009's two grant rules. It is the first section on that page recording a **hazard rather than a

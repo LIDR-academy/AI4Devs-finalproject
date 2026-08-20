@@ -14,6 +14,7 @@ Baseline stack versions and project-structure standards for this Laravel + Livew
 - [Livewire component convention: class-based, not single-file](#livewire-component-convention-class-based-not-single-file)
 - [Artisan-first workflow](#artisan-first-workflow)
 - [Quality gates](#quality-gates)
+  - [Steps 1 and 2 are the *iteration* forms](#steps-1-and-2-are-the-iteration-forms-run-both-unscoped-before-declaring-the-work-done)
 
 ## Stack versions
 
@@ -41,20 +42,23 @@ Real top-level layout — stick to it; don't create new base folders without app
 ```
 app/
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords)
-  Actions/Roles/       Domain actions for the Roles area (EnforceAdministratorPermissionGrant)
+  Actions/Roles/       Domain actions for the Roles area (EnforceAdministratorPermissionGrant,
+                       EnforceGrantorPermissionScope — both pure transformers over a save payload)
   Actions/Users/       Domain actions for the Users area (RequestEmailChange, ConfirmEmailChange,
                        CreateUser, UpdateUser — the last two authorize their own operation)
   Concerns/            Shared traits (validation rule sets)
   Console/Commands/    Artisan commands
   Enums/               Backed enums for domain value sets (UserStatus, RoleName, SalesRegionKind)
-  Exceptions/          Domain exceptions that render their own response (ImmutableRoleException)
+  Exceptions/          Domain exceptions that render their own response (ImmutableRoleException → 403,
+                       RoleInUseException → 409)
   Http/Controllers/    Abstract base + domain controllers used as HTTP boundaries in front of actions
   Listeners/           Event listeners (ActivateVerifiedUser), registered in AppServiceProvider
-  Livewire/            Livewire components, grouped by area (Settings/, Settings/TwoFactor/, Actions/)
+  Livewire/            Livewire components, grouped by area (Users/, Roles/, Settings/,
+                       Settings/TwoFactor/, Actions/)
   Models/              Eloquent models (User, SalesRegion; Role, which subclasses the package's
                        role model)
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
-  Policies/            Eloquent model policies (UserPolicy), auto-discovered by name
+  Policies/            Eloquent model policies (UserPolicy, RolePolicy), auto-discovered by name
   Providers/           Service providers (AppServiceProvider, FortifyServiceProvider)
 config/                Laravel + package config (fortify.php, permission.php, ...)
 database/
@@ -73,7 +77,8 @@ resources/
 routes/                 web.php, plus one file per functional area that web.php requires
                         (settings.php, roles.php, users.php) — no api.php yet
 tests/
-  Feature/              Feature tests, mirrors app structure (Auth/, Settings/, Seeders/, ...)
+  Feature/              Feature tests, mirrors app structure (Auth/, Settings/, Seeders/, Users/,
+                        Roles/, Models/, Policies/, Authorization/, ...)
   Unit/                 Mirrors app structure too (Enums/, Exceptions/, Listeners/, Models/), plus ArchitectureTest.php
   Browser/              Pest browser tests, mirrors app structure too (Auth/)
   Pest.php, TestCase.php
@@ -294,7 +299,23 @@ Every PHP change in this repo should pass, in this order, before being considere
 2. `vendor/bin/pint --dirty --format agent` — auto-fixes formatting against the `laravel` preset (`pint.json`).
 3. Larastan level 7 (`phpstan.neon`) for static analysis on `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 
-_Last updated: 2026-08-20 — Task 0040: corrected the `routes/` line of the directory listing (`web.php` plus one file per functional area — `settings.php`, `roles.php`, `users.php`) and added a new "one-per-area" paragraph stating the convention behind it: `web.php` holds only the app-wide routes and `require`s an area file per module, so a new area gets a new `routes/<area>.php` rather than another inline block. `users.index` was the one route not following that shape until this story moved it._
+### Steps 1 and 2 are the *iteration* forms. Run both unscoped before declaring the work done
+
+Both commands above take a scope argument, and **a narrowed gate reports "pass", not "not checked"** — nothing in either one's output distinguishes "I looked and found nothing" from "I looked at almost nothing". Task 0010 shipped past both of them at once (see [errors-log.md](../errors-log.md#both-of-this-projects-per-change-quality-gates-are-scoped-by-default-and-both-silently-passed--2026-08-20)), so the completion form is now stated explicitly:
+
+```bash
+vendor/bin/pint --format agent   # NOT --dirty
+php artisan test                 # NOT --filter
+```
+
+- **`--dirty` inspects only files with *uncommitted* changes**, so it becomes a complete no-op the moment the work is committed — it is inversely coupled to commit hygiene, failing hardest exactly when the workflow is being followed best. It is the right tool mid-edit and the wrong last check on a committed branch.
+- **`--filter` cannot observe a change's effect on the rest of the suite.** This matters far more often than it looks: a story that registers a **model event, an observer, a global scope, or middleware** has a blast radius of the whole suite by construction, however narrowly its own feature is scoped. `App\Models\Role`'s holder-count `deleting` guard was specified as part of the roles-CRUD story and reads as scoped to it — it binds every role in every test in the repo.
+
+Use the scoped forms freely while iterating; the unscoped runs are what counts as the record.
+
+_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend): added the **"Steps 1 and 2 are the iteration forms"** subsection to Quality gates — both `pint --dirty` and `test --filter` are scoped by default and report "pass" rather than "not checked", and this story shipped past both at once; the completion form is now the unscoped run of each, with the model-event/observer/global-scope blast-radius rule that makes the full suite non-optional. Updated the directory listing for `EnforceGrantorPermissionScope`, `RoleInUseException` (409, unlike `ImmutableRoleException`'s 403), `RolePolicy`, `app/Livewire/Users/` + `Roles/`, and the real `tests/Feature/` subfolders._
+
+_Previously, 2026-08-20 — Task 0040: corrected the `routes/` line of the directory listing (`web.php` plus one file per functional area — `settings.php`, `roles.php`, `users.php`) and added a new "one-per-area" paragraph stating the convention behind it: `web.php` holds only the app-wide routes and `require`s an area file per module, so a new area gets a new `routes/<area>.php` rather than another inline block. `users.index` was the one route not following that shape until this story moved it._
 
 _Previously, 2026-08-20 — Task 0009: added `app/Actions/Roles/` (`EnforceAdministratorPermissionGrant`) to the directory listing, and recorded it in the "one subfolder per area" paragraph as the pattern to copy — a new domain gets its own subfolder even for a single action, rather than being parked in the nearest existing one._
 

@@ -34,7 +34,9 @@ Controllers, by contrast, **are** suffixed `Controller`, and are named after the
 | `App\Notifications\PendingEmailVerification` | `app/Notifications/PendingEmailVerification.php` |
 | `App\Enums\UserStatus` | `app/Enums/UserStatus.php` |
 | `App\Actions\Roles\EnforceAdministratorPermissionGrant` | `app/Actions/Roles/EnforceAdministratorPermissionGrant.php` |
+| `App\Actions\Roles\EnforceGrantorPermissionScope` | `app/Actions/Roles/EnforceGrantorPermissionScope.php` |
 | `App\Policies\UserPolicy` | `app/Policies/UserPolicy.php` |
+| `App\Exceptions\RoleInUseException` | `app/Exceptions/RoleInUseException.php` |
 
 Policies are named `<Model>Policy` — and here the name is not merely a convention but a binding: Laravel 13 auto-discovers `App\Policies\UserPolicy` for `App\Models\User` by that exact name, so renaming it silently unbinds every `Gate::authorize()` call against a `User` (see [base-standards.md](base-standards.md#directory-structure)). Policy **methods** are named after the ability, as a bare verb phrase in camelCase and without a `can` prefix: `viewAny`, `update`, `promoteToAdministrator`, `updateSensitiveAttributes` — matching how they read at the call site, `Gate::authorize('promoteToAdministrator', $target)`.
 
@@ -62,6 +64,7 @@ The mirror rule above has one exception, and it is Livewire's, not this project'
 | Component | View — actual | View — what the mirror rule would predict |
 | --- | --- | --- |
 | `App\Livewire\Users\Index` | `resources/views/livewire/users.blade.php` | ~~`resources/views/livewire/users/index.blade.php`~~ |
+| `App\Livewire\Roles\Index` | `resources/views/livewire/roles.blade.php` | ~~`resources/views/livewire/roles/index.blade.php`~~ |
 
 This is explicit in the installed vendor source:
 
@@ -77,6 +80,8 @@ So `App\Livewire\Users\Index` becomes the component name `users`, and `users` re
 
 ✅ Good — the real pairing in this repo: `app/Livewire/Users/Index.php` ↔ `resources/views/livewire/users.blade.php`.
 ❌ Bad — assuming the mirror rule holds and looking for (or creating) `resources/views/livewire/users/index.blade.php`. It is not the path Livewire reports as the component's view, and a second file there is a silently unused duplicate.
+
+**This has already cost real time once, so it is worth stating as a habit rather than a rule to recall.** Task 0010's own Phase 1 spec — and its sibling 0011's — both wrote the nested path for `App\Livewire\Roles\Index`, and the error surfaced only when the story's test suite ran and threw `Illuminate\View\ViewException: File does not exist at path .../resources/views/livewire/roles.blade.php`. Livewire never even probes the nested path first, so nothing hints at the mistake until something renders. When adding an `Index` component, resolve the view path **by running the component**, not by reasoning about it.
 
 Practical consequence when adding the next module screen: an `Index` component for a new area lands at `resources/views/livewire/<area>.blade.php`, one level *shallower* than its class. Any other component in that same subfolder (`App\Livewire\Users\Editor` → `livewire/users/editor.blade.php`) follows the normal mirror rule, so the two live at different depths — that asymmetry is expected, not a mistake.
 
@@ -113,6 +118,17 @@ trait UserValidationRules
     protected function statusRules(): array { /* ... */ }
 }
 ```
+
+```php
+// app/Concerns/RoleValidationRules.php
+trait RoleValidationRules
+{
+    protected function roleNameRules(?int $roleId = null): array { /* ... */ }
+    protected function rolePermissionRules(): array { /* ... */ }
+}
+```
+
+Note `RoleValidationRules` (task 0010) and `UserValidationRules` are **different traits about different things** despite the near-collision in name: the former validates a *`Role` row's* own fields, the latter validates the *role/status a user is being assigned*. Both are named after the model whose input they describe, which is the rule — not after the screen that submits it.
 
 When adding a new validation concern, follow this exact pattern: `<Noun>ValidationRules` trait, `<noun>Rules()` methods — don't introduce a differently-named alternative (e.g. `getPasswordValidation()`). Traits stay **flat and single-concern**, composed at the consumer (`use ProfileValidationRules, UserValidationRules;` in `App\Livewire\Users\Index`, mirroring `CreateNewUser`'s `use PasswordValidationRules, ProfileValidationRules;`) — no trait in `app/Concerns/` `use`s another.
 
@@ -189,6 +205,23 @@ public const ROLE_MANAGEMENT_PERMISSION = 'roles.manage';
 ✅ Good — `users.statuses.active`, `users.email_change.throttled`: domain file, feature group, snake_case leaf. Values that interpolate use Laravel's `:placeholder` form (`:email`).
 ❌ Bad — do not write `users.emailChange.throttled` (camelCase segment), a flat `users.email_change_throttled` (no group), or a literal string inline in a component instead of a key. `App\Enums\UserStatus::label()` resolves `__('users.statuses.'.$this->value)` by convention, so a status label that isn't in the `statuses` group renders as its own raw key.
 
+**A count-dependent message is one key with a `|`-delimited plural form, resolved with `trans_choice()` — never two keys and never a hand-built `$count === 1 ? … : …`.** [`lang/en/roles.php`](../../lang/en/roles.php) (task 0010) is the first one:
+
+```php
+// lang/en/roles.php
+'index' => [
+    'delete_blocked' => 'This role cannot be deleted while it is still held by :count user.|This role cannot be deleted while it is still held by :count users.',
+],
+```
+
+```php
+// app/Livewire/Roles/Index.php — deleteRole()
+trans_choice('roles.index.delete_blocked', $role->users_count, ['count' => $role->users_count])
+```
+
+✅ Good — the singular/plural split lives in the *translation file*, so a locale with different plural rules (Spanish here, and any future one) can express them without touching PHP.
+❌ Bad — `delete_blocked_one` / `delete_blocked_many` as two keys, or branching on the count in the component. Both hardcode English's two-form plural rule into code that other locales have to live with.
+
 Note `APP_LOCALE=en` today, so everything renders in English until the interface language switcher exists — an accepted, documented consequence of the English-source decision, not a defect. Adding a key means adding it to **both** `lang/en/` and `lang/es/` in the same change.
 
 ## Boolean properties
@@ -207,7 +240,9 @@ public bool $showDeleteModal;
 
 Two patterns coexist in this file: `can*`/`requires*`/`show*` for capability/UI-state flags, and a bare past-participle (`twoFactorEnabled`) for a fact about the authenticated user's current state. Follow whichever of the two fits: use `can`/`requires`/`show` for UI/permission flags you're introducing, and a plain past-participle only for a mirrored model/domain fact (as `twoFactorEnabled` mirrors `User::hasEnabledTwoFactorAuthentication()`).
 
-_Last updated: 2026-08-20 — Task 0009: added the "name a permission once on the class that owns the rule" convention to **Permission names**, with `RolePolicy`'s two `public const` names as the ✅ example and `UserPolicy`'s four remaining literals as the deferred ❌ (finding F5), and listed `App\Actions\Roles\EnforceAdministratorPermissionGrant` in the class/file table — an imperative verb phrase with no `Action` suffix, matching the existing invokable-action rule._
+_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend): added the `trans_choice()` / `|`-delimited plural convention to **Translation keys**, with `lang/en/roles.php`'s `delete_blocked` as the ✅ and a two-key/branch-in-PHP ❌; added `RoleValidationRules` to **Traits** with the note that it and `UserValidationRules` are named after the model whose input they describe rather than the screen that submits it; added `App\Livewire\Roles\Index` → `livewire/roles.blade.php` as the second row of the `Index`-in-a-subfolder exception table, with the "resolve the view path by running the component" habit this story's own spec got wrong; and listed `EnforceGrantorPermissionScope` and `RoleInUseException` in the class/file table._
+
+_Previously: 2026-08-20 — Task 0009: added the "name a permission once on the class that owns the rule" convention to **Permission names**, with `RolePolicy`'s two `public const` names as the ✅ example and `UserPolicy`'s four remaining literals as the deferred ❌ (finding F5), and listed `App\Actions\Roles\EnforceAdministratorPermissionGrant` in the class/file table — an imperative verb phrase with no `Action` suffix, matching the existing invokable-action rule._
 
 _Previously: 2026-08-19 — Task 0008a: recorded that `App\Enums\RoleName`'s backing values are deliberately the persisted role names rather than lowercase (they are compared byte-for-byte against a row), and the `is<Thing>(self $x): bool` naming for a model's shared identity predicates — including why `isSuperAdminRoleRow()` carries a suffix its sibling does not, and why that is a wart to avoid repeating rather than a pattern to copy._
 

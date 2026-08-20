@@ -51,14 +51,18 @@ High-level layout of the codebase:
 app/
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords)
                       plus AuthenticateUser, the Fortify::authenticateUsing() callback
+  Actions/Roles/       Roles-domain actions (EnforceAdministratorPermissionGrant,
+                       EnforceGrantorPermissionScope)
   Actions/Users/       Users-domain actions (RequestEmailChange, ConfirmEmailChange, CreateUser, UpdateUser)
   Concerns/            Shared traits (e.g. validation rule sets)
   Console/Commands/    Artisan commands
-  Enums/               Backed enums for domain value sets (UserStatus, RoleName)
+  Enums/               Backed enums for domain value sets (UserStatus, RoleName, SalesRegionKind)
+  Exceptions/          Domain exceptions that render their own response (ImmutableRoleException,
+                       RoleInUseException)
   Http/Controllers/    Abstract base + domain controllers (HTTP boundary in front of an action)
   Listeners/           Event listeners (ActivateVerifiedUser, RejectNonActiveUserLogin)
-  Livewire/            Livewire components, grouped by area (Actions/, Settings/, Users/, ...)
-  Models/              Eloquent models (User; Role, a spatie/laravel-permission subclass)
+  Livewire/            Livewire components, grouped by area (Actions/, Roles/, Settings/, Users/, ...)
+  Models/              Eloquent models (User, SalesRegion; Role, a spatie/laravel-permission subclass)
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
   Policies/            Model policies (UserPolicy, RolePolicy), auto-discovered by name
   Providers/           Service providers
@@ -74,7 +78,7 @@ resources/
     layouts/             Auth/app layout shells
     livewire/            Views for Livewire components
     partials/
-routes/                  web.php, settings.php
+routes/                  web.php plus one file per area it requires (settings.php, roles.php, users.php)
 tests/
   Feature/
   Unit/

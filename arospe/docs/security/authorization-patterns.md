@@ -18,6 +18,8 @@ make these distinctions explicit.
 - [A rule that must bind a Super Admin actor must be a direct throw, not a Gate check](#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
 - [Authorization that consults a relation must reload it before the first check reads it](#authorization-that-consults-a-relation-must-reload-it-before-the-first-check-reads-it)
 - [A full-set sync behind a partially-visible form must preserve what the actor cannot see](#a-full-set-sync-behind-a-partially-visible-form-must-preserve-what-the-actor-cannot-see)
+- [An identity derived from a mutable column must be locked once code exists that can mutate it](#an-identity-derived-from-a-mutable-column-must-be-locked-once-code-exists-that-can-mutate-it)
+- [Two guards on one payload must agree on what an omission means](#two-guards-on-one-payload-must-agree-on-what-an-omission-means)
 - [A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself](#a-check-over-a-submitted-list-must-accept-every-shape-the-write-accepts-and-derive-the-before-state-itself)
 - [Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone](#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone)
 
@@ -613,6 +615,87 @@ Three corollaries:
   mirror-image note under [A rule that must bind a Super Admin actor](#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check),
   where `UpdateUser` refused *assigning* the Super Admin role while happily removing it.
 
+## An identity derived from a mutable column must be locked once code exists that can mutate it
+
+Established by task 0010's Phase 4 finding **F1** (High, two working privilege-escalation paths, both
+verified live).
+
+Task 0008a centralized the question "is this role the Administrator tier?" into one predicate,
+`Role::isAdministratorRole()`, which compares the row's persisted `name` against
+`RoleName::Administrator->value`. That was correct, and it was **safe only for as long as nothing could
+change `roles.name`**. Task 0010's roles-management screen is that something. Two consequences arrived
+together the moment it shipped:
+
+- **Rename.** A `roles.manage-administrators` holder renames the seeded `Administrator` role. Nothing
+  errors. But `isAdministratorRole()` now answers `false` for it, so every consumer of that predicate —
+  `UserPolicy`'s Administrator branches, `CreateUser`, `UpdateUser`, `RolePolicy::update()` — silently
+  stops protecting the tier. The role keeps its 37 permissions and every holder keeps their access; only
+  the *protection* disappears.
+- **Delete.** Once the role has no holders, the same actor deletes it outright. The catalog's base role
+  is gone, and re-creating it by hand (exact byte-identical name, `web` guard, 37 of 38 permissions)
+  is error-prone in a way nothing in the app would detect.
+
+Neither is a bug in the predicate. The predicate reads a column, and the column became writable.
+
+❌ Bad — the shape as found: an identity anchored to a column that application code can now write, with
+no guard on the column:
+
+```php
+// app/Models/Role.php — as of task 0009: only the Super Admin tier had guards
+public static function isAdministratorRole(self $role): bool
+{
+    return $role->persistedName() === RoleName::Administrator->value;
+}
+// ...and nothing in boot() refused a rename or a delete of that row.
+```
+
+✅ Good — the shipped fix. Three guards, mirroring the Super Admin tier's, registered in the **same**
+`boot()` so the ordering decision stays in one place:
+
+```php
+// app/Models/Role.php
+static::deleting(function (self $role): void {
+    $role->guardAgainstAdministratorDeletion();
+});
+
+static::updating(function (self $role): void {
+    // ...
+    $role->guardAgainstRenamingAdministrator();     // pre-mutation name: the row AS IT IS today
+    $role->guardAgainstAssumingAdministratorName(); // post-mutation name: renaming INTO the name
+});
+```
+
+Four properties of the fix that are the actually transferable part:
+
+- **Lock exactly what the identity depends on, and nothing more.** The Administrator row's *name* is
+  locked and the row is undeletable; its **permission set stays fully editable**, because
+  `syncPermissions()` does not change the answer to "is this the Administrator tier?" — and because
+  [`EnforceAdministratorPermissionGrant`](#a-full-set-sync-behind-a-partially-visible-form-must-preserve-what-the-actor-cannot-see)
+  exists precisely so that set *can* be changed. Copying the Super Admin tier's blanket
+  `guardAgainstSuperAdminMutation()` here would have broken the feature one story earlier had shipped.
+- **Guard both directions of a name.** A rename *of* the protected row and a rename *into* its name are
+  different attacks and need different guards, reading different sources — see
+  [the hydration rule](#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null).
+  The pre-mutation guard is additionally scoped to `isDirty('name')`, because ordinary saves of that row
+  are legitimate.
+- **A `creating`/`updating` guard needs a sanctioned bypass for the one legitimate writer.**
+  `Role::firstOrCreateAdministratorRole()` (`withoutEvents()`, plus a byte-exact read-back of the
+  persisted name against the case-insensitive `utf8mb4_unicode_ci` collation) is that bypass, and
+  `RolePermissionSeeder` now calls it instead of the raw `firstOrCreate()` the new guard would refuse.
+  Adding the guard **without** the bypass would have broken seeding, in production, on the next deploy.
+- **The policy layer is not the fix; it is the companion.** `RolePolicy::delete()` also refuses the row
+  categorically, but that branch is [unreachable for a Super Admin actor](../architecture/authorization.md#the-administrator-tiers-immutability-name-locked-undeletable-permissions-still-editable)
+  — `Gate::before` only defers on a *Super Admin* target. The model-event guard is what binds every
+  actor, for the same reason as
+  [the direct-throw rule](#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check).
+
+**Rule.** When a security decision is derived from a mutable attribute, the story that first ships code
+able to mutate that attribute **owns locking it** — and the review question is not "does the new screen
+authorize correctly?" but "**which existing invariants does this screen's write surface newly reach?**".
+Enumerate every column the new code can write, then, for each, ask what elsewhere in the app reads it as
+an identity. A predicate that was safe when it was written stays in the diff untouched while becoming
+unsafe, so nothing about the change draws attention to it.
+
 ## Two guards on one payload must agree on what an omission means
 
 Established by task 0010's Phase 4 re-audit, as a **forward-looking** rule: no live bypass exists
@@ -775,7 +858,16 @@ Do not "harden" the name comparisons themselves by lowercasing or trimming — t
 of matching names and break the property the byte-exact match above relies on. The remaining hardening
 is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-20 — Task 0010's Phase 4 re-audit (round 2): added "Two guards on one payload
+_Last updated: 2026-08-20 — Task 0010, Phase 6 docs sync: added "An identity derived from a mutable
+column must be locked once code exists that can mutate it", the durable rule behind that story's Phase 4
+round-1 finding **F1** (High) — the only round-1 finding whose lesson was not already covered here. It
+is the counterpart to task 0008a's centralization work: centralizing an identity onto a column is safe
+until a screen can write that column, and the story that ships the screen owns locking it. Includes the
+"lock exactly what the identity depends on, and nothing more" constraint (the Administrator row's
+permission set stays editable on purpose) and the sanctioned-bypass requirement without which adding a
+`creating` guard breaks the seeder in production._
+
+_Previously: 2026-08-20 — Task 0010's Phase 4 re-audit (round 2): added "Two guards on one payload
 must agree on what an omission means". Unlike every other section on this page it documents **no live
 bypass** — the roles screen's two transformers handle omission in opposite ways, which is safe only
 because `permissionOptions()` renders the permission catalog unfiltered. It is written as a

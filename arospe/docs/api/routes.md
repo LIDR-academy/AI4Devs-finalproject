@@ -16,13 +16,14 @@ Full current route list can always be regenerated with `php artisan route:list`.
 
 ## App-owned routes
 
-Declared in [`routes/web.php`](../../routes/web.php) and the two per-area files it requires, [`routes/settings.php`](../../routes/settings.php) and [`routes/users.php`](../../routes/users.php).
+Declared in [`routes/web.php`](../../routes/web.php) and the three per-area files it requires, [`routes/settings.php`](../../routes/settings.php), [`routes/roles.php`](../../routes/roles.php) and [`routes/users.php`](../../routes/users.php). One file per functional area is now the convention: a new module screen gets its own `routes/<area>.php` with its own `auth` + `verified` group, `require`d from `web.php`, rather than another entry in a growing `web.php`.
 
 | Method | URI | Name | Middleware | Handler |
 | --- | --- | --- | --- | --- |
 | GET | `/` | `home` | — | `view('welcome')` |
 | GET | `/dashboard` | `dashboard` | `auth`, `verified` | `view('dashboard')` |
 | GET | `/users` | `users.index` | `auth`, `verified`, `can:users.view` | `App\Livewire\Users\Index` |
+| GET | `/roles` | `roles.index` | `auth`, `verified`, `can:roles.manage` | `App\Livewire\Roles\Index` |
 | ANY | `/settings` | — | `auth` | redirect → `settings/profile` |
 | GET | `/settings/profile` | `profile.edit` | `auth` | `App\Livewire\Settings\Profile` |
 | GET | `/settings/appearance` | `appearance.edit` | `auth`, `verified` | `App\Livewire\Settings\Appearance` |
@@ -63,7 +64,37 @@ Six consequences for anyone reading this table as a contract:
 - **Its row actions are icon-only, so they are not selectable by visible text.** Each carries an `aria-label` plus a `data-test="edit-user-{id}"` / `data-test="delete-user-{id}"` hook — target those hooks from a browser test, never the button label. Both `wire:click` arguments are passed through `@js(...)`, which is mandatory rather than stylistic: a value interpolated into a `wire:*` attribute lands in a JavaScript evaluator, where Blade's HTML escaping is undone by the parser. See [security/blade-livewire-output-encoding.md](../security/blade-livewire-output-encoding.md).
 - **A row action the acting user may not perform renders `disabled`, not merely failing on click.** `loadUsers()` puts `canEdit` / `canDelete` on every row from `Gate::allows('update', $user)` / `Gate::allows('delete', $user)` — the very same `UserPolicy` methods `save()` and `deleteUser()` authorize against, so the disabled state matches what a click would do in every case but one. **The exception, since task 0008a:** a **Super Admin actor** viewing a **Super Admin-holding target** sees `canEdit` render `true` (the `Gate::before` bypass grants it) while `UpdateUser` refuses the save with a direct, deliberately non-`Gate`-mediated throw — so the row appears enabled and 403s on click. That is a known, accepted gap; the drift only ever runs enabled-then-refused, never the reverse. This is a UI hint layered *on top of* the component's own authorization, never a replacement for it; the rule, the exception, and why `Gate::allows()` rather than `Gate::authorize()`, are in [architecture/authorization.md](../architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer). The `data-test` hook is present on both branches, so a browser test selects the row action the same way regardless of whether it is enabled.
 - **Two markup rules the disabled branch establishes, both non-obvious and both load-bearing.** The disabled action is written as a separate `@if`/`@else` branch wrapped in an explicit `<flux:tooltip>` rather than as one button carrying a bound `:tooltip="$cond ? … : null"`: with `livewire/blaze` installed, a Flux prop that decides whether a wrapper renders counts as *present* whenever the attribute is written on the tag at all, so the conditional binding produced an empty tooltip bubble on every enabled row. And the `cursor-not-allowed!` class sits on that `flux:tooltip` wrapper, not on the button — Flux's own `disabled:pointer-events-none` takes a disabled button out of hit-testing, so a cursor rule placed there is never rendered. Both are recorded with their verification method in [errors-log.md](../errors-log.md); do not "simplify" either back into the obvious form.
-- **`/users` is linked from the sidebar with no permission gating.** [`resources/views/layouts/app/sidebar.blade.php`](../../resources/views/layouts/app/sidebar.blade.php) renders a static `flux:sidebar.item` to `route('users.index')` for every authenticated user. This is deliberate and cosmetic only — access is still refused by `can:users.view` on the route and re-checked inside the component; permission-aware navigation arrives with the Roles & Permissions story.
+- **`/users` is linked from the sidebar with no permission gating.** [`resources/views/layouts/app/sidebar.blade.php`](../../resources/views/layouts/app/sidebar.blade.php) renders a static `flux:sidebar.item` to `route('users.index')` for every authenticated user. This is deliberate and cosmetic only — access is still refused by `can:users.view` on the route and re-checked inside the component; permission-aware navigation is owned by story 0013, which is not yet built.
+
+### `roles.index` — the second permission-gated route
+
+Task 0010. Declared in its own [`routes/roles.php`](../../routes/roles.php), the same shape `users.index` established:
+
+```php
+// routes/roles.php
+Route::middleware(['auth', 'verified'])->group(function () {
+    // `can:roles.manage`, not Spatie's `permission:` — same reason as
+    // `users.index` in routes/users.php: Livewire 4's PersistentMiddleware
+    // allowlist carries Laravel's `Authorize` (`can:`) but not Spatie's
+    // `PermissionMiddleware`, so a `permission:`-gated route would protect
+    // the initial GET only, leaving every saveRole()/deleteRole()
+    // /livewire/update round-trip unauthorized. See
+    // docs/architecture/authorization.md.
+    Route::livewire('roles', RolesIndex::class)
+        ->middleware(['can:roles.manage'])
+        ->name('roles.index');
+});
+```
+
+The `can:`-not-`permission:` rule is identical to `users.index`'s and the inline comment restating it is deliberate duplication — a reader auditing one route file must not have to open the other to learn why. See [architecture/authorization.md](../architecture/authorization.md#gating-a-livewire-route-use-can-never-permission).
+
+Four things to know before reading this row as a contract:
+
+> ⚠️ **`GET /roles` does not render yet.** `resources/views/livewire/roles.blade.php` is **story 0011's** deliverable and does not exist, so the route resolves, passes middleware, mounts the component, and then throws `Illuminate\View\ViewException`. This is the known, deliberate boundary between the two stories, not a defect — every `Livewire::test()` assertion in `tests/Feature/Roles/IndexTest.php` that needs a render is affected the same way, and the suite is written around it. Note the view path is the **flat** one: `App\Livewire\Roles\Index` is an `Index` class in a subfolder, so Livewire strips the `.index` segment (see [conventions/naming.md](../conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)) — do not create `livewire/roles/index.blade.php`.
+
+- **The middleware column understates what protects it, exactly as it does for `users.index`.** `verified` and `can:` behave differently on Livewire's `/livewire/update` endpoint, so [`App\Livewire\Roles\Index`](../../app/Livewire/Roles/Index.php) authorizes against [`App\Policies\RolePolicy`](../../app/Policies/RolePolicy.php) as the first statement of **every** public method — `mount()`, both modal openers, `saveRole()`, `confirmDeleteRole()` and `deleteRole()` — including the two that only *disclose* a role's name and permission set. That, not the table row, is the real contract.
+- **The component's public surface, which story 0011's view consumes**: `$name` and `$selectedPermissionIds` (the form's two bound fields, the only non-`#[Locked]` writable state besides `$showModal` / `$showDeleteModal`), the `#[Locked]` `$editingRoleId` / `$deletingRoleId` / `$deletingRoleName` / `$canGrantAdministratorLevel`, and the two `#[Computed]` properties `roles()` (`selectable()`-scoped, `web`-guard-scoped, `withCount('users')` including trashed holders, `with('permissions')`) and `permissionOptions()` (the **full, unfiltered** `web` permission catalog — see the ⚠️ in [architecture/authorization.md](../architecture/authorization.md#the-second-grant-meta-rule-you-cannot-grant-what-you-do-not-hold) before filtering it).
+- **Two refusals are not 403s, and a caller must not assert one status for all of them.** Deleting a role that still has holders is a **409** (`App\Exceptions\RoleInUseException` from the model guard) or a validation error naming the exact count via `trans_choice('roles.index.delete_blocked', …)` when it comes through `deleteRole()`; the self-lockout refusal (stripping `roles.manage` from a role the actor holds) is likewise a `ValidationException`, not an authorization failure. Everything genuinely authorization-shaped — a forged id targeting a protected tier, a payload granting a permission the actor lacks — is a 403.
 
 ### `email-change.confirm` — the first app-owned route deliberately outside `auth`
 
@@ -126,7 +157,9 @@ Not listed: asset/dev-tool routes with no domain meaning (`flux/*`, `livewire-*/
 
 When `routes/api.php` and API resource controllers appear, replace this file's structure with one `api/<resource>.md` per resource, each documenting real request/response JSON pulled from the controller/resource classes — do not add one preemptively.
 
-_Last updated: 2026-08-20 — Task 0040 (move `users.index` into its own route file): `users.index` no longer lives in `routes/web.php` — it is declared in the new [`routes/users.php`](../../routes/users.php), required from `web.php` the same way `settings.php` is. Updated the app-owned-routes scope sentence, the subsection's "it lives in" sentence and its code quote (now showing the whole group, since the file's `auth` + `verified` group is its own). Pure relocation: the table row's URI, name and middleware are unchanged, and so is everything else this file says about the route._
+_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend): added `roles.index` (`GET /roles`, `can:roles.manage`) to the app-owned routes table and a subsection following `users.index`'s pattern — the same `can:`-not-`permission:` rule and the same "the middleware column understates what protects it" caveat, plus the component's public surface for story 0011's view, the two refusals that are **not** 403s (the 409 `RoleInUseException` and the two `ValidationException` paths), and the ⚠️ that `GET /roles` does not render yet because its Blade view is 0011's deliverable. Widened the "declared in" sentence to three per-area route files and recorded one-file-per-area as the convention. Also corrected the `users.index` sidebar bullet's vague "arrives with the Roles & Permissions story" — the owner is story 0013, and this story is not it._
+
+_Previously: 2026-08-20 — Task 0040 (move `users.index` into its own route file): `users.index` no longer lives in `routes/web.php` — it is declared in the new [`routes/users.php`](../../routes/users.php), required from `web.php` the same way `settings.php` is. Updated the app-owned-routes scope sentence, the subsection's "it lives in" sentence and its code quote (now showing the whole group, since the file's `auth` + `verified` group is its own). Pure relocation: the table row's URI, name and middleware are unchanged, and so is everything else this file says about the route._
 
 _Previously: 2026-08-19 — Task 0008a (centralize Administrator-level role identification): recorded that the write path behind `users.index` is now authorized twice over — the Administrator-tier abilities moved out of the component and into `CreateUser` / `UpdateUser` — and corrected the row-action bullet's "the disabled state cannot drift" claim, which now carries the one accepted exception (a Super Admin actor viewing a Super Admin-holding target renders enabled and is refused on click)._
 
