@@ -119,6 +119,19 @@ Feature: Roles & permissions management UI
       not the Super Admin
     When they view a role's permission toggles
     Then the "manage administrator-level roles/users" toggle is not rendered
+
+  # --- The seeded Administrator role's row (added 2026-08-21, Phase 2 review resolution 1) ---
+
+  Scenario: A broad roles.manage holder sees the Administrator role's actions disabled
+    Given an administrator who holds "manage roles & permissions" but not the narrower
+      "manage administrator-level roles/users" permission
+    When they view the roles list
+    Then the Administrator role's edit and delete actions are both rendered disabled
+
+  Scenario: The Super Admin sees the Administrator role's edit and delete actions enabled
+    Given a signed-in Super Admin
+    When they view the roles list
+    Then the Administrator role's edit and delete actions are both rendered enabled
 ```
 
 ## Files to create/modify
@@ -130,7 +143,9 @@ Feature: Roles & permissions management UI
 >
 > **File creation is 0010's, not this story's — one-directional, not "whichever lands first."**
 > [Story 0010](done/0010-role-permission-management-backend.md) **creates** both `routes/roles.php` and
-> `app/Livewire/Roles/Index.php`; this story **modifies** them. That follows from this story's own
+> `app/Livewire/Roles/Index.php`; this story may only **modify** them, and in practice needs to modify
+> only `Index.php` — a small, precedented `canEdit`/`canDelete` addition (open item 1 below), not
+> `routes/roles.php` at all — see the corrected bullets below. That follows from this story's own
 > Definition of Done, which states it "is not independently shippable — it is the view layer of a
 > component whose logic is 0010's" and requires 0010 to have landed first, so the two files always
 > exist by the time this story runs. An earlier draft of 0010 hedged with "whichever lands first
@@ -154,14 +169,40 @@ Feature: Roles & permissions management UI
   ```
 - `routes/web.php` — **`require __DIR__.'/roles.php';` is added by 0010**, beside the existing
   `require __DIR__.'/settings.php';`. Nothing to add here; verify it is present.
-- `app/Livewire/Roles/Index.php` — **created by 0010; modified here.** Class-based Livewire component
-  (per `conventions/base-standards.md`: class-based, never single-file), carrying a `#[Title(...)]`
-  attribute. **This story's share** is the UI-state surface only, named per `conventions/naming.md`'s
-  boolean-predicate rule — e.g. `$showRoleModal`, `$showDeleteModal`, and the bound
-  `$selectedPermissions` array. (Note `$editingRoleId` and `$deletingRoleId` are **0010's**, declared
-  `#[Locked]`, since they identify the row every authorization check resolves — this story reads them
-  but must not add, rename or unlock them.) It consumes, without re-deriving, two things 0010 exposes:
-  the Super-Admin-excluding roles collection, and a `$canGrantAdministratorLevel` boolean.
+- `app/Livewire/Roles/Index.php` — **created by 0010; one small, precedented follow-up modification
+  here (resolved 2026-08-21, open item 1).** Class-based Livewire component (per
+  `conventions/base-standards.md`: class-based, never single-file), carrying a
+  `#[Title('Roles & permissions')]` attribute.
+  `roles()` gains `canEdit`/`canDelete` per row (`Gate::allows('update'|'delete', $role)`), the same
+  post-closure "UI hint on an already-`done` component" shape the Users screen's own task-0006
+  follow-up used — see "Open items … resolved" above for the full justification and why this is not a
+  0010/0011 split violation.
+
+  > **Corrected 2026-08-21 (Phase 2 review, verified against the shipped
+  > [`app/Livewire/Roles/Index.php`](../../app/Livewire/Roles/Index.php) rather than against this
+  > story's Phase 1 assumption) — the UI-state surface this bullet reserved for 0011 already shipped
+  > with 0010, under different names.** The real public surface is:
+  >
+  > | Property | Shape | Notes |
+  > | --- | --- | --- |
+  > | `$name` | `public string` (writable) | the form's role-name field |
+  > | `$selectedPermissionIds` | `public array<int, int>` (writable) | **ids**, not names — not `$selectedPermissions` |
+  > | `$showModal` | `public bool` (writable) | the create/edit modal — not `$showRoleModal` |
+  > | `$showDeleteModal` | `public bool` (writable) | |
+  > | `$editingRoleId` / `$deletingRoleId` | `#[Locked] ?int` | 0010's; `null` on `$editingRoleId` means create mode |
+  > | `$deletingRoleName` | `#[Locked] string` | the delete modal's target name |
+  > | `$canGrantAdministratorLevel` | `#[Locked] bool` | set in `mount()` from `Gate::allows('grantAdministratorPermission', Role::class)` |
+  > | `roles()` | `#[Computed]` → `EloquentCollection<int, Role>` | `selectable()`- and `web`-scoped, `with('permissions')`, `withCount('users')` **including trashed holders**; read in the view as `$this->roles`. **To be added this story (open item 1):** `canEdit`/`canDelete` per row |
+  > | `permissionOptions()` | `#[Computed]` → `EloquentCollection<int, Permission>` | the **full, unfiltered** `web` catalog, `id` + `name` only, ordered by name; read as `$this->permissionOptions` |
+  >
+  > Actions available to `wire:click`: `openCreateModal()`, `openEditModal(int $roleId)`, `saveRole()`,
+  > `closeModal()`, `confirmDeleteRole(int $roleId)`, `deleteRole()`, `closeDeleteModal()`.
+  >
+  > Consequence for this story's scope: **beyond the `canEdit`/`canDelete` addition above, the
+  > component needs no other new property to render the screen**, so the rest of the diff to this file
+  > stays empty. Bind to the names above; do not rename them, do not unlock a `#[Locked]` one, and do
+  > not add a duplicate under this story's originally guessed name. The same surface is documented in
+  > [`docs/api/routes.md`](../../docs/api/routes.md#rolesindex--the-second-permission-gated-route).
 - `resources/views/livewire/roles.blade.php` — **the core deliverable.** **Corrected 2026-08-20
   (found running 0010's own test suite, which needs this same view to render) — not a kebab-case
   mirror path, and not nested under `roles/`.** `App\Livewire\Roles\Index` is an `Index` class inside
@@ -180,12 +221,55 @@ Feature: Roles & permissions management UI
   modal. Built with Flux UI: `flux:card` + `flux:table` for the list, `flux:modal` for both dialogs,
   `flux:input` for the role name, `flux:checkbox.group` for each module's permission block, and
   `flux:heading`/`flux:separator` for the per-module grouping.
+- `lang/en/roles.php` and `lang/es/roles.php` — **created by 0010; extended here.** They currently hold
+  exactly two keys (`roles.index.delete_blocked`, `roles.index.self_lockout_blocked`), both consumed by
+  0010's refusals. This story owns the screen's markup and therefore its copy: every user-facing string
+  the view renders (page/section headings, the create button, the empty state, modal titles and
+  buttons, the per-module headings and the permission labels) is a key added to **both** files,
+  key-for-key identical, per [`docs/conventions/naming.md`](../../docs/conventions/naming.md#translation-keys).
+  0010's file bullet is explicit that this story **may add keys to these files but must not move its
+  two**. **Resolved 2026-08-21 (open item 3, human-confirmed):** the module/permission labels are a
+  `modules` array (10 keys: the nine `RolePermissionSeeder::MODULES` entries plus `roles`) and an
+  `actions` array (4 keys: `view`/`create`/`edit`/`delete`) under the existing top-level structure,
+  composed together at render rather than one key per permission — see "Open items … resolved" above
+  for why.
 
 Presentational rules the view must honor:
 
-- **Permission toggles are rendered by iterating the backend-supplied module→permissions
-  structure**, never a hardcoded list of the 9 modules. This keeps the view correct whatever
-  granularity story 0002's seeded catalog lands on, and means a new module needs no view change.
+- **Permission toggles are rendered by iterating the backend-supplied catalog**, never a hardcoded
+  list of the 9 modules. This keeps the view correct whatever granularity story 0002's seeded catalog
+  lands on, and means a new module needs no view change.
+
+  > **Corrected 2026-08-21 (Phase 2 review) — there is no "module→permissions structure" on the
+  > backend; the grouping has to be derived.** `permissionOptions()` returns a **flat**,
+  > name-ordered collection of `Permission` rows carrying `id` and `name` only. The module is the
+  > segment before the dot in 0002's `<module-slug>.<action>` permission name (`blog.view` → `blog`),
+  > so the grouping is a pure presentational transform over an already-fetched collection — it adds no
+  > Eloquent query and so does not cross this story's split with 0010. **Resolved 2026-08-21 (open item
+  > 2, human-confirmed):** the transform lives view-side, a `->groupBy()` over
+  > `$this->permissionOptions` in the Blade file — not a new `#[Computed]` on the component, so this
+  > story's diff to 0010's closed component stays limited to the `canEdit`/`canDelete` addition (open
+  > item 1). The invariant this bullet exists for is unchanged either way: the module list is derived
+  > from the catalog, never written out by hand.
+  >
+  > Note the two non-CRUD permissions (`roles.manage`, `roles.manage-administrators`) group under a
+  > `roles` "module" that is not in `RolePermissionSeeder::MODULES` — a derived grouping handles them
+  > for free, a hardcoded module list would drop them silently.
+
+- **The permission catalog is rendered in full and is never filtered to what the acting user may
+  grant.** ⚠️ This is a hard constraint, not a preference, and it is new since this story was drafted.
+  0010's Phase 4 audit added [`App\Actions\Roles\EnforceGrantorPermissionScope`](../../app/Actions/Roles/EnforceGrantorPermissionScope.php),
+  which refuses a payload that *newly grants* a permission the actor does not hold — and it treats an
+  **omission** as a deliberate revoke, while its sibling `EnforceAdministratorPermissionGrant` treats
+  an omission as something to *preserve*. That divergence is safe only because every permission a role
+  currently holds is rendered as a checked box and comes back in the payload. Hiding the boxes for
+  permissions the actor cannot grant — the intuitive reaction to that guard — turns the divergence into
+  a **silent revoke**: a narrow `roles.manage` holder editing a role that legitimately holds
+  `products.delete` would submit a payload omitting it, and `syncPermissions()` would strip it with no
+  error anywhere. See
+  [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#two-guards-on-one-payload-must-agree-on-what-an-omission-means),
+  which names this story by number as the change that would introduce the bug. Rendering such a box
+  **disabled** is equally forbidden unless the disabled input still submits its current value.
 - **The administrator-level toggle is wrapped in a plain conditional** on the backend flag
   (`@if ($this->canGrantAdministratorLevel)`). It must be **absent from the DOM**, not merely
   hidden with CSS or disabled — a rendered-but-disabled control still leaks the permission's
@@ -194,9 +278,52 @@ Presentational rules the view must honor:
   the blocking message including the count and offers **only a dismiss control** — the destructive
   button is not rendered at all, rather than rendered-and-disabled. This is the PRD's
   "no confirm-and-proceed path" expressed in markup.
+
+  > **Corrected 2026-08-21 (Phase 2 review) — where the count comes from.** 0010 exposes **no**
+  > dedicated holder-count property; `confirmDeleteRole()` sets only `$deletingRoleId` and
+  > `$deletingRoleName`. The count is the `users_count` attribute already present on each row of
+  > `$this->roles` (`withCount(['users' => fn ($q) => $q->withTrashed()])` — **soft-deleted holders
+  > count**, per 0010's Phase 4 finding F3), so the modal reads it off the row matching
+  > `$deletingRoleId`. That is a lookup in an already-loaded collection, not a new query, so it stays
+  > inside this story's split. The server-side backstop is unchanged and must not be duplicated in the
+  > view: `deleteRole()` re-reads the count and throws a `ValidationException` on the `deletingRoleId`
+  > key carrying `trans_choice('roles.index.delete_blocked', …)`, and `App\Models\Role`'s own
+  > `deleting` guard throws `App\Exceptions\RoleInUseException` (**409**) behind that.
+
+- **Every server-side refusal 0010 ships must have somewhere to land in the markup.** ⚠️ Added
+  2026-08-21 (Phase 2 review): two of the three refusal channels below did not exist when this story
+  was drafted, and a view that renders no error for them refuses the user *silently*.
+
+  | Refusal | Shape | Error-bag key |
+  | --- | --- | --- |
+  | Invalid / duplicate / blank role name | `ValidationException` | `name` |
+  | Self-lockout — the save would strip `roles.manage` from a role the actor holds (F7) | `ValidationException` | `selectedPermissionIds` |
+  | Delete blocked by holder count | `ValidationException` | `deletingRoleId` |
+  | Granting a permission the actor does not hold (`EnforceGrantorPermissionScope`, F2) | `AuthorizationException` → **403** | — (no error bag) |
+  | Granting `roles.manage-administrators` without being the Super Admin (`EnforceAdministratorPermissionGrant`) | `AuthorizationException` → **403** | — (no error bag) |
+  | Forged id targeting the Super Admin or Administrator role | `AuthorizationException` → 403, or `ImmutableRoleException` → 403 | — (no error bag) |
+
+  The three `ValidationException` rows need an inline `@error(...)` outlet in the markup — including
+  one on the **permission checkbox group** and one **inside the delete modal**, neither of which this
+  story's original Gherkin covers. **Resolved 2026-08-21 — the three 403 rows stay full-page error
+  responses, not inline feedback.** Each is reachable only by tampering (a forged role id, or a
+  permission-catalog payload edited past what the rendered checkboxes offer), never by a normal click
+  once `canEdit`/`canDelete` (open item 1) gate the controls and the catalog stays fully rendered —
+  the same "no inline handling for a request the UI itself never produces" precedent 0010's own
+  component already sets for these exact exceptions.
 - **The Super Admin row is never special-cased in the view.** The view renders whatever collection
   the backend hands it; there is no `@if ($role->name !== 'Super Admin')` guard, because that would
   duplicate an invariant that belongs to 0010/0008.
+
+  > **Note added 2026-08-21 (Phase 2 review) — this rule covers the Super Admin role and *only* it.**
+  > `Role::selectable()` excludes the Super Admin role alone, so the seeded **Administrator** role
+  > *is* in `$this->roles` and will render as an ordinary row. Since 0010's Phase 4 finding F1 it is
+  > un-renameable and categorically undeletable (model guards + `RolePolicy::delete()`), while its
+  > permission set stays fully editable — and `RolePolicy::update()` additionally requires
+  > `roles.manage-administrators` for it. **Resolved 2026-08-21 (open item 1, human-confirmed):** its
+  > row is never name-guarded either — it renders like any other row, but with its edit/delete actions
+  > driven by the `canEdit`/`canDelete` UI hints described in "Open items … resolved" above, the same
+  > per-row `Gate::allows()` pattern the Users screen already uses.
 
 ## Tests to perform
 
@@ -232,6 +359,28 @@ assertions:
 - [ ] The delete-blocked path leaves the role in the list afterwards.
 - [ ] A module whose catalog entry has no permissions renders its heading without crashing.
 
+**Added 2026-08-21 (Phase 2 review) — coverage the shipped 0010 backend requires that this list
+predates:**
+- [ ] **0010's own suite goes green.** `tests/Feature/Roles/IndexTest.php` (39 tests) currently fails
+      wholesale on `Illuminate\View\ViewException`, because `Livewire::test()` renders and this
+      story's view does not exist yet — 0010 closed with that as an explicit, agreed exception in its
+      Definition of Done. Shipping the view is what resolves it, including the route-level
+      `$this->get(route('roles.index'))->assertOk()` case. **The whole file passing unedited is this
+      story's acceptance evidence**; any assertion that has to change is a regression to justify, not
+      a test to update.
+- [ ] The self-lockout refusal renders inline against the permission group (drive it: an actor edits
+      the role they hold and clears `roles.manage`), rather than failing silently.
+- [ ] The holder-count refusal renders inside the delete modal when it comes back from `deleteRole()`
+      as a validation error, not only as a pre-emptive branch on `users_count`.
+- [ ] A narrow `roles.manage` holder editing a role that holds a permission they do **not** hold, and
+      saving an unrelated change, leaves that permission intact — the regression test for the
+      unfiltered-catalog rule above. This is the single highest-value test in this story: it is the
+      one that fails if anyone "helpfully" filters `permissionOptions()` or the checkbox markup.
+- [ ] The Administrator role's row renders its edit/delete actions disabled for a plain `roles.manage`
+      holder, and enabled for a `roles.manage-administrators` holder / Super Admin (added 2026-08-21,
+      Phase 2 review resolution 1 — one Livewire component test per actor tier is enough; the browser
+      suite does not need this case, per the coverage-policy small-ceiling rule).
+
 ## Expected outcome
 A signed-in administrator can reach `/roles`, see every custom role with a live count (or an
 explicit empty state), create and edit roles through a modal whose permission toggles are grouped
@@ -261,9 +410,26 @@ DOM only for the Super Admin.
 - [ ] The "manage administrator-level roles/users" toggle is absent from the DOM for anyone who is
       not the Super Admin, including a holder of the general "manage roles & permissions"
       permission — absent, not hidden or disabled.
-- [ ] The view re-derives no authorization: it consumes 0009/0010's collection and boolean flag.
-- [ ] Component is class-based with a `#[Title(...)]` attribute and a kebab-case mirrored view, per
-      `conventions/base-standards.md` and `conventions/naming.md`.
+- [ ] The seeded Administrator role's row renders like any other row (added 2026-08-21, open item 1)
+      — no name-based guard — with its edit/delete actions disabled for an actor `Gate::allows()`
+      refuses (a plain `roles.manage` holder) and enabled for one it permits (a `roles.manage-administrators`
+      holder for edit; a Super Admin for both, including the one accepted drift where a Super Admin's
+      enabled delete control still 403s on click at the model layer).
+- [ ] The permission catalog is rendered **in full**: no checkbox is hidden, omitted or made
+      non-submitting on the basis of what the acting user may grant (added 2026-08-21 — see the
+      presentational rule and its security citation above).
+- [ ] Each of 0010's three `ValidationException` refusals (`name`, `selectedPermissionIds`,
+      `deletingRoleId`) has an inline outlet in the markup (added 2026-08-21).
+- [ ] The view derives no authorization **of its own**: it consumes 0009/0010's collection and
+      boolean flag, plus the `canEdit`/`canDelete` UI hints resolution 1 adds to `roles()` — hints
+      that disable a control, never a substitute for the model/policy layer that actually authorizes
+      the click, identical in shape and disclaimer to the Users screen's own row actions. *(Amended
+      2026-08-21 per Open item 1's resolution above.)*
+- [ ] Component is class-based with a `#[Title(...)]` attribute — **already true; verify, do not
+      build** — and the view lives at the flat `resources/views/livewire/roles.blade.php`, per the
+      [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+      to the kebab-case mirror rule. *(Corrected 2026-08-21: this bullet previously said "a kebab-case
+      mirrored view", contradicting the corrected view-path bullet in Files to create/modify.)*
 
 ## Definition of Done
 - [ ] Tests written and green (browser + Livewire component cases above)
@@ -272,5 +438,60 @@ DOM only for the Super Admin.
       toggle being absent rather than hidden, since a leak there is privilege-escalation-adjacent
 - [ ] Documentation updated (docs-keeper) — `docs/api/routes.md` gains the new `roles.index` route
 - [ ] Acceptance criteria met
-- [ ] Sibling stories 0002, 0008, 0009, 0010 landed (this story is not independently shippable —
-      it is the view layer of a component whose logic is 0010's)
+- [x] Sibling stories 0002, 0008, 0009, 0010 landed (this story is not independently shippable —
+      it is the view layer of a component whose logic is 0010's). **Verified 2026-08-21:** all four
+      are in `ai-spec/tasks/done/`; 0010 closed 2026-08-20 (commit `87bf0ae`).
+- [ ] `tests/Feature/Roles/IndexTest.php` — 0010's whole suite — passes **unedited** (added
+      2026-08-21; see the Tests to perform note on why it is red today)
+
+## Open items raised by the Phase 2 review — resolved 2026-08-21 (human-confirmed)
+
+The three questions Phase 2 flagged as product/scope decisions, closed before Phase 3 starts. Each
+resolution is also reflected inline at its own section above/below; this section is the single place
+recording *that* a decision was made and *why*, per the same convention 0010 used for its own
+human-confirmed calls (e.g. the Administrator-role deletion/self-escalation decisions in
+[0010's implementation record](done/0010-role-permission-management-backend.md), its "Phase 3/4/5/6
+implementation record" section).
+
+**1. The Administrator role renders with a per-row `Gate::allows()` UI hint — option (b).** Matches
+the Users screen's own convention (`App\Livewire\Users\Index::loadUsers()`'s `canEdit`/`canDelete`,
+`Gate::allows('update'|'delete', $user)`), rather than leaving two dead 403-on-click controls or
+inventing a third, novel treatment.
+
+**Consequence: this story's Phase 3 must add `canEdit`/`canDelete` to `App\Livewire\Roles\Index`'s
+`roles()`, a narrow, precedented exception to the 0010/0011 file split.** `roles()` is 0010's own
+`#[Computed]` property, on a file 0010 already closed — but this is not "reopening" 0010 any more
+than the Users screen's own per-row hints were, which landed as a **post-closure follow-up on the
+same screen** (see `docs/errors-log.md`'s "Task 0006 follow-up" entry, 2026-08-16, the exact same
+shape: a UI-hint addition to an already-`done` component, on the story that actually needed it to
+render). Concretely: `roles()` currently returns `Role::query()->selectable()->where(...)->...->get()`
+(a bare `EloquentCollection<int, Role>`); it needs to expose `canEdit` = `Gate::allows('update',
+$role)` and `canDelete` = `Gate::allows('delete', $role)` per row, either as an array shape mirroring
+`Users\Index`'s `$users` (an `array<int, array{...}>`) or as an appended pseudo-attribute on each
+`Role` — implementation-shape choice left to Phase 3, matching how this file leaves other such calls
+to the agent doing the work. `RolePolicy::delete()`'s own docblock already anticipates this addition
+by name and records the one accepted drift it carries forward unchanged: a Super Admin actor sees the
+Administrator row's delete control enabled (the `Gate::before` bypass grants `allows()` true) and the
+model guard (`guardAgainstAdministratorDeletion()`) refuses on click — same accepted-drift shape the
+Users screen already has for its own Super Admin/Administrator edge case, not a new one.
+
+The "**The view re-derives no authorization**" acceptance criterion (below) is amended accordingly:
+it becomes "the view derives no authorization **of its own**; `canEdit`/`canDelete` are UI hints
+consumed from the component, identical in shape and disclaimer to the Users screen's own, and never a
+substitute for the model/policy layer that actually authorizes each click." Two Gherkin scenarios are
+added for it (see the Gherkin block above/below).
+
+**2. The module grouping is derived in the Blade view — option (a).** A view-side `->groupBy()` over
+`$this->permissionOptions` (splitting each `Permission` row's `name` on the first `.`), not a new
+`#[Computed]` on the component. Keeps the component's diff for this story at just the `canEdit`/
+`canDelete` addition above — no second, unrelated method added to 0010's closed file for a
+purely-presentational transform this story's own split already claims as its job.
+
+**3. Permission-label copy uses a label-per-module plus a shared label-per-verb — option (a).** Ten
+module label keys (the nine `RolePermissionSeeder::MODULES` entries plus the `roles` pseudo-module
+from decision 2 above) and four verb label keys (`view`/`create`/`edit`/`delete`), composed at render
+(`__("roles.modules.$module") . ' — ' . __("roles.actions.$action")` or equivalent), fourteen keys
+total per language rather than 38+. Survives a future catalog module addition with no new key, unlike
+option (b); ships real, readable copy from day one, unlike option (c). Both `lang/en/roles.php` and
+`lang/es/roles.php` gain a `modules` and an `actions` array under the existing `index` key structure,
+key-for-key identical between the two files per `docs/conventions/naming.md`.
