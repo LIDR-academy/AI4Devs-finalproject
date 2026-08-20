@@ -13,13 +13,11 @@ const prisma = new PrismaClient();
  * 3. Runner Desacoplado (CLI independiente).
  * 4. PII Governance (Sobreescritura de credenciales por variables de entorno).
  */
-async function main() {
-  console.log('🌱 Ejecutando Seeding Profesional de PostgreSQL (Prisma ORM)...');
-
+// 1. 🌱 ESSENTIAL SEEDS (Usuarios y Catálogo Estructural)
+async function seedEssentialUsers(): Promise<void> {
   const adminPin = process.env.SEED_ADMIN_PIN ?? '1234';
   const kitchenPin = process.env.SEED_KITCHEN_PIN ?? '1234';
 
-  // 1. 🌱 ESSENTIAL SEEDS (Usuarios y Catálogo Estructural)
   const adminUser = await prisma.user.upsert({
     where: { id: 'usr-maria-2' },
     update: {
@@ -53,58 +51,68 @@ async function main() {
   });
 
   console.log(`✅ Usuarios Esenciales Idempotentes: ${adminUser.name}, ${kitchenUser.name}`);
+}
 
-  // 2. 🧪 SYNTHETIC FIXTURES SEEDS (Solo en entornos de Desarrollo / Demo)
+// 2. 🧪 SYNTHETIC FIXTURES SEEDS (Solo en entornos de Desarrollo / Demo)
+async function seedSyntheticFixtures(): Promise<void> {
+  console.log('🧪 Sembrando Fixtures Sintéticos de prueba (Insumos y Remanentes)...');
+
+  const insumo1 = await prisma.insumo.upsert({
+    where: { id: 'ins-1' },
+    update: { name: 'Queso Mozzarella', unitOfMeasure: 'KG' },
+    create: {
+      id: 'ins-1',
+      name: 'Queso Mozzarella',
+      unitOfMeasure: 'KG',
+    },
+  });
+
+  const insumo2 = await prisma.insumo.upsert({
+    where: { id: 'ins-2' },
+    update: { name: 'Salsa Pomodoro', unitOfMeasure: 'L' },
+    create: {
+      id: 'ins-2',
+      name: 'Salsa Pomodoro',
+      unitOfMeasure: 'L',
+    },
+  });
+
+  const insumo3 = await prisma.insumo.upsert({
+    where: { id: 'ins-3' },
+    update: { name: 'Masa de Pizza', unitOfMeasure: 'UNITS' },
+    create: {
+      id: 'ins-3',
+      name: 'Masa de Pizza',
+      unitOfMeasure: 'UNITS',
+    },
+  });
+
+  // Remanente FEFO de Prueba
+  const now = new Date();
+  await prisma.remanente.upsert({
+    where: { id: 'rem-101' },
+    update: { currentQuantity: 1.75 },
+    create: {
+      id: 'rem-101',
+      insumoId: insumo1.id,
+      initialQuantity: 2.0,
+      currentQuantity: 1.75,
+      location: 'KITCHEN_FRIDGE',
+      status: 'ACTIVE',
+      expirationDate: new Date(now.getTime() + 2 * 60 * 60 * 1000),
+    },
+  });
+
+  console.log(`✅ Insumos y Remanentes de Prueba sembrados: ${insumo1.name}, ${insumo2.name}, ${insumo3.name}`);
+}
+
+async function main() {
+  console.log('🌱 Ejecutando Seeding Profesional de PostgreSQL (Prisma ORM)...');
+
+  await seedEssentialUsers();
+
   if (process.env.NODE_ENV !== 'production') {
-    console.log('🧪 Sembrando Fixtures Sintéticos de prueba (Insumos y Remanentes)...');
-
-    const insumo1 = await prisma.insumo.upsert({
-      where: { id: 'ins-1' },
-      update: { name: 'Queso Mozzarella', unitOfMeasure: 'KG' },
-      create: {
-        id: 'ins-1',
-        name: 'Queso Mozzarella',
-        unitOfMeasure: 'KG',
-      },
-    });
-
-    const insumo2 = await prisma.insumo.upsert({
-      where: { id: 'ins-2' },
-      update: { name: 'Salsa Pomodoro', unitOfMeasure: 'L' },
-      create: {
-        id: 'ins-2',
-        name: 'Salsa Pomodoro',
-        unitOfMeasure: 'L',
-      },
-    });
-
-    const insumo3 = await prisma.insumo.upsert({
-      where: { id: 'ins-3' },
-      update: { name: 'Masa de Pizza', unitOfMeasure: 'UNITS' },
-      create: {
-        id: 'ins-3',
-        name: 'Masa de Pizza',
-        unitOfMeasure: 'UNITS',
-      },
-    });
-
-    // Remanente FEFO de Prueba
-    const now = new Date();
-    await prisma.remanente.upsert({
-      where: { id: 'rem-101' },
-      update: { currentQuantity: 1.75 },
-      create: {
-        id: 'rem-101',
-        insumoId: insumo1.id,
-        initialQuantity: 2.0,
-        currentQuantity: 1.75,
-        location: 'KITCHEN_FRIDGE',
-        status: 'ACTIVE',
-        expirationDate: new Date(now.getTime() + 2 * 60 * 60 * 1000),
-      },
-    });
-
-    console.log(`✅ Insumos y Remanentes de Prueba sembrados: ${insumo1.name}, ${insumo2.name}, ${insumo3.name}`);
+    await seedSyntheticFixtures();
   }
 
   console.log('🎉 Seeding Prisma completado exitosamente con 0 duplicaciones.');

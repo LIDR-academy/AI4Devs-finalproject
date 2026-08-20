@@ -39,26 +39,101 @@ export interface AppOptions {
   requireAuth?: boolean;
 }
 
+// Swagger UI - Documentacion Interactiva de API REST (OpenAPI 3.1)
+function setupSwaggerDocs(app: Express): void {
+  const openApiPath = path.resolve(process.cwd(), 'docs/03_persistence_and_api/openapi.yaml');
+  const fallbackPath = path.resolve(process.cwd(), '../../docs/03_persistence_and_api/openapi.yaml');
+  const finalOpenApiPath = fs.existsSync(openApiPath) ? openApiPath : (fs.existsSync(fallbackPath) ? fallbackPath : null);
+  if (!finalOpenApiPath) {
+    return;
+  }
+
+  try {
+    const swaggerDocument = YAML.load(finalOpenApiPath);
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  } catch (err) {
+    console.warn('⚠️ No se pudo cargar Swagger UI desde openapi.yaml:', err);
+  }
+}
+
+// Fail-Fast Environment Validation for JWT Secret (Guard 14).
+// Solo "test" tiene excepción: Vitest fija NODE_ENV=test automáticamente y los
+// tests de integración dependen de un secreto conocido sin tener que declararlo
+// en cada suite. Cualquier otro entorno (development, staging, production, o
+// NODE_ENV sin definir) exige un JWT_SECRET real — nunca un fallback hardcodeado
+// en el repositorio, que sería trivialmente conocido por cualquiera con el código.
+function assertJwtSecretConfigured(options: AppOptions): void {
+  const isTestEnv = process.env.NODE_ENV === 'test';
+  if (!isTestEnv && !options.jwtSecret && !process.env.JWT_SECRET) {
+    throw new Error(
+      'CONFIG FATAL: Variable de entorno JWT_SECRET es obligatoria fuera del entorno de test (Guard 14 Fail-Fast Secrets).'
+    );
+  }
+}
+
+interface AppRepositories {
+  userRepo: IUserRepository;
+  jwtSecret: string;
+  stockRepo: IStockRepository;
+  remanenteQueryRepo: IRemanenteQueryRepository;
+  reportRepo: IReportRepository;
+  recipeRepo: IRecipeRepository;
+  reconciliationRepo: IShiftReconciliationRepository;
+}
+
+// Repositorios e inyeccion de dependencias por defecto para dev/standalone
+function buildDefaultRepositories(options: AppOptions): AppRepositories {
+  const stockRepo = options.stockRepository ?? new InMemoryStockRepository();
+  return {
+    userRepo: options.userRepository ?? new InMemoryUserRepository(),
+    jwtSecret: options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-test-only-jwt-secret',
+    stockRepo,
+    remanenteQueryRepo:
+      options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository(stockRepo as InMemoryStockRepository),
+    reportRepo: options.reportRepository ?? new InMemoryReportRepository(),
+    recipeRepo: options.recipeRepository ?? new InMemoryRecipeRepository(),
+    reconciliationRepo: options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository(),
+  };
+}
+
+// Sembrado de Datos Desacoplado e Idempotente (SK-28)
+function triggerDevSeedingIfNeeded(repos: AppRepositories, options: AppOptions): void {
+  const shouldSeed = options.enableDevSeeding ?? (!options.userRepository && process.env.NODE_ENV !== 'test');
+  if (!shouldSeed) {
+    return;
+  }
+
+  const { userRepo, stockRepo, remanenteQueryRepo, recipeRepo } = repos;
+  runSeed(
+    { userRepo, stockRepo, remanenteQueryRepo, recipeRepo },
+    { includeSyntheticFixtures: process.env.NODE_ENV !== 'production' }
+  ).catch((err) => console.warn('⚠️ Advertencia ejecutando seeding:', err));
+}
+
+// Rutas Protegidas de Control de Bodega y Stock (Guard 15): las rutas exigen JWT
+// SIEMPRE por defecto, sin importar NODE_ENV. Un test de negocio que legítimamente
+// necesite aislar la lógica de auth debe pasar requireAuth:false explícito.
+function mountApiRoutes(
+  app: Express,
+  repos: AppRepositories,
+  authMiddleware: ReturnType<typeof createAuthenticateJWTMiddleware>,
+  isAuthRequired: boolean
+): void {
+  const { stockRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, reportRepo } = repos;
+  const guard = isAuthRequired ? [authMiddleware] : [];
+
+  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo));
+  app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
+  app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo));
+}
+
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
 
   app.use(cors());
   app.use(express.json());
-
-  // Swagger UI - Documentacion Interactiva de API REST (OpenAPI 3.1)
-  const openApiPath = path.resolve(process.cwd(), 'docs/03_persistence_and_api/openapi.yaml');
-  const fallbackPath = path.resolve(process.cwd(), '../../docs/03_persistence_and_api/openapi.yaml');
-  const finalOpenApiPath = fs.existsSync(openApiPath) ? openApiPath : (fs.existsSync(fallbackPath) ? fallbackPath : null);
-
-  if (finalOpenApiPath) {
-    try {
-      const swaggerDocument = YAML.load(finalOpenApiPath);
-      app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-      app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-    } catch (err) {
-      console.warn('⚠️ No se pudo cargar Swagger UI desde openapi.yaml:', err);
-    }
-  }
+  setupSwaggerDocs(app);
 
   // Endpoint de salud
   app.get('/health', (_req, res) => {
@@ -70,57 +145,16 @@ export function createApp(options: AppOptions = {}): Express {
     });
   });
 
-  // Fail-Fast Environment Validation for JWT Secret (Guard 14).
-  // Solo "test" tiene excepción: Vitest fija NODE_ENV=test automáticamente y los
-  // tests de integración dependen de un secreto conocido sin tener que declararlo
-  // en cada suite. Cualquier otro entorno (development, staging, production, o
-  // NODE_ENV sin definir) exige un JWT_SECRET real — nunca un fallback hardcodeado
-  // en el repositorio, que sería trivialmente conocido por cualquiera con el código.
-  const isTestEnv = process.env.NODE_ENV === 'test';
-  if (!isTestEnv && !options.jwtSecret && !process.env.JWT_SECRET) {
-    throw new Error(
-      'CONFIG FATAL: Variable de entorno JWT_SECRET es obligatoria fuera del entorno de test (Guard 14 Fail-Fast Secrets).'
-    );
-  }
+  assertJwtSecretConfigured(options);
 
-  // Repositorios e inyeccion de dependencias por defecto para dev/standalone
-  const userRepo = options.userRepository ?? new InMemoryUserRepository();
-  const jwtSecret = options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-test-only-jwt-secret';
-  const stockRepo = options.stockRepository ?? new InMemoryStockRepository();
-  const remanenteQueryRepo = options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository(stockRepo as InMemoryStockRepository);
-  const reportRepo = options.reportRepository ?? new InMemoryReportRepository();
-  const recipeRepo = options.recipeRepository ?? new InMemoryRecipeRepository();
-  const reconciliationRepo = options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository();
+  const repos = buildDefaultRepositories(options);
+  triggerDevSeedingIfNeeded(repos, options);
 
-  // Sembrado de Datos Desacoplado e Idempotente (SK-28)
-  const shouldSeed = options.enableDevSeeding ?? (!options.userRepository && process.env.NODE_ENV !== 'test');
-  if (shouldSeed) {
-    runSeed(
-      { userRepo, stockRepo, remanenteQueryRepo, recipeRepo },
-      { includeSyntheticFixtures: process.env.NODE_ENV !== 'production' }
-    ).catch((err) => console.warn('⚠️ Advertencia ejecutando seeding:', err));
-  }
-
-  const authMiddleware = createAuthenticateJWTMiddleware(jwtSecret);
-  // Guard 15: las rutas protegidas exigen JWT SIEMPRE por defecto, sin importar NODE_ENV.
-  // Antes esto solo se activaba en NODE_ENV==='production', dejando cualquier despliegue
-  // de development/staging/sin-definir totalmente abierto. Un test de negocio que
-  // legítimamente necesite aislar la lógica de auth debe pasar requireAuth:false explícito.
+  const authMiddleware = createAuthenticateJWTMiddleware(repos.jwtSecret);
   const isAuthRequired = options.requireAuth ?? true;
 
-  // Rutas de Autenticacion
-  app.use('/api/v1/auth', createAuthRouter(userRepo, jwtSecret));
-
-  // Rutas Protegidas de Control de Bodega y Stock (Guard 15)
-  if (isAuthRequired) {
-    app.use('/api/v1/stock', authMiddleware, createStockRouter(stockRepo));
-    app.use('/api/v1/kitchen', authMiddleware, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
-    app.use('/api/v1/reports', authMiddleware, createReportsRouter(reportRepo));
-  } else {
-    app.use('/api/v1/stock', createStockRouter(stockRepo));
-    app.use('/api/v1/kitchen', createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
-    app.use('/api/v1/reports', createReportsRouter(reportRepo));
-  }
+  app.use('/api/v1/auth', createAuthRouter(repos.userRepo, repos.jwtSecret));
+  mountApiRoutes(app, repos, authMiddleware, isAuthRequired);
 
   // Middleware global de errores
   app.use(errorHandler);

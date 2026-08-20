@@ -3,6 +3,7 @@ import { IRemanenteQueryRepository } from '../../../domain/kitchen/repositories/
 import { IShiftReconciliationRepository } from '../../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
 import { ShiftReconciliation, ShiftReconciliationItem } from '../../../domain/kitchen/entities/ShiftReconciliation.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
+import { ActiveRemanenteDTO } from '../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 
 export interface PhysicalCountItemInput {
   remanenteId: string;
@@ -15,17 +16,19 @@ export interface PerformShiftReconciliationInput {
   items: PhysicalCountItemInput[];
 }
 
+export interface ReconciledItemResponse {
+  remanenteId: string;
+  insumoId: string;
+  physicalQuantity: string;
+  theoreticalQuantity: string;
+  variance: string;
+}
+
 export interface PerformShiftReconciliationResult {
   reconciliationId: string;
   autoDiscardedCount: number;
   processedItemsCount: number;
-  items: Array<{
-    remanenteId: string;
-    insumoId: string;
-    physicalQuantity: string;
-    theoreticalQuantity: string;
-    variance: string;
-  }>;
+  items: ReconciledItemResponse[];
 }
 
 export class PerformShiftReconciliationUseCase {
@@ -41,83 +44,19 @@ export class PerformShiftReconciliationUseCase {
     const now = new Date();
     const activeDTOs = await this.remanenteQueryRepository.findActiveRemanentes();
 
-    let autoDiscardedCount = 0;
+    const autoDiscardedCount = await this.autoDiscardExpiredRemanentes(activeDTOs, now);
 
-    // 1. Auto-descarte masivo de remanentes vencidos
-    for (const dto of activeDTOs) {
-      if (dto.expirationDate < now) {
-        const remanente = await this.stockRepository.findRemanenteById(dto.id);
-        if (remanente && remanente.status === 'ACTIVE') {
-          const quantityDiscarded = remanente.discard();
-          await this.stockRepository.saveRemanente(remanente);
-          await this.stockRepository.recordMovement({
-            id: `mov-autodiscard-${Date.now()}-${remanente.id}`,
-            insumoId: remanente.insumoId,
-            type: 'DISCARD',
-            quantity: quantityDiscarded.toString(),
-            fromLoc: remanente.location,
-            toLoc: 'WASTE',
-          });
-          autoDiscardedCount++;
-        }
-      }
-    }
-
-    // 2. Procesamiento de conteo físico e informe de varianzas
     const reconciliationItems: ShiftReconciliationItem[] = [];
-    const responseItems: PerformShiftReconciliationResult['items'] = [];
-
+    const responseItems: ReconciledItemResponse[] = [];
     for (const itemInput of input.items) {
-      const remanente = await this.stockRepository.findRemanenteById(itemInput.remanenteId);
-      if (!remanente) {
+      const reconciled = await this.reconcilePhysicalCount(itemInput);
+      if (!reconciled) {
         continue;
       }
-
-      const theoreticalQuantity = remanente.currentQuantity;
-      const physicalQuantity = new DecimalQuantity(itemInput.physicalQuantity);
-      const varianceDecimal = physicalQuantity.toDecimal().minus(theoreticalQuantity.toDecimal());
-
-      reconciliationItems.push({
-        remanenteId: remanente.id,
-        insumoId: remanente.insumoId,
-        physicalQuantity,
-        theoreticalQuantity,
-        variance: varianceDecimal,
-      });
-
-      // Actualizar el remanente activo a la cantidad física medida
-      if (physicalQuantity.toNumber() === 0) {
-        remanente.discard();
-      } else {
-        const diff = physicalQuantity.toDecimal().minus(theoreticalQuantity.toDecimal());
-        if (diff.isNegative()) {
-          remanente.consumeQuantity(new DecimalQuantity(diff.abs()));
-        }
-      }
-
-      await this.stockRepository.saveRemanente(remanente);
-
-      if (!varianceDecimal.isZero()) {
-        await this.stockRepository.recordMovement({
-          id: `mov-recon-${Date.now()}-${remanente.id}`,
-          insumoId: remanente.insumoId,
-          type: 'SHIFT_RECONCILIATION_VARIANCE',
-          quantity: varianceDecimal.toFixed(3),
-          fromLoc: remanente.location,
-          toLoc: 'KITCHEN_ADJUSTMENT',
-        });
-      }
-
-      responseItems.push({
-        remanenteId: remanente.id,
-        insumoId: remanente.insumoId,
-        physicalQuantity: physicalQuantity.toString(),
-        theoreticalQuantity: theoreticalQuantity.toString(),
-        variance: varianceDecimal.toFixed(3),
-      });
+      reconciliationItems.push(reconciled.reconciliationItem);
+      responseItems.push(reconciled.responseItem);
     }
 
-    // 3. Crear y guardar objeto de conciliación
     const reconciliationId = `recon-${Date.now()}`;
     const reconciliation = new ShiftReconciliation({
       id: reconciliationId,
@@ -126,7 +65,6 @@ export class PerformShiftReconciliationUseCase {
       notes: input.notes,
       items: reconciliationItems,
     });
-
     await this.reconciliationRepository.save(reconciliation);
 
     return {
@@ -134,6 +72,85 @@ export class PerformShiftReconciliationUseCase {
       autoDiscardedCount,
       processedItemsCount: responseItems.length,
       items: responseItems,
+    };
+  }
+
+  // Auto-descarte masivo de remanentes vencidos, previo al conteo físico
+  private async autoDiscardExpiredRemanentes(activeDTOs: ActiveRemanenteDTO[], now: Date): Promise<number> {
+    let autoDiscardedCount = 0;
+
+    for (const dto of activeDTOs) {
+      if (dto.expirationDate >= now) {
+        continue;
+      }
+      const remanente = await this.stockRepository.findRemanenteById(dto.id);
+      if (!remanente || remanente.status !== 'ACTIVE') {
+        continue;
+      }
+
+      const quantityDiscarded = remanente.discard();
+      await this.stockRepository.saveRemanente(remanente);
+      await this.stockRepository.recordMovement({
+        id: `mov-autodiscard-${Date.now()}-${remanente.id}`,
+        insumoId: remanente.insumoId,
+        type: 'DISCARD',
+        quantity: quantityDiscarded.toString(),
+        fromLoc: remanente.location,
+        toLoc: 'WASTE',
+      });
+      autoDiscardedCount++;
+    }
+
+    return autoDiscardedCount;
+  }
+
+  // Aplica el conteo físico de un remanente, calcula varianza y ajusta el stock
+  private async reconcilePhysicalCount(
+    itemInput: PhysicalCountItemInput
+  ): Promise<{ reconciliationItem: ShiftReconciliationItem; responseItem: ReconciledItemResponse } | null> {
+    const remanente = await this.stockRepository.findRemanenteById(itemInput.remanenteId);
+    if (!remanente) {
+      return null;
+    }
+
+    const theoreticalQuantity = remanente.currentQuantity;
+    const physicalQuantity = new DecimalQuantity(itemInput.physicalQuantity);
+    const varianceDecimal = physicalQuantity.toDecimal().minus(theoreticalQuantity.toDecimal());
+
+    // Actualizar el remanente activo a la cantidad física medida
+    if (physicalQuantity.toNumber() === 0) {
+      remanente.discard();
+    } else if (varianceDecimal.isNegative()) {
+      remanente.consumeQuantity(new DecimalQuantity(varianceDecimal.abs()));
+    }
+    await this.stockRepository.saveRemanente(remanente);
+
+    if (!varianceDecimal.isZero()) {
+      await this.stockRepository.recordMovement({
+        id: `mov-recon-${Date.now()}-${remanente.id}`,
+        insumoId: remanente.insumoId,
+        type: 'SHIFT_RECONCILIATION_VARIANCE',
+        quantity: varianceDecimal.toFixed(3),
+        fromLoc: remanente.location,
+        toLoc: 'KITCHEN_ADJUSTMENT',
+      });
+    }
+
+    return {
+      reconciliationItem: {
+        remanenteId: remanente.id,
+        insumoId: remanente.insumoId,
+        physicalQuantity,
+        theoreticalQuantity,
+        variance: varianceDecimal,
+      },
+      responseItem: {
+        remanenteId: remanente.id,
+        insumoId: remanente.insumoId,
+        physicalQuantity: physicalQuantity.toString(),
+        theoreticalQuantity: theoreticalQuantity.toString(),
+        variance: varianceDecimal.toFixed(3),
+      },
     };
   }
 }

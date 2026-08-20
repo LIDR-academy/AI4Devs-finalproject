@@ -3,6 +3,40 @@ import {
   ActiveRemanenteDTO,
 } from '../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 import { InMemoryStockRepository } from '../../stock/repositories/InMemoryStockRepository.js';
+import { Remanente } from '../../../domain/stock/entities/Remanente.js';
+import { Insumo } from '../../../domain/stock/entities/Insumo.js';
+
+// Fallback de nombre/unidad para fixtures sintéticas sin catálogo maestro cargado
+// (dev/demo sin seed de Insumo completo). Nunca aplica cuando el insumo real existe.
+const FALLBACK_INSUMO_DISPLAY: Record<string, { name: string; unitOfMeasure: string }> = {
+  'ins-1': { name: 'Queso Mozzarella', unitOfMeasure: 'KG' },
+  'ins-2': { name: 'Salsa Pomodoro', unitOfMeasure: 'L' },
+  'ins-3': { name: 'Masa de Pizza', unitOfMeasure: 'UNITS' },
+};
+const DEFAULT_INSUMO_DISPLAY = { name: 'Insumo Cocina', unitOfMeasure: 'KG' };
+
+function toActiveDTO(rem: Remanente, insumo: Insumo | undefined, now: Date): ActiveRemanenteDTO {
+  const fallback = FALLBACK_INSUMO_DISPLAY[rem.insumoId] ?? DEFAULT_INSUMO_DISPLAY;
+  const hoursRemaining = Math.max(
+    0,
+    Math.round(((rem.expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60)) * 10) / 10
+  );
+
+  return {
+    id: rem.id,
+    insumoId: rem.insumoId,
+    insumoName: insumo ? insumo.name : fallback.name,
+    unitOfMeasure: insumo ? insumo.unitOfMeasure : fallback.unitOfMeasure,
+    currentQuantity: rem.currentQuantity.toString(),
+    initialQuantity: rem.initialQuantity.toString(),
+    location: rem.location,
+    expirationDate: rem.expirationDate,
+    hoursRemaining,
+    isCriticalAlert: hoursRemaining < 24,
+    status: rem.status,
+    createdAt: new Date(),
+  };
+}
 
 export class InMemoryRemanenteQueryRepository implements IRemanenteQueryRepository {
   public remanentes: ActiveRemanenteDTO[] = [];
@@ -14,30 +48,9 @@ export class InMemoryRemanenteQueryRepository implements IRemanenteQueryReposito
 
     if (this.stockRepo && this.stockRepo.remanentes.size > 0) {
       const now = new Date();
-      for (const rem of Array.from(this.stockRepo.remanentes.values())) {
-        if (rem.status === 'ACTIVE') {
-          const insumo = this.stockRepo.insumos.get(rem.insumoId);
-          const hoursRemaining = Math.max(
-            0,
-            Math.round(((rem.expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60)) * 10) / 10
-          );
-
-          activeItems.push({
-            id: rem.id,
-            insumoId: rem.insumoId,
-            insumoName: insumo ? insumo.name : (rem.insumoId === 'ins-1' ? 'Queso Mozzarella' : rem.insumoId === 'ins-2' ? 'Salsa Pomodoro' : rem.insumoId === 'ins-3' ? 'Masa de Pizza' : 'Insumo Cocina'),
-            unitOfMeasure: insumo ? insumo.unitOfMeasure : (rem.insumoId === 'ins-3' ? 'UNITS' : rem.insumoId === 'ins-2' ? 'L' : 'KG'),
-            currentQuantity: rem.currentQuantity.toString(),
-            initialQuantity: rem.initialQuantity.toString(),
-            location: rem.location,
-            expirationDate: rem.expirationDate,
-            hoursRemaining,
-            isCriticalAlert: hoursRemaining < 24,
-            status: rem.status,
-            createdAt: new Date(),
-          });
-        }
-      }
+      activeItems = Array.from(this.stockRepo.remanentes.values())
+        .filter((rem) => rem.status === 'ACTIVE')
+        .map((rem) => toActiveDTO(rem, this.stockRepo!.insumos.get(rem.insumoId), now));
     } else {
       activeItems = [...this.remanentes].filter((r) => r.status === 'ACTIVE');
     }
