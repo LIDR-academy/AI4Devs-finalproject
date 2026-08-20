@@ -27,7 +27,7 @@ flowchart LR
     Browser["Browser"]
 
     subgraph Laravel["Laravel 13 app"]
-        Routes["routes/web.php\nroutes/settings.php"]
+        Routes["routes/web.php\nroutes/settings.php\nroutes/users.php"]
         Livewire["Livewire 4 components\napp/Livewire/**"]
         Controllers["Domain controllers\napp/Http/Controllers/**"]
         Gate["Gate + policies\napp/Policies/UserPolicy.php"]
@@ -61,7 +61,7 @@ flowchart LR
     Laravel -.->|"queued jobs"| Queue
 ```
 
-- Web entry points are declared in [`routes/web.php`](../../routes/web.php) and [`routes/settings.php`](../../routes/settings.php); there is no `routes/api.php` in this app yet.
+- Web entry points are declared in [`routes/web.php`](../../routes/web.php), which itself holds only `home` and `dashboard` and `require`s one file per functional area — [`routes/settings.php`](../../routes/settings.php) and [`routes/users.php`](../../routes/users.php); there is no `routes/api.php` in this app yet.
 - **A Livewire action is a second entry point that skips most route middleware.** `POST /livewire/update` does not re-run the component's route middleware except for an allow-listed subset, which is why `users.index` gates with `can:` (on the allow-list) rather than `permission:` (not), and why the component re-authorizes through the Gate on every mutating method rather than trusting the route. See [security/livewire-authorization.md](../security/livewire-authorization.md).
 - Fortify-owned routes (login, register, password reset, 2FA challenge, `.well-known/passkey-endpoints`) are registered by the `FortifyServiceProvider` from `config/fortify.php`, not by hand-written controllers.
 - Session, cache, and queue all use the `database` driver (`SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION` in `.env`), backed by the `sessions`, `cache`, and `jobs` tables created in `database/migrations/0001_01_01_000000_create_users_table.php` and `0001_01_01_000001_create_cache_table.php` / `0001_01_01_000002_create_jobs_table.php`.
@@ -98,7 +98,7 @@ Documented once, linked everywhere else — do not duplicate these explanations 
 
 | Layer | Path |
 | --- | --- |
-| Routes | `routes/web.php`, `routes/settings.php` |
+| Routes | `routes/web.php`, plus the per-area files it requires: `routes/settings.php`, `routes/users.php` |
 | Livewire components | `app/Livewire/**` |
 | Domain controllers | `app/Http/Controllers/**` (HTTP boundary in front of an action) |
 | Fortify actions | `app/Actions/Fortify/**` |
@@ -112,6 +112,8 @@ Documented once, linked everywhere else — do not duplicate these explanations 
 | Seeders | `database/seeders/**` (`RolePermissionSeeder` is deploy-critical — see above) |
 | Middleware aliases & exception rendering | `bootstrap/app.php` |
 
-_Last updated: 2026-08-18 — Task 0008: corrected the stale "`app/Models/` contains only `User.php`" claim — `App\Models\Role` now exists (a `spatie/laravel-permission` subclass carrying the Super Admin role's invariants, not a domain model) — and added that story's invariants to the Authorization bullet._
+_Last updated: 2026-08-20 — Task 0040: the route layer is no longer two files. `users.index` moved out of `routes/web.php` into its own `routes/users.php`, required from `web.php` the way `settings.php` is, so `web.php` now declares only `home` and `dashboard`. Updated the three places that enumerated the route files as exactly `web.php` + `settings.php`: the flowchart's entry-point node, the entry-points bullet below it, and the "Where things live" Routes row. No lifecycle change — the arrows out of that node are identical._
+
+_Previously: 2026-08-18 — Task 0008: corrected the stale "`app/Models/` contains only `User.php`" claim — `App\Models\Role` now exists (a `spatie/laravel-permission` subclass carrying the Super Admin role's invariants, not a domain model) — and added that story's invariants to the Authorization bullet._
 
 _Previously: 2026-08-13 — Task 0004: the request-lifecycle diagram had gone stale by omission — added the domain-controller, domain-action (`app/Actions/Users/**`) and Gate/policy layers that tasks 0003 and 0004 introduced, noted that a Livewire action is a second entry point that skips most route middleware, and extended "Where things live" to match._
