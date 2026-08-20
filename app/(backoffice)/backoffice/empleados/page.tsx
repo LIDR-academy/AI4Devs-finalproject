@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { StatusBadge } from "@/components/status-badge";
@@ -70,10 +69,6 @@ export default async function EmployeesPage() {
           </tbody>
         </table>
       </div>
-
-      <Link href="/backoffice" className="text-sm hover:underline">
-        ← Volver a la cola de trabajo
-      </Link>
     </section>
   );
 }

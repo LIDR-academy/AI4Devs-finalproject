@@ -79,10 +79,6 @@ export default async function CustomersPage() {
           </tbody>
         </table>
       </div>
-
-      <Link href="/backoffice" className="text-sm hover:underline">
-        ← Volver a la cola de trabajo
-      </Link>
     </section>
   );
 }

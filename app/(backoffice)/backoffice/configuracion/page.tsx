@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { can } from "@/domain/auth/permissions";
@@ -65,10 +64,6 @@ export default async function SettingsPage() {
           pantalla llega con el diseño de UX.
         </p>
       </div>
-
-      <Link href="/backoffice" className="text-sm hover:underline">
-        ← Volver a la cola de trabajo
-      </Link>
     </section>
   );
 }

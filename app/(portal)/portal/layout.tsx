@@ -1,4 +1,6 @@
 import { LogoutButton } from "@/components/auth/logout-button";
+import { SurfaceNav } from "@/components/surface-nav";
+import { NAV_LABEL, navFor } from "@/lib/navigation";
 import { requireSurfacePage } from "@/http/auth-context";
 
 /**
@@ -7,6 +9,10 @@ import { requireSurfacePage } from "@/http/auth-context";
  * protegida se renderice sin sesión aunque el matcher del proxy cambie (ADR-0001
  * §2-§3). El code-splitting por ruta mantiene el código de back-office fuera de
  * este bundle.
+ *
+ * La navegación de secciones vive aquí y no en las páginas (`wireframes.md` §2.3):
+ * hoy el portal es una sola ruta y `SurfaceNav` no pinta nada, pero cuando W5 añada
+ * historial, suscripción y avisos aparecerá en todas a la vez y sin tocar esto.
  */
 export default async function PortalLayout({
   children,
@@ -15,15 +21,18 @@ export default async function PortalLayout({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="mb-6 flex items-center justify-between border-b pb-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)]">
-            Portal del suscriptor
-          </p>
-          <p className="text-sm font-medium">{user.fullName}</p>
+      <header className="mb-6 border-b pb-2">
+        <div className="flex items-center justify-between pb-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)]">
+              Portal del suscriptor
+            </p>
+            <p className="text-sm font-medium">{user.fullName}</p>
+          </div>
+          <LogoutButton />
         </div>
-        <LogoutButton />
-      </div>
+        <SurfaceNav label={NAV_LABEL.portal} destinations={navFor("portal", user.role)} />
+      </header>
       {children}
     </div>
   );

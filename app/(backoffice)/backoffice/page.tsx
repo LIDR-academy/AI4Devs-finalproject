@@ -1,8 +1,5 @@
-import Link from "next/link";
-
 import { StatusBadge } from "@/components/status-badge";
 import { copyStatus } from "@/lib/status";
-import { can } from "@/domain/auth/permissions";
 import { requireSurfacePage } from "@/http/auth-context";
 import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
 import { prismaBackofficeRepository } from "@/repositories/backoffice.repository.prisma";
@@ -44,30 +41,13 @@ export default async function BackofficePage() {
 
   return (
     <section className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Cola de trabajo</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            {items.length === 0
-              ? "No hay copias esperando."
-              : `${items.length} copia(s) esperando una acción.`}
-          </p>
-        </div>
-        <nav className="flex gap-3 text-sm">
-          <Link href="/backoffice/clientes" className="hover:underline">
-            Clientes
-          </Link>
-          {can(user.role, "settings.manage") ? (
-            <Link href="/backoffice/configuracion" className="hover:underline">
-              Configuración
-            </Link>
-          ) : null}
-          {can(user.role, "employee.manage") ? (
-            <Link href="/backoffice/empleados" className="hover:underline">
-              Personal
-            </Link>
-          ) : null}
-        </nav>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Cola de trabajo</h1>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          {items.length === 0
+            ? "No hay copias esperando."
+            : `${items.length} copia(s) esperando una acción.`}
+        </p>
       </div>
 
       {ORDER.filter((state) => byState.has(state)).map((state) => (

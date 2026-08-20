@@ -822,3 +822,36 @@ interfaz**, que es donde tocaba probar HU-03 y HU-04 sin que dos ficheros se dis
 misma copia; `axe` audita ya **doce pantallas** (la ficha cuenta como dos, una por
 proyección). Sincronizados `wireframes.md` (§3.10 nuevo), `ux-flows.md` §7,
 `design-system.md` §6.1, `PRD.md` §9 y `readme.md` §1.3.
+
+### [2026-08-20] — La navegación de superficie, en los dos layouts
+**Prompt:** "lo siguiente del plan es la navegación en los dos layouts
+(wireframes.md §8.5)".
+**Resumen de la respuesta:** Paso 2 de `wireframes.md` §9.2, el que todo lo que viene
+después da por supuesto. Los destinos de cada superficie se declaran en
+**`lib/navigation.ts`** y los pinta **`SurfaceNav`** desde el **layout**: la barra del
+back-office vivía dentro de `backoffice/page.tsx`, así que existía en el centro y no en
+las secciones —de `/backoffice/clientes` a `/backoffice/empleados` había que volver al
+hub—, y ahora está en las cinco.
+**Una lista única en vez de JSX repartido**, porque las tres cosas que pueden salir mal
+son datos y no pintura: **quién ve qué** sale de la **matriz de permisos** y nunca de un
+`if (rol === admin)`; **qué está activo** se marca con `aria-current="page"`, con prefijo
+en las secciones —la ficha de un cliente ilumina `Clientes`— y **coincidencia exacta en
+la raíz**, o `/backoffice` saldría activa en las cinco; y **qué existe todavía no**: los
+destinos sin pantalla se declaran con `pending` y no se pintan, así que el orden de la
+barra es una decisión de diseño y no el orden en que se implementaron las pantallas.
+**Se preguntó antes de construir** qué hacer con el portal, que solo tiene una ruta:
+la opción elegida evita enlaces a 404 —declara sus cinco destinos, pinta uno y por eso
+la barra no aparece— y deja que **W5 y W4 la enciendan quitando una marca**, sin volver
+a tocar los layouts.
+**Efecto colateral que la barra hace evidente:** los tres enlaces «← Volver a la cola de
+trabajo» de las secciones sobraban y se han quitado; el de la ficha de un cliente a su
+lista se queda, porque es un paso atrás y no una sección.
+**No hizo falta traer nada de shadcn** —`navigation-menu` es para menús con submenús;
+esto son cinco enlaces planos dentro de un `<nav>`—, así que esa fila sale de la tabla de
+componentes pendientes de `design-system.md` §6.2.
+**Verificación:** 354 unitarios, `tsc`, `eslint`, `next build` y **29 E2E en dos
+ejecuciones seguidas**, con `e2e/navegacion.spec.ts` probando el salto sección→sección
+que antes no se podía hacer. Tres rojos intermedios en `page.goto` de páginas públicas
+intactas resultaron ser **hambre de CPU con Docker Desktop recién arrancado** (§9.3), no
+una regresión. Sincronizados `wireframes.md` (§8.5 resuelta, §9.2), `design-system.md`
+§6.1/§6.2 y `readme.md` §1.3 + árbol de ficheros.

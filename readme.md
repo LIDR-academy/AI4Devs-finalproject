@@ -133,6 +133,12 @@ y pide el siguiente—.
 > el catálogo deja de ser una rejilla sin destino y **HU-00, HU-03 y HU-04 pasan a
 > verde** — solicitar un set y entrar en la cola ya se hacen desde el navegador.
 >
+> Y con ella, la **navegación de superficie** (`wireframes.md` §2.3 y §8.5): los
+> destinos de cada superficie se declaran en `lib/navigation.ts` —filtrados por la
+> matriz de permisos— y se pintan desde el layout, así que el back-office se recorre de
+> una sección a otra sin volver al centro. La del portal queda declarada y aparece
+> cuando lleguen sus rutas.
+>
 > **Pendiente:** las cuatro pantallas restantes y el videotutorial
 > (`documents/PRD.md` §9, `wireframes.md` §9.2).
 >
@@ -340,8 +346,9 @@ AI4Devs-finalproject-xvm/
 │   ├── http/                 # Adaptador HTTP: contrato RFC 9457, cookie y contexto de sesión
 │   ├── db/prisma.ts          # Cliente Prisma singleton (driver adapter pg)
 │   └── generated/prisma/     # Cliente Prisma generado (gitignored)
-├── components/ui/            # shadcn/ui (new-york, base neutral)
-├── lib/utils.ts              # Helper `cn`
+├── components/               # De producto (`surface-nav`, `status-badge`) …
+│   └── ui/                   # … y shadcn/ui (new-york, base neutral)
+├── lib/                      # Presentación: `status.ts`, `navigation.ts`, helper `cn`
 ├── scheduler/index.ts        # Proceso node-cron aparte
 ├── prisma/
 │   ├── schema.prisma         # Modelo de datos ejecutable (22 modelos / 18 enums)

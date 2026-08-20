@@ -963,6 +963,32 @@ no tiene ninguna porque hoy es una sola ruta.
 Hub y radios funciona con tres secciones. Con las cinco rutas de W5 y la sección nueva de
 W4, no: el rodeo por el centro se paga en cada salto.
 
+**Resuelto el 2026-08-20.** Los destinos de las dos superficies se declaran en
+[`lib/navigation.ts`](../lib/navigation.ts) —una lista por superficie, con el permiso que
+exige cada destino— y los pinta `SurfaceNav` desde **el layout**, no desde la página. Tres
+cosas que la lista única deja resueltas de paso:
+
+- **Quién ve qué sale de la matriz de permisos**, no de una comprobación de rol. El
+  operador ve `Cola de trabajo · Clientes`; el admin, las cuatro. El día que cambie quién
+  puede tocar la configuración, la barra se entera sola.
+- **Los destinos cuya pantalla aún no existe se declaran igualmente**, marcados
+  `pending`, y no se pintan: el orden de la barra es una decisión de diseño y no debe
+  salir del orden en que se implementen las pantallas. W4 y W5 quitan la marca al añadir
+  su ruta y la barra crece sin tocar los layouts.
+- **El activo se marca con `aria-current="page"`**, y la sección sigue activa en sus
+  subrutas —la ficha de un cliente ilumina `Clientes`— salvo la raíz de la superficie,
+  que exige coincidencia exacta o `/backoffice` saldría activa en las cinco secciones.
+
+Con la barra en las cinco páginas, los tres enlaces «← Volver a la cola de trabajo» de las
+secciones sobraban y se han quitado; el de la ficha de un cliente a su lista se queda,
+porque ese sí es un paso atrás y no una sección. El portal declara sus cinco destinos pero
+hoy solo tiene uno construido, así que su barra **no se pinta hasta W5**: una barra que
+siempre apunta a donde ya estás es un adorno.
+
+Lo cubre `e2e/navegacion.spec.ts` —el salto de `Clientes` a `Personal` sin pasar por el
+centro, que es justo lo que antes no se podía hacer— más `tests/navigation.test.ts` y
+`tests/surface-nav.test.tsx`.
+
 ### 8.6 · No hace falta `GET /api/sets`
 
 `app/api/sets/route.ts` solo tiene `POST`. La lista de W4 se resuelve leyendo el
@@ -1009,10 +1035,10 @@ El mismo de `ux-flows.md` §9.2, con lo que cada paso obliga a arreglar antes:
 
 1. ~~**W1 · Ficha de set.**~~ **Hecha el 2026-08-20** (§3). Desbloqueaba HU-03 y HU-04,
    el flujo central del producto, y el catálogo deja de ser una rejilla sin destino.
-2. **La navegación en los dos layouts** (§8.5). Barato, y todo lo que viene después la
-   da por supuesta. ← **siguiente**
+2. ~~**La navegación en los dos layouts**~~ (§8.5). **Hecha el 2026-08-20**: visible ya
+   en el back-office; la del portal queda declarada y aparece cuando W5 traiga sus rutas.
 3. **W5 · Portal ampliado.** Después de W1, porque W1 manda a `/portal/suscripcion` y a
-   `/portal/sets` desde sus avisos de no elegibilidad.
+   `/portal/sets` desde sus avisos de no elegibilidad. ← **siguiente**
 4. **W2 + W3.** Juntos, y **después de arreglar §8.1 y ratificar §8.2**: sin la puerta en
    la cola de trabajo y sin la lista de comprobaciones, no se pueden construir.
 5. **W4 · Catálogo e inventario.** El último de los cinco: es el que menos bloquea a un

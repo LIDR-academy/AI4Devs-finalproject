@@ -784,6 +784,34 @@ project. Read it at the start of every session.
   `axe` audita ya **doce pantallas** (la ficha cuenta como dos: sus dos proyecciones).
   **Residuo:** una ejecución fallida dejó a Ana con una copia alquilada; se limpió **por
   la API** (devolución + transiciones), nunca con `copy.update({state})`.
+- **Navegación de superficie (2026-08-20, paso 2 de `wireframes.md` §9.2):** los
+  destinos de las dos superficies se declaran en **`lib/navigation.ts`** —lista por
+  superficie, cada destino con el **permiso** que exige— y los pinta **`SurfaceNav`**
+  (`components/surface-nav.tsx`) **desde el layout**, no desde la página. Antes la nav
+  del back-office vivía dentro de `backoffice/page.tsx`: existía en el centro y no en
+  las secciones, así que ir de `/backoffice/clientes` a `/backoffice/empleados` obligaba
+  a volver al hub. **Tres decisiones que conviene no re-litigar:** (1) quién ve cada
+  destino sale de la **matriz de permisos**, nunca de una comprobación de rol; (2) los
+  destinos cuya pantalla aún no existe se declaran igualmente con `pending: true` y
+  **no se pintan** —el orden de la barra es diseño, no orden de implementación— y quien
+  construya W4 (`/backoffice/catalogo`) o W5 (las cuatro rutas del portal) solo tiene que
+  **quitar la marca**; (3) el activo se marca con `aria-current="page"`, con prefijo para
+  las secciones (la ficha de un cliente ilumina `Clientes`) y **coincidencia exacta para
+  la raíz** de la superficie, o `/backoffice` saldría activa en las cinco. La barra **no
+  se pinta con menos de dos destinos**, que es por lo que el portal aún no la enseña.
+  Se quitaron los tres «← Volver a la cola de trabajo» de las secciones (redundantes con
+  la barra); se mantiene el de la ficha de cliente → lista, que es un paso atrás, no una
+  sección. `components/` y `lib/` son **presentación**: pueden importar de `src/domain`,
+  y `src/` no los importa jamás.
+  **Verificación:** 354 unitarios (`tests/navigation.test.ts` + `tests/surface-nav.test.tsx`
+  nuevos), `tsc`, `eslint`, `next build` y **29 E2E en dos ejecuciones seguidas**
+  (`e2e/navegacion.spec.ts` nuevo: el salto sección→sección y los destinos que el
+  operador no ve). Sincronizados `wireframes.md` (§8.5 resuelta, §9.2), `design-system.md`
+  §6.1/§6.2 (fuera la fila de `tabs`/`navigation-menu`: no hizo falta shadcn) y
+  `readme.md` §1.3 + árbol.
+  **Trampa de entorno, no de código:** con Docker Desktop recién arrancado, el E2E dio
+  tres rojos en `page.goto` de páginas públicas intactas. Es el hambre de CPU documentada
+  en `wireframes.md` §9.3, no una regresión: con el demonio ya estable, 29/29 en 20 s.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -794,13 +822,13 @@ project. Read it at the start of every session.
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
-  (hoy **344 tests unitarios + 27 E2E**, `openspec validate --strict` en verde). Lo que queda
+  (hoy **354 tests unitarios + 29 E2E**, `openspec validate --strict` en verde). Lo que queda
   fuera del MVP: **diseño visual y UX** —los **tres entregables de diseño están hechos**:
   flujos por rol (`documents/ux-flows.md`), sistema de diseño
   (`documents/design-system.md`) y **wireframes** (`documents/wireframes.md`, 2026-08-20);
   de las cinco pantallas, **W1 (ficha de set) está construida** y **faltan las cuatro
-  restantes**, en el orden de `wireframes.md` §9.2: navegación en los layouts → W5 →
-  W2+W3 → W4— y el despliegue en la VM. **`axe` ya está en el
+  restantes**; la **navegación de superficie** (paso 2) también está hecha, así que el
+  orden que queda de `wireframes.md` §9.2 es: **W5 → W2+W3 → W4**— y el despliegue en la VM. **`axe` ya está en el
   E2E.** La decisión de alcance sobre el plan y el alquiler puntual está **tomada,
   ejecutada y archivada** (cambio `plan-obligatorio-en-alta`, 2026-08-17). **`ux-flows.md`
   §8.2 ya no tiene nada abierto**: los wireframes cerraron los tres puntos que quedaban.

@@ -355,6 +355,7 @@ además rechaza cualquier etiqueta que siga siendo `MAYÚSCULAS_CON_GUIONES`.
 | `Badge` | `components/ui/badge.tsx` | **Un solo eje: el tono.** Ni tamaños ni formas: lo que distingue un estado es el color y, sobre todo, el texto. |
 | `Card` | `components/ui/card.tsx` | Traído con la ficha de set (2026-08-20). **Sin sombra**: la elevación es para lo que flota de verdad, y en oscuro no separa. `Card` y `CardTitle` aceptan `asChild` — el título no fija nivel de encabezado, lo pone quien la usa. |
 | `StatusBadge` | `components/status-badge.tsx` | Recibe el `StatusLabel` ya resuelto, no el estado crudo, para que la decisión de qué ve cada rol viva entera en `lib/status.ts`. |
+| `SurfaceNav` | `components/surface-nav.tsx` | Barra de secciones de una superficie, en el layout (2026-08-20). Recibe los destinos **ya filtrados por permiso** desde el servidor; lo único que hace en cliente es marcar el activo con `aria-current`. En móvil, fila desplazable. |
 | `LogoutButton`, `Terms` | `components/` | De producto, no de sistema. |
 
 ### 6.2 Lo que hará falta traer de shadcn
@@ -366,7 +367,6 @@ Por orden de la primera pantalla que lo necesita (`ux-flows.md` §8.2):
 | ~~`card`~~ | ~~Ficha de set~~ — **traído el 2026-08-20**, ver §6.1. |
 | `input`, `label`, `form` | Registro de condición; hoy los formularios son `<input>` a pelo con clases repetidas. |
 | `dialog` / `alert-dialog` | Confirmar una baja de copia y una cancelación de plan. |
-| `tabs` o `navigation-menu` | Portal ampliado con historial y suscripción (§8.7 de `ux-flows.md`). |
 | `alert` | Vacíos y errores con formato, en vez de un párrafo rojo suelto. |
 | `table` | Back-office: hoy son `<table>` con clases copiadas en cuatro sitios. |
 | `skeleton` | Esperas (§7.3). |
@@ -378,6 +378,11 @@ código muerto que hay que mantener.
 [`wireframes.md`](wireframes.md) §9.1 añade `textarea`, `checkbox`, `radio-group` y
 `select` —los pide el registro de condición y el alta de set— y descarta `tabs`: la
 navegación del portal son cinco **rutas**, no pestañas.
+
+Por eso la fila de `tabs` / `navigation-menu` ha salido de la tabla: la barra de secciones
+se resolvió el mismo día con `SurfaceNav` (§6.1), que son enlaces dentro de un `<nav>` —30
+líneas— y no hizo falta traer nada de shadcn. `navigation-menu` es para menús con
+submenús; aquí hay cinco destinos planos.
 
 ---
 
