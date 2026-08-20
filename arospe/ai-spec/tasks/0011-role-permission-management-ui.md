@@ -162,8 +162,21 @@ Feature: Roles & permissions management UI
   `#[Locked]`, since they identify the row every authorization check resolves — this story reads them
   but must not add, rename or unlock them.) It consumes, without re-deriving, two things 0010 exposes:
   the Super-Admin-excluding roles collection, and a `$canGrantAdministratorLevel` boolean.
-- `resources/views/livewire/roles/index.blade.php` — **the core deliverable** (kebab-case mirror of
-  the class, per `conventions/naming.md`). Contains the list, the create/edit modal, and the delete
+- `resources/views/livewire/roles.blade.php` — **the core deliverable.** **Corrected 2026-08-20
+  (found running 0010's own test suite, which needs this same view to render) — not a kebab-case
+  mirror path, and not nested under `roles/`.** `App\Livewire\Roles\Index` is an `Index` class inside
+  a subfolder, exactly the case
+  [`docs/conventions/naming.md`](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+  documents as an exception to the normal mirror rule: Livewire's `Finder` strips a trailing `.index`
+  segment, so the component resolves to the **flat** file here — the direct analogue of
+  `App\Livewire\Users\Index` → `livewire/users.blade.php`, already shipped. Verified by execution
+  against 0010's real component: `Livewire::test(Index::class)` throws `ViewException: File does not
+  exist at path .../resources/views/livewire/roles.blade.php`; Laravel never even probes the nested
+  `roles/index.blade.php` path. Build the file at the flat path above, not
+  `resources/views/livewire/roles/index.blade.php` — the earlier wording in this bullet and in
+  0010's matching file bullet both had this wrong.
+
+  Contains the list, the create/edit modal, and the delete
   modal. Built with Flux UI: `flux:card` + `flux:table` for the list, `flux:modal` for both dialogs,
   `flux:input` for the role name, `flux:checkbox.group` for each module's permission block, and
   `flux:heading`/`flux:separator` for the per-module grouping.
