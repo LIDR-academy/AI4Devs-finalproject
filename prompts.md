@@ -10,6 +10,7 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [Refactor de Complejidad y Mantenibilidad](#8-refactor-de-complejidad-y-mantenibilidad)
 
 ---
 
@@ -255,5 +256,37 @@ La documentación detallada de las Pull Requests reales se ha integrado en la se
 
 ### Nota de control humano:
 Se auditó la documentación de Pull Requests para asegurar que solo contenga información verídica y verificable del repositorio (evitando la invención de PRs ficticios o pipelines de CI falsos), admitiendo documentar menos de tres PRs cuando no existan más en el historial de Git.
+
+---
+
+## 8. Refactor de Complejidad y Mantenibilidad
+
+### **8.1. Refactor Backend (TK-040)**
+
+**Prompt 1:**
+```md
+Usando el skill de Refactor en `.agents/skills/development/05_quality_and_lint/SK-19_refactor_and_lint.md`, refactoriza los archivos del backend que superan los umbrales de complejidad ciclomática y longitud de función declarados en la configuración del linter (`complexity`, `max-lines-per-function`), extrayendo colaboradores privados sin alterar el comportamiento existente. Verifica con la suite de pruebas y el gate de calidad ticket-scoped que ningún test se rompa.
+```
+
+### Respuesta del agente de IA:
+Se refactorizaron 6 archivos extrayendo colaboradores privados (`setupSwaggerDocs`, `buildDefaultRepositories`, `mountApiRoutes` en `app.ts`; `consumeIngredient` en `ConsumeRecipeUseCase`; `autoDiscardExpiredRemanentes` y `reconcilePhysicalCount` en `PerformShiftReconciliationUseCase`; funciones de seeding por entidad en ambos `seed.ts`; lookup `FALLBACK_INSUMO_DISPLAY` en `InMemoryRemanenteQueryRepository`), sin cambios de comportamiento.
+
+### Nota de control humano:
+Se verificó que los 46 tests del backend siguieran en verde sin modificar ninguno, que el linter quedara en 0 advertencias, y que la duplicación de código no aumentara.
+
+---
+
+### **8.2. Refactor Frontend (TK-041)**
+
+**Prompt 1:**
+```md
+Usando el skill de Refactor en `.agents/skills/development/05_quality_and_lint/SK-19_refactor_and_lint.md`, refactoriza los componentes del frontend que superan los umbrales de complejidad ciclomática y longitud de función, extrayendo subcomponentes locales y custom hooks sin alterar el comportamiento existente. Verifica con la suite de pruebas y el gate de calidad ticket-scoped que ningún test se rompa.
+```
+
+### Respuesta del agente de IA:
+Se refactorizaron 12 archivos: componentes con múltiples estados/secciones inline (`AlertFeed`, `ActiveRemanentesList`, `ReportsDashboard`) se descompusieron en subcomponentes por estado; formularios grandes (`ShiftReconciliationWizard`, `WarehouseExtractionModal`, `RecipeSelectorModal`) extrajeron su estado y handlers a custom hooks; `App.tsx` extrajo su estado a `useDashboardState`/`useModalVisibility` y su JSX a subcomponentes de header, tarjetas resumen y modales; `PinLoginModal.tsx` extrajo header, selector de usuario e indicador de PIN.
+
+### Nota de control humano:
+Se verificó que los 52 tests del frontend siguieran en verde sin modificar ninguno, que el linter quedara en 0 advertencias, y que la duplicación de código no aumentara (1.57%, bajo el umbral del 3%).
 
 ---
