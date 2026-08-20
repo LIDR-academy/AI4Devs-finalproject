@@ -1,7 +1,7 @@
 ---
 name: SK-16_develop_backend_ticket
 description: "Guía el desarrollo atómico de un ticket backend respetando la Arquitectura Hexagonal en Vertical Slices, TDD, sanitización activa de DTOs, precisión matemática de punto fijo, Eager Loading (Anti-N+1), CRUDs de entidades secundarias/pivotes, transacciones de BD, alineación de contrato y mutation score >= 70%."
-version: "3.7.0"
+version: "3.8.0"
 category: "development/02_backend_development"
 inputs:
   - ticket_id: "ID o ruta del ticket técnico (ej. TK-001 o docs/05_agile_planning/tickets/TK-001.md)"
@@ -16,6 +16,7 @@ outputs:
   - "Contrato de API de proyecto actualizado y validado según directivas de backend_rules.md"
   - "Suite TDD en verde con Mutation Score >= 70%"
   - "Auditorías Anti-N+1, Anti-Mass-Assignment y Transacciones de BD aprobadas"
+  - "Gate ticket-scoped de complejidad/longitud/profundidad y gate de duplicación (jscpd) en verde"
 ---
 
 # ⚙️ SK-16: Desarrollador de Tickets Backend (v3.7.0)
@@ -37,7 +38,8 @@ Sigue strictly este flujo de trabajo secuencial:
 1. **FASE RED:** Escribir las pruebas unitarias/integración en el runner del proyecto mapeando las cláusulas BDD Gherkin (`// Given`, `// When`, `// Then`) utilizando repositorios en memoria (`InMemoryRepository`). Confirmar que los tests **FALLAN**.
 2. **FASE GREEN:** Escribir la implementación mínima necesaria en Dominio, Aplicación e Infraestructura para poner las pruebas en **VERDE**.
 3. **Interruptor de Inferencia (Circuit Breaker):** Si los tests permanecen en RED tras 3 intentos consecutivos de auto-reparación, detener la ejecución, preservar el diff y solicitar intervención humana.
-4. **FASE REFACTOR:** Refactorizar el código manteniendo la suite en verde y eliminando duplicación o código muerto.
+4. **FASE REFACTOR:** Refactorizar el código manteniendo la suite en verde y eliminando duplicación o código muerto. Si un método/función supera ~60 líneas o una complejidad ciclomática aproximada de 10 (demasiados `if`/`else`/`switch`/bucles anidados), extrae colaboradores (funciones privadas, Value Objects, clases de política) antes de continuar — son los mismos umbrales que exige el linter (`complexity`, `max-lines-per-function`) y autocorregir aquí evita descubrirlo recién en FASE 5.
+5. **Auditoría de Reuso Previa (obligatoria antes de escribir código nuevo):** Antes de crear un Value Object, caso de uso, repositorio o adaptador nuevo, revisa si ya existe un colaborador equivalente en `domain/`/`application/`/`infrastructure/` (ej. aritmética decimal, validación de rango, boilerplate de repositorio `InMemory`). Si el mismo concepto ya se repite en 2+ casos de uso sin haber sido extraído, extráelo como parte de este ticket en vez de añadir una tercera copia.
 
 ---
 
@@ -81,5 +83,6 @@ Antes de dar por completado el ticket, debes validar y verificar los siguientes 
 2. **Validar Contrato de API:** Ejecutar el comando de validación de contrato de API indicado en `AGENTS.md`.
 3. **Pruebas de Mutación (Mutation Score $\ge 70\%$):** Ejecutar la suite de mutación sobre los módulos creados para garantizar que el Mutation Score sea $\ge 70\%$.
 4. **Compilación & Types:** Ejecuta el comando de build oficial de `AGENTS.md` para asegurar 0 errores de compilación.
-5. **Análisis Estático:** Ejecuta el linter oficial de `AGENTS.md` para garantizar 0 advertencias y 0 errores.
-6. **Reporte al Humano:** Presentar los artefactos creados/modificados y los resultados del pase de calidad estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.
+5. **Análisis Estático (Ticket-Scoped, obligatorio):** Ejecuta `bash .agents/scripts/check_ticket_code_quality.sh` — verifica, con `--max-warnings 0`, que los archivos sin commitear de este ticket no violen `complexity`/`max-lines-per-function`/`max-depth`. Deuda preexistente en archivos que este ticket no tocó no bloquea el cierre (ver `docs/00_stack_manifest.md`), pero cualquier violación en un archivo que este ticket creó o modificó sí lo hace. Además, ejecuta el linter oficial de `AGENTS.md` sobre todo el proyecto para confirmar **0 errores** (los warnings preexistentes fuera del diff de este ticket no bloquean).
+6. **Duplicación (jscpd):** Ejecuta `pnpm run duplication` — gate bloqueante, umbral declarado en `docs/00_stack_manifest.md`.
+7. **Reporte al Humano:** Presentar los artefactos creados/modificados y los resultados del pase de calidad estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

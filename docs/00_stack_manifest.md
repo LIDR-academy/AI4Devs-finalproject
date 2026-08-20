@@ -1,6 +1,6 @@
 ---
 document: stack_manifest
-version: 1.2.0
+version: 1.3.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
 approved_at: "2026-08-19"
@@ -86,7 +86,9 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 
 > **Nota histórica (TK-033):** hasta esta versión, `pnpm run lint` era un alias de `tsc --noEmit` sin ningún linter real detrás — el gate de calidad reportaba "0 errores" sin poder detectar duplicación de estilos, `any` inseguros, ni violaciones de accesibilidad. Corregido instalando ESLint real en ambos workspaces.
 >
-> **Nota histórica (TK-036):** `complexity`, `max-lines-per-function` (≤60) y `max-depth` (≤4) están activas en ambos `eslint.config.*` pero en severidad `warn` — **informativas, no bloqueantes**. Medición inicial: 8 advertencias reales en backend (`runSeed`, `ConsumeRecipeUseCase.execute`, `PerformShiftReconciliationUseCase.execute`, `createApp`, `InMemoryRemanenteQueryRepository.findActiveRemanentes`) y 15 en frontend (sobre todo componentes React donde JSX infla el conteo de líneas), por debajo del umbral solo tras excluir archivos de test. Pasan a bloqueantes cuando se pague esa deuda — mismo criterio que Mutation Testing. La duplicación de código (`jscpd`), en cambio, sí es bloqueante desde ya: el baseline real (1.68%) ya cumple el umbral con margen.
+> **Nota histórica (TK-036):** `complexity`, `max-lines-per-function` (≤60) y `max-depth` (≤4) están activas en ambos `eslint.config.*` pero en severidad `warn` — **informativas a nivel de repositorio completo**, por deuda preexistente: 8 advertencias reales en backend (`runSeed`, `ConsumeRecipeUseCase.execute`, `PerformShiftReconciliationUseCase.execute`, `createApp`, `InMemoryRemanenteQueryRepository.findActiveRemanentes`) y 15 en frontend (sobre todo componentes React donde JSX infla el conteo de líneas). La duplicación de código (`jscpd`), en cambio, es bloqueante desde ya a nivel repositorio: el baseline real (1.68%) ya cumple el umbral con margen.
+>
+> **Nota histórica (TK-037):** activar `complexity`/`max-lines-per-function`/`max-depth` como bloqueantes a nivel repositorio rompería `pnpm run lint` para cualquier ticket futuro sin relación con la deuda existente. En su lugar, `.agents/scripts/check_ticket_code_quality.sh` las hace **bloqueantes acotadas al diff del ticket en curso** (archivos sin commitear — working tree + staged): deuda preexistente en archivos no tocados nunca bloquea, pero código nuevo/modificado sí se exige limpio. Wireado en `SK-16`, `SK-17`, `SK-19` y `04_dev_audit_workflow.md`. En una regeneración completa del proyecto desde cero, todo archivo es "nuevo" en el ticket que lo crea — este mecanismo, aplicado ticket a ticket, produce un repositorio limpio por construcción sin exigir pagar deuda retroactiva.
 
 ---
 
@@ -124,6 +126,9 @@ pnpm run lint
 
 # Detección de duplicación de código (umbral 3%)
 pnpm run duplication
+
+# Gate de complejidad/longitud/profundidad acotado al ticket en curso (sin commitear)
+bash .agents/scripts/check_ticket_code_quality.sh
 
 # Servidor de desarrollo backend
 pnpm --filter @restostock/backend dev
