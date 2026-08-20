@@ -42,6 +42,10 @@ class FakeNotificationRepository implements NotificationRepository {
   async listForUser(): Promise<readonly NotificationView[]> {
     return [];
   }
+  // El emisor no lee el buzón; el puerto lo exige porque lo usa la cabecera del portal.
+  async countUnread() {
+    return 0;
+  }
   async markRead() {
     return true;
   }

@@ -11,6 +11,11 @@
  * nunca de una comprobación de rol: si mañana el operador puede tocar la
  * configuración, la nav se entera sola.
  *
+ * Mientras faltaban pantallas, los destinos sin ruta se declaraban aquí igualmente y
+ * se filtraban con una marca `pending`, para que el orden de la barra fuese una
+ * decisión de diseño y no el orden de implementación. Con W4 y W5 ya no queda ninguno
+ * y la marca se ha retirado; si vuelve a hacer falta, es dos líneas.
+ *
  * Módulo de presentación, como `lib/status.ts`: lo importan `app/` y `components/`,
  * jamás `src/`.
  */
@@ -24,21 +29,19 @@ export interface NavDestination {
   /** Sin permiso no se pinta. Ausente = lo ve cualquiera que entre en la superficie. */
   readonly permission?: Permission;
   /**
-   * La pantalla que lo justifica todavía no está construida. Se declara igualmente
-   * —el orden de la barra es una decisión de diseño (§2.3), no un accidente del orden
-   * de implementación— pero no se pinta: un enlace a un 404 es peor que no tenerlo.
-   * Lo quita quien construya la pantalla, y ese día la nav crece sola.
+   * Contador junto a la etiqueta. Lo pone quien pinta la barra, no la declaración: es
+   * un dato vivo. **El número no viaja solo** — lleva su texto para quien no lo ve.
    */
-  readonly pending?: true;
+  readonly badge?: { count: number; label: string };
 }
 
-/** Portal del suscriptor. Los cuatro pendientes llegan con W5 (§7). */
+/** Portal del suscriptor. Los cinco destinos existen desde W5 (§7). */
 const PORTAL: readonly NavDestination[] = [
   { href: "/portal", label: "Resumen" },
-  { href: "/portal/sets", label: "Mis sets", pending: true },
-  { href: "/portal/historial", label: "Historial", pending: true },
-  { href: "/portal/suscripcion", label: "Suscripción", pending: true },
-  { href: "/portal/avisos", label: "Avisos", pending: true },
+  { href: "/portal/sets", label: "Mis sets" },
+  { href: "/portal/historial", label: "Historial" },
+  { href: "/portal/suscripcion", label: "Suscripción" },
+  { href: "/portal/avisos", label: "Avisos" },
 ];
 
 /** Back-office. Los cinco destinos existen desde W4 (§6). */
@@ -68,9 +71,7 @@ export const NAV_LABEL: Record<Surface, string> = {
 /** Los destinos que este rol puede ver hoy, en el orden declarado. */
 export function navFor(surface: Surface, role: Role): readonly NavDestination[] {
   return DESTINATIONS[surface].filter(
-    (destination) =>
-      !destination.pending &&
-      (destination.permission === undefined || can(role, destination.permission))
+    (destination) => destination.permission === undefined || can(role, destination.permission)
   );
 }
 

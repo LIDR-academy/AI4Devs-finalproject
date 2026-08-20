@@ -135,29 +135,33 @@ y pide el siguiente—.
 >
 > Y con ella, la **navegación de superficie** (`wireframes.md` §2.3 y §8.5): los
 > destinos de cada superficie se declaran en `lib/navigation.ts` —filtrados por la
-> matriz de permisos— y se pintan desde el layout, así que el back-office se recorre de
-> una sección a otra sin volver al centro. La del portal queda declarada y aparece
-> cuando lleguen sus rutas.
+> matriz de permisos— y se pintan desde el layout, así que cada superficie se recorre de
+> una sección a otra sin volver al centro.
 >
-> **Construida también W4** (`wireframes.md` §6, 2026-08-20): el **catálogo e
+> **Construida W4** (`wireframes.md` §6, 2026-08-20): el **catálogo e
 > inventario del back-office**, con su lista —que incluye los sets **sin publicar**, los
 > únicos a los que no se llega por ninguna otra puerta— y la ficha con el alta, la
 > edición, la publicación y las copias de cada set. **HU-10 pasa a verde**: dar de alta
-> un set, tasarlo, publicarlo y ponerle copias ya se hace desde el navegador. Con ella,
-> **13 de 18** historias tienen recorrido completo por interfaz.
+> un set, tasarlo, publicarlo y ponerle copias ya se hace desde el navegador.
 >
-> **Pendiente:** W5 (portal ampliado) y W2+W3 (registro de condición y discrepancia),
-> estas dos bloqueadas por `wireframes.md` §8.1 y §8.2; y el videotutorial
-> (`documents/PRD.md` §9, `wireframes.md` §9.2).
+> **Y W5** (`wireframes.md` §7, 2026-08-20): el **portal ampliado**, repartido en sus
+> cinco rutas —resumen, mis sets, historial, suscripción y avisos— con la barra de
+> navegación y su contador de avisos sin leer. **HU-09 pasa a verde**: pausar, cancelar
+> y reactivar tenían API desde el principio y ningún sitio donde pulsarlas. Con ella,
+> **14 de 18** historias tienen recorrido completo por interfaz.
+>
+> **Pendiente:** W2+W3 (registro de condición y discrepancia), bloqueadas por
+> `wireframes.md` §8.1 y §8.2; y el videotutorial (`documents/PRD.md` §9,
+> `wireframes.md` §9.2).
 >
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales
 > de UX ya fijados: **responsive mobile-first** y **accesibilidad WCAG 2.1 AA**
 > (EN 301 549 / European Accessibility Act) — el contraste y el foco se comprueban
-> solos contra el CSS real, y **`axe` audita catorce pantallas** (las cinco públicas, la
-> ficha de set en sus dos proyecciones, el portal, las cinco del back-office y la ficha
-> de catálogo) más el **diálogo de alta de set abierto**, en el E2E y con las etiquetas
-> WCAG 2.1 A/AA.
+> solos contra el CSS real, y **`axe` audita dieciocho pantallas** (las cinco públicas, la
+> ficha de set en sus dos proyecciones, las cinco del portal, las cinco del back-office
+> y la ficha de catálogo) más **dos diálogos abiertos** —el alta de set y la
+> cancelación de suscripción—, en el E2E y con las etiquetas WCAG 2.1 A/AA.
 
 ### **1.4. Instrucciones de instalación:**
 

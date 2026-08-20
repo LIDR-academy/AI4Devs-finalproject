@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "./fixtures";
-import { login } from "./sesion";
+import { login, registrarSuscriptora } from "./sesion";
 
 /**
  * Auditoría automática de accesibilidad con axe-core.
@@ -20,8 +20,19 @@ import { login } from "./sesion";
 
 const REGLAS_WCAG_21_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
-/** Ejecuta axe sobre la página ya cargada y falla con un informe legible. */
+/**
+ * Ejecuta axe sobre la página ya cargada y falla con un informe legible.
+ *
+ * **Se espera a que no quede ninguna animación corriendo.** Un diálogo que aún está
+ * entrando tiene la opacidad a medias, y axe mide el color mezclado con lo que hay
+ * debajo: da fallos de contraste en textos que, quietos, pasan de sobra. Es un fallo
+ * de la prueba, no de la pantalla, y encontrarlo cuesta una tarde.
+ */
 async function auditar(page: Page): Promise<void> {
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== "running")
+  );
+
   const { violations } = await new AxeBuilder({ page })
     .withTags(REGLAS_WCAG_21_AA)
     .analyze();
@@ -80,9 +91,46 @@ test("sin incidencias de accesibilidad: ficha de set (suscriptora)", async ({ pa
   await auditar(page);
 });
 
+/**
+ * Portal del suscriptor: las cinco rutas de W5, más el **diálogo de cancelación**
+ * abierto —axe solo ve lo que está en el DOM—. Se abre y se cierra con "Volver": la
+ * auditoría no puede tener efectos, y confirmar cancelaría la suscripción de Ana.
+ */
+const PAGINAS_PORTAL = [
+  { ruta: "/portal", nombre: "resumen" },
+  { ruta: "/portal/sets", nombre: "mis sets" },
+  { ruta: "/portal/historial", nombre: "historial" },
+  { ruta: "/portal/suscripcion", nombre: "suscripción" },
+  { ruta: "/portal/avisos", nombre: "avisos" },
+];
+
 test("sin incidencias de accesibilidad: portal del suscriptor", async ({ page }) => {
   await login(page, "ana@example.test");
+  for (const { ruta, nombre } of PAGINAS_PORTAL) {
+    await test.step(nombre, async () => {
+      await page.goto(ruta);
+      await auditar(page);
+    });
+  }
+
+});
+
+/**
+ * El diálogo de cancelación, sobre una cuenta **recién creada**: con un set en su poder
+ * el botón sale deshabilitado —es la regla de `canEndSubscription`— y Ana puede tener
+ * uno, porque el circuito completo corre en paralelo. Se abre y se cierra con "Volver":
+ * una auditoría no puede tener efectos.
+ */
+test("sin incidencias de accesibilidad: cancelar la suscripción", async ({ page, request }) => {
+  const email = `axe-${Date.now()}@example.test`;
+  await registrarSuscriptora(request, email);
+  await login(page, email);
+
+  await page.goto("/portal/suscripcion");
+  await page.getByRole("button", { name: "Cancelar la suscripción" }).click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
   await auditar(page);
+  await page.getByRole("button", { name: "Volver" }).click();
 });
 
 /**

@@ -28,8 +28,32 @@ describe("SurfaceNav", () => {
     );
   });
 
-  // Con un solo destino la barra apuntaría siempre a donde ya estás. Es lo que pasa
-  // hoy en el portal, y por eso no se pinta hasta que W5 traiga sus rutas.
+  /**
+   * El contador de avisos sin leer: **el único adorno numérico** de la cabecera del
+   * portal (§7.1). Lo que se prueba es que el número no viaje solo — un "3" pelado se
+   * anunciaría como "Avisos 3" y no significa nada.
+   */
+  it("el contador lleva su texto para quien no lo ve", () => {
+    pathname.value = "/portal";
+    render(
+      <SurfaceNav
+        label="Portal"
+        destinations={[
+          { href: "/portal", label: "Resumen" },
+          {
+            href: "/portal/avisos",
+            label: "Avisos",
+            badge: { count: 3, label: "3 avisos sin leer" },
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("link", { name: "Avisos: 3 avisos sin leer" })).toBeInTheDocument();
+    expect(screen.getByText("3")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  // Con un solo destino la barra apuntaría siempre a donde ya estás.
   it("no se pinta con un solo destino", () => {
     pathname.value = "/portal";
     const { container } = render(

@@ -851,6 +851,41 @@ project. Read it at the start of every session.
   no contempla borrar un Set y la prueba no lo salta por detrás.
   **Verificación:** 366 unitarios, `tsc`, `eslint`, `next build` y **33 E2E en dos
   ejecuciones seguidas**; `axe` audita ya catorce pantallas más el diálogo de alta.
+- **W5 hecha — portal ampliado (2026-08-20):** las cinco rutas de `wireframes.md` §7
+  (`/portal`, `/portal/sets`, `/portal/historial`, `/portal/suscripcion`,
+  `/portal/avisos`) con la barra del layout encendida y el **contador de avisos sin
+  leer** (`NotificationRepository.countUnread`, nuevo). **HU-09 en verde** —pausar,
+  cancelar y reactivar tenían API y ningún botón—; **14 de 18** historias con recorrido
+  por interfaz. Piezas: `subscription-actions.tsx` (PlanSwitcher con el aviso de
+  downgrade **precalculado en el servidor**, pausar/reactivar y cancelar con
+  `AlertDialog`), `avisos/notification-actions.tsx`, y `components/ui/alert-dialog.tsx`
+  **escrito a mano** sobre Radix porque el generador de shadcn insistía en sobrescribir
+  `button.tsx` (`npx shadcn add` es interactivo y se cuelga en entorno no interactivo).
+  **Decisiones:** (1) **las colas viven en "Mis sets"** — §2.3 fija cinco destinos y no
+  hay sexta ruta; (2) los dos veredictos (`canSwitchToPlan`, `canEndSubscription`) se
+  calculan **al pintar**, así que el 409 queda para la carrera; (3) `pending` en
+  `lib/navigation.ts` **se retiró**: ya no queda ningún destino sin pantalla.
+  **Hallazgo de producto abierto:** **cancelar es un callejón sin salida** —
+  `findCurrentSubscription` ignora las canceladas (correcto) y `register` exige email
+  nuevo, así que no hay forma de recontratar desde la web. Falta un "recontratar" que
+  reabra suscripción a un usuario existente.
+  **Dos textos corregidos:** cancelar **no** saca de las colas (las entradas siguen y el
+  recorrido las salta por no elegible, D5), y el precio se pintaba con el decimal crudo
+  ("24.99 €/mes") porque viaja como cadena.
+  **Trampa de axe, anotada porque volverá:** medía el contraste **mientras el diálogo
+  entraba** —opacidad a medias, color mezclado con lo de debajo— y daba falsos fallos.
+  `auditar()` espera ahora a `document.getAnimations()` en reposo.
+  **E2E:** `e2e/portal.spec.ts` crea **su propia cuenta** por ejecución (helper
+  `registrarSuscriptora` en `e2e/sesion.ts`): pausar o cancelar cambia el estado del
+  suscriptor entero y chocaría con el circuito completo, que corre en paralelo. El
+  circuito hubo que adaptarlo: la devolución ya no está en el resumen sino en
+  `/portal/sets`.
+  **Limpieza de residuo:** dos ejecuciones fallidas dejaron a Ana con dos sets y a Bruno
+  en una cola; se limpió **por el dominio** (script `tsx --env-file=.env` llamando a
+  `leaveQueue`, `startReturn` y `advanceCopyLifecycle`), nunca tocando `copy.state`.
+  **Verificación:** 367 unitarios, `tsc`, `eslint`, `next build` y **36 E2E en dos
+  ejecuciones seguidas** dejando la base limpia (0 alquileres abiertos, 0 colas vivas);
+  `axe` audita 18 pantallas y 2 diálogos.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -861,13 +896,13 @@ project. Read it at the start of every session.
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
-  (hoy **366 tests unitarios + 33 E2E**, `openspec validate --strict` en verde). Lo que queda
+  (hoy **367 tests unitarios + 36 E2E**, `openspec validate --strict` en verde). Lo que queda
   fuera del MVP: **diseño visual y UX** —los **tres entregables de diseño están hechos**:
   flujos por rol (`documents/ux-flows.md`), sistema de diseño
   (`documents/design-system.md`) y **wireframes** (`documents/wireframes.md`, 2026-08-20);
-  de las cinco pantallas están construidas **W1 (ficha de set)** y **W4 (catálogo e
-  inventario)**, más la **navegación de superficie**; queda **W5** (sin bloqueantes) y
-  **W2+W3**, que siguen esperando a §8.1 y §8.2— y el despliegue en la VM. **`axe` ya está en el
+  de las cinco pantallas están construidas **W1 (ficha de set)**, **W4 (catálogo e
+  inventario)** y **W5 (portal ampliado)**, más la **navegación de superficie**; solo
+  quedan **W2+W3**, bloqueadas por §8.1 y §8.2— y el despliegue en la VM. **`axe` ya está en el
   E2E.** La decisión de alcance sobre el plan y el alquiler puntual está **tomada,
   ejecutada y archivada** (cambio `plan-obligatorio-en-alta`, 2026-08-17). **`ux-flows.md`
   §8.2 ya no tiene nada abierto**: los wireframes cerraron los tres puntos que quedaban.

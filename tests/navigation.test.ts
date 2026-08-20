@@ -32,14 +32,14 @@ describe("navFor", () => {
     expect(admin.indexOf("Clientes")).toBeLessThan(admin.indexOf("Configuración"));
   });
 
-  /**
-   * Lo que protege este par de pruebas: que nadie enseñe un destino antes de que
-   * exista su pantalla. Hoy el portal se queda en un único destino —los otros cuatro
-   * llegan con W5— y por eso su barra ni se pinta.
-   */
-  it("no ofrece los destinos cuya pantalla aún no existe", () => {
-    // El portal es hoy el único con pendientes: sus otras cuatro rutas llegan con W5.
-    expect(labels("portal", "SUBSCRIBER")).toEqual(["Resumen"]);
+  it("el portal tiene sus cinco destinos, en el orden de §2.3", () => {
+    expect(labels("portal", "SUBSCRIBER")).toEqual([
+      "Resumen",
+      "Mis sets",
+      "Historial",
+      "Suscripción",
+      "Avisos",
+    ]);
   });
 
   it("un rol sin acceso a la superficie no ve ninguna sección con permiso", () => {

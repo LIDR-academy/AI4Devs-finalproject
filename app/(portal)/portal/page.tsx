@@ -1,42 +1,40 @@
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/status-badge";
-import {
-  copyStatus,
-  notificationLabel,
-  queueStatus,
-  simultaneousSets,
-  subscriptionStatus,
-} from "@/lib/status";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { occupiesPlanSlot } from "@/domain/subscriptions/eligibility";
 import { prisma } from "@/db/prisma";
 import { requireSurfacePage } from "@/http/auth-context";
-import { prismaNotificationRepository } from "@/repositories/notification.repository.prisma";
+import { copyStatus, queueStatus, simultaneousSets, subscriptionStatus } from "@/lib/status";
 import { prismaQueueRepository } from "@/repositories/queue.repository.prisma";
 import { prismaRentalRepository } from "@/repositories/rental.repository.prisma";
 import { prismaSubscriptionRepository } from "@/repositories/subscription.repository.prisma";
 
-import { OfferButtons, PlanSwitcher, ReturnButton } from "./portal-actions";
+import { OfferButtons } from "./portal-actions";
 
 export const metadata = { title: "Mi portal" };
 
 const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" });
+const DAY = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium" });
+const EUR = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 
-/** Estados de copia en los que el suscriptor todavía puede iniciar la devolución. */
-const RETURNABLE = "ALQUILADA";
+/** Cuántas filas se enseñan en corto antes de mandar a la pantalla completa. */
+const RESUMEN = 3;
 
 /**
- * Portal del suscriptor: lo que tiene fuera, en qué colas está y qué le han avisado.
+ * Resumen del portal — `wireframes.md` §7.2.
  *
- * Es la pantalla que cierra el circuito para el cliente: desde aquí devuelve un set y
- * responde a una oferta de cola, que son las dos únicas acciones que le corresponden.
+ * Responde a "¿puedo pedir un set?", que es la pregunta con la que se entra, y **no
+ * repite** lo que hay en las otras cuatro pantallas: de "Mis sets" y "Mis colas"
+ * enseña las tres primeras y manda a verlas enteras.
  */
 export default async function PortalPage() {
   const { user } = await requireSurfacePage("portal");
 
-  const [rentals, queueEntries, notifications, offers, subscription, plans] = await Promise.all([
+  const [rentals, queueEntries, offers, subscription, plans, copyStates] = await Promise.all([
     prismaRentalRepository.listForUser(user.id, { activeOnly: true }),
     prismaQueueRepository.listEntriesForUser(user.id),
-    prismaNotificationRepository.listForUser(user.id, { limit: 10 }),
     // Ofertas vivas dirigidas a este usuario; es lo que convierte "te toca" en una
     // acción que puede ejecutar sin salir de aquí.
     prisma.reservationOffer.findMany({
@@ -49,28 +47,26 @@ export default async function PortalPage() {
     }),
     prismaSubscriptionRepository.findCurrentSubscription(user.id),
     prismaSubscriptionRepository.listPlans(),
+    prismaSubscriptionRepository.currentCopyStates(user.id),
   ]);
 
   const currentPlan = plans.find((plan) => plan.code === subscription?.planCode);
-  // Solo los planes a los que puede cambiarse: el que ya tiene no es una opción.
-  const otherPlans = plans.filter((plan) => plan.active && plan.code !== subscription?.planCode);
+  // Se cuenta con el mismo conjunto que decide la elegibilidad, no con "los sets que
+  // tengo en casa": si no, una copia en inspección desaparecería de la cuenta y el
+  // número contradiría al veredicto de la ficha de set.
+  const occupied = copyStates.filter(occupiesPlanSlot).length;
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Hola, {user.fullName}</h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          <Link href="/catalogo" className="hover:underline">
-            Explorar el catálogo
-          </Link>
-        </p>
-      </div>
+      <h1 className="text-2xl font-bold tracking-tight">Hola, {user.fullName}</h1>
 
-      {/* El único bloque del portal que reclama algo, y el único con tono de
-          aviso: si todo grita, no grita nada. La ventana caduca sola. */}
+      {/* El único bloque del portal que reclama algo, y el único con tono de aviso: si
+          todo grita, no grita nada. Se queda arriba del todo y en el resumen —no en su
+          propia pestaña— porque esconder tras un clic lo único urgente, y que además
+          caduca solo, sería el peor sitio posible. */}
       {offers.length > 0 ? (
         <section
-          className="space-y-3 rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning)] p-4 text-[var(--tone-warning-foreground)]"
+          className="flex flex-col gap-3 rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning)] p-4 text-[var(--tone-warning-foreground)]"
           aria-labelledby="te-toca"
         >
           <h2 id="te-toca" className="text-lg font-semibold">
@@ -88,104 +84,127 @@ export default async function PortalPage() {
         </section>
       ) : null}
 
-      <section className="space-y-3" aria-labelledby="portal-plan">
-        <h2 id="portal-plan" className="text-lg font-semibold">Tu plan</h2>
-        {subscription && subscription.status === "ACTIVE" && currentPlan ? (
-          <div className="space-y-3 rounded-md border p-4">
-            <p className="flex flex-wrap items-center gap-2 text-sm">
-              <StatusBadge status={subscriptionStatus(subscription.status)} />
-              <span>
-                <strong>{currentPlan.name}</strong> · {currentPlan.monthlyPrice} €/mes ·{" "}
-                {simultaneousSets(currentPlan.maxSimultaneousSets)}
-              </span>
-            </p>
-            <PlanSwitcher options={otherPlans} />
-          </div>
-        ) : (
-          <div className="space-y-2 rounded-md border p-4">
-            {subscription ? <StatusBadge status={subscriptionStatus(subscription.status)} /> : null}
-            <p className="text-sm text-[var(--muted-foreground)]">
-              No tienes ningún plan activo, así que no puedes llevarte sets.{" "}
-              <Link href="/planes" className="hover:underline">
-                Ver los planes
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card asChild>
+          <section aria-labelledby="tu-plan">
+          <CardHeader>
+            <CardTitle asChild>
+              <h2 id="tu-plan" className="text-base">
+                Tu plan
+              </h2>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {subscription && currentPlan ? (
+              <>
+                <p className="flex flex-wrap items-center gap-2 text-sm">
+                  <StatusBadge status={subscriptionStatus(subscription.status)} />
+                  <span>
+                    <strong>{currentPlan.name}</strong> ·{" "}
+                    {EUR.format(Number(currentPlan.monthlyPrice))}/mes
+                  </span>
+                </p>
+                <p className="text-sm text-[var(--muted-foreground)]">
+                  {simultaneousSets(subscription.maxSimultaneousSets)}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-[var(--muted-foreground)]">
+                No tienes ningún plan activo, así que no puedes llevarte sets.
+              </p>
+            )}
+            <Button asChild size="sm" variant="outline" className="self-start">
+              <Link href={subscription ? "/portal/suscripcion" : "/planes"}>
+                {subscription ? "Gestionar" : "Ver los planes"}
               </Link>
-            </p>
-          </div>
-        )}
-      </section>
+            </Button>
+          </CardContent>
+          </section>
+        </Card>
 
-      <section className="space-y-3" aria-labelledby="portal-sets">
-        <h2 id="portal-sets" className="text-lg font-semibold">Mis sets</h2>
+        <Card asChild>
+          <section aria-labelledby="ahora-mismo">
+          <CardHeader>
+            <CardTitle asChild>
+              <h2 id="ahora-mismo" className="text-base">
+                Ahora mismo
+              </h2>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* El dato que explica por adelantado el `PLAN_LIMIT_REACHED` que puede
+                devolver la ficha de set. */}
+            <p className="text-sm">
+              {subscription
+                ? `${occupied} de ${subscription.maxSimultaneousSets} plazas ocupadas`
+                : `${occupied} set(s) en tu poder`}
+            </p>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              {queueEntries.length === 1
+                ? "1 cola activa"
+                : `${queueEntries.length} colas activas`}
+            </p>
+            <Button asChild size="sm" variant="outline" className="self-start">
+              <Link href="/catalogo">Explorar el catálogo</Link>
+            </Button>
+          </CardContent>
+          </section>
+        </Card>
+      </div>
+
+      <section className="flex flex-col gap-3" aria-labelledby="resumen-sets">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="resumen-sets" className="text-lg font-semibold">
+            Mis sets ({rentals.length})
+          </h2>
+          <Link href="/portal/sets" className="text-sm hover:underline">
+            Ver todos ›
+          </Link>
+        </div>
         {rentals.length === 0 ? (
           <p className="text-sm text-[var(--muted-foreground)]">
-            No tienes ningún set ahora mismo.
+            No tienes ningún set ahora mismo.{" "}
+            <Link href="/catalogo" className="underline">
+              Explorar el catálogo
+            </Link>
           </p>
         ) : (
-          <ul className="space-y-3">
-            {rentals.map((rental) => {
-              // Al suscriptor no se le cuenta el estado exacto de la copia: los
-              // cuatro pasos del circuito de devolución son "devolución en curso".
-              const status = copyStatus(rental.copyState, "subscriber");
-              return (
-                <li
-                  key={rental.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-4"
-                >
-                  <div className="space-y-1">
-                    <p className="flex flex-wrap items-center gap-2 font-medium">
-                      {rental.setName}
-                      <StatusBadge status={status} />
-                    </p>
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      Desde el {DATE.format(rental.startedAt)}
-                      {status.hint ? ` · ${status.hint}` : ""}
-                    </p>
-                  </div>
-                  {rental.copyState === RETURNABLE ? <ReturnButton rentalId={rental.id} /> : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      <section className="space-y-3" aria-labelledby="portal-colas">
-        <h2 id="portal-colas" className="text-lg font-semibold">Mis colas</h2>
-        {queueEntries.length === 0 ? (
-          <p className="text-sm text-[var(--muted-foreground)]">No estás en ninguna cola.</p>
-        ) : (
-          <ul className="space-y-2 text-sm">
-            {queueEntries.map((entry) => (
-              <li key={entry.id} className="space-y-1 rounded-md border p-3">
-                <p className="flex flex-wrap items-center gap-2">
-                  <strong>{entry.setName}</strong>
-                  <StatusBadge status={queueStatus(entry.status, "subscriber")} />
-                </p>
-                <p className="text-[var(--muted-foreground)]">
-                  Desde el {DATE.format(entry.enqueuedAt)}
-                  {entry.appliedBonusDays > 0
-                    ? ` · ventaja de ${entry.appliedBonusDays} días`
-                    : ""}
-                </p>
+          <ul className="flex flex-col gap-2 text-sm">
+            {rentals.slice(0, RESUMEN).map((rental) => (
+              <li key={rental.id} className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{rental.setName}</span>
+                <StatusBadge status={copyStatus(rental.copyState, "subscriber")} />
+                <span className="text-[var(--muted-foreground)]">
+                  desde el {DAY.format(rental.startedAt)}
+                </span>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="space-y-3" aria-labelledby="portal-avisos">
-        <h2 id="portal-avisos" className="text-lg font-semibold">Avisos</h2>
-        {notifications.length === 0 ? (
-          <p className="text-sm text-[var(--muted-foreground)]">Nada nuevo.</p>
+      <section className="flex flex-col gap-3" aria-labelledby="resumen-colas">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="resumen-colas" className="text-lg font-semibold">
+            Mis colas ({queueEntries.length})
+          </h2>
+          <Link href="/portal/sets" className="text-sm hover:underline">
+            Ver todas ›
+          </Link>
+        </div>
+        {queueEntries.length === 0 ? (
+          <p className="text-sm text-[var(--muted-foreground)]">
+            No estás en ninguna cola.{" "}
+            <Link href="/catalogo" className="underline">
+              Explorar el catálogo
+            </Link>
+          </p>
         ) : (
-          <ul className="space-y-2 text-sm">
-            {notifications.map((notification) => (
-              <li key={notification.id} className="rounded-md border p-3">
-                {/* En la base el aviso se llama `QUEUE_TURN`; en pantalla, no. */}
-                <span className="font-medium">{notificationLabel(notification.type)}</span>{" "}
-                <span className="text-[var(--muted-foreground)]">
-                  · {DATE.format(notification.sentAt)}
-                </span>
+          <ul className="flex flex-col gap-2 text-sm">
+            {queueEntries.slice(0, RESUMEN).map((entry) => (
+              <li key={entry.id} className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{entry.setName}</span>
+                <StatusBadge status={queueStatus(entry.status, "subscriber")} />
               </li>
             ))}
           </ul>

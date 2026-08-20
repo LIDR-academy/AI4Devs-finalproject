@@ -52,6 +52,10 @@ export const prismaNotificationRepository: NotificationRepository = {
     );
   },
 
+  async countUnread(userId) {
+    return prisma.notification.count({ where: { userId, readAt: null } });
+  },
+
   async markRead({ notificationId, userId, at }) {
     // El `userId` va en el WHERE, no en una comprobación previa: así es imposible
     // marcar como leída la notificación de otro, ni siquiera por un fallo de lógica.

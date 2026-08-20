@@ -895,3 +895,38 @@ prueba vive donde no depende del estado de la base: en un test de componente.
 ejecuciones seguidas**, con `axe` auditando catorce pantallas más el diálogo de alta.
 Sincronizados `wireframes.md` (§6.6 nueva, §9.1, §9.2 y §9.4), `design-system.md`
 §6.1/§6.2 y `readme.md` §1.3 + árbol.
+
+### [2026-08-20] — W5: el portal ampliado
+**Prompt:** "commit y seguimos".
+**Resumen de la respuesta:** Las cinco rutas de `wireframes.md` §7 —resumen, mis sets,
+historial, suscripción y avisos— con la barra del portal ya encendida y su **contador
+de avisos sin leer**. **HU-09 pasa a verde**: pausar, cancelar y reactivar tenían API
+desde el principio y ningún sitio donde pulsarlas. **14 de 18** historias con recorrido
+completo por interfaz.
+**Los dos veredictos se calculan al pintar, no se esperan como error.**
+`canSwitchToPlan` dice **cuántos** sets habría que devolver para bajar de plan y
+`canEndSubscription` si se puede pausar; el suscriptor lo sabe antes de pulsar y el 409
+queda para la carrera. Y miden cosas distintas a propósito: el cambio de plan cuenta lo
+que **ocupa plaza**; pausar y cancelar, solo lo que está **en su poder**. Con una copia
+en inspección se puede pausar pero no bajar de plan.
+**Dos decisiones de estructura:** las **colas viven en "Mis sets"** —§2.3 fija cinco
+destinos y no hay sexta ruta, y una cola es lo mismo que un set en casa visto un paso
+antes—; y **cancelar abre un `alertdialog`**, no un `dialog`: interrumpe pidiendo una
+decisión y no lleva más campos que sus dos botones. Se escribió a mano sobre Radix
+porque el generador de shadcn insistía en sobrescribir `button.tsx`.
+**El hallazgo, y sigue abierto: cancelar es un callejón sin salida.** Una suscripción
+cancelada ya no rige, así que no hay nada que reactivar, y el alta exige un email nuevo:
+un cliente que cancela no puede volver por la web. El diálogo lo dice sin adornos y
+empuja a pausar, pero el hueco es de producto y falta un "recontratar".
+**Dos textos que solo se corrigen construyendo:** cancelar **no** saca de las colas —las
+entradas siguen y el recorrido las salta por no elegible (D5)—, así que decirlo habría
+sido mentira; y el precio se pintaba como "24.99 €/mes" porque el decimal viaja como
+cadena.
+**Una trampa de la auditoría automática:** `axe` medía el contraste **mientras el
+diálogo entraba**, con la opacidad a medias, y fallaba en textos que quietos pasan de
+sobra. Ahora espera a que no quede ninguna animación corriendo.
+**Verificación:** 367 unitarios, `tsc`, `eslint`, `next build` y **36 E2E en dos
+ejecuciones seguidas** dejando la base limpia. Las pruebas del portal crean **su propia
+cuenta**: pausar o cancelar cambia el estado del suscriptor entero y chocaría con el
+circuito completo, que corre en paralelo. Sincronizados `wireframes.md` (§7.7 nueva,
+§8.4, §9.1, §9.2 y §9.4), `design-system.md` §6.1/§6.2 y `readme.md` §1.3.

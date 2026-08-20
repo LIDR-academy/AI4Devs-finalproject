@@ -939,6 +939,42 @@ el aviso se llama `QUEUE_TURN`; en pantalla, "Te toca un set de tu cola".
   de romperse con cada cambio de redacción—; el contador de avisos no es solo el número,
   lleva texto accesible ("3 avisos sin leer").
 
+### 7.7 Lo que salió de construirla
+
+**Hecha el 2026-08-20.** Las cinco rutas —`/portal`, `/portal/sets`,
+`/portal/historial`, `/portal/suscripcion` y `/portal/avisos`— con la barra del layout
+ya encendida y su contador de avisos sin leer. **HU-09 pasa a verde**: pausar, cancelar
+y reactivar tenían API desde el principio y ningún sitio donde pulsarlas.
+
+**Las colas viven en «Mis sets».** El wireframe pone "Ver todas ›" junto a "Mis colas"
+sin decir a dónde, y §2.3 fija cinco destinos: no hay sexta ruta. Se resuelve juntando
+en una pantalla lo que el suscriptor tiene y lo que espera —una cola es lo mismo un
+paso antes—, y los dos "Ver todos" apuntan ahí.
+
+**El hallazgo: cancelar es un callejón sin salida.** `findCurrentSubscription` ignora
+las canceladas —correctamente: una suscripción cancelada ya no rige—, así que después
+de cancelar **no hay nada que reactivar**, y `POST /api/auth/register` exige un email
+nuevo. O sea que un cliente que cancela no puede volver por la web. El texto del
+diálogo lo dice sin adornos ("es definitivo desde el portal") y empuja a **pausar**,
+que es lo que casi siempre se quiere; pero el hueco es de producto, no de pantalla, y
+sigue abierto: falta un "recontratar" que reabra suscripción para un usuario existente.
+
+**Dos textos que la pantalla obligó a corregir:** cancelar **no** saca al suscriptor de
+sus colas —las entradas siguen ahí y el recorrido las salta por no ser elegible (D5)—,
+así que decir "saldrás de las colas" habría sido mentira; y el precio se pintaba con el
+decimal crudo ("24.99 €/mes") porque viaja como cadena, cuando el resto de la
+aplicación ya lo formatea en español.
+
+**Una lección de la auditoría automática:** `axe` medía el contraste **mientras el
+diálogo entraba**, con la opacidad a medias, y daba fallos de contraste en textos que,
+quietos, pasan de sobra. La auditoría espera ahora a que no quede ninguna animación
+corriendo. Era un fallo de la prueba, no de la pantalla.
+
+**Y el residuo, otra vez:** las pruebas de esta pantalla crean **su propia cuenta** en
+cada ejecución en vez de tocar a Ana o a Bruno. Pausar o cancelar cambia el estado del
+suscriptor entero, y el circuito completo —que corre en paralelo— cuenta con que su
+suscripción esté activa.
+
 ---
 
 ## 8. Lo que destapa dibujar estas pantallas
@@ -989,7 +1025,8 @@ justamente lo que pide HU-06.
 
 Se arregla en el repositorio —contar entradas activas con `effectiveEntryAt` anterior, en
 el mismo set—, no en la pantalla. Hasta entonces, la posición solo se ve entrando en la
-ficha de cada set (W1 §3.4).
+ficha de cada set (W1 §3.4), y eso es literalmente lo que dice "Mis colas" en
+`/portal/sets` desde W5: **sigue abierto**.
 
 ### 8.5 · La navegación de superficie no está en los layouts
 
@@ -1063,9 +1100,9 @@ componente sin uso es código muerto.
 | `checkbox`, `radio-group` | W2 — la lista de comprobación y el resultado |
 | ~~`select`~~ | **No se trae**: el tema es un `<select>` nativo — veinte opciones planas, mejor en móvil y sin JavaScript. |
 | ~~`dialog`~~ | **Traído con W4** (alta y edición de set, y la baja de copia con su motivo). Lo reutiliza W3. |
-| `alert-dialog` | W5 — cancelar la suscripción. **Ya no** para `[ Dar de baja ]`: esa pide un motivo, y `alertdialog` es para decidir, no para rellenar (§6.6). |
+| ~~`alert-dialog`~~ | **Traído con W5** para cancelar la suscripción — escrito a mano sobre Radix, porque el generador de shadcn insistía en sobrescribir `button.tsx`. **No** para `[ Dar de baja ]`: esa pide un motivo, y `alertdialog` es para decidir, no para rellenar (§6.6). |
 | `alert` | Los avisos de no elegibilidad (W1 §3.5) y de downgrade (W5 §7.4) |
-| `table` | El historial de W5. W4 no lo trajo: sus tablas siguen el mismo `<table>` con tokens que las otras cuatro del back-office, y traerlo solo para una habría dejado cinco tablas con dos estilos. |
+| `table` | **No hizo falta**: el historial de W5 usa el mismo `<table>` con tokens que el resto. W4 tampoco lo trajo: sus tablas siguen el mismo `<table>` con tokens que las otras cuatro del back-office, y traerlo solo para una habría dejado cinco tablas con dos estilos. |
 | `skeleton` | Solo si el historial llega a paginarse |
 | `tabs` | **No** — la navegación del portal son rutas, no pestañas (§2.3) |
 
@@ -1077,10 +1114,11 @@ El mismo de `ux-flows.md` §9.2, con lo que cada paso obliga a arreglar antes:
    el flujo central del producto, y el catálogo deja de ser una rejilla sin destino.
 2. ~~**La navegación en los dos layouts**~~ (§8.5). **Hecha el 2026-08-20**: visible ya
    en el back-office; la del portal queda declarada y aparece cuando W5 traiga sus rutas.
-3. **W5 · Portal ampliado.** Después de W1, porque W1 manda a `/portal/suscripcion` y a
-   `/portal/sets` desde sus avisos de no elegibilidad. ← **siguiente**
-4. **W2 + W3.** Juntos, y **después de arreglar §8.1 y ratificar §8.2**: sin la puerta en
-   la cola de trabajo y sin la lista de comprobaciones, no se pueden construir.
+3. ~~**W5 · Portal ampliado.**~~ **Hecha el 2026-08-20** (§7.7). Con ella, los avisos de
+   no elegibilidad de W1 dejan de apuntar a rutas que no existían.
+4. **W2 + W3.** Lo único que queda, y sigue **bloqueado por §8.1 y §8.2**: sin la puerta
+   en la cola de trabajo y sin la lista de comprobaciones ratificada, no se pueden
+   construir. ← **siguiente**
 5. ~~**W4 · Catálogo e inventario.**~~ **Hecha el 2026-08-20** (§6.6), fuera de orden
    —a petición del usuario— porque era la única de las tres restantes sin bloqueantes:
    W5 seguía disponible y W2/W3 siguen esperando a §8.1 y §8.2.
@@ -1112,14 +1150,14 @@ No hace falta inventar nada; el andamiaje ya está montado y tiene sus reglas:
 Recontando la tabla de `ux-flows.md` §7 con la corrección de §8.7 (HU-01 y HU-02 ya
 están hechas desde el 17 de agosto):
 
-| | Al dibujarlas | Hoy (con W1 y W4) | Con las cinco |
+| | Al dibujarlas | Hoy (con W1, W4 y W5) | Con las cinco |
 |---|---|---|---|
-| Historias con recorrido completo por interfaz | 9 de 18 | **13 de 18** | **16 de 18** |
+| Historias con recorrido completo por interfaz | 9 de 18 | **14 de 18** | **16 de 18** |
 | De las seis ⭐ distintivas del producto | 3 de 6 | **5 de 6** (falta HU-11, que trae W2) | **6 de 6** |
 | ¿Se puede ser cliente de Clickoteca solo con el navegador? | **No** | **Sí** | **Sí** |
 
-Las siete que cambian: HU-00 y HU-03/HU-04 con W1 y **HU-10 con W4** —las cuatro ya
-hechas—; quedan HU-07 con W3, HU-09 con W5 y HU-11 con W2.
+Las siete que cambian: HU-00 y HU-03/HU-04 con W1, **HU-10 con W4** y **HU-09 con W5**
+—las cinco ya hechas—; quedan HU-07 con W3 y HU-11 con W2.
 
 Las dos que seguirían sin cerrar, y por qué:
 

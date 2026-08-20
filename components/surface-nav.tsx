@@ -45,6 +45,11 @@ export function SurfaceNav({
               <Link
                 href={destination.href}
                 aria-current={current ? "page" : undefined}
+                // Con contador, el nombre accesible lo dice con palabras: el número
+                // suelto se anunciaría como "Avisos 3" y no significa nada.
+                aria-label={
+                  destination.badge ? `${destination.label}: ${destination.badge.label}` : undefined
+                }
                 className={cn(
                   "block whitespace-nowrap rounded-md px-3 py-1.5 transition-colors outline-none",
                   "focus-visible:ring-[3px] focus-visible:ring-[var(--ring)]",
@@ -54,6 +59,14 @@ export function SurfaceNav({
                 )}
               >
                 {destination.label}
+                {destination.badge ? (
+                  <span
+                    aria-hidden="true"
+                    className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--tone-warning)] px-1.5 py-0.5 text-xs font-medium text-[var(--tone-warning-foreground)]"
+                  >
+                    {destination.badge.count}
+                  </span>
+                ) : null}
               </Link>
             </li>
           );

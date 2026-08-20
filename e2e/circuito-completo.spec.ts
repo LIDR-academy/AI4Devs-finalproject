@@ -70,9 +70,14 @@ test("el alta con plan deja la cuenta operativa y el plan se cambia desde el por
   await expect(plan.getByText("Premium", { exact: true })).toBeVisible();
   await expect(plan.getByText("Activa", { exact: true })).toBeVisible();
 
-  // ── 4. Cambio de plan desde el portal ──────────────────────────────────────
-  await plan.getByRole("button", { name: /Cambiar a Basic/ }).click();
-  await expect(plan.getByText("Basic", { exact: true })).toBeVisible();
+  // ── 4. Cambio de plan, que desde W5 vive en su propia pantalla ─────────────
+  await plan.getByRole("link", { name: "Gestionar" }).click();
+  await page.waitForURL("/portal/suscripcion");
+  // Solo hay otro plan, así que solo hay un botón "Cambiar".
+  await page.getByRole("region", { name: "Cambiar de plan" }).getByRole("button").click();
+  await expect(
+    page.getByRole("region", { name: "Plan actual" }).getByText("Basic", { exact: true })
+  ).toBeVisible();
 });
 
 test("el suscriptor entra en su portal y el operador en el back-office", async ({ page }) => {
@@ -177,6 +182,8 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
   await page.getByRole("button", { name: "Salir", exact: true }).click();
   await page.waitForURL("/");
   await login(page, "ana@example.test");
+  // Desde W5 la devolución vive en "Mis sets", no en el resumen (`wireframes.md` §7.3).
+  await page.goto("/portal/sets");
   await expect(page.getByText(target!.name)).toBeVisible();
   await page.getByRole("button", { name: "Devolver" }).first().click();
   await expect(page.getByText(/devolución en curso/i)).toBeVisible();
@@ -209,6 +216,7 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
   await page.getByRole("button", { name: "Aceptar" }).click();
   // Tras aceptar, el set pasa a ser suyo y desaparece la oferta.
   await expect(page.getByRole("heading", { name: "Te toca" })).toHaveCount(0);
+  await page.goto("/portal/sets");
   await expect(page.getByRole("button", { name: "Devolver" })).toBeVisible();
 
   // ── 6. Cierre: la prueba devuelve el mundo como lo encontró ────────────────

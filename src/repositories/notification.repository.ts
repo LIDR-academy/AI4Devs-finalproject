@@ -33,6 +33,13 @@ export interface NotificationRepository {
     options?: { unreadOnly?: boolean; limit?: number }
   ): Promise<readonly NotificationView[]>;
 
+  /**
+   * Cuántos avisos sin leer tiene. Es lo único de la cabecera del portal que cambia
+   * sin que el suscriptor haga nada, y se pinta en **todas** sus páginas: contar en la
+   * base es más barato que traerse la lista para medirla.
+   */
+  countUnread(userId: string): Promise<number>;
+
   /** Marca como leída una notificación **del propio usuario**. */
   markRead(input: { notificationId: string; userId: string; at: Date }): Promise<boolean>;
 }

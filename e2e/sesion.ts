@@ -25,3 +25,30 @@ export async function apiLogin(request: APIRequestContext, email: string): Promi
   });
   expect(response.ok()).toBeTruthy();
 }
+
+/**
+ * Alta de una suscriptora por API, para las pruebas que necesitan una cuenta **suya**.
+ *
+ * Pausar, cancelar o cambiar de plan son cambios sobre el suscriptor entero: hacerlo
+ * sobre Ana o Bruno chocaría con el circuito completo, que corre en paralelo y cuenta
+ * con que su suscripción esté activa.
+ */
+export async function registrarSuscriptora(
+  request: APIRequestContext,
+  email: string,
+  planCode: "BASIC" | "PREMIUM" = "BASIC"
+): Promise<void> {
+  const response = await request.post("/api/auth/register", {
+    data: {
+      email,
+      password: PASSWORD,
+      fullName: "Suscriptora de pruebas",
+      isAdult: true,
+      acceptsTerms: true,
+      address: { line1: "Calle Portal 1", city: "Girona", postalCode: "17001" },
+      card: { brand: "VISA", last4: "4242", expMonth: 12, expYear: 2030 },
+      planCode,
+    },
+  });
+  expect(response.ok(), await response.text()).toBeTruthy();
+}
