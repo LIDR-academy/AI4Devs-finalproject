@@ -155,7 +155,7 @@ Feature: Product category management screen
 | `app/Livewire/ProductCategories/Index.php` | **New.** Class-based component per [base-standards.md](../../docs/conventions/base-standards.md#livewire-component-convention-class-based-not-single-file). Composes 0023's `ProductCategoryValidationRules` trait. |
 | `resources/views/livewire/product-categories.blade.php` | **New.** The **flat** path — per the [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name), `App\Livewire\ProductCategories\Index` drops `.index` and resolves here, **not** to `livewire/product-categories/index.blade.php`. |
 | `routes/web.php` | **Modify.** One `Route::livewire(...)` inside the existing `auth`+`verified` group — see the snippet below. |
-| `resources/views/layouts/app/sidebar.blade.php` | **Modify** — one `flux:sidebar.item`. **Branch on whether [0013](in-progress/0013-sidebar-module-gating-ui.md) has landed** — see **D-8**, and **OQ-1** for the placement question. |
+| `resources/views/layouts/app/sidebar.blade.php` | **Modify** — one `flux:sidebar.item`. **Branch on whether [0013](done/0013-sidebar-module-gating-ui.md) has landed** — see **D-8**, and **OQ-1** for the placement question. |
 | `lang/en/products.php` + `lang/es/products.php` | **Modify** (0024 creates both). Append an `index` subgroup under the existing `categories` group — see **D-6**. Key-for-key identical. |
 | `tests/Feature/ProductCategories/IndexTest.php` | **New.** Component + route-authorization tests. |
 | `tests/Feature/ProductCategories/IndexRenderingTest.php` | **New.** View-level rendering tests. |
@@ -534,7 +534,7 @@ component. Nothing on the screen references, links to, or shares anything with a
   dimension to summarise (Users has *active*; categories have nothing analogous), and the per-row product
   count already carries the only number that matters here. Raised as **OQ-2** in case the product owner
   wants Users parity anyway; if it is added, the `summary` key comes back with it.
-- **D-8 — Sidebar entry branches on whether [0013](in-progress/0013-sidebar-module-gating-ui.md) has landed**, exactly
+- **D-8 — Sidebar entry branches on whether [0013](done/0013-sidebar-module-gating-ui.md) has landed**, exactly
   as [0039](0039-payment-methods-ui.md) already specifies for itself:
   - *If 0013 has **not** landed (expected):* add one
     `<flux:sidebar.item icon="tag" :href="route('product-categories.index')" :current="request()->routeIs('product-categories.*')" wire:navigate>`
@@ -601,7 +601,7 @@ component. Nothing on the screen references, links to, or shares anything with a
 - Depends on already-shipped work: the seeded `products.*` permissions (0002), the `Gate::before` Super
   Admin bypass, policy auto-discovery (0004), the Users screen's list+modal pattern (0006), and the
   wired-up browser suite (0006b).
-- Optional interaction: **[0013](in-progress/0013-sidebar-module-gating-ui.md)** changes *which file* the sidebar
+- Optional interaction: **[0013](done/0013-sidebar-module-gating-ui.md)** changes *which file* the sidebar
   entry goes in (**D-8**), but does not block this story either way.
 
 ### Risks

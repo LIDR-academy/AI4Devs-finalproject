@@ -32,7 +32,7 @@ frontend (related_task_id: **0028**) | includes database-expert: **no**
 | 6 | Rendering `deletingTypeUsageCount` | **Render nothing usage-related at all.** That property is `#[Locked]` and **always `0` until story 0029**. A "used by 0 variants" line would be filler that also *implies a check exists when it does not*. This is the same discipline D7 states for code ("do not stub a model method that hardcodes `return 0`") applied to copy. The confirmation reads like the Users one ("This cannot be undone"). 0029 adds the count. |
 | 7 | The zero-value type state | **A real, reachable state with its own inline empty treatment**, on the assumption 0028's **Q2a** is confirmed (a valueless type is legal and inert, matching story 0010's zero-permission role precedent). Inside the modal the repeater shows an explicit "No values yet" line rather than a blank gap; in the list the row renders a zero count. ⚠️ This decision **inherits 0028's Q2** — see [Open questions](#open-questions) OQ-9. |
 | 8 | UI string language | **English source strings wrapped in `__()`**, matching the whole app today. Generic chrome (`Save`, `Cancel`, `Name`, `Values`) stays as bare `__('...')` literals exactly as [`users.blade.php`](../../resources/views/livewire/users.blade.php) does; only domain copy goes into `lang/*/products.php`. The Spanish switcher arrives with Epic 5. |
-| 9 | Sidebar entry | This story adds navigation — a screen with no way to reach it is not delivered. **Which file it goes in depends on whether [0013](in-progress/0013-sidebar-module-gating-ui.md) has landed by Phase 3**; both branches are specified in [Files to create/modify](#files-to-createmodify). |
+| 9 | Sidebar entry | This story adds navigation — a screen with no way to reach it is not delivered. **Which file it goes in depends on whether [0013](done/0013-sidebar-module-gating-ui.md) has landed by Phase 3**; both branches are specified in [Files to create/modify](#files-to-createmodify). |
 
 Resolved directly from the docs, no decision needed: **view path** follows the
 [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
@@ -186,7 +186,7 @@ Feature: Product attribute types screen — list, create/edit modal, values repe
   **If 0028 already shipped a key meaning the same thing, reuse it verbatim — do not add a second.**
   Both locale files stay key-for-key identical.
 - **Navigation — one of two files, depending on what has landed at Phase 3:**
-  - *If [0013](in-progress/0013-sidebar-module-gating-ui.md) has **not** landed (expected):*
+  - *If [0013](done/0013-sidebar-module-gating-ui.md) has **not** landed (expected):*
     `resources/views/layouts/app/sidebar.blade.php` — **modify.** Add one
     `<flux:sidebar.item icon="swatch" :href="route('product-attribute-types.index')" :current="request()->routeIs('product-attribute-types.*')" wire:navigate>`
     beside the existing Users entry, with a comment noting it is scaffolding 0013's registry will

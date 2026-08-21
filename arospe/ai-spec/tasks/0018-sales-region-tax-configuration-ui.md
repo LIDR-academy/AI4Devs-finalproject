@@ -250,7 +250,7 @@ Feature: Sales Regions screen — configuring seeded entries and moving the defa
 
 > 📌 **The sidebar entry goes in `config/modules.php`, not in `sidebar.blade.php` — and this is a
 > correction to the expert's file list, made after reading
-> [story 0013](in-progress/0013-sidebar-module-gating-ui.md).** 0013 introduces `config/modules.php` as the
+> [story 0013](done/0013-sidebar-module-gating-ui.md).** 0013 introduces `config/modules.php` as the
 > declarative, permission-gated nav registry and **replaces** the static `Platform` group in
 > `resources/views/layouts/app/sidebar.blade.php` with `<x-sidebar-nav />`. Its `group` field is a
 > nullable string, so `'group' => 'Taxes'` satisfies PRD §2.1's *"lives as a section **inside the Taxes
@@ -504,7 +504,7 @@ mutating control disabled and explained.
   class, the route, the policy, the actions, and the `lang/*/sales-regions.php` files this story grows.
   Still at the **new** stage, **contrary to the commissioning brief's claim that it is done.**
   **0018 cannot start Phase 3 until both have completed Phase 7.**
-- **[Story 0013](in-progress/0013-sidebar-module-gating-ui.md) — soft.** Owns `config/modules.php`, this story's
+- **[Story 0013](done/0013-sidebar-module-gating-ui.md) — soft.** Owns `config/modules.php`, this story's
   preferred sidebar target. A documented fallback exists if the ordering slips (see the sidebar note
   in [Files](#files-to-createmodify)).
 - **[Story 0006b](done/0006b-browser-test-infra-setup.md) — satisfied.** `tests/Browser/` is wired up

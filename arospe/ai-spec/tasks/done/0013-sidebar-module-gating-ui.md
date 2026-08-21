@@ -354,26 +354,26 @@ collide with page titles and the personal-account Settings menu item. Assert on 
 `data-test` hook, or the entry's resolved route URL (`assertDontSee(route('users.index'),
 escape: false)`).
 
-- [ ] Happy path: a role holding `users.view` sees the Users entry.
-- [ ] Happy path: a role holding `roles.manage` sees the Roles & Permissions entry.
-- [ ] Negative: a role holding no `users.view` never sees the Users entry.
-- [ ] Negative: a role holding a related-but-different Users permission (`users.create`, say) and
+- [x] Happy path: a role holding `users.view` sees the Users entry.
+- [x] Happy path: a role holding `roles.manage` sees the Roles & Permissions entry.
+- [x] Negative: a role holding no `users.view` never sees the Users entry.
+- [x] Negative: a role holding a related-but-different Users permission (`users.create`, say) and
       not `users.view` never sees the Users entry — the regression test for the "never advertise a
       link the route would refuse" rule (Phase 2 review F-3); the highest-value new case in this
       story.
-- [ ] **Gate-independence, direction 1**: a role holding `users.view` but **not** `roles.manage`
+- [x] **Gate-independence, direction 1**: a role holding `users.view` but **not** `roles.manage`
       never sees the Roles & Permissions entry.
-- [ ] **Gate-independence, direction 2**: a role holding **only** `roles.manage` never sees the
+- [x] **Gate-independence, direction 2**: a role holding **only** `roles.manage` never sees the
       Users entry. This is the direction most likely to be skipped, and the only one that proves the
       gates are genuinely independent rather than one being a subset of the other. A single test
       granting both permissions together would pass even if someone wired both entries to the same
       permission list — it must not be the only coverage.
-- [ ] Negative: a role holding neither permission sees neither entry.
-- [ ] **Mechanism, real journey (corrected 2026-08-21, Phase 2 review F-7 — no longer a stubbed-registry
+- [x] Negative: a role holding neither permission sees neither entry.
+- [x] **Mechanism, real journey (corrected 2026-08-21, Phase 2 review F-7 — no longer a stubbed-registry
       test):** a role holding `users.view` but not `roles.manage` sees no "Settings" group heading at
       all, asserted via the group's `data-test` hook — proving filter-before-group against the real,
       shipped registry rather than a test double.
-- [ ] Edge — Super Admin: a Super Admin with **zero** rows in `model_has_permissions` /
+- [x] Edge — Super Admin: a Super Admin with **zero** rows in `model_has_permissions` /
       `role_has_permissions` sees every registered entry, both groups. The fixture must assign no
       permissions "just in case", or the test proves a broad grant rather than the bypass path.
       Resolve the Super Admin role via `Role::superAdminName()`, never a hardcoded string or the
@@ -381,26 +381,26 @@ escape: false)`).
       `App\Enums\RoleName`'s own docblock on why), and pin `config(['auth.super_admin.email' =>
       null])` in the test's setup so a developer's ambient `SUPER_ADMIN_EMAIL` cannot provision a
       second, unaccounted-for account (`docs/errors-log.md`, 2026-08-12 entry).
-- [ ] Edge: a user with zero module permissions still sees the Dashboard entry.
-- [ ] Reactivity: revoking a role's `users.view` permission removes the entry on the **next**
+- [x] Edge: a user with zero module permissions still sees the Dashboard entry.
+- [x] Reactivity: revoking a role's `users.view` permission removes the entry on the **next**
       request. Spatie's registrar cache is flushed internally by `syncPermissions()` /
       `revokePermissionTo()`, and `Gate::before` re-resolves per request, so no manual cache-busting
       is needed in the test.
-- [ ] Regression — `tests/Feature/DashboardTest.php`: the only existing test rendering this layout
+- [x] Regression — `tests/Feature/DashboardTest.php`: the only existing test rendering this layout
       for an authenticated factory user with no roles or permissions. `canAny()` degrades safely
       (no `PermissionDoesNotExist` throw) for such a user, but this is the sharpest regression risk
       in the suite — a zero-permission user must still get a 200, now showing only the Dashboard
       entry.
-- [ ] Regression — `tests/Feature/Settings/ProfileUpdateTest.php` and
+- [x] Regression — `tests/Feature/Settings/ProfileUpdateTest.php` and
       `tests/Feature/Settings/SecurityTest.php`: both render the same app shell.
-- [ ] Regression (**added 2026-08-21, Phase 2 review F-11**) — `tests/Feature/Users/IndexRenderingTest.php`,
+- [x] Regression (**added 2026-08-21, Phase 2 review F-11**) — `tests/Feature/Users/IndexRenderingTest.php`,
       `tests/Feature/Roles/IndexUiTest.php` and `tests/Feature/Authorization/ModuleRouteAccessTest.php`
       all render this same shell for a permission-holding actor and must stay green.
-- [ ] Regression, verified-safe rather than left unexamined (**added 2026-08-21, F-11**) —
+- [x] Regression, verified-safe rather than left unexamined (**added 2026-08-21, F-11**) —
       `tests/Browser/UsersIndexTest.php` and `tests/Browser/RolesIndexTest.php` render this shell in a
       real browser; neither asserts on sidebar markup today, so they are expected to be unaffected —
       confirm they still pass rather than assuming it.
-- [ ] Mechanism: `php artisan config:cache` succeeds with `config/modules.php` present (**added
+- [x] Mechanism: `php artisan config:cache` succeeds with `config/modules.php` present (**added
       2026-08-21, Phase 2 re-review note**) — the acceptance criterion "contains no closures and
       survives `config:cache`" otherwise has no test backing it beyond code review. Run it and confirm
       the app still boots (e.g. the existing regression tests still pass) with the config cached, then
@@ -417,39 +417,52 @@ no change to the component.
 **0012**; neither story is complete without the other.
 
 ## Acceptance criteria
-- [ ] Sidebar entries and group headings are driven by a single declarative registry
+- [x] Sidebar entries and group headings are driven by a single declarative registry
       (`config/modules.php`), not by permission checks scattered through Blade.
-- [ ] An entry renders only when the signed-in user's role grants that entry's **exact** configured
+- [x] An entry renders only when the signed-in user's role grants that entry's **exact** configured
       permission — the same ability its own route's `can:` middleware enforces, never a broader or
       related set (**corrected 2026-08-21, Phase 2 review F-3**).
-- [ ] The Users entry and the Roles & Permissions entry are gated **independently** — `users.view`
+- [x] The Users entry and the Roles & Permissions entry are gated **independently** — `users.view`
       and `roles.manage` respectively.
-- [ ] Visibility is resolved through the Gate (`canAny()`), so the Super Admin bypass is inherited
+- [x] Visibility is resolved through the Gate (`canAny()`), so the Super Admin bypass is inherited
       with no sidebar-local special case; `hasAnyPermission()` is **not** used.
-- [ ] A group whose entries are all hidden renders no heading at all — verified against the real
+- [x] A group whose entries are all hidden renders no heading at all — verified against the real
       shipped "Settings" group, not a stub (**corrected 2026-08-21, F-7**).
-- [ ] The "Settings" group's icon and expandable/auto-expand-on-`roles.*` behaviour is preserved
+- [x] The "Settings" group's icon and expandable/auto-expand-on-`roles.*` behaviour is preserved
       exactly as it ships today (**added 2026-08-21, Confirmed product decision 2**).
-- [ ] Dashboard and the personal account menu are **not** permission-gated; Dashboard keeps its
+- [x] Dashboard and the personal account menu are **not** permission-gated; Dashboard keeps its
       shipped name and route (**corrected 2026-08-21, Confirmed product decision 1** — not renamed to
       "Home").
-- [ ] Each rendered entry carries a `data-test="sidebar-link-{key}"` hook, and each rendered group
+- [x] Each rendered entry carries a `data-test="sidebar-link-{key}"` hook, and each rendered group
       carries a `data-test="sidebar-group-{key}"` hook (**extended 2026-08-21, F-12**).
-- [ ] Adding a later epic's module requires only a new registry entry — no change to the component.
-- [ ] Labels are resolved via `__()` against real translation keys in `lang/en/navigation.php` +
+- [x] Adding a later epic's module requires only a new registry entry — no change to the component.
+- [x] Labels are resolved via `__()` against real translation keys in `lang/en/navigation.php` +
       `lang/es/navigation.php`, key-for-key identical between the two files — not bare English string
       literals (**corrected 2026-08-21, Confirmed product decision 3**).
-- [ ] `config/modules.php` contains no closures and survives `config:cache`.
-- [ ] No prototype markup, CSS, or JS from `docs/arospe-handoff/` is ported.
-- [ ] The user menu, mobile header dropdown, and toast/script blocks are unchanged;
+- [x] `config/modules.php` contains no closures and survives `config:cache`.
+- [x] No prototype markup, CSS, or JS from `docs/arospe-handoff/` is ported.
+- [x] The user menu, mobile header dropdown, and toast/script blocks are unchanged;
       `layouts/app/header.blade.php` is untouched.
 
 ## Definition of Done
-- [ ] Tests written and green
-- [ ] Code reviewed (code-reviewer)
-- [ ] No security findings (appsec-auditor)
-- [ ] Documentation updated (docs-keeper)
-- [ ] Acceptance criteria met
+- [x] Tests written and green — 15 in
+      [`tests/Feature/Navigation/SidebarModuleGatingTest.php`](../../../tests/Feature/Navigation/SidebarModuleGatingTest.php),
+      13 from the checklist above plus the two Phase 4 regression guards; full unscoped suite
+      **633/633**.
+- [x] Code reviewed (code-reviewer) — Phase 5 **PASS**, every acceptance criterion verified against
+      the shipped code rather than against the diff description.
+- [x] No security findings (appsec-auditor) — Phase 4 **PASS** with **two Low** findings raised and
+      closed inside the same phase (F1/F2, each converted into a regression-guard test in the file
+      above). None open at closure. Stated as the closing state rather than as "none were raised",
+      per the same correction story 0012 made to this bullet.
+- [x] Documentation updated (docs-keeper) — Phase 6 synced `docs/architecture/authorization.md`,
+      `docs/conventions/base-standards.md`, [`docs/api/routes.md`](../../../docs/api/routes.md),
+      `docs/README.md` and `docs/security/authorization-patterns.md`.
+- [x] Acceptance criteria met — all **thirteen** boxes above. Noted because the Phase 5 hand-off
+      summarised them as "12": the section carries thirteen bullets, and each was re-resolved
+      against the shipped files at closure (`config/modules.php`,
+      `resources/views/components/sidebar-nav.blade.php`, the `sidebar.blade.php` diff, and the two
+      `lang/*/navigation.php` files) rather than carried over on the strength of the count.
 
 ## Dependencies
 
@@ -532,3 +545,70 @@ count-based test against it would silently be off by a constant, recorded as a �
 `data-test` hook guidance it directly affects (R-4). Two non-blocking notes were also folded in: a
 test case for the `config:cache`-survival acceptance criterion, which previously had none, and naming
 the exact `docs/arospe-handoff/project/js/common.js` file the `NAV` array lives in._
+
+_Phase 3 (TDD), 2026-08-21/22 — red then green, commit `a2253db`. `frontend-qa` wrote
+[`tests/Feature/Navigation/SidebarModuleGatingTest.php`](../../../tests/Feature/Navigation/SidebarModuleGatingTest.php)
+first, against production files that did not yet exist, covering the thirteen checklist cases above.
+`frontend-expert` then shipped the four new files the plan called for and nothing else:
+`config/modules.php` (the registry, closure-free), `resources/views/components/sidebar-nav.blade.php`
+(the anonymous component), and `lang/en/navigation.php` + `lang/es/navigation.php` — verified
+key-for-key identical, with real Spanish copy rather than English placeholders. The only edit to
+[`resources/views/layouts/app/sidebar.blade.php`](../../../resources/views/layouts/app/sidebar.blade.php)
+replaces its two hardcoded `<flux:sidebar.group>` blocks with a single `<x-sidebar-nav />` inside the
+existing `<flux:sidebar.nav>`; the header logo, spacer, desktop user menu, mobile header dropdown,
+`@persist('toast')` and `@fluxScripts` are byte-identical, and `layouts/app/header.blade.php` was
+never opened. Two implementation details are worth carrying forward because neither is guessable from
+the plan: `groupBy('group', preserveKeys: true)` — without the second argument each group's members
+are reindexed `0, 1, 2…` and the hook renders as `sidebar-link-0` instead of the registry key — and
+the shipped Gate call is `Gate::any()`, the Blade-side equivalent of the plan's `canAny()`, chosen
+because the component has no `$user` in hand; the substance of the criterion (resolve through the
+Gate so the Super Admin bypass is inherited, never `hasAnyPermission()`) is unchanged._
+
+_Phase 4 (`appsec-auditor`), 2026-08-22 — **PASS**, two **Low** findings raised and closed inside the
+same phase rather than deferred. Both were about the registry being a new configuration surface that
+nothing mechanically constrained: an entry could be added with `permissions: []` and silently become
+world-visible (F1), or with a permission that is not the one its route's `can:` middleware actually
+enforces — the exact `.view`-shaped misconfiguration
+[`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#the-copyable-module-gate-pattern-and-the-three-alternatives-rejected)
+already warns about, which this story is the first to build a surface for (F2). Each was closed with a
+**regression-guard test** rather than a comment, taking the suite from 13 tests to 15: an explicit
+allow-list every ungated entry must appear on, and a mechanical comparison of each gated entry's
+`permissions` against the real `can:` ability on its route. Neither guard has an application-code
+counterpart, which is the point — they make a future epic's mis-added registry line fail in CI instead
+of shipping quietly._
+
+_Phase 5 (`code-reviewer`), 2026-08-22 — **PASS**. Every acceptance criterion was re-verified against
+the shipped files rather than the diff summary, the full unscoped suite was re-run independently
+(**633/633**, up from 618 before this story's 15), and `vendor/bin/pint --format agent` and Larastan
+level 7 were both clean. No finding required a return to Phase 3._
+
+_Phase 6 (`docs-keeper`), 2026-08-22 — commit `3ceb69b`, eleven files. Beyond documenting the
+`config/modules.php` registry pattern itself
+([`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md),
+`docs/conventions/base-standards.md`), the pass closed the F1 finding's status in
+`docs/security/authorization-patterns.md` and corrected the stale
+**"linked from the sidebar with no permission gating"** claims that
+[`docs/api/routes.md`](../../../docs/api/routes.md) and `docs/README.md` carried on **both** module
+routes — the sentences that named this story as the one that would close the gap, and that this story
+did close._
+
+_Phase 7 closure, 2026-08-22 — all 34 checkboxes ticked after cross-checking each against real shipped
+code and a real test (not ticked as a block), three Definition-of-Done bullets annotated with their
+closing state rather than left as bare claims, and the file moved `in-progress/` → `done/`. That is a
+**same-depth** move, so Direction 1 of
+[workflow.md](../../../docs/workflow.md#link-integrity-check-on-every-stage-move)'s link-integrity
+check is a no-op — verified rather than assumed: all seven distinct outbound relative paths were
+resolved against the filesystem and all four `#fragment` targets against a real heading in their
+target file. Direction 2 was not a no-op: **eleven inbound links across five not-yet-started task
+files** (`0018`, `0025`, `0027`, `0030`, `0039`) still pointed at this file's `in-progress/` path and
+were re-pointed to `done/`. Every one of those five cites this story for the same reason — they branch
+their own sidebar work on whether `config/modules.php` had landed — so the answer they were written to
+ask is now simply **yes**._
+
+**What shipped.** The sidebar's per-module entries are permission-gated through a single declarative
+registry, and a group whose every entry is hidden renders no heading at all. Epic 1's real
+consequence: adding a later epic's module to the navigation is now **one line in
+`config/modules.php`** — no Blade change, no permission check written anywhere by hand, and the
+Super Admin bypass inherited for free. This is the UI half of a pair; the server-side denial that
+makes any of it enforcement rather than presentation is closed story **0012**, and neither story is
+meaningful without the other.
