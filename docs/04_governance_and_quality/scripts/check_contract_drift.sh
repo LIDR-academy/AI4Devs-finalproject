@@ -79,8 +79,36 @@ fi
 echo ""
 if [ "$DRIFT_FOUND" -eq "0" ]; then
   echo "✨ Sin drift detectado. Contrato OpenAPI alineado con validación Zod en controllers."
-  exit 0
 else
   echo "🚨 Se detectaron problemas de alineación de contrato. Revisa los items anteriores."
+fi
+
+# 5. TK-055: detector de breaking changes (oasdiff) entre el openapi.yaml del working tree
+#    y la version en HEAD — solo corre si el archivo realmente cambio (diff-scoped), y solo
+#    marca DRIFT_FOUND=1 si oasdiff reporta un cambio de ruptura real (no cualquier cambio).
+if git cat-file -e HEAD:"$SPEC_FILE" 2>/dev/null && ! git diff --quiet HEAD -- "$SPEC_FILE" 2>/dev/null; then
+  echo ""
+  echo "🔍 $SPEC_FILE cambió respecto a HEAD — verificando breaking changes con oasdiff..."
+  if ! command -v oasdiff >/dev/null 2>&1; then
+    echo "❌ oasdiff no está instalado (docs/00_stack_manifest.md §6 lo declara obligatorio para este check)."
+    echo "   Instálalo: https://github.com/oasdiff/oasdiff#installation"
+    DRIFT_FOUND=1
+  else
+    BASE_SPEC=$(mktemp)
+    git show HEAD:"$SPEC_FILE" > "$BASE_SPEC"
+    if oasdiff breaking --fail-on ERR "$BASE_SPEC" "$SPEC_FILE"; then
+      echo "✨ oasdiff: sin breaking changes entre HEAD y el working tree."
+    else
+      echo "🚨 oasdiff detectó breaking changes reales en $SPEC_FILE (ver arriba). Si es intencional, documenta el bump de versión mayor en el contrato y notifica a los consumidores de la API."
+      DRIFT_FOUND=1
+    fi
+    rm -f "$BASE_SPEC"
+  fi
+fi
+
+echo ""
+if [ "$DRIFT_FOUND" -eq "0" ]; then
+  exit 0
+else
   exit 1
 fi

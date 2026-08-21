@@ -1,6 +1,6 @@
 ---
 document: stack_manifest
-version: 1.9.0
+version: 1.10.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
 approved_at: "2026-08-19"
@@ -47,7 +47,8 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Base de Datos** | PostgreSQL | **15** | Decimal(12,4) para cantidades físicas |
 | **ORM** | Prisma ORM | **5.x** | Migrations en `apps/backend/prisma/` |
 | **Repositorios de Test** | InMemory Fakes | — | Nunca mocks; siempre fakes tipados |
-| **Seeds** | `prisma/seed.ts` | — | Idempotente con `upsert` |
+| **Seeds** | `prisma/seed.ts` | — | Idempotente con `upsert`; verificado con Postgres real vía `check_seed_idempotency.sh` (TK-055) si el ticket lo toca |
+| **Schema Drift Detector** | Script propio (`check_schema_drift.sh`) | — | Compara `schema.prisma` vs. `docs/03_persistence_and_api/06_database_schema.md` §4 (TK-055) |
 
 ---
 
@@ -83,6 +84,7 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Linter (Frontend)** | ESLint | **9.x** (flat config) | + `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` (WCAG 2.2) |
 | **Comando de Lint** | `pnpm run lint` | — | `tsc --noEmit && eslint .` en cada workspace — el type-check NO reemplaza al linter |
 | **Duplication Detector** | jscpd | **5.x** | Umbral 3% (`.jscpd.json`), **bloqueante** en CI vía `pnpm run duplication` |
+| **Dead Code Detector** | knip | **6.x** | Guard 5, gate acotado al diff vía `check_dead_code.sh` (TK-055) |
 
 > **Nota histórica (TK-033):** hasta esta versión, `pnpm run lint` era un alias de `tsc --noEmit` sin ningún linter real detrás — el gate de calidad reportaba "0 errores" sin poder detectar duplicación de estilos, `any` inseguros, ni violaciones de accesibilidad. Corregido instalando ESLint real en ambos workspaces.
 >
@@ -107,6 +109,8 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 > **Nota histórica (TK-045, Guard 22):** todo el trabajo de validación de TK-042/043/044 se hizo contra `docker-compose.yml`; `infrastructure/opentofu/main.tf` — el único artefacto que Guard 22 reconoce como "aprovisionamiento declarativo" — nunca se re-ejecutó tras esos cambios y quedó roto: `docker_container.frontend` mapeaba `internal = 80` (el `Dockerfile` del frontend pasó a escuchar en 8080 al endurecerse como no-root en TK-042); `docker_container.backend` no declaraba `DATABASE_URL` (obligatorio, sin default) ni `CORS_ALLOWED_ORIGINS` (Guard 14 aborta el arranque en producción sin él); y no existía ningún `docker_container.postgres` — el backend no tenía base de datos a la que conectarse. Corregido y **validado con el binario OpenTofu real** (no solo HCL escrito a mano): `tofu validate` limpio, `tofu plan` (8 recursos, 0 errores) y `tofu apply` real contra el daemon Docker — `postgres`/`backend` se crearon y arrancaron correctamente (confirma que el wiring de `DATABASE_URL`/`CORS_ALLOWED_ORIGINS`/el nuevo recurso `postgres` es correcto); `frontend` falló solo por un conflicto de puerto 80 preexistente del host de validación, no por la configuración. `restart = "unless-stopped"` añadido a los 3 contenedores (ausente hasta ahora — sin él, un crash por condición de carrera con Postgres no reiniciaba). `.gitignore` (nuevo bloque) evita que `*.tfstate` — que puede contener secretos resueltos en texto plano — se commitee por accidente.
 >
 > **Nota histórica (TK-046, Guard 14/16):** una auditoría de "¿está configurado profesionalmente el manejo de variables de entorno?" encontró que **dos variables se validaban rigurosamente (Fail-Fast) pero nunca se leían en el código real** — validación sin efecto, falsa sensación de control: (1) `CORS_ALLOWED_ORIGINS` — `app.use(cors())` se llamaba sin argumentos, permitiendo cualquier origen sin importar el valor configurado/validado; (2) `RATE_LIMIT_WINDOW_MS`/`RATE_LIMIT_MAX_REQUESTS` — ningún middleware las leía; la única limitación real era el limiter hardcodeado del endpoint de login. Corregido en `app.ts`: `cors({ origin: ... })` ahora parsea `CORS_ALLOWED_ORIGINS` (lista separada por comas, o `"*"` fuera de producción) y lo aplica de verdad; nuevo rate limiter global montado en `/api/v1/*` alimentado por las variables ya validadas, sin tocar el limiter específico del login (mantenerlo hardcodeado en 10/15min evita debilitar la protección anti-fuerza-bruta a los 100/15min por defecto del limiter general). Bug adicional destapado al cablear el segundo limiter: `rateLimiter.ts` guardaba su `store` a **nivel de módulo**, compartido entre todas las instancias — dos limiters activos a la vez habrían contaminado su conteo mutuamente; corregido moviendo el `store` al closure de `createRateLimiter()`. Verificado con smoke tests reales (no solo tests unitarios): origen permitido → header CORS reflejado; origen no permitido → sin header; `/api/v1/*` → 429 al superar el límite configurado; `/health` → nunca limitado (fuera del scope `/api/v1`). `docker-compose.yml`/`infrastructure/opentofu/main.tf`/`.env.example` ganan `RATE_LIMIT_WINDOW_MS`/`RATE_LIMIT_MAX_REQUESTS` con defaults seguros si se omiten.
+>
+> **Nota histórica (TK-055, Plan de Gobernanza `.agents` v2.4.0):** un plan inicial de 9 mejoras de gobernanza proponía 2 scripts nuevos (`check_schema_drift.py`, `check_env_usage.py`) viviendo directo en `.agents/scripts/`, más `npx knip`/`tofu validate`/prueba de seed corriendo dentro de `validate_agents.sh` — revisado y corregido antes de implementar: `check_agnosticism.py` solo escanea `.sh` (un `.py` acoplado al stack habría evadido el propio guard que debía atraparlo), `npx` está literalmente en su lista `BLOCKED_SUBSTRINGS`, y `validate_agents.sh` audita el arnés `.agents/` en sí — nunca ha tocado la BD/IaC de un proyecto consumidor. Los 6 scripts resultantes (`check_schema_drift.sh`, `check_env_usage.sh`, `check_seed_idempotency.sh`, `check_iac_syntax.sh`, `check_dead_code.sh`, y `check_contract_drift.sh` extendido con `oasdiff`) se generaron hacia `docs/04_governance_and_quality/scripts/`, cada uno **verificado en vivo** contra este repo (incluyendo `check_seed_idempotency.sh` corriendo migrate+seed dos veces contra Postgres 15 real en un contenedor efímero, y `check_contract_drift.sh` detectando un breaking change real simulado con `oasdiff breaking --fail-on ERR`). `check_iac_syntax.sh` se probó en la rama feliz (sin binario `tofu`, sin directorio IaC), pero la corrida completa contra HCL real quedó **NO VERIFICADA** en este entorno por un límite de sandbox ajeno al script (falla la verificación de firma del proveedor OpenTofu en este entorno específico; `tofu fmt -check` sí confirma sintaxis HCL válida) — no se marca como aprobado por omisión (Antipatrón B, `rules/04_verified_implementation_standard.md`).
 
 ---
 
@@ -122,6 +126,8 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **API Linter** | @stoplight/spectral-cli | **6.x** | Valida `openapi.yaml` en CI |
 | **Secret Scanner** | gitleaks | **8.x** | SAST en CI pipeline |
 | **Container CVE Scanner** | trivy | **0.5x** | Escaneo de imágenes Docker |
+| **API Breaking-Change Detector** | oasdiff | **1.29.x** | `check_contract_drift.sh` (TK-055), bloqueante solo si `openapi.yaml` cambió vs. `HEAD` |
+| **IaC Syntax Validator (local)** | `tofu validate` | — | `check_iac_syntax.sh` (TK-055) — valida sintaxis HCL antes del push, no reemplaza `tofu plan` contra estado real |
 
 ---
 

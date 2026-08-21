@@ -1,7 +1,7 @@
 ---
 name: SK-21_audit_ui_accessibility
-description: "Guía procedimental para auditar la accesibilidad WCAG 2.1 AA/AAA, contraste HSL y tamaños táctiles ergonómicos de la interfaz de usuario."
-version: "1.0.0"
+description: "Guía procedimental para auditar la accesibilidad WCAG 2.1 AA/AAA, contraste HSL, tamaños táctiles ergonómicos y regresión visual (screenshot diffing) de la interfaz de usuario."
+version: "1.1.0"
 category: "development/06_visual_qa"
 inputs:
   - target_url: "URL del servidor frontend a auditar (ej. http://localhost:5173 o http://localhost:3000)"
@@ -10,6 +10,7 @@ outputs:
   - "Reporte de auditoría de accesibilidad WCAG y contraste HSL"
   - "Matriz de cumplimiento de dimensiones táctiles"
   - "Lista de correcciones CSS recomendadas para tokens fuera de norma"
+  - "Veredicto de regresión visual (screenshot diffing) contra baseline versionado en e2e/visual-baselines/"
 ---
 
 Actúa como un Accessibility Lead (a11y) y UX Ergonomics Auditor. Tu objetivo es inspeccionar exhaustivamente la interfaz de usuario para verificar el cumplimiento de la accesibilidad **WCAG 2.1 Level AA/AAA**, garantizando que los tokens de color HSL, el contraste del texto y las dimensiones de los componentes táctiles cumplan con los estándares exigidos por el proyecto.
@@ -44,5 +45,13 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ---
 
-## 📋 FASE 4: Generación de Reporte y Matriz de Hallazgos
-1. **Consolidación de Hallazgos:** Presentar el puntaje de accesibilidad (0-100%), la tabla de elementos afectados y las correcciones recomendadas estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.
+## 🖼️ FASE 4: Regresión Visual (Screenshot Diffing, TK-055)
+1. **Baseline Versionado:** las capturas de referencia viven en `e2e/visual-baselines/` (path fijo del framework VSDD, no específico de un proyecto — mismo criterio que `e2e/pages/` de Guard 21), commiteadas junto al código que las produce.
+2. **Captura y Comparación:** usa el motor de comparación de imágenes del runner E2E declarado en `docs/00_stack_manifest.md` (ej. `expect(page).toHaveScreenshot()` de Playwright) contra el baseline. Umbral de diff **conservador por defecto** (ej. `maxDiffPixelRatio: 0.01`) para absorber ruido de antialiasing/fuentes sin absorber una regresión real de layout (CLS > 0.1).
+3. **Un diff real SIEMPRE falla el gate — nunca se auto-acepta.** Si el diff corresponde a un rediseño intencional (no una regresión), el humano debe correr explícitamente el comando de re-baseline del runner (ej. `--update-snapshots`) como una acción deliberada y commitear el nuevo baseline en un commit separado y declarado como tal — nunca como efecto colateral silencioso de una corrida normal del gate.
+4. **Alcance:** ejecuta esta comparación sobre los componentes que el ticket en curso modificó visualmente, no el catálogo completo de baselines en cada corrida (mismo criterio acotado al diff que `check_ticket_code_quality.sh`).
+
+---
+
+## 📋 FASE 5: Generación de Reporte y Matriz de Hallazgos
+1. **Consolidación de Hallazgos:** Presentar el puntaje de accesibilidad (0-100%), la tabla de elementos afectados, las correcciones recomendadas, y el veredicto de regresión visual (FASE 4) estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.

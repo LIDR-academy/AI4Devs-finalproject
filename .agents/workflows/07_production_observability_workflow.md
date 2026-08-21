@@ -1,11 +1,11 @@
 ---
 name: 07_production_observability_workflow
-description: "Workflow de observabilidad Shift-Right v2.0: captura logs/stacktraces de producción, traduce incidencias a escenarios BDD Gherkin, genera pruebas de regresión automáticas y cierra el bucle de feedback convirtiendo incidencias en tickets TK-XXX del backlog."
-version: "2.0.0"
+description: "Workflow de observabilidad Shift-Right v2.1: captura logs/stacktraces de producción, traduce incidencias a escenarios BDD Gherkin, genera pruebas de regresión en borrador (con checkpoint humano obligatorio antes de sumarse a la suite real) y cierra el bucle de feedback convirtiendo incidencias en tickets TK-XXX del backlog."
+version: "2.1.0"
 category: "workflows/observability"
 ---
 
-# 🛰️ Workflow de Observabilidad Shift-Right (v2.0.0)
+# 🛰️ Workflow de Observabilidad Shift-Right (v2.1.0)
 
 Este workflow captura telemetría, errores y réplicas de producción para transformarlos de forma agnóstica en pruebas automatizadas de regresión **y en tickets técnicos accionables en el backlog**, cerrando el ciclo completo de mejora continua.
 
@@ -32,9 +32,10 @@ Este workflow captura telemetría, errores y réplicas de producción para trans
 ---
 
 ## 🔄 Paso 3 — Integración en la Suite de Tests & Reparación TDD
-1. Crear la prueba de regresión fallida (RED) en la suite del proyecto (`apps/` o `tests/`).
-2. Invocar [05_test_runner_workflow.md](05_test_runner_workflow.md) para ejecutar la reparación autónoma mediante el ciclo RED-GREEN-REFACTOR.
-3. Validar con [06_full_qa_pipeline.md](06_full_qa_pipeline.md) que `0` regresiones hayan sido introducidas.
+1. **Fixture en borrador, nunca directo a la suite real (TK-055):** crea la prueba de regresión fallida (RED) como archivo `*.draft.test.{ts,tsx,...}` (o convención equivalente del test runner declarado) en `tests/regression/` — NUNCA con el nombre/extensión final que el runner oficial recoja automáticamente. Un fixture auto-generado sin revisión humana previa es exactamente el patrón que `rules/00_output_reporting_standard.md` (Anti-Gate-Hueco) prohíbe: una prueba que "existe" sin que nadie haya verificado que valida algo real, en vez de una aserción trivial o tautológica.
+2. **Checkpoint humano obligatorio:** presenta el fixture en borrador al humano junto con el escenario Gherkin del Paso 2 y espera confirmación explícita antes de continuar. Solo tras la aprobación, renombra el archivo quitando `.draft` (o lo mueve a su ubicación final co-ubicada según `rules/02_testing_architecture_standard.md`) — ese renombrado es la señal de que un humano lo validó, no un paso automático.
+3. Invocar [05_test_runner_workflow.md](05_test_runner_workflow.md) para ejecutar la reparación autónoma mediante el ciclo RED-GREEN-REFACTOR, solo sobre el fixture ya aprobado (sin `.draft`).
+4. Validar con [06_full_qa_pipeline.md](06_full_qa_pipeline.md) que `0` regresiones hayan sido introducidas.
 
 ---
 

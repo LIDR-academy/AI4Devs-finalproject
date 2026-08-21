@@ -53,8 +53,26 @@ jobs:
       - name: Validate Agents Framework Integrity
         run: bash .agents/scripts/validate_agents.sh
 
-      - name: Check OpenAPI/Zod Contract Drift
+      # TK-055: check_iac_syntax.sh requiere el binario `tofu` real para `tofu validate`.
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: '1.6.0'
+
+      - name: Validate OpenTofu HCL Syntax
+        run: bash docs/04_governance_and_quality/scripts/check_iac_syntax.sh
+
+      # TK-055: instala el binario oasdiff (Go) — check_contract_drift.sh solo lo invoca si
+      # openapi.yaml cambió respecto a HEAD, pero debe estar disponible en el runner.
+      - name: Install oasdiff
+        run: |
+          curl -sL https://github.com/oasdiff/oasdiff/releases/download/v1.29.1/oasdiff_1.29.1_linux_amd64.tar.gz | tar -xz -C /usr/local/bin oasdiff
+
+      - name: Check OpenAPI/Zod Contract Drift (+ Breaking Changes via oasdiff)
         run: bash docs/04_governance_and_quality/scripts/check_contract_drift.sh
+
+      - name: Check Environment Variable Usage (Antipatrón A)
+        run: bash docs/04_governance_and_quality/scripts/check_env_usage.sh
 
       - name: Check DevSecOps Manifest Coverage (informational, Guard 25)
         continue-on-error: true
