@@ -326,7 +326,7 @@ Feature: Deleting a product
 | `app/Livewire/Products/Editor.php` | **New.** The create/edit screen (**D-1**: a routed page, not a modal). |
 | `resources/views/livewire/products/editor.blade.php` | **New.** The ordinary kebab-case mirror — note it sits one level *deeper* than the list's view; [naming.md](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name) already records that this asymmetry is expected. |
 | `routes/web.php` | **Modify.** Three `Route::livewire(...)` registrations inside the existing `auth`+`verified` group (**D-2**), **and** deletion of 0020's harness block (**D-14**). |
-| `resources/views/layouts/app/sidebar.blade.php` | **Modify** — one `flux:sidebar.item`, branching on whether [0013](0013-sidebar-module-gating-ui.md) has landed (**D-15**). |
+| `resources/views/layouts/app/sidebar.blade.php` | **Modify** — one `flux:sidebar.item`, branching on whether [0013](in-progress/0013-sidebar-module-gating-ui.md) has landed (**D-15**). |
 | `lang/en/products.php` + `lang/es/products.php` | **Modify** (0024 creates them; 0026 and 0028 also extend them). Append an `index` group and an `editor` group. Key-for-key identical. |
 | `app/Livewire/Dev/MediaGalleryHarness.php`, `resources/views/livewire/dev/media-gallery-harness.blade.php` | **Delete** (**D-14**). Both files carry a comment naming this story as their expiry. |
 | `tests/Feature/Dev/MediaGalleryHarnessRouteTest.php` | **Delete** (**D-14**) — its subject no longer exists. |
@@ -1465,7 +1465,7 @@ Identical to 0025 **D-8** and 0039's own specification, and verified against the
 state: `config/modules.php` does not exist, `routes/web.php` carries one hardcoded gated route, and
 `resources/views/layouts/app/sidebar.blade.php` is still the static starter-kit list.
 
-- *If [0013](0013-sidebar-module-gating-ui.md) has **not** landed (expected):* one
+- *If [0013](in-progress/0013-sidebar-module-gating-ui.md) has **not** landed (expected):* one
   `<flux:sidebar.item icon="cube" :href="route('products.index')" :current="request()->routeIs('products.*')" wire:navigate>`,
   with a comment noting it is scaffolding 0013's registry will absorb. **Static and ungated** — a
   cosmetic leak only; access is refused by `can:products.view` on the route and re-checked in

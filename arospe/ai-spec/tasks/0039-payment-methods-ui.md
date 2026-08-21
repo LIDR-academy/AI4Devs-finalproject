@@ -29,7 +29,7 @@ frontend (related_task_id: **0038**) | includes database-expert: **no**
 | 5 | An actor with `payment-methods.view` but not `.edit` | The Configure/Edit action renders **disabled with a tooltip**, not hidden — the per-row `Gate::allows()` **UI hint** convention already documented in [authorization.md](../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer) and shipped on the Users rows. The two permissions are distinct catalog entries, so this is a real role, not a hypothetical. The hint is layered *on top of* 0038's `Gate::authorize()` in `save()`, never instead of it. |
 | 6 | Confirmation step before changing an already-configured IBAN? | **No — a deliberate "no", not an oversight.** Neither §2.5 nor 0038's Gherkin implies one, and inventing an unspecified confirm step is new behaviour nobody asked for. Recorded so it is a decision; see OQ-3. |
 | 7 | UI string language | **English source strings wrapped in `__()`**, matching the whole app today. Generic chrome (`Payment methods`, `Save`, `Cancel`, `IBAN`) stays as bare `__('...')` literals exactly as `users.blade.php` does; only domain-specific copy goes into `lang/*/payment_methods.php`. The Spanish switcher arrives with Epic 5. |
-| 8 | Sidebar entry | This story adds navigation — a screen with no way to reach it is not delivered. **Which file it goes in depends on whether [0013](0013-sidebar-module-gating-ui.md) has landed by Phase 3**; both branches are specified in [Files to create/modify](#files-to-createmodify). |
+| 8 | Sidebar entry | This story adds navigation — a screen with no way to reach it is not delivered. **Which file it goes in depends on whether [0013](in-progress/0013-sidebar-module-gating-ui.md) has landed by Phase 3**; both branches are specified in [Files to create/modify](#files-to-createmodify). |
 
 Resolved directly from the docs, no decision needed: **view path** follows the
 [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
@@ -148,7 +148,7 @@ Feature: Payment methods settings screen (bank transfer)
   reuse it verbatim — do not add a second key meaning the same thing.** Both locale files stay
   key-for-key identical.
 - **Navigation — one of two files, depending on what has landed at Phase 3:**
-  - *If [0013](0013-sidebar-module-gating-ui.md) has **not** landed (expected):*
+  - *If [0013](in-progress/0013-sidebar-module-gating-ui.md) has **not** landed (expected):*
     `resources/views/layouts/app/sidebar.blade.php` — **modify.** Add one
     `<flux:sidebar.item icon="banknotes" :href="route('payment-methods.index')" :current="request()->routeIs('payment-methods.*')" wire:navigate>`
     beside the existing Users entry, with a comment noting it is scaffolding 0013's registry will

@@ -12,7 +12,7 @@ closed task 0012.
 **Corrected 2026-08-21 (Phase 2 review) — this is a gating *retrofit*, not a greenfield replacement.**
 The Phase 1 draft below (dated 2026-08-07) was written before stories 0006, 0011, 0040 and 0012 shipped
 and described replacing "the starter-kit `Platform` group / `Dashboard` item" with a fresh component.
-That starter-kit shell no longer exists: [`resources/views/layouts/app/sidebar.blade.php`](../../resources/views/layouts/app/sidebar.blade.php)
+That starter-kit shell no longer exists: [`resources/views/layouts/app/sidebar.blade.php`](../../../resources/views/layouts/app/sidebar.blade.php)
 already renders two real, correctly-routed groups —
 
 ```blade
@@ -34,7 +34,7 @@ already renders two real, correctly-routed groups —
 ```
 
 — with both `/users` and `/roles` rendered **unconditionally** for every authenticated user (see
-[`docs/api/routes.md`](../../docs/api/routes.md)'s "linked from the sidebar with no permission gating"
+[`docs/api/routes.md`](../../../docs/api/routes.md)'s "linked from the sidebar with no permission gating"
 bullets on both routes, which name this story as the one that closes that gap). This story's real job
 is narrower than the original draft: extract this exact structure into a registry, then make each
 item's (and each group's) rendering conditional on the Gate. Nothing about the shipped visual result —
@@ -55,7 +55,7 @@ open questions below):**
    below.
 3. **Sidebar labels move into translation files** — `lang/en/navigation.php` +
    `lang/es/navigation.php`, snake_case leaves grouped `groups`/`items`, per
-   [`docs/conventions/naming.md`](../../docs/conventions/naming.md#translation-keys) — rather than
+   [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#translation-keys) — rather than
    staying as bare `__('Dashboard')`-style English string keys. This is the larger-scope option: it
    adds two new lang files this story must create and keep key-for-key identical, matching the
    convention every other domain in this repo already follows (`lang/en/{roles,users}.php`).
@@ -214,7 +214,7 @@ Feature: Sidebar module visibility
   `users.index` on exactly `can:users.view`; `roles` is `['roles.manage']` because `routes/roles.php`
   gates `roles.index` on exactly `can:roles.manage`. A broader list (e.g. adding `users.create`)
   would show the Users entry to a role that the route itself then 403s — see
-  [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#the-copyable-module-gate-pattern-and-the-three-alternatives-rejected)'s
+  [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#the-copyable-module-gate-pattern-and-the-three-alternatives-rejected)'s
   ⚠️ on this exact misconfiguration, which this story is the first to actually build the surface for.
   The two gates stay **independent** either way — that half of the original design is unchanged and
   still load-bearing; reject any Phase 3 simplification that collapses the two gates into one.
@@ -253,7 +253,7 @@ Feature: Sidebar module visibility
   - `hasAnyPermission()` / `hasPermissionTo()` / `hasRole()` are trait methods that query the
     model's own relations and **never touch the Gate at all**. Since the Super Admin holds *zero*
     permission rows and bypasses permission checks entirely (`Role::superAdminName()`-keyed
-    `Gate::before`, [architecture/authorization.md](../../docs/architecture/authorization.md#the-super-admin-bypass)),
+    `Gate::before`, [architecture/authorization.md](../../../docs/architecture/authorization.md#the-super-admin-bypass)),
     a sidebar built on `hasAnyPermission()` would show the Super Admin **nothing** — the exact
     inverse of the requirement. This is a correctness fork, not a style preference. (With today's
     single-ability entries `can()` would work identically to `canAny()`; `canAny()` is chosen because
@@ -271,7 +271,7 @@ Feature: Sidebar module visibility
   in `desktop-user-menu.blade.php`); confirm at implementation time whether Flux's `flux:sidebar.group`
   forwards an arbitrary `data-test` attribute onto its rendered wrapper the way `flux:tooltip` does
   (see the two Flux/Blaze markup traps already recorded in
-  [`docs/errors-log.md`](../../docs/errors-log.md), 2026-08-16 — a bound prop can be "present" under
+  [`docs/errors-log.md`](../../../docs/errors-log.md), 2026-08-16 — a bound prop can be "present" under
   Blaze even when falsy, and some Flux components need the attribute on a specific wrapper, not the
   outer tag) — do not assume it forwards cleanly without checking the rendered HTML.
 
@@ -285,7 +285,7 @@ Feature: Sidebar module visibility
   `<ui-disclosure>` wrapper). Presence/absence assertions (`assertSee`, `assertDontSee`,
   `Selector::getByTestId()`-style single-match helpers) are unaffected; a **count**-based assertion
   would silently be off by a constant and read as correct — the exact failure mode
-  [`docs/errors-log.md`](../../docs/errors-log.md#a-count-based-assertion-over-rendered-html-counted-a-wrapper-element-it-never-meant-to-include--2026-08-21)
+  [`docs/errors-log.md`](../../../docs/errors-log.md#a-count-based-assertion-over-rendered-html-counted-a-wrapper-element-it-never-meant-to-include--2026-08-21)
   already records. Do not write a count-based test against this component without first confirming
   the real occurrence count from rendered HTML.
 
@@ -298,7 +298,7 @@ Feature: Sidebar module visibility
 - `lang/en/navigation.php` and `lang/es/navigation.php` — **new** (**Confirmed product decision 3**
   above). Two top-level arrays, `groups` and `items`, snake_case leaves matching the registry's own
   keys, key-for-key identical between the two files per
-  [`docs/conventions/naming.md`](../../docs/conventions/naming.md#translation-keys):
+  [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#translation-keys):
 
   ```php
   // lang/en/navigation.php
@@ -345,8 +345,8 @@ story 0006b; the suite exists and runs in CI (`docs/testing/frontend/playwright-
 behavior is pure server-rendered conditional markup with no JS, Alpine, or Livewire round-trip, so a
 Feature test asserting on rendered HTML observes everything a browser test would, while adding flake
 and runtime a browser test would not justify — the anti-pattern
-[`docs/testing/frontend/test-quality-checklist.md`](../../docs/testing/frontend/test-quality-checklist.md)
-and [`docs/testing/frontend/coverage-policy.md`](../../docs/testing/frontend/coverage-policy.md)'s
+[`docs/testing/frontend/test-quality-checklist.md`](../../../docs/testing/frontend/test-quality-checklist.md)
+and [`docs/testing/frontend/coverage-policy.md`](../../../docs/testing/frontend/coverage-policy.md)'s
 "prefer fewer high-value critical-journey tests" rule both argue against.
 
 **Asserting absence:** never `assertDontSee('Users')` or `assertDontSee('Settings')` — those words
