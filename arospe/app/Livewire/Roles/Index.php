@@ -18,6 +18,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Backoffice Roles & Permissions management screen: create, rename and
@@ -228,6 +229,15 @@ class Index extends Component
             $role->syncPermissions($permissionNames);
         });
 
+        // Story 0012 Phase 4 security audit finding F1: syncPermissions()
+        // already flushes the permission cache, but it does so INSIDE the
+        // transaction above -- a concurrent request landing between that
+        // flush and this COMMIT would miss the cache, read the pre-commit
+        // rows, and re-cache them on the shared `database` store for 24
+        // hours. This second, post-commit flush is what closes that window.
+        // See docs/security/authorization-patterns.md#flush-the-permission-cache-after-the-transaction-commits-never-inside-it.
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         // Audit trail (Phase 4 finding F8) -- this app has no dedicated
         // audit-log table; a structured log line is the minimum trace for
         // the highest-value mutation this screen performs.
@@ -313,6 +323,12 @@ class Index extends Component
 
             $role->delete();
         });
+
+        // Story 0012 Phase 4 security audit finding F1 -- same reasoning as
+        // the identical post-commit flush in saveRole() above: Role's own
+        // `deleted` event flushes the cache, but only inside the
+        // transaction just closed.
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         // Audit trail (Phase 4 finding F8) -- see the identical note in
         // saveRole() above.

@@ -380,7 +380,19 @@ middleware alias to register.
       default alias, so no alias registration is consumed from 0002 or anywhere else.
 - [ ] Neither module route is registered, renamed, or moved by this story.
 - [ ] A revoked or granted permission takes effect on the holder's next request, covered by a test
-      that would fail against a stale permission cache.
+      that exercises the real single-process cache invalidation on the route-middleware layer.
+      **Narrowed 2026-08-21 (Phase 4 security audit, F1)** — the shipped tests
+      (`ModuleRouteAccessTest.php`'s cache-staleness dataset) call `revokePermissionTo()` /
+      `givePermissionTo()` directly, which self-flush; they do not, and structurally cannot, exercise
+      this app's real write path (`App\Livewire\Roles\Index::saveRole()` / `deleteRole()`) or the
+      cross-worker race a shared `CACHE_STORE=database` cache creates, since `phpunit.xml` pins
+      `CACHE_STORE=array` per-process. That race is real and separate: the audit found `saveRole()` /
+      `deleteRole()` flushed the permission cache only *inside* their `DB::transaction()`, with no
+      post-commit flush — fixed in the same pass (see the Phase 4 record below) per the pre-existing,
+      documented rule in
+      [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#flush-the-permission-cache-after-the-transaction-commits-never-inside-it),
+      whose own "Testing caveat" states no test in this suite can reproduce that window — it must be
+      prevented by construction, not caught by a test.
 
 ## Definition of Done
 - [ ] Tests written and green
@@ -508,3 +520,61 @@ confirmed by re-running the cited sibling suites unmodified —
 `tests/Feature/Users/IndexTest.php` (65 passed) and `tests/Feature/Roles/IndexTest.php` (39 passed) —
 plus the full unscoped suite (`vendor/bin/pint --format agent` clean, Larastan level 7 clean,
 `php artisan test --compact` **618/618**, up from 609 before this story's 9 new tests).
+
+## Phase 4 (`appsec-auditor`) — PASS for this story's own scope, one Medium found in code it audits
+
+Verdict: **PASS** — the two route gates are genuinely and independently enforced, the no-disclosure
+claim holds (verified directly against the real 403 response, not taken from the tests), and the
+Super Admin bypass is exercised end-to-end with no false-confidence path. One **Medium** was found in
+pre-existing code this story's tests exercise but did not write, and three **Low** findings in the
+new test file itself — all four fixed in this same pass rather than deferred, since each fix was
+small and well-specified.
+
+- **F1 (Medium, fixed) — the permission cache was flushed only *inside* the write transaction, never
+  after it commits.** `App\Livewire\Roles\Index::saveRole()` / `deleteRole()` (story 0010, its own
+  Phase 4 finding F4) wrap `syncPermissions()` / `delete()` in `DB::transaction()`; both self-flush
+  the cache, but only pre-commit. On the shared `CACHE_STORE=database` store this fails **open** on
+  revocation: a concurrent request landing between that in-transaction flush and the `COMMIT` misses
+  the cache, reads the pre-commit rows, and re-caches them for 24 hours — the exact anti-pattern
+  [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#flush-the-permission-cache-after-the-transaction-commits-never-inside-it)
+  already documents. `tests/Feature/Authorization/ModuleRouteAccessTest.php`'s own cache-staleness
+  tests cannot catch it (they revoke/grant directly, bypassing the component's write path entirely).
+  Fixed by adding `app(PermissionRegistrar::class)->forgetCachedPermissions()` immediately after each
+  `DB::transaction()` call, per the documented pattern; the acceptance criterion this bears on is
+  narrowed above rather than left overclaiming what the shipped tests prove.
+- **F2 (Low, fixed) — a test comment named a disclosure mechanism that does not exist.** The two
+  non-disclosure tests pinned `config(['app.debug' => false])`, reasoning that `APP_DEBUG=true` could
+  leak the middleware string through Laravel's debug error page. Verified false by rendering the real
+  403 at both debug settings: the body is byte-identical, because `AuthorizationException` →
+  `AccessDeniedHttpException` **is** an `HttpException`, so `Handler::prepareResponse()`'s debug
+  branch is structurally unreachable for a 403 — it always renders the stock `errors::403` view. The
+  `config()` calls were removed as dead code and the comment rewritten to name the real invariant
+  (recorded as a new confirmed-safe rule in `docs/security/authorization-patterns.md`, written by the
+  audit itself).
+- **F3 (Low, fixed) — the two disclosure tests could pass on an empty body.** `assertForbidden()` +
+  `assertDontSee(...)` are both satisfied by a zero-length 403 body, so a future regression that
+  rendered nothing (or JSON) would stay green. Added a positive control,
+  `$response->assertSee('This action is unauthorized.')`, pinning that the generic page actually
+  rendered — the same "prove the assertion can fail" discipline this repo's errors-log already
+  applies to `arch()` rules and count-based assertions.
+- **F4 (Low, fixed) — the Super Admin helper read the compiled-in enum default instead of the
+  resolved name, and `beforeEach` left `auth.super_admin.email` ambient.** `moduleAccessSuperAdmin()`
+  called `RoleName::SuperAdmin->value` directly; `App\Enums\RoleName`'s own docblock states that case
+  supplies only the compiled-in default and that no guard compares a role row against it directly —
+  `Role::superAdminName()` is the resolved value `Gate::before` actually reads. Switched to it. Also
+  pinned `config(['auth.super_admin.email' => null])` in `beforeEach`, matching the convention
+  `tests/Feature/Seeders/DatabaseSeederTest.php` already uses, so a developer's ambient
+  `SUPER_ADMIN_EMAIL` can't provision an extra account across all 9 tests in this file — the same
+  ambient-config lesson `docs/errors-log.md` already records.
+
+Two informational notes recorded rather than raised as findings: the `.view`-gated shape (as opposed
+to `roles.manage`'s `.manage` shape) permits a dead configuration — a role granted
+`<module>.create/edit/delete` without `<module>.view` gets no route access and no warning; fail-closed
+but worth stating explicitly in the pattern this story documents for later epics. And "fully disjoint"
+(open question 2's resolution) holds at the *route* layer but not at the *data* layer —
+`permissionOptions()`/`roleOptions()`-style disclosure to any holder of the gating permission is
+inherent to each screen's feature and does not cross a permission name; not a new gap.
+
+Re-verified after all four fixes: `vendor/bin/pint --format agent` clean, Larastan level 7 clean,
+`tests/Feature/Authorization/ModuleRouteAccessTest.php` (9 passed), `tests/Feature/Roles/` (81
+passed), and the full unscoped suite (**618/618**).

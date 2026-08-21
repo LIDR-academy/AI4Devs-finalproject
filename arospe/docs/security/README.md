@@ -54,7 +54,14 @@ repo must follow — always with a real code example pulled from this repository
   permission's existence and does not submit), and that is safe only because it is precisely the
   permission `EnforceAdministratorPermissionGrant` re-adds. It names the one-`@if`-away regression, the
   count-based test that catches it where an `assertDontSee()` would not, and the accepted Low residual
-  that withholding the control does not withhold the id.
+  that withholding the control does not withhold the id. Task 0012 adds the **confirmed-safe** entry
+  every future module gate inherits: a `can:`-gated route's 403 names no permission because
+  `AccessDeniedHttpException` is an `HttpException` and `prepareResponse()` therefore never reaches the
+  debug renderer — `errors::403` prints only the exception message, byte-identically at both `APP_DEBUG`
+  settings. It names the two things that *would* reopen the disclosure (an app-owned
+  `resources/views/errors/403.blade.php`, or a `Response::deny('…')` message naming an ability), why
+  pinning `app.debug` in a test proves nothing on that path, and why `assertForbidden()` +
+  `assertDontSee()` needs a positive assertion beside it — both are satisfied by an empty body.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -125,7 +132,18 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-21 — Task 0011 (Roles & permissions management — UI), Phase 4 audit (verdict
+_Last updated: 2026-08-21 — Task 0012 (module/sidebar access gating — backend), Phase 4 audit: no new
+page — `authorization-patterns.md` gained one **confirmed-safe** rule, "A `can:`-gated route's 403 names
+no permission — and `APP_DEBUG` is not what makes that true". This story ships zero production code, so
+it produced no bypass to write up; what it did produce is a guarantee that every later epic's module
+gate inherits, holding for a mechanism different from the one assumed, with two named conditions that
+would reopen it. Verified by rendering the real exception handler at both debug settings rather than by
+reading the test's assertions. The audit's other findings are per-review (a missing post-commit
+permission-cache flush in `App\Livewire\Roles\Index`, which is a **violation of an existing rule on this
+same page** rather than a new one, plus three test-quality corrections) and live in the audit response,
+not here._
+
+_Previously: 2026-08-21 — Task 0011 (Roles & permissions management — UI), Phase 4 audit (verdict
 PASS, no blocking findings): still no new page — `authorization-patterns.md` gained one durable rule,
 "A control omitted from the DOM is safe only for the one value whose guard preserves an omission", and
 its **"Two guards on one payload"** section was narrowed in the same pass. That section closed with

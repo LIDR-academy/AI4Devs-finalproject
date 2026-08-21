@@ -22,6 +22,7 @@ make these distinctions explicit.
 - [Two guards on one payload must agree on what an omission means](#two-guards-on-one-payload-must-agree-on-what-an-omission-means)
 - [A control omitted from the DOM is safe only for the one value whose guard preserves an omission](#a-control-omitted-from-the-dom-is-safe-only-for-the-one-value-whose-guard-preserves-an-omission)
 - [A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself](#a-check-over-a-submitted-list-must-accept-every-shape-the-write-accepts-and-derive-the-before-state-itself)
+- [Confirmed safe: a `can:`-gated route's 403 names no permission — and `APP_DEBUG` is not what makes that true](#confirmed-safe-a-can-gated-routes-403-names-no-permission--and-app_debug-is-not-what-makes-that-true)
 - [Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone](#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone)
 
 ## The Super Admin bypass does not cover every check
@@ -925,6 +926,65 @@ controls, and must interpret the submitted input **exactly** as the write that f
   *previous round's remediation*, all shipped past review because each fix was read against the finding
   it answered rather than as new code with its own attack surface.
 
+## Confirmed safe: a `can:`-gated route's 403 names no permission — and `APP_DEBUG` is not what makes that true
+
+Established by task 0012's Phase 4 audit, which had to independently verify the "the refusal discloses
+no permission name" acceptance criterion every future module route will inherit. The conclusion holds,
+but **not for the reason it is intuitive to assume**, and the difference decides what can break it.
+
+`can:<ability>` is `Illuminate\Auth\Middleware\Authorize`, which throws `AuthorizationException`.
+`Handler::prepareException()` converts that to a Symfony `AccessDeniedHttpException` carrying the
+generic message `This action is unauthorized.` — the ability string is never part of the exception.
+From there:
+
+```php
+// vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php — prepareResponse()
+if (! $this->isHttpException($e) && config('app.debug')) {
+    return $this->toIlluminateResponse($this->convertExceptionToResponse($e), $e)->prepare($request);
+}
+// ... otherwise: renderHttpException($e) -> the errors::403 view
+```
+
+An `AccessDeniedHttpException` **is** an `HttpException`, so that first branch is unreachable for it:
+a 403 is rendered by `errors::403` at *every* debug setting, and that view's whole body is
+`@section('message', __($exception->getMessage() ?: 'Forbidden'))`. Verified by rendering the real
+handler against the real `users.index` route rather than by reading: the HTML response is
+**byte-identical (6605 bytes) with `app.debug` true and false**, and contains neither `users.view` nor
+`can:users.view` nor the word `middleware` in either case.
+
+That last point matters because the framework's debug error page **does** render the route's middleware
+list — `Exception::applicationRouteContext()` returns `'middleware' => implode(', ', $route->gatherMiddleware())`,
+which for this route is the literal `web, auth, verified, can:users.view`. It is simply never reached
+by a 403. So:
+
+- ❌ Do **not** write a test (or a comment) claiming `config(['app.debug' => false])` is what keeps the
+  ability name out of a 403 body. It is inert on this path, and stating it hides the real mechanism.
+- ✅ Do assert the **positive** half as well as the negative one. `assertForbidden()` plus
+  `assertDontSee('users.view')` are *both* satisfied by an empty body, so the pair proves nothing on
+  its own; add `assertSee('This action is unauthorized.')` so the test pins that the generic error page
+  rendered and that the message is still the generic one.
+
+**Rule.** The guarantee rests on exactly two things, and a change to either is what a future audit must
+look for — not at `APP_DEBUG`:
+
+1. **No app-owned `resources/views/errors/403.blade.php` exists.** `getHttpExceptionView()` prefers an
+   application view over the framework's. A branded 403 that renders anything beyond the message (route
+   context, a "you need X" hint, a debug dump) reopens the disclosure, and it is a *frontend* story that
+   would do it.
+2. **No gate on these routes returns `Response::deny('…')` with a message naming an ability.** The 403
+   body is the exception message, so a custom deny string is printed verbatim to the refused actor. The
+   two `assertDontSee` tests in `tests/Feature/Authorization/ModuleRouteAccessTest.php` do catch this
+   one — keep them when adding a module gate.
+
+One genuinely debug-dependent path remains, and it is not a permission disclosure:
+[`bootstrap/app.php`](../../bootstrap/app.php) registers
+`shouldRenderJsonWhen(fn ($request) => $request->is('api/*') || $request->expectsJson())`, and
+`convertExceptionToArray()` adds `exception`, `file`, `line` and a full `trace` to a JSON 403 when
+`app.debug` is true. Frame **arguments are stripped**, so the ability string still does not appear
+(verified) — but absolute paths and vendor frames do. `.env.example` ships `APP_DEBUG=true`, so this is
+one more reason a deployment must pin `APP_DEBUG=false`; it is not a reason to treat the HTML 403 as
+debug-sensitive.
+
 ## Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone
 
 Worth recording because the reasoning is non-obvious and someone will re-open the question. The
@@ -963,7 +1023,17 @@ Do not "harden" the name comparisons themselves by lowercasing or trimming — t
 of matching names and break the property the byte-exact match above relies on. The remaining hardening
 is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-20 — Task 0010, Phase 6 docs sync: added "An identity derived from a mutable
+_Last updated: 2026-08-21 — Task 0012 (module/sidebar access gating — backend), Phase 4 audit: added
+"Confirmed safe: a `can:`-gated route's 403 names no permission — and `APP_DEBUG` is not what makes that
+true". The story ships no production code, so this is a **confirmed-safe** entry rather than a bypass —
+but the reason the guarantee holds is not the one the story's own test comment assumed, and the
+difference decides what a future story could break: an app-owned `errors/403.blade.php` or a
+`Response::deny('…')` message, never the debug flag. Verified by rendering the real exception handler
+against the real `users.index` route at both debug settings (byte-identical 6605-byte body), and by
+reading `Exception::applicationRouteContext()`, which **does** render `can:users.view` on the debug page
+a 403 never reaches._
+
+_Previously: 2026-08-20 — Task 0010, Phase 6 docs sync: added "An identity derived from a mutable
 column must be locked once code exists that can mutate it", the durable rule behind that story's Phase 4
 round-1 finding **F1** (High) — the only round-1 finding whose lesson was not already covered here. It
 is the counterpart to task 0008a's centralization work: centralizing an identity onto a column is safe

@@ -14,13 +14,18 @@
 // duplicate -- those cases already live in Users/IndexTest.php and
 // Roles/IndexTest.php and are re-run, not rewritten, as part of Phase 3.
 
-use App\Enums\RoleName;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
+    // Pinned rather than left to the developer's ambient .env -- an
+    // unrelated SUPER_ADMIN_EMAIL would otherwise have the seeder
+    // provision a second account and attempt a reset mail on every test in
+    // this file. Same lesson as docs/errors-log.md's SUPER_ADMIN_EMAIL
+    // entry.
+    config(['auth.super_admin.email' => null]);
     app(PermissionRegistrar::class)->forgetCachedPermissions();
     $this->seed(RolePermissionSeeder::class);
 });
@@ -50,11 +55,15 @@ function moduleAccessUserWith(array $permissions, string $roleName): User
 /**
  * A Super Admin holding no permission rows of their own -- the bypass is
  * exercised through the real Gate::before closure (0002), never faked.
+ * Resolved through Role::superAdminName(), the single source of truth
+ * Gate::before itself reads -- never the RoleName enum's compiled-in
+ * default directly, which would silently stop matching under a configured
+ * `auth.super_admin.role` override (see App\Enums\RoleName's own docblock).
  */
 function moduleAccessSuperAdmin(): User
 {
     $user = User::factory()->create();
-    $user->assignRole(RoleName::SuperAdmin->value);
+    $user->assignRole(Role::superAdminName());
 
     return $user;
 }
@@ -101,15 +110,6 @@ test('a roles.manage holder reaches the roles screen but is forbidden from the u
 // =====================================================================
 
 test('the users-screen refusal names no permission, so the permission catalog is not disclosed', function () {
-    // Force production-like error rendering regardless of the developer's
-    // ambient .env (APP_DEBUG=true locally) -- Laravel's debug error page
-    // can echo a source-code preview of the route file that threw, which
-    // would leak the literal "can:users.view" middleware string and defeat
-    // the very thing this test exists to prove. Same "pin the config
-    // explicitly, don't trust the ambient environment" lesson as
-    // docs/errors-log.md's SUPER_ADMIN_EMAIL entry.
-    config(['app.debug' => false]);
-
     $blogEditor = moduleAccessUserWith(
         ['blog.view', 'blog.create', 'blog.edit', 'blog.delete'],
         'Blog Editor'
@@ -119,6 +119,13 @@ test('the users-screen refusal names no permission, so the permission catalog is
     $response = $this->get(route('users.index'));
 
     $response->assertForbidden();
+    // Positive control: the generic error page actually rendered, rather
+    // than an empty/non-HTML body that would satisfy the assertDontSee()
+    // calls below vacuously. AuthorizationException -> AccessDeniedHttpException
+    // IS an HttpException, so Handler::prepareResponse() always renders the
+    // stock errors::403 view and never the debug page regardless of
+    // APP_DEBUG -- see docs/security/authorization-patterns.md#confirmed-safe-a-can-gated-routes-403-names-no-permission--and-app_debug-is-not-what-makes-that-true.
+    $response->assertSee('This action is unauthorized.');
     $response->assertDontSee('users.view', false);
     $response->assertDontSee('users.create', false);
     $response->assertDontSee('users.edit', false);
@@ -126,8 +133,6 @@ test('the users-screen refusal names no permission, so the permission catalog is
 });
 
 test('the roles-screen refusal names no permission, so the permission catalog is not disclosed', function () {
-    config(['app.debug' => false]);
-
     $blogEditor = moduleAccessUserWith(
         ['blog.view', 'blog.create', 'blog.edit', 'blog.delete'],
         'Blog Editor'
@@ -137,6 +142,7 @@ test('the roles-screen refusal names no permission, so the permission catalog is
     $response = $this->get(route('roles.index'));
 
     $response->assertForbidden();
+    $response->assertSee('This action is unauthorized.');
     $response->assertDontSee('roles.manage', false);
     $response->assertDontSee('roles.manage-administrators', false);
 });
