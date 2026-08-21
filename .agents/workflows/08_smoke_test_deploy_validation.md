@@ -55,21 +55,29 @@ Para cada endpoint, verificar los 3 Oráculos obligatorios:
 
 ### 2.3. Ejemplo de Smoke Test para RestoStock
 
+> Ejemplo concreto para ESTE proyecto — las rutas exactas viven en `docs/03_persistence_and_api/openapi.yaml` y cambian con el contrato (verificadas por última vez tras `TK-047`, que sincronizó el spec con la API real). Antes de reutilizar este ejemplo, confírmalas contra el spec vigente en vez de asumir que siguen igual — es precisamente el Antipatrón C de [`.agents/rules/04_verified_implementation_standard.md`](../rules/04_verified_implementation_standard.md).
+
 ```bash
-# ORACULO HTTP: POST /api/auth/pin → 401 (PIN inválido confirma que el endpoint existe y valida)
+# ORACULO HTTP: POST /api/v1/auth/login-pin con usuario inexistente → 404
+# (userId no vacio no dispara 401 aqui: la validacion Zod pasa igual, el 401 solo
+# aparece si el usuario SI existe y el PIN es incorrecto — verificado contra el
+# codigo real, no asumido: el 404 confirma que la ruta existe y el UseCase corre)
 curl -sf -o /dev/null -w "%{http_code}" \
-  -X POST "${BACKEND_URL}/api/auth/pin" \
+  -X POST "${BACKEND_URL}/api/v1/auth/login-pin" \
   -H "Content-Type: application/json" \
-  -d '{"userId":"00000000-0000-0000-0000-000000000000","pin":"0000"}' | grep -q "401"
+  -d '{"userId":"00000000-0000-0000-0000-000000000000","pin":"0000"}' | grep -q "404"
 
-# ORACULO HTTP: GET /api/kitchen/remanentes → 401 (endpoint protegido responde)
+# ORACULO HTTP: GET /api/v1/kitchen/remanentes-activos sin token → 401 (ruta protegida responde)
 curl -sf -o /dev/null -w "%{http_code}" \
-  "${BACKEND_URL}/api/kitchen/remanentes" | grep -q "401"
+  "${BACKEND_URL}/api/v1/kitchen/remanentes-activos" | grep -q "401"
 
-# ORACULO SCHEMA: Verificar que error sigue el formato RFC 7807
-curl -sf -X POST "${BACKEND_URL}/api/auth/pin" \
+# ORACULO SCHEMA: Verificar que el error de validacion sigue el formato RFC 7807.
+# SIN -f/--fail aqui: esa flag suprime el body de la respuesta en codigos 4xx — con -f
+# este oraculo devuelve silenciosamente vacio en vez de fallar con un error legible
+# (bug real detectado corriendo este ejemplo contra el servidor real, no leyendo el codigo).
+curl -s -X POST "${BACKEND_URL}/api/v1/auth/login-pin" \
   -H "Content-Type: application/json" \
-  -d '{"userId":"invalid","pin":""}' | jq 'has("type") and has("status") and has("title")'
+  -d '{"userId":"usr-test","pin":""}' | jq 'has("type") and has("status") and has("title")'
 ```
 
 ---
