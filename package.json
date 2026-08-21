@@ -6,7 +6,7 @@
   "description": "Clickoteca — biblioteca de alquiler de sets LEGO por suscripción (MVP)",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "start:standalone": "node scripts/start-standalone.mjs",
     "lint": "eslint .",
