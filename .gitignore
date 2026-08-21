@@ -23,8 +23,12 @@ next-env.d.ts
 /playwright/.cache
 
 # env — nunca commitear secretos; usar .env.example como plantilla
-.env
-.env*.local
+# Se ignora **todo** `.env*` y se rescata solo la plantilla: enumerar variantes
+# (`.env`, `.env*.local`) dejaba fuera del ignore justo las que se crean sin pensar
+# —`.env.vercel` de `vercel env pull`, `.env.production`, `.env.supabase`—, que son las
+# que traen credenciales de verdad.
+.env*
+!.env.example
 
 # misc
 *.pem
