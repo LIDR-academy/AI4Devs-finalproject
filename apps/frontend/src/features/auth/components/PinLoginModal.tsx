@@ -9,49 +9,40 @@ interface PinLoginModalProps {
   onSuccess: (authData: LoginPinResponse) => void;
 }
 
-const DEFAULT_USERS = [
-  { id: 'usr-carlos-1', name: 'Carlos Gomez (Cocina)' },
-  { id: 'usr-maria-2', name: 'Maria Silva (Administrador)' },
-];
-
 interface UserSelectorProps {
   selectedUserId: string;
   onChange: (id: string) => void;
   disabled: boolean;
 }
 
+/**
+ * Antes un <select> con 2 operarios de fixtures de desarrollo hardcodeados
+ * (usr-carlos-1/usr-maria-2) — en una base de datos de producción nueva el único
+ * usuario real es el admin sembrado por TK-051, que nunca aparecía en esa lista:
+ * un humano real no podía loguearse tras un despliegue nuevo. El backend no expone
+ * ningún endpoint para listar operarios (mismo hallazgo ya documentado en
+ * TK-049-FE/UserStatusForm.tsx), así que se pide el ID real en vez de simular una
+ * lista que podría no reflejar los usuarios reales de este despliegue.
+ */
 const UserSelector: React.FC<UserSelectorProps> = ({ selectedUserId, onChange, disabled }) => (
   <div style={{ marginBottom: '20px', textAlign: 'left' }}>
     <label
-      htmlFor="select-pin-login-user"
+      htmlFor="input-pin-login-user"
       style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}
     >
-      Operario en Turno:
+      ID de Operario:
     </label>
-    <div style={{ position: 'relative' }}>
-      <select
-        id="select-pin-login-user"
-        value={selectedUserId}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        style={{
-          width: '100%',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          backgroundColor: 'var(--bg-root)',
-          border: '1px solid var(--border-card)',
-          color: 'var(--text-primary)',
-          fontSize: '1rem',
-          outline: 'none',
-        }}
-      >
-        {DEFAULT_USERS.map((user) => (
-          <option key={user.id} value={user.id}>
-            {user.name}
-          </option>
-        ))}
-      </select>
-    </div>
+    <input
+      type="text"
+      id="input-pin-login-user"
+      className="input-touch"
+      value={selectedUserId}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      placeholder="ej. bootstrap-admin"
+      autoComplete="off"
+      style={{ width: '100%' }}
+    />
   </div>
 );
 
@@ -95,7 +86,7 @@ const PinLoginHeader: React.FC = () => (
 
     <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '4px' }}>Acceso Táctil de Operarios</h2>
     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
-      Seleccione su perfil e ingrese su PIN de seguridad
+      Ingrese su ID de operario y su PIN de seguridad
     </p>
   </>
 );
@@ -111,8 +102,8 @@ const PinSubmitButton: React.FC<{ disabled: boolean; isLoading: boolean; onClick
   </button>
 );
 
-export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
-  const [selectedUserId, setSelectedUserId] = useState<string>(DEFAULT_USERS[0].id);
+function usePinLoginForm(onSuccess: (authData: LoginPinResponse) => void) {
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -131,6 +122,10 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedUserId.trim()) {
+      setError('Ingresa tu ID de operario.');
+      return;
+    }
     if (pin.length < 4) {
       setError('El PIN debe tener al menos 4 digitos.');
       return;
@@ -150,20 +145,30 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
     }
   };
 
+  return { selectedUserId, setSelectedUserId, pin, error, isLoading, handleDigitPress, handleDeletePress, handleLoginSubmit };
+}
+
+export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
+  const form = usePinLoginForm(onSuccess);
+
   return (
     <Modal maxWidth="420px" width="100%" textAlign="center">
       <PinLoginHeader />
 
-      <UserSelector selectedUserId={selectedUserId} onChange={setSelectedUserId} disabled={isLoading} />
-      <PinDotsDisplay pinLength={pin.length} />
+      <UserSelector selectedUserId={form.selectedUserId} onChange={form.setSelectedUserId} disabled={form.isLoading} />
+      <PinDotsDisplay pinLength={form.pin.length} />
 
-      {error && (
-        <ErrorBanner message={error} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
+      {form.error && (
+        <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
       )}
 
-      <PinPad onDigitPress={handleDigitPress} onDeletePress={handleDeletePress} disabled={isLoading} />
+      <PinPad onDigitPress={form.handleDigitPress} onDeletePress={form.handleDeletePress} disabled={form.isLoading} />
 
-      <PinSubmitButton disabled={isLoading || pin.length < 4} isLoading={isLoading} onClick={handleLoginSubmit} />
+      <PinSubmitButton
+        disabled={form.isLoading || form.pin.length < 4 || !form.selectedUserId.trim()}
+        isLoading={form.isLoading}
+        onClick={form.handleLoginSubmit}
+      />
     </Modal>
   );
 };
