@@ -93,6 +93,49 @@ describe('TK-049: Gestion Minima de Personal (crear/activar/desactivar operarios
     });
   });
 
+  describe('GET /api/v1/auth/users (TK-056)', () => {
+    it('ADMIN lista los operarios existentes, sin exponer pinHash', async () => {
+      const app = createApp({ userRepository: userRepo, jwtSecret: secret });
+      userRepo.seedUser(
+        new User({ id: 'usr-list-1', name: 'Operario Listado', role: 'KITCHEN_STAFF', pin: Pin.createFromRaw('2468'), status: 'ACTIVE', failedAttempts: 0 })
+      );
+
+      const response = await request(app)
+        .get('/api/v1/auth/users')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      const listed = response.body.find((u: { id: string }) => u.id === 'usr-list-1');
+      expect(listed).toMatchObject({ id: 'usr-list-1', name: 'Operario Listado', role: 'KITCHEN_STAFF', status: 'ACTIVE' });
+      expect(listed).not.toHaveProperty('pinHash');
+      expect(listed).not.toHaveProperty('pin');
+    });
+
+    it('retorna lista vacia si no hay operarios (repositorio limpio)', async () => {
+      const emptyRepo = new InMemoryUserRepository();
+      const app = createApp({ userRepository: emptyRepo, jwtSecret: secret });
+      const token = jwt.sign({ sub: 'usr-admin-1', name: 'Admin Seed', role: 'ADMIN' }, secret, { expiresIn: '1h' });
+
+      const response = await request(app).get('/api/v1/auth/users').set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([]);
+    });
+
+    it('rechaza con 403 Forbidden si quien lista NO es ADMIN', async () => {
+      const app = createApp({ userRepository: userRepo, jwtSecret: secret });
+      const response = await request(app).get('/api/v1/auth/users').set('Authorization', `Bearer ${staffToken}`);
+      expect(response.status).toBe(403);
+    });
+
+    it('rechaza con 401 Unauthorized sin token', async () => {
+      const app = createApp({ userRepository: userRepo, jwtSecret: secret });
+      const response = await request(app).get('/api/v1/auth/users');
+      expect(response.status).toBe(401);
+    });
+  });
+
   describe('PATCH /api/v1/auth/users/:id/status', () => {
     it('ADMIN desactiva (BLOCK) a un operario y este ya no puede loguearse (403 UserBlockedException)', async () => {
       const app = createApp({ userRepository: userRepo, jwtSecret: secret });

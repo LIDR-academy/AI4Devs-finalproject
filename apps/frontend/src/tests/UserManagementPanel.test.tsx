@@ -59,20 +59,42 @@ describe('TK-049-FE: UserManagementPanel Component Suite', () => {
     });
   });
 
-  it('bloquea una cuenta existente por ID desde la pestaña Bloquear / Reactivar', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ id: 'usr-1', status: 'BLOCKED' }) })
-    );
+  it('lista los operarios reales y bloquea uno desde la pestaña Bloquear / Reactivar (TK-056)', async () => {
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (!init || !init.method || init.method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => [{ id: 'usr-1', name: 'Carlos Gomez', role: 'KITCHEN_STAFF', status: 'ACTIVE' }],
+        };
+      }
+      return { ok: true, status: 200, json: async () => ({ id: 'usr-1', status: 'BLOCKED' }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
 
     render(<UserManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Bloquear \/ Reactivar/i }));
-    fireEvent.change(screen.getByLabelText(/ID del Operario/i), { target: { value: 'usr-1' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Carlos Gomez')).toBeInTheDocument();
+    });
+
     fireEvent.click(screen.getByRole('button', { name: /^Bloquear$/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/ahora en estado BLOCKED/i)).toBeInTheDocument();
+    });
+  });
+
+  it('muestra estado vacío cuando no hay operarios registrados', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] }));
+
+    render(<UserManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: /Bloquear \/ Reactivar/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Sin operarios registrados todavía/i)).toBeInTheDocument();
     });
   });
 });

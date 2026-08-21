@@ -103,9 +103,11 @@ graph TD
     US010["📝 US-010: Gestión de Personal"]
     TK049["🎫 TK-049: Gestión Personal (Backend)"]
     TK049FE["🎫 TK-049-FE: Panel Gestión Personal (Frontend)"]
+    TK056["🎫 TK-056: Listado de Operarios (Backend)"]
     EpicAuth --> US010
     US010 --> TK049
     US010 --> TK049FE
+    US010 --> TK056
 
     US011["📝 US-011: Trazabilidad de Movimientos"]
     TK050["🎫 TK-050: Trazabilidad Movimientos (Backend)"]
@@ -127,7 +129,7 @@ graph TD
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicShared epic;
     class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051 tk;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056 tk;
 ```
 
 ---
@@ -147,6 +149,6 @@ graph TD
 | | [US-008: Cierre y Conciliación](11_user_stories/kitchen/US-008.md) | [TK-009: Cierre y Conciliación](12_tickets/kitchen/backend/TK-009.md) | [TK-007-D: Conciliación Turno](12_tickets/kitchen/frontend/TK-007-D.md) | ✅ Done |
 | **📊 Reportes (`reports`)** | [US-009: Dashboard de Mermas](11_user_stories/reports/US-009.md) | [TK-010: Módulo de Reportes](12_tickets/reports/backend/TK-010.md) | [TK-007-E: Dashboard Reportes](12_tickets/reports/frontend/TK-007-E.md) | ✅ Done |
 | **🛠️ Shared Kernel** | *N/A (Cierre de Deuda)* | [TK-048: Cierre Persistencia Parcial](12_tickets/shared/backend/TK-048.md) | N/A | ✅ Done |
-| **🔐 Autenticación (`auth`)** | [US-010: Gestión de Personal](11_user_stories/auth/US-010.md) | [TK-049: Gestión Mínima de Personal](12_tickets/auth/backend/TK-049.md) | [TK-049-FE: Panel de Gestión de Personal](12_tickets/auth/frontend/TK-049-FE.md) | ✅ Done |
+| **🔐 Autenticación (`auth`)** | [US-010: Gestión de Personal](11_user_stories/auth/US-010.md) | [TK-049](12_tickets/auth/backend/TK-049.md) + [TK-056: Listado de Operarios](12_tickets/auth/backend/TK-056.md) | [TK-049-FE: Panel de Gestión de Personal](12_tickets/auth/frontend/TK-049-FE.md) | ✅ Done |
 | **📦 Bodega (`stock`)** | [US-011: Trazabilidad de Movimientos](11_user_stories/stock/US-011.md) | [TK-050: Trazabilidad de Movimientos](12_tickets/stock/backend/TK-050.md) | [TK-050-FE: Panel de Auditoría de Movimientos](12_tickets/stock/frontend/TK-050-FE.md) | ✅ Done |
 | **🛠️ Shared Kernel** | *N/A (Habilitador de Despliegue)* | [TK-051: Bootstrap Primer Administrador](12_tickets/shared/backend/TK-051.md) | N/A | ✅ Done |

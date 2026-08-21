@@ -30,7 +30,7 @@ Panel de administración web para que un Administrador consulte el historial de 
 ---
 
 ## 🔀 Alcance de Modificación (Frontend Architecture) — como quedó implementado
-*   **Componentes UI (`src/features/stock/components/`):** `MovementHistoryPanel.tsx` — tabla de movimientos con filtro por ID de insumo. El servicio soporta también `startDate`/`endDate`, pero la UI de rango de fechas no se construyó en este ticket (queda como mejora incremental, no bloquea el DoD: el filtro por insumo ya es funcional end-to-end).
+*   **Componentes UI (`src/features/stock/components/`):** `MovementHistoryPanel.tsx` — tabla de movimientos con filtro por ID de insumo **y** rango de fechas (`input[type=date]`, convertido a ISO 8601 inicio/fin de día antes de llamar al servicio).
 *   **API Service:** `src/features/stock/services/stock.service.ts` extendido con `getMovementHistory(filters)` y las interfaces `StockMovementHistoryItem`/`MovementHistoryFilters`, reutilizando `apiRequest` de `src/shared/http/apiClient.ts`.
 *   **Componente Compartido Reutilizado:** `src/shared/components/AccessDeniedState.tsx` (extraído durante `TK-049-FE`, en el mismo commit) — el guard de rol `ADMIN` no se duplicó una tercera vez.
 
@@ -55,7 +55,7 @@ Panel de administración web para que un Administrador consulte el historial de 
 *   **Then** la UI muestra un estado vacío explícito ("Sin movimientos en este rango"), no una tabla en blanco ni un error.
 
 ### DoD Estricto:
-1.  **Tests RTL:** 5 pruebas de integración (acceso restringido, no renderiza cerrado, listado real poblado por el backend, estado vacío explícito, error real sin datos sintéticos) — ver `apps/frontend/src/tests/MovementHistoryPanel.test.tsx`.
+1.  **Tests RTL:** 6 pruebas de integración (acceso restringido, no renderiza cerrado, listado real poblado por el backend, filtro de rango de fechas serializado a ISO 8601, estado vacío explícito, error real sin datos sintéticos) — ver `apps/frontend/src/tests/MovementHistoryPanel.test.tsx`.
 2.  **Estados Defensivos:** Loading (spinner), Empty ("Sin movimientos registrados en este rango"), Error (`ErrorBanner` con el mensaje real del backend, sin fallback a datos falsos — es un registro de auditoría).
 3.  **A11y:** tabla semántica (`<table>`/`<thead>`/`<tbody>`), inputs `input-touch`, cero errores `eslint-plugin-jsx-a11y`.
 

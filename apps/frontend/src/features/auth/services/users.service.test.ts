@@ -8,6 +8,18 @@ describe('UsersService — gestión de personal (TK-049-FE)', () => {
     localStorage.clear();
   });
 
+  it('lista los operarios reales del backend (TK-056)', async () => {
+    const mockUsers = [
+      { id: 'usr-1', name: 'Carlos', role: 'KITCHEN_STAFF', status: 'ACTIVE' },
+      { id: 'usr-2', name: 'Maria', role: 'ADMIN', status: 'BLOCKED' },
+    ];
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => mockUsers }));
+
+    const result = await UsersService.listUsers();
+
+    expect(result).toEqual(mockUsers);
+  });
+
   it('crea un operario nuevo y retorna la cuenta real del backend', async () => {
     AuthService.saveSession('admin-token', { id: 'usr-admin', name: 'Ana', role: 'ADMIN' });
     const mockUser = { id: 'usr-new-1', name: 'Nuevo Operario', role: 'KITCHEN_STAFF', status: 'ACTIVE' };

@@ -506,7 +506,7 @@ Se han definido detalladamente las siguientes 11 historias de usuario críticas 
     *   *Given* que un Administrador autenticado envía nombre, rol `KITCHEN_STAFF` y PIN `"4321"`,
     *   *When* invoca `POST /api/v1/auth/users`,
     *   *Then* el sistema crea la cuenta y el operario puede autenticarse de inmediato con ese PIN.
-*   **Estado:** ✅ Backend y Frontend implementados y verificados (⚠️ el backend no expone endpoint de listado; el bloqueo/reactivación se hace por ID exacto).
+*   **Estado:** ✅ Backend y Frontend implementados y verificados, incluyendo el listado real de operarios (`TK-056`).
 
 ### **5.11. US-011: Trazabilidad y Auditoría de Movimientos de Stock**
 *   **Formato de Negocio:** Como Administrador del restaurante, quiero consultar el historial de movimientos de stock filtrado por insumo y rango de fechas, para auditar quién movió qué y cuándo.
@@ -514,7 +514,7 @@ Se han definido detalladamente las siguientes 11 historias de usuario críticas 
     *   *Given* que se registró una extracción real de `Queso Mozzarella`,
     *   *When* el Administrador invoca `GET /api/v1/stock/movements`,
     *   *Then* el sistema retorna el movimiento con su tipo, cantidad, ubicaciones y fecha de creación.
-*   **Estado:** ✅ Backend y Frontend implementados y verificados (filtro por insumo; el selector de rango de fechas queda como mejora incremental).
+*   **Estado:** ✅ Backend y Frontend implementados y verificados, incluyendo el filtro por rango de fechas.
 
 ---
 
@@ -593,6 +593,10 @@ El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo
     *   **Descripción:** Corrige el problema huevo-gallina de despliegue nuevo (`POST /auth/users` exige ya ser ADMIN) y un bug crítico encontrado al investigarlo — `prisma/seed.ts` guardaba el PIN del admin en texto plano. Ahora hashea correctamente y siembra un admin configurable (`SEED_ADMIN_PIN`/`SEED_ADMIN_NAME`) de forma idempotente en cada arranque del contenedor.
     *   **Capas Afectadas:** `apps/backend/prisma/seed.ts`, `apps/backend/Dockerfile`, `apps/backend/docker-entrypoint.sh`.
     *   **DoD:** Validado extremo a extremo con contenedor real (login tras bootstrap, PIN persiste tras reinicio, arranque sin `SEED_ADMIN_PIN` no bloquea el despliegue).
+*   **TK-056: Listado de Operarios (Backend)**
+    *   **Descripción:** `GET /api/v1/auth/users` (rol `ADMIN`) — cierra la deuda que dejó `TK-049`/`TK-049-FE`: `UserStatusForm.tsx` pedía el ID exacto del operario por texto porque no existía forma de listarlos. Nunca expone `pinHash` en la respuesta.
+    *   **Capas Afectadas:** `auth/domain` (`IUserRepository.findAll()`), `auth/application` (`ListUsersUseCase`), `auth/infrastructure`.
+    *   **DoD:** 4 tests nuevos (listado poblado sin `pinHash`, lista vacía, 403/401); 64/64 tests backend en verde.
 
 Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`) están documentados en la sección 6.2 más abajo y ya implementados.
 
@@ -623,13 +627,13 @@ Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`) están documentados en la sec
     *   **Capas Afectadas:** `features/stock/components`, `/app/stock/extraction/page.tsx`.
     *   **DoD:** Deshabilitación de doble clic para evitar transacciones repetidas, validación de inputs mayores a cero y mapeo a `POST /api/v1/stock/extraction`.
 *   **TK-049-FE: Panel de Gestión de Personal (Frontend)**
-    *   **Descripción:** Modal con pestañas de alta de operario y bloqueo/reactivación por ID, consumiendo `POST /api/v1/auth/users` y `PATCH /api/v1/auth/users/{id}/status`.
+    *   **Descripción:** Modal con pestañas de alta de operario y bloqueo/reactivación desde una lista real (`TK-056`), consumiendo `GET`/`POST /api/v1/auth/users` y `PATCH /api/v1/auth/users/{id}/status`.
     *   **Capas Afectadas:** `features/auth/components` (`UserManagementPanel.tsx`, `CreateUserForm.tsx`, `UserStatusForm.tsx`), `features/auth/services/users.service.ts`.
-    *   **DoD:** 5 pruebas RTL en verde; sin fallback a datos sintéticos ante error (acciones administrativas reales, nunca simuladas); componente `AccessDeniedState` extraído a `shared/components/` para evitar una tercera duplicación del guard de rol `ADMIN`.
+    *   **DoD:** 7 pruebas RTL en verde; sin fallback a datos sintéticos ante error (acciones administrativas reales, nunca simuladas); componente `AccessDeniedState` extraído a `shared/components/` para evitar una tercera duplicación del guard de rol `ADMIN`.
 *   **TK-050-FE: Panel de Auditoría de Movimientos (Frontend)**
-    *   **Descripción:** Modal con tabla de historial de movimientos filtrable por insumo, consumiendo `GET /api/v1/stock/movements`.
+    *   **Descripción:** Modal con tabla de historial de movimientos filtrable por insumo y rango de fechas, consumiendo `GET /api/v1/stock/movements`.
     *   **Capas Afectadas:** `features/stock/components/MovementHistoryPanel.tsx`, `features/stock/services/stock.service.ts` (extendido).
-    *   **DoD:** 5 pruebas RTL en verde (incluye estado vacío explícito y error real sin datos sintéticos, al ser un registro de auditoría).
+    *   **DoD:** 6 pruebas RTL en verde (incluye filtro de fechas serializado a ISO 8601, estado vacío explícito y error real sin datos sintéticos, al ser un registro de auditoría).
 
 ---
 

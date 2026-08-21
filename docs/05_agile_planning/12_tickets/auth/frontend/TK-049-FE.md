@@ -26,7 +26,7 @@ Panel de administración táctil/web para que un Administrador dé de alta opera
 *   **Prioridad MoSCoW:** Should Have
 *   **Prerrequisitos:** `TK-001-FE` (Core Frontend), `TK-049` (API backend ya operativa)
 *   **Estado de Implementación:** ✅ Implementado y verificado (build + 67/67 tests frontend, gate de duplicación/complejidad en verde). Ver [`15_history.md`](../../../15_history.md) (2026-08-21).
-*   **Hallazgo durante la implementación:** el backend no expone ningún `GET /api/v1/auth/users` para listar operarios — solo `POST` (crear) y `PATCH .../status` (bloquear/reactivar). El panel de "Bloquear/Reactivar" pide el ID del operario manualmente en vez de mostrar una lista, con una advertencia explícita en la UI. Listar operarios queda registrado como deuda separada (nuevo endpoint de backend), no resuelta en este ticket.
+*   **Hallazgo durante la implementación (resuelto en `TK-056`):** el backend no exponía ningún `GET /api/v1/auth/users` para listar operarios — solo `POST` (crear) y `PATCH .../status` (bloquear/reactivar). El panel de "Bloquear/Reactivar" pedía el ID del operario manualmente en vez de mostrar una lista. `TK-056`/`TK-056` (frontend) cerraron esta deuda: `UserStatusForm.tsx` ahora consume `GET /api/v1/auth/users` y muestra una lista real seleccionable.
 
 ---
 
@@ -40,7 +40,7 @@ Panel de administración táctil/web para que un Administrador dé de alta opera
 ## ⚠️ Mitigación de Riesgos Técnicos
 1.  **Fuga de PIN en Cliente:** el formulario de alta nunca loguea ni persiste el PIN introducido más allá del payload de la petición; campo `type="password"`, `autoComplete="new-password"`.
 2.  **Doble Envío:** el botón de envío se deshabilita mientras la petición está en curso.
-3.  **Sin Listado de Operarios (hallazgo durante implementación):** el backend no expone `GET /api/v1/auth/users`. En vez de fabricar una lista falsa, `UserStatusForm.tsx` pide el ID exacto del operario con una advertencia visible — no hay confirmación por diálogo modal porque no hay riesgo de "clickear la fila equivocada" sin lista; el riesgo residual (typo en el ID) queda documentado, no resuelto con un dialog que no lo mitigaría de todas formas.
+3.  **Listado de Operarios (resuelto en `TK-056`):** `UserStatusForm.tsx` ahora consume `GET /api/v1/auth/users` y renderiza una lista real con botón Bloquear/Reactivar por fila — ya no depende de que el ADMIN conozca el ID exacto del operario de memoria.
 
 ---
 

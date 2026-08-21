@@ -49,6 +49,34 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/auth/users:
+    get:
+      summary: List all operator/admin accounts (ADMIN only, TK-056)
+      operationId: listUsers
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of users (never includes pinHash)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateUserResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       summary: Create a new kitchen operator or admin account (ADMIN only)
       operationId: createUser

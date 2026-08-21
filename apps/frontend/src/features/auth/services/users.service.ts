@@ -18,12 +18,23 @@ export interface SetUserStatusResult {
   status: string;
 }
 
+export interface UserListItem {
+  id: string;
+  name: string;
+  role: string;
+  status: string;
+}
+
 /**
  * Servicio separado de auth.service.ts (no user.service.ts) a propósito: apiClient.ts
  * importa AuthService para leer el token de sesión — si estos métodos vivieran en
  * auth.service.ts e importaran apiRequest de vuelta, se crearía un ciclo de módulos.
  */
 export class UsersService {
+  public static async listUsers(): Promise<UserListItem[]> {
+    return apiRequest<UserListItem[]>('/auth/users');
+  }
+
   public static async createUser(data: CreateUserRequest): Promise<CreateUserResult> {
     return apiRequest<CreateUserResult>('/auth/users', { method: 'POST', body: data });
   }

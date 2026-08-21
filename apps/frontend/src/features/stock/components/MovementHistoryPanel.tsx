@@ -15,19 +15,49 @@ interface MovementHistoryPanelProps {
 interface MovementFiltersBarProps {
   insumoId: string;
   onInsumoIdChange: (v: string) => void;
+  startDate: string;
+  onStartDateChange: (v: string) => void;
+  endDate: string;
+  onEndDateChange: (v: string) => void;
   onSearch: () => void;
 }
 
-const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({ insumoId, onInsumoIdChange, onSearch }) => (
-  <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({
+  insumoId,
+  onInsumoIdChange,
+  startDate,
+  onStartDateChange,
+  endDate,
+  onEndDateChange,
+  onSearch,
+}) => (
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
     <input
       type="text"
       className="input-touch"
       placeholder="Filtrar por ID de insumo (opcional)"
       value={insumoId}
       onChange={(e) => onInsumoIdChange(e.target.value)}
-      style={{ flex: 1 }}
+      style={{ flex: 2, minWidth: '180px' }}
       id="input-filter-insumo-id"
+    />
+    <input
+      type="date"
+      className="input-touch"
+      value={startDate}
+      onChange={(e) => onStartDateChange(e.target.value)}
+      aria-label="Fecha desde"
+      style={{ flex: 1, minWidth: '140px' }}
+      id="input-filter-start-date"
+    />
+    <input
+      type="date"
+      className="input-touch"
+      value={endDate}
+      onChange={(e) => onEndDateChange(e.target.value)}
+      aria-label="Fecha hasta"
+      style={{ flex: 1, minWidth: '140px' }}
+      id="input-filter-end-date"
     />
     <button type="button" className="btn-touch btn-secondary" onClick={onSearch} id="btn-search-movements">
       <Search size={18} />
@@ -80,9 +110,19 @@ const MovementTable: React.FC<{ items: StockMovementHistoryItem[] }> = ({ items 
   );
 };
 
+// input[type=date] entrega "YYYY-MM-DD" — el backend espera ISO 8601 date-time completo.
+function toStartOfDayIso(dateOnly: string): string {
+  return `${dateOnly}T00:00:00.000Z`;
+}
+function toEndOfDayIso(dateOnly: string): string {
+  return `${dateOnly}T23:59:59.999Z`;
+}
+
 function useMovementHistory(isOpen: boolean, userRole: string) {
   const [items, setItems] = useState<StockMovementHistoryItem[]>([]);
   const [insumoId, setInsumoId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,7 +130,11 @@ function useMovementHistory(isOpen: boolean, userRole: string) {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await StockService.getMovementHistory(insumoId ? { insumoId } : {});
+      const result = await StockService.getMovementHistory({
+        ...(insumoId ? { insumoId } : {}),
+        ...(startDate ? { startDate: toStartOfDayIso(startDate) } : {}),
+        ...(endDate ? { endDate: toEndOfDayIso(endDate) } : {}),
+      });
       setItems(result);
     } catch (err) {
       // Sin fallback a datos sintéticos: es un registro de auditoría, mostrar
@@ -99,7 +143,7 @@ function useMovementHistory(isOpen: boolean, userRole: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [insumoId]);
+  }, [insumoId, startDate, endDate]);
 
   useEffect(() => {
     if (isOpen && userRole === 'ADMIN') {
@@ -108,7 +152,7 @@ function useMovementHistory(isOpen: boolean, userRole: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, userRole]);
 
-  return { items, insumoId, setInsumoId, isLoading, error, load };
+  return { items, insumoId, setInsumoId, startDate, setStartDate, endDate, setEndDate, isLoading, error, load };
 }
 
 export const MovementHistoryPanel: React.FC<MovementHistoryPanelProps> = ({ isOpen, userRole, onClose }) => {
@@ -130,7 +174,15 @@ export const MovementHistoryPanel: React.FC<MovementHistoryPanelProps> = ({ isOp
         onClose={onClose}
       />
 
-      <MovementFiltersBar insumoId={history.insumoId} onInsumoIdChange={history.setInsumoId} onSearch={history.load} />
+      <MovementFiltersBar
+        insumoId={history.insumoId}
+        onInsumoIdChange={history.setInsumoId}
+        startDate={history.startDate}
+        onStartDateChange={history.setStartDate}
+        endDate={history.endDate}
+        onEndDateChange={history.setEndDate}
+        onSearch={history.load}
+      />
 
       {history.error && <ErrorBanner message={history.error} />}
 

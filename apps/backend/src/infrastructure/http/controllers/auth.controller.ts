@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AuthenticateByPinUseCase } from '../../../application/auth/use-cases/AuthenticateByPinUseCase.js';
 import { CreateUserUseCase } from '../../../application/auth/use-cases/CreateUserUseCase.js';
 import { SetUserStatusUseCase } from '../../../application/auth/use-cases/SetUserStatusUseCase.js';
+import { ListUsersUseCase } from '../../../application/auth/use-cases/ListUsersUseCase.js';
 
 export const authPinSchema = z.object({
   userId: z.string().min(1, 'El ID de usuario es requerido.'),
@@ -35,7 +36,8 @@ export class AuthController {
   constructor(
     private readonly authenticateByPinUseCase: AuthenticateByPinUseCase,
     private readonly createUserUseCase?: CreateUserUseCase,
-    private readonly setUserStatusUseCase?: SetUserStatusUseCase
+    private readonly setUserStatusUseCase?: SetUserStatusUseCase,
+    private readonly listUsersUseCase?: ListUsersUseCase
   ) {}
 
   public loginWithPin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -67,6 +69,18 @@ export class AuthController {
         respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
         return;
       }
+      next(error);
+    }
+  };
+
+  public listUsers = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.listUsersUseCase) {
+        throw new Error('ListUsersUseCase no configurado.');
+      }
+      const result = await this.listUsersUseCase.execute();
+      res.status(200).json(result);
+    } catch (error) {
       next(error);
     }
   };
