@@ -12,8 +12,23 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
+/**
+ * Tamaño del pool. Se deja el de `pg` (10) salvo que el despliegue diga otra cosa,
+ * porque el número correcto depende de dónde corre: en la VM hay **un** proceso y le
+ * conviene un pool holgado; en serverless hay tantos pools como instancias vivas, y
+ * diez conexiones por instancia agotan el límite del Postgres gestionado en cuanto hay
+ * tráfico. Ahí se baja con `DATABASE_POOL_MAX`.
+ */
+function poolMax(): number | undefined {
+  const raw = Number(process.env.DATABASE_POOL_MAX);
+  return Number.isFinite(raw) && raw > 0 ? raw : undefined;
+}
+
 function createClient() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+    max: poolMax(),
+  });
   return new PrismaClient({ adapter });
 }
 

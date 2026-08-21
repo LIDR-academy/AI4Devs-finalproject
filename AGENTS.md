@@ -1033,6 +1033,20 @@ project. Read it at the start of every session.
   no en build. Lo que **no** es problema: no se escribe en disco —las imágenes son URLs de
   Rebrickable— y `proxy.ts` corre en runtime Node en Next 16, así que Prisma en el
   middleware funciona.
+- **Postgres gestionado = dos URLs (2026-08-21):** con un pooler de transacciones
+  delante (Supabase, Neon) la aplicación va al pooler y **las migraciones no pueden** —
+  necesitan sesión estable para el *advisory lock* y el DDL—. `prisma.config.ts` usa
+  ahora `DIRECT_URL` si existe y `DATABASE_URL` si no, con `process.env` para la primera
+  porque `env()` lanza cuando falta y aquí faltar es lo normal. Se añade
+  `DATABASE_POOL_MAX` (por defecto, el de `pg`): en serverless hay **un pool por
+  instancia viva** y diez conexiones cada uno agotan el límite del proveedor; en la VM,
+  un solo proceso quiere el pool holgado, así que no se fija un número a ciegas. Script
+  nuevo `db:deploy` (`prisma migrate deploy`) — `db:migrate` es `migrate dev` y contra
+  una base remota no se usa. **Lo que no hay que tocar para desplegar fuera de la VM:**
+  el esquema, las imágenes (son `<img>` a URLs de Rebrickable, no `next/image`), la
+  cookie (`Secure` sale de `NODE_ENV`) y el `proxy`. **Y un dato descubierto mirando:**
+  `SESSION_SECRET` y `APP_URL` del `.env.example` **no los lee nadie** — el token de
+  sesión es aleatorio y se guarda hasheado (ADR-0002 §1).
 - _(More facts to be added as the project develops.)_
 
 ## Open questions

@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev && prisma generate",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "spec:validate": "openspec validate --all --strict",
     "scheduler": "tsx scheduler/index.ts"

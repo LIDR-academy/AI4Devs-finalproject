@@ -468,6 +468,16 @@ pueden divergir. Lo que cambia es quién mira el reloj.
   granularidad diaria, con lo que `*/5` obliga a plan de pago; y sigue haciendo falta
   un Postgres gestionado, porque ahí no hay `localhost` que valga.
 
+**Si la base es gestionada (Supabase, Neon), son dos URLs y no una.** La aplicación se
+conecta al **pooler de transacciones** y las **migraciones no pueden**: necesitan una
+sesión estable para tomar el *advisory lock* y ejecutar DDL. Por eso `DATABASE_URL`
+(pooler) es la del runtime y `DIRECT_URL` (conexión directa) la que usa el CLI de
+Prisma — `prisma.config.ts` prefiere la segunda si existe. Se añade `DATABASE_POOL_MAX`
+para el caso serverless, donde hay **un pool por instancia viva** y el defecto de `pg`
+(diez conexiones) agota el límite del proveedor en cuanto hay tráfico. Donde solo hay
+una conexión —la VM, el Postgres local del docker-compose— no se define ninguna de las
+dos y nada cambia. El esquema no se toca: Postgres es Postgres.
+
 ### **2.5. Seguridad**
 
 Decidido en `documents/ADR-0002`:
