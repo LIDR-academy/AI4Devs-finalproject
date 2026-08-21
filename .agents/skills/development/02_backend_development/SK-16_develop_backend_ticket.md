@@ -1,7 +1,7 @@
 ---
 name: SK-16_develop_backend_ticket
 description: "Guía el desarrollo atómico de un ticket backend respetando la Arquitectura Hexagonal en Vertical Slices, TDD, sanitización activa de DTOs, precisión matemática de punto fijo, Eager Loading (Anti-N+1), CRUDs de entidades secundarias/pivotes, transacciones de BD, alineación de contrato y mutation score >= 70%."
-version: "3.8.1"
+version: "3.9.0"
 category: "development/02_backend_development"
 inputs:
   - ticket_id: "ID o ruta del ticket técnico (ej. TK-001 o docs/05_agile_planning/tickets/TK-001.md)"
@@ -85,4 +85,5 @@ Antes de dar por completado el ticket, debes validar y verificar los siguientes 
 4. **Compilación & Types:** Ejecuta el comando de build oficial de `AGENTS.md` para asegurar 0 errores de compilación.
 5. **Análisis Estático (Ticket-Scoped, obligatorio):** Ejecuta `bash docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh` — verifica, con `--max-warnings 0`, que los archivos sin commitear de este ticket no violen `complexity`/`max-lines-per-function`/`max-depth`. Deuda preexistente en archivos que este ticket no tocó no bloquea el cierre (ver `docs/00_stack_manifest.md`), pero cualquier violación en un archivo que este ticket creó o modificó sí lo hace. Además, ejecuta el linter oficial de `AGENTS.md` sobre todo el proyecto para confirmar **0 errores** (los warnings preexistentes fuera del diff de este ticket no bloquean).
 6. **Duplicación (jscpd):** Ejecuta `pnpm run duplication` — gate bloqueante, umbral declarado en `docs/00_stack_manifest.md`.
-7. **Reporte al Humano:** Presentar los artefactos creados/modificados y los resultados del pase de calidad estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.
+7. **Implementación Verificada, no solo leída (obligatorio):** antes de reportar el ticket como terminado, autoaplica los 3 checks de [`.agents/rules/04_verified_implementation_standard.md`](../../../rules/04_verified_implementation_standard.md): (a) toda variable de entorno nueva que valides tiene al menos un call-site real que la consume; (b) todo Dockerfile/script de seed/migración que toques lo ejecutaste de verdad contra un entorno representativo, no solo lo leíste; (c) si el módulo tiene un spec `status: approved` asociado, confirmaste alineación o reportaste la divergencia al humano en vez de asumir en silencio.
+8. **Reporte al Humano:** Presentar los artefactos creados/modificados y los resultados del pase de calidad estructurados estrictamente según la plantilla universal en `.agents/rules/00_output_reporting_standard.md`.
