@@ -36,3 +36,13 @@ inputs:
   - ✅ Validado en vivo contra Postgres real (no solo tests): creación/lectura de recetas, conciliaciones de turno con variancia, y agregación correcta del reporte de mermas combinando ambos formatos de descarte (`DISCARD_EXPIRATION` y `DISCARD` sin sufijo del auto-descarte).
 - **Estado de Tests:** 46/46 backend + 52/52 frontend en verde (`pnpm test`).
 - **Estado de Build/Lint/Duplicación:** 0 errores; duplicación 1.50% (umbral 3%).
+
+### 2026-08-21 - Gestión Mínima de Personal (TK-049)
+- **Hito:** un restaurante real ya puede dar de alta y desactivar operarios sin redeployar código — hasta ahora los únicos 2 usuarios estaban hardcodeados en `seed.ts`.
+- **Acciones Realizadas:**
+  - ✅ `POST /api/v1/auth/users` (ADMIN): crea un operario nuevo (nombre, rol, PIN), reutilizando `Pin.createFromRaw` (hash con salt por usuario, ya existente).
+  - ✅ `PATCH /api/v1/auth/users/{id}/status` (ADMIN): bloquea/reactiva un operario — nuevos métodos `User.block()`/`User.activate()`, distintos del auto-bloqueo por 5 intentos fallidos pero mismo status.
+  - ✅ Ambas rutas protegidas con `authMiddleware` + `requireRole('ADMIN')` propios dentro de `auth.routes.ts` (el router de auth no tenía guard global porque `login-pin` debe ser público).
+  - ✅ `openapi.yaml` sincronizado con los 2 endpoints nuevos (mismo criterio de `TK-047`: validado en vivo, no solo declarado).
+- **Estado de Tests:** 9 tests nuevos (creación exitosa, login inmediato con el PIN asignado, 403 sin rol ADMIN, 401 sin token, 400 en PIN inválido, bloqueo con verificación de que el login subsecuente falla, reactivación, 404 usuario inexistente) — 55/55 backend + 52/52 frontend en verde.
+- **Estado de Build/Lint/Duplicación:** 0 errores; duplicación 1.48% (umbral 3%).

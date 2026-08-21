@@ -60,6 +60,18 @@ export class User {
     this.props.failedAttempts = 0;
   }
 
+  // Bloqueo/activacion administrativa (Guard: gestion minima de personal, TK-049) — distinto
+  // del bloqueo automatico por 5 intentos fallidos, pero mismo status: un ADMIN puede
+  // desactivar a un operario que deja el restaurante, o reactivar a uno bloqueado por error.
+  public block(): void {
+    this.props.status = 'BLOCKED';
+  }
+
+  public activate(): void {
+    this.props.status = 'ACTIVE';
+    this.props.failedAttempts = 0;
+  }
+
   public validatePin(rawPin: string): boolean {
     if (this.isBlocked()) {
       throw new UserBlockedException(this.props.name);
