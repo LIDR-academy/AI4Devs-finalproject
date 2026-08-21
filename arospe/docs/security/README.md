@@ -47,7 +47,14 @@ repo must follow — always with a real code example pulled from this repository
   protection in the app, and a delete into a way to remove the catalog's base role outright. It names
   the review question that catches this class ("which existing invariants does this screen's write
   surface newly reach?"), why the lock must cover exactly the identity and not the row's whole surface,
-  and why a `creating` guard without a sanctioned bypass breaks seeding in production.
+  and why a `creating` guard without a sanctioned bypass breaks seeding in production. Task 0011's Phase 4
+  audit closes that thread from the **view** side: **a control omitted from the DOM is safe only for the
+  one value whose guard preserves an omission** — the roles editor withholds exactly one checkbox
+  (`roles.manage-administrators`, absent rather than disabled, because a disabled control both leaks the
+  permission's existence and does not submit), and that is safe only because it is precisely the
+  permission `EnforceAdministratorPermissionGrant` re-adds. It names the one-`@if`-away regression, the
+  count-based test that catches it where an `assertDontSee()` would not, and the accepted Low residual
+  that withholding the control does not withhold the id.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -118,7 +125,19 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend), Phase 6 docs sync:
+_Last updated: 2026-08-21 — Task 0011 (Roles & permissions management — UI), Phase 4 audit (verdict
+PASS, no blocking findings): still no new page — `authorization-patterns.md` gained one durable rule,
+"A control omitted from the DOM is safe only for the one value whose guard preserves an omission", and
+its **"Two guards on one payload"** section was narrowed in the same pass. That section closed with
+"the second action never has to preserve anything, because nothing is ever invisibly absent" — true
+while the paired Blade view was still unbuilt, and no longer true now that it ships one deliberate
+omission, with `EnforceAdministratorPermissionGrant`'s preserve branch live rather than dormant.
+Corrected rather than only appended to, per [errors-log.md](../errors-log.md)'s "a security page
+documented the vulnerable code as current" lesson. Every claim in the new section was verified by
+rendering the real component for both actor tiers (37 vs. 38 checkboxes) and by executing a broad
+administrator's omitting save, not by reading the markup._
+
+_Previously: 2026-08-20 — Task 0010 (Roles & permissions management — backend), Phase 6 docs sync:
 still no new page — `authorization-patterns.md` gained a second rule from this story, "An identity
 derived from a mutable column must be locked once code exists that can mutate it" (Phase 4 round-1
 finding **F1**, High). Round 1's other seven findings each already had a home on that page or were

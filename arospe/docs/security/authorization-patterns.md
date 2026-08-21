@@ -20,6 +20,7 @@ make these distinctions explicit.
 - [A full-set sync behind a partially-visible form must preserve what the actor cannot see](#a-full-set-sync-behind-a-partially-visible-form-must-preserve-what-the-actor-cannot-see)
 - [An identity derived from a mutable column must be locked once code exists that can mutate it](#an-identity-derived-from-a-mutable-column-must-be-locked-once-code-exists-that-can-mutate-it)
 - [Two guards on one payload must agree on what an omission means](#two-guards-on-one-payload-must-agree-on-what-an-omission-means)
+- [A control omitted from the DOM is safe only for the one value whose guard preserves an omission](#a-control-omitted-from-the-dom-is-safe-only-for-the-one-value-whose-guard-preserves-an-omission)
 - [A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself](#a-check-over-a-submitted-list-must-accept-every-shape-the-write-accepts-and-derive-the-before-state-itself)
 - [Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone](#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone)
 
@@ -719,9 +720,16 @@ in opposite ways, and both are correct *for their own rule*:
 | [`EnforceGrantorPermissionScope`](../../app/Actions/Roles/EnforceGrantorPermissionScope.php) | throws | **ignores** — the sync revokes it |
 
 That divergence is safe only because of a property of a *different* file: `permissionOptions()` returns
-the **unfiltered** `web` catalog, so every permission a role currently holds is rendered as a checked
-box and comes back in the payload. The second action never has to preserve anything, because nothing is
-ever invisibly absent.
+the **unfiltered** `web` catalog, so (almost) every permission a role currently holds is rendered as a
+checked box and comes back in the payload.
+
+> **Narrowed 2026-08-21 (task 0011's Phase 4 audit), now that the paired Blade view exists.** This
+> section originally closed with "the second action never has to preserve anything, because nothing is
+> ever invisibly absent" — written while `resources/views/livewire/roles.blade.php` was still 0011's
+> unbuilt deliverable. The shipped view omits **exactly one** checkbox, and
+> `EnforceAdministratorPermissionGrant`'s preserve branch is therefore live rather than dormant. The
+> combination is still safe, for a reason worth stating on its own — see
+> [the section below](#a-control-omitted-from-the-dom-is-safe-only-for-the-one-value-whose-guard-preserves-an-omission).
 
 ⚠️ **The hazard.** The natural reaction to the finding `EnforceGrantorPermissionScope` closes ("an actor
 may not grant a permission they do not hold") is to stop rendering those checkboxes at all. Doing that —
@@ -764,6 +772,75 @@ Two corollaries verified during the same re-audit, both worth knowing before tou
   `saveRole()` keys on `Auth::user()->hasRole($role->name, 'web')`, so it protects the actor's own
   access and nobody else's. If that asymmetry ever stops being acceptable, the fix is a second diff
   direction in the same action, not a new guard elsewhere.
+
+## A control omitted from the DOM is safe only for the one value whose guard preserves an omission
+
+Established by task 0011's Phase 4 audit — the view half of the roles screen, and the first place in
+this repo where "do not render this control at all" is a *security* requirement rather than a
+convenience.
+
+The requirement has two halves that pull in opposite directions, and both are real:
+
+- **It must be absent, not disabled.** A rendered-but-disabled checkbox tells a broad `roles.manage`
+  holder that `roles.manage-administrators` exists and whether this role holds it — the escalation-adjacent
+  fact the whole Super-Admin-only meta-rule exists to withhold. HTML also does not submit a disabled
+  input, so "disabled" would be a silent revoke on top of a leak.
+- **Absence is what a full-replace `sync*()` reads as a revoke.** Per the two sections above, an omitted
+  value is destroyed unless some guard puts it back.
+
+✅ Good — the shipped view, which resolves that by omitting **exactly one** checkbox, and only the one
+whose guard already owns the preserve branch:
+
+```blade
+{{-- resources/views/livewire/roles.blade.php --}}
+@if ($permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION)
+    @if ($this->canGrantAdministratorLevel)
+        <flux:checkbox value="{{ $permission->id }}" :label="$permissionLabel($module, $action)" />
+    @endif
+@else
+    <flux:checkbox value="{{ $permission->id }}" :label="$permissionLabel($module, $action)" />
+@endif
+```
+
+Verified by rendering rather than by reading: a broad `roles.manage` holder editing a role that holds
+`roles.manage-administrators` gets **37** `value="…"` checkbox attributes and no matching label; a Super
+Admin gets **38**. Saving an unrelated change from that broad actor's payload — which omits the
+permission — leaves the role holding `roles.manage-administrators`, because
+[`EnforceAdministratorPermissionGrant`](../../app/Actions/Roles/EnforceAdministratorPermissionGrant.php)
+re-adds it. Every *other* permission the actor cannot grant (`products.delete`, say) is still rendered,
+so nothing else can be invisibly absent.
+
+❌ Bad — a second omission in the same loop, which is the natural next edit and has no guard behind it:
+
+```blade
+{{-- anti-pattern — do NOT add a second condition here --}}
+@if ($this->canGrant($permission->name))
+    <flux:checkbox value="{{ $permission->id }}" ... />
+@endif
+```
+
+`EnforceGrantorPermissionScope` **ignores** an omission, so this silently strips every permission the
+editing actor happens not to hold, from every role they touch, with no error and no failing test — the
+hazard the section above names, now one `@if` away instead of hypothetical.
+
+**Rule.** When a control is deliberately withheld from the DOM, the withheld set must be **exactly**
+the set of values some guard preserves on omission, and the code must say which guard that is. Keep the
+condition to one expression (ideally applied once, before the grouping/rendering transform, rather than
+per-item inside it), and pair it with a test asserting the rendered control count equals *catalog minus
+withheld* — a count assertion fails when a second omission appears, whereas an
+`assertDontSee()` on the withheld label passes just as happily when half the form has vanished.
+
+**Accepted residual (Low), recorded so it is not rediscovered as new.** Withholding the *control* does
+not withhold the *value*: `openEditModal()` assigns `$this->selectedPermissionIds` from the role's real
+permission set, and that property is public and not `#[Locked]` (it must be writable — it is the form
+field), so the withheld permission's integer **id** still reaches a non-Super-Admin's browser in the
+Livewire snapshot. By elimination against the 37 rendered id→label pairs, the actor can infer that the
+role holds a permission they are not shown. It confers nothing — granting it is refused with a 403 and
+revoking it is undone by the preserve branch, both verified live. Closing it means filtering the id out
+of `selectedPermissionIds` when `! $canGrantAdministratorLevel`, which is safe but puts the withholding
+rule in a **second** file; if that is ever done, the two must be derived from one expression, because a
+filter that also fires for the Super Admin turns preserve into revoke for the one actor allowed to
+revoke.
 
 ## A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself
 
