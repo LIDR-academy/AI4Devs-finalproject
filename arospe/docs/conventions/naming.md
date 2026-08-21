@@ -222,6 +222,24 @@ trans_choice('roles.index.delete_blocked', $role->users_count, ['count' => $role
 ✅ Good — the singular/plural split lives in the *translation file*, so a locale with different plural rules (Spanish here, and any future one) can express them without touching PHP.
 ❌ Bad — `delete_blocked_one` / `delete_blocked_many` as two keys, or branching on the count in the component. Both hardcode English's two-form plural rule into code that other locales have to live with.
 
+**The rule binds a Blade template exactly as it binds a component.** Task 0011 added two more `trans_choice()` keys to the same group — `roles.index.summary` (the list's live role count) and `roles.index.permission_count` (each row's granted-permission count) — and the second one shipped its first draft with `':count permission|:count permissions'` written **inline in `resources/views/livewire/roles.blade.php`**, where `lang/es/roles.php` could never reach it (Phase 5 finding F-3). A hardcoded plural is no more acceptable in a view than in PHP; the giveaway is the `|` character appearing anywhere outside a `lang/` file.
+
+**A key leaf is `snake_case` even when the value it names is not — map at render, never rename the value.** This story is where the two collide: the permission catalog's own names are `<module-slug>.<action>` with kebab-case segments (`sales-regions.view`, `roles.manage-administrators`), and those names are fixed by the seeded catalog. The labels are therefore **composed** from two flat arrays rather than written one key per permission:
+
+```php
+// lang/en/roles.php — top-level siblings of 'index', not nested under it
+'modules' => ['users' => 'Users', 'sales_regions' => 'Sales regions', /* … */ 'roles' => 'Roles'],
+'actions' => ['view' => 'View', /* … */ 'manage_administrators' => 'Manage administrator-level roles/users'],
+```
+
+```blade
+{{-- resources/views/livewire/roles.blade.php --}}
+__('roles.modules.'.str_replace('-', '_', $module)).' — '.__('roles.actions.'.str_replace('-', '_', $action))
+```
+
+✅ Good — 16 keys per language (10 module labels + 6 action labels) covering all 38 permissions, the hyphen mapped to an underscore at the point of lookup, and a new seeded module needing exactly one new key.
+❌ Bad — `'sales-regions' => …` as a literal kebab-case key leaf (violates the rule above), one key per permission (38+ keys, and a catalog addition silently renders a raw key), or renaming the permission itself to match the key. The permission name is the database's, not the translation file's.
+
 Note `APP_LOCALE=en` today, so everything renders in English until the interface language switcher exists — an accepted, documented consequence of the English-source decision, not a defect. Adding a key means adding it to **both** `lang/en/` and `lang/es/` in the same change.
 
 ## Boolean properties
@@ -240,7 +258,9 @@ public bool $showDeleteModal;
 
 Two patterns coexist in this file: `can*`/`requires*`/`show*` for capability/UI-state flags, and a bare past-participle (`twoFactorEnabled`) for a fact about the authenticated user's current state. Follow whichever of the two fits: use `can`/`requires`/`show` for UI/permission flags you're introducing, and a plain past-participle only for a mirrored model/domain fact (as `twoFactorEnabled` mirrors `User::hasEnabledTwoFactorAuthentication()`).
 
-_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend): added the `trans_choice()` / `|`-delimited plural convention to **Translation keys**, with `lang/en/roles.php`'s `delete_blocked` as the ✅ and a two-key/branch-in-PHP ❌; added `RoleValidationRules` to **Traits** with the note that it and `UserValidationRules` are named after the model whose input they describe rather than the screen that submits it; added `App\Livewire\Roles\Index` → `livewire/roles.blade.php` as the second row of the `Index`-in-a-subfolder exception table, with the "resolve the view path by running the component" habit this story's own spec got wrong; and listed `EnforceGrantorPermissionScope` and `RoleInUseException` in the class/file table._
+_Last updated: 2026-08-21 — Task 0011 (Roles & permissions management — UI): extended **Translation keys** in two directions the shipped view forced. First, the `trans_choice()` rule now states explicitly that it binds a **Blade template** too — `roles.index.permission_count` shipped its first draft with the `|`-delimited plural written inline in `resources/views/livewire/roles.blade.php`, unreachable by `lang/es/` (Phase 5 finding F-3), and `roles.index.summary` is the third key in that group. Second, added the **composed-label / snake_case-leaf** convention with its real ✅/❌ pair: the seeded catalog's names are kebab-case and fixed, so the segment is mapped to its key at lookup (`sales-regions` → `sales_regions`) and the labels are composed from a 10-key `modules` array and a 6-key `actions` array — never one key per permission, and never by renaming the permission._
+
+_Previously: 2026-08-20 — Task 0010 (Roles & permissions management — backend): added the `trans_choice()` / `|`-delimited plural convention to **Translation keys**, with `lang/en/roles.php`'s `delete_blocked` as the ✅ and a two-key/branch-in-PHP ❌; added `RoleValidationRules` to **Traits** with the note that it and `UserValidationRules` are named after the model whose input they describe rather than the screen that submits it; added `App\Livewire\Roles\Index` → `livewire/roles.blade.php` as the second row of the `Index`-in-a-subfolder exception table, with the "resolve the view path by running the component" habit this story's own spec got wrong; and listed `EnforceGrantorPermissionScope` and `RoleInUseException` in the class/file table._
 
 _Previously: 2026-08-20 — Task 0009: added the "name a permission once on the class that owns the rule" convention to **Permission names**, with `RolePolicy`'s two `public const` names as the ✅ example and `UserPolicy`'s four remaining literals as the deferred ❌ (finding F5), and listed `App\Actions\Roles\EnforceAdministratorPermissionGrant` in the class/file table — an imperative verb phrase with no `Action` suffix, matching the existing invokable-action rule._
 
