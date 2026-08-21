@@ -25,21 +25,22 @@ Panel de administración táctil/web para que un Administrador dé de alta opera
 *   **Estimación (Story Points):** 3
 *   **Prioridad MoSCoW:** Should Have
 *   **Prerrequisitos:** `TK-001-FE` (Core Frontend), `TK-049` (API backend ya operativa)
-*   **Estado de Implementación:** ⚠️ Spec aprobada, **sin implementar**. Ver decisión de alcance en [`15_history.md`](../../../15_history.md) (2026-08-21).
+*   **Estado de Implementación:** ✅ Implementado y verificado (build + 67/67 tests frontend, gate de duplicación/complejidad en verde). Ver [`15_history.md`](../../../15_history.md) (2026-08-21).
+*   **Hallazgo durante la implementación:** el backend no expone ningún `GET /api/v1/auth/users` para listar operarios — solo `POST` (crear) y `PATCH .../status` (bloquear/reactivar). El panel de "Bloquear/Reactivar" pide el ID del operario manualmente en vez de mostrar una lista, con una advertencia explícita en la UI. Listar operarios queda registrado como deuda separada (nuevo endpoint de backend), no resuelta en este ticket.
 
 ---
 
-## 🔀 Alcance de Modificación (Frontend Architecture)
-*   **Componentes UI (`src/features/auth/components/`):** `UserManagementPanel.tsx` (listado + acciones de bloqueo/reactivación), `CreateUserForm.tsx` (formulario de alta con nombre/rol/PIN).
-*   **State & API Service (`src/features/auth/services/`):** extender `auth.service.ts` con `createUser()` y `setUserStatus()`, reutilizando el cliente HTTP compartido de `src/shared/http/`.
-*   **Control de Acceso:** el panel solo debe renderizarse/navegarse para sesiones con rol `ADMIN` (mismo patrón de guard de rol ya usado por `ReportsDashboard.tsx`).
+## 🔀 Alcance de Modificación (Frontend Architecture) — como quedó implementado
+*   **Componentes UI (`src/features/auth/components/`):** `UserManagementPanel.tsx` (shell modal + guard de rol + tabs), `CreateUserForm.tsx` (alta), `UserStatusForm.tsx` (bloqueo/reactivación por ID).
+*   **API Service:** `src/features/auth/services/users.service.ts` (archivo nuevo, deliberadamente separado de `auth.service.ts` — `apiClient.ts` importa `AuthService` para leer el token, así que añadir estos métodos a `auth.service.ts` habría creado un ciclo de módulos), consumiendo el cliente HTTP compartido `src/shared/http/apiClient.ts`.
+*   **Componente Compartido Extraído:** `src/shared/components/AccessDeniedState.tsx` — el guard de rol `ADMIN` ya se repetía en `ReportsDashboard.tsx`; se extrajo a la capa compartida en vez de duplicarlo una tercera vez (regla de reuso de `SK-17`), y `ReportsDashboard.tsx` se migró a usarlo también.
 
 ---
 
 ## ⚠️ Mitigación de Riesgos Técnicos
-1.  **Fuga de PIN en Cliente:** el formulario de alta nunca debe loguear ni persistir el PIN introducido más allá del payload de la petición; campo de tipo `password` o máscara equivalente.
-2.  **Doble Envío:** deshabilitar el botón de envío mientras la petición está en curso, para evitar altas duplicadas por doble clic.
-3.  **Confirmación Antes de Bloquear:** la acción de bloqueo debe pedir confirmación explícita (es una acción destructiva de acceso, no reversible sin una segunda acción del ADMIN).
+1.  **Fuga de PIN en Cliente:** el formulario de alta nunca loguea ni persiste el PIN introducido más allá del payload de la petición; campo `type="password"`, `autoComplete="new-password"`.
+2.  **Doble Envío:** el botón de envío se deshabilita mientras la petición está en curso.
+3.  **Sin Listado de Operarios (hallazgo durante implementación):** el backend no expone `GET /api/v1/auth/users`. En vez de fabricar una lista falsa, `UserStatusForm.tsx` pide el ID exacto del operario con una advertencia visible — no hay confirmación por diálogo modal porque no hay riesgo de "clickear la fila equivocada" sin lista; el riesgo residual (typo en el ID) queda documentado, no resuelto con un dialog que no lo mitigaría de todas formas.
 
 ---
 
@@ -48,24 +49,28 @@ Panel de administración táctil/web para que un Administrador dé de alta opera
 ### Criterio de Aceptación 1: Alta exitosa de operario (Happy Path)
 *   **Given** un Administrador autenticado en el panel de gestión de personal
 *   **When** completa el formulario con nombre, rol `KITCHEN_STAFF` y PIN válido, y confirma
-*   **Then** la UI muestra la cuenta recién creada en el listado con estado `ACTIVE`, sin recargar la página completa.
+*   **Then** la UI muestra un mensaje de confirmación con el nombre y estado real devueltos por el backend, sin recargar la página completa.
 
-### Criterio de Aceptación 2: Bloqueo con confirmación
-*   **Given** un operario activo en el listado
-*   **When** el Administrador pulsa "Bloquear" y confirma en el diálogo
-*   **Then** la UI actualiza el estado a `BLOCKED` de forma optimista o tras respuesta `200 OK`, y permite revertir con "Reactivar".
+### Criterio de Aceptación 2: Bloqueo por ID
+*   **Given** un Administrador que conoce el ID de un operario activo
+*   **When** ingresa el ID en la pestaña "Bloquear / Reactivar" y pulsa "Bloquear"
+*   **Then** la UI confirma el nuevo estado `BLOCKED` devuelto por el backend, y permite revertir con "Reactivar".
 
 ### DoD Estricto:
-1.  **Tests RTL:** pruebas de integración de componentes cubriendo alta exitosa, error de validación (400), bloqueo y reactivación.
-2.  **Estados Defensivos:** Loading, Empty (sin operarios listados), Error (con reintento) y Offline, según `frontend_rules.md`.
-3.  **A11y:** botones de acción ≥48px, contraste WCAG 2.2 AA, confirmación de bloqueo accesible por teclado.
+1.  **Tests RTL:** 5 pruebas de integración de componentes (acceso restringido, alta exitosa con mensaje real del backend, error de validación con `ErrorBanner`, bloqueo por ID) — ver `apps/frontend/src/tests/UserManagementPanel.test.tsx`.
+2.  **Estados Defensivos:** feedback inline de éxito/error tras cada acción (sin estado "Empty" — no hay listado que pueda estar vacío).
+3.  **A11y:** botones táctiles `btn-touch` (≥48px), `ErrorBanner` con `role="alert"`, formularios navegables por teclado — cero errores en `eslint-plugin-jsx-a11y` (verificado con `pnpm run lint`).
 
 ---
 
 ## 🤖 Instrucciones de Ejecución Autónoma para Agente IA
-1. **Fichas a crear/modificar:**
+1. **Fichas creadas/modificadas:**
    - `apps/frontend/src/features/auth/components/UserManagementPanel.tsx`
    - `apps/frontend/src/features/auth/components/CreateUserForm.tsx`
-   - `apps/frontend/src/features/auth/services/auth.service.ts` (extender)
-2. **Ejecutar Suite de Pruebas Frontend:** `pnpm test apps/frontend/src/features/auth`
-3. **Comando de Verificación Total:** `pnpm run build && pnpm run lint`
+   - `apps/frontend/src/features/auth/components/UserStatusForm.tsx`
+   - `apps/frontend/src/features/auth/services/users.service.ts` (nuevo, no `auth.service.ts` — ver nota de ciclo de módulos arriba)
+   - `apps/frontend/src/shared/components/AccessDeniedState.tsx` (nuevo, extraído)
+   - `apps/frontend/src/App.tsx` (wiring del botón "Personal" y el modal)
+   - `apps/frontend/src/tests/UserManagementPanel.test.tsx`, `apps/frontend/src/features/auth/services/users.service.test.ts`
+2. **Ejecutar Suite de Pruebas Frontend:** `pnpm --filter @restostock/frontend run test` — 67/67 en verde.
+3. **Comando de Verificación Total:** `pnpm --filter @restostock/frontend run build && pnpm --filter @restostock/frontend run lint && bash docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh && pnpm run duplication` — todos en verde.

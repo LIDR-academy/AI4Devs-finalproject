@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, ShieldAlert, Calendar, Trash2, PieChart, RefreshCw, X } from 'lucide-react';
+import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, X } from 'lucide-react';
 import { ReportsService, WasteSummaryItem } from '../services/reports.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
+import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
 
 interface ReportsDashboardProps {
   userRole: string;
@@ -130,19 +131,6 @@ const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal }
   </div>
 );
 
-const AccessDeniedState: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <Modal maxWidth="500px" width="100%" textAlign="center" padding="32px">
-    <ShieldAlert size={48} style={{ color: 'var(--color-danger)', margin: '0 auto 16px auto' }} />
-    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Acceso Restringido</h2>
-    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
-      El módulo de Reportes y Analíticas de Mermas requiere rol de Administrador.
-    </p>
-    <button className="btn-touch btn-primary" onClick={onClose} style={{ width: '100%' }}>
-      Entendido - Volver al Tablero
-    </button>
-  </Modal>
-);
-
 export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, isOpen, onClose }) => {
   const [data, setData] = useState<WasteSummaryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -164,7 +152,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
   if (!isOpen) return null;
 
   if (userRole !== 'ADMIN') {
-    return <AccessDeniedState onClose={onClose} />;
+    return <AccessDeniedState moduleLabel="Reportes y Analíticas de Mermas" onClose={onClose} />;
   }
 
   const totalQuantity = data.reduce((acc, item) => acc + parseFloat(item.totalDiscardedQuantity || '0'), 0);

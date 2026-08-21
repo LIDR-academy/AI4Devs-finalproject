@@ -6,6 +6,46 @@ Todos los cambios notables en este proyecto de especificación técnica y diseñ
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-21
+
+Esta versión cierra la "Entrega 2": endurecimiento de calidad/testing, dockerización DevSecOps completa, y las 3 funcionalidades priorizadas para completar el MVP (persistencia real, gestión mínima de personal, trazabilidad de movimientos), más el saneamiento de los artefactos ágiles y del propio framework `.agents/` que ese trabajo dejó pendiente.
+
+### Added
+* **Arquitectura de Testing y Gobernanza (TK-011 a TK-021):**
+    * Estándar de Testing Architecture (co-ubicación híbrida: unit tests junto al dominio/casos de uso, integración en `tests/`, E2E Playwright con Page Object Model en `e2e/`) — Guard 21.
+    * CI/CD actualizado a Node 24 LTS, GitHub Actions `@v5`, e infraestructura declarativa OpenTofu (`infrastructure/opentofu/`) — Guards 22/23.
+* **Gates Automatizados de Calidad (TK-025 a TK-041):**
+    * `docs/00_stack_manifest.md` como SSoT de stack aprobado por humano — Guard 24.
+    * ESLint real instalado en ambos workspaces (antes `lint` era solo un alias de `tsc`), con gates de complejidad ciclomática/longitud de función y duplicación (`jscpd`) acotados al diff del ticket en curso, nunca retroactivos sobre deuda preexistente.
+    * Capa `shared/` en frontend para eliminar duplicación entre features (servicios HTTP, hooks, Value Objects).
+* **Dockerización y DevSecOps (TK-042 a TK-047):**
+    * `Dockerfile` multi-stage (backend y frontend) con hardening de contenedores: usuario no-root, runtime pineado, cero secretos hardcodeados — Guard 25.
+    * `gitleaks`/`trivy` wireados como gates bloqueantes reales en CI (antes declarados pero nunca ejecutados); 34+35 CVEs High/Critical eliminados en ambas imágenes.
+    * `openapi.yaml` sincronizado con las rutas reales `/api/v1/...` verificadas en vivo contra el servidor.
+* **Completitud del MVP — 3 funcionalidades priorizadas (TK-048 a TK-051):**
+    * Persistencia real en producción para reportes, recetas y conciliación de turno (antes en memoria, se perdían en cada reinicio).
+    * Gestión mínima de personal: alta y bloqueo/reactivación de operarios vía `POST /api/v1/auth/users` y `PATCH /api/v1/auth/users/{id}/status` (rol `ADMIN`).
+    * Trazabilidad de movimientos de stock: `GET /api/v1/stock/movements` con filtros por insumo y rango de fechas, para auditoría.
+    * Bootstrap idempotente del primer administrador en despliegues nuevos, corrigiendo además una vulnerabilidad crítica (el seed guardaba el PIN en texto plano, nunca ejecutado en producción hasta entonces).
+* **Regularización de Artefactos Ágiles (TK-054):**
+    * `US-010`/`US-011`, fichas técnicas `TK-048` a `TK-051` y `TK-049-FE`/`TK-050-FE`, índices, matriz de trazabilidad y mapa del backlog sincronizados con las funcionalidades ya implementadas — encontrados desactualizados en una auditoría posterior a su implementación.
+    * Nuevo **Guard 26** en `.agents/AGENTS.md` (Spec-Before-Code Cascade): impide que un agente empiece a programar una funcionalidad nueva sin que su ticket técnico exista primero, evitando que este gap se repita.
+* **Frontend de Gestión de Personal y Auditoría de Movimientos (TK-049-FE, TK-050-FE):**
+    * Panel de gestión de personal (alta de operarios + bloqueo/reactivación por ID) y panel de auditoría de movimientos de stock, consumiendo la API real de `TK-049`/`TK-050`. Sin fallback a datos sintéticos ante error, a diferencia de otros paneles del proyecto — son acciones administrativas y registros de auditoría, nunca deben simular éxito o datos falsos.
+    * Hallazgo durante la implementación: el backend no expone `GET /api/v1/auth/users` para listar operarios; el bloqueo/reactivación se hace por ID exacto, documentado como limitación conocida en `TK-049-FE.md`.
+    * Componente `AccessDeniedState` extraído a `shared/components/` (antes duplicado entre `ReportsDashboard`, y a punto de triplicarse con los 2 paneles nuevos).
+
+### Fixed
+* **Auditoría de seguridad de código:** 5 hallazgos críticos cerrados (TK-029).
+* **Gate de calidad ciego:** `lint` resolvía a `tsc --noEmit` sin ningún linter de estilo real instalado, dejando sin hacer cumplir reglas ya escritas en `frontend_rules.md` (TK-033).
+* **Configuración validada pero no consumida:** `CORS_ALLOWED_ORIGINS`/`RATE_LIMIT_*` se validaban con Zod pero ningún middleware las leía (`app.use(cors())` sin argumentos) (TK-046).
+* **Vulnerabilidad de PIN en texto plano** en `prisma/seed.ts`, nunca ejecutado en un flujo real hasta que la verificación en vivo de TK-048/TK-049 expuso que no existía forma de crear el primer administrador (TK-051).
+* **Gap de sincronización de artefactos ágiles:** el código, los tests y `openapi.yaml` se mantenían sincronizados ticket a ticket, pero User Stories, fichas de ticket, PRD y `readme.md` no se actualizaban salvo que alguien lo auditara manualmente después (TK-054).
+
+### Changed
+* `readme.md` §4 (Especificación de la API): ejemplos de request/response corregidos para reflejar el contrato real (`/api/v1/...`, `accessToken` en vez de `token`, roles `KITCHEN_STAFF`/`ADMIN` en vez de `OPERATOR`, hash `scrypt` en vez de `bcrypt`) — habían quedado congelados desde el diseño inicial del MVP y nunca se resincronizaron con la implementación real.
+* Nomenclatura y jerarquía de skills/workflows de `.agents/` estandarizada (TK-027).
+
 ## [0.3.0] - 2026-08-05
 
 Esta versión marca la industrialización completa de la Gobernanza VSDD, el motor de habilidades agénticas y la auditoría formal de especificaciones.

@@ -11,6 +11,8 @@ import {
   Utensils,
   ClipboardCheck,
   BarChart3,
+  Users,
+  History,
 } from 'lucide-react';
 import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
 import { AuthService } from './features/auth/services/auth.service.js';
@@ -21,12 +23,16 @@ import { DiscardModal } from './features/kitchen/components/DiscardModal.js';
 import { RecipeSelectorModal } from './features/kitchen/components/RecipeSelectorModal.js';
 import { ShiftReconciliationWizard } from './features/kitchen/components/ShiftReconciliationWizard.js';
 import { ReportsDashboard } from './features/reports/components/ReportsDashboard.js';
+import { UserManagementPanel } from './features/auth/components/UserManagementPanel.js';
+import { MovementHistoryPanel } from './features/stock/components/MovementHistoryPanel.js';
 
 interface DashboardHeaderProps {
   currentUser: { name: string; role: string };
   isLoading: boolean;
   onReconcile: () => void;
   onReports: () => void;
+  onUserManagement: () => void;
+  onMovementHistory: () => void;
   onSync: () => void;
   onLogout: () => void;
 }
@@ -55,11 +61,21 @@ interface HeaderActionsProps {
   isLoading: boolean;
   onReconcile: () => void;
   onReports: () => void;
+  onUserManagement: () => void;
+  onMovementHistory: () => void;
   onSync: () => void;
   onLogout: () => void;
 }
 
-const HeaderActions: React.FC<HeaderActionsProps> = ({ isLoading, onReconcile, onReports, onSync, onLogout }) => (
+const HeaderActions: React.FC<HeaderActionsProps> = ({
+  isLoading,
+  onReconcile,
+  onReports,
+  onUserManagement,
+  onMovementHistory,
+  onSync,
+  onLogout,
+}) => (
   <>
     <button className="btn-touch btn-secondary" onClick={onReconcile} id="btn-open-reconciliation" title="Cierre de Turno y Conciliación">
       <ClipboardCheck size={20} />
@@ -69,6 +85,16 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({ isLoading, onReconcile, o
     <button className="btn-touch btn-secondary" onClick={onReports} id="btn-open-reports" title="Reportes de Mermas">
       <BarChart3 size={20} />
       Reportes
+    </button>
+
+    <button className="btn-touch btn-secondary" onClick={onUserManagement} id="btn-open-user-management" title="Gestión de Personal">
+      <Users size={20} />
+      Personal
+    </button>
+
+    <button className="btn-touch btn-secondary" onClick={onMovementHistory} id="btn-open-movement-history" title="Auditoría de Movimientos">
+      <History size={20} />
+      Movimientos
     </button>
 
     <button className="btn-touch btn-secondary" onClick={onSync} disabled={isLoading} id="btn-sync-remanentes" title="Sincronizar Remanentes">
@@ -83,7 +109,16 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({ isLoading, onReconcile, o
   </>
 );
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ currentUser, isLoading, onReconcile, onReports, onSync, onLogout }) => (
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({
+  currentUser,
+  isLoading,
+  onReconcile,
+  onReports,
+  onUserManagement,
+  onMovementHistory,
+  onSync,
+  onLogout,
+}) => (
   <header
     style={{
       marginBottom: '24px',
@@ -105,7 +140,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ currentUser, isLoadin
 
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
       <UserBadge name={currentUser.name} role={currentUser.role} />
-      <HeaderActions isLoading={isLoading} onReconcile={onReconcile} onReports={onReports} onSync={onSync} onLogout={onLogout} />
+      <HeaderActions
+        isLoading={isLoading}
+        onReconcile={onReconcile}
+        onReports={onReports}
+        onUserManagement={onUserManagement}
+        onMovementHistory={onMovementHistory}
+        onSync={onSync}
+        onLogout={onLogout}
+      />
     </div>
   </header>
 );
@@ -197,6 +240,8 @@ interface AppModalsProps {
   isRecipeOpen: boolean;
   isReconciliationOpen: boolean;
   isReportsOpen: boolean;
+  isUserManagementOpen: boolean;
+  isMovementHistoryOpen: boolean;
   discardTarget: RemanenteFEFOItem | null;
   remanentes: RemanenteFEFOItem[];
   operatorId: string;
@@ -205,6 +250,8 @@ interface AppModalsProps {
   onCloseRecipe: () => void;
   onCloseReconciliation: () => void;
   onCloseReports: () => void;
+  onCloseUserManagement: () => void;
+  onCloseMovementHistory: () => void;
   onCloseDiscard: () => void;
   onSuccess: () => void;
 }
@@ -214,6 +261,8 @@ const AppModals: React.FC<AppModalsProps> = ({
   isRecipeOpen,
   isReconciliationOpen,
   isReportsOpen,
+  isUserManagementOpen,
+  isMovementHistoryOpen,
   discardTarget,
   remanentes,
   operatorId,
@@ -222,6 +271,8 @@ const AppModals: React.FC<AppModalsProps> = ({
   onCloseRecipe,
   onCloseReconciliation,
   onCloseReports,
+  onCloseUserManagement,
+  onCloseMovementHistory,
   onCloseDiscard,
   onSuccess,
 }) => (
@@ -229,6 +280,8 @@ const AppModals: React.FC<AppModalsProps> = ({
     <WarehouseExtractionModal isOpen={isExtractionOpen} onClose={onCloseExtraction} onSuccess={onSuccess} />
     <RecipeSelectorModal isOpen={isRecipeOpen} onClose={onCloseRecipe} onSuccess={onSuccess} />
     <DiscardModal remanente={discardTarget} onClose={onCloseDiscard} onSuccess={onSuccess} />
+    <UserManagementPanel isOpen={isUserManagementOpen} userRole={userRole} onClose={onCloseUserManagement} />
+    <MovementHistoryPanel isOpen={isMovementHistoryOpen} userRole={userRole} onClose={onCloseMovementHistory} />
     <ShiftReconciliationWizard
       isOpen={isReconciliationOpen}
       remanentes={remanentes}
@@ -245,6 +298,8 @@ function useModalVisibility() {
   const [isRecipeOpen, setIsRecipeOpen] = useState(false);
   const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
   const [isReportsOpen, setIsReportsOpen] = useState(false);
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [isMovementHistoryOpen, setIsMovementHistoryOpen] = useState(false);
   const [discardTarget, setDiscardTarget] = useState<RemanenteFEFOItem | null>(null);
 
   return {
@@ -256,6 +311,10 @@ function useModalVisibility() {
     setIsReconciliationOpen,
     isReportsOpen,
     setIsReportsOpen,
+    isUserManagementOpen,
+    setIsUserManagementOpen,
+    isMovementHistoryOpen,
+    setIsMovementHistoryOpen,
     discardTarget,
     setDiscardTarget,
   };
@@ -309,6 +368,24 @@ function useDashboardState() {
   };
 }
 
+function useAppHandlers(dashboard: ReturnType<typeof useDashboardState>) {
+  return {
+    onReconcile: () => dashboard.setIsReconciliationOpen(true),
+    onReports: () => dashboard.setIsReportsOpen(true),
+    onUserManagement: () => dashboard.setIsUserManagementOpen(true),
+    onMovementHistory: () => dashboard.setIsMovementHistoryOpen(true),
+    onExtract: () => dashboard.setIsExtractionOpen(true),
+    onPrepareRecipe: () => dashboard.setIsRecipeOpen(true),
+    onCloseExtraction: () => dashboard.setIsExtractionOpen(false),
+    onCloseRecipe: () => dashboard.setIsRecipeOpen(false),
+    onCloseReconciliation: () => dashboard.setIsReconciliationOpen(false),
+    onCloseReports: () => dashboard.setIsReportsOpen(false),
+    onCloseUserManagement: () => dashboard.setIsUserManagementOpen(false),
+    onCloseMovementHistory: () => dashboard.setIsMovementHistoryOpen(false),
+    onCloseDiscard: () => dashboard.setDiscardTarget(null),
+  };
+}
+
 const KitchenBoardTitle: React.FC = () => (
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
     <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -323,6 +400,7 @@ const KitchenBoardTitle: React.FC = () => (
 export const App: React.FC = () => {
   const dashboard = useDashboardState();
   const { currentUser, remanentes, isLoading, loadRemanentes, handleLoginSuccess, handleLogout, handleConsume } = dashboard;
+  const handlers = useAppHandlers(dashboard);
 
   if (!currentUser) {
     return <PinLoginModal onSuccess={handleLoginSuccess} />;
@@ -332,21 +410,9 @@ export const App: React.FC = () => {
 
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', minHeight: '100vh' }}>
-      <DashboardHeader
-        currentUser={currentUser}
-        isLoading={isLoading}
-        onReconcile={() => dashboard.setIsReconciliationOpen(true)}
-        onReports={() => dashboard.setIsReportsOpen(true)}
-        onSync={loadRemanentes}
-        onLogout={handleLogout}
-      />
+      <DashboardHeader currentUser={currentUser} isLoading={isLoading} onSync={loadRemanentes} onLogout={handleLogout} {...handlers} />
 
-      <SummaryCards
-        remanentesCount={remanentes.length}
-        criticalCount={criticalCount}
-        onExtract={() => dashboard.setIsExtractionOpen(true)}
-        onPrepareRecipe={() => dashboard.setIsRecipeOpen(true)}
-      />
+      <SummaryCards remanentesCount={remanentes.length} criticalCount={criticalCount} {...handlers} />
 
       <KitchenBoardTitle />
 
@@ -364,16 +430,14 @@ export const App: React.FC = () => {
         isRecipeOpen={dashboard.isRecipeOpen}
         isReconciliationOpen={dashboard.isReconciliationOpen}
         isReportsOpen={dashboard.isReportsOpen}
+        isUserManagementOpen={dashboard.isUserManagementOpen}
+        isMovementHistoryOpen={dashboard.isMovementHistoryOpen}
         discardTarget={dashboard.discardTarget}
         remanentes={remanentes}
         operatorId={currentUser.id}
         userRole={currentUser.role}
-        onCloseExtraction={() => dashboard.setIsExtractionOpen(false)}
-        onCloseRecipe={() => dashboard.setIsRecipeOpen(false)}
-        onCloseReconciliation={() => dashboard.setIsReconciliationOpen(false)}
-        onCloseReports={() => dashboard.setIsReportsOpen(false)}
-        onCloseDiscard={() => dashboard.setDiscardTarget(null)}
         onSuccess={loadRemanentes}
+        {...handlers}
       />
     </div>
   );

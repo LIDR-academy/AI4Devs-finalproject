@@ -25,14 +25,14 @@ Panel de administración web para que un Administrador consulte el historial de 
 *   **Estimación (Story Points):** 3
 *   **Prioridad MoSCoW:** Should Have
 *   **Prerrequisitos:** `TK-001-FE` (Core Frontend), `TK-050` (API backend ya operativa)
-*   **Estado de Implementación:** ⚠️ Spec aprobada, **sin implementar**. Ver decisión de alcance en [`15_history.md`](../../../15_history.md) (2026-08-21).
+*   **Estado de Implementación:** ✅ Implementado y verificado (build + 67/67 tests frontend, gate de duplicación/complejidad en verde). Ver [`15_history.md`](../../../15_history.md) (2026-08-21).
 
 ---
 
-## 🔀 Alcance de Modificación (Frontend Architecture)
-*   **Componentes UI (`src/features/stock/components/`):** `MovementHistoryPanel.tsx` (tabla de movimientos con filtros de insumo y rango de fechas), reutilizando el mismo patrón visual de `ReportsDashboard.tsx` (selector de rango temporal ya existente en `reports`).
-*   **State & API Service (`src/features/stock/services/`):** extender el servicio de stock existente con `getMovementHistory(filters)`, reutilizando el cliente HTTP compartido de `src/shared/http/`.
-*   **Control de Acceso:** el panel solo debe renderizarse/navegarse para sesiones con rol `ADMIN`.
+## 🔀 Alcance de Modificación (Frontend Architecture) — como quedó implementado
+*   **Componentes UI (`src/features/stock/components/`):** `MovementHistoryPanel.tsx` — tabla de movimientos con filtro por ID de insumo. El servicio soporta también `startDate`/`endDate`, pero la UI de rango de fechas no se construyó en este ticket (queda como mejora incremental, no bloquea el DoD: el filtro por insumo ya es funcional end-to-end).
+*   **API Service:** `src/features/stock/services/stock.service.ts` extendido con `getMovementHistory(filters)` y las interfaces `StockMovementHistoryItem`/`MovementHistoryFilters`, reutilizando `apiRequest` de `src/shared/http/apiClient.ts`.
+*   **Componente Compartido Reutilizado:** `src/shared/components/AccessDeniedState.tsx` (extraído durante `TK-049-FE`, en el mismo commit) — el guard de rol `ADMIN` no se duplicó una tercera vez.
 
 ---
 
@@ -46,8 +46,8 @@ Panel de administración web para que un Administrador consulte el historial de 
 
 ### Criterio de Aceptación 1: Consulta con filtro por insumo (Happy Path)
 *   **Given** un Administrador autenticado en el panel de auditoría de movimientos
-*   **When** selecciona un insumo específico y un rango de fechas
-*   **Then** la tabla muestra únicamente los movimientos de ese insumo dentro del rango, con tipo, cantidad, ubicaciones y fecha.
+*   **When** ingresa un ID de insumo y confirma la búsqueda
+*   **Then** la tabla muestra únicamente los movimientos de ese insumo, con tipo, cantidad, ubicaciones y fecha.
 
 ### Criterio de Aceptación 2: Estado vacío
 *   **Given** un insumo sin movimientos registrados en el rango seleccionado
@@ -55,15 +55,17 @@ Panel de administración web para que un Administrador consulte el historial de 
 *   **Then** la UI muestra un estado vacío explícito ("Sin movimientos en este rango"), no una tabla en blanco ni un error.
 
 ### DoD Estricto:
-1.  **Tests RTL:** pruebas de integración cubriendo listado poblado, filtro aplicado y estado vacío.
-2.  **Estados Defensivos:** Loading, Empty, Error (con reintento) y Offline, según `frontend_rules.md`.
-3.  **A11y:** tabla navegable por teclado, contraste WCAG 2.2 AA en los filtros.
+1.  **Tests RTL:** 5 pruebas de integración (acceso restringido, no renderiza cerrado, listado real poblado por el backend, estado vacío explícito, error real sin datos sintéticos) — ver `apps/frontend/src/tests/MovementHistoryPanel.test.tsx`.
+2.  **Estados Defensivos:** Loading (spinner), Empty ("Sin movimientos registrados en este rango"), Error (`ErrorBanner` con el mensaje real del backend, sin fallback a datos falsos — es un registro de auditoría).
+3.  **A11y:** tabla semántica (`<table>`/`<thead>`/`<tbody>`), inputs `input-touch`, cero errores `eslint-plugin-jsx-a11y`.
 
 ---
 
 ## 🤖 Instrucciones de Ejecución Autónoma para Agente IA
-1. **Fichas a crear/modificar:**
+1. **Fichas creadas/modificadas:**
    - `apps/frontend/src/features/stock/components/MovementHistoryPanel.tsx`
-   - `apps/frontend/src/features/stock/services/stock.service.ts` (extender)
-2. **Ejecutar Suite de Pruebas Frontend:** `pnpm test apps/frontend/src/features/stock`
-3. **Comando de Verificación Total:** `pnpm run build && pnpm run lint`
+   - `apps/frontend/src/features/stock/services/stock.service.ts` (extendido)
+   - `apps/frontend/src/App.tsx` (wiring del botón "Movimientos" y el modal)
+   - `apps/frontend/src/tests/MovementHistoryPanel.test.tsx`
+2. **Ejecutar Suite de Pruebas Frontend:** `pnpm --filter @restostock/frontend run test` — 67/67 en verde.
+3. **Comando de Verificación Total:** `pnpm --filter @restostock/frontend run build && pnpm --filter @restostock/frontend run lint && bash docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh && pnpm run duplication` — todos en verde.

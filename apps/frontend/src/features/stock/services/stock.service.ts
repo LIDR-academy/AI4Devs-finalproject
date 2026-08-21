@@ -18,6 +18,23 @@ export interface ExtractionResult {
   status: string;
 }
 
+export interface StockMovementHistoryItem {
+  id: string;
+  insumoId: string;
+  insumoName: string;
+  type: string;
+  quantity: string;
+  fromLoc: string;
+  toLoc: string;
+  createdAt: string;
+}
+
+export interface MovementHistoryFilters {
+  insumoId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 export class StockService {
   private static mockWarehouseStocks: Record<string, { name: string; stock: number; unit: string }> = {
     'ins-1': { name: 'Queso Mozzarella', stock: 15.5, unit: 'KG' },
@@ -55,6 +72,16 @@ export class StockService {
       expirationDate: expirationDate.toISOString(),
       status: 'ACTIVE',
     };
+  }
+
+  public static async getMovementHistory(filters: MovementHistoryFilters = {}): Promise<StockMovementHistoryItem[]> {
+    const params = new URLSearchParams();
+    if (filters.insumoId) params.set('insumoId', filters.insumoId);
+    if (filters.startDate) params.set('startDate', filters.startDate);
+    if (filters.endDate) params.set('endDate', filters.endDate);
+    const query = params.toString();
+
+    return apiRequest<StockMovementHistoryItem[]>(`/stock/movements${query ? `?${query}` : ''}`);
   }
 
   public static getAvailableInsumos() {
