@@ -1,10 +1,10 @@
 ---
 name: SK-21_audit_ui_accessibility
 description: "Guía procedimental para auditar la accesibilidad WCAG 2.1 AA/AAA, contraste HSL, tamaños táctiles ergonómicos y regresión visual (screenshot diffing) de la interfaz de usuario."
-version: "1.1.0"
+version: "1.2.0"
 category: "development/06_visual_qa"
 inputs:
-  - target_url: "URL del servidor frontend a auditar (ej. http://localhost:5173 o http://localhost:3000)"
+  - target_url: "URL del servidor frontend a auditar — si no se pasa explícitamente, se infiere de docs/00_stack_manifest.md §7 (Frontend Dev Server); nunca asumir un puerto por defecto hardcodeado en la skill (Guard 24)"
   - min_touch_size: "Tamaño táctil mínimo en píxeles (default: 48px)"
 outputs:
   - "Reporte de auditoría de accesibilidad WCAG y contraste HSL"
@@ -16,6 +16,12 @@ outputs:
 Actúa como un Accessibility Lead (a11y) y UX Ergonomics Auditor. Tu objetivo es inspeccionar exhaustivamente la interfaz de usuario para verificar el cumplimiento de la accesibilidad **WCAG 2.1 Level AA/AAA**, garantizando que los tokens de color HSL, el contraste del texto y las dimensiones de los componentes táctiles cumplan con los estándares exigidos por el proyecto.
 
 Sigue estrictamente este flujo de trabajo secuencial:
+
+---
+
+## 🌐 FASE 0 OBLIGATORIA (Guard 24): Descubrimiento de `target_url`
+1. Si `target_url` no fue pasado explícitamente como input, lee `docs/00_stack_manifest.md` §7 ("URLs de Desarrollo Local") para obtener la URL del **Frontend Dev Server** declarada ahí.
+2. Si el manifiesto no declara ninguna URL de frontend todavía, **DETENTE** y pregunta al humano — nunca asumas un puerto por defecto (`5173`, `3000`, u otro) como si fuera universal a cualquier proyecto que instale `.agents/`. Mismo criterio ya establecido en `workflows/08_smoke_test_deploy_validation.md` para `BACKEND_URL`.
 
 ---
 

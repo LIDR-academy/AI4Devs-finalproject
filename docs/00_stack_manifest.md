@@ -185,6 +185,15 @@ bash docs/04_governance_and_quality/scripts/check_dependency_audit.sh
 tofu validate && tofu plan
 ```
 
+### 🌐 URLs de Desarrollo Local (SSoT para skills que infieran un target dinámico)
+
+> Cualquier skill que necesite una URL de servidor (ej. `SK-21`, `08_smoke_test_deploy_validation.md`) DEBE leerla de aquí primero — nunca asumir un puerto por defecto hardcodeado en la skill misma.
+
+| Servicio | URL | Origen |
+|:---------|:----|:-------|
+| **Backend Dev Server** | `http://localhost:3000` | `PORT` en `apps/backend/.env` (default `3000`, ver `environment.ts`) |
+| **Frontend Dev Server** | `http://localhost:5173` | `server.port` en `apps/frontend/vite.config.ts` |
+
 ---
 
 ## 🚫 8. Tecnologías Explícitamente Prohibidas
