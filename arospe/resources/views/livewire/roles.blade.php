@@ -138,7 +138,7 @@
                     @php
                         // Withheld BEFORE grouping (Phase 4 security audit, findings F2/F4) --
                         // not a per-item @if inside the loop. Filtering first means the
-                        // administrator-level permission can never leave a module's heading
+                        // administrator-level permission can never leave a module's row
                         // rendered with an empty body (F4: a module whose only permission is
                         // administrator-level would otherwise disclose the same fact
                         // structurally), and it makes "the catalog is unfiltered except for
@@ -150,15 +150,31 @@
                                 fn (\Spatie\Permission\Models\Permission $permission): bool => $permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION
                             );
 
-                        // Pure presentational transform over the already-fetched catalog --
-                        // open item 2's resolution. The module is the segment before the first
-                        // dot in a "<module>.<action>" permission name; the two non-CRUD
-                        // permissions (roles.manage, roles.manage-administrators) fall into a
-                        // derived "roles" pseudo-module for free, with no hardcoded module list
-                        // anywhere here.
-                        $permissionGroups = $visiblePermissions->groupBy(
-                            fn (\Spatie\Permission\Models\Permission $permission): string => explode('.', $permission->name, 2)[0]
-                        );
+                        // Matrix rows: one per module, one column per CRUD action -- never a
+                        // hardcoded module list, only the four known action verbs
+                        // (RolePermissionSeeder::ACTIONS, the same set lang/*/roles.php's
+                        // 'actions' array names). A permission is placed in the grid purely by
+                        // whether its OWN action segment is one of the four; roles.manage and
+                        // roles.manage-administrators never are, so they fall out of the grid
+                        // by construction rather than by naming their module -- the matrix
+                        // would still correctly exclude a future non-CRUD permission under any
+                        // other module name.
+                        $crudActions = ['view', 'create', 'edit', 'delete'];
+
+                        $crudPermissionsByModule = [];
+                        $otherPermissions = collect();
+
+                        foreach ($visiblePermissions as $permission) {
+                            [$module, $action] = array_pad(explode('.', $permission->name, 2), 2, '');
+
+                            if (in_array($action, $crudActions, true)) {
+                                $crudPermissionsByModule[$module][$action] = $permission;
+                            } else {
+                                $otherPermissions->push($permission);
+                            }
+                        }
+
+                        ksort($crudPermissionsByModule);
 
                         // docs/conventions/naming.md requires snake_case translation-key
                         // leaves; a handful of catalog module/action segments are kebab-case
@@ -179,28 +195,65 @@
                     and #a-control-omitted-from-the-dom-is-safe-only-for-the-one-value-whose-guard-preserves-an-omission.
                     Nothing else is ever filtered to what the acting user may themselves grant;
                     the administrator-level permission is absent from the DOM entirely (not
-                    disabled) for anyone who is not the Super Admin, filtered above before
-                    grouping so no module can render with an empty body. --}}
+                    disabled) for anyone who is not the Super Admin, filtered above before the
+                    matrix is built so no module row can render with an empty body. --}}
                     <flux:checkbox.group wire:model="selectedPermissionIds" :label="__('Permissions')">
-                        @foreach ($permissionGroups as $module => $permissions)
-                            <div class="mb-4 last:mb-0">
-                                <flux:heading size="sm">{{ __('roles.modules.'.str_replace('-', '_', $module)) }}</flux:heading>
+                        <div class="overflow-x-auto">
+                            <flux:table>
+                                <flux:table.columns>
+                                    <flux:table.column>{{ __('Module') }}</flux:table.column>
+                                    @foreach ($crudActions as $action)
+                                        <flux:table.column class="text-center">{{ __('roles.actions.'.$action) }}</flux:table.column>
+                                    @endforeach
+                                </flux:table.columns>
+
+                                <flux:table.rows>
+                                    @foreach ($crudPermissionsByModule as $module => $permissionsByAction)
+                                        <flux:table.row>
+                                            <flux:table.cell>{{ __('roles.modules.'.str_replace('-', '_', $module)) }}</flux:table.cell>
+
+                                            @foreach ($crudActions as $action)
+                                                <flux:table.cell class="text-center">
+                                                    {{-- A module is expected to carry all four CRUD actions
+                                                    (RolePermissionSeeder seeds every module x action
+                                                    combination), but the cell is guarded rather than assumed,
+                                                    so a catalog that ever seeds a partial module renders an
+                                                    empty cell instead of an undefined-index error. --}}
+                                                    @if (isset($permissionsByAction[$action]))
+                                                        <flux:checkbox
+                                                            value="{{ $permissionsByAction[$action]->id }}"
+                                                            aria-label="{{ $permissionLabel($module, $action) }}"
+                                                        />
+                                                    @endif
+                                                </flux:table.cell>
+                                            @endforeach
+                                        </flux:table.row>
+                                    @endforeach
+                                </flux:table.rows>
+                            </flux:table>
+                        </div>
+
+                        {{-- Permissions whose action segment isn't one of the four CRUD verbs
+                        don't fit the module x action grid at all (today: roles.manage and,
+                        for the Super Admin only, roles.manage-administrators) -- listed
+                        separately rather than forcing a fifth ragged column onto the table. --}}
+                        @if ($otherPermissions->isNotEmpty())
+                            <div class="mt-4 space-y-2">
+                                <flux:heading size="sm">{{ __('roles.modules.roles') }}</flux:heading>
                                 <flux:separator class="my-2" />
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    @foreach ($permissions as $permission)
-                                        @php
-                                            $action = explode('.', $permission->name, 2)[1] ?? '';
-                                        @endphp
+                                @foreach ($otherPermissions as $permission)
+                                    @php
+                                        [$otherModule, $otherAction] = array_pad(explode('.', $permission->name, 2), 2, '');
+                                    @endphp
 
-                                        <flux:checkbox
-                                            value="{{ $permission->id }}"
-                                            :label="$permissionLabel($module, $action)"
-                                        />
-                                    @endforeach
-                                </div>
+                                    <flux:checkbox
+                                        value="{{ $permission->id }}"
+                                        :label="$permissionLabel($otherModule, $otherAction)"
+                                    />
+                                @endforeach
                             </div>
-                        @endforeach
+                        @endif
                     </flux:checkbox.group>
                 </div>
 

@@ -18,6 +18,11 @@
                     <flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
                         {{ __('Users') }}
                     </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                {{-- Store-configuration screens live under this collapsible group -- Roles &
+                permissions today, more to follow (e.g. billing details) as they land. --}}
+                <flux:sidebar.group expandable icon="cog-6-tooth" :heading="__('Settings')" :expanded="request()->routeIs('roles.*')">
                     <flux:sidebar.item icon="shield-check" :href="route('roles.index')" :current="request()->routeIs('roles.*')" wire:navigate>
                         {{ __('Roles & permissions') }}
                     </flux:sidebar.item>
