@@ -136,13 +136,27 @@
                     <flux:input wire:model="name" :label="__('Name')" required autofocus />
 
                     @php
-                        // Pure presentational transform over the already-fetched, unfiltered
-                        // catalog -- open item 2's resolution. The module is the segment
-                        // before the first dot in a "<module>.<action>" permission name; the
-                        // two non-CRUD permissions (roles.manage,
-                        // roles.manage-administrators) fall into a derived "roles"
-                        // pseudo-module for free, with no hardcoded module list anywhere here.
-                        $permissionGroups = $this->permissionOptions->groupBy(
+                        // Withheld BEFORE grouping (Phase 4 security audit, findings F2/F4) --
+                        // not a per-item @if inside the loop. Filtering first means the
+                        // administrator-level permission can never leave a module's heading
+                        // rendered with an empty body (F4: a module whose only permission is
+                        // administrator-level would otherwise disclose the same fact
+                        // structurally), and it makes "the catalog is unfiltered except for
+                        // this one value" a single expression rather than something a second,
+                        // unrelated @if could accidentally duplicate or diverge from.
+                        $visiblePermissions = $this->canGrantAdministratorLevel
+                            ? $this->permissionOptions
+                            : $this->permissionOptions->reject(
+                                fn ($permission) => $permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION
+                            );
+
+                        // Pure presentational transform over the already-fetched catalog --
+                        // open item 2's resolution. The module is the segment before the first
+                        // dot in a "<module>.<action>" permission name; the two non-CRUD
+                        // permissions (roles.manage, roles.manage-administrators) fall into a
+                        // derived "roles" pseudo-module for free, with no hardcoded module list
+                        // anywhere here.
+                        $permissionGroups = $visiblePermissions->groupBy(
                             fn ($permission) => explode('.', $permission->name, 2)[0]
                         );
 
@@ -159,12 +173,14 @@
                         };
                     @endphp
 
-                    {{-- The permission catalog is rendered in FULL, unconditionally, and is
-                    never filtered to what the acting user may themselves grant -- see
-                    docs/security/authorization-patterns.md#two-guards-on-one-payload-must-agree-on-what-an-omission-means.
-                    The one exception is the administrator-level toggle just below, which is
-                    absent from the DOM entirely (not disabled) for anyone who is not the
-                    Super Admin. --}}
+                    {{-- The permission catalog is rendered in FULL for every actor, with exactly
+                    one deliberate exception -- see
+                    docs/security/authorization-patterns.md#two-guards-on-one-payload-must-agree-on-what-an-omission-means
+                    and #a-control-omitted-from-the-dom-is-safe-only-for-the-one-value-whose-guard-preserves-an-omission.
+                    Nothing else is ever filtered to what the acting user may themselves grant;
+                    the administrator-level permission is absent from the DOM entirely (not
+                    disabled) for anyone who is not the Super Admin, filtered above before
+                    grouping so no module can render with an empty body. --}}
                     <flux:checkbox.group wire:model="selectedPermissionIds" :label="__('Permissions')">
                         @foreach ($permissionGroups as $module => $permissions)
                             <div class="mb-4 last:mb-0">
@@ -177,19 +193,10 @@
                                             $action = explode('.', $permission->name, 2)[1] ?? '';
                                         @endphp
 
-                                        @if ($permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION)
-                                            @if ($this->canGrantAdministratorLevel)
-                                                <flux:checkbox
-                                                    value="{{ $permission->id }}"
-                                                    :label="$permissionLabel($module, $action)"
-                                                />
-                                            @endif
-                                        @else
-                                            <flux:checkbox
-                                                value="{{ $permission->id }}"
-                                                :label="$permissionLabel($module, $action)"
-                                            />
-                                        @endif
+                                        <flux:checkbox
+                                            value="{{ $permission->id }}"
+                                            :label="$permissionLabel($module, $action)"
+                                        />
                                     @endforeach
                                 </div>
                             </div>
@@ -251,7 +258,12 @@
                         {{ __('Cancel') }}
                     </flux:button>
 
-                    @if ($deletingRoleHolderCount === 0)
+                    {{-- Phase 4 security audit finding F3: fail closed, not open, if the row
+                    can't be resolved (a genuine race -- the role was deleted or reassigned
+                    between page load and click). $deletingRole !== null is required in addition
+                    to the holder count, so a missing row never renders the destructive button
+                    just because ?? 0 read as "no holders". --}}
+                    @if ($deletingRole !== null && $deletingRoleHolderCount === 0)
                         <flux:button
                             variant="danger"
                             wire:click="deleteRole"

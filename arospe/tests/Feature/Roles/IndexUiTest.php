@@ -263,6 +263,46 @@ test('a permission the acting user does not hold is still rendered as an availab
         ->toContain('products.delete');
 });
 
+// Phase 4 security audit, finding F2: a presence assertion ("this one id is
+// still there") cannot catch a second, unrelated permission also going
+// missing -- it would pass equally well against a view that "helpfully"
+// filtered half the catalog. A count assertion can't: rendered checkbox
+// count must equal catalog size minus exactly the withheld set, per actor
+// tier, so any further omission fails this test.
+test('the rendered permission catalog omits exactly the administrator-level permission for a non-Super-Admin, and nothing else', function () {
+    roleUiPermission('blog.view');
+    roleUiPermission('blog.edit');
+    roleUiPermission('products.view');
+    roleUiPermission(RolePolicy::ROLE_MANAGEMENT_PERMISSION);
+    roleUiPermission(RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION);
+
+    $catalogSize = Permission::where('guard_name', 'web')->count();
+
+    $this->actingAs(roleUiActor());
+
+    $html = Livewire::test(Index::class)->call('openCreateModal')->html();
+
+    expect(substr_count($html, 'value="'))->toBe($catalogSize - 1);
+});
+
+test('the rendered permission catalog is complete for the Super Admin, including the administrator-level permission', function () {
+    roleUiPermission('blog.view');
+    roleUiPermission('blog.edit');
+    roleUiPermission('products.view');
+    roleUiPermission(RolePolicy::ROLE_MANAGEMENT_PERMISSION);
+    roleUiPermission(RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION);
+
+    $catalogSize = Permission::where('guard_name', 'web')->count();
+
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole(Role::firstOrCreateSuperAdminRole());
+    $this->actingAs($superAdmin);
+
+    $html = Livewire::test(Index::class)->call('openCreateModal')->html();
+
+    expect(substr_count($html, 'value="'))->toBe($catalogSize);
+});
+
 // =====================================================================
 // Negative / edge — invalid role names, one dataset-driven test per
 // gherkin-guidelines.md rule 4 (Scenario Outline -> one it() per
