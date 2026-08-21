@@ -1,10 +1,10 @@
 ---
 name: SK-20_execute_browser_qa
 description: "Guía al subagente de navegación de la IA para ejecutar pruebas visuales, de accesibilidad táctil y funcionales sobre la interfaz de usuario local."
-version: "1.0.0"
+version: "1.1.0"
 category: "development/06_visual_qa"
 inputs:
-  - target_url: "URL opcional del servidor de desarrollo local (ej. http://localhost:5173)"
+  - target_url: "URL opcional del servidor de desarrollo local — si no se pasa, se infiere de docs/00_stack_manifest.md §7 (Frontend Dev Server); solo si el manifiesto no la declara, se descubre leyendo la config real del proyecto (Guard 24)"
   - user_flow: "Descripción del flujo de usuario a probar visualmente"
 outputs:
   - "Reporte de verificación visual de la interfaz"
@@ -19,7 +19,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 ---
 
 ## 🔍 FASE 1: Descubrimiento de Configuración Local y UX
-1. **Identificar la URL de Desarrollo:** Si no se provee `target_url`, lee los archivos de configuración del frontend (ej. `package.json`, `vite.config.ts`, `next.config.js`) para descubrir en qué puerto corre el servidor local.
+1. **Identificar la URL de Desarrollo (Guard 24):** Si no se provee `target_url`, lee primero `docs/00_stack_manifest.md` §7 ("URLs de Desarrollo Local") — es la fuente única de verdad. Solo si el manifiesto no la declara todavía, descubre el puerto leyendo los archivos de configuración reales del frontend (ej. `package.json`, `vite.config.ts`, `next.config.js`) y considera añadir la fila correspondiente al manifiesto para que la próxima invocación no tenga que redescubrirla.
 2. **Descubrir Reglas Visuales del Proyecto:** Busca y lee las directivas de frontend y accesibilidad táctil en `docs/04_governance_and_quality/rules/` o en `docs/`. Identifica:
    - El tamaño mínimo de elementos interactivos (táctil).
    - La paleta de colores y variables CSS oficiales (Design Tokens).
