@@ -1021,10 +1021,24 @@ project. Read it at the start of every session.
   lo sostiene el CAS del cierre de oferta, con el margen conocido de que dos barridos a la
   vez repitan **un recordatorio**. `vercel.json` declara los dos crons; **el cron de Vercel
   va en UTC** (10:00 Madrid = 08:00 UTC en verano, 09:00 en invierno) y el **plan Hobby**
-  admite dos crons con granularidad diaria, así que `*/5` obliga a plan de pago.
+  —el de esta cuenta— admite dos crons y **solo diarios**: una expresión más frecuente
+  **hace fallar el despliegue**, no lo degrada, y además los dispara en cualquier momento
+  dentro de la hora. Por eso `vercel.json` los tiene **diarios** y no `*/5`. El precio,
+  anotado para no redescubrirlo: la caducidad de ofertas se vuelve imprecisa —una ventana
+  de 48 h puede cerrarse casi un día tarde—. Se recupera con plan de pago o disparando el
+  endpoint desde fuera.
   Verificado a mano contra el paquete autónomo: 401 sin credencial y con la equivocada,
   404 sin `CRON_SECRET` y con un trabajo inventado, 200 con resumen contable en los dos
   trabajos buenos.
+- **Supabase por Vercel: las variables no encajan solas (2026-08-21):** la integración
+  crea `STORAGE_POSTGRES_PRISMA_URL` (pooler 6543, `sslmode=require&pgbouncer=true`),
+  `STORAGE_POSTGRES_URL_NON_POOLING` (5432, sesión estable) y un montón de claves del
+  cliente JS de Supabase que **aquí no usa nadie** —solo se usa como Postgres, ni Auth ni
+  Storage ni RLS—. `DATABASE_URL` se crea a mano copiando el valor de la primera, y
+  `DIRECT_URL` **solo en el `.env` local** con la segunda: quien migra es la máquina de
+  desarrollo, no Vercel. **Decisión: el código no lee las `STORAGE_*`** —acoplaría el
+  proyecto a los nombres de una integración de Vercel, y el mismo código tiene que
+  arrancar en la VM y en local—.
 - **Vercel no es la arquitectura del ADR (2026-08-21, en curso):** el intento de
   despliegue destapa tres cosas que el ADR-0001 §5 daba por resueltas con la VM y allí no
   lo están — no hay Postgres en `localhost` (hace falta uno gestionado, su `DATABASE_URL`,
@@ -1047,6 +1061,18 @@ project. Read it at the start of every session.
   cookie (`Secure` sale de `NODE_ENV`) y el `proxy`. **Y un dato descubierto mirando:**
   `SESSION_SECRET` y `APP_URL` del `.env.example` **no los lee nadie** — el token de
   sesión es aleatorio y se guarda hasheado (ADR-0002 §1).
+- **Un solo repositorio, y es el del curso (decidido 2026-08-21):** al conectar Vercel,
+  este creó `xaviverges/clickoteca` — que **no es un fork**: un único commit "Initial
+  commit", **sin ancestro común** (`git merge-base` vacío) y con el árbol exacto de
+  `d169b2d`, o sea el estado anterior a los tres commits que arreglan el despliegue. De
+  ahí que el build siguiera fallando allí. Dos repos sin ancestro común no se pueden
+  sincronizar sin *force-push*, y la historia del entregable —la que nombra `readme.md`
+  §0.5, con el log de prompts y los ADR— es justo lo que se corrige, así que se descarta
+  desplegar desde un repo cuyo único commit se llama "Initial commit". **Vercel apunta a
+  `AI4Devs-finalproject-xvm`**, y `clickoteca` se archiva. **Ojo con la rama:** Vercel
+  despliega *Production* desde la rama de producción del repo, que por defecto es `main`
+  —aquí, el andamiaje del curso—, así que hay que fijar **Production Branch =
+  `MVP-Fase-1`**.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions

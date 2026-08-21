@@ -461,12 +461,27 @@ pueden divergir. Lo que cambia es quién mira el reloj.
   distinto—. Lo sostiene el dominio: el cierre de oferta es un CAS. El margen conocido
   es que dos barridos a la vez podrían enviar dos veces un recordatorio, y se acepta
   antes que montar un cerrojo distribuido para un aviso amable.
-- **Si el destino es Vercel**, `vercel.json` ya declara los dos crons. Tres cosas que
-  no son obvias: **el cron de Vercel va en UTC** (las 10:00 de Madrid son las 08:00
-  UTC en verano y las 09:00 en invierno, así que el recordatorio se desplaza una hora
-  con el cambio de hora); el **plan Hobby** admite como mucho dos crons y solo con
-  granularidad diaria, con lo que `*/5` obliga a plan de pago; y sigue haciendo falta
-  un Postgres gestionado, porque ahí no hay `localhost` que valga.
+- **Si el destino es Vercel**, `vercel.json` declara los dos crons. Tres cosas que no
+  son obvias: **el cron de Vercel va en UTC** (las 10:00 de Madrid son las 08:00 UTC en
+  verano y las 09:00 en invierno, así que el recordatorio se desplaza con el cambio de
+  hora); el **plan Hobby** admite dos crons y **solo diarios** —una expresión más
+  frecuente **hace fallar el despliegue**, no lo degrada—, y además los dispara en
+  cualquier momento **dentro de la hora** indicada; y sigue haciendo falta un Postgres
+  gestionado, porque ahí no hay `localhost` que valga.
+- **Por eso los dos crons de `vercel.json` son diarios**, no cada cinco minutos: es lo
+  que Hobby admite. Tiene un precio y conviene saberlo: la **caducidad de ofertas se
+  vuelve imprecisa** —una ventana de 48 h puede cerrarse con casi un día de retraso, y
+  el recordatorio de mitad de ventana puede llegar tarde o no llegar—. El dominio no se
+  rompe (todo se decide por marcas de tiempo, no por contadores), pero la experiencia
+  sí se resiente. Se recupera de dos maneras: plan de pago con `*/5 * * * *`, o dejar
+  `vercel.json` como está y **disparar el endpoint desde fuera** con la cadencia real —
+  cualquier cosa capaz de hacer un `curl` con la cabecera sirve, incluido el propio
+  `scheduler/` corriendo en otra máquina.
+- **La entrega de crons es *best effort*:** Vercel avisa de que puede saltarse una
+  ejecución o repetirla. Los dos trabajos son de **reconciliación** —miran qué está
+  vencido ahora, no llevan la cuenta de lo que hicieron—, así que una ejecución perdida
+  se cura sola en la siguiente y una repetida no duplica nada salvo, como mucho, un
+  recordatorio.
 
 **Si la base es gestionada (Supabase, Neon), son dos URLs y no una.** La aplicación se
 conecta al **pooler de transacciones** y las **migraciones no pueden**: necesitan una
