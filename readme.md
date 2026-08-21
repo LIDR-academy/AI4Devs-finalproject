@@ -21,10 +21,10 @@
 RestoStock es un sistema inteligente y ágil de trazabilidad e inventario para cocinas de restaurantes. Está diseñado para mitigar la merma de alimentos mediante la ordenación FEFO (First Expired, First Out) de remanentes e insumos abiertos en tiempo real, calculando dinámicamente la fecha de expiración acelerada tras su apertura.
 
 ### **0.4. URL del proyecto:**
-...
+No hay despliegue público en vivo — el proyecto corre localmente vía `pnpm dev` o `docker compose up` (ver sección de arquitectura y `docs/00_stack_manifest.md` para instrucciones).
 
 ### **0.5. URL o archivo comprimido del repositorio:**
-...
+https://github.com/lacruzjd/AI4Devs-finalproject
 
 ---
 

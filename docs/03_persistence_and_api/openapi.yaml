@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: RestoStock API
   description: REST API specification for RestoStock real-time inventory and FEFO traceability system.
-  version: 1.2.0
+  version: 2.0.0
 servers:
   - url: http://localhost:3000
     description: Local Development Server
@@ -10,9 +10,9 @@ servers:
     description: Production Server
 
 paths:
-  /api/v1/auth/pin:
+  /api/v1/auth/login-pin:
     post:
-      summary: Authenticate operator via 4-digit PIN
+      summary: Authenticate operator via 4-6 digit PIN
       operationId: authenticatePin
       tags:
         - Authentication
@@ -29,14 +29,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthPinResponse'
+        '400':
+          description: Input validation failed (userId/pin missing or malformed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Invalid credentials or inactive user
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Input validation failed
+        '429':
+          description: Too many login attempts from this IP (anti-brute-force rate limit)
           content:
             application/json:
               schema:
@@ -63,17 +69,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecordExtractionResponse'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Insufficient stock in warehouse or invalid quantity
+          description: Insufficient stock in warehouse
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/kitchen/remanentes:
+  /api/v1/kitchen/remanentes-activos:
     get:
       summary: List active kitchen remanentes ordered by FEFO
-      operationId: listRemanentes
+      operationId: listActiveRemanentes
       tags:
         - Kitchen Operations
       security:
@@ -94,30 +112,54 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/RemanenteItem'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/kitchen/consumption:
+  /api/v1/kitchen/remanentes/{id}/consume:
     post:
-      summary: Record partial or total consumption of active remanente
-      operationId: recordConsumption
+      summary: Record partial or total consumption of an active remanente
+      operationId: consumeRemanente
       tags:
         - Kitchen Operations
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecordConsumptionRequest'
+              $ref: '#/components/schemas/ConsumeRemanenteRequest'
       responses:
         '200':
           description: Consumption recorded successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecordConsumptionResponse'
+                $ref: '#/components/schemas/ConsumeRemanenteResponse'
+        '400':
+          description: Invalid quantity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Active remanente not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '422':
-          description: Invalid consumption or stock exceeded
+          description: Quantity to consume exceeds remaining quantity
           content:
             application/json:
               schema:
@@ -137,7 +179,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       requestBody:
         required: true
         content:
@@ -151,30 +192,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DiscardRemanenteResponse'
+        '400':
+          description: Missing discard reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Active remanente not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /api/v1/kitchen/recipes:
-    get:
-      summary: List available kitchen recipes
-      operationId: listRecipes
-      tags:
-        - Catalog & Recipes
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of available recipes
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RecipeItem'
 
   /api/v1/kitchen/recipes/{id}/consume:
     post:
@@ -190,25 +219,36 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ConsumeRecipeRequest'
       responses:
         '200':
-          description: Recipe consumption executed in FEFO cascade
+          description: Recipe consumption executed in FEFO cascade across all ingredients
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConsumeRecipeResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Insufficient stock for one or more ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/kitchen/shift-reconciliation:
     post:
-      summary: Process shift closing, auto-discard expired items and reconcile variances
-      operationId: shiftReconciliation
+      summary: Process shift closing — compares physical counts vs theoretical stock, auto-discards variances
+      operationId: performShiftReconciliation
       tags:
         - Shift & Audit
       security:
@@ -226,10 +266,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShiftReconciliationResponse'
+        '400':
+          description: Invalid reconciliation payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/reports/waste:
     get:
-      summary: Get consolidated waste report by date range
+      summary: Get consolidated waste report by date range (ADMIN role only)
       operationId: getWasteReport
       tags:
         - Reports & Analytics
@@ -238,13 +284,13 @@ paths:
       parameters:
         - name: startDate
           in: query
-          required: false
+          required: true
           schema:
             type: string
             format: date-time
         - name: endDate
           in: query
-          required: false
+          required: true
           schema:
             type: string
             format: date-time
@@ -258,7 +304,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/WasteReportItem'
         '400':
-          description: Invalid date format
+          description: Missing or invalid startDate/endDate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
           content:
             application/json:
               schema:
@@ -285,112 +337,115 @@ components:
       properties:
         userId:
           type: string
-          format: uuid
+          example: "usr-maria-2"
         pin:
           type: string
-          pattern: '^\d{4}$'
+          pattern: '^\d{4,6}$'
           example: "1234"
 
     AuthPinResponse:
       type: object
       properties:
-        token:
+        accessToken:
           type: string
         user:
           type: object
           properties:
             id:
               type: string
-              format: uuid
             name:
               type: string
             role:
               type: string
-              enum: [OPERATOR, ADMIN]
+              enum: [KITCHEN_STAFF, ADMIN]
 
     RecordExtractionRequest:
       type: object
       required:
         - insumoId
         - quantity
-        - unit
-        - toLocation
       properties:
         insumoId:
           type: string
-          format: uuid
         quantity:
           $ref: '#/components/schemas/DecimalString'
-        unit:
-          type: string
         toLocation:
           type: string
           enum: [KITCHEN_FRIDGE, KITCHEN_FREEZER, KITCHEN_PANTRY, KITCHEN_PREP]
+          default: KITCHEN_FRIDGE
 
     RecordExtractionResponse:
       type: object
       properties:
-        message:
+        remanenteId:
           type: string
-        movementId:
+        insumoId:
           type: string
-          format: uuid
-        remanente:
-          $ref: '#/components/schemas/RemanenteItem'
+        insumoName:
+          type: string
+        quantityExtracted:
+          $ref: '#/components/schemas/DecimalString'
+        remainingWarehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+        location:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
 
     RemanenteItem:
       type: object
       properties:
         id:
           type: string
-          format: uuid
-        insumo:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uuid
-            name:
-              type: string
-            consumptionUnit:
-              type: string
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        unitOfMeasure:
+          type: string
         currentQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        initialQuantity:
           $ref: '#/components/schemas/DecimalString'
         location:
           type: string
-        sublocation:
+        expirationDate:
           type: string
+          format: date-time
+        hoursRemaining:
+          type: integer
+        isCriticalAlert:
+          type: boolean
         status:
           type: string
           enum: [ACTIVE, CONSUMED, DISCARDED]
-        calculatedExpirationDate:
-          type: string
-          format: date-time
 
-    RecordConsumptionRequest:
+    ConsumeRemanenteRequest:
       type: object
       required:
-        - remanenteId
-        - quantityConsumed
+        - quantity
       properties:
-        remanenteId:
-          type: string
-          format: uuid
-        quantityConsumed:
+        quantity:
           $ref: '#/components/schemas/DecimalString'
 
-    RecordConsumptionResponse:
+    ConsumeRemanenteResponse:
       type: object
       properties:
-        message:
-          type: string
         remanenteId:
           type: string
-          format: uuid
+        consumedQuantity:
+          $ref: '#/components/schemas/DecimalString'
         remainingQuantity:
           $ref: '#/components/schemas/DecimalString'
         status:
           type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
+        isExhausted:
+          type: boolean
 
     DiscardRemanenteRequest:
       type: object
@@ -399,123 +454,135 @@ components:
       properties:
         reason:
           type: string
-          enum: [EXPIRATION, DAMAGE_OR_DROP, CONTAMINATION, SPOILAGE]
+          example: "EXPIRATION"
 
     DiscardRemanenteResponse:
       type: object
       properties:
-        message:
-          type: string
         remanenteId:
           type: string
-          format: uuid
         discardedQuantity:
           $ref: '#/components/schemas/DecimalString'
+        reason:
+          type: string
         status:
           type: string
-
-    RecipeItem:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        description:
-          type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
 
     ConsumeRecipeRequest:
       type: object
-      required:
-        - portions
       properties:
         portions:
           type: integer
           minimum: 1
+          default: 1
           example: 2
 
     ConsumeRecipeResponse:
       type: object
       properties:
-        message:
-          type: string
         recipeId:
           type: string
-          format: uuid
-        movementsCount:
+        recipeName:
+          type: string
+        portions:
           type: integer
+        ingredientsConsumed:
+          type: array
+          items:
+            type: object
+            properties:
+              insumoId:
+                type: string
+              totalConsumed:
+                $ref: '#/components/schemas/DecimalString'
+              remanentesAffectedCount:
+                type: integer
 
     ShiftReconciliationRequest:
       type: object
       required:
+        - operatorId
         - items
       properties:
+        operatorId:
+          type: string
+        notes:
+          type: string
         items:
           type: array
           items:
             type: object
             required:
-              - insumoId
+              - remanenteId
               - physicalQuantity
             properties:
-              insumoId:
+              remanenteId:
                 type: string
-                format: uuid
               physicalQuantity:
                 $ref: '#/components/schemas/DecimalString'
 
     ShiftReconciliationResponse:
       type: object
       properties:
-        message:
-          type: string
         reconciliationId:
           type: string
-          format: uuid
-        autoDiscardsCount:
+        autoDiscardedCount:
           type: integer
-        variancesCount:
+        processedItemsCount:
           type: integer
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              remanenteId:
+                type: string
+              insumoId:
+                type: string
+              physicalQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              theoreticalQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              variance:
+                $ref: '#/components/schemas/DecimalString'
 
     WasteReportItem:
       type: object
       properties:
         insumoId:
           type: string
-          format: uuid
-        name:
+        insumoName:
           type: string
-        brand:
-          type: string
-        category:
-          type: string
-        consumptionUnit:
-          type: string
-        reason:
+        unitOfMeasure:
           type: string
         totalDiscardedQuantity:
           $ref: '#/components/schemas/DecimalString'
+        reason:
+          type: string
 
     ErrorResponse:
+      description: RFC 7807 Problem Details format (Guard 19)
       type: object
       required:
-        - error
-        - message
+        - type
+        - title
+        - status
+        - detail
+        - instance
       properties:
-        error:
+        type:
           type: string
-        message:
+          format: uri
+          example: "https://restostock.com/errors/validation-error"
+        title:
           type: string
-        timestamp:
+          example: "ValidationError"
+        status:
+          type: integer
+          example: 400
+        detail:
           type: string
-          format: date-time
-        details:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              message:
-                type: string
+        instance:
+          type: string
+          example: "/api/v1/stock/extraction"
