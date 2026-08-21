@@ -67,6 +67,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-007-D** | [US-008](../11_user_stories/kitchen/US-008.md) | Formulario de Reconciliación de Turno | `kitchen` | 5 | Should Have | [kitchen/frontend/TK-007-D.md](kitchen/frontend/TK-007-D.md) |
 | **TK-007-E** | [US-009](../11_user_stories/reports/US-009.md) | Dashboard de Reportes de Desperdicio y Eficiencia FEFO | `reports` | 3 | Should Have | [reports/frontend/TK-007-E.md](reports/frontend/TK-007-E.md) |
 | **TK-007-F** | [US-002](../11_user_stories/stock/US-002.md) | Pantalla de Registro de Extracciones de Bodega | `stock` | 3 | Must Have | [stock/frontend/TK-007-F.md](stock/frontend/TK-007-F.md) |
+| **TK-049-FE** | [US-010](../11_user_stories/auth/US-010.md) | Panel de Gestión de Personal | `auth` | 3 | Should Have | [auth/frontend/TK-049-FE.md](auth/frontend/TK-049-FE.md) ⚠️ Spec sin implementar |
+| **TK-050-FE** | [US-011](../11_user_stories/stock/US-011.md) | Panel de Auditoría de Movimientos de Stock | `stock` | 3 | Should Have | [stock/frontend/TK-050-FE.md](stock/frontend/TK-050-FE.md) ⚠️ Spec sin implementar |
 
 ---
 
@@ -103,9 +105,11 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-051: Bootstrap del Primer Administrador](shared/backend/TK-051.md)** (Backend)
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
-*   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend) — ⚠️ Sin ticket de Frontend, ver nota abajo.
+*   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)
+*   **[TK-049-FE: Panel de Gestión de Personal](auth/frontend/TK-049-FE.md)** (Frontend) — ⚠️ Spec aprobada, sin implementar.
 
 ### 📦 Bodega y Stock (`stock/`) — Post-MVP
-*   **[TK-050: Trazabilidad de Movimientos de Stock](stock/backend/TK-050.md)** (Backend) — ⚠️ Sin ticket de Frontend, ver nota abajo.
+*   **[TK-050: Trazabilidad de Movimientos de Stock](stock/backend/TK-050.md)** (Backend)
+*   **[TK-050-FE: Panel de Auditoría de Movimientos](stock/frontend/TK-050-FE.md)** (Frontend) — ⚠️ Spec aprobada, sin implementar.
 
-> **⚠️ Deuda de Frontend Registrada:** `TK-049` (gestión de personal) y `TK-050` (trazabilidad de movimientos) se implementaron únicamente en Backend. No existen tickets de Frontend `TK-049-FE`/`TK-050-FE` — la interfaz de administración correspondiente queda pendiente de priorización. Ver [Matriz de Trazabilidad](../13_matriz_trazabilidad.md).
+> **⚠️ Deuda Registrada:** `TK-049-FE` y `TK-050-FE` ya existen como tickets técnicos completos (spec, DoD, criterios de aceptación) pero **no se ha escrito código de UI todavía**. Ver [Matriz de Trazabilidad](../13_matriz_trazabilidad.md).
