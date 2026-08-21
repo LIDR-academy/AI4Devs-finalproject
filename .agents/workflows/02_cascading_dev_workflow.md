@@ -77,6 +77,11 @@ Si el ticket es de Frontend o interfaz de usuario:
 
 ---
 
+### FASE 5.B: Verificación en Vivo del Stack Completo (TK-055, para tickets de integración full-stack)
+Si el ticket toca integración full-stack real (un endpoint nuevo consumido por UI, un flujo de autenticación, o cambios en el arranque/seed/migraciones del backend), ejecuta [09_live_stack_verification_workflow.md](09_live_stack_verification_workflow.md) — levanta la infraestructura real declarada en `docs/00_stack_manifest.md`, recorre el flujo crítico del ticket con el motor E2E declarado, y limpia el entorno de prueba por completo al terminar. No sustituye a `SK-20`/TDD, es la capa que verifica que las piezas ya probadas por separado funcionan juntas con infraestructura real — el mecanismo concreto detrás del Antipatrón B de `rules/04_verified_implementation_standard.md`.
+
+---
+
 ### FASE 6: Registro de Commit Atómico (Git Rule)
 1. Revisa las directivas en `docs/04_governance_and_quality/rules/git_rules.md`.
 2. Realiza un **único commit atómico por ticket** utilizando la convención `feat(modulo): ... [TK-XXX]` o `fix(modulo): ... [TK-XXX]`. Queda prohibido mezclar múltiples tickets en un solo commit.

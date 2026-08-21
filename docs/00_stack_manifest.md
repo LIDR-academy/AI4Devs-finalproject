@@ -1,6 +1,6 @@
 ---
 document: stack_manifest
-version: 1.10.0
+version: 1.11.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
 approved_at: "2026-08-19"
@@ -160,11 +160,17 @@ pnpm --filter @restostock/backend dev
 # Servidor de desarrollo frontend
 pnpm --filter @restostock/frontend dev
 
+# Levantar el stack completo local (Postgres + Backend + Frontend, imágenes reales de Docker)
+docker compose up -d --build
+
+# Bajar el stack completo local
+docker compose down
+
 # Migraciones de base de datos
 npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma
 
-# Seed de datos
-npx ts-node apps/backend/prisma/seed.ts
+# Seed de datos (idempotente, requiere SEED_ADMIN_PIN en producción — TK-051)
+pnpm --filter @restostock/backend exec tsx prisma/seed.ts
 
 # Validar integridad del framework .agents
 bash .agents/scripts/validate_agents.sh

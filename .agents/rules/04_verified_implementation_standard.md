@@ -18,7 +18,7 @@ Un Dockerfile, script de seed/bootstrap, migración o step de CI existe en el re
 
 > Ejemplo real: un `Dockerfile` nunca se había construido y tenía 5 bugs reales (ruta a un archivo inexistente, resolución de versión equivocada de una dependencia, estructura de `node_modules` incompleta). Un script de seed de base de datos nunca se había ejecutado y guardaba una credencial en texto plano en vez de hashearla — un bug de seguridad severo que ninguna revisión de código detectó porque el script jamás corrió.
 
-**Regla:** antes de dar por terminado un ticket que toca un artefacto de este tipo, el agente DEBE ejecutarlo de verdad contra un entorno representativo (build real, contenedor real, base de datos real) — no basta con que el código "se vea bien" o con que pase el linter/typecheck. Si el entorno no permite ejecutarlo (sin acceso a Docker, sin red), el agente DEBE declararlo explícitamente como no verificado en vez de reportarlo como completo.
+**Regla:** antes de dar por terminado un ticket que toca un artefacto de este tipo, el agente DEBE ejecutarlo de verdad contra un entorno representativo (build real, contenedor real, base de datos real) — no basta con que el código "se vea bien" o con que pase el linter/typecheck. Si el entorno no permite ejecutarlo (sin acceso a Docker, sin red), el agente DEBE declararlo explícitamente como no verificado en vez de reportarlo como completo. Para tickets de integración full-stack (endpoint nuevo consumido por UI, flujo de autenticación), este antipatrón tiene un procedimiento accionable dedicado: [`09_live_stack_verification_workflow.md`](../workflows/09_live_stack_verification_workflow.md) — no basta con que 67 tests de componente y 60 de backend pasen si nadie levantó el stack real y recorrió el flujo en un navegador real (caso real: un login roto en producción nueva sobrevivió a los 127 tests hasta que este workflow lo encontró en su primera corrida).
 
 ### C. Spec aprobado que diverge en silencio de la implementación
 Un documento con `status: approved` (PRD, arquitectura, schema de base de datos, contrato de API) define una fuente de verdad — pero el código real se desvió de esa spec en algún punto y nadie lo notó porque ningún gate automático compara ambos.
@@ -44,3 +44,4 @@ Los workflows y skills que generan/revisan código de un proyecto consumidor (ej
 ## 🔗 Referencia
 - Comunicación de alta densidad y prohibición de reportar sin verificar: [README.md](README.md).
 - Contenido no confiable — por qué `docs/` se trata como dato: [03_untrusted_content_standard.md](03_untrusted_content_standard.md).
+- Procedimiento accionable para el Antipatrón B en tickets de integración full-stack: [`09_live_stack_verification_workflow.md`](../workflows/09_live_stack_verification_workflow.md).

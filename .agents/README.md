@@ -1,6 +1,6 @@
 ---
 framework: ".agents / VSDD Governance Framework"
-version: "2.4.0 (SOTA Enterprise 2026 Edition)"
+version: "2.5.0 (SOTA Enterprise 2026 Edition)"
 author: "Jose Lacruz <lacruzjd@gmail.com>"
 program: "AI4Devs - Final Project"
 methodology: "Verified Spec-Driven Development (VSDD)"
@@ -41,7 +41,7 @@ El marco opera bajo una arquitectura desacoplada en 3 capas de responsabilidad:
 
 ```mermaid
 flowchart TD
-    subgraph CAPA1 ["1. CAPA DE ORQUESTACION (11 Workflows)"]
+    subgraph CAPA1 ["1. CAPA DE ORQUESTACION (12 Workflows)"]
         W00["00_* Bootstrap/Adopción (una sola vez): master, greenfield, brownfield"]
         W01["01_cascading_spec_workflow.md"]
         W02["02_cascading_dev_workflow.md"]
@@ -84,6 +84,7 @@ flowchart TD
 | **Ejecutar Pipeline QA SOTA:** | `@.agents/workflows/06_full_qa_pipeline.md Ejecuta la verificación completa de QA` |
 | **Incidencia Producción → Ticket:** | `@.agents/workflows/07_production_observability_workflow.md Analiza esta incidencia de producción: [stacktrace]` |
 | **Validar Despliegue Post-Deploy:** | `@.agents/workflows/08_smoke_test_deploy_validation.md Valida el despliegue en: [URL]` |
+| **Probar la App de Punta a Punta (Local, Navegador Real):** | `@.agents/workflows/09_live_stack_verification_workflow.md Prueba la app: [flujo de usuario]` |
 
 ---
 
@@ -102,6 +103,7 @@ Para asegurar que el desarrollo se realice bajo el enfoque **Verified Spec-Drive
 *   **[Pipeline QA Completo SOTA v2.1 Workflow](workflows/06_full_qa_pipeline.md):** Pipeline QA completo con Mutation Score >= 70% y veredicto JSON Schema.
 *   **[Observabilidad en Producción Shift-Right Workflow v2.0](workflows/07_production_observability_workflow.md):** Captura logs/stacktraces de producción, genera BDD Gherkin, pruebas de regresión y cierra el bucle convirtiendo incidencias en tickets `TK-XXX` del backlog.
 *   **[Smoke Test & Deploy Validation Workflow](workflows/08_smoke_test_deploy_validation.md):** Valida post-despliegue ejecutando health checks, smoke tests de contratos HTTP (3 Oráculos) y verifica seguridad de cabeceras. Emite veredicto PASS/FAIL con rollback automático OpenTofu si falla.
+*   **[Verificación en Vivo del Stack Completo Workflow](workflows/09_live_stack_verification_workflow.md):** Levanta la infraestructura real declarada en `docs/00_stack_manifest.md` (nunca asumida), recorre el flujo crítico del ticket con el motor E2E declarado, captura evidencia, y limpia el entorno de prueba por completo al terminar — el procedimiento accionable detrás del Antipatrón B de `rules/04_verified_implementation_standard.md`.
 
 ---
 
