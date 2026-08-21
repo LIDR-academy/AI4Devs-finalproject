@@ -950,6 +950,57 @@ project. Read it at the start of every session.
   `e2e/alquileres.ts`, no copiado en cada spec.
   **Verificación:** 385 unitarios, `tsc`, `eslint`, `next build` y **41 E2E en dos
   ejecuciones seguidas** dejando la base limpia; `axe` audita 19 pantallas y 3 diálogos.
+- **HU-06 y HU-16, las dos que faltaban (2026-08-21):** con ellas, **18 de 18 historias
+  con recorrido por interfaz** y ninguna que dependa ya de llamar a la API a mano.
+  **§8.4 — el puesto en la cola llega al portal.** `listEntriesForUser` devuelve
+  `QueueEntryPlacement` (la entrada + `position` + `queueLength`) y "Mis colas" abre cada
+  línea con **"2.º de 5"**. Tres decisiones: (1) el puesto lo calcula el **dominio**
+  —`placeInQueues` en `reservation-queue/ordering.ts`, que agrupa por Set y ordena con el
+  mismo `orderQueue` que sirve las ofertas—, no una cuenta aparte en SQL, o el criterio de
+  D11 quedaría escrito en dos sitios y la pantalla acabaría diciendo un puesto que el motor
+  no respeta; **el doble en memoria usa la misma función**, por lo mismo; (2) es una
+  **proyección aparte** y no dos campos en `QueueEntrySummary`, porque el puesto obliga a
+  leer la cola entera del Set y quien crea una entrada no debe pagar esa consulta; (3) **una
+  segunda consulta, no N**: se piden de golpe las entradas vivas de todos los Sets del
+  usuario. Spec nueva en `reservation-queue` ("Consulta de la posición en cola"), con el
+  escenario de que **el puesto no revela quién más espera**.
+  **HU-16 — la sexta pantalla, sin wireframe previo** (`wireframes.md` §10). Los **planes**
+  se editan en `/backoffice/configuracion`: un formulario por plan y **un solo botón**, los
+  tres campos en la misma llamada a `PATCH /api/plans/:code`, para que subir el precio y
+  bajar el bono sea un cambio y no dos en la auditoría. Los **recordatorios de retención**
+  van en la **ficha del set** (`/backoffice/catalogo/:id`) y no en el panel: el endpoint es
+  por set y llevarlo a configuración obligaría a inventar allí un selector; en el panel
+  queda un puntero al catálogo y la cadencia por defecto. La pantalla dice lo que más
+  sorprende de D7: activar los recordatorios de un set **que nadie espera no envía nada**.
+  Al operador se le enseñan igual las dos —se explica el 403, no se esconde la acción—.
+  **Mando inerte retirado:** `premiumQueueBonusDays` era un ajuste del sistema que **no
+  leía nadie** (el encolado congela `Plan.queueBonus`); fuera del catálogo y de la semilla.
+  Las filas que sigan en la base son inofensivas: `resolveSettings` solo recorre las claves
+  del catálogo. **§8.3 cerrado por la vía barata:** el campo de la ventana de confirmación
+  lleva debajo que es **también** el plazo para reclamar una entrega. Separarlo en dos
+  ajustes sigue siendo un cambio de modelo que nadie ha pedido.
+  **Puerto nuevo:** `QueueRepository.countActiveEntriesForSet` (WAITING|OFFERED, el mismo
+  criterio que el `queueLength` de los recordatorios).
+  **Carrera vieja destapada y corregida en `circuito-completo.spec.ts`:** tras pulsar
+  **"Higienizada"** la prueba cerraba sesión sin esperar nada, y el `fetch` en vuelo se
+  abortaba al navegar: la copia se quedaba en `EN_HIGIENIZACION`, la oferta a Bruno no
+  llegaba a existir y **el fallo aparecía tres pasos más allá**, en un "Te toca" que
+  nadie había pedido. Los dos pasos anteriores no lo sufrían porque se anclan en el
+  encabezado del grupo siguiente; este no tiene grupo detrás —la copia **sale** de la
+  cola de trabajo—, así que ahora se ancla en `waitForResponse` de la transición. La
+  regla, para no repetirla: **una acción que quita la fila de la pantalla no tiene dónde
+  anclarse en la pantalla**.
+  **Verificación:** 397 unitarios (`tests/configuracion-forms.test.tsx` nuevo, con los dos
+  formularios y sus caminos de error), `tsc`, `eslint`, `next build`,
+  `openspec validate --strict` y **44 E2E en dos ejecuciones seguidas** dejando la base
+  limpia (0 alquileres abiertos, 0 colas vivas). Las tres pruebas nuevas están escritas
+  para no dejar residuo: `e2e/configuracion.spec.ts` **no cambia ningún valor** —guarda el
+  plan con los que ya tiene, porque precio y bono son globales y otra prueba en paralelo
+  comprueba el precio en el alta—; el paso de retención va dentro de
+  `catalogo-backoffice.spec.ts`, sobre **su** set de prueba, que no tiene alquileres; y la
+  comprobación del puesto en `circuito-completo.spec.ts` es **por forma**
+  (`/^\d+\.º de \d+$/`) **y no por número**, porque otra prueba puede encolarse en el
+  mismo set.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
@@ -972,7 +1023,10 @@ project. Read it at the start of every session.
   §8.2 ya no tiene nada abierto**: los wireframes cerraron los tres puntos que quedaban.
   Los dos bloqueantes de `wireframes.md` §8.1 y §8.2 están **resueltos**
   (2026-08-20): la cola de trabajo tiene el grupo "Por preparar" y la lista de
-  comprobación está ratificada en el dominio. Para cualquier cambio de estado de una copia, usar
+  comprobación está ratificada en el dominio. **§8.4 y §8.7 cerrados el 2026-08-21**
+  (posición en cola y pantalla de HU-16) y **§8.3 anotado**: de los siete hallazgos de
+  §8 no queda ninguno abierto, y la cobertura es **18 de 18 historias**. Lo único
+  pendiente del proyecto es el **despliegue en la VM** y el **videotutorial**. Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en

@@ -1070,7 +1070,7 @@ es lo único que justifica registrarlos.
 **Resuelto el 2026-08-20**: ratificadas **dos** —recuento de piezas y manual—, en un
 único módulo de dominio del que se deriva la validación de los dos endpoints (§4.3).
 
-### 8.3 · Un ajuste con dos significados
+### 8.3 · ~~Un ajuste con dos significados~~ **Anotado**
 
 La ventana para reportar una discrepancia es `offerConfirmationWindowHours`, el mismo
 ajuste que da el plazo para confirmar una oferta de cola
@@ -1081,7 +1081,13 @@ entrega**. No es un fallo de la pantalla, pero la pantalla lo hace visible: dos 
 interfaz citando el mismo número por motivos que nadie relacionaría. Merece o un ajuste
 propio o una nota explícita en la configuración.
 
-### 8.4 · La posición en la cola no llega al portal
+**Resuelto por la vía barata el 2026-08-21**, al construir HU-16: el campo lleva ahora
+debajo *"Este mismo plazo es el que tiene el suscriptor para reportar una discrepancia en
+la entrega recibida"*. Sigue siendo un solo número —separarlo en dos ajustes es un cambio
+de modelo y de spec, y hoy nadie ha pedido plazos distintos—, pero ya no se acorta a
+ciegas. Si algún día se separan, esta nota es lo que desaparece.
+
+### 8.4 · ~~La posición en la cola no llega al portal~~ **Resuelto**
 
 `QueueEntrySummary` trae `enqueuedAt`, `effectiveEntryAt`, `appliedBonusDays` y
 `priorityPenaltyDays` — **pero no la posición**
@@ -1091,9 +1097,23 @@ Así que "Mis colas" puede decir desde cuándo espera, no en qué puesto va, que
 justamente lo que pide HU-06.
 
 Se arregla en el repositorio —contar entradas activas con `effectiveEntryAt` anterior, en
-el mismo set—, no en la pantalla. Hasta entonces, la posición solo se ve entrando en la
-ficha de cada set (W1 §3.4), y eso es literalmente lo que dice "Mis colas" en
-`/portal/sets` desde W5: **sigue abierto**.
+el mismo set—, no en la pantalla.
+
+**Resuelto el 2026-08-21.** `listEntriesForUser` devuelve ahora
+`QueueEntryPlacement` —la entrada más `position` y `queueLength`— y "Mis colas" abre cada
+línea con **"2.º de 5"**. Tres decisiones que conviene no reabrir:
+
+- **El puesto lo calcula el dominio, no SQL.** `placeInQueues` agrupa por Set y ordena con
+  el mismo `orderQueue` que sirve las ofertas (D11). Contar en la consulta habría dejado
+  el criterio de orden escrito en dos sitios, y el día que se toquen los empates la
+  pantalla diría un puesto que el motor no respeta. El doble en memoria de los tests usa
+  la misma función, por lo mismo.
+- **Es una proyección aparte y no dos campos en `QueueEntrySummary`.** El puesto obliga a
+  leer la cola entera del Set; quien crea una entrada o la busca por id no debe pagar esa
+  consulta.
+- **Una segunda consulta, no N.** Se piden de golpe las entradas vivas de todos los Sets
+  en los que espera el usuario —como mucho `maxQueuesPerUser` colas— y se agrupan en
+  memoria.
 
 ### 8.5 · La navegación de superficie no está en los layouts
 
@@ -1146,9 +1166,10 @@ que HU-02 (cambio de plan) está "sin API ni UI" cuando `PUT /api/subscriptions/
 `PlanSwitcher` del portal existen desde el 17. HU-09 (pausar/cancelar) sí sigue siendo
 correcta: la API está, la interfaz no.
 
-Y queda fuera de esta tanda, sin cambiar de estado: **HU-16**, cuyos endpoints
-`PATCH /api/plans/:code` y `PUT /api/sets/:id/retention-reminder` existen y no tienen
-ninguna pantalla en `/backoffice/configuracion`.
+Y quedaba fuera de esa tanda **HU-16**, cuyos endpoints `PATCH /api/plans/:code` y
+`PUT /api/sets/:id/retention-reminder` existían sin ninguna pantalla. **Construida el
+2026-08-21** (§10), con lo que la tabla queda ya sin ninguna historia "con API y sin
+interfaz".
 
 ---
 
@@ -1216,18 +1237,56 @@ No hace falta inventar nada; el andamiaje ya está montado y tiene sus reglas:
 Recontando la tabla de `ux-flows.md` §7 con la corrección de §8.7 (HU-01 y HU-02 ya
 están hechas desde el 17 de agosto):
 
-| | Al dibujarlas | Hoy, con las cinco |
-|---|---|---|
-| Historias con recorrido completo por interfaz | 9 de 18 | **16 de 18** |
-| De las seis ⭐ distintivas del producto | 3 de 6 | **6 de 6** |
-| ¿Se puede ser cliente de Clickoteca solo con el navegador? | **No** | **Sí** |
+| | Al dibujarlas | Con las cinco | Hoy (2026-08-21) |
+|---|---|---|---|
+| Historias con recorrido completo por interfaz | 9 de 18 | 16 de 18 | **18 de 18** |
+| De las seis ⭐ distintivas del producto | 3 de 6 | **6 de 6** | **6 de 6** |
+| ¿Se puede ser cliente de Clickoteca solo con el navegador? | **No** | **Sí** | **Sí** |
 
-Las siete que cambiaron: HU-00 y HU-03/HU-04 con W1, HU-10 con W4, HU-09 con W5, y
-HU-11 y HU-07 con W2+W3. **Todas hechas.**
+Las siete que cambiaron con las pantallas: HU-00 y HU-03/HU-04 con W1, HU-10 con W4,
+HU-09 con W5, y HU-11 y HU-07 con W2+W3. **Todas hechas.**
 
-Las dos que seguirían sin cerrar, y por qué:
+Las dos que quedaron a medias se cerraron al día siguiente (§10): **HU-06** necesitaba
+que la posición llegase al portal, que era el bloqueo de §8.4 y se arregla en el
+repositorio; **HU-16** tenía API y ninguna pantalla, §8.7.
 
-- **HU-06** (mis sets, historial y **posición** en cola) se queda a medias: el historial
-  llega con W5, pero la posición está bloqueada por §8.4 y no se arregla en la pantalla.
-- **HU-16** (planes y recordatorios de retención) queda fuera de esta tanda: tiene API y
-  no tiene pantalla, §8.7.
+---
+
+## 10. La sexta pantalla, que no estaba dibujada — HU-16 (2026-08-21)
+
+Los wireframes dibujaron cinco pantallas porque eran las que `ux-flows.md` §9.2 había
+dejado pendientes. HU-16 no estaba entre ellas: §8.7 la anotó al margen, "tiene API y no
+tiene pantalla", y así se quedó. Al construirla no hizo falta un wireframe previo —es un
+panel de formularios sobre endpoints que ya existen— pero sí tres decisiones que aquí se
+dejan escritas.
+
+**Los planes se editan en `/backoffice/configuracion`, con un formulario por plan y un
+solo botón.** Los tres campos —precio, sets simultáneos y ventaja en cola— viajan en la
+misma llamada a `PATCH /api/plans/:code`, así que subir el precio y bajar el bono es un
+cambio y no dos, y la auditoría lo registra como tal. Es lo contrario de "Reglas del
+sistema", donde cada parámetro es independiente y se guarda solo.
+
+**Los recordatorios de retención se configuran en la ficha del set, no en el panel.**
+`PUT /api/sets/:id/retention-reminder` es por set: llevarlo a la configuración obligaría
+a inventar allí un selector de sets, y a elegir a mano uno que se está mirando en el
+catálogo. En el panel queda solo un puntero al catálogo y la **cadencia por defecto**,
+que es la que se propone cuando un set no tiene la suya. La pantalla dice además lo que
+más sorprende de D7: activar los recordatorios de un set que nadie espera **no envía
+nada**, y sin decirlo se daría por roto.
+
+**Y una trampa del E2E, anotada porque el patrón volverá.** El recorrido del circuito
+completo pulsaba "Higienizada" y cerraba sesión sin esperar nada: la navegación abortaba
+el `fetch` en vuelo, la copia se quedaba en `EN_HIGIENIZACION` y el fallo aparecía **tres
+pasos más allá**, en una oferta que nunca llegó a crearse. Los pasos anteriores no lo
+sufrían porque se anclan en el encabezado del grupo siguiente de la cola de trabajo. La
+regla que se deja escrita: **una acción que quita la fila de la pantalla no tiene dónde
+anclarse en la pantalla** — se ancla en la respuesta.
+
+**Y un mando que no estaba conectado.** Construir la pantalla destapó que
+`premiumQueueBonusDays` —un parámetro del sistema, con su etiqueta y su campo— **no lo
+leía nadie**: la ventaja en cola sale de `Plan.queueBonus`, que es lo que `join-queue`
+congela al encolar (D11). Un admin podía ajustarlo, guardarlo y no cambiar nada. Se ha
+retirado del catálogo de ajustes y de la semilla; las filas que sigan en la base son
+inofensivas, porque `resolveSettings` solo recorre las claves del catálogo. Es el mismo
+patrón que §8.3 —dos textos citando el mismo número— visto desde el otro lado: allí un
+ajuste gobierna dos cosas, aquí dos ajustes gobernaban una y solo uno estaba enchufado.

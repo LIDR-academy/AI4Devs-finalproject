@@ -110,7 +110,7 @@ y pide el siguiente—.
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> **En curso.** Tres entregables cerrados; queda construirlos:
+> **Tres entregables cerrados y construidos.** Queda el videotutorial:
 >
 > 1. **Flujos por rol** — [`documents/ux-flows.md`](documents/ux-flows.md): actores y
 >    superficies, mapa de navegación, 15 diagramas Mermaid de flujo y la tabla de
@@ -123,7 +123,7 @@ y pide el siguiente—.
 >    Implementado en `app/globals.css` + `lib/status.ts`, y **verificado en la suite**
 >    (`tests/design-tokens.test.ts` mide el contraste contra el CSS real).
 > 3. **Wireframes** — [`documents/wireframes.md`](documents/wireframes.md): las cinco
->    pantallas que hoy solo existen como API (ficha de set, registro de condición,
+>    pantallas que entonces solo existían como API (ficha de set, registro de condición,
 >    discrepancia, catálogo de back-office y portal ampliado), con su disposición,
 >    de dónde sale cada dato, los errores reales de la API y qué se ve cuando no hay
 >    nada. Dibujarlas contra el código destapó siete huecos de implementación, dos
@@ -159,10 +159,19 @@ y pide el siguiente—.
 > producto**: **16 de 18** historias tienen recorrido completo por interfaz y **las cinco
 > pantallas de los wireframes están construidas**.
 >
-> **Pendiente:** el videotutorial (`documents/PRD.md` §9) y el despliegue en la VM. Las
-> dos historias que siguen sin cerrarse son **HU-06** —la posición en la cola, bloqueada
-> por `wireframes.md` §8.4, que se arregla en el repositorio y no en la pantalla— y
-> **HU-16** (planes y recordatorios de retención), que tiene API y no tiene interfaz.
+> **Y las dos que quedaban a medias, cerradas el 2026-08-21** (`wireframes.md` §8.4 y
+> §10). **HU-06**: "Mis colas" abre cada línea con el puesto —"2.º de 5"—, que hasta
+> ahora solo se veía entrando en la ficha de cada set; el puesto lo calcula el dominio
+> con el **mismo orden que sirve las ofertas**, no una cuenta aparte en SQL. **HU-16**:
+> los planes se editan desde `/backoffice/configuracion` —precio, sets simultáneos y
+> ventaja en cola, los tres en una sola llamada auditada— y los recordatorios de
+> retención se activan **set a set** desde su ficha del catálogo, que es donde el
+> endpoint los tiene. Construirla destapó además un mando que no estaba conectado:
+> `premiumQueueBonusDays` era un ajuste del sistema que **no leía nadie** —la ventaja
+> sale del plan— y se ha retirado. Con esto, **18 de 18** historias tienen recorrido
+> completo por interfaz.
+>
+> **Pendiente:** el videotutorial (`documents/PRD.md` §9) y el despliegue en la VM.
 >
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales

@@ -92,3 +92,19 @@ antigüedad y el historial de cumplimiento.
 - **WHEN** un usuario en su límite de colas intenta unirse a otra
 - **THEN** la acción es rechazada indicando el límite
 
+
+### Requirement: Consulta de la posición en cola
+El sistema SHALL mostrar al suscriptor, para cada cola en la que espera, el **puesto
+que ocupa** y cuántas personas la forman. El puesto se calcula con el mismo orden de
+servicio que decide a quién se ofrece la siguiente copia libre ("Orden de cola por
+entrada efectiva inmutable"), de modo que lo que ve el suscriptor y lo que hace el
+motor de ofertas no puedan divergir.
+
+#### Scenario: Ver el puesto propio
+- **WHEN** un suscriptor consulta las colas en las que espera
+- **THEN** cada una indica su puesto y el total de personas en esa cola
+
+#### Scenario: El puesto no revela quién más espera
+- **WHEN** se muestra el puesto
+- **THEN** se indican únicamente números: en ningún caso la identidad de los demás
+  suscriptores de la cola

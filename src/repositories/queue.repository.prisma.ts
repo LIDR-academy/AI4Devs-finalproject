@@ -1,5 +1,6 @@
 import { prisma } from "@/db/prisma";
 import type { CopyState } from "@/domain/copy/lifecycle";
+import { placeInQueues } from "@/domain/reservation-queue/ordering";
 import { OCCUPYING_COPY_STATES } from "@/domain/subscriptions/eligibility";
 import { applyTransition } from "@/repositories/copy-transitions";
 import type {
@@ -116,7 +117,34 @@ export const prismaQueueRepository: QueueRepository = {
       select: ENTRY_SELECT,
       orderBy: { effectiveEntryAt: "asc" },
     });
-    return rows.map((row) => toEntry(row as EntryRow));
+    if (rows.length === 0) return [];
+
+    // El puesto exige la cola entera de cada Set, no solo la entrada propia
+    // (§8.4). Una segunda consulta acotada a esos Sets —unas pocas decenas de filas—
+    // y el orden se resuelve con la misma función de dominio que sirve las ofertas,
+    // en vez de repetir el criterio de D11 en SQL.
+    const peers = await prisma.reservationQueueEntry.findMany({
+      where: {
+        setId: { in: [...new Set(rows.map((row) => row.setId))] },
+        status: { in: [...ACTIVE_ENTRY_STATUSES] },
+      },
+      select: { id: true, setId: true, effectiveEntryAt: true },
+    });
+    const placements = placeInQueues(peers);
+
+    return rows.map((row) => {
+      const entry = toEntry(row as EntryRow);
+      // La entrada acaba de salir de la misma tabla, así que siempre está en el mapa;
+      // el respaldo evita un `!` y describe lo que significaría no estarlo.
+      const placement = placements.get(entry.id) ?? { position: 1, queueLength: 1 };
+      return { ...entry, ...placement };
+    });
+  },
+
+  async countActiveEntriesForSet(setId) {
+    return prisma.reservationQueueEntry.count({
+      where: { setId, status: { in: [...ACTIVE_ENTRY_STATUSES] } },
+    });
   },
 
   async createEntry({ setId, userId, enqueuedAt, appliedBonusDays, effectiveEntryAt }) {

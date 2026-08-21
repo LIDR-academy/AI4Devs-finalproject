@@ -1,4 +1,5 @@
 import type { CopyState } from "@/domain/copy/lifecycle";
+import { placeInQueues } from "@/domain/reservation-queue/ordering";
 import type {
   CreatedOffer,
   PendingOffer,
@@ -46,9 +47,23 @@ export class FakeQueueRepository implements QueueRepository {
   }
 
   async listEntriesForUser(userId: string) {
-    return this.entries.filter(
-      (e) => e.userId === userId && (e.status === "WAITING" || e.status === "OFFERED")
+    // El puesto se calcula con la misma función de dominio que el adaptador real: si
+    // el doble contase por su cuenta, los tests validarían otra cola (§8.4).
+    const placements = placeInQueues(
+      this.entries.filter((e) => e.status === "WAITING" || e.status === "OFFERED")
     );
+    return this.entries
+      .filter((e) => e.userId === userId && (e.status === "WAITING" || e.status === "OFFERED"))
+      .map((entry) => ({
+        ...entry,
+        ...(placements.get(entry.id) ?? { position: 1, queueLength: 1 }),
+      }));
+  }
+
+  async countActiveEntriesForSet(setId: string) {
+    return this.entries.filter(
+      (e) => e.setId === setId && (e.status === "WAITING" || e.status === "OFFERED")
+    ).length;
   }
 
   async createEntry(input: {

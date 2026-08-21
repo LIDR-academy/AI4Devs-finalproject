@@ -501,26 +501,26 @@ lógica de deduplicación en pantalla. La excepción deliberada es
 |---|---|---|---|---|
 | HU-00 | Explorar como visitante | V1 | `/catalogo`, `/catalogo/:id`, `/planes` | 🟢 desde 2026-08-20 |
 | HU-01 | Alta de suscriptor, con plan | V2 | `/registro` | 🟢 desde 2026-08-17 |
-| HU-02 | **Cambiar** de plan | S5 | `/portal` | 🟢 desde 2026-08-17 |
+| HU-02 | **Cambiar** de plan | S5 | `/portal/suscripcion` | 🟢 desde 2026-08-17 |
 | HU-03 | Solicitar un set ⭐ | S1 | `/catalogo/:id` | 🟢 desde 2026-08-20 |
 | HU-04 | Unirse a la cola ⭐ | S1 | `/catalogo/:id` | 🟢 desde 2026-08-20 |
 | HU-05 | Confirmar o rechazar oferta ⭐ | S2 | `/portal` | 🟢 |
-| HU-06 | Mis sets, historial y posición | S6 | `/portal` | 🟡 sin historial ni posición |
-| HU-07 | Reportar discrepancia | S4 | — | 🟡 solo API |
-| HU-08 | Iniciar devolución ⭐ | S3 | `/portal` | 🟢 |
-| HU-09 | Cancelar o pausar | S5 | — | 🟡 solo API |
-| HU-10 | Dar de alta una copia | O3 | — | 🟡 catalogar sí, crear no |
-| HU-11 | Registrar condición ⭐ | O2 | — | 🟡 solo API |
+| HU-06 | Mis sets, historial y posición | S6 | `/portal/sets`, `/portal/historial` | 🟢 desde 2026-08-21 |
+| HU-07 | Reportar discrepancia | S4 | `/portal/sets` | 🟢 desde 2026-08-20 |
+| HU-08 | Iniciar devolución ⭐ | S3 | `/portal/sets` | 🟢 |
+| HU-09 | Cancelar o pausar | S5 | `/portal/suscripcion` | 🟢 desde 2026-08-20 |
+| HU-10 | Dar de alta una copia | O3 | `/backoffice/catalogo/:id` | 🟢 desde 2026-08-20 |
+| HU-11 | Registrar condición ⭐ | O2 | `/backoffice/copias/:id/entrega` | 🟢 desde 2026-08-20 |
 | HU-12 | Recepcionar e inspeccionar | O1 | `/backoffice` | 🟢 |
 | HU-13 | Higienizar ⭐ | O1 | `/backoffice` | 🟢 |
 | HU-14 | Marcar incompleta | O1 | `/backoffice` | 🟢 |
 | HU-15 | Baja de copia (admin) | O1 | `/backoffice` | 🟢 |
-| HU-16 | Configurar reglas | A1 | `/backoffice/configuracion` | 🟡 planes y retención sin UI |
+| HU-16 | Configurar reglas | A1 | `/backoffice/configuracion`, ficha de set | 🟢 desde 2026-08-21 |
 | HU-17 | Equidad de la cola | Sistema | — | 🟢 sin UI por diseño |
 
-**Resumen: 12 de 18 historias tienen recorrido completo por interfaz.** De las seis
-marcadas con ⭐ como distintivas del producto, están cubiertas HU-03, HU-04, HU-05,
-HU-08 y HU-13; falta HU-11.
+**Resumen: 18 de 18 historias tienen recorrido completo por interfaz**, y las **seis ⭐**
+con ellas. HU-17 sigue sin pantalla a propósito: es el motor de equidad de la cola, y lo
+que se ve de él es el puesto que ocupa cada suscriptor en "Mis colas".
 
 > **Corregido el 2026-08-20.** La primera versión de esta tabla se escribió el 16 de
 > agosto, un día antes de implementar `plan-obligatorio-en-alta`, y daba HU-01 como
@@ -530,11 +530,19 @@ HU-08 y HU-13; falta HU-11.
 > Y el 20 de agosto **W1 se construyó**: `/catalogo/:id` existe, así que HU-00, HU-03 y
 > HU-04 pasan a verde. Con las cuatro pantallas que faltan, esto llegaría a **16 de 18**
 > y **6 de 6** ⭐ — [`wireframes.md`](wireframes.md) §9.4.
+>
+> **Puesta al día el 2026-08-21.** Las cinco pantallas de los wireframes se construyeron
+> el 20 de agosto —W1 a W5— y el 21 llegaron las dos que quedaban a medias: la **posición
+> en cola** en "Mis colas" (§8.4 de los wireframes) cierra HU-06, y la pantalla de
+> **planes y recordatorios de retención** cierra HU-16. La tabla de arriba ya refleja
+> ambas; las columnas de pantalla también, que habían envejecido con el reparto de rutas
+> de W5.
 
-Que el MVP se diera por cerrado con esto es coherente — el criterio de éxito era el
+Cuando el MVP se dio por cerrado, esto era coherente — el criterio de éxito era el
 **circuito E2E demostrable**, y el E2E lo recorre entero mezclando interfaz y API.
-Pero traducido a producto: **hoy no se puede ser cliente de Clickoteca usando solo el
-navegador.**
+Traducido a producto, en cambio, quedaba corto: **no se podía ser cliente de Clickoteca
+usando solo el navegador**. Desde el 20 de agosto sí se puede, y desde el 21 no queda
+ninguna historia que dependa de llamar a la API a mano.
 
 ---
 

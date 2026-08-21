@@ -4,15 +4,30 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 /** Etiquetas legibles de cada parámetro; la clave técnica no se enseña sola. */
 const LABELS: Record<string, string> = {
   offerConfirmationWindowHours: "Ventana para confirmar una oferta (horas)",
   expiredOfferPenaltyDays: "Penalización al dejar caducar una oferta (días)",
-  premiumQueueBonusDays: "Ventaja del plan Premium en la cola (días)",
   maxQueuesPerUser: "Colas simultáneas por usuario",
   restrictedSetMinMonths: "Antigüedad mínima para sets restringidos (meses)",
   retentionReminderCadenceDays: "Cadencia de los recordatorios de retención (días)",
+};
+
+/**
+ * Lo que el número no dice de sí mismo. Solo donde hace falta: una aclaración en cada
+ * campo se lee como ruido y deja de leerse.
+ */
+const HINTS: Record<string, string> = {
+  // `wireframes.md` §8.3: el mismo ajuste gobierna dos plazos con motivos distintos.
+  // Mientras compartan valor, decirlo aquí es lo que evita que un admin acorte sin
+  // saberlo el plazo para reclamar una entrega.
+  offerConfirmationWindowHours:
+    "Este mismo plazo es el que tiene el suscriptor para reportar una discrepancia en la entrega recibida.",
+  retentionReminderCadenceDays:
+    "Valor por defecto: cada set puede fijar el suyo desde su ficha del catálogo.",
 };
 
 export function SettingsForm({ settings }: { settings: Record<string, number> }) {
@@ -46,30 +61,38 @@ export function SettingsForm({ settings }: { settings: Record<string, number> })
       {Object.entries(settings).map(([key, value]) => (
         <form
           key={key}
-          className="flex flex-wrap items-end gap-3"
+          className="flex flex-col gap-1.5"
           onSubmit={(event) => {
             event.preventDefault();
             const input = new FormData(event.currentTarget).get("value");
             save(key, Number(input));
           }}
         >
-          <div className="flex min-w-[18rem] flex-1 flex-col gap-1.5">
-            <label htmlFor={key} className="text-sm font-medium">
-              {LABELS[key] ?? key}
-            </label>
-            <input
-              id={key}
-              name="value"
-              type="number"
-              step="0.01"
-              min={0}
-              defaultValue={value}
-              className="h-9 rounded-md border px-3 text-sm"
-            />
+          {/* La aclaración va **debajo** de la fila y no dentro de la columna del
+              campo: si no, el botón —alineado al final— bajaría a su altura y cada
+              parámetro tendría el «Guardar» en un sitio distinto. */}
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex min-w-[18rem] flex-1 flex-col gap-1.5">
+              <Label htmlFor={key}>{LABELS[key] ?? key}</Label>
+              <Input
+                id={key}
+                name="value"
+                type="number"
+                step="0.01"
+                min={0}
+                defaultValue={value}
+                aria-describedby={HINTS[key] ? `${key}-hint` : undefined}
+              />
+            </div>
+            <Button type="submit" size="sm" variant="outline" disabled={saving !== null}>
+              {saving === key ? "Guardando…" : "Guardar"}
+            </Button>
           </div>
-          <Button type="submit" size="sm" variant="outline" disabled={saving !== null}>
-            {saving === key ? "Guardando…" : "Guardar"}
-          </Button>
+          {HINTS[key] ? (
+            <p id={`${key}-hint`} className="text-sm text-[var(--muted-foreground)]">
+              {HINTS[key]}
+            </p>
+          ) : null}
         </form>
       ))}
       {message ? (

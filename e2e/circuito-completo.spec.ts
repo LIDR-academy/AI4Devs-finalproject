@@ -174,6 +174,14 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
   await expect(box.getByText(/Eres el nº 1 de 1 en la cola/)).toBeVisible();
   await expect(box.getByRole("button", { name: "Salir de la cola" })).toBeVisible();
 
+  // El mismo puesto, visto desde el portal: es lo que pide HU-06 y lo que hasta
+  // `wireframes.md` §8.4 solo se veía entrando en la ficha de cada set. El número no se
+  // fija —otra prueba en paralelo puede encolarse en el mismo set— pero sí su forma.
+  await page.goto("/portal/sets");
+  const colas = page.getByRole("region", { name: /Mis colas/ });
+  await expect(colas.getByRole("link", { name: target!.name })).toBeVisible();
+  await expect(colas.getByText(/^\d+\.º de \d+$/)).toBeVisible();
+
   // ── 3. Ana devuelve el set desde su portal ─────────────────────────────────
   // Se vuelve al portal antes de cerrar sesión: el botón de salir vive en su layout,
   // y en la ficha `name: "Salir"` encontraría **"Salir de la cola"** —Playwright busca
@@ -199,7 +207,19 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
   await page.getByRole("button", { name: "Inspección OK" }).first().click();
   await expect(page.getByRole("heading", { name: /Por higienizar/i })).toBeVisible();
 
-  await page.getByRole("button", { name: "Higienizada" }).first().click();
+  // Se espera a que la transición **llegue al servidor** antes de seguir. Los dos
+  // pasos anteriores se anclaban en el encabezado del grupo siguiente; este no tiene
+  // grupo detrás —la copia sale de la cola de trabajo al quedar `DISPONIBLE`—, así que
+  // sin ancla el cierre de sesión abortaba el `fetch` en vuelo y la copia se quedaba
+  // en `EN_HIGIENIZACION`: la oferta a Bruno no llegaba a existir y el fallo aparecía
+  // tres pasos más allá, en un "Te toca" que nadie había pedido.
+  await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes("/transitions") && response.request().method() === "POST"
+    ),
+    page.getByRole("button", { name: "Higienizada" }).first().click(),
+  ]);
 
   // ── 5. La copia liberada se ofrece a Bruno, que la acepta ──────────────────
   await page.getByRole("button", { name: "Salir" }).click();

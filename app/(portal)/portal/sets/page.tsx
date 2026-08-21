@@ -22,6 +22,13 @@ const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium" });
  * no se recarga (`wireframes.md` §5.5).
  */
 const LIMITE = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" });
+/**
+ * El puesto en ordinal ("2.º"), no en cardinal: "2 de 5" se lee como una cantidad y
+ * "2.º de 5" como un sitio en una fila, que es lo que es (HU-06). El sufijo se escribe
+ * a mano —`Intl` no formatea ordinales, `PluralRules` solo da la categoría— y en
+ * masculino, concordando con "puesto".
+ */
+const puesto = (position: number) => `${position}.º`;
 
 /** Único estado desde el que el suscriptor puede iniciar la devolución. */
 const RETURNABLE = "ALQUILADA";
@@ -165,7 +172,10 @@ export default async function PortalSetsPage() {
                   <StatusBadge status={queueStatus(entry.status, "subscriber")} />
                 </p>
                 <p className="text-[var(--muted-foreground)]">
-                  Esperando desde el {DATE.format(entry.enqueuedAt)}
+                  <span className="font-medium text-[var(--foreground)]">
+                    {puesto(entry.position)} de {entry.queueLength}
+                  </span>{" "}
+                  · esperando desde el {DATE.format(entry.enqueuedAt)}
                   {entry.appliedBonusDays > 0
                     ? ` · ventaja de ${entry.appliedBonusDays} días por tu plan`
                     : ""}
@@ -174,14 +184,6 @@ export default async function PortalSetsPage() {
             ))}
           </ul>
         )}
-        {/* La posición no está en esta proyección — solo en la ficha del set
-            (`wireframes.md` §8.4), y arreglarlo es cosa del repositorio, no de la
-            pantalla. Hasta entonces, el enlace lleva a donde sí se ve. */}
-        {queueEntries.length > 0 ? (
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Tu puesto exacto en cada cola se ve entrando en la ficha del set.
-          </p>
-        ) : null}
       </section>
     </div>
   );

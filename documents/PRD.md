@@ -248,20 +248,21 @@ lanzamiento real necesitaría, como mínimo:
    de set, registro de condición, discrepancia, catálogo de back-office y portal
    ampliado), con su disposición, sus datos, sus errores reales y sus vacíos.
 
-**La primera pantalla ya está construida:** la ficha de set `/catalogo/:id`
-(2026-08-20), que es donde D13 se hace visible —el mismo recurso con dos
-proyecciones— y desde donde se solicita un set y se entra en la cola.
+**Las cinco pantallas están construidas** (2026-08-20): la ficha de set
+`/catalogo/:id` —donde D13 se hace visible, el mismo recurso con dos proyecciones—,
+el registro de condición, la franja de discrepancia, el catálogo del back-office y el
+portal ampliado. Los dos huecos bloqueantes que destapó dibujarlas se resolvieron
+antes de construirlas: la copia `ALQUILADA` no aparecía en la cola de trabajo del
+operador y la lista de comprobación del registro de condición no existía en ninguna
+capa (`wireframes.md` §8.1 y §8.2).
 
 Ese cruce entre las historias y el código implementado deja un dato que este PRD
-debe recoger: **hoy 12 de 18 historias tienen recorrido completo por interfaz**; el
-resto existe en la API sin pantalla desde la que ejecutarse. Construidas las cuatro
-pantallas que faltan serían 16 de 18 (`wireframes.md` §9.4).
+debe recoger: **las 18 de 18 historias tienen ya recorrido completo por interfaz**
+(2026-08-21). Las dos últimas fueron **HU-06** —la posición en cola, que no llegaba
+al portal (`wireframes.md` §8.4)— y **HU-16**, cuyos endpoints de planes y
+recordatorios de retención existían sin pantalla desde la que ejecutarse.
 
-**Pendiente:** las **cuatro pantallas restantes** —en el orden de `wireframes.md`
-§9.2— y el videotutorial. Antes de W2 hay que resolver dos huecos bloqueantes que
-destapó dibujarlas: la copia `ALQUILADA` no aparece en la cola de trabajo del
-operador, y la lista de comprobación del registro de condición no existe en ninguna
-capa (`wireframes.md` §8.1 y §8.2).
+**Pendiente:** el videotutorial y el despliegue en la VM.
 
 ## 10. Criterios de éxito del MVP
 
@@ -468,7 +469,7 @@ flowchart LR
 | UC-B08 | Consultar historial limitado del cliente | Operador | Vista de lectura parcial del historial del suscriptor para atención y soporte telefónico/email (sin datos sensibles completos). |
 | UC-B09 | Dar de baja una copia | **Admin** | Transita la copia a `BAJA` (daño irreparable, pérdida o sustracción). Acción exclusiva del Admin por su impacto económico. |
 | UC-B10 | Configurar planes y precios | **Admin** | Ajusta el precio mensual, los sets simultáneos y el bono de cola de BASIC y PREMIUM. |
-| UC-B11 | Configurar reglas del sistema | **Admin** | Establece: bono de cola premium, duración de ventana de confirmación, antigüedad mínima para sets restringidos, límite de colas simultáneas por usuario. |
+| UC-B11 | Configurar reglas del sistema | **Admin** | Establece: duración de la ventana de confirmación —que es además el plazo para reclamar una entrega—, penalización por dejar caducar una oferta, antigüedad mínima para sets restringidos, límite de colas simultáneas por usuario y cadencia por defecto de los recordatorios. El **bono de cola no está aquí**: vive en el plan (UC-B10), que es de donde lo lee el encolado. |
 | UC-B12 | Activar recordatorios de retención | **Admin** | Habilita recordatorios periódicos para un Set concreto que acumula cola, enviados al suscriptor que lo retiene. |
 | UC-B13 | Gestionar empleados | **Admin** | Crea, modifica y desactiva cuentas de Operadores. |
 | UC-B14 | Ver historial completo del cliente | **Admin** | Acceso completo al historial de alquileres, estado de suscripción y perfil del suscriptor. |
@@ -591,8 +592,11 @@ Las entidades se organizan en **tres anillos por orden de importancia**:
   máquina de estados de la copia es de primera clase (§7); `AuditLog` cubre el resto
   de acciones admin (config, gestión de empleados).
 - **`SystemSetting`** clave-valor para los parámetros configurables: ventana de
-  confirmación, cadencia de recordatorios, límite de colas por usuario, antigüedad
-  mínima de sets restringidos, bono de cola premium.
+  confirmación, penalización por caducidad, cadencia de recordatorios, límite de colas
+  por usuario y antigüedad mínima de sets restringidos. El **bono de cola** llegó a
+  estar en esta lista (`premiumQueueBonusDays`) y **se retiró el 2026-08-21**: nadie lo
+  leía —el encolado congela `Plan.queueBonus`— y en la pantalla de configuración
+  aparentaba ser un mando más.
 
 ### 15.2 Diagrama — Núcleo del circuito (Anillo 1)
 

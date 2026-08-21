@@ -995,3 +995,52 @@ ejecuciones seguidas** dejando la base limpia, con el recorrido registro→discr
 entero por interfaz. `axe` audita 19 pantallas y 3 diálogos. Sincronizados
 `wireframes.md` (§5.6 nueva, §9.1, §9.2 y §9.4), `design-system.md` §6.1/§6.2 y
 `readme.md` §1.3.
+
+### [2026-08-21] — HU-06 y HU-16: el puesto en la cola y la pantalla de configuración
+**Prompt:** "seguimos".
+**Resumen de la respuesta:** Las **dos historias que quedaban a medias**, cerradas.
+Con ellas, **18 de 18 con recorrido por interfaz** y ninguna que dependa ya de llamar
+a la API a mano.
+**HU-06 — el puesto llega al portal** (`wireframes.md` §8.4, el último hallazgo que
+seguía abierto). "Mis colas" abre ahora cada línea con **"2.º de 5"**, que era
+literalmente lo que pide la historia y lo único que solo se veía entrando en la ficha
+de cada set. Lo que importa de cómo se hizo: el puesto lo calcula **el dominio**
+—`placeInQueues` agrupa por Set y ordena con el mismo `orderQueue` que sirve las
+ofertas—, no una cuenta aparte en SQL. Contar en la consulta habría dejado el criterio
+de orden de D11 escrito en dos sitios, y el día que se toquen los empates la pantalla
+diría un puesto que el motor no respeta. El doble en memoria de los tests usa **la
+misma función**, por lo mismo. Es además una proyección aparte y no dos campos más en
+la entrada de cola: el puesto obliga a leer la cola entera del Set, y quien crea una
+entrada no debe pagar esa consulta.
+**HU-16 — la sexta pantalla, la que no estaba dibujada.** Los planes se editan desde
+`/backoffice/configuracion`, un formulario por plan y **un solo botón**: los tres
+campos viajan en la misma llamada, así que subir el precio y bajar el bono es un cambio
+y no dos en la auditoría. Los recordatorios de retención, en cambio, se activan **set a
+set desde su ficha del catálogo** —el endpoint es por set, y llevarlo al panel
+obligaría a inventar allí un selector de sets—; en el panel queda un puntero y la
+cadencia por defecto. La pantalla dice lo que más sorprende de D7: activarlos en un set
+**que nadie espera no envía nada**.
+**El mando que no estaba conectado.** Construir la pantalla destapó que
+`premiumQueueBonusDays` —parámetro del sistema, con su etiqueta y su campo— **no lo
+leía nadie**: la ventaja en cola sale de `Plan.queueBonus`, que es lo que se congela al
+encolar. Un admin podía ajustarlo, guardarlo y no cambiar nada. Retirado del catálogo y
+de la semilla; una fila suya en la base es inofensiva porque solo se recorren las claves
+del catálogo.
+**Y el hallazgo §8.3, cerrado por la vía barata:** la ventana de confirmación de ofertas
+es **también** el plazo para reclamar una entrega, y ahora el campo lo dice debajo.
+Separarlo en dos ajustes es un cambio de modelo y de spec que nadie ha pedido; lo que
+no podía seguir es que se acortase a ciegas.
+**Y una carrera vieja del E2E, destapada al ejecutarlo:** tras pulsar "Higienizada", el
+circuito completo cerraba sesión sin esperar nada y la navegación abortaba el `fetch` en
+vuelo — la copia se quedaba a medio circuito y el fallo aparecía tres pasos más allá, en
+la oferta que nunca llegó. Los pasos anteriores no lo sufrían porque se anclan en el
+encabezado del grupo siguiente; este no tiene grupo detrás, porque la copia **sale** de la
+cola de trabajo. Se ancla ahora en la respuesta de la transición.
+**Verificación:** 397 unitarios (con `tests/configuracion-forms.test.tsx`, que prueba
+los dos formularios por sus caminos de error), `tsc`, `eslint`, `next build`,
+`openspec validate --strict` y **44 E2E en dos ejecuciones seguidas** dejando la base
+limpia; requisito nuevo en la spec `reservation-queue`
+("Consulta de la posición en cola", con el escenario de que **el puesto no revela quién
+más espera**). Sincronizados `wireframes.md` (§8.3, §8.4, §8.7, §9.4 y §10 nueva),
+`ux-flows.md` §7 —cuya tabla de cobertura había envejecido con el reparto de rutas de
+W5—, `PRD.md` y `readme.md` §1.3.

@@ -75,7 +75,23 @@ test("alta, tasación, publicación e inventario de un set", async ({ page }) =>
   await expect(enLista).toHaveCount(1);
   await expect(enLista).toContainText("1 de 1 libre(s)");
 
-  // ── 8. Cierre: se retira del catálogo para no dejar un set alquilable ──────
+  // ── 8. Recordatorios de retención, que se configuran set a set (HU-16) ─────
+  // Se prueban sobre **este** set y no sobre uno de la semilla: la configuración es
+  // por set y aquí no hay alquileres, así que activarla no manda nada a nadie.
+  await page.goto(fichaUrl);
+  const retencion = page.getByRole("region", { name: "Recordatorios de retención" });
+  await retencion.getByLabel("Recordar a quien lo tenga").check();
+  await retencion.getByLabel("Cadencia (días)").fill("21");
+  await retencion.getByRole("button", { name: "Guardar" }).click();
+  await expect(retencion.getByText("Recordatorios guardados.")).toBeVisible();
+
+  // Que sobreviva a la recarga es lo que distingue haber guardado de haberlo pintado.
+  await page.reload();
+  await expect(retencion.getByLabel("Recordar a quien lo tenga")).toBeChecked();
+  await expect(retencion.getByLabel("Cadencia (días)")).toHaveValue("21");
+  await expect(retencion.getByText(/su propia cadencia/)).toBeVisible();
+
+  // ── 9. Cierre: se retira del catálogo para no dejar un set alquilable ──────
   await page.goto(fichaUrl);
   await page.getByRole("button", { name: "Retirar del catálogo" }).click();
   await expect(page.getByText("Sin publicar")).toBeVisible();

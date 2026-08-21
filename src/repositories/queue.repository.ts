@@ -39,6 +39,18 @@ export interface QueueEntrySummary {
   priorityPenaltyDays: number;
 }
 
+/**
+ * La misma entrada vista **por su dueño**, con el puesto que ocupa
+ * (`wireframes.md` §8.4). Es una proyección aparte y no un par de campos en
+ * `QueueEntrySummary` porque calcular el puesto obliga a leer la cola entera del Set:
+ * quien crea una entrada o la busca por id no debe pagar esa consulta.
+ */
+export interface QueueEntryPlacement extends QueueEntrySummary {
+  /** 1-based dentro de la cola de su Set, con el mismo orden que sirve las ofertas (D11). */
+  position: number;
+  queueLength: number;
+}
+
 export interface PendingOffer {
   offerId: string;
   entryId: string;
@@ -56,7 +68,14 @@ export interface QueueRepository {
   countActiveQueuesForUser(userId: string): Promise<number>;
   findEntryForUserAndSet(userId: string, setId: string): Promise<QueueEntrySummary | null>;
   findEntryById(entryId: string): Promise<QueueEntrySummary | null>;
-  listEntriesForUser(userId: string): Promise<readonly QueueEntrySummary[]>;
+  /** Colas vivas del usuario, cada una con su puesto (§8.4). */
+  listEntriesForUser(userId: string): Promise<readonly QueueEntryPlacement[]>;
+
+  /**
+   * Cuánta gente espera un Set. Mismo criterio que el `queueLength` con el que se
+   * deciden los recordatorios de retención (D7): esperando **u** ofrecida.
+   */
+  countActiveEntriesForSet(setId: string): Promise<number>;
 
   createEntry(input: {
     setId: string;

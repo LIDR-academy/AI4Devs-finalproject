@@ -77,8 +77,6 @@ async function seedSystemSettings() {
     offerConfirmationWindowHours: 48,
     // D5 — desplazamiento aplicado a quien deja caducar la oferta (vuelve al final).
     expiredOfferPenaltyDays: 7,
-    // D4/D11 — bono aditivo del plan premium, congelado al encolar.
-    premiumQueueBonusDays: 10,
     // D7 — límite de colas simultáneas por usuario.
     maxQueuesPerUser: 1,
     // D7 — antigüedad mínima de suscripción para sets restringidos.

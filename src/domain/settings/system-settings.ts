@@ -5,6 +5,13 @@
  * través de este catálogo **tipado y con valor por defecto**: una regla de negocio no
  * puede quedarse sin valor porque alguien no haya sembrado una fila, y un `Json` de
  * la base no debería propagarse como `unknown` hasta el dominio.
+ *
+ * **Aquí solo entra lo que alguien lee.** Hubo un `premiumQueueBonusDays` que no leía
+ * nadie —la ventaja en cola sale del plan (`Plan.queueBonus`), que es lo que
+ * `join-queue` congela al encolar— y en la pantalla de configuración se veía como un
+ * mando más: se ajustaba, se guardaba y no cambiaba nada. Retirado al construir HU-16.
+ * Una fila suya que siga en la base es inofensiva: `resolveSettings` solo recorre las
+ * claves de este catálogo.
  */
 
 export const SYSTEM_SETTINGS = {
@@ -12,8 +19,6 @@ export const SYSTEM_SETTINGS = {
   offerConfirmationWindowHours: 48,
   /** D5 — desplazamiento aplicado a quien deja caducar la oferta. */
   expiredOfferPenaltyDays: 7,
-  /** D4/D11 — bono aditivo del plan premium, congelado al encolar. */
-  premiumQueueBonusDays: 10,
   /** D7 — límite de colas simultáneas por usuario. */
   maxQueuesPerUser: 1,
   /** D7 — antigüedad mínima de suscripción para sets restringidos, en meses. */

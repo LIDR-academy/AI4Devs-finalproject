@@ -82,3 +82,39 @@ export function effectiveEntryOnRequeue(now: Date, penaltyDays: number): Date {
 export function offerReminderAt(offeredAt: Date, expiresAt: Date): Date {
   return new Date(offeredAt.getTime() + (expiresAt.getTime() - offeredAt.getTime()) / 2);
 }
+
+/** Puesto que ocupa una entrada dentro de la cola de su Set, con el total. */
+export interface QueuePlacement {
+  /** 1-based: el 1 es a quien se ofrecerá la próxima copia libre. */
+  position: number;
+  /** Cuántos esperan en esa cola, para leer el puesto en contexto ("2.º de 5"). */
+  queueLength: number;
+}
+
+/**
+ * Puesto de cada entrada dentro de la cola de su Set (`wireframes.md` §8.4).
+ *
+ * Recibe **todas** las entradas vivas de los Sets que interesen —no solo las de un
+ * usuario— y las agrupa por Set antes de ordenarlas con `orderQueue`. Que el criterio
+ * sea el mismo que sirve las ofertas no es un detalle: si la pantalla contase de otra
+ * forma, diría un puesto que el motor de cola no respeta.
+ */
+export function placeInQueues<T extends QueueOrderable & { setId: string }>(
+  entries: readonly T[]
+): Map<string, QueuePlacement> {
+  const bySet = new Map<string, T[]>();
+  for (const entry of entries) {
+    const group = bySet.get(entry.setId);
+    if (group) group.push(entry);
+    else bySet.set(entry.setId, [entry]);
+  }
+
+  const placements = new Map<string, QueuePlacement>();
+  for (const group of bySet.values()) {
+    const ordered = orderQueue(group);
+    ordered.forEach((entry, index) => {
+      placements.set(entry.id, { position: index + 1, queueLength: ordered.length });
+    });
+  }
+  return placements;
+}

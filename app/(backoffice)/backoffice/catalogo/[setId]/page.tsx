@@ -9,10 +9,14 @@ import { requireSurfacePage } from "@/http/auth-context";
 import { copyStatus } from "@/lib/status";
 import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
 import { prismaCopyRepository } from "@/repositories/copy.repository.prisma";
+import { prismaQueueRepository } from "@/repositories/queue.repository.prisma";
+import { prismaRetentionRepository } from "@/repositories/retention.repository.prisma";
 import { prismaSetRepository } from "@/repositories/set.repository.prisma";
+import { prismaSettingsRepository } from "@/repositories/settings.repository.prisma";
 import { listThemeOptions } from "@/use-cases/catalog/manage-sets";
 import { loadSetInventory } from "@/use-cases/copies/manage-copies";
 
+import { RetentionForm } from "../retention-form";
 import { SetFormDialog } from "../set-form-dialog";
 import { AddCopyButton, PublicationButton } from "../set-controls";
 
@@ -65,10 +69,12 @@ export default async function BackofficeSetPage({
     throw error;
   });
 
-  const themes = await listThemeOptions(
-    { repository: prismaSetRepository, audit: prismaAuditRepository },
-    actor
-  );
+  const [themes, retention, settings, queueLength] = await Promise.all([
+    listThemeOptions({ repository: prismaSetRepository, audit: prismaAuditRepository }, actor),
+    prismaRetentionRepository.findConfig(setId),
+    prismaSettingsRepository.load(),
+    prismaQueueRepository.countActiveEntriesForSet(setId),
+  ]);
 
   const { set, copies } = inventory;
   const theme = themes.find((option) => option.id === set.themeId);
@@ -114,6 +120,25 @@ export default async function BackofficeSetPage({
           />
           <PublicationButton setId={set.id} published={set.published} />
         </div>
+      </section>
+
+      <section aria-labelledby="retencion" className="flex flex-col gap-3">
+        <h2 id="retencion" className="text-lg font-semibold">
+          Recordatorios de retención
+        </h2>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Avisos amables a quien tenga el set en casa mientras haya cola. No hay plazo
+          máximo de préstamo: se puede retener mientras dure la suscripción (D7).
+        </p>
+        <RetentionForm
+          setId={set.id}
+          enabled={retention?.enabled ?? false}
+          // Sin configuración propia se propone la del sistema, que es la que usaría
+          // el scheduler de todos modos si alguien activase los recordatorios.
+          cadenceDays={retention?.cadenceDays ?? settings.retentionReminderCadenceDays}
+          defaultCadenceDays={settings.retentionReminderCadenceDays}
+          queueLength={queueLength}
+        />
       </section>
 
       <section aria-labelledby="copias" className="flex flex-col gap-3">
