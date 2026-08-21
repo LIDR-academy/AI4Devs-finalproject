@@ -788,18 +788,20 @@ The requirement has two halves that pull in opposite directions, and both are re
 - **Absence is what a full-replace `sync*()` reads as a revoke.** Per the two sections above, an omitted
   value is destroyed unless some guard puts it back.
 
-✅ Good — the shipped view, which resolves that by omitting **exactly one** checkbox, and only the one
-whose guard already owns the preserve branch:
+✅ Good — the shipped view, which resolves that by filtering the withheld permission out **once, before
+grouping**, rather than per-item inside the render loop:
 
 ```blade
 {{-- resources/views/livewire/roles.blade.php --}}
-@if ($permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION)
-    @if ($this->canGrantAdministratorLevel)
-        <flux:checkbox value="{{ $permission->id }}" :label="$permissionLabel($module, $action)" />
-    @endif
-@else
-    <flux:checkbox value="{{ $permission->id }}" :label="$permissionLabel($module, $action)" />
-@endif
+$visiblePermissions = $this->canGrantAdministratorLevel
+    ? $this->permissionOptions
+    : $this->permissionOptions->reject(
+        fn ($permission) => $permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION
+    );
+
+$permissionGroups = $visiblePermissions->groupBy(
+    fn ($permission) => explode('.', $permission->name, 2)[0]
+);
 ```
 
 Verified by rendering rather than by reading: a broad `roles.manage` holder editing a role that holds
@@ -810,7 +812,33 @@ permission — leaves the role holding `roles.manage-administrators`, because
 re-adds it. Every *other* permission the actor cannot grant (`products.delete`, say) is still rendered,
 so nothing else can be invisibly absent.
 
-❌ Bad — a second omission in the same loop, which is the natural next edit and has no guard behind it:
+❌ Bad — the shape this replaced (Phase 4 finding F2/F4, corrected in the same story before Phase 5):
+a per-item condition inside the render loop, applied *after* grouping:
+
+```blade
+{{-- anti-pattern — superseded; do not reintroduce --}}
+@foreach ($permissionGroups as $module => $permissions)
+    @foreach ($permissions as $permission)
+        @if ($permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION)
+            @if ($this->canGrantAdministratorLevel)
+                <flux:checkbox value="{{ $permission->id }}" ... />
+            @endif
+        @else
+            <flux:checkbox value="{{ $permission->id }}" ... />
+        @endif
+    @endforeach
+@endforeach
+```
+
+Two independent problems with this shape, not one: it is easy to duplicate or diverge from (a second,
+unrelated `@if` added to the same loop — see the next example — reads as "consistent" with this one even
+though nothing enforces that), and applying the filter *after* grouping means a module whose only
+permission is the withheld one still renders its heading and separator over an empty body — a structural
+version of the same disclosure the omission itself exists to prevent. Filtering before `groupBy()` closes
+both at once: a module that would end up empty never appears at all.
+
+❌ Bad — a second omission in the same loop, the natural next edit once any per-item condition already
+exists, and has no guard behind it:
 
 ```blade
 {{-- anti-pattern — do NOT add a second condition here --}}
