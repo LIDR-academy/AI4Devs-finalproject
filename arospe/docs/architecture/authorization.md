@@ -20,6 +20,7 @@ Cross-cutting concern — single source of truth for roles & permissions. Other 
 - [How to gate something](#how-to-gate-something)
   - [Gating a Livewire route: use `can:`, never `permission:`](#gating-a-livewire-route-use-can-never-permission)
   - [The copyable module-gate pattern, and the three alternatives rejected](#the-copyable-module-gate-pattern-and-the-three-alternatives-rejected)
+  - [The second half of a module gate: the sidebar registry](#the-second-half-of-a-module-gate-the-sidebar-registry)
 - [Where it lives](#where-it-lives)
 
 ## Stack
@@ -52,7 +53,9 @@ The authorization foundation is **live and in real use**: roles and permissions 
 - **Since task 0009 the *role* side of the Administrator tier is enforced too, and a third authorization category exists**: `RolePolicy` gained an Administrator-level branch on `update()`/`delete()`, a Super-Admin-only `grantAdministratorPermission` ability, and [`App\Actions\Roles\EnforceAdministratorPermissionGrant`](../../app/Actions/Roles/EnforceAdministratorPermissionGrant.php) — which enforces a **meta**-rule (who may *grant* a permission, as opposed to who may exercise it). See [`RolePolicy`](#rolepolicy--the-second-policy) and [Who may grant a permission](#who-may-grant-a-permission--the-meta-rule-layer).
 - **Since task 0010 roles are managed from the application itself**, which changes three things at once. `roles.index` (`GET /roles`, gated `can:roles.manage`) is the **second** permission-gated route and [`App\Livewire\Roles\Index`](../../app/Livewire/Roles/Index.php) is `RolePolicy`'s **first call site** — so the policy stopped being a layer built ahead of its consumer. The `Administrator` role became **partially immutable** (name locked, never deletable, permission set still editable) now that code exists which could rename or delete it. And a second grant meta-rule shipped, [`App\Actions\Roles\EnforceGrantorPermissionScope`](../../app/Actions/Roles/EnforceGrantorPermissionScope.php), refusing a payload that newly grants a permission the actor does not hold. See [The Administrator tier's immutability](#the-administrator-tiers-immutability-name-locked-undeletable-permissions-still-editable) and [Who may grant a permission](#who-may-grant-a-permission--the-meta-rule-layer).
 
-Still **ungated**: every route in [`routes/settings.php`](../../routes/settings.php) and the `dashboard` route, which carry only `auth` / `verified` / `password.confirm`. Those are per-user settings screens with no catalog permission behind them; the module screens of PRD Epics 2–5 will gate the same way `users.index` and `roles.index` do.
+- **Since task 0013 the *navigation* is gated too, and it is gated by data rather than by Blade.** [`config/modules.php`](../../config/modules.php) is this repo's first declarative permission-driven UI registry: a sidebar entry renders only when the Gate grants that entry's configured ability, an emptied group renders no heading at all, and a later epic plugs its module in by appending one entry — no component change. Hiding a link is presentation only; the enforcement is still the route's `can:` gate (task 0012). See [The second half of a module gate](#the-second-half-of-a-module-gate-the-sidebar-registry).
+
+Still **ungated**: every route in [`routes/settings.php`](../../routes/settings.php) and the `dashboard` route, which carry only `auth` / `verified` / `password.confirm`. Those are per-user settings screens with no catalog permission behind them; the module screens of PRD Epics 2–5 will gate the same way `users.index` and `roles.index` do. The `dashboard` route's sidebar entry is correspondingly the one registry item that ships with an empty `permissions` list, and it is allow-listed by name in a test so a second cannot join it silently.
 
 ## Permission catalog
 
@@ -948,7 +951,84 @@ Three alternatives were considered and rejected. Recorded here so they are not r
 | **A group-level gate** — `Route::middleware(['auth', 'verified', 'can:…'])->group(...)` | Every module needs a *different* ability, so a blanket group forces sub-grouping by ability and moves each route's requirement away from its own declaration. Keep the single `['auth', 'verified']` group per area file and chain `can:` **per route**, exactly as `security.edit` chains `->middleware(['password.confirm'])` in [`routes/settings.php`](../../routes/settings.php). |
 | **Laravel's `->can()` route sugar** — `Illuminate\Routing\Route::can()` | It builds the identical `'can:'.$ability` middleware string, so it adds no capability at all; using it would introduce a second syntax for one thing, against the plain alias string both shipped routes already carry. Same argument against writing the FQCN in place of the alias. |
 
-> ⚠️ **A `.view`-shaped gate lets a role hold `create`/`edit`/`delete` on a module it cannot reach.** `users.index` gates on `users.view`, so a role granted `users.create` + `users.edit` + `users.delete` and *not* `users.view` gets a 403 on `/users`, with no warning anywhere and its three grants unreachable — this app has no route into a module that bypasses the module's own list screen. The refusal is fail-closed and so not a vulnerability (task 0012's Phase 4 audit recorded it as informational, not a finding), but it is the single most likely misconfiguration the [roles screen](../api/routes.md#rolesindex--the-second-permission-gated-route)'s permission matrix will produce, since that grid renders the four CRUD actions as four independent checkboxes with nothing coupling them. `roles.manage` does not have this shape — it is one ability covering its whole screen. Nothing validates the combination today; a story that wants to warn about it owns both the rule and the surface it warns on.
+> ⚠️ **A `.view`-shaped gate lets a role hold `create`/`edit`/`delete` on a module it cannot reach.** `users.index` gates on `users.view`, so a role granted `users.create` + `users.edit` + `users.delete` and *not* `users.view` gets a 403 on `/users`, with no warning anywhere and its three grants unreachable — this app has no route into a module that bypasses the module's own list screen. The refusal is fail-closed and so not a vulnerability (task 0012's Phase 4 audit recorded it as informational, not a finding), but it is the single most likely misconfiguration the [roles screen](../api/routes.md#rolesindex--the-second-permission-gated-route)'s permission matrix will produce, since that grid renders the four CRUD actions as four independent checkboxes with nothing coupling them. `roles.manage` does not have this shape — it is one ability covering its whole screen. Nothing validates the combination today; a story that wants to warn about it owns both the rule and the surface it warns on. **Since task 0013 the same misconfiguration is also silent in the navigation**: [the sidebar registry](#the-second-half-of-a-module-gate-the-sidebar-registry) gates the Users entry on `users.view` — the same single ability, deliberately and test-pinned — so such a role now sees no link at all rather than a link that 403s. That is the correct behaviour (a link the route would refuse must never render), and it makes the dead grants *less* discoverable, not more: the module simply is not there.
+
+### The second half of a module gate: the sidebar registry
+
+A `can:` gate refuses the request; it does not stop the sidebar advertising the link. Task 0013 closed
+that half, and it did so with a **declarative registry** rather than per-module Blade conditionals — so
+a later epic gates its module's navigation by appending data, never by editing a component. The three
+files, all new in that story:
+
+| File | Role |
+| --- | --- |
+| [`config/modules.php`](../../config/modules.php) | the registry itself — `groups` (heading/icon/expandable/`expanded_when`/`class`) and `items` (group, label key, icon, route name, `current_when`, `permissions`) |
+| [`resources/views/components/sidebar-nav.blade.php`](../../resources/views/components/sidebar-nav.blade.php) | the one anonymous Blade component that reads it. `resources/views/layouts/app/sidebar.blade.php`'s `<flux:sidebar.nav>` block now contains nothing but `<x-sidebar-nav />`, so that file names no **module** route any more (it still names `dashboard` for the logo href, plus `profile.edit` / `logout` in the personal user menu, which module permissions never gate) |
+| [`lang/en/navigation.php`](../../lang/en/navigation.php), [`lang/es/navigation.php`](../../lang/es/navigation.php) | the copy; the registry stores the translation **key**, never the string |
+
+**Adding a module is one registry entry plus its translation leaf in each locale** — two more if it also
+needs a new group. No component change, no provider change, no new folder:
+
+```php
+// config/modules.php — the shape every later epic copies
+'roles' => [
+    'group' => 'settings',
+    'label' => 'navigation.items.roles',
+    'icon' => 'shield-check',
+    'route' => 'roles.index',
+    'current_when' => 'roles.*',
+    'permissions' => ['roles.manage'],
+],
+```
+
+Five rules come with it, each load-bearing:
+
+- **`permissions` must be *exactly* the ability the route's own `can:` middleware enforces** — never a
+  broader or related set. `users` is `['users.view']` because `routes/users.php` gates on exactly
+  `can:users.view`. A registry entry listing `users.create` as well would render the link for a role the
+  route then 403s, breaking the story's central criterion: *never advertise a link the route would
+  refuse*. The two gates stay independent — one ability per module, resolved separately — and
+  `tests/Feature/Navigation/SidebarModuleGatingTest.php` pins each entry against its route's real
+  middleware mechanically, so the registry cannot silently drift from the route. The gate itself remains
+  the route's; hiding a link is presentation only, and the enforcement evidence is task 0012's suite.
+- **Visibility is resolved through `Gate::any()`, never `hasAnyPermission()`.** This is a correctness
+  fork, not a style choice: `Gate::any()` runs the full `before`-callback chain, so it traverses the
+  identical mechanism `can:` middleware does and inherits [the Super Admin bypass](#the-super-admin-bypass)
+  with no sidebar-local special case. `hasAnyPermission()` is a `HasPermissions` trait method that queries
+  the model's own relations and never reaches the Gate — and since the Super Admin holds **zero**
+  permission rows by design, a sidebar built on it would show the Super Admin an empty menu, the exact
+  inverse of the requirement. Same trap as the `hasPermissionTo()` ❌ [below](#in-php-and-blade).
+- **`permissions: []` means "always visible" and must be branched on explicitly**, never handed to
+  `Gate::any()`. `Gate::any([])` returns `false` — there is nothing to iterate to `true` — so the naive
+  form would hide the ungated Dashboard entry from everyone. The component reads
+  `empty($item['permissions']) || Gate::any($item['permissions'])`, and *that* `empty()` is why an
+  ungated entry must also be allow-listed in a test: see
+  [security/authorization-patterns.md](../security/authorization-patterns.md#a-registry-that-means-ungated-by-absence-fails-open-silently),
+  which owns the fail-open rule and both shipped guard tests. Read it before adding an entry with an
+  empty `permissions`.
+- **Filter first, group second.** `collect(config('modules.items'))->filter(...)->groupBy('group', preserveKeys: true)`
+  structurally cannot produce a bucket with zero members, so a group whose every item was filtered out
+  is simply absent from the grouped collection and its `<flux:sidebar.group>` never renders. That is what
+  makes an emptied group's **heading disappear entirely** rather than render above nothing — a property
+  of the data flow, not of a conditional someone has to remember to write. `preserveKeys: true` is
+  mandatory: without it each bucket is reindexed `0, 1, 2…` and the `data-test` hooks below become
+  `sidebar-link-0`.
+- **Every rendered item carries `data-test="sidebar-link-{key}"` and every rendered group
+  `data-test="sidebar-group-{key}"`,** keyed by the registry key. Absence assertions must target those
+  hooks: `assertDontSee('Settings')` collides with the personal-account Settings item in the user-menu
+  dropdown on the same page, and `assertDontSee('Users')` with the page title.
+
+> ⚠️ **Two hazards a later epic will meet first, both currently unexercised.** (1) **`Gate::any()` is
+> OR, and nothing in the registry says so.** Every entry today holds a single ability, so the combinator
+> is invisible; the first entry needing two will silently get *any-of* semantics when *all-of* may have
+> been intended. If a module needs all-of, it needs either a single ability meaning "may reach this
+> module" (the shape both shipped routes use) or an explicit combinator key — and the `can:`-side
+> constraint that [there is no `permission:a|b` OR form](#the-copyable-module-gate-pattern-and-the-three-alternatives-rejected)
+> applies to the route half either way, so the two halves must be designed together. (2) **A `group` key
+> that names no entry in `groups` drops the item silently.** `groupBy()` resolves the missing/typo'd key
+> through `data_get()` to `''`, and the render loop iterates `config('modules.groups')`, so the orphan
+> bucket is never visited. It fails **closed** — the link vanishes rather than leaking — but it produces
+> no warning, so a mistyped `group` reads as "my module never shipped".
 
 ### In PHP and Blade
 
@@ -982,12 +1062,16 @@ The one place `hasPermissionTo()` is correct is **inside a policy body**, which 
 | Policies | `app/Policies/UserPolicy.php`, `app/Policies/RolePolicy.php` (auto-discovered; no provider registration) |
 | The one-role-model `arch()` rules | `tests/Unit/ArchitectureTest.php` |
 | The two gated routes | `routes/users.php` (`users.index`, `can:users.view`), `routes/roles.php` (`roles.index`, `can:roles.manage`) |
+| The sidebar module registry, and the one component that reads it | `config/modules.php`, `resources/views/components/sidebar-nav.blade.php` (mounted as `<x-sidebar-nav />` from `resources/views/layouts/app/sidebar.blade.php`) |
+| Sidebar navigation copy | `lang/en/navigation.php`, `lang/es/navigation.php` |
 | Per-action `Gate::authorize` call sites, and the per-row `Gate::allows` UI hint | `app/Livewire/Users/Index.php`, `app/Livewire/Roles/Index.php` |
 | Roles-screen copy (the holder-count refusal and the self-lockout refusal) | `lang/en/roles.php`, `lang/es/roles.php` |
 | Tests | `tests/Feature/Seeders/`, `tests/Feature/Authorization/`, `tests/Feature/Policies/`, `tests/Feature/Users/`, `tests/Feature/Roles/`, `tests/Feature/Models/RoleTest.php` |
 | Security rules derived from this foundation | [`docs/security/`](../security/README.md) |
 
-_Last updated: 2026-08-21 — Task 0012 (module/sidebar access gating — backend): added **The copyable module-gate pattern, and the three alternatives rejected** to **How to gate something**, closing the story's Phase 5 finding **F1** — its acceptance criterion required the pattern and its rejected alternatives to be "documented", and `grep -rn "route sugar\|group-level" docs/` returned zero hits, so two of the three rejections (a **group-level** gate, and Laravel's **`->can()` route sugar**) existed only inside the task file. The third, Spatie's `permission:`, was already the subsection directly above and is now cross-referenced rather than restated. The section also records the four vendor-verified properties a later epic inherits — `can` needs no alias registration, the Super Admin bypass needs no special case, `can:` has no `permission:a|b`-style OR form (and why the composite `Gate::define()` alternative was rejected for `users.index`), and a **misspelled ability denies silently** through `checkPermissionTo()`, which is why every module gate needs a positive 200 test beside its 403 — plus the ⚠️ recording Phase 5 finding **F2**: a `.view`-shaped gate leaves a role holding `create`/`edit`/`delete` on a module it cannot reach, fail-closed and unwarned, and the roles screen's four-independent-checkboxes matrix is what will produce it. This story ships **no** new route, ability, policy branch, seeded role or permission; the one production change it carries (a post-commit permission-cache flush in `App\Livewire\Roles\Index`) is a violation of an already-documented rule in [security/authorization-patterns.md](../security/authorization-patterns.md#flush-the-permission-cache-after-the-transaction-commits-never-inside-it), now also recorded in [errors-log.md](../errors-log.md)._
+_Last updated: 2026-08-22 — Task 0013 (module/sidebar access gating — UI): added **The second half of a module gate: the sidebar registry** beneath task 0012's route-gate pattern, because the two halves are one decision and a later epic needs them side by side — the three new files (`config/modules.php`, the one anonymous `sidebar-nav` component, `lang/{en,es}/navigation.php`), the copyable entry shape, and the five rules that come with it: `permissions` must be **exactly** the route's own `can:` ability (test-pinned, not prose-asserted), visibility resolves through `Gate::any()` and never `hasAnyPermission()` (a correctness fork — the zero-row Super Admin would otherwise see an empty menu), `permissions: []` must be branched on explicitly because `Gate::any([])` is `false`, filter-before-group is what makes an emptied group's heading vanish structurally, and the two `data-test` hook conventions. Plus a ⚠️ for the two hazards a later epic meets first, both unexercised today: `Gate::any()`'s **OR** semantics are invisible while every entry holds one ability, and a typo'd `group` key drops its item silently (fail-closed, but indistinguishable from "my module never shipped"). Added the **Current state** bullet, the note that `dashboard` is the one allow-listed ungated entry, and two **Where it lives** rows. Narrowed the existing `.view`-shaped-gate ⚠️: the same misconfiguration is now silent in the navigation too — correct behaviour, since the registry mirrors the route gate exactly, but it makes the dead grants less discoverable rather than more. The security rule governing the registry's fail-open default, and both shipped guard tests, stay in [security/authorization-patterns.md](../security/authorization-patterns.md#a-registry-that-means-ungated-by-absence-fails-open-silently) and are pointed at rather than duplicated. This story adds **no** route, ability, policy branch, seeded role or permission._
+
+_Previously: 2026-08-21 — Task 0012 (module/sidebar access gating — backend): added **The copyable module-gate pattern, and the three alternatives rejected** to **How to gate something**, closing the story's Phase 5 finding **F1** — its acceptance criterion required the pattern and its rejected alternatives to be "documented", and `grep -rn "route sugar\|group-level" docs/` returned zero hits, so two of the three rejections (a **group-level** gate, and Laravel's **`->can()` route sugar**) existed only inside the task file. The third, Spatie's `permission:`, was already the subsection directly above and is now cross-referenced rather than restated. The section also records the four vendor-verified properties a later epic inherits — `can` needs no alias registration, the Super Admin bypass needs no special case, `can:` has no `permission:a|b`-style OR form (and why the composite `Gate::define()` alternative was rejected for `users.index`), and a **misspelled ability denies silently** through `checkPermissionTo()`, which is why every module gate needs a positive 200 test beside its 403 — plus the ⚠️ recording Phase 5 finding **F2**: a `.view`-shaped gate leaves a role holding `create`/`edit`/`delete` on a module it cannot reach, fail-closed and unwarned, and the roles screen's four-independent-checkboxes matrix is what will produce it. This story ships **no** new route, ability, policy branch, seeded role or permission; the one production change it carries (a post-commit permission-cache flush in `App\Livewire\Roles\Index`) is a violation of an already-documented rule in [security/authorization-patterns.md](../security/authorization-patterns.md#flush-the-permission-cache-after-the-transaction-commits-never-inside-it), now also recorded in [errors-log.md](../errors-log.md)._
 
 _Previously: 2026-08-21 — Task 0011 (Roles & permissions management — UI): the story that turned three forward-looking claims on this page into shipped, test-covered behaviour, each corrected in place rather than appended to. (1) The **`RolePolicy::delete()` ⚠️** said story 0011's per-row `Gate::allows()` hint *will* render the `Administrator` row's delete enabled for a Super Admin — it does, and the three actor tiers it produces are now a table here, pinned by a dataset in `tests/Feature/Roles/IndexUiTest.php`. (2) The **grant-scope ⚠️** called filtering the catalog "the obvious next move for story 0011's view"; the view shipped filtering exactly **one** value, and the paragraph now states why that one is safe and what would have to change before a second joins it, pointing at the new `authorization-patterns.md` section rather than describing a hypothetical. (3) The **Who may grant a permission** table's Visibility row now names the real mechanism (`mount()` → the `#[Locked] $canGrantAdministratorLevel` flag) instead of "the contract story 0011's UI consumes". Extended **`Gate::allows()` in a list query** with its second call site — `Roles\Index::roles()`, the pseudo-attribute-not-array shape it uses and why, and the fact that this screen's accepted drift lands on `canDelete` rather than `canEdit`. No ability, policy branch, seeded role or permission changed in this story._
 

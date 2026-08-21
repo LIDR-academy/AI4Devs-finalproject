@@ -98,21 +98,24 @@ Documented once, linked everywhere else — do not duplicate these explanations 
 
 | Layer | Path |
 | --- | --- |
-| Routes | `routes/web.php`, plus the per-area files it requires: `routes/settings.php`, `routes/users.php` |
+| Routes | `routes/web.php`, plus the per-area files it requires: `routes/settings.php`, `routes/users.php`, `routes/roles.php` |
 | Livewire components | `app/Livewire/**` |
 | Domain controllers | `app/Http/Controllers/**` (HTTP boundary in front of an action) |
 | Fortify actions | `app/Actions/Fortify/**` |
-| Domain actions | `app/Actions/Users/**` |
+| Domain actions | `app/Actions/Users/**`, `app/Actions/Roles/**` |
 | Policies | `app/Policies/**` (auto-discovered by name) |
 | Notifications | `app/Notifications/**` |
 | Shared validation rules | `app/Concerns/**` (e.g. [`ProfileValidationRules`](../../app/Concerns/ProfileValidationRules.php), [`PasswordValidationRules`](../../app/Concerns/PasswordValidationRules.php), [`UserValidationRules`](../../app/Concerns/UserValidationRules.php)) |
 | Models | `app/Models/**` |
-| Views | `resources/views/livewire/**`, `resources/views/layouts/**` |
+| Views | `resources/views/livewire/**`, `resources/views/layouts/**`, `resources/views/components/**` (all anonymous — this repo has no `app/View/`) |
+| Declarative UI registry | `config/modules.php` — the permission-gated sidebar, read by `resources/views/components/sidebar-nav.blade.php`; see [authorization.md](authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry) |
 | Migrations | `database/migrations/**` |
 | Seeders | `database/seeders/**` (`RolePermissionSeeder` is deploy-critical — see above) |
 | Middleware aliases & exception rendering | `bootstrap/app.php` |
 
-_Last updated: 2026-08-20 — Task 0040: the route layer is no longer two files. `users.index` moved out of `routes/web.php` into its own `routes/users.php`, required from `web.php` the way `settings.php` is, so `web.php` now declares only `home` and `dashboard`. Updated the three places that enumerated the route files as exactly `web.php` + `settings.php`: the flowchart's entry-point node, the entry-points bullet below it, and the "Where things live" Routes row. No lifecycle change — the arrows out of that node are identical._
+_Last updated: 2026-08-22 — Task 0013 (module/sidebar access gating — UI): added a **Declarative UI registry** row to "Where things live" for [`config/modules.php`](../../config/modules.php) and the one component that reads it — a real layer rather than a config tweak, since it is what decides which module screens a signed-in user is offered. Widened the **Views** row for `resources/views/components/**` (verified: every Blade component in this repo is anonymous; there is no `app/View/`). Also corrected two rows this story did not touch but that were stale, found by re-reading the table rather than by the change→doc mapping: **Routes** omitted `routes/roles.php` (added by task 0010) and **Domain actions** omitted `app/Actions/Roles/**` (task 0009). No lifecycle change — this story adds no route, controller, action or model, and the flowchart is unaffected._
+
+_Previously: 2026-08-20 — Task 0040: the route layer is no longer two files. `users.index` moved out of `routes/web.php` into its own `routes/users.php`, required from `web.php` the way `settings.php` is, so `web.php` now declares only `home` and `dashboard`. Updated the three places that enumerated the route files as exactly `web.php` + `settings.php`: the flowchart's entry-point node, the entry-points bullet below it, and the "Where things live" Routes row. No lifecycle change — the arrows out of that node are identical._
 
 _Previously: 2026-08-18 — Task 0008: corrected the stale "`app/Models/` contains only `User.php`" claim — `App\Models\Role` now exists (a `spatie/laravel-permission` subclass carrying the Super Admin role's invariants, not a domain model) — and added that story's invariants to the Authorization bullet._
 

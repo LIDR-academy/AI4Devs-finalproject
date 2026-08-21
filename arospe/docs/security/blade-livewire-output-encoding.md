@@ -156,11 +156,20 @@ Recorded so a future audit does not re-litigate them:
   `resources/views/layouts/app/sidebar.blade.php`. The Flux components consuming user data escape
   too — `flux:avatar` emits initials via `{{ $initials ?? $slot }}` and the alt text via
   `alt="{{ $alt ?? $name }}"`.
-- **Translation calls never take user data as the key.** Every `__()` in this repo passes a literal
-  first argument and puts user data only in the `:placeholder` replacement array
-  (`__('Edit :name', ['name' => $user['name']])`), whose result is then `{{ }}`-escaped. A
-  user-controlled *key* would let a caller select an arbitrary translation string; a user-controlled
-  *replacement* is inert.
+- **Translation calls never take user data as the key.** User data reaches `__()` only through the
+  `:placeholder` replacement array (`__('Edit :name', ['name' => $user['name']])`), whose result is
+  then `{{ }}`-escaped. A user-controlled *key* would let a caller select an arbitrary translation
+  string; a user-controlled *replacement* is inert. Note the key itself is **not** always a literal
+  and does not need to be — what matters is its provenance. Three non-literal forms exist and all
+  three are safe because every input is developer-authored: a concatenated catalog value
+  (`__('users.statuses.'.$this->value)` in `App\Enums\UserStatus`, and the composed
+  `roles.modules.*` / `roles.actions.*` labels in `resources/views/livewire/roles.blade.php`), and —
+  since task 0013 — a **fully variable** key read straight from config
+  (`__($item['label'])` / `__($group['heading'])` in
+  `resources/views/components/sidebar-nav.blade.php`, whose values come from `config/modules.php`).
+  The rule to apply when adding a fourth: the key may be computed, but every term it is computed from
+  must come from code, config, or a seeded catalog — never from a request, a database column an
+  administrator can edit, or a route parameter.
 - **The `wire:ignore.self` inside `flux:modal` is vendor-owned and scoped to the `<dialog>`
   element's own attributes**, not its children — it does not shield any interpolated content from
   Livewire's DOM handling.
@@ -169,7 +178,9 @@ Recorded so a future audit does not re-litigate them:
   Alpine auto-invokes the returned function. This is the same pattern already in
   `resources/views/livewire/settings/security.blade.php`; it is not a silently-dead handler.
 
-_Last updated: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for the `{{ }}`-in-a-`wire:`-directive section, which carried three leading hyphens where the generated slug has two (the heading opens with `{{ }}`, and stripping the braces leaves exactly two spaces). Content unchanged._
+_Last updated: 2026-08-22 — Task 0013, Phase 6 docs sync: **corrected** the "Translation calls never take user data as the key" claim, which asserted that "every `__()` in this repo passes a **literal** first argument". That was already imprecise before this story (`App\Enums\UserStatus::label()` concatenates, and task 0011's composed `roles.modules.*` labels do too) and this story adds the first **fully variable** key — `__($item['label'])` in `resources/views/components/sidebar-nav.blade.php`, read from `config/modules.php`. The rule is restated by **provenance** rather than by syntax: a key may be computed, but every term must come from code, config or a seeded catalog. The rest of this page was re-verified against the real files in the same pass and needed no change — the layout this story rewrote still contains no `{!! !!}`, and the new component interpolates nothing into a `wire:*` directive (`wire:navigate` takes no argument), so the `@js()` rule is not engaged by it._
+
+_Previously: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for the `{{ }}`-in-a-`wire:`-directive section, which carried three leading hyphens where the generated slug has two (the heading opens with `{{ }}`, and stripping the braces leaves exactly two spaces). Content unchanged._
 
 _Previously: 2026-08-16 — Re-audit of task 0006: all three findings verified fixed against the real
 files, so the two consequences above were rewritten from "this is what the code does" to the rule plus

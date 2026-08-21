@@ -61,7 +61,29 @@ repo must follow — always with a real code example pulled from this repository
   settings. It names the two things that *would* reopen the disclosure (an app-owned
   `resources/views/errors/403.blade.php`, or a `Response::deny('…')` message naming an ability), why
   pinning `app.debug` in a test proves nothing on that path, and why `assertForbidden()` +
-  `assertDontSee()` needs a positive assertion beside it — both are satisfied by an empty body.
+  `assertDontSee()` needs a positive assertion beside it — both are satisfied by an empty body. Task 0013
+  adds the first rule governing a **declarative permission registry** (`config/modules.php`, designed for
+  every later epic to append to): **a registry that means "ungated" by *absence* fails open, silently** —
+  `empty($item['permissions'])` cannot distinguish "declared ungated" from "the author forgot the key",
+  and `empty()` is the one construct that reads a missing key without a warning, so an omitted key, a
+  misspelled key and a `null` value all render the entry for everyone while the *wrong-looking* mistakes
+  (a string instead of an array, an unknown group key, an unseeded ability) all fail closed. **Closed in
+  the same story**, so both ✅ blocks are the shipped guard tests quoted verbatim: the allow-list schema
+  test a new ungated entry cannot join without someone editing its one literal line, and the test pinning
+  each entry's `permissions` to its route's real `can:` middleware so the registry cannot drift from what
+  the route enforces. It also records why asserting `toHaveKey('permissions')` alone is a correct
+  narrowing rather than a gap — `permissions` is the only registry key whose absence is silent, since
+  every other one either raises an `ErrorException` at render or fails closed. A companion **confirmed-safe** section
+  recording the six mechanics a later epic should not re-derive: that `Gate::any()` traverses the same
+  `callBeforeCallbacks()` path as `can:` middleware (so the sidebar and the route cannot disagree), that
+  Spatie's and this app's two `Gate::before` callbacks compose in either registration order because the
+  vendor's returns `null` rather than `false` on failure, that `hasAnyPermission()` would have shown the
+  zero-row Super Admin *nothing*, that an unseeded ability and a guest both deny rather than throw, that
+  every rendered position is escaped including the `data-test` array keys, and that `flux:sidebar.group`
+  renders its slot **twice** when `expandable` and `icon` are combined — a count assertion against it is
+  off by a constant. The registry's *reusable* shape, for a later epic adding its own entry, is owned by
+  [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry);
+  this page holds only the security rules.
 - [Seeder safety](seeder-safety.md) — why `db:seed` is a production-reachable operation in this app, why
   fixture data must be guarded by an environment **allow-list** rather than a "not production" deny-list,
   and the rules for bootstrapping a privileged account from a configured email address: canonical
@@ -132,7 +154,23 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-21 — Task 0012 (module/sidebar access gating — backend), Phase 4 audit: no new
+_Last updated: 2026-08-22 — Task 0013 (module/sidebar access gating — UI), Phase 6 docs sync: the registry section's index entry above is rewritten now that **both findings are closed** — its ✅ blocks are the shipped guard tests rather than recommendations, and it records why the shipped allow-list assertion is deliberately narrower than the one originally recommended. Added the pointer to [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry), which now owns the registry's reusable shape so this page can stay limited to the security rules. No new page and no new rule in this pass._
+
+_Previously: 2026-08-21 — Task 0013 (module/sidebar access gating — UI), Phase 4 audit: no new page —
+`authorization-patterns.md` gained two sections for this repo's first **declarative permission registry**,
+`config/modules.php`. The registry's whole design is that every later epic appends entries to it, which
+makes the shape of its default the durable question rather than the two entries it holds today: "ungated"
+is currently expressed as an **absent or empty** `permissions` key read through `empty()`, so three
+distinct developer mistakes — an omitted key, a misspelled key, a `null` value — all resolve to "visible
+to everyone" with no warning, no exception and no log, while the mistakes that *look* riskier all fail
+closed. Written as a ❌/✅ pair with the finding marked **open**, per the audit-authored-page rule, so
+Phase 5's fix has a slot rather than needing the framing rewritten. The companion **confirmed-safe**
+section records the `Gate::any()` mechanics a later epic should not re-derive, all verified by execution
+against the real component and vendor source rather than from the package's docs. Per-review findings (the
+severity list, including the registry-vs-route drift guard and two low-severity hygiene notes) live in the
+audit response, not here._
+
+_Previously: 2026-08-21 — Task 0012 (module/sidebar access gating — backend), Phase 4 audit: no new
 page — `authorization-patterns.md` gained one **confirmed-safe** rule, "A `can:`-gated route's 403 names
 no permission — and `APP_DEBUG` is not what makes that true". This story ships zero production code, so
 it produced no bypass to write up; what it did produce is a guarantee that every later epic's module

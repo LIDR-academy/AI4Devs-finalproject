@@ -22,6 +22,8 @@ make these distinctions explicit.
 - [Two guards on one payload must agree on what an omission means](#two-guards-on-one-payload-must-agree-on-what-an-omission-means)
 - [A control omitted from the DOM is safe only for the one value whose guard preserves an omission](#a-control-omitted-from-the-dom-is-safe-only-for-the-one-value-whose-guard-preserves-an-omission)
 - [A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself](#a-check-over-a-submitted-list-must-accept-every-shape-the-write-accepts-and-derive-the-before-state-itself)
+- [A registry that means "ungated" by *absence* fails open, silently](#a-registry-that-means-ungated-by-absence-fails-open-silently)
+- [Confirmed safe: a sidebar built on Gate::any() inherits the Super Admin bypass, and both refusal paths fail closed](#confirmed-safe-a-sidebar-built-on-gateany-inherits-the-super-admin-bypass-and-both-refusal-paths-fail-closed)
 - [Confirmed safe: a `can:`-gated route's 403 names no permission — and `APP_DEBUG` is not what makes that true](#confirmed-safe-a-can-gated-routes-403-names-no-permission--and-app_debug-is-not-what-makes-that-true)
 - [Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone](#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone)
 
@@ -939,6 +941,175 @@ controls, and must interpret the submitted input **exactly** as the write that f
   *previous round's remediation*, all shipped past review because each fix was read against the finding
   it answered rather than as new code with its own attack surface.
 
+## A registry that means "ungated" by *absence* fails open, silently
+
+> **Status: closed, 2026-08-22 (story 0013).** Found as F1 by that story's Phase 4 audit and remediated
+> in the same story by shape **(b)** below — the allow-list schema test, which shipped in
+> [`tests/Feature/Navigation/SidebarModuleGatingTest.php`](../../tests/Feature/Navigation/SidebarModuleGatingTest.php)
+> and is quoted verbatim under ✅. The ❌ is still the shipped filter expression, because the fix is a
+> *test* rather than a rewrite of the component — read it as "the shape the guard test exists to
+> protect", not as an outstanding hole. This section was written as a ❌/✅ pair with an explicit status
+> banner precisely so this update was a one-line status flip rather than a re-framing, per
+> [the audit-authored-page rule](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20).
+
+Story 0013 introduced this repo's first **declarative permission registry** — `config/modules.php`,
+read by `resources/views/components/sidebar-nav.blade.php` — and the registry is designed to be
+*appended to by every later epic*. That makes the shape of its default the durable question, not the
+two entries it holds today.
+
+The registry expresses "this entry needs no permission" as an **empty** `permissions` array, and the
+component's filter reads that with `empty()`:
+
+❌ The filter as shipped — three distinct developer mistakes all resolve to "visible to everyone", with
+no warning, no exception and no log line:
+
+```blade
+{{-- resources/views/components/sidebar-nav.blade.php --}}
+->filter(fn (array $item): bool => empty($item['permissions']) || Gate::any($item['permissions']))
+```
+
+`empty()` is the one PHP construct that reads a missing array key **without emitting a warning**, so
+all three of these render the entry unconditionally — verified by execution against the real component
+with a `Gate::before` denying everything:
+
+| Registry mistake | `empty()` says | Result |
+| --- | --- | --- |
+| `permissions` key omitted entirely | `true` | rendered for everyone |
+| key misspelled (`'permission' => [...]`) | `true` | rendered for everyone |
+| `'permissions' => null` | `true` | rendered for everyone |
+| `'permissions' => 'users.view'` (string, not array) | `false` | fails **closed** — `Gate::any()` wraps it |
+| `'group' => '<key not in groups>'` | n/a | silently dropped — fails **closed** |
+
+Nothing is directly exploitable by an attacker: the route's own `can:` middleware still refuses the
+request ([the module-gate pattern](../architecture/authorization.md#the-copyable-module-gate-pattern-and-the-three-alternatives-rejected)),
+so the blast radius is an advertised link that 403s, plus disclosure of a module's existence and URL to
+a role that may not use it. But it violates the story's own acceptance criterion — *never advertise a
+link the route would refuse* — and it violates it **in the direction a registry is most likely to
+drift**, because the mistake is an omission rather than a wrong value, and omissions do not appear in a
+diff as anything.
+
+Note the asymmetry that makes this worth writing down: the *safe* mistakes above are the loud-looking
+ones, and the *unsafe* ones are the quiet ones. A permission name that is real but not in the seeded
+catalog also fails closed — `PermissionRegistrar`'s `Gate::before` calls `checkPermissionTo()`, which
+catches `PermissionDoesNotExist` and returns `false` — so a typo in the *value* hides the entry, while
+a typo in the *key* reveals it.
+
+Two shapes close it: **(a)** an explicit positive declaration at the registry level (`'ungated' => true`,
+required whenever `permissions` is empty), or **(b)** a schema test over the real registry that
+allow-lists the keys permitted to be ungated. **(b) is what shipped** — it is cheaper, adds no runtime
+cost, and puts the allow-list somewhere a reviewer of the *registry* diff cannot avoid updating:
+
+✅ Shipped — `tests/Feature/Navigation/SidebarModuleGatingTest.php`, quoted verbatim:
+
+```php
+// tests/Feature/Navigation/SidebarModuleGatingTest.php
+test('every ungated registry item is on the explicit allow-list', function () {
+    // Epic 1 ships exactly one deliberately ungated entry (Dashboard); this
+    // is an allow-list, not a shape check, so a new item can only join it by
+    // someone editing this line -- never silently by omission.
+    $deliberatelyUngated = ['dashboard'];
+
+    foreach (config('modules.items') as $key => $item) {
+        expect($item)->toHaveKey('permissions')
+            ->and($item['permissions'])->toBeArray();
+
+        if ($item['permissions'] === []) {
+            expect($key)->toBeIn($deliberatelyUngated);
+        }
+    }
+});
+```
+
+**It asserts `toHaveKey('permissions')` alone rather than the full `toHaveKeys([...])` shape this
+section originally recommended, and that narrowing is correct rather than a residual** — `permissions`
+is the *only* registry key whose absence is silent. Verified against the real component and framework
+source: `label`, `icon`, `route` and `current_when` are read by direct array access, so a missing one
+raises `E_WARNING` "Undefined array key", which
+[`HandleExceptions::handleError()`](../../vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php)
+rethrows as an `ErrorException` — a 500 on the dashboard, impossible to miss. A missing `group` is
+silent but fails **closed**: `Collection::groupBy()` resolves it through `data_get()` and casts the
+resulting `null` to `''`, so the item lands in a bucket no `config('modules.groups')` key ever matches
+and is dropped. Only `empty()` both swallows the warning *and* fails open, so only `permissions` needs
+pinning.
+
+**Rule: in any registry where a permission list gates rendering, "no permission required" must be an
+explicit value or an allow-listed key — never the absence of one. Do not read the gating key with
+`empty()` / `??`, both of which erase the difference between "declared as ungated" and "the author
+forgot".** This is the same family as [distinguishing "not hydrated" from "hydrated but null"](#a-guard-that-reads-a-rows-protected-identity-must-distinguish-not-hydrated-from-hydrated-but-null)
+and [why `config($key, $default)` alone cannot cover a present-but-`null` key](#read-the-super-admin-role-name-with-a-literal-default),
+arriving through a third door: a config array rather than a model attribute or a config scalar.
+
+**Second half of the same rule: a registry entry's `permissions` must be pinned to its route's real
+`can:` middleware by a test, not by a comment.** `config/modules.php` states the requirement in prose
+("must be exactly the ability its route's `can:` middleware enforces") and it was correct as written —
+but prose does not fail when someone changes one side. Found as F2 in the same audit and **closed in the
+same story**; the check needs no fixtures:
+
+✅ Shipped — `tests/Feature/Navigation/SidebarModuleGatingTest.php`, quoted verbatim:
+
+```php
+// tests/Feature/Navigation/SidebarModuleGatingTest.php
+foreach (config('modules.items') as $item) {
+    $route = Route::getRoutes()->getByName($item['route']);
+    expect($route)->not->toBeNull();
+
+    $gatedAbilities = collect($route->gatherMiddleware())
+        ->filter(fn (string $middleware): bool => str_starts_with($middleware, 'can:'))
+        ->map(fn (string $middleware): string => substr($middleware, strlen('can:')))
+        ->values()
+        ->all();
+
+    expect($gatedAbilities)->toEqualCanonicalizing($item['permissions']);
+}
+```
+
+Note it iterates **every** item including the ungated `dashboard`, whose route carries no `can:` gate at
+all — `[]` on both sides, which is exactly the assertion that matters there. It also catches the inverse
+drift the prose does not mention: an entry whose route *gains* a `can:` gate later while the registry
+still lists none.
+
+## Confirmed safe: a sidebar built on `Gate::any()` inherits the Super Admin bypass, and both refusal paths fail closed
+
+Recorded from story 0013's Phase 4 audit so a later epic plugging its module into `config/modules.php`
+does not re-derive any of it. Every claim below was verified against the installed vendor source plus
+a live render, not reasoned from the package's docs.
+
+- **`Gate::any()` runs the whole `before`-callback chain.** `Gate::any()` → `check()` → `inspect()` →
+  `raw()`, whose first act is `callBeforeCallbacks()`. So the sidebar filter and the route's `can:`
+  middleware traverse the *identical* mechanism — they cannot disagree about guard resolution, about
+  wildcard handling, or about the Super Admin. This is what makes the story's "no sidebar-local special
+  case for the Super Admin" criterion true rather than coincidental.
+- **The two `Gate::before` callbacks compose in either registration order.** Spatie's
+  (`PermissionRegistrar::registerPermissions()`) returns `checkPermissionTo($ability) ?: null` — `null`
+  on failure, never `false` — so it never short-circuits the chain, and this app's Super Admin closure
+  in `AppServiceProvider` still gets its turn. A `before` callback that returned a hard `false` would
+  break this; none does.
+- **`hasAnyPermission()` would have been the inverse of the requirement**, and this is a correctness
+  fork rather than a style preference: it is a `HasPermissions` trait method that queries the model's
+  own relations and never reaches the Gate, so the Super Admin — who holds *zero* permission rows by
+  design — would see an empty sidebar. Same for `hasPermissionTo()` and `hasRole()`.
+- **An ability that is not a seeded permission denies rather than throws.** `checkPermissionTo()`
+  catches `PermissionDoesNotExist` and returns `false`. A registry entry naming a permission the
+  catalog does not hold therefore hides itself from everyone but the Super Admin — silently, which is
+  the safe direction but is worth knowing when an entry mysteriously never appears.
+- **A guest never reaches a positive result.** `Gate::any()` resolves a `null` user; Spatie's callback
+  is skipped (its first parameter is typed `Authorizable`, non-nullable), this app's closure declines
+  on `! $user instanceof User`, and an ability with no registered callback resolves to `null` → denied.
+  The layout itself is unreachable while signed out anyway (`auth()->user()->name` on line 22), so this
+  is a second line, not the first.
+- **The rendered markup is escaped in every position.** Verified by rendering the component with
+  hostile values injected into the group `heading`, the item `label`, the `class`, and both the group
+  and item **array keys** (which land inside `data-test="…"`): all four emit HTML-entity-escaped output.
+  The `wire:navigate` on each item is a bare directive with no interpolated argument, so
+  [the `@js()` rule for `wire:*` values](blade-livewire-output-encoding.md#--inside-a-wire-directive-is-not-escaping--it-is-an-injection-sink)
+  is not engaged here — it *would* be the moment an entry needs `wire:click="…($id)"`.
+- **`flux:sidebar.group` renders its slot twice when it is both `expandable` and carries an `icon`** —
+  exactly the "Settings" group. `data-test="sidebar-link-roles"` therefore appears **2×** in the real
+  HTML while `data-test="sidebar-group-settings"` appears 1× (the group's `$attributes` land only on
+  the `<ui-disclosure>` wrapper, not on the collapsed-sidebar `<flux:dropdown>` duplicate). Confirmed by
+  counting the real render. Presence/absence assertions are unaffected; a **count** assertion would be
+  off by a constant and read as correct — see [errors-log.md](../errors-log.md#a-count-based-assertion-over-rendered-html-counted-a-wrapper-element-it-never-meant-to-include--2026-08-21).
+
 ## Confirmed safe: a `can:`-gated route's 403 names no permission — and `APP_DEBUG` is not what makes that true
 
 Established by task 0012's Phase 4 audit, which had to independently verify the "the refusal discloses
@@ -1036,7 +1207,11 @@ Do not "harden" the name comparisons themselves by lowercasing or trimming — t
 of matching names and break the property the byte-exact match above relies on. The remaining hardening
 is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-21 — Task 0012, Phase 6 docs sync: **Flush the permission cache after the transaction commits** gained the three real call sites that now hold its shape (`RolePermissionSeeder`, plus `saveRole()` / `deleteRole()` since this story's Phase 4 fix), and a ⚠️ recording why this rule was violated in the first place — the flush at issue was the **vendor's**, fired from inside `syncPermissions()` and `Role`'s `deleted` event, so task 0010's `DB::transaction()` wrapper moved it pre-commit with no flush line appearing anywhere in that diff. Generalised as: wrapping existing code in a transaction is a change to every side effect that code already performed. The [confirmed-safe 403 section](#confirmed-safe-a-can-gated-routes-403-names-no-permission--and-app_debug-is-not-what-makes-that-true) below was re-verified against the shipped `ModuleRouteAccessTest.php` in this pass — its code quotes, the `assertSee`/`assertDontSee` pairing and both named reopening conditions still match the real files, so it needed no correction (the [audit-authored-page rule](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20) says to check, not to assume)._
+_Last updated: 2026-08-22 — Task 0013, Phase 6 docs sync (sidebar module gating — UI): **closed** the registry section's F1/F2 status banner, which still read "open finding … as of story 0013's Phase 4 audit" while both remediations had already shipped in the same story (Phase 5 code-review finding). Both ✅ blocks are now the **real shipped tests** from [`tests/Feature/Navigation/SidebarModuleGatingTest.php`](../../tests/Feature/Navigation/SidebarModuleGatingTest.php), quoted verbatim, in place of the recommendation snippets they replaced. Recorded why the shipped allow-list test asserts `toHaveKey('permissions')` alone rather than the fuller `toHaveKeys([...])` shape originally recommended — **it is a correct narrowing, not a residual**: `permissions` is the only registry key whose absence is silent, because it is the only one read through `empty()`; the four keys read by direct array access raise an `E_WARNING` that `HandleExceptions::handleError()` rethrows as an `ErrorException` (a loud 500), and a missing `group` fails **closed** through `Collection::groupBy()`'s `data_get()` → `''` bucket. Both facts verified against framework source rather than assumed. The reusable pattern this registry establishes for later epics is now documented in [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry), which this page points at rather than duplicating._
+
+_Previously: 2026-08-21 — Task 0013, Phase 4 audit (sidebar module gating — UI): added two sections for this repo's first **declarative permission registry** (`config/modules.php`), whose whole design is that every later epic appends entries to it. **A registry that means "ungated" by absence fails open, silently** is an open finding written as a ❌/✅ pair — `empty($item['permissions'])` cannot distinguish "declared ungated" from "the author forgot the key", verified by execution across three silent fail-open shapes and two fail-closed ones, plus the recommendation that a registry entry's permissions be pinned to its route's real `can:` middleware by a test rather than by a comment. **Confirmed safe: a sidebar built on `Gate::any()`** records the six things a later epic should not re-derive — why `Gate::any()` traverses the identical mechanism as `can:` middleware, why the two `Gate::before` callbacks compose in either order, why `hasAnyPermission()` would have been the exact inverse of the requirement, why an unseeded ability and a guest both deny rather than throw, that the rendered markup is escaped in every position including the `data-test` array keys, and that `flux:sidebar.group` renders its slot twice when `expandable` and `icon` are combined._
+
+_Previously: 2026-08-21 — Task 0012, Phase 6 docs sync: **Flush the permission cache after the transaction commits** gained the three real call sites that now hold its shape (`RolePermissionSeeder`, plus `saveRole()` / `deleteRole()` since this story's Phase 4 fix), and a ⚠️ recording why this rule was violated in the first place — the flush at issue was the **vendor's**, fired from inside `syncPermissions()` and `Role`'s `deleted` event, so task 0010's `DB::transaction()` wrapper moved it pre-commit with no flush line appearing anywhere in that diff. Generalised as: wrapping existing code in a transaction is a change to every side effect that code already performed. The [confirmed-safe 403 section](#confirmed-safe-a-can-gated-routes-403-names-no-permission--and-app_debug-is-not-what-makes-that-true) below was re-verified against the shipped `ModuleRouteAccessTest.php` in this pass — its code quotes, the `assertSee`/`assertDontSee` pairing and both named reopening conditions still match the real files, so it needed no correction (the [audit-authored-page rule](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20) says to check, not to assume)._
 
 _Previously: 2026-08-21 — Task 0012 (module/sidebar access gating — backend), Phase 4 audit: added
 "Confirmed safe: a `can:`-gated route's 403 names no permission — and `APP_DEBUG` is not what makes that

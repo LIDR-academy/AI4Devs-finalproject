@@ -8,6 +8,7 @@ Baseline stack versions and project-structure standards for this Laravel + Livew
 - [Directory structure](#directory-structure)
   - [Controllers sit in front of actions, not instead of them](#controllers-sit-in-front-of-actions-not-instead-of-them)
   - [An authorization rule belongs to the action, not to one of its callers](#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
+  - [An app-owned config file is a registry, and must survive `config:cache`](#an-app-owned-config-file-is-a-registry-and-must-survive-configcache)
 - [Model conventions](#model-conventions)
   - [Deleting a user goes through the model, not the query builder](#deleting-a-user-goes-through-the-model-not-the-query-builder)
   - [UUID primary keys](#uuid-primary-keys)
@@ -60,17 +61,20 @@ app/
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
   Policies/            Eloquent model policies (UserPolicy, RolePolicy), auto-discovered by name
   Providers/           Service providers (AppServiceProvider, FortifyServiceProvider)
-config/                Laravel + package config (fortify.php, permission.php, ...)
+config/                Laravel + package config (fortify.php, permission.php, ...), plus
+                        modules.php — the one app-owned config file (see below)
 database/
   data/                 Bundled, version-controlled fixture data a seeder reads — not seeder
                         classes (iso-3166-countries.json, plus its own README stating provenance)
   factories/
   migrations/
   seeders/
-lang/                   Published translation files, one folder per locale (en/, es/)
+lang/                   Published translation files, one folder per locale (en/, es/), plus
+                        app-owned domain files kept key-for-key identical across both
+                        (users.php, roles.php, navigation.php)
 resources/
   views/
-    components/        Blade components
+    components/        Blade components — all anonymous (no app/View/Components/ in this repo)
     layouts/            Auth/app layout shells
     livewire/           Views for Livewire components AND plain auth Blade views (see naming.md)
     partials/
@@ -78,7 +82,7 @@ routes/                 web.php, plus one file per functional area that web.php 
                         (settings.php, roles.php, users.php) — no api.php yet
 tests/
   Feature/              Feature tests, mirrors app structure (Auth/, Settings/, Seeders/, Users/,
-                        Roles/, Models/, Policies/, Authorization/, ...)
+                        Roles/, Models/, Policies/, Authorization/, Navigation/, ...)
   Unit/                 Mirrors app structure too (Enums/, Exceptions/, Listeners/, Models/), plus ArchitectureTest.php
   Browser/              Pest browser tests, mirrors app structure too (Auth/)
   Pest.php, TestCase.php
@@ -93,6 +97,42 @@ tests/
 `routes/` follows the same one-per-area shape: `web.php` declares only the app-wide routes (`home`, `dashboard`) and then `require`s one file per functional area — `settings.php`, `roles.php`, and `users.php` since task 0040, which moved `users.index` out of `web.php` so it stops being the one route that didn't follow the pattern. A new area's routes go in a new `routes/<area>.php` with its own middleware group, appended as another `require` line rather than inlined into `web.php`; what each route contract actually is belongs to [api/routes.md](../api/routes.md).
 
 `app/Actions/` groups by concern, one subfolder per area: `Fortify/` holds the framework-contract implementations, `Users/` and `Roles/` the app's own domain actions for those areas. A new action goes in the subfolder for its domain (or directly under `app/Actions/` if it belongs to none) — never nested under an unrelated one. `Roles/` (task 0009) is the pattern to copy when a new module needs its first action: create the subfolder for the domain, even for a single class, rather than parking it in the nearest existing one.
+
+### An app-owned config file is a registry, and must survive `config:cache`
+
+Every other file in `config/` is Laravel's or a package's. [`config/modules.php`](../../config/modules.php) (task 0013) is the first one this app wrote itself, and it establishes when that shape is right: **a config file is for a declarative registry that a later story extends by appending data — never for behavior, and never as a home for a value that has one caller.** The alternative considered and not taken was a PHP class or a service-provider `Gate::define()` loop; config won because appending an entry must not require reading code.
+
+Two hard constraints come with it, both cheap to violate:
+
+- **No closures, ever.** `php artisan config:cache` serialises the merged config with `var_export()`, which cannot represent a `Closure` — one closure anywhere in `config/` makes the command fail and, in a deployment that caches config, takes the whole app down. Every value must be a scalar, array, or `null`. Where a closure is the obvious reach (`'expanded_when' => fn () => request()->routeIs('roles.*')`), store the **data** instead (`'expanded_when' => 'roles.*'`) and let the consumer apply it. `tests/Feature/Navigation/SidebarModuleGatingTest.php` runs `config:cache` as an actual assertion rather than trusting review.
+- **Store keys, not copy.** A registry entry holds a translation key (`'label' => 'navigation.items.users'`), resolved with `__()` at render. A literal English string in `config/` is unreachable from `lang/es/` — see [naming.md](naming.md#translation-keys).
+
+✅ Good — the real registry entry, quoted verbatim; every value is a scalar or array, `label` is a translation key rather than copy, and `current_when` is the *pattern* (the consumer applies `request()->routeIs()` to it at render):
+
+```php
+// config/modules.php
+'roles' => [
+    'group' => 'settings',
+    'label' => 'navigation.items.roles',
+    'icon' => 'shield-check',
+    'route' => 'roles.index',
+    'current_when' => 'roles.*',
+    'permissions' => ['roles.manage'],
+],
+```
+
+❌ Bad — the same entry written the way it is tempting to (adapted to illustrate; not present in the repo). It breaks `config:cache` outright, and hardcodes English into a file `lang/es/` cannot reach:
+
+```php
+// anti-pattern — do not write this in any config/ file
+'roles' => [
+    'label' => 'Roles & permissions',
+    'current_when' => fn () => request()->routeIs('roles.*'),
+    'visible' => fn () => auth()->user()?->can('roles.manage'),
+],
+```
+
+What this particular registry *means* — the gating rules, the per-entry ability requirement, and how a later epic plugs its module in — belongs to [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry), not here.
 
 ### Controllers sit in front of actions, not instead of them
 
@@ -313,7 +353,9 @@ php artisan test                 # NOT --filter
 
 Use the scoped forms freely while iterating; the unscoped runs are what counts as the record.
 
-_Last updated: 2026-08-20 — Task 0010 (Roles & permissions management — backend): added the **"Steps 1 and 2 are the iteration forms"** subsection to Quality gates — both `pint --dirty` and `test --filter` are scoped by default and report "pass" rather than "not checked", and this story shipped past both at once; the completion form is now the unscoped run of each, with the model-event/observer/global-scope blast-radius rule that makes the full suite non-optional. Updated the directory listing for `EnforceGrantorPermissionScope`, `RoleInUseException` (409, unlike `ImmutableRoleException`'s 403), `RolePolicy`, `app/Livewire/Users/` + `Roles/`, and the real `tests/Feature/` subfolders._
+_Last updated: 2026-08-22 — Task 0013 (module/sidebar access gating — UI): added the **"An app-owned config file is a registry, and must survive `config:cache`"** subsection for [`config/modules.php`](../../config/modules.php), the first config file in this repo that is neither Laravel's nor a package's — when that shape is right (a declarative registry a later story extends by appending data, never behavior), and its two hard constraints with a real ✅/❌ pair: **no closures** (`ConfigCacheCommand` serialises with `var_export()` and throws `LogicException` on anything non-serialisable, so one closure in `config/` takes down a config-caching deploy — store the data and let the consumer apply it), and **store translation keys, not copy**. Corrected three lines of the directory listing that this story falsified or left vague: `config/` is no longer only Laravel + package config, `lang/` now names its three app-owned domain files, and `resources/views/components/` records that every Blade component here is anonymous (verified: this repo has no `app/View/` at all). What the registry *means* stays in [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry)._
+
+_Previously, 2026-08-20 — Task 0010 (Roles & permissions management — backend): added the **"Steps 1 and 2 are the iteration forms"** subsection to Quality gates — both `pint --dirty` and `test --filter` are scoped by default and report "pass" rather than "not checked", and this story shipped past both at once; the completion form is now the unscoped run of each, with the model-event/observer/global-scope blast-radius rule that makes the full suite non-optional. Updated the directory listing for `EnforceGrantorPermissionScope`, `RoleInUseException` (409, unlike `ImmutableRoleException`'s 403), `RolePolicy`, `app/Livewire/Users/` + `Roles/`, and the real `tests/Feature/` subfolders._
 
 _Previously, 2026-08-20 — Task 0040: corrected the `routes/` line of the directory listing (`web.php` plus one file per functional area — `settings.php`, `roles.php`, `users.php`) and added a new "one-per-area" paragraph stating the convention behind it: `web.php` holds only the app-wide routes and `require`s an area file per module, so a new area gets a new `routes/<area>.php` rather than another inline block. `users.index` was the one route not following that shape until this story moved it._
 

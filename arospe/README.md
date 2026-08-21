@@ -66,8 +66,10 @@ app/
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
   Policies/            Model policies (UserPolicy, RolePolicy), auto-discovered by name
   Providers/           Service providers
-config/                Laravel + package configuration
+config/                Laravel + package configuration, plus modules.php (the app's own
+                       declarative sidebar/module registry)
 database/
+  data/                 Bundled fixture data a seeder reads (iso-3166-countries.json)
   factories/
   migrations/
   seeders/
