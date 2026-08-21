@@ -32,6 +32,16 @@ COPY apps/backend ./apps/backend
 RUN pnpm --filter @restostock/backend exec prisma generate --schema=prisma/schema.prisma
 RUN pnpm --filter @restostock/backend build
 
+# Compilacion standalone de prisma/seed.ts (TK-051, bootstrap del primer admin en
+# produccion) — NO forma parte del build principal (tsconfig.json tiene rootDir=./src,
+# prisma/ queda fuera a proposito; ampliar rootDir a . rompe la estructura de dist/,
+# prohibido por el Guard 12 de AGENTS.md). seed.ts no importa nada de src/ (hashea el PIN
+# con un helper propio) precisamente para poder compilarse solo, sin arrastrar `tsx`/
+# esbuild a la imagen final — eso reintroduciria las CVEs que TK-044 elimino.
+RUN pnpm --filter @restostock/backend exec tsc prisma/seed.ts --outDir dist/prisma \
+      --module NodeNext --moduleResolution NodeNext --target ES2022 \
+      --esModuleInterop --skipLibCheck
+
 # ---- deps-prod: SOLO dependencies de produccion (TK-044) ----
 # `pnpm install --frozen-lockfile` a secas instala tambien devDependencies (vitest, eslint,
 # typescript...), que terminaban copiadas verbatim a la imagen final. `trivy image` sobre esa

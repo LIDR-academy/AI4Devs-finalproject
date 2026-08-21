@@ -13,5 +13,11 @@ export PRISMA_SCHEMA_ENGINE_BINARY="$(find node_modules/.pnpm -name 'schema-engi
 echo "Aplicando migraciones de base de datos pendientes (prisma migrate deploy)..."
 apps/backend/node_modules/.bin/prisma migrate deploy --schema=apps/backend/prisma/schema.prisma
 
+# Bootstrap idempotente del primer administrador (TK-051): sin esto, una base de datos
+# nueva no tiene forma de crear usuarios via la API — POST /api/v1/auth/users exige ya
+# ser ADMIN. Se omite en silencio si SEED_ADMIN_PIN no esta seteado (ver seed.ts).
+echo "Verificando/sembrando administrador inicial (idempotente)..."
+node apps/backend/dist/prisma/seed.js
+
 echo "Iniciando RestoStock Backend..."
 exec node apps/backend/dist/infrastructure/http/server.js

@@ -55,6 +55,18 @@ variable "rate_limit_max_requests" {
   default     = 100
 }
 
+variable "seed_admin_pin" {
+  description = "PIN del administrador inicial (bootstrap idempotente, TK-051) — inyectado vía TF_VAR_seed_admin_pin. Sin el, una base de datos nueva no tiene forma de crear usuarios via la API."
+  type        = string
+  sensitive   = true
+}
+
+variable "seed_admin_name" {
+  description = "Nombre del administrador inicial."
+  type        = string
+  default     = "Administrador"
+}
+
 # Red aislada para arquitectura de microservicios / monolito modular
 resource "docker_network" "restostock_net" {
   name = "restostock_internal_network"
@@ -139,6 +151,8 @@ resource "docker_container" "backend" {
     "CORS_ALLOWED_ORIGINS=${var.cors_allowed_origins}",
     "RATE_LIMIT_WINDOW_MS=${var.rate_limit_window_ms}",
     "RATE_LIMIT_MAX_REQUESTS=${var.rate_limit_max_requests}",
+    "SEED_ADMIN_PIN=${var.seed_admin_pin}",
+    "SEED_ADMIN_NAME=${var.seed_admin_name}",
   ]
 
   ports {
