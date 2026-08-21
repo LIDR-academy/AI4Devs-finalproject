@@ -11,22 +11,10 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
-                        {{ __('Users') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
-
-                {{-- Store-configuration screens live under this collapsible group -- Roles &
-                permissions today, more to follow (e.g. billing details) as they land. --}}
-                <flux:sidebar.group expandable icon="cog-6-tooth" :heading="__('Settings')" :expanded="request()->routeIs('roles.*')">
-                    <flux:sidebar.item icon="shield-check" :href="route('roles.index')" :current="request()->routeIs('roles.*')" wire:navigate>
-                        {{ __('Roles & permissions') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                {{-- Story 0013: entries and group headings are driven by the declarative
+                registry in config/modules.php, gated per-entry through the Gate -- see
+                resources/views/components/sidebar-nav.blade.php. --}}
+                <x-sidebar-nav />
             </flux:sidebar.nav>
 
             <flux:spacer />
