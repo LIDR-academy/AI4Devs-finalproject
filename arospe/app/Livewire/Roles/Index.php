@@ -346,6 +346,16 @@ class Index extends Component
      * `permissions` is eager-loaded so the list can render each role's
      * granted modules without an N+1.
      *
+     * `canEdit` / `canDelete` (story 0011, Phase 2 review open item 1) are
+     * appended as pseudo-attributes on each row -- `Gate::allows('update'
+     * |'delete', $role)`, the same `UserPolicy`-shaped ability the row
+     * actions already authorize against in `openEditModal()` /
+     * `confirmDeleteRole()` -- mirroring `App\Livewire\Users\Index::
+     * loadUsers()`'s per-row `canEdit`/`canDelete` UI hint exactly. This is
+     * a UI hint the paired view disables a control with, never a substitute
+     * for the `Gate::authorize()` calls that actually gate the click; see
+     * docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer.
+     *
      * @return EloquentCollection<int, Role>
      */
     #[Computed]
@@ -357,7 +367,11 @@ class Index extends Component
             ->with('permissions')
             ->withCount(['users' => fn ($query) => $query->withTrashed()])
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->each(function (Role $role): void {
+                $role->canEdit = Gate::allows('update', $role);
+                $role->canDelete = Gate::allows('delete', $role);
+            });
     }
 
     /**

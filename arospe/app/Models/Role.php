@@ -23,6 +23,12 @@ use Spatie\Permission\Models\Role as SpatieRole;
  *
  * See ai-spec/tasks/done/0008-super-admin-role-invariants.md for the
  * full mechanism and why each design decision below is shaped the way it is.
+ *
+ * @property bool $canEdit Not a column -- a per-row UI hint appended by
+ *                         App\Livewire\Roles\Index::roles() (story 0011), Gate::allows('update',
+ *                         $role). Present only on rows returned from that computed property; the
+ *                         plain (not -read) annotation is deliberate, since roles() assigns it.
+ * @property bool $canDelete Same as $canEdit above, for the delete ability.
  */
 class Role extends SpatieRole
 {
