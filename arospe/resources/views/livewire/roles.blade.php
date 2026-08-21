@@ -51,7 +51,7 @@
                             </flux:table.cell>
 
                             <flux:table.cell>
-                                {{ trans_choice(':count permission|:count permissions', $role->permissions->count(), ['count' => $role->permissions->count()]) }}
+                                {{ trans_choice('roles.index.permission_count', $role->permissions->count(), ['count' => $role->permissions->count()]) }}
                             </flux:table.cell>
 
                             <flux:table.cell>
@@ -147,7 +147,7 @@
                         $visiblePermissions = $this->canGrantAdministratorLevel
                             ? $this->permissionOptions
                             : $this->permissionOptions->reject(
-                                fn ($permission) => $permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION
+                                fn (\Spatie\Permission\Models\Permission $permission): bool => $permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION
                             );
 
                         // Pure presentational transform over the already-fetched catalog --
@@ -157,7 +157,7 @@
                         // derived "roles" pseudo-module for free, with no hardcoded module list
                         // anywhere here.
                         $permissionGroups = $visiblePermissions->groupBy(
-                            fn ($permission) => explode('.', $permission->name, 2)[0]
+                            fn (\Spatie\Permission\Models\Permission $permission): string => explode('.', $permission->name, 2)[0]
                         );
 
                         // docs/conventions/naming.md requires snake_case translation-key

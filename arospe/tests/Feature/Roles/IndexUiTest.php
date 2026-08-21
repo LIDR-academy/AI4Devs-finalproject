@@ -282,7 +282,7 @@ test('the rendered permission catalog omits exactly the administrator-level perm
 
     $html = Livewire::test(Index::class)->call('openCreateModal')->html();
 
-    expect(substr_count($html, 'value="'))->toBe($catalogSize - 1);
+    expect(substr_count($html, '<ui-checkbox '))->toBe($catalogSize - 1);
 });
 
 test('the rendered permission catalog is complete for the Super Admin, including the administrator-level permission', function () {
@@ -300,7 +300,7 @@ test('the rendered permission catalog is complete for the Super Admin, including
 
     $html = Livewire::test(Index::class)->call('openCreateModal')->html();
 
-    expect(substr_count($html, 'value="'))->toBe($catalogSize);
+    expect(substr_count($html, '<ui-checkbox '))->toBe($catalogSize);
 });
 
 // =====================================================================
@@ -327,6 +327,26 @@ test('saving a role with an invalid name is refused with inline feedback and add
     'a name consisting only of whitespace' => ['   '],
     'the already-taken name "Blog Editor"' => ['Blog Editor'],
 ]);
+
+// Phase 5 code review finding F-5: assertHasErrors() above reads the error
+// bag directly and would still pass if the outlet itself vanished from the
+// DOM (e.g. a future edit dropping flux:input's :label prop, which is what
+// the implicit flux:error outlet is gated on -- traced through the Flux
+// with-field stub, not assumed). This asserts the render, not just the bag.
+test('the duplicate-name refusal actually renders inline, not only in the error bag', function () {
+    Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+
+    $this->actingAs(roleUiActor());
+
+    $component = Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', 'Blog Editor')
+        ->call('saveRole');
+
+    $component->assertHasErrors(['name']);
+
+    expect($component->html())->toContain($component->errors()->first('name'));
+});
 
 // =====================================================================
 // The seeded Administrator role's row — three actor tiers, per Phase 2

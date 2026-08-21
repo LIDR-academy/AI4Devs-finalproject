@@ -18,6 +18,7 @@ return [
         'delete_blocked' => 'This role cannot be deleted while it is still held by :count user.|This role cannot be deleted while it is still held by :count users.',
         'self_lockout_blocked' => 'You cannot remove the role-management permission from a role you hold yourself.',
         'summary' => ':count role|:count roles',
+        'permission_count' => ':count permission|:count permissions',
         'empty' => 'No custom roles have been created yet.',
         'action_not_allowed' => 'Action not allowed',
     ],

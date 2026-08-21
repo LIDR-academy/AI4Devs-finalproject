@@ -19,6 +19,7 @@ return [
         'delete_blocked' => 'Este rol no se puede eliminar porque todavía lo tiene :count usuario.|Este rol no se puede eliminar porque todavía lo tienen :count usuarios.',
         'self_lockout_blocked' => 'No puedes quitar el permiso de gestión de roles a un rol que tú mismo ostentas.',
         'summary' => ':count rol|:count roles',
+        'permission_count' => ':count permiso|:count permisos',
         'empty' => 'Todavía no se ha creado ningún rol personalizado.',
         'action_not_allowed' => 'Acción no permitida',
     ],
