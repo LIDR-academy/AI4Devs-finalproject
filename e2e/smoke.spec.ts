@@ -35,3 +35,17 @@ test("el paquete autónomo sirve sus estáticos", async ({ page }) => {
   expect(estaticos.length).toBeGreaterThan(0);
   expect(fallidos).toEqual([]);
 });
+
+/**
+ * El disparador de trabajos periódicos, **cerrado por defecto**. El servidor del E2E no
+ * define `CRON_SECRET`, que es justo el despliegue al que se le olvidó la variable: lo
+ * que se comprueba es que ahí no hay endpoint que valga, ni siquiera para quien traiga
+ * una credencial. Un `curl` en bucle a esta URL no puede caducar ofertas ajenas.
+ */
+test("sin CRON_SECRET no hay disparador de cron", async ({ request }) => {
+  const res = await request.get("/api/cron/offers", {
+    headers: { authorization: "Bearer loquesea" },
+  });
+  expect(res.status()).toBe(404);
+  await expect(res.json()).resolves.toMatchObject({ code: "NOT_FOUND" });
+});

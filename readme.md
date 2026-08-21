@@ -445,6 +445,29 @@ flowchart TB
 - **Plan B** si Oracle reclama la instancia *free*: VPS de pago (Hetzner CX22,
   ~4 €/mes) sin cambios de arquitectura.
 
+**Los trabajos periódicos también se disparan por HTTP.** El scheduler es un proceso
+de vida larga, y hay destinos donde eso no existe —cualquier plataforma serverless—.
+Para esos, `GET /api/cron/:job` ejecuta **los mismos trabajos**: el qué vive en
+`src/use-cases/scheduler/jobs.ts` y lo comparten los dos disparadores, así que no
+pueden divergir. Lo que cambia es quién mira el reloj.
+
+- **Los dos trabajos** son `offers` (caducidad de ofertas + recordatorio de mitad de
+  ventana, cada 5 min) y `retention` (recordatorios amables, una vez al día).
+- **Candado:** `Authorization: Bearer $CRON_SECRET`, el contrato que ya emite Vercel
+  Cron y que un `systemd timer` replica con una línea. **Sin `CRON_SECRET` el endpoint
+  responde 404 y no ejecuta nada**: un despliegue al que se le olvidó la variable no
+  puede acabar con la URL abierta.
+- **Dos ejecuciones solapadas no se bloquean** —cada invocación es un proceso
+  distinto—. Lo sostiene el dominio: el cierre de oferta es un CAS. El margen conocido
+  es que dos barridos a la vez podrían enviar dos veces un recordatorio, y se acepta
+  antes que montar un cerrojo distribuido para un aviso amable.
+- **Si el destino es Vercel**, `vercel.json` ya declara los dos crons. Tres cosas que
+  no son obvias: **el cron de Vercel va en UTC** (las 10:00 de Madrid son las 08:00
+  UTC en verano y las 09:00 en invierno, así que el recordatorio se desplaza una hora
+  con el cambio de hora); el **plan Hobby** admite como mucho dos crons y solo con
+  granularidad diaria, con lo que `*/5` obliga a plan de pago; y sigue haciendo falta
+  un Postgres gestionado, porque ahí no hay `localhost` que valga.
+
 ### **2.5. Seguridad**
 
 Decidido en `documents/ADR-0002`:

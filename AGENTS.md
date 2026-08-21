@@ -1001,6 +1001,38 @@ project. Read it at the start of every session.
   comprobación del puesto en `circuito-completo.spec.ts` es **por forma**
   (`/^\d+\.º de \d+$/`) **y no por número**, porque otra prueba puede encolarse en el
   mismo set.
+- **El build genera el cliente Prisma (2026-08-21):** `"build": "prisma generate && next
+  build"`. `src/generated/prisma` está en `.gitignore` —se regenera— así que en cualquier
+  máquina limpia (Vercel, un CI, un clon recién hecho) el módulo no existía y fallaban de
+  golpe el route handler, el `proxy` y el Server Component que acaban importándolo. **Ojo:
+  `prisma generate` carga `prisma.config.ts`, que resuelve `DATABASE_URL` al arrancar**;
+  sin esa variable el build muere ahí, no más tarde.
+- **Los trabajos periódicos se disparan también por HTTP (2026-08-21):**
+  `GET /api/cron/:job`, para destinos sin proceso de vida larga —el intento de despliegue
+  en Vercel—. Lo que hay que no olvidar: el **qué** vive en
+  `src/use-cases/scheduler/jobs.ts` y lo comparten `scheduler/index.ts` y el endpoint;
+  los dos disparadores solo aportan el reloj. Añadir un trabajo es tocar el catálogo
+  `JOBS`, y el nombre de la ruta sale de ahí (uno que no esté es 404).
+  **Candado:** `Authorization: Bearer $CRON_SECRET` —el contrato que ya emite Vercel Cron
+  y que un `systemd timer` replica—, comparado con `timingSafeEqual` y **cerrado por
+  defecto**: sin `CRON_SECRET` responde **404** (no 503: sin secreto aquí no hay endpoint,
+  y así tampoco confirma qué trabajos existen). **No hay guardarraíl contra el solape** —el
+  flag en memoria del scheduler no sirve cuando cada invocación es un proceso distinto—:
+  lo sostiene el CAS del cierre de oferta, con el margen conocido de que dos barridos a la
+  vez repitan **un recordatorio**. `vercel.json` declara los dos crons; **el cron de Vercel
+  va en UTC** (10:00 Madrid = 08:00 UTC en verano, 09:00 en invierno) y el **plan Hobby**
+  admite dos crons con granularidad diaria, así que `*/5` obliga a plan de pago.
+  Verificado a mano contra el paquete autónomo: 401 sin credencial y con la equivocada,
+  404 sin `CRON_SECRET` y con un trabajo inventado, 200 con resumen contable en los dos
+  trabajos buenos.
+- **Vercel no es la arquitectura del ADR (2026-08-21, en curso):** el intento de
+  despliegue destapa tres cosas que el ADR-0001 §5 daba por resueltas con la VM y allí no
+  lo están — no hay Postgres en `localhost` (hace falta uno gestionado, su `DATABASE_URL`,
+  `prisma migrate deploy` y la semilla), no hay proceso para el scheduler (resuelto con el
+  endpoint de cron) y `@node-rs/argon2` es un binario nativo que puede fallar en runtime,
+  no en build. Lo que **no** es problema: no se escribe en disco —las imágenes son URLs de
+  Rebrickable— y `proxy.ts` corre en runtime Node en Next 16, así que Prisma en el
+  middleware funciona.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions

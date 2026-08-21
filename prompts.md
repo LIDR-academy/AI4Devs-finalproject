@@ -1044,3 +1044,45 @@ limpia; requisito nuevo en la spec `reservation-queue`
 más espera**). Sincronizados `wireframes.md` (§8.3, §8.4, §8.7, §9.4 y §10 nueva),
 `ux-flows.md` §7 —cuya tabla de cobertura había envejecido con el reparto de rutas de
 W5—, `PRD.md` y `readme.md` §1.3.
+
+### [2026-08-21] — El disparador HTTP de los trabajos periódicos
+**Prompt:** "Estoy probando de hacer un deployment en Vercel. Da el siguiente error:
+[module not found en `src/db/prisma.ts`] … Sí, commitea y monta el endpoint de cron".
+**Resumen de la respuesta:** El error era de generación, no de código: el cliente Prisma
+se genera en `src/generated/prisma`, que está en `.gitignore` porque se regenera, y el
+build era solo `next build`. En cualquier máquina limpia —Vercel, un CI, un clon recién
+hecho— ese módulo no existe, y por eso el fallo salpicaba a la vez al route handler, al
+`proxy` y a un Server Component: los tres acaban importándolo. El build genera ahora el
+cliente antes de compilar, que vale para cualquier destino y de paso compila siempre
+contra el esquema vigente. **Con una trampa que conviene saber:** `prisma generate` carga
+`prisma.config.ts`, que resuelve `DATABASE_URL` al arrancar, así que sin esa variable el
+build muere en el paso nuevo.
+**Y el hueco de verdad que abre Vercel:** el scheduler es un proceso de vida larga
+(`node-cron`) y ahí eso no existe — sin él las ofertas no caducan nunca y no sale ningún
+recordatorio. Se ha montado `GET /api/cron/:job`, y lo que importa es **cómo**: el *qué*
+se ejecuta vive en un módulo único (`use-cases/scheduler/jobs.ts`) que comparten el
+proceso de la VM y el endpoint. Los dos disparadores solo aportan el reloj. Sin ese
+módulo común, la primera divergencia entre los dos caminos sería cuestión de semanas y
+solo se notaría en producción.
+**El candado, que es lo único que decide algo:** `Authorization: Bearer $CRON_SECRET` —el
+contrato que ya emite Vercel Cron y que un `systemd timer` replica con una línea—,
+comparado en tiempo constante y **cerrado por defecto**: sin la variable el endpoint
+responde **404** y no ejecuta nada. Un despliegue al que se le olvidó configurarla no
+puede acabar con la URL abierta, que es justo lo que pasaría si "sin secreto" significara
+"sin comprobación". Es 404 y no 503 a propósito: sin secreto aquí no hay endpoint, y así
+tampoco confirma a un desconocido qué trabajos existen.
+**Lo que el endpoint no da, dicho en voz alta:** el scheduler evita solaparse con un flag
+en memoria, y eso no sirve cuando cada invocación es un proceso distinto. Lo sostiene el
+dominio —el cierre de oferta es un CAS— con un margen conocido: dos barridos a la vez
+podrían repetir **un recordatorio**. Se acepta antes que montar un cerrojo distribuido
+para un aviso amable.
+**Tres cosas de Vercel que no son obvias** y quedan escritas: su cron va en **UTC** (las
+10:00 de Madrid son las 08:00 en verano y las 09:00 en invierno, así que el recordatorio
+se desplaza con el cambio de hora); el plan **Hobby** admite dos crons y solo diarios, con
+lo que `*/5` obliga a plan de pago; y sigue haciendo falta un Postgres gestionado, porque
+allí no hay `localhost` que valga.
+**Verificación:** 403 unitarios (6 nuevos sobre el candado y el catálogo de trabajos),
+`tsc`, `eslint`, `next build`, y prueba a mano contra el paquete autónomo: 401 sin
+credencial y con la equivocada, 404 sin `CRON_SECRET` y con un trabajo inventado, y 200
+con resumen contable en los dos trabajos buenos. Sincronizados `ADR-0001` §4,
+`readme.md` §2.4 y `.env.example`.

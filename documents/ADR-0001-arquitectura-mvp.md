@@ -97,6 +97,21 @@ la misma VM (§5) — **no** in-process en el servidor Next: el modelo de Next
 casos de uso lo evita y es reversible (alternativa: *systemd timer* que invoca un
 endpoint interno).
 
+> **Añadido el 2026-08-21.** Esa alternativa ya existe, y por una razón que el ADR no
+> había previsto: un despliegue **serverless** no puede tener un proceso de vida larga,
+> así que ahí el scheduler no es reversible sino imposible. `GET /api/cron/:job`
+> dispara los mismos trabajos por HTTP, con `Authorization: Bearer $CRON_SECRET` y
+> **cerrado por defecto** —sin la variable responde 404 y no ejecuta nada—. Lo que
+> importa de la forma: el **qué** vive en `src/use-cases/scheduler/jobs.ts` y lo
+> comparten los dos disparadores; el proceso `node-cron` y el cron de la plataforma
+> solo aportan el reloj. Sin ese módulo común, la primera divergencia entre los dos
+> caminos sería cuestión de semanas y solo se notaría en producción.
+>
+> Lo que **no** aporta el endpoint: el guardarraíl contra el solape. El scheduler tiene
+> un flag en memoria y ahí no sirve, porque cada invocación es un proceso distinto. Lo
+> sostiene el dominio (el cierre de oferta es un CAS), con el margen conocido de que
+> dos barridos simultáneos podrían repetir **un recordatorio**.
+
 ### 5. Hosting: VM única con IP pública (Oracle Cloud Free Tier)
 Un **único servidor Linux** aloja todo el sistema. Un **reverse proxy** (Caddy)
 termina TLS y enruta el tráfico al **servidor Next.js** (que sirve el front y la
