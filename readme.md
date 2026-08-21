@@ -46,6 +46,9 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 *   **Descuento Rápido de Stock por Recetas:** Consumo ágil en cocina descontando de forma automática del remanente más antiguo activo (FEFO) según las porciones requeridas por los platos.
 *   **Cierre de Turno y Conciliación Rápida:** Flujo de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock.
 *   **Dashboard y Reporte de Mermas Visibles:** Panel web administrativo para visualizar de forma consolidada las pérdidas físicas (mermas) por ingrediente y motivo en un rango de fechas, haciendo visible el desperdicio.
+*   **Gestión Mínima de Personal:** Alta y bloqueo/reactivación de cuentas de operarios vía API (rol `ADMIN`), sin depender de un redeploy de código. *(Backend implementado; interfaz de administración pendiente.)*
+*   **Trazabilidad de Movimientos de Stock:** Consulta del historial completo de extracciones, consumos y descartes filtrado por insumo y rango de fechas, para auditar quién movió qué y cuándo. *(Backend implementado; panel de auditoría pendiente.)*
+*   **Persistencia Real en Producción:** Todos los repositorios (incluyendo recetas, conciliaciones de turno y reportes) están respaldados por PostgreSQL en producción, con bootstrap idempotente del primer administrador en cada despliegue nuevo.
 
 
 
@@ -370,11 +373,71 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
     ]
     ```
 
+### **4.5. POST `/api/v1/auth/users` (Alta de Operario — Rol `ADMIN`)**
+*   **Propósito:** Crea una cuenta de operario nueva (nombre, rol, PIN), reutilizando el mismo hash con salt de `US-001`.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body (application/json):**
+    ```json
+    {
+      "name": "Nuevo Operario",
+      "role": "KITCHEN_STAFF",
+      "pin": "4321"
+    }
+    ```
+*   **Response Success (`201 Created`):**
+    ```json
+    {
+      "id": "d4e5f678-90ab-4cde-8f12-345678901bcd",
+      "name": "Nuevo Operario",
+      "role": "KITCHEN_STAFF",
+      "status": "ACTIVE"
+    }
+    ```
+
+### **4.6. PATCH `/api/v1/auth/users/{id}/status` (Bloqueo/Reactivación — Rol `ADMIN`)**
+*   **Propósito:** Bloquea o reactiva la cuenta de un operario existente.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body (application/json):**
+    ```json
+    {
+      "action": "BLOCK"
+    }
+    ```
+*   **Response Success (`200 OK`):**
+    ```json
+    {
+      "id": "d4e5f678-90ab-4cde-8f12-345678901bcd",
+      "status": "BLOCKED"
+    }
+    ```
+
+### **4.7. GET `/api/v1/stock/movements` (Historial de Movimientos — Rol `ADMIN`)**
+*   **Propósito:** Consulta el historial de movimientos de stock (extracciones, consumos, descartes) con filtros opcionales.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Query Parameters:**
+    *   `insumoId` (opcional): filtra por insumo.
+    *   `startDate` / `endDate` (opcional): rango de fechas ISO 8601.
+*   **Response Success (`200 OK`):**
+    ```json
+    [
+      {
+        "id": "8bf9f8a3-231a-4c22-b91c-22340bb95a31",
+        "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+        "insumoName": "Queso Mozzarella",
+        "type": "EXTRACTION",
+        "quantity": "2.0000",
+        "fromLoc": "MAIN_WAREHOUSE",
+        "toLoc": "KITCHEN_FRIDGE",
+        "createdAt": "2026-08-21T14:02:11Z"
+      }
+    ]
+    ```
+
 ---
 
 ## 5. Historias de Usuario
 
-Se han definido detalladamente las siguientes 9 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
+Se han definido detalladamente las siguientes 11 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
 
 ### **5.1. US-001: Autenticación por PIN del Personal de Cocina**
 *   **Formato de Negocio:** Como operario de cocina (Staff), quiero autenticarme en la terminal táctil ingresando mi PIN personal de 4 dígitos, para registrar mis movimientos de insumos y consumos de forma rápida y segura sin interrumpir el ritmo del servicio.
@@ -439,6 +502,22 @@ Se han definido detalladamente las siguientes 9 historias de usuario críticas (
     *   *When* el administrador consulta el endpoint de reporte de mermas para hoy,
     *   *Then* el sistema responde con una lista consolidada agrupando por ingrediente y motivo mostrando las cantidades exactas en formato de string.
 
+### **5.10. US-010: Gestión Mínima de Personal (Alta y Bloqueo de Operarios)**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero dar de alta operarios y bloquear/reactivar cuentas existentes vía API, para mantener el control de acceso al día sin depender de un redeploy de código.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que un Administrador autenticado envía nombre, rol `KITCHEN_STAFF` y PIN `"4321"`,
+    *   *When* invoca `POST /api/v1/auth/users`,
+    *   *Then* el sistema crea la cuenta y el operario puede autenticarse de inmediato con ese PIN.
+*   **Estado:** ⚠️ Backend implementado; interfaz de administración pendiente.
+
+### **5.11. US-011: Trazabilidad y Auditoría de Movimientos de Stock**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero consultar el historial de movimientos de stock filtrado por insumo y rango de fechas, para auditar quién movió qué y cuándo.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que se registró una extracción real de `Queso Mozzarella`,
+    *   *When* el Administrador invoca `GET /api/v1/stock/movements`,
+    *   *Then* el sistema retorna el movimiento con su tipo, cantidad, ubicaciones y fecha de creación.
+*   **Estado:** ⚠️ Backend implementado; panel de auditoría pendiente.
+
 ---
 
 ## 6. Tickets de Trabajo
@@ -500,6 +579,24 @@ El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo
     *   **Descripción:** Actualización del manual de operaciones `.agents/README.md` reflejando 34 Skills, 8 Workflows y la versión 2.3.0 SOTA Enterprise 2026.
     *   **Capas Afectadas:** `.agents/README.md`.
     *   **DoD:** Integridad del framework verificada con 54 enlaces absolutos validados.
+*   **TK-048: Cierre de Persistencia Parcial en Producción (Backend)**
+    *   **Descripción:** Elimina la última persistencia en memoria en producción — `reportRepository`, `recipeRepository` y `reconciliationRepository` pasan a ser Prisma-backed, con nuevos modelos `Recipe`, `RecipeIngredient`, `ShiftReconciliation`, `ShiftReconciliationItem` y la primera migración real del proyecto.
+    *   **Capas Afectadas:** `catalog/infrastructure`, `kitchen/infrastructure`, `reports/infrastructure`, `prisma/schema.prisma`.
+    *   **DoD:** Validado en vivo contra Postgres real (creación/lectura sobreviviendo a reinicio); 46/46 tests backend en verde.
+*   **TK-049: Gestión Mínima de Personal (Backend)**
+    *   **Descripción:** `POST /api/v1/auth/users` y `PATCH /api/v1/auth/users/{id}/status` (rol `ADMIN`) para alta y bloqueo/reactivación de operarios, reutilizando el hash de PIN con salt ya existente.
+    *   **Capas Afectadas:** `auth/domain`, `auth/application`, `auth/infrastructure`.
+    *   **DoD:** 9 tests nuevos (creación, login inmediato, 403/401/400/404, bloqueo con verificación de login posterior fallido, reactivación); `openapi.yaml` sincronizado.
+*   **TK-050: Trazabilidad de Movimientos de Stock (Backend)**
+    *   **Descripción:** `GET /api/v1/stock/movements` (rol `ADMIN`, filtros `insumoId`/`startDate`/`endDate`) sobre el modelo `StockMovement` ya poblado por extracción/consumo/descarte pero previamente inconsultable.
+    *   **Capas Afectadas:** `stock/domain`, `stock/application`, `stock/infrastructure`.
+    *   **DoD:** 5 tests nuevos (historial poblado por movimiento real, filtro, 403/401, lista vacía); 60/60 tests backend en verde.
+*   **TK-051: Bootstrap del Primer Administrador (Backend)**
+    *   **Descripción:** Corrige el problema huevo-gallina de despliegue nuevo (`POST /auth/users` exige ya ser ADMIN) y un bug crítico encontrado al investigarlo — `prisma/seed.ts` guardaba el PIN del admin en texto plano. Ahora hashea correctamente y siembra un admin configurable (`SEED_ADMIN_PIN`/`SEED_ADMIN_NAME`) de forma idempotente en cada arranque del contenedor.
+    *   **Capas Afectadas:** `apps/backend/prisma/seed.ts`, `apps/backend/Dockerfile`, `apps/backend/docker-entrypoint.sh`.
+    *   **DoD:** Validado extremo a extremo con contenedor real (login tras bootstrap, PIN persiste tras reinicio, arranque sin `SEED_ADMIN_PIN` no bloquea el despliegue).
+
+> **⚠️ Nota de Alcance:** `TK-049` y `TK-050` no tienen ticket de Frontend asociado — la interfaz de administración correspondiente queda pendiente de priorización. Ver [Matriz de Trazabilidad](docs/05_agile_planning/13_matriz_trazabilidad.md).
 
 ### 🖥️ 6.2. Tickets de Frontend (en subcarpetas `docs/05_agile_planning/12_tickets/{modulo}/frontend/`)
 

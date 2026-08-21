@@ -96,17 +96,40 @@ graph TD
     US009 --> TK010
     US009 --> TK007E
 
+    %% Cierre de Deuda / Post-MVP (TK-048 a TK-051)
+    TK048["🎫 TK-048: Cierre Persistencia Parcial (Backend)"]
+    EpicShared --> TK048
+
+    US010["📝 US-010: Gestión de Personal"]
+    TK049["🎫 TK-049: Gestión Personal (Backend)"]
+    TK049FE["⚠️ Frontend Pendiente"]
+    EpicAuth --> US010
+    US010 --> TK049
+    US010 -.-> TK049FE
+
+    US011["📝 US-011: Trazabilidad de Movimientos"]
+    TK050["🎫 TK-050: Trazabilidad Movimientos (Backend)"]
+    TK050FE["⚠️ Frontend Pendiente"]
+    EpicStock --> US011
+    US011 --> TK050
+    US011 -.-> TK050FE
+
+    TK051["🎫 TK-051: Bootstrap Primer Admin (Backend)"]
+    EpicShared --> TK051
+
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
     classDef roadmap fill:#FFC300,stroke:#FF5733,stroke-width:2px,color:#000;
     classDef epic fill:#F9E79F,stroke:#F39C12,stroke-width:2px,color:#000;
     classDef us fill:#EBF5FB,stroke:#3498DB,stroke-width:1.5px,color:#1B4F72;
     classDef tk fill:#F2F3F4,stroke:#7F8C8D,stroke-width:1.5px,color:#2C3E50;
+    classDef pending fill:#FDEDEC,stroke:#E74C3C,stroke-width:1.5px,color:#943126,stroke-dasharray: 4 2;
 
     class Roadmap roadmap;
-    class EpicAuth,EpicStock,EpicKitchen,EpicReports epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F tk;
+    class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicShared epic;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK050,TK051 tk;
+    class TK049FE,TK050FE pending;
 ```
 
 ---
@@ -125,3 +148,7 @@ graph TD
 | | [US-007: Consumo por Recetas](11_user_stories/kitchen/US-007.md) | [TK-008: Recetas y Cascada FEFO](12_tickets/kitchen/backend/TK-008.md) | [TK-007-C: Consumo Recetas](12_tickets/kitchen/frontend/TK-007-C.md) | ✅ Done |
 | | [US-008: Cierre y Conciliación](11_user_stories/kitchen/US-008.md) | [TK-009: Cierre y Conciliación](12_tickets/kitchen/backend/TK-009.md) | [TK-007-D: Conciliación Turno](12_tickets/kitchen/frontend/TK-007-D.md) | ✅ Done |
 | **📊 Reportes (`reports`)** | [US-009: Dashboard de Mermas](11_user_stories/reports/US-009.md) | [TK-010: Módulo de Reportes](12_tickets/reports/backend/TK-010.md) | [TK-007-E: Dashboard Reportes](12_tickets/reports/frontend/TK-007-E.md) | ✅ Done |
+| **🛠️ Shared Kernel** | *N/A (Cierre de Deuda)* | [TK-048: Cierre Persistencia Parcial](12_tickets/shared/backend/TK-048.md) | N/A | ✅ Done |
+| **🔐 Autenticación (`auth`)** | [US-010: Gestión de Personal](11_user_stories/auth/US-010.md) | [TK-049: Gestión Mínima de Personal](12_tickets/auth/backend/TK-049.md) | ⚠️ Pendiente | ⚠️ Backend Done / FE Pendiente |
+| **📦 Bodega (`stock`)** | [US-011: Trazabilidad de Movimientos](11_user_stories/stock/US-011.md) | [TK-050: Trazabilidad de Movimientos](12_tickets/stock/backend/TK-050.md) | ⚠️ Pendiente | ⚠️ Backend Done / FE Pendiente |
+| **🛠️ Shared Kernel** | *N/A (Habilitador de Despliegue)* | [TK-051: Bootstrap Primer Administrador](12_tickets/shared/backend/TK-051.md) | N/A | ✅ Done |

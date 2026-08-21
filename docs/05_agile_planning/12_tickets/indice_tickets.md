@@ -29,6 +29,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-008** | `kitchen` | **Alto** | **Alta** | 5 SP | Depende de `TK-004`. Algoritmo complejo de Recetas FEFO. | 🟡 P1 - Alta |
 | **TK-009** | `kitchen` | **Alto** | **Media** | 5 SP | Depende de `TK-004`, `TK-005`. Conciliación de cierre de turno. | 🟡 P1 - Alta |
 | **TK-010** | `reports` | **Medio** | **Media** | 3 SP | Depende de `TK-006`. Visualización de mermas y analítica. | 🟢 P2 - Media |
+| **TK-048** | `shared` | **Alto** | **Alta** | 5 SP | Depende de `TK-008`, `TK-009`, `TK-010`. Cierre de persistencia parcial en producción. | 🟡 P1 - Alta |
+| **TK-049** | `auth` | **Alto** | **Alta** | 3 SP | Depende de `TK-002`. Gestión mínima de personal (alta/bloqueo). | 🟡 P1 - Alta |
+| **TK-050** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-003`, `TK-005`, `TK-006`. Trazabilidad de movimientos. | 🟢 P2 - Media |
+| **TK-051** | `shared` | **Muy Alto** | **Muy Alta** | 5 SP | Depende de `TK-049`. Bootstrap del primer administrador en despliegue nuevo. | 🔴 P0 - Bloqueante |
 
 ---
 
@@ -47,6 +51,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-008** | [US-007](../11_user_stories/kitchen/US-007.md) | Implementación de Recetas y Descuento FEFO en Cascadas | `catalog`/`kitchen` | 5 | Should Have | [kitchen/backend/TK-008.md](kitchen/backend/TK-008.md) |
 | **TK-009** | [US-008](../11_user_stories/kitchen/US-008.md) | Implementación de Cierre de Turno y Conciliación en Cocina | `kitchen` | 5 | Should Have | [kitchen/backend/TK-009.md](kitchen/backend/TK-009.md) |
 | **TK-010** | [US-009](../11_user_stories/reports/US-009.md) | Implementación del Módulo de Reportes y Analítica de Mermas | `reports` | 3 | Should Have | [reports/backend/TK-010.md](reports/backend/TK-010.md) |
+| **TK-048** | N/A (Técnico) | Cierre de Persistencia Parcial en Producción | `shared` | 5 | Must Have | [shared/backend/TK-048.md](shared/backend/TK-048.md) |
+| **TK-049** | [US-010](../11_user_stories/auth/US-010.md) | Gestión Mínima de Personal (Alta y Bloqueo de Operarios) | `auth` | 3 | Must Have | [auth/backend/TK-049.md](auth/backend/TK-049.md) |
+| **TK-050** | [US-011](../11_user_stories/stock/US-011.md) | Trazabilidad de Movimientos de Stock | `stock` | 3 | Should Have | [stock/backend/TK-050.md](stock/backend/TK-050.md) |
+| **TK-051** | N/A (Técnico) | Bootstrap del Primer Administrador | `shared` | 5 | Must Have | [shared/backend/TK-051.md](shared/backend/TK-051.md) |
 
 ### 🖥️ Tickets de Frontend
 
@@ -89,3 +97,15 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 ### 📊 Reportes (`reports/`)
 *   **[TK-010: Módulo de Reportes](reports/backend/TK-010.md)** (Backend)
 *   **[TK-007-E: Dashboard de Mermas](reports/frontend/TK-007-E.md)** (Frontend)
+
+### 🛠️ Shared / Transversal (Post-MVP, Cierre de Deuda)
+*   **[TK-048: Cierre de Persistencia Parcial en Producción](shared/backend/TK-048.md)** (Backend)
+*   **[TK-051: Bootstrap del Primer Administrador](shared/backend/TK-051.md)** (Backend)
+
+### 🔐 Autenticación (`auth/`) — Post-MVP
+*   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend) — ⚠️ Sin ticket de Frontend, ver nota abajo.
+
+### 📦 Bodega y Stock (`stock/`) — Post-MVP
+*   **[TK-050: Trazabilidad de Movimientos de Stock](stock/backend/TK-050.md)** (Backend) — ⚠️ Sin ticket de Frontend, ver nota abajo.
+
+> **⚠️ Deuda de Frontend Registrada:** `TK-049` (gestión de personal) y `TK-050` (trazabilidad de movimientos) se implementaron únicamente en Backend. No existen tickets de Frontend `TK-049-FE`/`TK-050-FE` — la interfaz de administración correspondiente queda pendiente de priorización. Ver [Matriz de Trazabilidad](../13_matriz_trazabilidad.md).
