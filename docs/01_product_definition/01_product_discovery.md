@@ -1,4 +1,11 @@
-> **Navegación:** `[ 01_product_discovery.md ]` ➔ [02_glosario_y_reglas_negocio.md](./02_glosario_y_reglas_negocio.md) | [03_restostock_prd.md](./03_restostock_prd.md)
+---
+document: product_discovery
+version: 1.0.0
+status: approved
+inputs: []
+---
+
+> **Navegación:** `[ 01_product_discovery.md ]` ➔ [01_glosario_y_reglas_negocio.md](./01_glosario_y_reglas_negocio.md) | [02_prd.md](./02_prd.md)
 
 ---
 

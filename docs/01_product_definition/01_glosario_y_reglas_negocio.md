@@ -1,3 +1,11 @@
+---
+document: glossary_and_business_rules
+version: 1.0.0
+status: approved
+inputs:
+  - docs/01_product_definition/01_product_discovery.md
+---
+
 # 📖 Glosario de Dominio e Invariantes de Negocio — RestoStock
 
 Este documento centraliza los conceptos clave del dominio gastronómico de **RestoStock**, sus acrónimos y las reglas de negocio e invariantes innegociables que deben ser respetadas por la arquitectura, la base de datos y la implementación de código.

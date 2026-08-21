@@ -29,8 +29,8 @@ La documentación está organizada cronológicamente en 5 fases coincidentes con
 * [10_cicd_pipeline.md](04_governance_and_quality/10_cicd_pipeline.md): Pipeline de CI/CD DevSecOps en GitHub Actions (`.github/workflows/ci.yml`).
 
 ### 05. Gestión Ágil y Planificación (`docs/05_agile_planning/`)
-* [11_user_stories.md](05_agile_planning/11_user_stories.md): Historias de usuario BDD redactadas bajo el formato Dado-Cuando-Entonces.
-* [12_backlog_tickets.md](05_agile_planning/12_backlog_tickets.md): Backlog de tickets técnicos de implementación atómica (`TK-XXX`).
-* [13_pull_requests.md](05_agile_planning/13_pull_requests.md): Registro y especificación de Pull Requests de integración.
-* [user_stories/](05_agile_planning/user_stories/indice_user_stories.md): Historias de usuario INVEST con criterios BDD Gherkin.
-* [tickets/](05_agile_planning/tickets/indice_tickets.md): Tickets técnicos atómicos con DoD y estimaciones.
+* [11_user_stories/indice_user_stories.md](05_agile_planning/11_user_stories/indice_user_stories.md): Historias de usuario INVEST con criterios BDD Gherkin.
+* [12_tickets/indice_tickets.md](05_agile_planning/12_tickets/indice_tickets.md): Tickets técnicos atómicos con DoD y estimaciones (`TK-XXX`).
+* [13_matriz_trazabilidad.md](05_agile_planning/13_matriz_trazabilidad.md): Matriz de trazabilidad Requerimiento → US → TK (Backend/Frontend).
+* [14_backlog_map.md](05_agile_planning/14_backlog_map.md): Mapa jerárquico del backlog (Epic → US → TK) con diagrama Mermaid.
+* [15_history.md](05_agile_planning/15_history.md): Bitácora cronológica de entregas e historial de progreso del proyecto.
