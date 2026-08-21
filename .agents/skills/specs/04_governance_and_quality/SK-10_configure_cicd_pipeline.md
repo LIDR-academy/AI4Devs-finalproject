@@ -1,7 +1,7 @@
 ---
 name: cicd-pipeline
 description: "Genera la automatización del pipeline de CI/CD usando la plataforma, runtime e IaC Engine declarados en docs/00_stack_manifest.md (OIDC sin llaves estáticas obligatorio) para linters, auditoría SAST, TDD, validación de contrato y aprovisionamiento declarativo de infraestructura."
-version: "3.4.1"
+version: "3.6.0"
 category: "04_governance_and_quality"
 inputs:
   - "docs/04_governance_and_quality/08_security_strategy.md"
@@ -11,7 +11,7 @@ outputs:
   - "docs/04_governance_and_quality/10_cicd_pipeline.md"
 ---
 
-# ⚙️ SK-10: Pipeline de CI/CD, DevSecOps y OpenTofu IaC (v3.4.0)
+# ⚙️ SK-10: Pipeline de CI/CD, DevSecOps y OpenTofu IaC (v3.6.0)
 
 Actúa como un **Principal DevOps Engineer** y **DevSecOps Architect** experto en pipelines de Integración Continua declarativos multi-plataforma (GitHub Actions, GitLab CI, CircleCI...), runtimes modernos, IaC declarativo (OpenTofu, Pulumi, CDK...) y Docker, aplicando siempre la plataforma, runtime e IaC Engine exactos que `docs/00_stack_manifest.md` declare para este proyecto, bajo los **Guards 22 y 23** de `AGENTS.md`.
 
@@ -33,6 +33,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 4. **No usar Node.js < 24 LTS:** Prohibido configurar `node-version` con versiones anteriores a `lts/*` equivalente a Node 24 (Guard 23).
 5. **No almacenar credenciales cloud estáticas:** Prohibido usar `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` en secrets de GitHub Actions; mandatorio el uso de **OIDC con tokens efímeros** (Guard 23).
 6. **No aprovisionar infraestructura con scripts manuales:** Prohibido crear recursos cloud con `aws cli`, `gcloud` o scripts shell sin estado; mandatorio el uso de **módulos declarativos OpenTofu** en `infrastructure/opentofu/` (Guard 22).
+7. **No cerrar el Skill con Dockerfiles/IaC sin hardening (Guard 25, TK-042):** Antes de reportar Job 4 como completo, ejecuta `bash docs/04_governance_and_quality/scripts/check_container_security.sh` sobre cualquier `Dockerfile`/`docker-compose.yml`/módulo `.tf` que este Skill haya creado o modificado — runtime pineado a la versión declarada en `docs/00_stack_manifest.md` §1, usuario no-root, y cero secretos hardcodeados. Si falla, corrige antes de presentar el resultado como terminado.
 
 ---
 
@@ -43,6 +44,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 - Verificar integridad del arnés `.agents` con `bash .agents/scripts/validate_agents.sh`.
 - Verificar drift de contrato con `bash docs/04_governance_and_quality/scripts/check_contract_drift.sh`.
 - Validar especificación DESIGN.md con `npx -y @google/design.md lint DESIGN.md` (si existe).
+- **Cobertura DevSecOps (Guard 25, informativo):** `bash docs/04_governance_and_quality/scripts/check_devsecops_manifest_coverage.sh` — verifica que toda herramienta declarada en `docs/00_stack_manifest.md` §6 esté efectivamente wireada como step en este mismo pipeline. Este propio Skill DEBE releer su salida antes de darse por terminado: una brecha reportada aquí significa que el Job 2 de abajo quedó incompleto.
 
 ### 📍 Job 1: Lint & Static Analysis (2 min)
 - Setup de **Node 24 LTS** (`node-version: 'lts/*'`) con cache de **pnpm 9** (`cache: 'pnpm'`).
@@ -63,6 +65,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 - Compilación del bundle de producción `pnpm run build`.
 - Autenticación en proveedor cloud mediante **OpenID Connect (OIDC)** — sin `AWS_SECRET_ACCESS_KEY` ni llaves estáticas.
 - Validación de módulos IaC: `tofu validate && tofu plan` en `infrastructure/opentofu/` (modo dry-run en PRs, `tofu apply` solo en `main`).
+- **Migraciones automáticas en el arranque del contenedor (TK-043):** la imagen de producción del backend NUNCA debe arrancar el servidor directamente como `CMD`; debe usar un script `docker-entrypoint.sh` que primero aplique las migraciones pendientes del ORM declarado (ej. `prisma migrate deploy --schema=...`) y solo luego haga `exec` del proceso servidor — así el propio arranque falla rápido (Fail-Fast) si las migraciones no aplican, en vez de servir tráfico contra un esquema desactualizado.
 
 ---
 

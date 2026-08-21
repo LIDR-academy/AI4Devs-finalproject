@@ -1,0 +1,21 @@
+# TK-044: falsos positivos verificados manualmente — ninguno es un secreto real.
+# Formato: <fingerprint de gitleaks>. Regenerar con `gitleaks git -f json -r report.json .`
+# si aparece un nuevo hallazgo; nunca añadir un fingerprint sin verificar el secreto real.
+
+# Fixture de test (JWT_SECRET literal "test-jwt-secret-key-12345"), usado en ci.yml y en un
+# unit test — nunca alcanza produccion, es la env var de la suite de tests contra Postgres efimero.
+23a5954ff6aadd18153ca7d0c53873f285cb9638:.github/workflows/ci.yml:generic-api-key:130
+23a5954ff6aadd18153ca7d0c53873f285cb9638:.github/workflows/ci.yml:generic-api-key:137
+634e049c838ad91d5c4e63500392a598d4c6a406:apps/backend/tests/auth/AuthenticateWithPin.test.ts:generic-api-key:10
+374ee7c2a52e65fef5240252d0052e6700417277:.github/workflows/ci.yml:generic-api-key:69
+
+# Ejemplos de tokens JWT en documentacion (readme.md, docs/*.md) — valores decorativos de
+# muestra para ilustrar el formato de un JWT, no credenciales reales emitidas por el sistema.
+201ab862aa68b70e878ed072d4c8fdd1d1483a3d:readme.md:generic-api-key:287
+201ab862aa68b70e878ed072d4c8fdd1d1483a3d:docs/10_restostock_api_specification.md:generic-api-key:40
+201ab862aa68b70e878ed072d4c8fdd1d1483a3d:docs/03_restostock_design.md:generic-api-key:276
+64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:prompts.md:curl-auth-header:1088
+64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:readme.md:curl-auth-header:4028
+64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:readme.md:curl-auth-header:4288
+64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:readme.md:curl-auth-header:4528
+64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:readme.md:generic-api-key:4592

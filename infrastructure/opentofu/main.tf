@@ -14,9 +14,77 @@ terraform {
 
 provider "docker" {}
 
+variable "jwt_secret" {
+  description = "JWT signing secret — inyectado vía TF_VAR_jwt_secret desde el runner de CI (OIDC), nunca hardcodeado (Guard 23/25)."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_user" {
+  description = "Usuario de PostgreSQL — inyectado vía TF_VAR_postgres_user, nunca hardcodeado (Guard 23/25)."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_password" {
+  description = "Password de PostgreSQL — inyectado vía TF_VAR_postgres_password, nunca hardcodeado (Guard 23/25)."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_db" {
+  description = "Nombre de la base de datos RestoStock."
+  type        = string
+  default     = "restostock"
+}
+
+variable "cors_allowed_origins" {
+  description = "Orígenes CORS permitidos en producción — Guard 14 aborta el arranque del backend (Fail-Fast) si está vacío o es '*'."
+  type        = string
+}
+
 # Red aislada para arquitectura de microservicios / monolito modular
 resource "docker_network" "restostock_net" {
   name = "restostock_internal_network"
+}
+
+resource "docker_volume" "postgres_data" {
+  name = "restostock_postgres_data"
+}
+
+# ---- PostgreSQL (TK-045: faltaba por completo en este modulo — el backend no tenia base
+# de datos a la que conectarse fuera de docker-compose.yml) ----
+resource "docker_image" "postgres_img" {
+  name = "postgres:15-alpine"
+}
+
+resource "docker_container" "postgres" {
+  name    = "restostock-postgres-service"
+  image   = docker_image.postgres_img.image_id
+  restart = "unless-stopped"
+
+  networks_advanced {
+    name    = docker_network.restostock_net.name
+    aliases = ["postgres"]
+  }
+
+  env = [
+    "POSTGRES_USER=${var.postgres_user}",
+    "POSTGRES_PASSWORD=${var.postgres_password}",
+    "POSTGRES_DB=${var.postgres_db}",
+  ]
+
+  volumes {
+    volume_name    = docker_volume.postgres_data.name
+    container_path = "/var/lib/postgresql/data"
+  }
+
+  healthcheck {
+    test     = ["CMD-SHELL", "pg_isready -U ${var.postgres_user}"]
+    interval = "10s"
+    timeout  = "5s"
+    retries  = 5
+  }
 }
 
 # Imagen Backend Node.js / Express
@@ -39,36 +107,56 @@ resource "docker_image" "restostock_frontend_img" {
 
 # Contenedor Backend
 resource "docker_container" "backend" {
-  name  = "restostock-backend-service"
-  image = docker_image.restostock_backend_img.image_id
+  name    = "restostock-backend-service"
+  image   = docker_image.restostock_backend_img.image_id
+  restart = "unless-stopped"
 
   networks_advanced {
     name = docker_network.restostock_net.name
   }
 
+  # DATABASE_URL/CORS_ALLOWED_ORIGINS faltaban (TK-045): sin DATABASE_URL Zod lanza al
+  # arrancar (obligatorio, sin default); sin CORS_ALLOWED_ORIGINS, Guard 14 aborta el
+  # arranque en produccion (Fail-Fast, prohibido el comodin "*"). El contenedor nunca
+  # habria llegado a servir trafico con el `env` anterior.
   env = [
     "NODE_ENV=production",
     "PORT=3000",
-    "JWT_SECRET=restostock-prod-jwt-secret-key-2026-sota-32chars"
+    "JWT_SECRET=${var.jwt_secret}",
+    "DATABASE_URL=postgresql://${var.postgres_user}:${var.postgres_password}@postgres:5432/${var.postgres_db}?schema=public",
+    "CORS_ALLOWED_ORIGINS=${var.cors_allowed_origins}",
   ]
 
   ports {
     internal = 3000
     external = 3000
   }
+
+  # El provider docker no espera a que el healthcheck de postgres este "healthy" antes de
+  # crear este contenedor (sin equivalente nativo a `depends_on: condition: service_healthy`
+  # de docker-compose) — solo garantiza orden de creacion. El Fail-Fast del propio
+  # docker-entrypoint.sh (`prisma migrate deploy`) + `restart = "unless-stopped"` son el
+  # mecanismo real de resiliencia ante ese arranque en carrera.
+  depends_on = [docker_container.postgres]
 }
 
 # Contenedor Frontend Nginx Proxy
 resource "docker_container" "frontend" {
-  name  = "restostock-frontend-service"
-  image = docker_image.restostock_frontend_img.image_id
+  name    = "restostock-frontend-service"
+  image   = docker_image.restostock_frontend_img.image_id
+  restart = "unless-stopped"
 
   networks_advanced {
     name = docker_network.restostock_net.name
   }
 
+  # internal = 8080, NO 80 (TK-045): el Dockerfile del frontend corre nginx como usuario
+  # no-root, que no puede bindear el puerto privilegiado 80 — escucha en 8080. Con
+  # internal = 80 este contenedor era inalcanzable, nada escuchaba ahi dentro.
   ports {
-    internal = 80
+    internal = 8080
     external = 80
   }
+
+  depends_on = [docker_container.backend]
 }

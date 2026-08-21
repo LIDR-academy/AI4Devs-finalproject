@@ -1,7 +1,7 @@
 ---
 name: SK-23_audit_dependency_security
 description: "Guía de seguridad para prevenir alucinaciones de paquetes (Slopsquatting), auditar dependencias vulnerables y bloquear instalaciones de terceros no autorizadas."
-version: "1.0.0"
+version: "1.1.0"
 category: "development/05_quality_and_lint"
 inputs:
   - package_name: "Nombre del paquete o librería a validar"
@@ -28,6 +28,7 @@ Sigue estrictamente esta directiva de seguridad innegociable:
 2. **Criterios de Rechazo:**
    - Rechazar cualquier paquete con vulnerabilidades clasificadas como `High` o `Critical`.
    - Rechazar paquetes sin firmas digitales o con bajas métricas de mantenimiento en el registro oficial.
+3. **Riesgo Residual Documentado (TK-043, Guard 25) — cuando NO existe fix dentro del major aprobado:** si la vulnerabilidad `High`/`Critical` solo tiene parche en una versión MAJOR distinta a la aprobada en `docs/00_stack_manifest.md` (bump que requiere aprobación humana bajo Guard 24, no una decisión unilateral del agente), no la ignores en silencio ni la dejes bloqueando el pipeline indefinidamente vía `continue-on-error`: documéntala explícitamente en `docs/04_governance_and_quality/scripts/check_dependency_audit.sh` (generado por `SK-27`) con su GHSA/CVE, el vector real de explotación, y por qué es inalcanzable en el despliegue de producción del proyecto (ej. una vulnerabilidad exclusiva del dev-server de una herramienta de build nunca ejecutado en el `Dockerfile`). Esto mantiene el gate bloqueante ante vulnerabilidades NUEVAS sin caer en ceguera de alertas por deuda ya evaluada.
 
 ---
 

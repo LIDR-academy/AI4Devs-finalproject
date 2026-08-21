@@ -7,11 +7,17 @@
     "lint": "pnpm -r run lint",
     "test": "pnpm -r run test",
     "duplication": "jscpd apps/backend/src apps/frontend/src -c .jscpd.json",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "husky": "^9.1.7",
     "jscpd": "^5.0.16",
     "typescript": "^5.3.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "nanoid": "3.3.18",
+      "tmp": "0.2.7"
+    }
   }
 }

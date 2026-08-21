@@ -2,7 +2,11 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // linux-musl-openssl-3.0.x: node:24-alpine (Alpine 3.24) solo trae libssl.so.3 — el
+  // motor musl por defecto de Prisma 5.x enlaza contra OpenSSL 1.1, ausente en esta base
+  // (bug detectado al arrancar el contenedor por primera vez, TK-042/Guard 23).
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {

@@ -13,6 +13,9 @@ Execute commands autonomously from workspace root using exact flags:
 - **Validate OpenAPI Spec:** `npx -y @stoplight/spectral-cli lint docs/03_persistence_and_api/openapi.yaml`
 - **Validate DESIGN.md Spec:** `npx -y @google/design.md lint DESIGN.md`
 - **Validate Agents Framework Integrity:** `bash .agents/scripts/validate_agents.sh`
+- **Validate Container/IaC Security (Ticket-Scoped):** `bash docs/04_governance_and_quality/scripts/check_container_security.sh`
+- **Check DevSecOps Manifest Coverage (informational):** `bash docs/04_governance_and_quality/scripts/check_devsecops_manifest_coverage.sh`
+- **Audit Dependencies (Blocking, Documented Residual Risk):** `bash docs/04_governance_and_quality/scripts/check_dependency_audit.sh`
 
 
 ---
@@ -112,6 +115,7 @@ To mark a ticket as **Done**:
 22. **Declarative IaC & OpenTofu Standard Guard:** Prohibit manual cloud resource provisioning or unversioned shell scripts. Mandate declarative OpenTofu (MPL-2.0) HCL modules (`infrastructure/opentofu/`) and Docker Compose containerization for 100% reproducible, zero-drift deployments across all environments.
 23. **Agentic CI/CD Pipeline & Node 24 LTS Guard:** Mandate Node 24 LTS (`node-version: 'lts/*'`), GitHub Actions `@v5`, `pnpm 9`, OpenID Connect (OIDC) cloud authentication without static secret keys, and mandatory automated execution of `.agents` governance checks (`validate_agents.sh`) on all pull requests.
 24. **Anti-Stack-Hardcoding & Human-Approved SSoT Guard:** Prohibit any `.agents` Skill from assuming, recommending, or generating code using tools, versions, commands, or frameworks NOT declared and approved in `docs/00_stack_manifest.md`. Before executing any skill that generates code or infrastructure, the agent MUST read `docs/00_stack_manifest.md` as Phase 0. If a required technology is absent from the manifest → STOP execution and request explicit human approval before proceeding. This guarantees that every architectural decision is traceable to a human-reviewed document, not an AI assumption.
+25. **Manifest-to-Pipeline Enforcement & Container Hardening Guard (TK-042/TK-043):** Every DevSecOps tool declared in `docs/00_stack_manifest.md` §6 (e.g. `gitleaks`, `trivy`) MUST appear as an executable step in the real CI/CD pipeline — declaring a tool without wiring it is a Guard violation, not a documentation nuance. Additionally, every `Dockerfile`/`docker-compose.yml`/IaC module touched by the current ticket MUST: pin the exact runtime version declared in §1 (no floating/older base images), run as a non-root `USER`, contain zero hardcoded secrets (`*SECRET*`/`*PASSWORD*`/`*TOKEN*`/`*KEY*` literals — only environment/secret-manager references are allowed), and apply pending database migrations from a dedicated `docker-entrypoint.sh` BEFORE starting the server process (never rely on manual `db push`/sync). Every `High`/`Critical` dependency vulnerability MUST either be fixed or documented as an explicit, justified residual risk (GHSA/CVE id, exploitability, why unreachable in production) — silent `continue-on-error` gates and un-justified major-version bumps of approved stack tooling are both violations. Enforced by `docs/04_governance_and_quality/scripts/check_container_security.sh` (blocking, ticket-diff-scoped), `check_devsecops_manifest_coverage.sh` (informational, repo-wide), and `check_dependency_audit.sh` (blocking except for documented residual risk).
 
 
 

@@ -68,3 +68,18 @@ temp/
 .temp/
 .tmp/
 __pycache__/
+
+# OpenTofu / Terraform State (puede contener secretos resueltos en texto plano — Guard 22/23)
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
