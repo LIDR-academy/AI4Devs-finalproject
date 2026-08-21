@@ -158,7 +158,7 @@ Feature: Roles & permissions management UI
 > > carries exactly one carve-out, and no others.** Open item 1's resolution requires this story to add
 > > two `Gate::allows()` calls to `roles()`. That is deliberate and is the *only* permitted exception:
 > > a per-row **UI hint** that disables a control, blessed for copying by
-> > [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer)
+> > [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer)
 > > ("worth copying on the next module screen") and anticipated by name in `RolePolicy::delete()`'s own
 > > docblock. It is `Gate::allows()`, never `Gate::authorize()`; it decides nothing, it gates no write,
 > > and it must reuse the same policy abilities `openEditModal()` / `saveRole()` /
@@ -166,7 +166,7 @@ Feature: Roles & permissions management UI
 > > permission check added to this component in this story is a split violation.
 >
 > **File creation is 0010's, not this story's — one-directional, not "whichever lands first."**
-> [Story 0010](done/0010-role-permission-management-backend.md) **creates** both `routes/roles.php` and
+> [Story 0010](../done/0010-role-permission-management-backend.md) **creates** both `routes/roles.php` and
 > `app/Livewire/Roles/Index.php`; this story may only **modify** them, and in practice needs to modify
 > only `Index.php` — a small, precedented `canEdit`/`canDelete` addition (open item 1 below), not
 > `routes/roles.php` at all — see the corrected bullets below. That follows from this story's own
@@ -175,7 +175,7 @@ Feature: Roles & permissions management UI
 > exist by the time this story runs. An earlier draft of 0010 hedged with "whichever lands first
 > creates it" while this file declared both flatly **new**; that asymmetry is resolved here and in
 > 0010's own file-ownership note, which reads identically. Per
-> [`docs/contracts.md`](../../docs/contracts.md)'s Parallel Agent File-Ownership Rule, 0010 and 0011
+> [`docs/contracts.md`](../../../docs/contracts.md)'s Parallel Agent File-Ownership Rule, 0010 and 0011
 > must not be dispatched to concurrent agents.
 
 - `routes/roles.php` — **created by 0010; not created here.** It already registers
@@ -203,7 +203,7 @@ Feature: Roles & permissions management UI
   0010/0011 split violation.
 
   > **Corrected 2026-08-21 (Phase 2 review, verified against the shipped
-  > [`app/Livewire/Roles/Index.php`](../../app/Livewire/Roles/Index.php) rather than against this
+  > [`app/Livewire/Roles/Index.php`](../../../app/Livewire/Roles/Index.php) rather than against this
   > story's Phase 1 assumption) — the UI-state surface this bullet reserved for 0011 already shipped
   > with 0010, under different names.** The real public surface is:
   >
@@ -226,12 +226,12 @@ Feature: Roles & permissions management UI
   > component needs no other new property to render the screen**, so the rest of the diff to this file
   > stays empty. Bind to the names above; do not rename them, do not unlock a `#[Locked]` one, and do
   > not add a duplicate under this story's originally guessed name. The same surface is documented in
-  > [`docs/api/routes.md`](../../docs/api/routes.md#rolesindex--the-second-permission-gated-route).
+  > [`docs/api/routes.md`](../../../docs/api/routes.md#rolesindex--the-second-permission-gated-route).
 - `resources/views/livewire/roles.blade.php` — **the core deliverable.** **Corrected 2026-08-20
   (found running 0010's own test suite, which needs this same view to render) — not a kebab-case
   mirror path, and not nested under `roles/`.** `App\Livewire\Roles\Index` is an `Index` class inside
   a subfolder, exactly the case
-  [`docs/conventions/naming.md`](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+  [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
   documents as an exception to the normal mirror rule: Livewire's `Finder` strips a trailing `.index`
   segment, so the component resolves to the **flat** file here — the direct analogue of
   `App\Livewire\Users\Index` → `livewire/users.blade.php`, already shipped. Verified by execution
@@ -250,7 +250,7 @@ Feature: Roles & permissions management UI
   0010's refusals. This story owns the screen's markup and therefore its copy: every user-facing string
   the view renders (page/section headings, the create button, the empty state, modal titles and
   buttons, the per-module headings and the permission labels) is a key added to **both** files,
-  key-for-key identical, per [`docs/conventions/naming.md`](../../docs/conventions/naming.md#translation-keys).
+  key-for-key identical, per [`docs/conventions/naming.md`](../../../docs/conventions/naming.md#translation-keys).
   0010's file bullet is explicit that this story **may add keys to these files but must not move its
   two**. **Resolved 2026-08-21 (open item 3, human-confirmed):** the module/permission labels are a
   `modules` array (10 keys: the nine `RolePermissionSeeder::MODULES` entries plus `roles`) and an
@@ -284,7 +284,7 @@ Presentational rules the view must honor:
 
 - **The permission catalog is rendered in full and is never filtered to what the acting user may
   grant.** ⚠️ This is a hard constraint, not a preference, and it is new since this story was drafted.
-  0010's Phase 4 audit added [`App\Actions\Roles\EnforceGrantorPermissionScope`](../../app/Actions/Roles/EnforceGrantorPermissionScope.php),
+  0010's Phase 4 audit added [`App\Actions\Roles\EnforceGrantorPermissionScope`](../../../app/Actions/Roles/EnforceGrantorPermissionScope.php),
   which refuses a payload that *newly grants* a permission the actor does not hold — and it treats an
   **omission** as a deliberate revoke, while its sibling `EnforceAdministratorPermissionGrant` treats
   an omission as something to *preserve*. That divergence is safe only because every permission a role
@@ -293,7 +293,7 @@ Presentational rules the view must honor:
   a **silent revoke**: a narrow `roles.manage` holder editing a role that legitimately holds
   `products.delete` would submit a payload omitting it, and `syncPermissions()` would strip it with no
   error anywhere. See
-  [`docs/security/authorization-patterns.md`](../../docs/security/authorization-patterns.md#two-guards-on-one-payload-must-agree-on-what-an-omission-means),
+  [`docs/security/authorization-patterns.md`](../../../docs/security/authorization-patterns.md#two-guards-on-one-payload-must-agree-on-what-an-omission-means),
   whose ⚠️ names the two places the bug would be introduced — `permissionOptions()` **or the paired
   Blade view**, i.e. this story's own deliverable. *(Corrected 2026-08-21, Phase 2 re-review: this
   bullet previously claimed that page "names this story by number"; verified it does not — the string
@@ -358,12 +358,12 @@ Presentational rules the view must honor:
   So: `data-test="edit-role-{id}"` / `data-test="delete-role-{id}"`, present identically on the
   enabled and the disabled branch (a test must select the same row action regardless of its state),
   with `wire:click` arguments passed through `@js(...)` — mandatory, not stylistic, per
-  [`docs/security/blade-livewire-output-encoding.md`](../../docs/security/blade-livewire-output-encoding.md).
+  [`docs/security/blade-livewire-output-encoding.md`](../../../docs/security/blade-livewire-output-encoding.md).
   The two Flux/Blaze traps the Users screen's disabled branch hit are pre-solved and must not be
   re-derived: write the disabled branch as its own `@if`/`@else` with an explicit `<flux:tooltip>`
   wrapper rather than a conditionally-bound `:tooltip="…"` prop, and put any `cursor-not-allowed!`
   class on that wrapper rather than on the `pointer-events-none` button — both recorded in
-  [`docs/errors-log.md`](../../docs/errors-log.md) (2026-08-16).
+  [`docs/errors-log.md`](../../../docs/errors-log.md) (2026-08-16).
 
 - **The Super Admin row is never special-cased in the view.** The view renders whatever collection
   the backend hands it; there is no `@if ($role->name !== 'Super Admin')` guard, because that would
@@ -437,8 +437,8 @@ predates:**
   > **Corrected 2026-08-21 (Phase 2 re-review) — this bullet previously read "enabled for a
   > `roles.manage-administrators` holder / Super Admin", which is false for `canDelete` and would
   > have produced a test that cannot pass against the shipped policy.** Verified by reading
-  > [`app/Policies/RolePolicy.php`](../../app/Policies/RolePolicy.php) and
-  > [`app/Providers/AppServiceProvider.php`](../../app/Providers/AppServiceProvider.php) together:
+  > [`app/Policies/RolePolicy.php`](../../../app/Policies/RolePolicy.php) and
+  > [`app/Providers/AppServiceProvider.php`](../../../app/Providers/AppServiceProvider.php) together:
   > `delete()` refuses `Role::isAdministratorRole($role)` **categorically**, with no permission
   > escape hatch, and the `Gate::before` closure defers only when the ability's *target* is the
   > **Super Admin** role — so it bypasses to `true` for a Super Admin actor targeting the
@@ -504,7 +504,7 @@ DOM only for the Super Admin.
       2026-08-21 per Open item 1's resolution above.)*
 - [ ] Component is class-based with a `#[Title(...)]` attribute — **already true; verify, do not
       build** — and the view lives at the flat `resources/views/livewire/roles.blade.php`, per the
-      [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+      [`Index`-in-a-subfolder exception](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
       to the kebab-case mirror rule. *(Corrected 2026-08-21: this bullet previously said "a kebab-case
       mirrored view", contradicting the corrected view-path bullet in Files to create/modify.)*
 
@@ -527,7 +527,7 @@ The three questions Phase 2 flagged as product/scope decisions, closed before Ph
 resolution is also reflected inline at its own section above/below; this section is the single place
 recording *that* a decision was made and *why*, per the same convention 0010 used for its own
 human-confirmed calls (e.g. the Administrator-role deletion/self-escalation decisions in
-[0010's implementation record](done/0010-role-permission-management-backend.md), its "Phase 3/4/5/6
+[0010's implementation record](../done/0010-role-permission-management-backend.md), its "Phase 3/4/5/6
 implementation record" section).
 
 **1. The Administrator role renders with a per-row `Gate::allows()` UI hint — option (b).** Matches

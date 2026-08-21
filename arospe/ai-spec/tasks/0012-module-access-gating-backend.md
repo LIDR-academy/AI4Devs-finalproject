@@ -348,7 +348,7 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
    `Route::livewire('roles', Index::class)->name('roles.index')` in a **new `routes/roles.php`**
    mirroring `routes/settings.php`, `require`d from `routes/web.php` beside the existing
    `require __DIR__.'/settings.php';`, and created by whichever of 0010 / 0011 lands first.
-   [Story 0011](0011-role-permission-management-ui.md) already assumes exactly that. This story does
+   [Story 0011](in-progress/0011-role-permission-management-ui.md) already assumes exactly that. This story does
    not choose the location and does not create the file — as stated in *Files to create/modify*, it
    only chains middleware onto a route someone else registers, so the pattern documented above
    applies to `routes/roles.php` for `roles.index` and to `routes/web.php` for `users.index`.
