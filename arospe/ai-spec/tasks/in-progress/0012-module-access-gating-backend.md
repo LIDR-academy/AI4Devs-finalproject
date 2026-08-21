@@ -479,3 +479,32 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
    - `permission:users.view|users.create|...` for this one route. The exact thing
      `docs/api/routes.md` forbids on a `Route::livewire(...)` route — `App\Livewire\Users\Index`'s
      mutating methods would lose their route-layer protection on every `/livewire/update` round-trip.
+
+## Phase 3 implementation record
+
+**2026-08-21 — Phase 3, step 1 (`backend-qa`).** Wrote
+[`tests/Feature/Authorization/ModuleRouteAccessTest.php`](../../tests/Feature/Authorization/ModuleRouteAccessTest.php),
+covering exactly the five "New scope" checklist items above and nothing from the "Regression" list
+(re-run, not duplicated): a Super Admin reaching `roles.index` with no permission rows; cross-gate
+independence in both directions (`users.view` → 200 on `users.index` / 403 on `roles.index`, and the
+mirror); the two 403 refusals asserted to name no permission in the rendered body (with
+`config(['app.debug' => false])` set explicitly per test, so a developer's ambient `APP_DEBUG=true`
+can't leak the middleware string through Laravel's debug error page — the same "pin the config
+explicitly, don't trust the ambient environment" lesson as the `SUPER_ADMIN_EMAIL` errors-log entry);
+and cache staleness (both revoke and grant) proven through a real `$this->get(route(...))` round-trip
+with no `forgetCachedPermissions()` call between act and assert. Actors are built through fresh
+custom roles via a `moduleAccessUserWith()` helper, deliberately never the seeded `Administrator`
+role (which holds nearly the whole catalog and would silently defeat a cross-gate assertion), and
+permission names are taken from the real seeded catalog (`users.view`, `roles.manage`, `blog.*`) —
+never invented.
+
+**Result: all 9 tests passed on the first run, with zero production-code changes.** This is the
+outcome the task file's own "Files to create/modify" section anticipated (`routes/users.php` and
+`routes/roles.php` labeled "verify / document" — see F-1/N-4's corrections above) rather than a TDD
+failure: both routes already shipped correctly and independently gated (`can:users.view`,
+`can:roles.manage`) by stories 0004/0040 and 0010. Phase 3 step 2 (implement minimal code) had
+nothing to implement; step 3 (re-run, confirm green) is satisfied by the same run. Regression
+confirmed by re-running the cited sibling suites unmodified —
+`tests/Feature/Users/IndexTest.php` (65 passed) and `tests/Feature/Roles/IndexTest.php` (39 passed) —
+plus the full unscoped suite (`vendor/bin/pint --format agent` clean, Larastan level 7 clean,
+`php artisan test --compact` **618/618**, up from 609 before this story's 9 new tests).
