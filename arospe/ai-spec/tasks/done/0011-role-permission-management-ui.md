@@ -789,3 +789,40 @@ describing new surface. Four were named by Phase 5 and all four were verified be
 
 `docs/database/schema.md` and `docs/database/migrations.md` were checked and deliberately **not**
 touched: this story writes no column, table or migration.
+
+**Post-Phase-6 UI follow-up (2026-08-21, human-requested, commit `23f0056`).** Two presentational
+changes to this same screen, requested after Phase 6 had already synced the docs above, folded into
+this story rather than opened as a separate task since both are pure styling of surface this story
+already owns and neither touches a query, a mutation, or an authorization decision.
+
+1. **The sidebar link moved into a collapsible "Settings" group.** "Roles & permissions" no longer
+   sits beside "Users" at the top level of [`resources/views/layouts/app/sidebar.blade.php`](../../../resources/views/layouts/app/sidebar.blade.php);
+   it is nested inside a new `flux:sidebar.group` (`expandable`, `:expanded="request()->routeIs('roles.*')"`),
+   named as the future home for other store-configuration screens (billing details, etc.) rather than
+   as a permission boundary — the grouping is purely presentational, and `can:roles.manage` on the
+   route plus the component's own re-authorization are unchanged.
+2. **The permission checkboxes render as a matrix table, not a flat list grouped under a heading per
+   module.** The create/edit modal now shows one `flux:table` row per module with a `View`/`Create`/
+   `Edit`/`Delete` column each, replacing the previous `->groupBy()` + `flux:heading`-per-module
+   layout (open item 2's original resolution). **The security-relevant logic this story's Phase 4
+   audit hardened is unchanged in substance, only in its container**: the flat permission catalog is
+   still filtered with a single `->reject()` **before** the grid is built (never per-cell), so
+   `roles.manage-administrators` stays structurally absent from the DOM — not merely disabled — for
+   any actor who is not the Super Admin. Permissions whose action segment is not one of the four
+   seeded CRUD verbs (today: `roles.manage`, and `roles.manage-administrators` for a Super Admin) fall
+   out of the grid by construction into a separate list below the table, the same role the old `roles`
+   pseudo-module grouping played. Every checkbox kept its exact composed accessible name
+   (`aria-label`/`:label` = `Module — Action`), so the F-4 count-based regression tests
+   (`substr_count($html, '<ui-checkbox ')`) and every existing Feature/Browser test selector needed
+   **no changes** — verified by running the full 138-test Roles-scoped suite unmodified against the
+   new markup, then the full unscoped suite (609/609).
+
+Verified end-to-end with real browser rendering (Playwright screenshots of the expanded sidebar and
+the opened create-role modal, both discarded after review) rather than relying on the passing test
+suite alone, since a pure-markup change is exactly the kind of regression `Livewire::test()` assertions
+can miss if a selector coincidentally still matches. `docs/api/routes.md`'s `roles.index` subsection
+was updated in the same commit: the view bullet, the (now retitled) "module matrix" bullet, the
+DOM-omission bullet's wording, and the sidebar bullet.
+
+Quality gates re-run in their unscoped form for this follow-up: `vendor/bin/pint --format agent`
+clean, Larastan level 7 clean, full suite 609/609.
