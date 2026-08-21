@@ -236,14 +236,14 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
 *   **Historia:** Como Administrador, quiero dar de alta operarios y bloquear/reactivar cuentas existentes sin depender de un redeploy de código, para mantener el control de acceso al día a medida que cambia el personal del restaurante.
 *   **Complejidad:** S
 *   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
-*   **Estado:** Backend implementado (`TK-049`). ⚠️ Interfaz de administración pendiente — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
+*   **Estado:** ✅ Done — Backend (`TK-049`, `TK-056`) y Frontend (`TK-049-FE`) implementados — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
 
 
 ### US-011: Trazabilidad y Auditoría de Movimientos de Stock
 *   **Historia:** Como Administrador, quiero consultar el historial completo de movimientos de stock filtrado por insumo y rango de fechas, para investigar discrepancias de inventario y auditar quién movió qué y cuándo.
 *   **Complejidad:** S
 *   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
-*   **Estado:** Backend implementado (`TK-050`). ⚠️ Panel de auditoría pendiente — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
+*   **Estado:** ✅ Done — Backend (`TK-050`) y Frontend (`TK-050-FE`) implementados — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
 
 
 ---
