@@ -241,7 +241,9 @@ incompletas, en alta y de baja) y **5 cuentas**, una por rol:
 | `bruno@example.test` | SUBSCRIBER | Basic con 1 mes — **no** llega a la antigüedad mínima |
 | `carla@example.test` | SUBSCRIBER | Suscripción **cancelada** — sin plan activo, no puede alquilar |
 
-Contraseña común: `clickoteca` (solo desarrollo). Las tres antigüedades distintas
+Contraseña común: `clickoteca` (**solo desarrollo**; está escrita aquí, y este
+repositorio es público). Para sembrar un despliegue accesible desde fuera, pásale otra
+con `SEED_PASSWORD`, o el administrador queda abierto a quien lea este README. Las tres antigüedades distintas
 están elegidas para poder ejercitar la regla de sets restringidos (D7) sin tocar la
 base a mano. La procedencia del catálogo y qué campos son curados a mano se detallan
 en [`prisma/seed-data/README.md`](prisma/seed-data/README.md).

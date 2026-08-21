@@ -20,7 +20,13 @@ import { prisma } from "../src/db/prisma";
 const SEED_DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "seed-data");
 
 /** Contraseña única para todas las cuentas semilla. Solo desarrollo. */
-const DEV_PASSWORD = "clickoteca";
+/**
+ * Contraseña de las cuentas sembradas. `SEED_PASSWORD` la sustituye, y **hay que usarla
+ * en cualquier despliegue accesible desde fuera**: el repositorio es público y
+ * `readme.md` documenta la de desarrollo, así que sembrar una URL pública con el valor
+ * por defecto equivale a publicar una cuenta de administrador abierta.
+ */
+const DEV_PASSWORD = process.env.SEED_PASSWORD || "clickoteca";
 
 type SeedSet = {
   setNum: string;
@@ -341,7 +347,10 @@ async function main() {
   console.log("[seed] Completado:");
   console.log(`  planes            ${plans}`);
   console.log(`  ajustes nuevos    ${settings}`);
-  console.log(`  usuarios          ${userIds.size} (contraseña: "${DEV_PASSWORD}")`);
+  // La de desarrollo se imprime porque es pública y ahorra ir a buscarla; una puesta a
+  // mano, no: acabaría en el historial de la terminal y en cualquier log de CI.
+  const comoEsLaClave = process.env.SEED_PASSWORD ? "la de SEED_PASSWORD" : `"${DEV_PASSWORD}"`;
+  console.log(`  usuarios          ${userIds.size} (contraseña: ${comoEsLaClave})`);
   console.log(`  temas             ${themes}`);
   console.log(`  sets              ${seededSets}`);
   console.log(`  copias nuevas     ${copies}`);
