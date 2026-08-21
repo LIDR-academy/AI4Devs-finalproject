@@ -90,3 +90,41 @@ model SystemHealth {
   status    String
   createdAt DateTime @default(now())
 }
+
+model Recipe {
+  id          String             @id @default(uuid())
+  name        String
+  category    String
+  description String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  ingredients RecipeIngredient[]
+}
+
+model RecipeIngredient {
+  id       String  @id @default(uuid())
+  recipeId String
+  insumoId String
+  quantity Decimal @db.Decimal(12, 4)
+  recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+}
+
+model ShiftReconciliation {
+  id         String                    @id @default(uuid())
+  shiftDate  DateTime
+  operatorId String
+  notes      String?
+  createdAt  DateTime                  @default(now())
+  items      ShiftReconciliationItem[]
+}
+
+model ShiftReconciliationItem {
+  id                  String              @id @default(uuid())
+  reconciliationId    String
+  remanenteId         String
+  insumoId            String
+  physicalQuantity    Decimal             @db.Decimal(12, 4)
+  theoreticalQuantity Decimal             @db.Decimal(12, 4)
+  variance            Decimal             @db.Decimal(12, 4)
+  reconciliation      ShiftReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
+}
