@@ -374,7 +374,7 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
 
 ## 5. Historias de Usuario
 
-Se han definido detalladamente las siguientes 9 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/user_stories/indice_user_stories.md)):
+Se han definido detalladamente las siguientes 9 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
 
 ### **5.1. US-001: Autenticación por PIN del Personal de Cocina**
 *   **Formato de Negocio:** Como operario de cocina (Staff), quiero autenticarme en la terminal táctil ingresando mi PIN personal de 4 dígitos, para registrar mis movimientos de insumos y consumos de forma rápida y segura sin interrumpir el ritmo del servicio.
@@ -443,9 +443,9 @@ Se han definido detalladamente las siguientes 9 historias de usuario críticas (
 
 ## 6. Tickets de Trabajo
 
-El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo](docs/05_agile_planning/tickets/indice_tickets.md)) contiene las especificaciones exactas para el desarrollo de cada sprint, organizados en subcarpetas por módulo/epic (ej: `tickets/{modulo}/backend/` y `tickets/{modulo}/frontend/`):
+El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo](docs/05_agile_planning/12_tickets/indice_tickets.md)) contiene las especificaciones exactas para el desarrollo de cada sprint, organizados en subcarpetas por módulo/epic (ej: `12_tickets/{modulo}/backend/` y `12_tickets/{modulo}/frontend/`):
 
-### ⚙️ 6.1. Tickets de Backend (en subcarpetas `docs/05_agile_planning/tickets/{modulo}/backend/`)
+### ⚙️ 6.1. Tickets de Backend (en subcarpetas `docs/05_agile_planning/12_tickets/{modulo}/backend/`)
 
 
 *   **TK-001: Configuración del Core del Backend y Base de Datos (Base de Datos)**
@@ -501,7 +501,7 @@ El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo
     *   **Capas Afectadas:** `.agents/README.md`.
     *   **DoD:** Integridad del framework verificada con 54 enlaces absolutos validados.
 
-### 🖥️ 6.2. Tickets de Frontend (en subcarpetas `docs/05_agile_planning/tickets/{modulo}/frontend/`)
+### 🖥️ 6.2. Tickets de Frontend (en subcarpetas `docs/05_agile_planning/12_tickets/{modulo}/frontend/`)
 
 *   **TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas (Frontend)**
     *   **Descripción:** Pantalla táctil de notificaciones en el cliente y lógica de renderizado del feed de alertas críticas en la tablet, calculando dinámicamente vencimientos FEFO, stock mínimo en línea y estado de red offline.
