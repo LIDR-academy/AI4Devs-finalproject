@@ -7,8 +7,6 @@ interface RateLimitStore {
   };
 }
 
-const store: RateLimitStore = {};
-
 export interface RateLimitOptions {
   windowMs: number;
   max: number;
@@ -16,6 +14,10 @@ export interface RateLimitOptions {
 
 export function createRateLimiter(options: RateLimitOptions) {
   const { windowMs, max } = options;
+  // Store por-instancia (no a nivel de modulo): cada createRateLimiter() debe llevar su
+  // propio conteo independiente. Antes de este fix, dos limiters activos a la vez (ej. uno
+  // global + el de login) compartian el mismo contador por IP, contaminandose entre si.
+  const store: RateLimitStore = {};
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const ip = req.ip || req.socket.remoteAddress || 'unknown';

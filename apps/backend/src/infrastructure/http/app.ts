@@ -24,6 +24,7 @@ import YAML from 'yamljs';
 import { runSeed } from '../seeds/seed.js';
 
 import { createAuthenticateJWTMiddleware } from './middlewares/authenticateJWT.js';
+import { createRateLimiter } from './middlewares/rateLimiter.js';
 import { IShiftReconciliationRepository } from '../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
 import { InMemoryShiftReconciliationRepository } from '../kitchen/repositories/InMemoryShiftReconciliationRepository.js';
 
@@ -35,8 +36,39 @@ export interface AppOptions {
   recipeRepository?: IRecipeRepository;
   reconciliationRepository?: IShiftReconciliationRepository;
   jwtSecret?: string;
+  corsAllowedOrigins?: string;
+  rateLimit?: { windowMs: number; max: number };
   enableDevSeeding?: boolean;
   requireAuth?: boolean;
+}
+
+// CORS_ALLOWED_ORIGINS es "*" (dev/test) o una lista separada por comas de origenes exactos
+// (produccion — Guard 14 ya prohibe "*" ahi vía Fail-Fast en environment.ts). Antes de este
+// fix, `app.use(cors())` ignoraba esta variable por completo: se validaba estrictamente pero
+// el middleware real seguia aceptando cualquier origen sin importar el valor configurado.
+function resolveCorsOrigin(raw: string | undefined): string | string[] {
+  const value = raw ?? '*';
+  if (value === '*') {
+    return '*';
+  }
+  return value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+}
+
+// RATE_LIMIT_WINDOW_MS/RATE_LIMIT_MAX_REQUESTS estaban validadas en environment.ts pero no
+// las leia ningun middleware — la unica limitacion real era el limiter hardcodeado del login
+// (windowMs: 15min, max: 10, ver auth.routes.ts). Estos valores alimentan un limiter GLOBAL
+// para /api/v1/*, mas laxo (default 100/15min) que el de login, que se mantiene sin tocar
+// para no debilitar la proteccion anti-fuerza-bruta existente.
+function resolveRateLimitOptions(raw: AppOptions['rateLimit']): { windowMs: number; max: number } {
+  if (raw) {
+    return raw;
+  }
+  const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '900000', 10);
+  const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? '100', 10);
+  return { windowMs, max };
 }
 
 // Swagger UI - Documentacion Interactiva de API REST (OpenAPI 3.1)
@@ -131,7 +163,7 @@ function mountApiRoutes(
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
 
-  app.use(cors());
+  app.use(cors({ origin: resolveCorsOrigin(options.corsAllowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS) }));
   app.use(express.json());
   setupSwaggerDocs(app);
 
@@ -152,6 +184,10 @@ export function createApp(options: AppOptions = {}): Express {
 
   const authMiddleware = createAuthenticateJWTMiddleware(repos.jwtSecret);
   const isAuthRequired = options.requireAuth ?? true;
+
+  // Rate limiting global para /api/v1/* (Guard 16) — el login mantiene ademas su propio
+  // limiter mas estricto, aplicado despues de este en la cadena de middlewares.
+  app.use('/api/v1', createRateLimiter(resolveRateLimitOptions(options.rateLimit)));
 
   app.use('/api/v1/auth', createAuthRouter(repos.userRepo, repos.jwtSecret));
   mountApiRoutes(app, repos, authMiddleware, isAuthRequired);

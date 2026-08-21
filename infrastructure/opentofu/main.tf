@@ -43,6 +43,18 @@ variable "cors_allowed_origins" {
   type        = string
 }
 
+variable "rate_limit_window_ms" {
+  description = "Ventana (ms) del rate limiter global de /api/v1/* (Guard 16). El login mantiene su propio límite fijo, más estricto."
+  type        = number
+  default     = 900000
+}
+
+variable "rate_limit_max_requests" {
+  description = "Máximo de requests por IP dentro de rate_limit_window_ms (Guard 16)."
+  type        = number
+  default     = 100
+}
+
 # Red aislada para arquitectura de microservicios / monolito modular
 resource "docker_network" "restostock_net" {
   name = "restostock_internal_network"
@@ -125,6 +137,8 @@ resource "docker_container" "backend" {
     "JWT_SECRET=${var.jwt_secret}",
     "DATABASE_URL=postgresql://${var.postgres_user}:${var.postgres_password}@postgres:5432/${var.postgres_db}?schema=public",
     "CORS_ALLOWED_ORIGINS=${var.cors_allowed_origins}",
+    "RATE_LIMIT_WINDOW_MS=${var.rate_limit_window_ms}",
+    "RATE_LIMIT_MAX_REQUESTS=${var.rate_limit_max_requests}",
   ]
 
   ports {
