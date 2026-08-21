@@ -496,19 +496,26 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
 
 **2026-08-21 — Phase 3, step 1 (`backend-qa`).** Wrote
 [`tests/Feature/Authorization/ModuleRouteAccessTest.php`](../../tests/Feature/Authorization/ModuleRouteAccessTest.php),
-covering exactly the five "New scope" checklist items above and nothing from the "Regression" list
-(re-run, not duplicated): a Super Admin reaching `roles.index` with no permission rows; cross-gate
-independence in both directions (`users.view` → 200 on `users.index` / 403 on `roles.index`, and the
-mirror); the two 403 refusals asserted to name no permission in the rendered body (with
-`config(['app.debug' => false])` set explicitly per test, so a developer's ambient `APP_DEBUG=true`
-can't leak the middleware string through Laravel's debug error page — the same "pin the config
-explicitly, don't trust the ambient environment" lesson as the `SUPER_ADMIN_EMAIL` errors-log entry);
-and cache staleness (both revoke and grant) proven through a real `$this->get(route(...))` round-trip
-with no `forgetCachedPermissions()` call between act and assert. Actors are built through fresh
-custom roles via a `moduleAccessUserWith()` helper, deliberately never the seeded `Administrator`
-role (which holds nearly the whole catalog and would silently defeat a cross-gate assertion), and
-permission names are taken from the real seeded catalog (`users.view`, `roles.manage`, `blog.*`) —
-never invented.
+covering the five "New scope" checklist items above: a Super Admin reaching `roles.index` with no
+permission rows; cross-gate independence in both directions (`users.view` → 200 on `users.index` /
+403 on `roles.index`, and the mirror); the two 403 refusals asserted to name no permission in the
+rendered body; and cache staleness (both revoke and grant) proven through a real
+`$this->get(route(...))` round-trip with no `forgetCachedPermissions()` call between act and assert.
+Actors are built through fresh custom roles via a `moduleAccessUserWith()` helper, deliberately never
+the seeded `Administrator` role (which holds nearly the whole catalog and would silently defeat a
+cross-gate assertion), and permission names are taken from the real seeded catalog (`users.view`,
+`roles.manage`, `blog.*`) — never invented.
+
+**Corrected 2026-08-21 (Phase 5 review, F4)**: this record originally claimed the new tests covered
+"nothing from the 'Regression' list (re-run, not duplicated)" — overstated. The cross-gate and
+cache-staleness tests reuse two Regression positives (`Users/IndexTest.php:1206`'s `users.view` → 200
+and `Roles/IndexTest.php:420`'s `roles.manage` → 200) as **controls inside** the new cases, by
+design — the task file's own *Anti-patterns* section requires a positive 200 beside every negative,
+since a typo'd ability denies silently under `can:`. No case is a standalone duplicate of the
+Regression list. Also corrected: the two disclosure tests' original `config(['app.debug' => false])`
+pin and its "can't leak the middleware string through Laravel's debug error page" reasoning were
+removed at Phase 4 (finding F2, below) — verified false, since `AuthorizationException` renders
+through `errors::403` at every debug setting, never the debug page.
 
 **Result: all 9 tests passed on the first run, with zero production-code changes.** This is the
 outcome the task file's own "Files to create/modify" section anticipated (`routes/users.php` and
@@ -578,3 +585,42 @@ inherent to each screen's feature and does not cross a permission name; not a ne
 Re-verified after all four fixes: `vendor/bin/pint --format agent` clean, Larastan level 7 clean,
 `tests/Feature/Authorization/ModuleRouteAccessTest.php` (9 passed), `tests/Feature/Roles/` (81
 passed), and the full unscoped suite (**618/618**).
+
+## Phase 5 (`code-reviewer`) — PASS, one item deferred to Phase 6, four Low/informational
+
+Verdict: **PASS** — the F1 cache-flush fix was independently re-derived as correct and complete
+(right placement relative to `DB::transaction()`, no early-return path skipped, rollback-safe, no
+sibling write path in `CreateUser`/`UpdateUser`/`ConfirmEmailChange` has the same gap since none of
+them write `permissions`/`role_has_permissions`), all 10 sibling-test line citations in this file
+resolve to the exact assertion claimed, and the full unscoped suite is clean (**618/618**, Pint clean,
+Larastan level 7 clean — all re-run independently, not taken from this file's own account).
+
+- **F1 (Medium, deferred to Phase 6) — acceptance criterion 6's "documented, copyable pattern … with
+  the rejected alternatives recorded" is not yet in `docs/`.** `grep -rn "route sugar\|group-level"
+  docs/` returns zero hits — the group-level-middleware and `->can()`-route-sugar rejections this
+  story's own "Files to create/modify" → "The pattern to document for later epics" bullets state exist
+  only in this task file, not anywhere a later epic's developer would look. `docs-keeper` must carry
+  those bullets into `docs/api/routes.md` (or `docs/architecture/authorization.md`) at Phase 6, since
+  the criterion reads as "documented in `docs/`", not "recorded in a closed task file".
+- **F2 (Low, deferred to Phase 6) — the `.view`-shaped-gate dead-configuration note also never reached
+  `docs/`.** The Phase 4 record's informational note above (a role granted
+  `<module>.create/edit/delete` without `<module>.view` gets no route access and no warning, silently)
+  says explicitly it is worth stating for later epics; it wasn't. Same hand-off as F1 — it is the
+  single most likely misconfiguration a later epic's permission grid will produce.
+- **F3 (Low, accepted as-is) — the F1 fix has no regression pin and cannot fail a test by
+  construction.** `CACHE_STORE=array` in `phpunit.xml` plus the in-transaction self-flush both already
+  running means deleting either post-commit flush line leaves the suite at 618/618 green — the exact
+  case `authorization-patterns.md`'s own "Testing caveat" names as untestable by construction, not
+  caught by a test. Mitigation is the explicit multi-line comment naming the finding and linking the
+  rule (matching `RolePermissionSeeder`'s identical precedent), recorded here rather than left
+  implicit.
+- **F4 (Low, fixed above) — the Phase 3 record overstated its own test-to-regression independence**,
+  and separately still referenced the `app.debug` test comment F2 (Phase 4) had already removed. Both
+  corrected in the Phase 3 record above.
+- **F5 (informational, not actioned) — `assertSee('This action is unauthorized.')` pins an English
+  literal**, correct today (`APP_LOCALE=en`) but locale-dependent the moment an interface-language
+  switcher lands. No action needed now; noted for whoever builds that switcher.
+
+Quality gates re-verified independently by the reviewer (not taken from this file): full unscoped
+suite **618 passed, 1762 assertions**, `vendor/bin/pint --format agent` clean, Larastan level 7 clean.
+No lingering test processes found before the run.
