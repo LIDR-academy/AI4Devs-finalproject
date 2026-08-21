@@ -5,7 +5,7 @@
 // resources/views/components/sidebar-nav.blade.php component, and
 // lang/{en,es}/navigation.php. None of that production code exists yet at
 // the time this file is written -- this is the TDD red step (Phase 3 step
-// 1, per ai-spec/tasks/in-progress/0013-sidebar-module-gating-ui.md).
+// 1, per ai-spec/tasks/done/0013-sidebar-module-gating-ui.md).
 // frontend-expert implements it green next, in a separate phase.
 //
 // Feature tests only, never tests/Browser/: this is pure server-rendered

@@ -4,7 +4,7 @@
 // resources/views/components/sidebar-nav.blade.php. Split into `groups` and
 // `items` so the shipped "Settings" expandable group's icon/expand-on-route
 // behaviour survives the gating retrofit alongside the plain "Platform"
-// heading -- see ai-spec/tasks/in-progress/0013-sidebar-module-gating-ui.md.
+// heading -- see ai-spec/tasks/done/0013-sidebar-module-gating-ui.md.
 //
 // Scope boundary: this file is NOT the permission catalog. The catalog --
 // every permission across all epics, most with no screen yet -- is owned by
