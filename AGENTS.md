@@ -157,7 +157,7 @@ project. Read it at the start of every session.
   Prisma no expresa índices parciales — es el invariante multi-fila de D12.
   **Semilla** (`prisma/seed.ts`, idempotente vía upsert/find-si-falta): 2 planes,
   7 `SystemSetting`, 5 usuarios (uno por rol; suscriptores con 8 meses / 1 mes / sin
-  suscripción para ejercitar D7), 20 temas, 35 sets y 61 copias con su
+  suscripción para ejercitar D7), 20 temas, 35 sets y 59 copias con su
   `CopyStateTransition`. Solo se siembran estados de copia que existen **sin**
   `Rental` (INTAKE/DISPONIBLE/INCOMPLETA/BAJA). El catálogo real vive commiteado en
   `prisma/seed-data/sets.json` (extraído de los CSV públicos de Rebrickable) para
@@ -1063,6 +1063,15 @@ project. Read it at the start of every session.
   si una credencial sigue siendo válida es **intentar conectar**, no compararla—. La URL
   de sesión (5432) se puede **derivar** de la del pooler (6543) cambiando puerto y
   quitando `pgbouncer`: mismo host, usuario y contraseña.
+- **Las credenciales del despliegue no se publican (decidido 2026-08-21):** el
+  `readme.md` documenta `clickoteca` como contraseña **del entorno local**, y lo dice
+  explícitamente en §1.4; la instancia desplegada va con `SEED_PASSWORD` y sus
+  credenciales se entregan **por el canal del curso**. El motivo es que la semilla usa
+  **un único hash para las cinco cuentas** —`hashPassword` se llama una vez y se
+  reutiliza—, así que `SEED_PASSWORD` no es "la clave del admin" sino **una llave maestra
+  del entorno**: quien la tenga entra también como operador y como administrador. Se
+  valoró hashear por cuenta para poder entregar solo la de suscriptor y se descartó:
+  media aplicación es el back-office y quien corrige tiene que verlo igualmente.
 - **La base de Supabase quedó inicializada (2026-08-21):** `migrate deploy` de las cinco
   migraciones + semilla con `SEED_PASSWORD`. 23 tablas, 2 planes, 35 sets, 59 copias,
   5 ajustes y las 5 cuentas. **Data API de Supabase desactivada** —el proyecto usa

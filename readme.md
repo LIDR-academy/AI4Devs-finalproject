@@ -228,9 +228,9 @@ debe devolver `{"status":"ok"}`.
 
 #### Datos de prueba
 
-`npm run db:seed` deja el entorno listo para trastear: los 2 planes de §D9, los 7
+`npm run db:seed` deja el entorno listo para trastear: los 2 planes de §D9, los 5
 parámetros configurables del sistema, **35 sets reales** del dataset público de
-Rebrickable con sus temas, **61 copias** repartidas por estado (disponibles,
+Rebrickable con sus temas, **59 copias** repartidas por estado (disponibles,
 incompletas, en alta y de baja) y **5 cuentas**, una por rol:
 
 | Cuenta | Rol | Situación |
@@ -241,12 +241,26 @@ incompletas, en alta y de baja) y **5 cuentas**, una por rol:
 | `bruno@example.test` | SUBSCRIBER | Basic con 1 mes — **no** llega a la antigüedad mínima |
 | `carla@example.test` | SUBSCRIBER | Suscripción **cancelada** — sin plan activo, no puede alquilar |
 
-Contraseña común: `clickoteca` (**solo desarrollo**; está escrita aquí, y este
-repositorio es público). Para sembrar un despliegue accesible desde fuera, pásale otra
-con `SEED_PASSWORD`, o el administrador queda abierto a quien lea este README. Las tres antigüedades distintas
-están elegidas para poder ejercitar la regla de sets restringidos (D7) sin tocar la
-base a mano. La procedencia del catálogo y qué campos son curados a mano se detallan
-en [`prisma/seed-data/README.md`](prisma/seed-data/README.md).
+Contraseña común: `clickoteca`. **Es la de tu entorno local y solo la de tu entorno
+local**, y está escrita aquí porque este repositorio es público: quien clone y siembre
+su propia base entra con ella.
+
+> **La instancia desplegada no usa esta contraseña.** Se sembró con `SEED_PASSWORD`, y
+> sus credenciales **no se publican aquí**: se entregan por el canal del curso. La razón
+> es que la semilla usa **la misma contraseña para las cinco cuentas** —un único hash
+> para todas— así que publicarla no sería "dar acceso de demostración" sino dejar abierto
+> también el **administrador**, que configura el sistema, da de baja copias y gestiona el
+> personal. Cualquiera podría vaciar el catálogo la semana de la corrección.
+>
+> Si vas a desplegar tu propia instancia: `SEED_PASSWORD="…" npm run db:seed`. La
+> contraseña **se fija en la primera siembra** — el `upsert` de la semilla actualiza
+> nombre y rol, no el hash, así que volver a sembrar con otra no cambia las cuentas que
+> ya existan.
+
+Las tres antigüedades distintas están elegidas para poder ejercitar la regla de sets
+restringidos (D7) sin tocar la base a mano. La procedencia del catálogo y qué campos son
+curados a mano se detallan en
+[`prisma/seed-data/README.md`](prisma/seed-data/README.md).
 
 #### Base de datos local con Docker
 
