@@ -440,7 +440,10 @@ flowchart TB
 - **Imágenes** del catálogo en el filesystem del host → **mismo origen** (sin
   CORS, cookie *first-party*).
 - **Despliegue:** `next build` (output *standalone*) + `next start` gestionado por
-  **systemd**; el scheduler es otro servicio systemd. **Firewall:** solo 80/443 y
+  **systemd**; el scheduler es otro servicio systemd. El modo *standalone* se activa
+  **fuera de Vercel**: allí rompe el build, porque se lleva el trazado a
+  `.next/standalone/` y no emite `.next/next-server.js.nft.json`, que es el fichero con
+  el que Vercel arma sus funciones. Lo decide `process.env.VERCEL` en `next.config.ts`. **Firewall:** solo 80/443 y
   22. **Backups:** `pg_dump` por cron.
 - **Plan B** si Oracle reclama la instancia *free*: VPS de pago (Hetzner CX22,
   ~4 €/mes) sin cambios de arquitectura.
@@ -524,7 +527,8 @@ de integración — evita mockear Prisma y prueba de verdad las transiciones de 
 de `Copy` y el orden de la cola. Se ejecutan con `npm test` y `npm run test:e2e`.
 
 **El E2E no prueba el servidor de desarrollo.** Playwright hace `next build` y levanta
-el **paquete autónomo** (`output: standalone`) en un puerto propio, el 3100: es el mismo
+el **paquete autónomo** (`output: standalone`, que se activa fuera de Vercel — ver §2.4)
+en un puerto propio, el 3100: es el mismo
 artefacto que se despliega en la VM, y de paso cubre el empaquetado — hay una prueba que
 vigila que los estáticos, que ese paquete no incluye, se hayan copiado. La razón
 original fue de estabilidad: el pool de compilación de `next dev` se caía bajo la carga

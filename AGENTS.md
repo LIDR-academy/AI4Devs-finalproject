@@ -1039,6 +1039,15 @@ project. Read it at the start of every session.
   desarrollo, no Vercel. **Decisión: el código no lee las `STORAGE_*`** —acoplaría el
   proyecto a los nombres de una integración de Vercel, y el mismo código tiene que
   arrancar en la VM y en local—.
+- **`output: "standalone"` y Vercel son incompatibles (2026-08-21):** el modo standalone
+  se lleva el trazado a `.next/standalone/` y **deja de emitir
+  `.next/next-server.js.nft.json`**, que es justo el fichero que abre el paso
+  `onBuildComplete` de Vercel. El build compila entero, genera las 28 páginas y muere al
+  final con un **`ENOENT` sobre ese json** que no menciona "standalone" por ningún lado —
+  y `Applying modifyConfig from Vercel` en el log despista, porque parece que Vercel ya
+  ajusta la config. `next.config.ts` decide ahora por `process.env.VERCEL`: en la VM, en
+  local y en el E2E sigue saliendo el paquete autónomo. Comprobado en las dos
+  direcciones, y `tests/next-config.test.ts` lo fija.
 - **Vercel no es la arquitectura del ADR (2026-08-21, en curso):** el intento de
   despliegue destapa tres cosas que el ADR-0001 §5 daba por resueltas con la VM y allí no
   lo están — no hay Postgres en `localhost` (hace falta uno gestionado, su `DATABASE_URL`,
