@@ -11,7 +11,7 @@ Every rule below is grounded in this app's **real, existing flows** (login, regi
   2. [No overly technical details](#2-no-overly-technical-details)
   3. [Single When per scenario](#3-single-when-per-scenario)
   4. [Scenario Outline vs. duplicated scenarios](#4-scenario-outline-vs-duplicated-scenarios)
-  5. [Consistent language / shared glossary](#5-consistent-language--shared-glossary)
+  5. [Consistent language / shared glossary](#5-consistent-language--shared-domain-glossary)
   6. [No ghost scenarios](#6-no-ghost-scenarios)
   7. [No loss of ubiquitous language](#7-no-loss-of-ubiquitous-language)
 - [Domain glossary](#domain-glossary)
@@ -244,4 +244,6 @@ Conventions for the translation:
 
 See [examples/](examples/) for three complete scenario → Pest translations built on this convention.
 
-_Last updated: 2026-07-19 — New frontend/browser testing guide added by the docs-maintainer skill._
+_Last updated: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for rule 5, which read `#5-consistent-language--shared-glossary` while the heading is "Consistent language / **shared domain** glossary". Content unchanged._
+
+_Previously: 2026-07-19 — New frontend/browser testing guide added by the docs-maintainer skill._

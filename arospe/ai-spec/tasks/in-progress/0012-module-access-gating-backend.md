@@ -495,7 +495,7 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
 ## Phase 3 implementation record
 
 **2026-08-21 — Phase 3, step 1 (`backend-qa`).** Wrote
-[`tests/Feature/Authorization/ModuleRouteAccessTest.php`](../../tests/Feature/Authorization/ModuleRouteAccessTest.php),
+[`tests/Feature/Authorization/ModuleRouteAccessTest.php`](../../../tests/Feature/Authorization/ModuleRouteAccessTest.php),
 covering the five "New scope" checklist items above: a Super Admin reaching `roles.index` with no
 permission rows; cross-gate independence in both directions (`users.view` → 200 on `users.index` /
 403 on `roles.index`, and the mirror); the two 403 refusals asserted to name no permission in the
@@ -624,3 +624,96 @@ Larastan level 7 clean — all re-run independently, not taken from this file's 
 Quality gates re-verified independently by the reviewer (not taken from this file): full unscoped
 suite **618 passed, 1762 assertions**, `vendor/bin/pint --format agent` clean, Larastan level 7 clean.
 No lingering test processes found before the run.
+
+## Phase 6 (`docs-keeper`) — both deferred findings closed in `docs/`, plus three corrections found in passing
+
+**2026-08-21.** This story's production diff is one file (`app/Livewire/Roles/Index.php`: two
+`forgetCachedPermissions()` calls and one import) and one test file, so the usual change→doc mapping
+routes almost nothing. The substantive work was the opposite kind: carrying a rule that existed
+**only inside this task file** into `docs/`, which is what acceptance criterion 6 actually asks for.
+
+**F1 (Phase 5, Medium) — closed.** Added
+[`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#the-copyable-module-gate-pattern-and-the-three-alternatives-rejected)
+→ **The copyable module-gate pattern, and the three alternatives rejected**, as a new subsection of
+*How to gate something*, directly beneath the pre-existing `can:`-not-`permission:` one. That page —
+not `docs/api/routes.md` — owns it, per the placement rule in the `docs-maintainer` skill: the gate
+pattern is a cross-cutting authorization rule, while `api/routes.md` documents *what the two routes
+are*. The three rejections now sit in one table (Spatie's `permission:` cross-referenced to the
+subsection above rather than restated; the group-level gate; `->can()` route sugar, plus the FQCN
+form), alongside the four vendor-verified properties this file's *Files to create/modify* bullets
+listed — each re-verified at vendor source in this pass rather than copied across: `'can' =>
+Authorize::class` in `Illuminate\Foundation\Configuration\Middleware` (line 810),
+`Authorize::handle($request, Closure $next, $ability, ...$models)`, `Route::can()` composing
+`'can:'.$ability` (line 1106), and `checkPermissionTo()` swallowing `PermissionDoesNotExist`
+(`HasPermissions.php`, lines 253–260). `docs/api/routes.md` gained a **pointer** paragraph, not a
+second copy.
+
+**F2 (Phase 5, Low) — closed.** The `.view`-shaped dead configuration is now a ⚠️ closing that same
+new section: a role granted `<module>.create/edit/delete` without `<module>.view` reaches nothing and
+is warned nowhere, why that is fail-closed rather than a vulnerability, why the roles screen's
+four-independent-checkboxes matrix is what will produce it, and that `roles.manage` does not share the
+shape. It names no owner, because none exists — a story that wants to warn owns both the rule and its
+surface.
+
+**Verified, not assumed — and one thing changed as a result.** `docs/security/authorization-patterns.md`
+and `docs/security/README.md` were written by this story's own Phase 4, so per this repo's own
+[audit-authored-page rule](../../../docs/errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)
+they were re-checked rather than trusted: the confirmed-safe 403 section's two named reopening
+conditions were re-verified against the real tree (`resources/views/errors/` does not exist; `grep -rn
+"Response::deny\|->deny(" app/` returns nothing), as was `shouldRenderJsonWhen`'s quote in
+`bootstrap/app.php` and the `assertSee`/`assertDontSee` pairing it cites — all still accurate, no
+correction needed. What *did* need work is the **older** section that this story violated: *Flush the
+permission cache after the transaction commits* had no real call site cited (it predates all three),
+so it now names `RolePermissionSeeder` plus `saveRole()` / `deleteRole()`, and carries a new ⚠️ with
+the part that makes this class of bug invisible — **the flush that moved was one nobody wrote**
+(Spatie's own, from inside `syncPermissions()` and `Role`'s `deleted` event), so story 0010's
+`DB::transaction()` wrapper relocated it with no flush line appearing anywhere in that diff.
+
+**One new [errors-log](../../../docs/errors-log.md) entry (nineteen → twenty), judged to clear the bar.**
+The brief left this open. It qualifies because it produces a rule not already stated anywhere:
+*wrapping existing code in a `DB::transaction()` is a change to every side effect that code already
+performed, including third-party ones the call site cannot see*. It is deliberately **not** filed as
+another instance of "audit the remediation as new code" (2026-08-19 / 2026-08-20) — in those, a
+reviewer could read the flaw in the diff; here the diff is structurally incapable of showing it. The
+entry also records the compounding fact from Phase 5's F3: `CACHE_STORE=array` in `phpunit.xml` means
+the suite is 618/618 green today *and* 618/618 green with either fix line deleted, so the doc is the
+only control. Framed as the third direction of this log's doc/code-drift family — the first two are a
+doc outliving the feature it denied and a doc outliving the bug it described; this one is code
+drifting away from a rule the doc still states **correctly**, the only one of the three a re-read of
+the doc cannot catch.
+
+**Beyond the brief.** Four things fixed in passing. (1) `docs/api/routes.md`'s previous
+`_Previously:_` footer paragraph was missing its closing `_`, italicising the rest of the changelog —
+a formatting break from the 0011 follow-up pass. (2) `docs/architecture/authorization.md`'s table of
+contents had no entries for either *How to gate something* subsection; both added. (3) The parent
+delivery document [`../readme.md`](../../../../readme.md) was updated in the same pass, in Spanish, at
+three points: §2.2's routes bullet now carries the copyable pattern and its three rejected
+alternatives; §2.5 gained the `.view` dead-configuration paragraph and an extension of the existing
+*"flush explícito de la caché de permisos"* audit-practice bullet with the transaction-wrapper lesson;
+and §1's *estado actual* callout, which listed the three Spatie middleware aliases as registered in a
+way that read as though a module gate used them — it now states explicitly that **neither** protected
+module route consumes them. (4) Confirmed no change was warranted in `database/schema.md`,
+`database/migrations.md`, `conventions/*`, `docs/testing/*`, root `README.md`, `AGENTS.md` or
+`CLAUDE.md`: no table, column, migration, class, route contract or setup step moved, and
+`docs/testing/backend/datasets-and-factories.md` already states the seed-plus-flush convention this
+story's new test file follows. (5) **A broken relative link already inside this file**, written
+during Phase 3: the Phase 3 record's citation of `tests/Feature/Authorization/ModuleRouteAccessTest.php`
+used `](../../tests/…)`, which resolves to `ai-spec/tests/` from this file's `in-progress/` depth —
+exactly the [stage-move link class](../../../docs/errors-log.md#a-task-files-relative-links-broke-silently-when-it-moved-to-in-progressdone--2026-08-17)
+[workflow.md](../../../docs/workflow.md#link-integrity-check-on-every-stage-move) makes a mandatory
+check, caught here one phase early rather than at Phase 7. Corrected to `../../../tests/`; note that
+`in-progress/` → `done/` is a same-depth move, so it stays correct through closure. (6) **Three
+genuinely broken in-file anchors**, surfaced by running the same check across all 45 files of `docs/`
+rather than only the ones this pass touched — each a self-link from a table of contents to a heading
+in its own file, so each has been silently dead since it was written:
+`testing/frontend/gherkin-guidelines.md` (`#5-consistent-language--shared-glossary`, heading says
+*shared **domain** glossary*), `security/blade-livewire-output-encoding.md` (three leading hyphens
+where the slug of a heading opening with `{{ }}` has two), and `security/livewire-authorization.md`
+(`ruleuniqueignore` where `Rule::unique()->ignore()` slugifies to `ruleunique-**ignore**`, because the
+hyphen in `->` survives). All three fixed, content otherwise untouched. Worth stating as a habit: a
+markdown anchor **fails silently in both directions** — nothing errors, and the page simply does not
+scroll — so it needs the same "prove it resolves" discipline this repo already applies to assertions.
+
+Every relative link and `#fragment` written in this pass was resolved against the filesystem and
+against a real heading in the target file before finishing — in `docs/` and in this file alike.
+Documentation only — no application code or test was touched.

@@ -126,6 +126,19 @@ app(PermissionRegistrar::class)->forgetCachedPermissions();
 (or via `DB::afterCommit()`), in addition to any flush it needs *inside* the transaction for its own
 correctness.
 
+Three real call sites hold this shape today: [`database/seeders/RolePermissionSeeder.php`](../../database/seeders/RolePermissionSeeder.php)
+(the ✅ above is its structure), and — since task 0012's Phase 4 audit found them missing it —
+`saveRole()` and `deleteRole()` in [`app/Livewire/Roles/Index.php`](../../app/Livewire/Roles/Index.php).
+
+> ⚠️ **The flush this rule is about is usually one nobody wrote.** Both roles-screen methods were
+> already correct before task 0010 wrapped them in `DB::transaction()` for an unrelated finding: the
+> only flush on either path is the vendor's own, fired from inside `syncPermissions()` and from
+> `Role`'s `deleted` event. Introducing the transaction moved *that* flush pre-commit without any line
+> being added, removed or reordered — the diff contained no flush at all, so a review looking for one
+> found nothing to check. **Adding a `DB::transaction()` around existing code relocates every side
+> effect that code already performed**, so treat it as a change to each of them. See
+> [errors-log.md](../errors-log.md#wrapping-existing-code-in-a-dbtransaction-moved-a-cache-flush-nobody-had-written--2026-08-21).
+
 **Testing caveat.** `phpunit.xml` sets `CACHE_STORE=array`, so the permission cache is per-process in
 tests. No test in this suite can reproduce the cross-worker window above — it must be prevented by
 construction, not caught by a test.
@@ -1023,7 +1036,9 @@ Do not "harden" the name comparisons themselves by lowercasing or trimming — t
 of matching names and break the property the byte-exact match above relies on. The remaining hardening
 is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-21 — Task 0012 (module/sidebar access gating — backend), Phase 4 audit: added
+_Last updated: 2026-08-21 — Task 0012, Phase 6 docs sync: **Flush the permission cache after the transaction commits** gained the three real call sites that now hold its shape (`RolePermissionSeeder`, plus `saveRole()` / `deleteRole()` since this story's Phase 4 fix), and a ⚠️ recording why this rule was violated in the first place — the flush at issue was the **vendor's**, fired from inside `syncPermissions()` and `Role`'s `deleted` event, so task 0010's `DB::transaction()` wrapper moved it pre-commit with no flush line appearing anywhere in that diff. Generalised as: wrapping existing code in a transaction is a change to every side effect that code already performed. The [confirmed-safe 403 section](#confirmed-safe-a-can-gated-routes-403-names-no-permission--and-app_debug-is-not-what-makes-that-true) below was re-verified against the shipped `ModuleRouteAccessTest.php` in this pass — its code quotes, the `assertSee`/`assertDontSee` pairing and both named reopening conditions still match the real files, so it needed no correction (the [audit-authored-page rule](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20) says to check, not to assume)._
+
+_Previously: 2026-08-21 — Task 0012 (module/sidebar access gating — backend), Phase 4 audit: added
 "Confirmed safe: a `can:`-gated route's 403 names no permission — and `APP_DEBUG` is not what makes that
 true". The story ships no production code, so this is a **confirmed-safe** entry rather than a bypass —
 but the reason the guarantee holds is not the one the story's own test comment assumed, and the

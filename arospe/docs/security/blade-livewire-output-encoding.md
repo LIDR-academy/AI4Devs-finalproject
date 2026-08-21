@@ -10,7 +10,7 @@ the inside of a `wire:*` / `x-on:*` directive value, which is JavaScript.**
 
 ## Table of Contents
 
-- [`{{ }}` inside a `wire:` directive is not escaping — it is an injection sink](#---inside-a-wire-directive-is-not-escaping--it-is-an-injection-sink)
+- [`{{ }}` inside a `wire:` directive is not escaping — it is an injection sink](#--inside-a-wire-directive-is-not-escaping--it-is-an-injection-sink)
 - [The client can rewrite any public property that is not `#[Locked]`, including the one feeding the loop](#the-client-can-rewrite-any-public-property-that-is-not-locked-including-the-one-feeding-the-loop)
 - [What is already safe and needs no change](#what-is-already-safe-and-needs-no-change)
 
@@ -169,7 +169,9 @@ Recorded so a future audit does not re-litigate them:
   Alpine auto-invokes the returned function. This is the same pattern already in
   `resources/views/livewire/settings/security.blade.php`; it is not a silently-dead handler.
 
-_Last updated: 2026-08-16 — Re-audit of task 0006: all three findings verified fixed against the real
+_Last updated: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for the `{{ }}`-in-a-`wire:`-directive section, which carried three leading hyphens where the generated slug has two (the heading opens with `{{ }}`, and stripping the braces leaves exactly two spaces). Content unchanged._
+
+_Previously: 2026-08-16 — Re-audit of task 0006: all three findings verified fixed against the real
 files, so the two consequences above were rewritten from "this is what the code does" to the rule plus
 the shipped fix (`@js()` on both `wire:click` arguments, `#[Locked] $editingPendingEmail` read from
 `User::findOrFail()`, `#[Locked] $deletingUserName`), and `$users` staying unlocked was recorded as an

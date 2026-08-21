@@ -8,7 +8,7 @@ was verified against the installed `livewire/livewire` v4 source, not inferred f
 
 - [`/livewire/update` is a second entry point, and only an allow-listed subset of route middleware follows the component there](#livewireupdate-is-a-second-entry-point-and-only-an-allow-listed-subset-of-route-middleware-follows-the-component-there)
 - [Gate at the top of every method that mutates or discloses](#gate-at-the-top-of-every-method-that-mutates-or-discloses)
-- [`#[Locked]` is what makes `Rule::unique()->ignore()` safe here](#locked-is-what-makes-ruleuniqueignore-safe-here)
+- [`#[Locked]` is what makes `Rule::unique()->ignore()` safe here](#locked-is-what-makes-ruleunique-ignore-safe-here)
 - [Every server-derived property is `#[Locked]`, not just the ids](#every-server-derived-property-is-locked-not-just-the-ids)
 - [Authorization that lives only in the component is bypassed by every other call site of the action](#authorization-that-lives-only-in-the-component-is-bypassed-by-every-other-call-site-of-the-action)
 
@@ -195,7 +195,9 @@ Two rules to carry forward, both proven by how this was closed:
   [authorization-patterns.md](authorization-patterns.md#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
   for why the two Super Admin refusals are direct throws rather than `Gate` checks.
 
-_Last updated: 2026-08-20 — Task 0040: the ✅ `can:`-gated route quote now cites
+_Last updated: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for the `#[Locked]` section — `Rule::unique()->ignore()` slugifies to `ruleunique-ignore`, not `ruleuniqueignore`, because the hyphen in `->` survives. Content unchanged._
+
+_Previously: 2026-08-20 — Task 0040: the ✅ `can:`-gated route quote now cites
 [`routes/users.php`](../../routes/users.php), the per-area file `users.index` moved into. The rule it
 illustrates is untouched — the declaration, its middleware and the `PersistentMiddleware` allow-list
 behind it are byte-identical; only the file the route is declared in changed._
