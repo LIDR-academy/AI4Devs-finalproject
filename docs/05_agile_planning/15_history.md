@@ -46,3 +46,14 @@ inputs:
   - ✅ `openapi.yaml` sincronizado con los 2 endpoints nuevos (mismo criterio de `TK-047`: validado en vivo, no solo declarado).
 - **Estado de Tests:** 9 tests nuevos (creación exitosa, login inmediato con el PIN asignado, 403 sin rol ADMIN, 401 sin token, 400 en PIN inválido, bloqueo con verificación de que el login subsecuente falla, reactivación, 404 usuario inexistente) — 55/55 backend + 52/52 frontend en verde.
 - **Estado de Build/Lint/Duplicación:** 0 errores; duplicación 1.48% (umbral 3%).
+
+### 2026-08-21 - Trazabilidad de Movimientos de Stock (TK-050)
+- **Hito:** `GET /api/v1/stock/movements` (ADMIN, con filtros `insumoId`/`startDate`/`endDate`) — el modelo `StockMovement` ya se poblaba en cada extracción/consumo/descarte pero nunca se podía consultar; ahora un admin puede auditar "quién movió qué y cuándo".
+- **Acciones Realizadas:**
+  - ✅ Nueva interfaz `IStockMovementQueryRepository`, siguiendo el mismo patrón CQRS-ish ya establecido por `IRemanenteQueryRepository` (separación query/write dentro del mismo dominio).
+  - ✅ `InMemoryStockMovementQueryRepository` envuelve la misma instancia de `InMemoryStockRepository` (no un store independiente) — los movimientos generados por extracción/descarte/conciliación aparecen automáticamente en la consulta.
+  - ✅ `PrismaStockMovementQueryRepository` nuevo. `StockMovementRecord.createdAt` (opcional) añadido a la interfaz de escritura — Prisma ya lo generaba (`@default(now())`), pero el InMemory no lo tenía.
+  - ✅ `openapi.yaml` sincronizado con el endpoint nuevo.
+- **Estado de Tests:** 5 tests nuevos (historial poblado por un movimiento real —no seed directo—, filtro por `insumoId`, 403 sin rol ADMIN, 401 sin token, lista vacía sin movimientos) — 60/60 backend + 52/52 frontend en verde.
+- **Estado de Build/Lint/Duplicación:** 0 errores; duplicación 2.02% (umbral 3%).
+- **Cierre de sesión:** con esto se completan las 3 implementaciones priorizadas del análisis MVP (persistencia real, gestión de personal, trazabilidad de movimientos) — TK-048, TK-049, TK-050.

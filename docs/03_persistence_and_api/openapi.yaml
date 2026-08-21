@@ -168,6 +168,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/stock/movements:
+    get:
+      summary: Query stock movement audit trail (ADMIN only)
+      operationId: getStockMovementHistory
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: insumoId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Movement history ordered by most recent first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockMovementHistoryItem'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/kitchen/remanentes-activos:
     get:
       summary: List active kitchen remanentes ordered by FEFO
@@ -524,6 +566,28 @@ components:
           format: date-time
         status:
           type: string
+
+    StockMovementHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        type:
+          type: string
+          example: "DISCARD_EXPIRATION"
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+        fromLoc:
+          type: string
+        toLoc:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
           enum: [ACTIVE, CONSUMED, DISCARDED]
 
     RemanenteItem:

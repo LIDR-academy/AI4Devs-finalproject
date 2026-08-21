@@ -12,6 +12,8 @@ import { InMemoryReportRepository } from '../reports/repositories/InMemoryReport
 import { InMemoryRecipeRepository } from '../catalog/repositories/InMemoryRecipeRepository.js';
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
 import { IStockRepository } from '../../domain/stock/repositories/IStockRepository.js';
+import { IStockMovementQueryRepository } from '../../domain/stock/repositories/IStockMovementQueryRepository.js';
+import { InMemoryStockMovementQueryRepository } from '../stock/repositories/InMemoryStockMovementQueryRepository.js';
 import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 import { IReportRepository } from '../../domain/reports/repositories/IReportRepository.js';
 import { IRecipeRepository } from '../../domain/catalog/repositories/IRecipeRepository.js';
@@ -31,6 +33,7 @@ import { InMemoryShiftReconciliationRepository } from '../kitchen/repositories/I
 export interface AppOptions {
   userRepository?: IUserRepository;
   stockRepository?: IStockRepository;
+  stockMovementQueryRepository?: IStockMovementQueryRepository;
   remanenteQueryRepository?: IRemanenteQueryRepository;
   reportRepository?: IReportRepository;
   recipeRepository?: IRecipeRepository;
@@ -108,6 +111,7 @@ interface AppRepositories {
   userRepo: IUserRepository;
   jwtSecret: string;
   stockRepo: IStockRepository;
+  stockMovementQueryRepo: IStockMovementQueryRepository;
   remanenteQueryRepo: IRemanenteQueryRepository;
   reportRepo: IReportRepository;
   recipeRepo: IRecipeRepository;
@@ -121,6 +125,8 @@ function buildDefaultRepositories(options: AppOptions): AppRepositories {
     userRepo: options.userRepository ?? new InMemoryUserRepository(),
     jwtSecret: options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-test-only-jwt-secret',
     stockRepo,
+    stockMovementQueryRepo:
+      options.stockMovementQueryRepository ?? new InMemoryStockMovementQueryRepository(stockRepo as InMemoryStockRepository),
     remanenteQueryRepo:
       options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository(stockRepo as InMemoryStockRepository),
     reportRepo: options.reportRepository ?? new InMemoryReportRepository(),
@@ -152,10 +158,10 @@ function mountApiRoutes(
   authMiddleware: ReturnType<typeof createAuthenticateJWTMiddleware>,
   isAuthRequired: boolean
 ): void {
-  const { stockRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, reportRepo } = repos;
+  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, reportRepo } = repos;
   const guard = isAuthRequired ? [authMiddleware] : [];
 
-  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo));
+  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo));
   app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
   app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo));
 }

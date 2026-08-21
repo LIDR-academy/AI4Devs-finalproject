@@ -41,6 +41,6 @@ export class InMemoryStockRepository implements IStockRepository {
   }
 
   async recordMovement(movement: StockMovementRecord): Promise<void> {
-    this.movements.push(movement);
+    this.movements.push({ ...movement, createdAt: movement.createdAt ?? new Date() });
   }
 }

@@ -6,6 +6,7 @@ import { PrismaRemanenteQueryRepository } from '../kitchen/repositories/PrismaRe
 import { PrismaReportRepository } from '../reports/repositories/PrismaReportRepository.js';
 import { PrismaRecipeRepository } from '../catalog/repositories/PrismaRecipeRepository.js';
 import { PrismaShiftReconciliationRepository } from '../kitchen/repositories/PrismaShiftReconciliationRepository.js';
+import { PrismaStockMovementQueryRepository } from '../stock/repositories/PrismaStockMovementQueryRepository.js';
 
 /**
  * Antes de este fix, server.ts llamaba createApp() sin argumentos, y cada
@@ -27,6 +28,7 @@ export function buildRepositoriesForEnvironment(
   return {
     userRepository: new PrismaUserRepository(prisma),
     stockRepository: new PrismaStockRepository(prisma),
+    stockMovementQueryRepository: new PrismaStockMovementQueryRepository(prisma),
     remanenteQueryRepository: new PrismaRemanenteQueryRepository(prisma),
     reportRepository: new PrismaReportRepository(prisma),
     recipeRepository: new PrismaRecipeRepository(prisma),
