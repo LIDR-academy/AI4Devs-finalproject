@@ -148,7 +148,7 @@ Feature: Roles and permissions management
 > one way. 0011 has been edited to match, and its shared-surface warning (0011 owns the Blade view and
 > the component's UI-state properties; 0010 owns every query, mutation, validation rule and
 > authorization decision) still governs *what* each story writes inside the component class.
-> [Story 0012](../in-progress/0012-module-access-gating-backend.md)'s Phase 2 INVEST review (2026-08-21)
+> [Story 0012](../done/0012-module-access-gating-backend.md)'s Phase 2 INVEST review (2026-08-21)
 > reconciled exactly this: its `routes/roles.php` bullet and open question 3 now read "created by
 > story 0010", not the older "whichever of 0010 / 0011 lands first" hedge. 0012 owns only the
 > middleware chain, not the file, so nothing broke in the meantime — this note is now historical.
@@ -475,7 +475,7 @@ Feature: Roles and permissions management
   **not** `Spatie\Permission\Middleware\PermissionMiddleware`. So a `permission:`-gated route protects
   the initial `GET` only: every subsequent `saveRole()` / `deleteRole()` action request runs through
   **zero** permission middleware, silently, while the page-load check keeps passing. Sibling story
-  [0012](../in-progress/0012-module-access-gating-backend.md) states the identical rule for every future module
+  [0012](../done/0012-module-access-gating-backend.md) states the identical rule for every future module
   route, and [`docs/api/routes.md`](../../../docs/api/routes.md#usersindex--the-first-permission-gated-route)
   records it as an already-shipped project convention that must not be "normalised" away —
   `routes/web.php` carries it as an inline comment above `users.index`. Write the same comment above

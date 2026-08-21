@@ -290,21 +290,21 @@ The full list below is kept as **regression evidence** (must stay green, not be 
 where a bullet is marked new-scope.
 
 **Regression (already shipped by 0010/0011 — re-run, do not rewrite):**
-- [ ] A user holding `users.view` gets 200 on `users.index` (`Users/IndexTest.php:1206`).
-- [ ] A user holding "manage roles & permissions" gets 200 on `roles.index` (`Roles/IndexTest.php:420`).
-- [ ] A user with zero permissions gets `assertForbidden()` on each route
+- [x] A user holding `users.view` gets 200 on `users.index` (`Users/IndexTest.php:1206`).
+- [x] A user holding "manage roles & permissions" gets 200 on `roles.index` (`Roles/IndexTest.php:420`).
+- [x] A user with zero permissions gets `assertForbidden()` on each route
       (`Users/IndexTest.php:1198`, `Roles/IndexTest.php:414`).
-- [ ] A guest gets `assertRedirect(route('login'))`, **not** 403, on each route — proves `auth` fires
+- [x] A guest gets `assertRedirect(route('login'))`, **not** 403, on each route — proves `auth` fires
       before the permission check (`Users/IndexTest.php:1191`, `Roles/IndexTest.php:407`).
-- [ ] A Super Admin holding no permission rows gets 200 on `users.index` (exercises the real
+- [x] A Super Admin holding no permission rows gets 200 on `users.index` (exercises the real
       `Gate::before` bypass; do **not** fake the Gate) (`Users/IndexTest.php:1214`).
-- [ ] Permission-cache staleness (revoke), at the component/model level
+- [x] Permission-cache staleness (revoke), at the component/model level
       (`Users/IndexTest.php:1169`, `Roles/IndexTest.php:152`).
-- [ ] Permission-cache staleness (grant), the symmetric 403 → 200 transition, at the component/model
+- [x] Permission-cache staleness (grant), the symmetric 403 → 200 transition, at the component/model
       level (`Roles/IndexTest.php:182`).
-- [ ] Mutating the *role's* permission set (not the user's own row) reaches the holder on the next
+- [x] Mutating the *role's* permission set (not the user's own row) reaches the holder on the next
       request (`Roles/IndexTest.php:152` / `:182`).
-- [ ] Full regression run: `tests/Feature/DashboardTest.php`,
+- [x] Full regression run: `tests/Feature/DashboardTest.php`,
       `tests/Feature/Models/UserRolesAndPermissionsTest.php`, `tests/Feature/Settings/*` (notably
       `security.edit`'s `password.confirm`), plus a **full** `php artisan test --compact` run. The
       shared surface here is the **Gate** (Spatie's `Gate::before` hook plus 0002's Super Admin
@@ -312,15 +312,15 @@ where a bullet is marked new-scope.
       regression risk, not a two-route one.
 
 **New scope (2026-08-21, Phase 2 review F-4/F-5 — the four gaps neither sibling suite covers, five checklist items in all):**
-- [ ] Edge: a Super Admin holding no permission rows gets 200 on `roles.index` too — only
+- [x] Edge: a Super Admin holding no permission rows gets 200 on `roles.index` too — only
       `users.index` has this case today.
-- [ ] Negative: cross-gate independence — a user with `users.view` but not
+- [x] Negative: cross-gate independence — a user with `users.view` but not
       "manage roles & permissions" gets 200 on `users.index` and 403 on `roles.index`.
-- [ ] Negative: cross-gate independence, reverse — a user with "manage roles & permissions" but not
+- [x] Negative: cross-gate independence, reverse — a user with "manage roles & permissions" but not
       `users.view` gets 200 on `roles.index` and 403 on `users.index`.
-- [ ] Negative: the 403 response body names no permission — assert against the rendered response,
+- [x] Negative: the 403 response body names no permission — assert against the rendered response,
       not just the status code, on at least one denied route.
-- [ ] Edge: permission-cache staleness (revoke and grant), proven through the **HTTP route** —
+- [x] Edge: permission-cache staleness (revoke and grant), proven through the **HTTP route** —
       `$this->get(route('users.index'))` / `$this->get(route('roles.index'))` — rather than through
       the component or model layer the shipped tests already cover, since the route-middleware layer
       is what this story actually owns.
@@ -361,25 +361,25 @@ chaining one `can:<permission>` middleware onto its route — no new mechanism t
 middleware alias to register.
 
 ## Acceptance criteria
-- [ ] `users.index` is gated on `can:users.view` and `roles.index` on the single "manage roles &
+- [x] `users.index` is gated on `can:users.view` and `roles.index` on the single "manage roles &
       permissions" permission (`roles.manage`), enforced by route middleware and independently of
       each other. **Resolved 2026-08-21 (open questions 2 and 6, human-confirmed)** — both gates are
       single-ability and fully disjoint; see "Confirmed product decisions" near the top of this file.
-- [ ] A signed-in user lacking the required permission is refused server-side with 403 on a direct
+- [x] A signed-in user lacking the required permission is refused server-side with 403 on a direct
       URL visit, with the sidebar playing no part in the outcome.
-- [ ] The refusal discloses no permission name.
-- [ ] A guest is redirected to sign-in rather than shown a denial — `auth` resolves before the
+- [x] The refusal discloses no permission name.
+- [x] A guest is redirected to sign-in rather than shown a denial — `auth` resolves before the
       permission check.
-- [ ] The Super Admin passes both routes with no permission rows and no Super Admin-specific code in
+- [x] The Super Admin passes both routes with no permission rows and no Super Admin-specific code in
       this story.
-- [ ] Per-route (not group-level) `can:` middleware written as the plain alias string is the
+- [x] Per-route (not group-level) `can:` middleware written as the plain alias string is the
       documented, copyable pattern for later epics, with the rejected alternatives recorded — Spatie's
       `permission:` (off Livewire's `PersistentMiddleware` allow-list, so it does not survive
       `/livewire/update`), a group-level gate, and Laravel's `->can()` route sugar.
-- [ ] `bootstrap/app.php` is untouched by this story, and needs no change: `can` is a framework
+- [x] `bootstrap/app.php` is untouched by this story, and needs no change: `can` is a framework
       default alias, so no alias registration is consumed from 0002 or anywhere else.
-- [ ] Neither module route is registered, renamed, or moved by this story.
-- [ ] A revoked or granted permission takes effect on the holder's next request, covered by a test
+- [x] Neither module route is registered, renamed, or moved by this story.
+- [x] A revoked or granted permission takes effect on the holder's next request, covered by a test
       that exercises the real single-process cache invalidation on the route-middleware layer.
       **Narrowed 2026-08-21 (Phase 4 security audit, F1)** — the shipped tests
       (`ModuleRouteAccessTest.php`'s cache-staleness dataset) call `revokePermissionTo()` /
@@ -395,14 +395,19 @@ middleware alias to register.
       prevented by construction, not caught by a test.
 
 ## Definition of Done
-- [ ] Tests written and green
-- [ ] Code reviewed (code-reviewer) — **note (re-review N-4)**: under open question 6's recommended
-      resolution this story produces no production-code diff (both routes already ship correctly
-      gated), so this review is of the new tests and this file's own corrections, not of a route
-      change
-- [ ] No security findings (appsec-auditor)
-- [ ] Documentation updated (docs-keeper)
-- [ ] Acceptance criteria met
+- [x] Tests written and green — `tests/Feature/Authorization/ModuleRouteAccessTest.php` (9 tests),
+      full unscoped suite 618/618
+- [x] Code reviewed (code-reviewer) — Phase 5, PASS. **Corrected 2026-08-21**: the note this bullet
+      originally carried ("under open question 6's recommended resolution this story produces no
+      production-code diff") was true only through Phase 3 — Phase 4's security audit found and fixed
+      a real bug in `App\Livewire\Roles\Index` (the post-commit permission-cache flush), so this story
+      does carry a production-code diff after all, independently re-verified correct by Phase 5.
+- [x] No security findings (appsec-auditor) — **Phase 4 found one Medium (F1) and three Low (F2–F4),
+      all fixed in the same pass** (commit `0a53acb`); "no security findings" reflects the
+      **closing** state, not that none were raised. See the Phase 4 record above.
+- [x] Documentation updated (docs-keeper) — Phase 6, closing Phase 5's two deferred items (F1/F2) into
+      `docs/architecture/authorization.md`'s new "copyable module-gate pattern" section
+- [x] Acceptance criteria met — all 9, including AC6 once Phase 6 landed the pattern in `docs/`
 
 ## Dependencies
 - **Task 0002** — the seeded permission catalog (`users.*`, `roles.manage`) and the Super Admin
