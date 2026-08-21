@@ -1,7 +1,7 @@
 ---
 name: SK-29_load_and_performance_testing
 description: "Diseña, genera y ejecuta pruebas no-funcionales de carga y rendimiento de forma agnóstica a la pila tecnológica. La regresión visual vive en SK-21 (development/06_visual_qa), no aquí — evita duplicación entre skills con responsabilidades distintas."
-version: "1.1.0"
+version: "1.2.0"
 category: "development/07_performance_and_observability"
 inputs:
   - api_spec_path: "Ruta opcional a la especificación de API (OpenAPI, GraphQL, gRPC)"
@@ -22,10 +22,10 @@ Actúa como un Principal Performance & Infrastructure QA Engineer. Tu objetivo e
 ---
 
 ## ⚡ FASE 1: Análisis de SLAs y Criterios No-Funcionales
-1. **Definición de Umbrales de Rendimiento (SLAs Universales):**
-   - **Latencia Percentil 95 (p95):** < 200ms para operaciones de lectura/escritura estándar.
-   - **Latencia Percentil 99 (p99):** < 500ms bajo carga sostenida.
-   - **Tasa de Error HTTP (Error Rate):** 0.00% bajo volumen nominal.
+1. **Definición de Umbrales de Rendimiento (Guard 24 — NFR del proyecto antes que default genérico):**
+   - **Fuente primaria:** busca un NFR de latencia ya declarado para el/los endpoint(s) bajo prueba, en la sección "Criterios de Aceptación No Funcionales (NFRs)" de la User Story asociada (`docs/05_agile_planning/11_user_stories/{modulo}/US-XXX.md`) o en `docs/01_product_definition/02_prd.md`. Si existe, ese es el umbral bloqueante real — nunca lo sobrescribas con un default genérico.
+   - **Fallback documentado (solo si el proyecto NO declaró un NFR para ese endpoint):** p95 < 200ms, p99 < 500ms bajo carga sostenida. Repórtalo explícitamente como "SLA por defecto, sin NFR específico del proyecto" en el reporte final — nunca lo presentes como si fuera un requisito de negocio confirmado.
+   - **Tasa de Error HTTP (Error Rate):** 0.00% bajo volumen nominal — este sí es un criterio de ingeniería de carga universal, no depende del dominio de negocio.
    - **Concurrencia Escalonada:** Probar ramp-up gradual de usuarios virtuales (Virtual Users - VUs).
 
 2. **Detección de Endpoints Críticos:**
@@ -47,6 +47,8 @@ Actúa como un Principal Performance & Infrastructure QA Engineer. Tu objetivo e
        { duration: '15s', target: 0 },  # Ramp-down
      ],
      thresholds: {
+       // Sustituye 200/500 por el NFR real del endpoint (FASE 1) si el proyecto declaró uno —
+       // estos son solo el fallback documentado cuando no existe un NFR específico.
        http_req_duration: ['p(95)<200', 'p(99)<500'],
        http_req_failed: ['rate<0.01'],
      },
@@ -66,3 +68,4 @@ Actúa como un Principal Performance & Infrastructure QA Engineer. Tu objetivo e
 ## ✅ FASE 3: Reporte de Resultados y Quality Gates
 1. Verificar que la tasa de fallo de requerimientos sea 0%.
 2. Si los umbrales p95 o p99 se violan, abortar la integración y registrar la degradación de rendimiento.
+3. **Declarar la procedencia del umbral usado (FASE 1):** el reporte final DEBE indicar explícitamente si el SLA aplicado vino de un NFR real del proyecto o del fallback genérico (200ms/500ms) — nunca presentar el fallback como si fuera un requisito de negocio verificado.
