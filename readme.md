@@ -498,6 +498,15 @@ para el caso serverless, donde hay **un pool por instancia viva** y el defecto d
 una conexión —la VM, el Postgres local del docker-compose— no se define ninguna de las
 dos y nada cambia. El esquema no se toca: Postgres es Postgres.
 
+**Y las dos cadenas necesitan `uselibpqcompat=true`.** `pg` v8.16+ interpreta
+`sslmode=require` como `verify-full`, y el certificado del pooler de Supabase encadena a
+una raíz que Node no trae de serie: sin ese parámetro la conexión muere con
+*"self-signed certificate in certificate chain"*, y no al migrar —el motor de Prisma usa
+la semántica de libpq— sino **en la aplicación**, que va por el mismo `pg` del driver
+adapter. El parámetro devuelve a `require` el significado de libpq (cifra, no verifica) y
+es la forma que sobrevive al cambio anunciado para `pg` v9. La alternativa estricta, si
+algún día importa: descargar la CA de Supabase y usar `verify-full` con `sslrootcert`.
+
 ### **2.5. Seguridad**
 
 Decidido en `documents/ADR-0002`:

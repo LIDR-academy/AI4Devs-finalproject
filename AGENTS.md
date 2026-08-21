@@ -1048,6 +1048,26 @@ project. Read it at the start of every session.
   ajusta la config. `next.config.ts` decide ahora por `process.env.VERCEL`: en la VM, en
   local y en el E2E sigue saliendo el paquete autónomo. Comprobado en las dos
   direcciones, y `tests/next-config.test.ts` lo fija.
+- **TLS con Supabase: `uselibpqcompat=true` (2026-08-21):** `pg` v8.16+ trata
+  `sslmode=require` como `verify-full` y el certificado del pooler de Supabase encadena a
+  una raíz que Node no lleva → *"self-signed certificate in certificate chain"*. **No se
+  ve al migrar** —el motor de Prisma usa semántica libpq— sino en la **aplicación**, que
+  va por el mismo `pg` del driver adapter, así que el síntoma aparece en el primer query
+  y no en el despliegue. El parámetro devuelve a `require` su significado de libpq y es
+  la forma que sobrevive al cambio anunciado para `pg` v9. Alternativa estricta: la CA de
+  Supabase con `verify-full` y `sslrootcert`.
+- **`vercel env pull` no baja los secretos de una integración (2026-08-21):** las
+  variables que gestiona la integración de Supabase se descargan con el valor literal
+  `[SENSITIVE]`. Solo bajan con valor real las creadas a mano. Consecuencia práctica:
+  comparar dos de esas variables entre sí **no prueba nada** —y la forma fiable de saber
+  si una credencial sigue siendo válida es **intentar conectar**, no compararla—. La URL
+  de sesión (5432) se puede **derivar** de la del pooler (6543) cambiando puerto y
+  quitando `pgbouncer`: mismo host, usuario y contraseña.
+- **La base de Supabase quedó inicializada (2026-08-21):** `migrate deploy` de las cinco
+  migraciones + semilla con `SEED_PASSWORD`. 23 tablas, 2 planes, 35 sets, 59 copias,
+  5 ajustes y las 5 cuentas. **Data API de Supabase desactivada** —el proyecto usa
+  Supabase solo como Postgres— porque las tablas creadas por Prisma nacen **sin RLS** y
+  quedarían legibles con la anon key, que es pública por diseño.
 - **Vercel no es la arquitectura del ADR (2026-08-21, en curso):** el intento de
   despliegue destapa tres cosas que el ADR-0001 §5 daba por resueltas con la VM y allí no
   lo están — no hay Postgres en `localhost` (hace falta uno gestionado, su `DATABASE_URL`,
