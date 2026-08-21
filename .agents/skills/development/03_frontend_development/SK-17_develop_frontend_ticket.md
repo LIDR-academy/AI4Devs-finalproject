@@ -1,7 +1,7 @@
 ---
 name: SK-17_develop_frontend_ticket
 description: "Guía el desarrollo atómico de tickets de Frontend aplicando Clean Architecture en cliente, SOLID (<150 líneas por componente), WCAG 2.2, Core Web Vitals (INP/LCP/CLS) y seguridad defensiva."
-version: "4.3.0"
+version: "4.4.0"
 category: "development/03_frontend_development"
 inputs:
   - ticket_id: "ID o ruta del ticket técnico de frontend (ej. TK-007 o docs/05_agile_planning/12_tickets/...)"
@@ -27,6 +27,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🔍 FASE 1: Descubrimiento de Pila Tecnológica, UI & Core Web Vitals
 1. **Analizar Especificación del Ticket:** Lee el ticket técnico en `docs/05_agile_planning/12_tickets/{ticket_id}` y comprende los criterios de aceptación (BDD/Gherkin).
+   - **Fail-Fast Obligatorio (Guard 26, `AGENTS.md`):** si `{ticket_id}` no existe como archivo — porque te pidieron implementar una funcionalidad nueva sin ticket previo — DETENTE. No implementes primero y documentes después: informa al humano que falta la Etapa 1 (`01_cascading_spec_workflow.md`: `SK-02`/`SK-11`/`SK-12`/`SK-13`/`SK-14`) y espera a que exista el `TK-XXX.md` antes de continuar con este skill.
 2. **Consultar Comandos Oficiales:** Consulta `AGENTS.md` para extraer los comandos declarados del proyecto para compilación (`build`), linter (`lint`) y runner de pruebas UI.
 3. **Descubrir Reglas de UX/UI, CWV y Pila Cliente:** Consulta las directivas declaradas en `required_rules` (especialmente `docs/04_governance_and_quality/rules/frontend_rules.md` y `docs/02_architecture_design/05_ui_ux_design_system.md`) para identificar:
    - Framework cliente y motor de formateo/linter oficial.

@@ -21,6 +21,7 @@ Dado el ticket técnico (`TK-XXX`) o requerimiento de codificación suministrado
 ### FASE 0: Lectura del Ticket y Mapeo del Entorno
 Antes de escribir cualquier línea de código:
 1. **Analizar el Ticket:** Lee detalladamente la especificación del ticket (ubicada en `docs/05_agile_planning/12_tickets/{modulo}/{backend|frontend}/TK-XXX.md`). Identifica los Criterios de Aceptación y el Definition of Done (DoD).
+   - **Fail-Fast Obligatorio (Guard 26):** si ese archivo `TK-XXX.md` **no existe** — porque el usuario pidió implementar una capacidad nueva en lenguaje natural, sin ticket previo — **DETENTE aquí**. No improvises la implementación y reconstruyas la especificación después: invoca primero la Etapa 1 completa de [01_cascading_spec_workflow.md](01_cascading_spec_workflow.md) (`SK-02` → PRD, `SK-11` → User Story, `SK-12` → Ticket Técnico, `SK-13` → Matriz de Trazabilidad, `SK-14` → Backlog Map) y solo entonces vuelve a esta FASE 0 con el `TK-XXX.md` ya creado. Programar primero y especificar después viola este Guard aunque se corrija en la misma sesión.
 2. **Identificar la Naturaleza de la Tarea:**
    - **Ticket de Backend:** Involucra dominio, casos de uso, repositorios y controladores REST.
    - **Ticket de Frontend:** Involucra componentes UI, hooks de estado, llamadas a la API y ruteo.
@@ -83,6 +84,6 @@ Si el ticket es de Frontend o interfaz de usuario:
 ---
 
 ## 🚫 REGLAS DE EJECUCIÓN INNEGOCIABLES:
-1. **No Vibe-Coding:** Jamás comiences a escribir clases o controladores sin haber leído las reglas en `docs/04_governance_and_quality/rules/` y el ticket específico.
+1. **No Vibe-Coding (Guard 26):** Jamás comiences a escribir clases o controladores sin haber leído las reglas en `docs/04_governance_and_quality/rules/` y el ticket específico — y si ese ticket no existe todavía, el primer paso es crearlo vía la Etapa 1 (`01_cascading_spec_workflow.md`), nunca escribir el código primero y documentarlo después.
 2. **InMemory Fakes:** Nunca uses mocks complejos de bases de datos para tests unitarios. Utiliza repositorios falsos en memoria (`InMemoryRepository`).
 3. **Commit por Ticket:** No consolides el trabajo de varios tickets en un solo commit. Mantén la trazabilidad git impecable.

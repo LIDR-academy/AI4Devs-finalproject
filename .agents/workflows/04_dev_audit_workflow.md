@@ -22,6 +22,7 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 1. Inspecciona la carpeta `docs/04_governance_and_quality/rules/`.
 2. Lee las directivas activas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`).
 3. Identifica el runner de pruebas del proyecto, el motor de linters/compiladores y los estándares de sanitización.
+4. **Cascada Spec-Antes-que-Código (Guard 26, TK-054):** confirma que existe un `TK-XXX.md` en `docs/05_agile_planning/12_tickets/` para el ticket auditado, con al menos 1 User Story (`US-XXX.md`) enlazada (o `N/A (Técnico)` justificado si es un habilitador de infraestructura) y una fila correspondiente en `13_matriz_trazabilidad.md`. Si el código ya existe pero estos artefactos de la Etapa 1 no — o se crearon después, como reconstrucción retroactiva en vez de spec previa — marca la fase como DEFECTUOSA: es la misma clase de gap que dejó sin Frontend a `TK-049`/`TK-050` hasta que una auditoría manual lo detectó.
 
 ---
 
