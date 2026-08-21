@@ -10,6 +10,17 @@ middleware wiring **pattern** that every later epic's module routes will copy.
 ## Type
 backend (related_task_id: 0013) | includes database-expert: no
 
+**Confirmed product decisions (2026-08-21, human-confirmed before Phase 3, resolving open questions
+2 and 6 below — both recommended options taken):**
+1. **`users.index` gates on the single ability `can:users.view`** — already what ships today, needs
+   no new code, and keeps the two gates independent. The Gherkin below and the acceptance criteria
+   are written accordingly (`"users.view"`, not "a Users & Roles permission"); the composite
+   `Gate::define('users.access', …)` alternative is rejected — it would add an out-of-scope
+   `app/Providers/` change and a permission name outside 0002's seeded catalog.
+2. **`roles.manage` and `users.view` are fully disjoint gates** — holding one never implies the
+   other. This is what makes the cross-gate independence scenarios below meaningful, and matches
+   0013's two-independent-lists sidebar design.
+
 ## Gherkin
 ```gherkin
 Feature: Server-side module access gating
@@ -25,7 +36,7 @@ Feature: Server-side module access gating
       | Roles & Permissions |
 
   Scenario: A user administrator reaches the Users screen
-    Given a user administrator whose role grants a Users & Roles permission
+    Given a user administrator whose role grants the "users.view" permission
     When they navigate directly to the Users URL
     Then the Users screen is served to them
 
@@ -34,15 +45,15 @@ Feature: Server-side module access gating
     When they navigate directly to the Roles & Permissions URL
     Then the Roles & Permissions area is served to them
 
-  Scenario: Holding Users & Roles permissions does not open the Roles & Permissions area
-    Given an administrator whose role grants Users & Roles permissions but not
+  Scenario: Holding the Users view permission does not open the Roles & Permissions area
+    Given an administrator whose role grants "users.view" but not
       "manage roles & permissions"
     When they navigate directly to the Roles & Permissions URL
     Then access is denied server-side
 
   Scenario: Holding role-management permission does not open the Users screen
-    Given an administrator whose role grants "manage roles & permissions" but no
-      Users & Roles permission
+    Given an administrator whose role grants "manage roles & permissions" but not
+      "users.view"
     When they navigate directly to the Users URL
     Then access is denied server-side
 
@@ -68,13 +79,13 @@ Feature: Server-side module access gating
 
   Scenario: Revoking a module permission closes the module on the next visit
     Given a user administrator who has already opened the Users screen in this session and
-      whose role has since had its Users & Roles permissions revoked
+      whose role has since had "users.view" revoked
     When they navigate directly to the Users URL again
     Then access is denied server-side
 
   Scenario: Granting a module permission opens the module on the next visit
     Given an administrator who was refused the Users screen and whose role has since been
-      granted a Users & Roles permission
+      granted "users.view"
     When they navigate directly to the Users URL again
     Then the Users screen is served to them
 
@@ -251,7 +262,7 @@ turns up nearly every case originally planned here, already green:
 
 | planned case | already shipped at |
 | --- | --- |
-| a Users & Roles permission holder gets 200 on `users.index` | `Users/IndexTest.php:1206` |
+| a `users.view` holder gets 200 on `users.index` | `Users/IndexTest.php:1206` |
 | a `roles.manage` holder gets 200 on `roles.index` | `Roles/IndexTest.php:420` |
 | a zero-permission user gets 403 on each route | `Users/IndexTest.php:1198`, `Roles/IndexTest.php:414` |
 | a guest is redirected to `login` on each route | `Users/IndexTest.php:1191`, `Roles/IndexTest.php:407` |
@@ -279,7 +290,7 @@ The full list below is kept as **regression evidence** (must stay green, not be 
 where a bullet is marked new-scope.
 
 **Regression (already shipped by 0010/0011 — re-run, do not rewrite):**
-- [ ] A user holding one Users & Roles permission gets 200 on `users.index` (`Users/IndexTest.php:1206`).
+- [ ] A user holding `users.view` gets 200 on `users.index` (`Users/IndexTest.php:1206`).
 - [ ] A user holding "manage roles & permissions" gets 200 on `roles.index` (`Roles/IndexTest.php:420`).
 - [ ] A user with zero permissions gets `assertForbidden()` on each route
       (`Users/IndexTest.php:1198`, `Roles/IndexTest.php:414`).
@@ -303,10 +314,10 @@ where a bullet is marked new-scope.
 **New scope (2026-08-21, Phase 2 review F-4/F-5 — the four gaps neither sibling suite covers, five checklist items in all):**
 - [ ] Edge: a Super Admin holding no permission rows gets 200 on `roles.index` too — only
       `users.index` has this case today.
-- [ ] Negative: cross-gate independence — a user with a Users & Roles permission but not
+- [ ] Negative: cross-gate independence — a user with `users.view` but not
       "manage roles & permissions" gets 200 on `users.index` and 403 on `roles.index`.
-- [ ] Negative: cross-gate independence, reverse — a user with "manage roles & permissions" but no
-      Users & Roles permission gets 200 on `roles.index` and 403 on `users.index`.
+- [ ] Negative: cross-gate independence, reverse — a user with "manage roles & permissions" but not
+      `users.view` gets 200 on `roles.index` and 403 on `users.index`.
 - [ ] Negative: the 403 response body names no permission — assert against the rendered response,
       not just the status code, on at least one denied route.
 - [ ] Edge: permission-cache staleness (revoke and grant), proven through the **HTTP route** —
@@ -314,11 +325,11 @@ where a bullet is marked new-scope.
       the component or model layer the shipped tests already cover, since the route-middleware layer
       is what this story actually owns.
 
-**Conditional on open question 6 (drop entirely if `users.index` stays single-ability):**
-- [ ] Integration: a dataset of 2–3 *different* Users & Roles permissions each independently opens
-      `users.index` — proves a genuine any-of check, not a hardcoded single string. Two or three is
-      enough; enumerating the whole catalog is decoration. Wrong to write if `can:users.view` (the
-      recommended, already-shipped resolution) stands.
+**Dropped 2026-08-21 (open questions 2 and 6 resolved, human-confirmed) — the any-of dataset test.**
+`users.index` stays gated on the single ability `can:users.view` (already shipping), so a dataset
+proving "2–3 different Users & Roles permissions each independently open `users.index`" would be
+testing a gate this story does not build. See the "Confirmed product decisions" note near the top of
+this file.
 
 **Removed 2026-08-21 (Phase 2 review, F-2) — a planned `verified`-refusal test that cannot fail.**
 `App\Models\User` does not implement `Illuminate\Contracts\Auth\MustVerifyEmail` (the import sits
@@ -350,11 +361,10 @@ chaining one `can:<permission>` middleware onto its route — no new mechanism t
 middleware alias to register.
 
 ## Acceptance criteria
-- [ ] `users.index` is gated on *any* Users & Roles permission and `roles.index` on the single
-      "manage roles & permissions" permission (`roles.manage`), enforced by route middleware and
-      independently of each other. **The `users.index` half is pending open question 6** — `can:`
-      takes one ability, so the any-of form needs a decision before Phase 3; the independence
-      requirement stands either way.
+- [ ] `users.index` is gated on `can:users.view` and `roles.index` on the single "manage roles &
+      permissions" permission (`roles.manage`), enforced by route middleware and independently of
+      each other. **Resolved 2026-08-21 (open questions 2 and 6, human-confirmed)** — both gates are
+      single-ability and fully disjoint; see "Confirmed product decisions" near the top of this file.
 - [ ] A signed-in user lacking the required permission is refused server-side with 403 on a direct
       URL visit, with the sidebar playing no part in the outcome.
 - [ ] The refusal discloses no permission name.
@@ -421,13 +431,10 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
    question. Note also that `users.index` already ships gated on `can:users.view` (see
    [`docs/api/routes.md`](../../../docs/api/routes.md#usersindex--the-first-permission-gated-route)), so
    this story adjusts an existing gate rather than adding the first one.
-2. **Does "manage roles & permissions" count toward the "any Users & Roles permission" gate?** This
-   story is written assuming **not**.
-   - **(recommended)** Keep the two sets fully disjoint — matches 0013's two-independent-lists
-     registry design and makes the cross-gate scenarios above meaningful.
-   - Treat role management as a superset that implies user-module access. This would invalidate the
-     "role-management permission does not open the Users screen" scenario, so it must be settled
-     explicitly with 0002, not discovered in Phase 3.
+2. **~~Does "manage roles & permissions" count toward the Users gate?~~ RESOLVED 2026-08-21,
+   human-confirmed.** Recommended option taken: **the two sets are fully disjoint** — matches 0013's
+   two-independent-lists registry design and makes the cross-gate scenarios above meaningful. Gherkin
+   and acceptance criteria are written accordingly.
 3. **~~Where `roles.index` physically lives.~~ RESOLVED by 0010 — a new `routes/roles.php`.**
    [Story 0010](../done/0010-role-permission-management-backend.md) settled this in its own debate and lists
    it among the decisions "recorded so they are not reopened": the route is
@@ -456,25 +463,19 @@ Resolve before Phase 3; none of them blocks Phase 2 INVEST review.
    checks. Use 0002's actual constant or config value in the Super Admin test rather than a guessed
    string. **Corrected 2026-08-21 (cosmetic, Phase 2 review):** 0002 is closed; the substance stands,
    the "block on 0002 landing" framing does not.
-6. **How is `users.index`'s "any Users & Roles permission" gate expressed, now that the middleware is
-   `can:` and not `permission:`?** ⚠️ **New, and it blocks Phase 3 for `users.index` only** —
-   `roles.index` is unaffected (a single ability, `can:roles.manage`, already settled by 0010).
-   Laravel's `Authorize` middleware takes **exactly one** ability; everything after it in the
-   middleware string is parsed as a model binding, so the `permission:a|b|c` OR form this story was
-   originally written around has no `can:` equivalent. Three ways out:
-   - **(recommended)** Gate on the single ability `can:users.view`, which is what already ships and
-     what `docs/api/routes.md` documents. It reads as "may see the Users module", mirrors
-     `roles.index`'s single-ability shape, needs no new code, and keeps the two gates independent —
-     acceptance criterion 1's real requirement. It does narrow the story: the any-of Gherkin
-     ("a Users & Roles permission") and the 2–3-permission dataset test would be rewritten to name
-     `users.view` specifically. Note the catalog makes this coherent — an actor granted
-     `users.edit` but not `users.view` is not a configuration 0002 intends.
-   - Define a composite ability — `Gate::define('users.access', fn (User $u) => $u->canAny([...]))`
-     in a service provider — and gate on `can:users.access`. Preserves the any-of semantics exactly,
-     but adds an `app/Providers/` change this story currently declares out of scope, and introduces
-     an ability name that is **not** in 0002's seeded catalog, which cuts against the
-     "never invent a permission name" rule in *Anti-patterns*.
-   - Keep `permission:users.view|users.create|...` for this one route. **Rejected** — it is the exact
-     thing `docs/api/routes.md` forbids on a `Route::livewire(...)` route, and `App\Livewire\Users\Index`'s
+6. **~~How is `users.index`'s any-of gate expressed under `can:`?~~ RESOLVED 2026-08-21,
+   human-confirmed.** Recommended option taken: **`can:users.view`**, the single ability already
+   shipping and already documented in `docs/api/routes.md`. It reads as "may see the Users module",
+   mirrors `roles.index`'s single-ability shape, needs no new code, and keeps the two gates
+   independent — acceptance criterion 1's real requirement. Consequence: this story narrows to
+   confirming/documenting an existing gate rather than building an any-of one; the Gherkin above and
+   the acceptance criteria below name `users.view` specifically, and the 2–3-permission dataset test
+   is dropped (see [Tests to perform](#tests-to-perform)'s "Conditional on open question 6" list,
+   removed accordingly). The two rejected alternatives, kept for the record:
+   - A composite ability — `Gate::define('users.access', fn (User $u) => $u->canAny([...]))` in a
+     service provider. Preserves any-of semantics exactly, but adds an out-of-scope `app/Providers/`
+     change and an ability name **not** in 0002's seeded catalog, against the "never invent a
+     permission name" rule in *Anti-patterns*.
+   - `permission:users.view|users.create|...` for this one route. The exact thing
+     `docs/api/routes.md` forbids on a `Route::livewire(...)` route — `App\Livewire\Users\Index`'s
      mutating methods would lose their route-layer protection on every `/livewire/update` round-trip.
-     Recorded only so it is visibly a rejected option rather than an overlooked one.
