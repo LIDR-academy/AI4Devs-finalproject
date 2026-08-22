@@ -105,4 +105,84 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de insumos)', () =
       expect(response.status).toBe(401);
     });
   });
+
+  describe('PATCH /api/v1/stock/insumos/:id/restock (US-013/TK-060)', () => {
+    it('ADMIN reabastece un insumo existente (200) sumando la cantidad al stock actual', async () => {
+      const app = createApp({ userRepository: userRepo, stockRepository: stockRepo, jwtSecret: secret });
+
+      const created = await request(app)
+        .post('/api/v1/stock/insumos')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Aceite de Oliva', unitOfMeasure: 'L' });
+
+      const response = await request(app)
+        .patch(`/api/v1/stock/insumos/${created.body.id}/restock`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ quantity: 20 });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        insumoId: created.body.id,
+        insumoName: 'Aceite de Oliva',
+        quantityAdded: '20.000',
+        newWarehouseStock: '20.000',
+      });
+
+      const listResponse = await request(app).get('/api/v1/stock/insumos').set('Authorization', `Bearer ${adminToken}`);
+      const listed = listResponse.body.find((i: { id: string }) => i.id === created.body.id);
+      expect(listed.warehouseStock).toBe('20.000');
+    });
+
+    it('rechaza con 404 si el insumo no existe', async () => {
+      const app = createApp({ userRepository: userRepo, stockRepository: stockRepo, jwtSecret: secret });
+
+      const response = await request(app)
+        .patch('/api/v1/stock/insumos/ins-inexistente/restock')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ quantity: 5 });
+
+      expect(response.status).toBe(404);
+    });
+
+    it('rechaza con 400 si la cantidad es cero o negativa', async () => {
+      const app = createApp({ userRepository: userRepo, stockRepository: stockRepo, jwtSecret: secret });
+
+      const created = await request(app)
+        .post('/api/v1/stock/insumos')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Sal Fina', unitOfMeasure: 'KG' });
+
+      const response = await request(app)
+        .patch(`/api/v1/stock/insumos/${created.body.id}/restock`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ quantity: 0 });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('title', 'ValidationError');
+    });
+
+    it('rechaza con 403 Forbidden si quien reabastece NO es ADMIN', async () => {
+      const app = createApp({ userRepository: userRepo, stockRepository: stockRepo, jwtSecret: secret });
+
+      const created = await request(app)
+        .post('/api/v1/stock/insumos')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Azucar Blanca', unitOfMeasure: 'KG' });
+
+      const response = await request(app)
+        .patch(`/api/v1/stock/insumos/${created.body.id}/restock`)
+        .set('Authorization', `Bearer ${staffToken}`)
+        .send({ quantity: 5 });
+
+      expect(response.status).toBe(403);
+    });
+
+    it('rechaza con 401 Unauthorized sin token', async () => {
+      const app = createApp({ userRepository: userRepo, stockRepository: stockRepo, jwtSecret: secret });
+
+      const response = await request(app).patch('/api/v1/stock/insumos/ins-cualquiera/restock').send({ quantity: 5 });
+
+      expect(response.status).toBe(401);
+    });
+  });
 });

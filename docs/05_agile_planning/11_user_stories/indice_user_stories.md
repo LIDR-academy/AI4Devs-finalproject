@@ -17,6 +17,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite registrar la salida física de insumos enteros desde el almacén central y su correspondiente ingreso a la cocina con el cálculo de su vida útil acelerada.
 *   **[US-011: Trazabilidad y Auditoría de Movimientos de Stock](stock/US-011.md)**
     *   *Descripción:* Permite a un Administrador consultar el historial completo de movimientos de stock filtrado por insumo y rango de fechas. ✅ Backend (`TK-050`) y Frontend (`TK-050-FE`) implementados.
+*   **[US-013: Reabastecimiento de Bodega](stock/US-013.md)**
+    *   *Descripción:* Permite a un Administrador sumar stock a un insumo existente cuando llega una entrega nueva del proveedor. ✅ Backend (`TK-060`) y Frontend (`TK-060-FE`) implementados.
 
 ### 📖 Catálogo (`/catalog/`)
 *   **[US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](catalog/US-012.md)**

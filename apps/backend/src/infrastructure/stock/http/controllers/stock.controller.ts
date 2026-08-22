@@ -4,6 +4,7 @@ import { RecordExtractionUseCase } from '../../../../application/stock/use-cases
 import { GetStockMovementHistoryUseCase } from '../../../../application/stock/use-cases/GetStockMovementHistoryUseCase.js';
 import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/CreateInsumoUseCase.js';
 import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
+import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
 
 export const recordExtractionSchema = z.object({
   insumoId: z.string().min(1, 'El ID de insumo es obligatorio.'),
@@ -16,6 +17,10 @@ export const createInsumoSchema = z.object({
   unitOfMeasure: z.enum(['KG', 'L', 'UNITS'], {
     errorMap: () => ({ message: 'La unidad de medida debe ser KG, L o UNITS.' }),
   }),
+});
+
+export const restockInsumoSchema = z.object({
+  quantity: z.coerce.number().positive('La cantidad a reabastecer debe ser positiva.'),
 });
 
 export const stockMovementHistoryQuerySchema = z.object({
@@ -41,7 +46,8 @@ export class StockController {
     private readonly recordExtractionUseCase: RecordExtractionUseCase,
     private readonly getStockMovementHistoryUseCase?: GetStockMovementHistoryUseCase,
     private readonly createInsumoUseCase?: CreateInsumoUseCase,
-    private readonly listInsumosUseCase?: ListInsumosUseCase
+    private readonly listInsumosUseCase?: ListInsumosUseCase,
+    private readonly restockInsumoUseCase?: RestockInsumoUseCase
   ) {}
 
   public recordExtraction = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -108,6 +114,28 @@ export class StockController {
       const result = await this.listInsumosUseCase.execute();
       res.status(200).json(result);
     } catch (error) {
+      next(error);
+    }
+  };
+
+  public restockInsumo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const parsedBody = restockInsumoSchema.parse(req.body);
+
+      if (!this.restockInsumoUseCase) {
+        throw new Error('RestockInsumoUseCase no configurado.');
+      }
+
+      const result = await this.restockInsumoUseCase.execute({
+        insumoId: req.params.id,
+        quantity: parsedBody.quantity,
+      });
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
       next(error);
     }
   };

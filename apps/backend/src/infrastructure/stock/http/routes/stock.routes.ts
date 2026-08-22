@@ -4,6 +4,7 @@ import { RecordExtractionUseCase } from '../../../../application/stock/use-cases
 import { GetStockMovementHistoryUseCase } from '../../../../application/stock/use-cases/GetStockMovementHistoryUseCase.js';
 import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/CreateInsumoUseCase.js';
 import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
+import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
 import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IStockMovementQueryRepository } from '../../../../domain/stock/repositories/IStockMovementQueryRepository.js';
@@ -20,11 +21,13 @@ export function createStockRouter(
     : undefined;
   const createInsumoUseCase = new CreateInsumoUseCase(stockRepository);
   const listInsumosUseCase = new ListInsumosUseCase(stockRepository);
+  const restockInsumoUseCase = new RestockInsumoUseCase(stockRepository, stockRepository);
   const controller = new StockController(
     useCase,
     getMovementHistoryUseCase,
     createInsumoUseCase,
-    listInsumosUseCase
+    listInsumosUseCase,
+    restockInsumoUseCase
   );
 
   router.post('/extraction', controller.recordExtraction);
@@ -33,6 +36,8 @@ export function createStockRouter(
   // Catálogo de insumos (TK-057): alta administrativa, listado para cualquier autenticado.
   router.post('/insumos', requireRole('ADMIN'), controller.createInsumo);
   router.get('/insumos', controller.listInsumos);
+  // Reabastecimiento de bodega (US-013/TK-060): incrementa warehouseStock, solo ADMIN.
+  router.patch('/insumos/:id/restock', requireRole('ADMIN'), controller.restockInsumo);
 
   return router;
 }

@@ -300,6 +300,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/stock/insumos/{id}/restock:
+    patch:
+      summary: Increment an existing insumo's warehouse stock (ADMIN only, US-013/TK-060)
+      operationId: restockInsumo
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestockInsumoRequest'
+      responses:
+        '200':
+          description: Insumo restocked successfully (quantity added to existing warehouseStock)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestockInsumoResponse'
+        '400':
+          description: Quantity is missing, zero or negative
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Insumo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/kitchen/remanentes-activos:
     get:
       summary: List active kitchen remanentes ordered by FEFO
@@ -773,6 +825,28 @@ components:
           type: string
           enum: [KG, L, UNITS]
         warehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+
+    RestockInsumoRequest:
+      type: object
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: number
+          exclusiveMinimum: 0
+          example: 20
+
+    RestockInsumoResponse:
+      type: object
+      properties:
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        quantityAdded:
+          $ref: '#/components/schemas/DecimalString'
+        newWarehouseStock:
           $ref: '#/components/schemas/DecimalString'
 
     RemanenteItem:

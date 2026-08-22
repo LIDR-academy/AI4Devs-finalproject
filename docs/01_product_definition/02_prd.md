@@ -36,6 +36,8 @@ inputs:
    - [US-009: Dashboard y Reporte de Mermas Visibles](#us-009-dashboard-y-reporte-de-mermas-visibles)
    - [US-010: Gestión Mínima de Personal (Alta y Bloqueo de Operarios)](#us-010-gestión-mínima-de-personal-alta-y-bloqueo-de-operarios)
    - [US-011: Trazabilidad y Auditoría de Movimientos de Stock](#us-011-trazabilidad-y-auditoría-de-movimientos-de-stock)
+   - [US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](#us-012-gestión-de-catálogo-maestro-alta-de-insumos-y-recetas)
+   - [US-013: Reabastecimiento de Bodega](#us-013-reabastecimiento-de-bodega)
 6. [Estrategia de Calidad y Verificación (QA/Testing)](#6-estrategia-de-calidad-y-verificación-qatesting)
 7. [Roadmap Post-MVP (Fase 2)](#7-roadmap-post-mvp-fase-2)
 
@@ -260,6 +262,13 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
 *   **Complejidad:** M
 *   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
 *   **Estado:** ✅ Done — Backend (`TK-057`) y Frontend (`TK-057-FE`) implementados — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
+
+
+### US-013: Reabastecimiento de Bodega
+*   **Historia:** Como Administrador, quiero sumar la cantidad recibida al stock de bodega de un insumo ya existente cuando llega una entrega de un proveedor, para que el restaurante pueda operar más allá de la carga inicial de inventario — sin esto, un insumo que llega a 0 en bodega queda inutilizable para siempre.
+*   **Complejidad:** S
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Estado:** ✅ Done — Backend (`TK-060`) y Frontend (`TK-060-FE`) implementados — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
 
 
 ---

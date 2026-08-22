@@ -1,5 +1,14 @@
 import { apiRequest } from '../../../shared/http/apiClient.js';
 import { DecimalQuantity } from '../../../shared/domain/DecimalQuantity.js';
+import { CatalogService } from '../../catalog/services/catalog.service.js';
+
+export interface RecipeItem {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  ingredientsSummary: string;
+}
 
 export interface RemanenteFEFOItem {
   id: string;
@@ -14,6 +23,33 @@ export interface RemanenteFEFOItem {
   isCriticalAlert: boolean;
   status: string;
 }
+
+// Recetas de demo (TK-061): mismas 3 usadas historicamente como DEFAULT_RECIPES en
+// RecipeSelectorModal.tsx — ahora sirven solo como fallback offline, mismo patron que
+// mockRemanentes/mockWasteReport en este archivo y en reports.service.ts.
+const FALLBACK_RECIPES: RecipeItem[] = [
+  {
+    id: 'rec-pizza-margarita',
+    name: 'Pizza Margarita',
+    category: 'PIZZA',
+    description: '1 Masa + 0.15 kg Queso Mozzarella + 0.10 kg Salsa Pomodoro',
+    ingredientsSummary: 'Insumos: Queso Mozzarella, Salsa, Masa',
+  },
+  {
+    id: 'rec-pasta-pomodoro',
+    name: 'Pasta Pomodoro',
+    category: 'PASTA',
+    description: '0.20 kg Pasta Fettuccine + 0.15 kg Salsa Pomodoro',
+    ingredientsSummary: 'Insumos: Pasta, Salsa Pomodoro',
+  },
+  {
+    id: 'rec-ensalada-cesar',
+    name: 'Ensalada César',
+    category: 'ENSALADA',
+    description: '0.15 kg Lechuga + 0.10 kg Pollo + 0.05 kg Aderezo',
+    ingredientsSummary: 'Insumos: Lechuga, Pollo, Aderezo',
+  },
+];
 
 export class KitchenService {
   private static mockRemanentes: RemanenteFEFOItem[] = [
@@ -131,5 +167,32 @@ export class KitchenService {
 
   public static addLocalRemanente(item: RemanenteFEFOItem): void {
     this.mockRemanentes.unshift(item);
+  }
+
+  public static async fetchAvailableRecipes(): Promise<RecipeItem[]> {
+    try {
+      const [recipes, insumos] = await Promise.all([CatalogService.listRecipes(), CatalogService.listInsumos()]);
+      const insumoNameById = new Map(insumos.map((insumo) => [insumo.id, insumo.name]));
+
+      return recipes.map((recipe) => {
+        const ingredientNames = recipe.ingredients.map(
+          (ingredient) => insumoNameById.get(ingredient.insumoId) ?? ingredient.insumoId
+        );
+        const description = recipe.ingredients
+          .map((ingredient, index) => `${ingredient.quantity} ${ingredientNames[index]}`)
+          .join(' + ');
+
+        return {
+          id: recipe.id,
+          name: recipe.name,
+          category: recipe.category,
+          description: description || recipe.description || 'Sin ingredientes registrados',
+          ingredientsSummary: `Insumos: ${ingredientNames.join(', ') || 'sin insumos'}`,
+        };
+      });
+    } catch (err) {
+      console.error('[KitchenService] Error en fetchAvailableRecipes, cayendo a modo offline:', err);
+      return FALLBACK_RECIPES;
+    }
   }
 }

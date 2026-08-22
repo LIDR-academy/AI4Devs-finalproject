@@ -34,6 +34,7 @@ inputs:
 | **REQ-012** | `stock` | `StockMovement` | `GET /api/v1/stock/movements` | [US-011](11_user_stories/stock/US-011.md) | [TK-050](12_tickets/stock/backend/TK-050.md) | [TK-050-FE](12_tickets/stock/frontend/TK-050-FE.md) | ✅ Done | [SK-17_develop_frontend_ticket.md](../../.agents/skills/development/03_frontend_development/SK-17_develop_frontend_ticket.md) |
 | **REQ-013** | `auth` | `User` | `POST /api/v1/auth/login-pin` (bootstrap idempotente) | N/A *(Técnico)* | [TK-051](12_tickets/shared/backend/TK-051.md) | N/A | ✅ Done | [SK-16_develop_backend_ticket.md](../../.agents/skills/development/02_backend_development/SK-16_develop_backend_ticket.md) |
 | **REQ-014** | `stock`/`catalog` | `Insumo`, `Recipe`, `RecipeIngredient` | `POST/GET /api/v1/stock/insumos`, `POST/GET /api/v1/catalog/recipes` | [US-012](11_user_stories/catalog/US-012.md) | [TK-057](12_tickets/catalog/backend/TK-057.md) | [TK-057-FE](12_tickets/catalog/frontend/TK-057-FE.md) | ✅ Done | [SK-17_develop_frontend_ticket.md](../../.agents/skills/development/03_frontend_development/SK-17_develop_frontend_ticket.md) |
+| **REQ-015** | `stock` | `Insumo`, `WarehouseStock`, `StockMovement` | `PATCH /api/v1/stock/insumos/{id}/restock` | [US-013](11_user_stories/stock/US-013.md) | [TK-060](12_tickets/stock/backend/TK-060.md) | [TK-060-FE](12_tickets/stock/frontend/TK-060-FE.md) | ✅ Done | [SK-17_develop_frontend_ticket.md](../../.agents/skills/development/03_frontend_development/SK-17_develop_frontend_ticket.md) |
 
 ---
 

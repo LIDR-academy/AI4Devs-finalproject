@@ -80,6 +80,50 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     });
   });
 
+  it('reabastece un insumo existente (US-013) sumando cantidad al stock actual', async () => {
+    let insumoStock = '10.000';
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/restock')) {
+        insumoStock = '25.500';
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            insumoId: 'ins-1',
+            insumoName: 'Queso Mozzarella',
+            quantityAdded: '15.500',
+            newWarehouseStock: insumoStock,
+          }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [{ id: 'ins-1', name: 'Queso Mozzarella', unitOfMeasure: 'KG', warehouseStock: insumoStock }],
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Queso Mozzarella/i)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Reabastecer/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Cantidad Recibida/i)).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/Cantidad Recibida/i), { target: { value: '15.5' } });
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar Reabastecimiento/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/25.500 KG/i)).toBeInTheDocument();
+    });
+  });
+
   it('muestra estado de carga si el catálogo de insumos está vacío al abrir Alta de Receta', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] }));
 

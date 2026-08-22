@@ -50,6 +50,7 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 *   **Trazabilidad de Movimientos de Stock:** Panel de auditoría para consultar el historial de extracciones, consumos y descartes filtrado por insumo, para saber quién movió qué y cuándo.
 *   **Persistencia Real en Producción:** Todos los repositorios (incluyendo recetas, conciliaciones de turno y reportes) están respaldados por PostgreSQL en producción, con bootstrap idempotente del primer administrador en cada despliegue nuevo.
 *   **Gestión de Catálogo Maestro:** Panel de administración para dar de alta insumos y recetas (rol `ADMIN`) sin depender del script de seed, permitiendo operar con el inventario real del restaurante.
+*   **Reabastecimiento de Bodega:** Un Administrador puede sumar stock a un insumo existente cuando llega una entrega del proveedor, para que el restaurante siga operando más allá de la carga inicial de inventario.
 
 
 
@@ -461,11 +462,24 @@ La API REST opera bajo el estándar OpenAPI 3.1.0. A continuación se detallan l
     ```
 *   **Response Error (`404 Not Found`):** si algún `insumoId` referenciado no existe en el catálogo.
 
+### **4.10. PATCH `/api/v1/stock/insumos/{id}/restock` (Reabastecimiento de Bodega — Rol `ADMIN`)**
+*   **Propósito:** Suma la cantidad recibida al `warehouseStock` actual de un insumo ya existente (incremental, no un total absoluto) cuando llega una entrega nueva del proveedor.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body:**
+    ```json
+    { "quantity": 20 }
+    ```
+*   **Response Success (`200 OK`):**
+    ```json
+    { "insumoId": "f3a1c2e0-1234-4abc-9def-0123456789ab", "insumoName": "Harina 000", "quantityAdded": "20.000", "newWarehouseStock": "20.000" }
+    ```
+*   **Response Error (`404 Not Found`):** si el insumo no existe. **(`400 Bad Request`):** si `quantity` es cero o negativo.
+
 ---
 
 ## 5. Historias de Usuario
 
-Se han definido detalladamente las siguientes 12 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
+Se han definido detalladamente las siguientes 13 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
 
 ### **5.1. US-001: Autenticación por PIN del Personal de Cocina**
 *   **Formato de Negocio:** Como operario de cocina (Staff), quiero autenticarme en la terminal táctil ingresando mi PIN personal de 4 dígitos, para registrar mis movimientos de insumos y consumos de forma rápida y segura sin interrumpir el ritmo del servicio.
@@ -554,6 +568,14 @@ Se han definido detalladamente las siguientes 12 historias de usuario críticas 
     *   *Then* el sistema crea el insumo con stock inicial `0` y este aparece inmediatamente en `GET /api/v1/stock/insumos`.
 *   **Estado:** ✅ Backend y Frontend implementados y verificados.
 
+### **5.13. US-013: Reabastecimiento de Bodega**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero sumar la cantidad recibida al stock de bodega de un insumo ya existente cuando llega una entrega del proveedor, para que el restaurante pueda operar más allá de la carga inicial de inventario.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* un insumo `Harina 000` con `5.000 KG` de stock actual,
+    *   *When* el Administrador invoca `PATCH /api/v1/stock/insumos/{id}/restock` con `quantity: 10.5`,
+    *   *Then* el sistema suma la cantidad al stock existente (`15.500`) y registra un `StockMovement` tipo `RESTOCK`.
+*   **Estado:** ✅ Backend y Frontend implementados y verificados.
+
 ---
 
 ## 6. Tickets de Trabajo
@@ -639,8 +661,12 @@ El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo
     *   **Descripción:** `POST`/`GET /api/v1/stock/insumos` y `POST`/`GET /api/v1/catalog/recipes` (creación con rol `ADMIN`, listado para cualquier autenticado) — cierra además la deuda de `TK-008` (`POST /api/catalog/recipes` nunca se había implementado). Sin cambios de esquema Prisma.
     *   **Capas Afectadas:** `stock/domain` (`IStockRepository.findAllInsumos()`), `stock/application`, `stock/infrastructure`; `catalog/application`, `catalog/infrastructure` (primer HTTP layer real de ese módulo).
     *   **DoD:** 13 tests nuevos (alta/listado de insumo, 403/401/400, alta/listado de receta con ingredientes válidos, 404 con `insumoId` inexistente); 77/77 tests backend en verde.
+*   **TK-060: Reabastecimiento de Bodega (Backend)**
+    *   **Descripción:** `PATCH /api/v1/stock/insumos/{id}/restock` (rol `ADMIN`) suma la cantidad recibida al `warehouseStock` existente de un insumo — antes de este ticket, el stock de un insumo solo se fijaba una vez al crearlo y solo podía bajar, dejando un insumo agotado inutilizable para siempre. Registra un `StockMovement` tipo `RESTOCK` (sin migración, `type` es `String` libre en el schema).
+    *   **Capas Afectadas:** `stock/domain` (`Insumo.increaseStock()`), `stock/application` (`RestockInsumoUseCase`), `stock/infrastructure`.
+    *   **DoD:** tests de caso de uso (suma correcta, movimiento auditado, 404 insumo inexistente) + integración HTTP (200/404/400/403/401); `openapi.yaml` sincronizado, validado con `oasdiff breaking` sin breaking changes.
 
-Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`, `TK-057-FE`) están documentados en la sección 6.2 más abajo y ya implementados.
+Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`, `TK-057-FE`, `TK-060-FE`) están documentados en la sección 6.2 más abajo y ya implementados.
 
 ### 🖥️ 6.2. Tickets de Frontend (en subcarpetas `docs/05_agile_planning/12_tickets/{modulo}/frontend/`)
 
@@ -680,6 +706,14 @@ Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`, `TK-057-FE`) están documenta
     *   **Descripción:** Modal con pestañas de alta de insumo y alta de receta (con filas dinámicas de ingrediente: selector de insumo + cantidad), consumiendo `POST`/`GET /api/v1/stock/insumos` y `POST`/`GET /api/v1/catalog/recipes`.
     *   **Capas Afectadas:** `features/catalog/components` (`CatalogManagementPanel.tsx`, `CreateInsumoForm.tsx`, `CreateRecipeForm.tsx`), `features/catalog/services/catalog.service.ts`.
     *   **DoD:** 6 pruebas RTL en verde; sin fallback a datos sintéticos ante error; `SectionTabs` y `SuccessFeedbackBanner` extraídos a `shared/components/` para evitar duplicar el patrón ya usado por `UserManagementPanel` (regla de reuso de `SK-17`).
+*   **TK-060-FE: Panel de Reabastecimiento de Bodega (Frontend)**
+    *   **Descripción:** Botón "Reabastecer" por fila en el Inventario de Bodega (`InsumoCatalogPanel.tsx`), abre un modal con la cantidad recibida y consume `PATCH /api/v1/stock/insumos/{id}/restock`; refresca la lista con el stock real tras confirmar.
+    *   **Capas Afectadas:** `features/stock/components` (`RestockInsumoModal.tsx`, `InsumoCatalogPanel.tsx`), `features/stock/services/stock.service.ts` (extendido).
+    *   **DoD:** prueba RTL en verde (reabastecimiento exitoso con stock actualizado visible); gate de complejidad ticket-scoped en verde.
+*   **TK-061: Conectar el Selector de Recetas de Cocina al Catálogo Real (Frontend)**
+    *   **Descripción:** `RecipeSelectorModal.tsx` (consumo de recetas en cocina) siempre renderizó una lista hardcodeada — nunca llamaba a `GET /api/v1/catalog/recipes`, así que una receta dada de alta por un Administrador nunca aparecía en cocina. Ahora hace fetch real, cruzando `GET /stock/insumos` para armar el resumen de ingredientes; cae a las mismas 3 recetas de demo (`FALLBACK_RECIPES`) ante error de red, mismo patrón que `KitchenService.fetchActiveRemanentes`.
+    *   **Capas Afectadas:** `features/kitchen/services/kitchen.service.ts` (`fetchAvailableRecipes`), `features/kitchen/components/RecipeSelectorModal.tsx`.
+    *   **DoD:** 5 pruebas RTL nuevas (recetas reales, resumen de ingredientes, fallback offline, estado vacío, confirmación con ID real) — `RecipeSelectorModal.test.tsx` no existía antes de este ticket.
 
 ---
 

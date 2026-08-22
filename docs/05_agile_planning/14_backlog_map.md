@@ -128,6 +128,13 @@ graph TD
     US012 --> TK057
     US012 --> TK057FE
 
+    US013["📝 US-013: Reabastecimiento de Bodega"]
+    TK060["🎫 TK-060: Reabastecimiento de Bodega (Backend)"]
+    TK060FE["🎫 TK-060-FE: Panel de Reabastecimiento (Frontend)"]
+    EpicStock --> US013
+    US013 --> TK060
+    US013 --> TK060FE
+
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
     classDef roadmap fill:#FFC300,stroke:#FF5733,stroke-width:2px,color:#000;
@@ -137,8 +144,8 @@ graph TD
 
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE tk;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE tk;
 ```
 
 ---
@@ -162,3 +169,4 @@ graph TD
 | **📦 Bodega (`stock`)** | [US-011: Trazabilidad de Movimientos](11_user_stories/stock/US-011.md) | [TK-050: Trazabilidad de Movimientos](12_tickets/stock/backend/TK-050.md) | [TK-050-FE: Panel de Auditoría de Movimientos](12_tickets/stock/frontend/TK-050-FE.md) | ✅ Done |
 | **🛠️ Shared Kernel** | *N/A (Habilitador de Despliegue)* | [TK-051: Bootstrap Primer Administrador](12_tickets/shared/backend/TK-051.md) | N/A | ✅ Done |
 | **📖 Catálogo (`catalog`)** | [US-012: Gestión de Catálogo Maestro](11_user_stories/catalog/US-012.md) | [TK-057: Alta de Insumos y Recetas](12_tickets/catalog/backend/TK-057.md) | [TK-057-FE: Panel de Gestión de Catálogo](12_tickets/catalog/frontend/TK-057-FE.md) | ✅ Done |
+| **📦 Bodega (`stock`)** | [US-013: Reabastecimiento de Bodega](11_user_stories/stock/US-013.md) | [TK-060: Reabastecimiento de Bodega](12_tickets/stock/backend/TK-060.md) | [TK-060-FE: Panel de Reabastecimiento](12_tickets/stock/frontend/TK-060-FE.md) | ✅ Done |

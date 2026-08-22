@@ -37,4 +37,8 @@ export class Insumo {
   public deductStock(quantity: DecimalQuantity): void {
     this.props.warehouseStock = this.props.warehouseStock.subtract(quantity);
   }
+
+  public increaseStock(quantity: DecimalQuantity): void {
+    this.props.warehouseStock = this.props.warehouseStock.add(quantity);
+  }
 }

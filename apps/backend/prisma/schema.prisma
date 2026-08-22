@@ -77,7 +77,7 @@ model Remanente {
 model StockMovement {
   id        String   @id @default(uuid())
   insumoId  String
-  type      String   // EXTRACTION, DISCARD, RECONCILIATION
+  type      String   // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK
   quantity  Decimal  @db.Decimal(12, 3)
   fromLoc   String
   toLoc     String

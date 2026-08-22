@@ -1,42 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Utensils, CheckCircle, AlertTriangle } from 'lucide-react';
-import { KitchenService } from '../services/kitchen.service.js';
+import { KitchenService, RecipeItem } from '../services/kitchen.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
-
-interface RecipeItem {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  ingredientsSummary: string;
-}
-
-const DEFAULT_RECIPES: RecipeItem[] = [
-  {
-    id: 'rec-pizza-margarita',
-    name: 'Pizza Margarita',
-    category: 'PIZZA',
-    description: '1 Masa + 0.15 kg Queso Mozzarella + 0.10 kg Salsa Pomodoro',
-    ingredientsSummary: 'Insumos: Queso Mozzarella, Salsa, Masa',
-  },
-  {
-    id: 'rec-pasta-pomodoro',
-    name: 'Pasta Pomodoro',
-    category: 'PASTA',
-    description: '0.20 kg Pasta Fettuccine + 0.15 kg Salsa Pomodoro',
-    ingredientsSummary: 'Insumos: Pasta, Salsa Pomodoro',
-  },
-  {
-    id: 'rec-ensalada-cesar',
-    name: 'Ensalada César',
-    category: 'ENSALADA',
-    description: '0.15 kg Lechuga + 0.10 kg Pollo + 0.05 kg Aderezo',
-    ingredientsSummary: 'Insumos: Lechuga, Pollo, Aderezo',
-  },
-];
 
 interface RecipeSelectorModalProps {
   isOpen: boolean;
@@ -156,19 +124,76 @@ const PortionStepper: React.FC<PortionStepperProps> = ({ portions, onChange }) =
   </div>
 );
 
-export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
-  isOpen,
-  onClose,
-  onSuccess,
+function useAvailableRecipes(isOpen: boolean): { recipes: RecipeItem[]; isLoadingRecipes: boolean } {
+  const [recipes, setRecipes] = useState<RecipeItem[]>([]);
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    setIsLoadingRecipes(true);
+    KitchenService.fetchAvailableRecipes()
+      .then((data) => {
+        if (!cancelled) setRecipes(data);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingRecipes(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  return { recipes, isLoadingRecipes };
+}
+
+interface RecipeSelectionBodyProps {
+  isLoadingRecipes: boolean;
+  recipes: RecipeItem[];
+  selectedRecipeId: string;
+  onSelectRecipe: (id: string) => void;
+  portions: number;
+  onPortionsChange: (portions: number) => void;
+}
+
+const RecipeSelectionBody: React.FC<RecipeSelectionBodyProps> = ({
+  isLoadingRecipes,
+  recipes,
+  selectedRecipeId,
+  onSelectRecipe,
+  portions,
+  onPortionsChange,
 }) => {
-  const [selectedRecipeId, setSelectedRecipeId] = useState<string>('rec-pizza-margarita');
-  const [portions, setPortions] = useState<number>(1);
+  if (isLoadingRecipes) {
+    return (
+      <div style={{ color: 'var(--text-secondary)', padding: '24px 0', textAlign: 'center' }}>
+        Cargando recetas del catálogo...
+      </div>
+    );
+  }
+  if (recipes.length === 0) {
+    return (
+      <div style={{ color: 'var(--text-secondary)', padding: '24px 0', textAlign: 'center' }}>
+        No hay recetas dadas de alta en el catálogo todavía.
+      </div>
+    );
+  }
+  return (
+    <>
+      <RecipeList recipes={recipes} selectedRecipeId={selectedRecipeId} onSelect={onSelectRecipe} />
+      <PortionsSelector portions={portions} onChange={onPortionsChange} />
+    </>
+  );
+};
+
+function usePrepareRecipe(onSuccess: () => void, onClose: () => void) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  if (!isOpen) return null;
-
-  const handlePrepareRecipe = async () => {
+  const handlePrepareRecipe = async (selectedRecipeId: string, portions: number) => {
+    if (!selectedRecipeId) return;
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
@@ -181,6 +206,25 @@ export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  return { isSubmitting, errorMsg, handlePrepareRecipe };
+}
+
+export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
+  const { recipes, isLoadingRecipes } = useAvailableRecipes(isOpen);
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
+  const [portions, setPortions] = useState<number>(1);
+  const { isSubmitting, errorMsg, handlePrepareRecipe } = usePrepareRecipe(onSuccess, onClose);
+
+  useEffect(() => {
+    setSelectedRecipeId((current) => (recipes.some((r) => r.id === current) ? current : (recipes[0]?.id ?? '')));
+  }, [recipes]);
+
+  if (!isOpen) return null;
 
   return (
     <Modal maxWidth="560px" width="100%">
@@ -195,8 +239,14 @@ export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
 
       {errorMsg && <ErrorBanner message={errorMsg} icon={<AlertTriangle size={18} />} />}
 
-      <RecipeList recipes={DEFAULT_RECIPES} selectedRecipeId={selectedRecipeId} onSelect={setSelectedRecipeId} />
-      <PortionsSelector portions={portions} onChange={setPortions} />
+      <RecipeSelectionBody
+        isLoadingRecipes={isLoadingRecipes}
+        recipes={recipes}
+        selectedRecipeId={selectedRecipeId}
+        onSelectRecipe={setSelectedRecipeId}
+        portions={portions}
+        onPortionsChange={setPortions}
+      />
 
       <ModalFooterActions
         onCancel={onClose}
@@ -204,7 +254,7 @@ export const RecipeSelectorModal: React.FC<RecipeSelectorModalProps> = ({
         submittingLabel="Descontando FEFO..."
         confirmIcon={<Utensils size={20} />}
         confirmType="button"
-        onConfirm={handlePrepareRecipe}
+        onConfirm={() => handlePrepareRecipe(selectedRecipeId, portions)}
         isSubmitting={isSubmitting}
         marginTop="0px"
       />

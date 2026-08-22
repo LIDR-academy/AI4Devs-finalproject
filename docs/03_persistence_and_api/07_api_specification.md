@@ -31,6 +31,7 @@ inputs:
 | **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. |
 | **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
 | **GET** | `/api/v1/stock/insumos` | *Ninguno* | `ListInsumosResponse` | Obtiene la lista de insumos del catálogo maestro (`TK-057`). |
+| **PATCH** | `/api/v1/stock/insumos/{id}/restock` | `RestockInsumoRequest` | `RestockInsumoResponse` | Suma la cantidad recibida al stock de bodega de un insumo existente (`TK-060`). |
 
 ---
 
@@ -473,6 +474,35 @@ sequenceDiagram
       }
     ]
     ```
+
+---
+
+### 2.13. `PATCH /api/v1/stock/insumos/{id}/restock`
+*   **Descripción:** Suma la cantidad recibida al `warehouseStock` actual de un insumo ya existente (`TK-060`) — semántica **incremental**, nunca fija un total absoluto. Sin esto, un insumo que llega a `0` en bodega quedaba inutilizable para siempre.
+*   **Cabeceras Requeridas:**
+    *   `Content-Type: application/json`
+    *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
+*   **Request Payload (`RestockInsumoRequest`):**
+    ```json
+    {
+      "quantity": 20
+    }
+    ```
+*   **Response Success (`200 OK` - `RestockInsumoResponse`):**
+    ```json
+    {
+      "insumoId": "f3a1c2e0-1234-4abc-9def-0123456789ab",
+      "insumoName": "Harina 000",
+      "quantityAdded": "20.000",
+      "newWarehouseStock": "20.000"
+    }
+    ```
+*   **Response Error (`404 Not Found`):**
+    *   *Causa:* El `id` de insumo no existe en el catálogo.
+*   **Response Error (`400 Bad Request`):**
+    *   *Causa:* `quantity` es cero, negativo o no numérico.
+*   **Response Error (`403 Forbidden`):**
+    *   *Causa:* El solicitante autenticado no tiene rol `ADMIN`.
 
 ---
 

@@ -48,6 +48,17 @@ export interface CreateInsumoDTO {
   initialWarehouseStock?: string;
 }
 
+export interface RestockInsumoDTO {
+  quantity: number | string;
+}
+
+export interface RestockInsumoResult {
+  insumoId: string;
+  insumoName: string;
+  quantityAdded: string;
+  newWarehouseStock: string;
+}
+
 export class StockService {
   private static mockWarehouseStocks: Record<string, { name: string; stock: number; unit: string }> = {
     'ins-1': { name: 'Queso Mozzarella', stock: 15.5, unit: 'KG' },
@@ -57,6 +68,10 @@ export class StockService {
 
   public static async createInsumo(data: CreateInsumoDTO): Promise<InsumoItem> {
     return apiRequest<InsumoItem>('/stock/insumos', { method: 'POST', body: data });
+  }
+
+  public static async restockInsumo(insumoId: string, data: RestockInsumoDTO): Promise<RestockInsumoResult> {
+    return apiRequest<RestockInsumoResult>(`/stock/insumos/${insumoId}/restock`, { method: 'PATCH', body: data });
   }
 
   public static async getInsumos(): Promise<InsumoItem[]> {
