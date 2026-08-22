@@ -5,7 +5,6 @@ import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
 import { SectionTabs } from '../../../shared/components/SectionTabs.js';
 import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
-import { CreateInsumoForm } from './CreateInsumoForm.js';
 import { CreateRecipeForm } from './CreateRecipeForm.js';
 import { InsumoCatalogPanel } from '../../stock/components/InsumoCatalogPanel.js';
 
