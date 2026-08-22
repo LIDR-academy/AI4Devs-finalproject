@@ -5,13 +5,15 @@ import { createAuthRouter } from './routes/auth.routes.js';
 import { createStockRouter } from '../stock/http/routes/stock.routes.js';
 import { createKitchenRouter } from '../kitchen/http/routes/kitchen.routes.js';
 import { createReportsRouter } from '../reports/http/routes/reports.routes.js';
+import { createCatalogRouter } from '../catalog/http/routes/catalog.routes.js';
 import { InMemoryUserRepository } from '../auth/repositories/InMemoryUserRepository.js';
 import { InMemoryStockRepository } from '../stock/repositories/InMemoryStockRepository.js';
 import { InMemoryRemanenteQueryRepository } from '../kitchen/repositories/InMemoryRemanenteQueryRepository.js';
 import { InMemoryReportRepository } from '../reports/repositories/InMemoryReportRepository.js';
 import { InMemoryRecipeRepository } from '../catalog/repositories/InMemoryRecipeRepository.js';
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
-import { IStockRepository } from '../../domain/stock/repositories/IStockRepository.js';
+import { IInsumoRepository } from '../../domain/stock/repositories/IInsumoRepository.js';
+import { IRemanenteRepository } from '../../domain/stock/repositories/IRemanenteRepository.js';
 import { IStockMovementQueryRepository } from '../../domain/stock/repositories/IStockMovementQueryRepository.js';
 import { InMemoryStockMovementQueryRepository } from '../stock/repositories/InMemoryStockMovementQueryRepository.js';
 import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
@@ -32,7 +34,7 @@ import { InMemoryShiftReconciliationRepository } from '../kitchen/repositories/I
 
 export interface AppOptions {
   userRepository?: IUserRepository;
-  stockRepository?: IStockRepository;
+  stockRepository?: IInsumoRepository & IRemanenteRepository;
   stockMovementQueryRepository?: IStockMovementQueryRepository;
   remanenteQueryRepository?: IRemanenteQueryRepository;
   reportRepository?: IReportRepository;
@@ -110,7 +112,7 @@ function assertJwtSecretConfigured(options: AppOptions): void {
 interface AppRepositories {
   userRepo: IUserRepository;
   jwtSecret: string;
-  stockRepo: IStockRepository;
+  stockRepo: IInsumoRepository & IRemanenteRepository;
   stockMovementQueryRepo: IStockMovementQueryRepository;
   remanenteQueryRepo: IRemanenteQueryRepository;
   reportRepo: IReportRepository;
@@ -164,6 +166,7 @@ function mountApiRoutes(
   app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo));
   app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
   app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo));
+  app.use('/api/v1/catalog', ...guard, createCatalogRouter(recipeRepo, stockRepo));
 }
 
 export function createApp(options: AppOptions = {}): Express {

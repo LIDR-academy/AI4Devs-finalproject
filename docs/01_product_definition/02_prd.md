@@ -255,6 +255,13 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
 *   **Estado:** ✅ Done — Backend (`TK-050`) y Frontend (`TK-050-FE`) implementados — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
 
 
+### US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)
+*   **Historia:** Como Administrador, quiero dar de alta insumos y recetas en el catálogo maestro desde la API, sin depender del script de seed, para que el restaurante opere con su propio inventario real y no solo con datos de demostración.
+*   **Complejidad:** M
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Estado:** ✅ Done — Backend (`TK-057`) y Frontend (`TK-057-FE`) implementados — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
+
+
 ---
 
 ## 6. Estrategia de Calidad y Verificación (QA/Testing)

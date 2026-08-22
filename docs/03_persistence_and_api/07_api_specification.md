@@ -24,10 +24,13 @@ inputs:
 | **GET** | `/api/v1/kitchen/remanentes` | *Ninguno (Query Params)* | `GetRemanentesResponse` | Obtiene la lista de remanentes activos en cocina ordenados bajo el principio FEFO. |
 | **POST** | `/api/v1/kitchen/consumption` | `RecordConsumptionRequest` | `RecordConsumptionResponse` | Registra consumos parciales de insumos abiertos (remanentes) durante el servicio. |
 | **POST** | `/api/v1/kitchen/remanentes/:id/discard`| `DiscardRemanenteRequest` | `DiscardRemanenteResponse` | Registra el descarte físico total de un remanente activo por merma o expiración. |
-| **POST** | `/api/catalog/recipes` 🚧 | `CreateRecipeRequest` | `CreateRecipeResponse` | *(Pendiente — ver TK-008)* Crear una nueva receta de comida con sus ingredientes y proporciones. No implementado aún; ausente de `openapi.yaml` hasta que exista un controller real. |
-| **GET** | `/api/v1/kitchen/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas disponibles en cocina para consumo rápido. |
+| **POST** | `/api/v1/catalog/recipes` | `CreateRecipeRequest` | `CreateRecipeResponse` | Crea una nueva receta con sus ingredientes y proporciones en el catálogo maestro (`TK-057`). |
+| **GET** | `/api/v1/catalog/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas del catálogo maestro (`TK-057`). |
+| **GET** | `/api/v1/kitchen/recipes` 🚧 | *Ninguno* | `ListRecipesResponse` | *(Nunca implementado)* Reemplazado por `GET /api/v1/catalog/recipes` (`TK-057`) — ver §2.7. |
 | **POST** | `/api/v1/kitchen/recipes/:id/consume` | `ConsumeRecipeRequest` | `ConsumeRecipeResponse` | Descuenta stock en cocina en cascada FEFO basado en los ingredientes de la receta. |
 | **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. |
+| **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
+| **GET** | `/api/v1/stock/insumos` | *Ninguno* | `ListInsumosResponse` | Obtiene la lista de insumos del catálogo maestro (`TK-057`). |
 
 ---
 
@@ -269,8 +272,8 @@ sequenceDiagram
     }
     ```
 
-### 2.6. `POST /api/catalog/recipes` 🚧 *(Pendiente de implementación — ver [TK-008](../05_agile_planning/12_tickets/kitchen/backend/TK-008.md); no existe en `openapi.yaml` ni tiene controller/router activo)*
-*   **Descripción:** Permite al administrador crear una nueva receta asociándole una lista de ingredientes e indicando las porciones necesarias expresadas en la unidad de consumo del ingrediente.
+### 2.6. `POST /api/v1/catalog/recipes`
+*   **Descripción:** Permite al administrador crear una nueva receta asociándole una lista de ingredientes e indicando las porciones necesarias expresadas en la unidad de consumo del ingrediente. Cada `insumoId` referenciado debe existir en el catálogo (`GET /api/v1/stock/insumos`); si no existe, la API responde `404 Not Found` (`TK-057`).
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
     *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
@@ -301,7 +304,7 @@ sequenceDiagram
 
 ---
 
-### 2.7. `GET /api/v1/kitchen/recipes`
+### 2.7. `GET /api/v1/kitchen/recipes` 🚧 *(Nunca implementado — hallazgo de `TK-057`: esta sección documentaba un endpoint que jamás tuvo controller/router activo; el frontend de consumo de recetas usa una lista hardcodeada `DEFAULT_RECIPES` como fallback en su lugar. Reemplazado por §2.7-bis, `GET /api/v1/catalog/recipes`, real y verificado en `TK-057`)*
 *   **Descripción:** Retorna la lista de recetas activas configuradas en el catálogo maestro para su visualización y selección en la pantalla táctil de cocina.
 *   **Cabeceras Requeridas:**
     *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR`)
@@ -312,6 +315,25 @@ sequenceDiagram
         "id": "aa9f88d1-12cd-41e2-b9e1-bb901518f88c",
         "name": "Pizza Margarita",
         "description": "Pizza tradicional con salsa de tomate y mozzarella"
+      }
+    ]
+    ```
+
+### 2.7-bis. `GET /api/v1/catalog/recipes`
+*   **Descripción:** Retorna la lista de recetas del catálogo maestro con sus ingredientes, implementado en `TK-057`.
+*   **Cabeceras Requeridas:**
+    *   `Authorization: Bearer <token_jwt>` (cualquier rol autenticado)
+*   **Response Success (`200 OK` - `ListRecipesResponse`):**
+    ```json
+    [
+      {
+        "id": "aa9f88d1-12cd-41e2-b9e1-bb901518f88c",
+        "name": "Pizza Margarita",
+        "category": "Pizzas",
+        "description": "Pizza tradicional con salsa de tomate y mozzarella",
+        "ingredients": [
+          { "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea", "quantity": "0.150" }
+        ]
       }
     ]
     ```
@@ -406,6 +428,50 @@ sequenceDiagram
       "message": "Invalid date format for startDate. Must be ISO 8601 standard",
       "timestamp": "2026-07-11T11:51:30Z"
     }
+    ```
+
+---
+
+### 2.11. `POST /api/v1/stock/insumos`
+*   **Descripción:** Da de alta un insumo nuevo en el catálogo maestro de bodega, con stock inicial en `0` (`TK-057`). `unitOfMeasure` es una lista cerrada (`KG` | `L` | `UNITS`) — valores fuera de ese set responden `400`.
+*   **Cabeceras Requeridas:**
+    *   `Content-Type: application/json`
+    *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
+*   **Request Payload (`CreateInsumoRequest`):**
+    ```json
+    {
+      "name": "Harina 000",
+      "unitOfMeasure": "KG"
+    }
+    ```
+*   **Response Success (`201 Created` - `CreateInsumoResponse`):**
+    ```json
+    {
+      "id": "f3a1c2e0-1234-4abc-9def-0123456789ab",
+      "name": "Harina 000",
+      "unitOfMeasure": "KG",
+      "warehouseStock": "0.000"
+    }
+    ```
+*   **Response Error (`403 Forbidden`):**
+    *   *Causa:* El solicitante autenticado no tiene rol `ADMIN`.
+
+---
+
+### 2.12. `GET /api/v1/stock/insumos`
+*   **Descripción:** Retorna la lista completa de insumos del catálogo maestro, usada para poblar selectores en extracción de bodega y alta de recetas (`TK-057`).
+*   **Cabeceras Requeridas:**
+    *   `Authorization: Bearer <token_jwt>` (cualquier rol autenticado)
+*   **Response Success (`200 OK` - `ListInsumosResponse`):**
+    ```json
+    [
+      {
+        "id": "f3a1c2e0-1234-4abc-9def-0123456789ab",
+        "name": "Harina 000",
+        "unitOfMeasure": "KG",
+        "warehouseStock": "0.000"
+      }
+    ]
     ```
 
 ---

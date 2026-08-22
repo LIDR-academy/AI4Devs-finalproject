@@ -10,13 +10,17 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 *   **[US-001: Autenticación por PIN del Personal de Cocina](auth/US-001.md)**
     *   *Descripción:* Permite el acceso rápido e individualizado de los cocineros y operarios mediante teclado táctil y PIN de 4 dígitos para garantizar la trazabilidad operacional.
 *   **[US-010: Gestión Mínima de Personal (Alta y Bloqueo de Operarios)](auth/US-010.md)**
-    *   *Descripción:* Permite a un Administrador dar de alta operarios y bloquear/reactivar cuentas existentes vía API, sin depender de un redeploy de código. ⚠️ Backend implementado (`TK-049`); Frontend pendiente.
+    *   *Descripción:* Permite a un Administrador dar de alta operarios y bloquear/reactivar cuentas existentes vía API, sin depender de un redeploy de código. ✅ Backend (`TK-049`) y Frontend (`TK-049-FE`) implementados.
 
 ### 📦 Bodega y Stock (`/stock/`)
 *   **[US-002: Registro de Extracciones de Bodega](stock/US-002.md)**
     *   *Descripción:* Permite registrar la salida física de insumos enteros desde el almacén central y su correspondiente ingreso a la cocina con el cálculo de su vida útil acelerada.
 *   **[US-011: Trazabilidad y Auditoría de Movimientos de Stock](stock/US-011.md)**
-    *   *Descripción:* Permite a un Administrador consultar el historial completo de movimientos de stock filtrado por insumo y rango de fechas. ⚠️ Backend implementado (`TK-050`); Frontend pendiente.
+    *   *Descripción:* Permite a un Administrador consultar el historial completo de movimientos de stock filtrado por insumo y rango de fechas. ✅ Backend (`TK-050`) y Frontend (`TK-050-FE`) implementados.
+
+### 📖 Catálogo (`/catalog/`)
+*   **[US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](catalog/US-012.md)**
+    *   *Descripción:* Permite a un Administrador dar de alta insumos y recetas en el catálogo maestro vía API, sin depender del script de seed. ✅ Backend (`TK-057`) y Frontend (`TK-057-FE`) implementados.
 
 ### 🍳 Cocina (`/kitchen/`)
 *   **[US-003: Consulta Táctil de Remanentes Activos en Orden FEFO](kitchen/US-003.md)**

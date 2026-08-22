@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Users, CheckCircle2 } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
+import { SectionTabs } from '../../../shared/components/SectionTabs.js';
+import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
 import { CreateUserForm } from './CreateUserForm.js';
 import { UserStatusForm } from './UserStatusForm.js';
 
@@ -14,28 +16,10 @@ interface UserManagementPanelProps {
 
 type Section = 'create' | 'status';
 
-const SectionTabs: React.FC<{ section: Section; onChange: (s: Section) => void }> = ({ section, onChange }) => (
-  <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-    <button
-      type="button"
-      className={`btn-touch ${section === 'create' ? 'btn-primary' : 'btn-secondary'}`}
-      onClick={() => onChange('create')}
-      style={{ flex: 1 }}
-      id="btn-tab-create-user"
-    >
-      Alta de Operario
-    </button>
-    <button
-      type="button"
-      className={`btn-touch ${section === 'status' ? 'btn-primary' : 'btn-secondary'}`}
-      onClick={() => onChange('status')}
-      style={{ flex: 1 }}
-      id="btn-tab-user-status"
-    >
-      Bloquear / Reactivar
-    </button>
-  </div>
-);
+const USER_MANAGEMENT_TABS = [
+  { value: 'create' as const, label: 'Alta de Operario', id: 'btn-tab-create-user' },
+  { value: 'status' as const, label: 'Bloquear / Reactivar', id: 'btn-tab-user-status' },
+];
 
 export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, userRole, onClose }) => {
   const [section, setSection] = useState<Section>('create');
@@ -63,32 +47,14 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen
 
       <SectionTabs
         section={section}
+        options={USER_MANAGEMENT_TABS}
         onChange={(s) => {
           setSection(s);
           setFeedback(null);
         }}
       />
 
-      {feedback && (
-        <div
-          role="status"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 14px',
-            marginBottom: '16px',
-            backgroundColor: 'rgba(0, 210, 190, 0.12)',
-            border: '1px solid var(--color-primary)',
-            borderRadius: '8px',
-            color: 'var(--color-primary)',
-            fontSize: '0.88rem',
-          }}
-        >
-          <CheckCircle2 size={18} />
-          <span>{feedback}</span>
-        </div>
-      )}
+      {feedback && <SuccessFeedbackBanner message={feedback} />}
 
       {section === 'create' ? <CreateUserForm onCreated={handleUpdated} /> : <UserStatusForm onUpdated={handleUpdated} />}
     </Modal>

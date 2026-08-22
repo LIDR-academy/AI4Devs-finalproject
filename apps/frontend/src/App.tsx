@@ -13,6 +13,7 @@ import {
   BarChart3,
   Users,
   History,
+  BookOpen,
 } from 'lucide-react';
 import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
 import { AuthService } from './features/auth/services/auth.service.js';
@@ -25,6 +26,7 @@ import { ShiftReconciliationWizard } from './features/kitchen/components/ShiftRe
 import { ReportsDashboard } from './features/reports/components/ReportsDashboard.js';
 import { UserManagementPanel } from './features/auth/components/UserManagementPanel.js';
 import { MovementHistoryPanel } from './features/stock/components/MovementHistoryPanel.js';
+import { CatalogManagementPanel } from './features/catalog/components/CatalogManagementPanel.js';
 
 interface DashboardHeaderProps {
   currentUser: { name: string; role: string };
@@ -33,6 +35,7 @@ interface DashboardHeaderProps {
   onReports: () => void;
   onUserManagement: () => void;
   onMovementHistory: () => void;
+  onCatalogManagement: () => void;
   onSync: () => void;
   onLogout: () => void;
 }
@@ -63,6 +66,7 @@ interface HeaderActionsProps {
   onReports: () => void;
   onUserManagement: () => void;
   onMovementHistory: () => void;
+  onCatalogManagement: () => void;
   onSync: () => void;
   onLogout: () => void;
 }
@@ -73,6 +77,7 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
   onReports,
   onUserManagement,
   onMovementHistory,
+  onCatalogManagement,
   onSync,
   onLogout,
 }) => (
@@ -97,6 +102,11 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
       Movimientos
     </button>
 
+    <button className="btn-touch btn-secondary" onClick={onCatalogManagement} id="btn-open-catalog-management" title="Gestión de Catálogo">
+      <BookOpen size={20} />
+      Catálogo
+    </button>
+
     <button className="btn-touch btn-secondary" onClick={onSync} disabled={isLoading} id="btn-sync-remanentes" title="Sincronizar Remanentes">
       <RefreshCw size={20} className={isLoading ? 'spin' : ''} />
       Sincronizar
@@ -116,6 +126,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onReports,
   onUserManagement,
   onMovementHistory,
+  onCatalogManagement,
   onSync,
   onLogout,
 }) => (
@@ -146,6 +157,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         onReports={onReports}
         onUserManagement={onUserManagement}
         onMovementHistory={onMovementHistory}
+        onCatalogManagement={onCatalogManagement}
         onSync={onSync}
         onLogout={onLogout}
       />
@@ -242,6 +254,7 @@ interface AppModalsProps {
   isReportsOpen: boolean;
   isUserManagementOpen: boolean;
   isMovementHistoryOpen: boolean;
+  isCatalogManagementOpen: boolean;
   discardTarget: RemanenteFEFOItem | null;
   remanentes: RemanenteFEFOItem[];
   operatorId: string;
@@ -252,6 +265,7 @@ interface AppModalsProps {
   onCloseReports: () => void;
   onCloseUserManagement: () => void;
   onCloseMovementHistory: () => void;
+  onCloseCatalogManagement: () => void;
   onCloseDiscard: () => void;
   onSuccess: () => void;
 }
@@ -263,6 +277,7 @@ const AppModals: React.FC<AppModalsProps> = ({
   isReportsOpen,
   isUserManagementOpen,
   isMovementHistoryOpen,
+  isCatalogManagementOpen,
   discardTarget,
   remanentes,
   operatorId,
@@ -273,6 +288,7 @@ const AppModals: React.FC<AppModalsProps> = ({
   onCloseReports,
   onCloseUserManagement,
   onCloseMovementHistory,
+  onCloseCatalogManagement,
   onCloseDiscard,
   onSuccess,
 }) => (
@@ -282,6 +298,7 @@ const AppModals: React.FC<AppModalsProps> = ({
     <DiscardModal remanente={discardTarget} onClose={onCloseDiscard} onSuccess={onSuccess} />
     <UserManagementPanel isOpen={isUserManagementOpen} userRole={userRole} onClose={onCloseUserManagement} />
     <MovementHistoryPanel isOpen={isMovementHistoryOpen} userRole={userRole} onClose={onCloseMovementHistory} />
+    <CatalogManagementPanel isOpen={isCatalogManagementOpen} userRole={userRole} onClose={onCloseCatalogManagement} />
     <ShiftReconciliationWizard
       isOpen={isReconciliationOpen}
       remanentes={remanentes}
@@ -300,6 +317,7 @@ function useModalVisibility() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
   const [isMovementHistoryOpen, setIsMovementHistoryOpen] = useState(false);
+  const [isCatalogManagementOpen, setIsCatalogManagementOpen] = useState(false);
   const [discardTarget, setDiscardTarget] = useState<RemanenteFEFOItem | null>(null);
 
   return {
@@ -315,6 +333,8 @@ function useModalVisibility() {
     setIsUserManagementOpen,
     isMovementHistoryOpen,
     setIsMovementHistoryOpen,
+    isCatalogManagementOpen,
+    setIsCatalogManagementOpen,
     discardTarget,
     setDiscardTarget,
   };
@@ -374,6 +394,7 @@ function useAppHandlers(dashboard: ReturnType<typeof useDashboardState>) {
     onReports: () => dashboard.setIsReportsOpen(true),
     onUserManagement: () => dashboard.setIsUserManagementOpen(true),
     onMovementHistory: () => dashboard.setIsMovementHistoryOpen(true),
+    onCatalogManagement: () => dashboard.setIsCatalogManagementOpen(true),
     onExtract: () => dashboard.setIsExtractionOpen(true),
     onPrepareRecipe: () => dashboard.setIsRecipeOpen(true),
     onCloseExtraction: () => dashboard.setIsExtractionOpen(false),
@@ -382,6 +403,7 @@ function useAppHandlers(dashboard: ReturnType<typeof useDashboardState>) {
     onCloseReports: () => dashboard.setIsReportsOpen(false),
     onCloseUserManagement: () => dashboard.setIsUserManagementOpen(false),
     onCloseMovementHistory: () => dashboard.setIsMovementHistoryOpen(false),
+    onCloseCatalogManagement: () => dashboard.setIsCatalogManagementOpen(false),
     onCloseDiscard: () => dashboard.setDiscardTarget(null),
   };
 }
@@ -432,6 +454,7 @@ export const App: React.FC = () => {
         isReportsOpen={dashboard.isReportsOpen}
         isUserManagementOpen={dashboard.isUserManagementOpen}
         isMovementHistoryOpen={dashboard.isMovementHistoryOpen}
+        isCatalogManagementOpen={dashboard.isCatalogManagementOpen}
         discardTarget={dashboard.discardTarget}
         remanentes={remanentes}
         operatorId={currentUser.id}

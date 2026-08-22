@@ -49,6 +49,7 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 *   **Gestión Mínima de Personal:** Panel de administración para dar de alta operarios y bloquear/reactivar cuentas (rol `ADMIN`), sin depender de un redeploy de código.
 *   **Trazabilidad de Movimientos de Stock:** Panel de auditoría para consultar el historial de extracciones, consumos y descartes filtrado por insumo, para saber quién movió qué y cuándo.
 *   **Persistencia Real en Producción:** Todos los repositorios (incluyendo recetas, conciliaciones de turno y reportes) están respaldados por PostgreSQL en producción, con bootstrap idempotente del primer administrador en cada despliegue nuevo.
+*   **Gestión de Catálogo Maestro:** Panel de administración para dar de alta insumos y recetas (rol `ADMIN`) sin depender del script de seed, permitiendo operar con el inventario real del restaurante.
 
 
 
@@ -431,11 +432,40 @@ La API REST opera bajo el estándar OpenAPI 3.1.0. A continuación se detallan l
     ]
     ```
 
+### **4.8. POST `/api/v1/stock/insumos` (Alta de Insumo — Rol `ADMIN`)**
+*   **Propósito:** Da de alta un insumo nuevo en el catálogo maestro con stock inicial en `0`.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body** (`unitOfMeasure` es lista cerrada: `KG` | `L` | `UNITS`):
+    ```json
+    { "name": "Harina 000", "unitOfMeasure": "KG" }
+    ```
+*   **Response Success (`201 Created`):**
+    ```json
+    { "id": "f3a1c2e0-1234-4abc-9def-0123456789ab", "name": "Harina 000", "unitOfMeasure": "KG", "warehouseStock": "0.000" }
+    ```
+
+### **4.9. POST `/api/v1/catalog/recipes` (Alta de Receta — Rol `ADMIN`)**
+*   **Propósito:** Crea una receta nueva con sus ingredientes, validando que cada `insumoId` exista en el catálogo (`GET /api/v1/stock/insumos`).
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body:**
+    ```json
+    {
+      "name": "Pizza Margarita",
+      "category": "Pizzas",
+      "ingredients": [{ "insumoId": "f3a1c2e0-1234-4abc-9def-0123456789ab", "quantity": "0.150" }]
+    }
+    ```
+*   **Response Success (`201 Created`):**
+    ```json
+    { "message": "Recipe created successfully", "recipeId": "aa9f88d1-12cd-41e2-b9e1-bb901518f88c" }
+    ```
+*   **Response Error (`404 Not Found`):** si algún `insumoId` referenciado no existe en el catálogo.
+
 ---
 
 ## 5. Historias de Usuario
 
-Se han definido detalladamente las siguientes 11 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
+Se han definido detalladamente las siguientes 12 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
 
 ### **5.1. US-001: Autenticación por PIN del Personal de Cocina**
 *   **Formato de Negocio:** Como operario de cocina (Staff), quiero autenticarme en la terminal táctil ingresando mi PIN personal de 4 dígitos, para registrar mis movimientos de insumos y consumos de forma rápida y segura sin interrumpir el ritmo del servicio.
@@ -515,6 +545,14 @@ Se han definido detalladamente las siguientes 11 historias de usuario críticas 
     *   *When* el Administrador invoca `GET /api/v1/stock/movements`,
     *   *Then* el sistema retorna el movimiento con su tipo, cantidad, ubicaciones y fecha de creación.
 *   **Estado:** ✅ Backend y Frontend implementados y verificados, incluyendo el filtro por rango de fechas.
+
+### **5.12. US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero dar de alta insumos y recetas en el catálogo maestro vía API, para operar con el inventario real del restaurante sin depender del script de seed.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que un Administrador autenticado envía nombre `"Harina 000"` y unidad de medida `"KG"`,
+    *   *When* invoca `POST /api/v1/stock/insumos`,
+    *   *Then* el sistema crea el insumo con stock inicial `0` y este aparece inmediatamente en `GET /api/v1/stock/insumos`.
+*   **Estado:** ✅ Backend y Frontend implementados y verificados.
 
 ---
 
@@ -597,8 +635,12 @@ El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo
     *   **Descripción:** `GET /api/v1/auth/users` (rol `ADMIN`) — cierra la deuda que dejó `TK-049`/`TK-049-FE`: `UserStatusForm.tsx` pedía el ID exacto del operario por texto porque no existía forma de listarlos. Nunca expone `pinHash` en la respuesta.
     *   **Capas Afectadas:** `auth/domain` (`IUserRepository.findAll()`), `auth/application` (`ListUsersUseCase`), `auth/infrastructure`.
     *   **DoD:** 4 tests nuevos (listado poblado sin `pinHash`, lista vacía, 403/401); 64/64 tests backend en verde.
+*   **TK-057: Gestión de Catálogo Maestro — Alta de Insumos y Recetas (Backend)**
+    *   **Descripción:** `POST`/`GET /api/v1/stock/insumos` y `POST`/`GET /api/v1/catalog/recipes` (creación con rol `ADMIN`, listado para cualquier autenticado) — cierra además la deuda de `TK-008` (`POST /api/catalog/recipes` nunca se había implementado). Sin cambios de esquema Prisma.
+    *   **Capas Afectadas:** `stock/domain` (`IStockRepository.findAllInsumos()`), `stock/application`, `stock/infrastructure`; `catalog/application`, `catalog/infrastructure` (primer HTTP layer real de ese módulo).
+    *   **DoD:** 13 tests nuevos (alta/listado de insumo, 403/401/400, alta/listado de receta con ingredientes válidos, 404 con `insumoId` inexistente); 77/77 tests backend en verde.
 
-Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`) están documentados en la sección 6.2 más abajo y ya implementados.
+Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`, `TK-057-FE`) están documentados en la sección 6.2 más abajo y ya implementados.
 
 ### 🖥️ 6.2. Tickets de Frontend (en subcarpetas `docs/05_agile_planning/12_tickets/{modulo}/frontend/`)
 
@@ -634,6 +676,10 @@ Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`) están documentados en la sec
     *   **Descripción:** Modal con tabla de historial de movimientos filtrable por insumo y rango de fechas, consumiendo `GET /api/v1/stock/movements`.
     *   **Capas Afectadas:** `features/stock/components/MovementHistoryPanel.tsx`, `features/stock/services/stock.service.ts` (extendido).
     *   **DoD:** 6 pruebas RTL en verde (incluye filtro de fechas serializado a ISO 8601, estado vacío explícito y error real sin datos sintéticos, al ser un registro de auditoría).
+*   **TK-057-FE: Panel de Gestión de Catálogo (Frontend)**
+    *   **Descripción:** Modal con pestañas de alta de insumo y alta de receta (con filas dinámicas de ingrediente: selector de insumo + cantidad), consumiendo `POST`/`GET /api/v1/stock/insumos` y `POST`/`GET /api/v1/catalog/recipes`.
+    *   **Capas Afectadas:** `features/catalog/components` (`CatalogManagementPanel.tsx`, `CreateInsumoForm.tsx`, `CreateRecipeForm.tsx`), `features/catalog/services/catalog.service.ts`.
+    *   **DoD:** 6 pruebas RTL en verde; sin fallback a datos sintéticos ante error; `SectionTabs` y `SuccessFeedbackBanner` extraídos a `shared/components/` para evitar duplicar el patrón ya usado por `UserManagementPanel` (regla de reuso de `SK-17`).
 
 ---
 

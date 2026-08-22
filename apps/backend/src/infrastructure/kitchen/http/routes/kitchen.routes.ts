@@ -5,7 +5,7 @@ import { ConsumeRemanenteUseCase } from '../../../../application/kitchen/use-cas
 import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cases/DiscardRemanenteUseCase.js';
 import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/ConsumeRecipeUseCase.js';
 import { IRemanenteQueryRepository } from '../../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
-import { IStockRepository } from '../../../../domain/stock/repositories/IStockRepository.js';
+import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IRecipeRepository } from '../../../../domain/catalog/repositories/IRecipeRepository.js';
 
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
@@ -15,22 +15,22 @@ import { IShiftReconciliationRepository } from '../../../../domain/kitchen/repos
 
 export function createKitchenRouter(
   remanenteQueryRepository: IRemanenteQueryRepository,
-  stockRepository?: IStockRepository,
+  remanenteRepository?: IRemanenteRepository,
   recipeRepository?: IRecipeRepository,
   reconciliationRepository?: IShiftReconciliationRepository
 ): Router {
   const router = Router();
   const getActiveUseCase = new GetActiveRemanentesUseCase(remanenteQueryRepository);
-  const consumeUseCase = stockRepository ? new ConsumeRemanenteUseCase(stockRepository) : undefined;
-  const discardUseCase = stockRepository ? new DiscardRemanenteUseCase(stockRepository) : undefined;
+  const consumeUseCase = remanenteRepository ? new ConsumeRemanenteUseCase(remanenteRepository) : undefined;
+  const discardUseCase = remanenteRepository ? new DiscardRemanenteUseCase(remanenteRepository) : undefined;
   const consumeRecipeUseCase =
-    stockRepository && recipeRepository
-      ? new ConsumeRecipeUseCase(recipeRepository, stockRepository)
+    remanenteRepository && recipeRepository
+      ? new ConsumeRecipeUseCase(recipeRepository, remanenteRepository)
       : undefined;
 
   const reconciliationRepo = reconciliationRepository ?? new InMemoryShiftReconciliationRepository();
-  const performShiftReconciliationUseCase = stockRepository
-    ? new PerformShiftReconciliationUseCase(stockRepository, remanenteQueryRepository, reconciliationRepo)
+  const performShiftReconciliationUseCase = remanenteRepository
+    ? new PerformShiftReconciliationUseCase(remanenteRepository, remanenteQueryRepository, reconciliationRepo)
     : undefined;
 
   const controller = new KitchenController(
@@ -42,12 +42,12 @@ export function createKitchenRouter(
   );
 
   router.get('/remanentes-activos', controller.getActiveRemanentes);
-  if (stockRepository) {
+  if (remanenteRepository) {
     router.post('/remanentes/:id/consume', controller.consumeRemanente);
     router.post('/remanentes/:id/discard', controller.discardRemanente);
     router.post('/shift-reconciliation', controller.performShiftReconciliation);
   }
-  if (stockRepository && recipeRepository) {
+  if (remanenteRepository && recipeRepository) {
     router.post('/recipes/:id/consume', controller.consumeRecipe);
   }
 

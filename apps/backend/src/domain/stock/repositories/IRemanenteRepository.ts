@@ -1,4 +1,3 @@
-import { Insumo } from '../entities/Insumo.js';
 import { Remanente } from '../entities/Remanente.js';
 
 export interface StockMovementRecord {
@@ -13,11 +12,9 @@ export interface StockMovementRecord {
   createdAt?: Date;
 }
 
-export interface IStockRepository {
-  findInsumoById(id: string): Promise<Insumo | null>;
+export interface IRemanenteRepository {
   findRemanenteById(id: string): Promise<Remanente | null>;
   findActiveRemanentesByInsumoId(insumoId: string): Promise<Remanente[]>;
-  saveInsumo(insumo: Insumo): Promise<void>;
   saveRemanente(remanente: Remanente): Promise<void>;
   recordMovement(movement: StockMovementRecord): Promise<void>;
 }

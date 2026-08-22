@@ -1,5 +1,6 @@
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
-import { IStockRepository } from '../../domain/stock/repositories/IStockRepository.js';
+import { IInsumoRepository } from '../../domain/stock/repositories/IInsumoRepository.js';
+import { IRemanenteRepository } from '../../domain/stock/repositories/IRemanenteRepository.js';
 import {
   IRemanenteQueryRepository,
   ActiveRemanenteDTO,
@@ -15,7 +16,7 @@ import { DecimalQuantity } from '../../domain/stock/value-objects/DecimalQuantit
 
 export interface SeedRepositories {
   userRepo: IUserRepository;
-  stockRepo: IStockRepository;
+  stockRepo: IInsumoRepository & IRemanenteRepository;
   remanenteQueryRepo: IRemanenteQueryRepository;
   recipeRepo: IRecipeRepository;
 }
@@ -59,24 +60,24 @@ async function seedEssentialUsers(userRepo: IUserRepository): Promise<void> {
 }
 
 // Insumos de Bodega Ficticios (solo entornos dev/staging/standalone)
-async function seedSyntheticInsumos(stockRepo: IStockRepository): Promise<void> {
-  const existingIns1 = await stockRepo.findInsumoById('ins-1');
+async function seedSyntheticInsumos(insumoRepo: IInsumoRepository): Promise<void> {
+  const existingIns1 = await insumoRepo.findById('ins-1');
   if (!existingIns1) {
-    await stockRepo.saveInsumo(
+    await insumoRepo.save(
       new Insumo({ id: 'ins-1', name: 'Queso Mozzarella', unitOfMeasure: 'KG', warehouseStock: new DecimalQuantity('50.0000') })
     );
   }
 
-  const existingIns2 = await stockRepo.findInsumoById('ins-2');
+  const existingIns2 = await insumoRepo.findById('ins-2');
   if (!existingIns2) {
-    await stockRepo.saveInsumo(
+    await insumoRepo.save(
       new Insumo({ id: 'ins-2', name: 'Salsa Pomodoro', unitOfMeasure: 'L', warehouseStock: new DecimalQuantity('50.0000') })
     );
   }
 
-  const existingIns3 = await stockRepo.findInsumoById('ins-3');
+  const existingIns3 = await insumoRepo.findById('ins-3');
   if (!existingIns3) {
-    await stockRepo.saveInsumo(
+    await insumoRepo.save(
       new Insumo({ id: 'ins-3', name: 'Masa de Pizza', unitOfMeasure: 'UNITS', warehouseStock: new DecimalQuantity('100.0000') })
     );
   }
@@ -113,7 +114,7 @@ async function seedSyntheticRecipes(recipeRepo: IRecipeRepository): Promise<void
 
 // Remanentes Activos FEFO Simulados (Persistidos en Repositorio de Stock y Query Model)
 async function seedSyntheticRemanentes(
-  stockRepo: IStockRepository,
+  remanenteRepo: IRemanenteRepository,
   remanenteQueryRepo: IRemanenteQueryRepository
 ): Promise<void> {
   const queryRepoWithSeed = remanenteQueryRepo as {
@@ -140,8 +141,8 @@ async function seedSyntheticRemanentes(
   for (const fixture of fixtures) {
     const expirationDate = new Date(now.getTime() + fixture.hoursToExpire * 60 * 60 * 1000);
 
-    // 1. Guardar Entidad en StockRepository (Write Model)
-    await stockRepo.saveRemanente(
+    // 1. Guardar Entidad en RemanenteRepository (Write Model)
+    await remanenteRepo.saveRemanente(
       new Remanente({
         id: fixture.id,
         insumoId: fixture.insumoId,

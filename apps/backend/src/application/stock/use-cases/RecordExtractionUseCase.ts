@@ -1,4 +1,5 @@
-import { IStockRepository } from '../../../domain/stock/repositories/IStockRepository.js';
+import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
+import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { Remanente } from '../../../domain/stock/entities/Remanente.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
@@ -22,10 +23,13 @@ export interface ExtractionResponseDTO {
 }
 
 export class RecordExtractionUseCase {
-  constructor(private readonly stockRepository: IStockRepository) {}
+  constructor(
+    private readonly insumoRepository: IInsumoRepository,
+    private readonly remanenteRepository: IRemanenteRepository
+  ) {}
 
   public async execute(dto: RecordExtractionDTO): Promise<ExtractionResponseDTO> {
-    const insumo = await this.stockRepository.findInsumoById(dto.insumoId);
+    const insumo = await this.insumoRepository.findById(dto.insumoId);
     if (!insumo) {
       throw new EntityNotFoundException('Insumo', dto.insumoId);
     }
@@ -42,17 +46,17 @@ export class RecordExtractionUseCase {
 
     // Debitar stock de bodega
     insumo.deductStock(requestedQty);
-    await this.stockRepository.saveInsumo(insumo);
+    await this.insumoRepository.save(insumo);
 
     // Crear remanente activo FEFO en cocina
     const remanenteId = `rem-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const location = dto.toLocation || 'KITCHEN_FRIDGE';
     const remanente = Remanente.createNew(remanenteId, insumo.id, requestedQty, location, 24);
 
-    await this.stockRepository.saveRemanente(remanente);
+    await this.remanenteRepository.saveRemanente(remanente);
 
     // Auditoría de movimiento
-    await this.stockRepository.recordMovement({
+    await this.remanenteRepository.recordMovement({
       id: `mov-${Date.now()}`,
       insumoId: insumo.id,
       type: 'EXTRACTION',

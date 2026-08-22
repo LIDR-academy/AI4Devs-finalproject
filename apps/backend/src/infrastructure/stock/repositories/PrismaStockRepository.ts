@@ -2,12 +2,13 @@ import { PrismaClient } from '@prisma/client';
 import { Insumo } from '../../../domain/stock/entities/Insumo.js';
 import { Remanente, RemanenteStatusType } from '../../../domain/stock/entities/Remanente.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
-import { IStockRepository, StockMovementRecord } from '../../../domain/stock/repositories/IStockRepository.js';
+import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
+import { IRemanenteRepository, StockMovementRecord } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 
-export class PrismaStockRepository implements IStockRepository {
+export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  public async findInsumoById(id: string): Promise<Insumo | null> {
+  public async findById(id: string): Promise<Insumo | null> {
     const raw = await this.prisma.insumo.findUnique({
       where: { id },
       include: { warehouseStocks: true },
@@ -22,6 +23,22 @@ export class PrismaStockRepository implements IStockRepository {
       name: raw.name,
       unitOfMeasure: raw.unitOfMeasure,
       warehouseStock: new DecimalQuantity(quantity),
+    });
+  }
+
+  public async findAll(): Promise<Insumo[]> {
+    const list = await this.prisma.insumo.findMany({ include: { warehouseStocks: true } });
+
+    return list.map((raw) => {
+      const mainStock = raw.warehouseStocks.find((s) => s.location === 'MAIN_WAREHOUSE');
+      const quantity = mainStock ? mainStock.quantity.toString() : '0';
+
+      return new Insumo({
+        id: raw.id,
+        name: raw.name,
+        unitOfMeasure: raw.unitOfMeasure,
+        warehouseStock: new DecimalQuantity(quantity),
+      });
     });
   }
 
@@ -69,7 +86,7 @@ export class PrismaStockRepository implements IStockRepository {
     );
   }
 
-  public async saveInsumo(insumo: Insumo): Promise<void> {
+  public async save(insumo: Insumo): Promise<void> {
     const stockQty = insumo.warehouseStock.toDecimal();
 
     await this.prisma.insumo.upsert({

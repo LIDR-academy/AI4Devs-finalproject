@@ -1,4 +1,4 @@
-import { IStockRepository } from '../../../domain/stock/repositories/IStockRepository.js';
+import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IRemanenteQueryRepository } from '../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 import { IShiftReconciliationRepository } from '../../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
 import { ShiftReconciliation, ShiftReconciliationItem } from '../../../domain/kitchen/entities/ShiftReconciliation.js';
@@ -33,7 +33,7 @@ export interface PerformShiftReconciliationResult {
 
 export class PerformShiftReconciliationUseCase {
   constructor(
-    private readonly stockRepository: IStockRepository,
+    private readonly remanenteRepository: IRemanenteRepository,
     private readonly remanenteQueryRepository: IRemanenteQueryRepository,
     private readonly reconciliationRepository: IShiftReconciliationRepository
   ) {}
@@ -83,14 +83,14 @@ export class PerformShiftReconciliationUseCase {
       if (dto.expirationDate >= now) {
         continue;
       }
-      const remanente = await this.stockRepository.findRemanenteById(dto.id);
+      const remanente = await this.remanenteRepository.findRemanenteById(dto.id);
       if (!remanente || remanente.status !== 'ACTIVE') {
         continue;
       }
 
       const quantityDiscarded = remanente.discard();
-      await this.stockRepository.saveRemanente(remanente);
-      await this.stockRepository.recordMovement({
+      await this.remanenteRepository.saveRemanente(remanente);
+      await this.remanenteRepository.recordMovement({
         id: `mov-autodiscard-${Date.now()}-${remanente.id}`,
         insumoId: remanente.insumoId,
         type: 'DISCARD',
@@ -108,7 +108,7 @@ export class PerformShiftReconciliationUseCase {
   private async reconcilePhysicalCount(
     itemInput: PhysicalCountItemInput
   ): Promise<{ reconciliationItem: ShiftReconciliationItem; responseItem: ReconciledItemResponse } | null> {
-    const remanente = await this.stockRepository.findRemanenteById(itemInput.remanenteId);
+    const remanente = await this.remanenteRepository.findRemanenteById(itemInput.remanenteId);
     if (!remanente) {
       return null;
     }
@@ -123,10 +123,10 @@ export class PerformShiftReconciliationUseCase {
     } else if (varianceDecimal.isNegative()) {
       remanente.consumeQuantity(new DecimalQuantity(varianceDecimal.abs()));
     }
-    await this.stockRepository.saveRemanente(remanente);
+    await this.remanenteRepository.saveRemanente(remanente);
 
     if (!varianceDecimal.isZero()) {
-      await this.stockRepository.recordMovement({
+      await this.remanenteRepository.recordMovement({
         id: `mov-recon-${Date.now()}-${remanente.id}`,
         insumoId: remanente.insumoId,
         type: 'SHIFT_RECONCILIATION_VARIANCE',

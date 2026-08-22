@@ -1,4 +1,4 @@
-import { IStockRepository } from '../../../domain/stock/repositories/IStockRepository.js';
+import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 
@@ -16,10 +16,10 @@ export interface ConsumptionResponseDTO {
 }
 
 export class ConsumeRemanenteUseCase {
-  constructor(private readonly stockRepository: IStockRepository) {}
+  constructor(private readonly remanenteRepository: IRemanenteRepository) {}
 
   public async execute(dto: ConsumeRemanenteDTO): Promise<ConsumptionResponseDTO> {
-    const remanente = await this.stockRepository.findRemanenteById(dto.remanenteId);
+    const remanente = await this.remanenteRepository.findRemanenteById(dto.remanenteId);
     if (!remanente) {
       throw new EntityNotFoundException('Remanente', dto.remanenteId);
     }
@@ -30,10 +30,10 @@ export class ConsumeRemanenteUseCase {
     remanente.consumeQuantity(qtyToConsume);
 
     // Persistir remanente actualizado
-    await this.stockRepository.saveRemanente(remanente);
+    await this.remanenteRepository.saveRemanente(remanente);
 
     // Registrar auditoria de consumo
-    await this.stockRepository.recordMovement({
+    await this.remanenteRepository.recordMovement({
       id: `mov-${Date.now()}`,
       insumoId: remanente.insumoId,
       type: 'CONSUMPTION',

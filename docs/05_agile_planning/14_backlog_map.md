@@ -20,12 +20,13 @@ inputs:
 ```mermaid
 graph TD
     %% Nodos Principales (Roadmap & Epics)
-    Roadmap["🎯 RESTOSTOCK MVP<br/>(03_restostock_prd.md)"]
+    Roadmap["🎯 RESTOSTOCK MVP<br/>(02_prd.md)"]
     
     EpicAuth["🔐 EPIC: Autenticación y Sesiones<br/>(modules/auth)"]
     EpicStock["📦 EPIC: Control de Bodega<br/>(modules/stock)"]
     EpicKitchen["🍳 EPIC: Operaciones de Cocina<br/>(modules/kitchen)"]
     EpicReports["📊 EPIC: Reportes y Analíticas<br/>(modules/reports)"]
+    EpicCatalog["📖 EPIC: Catálogo Maestro<br/>(modules/catalog)"]
     EpicShared["🛠️ Cross-Cutting Shared Kernel"]
 
     %% Relaciones de Roadmap a Epics
@@ -33,6 +34,7 @@ graph TD
     Roadmap --> EpicStock
     Roadmap --> EpicKitchen
     Roadmap --> EpicReports
+    Roadmap --> EpicCatalog
     Roadmap --> EpicShared
 
     %% Habilitador Técnico Base
@@ -119,6 +121,13 @@ graph TD
     TK051["🎫 TK-051: Bootstrap Primer Admin (Backend)"]
     EpicShared --> TK051
 
+    US012["📝 US-012: Gestión de Catálogo Maestro"]
+    TK057["🎫 TK-057: Alta de Insumos y Recetas (Backend)"]
+    TK057FE["🎫 TK-057-FE: Panel de Gestión de Catálogo (Frontend)"]
+    EpicCatalog --> US012
+    US012 --> TK057
+    US012 --> TK057FE
+
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
     classDef roadmap fill:#FFC300,stroke:#FF5733,stroke-width:2px,color:#000;
@@ -127,9 +136,9 @@ graph TD
     classDef tk fill:#F2F3F4,stroke:#7F8C8D,stroke-width:1.5px,color:#2C3E50;
 
     class Roadmap roadmap;
-    class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056 tk;
+    class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE tk;
 ```
 
 ---
@@ -152,3 +161,4 @@ graph TD
 | **🔐 Autenticación (`auth`)** | [US-010: Gestión de Personal](11_user_stories/auth/US-010.md) | [TK-049](12_tickets/auth/backend/TK-049.md) + [TK-056: Listado de Operarios](12_tickets/auth/backend/TK-056.md) | [TK-049-FE: Panel de Gestión de Personal](12_tickets/auth/frontend/TK-049-FE.md) | ✅ Done |
 | **📦 Bodega (`stock`)** | [US-011: Trazabilidad de Movimientos](11_user_stories/stock/US-011.md) | [TK-050: Trazabilidad de Movimientos](12_tickets/stock/backend/TK-050.md) | [TK-050-FE: Panel de Auditoría de Movimientos](12_tickets/stock/frontend/TK-050-FE.md) | ✅ Done |
 | **🛠️ Shared Kernel** | *N/A (Habilitador de Despliegue)* | [TK-051: Bootstrap Primer Administrador](12_tickets/shared/backend/TK-051.md) | N/A | ✅ Done |
+| **📖 Catálogo (`catalog`)** | [US-012: Gestión de Catálogo Maestro](11_user_stories/catalog/US-012.md) | [TK-057: Alta de Insumos y Recetas](12_tickets/catalog/backend/TK-057.md) | [TK-057-FE: Panel de Gestión de Catálogo](12_tickets/catalog/frontend/TK-057-FE.md) | ✅ Done |

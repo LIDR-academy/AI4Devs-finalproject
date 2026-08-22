@@ -1,4 +1,4 @@
-import { IStockRepository } from '../../../domain/stock/repositories/IStockRepository.js';
+import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 
 export interface DiscardRemanenteDTO {
@@ -14,10 +14,10 @@ export interface DiscardResponseDTO {
 }
 
 export class DiscardRemanenteUseCase {
-  constructor(private readonly stockRepository: IStockRepository) {}
+  constructor(private readonly remanenteRepository: IRemanenteRepository) {}
 
   public async execute(dto: DiscardRemanenteDTO): Promise<DiscardResponseDTO> {
-    const remanente = await this.stockRepository.findRemanenteById(dto.remanenteId);
+    const remanente = await this.remanenteRepository.findRemanenteById(dto.remanenteId);
     if (!remanente) {
       throw new EntityNotFoundException('Remanente', dto.remanenteId);
     }
@@ -26,10 +26,10 @@ export class DiscardRemanenteUseCase {
     const discardedQty = remanente.discard();
 
     // Persistir remanente actualizado
-    await this.stockRepository.saveRemanente(remanente);
+    await this.remanenteRepository.saveRemanente(remanente);
 
     // Registrar movimiento de auditoria por merma
-    await this.stockRepository.recordMovement({
+    await this.remanenteRepository.recordMovement({
       id: `mov-discard-${Date.now()}`,
       insumoId: remanente.insumoId,
       type: `DISCARD_${dto.reason}`,

@@ -33,6 +33,9 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-049** | `auth` | **Alto** | **Alta** | 3 SP | Depende de `TK-002`. Gestión mínima de personal (alta/bloqueo). | 🟡 P1 - Alta |
 | **TK-050** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-003`, `TK-005`, `TK-006`. Trazabilidad de movimientos. | 🟢 P2 - Media |
 | **TK-051** | `shared` | **Muy Alto** | **Muy Alta** | 5 SP | Depende de `TK-049`. Bootstrap del primer administrador en despliegue nuevo. | 🔴 P0 - Bloqueante |
+| **TK-056** | `auth` | **Medio** | **Media** | 2 SP | Depende de `TK-049`. Listado de operarios (cierre de deuda). | 🟢 P2 - Media |
+| **TK-057** | `catalog` | **Alto** | **Media** | 5 SP | Depende de `TK-003`, `TK-008`. Alta de insumos y recetas en el catálogo maestro. | 🟡 P1 - Alta |
+| **TK-058** | `shared` | **Medio** | **Baja** | 3 SP | Depende de `TK-057`. Refactor ISP puro, cero cambio de comportamiento. | 🟢 P2 - Media |
 
 ---
 
@@ -55,6 +58,9 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-049** | [US-010](../11_user_stories/auth/US-010.md) | Gestión Mínima de Personal (Alta y Bloqueo de Operarios) | `auth` | 3 | Must Have | [auth/backend/TK-049.md](auth/backend/TK-049.md) |
 | **TK-050** | [US-011](../11_user_stories/stock/US-011.md) | Trazabilidad de Movimientos de Stock | `stock` | 3 | Should Have | [stock/backend/TK-050.md](stock/backend/TK-050.md) |
 | **TK-051** | N/A (Técnico) | Bootstrap del Primer Administrador | `shared` | 5 | Must Have | [shared/backend/TK-051.md](shared/backend/TK-051.md) |
+| **TK-056** | [US-010](../11_user_stories/auth/US-010.md) | Listado de Operarios (Cierre de Deuda de TK-049) | `auth` | 2 | Should Have | [auth/backend/TK-056.md](auth/backend/TK-056.md) |
+| **TK-057** | [US-012](../11_user_stories/catalog/US-012.md) | Gestión de Catálogo Maestro (Alta de Insumos y Recetas) | `stock`/`catalog` | 5 | Should Have | [catalog/backend/TK-057.md](catalog/backend/TK-057.md) |
+| **TK-058** | N/A (Técnico) | Modularización del Repositorio de Stock (ISP) | `shared` | 3 | Should Have | [shared/backend/TK-058.md](shared/backend/TK-058.md) |
 
 ### 🖥️ Tickets de Frontend
 
@@ -68,8 +74,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-007-E** | [US-009](../11_user_stories/reports/US-009.md) | Dashboard de Reportes de Desperdicio y Eficiencia FEFO | `reports` | 3 | Should Have | [reports/frontend/TK-007-E.md](reports/frontend/TK-007-E.md) |
 | **TK-007-F** | [US-002](../11_user_stories/stock/US-002.md) | Pantalla de Registro de Extracciones de Bodega | `stock` | 3 | Must Have | [stock/frontend/TK-007-F.md](stock/frontend/TK-007-F.md) |
 | **TK-049-FE** | [US-010](../11_user_stories/auth/US-010.md) | Panel de Gestión de Personal | `auth` | 3 | Should Have | [auth/frontend/TK-049-FE.md](auth/frontend/TK-049-FE.md) |
-| **TK-056** | [US-010](../11_user_stories/auth/US-010.md) | Listado de Operarios (Cierre de Deuda de TK-049) | `auth` | 2 | Should Have | [auth/backend/TK-056.md](auth/backend/TK-056.md) |
 | **TK-050-FE** | [US-011](../11_user_stories/stock/US-011.md) | Panel de Auditoría de Movimientos de Stock | `stock` | 3 | Should Have | [stock/frontend/TK-050-FE.md](stock/frontend/TK-050-FE.md) |
+| **TK-057-FE** | [US-012](../11_user_stories/catalog/US-012.md) | Panel de Gestión de Catálogo | `catalog` | 3 | Should Have | [catalog/frontend/TK-057-FE.md](catalog/frontend/TK-057-FE.md) |
 
 ---
 
@@ -104,6 +110,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 ### 🛠️ Shared / Transversal (Post-MVP, Cierre de Deuda)
 *   **[TK-048: Cierre de Persistencia Parcial en Producción](shared/backend/TK-048.md)** (Backend)
 *   **[TK-051: Bootstrap del Primer Administrador](shared/backend/TK-051.md)** (Backend)
+*   **[TK-058: Modularización del Repositorio de Stock (ISP)](shared/backend/TK-058.md)** (Backend) — split de `IStockRepository` en `IInsumoRepository`/`IRemanenteRepository`, motivado por `TK-057`.
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
 *   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)
@@ -114,4 +121,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-050: Trazabilidad de Movimientos de Stock](stock/backend/TK-050.md)** (Backend)
 *   **[TK-050-FE: Panel de Auditoría de Movimientos](stock/frontend/TK-050-FE.md)** (Frontend)
 
-`TK-056` cerró la única deuda residual que quedaba (listado de operarios) — `TK-049`/`TK-049-FE`/`TK-050`/`TK-050-FE` quedan sin pendientes conocidos.
+### 📖 Catálogo (`catalog/`) — Post-MVP
+*   **[TK-057: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](catalog/backend/TK-057.md)** (Backend) — cierra además la deuda de `TK-008` (`POST /api/catalog/recipes` nunca implementado).
+*   **[TK-057-FE: Panel de Gestión de Catálogo](catalog/frontend/TK-057-FE.md)** (Frontend)
+
+`TK-056` cerró la deuda residual de listado de operarios; `TK-057`/`TK-057-FE` cierran la deuda de alta de catálogo (insumos y recetas) y la de `TK-008` — `TK-049`/`TK-049-FE`/`TK-050`/`TK-050-FE`/`TK-057`/`TK-057-FE` quedan sin pendientes conocidos.

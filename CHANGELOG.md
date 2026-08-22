@@ -6,6 +6,16 @@ Todos los cambios notables en este proyecto de especificación técnica y diseñ
 
 ## [Unreleased]
 
+### Added
+* **Gestión de Catálogo Maestro (US-012 / TK-057 / TK-057-FE):**
+    * Alta y listado de insumos (`POST`/`GET /api/v1/stock/insumos`) y de recetas con ingredientes (`POST`/`GET /api/v1/catalog/recipes`), sin depender del script de seed.
+    * Cierra la deuda de `TK-008`: `POST /api/catalog/recipes` nunca se había implementado (corregido además a la convención `/api/v1/...`).
+    * Panel de administración con formulario de alta de insumo y alta de receta (filas dinámicas de ingrediente), reutilizando `SectionTabs`/`SuccessFeedbackBanner` (nuevos componentes compartidos, extraídos para evitar duplicar el patrón de `UserManagementPanel`).
+    * Sin cambios de esquema Prisma — `Insumo`/`Recipe`/`RecipeIngredient` ya existían.
+
+### Fixed
+* **Auditoría de plantillas de artefactos `.agents/`:** enlaces rotos en `docs/README.md` (5/5 rotos), 16 tickets con ruta relativa de navegación mal calculada, `TK-049`/`TK-050` con nota de deuda de Frontend desactualizada, frontmatter faltante en `docs/01_product_definition/`, y `07_api_specification.md` con un endpoint documentado como pendiente que ya estaba implementado en otro (contradicción cruzada, corregida al verificar contra el código real).
+
 ## [0.4.0] - 2026-08-21
 
 Esta versión cierra la "Entrega 2": endurecimiento de calidad/testing, dockerización DevSecOps completa, y las 3 funcionalidades priorizadas para completar el MVP (persistencia real, gestión mínima de personal, trazabilidad de movimientos), más el saneamiento de los artefactos ágiles y del propio framework `.agents/` que ese trabajo dejó pendiente.

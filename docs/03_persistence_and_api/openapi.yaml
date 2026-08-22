@@ -238,6 +238,68 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/stock/insumos:
+    get:
+      summary: List all insumos in the master catalog (TK-057)
+      operationId: listInsumos
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of insumos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateInsumoResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new insumo in the master catalog with 0 initial stock (ADMIN only, TK-057)
+      operationId: createInsumo
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInsumoRequest'
+      responses:
+        '201':
+          description: Insumo created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInsumoResponse'
+        '400':
+          description: Invalid name/unitOfMeasure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/kitchen/remanentes-activos:
     get:
       summary: List active kitchen remanentes ordered by FEFO
@@ -390,6 +452,74 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           description: Insufficient stock for one or more ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/catalog/recipes:
+    get:
+      summary: List all recipes in the master catalog, with ingredients (TK-057)
+      operationId: listRecipes
+      tags:
+        - Catalog
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeListItem'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new recipe with its ingredients (ADMIN only, TK-057)
+      operationId: createRecipe
+      tags:
+        - Catalog
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecipeRequest'
+      responses:
+        '201':
+          description: Recipe created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRecipeResponse'
+        '400':
+          description: Invalid name/category/ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: One or more ingredient insumoId references a non-existent insumo
           content:
             application/json:
               schema:
@@ -618,6 +748,33 @@ components:
           format: date-time
           enum: [ACTIVE, CONSUMED, DISCARDED]
 
+    CreateInsumoRequest:
+      type: object
+      required:
+        - name
+        - unitOfMeasure
+      properties:
+        name:
+          type: string
+          example: "Harina 000"
+        unitOfMeasure:
+          type: string
+          enum: [KG, L, UNITS]
+          example: "KG"
+
+    CreateInsumoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        unitOfMeasure:
+          type: string
+          enum: [KG, L, UNITS]
+        warehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+
     RemanenteItem:
       type: object
       properties:
@@ -720,6 +877,62 @@ components:
                 $ref: '#/components/schemas/DecimalString'
               remanentesAffectedCount:
                 type: integer
+
+    CreateRecipeIngredient:
+      type: object
+      required:
+        - insumoId
+        - quantity
+      properties:
+        insumoId:
+          type: string
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+
+    CreateRecipeRequest:
+      type: object
+      required:
+        - name
+        - category
+        - ingredients
+      properties:
+        name:
+          type: string
+          example: "Pizza Margarita"
+        category:
+          type: string
+          example: "Pizzas"
+        description:
+          type: string
+        ingredients:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateRecipeIngredient'
+
+    CreateRecipeResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        recipeId:
+          type: string
+
+    RecipeListItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateRecipeIngredient'
 
     ShiftReconciliationRequest:
       type: object

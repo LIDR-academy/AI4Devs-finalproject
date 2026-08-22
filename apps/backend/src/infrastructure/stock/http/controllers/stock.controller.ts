@@ -2,11 +2,20 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { RecordExtractionUseCase } from '../../../../application/stock/use-cases/RecordExtractionUseCase.js';
 import { GetStockMovementHistoryUseCase } from '../../../../application/stock/use-cases/GetStockMovementHistoryUseCase.js';
+import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/CreateInsumoUseCase.js';
+import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
 
 export const recordExtractionSchema = z.object({
   insumoId: z.string().min(1, 'El ID de insumo es obligatorio.'),
   quantity: z.union([z.number().positive('La cantidad debe ser positiva.'), z.string().min(1)]),
   toLocation: z.string().optional().default('KITCHEN_FRIDGE'),
+});
+
+export const createInsumoSchema = z.object({
+  name: z.string().min(1, 'El nombre del insumo es requerido.'),
+  unitOfMeasure: z.enum(['KG', 'L', 'UNITS'], {
+    errorMap: () => ({ message: 'La unidad de medida debe ser KG, L o UNITS.' }),
+  }),
 });
 
 export const stockMovementHistoryQuerySchema = z.object({
@@ -30,7 +39,9 @@ function respondValidationError(req: Request, res: Response, detailMsg: string):
 export class StockController {
   constructor(
     private readonly recordExtractionUseCase: RecordExtractionUseCase,
-    private readonly getStockMovementHistoryUseCase?: GetStockMovementHistoryUseCase
+    private readonly getStockMovementHistoryUseCase?: GetStockMovementHistoryUseCase,
+    private readonly createInsumoUseCase?: CreateInsumoUseCase,
+    private readonly listInsumosUseCase?: ListInsumosUseCase
   ) {}
 
   public recordExtraction = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -66,6 +77,37 @@ export class StockController {
         respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
         return;
       }
+      next(error);
+    }
+  };
+
+  public createInsumo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const parsedBody = createInsumoSchema.parse(req.body);
+
+      if (!this.createInsumoUseCase) {
+        throw new Error('CreateInsumoUseCase no configurado.');
+      }
+
+      const result = await this.createInsumoUseCase.execute(parsedBody);
+      res.status(201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
+
+  public listInsumos = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.listInsumosUseCase) {
+        throw new Error('ListInsumosUseCase no configurado.');
+      }
+      const result = await this.listInsumosUseCase.execute();
+      res.status(200).json(result);
+    } catch (error) {
       next(error);
     }
   };

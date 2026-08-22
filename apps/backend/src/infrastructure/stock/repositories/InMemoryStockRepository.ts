@@ -1,17 +1,22 @@
 import { Insumo } from '../../../domain/stock/entities/Insumo.js';
 import { Remanente } from '../../../domain/stock/entities/Remanente.js';
+import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
 import {
-  IStockRepository,
+  IRemanenteRepository,
   StockMovementRecord,
-} from '../../../domain/stock/repositories/IStockRepository.js';
+} from '../../../domain/stock/repositories/IRemanenteRepository.js';
 
-export class InMemoryStockRepository implements IStockRepository {
+export class InMemoryStockRepository implements IInsumoRepository, IRemanenteRepository {
   public insumos: Map<string, Insumo> = new Map();
   public remanentes: Map<string, Remanente> = new Map();
   public movements: StockMovementRecord[] = [];
 
-  async findInsumoById(id: string): Promise<Insumo | null> {
+  async findById(id: string): Promise<Insumo | null> {
     return this.insumos.get(id) || null;
+  }
+
+  async findAll(): Promise<Insumo[]> {
+    return Array.from(this.insumos.values());
   }
 
   async findRemanenteById(id: string): Promise<Remanente | null> {
@@ -24,7 +29,7 @@ export class InMemoryStockRepository implements IStockRepository {
       .sort((a, b) => a.expirationDate.getTime() - b.expirationDate.getTime());
   }
 
-  async saveInsumo(insumo: Insumo): Promise<void> {
+  async save(insumo: Insumo): Promise<void> {
     this.insumos.set(insumo.id, insumo);
   }
 

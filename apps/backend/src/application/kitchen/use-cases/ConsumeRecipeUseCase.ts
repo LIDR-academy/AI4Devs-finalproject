@@ -1,5 +1,5 @@
 import { IRecipeRepository } from '../../../domain/catalog/repositories/IRecipeRepository.js';
-import { IStockRepository } from '../../../domain/stock/repositories/IStockRepository.js';
+import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 import { ExcessConsumptionException } from '../../../domain/kitchen/errors/ExcessConsumptionException.js';
@@ -26,7 +26,7 @@ export interface RecipeConsumptionResult {
 export class ConsumeRecipeUseCase {
   constructor(
     private recipeRepository: IRecipeRepository,
-    private stockRepository: IStockRepository
+    private remanenteRepository: IRemanenteRepository
   ) {}
 
   async execute(command: ConsumeRecipeCommand): Promise<RecipeConsumptionResult> {
@@ -58,7 +58,7 @@ export class ConsumeRecipeUseCase {
     const requiredQtyDecimal = ingredient.quantity.toDecimal().mul(portions);
     const requiredQty = new DecimalQuantity(requiredQtyDecimal);
 
-    const activeRemanentes = await this.stockRepository.findActiveRemanentesByInsumoId(ingredient.insumoId);
+    const activeRemanentes = await this.remanenteRepository.findActiveRemanentesByInsumoId(ingredient.insumoId);
 
     let totalAvailable = new DecimalQuantity(0);
     for (const r of activeRemanentes) {
@@ -82,7 +82,7 @@ export class ConsumeRecipeUseCase {
         : remainingToDeductDecimal;
 
       remanente.consumeQuantity(new DecimalQuantity(amountToDeductDecimal));
-      await this.stockRepository.saveRemanente(remanente);
+      await this.remanenteRepository.saveRemanente(remanente);
 
       remainingToDeductDecimal = remainingToDeductDecimal.sub(amountToDeductDecimal);
       affectedCount++;

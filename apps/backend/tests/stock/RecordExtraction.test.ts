@@ -44,7 +44,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
     expect(response.body).toHaveProperty('expirationDate');
 
     // ORACULO ESTADO: Verificación de persistencia de stock e histórico de movimientos
-    const updatedInsumo = await stockRepo.findInsumoById('ins-mozzarella-1');
+    const updatedInsumo = await stockRepo.findById('ins-mozzarella-1');
     expect(updatedInsumo?.warehouseStock.toString()).toBe('3.000');
     expect(stockRepo.remanentes.size).toBe(1);
     expect(stockRepo.movements.length).toBe(1);
@@ -69,7 +69,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
     expect(response.body.message).toMatch(/Stock insuficiente/);
 
     // ORACULO ESTADO: Garantizar que el stock NO fue alterado (Invariante)
-    const updatedInsumo = await stockRepo.findInsumoById('ins-mozzarella-1');
+    const updatedInsumo = await stockRepo.findById('ins-mozzarella-1');
     expect(updatedInsumo?.warehouseStock.toString()).toBe('5.000');
     expect(stockRepo.remanentes.size).toBe(0);
   });
