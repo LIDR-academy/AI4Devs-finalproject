@@ -15,16 +15,15 @@ interface CatalogManagementPanelProps {
   onClose: () => void;
 }
 
-type Section = 'inventory' | 'insumo' | 'recipe';
+type Section = 'inventory' | 'recipe';
 
 const CATALOG_TABS = [
   { value: 'inventory' as const, label: 'Inventario de Bodega', id: 'btn-tab-inventory-stock' },
-  { value: 'insumo' as const, label: 'Alta de Insumo', id: 'btn-tab-create-insumo' },
   { value: 'recipe' as const, label: 'Alta de Receta', id: 'btn-tab-create-recipe' },
 ];
 
 export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ isOpen, userRole, onClose }) => {
-  const [section, setSection] = useState<Section>('insumo');
+  const [section, setSection] = useState<Section>('inventory');
   const [feedback, setFeedback] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -58,13 +57,7 @@ export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ 
 
       {feedback && <SuccessFeedbackBanner message={feedback} />}
 
-      {section === 'inventory' ? (
-        <InsumoCatalogPanel />
-      ) : section === 'insumo' ? (
-        <CreateInsumoForm onCreated={handleUpdated} />
-      ) : (
-        <CreateRecipeForm onCreated={handleUpdated} />
-      )}
+      {section === 'inventory' ? <InsumoCatalogPanel /> : <CreateRecipeForm onCreated={handleUpdated} />}
     </Modal>
   );
 };

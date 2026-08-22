@@ -19,39 +19,23 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('crea un insumo exitosamente y muestra el mensaje de confirmación real del backend', async () => {
+  it('renderiza la vista de Inventario de Bodega por defecto', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
-        status: 201,
-        json: async () => ({ id: 'ins-new-1', name: 'Harina 000', unitOfMeasure: 'KG', warehouseStock: '0.000' }),
+        status: 200,
+        json: async () => [
+          { id: 'ins-1', name: 'Queso Mozzarella', unitOfMeasure: 'KG', warehouseStock: '15.500' },
+        ],
       })
     );
 
     render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
 
-    fireEvent.change(screen.getByLabelText(/Nombre del Insumo/i), { target: { value: 'Harina 000' } });
-    fireEvent.click(screen.getByRole('button', { name: /Crear Insumo/i }));
-
     await waitFor(() => {
-      expect(screen.getByText(/creado con stock inicial 0\.000 KG/i)).toBeInTheDocument();
-    });
-  });
-
-  it('muestra el error real del backend si el alta de insumo falla (nunca finge éxito)', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: false, status: 400, json: async () => ({ message: 'El nombre ya está en uso' }) })
-    );
-
-    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
-
-    fireEvent.change(screen.getByLabelText(/Nombre del Insumo/i), { target: { value: 'Duplicado' } });
-    fireEvent.click(screen.getByRole('button', { name: /Crear Insumo/i }));
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/El nombre ya está en uso/i);
+      expect(screen.getByText(/Inventario y Catálogo de Bodega/i)).toBeInTheDocument();
+      expect(screen.getByText(/Queso Mozzarella/i)).toBeInTheDocument();
     });
   });
 
