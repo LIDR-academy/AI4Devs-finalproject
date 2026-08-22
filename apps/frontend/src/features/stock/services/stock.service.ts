@@ -35,12 +35,42 @@ export interface MovementHistoryFilters {
   endDate?: string;
 }
 
+export interface InsumoItem {
+  id: string;
+  name: string;
+  unitOfMeasure: string;
+  warehouseStock: string;
+}
+
+export interface CreateInsumoDTO {
+  name: string;
+  unitOfMeasure: string;
+  initialWarehouseStock?: string;
+}
+
 export class StockService {
   private static mockWarehouseStocks: Record<string, { name: string; stock: number; unit: string }> = {
     'ins-1': { name: 'Queso Mozzarella', stock: 15.5, unit: 'KG' },
     'ins-2': { name: 'Salsa Pomodoro', stock: 25.0, unit: 'L' },
     'ins-3': { name: 'Masa de Pizza', stock: 40.0, unit: 'UNITS' },
   };
+
+  public static async createInsumo(data: CreateInsumoDTO): Promise<InsumoItem> {
+    return apiRequest<InsumoItem>('/stock/insumos', { method: 'POST', body: data });
+  }
+
+  public static async getInsumos(): Promise<InsumoItem[]> {
+    try {
+      return await apiRequest<InsumoItem[]>('/stock/insumos');
+    } catch {
+      return this.getAvailableInsumos().map((item) => ({
+        id: item.id,
+        name: item.name,
+        unitOfMeasure: item.unit,
+        warehouseStock: item.stock.toString(),
+      }));
+    }
+  }
 
   public static async recordExtraction(data: ExtractionRequest): Promise<ExtractionResult> {
     try {

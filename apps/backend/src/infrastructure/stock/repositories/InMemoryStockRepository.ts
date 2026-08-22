@@ -15,6 +15,20 @@ export class InMemoryStockRepository implements IInsumoRepository, IRemanenteRep
     return this.insumos.get(id) || null;
   }
 
+  async findInsumoById(id: string): Promise<Insumo | null> {
+    return this.findById(id);
+  }
+
+  async findByName(name: string): Promise<Insumo | null> {
+    const target = name.trim().toLowerCase();
+    for (const insumo of this.insumos.values()) {
+      if (insumo.name.trim().toLowerCase() === target) {
+        return insumo;
+      }
+    }
+    return null;
+  }
+
   async findAll(): Promise<Insumo[]> {
     return Array.from(this.insumos.values());
   }

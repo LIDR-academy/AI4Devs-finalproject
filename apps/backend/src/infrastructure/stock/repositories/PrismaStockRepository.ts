@@ -26,6 +26,24 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
     });
   }
 
+  public async findByName(name: string): Promise<Insumo | null> {
+    const raw = await this.prisma.insumo.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' } },
+      include: { warehouseStocks: true },
+    });
+    if (!raw) return null;
+
+    const mainStock = raw.warehouseStocks.find((s) => s.location === 'MAIN_WAREHOUSE');
+    const quantity = mainStock ? mainStock.quantity.toString() : '0';
+
+    return new Insumo({
+      id: raw.id,
+      name: raw.name,
+      unitOfMeasure: raw.unitOfMeasure,
+      warehouseStock: new DecimalQuantity(quantity),
+    });
+  }
+
   public async findAll(): Promise<Insumo[]> {
     const list = await this.prisma.insumo.findMany({ include: { warehouseStocks: true } });
 

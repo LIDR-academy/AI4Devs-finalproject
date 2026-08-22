@@ -1,19 +1,12 @@
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
-
-export interface InsumoListItemDTO {
-  id: string;
-  name: string;
-  unitOfMeasure: string;
-  warehouseStock: string;
-}
+import { InsumoOutputDTO } from './CreateInsumoUseCase.js';
 
 export class ListInsumosUseCase {
   constructor(private readonly insumoRepository: IInsumoRepository) {}
 
-  public async execute(): Promise<InsumoListItemDTO[]> {
-    const insumos = await this.insumoRepository.findAll();
-
-    return insumos.map((insumo) => ({
+  public async execute(): Promise<InsumoOutputDTO[]> {
+    const list = await this.insumoRepository.findAll();
+    return list.map((insumo) => ({
       id: insumo.id,
       name: insumo.name,
       unitOfMeasure: insumo.unitOfMeasure,

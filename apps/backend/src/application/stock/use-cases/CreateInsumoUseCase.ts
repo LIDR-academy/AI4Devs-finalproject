@@ -1,14 +1,16 @@
-import crypto from 'crypto';
+import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
 import { Insumo } from '../../../domain/stock/entities/Insumo.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
-import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
+import { InsumoAlreadyExistsException } from '../../../domain/stock/errors/InsumoAlreadyExistsException.js';
+import crypto from 'crypto';
 
-export interface CreateInsumoDTO {
+export interface CreateInsumoInputDTO {
   name: string;
   unitOfMeasure: string;
+  initialWarehouseStock?: string;
 }
 
-export interface CreateInsumoResponseDTO {
+export interface InsumoOutputDTO {
   id: string;
   name: string;
   unitOfMeasure: string;
@@ -18,12 +20,20 @@ export interface CreateInsumoResponseDTO {
 export class CreateInsumoUseCase {
   constructor(private readonly insumoRepository: IInsumoRepository) {}
 
-  public async execute(dto: CreateInsumoDTO): Promise<CreateInsumoResponseDTO> {
+  public async execute(input: CreateInsumoInputDTO): Promise<InsumoOutputDTO> {
+    const trimmedName = input.name.trim();
+
+    const existing = await this.insumoRepository.findByName(trimmedName);
+    if (existing) {
+      throw new InsumoAlreadyExistsException(`El insumo '${trimmedName}' ya esta registrado en el catalogo.`);
+    }
+
+    const stockQtyStr = input.initialWarehouseStock ?? '0';
     const insumo = new Insumo({
-      id: crypto.randomUUID(),
-      name: dto.name,
-      unitOfMeasure: dto.unitOfMeasure,
-      warehouseStock: new DecimalQuantity(0),
+      id: `ins-${crypto.randomBytes(4).toString('hex')}`,
+      name: trimmedName,
+      unitOfMeasure: input.unitOfMeasure.toUpperCase(),
+      warehouseStock: new DecimalQuantity(stockQtyStr),
     });
 
     await this.insumoRepository.save(insumo);
