@@ -7,6 +7,7 @@ import { SectionTabs } from '../../../shared/components/SectionTabs.js';
 import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
 import { CreateInsumoForm } from './CreateInsumoForm.js';
 import { CreateRecipeForm } from './CreateRecipeForm.js';
+import { InsumoCatalogPanel } from '../../stock/components/InsumoCatalogPanel.js';
 
 interface CatalogManagementPanelProps {
   isOpen: boolean;
@@ -14,9 +15,10 @@ interface CatalogManagementPanelProps {
   onClose: () => void;
 }
 
-type Section = 'insumo' | 'recipe';
+type Section = 'inventory' | 'insumo' | 'recipe';
 
 const CATALOG_TABS = [
+  { value: 'inventory' as const, label: 'Inventario de Bodega', id: 'btn-tab-inventory-stock' },
   { value: 'insumo' as const, label: 'Alta de Insumo', id: 'btn-tab-create-insumo' },
   { value: 'recipe' as const, label: 'Alta de Receta', id: 'btn-tab-create-recipe' },
 ];
@@ -35,10 +37,10 @@ export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ 
   };
 
   return (
-    <Modal maxWidth="560px" width="92%">
+    <Modal maxWidth="720px" width="92%">
       <ModalHeader
         icon={<BookOpen style={{ color: 'var(--color-primary)' }} />}
-        title="Gestión de Catálogo"
+        title="Gestión de Catálogo e Inventario"
         fontSize="1.4rem"
         gap="10px"
         marginBottom="20px"
@@ -56,7 +58,13 @@ export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ 
 
       {feedback && <SuccessFeedbackBanner message={feedback} />}
 
-      {section === 'insumo' ? <CreateInsumoForm onCreated={handleUpdated} /> : <CreateRecipeForm onCreated={handleUpdated} />}
+      {section === 'inventory' ? (
+        <InsumoCatalogPanel />
+      ) : section === 'insumo' ? (
+        <CreateInsumoForm onCreated={handleUpdated} />
+      ) : (
+        <CreateRecipeForm onCreated={handleUpdated} />
+      )}
     </Modal>
   );
 };
