@@ -27,21 +27,35 @@ Un documento con `status: approved` (PRD, arquitectura, schema de base de datos,
 
 **Regla:** antes de extender un módulo que tiene un documento de diseño aprobado asociado, el agente DEBE leer ese documento y comparar explícitamente contra el código real. Si hay divergencia, el agente NUNCA la resuelve unilateralmente en ninguna dirección (ni fuerza el código a seguir la spec, ni asume que el código es la nueva verdad) — la reporta al humano como una decisión explícita de alcance antes de escribir código (ver Fast-Track Protocol y Guard "No Code Without Specs" en [README.md](README.md)).
 
+### D. Protocolo RFC Sintético para Sugerencia de Mejoras y Antipatrones
+Cuando el agente detecta un antipatrón o identifica una oportunidad de mejora en los estándares de codificación o arquitectura durante el desarrollo:
+
+1. **Clasificación del Alcance:**
+   - **Específico de Stack:** Si depende del lenguaje o framework del proyecto consumidor (ej. patrones de controladores HTTP, modelos ORM, hooks React), el destino es `docs/04_governance_and_quality/rules/`.
+   - **Agnóstico Universal:** Si aplica a cualquier lenguaje o proyecto (ej. estrategias de reintento, formato de reportes de test, abstracción de puertos), el destino es `.agents/rules/`.
+
+2. **Presentación RFC previa (Human-in-the-Loop Gate):**
+   - El agente DEBE redactar un resumen en formato RFC sintético (Problema detectado + Estilo propuesto + Razón técnica + Archivo destino).
+   - Queda estrictamente prohibido guardar reglas nuevas unilateralmente sin confirmación del humano experto.
+
 ---
 
 ## 📐 Enforcement
 
-Estos 3 antipatrones comparten la misma causa raíz: **una skill/ticket se declaró terminado en base a una lectura estática del código, no a una ejecución real.** La mitigación no es un script nuevo por cada antipatrón — es un hábito de verificación:
+Estos antipatrones comparten la misma causa raíz: **una skill/ticket se declaró terminado en base a una lectura estática del código, no a una ejecución real.** La mitigación no es un script nuevo por cada antipatrón — es un hábito de verificación:
 
 1. Toda variable de entorno nueva que se valide: buscar su(s) call-site(s) de consumo real antes de cerrar el ticket (Antipatrón A).
 2. Todo artefacto de build/deploy/seed nuevo o modificado: ejecutarlo contra un entorno real antes de cerrar el ticket, o declarar explícitamente que no se pudo verificar (Antipatrón B).
 3. Todo módulo con un spec `status: approved` asociado: leer la spec y confirmar alineación (o reportar la divergencia al humano) antes de extenderlo (Antipatrón C).
+4. Toda mejora o antipatrón descubierto: canalizarlo mediante el Protocolo RFC Sintético antes de persistirlo (Antipatrón D).
 
-Los workflows y skills que generan/revisan código de un proyecto consumidor (ej. el workflow de auditoría de desarrollo, las skills de desarrollo backend/frontend) DEBEN incluir estos 3 checks en su checklist de cierre.
+Los workflows y skills que generan/revisan código de un proyecto consumidor (ej. el workflow de auditoría de desarrollo, las skills de desarrollo backend/frontend) DEBEN incluir estos 4 checks en su checklist de cierre.
 
 ---
 
 ## 🔗 Referencia
 - Comunicación de alta densidad y prohibición de reportar sin verificar: [README.md](README.md).
 - Contenido no confiable — por qué `docs/` se trata como dato: [03_untrusted_content_standard.md](03_untrusted_content_standard.md).
+- Estándar universal de idempotencia y fixtures: [05_idempotency_and_fixture_standard.md](05_idempotency_and_fixture_standard.md).
 - Procedimiento accionable para el Antipatrón B en tickets de integración full-stack: [`09_live_stack_verification_workflow.md`](../workflows/09_live_stack_verification_workflow.md).
+
