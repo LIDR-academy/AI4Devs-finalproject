@@ -12,11 +12,12 @@
 >
 > **Stack confirmado:** **Next.js full-stack** (App Router, TypeScript) para
 > front + API REST (Route Handlers en `app/api/*`, OpenAPI), **PostgreSQL +
-> Prisma**, scheduler en proceso aparte. **Hosting** en VM única Oracle Ampere
-> free, mismo origen (`ADR-0001` §2 y §5). No quedan *Open questions* de
-> arquitectura.
+> Prisma**, scheduler en proceso aparte. **Hosting** en **Vercel** (plan Hobby)
+> con **Supabase Postgres**, mismo origen — `ADR-0001` §2 y **`ADR-0003`**, que
+> sustituye la VM única de `ADR-0001` §5—. URL pública:
+> **https://clickoteca.vercel.app**. No quedan *Open questions* de arquitectura.
 >
-> Última actualización: 2026-07-05.
+> Última actualización: 2026-08-22 (hosting: VM → Vercel + Supabase).
 
 ---
 
@@ -69,9 +70,12 @@ C4Context
 
 Descompone Clickoteca en unidades lógicas. El stack está confirmado: **Next.js
 full-stack** (App Router) sirve front + API REST (OpenAPI) sobre **PostgreSQL +
-Prisma**, con un **scheduler** en proceso aparte. Los procesos **conviven en una
-única VM** (Oracle Ampere free, mismo origen — ver `ADR-0001` §5): la app Next y
-el scheduler son dos procesos Node; Postgres corre local.
+Prisma**, con los **trabajos programados** como tercera pieza. El despliegue es
+**Vercel + Supabase** (`ADR-0003`): la app Next corre como funciones *serverless*
+—front y `/api` en el mismo origen— y Postgres es gestionado. Como no hay proceso
+de vida larga, el reloj lo pone el **cron de la plataforma** sobre
+`GET /api/cron/:job`; el proceso `node-cron` de `scheduler/` sigue siendo el
+disparador en local (y en cualquier destino con procesos de vida larga).
 
 ```mermaid
 C4Container
@@ -80,10 +84,10 @@ C4Container
     Person(subscriber, "Suscriptor", "Portal de cliente")
     Person(backoffice, "Operador / Admin", "Back-office")
 
-    System_Boundary(clickoteca, "Clickoteca — VM única (Oracle Ampere free, mismo origen)") {
-        Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript; proceso Node tras el reverse proxy", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + middleware). API REST pública en app/api/* documentada en OpenAPI; arquitectura en capas: Route Handlers → casos de uso → repositorios → dominio.")
-        Container(scheduler, "Procesos programados", "TypeScript, proceso Node aparte (node-cron)", "Caducidad de ventanas de oferta y recordatorios de retención y de mitad de ventana. Disparan notificaciones y ofertas. Proceso separado para no duplicarse con el modelo multi-instancia de Next. El orden de cola NO se recalcula (D11).")
-        ContainerDb(db, "Base de datos", "PostgreSQL + Prisma; local en la VM (localhost)", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones persistidas.")
+    System_Boundary(clickoteca, "Clickoteca — Vercel + Supabase (mismo origen)") {
+        Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript; funciones serverless en Vercel", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + proxy.ts). API REST pública en app/api/* documentada en OpenAPI; arquitectura en capas: Route Handlers → casos de uso → repositorios → dominio.")
+        Container(scheduler, "Trabajos programados", "TypeScript; GET /api/cron/:job disparado por Vercel Cron (en local, proceso node-cron)", "Caducidad de ventanas de oferta y recordatorios de retención y de mitad de ventana. Mismo catálogo de trabajos para los dos disparadores (src/use-cases/scheduler/jobs.ts); solo cambia quién mira el reloj. El orden de cola NO se recalcula (D11).")
+        ContainerDb(db, "Base de datos", "PostgreSQL gestionado (Supabase) + Prisma; pooler de transacción", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones persistidas.")
     }
 
     System_Ext(payments, "Pasarela de pagos (SIMULADA)", "Mock")
@@ -95,7 +99,7 @@ C4Container
 
     Rel(web, db, "Lee y escribe", "SQL vía Prisma")
     Rel(scheduler, db, "Caduca ofertas, marca recordatorios", "SQL vía Prisma")
-    Rel(scheduler, web, "Comparte la capa de casos de uso (mismo código)", "módulo compartido")
+    Rel(scheduler, web, "Comparte la capa de casos de uso (mismo código)", "módulo compartido; en Vercel es el propio /api/cron/:job")
 
     Rel(web, payments, "Registra pagos", "simulado")
     Rel(web, logistics, "Registra envíos", "manual")
@@ -118,15 +122,25 @@ C4Container
   ventana de confirmación (D5, UC-P16/17) y los recordatorios (D7). El **orden de
   cola ya no se recalcula** — se deriva de forma *lazy* sobre `entrada_efectiva`
   inmutable (`design.md` D11 revisado), así que el antiguo "recálculo de score"
-  desaparece del scheduler. Corre como **proceso Node aparte** (`node-cron`) en la
-  misma VM —**no** in-process en Next: su modelo multi-instancia duplicaría el
-  cron—; reutiliza la misma capa de casos de uso importándola como módulo.
-- **Hosting (decidido):** **VM única** con IP pública en **Oracle Cloud Free Tier**
-  (Ampere A1 / ARM64, 2 OCPU · 12 GB · 50 GB). Un reverse proxy (Caddy) termina TLS
-  y enruta al servidor Next (front + `/api`); Postgres corre en `localhost`; las
-  imágenes viven en el filesystem. **Mismo origen** → sin CORS y cookie de sesión
-  *first-party* (`ADR-0002`). Alternativas descartadas y trade-offs (ops propio,
-  punto único de fallo, plan B Hetzner) en `ADR-0001` §5.
+  desaparece del scheduler. **Nunca es in-process en Next**: su modelo
+  multi-instancia duplicaría el cron. En el despliegue (Vercel) el disparador es
+  `GET /api/cron/:job`, protegido con `Authorization: Bearer $CRON_SECRET` y
+  cerrado por defecto —sin la variable responde 404—, con los dos crons declarados
+  en `vercel.json`; en local es el proceso `node-cron` de `scheduler/`. Los dos
+  reutilizan la misma capa de casos de uso importándola como módulo, así que no
+  pueden divergir.
+- **Hosting (desplegado):** **Vercel** (plan Hobby, *Production Branch*
+  `MVP-Fase-1`) sirve front y `/api` desde el mismo despliegue —**mismo origen** →
+  sin CORS y cookie de sesión *first-party* (`ADR-0002`)—, con TLS y CDN de la
+  plataforma. La base es **Supabase Postgres**, usada solo como Postgres (sin Auth,
+  Storage ni RLS, con la Data API desactivada): la app va al **pooler de
+  transacción** (`:6543`) y las migraciones a la **conexión de sesión** (`:5432`).
+  Las imágenes del catálogo son **URLs de Rebrickable**, así que no hay
+  almacenamiento de ficheros. URL pública: **https://clickoteca.vercel.app**.
+  Trade-offs (crons diarios del plan Hobby, presupuesto de conexiones en
+  *serverless*, latencia a la base) y alternativas descartadas, en `ADR-0003`; la
+  decisión anterior —VM única de Oracle, nunca provisionada— queda en `ADR-0001`
+  §5.
 
 ---
 

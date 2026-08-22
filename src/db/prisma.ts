@@ -14,8 +14,9 @@ const globalForPrisma = globalThis as unknown as {
 
 /**
  * Tamaño del pool. Se deja el de `pg` (10) salvo que el despliegue diga otra cosa,
- * porque el número correcto depende de dónde corre: en la VM hay **un** proceso y le
- * conviene un pool holgado; en serverless hay tantos pools como instancias vivas.
+ * porque el número correcto depende de dónde corre: con un servidor propio hay **un**
+ * proceso y le conviene un pool holgado; en serverless hay tantos pools como
+ * instancias vivas.
  *
  * Ahí el valor es **1**, y la razón no es la que parece. No es que falten conexiones
  * durante el pico: el techo del pooler es este número **por el de instancias vivas**, y

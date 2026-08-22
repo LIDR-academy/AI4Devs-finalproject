@@ -14,8 +14,9 @@
 
 La API es pública (Route Handlers de Next.js en `app/api/*`) y da servicio a la
 misma app Next, con dos superficies segmentadas por rol (`ADR-0001` §2–§3). El
-despliegue es **mismo origen** (VM única, `ADR-0001` §5): front, API e imágenes se
-sirven desde el mismo host, lo que simplifica las decisiones de sesión. El criterio de éxito del MVP es la **cobertura de caminos de error** (PRD
+despliegue es **mismo origen** (`ADR-0001` §5, hoy `ADR-0003`): front y API salen
+del mismo despliegue —Vercel— y las imágenes del catálogo son URLs externas, lo que
+simplifica las decisiones de sesión. El criterio de éxito del MVP es la **cobertura de caminos de error** (PRD
 §10), lo que exige un contrato de errores **estable y máquina-legible**, no solo
 códigos HTTP.
 
@@ -27,7 +28,8 @@ códigos HTTP.
 
 - **Sesión opaca server-side**: el identificador de sesión viaja en una cookie
   `httpOnly` + `Secure` + `SameSite=Lax` (`Strict` donde aplique). El estado de
-  sesión se persiste en Postgres (tabla de sesiones), coherente con la VM única.
+  sesión se persiste en Postgres (tabla de sesiones). Que la base sea local o
+  gestionada no cambia nada aquí: el cambio de hosting (`ADR-0003`) no toca este ADR.
 - **Passwords con argon2id** (bcrypt aceptable como alternativa).
 - **Autorización por rol** (`SUBSCRIBER | OPERATOR | ADMIN`) en middleware
   **server-side**: es la **frontera de seguridad real**. La segmentación por rol
@@ -101,7 +103,7 @@ para el transporte, `code` para el dominio.
 
 **Negativas / trade-offs**
 - La sesión server-side requiere **almacenamiento de sesiones** (tabla en Postgres)
-  — coste bajo en la VM única.
+  — una consulta por petición, que con la base gestionada de `ADR-0003` paga red.
 - El enum de `code` **es contrato**: ampliarlo es seguro, cambiar/eliminar valores
   es *breaking* y hay que versionarlo.
 

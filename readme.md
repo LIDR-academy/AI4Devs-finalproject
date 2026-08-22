@@ -30,7 +30,18 @@ a circulación), tanto desde la cara del **suscriptor** como desde el
 
 ### **0.4. URL del proyecto:**
 
-https://github.com/xaviverges/AI4Devs-finalproject-xvm/tree/project-xvm
+**Aplicación desplegada: https://clickoteca.vercel.app**
+
+Corre en **Vercel** (plan Hobby) con **Supabase Postgres** — ver §2.4 y
+`documents/ADR-0003`. Comprobación rápida de que está en pie:
+`GET https://clickoteca.vercel.app/api/health` devuelve
+`{"status":"ok","service":"clickoteca"}`.
+
+> **Las credenciales de la instancia desplegada no se publican aquí** (este
+> repositorio es público): se entregan por el canal del curso. Las cuentas de
+> ejemplo de §1.4, con la contraseña `clickoteca`, son **las de tu entorno local**.
+
+Repositorio: https://github.com/xaviverges/AI4Devs-finalproject-xvm/tree/project-xvm
 
 ### 0.5. URL o archivo comprimido del repositorio
 
@@ -171,7 +182,9 @@ y pide el siguiente—.
 > sale del plan— y se ha retirado. Con esto, **18 de 18** historias tienen recorrido
 > completo por interfaz.
 >
-> **Pendiente:** el videotutorial (`documents/PRD.md` §9) y el despliegue en la VM.
+> **Desplegado el 2026-08-21/22** en **https://clickoteca.vercel.app** (Vercel +
+> Supabase, `documents/ADR-0003`). **Pendiente:** el videotutorial
+> (`documents/PRD.md` §9).
 >
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales
@@ -267,9 +280,12 @@ curados a mano se detallan en
 El fichero `docker-compose.yml` de la raíz levanta **PostgreSQL 16** con las
 credenciales que espera el `DATABASE_URL` de `.env.example`
 (`clickoteca:clickoteca@localhost:5432/clickoteca`). El puerto se publica **solo en
-`127.0.0.1`**, nunca en la IP de la máquina — misma regla que en producción (ver
-ADR-0001 §5). Los datos persisten en el volumen `pgdata`, así que sobreviven a
-parar y recrear el contenedor.
+`127.0.0.1`**, nunca en la IP de la máquina: la base no se expone a la red. Los datos
+persisten en el volumen `pgdata`, así que sobreviven a parar y recrear el
+contenedor.
+
+> El despliegue **no** usa este Postgres: allí la base es Supabase y se llega por su
+> pooler (§2.4). Este contenedor es el de desarrollo y el de los tests.
 
 ```bash
 docker compose up -d        # arrancar (la primera vez descarga la imagen)
@@ -292,11 +308,13 @@ iniciar Docker Desktop.
 | `npm run dev` | App Next.js (front + `/api`) en modo desarrollo |
 | `npm run scheduler` | Proceso node-cron (recálculo de score, caducidad de ofertas, recordatorios) |
 | `npm run build` / `npm start` | Build de producción y arranque del servidor |
-| `npm run start:standalone` | Arranca el **artefacto de despliegue** (`output: standalone`) copiándole los estáticos — lo mismo que corre en la VM |
+| `npm run start:standalone` | Arranca el **paquete autónomo** (`output: standalone`) copiándole los estáticos — el artefacto que levanta el E2E; en Vercel no se usa (ver §2.4) |
 | `npm run lint` / `npm run typecheck` | ESLint 9 (flat config) y `tsc --noEmit` |
 | `npm test` / `npm run test:watch` | Vitest (unit + integración) |
 | `npm run test:e2e` | Playwright contra el build autónomo en el puerto 3100 (requiere `npx playwright install` la primera vez y la base de datos levantada). `E2E_DEV=1` lo apunta a `next dev` |
 | `npm run db:migrate` / `db:generate` / `db:seed` | Migraciones, cliente Prisma y semillas |
+| `npm run db:deploy` | `prisma migrate deploy` — aplica migraciones ya creadas a una base remota (el despliegue). `db:migrate` es `migrate dev` y contra producción no se usa |
+| `npm run spec:validate` | `openspec validate --all --strict` sobre las specs de `openspec/` |
 
 ---
 
@@ -307,10 +325,11 @@ iniciar Docker Desktop.
 **Patrón:** aplicación **Next.js full-stack** (App Router, TypeScript) que sirve
 front (SSR/RSC) y **API REST pública** (Route Handlers en `app/api/*` + OpenAPI)
 en un solo proyecto, sobre **PostgreSQL + Prisma**, con **arquitectura en capas**
-(Route Handlers → casos de uso → repositorios → dominio) y un **scheduler** como
-proceso Node aparte. Todo se despliega en una **VM única** (mismo origen). El
-detalle está en `documents/C4-architecture.md` (C4 niveles 1–3) y en
-`documents/ADR-0001`.
+(Route Handlers → casos de uso → repositorios → dominio) y unos **trabajos
+programados** que comparten esa misma capa. Todo se despliega en **Vercel** —front
+y `/api` en el mismo origen— con **Supabase Postgres** detrás. El detalle está en
+`documents/C4-architecture.md` (C4 niveles 1–3), en `documents/ADR-0001`
+(arquitectura) y en `documents/ADR-0003` (hosting).
 
 ```mermaid
 C4Container
@@ -319,10 +338,10 @@ C4Container
     Person(subscriber, "Suscriptor", "Portal de cliente")
     Person(backoffice, "Operador / Admin", "Back-office")
 
-    System_Boundary(clickoteca, "Clickoteca — VM única (Oracle Ampere free, mismo origen)") {
-        Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + proxy.ts). API REST pública en app/api/* con OpenAPI; capas: Route Handlers → casos de uso → repositorios → dominio.")
-        Container(scheduler, "Procesos programados", "TypeScript, proceso Node aparte (node-cron)", "Caducidad de ventanas de oferta y recordatorios. El orden de cola NO se recalcula (D11).")
-        ContainerDb(db, "Base de datos", "PostgreSQL + Prisma; local (localhost)", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones.")
+    System_Boundary(clickoteca, "Clickoteca — Vercel + Supabase (mismo origen)") {
+        Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript; funciones serverless en Vercel", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + proxy.ts). API REST pública en app/api/* con OpenAPI; capas: Route Handlers → casos de uso → repositorios → dominio.")
+        Container(scheduler, "Trabajos programados", "TypeScript; GET /api/cron/:job vía Vercel Cron (en local, proceso node-cron)", "Caducidad de ventanas de oferta y recordatorios. El orden de cola NO se recalcula (D11).")
+        ContainerDb(db, "Base de datos", "PostgreSQL gestionado (Supabase) + Prisma; pooler de transacción", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones.")
     }
 
     System_Ext(payments, "Pasarela de pagos (SIMULADA)", "Mock")
@@ -349,10 +368,13 @@ C4Container
 - **Dominio agnóstico del framework:** la máquina de estados de la copia y la
   política de cola viven en una capa TS pura, testable sin levantar el servidor.
   Habilita el criterio de éxito del MVP: **cobertura de caminos de error**.
-- **Scheduler en proceso aparte** porque el modelo multi-instancia de Next
-  duplicaría un cron in-process.
-- **Sacrificios:** se pasa a **ops propio** (TLS, parches, firewall, backups) y a
-  un **punto único de fallo** — aceptable en un MVP de demo.
+- **Trabajos programados fuera del proceso web** porque el modelo multi-instancia
+  de Next duplicaría un cron in-process. En Vercel no hay proceso de vida larga, así
+  que el reloj lo pone el cron de la plataforma sobre `GET /api/cron/:job`; el
+  proceso `node-cron` de `scheduler/` sigue sirviendo en local.
+- **Sacrificios:** la plataforma impone su ritmo — **crons diarios** en el plan
+  Hobby (la caducidad de ofertas se vuelve imprecisa) y un **presupuesto de
+  conexiones** a la base, que en un servidor propio no existiría (`ADR-0003`).
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -409,8 +431,9 @@ AI4Devs-finalproject-xvm/
 ├── documents/
 │   ├── PRD.md                # PRD completo (incluye §15 modelo de datos)
 │   ├── C4-architecture.md    # Diagramas C4 niveles 1–3 (Mermaid)
-│   ├── ADR-0001-arquitectura-mvp.md   # Stack, capas, hosting, scheduler
+│   ├── ADR-0001-arquitectura-mvp.md   # Stack, capas, scheduler (§5 hosting: sustituida)
 │   ├── ADR-0002-api-auth-errores.md   # Auth por sesión + contrato de errores
+│   ├── ADR-0003-hosting-vercel-supabase.md  # Hosting real: Vercel + Supabase
 │   ├── user_stories.md       # Historias de usuario (Gherkin) HU-00..HU-17
 │   ├── ux-flows.md           # Flujos por rol (15 diagramas) + cobertura HU→pantalla
 │   ├── design-system.md      # Tokens, tonos y vocabulario de estados
@@ -430,63 +453,78 @@ de la API a un servicio propio.
 
 ### **2.4. Infraestructura y despliegue**
 
-**Hosting (decidido):** una **VM única** con IP pública en **Oracle Cloud Free
-Tier** (Ampere A1 / ARM64, 2 OCPU · 12 GB RAM · 50 GB, Ubuntu 24.04 LTS,
-*always-free*).
+**Hosting (desplegado):** **Vercel** (plan Hobby) con **Supabase Postgres**, en
+**https://clickoteca.vercel.app**. La decisión está en `documents/ADR-0003`, que
+**sustituye a `ADR-0001` §5** — la VM única de Oracle que ese ADR eligió y que nunca
+llegó a provisionarse.
 
 ```mermaid
 flowchart TB
-    user([Usuario / navegador]) -->|HTTPS 443| caddy
-    subgraph vm["VM única — Oracle Ampere A1 (ARM64)"]
-        caddy["Caddy (reverse proxy)<br/>TLS Let's Encrypt"]
-        next["Servidor Next.js<br/>(front + /api) · systemd"]
-        sched["Scheduler Node<br/>(node-cron) · systemd"]
-        pg[("PostgreSQL<br/>localhost")]
-        fs["Imágenes en filesystem"]
-        caddy --> next
-        next --> pg
-        sched --> pg
-        next --> fs
+    user([Usuario / navegador]) -->|HTTPS| edge
+    subgraph vercel["Vercel — clickoteca.vercel.app (plan Hobby)"]
+        edge["Edge / CDN<br/>TLS de la plataforma"]
+        next["App Next.js (front + /api)<br/>funciones serverless"]
+        cron["Vercel Cron<br/>(vercel.json, 2 trabajos diarios)"]
+        edge --> next
+        cron -->|GET /api/cron/:job + Bearer CRON_SECRET| next
     end
+    subgraph supabase["Supabase"]
+        pooler["Pooler de transacción<br/>:6543"]
+        pg[("PostgreSQL")]
+        pooler --> pg
+    end
+    next -->|SQL vía Prisma| pooler
+    next -.->|imágenes: URLs externas| rb["Rebrickable"]
 ```
 
-- **Reverse proxy Caddy** termina TLS (Let's Encrypt automático, necesario para la
-  cookie `Secure`) y enruta al servidor Next (front + `/api`).
-- **PostgreSQL local** escuchando solo en `localhost` (**nunca** en la IP pública).
-- **Imágenes** del catálogo en el filesystem del host → **mismo origen** (sin
-  CORS, cookie *first-party*).
-- **Despliegue:** `next build` (output *standalone*) + `next start` gestionado por
-  **systemd**; el scheduler es otro servicio systemd. El modo *standalone* se activa
-  **fuera de Vercel**: allí rompe el build, porque se lleva el trazado a
-  `.next/standalone/` y no emite `.next/next-server.js.nft.json`, que es el fichero con
-  el que Vercel arma sus funciones. Lo decide `process.env.VERCEL` en `next.config.ts`. **Firewall:** solo 80/443 y
-  22. **Backups:** `pg_dump` por cron.
-- **Plan B** si Oracle reclama la instancia *free*: VPS de pago (Hetzner CX22,
-  ~4 €/mes) sin cambios de arquitectura.
+- **Mismo origen:** front y `/api` salen del mismo despliegue, así que la cookie de
+  sesión sigue siendo *first-party* y no hay CORS. TLS, dominio y CDN los pone la
+  plataforma: no hay reverse proxy, systemd ni firewall que administrar.
+- **Despliegue por `git push`** a la rama de producción, que aquí es **`MVP-Fase-1`**
+  (Vercel usa `main` por defecto, y en este repo `main` es el andamiaje del curso).
+  El build es `prisma generate && next build`, porque `src/generated/prisma` no está
+  versionado y en una máquina limpia no existe.
+- **El paquete autónomo (`output: standalone`) se desactiva en Vercel**, donde rompe
+  el build: se lleva el trazado a `.next/standalone/` y no emite
+  `.next/next-server.js.nft.json`, que es el fichero con el que Vercel arma sus
+  funciones. Lo decide `process.env.VERCEL` en `next.config.ts`; en local y en el E2E
+  se sigue construyendo el paquete autónomo, que es también el artefacto de un
+  despliegue con servidor propio.
+- **Imágenes** del catálogo: `<img>` a URLs de Rebrickable, no `next/image` ni
+  ficheros locales → no hace falta almacenamiento de objetos ni disco escribible.
+- **Base de datos:** Supabase usado **solo como Postgres** —sin Auth, Storage ni
+  RLS, y con la **Data API desactivada**, porque las tablas que crea Prisma nacen sin
+  RLS y quedarían legibles con la *anon key*, que es pública por diseño—. El detalle
+  de las dos URLs, más abajo.
+- **Lo que se perdió por el camino, y conviene saber:** en el plan Hobby los crons
+  son **diarios** (la caducidad de ofertas se vuelve imprecisa) y en *serverless* hay
+  un **presupuesto de conexiones** que en un servidor propio no existe. Los dos
+  trade-offs, con sus números, en `documents/ADR-0003`.
 
-**Los trabajos periódicos también se disparan por HTTP.** El scheduler es un proceso
-de vida larga, y hay destinos donde eso no existe —cualquier plataforma serverless—.
-Para esos, `GET /api/cron/:job` ejecuta **los mismos trabajos**: el qué vive en
-`src/use-cases/scheduler/jobs.ts` y lo comparten los dos disparadores, así que no
-pueden divergir. Lo que cambia es quién mira el reloj.
+**Los trabajos periódicos se disparan por HTTP.** El scheduler es un proceso de vida
+larga y en una plataforma *serverless* eso no existe, así que en el despliegue el
+disparador es `GET /api/cron/:job`, que ejecuta **los mismos trabajos**: el qué vive
+en `src/use-cases/scheduler/jobs.ts` y lo comparten los dos disparadores, así que no
+pueden divergir. Lo que cambia es quién mira el reloj — en local, el proceso
+`npm run scheduler`.
 
 - **Los dos trabajos** son `offers` (caducidad de ofertas + recordatorio de mitad de
   ventana, cada 5 min) y `retention` (recordatorios amables, una vez al día).
 - **Candado:** `Authorization: Bearer $CRON_SECRET`, el contrato que ya emite Vercel
-  Cron y que un `systemd timer` replica con una línea. **Sin `CRON_SECRET` el endpoint
-  responde 404 y no ejecuta nada**: un despliegue al que se le olvidó la variable no
-  puede acabar con la URL abierta.
+  Cron de serie (y que cualquier otro disparador replica con una línea). **Sin
+  `CRON_SECRET` el endpoint responde 404 y no ejecuta nada**: un despliegue al que se
+  le olvidó la variable no puede acabar con la URL abierta.
 - **Dos ejecuciones solapadas no se bloquean** —cada invocación es un proceso
   distinto—. Lo sostiene el dominio: el cierre de oferta es un CAS. El margen conocido
   es que dos barridos a la vez podrían enviar dos veces un recordatorio, y se acepta
   antes que montar un cerrojo distribuido para un aviso amable.
-- **Si el destino es Vercel**, `vercel.json` declara los dos crons. Tres cosas que no
-  son obvias: **el cron de Vercel va en UTC** (las 10:00 de Madrid son las 08:00 UTC en
-  verano y las 09:00 en invierno, así que el recordatorio se desplaza con el cambio de
-  hora); el **plan Hobby** admite dos crons y **solo diarios** —una expresión más
-  frecuente **hace fallar el despliegue**, no lo degrada—, y además los dispara en
-  cualquier momento **dentro de la hora** indicada; y sigue haciendo falta un Postgres
-  gestionado, porque ahí no hay `localhost` que valga.
+- **`vercel.json` declara los dos crons.** Tres cosas que no son obvias: **el cron de
+  Vercel va en UTC** (las 10:00 de Madrid son las 08:00 UTC en verano y las 09:00 en
+  invierno, así que el recordatorio se desplaza con el cambio de hora); el **plan
+  Hobby** admite dos crons y **solo diarios** —una expresión más frecuente **hace
+  fallar el despliegue**, no lo degrada—, y además los dispara en cualquier momento
+  **dentro de la hora** indicada; y hace falta un Postgres gestionado, porque ahí no
+  hay `localhost` que valga.
 - **Por eso los dos crons de `vercel.json` son diarios**, no cada cinco minutos: es lo
   que Hobby admite. Tiene un precio y conviene saberlo: la **caducidad de ofertas se
   vuelve imprecisa** —una ventana de 48 h puede cerrarse con casi un día de retraso, y
@@ -502,15 +540,18 @@ pueden divergir. Lo que cambia es quién mira el reloj.
   se cura sola en la siguiente y una repetida no duplica nada salvo, como mucho, un
   recordatorio.
 
-**Si la base es gestionada (Supabase, Neon), son dos URLs y no una.** La aplicación se
+**Con la base gestionada son dos URLs y no una.** La aplicación se
 conecta al **pooler de transacciones** y las **migraciones no pueden**: necesitan una
 sesión estable para tomar el *advisory lock* y ejecutar DDL. Por eso `DATABASE_URL`
 (pooler) es la del runtime y `DIRECT_URL` (conexión directa) la que usa el CLI de
 Prisma — `prisma.config.ts` prefiere la segunda si existe. Se añade `DATABASE_POOL_MAX`
 para el caso serverless, donde hay **un pool por instancia viva** y el defecto de `pg`
-(diez conexiones) agota el límite del proveedor en cuanto hay tráfico. Donde solo hay
-una conexión —la VM, el Postgres local del docker-compose— no se define ninguna de las
-dos y nada cambia. El esquema no se toca: Postgres es Postgres.
+(diez conexiones) agota el límite del proveedor en cuanto hay tráfico: en el
+despliegue va a **1**, porque el techo no lo marca la concurrencia de peticiones sino
+`DATABASE_POOL_MAX` × instancias vivas, y **una instancia congelada no ejecuta
+temporizadores**, así que nunca cierra su conexión ociosa. Donde hay un solo proceso
+—el Postgres local del docker-compose— no se define ninguna de las dos y nada cambia.
+El esquema no se toca: Postgres es Postgres.
 
 **Y las dos cadenas necesitan `uselibpqcompat=true`.** `pg` v8.16+ interpreta
 `sslmode=require` como `verify-full`, y el certificado del pooler de Supabase encadena a
@@ -520,6 +561,26 @@ la semántica de libpq— sino **en la aplicación**, que va por el mismo `pg` d
 adapter. El parámetro devuelve a `require` el significado de libpq (cifra, no verifica) y
 es la forma que sobrevive al cambio anunciado para `pg` v9. La alternativa estricta, si
 algún día importa: descargar la CA de Supabase y usar `verify-full` con `sslrootcert`.
+
+**Puesta en marcha de un despliegue nuevo**, por si hay que repetirla:
+
+1. Crear el proyecto en Vercel apuntando al repositorio y fijar **Production Branch**
+   (aquí, `MVP-Fase-1`).
+2. Añadir la base (integración de Supabase) y definir `DATABASE_URL` a mano con la URL
+   del **pooler de transacción** (`:6543`) más `uselibpqcompat=true`. Las variables
+   `STORAGE_*` que crea la integración no las lee el código.
+3. `DATABASE_POOL_MAX=1` y un `CRON_SECRET` largo y aleatorio.
+4. Desde la máquina de desarrollo, con `DIRECT_URL` apuntando a la conexión de sesión
+   (`:5432`): `npm run db:deploy` y `SEED_PASSWORD="…" npm run db:seed`. La contraseña
+   **se fija en la primera siembra** (el `upsert` no actualiza el hash de una cuenta que
+   ya existe).
+5. Comprobar: `GET /api/health` responde `{"status":"ok"}`, y
+   `curl -H "Authorization: Bearer $CRON_SECRET" .../api/cron/offers` devuelve el
+   resumen del trabajo.
+
+> **Si vuelve a aparecer `EMAXCONN`** (conexiones agotadas), la palanca es un
+> **redespliegue**: destruye las instancias congeladas y libera de golpe los huecos que
+> retenían. La causa y la aritmética, en `documents/ADR-0003`.
 
 ### **2.5. Seguridad**
 
@@ -553,9 +614,9 @@ de `Copy` y el orden de la cola. Se ejecutan con `npm test` y `npm run test:e2e`
 
 **El E2E no prueba el servidor de desarrollo.** Playwright hace `next build` y levanta
 el **paquete autónomo** (`output: standalone`, que se activa fuera de Vercel — ver §2.4)
-en un puerto propio, el 3100: es el mismo
-artefacto que se despliega en la VM, y de paso cubre el empaquetado — hay una prueba que
-vigila que los estáticos, que ese paquete no incluye, se hayan copiado. La razón
+en un puerto propio, el 3100: es un artefacto de producción de verdad, y de paso cubre
+el empaquetado — hay una prueba que vigila que los estáticos, que ese paquete no
+incluye, se hayan copiado. La razón
 original fue de estabilidad: el pool de compilación de `next dev` se caía bajo la carga
 de varios navegadores y dejaba el servidor devolviendo 500 en unas rutas y colgando
 otras. `E2E_DEV=1` conserva el objetivo antiguo para iterar sobre una pantalla.
@@ -1137,7 +1198,9 @@ diagramas ER + máquina de estados de la copia) y sincronización con las specs.
 
 **Pull Request 2 — Arquitectura** (`7985b78`)
 Hosting en VM única, concurrencia por CAS (D12), orden de cola inmutable (D11) y
-contrato de errores RFC 9457. Incluye C4 (niveles 1–3) y ADR-0001/ADR-0002.
+contrato de errores RFC 9457. Incluye C4 (niveles 1–3) y ADR-0001/ADR-0002. *(La
+decisión de hosting de este hito se sustituyó después por `ADR-0003` — Vercel +
+Supabase; ver §2.4.)*
 
 **Pull Request 3 — Cierre de arquitectura y stack** (`a5edc4b`)
 Stack confirmado **Next.js full-stack** (front + API REST/OpenAPI), cierre de las

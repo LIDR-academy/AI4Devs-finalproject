@@ -262,7 +262,8 @@ debe recoger: **las 18 de 18 historias tienen ya recorrido completo por interfaz
 al portal (`wireframes.md` §8.4)— y **HU-16**, cuyos endpoints de planes y
 recordatorios de retención existían sin pantalla desde la que ejecutarse.
 
-**Pendiente:** el videotutorial y el despliegue en la VM.
+**Desplegado** en **https://clickoteca.vercel.app** (Vercel + Supabase,
+`documents/ADR-0003`). **Pendiente:** el videotutorial.
 
 ## 10. Criterios de éxito del MVP
 

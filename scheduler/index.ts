@@ -5,8 +5,9 @@ import { runJob, type JobName } from "@/use-cases/scheduler/jobs";
 
 /**
  * Scheduler — proceso Node **independiente** del servidor Next (ADR-0001 §2, §4).
- * Se ejecuta como su propio servicio (systemd en la VM) para no duplicarse si Next
- * corre en varias instancias.
+ * Se ejecuta como su propio servicio (systemd, un contenedor, lo que sea) para no
+ * duplicarse si Next corre en varias instancias. En el despliegue actual —Vercel,
+ * ADR-0003— no hay proceso de vida larga y el reloj lo pone `/api/cron/:job`.
  *
  * Solo se ocupa de **cuándo**; el **qué** vive en `use-cases/scheduler/jobs.ts`, que
  * comparte con el endpoint `/api/cron/:job` — el disparador para despliegues sin

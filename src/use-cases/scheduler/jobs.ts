@@ -6,9 +6,9 @@ import { sendRetentionReminders } from "@/use-cases/subscriptions/retention-remi
 /**
  * Los trabajos periódicos, declarados **una sola vez** (ADR-0001 §4).
  *
- * Hay dos formas de dispararlos y no pueden divergir: el proceso `node-cron` de la VM
- * (`scheduler/index.ts`) y, donde no se puede tener un proceso de vida larga —un
- * despliegue serverless—, una llamada HTTP a `/api/cron/:job`. Lo que cambia es **quién
+ * Hay dos formas de dispararlos y no pueden divergir: el proceso `node-cron` de
+ * `scheduler/index.ts` y, donde no se puede tener un proceso de vida larga —el
+ * despliegue serverless de ADR-0003—, una llamada HTTP a `/api/cron/:job`. Lo que cambia es **quién
  * mira el reloj**; lo que se ejecuta es esto.
  *
  * Cada trabajo devuelve un resumen contable en vez de escribir en consola: quien lo

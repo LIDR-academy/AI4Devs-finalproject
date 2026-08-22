@@ -40,14 +40,15 @@ project. Read it at the start of every session.
   aparte** (node-cron), no in-process (Next multi-instancia lo duplicaría);
   frontend cross-browser (evergreen), responsive mobile-first, accesibilidad
   objetivo **WCAG 2.1 AA** (EN 301 549 / European Accessibility Act). Hosting
-  **decidido**: **VM única con IP pública** en **Oracle Cloud Free Tier** (Ampere
-  A1 / ARM64, 2 OCPU · 12 GB · 50 GB, Ubuntu 24.04). Un reverse proxy (Caddy)
-  termina TLS y enruta al servidor Next (front + `/api`); Postgres
-  corre en `localhost`; las imágenes en el filesystem → **mismo origen** (sin CORS,
-  cookie de sesión *first-party*). Descartado el split PaaS Vercel+Render+Neon
-  (multi-origen, cold-start, suspensión de BD); plan B si Oracle reclama la
-  instancia: Hetzner CX22 (~4 €/mes). Detalle en `documents/ADR-0001` §5 y
-  `ADR-0002` (auth + errores).
+  **desplegado**: **Vercel** (plan Hobby, *Production Branch* `MVP-Fase-1`) con
+  **Supabase Postgres**, en **https://clickoteca.vercel.app** — front y `/api` en el
+  **mismo despliegue** (sin CORS, cookie de sesión *first-party*), imágenes como URLs
+  de Rebrickable y trabajos periódicos por `GET /api/cron/:job`. Detalle en
+  `documents/ADR-0003`, que **sustituye `ADR-0001` §5**: la decisión original era una
+  **VM única** en Oracle Cloud Free Tier (Caddy + systemd + Postgres en `localhost`) y
+  **nunca llegó a provisionarse**; se conserva ahí como registro, y el paquete autónomo
+  se sigue construyendo fuera de Vercel para local y E2E. `ADR-0002` (auth + errores)
+  no cambia.
 - **PRD:** borrador completo en `documents/PRD.md`, sintetizado desde
   `openspec/changes/clickoteca-mvp/` + `readme.md` §1.2 + log de prompts.
   Sirve de fuente detallada de la que luego se condensará `readme.md` §1.
@@ -585,8 +586,9 @@ project. Read it at the start of every session.
   Vitest reescribe `import.meta.url` a `http://…` y `fileURLToPath` lo rechaza: para
   leer ficheros en un test hay que usar `resolve(process.cwd(), …)`; (c) un comentario
   JSX **no puede ir entre `? (` y el elemento** de una ternaria.
-  **Sin webfont a propósito**: `next/font` descarga en build y ataría el despliegue a
-  la red (el destino es una VM libre de Oracle). Pila del sistema en `--font-sans`.
+  **Sin webfont a propósito**: `next/font` descarga en build y ataría el build a la
+  red, y una webfont añade una petición bloqueante en la primera pintura. Pila del
+  sistema en `--font-sans`.
   **El tema oscuro está definido y medido, pero no conmutable**: nadie pone la clase
   `.dark` ni se lee `prefers-color-scheme`. Es deuda conocida.
   **El E2E dependía del texto de la interfaz**: renombrar los grupos de la cola de
@@ -641,8 +643,8 @@ project. Read it at the start of every session.
   (2) **Se levanta lo que se despliega, no `next start`.** `next start` avisa de que no
   funciona con `output: standalone`, y con razón: el paquete autónomo **no incluye
   `.next/static`** —copiarlo es trabajo del despliegue—. El script hace esa copia (y la
-  de `public` si existe) antes de arrancar `server.js`, que es exactamente el runbook de
-  la VM (ADR-0001 §5).
+  de `public` si existe) antes de arrancar `server.js`, que es el runbook de cualquier
+  destino con servidor propio (en Vercel este modo se apaga, ADR-0003).
   (3) **Hay una prueba que vigila esa copia** (`smoke.spec.ts`): si faltan los estáticos
   las páginas siguen respondiendo 200 y el evento `load` no se entera —un chunk caído no
   lo impide—, así que se mira el tráfico de `/_next/static/`. Verificado que no es vacua:
@@ -1077,9 +1079,9 @@ project. Read it at the start of every session.
   5 ajustes y las 5 cuentas. **Data API de Supabase desactivada** —el proyecto usa
   Supabase solo como Postgres— porque las tablas creadas por Prisma nacen **sin RLS** y
   quedarían legibles con la anon key, que es pública por diseño.
-- **Vercel no es la arquitectura del ADR (2026-08-21, en curso):** el intento de
-  despliegue destapa tres cosas que el ADR-0001 §5 daba por resueltas con la VM y allí no
-  lo están — no hay Postgres en `localhost` (hace falta uno gestionado, su `DATABASE_URL`,
+- **Vercel no es la arquitectura del ADR (2026-08-21; cerrado el 2026-08-22 con
+  `ADR-0003`, que sustituye `ADR-0001` §5):** el despliegue destapa tres cosas que el
+  ADR-0001 §5 daba por resueltas con la VM y allí no lo están — no hay Postgres en `localhost` (hace falta uno gestionado, su `DATABASE_URL`,
   `prisma migrate deploy` y la semilla), no hay proceso para el scheduler (resuelto con el
   endpoint de cron) y `@node-rs/argon2` es un binario nativo que puede fallar en runtime,
   no en build. Lo que **no** es problema: no se escribe en disco —las imágenes son URLs de
@@ -1182,8 +1184,9 @@ project. Read it at the start of every session.
   (`documents/design-system.md`) y **wireframes** (`documents/wireframes.md`, 2026-08-20);
   **las cinco pantallas están construidas** (W1 ficha de set, W2 registro de
   condición, W3 discrepancia, W4 catálogo e inventario, W5 portal ampliado) más la
-  **navegación de superficie**— y el despliegue en la VM. **`axe` ya está en el
-  E2E.** La decisión de alcance sobre el plan y el alquiler puntual está **tomada,
+  **navegación de superficie**—. **El despliegue está hecho** (2026-08-21/22): Vercel
+  + Supabase en **https://clickoteca.vercel.app**, documentado en `ADR-0003`, que
+  sustituye la VM de `ADR-0001` §5. **`axe` ya está en el E2E.** La decisión de alcance sobre el plan y el alquiler puntual está **tomada,
   ejecutada y archivada** (cambio `plan-obligatorio-en-alta`, 2026-08-17). **`ux-flows.md`
   §8.2 ya no tiene nada abierto**: los wireframes cerraron los tres puntos que quedaban.
   Los dos bloqueantes de `wireframes.md` §8.1 y §8.2 están **resueltos**
@@ -1191,12 +1194,13 @@ project. Read it at the start of every session.
   comprobación está ratificada en el dominio. **§8.4 y §8.7 cerrados el 2026-08-21**
   (posición en cola y pantalla de HU-16) y **§8.3 anotado**: de los siete hallazgos de
   §8 no queda ninguno abierto, y la cobertura es **18 de 18 historias**. Lo único
-  pendiente del proyecto es el **despliegue en la VM** y el **videotutorial**. Para cualquier cambio de estado de una copia, usar
+  pendiente del proyecto es el **videotutorial**. Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
-Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle
-free (`ADR-0001` §5); auth → cookie de sesión
+Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
+Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →
+cookie de sesión
 + contrato de errores RFC 9457 (`ADR-0002`); concurrencia → CAS y orden de cola
 inmutable (`design.md` D11 rev / D12).)_
 

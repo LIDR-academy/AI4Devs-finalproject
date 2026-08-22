@@ -13,8 +13,8 @@ import { defineConfig, devices } from "@playwright/test";
  * nada que ver con lo que la prueba comprueba. El build de producción no usa ese pool.
  *
  * El servidor que se levanta es el **artefacto de despliegue**: el paquete autónomo
- * (`output: "standalone"`, ADR-0001 §5) con sus estáticos copiados, no `next start`.
- * Así el E2E cubre también el empaquetado que va a la VM.
+ * (`output: "standalone"`) con sus estáticos copiados, no `next start`. Así el E2E
+ * cubre también el empaquetado.
  *
  * Para iterar sobre una pantalla mientras se escribe, `E2E_DEV=1` apunta al servidor
  * de desarrollo de siempre (puerto 3000, un solo worker).

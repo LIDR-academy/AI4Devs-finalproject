@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         email: parsed.data.email,
         password: parsed.data.password,
         userAgent: request.headers.get("user-agent"),
-        // Detrás de Caddy la IP real llega en X-Forwarded-For (ADR-0001 §5).
+        // Detrás del proxy de la plataforma la IP real llega en X-Forwarded-For.
         ipAddress: request.headers.get("x-forwarded-for"),
       }
     );

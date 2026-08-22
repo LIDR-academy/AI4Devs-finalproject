@@ -25,7 +25,7 @@ describe("next.config", () => {
     vi.unstubAllEnvs();
   });
 
-  it("fuera de Vercel construye el paquete autónomo, que es lo que despliega la VM", async () => {
+  it("fuera de Vercel construye el paquete autónomo, que es lo que levanta el E2E", async () => {
     vi.stubEnv("VERCEL", undefined);
     expect((await loadConfig()).output).toBe("standalone");
   });

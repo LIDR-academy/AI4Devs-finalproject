@@ -5,17 +5,18 @@ import { isJobName, runJob } from "@/use-cases/scheduler/jobs";
 /**
  * Disparador HTTP de los trabajos periódicos — `GET /api/cron/:job`.
  *
- * Existe para los despliegues **sin proceso de vida larga**, donde no cabe el
- * `scheduler/index.ts` de la VM (ADR-0001 §4): allí quien mira el reloj es el cron de
- * la plataforma —Vercel Cron, un `systemd timer`, lo que sea— y esta URL es el botón.
+ * Existe para los despliegues **sin proceso de vida larga**, donde no cabe
+ * `scheduler/index.ts` (ADR-0001 §4, ADR-0003 §3): allí quien mira el reloj es el cron
+ * de la plataforma —Vercel Cron, un `systemd timer`, lo que sea— y esta URL es el
+ * botón.
  * Los trabajos son los mismos objetos; lo único que cambia es quién los llama.
  *
  * `GET` y no `POST` porque es lo que emite Vercel Cron, y porque el efecto no depende
  * del cuerpo. No es idempotente en el sentido estricto —caducar una oferta cambia
  * cosas— así que el candado del secreto no es decorativo.
  *
- * **Dos ejecuciones solapadas no se bloquean.** El scheduler de la VM tiene un flag en
- * memoria para eso, y aquí no serviría: cada invocación es un proceso distinto. Lo que
+ * **Dos ejecuciones solapadas no se bloquean.** El proceso `scheduler/` tiene un flag
+ * en memoria para eso, y aquí no serviría: cada invocación es un proceso distinto. Lo que
  * sostiene el solape es el dominio —el cierre de oferta es un CAS y devuelve `null` si
  * otro llegó antes—, con un margen conocido: dos barridos a la vez podrían llegar a
  * enviar dos veces **un recordatorio**. Se acepta a cambio de no montar un cerrojo
@@ -48,8 +49,8 @@ export async function GET(
 
   try {
     const result = await runJob(job);
-    // Se registra igual que en la VM: en un despliegue serverless el log de la
-    // invocación es lo único que queda cuando algo va mal de madrugada.
+    // Se registra igual que en el proceso `scheduler/`: en un despliegue serverless el
+    // log de la invocación es lo único que queda cuando algo va mal de madrugada.
     console.log(`[cron] ${result.job}: ${result.summary}`);
     return Response.json(result);
   } catch (error) {

@@ -47,7 +47,7 @@ describe("autorización del cron", () => {
 });
 
 describe("catálogo de trabajos periódicos", () => {
-  it("son exactamente los dos que programa el scheduler de la VM", () => {
+  it("son exactamente los dos que programa el proceso scheduler", () => {
     expect(JOB_NAMES).toEqual(["offers", "retention"]);
   });
 

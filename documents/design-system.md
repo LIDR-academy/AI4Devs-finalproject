@@ -219,8 +219,9 @@ nadie. Es deuda conocida, no un olvido.
 ### 4.1 Tipografía
 
 Pila del sistema (`--font-sans`), sin webfont. Es una decisión, no una carencia: un
-`next/font` descarga en tiempo de build y ata el despliegue a tener red — y el
-destino es una VM libre de Oracle, no un CDN. Cambiarlo es una línea en
+`next/font` descarga en tiempo de build y ata el build a tener red, y una webfont
+añade una petición bloqueante en la primera pintura para un texto que la pila del
+sistema ya resuelve. Cambiarlo es una línea en
 [`app/layout.tsx`](../app/layout.tsx) el día que compense.
 
 La escala **ratifica la que ya usaban las pantallas** en vez de inventar otra:

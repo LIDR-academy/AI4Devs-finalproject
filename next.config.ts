@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 /**
- * El **paquete autónomo es el artefacto de la VM** (ADR-0001 §5) y el que levanta el
- * E2E, así que es el modo por defecto.
+ * El **paquete autónomo** es el artefacto de cualquier destino con servidor propio y
+ * el que levanta el E2E, así que es el modo por defecto. El despliegue real va a
+ * Vercel (ADR-0003), donde este modo se apaga.
  *
  * **En Vercel, no.** En modo standalone Next se lleva el trazado de ficheros a
  * `.next/standalone/` y **deja de emitir `.next/next-server.js.nft.json`** — que es
@@ -10,8 +11,8 @@ import type { NextConfig } from "next";
  * funciones. El build compila entero, genera las páginas y muere al final con un
  * `ENOENT` sobre ese json, que no dice en absoluto de dónde viene.
  *
- * `VERCEL` la define su entorno de build, así que la condición se resuelve sola: en la
- * VM, en local y en el E2E sigue saliendo el paquete autónomo.
+ * `VERCEL` la define su entorno de build, así que la condición se resuelve sola: en
+ * local y en el E2E sigue saliendo el paquete autónomo.
  */
 const nextConfig: NextConfig = {
   output: process.env.VERCEL ? undefined : "standalone",

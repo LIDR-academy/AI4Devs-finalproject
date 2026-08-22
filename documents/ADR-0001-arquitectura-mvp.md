@@ -1,9 +1,13 @@
 # ADR-0001 — Arquitectura de la aplicación (Clickoteca MVP)
 
-- **Estado:** Aceptado. Hosting **confirmado** (VM única Oracle free, §5) y
-  framework **confirmado**: **Next.js full-stack** (App Router) para front + API
-  (decidido 2026-07-05); no quedan *Open questions* de arquitectura.
-- **Fecha:** 2026-07-04 (rev. 2026-07-05: framework Next.js)
+- **Estado:** Aceptado, con **§5 (hosting) sustituida por `ADR-0003`**: la
+  aplicación se despliega en **Vercel + Supabase**
+  (**https://clickoteca.vercel.app**), no en la VM única de Oracle, que nunca
+  llegó a provisionarse. El resto sigue vigente, y el framework está
+  **confirmado**: **Next.js full-stack** (App Router) para front + API (decidido
+  2026-07-05); no quedan *Open questions* de arquitectura.
+- **Fecha:** 2026-07-04 (rev. 2026-07-05: framework Next.js; rev. 2026-08-22:
+  §5 sustituida por `ADR-0003`)
 - **Decisores:** Xavier Vergés (owner).
 - **Contexto de origen:** `openspec/changes/clickoteca-mvp/` (proposal + design +
   specs), `documents/PRD.md`, `documents/C4-architecture.md`, `prompts.md`.
@@ -42,8 +46,11 @@ Restricciones y fuerzas que condicionan la arquitectura:
 Adoptar una **aplicación Next.js full-stack** (App Router, TypeScript) que sirve
 tanto el frontend (SSR/RSC) como la **API REST pública** (Route Handlers en
 `app/api/*`, documentada en OpenAPI), sobre **PostgreSQL + Prisma**, más un
-**scheduler** en proceso aparte para los procesos temporales. En la VM (§5) hay,
-por tanto, **dos procesos Node** (app Next + scheduler) y **PostgreSQL** local.
+**scheduler** en proceso aparte para los procesos temporales. En un destino con
+procesos de vida larga (el entorno local, o la VM de §5) hay, por tanto, **dos
+procesos Node** (app Next + scheduler) y **PostgreSQL**. En el despliegue real
+—Vercel, `ADR-0003`— no hay proceso de vida larga: los mismos trabajos se disparan
+por HTTP (§4) y Postgres es gestionado.
 Elecciones concretas:
 
 ### 1. Capa de datos: PostgreSQL + Prisma
@@ -90,8 +97,9 @@ modo que una futura extracción de la API a un servicio aparte sea barata.
 implementan como procesos programados que **reutilizan los casos de uso** del
 dominio. El **orden de cola ya no requiere recálculo**: se ordena de forma *lazy*
 sobre `entrada_efectiva` inmutable (D11 revisado), así que el scheduler solo cubre
-esos dos eventos temporales. Corre como **proceso Node separado** (`node-cron`) en
-la misma VM (§5) — **no** in-process en el servidor Next: el modelo de Next
+esos dos eventos temporales. Corre como **proceso Node separado** (`node-cron`)
+junto a la app donde hay procesos de vida larga (local, o la VM de §5) — **no**
+in-process en el servidor Next: el modelo de Next
 (orientado a *serverless*/multi-instancia) haría que un cron in-process se
 **duplicara** por instancia. Un proceso dedicado que importa la misma capa de
 casos de uso lo evita y es reversible (alternativa: *systemd timer* que invoca un
@@ -112,7 +120,18 @@ endpoint interno).
 > sostiene el dominio (el cierre de oferta es un CAS), con el margen conocido de que
 > dos barridos simultáneos podrían repetir **un recordatorio**.
 
-### 5. Hosting: VM única con IP pública (Oracle Cloud Free Tier)
+### 5. Hosting: VM única con IP pública (Oracle Cloud Free Tier) — ~~vigente~~ **sustituida**
+
+> **SUSTITUIDA por `ADR-0003` (2026-08-22).** Esta sección se conserva como
+> registro de la decisión original: la VM **nunca llegó a provisionarse**. La
+> aplicación corre en **Vercel** (plan Hobby) con **Supabase Postgres**, en
+> **https://clickoteca.vercel.app**. Lo que sigue vigente de aquí es el
+> **mismo origen** (front y `/api` en el mismo despliegue) y el paquete
+> autónomo, que se sigue construyendo fuera de Vercel para local y E2E. Lo que
+> **ya no aplica**: Caddy, systemd, firewall propio, `pg_dump` por cron,
+> Postgres en `localhost` e imágenes en filesystem. Ver `ADR-0003` para el
+> presupuesto de conexiones y los crons por HTTP, que aquí no existían.
+
 Un **único servidor Linux** aloja todo el sistema. Un **reverse proxy** (Caddy)
 termina TLS y enruta el tráfico al **servidor Next.js** (que sirve el front y la
 API en `/api`); el **scheduler** corre como proceso Node aparte; **PostgreSQL**
@@ -164,9 +183,9 @@ ociosa; se mitiga con actividad mínima. **Plan B** si Oracle reclama: VPS de pa
 | API | GraphQL en vez de REST | Sobra flexibilidad de query; REST+OpenAPI es más simple de documentar/testear para este alcance. |
 | Frontend | SPA pura (sin SSR) servida estática | Se prefiere Next SSR/RSC por accesibilidad/SEO del catálogo público (visitante, D13) y por unificar con la API. |
 | Scheduler | Cron in-process en el servidor Next | El modelo multi-instancia de Next duplicaría el cron; se usa un proceso Node aparte en la misma VM. Reversible. |
-| Hosting | Split PaaS (Vercel + Render + Neon) | Multi-origen (CORS + cookie cross-origin), *cold-start* y suspensión de BD, e imágenes en servicio aparte. La VM única mismo-origen elimina las tres fricciones a coste 0. |
+| Hosting | Split PaaS (Vercel + Render + Neon) | Multi-origen (CORS + cookie cross-origin), *cold-start* y suspensión de BD, e imágenes en servicio aparte. La VM única mismo-origen elimina las tres fricciones a coste 0. **Revisado en `ADR-0003`:** el destino real es Vercel + Supabase, que **no** es un split multi-origen —front y `/api` salen del mismo despliegue— y donde las imágenes son URLs de Rebrickable, así que de las tres fricciones solo queda la latencia a la base. |
 | Hosting | VPS de pago (Hetzner CX22, ~4 €/mes) | Más fiable (sin reclamación), pero rompe el coste 0; reservado como **plan B** si Oracle reclama la instancia. |
-| Hosting DB | Postgres gratis de Render / Neon | Caducidad/suspensión del free tier; con Postgres **local** en la VM el problema no existe. |
+| Hosting DB | Postgres gratis de Render / Neon | Caducidad/suspensión del free tier; con Postgres **local** en la VM el problema no existe. **Revisado en `ADR-0003`:** al desaparecer el `localhost`, la base pasa a ser gestionada (Supabase). |
 | Hosting DB | Railway | Ya no es gratuito con BD en 2026. |
 
 ---
@@ -179,7 +198,7 @@ ociosa; se mitiga con actividad mínima. **Plan B** si Oracle reclama: VPS de pa
 - Dominio aislado → los tests pueden centrarse en caminos de error y casos
   límite (máquina de estados, equidad de cola) sin levantar infraestructura.
 - Tipado TS end-to-end (Prisma + API + Next) reduce errores de contrato.
-- Coste operativo **0 €** permanente con el hosting elegido (§5).
+- Coste operativo **0 €** permanente con el hosting elegido (§5; hoy, el de `ADR-0003`).
 - Un solo proyecto y un solo *deploy* para front + API; el back-office segmentado
   por ruta no viaja al navegador del suscriptor sin autorización. La capa
   compartida factorizada deja barata una futura extracción de la API.
@@ -187,13 +206,21 @@ ociosa; se mitiga con actividad mínima. **Plan B** si Oracle reclama: VPS de pa
   imágenes aparte; latencia local y constante (sin *cold-start* ni suspensión).
 
 **Negativas / trade-offs**
-- **Ops propio**: al ser una VM y no un PaaS gestionado, TLS, parches de SO,
-  firewall y backups (`pg_dump`) son responsabilidad nuestra.
-- **Punto único de fallo** (todo en un host) — aceptable en un MVP de demo.
-- **Riesgo de reclamación** de la instancia *always-free* de Oracle si queda
-  ociosa; mitigable, con Hetzner como plan B sin cambio de arquitectura.
+
+> Las tres primeras son las que **motivaron `ADR-0003`** y ya no aplican: en
+> Vercel + Supabase no hay ops propio, ni host único, ni instancia reclamable. A
+> cambio aparecen las suyas (crons diarios y presupuesto de conexiones), listadas
+> allí.
+
+- ~~**Ops propio**: al ser una VM y no un PaaS gestionado, TLS, parches de SO,
+  firewall y backups (`pg_dump`) son responsabilidad nuestra.~~
+- ~~**Punto único de fallo** (todo en un host) — aceptable en un MVP de demo.~~
+- ~~**Riesgo de reclamación** de la instancia *always-free* de Oracle si queda
+  ociosa; mitigable, con Hetzner como plan B sin cambio de arquitectura.~~
 - El **scheduler** es un proceso desplegable aparte (systemd) — uno más que
-  operar, aunque desacoplado del servidor web y sin riesgo de doble ejecución.
+  operar, aunque desacoplado del servidor web y sin riesgo de doble ejecución. En
+  Vercel no se despliega: su reloj lo pone el cron de la plataforma sobre
+  `GET /api/cron/:job` (§4 y `ADR-0003` §3).
 - **Acoplamiento front+API** en un mismo proyecto Next: si se quisiera escalar o
   independizar la API, hay que extraerla (previsto, reversible vía capa compartida).
 - Prisma 6 pinneado deja una **deuda de migración** a Prisma 7 pendiente.

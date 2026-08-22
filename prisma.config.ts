@@ -9,8 +9,8 @@ import { defineConfig, env } from "prisma/config";
  * detrás de un pooler de transacciones —Supabase, Neon— la aplicación se conecta al
  * pooler y **las migraciones no pueden**: necesitan una sesión estable para tomar el
  * *advisory lock* y ejecutar DDL. Son dos URLs contra la misma base, y quien las
- * distingue es esto. Donde hay una sola conexión (la VM de ADR-0001 §5, el Postgres
- * local del docker-compose) no se define `DIRECT_URL` y todo sigue igual.
+ * distingue es esto. Donde hay una sola conexión (el Postgres local del
+ * docker-compose) no se define `DIRECT_URL` y todo sigue igual.
  */
 export default defineConfig({
   schema: "prisma/schema.prisma",
