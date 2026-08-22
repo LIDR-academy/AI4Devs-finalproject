@@ -131,8 +131,8 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
                     flex: 1,
                     minHeight: '48px',
                     borderRadius: '8px',
-                    border: unitOfMeasure === unit ? '2px solid #38BDF8' : '1px solid #334155',
-                    backgroundColor: unitOfMeasure === unit ? '#0284C7' : '#0F172A',
+                    border: unitOfMeasure === unit ? '2px solid var(--color-primary)' : '1px solid #334155',
+                    backgroundColor: unitOfMeasure === unit ? 'var(--color-primary)' : '#0F172A',
                     color: '#F8FAFC',
                     fontWeight: unitOfMeasure === unit ? 600 : 400,
                     cursor: 'pointer',
@@ -172,31 +172,14 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
               type="button"
               onClick={onClose}
               disabled={loading}
-              style={{
-                minHeight: '48px',
-                padding: '0 20px',
-                borderRadius: '8px',
-                border: '1px solid #475569',
-                backgroundColor: 'transparent',
-                color: '#94A3B8',
-                cursor: 'pointer',
-              }}
+              className="btn-touch btn-secondary"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                minHeight: '48px',
-                padding: '0 24px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#0EA5E9',
-                color: '#FFFFFF',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className="btn-touch btn-primary"
             >
               {loading ? 'Guardando...' : 'Guardar Insumo'}
             </button>

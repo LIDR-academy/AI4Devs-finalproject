@@ -57,18 +57,7 @@ export const InsumoCatalogPanel: React.FC = () => {
 
         <button
           onClick={() => setIsModalOpen(true)}
-          style={{
-            minHeight: '48px',
-            padding: '0 24px',
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: '#0EA5E9',
-            color: '#FFFFFF',
-            fontWeight: 600,
-            fontSize: '1rem',
-            cursor: 'pointer',
-            boxShadow: '0 4px 6px -1px rgba(14, 165, 233, 0.4)',
-          }}
+          className="btn-touch btn-primary"
         >
           + Nuevo Insumo
         </button>
@@ -137,7 +126,7 @@ export const InsumoCatalogPanel: React.FC = () => {
             <tbody>
               {filteredInsumos.map((item) => (
                 <tr key={item.id} style={{ borderBottom: '1px solid #334155' }}>
-                  <td style={{ padding: '16px', fontFamily: 'monospace', color: '#38BDF8' }}>{item.id}</td>
+                  <td style={{ padding: '16px', fontFamily: 'monospace', color: 'var(--color-primary)' }}>{item.id}</td>
                   <td style={{ padding: '16px', fontWeight: 600 }}>{item.name}</td>
                   <td style={{ padding: '16px' }}>
                     <span
