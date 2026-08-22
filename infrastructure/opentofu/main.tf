@@ -135,8 +135,12 @@ resource "docker_container" "backend" {
   image   = docker_image.restostock_backend_img.image_id
   restart = "unless-stopped"
 
+  # alias "backend" (no solo el nombre del contenedor): coincide con el alias implícito
+  # que docker-compose.yml genera por nombre de servicio — el nginx.conf del frontend
+  # proxya /api/ a http://backend:3000 y debe resolver igual en ambos despliegues.
   networks_advanced {
-    name = docker_network.restostock_net.name
+    name    = docker_network.restostock_net.name
+    aliases = ["backend"]
   }
 
   # DATABASE_URL/CORS_ALLOWED_ORIGINS faltaban (TK-045): sin DATABASE_URL Zod lanza al

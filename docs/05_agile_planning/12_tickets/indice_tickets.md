@@ -111,6 +111,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-048: Cierre de Persistencia Parcial en Producción](shared/backend/TK-048.md)** (Backend)
 *   **[TK-051: Bootstrap del Primer Administrador](shared/backend/TK-051.md)** (Backend)
 *   **[TK-058: Modularización del Repositorio de Stock (ISP)](shared/backend/TK-058.md)** (Backend) — split de `IStockRepository` en `IInsumoRepository`/`IRemanenteRepository`, motivado por `TK-057`.
+*   **[TK-059: Fix de Conectividad Frontend↔Backend en Despliegue Dockerizado](shared/backend/TK-059.md)** (Backend) — nginx del frontend no reenviaba `/api` al backend; detectado por auditoría de código muerto (`knip`).
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
 *   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)

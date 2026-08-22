@@ -17,8 +17,9 @@ RUN pnpm --filter @restostock/frontend build
 # reconstruida contra el Alpine mas reciente (3.24, 0 CVEs High/Critical al validar, TK-044).
 FROM nginx:stable-alpine AS runner
 
+COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
 RUN addgroup -S restostock && adduser -S restostock -G restostock && \
-    sed -i 's/listen\s*80;/listen 8080;/' /etc/nginx/conf.d/default.conf && \
     sed -i '/user  nginx;/d' /etc/nginx/nginx.conf && \
     touch /var/run/nginx.pid && \
     chown -R restostock:restostock /var/cache/nginx /var/run/nginx.pid /etc/nginx/conf.d
