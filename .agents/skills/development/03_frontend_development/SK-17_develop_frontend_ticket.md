@@ -29,9 +29,9 @@ Sigue estrictamente este flujo de trabajo secuencial:
 1. **Analizar Especificación del Ticket:** Lee el ticket técnico en `docs/05_agile_planning/12_tickets/{ticket_id}` y comprende los criterios de aceptación (BDD/Gherkin).
    - **Fail-Fast Obligatorio (Guard 26, `AGENTS.md`):** si `{ticket_id}` no existe como archivo — porque te pidieron implementar una funcionalidad nueva sin ticket previo — DETENTE. No implementes primero y documentes después: informa al humano que falta la Etapa 1 (`01_cascading_spec_workflow.md`: `SK-02`/`SK-11`/`SK-12`/`SK-13`/`SK-14`) y espera a que exista el `TK-XXX.md` antes de continuar con este skill.
 2. **Consultar Comandos Oficiales:** Consulta `AGENTS.md` para extraer los comandos declarados del proyecto para compilación (`build`), linter (`lint`) y runner de pruebas UI.
-3. **Descubrir Reglas de UX/UI, CWV y Pila Cliente:** Consulta las directivas declaradas en `required_rules` (especialmente `docs/04_governance_and_quality/rules/frontend_rules.md` y `docs/02_architecture_design/05_ui_ux_design_system.md`) para identificar:
+3. **Descubrir Reglas de UX/UI, CWV y Pila Cliente (Guard 29, `AGENTS.md`):** Consulta obligatoriamente `DESIGN.md` en la raíz del espacio de trabajo y las directivas declaradas en `required_rules` (especialmente `docs/04_governance_and_quality/rules/frontend_rules.md` y `docs/02_architecture_design/05_ui_ux_design_system.md`) para identificar:
    - Framework cliente y motor de formateo/linter oficial.
-   - Sistema de diseño, tokens de color (variables HSL/CSS) y diseño responsive basado en componentes.
+   - Sistema de diseño, tokens de color (variables HSL/CSS) y diseño responsive basado en componentes. Prohibido hardcodear literales hexadecimales/RGB en inline `style={...}`.
    - Especificaciones de ergonomía táctil y objetivos **WCAG 2.2 AA/AAA** (contraste, foco visible y navegación por teclado).
    - Metas preventivas de Core Web Vitals: LCP < 2.5s, INP < 200ms (responsividad táctil/teclado) y CLS < 0.1 (cero saltos de layout).
    - Los 4 estados defensivos obligatorios de UI: Carga/Loading, Estado Vacío/Empty, Errores con reintento y Banner Offline.
@@ -55,6 +55,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 
 ## 🔄 FASE 4: Bucle de Auto-Reflexión & Seguridad Defensiva Anti-IA
 Antes de entregar el ticket, ejecuta esta lista de cotejo interna:
+- [ ] **Cumplimiento Design System (Guard 29):** ¿Leí `DESIGN.md` antes de maquetar? ¿Cero colores hexadecimales hardcodeados en inline `style={...}`?
 - [ ] **Granularidad:** ¿Todos los componentes miden < ~150 líneas de código y cumplen SRP?
 - [ ] **Ergonomía & A11y:** ¿Se cumplen las dimensiones táctiles y el contraste de texto WCAG 2.2?
 - [ ] **Core Web Vitals:** ¿Se garantiza estabilidad de layout (CLS < 0.1) y responsividad (INP < 200ms)?
