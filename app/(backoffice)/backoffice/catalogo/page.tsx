@@ -56,15 +56,18 @@ export default async function CatalogoPage({
   const filter = filterFor(params.estado);
   const deps = { repository: prismaSetRepository, audit: prismaAuditRepository };
 
-  const [catalog, themes] = await Promise.all([
-    browseManagedCatalog(deps, {
-      actor,
-      search,
-      published: filter.published,
-      page: Number(params.p ?? 1),
-    }),
-    listThemeOptions(deps, actor),
-  ]);
+  // En secuencia y no en paralelo: cada consulta simultánea ocupa una conexión del
+  // pool, y con un pooler gestionado delante el pico de un render se multiplica por
+  // las instancias vivas. Encadenadas, el render entero cabe en una conexión; el
+  // precio es un viaje de ida y vuelta más, que en una pantalla de back-office no se
+  // nota. Los recuentos de la lista ya van en un solo lote (`listManaged`).
+  const catalog = await browseManagedCatalog(deps, {
+    actor,
+    search,
+    published: filter.published,
+    page: Number(params.p ?? 1),
+  });
+  const themes = await listThemeOptions(deps, actor);
 
   const filtered = search !== "" || filter.published !== null;
 

@@ -107,7 +107,13 @@ export const prismaSetRepository: SetRepository = {
         : {}),
     };
 
-    const [rows, totalSets, totalCopies] = await Promise.all([
+    // Las tres van en **un `$transaction`** y no en un `Promise.all`, por dos razones.
+    // La conexión: en paralelo cada consulta toma una del pool, así que un solo render
+    // se llevaba tres —y con un pooler delante, ese pico multiplicado por las
+    // instancias vivas es lo que agota el límite del proveedor—; en lote van por una.
+    // Y la foto: el lote es una transacción, de modo que la lista y los recuentos ven
+    // el mismo estado. En paralelo, un alta a medio camino los descuadraba.
+    const [rows, totalSets, totalCopies] = await prisma.$transaction([
       prisma.set.findMany({
         where,
         select: {

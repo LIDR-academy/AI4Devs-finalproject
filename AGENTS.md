@@ -1111,6 +1111,61 @@ project. Read it at the start of every session.
   despliega *Production* desde la rama de producción del repo, que por defecto es `main`
   —aquí, el andamiaje del curso—, así que hay que fijar **Production Branch =
   `MVP-Fase-1`**.
+- **El pooler de sesión no aguanta serverless (2026-08-21):** `/backoffice/catalogo`
+  fallaba en el despliegue con la página de error de Next (`digest: 2243060452`) y en el
+  log de Vercel: `PrismaClientKnownRequestError … (EMAXCONNSESSION) max clients reached
+  in session mode - max clients are limited to pool_size: 15`. `DATABASE_URL` apuntaba al
+  pooler de **sesión** (`:5432`), donde **cada cliente retiene una conexión de servidor**,
+  así que el techo de clientes *es* `pool_size` = 15; con `DATABASE_POOL_MAX=3`, cinco
+  instancias de función lo llenaban. Arreglo: `DATABASE_URL` al pooler de **transacción**
+  (`:6543`, el que documenta Supabase para *serverless and edge functions*), conservando
+  `uselibpqcompat=true`. Ahí las 15 conexiones de servidor se **multiplexan** entre
+  cientos de clientes y `DATABASE_POOL_MAX=3` deja de ser un problema. Verificado: 12
+  peticiones concurrentes daban **12× 500** antes y **12× 200** después, y 30 concurrentes
+  también en verde.
+  **Tres trampas de diagnóstico, anotadas para no repetirlas:** (1) el `digest` de Next es
+  `stringHash(message + stack)` y **no es reversible** — el mensaje solo sale de
+  `vercel logs --level error --since <t>`, que sí guarda el histórico; (2) sondear el modo
+  del pooler con `SET application_name` + `SHOW` **no vale**: sin contención, el modo
+  transacción devuelve la misma conexión de servidor y el estado parece persistir — quien
+  distingue el modo es el mensaje `EMAXCONNSESSION` con tope exactamente `pool_size`; (3)
+  el fallo **no se reproduce con una sola petición**: en local contra esa misma base, y en
+  producción en serie, la pantalla devolvía 200. Hace falta concurrencia.
+- **`DATABASE_URL` en Vercel dejó de ser sensible (2026-08-21):** estaba marcada como
+  *sensitive*, que en Vercel significa **no legible** ni por `vercel env pull` (baja como
+  `[SENSITIVE]`) ni por el panel — solo reescribible. Eso impedía comprobar a qué puerto
+  apuntaba, que era justo el dato del fallo. Se reescribió con `--no-sensitive`: sigue
+  cifrada en reposo, pero se puede leer para diagnosticar.
+- **El pico de conexiones de un render es su fan-out (2026-08-21):** `Promise.all` de N
+  consultas toma N conexiones del pool a la vez. `listManaged` (lista + dos recuentos) va
+  ahora en un **`prisma.$transaction([...])`** —una conexión, un lote y, de propina, la
+  lista y los recuentos en la misma foto— y la página del catálogo encadena
+  `browseManagedCatalog` y `listThemeOptions` en vez de paralelizarlas: el render entero
+  cabe en una conexión. **El patrón sigue vivo en el resto de la app** (el portal abre seis
+  consultas a la vez, el detalle de set cuatro); no se tocó porque con el pooler de
+  transacción deja de ser un riesgo, pero es el sitio donde mirar si vuelve a aparecer.
+- **Una instancia congelada no suelta su conexión (2026-08-22):** verificando el fan-out
+  de `Promise.all` bajo carga apareció el segundo techo, ya en modo transacción:
+  `(EMAXCONN) max client connections reached, limit: 200`. Y lo revelador: **no se
+  recupera con el tiempo**. Una sonda que abría 30 conexiones a la vez desde fuera
+  aceptó **1 de 30** minutos después de la última petición — 199 huecos retenidos por
+  instancias de función de Vercel. La causa: `pg` cierra una conexión ociosa a los
+  `idleTimeoutMillis` (**30 s por defecto**, no 10), pero **una instancia congelada no
+  ejecuta temporizadores**, así que ese cierre nunca ocurre y el slot queda tomado hasta
+  que Vercel recicla la instancia. **Un redespliegue las destruye y libera todo de golpe**
+  (comprobado: 30/30 justo después). Es la palanca de emergencia si vuelve a pasar.
+  **La aritmética que importa:** el techo no lo marca la concurrencia de peticiones sino
+  `DATABASE_POOL_MAX` × instancias vivas. Con 3, unas 67 instancias agotan las 200; con 1
+  harían falta 200. Y aquí es donde el fan-out sí pesa: una pantalla que lanza 6 consultas
+  en paralelo (el portal) **garantiza** que su instancia llegue al máximo del pool y lo
+  retenga, mientras que encadenadas se quedaría en una. O sea, `Promise.all` no rompe nada
+  por sí solo —el pool encola lo que no cabe, y ninguna transacción usa el cliente global,
+  así que no hay interbloqueo posible— pero multiplica la huella de conexiones por
+  instancia. Bajar `DATABASE_POOL_MAX` a 1 vuelve la discusión irrelevante; el coste es
+  serializar los fan-out, y medido contra el despliegue no se nota (páginas calientes en
+  ~260-290 ms, dominadas por la red, con Vercel y Supabase en la misma región).
+  **Ojo con medir esto:** una prueba de carga deja el pooler saturado durante minutos, así
+  que degrada el despliegue mucho después de terminar.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
