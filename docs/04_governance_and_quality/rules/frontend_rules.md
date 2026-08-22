@@ -4,9 +4,10 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 
 ---
 
-## 🛠️ Pila Tecnológica Detectada
+## 🛠️ Pila Tecnológica Detectada & Cumplimiento de Diseño
 * **Framework Core:** React / Next.js (TypeScript)
-* **Estilos & Sistema de Diseño:** Vanilla CSS con variables HSL centralizadas en `index.css` y exportadas al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`).
+* **Estilos & Sistema de Diseño (Guard 29, `AGENTS.md`):** Vanilla CSS con variables centralizadas en `index.css` y exportadas al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`).
+* **Regla Innegociable de Tokens (Guard 29):** Queda estrictamente prohibido hardcodear colores hexadecimales o RGB en línea (`style={{ color: '#HEX' }}`) dentro de componentes UI en cualquier proyecto (Greenfield, Brownfield/Legacy o Mantenimiento). Todos los estilos deben consumir los tokens CSS globales de `DESIGN.md` (`var(--color-primary)`, `btn-touch btn-primary`, etc.).
 * **Persistencia Offline:** Dexie.js (IndexedDB / Cola FIFO local)
 * **Testing UI & QA Visual:** Vitest / React Testing Library / SK-21 a11y Auditor
 

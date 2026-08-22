@@ -40,9 +40,10 @@ Antes de redactar cualquier archivo de especificación (Fase 2 en adelante), ide
 
 **Esta fase NO se satisface con el gate genérico de Human-in-the-Loop de `.agents/README.md`** (presentar un diseño ya cerrado para aprobación sí/no, ej. `EnterPlanMode`/`ExitPlanMode`): ese gate aprueba una decisión ya tomada, no expone al humano las alternativas de negocio subyacentes. Las respuestas obtenidas aquí se documentan explícitamente en la User Story y/o el Ticket Técnico resultante (sección dedicada, ej. "Decisiones de negocio consultadas con el humano"), citando pregunta y respuesta — nunca como una decisión silenciosa del agente.
 
-### FASE 2: Modificación de Requisitos y Modelo
+### FASE 2: Modificación de Requisitos, Modelo y Sistema de Diseño
 1. **PRD (`docs/01_product_definition/`):** Integra la funcionalidad en la descripción de alcance o flujos alternativos.
-2. **Diseño de Arquitectura y Base de Datos:**
+2. **Diseño de Arquitectura, Base de Datos y UI/UX (`DESIGN.md` - Guard 29):**
+   * Si la funcionalidad afecta o crea pantallas/componentes UI, invoca [`SK-05: Sistema de Diseño UI/UX`](../skills/specs/02_architecture_design/SK-05_design_ui_ux_system.md) para actualizar `docs/02_architecture_design/05_ui_ux_design_system.md` y `DESIGN.md` en la raíz con los nuevos tokens visuales, estados de UI y componentes antes de escribir código frontend.
    * Si requiere cambios de base de datos, edita el esquema declarativo oficial (convención snake_case en BD, camelCase en código, uso estricto de Decimal para montos/cantidades físicas, uso de Enums nativos para campos cerrados e índices de búsqueda).
    * Actualiza el modelo lógico en `docs/02_architecture_design/` y `docs/03_persistence_and_api/`.
 3. **Contrato de API (`docs/03_persistence_and_api/`):** Agrega o modifica las firmas de endpoints, payloads de esquemas de validación y códigos de respuesta.
