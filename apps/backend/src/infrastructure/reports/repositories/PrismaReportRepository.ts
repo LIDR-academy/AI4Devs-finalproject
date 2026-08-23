@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../../generated/prisma/client.js';
 import { WasteSummary } from '../../../domain/reports/entities/WasteSummary.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { IReportRepository } from '../../../domain/reports/repositories/IReportRepository.js';

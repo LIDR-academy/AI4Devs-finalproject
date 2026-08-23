@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '../../../generated/prisma/client.js';
 import Decimal from 'decimal.js';
 import { ShiftReconciliation } from '../../../domain/kitchen/entities/ShiftReconciliation.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';

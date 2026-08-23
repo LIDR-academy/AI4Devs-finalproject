@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '../../../generated/prisma/client.js';
 import { Recipe } from '../../../domain/catalog/entities/Recipe.js';
 import { RecipeIngredient } from '../../../domain/catalog/entities/RecipeIngredient.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';

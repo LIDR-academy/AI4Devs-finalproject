@@ -7,7 +7,8 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/node_modules/**",
-    "**/dist/**"
+    "**/dist/**",
+    "**/generated/**"
   ],
   "absolute": true
 }

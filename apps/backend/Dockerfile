@@ -3,10 +3,9 @@ FROM node:24-alpine AS base
 WORKDIR /app
 
 # node:24-alpine (Alpine 3.24) trae libssl.so.3 como libreria pero NO el binario CLI
-# `openssl` — la deteccion de plataforma de Prisma 5.x lo ejecuta (`openssl version -v`)
-# para elegir el motor OpenSSL-3 correcto; sin el, tanto el query-engine como el
-# schema-engine (usado por `migrate deploy`) se descargan/resuelven mal (bug detectado
-# al automatizar `prisma migrate deploy` en el arranque del contenedor, TK-043).
+# `openssl` — necesario para el schema-engine de `migrate deploy` (TK-043). Con Prisma 7
+# (TK-062) el query-engine Rust del cliente desaparece (driver adapters), pero el
+# schema-engine de migraciones sigue siendo un binario nativo — se deja este paquete.
 RUN apk add --no-cache openssl
 
 # HUSKY=0: el script "prepare" del package.json raiz instala git hooks locales — irrelevante
@@ -26,19 +25,25 @@ RUN pnpm install --frozen-lockfile
 COPY apps/backend/prisma ./apps/backend/prisma
 COPY apps/backend ./apps/backend
 
-# pnpm exec (no npx): resuelve el binario Prisma 5.x pineado en package.json en vez de
-# descargar la ultima version del registro, que rompe el schema (Prisma 7 elimina
-# datasource.url) — bug detectado al construir esta imagen por primera vez (TK-042).
+# pnpm exec (no npx): resuelve el binario Prisma 7.x pineado en package.json en vez de
+# descargar la ultima version del registro (bug real detectado al construir esta imagen
+# por primera vez con Prisma 5, TK-042 — el mismo motivo aplica ahora con Prisma 7).
+# El cliente generado (generator "prisma-client", TK-062) escribe TypeScript fuente
+# dentro de src/generated/ a proposito, para que el build principal de abajo lo compile
+# junto con el resto de src/ sin tocar rootDir (Guard 12).
 RUN pnpm --filter @restostock/backend exec prisma generate --schema=prisma/schema.prisma
 RUN pnpm --filter @restostock/backend build
 
 # Compilacion standalone de prisma/seed.ts (TK-051, bootstrap del primer admin en
 # produccion) — NO forma parte del build principal (tsconfig.json tiene rootDir=./src,
 # prisma/ queda fuera a proposito; ampliar rootDir a . rompe la estructura de dist/,
-# prohibido por el Guard 12 de AGENTS.md). seed.ts no importa nada de src/ (hashea el PIN
-# con un helper propio) precisamente para poder compilarse solo, sin arrastrar `tsx`/
-# esbuild a la imagen final — eso reintroduciria las CVEs que TK-044 elimino.
-RUN pnpm --filter @restostock/backend exec tsc prisma/seed.ts --outDir dist/prisma \
+# prohibido por el Guard 12 de AGENTS.md). seed.ts sigue sin importar nada de la logica
+# de negocio de src/ (hashea el PIN con un helper propio) — la unica importacion cruzada
+# es el cliente Prisma generado (src/generated/prisma/, boilerplate de ORM, no logica de
+# aplicacion), necesario desde TK-062 para el driver adapter. --rootDir . fija el output
+# en dist/prisma/seed.js (mismo path que docker-entrypoint.sh espera) en vez de que tsc
+# infiera un rootDir mas ancho por la importacion cruzada a src/generated/.
+RUN pnpm --filter @restostock/backend exec tsc prisma/seed.ts --outDir dist --rootDir . \
       --module NodeNext --moduleResolution NodeNext --target ES2022 \
       --esModuleInterop --skipLibCheck
 
@@ -53,6 +58,7 @@ FROM base AS deps-prod
 
 RUN pnpm install --frozen-lockfile --prod
 COPY apps/backend/prisma ./apps/backend/prisma
+COPY apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
 RUN pnpm --filter @restostock/backend exec prisma generate --schema=prisma/schema.prisma
 
 # ---- runner ----
@@ -80,6 +86,7 @@ COPY --from=deps-prod --chown=restostock:restostock /app/apps/backend/node_modul
 COPY --from=builder --chown=restostock:restostock /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder --chown=restostock:restostock /app/apps/backend/package.json ./apps/backend/package.json
 COPY --from=deps-prod --chown=restostock:restostock /app/apps/backend/prisma ./apps/backend/prisma
+COPY --from=deps-prod --chown=restostock:restostock /app/apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
 COPY --chown=restostock:restostock --chmod=755 apps/backend/docker-entrypoint.sh ./docker-entrypoint.sh
 
 USER restostock

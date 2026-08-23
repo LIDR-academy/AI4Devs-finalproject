@@ -1,4 +1,4 @@
-import { PrismaClient, User as PrismaUser } from '@prisma/client';
+import { PrismaClient, User as PrismaUser } from '../../../generated/prisma/client.js';
 import { User, UserRole, UserStatusType } from '../../../domain/auth/entities/User.js';
 import { Pin } from '../../../domain/auth/value-objects/Pin.js';
 import { IUserRepository } from '../../../domain/auth/repositories/IUserRepository.js';

@@ -2,16 +2,20 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider      = "prisma-client-js"
-  // linux-musl-openssl-3.0.x: node:24-alpine (Alpine 3.24) solo trae libssl.so.3 — el
-  // motor musl por defecto de Prisma 5.x enlaza contra OpenSSL 1.1, ausente en esta base
-  // (bug detectado al arrancar el contenedor por primera vez, TK-042/Guard 23).
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  // Prisma 7 (TK-062): sin motor Rust — requiere un driver adapter (@prisma/adapter-pg)
+  // en el constructor de PrismaClient. moduleFormat = "cjs" evita migrar todo el backend
+  // a ESM (el resto del proyecto sigue en CommonJS/NodeNext tal como estaba).
+  provider     = "prisma-client"
+  moduleFormat = "cjs"
+  // Dentro de src/ a proposito (no ../generated) — tsconfig.json fija rootDir=./src
+  // (Guard 12), y ampliarlo para incluir una carpeta hermana rompe la estructura de
+  // dist/. Generando aqui, tsc lo compila junto con el resto de src/ sin tocar tsconfig.
+  output       = "../src/generated/prisma"
 }
 
 datasource db {
+  // La URL de conexion se movio a prisma.config.ts (Prisma 7 ya no soporta `url` aqui).
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {

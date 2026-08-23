@@ -7,6 +7,8 @@ web_modules/
 # Build and Compilation Output
 dist/
 build/
+# Cliente Prisma generado (TK-062, generator "prisma-client") — codigo generado, no se commitea
+apps/backend/src/generated/
 .next/
 out/
 .nuxt/

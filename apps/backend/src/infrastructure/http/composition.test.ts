@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../generated/prisma/client.js';
 import { buildRepositoriesForEnvironment } from './composition.js';
 import { PrismaStockRepository } from '../stock/repositories/PrismaStockRepository.js';
 import { PrismaUserRepository } from '../auth/repositories/PrismaUserRepository.js';

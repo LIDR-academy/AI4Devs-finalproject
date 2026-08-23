@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../generated/prisma/client.js';
 import { AppOptions } from './app.js';
 import { PrismaStockRepository } from '../stock/repositories/PrismaStockRepository.js';
 import { PrismaUserRepository } from '../auth/repositories/PrismaUserRepository.js';
