@@ -2,7 +2,7 @@
 
 Este documento describe una propuesta de API REST orientada al dominio establecido en [documentos/arquitectura.md](arquitectura.md) y a las funcionalidades del sistema definidas en [readme.md](../readme.md).
 
-La API sigue un estilo REST y está agrupada por módulos funcionales: autenticación, socios, rutas, calendario, pagos y administración/avisos.
+La API sigue un estilo REST y está agrupada por módulos funcionales: autenticación, socios, rutas, calendario, pagos y administración/avisos. Además incorpora el flujo de propuesta de rutas por parte de los socios y la revisión administrativa antes de la publicación.
 
 ---
 
@@ -69,6 +69,8 @@ paths:
       tags: [Auth]
       summary: Registro inicial de un socio
       operationId: registerMember
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -110,6 +112,19 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Cerrar sesión
+      operationId: logoutMember
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Sesión cerrada correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /members/{memberId}:
     get:
       tags: [Members]
@@ -150,6 +165,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/Member'
 
+  /members/{memberId}/password:
+    put:
+      tags: [Members]
+      summary: Cambiar contraseña del socio
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Contraseña cambiada correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /routes:
     get:
       tags: [Routes]
@@ -162,7 +200,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [DRAFT, PUBLISHED, COMPLETED, CANCELLED]
+            enum: [PROPOSAL, PENDING_REVIEW, PUBLISHED, REJECTED, COMPLETED, CANCELLED]
         - name: difficulty
           in: query
           description: Nivel de dificultad
@@ -191,7 +229,7 @@ paths:
                     $ref: '#/components/schemas/Pagination'
     post:
       tags: [Routes]
-      summary: Crear una nueva ruta
+      summary: Crear una nueva ruta (administración)
       operationId: createRoute
       security:
         - bearerAuth: []
@@ -203,7 +241,7 @@ paths:
               $ref: '#/components/schemas/CreateRouteRequest'
             examples:
               crearRuta:
-                summary: Creación de una ruta de fin de semana
+                summary: Creación de una ruta de fin de semana por administración
                 value:
                   title: Ruta de la Sierra de Javalambre
                   description: Fin de semana con parada en restaurante y alojamiento.
@@ -239,6 +277,100 @@ paths:
                     departureDate: 2026-09-12
                     departureTime: 08:00:00
                     totalPrice: 215
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /members/{memberId}/route-proposals:
+    post:
+      tags: [Routes]
+      summary: Proponer una ruta desde el perfil del socio
+      operationId: createRouteProposal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteProposalRequest'
+            examples:
+              propuestaRuta:
+                summary: Propuesta de ruta enviada por un socio
+                value:
+                  title: Vuelta al Castillo de Cullera
+                  description: Ruta de senderismo con parada para almuerzo en el pueblo.
+                  difficulty: EASY
+                  distanceKm: 32
+                  meetingPoint: Aparcamiento del Mirador
+                  departureDate: 2026-10-05
+                  departureTime: 09:30:00
+                  returnDate: 2026-10-05
+                  hasLodging: false
+                  hasRestaurant: true
+                  basePrice: 25
+                  lodgingPrice: 0
+                  restaurantPrice: 18
+      responses:
+        '201':
+          description: Ruta propuesta correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /routes/proposals:
+    get:
+      tags: [Routes]
+      summary: Listar rutas pendientes de revisión administrativa
+      operationId: listRouteProposals
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PROPOSAL, PENDING_REVIEW, REJECTED]
+      responses:
+        '200':
+          description: Propuestas de rutas pendientes de aprobación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Route'
+
+  /routes/{routeId}/review:
+    post:
+      tags: [Routes]
+      summary: Revisar y aprobar o rechazar una propuesta de ruta
+      operationId: reviewRouteProposal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RouteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteReviewRequest'
+      responses:
+        '200':
+          description: Revisión aplicada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
         '403':
           $ref: '#/components/responses/Forbidden'
 
@@ -420,6 +552,33 @@ paths:
                     items:
                       $ref: '#/components/schemas/RouteRegistration'
 
+  /registrations/{registrationId}:
+    put:
+      tags: [Registrations]
+      summary: Cancelar inscripción a una ruta
+      operationId: cancelRegistration
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RegistrationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelRegistrationRequest'
+      responses:
+        '200':
+          description: Inscripción cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteRegistration'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /payments:
     post:
       tags: [Payments]
@@ -482,6 +641,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payment'
+
+  /payments/{paymentId}/refund:
+    post:
+      tags: [Payments]
+      summary: Procesar reembolso de un pago (solo admin)
+      operationId: refundPayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundPaymentRequest'
+      responses:
+        '200':
+          description: Reembolso procesado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /notifications:
     get:
@@ -556,6 +742,13 @@ components:
         format: uuid
     RouteId:
       name: routeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RegistrationId:
+      name: registrationId
       in: path
       required: true
       schema:
@@ -684,10 +877,25 @@ components:
         status:
           type: string
           enum: [ACTIVE, INACTIVE, BLOCKED]
+          description: Solo administradores pueden cambiar status
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          description: Contraseña actual para validación
+        newPassword:
+          type: string
+          format: password
+          description: Nueva contraseña (debe cumplir requisitos de seguridad)
 
     CreateRouteRequest:
       type: object
-      required: [title, description, difficulty, departureDate, status]
+      required: [title, description, difficulty, departureDate]
+      description: Crear una nueva ruta desde administración. Las rutas creadas por admin se publican inmediatamente (PUBLISHED). Solo socios pueden crear propuestas (PROPOSAL).
       properties:
         title:
           type: string
@@ -701,9 +909,6 @@ components:
           format: float
         meetingPoint:
           type: string
-        status:
-          type: string
-          enum: [DRAFT, PUBLISHED, COMPLETED, CANCELLED]
         departureDate:
           type: string
           format: date
@@ -720,17 +925,87 @@ components:
         basePrice:
           type: number
           format: double
+          description: Precio base (puede ser 0 para rutas gratuitas)
         lodgingPrice:
           type: number
           format: double
+          description: Coste de alojamiento (puede ser 0 o omitirse)
         restaurantPrice:
           type: number
           format: double
+          description: Coste del restaurante (puede ser 0 o omitirse)
+
+    RouteProposalRequest:
+      type: object
+      required: [title, description, difficulty, departureDate]
+      description: Proponer una nueva ruta desde un socio. La propuesta se guarda en estado PROPOSAL y requiere revisión administrativa antes de publicarse.
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        difficulty:
+          type: string
+          enum: [EASY, MEDIUM, HARD]
+        distanceKm:
+          type: number
+          format: float
+        meetingPoint:
+          type: string
+        departureDate:
+          type: string
+          format: date
+        departureTime:
+          type: string
+          format: time
+        returnDate:
+          type: string
+          format: date
+        hasLodging:
+          type: boolean
+        hasRestaurant:
+          type: boolean
+        basePrice:
+          type: number
+          format: double
+          description: Precio base (puede ser 0 para rutas gratuitas)
+        lodgingPrice:
+          type: number
+          format: double
+          description: Coste de alojamiento (puede ser 0 o omitirse)
+        restaurantPrice:
+          type: number
+          format: double
+          description: Coste del restaurante (puede ser 0 o omitirse)
+
+    RouteReviewRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [APPROVED, REJECTED]
+        reviewNotes:
+          type: string
+        rejectionReason:
+          type: string
 
     Route:
       type: object
       properties:
         routeId:
+          type: string
+          format: uuid
+        createdByMember:
+          type: string
+          format: uuid
+        createdByAdmin:
+          type: string
+          format: uuid
+        createdByType:
+          type: string
+          enum: [MEMBER, ADMIN]
+        reviewedBy:
           type: string
           format: uuid
         title:
@@ -743,7 +1018,7 @@ components:
           type: number
         status:
           type: string
-          enum: [DRAFT, PUBLISHED, COMPLETED, CANCELLED]
+          enum: [PROPOSAL, PENDING_REVIEW, PUBLISHED, REJECTED, COMPLETED, CANCELLED]
         departureDate:
           type: string
           format: date
@@ -770,7 +1045,7 @@ components:
           type: string
         status:
           type: string
-          enum: [DRAFT, PUBLISHED, COMPLETED, CANCELLED]
+          enum: [PROPOSAL, PENDING_REVIEW, PUBLISHED, REJECTED, COMPLETED, CANCELLED]
         totalPrice:
           type: number
 
@@ -810,6 +1085,7 @@ components:
     CreateRouteMediaRequest:
       type: object
       required: [mediaType, fileUrl]
+      description: Subir un archivo multimedia para una ruta. El cloudKey se genera automáticamente en backend.
       properties:
         mediaType:
           type: string
@@ -817,10 +1093,13 @@ components:
         fileUrl:
           type: string
           format: uri
+          description: URL del archivo (puede ser URL pública o privada)
         caption:
           type: string
+          description: Leyenda o descripción de la imagen/video
         isCover:
           type: boolean
+          description: Si es true, esta será la imagen de portada de la ruta
 
     CalendarEvent:
       type: object
@@ -1024,6 +1303,22 @@ components:
           type: integer
         totalPages:
           type: integer
+
+    CancelRegistrationRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          description: Motivo de la cancelación (opcional pero recomendado para auditoría)
+
+    RefundPaymentRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          description: Motivo del reembolso (obligatorio para auditoría)
 ```
 
 ---
@@ -1044,6 +1339,7 @@ La API propuesta se concentra en los siguientes flujos funcionales:
 
 - `POST /auth/login`: valida credenciales del socio o administrador y devuelve JWT y perfil.
 - `POST /auth/register`: crea el registro inicial de un socio y su cuenta de acceso.
+- `POST /auth/logout`: cierra sesión
 
 ### 2.2. Socios
 
@@ -1054,6 +1350,9 @@ La API propuesta se concentra en los siguientes flujos funcionales:
 
 - `GET /routes`: obtiene rutas públicas o visibles.
 - `POST /routes`: crea una nueva ruta, usado por administración.
+- `POST /members/{memberId}/route-proposals`: permite a un socio proponer una nueva ruta para revisión.
+- `GET /routes/proposals`: lista propuestas de rutas pendientes de revisión administrativa.
+- `POST /routes/{routeId}/review`: aprueba o rechaza una propuesta de ruta.
 - `GET /routes/{routeId}`: obtiene una ruta con detalle.
 - `PUT /routes/{routeId}`: actualiza una ruta.
 - `GET /routes/{routeId}/media`: devuelve medios asociados.
@@ -1089,4 +1388,44 @@ La API se ha diseñado para satisfacer la arquitectura de monolito modular propu
 - `registrations` y `payments` para gestión transaccional de cobros.
 - `notifications` para correo y avisos.
 
-La documentación OpenAPI puede evolucionar con nuevas operaciones cuando se definan los casos de uso de administración avanzada, validación de permisos y auditoría.
+---
+
+## 4. Control de acceso por rol
+
+La API implementa dos roles principales:
+
+### **SOCIO**
+Permisos:
+- `POST /auth/login` - Iniciar sesión
+- `POST /auth/register` - Registrarse
+- `POST /auth/logout` - Cerrar sesión
+- `GET /members/{memberId}` - Ver su propio perfil
+- `PUT /members/{memberId}` - Actualizar su propio perfil (excepto status)
+- `PUT /members/{memberId}/password` - Cambiar su propia contraseña
+- `GET /routes` - Listar rutas publicadas
+- `GET /routes/{routeId}` - Ver detalle de ruta
+- `GET /routes/{routeId}/media` - Ver galería de ruta
+- `POST /members/{memberId}/route-proposals` - Proponer una nueva ruta
+- `GET /calendar` - Consultar calendario de actividades
+- `POST /routes/{routeId}/registrations` - Inscribirse en una ruta
+- `GET /members/{memberId}/registrations` - Ver sus inscripciones
+- `PUT /registrations/{registrationId}` - Cancelar su propia inscripción
+- `POST /payments` - Crear pago para su inscripción
+- `GET /payments/{paymentId}` - Consultar estado de su pago
+- `GET /notifications` - Ver avisos dirigidos a él
+
+### **ADMIN**
+Permisos (incluye todos los de SOCIO, más):
+- `POST /routes` - Crear ruta directamente (se publica como PUBLISHED)
+- `GET /routes` - Listar todas las rutas (incluyendo DRAFT, PENDING_REVIEW, etc.)
+- `GET /routes/proposals` - Listar propuestas pendientes de revisión
+- `POST /routes/{routeId}/review` - Revisar y aprobar/rechazar propuestas
+- `PUT /routes/{routeId}` - Actualizar cualquier ruta
+- `POST /routes/{routeId}/media` - Subir media para una ruta
+- `POST /calendar/events` - Crear eventos en el calendario
+- `POST /notifications` - Crear avisos
+- `POST /notifications/{notificationId}/send` - Enviar avisos a socios
+- `POST /payments/{paymentId}/refund` - Procesar reembolsos
+- `PUT /members/{memberId}` - Actualizar perfil de cualquier socio (incluyendo status)
+
+**Nota**: Los endpoints sin especificación explícita de seguridad están disponibles públicamente (ej: `GET /routes` para consultar rutas publicadas sin estar autenticado).

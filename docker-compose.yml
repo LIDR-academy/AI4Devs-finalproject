@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: frapen-angels-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: frapen_angels
+      POSTGRES_USER: frapen_user
+      POSTGRES_PASSWORD: frapen_password_dev
+      POSTGRES_INITDB_ARGS: --encoding=UTF8
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frapen_user -d frapen_angels"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - frapen-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  frapen-network:
+    driver: bridge
