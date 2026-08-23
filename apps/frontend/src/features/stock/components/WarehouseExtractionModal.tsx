@@ -114,16 +114,18 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
 
 const UNIT_BY_INSUMO_ID: Record<string, string> = { 'ins-2': 'L', 'ins-3': 'UNITS' };
 
-function resolveUnitOfMeasure(insumoId: string): string {
-  return UNIT_BY_INSUMO_ID[insumoId] ?? 'KG';
+function resolveUnitOfMeasure(selectedInsumoId: string, insumos: Insumo[]): string {
+  const found = insumos.find((i) => i.id === selectedInsumoId);
+  if (found?.unit) return found.unit;
+  return UNIT_BY_INSUMO_ID[selectedInsumoId] ?? 'KG';
 }
 
-function buildLocalRemanenteFromExtraction(selectedInsumoId: string, result: Awaited<ReturnType<typeof StockService.recordExtraction>>) {
+function buildLocalRemanenteFromExtraction(selectedInsumoId: string, insumos: Insumo[], result: Awaited<ReturnType<typeof StockService.recordExtraction>>) {
   return {
     id: result.remanenteId,
     insumoId: result.insumoId,
     insumoName: result.insumoName,
-    unitOfMeasure: resolveUnitOfMeasure(selectedInsumoId),
+    unitOfMeasure: resolveUnitOfMeasure(selectedInsumoId, insumos),
     currentQuantity: result.quantityExtracted,
     initialQuantity: result.quantityExtracted,
     location: result.location,
@@ -182,22 +184,25 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
   </form>
 );
 
-function useExtractionForm(onSuccess: () => void, onClose: () => void) {
-  const [selectedInsumoId, setSelectedInsumoId] = useState('ins-1');
+function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: () => void) {
+  const [selectedInsumoId, setSelectedInsumoId] = useState('');
   const [quantity, setQuantity] = useState(1.0);
   const [location, setLocation] = useState('KITCHEN_FRIDGE');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const activeInsumoId = selectedInsumoId || (insumos.length > 0 ? insumos[0].id : '');
 
   const handleIncrement = () => setQuantity((prev) => Math.round((prev + 0.5) * 10) / 10);
   const handleDecrement = () => setQuantity((prev) => Math.max(0.5, Math.round((prev - 0.5) * 10) / 10));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeInsumoId) return;
     setIsSubmitting(true);
 
     try {
-      const result = await StockService.recordExtraction({ insumoId: selectedInsumoId, quantity: quantity.toString(), toLocation: location });
-      KitchenService.addLocalRemanente(buildLocalRemanenteFromExtraction(selectedInsumoId, result));
+      const result = await StockService.recordExtraction({ insumoId: activeInsumoId, quantity: quantity.toString(), toLocation: location });
+      KitchenService.addLocalRemanente(buildLocalRemanenteFromExtraction(activeInsumoId, insumos, result));
       onSuccess();
       onClose();
     } catch (err) {
@@ -208,7 +213,7 @@ function useExtractionForm(onSuccess: () => void, onClose: () => void) {
     }
   };
 
-  return { selectedInsumoId, setSelectedInsumoId, quantity, setQuantity, location, setLocation, isSubmitting, handleIncrement, handleDecrement, handleSubmit };
+  return { selectedInsumoId: activeInsumoId, setSelectedInsumoId, quantity, setQuantity, location, setLocation, isSubmitting, handleIncrement, handleDecrement, handleSubmit };
 }
 
 export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> = ({
@@ -216,11 +221,24 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
   onClose,
   onSuccess,
 }) => {
-  const form = useExtractionForm(onSuccess, onClose);
+  const [insumos, setInsumos] = useState<Insumo[]>([]);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      StockService.getInsumos()
+        .then((items) => {
+          setInsumos(items.map((i) => ({ id: i.id, name: i.name, stock: Number(i.warehouseStock), unit: i.unitOfMeasure })));
+        })
+        .catch(() => {
+          setInsumos(StockService.getAvailableInsumos());
+        });
+    }
+  }, [isOpen]);
+
+  const displayInsumos = insumos.length > 0 ? insumos : StockService.getAvailableInsumos();
+  const form = useExtractionForm(displayInsumos, onSuccess, onClose);
 
   if (!isOpen) return null;
-
-  const insumos = StockService.getAvailableInsumos();
 
   return (
     <Modal maxWidth="500px" width="90%">
@@ -234,7 +252,7 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
       />
 
       <ExtractionForm
-        insumos={insumos}
+        insumos={displayInsumos}
         selectedInsumoId={form.selectedInsumoId}
         onInsumoChange={form.setSelectedInsumoId}
         location={form.location}

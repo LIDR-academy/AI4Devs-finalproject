@@ -55,7 +55,7 @@ services:
     container_name: restostock_frontend
     restart: unless-stopped
     ports:
-      - "80:8080"
+      - "${FRONTEND_PORT:-8080}:8080"
     depends_on:
       backend:
         condition: service_healthy
