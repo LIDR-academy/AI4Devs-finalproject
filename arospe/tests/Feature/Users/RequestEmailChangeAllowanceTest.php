@@ -8,11 +8,16 @@
 // alone, so an administrator editing someone else's row could exhaust a victim's own 3/hour
 // allowance and leave them unable to change their own address.
 //
-// tests/Feature/Settings/EmailChangeTest.php already covers the (target, actor) limiter's basic
-// 4th-call-refused and per-user-scoping behaviour for the single-caller (self-service) case,
-// where target === actor -- that file is not duplicated here. This file is specifically about
-// the CROSS-actor behaviour: what happens once a second, distinct actor (an administrator) can
-// also call this action against the same target.
+// tests/Feature/Settings/EmailChangeTest.php's two throttle tests ("a 4th email change request
+// within the throttle window is rejected...", "the email change throttle is scoped per user, not
+// global") call RequestEmailChange directly with no actingAs() beforehand, so Auth::id() is null
+// there -- they exercise the UNAUTHENTICATED-actor path (both limiters live, actorKey =
+// 'unauthenticated'), never the genuine self-service case where target === Auth::user(). This
+// file is specifically about the CROSS-actor behaviour: what happens once a second, distinct
+// actor (an administrator) can also call this action against the same target -- plus, since
+// story 0015 Phase 4 re-audit finding L-1, a dedicated self-service test proving the
+// per-(target, actor) limiter alone still caps a genuine self-service caller now that the F-A
+// exemption has removed the aggregate limiter as a backstop on that path.
 
 use App\Actions\Users\RequestEmailChange;
 use App\Enums\UserStatus;
@@ -202,4 +207,47 @@ test('an administrator exhausting the per-target aggregate ceiling does not prev
         ->assertHasNoErrors();
 
     expect($target->fresh()->pending_email)->toBe('targets-own-choice-after-aggregate@arospe.es');
+});
+
+// Story 0015 Phase 4 re-audit finding L-1: the F-A fix above exempts a genuine self-service
+// caller from the per-target AGGREGATE ceiling only -- it must never touch the narrower
+// per-(target, actor) limiter, which remains the ONLY control capping a self-service caller's
+// own request rate. Nothing in the suite proved that directly: every "self-service" test in this
+// file exhausts a DIFFERENT actor's allowance and then shows the target's own request still
+// succeeds, and EmailChangeTest.php's two throttle tests run with no authenticated actor at all
+// (see the file header above). This test authenticates as the target themselves and drives four
+// requests through the real self-service call site, App\Livewire\Settings\Profile, so it fails if
+// the composite (target, actor) limiter were ever accidentally exempted alongside the aggregate
+// one, or weakened in any other way.
+test('the per-(target, actor) limiter still refuses a targets own 4th self-service request within the window', function () {
+    Notification::fake();
+
+    $target = User::factory()->create(['status' => UserStatus::Active]);
+    $this->actingAs($target);
+
+    $component = Livewire::test(Profile::class)
+        ->set('email', 'self-service-1@arospe.es')
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    $component->set('email', 'self-service-2@arospe.es')
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    $component->set('email', 'self-service-3@arospe.es')
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    // The target's own composite (target, actor) allowance is now exhausted at 3/hour -- the
+    // aggregate-limiter exemption (F-A) applies only to the OTHER control, so this one must still
+    // refuse a 4th self-service request within the same window.
+    $component->set('email', 'self-service-4@arospe.es')
+        ->call('updateProfileInformation')
+        ->assertHasErrors(['email']);
+
+    // The refused 4th call never reaches forceFill()->save(): pending_email stays whatever the
+    // 3rd (allowed) call left it at.
+    expect($target->fresh()->pending_email)->toBe('self-service-3@arospe.es');
+
+    Notification::assertSentOnDemandTimes(PendingEmailVerification::class, 3);
 });
