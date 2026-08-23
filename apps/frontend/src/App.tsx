@@ -68,7 +68,6 @@ interface HeaderActionsProps {
   onMovementHistory: () => void;
   onCatalogManagement: () => void;
   onSync: () => void;
-  onLogout: () => void;
 }
 
 const HeaderActions: React.FC<HeaderActionsProps> = ({
@@ -79,7 +78,6 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
   onMovementHistory,
   onCatalogManagement,
   onSync,
-  onLogout,
 }) => (
   <>
     <button className="btn-touch btn-secondary" onClick={onReconcile} id="btn-open-reconciliation" title="Cierre de Turno y Conciliación">
@@ -111,11 +109,6 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
       <RefreshCw size={20} className={isLoading ? 'spin' : ''} />
       Sincronizar
     </button>
-
-    <button className="btn-touch btn-danger" onClick={onLogout} id="btn-logout">
-      <LogOut size={20} />
-      Cerrar Sesión
-    </button>
   </>
 );
 
@@ -135,22 +128,31 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       marginBottom: '24px',
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       flexWrap: 'wrap',
       gap: '16px',
     }}
   >
-    <div>
-      <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <Package style={{ color: 'var(--color-primary)' }} /> RestoStock FEFO Dashboard - Control de Inventario FEFO
-      </h1>
-      <p style={{ color: 'var(--text-secondary)', marginTop: '4px', fontSize: '0.9rem' }}>
-        Sistema Táctil de Inventario en Tiempo Real para Cocinas Industriales
-      </p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Package style={{ color: 'var(--color-primary)' }} /> RestoStock FEFO Dashboard - Control de Inventario FEFO
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', marginTop: '4px', fontSize: '0.9rem' }}>
+          Sistema Táctil de Inventario en Tiempo Real para Cocinas Industriales
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <UserBadge name={currentUser.name} role={currentUser.role} />
+        <button className="btn-touch btn-danger" onClick={onLogout} id="btn-logout">
+          <LogOut size={20} />
+          Cerrar Sesión
+        </button>
+      </div>
     </div>
 
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <UserBadge name={currentUser.name} role={currentUser.role} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
       <HeaderActions
         isLoading={isLoading}
         onReconcile={onReconcile}
@@ -159,7 +161,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         onMovementHistory={onMovementHistory}
         onCatalogManagement={onCatalogManagement}
         onSync={onSync}
-        onLogout={onLogout}
       />
     </div>
   </header>
