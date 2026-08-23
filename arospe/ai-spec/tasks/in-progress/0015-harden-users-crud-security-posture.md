@@ -9,7 +9,7 @@ that is what made deferring them from 0004 acceptable — but each is a small, w
 item worth closing now that this screen carries real UI traffic (story 0006) and a real roles
 mechanism (stories 0008/0008a/0009/0010). This story consolidates what remains of F4–F12 plus
 F17/F18 into one pass rather than nine micro-tasks. **F13 (step-up authentication) is no longer part
-of this story** — it is split out as its own sibling, [0015a](0015a-step-up-auth-privileged-user-actions.md),
+of this story** — it is split out as its own sibling, [0015a](../0015a-step-up-auth-privileged-user-actions.md),
 because it needs a UI affordance the Users modals do not have and is therefore fullstack, not
 backend. Findings F2/F3 (name-based role matching, guard enforced only in the component) were tracked
 on stories 0008/0009 and are closed. F14 was recorded as accepted-as-designed and needs no fix.
@@ -26,9 +26,9 @@ already shipped. Phase 3 must re-locate every cited line rather than trusting a 
 ### Deferred, deliberately — not silently dropped
 
 **F18 — an administrator cannot cancel another user's in-flight pending email change.**
-Verified at `HEAD`: [`RequestEmailChange`](../../app/Actions/Users/RequestEmailChange.php) clears
+Verified at `HEAD`: [`RequestEmailChange`](../../../app/Actions/Users/RequestEmailChange.php) clears
 `pending_email` when handed the address already on the account (lines 34–40), but
-[`UpdateUser`](../../app/Actions/Users/UpdateUser.php) only calls it when the submitted address
+[`UpdateUser`](../../../app/Actions/Users/UpdateUser.php) only calls it when the submitted address
 *differs* from the current one (lines 97–99), so that clearing branch is unreachable from the Users
 screen — `App\Livewire\Settings\Profile` can reach it, this editor cannot. **Decision (human,
 2026-08-23): defer.** This is a missing convenience capability, not an attack path — no data is
@@ -153,7 +153,7 @@ Phase 3 must re-locate each site.
 ### F4 — lock the one remaining server-derived Livewire property (`app/Livewire/Users/Index.php`)
 
 **Half of this finding is already closed and must not be re-implemented.** `$deletingUserName` is
-**already** `#[Locked]` at [`Index.php:77-78`](../../app/Livewire/Users/Index.php), alongside
+**already** `#[Locked]` at [`Index.php:77-78`](../../../app/Livewire/Users/Index.php), alongside
 `$editingUserId` (41–42), `$editingPendingEmail` (44–45) and `$deletingUserId` (47–48). The only
 unlocked server-derived property left is:
 
@@ -169,7 +169,7 @@ Add `#[Locked]`, matching `app/Livewire/Settings/Security.php`'s `#[Locked] publ
 
 > **This change breaks two existing tests, and both are part of this story's scope.**
 >
-> 1. [`tests/Feature/Users/IndexTest.php:199`](../../tests/Feature/Users/IndexTest.php) reads
+> 1. [`tests/Feature/Users/IndexTest.php:199`](../../../tests/Feature/Users/IndexTest.php) reads
 >    `$component = Livewire::test(Index::class)->set('users', []);` — a `set()` against a `#[Locked]`
 >    property raises `Livewire\Exceptions\CannotUpdateLockedPropertyException`. That `set('users', [])`
 >    exists only to prove `usersSummary()` computes from its own query rather than from the `$users`
@@ -177,7 +177,7 @@ Add `#[Locked]`, matching `app/Livewire/Settings/Security.php`'s `#[Locked] publ
 >    the same thing without writing the property — the shape to prefer is asserting `usersSummary()`
 >    against database state that `$users` could not have supplied. Do **not** delete the test, and do
 >    **not** weaken it to a smoke check: the independence it pins is real coverage.
-> 2. [`tests/Feature/Users/IndexRenderingTest.php:114-116`](../../tests/Feature/Users/IndexRenderingTest.php)
+> 2. [`tests/Feature/Users/IndexRenderingTest.php:114-116`](../../../tests/Feature/Users/IndexRenderingTest.php)
 >    ("the empty state renders when there are no users to display") reads
 >    `Livewire::test(Index::class)->set('users', [])->assertSee('No users found.');`. Here the property
 >    write is **not** incidental — it is the test's only mechanism, and its own comment records why: with
@@ -204,7 +204,7 @@ email-change verification hash.
 
 **Follow the shipped sibling precedent, not the seeder's.** This story's first draft said to match
 `RolePermissionSeeder`'s `Log::warning`-for-privileged convention. That is the wrong precedent now:
-[`app/Livewire/Roles/Index.php:244`](../../app/Livewire/Roles/Index.php) and `:335` are the *same
+[`app/Livewire/Roles/Index.php:244`](../../../app/Livewire/Roles/Index.php) and `:335` are the *same
 kind of screen* — a permission-gated admin CRUD Livewire component — and they ship this exact shape,
 `Log::info` for every outcome including deletes:
 
@@ -241,7 +241,7 @@ reason `Roles\Index` captures `$beforePermissionNames` before its own sync.
 Add a `RateLimiter::attempt()` guard mirroring `RequestEmailChange`'s existing pattern exactly (same
 facade, same `ValidationException` conversion), keyed on `Auth::id()`, `maxAttempts: 10`,
 `decaySeconds: 3600`. It belongs in the action (not the component), per
-[base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers) —
+[base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers) —
 a rate limit protecting an operation is a property of the operation. Place it **after**
 `Gate::authorize('create', User::class)` (line 41) and **before** the `DB::transaction()` (line 63),
 so an unauthorized caller is refused without consuming quota and no refused attempt opens a
@@ -326,10 +326,10 @@ classifies as sensitive.
 > target: it asks the Livewire component to re-derive tier membership, which is exactly the pattern
 > story 0008a removed from this very component (`administratorRoleId()` and `authorizeRoleChange()`
 > were **deleted**, not relocated — see
-> [base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
-> and [security/livewire-authorization.md](../../docs/security/livewire-authorization.md)).
+> [base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
+> and [security/livewire-authorization.md](../../../docs/security/livewire-authorization.md)).
 > No branch is needed there, because the policy already contains it —
-> verified at [`app/Policies/UserPolicy.php:56-67`](../../app/Policies/UserPolicy.php):
+> verified at [`app/Policies/UserPolicy.php:56-67`](../../../app/Policies/UserPolicy.php):
 > `updateSensitiveAttributes()` delegates to `update()` first, then returns `true` outright for any
 > target that does not hold the Administrator role. So the unconditional call is *identical* to
 > `update` for an ordinary target and strictly stronger for an Administrator-holding one.
@@ -338,7 +338,7 @@ classifies as sensitive.
 > **Human decision, 2026-08-23 (resolving Phase 2 finding F-A): an administrator may always open and
 > edit their own row** (name, email) **— what they may never do is change their own role or status.**
 > That second half is *already* true today and is untouched by this finding: `UpdateUser`'s
-> `$isSelfEdit` branch (verified at [`UpdateUser.php:73-92`](../../app/Actions/Users/UpdateUser.php))
+> `$isSelfEdit` branch (verified at [`UpdateUser.php:73-92`](../../../app/Actions/Users/UpdateUser.php))
 > never calls `authorizeRoleAndStatusChange()` and never applies a submitted role/status for a
 > self-edit — `IndexTest.php:670`/`:687` already pin the silent-ignore behaviour. So `openEditModal()`
 > gates as:
@@ -369,7 +369,7 @@ story turns into an unexplained regression:
    own row** — the modal's disclosure of another user's `pending_email`/`status` before any save
    attempt is itself the problem, and reopening a per-tier branch in the component to preserve
    rename-only access there would reintroduce the pattern story 0008a deliberately removed. It breaks
-   [`tests/Feature/Users/IndexTest.php:982`](../../tests/Feature/Users/IndexTest.php) ("saving an
+   [`tests/Feature/Users/IndexTest.php:982`](../../../tests/Feature/Users/IndexTest.php) ("saving an
    existing Administrator without changing their role … succeeds without the stricter permission"),
    which must be rewritten to assert the new refusal at `openEditModal` — a **deliberate,
    story-scoped test change**, recorded as such rather than quietly amended.
@@ -390,7 +390,7 @@ story turns into an unexplained regression:
    another Administrator-holding target the actor lacks the stricter permission for. The
    `Gate::allows()`-is-a-UI-hint rule requires the hint to reuse *the same rule* the guarded call
    authorizes against — see
-   [architecture/authorization.md](../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer).
+   [architecture/authorization.md](../../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer).
    This changes `IndexTest.php:110-112`, which asserts `canEdit->toBeTrue()` for an
    Administrator-holding target viewed by an actor lacking the stricter permission — that assertion's
    fixture is an *other* target, so it becomes `toBeFalse()` unchanged by the self-row exemption; a
@@ -410,7 +410,7 @@ story turns into an unexplained regression:
 
 **Read this whole bullet before touching the property — the obvious fix reopens a documented bug.**
 
-The property today is, verified at [`Index.php:66-73`](../../app/Livewire/Users/Index.php):
+The property today is, verified at [`Index.php:66-73`](../../../app/Livewire/Users/Index.php):
 
 ```php
 /**
@@ -424,7 +424,7 @@ public UserStatus $status = UserStatus::Inactive;
 
 That non-nullability is **deliberate and load-bearing**, established by
 [`docs/errors-log.md` — "A `null` Livewire property bound to a native `<select>` silently dropped the
-user's own pick"](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16).
+user's own pick"](../../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16).
 This story's first draft said to retype it to `public ?UserStatus $status` → `public ?string $status`.
 **That instruction was wrong and is withdrawn**: the nullable retype reintroduces exactly that bug,
 in which a user's first-option pick is silently discarded with the correct value still displayed.
@@ -517,7 +517,7 @@ against a rolled-back user, and it keeps working identically for a synchronous s
 
 **Half of this finding is closed; the half that matters is not.** Story 0008a **already added** the
 `DB::transaction()` this finding asked for — verified at
-[`UpdateUser.php:79-93`](../../app/Actions/Users/UpdateUser.php), wrapping `fill()` / `save()` /
+[`UpdateUser.php:79-93`](../../../app/Actions/Users/UpdateUser.php), wrapping `fill()` / `save()` /
 `syncRoles()`. But the atomicity goal it was added for is **not** achieved, because the delegation to
 `RequestEmailChange` runs *after* the transaction has already committed:
 
@@ -552,7 +552,7 @@ Gherkin scenario forbids, and it is live today.
   existing `DB::transaction()` closure satisfies the required outcome but violates this constraint,
   and it is the precise shape
   [`docs/errors-log.md` — "Wrapping existing code in a `DB::transaction()` moved a cache flush nobody
-  had written"](../../docs/errors-log.md#wrapping-existing-code-in-a-dbtransaction-moved-a-cache-flush-nobody-had-written--2026-08-21)
+  had written"](../../../docs/errors-log.md#wrapping-existing-code-in-a-dbtransaction-moved-a-cache-flush-nobody-had-written--2026-08-21)
   warns about: a wrapper relocates every side effect of the wrapped code, including the ones the diff
   does not show. Read that entry before choosing a shape.
 - **Recommended shape:** run the email-change delegation **after `authorizeRoleAndStatusChange()` and
@@ -580,7 +580,7 @@ Gherkin scenario forbids, and it is live today.
 
 `deleteUser()` (201) resolves the target (202), authorizes (204) and deletes (206) with no self-check.
 `UserPolicy::delete()` has none either — verified at
-[`UserPolicy.php:113-129`](../../app/Policies/UserPolicy.php), and a **Super Admin actor bypasses that
+[`UserPolicy.php:113-129`](../../../app/Policies/UserPolicy.php), and a **Super Admin actor bypasses that
 policy entirely** via `Gate::before`, so nothing stops a Super Admin actor, or any actor whose own row
 `UserPolicy::delete()` would otherwise allow, from deleting their own account from this screen.
 
@@ -621,7 +621,7 @@ same reasoning `UpdateUser`'s direct-throw Super Admin refusal already records a
 
 **The naming half of this finding is already closed and must not be re-implemented.** It asked for
 the self-edit check to be extracted out of a flag named `$applyRoleAndStatus`. Story 0008a did that:
-verified at [`UpdateUser.php:73`](../../app/Actions/Users/UpdateUser.php), the code reads
+verified at [`UpdateUser.php:73`](../../../app/Actions/Users/UpdateUser.php), the code reads
 `$isSelfEdit = Auth::user()?->is($user) ?? false;`, and `$applyRoleAndStatus` no longer exists as a
 parameter anywhere.
 
@@ -642,7 +642,7 @@ Recorded rather than silently removed. F12 asked to guard against two `null`s sa
 `$wasAdministrator`/`$willBeAdministrator` in `Index::authorizeRoleChange()`, an id-to-id comparison
 against an `administratorRoleId()` lookup. **Both methods were deleted by story 0008a** and the
 comparison no longer exists in any form. The replacement, verified at
-[`UpdateUser.php:151-152`](../../app/Actions/Users/UpdateUser.php), is row-shaped and cannot be
+[`UpdateUser.php:151-152`](../../../app/Actions/Users/UpdateUser.php), is row-shaped and cannot be
 satisfied by two nulls:
 
 ```php
@@ -701,14 +701,14 @@ no acceptance criterion.**
         `confirmDelete()`), and `save()` with `$editingUserId` unset silently takes the **create**
         branch instead, which would make the test assert an unrelated rule (`CreateUser`'s
         `promoteToAdministrator` gate) and pass for the wrong reason — exactly the vacuous-coverage
-        trap [`docs/errors-log.md`](../../docs/errors-log.md) records twice. **The shape to use instead
+        trap [`docs/errors-log.md`](../../../docs/errors-log.md) records twice. **The shape to use instead
         is the one already shipped twice in this repo**: call the opener while the actor still holds
         the stricter permission (so it succeeds and reaches the mutating call), then revoke the
         permission and flush the permission cache, then call `save()`/`deleteUser()` and assert the
         refusal there —
-        [`tests/Feature/Users/IndexTest.php:746`](../../tests/Feature/Users/IndexTest.php) is the
+        [`tests/Feature/Users/IndexTest.php:746`](../../../tests/Feature/Users/IndexTest.php) is the
         `save()` form of this shape, and
-        [`tests/Feature/Roles/IndexTest.php:462-481`](../../tests/Feature/Roles/IndexTest.php) the
+        [`tests/Feature/Roles/IndexTest.php:462-481`](../../../tests/Feature/Roles/IndexTest.php) the
         `deleteRole()` form — so F1's coverage does not silently degrade to "refused somewhere before
         the write, don't know where".
       - `IndexTest.php:1007` ("changing an Administrators status without the stricter permission is
@@ -786,14 +786,14 @@ no acceptance criterion.**
       invitation token, or an email-change hash. Assert the before-values are the pre-write ones (a
       log line written after `save()` from the model instance would report the new value as the old).
 - [ ] **Full-suite regression:** the whole existing suite passes. Per
-      [base-standards.md](../../docs/conventions/base-standards.md#steps-1-and-2-are-the-iteration-forms-run-both-unscoped-before-declaring-the-work-done),
+      [base-standards.md](../../../docs/conventions/base-standards.md#steps-1-and-2-are-the-iteration-forms-run-both-unscoped-before-declaring-the-work-done),
       the record is an **unscoped** `php artisan test` and an **unscoped** `vendor/bin/pint --format
       agent` — not `--filter` / `--dirty`. This story changes a validation-facing property type and a
       permission-facing UI hint, so its blast radius is wider than its own feature by construction.
 
 ## Expected outcome
 The Users CRUD backend built in story 0004 has no known non-blocking security gaps left open, except
-the two deliberately carried elsewhere (step-up authentication → [0015a](0015a-step-up-auth-privileged-user-actions.md);
+the two deliberately carried elsewhere (step-up authentication → [0015a](../0015a-step-up-auth-privileged-user-actions.md);
 cancelling an in-flight email change → deferred). Every server-derived property is locked; every
 method that discloses or mutates state is authorized, with the disclosure check no weaker than the
 write check it precedes and no tier logic re-derived in the component; a forged or empty status value
@@ -864,20 +864,20 @@ create, edit and delete each leave a structured audit line matching the Roles sc
       re-audits specifically against F4–F11 and F17's closure, and confirms F12/F13/F18 are correctly
       dispositioned rather than forgotten.
 - [ ] Documentation updated (docs-keeper):
-      - [`docs/security/livewire-authorization.md`](../../docs/security/livewire-authorization.md) —
+      - [`docs/security/livewire-authorization.md`](../../../docs/security/livewire-authorization.md) —
         its "gate every method that mutates *or discloses*" section gains this story's disclosure
         gates as the shipped example, including **why the disclosure check is the stronger ability**
         and why the component performs no tier lookup to get there.
-      - [`docs/api/routes.md`](../../docs/api/routes.md)'s `users.index` subsection — the per-row
+      - [`docs/api/routes.md`](../../../docs/api/routes.md)'s `users.index` subsection — the per-row
         `canEdit` bullet currently states that `canEdit` comes from `Gate::allows('update', $user)`
         and that it "needs only `users.edit`" for an Administrator-holding target. **Both become false
         the day this ships**; correct them rather than appending. The same claim appears in
         `loadUsers()`'s own docblock (`Index.php:271-292`) — that half is Phase 3's, not
         `docs-keeper`'s, but the two must be corrected together.
-      - [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md)'s
+      - [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md)'s
         `Gate::allows()`-is-a-UI-hint section — same correction, plus the new self-delete guard as a
         second example of a rule that must live outside `Gate` because of the `Gate::before` bypass.
-      - [`docs/errors-log.md`](../../docs/errors-log.md) — **only if** Phase 3/4/5 produces a real
+      - [`docs/errors-log.md`](../../../docs/errors-log.md) — **only if** Phase 3/4/5 produces a real
         mistake. The F10 ordering hazard is a *forward-looking* application of an entry that already
         exists; per this project's precedent it is cross-referenced, not duplicated.
 - [ ] Acceptance criteria met.
@@ -894,13 +894,13 @@ overtaken by later stories. Recorded here so the same drift is visible rather th
 | F8 | retype to `public ?string $status` | property is deliberately non-nullable per a documented errors-log entry | retype to non-nullable `public string`; the "existing dataset row" it cited does not exist |
 | F10 | add the `DB::transaction()` | 0008a added it; the email delegation runs **after** the commit | re-scoped to the ordering, with an explicit no-mail-on-rollback constraint |
 | F12 | fix the null-collision in `authorizeRoleChange()` | both that method and `administratorRoleId()` were **deleted** by 0008a | closed; dropped from scope |
-| F13 | step-up auth in this story | needs a modal affordance `users.blade.php` does not have | split to [0015a](0015a-step-up-auth-privileged-user-actions.md) |
+| F13 | step-up auth in this story | needs a modal affordance `users.blade.php` does not have | split to [0015a](../0015a-step-up-auth-privileged-user-actions.md) |
 | F17 | rename the flag **and** add a test | 0008a already ships `$isSelfEdit` (`UpdateUser.php:73`) | test half only, relocated to `UpdateUser` |
 | F18 | decide whether to add the capability | still true as described | deferred by human decision |
 
 ## Open questions — RESOLVED 2026-08-23
 
-Per [`docs/contracts.md`](../../docs/contracts.md)'s Uncertainty Handling Rule, these needed a human
+Per [`docs/contracts.md`](../../../docs/contracts.md)'s Uncertainty Handling Rule, these needed a human
 answer before Phase 3. Answered by the human (aarpwebmaster@gmail.com) on 2026-08-23.
 
 **Q1 — Drop `ShouldQueue` from `UserInvitation`, or restructure to mint the token inside `toMail()`?**
@@ -911,7 +911,7 @@ payload.
 
 **Q2 — Does user administration need step-up authentication (F13)?**
 **Decision: yes, for role/status changes and deletion — not plain name edits.** The work itself is
-**not in this story**: it is [0015a](0015a-step-up-auth-privileged-user-actions.md), split out because
+**not in this story**: it is [0015a](../0015a-step-up-auth-privileged-user-actions.md), split out because
 it requires a re-confirmation affordance in the Users modals and is therefore fullstack.
 
 **Q3 — Rate-limit window and threshold for `CreateUser`?**
@@ -928,13 +928,13 @@ and is a tunable, since the security property holds at any value ≥ 3.
 - **Follow-up from story 0004**'s Phase 4 security audit and re-audit. F1 was fixed in 0004 itself;
   F2/F3 were tracked on stories 0008/0009 and are closed; F14 is accepted-as-designed; F15/F16 were
   recorded on story 0009.
-- **Sibling story: [0015a — Step-up authentication for privileged Users actions](0015a-step-up-auth-privileged-user-actions.md)**
+- **Sibling story: [0015a — Step-up authentication for privileged Users actions](../0015a-step-up-auth-privileged-user-actions.md)**
   (F13). Split out of this story on 2026-08-23, following the 0008/0008a precedent. The two are
   **independent and may land in either order**: 0015a adds a new guard to `updateExistingUser()`'s
   role/status path and to `deleteUser()`, while this story changes those methods' *other* concerns
   (audit logging, the self-delete no-op, the disclosure gates). Their only real contact points are two
   files both touch — `app/Livewire/Users/Index.php` and `resources/views/livewire/users.blade.php` —
-  so per [`docs/contracts.md`](../../docs/contracts.md)'s Parallel Agent File-Ownership Rule they must
+  so per [`docs/contracts.md`](../../../docs/contracts.md)'s Parallel Agent File-Ownership Rule they must
   **not** be implemented concurrently; whichever reaches Phase 3 second rebases onto the first.
 - **Depends on shipped code from stories 0005, 0006, 0008, 0008a and 0009**, all closed. It depends on
   no *unfinished* work: the four files it edits were created by 0004, but their current contents are
@@ -949,4 +949,4 @@ F7 sharpening were added by the same auditor's Phase 4 **re-audit**, run after t
 re-audit also produced F15 (a sharper restatement of F2/F3) and F16 (informational), both recorded on
 story 0009. Rewritten 2026-08-23 after a Phase 2 INVEST/docs-consistency **FAIL** from `code-reviewer`
 (blocking findings B1–B6, advisory S1/S3), with every remaining finding re-verified against the real
-files at `HEAD` and F13 split out to [0015a](0015a-step-up-auth-privileged-user-actions.md).
+files at `HEAD` and F13 split out to [0015a](../0015a-step-up-auth-privileged-user-actions.md).
