@@ -31,7 +31,7 @@ Plataforma que digitaliza de extremo a extremo el ciclo de arrendamiento residen
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-https://github.com/juanma1000/AI4Devs-finalproject
+https://github.com/juanma1000/rentame
 
 ---
 
@@ -49,23 +49,44 @@ Ver el detalle completo (problema, usuarios, métricas de éxito, restricciones 
 
 ### **1.2. Características y funcionalidades principales:**
 
-El MVP cubre cinco funcionalidades clave, cada una desarrollada en detalle como historia de usuario:
+El MVP cubre siete funcionalidades clave, cada una desarrollada en detalle como historia de usuario:
 
 1. **Publicación de inmuebles** — propietarios ([HU-001](docs/user-stories/HU-001-publicacion-inmueble-propietario.md)) o agentes en su representación ([HU-002](docs/user-stories/HU-002-publicacion-inmueble-agente.md)) publican el inmueble con información, fotos y disponibilidad real. El estado cambia a "No disponible" automáticamente al completarse un arrendamiento.
 2. **Búsqueda de inmuebles disponibles** ([HU-003](docs/user-stories/HU-003-busqueda-inmuebles-disponibles.md)) — búsqueda y filtrado en tiempo real, sin necesidad de registro, mostrando únicamente inmuebles realmente disponibles.
 3. **Validación de identidad del inquilino** ([HU-004](docs/user-stories/HU-004-validacion-identidad-inquilino.md)) — verificación de cédula de ciudadanía colombiana vía API externa, requisito previo al proceso de arrendamiento.
 4. **Análisis de riesgo o seguro de arrendamiento + firma de contrato** ([HU-005](docs/user-stories/HU-005-analisis-riesgo-seguro-arrendamiento.md)) — estudio de crédito o contratación de seguro, y firma electrónica del contrato con validez legal en Colombia (Ley 527 de 1999).
 5. **Pago mensual de renta** ([HU-006](docs/user-stories/HU-006-pago-mensual-renta.md)) — cobro dentro de la plataforma mediante pasarela de pagos colombiana (PSE/tarjeta), con historial y comprobantes.
+6. **Gestión de agencias** ([HU-007](docs/user-stories/HU-007-gestion-de-agencias.md)) — las agencias existen como entidad propia a la que pertenecen uno o más agentes, y se vinculan a propietarios mediante una relación con estados (pendiente/activa/revocada), sosteniendo el vínculo agencia-propietario aunque cambie el agente que atiende al cliente.
+7. **Registro y autenticación** ([HU-008](docs/user-stories/HU-008-registro-y-autenticacion.md)) — creación de cuenta con email/contraseña y rol fijo (propietario/agente/inquilino) elegido en el registro; para agentes, el registro exige crear una agencia nueva o solicitar unirse a una existente.
 
 El listado completo de historias de usuario, con criterios de aceptación y notas técnicas, está en [docs/user-stories/](docs/user-stories/).
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> Pendiente — no hay todavía prototipos ni interfaz implementada. Se documentará con imágenes/video una vez se construya el frontend, según la estructura de features descrita en la [arquitectura](docs/architecture/architecture.md#5-estructura-de-carpetas--frontend-react).
+Capturas del frontend real de este mismo proyecto, implementado en [Rentame](https://github.com/juanma1000/Rentame) — este repositorio contiene la documentación (PRD, historias de usuario, arquitectura) y Rentame el código fuente que la implementa, según la estructura de microfrontends descrita en la [arquitectura](docs/architecture/architecture.md#5-estructura-de-carpetas--frontend-microfrontends):
+
+| Búsqueda pública de inmuebles | Detalle de inmueble |
+|---|---|
+| ![Búsqueda pública](docs/architecture/screenshots/busqueda-publica.png) | ![Detalle de inmueble](docs/architecture/screenshots/detalle-inmueble.png) |
+
+| Inicio de sesión | Entrada al flujo de publicación |
+|---|---|
+| ![Login](docs/architecture/screenshots/login.png) | ![Entrada publicar](docs/architecture/screenshots/entrada-publicar.png) |
 
 ### **1.4. Instrucciones de instalación:**
 
-> Pendiente — el proyecto está en fase de diseño; todavía no hay código de backend/frontend que instalar. La arquitectura ya define el stack (FastAPI + PostgreSQL + S3/MinIO para el backend, React + Vite para el frontend) y la estructura de carpetas prevista en [docs/architecture/architecture.md](docs/architecture/architecture.md#4-estructura-de-carpetas--backend-fastapi). Esta sección se completará con los pasos reales de instalación (dependencias, variables de entorno, migraciones, seed data, `docker-compose up`, etc.) cuando exista implementación.
+El stack completo (PostgreSQL, MinIO con el bucket inicializado, backend FastAPI y frontend) se levanta con un único comando, vía Docker Compose:
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+- Backend (API FastAPI): `http://localhost:8000`
+- Frontend: `http://localhost:3000`
+- Consola de MinIO: `http://localhost:9001`
+
+> Nota: este comando corresponde al repositorio de código fuente [Rentame](https://github.com/juanma1000/Rentame), que implementa la arquitectura definida en [docs/architecture/architecture.md](docs/architecture/architecture.md). Este repositorio (`AI4Devs-finalproject`) contiene la documentación del proyecto (PRD, historias de usuario, arquitectura); el `docker-compose.yml`, `backend/` y `frontend/` viven en Rentame.
 
 ---
 
@@ -81,8 +102,21 @@ graph TD
         INQ[Inquilino]
     end
 
-    subgraph Frontend["Frontend — React (SPA Responsive)"]
-        FE[React App\nVite · React Router · Axios]
+    subgraph Frontend["Frontend — Microfrontends (Rspack + Module Federation 2.0)"]
+        SHELL["shell — host\nRouter global · Layout por rol · Auth context"]
+        BUSQAPP["busqueda-app — remote público\nBúsqueda · Filtros · Detalle inmueble"]
+        INMAPP["inmuebles-app — remote privado\nPublicación · Edición · Mis inmuebles · Vinculación agente"]
+        IDENTAPP["identidad-app — remote privado\nValidación de identidad del inquilino"]
+        ARRAPP["arrendamiento-app — remote privado\nSolicitudes · Documentos · Aprobación · Firma contrato"]
+        PAGAPP["pagos-app — remote privado\nPanel de pagos · Historial · Comprobantes"]
+        AUTHPKG["@rentame/auth\nSingleton compartido vía MF2"]
+
+        SHELL -->|lazy load en runtime| BUSQAPP
+        SHELL -->|lazy load en runtime| INMAPP
+        SHELL -->|lazy load en runtime| IDENTAPP
+        SHELL -->|lazy load en runtime| ARRAPP
+        SHELL -->|lazy load en runtime| PAGAPP
+        SHELL -.-|singleton MF2| AUTHPKG
     end
 
     subgraph Backend["Backend — FastAPI (Arquitectura Hexagonal)"]
@@ -105,17 +139,22 @@ graph TD
         EMAIL[Servidor de Email\nSMTP / SaaS — notificaciones]
     end
 
-    PRP -->|HTTPS| FE
-    AGT -->|HTTPS| FE
-    INQ -->|HTTPS| FE
+    PRP -->|HTTPS| SHELL
+    AGT -->|HTTPS| SHELL
+    INQ -->|HTTPS| SHELL
 
-    FE -->|REST / HTTPS + JWT| API
+    BUSQAPP -->|REST / HTTPS — sin JWT| API
+    INMAPP -->|REST / HTTPS + JWT| API
+    IDENTAPP -->|REST / HTTPS + JWT| API
+    ARRAPP -->|REST / HTTPS + JWT| API
+    PAGAPP -->|REST / HTTPS + JWT| API
+
     API --> UC
     UC --> DOM
     DOM -->|interfaces / puertos| INFRA
 
     INFRA -->|SQLAlchemy ORM| PG
-    INFRA -->|boto3 / presigned URLs| S3
+    INFRA -->|boto3 — proxy por backend| S3
     INFRA -->|REST / HTTPS| IDENT
     INFRA -->|REST / HTTPS| RIESGO
     INFRA -->|REST / HTTPS + webhooks| PAGOS
@@ -125,11 +164,13 @@ graph TD
     PAGOS -->|Webhook HTTPS| API
 ```
 
-El sistema sigue **arquitectura hexagonal** en el backend (dominio → aplicación → infraestructura, con adaptadores de entrada y salida separados) y **slicing por dominio/feature** tanto en backend como en frontend. Esta decisión se justifica porque el proyecto depende de **cuatro integraciones externas cuyo proveedor concreto todavía no está seleccionado** (identidad, riesgo/seguro, pagos, firma electrónica — ver [puntos abiertos del PRD](docs/PRD-plataforma-arrendamiento-larga-estadia.md#puntos-abiertos-requieren-decisión-antes-de-diseño-técnico)): cada una se modela como un puerto abstracto (`IdentityVerificationPort`, `RiskAssessmentPort`, `PaymentGatewayPort`, `ElectronicSignaturePort`) para que el dominio y los casos de uso no dependan de un proveedor específico, y el adaptador concreto se conecte más adelante sin rediseñar nada.
+El backend sigue **arquitectura hexagonal** (dominio → aplicación → infraestructura, con adaptadores de entrada y salida separados) y **slicing por dominio/feature** (`usuarios`, `inmuebles`, `agencias`, `identidad`, `arrendamiento`, `riesgo`, `pagos`). Esta decisión se justifica porque el proyecto depende de **cuatro integraciones externas cuyo proveedor concreto todavía no está seleccionado** (identidad, riesgo/seguro, pagos, firma electrónica — ver [puntos abiertos del PRD](docs/PRD-plataforma-arrendamiento-larga-estadia.md#puntos-abiertos-requieren-decisión-antes-de-diseño-técnico)): cada una se modela como un puerto abstracto (`IdentityVerificationPort`, `RiskAssessmentPort`, `PaymentGatewayPort`, `ElectronicSignaturePort`) para que el dominio y los casos de uso no dependan de un proveedor específico, y el adaptador concreto se conecte más adelante sin rediseñar nada.
 
-**Beneficios:** permite avanzar en el desarrollo sin bloquear por decisiones de proveedor todavía pendientes; facilita testear cada dominio con adaptadores mock; aísla el impacto de cambiar de proveedor a un solo archivo de infraestructura.
+El frontend adopta **microfrontends con Rspack + Module Federation 2.0**: un `shell` (host) que carga en runtime remotes independientes por dominio (`busqueda-app`, `inmuebles-app`, `identidad-app`, `arrendamiento-app`, `pagos-app`), más un paquete `@rentame/auth` compartido como singleton para el estado de sesión. Cada dominio de negocio tiene así su propio ciclo de desarrollo y despliegue, evitando redeployar toda la aplicación al evolucionar un remote como `pagos-app`.
 
-**Costos/déficits:** más capas e indirection que un CRUD directo — mayor esfuerzo inicial de scaffolding para un equipo unipersonal; requiere disciplina para no filtrar detalles de infraestructura hacia el dominio.
+**Beneficios:** permite avanzar en el desarrollo sin bloquear por decisiones de proveedor todavía pendientes; facilita testear cada dominio con adaptadores mock; aísla el impacto de cambiar de proveedor a un solo archivo de infraestructura; los remotes del frontend se despliegan y evolucionan de forma independiente por dominio.
+
+**Costos/déficits:** más capas e indirection que un CRUD directo — mayor esfuerzo inicial de scaffolding para un equipo unipersonal; requiere disciplina para no filtrar detalles de infraestructura hacia el dominio; el setup de 6 proyectos Rspack (shell + 5 remotes) y la coordinación de contratos entre ellos añaden complejidad operativa frente a una SPA única.
 
 Diagrama completo, tabla de componentes y las 5 diagramas de secuencia de los flujos críticos del MVP en [docs/architecture/architecture.md](docs/architecture/architecture.md).
 
@@ -137,7 +178,9 @@ Diagrama completo, tabla de componentes y las 5 diagramas de secuencia de los fl
 
 | Componente | Tecnología | Responsabilidad |
 |---|---|---|
-| React App | React + Vite + React Router + Axios | SPA responsiva que consume la API REST. Slicing por feature/dominio (`auth`, `inmuebles`, `identidad`, `arrendamiento`, `riesgo`, `pagos`). |
+| shell (host) | React + Vite + Rspack + Module Federation 2.0 | Router global, layout por rol y contexto de autenticación (`@rentame/auth`). Carga en runtime los remotes de cada dominio; no contiene lógica de negocio propia. |
+| Remotes (`busqueda-app`, `inmuebles-app`, `identidad-app`, `arrendamiento-app`, `pagos-app`) | React + Rspack (MF2) | Cada uno implementa la UI de un dominio, consume la API REST y se despliega de forma independiente. |
+| @rentame/auth | Paquete compartido (singleton MF2) | `AuthProvider`, `useAuth` y `AuthGuard` — una única instancia de sesión en runtime, compartida por el shell y todos los remotes. |
 | API Layer | FastAPI + Pydantic | Adaptadores de entrada HTTP: validan esquemas, extraen JWT, delegan al caso de uso. Sin lógica de negocio. |
 | Application Layer | Python (casos de uso) | Orquesta el dominio y coordina puertos de salida sin depender de implementaciones concretas. |
 | Dominio | Python puro | Entidades, value objects y puertos (interfaces). Reglas de negocio sin dependencia de frameworks. |
@@ -148,7 +191,7 @@ Diagrama completo, tabla de componentes y las 5 diagramas de secuencia de los fl
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-**Backend (FastAPI)** — arquitectura hexagonal + slicing por dominio (`usuarios`, `inmuebles`, `identidad`, `arrendamiento`, `riesgo`, `pagos`), cada uno con sus capas `domain/`, `application/` e `infrastructure/` (con `api/`, `persistence/` y `external/` separados), más un módulo `shared/` transversal:
+**Backend (FastAPI)** — arquitectura hexagonal + slicing por dominio (`usuarios`, `inmuebles`, `agencias`, `identidad`, `arrendamiento`, `riesgo`, `pagos`), cada uno con sus capas `domain/`, `application/` e `infrastructure/` (con `api/`, `persistence/` y `external/` separados), más un módulo `shared/` transversal:
 
 ```
 backend/
@@ -156,7 +199,8 @@ backend/
 ├── alembic/
 ├── shared/
 │   ├── domain/ · application/ · infrastructure/
-├── usuarios/        # registro, login, JWT, vínculo agente-propietario
+├── usuarios/        # registro, login, JWT, rol fijo por cuenta
+├── agencias/        # entidad agencia, ingreso de agentes, vínculo agencia-propietario
 ├── inmuebles/       # publicación, búsqueda, fotos en S3
 ├── identidad/       # validación de cédula colombiana
 ├── arrendamiento/   # solicitudes, documentos, contrato y firma
@@ -164,18 +208,18 @@ backend/
 └── pagos/           # cobro mensual, webhooks de pasarela
 ```
 
-**Frontend (React)** — slicing por feature, cada una con `ui/`, `model/` y `api/`, más una capa `shared/` y `app/` con rutas y providers:
+**Frontend (Microfrontends)** — un `shell` host más un remote independiente por dominio, cada uno consumiendo el paquete compartido `@rentame/auth`:
 
 ```
-frontend/src/
-├── app/             # rutas, layouts, providers
-├── shared/          # ui, api (axios), hooks, utils
-├── auth/
-├── inmuebles/
-├── identidad/
-├── arrendamiento/
-├── riesgo/
-└── pagos/
+frontend/
+├── shell/                # host: router global, layout por rol, monta los remotes
+├── busqueda-app/         # remote público: búsqueda, filtros, detalle de inmueble
+├── inmuebles-app/        # remote privado: publicación, edición, vinculación de agente
+├── identidad-app/        # remote privado: validación de identidad del inquilino
+├── arrendamiento-app/    # remote privado: solicitudes, documentos, firma de contrato
+├── pagos-app/            # remote privado: panel de pagos, historial, comprobantes
+└── packages/
+    └── auth/             # @rentame/auth — singleton compartido vía Module Federation
 ```
 
 Árbol completo de carpetas, con el propósito de cada archivo, en [docs/architecture/architecture.md §4-5](docs/architecture/architecture.md#4-estructura-de-carpetas--backend-fastapi).
@@ -188,7 +232,7 @@ frontend/src/
 
 Prácticas de seguridad ya contempladas en el diseño (antes de implementación):
 
-- **Autenticación stateless con JWT + refresh token**, almacenado en cookie `HttpOnly`, para evitar exposición del token a scripts del cliente.
+- **Autenticación stateless con JWT de solo access token** (sin refresh token): al expirar, el usuario vuelve a autenticarse. El singleton `@rentame/auth` gestiona el ciclo de vida del token en todos los remotes del frontend.
 - **Validación de esquemas en el borde de entrada**: todos los endpoints FastAPI validan el payload con Pydantic antes de llegar al caso de uso, evitando que datos malformados o maliciosos lleguen al dominio.
 - **Aislamiento de proveedores externos vía puertos abstractos**: las credenciales y detalles de cada integración (identidad, riesgo, pagos, firma) viven únicamente en el adaptador de infraestructura correspondiente, nunca en el dominio ni en la capa de aplicación.
 - **Cumplimiento de la Ley 1581 de 2012 (Habeas Data)**: el manejo de documentos sensibles del inquilino (cédula, desprendibles de pago) requiere cifrado en reposo en el object storage y controles de acceso estrictos — ver [riesgos de la arquitectura](docs/architecture/architecture.md#7-riesgos).
@@ -215,19 +259,36 @@ erDiagram
         string apellido
         string telefono
         string rol "propietario | agente | inquilino"
+        uuid agencia_id FK "nullable — solo aplica a rol=agente"
         boolean activo
         timestamp creado_en
         timestamp actualizado_en
     }
 
-    RELACION_AGENTE_PROPIETARIO {
+    AGENCIA {
         uuid id PK
-        uuid agente_id FK
-        uuid propietario_id FK
-        string estado "pendiente | activa | revocada"
-        string codigo_invitacion UK
+        string razon_social
+        string nit UK
         timestamp creado_en
-        timestamp aceptado_en
+    }
+
+    SOLICITUD_INGRESO_AGENCIA {
+        uuid id PK
+        uuid agencia_id FK
+        uuid agente_id FK
+        string estado "pendiente | aprobada"
+        timestamp creado_en
+        timestamp resuelto_en
+    }
+
+    RELACION_AGENCIA_PROPIETARIO {
+        uuid id PK
+        uuid agencia_id FK
+        uuid propietario_id FK
+        uuid agente_responsable_id FK "nullable — trazabilidad, no autoriza"
+        string estado "pendiente | activa | revocada"
+        timestamp creado_en
+        timestamp activado_en
     }
 
     INMUEBLE {
@@ -337,8 +398,12 @@ erDiagram
         timestamp pagado_en
     }
 
-    USUARIO ||--o{ RELACION_AGENTE_PROPIETARIO : "agente en"
-    USUARIO ||--o{ RELACION_AGENTE_PROPIETARIO : "propietario en"
+    AGENCIA ||--o{ USUARIO : "empleador de (rol=agente)"
+    AGENCIA ||--o{ SOLICITUD_INGRESO_AGENCIA : "recibe"
+    USUARIO ||--o{ SOLICITUD_INGRESO_AGENCIA : "solicita ingreso"
+    AGENCIA ||--o{ RELACION_AGENCIA_PROPIETARIO : "representa a"
+    USUARIO ||--o{ RELACION_AGENCIA_PROPIETARIO : "propietario en"
+    USUARIO ||--o{ RELACION_AGENCIA_PROPIETARIO : "agente responsable de"
     USUARIO ||--o{ INMUEBLE : "propietario de"
     USUARIO ||--o{ INMUEBLE : "agente de"
     USUARIO ||--|| VALIDACION_IDENTIDAD : "tiene"
@@ -361,8 +426,10 @@ Fuente y descripción del modelo en [docs/architecture/architecture.md §2](docs
 
 ### **3.2. Descripción de entidades principales:**
 
-- **USUARIO**: cuenta con rol (`propietario`, `agente`, `inquilino`). `email` único. Un usuario puede ser propietario de inmuebles, representado por agentes, o inquilino en solicitudes.
-- **RELACION_AGENTE_PROPIETARIO**: vínculo N:M entre un agente y los propietarios que representa, con estado (`pendiente | activa | revocada`) y código de invitación único — soporta [HU-002](docs/user-stories/HU-002-publicacion-inmueble-agente.md).
+- **USUARIO**: cuenta con rol fijo (`propietario`, `agente`, `inquilino`) elegido en el registro. `email` único. Un agente referencia su `agencia_id` — soporta [HU-008](docs/user-stories/HU-008-registro-y-autenticacion.md).
+- **AGENCIA**: entidad propia (persona jurídica, `nit` único) a la que pertenecen uno o más agentes — soporta [HU-007](docs/user-stories/HU-007-gestion-de-agencias.md).
+- **SOLICITUD_INGRESO_AGENCIA**: solicitud de un agente para unirse a una agencia existente, con estado (`pendiente | aprobada`) que requiere aprobación de un miembro ya vinculado.
+- **RELACION_AGENCIA_PROPIETARIO**: vínculo entre una agencia y los propietarios que representa, con estado (`pendiente | activa | revocada`) y un agente responsable de trazabilidad (nullable) — soporta [HU-002](docs/user-stories/HU-002-publicacion-inmueble-agente.md).
 - **INMUEBLE**: propiedad publicada por un propietario (y opcionalmente gestionada por un agente, FK nullable). `estado` controla la disponibilidad (`disponible | no_disponible | oculto`) — soporta [HU-001](docs/user-stories/HU-001-publicacion-inmueble-propietario.md) y [HU-003](docs/user-stories/HU-003-busqueda-inmuebles-disponibles.md).
 - **FOTO_INMUEBLE**: fotos del inmueble, referenciadas por `storage_key` en el object storage, con orden y foto principal.
 - **VALIDACION_IDENTIDAD**: 1:1 con `USUARIO` (`FK, UK`) — la verificación de cédula se hace una única vez por cuenta ([HU-004](docs/user-stories/HU-004-validacion-identidad-inquilino.md)). Guarda la respuesta cruda del proveedor externo.
@@ -493,7 +560,7 @@ Diagramas de secuencia completos de cada flujo (publicación, búsqueda, identid
 
 ## 5. Historias de Usuario
 
-> Documentadas en detalle, con criterios de aceptación completos, en [docs/user-stories/](docs/user-stories/). Se destacan aquí 3 de las 6 historias del MVP, una por cada capacidad diferenciadora del producto: publicación, verificación de identidad y cobro.
+> Documentadas en detalle, con criterios de aceptación completos, en [docs/user-stories/](docs/user-stories/). Se destacan aquí 3 de las 8 historias del MVP, una por cada capacidad diferenciadora del producto: publicación, verificación de identidad y cobro.
 
 **Historia de Usuario 1 — [HU-001: Publicación de inmueble por propietario](docs/user-stories/HU-001-publicacion-inmueble-propietario.md)**
 

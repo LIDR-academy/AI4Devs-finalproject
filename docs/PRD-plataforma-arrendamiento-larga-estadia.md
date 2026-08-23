@@ -30,6 +30,10 @@ Digitalizar el ciclo completo de arrendamiento residencial de larga estadía (m�
 
 5. **Pago mensual de renta** — El inquilino paga la mensualidad dentro de la plataforma mediante integración con pasarela de pagos colombiana. El flujo de cobro queda registrado en el sistema.
 
+6. **Gestión de agencias** — Las agencias de arrendamiento existen como entidad propia (persona jurídica) a la que pertenecen uno o más agentes, y se vinculan a propietarios mediante una relación con estados (`pendiente`, `activa`, `revocada`) iniciada por el propietario. Es una funcionalidad necesaria para que la funcionalidad 1 (publicación de inmuebles) funcione correctamente cuando el publicador es un agente: sin una entidad agencia que sostenga el vínculo agencia-propietario, la relación se rompe cada vez que cambia el empleado que atiende al cliente.
+
+7. **Registro y autenticación** — Mecanismo real por el cual una persona crea una cuenta y accede a la plataforma con email y contraseña. Es una funcionalidad fundacional: sin ella, ninguna de las funcionalidades 1, 4 y 6 (publicación de inmuebles, y gestión de agencias) es utilizable por una persona real, ya que hoy todas asumen un usuario ya autenticado mediante un JWT emitido manualmente como herramienta de desarrollo. El rol de la cuenta (`propietario` | `agente` | `inquilino`) se elige en el registro y queda fijo — una cuenta no puede tener más de un rol ni cambiarlo después. Para quien se registra como agente, el paso de crear una agencia nueva o solicitar unirse a una existente es obligatorio dentro del mismo flujo de registro (se apoya en la funcionalidad 6).
+
 ## Fuera de alcance
 
 Todo lo que no está en la lista de funcionalidades clave del MVP queda excluido de la primera versión y se irá incorporando iterativamente. Algunos ejemplos implícitos: gestión de mantenimiento del inmueble, chat entre partes, sistema de disputas o reclamaciones, facturación electrónica, dashboards avanzados para propietarios con múltiples inmuebles, módulos de reportes, y refinamientos de UX post-lanzamiento.
@@ -54,6 +58,10 @@ Criterio cualitativo acordado: un inquilino debe poder completar el ciclo comple
 - Las APIs externas de validación de identidad, análisis de riesgo/seguro y pasarela de pagos son disponibles, documentadas y accesibles para el mercado colombiano — pero los proveedores concretos aún no han sido seleccionados.
 - El ciclo de arrendamiento incluye firma de contrato digital. Se asume que existe un proveedor de firma electrónica con validez legal en Colombia disponible para integrar.
 - El modelo de ingresos de la plataforma no está definido todavía (comisión, suscripción, porcentaje del arriendo, etc.).
+- El rol "agente" opera dentro de una "agencia" (entidad organizacional, persona jurídica), no de forma individual. Un agente pertenece a al menos una agencia para poder gestionar propietarios en representación de esta.
+- El rol de una cuenta (`propietario` | `agente` | `inquilino`) es único, fijo desde el registro y no cambia después; una cuenta no puede tener más de un rol simultáneo.
+- La autenticación del MVP es email + contraseña clásico, sin verificación de email (acceso inmediato tras registrarse) y sin recuperación de contraseña (depende de un proveedor de email todavía no seleccionado).
+- Las sesiones son simples: solo access token (JWT), sin mecanismo de refresh token; el usuario vuelve a autenticarse cuando el token expira. El refresh token mencionado como decisión general en la arquitectura queda para una iteración futura.
 
 ## Puntos abiertos (requieren decisión antes de diseño técnico)
 
@@ -74,6 +82,9 @@ Criterio cualitativo acordado: un inquilino debe poder completar el ciclo comple
 | La decisión entre estudio de crédito vs. seguro de arrendamiento no se toma antes del diseño, generando retrabajo | Medio — afecta la arquitectura de integraciones | Media |
 | Validez legal de la firma electrónica en contratos de arrendamiento en Colombia no está suficientemente validada antes de construir | Alto — podría invalidar contratos firmados en la plataforma | Baja-media |
 | Scope creep al no tener métricas ni priorización explícita desde el inicio | Medio — puede dilatar el MVP indefinidamente | Media |
+| Sin un gate de aprobación al unirse a una agencia existente, un agente podría autoasignarse a una agencia ajena solo con conocer su nombre, comprometiendo la integridad de la cartera de propietarios de esa agencia | Alto — riesgo de seguridad/integridad de datos entre organizaciones | Baja (mitigado por diseño: HU-007 exige aprobación de un miembro existente) |
+| Sin verificación de email ni recuperación de contraseña en el MVP, una cuenta registrada con un correo ajeno o mal escrito no puede validarse ni recuperarse, y una contraseña olvidada bloquea al usuario permanentemente hasta una iteración futura | Medio — fricción y soporte manual, no bloquea el ciclo principal | Media |
+| Sin refresh token, el usuario debe volver a loguearse cada vez que expira el access token; si la expiración es corta, puede generar fricción durante flujos largos (ej. publicación de inmueble con carga de fotos) | Bajo-medio — fricción de UX, no de seguridad | Media |
 
 ## Próximos pasos sugeridos
 
