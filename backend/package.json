@@ -16,6 +16,7 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed-all": "tsx prisma/seed-all.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {

@@ -334,7 +334,7 @@ Also, a coachee should not see any busy block from any class that is not relevan
 And forr the group classes that a coachee has joined the waiting list, we shouldhave something in th card in the calendar view that says so. Maybe a tag saying waitlist or an icon? 
 
 
-# 18 - OpenCode - DeepSeek V4 Flash Free
+# 18 - OpenCode - Big Pickle
 
 [/speckit.specify] Let's start implementing push notifications. Here's the first task we need to do https://linear.app/ai4devs/issue/COACHER-25/us-41-push-notification-infrastructure
 
@@ -346,4 +346,24 @@ And forr the group classes that a coachee has joined the waiting list, we should
 Is there a way to test if the push notifications are workinng from my computer?
 
 
-<!-- Backend `npm audit` fails on pre-existing transitive dev-dep vulnerabilities (prisma 6→7 and vitest 2→4 are the only fixes, both major/breaking). -->
+----
+
+And forr the group classes that a coachee has joined the waiting list, we shouldhave something in th card in the calendar view that says so. Maybe a tag saying waitlist or an icon? 
+
+
+# 18 - OpenCode - MiMo 2.5 Free
+
+This is a project that I plan to sell at some point but for starters is a project for school. When I present this, I'd like to have some dummy data already in place so people can test it properly and navigate with the different roles and functionalities. I'd like to have 1 admin user, 1 coach user and 10 coachees. I'd like for 4 of those users to have a shared recurring class, I?d like for someone to have an individual recurring class, and be creative for the rest, so that there are classes where they can enroll, classses where they can join waiting lists, etc. I'd like that we can see all the diffferent possibilities the platform supports. I guess that the best for this is a seeder? For the new users, let's always use the same password: 123456789 (I know i'ts not secure but it's just dummy ufor testing). Also diferentiate some new coachee so that they can see the set password for the first time functionality. 
+You can remove all the current data that we have, also the instances from the google calendar. If needed, readapt whatever seeder we already have (if you feel like it's necessary).
+
+Once all this is done, let's create a section in the readme file: Users and setup. In this section we are going to first provide all the instructions necessary in order to start the project, maybe it's better to create a script and put everything there so the person who tests it only has to run one command. And we will also provide a list of all the already existing users and their passwords and their characteristics. What role do they have, what level, classes, etc.  
+
+----
+
+I'm logged in as an admin and I can't see any class.
+[stopeed the process myself]
+Actually I do see them but one they later of what's written in the readme. If the readme says Monday, the class it's actually on Tuesday, if says Wednesday, the class is Thursday. Fix it
+
+----
+
+Can we adapt the seed so that the classes are always created for the following week of the current instead of a hardcoded date?

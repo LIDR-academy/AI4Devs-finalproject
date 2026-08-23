@@ -8,6 +8,7 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [Users and Setup](#8-users-and-setup)
 
 ---
 
@@ -878,4 +879,162 @@ https://github.com/LIDR-academy/AI4Devs-finalproject/pull/232
 **Pull Request 2**
 
 **Pull Request 3**
+
+---
+
+## 8. Users and Setup
+
+### 8.1. Quick Start (One Command)
+
+The fastest way to set up the development environment:
+
+```bash
+cd backend
+./scripts/setup.sh
+```
+
+This script will:
+1. Create `.env` from `.env.example` (if not exists)
+2. Install dependencies
+3. Generate Prisma client
+4. Run database migrations
+5. Seed the database with test data
+
+After setup, start the servers:
+
+```bash
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+```
+
+### 8.2. Manual Setup
+
+If you prefer to run each step manually:
+
+```bash
+cd backend
+
+# 1. Install dependencies
+npm install
+
+# 2. Create .env (copy from .env.example and update values)
+cp .env.example .env
+
+# 3. Generate Prisma client
+npx prisma generate
+
+# 4. Run migrations
+npx prisma migrate dev
+
+# 5. Seed database with test data
+npm run db:seed-all
+```
+
+### 8.3. Test Users
+
+All test users use the same password: **`123456789`**
+
+#### Admin User
+
+| Field | Value |
+|-------|-------|
+| Email | `admin@coacher.com` |
+| Password | `123456789` |
+| Role | Admin |
+| Must Change Password | No |
+
+#### Coach User
+
+| Field | Value |
+|-------|-------|
+| Email | `coach@coacher.com` |
+| Password | `123456789` |
+| Role | Coach |
+| Specialities | Fuerza, Resistencia, HIIT |
+| Must Change Password | No |
+
+#### Coachee Users
+
+| Name | Email | Level | Preference | Must Change Password | Notes |
+|------|-------|-------|------------|---------------------|-------|
+| Ana Garcia | `coachee1@coacher.com` | Basico | Both | No | Enrolled in recurring group class |
+| Carlos Lopez | `coachee2@coacher.com` | Intermedio | Group | No | Enrolled in waitlist class |
+| Maria Rodriguez | `coachee3@coacher.com` | Principiante | Individual | No | Enrolled in available class |
+| Pedro Martinez | `coachee4@coacher.com` | Basico | Group | No | Enrolled in recurring group + waitlisted |
+| Laura Fernandez | `coachee5@coacher.com` | Intermedio | Both | **YES** | Enrolled in waitlist class |
+| Javier Sanchez | `coachee6@coacher.com` | Avanzado | Individual | **YES** | Enrolled in recurring individual class |
+| Isabel Torres | `coachee7@coacher.com` | Basico | Group | No | Enrolled in recurring group class |
+| Miguel Hernandez | `coachee8@coacher.com` | Principiante | Both | No | Enrolled in recurring group class |
+| Sofia Diaz | `coachee9@coacher.com` | Intermedio | Group | **YES** | Enrolled in waitlist class |
+| Daniel Moreno | `coachee10@coacher.com` | Avanzado | Both | No | Enrolled in waitlist class |
+
+> **Note:** Users with "Must Change Password: YES" will be redirected to change their password on first login.
+
+### 8.4. Test Classes
+
+> **Note:** All classes are created dynamically for the next week from the current date. When you run the seeder, classes will always be scheduled for the upcoming Monday through Saturday.
+
+#### Recurring Group Class (Mondays 10:00)
+- **Level:** Basico
+- **Coach:** Coach Trainer
+- **Enrolled:** Ana Garcia, Pedro Martinez, Isabel Torres, Miguel Hernandez
+- **Recurrence:** Weekly (12 instances)
+- **Description:** Grupo de entrenamiento basico - Fuerza y Resistencia
+
+#### Recurring Individual Class (Wednesdays 11:00)
+- **Level:** Avanzado
+- **Coach:** Coach Trainer
+- **Enrolled:** Javier Sanchez
+- **Recurrence:** Weekly (12 instances)
+- **Description:** Sesion individual de alto rendimiento
+
+#### Group Class with Waiting List (Tuesdays 18:00)
+- **Level:** Intermedio
+- **Coach:** Coach Trainer
+- **Enrolled:** Carlos Lopez, Laura Fernandez, Sofia Diaz, Daniel Moreno (4/4 - FULL)
+- **Waiting List:** Ana Garcia, Pedro Martinez (2/4)
+- **Description:** Clase grupal intermedia - cardio y tonificacion
+
+#### Available Group Class (Thursdays 9:00)
+- **Level:** Principiante
+- **Coach:** Coach Trainer
+- **Enrolled:** Maria Rodriguez (1/4)
+- **Available Spots:** 2
+- **Description:** Clase grupal para principiantes - introduccion al fitness
+
+#### Group Class with Notes (Fridays 17:00)
+- **Level:** Basico
+- **Coach:** Coach Trainer
+- **Enrolled:** Ana Garcia, Isabel Torres, Miguel Hernandez (3/4)
+- **Available Spots:** 1
+- **Description:** Sesion de viernes - trabajo funcional. Traer colchoneta y botella de agua.
+
+#### Upcoming Individual Class (Saturdays 10:00)
+- **Level:** N/A (Individual)
+- **Coach:** Coach Trainer
+- **Enrolled:** Pedro Martinez
+- **Description:** Sesion individual - preparacion fisica general
+
+#### Canceled Class (Wednesdays 16:00)
+- **Level:** Experto
+- **Status:** Canceled
+- **Description:** Clase cancelada - coach indisponible
+
+### 8.5. Test Scenarios
+
+The seed data supports testing of various platform features:
+
+1. **Role-based access:** Login as Admin, Coach, or Coachee to see different views
+2. **Password change flow:** Login with Laura, Javier, or Sofia to test first-time password change
+3. **Class enrollment:** Coachees can join available classes (Thursday 9:00, Friday 17:00)
+4. **Waiting list:** Ana and Pedro are on waiting list for Tuesday 18:00 class
+5. **Recurring classes:** View Monday and Wednesday recurring series in calendar (12 instances each)
+6. **Class capacity:** Tuesday 18:00 class is full (4/4), demonstrating waiting list behavior
+7. **Canceled classes:** Wednesday 16:00 class shows canceled status
+8. **Level-based visibility:** Different coachees see classes appropriate to their level
+
+> **Important:** Dates are always relative to the current week. Running the seeder multiple times will create classes for the next upcoming week.
 
