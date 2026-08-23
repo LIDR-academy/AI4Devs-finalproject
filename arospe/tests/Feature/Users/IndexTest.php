@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -84,9 +85,12 @@ test('each row exposes the id, name, email, pendingEmail, role and status the vi
 test('canEdit and canDelete mirror what UserPolicy would actually authorize for each row', function () {
     // An Administrator holds users.edit/users.delete but not roles.manage-administrators
     // (RolePermissionSeeder), so this exercises every branch UserPolicy::update()/delete() has:
-    // an ordinary target (both true), an Administrator-holding target (edit true, delete false --
-    // delete requires roles.manage-administrators for that target), and the Super Admin target
-    // (both false, regardless of permissions).
+    // an ordinary target (both true), an Administrator-holding OTHER target (both false as of
+    // story 0015's F7 -- canEdit now requires updateSensitiveAttributes for any other target,
+    // which this actor lacks; canDelete already required it), the actor's OWN row (canEdit true
+    // via the F7 self-row exemption, canDelete unaffected by F7 and still false because the
+    // policy itself refuses an Administrator-holding actor deleting themselves), and the Super
+    // Admin target (both false, regardless of permissions).
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
@@ -107,9 +111,16 @@ test('canEdit and canDelete mirror what UserPolicy would actually authorize for 
         ->canEdit->toBeTrue()
         ->canDelete->toBeTrue();
 
+    // Story 0015 F7: an actor lacking roles.manage-administrators can no longer open (or edit)
+    // an OTHER Administrator-holding target's row at all -- canEdit is now false here, not true.
     expect($users->firstWhere('id', $administratorTarget->id))
-        ->canEdit->toBeTrue()
+        ->canEdit->toBeFalse()
         ->canDelete->toBeFalse();
+
+    // New assertion (story 0015 F7): the actor's OWN row is exempt from that same narrowing --
+    // canEdit stays true for it, proving the self-row exemption rather than a blanket refusal.
+    expect($users->firstWhere('id', $administrator->id))
+        ->canEdit->toBeTrue();
 
     expect($users->firstWhere('id', $superAdminTarget->id))
         ->canEdit->toBeFalse()
@@ -188,20 +199,51 @@ test('usersSummary reports accurate totals computed independently of the users p
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
 
+    // Mount the component -- and so populate its #[Locked] $users property AND cache the
+    // #[Computed] usersSummary()'s first evaluation (the header already renders it at mount) --
+    // BEFORE any of the rows below exist. Story 0015 finding F4: $users is now #[Locked], so
+    // independence can no longer be proven by forcing it empty via set('users', []).
+    $component = Livewire::test(Index::class);
+
     User::factory()->count(3)->create(['status' => UserStatus::Active]);
     User::factory()->count(2)->create(['status' => UserStatus::Inactive]);
 
     $superAdmin = User::factory()->create(['status' => UserStatus::Active]);
     $superAdmin->assignRole('Super Admin');
 
+    // Force a fresh dehydrate/hydrate/render cycle WITHOUT calling loadUsers() again: Livewire's
+    // built-in '$refresh' action re-renders the current component from its existing snapshot (so
+    // $this->users stays exactly what it was at mount -- created AFTER it are invisible to it,
+    // proving the row set at mount could not be the source of a correct total below) and hydrates
+    // a genuinely NEW PHP instance, whose #[Computed] cache (Livewire\Features\SupportComputed\
+    // BaseComputed::$requestCachedValue, an in-memory-only property never part of the dehydrated
+    // snapshot) starts empty -- so usersSummary() is evaluated FRESH here, not read back from the
+    // value already cached during mount's own render. A bare ->get('usersSummary') without this
+    // step would silently return that stale, mount-time value regardless of what usersSummary()
+    // does, proving nothing about its independence from $users either way.
+    $component->call('$refresh');
+
     // added: administrator + 3 active + 2 inactive + super admin = 7
     // added active: administrator + 3 active + super admin = 5
-    $component = Livewire::test(Index::class)->set('users', []);
-
     $summary = $component->get('usersSummary');
 
     expect($summary['total'])->toBe($baselineTotal + 7)
         ->and($summary['active'])->toBe($baselineActive + 5);
+});
+
+// --- Locked properties ---
+
+// Story 0015 finding F4: $users is the last remaining server-derived Livewire property that
+// was not #[Locked] -- $editingUserId, $editingPendingEmail, $deletingUserId and
+// $deletingUserName already were. A forged Livewire payload setting `users` directly must be
+// rejected the same way the others already are.
+test('a forged set against the users property is rejected, mirroring the existing locked-property guard', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    expect(fn () => Livewire::test(Index::class)->set('users', []))
+        ->toThrow(CannotUpdateLockedPropertyException::class);
 });
 
 test('roleOptions excludes the Super Admin role', function () {
@@ -259,7 +301,7 @@ test('creating a user via the form persists the user with the submitted role and
         ->set('name', 'New Hire')
         ->set('email', 'new.hire@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -288,7 +330,7 @@ test('opening the create form never leaves roleId or status as null', function (
     Livewire::test(Index::class)
         ->call('openCreateModal')
         ->assertSet('roleId', '')
-        ->assertSet('status', UserStatus::Inactive);
+        ->assertSet('status', UserStatus::Inactive->value);
 });
 
 test('creating a user with invalid details is rejected and no user is created', function (Closure $overridesFactory) {
@@ -305,7 +347,7 @@ test('creating a user with invalid details is rejected and no user is created', 
         ->set('name', 'Valid Name')
         ->set('email', 'valid.create@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active);
+        ->set('status', UserStatus::Active->value);
 
     foreach ($overridesFactory() as $property => $value) {
         $component->set($property, $value);
@@ -320,6 +362,34 @@ test('creating a user with invalid details is rejected and no user is created', 
     'no role chosen' => [fn () => ['roleId' => null]],
     'a role that does not exist' => [fn () => ['roleId' => '999999999']],
     'the Super Admin role' => [fn () => ['roleId' => (string) Role::where('name', 'Super Admin')->where('guard_name', 'web')->value('id')]],
+    // Story 0015 finding F8: a forged status value must fail validation, not raise an unhandled
+    // \ValueError -- possible now that $status is a plain, non-nullable `public string`
+    // (App\Livewire\Users\Index::$status) rather than a typed UserStatus enum property, which
+    // hydrated a bad value BEFORE Rule::enum(UserStatus::class) ever got a chance to reject it.
+    'a forged status value' => [fn () => ['status' => 'not-a-real-status']],
+    'an empty status value' => [fn () => ['status' => '']],
+]);
+
+// Story 0015 finding F8: the validation error must land specifically on the status field, not
+// merely "some error somewhere" -- and must never surface as an unhandled \ValueError/TypeError.
+test('submitting a forged or empty status value fails validation on the status field, not an unhandled error', function (string $forgedStatus) {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', 'Valid Name')
+        ->set('email', 'valid.create@arospe.es')
+        ->set('roleId', (string) $role->id)
+        ->set('status', $forgedStatus)
+        ->call('save')
+        ->assertHasErrors(['status']);
+})->with([
+    'a forged status value' => ['not-a-real-status'],
+    'an empty status value' => [''],
 ]);
 
 test('creating a user with an address held as another users pending email is rejected', function () {
@@ -337,7 +407,7 @@ test('creating a user with an address held as another users pending email is rej
         ->set('name', 'New Hire')
         ->set('email', 'claimed@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasErrors(['email']);
 
@@ -356,7 +426,7 @@ test('creating an active user persists the active status, not the inactive defau
         ->set('name', 'Active Hire')
         ->set('email', 'active.hire@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -378,7 +448,7 @@ test('creating a suspended user persists the suspended status', function () {
         ->set('name', 'Suspended Hire')
         ->set('email', 'suspended.hire@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Suspended)
+        ->set('status', UserStatus::Suspended->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -399,7 +469,7 @@ test('the submitted email is lowercased before validation, and persisted lowerca
         ->set('name', 'Marta Ruiz')
         ->set('email', 'MARTA@X.COM')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -421,7 +491,7 @@ test('creating a case-different duplicate of an existing email is rejected as a 
         ->set('name', 'Marta Duplicate')
         ->set('email', 'MARTA.RUIZ@AROSPE.ES')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasErrors(['email']);
 
@@ -473,7 +543,7 @@ test('a user administrator changes another users status', function () {
 
     Livewire::test(Index::class)
         ->call('openEditModal', $target->id)
-        ->set('status', UserStatus::Suspended)
+        ->set('status', UserStatus::Suspended->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -691,7 +761,7 @@ test('an administrator submitting a different status for themselves has it silen
 
     Livewire::test(Index::class)
         ->call('openEditModal', $administrator->id)
-        ->set('status', UserStatus::Suspended)
+        ->set('status', UserStatus::Suspended->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -822,7 +892,7 @@ test('creating a user holding the seeded Administrator role is denied without th
         ->set('name', 'New Administrator')
         ->set('email', 'new.administrator@arospe.es')
         ->set('roleId', (string) $administratorRole->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save'))
         ->toThrow(AuthorizationException::class);
 
@@ -842,7 +912,7 @@ test('creating a user holding the seeded Administrator role succeeds with the st
         ->set('name', 'New Administrator')
         ->set('email', 'new.administrator@arospe.es')
         ->set('roleId', (string) $administratorRole->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -891,10 +961,19 @@ test('promoting a user to Administrator with the stricter permission succeeds', 
     expect($target->fresh()->hasRole('Administrator'))->toBeTrue();
 });
 
+// Story 0015 finding F7 restructuring: openEditModal() now gates on updateSensitiveAttributes
+// for any OTHER Administrator-holding target, so an actor lacking roles.manage-administrators
+// can no longer reach save()'s edit branch at all -- editingUserId is #[Locked] and only
+// openEditModal() populates it. The permission is granted so the opener succeeds and reaches
+// the mutating call, then revoked (and the permission cache flushed) before save() -- the same
+// shape already shipped at "authorization for editing is re-checked inside save" above and at
+// tests/Feature/Roles/IndexTest.php's "calling deleteRole() directly without roles.manage" --
+// so this still proves the refusal happens on the write, not merely "somewhere before it".
 test('downgrading an Administrator without the stricter permission is denied, and that users role is left unchanged', function () {
     $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators'); // held to open; revoked below
     $this->actingAs($administrator);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
@@ -903,6 +982,9 @@ test('downgrading an Administrator without the stricter permission is denied, an
     $target->assignRole($administratorRole);
 
     $component = Livewire::test(Index::class)->call('openEditModal', $target->id);
+
+    $administrator->revokePermissionTo('roles.manage-administrators');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     expect(fn () => $component->set('roleId', (string) $editorRole->id)->call('save'))
         ->toThrow(AuthorizationException::class);
@@ -931,10 +1013,18 @@ test('downgrading an Administrator with the stricter permission succeeds', funct
         ->and($target->fresh()->hasRole('Administrator'))->toBeFalse();
 });
 
+// Story 0015 finding F7 restructuring: confirmDelete() now authorizes 'delete' unconditionally
+// (it always did need Gate::authorize('delete', ...), but with no self-row exemption --
+// see F11's interaction note), and UserPolicy::delete() requires roles.manage-administrators for
+// an Administrator-holding target exactly as this test's actor lacks. Verified to collide
+// deterministically with confirmDelete()'s own new gate, so -- same shape as the downgrade
+// restructuring above -- the permission is held to open the delete confirmation and revoked
+// (with the permission cache flushed) only before the mutating call.
 test('deleting a user holding the Administrator role without the stricter permission is denied, and that user still exists', function () {
     $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators'); // held to open; revoked below
     $this->actingAs($administrator);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
@@ -942,6 +1032,9 @@ test('deleting a user holding the Administrator role without the stricter permis
     $target->assignRole($administratorRole);
 
     $component = Livewire::test(Index::class)->call('confirmDelete', $target->id);
+
+    $administrator->revokePermissionTo('roles.manage-administrators');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     expect(fn () => $component->call('deleteUser'))->toThrow(AuthorizationException::class);
 
@@ -979,7 +1072,68 @@ test('deleting an ordinary roleless user is not blocked by the administrator-lev
     expect(User::find($target->id))->toBeNull();
 });
 
-test('saving an existing Administrator without changing their role is not a role change, and succeeds without the stricter permission', function () {
+// --- F11: self-delete guard ---
+//
+// Story 0015 finding F11: deleteUser() resolves the target, authorizes and deletes with no
+// self-check, and UserPolicy::delete() has none either -- a Super Admin actor bypasses that
+// policy entirely via Gate::before, so nothing stops a Super Admin, or any actor whose own row
+// UserPolicy::delete() would otherwise allow, from deleting their own account from this screen.
+
+test('an actor holding users.delete directly, with no privileged role of their own, deleting their own account through the Users screen is a silent no-op', function () {
+    $actor = User::factory()->create();
+    // Direct permissions, no role at all -- users.view is required too, since mount() gates on
+    // viewAny independently of users.delete (without it, Livewire::test() 403s at mount and the
+    // subsequent chained ->call()s fail with a confusing "Invalid Livewire snapshot structure"
+    // error instead of a clean signal).
+    $actor->givePermissionTo(['users.view', 'users.delete']);
+    $this->actingAs($actor);
+
+    Livewire::test(Index::class)
+        ->call('confirmDelete', $actor->id)
+        ->call('deleteUser');
+
+    expect(User::find($actor->id))->not->toBeNull();
+});
+
+test('a Super Admin actor deleting their own account through the Users screen is a silent no-op', function () {
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole('Super Admin');
+    $this->actingAs($superAdmin);
+
+    Livewire::test(Index::class)
+        ->call('confirmDelete', $superAdmin->id)
+        ->call('deleteUser');
+
+    expect(User::find($superAdmin->id))->not->toBeNull();
+});
+
+// F7 interaction: confirmDelete()'s new gate carries no self-row exemption (unlike
+// openEditModal()'s), so an actor whose own row holds Administrator is refused there -- the
+// same AuthorizationException UserPolicy::delete() already produces for any OTHER
+// Administrator-holding target -- and F11's silent no-op never gets a chance to fire.
+test('an actor whose own row holds the Administrator role is refused at confirmDelete for their own row, before F11s self-delete no-op could ever fire', function () {
+    $this->withoutExceptionHandling();
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $this->actingAs($administrator);
+
+    $component = Livewire::test(Index::class);
+
+    expect(fn () => $component->call('confirmDelete', $administrator->id))
+        ->toThrow(AuthorizationException::class);
+
+    expect($component->get('deletingUserId'))->toBeNull();
+    expect(User::find($administrator->id))->not->toBeNull();
+});
+
+// Story 0015 finding F7: this test used to prove that saving an unchanged Administrator role
+// needs no stricter permission -- it succeeded because the mutating save() ran. Since F7 adds
+// an unconditional updateSensitiveAttributes gate to openEditModal() itself for any OTHER
+// target, an actor lacking roles.manage-administrators can no longer open this Administrator-
+// holding target's edit modal at all, so the refusal now happens there instead -- rewritten to
+// assert exactly that, per the story's enumerated list of intentional test changes.
+test('opening the edit modal for an existing Administrator target without the stricter permission is refused at the opener', function () {
+    $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
     $this->actingAs($administrator);
@@ -988,15 +1142,10 @@ test('saving an existing Administrator without changing their role is not a role
     $target = User::factory()->create(['name' => 'Existing Admin']);
     $target->assignRole($administratorRole);
 
-    Livewire::test(Index::class)
-        ->call('openEditModal', $target->id)
-        ->set('name', 'Existing Admin Renamed')
-        ->set('roleId', (string) $administratorRole->id)
-        ->call('save')
-        ->assertHasNoErrors();
+    expect(fn () => Livewire::test(Index::class)->call('openEditModal', $target->id))
+        ->toThrow(AuthorizationException::class);
 
-    expect($target->fresh()->name)->toBe('Existing Admin Renamed')
-        ->and($target->fresh()->hasRole('Administrator'))->toBeTrue();
+    expect($target->fresh()->name)->toBe('Existing Admin');
 });
 
 // --- Security audit finding F1 (Phase 4): status/email on an Administrator target ---
@@ -1004,10 +1153,15 @@ test('saving an existing Administrator without changing their role is not a role
 // seizing an Administrator's account is the same effect a role-change guard exists
 // to prevent.
 
+// Story 0015 finding F7 restructuring: same shape as the downgrade/delete restructurings above
+// -- the permission is held to open the edit modal (openEditModal() now gates on
+// updateSensitiveAttributes for any OTHER Administrator-holding target) and revoked, with the
+// permission cache flushed, only before the mutating save() call.
 test('changing an Administrators status without the stricter permission is denied, and that users status is left unchanged', function () {
     $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
-    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators'); // held to open; revoked below
     $this->actingAs($administrator);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
@@ -1016,7 +1170,10 @@ test('changing an Administrators status without the stricter permission is denie
 
     $component = Livewire::test(Index::class)->call('openEditModal', $target->id);
 
-    expect(fn () => $component->set('status', UserStatus::Suspended)->call('save'))
+    $administrator->revokePermissionTo('roles.manage-administrators');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    expect(fn () => $component->set('status', UserStatus::Suspended->value)->call('save'))
         ->toThrow(AuthorizationException::class);
 
     expect($target->fresh()->status)->toBe(UserStatus::Active);
@@ -1034,17 +1191,19 @@ test('changing an Administrators status with the stricter permission succeeds', 
 
     Livewire::test(Index::class)
         ->call('openEditModal', $target->id)
-        ->set('status', UserStatus::Suspended)
+        ->set('status', UserStatus::Suspended->value)
         ->call('save')
         ->assertHasNoErrors();
 
     expect($target->fresh()->status)->toBe(UserStatus::Suspended);
 });
 
+// Story 0015 finding F7 restructuring: same shape as the status test above.
 test('changing an Administrators email without the stricter permission is denied, and that users email is left unchanged', function () {
     $this->withoutExceptionHandling();
     $administrator = User::factory()->create();
-    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators'); // held to open; revoked below
     $this->actingAs($administrator);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
@@ -1052,6 +1211,9 @@ test('changing an Administrators email without the stricter permission is denied
     $target->assignRole($administratorRole);
 
     $component = Livewire::test(Index::class)->call('openEditModal', $target->id);
+
+    $administrator->revokePermissionTo('roles.manage-administrators');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     expect(fn () => $component->set('email', 'attacker@arospe.es')->call('save'))
         ->toThrow(AuthorizationException::class);
@@ -1098,7 +1260,7 @@ test('changing a non-Administrators status does not require the stricter permiss
 
     Livewire::test(Index::class)
         ->call('openEditModal', $target->id)
-        ->set('status', UserStatus::Suspended)
+        ->set('status', UserStatus::Suspended->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -1120,6 +1282,109 @@ test('a Super Admin actor can promote a user to Administrator without holding ro
         ->assertHasNoErrors();
 
     expect($target->fresh()->hasRole('Administrator'))->toBeTrue();
+});
+
+// --- F7: authorize the disclosure paths, not only the mutating ones ---
+//
+// Story 0015 finding F7: openCreateModal(), openEditModal() and confirmDelete() previously
+// performed no authorization of their own at all -- openEditModal() in particular copied a
+// target's pending_email and status into public component state before any check ran.
+
+test('calling openCreateModal directly is refused for an actor lacking users.create', function () {
+    $this->withoutExceptionHandling();
+    $viewer = User::factory()->create();
+    $viewer->givePermissionTo('users.view'); // deliberately not users.create
+    $this->actingAs($viewer);
+
+    expect(fn () => Livewire::test(Index::class)->call('openCreateModal'))
+        ->toThrow(AuthorizationException::class);
+});
+
+test('calling openEditModal directly against another user is refused for an actor lacking users.edit', function () {
+    $this->withoutExceptionHandling();
+    $viewer = User::factory()->create();
+    $viewer->givePermissionTo('users.view'); // deliberately not users.edit
+    $this->actingAs($viewer);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create();
+    $target->assignRole($editorRole);
+
+    expect(fn () => Livewire::test(Index::class)->call('openEditModal', $target->id))
+        ->toThrow(AuthorizationException::class);
+});
+
+test('calling confirmDelete directly against another user is refused for an actor lacking users.delete', function () {
+    $this->withoutExceptionHandling();
+    $viewer = User::factory()->create();
+    $viewer->givePermissionTo('users.view'); // deliberately not users.delete
+    $this->actingAs($viewer);
+
+    $target = User::factory()->create();
+
+    expect(fn () => Livewire::test(Index::class)->call('confirmDelete', $target->id))
+        ->toThrow(AuthorizationException::class);
+});
+
+test('opening the edit modal for another Administrator-holding target is refused before the target status or pending email is disclosed', function () {
+    $this->withoutExceptionHandling();
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $this->actingAs($administrator);
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+    $target = User::factory()
+        ->pendingEmail('secret-pending@arospe.es')
+        ->create(['status' => UserStatus::Suspended]);
+    $target->assignRole($administratorRole);
+
+    $component = Livewire::test(Index::class);
+
+    expect(fn () => $component->call('openEditModal', $target->id))
+        ->toThrow(AuthorizationException::class);
+
+    // Asserting the component's own state, not only the exception: a check placed AFTER the
+    // assignments would also pass a bare toThrow() test while still having disclosed the
+    // values -- these two properties are exactly what F7 exists to keep undisclosed.
+    expect($component->get('status'))->toBe(UserStatus::Inactive->value)
+        ->and($component->get('editingPendingEmail'))->toBeNull();
+});
+
+test('F7 must-not-over-block: the same actor still opens an ordinary targets edit modal', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $this->actingAs($administrator);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create(['name' => 'Ordinary Target']);
+    $target->assignRole($editorRole);
+
+    Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->assertSet('editingUserId', $target->id);
+});
+
+test('F7 must-not-over-block, self row: an actor lacking roles.manage-administrators still opens, renames and re-emails their own row, and canEdit stays true for it', function () {
+    $administrator = User::factory()->create(['name' => 'Old Own Name', 'email' => 'own-row@arospe.es']);
+    $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
+    $this->actingAs($administrator);
+
+    $component = Livewire::test(Index::class);
+
+    $component->call('openEditModal', $administrator->id)
+        ->assertSet('editingUserId', $administrator->id);
+
+    $component->set('name', 'New Own Name')
+        ->set('email', 'new-own-row@arospe.es')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($administrator->fresh()->name)->toBe('New Own Name')
+        ->and($administrator->fresh()->pending_email)->toBe('new-own-row@arospe.es');
+
+    $ownRow = collect($component->get('users'))->firstWhere('id', $administrator->id);
+
+    expect($ownRow['canEdit'])->toBeTrue();
 });
 
 // --- Malformed / unknown ids handled by the component itself ---

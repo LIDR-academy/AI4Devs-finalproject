@@ -16,9 +16,12 @@ use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\UserInvitation;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
@@ -169,4 +172,81 @@ test('creating a user directly throws for an actor holding no permissions at all
         ->toThrow(AuthorizationException::class);
 
     expect(User::count())->toBe($countBefore);
+});
+
+// =====================================================================
+// Story 0015 finding F6 part 1 — CreateUser is rate limited at 10 attempts
+// per 3600 seconds, keyed on the acting user's id (Q3), checked AFTER its
+// Gate::authorize('create', ...) and BEFORE its DB::transaction() -- an
+// unauthorized caller is refused without consuming quota, and no refused
+// attempt opens a transaction.
+// =====================================================================
+
+test('an 11th CreateUser call within the window is rejected with a validation message and sends no invitation', function () {
+    Notification::fake();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('users.create');
+    $this->actingAs($actor);
+
+    $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $createUser = app(CreateUser::class);
+
+    for ($i = 0; $i < 10; $i++) {
+        $createUser("Hire {$i}", "throttle-hire-{$i}@arospe.es", (string) $role->id, UserStatus::Active);
+    }
+
+    expect(fn () => $createUser('Eleventh Hire', 'throttle-hire-11@arospe.es', (string) $role->id, UserStatus::Active))
+        ->toThrow(ValidationException::class);
+
+    expect(User::where('email', 'throttle-hire-11@arospe.es')->exists())->toBeFalse();
+    Notification::assertSentTimes(UserInvitation::class, 10);
+});
+
+test('the CreateUser rate limit resets after the decay window', function () {
+    Notification::fake();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('users.create');
+    $this->actingAs($actor);
+
+    $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $createUser = app(CreateUser::class);
+
+    for ($i = 0; $i < 10; $i++) {
+        $createUser("Reset Hire {$i}", "reset-hire-{$i}@arospe.es", (string) $role->id, UserStatus::Active);
+    }
+
+    expect(fn () => $createUser('Blocked Hire', 'reset-hire-blocked@arospe.es', (string) $role->id, UserStatus::Active))
+        ->toThrow(ValidationException::class);
+
+    $this->travel(61)->minutes();
+
+    $createUser('After Reset Hire', 'reset-hire-after@arospe.es', (string) $role->id, UserStatus::Active);
+
+    expect(User::where('email', 'reset-hire-after@arospe.es')->exists())->toBeTrue();
+});
+
+test('a refused unauthorized CreateUser attempt consumes no rate-limit quota for that same actor', function () {
+    Notification::fake();
+
+    $actor = User::factory()->create(); // deliberately no users.create yet
+    $this->actingAs($actor);
+
+    $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $createUser = app(CreateUser::class);
+
+    expect(fn () => $createUser('Refused Hire', 'refused-hire@arospe.es', (string) $role->id, UserStatus::Active))
+        ->toThrow(AuthorizationException::class);
+
+    // Same actor, now authorized -- if the refused attempt above had consumed quota, one of
+    // these 10 would be refused by the rate limiter instead of succeeding.
+    $actor->givePermissionTo('users.create');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    for ($i = 0; $i < 10; $i++) {
+        $createUser("Quota Hire {$i}", "quota-hire-{$i}@arospe.es", (string) $role->id, UserStatus::Active);
+    }
+
+    expect(User::where('email', 'like', 'quota-hire-%@arospe.es')->count())->toBe(10);
 });

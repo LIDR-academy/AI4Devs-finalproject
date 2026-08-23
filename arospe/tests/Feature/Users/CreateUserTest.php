@@ -31,7 +31,7 @@ test('creating a user sends exactly one invitation, to the new user only', funct
         ->set('name', 'New Hire')
         ->set('email', 'new.hire@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -55,7 +55,7 @@ test('a failed creation sends no invitation to anyone', function () {
         ->set('name', 'Duplicate Attempt')
         ->set('email', 'marta.ruiz@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasErrors(['email']);
 
@@ -74,7 +74,7 @@ test('a newly created user has a null email_verified_at and a null pending_email
         ->set('name', 'New Hire')
         ->set('email', 'fresh.hire@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasNoErrors();
 
@@ -96,7 +96,7 @@ test('a newly created user is given an unusable password', function () {
         ->set('name', 'New Hire')
         ->set('email', 'no.password@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasNoErrors();
 

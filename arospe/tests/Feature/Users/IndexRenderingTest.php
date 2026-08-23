@@ -101,8 +101,18 @@ test('the status badge shows the correct label for each status', function (UserS
 test('the empty state renders when there are no users to display', function () {
     // Per the story's "Resolved questions": the users list always includes at least the acting
     // administrator's own row in real use (mount() -> loadUsers() always finds >= 1 row for a
-    // signed-in caller), so this branch is exercised in isolation by forcing $users empty
-    // directly, not through a reachable sign-in journey.
+    // signed-in caller), so this branch has no reachable sign-in journey to exercise it through
+    // and must be forced.
+    //
+    // Story 0015 finding F4: $users is now #[Locked], so it can no longer be forced empty via
+    // set('users', []) -- that write is exactly what this test's own mechanism needs to avoid.
+    // The SoftDeletingScope installed on App\Models\User (story 0005) is the mechanism chosen
+    // instead: soft-deleting the acting administrator's own row removes it from every
+    // User::query() result, including loadUsers()'s bare query, while leaving the already-
+    // resolved Auth::user() instance untouched -- actingAs() sets it directly on the guard
+    // in-memory, it is never re-queried from the database, so mount()'s own
+    // Gate::authorize('viewAny', ...) still passes for the now-trashed row. This still fails if
+    // the empty-state branch is removed from the view, exactly as set('users', []) did.
     //
     // Exact copy is explicitly unpinned by the story (decision 1 only fixes "New user"'s
     // wording, not the empty state's). "No users found." is the real, confirmed copy the view
@@ -112,8 +122,9 @@ test('the empty state renders when there are no users to display', function () {
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
 
+    $administrator->delete();
+
     Livewire::test(Index::class)
-        ->set('users', [])
         ->assertSee('No users found.');
 });
 
@@ -298,7 +309,7 @@ test('submitting an invalid form renders a validation message next to the field 
         ->set('name', 'Valid Name')
         ->set('email', 'valid.create@arospe.es')
         ->set('roleId', (string) $role->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->set($property, $value)
         ->call('save')
         ->assertSee($message)

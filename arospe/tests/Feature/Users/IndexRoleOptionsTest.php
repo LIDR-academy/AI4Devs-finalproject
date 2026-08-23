@@ -76,7 +76,7 @@ test('roleRules() rejects the config-resolved Super Admin role id and accepts th
         ->set('name', 'Forged Submission')
         ->set('email', 'forged@arospe.es')
         ->set('roleId', (string) $configuredSuperAdminRole->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasErrors(['roleId']);
 
@@ -89,7 +89,7 @@ test('roleRules() rejects the config-resolved Super Admin role id and accepts th
         ->set('name', 'Legitimate Submission')
         ->set('email', 'legitimate@arospe.es')
         ->set('roleId', (string) $ordinaryRoleNamedSuperAdmin->id)
-        ->set('status', UserStatus::Active)
+        ->set('status', UserStatus::Active->value)
         ->call('save')
         ->assertHasNoErrors();
 

@@ -31,9 +31,12 @@ use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\PendingEmailVerification;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
@@ -528,4 +531,139 @@ test('a stale, pre-hydrated roles collection on the target cannot evade the Supe
 
     expect($target->fresh()->name)->toBe('Original Name')
         ->and($target->fresh()->hasRole('Super Admin'))->toBeTrue();
+});
+
+// =====================================================================
+// Story 0015 finding F10 — a refused email change (RequestEmailChange's own
+// throttle, or its pending_email uniqueness collision) must not leave a
+// partially applied edit: the name, status and role writes run in the same
+// DB::transaction(), but the email-change delegation used to run AFTER that
+// transaction had already committed, so a throttled/refused email change
+// still left the name/status/role changes persisted. Fixed by moving the
+// delegation above the transaction (and above no authorization check),
+// while keeping it below authorizeRoleAndStatusChange() so the
+// notification still cannot fire for an actor who was never allowed to
+// touch the target's sensitive attributes at all.
+// =====================================================================
+
+test('a refused email change during an edit leaves name, status and role all unchanged, and sends no verification mail for the rolled-back write', function () {
+    Notification::fake();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('users.edit');
+    $this->actingAs($actor);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+
+    $target = User::factory()->create([
+        'name' => 'Original Name',
+        'email' => 'throttled-edit-target@arospe.es',
+        'status' => UserStatus::Active,
+    ]);
+    $target->assignRole($editorRole);
+
+    // Exhaust THIS actor's (target, actor) email-change allowance before the edit under test, so
+    // UpdateUser's own delegation to RequestEmailChange is what refuses -- not anything else.
+    $requestEmailChange = app(RequestEmailChange::class);
+    $requestEmailChange($target, 'first-throttle-fill@arospe.es');
+    $requestEmailChange($target, 'second-throttle-fill@arospe.es');
+    $requestEmailChange($target, 'third-throttle-fill@arospe.es');
+
+    $updateUser = app(UpdateUser::class);
+
+    expect(fn () => $updateUser(
+        $target,
+        'Changed Name',
+        'refused-change@arospe.es',
+        (string) $blogEditorRole->id,
+        UserStatus::Suspended,
+        $requestEmailChange,
+    ))->toThrow(ValidationException::class);
+
+    $target->refresh();
+
+    // Asserted on the database row, not on the exception alone.
+    expect($target->name)->toBe('Original Name')
+        ->and($target->status)->toBe(UserStatus::Active)
+        ->and($target->hasRole('Editor'))->toBeTrue()
+        ->and($target->hasRole('Blog Editor'))->toBeFalse();
+
+    // The three throttle-filling calls above already sent three notifications -- asserting
+    // exactly 3 (not 0) is what proves no FOURTH one was sent for the refused, rolled-back edit.
+    Notification::assertSentOnDemandTimes(PendingEmailVerification::class, 3);
+});
+
+test('a successful edit that changes name, status, role and email together applies all three writes and still parks the pending email', function () {
+    Notification::fake();
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('users.edit');
+    $this->actingAs($actor);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+
+    $target = User::factory()->create([
+        'name' => 'Original Name',
+        'email' => 'combined-edit-target@arospe.es',
+        'status' => UserStatus::Active,
+    ]);
+    $target->assignRole($editorRole);
+
+    $updateUser = app(UpdateUser::class);
+
+    $updateUser(
+        $target,
+        'Fully Changed Name',
+        'combined-new-address@arospe.es',
+        (string) $blogEditorRole->id,
+        UserStatus::Suspended,
+        app(RequestEmailChange::class),
+    );
+
+    $target->refresh();
+
+    expect($target->name)->toBe('Fully Changed Name')
+        ->and($target->status)->toBe(UserStatus::Suspended)
+        ->and($target->hasRole('Blog Editor'))->toBeTrue()
+        ->and($target->hasRole('Editor'))->toBeFalse()
+        ->and($target->getRawOriginal('email'))->toBe('combined-edit-target@arospe.es')
+        ->and($target->pending_email)->toBe('combined-new-address@arospe.es');
+
+    Notification::assertSentOnDemandTimes(PendingEmailVerification::class, 1);
+});
+
+// =====================================================================
+// Story 0015 finding F17 — "a self-edit of email never requires
+// roles.manage-administrators" is a real, intentional property (the email
+// guard inside authorizeRoleAndStatusChange() is never even reached for a
+// self-edit, since __invoke() only calls it when ! $isSelfEdit), but
+// nothing pinned it as a test before this story. Pinned here, against
+// UpdateUser directly -- the class that owns the rule -- rather than
+// against the Livewire component, so a future refactor of the component
+// cannot silently drop the coverage.
+// =====================================================================
+
+test('an actor holding users.edit but not roles.manage-administrators, who themselves holds the Administrator role, can change their own email address', function () {
+    $actor = User::factory()->create(['email' => 'self-edit-admin@arospe.es', 'status' => UserStatus::Active]);
+    $actor->assignRole('Administrator');
+    $actor->givePermissionTo('users.edit'); // deliberately NOT roles.manage-administrators
+    $this->actingAs($actor);
+
+    $updateUser = app(UpdateUser::class);
+
+    $updateUser(
+        $actor,
+        $actor->name,
+        'self-edit-new-address@arospe.es',
+        (string) $actor->roles()->value('roles.id'),
+        $actor->status,
+        app(RequestEmailChange::class),
+    );
+
+    $actor->refresh();
+
+    expect($actor->getRawOriginal('email'))->toBe('self-edit-admin@arospe.es')
+        ->and($actor->pending_email)->toBe('self-edit-new-address@arospe.es');
 });
