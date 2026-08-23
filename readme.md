@@ -730,4 +730,14 @@ A continuación se registra el histórico de Pull Requests de este repositorio:
     *   Formato Markdown y sintaxis de diagramas Mermaid validados.
     *   Pipeline inicial de integración continua (`ci.yml`) configurado.
 
+### 🔄 PR #2: `feat: código funcional MVP RestoStock — Entrega 2`
+*   **URL:** [github.com/lacruzjd/AI4Devs-finalproject/pull/1](https://github.com/lacruzjd/AI4Devs-finalproject/pull/1)
+*   **Ramas:** `feature-entrega2-JDLM` ➡️ `main`
+*   **Ticket Relacionado:** TK-002 a TK-062 (backend, frontend, persistencia real, DevSecOps, gobernanza `.agents/`)
+*   **Descripción del Cambio:** Código funcional del MVP — backend, frontend y base de datos conectados, con el flujo principal completo: autenticación por PIN, extracción de bodega, tablero FEFO, consumo parcial, descartes/mermas, alertas críticas, consumo por recetas, cierre de turno y conciliación, dashboard de reportes de mermas. Post-MVP: persistencia real en PostgreSQL (Prisma, migrado a v7 con driver adapters), gestión de personal, trazabilidad de movimientos de stock, gestión de catálogo maestro, reabastecimiento de bodega. Infraestructura: Docker Compose + OpenTofu, pipeline CI/CD (lint, tests, contract-drift, gitleaks, Trivy), gate de calidad ticket-scoped, framework de gobernanza IA `.agents/` versionado.
+*   **Quality Gates (DoD):**
+    *   `pnpm run build && pnpm run lint` — 0 errores.
+    *   `pnpm run test` — suite completa de tests unitarios/integración en verde (backend + frontend).
+    *   Verificación en vivo con Docker real de los flujos críticos (login, extracción, reabastecimiento, catálogo, movimientos).
+
 
