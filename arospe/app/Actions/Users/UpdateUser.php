@@ -76,6 +76,28 @@ class UpdateUser
             $this->authorizeRoleAndStatusChange($user, $roleId, $email, $status);
         }
 
+        // Story 0015 finding F10: this delegation must run AFTER
+        // authorizeRoleAndStatusChange() above (so the sensitive-attribute
+        // gate always runs before any email change can be parked or
+        // mailed) and BEFORE the DB::transaction() below (so a refusal here
+        // -- RequestEmailChange's own throttle, or its pending_email
+        // uniqueness collision -- never leaves the name/status/role writes
+        // below persisted). It must NOT move inside that transaction:
+        // RequestEmailChange ends with a non-transactional
+        // Notification::route(...)->notify(...) call, and wrapping it would
+        // relocate that side effect too -- see docs/errors-log.md's
+        // "Wrapping existing code in a DB::transaction() moved a cache
+        // flush nobody had written" entry. The residual this leaves is
+        // strictly smaller than before: a later failure inside the
+        // transaction can leave a `pending_email` parked with no other
+        // change applied -- a reversible, non-privileged state the
+        // target's own confirmation link governs.
+        $currentEmail = Str::lower((string) $user->getRawOriginal('email'));
+
+        if ($email !== $currentEmail) {
+            $requestEmailChange($user, $email);
+        }
+
         DB::transaction(function () use ($user, $name, $status, $roleId, $isSelfEdit): void {
             $user->fill(['name' => $name]);
 
@@ -91,12 +113,6 @@ class UpdateUser
                 $user->syncRoles([(int) $roleId]);
             }
         });
-
-        $currentEmail = Str::lower((string) $user->getRawOriginal('email'));
-
-        if ($email !== $currentEmail) {
-            $requestEmailChange($user, $email);
-        }
 
         return $user;
     }

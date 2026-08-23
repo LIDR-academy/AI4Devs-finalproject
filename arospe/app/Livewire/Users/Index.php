@@ -10,7 +10,9 @@ use App\Concerns\UserValidationRules;
 use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -36,6 +38,7 @@ class Index extends Component
     /**
      * @var array<int, array{id: string, name: string, email: string, pendingEmail: string|null, role: string|null, status: UserStatus, canEdit: bool, canDelete: bool}>
      */
+    #[Locked]
     public array $users = [];
 
     #[Locked]
@@ -69,8 +72,15 @@ class Index extends Component
      * `?string`: assigning a JS `null` into the status `<select>` corrupts its native
      * selection state, so this property must never actually be null while bound via
      * wire:model.
+     *
+     * A plain `string`, not `UserStatus` (story 0015 finding F8): Livewire's `EnumSynth`
+     * hydrates a forged backing value via `$type::from($value)` during property hydration --
+     * before `statusRules()`'s `Rule::enum(UserStatus::class)` ever runs -- so a typed enum
+     * property let a forged value raise an unhandled `\ValueError` (or, for an empty string,
+     * a `TypeError`) instead of failing validation cleanly. Never nullable: see the paragraph
+     * above.
      */
-    public UserStatus $status = UserStatus::Inactive;
+    public string $status = UserStatus::Inactive->value;
 
     public bool $showDeleteModal = false;
 
@@ -94,9 +104,16 @@ class Index extends Component
 
     /**
      * Open the create-user form with empty fields.
+     *
+     * Authorizes as its first statement (story 0015 finding F7): a
+     * disclosure/UI-opening path, not only the mutating save(), per
+     * docs/security/livewire-authorization.md's "gate every method that
+     * mutates *or discloses*" rule.
      */
     public function openCreateModal(): void
     {
+        Gate::authorize('create', User::class);
+
         $this->reset(['editingUserId', 'editingPendingEmail', 'name', 'email', 'roleId', 'status']);
         $this->showModal = true;
     }
@@ -109,10 +126,33 @@ class Index extends Component
      * not apply here — a malformed or unknown id must fail on its own, which
      * User::findOrFail() already does by raising ModelNotFoundException when
      * the query returns no row.
+     *
+     * Authorizes with `updateSensitiveAttributes` for any *other* target,
+     * unconditionally (story 0015 finding F7) — never a role-membership
+     * check re-derived here, since `UserPolicy::updateSensitiveAttributes()`
+     * already delegates to `update()` and then returns `true` outright for a
+     * target that does not hold the Administrator role, so the unconditional
+     * call is identical to `update` for an ordinary target and strictly
+     * stronger for an Administrator-holding one. The check runs before any
+     * of the target's attributes are copied into public component state,
+     * because `pending_email` and `status` are exactly what
+     * `UserPolicy` itself classifies as sensitive.
+     *
+     * The actor's own row is exempt (`$target->is(Auth::user())`) — an
+     * identity check, not a role/tier lookup, mirroring the identical
+     * exemption `App\Actions\Users\UpdateUser`'s `$isSelfEdit` already
+     * applies at the write layer. `pending_email` and `status` are not
+     * sensitive when disclosed to the row's own owner. See
+     * docs/architecture/authorization.md for the full rule and its accepted
+     * side effects.
      */
     public function openEditModal(string $userId): void
     {
         $target = User::findOrFail($userId);
+
+        if (! $target->is(Auth::user())) {
+            Gate::authorize('updateSensitiveAttributes', $target);
+        }
 
         $currentRoleId = $target->roles()->value('roles.id');
 
@@ -121,7 +161,7 @@ class Index extends Component
         $this->name = $target->name;
         $this->email = $target->email;
         $this->roleId = $currentRoleId !== null ? (string) $currentRoleId : '';
-        $this->status = $target->status;
+        $this->status = $target->status->value;
         $this->showModal = true;
     }
 
@@ -153,6 +193,12 @@ class Index extends Component
             'status' => $this->statusRules(),
         ]);
 
+        // Hydrated once, at this boundary (story 0015 finding F8): $status is transported as a
+        // plain string so a forged value fails statusRules()'s Rule::enum() cleanly, but the
+        // downstream actions still take a real UserStatus, and a validated string is guaranteed
+        // to be one of its backing values by this point.
+        $validated['status'] = UserStatus::from((string) $validated['status']);
+
         if ($target === null) {
             $this->createNewUser($createUser, $validated);
         } else {
@@ -176,10 +222,18 @@ class Index extends Component
 
     /**
      * Open the delete-confirmation modal for the target user.
+     *
+     * Authorizes as its first statement (story 0015 finding F7): a
+     * disclosure/UI-opening path, not only the mutating deleteUser(). Unlike
+     * openEditModal(), this gate carries **no** self-row exemption — see
+     * deleteUser()'s docblock for why, and for how that interacts with F11's
+     * self-delete no-op below.
      */
     public function confirmDelete(string $userId): void
     {
         $target = User::findOrFail($userId);
+
+        Gate::authorize('delete', $target);
 
         $this->deletingUserId = $target->id;
         $this->deletingUserName = $target->name;
@@ -192,6 +246,21 @@ class Index extends Component
      * UserPolicy::delete() is the permission rule; the soft delete plus email
      * obfuscation (and password_reset_tokens revocation) happen via the
      * App\Models\User::delete() override added by story 0005.
+     *
+     * Self-delete is a silent no-op (story 0015 finding F11): neither
+     * UserPolicy::delete() nor its Gate::before Super Admin bypass stops an
+     * actor from deleting their own account, so the guard lives here, as a
+     * direct identity check rather than a Gate-mediated rule -- a
+     * Gate-mediated rule would be undone by a Super Admin actor's own
+     * Gate::before bypass, same reasoning as UpdateUser's Super Admin
+     * guards. This is reachable only through confirmDelete() above (
+     * $deletingUserId is #[Locked]), whose gate carries no self-row
+     * exemption -- so an actor whose own row holds Administrator is already
+     * refused there, with a visible AuthorizationException, before this
+     * no-op ever gets a chance to fire. The no-op is therefore observable
+     * only for an actor UserPolicy::delete() would otherwise allow to
+     * delete their own row (a Super Admin, via Gate::before, or a
+     * non-Administrator actor holding users.delete directly).
      */
     public function deleteUser(): void
     {
@@ -201,9 +270,24 @@ class Index extends Component
 
         $target = User::findOrFail($this->deletingUserId);
 
+        if ($target->is(Auth::user())) {
+            return;
+        }
+
         Gate::authorize('delete', $target);
 
+        $targetId = $target->id;
+
         $target->delete();
+
+        // Audit trail (story 0015 finding F5) -- this app has no dedicated
+        // audit-log table; a structured log line is the minimum trace for
+        // the highest-value mutation this screen performs. Mirrors the
+        // shipped shape at App\Livewire\Roles\Index::deleteRole().
+        Log::info('User deleted', [
+            'actor_id' => Auth::id(),
+            'user_id' => $targetId,
+        ]);
 
         $this->loadUsers();
         unset($this->usersSummary);
@@ -268,14 +352,20 @@ class Index extends Component
      * meaningful creation-order tiebreaker since `id` is a time-ordered
      * UUIDv7. The acting administrator's own row is not filtered out.
      *
-     * `canEdit`/`canDelete` mirror `UserPolicy::update()`/`delete()`
-     * (`Gate::allows()` runs the same policy method `save()`/`deleteUser()`
-     * authorize with), so the row actions' disabled state matches what a
-     * click would do for almost every actor/target combination — an
-     * already-trashed target, or an Administrator-holding target edited
-     * without `roles.manage-administrators` (delete only; `canEdit` needs
-     * only `users.edit`), both resolve to `false` here the same way they
-     * would 403 there.
+     * `canDelete` mirrors `UserPolicy::delete()` (`Gate::allows()` runs the
+     * same policy method deleteUser() authorizes with). `canEdit` (story
+     * 0015 finding F7) is `true` for the actor's own row -- the same
+     * identity exemption openEditModal() applies -- and otherwise
+     * `Gate::allows('updateSensitiveAttributes', $user)`, the same,
+     * unconditional ability openEditModal() authorizes any *other* target
+     * against. So the row actions' disabled state matches what a click
+     * would do for almost every actor/target combination: an
+     * already-trashed target, or an Administrator-holding *other* target
+     * edited without `roles.manage-administrators` (both `canEdit` and
+     * `canDelete` now resolve to `false` for that combination, since
+     * `updateSensitiveAttributes` requires that permission for an
+     * Administrator-holding target), resolve to `false` here the same way
+     * they would 403 there.
      *
      * One combination has drifted since story 0008a and is a known,
      * accepted gap rather than a bug to fix here: for a **Super Admin
@@ -309,7 +399,7 @@ class Index extends Component
                     'pendingEmail' => $user->pending_email,
                     'role' => $role?->name,
                     'status' => $user->status,
-                    'canEdit' => Gate::allows('update', $user),
+                    'canEdit' => $user->is(Auth::user()) || Gate::allows('updateSensitiveAttributes', $user),
                     'canDelete' => Gate::allows('delete', $user),
                 ];
             })
@@ -328,12 +418,23 @@ class Index extends Component
      */
     private function createNewUser(CreateUser $createUser, array $validated): void
     {
-        $createUser(
+        $created = $createUser(
             (string) $validated['name'],
             (string) $validated['email'],
             (string) $validated['roleId'],
             $validated['status'],
         );
+
+        // Audit trail (story 0015 finding F5) -- mirrors the shipped shape
+        // at App\Livewire\Roles\Index::saveRole(). Never logs the generated
+        // password or the invitation token, neither of which is available
+        // here at all -- CreateUser generates and consumes both internally.
+        Log::info('User created', [
+            'actor_id' => Auth::id(),
+            'user_id' => $created->id,
+            'role' => $this->currentRoleName($created),
+            'status' => $created->status->value,
+        ]);
     }
 
     /**
@@ -350,6 +451,14 @@ class Index extends Component
      */
     private function updateExistingUser(UpdateUser $updateUser, RequestEmailChange $requestEmailChange, User $target, array $validated): void
     {
+        // Captured BEFORE the write (story 0015 finding F5): $updateUser()
+        // mutates this same $target instance in place, so reading these
+        // after the call would report the new values as the "before" ones
+        // -- the same reason App\Livewire\Roles\Index::saveRole() captures
+        // $beforePermissionNames above its own sync.
+        $beforeRole = $this->currentRoleName($target);
+        $beforeStatus = $target->getRawOriginal('status');
+
         $updateUser(
             $target,
             (string) $validated['name'],
@@ -358,5 +467,31 @@ class Index extends Component
             $validated['status'],
             $requestEmailChange,
         );
+
+        // Audit trail (story 0015 finding F5). Never logs an email-change
+        // verification token -- neither this method nor UpdateUser ever
+        // holds one; RequestEmailChange only mails a signed link.
+        Log::info('User updated', [
+            'actor_id' => Auth::id(),
+            'user_id' => $target->id,
+            'role_before' => $beforeRole,
+            'role_after' => $this->currentRoleName($target),
+            'status_before' => $beforeStatus,
+            'status_after' => $target->status->value,
+        ]);
+    }
+
+    /**
+     * The name of the given user's single current role, or null when
+     * roleless -- a typed helper so callers reading it for the audit log
+     * above don't each need their own @var Role|null hint (matching
+     * loadUsers()'s existing pattern for the same relation).
+     */
+    private function currentRoleName(User $user): ?string
+    {
+        /** @var Role|null $role */
+        $role = $user->roles->first();
+
+        return $role?->name;
     }
 }

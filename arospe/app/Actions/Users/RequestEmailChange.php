@@ -5,6 +5,7 @@ namespace App\Actions\Users;
 use App\Models\User;
 use App\Notifications\PendingEmailVerification;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -46,9 +47,40 @@ class RequestEmailChange
         // validation every time, since the uniqueness rule ignores the
         // caller's own row) or cycling through arbitrary addresses drives
         // unlimited mail to a third-party inbox.
-        $key = 'email-change:'.$user->getKey();
+        //
+        // Story 0015 finding F6 part 2: TWO limiters, not one, since the
+        // original single target-only key let an administrator (a second,
+        // cross-user caller since story 0004) burn a victim's own 3/hour
+        // allowance. `Auth::id() ?? 'unauthenticated'` is the fail-closed
+        // direction for the one caller with no authenticated actor at all
+        // -- never fall back to $user->getKey(), which would silently
+        // restore the burnable behaviour this exists to close.
+        $actorKey = Auth::id() ?? 'unauthenticated';
+
+        // (1) Per (target, actor): the existing 3/hour allowance, now
+        // un-burnable across actors, so a target always retains their own
+        // three regardless of administrator activity. Checked FIRST: both
+        // limiters use RateLimiter::attempt(), which consumes on success,
+        // so checking the wider one first would burn aggregate quota on a
+        // request this narrower one is about to refuse anyway.
+        $key = 'email-change:'.$user->getKey().':'.$actorKey;
 
         if (! RateLimiter::attempt($key, maxAttempts: 3, callback: fn (): bool => true, decaySeconds: 3600)) {
+            throw ValidationException::withMessages([
+                'email' => trans('users.email_change.throttled'),
+            ]);
+        }
+
+        // (2) Per target, aggregate: preserves the inbox-flood ceiling the
+        // old target-only key provided once (1) stopped being a global cap.
+        // 10/hour matches decision Q3's already-decided CreateUser ceiling
+        // (one order of magnitude above a single user's own allowance) --
+        // a tunable, since the security property (a victim's own allowance
+        // is not consumable by anyone else, and their inbox still has a
+        // ceiling) holds at any value >= 3.
+        $aggregateKey = 'email-change-target:'.$user->getKey();
+
+        if (! RateLimiter::attempt($aggregateKey, maxAttempts: 10, callback: fn (): bool => true, decaySeconds: 3600)) {
             throw ValidationException::withMessages([
                 'email' => trans('users.email_change.throttled'),
             ]);

@@ -211,8 +211,12 @@ test('the role select renders the available roles and omits Super Admin', functi
 
 test('the edit and delete row actions are disabled for a target the actor cannot edit or delete', function () {
     // An Administrator holds users.edit/users.delete but not roles.manage-administrators
-    // (RolePermissionSeeder), so an Administrator-holding target is exactly the case where
-    // UserPolicy::update() still allows editing but UserPolicy::delete() does not.
+    // (RolePermissionSeeder). Story 0015 finding F7 narrowed canEdit for an OTHER
+    // Administrator-holding target from "needs only users.edit" to the same
+    // updateSensitiveAttributes ability canDelete already required (see the identical
+    // canEdit->toBeFalse() rewrite at tests/Feature/Users/IndexTest.php:116-118, which pins the
+    // same underlying rule this test pins at the rendered-HTML level) -- both actions are now
+    // disabled for this target, not just delete.
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
@@ -233,7 +237,7 @@ test('the edit and delete row actions are disabled for a target the actor cannot
         $html
     );
 
-    expect($isRowActionDisabled('edit-user-'.$administratorTarget->id))->toBeFalse()
+    expect($isRowActionDisabled('edit-user-'.$administratorTarget->id))->toBeTrue()
         ->and($isRowActionDisabled('delete-user-'.$administratorTarget->id))->toBeTrue()
         ->and($isRowActionDisabled('edit-user-'.$superAdminTarget->id))->toBeTrue()
         ->and($isRowActionDisabled('delete-user-'.$superAdminTarget->id))->toBeTrue();

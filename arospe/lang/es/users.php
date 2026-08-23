@@ -36,6 +36,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Creación de usuarios
+    |--------------------------------------------------------------------------
+    |
+    | Texto del límite de solicitudes propio de App\Actions\Users\CreateUser
+    | (historia 0015, hallazgo F6 parte 1).
+    |
+    */
+
+    'create' => [
+        'throttled' => 'Demasiadas solicitudes de creación de usuarios. Inténtalo de nuevo más tarde.',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Inicio de sesión
     |--------------------------------------------------------------------------
     |

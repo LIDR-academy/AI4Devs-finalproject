@@ -3,12 +3,11 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class UserInvitation extends Notification implements ShouldQueue
+class UserInvitation extends Notification
 {
     use Queueable, SerializesModels;
 
@@ -21,6 +20,14 @@ class UserInvitation extends Notification implements ShouldQueue
      * why the two must not be conflated. `$email` is passed explicitly
      * rather than read off `$notifiable` in toMail(), matching
      * PendingEmailVerification's convention.
+     *
+     * Deliberately does NOT implement ShouldQueue (story 0015 finding F9,
+     * decision Q1): while queued, this constructor's plaintext, still-valid
+     * password-set token would have been serialized into a `jobs` table row
+     * (QUEUE_CONNECTION=database in real deployments). Sends synchronously
+     * instead, matching Fortify's own ResetPassword notification -- no
+     * functional difference to the operator, since account creation is
+     * already an administrator-initiated, non-realtime action.
      */
     public function __construct(
         public string $token,
