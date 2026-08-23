@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  COACH
+  COACHEE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ClassType {
+  INDIVIDUAL
+  GROUP
+}
+
+enum ClassStatus {
+  ACTIVE
+  CANCELED
+}
+
+enum BlockType {
+  PERSONAL
+  GYM_WIDE
+}
+
+enum ClassTypePreference {
+  INDIVIDUAL
+  GROUP
+  BOTH
+}
+
+enum DevicePlatform {
+  WEB
+}
+
+model User {
+  id                   String   @id @default(uuid()) @db.Uuid
+  email                String   @unique
+  password_hash        String
+  must_change_password Boolean @default(true)
+  name                 String
+  phone                String
+  specialities         String?
+  role                 UserRole
+  status               UserStatus @default(ACTIVE)
+  level_id             String?   @db.Uuid
+  class_type_preference ClassTypePreference?
+  bank_account         String?
+  ssn                  String?
+  dni                  String?
+  additional_info      String?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  level           Level?              @relation(fields: [level_id], references: [id])
+  enrolledClasses ClassEnrollment[]
+  waitingLists    WaitingList[]
+  createdClasses  TrainingClass[]     @relation("CreatedBy")
+  assignedClasses TrainingClass[]     @relation("AssignedCoach")
+  coachedSeries   RecurrenceSeries[]
+  createdSeries   RecurrenceSeries[]  @relation("SeriesCreator")
+  createdBlocks   Block[]             @relation("BlockCreator")
+  coachBlocks     Block[]             @relation("BlockedCoach")
+  notifications   Notification[]
+  refreshTokens   RefreshToken[]
+  auditLogs       SecurityAuditLog[]
+  deviceTokens    DeviceToken[]
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  token_hash String    @unique
+  user_id    String    @db.Uuid
+  expires_at DateTime
+  created_at DateTime  @default(now())
+  revoked_at DateTime?
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model Level {
+  id         String @id @default(uuid()) @db.Uuid
+  name       String @unique
+  color      String
+  sort_order Int
+
+  users            User[]
+  trainingClasses  TrainingClass[]
+  recurrenceSeries RecurrenceSeries[]
+}
+
+model TrainingClass {
+  id                   String      @id @default(uuid()) @db.Uuid
+  class_type           ClassType
+  assigned_coach_id    String      @db.Uuid
+  level_id             String?     @db.Uuid
+  start_time           DateTime
+  duration_minutes     Int
+  status               ClassStatus @default(ACTIVE)
+  description          String?
+  recurrence_series_id String?     @db.Uuid
+  google_event_id      String?
+  created_by           String      @db.Uuid
+  created_at           DateTime    @default(now())
+  updated_at           DateTime    @updatedAt
+
+  assignedCoach    User               @relation("AssignedCoach", fields: [assigned_coach_id], references: [id])
+  createdBy        User               @relation("CreatedBy", fields: [created_by], references: [id])
+  level            Level?             @relation(fields: [level_id], references: [id])
+  recurrenceSeries RecurrenceSeries?  @relation(fields: [recurrence_series_id], references: [id])
+  enrollments      ClassEnrollment[]
+  waitingLists     WaitingList[]
+  notifications    Notification[]
+}
+
+model ClassEnrollment {
+  id         String   @id @default(uuid()) @db.Uuid
+  class_id   String   @db.Uuid
+  coachee_id String   @db.Uuid
+  joined_at  DateTime @default(now())
+
+  class   TrainingClass @relation(fields: [class_id], references: [id])
+  coachee User          @relation(fields: [coachee_id], references: [id])
+
+  @@unique([class_id, coachee_id])
+}
+
+model WaitingList {
+  id         String   @id @default(uuid()) @db.Uuid
+  class_id   String   @db.Uuid
+  coachee_id String   @db.Uuid
+  joined_at  DateTime @default(now())
+
+  class   TrainingClass @relation(fields: [class_id], references: [id])
+  coachee User          @relation(fields: [coachee_id], references: [id])
+
+  @@unique([class_id, coachee_id])
+}
+
+model RecurrenceSeries {
+  id          String    @id @default(uuid()) @db.Uuid
+  class_type  ClassType
+  level_id    String?   @db.Uuid
+  coach_id    String    @db.Uuid
+  day_of_week Int
+  start_time  DateTime
+  start_date  DateTime
+  created_by  String    @db.Uuid
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  level           Level?          @relation(fields: [level_id], references: [id])
+  coach           User            @relation(fields: [coach_id], references: [id])
+  createdBy       User            @relation("SeriesCreator", fields: [created_by], references: [id])
+  trainingClasses TrainingClass[]
+}
+
+model Block {
+  id              String      @id @default(uuid()) @db.Uuid
+  block_type      BlockType
+  created_by      String      @db.Uuid
+  coach_id        String?     @db.Uuid
+  start_time      DateTime
+  end_time        DateTime
+  status          ClassStatus @default(ACTIVE)
+  description     String?
+  google_event_id String?
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  createdBy User  @relation("BlockCreator", fields: [created_by], references: [id])
+  coach     User? @relation("BlockedCoach", fields: [coach_id], references: [id])
+}
+
+model SecurityAuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actor_id    String   @db.Uuid
+  action      String
+  resource    String
+  resource_id String?
+  outcome     String
+  created_at  DateTime @default(now())
+
+  actor User @relation(fields: [actor_id], references: [id])
+}
+
+model Notification {
+  id                String    @id @default(uuid()) @db.Uuid
+  notification_type Int
+  recipient_id      String    @db.Uuid
+  class_id          String?   @db.Uuid
+  content           String
+  is_read           Boolean   @default(false)
+  sent_at           DateTime  @default(now())
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  recipient User             @relation(fields: [recipient_id], references: [id])
+  class     TrainingClass?   @relation(fields: [class_id], references: [id])
+}
+
+model DeviceToken {
+  id         String         @id @default(uuid()) @db.Uuid
+  token      String         @unique
+  user_id    String         @db.Uuid
+  platform   DevicePlatform @default(WEB)
+  is_active  Boolean        @default(true)
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, is_active])
+}
