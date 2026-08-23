@@ -444,7 +444,7 @@ Fuente y descripción del modelo en [docs/architecture/architecture.md §2](docs
 
 ## 4. Especificación de la API
 
-> Backend vía API REST (FastAPI). Se documentan 3 endpoints representativos de los flujos principales del MVP; el resto de rutas siguen el mismo patrón (ver estructura de routers por dominio en [docs/architecture/architecture.md §4](docs/architecture/architecture.md#4-estructura-de-carpetas--backend-fastapi)).
+> Backend vía API REST (FastAPI). Se documentan 3 endpoints ya implementados en el repositorio de código ([Rentame](https://github.com/juanma1000/Rentame)), representativos de los dominios `usuarios` e `inmuebles`; el resto de rutas de esos dos dominios (`agencias`, `PUT/PATCH /inmuebles/{id}`, `GET /inmuebles/mios`, `GET /inmuebles/gestionados`) siguen el mismo patrón (ver estructura de routers por dominio en [docs/architecture/architecture.md §4](docs/architecture/architecture.md#4-estructura-de-carpetas--backend-fastapi)). Los dominios `identidad`, `arrendamiento`, `riesgo` y `pagos` todavía no están implementados — sus endpoints (`/identidad/validar`, `/solicitudes`, `/pagos/iniciar`, etc.) son diseño, no código ya construido.
 
 ```yaml
 openapi: 3.0.3
@@ -452,7 +452,83 @@ info:
   title: Plataforma de Arrendamiento Residencial — API (extracto)
   version: 0.1.0
 paths:
-  /inmuebles:
+  /usuarios/registro:
+    post:
+      summary: Registrar una cuenta con rol fijo (HU-008)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, nombre, rol]
+              properties:
+                email: { type: string, example: "propietario@example.com" }
+                password: { type: string, format: password }
+                nombre: { type: string, example: "Ana Gómez" }
+                rol: { type: string, enum: [propietario, agente, inquilino] }
+      responses:
+        "201":
+          description: Cuenta creada; devuelve el access token de sesión
+          content:
+            application/json:
+              example:
+                access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                usuario:
+                  id: "b3f1c2a0-1111-4a2b-9c3d-000000000001"
+                  email: "propietario@example.com"
+                  nombre: "Ana Gómez"
+                  rol: "propietario"
+        "409":
+          description: El email ya está registrado
+
+  /usuarios/login:
+    post:
+      summary: Autenticar con email y contraseña (HU-008)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string, format: password }
+      responses:
+        "200":
+          description: Credenciales válidas; devuelve el access token
+          content:
+            application/json:
+              example:
+                access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                usuario:
+                  id: "b3f1c2a0-1111-4a2b-9c3d-000000000001"
+                  email: "propietario@example.com"
+                  nombre: "Ana Gómez"
+                  rol: "propietario"
+        "401":
+          description: Credenciales inválidas (mismo error para email inexistente o contraseña incorrecta)
+
+  /inmuebles/publicos:
+    get:
+      summary: Buscar inmuebles disponibles, sin autenticación (HU-003)
+      responses:
+        "200":
+          description: Listado de inmuebles con estado "disponible"
+          content:
+            application/json:
+              example:
+                - id: "b3f1c2a0-1111-4a2b-9c3d-000000000001"
+                  direccion: "Calle 10 # 5-30"
+                  ciudad: "Medellín"
+                  barrio: "El Poblado"
+                  valor_mensual: 2200000
+                  habitaciones: 2
+                  banos: 2
+                  foto_url: "http://localhost:9000/inmuebles/.../foto1.jpg"
+
+  /inmuebles/:
     post:
       summary: Publicar un inmueble (HU-001 / HU-002)
       security:
@@ -460,7 +536,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               required: [direccion, ciudad, tipo, area_m2, habitaciones, banos, valor_mensual]
@@ -474,7 +550,8 @@ paths:
                 banos: { type: integer, example: 2 }
                 valor_mensual: { type: number, example: 2000000 }
                 descripcion: { type: string }
-                propietario_id: { type: string, format: uuid, description: "Solo si publica un agente" }
+                propietario_id: { type: string, format: uuid, description: "Solo si publica un agente (HU-002)" }
+                fotos: { type: array, items: { type: string, format: binary } }
       responses:
         "201":
           description: Inmueble creado con estado "disponible"
@@ -485,66 +562,6 @@ paths:
                 estado: "disponible"
                 direccion: "Calle 10 # 43-12"
                 valor_mensual: 2000000
-
-  /inmuebles:
-    get:
-      summary: Buscar inmuebles disponibles (HU-003)
-      parameters:
-        - in: query
-          name: ciudad
-          schema: { type: string }
-        - in: query
-          name: valor_max
-          schema: { type: number }
-        - in: query
-          name: habitaciones_min
-          schema: { type: integer }
-        - in: query
-          name: tipo
-          schema: { type: string, enum: [apartamento, casa, habitacion, otro] }
-      responses:
-        "200":
-          description: Listado de inmuebles con estado "disponible"
-          content:
-            application/json:
-              example:
-                - id: "b3f1c2a0-1111-4a2b-9c3d-000000000001"
-                  direccion_general: "El Poblado, Medellín"
-                  valor_mensual: 2000000
-                  habitaciones: 2
-                  banos: 2
-                  foto_url: "https://storage.example.com/inmuebles/.../foto1.jpg"
-
-  /identidad/validar:
-    post:
-      summary: Validar identidad del inquilino (HU-004)
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required: [numero_cedula, img_frente, img_dorso]
-              properties:
-                numero_cedula: { type: string, example: "1017123456" }
-                img_frente: { type: string, format: binary }
-                img_dorso: { type: string, format: binary }
-      responses:
-        "200":
-          description: Resultado de la validación
-          content:
-            application/json:
-              example:
-                estado: "aprobado"
-        "422":
-          description: Validación rechazada por el proveedor de identidad
-          content:
-            application/json:
-              example:
-                estado: "rechazado"
-                motivo: "Documento ilegible"
 
 components:
   securitySchemes:
@@ -635,4 +652,4 @@ Prioridad: Alta · Estimación: 08 (17h)
 
 ## 7. Pull Requests
 
-> Pendiente — el proyecto está todavía en fase de diseño (PRD, historias de usuario y arquitectura técnica); no se ha abierto código de implementación, por lo que no existen aún Pull Requests propias del desarrollo del producto que documentar. Esta sección se completará con las 3 PRs más representativas una vez comience la implementación (ver [tickets de trabajo](#6-tickets-de-trabajo) como punto de partida).
+
