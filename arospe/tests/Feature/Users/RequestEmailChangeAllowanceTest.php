@@ -149,3 +149,57 @@ test('a request refused by the narrower (target, actor) limiter does not consume
 
     expect(RateLimiter::attempts($aggregateKey))->toBe(6);
 });
+
+// Story 0015 Phase 4 re-audit finding F-A: the per-target aggregate ceiling (10/hour) is shared
+// by every ADMINISTRATOR acting on a target, but must never apply to the target's OWN
+// self-service request -- that key is inherently burnable by third-party activity, and the
+// target is not a third party. Before this fix, four administrators each sending 3 requests
+// (each safely within their own per-(target, actor) cap) exhausted the target's aggregate
+// allowance before the target ever acted, locking them out of changing their own address via
+// App\Livewire\Settings\Profile for up to an hour -- contradicting this story's own "a target
+// always retains their own three regardless of administrator activity" acceptance criterion.
+test('an administrator exhausting the per-target aggregate ceiling does not prevent the target changing their own address', function () {
+    Notification::fake();
+
+    $target = User::factory()->create(['status' => UserStatus::Active]);
+
+    $requestEmailChange = app(RequestEmailChange::class);
+
+    // Four distinct administrators exhaust the FULL 10/hour aggregate ceiling between them
+    // (3 + 3 + 3 + 1 = 10), each safely within their OWN 3/hour (target, actor) allowance --
+    // the identical setup shape as "the per-target aggregate ceiling refuses further
+    // requests..." above, which already proves an 11th third-party request is refused once this
+    // ceiling is reached.
+    $sequence = 0;
+
+    for ($administratorIndex = 0; $administratorIndex < 3; $administratorIndex++) {
+        $administrator = User::factory()->create();
+        $administrator->assignRole('Administrator');
+        $this->actingAs($administrator);
+
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            $sequence++;
+            $requestEmailChange($target, "aggregate-exempt-{$sequence}@arospe.es");
+        }
+    }
+
+    $fourthAdministrator = User::factory()->create();
+    $fourthAdministrator->assignRole('Administrator');
+    $this->actingAs($fourthAdministrator);
+
+    $sequence++;
+    $requestEmailChange($target, "aggregate-exempt-{$sequence}@arospe.es");
+
+    // The per-target aggregate ceiling is now fully exhausted by third-party (administrator)
+    // activity alone. The target's own self-service request must still succeed -- driven
+    // through the real call site, App\Livewire\Settings\Profile -- because the aggregate
+    // limiter never applies to the target's own request.
+    $this->actingAs($target);
+
+    Livewire::test(Profile::class)
+        ->set('email', 'targets-own-choice-after-aggregate@arospe.es')
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    expect($target->fresh()->pending_email)->toBe('targets-own-choice-after-aggregate@arospe.es');
+});

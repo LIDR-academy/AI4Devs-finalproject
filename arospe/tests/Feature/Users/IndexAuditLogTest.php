@@ -125,6 +125,66 @@ test('editing a user logs the actor, the target, and the PRE-WRITE before/after 
         ->once();
 });
 
+// Story 0015 Phase 4 re-audit finding F-B: UserPolicy::updateSensitiveAttributes() classifies an
+// email rewrite as severity-equivalent to account takeover, and the delete path is already
+// logged -- so the "User updated" line must record whether an edit requested an email change,
+// even though it never logs the address itself (UpdateUser only ever parks a new address in
+// `pending_email`; there is no "after" value to log until its own confirmation link is used).
+test('editing a user with a changed email logs email_change_requested as true', function () {
+    Log::spy();
+
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create(['status' => UserStatus::Active, 'email' => 'audited-before@arospe.es']);
+    $target->assignRole($role);
+
+    Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->set('email', 'audited-after@arospe.es')
+        ->set('roleId', (string) $role->id)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    Log::shouldHaveReceived('info')
+        ->withArgs(fn (string $message, array $context): bool => $message === 'User updated'
+            && ($context['user_id'] ?? null) === $target->id
+            && ($context['email_change_requested'] ?? null) === true
+            // The new address itself must never appear in the logged context -- only the
+            // boolean flag; UpdateUser never writes it to `users.email` synchronously anyway.
+            && ! str_contains((string) json_encode($context), 'audited-after@arospe.es')
+            && usersAuditLogContextHasNoSecretLookingKey($context))
+        ->once();
+});
+
+test('editing a user without changing the email logs email_change_requested as false', function () {
+    Log::spy();
+
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create(['status' => UserStatus::Active, 'name' => 'Before Name']);
+    $target->assignRole($role);
+
+    Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->set('name', 'After Name')
+        ->set('roleId', (string) $role->id)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    Log::shouldHaveReceived('info')
+        ->withArgs(fn (string $message, array $context): bool => $message === 'User updated'
+            && ($context['user_id'] ?? null) === $target->id
+            && ($context['email_change_requested'] ?? null) === false
+            && usersAuditLogContextHasNoSecretLookingKey($context))
+        ->once();
+});
+
 test('deleting a user logs the actor and the target', function () {
     Log::spy();
 

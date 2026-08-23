@@ -37,6 +37,18 @@ affordance surfaces "cancel the pending change"?) that belongs to a future Users
 than to a backend hardening story. Recorded here so it reads as a decision rather than a dropped
 finding; **not** in this story's Files to create/modify, Tests, or Acceptance criteria.
 
+**F-C — no refused privileged attempt is logged (Phase 4 finding, `appsec-auditor`).** All three
+`Log::info` calls this story adds (F5) sit after a successful mutation; every refusal —
+`AuthorizationException` from `openCreateModal()`/`openEditModal()`/`confirmDelete()`/`save()`, and
+either action's rate-limit `ValidationException` — logs nothing, so repeated probing of an
+Administrator-holding target by an actor lacking `roles.manage-administrators` leaves no trace.
+**Decision (human, 2026-08-24): defer.** The identical gap exists on `App\Livewire\Roles\Index`,
+which this story does not touch; closing it only here would leave the same hole on that screen, and
+this is better addressed as a cross-cutting audit-logging pass covering both admin screens at once
+than as a one-off addition buried in a Users-only hardening story. Recorded so it reads as a decision
+rather than an overlooked finding; **not** in this story's Files to create/modify, Tests, or
+Acceptance criteria.
+
 ## Type
 backend | includes database-expert: no
 

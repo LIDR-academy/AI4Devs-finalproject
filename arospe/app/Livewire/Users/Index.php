@@ -459,6 +459,26 @@ class Index extends Component
         $beforeRole = $this->currentRoleName($target);
         $beforeStatus = $target->getRawOriginal('status');
 
+        // Story 0015 Phase 4 re-audit finding F-B: whether this edit
+        // requested an email change at all -- not the new address itself,
+        // which UpdateUser never writes to `users.email` synchronously
+        // (RequestEmailChange only parks it in `pending_email`), so there is
+        // no "after" value to log yet. UserPolicy::updateSensitiveAttributes()
+        // classifies an email rewrite as severity-equivalent to account
+        // takeover, and the delete path below is already logged -- an
+        // "User updated" line silent on this was the highest-value mutation
+        // this screen performs going unrepresented in the only audit trail
+        // this app has. Compared the same way UpdateUser's own
+        // authorizeRoleAndStatusChange() compares it (Str::lower() both
+        // sides, against getRawOriginal() rather than a possibly-mutated
+        // in-memory attribute), matching $beforeStatus's use of
+        // getRawOriginal() above -- and computed here, above the write, for
+        // the identical reason: nothing about `users.email` changes as a
+        // side effect of the call below, but reading it in the same place
+        // as every other "before" value keeps the audit-log block's ordering
+        // uniform rather than making this one field an exception.
+        $emailChanged = Str::lower((string) $validated['email']) !== Str::lower((string) $target->getRawOriginal('email'));
+
         $updateUser(
             $target,
             (string) $validated['name'],
@@ -469,8 +489,11 @@ class Index extends Component
         );
 
         // Audit trail (story 0015 finding F5). Never logs an email-change
-        // verification token -- neither this method nor UpdateUser ever
-        // holds one; RequestEmailChange only mails a signed link.
+        // verification token or the submitted/new address itself -- neither
+        // this method nor UpdateUser ever holds a token, and the address is
+        // not yet the account's real email (it is only ever parked in
+        // `pending_email` until its own confirmation link is used); only
+        // whether a change was requested (F-B) is logged.
         Log::info('User updated', [
             'actor_id' => Auth::id(),
             'user_id' => $target->id,
@@ -478,6 +501,7 @@ class Index extends Component
             'role_after' => $this->currentRoleName($target),
             'status_before' => $beforeStatus,
             'status_after' => $target->status->value,
+            'email_change_requested' => $emailChanged,
         ]);
     }
 

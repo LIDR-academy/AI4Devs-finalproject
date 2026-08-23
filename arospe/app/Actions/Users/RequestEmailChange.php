@@ -71,19 +71,36 @@ class RequestEmailChange
             ]);
         }
 
-        // (2) Per target, aggregate: preserves the inbox-flood ceiling the
-        // old target-only key provided once (1) stopped being a global cap.
-        // 10/hour matches decision Q3's already-decided CreateUser ceiling
-        // (one order of magnitude above a single user's own allowance) --
-        // a tunable, since the security property (a victim's own allowance
-        // is not consumable by anyone else, and their inbox still has a
-        // ceiling) holds at any value >= 3.
-        $aggregateKey = 'email-change-target:'.$user->getKey();
+        // (2) Per target, aggregate -- but NEVER applied to the target's own
+        // self-service request (story 0015 Phase 4 re-audit finding F-A).
+        // This key is shared by every administrator acting on this target,
+        // so it is inherently burnable by third-party activity; the target
+        // themselves is not a third party. Without this exemption, four
+        // administrators each sending 3 requests (each within their own
+        // per-(target,actor) cap) exhausts the aggregate 10 before the
+        // target ever acts, locking them out of changing their own address
+        // via App\Livewire\Settings\Profile for up to an hour -- entirely
+        // caused by administrator activity, contradicting this story's own
+        // "a target always retains their own three regardless of
+        // administrator activity" acceptance criterion. The target's own
+        // three-per-hour allowance above is unaffected either way.
+        $isSelfService = Auth::id() !== null && $user->is(Auth::user());
 
-        if (! RateLimiter::attempt($aggregateKey, maxAttempts: 10, callback: fn (): bool => true, decaySeconds: 3600)) {
-            throw ValidationException::withMessages([
-                'email' => trans('users.email_change.throttled'),
-            ]);
+        if (! $isSelfService) {
+            // Preserves the inbox-flood ceiling the old target-only key
+            // provided once (1) stopped being a global cap. 10/hour matches
+            // decision Q3's already-decided CreateUser ceiling (one order of
+            // magnitude above a single user's own allowance) -- a tunable,
+            // since the security property (a victim's own allowance is not
+            // consumable by anyone else, and their inbox still has a
+            // ceiling) holds at any value >= 3.
+            $aggregateKey = 'email-change-target:'.$user->getKey();
+
+            if (! RateLimiter::attempt($aggregateKey, maxAttempts: 10, callback: fn (): bool => true, decaySeconds: 3600)) {
+                throw ValidationException::withMessages([
+                    'email' => trans('users.email_change.throttled'),
+                ]);
+            }
         }
 
         try {
