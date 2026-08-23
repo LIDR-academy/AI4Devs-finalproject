@@ -1231,6 +1231,33 @@ All error responses follow this shape:
 
 ---
 
+### POST /notifications/device-token
+
+- **Description:** Registers (or re-registers) the calling user's push notification device credential. Idempotent: if the token already exists it is updated — reassigned to the currently authenticated account and marked active; otherwise created.
+- **Auth/Role:** Authenticated (any role: ADMIN, COACH, COACHEE).
+- **Path Params:** None.
+- **Query Params:** None.
+- **Request Body:**
+  ```json
+  { "token": "string (FCM registration token, length 32–4096)", "platform": "WEB" }
+  ```
+  - `platform` optional, default `"WEB"`. Unknown/extra fields rejected (`VALIDATION_ERROR`).
+- **Success Response:** `200 OK` (always 200 — upsert is idempotent by design)
+  ```json
+  { "id": "uuid", "platform": "WEB", "createdAt": "2026-08-21T10:00:00.000Z" }
+  ```
+- **Error Responses:**
+  - `400 VALIDATION_ERROR` — missing/short/long token or unexpected fields (`{ error: { code, message, ref } }`).
+  - `401 UNAUTHORIZED` — missing/expired JWT.
+  - `403 FORBIDDEN` — role outside ADMIN/COACH/COACHEE (not reachable with current role set; kept for consistency).
+- **Business Rules Applied:**
+  - Latecomer-wins ownership: the same physical device registering under account B silently moves the credential from account A.
+  - Re-registration of an inactive (stale-deactivated) token reactivates it.
+  - Invalid-payload attempts are logged as security events (actor, action, outcome) via `AuditLogger`.
+  - No push dispatch is triggered by this endpoint; registration only affects future fan-outs.
+
+---
+
 ### PATCH /notifications/:id/read
 
 - **Description:** Marks a single notification as read.
@@ -1309,5 +1336,6 @@ All error responses follow this shape:
 | PATCH | `/coaches/:id/status` | Admin | Activate/deactivate coach |
 | GET | `/coaches/:id/financial` | Admin | Get coach financial data |
 | GET | `/notifications` | Any | List notifications (role-scoped) |
+| POST | `/notifications/device-token` | Any | Register/re-register this device's push token |
 | PATCH | `/notifications/:id/read` | Any | Mark notification as read |
 | GET | `/health` | None | Health check |

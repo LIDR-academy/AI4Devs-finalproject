@@ -6,6 +6,7 @@ import {
 } from "@/infrastructure/context/PullToRefreshContext";
 import { PullToRefreshIndicator } from "@/ui/components/coachee/PullToRefreshIndicator";
 import { NotificationBell } from "@/ui/components/NotificationBell";
+import { PushNotificationPrompt } from "@/ui/components/PushNotificationPrompt";
 
 const bottomNavItems = [
   {
@@ -92,6 +93,7 @@ function CoacheeLayoutInner() {
           ))}
         </div>
       </nav>
+      <PushNotificationPrompt />
     </div>
   );
 }

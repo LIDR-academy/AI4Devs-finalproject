@@ -3,6 +3,7 @@ dist/
 build/
 .env
 .env.local
+env.local
 *.log
 .DS_Store
 .prisma/

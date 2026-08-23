@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/infrastructure/context/AuthContext";
 import { NotificationBell } from "@/ui/components/NotificationBell";
+import { PushNotificationPrompt } from "@/ui/components/PushNotificationPrompt";
 
 const navItems = [
   {
@@ -124,6 +125,7 @@ export function CoachLayout() {
           <Outlet />
         </main>
       </div>
+      <PushNotificationPrompt />
     </div>
   );
 }

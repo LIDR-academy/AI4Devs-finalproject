@@ -21,6 +21,8 @@ import { ListCoachees } from "../application/use-cases/ListCoachees.js";
 import { ListCoaches } from "../application/use-cases/ListCoaches.js";
 import { ListTrainingClasses } from "../application/use-cases/ListTrainingClasses.js";
 import { ListWaitingLists } from "../application/use-cases/ListWaitingLists.js";
+import { RegisterDeviceToken } from "../application/use-cases/RegisterDeviceToken.js";
+import { SendNotification } from "../application/use-cases/SendNotification.js";
 import { UpdateCoach } from "../application/use-cases/UpdateCoach.js";
 import { UpdateCoachee } from "../application/use-cases/UpdateCoachee.js";
 import { UpdateCoacheeLevel } from "../application/use-cases/UpdateCoacheeLevel.js";
@@ -36,10 +38,13 @@ import { EnrollmentPolicy } from "../domain/services/EnrollmentPolicy.js";
 import { WaitingListPolicy } from "../domain/services/WaitingListPolicy.js";
 import { CalendarHealthMonitor } from "../infrastructure/adapters/calendar/CalendarHealthMonitor.js";
 import { GoogleCalendarAdapter } from "../infrastructure/adapters/calendar/GoogleCalendarAdapter.js";
+import { createFCMAdapter } from "../infrastructure/adapters/notifications/FCMNotificationAdapter.js";
 import { Aes256GcmEncryptionService } from "../infrastructure/encryption/Aes256GcmEncryptionService.js";
 import { AuditLogger } from "../infrastructure/logging/AuditLogger.js";
 import { PrismaCoacheeRepository } from "../infrastructure/persistence/PrismaCoacheeRepository.js";
 import { PrismaCoachRepository } from "../infrastructure/persistence/PrismaCoachRepository.js";
+import { PrismaDeviceTokenRepository } from "../infrastructure/persistence/PrismaDeviceTokenRepository.js";
+import { PrismaNotificationRepository } from "../infrastructure/persistence/PrismaNotificationRepository.js";
 import { env, resolveCalendarId } from "./env.js";
 
 const prisma = new PrismaClient();
@@ -122,4 +127,10 @@ export const container = {
     : null,
   cancelBlock: new CancelBlock(prisma, calendarProvider, new BlockPolicy(), auditLogger),
   listBlocks: new ListBlocks(prisma),
+  registerDeviceToken: new RegisterDeviceToken(new PrismaDeviceTokenRepository()),
+  sendNotification: new SendNotification(
+    new PrismaNotificationRepository(),
+    new PrismaDeviceTokenRepository(),
+    createFCMAdapter(),
+  ),
 };

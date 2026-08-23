@@ -39,6 +39,10 @@ enum ClassTypePreference {
   BOTH
 }
 
+enum DevicePlatform {
+  WEB
+}
+
 model User {
   id                   String   @id @default(uuid()) @db.Uuid
   email                String   @unique
@@ -70,6 +74,7 @@ model User {
   notifications   Notification[]
   refreshTokens   RefreshToken[]
   auditLogs       SecurityAuditLog[]
+  deviceTokens    DeviceToken[]
 }
 
 model RefreshToken {
@@ -202,4 +207,18 @@ model Notification {
 
   recipient User             @relation(fields: [recipient_id], references: [id])
   class     TrainingClass?   @relation(fields: [class_id], references: [id])
+}
+
+model DeviceToken {
+  id         String         @id @default(uuid()) @db.Uuid
+  token      String         @unique
+  user_id    String         @db.Uuid
+  platform   DevicePlatform @default(WEB)
+  is_active  Boolean        @default(true)
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, is_active])
 }

@@ -61,7 +61,7 @@ Required variables (already present in the committed template):
 - `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/coacher`
 - `JWT_SECRET` (min. 32 chars)
 - `COACH_FINANCIAL_ENCRYPTION_KEY` (exactly 32 chars)
-- Optional: `GOOGLE_CALENDAR_*` / `FCM_SERVER_KEY` — the API starts fine without them (Google Calendar provider degrades gracefully; notifications are stubs).
+- Optional: `GOOGLE_CALENDAR_*` / `FIREBASE_SERVICE_ACCOUNT_PATH` — the API starts fine without them (Google Calendar provider degrades gracefully; push notifications are stubs when unset).
 
 The Google Calendar service-account key is stored at `backend/secrets/coacher-calendar-sa-key.json` (gitignored).
 
