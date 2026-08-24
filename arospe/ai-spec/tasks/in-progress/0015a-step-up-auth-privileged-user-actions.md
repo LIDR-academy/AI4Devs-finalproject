@@ -10,8 +10,8 @@ identity, while this app already treats a comparable trust boundary — managing
 highest-value Users actions, and adds the UI affordance that makes the re-confirmation
 comprehensible rather than a surprise redirect.
 
-> **Split out of story [0015](done/0015-harden-users-crud-security-posture.md) on 2026-08-23**, following
-> the [0008](done/0008-super-admin-role-invariants.md) / [0008a](done/0008a-centralize-administrator-role-identification.md)
+> **Split out of story [0015](../done/0015-harden-users-crud-security-posture.md) on 2026-08-23**, following
+> the [0008](../done/0008-super-admin-role-invariants.md) / [0008a](../done/0008a-centralize-administrator-role-identification.md)
 > precedent. It was finding **F13** there. Two reasons for the split, both structural rather than
 > cosmetic: 0015 is declared **backend** and this work needs a re-confirmation affordance in
 > `resources/views/livewire/users.blade.php`, which story 0006's shipped UI does not have (verified —
@@ -174,7 +174,7 @@ The real mechanism, in three verified parts:
 
 **Why an in-method guard rather than route middleware.** `RequirePassword` is **not** on Livewire 4's
 `PersistentMiddleware` allow-list — verified, and already documented in this repo at
-[`docs/security/livewire-authorization.md`](../../docs/security/livewire-authorization.md), whose
+[`docs/security/livewire-authorization.md`](../../../docs/security/livewire-authorization.md), whose
 table lists `password.confirm` → `Illuminate\Auth\Middleware\RequirePassword` → "❌ no". So adding
 `->middleware(['password.confirm'])` to `routes/users.php` would protect the initial `GET /users` and
 leave **every** `/livewire/update` round-trip — which is where `save()` and `deleteUser()` actually
@@ -195,7 +195,7 @@ Line numbers are the verified `HEAD` (`00dd9c7`) ones as of 2026-08-23 and are a
   compares the elapsed time against `config('auth.password_timeout')` using the identical
   `>` comparison `RequirePassword` uses, and throws when stale. New subfolder `app/Actions/Auth/`,
   following the one-subfolder-per-area convention `app/Actions/Roles/` established (see
-  [base-standards.md](../../docs/conventions/base-standards.md#directory-structure)); it also exposes a
+  [base-standards.md](../../../docs/conventions/base-standards.md#directory-structure)); it also exposes a
   non-throwing `isRecentlyConfirmed(): bool` (named as a predicate, not the ambiguous `isConfirmed()` —
   confirmed *what* is unclear out of context) for the view's warning, so the UI hint and the guard
   cannot drift — the same "the hint reuses the guard's own predicate" rule the `Gate::allows()` UI hints
@@ -218,7 +218,7 @@ Line numbers are the verified `HEAD` (`00dd9c7`) ones as of 2026-08-23 and are a
 
 - **`app/Actions/Users/UpdateUser.php` (modify)** — call the guard from inside
   `authorizeRoleAndStatusChange()` (declared 132), so it binds the operation rather than one caller,
-  per [base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers).
+  per [base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers).
   Two placement rules, both load-bearing:
   - **It must fire only when a role or status change is actually happening**, never on every save.
     The method already computes `$isNoOpRoleChange` (148) and `$statusChanged` (167); the guard hangs
@@ -254,7 +254,7 @@ Line numbers are the verified `HEAD` (`00dd9c7`) ones as of 2026-08-23 and are a
      later story extracts one, the guard moves with it.
   2. A `#[Computed]` boolean (e.g. `requiresPasswordConfirmation()`) reading the guard's non-throwing
      predicate, for the view's warnings. Name it as a predicate per
-     [naming.md](../../docs/conventions/naming.md#boolean-properties).
+     [naming.md](../../../docs/conventions/naming.md#boolean-properties).
   3. Catch `PasswordConfirmationRequiredException` in `save()` and `deleteUser()` and route the actor
      to re-confirm: set the intended URL back to `users.index` explicitly
      (`redirect()->setIntendedUrl(route('users.index'))`) and issue the redirect through Livewire's own
@@ -287,7 +287,7 @@ Line numbers are the verified `HEAD` (`00dd9c7`) ones as of 2026-08-23 and are a
 
 - **`lang/en/users.php` and `lang/es/users.php` (modify)** — new keys under the existing `index`
   group, key-for-key identical across both files: the two warnings, plus any flash message shown on
-  return. `snake_case` leaves, per [naming.md](../../docs/conventions/naming.md#translation-keys).
+  return. `snake_case` leaves, per [naming.md](../../../docs/conventions/naming.md#translation-keys).
 
 **Confirmed *not* needed**, recorded so reviewers do not re-open them: **no `config/auth.php` change**
 and **no new timeout key** (the existing `auth.password_timeout` is reused verbatim); **no
@@ -301,7 +301,7 @@ a Super Admin.
 
 - **Creating a user is not step-up-gated.** Q2 named role/status changes and deletion only. Creation
   provisions a new account rather than seizing an existing one, and it is separately rate-limited by
-  story [0015](done/0015-harden-users-crud-security-posture.md)'s F6. Recorded as a decision so a future
+  story [0015](../done/0015-harden-users-crud-security-posture.md)'s F6. Recorded as a decision so a future
   reader does not read it as an oversight.
 - **A self-edit is not step-up-gated**, because a self-edit already applies neither a role nor a
   status change (`UpdateUser`'s `$isSelfEdit` branch, 75–92) — there is no privileged write to guard.
@@ -359,7 +359,7 @@ a Super Admin.
       with a fresh confirmation neither does. Prove the assertion can fail — flip the condition once
       and confirm the test goes red — per this repo's regression-proof convention.
 - [ ] **Full-suite regression:** run `php artisan test` and `vendor/bin/pint --format agent` **unscoped**
-      (see [base-standards.md](../../docs/conventions/base-standards.md#steps-1-and-2-are-the-iteration-forms-run-both-unscoped-before-declaring-the-work-done)).
+      (see [base-standards.md](../../../docs/conventions/base-standards.md#steps-1-and-2-are-the-iteration-forms-run-both-unscoped-before-declaring-the-work-done)).
       This story adds a guard inside an action that many existing tests exercise, so its blast radius
       is the whole Users suite by construction — expect existing tests that change a role or status to
       need the session key seeded, and treat each such amendment as a deliberate, listed change rather
@@ -417,17 +417,17 @@ change. There is one implementation of the freshness check, one timeout value sh
       is the whole finding), the fail-closed behaviour with no session, and whether the 423 response
       discloses anything it should not.
 - [ ] Documentation updated (docs-keeper):
-      - [`docs/architecture/authorization.md`](../../docs/architecture/authorization.md) — a new
+      - [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md) — a new
         section for step-up authentication as a **third** authorization layer alongside route
         middleware and policies: what it protects, why it is an in-method check rather than route
         middleware, and why it is deliberately not a `UserPolicy` ability.
-      - [`docs/security/livewire-authorization.md`](../../docs/security/livewire-authorization.md) —
+      - [`docs/security/livewire-authorization.md`](../../../docs/security/livewire-authorization.md) —
         its `PersistentMiddleware` table already records `password.confirm` as **not** persistent;
         this story is the first code to act on that row, so it becomes that row's worked example.
-      - [`docs/api/routes.md`](../../docs/api/routes.md)'s `users.index` subsection — the
+      - [`docs/api/routes.md`](../../../docs/api/routes.md)'s `users.index` subsection — the
         "the middleware column understates what protects this route" bullet gains the step-up
         requirement.
-      - [`docs/conventions/base-standards.md`](../../docs/conventions/base-standards.md) —
+      - [`docs/conventions/base-standards.md`](../../../docs/conventions/base-standards.md) —
         `app/Actions/Auth/` added to the directory listing, and
         `PasswordConfirmationRequiredException` (423) beside the two existing domain exceptions.
 - [ ] Acceptance criteria met.
@@ -436,9 +436,9 @@ change. There is one implementation of the freshness check, one timeout value sh
       freshness. Pre-existing, deliberately out of scope, and a candidate for its own follow-up story.
 
 ## Dependencies and related work
-- **Split from story [0015 — Harden the Users CRUD backend's security posture](done/0015-harden-users-crud-security-posture.md)**
-  (finding **F13**), on 2026-08-23, mirroring the [0008](done/0008-super-admin-role-invariants.md) /
-  [0008a](done/0008a-centralize-administrator-role-identification.md) precedent. 0015 records the
+- **Split from story [0015 — Harden the Users CRUD backend's security posture](../done/0015-harden-users-crud-security-posture.md)**
+  (finding **F13**), on 2026-08-23, mirroring the [0008](../done/0008-super-admin-role-invariants.md) /
+  [0008a](../done/0008a-centralize-administrator-role-identification.md) precedent. 0015 records the
   split in its own Dependencies section and in its Q2 resolution; this story owns F13 entirely, and
   0015 owns no part of it.
 - **Independent of 0015 — either may land first.** This story adds a *new* guard to
@@ -447,17 +447,17 @@ change. There is one implementation of the freshness check, one timeout value sh
   Neither depends on the other's outcome.
   > ⚠️ **They must not be implemented concurrently.** Both edit `app/Livewire/Users/Index.php` and
   > `resources/views/livewire/users.blade.php`, and per
-  > [`docs/contracts.md`](../../docs/contracts.md)'s Parallel Agent File-Ownership Rule two agents
+  > [`docs/contracts.md`](../../../docs/contracts.md)'s Parallel Agent File-Ownership Rule two agents
   > writing one file is a lost-edit bug waiting to happen — a rule this project adopted after a real
   > incident on this exact Blade file (see
-  > [`docs/errors-log.md`](../../docs/errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)).
+  > [`docs/errors-log.md`](../../../docs/errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)).
   > Whichever story reaches Phase 3 second rebases onto the first and re-verifies its own line
   > citations.
 - **Depends on shipped code only** — `laravel/fortify`'s password-confirmation flow (live, and the
   sole protection on `settings/security`), `App\Actions\Users\UpdateUser`'s post-0008a shape, and
   story 0006's Users modals. Nothing unfinished.
 - **Task ordering:** `0015` sorts before `0015a`, satisfying
-  [`docs/workflow.md`](../../docs/workflow.md#task-ordering-rule)'s rule, and the two are siblings
+  [`docs/workflow.md`](../../../docs/workflow.md#task-ordering-rule)'s rule, and the two are siblings
   rather than a dependency pair.
 
 ## Human decisions (recorded before Phase 3)
@@ -489,7 +489,7 @@ change. There is one implementation of the freshness check, one timeout value sh
 
 ## Provenance
 Finding **F13**, raised by `appsec-auditor` during story 0004's Phase 4 security audit and carried
-into story [0015](done/0015-harden-users-crud-security-posture.md) as one of ten consolidated non-blocking
+into story [0015](../done/0015-harden-users-crud-security-posture.md) as one of ten consolidated non-blocking
 items. Split into this standalone story on 2026-08-23 after `code-reviewer`'s Phase 2 INVEST review of
 0015 (blocking finding **B4**: F13's implementation guidance named two mechanisms that do not exist;
 **B6**: it carried no Gherkin at all). The mechanism described above replaces that guidance and was

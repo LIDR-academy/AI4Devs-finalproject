@@ -68,7 +68,7 @@ Feature: Audit trail for refused privileged attempts
 Line numbers are the verified working-tree ones read on 2026-08-24, **with story 0015's own changes
 already applied** (0015 is `in-progress/` and its F5/F7/F11 work has landed in the tree). They are a
 reading aid only — Phase 3 must re-locate every site, and must re-verify the list itself if 0015 or
-[0015a](0015a-step-up-auth-privileged-user-actions.md) lands further changes first.
+[0015a](in-progress/0015a-step-up-auth-privileged-user-actions.md) lands further changes first.
 
 ### The complete, verified set of refusal points
 
@@ -342,7 +342,7 @@ is visible rather than discovered at Phase 4.
   (Phase 4 finding **F-C**), on 2026-08-24. 0015 records the deferral in its "Deferred, deliberately —
   not silently dropped" section; that section stays as written, and this file is the follow-up it
   implies. 0015 owns no part of this work.
-- **Independent of sibling story [0015a — Step-up authentication for privileged Users actions](0015a-step-up-auth-privileged-user-actions.md).**
+- **Independent of sibling story [0015a — Step-up authentication for privileged Users actions](in-progress/0015a-step-up-auth-privileged-user-actions.md).**
   Different concerns entirely: 0015a adds a *guard*, this story adds *observation* of guards that
   already exist. Neither depends on the other's outcome and they may land in either order.
   > ⚠️ **They must not be implemented concurrently.** Both touch `app/Livewire/Users/Index.php` —
@@ -378,7 +378,7 @@ logging convention alongside it.
 Filed as this standalone story on 2026-08-24 after `code-reviewer`'s Phase 5 review of 0015 found that
 the deferral was recorded in prose but had **no follow-up task file** — unlike sibling finding F13,
 which had been properly split off as
-[0015a](0015a-step-up-auth-privileged-user-actions.md). The same review's informational finding
+[0015a](in-progress/0015a-step-up-auth-privileged-user-actions.md). The same review's informational finding
 **I-2** (originating in the auditor's own report) noted that F-C's list of Users refusal points was
 incomplete; **the enumerated tables above were therefore built by reading both components' current
 code directly rather than by trusting either prior list**, and they add the two sites both lists
