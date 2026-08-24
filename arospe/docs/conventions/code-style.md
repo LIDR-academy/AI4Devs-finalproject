@@ -224,7 +224,45 @@ actually correct: a `#[Computed]` method takes no parameters at all (Livewire ca
 neither constructor nor method injection is available, and manual container resolution is the only
 option. Don't read this as license to reach for `app()` elsewhere.
 
-_Last updated: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions), Phase 6:
+Task 0015b repeats the same split for `App\Actions\Auth\LogRefusedPrivilegedAttempt` across seven
+classes — constructor-injected into all five domain actions, method-injected into both Livewire
+components' action methods — which is the rule and its documented exception applied unchanged, not a
+third case. What it does add is the constraint that falls out of the exception:
+
+> **An action must be resolved from the container, never `new`-ed — including in tests.** This story
+> gave `RequestEmailChange`, `EnforceAdministratorPermissionGrant` and `EnforceGrantorPermissionScope`
+> their **first** constructor dependency, and every existing `new RequestEmailChange` call site broke
+> at once: ten of them in `tests/Feature/Settings/EmailChangeTest.php`, each rewritten to
+> `app(RequestEmailChange::class)` with no assertion touched. A zero-argument constructor is not a
+> contract — the constructor is where this convention says a shared dependency goes, so any action can
+> acquire one in a later story.
+
+✅ Good — how a direct-call test reaches an action, per the 0008a rule that these are independently callable:
+
+```php
+// tests/Feature/Settings/EmailChangeTest.php
+app(RequestEmailChange::class)($user, 'new-address@example.com');
+```
+
+❌ Bad — the shape those ten call sites used until task 0015b:
+
+```php
+// anti-pattern — breaks the moment the action gains its first constructor dependency
+(new RequestEmailChange)($user, 'new-address@example.com');
+```
+
+_Last updated: 2026-08-24 — Task 0015b (log refused privileged attempts), Phase 6: extended the
+constructor-injection exception with the constraint that falls out of it — **an action must be resolved
+from the container, never `new`-ed, including in tests**. This story gave three actions their *first*
+constructor dependency, and every `new RequestEmailChange` call site broke at once (ten in
+`tests/Feature/Settings/EmailChangeTest.php`, all rewritten to `app(RequestEmailChange::class)` with no
+assertion changed), which is the proof that a zero-argument constructor is not a contract. The story's
+own seven injection sites are the existing rule and its exception applied unchanged — five actions
+constructor-inject `LogRefusedPrivilegedAttempt`, both Livewire components method-inject it — not a
+third case, so the rule above is unmodified. Nothing else on this page changed: no new type, brace,
+validation-trait or PHPDoc convention._
+
+_Previously: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions), Phase 6:
 added the constructor-injection exception, with the real ✅/❌ pair from
 `App\Actions\Auth\EnsureRecentPasswordConfirmation`'s three call sites (two constructor-injected, one
 method-injected, one `app()`-resolved out of necessity) — found during Phase 6 review rather than named

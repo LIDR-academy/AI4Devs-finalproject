@@ -17,6 +17,7 @@ Cross-cutting concern — single source of truth for roles & permissions. Other 
 - [Middleware aliases](#middleware-aliases)
 - [Policies](#policies)
 - [Step-up authentication — the third layer](#step-up-authentication--the-third-layer)
+- [Recording a refusal — what every gate owes the audit trail](#recording-a-refusal--what-every-gate-owes-the-audit-trail)
 - [Configuration](#configuration)
 - [How to gate something](#how-to-gate-something)
   - [Gating a Livewire route: use `can:`, never `permission:`](#gating-a-livewire-route-use-can-never-permission)
@@ -57,6 +58,8 @@ The authorization foundation is **live and in real use**: roles and permissions 
 - **Since task 0013 the *navigation* is gated too, and it is gated by data rather than by Blade.** [`config/modules.php`](../../config/modules.php) is this repo's first declarative permission-driven UI registry: a sidebar entry renders only when the Gate grants that entry's configured ability, an emptied group renders no heading at all, and a later epic plugs its module in by appending one entry — no component change. Hiding a link is presentation only; the enforcement is still the route's `can:` gate (task 0012). See [The second half of a module gate](#the-second-half-of-a-module-gate-the-sidebar-registry).
 
 - **Since task 0015a there is a *third* authorization layer, and it is not an ability.** Route middleware and policies both ask questions about the account; neither asks whether the person at the keyboard is still the account holder, which a hijacked or unattended session passes trivially. [`App\Actions\Auth\EnsureRecentPasswordConfirmation`](../../app/Actions/Auth/EnsureRecentPasswordConfirmation.php) requires a **recently confirmed password** before five specific writes on the Users screen — another user's role, status or email; a deletion; an Administrator-tier creation — reusing Laravel's own `password.confirm` session key and timeout rather than adding a second one. It is a direct throw rendering **423**, never a `Gate` check and never a `UserPolicy` ability, and it runs *after* every `Gate::authorize()` on its branch. See [Step-up authentication](#step-up-authentication--the-third-layer).
+
+- **Since task 0015b every refusal on both admin screens is recorded, not only every success.** [`App\Actions\Auth\LogRefusedPrivilegedAttempt`](../../app/Actions/Auth/LogRefusedPrivilegedAttempt.php) writes one `Log::warning('Privileged action refused', …)` line for each authorization *and* rate-limit refusal across `App\Livewire\Users\Index`, `App\Livewire\Roles\Index` and the five domain actions behind them — same shape at both layers, so a non-dashboard caller inherits the trace. The refusal itself is untouched: same exception, status, message and timing. See [Recording a refusal](#recording-a-refusal--what-every-gate-owes-the-audit-trail), and note that a refusal on these screens produces one of **two** message strings.
 
 Still **ungated**: every route in [`routes/settings.php`](../../routes/settings.php) and the `dashboard` route, which carry only `auth` / `verified` / `password.confirm`. Those are per-user settings screens with no catalog permission behind them; the module screens of PRD Epics 2–5 will gate the same way `users.index` and `roles.index` do. The `dashboard` route's sidebar entry is correspondingly the one registry item that ships with an empty `permissions` list, and it is allow-listed by name in a test so a second cannot join it silently.
 
@@ -955,6 +958,140 @@ Two notices carry a **second** predicate beside it, and both exist because a not
 
 > ⚠️ **What this layer does *not* cover, recorded rather than implied.** `settings/security` still relies on route middleware alone, so its own `/livewire/update` round trips are not re-checked; and `settings/profile` lets an actor change their own email with **no** step-up check at all — the same self-service change `UpdateUser`'s `$isSelfEdit` exemption leaves alone, but for a narrower reason there. Both are pre-existing, both are named residuals in [security/step-up-authentication.md](../security/step-up-authentication.md#-open-items-this-layer-still-does-not-close), and neither is closed by task 0015a.
 
+## Recording a refusal — what every gate owes the audit trail
+
+Task 0015b. The three layers above decide **whether** an attempt proceeds; none of them records that it did not. Until this story every refusal in this app was correct and completely invisible — an actor repeatedly probing an `Administrator`-holding target, or hammering a rate-limited action, left nothing behind, while the *successful* mutations sitting beside them had been writing `Log::info` audit lines since task 0015. **Gating a method and knowing when the gate fired are two different properties, and the second one has to be built.** This section is the copyable pattern; it sits alongside [the module-gate pattern](#the-copyable-module-gate-pattern-and-the-three-alternatives-rejected) and [the sidebar registry](#the-second-half-of-a-module-gate-the-sidebar-registry) as the third thing a later epic's admin screen inherits rather than re-invents.
+
+Both admin screens and the five domain actions behind them now write exactly one structured line per refusal:
+
+```php
+// app/Actions/Auth/LogRefusedPrivilegedAttempt.php — log()
+Log::warning('Privileged action refused', [
+    'actor_id' => $actor?->id,
+    'ability' => $ability,
+    'target_type' => $targetType,
+    'target_id' => $targetId,
+]);
+```
+
+Four properties of that line, each a decision rather than a default:
+
+- **`Log::warning`, not `Log::info`.** A refusal is an anomaly, not an outcome. Putting it at a different level from the success lines is what makes "show me every refused attempt" a level filter rather than a message-substring grep.
+- **The keys are generic (`target_type` / `target_id`), not per-domain.** The two screens' existing success lines already disagree — `Log::info('Role saved', ['role_id' => …])` versus `Log::info('User deleted', ['user_id' => …])` — and the step-up warning uses `user_id` + `action` on top of that. Rather than add a fourth shape, one pair of keys covers users, roles and any future third admin screen. The pre-existing success lines and the step-up lines are **unchanged**; this is the shape new refusal logging adopts, not a migration of what already ships.
+- **The message string is a constant, never interpolated.** Interpolating a value into the message rather than into the context array is exactly how that value evades a structured-log filter.
+- **The line records who attempted what against what, and nothing else** — no password, no invitation token, no email-change hash, no session id, no request body. `tests/Feature/Users/RefusalLoggingTest.php` asserts this against the recorded **context array** rather than a rendered string, so an added key cannot slip past a substring check.
+
+### One helper, two halves — the same shape as the step-up guard
+
+`App\Actions\Auth\LogRefusedPrivilegedAttempt` is deliberately built like its folder-mate [`EnsureRecentPasswordConfirmation`](#step-up-authentication--the-third-layer): a **throwing wrapper** for the `Gate`-shaped sites and a **non-throwing recorder** for everything else, so the "record" half and the "refuse" half cannot drift apart.
+
+✅ Good — the throwing half, and a call site. The wrapper's own `authorize()` is what throws, so the refusal keeps its exact class, message and status:
+
+```php
+// app/Actions/Auth/LogRefusedPrivilegedAttempt.php — authorize()
+$gate = Gate::forUser($resolvedActor);
+
+if ($gate->denies($ability, $gateTarget)) {
+    [$resolvedType, $resolvedId] = $this->resolveTarget($gateTarget, $targetType, $targetId);
+
+    $this->log($resolvedActor, $ability, $resolvedType, $resolvedId);
+}
+
+$gate->authorize($ability, $gateTarget);
+```
+
+```php
+// app/Livewire/Users/Index.php — confirmDelete()
+$logRefusedPrivilegedAttempt->authorize('delete', $target);
+```
+
+❌ Bad — the shape this replaced at every site, and the shape a reader will reach for when adding the fifteenth one (adapted to illustrate; deliberately not present in the repo):
+
+```php
+// anti-pattern — one hand-written copy of the rule per call site
+try {
+    Gate::authorize('delete', $target);
+} catch (AuthorizationException $e) {
+    Log::warning('Privileged action refused', [...]);
+    throw $e;
+}
+```
+
+Three things make the wrapper the right shape rather than a stylistic preference:
+
+- **One implementation of the rule, not fourteen-plus.** Hand-written `try/catch` at every site is the copy-the-rule pattern [base-standards.md](../conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers) forbids for the authorization rules themselves; the same reasoning binds their observability.
+- **A `catch` around `Gate::authorize()` would over-attribute.** It also intercepts an `AuthorizationException` thrown by unrelated, nested authorization further down the call stack, and logs it under *this* ability. The `denies()`-then-`authorize()` shape evaluates the ability twice — an accepted, correctness-neutral cost, recorded in the class's own docblock so nobody "optimises" it back into a `catch`.
+- **The actor is a parameter, not `Auth::user()`.** `EnforceAdministratorPermissionGrant` and `EnforceGrantorPermissionScope` authorize against a `User $actor` passed *into* them, precisely so a non-dashboard caller works; a bare `Auth::id()` would log `actor_id: null` for exactly the queued-job or Artisan caller the logging exists to serve. `$actor` defaults to `Auth::user()` only when omitted.
+
+The non-throwing half is called immediately before an existing `throw` — a rate limiter, the self-lockout check, the holders-remaining check, or a direct `AuthorizationException` — never as a second, independent check that could disagree with it about whether the attempt was actually refused:
+
+```php
+// app/Livewire/Roles/Index.php — deleteRole()
+if ($role->users_count > 0) {
+    $logRefusedPrivilegedAttempt->log(Auth::user(), 'holders_remaining', 'role', $role->id);
+
+    throw ValidationException::withMessages([
+        'deletingRoleId' => trans_choice('roles.index.delete_blocked', $role->users_count, ['count' => $role->users_count]),
+    ]);
+}
+```
+
+For a non-`Gate` refusal the `ability` key carries a **short snake_case reason instead of an ability name**, chosen to be distinct from every real permission so a log filter cannot confuse the two: `create_rate_limited`, `email_change_rate_limited`, `email_change_aggregate_rate_limited`, `pending_email_conflict`, `assign_super_admin_role`, `super_admin_holder_protected`, `self_lockout`, `holders_remaining`, `grant_exceeds_scope`.
+
+**Logging is observation, never handling.** Every refusal still reaches the user with the same exception class, the same status, the same message and the same validation field it did before — a log line that swallowed the exception would turn a hardening story into a security regression. `tests/Feature/Users/ActionRefusalLoggingTest.php` asserts the throw *and* the log on the same call, so neither can be satisfied without the other.
+
+### ⚠️ A refusal on these screens produces one of **two** message strings
+
+The single most likely mistake a defender will make against this log. Filtering for `'Privileged action refused'` alone silently drops the strongest hijacked-session signal the app emits:
+
+| Message | Written by | Question it answers | Context keys |
+| --- | --- | --- | --- |
+| `Privileged action refused` | `App\Actions\Auth\LogRefusedPrivilegedAttempt` (task 0015b) | *Does the actor hold the permission, or have they exhausted a rate limit?* | `actor_id`, `ability`, `target_type`, `target_id` |
+| `Step-up password confirmation required` | `App\Livewire\Users\Index` directly (task 0015a) | *Is the session's password confirmation still fresh?* | `actor_id`, `action`, `user_id` |
+
+The two were shipped by different stories and are **deliberately not folded together**: they answer different questions, and reconciling two independently-audited conventions into one is a larger edit to closed code than either story's purpose. Both are `Log::warning` on the default channel, so a level filter catches both; a *message* filter needs both strings. Adding a third message string to these screens should be a conscious decision, made here.
+
+### What is deliberately **not** logged
+
+Three refusal shapes are excluded, each decided rather than missed:
+
+- **Both components' `mount()`.** `UserPolicy::viewAny()` and `RolePolicy::viewAny()` check the identical abilities the routes' own `can:users.view` / `can:roles.manage` middleware enforces, and `can:` **is** on Livewire's `PersistentMiddleware` allow-list — so a real HTTP actor who would fail `mount()` is refused by the route first and never reaches the component. The check stays (defence in depth against a direct `Livewire::test()` mount); logging it would only ever fire from a test. Both docblocks record the tripwire: *if `viewAny()` ever gains a condition the route's `can:` ability does not check, this refusal becomes reachable over HTTP and must be logged.* See [security/livewire-authorization.md](../security/livewire-authorization.md#gating-a-method-is-not-the-same-as-knowing-when-the-gate-fired).
+- **The step-up refusal**, which already has its own line — see the table above.
+- **`App\Models\Role`'s model-event guards** (`ImmutableRoleException` → 403, `RoleInUseException` → 409). These are deterministic state-based refusals: a caller cannot use them to probe permission boundaries, only real database state. Extending the pattern there is deferred rather than dropped.
+
+### A shared action's rate-limit refusal needs a log ceiling
+
+The one non-obvious constraint, and the story's own Phase 4 finding (F-1). `App\Actions\Users\RequestEmailChange` is called by the Users admin screen **and** by `App\Livewire\Settings\Profile::updateProfileInformation()` — self-service, `auth`-only, no permission gate. Instrumenting the action therefore instrumented a caller the story had explicitly declared out of scope, and `RateLimiter::attempt()` does not consume once exhausted: an unthrottled log call on that branch is an unbounded log-write primitive for **any authenticated user**, at zero cost to them.
+
+The fix is a second, 1-attempt limiter gating **the log call only** — never the real limit, which is unchanged:
+
+```php
+// app/Actions/Users/RequestEmailChange.php
+if (! RateLimiter::attempt($key, maxAttempts: 3, callback: fn (): bool => true, decaySeconds: 3600)) {
+    if (RateLimiter::attempt('email-change-log:'.$key, maxAttempts: 1, callback: fn (): bool => true, decaySeconds: 3600)) {
+        $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'email_change_rate_limited', 'user', $user->id);
+    }
+
+    throw ValidationException::withMessages(['email' => trans('users.email_change.throttled')]);
+}
+```
+
+Three rules generalise from it:
+
+- **A distinct key prefix** (`email-change-log:`), so the ceiling's window can never collide with the real limiter's own key.
+- **The ceiling key is as narrow as the refusal it describes.** All three log throttles key on `(target, actor)` — including the aggregate limiter's, whose own real key is target-only (Phase 5 finding R-3) — so a second administrator's refusal against a target a first administrator already triggered a log for is still recorded.
+- **Gate the log, never the limit.** Over-logging under a race is the only failure direction; the ceiling sits *inside* the real refusal branch, so it has exactly one writer and cannot be poisoned to pre-suppress a genuine refusal.
+
+`App\Actions\Users\CreateUser`'s rate-limit site is admin-only and needs no ceiling, but carries the identical shape anyway, so it cannot silently diverge if that action ever gains a second caller the way `RequestEmailChange` already has.
+
+### Copyable: what a third admin screen inherits
+
+1. Replace each `Gate::authorize($ability, $target)` with `$logRefusedPrivilegedAttempt->authorize($ability, $target)` — method-injected on a Livewire action method, constructor-injected in a domain action (see [code-style.md](../conventions/code-style.md#exception-an-actions-own-dependency-is-constructor-injected-when-the-method-signature-is-a-public-contract)).
+2. For each non-`Gate` refusal, call `->log(...)` on the line immediately above the existing `throw`, with a snake_case reason distinct from any permission name.
+3. Add a log ceiling to any rate-limit site the screen shares with an unprivileged caller.
+4. Pin the shape with an **equivalence test** that captures a refusal from the new screen and one from an existing screen in a single `Log::spy()` session and set-equates their key sets — `tests/Feature/Roles/RefusalLoggingTest.php` and `tests/Feature/Users/ActionRefusalLoggingTest.php` do this screen-to-screen and action-to-action respectively. Asserting each screen's shape in isolation lets two conventions drift into existence.
+5. Add a must-not-over-log test beside each: a permitted create/edit/delete still writes its single `Log::info` success line and **no** warning.
+
 ## Configuration
 
 Teams support is **disabled** (single-tenant permission model):
@@ -1148,6 +1285,10 @@ The one place `hasPermissionTo()` is correct is **inside a policy body**, which 
 | The step-up guard's call sites | `app/Actions/Users/UpdateUser.php` (role/status/third-party email), `app/Actions/Users/CreateUser.php` (Administrator-tier creation), `app/Livewire/Users/Index.php` (`deleteUser()`) |
 | The rate limiter on `password.confirm.store` | `app/Providers/FortifyServiceProvider.php` (`configurePasswordConfirmationRateLimiting()`) |
 | The step-up modal notices' copy | `lang/en/users.php`, `lang/es/users.php` (`users.index.step_up_notice_*`) |
+| The refusal-logging helper (the single implementation, throwing and non-throwing) | `app/Actions/Auth/LogRefusedPrivilegedAttempt.php` |
+| The refusal-logging call sites | `app/Livewire/Users/Index.php`, `app/Livewire/Roles/Index.php`, `app/Actions/Users/{CreateUser,UpdateUser,RequestEmailChange}.php`, `app/Actions/Roles/{EnforceAdministratorPermissionGrant,EnforceGrantorPermissionScope}.php` |
+| The step-up refusal's own, separately-shaped log line | `app/Livewire/Users/Index.php` (`Log::warning('Step-up password confirmation required', …)`, task 0015a) |
+| Refusal-logging tests, incl. the two shape-equivalence tests | `tests/Feature/Users/RefusalLoggingTest.php`, `tests/Feature/Roles/RefusalLoggingTest.php`, `tests/Feature/Users/ActionRefusalLoggingTest.php`, `tests/Feature/Roles/ActionRefusalLoggingTest.php` |
 | Migration | `database/migrations/2026_07_12_181045_create_permission_tables.php` |
 | Catalog & role seeding | `database/seeders/RolePermissionSeeder.php` |
 | Seeder call order & fixture guard | `database/seeders/DatabaseSeeder.php` |
@@ -1164,7 +1305,9 @@ The one place `hasPermissionTo()` is correct is **inside a policy body**, which 
 | Tests | `tests/Feature/Seeders/`, `tests/Feature/Authorization/`, `tests/Feature/Policies/`, `tests/Feature/Users/`, `tests/Feature/Roles/`, `tests/Feature/Models/RoleTest.php`, `tests/Feature/Actions/Auth/`, `tests/Unit/Actions/Auth/`, `tests/Unit/Exceptions/` |
 | Security rules derived from this foundation | [`docs/security/`](../security/README.md) |
 
-_Last updated: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions): the first story to add an authorization **layer** to this page rather than a rule inside an existing one. Added **Step-up authentication — the third layer**, with the three-layer table that names the question each answers (route middleware: the account is signed in and holds the ability; policies: this actor may do this to this target; step-up: **the person at the keyboard is still the account holder** — which a hijacked or unattended session passes trivially at the first two), the five operations it covers and the four it deliberately does not, why a self-edit and an ordinary-role creation are exempt **structurally** rather than by a second condition, why it is an in-method check (`RequirePassword` is absent from Livewire's `PersistentMiddleware` allow-list, so route middleware would guard the `GET` and leave every `/livewire/update` round trip open — the same fork that produced `can:` over `permission:`), the three independent reasons it is **not** a `UserPolicy` ability (`Gate::before` would exempt the Super Admin it most needs to bind; freshness is a property of the session, not of the actor/target pair; and a 403 is indistinguishable from "you lack the permission", so the refusal is a **423** — the status `RequirePassword` itself returns), the ordering rule with a flowchart (the permission refusal always wins, and a branch with no preceding `Gate` call is not an exemption), the two caller shapes (a direct caller gets the 423; the dashboard logs and redirects), and the UI-hint rule reusing the guard's own predicate. Two ⚠️s: `password.confirm.store` needed a limiter Fortify does not ship (decision D8) and any later step-up-gated screen inherits that endpoint as its barrier; and the two doors the layer still does not close (`settings/security`, `settings/profile`). Added the **Current state** bullet, seven **Where it lives** rows and three test folders. **This story changes no route, ability, policy method, seeded role or permission** — `routes/users.php` and `App\Policies\UserPolicy` are verified unchanged. The mechanical rules stay in [security/step-up-authentication.md](../security/step-up-authentication.md) and are pointed at rather than duplicated._
+_Last updated: 2026-08-24 — Task 0015b (log refused privileged attempts — the F-C split from story 0015). Added **Recording a refusal — what every gate owes the audit trail**, the page's third copyable pattern for a later epic alongside the module gate and the sidebar registry: the one `Log::warning('Privileged action refused', …)` line shape and why each of its four properties is a decision (`warning` over `info`, deliberately **generic** `target_type`/`target_id` keys rather than a fourth per-domain shape, a constant message string, and no payload); the helper's two halves, built like `EnsureRecentPasswordConfirmation`'s so the record half and the refuse half cannot drift, with the ✅/❌ pair against the per-site `try/catch` it replaced and the three reasons the wrapper shape is right (one implementation of the rule; a `catch` around `Gate::authorize()` over-attributes a nested refusal to this ability; the actor is a **parameter**, so a queued-job caller does not log `actor_id: null`); the snake_case reason strings the non-`Gate` sites carry instead of an ability name; and the log-ceiling rule a rate-limit site shares with an unprivileged caller (Phase 4 finding F-1 — `RequestEmailChange` is called by `Settings\Profile` too, and `RateLimiter::attempt()` does not consume once exhausted, so the unthrottled log was an unbounded write primitive for any authenticated user; gate the **log**, never the limit, on a distinct key prefix, keyed as narrowly as the refusal). Its ⚠️ closes the story's own Phase 4 finding **F-3**: a refusal on these screens produces one of **two** message strings, since story 0015a's `'Step-up password confirmation required'` is deliberately left unfolded — a level filter catches both, a message filter needs both, and the task file's "a single filter covers all of them" sentence was corrected in the same pass. Also records the three deliberate exclusions (both `mount()`s, unreachable over HTTP because `can:` **is** on the `PersistentMiddleware` allow-list, with the tripwire that would change it; the step-up line; `App\Models\Role`'s model-event guards). Added the **Current state** bullet and four **Where it lives** rows. **This story changes no route, ability, policy method, seeded role, permission, column or migration**, and no refusal's class, status, message or timing — logging is observation, never handling._
+
+_Previously: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions): the first story to add an authorization **layer** to this page rather than a rule inside an existing one. Added **Step-up authentication — the third layer**, with the three-layer table that names the question each answers (route middleware: the account is signed in and holds the ability; policies: this actor may do this to this target; step-up: **the person at the keyboard is still the account holder** — which a hijacked or unattended session passes trivially at the first two), the five operations it covers and the four it deliberately does not, why a self-edit and an ordinary-role creation are exempt **structurally** rather than by a second condition, why it is an in-method check (`RequirePassword` is absent from Livewire's `PersistentMiddleware` allow-list, so route middleware would guard the `GET` and leave every `/livewire/update` round trip open — the same fork that produced `can:` over `permission:`), the three independent reasons it is **not** a `UserPolicy` ability (`Gate::before` would exempt the Super Admin it most needs to bind; freshness is a property of the session, not of the actor/target pair; and a 403 is indistinguishable from "you lack the permission", so the refusal is a **423** — the status `RequirePassword` itself returns), the ordering rule with a flowchart (the permission refusal always wins, and a branch with no preceding `Gate` call is not an exemption), the two caller shapes (a direct caller gets the 423; the dashboard logs and redirects), and the UI-hint rule reusing the guard's own predicate. Two ⚠️s: `password.confirm.store` needed a limiter Fortify does not ship (decision D8) and any later step-up-gated screen inherits that endpoint as its barrier; and the two doors the layer still does not close (`settings/security`, `settings/profile`). Added the **Current state** bullet, seven **Where it lives** rows and three test folders. **This story changes no route, ability, policy method, seeded role or permission** — `routes/users.php` and `App\Policies\UserPolicy` are verified unchanged. The mechanical rules stay in [security/step-up-authentication.md](../security/step-up-authentication.md) and are pointed at rather than duplicated._
 
 _Previously: 2026-08-24 — Task 0015 (Users CRUD security hardening): **no new ability, policy method, seeded role, permission or route** — every change here is a correction to what this page said about where two existing abilities are asked. Rewrote **`Gate::allows()` in a list query is a UI hint, not a layer**, whose `canEdit` code quote and its "same policy method" bullet were both falsified: the flag is now `$user->is(Auth::user()) || Gate::allows('updateSensitiveAttributes', $user)`, mirroring `openEditModal()`'s new gate rather than `save()`'s, which flips an Administrator-holding **other** target's row from enabled to disabled and pins the actor's own row to enabled. The section's single accepted drift became **two**, both for the same structural reason (a `Gate::allows()` hint is blind to any rule that deliberately lives outside `Gate`) — the pre-existing `canEdit` one from 0008a, and `canDelete` on the actor's **own** row, which now renders enabled while `deleteUser()`'s self-delete guard makes the confirm click a no-op (finding F11; Phase 5 finding A-1 is why that no-op closes the modal). Corrected the **`UserPolicy` abilities** "who calls what" paragraph, which claimed `updateSensitiveAttributes` is authorized **only** in `CreateUser` / `UpdateUser` — `openEditModal()` now asks it too, unconditionally, and the paragraph states why that is not the tier-derivation pattern 0008a removed. Corrected both statements that the delete path has **no** direct-throw-style guard (the ⚠️ in **Known limitations**, which additionally claimed a Super Admin can delete "their own account", and the second bullet under **A rule that must bind a Super Admin actor cannot go through `Gate`**): the self-targeting half is closed, the other-holder half is not. Extended **`Gate::authorize` at the call site** to record that the Users screen's three modal openers — ungated since task 0004 — now authorize, and pointed at [security/livewire-authorization.md](../security/livewire-authorization.md#the-shipped-disclosure-gates-and-why-the-disclosure-check-is-the-stronger-ability), which owns the full disclosure-gate rule rather than duplicating it here._
 
