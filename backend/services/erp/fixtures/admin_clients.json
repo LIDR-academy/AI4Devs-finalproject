@@ -1,0 +1,12 @@
+[
+   {
+      "id_externo": "cli-001",
+      "rfc": "XAXX010101000",
+      "razon_social": "Comercializadora Demo SA de CV"
+   },
+   {
+      "id_externo": "cli-002",
+      "rfc": "DEMO900101ABC",
+      "razon_social": "Distribuidora del Centro SA de CV"
+   }
+]

@@ -1,0 +1,41 @@
+{
+   "1001": [
+      {
+         "id_externo": "5001",
+         "empresa_id_externo": "1001",
+         "plan_nombre": "Plan Basico",
+         "tipo_contrato": 2,
+         "estatus": 1,
+         "fecha_inicio": "2026-01-01",
+         "fecha_final": "2026-02-01",
+         "prorroga": 0,
+         "precio_unitario": "499.00"
+      }
+   ],
+   "1002": [
+      {
+         "id_externo": "5002",
+         "empresa_id_externo": "1002",
+         "plan_nombre": "Plan Cortesia",
+         "tipo_contrato": 1,
+         "estatus": 1,
+         "fecha_inicio": "2026-01-01",
+         "fecha_final": "2026-02-01",
+         "prorroga": 0,
+         "precio_unitario": "0.00"
+      }
+   ],
+   "2001": [
+      {
+         "id_externo": "5003",
+         "empresa_id_externo": "2001",
+         "plan_nombre": "Plan Premium",
+         "tipo_contrato": 2,
+         "estatus": 4,
+         "fecha_inicio": "2025-12-01",
+         "fecha_final": "2026-01-01",
+         "prorroga": 5,
+         "precio_unitario": "999.00"
+      }
+   ]
+}

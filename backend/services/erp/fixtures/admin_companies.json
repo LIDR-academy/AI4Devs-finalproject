@@ -1,0 +1,30 @@
+[
+   {
+      "id_externo": "1001",
+      "app": "SUITE_A",
+      "razon_social": "Comercializadora Demo SA de CV",
+      "nombre_comercial": "Demo Norte",
+      "estado": "activa"
+   },
+   {
+      "id_externo": "1002",
+      "app": "SUITE_B",
+      "razon_social": "Distribuidora del Centro SA de CV",
+      "nombre_comercial": "Centro",
+      "estado": "activa"
+   },
+   {
+      "id_externo": "2001",
+      "app": "SUITE_A",
+      "razon_social": "Empresa Compartida SA de CV (ADMIN)",
+      "nombre_comercial": "Compartida",
+      "estado": "activa"
+   },
+   {
+      "id_externo": "1003",
+      "app": "SUITE_A",
+      "razon_social": "Empresa Dada de Baja SA de CV",
+      "nombre_comercial": "Baja",
+      "estado": "baja_erp"
+   }
+]

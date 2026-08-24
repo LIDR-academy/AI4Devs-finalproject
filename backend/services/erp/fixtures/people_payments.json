@@ -1,0 +1,28 @@
+{
+   "3001": [
+      {
+         "id_externo": "9101",
+         "empresa_id_externo": "3001",
+         "empresa_plan_id_externo": "6001",
+         "estatus": 1,
+         "subtotal": "349.00",
+         "importe_descuento": "0.00",
+         "impuesto": "55.84",
+         "total": "404.84",
+         "fecha": "2026-02-15"
+      }
+   ],
+   "2001": [
+      {
+         "id_externo": "9102",
+         "empresa_id_externo": "2001",
+         "empresa_plan_id_externo": "6002",
+         "estatus": 2,
+         "subtotal": "799.00",
+         "importe_descuento": "0.00",
+         "impuesto": "127.84",
+         "total": "926.84",
+         "fecha": "2026-02-01"
+      }
+   ]
+}

@@ -30,7 +30,7 @@ Today, that information is scattered across both systems and there is no single 
 
 EyeMaster **does not replace** the ERPs nor modify them. It works as a **consolidation layer** that:
 
-- **Reads in real time** company, plan, and payment information from the ERPs (read-only).
+- **Reads in real time** company, plan, and payment information from the ERPs through their **REST webservices** (read-only).
 - **Locally manages** commercial relationships: billable client, group, and distributor per company, with history.
 - **Calculates** the operational status of each company (current, expired, blocked) and its outstanding balance.
 - **Exposes** a **reports** module that combines both sources to answer operational and financial queries.
@@ -44,8 +44,8 @@ The result is a single source of truth for commercial operations, with complete 
 | Term | Definition |
 |---|---|
 | **ERP** | External system where companies and their financial operations live. This project has two: ADMIN and PEOPLE. |
-| **ADMIN** | One of the two organization ERPs. Also exposes a SOAP webservice for client registration. |
-| **PEOPLE** | The other ERP. Same data structure as ADMIN; they were once a single database, now separated. |
+| **ADMIN** | One of the two organization ERPs. Exposes REST webservices for its data and for client registration. |
+| **PEOPLE** | The other ERP. Same data structure and webservice contract as ADMIN; they were once a single database, now separated. |
 | **App** | Suite a company belongs to: `SUITE_A` or `SUITE_B`. It is a reporting dimension. |
 | **Company** | Operational entity that lives in an ERP. EyeMaster retrieves it, does not create it. |
 | **Client** | Natural or legal person to be invoiced. Validated or registered in ADMIN's `catalogo_clientes` catalog. |
@@ -64,7 +64,9 @@ The result is a single source of truth for commercial operations, with complete 
 | **RBAC** | Security model based on roles and permissions (Role-Based Access Control). |
 | **SPA** | Single Page Application: web application running in the browser (React + Vite). |
 | **JWT** | Signed authentication token, used to identify the user in each request. |
-| **SOAP** | Communication protocol for web services; used by ADMIN's client registration webservice. |
+| **ERP webservice** | REST/JSON API exposed by each ERP (ADMIN, PEOPLE) through which EyeMaster reads companies, plans, and payments, and registers clients. Replaces the previous direct database access. |
+| **ERP Gateway** | Backend component that centralizes all ERP calls behind a single interface, with two implementations selectable by `ERP_MODE`: **real** (HTTP) and **mock**. |
+| **Mock provider** | Implementation of the ERP Gateway that returns local JSON fixtures instead of calling the real webservices, used while these do not yet exist (`ERP_MODE=mock`). |
 
 ---
 
@@ -79,9 +81,9 @@ The result is a single source of truth for commercial operations, with complete 
 | **Target date** | July 5, 2026 |
 | **Application type** | Internal; not offered to the public |
 | **Operating currency** | MXN (Mexican peso) |
-| **Stack — Backend** | Django + Django REST Framework, PostgreSQL, `zeep` (SOAP), `djangorestframework-simplejwt` |
+| **Stack — Backend** | Django + Django REST Framework, PostgreSQL, `httpx` (REST client for the ERP webservices), `djangorestframework-simplejwt` |
 | **Stack — Frontend** | React + Vite (decoupled SPA) |
-| **External integrations** | ADMIN (read-only PostgreSQL database + SOAP webservice), PEOPLE (read-only PostgreSQL database) |
+| **External integrations** | ADMIN (REST webservices: data + client catalog), PEOPLE (REST data webservice). Read-only, token-authenticated. **Simulated** by an internal mock provider (`ERP_MODE=mock`) until the real webservices exist. |
 | **Deployment** | Backend on Render or Railway (Docker); frontend on Vercel or Netlify |
 | **Repository** | *To be defined* |
 
@@ -131,7 +133,7 @@ This delimitation is critical to avoid misunderstandings with any audience:
 |---|---|
 | Create companies in the ERPs | ❌ No. Companies exist previously; EyeMaster retrieves them. |
 | Generate charges or invoices | ❌ No. Payments are generated in the ERPs; EyeMaster only queries them. |
-| Write to ADMIN or PEOPLE | ❌ No (except client registration via SOAP to `catalogo_clientes`). |
+| Write to ADMIN or PEOPLE | ❌ No (except client registration via the ADMIN client-catalog webservice to `catalogo_clientes`). |
 | Modify plans, add-ons, or consumption | ❌ No. These are source data, read-only. |
 | Process online payments | ❌ Out of scope. |
 | Replace the ERP in daily operations | ❌ No. It is a consolidation layer, not a replacement. |
@@ -172,11 +174,11 @@ Permissions associated with each role are **configurable from the system itself*
 
 ### 5.1 Conceptual view (for non-technical audiences)
 
-EyeMaster sits between two existing ERPs and their internal users. It reads the ERPs in real time, maintains its own database for commercial relationships, and exposes a web application to users.
+EyeMaster sits between two existing ERPs and their internal users. It reads the ERPs in real time **through their webservices**, maintains its own database for commercial relationships, and exposes a web application to users.
 
 ```mermaid
 flowchart LR
-    subgraph EXT["External systems"]
+    subgraph EXT["External systems — REST webservices"]
         ADMIN["ERP ADMIN<br/>(companies, plans, payments)"]
         PEOPLE["ERP PEOPLE<br/>(companies, plans, payments)"]
         DH["Client catalog<br/>(catalogo_clientes, in ADMIN)"]
@@ -191,9 +193,9 @@ flowchart LR
 
     USR --> UI
     UI --> CORE
-    CORE -- "reads in real time" --> ADMIN
-    CORE -- "reads in real time" --> PEOPLE
-    CORE -- "queries and registers" --> DH
+    CORE -- "reads via webservice" --> ADMIN
+    CORE -- "reads via webservice" --> PEOPLE
+    CORE -- "queries and registers (webservice)" --> DH
 ```
 
 **What each side manages:**
@@ -220,14 +222,16 @@ flowchart TB
         BIZ["Business services<br/>(assignments, validities)"]
         FIN["Financial service<br/>(plans, payments, status, balance)"]
         REP["Reporting engine"]
-        SOAP["SOAP client (zeep)"]
+        GW["ERP Gateway<br/>(REST client · httpx)"]
+        MOCK["Mock provider<br/>(fixtures · ERP_MODE=mock)"]
     end
     subgraph DB["Data"]
         LOCAL[("PostgreSQL EyeMaster<br/>(own + ERP cache)")]
-        ADB[("ADMIN: master + instances<br/>PostgreSQL — read-only")]
-        PDB[("PEOPLE: master + instances<br/>PostgreSQL — read-only")]
     end
-    WS["ADMIN Webservice (web2py)<br/>Search/create client in catalogo_clientes"]
+    subgraph ERP["External ERPs — REST/JSON webservices (read-only)"]
+        AWS["ADMIN webservice<br/>companies · plans · payments · catalogo_clientes"]
+        PWS["PEOPLE webservice<br/>companies · plans · payments"]
+    end
 
     SPA -->|"HTTPS · JSON"| API
     API --> AUTH
@@ -237,27 +241,28 @@ flowchart TB
     BIZ -->|"read/write"| LOCAL
     FIN -->|"read + cache"| LOCAL
     REP -->|"read"| LOCAL
-    BIZ -->|"real-time read"| ADB
-    BIZ -->|"real-time read"| PDB
-    FIN -->|"real-time read"| ADB
-    FIN -->|"real-time read"| PDB
-    BIZ --> SOAP
-    SOAP --> WS
+    BIZ --> GW
+    FIN --> GW
+    GW -.->|"ERP_MODE=mock"| MOCK
+    GW -->|"HTTPS + token · JSON"| AWS
+    GW -->|"HTTPS + token · JSON"| PWS
 ```
 
 ### 5.3 External integrations
 
 | Integration | Type | Direction | Purpose |
 |---|---|---|---|
-| **ADMIN — database** | PostgreSQL | Read (real-time) | Retrieve companies, plans, subscriptions, payments, and billing cycles. |
-| **ADMIN — SOAP webservice** | SOAP / web2py | Read + limited write | Search client by RFC in `catalogo_clientes` and, if not found, register it. Only point where EyeMaster writes to external systems. |
-| **PEOPLE — database** | PostgreSQL | Read (real-time) | Same purpose as ADMIN. Identical structure. |
+| **ADMIN — data webservice** | REST / JSON | Read (real-time) | Retrieve companies, plans, subscriptions, payments, and billing cycles. |
+| **ADMIN — client-catalog webservice** | REST / JSON | Read + limited write | Search client by RFC in `catalogo_clientes` and, if not found, register it. Only point where EyeMaster writes to external systems. |
+| **PEOPLE — data webservice** | REST / JSON | Read (real-time) | Same purpose as ADMIN's data webservice. Identical contract. |
 
 **Relevant operational notes:**
 
-- ADMIN and PEOPLE are two databases with the **same schema**. They once operated as one; at some point they were separated and cleaned up. This history means company identifiers can **overlap** between both databases, which requires using `proyecto + id_externo` as the identity in EyeMaster.
+- All ERP access goes through a single **ERP Gateway** with two interchangeable implementations, selected by the `ERP_MODE` setting: **real** (`httpx` HTTP client) and **mock** (returns local JSON fixtures). Since the real webservices do not exist yet, the project runs in `ERP_MODE=mock`, which **simulates** both the request and the response.
+- ADMIN and PEOPLE expose the **same webservice contract**. They once operated as a single database; at some point they were separated and cleaned up. This history means company identifiers can **overlap** between both ERPs, which requires using `proyecto + id_externo` as the identity in EyeMaster.
 - The `empresa.app` field distinguishes two commercial suites: `SUITE_A` and `SUITE_B`. In EyeMaster, `app` is a **reporting dimension**, not part of the identity.
-- ADMIN's SOAP webservice is protected by an **access token**. It is consumed with the `zeep` library from a dedicated service.
+- The ERP webservices are protected by an **access token**. Each request carries it in the `Authorization` header; tokens are kept out of the code (environment variables).
+- The webservices resolve internally which instance holds each company; EyeMaster no longer needs `master → instance` resolution logic — it simply calls the webservice.
 - Plans, subscriptions, payments, and billing cycles are **cached locally** to speed up queries and enable the reporting engine. The cache carries `ultima_sync`; it is never written back to the ERP.
 
 ### 5.4 Architectural decisions
@@ -267,11 +272,13 @@ flowchart TB
 | **Decoupled frontend from backend** (SPA + REST API) | Deployment independence and ability to evolve separately. |
 | **JWT authentication** (`djangorestframework-simplejwt`) | Standard and compatible with stateless SPA without session state in the backend. |
 | **RBAC with own views** | Reuses Django's auth engine (models, hashing, verification), but not its admin UI. All user and permission management goes through product endpoints and screens. |
-| **Read-only connections to the ERPs** | Explicit guarantee that EyeMaster cannot corrupt production data. Django routers configured with limited permissions. |
-| **Local financial cache** | The reporting engine needs fast aggregations and historical view that would be costly to resolve by querying the ERP on each request. |
+| **ERP access via webservices, not direct DB** | EyeMaster no longer connects to the ERP databases; it consumes their REST webservices. This decouples EyeMaster from the ERPs' internal schema and removes any writable database surface. |
+| **Single ERP Gateway (real + mock)** | Centralizing all ERP calls behind one interface allows swapping the real HTTP client for a mock provider (fixtures) via `ERP_MODE`, so the product can be developed and demoed before the real webservices exist. |
+| **Read-only webservice integration** | Explicit guarantee that EyeMaster cannot corrupt production data: it consumes only read endpoints (plus the single client-catalog write). It holds no ERP database credentials. |
+| **Local financial cache** | The reporting engine needs fast aggregations and historical view that would be costly to resolve by calling the ERP webservice on each request. |
 | **Assignments with validity, no physical deletion** | Allows reconstructing system state "as of date" for correct historical reports. |
 | **Company identity = `proyecto + id_externo`** | Internal IDs can overlap between ADMIN and PEOPLE. The combination guarantees uniqueness. |
-| **`catalogo_clientes` resolved via ADMIN instance** | The client catalog is not an independent database; it lives inside the ADMIN-resolved instance. |
+| **`catalogo_clientes` exposed by the ADMIN webservice** | The client catalog is not an independent system; it is served by ADMIN's client-catalog webservice endpoints. |
 | **Container deployment** | Environment reproducibility; secrets via environment variables. |
 
 ---
@@ -353,7 +360,7 @@ sequenceDiagram
 **How it works.**
 
 - The operator captures the client's **RFC** and **legal name**.
-- EyeMaster invokes ADMIN's **SOAP webservice** to search for the client by RFC.
+- EyeMaster invokes ADMIN's **client-catalog webservice** (REST) to search for the client by RFC.
 - If found in ADMIN, it is linked locally (`origen = existente`).
 - If not found, it is created in ADMIN via the same webservice and then linked locally (`origen = creado`).
 - If the webservice **does not respond**, the client is registered locally as `pendiente` and can be retried.
@@ -364,13 +371,13 @@ sequenceDiagram
 flowchart TD
     A([Operator enters RFC and legal name]) --> B{RFC already exists<br/>locally?}
     B -- Yes --> X([Error 409 — Duplicate RFC])
-    B -- No --> C[Call SOAP ADMIN<br/>search by RFC]
+    B -- No --> C[Call ADMIN client-catalog<br/>webservice · search by RFC]
     C --> D{ADMIN responds?}
     D -- No --> P[Save local<br/>estado_sync = pendiente]
     P --> Z([Response 202 — pending])
     D -- Yes --> E{Exists in catalogo_clientes?}
     E -- Yes --> F[Link<br/>origen = existente]
-    E -- No --> G[Create in catalogo_clientes via SOAP] --> H[Link<br/>origen = creado]
+    E -- No --> G[Create in catalogo_clientes via webservice] --> H[Link<br/>origen = creado]
     F --> Y([Response 201 — synchronized])
     H --> Y
 ```
@@ -387,10 +394,10 @@ flowchart TD
 
 **Dependencies.**
 
-- ADMIN SOAP webservice (valid access token).
+- ADMIN client-catalog webservice (valid access token), via the ERP Gateway.
 - Audit log (records the registration).
 
-**External data.** Client data in `catalogo_clientes` (ADMIN-resolved instance).
+**External data.** Client data in `catalogo_clientes`, served by ADMIN's client-catalog webservice.
 
 **Own data.** Local `Client` table: `id`, `rfc`, `razon_social`, `id_admin_catalogo_clientes`, `origen`, `estado_sync`.
 
@@ -399,7 +406,7 @@ flowchart TD
 | Scenario | Response |
 |---|---|
 | RFC already registered locally | `409 Conflict`. |
-| SOAP webservice unavailable or slow | Local client in `pendiente` state; response `202 Accepted`. |
+| Client-catalog webservice unavailable or slow | Local client in `pendiente` state; response `202 Accepted`. |
 | Webservice responds with ADMIN validation error | `400` with the ERP message. |
 | ADMIN token expired | Automatic retry with refreshed token; if it fails, `502 Bad Gateway`. |
 
@@ -429,7 +436,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     A([Operator selects ERP and searches]) --> B[GET /api/empresas/buscar]
-    B --> C[Real-time query<br/>master → instance]
+    B --> C[Real-time call<br/>ERP data webservice]
     C --> D{Any results?}
     D -- No --> E([Message: no matches])
     D -- Yes --> F[Show list]
@@ -449,7 +456,7 @@ flowchart TD
 | R-EMP-04 | The `ultima_sync` is updated on each retrieval and shown to the user. |
 | R-EMP-05 | If a company was deregistered in the ERP, EyeMaster reflects this with `estado = baja_erp` and blocks new assignments. |
 
-**Dependencies.** Read-only routers to ADMIN and PEOPLE; master → instance resolution service.
+**Dependencies.** ERP data webservices (ADMIN, PEOPLE) consumed through the ERP Gateway; mock provider when `ERP_MODE=mock`.
 
 **External data.** `empresa` and associated fields in each ERP.
 
@@ -569,7 +576,7 @@ Validity is a property of `empresa_plan` (the subscription), **at the company le
 
 > **Note.** The ERP model comment declares values `2 = Contracted` and `3 = Pending payment` for `empresa_plan.estatus`, but the live code only uses `1`, `4`, and `0`. The code behavior is adopted and the caveat is documented (see §11).
 
-**Dependencies.** Read-only PostgreSQL connection to ADMIN and PEOPLE. Local cache tables.
+**Dependencies.** ERP data webservices (ADMIN, PEOPLE) via the ERP Gateway (mock provider when `ERP_MODE=mock`). Local cache tables.
 
 **External data.** `plan`, `complemento`, `empresa_plan`, `corte_plan`, `consumo_plan`.
 
@@ -956,7 +963,7 @@ erDiagram
 | `403` | Authenticated but without permission. |
 | `404` | Resource not found. |
 | `409` | Validation conflict (e.g., duplicate assignment). |
-| `502` | ADMIN SOAP webservice failure. |
+| `502` | ADMIN client-catalog webservice failure. |
 | `503` | ERP unavailable. |
 
 ### 8.2 Endpoints by domain
@@ -1068,7 +1075,7 @@ Content-Type: application/json
 |---|---|---|
 | Found in ADMIN | `201` | `{ "origen": "existente", "estado_sync": "sincronizado", ... }` |
 | Created in ADMIN | `201` | `{ "origen": "creado", "estado_sync": "sincronizado", ... }` |
-| SOAP not responding | `202` | `{ "estado_sync": "pendiente", ... }` |
+| Webservice not responding | `202` | `{ "estado_sync": "pendiente", ... }` |
 | Local duplicate RFC | `409` | `{ "error": "RFC ya registrado en EyeMaster." }` |
 
 #### 8.3.2 Assign group with conflict
@@ -1154,8 +1161,8 @@ Stories are grouped by functional block. All belong to **Delivery 1**.
 **Acceptance criteria**
 
 - If found in ADMIN, it is linked (`origen = existente`).
-- If not found, it is created in ADMIN via SOAP and linked (`origen = creado`).
-- If SOAP does not respond, it is saved as `pendiente`.
+- If not found, it is created in ADMIN via its client-catalog webservice and linked (`origen = creado`).
+- If the webservice does not respond, it is saved as `pendiente`.
 - Two local clients with the same RFC are not allowed (`409`).
 
 **HU-07 — Retry synchronization of pending clients**
@@ -1165,7 +1172,7 @@ Stories are grouped by functional block. All belong to **Delivery 1**.
 **Acceptance criteria**
 
 - Screen with filterable list of pending clients.
-- "Retry" action that invokes SOAP and updates the status.
+- "Retry" action that invokes the client-catalog webservice and updates the status.
 - Result recorded in the audit log.
 
 ### 9.3 Companies
@@ -1308,7 +1315,7 @@ Stories are grouped by functional block. All belong to **Delivery 1**.
 | Ticket | Task | Layer | Pts |
 |---|---|---|---|
 | TK-02-01 | `Client` model (unique RFC, `estado_sync`). | BE | 2 |
-| TK-02-02 | `AdminSoapService` with `zeep` (configurable token). | INT | 5 |
+| TK-02-02 | Client-catalog client in the ERP Gateway (`httpx`, configurable token) + mock. | INT | 5 |
 | TK-02-03 | `POST /api/clientes` with search-or-create logic. | BE | 5 |
 | TK-02-04 | Client listing and detail. | BE | 2 |
 | TK-02-05 | Synchronization retry. | BE | 2 |
@@ -1318,8 +1325,8 @@ Stories are grouped by functional block. All belong to **Delivery 1**.
 
 | Ticket | Task | Layer | Pts |
 |---|---|---|---|
-| TK-03-01 | Read-only routers to ADMIN and PEOPLE. | BE | 3 |
-| TK-03-02 | `ERPService` with master → instance resolution. | BE | 5 |
+| TK-03-01 | `ERPGateway` interface + mock provider (JSON fixtures), selectable by `ERP_MODE`. | BE | 3 |
+| TK-03-02 | Real `ERPGateway` REST client (`httpx`) for ADMIN/PEOPLE data webservices + response mapping to cache models. | BE | 5 |
 | TK-03-03 | `Company` model and endpoints (search, retrieve, detail). | BE | 5 |
 | TK-03-04 | Search and retrieval screen. | FE | 3 |
 
@@ -1443,7 +1450,7 @@ Functionality outside Delivery 1, mentioned in §4.3.3. Still to be defined:
 | PD-17 | Environment variables | Complete list of secrets and configuration. |
 | PD-18 | Deployment plan | Render vs. Railway: final decision. |
 | PD-19 | Backup plan | Local PostgreSQL backup policy. |
-| PD-20 | Monitoring and alerts | Tools and metrics to observe (ERP uptime, SOAP latency, sync errors). |
+| PD-20 | Monitoring and alerts | Tools and metrics to observe (ERP webservice uptime, request latency, sync errors). |
 
 ---
 
@@ -1457,7 +1464,7 @@ Improvements detected during analysis. Each includes its justification.
 |---|---|
 | **Define a `SyncService` with schedule and observability** | Financial cache synchronization is critical. Centralizing it with metrics (`ultima_sync_ok`, errors, latency) facilitates diagnosis and support. |
 | **"As of date" view layer as a reusable module** | The reporting engine needs to reconstruct state at a date. If that logic lives in a dedicated module, it can also be used in historical detail screens. |
-| **Circuit breaker for the SOAP webservice** | If ADMIN responds slowly or intermittently, cutting requests and degrading gracefully (`pendiente` state) is better than blocking the operator. |
+| **Circuit breaker for the ERP webservices** | If an ERP webservice responds slowly or intermittently, cutting requests and degrading gracefully (`pendiente` state / cached data) is better than blocking the operator. |
 
 ### 12.2 Data model
 

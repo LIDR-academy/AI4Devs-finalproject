@@ -2,6 +2,7 @@
 
 > This document follows the **official delivery template** of the Master.
 > For the expanded functional documentation (glossary, detailed modules, open items, improvements, etc.) see `documentacion-funcional.md` in the repository root.
+> To actually run the code: [`docs/getting-started.md`](docs/getting-started.md). To deploy it: [`docs/deployment.md`](docs/deployment.md).
 
 ## Index
 
@@ -25,7 +26,7 @@ Jairo Alberto Sánchez Suárez
 **EyeMaster V2**
 
 ### 0.3. Brief project description
-Internal administrative system that **centralizes** the commercial and financial operation of companies registered in two external ERPs (**ADMIN** and **PEOPLE**). EyeMaster does not replace the ERPs: it reads them in real time (read-only), locally manages commercial relationships (billable client, group, and distributor) with historical traceability, and exposes a reports module that combines both sources.
+Internal administrative system that **centralizes** the commercial and financial operation of companies registered in two external ERPs (**ADMIN** and **PEOPLE**). EyeMaster does not replace the ERPs: it reads them in real time through their **REST webservices** (read-only), locally manages commercial relationships (billable client, group, and distributor) with historical traceability, and exposes a reports module that combines both sources.
 
 ### 0.4. Project URL
 Not applicable in this delivery. Delivery 1 corresponds only to the technical documentation of the product; no application is deployed yet.
@@ -55,8 +56,8 @@ https://github.com/jairosanchez90/AI4Devs-finalproject.git
 | Block | Functionality |
 |---|---|
 | **Access and security** | JWT authentication, role and permission control configurable from the system, audit log of sensitive actions. |
-| **Clients** | Validated registration against ADMIN's `datahome` catalog (searches by RFC; creates if not found via SOAP webservice); retry if the service does not respond. |
-| **Companies** | Real-time search and "retrieval" of companies from ADMIN or PEOPLE (read-only); EyeMaster never creates them. |
+| **Clients** | Validated registration against ADMIN's `datahome` catalog (searches by RFC; creates if not found via ADMIN's client-catalog **REST webservice**); retry if the service does not respond. |
+| **Companies** | Real-time search and "retrieval" of companies from ADMIN's or PEOPLE's **REST webservices** (read-only); EyeMaster never creates them. |
 | **Commercial structure** | Assignment of client, group, and distributor to each company, with validity (`from / until`), exclusivity validations, and distributor inheritance from the group. |
 | **Plans and subscriptions** | Query of plan catalog, active plan per company, and its operational status (current, expired, blocked). |
 | **Payments and outstanding balance** | Payment query per company and outstanding balance calculation aggregatable by client, group, or distributor. |
@@ -67,25 +68,57 @@ https://github.com/jairosanchez90/AI4Devs-finalproject.git
 
 - Does not create companies in the ERPs.
 - Does not generate charges or invoices.
-- Does not write to ADMIN or PEOPLE (sole exception: client registration via SOAP to `datahome`).
+- Does not write to ADMIN or PEOPLE (sole exception: client registration via ADMIN's client-catalog webservice to `datahome`).
 - Does not process online payments.
 
 ### 1.3. Design and user experience
 
-**Not applicable in this delivery.** Delivery 1 corresponds to the technical documentation of the product. Screens and the video tutorial will be included in subsequent deliveries, when the React SPA implementation exists.
+A working React SPA now exists, built on top of the documentation in this delivery (see `docs/plan-implementacion.md` for the implementation roadmap). Visual identity: navy blue brand, light surfaces only (no dark mode), a fixed sidebar that collapses into a mobile drawer under 900px, and card-based sections for every module.
+
+Full screenshot set with descriptions: [`capturas/README.md`](capturas/README.md). Representative screens:
+
+**Login**
+
+![Login](capturas/evidencias/login.png)
+
+**Home dashboard**
+
+![Inicio](capturas/evidencias/inicio.png)
+
+**Company detail — commercial assignment, plans, and payments**
+
+![Empresa detalle](capturas/evidencias/empresa-detalle-planes.png)
+
+**Reporting engine**
+
+![Reportes](capturas/evidencias/reportes.png)
+
+**Roles and permissions**
+
+![Roles y permisos](capturas/evidencias/roles-permisos.png)
+
+The remaining screens (companies search/list, clients, groups/distributors, plan catalog, users, audit log) are in [`capturas/README.md`](capturas/README.md).
+
+**Video tutorial:** still pending — not recorded for this delivery.
 
 ### 1.4. Installation instructions
 
-**Not applicable in this delivery.** The project is in the documentation phase; there is no executable code. The installation guide (backend and frontend dependencies, environment variables, migrations, seed data, and local startup) will be delivered alongside the first functional version of the product.
+A working implementation now exists (backend, frontend, and their test suites), built following the OpenSpec-tracked plan in `docs/plan-implementacion.md`. Full setup steps live in [`docs/getting-started.md`](docs/getting-started.md); the short version:
 
-For reference for subsequent deliveries, the planned stack is:
+```bash
+cp .env.example .env
+cd backend && python3 -m venv .venv && ./.venv/bin/pip install -r requirements-dev.txt
+./.venv/bin/python manage.py migrate && ./.venv/bin/python manage.py runserver
+```
+
+The stack in use:
 
 | Component | Technology |
 |---|---|
-| Backend | Django + Django REST Framework, `djangorestframework-simplejwt`, `zeep` (SOAP) |
+| Backend | Django + Django REST Framework, `djangorestframework-simplejwt`, `httpx` (REST client for the ERP webservices) |
 | Frontend | React + Vite (decoupled SPA) |
 | Database | PostgreSQL (EyeMaster local) |
-| Integrations | Two external PostgreSQL databases (ADMIN, PEOPLE) read-only + ADMIN SOAP webservice |
+| Integrations | ADMIN and PEOPLE **REST/JSON webservices** (companies, plans, payments) + ADMIN client-catalog webservice. Read-only, token-authenticated. **Simulated** by an internal mock provider (`ERP_MODE=mock`) until the real webservices are available. |
 
 ---
 
@@ -104,14 +137,16 @@ flowchart TB
         BIZ["Business services<br/>(assignments, validities)"]
         FIN["Financial service<br/>(plans, payments, status, balance)"]
         REP["Reporting engine"]
-        SOAP["SOAP client (zeep)"]
+        GW["ERP Gateway<br/>(REST client · httpx)"]
+        MOCK["Mock provider<br/>(fixtures · ERP_MODE=mock)"]
     end
     subgraph DB["Data"]
         LOCAL[("PostgreSQL EyeMaster<br/>(own + ERP cache)")]
-        ADB[("ADMIN: master + instances<br/>PostgreSQL — read-only")]
-        PDB[("PEOPLE: master + instances<br/>PostgreSQL — read-only")]
     end
-    WS["ADMIN Webservice (web2py)<br/>Search/create client in datahome"]
+    subgraph ERP["External ERPs — REST/JSON webservices (read-only)"]
+        AWS["ADMIN webservice<br/>companies · plans · payments · datahome"]
+        PWS["PEOPLE webservice<br/>companies · plans · payments"]
+    end
 
     SPA -->|"HTTPS · JSON"| API
     API --> AUTH
@@ -121,19 +156,18 @@ flowchart TB
     BIZ -->|"read/write"| LOCAL
     FIN -->|"read + cache"| LOCAL
     REP -->|"read"| LOCAL
-    BIZ -->|"real-time read"| ADB
-    BIZ -->|"real-time read"| PDB
-    FIN -->|"real-time read"| ADB
-    FIN -->|"real-time read"| PDB
-    BIZ --> SOAP
-    SOAP --> WS
+    BIZ --> GW
+    FIN --> GW
+    GW -.->|"ERP_MODE=mock"| MOCK
+    GW -->|"HTTPS + token · JSON"| AWS
+    GW -->|"HTTPS + token · JSON"| PWS
 ```
 
-**Pattern.** **Hybrid decoupled architecture** combining a **consolidation layer (data hub) pattern** with a stateless **SPA frontend + REST API**.
+**Pattern.** **Hybrid decoupled architecture** combining a **consolidation layer (data hub) pattern** with a stateless **SPA frontend + REST API**. All ERP access is mediated by a single **ERP Gateway** with two interchangeable implementations — a real REST client and a mock provider that returns fixtures — selected by the `ERP_MODE` setting.
 
 **Justification.** The organization already has two production ERPs that cannot be modified in their billing flow. EyeMaster needs to:
 
-1. **Read and combine** both without risk of corrupting them → **read-only** connections + local cache.
+1. **Read and combine** both without risk of corrupting them → **read-only webservice** calls + local cache.
 2. **Locally manage** information that no ERP stores (client-group-distributor relationships with history).
 3. **Serve fast queries** on aggregated data → financial cache with `ultima_sync`.
 4. **Enable consolidated reports** → flexible engine on a star model.
@@ -142,7 +176,7 @@ flowchart TB
 
 | Benefit | Detail |
 |---|---|
-| ERP isolation | Django routers with limited permissions guarantee that a bug in EyeMaster cannot write to ADMIN or PEOPLE. |
+| ERP isolation | EyeMaster holds no database credentials to the ERPs; it consumes only their read webservices (plus the single client-catalog write endpoint). A bug cannot corrupt ADMIN or PEOPLE because the surface simply does not exist. |
 | Independent evolution | Frontend and backend are deployed separately; the team can iterate UI without touching the API. |
 | Consolidated reports | The star model allows crossing both ERPs with uniform dimensions (Project, App, Time, Client, Group, Distributor). |
 | Temporal traceability | Assignments with validity (`fecha_inicio / fecha_fin`) enable "as of date" queries without additional structure. |
@@ -154,8 +188,8 @@ flowchart TB
 |---|---|
 | Latency and freshness | The local cache serves fast queries but introduces a delay relative to the ERP (defining acceptable `ultima_sync` is a pending decision). |
 | Temporary dual source of truth | If the cache fails, information may become stale; mitigated by always showing `ultima_sync` and allowing on-demand refresh. |
-| Multi-tenant complexity | Resolving master → instance per company in two ERPs duplicates the connection logic. |
-| Composite identity | With two databases where IDs can collide, every company reference requires `(proyecto, id_externo)`, not just the external id. |
+| Dependency on ERP availability | Moving from direct DB reads to webservices makes EyeMaster depend on the ERP webservice being up and performant; mitigated by the local cache, timeouts/retries in the gateway, and graceful degradation to cached data. |
+| Composite identity | With two ERPs where IDs can collide, every company reference requires `(proyecto, id_externo)`, not just the external id. |
 | Not the financial source of truth | EyeMaster reads billing but does not originate it; any discrepancy with the ERP is resolved in favor of the ERP. |
 
 ### 2.2. Description of main components
@@ -166,45 +200,56 @@ flowchart TB
 | **REST API** | Django REST Framework | Exposes endpoints; orchestrates services; applies permissions. |
 | **Authentication and permissions** | `djangorestframework-simplejwt` + Django auth | Issues JWT, verifies tokens, validates permissions by code (own RBAC on Django engine). |
 | **Business service** | Django (services) | Assignment validations, inheritance, validities, and audit log. |
-| **Financial service (`ERPFinanceService`)** | Django (services) + PostgreSQL drivers | Reads `plan`, `empresa_plan`, `pago`, `corte_plan` from the ERPs and maintains the local cache. |
+| **Financial service (`ERPFinanceService`)** | Django (services) + ERP Gateway | Reads `plan`, `empresa_plan`, `pago`, `corte_plan` from the ERP webservices and maintains the local cache. |
 | **Reporting engine** | Django + SQL | Flexible engine that resolves `measure × dimensions × filters × as_of_date` on the star model. |
-| **SOAP client** | `zeep` | Consumes ADMIN's webservice (`search` and `create` client in `datahome`) with access token. |
+| **ERP Gateway** | `httpx` (REST) | Single integration point with the ERPs. Two implementations behind one interface: **real** (HTTPS + token to the ADMIN/PEOPLE webservices) and **mock** (returns JSON fixtures), selected by `ERP_MODE`. Also performs client search/create in `datahome`. |
 | **PostgreSQL EyeMaster** | PostgreSQL | Stores own data (users, assignments, audit log) and the financial cache (`cache_plan`, `cache_pago`...). |
-| **ADMIN / PEOPLE (DB)** | External PostgreSQL | Source databases; **read-only** access via dedicated Django routers. |
-| **ADMIN Webservice** | SOAP over web2py | Only point where EyeMaster writes to an external system (client registration in `datahome`). |
+| **ADMIN / PEOPLE (webservices)** | External REST/JSON | Source systems exposed as **read-only** REST webservices (companies, plans, subscriptions, payments, billing cycles). Currently simulated by the mock provider. |
+| **ADMIN client-catalog webservice** | REST/JSON | Only point where EyeMaster writes to an external system (client search/registration in `datahome`). |
 
 ### 2.3. High-level project description and file structure
 
-**Not applicable in this delivery.** The file structure will be defined when implementation begins. The planned structure, aligned with Django + React best practices, will be:
+Implemented, matching the planned structure below (backend apps by domain, cross-cutting services outside apps, per `documentacion-funcional.md`'s bounded-context principle):
 
 ```
-eyemaster/
+AI4Devs-finalproject/
 ├── backend/
 │   ├── apps/
 │   │   ├── accounts/        # Users, roles, permissions
-│   │   ├── clientes/        # Client catalog + SOAP
+│   │   ├── clientes/        # Client catalog (via ERP webservice)
 │   │   ├── empresas/        # Retrieval and mirrors
 │   │   ├── comercial/       # Groups, distributors, assignments
-│   │   ├── financiero/      # Cache plan, empresa_plan, pago
+│   │   ├── financiero/      # Financial cache, local plan catalog, adeudo/estatus services
 │   │   ├── reportes/        # Flexible engine + catalog
 │   │   └── auditoria/       # Audit log
-│   ├── core/                # Settings, routers, middleware
-│   ├── services/            # ERPService, AdminSoapService, EstatusPlanService, AdeudoService
+│   ├── core/                # Settings, urls, health check
+│   ├── services/
+│   │   └── erp/             # ERP Gateway: interface + real (REST) + mock impls
+│   │       ├── gateway.py   # ERPGateway interface + get_erp_gateway() factory
+│   │       ├── rest.py      # Real client (httpx) → ADMIN/PEOPLE webservices, circuit breaker
+│   │       ├── mock.py      # Mock provider → reads fixtures/
+│   │       ├── fixtures/    # Simulated ERP responses (JSON) used when ERP_MODE=mock
+│   │       └── CONTRACT.md  # Provisional REST contract the mock/real clients implement
+│   ├── tests/                # pytest suite, mirrors the apps/ layout
 │   └── manage.py
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/
-│   │   ├── components/
-│   │   ├── services/        # HTTP clients, JWT
+│   │   ├── pages/            # One file per screen (login, empresas, clientes, reportes, ...)
+│   │   ├── components/       # Button, Select, Table, Badge, AppLayout, PasswordInput
+│   │   ├── auth/              # AuthContext, RequireAuth
+│   │   ├── services/          # One HTTP client wrapper per backend app
 │   │   └── App.tsx
 │   └── vite.config.ts
 ├── docs/
-│   ├── readme.md                    # Official delivery document (Master template)
-│   ├── documentacion-funcional.md   # Expanded functional analysis
-│   ├── prompts.md
-│   ├── reglas_cobranza.md
-│   └── tickets.md
-└── README.md
+│   ├── plan-implementacion.md   # Implementation roadmap, OpenSpec change tracking
+│   ├── getting-started.md       # How to run the project locally
+│   └── deployment.md            # Deployment runbook and known gaps
+├── openspec/                    # OpenSpec changes/specs driving the implementation
+├── capturas/                    # Screenshots referenced from this document
+├── readme.md                    # This document (official delivery, Master template)
+├── documentacion-funcional.md   # Expanded functional analysis
+├── prompts.md                   # Prompt history with Claude
+└── reglas_cobranza.md           # Billing rules verified against the ERP source code
 ```
 
 Planned pattern: **Django apps by domain** (not by technical layer), following the *bounded context* principle of lightweight DDD. Cross-cutting services (`ERPFinanceService`, `AsignacionService`, `EstatusPlanService`) live outside the apps to avoid circular coupling.
@@ -222,23 +267,25 @@ flowchart LR
         BE["Django Backend<br/>(Render or Railway)"]
         DB[("Managed PostgreSQL")]
     end
-    subgraph ORG["Organization internal network"]
-        ADMIN[("ADMIN — PostgreSQL")]
-        PEOPLE[("PEOPLE — PostgreSQL")]
-        WS["ADMIN Webservice (SOAP)"]
+    subgraph ORG["Organization — ERP webservices"]
+        ADMIN["ADMIN webservice (REST)"]
+        PEOPLE["PEOPLE webservice (REST)"]
+        WS["ADMIN client-catalog webservice (REST)"]
     end
 
     USER["Internal user"] --> FE
     FE -->|"HTTPS"| BE
     BE --> DB
-    BE -->|"VPN / private network"| ADMIN
-    BE -->|"VPN / private network"| PEOPLE
+    BE -->|"HTTPS + token"| ADMIN
+    BE -->|"HTTPS + token"| PEOPLE
     BE -->|"HTTPS + token"| WS
 ```
 
+> Until the real ERP webservices exist, `ERP_MODE=mock` makes the backend serve ERP data from local fixtures, so no `ORG` connectivity is required to run and demo EyeMaster.
+
 **Planned deployment process:**
 
-1. **Backend.** Docker image built in CI from `backend/Dockerfile`; deployed on Render or Railway with environment variables (`SECRET_KEY`, `DATABASE_URL`, ADMIN and PEOPLE credentials, SOAP token).
+1. **Backend.** Docker image built in CI from `backend/Dockerfile`; deployed on Render or Railway with environment variables (`SECRET_KEY`, `DATABASE_URL`, `ERP_MODE`, `ADMIN_API_URL`, `PEOPLE_API_URL`, and their webservice tokens). With `ERP_MODE=mock`, the ERP URLs/tokens are not required.
 2. **Frontend.** Static build (`npm run build`) on Vercel or Netlify; `VITE_API_URL` points to the backend.
 3. **Migrations.** `python manage.py migrate` on each backend deploy.
 4. **Financial cache.** Scheduled job (Celery beat or PaaS equivalent) that invokes `SyncService` with the agreed periodicity (pending, see `documentacion-funcional.md` PD-10).
@@ -253,25 +300,25 @@ Planned practices and why:
 | **JWT authentication** | Signed tokens, short life + refresh. | Login → `POST /api/auth/login` returns `access` and `refresh`; frontend includes `Authorization: Bearer <jwt>` in each request. |
 | **Role-based access control (RBAC)** | Each endpoint validates a permission by code. Permissions per role are configured from the system. | The endpoint `POST /api/clientes` requires permission `cliente.crear`; without it, responds `403`. |
 | **Password hashing** | Django mechanism (PBKDF2 by default). | Passwords are never stored or logged in plain text. |
-| **Read-only connections to the ERPs** | Django routers with PostgreSQL user with `SELECT` privileges only. | Even if a bug attempts an `INSERT` on ADMIN, PostgreSQL rejects the operation at the engine level. |
+| **Read-only webservice integration with the ERPs** | EyeMaster consumes only the ERPs' read endpoints (plus the single client-catalog write endpoint) with a scoped token; it holds no database credentials. | Even if a bug tried to write ERP data, there is no writable surface to reach — the only mutating call is client registration. |
 | **Append-only audit** | `Bitacora` table without allowed `UPDATE` or `DELETE`. | Login, client registration, assignments, and permission changes are traced; only administrators can query it. |
-| **RFC and duplicate validation** | Client registration verifies RFC locally before invoking SOAP. | Prevents propagating duplicates to `datahome`. |
+| **RFC and duplicate validation** | Client registration verifies RFC locally before invoking the ERP webservice. | Prevents propagating duplicates to `datahome`. |
 | **Error messages without information leakage** | Invalid credentials return generic `401`. | Does not indicate whether the issue is the user or the password. |
 | **CORS configured** | Only the frontend domain authorized. | Blocks requests from other origins. |
-| **Secrets outside the code** | Environment variables; never in the repository. | `DATABASE_URL`, SOAP token, JWT keys live in the PaaS. |
+| **Secrets outside the code** | Environment variables; never in the repository. | `DATABASE_URL`, ERP webservice tokens, JWT keys live in the PaaS. |
 | **Partial unique constraint in DB** | Engine-level guarantee that a current assignment is unique. | Even if two concurrent sessions try to assign the same group, PostgreSQL rejects the second. |
 
 ### 2.6. Tests
 
-**Not applicable in this delivery.** The testing strategy is defined for subsequent deliveries:
+Implemented for the current backend and frontend (`docs/getting-started.md` §4 has the exact commands):
 
-| Level | Planned tool | Focus |
-|---|---|---|
-| Backend unit | `pytest` + `pytest-django` | Validations, inheritance, outstanding balance calculation, validity close and open. |
-| Integration | `pytest` with test database | Complete REST endpoints, authentication cycle, search-or-create client registration. |
-| Frontend unit | Vitest + React Testing Library | Selector components, status badges, forms. |
-| E2E | Playwright | Critical flows: login, retrieve company, assign group, query report. |
-| ERP contract | Tests with mirror databases or mocks | That SQL queries to ADMIN and PEOPLE continue working on model changes. |
+| Level | Tool | Focus | Status |
+|---|---|---|---|
+| Backend unit + integration | `pytest` + `pytest-django` | Validations, inheritance, outstanding balance, validity close/open, REST endpoints, auth cycle, search-or-create client, reporting engine | ✅ 142 tests passing |
+| Frontend unit | Vitest + React Testing Library | Route guard / auth flow | ✅ passing |
+| ERP contract | Tests against the mock provider (`services/erp/fixtures`) | The ERP Gateway parses ADMIN/PEOPLE responses consistently between `mock` and `real` | ✅ passing |
+| E2E | Playwright | Critical flows: login, retrieve company, assign group, query report | ⬜ deferred — see `docs/deployment.md` "Known gaps" (no browser binaries in this dev sandbox) |
+| Frontend component coverage | Vitest + RTL | Selector components, status badges, forms beyond the route guard | ⬜ partial — only the auth guard is covered today |
 
 ---
 
@@ -362,7 +409,7 @@ erDiagram
     }
 ```
 
-#### ERP cache — financial model (read-only from ERP)
+#### ERP cache — financial model (populated read-only from the ERP webservices)
 
 ```mermaid
 erDiagram
@@ -447,7 +494,7 @@ erDiagram
 | `rfc` | string | UNIQUE, NOT NULL | Mexican RFC unique in EyeMaster. |
 | `razon_social` | string | NOT NULL | |
 | `id_admin_datahome` | string | NULL if pending | Identifier in `datahome` (ADMIN). |
-| `origen` | enum | `existente \| creado` | Whether linked to an existing one or created via SOAP. |
+| `origen` | enum | `existente \| creado` | Whether linked to an existing one or created via the ERP webservice. |
 | `estado_sync` | enum | `sincronizado \| pendiente \| error` | Synchronization status with ADMIN. |
 
 **EMPRESA** — local mirror of companies that live in the ERPs.
@@ -546,7 +593,7 @@ paths:
     post:
       summary: Client registration (search or create in ADMIN)
       description: |
-        Searches RFC in ADMIN's `datahome` catalog via SOAP.
+        Searches RFC in ADMIN's `datahome` catalog via its REST webservice.
         - If found → link local (`origen=existente`).
         - If not found → create in ADMIN and link (`origen=creado`).
         - If ADMIN does not respond → save local with `estado_sync=pendiente`.
@@ -682,12 +729,12 @@ Feature: Validated client registration against ADMIN
   Scenario: RFC does not exist in ADMIN
     Given a valid RFC that does NOT exist in datahome
     When the operator sends POST /api/clientes
-    Then the client is created in ADMIN via SOAP
+    Then the client is created in ADMIN via its client-catalog webservice
     And the response is 201 with origen="creado" and estado_sync="sincronizado"
 
   Scenario: ADMIN does not respond
     Given a valid RFC
-    And the ADMIN SOAP webservice is down
+    And the ADMIN client-catalog webservice is down
     When the operator sends POST /api/clientes
     Then it is saved locally with estado_sync="pendiente"
     And the response is 202

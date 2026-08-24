@@ -1,0 +1,564 @@
+/* ---------------------------------------------------------------------
+   EyeMaster V2 — design tokens
+   Brand: navy blue. Always light surfaces (no dark-mode branch).
+--------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* Brand — navy */
+  --navy-900: #0a1e3d;
+  --navy-800: #0f2a52;
+  --navy-700: #163a6b;
+  --navy-600: #1d4a85;
+  --navy-500: #2b5fa3;
+  --navy-100: #e8eef7;
+  --navy-50: #f4f7fc;
+
+  /* Semantic */
+  --success: #157a4a;
+  --success-bg: #e5f5ec;
+  --warning: #a9660a;
+  --warning-bg: #fbf0dd;
+  --danger: #c22b3b;
+  --danger-bg: #fbe8ea;
+  --neutral: #5b6472;
+  --neutral-bg: #eef1f5;
+
+  /* Surfaces & text */
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --border: #e1e6ee;
+  --text: #29344a;
+  --text-muted: #66708a;
+  --text-h: var(--navy-900);
+  --accent: var(--navy-600);
+  --accent-hover: var(--navy-700);
+  --accent-bg: var(--navy-100);
+  --accent-border: var(--navy-500);
+  --shadow: 0 1px 2px rgba(15, 42, 82, 0.06), 0 8px 24px rgba(15, 42, 82, 0.08);
+
+  --sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+  --radius: 8px;
+
+  font: 15px/1.55 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3 {
+  font-family: var(--sans);
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: 28px;
+  margin: 0 0 4px;
+}
+
+h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+
+p {
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+a {
+  color: var(--accent);
+}
+
+/* -----------------------------------------------------------------
+   App shell — sidebar + content, collapses to top bar on mobile
+------------------------------------------------------------------ */
+.app-layout {
+  display: flex;
+  min-height: 100svh;
+  text-align: left;
+  background: var(--bg);
+}
+
+.app-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--navy-900);
+  color: #cfdcef;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 20px 16px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.app-brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--navy-500), var(--navy-700));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  flex: 1;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #b9c8e0;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.nav-link.active {
+  background: var(--navy-600);
+  color: #fff;
+}
+
+.app-sidebar-footer {
+  padding: 14px 20px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+}
+
+.app-user-email {
+  display: block;
+  color: #fff;
+  font-weight: 500;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* mobile top bar (hidden on desktop) */
+.app-topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--navy-900);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.app-topbar button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  padding: 28px 32px;
+  text-align: left;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .app-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow);
+  }
+
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .app-sidebar-backdrop {
+    display: none;
+  }
+
+  .app-sidebar.open ~ .app-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 30, 61, 0.4);
+    z-index: 25;
+  }
+
+  .app-topbar {
+    display: flex;
+  }
+
+  .app-content {
+    padding: 18px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   Sections / cards
+------------------------------------------------------------------ */
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+section h2:first-of-type {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+/* -----------------------------------------------------------------
+   Forms
+------------------------------------------------------------------ */
+form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  max-width: 420px;
+}
+
+form fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 0 0 14px;
+}
+
+form fieldset label {
+  flex-direction: row;
+  align-items: center;
+  font-weight: 500;
+  color: var(--text);
+  margin: 6px 0;
+}
+
+form legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0 4px;
+}
+
+.form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.form-row label {
+  margin-bottom: 0;
+}
+
+input,
+select,
+.select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.password-field {
+  position: relative;
+  display: flex;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 6px 8px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.password-toggle:hover {
+  background: var(--navy-50);
+}
+
+/* -----------------------------------------------------------------
+   Buttons
+------------------------------------------------------------------ */
+.btn {
+  display: inline-block;
+  padding: 9px 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* -----------------------------------------------------------------
+   Tables — scroll on small screens, never overflow the page
+------------------------------------------------------------------ */
+.app-content table,
+.login-card table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 4px 0 16px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+th, td {
+  padding: 10px 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead th {
+  background: var(--navy-50);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: var(--navy-50);
+}
+
+.table-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* -----------------------------------------------------------------
+   Badges
+------------------------------------------------------------------ */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); }
+.badge-danger  { background: var(--danger-bg);  color: var(--danger); }
+.badge-neutral { background: var(--neutral-bg); color: var(--neutral); }
+
+/* -----------------------------------------------------------------
+   Alerts
+------------------------------------------------------------------ */
+[role="alert"] {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid #f2c6cc;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+/* -----------------------------------------------------------------
+   Login screen
+------------------------------------------------------------------ */
+.login-screen {
+  min-height: 100svh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(29, 74, 133, 0.18), transparent),
+    var(--navy-900);
+  padding: 20px;
+}
+
+.login-card {
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  text-align: left;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.login-brand h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.login-subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.login-card label,
+.login-card input {
+  max-width: none;
+  width: 100%;
+}
+
+.login-card .btn {
+  width: 100%;
+  margin-top: 6px;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 28px 22px;
+  }
+}
