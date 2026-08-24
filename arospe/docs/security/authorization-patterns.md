@@ -23,6 +23,7 @@ make these distinctions explicit.
 - [A control omitted from the DOM is safe only for the one value whose guard preserves an omission](#a-control-omitted-from-the-dom-is-safe-only-for-the-one-value-whose-guard-preserves-an-omission)
 - [A check over a submitted list must accept every shape the write accepts, and derive the "before" state itself](#a-check-over-a-submitted-list-must-accept-every-shape-the-write-accepts-and-derive-the-before-state-itself)
 - [A registry that means "ungated" by *absence* fails open, silently](#a-registry-that-means-ungated-by-absence-fails-open-silently)
+- [A rate limit keyed on the target alone becomes an attack on the target the moment a second caller exists](#a-rate-limit-keyed-on-the-target-alone-becomes-an-attack-on-the-target-the-moment-a-second-caller-exists)
 - [Confirmed safe: a sidebar built on Gate::any() inherits the Super Admin bypass, and both refusal paths fail closed](#confirmed-safe-a-sidebar-built-on-gateany-inherits-the-super-admin-bypass-and-both-refusal-paths-fail-closed)
 - [Confirmed safe: a `can:`-gated route's 403 names no permission — and `APP_DEBUG` is not what makes that true](#confirmed-safe-a-can-gated-routes-403-names-no-permission--and-app_debug-is-not-what-makes-that-true)
 - [Confirmed safe: role-name collision is closed by a creation/rename guard, not by the database alone](#confirmed-safe-role-name-collision-is-closed-by-a-creationrename-guard-not-by-the-database-alone)
@@ -568,6 +569,26 @@ path fails **open** and silently, since a missing role is indistinguishable from
 genuinely does not hold. `load()` (not `loadMissing()`) is what the rule needs — `loadMissing()` is
 precisely a no-op when the caller already supplied the stale collection.
 
+> **Confirmed safe (task 0015, Phase 4) — and the reason the `load()`-not-`loadMissing()` clause above
+> is now load-bearing rather than defensive.** Task 0015's audit-log work (finding F5) gave this action
+> a **second pre-hydrating caller**, in the same request, one statement above the call:
+> `App\Livewire\Users\Index::updateExistingUser()` captures the "before" role for its `Log::info` line
+> by reading `$target->roles` — which hydrates the relation on the very instance it then hands to
+> `UpdateUser`. The audit confirmed no finding: `__invoke()`'s `$user->load('roles')` **forces** a
+> re-query, so the pre-hydrated collection is discarded before any check consults it, and this caller's
+> collection was never stale to begin with (it comes from a fresh `User::findOrFail()` in the same
+> request).
+>
+> The durable point is what would break it. When N1 was written, `loadMissing()` looked like a
+> harmless micro-optimisation only a hypothetical attacker-controlled caller would punish. It is now
+> one edit away from a real regression through **this repo's own code**: swapping `load()` for
+> `loadMissing()` would make `UpdateUser` authorize against whatever the component happened to hydrate
+> for a *logging* purpose. **Rule: a forced reload is not redundant merely because every caller you can
+> see is trustworthy — count the callers that hydrate the relation before the call, and treat that
+> count going up as a reason to re-read this section, not as a reason to skip the reload.** The
+> "before"-state capture that pre-hydrates it must also stay above the call for its own reason (it
+> reads pre-write values), so the two constraints are stable together rather than in tension.
+
 ## A full-set sync behind a partially-visible form must preserve what the actor cannot see
 
 Established by task 0009's Phase 4 audit (finding F1), whose correct resolution required a **human
@@ -1068,6 +1089,69 @@ all — `[]` on both sides, which is exactly the assertion that matters there. I
 drift the prose does not mention: an entry whose route *gains* a `can:` gate later while the registry
 still lists none.
 
+## A rate limit keyed on the target alone becomes an attack on the target the moment a second caller exists
+
+Established by task 0015's finding **F6 part 2**, against a limiter that had been correct when it was
+written and became a denial-of-service vector without a single line of it changing.
+
+`App\Actions\Users\RequestEmailChange` throttled at `'email-change:'.$user->getKey()` — 3 per hour,
+keyed on the **target**. That was right while `App\Livewire\Settings\Profile` was the only caller,
+because there target ≡ actor and the key is really "this person's own allowance". Task 0004 added a
+second, **cross-user** caller (an administrator editing someone else's row) and the same key silently
+changed meaning: an administrator could now spend a victim's three attempts and leave them unable to
+change their own address for the rest of the hour. Quota is a resource, and a shared key is a resource
+one actor can consume on another's behalf.
+
+**Neither obvious fix is sufficient alone**, which is the part worth carrying forward:
+
+| Fix | Fixes the quota burn | Keeps the inbox-flood ceiling |
+| --- | --- | --- |
+| Re-key composite `(target, actor)` | ✅ | ❌ — N administrators each get their own 3/hour at one inbox |
+| Add an actor-scoped limiter beside the unchanged target one | ❌ — the target's own 3 is still burnable | ✅ |
+| **Both: composite key, plus a second target-aggregate limiter** | ✅ | ✅ |
+
+✅ Good — the shipped shape ([`app/Actions/Users/RequestEmailChange.php`](../../app/Actions/Users/RequestEmailChange.php)),
+with the four decisions that make it work:
+
+```php
+$actorKey = Auth::id() ?? 'unauthenticated';
+
+// (1) narrower first — RateLimiter::attempt() CONSUMES on success
+$key = 'email-change:'.$user->getKey().':'.$actorKey;   // 3/hour
+
+$isSelfService = Auth::id() !== null && $user->is(Auth::user());
+
+if (! $isSelfService) {
+    $aggregateKey = 'email-change-target:'.$user->getKey();   // 10/hour
+}
+```
+
+- **Check the narrower limiter first.** `RateLimiter::attempt()` consumes on success, so checking the
+  aggregate first would burn shared quota on a request the composite key is about to refuse anyway.
+  The residual asymmetry is fail-*closed* and accepted: when (1) passes and (2) refuses, the actor has
+  spent one of *their own* attempts on a refused request — never one of the target's.
+- **`Auth::id() ?? 'unauthenticated'` groups every session-less caller into one bucket.** This action
+  has no `Gate` check of its own and is reachable without a session. Falling back to `$user->getKey()`
+  would silently restore the burnable behaviour the composite key exists to remove.
+- **The aggregate ceiling must exempt the target's own request** (Phase 4 re-audit finding **F-A**).
+  Without the exemption, four administrators each staying inside their own composite cap exhaust the
+  shared 10 and lock the target out of `settings/profile` for an hour — administrator activity
+  producing exactly the outcome this whole change exists to prevent. The exemption is an **identity**
+  check (`$user->is(Auth::user())`), the same idiom the Users screen uses for its own self-row rules.
+- **An exemption removes a backstop, so the surviving control needs its own test** (re-audit finding
+  **L-1**). Once the aggregate no longer applies to a self-service caller, the composite limiter is the
+  *only* thing capping that caller's rate — and nothing in the suite proved it did, because every
+  existing "self-service" test exhausted a *different* actor's allowance first, and the pre-existing
+  throttle tests in `tests/Feature/Settings/EmailChangeTest.php` run with **no** `actingAs()` (so they
+  exercise the `'unauthenticated'` path, where both limiters are live). The fix authenticates as the
+  target and drives four real requests through `App\Livewire\Settings\Profile`.
+
+**Rule.** A rate-limit key encodes an assumption about who the callers are. When an action gains a
+caller for whom **target ≢ actor**, every key it uses has to be re-derived — and the replacement is
+normally *two* limiters, because one key cannot express both "this person's own allowance" and "how
+much traffic anyone may aim at this person". Same reasoning applies to any other consumable keyed on a
+subject rather than on the actor: verification-code sends, invitation resends, export jobs.
+
 ## Confirmed safe: a sidebar built on `Gate::any()` inherits the Super Admin bypass, and both refusal paths fail closed
 
 Recorded from story 0013's Phase 4 audit so a later epic plugging its module into `config/modules.php`
@@ -1207,7 +1291,9 @@ Do not "harden" the name comparisons themselves by lowercasing or trimming — t
 of matching names and break the property the byte-exact match above relies on. The remaining hardening
 is guard-scoping (see [Always pass the guard](#always-pass-the-guard-to-hasrole--hasanyrole)).
 
-_Last updated: 2026-08-22 — Task 0013, Phase 6 docs sync (sidebar module gating — UI): **closed** the registry section's F1/F2 status banner, which still read "open finding … as of story 0013's Phase 4 audit" while both remediations had already shipped in the same story (Phase 5 code-review finding). Both ✅ blocks are now the **real shipped tests** from [`tests/Feature/Navigation/SidebarModuleGatingTest.php`](../../tests/Feature/Navigation/SidebarModuleGatingTest.php), quoted verbatim, in place of the recommendation snippets they replaced. Recorded why the shipped allow-list test asserts `toHaveKey('permissions')` alone rather than the fuller `toHaveKeys([...])` shape originally recommended — **it is a correct narrowing, not a residual**: `permissions` is the only registry key whose absence is silent, because it is the only one read through `empty()`; the four keys read by direct array access raise an `E_WARNING` that `HandleExceptions::handleError()` rethrows as an `ErrorException` (a loud 500), and a missing `group` fails **closed** through `Collection::groupBy()`'s `data_get()` → `''` bucket. Both facts verified against framework source rather than assumed. The reusable pattern this registry establishes for later epics is now documented in [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry), which this page points at rather than duplicating._
+_Last updated: 2026-08-24 — Task 0015 (Users CRUD security hardening): added **"A rate limit keyed on the target alone becomes an attack on the target the moment a second caller exists"** (finding F6 part 2) — the `RequestEmailChange` limiter that was correct while `Settings\Profile` was its only caller and became a quota-burn vector when task 0004 added a cross-user one, with the table showing why **neither** obvious fix works alone, the four decisions in the shipped two-limiter shape (check the narrower key first because `RateLimiter::attempt()` consumes on success; `Auth::id() ?? 'unauthenticated'` and never `$user->getKey()`; the aggregate ceiling must exempt the target's **own** request, re-audit finding F-A; and an exemption that removes a backstop needs a dedicated test for the surviving control, re-audit finding L-1). Added a **Confirmed safe** block to **"Authorization that consults a relation must reload it before the first check reads it"**: this story's audit-log capture (finding F5) makes `App\Livewire\Users\Index::updateExistingUser()` a **second** caller that pre-hydrates `roles` one statement above the `UpdateUser` call, safe **only** because `__invoke()` uses `load()` rather than `loadMissing()` — so that clause is now load-bearing against this repo's own code rather than against a hypothetical caller. Nothing else on this page changed meaning; the disclosure-gate rule this story also produced belongs to [livewire-authorization.md](livewire-authorization.md#the-shipped-disclosure-gates-and-why-the-disclosure-check-is-the-stronger-ability) and is not duplicated here._
+
+_Previously: 2026-08-22 — Task 0013, Phase 6 docs sync (sidebar module gating — UI): **closed** the registry section's F1/F2 status banner, which still read "open finding … as of story 0013's Phase 4 audit" while both remediations had already shipped in the same story (Phase 5 code-review finding). Both ✅ blocks are now the **real shipped tests** from [`tests/Feature/Navigation/SidebarModuleGatingTest.php`](../../tests/Feature/Navigation/SidebarModuleGatingTest.php), quoted verbatim, in place of the recommendation snippets they replaced. Recorded why the shipped allow-list test asserts `toHaveKey('permissions')` alone rather than the fuller `toHaveKeys([...])` shape originally recommended — **it is a correct narrowing, not a residual**: `permissions` is the only registry key whose absence is silent, because it is the only one read through `empty()`; the four keys read by direct array access raise an `E_WARNING` that `HandleExceptions::handleError()` rethrows as an `ErrorException` (a loud 500), and a missing `group` fails **closed** through `Collection::groupBy()`'s `data_get()` → `''` bucket. Both facts verified against framework source rather than assumed. The reusable pattern this registry establishes for later epics is now documented in [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry), which this page points at rather than duplicating._
 
 _Previously: 2026-08-21 — Task 0013, Phase 4 audit (sidebar module gating — UI): added two sections for this repo's first **declarative permission registry** (`config/modules.php`), whose whole design is that every later epic appends entries to it. **A registry that means "ungated" by absence fails open, silently** is an open finding written as a ❌/✅ pair — `empty($item['permissions'])` cannot distinguish "declared ungated" from "the author forgot the key", verified by execution across three silent fail-open shapes and two fail-closed ones, plus the recommendation that a registry entry's permissions be pinned to its route's real `can:` middleware by a test rather than by a comment. **Confirmed safe: a sidebar built on `Gate::any()`** records the six things a later epic should not re-derive — why `Gate::any()` traverses the identical mechanism as `can:` middleware, why the two `Gate::before` callbacks compose in either order, why `hasAnyPermission()` would have been the exact inverse of the requirement, why an unseeded ability and a guest both deny rather than throw, that the rendered markup is escaped in every position including the `data-test` array keys, and that `flux:sidebar.group` renders its slot twice when `expandable` and `icon` are combined._
 

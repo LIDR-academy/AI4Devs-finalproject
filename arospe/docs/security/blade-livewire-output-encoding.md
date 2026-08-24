@@ -105,16 +105,23 @@ Two consequences to carry forward:
   carries `#[Locked]`** (task 0006 audit, F3): the delete-confirmation modal's whole job is naming the
   account about to be removed, and that name must not be desyncable from the locked id it belongs to.
 
-  `$users` qualifies by the same rule but is **deliberately left unlocked** — a documented, accepted
-  residual rather than an oversight. It is display-only: every mutating and disclosing method
+  **`$users` is now `#[Locked]` too (task 0015, finding F4).** Through task 0006 it was deliberately
+  left unlocked as an accepted residual — display-only, since every method that mutates or discloses
   (`openEditModal()`, `confirmDelete()`, `deleteUser()`, `save()`) re-reads its target with
-  `User::findOrFail()` and re-authorizes, and `usersSummary()` is its own query, so no authorization
-  or persistence decision reads `$users`. Tampering with it therefore only rewrites the attacker's own
-  rendered rows (self-XSS is already closed by the `@js()` rule above). The cost of locking it is
-  concrete: `->set('users', [])` throws on a locked property, so
-  `tests/Feature/Users/IndexRenderingTest.php`'s empty-state test would have to construct that branch
-  another way. Revisit the tradeoff the moment anything reads `$users` for a decision rather than for
-  display.
+  `User::findOrFail()`, and `usersSummary()` is its own query, so no authorization or persistence
+  decision has ever read `$users`; tampering only rewrote the attacker's own rendered rows, and
+  self-XSS is closed by the `@js()` rule above. That reasoning still holds — what changed is the
+  verdict on the cost, which is what the residual traded against: `->set('users', [])` throws on a
+  locked property, and two tests used it, one of them
+  (`tests/Feature/Users/IndexRenderingTest.php`'s empty-state case) with no other mechanism available.
+  Both were rewritten rather than dropped, so the residual is closed at no loss of coverage — see
+  [livewire-authorization.md](livewire-authorization.md#every-server-derived-property-is-locked-not-just-the-ids).
+
+  > Note for anyone reading this section as history: the "every mutating **and disclosing** method
+  > re-authorizes" clause above was **aspirational** when it was written. The three openers carried no
+  > authorization at all until task 0015 (finding F7) added it. The sentence is true now; it was a
+  > statement about intent then, and that is worth knowing before trusting a similar clause on a page
+  > written during an audit.
 - **Read authoritative values from the model, not from a client-writable array.** The edit modal's
   pending-address notice used to re-derive its value out of `$users` — this is the anti-pattern, and
   it is **no longer present in the repo** (task 0006 audit, F2):
@@ -178,7 +185,9 @@ Recorded so a future audit does not re-litigate them:
   Alpine auto-invokes the returned function. This is the same pattern already in
   `resources/views/livewire/settings/security.blade.php`; it is not a silently-dead handler.
 
-_Last updated: 2026-08-22 — Task 0013, Phase 6 docs sync: **corrected** the "Translation calls never take user data as the key" claim, which asserted that "every `__()` in this repo passes a **literal** first argument". That was already imprecise before this story (`App\Enums\UserStatus::label()` concatenates, and task 0011's composed `roles.modules.*` labels do too) and this story adds the first **fully variable** key — `__($item['label'])` in `resources/views/components/sidebar-nav.blade.php`, read from `config/modules.php`. The rule is restated by **provenance** rather than by syntax: a key may be computed, but every term must come from code, config or a seeded catalog. The rest of this page was re-verified against the real files in the same pass and needed no change — the layout this story rewrote still contains no `{!! !!}`, and the new component interpolates nothing into a `wire:*` directive (`wire:navigate` takes no argument), so the `@js()` rule is not engaged by it._
+_Last updated: 2026-08-24 — Task 0015 (Users CRUD security hardening), found by grepping this tree rather than by the story's Definition of Done, which does not name this file. The `#[Locked]` bullet described `$users` as **deliberately left unlocked**, an accepted residual with the cost of locking it spelled out; finding F4 locked it and rewrote the two tests that cost referred to, so the paragraph now records the residual as **closed** while keeping the reasoning that made it acceptable for two stories. Added a note that the same bullet's "every mutating **and disclosing** method re-authorizes" clause was **aspirational** when written — the three modal openers carried no authorization until this story's finding F7 — since a reader would otherwise take it as a verified fact about the code at the time. Nothing else on this page changed: the `@js()` rule, the removed `$users`-derived pending-address anti-pattern and the `openEditModal()` quote were re-verified against the real files and are unaffected._
+
+_Previously: 2026-08-22 — Task 0013, Phase 6 docs sync: **corrected** the "Translation calls never take user data as the key" claim, which asserted that "every `__()` in this repo passes a **literal** first argument". That was already imprecise before this story (`App\Enums\UserStatus::label()` concatenates, and task 0011's composed `roles.modules.*` labels do too) and this story adds the first **fully variable** key — `__($item['label'])` in `resources/views/components/sidebar-nav.blade.php`, read from `config/modules.php`. The rule is restated by **provenance** rather than by syntax: a key may be computed, but every term must come from code, config or a seeded catalog. The rest of this page was re-verified against the real files in the same pass and needed no change — the layout this story rewrote still contains no `{!! !!}`, and the new component interpolates nothing into a `wire:*` directive (`wire:navigate` takes no argument), so the `@js()` rule is not engaged by it._
 
 _Previously: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for the `{{ }}`-in-a-`wire:`-directive section, which carried three leading hyphens where the generated slug has two (the heading opens with `{{ }}`, and stripping the braces leaves exactly two spaces). Content unchanged._
 
