@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Notification } from "@/domain/types/notification";
 import { useAuth } from "@/infrastructure/context/AuthContext";
@@ -11,12 +12,14 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ unreadCountOverride }: NotificationBellProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const unreadCount = useUnreadCount();
   const count = unreadCountOverride ?? unreadCount;
   const { user } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const markAsRead = useMarkNotificationAsRead();
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const isCoachee = user?.role === "COACHEE";
 
@@ -26,6 +29,18 @@ export function NotificationBell({ unreadCountOverride }: NotificationBellProps)
   });
 
   const notifications = notificationsData?.data ?? [];
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
 
   const handleClick = (notification: Notification) => {
     if (!notification.isRead) {
@@ -41,9 +56,10 @@ export function NotificationBell({ unreadCountOverride }: NotificationBellProps)
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={panelRef}>
       <button
         type="button"
+        onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
         aria-label="Notifications"
       >
@@ -68,7 +84,7 @@ export function NotificationBell({ unreadCountOverride }: NotificationBellProps)
         )}
       </button>
 
-      {!isCoachee && (
+      {isOpen && !isCoachee && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
           <div className="p-4 border-b">
             <h3 className="font-semibold">Notifications</h3>

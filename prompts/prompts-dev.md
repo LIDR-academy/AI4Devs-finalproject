@@ -394,6 +394,8 @@ Can we adapt the seed so that the classes are always created for the following w
 [/speckit.tasks]
 [/speckit.implement]
 
+I have the notifications box always shown
+
 
 # XX - OpenCode - MiMo 2.5 Free
 
