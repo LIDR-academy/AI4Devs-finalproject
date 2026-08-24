@@ -9,7 +9,7 @@ that is what made deferring them from 0004 acceptable — but each is a small, w
 item worth closing now that this screen carries real UI traffic (story 0006) and a real roles
 mechanism (stories 0008/0008a/0009/0010). This story consolidates what remains of F4–F12 plus
 F17/F18 into one pass rather than nine micro-tasks. **F13 (step-up authentication) is no longer part
-of this story** — it is split out as its own sibling, [0015a](../in-progress/0015a-step-up-auth-privileged-user-actions.md),
+of this story** — it is split out as its own sibling, [0015a](0015a-step-up-auth-privileged-user-actions.md),
 because it needs a UI affordance the Users modals do not have and is therefore fullstack, not
 backend. Findings F2/F3 (name-based role matching, guard enforced only in the component) were tracked
 on stories 0008/0009 and are closed. F14 was recorded as accepted-as-designed and needs no fix.
@@ -805,7 +805,7 @@ no acceptance criterion.**
 
 ## Expected outcome
 The Users CRUD backend built in story 0004 has no known non-blocking security gaps left open, except
-the two deliberately carried elsewhere (step-up authentication → [0015a](../in-progress/0015a-step-up-auth-privileged-user-actions.md);
+the two deliberately carried elsewhere (step-up authentication → [0015a](0015a-step-up-auth-privileged-user-actions.md);
 cancelling an in-flight email change → deferred). Every server-derived property is locked; every
 method that discloses or mutates state is authorized, with the disclosure check no weaker than the
 write check it precedes and no tier logic re-derived in the component; a forged or empty status value
@@ -920,7 +920,7 @@ overtaken by later stories. Recorded here so the same drift is visible rather th
 | F8 | retype to `public ?string $status` | property is deliberately non-nullable per a documented errors-log entry | retype to non-nullable `public string`; the "existing dataset row" it cited does not exist |
 | F10 | add the `DB::transaction()` | 0008a added it; the email delegation runs **after** the commit | re-scoped to the ordering, with an explicit no-mail-on-rollback constraint |
 | F12 | fix the null-collision in `authorizeRoleChange()` | both that method and `administratorRoleId()` were **deleted** by 0008a | closed; dropped from scope |
-| F13 | step-up auth in this story | needs a modal affordance `users.blade.php` does not have | split to [0015a](../in-progress/0015a-step-up-auth-privileged-user-actions.md) |
+| F13 | step-up auth in this story | needs a modal affordance `users.blade.php` does not have | split to [0015a](0015a-step-up-auth-privileged-user-actions.md) |
 | F17 | rename the flag **and** add a test | 0008a already ships `$isSelfEdit` (`UpdateUser.php:73`) | test half only, relocated to `UpdateUser` |
 | F18 | decide whether to add the capability | still true as described | deferred by human decision |
 
@@ -937,7 +937,7 @@ payload.
 
 **Q2 — Does user administration need step-up authentication (F13)?**
 **Decision: yes, for role/status changes and deletion — not plain name edits.** The work itself is
-**not in this story**: it is [0015a](../in-progress/0015a-step-up-auth-privileged-user-actions.md), split out because
+**not in this story**: it is [0015a](0015a-step-up-auth-privileged-user-actions.md), split out because
 it requires a re-confirmation affordance in the Users modals and is therefore fullstack.
 
 **Q3 — Rate-limit window and threshold for `CreateUser`?**
@@ -954,7 +954,7 @@ and is a tunable, since the security property holds at any value ≥ 3.
 - **Follow-up from story 0004**'s Phase 4 security audit and re-audit. F1 was fixed in 0004 itself;
   F2/F3 were tracked on stories 0008/0009 and are closed; F14 is accepted-as-designed; F15/F16 were
   recorded on story 0009.
-- **Sibling story: [0015a — Step-up authentication for privileged Users actions](../in-progress/0015a-step-up-auth-privileged-user-actions.md)**
+- **Sibling story: [0015a — Step-up authentication for privileged Users actions](0015a-step-up-auth-privileged-user-actions.md)**
   (F13). Split out of this story on 2026-08-23, following the 0008/0008a precedent. The two are
   **independent and may land in either order**: 0015a adds a new guard to `updateExistingUser()`'s
   role/status path and to `deleteUser()`, while this story changes those methods' *other* concerns
@@ -975,4 +975,4 @@ F7 sharpening were added by the same auditor's Phase 4 **re-audit**, run after t
 re-audit also produced F15 (a sharper restatement of F2/F3) and F16 (informational), both recorded on
 story 0009. Rewritten 2026-08-23 after a Phase 2 INVEST/docs-consistency **FAIL** from `code-reviewer`
 (blocking findings B1–B6, advisory S1/S3), with every remaining finding re-verified against the real
-files at `HEAD` and F13 split out to [0015a](../in-progress/0015a-step-up-auth-privileged-user-actions.md).
+files at `HEAD` and F13 split out to [0015a](0015a-step-up-auth-privileged-user-actions.md).

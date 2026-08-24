@@ -469,47 +469,47 @@ assertion in any of these files was removed or loosened.
   keep exercising a successful save/delete rather than tripping the new guard.
 
 ## Tests to perform
-- [ ] **Role change, stale confirmation:** with `auth.password_confirmed_at` unset (and, separately,
+- [x] **Role change, stale confirmation:** with `auth.password_confirmed_at` unset (and, separately,
       set to a timestamp older than `config('auth.password_timeout')`), a role change is refused and
       the target's role is **unchanged in the database**. Assert on the row, not only on the response.
-- [ ] **Status change, stale confirmation:** same shape, asserting the target's `status` is unchanged.
-- [ ] **Deletion, stale confirmation:** same shape, asserting `User::find($id)` is still non-null.
-- [ ] **(Phase 4, F2) Third-party email change, stale confirmation:** same shape, editing **another**
+- [x] **Status change, stale confirmation:** same shape, asserting the target's `status` is unchanged.
+- [x] **Deletion, stale confirmation:** same shape, asserting `User::find($id)` is still non-null.
+- [x] **(Phase 4, F2) Third-party email change, stale confirmation:** same shape, editing **another**
       user's email only, asserting `pending_email` is still unset on the target's row.
-- [ ] **(Phase 4, F1) Administrator-tier creation, stale confirmation:** submitting a create form with
+- [x] **(Phase 4, F1) Administrator-tier creation, stale confirmation:** submitting a create form with
       the Administrator role selected is refused; no user is created.
-- [ ] **Happy path:** with `auth.password_confirmed_at` set to `now()`, each of the three actions
+- [x] **Happy path:** with `auth.password_confirmed_at` set to `now()`, each of the three actions
       succeeds. This is the regression guard that proves the story did not ship a blanket refusal.
-- [ ] **Boundary:** a confirmation exactly `config('auth.password_timeout')` seconds old is **still
+- [x] **Boundary:** a confirmation exactly `config('auth.password_timeout')` seconds old is **still
       valid**, and one second older is not — `RequirePassword` uses `>`, not `>=`, and this story must
       match it exactly. Drive it with `Carbon::setTestNow()`.
-- [ ] **Must-not-over-block — name only:** with a stale confirmation, a name-only edit of another user
+- [x] **Must-not-over-block — name only:** with a stale confirmation, a name-only edit of another user
       succeeds and the name is persisted.
-- [ ] **Must-not-over-block — self-service email:** with a stale confirmation, an administrator changing
+- [x] **Must-not-over-block — self-service email:** with a stale confirmation, an administrator changing
       **their own** email address (an `$isSelfEdit` request) is accepted and parked in `pending_email`.
       *(Narrowed by the Phase 4 F2 decision — an email change of **another** user is now covered by the
       "Third-party email change, stale confirmation" bullet above, not this one.)*
-- [ ] **Must-not-over-block — create (ordinary role):** with a stale confirmation, creating a user with
+- [x] **Must-not-over-block — create (ordinary role):** with a stale confirmation, creating a user with
       an **ordinary** role succeeds. *(Narrowed by the Phase 4 F1 decision — Administrator-tier creation
       is now covered by the "Administrator-tier creation, stale confirmation" bullet above.)*
-- [ ] **Must-not-over-block — self-edit:** with a stale confirmation, an administrator saving their own
+- [x] **Must-not-over-block — self-edit:** with a stale confirmation, an administrator saving their own
       row with a different role selected succeeds and their role is unchanged, exactly as
       `tests/Feature/Users/IndexTest.php:670` pins today.
-- [ ] **Permission refusal takes precedence:** an actor lacking `users.delete` (and, separately, lacking
+- [x] **Permission refusal takes precedence:** an actor lacking `users.delete` (and, separately, lacking
       `promoteToAdministrator`/`downgrade`/`updateSensitiveAttributes` as relevant) with a **stale**
       confirmation receives the authorization refusal (`AuthorizationException`), never the
       password-confirmation refusal — proves the ordering fix, not just its absence of a crash.
-- [ ] **Binds a Super Admin actor:** a Super Admin with a stale confirmation is refused a role change —
+- [x] **Binds a Super Admin actor:** a Super Admin with a stale confirmation is refused a role change —
       `Gate::before`'s bypass does not exempt the step-up guard, since it is a direct throw, not a
       `Gate` check.
-- [ ] **Direct action call:** invoke `App\Actions\Users\UpdateUser` **directly** (resolved from the
+- [x] **Direct action call:** invoke `App\Actions\Users\UpdateUser` **directly** (resolved from the
       container under `actingAs()`, never through `Livewire::test()`) with a stale confirmation and a
       role change, and assert it throws and writes nothing — the guard must not be a property of the
       Livewire caller alone, per the same rule story 0008a established for these actions.
-- [ ] **Fail-closed with no session:** the same direct call in a genuinely session-less context (not
+- [x] **Fail-closed with no session:** the same direct call in a genuinely session-less context (not
       merely an unset key under `actingAs()`, which a sibling test already covers — Phase 4 finding F5
       caught the original version of this test exercising the wrong case) is refused, not exempted.
-- [ ] **(Phase 4, F3) `password.confirm.store` is rate limited:** the 6th password submission within one
+- [x] **(Phase 4, F3) `password.confirm.store` is rate limited:** the 6th password submission within one
       minute is rejected with a 429 response rather than checked against the actual password —
       matching Fortify's own `login` limiter's shape (by user id when authenticated, else IP). *(Worded
       "429 response" rather than "throttling message" since Phase 5 finding N4/F-3: the shipped
@@ -518,28 +518,28 @@ assertion in any of these files was removed or loosened.
       a second confirmation-flow response for a path reached only after five wrong passwords in a
       minute. The security content the scenario cares about — the password is never checked — is
       still exactly what the test proves.)*
-- [ ] **(Phase 4, F4) A step-up refusal is logged:** both the `save()` and `deleteUser()` catch paths
+- [x] **(Phase 4, F4) A step-up refusal is logged:** both the `save()` and `deleteUser()` catch paths
       emit exactly one `Log::warning` carrying `actor_id`, `action`, and the target's `user_id` before
       redirecting (`Log::spy()`/fake), matching story 0015's `Log::info` shape for the same class's
       successful mutations.
-- [ ] **The refusal is not a 403.** Against the **direct action call** (the non-dashboard-caller path —
+- [x] **The refusal is not a 403.** Against the **direct action call** (the non-dashboard-caller path —
       see "Direct action call" above), assert the thrown exception is
       `PasswordConfirmationRequiredException` rendering 423, **not** an `AuthorizationException`/403 —
       an actor who holds `users.edit` must be able to tell "your confirmation expired" from "you may
       not do this". The dashboard-caller path is covered separately by the redirect round-trip test
       below, which never surfaces a raw status code to assert on.
-- [ ] **Re-confirmation restores the ability:** refuse, write the session key the way
+- [x] **Re-confirmation restores the ability:** refuse, write the session key the way
       `ConfirmablePasswordController::store()` does, retry, and assert the change now applies.
-- [ ] **Sign-out invalidates it:** confirm, sign out, sign in again, and assert the action is refused.
-- [ ] **Redirect round-trip (browser, `tests/Browser/UsersIndexTest.php`):** a refused role change
+- [x] **Sign-out invalidates it:** confirm, sign out, sign in again, and assert the action is refused.
+- [x] **Redirect round-trip (browser, `tests/Browser/UsersIndexTest.php`):** a refused role change
       lands the administrator on the password-confirmation screen, and after submitting their password
       they are returned to `/users`. This is the bullet that catches the `url.intended` hazard named in
       Files to create/modify — it cannot be proven at `Livewire::test()` level.
-- [ ] **The affordance renders, and only when it should:** with a stale confirmation the create/edit
+- [x] **The affordance renders, and only when it should:** with a stale confirmation the create/edit
       and delete modals each show their notice (selected by `data-test`, never by translated text);
       with a fresh confirmation neither does. Prove the assertion can fail — flip the condition once
       and confirm the test goes red — per this repo's regression-proof convention.
-- [ ] **Full-suite regression:** run `php artisan test` and `vendor/bin/pint --format agent` **unscoped**
+- [x] **Full-suite regression:** run `php artisan test` and `vendor/bin/pint --format agent` **unscoped**
       (see [base-standards.md](../../../docs/conventions/base-standards.md#steps-1-and-2-are-the-iteration-forms-run-both-unscoped-before-declaring-the-work-done)).
       This story adds a guard inside an action that many existing tests exercise, so its blast radius
       is the whole Users suite by construction — expect existing tests that change a role or status to
@@ -559,57 +559,57 @@ flow anywhere in the app, the confirmation screen itself is rate limited, and a 
 structured log entry.
 
 ## Acceptance criteria
-- [ ] `App\Actions\Auth\EnsureRecentPasswordConfirmation` is the **single** implementation of the
+- [x] `App\Actions\Auth\EnsureRecentPasswordConfirmation` is the **single** implementation of the
       freshness check: it reads `session('auth.password_confirmed_at', 0)` against
       `config('auth.password_timeout')` with the same `>` comparison `RequirePassword` uses, and no
       call site re-derives it inline.
-- [ ] **No new timeout is introduced.** `config/auth.php` is unmodified, no `AUTH_*` env key is added,
+- [x] **No new timeout is introduced.** `config/auth.php` is unmodified, no `AUTH_*` env key is added,
       and no Users-specific window exists — the value is the same 3 hours `settings/security` relies on.
-- [ ] The guard is enforced from **`App\Actions\Users\UpdateUser`** for role, status and third-party
+- [x] The guard is enforced from **`App\Actions\Users\UpdateUser`** for role, status and third-party
       email changes (so a direct, non-dashboard caller inherits it), from
       **`App\Livewire\Users\Index::deleteUser()`** for deletion, and from
       **`App\Actions\Users\CreateUser`** for an Administrator-tier creation (Phase 4, F1) — in every
       case **above the first write**.
-- [ ] The guard fires **only** when a role change, a status change, a third-party email change, or an
+- [x] The guard fires **only** when a role change, a status change, a third-party email change, or an
       Administrator-tier creation is actually occurring. A name-only edit, a self-service email change,
       an ordinary-role creation, and a self-edit generally, each reach no step-up check.
-- [ ] **(Phase 4, F3)** `password.confirm.store` is rate limited at 5/minute, keyed the same way
+- [x] **(Phase 4, F3)** `password.confirm.store` is rate limited at 5/minute, keyed the same way
       Fortify's own `login` limiter is.
-- [ ] **(Phase 4, F4)** A step-up refusal on the dashboard path emits exactly one `Log::warning` entry
+- [x] **(Phase 4, F4)** A step-up refusal on the dashboard path emits exactly one `Log::warning` entry
       before redirecting, carrying `actor_id`, `action`, and the target's `user_id`.
-- [ ] A stale or absent confirmation, including no session at all, **fails closed**.
-- [ ] **When both a permission refusal and a step-up refusal would apply, the permission refusal wins.**
+- [x] A stale or absent confirmation, including no session at all, **fails closed**.
+- [x] **When both a permission refusal and a step-up refusal would apply, the permission refusal wins.**
       The guard runs only after every `Gate::authorize()` call on its branch has passed — never before —
       so an actor who lacks the underlying permission always sees the permission refusal, never a
       re-confirmation prompt. This holds for a Super Admin actor too: the guard is a direct throw, not a
       `Gate` check, so `Gate::before`'s bypass does not exempt it from step-up.
-- [ ] The refusal is `App\Exceptions\PasswordConfirmationRequiredException` rendering **423** when it
+- [x] The refusal is `App\Exceptions\PasswordConfirmationRequiredException` rendering **423** when it
       reaches an HTTP response uncaught (the direct/non-dashboard caller path) — never a 403 and never an
       `AuthorizationException`, so it is distinguishable from a permission refusal. On the dashboard path
       the same exception is caught and converted to a redirect (see the next criterion) rather than
       rendered.
-- [ ] A refused action routes the actor to `route('password.confirm')` and, after confirming, returns
+- [x] A refused action routes the actor to `route('password.confirm')` and, after confirming, returns
       them to `/users` — proven by a browser test, not by reading vendor code.
-- [ ] The edit and delete Users modals show a re-confirmation notice when — and only when — the
+- [x] The edit and delete Users modals show a re-confirmation notice when — and only when — the
       confirmation is stale, driven by the **same** predicate the guard uses, each with a `data-test`
       hook; the create form warns when an Administrator-tier role is selected (Phase 4, F1); new keys
       present in **both** `lang/en/users.php` and `lang/es/users.php`.
-- [ ] No password field is added to any Users modal or the create form; re-confirmation happens on
+- [x] No password field is added to any Users modal or the create form; re-confirmation happens on
       Fortify's own screen.
-- [ ] `routes/users.php` is unchanged, and `App\Policies\UserPolicy` is unchanged.
-- [ ] Every existing test amended to seed the confirmation session key is listed explicitly in the
+- [x] `routes/users.php` is unchanged, and `App\Policies\UserPolicy` is unchanged.
+- [x] Every existing test amended to seed the confirmation session key is listed explicitly in the
       implementation notes, and no existing *assertion* is weakened.
-- [ ] The full unscoped suite is green.
+- [x] The full unscoped suite is green.
 
 ## Definition of Done
-- [ ] Tests written and green, plus the full existing suite, run **unscoped** — including at least one
+- [x] Tests written and green, plus the full existing suite, run **unscoped** — including at least one
       browser test for the redirect round-trip and one for the modal affordance.
-- [ ] Code reviewed (code-reviewer).
-- [ ] No security findings (appsec-auditor). Phase 4 should pay particular attention to: the guard
+- [x] Code reviewed (code-reviewer).
+- [x] No security findings (appsec-auditor). Phase 4 should pay particular attention to: the guard
       firing on exactly the intended branches (an over-block is a usability regression, an under-block
       is the whole finding), the fail-closed behaviour with no session, and whether the 423 response
       discloses anything it should not.
-- [ ] Documentation updated (docs-keeper):
+- [x] Documentation updated (docs-keeper):
       - [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md) — a new
         section for step-up authentication as a **third** authorization layer alongside route
         middleware and policies: what it protects, why it is an in-method check rather than route
@@ -631,11 +631,11 @@ structured log entry.
         and its "Open items" list are still accurate against `HEAD` before Phase 7, not only against
         Phase 3's original scope. **Already corrected once, in the same review that raised F-3** —
         this bullet exists so a future revisit does not have to rediscover why the page needs it.
-- [ ] Acceptance criteria met.
-- [ ] **Known limitation, recorded rather than fixed — `settings/security` still relies on route
+- [x] Acceptance criteria met.
+- [x] **Known limitation, recorded rather than fixed — `settings/security` still relies on route
       middleware alone**, so its own `/livewire/update` round-trips are not re-checked for password
       freshness. Pre-existing, deliberately out of scope, and a candidate for its own follow-up story.
-- [ ] **Known limitation, recorded rather than fixed (Phase 4 re-audit finding N5) —
+- [x] **Known limitation, recorded rather than fixed (Phase 4 re-audit finding N5) —
       `settings/profile` (`profile.edit`) lets an actor change their own email with no step-up check at
       all**, the same self-service email change D7 exempts from `UpdateUser`'s guard for a *different*
       reason (there is no third party to protect on the Users screen). Under this story's own
@@ -643,6 +643,95 @@ structured log entry.
       being rewritten, so D7's rationale does not fully generalize — but gating `UpdateUser` alone would
       close nothing while this pre-existing, wider-open door stays open. Candidate for its own
       follow-up story alongside the `settings/security` residual above.
+
+## Phase 7 closure record (2026-08-24)
+
+Closed by `product-owner` after independently verifying every acceptance criterion, every
+"Tests to perform" bullet and every Definition of Done item against the real shipped tree at
+`HEAD` (`b01f11d`) — by opening the cited files, not by trusting the phase reports. All 45
+checkboxes above are checked on that basis. What was verified, and how:
+
+- **AC1 (single implementation).** `app/Actions/Auth/EnsureRecentPasswordConfirmation.php`
+  holds the only comparison; a repo-wide grep for the class and its exception returns exactly
+  three call sites (`CreateUser`, `UpdateUser`, `Index::deleteUser()`) plus the view's
+  `requiresPasswordConfirmation` computed property, and none re-derives the session/config
+  comparison inline.
+- **AC2 / "Confirmed not needed" (no new timeout, no route/policy/schema change).** Verified
+  by diffing the story's whole commit range against `config/`, `routes/`, `app/Policies/`,
+  `database/` and `.env.example` — **all five untouched**. `AUTH_PASSWORD_TIMEOUT` appears
+  only at its pre-existing `config/auth.php:116`.
+- **AC3/AC4/AC8 (placement, narrowness, precedence).** Read in each file rather than inferred:
+  `UpdateUser::authorizeRoleAndStatusChange()` fires the guard on
+  `! $isNoOpRoleChange || $emailChanged || $statusChanged`, below all three `Gate::authorize()`
+  calls on its branch and above `__invoke()`'s `DB::transaction()`, and is reached only when
+  `! $isSelfEdit` (structural exemption, not a second condition); `CreateUser` fires it inside
+  the Administrator branch immediately after that branch's own
+  `Gate::authorize('promoteToAdministrator', …)`; `Index::deleteUser()` fires it after
+  `Gate::authorize('delete', …)` and above `$target->delete()`.
+- **AC5/AC6 (F3 limiter, F4 logging).** `FortifyServiceProvider::configurePasswordConfirmationRateLimiting()`
+  registers `Limit::perMinute(5)->by(user id ?: ip)` and attaches it to
+  `password.confirm.store`; both catch blocks emit one `Log::warning` with `actor_id`,
+  `action` and `user_id` before redirecting.
+- **AC11/AC12 (affordance, no password field).** Three `flux:callout` notices with the three
+  `data-test` hooks the browser tests pin, each gated on `requiresPasswordConfirmation` plus
+  its own self-row/role exemption; the view contains no password input of any kind. The three
+  new lang keys are present and key-for-key identical in `lang/en/users.php` and
+  `lang/es/users.php`.
+- **AC14 (amended tests listed, no assertion weakened).** Seed-line counts in the diff match
+  the Implementation notes exactly — `IndexTest.php` 15, `UpdateUserActionAuthorizationTest.php`
+  8, `IndexAuditLogTest.php` 3, `CreateUserActionAuthorizationTest.php` 1, and
+  `tests/Browser/UsersIndexTest.php` **2 pre-existing** (its other 7 seed lines belong to this
+  story's own 6 new browser tests). **Zero** `expect`/`assert` lines were removed from any of
+  the five files across the story's entire commit range.
+- **Tests to perform.** Every bullet maps to a named, shipped test: 69 backend tests across
+  `IndexStepUpAuthorizationTest` (18), `UpdateUserStepUpAuthorizationTest` (20),
+  `IndexStepUpAffordanceTest` (11), `Feature/Actions/Auth/EnsureRecentPasswordConfirmationTest`
+  (10), `CreateUserStepUpAuthorizationTest` (6), `Unit/Exceptions/…` (3),
+  `Unit/Actions/Auth/…` (1), plus 3 in `Feature/Auth/PasswordConfirmationTest.php` and 6 new
+  browser tests. The `>`-not-`>=` boundary, the direct-container-call path
+  (`app(UpdateUser::class)`, never `Livewire::test()`), the genuinely session-less fail-closed
+  case, the 423-not-403 assertion, sign-out invalidation and the browser round-trip
+  (`/users` → `/user/confirm-password` → back to `/users`, with the target's role asserted
+  *unchanged*) all exist as distinct tests.
+- **DoD documentation.** All five named docs carry step-up content, including
+  `docs/security/step-up-authentication.md`, whose code quotes were re-checked line by line
+  against `HEAD` — its `isRecentlyConfirmed()` quote and its
+  `! $isNoOpRoleChange || $emailChanged || $statusChanged` quote both match the shipped code,
+  and its narrower historical `|| $statusChanged` quote is correctly labelled as the superseded
+  form. Its "Open items" list carries both residuals this DoD records.
+- **Suite evidence.** Re-ran the story's own suite at closure as a spot check —
+  `--filter="StepUp|EnsureRecentPasswordConfirmation|PasswordConfirmation"` → **72 passed, 133
+  assertions**. The unscoped 744/744 run, clean `pint --format agent` and clean Larastan level 7
+  were verified repeatedly during Phases 5–6 and are not re-run here.
+
+### One non-blocking observation, recorded rather than fixed
+
+`app/Actions/Auth/EnsureRecentPasswordConfirmation.php`'s **class docblock is narrower than the
+shipped behaviour**: it says the check is "reused by `App\Actions\Users\UpdateUser` (role/status
+changes) and `App\Livewire\Users\Index::deleteUser()` (deletion)" and concludes "**Neither** call
+site re-derives this comparison inline". Both halves predate the Phase 4 widening — there are now
+**three** call sites (`CreateUser`, per F1/D6) and `UpdateUser`'s trigger includes a third-party
+email change (per F2/D7). The `docs/` pages and every other docblock touched by F1/F2 were
+updated; this one was missed.
+
+Deliberately **not** treated as blocking: it falsifies no acceptance criterion (AC1 asks that no
+call site re-derive the comparison — verified true for all three), no DoD item, and no behaviour.
+It is a comment-only inaccuracy of exactly the class this story's own new
+[errors-log entry](../../../docs/errors-log.md) is about, so it is recorded here as a one-line
+follow-up rather than silently left: **widen that docblock to name all three call sites and
+`UpdateUser`'s email condition.** `product-owner` may not edit `app/`, which is why it is handed
+on rather than fixed at closure.
+
+### Not a fullstack split — no second sub-task's Phase 7 is pending
+
+The `Type` line reads `fullstack (related_task_id: 0015)`, but `0015` is this story's
+**provenance sibling** (it was 0015's finding F13, split out on 2026-08-23), not a paired
+frontend/backend half: 0015 is itself typed `backend`, is already in `done/`, and per this file's
+own Dependencies section "owns no part of" F13. A repo-wide search finds exactly one `0015a`
+task file, and this story carried its own frontend and backend work through a single Phase 3
+(commits `a7d9558` backend, `0921dcf` frontend). `docs/workflow.md`'s "not marked as globally
+closed until **both** sub-tasks have completed their Phase 7" clause therefore does not apply.
+(`0015b`, still in the `new` stage, is a separate future story, not a sub-task of this one.)
 
 ## Dependencies and related work
 - **Split from story [0015 — Harden the Users CRUD backend's security posture](../done/0015-harden-users-crud-security-posture.md)**

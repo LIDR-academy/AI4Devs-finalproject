@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Date;
 
 /**
  * Story 0015a — the single implementation of the password-confirmation
- * freshness check, reused by App\Actions\Users\UpdateUser (role/status
- * changes) and App\Livewire\Users\Index::deleteUser() (deletion). Neither
- * call site re-derives this comparison inline.
+ * freshness check, reused by App\Actions\Users\UpdateUser (a role or status
+ * change, and — since Phase 4 finding F2/decision D7 — a third-party email
+ * change), App\Actions\Users\CreateUser (an Administrator-tier creation,
+ * Phase 4 finding F1/decision D6), and App\Livewire\Users\Index::deleteUser()
+ * (deletion). No call site re-derives this comparison inline.
  *
  * Reads and compares exactly the way
  * Illuminate\Auth\Middleware\RequirePassword::shouldConfirmPassword() does —
