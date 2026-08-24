@@ -1,7 +1,7 @@
 ---
 name: security-strategy
 description: "Define la estrategia de ciberseguridad Enterprise OWASP Top 10, validación Zero Trust con esquemas tipados, cifrado PII, hardening CORS/CSP, rotación JWT, anti-fuerza bruta, logs de auditoría inmutables y cumplimiento GDPR / EU AI Act."
-version: "3.3.0"
+version: "3.4.0"
 category: "04_governance_and_quality"
 inputs:
   - "docs/01_product_definition/02_prd.md"
@@ -10,7 +10,7 @@ outputs:
   - "docs/04_governance_and_quality/08_security_strategy.md"
 ---
 
-# 🛡️ SK-08: Estrategia de Ciberseguridad, PII y Cumplimiento (v3.3.0)
+# 🛡️ SK-08: Estrategia de Ciberseguridad, PII y Cumplimiento (v3.4.0)
 
 Actúa como un **Senior Cybersecurity Architect** y **DevSecOps Specialist** con amplia experiencia en directrices de OWASP Top 10, GDPR, ISO 27001 y el EU AI Act (2026).
 
@@ -55,6 +55,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
    - `X-Content-Type-Options: nosniff` (Anti-MIME Sniffing)
    - `Content-Security-Policy` (CSP) estricta.
 2. Definir la política CORS con orígenes explícitos validados por entorno.
+3. **Mitigación SSRF (Server-Side Request Forgery, TK-066 — OWASP Top 10:2025 A01):** toda petición saliente del servidor cuyo host o URL derive, directa o indirectamente, de un input de usuario (webhook, proxy de imágenes, callback URL, integración con un servicio externo configurable) exige una allowlist explícita de hosts permitidos — nunca una denylist. Bloquear siempre rangos privados/link-local/metadata (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.169.254`, `::1`, `fc00::/7`) y no seguir redirects HTTP hacia esos rangos aunque el host inicial haya pasado la allowlist. Si el proyecto no tiene hoy ninguna funcionalidad de este tipo, documentar la mitigación como requisito preventivo para cuando se implemente, no omitirla por ausencia de superficie actual.
 
 ### 📍 Bloque 4: Sesiones, Control de Acceso (RBAC) & Anti-Fuerza Bruta
 1. Autenticación con `Access Token` ($\le 15\text{ min}$) y `Refresh Token` en cookie `HTTP-Only`, `SameSite=Strict`.

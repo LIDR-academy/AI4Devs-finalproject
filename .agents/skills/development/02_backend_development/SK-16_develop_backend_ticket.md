@@ -1,7 +1,7 @@
 ---
 name: SK-16_develop_backend_ticket
 description: "Guía el desarrollo atómico de un ticket backend respetando la Arquitectura Hexagonal en Vertical Slices, TDD, sanitización activa de DTOs, precisión matemática de punto fijo, Eager Loading (Anti-N+1), CRUDs de entidades secundarias/pivotes, transacciones de BD, alineación de contrato y mutation score >= 70%."
-version: "3.10.0"
+version: "3.11.0"
 category: "development/02_backend_development"
 inputs:
   - ticket_id: "ID o ruta del ticket técnico (ej. TK-001 o docs/05_agile_planning/tickets/TK-001.md)"
@@ -19,7 +19,7 @@ outputs:
   - "Gate ticket-scoped de complejidad/longitud/profundidad y gate de duplicación (jscpd) en verde"
 ---
 
-# ⚙️ SK-16: Desarrollador de Tickets Backend (v3.7.0)
+# ⚙️ SK-16: Desarrollador de Tickets Backend (v3.11.0)
 
 Actúa como un **Senior Backend Software Engineer** y **Clean Architecture Advocate**. Tu objetivo es implementar de forma atómica el ticket backend especificado en `ticket_id` respetando la Arquitectura Hexagonal en Vertical Slices, TDD estricto y las guardias universales de calidad.
 
@@ -76,6 +76,7 @@ Antes de dar por completado el ticket, debes validar y verificar los siguientes 
 - [ ] ¿El contrato de API del proyecto está sincronizado según `backend_rules.md` y pasa su linter sin errores?
 - [ ] ¿No se usaron tipos inseguros (`any` / casting sin parsear) en ninguna capa?
 - [ ] ¿Las fechas usan huso horario UTC (ISO 8601 `YYYY-MM-DDTHH:mm:ssZ`)?
+- [ ] **(TK-066) Si este ticket agrega código que hace peticiones HTTP salientes cuyo host/URL deriva de input de usuario** (webhook, proxy, callback URL, integración externa configurable): ¿aplica allowlist explícita de hosts y bloquea rangos privados/link-local/metadata sin seguir redirects hacia ellos? Ver `docs/04_governance_and_quality/08_security_strategy.md` Bloque 3 (mitigación SSRF). N/A si el ticket no introduce peticiones salientes.
 
 ---
 

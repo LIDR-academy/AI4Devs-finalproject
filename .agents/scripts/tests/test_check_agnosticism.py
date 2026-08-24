@@ -57,19 +57,78 @@ class CheckAgnosticismTests(unittest.TestCase):
         # apps/backend AND *.ts both match on the same line
         self.assertEqual(violations, 2, msg=messages)
 
-    def test_non_sh_files_are_ignored(self):
-        self._write_script("check_links.py", "import npx_is_not_real  # not bash, ignored\n")
+    def test_markdown_files_are_not_pattern_scanned(self):
+        self._write_script("README.md", "run `npx eslint` in a code fence, purely documentation\n")
 
         checked, violations, messages = run_checks(self.scripts_dir)
 
         self.assertEqual(checked, 0)
         self.assertEqual(violations, 0, msg=messages)
 
+    def test_py_file_with_blocked_pattern_is_detected(self):
+        self._write_script(
+            "check_something.py",
+            "import subprocess\nsubprocess.run(['npx ', 'eslint', '.'])\n",
+        )
+
+        checked, violations, messages = run_checks(self.scripts_dir)
+
+        self.assertEqual(violations, 1)
+        self.assertIn("npx", messages[0])
+
+    def test_unexpected_extension_is_flagged(self):
+        self._write_script("check_something.js", "// clean content, but the wrong language entirely\n")
+
+        checked, violations, messages = run_checks(self.scripts_dir)
+
+        self.assertEqual(violations, 1)
+        self.assertIn("Extensión no permitida", messages[0])
+
+    def test_dotfiles_are_not_flagged_as_unexpected_extension(self):
+        self._write_script(".gitignore", "__pycache__/\n")
+
+        checked, violations, messages = run_checks(self.scripts_dir)
+
+        self.assertEqual(checked, 0)
+        self.assertEqual(violations, 0, msg=messages)
+
+    def test_own_module_is_exempt_from_pattern_scan(self):
+        # check_agnosticism.py define BLOCKED_SUBSTRINGS como literales — escanearse a sí
+        # mismo con sus propios patrones produciría falsos positivos garantizados.
+        self._write_script("check_agnosticism.py", 'BLOCKED_SUBSTRINGS = [("npx ", "x"), ("apps/backend", "y")]\n')
+
+        checked, violations, messages = run_checks(self.scripts_dir)
+
+        self.assertEqual(checked, 0)
+        self.assertEqual(violations, 0, msg=messages)
+
+    def test_nested_subdirectory_sh_file_is_detected(self):
+        nested_dir = os.path.join(self.scripts_dir, "helpers")
+        os.makedirs(nested_dir)
+        with open(os.path.join(nested_dir, "check_nested.sh"), "w") as f:
+            f.write("#!/usr/bin/env bash\nnpx eslint .\n")
+
+        checked, violations, messages = run_checks(self.scripts_dir)
+
+        self.assertEqual(violations, 1)
+        self.assertIn(os.path.join("helpers", "check_nested.sh"), messages[0])
+
     def test_tests_subdirectory_is_not_scanned(self):
         tests_dir = os.path.join(self.scripts_dir, "tests")
         os.makedirs(tests_dir)
         with open(os.path.join(tests_dir, "fixture.sh"), "w") as f:
             f.write("npx should-not-be-scanned\n")
+
+        checked, violations, messages = run_checks(self.scripts_dir)
+
+        self.assertEqual(checked, 0)
+        self.assertEqual(violations, 0, msg=messages)
+
+    def test_nested_tests_subdirectory_is_not_scanned(self):
+        nested_tests_dir = os.path.join(self.scripts_dir, "helpers", "tests")
+        os.makedirs(nested_tests_dir)
+        with open(os.path.join(nested_tests_dir, "fixture.sh"), "w") as f:
+            f.write("npx should-not-be-scanned-either\n")
 
         checked, violations, messages = run_checks(self.scripts_dir)
 

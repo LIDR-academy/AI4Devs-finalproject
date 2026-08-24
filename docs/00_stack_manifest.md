@@ -1,6 +1,6 @@
 ---
 document: stack_manifest
-version: 1.11.0
+version: 1.12.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
 approved_at: "2026-08-19"
@@ -124,8 +124,10 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Cloud Auth** | OIDC (OpenID Connect) | — | Guard 23: prohibidas llaves estáticas |
 | **Container Registry** | GitHub Container Registry (GHCR) | — | Imágenes inmutables firmadas |
 | **API Linter** | @stoplight/spectral-cli | **6.x** | Valida `openapi.yaml` en CI |
-| **Secret Scanner** | gitleaks | **8.x** | SAST en CI pipeline |
+| **Secret Scanner** | gitleaks | **8.x** | Escaneo de secretos únicamente — no es SAST (TK-066: corregido mislabel previo, ver Semgrep abajo) |
+| **SAST (Static Application Security Testing)** | Semgrep | **1.174.0** | `pip install semgrep==1.174.0` — escanea código fuente de la app (Guard 33), distinto y adicional a gitleaks |
 | **Container CVE Scanner** | trivy | **0.5x** | Escaneo de imágenes Docker |
+| **SBOM Generator** | cdxgen (`@cdxgen/cdxgen`) | **13.0.1** | CycloneDX; soporta `pnpm-lock.yaml` nativo (workspaces monorepo) — Guard 33 |
 | **API Breaking-Change Detector** | oasdiff | **1.29.x** | `check_contract_drift.sh` (TK-055), bloqueante solo si `openapi.yaml` cambió vs. `HEAD` |
 | **IaC Syntax Validator (local)** | `tofu validate` | — | `check_iac_syntax.sh` (TK-055) — valida sintaxis HCL antes del push, no reemplaza `tofu plan` contra estado real |
 

@@ -4,10 +4,14 @@ import jwt from 'jsonwebtoken';
 import { createApp } from '../app.js';
 
 describe('requireRole — Autorización por rol (Guard 15, dimensión de rol)', () => {
+  // TK-066: literal sintético solo para firmar JWTs contra una instancia de createApp()
+  // creada in-process en el propio test — nunca un secreto real ni usado en producción.
+  // Mismo hallazgo ya documentado como falso positivo para gitleaks en TK-044.
   const secret = 'test-secret-key-role-12345';
 
   it('rechaza con 403 Forbidden a un usuario autenticado con rol KITCHEN_STAFF en /api/v1/reports/waste (solo ADMIN)', async () => {
     const app = createApp({ jwtSecret: secret });
+    // nosemgrep: javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret
     const token = jwt.sign({ sub: 'usr-2', name: 'Cocinero', role: 'KITCHEN_STAFF' }, secret, { expiresIn: '1h' });
 
     const response = await request(app)
@@ -20,6 +24,7 @@ describe('requireRole — Autorización por rol (Guard 15, dimensión de rol)', 
 
   it('permite acceso con 200 a un usuario autenticado con rol ADMIN en /api/v1/reports/waste', async () => {
     const app = createApp({ jwtSecret: secret });
+    // nosemgrep: javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret
     const token = jwt.sign({ sub: 'usr-1', name: 'Admin', role: 'ADMIN' }, secret, { expiresIn: '1h' });
 
     const response = await request(app)

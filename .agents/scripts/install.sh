@@ -34,6 +34,32 @@ cp -R "$SOURCE_AGENTS_DIR" "$TARGET_DIR/.agents"
 rm -rf "$TARGET_DIR/.agents/scripts/__pycache__" "$TARGET_DIR/.agents/scripts/tests/__pycache__"
 echo "✅ .agents/ copiado."
 
+# TK-065: deja rastro de procedencia — install.sh hace un cp -R sin verificación de
+# integridad; este archivo permite que el proyecto destino diferencie más adelante contra
+# el origen real (detectar drift/tampering), en vez de perder toda referencia al commit
+# exacto que se copió. Solo usa git/date/grep (agnóstico, pasa check_agnosticism.py).
+SOURCE_COMMIT="$(git -C "$SOURCE_AGENTS_DIR" rev-parse HEAD 2>/dev/null || echo "desconocido (origen no es un repositorio git)")"
+SOURCE_REMOTE="$(git -C "$SOURCE_AGENTS_DIR" config --get remote.origin.url 2>/dev/null || echo "desconocido (sin remote 'origin' configurado)")"
+FRAMEWORK_VERSION="$(grep -m1 '^version:' "$SOURCE_AGENTS_DIR/README.md" 2>/dev/null | sed -e 's/^version:[[:space:]]*//' -e 's/^"//' -e 's/"$//' || echo "desconocido")"
+INSTALL_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+cat > "$TARGET_DIR/.agents/INSTALLED_FROM.md" <<EOF
+# 📦 Procedencia de esta instalación de \`.agents/\`
+
+Generado automáticamente por \`install.sh\` (\`TK-065\`) — no editar a mano.
+
+- **Ruta de origen:** \`$SOURCE_AGENTS_DIR\`
+- **Remote git de origen:** \`$SOURCE_REMOTE\`
+- **Commit de origen:** \`$SOURCE_COMMIT\`
+- **Versión del framework instalada:** \`$FRAMEWORK_VERSION\`
+- **Fecha de instalación (UTC):** \`$INSTALL_TIMESTAMP\`
+
+Este archivo no tiene efecto sobre el comportamiento del agente — es solo un registro para
+poder diferenciar manualmente esta copia contra el origen (\`git diff\` entre ambos árboles
+\`.agents/\`) si en el futuro se sospecha de drift o de una modificación no revisada.
+EOF
+echo "✅ INSTALLED_FROM.md (procedencia de la instalación) creado."
+
 ENTRYPOINT_CONTENT_BOOTSTRAPPED='# 🤖 AI Assistant Entrypoint
 
 > All operational rules, architectural guidelines, quality gates, and workflows for this repository are defined in the Single Source of Truth (SSoT):

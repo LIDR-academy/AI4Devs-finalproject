@@ -47,6 +47,8 @@ bash .agents/scripts/validate_agents.sh
 ```
 Esto corre los tests unitarios de las propias herramientas de auditoría, verifica enlaces markdown, `required_rules` del frontmatter, unicidad de IDs, **y que ningún script bajo `.agents/scripts/` se haya acoplado al stack de un proyecto (`check_agnosticism.py`, ver regla abajo)**. Un PR que lo rompe no se fusiona — está wireado en `ci.yml`.
 
+Además, ningún PR a `.agents/` (aunque `validate_agents.sh` pase en verde) se considera gobernanza vigente hasta que un humano confirmó explícitamente su diff — `.agents/` está sujeto al mismo modelo de amenaza de contenido no confiable que `docs/`, ver [`rules/03_untrusted_content_standard.md`](rules/03_untrusted_content_standard.md) Regla 5.
+
 ## Qué NO hacer (Non-Goals)
 
 Aplican las mismas guardas que rigen el código generado por las skills ([rules/README.md](rules/README.md)):
@@ -58,7 +60,7 @@ Aplican las mismas guardas que rigen el código generado por las skills ([rules/
 
 `install.sh` copia `.agents/` **verbatim** (`cp -R`) a cualquier proyecto nuevo, sin importar su stack — así que ningún archivo bajo `.agents/scripts/` puede depender del lenguaje, gestor de paquetes, test runner o layout de directorios que un proyecto consumidor haya elegido. Un script ahí solo puede operar sobre (a) la estructura propia de `.agents/` (skills, workflows, rules), o (b) la taxonomía fija de `docs/` que el propio framework VSDD impone a cualquier proyecto (ej. `docs/02_architecture_design/03_domain_model.md` — mismo path en cualquier stack).
 
-Cualquier script de gobernanza cuya lógica sí dependa del stack real (linter, test runner, contrato de API, layout de monorepo) **DEBE generarse por skill** (ej. `SK-27_extract_project_rules.md`) hacia el árbol del **proyecto consumidor** (ej. `docs/04_governance_and_quality/scripts/`), adaptado al stack declarado en `docs/00_stack_manifest.md` — nunca vivir como archivo estático en `.agents/scripts/`. Verificado automáticamente por `.agents/scripts/check_agnosticism.py` (wireado en `validate_agents.sh`), que falla si detecta binarios de gestor de paquetes (`npx`, `pnpm`, `npm`, `pip`, `cargo`...), extensiones de código fuente como glob literal, o rutas de proyecto hardcodeadas dentro de `.agents/scripts/*.sh`.
+Cualquier script de gobernanza cuya lógica sí dependa del stack real (linter, test runner, contrato de API, layout de monorepo) **DEBE generarse por skill** (ej. `SK-27_extract_project_rules.md`) hacia el árbol del **proyecto consumidor** (ej. `docs/04_governance_and_quality/scripts/`), adaptado al stack declarado en `docs/00_stack_manifest.md` — nunca vivir como archivo estático en `.agents/scripts/`. Verificado automáticamente por `.agents/scripts/check_agnosticism.py` (wireado en `validate_agents.sh`), que recorre `.agents/scripts/` **de forma recursiva** (excluyendo `tests/` y `__pycache__` a cualquier profundidad, `TK-065`) y falla si detecta: binarios de gestor de paquetes (`npx`, `pnpm`, `npm`, `pip`, `cargo`...) o rutas de proyecto hardcodeadas dentro de cualquier `*.sh`/`*.py`, **o cualquier archivo con una extensión fuera de la allowlist `.sh`/`.py`/`.md`** — la vía más simple de acoplarse a un stack es escribir el script en otro lenguaje por completo, y ningún substring bloqueado lo detectaría; esto cierra un blind spot que estuvo documentado sin resolver desde `TK-053`/`TK-055`.
 
 ## Git hook `commit-msg`
 

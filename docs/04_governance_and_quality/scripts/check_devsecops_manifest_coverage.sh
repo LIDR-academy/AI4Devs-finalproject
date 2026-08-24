@@ -31,7 +31,8 @@ fi
 
 # Herramientas DevSecOps declaradas en la tabla §6 del manifiesto que DEBEN aparecer
 # como step ejecutable en el pipeline real. Regenerar esta lista (vía SK-27) si §6 cambia.
-DEVSECOPS_TOOLS=("gitleaks" "trivy")
+# TK-066: agregados semgrep (SAST, Guard 33) y cdxgen (SBOM, Guard 33).
+DEVSECOPS_TOOLS=("gitleaks" "trivy" "semgrep" "cdxgen")
 
 for tool in "${DEVSECOPS_TOOLS[@]}"; do
   if ! grep -qi "$tool" "$MANIFEST"; then
