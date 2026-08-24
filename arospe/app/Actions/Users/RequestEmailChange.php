@@ -2,6 +2,7 @@
 
 namespace App\Actions\Users;
 
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Models\User;
 use App\Notifications\PendingEmailVerification;
 use Illuminate\Database\QueryException;
@@ -13,6 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class RequestEmailChange
 {
+    public function __construct(
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
+    ) {}
+
     /**
      * Request a change of the given user's email address.
      *
@@ -66,6 +71,22 @@ class RequestEmailChange
         $key = 'email-change:'.$user->getKey().':'.$actorKey;
 
         if (! RateLimiter::attempt($key, maxAttempts: 3, callback: fn (): bool => true, decaySeconds: 3600)) {
+            // Story 0015b Phase 4 finding F-1 (Medium): RateLimiter::attempt()
+            // does not consume once exhausted, so an unthrottled log call here
+            // is writable without bound by any authenticated user via
+            // App\Livewire\Settings\Profile's self-service email change --
+            // this action's second, unprivileged caller, brought into scope
+            // by Q5 alongside the privileged one. A second, 1-attempt
+            // RateLimiter gates the LOG ITSELF -- never the real limit above,
+            // which is unchanged -- so at most one log line is written per
+            // (target, actor) per window, however many times the refusal is
+            // retried within it. Distinct key prefix ('email-change-log:')
+            // so this throttle window never collides with the real limiter's
+            // own key.
+            if (RateLimiter::attempt('email-change-log:'.$key, maxAttempts: 1, callback: fn (): bool => true, decaySeconds: 3600)) {
+                $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'email_change_rate_limited', 'user', $user->id);
+            }
+
             throw ValidationException::withMessages([
                 'email' => trans('users.email_change.throttled'),
             ]);
@@ -97,6 +118,20 @@ class RequestEmailChange
             $aggregateKey = 'email-change-target:'.$user->getKey();
 
             if (! RateLimiter::attempt($aggregateKey, maxAttempts: 10, callback: fn (): bool => true, decaySeconds: 3600)) {
+                // Story 0015b Phase 4 finding F-1 / Phase 5 finding R-3 (L-2):
+                // same one-log-per-window ceiling as the composite limiter
+                // above, gating the log call rather than the real limit. Keyed
+                // by (target, actor) -- not target alone -- so a second
+                // administrator's aggregate refusal against a target another
+                // administrator already triggered a log for within the hour
+                // is still logged. A distinct key prefix
+                // ('email-change-target-log:') keeps this throttle window
+                // from colliding with the composite limiter's own log-throttle
+                // window or with either real rate-limit key.
+                if (RateLimiter::attempt('email-change-target-log:'.$aggregateKey.':'.$actorKey, maxAttempts: 1, callback: fn (): bool => true, decaySeconds: 3600)) {
+                    $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'email_change_aggregate_rate_limited', 'user', $user->id);
+                }
+
                 throw ValidationException::withMessages([
                     'email' => trans('users.email_change.throttled'),
                 ]);
@@ -107,6 +142,10 @@ class RequestEmailChange
             $user->forceFill(['pending_email' => $newEmail])->save();
         } catch (QueryException $e) {
             if ($e->getCode() === '23000') {
+                // Story 0015b: a non-Gate refusal, logged immediately before
+                // the existing throw.
+                $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'pending_email_conflict', 'user', $user->id);
+
                 throw ValidationException::withMessages([
                     'email' => trans('validation.unique', ['attribute' => 'email']),
                 ]);

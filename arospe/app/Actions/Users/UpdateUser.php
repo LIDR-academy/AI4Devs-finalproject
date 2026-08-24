@@ -3,6 +3,7 @@
 namespace App\Actions\Users;
 
 use App\Actions\Auth\EnsureRecentPasswordConfirmation;
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Role;
@@ -11,7 +12,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class UpdateUser
@@ -27,6 +27,7 @@ class UpdateUser
      */
     public function __construct(
         private readonly EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation,
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
     ) {}
 
     /**
@@ -76,7 +77,7 @@ class UpdateUser
     ): User {
         $user->load('roles');
 
-        Gate::authorize('update', $user);
+        $this->logRefusedPrivilegedAttempt->authorize('update', $user);
 
         // Defence in depth: the primary normalisation happens in the
         // component before validate() runs, so the uniqueness rule already
@@ -165,12 +166,18 @@ class UpdateUser
         $currentRoles = $user->roles;
 
         if ($currentRoles->contains(fn (Role $role): bool => Role::isSuperAdminRoleRow($role))) {
+            // Story 0015b: a non-Gate, direct-throw refusal, logged
+            // immediately before the existing throw.
+            $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'super_admin_holder_protected', 'user', $user->id);
+
             throw new AuthorizationException('A Super Admin holder cannot be modified through this action.');
         }
 
         $submittedRole = Role::query()->find((int) $roleId);
 
         if ($submittedRole !== null && Role::isSuperAdminRoleRow($submittedRole)) {
+            $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'assign_super_admin_role', 'user', $user->id);
+
             throw new AuthorizationException('The Super Admin role cannot be assigned.');
         }
 
@@ -182,9 +189,9 @@ class UpdateUser
             $willBeAdministrator = $submittedRole !== null && Role::isAdministratorRole($submittedRole);
 
             if ($willBeAdministrator && ! $wasAdministrator) {
-                Gate::authorize('promoteToAdministrator', $user);
+                $this->logRefusedPrivilegedAttempt->authorize('promoteToAdministrator', $user);
             } elseif ($wasAdministrator && ! $willBeAdministrator) {
-                Gate::authorize('downgrade', $user);
+                $this->logRefusedPrivilegedAttempt->authorize('downgrade', $user);
             }
         }
 
@@ -197,7 +204,7 @@ class UpdateUser
         $statusChanged = $status->value !== $user->getRawOriginal('status');
 
         if ($emailChanged || $statusChanged) {
-            Gate::authorize('updateSensitiveAttributes', $user);
+            $this->logRefusedPrivilegedAttempt->authorize('updateSensitiveAttributes', $user);
         }
 
         // Story 0015a — step-up authentication. Widened by Phase 4 finding

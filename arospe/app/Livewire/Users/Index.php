@@ -3,6 +3,7 @@
 namespace App\Livewire\Users;
 
 use App\Actions\Auth\EnsureRecentPasswordConfirmation;
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Actions\Users\CreateUser;
 use App\Actions\Users\RequestEmailChange;
 use App\Actions\Users\UpdateUser;
@@ -96,6 +97,19 @@ class Index extends Component
      * because Livewire's `/livewire/update` endpoint is a separate entry point
      * that never runs route middleware — mounting the component directly (as
      * every `Livewire::test()` call does) must be denied on its own.
+     *
+     * Deliberately left unlogged by story 0015b (Phase 4 finding F-2), unlike
+     * every other `Gate::authorize()` call in this class: the route's own
+     * `can:users.view` gate checks the identical ability `viewAny()` does, and
+     * `can:` — unlike `permission:` — IS on Livewire's `PersistentMiddleware`
+     * allow-list, so a real HTTP actor who would fail this check is refused by
+     * the route before ever reaching `mount()`. A refusal here is therefore
+     * unreachable over HTTP; logging it would only ever fire from a
+     * `Livewire::test()` call that mounts the component directly.
+     *
+     * If `viewAny()` ever gains a condition the route's own `can:` ability
+     * does not check, this refusal becomes reachable over HTTP and must be
+     * logged.
      */
     public function mount(): void
     {
@@ -110,11 +124,12 @@ class Index extends Component
      * Authorizes as its first statement (story 0015 finding F7): a
      * disclosure/UI-opening path, not only the mutating save(), per
      * docs/security/livewire-authorization.md's "gate every method that
-     * mutates *or discloses*" rule.
+     * mutates *or discloses*" rule. A refusal is logged (story 0015b)
+     * before it propagates.
      */
-    public function openCreateModal(): void
+    public function openCreateModal(LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
-        Gate::authorize('create', User::class);
+        $logRefusedPrivilegedAttempt->authorize('create', User::class);
 
         $this->reset(['editingUserId', 'editingPendingEmail', 'name', 'email', 'roleId', 'status']);
         $this->showModal = true;
@@ -148,12 +163,12 @@ class Index extends Component
      * docs/architecture/authorization.md for the full rule and its accepted
      * side effects.
      */
-    public function openEditModal(string $userId): void
+    public function openEditModal(string $userId, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
         $target = User::findOrFail($userId);
 
         if (! $target->is(Auth::user())) {
-            Gate::authorize('updateSensitiveAttributes', $target);
+            $logRefusedPrivilegedAttempt->authorize('updateSensitiveAttributes', $target);
         }
 
         $currentRoleId = $target->roles()->value('roles.id');
@@ -176,15 +191,15 @@ class Index extends Component
      * rule see a still-mixed-case value, letting a case-different duplicate
      * slip through on the sqlite test connection.
      */
-    public function save(CreateUser $createUser, UpdateUser $updateUser, RequestEmailChange $requestEmailChange): void
+    public function save(CreateUser $createUser, UpdateUser $updateUser, RequestEmailChange $requestEmailChange, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
         $target = null;
 
         if ($this->editingUserId === null) {
-            Gate::authorize('create', User::class);
+            $logRefusedPrivilegedAttempt->authorize('create', User::class);
         } else {
             $target = User::findOrFail($this->editingUserId);
-            Gate::authorize('update', $target);
+            $logRefusedPrivilegedAttempt->authorize('update', $target);
         }
 
         $this->email = Str::lower($this->email);
@@ -264,11 +279,11 @@ class Index extends Component
      * deleteUser()'s docblock for why, and for how that interacts with F11's
      * self-delete no-op below.
      */
-    public function confirmDelete(string $userId): void
+    public function confirmDelete(string $userId, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
         $target = User::findOrFail($userId);
 
-        Gate::authorize('delete', $target);
+        $logRefusedPrivilegedAttempt->authorize('delete', $target);
 
         $this->deletingUserId = $target->id;
         $this->deletingUserName = $target->name;
@@ -307,7 +322,7 @@ class Index extends Component
      * $target->delete() directly), so it is guarded here in the component,
      * matching the docblock above it.
      */
-    public function deleteUser(EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation): void
+    public function deleteUser(EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
         if ($this->deletingUserId === null) {
             return;
@@ -325,7 +340,7 @@ class Index extends Component
             return;
         }
 
-        Gate::authorize('delete', $target);
+        $logRefusedPrivilegedAttempt->authorize('delete', $target);
 
         try {
             $ensureRecentPasswordConfirmation();

@@ -23,7 +23,7 @@ test('requesting a change stores pending_email, leaves email/status untouched, a
     $originalEmail = $user->getRawOriginal('email');
     $originalVerifiedAt = $user->email_verified_at;
 
-    (new RequestEmailChange)($user, 'new-address@example.com');
+    app(RequestEmailChange::class)($user, 'new-address@example.com');
 
     $user->refresh();
 
@@ -45,7 +45,7 @@ test('no pending value is stored and nothing is sent when submitting the current
 
     $user = User::factory()->create(['email' => 'marta.ruiz@arospe.es', 'status' => UserStatus::Active]);
 
-    (new RequestEmailChange)($user, $submitted);
+    app(RequestEmailChange::class)($user, $submitted);
 
     expect($user->fresh()->pending_email)->toBeNull();
     Notification::assertNothingSent();
@@ -57,7 +57,7 @@ test('no pending value is stored and nothing is sent when submitting the current
 test('case handling: requesting a mixed-case address stores and applies it lowercased', function () {
     $user = User::factory()->create(['status' => UserStatus::Active]);
 
-    (new RequestEmailChange)($user, 'MARTA@X.COM');
+    app(RequestEmailChange::class)($user, 'MARTA@X.COM');
 
     expect($user->fresh()->pending_email)->toBe('marta@x.com');
 
@@ -77,7 +77,7 @@ test('the verification link hash is built from the normalised address, not the r
 
     $user = User::factory()->create(['status' => UserStatus::Active]);
 
-    (new RequestEmailChange)($user, 'MARTA@X.COM');
+    app(RequestEmailChange::class)($user, 'MARTA@X.COM');
 
     Notification::assertSentOnDemand(
         PendingEmailVerification::class,
@@ -127,7 +127,7 @@ test('a pending_email uniqueness collision that slips past validation is rethrow
     $user = User::factory()->create(['status' => UserStatus::Active]);
 
     try {
-        (new RequestEmailChange)($user, 'claimed@example.com');
+        app(RequestEmailChange::class)($user, 'claimed@example.com');
         $this->fail('Expected a ValidationException to be thrown.');
     } catch (ValidationException $exception) {
         expect($exception->errors())->toHaveKey('email');
@@ -143,12 +143,12 @@ test('a 4th email change request within the throttle window is rejected without 
 
     $user = User::factory()->create(['status' => UserStatus::Active]);
 
-    (new RequestEmailChange)($user, 'first@example.com');
-    (new RequestEmailChange)($user, 'second@example.com');
-    (new RequestEmailChange)($user, 'third@example.com');
+    app(RequestEmailChange::class)($user, 'first@example.com');
+    app(RequestEmailChange::class)($user, 'second@example.com');
+    app(RequestEmailChange::class)($user, 'third@example.com');
 
     try {
-        (new RequestEmailChange)($user, 'fourth@example.com');
+        app(RequestEmailChange::class)($user, 'fourth@example.com');
         $this->fail('Expected a ValidationException to be thrown.');
     } catch (ValidationException $exception) {
         expect($exception->errors())->toHaveKey('email');
@@ -167,14 +167,14 @@ test('the email change throttle is scoped per user, not global', function () {
     $throttledUser = User::factory()->create(['status' => UserStatus::Active]);
     $otherUser = User::factory()->create(['status' => UserStatus::Active]);
 
-    (new RequestEmailChange)($throttledUser, 'one@example.com');
-    (new RequestEmailChange)($throttledUser, 'two@example.com');
-    (new RequestEmailChange)($throttledUser, 'three@example.com');
+    app(RequestEmailChange::class)($throttledUser, 'one@example.com');
+    app(RequestEmailChange::class)($throttledUser, 'two@example.com');
+    app(RequestEmailChange::class)($throttledUser, 'three@example.com');
 
     // $throttledUser has now exhausted its 3 attempts, but a different
     // user's own first request in the same window must still succeed —
     // the limiter key includes the user's id, so it can't collide.
-    (new RequestEmailChange)($otherUser, 'four@example.com');
+    app(RequestEmailChange::class)($otherUser, 'four@example.com');
 
     expect($otherUser->fresh()->pending_email)->toBe('four@example.com');
     Notification::assertSentOnDemandTimes(PendingEmailVerification::class, 4);
@@ -357,7 +357,7 @@ test('an expired verification link is refused with a 403', function () {
 test('requesting a second address replaces the first pending one, and the first link then fails at the hash check', function () {
     $user = User::factory()->create(['status' => UserStatus::Active]);
 
-    (new RequestEmailChange)($user, 'first-address@example.com');
+    app(RequestEmailChange::class)($user, 'first-address@example.com');
 
     $firstUrl = URL::temporarySignedRoute(
         'email-change.confirm',
@@ -365,7 +365,7 @@ test('requesting a second address replaces the first pending one, and the first 
         ['user' => $user->id, 'hash' => sha1('first-address@example.com')],
     );
 
-    (new RequestEmailChange)($user, 'second-address@example.com');
+    app(RequestEmailChange::class)($user, 'second-address@example.com');
 
     expect($user->fresh()->pending_email)->toBe('second-address@example.com');
 
@@ -380,7 +380,7 @@ test('requesting a second address replaces the first pending one, and the first 
 
 test('cancelling a pending email change clears it and invalidates the outstanding link', function () {
     $user = User::factory()->create(['status' => UserStatus::Active]);
-    (new RequestEmailChange)($user, 'cancel-me@example.com');
+    app(RequestEmailChange::class)($user, 'cancel-me@example.com');
 
     $url = URL::temporarySignedRoute(
         'email-change.confirm',

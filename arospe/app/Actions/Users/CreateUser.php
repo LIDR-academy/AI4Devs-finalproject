@@ -3,6 +3,7 @@
 namespace App\Actions\Users;
 
 use App\Actions\Auth\EnsureRecentPasswordConfirmation;
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
@@ -11,7 +12,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
@@ -30,6 +30,7 @@ class CreateUser
      */
     public function __construct(
         private readonly EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation,
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
     ) {}
 
     /**
@@ -62,7 +63,7 @@ class CreateUser
      */
     public function __invoke(string $name, string $email, string $roleId, UserStatus $status): User
     {
-        Gate::authorize('create', User::class);
+        $this->logRefusedPrivilegedAttempt->authorize('create', User::class);
 
         // Story 0015 finding F6 part 1: rate-limited at 10 attempts per
         // hour, keyed on the acting user's id (decision Q3 — one order of
@@ -78,7 +79,25 @@ class CreateUser
         // 0015a. Deliberately not changed here -- moving those checks above
         // the limiter would be a bigger, unrelated quota-semantics change,
         // and the refusal is still bounded (10/hour) either way.
-        if (! RateLimiter::attempt('users-create:'.Auth::id(), maxAttempts: 10, callback: fn (): bool => true, decaySeconds: 3600)) {
+        $rateLimitKey = 'users-create:'.Auth::id();
+
+        if (! RateLimiter::attempt($rateLimitKey, maxAttempts: 10, callback: fn (): bool => true, decaySeconds: 3600)) {
+            // Story 0015b: a non-Gate refusal, logged immediately before the
+            // existing throw. 'create_rate_limited' is the pre-agreed reason
+            // string (task file "Named now" paragraph) -- distinct from the
+            // 'create' ability itself, so a log filter can tell the two
+            // refusal shapes apart.
+            //
+            // Phase 4 finding F-1: not itself a finding (this site is
+            // admin-only -- App\Livewire\Settings\Profile never reaches it),
+            // but gated the same way as RequestEmailChange's two rate-limit
+            // sites for symmetry, per the auditor's recommendation, so the
+            // shape doesn't silently diverge if this action ever gains a
+            // second caller the way RequestEmailChange already has.
+            if (RateLimiter::attempt('users-create-log:'.$rateLimitKey, maxAttempts: 1, callback: fn (): bool => true, decaySeconds: 3600)) {
+                $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'create_rate_limited');
+            }
+
             throw ValidationException::withMessages([
                 'email' => trans('users.create.throttled'),
             ]);
@@ -93,6 +112,11 @@ class CreateUser
         $submittedRole = Role::query()->find((int) $roleId);
 
         if ($submittedRole !== null && Role::isSuperAdminRoleRow($submittedRole)) {
+            // Story 0015b: a non-Gate, direct-throw refusal, logged
+            // immediately before the existing throw. No target exists yet
+            // on this create path.
+            $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'assign_super_admin_role');
+
             throw new AuthorizationException('The Super Admin role cannot be assigned.');
         }
 
@@ -100,7 +124,7 @@ class CreateUser
             // Class-level: no target exists yet on the create path, which is
             // why UserPolicy::promoteToAdministrator()'s $target parameter
             // defaults to null.
-            Gate::authorize('promoteToAdministrator', User::class);
+            $this->logRefusedPrivilegedAttempt->authorize('promoteToAdministrator', User::class);
 
             // Story 0015a, Phase 4 finding F1: only after the Gate call
             // immediately above, never before -- so an actor lacking

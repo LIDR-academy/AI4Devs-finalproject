@@ -2,6 +2,7 @@
 
 namespace App\Actions\Roles;
 
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Models\Role;
 use App\Models\User;
 use App\Policies\RolePolicy;
@@ -10,6 +11,10 @@ use Illuminate\Support\Collection;
 
 class EnforceGrantorPermissionScope
 {
+    public function __construct(
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
+    ) {}
+
     /**
      * Refuse a role-save payload that newly grants a permission the acting
      * user does not themselves hold -- story 0010 Phase 4 security audit
@@ -90,11 +95,20 @@ class EnforceGrantorPermissionScope
 
         $ungranted = $newlyGranted->diff($actor->getAllPermissions()->pluck('name'));
 
-        throw_if(
-            $ungranted->isNotEmpty(),
-            AuthorizationException::class,
-            'You cannot grant a permission you do not hold yourself.',
-        );
+        if ($ungranted->isNotEmpty()) {
+            // Story 0015b: a non-Gate, direct-throw refusal, logged
+            // immediately before the existing throw. 'grant_exceeds_scope'
+            // is distinct from any real permission name, so a log filter
+            // cannot confuse the two.
+            $this->logRefusedPrivilegedAttempt->log(
+                $actor,
+                'grant_exceeds_scope',
+                $role !== null ? 'role' : null,
+                $role?->id,
+            );
+
+            throw new AuthorizationException('You cannot grant a permission you do not hold yourself.');
+        }
 
         return $submittedPermissionNames;
     }

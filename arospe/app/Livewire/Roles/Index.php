@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Roles;
 
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Actions\Roles\EnforceAdministratorPermissionGrant;
 use App\Actions\Roles\EnforceGrantorPermissionScope;
 use App\Concerns\RoleValidationRules;
@@ -84,6 +85,20 @@ class Index extends Component
      * separate entry point that never runs route middleware — mounting the
      * component directly (as every `Livewire::test()` call does) must be
      * denied on its own.
+     *
+     * Deliberately left unlogged by story 0015b (Phase 4 finding F-2), unlike
+     * every other `Gate::authorize()` call in this class: the route's own
+     * `can:roles.manage` gate checks the identical ability `viewAny()` does,
+     * and `can:` — unlike `permission:` — IS on Livewire's
+     * `PersistentMiddleware` allow-list, so a real HTTP actor who would fail
+     * this check is refused by the route before ever reaching `mount()`. A
+     * refusal here is therefore unreachable over HTTP; logging it would only
+     * ever fire from a `Livewire::test()` call that mounts the component
+     * directly.
+     *
+     * If `viewAny()` ever gains a condition the route's own `can:` ability
+     * does not check, this refusal becomes reachable over HTTP and must be
+     * logged.
      */
     public function mount(): void
     {
@@ -101,9 +116,9 @@ class Index extends Component
      * statement, so a future reader never has to reason about which
      * methods are the one exception.
      */
-    public function openCreateModal(): void
+    public function openCreateModal(LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
-        Gate::authorize('create', Role::class);
+        $logRefusedPrivilegedAttempt->authorize('create', Role::class);
 
         $this->reset(['editingRoleId', 'name', 'selectedPermissionIds']);
         $this->showModal = true;
@@ -118,11 +133,11 @@ class Index extends Component
      * enough — per docs/security/livewire-authorization.md, every method
      * that mutates *or discloses* re-authorizes as its first statement.
      */
-    public function openEditModal(int $roleId): void
+    public function openEditModal(int $roleId, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
         $role = Role::query()->where('guard_name', 'web')->with('permissions')->findOrFail($roleId);
 
-        Gate::authorize('update', $role);
+        $logRefusedPrivilegedAttempt->authorize('update', $role);
 
         $this->editingRoleId = (int) $role->id;
         $this->name = $role->name;
@@ -143,13 +158,14 @@ class Index extends Component
     public function saveRole(
         EnforceGrantorPermissionScope $enforceGrantorPermissionScope,
         EnforceAdministratorPermissionGrant $enforceAdministratorPermissionGrant,
+        LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
     ): void {
         if ($this->editingRoleId === null) {
-            Gate::authorize('create', Role::class);
+            $logRefusedPrivilegedAttempt->authorize('create', Role::class);
             $role = null;
         } else {
             $role = Role::query()->where('guard_name', 'web')->findOrFail($this->editingRoleId);
-            Gate::authorize('update', $role);
+            $logRefusedPrivilegedAttempt->authorize('update', $role);
         }
 
         $this->name = trim($this->name);
@@ -206,6 +222,10 @@ class Index extends Component
             && Auth::user()->hasRole($role->name, 'web')
             && ! in_array(RolePolicy::ROLE_MANAGEMENT_PERMISSION, $permissionNames, true)
         ) {
+            // Story 0015b: a non-Gate refusal, logged immediately before the
+            // existing throw rather than as a second, independent check.
+            $logRefusedPrivilegedAttempt->log(Auth::user(), 'self_lockout', 'role', $role->id);
+
             throw ValidationException::withMessages([
                 'selectedPermissionIds' => __('roles.index.self_lockout_blocked'),
             ]);
@@ -269,11 +289,11 @@ class Index extends Component
      * A disclosure path (the target's name), so it authorizes independently
      * of deleteRole() -- same reasoning as openEditModal() above.
      */
-    public function confirmDeleteRole(int $roleId): void
+    public function confirmDeleteRole(int $roleId, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
         $role = Role::query()->where('guard_name', 'web')->findOrFail($roleId);
 
-        Gate::authorize('delete', $role);
+        $logRefusedPrivilegedAttempt->authorize('delete', $role);
 
         $this->deletingRoleId = (int) $role->id;
         $this->deletingRoleName = $role->name;
@@ -293,7 +313,7 @@ class Index extends Component
      * App\Models\Role's own `deleting` guard throws RoleInUseException for
      * any future call site that bypasses this method.
      */
-    public function deleteRole(): void
+    public function deleteRole(LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
         if ($this->deletingRoleId === null) {
             return;
@@ -304,9 +324,13 @@ class Index extends Component
             ->withCount(['users' => fn ($query) => $query->withTrashed()])
             ->findOrFail($this->deletingRoleId);
 
-        Gate::authorize('delete', $role);
+        $logRefusedPrivilegedAttempt->authorize('delete', $role);
 
         if ($role->users_count > 0) {
+            // Story 0015b: a non-Gate refusal, logged immediately before the
+            // existing throw rather than as a second, independent check.
+            $logRefusedPrivilegedAttempt->log(Auth::user(), 'holders_remaining', 'role', $role->id);
+
             throw ValidationException::withMessages([
                 'deletingRoleId' => trans_choice('roles.index.delete_blocked', $role->users_count, ['count' => $role->users_count]),
             ]);

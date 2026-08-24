@@ -2,6 +2,7 @@
 
 namespace App\Actions\Roles;
 
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Models\Role;
 use App\Models\User;
 use App\Policies\RolePolicy;
@@ -12,6 +13,10 @@ use Spatie\Permission\Models\Permission;
 
 class EnforceAdministratorPermissionGrant
 {
+    public function __construct(
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
+    ) {}
+
     /**
      * Refuse a role-save payload that newly grants roles.manage-administrators
      * unless the acting user is the Super Admin, and preserve an existing
@@ -68,7 +73,18 @@ class EnforceAdministratorPermissionGrant
         $isSubmittedGranted = in_array(RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION, $submittedNames, true);
 
         if ($isSubmittedGranted && ! $wasGranted) {
-            Gate::forUser($actor)->authorize('grantAdministratorPermission', Role::class);
+            // Story 0015b: the Gate target is the Role CLASS (a class-level
+            // ability -- no specific row is being tested), but the target
+            // this refusal is actually ABOUT is $role when one exists, so it
+            // is passed explicitly rather than left to auto-derive from the
+            // Gate target.
+            $this->logRefusedPrivilegedAttempt->authorize(
+                'grantAdministratorPermission',
+                Role::class,
+                actor: $actor,
+                targetType: $role !== null ? 'role' : null,
+                targetId: $role?->id,
+            );
         }
 
         if ($wasGranted && ! $isSubmittedGranted && Gate::forUser($actor)->denies('grantAdministratorPermission', Role::class)) {
