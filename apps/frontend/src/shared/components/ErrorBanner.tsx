@@ -23,12 +23,12 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
     <div
       role="alert"
       style={{
-        backgroundColor: 'rgba(255, 42, 42, 0.15)',
+        backgroundColor: 'rgba(225, 6, 0, 0.15)',
         border: '1px solid var(--color-danger)',
-        borderRadius: '8px',
+        borderRadius: '4px',
         padding,
         marginBottom,
-        color: 'var(--color-danger)',
+        color: 'var(--color-danger-text)',
         fontSize,
         display: 'flex',
         alignItems: 'center',

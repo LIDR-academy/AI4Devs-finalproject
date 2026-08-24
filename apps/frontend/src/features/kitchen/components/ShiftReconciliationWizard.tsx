@@ -104,7 +104,7 @@ const ReconciliationItemInfo: React.FC<{ item: RemanenteFEFOItem; diff: number; 
       Teórico: {formatQuantity(item.currentQuantity, item.unitOfMeasure)} {formatUnitLabel(item.unitOfMeasure)} | Expira en {item.hoursRemaining}h
     </div>
     {diff !== 0 && (
-      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: diff < 0 ? 'var(--color-danger)' : 'var(--color-primary)', marginTop: '2px' }}>
+      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: diff < 0 ? 'var(--color-danger-text)' : 'var(--color-primary)', marginTop: '2px' }}>
         Varianza: {diff > 0 ? `+${formatQuantity(diff, item.unitOfMeasure)}` : formatQuantity(diff, item.unitOfMeasure)} {formatUnitLabel(item.unitOfMeasure)}
         {isCritical && ' ⚠️ (>50% de desvío)'}
       </div>
@@ -167,10 +167,10 @@ const ReconciliationItemRow: React.FC<ReconciliationItemRowProps> = ({ item, phy
   return (
     <div
       style={{
-        backgroundColor: isCritical ? 'rgba(255, 42, 42, 0.08)' : 'var(--bg-card)',
+        backgroundColor: isCritical ? 'rgba(225, 6, 0, 0.08)' : 'var(--bg-card)',
         border: `1px solid ${isCritical ? 'var(--color-danger)' : 'var(--border-card)'}`,
         padding: '12px 16px',
-        borderRadius: '8px',
+        borderRadius: '4px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -191,14 +191,14 @@ interface CriticalVarianceBannerProps {
 const CriticalVarianceBanner: React.FC<CriticalVarianceBannerProps> = ({ isAuthorized, onAuthorize }) => (
   <div
     style={{
-      backgroundColor: 'rgba(255, 42, 42, 0.12)',
+      backgroundColor: 'rgba(225, 6, 0, 0.12)',
       border: '1px solid var(--color-danger)',
       padding: '14px',
-      borderRadius: '8px',
+      borderRadius: '4px',
       marginBottom: '20px',
     }}
   >
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-danger)', fontWeight: 700, marginBottom: '6px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-danger-text)', fontWeight: 700, marginBottom: '6px' }}>
       <AlertOctagon size={22} />
       ¡Alerta de Varianza Crítica Mayor al 50%!
     </div>

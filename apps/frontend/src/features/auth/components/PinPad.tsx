@@ -10,7 +10,7 @@ interface PinPadProps {
 const DIGIT_BUTTON_STYLE: React.CSSProperties = {
   width: '64px',
   height: '64px',
-  borderRadius: '12px',
+  borderRadius: '4px',
   backgroundColor: 'var(--bg-card)',
   border: '1px solid var(--border-card)',
   color: 'var(--text-primary)',
@@ -61,10 +61,10 @@ export const PinPad: React.FC<PinPadProps> = ({ onDigitPress, onDeletePress, dis
         style={{
           width: '64px',
           height: '64px',
-          borderRadius: '12px',
-          backgroundColor: 'rgba(255, 42, 42, 0.15)',
+          borderRadius: '4px',
+          backgroundColor: 'rgba(225, 6, 0, 0.15)',
           border: '1px solid var(--color-danger)',
-          color: 'var(--color-danger)',
+          color: 'var(--color-danger-text)',
         }}
       >
         <Delete size={24} />

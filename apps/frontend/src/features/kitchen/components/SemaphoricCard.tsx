@@ -15,19 +15,37 @@ interface SemaphoricCardProps {
 }
 
 interface Severity {
-  color: string;
+  /** Uso no-textual: borde izquierdo, fondo de badge (≥3:1, no necesita ser AAA-texto). */
+  accentColor: string;
+  /** Uso textual: label del badge, "Vence en Xh", botón "Descartar" (debe cumplir 4.5:1/7:1 sobre --bg-card). */
+  textColor: string;
   label: string;
   bg: string;
 }
 
 function getSeverity(hours: number): Severity {
   if (hours <= 6) {
-    return { color: 'var(--color-danger, #ff2a2a)', bg: 'rgba(255, 42, 42, 0.12)', label: 'CRÍTICO (< 6h)' };
+    return {
+      accentColor: 'var(--color-danger, #e10600)',
+      textColor: 'var(--color-danger-text, #ff6b5e)',
+      bg: 'rgba(225, 6, 0, 0.12)',
+      label: 'CRÍTICO (< 6h)',
+    };
   }
   if (hours <= 24) {
-    return { color: 'var(--color-warning, #f4a261)', bg: 'rgba(244, 162, 97, 0.12)', label: 'ADVERTENCIA (< 24h)' };
+    return {
+      accentColor: 'var(--color-warning, #ff6a00)',
+      textColor: 'var(--color-warning, #ff6a00)',
+      bg: 'rgba(255, 106, 0, 0.12)',
+      label: 'ADVERTENCIA (< 24h)',
+    };
   }
-  return { color: 'var(--color-success, #00a896)', bg: 'rgba(0, 168, 150, 0.12)', label: 'ÓPTIMO' };
+  return {
+    accentColor: 'var(--color-success, #2fbf6e)',
+    textColor: 'var(--color-success, #2fbf6e)',
+    bg: 'rgba(47, 191, 110, 0.12)',
+    label: 'ÓPTIMO',
+  };
 }
 
 interface AlertActionButtonsProps {
@@ -43,10 +61,10 @@ const AlertActionButtons: React.FC<AlertActionButtonsProps> = ({ alert, onAction
       style={{
         minHeight: '48px',
         minWidth: '90px',
-        backgroundColor: 'var(--color-primary, #00a896)',
-        color: '#ffffff',
+        backgroundColor: 'var(--color-primary, #ff6a00)',
+        color: 'var(--color-primary-on, #101010)',
         border: 'none',
-        borderRadius: '6px',
+        borderRadius: '4px',
         fontWeight: 600,
         cursor: 'pointer',
       }}
@@ -60,9 +78,9 @@ const AlertActionButtons: React.FC<AlertActionButtonsProps> = ({ alert, onAction
         minHeight: '48px',
         minWidth: '90px',
         backgroundColor: 'transparent',
-        color: 'var(--color-danger, #ff2a2a)',
-        border: '1px solid var(--color-danger, #ff2a2a)',
-        borderRadius: '6px',
+        color: 'var(--color-danger-text, #ff6b5e)',
+        border: '1px solid var(--color-danger, #e10600)',
+        borderRadius: '4px',
         fontWeight: 600,
         cursor: 'pointer',
       }}
@@ -79,9 +97,9 @@ export const SemaphoricCard: React.FC<SemaphoricCardProps> = ({ alert, onAction 
     <article
       data-testid={`semaphoric-card-${alert.id}`}
       style={{
-        backgroundColor: 'var(--bg-card, #101c24)',
-        borderLeft: `6px solid ${severity.color}`,
-        borderRadius: '8px',
+        backgroundColor: 'var(--bg-card, #1a1a1a)',
+        borderLeft: `6px solid ${severity.accentColor}`,
+        borderRadius: '4px',
         padding: '1rem',
         marginBottom: '0.75rem',
         display: 'flex',
@@ -91,13 +109,13 @@ export const SemaphoricCard: React.FC<SemaphoricCardProps> = ({ alert, onAction 
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h4 style={{ margin: 0, color: 'var(--text-primary, #ffffff)', fontSize: '1.1rem' }}>
+        <h4 style={{ margin: 0, color: 'var(--text-primary, #f5f5f0)', fontSize: '1.1rem' }}>
           {alert.ingredientName}
         </h4>
         <span
           style={{
             backgroundColor: severity.bg,
-            color: severity.color,
+            color: severity.textColor,
             padding: '0.25rem 0.6rem',
             borderRadius: '4px',
             fontSize: '0.8rem',
@@ -108,13 +126,16 @@ export const SemaphoricCard: React.FC<SemaphoricCardProps> = ({ alert, onAction 
         </span>
       </div>
 
-      <div style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.9rem' }}>
-        <span>Lote: <strong>{alert.lotNumber}</strong></span> • 
+      <div style={{ color: 'var(--text-secondary, #8a8a86)', fontSize: '0.9rem' }}>
+        <span>Lote: <strong>{alert.lotNumber}</strong></span> •
         <span> Cantidad: <strong>{alert.quantity} {alert.unit}</strong></span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ color: severity.color, fontWeight: 700, fontSize: '0.95rem' }}>
+        {/* Texto siempre en --text-primary (no en el tono del tier): a este tamaño/peso ningún tono de acento
+            alcanza el 7:1 exigido para "números principales" por el Design System v2.0.0; la urgencia ya la
+            comunican el borde izquierdo y el badge (uso no-textual, ≥3:1). */}
+        <span style={{ color: 'var(--text-primary, #f5f5f0)', fontWeight: 700, fontSize: '0.95rem' }}>
           ⏳ Vence en {alert.hoursRemaining}h
         </span>
 

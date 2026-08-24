@@ -176,7 +176,7 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
 
     <QuantityStepper quantity={quantity} onIncrement={onIncrement} onDecrement={onDecrement} onChange={onQuantityChange} />
 
-    <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'rgba(0, 210, 190, 0.1)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
+    <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'rgba(255, 106, 0, 0.1)', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
       ⚠️ Al confirmar la extracción, el insumo pasará automáticamente al tablero de <strong>Remanentes Activos con vencimiento prioritario a 24 Horas FEFO</strong>.
     </div>
 

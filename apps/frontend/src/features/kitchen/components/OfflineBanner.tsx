@@ -13,8 +13,8 @@ export const OfflineBanner: React.FC = () => {
       role="alert"
       aria-live="assertive"
       style={{
-        backgroundColor: 'var(--color-danger, #ff2a2a)',
-        color: 'var(--text-primary, #ffffff)',
+        backgroundColor: 'var(--color-danger, #e10600)',
+        color: 'var(--text-primary, #f5f5f0)',
         padding: '0.75rem 1rem',
         textAlign: 'center',
         fontWeight: 600,

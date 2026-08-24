@@ -34,7 +34,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isSelected, onSelect })
       padding: '16px',
       borderRadius: '12px',
       border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--border-card)',
-      backgroundColor: isSelected ? 'rgba(0, 210, 190, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+      backgroundColor: isSelected ? 'rgba(255, 106, 0, 0.08)' : 'rgba(255, 255, 255, 0.02)',
       cursor: 'pointer',
       display: 'flex',
       justifyContent: 'space-between',

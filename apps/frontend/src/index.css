@@ -1,23 +1,27 @@
 :root {
-  /* Fondo Principal y Contenedores Pizarra */
-  --bg-root: hsl(205, 38%, 7%);             /* #0b1319 - Dark Petrol Charcoal */
-  --bg-card: hsl(205, 38%, 10%);            /* #101c24 - Pizarra Petróleo */
-  --border-card: hsl(205, 25%, 18%);        /* #192a36 - Borde sutil */
+  /* Fondo Principal y Contenedores - "Señal Industrial" v2.0.0 */
+  --bg-root: hsl(0, 0%, 6%);                /* #101010 - Negro Industrial */
+  --bg-card: hsl(0, 0%, 10%);               /* #1a1a1a - Superficie de Tarjeta */
+  --border-card: hsl(0, 0%, 40%);           /* #666666 - Borde de componente táctil (≥3:1 no-texto, WCAG 1.4.11) */
 
   /* Colores Primarios y Acentos */
-  --color-primary: hsl(173, 100%, 33%);     /* #00a896 - Turquesa Petrol (Teal) */
-  --color-primary-hover: hsl(173, 100%, 40%); /* #02c39a */
-  --color-secondary: hsl(43, 89%, 60%);     /* #e9c46a - Amarillo Miel */
+  --color-primary: hsl(24, 100%, 50%);      /* #ff6a00 - Ámbar de Seguridad Industrial */
+  --color-primary-hover: hsl(24, 100%, 44%); /* #e05f00 */
+  --color-primary-on: hsl(0, 0%, 6%);       /* #101010 - texto/icono sobre fondo --color-primary (7.06:1 AAA) */
+  --color-secondary: hsl(0, 0%, 20%);       /* #333333 - Gris Neutro (acciones secundarias/no urgentes) */
 
-  /* Indicadores Tri-Color FEFO & Alertas (Gauge Dial) */
-  --color-danger: hsl(0, 100%, 58%);        /* #ff2a2a - Rojo Neón Intenso (< 12h FEFO) */
-  --color-warning: hsl(43, 89%, 60%);       /* #f4a261 - Amarillo Calidez (< 24h FEFO) */
-  --color-success: hsl(173, 100%, 33%);     /* #00a896 - Verde Turquesa (Fresco) */
+  /* Indicadores Tri-Color FEFO & Alertas */
+  --color-danger: hsl(2, 100%, 44%);        /* #e10600 - Rojo de Alerta (< 6h FEFO). Solo fondo/badge/borde, nunca texto directo */
+  --color-danger-text: hsl(4, 100%, 71%);   /* #ff6b5e - variante clara para texto/labels de alerta (6.2-6.8:1) */
+  --color-warning: hsl(24, 100%, 50%);      /* #ff6a00 - mismo tono que --color-primary por diseño (< 24h FEFO) */
+  --color-success: hsl(148, 61%, 47%);      /* #2fbf6e - Verde de Confirmación (Fresco / OK) */
 
   /* Tipografía y Textos */
-  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  --text-primary: hsl(0, 0%, 98%);        /* #fafafa - Blanco Puro */
-  --text-secondary: hsl(205, 15%, 70%);    /* #94a3b8 - Gris Azulado */
+  --font-family-display: 'Oswald', system-ui, sans-serif; /* Titulares, labels, cifras destacadas */
+  --font-family-body: 'Barlow', system-ui, sans-serif;    /* Cuerpo de texto, metadatos */
+  --font-family: var(--font-family-body);
+  --text-primary: hsl(84, 12%, 96%);      /* #f5f5f0 - ~18:1 sobre --bg-root */
+  --text-secondary: hsl(60, 2%, 55%);     /* #8a8a86 - 5.0-5.5:1 sobre --bg-root/--bg-card */
 }
 
 * {
@@ -34,12 +38,18 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+h1,
+h2,
+h3 {
+  font-family: var(--font-family-display);
+}
+
 /* Regla de Ergonomía Táctil Innegociable (Touch Target >= 48px x 48px) */
 .btn-touch {
   min-height: 48px;
   min-width: 48px;
   padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 4px;
   font-weight: 600;
   font-size: 1rem;
   border: none;
@@ -54,7 +64,7 @@ body {
 
 .btn-primary {
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-on);
 }
 
 .btn-primary:hover {
@@ -74,8 +84,8 @@ body {
 }
 
 .btn-warning {
-  background-color: var(--color-secondary);
-  color: var(--bg-root);
+  background-color: var(--color-warning);
+  color: var(--color-primary-on);
 }
 
 .btn-warning:hover {
@@ -85,7 +95,7 @@ body {
 .input-touch {
   min-height: 48px;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: var(--bg-root);
   border: 1px solid var(--border-card);
   color: var(--text-primary);
@@ -97,7 +107,7 @@ body {
 
 .input-touch:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(0, 168, 150, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.2);
 }
 
 /* Modificador de boton solo-icono (ej. cerrar modal); combinar con .btn-touch .btn-secondary */
@@ -112,11 +122,11 @@ body {
   color: var(--text-secondary);
 }
 
-/* Estructura de Tarjetas (Dark Petrol Cards) */
+/* Estructura de Tarjetas (Señal Industrial Cards) */
 .card-dashboard {
   background-color: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: 12px;
+  border-radius: 6px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
@@ -134,7 +144,7 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: rgba(0, 168, 150, 0.15);
+  background-color: rgba(255, 106, 0, 0.15);
   color: var(--color-primary);
   display: flex;
   align-items: center;
@@ -147,7 +157,7 @@ body {
   color: var(--text-primary);
 }
 
-/* 🪟 Sistema de Ventanas Emergentes Flotantes (Glassmorphism Floating Overlays) */
+/* 🪟 Sistema de Ventanas Emergentes Flotantes (Solid Industrial Overlays) */
 .modal-overlay,
 .modal-backdrop {
   position: fixed;
@@ -155,9 +165,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(11, 19, 25, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(16, 16, 16, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,9 +177,10 @@ body {
 .modal-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: 16px;
+  border-top: 4px solid var(--color-primary);
+  border-radius: 4px;
   padding: 28px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 168, 150, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   max-height: 90vh;
   overflow-y: auto;
   width: 100%;

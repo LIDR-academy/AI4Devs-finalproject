@@ -14,24 +14,24 @@ const AlertFeedErrorState: React.FC<{ error: string; onRetry?: () => void }> = (
   <div
     role="alert"
     style={{
-      border: '1px solid var(--color-danger, #ff2a2a)',
-      backgroundColor: 'rgba(255, 42, 42, 0.1)',
+      border: '1px solid var(--color-danger, #e10600)',
+      backgroundColor: 'rgba(225, 6, 0, 0.1)',
       padding: '1rem',
-      borderRadius: '8px',
+      borderRadius: '4px',
       textAlign: 'center',
     }}
   >
-    <p style={{ color: 'var(--color-danger, #ff2a2a)', fontWeight: 600 }}>{error}</p>
+    <p style={{ color: 'var(--color-danger-text, #ff6b5e)', fontWeight: 600 }}>{error}</p>
     {onRetry && (
       <button
         onClick={onRetry}
         style={{
           minHeight: '48px',
           padding: '0 1.5rem',
-          backgroundColor: 'var(--color-primary, #00a896)',
-          color: '#ffffff',
+          backgroundColor: 'var(--color-primary, #ff6a00)',
+          color: 'var(--color-primary-on, #101010)',
           border: 'none',
-          borderRadius: '6px',
+          borderRadius: '4px',
           cursor: 'pointer',
           fontWeight: 600,
         }}
@@ -49,8 +49,8 @@ const AlertFeedLoadingSkeleton: React.FC = () => (
         key={i}
         style={{
           height: '100px',
-          backgroundColor: 'var(--bg-card, #101c24)',
-          borderRadius: '8px',
+          backgroundColor: 'var(--bg-card, #1a1a1a)',
+          borderRadius: '4px',
           opacity: 0.6,
           animation: 'pulse 1.5s infinite ease-in-out',
         }}
@@ -60,7 +60,7 @@ const AlertFeedLoadingSkeleton: React.FC = () => (
 );
 
 const AlertFeedEmptyState: React.FC = () => (
-  <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary, #94a3b8)' }}>
+  <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary, #8a8a86)' }}>
     <span style={{ fontSize: '3rem', display: 'block', marginBottom: '0.5rem' }}>✅</span>
     <h3>No hay remanentes en riesgo de vencimiento</h3>
     <p>Todos los insumos en cocina cumplen las directivas FEFO óptimas.</p>
@@ -100,8 +100,8 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
     <section
       aria-label="Feed de Alertas FEFO de Cocina"
       style={{
-        backgroundColor: 'var(--bg-root, #0b1319)',
-        color: 'var(--text-primary, #fafafa)',
+        backgroundColor: 'var(--bg-root, #101010)',
+        color: 'var(--text-primary, #f5f5f0)',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
@@ -109,9 +109,9 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
     >
       <OfflineBanner />
 
-      <header style={{ padding: '1rem', borderBottom: '1px solid var(--border-card, #192a36)' }}>
+      <header style={{ padding: '1rem', borderBottom: '1px solid var(--border-card, #666666)' }}>
         <h2 style={{ margin: 0, fontSize: '1.4rem' }}>🚨 Feed de Alertas & Remanentes CRÍTICOS</h2>
-        <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary, #94a3b8)', fontSize: '0.9rem' }}>
+        <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary, #8a8a86)', fontSize: '0.9rem' }}>
           Monitoreo en tiempo real del vencimiento de insumos por método FEFO.
         </p>
       </header>
