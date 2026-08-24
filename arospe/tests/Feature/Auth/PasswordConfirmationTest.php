@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
 
 test('confirm password screen can be rendered', function () {
     $user = User::factory()->create();
@@ -31,4 +32,17 @@ test('repeated incorrect password submissions against the confirmation screen ar
     // The session key a genuine confirmation would have written is still absent -- the 6th
     // attempt was rejected by the limiter, never checked against the actual password.
     expect(session('auth.password_confirmed_at'))->toBeNull();
+});
+
+// Phase 4 re-audit finding N2: the assertion above proves the limiter behaves correctly today,
+// but not that the middleware is actually the thing attached -- a future change to how
+// FortifyServiceProvider's booted() callback resolves the route (or an upstream Fortify change
+// to how/when it registers password.confirm.store) could stop attaching the middleware while
+// this suite, which never runs against a route:cache build, stays green. This asserts the
+// attachment directly, independent of whether a request happens to trip the limit.
+test('password.confirm.store carries the confirm-password throttle middleware', function () {
+    $route = Route::getRoutes()->getByName('password.confirm.store');
+
+    expect($route)->not->toBeNull()
+        ->and($route->gatherMiddleware())->toContain('throttle:confirm-password');
 });

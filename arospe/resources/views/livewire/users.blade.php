@@ -168,12 +168,14 @@
                     is exempt by construction (App\Actions\Users\UpdateUser only runs the
                     step-up guard when ! $isSelfEdit), and role/status changes are always
                     silently no-op'd on the actor's own row -- so the notice would be
-                    misleading there. Gated on the same requiresPasswordConfirmation()
-                    predicate the guard itself reads
+                    misleading there. Gated on isEditingOwnRow (Phase 4 re-audit finding N6 --
+                    previously the raw `$editingUserId !== auth()->id()` comparison, now the
+                    same identity idiom openEditModal()/UpdateUser's $isSelfEdit use) and on
+                    the same requiresPasswordConfirmation() predicate the guard itself reads
                     (EnsureRecentPasswordConfirmation::isRecentlyConfirmed()), so the hint and
                     the guard cannot drift. Placed above the role/status selects so it is read
                     before the fields it applies to. --}}
-                    @if ($editingUserId !== null && $editingUserId !== auth()->id() && $this->requiresPasswordConfirmation)
+                    @if ($editingUserId !== null && ! $this->isEditingOwnRow && $this->requiresPasswordConfirmation)
                         <flux:callout
                             variant="warning"
                             icon="exclamation-triangle"
@@ -245,9 +247,12 @@
                 </div>
 
                 {{-- Story 0015a: same predicate as the edit modal's notice above, so the hint
-                and the guard cannot drift. Placed above the destructive button so it is read
-                before the actor commits to it. --}}
-                @if ($this->requiresPasswordConfirmation)
+                and the guard cannot drift. Also gated on ! isDeletingOwnRow (Phase 4 re-audit
+                finding N6): deleteUser() silently no-ops on the actor's own row (story 0015's
+                F11) rather than throwing the step-up exception, so this notice would otherwise
+                promise a re-confirmation prompt that never arrives. Placed above the
+                destructive button so it is read before the actor commits to it. --}}
+                @if (! $this->isDeletingOwnRow && $this->requiresPasswordConfirmation)
                     <flux:callout
                         variant="warning"
                         icon="exclamation-triangle"

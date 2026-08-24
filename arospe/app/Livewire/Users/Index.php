@@ -408,6 +408,35 @@ class Index extends Component
     }
 
     /**
+     * Whether the edit modal's currently open target is the actor's own row
+     * — the same identity idiom `openEditModal()` and `UpdateUser`'s
+     * `$isSelfEdit` already use (`->is(Auth::user())`), read here instead of
+     * restated as the raw `$editingUserId !== auth()->id()` comparison the
+     * view used to make directly (story 0015a, Phase 4 re-audit finding
+     * N6). A self-edit reaches no step-up check at all, so this is what the
+     * edit modal's re-confirmation notice is exempted on.
+     */
+    #[Computed]
+    public function isEditingOwnRow(): bool
+    {
+        return $this->editingUserId !== null && $this->editingUserId === Auth::id();
+    }
+
+    /**
+     * Whether the delete modal's currently open target is the actor's own
+     * row (story 0015a, Phase 4 re-audit finding N6). `deleteUser()` no-ops
+     * silently on a self-target (story 0015's F11) rather than throwing
+     * `PasswordConfirmationRequiredException`, so the delete modal's
+     * re-confirmation notice must not claim that confirming will be
+     * required on that row — it never reaches the guard at all.
+     */
+    #[Computed]
+    public function isDeletingOwnRow(): bool
+    {
+        return $this->deletingUserId !== null && $this->deletingUserId === Auth::id();
+    }
+
+    /**
      * Whether the create form's currently selected role is Administrator-
      * tier — the second predicate the create form's re-confirmation notice
      * is gated on, alongside requiresPasswordConfirmation() above (story

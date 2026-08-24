@@ -155,15 +155,17 @@ class FortifyServiceProvider extends ServiceProvider
      * returned (and therefore already been `add()`-ed) -- so the route is
      * genuinely registered, but `getByName('password.confirm.store')`
      * returns `null` until something rebuilds the name-lookup table.
-     * `Illuminate\Foundation\Support\Providers\RouteServiceProvider`
-     * ordinarily does exactly that from its own `$this->app->booted()`
-     * callback, registered while loading *this app's own* `routes/web.php`
-     * -- which the framework's provider-registration order places *before*
-     * package-discovered providers such as vendor Fortify's, so that
-     * rebuild runs before Fortify's routes even exist to be looked up by
-     * name. Calling `refreshNameLookups()` again here, immediately before
-     * the lookup, is what makes this deterministic rather than order-
-     * dependent on a callback this class does not own.
+     * `Illuminate\Foundation\Support\Providers\RouteServiceProvider` already
+     * does exactly that from its own `$this->app->booted()` callback --
+     * and, corrected from an earlier draft of this comment (Phase 4
+     * re-audit finding N3): every provider's `boot()`, Fortify's included,
+     * runs before ANY `bootedCallbacks` fire, so that callback already sees
+     * Fortify's named route by the time it runs, regardless of provider
+     * registration order. The call here is therefore not closing an
+     * ordering gap; it is an order-independent belt-and-braces repeat, kept
+     * because this method owns no guarantee that the framework's callback
+     * runs, or runs first, and because `refreshNameLookups()` is a cheap,
+     * idempotent rebuild either way.
      */
     private function configurePasswordConfirmationRateLimiting(): void
     {

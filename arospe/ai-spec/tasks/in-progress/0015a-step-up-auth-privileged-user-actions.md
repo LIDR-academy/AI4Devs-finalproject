@@ -391,6 +391,53 @@ shape. **F5** — the "fail-closed with no session" test exercised the *absent-k
 by a sibling test) rather than a genuinely session-less context; renamed/restructured to match what it
 actually proves.
 
+### Phase 4 re-audit (2026-08-24) — F1–F5 verified correct; six non-blocking observations
+
+`appsec-auditor` re-audited the F1–F5 code (not the task-file prose) against the shipped commit and
+returned **PASS, no blocking findings** — every one of the five fixes was traced end to end (ordering,
+the self-edit exemption's structural guarantee, the route-cache survival of the F3 middleware
+attachment, the log's field set, and the genuinely-session-less test body) rather than taken on the
+comment's word. Six Low/Informational observations, all resolved in the same pass:
+
+- **N1 — fixed.** The rate-limiter comment in `CreateUser.php` implied *every* unauthorized-caller
+  refusal on the create path was quota-free; only the base `create` ability's refusal actually is —
+  the Super Admin-role refusal, the `promoteToAdministrator` refusal and (now) the step-up refusal on
+  the Administrator branch all run after `RateLimiter::attempt()` and do consume one attempt, exactly
+  as the Super Admin/`promoteToAdministrator` cases already did before this story. Comment corrected to
+  say so rather than restructuring pre-existing, already-tested quota semantics.
+- **N2 — fixed.** Added `password.confirm.store carries the confirm-password throttle middleware` to
+  `tests/Feature/Auth/PasswordConfirmationTest.php`, asserting `gatherMiddleware()` directly — the
+  existing 6th-attempt test proves the limiter *behaves* correctly today but not that the middleware is
+  the thing attached, so a future change to the `booted()`-callback attachment mechanism (or an
+  upstream Fortify change) could silently unthrottle the route while that test alone stayed green.
+- **N3 — fixed.** `FortifyServiceProvider`'s `refreshNameLookups()` docblock claimed the framework's own
+  `RouteServiceProvider` refresh runs *before* Fortify's routes exist to be looked up by name — false;
+  every provider's `boot()` runs before any `bootedCallbacks` fire, Fortify's included. Rewritten to
+  state the true reason: this call is an order-independent belt-and-braces repeat, not a fix for an
+  ordering gap.
+- **N4 — accepted, not fixed.** The Gherkin says a throttled attempt "is rejected with a throttling
+  message"; the shipped response is a bare 429 (Laravel's default), not a worded message, unlike
+  Fortify's own `login` limiter which surfaces one via `EnsureLoginIsNotThrottled`. No security effect —
+  the shipped test already proves the password is never checked. Left for Phase 5 (`code-reviewer`) to
+  decide between a worded 429 response and a Gherkin reword; not a security decision.
+- **N5 — accepted, recorded rather than changed.** D7's rationale for exempting a self-service email
+  change ("no third party to protect") does not fully hold against this story's own hijacked-session
+  threat model — the account holder *is* the party at risk. Not fixed here: `settings/profile`
+  (`profile.edit`, `auth` only) already permits the identical change with **no** step-up at all, so
+  gating it in `UpdateUser` alone would close nothing while `settings/profile` stayed open. Recorded as
+  a named residual pointing at `settings/profile` as its real owner, alongside the pre-existing
+  `settings/security` residual in the Definition of Done below — not left implicit in D7's prose.
+- **N6 — fixed.** The edit modal's notice re-derived the self-row identity check inline
+  (`$editingUserId !== auth()->id()`) instead of reusing the same `->is(Auth::user())` idiom
+  `openEditModal()` and `UpdateUser`'s `$isSelfEdit` already use — a fourth independent spelling of one
+  predicate. Worse, the delete modal's notice had **no** self-row exemption at all: `deleteUser()`
+  silently no-ops on the actor's own row (story 0015's F11) rather than throwing, so the notice was
+  promising a re-confirmation prompt a self-delete click would never produce. Added
+  `App\Livewire\Users\Index::isEditingOwnRow()` / `isDeletingOwnRow()`, both reading the identity idiom,
+  and gated both notices on them; two new tests in `IndexStepUpAffordanceTest.php` pin the corrected
+  behaviour (the delete-modal one is the real regression test, since N6's delete-modal half was an
+  actual, user-visible defect, not only a hygiene issue).
+
 ## Tests to perform
 - [ ] **Role change, stale confirmation:** with `auth.password_confirmed_at` unset (and, separately,
       set to a timestamp older than `config('auth.password_timeout')`), a role change is refused and
@@ -544,6 +591,14 @@ structured log entry.
 - [ ] **Known limitation, recorded rather than fixed — `settings/security` still relies on route
       middleware alone**, so its own `/livewire/update` round-trips are not re-checked for password
       freshness. Pre-existing, deliberately out of scope, and a candidate for its own follow-up story.
+- [ ] **Known limitation, recorded rather than fixed (Phase 4 re-audit finding N5) —
+      `settings/profile` (`profile.edit`) lets an actor change their own email with no step-up check at
+      all**, the same self-service email change D7 exempts from `UpdateUser`'s guard for a *different*
+      reason (there is no third party to protect on the Users screen). Under this story's own
+      hijacked-session threat model the account holder is the party at risk from their own address
+      being rewritten, so D7's rationale does not fully generalize — but gating `UpdateUser` alone would
+      close nothing while this pre-existing, wider-open door stays open. Candidate for its own
+      follow-up story alongside the `settings/security` residual above.
 
 ## Dependencies and related work
 - **Split from story [0015 — Harden the Users CRUD backend's security posture](../done/0015-harden-users-crud-security-posture.md)**

@@ -67,10 +67,17 @@ class CreateUser
         // Story 0015 finding F6 part 1: rate-limited at 10 attempts per
         // hour, keyed on the acting user's id (decision Q3 — one order of
         // magnitude above RequestEmailChange's 3/hour, scaled for a
-        // legitimate bulk-onboarding workflow). Placed after
-        // Gate::authorize() above, so an unauthorized caller is refused
-        // without consuming quota, and before DB::transaction() below, so
-        // no refused attempt ever opens one.
+        // legitimate bulk-onboarding workflow). Placed after the base
+        // `create` Gate::authorize() above, so a caller lacking users.create
+        // is refused without consuming quota, and before DB::transaction()
+        // below, so no refused attempt ever opens one. This does NOT extend
+        // to the Super Admin / Administrator-tier checks below (story
+        // 0015a, Phase 4 re-audit finding N1): a role-assignment refusal or
+        // a step-up refusal on the Administrator branch runs after this
+        // limiter and does consume one attempt, same as it did before story
+        // 0015a. Deliberately not changed here -- moving those checks above
+        // the limiter would be a bigger, unrelated quota-semantics change,
+        // and the refusal is still bounded (10/hour) either way.
         if (! RateLimiter::attempt('users-create:'.Auth::id(), maxAttempts: 10, callback: fn (): bool => true, decaySeconds: 3600)) {
             throw ValidationException::withMessages([
                 'email' => trans('users.create.throttled'),

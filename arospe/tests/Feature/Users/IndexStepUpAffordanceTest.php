@@ -102,6 +102,23 @@ test('the edit modal shows no re-confirmation notice when the confirmation is fr
     expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
 });
 
+// Phase 4 re-audit finding N6: openEditModal() lets the actor edit their own row with no gate
+// and no step-up check at all (a self-edit never reaches authorizeRoleAndStatusChange()), so the
+// notice must not appear there regardless of confirmation freshness -- distinct from the
+// create-modal case below, which is $editingUserId === null rather than "editing self".
+test('the edit modal shows no re-confirmation notice on the actor\'s own row, even with a stale confirmation', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $html = Livewire::test(Index::class)
+        ->call('openEditModal', $administrator->id)
+        ->html();
+
+    expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
+});
+
 // Creation is never step-up-gated (Q2 / decision D1), so the create modal must show no notice
 // regardless of confirmation freshness -- even though it shares the same $showModal block the
 // edit modal uses.
@@ -161,6 +178,33 @@ test('the delete modal shows no re-confirmation notice when the confirmation is 
 
     $html = Livewire::test(Index::class)
         ->call('confirmDelete', $target->id)
+        ->html();
+
+    expect($html)->not->toContain('data-test="delete-modal-reconfirm-notice"');
+});
+
+// Phase 4 re-audit finding N6, the real defect this batch of tests exists to catch:
+// deleteUser() silently no-ops on the actor's own row (story 0015's F11) rather than throwing
+// PasswordConfirmationRequiredException, so before this fix the delete modal promised a
+// re-confirmation prompt on a click that would never produce one. Deliberately NOT an
+// Administrator-role actor: UserPolicy::delete() additionally requires
+// roles.manage-administrators against an Administrator-tier target (including the actor's own
+// row), which an Administrator-role actor does not hold -- confirmDelete()'s Gate::authorize()
+// would refuse before the no-op or this notice were ever reached. Plain users.delete instead,
+// matching the "non-Administrator actor holding users.delete directly" case
+// deleteUser()'s own docblock names as where the no-op is observable.
+test('the delete modal shows no re-confirmation notice on the actor\'s own row, even with a stale confirmation', function () {
+    $actor = User::factory()->create();
+    // users.view is required too, since mount() gates on viewAny independently of
+    // users.delete -- see tests/Feature/Users/IndexTest.php's identical comment on the
+    // sibling self-delete-no-op test; without it Livewire::test() 403s at mount and the
+    // chained ->call() fails with a confusing "Invalid Livewire snapshot structure" error.
+    $actor->givePermissionTo(['users.view', 'users.delete']);
+    $this->actingAs($actor);
+    markAffordancePasswordConfirmationStale();
+
+    $html = Livewire::test(Index::class)
+        ->call('confirmDelete', $actor->id)
         ->html();
 
     expect($html)->not->toContain('data-test="delete-modal-reconfirm-notice"');
