@@ -169,9 +169,8 @@
                     step-up guard when ! $isSelfEdit), and role/status changes are always
                     silently no-op'd on the actor's own row -- so the notice would be
                     misleading there. Gated on isEditingOwnRow (Phase 4 re-audit finding N6 --
-                    previously the raw `$editingUserId !== auth()->id()` comparison, now the
-                    same identity idiom openEditModal()/UpdateUser's $isSelfEdit use) and on
-                    the same requiresPasswordConfirmation() predicate the guard itself reads
+                    the same id comparison this view used to make inline, now the component's
+                    single spelling of it) and on the same requiresPasswordConfirmation() predicate the guard itself reads
                     (EnsureRecentPasswordConfirmation::isRecentlyConfirmed()), so the hint and
                     the guard cannot drift. Placed above the role/status selects so it is read
                     before the fields it applies to. --}}
@@ -199,7 +198,19 @@
                         />
                     @endif
 
-                    <flux:select wire:model="roleId" :label="__('Role')" :placeholder="__('Select a role')">
+                    {{-- wire:model.live, not the plain (deferred) form the other fields on this
+                    modal use -- Phase 5 finding F-2. The create-modal notice above and
+                    isAdministratorRoleSelected() it reads are driven entirely by $roleId, so
+                    without .live nothing round-trips between picking "Administrator" and
+                    clicking Save: the notice would never actually reach the browser, only ever
+                    appearing after the request that also triggers the step-up refusal it was
+                    meant to warn about. Verified in vendor source
+                    (vendor/livewire/livewire/dist/livewire.esm.js's wire:model directive):
+                    without .live or .lazy, shouldSendNetwork is false and no commit is issued on
+                    change. This does make every role pick on this form a server round-trip,
+                    on the edit modal too (they share this one select) -- accepted, since the
+                    alternative is a notice that cannot render in a real browser. --}}
+                    <flux:select wire:model.live="roleId" :label="__('Role')" :placeholder="__('Select a role')">
                         @foreach ($this->roleOptions as $option)
                             <flux:select.option value="{{ $option['id'] }}">{{ $option['name'] }}</flux:select.option>
                         @endforeach

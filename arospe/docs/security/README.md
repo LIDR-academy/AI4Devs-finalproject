@@ -167,16 +167,30 @@ repo must follow — always with a real code example pulled from this repository
   `Gate`-mediated one is inert for the Super Admin it most needs to bind) rendering **423, never 403**
   (the actor *does* hold the permission), with `Handler::render()` verified to consult `render()` ahead
   of the debug renderer; and why the guard must key off the narrowest booleans describing the privileged
-  write rather than the wider `updateSensitiveAttributes` condition beside it, which would silently
-  extend it to an email-only edit. Carries a **confirmed-safe** list of six verified mechanics (absent
-  key *and* no session both fail closed, a logout flushes the key while `SessionGuard::login()`'s
-  `migrate(true)` would not, the intended-URL round trip is a fixed route with no open-redirect surface,
-  `$this->redirect()` vs. a returned `Redirector`) and a ⚠️ list of five things the layer does **not**
-  close — creation and email change are both out of scope by decision while remaining escalation and
-  account-seizure primitives, `POST /user/confirm-password` is unthrottled, a refusal writes no audit
-  record, and `settings/security` still relies on route middleware alone.
+  write rather than a wider, nearby condition — task 0015a's own Phase 3 shape got this backwards for
+  a **third-party email change**, exempting it alongside a self-service one when only the self-service
+  case should be exempt, closed by decision D7 (finding F2). Carries a **confirmed-safe** list of six
+  verified mechanics (absent key *and* no session both fail closed, a logout flushes the key while
+  `SessionGuard::login()`'s `migrate(true)` would not, the intended-URL round trip is a fixed route with
+  no open-redirect surface, `$this->redirect()` vs. a returned `Redirector`), a **closed-by-decision**
+  section covering the first Phase 4 audit's four findings (creation of an Administrator-tier account,
+  D6/F1; a third-party email change, D7/F2; the unthrottled `password.confirm.store` endpoint, D8/F3;
+  and a step-up refusal writing no audit record, F4 — each as a ❌/✅ pair, re-verified by a Phase 4
+  re-audit rather than taken on the fix commit's word), and a narrowed ⚠️ list of what the layer still
+  does **not** close — `settings/security` relies on route middleware alone, and `settings/profile`
+  permits a self-service email change with no step-up check at all (re-audit finding N5), the same
+  self-service case this layer's own `$isSelfEdit` exemption leaves alone for a different, narrower
+  reason.
 
-_Last updated: 2026-08-24 — Added [step-up-authentication.md](step-up-authentication.md) from the
+_Last updated: 2026-08-24 — Task 0015a, Phase 5 code review finding F-3: [step-up-authentication.md](step-up-authentication.md)
+was authored during the *first* Phase 4 audit (Phase 3's shipped code, role/status/delete only) and
+never revisited once the human-approved widening (F1/F2/F3/F4, decisions D6/D7/D8) and its own re-audit
+landed — the exact staleness
+[errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)
+already names. This entry is rewritten around that page's now-closed ⚠️ items rather than describing
+them as open._
+
+_Previously: 2026-08-24 — Added [step-up-authentication.md](step-up-authentication.md) from the
 Phase 4 audit of task 0015a (step-up authentication for privileged Users actions) — the first code in
 this repo to act on the `password.confirm` row of
 [livewire-authorization.md](livewire-authorization.md)'s `PersistentMiddleware` table. The audit

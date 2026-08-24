@@ -80,7 +80,7 @@ Feature: Step-up authentication for privileged Users actions
   Scenario: Repeated password-confirmation attempts are rate limited
     Given a user administrator submitting their password on the re-confirmation screen
     When they submit a sixth incorrect password within one minute
-    Then the attempt is rejected with a throttling message rather than checked against their password
+    Then the attempt is rejected with a 429 response rather than checked against their password
 
   Scenario: A self-edit that submits a role is not blocked, because no role change occurs
     Given a user administrator whose password confirmation has expired
@@ -415,11 +415,19 @@ comment's word. Six Low/Informational observations, all resolved in the same pas
   every provider's `boot()` runs before any `bootedCallbacks` fire, Fortify's included. Rewritten to
   state the true reason: this call is an order-independent belt-and-braces repeat, not a fix for an
   ordering gap.
-- **N4 — accepted, not fixed.** The Gherkin says a throttled attempt "is rejected with a throttling
-  message"; the shipped response is a bare 429 (Laravel's default), not a worded message, unlike
-  Fortify's own `login` limiter which surfaces one via `EnsureLoginIsNotThrottled`. No security effect —
-  the shipped test already proves the password is never checked. Left for Phase 5 (`code-reviewer`) to
-  decide between a worded 429 response and a Gherkin reword; not a security decision.
+- **N4 — resolved at Phase 5 by rewording the Gherkin, not the code.** The Gherkin said a throttled
+  attempt "is rejected with a throttling message"; the shipped response is a bare 429 (Laravel's
+  default), not a worded message, unlike Fortify's own `login` limiter which surfaces one via
+  `EnsureLoginIsNotThrottled`. Left for Phase 5 (`code-reviewer`) as a non-security call per N4's own
+  note; `code-reviewer` recommended accepting the implementation and rewording the Gherkin, for three
+  reasons: the scenario's real security content (the password is never checked) is already fully
+  proven by the shipped test regardless of wording; a worded response would mean the app owning a
+  second confirmation-flow response for a path reached only after five wrong passwords in a minute,
+  contradicting the mechanism section's explicit "no second password-confirmation flow" commitment;
+  and the actual drift is smaller than it first reads — Laravel renders a real, translated `errors::429`
+  page (not literally nothing), so the gap is "inline form error" vs. "framework error page", a shape
+  this app already accepts on `email-change.confirm`'s own `throttle:6,1`. The Gherkin scenario and its
+  matching "Tests to perform" bullet now both say "429 response" rather than "throttling message".
 - **N5 — accepted, recorded rather than changed.** D7's rationale for exempting a self-service email
   change ("no third party to protect") does not fully hold against this story's own hijacked-session
   threat model — the account holder *is* the party at risk. Not fixed here: `settings/profile`
@@ -437,6 +445,28 @@ comment's word. Six Low/Informational observations, all resolved in the same pas
   and gated both notices on them; two new tests in `IndexStepUpAffordanceTest.php` pin the corrected
   behaviour (the delete-modal one is the real regression test, since N6's delete-modal half was an
   actual, user-visible defect, not only a hygiene issue).
+
+## Implementation notes — existing tests amended to seed the confirmation session key
+
+The acceptance criteria require every pre-existing test amended for this story to be listed here
+explicitly (Phase 5 code review finding F-6). All amendments are the same one-line addition —
+`session(['auth.password_confirmed_at' => now()->unix()])` or the `withSession([...])` browser-test
+equivalent — placed before the mutation the guard would otherwise refuse, so the test keeps exercising
+the behaviour it originally pinned rather than being weakened. Verified independently at Phase 5: no
+assertion in any of these files was removed or loosened.
+
+- **`tests/Feature/Users/IndexTest.php`** — 15 tests amended (role/status-changing saves and deletes
+  that predate this story and would otherwise be refused by the new guard).
+- **`tests/Feature/Users/UpdateUserActionAuthorizationTest.php`** — 8 tests amended, plus one assertion
+  **strengthened** in the same pass (Phase 5 finding, non-blocking, worth recording as a genuine
+  improvement rather than only a seed): a test asserting a forged role id previously expected a bare
+  `AuthorizationException` and now expects the more specific `Spatie\Permission\Exceptions\RoleDoesNotExist`,
+  matching what the code actually throws.
+- **`tests/Feature/Users/IndexAuditLogTest.php`** — 3 tests amended.
+- **`tests/Feature/Users/CreateUserActionAuthorizationTest.php`** — 1 test amended (Phase 4 finding
+  F1's Administrator-tier creation test).
+- **`tests/Browser/UsersIndexTest.php`** — 2 pre-existing tests amended (`withSession([...])`) so they
+  keep exercising a successful save/delete rather than tripping the new guard.
 
 ## Tests to perform
 - [ ] **Role change, stale confirmation:** with `auth.password_confirmed_at` unset (and, separately,
@@ -480,8 +510,14 @@ comment's word. Six Low/Informational observations, all resolved in the same pas
       merely an unset key under `actingAs()`, which a sibling test already covers — Phase 4 finding F5
       caught the original version of this test exercising the wrong case) is refused, not exempted.
 - [ ] **(Phase 4, F3) `password.confirm.store` is rate limited:** the 6th password submission within one
-      minute is rejected with a throttling message rather than checked against the actual password —
-      matching Fortify's own `login` limiter's shape (by user id when authenticated, else IP).
+      minute is rejected with a 429 response rather than checked against the actual password —
+      matching Fortify's own `login` limiter's shape (by user id when authenticated, else IP). *(Worded
+      "429 response" rather than "throttling message" since Phase 5 finding N4/F-3: the shipped
+      refusal is Laravel's own generic 429 page, not a worded inline message like Fortify's `login`
+      limiter produces — accepted rather than built, since a worded response would mean the app owning
+      a second confirmation-flow response for a path reached only after five wrong passwords in a
+      minute. The security content the scenario cares about — the password is never checked — is
+      still exactly what the test proves.)*
 - [ ] **(Phase 4, F4) A step-up refusal is logged:** both the `save()` and `deleteUser()` catch paths
       emit exactly one `Log::warning` carrying `actor_id`, `action`, and the target's `user_id` before
       redirecting (`Log::spy()`/fake), matching story 0015's `Log::info` shape for the same class's
@@ -585,8 +621,16 @@ structured log entry.
         "the middleware column understates what protects this route" bullet gains the step-up
         requirement.
       - [`docs/conventions/base-standards.md`](../../../docs/conventions/base-standards.md) —
-        `app/Actions/Auth/` added to the directory listing, and
-        `PasswordConfirmationRequiredException` (423) beside the two existing domain exceptions.
+        `app/Actions/Auth/` added to the directory listing, `PasswordConfirmationRequiredException`
+        (423) beside the two existing domain exceptions, and the new `tests/Feature/Actions/` and
+        `tests/Unit/Actions/` folders added to the `tests/` listing (Phase 5 finding F-7).
+      - [`docs/security/step-up-authentication.md`](../../../docs/security/step-up-authentication.md)
+        (already exists, authored during the first Phase 4 audit) — **explicitly named here** because
+        the change→doc mapping does not otherwise route Phase 6 to it (Phase 5 finding F-3, closing
+        the same blind spot `docs/errors-log.md`'s 2026-08-20 entry describes): verify its code quotes
+        and its "Open items" list are still accurate against `HEAD` before Phase 7, not only against
+        Phase 3's original scope. **Already corrected once, in the same review that raised F-3** —
+        this bullet exists so a future revisit does not have to rediscover why the page needs it.
 - [ ] Acceptance criteria met.
 - [ ] **Known limitation, recorded rather than fixed — `settings/security` still relies on route
       middleware alone**, so its own `/livewire/update` round-trips are not re-checked for password

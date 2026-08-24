@@ -1,8 +1,9 @@
 # Step-up authentication
 
 Durable rules for the app's **third** authorization layer, established by task 0015a — the
-password-confirmation freshness guard on the Users screen's role change, status change and delete
-actions. Route middleware answers *are you signed in and do you hold the ability*; a policy answers
+password-confirmation freshness guard on the Users screen's role change, status change, third-party
+email change, deletion, and Administrator-tier creation. Route middleware answers *are you signed in
+and do you hold the ability*; a policy answers
 *may you do it to this target*; step-up answers a different question entirely — **is the person at
 the keyboard still the account holder**. A session that is hijacked, borrowed or simply left
 unattended passes the first two layers perfectly.
@@ -19,7 +20,8 @@ only.
 - [The refusal is a direct throw, and is not a 403](#the-refusal-is-a-direct-throw-and-is-not-a-403)
 - [Hang the guard off the narrowest condition that describes the privileged write](#hang-the-guard-off-the-narrowest-condition-that-describes-the-privileged-write)
 - [Confirmed safe — verified mechanics a later story should not re-derive](#confirmed-safe--verified-mechanics-a-later-story-should-not-re-derive)
-- [⚠️ Open items this layer does not close](#-open-items-this-layer-does-not-close)
+- [Closed after the first Phase 4 audit, by human decision rather than by the original scope](#closed-after-the-first-phase-4-audit-by-human-decision-rather-than-by-the-original-scope)
+- [⚠️ Open items this layer still does not close](#-open-items-this-layer-still-does-not-close)
 
 ## Reuse the framework's own check — never re-derive the comparison
 
@@ -117,7 +119,7 @@ throws, then `promoteToAdministrator`/`downgrade`, then `updateSensitiveAttribut
 
 ```php
 // app/Actions/Users/UpdateUser.php — last statement of authorizeRoleAndStatusChange()
-if (! $isNoOpRoleChange || $statusChanged) {
+if (! $isNoOpRoleChange || $emailChanged || $statusChanged) {
     ($this->ensureRecentPasswordConfirmation)();
 }
 ```
@@ -166,24 +168,50 @@ no escaping, so a future caller passing user-supplied text into the constructor 
 
 An over-block is a usability regression that trains administrators to click through the prompt, which
 weakens the control. The guard must key off the booleans that describe the privileged write itself —
-never a nearby, wider condition that happens to be in scope.
+never a nearby, wider condition that happens to be in scope *and* never a narrower one that leaves a
+privileged write uncovered. Both directions are mistakes; task 0015a made one of each, in two rounds.
 
-✅ Good — `! $isNoOpRoleChange || $statusChanged`: exactly "a role or status change is happening".
+**Round 1 (Phase 3) got the direction of the mistake right and the boundary wrong.** The original
+condition was `! $isNoOpRoleChange || $statusChanged` — deliberately narrower than the
+`updateSensitiveAttributes` gate's own `$emailChanged || $statusChanged` immediately above it in the
+same method, specifically to exempt an email-only edit. That exemption was correct for a *self-service*
+email change (there is no third party to protect), but the same narrow condition also exempted a
+**third-party** email change — and `UserPolicy::updateSensitiveAttributes()`'s own docblock already
+called an email rewrite "severity-equivalent to account takeover". Phase 4 finding F2 (decision D7)
+closed it.
 
-❌ Bad — reusing the condition immediately above it (adapted to illustrate; this is the mistake the
-shipped code carries a comment against):
+✅ Good — the shipped condition, widened by F2. It is exactly `updateSensitiveAttributes`'s own
+condition, evaluated only for a non-self edit (`authorizeRoleAndStatusChange()` is reached only when
+`! $isSelfEdit` — see `__invoke()`), which is what keeps the self-service exemption intact without a
+second flag inside this method:
 
 ```php
-// anti-pattern — this is the updateSensitiveAttributes gate's condition, and it is WIDER
-if ($emailChanged || $statusChanged) {
+// app/Actions/Users/UpdateUser.php — last statement of authorizeRoleAndStatusChange(),
+// reached only when ! $isSelfEdit
+if (! $isNoOpRoleChange || $emailChanged || $statusChanged) {
     ($this->ensureRecentPasswordConfirmation)();
 }
 ```
 
-`$emailChanged` is in that condition because an email rewrite is a sensitive *attribute*, not because
-it is a step-up trigger. Reusing it silently extends the guard to an email-only edit. The
-disjointness that matters is pinned by a dedicated regression test ("an email-only change is accepted
-and parked as pending despite a stale confirmation"), not by review.
+❌ Bad — the story's own Phase 3 shape, narrower than the sensitive-attributes gate one line above it
+for no stated reason once a third party is involved (adapted to illustrate; no longer present in the
+repo):
+
+```php
+// anti-pattern — exempts a THIRD-PARTY email change from step-up, contradicting
+// UserPolicy::updateSensitiveAttributes()'s own "severity-equivalent to account takeover" rule
+if (! $isNoOpRoleChange || $statusChanged) {
+    ($this->ensureRecentPasswordConfirmation)();
+}
+```
+
+The disjointness that matters — a third-party email-only change is refused, a self-service one is not
+— is pinned by two dedicated regression tests in
+`tests/Feature/Users/UpdateUserStepUpAuthorizationTest.php`: "a third-party email-only change is
+refused when the confirmation is stale, and the pending email is left unset" and "a self-service
+email-only change is accepted and parked as pending despite a stale confirmation". Not by review alone
+— the self-edit exemption is structural (`$isSelfEdit`), so the two cases cannot be conflated by a
+future edit to this one `if`.
 
 ## Confirmed safe — verified mechanics a later story should not re-derive
 
@@ -219,34 +247,92 @@ Phase 4 audit. Re-deriving them costs an hour each.
   worked example for the row
   [livewire-authorization.md](livewire-authorization.md) already carries.
 
-## ⚠️ Open items this layer does not close
+## Closed after the first Phase 4 audit, by human decision rather than by the original scope
 
-Named here so a later story does not read the layer's existence as coverage it does not have.
+The first Phase 4 audit (Phase 3's shipped code) found four gaps that left open exactly the class of
+escalation this layer exists to close. All four were escalated per
+[contracts.md](../contracts.md)'s Uncertainty Handling Rule and approved; a **re-audit** then verified
+each fix rather than taking the commit message's word for it (`docs/errors-log.md`'s own precedent —
+a fix is new code to be audited as such). Recorded as ❌/✅ pairs, not deleted, so a later reader does
+not have to reconstruct what "closed" means from the diff alone.
 
-- **Creation is not step-up-gated.** A hijacked session holding `promoteToAdministrator` can still
-  mint a new `Administrator` account (10/hour, per task 0015's limiter) with the invitation link
-  delivered to an attacker-chosen address — a *durable* escalation that outlives the hijacked
-  session, where promoting an existing user is not. Scope decision D1, recorded rather than derived.
-- **An email change is not step-up-gated**, although it is the most direct account-seizure primitive
-  on the screen: the verification link goes only to the **new** address and the account's current
-  address is never notified, so confirming it rewrites `users.email`, sets `email_verified_at`, and
-  a password reset then yields the account. `UserPolicy::updateSensitiveAttributes()` classifies an
-  email rewrite as severity-equivalent to account takeover, which makes the exemption inconsistent
-  with the app's own severity model. Scope decision D1.
-- **`POST /user/confirm-password` is not rate-limited.** Verified: its middleware is
-  `['web', 'Authenticate:web']`, `config/fortify.php`'s `limiters` names only `login`, `two-factor`
-  and `passkeys`, and `ConfirmPassword::__invoke()` performs a bare `$guard->validate()` with no
-  attempt counting or lockout. Step-up's only bypass is therefore an unthrottled online password
-  oracle against the already-compromised account — while `/login` limits the same credential check to
-  5/min.
-- **A step-up refusal writes no audit record.** Both catch blocks in `App\Livewire\Users\Index`
-  swallow the exception and redirect, so it never reaches the framework handler's `report()` either.
-  Task 0015 added `Log::info` for created/updated/deleted on this exact screen; a refusal — the
-  strongest available signal of an unattended or hijacked session — is currently invisible.
+- **Creation was not step-up-gated (decision D6, finding F1) — closed.** A hijacked session holding
+  `promoteToAdministrator` could still mint a new `Administrator` account (10/hour, per task 0015's
+  limiter) with the invitation link delivered to an attacker-chosen address — a *durable* escalation
+  that outlives the hijacked session, where promoting an existing user is not.
+
+  ❌ Before — `App\Actions\Users\CreateUser` authorized the Administrator-tier branch and stopped:
+  ```php
+  Gate::authorize('promoteToAdministrator', User::class);
+  // no step-up check — a hijacked session could mint a new Administrator account outright
+  ```
+  ✅ After — the guard fires immediately after that Gate call, never before it, so a caller lacking
+  `roles.manage-administrators` always sees the permission refusal:
+  ```php
+  // app/Actions/Users/CreateUser.php
+  Gate::authorize('promoteToAdministrator', User::class);
+  ($this->ensureRecentPasswordConfirmation)();
+  ```
+  Ordinary-role creation reaches no step-up check at all — deliberately narrow, per
+  `tests/Feature/Users/CreateUserStepUpAuthorizationTest.php`.
+
+- **A third-party email change was not step-up-gated (decision D7, finding F2) — closed.** The most
+  direct account-seizure primitive on the screen: the verification link goes only to the **new**
+  address, the account's current address is never notified, and `UserPolicy::updateSensitiveAttributes()`
+  already classifies an email rewrite as severity-equivalent to account takeover. See
+  [Hang the guard off the narrowest condition](#hang-the-guard-off-the-narrowest-condition-that-describes-the-privileged-write)
+  above for the shipped ❌/✅ pair. A **self-service** email change (the actor's own address) stays
+  exempt — structurally, since `authorizeRoleAndStatusChange()` is reached only when `! $isSelfEdit`.
+
+- **`POST /user/confirm-password` was not rate-limited (decision D8, finding F3) — closed.** Verified
+  at the time: `ConfirmablePasswordController::store()`'s route carried no throttle at all —
+  `config/fortify.php`'s `limiters` names only `login`, `two-factor` and `passkeys` — so once this
+  layer made that endpoint the sole barrier in front of
+  role/status/delete/promote-to-Administrator/third-party-email-change, an attacker holding a
+  hijacked session could guess the account's own password against it without limit.
+
+  ✅ `App\Providers\FortifyServiceProvider::configurePasswordConfirmationRateLimiting()` appends
+  `throttle:confirm-password` (5/min, keyed by user id when authenticated, else IP — matching
+  Fortify's own `login` limiter's shape) to the already-registered vendor route from an
+  `$this->app->booted()` callback, since Fortify's `routes.php` consults no `config('fortify.limiters.*')`
+  key for this route and there is therefore no config hook to wire a limiter through the normal way.
+  Re-audit finding N2 added a direct test that the middleware is actually attached
+  (`tests/Feature/Auth/PasswordConfirmationTest.php`), independent of whether a request happens to
+  trip the limit — the attachment mechanism (mutating an already-booted route object) has no config
+  or migration to make its absence loud otherwise.
+
+- **A step-up refusal wrote no audit record (finding F4) — closed.** Both catch blocks in
+  `App\Livewire\Users\Index` (`save()`, `deleteUser()`) now emit `Log::warning('Step-up password
+  confirmation required', ['actor_id' => ..., 'action' => ..., 'user_id' => ...])` before redirecting
+  — matching the `Log::info` shape task 0015's finding F5 already established on this same class for
+  successful mutations. A step-up refusal is the strongest available signal of a hijacked or
+  unattended session; it is no longer invisible to the audit trail.
+
+## ⚠️ Open items this layer still does not close
+
 - **`settings/security` still relies on route middleware alone**, so its own `/livewire/update` round
-  trips are not re-checked. Pre-existing, explicitly out of task 0015a's scope, and a candidate for
-  its own story.
+  trips are not re-checked for password freshness. Pre-existing, explicitly out of task 0015a's scope,
+  and a candidate for its own follow-up story.
+- **`settings/profile` (`profile.edit`) lets an actor change their own email with no step-up check at
+  all (re-audit finding N5).** This is the *same* self-service email change this layer's own
+  `$isSelfEdit` exemption leaves alone on the Users screen — but for a different reason there (there is
+  no third party to protect on that screen). Under this layer's own hijacked-session threat model the
+  account holder is the party at risk from their own address being rewritten with no re-confirmation,
+  so gating `UpdateUser` alone closes nothing while this wider-open door on `settings/profile` stays
+  open. Recorded as a residual rather than closed in this story, since a `settings/profile` step-up
+  check is a different screen's story with its own tests.
 
-_Last updated: 2026-08-24 — Added from the Phase 4 audit of task 0015a (step-up authentication for
+_Last updated: 2026-08-24 — Task 0015a, Phase 5 code review finding F-3: this page was authored during
+the first Phase 4 audit (Phase 3's shipped code) and never revisited after the widened, human-approved
+fixes (F1/F2/F3/F4, decisions D6/D7/D8) and the Phase 4 re-audit that verified them — the exact failure
+[errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)
+already names, recurring one story later. Corrected the stale `! $isNoOpRoleChange || $statusChanged`
+code quote (now `|| $emailChanged`), rewrote "Hang the guard off the narrowest condition" around the
+two-round history rather than a single ❌/✅ pair that labelled the shipped, decision-D7-approved
+behaviour an anti-pattern, and converted four of the five "Open items" into closed ❌/✅ pairs — the
+fifth (`settings/security`) still holds, and a new one (`settings/profile`, N5) replaces the closed
+email-change item as this layer's remaining known-open door._
+
+_Previously: 2026-08-24 — Added from the Phase 4 audit of task 0015a (step-up authentication for
 privileged Users actions), the first code in this repo to act on the `password.confirm` row of
 [livewire-authorization.md](livewire-authorization.md)'s `PersistentMiddleware` table._

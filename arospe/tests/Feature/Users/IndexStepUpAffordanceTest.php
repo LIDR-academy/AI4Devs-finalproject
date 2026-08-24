@@ -119,9 +119,11 @@ test('the edit modal shows no re-confirmation notice on the actor\'s own row, ev
     expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
 });
 
-// Creation is never step-up-gated (Q2 / decision D1), so the create modal must show no notice
-// regardless of confirmation freshness -- even though it shares the same $showModal block the
-// edit modal uses.
+// Creating an ORDINARY-role user is never step-up-gated (Q2 / decision D1) -- narrowed by
+// decision D6 (F1) below, which gates the Administrator-tier branch specifically. This asserts
+// the EDIT notice's data-test hook is absent, which the create modal must never show regardless
+// of role or confirmation freshness -- the create-branch's own notice, when it does apply, is a
+// different hook (create-modal-reconfirm-notice), asserted separately below.
 test('the create modal shows no re-confirmation notice even when the confirmation is stale', function () {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
@@ -133,6 +135,48 @@ test('the create modal shows no re-confirmation notice even when the confirmatio
         ->html();
 
     expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
+});
+
+// =====================================================================
+// Phase 4 finding F1 (decision D6) -- the create-form Administrator-tier notice.
+// Phase 5 finding F-2: this branch could not render in a real browser until the role select
+// gained wire:model.live (resources/views/livewire/users.blade.php) -- without it, picking
+// "Administrator" produced no round-trip and $this->isAdministratorRoleSelected never updated
+// before Save. These two tests exercise that live round-trip explicitly, via ->set('roleId', ...)
+// rather than only asserting on the value openCreateModal() seeds.
+// =====================================================================
+
+test('the create modal shows the Administrator-tier re-confirmation notice once that role is selected, with a stale confirmation', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    $html = Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('roleId', (string) $administratorRole->id)
+        ->html();
+
+    expect($html)->toContain('data-test="create-modal-reconfirm-notice"');
+});
+
+test('the create modal shows no Administrator-tier notice once an ordinary role is selected, even with a stale confirmation', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+
+    $html = Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('roleId', (string) $editorRole->id)
+        ->html();
+
+    expect($html)->not->toContain('data-test="create-modal-reconfirm-notice"');
 });
 
 // =====================================================================

@@ -409,12 +409,22 @@ class Index extends Component
 
     /**
      * Whether the edit modal's currently open target is the actor's own row
-     * — the same identity idiom `openEditModal()` and `UpdateUser`'s
-     * `$isSelfEdit` already use (`->is(Auth::user())`), read here instead of
-     * restated as the raw `$editingUserId !== auth()->id()` comparison the
-     * view used to make directly (story 0015a, Phase 4 re-audit finding
-     * N6). A self-edit reaches no step-up check at all, so this is what the
-     * edit modal's re-confirmation notice is exempted on.
+     * (story 0015a, Phase 4 re-audit finding N6) — extracted here so the
+     * check has exactly one spelling instead of being re-derived inline in
+     * the view (which previously compared `$editingUserId !== auth()->id()`
+     * directly). A self-edit reaches no step-up check at all, so this is
+     * what the edit modal's re-confirmation notice is exempted on.
+     *
+     * Compares ids (`$editingUserId === Auth::id()`) rather than loading
+     * `$target` and calling `$target->is(Auth::user())`, the idiom
+     * `openEditModal()` and `UpdateUser`'s `$isSelfEdit` use — the two are
+     * equivalent for this UUID-keyed model (`Model::is()` itself compares
+     * `getKey()`, `getKeyName()` and the class), and comparing ids needs no
+     * extra query since `$editingUserId` is already the value the modal was
+     * opened with. Phase 5 re-audit finding F-5 flagged an earlier draft of
+     * this docblock for claiming the `->is()` idiom was used verbatim when
+     * it wasn't; corrected here rather than changed to match, since the
+     * id comparison is the cheaper of the two equivalent checks.
      */
     #[Computed]
     public function isEditingOwnRow(): bool
@@ -428,7 +438,8 @@ class Index extends Component
      * silently on a self-target (story 0015's F11) rather than throwing
      * `PasswordConfirmationRequiredException`, so the delete modal's
      * re-confirmation notice must not claim that confirming will be
-     * required on that row — it never reaches the guard at all.
+     * required on that row — it never reaches the guard at all. Same id
+     * comparison as `isEditingOwnRow()` above, for the same reason.
      */
     #[Computed]
     public function isDeletingOwnRow(): bool
@@ -449,15 +460,28 @@ class Index extends Component
      * `->set('roleId', null)` against this non-nullable `string` property
      * (tests/Feature/Users/IndexTest.php's "no role chosen" validation
      * dataset does exactly this, to prove roleRules() rejects it) leaves
-     * Livewire's synth unable to coerce the property, so a direct
-     * `$this->roleId` read throws Livewire\Exceptions\
-     * PropertyNotFoundException from inside this class's own method --
-     * `Component::__isset()` catches that exception internally and returns
-     * `false`, which is exactly the right answer here: no role is selected.
+     * Livewire's synth unable to coerce the incoming `null` into the
+     * declared `string` type, so it clears the property via reflection
+     * rather than writing an invalid value -- an uninitialized *typed*
+     * property, which is a distinct PHP state from "holds null". A direct
+     * `$this->roleId` read in that state throws PHP's own
+     * "must not be accessed before initialization" Error; `isset()` is the
+     * one construct that observes that state without throwing, returning
+     * `false` -- exactly the right answer here: no role is selected.
+     *
+     * Larastan (level 7) flags the `isset()` below as `isset.property`,
+     * reasoning from the property's *declared* type (`string`, with a
+     * default) that it can never be unset -- a correct read of the static
+     * declaration that misses the runtime possibility above, which
+     * tests/Feature/Users/IndexTest.php's "no role chosen" dataset proves
+     * really happens. Suppressed rather than restructured, matching this
+     * repo's existing precedent for a framework behaviour Larastan's stubs
+     * do not model (see app/Listeners/RejectNonActiveUserLogin.php).
      */
     #[Computed]
     public function isAdministratorRoleSelected(): bool
     {
+        // @phpstan-ignore isset.property
         if (! isset($this->roleId) || $this->roleId === '') {
             return false;
         }

@@ -301,10 +301,12 @@ test('the users screen produces no javascript errors on load and on every modal 
  * SELECTOR CONTRACT for the not-yet-built affordance (task file, "Files to
  * create/modify" > resources/views/livewire/users.blade.php): a data-test hook is
  * required because the notice's copy is translated (lang/en/users.php and
- * lang/es/users.php) and must not be selected by text. This file fixes the two exact
+ * lang/es/users.php) and must not be selected by text. This file fixes the three exact
  * hook names frontend-expert must use -- data-test="edit-modal-reconfirm-notice" on the
- * create/edit modal's notice, data-test="delete-modal-reconfirm-notice" on the delete
- * modal's -- so implementation and test cannot silently drift on naming.
+ * create/edit modal's role/status/email notice, data-test="create-modal-reconfirm-notice"
+ * on that same modal's Administrator-tier-only notice (Phase 4 finding F1), and
+ * data-test="delete-modal-reconfirm-notice" on the delete modal's -- so implementation and
+ * test cannot silently drift on naming.
  */
 
 // Scenario: A stale password confirmation blocks a role change / re-confirming restores
@@ -413,6 +415,35 @@ test('the delete confirmation shows a re-confirmation notice when the password c
         ->click('@delete-user-'.$target->id)
         ->assertNoJavaScriptErrors()
         ->assertVisible('@delete-modal-reconfirm-notice')
+        ->assertNoJavaScriptErrors();
+});
+
+// Phase 5 finding F-2: the create form's Administrator-tier notice is driven entirely by
+// $roleId, and the role <flux:select> used a plain (deferred) wire:model -- so picking
+// "Administrator" produced no round-trip in a real browser, and the notice never actually
+// rendered before Save. resources/views/livewire/users.blade.php now binds that select with
+// wire:model.live specifically so this is observable. Deliberately NOT proven via
+// Livewire::test()->set('roleId', ...) (see the "creating a user by selecting a role..." test's
+// own docblock above) -- only a real browser interaction can catch a regression back to the
+// deferred binding, since the Feature-level test harness re-renders on every ->set() regardless
+// of what the Blade markup says.
+test('the create form shows the Administrator-tier re-confirmation notice as soon as that role is picked, before Save', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators');
+
+    $this->actingAs($administrator)->withSession([
+        'auth.password_confirmed_at' => now()->subSeconds(config('auth.password_timeout') + 1)->unix(),
+    ]);
+
+    visit('/users')
+        ->assertNoJavaScriptErrors()
+        ->click('New user')
+        ->assertNoJavaScriptErrors()
+        ->assertMissing('@create-modal-reconfirm-notice')
+        ->select('roleId', 'Administrator')
+        ->assertNoJavaScriptErrors()
+        ->assertVisible('@create-modal-reconfirm-notice')
         ->assertNoJavaScriptErrors();
 });
 
