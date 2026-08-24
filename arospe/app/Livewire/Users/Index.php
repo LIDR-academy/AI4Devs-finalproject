@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Users;
 
+use App\Actions\Auth\EnsureRecentPasswordConfirmation;
 use App\Actions\Users\CreateUser;
 use App\Actions\Users\RequestEmailChange;
 use App\Actions\Users\UpdateUser;
 use App\Concerns\ProfileValidationRules;
 use App\Concerns\UserValidationRules;
 use App\Enums\UserStatus;
+use App\Exceptions\PasswordConfirmationRequiredException;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -199,10 +201,28 @@ class Index extends Component
         // to be one of its backing values by this point.
         $validated['status'] = UserStatus::from((string) $validated['status']);
 
-        if ($target === null) {
-            $this->createNewUser($createUser, $validated);
-        } else {
-            $this->updateExistingUser($updateUser, $requestEmailChange, $target, $validated);
+        try {
+            if ($target === null) {
+                $this->createNewUser($createUser, $validated);
+            } else {
+                $this->updateExistingUser($updateUser, $requestEmailChange, $target, $validated);
+            }
+        } catch (PasswordConfirmationRequiredException) {
+            // Story 0015a — a role/status change reached UpdateUser's
+            // step-up guard. The modal is deliberately left open (accepted
+            // UX wart, decision D4) rather than closed/reloaded: the actor
+            // is being redirected away entirely, so there is nothing to
+            // reset here. setIntendedUrl() is required because this request
+            // is a POST to /livewire/update, not the GET
+            // RequirePassword::redirectGuest() normally handles, so nothing
+            // else populates `url.intended` for Fortify's post-confirmation
+            // response to return to. $this->redirect() (not a bare
+            // redirect()->route()) is what a Livewire action method needs to
+            // turn into a real browser navigation.
+            redirect()->setIntendedUrl(route('users.index'));
+            $this->redirect(route('password.confirm'));
+
+            return;
         }
 
         $this->loadUsers();
@@ -263,8 +283,16 @@ class Index extends Component
      * non-Administrator actor holding users.delete directly). It still
      * closes the delete-confirmation modal (Phase 5 finding A-1) so the
      * confirm click gets visible feedback rather than appearing frozen.
+     *
+     * Story 0015a: the step-up guard runs immediately after
+     * Gate::authorize('delete', ...) and before $target->delete() -- never
+     * before the Gate call, so an actor who lacks permission always sees the
+     * permission refusal rather than a re-confirmation prompt. There is no
+     * dedicated DeleteUser action to hang this on (this method calls
+     * $target->delete() directly), so it is guarded here in the component,
+     * matching the docblock above it.
      */
-    public function deleteUser(): void
+    public function deleteUser(EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation): void
     {
         if ($this->deletingUserId === null) {
             return;
@@ -283,6 +311,17 @@ class Index extends Component
         }
 
         Gate::authorize('delete', $target);
+
+        try {
+            $ensureRecentPasswordConfirmation();
+        } catch (PasswordConfirmationRequiredException) {
+            // See save()'s identical catch block for why both
+            // setIntendedUrl() and $this->redirect() are required here.
+            redirect()->setIntendedUrl(route('users.index'));
+            $this->redirect(route('password.confirm'));
+
+            return;
+        }
 
         $targetId = $target->id;
 
@@ -330,6 +369,20 @@ class Index extends Component
             'total' => (int) $counts->total,
             'active' => (int) $counts->active,
         ];
+    }
+
+    /**
+     * Whether the acting user's password confirmation is stale or absent —
+     * the predicate the create/edit and delete modals' re-confirmation
+     * notices are gated on (story 0015a). Reads
+     * EnsureRecentPasswordConfirmation::isRecentlyConfirmed() rather than
+     * re-deriving the session/config comparison here, so the warning shown
+     * before the guard fires and the guard itself can never drift.
+     */
+    #[Computed]
+    public function requiresPasswordConfirmation(): bool
+    {
+        return ! app(EnsureRecentPasswordConfirmation::class)->isRecentlyConfirmed();
     }
 
     /**

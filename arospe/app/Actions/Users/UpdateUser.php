@@ -2,6 +2,7 @@
 
 namespace App\Actions\Users;
 
+use App\Actions\Auth\EnsureRecentPasswordConfirmation;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Role;
@@ -15,6 +16,19 @@ use Illuminate\Support\Str;
 
 class UpdateUser
 {
+    /**
+     * `EnsureRecentPasswordConfirmation`'s __invoke() takes no arguments, so
+     * it cannot be method-injected into this class's own __invoke() the way
+     * `RequestEmailChange` is — every caller of this action (the Livewire
+     * component and every direct-call test) invokes __invoke() with exactly
+     * its six domain arguments. Constructor injection is the only shape that
+     * keeps that signature unchanged while still resolving the guard from
+     * the container (story 0015a).
+     */
+    public function __construct(
+        private readonly EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation,
+    ) {}
+
     /**
      * Update an existing user's name and, unless the target is the acting
      * user, their role and status.
@@ -184,6 +198,22 @@ class UpdateUser
 
         if ($emailChanged || $statusChanged) {
             Gate::authorize('updateSensitiveAttributes', $user);
+        }
+
+        // Story 0015a — step-up authentication. Hung off $isNoOpRoleChange /
+        // $statusChanged DIRECTLY, never off the wider `$emailChanged ||
+        // $statusChanged` condition immediately above: that condition also
+        // gates updateSensitiveAttributes for an EMAIL-only change, which
+        // must reach no step-up check at all. Placed after every
+        // Gate::authorize() call on this branch (promoteToAdministrator /
+        // downgrade above, updateSensitiveAttributes immediately above) so a
+        // permission refusal always wins over a step-up refusal — including
+        // for a Super Admin actor, since this is a direct throw rather than
+        // a Gate check, so Gate::before's bypass does not exempt it. Still
+        // above the first write: this whole method runs above __invoke()'s
+        // DB::transaction().
+        if (! $isNoOpRoleChange || $statusChanged) {
+            ($this->ensureRecentPasswordConfirmation)();
         }
     }
 }

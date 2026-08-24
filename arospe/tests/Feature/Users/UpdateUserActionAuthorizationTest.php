@@ -552,6 +552,9 @@ test('a refused email change during an edit leaves name, status and role all unc
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit');
     $this->actingAs($actor);
+    // Story 0015a: the role/status change under test here requires a fresh password
+    // confirmation, so it doesn't mask the throttle refusal this test is actually about.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);

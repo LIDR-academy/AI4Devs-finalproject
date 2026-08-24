@@ -196,7 +196,10 @@ test('cancelling the create-user form closes it and adds no new user', function 
 test('confirming the delete action removes the user from the list', function () {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
-    $this->actingAs($administrator);
+    // Story 0015a: deletion now requires a fresh password confirmation.
+    $this->actingAs($administrator)->withSession([
+        'auth.password_confirmed_at' => now()->unix(),
+    ]);
 
     $target = User::factory()->create(['name' => 'Diego Ferrer']);
 

@@ -504,6 +504,8 @@ test('changing a users role detaches the previous role, leaving exactly one', fu
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
+    // Story 0015a: a role change now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
@@ -536,6 +538,8 @@ test('a user administrator changes another users status', function () {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
+    // Story 0015a: a status change now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create(['status' => UserStatus::Active]);
@@ -772,6 +776,8 @@ test('changing another users role from Editor to Blog Editor applies, unaffected
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
     $this->actingAs($administrator);
+    // Story 0015a: a role change now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
@@ -946,6 +952,8 @@ test('promoting a user to Administrator with the stricter permission succeeds', 
     $administrator->assignRole('Administrator');
     $administrator->givePermissionTo('roles.manage-administrators');
     $this->actingAs($administrator);
+    // Story 0015a: a role change now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
@@ -997,6 +1005,8 @@ test('downgrading an Administrator with the stricter permission succeeds', funct
     $administrator->assignRole('Administrator');
     $administrator->givePermissionTo('roles.manage-administrators');
     $this->actingAs($administrator);
+    // Story 0015a: a role change now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
@@ -1046,6 +1056,8 @@ test('deleting a user holding the Administrator role succeeds with the stricter 
     $administrator->assignRole('Administrator');
     $administrator->givePermissionTo('roles.manage-administrators');
     $this->actingAs($administrator);
+    // Story 0015a: deletion now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
     $target = User::factory()->create();
@@ -1062,6 +1074,8 @@ test('deleting an ordinary roleless user is not blocked by the administrator-lev
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator'); // lacks roles.manage-administrators, but holds users.delete
     $this->actingAs($administrator);
+    // Story 0015a: deletion now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $target = User::factory()->create();
 
@@ -1194,6 +1208,8 @@ test('changing an Administrators status with the stricter permission succeeds', 
     $administrator->assignRole('Administrator');
     $administrator->givePermissionTo('roles.manage-administrators');
     $this->actingAs($administrator);
+    // Story 0015a: a status change now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
     $target = User::factory()->create(['status' => UserStatus::Active]);
@@ -1263,6 +1279,8 @@ test('changing a non-Administrators status does not require the stricter permiss
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator'); // lacks roles.manage-administrators
     $this->actingAs($administrator);
+    // Story 0015a: a status change now requires a fresh password confirmation.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create(['status' => UserStatus::Active]);
@@ -1281,6 +1299,8 @@ test('a Super Admin actor can promote a user to Administrator without holding ro
     $superAdmin = User::factory()->create();
     $superAdmin->assignRole('Super Admin');
     $this->actingAs($superAdmin);
+    // Story 0015a: a role change now requires a fresh password confirmation, even for a Super Admin actor.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
     $target = User::factory()->create();

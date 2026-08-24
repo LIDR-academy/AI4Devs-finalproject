@@ -8,12 +8,12 @@
 // guard cannot drift.
 //
 // Selected by data-test hook, never by translated text (per docs/api/routes.md's established
-// convention for this screen, and because the copy is translated). This file is the first place
-// these two hooks and their two lang keys are named -- they do not exist anywhere yet, which is
-// exactly why every "notice appears" assertion below is RED right now:
+// convention for this screen, and because the copy is translated). Hook names are shared with
+// tests/Browser/UsersIndexTest.php's redirect/affordance coverage -- kept identical across both so
+// the two test suites pin the same two DOM elements rather than silently drifting apart:
 //
-//   - data-test="step-up-notice-edit"   -- inside @if ($showModal), above the role/status selects
-//   - data-test="step-up-notice-delete" -- inside @if ($showDeleteModal), above the destructive button
+//   - data-test="edit-modal-reconfirm-notice"   -- inside @if ($showModal), above the role/status selects
+//   - data-test="delete-modal-reconfirm-notice" -- inside @if ($showDeleteModal), above the destructive button
 //   - users.index.step_up_notice_edit / users.index.step_up_notice_delete -- lang/en/users.php and
 //     lang/es/users.php, key-for-key identical across both.
 //
@@ -66,7 +66,7 @@ test('the edit modal shows a re-confirmation notice when the confirmation is sta
         ->call('openEditModal', $target->id)
         ->html();
 
-    expect($html)->toContain('data-test="step-up-notice-edit"');
+    expect($html)->toContain('data-test="edit-modal-reconfirm-notice"');
 });
 
 test('the edit modal shows a re-confirmation notice when the confirmation was never set', function () {
@@ -82,7 +82,7 @@ test('the edit modal shows a re-confirmation notice when the confirmation was ne
         ->call('openEditModal', $target->id)
         ->html();
 
-    expect($html)->toContain('data-test="step-up-notice-edit"');
+    expect($html)->toContain('data-test="edit-modal-reconfirm-notice"');
 });
 
 test('the edit modal shows no re-confirmation notice when the confirmation is fresh', function () {
@@ -99,7 +99,7 @@ test('the edit modal shows no re-confirmation notice when the confirmation is fr
         ->call('openEditModal', $target->id)
         ->html();
 
-    expect($html)->not->toContain('data-test="step-up-notice-edit"');
+    expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
 });
 
 // Creation is never step-up-gated (Q2 / decision D1), so the create modal must show no notice
@@ -115,7 +115,7 @@ test('the create modal shows no re-confirmation notice even when the confirmatio
         ->call('openCreateModal')
         ->html();
 
-    expect($html)->not->toContain('data-test="step-up-notice-edit"');
+    expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
 });
 
 // =====================================================================
@@ -134,7 +134,7 @@ test('the delete modal shows a re-confirmation notice when the confirmation is s
         ->call('confirmDelete', $target->id)
         ->html();
 
-    expect($html)->toContain('data-test="step-up-notice-delete"');
+    expect($html)->toContain('data-test="delete-modal-reconfirm-notice"');
 });
 
 test('the delete modal shows a re-confirmation notice when the confirmation was never set', function () {
@@ -148,7 +148,7 @@ test('the delete modal shows a re-confirmation notice when the confirmation was 
         ->call('confirmDelete', $target->id)
         ->html();
 
-    expect($html)->toContain('data-test="step-up-notice-delete"');
+    expect($html)->toContain('data-test="delete-modal-reconfirm-notice"');
 });
 
 test('the delete modal shows no re-confirmation notice when the confirmation is fresh', function () {
@@ -163,5 +163,5 @@ test('the delete modal shows no re-confirmation notice when the confirmation is 
         ->call('confirmDelete', $target->id)
         ->html();
 
-    expect($html)->not->toContain('data-test="step-up-notice-delete"');
+    expect($html)->not->toContain('data-test="delete-modal-reconfirm-notice"');
 });
