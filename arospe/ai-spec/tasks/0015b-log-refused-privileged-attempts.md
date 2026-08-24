@@ -10,7 +10,7 @@ detectable after the fact. It is a **cross-cutting** pass by design — the iden
 screens, and closing it on one only would leave the same hole on the other while creating a second,
 divergent logging convention.
 
-> **Split out of story [0015](in-progress/0015-harden-users-crud-security-posture.md)**, where it was
+> **Split out of story [0015](done/0015-harden-users-crud-security-posture.md)**, where it was
 > Phase 4 finding **F-C**, deferred by explicit human decision (2026-08-24) rather than fixed in
 > place, following the [0008](done/0008-super-admin-role-invariants.md) /
 > [0008a](done/0008a-centralize-administrator-role-identification.md) and 0015/0015a precedent.
@@ -338,7 +338,7 @@ actions for free, answer (a) makes them an explicit extra decision. Listed separ
 is visible rather than discovered at Phase 4.
 
 ## Dependencies and related work
-- **Split from story [0015 — Harden the Users CRUD backend's security posture](in-progress/0015-harden-users-crud-security-posture.md)**
+- **Split from story [0015 — Harden the Users CRUD backend's security posture](done/0015-harden-users-crud-security-posture.md)**
   (Phase 4 finding **F-C**), on 2026-08-24. 0015 records the deferral in its "Deferred, deliberately —
   not silently dropped" section; that section stays as written, and this file is the follow-up it
   implies. 0015 owns no part of this work.
@@ -367,7 +367,7 @@ is visible rather than discovered at Phase 4.
 
 ## Provenance
 Finding **F-C**, raised by `appsec-auditor` during story
-[0015](in-progress/0015-harden-users-crud-security-posture.md)'s Phase 4 security audit: the three
+[0015](done/0015-harden-users-crud-security-posture.md)'s Phase 4 security audit: the three
 `Log::info` calls that story adds all sit after a *successful* mutation, so every refusal —
 `AuthorizationException` from the disclosure and mutation gates, and either action's rate-limit
 `ValidationException` — logs nothing. Deferred by explicit human decision (2026-08-24) rather than

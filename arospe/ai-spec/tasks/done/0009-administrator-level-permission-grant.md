@@ -502,7 +502,7 @@ carrying that permission is rejected with a 403 rather than partially applied.
       `roles.manage-administrators` via a direct `model_has_permissions` grant or via a differently-named
       custom role is not covered by `UserPolicy`'s Administrator branches at all. F16 from the same
       re-audit is **informational, requiring no action**. Both were recorded against this story rather
-      than against [0015](../in-progress/0015-harden-users-crud-security-posture.md) because they concern this
+      than against [0015](0015-harden-users-crud-security-posture.md) because they concern this
       not-yet-built mechanism rather than 0015's own code (see 0015's *Provenance* section). The human
       decision above resolves F15 as **accepted, with the PRD as the authority** — the earlier draft of
       this bullet mandated re-deriving the guard from the actual permission set, and that requirement is
