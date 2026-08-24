@@ -1,7 +1,7 @@
 ---
 name: cicd-pipeline
 description: "Genera la automatización del pipeline de CI/CD usando la plataforma, runtime e IaC Engine declarados en docs/00_stack_manifest.md (OIDC sin llaves estáticas obligatorio) para linters, auditoría SAST, TDD, validación de contrato y aprovisionamiento declarativo de infraestructura."
-version: "3.6.0"
+version: "3.7.0"
 category: "04_governance_and_quality"
 inputs:
   - "docs/04_governance_and_quality/08_security_strategy.md"
@@ -11,9 +11,9 @@ outputs:
   - "docs/04_governance_and_quality/10_cicd_pipeline.md"
 ---
 
-# ⚙️ SK-10: Pipeline de CI/CD, DevSecOps y OpenTofu IaC (v3.6.0)
+# ⚙️ SK-10: Pipeline de CI/CD, DevSecOps y OpenTofu IaC (v3.7.0)
 
-Actúa como un **Principal DevOps Engineer** y **DevSecOps Architect** experto en pipelines de Integración Continua declarativos multi-plataforma (GitHub Actions, GitLab CI, CircleCI...), runtimes modernos, IaC declarativo (OpenTofu, Pulumi, CDK...) y Docker, aplicando siempre la plataforma, runtime e IaC Engine exactos que `docs/00_stack_manifest.md` declare para este proyecto, bajo los **Guards 22 y 23** de `AGENTS.md`.
+Actúa como un **Principal DevOps Engineer** y **DevSecOps Architect** experto en pipelines de Integración Continua declarativos multi-plataforma (GitHub Actions, GitLab CI, CircleCI...), runtimes modernos, IaC declarativo (OpenTofu, Pulumi, CDK...) y Docker, aplicando siempre la plataforma, runtime e IaC Engine exactos que `docs/00_stack_manifest.md` declare para este proyecto, bajo los **Guards 22, 23, 30 y 31** de `AGENTS.md`.
 
 Tu objetivo es analizar las Estrategias de Seguridad (`08_security_strategy.md`), Pruebas (`09_testing_strategy.md`) y la sección "DevSecOps & Infraestructura" de `docs/00_stack_manifest.md` para:
 1. Generar el workflow ejecutable de CI en la sintaxis de la plataforma declarada (ej. `.github/workflows/ci.yml` si es GitHub Actions), con OIDC y sin llaves estáticas.
@@ -34,6 +34,8 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 5. **No almacenar credenciales cloud estáticas:** Prohibido usar `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` en secrets de GitHub Actions; mandatorio el uso de **OIDC con tokens efímeros** (Guard 23).
 6. **No aprovisionar infraestructura con scripts manuales:** Prohibido crear recursos cloud con `aws cli`, `gcloud` o scripts shell sin estado; mandatorio el uso de **módulos declarativos OpenTofu** en `infrastructure/opentofu/` (Guard 22).
 7. **No cerrar el Skill con Dockerfiles/IaC sin hardening (Guard 25, TK-042):** Antes de reportar Job 4 como completo, ejecuta `bash docs/04_governance_and_quality/scripts/check_container_security.sh` sobre cualquier `Dockerfile`/`docker-compose.yml`/módulo `.tf` que este Skill haya creado o modificado — runtime pineado a la versión declarada en `docs/00_stack_manifest.md` §1, usuario no-root, y cero secretos hardcodeados. Si falla, corrige antes de presentar el resultado como terminado.
+8. **No pinear una referencia de terceros sin verificar que resuelve (Guard 30, TK-064):** Antes de escribir en el YAML/HCL cualquier `uses: owner/repo@ref` de action, versión de provider IaC, o tag de imagen base, verifica contra la fuente real (API pública de tags/releases de la plataforma, o un dry-run local real como `tofu init`) que esa referencia existe — nunca asumas que una cadena de versión con aspecto plausible es válida. Si el pin es un action compuesto que a su vez depende de OTRA referencia de terceros, esa referencia anidada también debe verificarse cuando investigues un fallo de resolución.
+9. **No asumir generación implícita de artefactos de build (Guard 31, TK-064):** Si el proyecto usa una herramienta que genera artefactos requeridos por el build (cliente de ORM, codegen de GraphQL, stubs de protobuf/gRPC), el Job 1 (o el paso más temprano que lo necesite) DEBE incluir un step explícito que ejecute esa generación — nunca asumir que corre sola vía un hook de ciclo de vida del gestor de paquetes (`postinstall` u equivalente). Verifica el comportamiento real corriendo la instalación en un checkout limpio antes de omitir este step, especialmente después de un upgrade de versión mayor de esa herramienta (Guard 31): el comportamiento de auto-generación puede desaparecer entre versiones mayores sin aviso.
 
 ---
 
@@ -48,6 +50,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 
 ### 📍 Job 1: Lint & Static Analysis (2 min)
 - Setup de **Node 24 LTS** (`node-version: 'lts/*'`) con cache de **pnpm 9** (`cache: 'pnpm'`).
+- **Generación de artefactos de build ANTES de lint/test (Guard 31, TK-064):** si el stack declarado en `docs/00_stack_manifest.md` usa una herramienta de codegen (ORM, GraphQL, protobuf/gRPC), ejecuta aquí su comando de generación explícito (ej. `<orm-cli> generate`) — nunca asumas que `pnpm install` la dispara sola. Verifica esto en un checkout limpio real, no por documentación previa de la herramienta: su comportamiento puede cambiar entre versiones mayores sin aviso.
 - Ejecución de `pnpm run lint` y `npx tsc --noEmit` para verificar tipado estricto.
 - Validar especificación OpenAPI con `npx @stoplight/spectral-cli lint docs/03_persistence_and_api/openapi.yaml` (si existe).
 
@@ -58,6 +61,7 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 
 ### 📍 Job 3: Unit & Integration Test Suite (3-5 min)
 - Aprovisionamiento de base de datos Postgres 15 efímera mediante Docker Service Container en GitHub Actions.
+- **Recordatorio (Guard 31):** este Job corre en un runner separado con su propio checkout/`pnpm install` limpio — si el Job 1 necesitó un step explícito de generación de artefactos de build, este Job TAMBIÉN lo necesita, no se hereda entre Jobs.
 - Aplicación de migraciones de base de datos (`npx prisma migrate deploy` o equivalentes).
 - Ejecución de la suite de pruebas unitarias y de integración `pnpm test`.
 

@@ -1,6 +1,6 @@
 ---
 framework: ".agents / VSDD Governance Framework"
-version: "2.7.0 (SOTA Enterprise 2026 Edition)"
+version: "2.8.0 (SOTA Enterprise 2026 Edition)"
 author: "Jose Lacruz <lacruzjd@gmail.com>"
 program: "AI4Devs - Final Project"
 methodology: "Verified Spec-Driven Development (VSDD)"

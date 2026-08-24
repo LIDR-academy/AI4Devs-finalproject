@@ -41,6 +41,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-061** | `shared` | **Alto** | **Alta** | 2 SP | Depende de `TK-057`. Conecta el selector de recetas de cocina al catálogo real (deuda de `US-012`). | 🟡 P1 - Alta |
 | **TK-062** | `shared` | **Medio** | **Baja** | 5 SP | Sin dependencias. Migración de Prisma 5→7 (driver adapters) — decisión de negocio del humano, no un hallazgo de auditoría. | 🟢 P2 - Media |
 | **TK-063** | `shared` | **Medio** | **Media** | 3 SP | Sin dependencias. Script `ci_local.sh` — reproduce los 3 jobs de `ci.yml` localmente, motivado por 4 rondas de fallos de CI en el PR de Entrega 2. | 🟢 P2 - Media |
+| **TK-064** | `shared` | **Alto** | **Media** | 5 SP | Depende de `TK-063`. Guards 30/31/32 (SecDevOps) en `.agents/` — cierra el gap de gobernanza que permitió los 5 fallos reales de CI. | 🟡 P1 - Alta |
 
 ---
 
@@ -122,6 +123,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-061: Conectar el Selector de Recetas de Cocina al Catálogo Real](shared/frontend/TK-061.md)** (Frontend) — `RecipeSelectorModal.tsx` usaba una lista hardcodeada en vez de `GET /api/v1/catalog/recipes`; cierra la deuda ya documentada en `US-012`.
 *   **[TK-062: Migración de Prisma 5 a Prisma 7 (Driver Adapters)](shared/backend/TK-062.md)** (Backend) — upgrade de dependencia mayor a pedido explícito del humano; `datasource.url` en `schema.prisma` deja de estar soportado, se mueve a `prisma.config.ts` + adapter.
 *   **[TK-063: Script Orquestador `ci_local.sh`](shared/backend/TK-063.md)** (Backend) — reproduce los 3 jobs de `ci.yml` localmente antes del push; auto-descarga `tofu`/`oasdiff`/`gitleaks` si faltan.
+*   **[TK-064: Guards 30/31/32 (SecDevOps)](shared/backend/TK-064.md)** (Backend) — cierra el gap de gobernanza SecDevOps en `.agents/` (verificación de pins de terceros, codegen antes de build, re-verificación de seguridad post-upgrade mayor).
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
 *   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)
