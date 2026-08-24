@@ -263,3 +263,167 @@ test('the users screen produces no javascript errors on load and on every modal 
         ->click('Cancel')
         ->assertNoJavaScriptErrors();
 });
+
+/*
+ * ============================================================================
+ * Story 0015a — Step-up authentication for privileged Users actions
+ * ============================================================================
+ *
+ * Hand translation of the "redirect round-trip" and "affordance renders, and only when
+ * it should" bullets from
+ * ai-spec/tasks/in-progress/0015a-step-up-auth-privileged-user-actions.md's "Tests to
+ * perform" section. Phase 3, step 1 (red): none of this story's application code exists
+ * yet -- App\Actions\Auth\EnsureRecentPasswordConfirmation, the
+ * PasswordConfirmationRequiredException catch/redirect in App\Livewire\Users\Index, and
+ * the two notices in resources/views/livewire/users.blade.php are all still to be
+ * written by frontend-expert/backend-expert. These tests are expected to fail now.
+ *
+ * THE MECHANISM (verified vendor behaviour, quoted from the task file's own "The
+ * mechanism" section rather than re-derived here): RequirePassword::
+ * shouldConfirmPassword() reads session('auth.password_confirmed_at', 0) against
+ * config('auth.password_timeout') with a strict `>` comparison; the ONLY writer of
+ * that session key is Laravel\Fortify\Http\Controllers\ConfirmablePasswordController::
+ * store(), reached by POSTing route('password.confirm.store') from the real
+ * livewire.auth.confirm-password view (resources/views/livewire/auth/confirm-password.
+ * blade.php), which carries data-test="confirm-password-button" and a `password` field
+ * -- both driven directly below rather than re-derived. "Stale" below always means an
+ * explicit timestamp older than config('auth.password_timeout'), matching that `>`
+ * comparison exactly (never merely absent), so these tests remain correct however that
+ * config value changes.
+ *
+ * SELECTOR CONTRACT for the not-yet-built affordance (task file, "Files to
+ * create/modify" > resources/views/livewire/users.blade.php): a data-test hook is
+ * required because the notice's copy is translated (lang/en/users.php and
+ * lang/es/users.php) and must not be selected by text. This file fixes the two exact
+ * hook names frontend-expert must use -- data-test="edit-modal-reconfirm-notice" on the
+ * create/edit modal's notice, data-test="delete-modal-reconfirm-notice" on the delete
+ * modal's -- so implementation and test cannot silently drift on naming.
+ */
+
+// Scenario: A stale password confirmation blocks a role change / re-confirming restores
+// the ability to act (the round-trip). Covers the `url.intended` hazard the task file's
+// Files-to-modify section names explicitly: the redirect originates from a POST to
+// /livewire/update, not the GET RequirePassword::redirectGuest() normally handles, so
+// nothing sets the intended URL for us unless the component does so itself -- this can
+// only be proven end to end in a real browser, never at Livewire::test() level.
+test('a stale password confirmation on a role change redirects to reconfirm the password and returns to /users', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+
+    // Both roles here are deliberately ordinary (non-Administrator, non-Super-Admin), so
+    // neither promoteToAdministrator() nor downgrade() ever fires -- the seeded
+    // Administrator role itself lacks roles.manage-administrators, so a change touching
+    // either of those abilities would confound this test with an unrelated permission
+    // refusal. This is also the task file's own flagged edge case: "the step-up guard
+    // must still fire" even on the branch where neither Gate::authorize() call precedes
+    // it, because the role genuinely changed.
+    $viewerRole = Role::create(['name' => 'Viewer', 'guard_name' => 'web']);
+    Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create(['name' => 'Diego Ferrer']);
+    $target->assignRole($viewerRole);
+
+    $this->actingAs($administrator)->withSession([
+        'auth.password_confirmed_at' => now()->subSeconds(config('auth.password_timeout') + 1)->unix(),
+    ]);
+
+    visit('/users')
+        ->assertNoJavaScriptErrors()
+        ->click('@edit-user-'.$target->id)
+        ->assertNoJavaScriptErrors()
+        ->select('roleId', 'Editor')
+        ->click('Save')
+        // The refusal must route the administrator to Fortify's own re-confirmation
+        // screen -- never silently apply the role change, and never a bare 403.
+        ->assertPathIs('/user/confirm-password')
+        ->assertSee('Confirm password')
+        ->assertNoJavaScriptErrors()
+        ->fill('password', 'password')
+        ->click('Confirm')
+        // Fortify's own post-confirmation response must return the actor to /users
+        // specifically, not whatever page it lands on by default.
+        ->assertPathIs('/users')
+        ->assertNoJavaScriptErrors();
+
+    // D4 (task file, Human decisions): the redirect leaves the modal, so the original
+    // in-flight role change is NOT retried automatically -- the administrator must
+    // resubmit. The round-trip above must therefore leave the target's role exactly as
+    // it was before the refused save, not silently apply it once confirmed.
+    expect($target->fresh()->hasRole('Viewer'))->toBeTrue()
+        ->and($target->fresh()->hasRole('Editor'))->toBeFalse();
+});
+
+// Scenario: The edit form warns before the administrator fills it in
+test('the edit form shows a re-confirmation notice when the password confirmation is stale', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+
+    $target = User::factory()->create(['name' => 'Diego Ferrer']);
+
+    $this->actingAs($administrator)->withSession([
+        'auth.password_confirmed_at' => now()->subSeconds(config('auth.password_timeout') + 1)->unix(),
+    ]);
+
+    visit('/users')
+        ->assertNoJavaScriptErrors()
+        ->click('@edit-user-'.$target->id)
+        ->assertNoJavaScriptErrors()
+        ->assertVisible('@edit-modal-reconfirm-notice')
+        ->assertNoJavaScriptErrors();
+});
+
+// Scenario: A fresh confirmation shows no warning
+test('the edit form shows no re-confirmation notice when the password confirmation is fresh', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+
+    $target = User::factory()->create(['name' => 'Diego Ferrer']);
+
+    $this->actingAs($administrator)->withSession([
+        'auth.password_confirmed_at' => now()->unix(),
+    ]);
+
+    visit('/users')
+        ->assertNoJavaScriptErrors()
+        ->click('@edit-user-'.$target->id)
+        ->assertNoJavaScriptErrors()
+        ->assertMissing('@edit-modal-reconfirm-notice')
+        ->assertNoJavaScriptErrors();
+});
+
+// Scenario: The delete confirmation warns before the administrator commits
+test('the delete confirmation shows a re-confirmation notice when the password confirmation is stale', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+
+    $target = User::factory()->create(['name' => 'Diego Ferrer']);
+
+    $this->actingAs($administrator)->withSession([
+        'auth.password_confirmed_at' => now()->subSeconds(config('auth.password_timeout') + 1)->unix(),
+    ]);
+
+    visit('/users')
+        ->assertNoJavaScriptErrors()
+        ->click('@delete-user-'.$target->id)
+        ->assertNoJavaScriptErrors()
+        ->assertVisible('@delete-modal-reconfirm-notice')
+        ->assertNoJavaScriptErrors();
+});
+
+// Scenario: A fresh confirmation shows no warning (delete confirmation)
+test('the delete confirmation shows no re-confirmation notice when the password confirmation is fresh', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+
+    $target = User::factory()->create(['name' => 'Diego Ferrer']);
+
+    $this->actingAs($administrator)->withSession([
+        'auth.password_confirmed_at' => now()->unix(),
+    ]);
+
+    visit('/users')
+        ->assertNoJavaScriptErrors()
+        ->click('@delete-user-'.$target->id)
+        ->assertNoJavaScriptErrors()
+        ->assertMissing('@delete-modal-reconfirm-notice')
+        ->assertNoJavaScriptErrors();
+});
