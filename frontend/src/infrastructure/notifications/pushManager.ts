@@ -91,7 +91,11 @@ export async function runPushRegistration(): Promise<PushAffordance> {
   stampNavigation();
 
   if (!hasNavigated()) {
-    console.log("[pushManager] Skipped: first navigation (count:", localStorage.getItem(NAVIGATION_KEY), ")");
+    console.log(
+      "[pushManager] Skipped: first navigation (count:",
+      localStorage.getItem(NAVIGATION_KEY),
+      ")",
+    );
     return { visible: false, onAccept: () => {}, onDismiss: () => {} };
   }
 
@@ -167,7 +171,10 @@ async function silentRegister(): Promise<void> {
       serviceWorkerRegistration: sw,
     });
 
-    console.log("[pushManager] ✅ getToken returned:", token ? `${token.substring(0, 30)}...` : "null/empty");
+    console.log(
+      "[pushManager] ✅ getToken returned:",
+      token ? `${token.substring(0, 30)}...` : "null/empty",
+    );
 
     if (token) {
       console.log("[pushManager] Registering token with backend...");

@@ -13,6 +13,7 @@ import { GetCoach } from "../application/use-cases/GetCoach.js";
 import { GetCoachee } from "../application/use-cases/GetCoachee.js";
 import { GetCoacheeDashboard } from "../application/use-cases/GetCoacheeDashboard.js";
 import { GetCoachFinancialData } from "../application/use-cases/GetCoachFinancialData.js";
+import { GetNotificationById } from "../application/use-cases/GetNotificationById.js";
 import { GetTrainingClass } from "../application/use-cases/GetTrainingClass.js";
 import { JoinTrainingClass } from "../application/use-cases/JoinTrainingClass.js";
 import { JoinWaitingList } from "../application/use-cases/JoinWaitingList.js";
@@ -20,8 +21,10 @@ import { LeaveWaitingList } from "../application/use-cases/LeaveWaitingList.js";
 import { ListBlocks } from "../application/use-cases/ListBlocks.js";
 import { ListCoachees } from "../application/use-cases/ListCoachees.js";
 import { ListCoaches } from "../application/use-cases/ListCoaches.js";
+import { ListNotifications } from "../application/use-cases/ListNotifications.js";
 import { ListTrainingClasses } from "../application/use-cases/ListTrainingClasses.js";
 import { ListWaitingLists } from "../application/use-cases/ListWaitingLists.js";
+import { MarkNotificationAsRead } from "../application/use-cases/MarkNotificationAsRead.js";
 import { RegisterDeviceToken } from "../application/use-cases/RegisterDeviceToken.js";
 import { SendNotification } from "../application/use-cases/SendNotification.js";
 import { UpdateCoach } from "../application/use-cases/UpdateCoach.js";
@@ -178,4 +181,7 @@ export const container = {
     new PrismaDeviceTokenRepository(),
     sendNotificationAdapter,
   ),
+  listNotifications: new ListNotifications(new PrismaNotificationRepository()),
+  getNotificationById: new GetNotificationById(new PrismaNotificationRepository()),
+  markNotificationAsRead: new MarkNotificationAsRead(new PrismaNotificationRepository()),
 };

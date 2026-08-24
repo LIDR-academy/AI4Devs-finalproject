@@ -1,4 +1,7 @@
 import type {
+  ListNotificationsParams,
+  ListNotificationsResponse,
+  Notification,
   RegisterDeviceTokenPayload,
   RegisterDeviceTokenResponse,
 } from "@/domain/types/notification";
@@ -11,5 +14,17 @@ export async function registerDeviceToken(
     "/notifications/device-token",
     { token: payload.token, platform: payload.platform ?? "WEB" },
   );
+  return data;
+}
+
+export async function listNotifications(
+  params: ListNotificationsParams,
+): Promise<ListNotificationsResponse> {
+  const { data } = await apiClient.get<ListNotificationsResponse>("/notifications", { params });
+  return data;
+}
+
+export async function markNotificationAsRead(id: string): Promise<Notification> {
+  const { data } = await apiClient.patch<Notification>(`/notifications/${id}/read`);
   return data;
 }

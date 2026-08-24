@@ -377,6 +377,23 @@ Can we adapt the seed so that the classes are always created for the following w
 [/speckit.tasks]
 [/speckit.implement]
 
+# 23 - OpenCode - MiMo 2.5 Free
+
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-27/us-43-class-lifecycle-notifications
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
+
+# 24 - OpenCode - MiMo 2.5 Free
+
+[/speckit.specify] https://linear.app/ai4devs/issue/COACHER-29/us-45-in-app-notification-center
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
+
 
 # XX - OpenCode - MiMo 2.5 Free
 

@@ -6,3 +6,10 @@ export const deviceTokenSchema = z
     platform: z.enum(["WEB"]).default("WEB"),
   })
   .strict();
+
+export const listNotificationsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  cursor: z.string().uuid().optional(),
+  unread_only: z.coerce.boolean().default(false),
+  today_only: z.coerce.boolean().default(false),
+});

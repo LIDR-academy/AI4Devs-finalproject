@@ -6,6 +6,13 @@ import type { NotificationSender } from "../../domain/ports/NotificationSender.j
 function createMockNotificationRepo(): NotificationRepository {
   return {
     create: vi.fn().mockResolvedValue({ id: "notif-1" }),
+    findById: vi.fn().mockResolvedValue(null),
+    listByRecipient: vi.fn().mockResolvedValue({
+      data: [],
+      meta: { hasMore: false, nextCursor: null, totalCount: 0, unreadCount: 0 },
+    }),
+    countUnreadByRecipient: vi.fn().mockResolvedValue(0),
+    markAsRead: vi.fn().mockResolvedValue({ id: "notif-1", isRead: true }),
   };
 }
 
