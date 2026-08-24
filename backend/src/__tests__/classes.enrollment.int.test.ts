@@ -465,6 +465,8 @@ describe("DELETE /api/v1/classes/:id/enrollment", () => {
       message: "Enrollment canceled.",
       waitingListProcessed: false,
       claimedByCoachee: null,
+      notificationsSent: 1,
+      waitingListMembersNotified: 0,
     });
 
     const enrollment = await prisma.classEnrollment.findUnique({
@@ -489,6 +491,8 @@ describe("DELETE /api/v1/classes/:id/enrollment", () => {
       message: "Enrollment canceled.",
       waitingListProcessed: true,
       claimedByCoachee: null,
+      notificationsSent: 0,
+      waitingListMembersNotified: 0,
     });
 
     const notification = await prisma.notification.findFirst({

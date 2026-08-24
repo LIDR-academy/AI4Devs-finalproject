@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import type { EnrollmentPolicy } from "../../domain/services/EnrollmentPolicy.js";
+import type { ProcessWaitingListService } from "../../domain/services/ProcessWaitingListService.js";
 import {
   AppError,
   ForbiddenError,
@@ -17,6 +18,8 @@ export interface CancelEnrollmentResult {
   message: string;
   waitingListProcessed: boolean;
   claimedByCoachee: string | null;
+  notificationsSent: number;
+  waitingListMembersNotified: number;
 }
 
 export class CancelEnrollment {
@@ -24,11 +27,12 @@ export class CancelEnrollment {
     private readonly prisma: PrismaClient,
     private readonly policy: EnrollmentPolicy,
     private readonly auditLogger: AuditLogger,
+    private readonly processWaitingList?: ProcessWaitingListService,
   ) {}
 
   async execute(input: CancelEnrollmentInput): Promise<CancelEnrollmentResult> {
     try {
-      const openedSpot = await this.prisma.$transaction(async (tx) => {
+      const { openedSpot } = await this.prisma.$transaction(async (tx) => {
         const trainingClass = await tx.trainingClass.findUnique({
           where: { id: input.classId },
           include: { waitingLists: true },
@@ -74,8 +78,40 @@ export class CancelEnrollment {
           },
         });
 
-        return this.policy.openedSpotDetected(hasWaitingList);
+        return {
+          openedSpot: this.policy.openedSpotDetected(hasWaitingList),
+          hasWaitingList,
+        };
       });
+
+      // Process waiting-list automation after the transaction commits
+      let notificationsSent = 1; // coach notification already sent in transaction
+      let waitingListMembersNotified = 0;
+
+      if (openedSpot && this.processWaitingList) {
+        try {
+          const wlResult = await this.processWaitingList.processSpotOpened(input.classId);
+          notificationsSent = wlResult.notificationsSent;
+          waitingListMembersNotified = wlResult.waitingListMembersNotified;
+
+          await this.auditLogger.log({
+            actorId: input.coacheeId,
+            action: "waiting-list.notify-spot-opened",
+            resource: "WAITING_LIST",
+            resourceId: input.classId,
+            outcome: "SUCCESS",
+          });
+        } catch {
+          // Notification delivery failure must not break the cancellation
+          await this.auditLogger.log({
+            actorId: input.coacheeId,
+            action: "waiting-list.notify-spot-opened",
+            resource: "WAITING_LIST",
+            resourceId: input.classId,
+            outcome: "DENIED",
+          });
+        }
+      }
 
       await this.auditLogger.log({
         actorId: input.coacheeId,
@@ -89,6 +125,8 @@ export class CancelEnrollment {
         message: "Enrollment canceled.",
         waitingListProcessed: openedSpot,
         claimedByCoachee: null,
+        notificationsSent,
+        waitingListMembersNotified,
       };
     } catch (error) {
       if (error instanceof AppError) {

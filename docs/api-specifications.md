@@ -490,7 +490,9 @@ All error responses follow this shape:
   {
     "message": "Enrollment canceled.",
     "waitingListProcessed": true,
-    "claimedByCoachee": "uuid | null"
+    "claimedByCoachee": "uuid | null",
+    "notificationsSent": 1,
+    "waitingListMembersNotified": 2
   }
   ```
 - **Error Responses:**
@@ -504,6 +506,8 @@ All error responses follow this shape:
   - **Group class cancellation without waiting list** (notification #5): Coach is notified that the spot is free.
   - Spot is claimed first-come, first-served — no hold time (PRD Section 5).
   - If there is a waiting list, `waitingListProcessed` is true and `claimedByCoachee` shows the ID of the coachee who claimed the spot (if any).
+  - `notificationsSent` is the total number of notifications dispatched (coach + waitlisted coachees).
+  - `waitingListMembersNotified` is the number of waitlisted coachees notified about the opened spot.
 
 ---
 
@@ -784,6 +788,44 @@ All error responses follow this shape:
   - Coachee may leave any waiting list at any time (PRD Section 5).
   - No notification is sent to the Coach (PRD Section 6.4).
   - Notification #10 sent to the leaving coachee: "Has salido de la waiting list...".
+
+---
+
+### POST /classes/:id/waiting-list/claim
+
+- **Description:** Claims an opened spot on a first-come-first-served basis. The first waitlisted coachee to call this endpoint after a spot opens is enrolled. Uses a serializable transaction to enforce FCFS under concurrent requests. Subsequent claimants receive a conflict error.
+- **Auth/Role:** Authenticated (Coachee — must be on the waiting list).
+- **Path Params:**
+  - `id` (uuid) — class ID.
+- **Query Params:** None.
+- **Request Body:** None (coachee identity derived from JWT).
+- **Success Response:** `201 Created`
+  ```json
+  {
+    "data": {
+      "message": "You joined this class from the waiting list.",
+      "enrollmentId": "uuid",
+      "classId": "uuid",
+      "coacheeId": "uuid",
+      "joinedAt": "2026-08-25T10:00:00.000Z"
+    }
+  }
+  ```
+- **Error Responses:**
+  - `403 FORBIDDEN` — authenticated user is not a Coachee.
+  - `404 NOT_FOUND` — class does not exist.
+  - `409 NOT_ON_WAITING_LIST` — coachee is not on the waiting list for this class.
+  - `409 ALREADY_ENROLLED` — coachee is already enrolled in this class.
+  - `409 SPOT_TAKEN` — class is already at capacity (another coachee claimed first).
+  - `400 VALIDATION_ERROR` — class status is `canceled`.
+- **Business Rules Applied:**
+  - FCFS enforced via PostgreSQL serializable transaction — concurrent claim attempts result in at most one success (PRD Section 5).
+  - Class must be ACTIVE (not canceled).
+  - Class must have capacity (enrollment count < 4).
+  - Coachee must have an existing waiting list entry for the class.
+  - Notification #9 sent to the claiming coachee.
+  - Notification #6 sent to the assigned coach.
+  - Waiting list entry is removed upon successful claim.
 
 ---
 
@@ -1299,6 +1341,27 @@ All error responses follow this shape:
 
 ---
 
+## Notification Types Reference
+
+| # | Trigger | Recipient(s) | Content |
+|---|---------|-------------|---------|
+| 1 | Spot(s) open in a class with a waiting list | All Coachees on that waiting list | "¡Hay hueco(s) libre(s) en [clase/nivel]! Corre a reservarlo." |
+| 2 | Coach creates individual class | Assigned Coachee | — |
+| 3 | Coachee cancels individual class | Assigned Coach | — |
+| 4 | Coachee cancels group class — waiting list exists | Assigned Coach | "[Coachee] canceló. Se ha notificado a [N] coache(s) en waiting list." |
+| 5 | Coachee cancels group class — no waiting list | Assigned Coach | "[Coachee] canceló. El hueco está libre." |
+| 6 | Waitlisted Coachee claims a spot | Assigned Coach | "A waitlisted Coachee has claimed the spot in this class." |
+| 7 | Coach creates group class | Assigned Coach | — |
+| 8 | Coachee joins a group class | Assigned Coach | — |
+| 9 | Coachee joins a waiting list / Coachee claims from waiting list | The Coachee who joined/claimed | "Te has apuntado a la waiting list de [clase/hora]. Te avisaremos cuando haya hueco." / "You joined this class from the waiting list." |
+| 10 | Coachee leaves a waiting list voluntarily | The Coachee who left | "Has salido de la waiting list de [clase/hora]" |
+
+- Notifications #4 and #5 are mutually exclusive: the system checks whether a waiting list exists and sends the appropriate variant.
+- Notification #1 is not sent if a spot opens but the waiting list is empty; instead, the Coach is notified (#4 or #5 depending on context).
+- All waitlisted coachees are notified **simultaneously** (no sequential fan-out).
+
+---
+
 ## Endpoint Summary
 
 | Method | Path | Role | Short Description |
@@ -1322,6 +1385,7 @@ All error responses follow this shape:
 | DELETE | `/blocks/:id` | Admin, Coach | Cancel a block |
 | POST | `/classes/:id/waiting-list` | Coachee | Join waiting list |
 | DELETE | `/classes/:id/waiting-list` | Coachee | Leave waiting list |
+| POST | `/classes/:id/waiting-list/claim` | Coachee | Claim spot from waiting list (FCFS) |
 | GET | `/waiting-lists` | Coachee | List my active waiting lists |
 | GET | `/coachees` | Admin, Coach | List coachees (with filters) |
 | POST | `/coachees` | Admin | Create coachee |

@@ -3,6 +3,7 @@ import { CancelBlock } from "../application/use-cases/CancelBlock.js";
 import { CancelEnrollment } from "../application/use-cases/CancelEnrollment.js";
 import { CancelRecurringSeries } from "../application/use-cases/CancelRecurringSeries.js";
 import { CancelTrainingClass } from "../application/use-cases/CancelTrainingClass.js";
+import { ClaimWaitingListSpot } from "../application/use-cases/ClaimWaitingListSpot.js";
 import { CreateBlock } from "../application/use-cases/CreateBlock.js";
 import { CreateCoach } from "../application/use-cases/CreateCoach.js";
 import { CreateCoachee } from "../application/use-cases/CreateCoachee.js";
@@ -29,22 +30,28 @@ import { UpdateCoacheeLevel } from "../application/use-cases/UpdateCoacheeLevel.
 import { UpdateCoacheeStatus } from "../application/use-cases/UpdateCoacheeStatus.js";
 import { UpdateCoachStatus } from "../application/use-cases/UpdateCoachStatus.js";
 import { UpdateTrainingClass } from "../application/use-cases/UpdateTrainingClass.js";
+import type { NotificationSender } from "../domain/ports/NotificationSender.js";
 import { BlockPolicy } from "../domain/services/BlockPolicy.js";
 import { ClassCancellationPolicy } from "../domain/services/ClassCancellationPolicy.js";
 import { CoacheeDashboardPolicy } from "../domain/services/CoacheeDashboardPolicy.js";
 import { CoacheeService } from "../domain/services/CoacheeService.js";
 import { CoachService } from "../domain/services/CoachService.js";
 import { EnrollmentPolicy } from "../domain/services/EnrollmentPolicy.js";
+import { ProcessWaitingListService } from "../domain/services/ProcessWaitingListService.js";
 import { WaitingListPolicy } from "../domain/services/WaitingListPolicy.js";
 import { CalendarHealthMonitor } from "../infrastructure/adapters/calendar/CalendarHealthMonitor.js";
 import { GoogleCalendarAdapter } from "../infrastructure/adapters/calendar/GoogleCalendarAdapter.js";
 import { createFCMAdapter } from "../infrastructure/adapters/notifications/FCMNotificationAdapter.js";
 import { Aes256GcmEncryptionService } from "../infrastructure/encryption/Aes256GcmEncryptionService.js";
 import { AuditLogger } from "../infrastructure/logging/AuditLogger.js";
+import { PrismaClassRepository } from "../infrastructure/persistence/PrismaClassRepository.js";
 import { PrismaCoacheeRepository } from "../infrastructure/persistence/PrismaCoacheeRepository.js";
 import { PrismaCoachRepository } from "../infrastructure/persistence/PrismaCoachRepository.js";
 import { PrismaDeviceTokenRepository } from "../infrastructure/persistence/PrismaDeviceTokenRepository.js";
+import { PrismaEnrollmentRepository } from "../infrastructure/persistence/PrismaEnrollmentRepository.js";
 import { PrismaNotificationRepository } from "../infrastructure/persistence/PrismaNotificationRepository.js";
+import { PrismaUserRepository } from "../infrastructure/persistence/PrismaUserRepository.js";
+import { PrismaWaitingListRepository } from "../infrastructure/persistence/PrismaWaitingListRepository.js";
 import { env, resolveCalendarId } from "./env.js";
 
 const prisma = new PrismaClient();
@@ -61,6 +68,25 @@ const calendarHealthMonitor = new CalendarHealthMonitor();
 
 const enrollmentPolicy = new EnrollmentPolicy();
 const coacheeDashboardPolicy = new CoacheeDashboardPolicy();
+const waitingListPolicy = new WaitingListPolicy();
+
+// Domain ports for ProcessWaitingListService
+const classRepository = new PrismaClassRepository(prisma);
+const waitingListRepository = new PrismaWaitingListRepository(prisma);
+const _enrollmentRepository = new PrismaEnrollmentRepository(prisma);
+const userRepository = new PrismaUserRepository(prisma);
+const sendNotificationAdapter: NotificationSender = createFCMAdapter() ?? {
+  async send() {
+    return { succeeded: [], failed: [] };
+  },
+};
+
+const processWaitingListService = new ProcessWaitingListService(
+  classRepository,
+  waitingListRepository,
+  sendNotificationAdapter,
+  userRepository,
+);
 
 const calendarId = resolveCalendarId();
 let calendarProvider: GoogleCalendarAdapter | null = null;
@@ -118,10 +144,16 @@ export const container = {
   getTrainingClass: new GetTrainingClass(prisma),
   getCoacheeDashboard: new GetCoacheeDashboard(prisma, coacheeDashboardPolicy),
   joinTrainingClass: new JoinTrainingClass(prisma, enrollmentPolicy, auditLogger),
-  joinWaitingList: new JoinWaitingList(prisma, new WaitingListPolicy(), auditLogger),
-  leaveWaitingList: new LeaveWaitingList(prisma, new WaitingListPolicy(), auditLogger),
-  listWaitingLists: new ListWaitingLists(prisma, new WaitingListPolicy()),
-  cancelEnrollment: new CancelEnrollment(prisma, enrollmentPolicy, auditLogger),
+  joinWaitingList: new JoinWaitingList(prisma, waitingListPolicy, auditLogger),
+  leaveWaitingList: new LeaveWaitingList(prisma, waitingListPolicy, auditLogger),
+  listWaitingLists: new ListWaitingLists(prisma, waitingListPolicy),
+  cancelEnrollment: new CancelEnrollment(
+    prisma,
+    enrollmentPolicy,
+    auditLogger,
+    processWaitingListService,
+  ),
+  claimWaitingListSpot: new ClaimWaitingListSpot(prisma, auditLogger),
   createBlock: calendarProvider
     ? new CreateBlock(prisma, calendarProvider, new BlockPolicy(), auditLogger)
     : null,
@@ -131,6 +163,6 @@ export const container = {
   sendNotification: new SendNotification(
     new PrismaNotificationRepository(),
     new PrismaDeviceTokenRepository(),
-    createFCMAdapter(),
+    sendNotificationAdapter,
   ),
 };

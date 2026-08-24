@@ -12,9 +12,9 @@
 import "dotenv/config";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getMessaging } from "firebase-admin/messaging";
 import { PrismaClient } from "@prisma/client";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BACKEND_ROOT = path.resolve(__dirname, "../..");
@@ -28,9 +28,7 @@ async function main() {
     process.exit(1);
   }
 
-  const resolvedPath = path.isAbsolute(saPath)
-    ? saPath
-    : path.resolve(BACKEND_ROOT, saPath);
+  const resolvedPath = path.isAbsolute(saPath) ? saPath : path.resolve(BACKEND_ROOT, saPath);
 
   const apps = getApps();
   if (apps.length === 0) {
@@ -43,7 +41,9 @@ async function main() {
   });
 
   if (tokens.length === 0) {
-    console.error("No active device tokens found. Register a device first (sign in and accept push notifications).");
+    console.error(
+      "No active device tokens found. Register a device first (sign in and accept push notifications).",
+    );
     await prisma.$disconnect();
     process.exit(1);
   }

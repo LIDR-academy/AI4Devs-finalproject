@@ -395,6 +395,27 @@ router.delete(
   },
 );
 
+router.post(
+  "/classes/:id/waiting-list/claim",
+  authenticate,
+  requireRole(UserRole.COACHEE),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsed = classIdParamSchema.safeParse(req.params.id);
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error.message);
+      }
+      const result = await container.claimWaitingListSpot.execute({
+        classId: parsed.data,
+        coacheeId: req.user?.id ?? "",
+      });
+      res.status(201).json({ data: result });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 router.get(
   "/coachee/dashboard",
   authenticate,

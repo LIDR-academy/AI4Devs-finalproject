@@ -142,6 +142,8 @@ describe("CancelEnrollment", () => {
       message: "Enrollment canceled.",
       waitingListProcessed: false,
       claimedByCoachee: null,
+      notificationsSent: 1,
+      waitingListMembersNotified: 0,
     });
 
     const stored = await prisma.classEnrollment.findUnique({
@@ -176,6 +178,8 @@ describe("CancelEnrollment", () => {
       message: "Enrollment canceled.",
       waitingListProcessed: true,
       claimedByCoachee: null,
+      notificationsSent: 1,
+      waitingListMembersNotified: 0,
     });
 
     const notifications = await prisma.notification.findMany({ where: { class_id: classId } });

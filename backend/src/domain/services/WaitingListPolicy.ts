@@ -89,5 +89,17 @@ export class WaitingListPolicy {
     return 10;
   }
 
+  notificationTypeForSpotOpened(): number {
+    return 1;
+  }
+
+  coachNotificationTypeForSpotOpened(hasWaitingList: boolean): number {
+    return hasWaitingList ? 4 : 5;
+  }
+
+  notificationTypeForSpotClaimed(): number {
+    return 6;
+  }
+
   static readonly GROUP_CAPACITY: number = GROUP_MAX_COACHEES;
 }
