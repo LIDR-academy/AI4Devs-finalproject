@@ -41,6 +41,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # TK-062: Prisma 7 ya no genera el cliente automaticamente en postinstall (si lo
+      # hacia en 5.x) — sin este paso, tsc falla en cualquier checkout limpio porque
+      # src/generated/prisma/ (gitignored) no existe todavia.
+      - name: Generate Prisma Client
+        run: pnpm --filter @restostock/backend exec prisma generate --schema=prisma/schema.prisma
+
       - name: Run Code Linter
         run: pnpm run lint
 
@@ -206,6 +212,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # TK-062: idem lint-and-validate — pnpm run build/test necesitan el cliente
+      # generado (src/generated/prisma/) antes de compilar/testear.
+      - name: Generate Prisma Client
+        run: pnpm --filter @restostock/backend exec prisma generate --schema=prisma/schema.prisma
 
       - name: Validate DB Schema
         run: npx prisma validate --schema=apps/backend/prisma/schema.prisma
