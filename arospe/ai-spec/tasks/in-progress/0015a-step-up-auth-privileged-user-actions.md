@@ -57,15 +57,30 @@ Feature: Step-up authentication for privileged Users actions
     When they change another user's name only
     Then the change is applied without any re-confirmation
 
-  Scenario: An email change is not blocked by a stale password confirmation
+  Scenario: An email change to another user's account requires re-confirmation
     Given a user administrator whose password confirmation has expired
     When they change another user's email address only
+    Then the change is refused and they are routed to re-confirm their password
+
+  Scenario: A self-service email change is not blocked, because it is not a third-party change
+    Given a user administrator whose password confirmation has expired
+    When they change their own email address
     Then the change is held as pending without any re-confirmation
 
-  Scenario: Creating a user is not blocked by a stale password confirmation
+  Scenario: Creating an ordinary user is not blocked by a stale password confirmation
     Given a user administrator whose password confirmation has expired
-    When they create a new user
+    When they create a new user with an ordinary role
     Then the user is created without any re-confirmation
+
+  Scenario: Creating an Administrator-tier user requires re-confirmation
+    Given a user administrator whose password confirmation has expired
+    When they create a new user with the Administrator role
+    Then the creation is refused and they are routed to re-confirm their password
+
+  Scenario: Repeated password-confirmation attempts are rate limited
+    Given a user administrator submitting their password on the re-confirmation screen
+    When they submit a sixth incorrect password within one minute
+    Then the attempt is rejected with a throttling message rather than checked against their password
 
   Scenario: A self-edit that submits a role is not blocked, because no role change occurs
     Given a user administrator whose password confirmation has expired
@@ -220,14 +235,16 @@ Line numbers are the verified `HEAD` (`00dd9c7`) ones as of 2026-08-23 and are a
   `authorizeRoleAndStatusChange()` (declared 132), so it binds the operation rather than one caller,
   per [base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers).
   Two placement rules, both load-bearing:
-  - **It must fire only when a role or status change is actually happening**, never on every save.
-    The method already computes `$isNoOpRoleChange` (148) and `$statusChanged` (167); the guard hangs
-    off those two computed booleans directly — **not** off the `$emailChanged || $statusChanged`
-    condition that guards `updateSensitiveAttributes` at 169–171, which is a different, wider
-    condition the step-up guard must not reuse. A name-only or email-only edit must reach no step-up
-    check at all (Q2: not plain name edits) — and note `authorizeRoleAndStatusChange()` also gates
-    the *email* path via `updateSensitiveAttributes` (169–171), which this story must **not** extend
-    to. Getting this wrong is the single most likely way this story over-blocks.
+  - **It must fire when a role change, a status change, or a third-party email change is actually
+    happening — never on a name-only edit, and never on a self-edit of any kind.** *(Widened by the
+    Phase 4 F2 decision above; the original scope keyed the guard off `$isNoOpRoleChange`/`$statusChanged`
+    alone and left `$emailChanged` out, matching `updateSensitiveAttributes`'s wider
+    `$emailChanged || $statusChanged` condition on the status half but deliberately not the email half.
+    That asymmetry is now closed: the step-up guard's condition is exactly
+    `updateSensitiveAttributes`'s own condition, evaluated only when `! $isSelfEdit`.)* A name-only edit
+    must reach no step-up check at all. Getting the self-edit exemption wrong is the single most likely
+    way this story over-blocks — a self-service email change (the actor changing their own address)
+    must stay exempt, since `$isSelfEdit` already means there is no third party to protect.
   - **It must run above the first write, and after every `Gate` check on its branch has passed** —
     below `Gate::authorize('promoteToAdministrator')` / `downgrade` (155/157) and below
     `Gate::authorize('updateSensitiveAttributes')` (170) where those run, so a permission refusal is
@@ -269,13 +286,36 @@ Line numbers are the verified `HEAD` (`00dd9c7`) ones as of 2026-08-23 and are a
      **This is the dashboard-caller path; a non-dashboard caller of `UpdateUser` directly (e.g. from a
      future API or Artisan command) never reaches this catch block and instead sees the exception's own
      423 response** — the two are for different callers, not alternatives to choose between.
+  4. **(Phase 4, F4)** Both catch blocks log the refusal before redirecting —
+     `Log::warning('Step-up password confirmation required', ['actor_id' => Auth::id(), 'action' =>
+     'users.update'|'users.delete', 'user_id' => $target->id])` — matching the shape story 0015's F5
+     already established on this same class (`Log::info` for create/edit/delete). A step-up refusal is
+     the strongest available signal of a hijacked or unattended session; without this it was the one
+     event on this screen invisible to the audit trail.
+
+- **`app/Actions/Users/CreateUser.php` (modify — Phase 4, F1)** — gate creation of an Administrator-tier
+  user the same way. `CreateUser` already computes whether the submitted role is Administrator-tier for
+  its own `Gate::authorize('promoteToAdministrator', User::class)` call; call the step-up guard
+  immediately after that check passes, on the Administrator branch only. An ordinary-role creation
+  reaches no step-up check at all — this is deliberately narrow, matching the "fire only on the
+  privileged branch" rule the rest of this story follows, not a blanket gate on every creation.
+
+- **`app/Providers/FortifyServiceProvider.php` and/or `config/fortify.php` (modify — Phase 4, F3)** — add
+  a rate limiter to `password.confirm.store`. Verified in the audit: that route carries no throttle at
+  all today (`config/fortify.php`'s `limiters` names `login`/`two-factor`/`passkeys` only), and once
+  this story makes it the sole barrier in front of role/status/delete/promote-to-Administrator/
+  third-party-email-change, an attacker holding a hijacked session can guess the account's own password
+  against it without limit. 5/minute, keyed by user id when authenticated (falling back to IP),
+  matching Fortify's own `login` limiter's shape.
 
 - **`resources/views/livewire/users.blade.php` (modify)** — the affordance. Story 0006's shipped
   modals have none: the create/edit modal (142–194) and the delete modal (197–228) contain only
   inputs and Cancel/Save buttons. Add, gated on the new computed property:
-  - inside `@if ($showModal)`, a notice stating that changing the role or status will require
+  - inside `@if ($showModal)`, a notice stating that changing the role, status or email will require
     re-confirming the password — placed **above** the role/status selects (165–175), so it is read
-    before the fields it applies to;
+    before the fields it applies to; shown only for an edit of another user (per the F2 self-edit
+    exemption above), never on the create form for an ordinary role, but a second notice on the create
+    form (or the same one, reworded) when the selected role is Administrator-tier, per F1;
   - inside `@if ($showDeleteModal)`, the equivalent notice above the destructive button (217–224).
   - Use a `flux:callout` (or `flux:text`, matching the existing `pending_notice_admin` treatment at
     158–162 — check what reads best against the shipped modals rather than inventing a new pattern).
@@ -286,8 +326,10 @@ Line numbers are the verified `HEAD` (`00dd9c7`) ones as of 2026-08-23 and are a
     [The mechanism](#the-mechanism--verified-vendor-behaviour-not-inferred) rules out.
 
 - **`lang/en/users.php` and `lang/es/users.php` (modify)** — new keys under the existing `index`
-  group, key-for-key identical across both files: the two warnings, plus any flash message shown on
-  return. `snake_case` leaves, per [naming.md](../../../docs/conventions/naming.md#translation-keys).
+  group, key-for-key identical across both files: the edit-modal warning (now covering role, status
+  *and* email per F2), the delete-modal warning, the create-modal Administrator-tier warning (F1), plus
+  any flash message shown on return. `snake_case` leaves, per
+  [naming.md](../../../docs/conventions/naming.md#translation-keys).
 
 **Confirmed *not* needed**, recorded so reviewers do not re-open them: **no `config/auth.php` change**
 and **no new timeout key** (the existing `auth.password_timeout` is reused verbatim); **no
@@ -299,14 +341,55 @@ a Super Admin.
 
 ### Out of scope, decided rather than omitted
 
-- **Creating a user is not step-up-gated.** Q2 named role/status changes and deletion only. Creation
-  provisions a new account rather than seizing an existing one, and it is separately rate-limited by
-  story [0015](../done/0015-harden-users-crud-security-posture.md)'s F6. Recorded as a decision so a future
-  reader does not read it as an oversight.
-- **A self-edit is not step-up-gated**, because a self-edit already applies neither a role nor a
-  status change (`UpdateUser`'s `$isSelfEdit` branch, 75–92) — there is no privileged write to guard.
+- **A self-edit is not step-up-gated**, because a self-edit already applies neither a role, a status
+  nor a third-party email change (`UpdateUser`'s `$isSelfEdit` branch, 75–92) — there is no privileged
+  write to guard.
 - **The Roles screen (`App\Livewire\Roles\Index`) is not in scope**, though it performs comparably
   privileged writes. If the pattern should extend there it is a separate story, with its own tests.
+
+### Widened after Phase 4 (2026-08-24) — three findings resolved by human decision, not deferred
+
+`appsec-auditor`'s Phase 4 audit found the step-up guard, as originally scoped (role/status/delete
+only), left open exactly the class of escalation this story's own Description names as the threat:
+a hijacked or unattended session could still seize an account through two paths the guard didn't
+cover, and the control's only remaining barrier had no rate limit of its own. All three were escalated
+to the human per [contracts.md](../../../docs/contracts.md)'s Uncertainty Handling Rule, and each was
+approved as recommended:
+
+- **F1 — creating an Administrator-tier account is now step-up-gated too.** A hijacked session could
+  not promote, suspend or delete under the original scope — but could still `CreateUser` a **new**
+  Administrator account, mailed to an address the attacker chooses, which is a *stronger* outcome
+  (durable, independently credentialed, survives the victim's password change). **Decided: gate
+  `CreateUser` when the submitted role is Administrator-tier, reusing the
+  `Role::isAdministratorRole($submittedRole)` check `CreateUser` already computes for its own
+  `promoteToAdministrator` gate** (see the file entry below). Ordinary-role creation is unaffected —
+  the guard fires only on the Administrator branch, after that branch's own `Gate::authorize()`, same
+  ordering rule as everywhere else in this story.
+- **F2 — a third-party email change is now step-up-gated too.** `UserPolicy::updateSensitiveAttributes()`'s
+  own docblock calls an email rewrite "severity-equivalent to account takeover", yet the original scope
+  exempted it, and `RequestEmailChange` mails only the *new* address — the account's current owner gets
+  no signal. **Decided: add `$emailChanged` to `UpdateUser`'s step-up condition, for non-self edits
+  only** — a self-service email change (the actor changing their own address) remains exempt, since
+  `$isSelfEdit` already means there is no third party to protect. This reopens and narrows Q2's original
+  "not plain name edits" framing: an email change was never a name edit, and D1's rationale (seizing or
+  destroying *another* administrator's account) applies to it exactly as it does to role/status.
+- **F3 — `password.confirm.store` gains a rate limit.** Verified in the audit: Fortify's
+  `ConfirmablePasswordController::store()` route carries no throttle at all (`config/fortify.php`'s
+  `limiters` names `login`/`two-factor`/`passkeys` only), so once this story makes that endpoint the
+  single gate in front of role/status/delete/promote-to-Administrator/email-change-of-another-user, an
+  attacker holding a hijacked session can guess the account's own password against it without limit.
+  **Decided: add a 5/minute limiter**, keyed the same way Fortify's own `login` limiter is (by user id
+  when authenticated, falling back to IP). Pre-existing gap, not introduced by this story, but this
+  story is what makes it load-bearing — fixed here rather than left as a residual, since the fix is a
+  few lines in `FortifyServiceProvider`/`config/fortify.php` and this story is the reason it matters.
+
+Also fixed as part of the same Phase 4 pass, both Low severity: **F4** — a step-up refusal on the
+dashboard path (`save()`/`deleteUser()`'s catch blocks) previously logged nothing, so the control's own
+refusals were invisible to the audit trail story 0015's F5 established for this same screen; now logs
+`Log::warning('Step-up password confirmation required', [...])` before redirecting, matching that
+shape. **F5** — the "fail-closed with no session" test exercised the *absent-key* case (already covered
+by a sibling test) rather than a genuinely session-less context; renamed/restructured to match what it
+actually proves.
 
 ## Tests to perform
 - [ ] **Role change, stale confirmation:** with `auth.password_confirmed_at` unset (and, separately,
@@ -314,6 +397,10 @@ a Super Admin.
       the target's role is **unchanged in the database**. Assert on the row, not only on the response.
 - [ ] **Status change, stale confirmation:** same shape, asserting the target's `status` is unchanged.
 - [ ] **Deletion, stale confirmation:** same shape, asserting `User::find($id)` is still non-null.
+- [ ] **(Phase 4, F2) Third-party email change, stale confirmation:** same shape, editing **another**
+      user's email only, asserting `pending_email` is still unset on the target's row.
+- [ ] **(Phase 4, F1) Administrator-tier creation, stale confirmation:** submitting a create form with
+      the Administrator role selected is refused; no user is created.
 - [ ] **Happy path:** with `auth.password_confirmed_at` set to `now()`, each of the three actions
       succeeds. This is the regression guard that proves the story did not ship a blanket refusal.
 - [ ] **Boundary:** a confirmation exactly `config('auth.password_timeout')` seconds old is **still
@@ -321,10 +408,13 @@ a Super Admin.
       match it exactly. Drive it with `Carbon::setTestNow()`.
 - [ ] **Must-not-over-block — name only:** with a stale confirmation, a name-only edit of another user
       succeeds and the name is persisted.
-- [ ] **Must-not-over-block — email only:** with a stale confirmation, an email-only change of another
-      user is accepted and parked in `pending_email`. This is the test that fails if the guard is
-      attached to `authorizeRoleAndStatusChange()`'s entry rather than to its role/status branches.
-- [ ] **Must-not-over-block — create:** with a stale confirmation, creating a user succeeds.
+- [ ] **Must-not-over-block — self-service email:** with a stale confirmation, an administrator changing
+      **their own** email address (an `$isSelfEdit` request) is accepted and parked in `pending_email`.
+      *(Narrowed by the Phase 4 F2 decision — an email change of **another** user is now covered by the
+      "Third-party email change, stale confirmation" bullet above, not this one.)*
+- [ ] **Must-not-over-block — create (ordinary role):** with a stale confirmation, creating a user with
+      an **ordinary** role succeeds. *(Narrowed by the Phase 4 F1 decision — Administrator-tier creation
+      is now covered by the "Administrator-tier creation, stale confirmation" bullet above.)*
 - [ ] **Must-not-over-block — self-edit:** with a stale confirmation, an administrator saving their own
       row with a different role selected succeeds and their role is unchanged, exactly as
       `tests/Feature/Users/IndexTest.php:670` pins today.
@@ -339,8 +429,16 @@ a Super Admin.
       container under `actingAs()`, never through `Livewire::test()`) with a stale confirmation and a
       role change, and assert it throws and writes nothing — the guard must not be a property of the
       Livewire caller alone, per the same rule story 0008a established for these actions.
-- [ ] **Fail-closed with no session:** the same direct call with no session at all is refused, not
-      exempted.
+- [ ] **Fail-closed with no session:** the same direct call in a genuinely session-less context (not
+      merely an unset key under `actingAs()`, which a sibling test already covers — Phase 4 finding F5
+      caught the original version of this test exercising the wrong case) is refused, not exempted.
+- [ ] **(Phase 4, F3) `password.confirm.store` is rate limited:** the 6th password submission within one
+      minute is rejected with a throttling message rather than checked against the actual password —
+      matching Fortify's own `login` limiter's shape (by user id when authenticated, else IP).
+- [ ] **(Phase 4, F4) A step-up refusal is logged:** both the `save()` and `deleteUser()` catch paths
+      emit exactly one `Log::warning` carrying `actor_id`, `action`, and the target's `user_id` before
+      redirecting (`Log::spy()`/fake), matching story 0015's `Log::info` shape for the same class's
+      successful mutations.
 - [ ] **The refusal is not a 403.** Against the **direct action call** (the non-dashboard-caller path —
       see "Direct action call" above), assert the thrown exception is
       `PasswordConfirmationRequiredException` rendering 423, **not** an `AuthorizationException`/403 —
@@ -367,12 +465,15 @@ a Super Admin.
 
 ## Expected outcome
 An administrator whose password confirmation is older than `config('auth.password_timeout')` cannot
-change another user's role or status, and cannot delete a user, until they re-confirm — while name
-edits, email changes, creation and self-edits are entirely unaffected. The refusal is a distinct,
+change another user's role, status or email, cannot delete a user, and cannot create a new
+Administrator-tier account, until they re-confirm — while name edits, a self-service email change,
+ordinary-role creation and self-edits generally are entirely unaffected. The refusal is a distinct,
 non-403 response that routes them to Laravel's existing confirmation screen and returns them to
-`/users`, and both Users modals warn about the requirement *before* the administrator commits to a
-change. There is one implementation of the freshness check, one timeout value shared with
-`settings/security`, and no second password-confirmation flow anywhere in the app.
+`/users`, and both Users modals (plus the create form, for an Administrator-tier selection) warn about
+the requirement *before* the administrator commits to a change. There is one implementation of the
+freshness check, one timeout value shared with `settings/security`, no second password-confirmation
+flow anywhere in the app, the confirmation screen itself is rate limited, and a refusal leaves a
+structured log entry.
 
 ## Acceptance criteria
 - [ ] `App\Actions\Auth\EnsureRecentPasswordConfirmation` is the **single** implementation of the
@@ -381,11 +482,18 @@ change. There is one implementation of the freshness check, one timeout value sh
       call site re-derives it inline.
 - [ ] **No new timeout is introduced.** `config/auth.php` is unmodified, no `AUTH_*` env key is added,
       and no Users-specific window exists — the value is the same 3 hours `settings/security` relies on.
-- [ ] The guard is enforced from **`App\Actions\Users\UpdateUser`** for role and status changes (so a
-      direct, non-dashboard caller inherits it) and from **`App\Livewire\Users\Index::deleteUser()`**
-      for deletion, in both cases **above the first write**.
-- [ ] The guard fires **only** when a role or status change is actually occurring. A name-only edit, an
-      email-only change, a user creation and a self-edit each reach no step-up check.
+- [ ] The guard is enforced from **`App\Actions\Users\UpdateUser`** for role, status and third-party
+      email changes (so a direct, non-dashboard caller inherits it), from
+      **`App\Livewire\Users\Index::deleteUser()`** for deletion, and from
+      **`App\Actions\Users\CreateUser`** for an Administrator-tier creation (Phase 4, F1) — in every
+      case **above the first write**.
+- [ ] The guard fires **only** when a role change, a status change, a third-party email change, or an
+      Administrator-tier creation is actually occurring. A name-only edit, a self-service email change,
+      an ordinary-role creation, and a self-edit generally, each reach no step-up check.
+- [ ] **(Phase 4, F3)** `password.confirm.store` is rate limited at 5/minute, keyed the same way
+      Fortify's own `login` limiter is.
+- [ ] **(Phase 4, F4)** A step-up refusal on the dashboard path emits exactly one `Log::warning` entry
+      before redirecting, carrying `actor_id`, `action`, and the target's `user_id`.
 - [ ] A stale or absent confirmation, including no session at all, **fails closed**.
 - [ ] **When both a permission refusal and a step-up refusal would apply, the permission refusal wins.**
       The guard runs only after every `Gate::authorize()` call on its branch has passed — never before —
@@ -399,10 +507,12 @@ change. There is one implementation of the freshness check, one timeout value sh
       rendered.
 - [ ] A refused action routes the actor to `route('password.confirm')` and, after confirming, returns
       them to `/users` — proven by a browser test, not by reading vendor code.
-- [ ] Both Users modals show a re-confirmation notice when — and only when — the confirmation is
-      stale, driven by the **same** predicate the guard uses, each with a `data-test` hook, with new
-      keys present in **both** `lang/en/users.php` and `lang/es/users.php`.
-- [ ] No password field is added to either Users modal; re-confirmation happens on Fortify's own screen.
+- [ ] The edit and delete Users modals show a re-confirmation notice when — and only when — the
+      confirmation is stale, driven by the **same** predicate the guard uses, each with a `data-test`
+      hook; the create form warns when an Administrator-tier role is selected (Phase 4, F1); new keys
+      present in **both** `lang/en/users.php` and `lang/es/users.php`.
+- [ ] No password field is added to any Users modal or the create form; re-confirmation happens on
+      Fortify's own screen.
 - [ ] `routes/users.php` is unchanged, and `App\Policies\UserPolicy` is unchanged.
 - [ ] Every existing test amended to seed the confirmation session key is listed explicitly in the
       implementation notes, and no existing *assertion* is weakened.
@@ -486,6 +596,20 @@ change. There is one implementation of the freshness check, one timeout value sh
 - **D5 — The story is fullstack, not backend. Approved (2026-08-23).** Verified against the shipped
   view: `resources/views/livewire/users.blade.php` has no password-confirmation affordance of any kind
   to extend, so the frontend half is new work rather than a tweak.
+- **D6 — `CreateUser` is step-up-gated when the submitted role is Administrator-tier. Approved
+  (2026-08-24, Phase 4 finding F1).** The original scope (role/status/delete on an *existing* target)
+  left open a stronger outcome for a hijacked session: mint a brand-new, independently-credentialed
+  Administrator account instead of seizing one. Ordinary-role creation is unaffected.
+- **D7 — `UpdateUser`'s step-up condition includes a third-party email change. Approved (2026-08-24,
+  Phase 4 finding F2).** `UserPolicy::updateSensitiveAttributes()` already treats an email rewrite as
+  account-takeover-equivalent; the original scope's "not plain name edits" framing (Q2) exempted email
+  changes as if they were name edits, which they are not. A self-service email change (the actor's own
+  address) stays exempt — `$isSelfEdit` already means there is no third party to protect, the same
+  reasoning D1 already applied to role/status.
+- **D8 — `password.confirm.store` gains a 5/minute rate limit. Approved (2026-08-24, Phase 4 finding
+  F3).** Pre-existing gap (Fortify ships no throttle on this route), not introduced by this story, but
+  this story is what makes the endpoint load-bearing for the highest-value mutations on this screen —
+  fixed here rather than left as an unowned residual.
 
 ## Provenance
 Finding **F13**, raised by `appsec-auditor` during story 0004's Phase 4 security audit and carried

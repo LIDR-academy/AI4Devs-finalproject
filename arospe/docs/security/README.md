@@ -154,7 +154,38 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
-_Last updated: 2026-08-22 — Task 0013 (module/sidebar access gating — UI), Phase 6 docs sync: the registry section's index entry above is rewritten now that **both findings are closed** — its ✅ blocks are the shipped guard tests rather than recommendations, and it records why the shipped allow-list assertion is deliberately narrower than the one originally recommended. Added the pointer to [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry), which now owns the registry's reusable shape so this page can stay limited to the security rules. No new page and no new rule in this pass._
+- [Step-up authentication](step-up-authentication.md) — the rules governing the app's **third**
+  authorization layer, added by task 0015a: a password-confirmation freshness guard that answers
+  "is the person at the keyboard still the account holder", which route middleware and policies both
+  pass for a hijacked or unattended session. Why the check must reuse
+  `RequirePassword`'s own session key, config key and `>` boundary rather than re-derive them (and why
+  the boundary needs asserting from *both* sides to tell `>` from `>=`); why the throwing guard must be
+  a wrapper around the non-throwing predicate the UI warning reads, so the hint cannot drift from the
+  rule; why the guard runs strictly **after** every `Gate::authorize()` on its branch — an inverted
+  ordering turns a permission refusal into a credential prompt plus a target-exists disclosure, and a
+  branch with no preceding `Gate` call is not an exemption; why the refusal is a **direct throw** (a
+  `Gate`-mediated one is inert for the Super Admin it most needs to bind) rendering **423, never 403**
+  (the actor *does* hold the permission), with `Handler::render()` verified to consult `render()` ahead
+  of the debug renderer; and why the guard must key off the narrowest booleans describing the privileged
+  write rather than the wider `updateSensitiveAttributes` condition beside it, which would silently
+  extend it to an email-only edit. Carries a **confirmed-safe** list of six verified mechanics (absent
+  key *and* no session both fail closed, a logout flushes the key while `SessionGuard::login()`'s
+  `migrate(true)` would not, the intended-URL round trip is a fixed route with no open-redirect surface,
+  `$this->redirect()` vs. a returned `Redirector`) and a ⚠️ list of five things the layer does **not**
+  close — creation and email change are both out of scope by decision while remaining escalation and
+  account-seizure primitives, `POST /user/confirm-password` is unthrottled, a refusal writes no audit
+  record, and `settings/security` still relies on route middleware alone.
+
+_Last updated: 2026-08-24 — Added [step-up-authentication.md](step-up-authentication.md) from the
+Phase 4 audit of task 0015a (step-up authentication for privileged Users actions) — the first code in
+this repo to act on the `password.confirm` row of
+[livewire-authorization.md](livewire-authorization.md)'s `PersistentMiddleware` table. The audit
+raised no blocking implementation finding: the guard's ordering, scope, fail-closed behaviour, 423
+render and single-predicate UI hint were each verified against the shipped code and vendor source.
+Its findings are about the control's **scope and dependencies** — recorded as that page's ⚠️ list,
+since each needs a human decision rather than a patch._
+
+_Previously: 2026-08-22 — Task 0013 (module/sidebar access gating — UI), Phase 6 docs sync: the registry section's index entry above is rewritten now that **both findings are closed** — its ✅ blocks are the shipped guard tests rather than recommendations, and it records why the shipped allow-list assertion is deliberately narrower than the one originally recommended. Added the pointer to [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry), which now owns the registry's reusable shape so this page can stay limited to the security rules. No new page and no new rule in this pass._
 
 _Previously: 2026-08-21 — Task 0013 (module/sidebar access gating — UI), Phase 4 audit: no new page —
 `authorization-patterns.md` gained two sections for this repo's first **declarative permission registry**,
