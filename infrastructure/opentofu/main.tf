@@ -7,7 +7,12 @@ terraform {
   required_providers {
     docker = {
       source  = "kreuzwerker/docker"
-      version = "~> 3.0.2"
+      # ~> 3.0.2 (fijado originalmente) tiene la firma de release corrupta/revocada en el
+      # registro de OpenTofu — "authentication signature from unknown issuer" en `tofu init`,
+      # verificado contra el registro real. v3.9.0 (dentro de la misma major, sin romper el
+      # schema de docker_container/docker_image/docker_network usado en este archivo) esta
+      # firmada correctamente.
+      version = "~> 3.6"
     }
   }
 }
