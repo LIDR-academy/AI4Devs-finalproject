@@ -146,8 +146,8 @@ Feature: Users CRUD backend hardening
   Scenario: Editing a user leaves an audit trail
     Given a user administrator who changes another user's role and status
     When the edit completes
-    Then a structured log entry records the actor, the target, and the before and after role and status,
-      without any email-change verification token
+    Then a structured log entry records the actor, the target, the before and after role and status,
+      and whether an email change was requested, without any email-change verification token
 
   Scenario: Deleting a user leaves an audit trail
     Given a user administrator who deletes another user
@@ -840,10 +840,15 @@ create, edit and delete each leave a structured audit line matching the Roles sc
       acting user's id**, checked after its `Gate::authorize()` and before its `DB::transaction()`,
       refusing with a `ValidationException`.
 - [ ] `App\Actions\Users\RequestEmailChange` enforces **two** limiters: `(target, actor)` at
-      **3 per 3600 s** (checked first) and `target` aggregate at **10 per 3600 s** (checked second),
-      with `Auth::id() ?? 'unauthenticated'` as the actor segment. An administrator exhausting a
-      target's allowance leaves that target's own allowance intact, and the target's inbox still has
-      a ceiling across all actors.
+      **3 per 3600 s** (checked first, always applied — including to the target's own self-service
+      requests) and `target` aggregate at **10 per 3600 s** (checked second, **skipped entirely when
+      the caller is the target themselves** — Phase 4 re-audit finding F-A: the aggregate exists to
+      cap third-party mail volume against one target's address, not to cap the target's own choice of
+      a new address for themselves), with `Auth::id() ?? 'unauthenticated'` as the actor segment. An
+      administrator exhausting a target's allowance leaves that target's own allowance intact, and the
+      target's inbox still has a ceiling across all **third-party** actors — the target's own 3/hour
+      composite limit remains the only control on their own request rate, pinned by the Phase 4
+      follow-up (L-1) test.
 - [ ] A refused email change leaves the target's **name, status and role all unchanged**, and sends no
       verification notification. The `load('roles')` → `Gate::authorize('update')` →
       `authorizeRoleAndStatusChange()` ordering in `UpdateUser` is unchanged, and every authorization
@@ -851,21 +856,30 @@ create, edit and delete each leave a structured audit line matching the Roles sc
 - [ ] `App\Notifications\UserInvitation` no longer implements `ShouldQueue`; creating a user enqueues
       no job and the token never reaches the `jobs` table.
 - [ ] Creating, editing and deleting a user each emit exactly one structured `Log::info` line carrying
-      `actor_id`, the target id, and (for the edit path) the before/after role and status — matching
-      `App\Livewire\Roles\Index`'s shipped shape, never `Log::warning`, and never containing a
-      password, invitation token or email-change hash.
+      `actor_id`, the target id, and (for the edit path) the before/after role and status plus an
+      `email_change_requested` boolean (added by the Phase 4 F-B fix) — matching `App\Livewire\Roles\Index`'s
+      shipped shape, never `Log::warning`, and never containing a password, invitation token or
+      email-change hash.
 - [ ] "A self-edit of email never requires `roles.manage-administrators`" is pinned by a test against
       `App\Actions\Users\UpdateUser` (F17). No production change under this finding.
 - [ ] The **complete, enumerated set** of intentional test changes is exactly: F7's list under "Tests to
       perform" (`IndexTest.php:982`, `:110-112` plus a new self-row assertion beside it, `:894`,
-      `:1007`, `:1044`, `:934`), F4's `:199` and `IndexRenderingTest.php:114-116` rewrites (the latter
-      keeping `assertSee('No users found.')` reachable through a mechanism other than writing `$users`
-      directly), and F8's 22 `set('status', …)` / `assertSet('status', …)` type-conversion sites across
-      four files — which include `IndexTest.php:694` (inside the `:687` self-row test). No test outside
-      this set is amended, and none of them is deleted or weakened to a smoke check. `IndexTest.php:501`,
-      `:586`, `:655`, `:670`, `:687` (the self-row cases) keep their fixtures and assertions unchanged by
-      F7 — `:687`'s only edit is F8's mechanical status-value retype at line 694, not a fixture or
-      assertion change. The full unscoped suite is green.
+      `:1007`, `:1044`, `:934`, **and `IndexRenderingTest.php`'s "the edit and delete row actions are
+      disabled for a target the actor cannot edit or delete" — found during Phase 3 implementation, not
+      originally enumerated here, and confirmed correct at Phase 5: the rendered-HTML sibling of the
+      `:110-112` change, breaking for the identical reason**), F4's `:199` and `IndexRenderingTest.php:114-116`
+      rewrites (the latter keeping `assertSee('No users found.')` reachable through a mechanism other
+      than writing `$users` directly — Phase 5 confirms it does so via a soft-deleted acting
+      administrator, a state that can never occur in production per
+      [security/soft-delete-patterns.md](../../../docs/security/soft-delete-patterns.md), and is
+      therefore a safe test-only mechanism, not a gap), and F8's 22 `set('status', …)` /
+      `assertSet('status', …)` type-conversion sites across four files — which include
+      `IndexTest.php:694` (inside the `:687` self-row test). **`IndexRenderingTest.php` therefore
+      receives two edits, not one.** No test outside this set is amended, and none of them is deleted
+      or weakened to a smoke check. `IndexTest.php:501`, `:586`, `:655`, `:670`, `:687` (the self-row
+      cases) keep their fixtures and assertions unchanged by F7 — `:687`'s only edit is F8's mechanical
+      status-value retype at line 694, not a fixture or assertion change. The full unscoped suite is
+      green (667 tests as shipped, plus L-1's follow-up test).
 - [ ] F12 is recorded as closed-by-0008a, F13 as split to 0015a, and F18 as deferred — each stated in
       this file, none silently dropped.
 

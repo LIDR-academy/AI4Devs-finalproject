@@ -247,7 +247,7 @@ class Index extends Component
      * obfuscation (and password_reset_tokens revocation) happen via the
      * App\Models\User::delete() override added by story 0005.
      *
-     * Self-delete is a silent no-op (story 0015 finding F11): neither
+     * Self-delete is a no-op on the account (story 0015 finding F11): neither
      * UserPolicy::delete() nor its Gate::before Super Admin bypass stops an
      * actor from deleting their own account, so the guard lives here, as a
      * direct identity check rather than a Gate-mediated rule -- a
@@ -260,7 +260,9 @@ class Index extends Component
      * no-op ever gets a chance to fire. The no-op is therefore observable
      * only for an actor UserPolicy::delete() would otherwise allow to
      * delete their own row (a Super Admin, via Gate::before, or a
-     * non-Administrator actor holding users.delete directly).
+     * non-Administrator actor holding users.delete directly). It still
+     * closes the delete-confirmation modal (Phase 5 finding A-1) so the
+     * confirm click gets visible feedback rather than appearing frozen.
      */
     public function deleteUser(): void
     {
@@ -271,6 +273,12 @@ class Index extends Component
         $target = User::findOrFail($this->deletingUserId);
 
         if ($target->is(Auth::user())) {
+            // story 0015 Phase 5 finding A-1: the self-delete no-op above must
+            // still close the modal -- otherwise $showDeleteModal /
+            // $deletingUserId stay set and the confirm click appears to do
+            // nothing, with no feedback that the no-op fired.
+            $this->closeDeleteModal();
+
             return;
         }
 

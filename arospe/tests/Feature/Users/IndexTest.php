@@ -1088,9 +1088,15 @@ test('an actor holding users.delete directly, with no privileged role of their o
     $actor->givePermissionTo(['users.view', 'users.delete']);
     $this->actingAs($actor);
 
+    // Phase 5 finding A-1: the no-op must still close the delete-confirmation modal, or the
+    // confirm click reads as frozen -- $showDeleteModal / $deletingUserId stay set with no
+    // feedback that anything happened.
     Livewire::test(Index::class)
         ->call('confirmDelete', $actor->id)
-        ->call('deleteUser');
+        ->assertSet('showDeleteModal', true)
+        ->call('deleteUser')
+        ->assertSet('showDeleteModal', false)
+        ->assertSet('deletingUserId', null);
 
     expect(User::find($actor->id))->not->toBeNull();
 });
@@ -1100,9 +1106,13 @@ test('a Super Admin actor deleting their own account through the Users screen is
     $superAdmin->assignRole('Super Admin');
     $this->actingAs($superAdmin);
 
+    // Phase 5 finding A-1: same modal-closing assertion as the direct-permission actor above.
     Livewire::test(Index::class)
         ->call('confirmDelete', $superAdmin->id)
-        ->call('deleteUser');
+        ->assertSet('showDeleteModal', true)
+        ->call('deleteUser')
+        ->assertSet('showDeleteModal', false)
+        ->assertSet('deletingUserId', null);
 
     expect(User::find($superAdmin->id))->not->toBeNull();
 });
