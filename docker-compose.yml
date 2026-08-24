@@ -1,0 +1,35 @@
+services:
+   db:
+      image: postgres:16-alpine
+      restart: unless-stopped
+      environment:
+         POSTGRES_DB: ${POSTGRES_DB:-eyemaster}
+         POSTGRES_USER: ${POSTGRES_USER:-eyemaster}
+         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eyemaster}
+      ports:
+         - "5432:5432"
+      volumes:
+         - eyemaster_db_data:/var/lib/postgresql/data
+      healthcheck:
+         test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eyemaster}"]
+         interval: 5s
+         timeout: 5s
+         retries: 5
+
+   backend:
+      build: ./backend
+      restart: unless-stopped
+      env_file:
+         - .env
+      environment:
+         DATABASE_URL: postgresql://${POSTGRES_USER:-eyemaster}:${POSTGRES_PASSWORD:-eyemaster}@db:5432/${POSTGRES_DB:-eyemaster}
+      ports:
+         - "8000:8000"
+      depends_on:
+         db:
+            condition: service_healthy
+      volumes:
+         - ./backend:/app
+
+volumes:
+   eyemaster_db_data:

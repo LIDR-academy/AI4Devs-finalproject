@@ -1,0 +1,23 @@
+[
+   {
+      "id_externo": "3001",
+      "app": "SUITE_B",
+      "razon_social": "Recursos Humanos Integrales SA de CV",
+      "nombre_comercial": "RH Integral",
+      "estado": "activa"
+   },
+   {
+      "id_externo": "2001",
+      "app": "SUITE_B",
+      "razon_social": "Empresa Compartida SA de CV (PEOPLE)",
+      "nombre_comercial": "Compartida RH",
+      "estado": "activa"
+   },
+   {
+      "id_externo": "3002",
+      "app": "SUITE_A",
+      "razon_social": "Nomina Sur SA de CV",
+      "nombre_comercial": "Nomina Sur",
+      "estado": "inactiva"
+   }
+]

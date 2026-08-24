@@ -1,0 +1,11 @@
+[tool.ruff]
+line-length = 100
+indent-width = 3
+target-version = "py312"
+exclude = ["migrations", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.format]
+indent-style = "space"

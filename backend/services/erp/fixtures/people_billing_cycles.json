@@ -1,0 +1,13 @@
+{
+   "3001": [
+      {
+         "id_externo": "8001",
+         "empresa_plan_id_externo": "6001",
+         "complemento_clave": "COMP-REC-D",
+         "cantidad": "40.00",
+         "excedente": "0.00",
+         "periodo_inicio": "2026-01-15",
+         "periodo_final": "2026-02-15"
+      }
+   ]
+}

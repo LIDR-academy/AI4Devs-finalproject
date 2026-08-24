@@ -1,0 +1,39 @@
+{
+   "1001": [
+      {
+         "id_externo": "9001",
+         "empresa_id_externo": "1001",
+         "empresa_plan_id_externo": "5001",
+         "estatus": 2,
+         "subtotal": "499.00",
+         "importe_descuento": "0.00",
+         "impuesto": "79.84",
+         "total": "578.84",
+         "fecha": "2026-02-01"
+      }
+   ],
+   "2001": [
+      {
+         "id_externo": "9002",
+         "empresa_id_externo": "2001",
+         "empresa_plan_id_externo": "5003",
+         "estatus": 2,
+         "subtotal": "999.00",
+         "importe_descuento": "0.00",
+         "impuesto": "159.84",
+         "total": "1158.84",
+         "fecha": "2026-01-01"
+      },
+      {
+         "id_externo": "9003",
+         "empresa_id_externo": "2001",
+         "empresa_plan_id_externo": "5003",
+         "estatus": 1,
+         "subtotal": "999.00",
+         "importe_descuento": "0.00",
+         "impuesto": "159.84",
+         "total": "1158.84",
+         "fecha": "2025-12-01"
+      }
+   ]
+}

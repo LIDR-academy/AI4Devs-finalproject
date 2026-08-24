@@ -1,0 +1,28 @@
+{
+   "3001": [
+      {
+         "id_externo": "6001",
+         "empresa_id_externo": "3001",
+         "plan_nombre": "Plan RH Basico",
+         "tipo_contrato": 2,
+         "estatus": 1,
+         "fecha_inicio": "2026-01-15",
+         "fecha_final": "2026-02-15",
+         "prorroga": 0,
+         "precio_unitario": "349.00"
+      }
+   ],
+   "2001": [
+      {
+         "id_externo": "6002",
+         "empresa_id_externo": "2001",
+         "plan_nombre": "Plan RH Premium",
+         "tipo_contrato": 2,
+         "estatus": 1,
+         "fecha_inicio": "2026-01-01",
+         "fecha_final": "2026-02-01",
+         "prorroga": 0,
+         "precio_unitario": "799.00"
+      }
+   ]
+}
