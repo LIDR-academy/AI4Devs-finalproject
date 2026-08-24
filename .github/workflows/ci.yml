@@ -149,14 +149,14 @@ jobs:
       # bundleado en el Dockerfile del backend, y `nginx:stable-alpine` (Alpine 3.24) en el
       # del frontend. Verificado en vivo con `trivy image` local: 0 High/Critical en ambas.
       - name: Scan backend image for CVEs (trivy)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: restostock-backend:ci
           severity: CRITICAL,HIGH
           exit-code: '1'
 
       - name: Scan frontend image for CVEs (trivy)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: restostock-frontend:ci
           severity: CRITICAL,HIGH
