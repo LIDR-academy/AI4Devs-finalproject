@@ -11,6 +11,7 @@ function makeClass(overrides: Partial<ClassWithRelations> = {}): ClassWithRelati
     classType: "GROUP",
     status: "ACTIVE",
     assignedCoachId: "coach-1",
+    createdBy: "coach-1",
     startTime: new Date("2026-08-25T10:00:00Z"),
     enrollments: [{ id: "enrollment-1", coacheeId: "coachee-enrolled" }],
     waitingLists: [

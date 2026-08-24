@@ -3,6 +3,7 @@ export interface ClassWithRelations {
   classType: "INDIVIDUAL" | "GROUP";
   status: "ACTIVE" | "CANCELED";
   assignedCoachId: string;
+  createdBy: string;
   startTime: Date;
   enrollments: Array<{ id: string; coacheeId: string }>;
   waitingLists: Array<{ id: string; coacheeId: string }>;

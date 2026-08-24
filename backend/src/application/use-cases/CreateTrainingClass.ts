@@ -1,6 +1,7 @@
 import type { ClassType, Prisma, PrismaClient, User } from "@prisma/client";
 import type { CalendarProvider } from "../../domain/ports/CalendarProvider.js";
 import { canAddToGymSlot, validateClassSize } from "../../domain/services/CapacityValidator.js";
+import type { ClassLifecycleNotificationService } from "../../domain/services/ClassLifecycleNotificationService.js";
 import { hasOverlap, type TimeInterval } from "../../domain/services/OverlapChecker.js";
 import { isWithinReach } from "../../domain/services/ReachCalculator.js";
 import {
@@ -71,6 +72,7 @@ export class CreateTrainingClass {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly calendar: CalendarProvider,
+    private readonly notificationService?: ClassLifecycleNotificationService,
   ) {}
 
   async execute(data: CreateTrainingClassData): Promise<CreateTrainingClassResult> {
@@ -130,6 +132,24 @@ export class CreateTrainingClass {
       events,
       seriesData,
     );
+
+    // Dispatch lifecycle notifications (fire-and-forget, never blocks creation)
+    if (this.notificationService) {
+      for (const classId of classIds) {
+        try {
+          if (classType === "GROUP") {
+            await this.notificationService.notifyNewClassAvailable(classId);
+          } else {
+            await this.notificationService.notifyIndividualClassAssigned(classId, coacheeIds[0]);
+          }
+          if (this.notificationService && coachId !== createdBy) {
+            await this.notificationService.notifyCoachAssigned(classId);
+          }
+        } catch {
+          // Delivery failure isolation — never break the creation response
+        }
+      }
+    }
 
     const instances = await this.prisma.trainingClass.findMany({
       where: { id: { in: classIds } },

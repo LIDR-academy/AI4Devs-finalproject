@@ -33,6 +33,7 @@ import { UpdateTrainingClass } from "../application/use-cases/UpdateTrainingClas
 import type { NotificationSender } from "../domain/ports/NotificationSender.js";
 import { BlockPolicy } from "../domain/services/BlockPolicy.js";
 import { ClassCancellationPolicy } from "../domain/services/ClassCancellationPolicy.js";
+import { ClassLifecycleNotificationService } from "../domain/services/ClassLifecycleNotificationService.js";
 import { CoacheeDashboardPolicy } from "../domain/services/CoacheeDashboardPolicy.js";
 import { CoacheeService } from "../domain/services/CoacheeService.js";
 import { CoachService } from "../domain/services/CoachService.js";
@@ -88,6 +89,14 @@ const processWaitingListService = new ProcessWaitingListService(
   userRepository,
 );
 
+const classLifecycleNotificationService = new ClassLifecycleNotificationService(
+  classRepository,
+  userRepository,
+  new PrismaNotificationRepository(),
+  sendNotificationAdapter,
+  new PrismaDeviceTokenRepository(),
+);
+
 const calendarId = resolveCalendarId();
 let calendarProvider: GoogleCalendarAdapter | null = null;
 if (env.GOOGLE_CALENDAR_SA_EMAIL && env.GOOGLE_CALENDAR_SA_KEY_PATH && calendarId) {
@@ -125,19 +134,23 @@ export const container = {
   getCoachFinancialData: new GetCoachFinancialData(coachRepository, encryptionService),
   calendarProvider,
   calendarHealthMonitor,
-  createTrainingClass: calendarProvider ? new CreateTrainingClass(prisma, calendarProvider) : null,
+  createTrainingClass: calendarProvider
+    ? new CreateTrainingClass(prisma, calendarProvider, classLifecycleNotificationService)
+    : null,
   updateTrainingClass: calendarProvider ? new UpdateTrainingClass(prisma, calendarProvider) : null,
   cancelTrainingClass: new CancelTrainingClass(
     prisma,
     calendarProvider,
     new ClassCancellationPolicy(),
     auditLogger,
+    classLifecycleNotificationService,
   ),
   cancelRecurringSeries: new CancelRecurringSeries(
     prisma,
     calendarProvider,
     new ClassCancellationPolicy(),
     auditLogger,
+    classLifecycleNotificationService,
   ),
   getAvailableSlots: calendarProvider ? new GetAvailableSlots(prisma, calendarProvider) : null,
   listTrainingClasses: new ListTrainingClasses(prisma),

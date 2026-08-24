@@ -5,6 +5,7 @@ import type {
   ClassCancellationPolicy,
   ClassInstanceLike,
 } from "../../domain/services/ClassCancellationPolicy.js";
+import type { ClassLifecycleNotificationService } from "../../domain/services/ClassLifecycleNotificationService.js";
 import {
   ForbiddenError,
   NotFoundError,
@@ -42,6 +43,7 @@ export class CancelRecurringSeries {
     private readonly calendar: CalendarProvider | null,
     private readonly policy: ClassCancellationPolicy,
     private readonly auditLogger: AuditLogger,
+    private readonly notificationService?: ClassLifecycleNotificationService,
   ) {}
 
   async execute(input: CancelRecurringSeriesInput): Promise<CancelRecurringSeriesResult> {
@@ -116,6 +118,17 @@ export class CancelRecurringSeries {
       resourceId: input.seriesId,
       outcome: "SUCCESS",
     });
+
+    // Dispatch lifecycle notifications (fire-and-forget, never blocks cancellation)
+    if (this.notificationService) {
+      for (const trainingClass of toCancel) {
+        try {
+          await this.notificationService.notifyClassCanceled(trainingClass.id);
+        } catch {
+          // Delivery failure isolation
+        }
+      }
+    }
 
     return {
       seriesId: input.seriesId,

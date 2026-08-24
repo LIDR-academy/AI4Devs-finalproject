@@ -9,7 +9,13 @@ export class PrismaClassRepository implements ClassRepository {
   ): Promise<ClassWithRelations | null> {
     const cls = await this.prisma.trainingClass.findUnique({
       where: { id: classId },
-      include: {
+      select: {
+        id: true,
+        class_type: true,
+        status: true,
+        assigned_coach_id: true,
+        created_by: true,
+        start_time: true,
         enrollments: { select: { id: true, coachee_id: true } },
         waitingLists: { select: { id: true, coachee_id: true } },
         level: { select: { id: true, name: true, sort_order: true } },
@@ -22,6 +28,7 @@ export class PrismaClassRepository implements ClassRepository {
       classType: cls.class_type,
       status: cls.status,
       assignedCoachId: cls.assigned_coach_id,
+      createdBy: cls.created_by,
       startTime: cls.start_time,
       enrollments: cls.enrollments.map((e) => ({ id: e.id, coacheeId: e.coachee_id })),
       waitingLists: cls.waitingLists.map((w) => ({ id: w.id, coacheeId: w.coachee_id })),
