@@ -1,0 +1,1097 @@
+openapi: 3.1.0
+info:
+  title: RestoStock API
+  description: REST API specification for RestoStock real-time inventory and FEFO traceability system.
+  version: 2.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+  - url: https://api.restostock.internal
+    description: Production Server
+
+paths:
+  /api/v1/auth/login-pin:
+    post:
+      summary: Authenticate operator via 4-6 digit PIN
+      operationId: authenticatePin
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthPinRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthPinResponse'
+        '400':
+          description: Input validation failed (userId/pin missing or malformed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials or inactive user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many login attempts from this IP (anti-brute-force rate limit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/users:
+    get:
+      summary: List all operator/admin accounts (ADMIN only, TK-056)
+      operationId: listUsers
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of users (never includes pinHash)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateUserResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new kitchen operator or admin account (ADMIN only)
+      operationId: createUser
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+        '400':
+          description: Invalid name/role/pin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/users/{id}/status:
+    patch:
+      summary: Block or reactivate an operator account (ADMIN only)
+      operationId: setUserStatus
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUserStatusRequest'
+      responses:
+        '200':
+          description: User status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetUserStatusResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/extraction:
+    post:
+      summary: Record stock extraction from main warehouse to kitchen
+      operationId: recordExtraction
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordExtractionRequest'
+      responses:
+        '201':
+          description: Extraction recorded and active remanente created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordExtractionResponse'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Insufficient stock in warehouse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/movements:
+    get:
+      summary: Query stock movement audit trail (ADMIN only)
+      operationId: getStockMovementHistory
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: insumoId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Movement history ordered by most recent first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockMovementHistoryItem'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/insumos:
+    get:
+      summary: List all insumos in the master catalog (TK-057)
+      operationId: listInsumos
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of insumos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateInsumoResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new insumo in the master catalog with 0 initial stock (ADMIN only, TK-057)
+      operationId: createInsumo
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInsumoRequest'
+      responses:
+        '201':
+          description: Insumo created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInsumoResponse'
+        '400':
+          description: Invalid name/unitOfMeasure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/insumos/{id}/restock:
+    patch:
+      summary: Increment an existing insumo's warehouse stock (ADMIN only, US-013/TK-060)
+      operationId: restockInsumo
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestockInsumoRequest'
+      responses:
+        '200':
+          description: Insumo restocked successfully (quantity added to existing warehouseStock)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestockInsumoResponse'
+        '400':
+          description: Quantity is missing, zero or negative
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Insumo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/remanentes-activos:
+    get:
+      summary: List active kitchen remanentes ordered by FEFO
+      operationId: listActiveRemanentes
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: location
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [KITCHEN_FRIDGE, KITCHEN_FREEZER, KITCHEN_PANTRY, KITCHEN_PREP]
+      responses:
+        '200':
+          description: List of active remanentes ordered by earliest expiration date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RemanenteItem'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/remanentes/{id}/consume:
+    post:
+      summary: Record partial or total consumption of an active remanente
+      operationId: consumeRemanente
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumeRemanenteRequest'
+      responses:
+        '200':
+          description: Consumption recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumeRemanenteResponse'
+        '400':
+          description: Invalid quantity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Active remanente not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Quantity to consume exceeds remaining quantity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/remanentes/{id}/discard:
+    post:
+      summary: Discard active remanente due to waste or expiration
+      operationId: discardRemanente
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscardRemanenteRequest'
+      responses:
+        '200':
+          description: Remanente discarded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscardRemanenteResponse'
+        '400':
+          description: Missing discard reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Active remanente not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/recipes/{id}/consume:
+    post:
+      summary: Consume stock in cascade FEFO based on recipe ingredients
+      operationId: consumeRecipe
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumeRecipeRequest'
+      responses:
+        '200':
+          description: Recipe consumption executed in FEFO cascade across all ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumeRecipeResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Insufficient stock for one or more ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/catalog/recipes:
+    get:
+      summary: List all recipes in the master catalog, with ingredients (TK-057)
+      operationId: listRecipes
+      tags:
+        - Catalog
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeListItem'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new recipe with its ingredients (ADMIN only, TK-057)
+      operationId: createRecipe
+      tags:
+        - Catalog
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecipeRequest'
+      responses:
+        '201':
+          description: Recipe created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRecipeResponse'
+        '400':
+          description: Invalid name/category/ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: One or more ingredient insumoId references a non-existent insumo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/shift-reconciliation:
+    post:
+      summary: Process shift closing — compares physical counts vs theoretical stock, auto-discards variances
+      operationId: performShiftReconciliation
+      tags:
+        - Shift & Audit
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftReconciliationRequest'
+      responses:
+        '201':
+          description: Shift reconciliation processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftReconciliationResponse'
+        '400':
+          description: Invalid reconciliation payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/reports/waste:
+    get:
+      summary: Get consolidated waste report by date range (ADMIN role only)
+      operationId: getWasteReport
+      tags:
+        - Reports & Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Waste report items aggregated by reason
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WasteReportItem'
+        '400':
+          description: Missing or invalid startDate/endDate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DecimalString:
+      type: string
+      pattern: '^\d+(\.\d{1,4})?$'
+      example: "2.0000"
+
+    AuthPinRequest:
+      type: object
+      required:
+        - userId
+        - pin
+      properties:
+        userId:
+          type: string
+          example: "usr-maria-2"
+        pin:
+          type: string
+          pattern: '^\d{4,6}$'
+          example: "1234"
+
+    AuthPinResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            role:
+              type: string
+              enum: [KITCHEN_STAFF, ADMIN]
+
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - role
+        - pin
+      properties:
+        name:
+          type: string
+          example: "Nuevo Operario"
+        role:
+          type: string
+          enum: [KITCHEN_STAFF, ADMIN]
+        pin:
+          type: string
+          pattern: '^\d{4,6}$'
+          example: "4321"
+
+    CreateUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [KITCHEN_STAFF, ADMIN]
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED]
+
+    SetUserStatusRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum: [BLOCK, ACTIVATE]
+
+    SetUserStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED]
+
+    RecordExtractionRequest:
+      type: object
+      required:
+        - insumoId
+        - quantity
+      properties:
+        insumoId:
+          type: string
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+        toLocation:
+          type: string
+          enum: [KITCHEN_FRIDGE, KITCHEN_FREEZER, KITCHEN_PANTRY, KITCHEN_PREP]
+          default: KITCHEN_FRIDGE
+
+    RecordExtractionResponse:
+      type: object
+      properties:
+        remanenteId:
+          type: string
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        quantityExtracted:
+          $ref: '#/components/schemas/DecimalString'
+        remainingWarehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+        location:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+
+    StockMovementHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        type:
+          type: string
+          example: "DISCARD_EXPIRATION"
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+        fromLoc:
+          type: string
+        toLoc:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          enum: [ACTIVE, CONSUMED, DISCARDED]
+
+    CreateInsumoRequest:
+      type: object
+      required:
+        - name
+        - unitOfMeasure
+      properties:
+        name:
+          type: string
+          example: "Harina 000"
+        unitOfMeasure:
+          type: string
+          enum: [KG, L, UNITS]
+          example: "KG"
+
+    CreateInsumoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        unitOfMeasure:
+          type: string
+          enum: [KG, L, UNITS]
+        warehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+
+    RestockInsumoRequest:
+      type: object
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: number
+          exclusiveMinimum: 0
+          example: 20
+
+    RestockInsumoResponse:
+      type: object
+      properties:
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        quantityAdded:
+          $ref: '#/components/schemas/DecimalString'
+        newWarehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+
+    RemanenteItem:
+      type: object
+      properties:
+        id:
+          type: string
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        unitOfMeasure:
+          type: string
+        currentQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        initialQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        location:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+        hoursRemaining:
+          type: integer
+        isCriticalAlert:
+          type: boolean
+        status:
+          type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
+
+    ConsumeRemanenteRequest:
+      type: object
+      required:
+        - quantity
+      properties:
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+
+    ConsumeRemanenteResponse:
+      type: object
+      properties:
+        remanenteId:
+          type: string
+        consumedQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        remainingQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        status:
+          type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
+        isExhausted:
+          type: boolean
+
+    DiscardRemanenteRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          example: "EXPIRATION"
+
+    DiscardRemanenteResponse:
+      type: object
+      properties:
+        remanenteId:
+          type: string
+        discardedQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
+
+    ConsumeRecipeRequest:
+      type: object
+      properties:
+        portions:
+          type: integer
+          minimum: 1
+          default: 1
+          example: 2
+
+    ConsumeRecipeResponse:
+      type: object
+      properties:
+        recipeId:
+          type: string
+        recipeName:
+          type: string
+        portions:
+          type: integer
+        ingredientsConsumed:
+          type: array
+          items:
+            type: object
+            properties:
+              insumoId:
+                type: string
+              totalConsumed:
+                $ref: '#/components/schemas/DecimalString'
+              remanentesAffectedCount:
+                type: integer
+
+    CreateRecipeIngredient:
+      type: object
+      required:
+        - insumoId
+        - quantity
+      properties:
+        insumoId:
+          type: string
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+
+    CreateRecipeRequest:
+      type: object
+      required:
+        - name
+        - category
+        - ingredients
+      properties:
+        name:
+          type: string
+          example: "Pizza Margarita"
+        category:
+          type: string
+          example: "Pizzas"
+        description:
+          type: string
+        ingredients:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateRecipeIngredient'
+
+    CreateRecipeResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        recipeId:
+          type: string
+
+    RecipeListItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateRecipeIngredient'
+
+    ShiftReconciliationRequest:
+      type: object
+      required:
+        - operatorId
+        - items
+      properties:
+        operatorId:
+          type: string
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - remanenteId
+              - physicalQuantity
+            properties:
+              remanenteId:
+                type: string
+              physicalQuantity:
+                $ref: '#/components/schemas/DecimalString'
+
+    ShiftReconciliationResponse:
+      type: object
+      properties:
+        reconciliationId:
+          type: string
+        autoDiscardedCount:
+          type: integer
+        processedItemsCount:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              remanenteId:
+                type: string
+              insumoId:
+                type: string
+              physicalQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              theoreticalQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              variance:
+                $ref: '#/components/schemas/DecimalString'
+
+    WasteReportItem:
+      type: object
+      properties:
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        unitOfMeasure:
+          type: string
+        totalDiscardedQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        reason:
+          type: string
+
+    ErrorResponse:
+      description: RFC 7807 Problem Details format (Guard 19)
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+      properties:
+        type:
+          type: string
+          format: uri
+          example: "https://restostock.com/errors/validation-error"
+        title:
+          type: string
+          example: "ValidationError"
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+        instance:
+          type: string
+          example: "/api/v1/stock/extraction"

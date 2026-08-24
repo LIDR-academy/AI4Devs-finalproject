@@ -9,29 +9,28 @@ La documentación está organizada cronológicamente en 5 fases coincidentes con
 ## 🧭 Índice por Fases de Desarrollo
 
 ### 01. Concepción y Alcance de Producto (`docs/01_product_definition/`)
-* [01_idea_inicial.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/01_product_definition/01_idea_inicial.md): Documento inicial de descubrimiento y análisis del problema de negocio.
-* [02_restostock_prd.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/01_product_definition/02_restostock_prd.md): Documento de Requerimientos de Producto (PRD), épicas, historias preliminares y edge cases.
-* [03_glosario_y_reglas_negocio.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/01_product_definition/03_glosario_y_reglas_negocio.md): Glosario de términos de dominio, acrónimos (FEFO, TRR) e invariantes innegociables.
+* [01_product_discovery.md](01_product_definition/01_product_discovery.md): Documento inicial de descubrimiento, investigación de mercado y análisis Buy vs Build.
+* [01_glosario_y_reglas_negocio.md](01_product_definition/01_glosario_y_reglas_negocio.md): Glosario de términos de dominio, acrónimos (FEFO, TRR) e invariantes innegociables.
+* [02_prd.md](01_product_definition/02_prd.md): Documento de Requerimientos de Producto (PRD), épicas, historias preliminares y edge cases.
 
 ### 02. Diseño de Arquitectura y Sistema (`docs/02_architecture_design/`)
-* [03_restostock_design.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/03_restostock_design.md): Especificación técnica de arquitectura hexagonal y modelo conceptual de persistencia 3NF.
-* [04_restostock_architecture_diagram.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/04_restostock_architecture_diagram.md): Diagrama C4 de contenedores de arquitectura física y lógica en Mermaid.
-* [05_restostock_components_description.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/05_restostock_components_description.md): Descripción de responsabilidades e inyección de dependencias por capas.
-* [06_restostock_folder_structure.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/06_restostock_folder_structure.md): Jerarquía física de directorios combinando Vertical Slices y Arquitectura Hexagonal.
-* [adr/](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/02_architecture_design/adr/): Registro de Decisiones de Arquitectura (ADR - Architecture Decision Records) tomadas durante el ciclo de vida del proyecto.
+* [03_domain_model.md](02_architecture_design/03_domain_model.md): Modelo conceptual de dominio, agregados, Value Objects e invariantes puras.
+* [04_technical_design.md](02_architecture_design/04_technical_design.md): Especificación técnica de arquitectura hexagonal, stack tecnológico y C4 diagrams.
+* [05_ui_ux_design_system.md](02_architecture_design/05_ui_ux_design_system.md): Sistema de diseño UI/UX, tokens visuales, ergonomía táctil y accesibilidad.
 
-### 03. Gobernanza, Calidad y Seguridad (`docs/03_governance_and_quality/`)
-* [07_restostock_security_strategy.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/07_restostock_security_strategy.md): Estrategia de seguridad OWASP Top 10, sanitización, JWT y cumplimiento regulatorio.
-* [08_restostock_testing_strategy.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/08_restostock_testing_strategy.md): Directiva de testing TDD (Red-Green-Refactor) y cobertura obligatoria.
-* [guia_redaccion_tecnica.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/guia_redaccion_tecnica.md): Guía de estilo, convenciones de nomenclatura y redacción técnica para IA.
-* [audit_report.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/03_governance_and_quality/audit_report.md): Reporte de auditoría integral y hallazgos.
+### 03. Persistencia y Contratos API (`docs/03_persistence_and_api/`)
+* [06_database_schema.md](03_persistence_and_api/06_database_schema.md): Esquema declarativo de base de datos en 3NF, diccionario de datos y seeds.
+* [07_api_specification.md](03_persistence_and_api/07_api_specification.md): Especificación de contratos RESTful, JSON/Zod schemas, cabeceras y RFC 7807 error envelopes.
+* [openapi.yaml](03_persistence_and_api/openapi.yaml): Contrato OpenAPI 3.1 ejecutable para mocking, linting con Spectral y Postman.
 
-### 04. Modelo Físico y Contratos API (`docs/04_persistence_and_api/`)
-* [09_restostock_database_schema.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/04_persistence_and_api/09_restostock_database_schema.md): Esquema declarativo de base de datos Prisma (`schema.prisma`) en 3NF.
-* [10_restostock_api_specification.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/04_persistence_and_api/10_restostock_api_specification.md): Especificación OpenAPI 3.0 de endpoints REST, esquemas Zod y códigos HTTP.
+### 04. Gobernanza, Calidad y Ciberseguridad (`docs/04_governance_and_quality/`)
+* [08_security_strategy.md](04_governance_and_quality/08_security_strategy.md): Estrategia de seguridad Zero Trust, cifrado PII, OWASP Top 10 y cumplimiento GDPR/EU AI Act.
+* [09_testing_strategy.md](04_governance_and_quality/09_testing_strategy.md): Directiva innegociable de pruebas TDD Red-Green-Refactor, pirámide de testing y fakes InMemory.
+* [10_cicd_pipeline.md](04_governance_and_quality/10_cicd_pipeline.md): Pipeline de CI/CD DevSecOps en GitHub Actions (`.github/workflows/ci.yml`).
 
-### 05. Gestión Agile, Backlog y PRs (`docs/05_agile_planning/`)
-* [matriz_trazabilidad.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/05_agile_planning/matriz_trazabilidad.md): Matriz de trazabilidad End-to-End VSDD conectando REQ $\rightarrow$ API $\rightarrow$ US $\rightarrow$ TK.
-* [backlog_map.md](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/05_agile_planning/backlog_map.md): Mapa del backlog y relaciones visuales entre Épicas, User Stories y Tickets.
-* [user_stories/](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/05_agile_planning/user_stories/indice_user_stories.md): Historias de usuario INVEST con criterios BDD Gherkin.
-* [tickets/](file:///home/lacruzjd/entrgafinal/AI4Devs-finalproject/docs/05_agile_planning/tickets/indice_tickets.md): Tickets técnicos atómicos con DoD y estimaciones.
+### 05. Gestión Ágil y Planificación (`docs/05_agile_planning/`)
+* [11_user_stories/indice_user_stories.md](05_agile_planning/11_user_stories/indice_user_stories.md): Historias de usuario INVEST con criterios BDD Gherkin.
+* [12_tickets/indice_tickets.md](05_agile_planning/12_tickets/indice_tickets.md): Tickets técnicos atómicos con DoD y estimaciones (`TK-XXX`).
+* [13_matriz_trazabilidad.md](05_agile_planning/13_matriz_trazabilidad.md): Matriz de trazabilidad Requerimiento → US → TK (Backend/Frontend).
+* [14_backlog_map.md](05_agile_planning/14_backlog_map.md): Mapa jerárquico del backlog (Epic → US → TK) con diagrama Mermaid.
+* [15_history.md](05_agile_planning/15_history.md): Bitácora cronológica de entregas e historial de progreso del proyecto.

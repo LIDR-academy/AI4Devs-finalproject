@@ -7,6 +7,8 @@ web_modules/
 # Build and Compilation Output
 dist/
 build/
+# Cliente Prisma generado (TK-062, generator "prisma-client") — codigo generado, no se commitea
+apps/backend/src/generated/
 .next/
 out/
 .nuxt/
@@ -33,6 +35,10 @@ pnpm-debug.log*
 # Test Coverage (QA Strategy)
 coverage/
 .nyc_output/
+
+# Mutation Testing Reports (Stryker)
+reports/mutation/
+.stryker-tmp/
 
 # IDEs, Editors & Workspaces
 .vscode/
@@ -63,3 +69,19 @@ tmp/
 temp/
 .temp/
 .tmp/
+__pycache__/
+
+# OpenTofu / Terraform State (puede contener secretos resueltos en texto plano — Guard 22/23)
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc

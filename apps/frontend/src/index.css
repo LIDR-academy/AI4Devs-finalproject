@@ -1,0 +1,199 @@
+:root {
+  /* Fondo Principal y Contenedores Pizarra */
+  --bg-root: hsl(205, 38%, 7%);             /* #0b1319 - Dark Petrol Charcoal */
+  --bg-card: hsl(205, 38%, 10%);            /* #101c24 - Pizarra Petróleo */
+  --border-card: hsl(205, 25%, 18%);        /* #192a36 - Borde sutil */
+
+  /* Colores Primarios y Acentos */
+  --color-primary: hsl(173, 100%, 33%);     /* #00a896 - Turquesa Petrol (Teal) */
+  --color-primary-hover: hsl(173, 100%, 40%); /* #02c39a */
+  --color-secondary: hsl(43, 89%, 60%);     /* #e9c46a - Amarillo Miel */
+
+  /* Indicadores Tri-Color FEFO & Alertas (Gauge Dial) */
+  --color-danger: hsl(0, 100%, 58%);        /* #ff2a2a - Rojo Neón Intenso (< 12h FEFO) */
+  --color-warning: hsl(43, 89%, 60%);       /* #f4a261 - Amarillo Calidez (< 24h FEFO) */
+  --color-success: hsl(173, 100%, 33%);     /* #00a896 - Verde Turquesa (Fresco) */
+
+  /* Tipografía y Textos */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --text-primary: hsl(0, 0%, 98%);        /* #fafafa - Blanco Puro */
+  --text-secondary: hsl(205, 15%, 70%);    /* #94a3b8 - Gris Azulado */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Regla de Ergonomía Táctil Innegociable (Touch Target >= 48px x 48px) */
+.btn-touch {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease-in-out;
+  touch-action: manipulation;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-warning {
+  background-color: var(--color-secondary);
+  color: var(--bg-root);
+}
+
+.btn-warning:hover {
+  filter: brightness(1.1);
+}
+
+.input-touch {
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background-color: var(--bg-root);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  font-size: 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input-touch:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 168, 150, 0.2);
+}
+
+/* Modificador de boton solo-icono (ej. cerrar modal); combinar con .btn-touch .btn-secondary */
+.btn-icon {
+  padding: 0;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Estructura de Tarjetas (Dark Petrol Cards) */
+.card-dashboard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.card-badge-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(0, 168, 150, 0.15);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 🪟 Sistema de Ventanas Emergentes Flotantes (Glassmorphism Floating Overlays) */
+.modal-overlay,
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(11, 19, 25, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeInOverlay 0.2s ease-out;
+}
+
+.modal-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 168, 150, 0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 100%;
+  animation: scaleUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUpModal {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

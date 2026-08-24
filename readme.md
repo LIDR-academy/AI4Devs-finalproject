@@ -21,10 +21,10 @@
 RestoStock es un sistema inteligente y ágil de trazabilidad e inventario para cocinas de restaurantes. Está diseñado para mitigar la merma de alimentos mediante la ordenación FEFO (First Expired, First Out) de remanentes e insumos abiertos en tiempo real, calculando dinámicamente la fecha de expiración acelerada tras su apertura.
 
 ### **0.4. URL del proyecto:**
-...
+No hay despliegue público en vivo — el proyecto corre localmente vía `pnpm dev` o `docker compose up` (ver sección de arquitectura y `docs/00_stack_manifest.md` para instrucciones).
 
 ### **0.5. URL o archivo comprimido del repositorio:**
-...
+https://github.com/lacruzjd/AI4Devs-finalproject
 
 ---
 
@@ -46,6 +46,11 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 *   **Descuento Rápido de Stock por Recetas:** Consumo ágil en cocina descontando de forma automática del remanente más antiguo activo (FEFO) según las porciones requeridas por los platos.
 *   **Cierre de Turno y Conciliación Rápida:** Flujo de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock.
 *   **Dashboard y Reporte de Mermas Visibles:** Panel web administrativo para visualizar de forma consolidada las pérdidas físicas (mermas) por ingrediente y motivo en un rango de fechas, haciendo visible el desperdicio.
+*   **Gestión Mínima de Personal:** Panel de administración para dar de alta operarios y bloquear/reactivar cuentas (rol `ADMIN`), sin depender de un redeploy de código.
+*   **Trazabilidad de Movimientos de Stock:** Panel de auditoría para consultar el historial de extracciones, consumos y descartes filtrado por insumo, para saber quién movió qué y cuándo.
+*   **Persistencia Real en Producción:** Todos los repositorios (incluyendo recetas, conciliaciones de turno y reportes) están respaldados por PostgreSQL en producción, con bootstrap idempotente del primer administrador en cada despliegue nuevo.
+*   **Gestión de Catálogo Maestro:** Panel de administración para dar de alta insumos y recetas (rol `ADMIN`) sin depender del script de seed, permitiendo operar con el inventario real del restaurante.
+*   **Reabastecimiento de Bodega:** Un Administrador puede sumar stock a un insumo existente cuando llega una entrega del proveedor, para que el restaurante siga operando más allá de la carga inicial de inventario.
 
 
 
@@ -58,36 +63,38 @@ La aplicación de cocina está diseñada bajo una estética oscura de alto contr
 
 ### **1.4. Instrucciones de instalación:**
 #### Prerrequisitos
-*   Node.js (versión 18 o superior)
-*   Manejador de paquetes `pnpm` (versión 8 o superior)
-*   Motor de base de datos PostgreSQL
+*   Node.js (versión 24 LTS o superior)
+*   Manejador de paquetes `pnpm` (versión 9 o superior)
+*   OpenTofu (versión 1.6 o superior) / Docker Compose (PostgreSQL 15)
 
 #### Pasos para la puesta en marcha local
 1.  **Clonar el repositorio:**
     ```bash
-    Sin definir aun.
+    git clone https://github.com/usuario/restostock.git
+    cd AI4Devs-finalproject
     ```
 2.  **Instalar dependencias del monorepo:**
     ```bash
-    Sin definir aun.
+    pnpm install
     ```
 3.  **Configurar Variables de Entorno:**
-    Cree un archivo `.env` en el directorio `apps/backend/` con las siguientes llaves:
-    ```env
-    Sin definir aun.
-    ```
-4.  **Levantar Base de Datos (Docker Compose):**
+    Copie la plantilla de variables de entorno en el backend y frontend:
     ```bash
-    Sin definir aun.
+    cp apps/backend/.env.example apps/backend/.env
+    cp apps/frontend/.env.example apps/frontend/.env
     ```
-5.  **Ejecutar Migraciones y Seed en Prisma:**
+4.  **Ejecutar Pruebas Automatizadas:**
     ```bash
-    Sin definir aun.
+    pnpm test
+    ```
+5.  **Compilación del Proyecto:**
+    ```bash
+    pnpm build
     ```
 6.  **Iniciar Servidores en modo Desarrollo:**
     Desde la raíz del monorepo:
-    ```
-    Sin definir aun.
+    ```bash
+    pnpm --filter @restostock/frontend dev
     ```
 
 ---
@@ -169,22 +176,26 @@ restostock-monorepo/
 ```
 
 ### **2.4. Infraestructura y despliegue:**
-El despliegue está automatizado mediante **GitHub Actions** (`.github/workflows/ci.yml`). El pipeline de CI ejecuta:
-1.  Servicio PostgreSQL efímero y aislado en contenedor Docker para tests de integración.
-2.  Caché de dependencias `pnpm` para velocidad.
-3.  Comprobación de tipos con TypeScript, auditoría estática con linters (`pnpm lint`) y ejecución de la suite de pruebas unitarias y de integración.
-4.  Carga segura de credenciales utilizando GitHub Secrets.
+El despliegue y aprovisionamiento están automatizados mediante **GitHub Actions 2026 SOTA** (`.github/workflows/ci.yml`) y módulos declarativos de **OpenTofu** (`infrastructure/opentofu/main.tf` bajo licencia MPL-2.0). El pipeline de CI ejecuta:
+1.  Verificación de gobernanza agéntica con `bash .agents/scripts/validate_agents.sh` (0 enlaces rotos).
+2.  Entorno de ejecución Node 24 LTS con caché optimizada de `pnpm 9`.
+3.  Servicio PostgreSQL efímero y aislado en contenedor Docker para tests de integración.
+4.  Comprobación de tipos con TypeScript, auditoría estática con linters (`pnpm run lint`), linter de especificaciones `DESIGN.md` y ejecución de la suite de 51 pruebas automatizadas unitarias/integración.
+5.  Autenticación segura en la nube mediante OpenID Connect (OIDC) sin almacenamiento de llaves estáticas.
 
 ### **2.5. Seguridad:**
 *   **Validación Activa:** Todos los payloads que ingresan a la API son parseados síncronamente con **Zod** para prevenir inyección de payloads malformados (*Mass Assignment*).
 *   **Gobernanza de Secretos:** Implementación de wrapper de entorno síncrono Fail-Fast para detener el sistema si falta algún secreto.
-*   **Cifrado de Datos:** Contraseñas y PINs cifrados con `bcrypt` factor de costo 10 en base de datos.
+*   **Cifrado de Datos:** PINs hasheados con `crypto.scryptSync` y salt aleatorio por usuario (formato `salt:hash`) en base de datos — nunca en texto plano.
 *   **Mitigación SQLi:** Uso obligatorio de sentencias preparadas (Prepared Statements) a través del motor relacional de Prisma.
 
-### **2.6. Tests:**
-El proyecto sigue la directiva de **Desarrollo Guiado por Pruebas (TDD)**:
+### **2.6. Tests y Gobernanza Agéntica:**
+El proyecto sigue la directiva de **Desarrollo Guiado por Pruebas (TDD)** y **Gobernanza Agéntica v2.3.0**:
 *   Se prohíbe escribir código de producción sin un test unitario/integración que falle previamente (`RED` a `GREEN`).
-*   Uso de **Fake Repositories** en memoria para pruebas de la capa de aplicación, evitando mocks pesados de base de datos que acoplen los tests a la implementación física del ORM.
+*   Suite completa verificada: **51/51 tests activos al 100% de éxito**.
+*   Patrón de **3 Oráculos** (UI, RED, ESTADO) para aserciones deterministas en Playwright E2E y pruebas unitarias/integración.
+*   Uso de **Fake Repositories** en memoria para pruebas de la capa de aplicación con sincronización dinámica entre modelos de lectura y escritura.
+*   Cumplimiento de **Stryker Mutation Score $\ge 70\%$** para evitar pruebas tautológicas.
 
 ---
 
@@ -273,30 +284,30 @@ erDiagram
 
 ## 4. Especificación de la API
 
-La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan los 3 endpoints críticos de negocio:
+La API REST opera bajo el estándar OpenAPI 3.1.0. A continuación se detallan los 4 endpoints críticos de negocio del MVP original (el contrato completo, incluyendo los endpoints añadidos en la entrega 2, vive en [`docs/03_persistence_and_api/openapi.yaml`](docs/03_persistence_and_api/openapi.yaml)):
 
-### **4.1. POST `/api/auth/pin` (Autenticación)**
-*   **Propósito:** Valida el PIN de 4 dígitos de un operario y genera un token JWT temporal.
+### **4.1. POST `/api/v1/auth/login-pin` (Autenticación)**
+*   **Propósito:** Valida el PIN de 4-6 dígitos de un operario y genera un token JWT temporal.
 *   **Request Body (application/json):**
     ```json
     {
-      "userId": "c596e191-230d-45db-99ff-411a2f6412b1",
+      "userId": "usr-maria-2",
       "pin": "1234"
     }
     ```
 *   **Response Success (`200 OK`):**
     ```json
     {
-      "token": "eyJhbGciOiJIUzI1NiIsIn...",
+      "accessToken": "eyJhbGciOiJIUzI1NiIsIn...",
       "user": {
-        "id": "c596e191-230d-45db-99ff-411a2f6412b1",
-        "name": "Carlos Gomez",
-        "role": "OPERATOR"
+        "id": "usr-maria-2",
+        "name": "Maria Gomez",
+        "role": "KITCHEN_STAFF"
       }
     }
     ```
 
-### **4.2. POST `/api/stock/extraction` (Registro de Extracción)**
+### **4.2. POST `/api/v1/stock/extraction` (Registro de Extracción)**
 *   **Propósito:** Registra traslado de bodega a cocina y crea un remanente activo calculando su vencimiento acelerado.
 *   **Headers:** `Authorization: Bearer <JWT_TOKEN>`
 *   **Request Body (application/json):**
@@ -304,25 +315,24 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
     {
       "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
       "quantity": "2.0000",
-      "unit": "Horma"
+      "toLocation": "KITCHEN_FRIDGE"
     }
     ```
 *   **Response Success (`201 Created`):**
     ```json
     {
-      "message": "Stock extraction recorded successfully",
-      "movementId": "8bf9f8a3-231a-4c22-b91c-22340bb95a31",
-      "remanente": {
-        "id": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-        "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-        "currentQuantity": "2.0000",
-        "status": "ACTIVE",
-        "calculatedExpirationDate": "2026-07-05T16:36:12Z"
-      }
+      "remanenteId": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
+      "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+      "insumoName": "Queso Mozzarella",
+      "quantityExtracted": "2.0000",
+      "remainingWarehouseStock": "3.0000",
+      "location": "KITCHEN_FRIDGE",
+      "expirationDate": "2026-07-05T16:36:12Z",
+      "status": "ACTIVE"
     }
     ```
 
-### **4.3. GET `/api/kitchen/remanentes` (Listar Remanentes FEFO)**
+### **4.3. GET `/api/v1/kitchen/remanentes-activos` (Listar Remanentes FEFO)**
 *   **Propósito:** Retorna la lista de ingredientes abiertos en cocina ordenados por fecha de expiración acelerada de menor a mayor.
 *   **Headers:** `Authorization: Bearer <JWT_TOKEN>`
 *   **Response Success (`200 OK`):**
@@ -330,20 +340,21 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
     [
       {
         "id": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-        "insumo": {
-          "id": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-          "name": "Queso Mozzarella",
-          "consumptionUnit": "KG"
-        },
+        "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+        "insumoName": "Queso Mozzarella",
+        "unitOfMeasure": "KG",
         "currentQuantity": "1.7500",
+        "initialQuantity": "2.0000",
         "location": "KITCHEN_FRIDGE",
-        "status": "ACTIVE",
-        "calculatedExpirationDate": "2026-07-05T16:30:00Z"
+        "expirationDate": "2026-07-05T16:30:00Z",
+        "hoursRemaining": 3,
+        "isCriticalAlert": true,
+        "status": "ACTIVE"
       }
     ]
     ```
 
-### **4.4. GET `/api/reports/waste` (Reporte de Mermas)**
+### **4.4. GET `/api/v1/reports/waste` (Reporte de Mermas)**
 *   **Propósito:** Consulta y consolidación agregada de mermas físicas descartadas en un rango temporal.
 *   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
 *   **Query Parameters:**
@@ -354,21 +365,121 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
     [
       {
         "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-        "name": "Queso Mozzarella",
-        "brand": "La Serenísima",
-        "category": "Lácteos",
-        "consumptionUnit": "KG",
-        "reason": "EXPIRATION",
-        "totalDiscardedQuantity": "3.5000"
+        "insumoName": "Queso Mozzarella",
+        "unitOfMeasure": "KG",
+        "totalDiscardedQuantity": "3.5000",
+        "reason": "EXPIRATION"
       }
     ]
     ```
+
+### **4.5. POST `/api/v1/auth/users` (Alta de Operario — Rol `ADMIN`)**
+*   **Propósito:** Crea una cuenta de operario nueva (nombre, rol, PIN), reutilizando el mismo hash con salt de `US-001`.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body (application/json):**
+    ```json
+    {
+      "name": "Nuevo Operario",
+      "role": "KITCHEN_STAFF",
+      "pin": "4321"
+    }
+    ```
+*   **Response Success (`201 Created`):**
+    ```json
+    {
+      "id": "d4e5f678-90ab-4cde-8f12-345678901bcd",
+      "name": "Nuevo Operario",
+      "role": "KITCHEN_STAFF",
+      "status": "ACTIVE"
+    }
+    ```
+
+### **4.6. PATCH `/api/v1/auth/users/{id}/status` (Bloqueo/Reactivación — Rol `ADMIN`)**
+*   **Propósito:** Bloquea o reactiva la cuenta de un operario existente.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body (application/json):**
+    ```json
+    {
+      "action": "BLOCK"
+    }
+    ```
+*   **Response Success (`200 OK`):**
+    ```json
+    {
+      "id": "d4e5f678-90ab-4cde-8f12-345678901bcd",
+      "status": "BLOCKED"
+    }
+    ```
+
+### **4.7. GET `/api/v1/stock/movements` (Historial de Movimientos — Rol `ADMIN`)**
+*   **Propósito:** Consulta el historial de movimientos de stock (extracciones, consumos, descartes) con filtros opcionales.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Query Parameters:**
+    *   `insumoId` (opcional): filtra por insumo.
+    *   `startDate` / `endDate` (opcional): rango de fechas ISO 8601.
+*   **Response Success (`200 OK`):**
+    ```json
+    [
+      {
+        "id": "8bf9f8a3-231a-4c22-b91c-22340bb95a31",
+        "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+        "insumoName": "Queso Mozzarella",
+        "type": "EXTRACTION",
+        "quantity": "2.0000",
+        "fromLoc": "MAIN_WAREHOUSE",
+        "toLoc": "KITCHEN_FRIDGE",
+        "createdAt": "2026-08-21T14:02:11Z"
+      }
+    ]
+    ```
+
+### **4.8. POST `/api/v1/stock/insumos` (Alta de Insumo — Rol `ADMIN`)**
+*   **Propósito:** Da de alta un insumo nuevo en el catálogo maestro con stock inicial en `0`.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body** (`unitOfMeasure` es lista cerrada: `KG` | `L` | `UNITS`):
+    ```json
+    { "name": "Harina 000", "unitOfMeasure": "KG" }
+    ```
+*   **Response Success (`201 Created`):**
+    ```json
+    { "id": "f3a1c2e0-1234-4abc-9def-0123456789ab", "name": "Harina 000", "unitOfMeasure": "KG", "warehouseStock": "0.000" }
+    ```
+
+### **4.9. POST `/api/v1/catalog/recipes` (Alta de Receta — Rol `ADMIN`)**
+*   **Propósito:** Crea una receta nueva con sus ingredientes, validando que cada `insumoId` exista en el catálogo (`GET /api/v1/stock/insumos`).
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body:**
+    ```json
+    {
+      "name": "Pizza Margarita",
+      "category": "Pizzas",
+      "ingredients": [{ "insumoId": "f3a1c2e0-1234-4abc-9def-0123456789ab", "quantity": "0.150" }]
+    }
+    ```
+*   **Response Success (`201 Created`):**
+    ```json
+    { "message": "Recipe created successfully", "recipeId": "aa9f88d1-12cd-41e2-b9e1-bb901518f88c" }
+    ```
+*   **Response Error (`404 Not Found`):** si algún `insumoId` referenciado no existe en el catálogo.
+
+### **4.10. PATCH `/api/v1/stock/insumos/{id}/restock` (Reabastecimiento de Bodega — Rol `ADMIN`)**
+*   **Propósito:** Suma la cantidad recibida al `warehouseStock` actual de un insumo ya existente (incremental, no un total absoluto) cuando llega una entrega nueva del proveedor.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Request Body:**
+    ```json
+    { "quantity": 20 }
+    ```
+*   **Response Success (`200 OK`):**
+    ```json
+    { "insumoId": "f3a1c2e0-1234-4abc-9def-0123456789ab", "insumoName": "Harina 000", "quantityAdded": "20.000", "newWarehouseStock": "20.000" }
+    ```
+*   **Response Error (`404 Not Found`):** si el insumo no existe. **(`400 Bad Request`):** si `quantity` es cero o negativo.
 
 ---
 
 ## 5. Historias de Usuario
 
-Se han definido detalladamente las siguientes 9 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/user_stories/indice_user_stories.md)):
+Se han definido detalladamente las siguientes 13 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
 
 ### **5.1. US-001: Autenticación por PIN del Personal de Cocina**
 *   **Formato de Negocio:** Como operario de cocina (Staff), quiero autenticarme en la terminal táctil ingresando mi PIN personal de 4 dígitos, para registrar mis movimientos de insumos y consumos de forma rápida y segura sin interrumpir el ritmo del servicio.
@@ -433,61 +544,176 @@ Se han definido detalladamente las siguientes 9 historias de usuario críticas (
     *   *When* el administrador consulta el endpoint de reporte de mermas para hoy,
     *   *Then* el sistema responde con una lista consolidada agrupando por ingrediente y motivo mostrando las cantidades exactas en formato de string.
 
+### **5.10. US-010: Gestión Mínima de Personal (Alta y Bloqueo de Operarios)**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero dar de alta operarios y bloquear/reactivar cuentas existentes vía API, para mantener el control de acceso al día sin depender de un redeploy de código.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que un Administrador autenticado envía nombre, rol `KITCHEN_STAFF` y PIN `"4321"`,
+    *   *When* invoca `POST /api/v1/auth/users`,
+    *   *Then* el sistema crea la cuenta y el operario puede autenticarse de inmediato con ese PIN.
+*   **Estado:** ✅ Backend y Frontend implementados y verificados, incluyendo el listado real de operarios (`TK-056`).
+
+### **5.11. US-011: Trazabilidad y Auditoría de Movimientos de Stock**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero consultar el historial de movimientos de stock filtrado por insumo y rango de fechas, para auditar quién movió qué y cuándo.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que se registró una extracción real de `Queso Mozzarella`,
+    *   *When* el Administrador invoca `GET /api/v1/stock/movements`,
+    *   *Then* el sistema retorna el movimiento con su tipo, cantidad, ubicaciones y fecha de creación.
+*   **Estado:** ✅ Backend y Frontend implementados y verificados, incluyendo el filtro por rango de fechas.
+
+### **5.12. US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero dar de alta insumos y recetas en el catálogo maestro vía API, para operar con el inventario real del restaurante sin depender del script de seed.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que un Administrador autenticado envía nombre `"Harina 000"` y unidad de medida `"KG"`,
+    *   *When* invoca `POST /api/v1/stock/insumos`,
+    *   *Then* el sistema crea el insumo con stock inicial `0` y este aparece inmediatamente en `GET /api/v1/stock/insumos`.
+*   **Estado:** ✅ Backend y Frontend implementados y verificados.
+
+### **5.13. US-013: Reabastecimiento de Bodega**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero sumar la cantidad recibida al stock de bodega de un insumo ya existente cuando llega una entrega del proveedor, para que el restaurante pueda operar más allá de la carga inicial de inventario.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* un insumo `Harina 000` con `5.000 KG` de stock actual,
+    *   *When* el Administrador invoca `PATCH /api/v1/stock/insumos/{id}/restock` con `quantity: 10.5`,
+    *   *Then* el sistema suma la cantidad al stock existente (`15.500`) y registra un `StockMovement` tipo `RESTOCK`.
+*   **Estado:** ✅ Backend y Frontend implementados y verificados.
+
 ---
 
 ## 6. Tickets de Trabajo
 
-El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo](docs/05_agile_planning/tickets/indice_tickets.md)) contiene las especificaciones exactas para el desarrollo del sprint:
+El backlog técnico y funcional (disponible en el [Índice de Tickets de Trabajo](docs/05_agile_planning/12_tickets/indice_tickets.md)) contiene las especificaciones exactas para el desarrollo de cada sprint, organizados en subcarpetas por módulo/epic (ej: `12_tickets/{modulo}/backend/` y `12_tickets/{modulo}/frontend/`):
 
-### **6.1. TK-001: Configuración del Core del Backend y Base de Datos (Base de Datos)**
-*   **Descripción:** Configuración inicial del monorepo Express, Prisma Client, inyección síncrona segura de variables de entorno y middleware global de excepciones y validación de esquemas Zod.
-*   **Capas Afectadas:** `shared/domain`, `shared/infrastructure`.
-*   **DoD:** Build de typescript exitoso en CI, conexión segura TLS verificada en la base de datos de test efímera.
+### ⚙️ 6.1. Tickets de Backend (en subcarpetas `docs/05_agile_planning/12_tickets/{modulo}/backend/`)
 
-### **6.2. TK-002: Implementación de Autenticación de Operarios por PIN (Backend)**
-*   **Descripción:** Implementación de la API `/api/auth/pin` integrando el caso de uso `AuthenticateByPin` y la validación de hash `bcrypt` (10 salt rounds).
-*   **Capas Afectadas:** `auth/domain`, `auth/application`, `auth/infrastructure`.
-*   **DoD:** Test unitario pasando con el 100% de cobertura y aserción de que el PIN plano nunca se retorna ni se guarda.
 
-### **6.3. TK-003: Implementación de Extracciones de Bodega (Backend & Log)**
-*   **Descripción:** Lógica transaccional que reduce stock consolidado y genera un remanente activo calculando su vida útil acotada.
-*   **Capas Afectadas:** `stock/domain`, `stock/application`, `stock/infrastructure`.
-*   **DoD:** Garantía transaccional de base de datos verificada: si el débito de stock o la creación del remanente falla, toda la transacción debe revertirse (rollback).
+*   **TK-001: Configuración del Core del Backend y Base de Datos (Base de Datos)**
+    *   **Descripción:** Configuración inicial del monorepo Express, Prisma Client, inyección síncrona segura de variables de entorno y middleware global de excepciones y validación de esquemas Zod.
+    *   **Capas Afectadas:** `shared/domain`, `shared/infrastructure`.
+    *   **DoD:** Build de typescript exitoso en CI, conexión segura TLS verificada en la base de datos de test efímera.
+*   **TK-002: Implementación de Autenticación de Operarios por PIN (Backend)**
+    *   **Descripción:** Implementación de la API `/api/v1/auth/login-pin` integrando el caso de uso `AuthenticateByPin` y la validación de hash con `crypto.scryptSync` (salt por usuario).
+    *   **Capas Afectadas:** `auth/domain`, `auth/application`, `auth/infrastructure`.
+    *   **DoD:** Test unitario pasando con el 100% de cobertura y aserción de que el PIN plano nunca se retorna ni se guarda.
+*   **TK-003: Implementación de Extracciones de Bodega (Backend & Log)**
+    *   **Descripción:** Lógica transaccional que reduce stock consolidado y genera un remanente activo calculando su vida útil acotada.
+    *   **Capas Afectadas:** `stock/domain`, `stock/application`, `stock/infrastructure`.
+    *   **DoD:** Garantía transaccional de base de datos verificada: si el débito de stock o la creación del remanente falla, toda la transacción debe revertirse (rollback).
+*   **TK-004: Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO) (Backend)**
+    *   **Descripción:** Exposición de una consulta optimizada para obtener los remanentes abiertos y disponibles en cocina ordenados por vencimiento de menor a mayor (FEFO).
+    *   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Test unitario del caso de uso utilizando un repositorio en memoria para validar que el resultado del caso de uso retorne la lista ordenada cronológicamente; autenticación JWT con rol mínimo `KITCHEN_STAFF` requerida.
+*   **TK-005: Implementación del Slice de Consumo Parcial de Remanentes (Backend)**
+    *   **Descripción:** Funcionalidad para descontar cantidades de insumos abiertos (remanentes). Si el consumo reduce la cantidad de un remanente a cero exacto, el sistema debe cambiar automáticamente su estado a agotado (`CONSUMED`).
+    *   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Tests unitarios verificando transiciones del flujo (consumo parcial, consumo agotador y rechazo por saldo insuficiente) pasando en verde; uso estricto de la librería `decimal.js` para toda aritmética decimal.
+*   **TK-006: Implementación del Slice de Descarte y Mermas de Cocina (Backend)**
+    *   **Descripción:** Permite retirar del inventario activo ingredientes abiertos e inservibles (vencidos, dañados, etc.). La cantidad remanente se pone en cero, el estado cambia a descartado (`DISCARDED`) y se crea una entrada de auditoría en la tabla `stock_movements`.
+    *   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Validar en dominio e impedir doble descarte sobre remanentes consumidos o descartados; requerimiento de autenticación JWT con rol mínimo `KITCHEN_STAFF`.
+*   **TK-008: Implementación de Recetas y Descuento FEFO en Cascadas (Backend)**
+    *   **Descripción:** Implementa el flujo de descuento rápido de ingredientes en cocina basado en recetas maestras, buscando remanentes activos de cada ingrediente y debitando la cantidad en cascada FEFO de forma atómica.
+    *   **Capas Afectadas:** `catalog/domain`, `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Pruebas unitarias en rojo del caso de uso `ConsumeRecipeUseCase` antes de codificar la lógica del dominio; ejecución de la cascada completa dentro de una única transacción Prisma (`$transaction`).
+*   **TK-009: Implementación de Cierre de Turno y Conciliación en Cocina (Backend)**
+    *   **Descripción:** Proceso guiado de cierre de turno y conciliación física. Marca automáticamente como `DISCARDED` remanentes vencidos y permite reportar cantidades físicas reales restantes registrando variaciones de stock (varianzas).
+    *   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+    *   **DoD:** Escribir pruebas unitarias en rojo del caso de uso antes del código de producción; optimización SQL mediante actualizaciones por lote (`updateMany`) en una transacción atómica.
+*   **TK-010: Implementación del Módulo de Reportes y Analítica de Mermas (Backend)**
+    *   **Descripción:** Endpoint REST `GET /api/v1/reports/waste` que permite al administrador consultar la cantidad total de inventario desechado (mermas físicas) agrupado por ingrediente y motivo en un rango de fechas.
+    *   **Capas Afectadas:** `reports/domain`, `reports/application`, `reports/infrastructure`.
+    *   **DoD:** Pruebas de integración para `GetWasteReportUseCase` verificando la sumatoria y el rango de fechas; autenticación JWT con rol requerido `ADMIN`.
+*   **TK-018: Sincronización del Modelo de Consulta de Remanentes (Read-Model Sync)**
+    *   **Descripción:** Vinculación directa del `InMemoryRemanenteQueryRepository` con el `InMemoryStockRepository` para garantizar la actualización en tiempo real del estado consumido en la UI de cocina.
+    *   **Capas Afectadas:** `kitchen/infrastructure`, `stock/infrastructure`, `http/app`.
+    *   **DoD:** Prueba de integración del Oráculo de Estado en verde verificando impacto inmediato de `POST /consume` en `GET /remanentes-activos`.
+*   **TK-019: Modernización del Pipeline CI/CD SOTA y Módulo IaC OpenTofu**
+    *   **Descripción:** Actualización del workflow `.github/workflows/ci.yml` a Node 24 LTS, Actions v5, pnpm 9 e integración de módulo declarativo de infraestructura con OpenTofu (`infrastructure/opentofu/main.tf`).
+    *   **Capas Afectadas:** `.github/workflows`, `infrastructure/opentofu`.
+    *   **DoD:** Pipeline pasando exitosamente con `validate_agents.sh` y validación de `DESIGN.md`.
+*   **TK-020: Gobernanza Agéntica - Guards 22 (IaC OpenTofu) y 23 (CI/CD SOTA)**
+    *   **Descripción:** Codificación en `AGENTS.md` de los Guards Universales 22 y 23 para obligar la observancia de la infraestructura declarativa en OpenTofu y CI/CD en Node 24 LTS por parte del agente.
+    *   **Capas Afectadas:** `AGENTS.md`.
+    *   **DoD:** `validate_agents.sh` ejecutado exitosamente con 0 enlaces rotos.
+*   **TK-021: Actualización del Arnés .agents/README.md a v2.3.0**
+    *   **Descripción:** Actualización del manual de operaciones `.agents/README.md` reflejando 34 Skills, 8 Workflows y la versión 2.3.0 SOTA Enterprise 2026.
+    *   **Capas Afectadas:** `.agents/README.md`.
+    *   **DoD:** Integridad del framework verificada con 54 enlaces absolutos validados.
+*   **TK-048: Cierre de Persistencia Parcial en Producción (Backend)**
+    *   **Descripción:** Elimina la última persistencia en memoria en producción — `reportRepository`, `recipeRepository` y `reconciliationRepository` pasan a ser Prisma-backed, con nuevos modelos `Recipe`, `RecipeIngredient`, `ShiftReconciliation`, `ShiftReconciliationItem` y la primera migración real del proyecto.
+    *   **Capas Afectadas:** `catalog/infrastructure`, `kitchen/infrastructure`, `reports/infrastructure`, `prisma/schema.prisma`.
+    *   **DoD:** Validado en vivo contra Postgres real (creación/lectura sobreviviendo a reinicio); 46/46 tests backend en verde.
+*   **TK-049: Gestión Mínima de Personal (Backend)**
+    *   **Descripción:** `POST /api/v1/auth/users` y `PATCH /api/v1/auth/users/{id}/status` (rol `ADMIN`) para alta y bloqueo/reactivación de operarios, reutilizando el hash de PIN con salt ya existente.
+    *   **Capas Afectadas:** `auth/domain`, `auth/application`, `auth/infrastructure`.
+    *   **DoD:** 9 tests nuevos (creación, login inmediato, 403/401/400/404, bloqueo con verificación de login posterior fallido, reactivación); `openapi.yaml` sincronizado.
+*   **TK-050: Trazabilidad de Movimientos de Stock (Backend)**
+    *   **Descripción:** `GET /api/v1/stock/movements` (rol `ADMIN`, filtros `insumoId`/`startDate`/`endDate`) sobre el modelo `StockMovement` ya poblado por extracción/consumo/descarte pero previamente inconsultable.
+    *   **Capas Afectadas:** `stock/domain`, `stock/application`, `stock/infrastructure`.
+    *   **DoD:** 5 tests nuevos (historial poblado por movimiento real, filtro, 403/401, lista vacía); 60/60 tests backend en verde.
+*   **TK-051: Bootstrap del Primer Administrador (Backend)**
+    *   **Descripción:** Corrige el problema huevo-gallina de despliegue nuevo (`POST /auth/users` exige ya ser ADMIN) y un bug crítico encontrado al investigarlo — `prisma/seed.ts` guardaba el PIN del admin en texto plano. Ahora hashea correctamente y siembra un admin configurable (`SEED_ADMIN_PIN`/`SEED_ADMIN_NAME`) de forma idempotente en cada arranque del contenedor.
+    *   **Capas Afectadas:** `apps/backend/prisma/seed.ts`, `apps/backend/Dockerfile`, `apps/backend/docker-entrypoint.sh`.
+    *   **DoD:** Validado extremo a extremo con contenedor real (login tras bootstrap, PIN persiste tras reinicio, arranque sin `SEED_ADMIN_PIN` no bloquea el despliegue).
+*   **TK-056: Listado de Operarios (Backend)**
+    *   **Descripción:** `GET /api/v1/auth/users` (rol `ADMIN`) — cierra la deuda que dejó `TK-049`/`TK-049-FE`: `UserStatusForm.tsx` pedía el ID exacto del operario por texto porque no existía forma de listarlos. Nunca expone `pinHash` en la respuesta.
+    *   **Capas Afectadas:** `auth/domain` (`IUserRepository.findAll()`), `auth/application` (`ListUsersUseCase`), `auth/infrastructure`.
+    *   **DoD:** 4 tests nuevos (listado poblado sin `pinHash`, lista vacía, 403/401); 64/64 tests backend en verde.
+*   **TK-057: Gestión de Catálogo Maestro — Alta de Insumos y Recetas (Backend)**
+    *   **Descripción:** `POST`/`GET /api/v1/stock/insumos` y `POST`/`GET /api/v1/catalog/recipes` (creación con rol `ADMIN`, listado para cualquier autenticado) — cierra además la deuda de `TK-008` (`POST /api/catalog/recipes` nunca se había implementado). Sin cambios de esquema Prisma.
+    *   **Capas Afectadas:** `stock/domain` (`IStockRepository.findAllInsumos()`), `stock/application`, `stock/infrastructure`; `catalog/application`, `catalog/infrastructure` (primer HTTP layer real de ese módulo).
+    *   **DoD:** 13 tests nuevos (alta/listado de insumo, 403/401/400, alta/listado de receta con ingredientes válidos, 404 con `insumoId` inexistente); 77/77 tests backend en verde.
+*   **TK-060: Reabastecimiento de Bodega (Backend)**
+    *   **Descripción:** `PATCH /api/v1/stock/insumos/{id}/restock` (rol `ADMIN`) suma la cantidad recibida al `warehouseStock` existente de un insumo — antes de este ticket, el stock de un insumo solo se fijaba una vez al crearlo y solo podía bajar, dejando un insumo agotado inutilizable para siempre. Registra un `StockMovement` tipo `RESTOCK` (sin migración, `type` es `String` libre en el schema).
+    *   **Capas Afectadas:** `stock/domain` (`Insumo.increaseStock()`), `stock/application` (`RestockInsumoUseCase`), `stock/infrastructure`.
+    *   **DoD:** tests de caso de uso (suma correcta, movimiento auditado, 404 insumo inexistente) + integración HTTP (200/404/400/403/401); `openapi.yaml` sincronizado, validado con `oasdiff breaking` sin breaking changes.
 
-### **6.4. TK-004: Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO) (Backend)**
-*   **Descripción:** Exposición de una consulta optimizada para obtener los remanentes abiertos y disponibles en cocina ordenados por vencimiento de menor a mayor (FEFO).
-*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Test unitario del caso de uso utilizando un repositorio en memoria para validar que el resultado del caso de uso retorne la lista ordenada cronológicamente; autenticación JWT con rol mínimo `OPERATOR` requerida.
+Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`, `TK-057-FE`, `TK-060-FE`) están documentados en la sección 6.2 más abajo y ya implementados.
 
-### **6.5. TK-005: Implementación del Slice de Consumo Parcial de Remanentes (Backend)**
-*   **Descripción:** Funcionalidad para descontar cantidades de insumos abiertos (remanentes). Si el consumo reduce la cantidad de un remanente a cero exacto, el sistema debe cambiar automáticamente su estado a agotado (`CONSUMED`).
-*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Tests unitarios verificando transiciones del flujo (consumo parcial, consumo agotador y rechazo por saldo insuficiente) pasando en verde; uso estricto de la librería `decimal.js` para toda aritmética decimal.
+### 🖥️ 6.2. Tickets de Frontend (en subcarpetas `docs/05_agile_planning/12_tickets/{modulo}/frontend/`)
 
-### **6.6. TK-006: Implementación del Slice de Descarte y Mermas de Cocina (Backend)**
-*   **Descripción:** Permite retirar del inventario activo ingredientes abiertos e inservibles (vencidos, dañados, etc.). La cantidad remanente se pone en cero, el estado cambia a descartado (`DISCARDED`) y se crea una entrada de auditoría en la tabla `stock_movements`.
-*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Validar en dominio e impedir doble descarte sobre remanentes consumidos o descartados; requerimiento de autenticación JWT con rol mínimo `OPERATOR`.
-
-### **6.7. TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas en Frontend (Frontend)**
-*   **Descripción:** Pantalla táctil de notificaciones en el cliente y lógica de renderizado del feed de alertas críticas en la tablet, calculando dinámicamente vencimientos FEFO, stock mínimo en línea y estado de red offline.
-*   **Capas Afectadas:** `/app/kitchen/notifications/page.tsx`, `features/kitchen/components`.
-*   **DoD:** Banner offline y alertas críticas diseñadas bajo estándares de accesibilidad táctil; simular estado offline mediante tests unitarios en React para validar la renderización del banner.
-
-### **6.8. TK-008: Implementación de Recetas y Descuento FEFO en Cascadas (Backend)**
-*   **Descripción:** Implementa el flujo de descuento rápido de ingredientes en cocina basado en recetas maestras, buscando remanentes activos de cada ingrediente y debitando la cantidad en cascada FEFO de forma atómica.
-*   **Capas Afectadas:** `catalog/domain`, `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Pruebas unitarias en rojo del caso de uso `ConsumeRecipeUseCase` antes de codificar la lógica del dominio; ejecución de la cascada completa dentro de una única transacción Prisma (`$transaction`).
-
-### **6.9. TK-009: Implementación de Cierre de Turno y Conciliación en Cocina (Backend)**
-*   **Descripción:** Proceso guiado de cierre de turno y conciliación física. Marca automáticamente como `DISCARDED` remanentes vencidos y permite reportar cantidades físicas reales restantes registrando variaciones de stock (varianzas).
-*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
-*   **DoD:** Escribir pruebas unitarias en rojo del caso de uso antes del código de producción; optimización SQL mediante actualizaciones por lote (`updateMany`) en una transacción atómica.
-
-### **6.10. TK-010: Implementación del Módulo de Reportes y Analítica de Mermas (Backend)**
-*   **Descripción:** Endpoint REST `GET /api/reports/waste` que permite al administrador consultar la cantidad total de inventario desechado (mermas físicas) agrupado por ingrediente y motivo en un rango de fechas.
-*   **Capas Afectadas:** `reports/domain`, `reports/application`, `reports/infrastructure`.
-*   **DoD:** Pruebas de integración para `GetWasteReportUseCase` verificando la sumatoria y el rango de fechas; autenticación JWT con rol requerido `ADMIN`; cantidades devueltas estrictamente como cadenas de texto en formato JSON.
+*   **TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas (Frontend)**
+    *   **Descripción:** Pantalla táctil de notificaciones en el cliente y lógica de renderizado del feed de alertas críticas en la tablet, calculando dinámicamente vencimientos FEFO, stock mínimo en línea y estado de red offline.
+    *   **Capas Afectadas:** `/app/kitchen/notifications/page.tsx`, `features/kitchen/components`.
+    *   **DoD:** Banner offline y alertas críticas diseñadas bajo estándares de accesibilidad táctil; simular estado offline mediante IndexedDB.
+*   **TK-007-B: Pantalla de Login por PIN (Frontend)**
+    *   **Descripción:** Interfaz de teclado numérico táctil (`PinPad`) optimizado para pantallas de cocina para el inicio de sesión rápido, guardando el JWT devuelto.
+    *   **Capas Afectadas:** `features/auth/components`, `/app/login/page.tsx`.
+    *   **DoD:** Botones táctiles de mínimo `64px`, máscara de dígitos y pruebas unitarias de interactividad.
+*   **TK-007-C: Interfaz de Consumo de Recetas (Frontend)**
+    *   **Descripción:** Panel de visualización de recetas maestras en cocina con disparadores táctiles para registrar la preparación de porciones y descuento FEFO.
+    *   **Capas Afectadas:** `features/kitchen/components`, `/app/kitchen/recipes/page.tsx`.
+    *   **DoD:** Control de inventario restante en cliente, botón de acción rápida de al menos `54px` e integración con cola IndexedDB.
+*   **TK-007-D: Formulario de Reconciliación de Turno (Frontend)**
+    *   **Descripción:** Wizard táctil paso a paso para reportar stock real en cocina y autorizar/ingresar variaciones de inventario al fin de turno.
+    *   **Capas Afectadas:** `features/kitchen/components`, `/app/kitchen/reconciliation/page.tsx`.
+    *   **DoD:** Advertencia de color rojo y checkbox de confirmación especial para variaciones de inventario físico mayores al 50%.
+*   **TK-007-E: Dashboard de Reportes de Desperdicio y Eficiencia FEFO (Frontend)**
+    *   **Descripción:** Panel web para administradores que visualiza mediante gráficos interactivos y donas las pérdidas de stock consolidado y motivos.
+    *   **Capas Afectadas:** `features/reports/components`, `/app/admin/reports/page.tsx`.
+    *   **DoD:** Autenticación y control de rutas JWT para rol `ADMIN`, gráficos interactivos optimizados y selectores de rango temporal.
+*   **TK-007-F: Pantalla de Registro de Extracciones de Bodega (Frontend)**
+    *   **Descripción:** Formulario táctil ergonómico para registrar el paso de insumos de bodega a cocina abriendo los empaques de fábrica.
+    *   **Capas Afectadas:** `features/stock/components`, `/app/stock/extraction/page.tsx`.
+    *   **DoD:** Deshabilitación de doble clic para evitar transacciones repetidas, validación de inputs mayores a cero y mapeo a `POST /api/v1/stock/extraction`.
+*   **TK-049-FE: Panel de Gestión de Personal (Frontend)**
+    *   **Descripción:** Modal con pestañas de alta de operario y bloqueo/reactivación desde una lista real (`TK-056`), consumiendo `GET`/`POST /api/v1/auth/users` y `PATCH /api/v1/auth/users/{id}/status`.
+    *   **Capas Afectadas:** `features/auth/components` (`UserManagementPanel.tsx`, `CreateUserForm.tsx`, `UserStatusForm.tsx`), `features/auth/services/users.service.ts`.
+    *   **DoD:** 7 pruebas RTL en verde; sin fallback a datos sintéticos ante error (acciones administrativas reales, nunca simuladas); componente `AccessDeniedState` extraído a `shared/components/` para evitar una tercera duplicación del guard de rol `ADMIN`.
+*   **TK-050-FE: Panel de Auditoría de Movimientos (Frontend)**
+    *   **Descripción:** Modal con tabla de historial de movimientos filtrable por insumo y rango de fechas, consumiendo `GET /api/v1/stock/movements`.
+    *   **Capas Afectadas:** `features/stock/components/MovementHistoryPanel.tsx`, `features/stock/services/stock.service.ts` (extendido).
+    *   **DoD:** 6 pruebas RTL en verde (incluye filtro de fechas serializado a ISO 8601, estado vacío explícito y error real sin datos sintéticos, al ser un registro de auditoría).
+*   **TK-057-FE: Panel de Gestión de Catálogo (Frontend)**
+    *   **Descripción:** Modal con pestañas de alta de insumo y alta de receta (con filas dinámicas de ingrediente: selector de insumo + cantidad), consumiendo `POST`/`GET /api/v1/stock/insumos` y `POST`/`GET /api/v1/catalog/recipes`.
+    *   **Capas Afectadas:** `features/catalog/components` (`CatalogManagementPanel.tsx`, `CreateInsumoForm.tsx`, `CreateRecipeForm.tsx`), `features/catalog/services/catalog.service.ts`.
+    *   **DoD:** 6 pruebas RTL en verde; sin fallback a datos sintéticos ante error; `SectionTabs` y `SuccessFeedbackBanner` extraídos a `shared/components/` para evitar duplicar el patrón ya usado por `UserManagementPanel` (regla de reuso de `SK-17`).
+*   **TK-060-FE: Panel de Reabastecimiento de Bodega (Frontend)**
+    *   **Descripción:** Botón "Reabastecer" por fila en el Inventario de Bodega (`InsumoCatalogPanel.tsx`), abre un modal con la cantidad recibida y consume `PATCH /api/v1/stock/insumos/{id}/restock`; refresca la lista con el stock real tras confirmar.
+    *   **Capas Afectadas:** `features/stock/components` (`RestockInsumoModal.tsx`, `InsumoCatalogPanel.tsx`), `features/stock/services/stock.service.ts` (extendido).
+    *   **DoD:** prueba RTL en verde (reabastecimiento exitoso con stock actualizado visible); gate de complejidad ticket-scoped en verde.
+*   **TK-061: Conectar el Selector de Recetas de Cocina al Catálogo Real (Frontend)**
+    *   **Descripción:** `RecipeSelectorModal.tsx` (consumo de recetas en cocina) siempre renderizó una lista hardcodeada — nunca llamaba a `GET /api/v1/catalog/recipes`, así que una receta dada de alta por un Administrador nunca aparecía en cocina. Ahora hace fetch real, cruzando `GET /stock/insumos` para armar el resumen de ingredientes; cae a las mismas 3 recetas de demo (`FALLBACK_RECIPES`) ante error de red, mismo patrón que `KitchenService.fetchActiveRemanentes`.
+    *   **Capas Afectadas:** `features/kitchen/services/kitchen.service.ts` (`fetchAvailableRecipes`), `features/kitchen/components/RecipeSelectorModal.tsx`.
+    *   **DoD:** 5 pruebas RTL nuevas (recetas reales, resumen de ingredientes, fallback offline, estado vacío, confirmación con ID real) — `RecipeSelectorModal.test.tsx` no existía antes de este ticket.
 
 ---
 
@@ -503,4 +729,15 @@ A continuación se registra el histórico de Pull Requests de este repositorio:
     *   Revisión y aprobación de la auditoría documental por el oráculo de IA.
     *   Formato Markdown y sintaxis de diagramas Mermaid validados.
     *   Pipeline inicial de integración continua (`ci.yml`) configurado.
+
+### 🔄 PR #2: `feat: código funcional MVP RestoStock — Entrega 2`
+*   **URL:** [github.com/lacruzjd/AI4Devs-finalproject/pull/1](https://github.com/lacruzjd/AI4Devs-finalproject/pull/1)
+*   **Ramas:** `feature-entrega2-JDLM` ➡️ `main`
+*   **Ticket Relacionado:** TK-002 a TK-062 (backend, frontend, persistencia real, DevSecOps, gobernanza `.agents/`)
+*   **Descripción del Cambio:** Código funcional del MVP — backend, frontend y base de datos conectados, con el flujo principal completo: autenticación por PIN, extracción de bodega, tablero FEFO, consumo parcial, descartes/mermas, alertas críticas, consumo por recetas, cierre de turno y conciliación, dashboard de reportes de mermas. Post-MVP: persistencia real en PostgreSQL (Prisma, migrado a v7 con driver adapters), gestión de personal, trazabilidad de movimientos de stock, gestión de catálogo maestro, reabastecimiento de bodega. Infraestructura: Docker Compose + OpenTofu, pipeline CI/CD (lint, tests, contract-drift, gitleaks, Trivy), gate de calidad ticket-scoped, framework de gobernanza IA `.agents/` versionado.
+*   **Quality Gates (DoD):**
+    *   `pnpm run build && pnpm run lint` — 0 errores.
+    *   `pnpm run test` — suite completa de tests unitarios/integración en verde (backend + frontend).
+    *   Verificación en vivo con Docker real de los flujos críticos (login, extracción, reabastecimiento, catálogo, movimientos).
+
 

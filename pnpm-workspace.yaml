@@ -1,0 +1,13 @@
+packages:
+  - 'apps/*'
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@scarf/scarf': true
+  esbuild: true
+  prisma: true
+# NOTA (TK-043): pnpm 9.x (el pineado por docs/00_stack_manifest.md §1) NO soporta
+# `auditConfig.ignoreGhsas` (feature de versiones de pnpm posteriores) — un pnpm local mas
+# nuevo puede escribirlo aqui automaticamente al correr `pnpm audit --ignore`, pero pnpm 9
+# lo ignora en silencio. El riesgo residual real (vite/vitest, ver docs/00_stack_manifest.md)
+# se aplica en docs/04_governance_and_quality/scripts/check_dependency_audit.sh, no aqui.

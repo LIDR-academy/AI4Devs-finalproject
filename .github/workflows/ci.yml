@@ -1,0 +1,245 @@
+name: RestoStock CI Pipeline (2026 SOTA)
+
+on:
+  push:
+    branches: [ main, feature-*, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  lint-and-validate:
+    name: Lint, Types, OpenAPI & Agents Governance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js (Node 24 LTS)
+        uses: actions/setup-node@v5
+        with:
+          node-version: 'lts/*'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # TK-062: Prisma 7 ya no genera el cliente automaticamente en postinstall (si lo
+      # hacia en 5.x) — sin este paso, tsc falla en cualquier checkout limpio porque
+      # src/generated/prisma/ (gitignored) no existe todavia.
+      - name: Generate Prisma Client
+        run: pnpm --filter @restostock/backend exec prisma generate --schema=prisma/schema.prisma
+
+      - name: Run Code Linter
+        run: pnpm run lint
+
+      - name: Check Code Duplication (jscpd)
+        run: pnpm run duplication
+
+      - name: Validate OpenAPI Contract
+        run: npx -y @stoplight/spectral-cli lint docs/03_persistence_and_api/openapi.yaml
+
+      - name: Validate Agents Framework Integrity
+        run: bash .agents/scripts/validate_agents.sh
+
+      # TK-055: check_iac_syntax.sh requiere el binario `tofu` real para `tofu validate`.
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: '1.6.0'
+
+      - name: Validate OpenTofu HCL Syntax
+        run: bash docs/04_governance_and_quality/scripts/check_iac_syntax.sh
+
+      # TK-055: instala el binario oasdiff (Go) — check_contract_drift.sh solo lo invoca si
+      # openapi.yaml cambió respecto a HEAD, pero debe estar disponible en el runner.
+      - name: Install oasdiff
+        run: |
+          curl -sL https://github.com/oasdiff/oasdiff/releases/download/v1.29.1/oasdiff_1.29.1_linux_amd64.tar.gz | tar -xz -C /usr/local/bin oasdiff
+
+      - name: Check OpenAPI/Zod Contract Drift (+ Breaking Changes via oasdiff)
+        run: bash docs/04_governance_and_quality/scripts/check_contract_drift.sh
+
+      - name: Check Environment Variable Usage (Antipatrón A)
+        run: bash docs/04_governance_and_quality/scripts/check_env_usage.sh
+
+      - name: Check DevSecOps Manifest Coverage (informational, Guard 25)
+        continue-on-error: true
+        run: bash docs/04_governance_and_quality/scripts/check_devsecops_manifest_coverage.sh
+
+      - name: Check Dynamic Rules Freshness (informational)
+        continue-on-error: true
+        run: bash .agents/scripts/check_rules_freshness.sh
+
+      - name: Validate DESIGN.md Spec
+        run: npx -y @google/design.md lint DESIGN.md
+
+  security-audit:
+    name: Security & Dependency Audit (SK-10 Job 2, Guard 25)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # TK-044: bloqueante desde ya — validado en vivo con el binario gitleaks real (v8.30.1):
+      # 12 falsos positivos en el historial de git (JWT_SECRET de fixtures de test, ejemplos
+      # de JWT en documentación), todos verificados manualmente como no-secretos y allowlisted
+      # con su fingerprint exacto en `.gitleaksignore` (nunca por regla completa). `gitleaks
+      # git .` sobre el historial completo confirma "no leaks found" tras el allowlist.
+      - name: Scan for hardcoded secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js (Node 24 LTS)
+        uses: actions/setup-node@v5
+        with:
+          node-version: 'lts/*'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # TK-043: nanoid/tmp parcheados vía package.json#pnpm.overrides (pnpm 9.x lee overrides
+      # ahí, no en pnpm-workspace.yaml — esa migración es de una versión de pnpm posterior a
+      # la pineada). vite/vitest quedan como riesgo residual documentado (dev server/UI
+      # únicamente, nunca en producción; fix real exige Vite 6/Vitest 3, decisión de stack
+      # pendiente de aprobación humana bajo Guard 24). pnpm 9.x no soporta `--ignore` ni
+      # auditConfig — check_dependency_audit.sh reimplementa esa capacidad y falla ante
+      # cualquier vulnerabilidad high/critical NO documentada explícitamente en su allow-list.
+      - name: Dependency Vulnerability Audit
+        run: bash docs/04_governance_and_quality/scripts/check_dependency_audit.sh
+
+      - name: Build backend image for CVE scan
+        run: docker build -f apps/backend/Dockerfile -t restostock-backend:ci .
+
+      - name: Build frontend image for CVE scan
+        run: docker build -f apps/frontend/Dockerfile -t restostock-frontend:ci .
+
+      # TK-044: bloqueante desde ya — trivy reportaba 34 CVEs High/Critical en la imagen
+      # backend (25 del binario Go de esbuild, arrastrado por vitest/vite como
+      # devDependencies copiadas sin querer a la imagen final; el resto, CVEs del npm
+      # bundleado en node:24-alpine, nunca ejecutado en producción) y 35 en la imagen
+      # frontend (Alpine 3.21 desactualizado de nginx:1.27-alpine). Corregido con un stage
+      # `deps-prod` (solo dependencies, nunca devDependencies) + eliminación del npm
+      # bundleado en el Dockerfile del backend, y `nginx:stable-alpine` (Alpine 3.24) en el
+      # del frontend. Verificado en vivo con `trivy image` local: 0 High/Critical en ambas.
+      - name: Scan backend image for CVEs (trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: restostock-backend:ci
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+      - name: Scan frontend image for CVEs (trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: restostock-frontend:ci
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+  test-and-build:
+    name: Unit/Integration Tests & Production Build
+    needs: lint-and-validate
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: restostock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js (Node 24 LTS)
+        uses: actions/setup-node@v5
+        with:
+          node-version: 'lts/*'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # TK-062: idem lint-and-validate — pnpm run build/test necesitan el cliente
+      # generado (src/generated/prisma/) antes de compilar/testear.
+      - name: Generate Prisma Client
+        run: pnpm --filter @restostock/backend exec prisma generate --schema=prisma/schema.prisma
+
+      - name: Validate DB Schema
+        run: npx prisma validate --schema=apps/backend/prisma/schema.prisma
+
+      - name: Run Test Suite (Vitest)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/restostock_test?schema=public
+          JWT_SECRET: test-jwt-secret-key-12345
+        run: pnpm run test
+
+      - name: Run Production Build
+        run: pnpm run build
+
+      - name: Profile Test Suite Speed (informational)
+        continue-on-error: true
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/restostock_test?schema=public
+          JWT_SECRET: test-jwt-secret-key-12345
+        run: bash docs/04_governance_and_quality/scripts/profile_test_suite.sh
+
+      - name: Mutation Testing — Domain & Application (informational, target 70%)
+        continue-on-error: true
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/restostock_test?schema=public
+          JWT_SECRET: test-jwt-secret-key-12345
+        run: pnpm --filter @restostock/backend run test:mutation

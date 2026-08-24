@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  // Prisma 7 (TK-062): sin motor Rust — requiere un driver adapter (@prisma/adapter-pg)
+  // en el constructor de PrismaClient. moduleFormat = "cjs" evita migrar todo el backend
+  // a ESM (el resto del proyecto sigue en CommonJS/NodeNext tal como estaba).
+  provider     = "prisma-client"
+  moduleFormat = "cjs"
+  // Dentro de src/ a proposito (no ../generated) — tsconfig.json fija rootDir=./src
+  // (Guard 12), y ampliarlo para incluir una carpeta hermana rompe la estructura de
+  // dist/. Generando aqui, tsc lo compila junto con el resto de src/ sin tocar tsconfig.
+  output       = "../src/generated/prisma"
+}
+
+datasource db {
+  // La URL de conexion se movio a prisma.config.ts (Prisma 7 ya no soporta `url` aqui).
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  KITCHEN_STAFF
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum RemanenteStatus {
+  ACTIVE
+  EXHAUSTED
+  DISCARDED
+}
+
+model User {
+  id             String     @id @default(uuid())
+  name           String
+  role           Role       @default(KITCHEN_STAFF)
+  pinHash        String
+  status         UserStatus @default(ACTIVE)
+  failedAttempts Int        @default(0)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Insumo {
+  id              String           @id @default(uuid())
+  name            String
+  unitOfMeasure   String           @default("KG")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  warehouseStocks WarehouseStock[]
+  remanentes      Remanente[]
+  stockMovements  StockMovement[]
+}
+
+model WarehouseStock {
+  id        String   @id @default(uuid())
+  insumoId  String
+  location  String   @default("MAIN_WAREHOUSE")
+  quantity  Decimal  @default(0) @db.Decimal(12, 3)
+  updatedAt DateTime @updatedAt
+  insumo    Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+}
+
+model Remanente {
+  id              String          @id @default(uuid())
+  insumoId        String
+  currentQuantity Decimal         @default(0) @db.Decimal(12, 3)
+  initialQuantity Decimal         @default(0) @db.Decimal(12, 3)
+  location        String          @default("KITCHEN_FRIDGE")
+  status          RemanenteStatus @default(ACTIVE)
+  expirationDate  DateTime
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  insumo          Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+}
+
+model StockMovement {
+  id        String   @id @default(uuid())
+  insumoId  String
+  type      String   // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK
+  quantity  Decimal  @db.Decimal(12, 3)
+  fromLoc   String
+  toLoc     String
+  createdAt DateTime @default(now())
+  insumo    Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+}
+
+model SystemHealth {
+  id        String   @id @default(uuid())
+  status    String
+  createdAt DateTime @default(now())
+}
+
+model Recipe {
+  id          String             @id @default(uuid())
+  name        String
+  category    String
+  description String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  ingredients RecipeIngredient[]
+}
+
+model RecipeIngredient {
+  id       String  @id @default(uuid())
+  recipeId String
+  insumoId String
+  quantity Decimal @db.Decimal(12, 4)
+  recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+}
+
+model ShiftReconciliation {
+  id         String                    @id @default(uuid())
+  shiftDate  DateTime
+  operatorId String
+  notes      String?
+  createdAt  DateTime                  @default(now())
+  items      ShiftReconciliationItem[]
+}
+
+model ShiftReconciliationItem {
+  id                  String              @id @default(uuid())
+  reconciliationId    String
+  remanenteId         String
+  insumoId            String
+  physicalQuantity    Decimal             @db.Decimal(12, 4)
+  theoreticalQuantity Decimal             @db.Decimal(12, 4)
+  variance            Decimal             @db.Decimal(12, 4)
+  reconciliation      ShiftReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
+}
