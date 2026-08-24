@@ -2,6 +2,7 @@
 
 namespace App\Actions\Users;
 
+use App\Actions\Auth\EnsureRecentPasswordConfirmation;
 use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
@@ -20,6 +21,18 @@ use Illuminate\Validation\ValidationException;
 class CreateUser
 {
     /**
+     * Constructor injection, not method injection, for the same reason
+     * App\Actions\Users\UpdateUser uses it (story 0015a): __invoke()'s four
+     * domain arguments are this action's whole public signature, called
+     * that way from both App\Livewire\Users\Index::createNewUser() and
+     * every direct-call test, so the guard is resolved from the container
+     * without widening that signature.
+     */
+    public function __construct(
+        private readonly EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation,
+    ) {}
+
+    /**
      * Provision a new administrator-created user account.
      *
      * The address goes straight into `users.email`, unverified — it is the
@@ -37,6 +50,15 @@ class CreateUser
      * `users.create` ability; the Super Admin role can never be assigned
      * through this action, by anyone, since no ability grants that (F1); the
      * Administrator role additionally requires `promoteToAdministrator`.
+     *
+     * Story 0015a, Phase 4 finding F1 (decision D6): creating an
+     * Administrator-tier account additionally requires a recently confirmed
+     * password. Deliberately narrow -- the guard fires only on the
+     * Administrator branch below, immediately after that branch's own
+     * `Gate::authorize('promoteToAdministrator', ...)` call, never before
+     * it: a caller lacking `roles.manage-administrators` must always see the
+     * permission refusal, never a re-confirmation prompt. Ordinary-role
+     * creation reaches no step-up check at all.
      */
     public function __invoke(string $name, string $email, string $roleId, UserStatus $status): User
     {
@@ -72,6 +94,12 @@ class CreateUser
             // why UserPolicy::promoteToAdministrator()'s $target parameter
             // defaults to null.
             Gate::authorize('promoteToAdministrator', User::class);
+
+            // Story 0015a, Phase 4 finding F1: only after the Gate call
+            // immediately above, never before -- so an actor lacking
+            // roles.manage-administrators always sees the permission
+            // refusal rather than a re-confirmation prompt.
+            ($this->ensureRecentPasswordConfirmation)();
         }
 
         try {

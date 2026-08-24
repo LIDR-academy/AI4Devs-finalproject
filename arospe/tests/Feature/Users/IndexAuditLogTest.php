@@ -140,6 +140,9 @@ test('editing a user with a changed email logs email_change_requested as true', 
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
+    // Story 0015a, Phase 4 finding F2: a THIRD-PARTY email change now requires a fresh
+    // password confirmation too.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create(['status' => UserStatus::Active, 'email' => 'audited-before@arospe.es']);

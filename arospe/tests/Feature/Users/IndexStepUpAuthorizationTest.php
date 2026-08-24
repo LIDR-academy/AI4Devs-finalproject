@@ -22,6 +22,7 @@ use App\Livewire\Users\Index;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Log;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -217,7 +218,7 @@ test('saving a name-only edit with a stale password confirmation still succeeds 
     expect($target->fresh()->name)->toBe('Renamed Through Dashboard');
 });
 
-test('creating a user with a stale password confirmation still succeeds through the dashboard', function () {
+test('creating a user with an ordinary role and a stale password confirmation still succeeds through the dashboard', function () {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
@@ -235,6 +236,139 @@ test('creating a user with a stale password confirmation still succeeds through 
         ->assertHasNoErrors();
 
     expect(User::where('email', 'new-through-dashboard@arospe.es')->exists())->toBeTrue();
+});
+
+// Phase 4 finding F1 (decision D6): creating an ADMINISTRATOR-TIER user through the dashboard is
+// now step-up-gated too -- CreateUser's own guard throws, save()'s catch converts it into the
+// same redirect deleteUser()/a role-or-status save() already produce.
+test('creating an Administrator-tier user with a stale password confirmation redirects to re-confirm, and no user is created', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators');
+    $this->actingAs($administrator);
+    markComponentPasswordConfirmationStale();
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', 'New Administrator Through Dashboard')
+        ->set('email', 'new-administrator-through-dashboard@arospe.es')
+        ->set('roleId', (string) $administratorRole->id)
+        ->set('status', UserStatus::Active->value)
+        ->call('save')
+        ->assertRedirect(route('password.confirm'));
+
+    expect(User::where('email', 'new-administrator-through-dashboard@arospe.es')->exists())->toBeFalse();
+});
+
+// Phase 4 finding F2 (decision D7): a THIRD-PARTY email change through the dashboard is now
+// step-up-gated too.
+test('editing another users email with a stale password confirmation redirects to re-confirm, and the pending email is left unset', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create(['email' => 'dashboard-third-party@arospe.es']);
+    $target->assignRole($editorRole);
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $target->id);
+
+    markComponentPasswordConfirmationStale();
+
+    $component->set('email', 'dashboard-third-party-new@arospe.es')
+        ->call('save')
+        ->assertRedirect(route('password.confirm'));
+
+    expect($target->fresh()->pending_email)->toBeNull()
+        ->and($target->fresh()->getRawOriginal('email'))->toBe('dashboard-third-party@arospe.es');
+});
+
+// =====================================================================
+// Phase 4 finding F4: both catch blocks log the refusal, carrying
+// actor_id, action and the target's user_id, before redirecting --
+// matching story 0015's F5 Log::info shape for this same class's
+// successful mutations.
+// =====================================================================
+
+test('a step-up refusal on a role change logs a warning with the actor, the action, and the target before redirecting', function () {
+    Log::spy();
+
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create();
+    $target->assignRole($editorRole);
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $target->id);
+
+    markComponentPasswordConfirmationStale();
+
+    $component->set('roleId', (string) $blogEditorRole->id)
+        ->call('save')
+        ->assertRedirect(route('password.confirm'));
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context): bool => $message === 'Step-up password confirmation required'
+            && ($context['actor_id'] ?? null) === $administrator->id
+            && ($context['action'] ?? null) === 'users.update'
+            && ($context['user_id'] ?? null) === $target->id)
+        ->once();
+});
+
+test('a step-up refusal on an Administrator-tier creation logs a warning with the actor and the action, and a null user_id', function () {
+    Log::spy();
+
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators');
+    $this->actingAs($administrator);
+    markComponentPasswordConfirmationStale();
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', 'Logged Administrator Creation')
+        ->set('email', 'logged-administrator-creation@arospe.es')
+        ->set('roleId', (string) $administratorRole->id)
+        ->set('status', UserStatus::Active->value)
+        ->call('save')
+        ->assertRedirect(route('password.confirm'));
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context): bool => $message === 'Step-up password confirmation required'
+            && ($context['actor_id'] ?? null) === $administrator->id
+            && ($context['action'] ?? null) === 'users.create'
+            && ($context['user_id'] ?? null) === null)
+        ->once();
+});
+
+test('a step-up refusal on a deletion logs a warning with the actor, the action, and the target before redirecting', function () {
+    Log::spy();
+
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    // auth.password_confirmed_at deliberately never written.
+
+    $target = User::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('confirmDelete', $target->id)
+        ->call('deleteUser')
+        ->assertRedirect(route('password.confirm'));
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context): bool => $message === 'Step-up password confirmation required'
+            && ($context['actor_id'] ?? null) === $administrator->id
+            && ($context['action'] ?? null) === 'users.delete'
+            && ($context['user_id'] ?? null) === $target->id)
+        ->once();
 });
 
 // =====================================================================

@@ -200,11 +200,16 @@ class UpdateUser
             Gate::authorize('updateSensitiveAttributes', $user);
         }
 
-        // Story 0015a — step-up authentication. Hung off $isNoOpRoleChange /
-        // $statusChanged DIRECTLY, never off the wider `$emailChanged ||
-        // $statusChanged` condition immediately above: that condition also
-        // gates updateSensitiveAttributes for an EMAIL-only change, which
-        // must reach no step-up check at all. Placed after every
+        // Story 0015a — step-up authentication. Widened by Phase 4 finding
+        // F2 (decision D7): the condition is now exactly
+        // updateSensitiveAttributes's own `$emailChanged || $statusChanged`
+        // PLUS a genuine role change (`! $isNoOpRoleChange`) -- so a
+        // third-party email change is step-up-gated too, matching
+        // updateSensitiveAttributes's own "an email rewrite is
+        // severity-equivalent to account takeover" rule. This method only
+        // runs when `! $isSelfEdit` (see __invoke()), so a self-service
+        // email change never reaches this branch at all -- the exemption is
+        // structural, not a second condition here. Placed after every
         // Gate::authorize() call on this branch (promoteToAdministrator /
         // downgrade above, updateSensitiveAttributes immediately above) so a
         // permission refusal always wins over a step-up refusal — including
@@ -212,7 +217,7 @@ class UpdateUser
         // a Gate check, so Gate::before's bypass does not exempt it. Still
         // above the first write: this whole method runs above __invoke()'s
         // DB::transaction().
-        if (! $isNoOpRoleChange || $statusChanged) {
+        if (! $isNoOpRoleChange || $emailChanged || $statusChanged) {
             ($this->ensureRecentPasswordConfirmation)();
         }
     }

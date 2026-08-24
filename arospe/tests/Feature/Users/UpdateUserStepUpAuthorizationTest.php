@@ -233,12 +233,15 @@ test('a name-only edit succeeds despite a stale confirmation', function () {
     expect($target->fresh()->name)->toBe('Renamed');
 });
 
-// This is the test that fails if the guard is attached to authorizeRoleAndStatusChange()'s ENTRY
-// (which also runs for an email-only change, since that method also gates
-// updateSensitiveAttributes for an email change) rather than to its role/status branches
-// specifically -- exactly the over-block risk the story's Files-to-modify section calls out as
-// "the single most likely way this story over-blocks".
-test('an email-only change is accepted and parked as pending despite a stale confirmation', function () {
+// =====================================================================
+// Phase 4 finding F2 (decision D7) -- a THIRD-PARTY email-only change is
+// now step-up-gated too, matching updateSensitiveAttributes's own "an
+// email rewrite is severity-equivalent to account takeover" rule. A
+// self-service email change (the actor's own address) remains exempt --
+// see the test below.
+// =====================================================================
+
+test('a third-party email-only change is refused when the confirmation is stale, and the pending email is left unset', function () {
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit');
     $this->actingAs($actor);
@@ -249,11 +252,35 @@ test('an email-only change is accepted and parked as pending despite a stale con
     $target->assignRole($editorRole);
 
     $updateUser = app(UpdateUser::class);
-    $updateUser($target, $target->name, 'stepup-email-only-new@arospe.es', (string) $editorRole->id, $target->status, app(RequestEmailChange::class));
+
+    expect(fn () => $updateUser($target, $target->name, 'stepup-email-only-new@arospe.es', (string) $editorRole->id, $target->status, app(RequestEmailChange::class)))
+        ->toThrow(PasswordConfirmationRequiredException::class);
 
     $target->refresh();
-    expect($target->pending_email)->toBe('stepup-email-only-new@arospe.es')
+    expect($target->pending_email)->toBeNull()
         ->and($target->getRawOriginal('email'))->toBe('stepup-email-only@arospe.es');
+});
+
+// This is the test that fails if the guard is attached to authorizeRoleAndStatusChange()'s ENTRY
+// unconditionally for every non-self edit, rather than firing only when a role, status or (per
+// F2) THIRD-PARTY email change is actually happening -- exactly the over-block risk the story's
+// Files-to-modify section calls out as "the single most likely way this story over-blocks".
+// Narrowed by F2: an email-only change of ANOTHER user is now covered by the test above; this one
+// is the SELF-service case, which never reaches authorizeRoleAndStatusChange() at all (__invoke()
+// only calls it when ! $isSelfEdit) -- so there is no third party to protect and no step-up check
+// to fire.
+test('a self-service email-only change is accepted and parked as pending despite a stale confirmation', function () {
+    $actor = User::factory()->create(['email' => 'stepup-self-email@arospe.es', 'status' => UserStatus::Active]);
+    $actor->givePermissionTo('users.edit');
+    $this->actingAs($actor);
+    markPasswordConfirmationStale();
+
+    $updateUser = app(UpdateUser::class);
+    $updateUser($actor, $actor->name, 'stepup-self-email-new@arospe.es', '', $actor->status, app(RequestEmailChange::class));
+
+    $actor->refresh();
+    expect($actor->pending_email)->toBe('stepup-self-email-new@arospe.es')
+        ->and($actor->getRawOriginal('email'))->toBe('stepup-self-email@arospe.es');
 });
 
 test('a self-edit that submits a different role succeeds despite a stale confirmation, because no role change actually occurs', function () {
@@ -449,10 +476,21 @@ test('the refusal against a direct call is PasswordConfirmationRequiredException
 });
 
 // =====================================================================
-// Fail-closed with no session at all.
+// Fail-closed with an unset confirmation key -- NOT the same claim as "no
+// session at all". Phase 4 finding F5: this test's original title claimed
+// the latter while actingAs() still binds a real session store, it only
+// leaves this one key unset -- the identical case
+// tests/Feature/Actions/Auth/EnsureRecentPasswordConfirmationTest.php's "it
+// throws when the confirmation was never set this session" already covers
+// at the raw-guard level. Kept here, renamed to what it actually proves:
+// UpdateUser's full role-change path (not just the guard in isolation)
+// fails closed too. The genuinely session-less claim -- no Laravel
+// container/session service bound at all -- is
+// tests/Unit/Actions/Auth/EnsureRecentPasswordConfirmationTest.php's own
+// test, which this one is deliberately not a substitute for.
 // =====================================================================
 
-test('a caller invoking the action with no session at all is refused rather than exempted', function () {
+test('a role change is refused when the confirmation key was never set this session, under a real actingAs() session', function () {
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit');
     $this->actingAs($actor);

@@ -32,8 +32,9 @@ return [
     'index' => [
         'summary' => ':total usuarios · :active activos',
         'action_not_allowed' => 'Acción no permitida',
-        'step_up_notice_edit' => 'Cambiar el rol o el estado de este usuario requerirá que vuelvas a confirmar tu contraseña.',
+        'step_up_notice_edit' => 'Cambiar el rol, el estado o el correo electrónico de este usuario requerirá que vuelvas a confirmar tu contraseña.',
         'step_up_notice_delete' => 'Eliminar a este usuario requerirá que vuelvas a confirmar tu contraseña.',
+        'step_up_notice_create' => 'Crear un usuario con nivel de Administrador requerirá que vuelvas a confirmar tu contraseña.',
     ],
 
     /*

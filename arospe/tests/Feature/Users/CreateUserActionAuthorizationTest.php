@@ -61,6 +61,9 @@ test('creating a user with the Administrator role directly succeeds for an actor
     $actor = User::factory()->create();
     $actor->givePermissionTo(['users.create', 'roles.manage-administrators']);
     $this->actingAs($actor);
+    // Story 0015a, Phase 4 finding F1: creating an Administrator-tier user now requires a
+    // fresh password confirmation too.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
 

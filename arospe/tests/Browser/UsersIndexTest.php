@@ -118,7 +118,11 @@ test('the per-row edit action opens the modal prefilled, so re-saving without ch
 test('creating a user by selecting a role and a status from the dropdowns saves it with no validation errors', function () {
     $superAdmin = User::factory()->create();
     $superAdmin->assignRole('Super Admin');
-    $this->actingAs($superAdmin);
+    // Story 0015a, Phase 4 finding F1: creating an Administrator-tier user (picked below) now
+    // requires a fresh password confirmation too, even for a Super Admin actor.
+    $this->actingAs($superAdmin)->withSession([
+        'auth.password_confirmed_at' => now()->unix(),
+    ]);
 
     visit('/users')
         ->assertNoJavaScriptErrors()

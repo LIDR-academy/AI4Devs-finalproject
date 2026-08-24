@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
@@ -33,6 +34,7 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configurePasswordConfirmationRateLimiting();
         $this->configurePasskeys();
     }
 
@@ -118,6 +120,60 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by(
                 ($credentialId ?: $request->session()->getId()).'|'.$request->ip(),
             );
+        });
+    }
+
+    /**
+     * Rate limit `password.confirm.store` (story 0015a, Phase 4 finding F3 /
+     * decision D8).
+     *
+     * Verified in vendor source: unlike `login`, `two-factor` and
+     * `passkeys`, `Laravel\Fortify\routes\routes.php` registers
+     * `password.confirm.store` with no `config('fortify.limiters.*')` lookup
+     * at all -- there is no config key this route consults, so a limiter
+     * cannot be wired the way the other three are. Once story 0015a makes
+     * this route the sole barrier in front of
+     * role/status/delete/promote-to-Administrator/third-party-email-change,
+     * an unthrottled attacker holding a hijacked session could guess the
+     * account's own password against it without limit.
+     *
+     * The route object is appended to directly, after every provider
+     * (vendor and app) has finished booting -- `$this->app->booted()`,
+     * rather than doing this inline in `boot()`, because
+     * Laravel\Fortify\FortifyServiceProvider registers this route from its
+     * own `boot()` too, and provider boot order between packages is not a
+     * contract this app should depend on. `Route::middleware()` on an
+     * already-registered `Illuminate\Routing\Route` instance appends to its
+     * existing middleware stack rather than replacing it.
+     *
+     * `refreshNameLookups()` first is not optional, and was found only by
+     * tracing real execution rather than reading the vendor source:
+     * `RouteCollection::add()` populates its name-lookup table from
+     * `$route->getName()` at the moment the route is added to the
+     * collection, but Fortify's routes.php calls `->name(...)` as a
+     * separate fluent call **after** `Route::post(...)` has already
+     * returned (and therefore already been `add()`-ed) -- so the route is
+     * genuinely registered, but `getByName('password.confirm.store')`
+     * returns `null` until something rebuilds the name-lookup table.
+     * `Illuminate\Foundation\Support\Providers\RouteServiceProvider`
+     * ordinarily does exactly that from its own `$this->app->booted()`
+     * callback, registered while loading *this app's own* `routes/web.php`
+     * -- which the framework's provider-registration order places *before*
+     * package-discovered providers such as vendor Fortify's, so that
+     * rebuild runs before Fortify's routes even exist to be looked up by
+     * name. Calling `refreshNameLookups()` again here, immediately before
+     * the lookup, is what makes this deterministic rather than order-
+     * dependent on a callback this class does not own.
+     */
+    private function configurePasswordConfirmationRateLimiting(): void
+    {
+        RateLimiter::for('confirm-password', function (Request $request) {
+            return Limit::perMinute(5)->by((string) ($request->user()?->id ?: $request->ip()));
+        });
+
+        $this->app->booted(function (): void {
+            Route::getRoutes()->refreshNameLookups();
+            Route::getRoutes()->getByName('password.confirm.store')?->middleware('throttle:confirm-password');
         });
     }
 }

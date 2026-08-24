@@ -208,17 +208,32 @@ class Index extends Component
                 $this->updateExistingUser($updateUser, $requestEmailChange, $target, $validated);
             }
         } catch (PasswordConfirmationRequiredException) {
-            // Story 0015a — a role/status change reached UpdateUser's
-            // step-up guard. The modal is deliberately left open (accepted
-            // UX wart, decision D4) rather than closed/reloaded: the actor
-            // is being redirected away entirely, so there is nothing to
-            // reset here. setIntendedUrl() is required because this request
-            // is a POST to /livewire/update, not the GET
+            // Story 0015a — a role/status/email change (or, on the create
+            // path, an Administrator-tier creation -- Phase 4 finding F1)
+            // reached the step-up guard. The modal is deliberately left open
+            // (accepted UX wart, decision D4) rather than closed/reloaded:
+            // the actor is being redirected away entirely, so there is
+            // nothing to reset here. setIntendedUrl() is required because
+            // this request is a POST to /livewire/update, not the GET
             // RequirePassword::redirectGuest() normally handles, so nothing
             // else populates `url.intended` for Fortify's post-confirmation
             // response to return to. $this->redirect() (not a bare
             // redirect()->route()) is what a Livewire action method needs to
             // turn into a real browser navigation.
+            //
+            // Phase 4 finding F4: logged before redirecting -- a step-up
+            // refusal is the strongest available signal of a hijacked or
+            // unattended session, and was previously invisible to the audit
+            // trail story 0015's F5 established for this same class.
+            // $target is null on the create path (the guard fired inside
+            // CreateUser before any row existed), so the action/user_id
+            // reflect whichever branch actually threw.
+            Log::warning('Step-up password confirmation required', [
+                'actor_id' => Auth::id(),
+                'action' => $target === null ? 'users.create' : 'users.update',
+                'user_id' => $target?->id,
+            ]);
+
             redirect()->setIntendedUrl(route('users.index'));
             $this->redirect(route('password.confirm'));
 
@@ -316,7 +331,14 @@ class Index extends Component
             $ensureRecentPasswordConfirmation();
         } catch (PasswordConfirmationRequiredException) {
             // See save()'s identical catch block for why both
-            // setIntendedUrl() and $this->redirect() are required here.
+            // setIntendedUrl() and $this->redirect() are required here, and
+            // for why the refusal is logged first (Phase 4 finding F4).
+            Log::warning('Step-up password confirmation required', [
+                'actor_id' => Auth::id(),
+                'action' => 'users.delete',
+                'user_id' => $target->id,
+            ]);
+
             redirect()->setIntendedUrl(route('users.index'));
             $this->redirect(route('password.confirm'));
 
@@ -383,6 +405,37 @@ class Index extends Component
     public function requiresPasswordConfirmation(): bool
     {
         return ! app(EnsureRecentPasswordConfirmation::class)->isRecentlyConfirmed();
+    }
+
+    /**
+     * Whether the create form's currently selected role is Administrator-
+     * tier — the second predicate the create form's re-confirmation notice
+     * is gated on, alongside requiresPasswordConfirmation() above (story
+     * 0015a, Phase 4 finding F1). Reads Role::isAdministratorRole() against
+     * the resolved $roleId, the identical check CreateUser's own step-up
+     * guard fires on, so the hint and the guard cannot drift. An empty or
+     * unresolvable $roleId is never Administrator-tier.
+     *
+     * `isset($this->roleId)` rather than a bare property read: a forged
+     * `->set('roleId', null)` against this non-nullable `string` property
+     * (tests/Feature/Users/IndexTest.php's "no role chosen" validation
+     * dataset does exactly this, to prove roleRules() rejects it) leaves
+     * Livewire's synth unable to coerce the property, so a direct
+     * `$this->roleId` read throws Livewire\Exceptions\
+     * PropertyNotFoundException from inside this class's own method --
+     * `Component::__isset()` catches that exception internally and returns
+     * `false`, which is exactly the right answer here: no role is selected.
+     */
+    #[Computed]
+    public function isAdministratorRoleSelected(): bool
+    {
+        if (! isset($this->roleId) || $this->roleId === '') {
+            return false;
+        }
+
+        $role = Role::query()->find((int) $this->roleId);
+
+        return $role !== null && Role::isAdministratorRole($role);
     }
 
     /**

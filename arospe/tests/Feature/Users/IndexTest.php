@@ -592,6 +592,9 @@ test('changing an email to a different free address is accepted', function () {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
+    // Story 0015a, Phase 4 finding F2: a THIRD-PARTY email change now requires a fresh
+    // password confirmation too.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create(['email' => 'target@arospe.es']);
@@ -632,6 +635,9 @@ test('editing another users email holds it as pending and notifies only the new 
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
+    // Story 0015a, Phase 4 finding F2: a THIRD-PARTY email change now requires a fresh
+    // password confirmation too.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create(['email' => 'target@arospe.es', 'status' => UserStatus::Active]);
@@ -685,6 +691,9 @@ test('changing a users name and email at once applies the name immediately, the 
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
+    // Story 0015a, Phase 4 finding F2: a THIRD-PARTY email change now requires a fresh
+    // password confirmation too.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create(['email' => 'target@arospe.es']);
@@ -910,6 +919,9 @@ test('creating a user holding the seeded Administrator role succeeds with the st
     $administrator->assignRole('Administrator');
     $administrator->givePermissionTo('roles.manage-administrators');
     $this->actingAs($administrator);
+    // Story 0015a, Phase 4 finding F1: creating an Administrator-tier user now requires a
+    // fresh password confirmation too.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
 
@@ -1255,6 +1267,9 @@ test('changing an Administrators email with the stricter permission succeeds and
     $administrator->assignRole('Administrator');
     $administrator->givePermissionTo('roles.manage-administrators');
     $this->actingAs($administrator);
+    // Story 0015a, Phase 4 finding F2: a THIRD-PARTY email change now requires a fresh
+    // password confirmation too.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
     $target = User::factory()->create(['email' => 'admin.target@arospe.es']);

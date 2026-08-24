@@ -162,19 +162,38 @@
                         @endif
                     </div>
 
-                    {{-- Story 0015a: only the edit form (never the create form, which this
-                    same @if ($showModal) block also renders) warns that changing role/status
-                    requires re-confirming the password -- creation is never step-up-gated
-                    (decision D1). Gated on the same requiresPasswordConfirmation() predicate
-                    the guard itself reads (EnsureRecentPasswordConfirmation::isRecentlyConfirmed()),
-                    so the hint and the guard cannot drift. Placed above the role/status selects
-                    so it is read before the fields it applies to. --}}
-                    @if ($editingUserId !== null && $this->requiresPasswordConfirmation)
+                    {{-- Story 0015a: the edit form warns that changing role, status or email
+                    requires re-confirming the password (widened by Phase 4 finding F2 to
+                    include email). Never shown on a self-edit -- a self-service email change
+                    is exempt by construction (App\Actions\Users\UpdateUser only runs the
+                    step-up guard when ! $isSelfEdit), and role/status changes are always
+                    silently no-op'd on the actor's own row -- so the notice would be
+                    misleading there. Gated on the same requiresPasswordConfirmation()
+                    predicate the guard itself reads
+                    (EnsureRecentPasswordConfirmation::isRecentlyConfirmed()), so the hint and
+                    the guard cannot drift. Placed above the role/status selects so it is read
+                    before the fields it applies to. --}}
+                    @if ($editingUserId !== null && $editingUserId !== auth()->id() && $this->requiresPasswordConfirmation)
                         <flux:callout
                             variant="warning"
                             icon="exclamation-triangle"
                             :heading="__('users.index.step_up_notice_edit')"
                             data-test="edit-modal-reconfirm-notice"
+                        />
+                    @endif
+
+                    {{-- Story 0015a, Phase 4 finding F1: the create form warns only when the
+                    selected role is Administrator-tier -- an ordinary-role creation is never
+                    step-up-gated. Gated on the same two predicates
+                    CreateUser's own guard fires on (isAdministratorRoleSelected mirrors
+                    Role::isAdministratorRole(), requiresPasswordConfirmation mirrors the
+                    freshness check), so the hint and the guard cannot drift. --}}
+                    @if ($editingUserId === null && $this->isAdministratorRoleSelected && $this->requiresPasswordConfirmation)
+                        <flux:callout
+                            variant="warning"
+                            icon="exclamation-triangle"
+                            :heading="__('users.index.step_up_notice_create')"
+                            data-test="create-modal-reconfirm-notice"
                         />
                     @endif
 
