@@ -14,6 +14,10 @@
 201ab862aa68b70e878ed072d4c8fdd1d1483a3d:readme.md:generic-api-key:287
 201ab862aa68b70e878ed072d4c8fdd1d1483a3d:docs/10_restostock_api_specification.md:generic-api-key:40
 201ab862aa68b70e878ed072d4c8fdd1d1483a3d:docs/03_restostock_design.md:generic-api-key:276
+# Mismo placeholder "eyJhbGciOiJIUzI1NiIsIn..." (truncado, decorativo), fingerprint distinto
+# porque readme.md se reescribio en TK-049-FE (nuevo blob hash) — detectado con TK-063 (ci_local.sh),
+# confirmado como el mismo caso ya documentado arriba, no un secreto nuevo.
+8ee1ed012b415ceb2b0db1f8a090c73895d6a07f:readme.md:generic-api-key:299
 64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:prompts.md:curl-auth-header:1088
 64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:readme.md:curl-auth-header:4028
 64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:readme.md:curl-auth-header:4288

@@ -9,6 +9,9 @@ dist/
 build/
 # Cliente Prisma generado (TK-062, generator "prisma-client") — codigo generado, no se commitea
 apps/backend/src/generated/
+
+# Binarios auto-descargados por ci_local.sh (TK-063) — cache local, no se commitea
+.ci-local-tools/
 .next/
 out/
 .nuxt/
