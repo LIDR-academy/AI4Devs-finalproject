@@ -418,13 +418,14 @@ class Index extends Component
      * Compares ids (`$editingUserId === Auth::id()`) rather than loading
      * `$target` and calling `$target->is(Auth::user())`, the idiom
      * `openEditModal()` and `UpdateUser`'s `$isSelfEdit` use — the two are
-     * equivalent for this UUID-keyed model (`Model::is()` itself compares
-     * `getKey()`, `getKeyName()` and the class), and comparing ids needs no
-     * extra query since `$editingUserId` is already the value the modal was
-     * opened with. Phase 5 re-audit finding F-5 flagged an earlier draft of
-     * this docblock for claiming the `->is()` idiom was used verbatim when
-     * it wasn't; corrected here rather than changed to match, since the
-     * id comparison is the cheaper of the two equivalent checks.
+     * equivalent here (`Model::is()` compares `getKey()`, `getTable()` and
+     * `getConnectionName()`, all three identical for two `User` rows with
+     * the same id), and comparing ids needs no extra query since
+     * `$editingUserId` is already the value the modal was opened with.
+     * Phase 5 re-audit finding F-5 flagged an earlier draft of this
+     * docblock for claiming the `->is()` idiom was used verbatim when it
+     * wasn't; corrected here rather than changed to match, since the id
+     * comparison is the cheaper of the two equivalent checks.
      */
     #[Computed]
     public function isEditingOwnRow(): bool
@@ -461,13 +462,20 @@ class Index extends Component
      * (tests/Feature/Users/IndexTest.php's "no role chosen" validation
      * dataset does exactly this, to prove roleRules() rejects it) leaves
      * Livewire's synth unable to coerce the incoming `null` into the
-     * declared `string` type, so it clears the property via reflection
-     * rather than writing an invalid value -- an uninitialized *typed*
-     * property, which is a distinct PHP state from "holds null". A direct
-     * `$this->roleId` read in that state throws PHP's own
-     * "must not be accessed before initialization" Error; `isset()` is the
-     * one construct that observes that state without throwing, returning
-     * `false` -- exactly the right answer here: no role is selected.
+     * declared `string` type -- HandleComponents::
+     * setComponentPropertyAwareOfTypes() catches the resulting \TypeError
+     * and `unset()`s the property instead of writing an invalid value.
+     * PHP routes a read of an unset *declared* property through the magic
+     * methods even from inside the declaring class, so a direct
+     * `$this->roleId` read in that state hits
+     * Livewire\Component::__get() and throws
+     * Livewire\Exceptions\PropertyNotFoundException; `isset()` hits
+     * Component::__isset(), which catches that exception internally and
+     * returns `false` -- exactly the right answer here: no role is
+     * selected. (Verified by execution, not inferred: a Phase 5 review
+     * pass previously replaced this explanation with a plausible-sounding
+     * but wrong one -- "clears via reflection", "throws PHP's own typed-
+     * property Error" -- corrected back after tracing the real call path.)
      *
      * Larastan (level 7) flags the `isset()` below as `isset.property`,
      * reasoning from the property's *declared* type (`string`, with a
