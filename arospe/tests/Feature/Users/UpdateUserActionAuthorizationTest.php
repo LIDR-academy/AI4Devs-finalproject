@@ -37,6 +37,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
@@ -225,6 +226,9 @@ test('updating a user directly to promote them to Administrator succeeds for an 
     $actor = User::factory()->create();
     $actor->givePermissionTo(['users.edit', 'roles.manage-administrators']);
     $this->actingAs($actor);
+    // Story 0015a: this is a real role change (Editor -> Administrator), so it requires a fresh
+    // password confirmation to reach the write this test is actually about.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $administratorRole = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
@@ -275,6 +279,9 @@ test('assigning a custom role named "Administrador Regional" needs no roles.mana
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit'); // deliberately NOT roles.manage-administrators
     $this->actingAs($actor);
+    // Story 0015a: this is a real role change (Editor -> Administrador Regional), so it requires
+    // a fresh password confirmation to reach the write this test is actually about.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $customRole = Role::create(['name' => 'Administrador Regional', 'guard_name' => 'web']);
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
@@ -305,6 +312,9 @@ test('a custom role holding every permission the seeded Administrator role holds
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit'); // deliberately NOT roles.manage-administrators
     $this->actingAs($actor);
+    // Story 0015a: this is a real role change (none -> Deputy), so it requires a fresh password
+    // confirmation to reach the write this test is actually about.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $administratorRole = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->firstOrFail();
     $deputyRole = Role::create(['name' => 'Deputy', 'guard_name' => 'web']);
@@ -327,6 +337,9 @@ test('changing an ordinary users status and email directly needs no roles.manage
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit'); // deliberately NOT roles.manage-administrators
     $this->actingAs($actor);
+    // Story 0015a: this test changes the target's status (Active -> Suspended), which requires a
+    // fresh password confirmation to reach the write this test is actually about.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create(['status' => UserStatus::Active, 'email' => 'ordinary.target@arospe.es']);
@@ -352,6 +365,9 @@ test('with no Administrator role row present, updating a user with an ordinary r
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit');
     $this->actingAs($actor);
+    // Story 0015a: this is a real role change (none -> Editor), so it requires a fresh password
+    // confirmation to reach the write this test is actually about.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create(['email' => 'no-admin-row.target@arospe.es']);
@@ -372,6 +388,11 @@ test('a roleId matching no role at all when updating is not treated as a promoti
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit'); // deliberately NOT roles.manage-administrators
     $this->actingAs($actor);
+    // Story 0015a: a genuine role change is detected before role resolution runs, so the step-up
+    // guard would otherwise intercept first and this test would pass for the wrong reason (any
+    // non-AuthorizationException satisfies the old loose assertion, PasswordConfirmationRequiredException
+    // included) without ever reaching the role-resolution failure it exists to prove.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $target = User::factory()->create();
@@ -388,7 +409,7 @@ test('a roleId matching no role at all when updating is not treated as a promoti
     }
 
     expect($caught)->not->toBeNull()
-        ->and($caught)->not->toBeInstanceOf(AuthorizationException::class);
+        ->and($caught)->toBeInstanceOf(RoleDoesNotExist::class);
 });
 
 // =====================================================================
@@ -603,6 +624,9 @@ test('a successful edit that changes name, status, role and email together appli
     $actor = User::factory()->create();
     $actor->givePermissionTo('users.edit');
     $this->actingAs($actor);
+    // Story 0015a: this test changes both role and status, so it requires a fresh password
+    // confirmation to reach the writes this test is actually about.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);

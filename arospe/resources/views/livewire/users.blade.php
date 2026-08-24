@@ -162,6 +162,22 @@
                         @endif
                     </div>
 
+                    {{-- Story 0015a: only the edit form (never the create form, which this
+                    same @if ($showModal) block also renders) warns that changing role/status
+                    requires re-confirming the password -- creation is never step-up-gated
+                    (decision D1). Gated on the same requiresPasswordConfirmation() predicate
+                    the guard itself reads (EnsureRecentPasswordConfirmation::isRecentlyConfirmed()),
+                    so the hint and the guard cannot drift. Placed above the role/status selects
+                    so it is read before the fields it applies to. --}}
+                    @if ($editingUserId !== null && $this->requiresPasswordConfirmation)
+                        <flux:callout
+                            variant="warning"
+                            icon="exclamation-triangle"
+                            :heading="__('users.index.step_up_notice_edit')"
+                            data-test="edit-modal-reconfirm-notice"
+                        />
+                    @endif
+
                     <flux:select wire:model="roleId" :label="__('Role')" :placeholder="__('Select a role')">
                         @foreach ($this->roleOptions as $option)
                             <flux:select.option value="{{ $option['id'] }}">{{ $option['name'] }}</flux:select.option>
@@ -208,6 +224,18 @@
                         {{ __('Are you sure you want to delete ":name"? This cannot be undone.', ['name' => $deletingUserName]) }}
                     </flux:text>
                 </div>
+
+                {{-- Story 0015a: same predicate as the edit modal's notice above, so the hint
+                and the guard cannot drift. Placed above the destructive button so it is read
+                before the actor commits to it. --}}
+                @if ($this->requiresPasswordConfirmation)
+                    <flux:callout
+                        variant="warning"
+                        icon="exclamation-triangle"
+                        :heading="__('users.index.step_up_notice_delete')"
+                        data-test="delete-modal-reconfirm-notice"
+                    />
+                @endif
 
                 <div class="flex gap-3 justify-end">
                     <flux:button variant="outline" wire:click="closeDeleteModal">

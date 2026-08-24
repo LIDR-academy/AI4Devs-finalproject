@@ -85,6 +85,10 @@ test('editing a user logs the actor, the target, and the PRE-WRITE before/after 
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
+    // Story 0015a: the role+status change under test here requires a fresh password
+    // confirmation, so it doesn't get intercepted by the step-up guard before the log line this
+    // test is actually about is ever written.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
     $blogEditorRole = Role::create(['name' => 'Blog Editor', 'guard_name' => 'web']);
@@ -191,6 +195,9 @@ test('deleting a user logs the actor and the target', function () {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
     $this->actingAs($administrator);
+    // Story 0015a: deleteUser() now runs the same step-up guard, so it needs a fresh
+    // confirmation to reach the deletion (and its log line) at all.
+    session(['auth.password_confirmed_at' => now()->unix()]);
 
     $target = User::factory()->create();
     $targetId = $target->id;

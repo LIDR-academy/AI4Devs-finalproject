@@ -32,6 +32,8 @@ return [
     'index' => [
         'summary' => ':total users · :active active',
         'action_not_allowed' => 'Action not allowed',
+        'step_up_notice_edit' => 'Changing this user\'s role or status will require you to re-confirm your password.',
+        'step_up_notice_delete' => 'Deleting this user will require you to re-confirm your password.',
     ],
 
     /*
