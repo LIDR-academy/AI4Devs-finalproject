@@ -214,7 +214,8 @@ Canonical terms for what exists in the code **today**, derived from [`app/Models
 | **Authentication code** | The 6-digit time-based code entered to confirm/challenge 2FA (not "OTP", "PIN"). | 2FA challenge flow |
 | **Recovery code** | A single-use backup code to sign in when the authenticator is unavailable. | `two_factor_recovery_codes`, `RecoveryCodes` component |
 | **Passkey** | A WebAuthn credential for passwordless sign-in (not "security key", "login token"). | `passkeys` table, `PasskeyAuthenticatable` |
-| **Password confirmation** | Re-entering the current password to re-authorize a sensitive action. | `password.confirm` middleware on `security.edit` |
+| **Password confirmation** | Re-entering the current password to re-authorize a sensitive action. | `password.confirm` middleware on `security.edit`; the in-method step-up guard on the Users screen |
+| **Step-up authentication** | Requiring a *recently* confirmed password before a privileged action, even though the actor already holds the permission (not "re-login", "2FA"). | `App\Actions\Auth\EnsureRecentPasswordConfirmation`, `auth.password_confirmed_at` |
 | **Session** | A server-side authenticated session record. | `sessions` table (`SESSION_DRIVER=database`) |
 | **Dashboard** | The authenticated landing page after sign-in. | `dashboard` route |
 | **Security settings** | The page to manage password, 2FA, and passkeys. | `security.edit` route, `Security` component |
@@ -244,6 +245,8 @@ Conventions for the translation:
 
 See [examples/](examples/) for three complete scenario → Pest translations built on this convention.
 
-_Last updated: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for rule 5, which read `#5-consistent-language--shared-glossary` while the heading is "Consistent language / **shared domain** glossary". Content unchanged._
+_Last updated: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions): one glossary term added, **Step-up authentication**, with its "not re-login / not 2FA" disambiguation — the story's own Gherkin needed a settled word for "requiring a *recently* confirmed password from an actor who already holds the permission", and the existing **Password confirmation** entry pointed only at `security.edit`'s middleware, which is now one of two places the app requires one. Nothing else on this page changed._
+
+_Previously: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for rule 5, which read `#5-consistent-language--shared-glossary` while the heading is "Consistent language / **shared domain** glossary". Content unchanged._
 
 _Previously: 2026-07-19 — New frontend/browser testing guide added by the docs-maintainer skill._

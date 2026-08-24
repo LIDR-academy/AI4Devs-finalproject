@@ -31,6 +31,7 @@ flowchart LR
         Livewire["Livewire 4 components\napp/Livewire/**"]
         Controllers["Domain controllers\napp/Http/Controllers/**"]
         Gate["Gate + policies\napp/Policies/UserPolicy.php"]
+        StepUp["Step-up guard\napp/Actions/Auth/EnsureRecentPasswordConfirmation.php"]
         Fortify["Fortify actions\napp/Actions/Fortify/**"]
         Actions["Domain actions\napp/Actions/Users/**"]
         Models["Eloquent models\napp/Models/User.php"]
@@ -48,6 +49,9 @@ flowchart LR
     Livewire -->|"Gate::authorize(...)"| Gate
     Livewire -->|"delegates create/reset/2FA"| Fortify
     Livewire -->|"delegates domain writes"| Actions
+    Livewire -->|"privileged write: after Gate"| StepUp
+    Actions -->|"privileged write: after Gate"| StepUp
+    StepUp --> Session
     Controllers --> Actions
     Fortify --> Models
     Actions --> Models
@@ -63,6 +67,7 @@ flowchart LR
 
 - Web entry points are declared in [`routes/web.php`](../../routes/web.php), which itself holds only `home` and `dashboard` and `require`s one file per functional area — [`routes/settings.php`](../../routes/settings.php) and [`routes/users.php`](../../routes/users.php); there is no `routes/api.php` in this app yet.
 - **A Livewire action is a second entry point that skips most route middleware.** `POST /livewire/update` does not re-run the component's route middleware except for an allow-listed subset, which is why `users.index` gates with `can:` (on the allow-list) rather than `permission:` (not), and why the component re-authorizes through the Gate on every mutating method rather than trusting the route. See [security/livewire-authorization.md](../security/livewire-authorization.md).
+- **Since task 0015a, five privileged Users writes pass a third check after the Gate.** `App\Actions\Auth\EnsureRecentPasswordConfirmation` reads the session for a password confirmation no older than `config('auth.password_timeout')` and refuses with a 423 (or, on the dashboard path, a redirect to `password.confirm`). It answers a question neither middleware nor a policy asks — *is the person at the keyboard still the account holder* — and it is an in-method check for the same allow-list reason as the bullet above: `password.confirm` does not follow a component to `/livewire/update`. See [authorization.md](authorization.md#step-up-authentication--the-third-layer).
 - Fortify-owned routes (login, register, password reset, 2FA challenge, `.well-known/passkey-endpoints`) are registered by the `FortifyServiceProvider` from `config/fortify.php`, not by hand-written controllers.
 - Session, cache, and queue all use the `database` driver (`SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION` in `.env`), backed by the `sessions`, `cache`, and `jobs` tables created in `database/migrations/0001_01_01_000000_create_users_table.php` and `0001_01_01_000001_create_cache_table.php` / `0001_01_01_000002_create_jobs_table.php`.
 - `MAIL_MAILER=log` in `.env` — outgoing mail (email verification, password reset) is written to the log, not actually delivered, in this environment.
@@ -103,7 +108,9 @@ Documented once, linked everywhere else — do not duplicate these explanations 
 | Domain controllers | `app/Http/Controllers/**` (HTTP boundary in front of an action) |
 | Fortify actions | `app/Actions/Fortify/**` |
 | Domain actions | `app/Actions/Users/**`, `app/Actions/Roles/**` |
+| Cross-cutting auth-state actions | `app/Actions/Auth/**` — today the step-up freshness guard; not a module area and not Fortify's, see [conventions/base-standards.md](../conventions/base-standards.md#directory-structure) |
 | Policies | `app/Policies/**` (auto-discovered by name) |
+| Domain exceptions that render their own response | `app/Exceptions/**` (`ImmutableRoleException` → 403, `RoleInUseException` → 409, `PasswordConfirmationRequiredException` → 423) |
 | Notifications | `app/Notifications/**` |
 | Shared validation rules | `app/Concerns/**` (e.g. [`ProfileValidationRules`](../../app/Concerns/ProfileValidationRules.php), [`PasswordValidationRules`](../../app/Concerns/PasswordValidationRules.php), [`UserValidationRules`](../../app/Concerns/UserValidationRules.php)) |
 | Models | `app/Models/**` |
@@ -113,7 +120,9 @@ Documented once, linked everywhere else — do not duplicate these explanations 
 | Seeders | `database/seeders/**` (`RolePermissionSeeder` is deploy-critical — see above) |
 | Middleware aliases & exception rendering | `bootstrap/app.php` |
 
-_Last updated: 2026-08-22 — Task 0013 (module/sidebar access gating — UI): added a **Declarative UI registry** row to "Where things live" for [`config/modules.php`](../../config/modules.php) and the one component that reads it — a real layer rather than a config tweak, since it is what decides which module screens a signed-in user is offered. Widened the **Views** row for `resources/views/components/**` (verified: every Blade component in this repo is anonymous; there is no `app/View/`). Also corrected two rows this story did not touch but that were stale, found by re-reading the table rather than by the change→doc mapping: **Routes** omitted `routes/roles.php` (added by task 0010) and **Domain actions** omitted `app/Actions/Roles/**` (task 0009). No lifecycle change — this story adds no route, controller, action or model, and the flowchart is unaffected._
+_Last updated: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions): the first story since task 0004 to change the **request-lifecycle diagram**, because it adds a real step to it rather than a rule inside an existing one — a `Step-up guard` node reached by both the Livewire component and the domain actions, *after* the Gate and reading the session, plus the bullet explaining what it answers that neither middleware nor a policy asks. Added two **Where things live** rows: `app/Actions/Auth/**` (a cross-cutting concern folder, not a module area — the distinction is owned by [base-standards.md](../conventions/base-standards.md#directory-structure)), and `app/Exceptions/**`, which this table had never listed at all despite holding three response-rendering domain exceptions since task 0008 — found by re-reading the table against the tree rather than by the change→doc mapping. No route, controller, model or runtime dependency changed._
+
+_Previously: 2026-08-22 — Task 0013 (module/sidebar access gating — UI): added a **Declarative UI registry** row to "Where things live" for [`config/modules.php`](../../config/modules.php) and the one component that reads it — a real layer rather than a config tweak, since it is what decides which module screens a signed-in user is offered. Widened the **Views** row for `resources/views/components/**` (verified: every Blade component in this repo is anonymous; there is no `app/View/`). Also corrected two rows this story did not touch but that were stale, found by re-reading the table rather than by the change→doc mapping: **Routes** omitted `routes/roles.php` (added by task 0010) and **Domain actions** omitted `app/Actions/Roles/**` (task 0009). No lifecycle change — this story adds no route, controller, action or model, and the flowchart is unaffected._
 
 _Previously: 2026-08-20 — Task 0040: the route layer is no longer two files. `users.index` moved out of `routes/web.php` into its own `routes/users.php`, required from `web.php` the way `settings.php` is, so `web.php` now declares only `home` and `dashboard`. Updated the three places that enumerated the route files as exactly `web.php` + `settings.php`: the flowchart's entry-point node, the entry-points bullet below it, and the "Where things live" Routes row. No lifecycle change — the arrows out of that node are identical._
 

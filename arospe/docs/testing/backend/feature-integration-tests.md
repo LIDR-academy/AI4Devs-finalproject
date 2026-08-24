@@ -64,11 +64,12 @@ This asserts on real database state (`passkeys()->find()` returning null) rather
 
 ## Authorization tests
 
-Access control in this app comes in three layers, and a test that exercises one proves nothing about the others:
+Access control in this app comes in four layers, and a test that exercises one proves nothing about the others:
 
 1. **Route middleware** — `auth`, `verified`, `password.confirm` on the settings screens; `can:users.view` on `users.index`.
 2. **Roles & permissions** — `spatie/laravel-permission`, with `HasRoles` attached to `App\Models\User` and a seeded 38-permission catalog (see [architecture/authorization.md](../../architecture/authorization.md)).
 3. **Policies** — `app/Policies/UserPolicy.php`, auto-discovered and called via `Gate::authorize()` from `App\Livewire\Users\Index`.
+4. **Step-up authentication** (task 0015a) — `App\Actions\Auth\EnsureRecentPasswordConfirmation`, an in-method check requiring a password confirmed within `config('auth.password_timeout')` before five specific Users writes. Not an ability and not a policy, so no `Gate::forUser()` test reaches it. See [architecture/authorization.md](../../architecture/authorization.md#step-up-authentication--the-third-layer).
 
 Rules that follow from that:
 
@@ -77,6 +78,8 @@ Rules that follow from that:
 - **Re-check authorization inside the action, not only at mount.** A component method reached over `/livewire/update` is a separate entry point; a test that only asserts `mount()` is denied will pass against a component whose `save()` is wide open.
 - **Assert a user cannot act on another user's resource.** E.g. `deletePasskey` for a passkey ID belonging to someone else should 404/throw rather than silently succeed — still *not* covered by any test, which is exactly the kind of silent gap [risk-based-testing.md](../qa/risk-based-testing.md) is meant to catch.
 - **Flush the permission cache in `beforeEach`, never between Act and Assert.** The `database` cache store leaks across `RefreshDatabase` tests, so a stale cache hides *revocations*; flushing mid-test destroys the test's ability to detect its own bug.
+- **Seeding `auth.password_confirmed_at` is a deliberate, listed amendment — not boilerplate.** Any test that changes another user's role, status or email, deletes a user, or creates an Administrator-tier user now needs `session(['auth.password_confirmed_at' => now()->unix()])` (or `withSession([...])` in a browser test) before the mutation, or the step-up guard refuses it. Task 0015a amended 29 pre-existing tests this way; each one is enumerated in its task file, and **no assertion was loosened to make one pass**. If seeding the key is not enough to make an existing test green, the story changed behaviour — investigate rather than weaken the assertion.
+- **A step-up test asserts three things, and the third is the one people skip.** That the refusal happens (assert on the **row**, not only on the response — the target's role/status/`pending_email` must be *unchanged*); that it does **not** happen for the exempt cases (a name-only edit, a self-edit, an ordinary-role creation), which is the regression guard proving the story did not ship a blanket refusal; and that a **permission** refusal still wins when both would apply — an actor lacking the ability with a stale confirmation must get `AuthorizationException`, never the re-confirmation path. Additionally, pin the timeout boundary from **both** sides with `Carbon::setTestNow()`: the vendor uses `>` and not `>=`, and a boundary asserted from one side cannot tell the two apart.
 
 ## Database assertions
 
@@ -84,4 +87,6 @@ Prefer asserting on returned/fetched model state (`expect($user->fresh()->...)`)
 
 See [database-strategy.md](database-strategy.md) for why `RefreshDatabase` is what makes `$user->passkeys()->find($passkey->id)` a trustworthy assertion here (each test starts from a clean, migrated schema).
 
-_Last updated: 2026-08-13 — Task 0004: replaced the "Authorization: today vs. once Policies exist" section, which had gone stale on two counts (`app/Policies/` now exists, and `HasRoles` has been attached to `App\Models\User` since task 0002), with the real three-layer picture and the rules that follow — including why a `Livewire::test()` authorization test and an HTTP one are not substitutes for each other._
+_Last updated: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions): the **Authorization tests** section's enumeration said "three layers" and is now four — step-up is not an ability and not a policy, so no `Gate::forUser()` test reaches it and no existing rule on this page covered it. Added two rules: seeding `auth.password_confirmed_at` in an amended pre-existing test is a **listed** change, never boilerplate, and never a substitute for investigating a test that stays red after seeding; and a step-up test asserts the refusal (on the **row**, not the response), the **exempt** cases (the regression guard against a blanket refusal), and that a permission refusal still wins when both would apply — plus the timeout boundary from both sides, since the vendor comparison is `>` and not `>=`. Nothing else on this page changed meaning._
+
+_Previously: 2026-08-13 — Task 0004: replaced the "Authorization: today vs. once Policies exist" section, which had gone stale on two counts (`app/Policies/` now exists, and `HasRoles` has been attached to `App\Models\User` since task 0002), with the real three-layer picture and the rules that follow — including why a `Livewire::test()` authorization test and an HTTP one are not substitutes for each other._

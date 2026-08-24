@@ -7,6 +7,7 @@ was verified against the installed `livewire/livewire` v4 source, not inferred f
 ## Table of Contents
 
 - [`/livewire/update` is a second entry point, and only an allow-listed subset of route middleware follows the component there](#livewireupdate-is-a-second-entry-point-and-only-an-allow-listed-subset-of-route-middleware-follows-the-component-there)
+  - [The worked example for the `password.confirm` row (task 0015a)](#the-worked-example-for-the-passwordconfirm-row-task-0015a)
 - [Gate at the top of every method that mutates or discloses](#gate-at-the-top-of-every-method-that-mutates-or-discloses)
   - [The shipped disclosure gates, and why the disclosure check is the *stronger* ability](#the-shipped-disclosure-gates-and-why-the-disclosure-check-is-the-stronger-ability)
 - [`#[Locked]` is what makes `Rule::unique()->ignore()` safe here](#locked-is-what-makes-ruleunique-ignore-safe-here)
@@ -75,6 +76,60 @@ Two corollaries that are easy to miss:
 - **`password.confirm` does not follow the component either.** `settings/security` carries it at the
   route, so it protects the page load only — a hijacked session that already holds a rendered snapshot
   is not re-challenged per action.
+
+### The worked example for the `password.confirm` row (task 0015a)
+
+That row sat in the table above as a bare ❌ from task 0004 until task 0015a became the **first code in
+this repo to act on it**. It is the clearest case in the table, because the naive fix is not merely
+weaker than the shipped one — it is *inert* for the thing it would be added to protect.
+
+❌ Bad — the shape a reader who has not internalised the allow-list will reach for (adapted to
+illustrate; deliberately **not** present in `routes/users.php`, which task 0015a leaves unchanged):
+
+```php
+// anti-pattern on a Livewire route — guards the initial GET /users and nothing else.
+// save() and deleteUser() run on /livewire/update, where RequirePassword never executes.
+Route::livewire('users', UsersIndex::class)
+    ->middleware(['can:users.view', 'password.confirm']);
+```
+
+Two failures at once, and the second is easy to miss: every privileged mutation stays unguarded, **and**
+a name-only edit — which the step-up layer deliberately exempts — would now be blocked, because route
+middleware cannot see which operation a round trip is about to perform.
+
+✅ Good — the check moves into the method that performs the operation, reading the *same* session key
+and timeout the middleware would have:
+
+```php
+// app/Actions/Users/UpdateUser.php — last statement of authorizeRoleAndStatusChange(),
+// which __invoke() reaches only when ! $isSelfEdit
+if (! $isNoOpRoleChange || $emailChanged || $statusChanged) {
+    ($this->ensureRecentPasswordConfirmation)();
+}
+```
+
+```php
+// app/Livewire/Users/Index.php — deleteUser(), after Gate::authorize('delete', $target)
+try {
+    $ensureRecentPasswordConfirmation();
+} catch (PasswordConfirmationRequiredException) { /* log, then redirect to re-confirm */ }
+```
+
+Three properties generalise to the next screen that needs step-up:
+
+- **Route middleware being unavailable is what forces the guard into the method — not a preference.**
+  The same reasoning that makes `can:` mandatory over `permission:` on this route makes an in-method
+  check mandatory over `password.confirm` on it.
+- **An in-method guard can be conditional; route middleware cannot.** This is a genuine gain rather
+  than a workaround: the guard fires on a role, status or third-party email change and on nothing
+  else, which route middleware could never express.
+- **The guard runs after every `Gate::authorize()` on its branch**, so a permission refusal is never
+  converted into a credential prompt. See [step-up-authentication.md](step-up-authentication.md),
+  which owns the full rule set.
+
+⚠️ **`settings/security` is still the ❌ row's unfixed case.** It relies on route middleware alone, so
+its own `/livewire/update` round trips are not re-challenged. Pre-existing, out of task 0015a's scope,
+and named as a residual rather than left implicit.
 
 ## Gate at the top of every method that mutates or discloses
 
@@ -290,7 +345,9 @@ Two rules to carry forward, both proven by how this was closed:
   [authorization-patterns.md](authorization-patterns.md#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
   for why the two Super Admin refusals are direct throws rather than `Gate` checks.
 
-_Last updated: 2026-08-24 — Task 0015 (Users CRUD security hardening): the "mutates **or discloses**" rule had been stated here since task 0004's audit while the screen it was written about gated **none** of its three openers. It does now, so the section gains the shipped example — `openCreateModal()` → `create`, `confirmDelete()` → `delete`, `openEditModal()` → `updateSensitiveAttributes` — with the four properties that make it copyable: why the disclosure gate asks a **stronger** ability than the write it precedes (the write path asks it *conditionally*, once a status/email change is detected; the opener discloses those two attributes *unconditionally*), why the component performs **no** tier lookup to get there (`UserPolicy::updateSensitiveAttributes()` already contains the branch, so the unconditional call is identical to `update` for an ordinary target and strictly stronger for an Administrator-holding one — re-deriving it would reinstate the shape task 0008a deleted), why the one branch that exists is an **identity** check with its accepted side effect, and why `confirmDelete()` carries no such exemption. Plus the two test consequences: an under-privileged actor can no longer reach a mutating method through its opener, and a disclosure gate needs a **state** assertion rather than an exception-only one. Also recorded `$users` as `#[Locked]` (finding F4 — the last unlocked derived property on that screen) and the rule that locking one is a change to every test that wrote it._
+_Last updated: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions): the `password.confirm` row of the `PersistentMiddleware` table has carried a bare ❌ since task 0004 with nothing in the repo acting on it; this story is that code, so the row gains its **worked example** as a new subsection. It is the clearest case in the table because the naive fix is not merely weaker — `->middleware(['password.confirm'])` on `routes/users.php` is *inert* against the mutations it would be added for (they run on `/livewire/update`) while simultaneously blocking a name-only edit the step-up layer deliberately exempts. Kept to the ❌/✅ pair plus the three properties that generalise (route middleware being unavailable is what **forces** the guard into the method; an in-method guard can be conditional where middleware cannot, which is a gain rather than a workaround; and it runs after every `Gate::authorize()` on its branch), with the full rule set pointed at in the new [step-up-authentication.md](step-up-authentication.md) rather than duplicated. Recorded `settings/security` as the row's still-unfixed case. **Nothing else on this page changed meaning** — verified against the diff rather than assumed: this story adds no `#[Locked]` property, no disclosure gate, and no component-only rule (its one component-level guard, `deleteUser()`'s, is documented as belonging there because no `DeleteUser` action exists to move it to)._
+
+_Previously: 2026-08-24 — Task 0015 (Users CRUD security hardening): the "mutates **or discloses**" rule had been stated here since task 0004's audit while the screen it was written about gated **none** of its three openers. It does now, so the section gains the shipped example — `openCreateModal()` → `create`, `confirmDelete()` → `delete`, `openEditModal()` → `updateSensitiveAttributes` — with the four properties that make it copyable: why the disclosure gate asks a **stronger** ability than the write it precedes (the write path asks it *conditionally*, once a status/email change is detected; the opener discloses those two attributes *unconditionally*), why the component performs **no** tier lookup to get there (`UserPolicy::updateSensitiveAttributes()` already contains the branch, so the unconditional call is identical to `update` for an ordinary target and strictly stronger for an Administrator-holding one — re-deriving it would reinstate the shape task 0008a deleted), why the one branch that exists is an **identity** check with its accepted side effect, and why `confirmDelete()` carries no such exemption. Plus the two test consequences: an under-privileged actor can no longer reach a mutating method through its opener, and a disclosure gate needs a **state** assertion rather than an exception-only one. Also recorded `$users` as `#[Locked]` (finding F4 — the last unlocked derived property on that screen) and the rule that locking one is a change to every test that wrote it._
 
 _Previously: 2026-08-21 — Task 0012, Phase 6 link sweep: fixed this file's own table-of-contents anchor for the `#[Locked]` section — `Rule::unique()->ignore()` slugifies to `ruleunique-ignore`, not `ruleuniqueignore`, because the hyphen in `->` survives. Content unchanged._
 

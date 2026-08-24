@@ -99,6 +99,14 @@ The notice itself carries no capability — it is a `flux:callout` with a `data-
 password field. Removing it client-side changes nothing server-side, which is the property that makes
 it safe to render from a client-reachable computed property at all.
 
+**The rule extends to a notice's *exemptions*, not only to whether it fires at all.** Both Users
+modals also gate on `isEditingOwnRow()` / `isDeletingOwnRow()` (`App\Livewire\Users\Index`, Phase 4
+re-audit finding N6) — a self-edit reaches no step-up check, and `deleteUser()` no-ops silently on the
+actor's own row (story 0015's F11) rather than throwing, so a notice with no self-row exemption would
+promise a re-confirmation prompt a click would never produce. The delete modal shipped with exactly
+that gap once: `isDeletingOwnRow()` did not exist yet, so its notice rendered on the actor's own row
+regardless of freshness. Closed in the same N6 pass that added the predicate.
+
 ## A step-up refusal must never mask a permission refusal
 
 This is the rule most easily inverted, and inverting it produces the *opposite* of the control's

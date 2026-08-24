@@ -49,6 +49,8 @@ High-level layout of the codebase:
 
 ```
 app/
+  Actions/Auth/        Cross-cutting auth-state actions (EnsureRecentPasswordConfirmation,
+                       the step-up password-freshness guard)
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords)
                       plus AuthenticateUser, the Fortify::authenticateUsing() callback
   Actions/Roles/       Roles-domain actions (EnforceAdministratorPermissionGrant,
@@ -58,7 +60,7 @@ app/
   Console/Commands/    Artisan commands
   Enums/               Backed enums for domain value sets (UserStatus, RoleName, SalesRegionKind)
   Exceptions/          Domain exceptions that render their own response (ImmutableRoleException,
-                       RoleInUseException)
+                       RoleInUseException, PasswordConfirmationRequiredException)
   Http/Controllers/    Abstract base + domain controllers (HTTP boundary in front of an action)
   Listeners/           Event listeners (ActivateVerifiedUser, RejectNonActiveUserLogin)
   Livewire/            Livewire components, grouped by area (Actions/, Roles/, Settings/, Users/, ...)

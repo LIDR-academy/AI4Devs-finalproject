@@ -177,4 +177,58 @@ public function deletePasskey(): void
 ```
 Method-parameter injection keeps the dependency visible in the signature (easier to test and to read) and matches every other action call site in this codebase.
 
-_Last updated: 2026-07-12 — Initial scaffold of the documentation set by the docs-maintainer skill._
+### Exception: an action's own dependency is constructor-injected when the method signature is a public contract
+
+Task 0015a's `App\Actions\Auth\EnsureRecentPasswordConfirmation` is used three ways in the same
+story, and only one of them follows the rule above:
+
+```php
+// app/Actions/Users/UpdateUser.php — constructor injection
+public function __construct(
+    private readonly EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation,
+) {}
+
+public function __invoke(User $user, string $name, string $email, string $roleId, UserStatus $status, RequestEmailChange $requestEmailChange): User
+{
+    // ...
+    ($this->ensureRecentPasswordConfirmation)();
+}
+```
+
+```php
+// app/Livewire/Users/Index.php — method injection, the rule above
+public function deleteUser(EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation): void
+{
+    // ...
+}
+```
+
+`UpdateUser` and `CreateUser` constructor-inject it; `Index::deleteUser()` method-injects it. Neither
+is arbitrary. `__invoke()`'s parameter list on both actions is a **public contract**, called with
+exactly those domain arguments by both `App\Livewire\Users\Index` and every direct-call test (per the
+0008a rule that the action must be independently callable) — widening it to also carry the guard as a
+parameter would put an internal dependency in a signature callers must match verbatim. `deleteUser()`
+has no such external contract (it is a Livewire action method, called only via `wire:click` /
+`Livewire::test()->call()`), so the rule above applies unmodified there.
+
+❌ Bad — do not "fix" `UpdateUser`/`CreateUser` to match `deleteUser()`'s shape (adapted to illustrate):
+
+```php
+// anti-pattern — do not widen __invoke()'s signature for an internal dependency
+public function __invoke(User $user, string $name, string $email, string $roleId, UserStatus $status, RequestEmailChange $requestEmailChange, EnsureRecentPasswordConfirmation $ensureRecentPasswordConfirmation): User
+```
+
+A fourth call site, `App\Livewire\Users\Index::requiresPasswordConfirmation()`, resolves the same
+class with `app(EnsureRecentPasswordConfirmation::class)` — the ❌ shape above, in the one place it is
+actually correct: a `#[Computed]` method takes no parameters at all (Livewire calls it with none), so
+neither constructor nor method injection is available, and manual container resolution is the only
+option. Don't read this as license to reach for `app()` elsewhere.
+
+_Last updated: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions), Phase 6:
+added the constructor-injection exception, with the real ✅/❌ pair from
+`App\Actions\Auth\EnsureRecentPasswordConfirmation`'s three call sites (two constructor-injected, one
+method-injected, one `app()`-resolved out of necessity) — found during Phase 6 review rather than named
+by the change→doc mapping, since this page's "Inject single-purpose actions per-method" rule reads as
+contradicted by two of the three until the reason is stated._
+
+_Previously: 2026-07-12 — Initial scaffold of the documentation set by the docs-maintainer skill._

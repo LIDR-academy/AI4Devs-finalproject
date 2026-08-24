@@ -42,6 +42,8 @@ Real top-level layout — stick to it; don't create new base folders without app
 
 ```
 app/
+  Actions/Auth/        Cross-cutting auth-state actions (EnsureRecentPasswordConfirmation — the
+                       step-up freshness guard; not an area, and not Fortify's)
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords)
   Actions/Roles/       Domain actions for the Roles area (EnforceAdministratorPermissionGrant,
                        EnforceGrantorPermissionScope — both pure transformers over a save payload)
@@ -51,7 +53,7 @@ app/
   Console/Commands/    Artisan commands
   Enums/               Backed enums for domain value sets (UserStatus, RoleName, SalesRegionKind)
   Exceptions/          Domain exceptions that render their own response (ImmutableRoleException → 403,
-                       RoleInUseException → 409)
+                       RoleInUseException → 409, PasswordConfirmationRequiredException → 423)
   Http/Controllers/    Abstract base + domain controllers used as HTTP boundaries in front of actions
   Listeners/           Event listeners (ActivateVerifiedUser), registered in AppServiceProvider
   Livewire/            Livewire components, grouped by area (Users/, Roles/, Settings/,
@@ -81,9 +83,10 @@ resources/
 routes/                 web.php, plus one file per functional area that web.php requires
                         (settings.php, roles.php, users.php) — no api.php yet
 tests/
-  Feature/              Feature tests, mirrors app structure (Auth/, Settings/, Seeders/, Users/,
-                        Roles/, Models/, Policies/, Authorization/, Navigation/, ...)
-  Unit/                 Mirrors app structure too (Enums/, Exceptions/, Listeners/, Models/), plus ArchitectureTest.php
+  Feature/              Feature tests, mirrors app structure (Actions/Auth/, Auth/, Settings/,
+                        Seeders/, Users/, Roles/, Models/, Policies/, Authorization/, Navigation/, ...)
+  Unit/                 Mirrors app structure too (Actions/Auth/, Enums/, Exceptions/, Listeners/,
+                        Models/), plus ArchitectureTest.php
   Browser/              Pest browser tests, mirrors app structure too (Auth/)
   Pest.php, TestCase.php
 ```
@@ -97,6 +100,8 @@ tests/
 `routes/` follows the same one-per-area shape: `web.php` declares only the app-wide routes (`home`, `dashboard`) and then `require`s one file per functional area — `settings.php`, `roles.php`, and `users.php` since task 0040, which moved `users.index` out of `web.php` so it stops being the one route that didn't follow the pattern. A new area's routes go in a new `routes/<area>.php` with its own middleware group, appended as another `require` line rather than inlined into `web.php`; what each route contract actually is belongs to [api/routes.md](../api/routes.md).
 
 `app/Actions/` groups by concern, one subfolder per area: `Fortify/` holds the framework-contract implementations, `Users/` and `Roles/` the app's own domain actions for those areas. A new action goes in the subfolder for its domain (or directly under `app/Actions/` if it belongs to none) — never nested under an unrelated one. `Roles/` (task 0009) is the pattern to copy when a new module needs its first action: create the subfolder for the domain, even for a single class, rather than parking it in the nearest existing one.
+
+`Auth/` (task 0015a) is the first subfolder here that is **not** a module area, and it is worth reading as its own precedent. `EnsureRecentPasswordConfirmation` is called from three places in two different areas (`Actions/Users/UpdateUser`, `Actions/Users/CreateUser`, and `Livewire/Users/Index::deleteUser()`) and is expected to be called from more as later screens adopt step-up, so filing it under `Users/` would have made the next caller's import read as a cross-area dependency on a module it has nothing to do with. Note it is also **not** `Fortify/`: that folder is reserved for classes implementing a Fortify contract, and this one implements none — it only *reads* the session key Fortify's own controller writes. **The rule: a subfolder is either a module area or a named cross-cutting concern, and a class serving two areas belongs to the concern, not to whichever area called it first.** Do not add a `Shared/` or `Common/` folder for this — name the concern.
 
 ### An app-owned config file is a registry, and must survive `config:cache`
 
@@ -174,6 +179,8 @@ Corollary: don't invert this either. A controller that re-implements the domain 
 Task 0008a established this by removing a real gap: the Administrator-tier guards lived only in `App\Livewire\Users\Index`, so `CreateUser` / `UpdateUser` were **completely ungated** for any other caller — a future API endpoint, Artisan command or queued job would have inherited nothing. The rule: **if an operation must not happen without a permission, the check lives in the class that performs the operation.** A caller may authorize too (defence in depth), but it may not be the only place the rule exists.
 
 > **The converse is not true, and task 0015 is the case that shows it.** A check that guards something the *caller alone* does — a Livewire opener copying a target's attributes into public component state — belongs in the caller, and there is no action to move it to: no `app/Actions/` class performs that disclosure. `App\Livewire\Users\Index::openEditModal()`'s `Gate::authorize('updateSensitiveAttributes', $target)` is such a check, and it is **not** a regression of the rule above. Read it as: the rule follows the *operation*, and "hand these attributes to the client" is an operation the component owns. What still may not reappear in a component is a re-derivation of *who the target is* — the tier lookup 0008a deleted; see [security/livewire-authorization.md](../security/livewire-authorization.md#the-shipped-disclosure-gates-and-why-the-disclosure-check-is-the-stronger-ability).
+>
+> **Task 0015a adds the second, weaker case, and it is weaker on purpose.** Its step-up guard lives in `UpdateUser` and `CreateUser` — the actions — for role, status, email and Administrator-tier creation, exactly as the rule above demands. For **deletion** it lives in `App\Livewire\Users\Index::deleteUser()`, and only because there is no `DeleteUser` action to move it to: that method calls `$target->delete()` on the model directly. That is an accepted placement pending a class to hold it, not a second exception to the rule — **if a later story extracts a `DeleteUser` action, the guard moves with it.** Record a placement like this in the method's own docblock (as `deleteUser()` does) so the next reader can tell "this is where it belongs" from "this is where it is until something better exists".
 
 ✅ Good — the action authorizes as its own first statements, before opening any transaction:
 
@@ -355,7 +362,9 @@ php artisan test                 # NOT --filter
 
 Use the scoped forms freely while iterating; the unscoped runs are what counts as the record.
 
-_Last updated: 2026-08-24 — Task 0015 (Users CRUD security hardening): one addition only. **"An authorization rule belongs to the action, not to one of its callers"** gained a blockquote recording its **converse**, because this story adds a `Gate::authorize()` to a Livewire component and a reader applying the rule mechanically would try to "fix" it by moving the check into an action — there is none to move it to, since no `app/Actions/` class performs the disclosure the check guards. The rule follows the *operation*; what still may not reappear in a component is a re-derivation of the target's tier. Verified as unchanged rather than assumed: the directory listing (this story creates no folder — its five new test files land in the existing `tests/Feature/Users/`), the model conventions (no model, column or migration changed), the `lang/` entry (`users.php` gains one key, no structural change) and the quality gates._
+_Last updated: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions): four structural additions, no convention reversed. **Directory listing** — `app/Actions/Auth/` (with the paragraph explaining why it is a new *kind* of subfolder: the first one that is not a module area, and deliberately not `Fortify/`, which is reserved for classes implementing a Fortify contract — `EnsureRecentPasswordConfirmation` implements none, it only reads the session key Fortify's controller writes; the rule that falls out is **a class serving two areas belongs to the named concern, not to whichever area called it first**, and never to a `Shared/`/`Common/` catch-all); `PasswordConfirmationRequiredException → 423` beside `ImmutableRoleException` (403) and `RoleInUseException` (409); and `tests/Feature/Actions/Auth/` + `tests/Unit/Actions/Auth/` in the `tests/` listing (Phase 5 finding F-7 — the two new folders were the one part of this story the change→doc mapping does not route anywhere). **An authorization rule belongs to the action** gained a second blockquote for the story's deletion guard, which sits in `App\Livewire\Users\Index::deleteUser()` **only** because no `DeleteUser` action exists to hold it — an accepted placement pending a class, explicitly not a second exception, with the rule that such a placement is recorded in the method's own docblock so a reader can tell "belongs here" from "is here for now". Verified as unchanged rather than assumed: the stack-versions table (no dependency changed), the model conventions (no model, column or migration in the diff), the Livewire class-based convention, and the quality gates._
+
+_Previously: 2026-08-24 — Task 0015 (Users CRUD security hardening): one addition only. **"An authorization rule belongs to the action, not to one of its callers"** gained a blockquote recording its **converse**, because this story adds a `Gate::authorize()` to a Livewire component and a reader applying the rule mechanically would try to "fix" it by moving the check into an action — there is none to move it to, since no `app/Actions/` class performs the disclosure the check guards. The rule follows the *operation*; what still may not reappear in a component is a re-derivation of the target's tier. Verified as unchanged rather than assumed: the directory listing (this story creates no folder — its five new test files land in the existing `tests/Feature/Users/`), the model conventions (no model, column or migration changed), the `lang/` entry (`users.php` gains one key, no structural change) and the quality gates._
 
 _Previously: 2026-08-22 — Task 0013 (module/sidebar access gating — UI): added the **"An app-owned config file is a registry, and must survive `config:cache`"** subsection for [`config/modules.php`](../../config/modules.php), the first config file in this repo that is neither Laravel's nor a package's — when that shape is right (a declarative registry a later story extends by appending data, never behavior), and its two hard constraints with a real ✅/❌ pair: **no closures** (`ConfigCacheCommand` serialises with `var_export()` and throws `LogicException` on anything non-serialisable, so one closure in `config/` takes down a config-caching deploy — store the data and let the consumer apply it), and **store translation keys, not copy**. Corrected three lines of the directory listing that this story falsified or left vague: `config/` is no longer only Laravel + package config, `lang/` now names its three app-owned domain files, and `resources/views/components/` records that every Blade component here is anonymous (verified: this repo has no `app/View/` at all). What the registry *means* stays in [architecture/authorization.md](../architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry)._
 
