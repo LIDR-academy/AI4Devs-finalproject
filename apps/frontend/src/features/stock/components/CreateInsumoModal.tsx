@@ -55,7 +55,7 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(16, 16, 16, 0.92)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -65,9 +65,10 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
       <div
         className="modal-content"
         style={{
-          backgroundColor: '#1E293B',
-          color: '#F8FAFC',
-          borderRadius: '12px',
+          backgroundColor: 'var(--bg-card)',
+          color: 'var(--text-primary)',
+          borderTop: '4px solid var(--color-primary)',
+          borderRadius: '4px',
           padding: '24px',
           width: '100%',
           maxWidth: '480px',
@@ -81,10 +82,11 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
         {error && (
           <div
             style={{
-              backgroundColor: '#7F1D1D',
-              color: '#FEE2E2',
+              backgroundColor: 'rgba(225, 6, 0, 0.15)',
+              border: '1px solid var(--color-danger)',
+              color: 'var(--color-danger-text)',
               padding: '12px',
-              borderRadius: '8px',
+              borderRadius: '4px',
               marginBottom: '16px',
               fontSize: '0.875rem',
             }}
@@ -95,7 +97,7 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label htmlFor="insumo-name-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: '#94A3B8' }}>
+            <label htmlFor="insumo-name-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
               Nombre del Insumo *
             </label>
             <input
@@ -107,10 +109,10 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
               style={{
                 width: '100%',
                 padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #334155',
-                backgroundColor: '#0F172A',
-                color: '#F8FAFC',
+                borderRadius: '4px',
+                border: '1px solid var(--border-card)',
+                backgroundColor: 'var(--bg-root)',
+                color: 'var(--text-primary)',
                 fontSize: '1rem',
               }}
               required
@@ -118,7 +120,7 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <span style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: '#94A3B8' }}>
+            <span style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
               Unidad de Medida *
             </span>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -130,10 +132,10 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
                   style={{
                     flex: 1,
                     minHeight: '48px',
-                    borderRadius: '8px',
-                    border: unitOfMeasure === unit ? '2px solid var(--color-primary)' : '1px solid #334155',
-                    backgroundColor: unitOfMeasure === unit ? 'var(--color-primary)' : '#0F172A',
-                    color: '#F8FAFC',
+                    borderRadius: '4px',
+                    border: unitOfMeasure === unit ? '2px solid var(--color-primary)' : '1px solid var(--border-card)',
+                    backgroundColor: unitOfMeasure === unit ? 'var(--color-primary)' : 'var(--bg-root)',
+                    color: unitOfMeasure === unit ? 'var(--color-primary-on)' : 'var(--text-primary)',
                     fontWeight: unitOfMeasure === unit ? 600 : 400,
                     cursor: 'pointer',
                   }}
@@ -145,7 +147,7 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label htmlFor="initial-stock-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: '#94A3B8' }}>
+            <label htmlFor="initial-stock-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
               Stock Inicial en Bodega
             </label>
             <input
@@ -158,10 +160,10 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
               style={{
                 width: '100%',
                 padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #334155',
-                backgroundColor: '#0F172A',
-                color: '#F8FAFC',
+                borderRadius: '4px',
+                border: '1px solid var(--border-card)',
+                backgroundColor: 'var(--bg-root)',
+                color: 'var(--text-primary)',
                 fontSize: '1rem',
               }}
             />

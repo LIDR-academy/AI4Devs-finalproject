@@ -18,9 +18,9 @@ export const SuccessFeedbackBanner: React.FC<SuccessFeedbackBannerProps> = ({ me
       gap: '8px',
       padding: '10px 14px',
       marginBottom: '16px',
-      backgroundColor: 'rgba(0, 210, 190, 0.12)',
+      backgroundColor: 'rgba(255, 106, 0, 0.12)',
       border: '1px solid var(--color-primary)',
-      borderRadius: '8px',
+      borderRadius: '4px',
       color: 'var(--color-primary)',
       fontSize: '0.88rem',
     }}

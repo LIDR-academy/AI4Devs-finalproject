@@ -188,7 +188,9 @@ const MetricCard: React.FC<{ icon: React.ReactNode; iconBg?: string; title: stri
       </div>
       <h2 className="card-title">{title}</h2>
     </div>
-    <div style={{ fontSize: '2.2rem', fontWeight: 800, color: valueColor }}>
+    {/* La cifra siempre en --text-primary (nunca en el tono de valueColor): a este tamaño ningun acento
+        alcanza el 7:1 exigido para "numeros principales"; valueColor queda reservado al icono (no-texto). */}
+    <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
       {value} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{unitLabel}</span>
     </div>
   </div>
@@ -221,7 +223,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
     <MetricCard icon={<Clock size={20} />} title="Remanentes Abiertos" value={remanentesCount} unitLabel="lotes FEFO" valueColor="var(--color-primary)" />
     <MetricCard
       icon={<AlertTriangle size={20} />}
-      iconBg="rgba(255, 42, 42, 0.15)"
+      iconBg="rgba(225, 6, 0, 0.15)"
       title="Vencimiento Próximo (<24h)"
       value={criticalCount}
       unitLabel="lotes críticos"
@@ -233,7 +235,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
       onClick={onExtract}
       id="btn-open-extraction"
       accentColor="var(--color-primary)"
-      tint="rgba(0, 210, 190, 0.05)"
+      tint="rgba(255, 106, 0, 0.05)"
       className="btn-primary"
     />
     <ActionCard
@@ -242,7 +244,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
       onClick={onPrepareRecipe}
       id="btn-open-recipe"
       accentColor="var(--color-warning)"
-      tint="rgba(255, 170, 0, 0.05)"
+      tint="rgba(255, 106, 0, 0.05)"
       className="btn-warning"
     />
   </section>

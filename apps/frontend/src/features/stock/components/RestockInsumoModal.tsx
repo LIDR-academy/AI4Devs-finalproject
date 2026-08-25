@@ -31,10 +31,11 @@ const RestockFormFields: React.FC<RestockFormFieldsProps> = ({ insumo, quantity,
     {error && (
       <div
         style={{
-          backgroundColor: '#7F1D1D',
-          color: '#FEE2E2',
+          backgroundColor: 'rgba(225, 6, 0, 0.15)',
+          border: '1px solid var(--color-danger)',
+          color: 'var(--color-danger-text)',
           padding: '12px',
-          borderRadius: '8px',
+          borderRadius: '4px',
           marginBottom: '16px',
           fontSize: '0.875rem',
         }}

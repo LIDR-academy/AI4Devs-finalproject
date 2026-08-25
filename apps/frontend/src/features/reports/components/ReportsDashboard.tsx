@@ -55,24 +55,25 @@ const KpiCards: React.FC<KpiCardsProps> = ({ totalQuantity, expirationWaste }) =
   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
     <div className="card-dashboard">
       <div className="card-header">
-        <div className="card-badge-icon" style={{ backgroundColor: 'rgba(255, 42, 42, 0.15)', color: 'var(--color-danger)' }}>
+        <div className="card-badge-icon" style={{ backgroundColor: 'rgba(225, 6, 0, 0.15)', color: 'var(--color-danger)' }}>
           <Trash2 size={20} />
         </div>
         <h3 className="card-title">Total Insumos Descartados</h3>
       </div>
-      <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-danger)' }}>
+      {/* Cifra siempre en --text-primary: mismo criterio que MetricCard en App.tsx, ver TK-068. */}
+      <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
         {totalQuantity.toFixed(2)} <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>unidades/KG</span>
       </div>
     </div>
 
     <div className="card-dashboard">
       <div className="card-header">
-        <div className="card-badge-icon" style={{ backgroundColor: 'rgba(255, 170, 0, 0.15)', color: 'var(--color-warning)' }}>
+        <div className="card-badge-icon" style={{ backgroundColor: 'rgba(255, 106, 0, 0.15)', color: 'var(--color-warning)' }}>
           <PieChart size={20} />
         </div>
         <h3 className="card-title">Mermas por Expiración</h3>
       </div>
-      <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-warning)' }}>
+      <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
         {expirationWaste.toFixed(2)} <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>unidades</span>
       </div>
     </div>
@@ -107,7 +108,7 @@ const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal }
                 <span>
                   {item.insumoName} <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>({item.reason})</span>
                 </span>
-                <span style={{ color: 'var(--color-danger)' }}>
+                <span style={{ color: 'var(--color-danger-text)' }}>
                   {item.totalDiscardedQuantity} {item.unitOfMeasure}
                 </span>
               </div>

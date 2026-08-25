@@ -23,7 +23,7 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
     >
       <div>
         <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>📦 Inventario y Catálogo de Bodega</h1>
-        <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '0.875rem' }}>
+        <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
           Gestiona el catálogo maestro de ingredientes y su disponibilidad en bodega principal.
         </p>
       </div>
@@ -43,10 +43,10 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
           width: '100%',
           maxWidth: '400px',
           padding: '12px 16px',
-          borderRadius: '8px',
-          border: '1px solid #334155',
-          backgroundColor: '#0F172A',
-          color: '#F8FAFC',
+          borderRadius: '4px',
+          border: '1px solid var(--border-card)',
+          backgroundColor: 'var(--bg-root)',
+          color: 'var(--text-primary)',
           fontSize: '0.95rem',
         }}
       />
@@ -60,7 +60,7 @@ interface InsumoTableRowProps {
 }
 
 const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
-  <tr style={{ borderBottom: '1px solid #334155' }}>
+  <tr style={{ borderBottom: '1px solid var(--border-card)' }}>
     <td style={{ padding: '16px', fontFamily: 'monospace', color: 'var(--color-primary)' }}>{item.id}</td>
     <td style={{ padding: '16px', fontWeight: 600 }}>{item.name}</td>
     <td style={{ padding: '16px' }}>
@@ -68,7 +68,7 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
         style={{
           padding: '4px 8px',
           borderRadius: '4px',
-          backgroundColor: '#334155',
+          backgroundColor: 'var(--border-card)',
           fontSize: '0.75rem',
           fontWeight: 600,
         }}
@@ -76,7 +76,7 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
         {item.unitOfMeasure}
       </span>
     </td>
-    <td style={{ padding: '16px', fontWeight: 600, color: '#34D399' }}>
+    <td style={{ padding: '16px', fontWeight: 600, color: 'var(--color-success)' }}>
       {item.warehouseStock} {item.unitOfMeasure}
     </td>
     <td style={{ padding: '16px', textAlign: 'right' }}>
@@ -97,10 +97,10 @@ interface InsumoTableProps {
 }
 
 const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock }) => (
-  <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #334155' }}>
-    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#1E293B' }}>
+  <div style={{ overflowX: 'auto', borderRadius: '6px', border: '1px solid var(--border-card)' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'var(--bg-card)' }}>
       <thead>
-        <tr style={{ backgroundColor: '#0F172A', borderBottom: '1px solid #334155', color: '#94A3B8' }}>
+        <tr style={{ backgroundColor: 'var(--bg-root)', borderBottom: '1px solid var(--border-card)', color: 'var(--text-secondary)' }}>
           <th style={{ padding: '16px' }}>ID Insumo</th>
           <th style={{ padding: '16px' }}>Nombre Insumo</th>
           <th style={{ padding: '16px' }}>Unidad Medida</th>
@@ -129,10 +129,11 @@ const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, f
     {error && (
       <div
         style={{
-          backgroundColor: '#7F1D1D',
-          color: '#FEE2E2',
+          backgroundColor: 'rgba(225, 6, 0, 0.15)',
+          border: '1px solid var(--color-danger)',
+          color: 'var(--color-danger-text)',
           padding: '12px 16px',
-          borderRadius: '8px',
+          borderRadius: '4px',
           marginBottom: '20px',
         }}
       >
@@ -141,15 +142,15 @@ const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, f
     )}
 
     {loading ? (
-      <div style={{ color: '#94A3B8', padding: '32px 0', textAlign: 'center' }}>Cargando inventario de bodega...</div>
+      <div style={{ color: 'var(--text-secondary)', padding: '32px 0', textAlign: 'center' }}>Cargando inventario de bodega...</div>
     ) : filteredInsumos.length === 0 ? (
       <div
         style={{
-          backgroundColor: '#1E293B',
-          borderRadius: '12px',
+          backgroundColor: 'var(--bg-card)',
+          borderRadius: '6px',
           padding: '40px',
           textAlign: 'center',
-          color: '#94A3B8',
+          color: 'var(--text-secondary)',
         }}
       >
         No se encontraron insumos registrados en bodega.
@@ -192,7 +193,7 @@ export const InsumoCatalogPanel: React.FC = () => {
   const filteredInsumos = insumos.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="insumo-catalog-panel" style={{ padding: '24px', color: '#F8FAFC' }}>
+    <div className="insumo-catalog-panel" style={{ padding: '24px', color: 'var(--text-primary)' }}>
       <InsumoCatalogHeader onCreateClick={() => setIsModalOpen(true)} search={search} onSearchChange={setSearch} />
 
       <InsumoCatalogBody
