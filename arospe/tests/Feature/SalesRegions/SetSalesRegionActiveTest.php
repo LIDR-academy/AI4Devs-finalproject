@@ -283,3 +283,89 @@ test('setting active directly succeeds for an actor holding sales-regions.edit',
 
     expect($region->fresh()->is_active)->toBeTrue();
 });
+
+// =====================================================================
+// Phase 4 finding F-1 (docs/security/model-instance-trust.md) — is_default (the target row) and
+// is_active (the replacement row) must be re-read under lock, inside the transaction, never
+// trusted off caller-supplied instances. Regression shape per the security page: mutate the row
+// behind the instance with a direct query between hydration and the call, the honest
+// single-process simulation of another administrator's already-committed transaction.
+// =====================================================================
+
+test('concurrent promotion of the deactivation target is honoured: deactivating it without a replacement is refused, not silently applied', function () {
+    $region = SalesRegion::factory()->create(['is_default' => false, 'is_active' => true]);
+
+    // $region is hydrated here, NOT the default. Simulate a second
+    // administrator's already-committed setDefault($region) landing between
+    // hydration and this call.
+    SalesRegion::query()->whereKey($region->id)->update(['is_default' => true]);
+
+    $actor = setActiveTestActor(['sales-regions.edit']);
+    $this->actingAs($actor);
+
+    expect(fn () => app(SetSalesRegionActive::class)($region, false, null))
+        ->toThrow(ValidationException::class);
+
+    expect($region->fresh()->is_active)->toBeTrue()
+        ->and($region->fresh()->is_default)->toBeTrue();
+});
+
+test('concurrent deactivation of the named replacement is honoured: promoting an inactive replacement is refused, not silently applied', function () {
+    $currentDefault = SalesRegion::factory()->isDefault()->create();
+    $replacement = SalesRegion::factory()->create(['is_active' => true]);
+
+    // $replacement is hydrated here, active. Simulate a second
+    // administrator's already-committed deactivation landing between
+    // hydration and this call.
+    SalesRegion::query()->whereKey($replacement->id)->update(['is_active' => false]);
+
+    $actor = setActiveTestActor(['sales-regions.edit']);
+    $this->actingAs($actor);
+
+    expect(fn () => app(SetSalesRegionActive::class)($currentDefault, false, $replacement))
+        ->toThrow(ValidationException::class);
+
+    expect($currentDefault->fresh()->is_active)->toBeTrue()
+        ->and($currentDefault->fresh()->is_default)->toBeTrue()
+        ->and($replacement->fresh()->is_default)->toBeFalse();
+});
+
+// =====================================================================
+// Phase 4 finding F-2 (docs/security/model-instance-trust.md) — save() writes the whole dirty
+// set, not an allow-list. A caller-forged is_default on the target instance must not ride along
+// and produce a second default; a caller-dirtied structural column must not persist either.
+// =====================================================================
+
+test('a caller-forged is_default on the target instance does not produce a second default', function () {
+    $currentDefault = SalesRegion::factory()->isDefault()->create();
+    $region = SalesRegion::factory()->create(['is_active' => false]);
+
+    // Forge the in-memory attribute WITHOUT persisting it -- this action
+    // does not own is_default, so its final save() must not write it.
+    $region->is_default = true;
+
+    $actor = setActiveTestActor(['sales-regions.edit']);
+    $this->actingAs($actor);
+
+    app(SetSalesRegionActive::class)($region, true);
+
+    expect(SalesRegion::where('is_default', true)->count())->toBe(1)
+        ->and($currentDefault->fresh()->is_default)->toBeTrue()
+        ->and($region->fresh()->is_default)->toBeFalse()
+        ->and($region->fresh()->is_active)->toBeTrue();
+});
+
+test('a caller-dirtied structural column does not persist through this action', function () {
+    $region = SalesRegion::factory()->inactive()->create();
+    $originalSlug = $region->slug;
+
+    $region->slug = 'hijacked-via-set-active';
+
+    $actor = setActiveTestActor(['sales-regions.edit']);
+    $this->actingAs($actor);
+
+    app(SetSalesRegionActive::class)($region, true);
+
+    expect($region->fresh()->is_active)->toBeTrue()
+        ->and($region->fresh()->slug)->toBe($originalSlug);
+});

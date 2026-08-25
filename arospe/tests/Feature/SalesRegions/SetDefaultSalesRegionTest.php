@@ -106,3 +106,76 @@ test('setting the already-default entry as the default directly changes nothing 
     expect(SalesRegion::where('is_default', true)->count())->toBe(1)
         ->and(SalesRegion::where('is_default', true)->first()->id)->toBe($currentDefault->id);
 });
+
+// =====================================================================
+// Phase 4 finding F-1 (docs/security/model-instance-trust.md) — is_active must be re-read under
+// lock, inside the transaction, never trusted off the caller-supplied instance. A stale in-memory
+// attribute must not be able to defeat D10.
+// =====================================================================
+
+test('a caller-hydrated instance carrying a stale in-memory is_active cannot bypass the D10 guard', function () {
+    $currentDefault = SalesRegion::factory()->isDefault()->create();
+    $candidate = SalesRegion::factory()->inactive()->create();
+
+    // Hydrate, then forge the in-memory attribute WITHOUT persisting it --
+    // exactly the caller-hydrated-instance exploit path the audit confirmed
+    // by execution.
+    $candidate->is_active = true;
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('sales-regions.edit');
+    $this->actingAs($actor);
+
+    expect(fn () => app(SetDefaultSalesRegion::class)($candidate))
+        ->toThrow(ValidationException::class);
+
+    expect($candidate->fresh()->is_default)->toBeFalse()
+        ->and($candidate->fresh()->is_active)->toBeFalse()
+        ->and($currentDefault->fresh()->is_default)->toBeTrue();
+});
+
+test('the row is re-read under lock: a concurrent deactivation between hydration and the call is honoured, not the stale copy', function () {
+    $currentDefault = SalesRegion::factory()->isDefault()->create();
+    $candidate = SalesRegion::factory()->create(['is_active' => true]);
+
+    // $candidate is hydrated here, active. Simulate a second administrator's
+    // already-committed deactivation landing between hydration and this
+    // call -- the honest single-process simulation of another transaction,
+    // per docs/security/model-instance-trust.md's "Regression test shape".
+    SalesRegion::query()->whereKey($candidate->id)->update(['is_active' => false]);
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('sales-regions.edit');
+    $this->actingAs($actor);
+
+    expect(fn () => app(SetDefaultSalesRegion::class)($candidate))
+        ->toThrow(ValidationException::class);
+
+    expect($currentDefault->fresh()->is_default)->toBeTrue();
+});
+
+// =====================================================================
+// Phase 4 finding F-2 (docs/security/model-instance-trust.md) — save() writes the whole dirty
+// set, not an allow-list, so this action must write through an instance it hydrates itself. A
+// caller-dirtied structural column must not ride along.
+// =====================================================================
+
+test('a caller-dirtied structural column does not persist through this action', function () {
+    $currentDefault = SalesRegion::factory()->isDefault()->create();
+    $candidate = SalesRegion::factory()->create();
+    $originalName = $candidate->name;
+
+    $candidate->name = 'Hijacked via SetDefaultSalesRegion';
+    $candidate->sort_order = 999;
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('sales-regions.edit');
+    $this->actingAs($actor);
+
+    app(SetDefaultSalesRegion::class)($candidate);
+
+    expect($candidate->fresh()->is_default)->toBeTrue()
+        ->and($candidate->fresh()->name)->toBe($originalName)
+        ->and($candidate->fresh()->sort_order)->not->toBe(999)
+        ->and($currentDefault->fresh()->is_default)->toBeFalse();
+});

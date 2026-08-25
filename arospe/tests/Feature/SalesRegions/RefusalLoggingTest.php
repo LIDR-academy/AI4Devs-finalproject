@@ -410,6 +410,35 @@ test('UpdateSalesRegion direct-call succeeds for an actor holding sales-regions.
 });
 
 // =====================================================================
+// Phase 4 finding F-2 (docs/security/model-instance-trust.md) — save() writes the whole dirty
+// set, not the fill() allow-list. A caller-dirtied structural column must not persist through
+// this action, even though it is never named in the fill() array.
+// =====================================================================
+
+test('UpdateSalesRegion does not persist a caller-dirtied structural column', function () {
+    $region = SalesRegion::factory()->create();
+    $originalSlug = $region->slug;
+    $originalName = $region->name;
+    $originalParentId = $region->parent_id;
+
+    $region->slug = 'hijacked-slug';
+    $region->name = 'Hijacked';
+    $region->sort_order = 999;
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('sales-regions.edit');
+    $this->actingAs($actor);
+
+    app(UpdateSalesRegion::class)($region, 'XX', 'desc', '5.000');
+
+    expect($region->fresh()->slug)->toBe($originalSlug)
+        ->and($region->fresh()->name)->toBe($originalName)
+        ->and($region->fresh()->parent_id)->toBe($originalParentId)
+        ->and($region->fresh()->sort_order)->not->toBe(999)
+        ->and($region->fresh()->code)->toBe('XX');
+});
+
+// =====================================================================
 // "The three screens emit the same line shape at the same level" — the exact-key-set equivalence
 // assertion tests/Feature/Roles/RefusalLoggingTest.php's own "the Roles and Users screens refusal
 // log lines share exactly the same shape" test already establishes for two screens, extended
