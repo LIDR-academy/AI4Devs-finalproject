@@ -32,6 +32,7 @@ value was decided by whoever hydrated the instance, at whatever time they did so
 - [A guard must re-read its subject under lock, inside its own transaction](#a-guard-must-re-read-its-subject-under-lock-inside-its-own-transaction)
 - [`save()` writes the whole dirty set, so "the single named writer" is a convention, not an enforcement](#save-writes-the-whole-dirty-set-so-the-single-named-writer-is-a-convention-not-an-enforcement)
 - [One fix closes both](#one-fix-closes-both)
+- [Re-audit round 2: what the fix itself got subtly wrong](#re-audit-round-2-what-the-fix-itself-got-subtly-wrong)
 
 ## A guard must re-read its subject under lock, inside its own transaction
 
@@ -87,44 +88,54 @@ The middle row is the sharpest: it defeats the story's headline acceptance crite
 default is refused unless a replacement is named") without any forged input at all — two administrators
 clicking within the same second is enough, and the corruption is silent and permanent.
 
-✅ **The shape that holds** — derive the guard's subject inside the transaction, through the lock, and read
-the guard off *that* instance:
+✅ **The shape that holds, as shipped after re-audit round 2** — derive the guard's subject inside the
+transaction, through the lock, and read the guard off *that* instance. The round-1 fix shown further down in
+[the re-audit section](#re-audit-round-2-what-the-fix-itself-got-subtly-wrong) locked the target and the
+clear-set as two separate queries; **R-1** in that section found a real deadlock in exactly that split, so
+the shipped shape locks both in one:
 
 ```php
 return DB::transaction(function () use ($newDefault): SalesRegion {
-    // The row this guard is about, re-read under lock inside the transaction:
-    // is_active is the state the rule protects, so it may not arrive as an
-    // attribute of an instance hydrated by the caller, at an unknown time.
-    $target = SalesRegion::query()
-        ->whereKey($newDefault->getKey())
+    // Every row this call could touch, locked together in ONE
+    // primary-key-ordered query: the target itself, plus every row
+    // currently flagged as the default.
+    $rows = SalesRegion::query()
+        ->where(fn ($q) => $q->where('is_default', true)->orWhere('id', $newDefault->getKey()))
+        ->orderBy('id')
         ->lockForUpdate()
-        ->firstOrFail();
+        ->get();
+
+    $target = $rows->first(fn (SalesRegion $r) => $r->is($newDefault))
+        ?? throw (new ModelNotFoundException)->setModel(SalesRegion::class, [$newDefault->getKey()]);
 
     if (! $target->is_active) {
         // ... log and throw, exactly as today ...
     }
 
-    // ... clear the current default(s), then write through $target ...
+    // ... clear every OTHER already-locked default row, then write through $target ...
 });
 ```
 
 Two implementation notes that shipped with the fix rather than after it:
 
-- **`whereKeyNot()` is kept, its docblock corrected rather than left stale.** The old rationale described a
-  *caller's stale* `$newDefault` skipping its write-back; that framing stopped being accurate once `$target`
-  is freshly locked. The guard is still required, for a narrower and still-real reason: the clearing query
-  below matches rows through a **separate** Eloquent query, so even a row identical to `$target` hydrates as
-  a **second, independent instance** there. Without the exclusion, that second instance would clear
-  `$target`'s own row invisibly to `$target`'s own dirty-tracking (its `original` already says `true`), and
-  the final `forceFill(['is_default' => true])` would then see no dirty change and skip writing it back —
-  the exact silent-clear this repo's own [errors-log](../errors-log.md) has an entry about not leaving a
-  surviving-but-wrong explanation for.
-- **Lock ordering was a real deadlock surface, closed rather than left unconsidered.** `SetSalesRegionActive`
-  now acquires its own target row and (when named) the replacement row in **one**
-  `whereIn([...])->orderBy('id')->lockForUpdate()` query, so two concurrent calls that each name the other's
-  target as their own replacement always lock in the same (ascending-id) order instead of a possibly-opposite
-  one. `SetDefaultSalesRegion`'s own target-plus-current-defaults lock follows the same
-  order-then-lock shape. As a second, independent layer — since the unindexed full-table locking scan makes
+- **`whereKeyNot()`'s job is now done by `$rows->reject(fn ($r) => $r->is($target))`, kept for the same
+  reason, docblock corrected rather than left stale.** The old rationale described a *caller's stale*
+  `$newDefault` skipping its write-back; that framing stopped being accurate once `$target` is freshly
+  locked. The exclusion is still required, for a narrower and still-real reason: the clearing step below
+  iterates the SAME `$rows` collection but as separate model instances from `$target` for every row except
+  it (`->first()`/`->reject()` on a `Collection` do not deduplicate object identity), so a row identical to
+  `$target` would still hydrate as a **second, independent instance** if not excluded. Without the exclusion,
+  that second instance would clear `$target`'s own row invisibly to `$target`'s own dirty-tracking (its
+  `original` already says `true`), and the final `forceFill(['is_default' => true])` would then see no dirty
+  change and skip writing it back — the exact silent-clear this repo's own [errors-log](../errors-log.md) has
+  an entry about not leaving a surviving-but-wrong explanation for.
+- **Lock ordering was a real deadlock surface — closed by real resource-ordering, not by an assertion of it.**
+  Round 1 shipped `SetSalesRegionActive` locking its target and (when named) the replacement in one ordered
+  query, reasoning it protected against "two calls naming each other's target as their own replacement" — a
+  scenario **R-1a** in the re-audit section proved cannot occur. The deadlock that round 1 actually
+  introduced was in `SetDefaultSalesRegion` itself (**R-1b**), from acquiring its two lock sets as *separate*
+  queries; the single combined query above is round 2's real fix. As a second, independent layer — since the
+  unindexed full-table locking scan makes
   contention the normal case rather than the rare one — both actions' `DB::transaction()` calls pass
   `attempts: 3`, Laravel's built-in retry for a `40001`/deadlock `QueryException`, so a residual race the
   ordering doesn't fully close (e.g. a self-healing repair pass touching a row outside the pre-locked set)
@@ -213,8 +224,10 @@ one query does both jobs for each action.
 The two rules above have one root cause and therefore one remedy: **re-fetch the row the action owns, inside
 the action's transaction, under `lockForUpdate()`, and use that instance for both the guard's read and the
 action's write.** Re-reading fixes the TOCTOU; the fresh instance's empty dirty set fixes the write-through.
-A caller's model then degrades to what it should always have been — a way of naming *which row*, and nothing
-more.
+A caller's model then degrades to almost what it should always have been — a way of naming *which row*, and
+nothing more, **with one exception**: it is still the `Gate` target passed to
+`LogRefusedPrivilegedAttempt::authorize()`, ahead of the re-fetch. See **R-3**, in the re-audit section below,
+for why that is harmless today and what it would take to reopen it.
 
 **Regression test shape.** A test for either rule must dirty the instance (or mutate the row behind it with
 `SalesRegion::query()->whereKey(...)->update(...)`, which is the honest single-process simulation of another
@@ -224,7 +237,130 @@ were all green despite both findings. Eight such tests were added (four per find
 was confirmed to redden against the pre-fix code before the fix was restored — proof the tests carry real
 signal, not merely proof they exist.
 
-_Last updated: 2026-08-25 — Task 0017 (Sales Region tax configuration — backend), Phase 4 fix, same day as the
-audit. Both sections **closed**: every ❌ block is the code as it shipped from Phase 3, every ✅ block is the
-real shipped fix (not a recommendation), and every claim in both was verified by execution against the real
-actions on the `testing` database, inside a rolled-back transaction, rather than by reading._
+## Re-audit round 2: what the fix itself got subtly wrong
+
+The rule this repo already has for a security fix — [re-audit it as new code, not merely as a diff against the
+finding](../errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19) —
+applied to the fix above, the same day. Verdict: **PASS**, four Low findings, none reopening F-1 or F-2. All
+five are closed or recorded below; **R-1's documentation half is the one worth reading closely**, because it
+is a false guarantee that had been written into this very page.
+
+### R-1 — Low — the lock-ordering fix protected an unreachable scenario, and reopened a real one
+
+Two parts, confirmed by execution (two live MySQL sessions replaying the real statements, plus `EXPLAIN`).
+
+**R-1a.** The original fix's docblocks — on both actions, on this page, and in the task file — justified
+`SetSalesRegionActive`'s `whereIn([...])->orderBy('id')->lockForUpdate()` with *"two concurrent operations
+that name each other's target as their own replacement always acquire their locks in the same order"*. That
+interleaving cannot occur: the nested call only runs when `$target->is_default` is already `true`, so both
+sides of such a race would need `is_default = true` simultaneously — the exact state this story exists to
+forbid. The ordering protected a case the invariant already excludes.
+
+**R-1b.** The reachable deadlock was in `SetDefaultSalesRegion`, and the *first* fix round introduced it —
+proven by running the pre-fix shape against the same two rows, which serialised cleanly. That action was
+acquiring **two separate** lock sets: the target row (`whereKey(...)->lockForUpdate()`), then the clear-scan
+(`where('is_default', true)->lockForUpdate()`, which `EXPLAIN` confirms is a near-full-table scan — 0016
+deliberately left `is_default` unindexed). Two administrators each promoting a **different** region to
+default is enough: T1 holds its target and needs T2's row via the clear-scan; T2 holds its target and needs
+T1's row the same way. Reproduced directly:
+
+```
+[S2] ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+[S1] SCAN OK
+```
+
+✅ **The fix.** `SetDefaultSalesRegion` now locks its target row *and* the clear-set in **one**
+`orderBy('id')->lockForUpdate()` query (see the code in the section above, updated in place) — real
+resource-ordering, not asserted resource-ordering: any two transactions needing an overlapping row set now
+request it in the same order regardless of which action's query originates the request, which is what
+actually prevents a circular wait. Impact of the closed bug was bounded even before this fix (the deadlock
+rolls the transaction back atomically and `attempts: 3` retries into a converged state — worst case was a 500
+to an administrator, never a violated invariant), which is why this was Low rather than Medium.
+
+**R-1c — three false statements corrected in place, in this page and in both actions' docblocks:** the claim
+that `SetDefaultSalesRegion`'s two queries "follow the same order-then-lock shape" (they didn't, before this
+fix); the claim that `attempts: 3` on `SetDefaultSalesRegion` mitigates the deadlock from `SetSalesRegionActive`'s
+nested call (it is **inert** there — Laravel only retries at `transactions === 1`, so a real deadlock inside a
+nested savepoint call rethrows a `DeadlockException` instead; the *outer* transaction's own `attempts: 3` is
+what actually covers that case); and the "nothing more than naming which row" closing line above, corrected
+by R-3.
+
+### R-2 — Low — the returned instance could lie about `is_default`
+
+On `SetSalesRegionActive`'s promotion branch, the nested `SetDefaultSalesRegion` call clears the outer
+`$target`'s row through its **own**, separately re-fetched instance — invisible to `$target`'s own
+dirty-tracking, whose `original` still says `true`. The persisted state was always correct (`is_default` was
+simply never dirty on `$target`, so `save()` never wrote it), but the method **returned** `$target` as-is,
+so a caller reading `$region->is_default` off the return value would see `true` for a row the database now
+has as `false`. Confirmed by execution: `returned->is_default=true`, `DB row: is_default=false`, same row.
+
+Nothing in this app reads the return value today — both `Index::setActive()` and `Index::save()` discard
+it — so this was unreachable in practice, and it inverts [this page's own opening thesis](#a-guard-must-re-read-its-subject-under-lock-inside-its-own-transaction):
+the fix stopped the action *trusting* a stale instance and left it *emitting* one.
+
+✅ **The fix.** `SetSalesRegionActive` now calls `$target->refresh()` immediately before returning it, so a
+future non-dashboard caller — the kind [the action-owns-the-rule convention](../conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
+exists to support — gets an accurate row. A regression test asserts the return value directly
+(`tests/Feature/SalesRegions/SetSalesRegionActiveTest.php`, "the returned instance reflects is_default being
+cleared…"), confirmed to redden without the `refresh()` call before being trusted.
+
+### R-3 — Low — the `Gate` target is still the caller's instance, recorded rather than fixed
+
+Every action still authorizes against the caller-supplied instance, before the re-fetch:
+`$this->logRefusedPrivilegedAttempt->authorize('update', $region, ...)`. Inert **today**, and only because
+`SalesRegionPolicy::update()` ignores its `$target` entirely and decides on the permission alone — but that
+policy's own docblock already anticipates a future target-dependent rule (mirroring `UserPolicy::update()`'s
+Super Admin exclusion). The day one is added, a caller could forge an in-memory attribute the new branch
+reads (e.g. `$region->kind`), get authorized against the forged value, and have the action then write the
+re-fetched **real** row — F-1 one layer up, and outside the fix's own lock, since authorization runs before
+the transaction opens by design ("a refusal never opens a transaction at all").
+
+Not a code change today — there is no rule to fix yet. Recorded on
+[`SalesRegionPolicy::update()`'s own docblock](../../app/Policies/SalesRegionPolicy.php) so the constraint is
+read by whoever adds the next branch, not rediscovered.
+
+### R-4 — Low — `Index::save()` authorized the replacement row after already writing the target
+
+Pre-existing, outside the original fix's diff, but touching the same two actions. `save()` called
+`$updateSalesRegion($target, ...)` — committing rate/description/code immediately — and only *then*
+authorized `$replacementDefault`, violating [this repo's "authorize before the first write" rule](../conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
+for that second row specifically. Inert today for the same reason as R-3.
+
+✅ **The fix — narrower than first proposed.** The re-audit's own suggestion (wrap both action calls in one
+transaction) was **not** applied: this story's Phase 1 reconciliation already reviewed and explicitly
+accepted the two-call, two-transaction shape — *"a mid-submit failure between them can leave the
+rate/code/description half persisted while the active/default half is refused… an acceptable,
+Users-screen-consistent shape… not a defect"* — and the first Phase 4 audit's own "Confirmed clean" list
+re-confirmed it. Merging the transactions would have silently reversed an already-made, already-audited
+decision. Only the **authorization ordering** moved: `$replacementDefault` is now looked up and authorized
+*before* `$updateSalesRegion` runs, so an actor lacking rights on the replacement (once R-3's future rule
+exists) is refused before either write, while the accepted partial-write-on-*validation*-refusal shape is
+untouched.
+
+### R-5 — Informational — test hygiene, applied
+
+- Both "concurrent…" tests in `SetSalesRegionActiveTest.php` asserted only `ValidationException::class`,
+  which cannot distinguish the D3 refusal (`default_deactivation_requires_replacement`) from the nested D10
+  one (`default_must_be_active`) — both throw on the same `replacementDefaultId` key, so a regression that
+  refused for the *wrong* reason would still pass. Both now assert the specific message.
+- Two `->not->toBe(999)` assertions (`SetDefaultSalesRegionTest.php`, `RefusalLoggingTest.php`) only proved
+  the persisted value wasn't exactly `999`, not that it was the correct original value. Both now assert
+  `->toBe($original...)`.
+- `RefusalLoggingTest.php`'s `parent_id` assertion compared against `null` without ever dirtying `parent_id`
+  away from `null` — trivially true regardless of whether the guard worked. Now dirties it to a real,
+  FK-valid other row's id first.
+
+**Verification, same discipline as the first round:** all new/changed assertions confirmed to redden against
+the pre-fix code (or, for `refresh()`, against the code with that one line removed) before being trusted.
+Full suite re-run unscoped: **869/869 passed, 2434 assertions**. `vendor/bin/pint --test --format agent`
+(unscoped): **passed**.
+
+_Last updated: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), Phase 4 re-audit (round 2)
+and same-day fix. All three sections **closed**. The two original findings' code examples were updated in
+place to match the round-2 fix (the single ordered lock query, the `refresh()` call) rather than left
+describing the round-1 shape a second round found wrong._
+
+_Previously: 2026-08-25 — Task 0017, Phase 4 fix, same day as the original audit. Both sections **closed**:
+every ❌ block is the code as it shipped from Phase 3, every ✅ block is the real shipped fix (not a
+recommendation), and every claim in both was verified by execution against the real actions on the `testing`
+database, inside a rolled-back transaction, rather than by reading._

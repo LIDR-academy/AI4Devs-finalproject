@@ -176,11 +176,21 @@ repo must follow — always with a real code example pulled from this repository
   code as it shipped from Phase 3, each ✅ block is the real shipped fix (re-fetch the row under
   `lockForUpdate()`, inside the action's own transaction, and read/write only through that instance) — plus
   the note that `App\Actions\Users\UpdateUser` shares the second shape (out of scope for 0017, recorded so
-  the next audit treats it as known rather than new), the corrected `whereKeyNot()` docblock rationale, the
-  deadlock surface the fix closes (a single primary-key-ordered `lockForUpdate()` query plus `attempts: 3`
-  retry), and the regression-test shape that can actually fail (dirty the instance, or mutate the row behind
-  it, *between* hydration and the call) — eight such tests were added and each was confirmed to redden
-  against the pre-fix code before the fix was restored.
+  the next audit treats it as known rather than new), the corrected `whereKeyNot()` docblock rationale, and
+  the regression-test shape that can actually fail (dirty the instance, or mutate the row behind it,
+  *between* hydration and the call) — eight such tests were added and each was confirmed to redden against
+  the pre-fix code before the fix was restored. **A third section, "Re-audit round 2" (2026-08-26), records
+  what re-auditing that fix as new code found**, per this project's own standing rule that a security fix
+  needs the same scrutiny as the bug it closes: the round-1 fix's own lock-ordering docblock justified itself
+  against a scenario that provably cannot occur, while round 1 had *introduced* a real, confirmed (two live
+  MySQL sessions) deadlock elsewhere — `SetDefaultSalesRegion` acquiring its target lock and its clear-scan
+  lock as two separate queries rather than one ordered one, closed by collapsing them (**R-1**); the
+  promotion branch could also return an instance that lied about `is_default` after the nested action's
+  separate write cleared it, closed with a `refresh()` (**R-2**); plus a recorded-not-fixed note on the
+  `Gate` target still being the caller's instance (**R-3**, no rule reads it yet), an authorization-ordering
+  fix that deliberately did *not* touch an already-reviewed-and-accepted two-transaction shape (**R-4** — the
+  re-audit's broader suggestion was declined in writing rather than silently reversing a Phase 1 decision),
+  and three test-hygiene fixes (**R-5**).
 - [Step-up authentication](step-up-authentication.md) — the rules governing the app's **third**
   authorization layer, added by task 0015a: a password-confirmation freshness guard that answers
   "is the person at the keyboard still the account holder", which route middleware and policies both
@@ -209,8 +219,21 @@ repo must follow — always with a real code example pulled from this repository
   self-service case this layer's own `$isSelfEdit` exemption leaves alone for a different, narrower
   reason.
 
-_Last updated: 2026-08-25 — Task 0017 (Sales Region tax configuration — backend), Phase 4 audit and same-day
-fix: added [model-instance-trust.md](model-instance-trust.md), the eleventh page. The audit's two findings
+_Last updated: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), Phase 4 re-audit round 2 and
+same-day fix: [model-instance-trust.md](model-instance-trust.md) gained a third section, applying this
+project's own rule that a security fix needs re-auditing as new code, not merely confirmed to close the
+finding it answers. The round-1 fix's own lock-ordering justification turned out to protect a scenario that
+cannot occur, while round 1 had introduced a real, execution-confirmed deadlock elsewhere — collapsed to one
+real ordered lock query rather than an asserted one (R-1). A promotion branch could return an instance lying
+about `is_default` after a nested action's separate write cleared it, fixed with a `refresh()` (R-2). A note
+recorded (not fixed — no rule reads it yet) on the `Gate` target still being the caller's instance (R-3). An
+authorization-ordering fix applied without touching an already-reviewed-and-accepted two-transaction shape
+(R-4 — the re-audit's broader atomicity suggestion was declined in writing, per this project's own rule that
+a re-raised instruction contradicting an existing decision is withdrawn rather than acted on). Three
+test-hygiene fixes (R-5).
+
+_Previously: 2026-08-25 — Task 0017, Phase 4 audit and same-day fix: added
+[model-instance-trust.md](model-instance-trust.md), the eleventh page. The audit's two findings
 share one root cause and one remedy, which is what earns them a page rather than a per-review note: a
 caller-supplied Eloquent instance is untrusted on **both** sides — its attributes are not a safe input to a
 guard, and its dirty set is not a safe payload for a write. Written as ❌/✅ pairs from the start per the
