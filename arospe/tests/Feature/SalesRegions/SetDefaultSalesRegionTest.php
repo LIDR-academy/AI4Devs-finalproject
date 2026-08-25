@@ -164,6 +164,7 @@ test('a caller-dirtied structural column does not persist through this action', 
     $currentDefault = SalesRegion::factory()->isDefault()->create();
     $candidate = SalesRegion::factory()->create();
     $originalName = $candidate->name;
+    $originalSortOrder = $candidate->sort_order;
 
     $candidate->name = 'Hijacked via SetDefaultSalesRegion';
     $candidate->sort_order = 999;
@@ -174,8 +175,11 @@ test('a caller-dirtied structural column does not persist through this action', 
 
     app(SetDefaultSalesRegion::class)($candidate);
 
+    // ->toBe($originalSortOrder), not ->not->toBe(999) (Phase 4 RE-audit
+    // finding R-5): the negated form only proves the value isn't exactly
+    // 999, not that it's the correct original value.
     expect($candidate->fresh()->is_default)->toBeTrue()
         ->and($candidate->fresh()->name)->toBe($originalName)
-        ->and($candidate->fresh()->sort_order)->not->toBe(999)
+        ->and($candidate->fresh()->sort_order)->toBe($originalSortOrder)
         ->and($currentDefault->fresh()->is_default)->toBeFalse();
 });

@@ -35,6 +35,18 @@ class SalesRegionPolicy
      * exclusion -- there is no untouchable row in this domain today. Kept as
      * an instance method anyway, so the per-row Gate::allows() UI hint reuses
      * the identical method a future target-dependent rule would need.
+     *
+     * Phase 4 RE-audit finding R-3, recorded here rather than fixed (there is
+     * no rule to fix yet): every SalesRegions action authorizes against a
+     * CALLER-supplied instance, before that action re-fetches its own fresh
+     * copy under lock (docs/security/model-instance-trust.md). That is safe
+     * only because this method ignores $target entirely. The day a
+     * target-dependent branch is added here (e.g. gating on $target->kind),
+     * it MUST be evaluated against a freshly re-fetched row, not the
+     * caller's -- otherwise a forged in-memory attribute on the caller's
+     * instance authorizes a write the action then performs against the real,
+     * different row, reopening the exact class of bug this file's sibling
+     * actions were fixed for, one layer up and outside their locks.
      */
     public function update(User $actor, SalesRegion $target): bool
     {

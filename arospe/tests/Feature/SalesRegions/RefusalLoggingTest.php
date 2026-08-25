@@ -416,14 +416,21 @@ test('UpdateSalesRegion direct-call succeeds for an actor holding sales-regions.
 // =====================================================================
 
 test('UpdateSalesRegion does not persist a caller-dirtied structural column', function () {
+    $otherParent = SalesRegion::factory()->create();
     $region = SalesRegion::factory()->create();
     $originalSlug = $region->slug;
     $originalName = $region->name;
     $originalParentId = $region->parent_id;
+    $originalSortOrder = $region->sort_order;
 
     $region->slug = 'hijacked-slug';
     $region->name = 'Hijacked';
     $region->sort_order = 999;
+    // A real, FK-valid id -- $originalParentId is null on a plain factory
+    // row, so asserting against it alone would pass whether or not the
+    // dirtied value was ever at risk of persisting (Phase 4 RE-audit
+    // finding R-5): this line makes the assertion below meaningful.
+    $region->parent_id = $otherParent->id;
 
     $actor = User::factory()->create();
     $actor->givePermissionTo('sales-regions.edit');
@@ -431,10 +438,12 @@ test('UpdateSalesRegion does not persist a caller-dirtied structural column', fu
 
     app(UpdateSalesRegion::class)($region, 'XX', 'desc', '5.000');
 
+    // ->toBe($originalSortOrder), not ->not->toBe(999) (R-5): the negated
+    // form only proves the value isn't exactly 999, not that it's correct.
     expect($region->fresh()->slug)->toBe($originalSlug)
         ->and($region->fresh()->name)->toBe($originalName)
         ->and($region->fresh()->parent_id)->toBe($originalParentId)
-        ->and($region->fresh()->sort_order)->not->toBe(999)
+        ->and($region->fresh()->sort_order)->toBe($originalSortOrder)
         ->and($region->fresh()->code)->toBe('XX');
 });
 

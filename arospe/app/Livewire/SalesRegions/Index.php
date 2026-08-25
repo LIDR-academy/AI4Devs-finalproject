@@ -139,11 +139,24 @@ class Index extends Component
      * render an inline row switch, a modal field, or both, without the
      * single-default invariant existing in two places.
      *
-     * Authorization is the first statement. The rate is normalised (a
-     * Spanish-locale decimal comma to a dot, D12) immediately afterwards
-     * and before validate() runs -- normalising only inside the action
-     * would let the validation rule see the un-normalised value and reject
-     * it.
+     * Authorization is the first statement -- BOTH rows it can write,
+     * including the replacement default, per Phase 4 RE-audit finding R-4:
+     * the replacement's authorize() call used to run after UpdateSalesRegion
+     * had already written the rate/description/code, so an actor lacking
+     * update rights on the replacement row (should a future target-dependent
+     * rule ever grant SalesRegionPolicy::update() one -- see its own
+     * docblock) would still get that first write committed before being
+     * refused. Both authorize() calls now run before either action is
+     * called. This does NOT change the accepted, Users-screen-consistent
+     * two-transaction shape below -- see the Phase 1 reconciliation section
+     * of this story's task file for why a mid-submit VALIDATION refusal
+     * (D3/D10) is still allowed to leave the rate/description/code half
+     * committed; only the AUTHORIZATION ordering moved.
+     *
+     * The rate is normalised (a Spanish-locale decimal comma to a dot, D12)
+     * immediately afterwards and before validate() runs -- normalising only
+     * inside the action would let the validation rule see the un-normalised
+     * value and reject it.
      */
     public function save(UpdateSalesRegion $updateSalesRegion, SetSalesRegionActive $setSalesRegionActive, LogRefusedPrivilegedAttempt $log): void
     {
@@ -165,8 +178,6 @@ class Index extends Component
         $rate = $validated['rate'] === '' ? null : $validated['rate'];
         $replacementDefaultId = $validated['replacementDefaultId'] === '' ? null : $validated['replacementDefaultId'];
 
-        $updateSalesRegion($target, $code, $description, $rate);
-
         $replacementDefault = $replacementDefaultId !== null
             ? SalesRegion::find($replacementDefaultId)
             : null;
@@ -174,6 +185,8 @@ class Index extends Component
         if ($replacementDefault !== null) {
             $log->authorize('update', $replacementDefault, targetType: 'sales_region', targetId: $replacementDefault->id);
         }
+
+        $updateSalesRegion($target, $code, $description, $rate);
 
         $setSalesRegionActive($target, $this->active, $replacementDefault);
 

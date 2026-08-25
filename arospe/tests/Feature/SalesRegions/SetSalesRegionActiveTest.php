@@ -303,8 +303,18 @@ test('concurrent promotion of the deactivation target is honoured: deactivating 
     $actor = setActiveTestActor(['sales-regions.edit']);
     $this->actingAs($actor);
 
-    expect(fn () => app(SetSalesRegionActive::class)($region, false, null))
-        ->toThrow(ValidationException::class);
+    // Assert the specific D3 message (Phase 4 RE-audit finding R-5): a bare
+    // ValidationException::class match cannot distinguish this refusal from
+    // D10's (default_must_be_active), which throws on the same
+    // replacementDefaultId key -- a regression that refused for the WRONG
+    // reason would still pass a class-only assertion.
+    try {
+        app(SetSalesRegionActive::class)($region, false, null);
+        $this->fail('Expected a ValidationException.');
+    } catch (ValidationException $e) {
+        expect($e->errors()['replacementDefaultId'][0])
+            ->toBe(__('sales-regions.errors.default_deactivation_requires_replacement'));
+    }
 
     expect($region->fresh()->is_active)->toBeTrue()
         ->and($region->fresh()->is_default)->toBeTrue();
@@ -322,8 +332,17 @@ test('concurrent deactivation of the named replacement is honoured: promoting an
     $actor = setActiveTestActor(['sales-regions.edit']);
     $this->actingAs($actor);
 
-    expect(fn () => app(SetSalesRegionActive::class)($currentDefault, false, $replacement))
-        ->toThrow(ValidationException::class);
+    // Assert the specific D10 message -- the refusal this test is actually
+    // about is the NESTED SetDefaultSalesRegion call's guard, not this
+    // action's own D3 one, and both throw ValidationException on the same
+    // key (Phase 4 RE-audit finding R-5).
+    try {
+        app(SetSalesRegionActive::class)($currentDefault, false, $replacement);
+        $this->fail('Expected a ValidationException.');
+    } catch (ValidationException $e) {
+        expect($e->errors()['replacementDefaultId'][0])
+            ->toBe(__('sales-regions.errors.default_must_be_active'));
+    }
 
     expect($currentDefault->fresh()->is_active)->toBeTrue()
         ->and($currentDefault->fresh()->is_default)->toBeTrue()
@@ -368,4 +387,24 @@ test('a caller-dirtied structural column does not persist through this action', 
 
     expect($region->fresh()->is_active)->toBeTrue()
         ->and($region->fresh()->slug)->toBe($originalSlug);
+});
+
+// =====================================================================
+// Phase 4 RE-audit finding R-2 (docs/security/model-instance-trust.md) — the returned instance
+// must reflect the promotion's effect on is_default, not a stale in-memory copy from before the
+// nested SetDefaultSalesRegion call cleared it through a separate instance.
+// =====================================================================
+
+test('the returned instance reflects is_default being cleared by the atomic promotion, not a stale copy', function () {
+    $oldDefault = SalesRegion::factory()->isDefault()->create();
+    $replacement = SalesRegion::factory()->create(['is_active' => true, 'is_default' => false]);
+
+    $actor = setActiveTestActor(['sales-regions.edit']);
+    $this->actingAs($actor);
+
+    $returned = app(SetSalesRegionActive::class)($oldDefault, false, $replacement);
+
+    expect($returned->is($oldDefault))->toBeTrue()
+        ->and($returned->is_default)->toBeFalse()
+        ->and($returned->is_active)->toBeFalse();
 });

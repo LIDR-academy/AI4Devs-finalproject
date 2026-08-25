@@ -62,12 +62,22 @@ class SetSalesRegionActive
      *
      * Lock ordering: both candidate rows are locked in one
      * whereIn(...)->orderBy('id')->lockForUpdate() query rather than as two
-     * separate lockForUpdate() calls, so two concurrent operations that name
-     * each other's target as their own replacement always acquire their
-     * locks in the same (primary-key-ascending) order -- the ordering half
-     * of the deadlock mitigation this action's nested call into
-     * SetDefaultSalesRegion would otherwise open; `attempts: 3` on both
-     * transactions is the retry half.
+     * separate lockForUpdate() calls. This does NOT protect a "two calls
+     * naming each other's target as their own replacement" scenario --
+     * that interleaving cannot occur, since the nested call below only ever
+     * runs when $target->is_default is true, so both sides of such a race
+     * would need is_default=true simultaneously, the exact state this story
+     * exists to forbid (Phase 4 RE-audit finding R-1a, which corrected this
+     * docblock's original, wrong framing). What ordering-then-locking here
+     * actually buys is consistency with SetDefaultSalesRegion's OWN single
+     * ordered lock query (see that action's docblock, R-1b/R-1): as long as
+     * every multi-row lock acquisition against this table sorts its rows by
+     * primary key ascending in one query, any two transactions needing an
+     * overlapping row set always request it in the same order, which is
+     * what actually prevents a circular wait -- regardless of which of the
+     * two actions' queries originates the request. `attempts: 3` is a
+     * second, independent layer for whatever a residual race still reaches
+     * (e.g. a row outside either query's pre-locked set).
      */
     public function __invoke(SalesRegion $region, bool $active, ?SalesRegion $replacementDefault = null): SalesRegion
     {
@@ -105,13 +115,20 @@ class SetSalesRegionActive
                 ($this->setDefaultSalesRegion)($replacement);
             }
 
-            // tap($target)->forceFill([...])->save() would NOT return
-            // $target: HigherOrderTapProxy::__call() unwraps to the raw
-            // target after the FIRST chained call, so the second call,
-            // ->save(), runs directly on the model and returns its own
-            // bool. Wrapping the already-forceFill()ed instance keeps
-            // ->save() as the one proxied call.
-            return tap($target->forceFill(['is_active' => $active]))->save();
+            $target->forceFill(['is_active' => $active])->save();
+
+            // Phase 4 RE-audit finding R-2: when the branch above ran, the
+            // nested SetDefaultSalesRegion call cleared THIS row's
+            // is_default through its OWN, separately re-fetched instance
+            // (its whereKeyNot()-equivalent only excludes $replacement) --
+            // invisibly to $target's own dirty-tracking, whose `original`
+            // still says `true`. The persisted state is correct (is_default
+            // is simply not dirty on $target, so save() above never touched
+            // it), but without this refresh the RETURNED instance would
+            // still claim is_default=true for a row the database now has as
+            // false -- a real defect for any future caller that reads the
+            // return value, even though nothing in this app does today.
+            return $target->refresh();
         }, attempts: 3);
     }
 }
