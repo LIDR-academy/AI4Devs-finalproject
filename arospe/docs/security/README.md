@@ -154,6 +154,33 @@ repo must follow — always with a real code example pulled from this repository
   `syncOriginal()` after every successful save), with the four constraints that come with it, plus
   the nullable-`?User` rule for `Passkeys::authorizeLoginUsing()`.
 
+- [Model-instance trust](model-instance-trust.md) — the rules established by task 0017's Phase 4 audit,
+  this repo's first **domain-invariant** guard (a rule about the shape of the data — "exactly one default,
+  and it is always active" — rather than about who may act). Every "derive the state, never accept it" rule
+  on [authorization-patterns.md](authorization-patterns.md) is stated in terms of a *parameter beside* the
+  model; this page is the same failure class one level down, where the untrusted input **is** the model.
+  Two rules, one root cause. **(1)** A guard must re-read its subject under lock *inside* its own
+  transaction: `SetDefaultSalesRegion`'s D10 refusal is correctly placed inside the transaction and still
+  cannot hold, because `$newDefault->is_active` was read before that transaction existed — with the three
+  reasons `lockForUpdate()` does not close it and reordering it would not either (it locks the rows being
+  *cleared*, not the one being *promoted*; on MySQL the unindexed scan happens to lock the whole table and
+  it still makes no difference; and a lock protects a row from changing but cannot refresh a value already
+  in a PHP variable). Three confirmed paths to the forbidden `is_default = true, is_active = false` state,
+  the sharpest needing no forged input at all — two administrators clicking within the same second
+  deactivate the catalog's only default with no replacement named and no refusal raised. **(2)** `save()`
+  writes the whole **dirty set**, not the `fill()` allow-list, so "the single named writer of this column"
+  is a convention among callers rather than an enforcement: a caller that dirties `slug`/`name`/`sort_order`
+  before calling `UpdateSalesRegion` persists all three despite `#[Fillable]`, and one that dirties
+  `is_default` before calling `SetSalesRegionActive` reaches **two defaults** without `SetDefaultSalesRegion`
+  ever running. Both sections marked **closed**, same day as the audit that found them — each ❌ block is the
+  code as it shipped from Phase 3, each ✅ block is the real shipped fix (re-fetch the row under
+  `lockForUpdate()`, inside the action's own transaction, and read/write only through that instance) — plus
+  the note that `App\Actions\Users\UpdateUser` shares the second shape (out of scope for 0017, recorded so
+  the next audit treats it as known rather than new), the corrected `whereKeyNot()` docblock rationale, the
+  deadlock surface the fix closes (a single primary-key-ordered `lockForUpdate()` query plus `attempts: 3`
+  retry), and the regression-test shape that can actually fail (dirty the instance, or mutate the row behind
+  it, *between* hydration and the call) — eight such tests were added and each was confirmed to redden
+  against the pre-fix code before the fix was restored.
 - [Step-up authentication](step-up-authentication.md) — the rules governing the app's **third**
   authorization layer, added by task 0015a: a password-confirmation freshness guard that answers
   "is the person at the keyboard still the account holder", which route middleware and policies both
@@ -182,7 +209,20 @@ repo must follow — always with a real code example pulled from this repository
   self-service case this layer's own `$isSelfEdit` exemption leaves alone for a different, narrower
   reason.
 
-_Last updated: 2026-08-24 — Task 0015a, Phase 5 code review finding F-3: [step-up-authentication.md](step-up-authentication.md)
+_Last updated: 2026-08-25 — Task 0017 (Sales Region tax configuration — backend), Phase 4 audit and same-day
+fix: added [model-instance-trust.md](model-instance-trust.md), the eleventh page. The audit's two findings
+share one root cause and one remedy, which is what earns them a page rather than a per-review note: a
+caller-supplied Eloquent instance is untrusted on **both** sides — its attributes are not a safe input to a
+guard, and its dirty set is not a safe payload for a write. Written as ❌/✅ pairs from the start per the
+[audit-authored-page rule](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)
+and updated to **closed** once the fix landed the same day, so neither block was left describing a tree that
+no longer existed. This is also the first page here about a **domain invariant** rather than an authorization
+rule — the authorization coverage of this story (three actions, five component methods, the policy, the
+`can:`-gated route and the refusal logging) was audited and found complete, with no finding. Per-review
+findings, including the severity list and the verdict on the TOCTOU item Phase 2 deferred here, live in the
+audit response, not on this page._
+
+_Previously: 2026-08-24 — Task 0015a, Phase 5 code review finding F-3: [step-up-authentication.md](step-up-authentication.md)
 was authored during the *first* Phase 4 audit (Phase 3's shipped code, role/status/delete only) and
 never revisited once the human-approved widening (F1/F2/F3/F4, decisions D6/D7/D8) and its own re-audit
 landed — the exact staleness
