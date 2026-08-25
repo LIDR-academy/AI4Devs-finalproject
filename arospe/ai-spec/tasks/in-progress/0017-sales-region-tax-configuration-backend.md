@@ -1376,3 +1376,62 @@ formatting drift on any file this story touches.
 - Phase 4 (`appsec-auditor`), Phase 5 (`code-reviewer`), Phase 6 (`docs-keeper`), Phase 7 (closure) have not
   run. Nothing in this story has been committed to git yet — that happens immediately after this section is
   written, as the Phase 3 commit boundary.
+
+## Phase 4 audit and fix (`appsec-auditor`, 2026-08-25)
+
+**Verdict: FAIL.** Two Medium findings, both in the three action classes, both confirmed by execution
+against the real implementation (not by reading), both fixed the same day. Full detail — including the three
+exploit sequences traced by execution, the exact `tinker` reproductions, and why `lockForUpdate()` alone
+cannot close either — lives in [`docs/security/model-instance-trust.md`](../../../docs/security/model-instance-trust.md)
+(this story's Phase 4 audit is what created that page); this section is the task-file-level summary.
+
+- **F-1 — TOCTOU on the deferred `$replacementDefault->is_active` item, widened.** The Phase 2 note asked
+  about the replacement row specifically; the audit found the same defect on **both** guarded reads —
+  `SetDefaultSalesRegion`'s `$newDefault->is_active` (D10) and `SetSalesRegionActive`'s `$region->is_default`
+  — because both actions read the guard's subject off a caller-hydrated instance rather than re-reading it
+  under lock inside their own transaction. The sharpest confirmed exploit needs no forged input at all: two
+  administrators acting within the same second — one promoting a region to default while the other, in
+  parallel, deactivates that same region with no replacement named — leaves the catalog's only default
+  inactive, with the D3 refusal never firing for either request.
+- **F-2 — mass assignment via `save()`'s whole dirty set, not the `fill()`/`forceFill()` array.** All three
+  actions' final write ran against the caller-supplied instance, so `save()` persisted whatever else the
+  caller had left dirty on it — confirmed to let a caller-dirtied `slug`/`name`/`sort_order` survive
+  `UpdateSalesRegion` despite `#[Fillable]`, and a caller-forged `is_default` reach the database through
+  `SetSalesRegionActive` with **`SetDefaultSalesRegion` never running at all** — two defaults, reached without
+  touching the one class whose entire purpose is preventing that.
+- **F-3 — Low, accepted as a known residual, no fix.** `save()`'s lost-update risk on `is_active` while an
+  edit modal is open (another admin's toggle is silently reverted on submit) matches the Users screen's
+  existing, undocumented-as-a-decision shape. Recorded here rather than fixed, per the audit's own
+  recommendation, so it is a decision rather than an oversight the next reviewer has to re-discover.
+
+**The fix — one root cause, one remedy, applied to all three actions**: re-fetch the row(s) the action owns
+inside its own transaction/call, and read and write **only** through that fresh instance — never the
+caller-supplied one, after the re-fetch.
+
+- `UpdateSalesRegion` needs no lock (no cross-row invariant): `SalesRegion::query()->whereKey(...)->firstOrFail()`
+  before `fill()`.
+- `SetDefaultSalesRegion` and `SetSalesRegionActive` need the re-fetch **and** `lockForUpdate()`, since they
+  also carry the TOCTOU fix — one query does both jobs. `SetSalesRegionActive` locks its own target and (when
+  named) the replacement together in **one** `whereIn([...])->orderBy('id')->lockForUpdate()` query, so two
+  concurrent calls naming each other's target as their own replacement always lock in the same order —
+  closing the deadlock surface the audit flagged as a consequence of introducing per-row locking. Both
+  actions' `DB::transaction()` calls additionally carry `attempts: 3` (Laravel's built-in deadlock retry) as
+  a second, independent layer, since the unindexed `is_default` scan makes lock contention the normal case
+  rather than the rare one.
+- `whereKeyNot()` in `SetDefaultSalesRegion`'s clear-query is **kept** (still required — a separate query
+  hydrates a separate instance even for $target's own row) with its docblock corrected rather than left
+  describing a scenario the fix changed.
+
+**Verification, not merely applied and trusted:**
+- Eight regression tests added (four per finding, split across `SetDefaultSalesRegionTest.php`,
+  `SetSalesRegionActiveTest.php` and `RefusalLoggingTest.php` per the existing one-file-per-action
+  convention), each mutating the row (or the in-memory instance) **between** hydration and the action call —
+  the only shape that can actually exercise either bug, per the security page's own "Regression test shape"
+  note.
+- All eight were confirmed to **redden against the pre-fix code** (`git stash` on the three action files,
+  re-run, confirm red, `git stash pop`) before being trusted as real regression coverage — not merely
+  asserted to exist.
+- Full suite re-run unscoped after the fix was restored: **868/868 passed, 2431 assertions** (860/2403 →
+  868/2431, the eight new tests). `vendor/bin/pint --test --format agent` (unscoped): **passed**.
+- `docs/security/model-instance-trust.md` and its `docs/security/README.md` index entry updated from
+  **open** to **closed** the same day, per this repo's own rule against a security page outliving its fix.
