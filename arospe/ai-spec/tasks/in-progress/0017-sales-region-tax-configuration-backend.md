@@ -1435,3 +1435,50 @@ caller-supplied one, after the re-fetch.
   868/2431, the eight new tests). `vendor/bin/pint --test --format agent` (unscoped): **passed**.
 - `docs/security/model-instance-trust.md` and its `docs/security/README.md` index entry updated from
   **open** to **closed** the same day, per this repo's own rule against a security page outliving its fix.
+
+### Phase 4 re-audit round 2 (`appsec-auditor`, 2026-08-26)
+
+Per this repo's own rule — [a security fix must be re-audited as new code, not merely confirmed to close the
+original finding](../../../docs/errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19) —
+the F-1/F-2 fix above was re-audited the next day. **Verdict: PASS**, four Low findings, none reopening F-1
+or F-2. Full detail (including the two-live-MySQL-session deadlock reproduction) is in
+[`docs/security/model-instance-trust.md`](../../../docs/security/model-instance-trust.md#re-audit-round-2-what-the-fix-itself-got-subtly-wrong).
+
+- **R-1 — fixed.** The round-1 fix's lock-ordering docblocks justified themselves against a scenario that
+  cannot occur (two calls naming each other's target as replacement — both would need `is_default = true`
+  simultaneously, the state the story forbids), while round 1 had actually **introduced** a real, confirmed
+  deadlock elsewhere: `SetDefaultSalesRegion` acquiring its target lock and its clear-scan lock as two
+  *separate* queries, reachable by two administrators promoting two *different* regions concurrently.
+  Collapsed to one `orderBy('id')->lockForUpdate()` query covering both row sets — real resource-ordering
+  rather than an asserted one. Both actions' docblocks and the security page corrected in place.
+- **R-2 — fixed.** `SetSalesRegionActive`'s promotion branch could return an instance still claiming
+  `is_default = true` for a row the nested `SetDefaultSalesRegion` call had already persisted as `false`
+  (through a separate, independently re-fetched instance) — the persisted state was always correct, only the
+  **return value** lied. Fixed with `->refresh()` before returning; a new regression test asserts the return
+  value directly and was confirmed to redden without that call.
+- **R-3 — recorded, not fixed (there is no rule to fix yet).** Every action still authorizes against the
+  caller-supplied instance, before the re-fetch — inert today only because `SalesRegionPolicy::update()`
+  ignores its target entirely. Recorded on that policy method's own docblock: the day a target-dependent rule
+  is added there, it must be evaluated against a re-fetched row, or the exact class of bug this fix closed
+  reopens one layer up, outside the transaction's lock.
+- **R-4 — partially fixed, partially declined by an already-made decision.** The re-audit flagged two things
+  under one finding: `Index::save()` authorizing the replacement row *after* already writing the target
+  (fixed — the lookup and `authorize()` call now run before either action executes), and the two-action-call
+  shape not being atomic (**not** applied — this exact shape, "a mid-submit failure can leave the
+  rate/code/description half persisted while the active/default half is refused", was already reviewed and
+  explicitly accepted as deliberate and Users-screen-consistent in the [Phase 1 reconciliation](#phase-1-reconciliation-backend-expert--backend-qa-reviews-2026-08-25)
+  above, and re-confirmed accepted by the first Phase 4 audit's own "Confirmed clean" list. Wrapping both
+  calls in one transaction would have silently reversed an already-made, already-audited decision, so it was
+  not done — per this repo's own rule that a deferred/re-raised instruction contradicting an existing decision
+  is withdrawn in writing, not acted on).
+- **R-5 — test hygiene, applied.** Two `ValidationException::class`-only assertions widened to the specific
+  message (they could not distinguish the D3 refusal from the nested D10 one, both on the same key); two
+  `->not->toBe(999)` assertions tightened to `->toBe($original...)`; one trivially-true `parent_id`
+  assertion (comparing `null` to `null` without ever dirtying it) given a real, FK-valid value to dirty first.
+
+**Verification:** every changed/added assertion confirmed to redden against the pre-fix code before being
+trusted (the same `git stash` / temporary-removal discipline as round 1). Full suite re-run unscoped:
+**869/869 passed, 2434 assertions**. `vendor/bin/pint --test --format agent` (unscoped): **passed**.
+`docs/security/model-instance-trust.md` gained a third section, "Re-audit round 2", and both original
+sections' code examples were updated in place to the round-2 shape rather than left describing what round 2
+found wrong.
