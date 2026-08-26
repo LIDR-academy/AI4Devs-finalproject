@@ -95,6 +95,26 @@ function salesRegionsRowControlDisabled(string $html, string $dataTest): bool
 }
 
 /**
+ * Does the <ui-switch> carrying `data-test="$dataTest"` render `checked` -- Phase 4 finding F-3's
+ * server-truth assertion. flux/switch.blade.php emits this as a BARE boolean attribute
+ * (`@if ($checked) checked data-checked @endif`), not a `key="value"` pair like `disabled` above,
+ * so the anchor here is `\schecked` (a literal space before the word). This is deliberately safe
+ * against the switch's own compiled classlist, which contains "checked" only as a substring of a
+ * hyphen-prefixed utility (`group-has-checked:...`) or the `data-checked` attribute itself
+ * (hyphen-prefixed, not space-prefixed) -- neither is preceded by whitespace, so neither
+ * false-matches `\schecked`.
+ */
+function salesRegionsRowControlChecked(string $html, string $dataTest): bool
+{
+    $quoted = preg_quote($dataTest, '/');
+
+    return (bool) preg_match(
+        '/<[a-z0-9-]+(?=[^>]*\bdata-test="'.$quoted.'")(?=[^>]*\schecked(?:\s|>))[^>]*>/is',
+        $html
+    );
+}
+
+/**
  * Is the control carrying `data-test="$dataTest"` wrapped in an explicit <flux:tooltip> (compiled
  * to <ui-tooltip>), the Flux/Blaze trap documented in docs/errors-log.md and required again here
  * by the task file's "Disabled affordances" section? Element-name-agnostic for the same reason as
@@ -375,6 +395,16 @@ test('an orphaned replacementDefaultId refusal renders in the page-level outlet 
 
     expect($default->fresh()->is_active)->toBeTrue()
         ->and($default->fresh()->is_default)->toBeTrue();
+
+    // Phase 4 finding F-3: the row's own re-rendered HTML must still claim the switch is
+    // checked after the refusal -- the server-truth half of "a UI that reports success on a
+    // refused write is the worst outcome" (this story's own stated test-4 rationale). This
+    // proves the SERVER never renders a stale/false state; it cannot observe whether a real
+    // browser's <ui-switch> (a Flux web component with its own internal click-driven state --
+    // see the markup's F-3 note) visually reverts after Livewire's morph finds no HTML change to
+    // apply, which is a client-side question this suite's component-level layer cannot answer.
+    expect(salesRegionsRowControlChecked($component->html(), 'toggle-active-region-'.$default->id))
+        ->toBeTrue();
 });
 
 test('an orphaned replacementDefaultId refusal renders exactly once when the modal is open', function () {
@@ -395,4 +425,41 @@ test('an orphaned replacementDefaultId refusal renders exactly once when the mod
     // @unless ($showModal) means the page-level outlet must NOT also render it while the modal
     // (which shows its own copy, via the field-level error) is open -- exactly once, never twice.
     expect(substr_count($component->html(), $message))->toBe(1);
+});
+
+// =====================================================================
+// Test 11 -- Phase 4 finding F-1's regression guard. Every id in $this->regions must have exactly
+// one edit-region-{id} hook on the page, regardless of its own or its parent's isActive state.
+// F-1 was an inactive PARENT (España) dropping its whole children group -- including whichever
+// child held is_default and every configured rate -- from BOTH tables at once. A test naming
+// España specifically would only catch that one shape again; asserting this as a blanket
+// row-count invariant over an arbitrary, deliberately-mixed-activity tree closes the whole class
+// (an inactive parent, an inactive childless country, an inactive default-holding child, all
+// mixed with active siblings) rather than one instance of it.
+// =====================================================================
+
+test('every region in the component state renders exactly one edit control, regardless of its own or its parents active state', function () {
+    $actor = salesRegionsIndexRenderingTestActor();
+    $this->actingAs($actor);
+
+    // Deliberately inactive PARENT with children -- the exact shape F-1 dropped entirely.
+    $espana = SalesRegion::factory()->create(['name' => 'España', 'is_active' => false]);
+    $default = SalesRegion::factory()->fiscalTerritoryOf($espana)->isDefault()->create(['name' => 'Península']);
+    $inactiveChild = SalesRegion::factory()->fiscalTerritoryOf($espana)->inactive()->create(['name' => 'Canarias']);
+
+    // A childless country, active and inactive, as a control group.
+    $activeCountry = SalesRegion::factory()->create(['name' => 'Portugal', 'is_active' => true]);
+    $inactiveCountry = SalesRegion::factory()->create(['name' => 'Andorra', 'is_active' => false]);
+
+    $component = Livewire::test(Index::class);
+    $html = $component->html();
+
+    $regionIds = collect($component->get('regions'))->pluck('id')
+        ->merge([$espana->id, $default->id, $inactiveChild->id, $activeCountry->id, $inactiveCountry->id])
+        ->unique();
+
+    foreach ($regionIds as $id) {
+        expect(substr_count($html, 'data-test="edit-region-'.$id.'"'))
+            ->toBe(1, "Region {$id} must render exactly one edit-region-{$id} control.");
+    }
 });

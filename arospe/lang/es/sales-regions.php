@@ -52,7 +52,7 @@ return [
     'index' => [
         'title' => 'Regiones de venta',
         'summary' => ':active activas de :total entradas totales',
-        'action_not_allowed' => 'No tienes permiso para realizar esta acción.',
+        'action_not_allowed' => 'Acción no permitida',
         'default_toggle_tooltip' => 'Esta es la entrada predeterminada. Abre su formulario de edición para indicar una entrada predeterminada sustituta antes de desactivarla.',
         'empty' => 'No se encontraron entradas de regiones de venta.',
     ],

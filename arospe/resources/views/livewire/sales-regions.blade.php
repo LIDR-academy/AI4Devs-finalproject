@@ -47,10 +47,28 @@
         ->sortBy('sortOrder')
         ->groupBy('parentId');
 
-    // Q1(a): the split that defines the two sections is is_active itself --
-    // a real column, not an invented UI concept (Q2's own reasoning).
-    $activeTopLevelRegions = $topLevelRegions->where('isActive', true)->values();
-    $inactiveTopLevelRegions = $topLevelRegions->where('isActive', false)->values();
+    // Phase 4 finding F-1: a parent-with-children row (structurally, only
+    // "España") must stay in the grouped/active table REGARDLESS of its own
+    // isActive, or its whole fiscal-territory group -- including whichever
+    // row holds is_default and every configured rate -- silently vanishes
+    // from the screen the moment an administrator disables it from its own
+    // inline toggle (D5 classifies that transition as always-safe, so
+    // nothing blocks the click). Confirmed by execution: without this
+    // guard, deactivating "España" left `Espana`'s five children in NEITHER
+    // table, the amber Default badge absent from the whole page, and the
+    // header's own "N active" count simultaneously claiming 5 active rows
+    // while zero rendered anywhere. Grouping (D2/D3) is this parent row's
+    // real purpose on this screen; the active/inactive split (Q1/Q2) is for
+    // the ~249 flat, childless countries, not for this one structural node.
+    $parentIdsWithChildren = $childrenByParent->keys();
+
+    $activeTopLevelRegions = $topLevelRegions
+        ->filter(fn (array $region): bool => $region['isActive'] === true || $parentIdsWithChildren->contains($region['id']))
+        ->values();
+
+    $inactiveTopLevelRegions = $topLevelRegions
+        ->filter(fn (array $region): bool => $region['isActive'] === false && ! $parentIdsWithChildren->contains($region['id']))
+        ->values();
 
     // Alpine's initial state for each expandable parent's disclosure --
     // default-open (D3). @js() renders a plain JS object literal, so a
@@ -72,8 +90,13 @@
         <div>
             <flux:heading size="xl">{{ __('sales-regions.index.title') }}</flux:heading>
             <flux:subheading>
+                {{-- F-2: counted from real isActive state across every row, never from which
+                table a row happens to render in -- $activeTopLevelRegions now deliberately
+                includes an inactive parent-with-children row (F-1), and childrenByParent was
+                never filtered by isActive at all, so either as a per-collection count would
+                misreport an inactive territory (or an inactive "España" itself) as active. --}}
                 {{ __('sales-regions.index.summary', [
-                    'active' => $activeTopLevelRegions->count() + $childrenByParent->collapse()->count(),
+                    'active' => $allRegions->where('isActive', true)->count(),
                     'total' => $allRegions->count(),
                 ]) }}
             </flux:subheading>
@@ -163,7 +186,22 @@
                             never throw, so the inline switch handles both directly. D4:
                             deactivating the CURRENT DEFAULT is refused here -- disabled with
                             a tooltip routing to the edit modal (A3-a), never wired to
-                            setActive() from this row. --}}
+                            setActive() from this row.
+
+                            Phase 4 finding F-3, recorded rather than silently accepted: this row
+                            can still be refused via the A4-a race (another admin makes it the
+                            default between paint and click), and <flux:switch> compiles to a
+                            <ui-switch> web component with its own internal click-driven state
+                            (see vendor/livewire/flux/stubs/resources/views/flux/switch.blade.php)
+                            -- not merely a passive :checked reflection. Whether a real browser's
+                            <ui-switch> visually reverts once Livewire's morph finds no HTML
+                            change to apply (since a refused call never reaches loadRegions()) is
+                            an OPEN, undecided question -- verified only that the SERVER always
+                            re-renders the correct checked state (IndexRenderingTest.php's
+                            matching F-3 assertion), which a component test cannot extend to real
+                            client-side morph behaviour. Narrow window (requires two concurrent
+                            admins), Low severity per the audit, not fixed pre-emptively without
+                            first proving the failure mode in a real browser. --}}
                             @if ($region['canEdit'] && ! $region['isDefault'])
                                 <flux:switch
                                     wire:click="setActive({{ \Illuminate\Support\Js::from($region['id']) }}, {{ \Illuminate\Support\Js::from(! $region['isActive']) }}, '')"
@@ -440,7 +478,13 @@
                             </flux:table.cell>
 
                             <flux:table.cell>
-                                @if ($region['canEdit'])
+                                {{-- Phase 4 finding F-5: `&& ! $region['isDefault']` added for
+                                symmetry with the active table's identical guard, even though a
+                                row in THIS section is unreachable with isDefault true (D10 means
+                                an inactive row can never hold the default flag, enforced in
+                                SetSalesRegionActive) -- so the markup is correct independent of
+                                the action's own guard, rather than by coincidence. --}}
+                                @if ($region['canEdit'] && ! $region['isDefault'])
                                     <flux:switch
                                         wire:click="setActive({{ \Illuminate\Support\Js::from($region['id']) }}, {{ \Illuminate\Support\Js::from(! $region['isActive']) }}, '')"
                                         :checked="$region['isActive']"

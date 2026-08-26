@@ -52,7 +52,7 @@ return [
     'index' => [
         'title' => 'Sales Regions',
         'summary' => ':active active of :total total entries',
-        'action_not_allowed' => 'You do not have permission to perform this action.',
+        'action_not_allowed' => 'Action not allowed',
         'default_toggle_tooltip' => 'This is the default entry. Open its edit form to name a replacement default before disabling it.',
         'empty' => 'No sales region entries found.',
     ],
