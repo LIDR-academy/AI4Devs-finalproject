@@ -1245,9 +1245,9 @@ rather than fixed, since there is nothing to fix.
 
 `vendor/bin/pint --dirty --format agent` (passed) on every changed file; `IndexRenderingTest.php` 30/30
 (29 + the new invariant test); `SalesRegionsIndexTest.php` (browser) 8/8; `SidebarModuleGatingTest.php`
-18/18; `vendor/bin/phpstan analyse` level 7 unscoped (0 errors); full suite unscoped in progress. MySQL
-container and Playwright process count checked clean before and after the browser-test run, per the
-Phase 3 incident above — no repeat.
+18/18; `vendor/bin/phpstan analyse` level 7 unscoped (0 errors); full suite unscoped 896/896 (2586
+assertions). MySQL container and Playwright process count checked clean before and after the
+browser-test run, per the Phase 3 incident above — no repeat.
 
 **Re-audit decision.** Every F-1 fix is a pure Blade-template filter-condition change (no new PHP logic,
 no new authorization surface, no new user input) and F-2 through F-5 are equally narrow (a count
@@ -1255,3 +1255,127 @@ expression, a test-only assertion, a translation string, a guard condition mirro
 None introduces a new mechanism the "audit the remediation as new code" convention exists to catch — unlike
 0017's TOCTOU/mass-assignment fixes, which added new locking and fresh-instance logic that genuinely
 warranted a second round. Proceeding directly to Phase 5 (code review) rather than a second audit round.
+
+## Phase 5 code review (`code-reviewer`, 2026-08-26)
+
+**Verdict: Changes needed.** Two blocking findings, seven non-blocking, plus verification that every
+Phase 4 fix (F-1 through F-6) landed correctly and completely in the code, not just in the task file's
+own description. All three quality gates were re-run independently by the reviewer rather than trusted
+from the record above: Pint unscoped (passed), Larastan level 7 unscoped (0 errors, after discovering the
+gate crashes at this host's default 128M memory limit and must be run with `--memory-limit=1G` — an
+environment note, not a story defect), Unit+Feature 867/867, Browser 29/29 — 896/896 total, matching the
+Phase 4 record.
+
+### B1 (blocking) — cancelling the modal after a refused save left the refusal message stranded
+
+`closeModal()` reset the form's properties but never called `resetValidation()`, so `replacementDefaultId`'s
+error stayed on the bag across requests (Livewire persists it via `SupportValidation::dehydrate()`/
+`hydrate()`). Reproduced: open the default row's edit modal, disable it with no replacement, Save (refused,
+error renders inline in the modal, correct) — then click Cancel. `showModal` flips to false, the
+`@unless ($showModal)` page-level outlet now passes its own guard, and the stale message renders above the
+table with no field and no context, indefinitely — the exact "orphaned refusal" A4-a exists to prevent,
+produced by the control added to prevent it.
+
+**Fix.** `closeModal()` (`app/Livewire/SalesRegions/Index.php`) now also calls
+`resetValidation('replacementDefaultId')`, with a docblock explaining why — this is a cross-story edit into
+0017's file, recorded here rather than worked around with a second markup flag. New regression test in
+`IndexRenderingTest.php` reproduces the full failing sequence (refused save inside the modal, then cancel)
+and asserts the page-level outlet is empty afterward.
+
+### B2 (blocking) — a browser test's "genuinely inert" claim never attempted a click
+
+Test 15 asserted nothing changed after a disabled control was clicked, but the interaction chain was
+hover-only — no `click()` call anywhere in it — so the assertions were structurally incapable of failing
+on any implementation, including a fully live one.
+
+**Fix.** The disabled branch renders no `wire:click` attribute at all (verified in the markup), so a real
+pointer click can never even reach the button (`pointer-events: none` refuses Playwright's own
+actionability check — the same reason the hover targets the `<ui-tooltip>` wrapper, not the button). The
+test now dispatches the DOM's native `.click()` via `$page->script(...)`, bypassing hit-testing entirely —
+proving inertness by construction (no `wire:click` to act on) rather than by an untested assumption.
+
+### Non-blocking, all fixed
+
+- **N1** — the code chip's empty `@else` branch rendered a styled, content-less `<span>`; now renders the
+  same em dash the rate column already uses, in all three row copies.
+- **N2** — `sales-regions.index.empty` existed in both lang files with no consumer anywhere in the markup.
+  Wired up as an `@if ($allRegions->isEmpty())` / `@else` around the whole active/inactive markup, matching
+  `roles.blade.php`'s identical shape (unreachable in production since the seeder always populates ~254
+  rows, kept anyway for the same reason that screen does), plus a new component test.
+- **N3** — the D6 rate-distinction tests (`assertSee('0%')` / `assertDontSee('—')`) were page-global
+  substring checks, unsafe the moment a second row with a different rate exists in the same render (`'0%'`
+  matches inside `'10%'`/`'100%'`). Added `data-test="rate-region-{id}"` to all three row copies and a new
+  row-scoped `salesRegionsRateCellText()` helper; both affected tests rewritten to use it.
+- **N4** — browser test 16 asserted only `assertSee('Francia')` after activating a collapsed-section row,
+  which cannot distinguish "still inside the collapsed section" from "moved to the active table" — both
+  render the same name. Now asserts the "Show all countries (N)" toggle's own live count decrements by
+  exactly one, read via `->text()` rather than `assertSeeIn()`'s `getByText()` locator (see the Blade-bug
+  investigation below for why that mattered).
+- **N5** — four ACs were correctly implemented with no test: the modal's read-only name/slug/kind context
+  block (new component test), which tooltip copy a disabled toggle carries — the default row's
+  edit-form-routing copy vs. a `canEdit === false` row's generic one, previously indistinguishable by a bare
+  "is it disabled" check (new `salesRegionsRowControlTooltipContent()` helper, both directions asserted in
+  tests 5 and 6), and that an invalid rate leaves the modal open with the previous rate still rendered in
+  the list (extended the existing dataset test in `IndexTest.php`).
+- **N6** — recorded as a deliberate, written-down deferral rather than a silent drop: per-row
+  `wire:loading`/`wire:target` scoping on the row actions matches neither sibling screen's own row-action
+  markup (`users.blade.php` / `roles.blade.php` scope it only on their modal Save/Delete buttons), so
+  building a new per-row pattern under this story's own audit-fix pass would invent precedent rather than
+  follow one. Left as a gap for a future story to pick up deliberately.
+- **N8** — attempted (unify `wire:click` argument encoding on `@js()` for consistency with the file's other
+  calls) and **reverted** after it silently broke `setActive()`'s wire:click across all three row copies —
+  see the write-up immediately below and [docs/errors-log.md](../../docs/errors-log.md#two-directive-calls-in-one-blade-component-tags-attribute-string-silently-fail-to-compile--2026-08-26).
+  Not "fixed" — the pre-existing `{{ \Illuminate\Support\Js::from(...) }}` form was correct and is kept.
+- **N7** and **N9** — recorded as known, accepted, deliberately not addressed in this pass: N7 (the
+  triplicated row markup, of which F-5 and this pass's N8 mistake are both direct symptoms) is a real
+  follow-up-story candidate, not a Phase 5 fix — collapsing ~300 lines of Blade here would invalidate the
+  browser-test run this pass just stabilized. N9 (generic `__('Actions')`/`__('Cancel')`/`__('Save')` keys
+  with no `lang/*.json` file backing them) is pre-existing on both sibling screens too, not a 0018
+  regression, and out of scope for the same reason.
+
+### A real bug found while fixing N8, and what it took to isolate it
+
+Converting the three `setActive(...)` `wire:click` attributes to `@js(...)` (matching `openEditModal`'s
+single-argument style) silently made every inline active/inactive toggle a no-op — no PHP error, no
+JavaScript console error, no failed request. `Livewire::test(Index::class)->call('setActive', ...)` (a
+direct component call, bypassing the compiled view) worked correctly throughout, so nothing at the
+component-test layer could have caught it; only a browser test asserting a *rendered* outcome after a real
+click did, and even that took several rounds — every earlier symptom (a stale count, an unchanged
+`is_active`) read exactly like ordinary async timing flakiness, the same failure shape this story's own
+Phase 3 section already documents as a real, accepted risk in this codebase. It was settled by dumping the
+actual compiled HTML rather than reasoning about it further: `wire:click="setActive(@js($region['id']), @js(!
+$region['isActive']), '')"` rendered **byte-for-byte as written**, `@js(...)` completely unprocessed.
+Minimally reproduced outside this story's markup (`<x-button wire:click="foo(@js($id), @js($flag))" />`
+against a trivial component, via `Blade::render()`) — **two `@directive(...)` calls inside one Blade
+component tag's attribute value do not compile; a single one does, and so do two `{{ }}` echoes in the
+same attribute**, which is exactly why the pre-existing `Js::from()` form had always worked. Reverted to
+that form in all three copies, each with an inline comment recording the finding so a future pass doesn't
+"fix" it back to `@js()` a second time. Full write-up, the minimal repro, and the generalised rule are in
+[docs/errors-log.md](../../docs/errors-log.md#two-directive-calls-in-one-blade-component-tags-attribute-string-silently-fail-to-compile--2026-08-26).
+
+**An unrelated environment incident surfaced during this investigation and is recorded for completeness,
+not because it reflects a story defect.** Several ad-hoc `docker exec ... php artisan tinker` /
+`view:clear` calls run without `-u sail` during the isolation above wrote compiled-view and PHPStan cache
+files as `root`, which then blocked the `sail`-user test process from touching them (`touch(): Utime failed:
+Operation not permitted`, cascading into 57 unrelated test errors on the next run). Fixed with
+`chown -R sail:sail` on `storage/`, `bootstrap/cache/` and `/tmp/phpstan`, verified with a `-not -user sail`
+sweep finding nothing, and every subsequent gate re-run clean. No lasting convention beyond "always pass
+`-u sail` to an ad-hoc `docker exec` in this project" — not written up in `errors-log.md`, since this is a
+narrower repeat of the class of incident that file already tracks (root-owned files after direct `docker
+exec` use) rather than a new lesson.
+
+**A separate, apparently timing-related flake surfaced only under the FULL unscoped suite** (899 tests,
+after this pass added new tests), not when the same test ran alone or scoped to
+`--filter=SalesRegions` (125/125, twice) — test 16's post-click count assertion intermittently read the
+pre-click value under the heavier concurrent load a full run produces. Mitigated with a short, bounded
+`->wait(1)` immediately after the click (matching this story's own Phase 3 precedent for the identical
+class of real-browser timing sensitivity), verified by three consecutive full unscoped runs after adding
+it: 899/899, 899/899, 899/899 (2611–2615 assertions). Recorded as a known, bounded mitigation rather than a
+provable fix, consistent with how the Phase 3 `<flux:select>` risk is already documented above.
+
+### Verification after Phase 5 fixes
+
+`vendor/bin/pint --dirty --format agent` (passed); Larastan level 7 unscoped with `--memory-limit=1G` (0
+errors); full unscoped suite, three consecutive clean runs after all fixes landed: 899/899 (2615
+assertions, final run). MySQL container and Playwright process count checked clean throughout — no repeat
+of the Phase 3 OOM incident.
