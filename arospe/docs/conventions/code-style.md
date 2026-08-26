@@ -237,6 +237,25 @@ third case. What it does add is the constraint that falls out of the exception:
 > contract — the constructor is where this convention says a shared dependency goes, so any action can
 > acquire one in a later story.
 
+Task 0017 extends the same split to a third area without altering it — `LogRefusedPrivilegedAttempt` is now constructor-injected into **eight** domain actions and method-injected into **three** Livewire components' action methods — and adds the exception's clearest case yet: **one action depending on another**. `App\Actions\SalesRegions\SetSalesRegionActive` constructor-injects `SetDefaultSalesRegion`, because `__invoke(SalesRegion $region, bool $active, ?SalesRegion $replacementDefault = null)` is a signature every caller — the component and every direct-call test — matches verbatim, so widening it with a collaborator would put an internal dependency into a public contract:
+
+```php
+// app/Actions/SalesRegions/SetSalesRegionActive.php
+public function __construct(
+    private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
+    private readonly SetDefaultSalesRegion $setDefaultSalesRegion,
+) {}
+```
+
+❌ Bad — reaching for `app()` here (the shape 0017's own Phase 1 draft proposed before it was corrected):
+
+```php
+// anti-pattern — app() is for a zero-parameter #[Computed] method, not for an action's collaborator
+($replacement !== null) && app(SetDefaultSalesRegion::class)($replacement);
+```
+
+`app()` earns its one exception because a `#[Computed]` method **cannot** accept parameters; an action's constructor is available, so nothing forces the container call. The distinction matters for testability: a constructor dependency can be swapped in a test, an `app()` call inside a method body cannot without binding the container.
+
 ✅ Good — how a direct-call test reaches an action, per the 0008a rule that these are independently callable:
 
 ```php
@@ -251,7 +270,21 @@ app(RequestEmailChange::class)($user, 'new-address@example.com');
 (new RequestEmailChange)($user, 'new-address@example.com');
 ```
 
-_Last updated: 2026-08-24 — Task 0015b (log refused privileged attempts), Phase 6: extended the
+_Last updated: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), Phase 6: extended the
+constructor-injection exception with **the clearest case it has** — one action constructor-injecting
+another (`SetSalesRegionActive` ← `SetDefaultSalesRegion`), with the ❌ pair against `app()`, which this
+story's own Phase 1 draft proposed before Phase 2 corrected it. The distinction is not stylistic: `app()`
+earns its single exception because a zero-parameter `#[Computed]` method *cannot* accept an injected
+dependency, whereas an action's constructor always can — and a constructor dependency is swappable in a
+test where an `app()` call in a method body is not. Also refreshed the two counts in the 0015b paragraph
+above it, which had become under-counts (`LogRefusedPrivilegedAttempt` is now constructor-injected into
+**eight** actions and method-injected into **three** components); the 0015b sentence itself is left as the
+historical statement it is. Nothing else on this page changed: no new type, brace, validation-trait or
+PHPDoc convention, and the story's own `@return array<int, ValidationRule|array<mixed>|string>` trait
+docblocks and `array<int, array{...}>` shapes on `$regions` / `replacementCandidates()` are the existing
+rules applied, not new ones._
+
+_Previously: 2026-08-24 — Task 0015b (log refused privileged attempts), Phase 6: extended the
 constructor-injection exception with the constraint that falls out of it — **an action must be resolved
 from the container, never `new`-ed, including in tests**. This story gave three actions their *first*
 constructor dependency, and every `new RequestEmailChange` call site broke at once (ten in

@@ -50,11 +50,14 @@ High-level layout of the codebase:
 ```
 app/
   Actions/Auth/        Cross-cutting auth-state actions (EnsureRecentPasswordConfirmation,
-                       the step-up password-freshness guard)
+                       the step-up password-freshness guard; LogRefusedPrivilegedAttempt,
+                       the refusal audit line)
   Actions/Fortify/    Fortify contract implementations (CreatesNewUsers, ResetsUserPasswords)
                       plus AuthenticateUser, the Fortify::authenticateUsing() callback
   Actions/Roles/       Roles-domain actions (EnforceAdministratorPermissionGrant,
                        EnforceGrantorPermissionScope)
+  Actions/SalesRegions/ Sales-Regions-domain actions (UpdateSalesRegion, SetDefaultSalesRegion,
+                       SetSalesRegionActive)
   Actions/Users/       Users-domain actions (RequestEmailChange, ConfirmEmailChange, CreateUser, UpdateUser)
   Concerns/            Shared traits (e.g. validation rule sets)
   Console/Commands/    Artisan commands
@@ -63,10 +66,12 @@ app/
                        RoleInUseException, PasswordConfirmationRequiredException)
   Http/Controllers/    Abstract base + domain controllers (HTTP boundary in front of an action)
   Listeners/           Event listeners (ActivateVerifiedUser, RejectNonActiveUserLogin)
-  Livewire/            Livewire components, grouped by area (Actions/, Roles/, Settings/, Users/, ...)
+  Livewire/            Livewire components, grouped by area (Actions/, Roles/, SalesRegions/,
+                       Settings/, Users/, ...)
   Models/              Eloquent models (User, SalesRegion; Role, a spatie/laravel-permission subclass)
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
-  Policies/            Model policies (UserPolicy, RolePolicy), auto-discovered by name
+  Policies/            Model policies (UserPolicy, RolePolicy, SalesRegionPolicy),
+                       auto-discovered by name
   Providers/           Service providers
 config/                Laravel + package configuration, plus modules.php (the app's own
                        declarative sidebar/module registry)
@@ -82,7 +87,8 @@ resources/
     layouts/             Auth/app layout shells
     livewire/            Views for Livewire components
     partials/
-routes/                  web.php plus one file per area it requires (settings.php, roles.php, users.php)
+routes/                  web.php plus one file per area it requires (settings.php, roles.php,
+                         users.php, sales-regions.php)
 tests/
   Feature/
   Unit/

@@ -190,7 +190,7 @@ repo must follow — always with a real code example pulled from this repository
   `Gate` target still being the caller's instance (**R-3**, no rule reads it yet), an authorization-ordering
   fix that deliberately did *not* touch an already-reviewed-and-accepted two-transaction shape (**R-4** — the
   re-audit's broader suggestion was declined in writing rather than silently reversing a Phase 1 decision),
-  and three test-hygiene fixes (**R-5**).
+  and three test-hygiene fixes (**R-5**). **A Phase 5 code review then corrected two claims on the page itself** — an unusually fast recurrence of [the audit-authored-page failure mode](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20), where the stale sentence was *one day old* rather than one story old: its status blockquote said **neither** finding was reachable through the shipped dashboard, which is true of F-2 (the component re-fetches every row with `findOrFail()` before each call, so it never hands an action a dirtied instance) and **false of F-1** — that `findOrFail()` runs *outside* the action's transaction, so a second administrator's already-committed write landing in that window reproduces the exact stale read, which is the "two administrators clicking within the same second" row the page's own exploit table already described two paragraphs below. And the lock-ordering bullet repeated R-1a's over-claim one layer up: `SetSalesRegionActive`'s promotion path still acquires two lock sets in sequence (its own ordered query, then the nested action's separate one), so what closes that residual window is the **outer** transaction's `attempts: 3` retry, not the ordering — a nested SAVEPOINT-level call cannot retry itself, since Laravel only retries at `transactions === 1`.
 - [Step-up authentication](step-up-authentication.md) — the rules governing the app's **third**
   authorization layer, added by task 0015a: a password-confirmation freshness guard that answers
   "is the person at the keyboard still the account holder", which route middleware and policies both
@@ -219,7 +219,9 @@ repo must follow — always with a real code example pulled from this repository
   self-service case this layer's own `$isSelfEdit` exemption leaves alone for a different, narrower
   reason.
 
-_Last updated: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), Phase 4 re-audit round 2 and
+_Last updated: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), **Phase 6 docs sync**: no new page and no new rule — [model-instance-trust.md](model-instance-trust.md) was re-verified against `HEAD` rather than rewritten (every ❌/✅ code block still matches the shipped actions, the `whereKeyNot()` → `$rows->reject(...)` supersession is recorded on the page and confirmed in the code, and nothing in this app reads `SetSalesRegionActive`'s return value, exactly as the R-2 section says). What this pass corrected is **this index entry**, which stopped at Phase 4 round 2 while the page itself gained two Phase 5 code-review corrections the next day: the status blockquote's "neither finding was dashboard-reachable" claim, which is true only of F-2, and the lock-ordering bullet's over-claim, where the residual window inside `SetSalesRegionActive`'s promotion path is closed by the **outer** transaction's `attempts: 3` rather than by ordering. Both are now summarised above. Recorded as a distinct data point rather than folded away: this is the audit-authored-page failure mode recurring with a **one-day** fuse instead of a one-story one, caught by the review that immediately followed — which is the prescribed fix working, not a new lesson (see [errors-log.md](../errors-log.md))._
+
+_Previously: 2026-08-26 — Task 0017, Phase 4 re-audit round 2 and
 same-day fix: [model-instance-trust.md](model-instance-trust.md) gained a third section, applying this
 project's own rule that a security fix needs re-auditing as new code, not merely confirmed to close the
 finding it answers. The round-1 fix's own lock-ordering justification turned out to protect a scenario that
@@ -233,7 +235,7 @@ a re-raised instruction contradicting an existing decision is withdrawn rather t
 test-hygiene fixes (R-5).
 
 _Previously: 2026-08-25 — Task 0017, Phase 4 audit and same-day fix: added
-[model-instance-trust.md](model-instance-trust.md), the eleventh page. The audit's two findings
+[model-instance-trust.md](model-instance-trust.md), the **tenth** page (this said "eleventh" until the Phase 6 pass counted the directory: `ls docs/security/*.md` returns ten files besides this index). The audit's two findings
 share one root cause and one remedy, which is what earns them a page rather than a per-review note: a
 caller-supplied Eloquent instance is untrusted on **both** sides — its attributes are not a safe input to a
 guard, and its dirty set is not a safe payload for a write. Written as ❌/✅ pairs from the start per the
