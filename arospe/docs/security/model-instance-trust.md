@@ -18,11 +18,17 @@ value was decided by whoever hydrated the instance, at whatever time they did so
 > `SetSalesRegionActive` and `UpdateSalesRegion` all now write through an instance re-fetched inside their
 > own transaction/call, never through the caller-supplied one, per
 > [errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s
-> rule against a page that outlives its own fix. Neither was reachable through the shipped dashboard —
-> `App\Livewire\SalesRegions\Index` re-fetches every row with `findOrFail()` immediately before each call —
-> which is exactly why they had to be closed at the action layer: under the
-> [action-owns-the-rule convention](../conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
-> these actions exist to be called from somewhere other than that component. Eight regression tests (four per
+> rule against a page that outlives its own fix. **F-2 was not reachable through the shipped dashboard** —
+> `App\Livewire\SalesRegions\Index` re-fetches every row with `findOrFail()` immediately before each call, so
+> the component itself never hands an action a dirtied instance. **F-1 was reachable through the dashboard**
+> (Phase 5 code review finding F-2, correcting this line, which originally claimed neither was): the
+> component's `findOrFail()` runs *outside* the action's own transaction, so a second administrator's
+> already-committed write landing in that window reproduces the exact stale read F-1 describes — the "two
+> administrators clicking within the same second" row in the exploit table below is that path, not a
+> hypothetical non-dashboard one. Both findings still had to be closed at the action layer regardless: under
+> the [action-owns-the-rule convention](../conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
+> these actions exist to be called from somewhere other than that component, dashboard-reachable or not.
+> Eight regression tests (four per
 > finding, two per action, split `SetDefaultSalesRegionTest.php` / `SetSalesRegionActiveTest.php` /
 > `RefusalLoggingTest.php`) were verified to redden against the pre-fix code before the fix was restored —
 > the shape [this page's own "Regression test shape" section](#one-fix-closes-both) describes.
@@ -129,17 +135,22 @@ Two implementation notes that shipped with the fix rather than after it:
   `original` already says `true`), and the final `forceFill(['is_default' => true])` would then see no dirty
   change and skip writing it back — the exact silent-clear this repo's own [errors-log](../errors-log.md) has
   an entry about not leaving a surviving-but-wrong explanation for.
-- **Lock ordering was a real deadlock surface — closed by real resource-ordering, not by an assertion of it.**
-  Round 1 shipped `SetSalesRegionActive` locking its target and (when named) the replacement in one ordered
-  query, reasoning it protected against "two calls naming each other's target as their own replacement" — a
-  scenario **R-1a** in the re-audit section proved cannot occur. The deadlock that round 1 actually
-  introduced was in `SetDefaultSalesRegion` itself (**R-1b**), from acquiring its two lock sets as *separate*
-  queries; the single combined query above is round 2's real fix. As a second, independent layer — since the
-  unindexed full-table locking scan makes
-  contention the normal case rather than the rare one — both actions' `DB::transaction()` calls pass
-  `attempts: 3`, Laravel's built-in retry for a `40001`/deadlock `QueryException`, so a residual race the
-  ordering doesn't fully close (e.g. a self-healing repair pass touching a row outside the pre-locked set)
-  degrades to a transparent retry rather than a 500.
+- **Lock ordering was a real deadlock surface — closed by real resource-ordering for the scenario it can
+  reach, and by retry for the one it cannot.** Round 1 shipped `SetSalesRegionActive` locking its target and
+  (when named) the replacement in one ordered query, reasoning it protected against "two calls naming each
+  other's target as their own replacement" — a scenario **R-1a** in this section proved cannot occur. The
+  deadlock that round 1 actually introduced was in `SetDefaultSalesRegion` itself (**R-1b**), from acquiring
+  its two lock sets as *separate* queries; the single combined query above is round 2's real fix for that
+  action. **A residual, narrower window remains inside `SetSalesRegionActive`'s own promotion path** (Phase 5
+  code review finding F-3, which corrected a second over-claim in that action's docblock): its own ordered
+  query, followed by the *nested* `SetDefaultSalesRegion` call's own separate ordered query, is still two
+  lock-acquisition events in sequence — so a **concurrent, unrelated** `SetDefaultSalesRegion(other)` call can
+  hold a row this sequence needs while waiting on one it holds. Ordering does not close this, because the two
+  events are not one query; what closes it is that `attempts: 3` on the **outer** transaction retries the
+  deadlock a nested SAVEPOINT-level call cannot retry itself (Laravel only retries at `transactions === 1`).
+  Deliberately not closed further in code — indexing `is_default` (D13's deferred backstop) or acquiring the
+  full row-set union up front are both larger than this story's scope, and the retry already converges the
+  invariant correctly, at the cost of an occasional retried write rather than a violated invariant.
 
 ## `save()` writes the whole dirty set, so "the single named writer" is a convention, not an enforcement
 
