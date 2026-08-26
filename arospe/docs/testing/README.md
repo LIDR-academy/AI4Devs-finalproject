@@ -20,7 +20,7 @@ Framework-agnostic, applies to any new feature before a single line of test code
 
 For QA engineers writing browser-level tests, and for turning user stories into Gherkin scenarios and then into Pest browser tests.
 
-- [Frontend / browser testing guide](frontend/README.md) — tooling decision (Pest 4 browser testing, not a separate Playwright/BDD runner), the user-story → Gherkin → Pest workflow and reference prompt, setup status, Gherkin guidelines + domain glossary, browser-specific quality checklist, frontend coverage policy, and worked scenario/test examples.
+- [Frontend / browser testing guide](frontend/README.md) — tooling decision (Pest 4 browser testing, not a separate Playwright/BDD runner), the user-story → Gherkin → Pest workflow and reference prompt, setup status, Gherkin guidelines + domain glossary, browser-specific quality checklist, frontend coverage policy, and worked scenario/test examples. Since task 0018 [playwright-setup.md](frontend/playwright-setup.md#waiting-one-call-is-banned-in-this-repo-and-one-is-bounded) also owns this repo's **waiting rules** (`->waitForEvent('networkidle')` banned outright; a bounded `->wait(n)` with a stated reason as the one accepted mitigation) and the selector ⚠️ for an admin list screen whose row controls are icon-only — read both before writing a browser test against `tests/Browser/`'s three files.
 
 ## CI — how to run and enforce it
 
@@ -36,4 +36,6 @@ For QA engineers writing browser-level tests, and for turning user stories into 
 - [`.claude/skills/pest-testing/SKILL.md`](../../.claude/skills/pest-testing/SKILL.md) — Pest 4 syntax reference (`test()`/`it()`/`expect()`, `make:test`, browser/smoke/architecture testing). This doc set assumes you know that or will look it up there; it focuses on judgment (what/why to test), not syntax (how to call `expect()`).
 - [conventions/base-standards.md](../conventions/base-standards.md) — the quality-gate order (test → Pint → Larastan) every change goes through.
 
-_Last updated: 2026-07-19 — Added the Frontend / Browser testing section linking to docs/testing/frontend/._
+_Last updated: 2026-08-26 — Task 0018 (Sales Regions & Taxes screen — UI): widened the Frontend/Browser entry to point at [playwright-setup.md](frontend/playwright-setup.md)'s two new sections (the waiting rules, and the icon-only-row-control selector ⚠️), since both are things a QA author hits by discovery otherwise. **Verified as unchanged rather than assumed:** the four authorization layers (this story adds none — every gate on the screen it builds belongs to task 0017's already-audited component), the QA and backend sections, and the CI section — the story adds eight browser tests and roughly twenty component tests to existing folders and changes no command, threshold or database strategy._
+
+_Previously: 2026-07-19 — Added the Frontend / Browser testing section linking to docs/testing/frontend/._

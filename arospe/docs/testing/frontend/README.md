@@ -18,7 +18,7 @@ This project does **not** use a separate Playwright + `playwright-bdd` + Cucumbe
 
 Consequence for QA: a Gherkin `.feature` scenario in this repo is a **specification artifact**, not something a BDD engine executes. A human (or an LLM, reviewed by a human) translates each scenario **by hand** into a Pest browser test in `tests/Browser/`, following the Given/When/Then → Pest `it()` mapping in [gherkin-guidelines.md](gherkin-guidelines.md#givenwhenthen--pest-it-translation-convention).
 
-> Status: `pestphp/pest-plugin-browser` (`^4.3.1`) and `playwright` (`^1.61.1`) are **installed**, the browser binaries have been downloaded (`npx playwright install`), and since task 0006b the suite is **wired up**: `tests/Browser/` exists with a first test, `phpunit.xml` declares a `Browser` testsuite, `RefreshDatabase` applies to it, and CI runs it on **Chromium only**. Still open: cross-browser coverage, and whether a growing browser suite should keep running on every push. See [playwright-setup.md](playwright-setup.md) for the full status, the one-time browser-binary setup step, and a known missing-system-library caveat before you try to run any browser test.
+> Status: `pestphp/pest-plugin-browser` (`^4.3.1`) and `playwright` (`^1.61.1`) are **installed**, the browser binaries have been downloaded (`npx playwright install`), and since task 0006b the suite is **wired up**: `tests/Browser/` exists with a first test, `phpunit.xml` declares a `Browser` testsuite, `RefreshDatabase` applies to it, and CI runs it on **Chromium only**. Still open: cross-browser coverage, and whether a growing browser suite should keep running on every push. See [playwright-setup.md](playwright-setup.md) for the full status, the one-time browser-binary setup step, and a known missing-system-library caveat before you try to run any browser test. Since task 0018 that file also carries the repo's **waiting rules** — `->waitForEvent('networkidle')` is banned here and a bounded `->wait(n)` is the one accepted mitigation — which are the fastest way to lose an afternoon if you meet them by discovery instead of by reading.
 
 ## Files in this guide
 
@@ -75,6 +75,8 @@ These already cover the general reasoning and apply as-is to frontend/browser te
 - [../ci/commands.md](../ci/commands.md) / [../ci/pipeline-integration.md](../ci/pipeline-integration.md) — the existing backend coverage commands and the proposed (not-yet-enforced) CI gate.
 - [`.claude/skills/pest-testing/SKILL.md`](../../../.claude/skills/pest-testing/SKILL.md) — Pest 4 browser syntax reference (`visit()`, `click()`, `fill()`, smoke testing, `assertNoJavaScriptErrors()`).
 
-_Last updated: 2026-08-16 — Task 0006b: updated the tooling-decision status line — the `tests/Browser/` suite and its CI wiring are no longer pending; CI runs it Chromium-only._
+_Last updated: 2026-08-26 — Task 0018 (Sales Regions & Taxes screen — UI): one clause added to the status line, pointing at [playwright-setup.md](playwright-setup.md#waiting-one-call-is-banned-in-this-repo-and-one-is-bounded)'s new waiting rules. Nothing else here changed — the tooling decision, the story→Gherkin→Pest workflow and the links out are all unaffected by a story that added a third browser-test file following them._
+
+_Previously: 2026-08-16 — Task 0006b: updated the tooling-decision status line — the `tests/Browser/` suite and its CI wiring are no longer pending; CI runs it Chromium-only._
 
 _Previously, 2026-07-19 — Updated the tooling-decision status line: pest-plugin-browser + playwright are now installed; tests/Browser suite and CI wiring remain pending._
