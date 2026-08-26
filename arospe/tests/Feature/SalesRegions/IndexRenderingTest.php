@@ -70,6 +70,24 @@ function salesRegionsExpectedRateDisplay(?string $rate): string
 }
 
 /**
+ * The rendered text of ONE row's rate cell (`data-test="rate-region-{id}"`), added at Phase 5 code
+ * review finding N3: `assertSee('0%')` / `assertDontSee('—')` are page-global substring checks --
+ * '0%' matches inside '10%'/'20%'/'100%', and '—' is also what the code chip's own @else branch
+ * now renders (finding N1) -- so they only ever passed because each arrangement held exactly one
+ * rate-bearing row. Anchoring on the row's own cell is immune to a second fixture row entirely.
+ */
+function salesRegionsRateCellText(string $html, string $regionId): ?string
+{
+    $quoted = preg_quote($regionId, '/');
+
+    if (! preg_match('/data-test="rate-region-'.$quoted.'"[^>]*>\s*([^<]*)</', $html, $matches)) {
+        return null;
+    }
+
+    return trim($matches[1]);
+}
+
+/**
  * Does the tag carrying `data-test="$dataTest"` also carry a `disabled` attribute? Lookaheads
  * make this robust to attribute order and to the element name (Flux's disabled row controls are
  * not all <button> -- the Active column is a <ui-switch> -- see the file banner above).
@@ -130,6 +148,39 @@ function salesRegionsRowControlWrappedInTooltip(string $html, string $dataTest):
     );
 }
 
+/**
+ * Phase 5 code review finding N5: the disabled control carrying `data-test="$dataTest"`'s own
+ * tooltip COPY, not merely that a tooltip wraps it -- A3-a's whole content is WHICH string a
+ * disabled toggle carries (the default row's "open the edit form" routing copy vs. the generic
+ * "you can't do this" one a canEdit===false row gets), and the two coexist verbatim elsewhere on
+ * the same page, so a bare assertSee could match either occurrence.
+ *
+ * flux/tooltip/index.blade.php nests the content as a sibling <flux:tooltip.content> element
+ * (compiling to `<div ... data-flux-tooltip-content>{{ text }}</div>`) inside the SAME
+ * <ui-tooltip>, not as a `content="..."` attribute on it -- captured here in two steps: isolate
+ * the one <ui-tooltip>...</ui-tooltip> block containing $dataTest (bounded so the lazy match
+ * cannot cross into a second, unrelated tooltip elsewhere on the page), then read that block's
+ * own content div.
+ */
+function salesRegionsRowControlTooltipContent(string $html, string $dataTest): ?string
+{
+    $quotedDataTest = preg_quote($dataTest, '/');
+
+    if (! preg_match(
+        '/<ui-tooltip[^>]*>((?:(?!<\/ui-tooltip>).)*?data-test="'.$quotedDataTest.'"(?:(?!<\/ui-tooltip>).)*?)<\/ui-tooltip>/is',
+        $html,
+        $tooltipMatch
+    )) {
+        return null;
+    }
+
+    if (! preg_match('/data-flux-tooltip-content[^>]*>\s*([^<]*)/is', $tooltipMatch[1], $contentMatch)) {
+        return null;
+    }
+
+    return trim($contentMatch[1]);
+}
+
 // =====================================================================
 // Test 1 -- the list renders each entry's code chip, name, description and rate exactly as
 // configured. Retires: a persisted value that never reaches the rendered row.
@@ -163,17 +214,20 @@ test('a NULL rate renders the unconfigured marker and a 0.000 rate renders 0%, n
 
     $unconfigured = SalesRegion::factory()->create(['name' => 'Marruecos', 'rate' => null]);
 
-    Livewire::test(Index::class)
-        ->assertSee('—')
-        ->assertDontSee('0%');
+    $html = Livewire::test(Index::class)->html();
+
+    // Phase 5 code review finding N3: anchored on this row's own rate-region-{id} cell rather
+    // than a page-global assertSee('—')/assertDontSee('0%'), which would false-pass or
+    // false-fail the moment a second, differently-rated row exists in the same render.
+    expect(salesRegionsRateCellText($html, $unconfigured->id))->toBe('—');
 
     $unconfigured->delete();
 
     $configuredZero = SalesRegion::factory()->withRate('0.000')->create(['name' => 'Andorra']);
 
-    Livewire::test(Index::class)
-        ->assertSee('0%')
-        ->assertDontSee('—');
+    $html = Livewire::test(Index::class)->html();
+
+    expect(salesRegionsRateCellText($html, $configuredZero->id))->toBe('0%');
 
     expect($configuredZero->fresh()->rate)->toBe('0.000');
 });
@@ -250,6 +304,14 @@ test('the set-default control is disabled on the default and inactive rows, and 
         ->and(salesRegionsRowControlDisabled($html, 'toggle-active-region-'.$default->id))->toBeTrue()
         ->and(salesRegionsRowControlDisabled($html, 'toggle-active-region-'.$inactive->id))->toBeFalse()
         ->and(salesRegionsRowControlDisabled($html, 'toggle-active-region-'.$ordinary->id))->toBeFalse();
+
+    // Phase 5 code review finding N5: A3-a's whole content is WHICH tooltip string a disabled
+    // toggle carries -- "disabled" alone (asserted above) does not distinguish the default row's
+    // "open the edit form" routing copy from the generic "you can't do this" one a canEdit===false
+    // row gets (test 6, below), and both copies exist verbatim elsewhere on the same page, so a
+    // bare assertSee could match either occurrence.
+    expect(salesRegionsRowControlTooltipContent($html, 'toggle-active-region-'.$default->id))
+        ->toBe(__('sales-regions.index.default_toggle_tooltip'));
 });
 
 // =====================================================================
@@ -272,6 +334,12 @@ test('a row the actor cannot edit renders edit, toggle and set-default all disab
         ->and(salesRegionsRowControlWrappedInTooltip($html, 'edit-region-'.$region->id))->toBeTrue()
         ->and(salesRegionsRowControlWrappedInTooltip($html, 'toggle-active-region-'.$region->id))->toBeTrue()
         ->and(salesRegionsRowControlWrappedInTooltip($html, 'set-default-region-'.$region->id))->toBeTrue();
+
+    // Phase 5 code review finding N5: this row is NOT the default, so its disabled toggle must
+    // carry the generic action_not_allowed copy, never the default row's edit-form-routing one
+    // (asserted the other way in test 5, above) -- the two must never swap.
+    expect(salesRegionsRowControlTooltipContent($html, 'toggle-active-region-'.$region->id))
+        ->toBe(__('sales-regions.index.action_not_allowed'));
 });
 
 // =====================================================================
@@ -361,14 +429,44 @@ test('clearing a configured rate and saving renders the unconfigured marker agai
 
     $region = SalesRegion::factory()->withRate('21.500')->create(['name' => 'Portugal']);
 
-    Livewire::test(Index::class)
+    $html = Livewire::test(Index::class)
         ->call('openEditModal', $region->id)
         ->set('rate', '')
         ->call('save')
-        ->assertSee('—')
-        ->assertDontSee('21.5%');
+        ->html();
+
+    // Phase 5 code review finding N3: same row-scoped anchor as test 2, above.
+    expect(salesRegionsRateCellText($html, $region->id))->toBe('—');
 
     expect($region->fresh()->rate)->toBeNull();
+});
+
+// =====================================================================
+// Phase 5 code review finding N5: the edit modal's read-only context block -- name, slug and
+// kind are shown but never bound to a form control, the PRD's "a structural attribute cannot be
+// changed" requirement satisfied structurally (no property to write) rather than by filtering
+// input server-side. Asserted on a fiscal territory specifically, since its kind label
+// ("Territorio fiscal" / "Fiscal territory") is the one of the two that also needs D2's
+// parent/child relationship to be reachable at all.
+// =====================================================================
+
+test('the edit modal shows name, slug and kind as read-only context with no bound form control', function () {
+    $actor = salesRegionsIndexRenderingTestActor();
+    $this->actingAs($actor);
+
+    $espana = SalesRegion::factory()->create(['name' => 'España']);
+    $canarias = SalesRegion::factory()->fiscalTerritoryOf($espana)->create(['name' => 'Canarias']);
+
+    $html = Livewire::test(Index::class)
+        ->call('openEditModal', $canarias->id)
+        ->html();
+
+    expect($html)->toContain($canarias->name)
+        ->and($html)->toContain($canarias->slug)
+        ->and($html)->toContain(__('sales-regions.labels.kind_fiscal_territory'))
+        ->and($html)->not->toContain('wire:model="name"')
+        ->and($html)->not->toContain('wire:model="slug"')
+        ->and($html)->not->toContain('wire:model="kind"');
 });
 
 // =====================================================================
@@ -405,6 +503,46 @@ test('an orphaned replacementDefaultId refusal renders in the page-level outlet 
     // apply, which is a client-side question this suite's component-level layer cannot answer.
     expect(salesRegionsRowControlChecked($component->html(), 'toggle-active-region-'.$default->id))
         ->toBeTrue();
+});
+
+// =====================================================================
+// Phase 5 code review finding B1 (blocking): cancelling the modal after a refused save() left the
+// replacementDefaultId error on the bag forever, so the page-level `@unless ($showModal)` outlet
+// rendered the refusal message with no field and no context -- the exact "orphaned refusal" A4-a
+// exists to prevent, produced by the control added to prevent it. closeModal() now also calls
+// resetValidation('replacementDefaultId'); this reproduces the failing sequence end to end
+// (save() refused inside the modal, THEN cancel) rather than only setActive() with the modal
+// already closed, which is what the two tests above already cover.
+// =====================================================================
+
+test('cancelling the modal after a refused save clears the stale error from the page-level outlet', function () {
+    $actor = salesRegionsIndexRenderingTestActor();
+    $this->actingAs($actor);
+
+    $default = SalesRegion::factory()->isDefault()->create(['name' => 'España (Península)']);
+
+    $component = Livewire::test(Index::class)
+        ->call('openEditModal', $default->id)
+        ->set('active', false)
+        ->set('replacementDefaultId', '')
+        ->call('save')
+        ->assertHasErrors(['replacementDefaultId'])
+        ->assertSet('showModal', true);
+
+    $message = __('sales-regions.errors.default_deactivation_requires_replacement');
+
+    // While the modal is still open (the refusal above never reached closeModal()), the
+    // field-level error is the only rendering of the message -- the page-level outlet must stay
+    // silent, per the existing "renders exactly once when the modal is open" contract.
+    expect(substr_count($component->html(), $message))->toBe(1);
+
+    $component->call('closeModal');
+
+    expect($component->get('showModal'))->toBeFalse()
+        ->and(substr_count($component->html(), $message))->toBe(0);
+
+    expect($default->fresh()->is_active)->toBeTrue()
+        ->and($default->fresh()->is_default)->toBeTrue();
 });
 
 test('an orphaned replacementDefaultId refusal renders exactly once when the modal is open', function () {
@@ -462,4 +600,21 @@ test('every region in the component state renders exactly one edit control, rega
         expect(substr_count($html, 'data-test="edit-region-'.$id.'"'))
             ->toBe(1, "Region {$id} must render exactly one edit-region-{$id} control.");
     }
+});
+
+// =====================================================================
+// Phase 5 code review finding N2: sales-regions.index.empty existed in both lang files with no
+// consumer anywhere in the markup -- unreachable in production (0016's seeder always populates
+// ~254 rows), but still wired up in the view for the same reason roles.blade.php wires up its
+// own, and worth a component-level test since no seeder runs here at all.
+// =====================================================================
+
+test('an empty catalog renders the empty-state message and no table', function () {
+    $actor = salesRegionsIndexRenderingTestActor();
+    $this->actingAs($actor);
+
+    $html = Livewire::test(Index::class)->html();
+
+    expect($html)->toContain(__('sales-regions.index.empty'))
+        ->and($html)->not->toContain('<table');
 });

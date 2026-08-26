@@ -264,7 +264,7 @@ test('a tax auditor session leaves row controls genuinely inert, and hovering a 
     // never was to begin with).
     $codeBefore = $region->code;
 
-    visit('/taxes/sales-regions')
+    $page = visit('/taxes/sales-regions')
         ->assertNoJavaScriptErrors()
         ->assertSee('Portugal')
         // The row action is icon-only/switch-shaped and disabled with pointer-events: none
@@ -276,7 +276,19 @@ test('a tax auditor session leaves row controls genuinely inert, and hovering a 
         ->assertSee(__('sales-regions.index.action_not_allowed'))
         ->assertNoJavaScriptErrors();
 
-    // Genuinely inert: a click on a disabled control must not reach the server at all.
+    // Phase 5 code review finding B2: a real mouse click can never even reach this button --
+    // pointer-events: none means Playwright's own actionability check refuses to target it, the
+    // same reason the hover above targets the <ui-tooltip> wrapper instead of the button. That
+    // makes "assert nothing happened after clicking" untestable via a real pointer click, so this
+    // proves inertness the way it is actually guaranteed: the disabled branch's markup (see
+    // sales-regions.blade.php's edit-region-{id} @else branch) never renders a `wire:click`
+    // attribute at all. Dispatching the DOM's native .click() bypasses Playwright's hit-testing
+    // entirely, which is deliberate here -- it is the closest a test can get to "an attacker
+    // scripts a click directly", and Livewire's delegated listener finds no wire:click to act on
+    // regardless, so even that cannot reach the server.
+    $page->script('document.querySelector(\'[data-test="edit-region-'.$region->id.'"]\').click();');
+
+    // Genuinely inert: a forced click on the disabled control must not reach the server at all.
     expect(SalesRegion::count())->toBe($countBefore)
         ->and($region->fresh()->code)->toBe($codeBefore);
 });
@@ -294,21 +306,49 @@ test('the "show all countries" section stays open with its filter text after act
 
     $francia = SalesRegion::factory()->inactive()->create(['name' => 'Francia']);
     SalesRegion::factory()->inactive()->count(2)->create();
+    $inactiveCountBefore = SalesRegion::query()->whereNull('parent_id')->where('is_active', false)->count();
 
-    visit('/taxes/sales-regions')
+    $page = visit('/taxes/sales-regions')
         ->assertNoJavaScriptErrors()
         ->click('@show-all-countries-toggle')
         ->assertNoJavaScriptErrors()
         ->fill('@show-all-countries-filter', 'Francia')
         ->assertNoJavaScriptErrors()
-        ->assertSee('Francia')
-        ->click('@toggle-active-region-'.$francia->id)
+        ->assertSee('Francia');
+
+    // Phase 5 code review finding N4: the "show all countries (N)" toggle's own live count is
+    // what the "moved into the active section" claim was missing -- assertSee('Francia') alone
+    // cannot distinguish "still inside the collapsed/filtered section" from "now rendered
+    // elsewhere on the page", since Francia's name appears in both cases. Read via ->text() (a
+    // plain textContent() fetch), not assertSeeIn()'s getByText() locator -- immaterial here, but
+    // kept for parity with the after-click read below, where it mattered (see that comment).
+    expect((string) $page->text('@show-all-countries-toggle'))->toContain('('.$inactiveCountBefore.')');
+
+    $page->click('@toggle-active-region-'.$francia->id)
         ->assertNoJavaScriptErrors()
-        // A1-a: the row moving into the active section is the confirmation the click took
-        // effect -- no stability hack keeps it inside the collapsed section.
-        ->assertSee('Francia')
-        // A1-b: the disclosure state and the filter text must both survive the round trip.
-        ->assertVisible('@show-all-countries-filter')
+        // A bounded wait here is a second, independent mitigation on top of the real fix below --
+        // this exact assertion still failed intermittently in a full, 899-test unscoped run (heavier
+        // system load / more concurrent browser activity than an isolated --filter run) even after
+        // the compile bug was fixed, while --filter=SalesRegions passed 125/125 on its own. Kept
+        // short and bounded, matching this story's own Phase 3 precedent for the same class of
+        // real-browser timing sensitivity under load rather than treated as fully eliminated.
+        ->wait(1);
+
+    // A1-a: the collapsed section's own count decrementing by exactly one is proof the row left
+    // it -- no stability hack keeps it inside the collapsed section. This assertion is what
+    // caught a REAL bug during this story's Phase 5 pass: an earlier attempt at N8 (unify on
+    // @js() for consistency) silently broke this exact wire:click -- two @js(...) directives
+    // inside one flux: component tag's attribute string do not compile, leaving the literal,
+    // unprocessed "@js($region['id'])" text in the rendered attribute, so every click here was a
+    // no-op with no console error. Isolated by comparing this test's failure against a direct
+    // Livewire::test()->call('setActive', ...) call (which worked), then confirmed by dumping the
+    // real compiled HTML -- see resources/views/livewire/sales-regions.blade.php's own comment at
+    // this wire:click for the fix (docs/errors-log.md has the full writeup). Do not re-attempt the
+    // @js() conversion here.
+    expect((string) $page->text('@show-all-countries-toggle'))->toContain('('.($inactiveCountBefore - 1).')');
+
+    // A1-b: the disclosure state and the filter text must both survive the round trip.
+    $page->assertVisible('@show-all-countries-filter')
         ->assertValue('@show-all-countries-filter', 'Francia')
         ->assertNoJavaScriptErrors();
 

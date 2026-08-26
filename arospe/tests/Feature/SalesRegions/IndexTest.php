@@ -349,7 +349,14 @@ test('an invalid rate is rejected through the component, and the previous rate s
         ->call('openEditModal', $region->id)
         ->set('rate', $invalidRate)
         ->call('save')
-        ->assertHasErrors(['rate']);
+        ->assertHasErrors(['rate'])
+        // Phase 5 code review finding N5: a refused save must also leave the modal open (the
+        // administrator is meant to correct the field, not lose their place) and the LIST still
+        // showing the previous rate -- loadRegions() is never reached because save() throws
+        // before it. This test's own arrangement creates exactly one rated region, so a bare
+        // assertSee('5%') is safe here (no second row to collide with).
+        ->assertSet('showModal', true)
+        ->assertSee('5%');
 
     expect($region->fresh()->rate)->toBe('5.000');
 })->with([

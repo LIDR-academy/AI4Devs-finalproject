@@ -219,11 +219,20 @@ class Index extends Component
 
     /**
      * Close the edit modal and reset its form fields.
+     *
+     * Story 0018 / Phase 5 finding B1: also clears any `replacementDefaultId`
+     * validation error still on the bag. Without this, cancelling the modal
+     * after a refused setActive() call (the A4-a race, D4's default-disable
+     * refusal) left the page-level `@unless ($showModal)` outlet rendering
+     * that stale message indefinitely -- Livewire persists the error bag
+     * across requests (SupportValidation::dehydrate()/hydrate()), and
+     * nothing else in this class ever clears this key.
      */
     public function closeModal(): void
     {
         $this->showModal = false;
         $this->reset(['editingRegionId', 'code', 'description', 'rate', 'active', 'replacementDefaultId']);
+        $this->resetValidation('replacementDefaultId');
     }
 
     /**

@@ -114,6 +114,16 @@
         </div>
     @endunless
 
+    {{-- Phase 5 code review finding N2: 0016's seeder always populates ~254 rows, so this branch
+    is unreachable in production -- kept anyway, matching roles.blade.php's identical @if/@else
+    shape, because sales-regions.index.empty already existed in both lang files with no consumer
+    (a silent, un-testable drift the moment either changed independently) and a component test can
+    still exercise it directly against an empty table. --}}
+    @if ($allRegions->isEmpty())
+        <div class="p-8 text-center border rounded-lg border-zinc-200 dark:border-zinc-700">
+            <flux:text>{{ __('sales-regions.index.empty') }}</flux:text>
+        </div>
+    @else
     {{-- Active entries: rendered open, Spain's fiscal territories grouped and
     collapsible (default-open) beneath "España" via Alpine (D2/D3). --}}
     <div class="mt-6" x-data="{ expandedParents: @js($expandedParentsInit) }">
@@ -136,7 +146,7 @@
                             @if ($region['code'])
                                 <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 font-mono text-xs text-zinc-700 dark:bg-white/10 dark:text-zinc-300">{{ $region['code'] }}</span>
                             @else
-                                <span class="text-zinc-400 dark:text-zinc-500"></span>
+                                <span class="text-zinc-400 dark:text-zinc-500">—</span>
                             @endif
                         </flux:table.cell>
 
@@ -176,8 +186,11 @@
 
                         {{-- D6: NULL renders an em dash, never "0%"; a real 0.000 renders
                         "0%", never the em dash. String manipulation only -- rate is a
-                        string|null from a decimal:3 cast, never (float) cast or compared. --}}
-                        <flux:table.cell class="text-right tabular-nums">
+                        string|null from a decimal:3 cast, never (float) cast or compared.
+                        Phase 5 code review finding N3: data-test scopes this cell so a test can
+                        anchor on ONE row's rate rather than a page-global substring, which a
+                        second fixture row with a different rate would otherwise false-match. --}}
+                        <flux:table.cell class="text-right tabular-nums" data-test="rate-region-{{ $region['id'] }}">
                             {{ $region['rate'] === null ? '—' : rtrim(rtrim($region['rate'], '0'), '.').'%' }}
                         </flux:table.cell>
 
@@ -201,7 +214,20 @@
                             matching F-3 assertion), which a component test cannot extend to real
                             client-side morph behaviour. Narrow window (requires two concurrent
                             admins), Low severity per the audit, not fixed pre-emptively without
-                            first proving the failure mode in a real browser. --}}
+                            first proving the failure mode in a real browser.
+
+                            Phase 5 code review finding N8 tried converting this and the two other
+                            setActive() wire:click attributes below to @js(...), matching
+                            openEditModal()'s single-call style, and it silently broke every one of
+                            them: TWO @js(...) directives inside ONE flux: component tag's
+                            attribute string do not compile at all -- the literal, unprocessed
+                            "@js($region['id'])" text ends up in the rendered wire:click attribute,
+                            confirmed via Livewire::test(...)->html(). A SINGLE @js() call in a
+                            component attribute compiles fine (openEditModal/setDefault below,
+                            unchanged), so this is specific to stacking two in one attribute value,
+                            not to @js() inside a component tag generally. Deliberately kept as
+                            {{ \Illuminate\Support\Js::from(...) }} here -- proven correct by the
+                            same check -- rather than "fixed" back to @js() a second time. --}}
                             @if ($region['canEdit'] && ! $region['isDefault'])
                                 <flux:switch
                                     wire:click="setActive({{ \Illuminate\Support\Js::from($region['id']) }}, {{ \Illuminate\Support\Js::from(! $region['isActive']) }}, '')"
@@ -293,7 +319,7 @@
                                     @if ($child['code'])
                                         <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 font-mono text-xs text-zinc-700 dark:bg-white/10 dark:text-zinc-300">{{ $child['code'] }}</span>
                                     @else
-                                        <span class="text-zinc-400 dark:text-zinc-500"></span>
+                                        <span class="text-zinc-400 dark:text-zinc-500">—</span>
                                     @endif
                                 </flux:table.cell>
 
@@ -313,7 +339,7 @@
                                     {{ $child['description'] }}
                                 </flux:table.cell>
 
-                                <flux:table.cell class="text-right tabular-nums">
+                                <flux:table.cell class="text-right tabular-nums" data-test="rate-region-{{ $child['id'] }}">
                                     {{ $child['rate'] === null ? '—' : rtrim(rtrim($child['rate'], '0'), '.').'%' }}
                                 </flux:table.cell>
 
@@ -461,7 +487,7 @@
                                 @if ($region['code'])
                                     <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 font-mono text-xs text-zinc-700 dark:bg-white/10 dark:text-zinc-300">{{ $region['code'] }}</span>
                                 @else
-                                    <span class="text-zinc-400 dark:text-zinc-500"></span>
+                                    <span class="text-zinc-400 dark:text-zinc-500">—</span>
                                 @endif
                             </flux:table.cell>
 
@@ -473,7 +499,7 @@
                                 {{ $region['description'] }}
                             </flux:table.cell>
 
-                            <flux:table.cell class="text-right tabular-nums">
+                            <flux:table.cell class="text-right tabular-nums" data-test="rate-region-{{ $region['id'] }}">
                                 {{ $region['rate'] === null ? '—' : rtrim(rtrim($region['rate'], '0'), '.').'%' }}
                             </flux:table.cell>
 
@@ -550,6 +576,7 @@
             </flux:table>
         </div>
     </div>
+    @endif
 
     {{-- Edit modal (D4/D5): code/description/rate only. Name, slug and kind are
     read-only context with no form control at all -- the PRD's "a structural
