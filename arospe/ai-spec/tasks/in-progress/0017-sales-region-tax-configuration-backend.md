@@ -933,7 +933,7 @@ catalog whose "exactly one default" precondition is now enforced rather than mer
 - [x] Tests written and green (the full suite, not just this story's — per [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule)
 - [x] Code reviewed (code-reviewer)
 - [x] No security findings (appsec-auditor)
-- [ ] Documentation updated (docs-keeper)
+- [x] Documentation updated (docs-keeper)
 - [x] Acceptance criteria met
 - [x] All seven [mandatory revert-checks](#tests-to-perform) performed, each confirmed to redden its named
       test (grew from four to seven during Phase 1 reconciliation — #3 corrected, #5–#7 added)

@@ -10,7 +10,7 @@ current default without naming a replacement is blocked with a clear message, an
 visibly clears the old one. The rate input accepts a Spanish-locale decimal comma. This story is
 **markup, interaction and rendering tests only**: the component class, policy, actions, validation
 trait, route and both `lang/*/sales-regions.php` files are sibling backend story
-[0017](0017-sales-region-tax-configuration-backend.md); the table, model, enum, factory and seeder are
+[0017](done/0017-sales-region-tax-configuration-backend.md); the table, model, enum, factory and seeder are
 [0016](done/0016-sales-region-catalog-schema-and-seeder.md).
 
 ## Type
@@ -500,7 +500,7 @@ mutating control disabled and explained.
 
 - **[Story 0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Table, model,
   enum, factory. Still at the **new** stage.
-- **[Story 0017](0017-sales-region-tax-configuration-backend.md) — hard, blocking.** The component
+- **[Story 0017](done/0017-sales-region-tax-configuration-backend.md) — hard, blocking.** The component
   class, the route, the policy, the actions, and the `lang/*/sales-regions.php` files this story grows.
   Still at the **new** stage, **contrary to the commissioning brief's claim that it is done.**
   **0018 cannot start Phase 3 until both have completed Phase 7.**
@@ -579,7 +579,7 @@ seeded-inactive countries — is a one-click operation that a modal would make t
 
 Both required Phase 1 participants **were convened and both returned their contributions before this
 document was composed** — closing the process gap
-[0017's own Provenance section](0017-sales-region-tax-configuration-backend.md#provenance) records for
+[0017's own Provenance section](done/0017-sales-region-tax-configuration-backend.md#provenance) records for
 itself.
 
 - **`frontend-expert`** contributed the file list, the technical approach, the grouping mechanism (D2/D3),

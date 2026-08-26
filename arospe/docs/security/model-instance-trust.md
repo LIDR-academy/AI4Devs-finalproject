@@ -1,6 +1,6 @@
 # A caller-supplied model instance is untrusted input — on both the read and the write side
 
-Established by the Phase 4 audit of [task 0017](../../ai-spec/tasks/in-progress/0017-sales-region-tax-configuration-backend.md)
+Established by the Phase 4 audit of [task 0017](../../ai-spec/tasks/done/0017-sales-region-tax-configuration-backend.md)
 (Sales Region tax configuration), this repo's first **domain-invariant** guard — a rule about the shape of
 the *data* ("exactly one default, and it is always active") rather than about who may act.
 

@@ -1207,7 +1207,7 @@ Executed during this debate, against this repository.
   `ProductFactory` and `ProductValidationRules`, all of which this story extends.
 - **[0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Creates
   `sales_regions`, `SalesRegion`, `SalesRegionKind` and `SalesRegionFactory`.
-- **[0017](0017-sales-region-tax-configuration-backend.md) — hard, blocking.** Nothing in this story
+- **[0017](done/0017-sales-region-tax-configuration-backend.md) — hard, blocking.** Nothing in this story
   calls its code, but the resolver's entire fallback tier rests on 0017's enforced "exactly one
   default, and it is active" invariant. Without it the default lookup has no guarantee behind it.
 - **[0022](0022-searchable-multi-select-component.md) — hard, blocking, and easy to miss.**
@@ -1364,7 +1364,7 @@ Non-blocking for the schema; **confirm before Phase 3.**
 Phase 1 (Three Amigos) debate run on 2026-08-18 per
 [workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate), grounded in full readings of
 [0016](done/0016-sales-region-catalog-schema-and-seeder.md),
-[0017](0017-sales-region-tax-configuration-backend.md),
+[0017](done/0017-sales-region-tax-configuration-backend.md),
 [0024](0024-products-core-crud-backend.md), [PRD](../../docs/PRD/PRD.md) §2.1 / §2.2 / §3.2, and this
 project's conventions, security and testing doc sets.
 

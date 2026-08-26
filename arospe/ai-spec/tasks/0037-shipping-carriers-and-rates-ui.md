@@ -141,7 +141,7 @@ shape of the gap [0036](0036-shipping-rate-rules-backend.md) **R-4** and
    the outcome depend on a documented rule (`nullable` against a real `null`) instead of on
    `presentOrRuleIsImplicit()` behaviour no future reviewer has any reason to know. This is exactly
    the position, and the reason, that `Users\Index::save()` lowercases the email in — and that
-   [0017](0017-sales-region-tax-configuration-backend.md) **D12** normalises its rate in.
+   [0017](done/0017-sales-region-tax-configuration-backend.md) **D12** normalises its rate in.
 3. Because `TrimStrings` is skipped too, the component **trims every string field itself**. Do not
    assume framework trimming anywhere on this screen.
 
@@ -209,7 +209,7 @@ Conflating listing with resolution is the single likeliest cross-wiring in the w
 ### D-5 — Weight and price inputs are `type="text" inputmode="decimal"`, never `type="number"`, and a Spanish decimal comma is accepted.
 
 Not a new decision — [0018](0018-sales-region-tax-configuration-ui.md) **D1** and
-[0017](0017-sales-region-tax-configuration-backend.md) **D12** already settled this for the tax-rate
+[0017](done/0017-sales-region-tax-configuration-backend.md) **D12** already settled this for the tax-rate
 field, and the reasoning transfers verbatim: a native `<input type="number">` does its own
 client-side parsing, so `4,95` is either refused as a keystroke or coerced before submission and the
 comma **never reaches the wire payload** for the component to normalise. `type="text"` plus
@@ -930,7 +930,7 @@ relitigated:
   the zone-delete guard's own error message instructs administrators to reassign rates — so
   reassignment must work. No extra confirmation: it is an edit like any other, and it is reversible.
 - **The decimal-input format is not open** — [0018](0018-sales-region-tax-configuration-ui.md) **D1**
-  and [0017](0017-sales-region-tax-configuration-backend.md) **D12** already settled it project-wide
+  and [0017](done/0017-sales-region-tax-configuration-backend.md) **D12** already settled it project-wide
   (**D-5**).
 
 ## Provenance
@@ -963,7 +963,7 @@ Three notes on how this debate ran, recorded for honesty:
   and line references, because this is the kind of claim that must not be taken on trust.
 - **`frontend-qa` raised the decimal-input format as a blocking ambiguity; it was resolved from
   precedent rather than escalated.** [0018](0018-sales-region-tax-configuration-ui.md) **D1** and
-  [0017](0017-sales-region-tax-configuration-backend.md) **D12** had already settled it for the tax
+  [0017](done/0017-sales-region-tax-configuration-backend.md) **D12** had already settled it for the tax
   field. It is recorded here as **D-5** rather than as an open question, which is what the
   [Uncertainty Handling Rule](../../docs/contracts.md#uncertainty-handling-rule) asks for: ask only
   where the answer genuinely is not already in the repo.
