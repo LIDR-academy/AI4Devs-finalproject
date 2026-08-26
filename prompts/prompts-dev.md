@@ -397,6 +397,39 @@ Can we adapt the seed so that the classes are always created for the following w
 I have the notifications box always shown
 
 
-# XX - OpenCode - MiMo 2.5 Free
+# 25 - claude.com
 
-I have an MVP of a project I neet to publish. Therefore I need some hosting service. It's a web project so I will also need a domain. The thinng is taht I can't spend any money on it. Can you help me finding a free hosting and domain?
+I have an MVP of a project I neet to publish. Therefore I need some hosting service. It's a web project so I will also need a domain. The thinng is that I can't spend any money on it. Can you help me finding a free hosting and domain?
+
+
+# 24 - OpenCode - MiMo 2.5 Free
+
+I want to deploy this project using the free tier from Vercel. Can you please give me a step by step instructions? I have never done it before or used Vercel
+
+---
+
+Okey, can you redo all the instructions if we do everything on Render? 
+
+----
+
+I just created the database and it says:
+Your database will expire on September 23, 2026. The database will be deleted unless you upgrade to a paid instance type.
+
+----
+
+Give me a step by step instructions using Neon for the database. Or can I host everything on Neon? Is that possible? Would is be better? Would it e  aeasier?
+
+----
+
+is it still better than using Vercel for the backend anad frontend?
+
+----
+
+I?m stuck with the Render web service. DDoes Render has MCP? Maybe you can connect?
+
+----
+
+Done. Can you connect to my Render accountthrough the MCP  and check for the web service and fix it please
+
+----
+
