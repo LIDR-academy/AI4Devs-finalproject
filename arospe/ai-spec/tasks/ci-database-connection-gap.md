@@ -4,14 +4,17 @@ Not a PRD-derived user story — deliberately outside the `00XX-` task numbering
 debating an Epic 2 story in Three Amigos Phase 1; confirmed here by reading the actual config,
 not taken on the reporting agent's word.
 
-> **Status: fixed — 2026-08-19.** MySQL is this project's only supported database; a SQLite
-> fallback was never a real option (confirmed by the project owner, not just inferred from
-> `docs/architecture/overview.md`). `.env.example`, `phpunit.xml` and
+> **Status: fixed and fully documented — 2026-08-26.** MySQL is this project's only supported
+> database; a SQLite fallback was never a real option (confirmed by the project owner, not just
+> inferred from `docs/architecture/overview.md`). `.env.example`, `phpunit.xml` and
 > `.github/workflows/tests.yml` were updated to make MySQL the actual, working default end to
-> end — see [Recommended fix](#recommended-fix) below, which now describes what was **done**,
-> not a choice between options. `docs/testing/ci/pipeline-integration.md` and
-> `docs/testing/ci/commands.md` still need the doc pass noted in
-> [Files to change](#files-to-change).
+> end — see [Recommended fix](#recommended-fix) below, which describes what was **done**, not a
+> choice between options. Verified live on 2026-08-26 against a real MySQL connection (a fresh
+> `composer install` + `npm ci && npm run build` + `php artisan migrate` from a clean checkout,
+> then the full `Unit`+`Feature` suite: 866/866 passing) — see
+> [Files to change](#files-to-change) for what that run confirmed. `docs/testing/ci/pipeline-integration.md`
+> and `docs/testing/ci/commands.md` now document the real DB provisioning step in CI and the
+> local prerequisite, closing the doc-pass this file's checklist had left open.
 
 ## Problem
 
@@ -101,6 +104,14 @@ SQLite wouldn't replicate anyway. Two parts, both needed, both **done**:
 Verified locally post-fix: `sail artisan test --compact --filter=ExampleTest` passes against the
 Sail `mysql` container with the new `phpunit.xml` override in place.
 
+**Re-verified end to end on 2026-08-26**, from a clean checkout of this fix rather than an
+already-provisioned Sail environment: `composer install`, `npm ci && npm run build`, `php artisan
+migrate` against a real MySQL 8.4 instance using nothing but the values `.env.example` now ships
+(no manual DB config beyond the credentials `.env.example` deliberately leaves for the operator to
+fill in) — migrations ran clean, and the full `Unit`+`Feature` suite passed **866/866** (2393
+assertions). The `Browser` suite was not run (needs Playwright's Node dependency, orthogonal to
+the database connection this task is about).
+
 ## Files to change
 
 - [x] `.env.example` — `DB_CONNECTION=mysql`, `DB_HOST=mysql`, `DB_PORT=3306` uncommented;
@@ -108,9 +119,18 @@ Sail `mysql` container with the new `phpunit.xml` override in place.
 - [x] `phpunit.xml` — added `DB_CONNECTION=mysql` next to the existing `DB_DATABASE=testing`.
 - [x] `.github/workflows/tests.yml` — added the MySQL `services:` block, job-level `DB_*` env,
       and fixed `npm i` → `npm ci` in the same step.
-- [ ] `docs/testing/ci/pipeline-integration.md` — still needs to document the real DB
-      provisioning step; it currently describes the `Run Tests` step without mentioning it.
-- [ ] `docs/testing/ci/commands.md` — still needs a cross-reference/note of the DB prerequisite.
+- [x] `docs/testing/ci/pipeline-integration.md` — already documented the real DB provisioning
+      step as of the original fix commit (`55ba248`); this pass added the cross-reference to
+      `commands.md`'s new local-prerequisite section rather than duplicating content that was
+      already there and already verified accurate.
+- [x] `docs/testing/ci/commands.md` — added a **Database prerequisite** section: every command
+      on that page needs a live MySQL connection, `phpunit.xml`'s `<env>` pin wins over any
+      `.env`/`.env.testing`, and — the non-obvious part found while re-verifying this fix from a
+      second `git worktree` — a worktree's own `.env.testing` does **not** isolate a `php artisan
+      test` run the way it isolates a bare `artisan migrate:fresh --env=testing`, because
+      PHPUnit's `<env>` block is already a real process environment variable by the time Laravel's
+      dotenv loader runs. Documented with the `DB_DATABASE=testing1 php artisan test` override
+      that does work, cross-referenced to `worktree-databases.md`.
 - Not needed: `composer.json` / `.gitignore` (SQLite-fallback-only items, moot now that the
   fallback option is rejected); `README.md` (already correctly documents the Sail/MySQL-only
   local setup path and the "request credentials from Angel" convention — nothing to change).
