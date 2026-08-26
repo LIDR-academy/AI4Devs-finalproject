@@ -2,6 +2,20 @@
 
 All commands run from the Laravel app root (`arospe/`), the same directory as `artisan` and `phpunit.xml`.
 
+## Database prerequisite
+
+Every command on this page needs a live, reachable MySQL connection — this repo has no SQLite/in-memory fallback (see [`ai-spec/tasks/ci-database-connection-gap.md`](../../../ai-spec/tasks/ci-database-connection-gap.md) for why that matters). [`phpunit.xml`](../../../phpunit.xml) pins `<env name="DB_CONNECTION" value="mysql"/>` / `<env name="DB_DATABASE" value="testing"/>`, which take effect the moment PHPUnit/Pest boots and win over whatever your real `.env` (or `.env.testing`) says — so every `php artisan test` run, local or CI, always targets a MySQL database named `testing` regardless of which environment file is on disk.
+
+- **CI** provisions this automatically: `.github/workflows/tests.yml` runs a `services.mysql` container and never touches `.env` for it — see [pipeline-integration.md](pipeline-integration.md#current-state-real-as-of-this-writing) for the full setup.
+- **Locally**, you need a MySQL instance reachable at whatever `DB_HOST`/`DB_PORT`/`DB_USERNAME`/`DB_PASSWORD` your `.env` resolves to (`DB_CONNECTION`/`DB_DATABASE` themselves get overridden by `phpunit.xml` regardless) — Sail's `compose.yaml` mysql service satisfies this directly.
+- **Running from more than one `git worktree` against the same MySQL instance?** `phpunit.xml`'s `DB_DATABASE=testing` pin is a real process environment variable and is **not** overridden by a worktree's own `.env.testing` — a `DB_DATABASE=testingN` in `.env.testing` isolates a bare `artisan migrate:fresh --env=testing`, but not `php artisan test` itself, since phpunit's `<env>` block already wins by the time Laravel's dotenv loader runs. To point one `php artisan test` run at a different database, override it as an actual shell environment variable, which does take precedence over `phpunit.xml`:
+
+  ```bash
+  DB_DATABASE=testing1 php artisan test --compact
+  ```
+
+  See [worktree-databases.md](../worktree-databases.md) for why every worktree needs its own database name in the first place.
+
 ## Run the full suite
 
 ```bash
@@ -104,6 +118,8 @@ php -d memory_limit=3G vendor/bin/phpstan analyse
 
 This is an environment quirk, not a project requirement — CI runs the plain `composer types:check` successfully. If you see PHPStan die without reporting errors, try this before assuming the analysis is broken.
 
-_Last updated: 2026-08-16 — Task 0006b: `php artisan test` now runs three suites, not two (the `Browser` suite launches a real browser and needs the Playwright binaries present); added the `--testsuite=` command and refreshed the stale "3 test files" parallelization note._
+_Last updated: 2026-08-26 — CI database connection gap (`ai-spec/tasks/ci-database-connection-gap.md`): added the "Database prerequisite" section — every command on this page needs a live MySQL connection, `phpunit.xml` pins `DB_CONNECTION`/`DB_DATABASE` ahead of any `.env`/`.env.testing`, and a `DB_DATABASE` override for `php artisan test` must be a real shell environment variable, not a worktree's `.env.testing` entry, since PHPUnit's `<env>` block already wins by the time Laravel's dotenv loader runs. Closes the doc-pass item this task's checklist left open._
+
+_Previously, 2026-08-16 — Task 0006b: `php artisan test` now runs three suites, not two (the `Browser` suite launches a real browser and needs the Playwright binaries present); added the `--testsuite=` command and refreshed the stale "3 test files" parallelization note._
 
 _Previously, 2026-08-12 — Task 0003: recorded the `php -d memory_limit=3G` workaround for PHPStan's parallel workers crashing on this project's WSL2 dev setup._
