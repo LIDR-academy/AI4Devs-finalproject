@@ -124,6 +124,51 @@ test('a role holding roles.manage sees the Roles & Permissions entry', function 
 });
 
 // =====================================================================
+// Story 0018 — the sales_regions entry (task file "Files to create/modify"
+// bullet for this test file). Two generic Phase-4 guard tests already
+// cross-check the registry against the route for every entry with no edit
+// needed (see below); what is added here is the per-entry coverage those
+// generic checks cannot supply.
+// =====================================================================
+
+test('a role holding exactly sales-regions.view sees the Sales Regions entry under the Taxes group', function () {
+    $this->actingAs(sidebarNavUserWith(['sales-regions.view']));
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('data-test="sidebar-group-taxes"', false)
+        ->assertSee('data-test="sidebar-link-sales_regions"', false);
+});
+
+test('a role holding the related-but-different sales-regions.edit permission never sees the Sales Regions entry or the Taxes group', function () {
+    // The same "never advertise a link the route would refuse" regression
+    // case story 0013 established for users.create — routes/sales-regions.php
+    // gates sales-regions.index on exactly can:sales-regions.view.
+    $this->actingAs(sidebarNavUserWith(['sales-regions.edit']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('data-test="sidebar-link-dashboard"', false);
+    $response->assertDontSee('data-test="sidebar-link-sales_regions"', false);
+    $response->assertDontSee('data-test="sidebar-group-taxes"', false);
+});
+
+test('the Taxes group renders no heading at all when its only entry is hidden', function () {
+    $this->actingAs(sidebarNavUserWith(['users.view']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    // Platform survives (Dashboard + Users), proving the "no heading"
+    // behaviour is specific to an emptied group, not a blanket suppression.
+    $response->assertSee('data-test="sidebar-group-platform"', false);
+    $response->assertSee('data-test="sidebar-link-users"', false);
+    $response->assertDontSee('data-test="sidebar-group-taxes"', false);
+    $response->assertDontSee('data-test="sidebar-link-sales_regions"', false);
+});
+
+// =====================================================================
 // Negative — an entry stays hidden without its own exact permission.
 // Anchored with an assertSee() on the always-visible Dashboard hook so the
 // assertion actually exercises the sidebar-nav component once it exists,
@@ -192,6 +237,11 @@ test('a role holding neither users.view nor roles.manage sees neither gated entr
     $response->assertSee('data-test="sidebar-link-dashboard"', false);
     $response->assertDontSee('data-test="sidebar-link-users"', false);
     $response->assertDontSee('data-test="sidebar-link-roles"', false);
+    // Story 0018 — the same role holds no sales-regions.view either, so it
+    // must not see the sales_regions entry (this test would otherwise
+    // silently under-cover the new registry entry, task file note on
+    // this file).
+    $response->assertDontSee('data-test="sidebar-link-sales_regions"', false);
 });
 
 // =====================================================================
@@ -234,6 +284,9 @@ test('a Super Admin holding zero permission rows sees every registered module en
     $response->assertSee('data-test="sidebar-link-users"', false);
     $response->assertSee('data-test="sidebar-group-settings"', false);
     $response->assertSee('data-test="sidebar-link-roles"', false);
+    // Story 0018.
+    $response->assertSee('data-test="sidebar-group-taxes"', false);
+    $response->assertSee('data-test="sidebar-link-sales_regions"', false);
 });
 
 // =====================================================================
@@ -249,6 +302,9 @@ test('a user with zero module permissions still sees the Dashboard entry', funct
     $response->assertSee('data-test="sidebar-link-dashboard"', false);
     $response->assertDontSee('data-test="sidebar-link-users"', false);
     $response->assertDontSee('data-test="sidebar-link-roles"', false);
+    // Story 0018.
+    $response->assertDontSee('data-test="sidebar-link-sales_regions"', false);
+    $response->assertDontSee('data-test="sidebar-group-taxes"', false);
 });
 
 // =====================================================================

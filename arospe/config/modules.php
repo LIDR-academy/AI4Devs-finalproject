@@ -37,6 +37,13 @@ return [
             'expanded_when' => 'roles.*',   // route-name pattern passed to request()->routeIs()
             'class' => null,
         ],
+        'taxes' => [
+            'heading' => 'navigation.groups.taxes',
+            'icon' => 'receipt-percent',
+            'expandable' => false,   // one entry today; revisit if a second Taxes screen ships
+            'expanded_when' => null,
+            'class' => null,
+        ],
     ],
     'items' => [
         'dashboard' => [
@@ -62,6 +69,14 @@ return [
             'route' => 'roles.index',
             'current_when' => 'roles.*',
             'permissions' => ['roles.manage'],
+        ],
+        'sales_regions' => [
+            'group' => 'taxes',
+            'label' => 'navigation.items.sales_regions',
+            'icon' => 'globe-americas',
+            'route' => 'sales-regions.index',
+            'current_when' => 'sales-regions.*',
+            'permissions' => ['sales-regions.view'],
         ],
     ],
 ];

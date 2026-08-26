@@ -17,12 +17,14 @@ return [
     'groups' => [
         'platform' => 'Plataforma',
         'settings' => 'Ajustes',
+        'taxes' => 'Impuestos',
     ],
 
     'items' => [
         'dashboard' => 'Panel de control',
         'users' => 'Usuarios',
         'roles' => 'Roles y permisos',
+        'sales_regions' => 'Regiones de venta',
     ],
 
 ];

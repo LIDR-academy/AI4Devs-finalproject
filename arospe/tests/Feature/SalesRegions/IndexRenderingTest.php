@@ -73,13 +73,23 @@ function salesRegionsExpectedRateDisplay(?string $rate): string
  * Does the tag carrying `data-test="$dataTest"` also carry a `disabled` attribute? Lookaheads
  * make this robust to attribute order and to the element name (Flux's disabled row controls are
  * not all <button> -- the Active column is a <ui-switch> -- see the file banner above).
+ *
+ * Matches `disabled="disabled"` specifically -- the exact format Laravel's
+ * ComponentAttributeBag::__toString() renders a bare boolean `disabled` prop as (`if ($value ===
+ * true) { $value = $key; }` then `key="value"`) -- rather than a bare `\sdisabled` substring.
+ * flux:button's own compiled classlist unconditionally carries the literal substring
+ * " disabled:opacity-75" (a Tailwind variant-prefixed utility, present on the ENABLED branch
+ * too), which a bare `\sdisabled` lookahead false-matches on every flux:button regardless of its
+ * real state. tests/Feature/Users/IndexRenderingTest.php's own `$isRowActionDisabled` -- the
+ * technique this file's header says it borrows -- already anchors on `\sdisabled="disabled"` for
+ * exactly this reason; this helper now matches it.
  */
 function salesRegionsRowControlDisabled(string $html, string $dataTest): bool
 {
     $quoted = preg_quote($dataTest, '/');
 
     return (bool) preg_match(
-        '/<[a-z0-9-]+(?=[^>]*\bdata-test="'.$quoted.'")(?=[^>]*\sdisabled)[^>]*>/is',
+        '/<[a-z0-9-]+(?=[^>]*\bdata-test="'.$quoted.'")(?=[^>]*\sdisabled="disabled")[^>]*>/is',
         $html
     );
 }

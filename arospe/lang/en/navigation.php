@@ -16,12 +16,14 @@ return [
     'groups' => [
         'platform' => 'Platform',
         'settings' => 'Settings',
+        'taxes' => 'Taxes',
     ],
 
     'items' => [
         'dashboard' => 'Dashboard',
         'users' => 'Users',
         'roles' => 'Roles & permissions',
+        'sales_regions' => 'Sales Regions',
     ],
 
 ];

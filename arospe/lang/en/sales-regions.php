@@ -38,4 +38,46 @@ return [
         'replacementDefaultId' => 'replacement default',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Screen copy (story 0018)
+    |--------------------------------------------------------------------------
+    |
+    | Additive to the errors/attributes groups above -- consumed by
+    | resources/views/livewire/sales-regions.blade.php. Keep this section
+    | key-for-key identical to lang/es/sales-regions.php.
+    |
+    */
+
+    'index' => [
+        'title' => 'Sales Regions',
+        'summary' => ':active active of :total total entries',
+        'action_not_allowed' => 'You do not have permission to perform this action.',
+        'default_toggle_tooltip' => 'This is the default entry. Open its edit form to name a replacement default before disabling it.',
+        'empty' => 'No sales region entries found.',
+    ],
+
+    'fields' => [
+        'code' => 'Code',
+        'name' => 'Name',
+        'description' => 'Description',
+        'rate' => 'Rate %',
+        'active' => 'Active',
+        'slug' => 'Slug',
+        'kind' => 'Type',
+        'replacement_default' => 'Replacement default',
+    ],
+
+    'labels' => [
+        'default' => 'Default',
+        'show_all_countries' => 'Show all countries',
+        'filter_countries_placeholder' => 'Filter by name or code…',
+        'toggle_active' => 'Toggle active for :name',
+        'set_default' => 'Set :name as default',
+        'toggle_expand' => 'Expand or collapse :name',
+        'select_replacement' => 'Select a replacement default',
+        'kind_country' => 'Country',
+        'kind_fiscal_territory' => 'Fiscal territory',
+    ],
+
 ];
