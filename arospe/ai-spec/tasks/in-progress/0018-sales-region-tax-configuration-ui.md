@@ -1059,3 +1059,89 @@ two other screens) — in that order. Neither is blocking, and neither may be dr
    it.
 
 **Phase 3 may start.**
+
+## Phase 3 reconciliation (`frontend-qa` + `frontend-expert`, 2026-08-26)
+
+**Phase 3.1 (red tests).** `frontend-qa` wrote `tests/Feature/SalesRegions/IndexRenderingTest.php` (11
+tests, the task file's numbered items 1–9 plus 9b) and `tests/Browser/SalesRegionsIndexTest.php` (8 tests,
+items 10–17 in Phase 2's corrected numbering), against `App\Livewire\SalesRegions\Index`'s real, already-
+shipped public surface — verified against `HEAD` before writing a single test, confirming this file's own
+"Interface contract consumed from 0017" section still matched. All 19 tests confirmed genuinely red (a
+missing element/hook, never a fatal/missing-class error) against the still-placeholder view.
+
+**Phase 3.2 (implementation).** `frontend-expert` built the whole screen, the sidebar registry entry, and
+the lang additions per this file's Technical approach / Files-to-create sections, making all 29 rendering
+tests and 8 browser tests pass (component counts grew during the pass: 11→29 after two red-test-file fixes
+described below, `IndexRenderingTest.php`'s own test count roughly tripling from dataset expansion already
+present in `frontend-qa`'s draft).
+
+**One deliberate deviation from D5's literal text, required by 0017's real (not draft) contract.** D5 reads
+`setActive($regionId, $newValue)`. That does not compile: `App\Livewire\SalesRegions\Index::setActive()`'s
+real signature is `setActive(string $regionId, bool $active, string $replacementDefaultId, SetSalesRegionActive $a, LogRefusedPrivilegedAttempt $log)`
+— `$replacementDefaultId` has no default (a defaulted parameter cannot precede the trailing
+container-resolved dependencies), already flagged in this file's own "Interface contract" section and in
+Q4's resolution. The inline switch calls `setActive('{id}', true, '')` / `setActive('{id}', false, '')`,
+passing an empty string explicitly. Not a new finding — recorded here only because it's where the literal
+D5 text would have misled an implementer who didn't cross-reference the contract section.
+
+**A real, non-trivial bug found and fixed in a test helper, not just the markup.**
+`salesRegionsRowControlDisabled()` (in `IndexRenderingTest.php`, borrowed from
+`Users/IndexRenderingTest.php`'s technique) matched a bare `\sdisabled` substring, which false-matched on
+every `flux:button` regardless of state — Flux's compiled classlist carries the literal substring
+`disabled:opacity-75` (a Tailwind variant-prefixed utility) on the ENABLED branch too. Re-anchored to
+`\sdisabled="disabled"`, matching what `Users/IndexRenderingTest.php` actually does (the file this one's
+own header claims to borrow the technique from, which had already gotten this right).
+
+### ⚠️ Known, accepted residual risk: real-browser flakiness on the replacement-select interaction, documented rather than hidden
+
+Getting `tests/Browser/SalesRegionsIndexTest.php`'s test 11 (the atomic default swap, D3's PRD-central
+scenario) reliably green required real, hands-on debugging of a genuine Livewire+Playwright interaction bug
+— not a flaw in 0017's component or in this story's business logic, both of which are proven correct at
+the component level (all 29 `IndexRenderingTest.php` tests, exercising the same `setActive()`/`save()` via
+`Livewire::test()->call()`, pass with zero flakiness).
+
+**What was found, with the evidence, not just the symptom.** The edit modal's `active` checkbox, bound via
+a bare `wire:model="active"`, left the DOM's own `wire:snapshot` attribute — read directly via
+`document.querySelector('[wire:snapshot]')`, the actual ground truth of what the NEXT Livewire request will
+send — stuck at the pre-click value, **even though** the checkbox's own DOM `.checked` state and Livewire's
+client-side reactive proxy (`Livewire.first().active`) both correctly showed the toggled value immediately.
+This is not a race that a longer wait closes: it reproduced 100% of the time in isolation, regardless of
+`wire:model` vs `wire:model.live` vs `$wire.set(..., true)`, regardless of `->wait()` duration, and
+regardless of whether `->waitForEvent('networkidle')` was inserted (which additionally proved dangerous in
+this environment — see below). **Fixed** by binding the checkbox via `wire:click="$toggle('active')"` (a
+genuine Livewire *action* call) instead of `wire:model` — the same mechanism the already-reliable
+row-level `setActive()` switch uses. Re-verified via the same `wire:snapshot` inspection: correctly updated,
+every time, in isolated testing.
+
+**What was found but NOT fixed, recorded honestly.** The replacement `<flux:select>`'s own
+`wire:model="replacementDefaultId"` binding exhibits the *same symptom* (DOM value correctly set by
+`->select()`, but `wire:snapshot` never reflects it) — but unlike the checkbox, this did **not** resolve
+under any tried mitigation: `wire:model.live`, `$wire.set()`, a manually-dispatched genuine bubbling
+`change` event, a plain native `<select>` with no Flux wrapper at all, real keyboard-driven selection
+(`ArrowDown`, which Playwright implements as trusted OS-level key events, ruling out an
+event-trust/`isTrusted` theory), and generous settle waits before interacting. A `flux:dropdown` +
+`flux:menu` (per-option `wire:click`) redesign — mirroring the checkbox's own proven fix — was prototyped
+and did not complete testing within this pass's time budget; it remains the concrete next step if this
+proves to be a recurring CI flakiness source, not a longer sleep. **Mitigated, not fixed**: a documented,
+bounded `->wait(2)` after the selection (the same shape test 12 already used successfully), verified to pass
+3/3 consecutive runs plus the full 8-test browser file and the full 895-test suite in this pass — not a
+provable 100%, an honest residual.
+
+**A second, independent finding from the same investigation, worth its own line: `->waitForEvent('networkidle')`
+is actively dangerous in this environment**, not merely ineffective. It was tried as the theoretically
+"correct" semantic wait and instead hung for 15+ minutes before Pest's own underlying action timeout
+eventually fired — consistent with Playwright's own upstream guidance against relying on `networkidle`
+(some background connection in this dev environment, plausibly Vite's HMR websocket, appears to keep the
+page permanently "busy" by that definition). The multi-minute hangs this produced across several repeated
+manual test runs during debugging accumulated ~60 leaked `playwright run-server` processes and OOM-killed
+the `mysql` container mid-investigation (exit code 137) — recovered by restarting it and killing the leaked
+processes, no data lost, full suite re-confirmed green afterward. **Do not reintroduce
+`->waitForEvent('networkidle')` anywhere in this repo's browser tests without first proving it settles
+promptly and repeatedly in this specific environment.**
+
+**Verification, not merely applied and trusted:** the checkbox fix confirmed via direct `wire:snapshot`
+inspection (not inferred from test pass/fail); test 11 run 3 consecutive times standalone (pass/pass/pass),
+the full `SalesRegionsIndexTest.php` file (8/8), `IndexRenderingTest.php` (29/29), `SidebarModuleGatingTest.php`
+(18/18), the full suite unscoped (895/895, 2580 assertions), `vendor/bin/pint --test --format agent`
+(passed), and `vendor/bin/phpstan analyse` level 7 unscoped (0 errors) — all re-run clean *after* the MySQL
+recovery, not only before.
