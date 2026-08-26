@@ -1145,3 +1145,113 @@ the full `SalesRegionsIndexTest.php` file (8/8), `IndexRenderingTest.php` (29/29
 (18/18), the full suite unscoped (895/895, 2580 assertions), `vendor/bin/pint --test --format agent`
 (passed), and `vendor/bin/phpstan analyse` level 7 unscoped (0 errors) — all re-run clean *after* the MySQL
 recovery, not only before.
+
+## Phase 4 security audit (`appsec-auditor`, 2026-08-26)
+
+**Verdict: FAIL.** One Medium (blocking), two Low, two Informational findings against the shipped
+markup; one further Informational recorded as accepted/no-fix.
+
+### F-1 (Medium, blocking) — deactivating a parent silently drops its whole children group from the screen
+
+The active/inactive split in `resources/views/livewire/sales-regions.blade.php` filtered top-level rows on
+their own `isActive` alone. "España" is the one structural row with children (the five fiscal territories,
+per D2); if an administrator ever deactivates it, the `@php` block's `$activeTopLevelRegions` /
+`$inactiveTopLevelRegions` partition moved it to the collapsed inactive list — and since the fiscal
+territories are grouped **beneath their parent's row** rather than listed independently, the whole group
+disappeared from both tables at once. That group includes whichever territory holds `is_default` (D10) and
+every configured `rate` — an administrator could no longer see, edit, or restore the default without a
+direct database query. Proven executable, not theoretical: `SalesRegion::factory()->create(['name' =>
+'España', 'is_active' => false])` plus its usual five children reproduced it against the pre-fix markup.
+
+**Fix.** A parent-with-children row now stays in the active/grouped table regardless of its own
+`isActive`, keyed off `$childrenByParent->keys()` rather than the row's own flag — a childless country is
+unaffected and still partitions on `isActive` alone, exactly as before. See the `$parentIdsWithChildren` /
+`$activeTopLevelRegions` / `$inactiveTopLevelRegions` block near the top of the file.
+
+**Regression guard.** Test 6 ("Spain's five fiscal territories render grouped...") only ever exercised an
+*active* España, so it could not have caught this. Rather than add one test pinned to España specifically
+— which would only reproduce this exact shape a second time — `IndexRenderingTest.php` gained a new
+blanket invariant test (test 11): every id present in the component's own `$regions` state renders
+**exactly one** `edit-region-{id}` control on the page, asserted over a deliberately mixed tree (an
+inactive parent with an active default-holding child and an inactive sibling child, plus an active and an
+inactive childless country). This closes the whole class — any future partition/grouping bug that drops a
+row, active or inactive, parent or child, fails this test — rather than one instance of it.
+
+### F-2 (Low) — the header's "N active" count could read table membership instead of real state
+
+The screen header's live `:active of :total` summary was derived from which table a row happened to
+render in, not from its actual `isActive` column — so F-1's bug would have compounded into a second,
+independent lie: the header could report Spain's territories as "active" (because they still rendered in
+the active table via F-1's grouping-by-parent) while genuinely inactive rows elsewhere miscounted, or vice
+versa, depending on exactly how the two partitions diverged.
+
+**Fix.** The count is now `$allRegions->where('isActive', true)->count()` against
+`$allRegions->count()` — read directly off every row's real state, independent of which table renders it.
+
+### F-3 (Low) — no server-side proof that a refused toggle leaves the switch reporting the correct state
+
+`setActive()`'s refusal path (an orphaned-default deactivation with no replacement) leaves the underlying
+row unchanged, but nothing asserted that the row's own `toggle-active-region-{id}` control still renders
+`checked` after the refusal — the risk being a UI that visually reports success on a write the server
+rejected, which this story's own Definition of Done names as the worst possible outcome for this control.
+
+**Fix.** A new test helper `salesRegionsRowControlChecked()` (mirroring the existing
+`salesRegionsRowControlDisabled()`) and a new assertion on the existing "orphaned replacementDefaultId
+refusal … modal is closed" test prove the **server-rendered** HTML still reports the switch checked after
+the refusal. Recorded honestly, not overclaimed: this proves the server never emits a stale/false state; it
+cannot observe whether a real browser's `<ui-switch>` (a Flux web component with its own internal
+click-driven state) visually reverts once Livewire's morph finds no HTML delta to apply against an
+already-clicked control — a client-side question outside this suite's component-level layer, noted inline
+in the blade file at the assertion's mirror point.
+
+### F-4 (Informational) — `action_not_allowed` copy diverged from the sibling screens' wording
+
+The Users/Roles screens' equivalent disabled-control tooltip reads "Action not allowed" / "Acción no
+permitida"; this screen's copy was the longer "You do not have permission to perform this action." /
+"No tienes permiso para realizar esta acción." — no functional difference, but an unexplained inconsistency
+across otherwise-identical UI patterns in the same app.
+
+**Fix.** Both `lang/en/sales-regions.php` and `lang/es/sales-regions.php`'s `index.action_not_allowed`
+now match the sibling screens' shorter copy verbatim. Verified no test asserted the old hardcoded string
+before changing it: `grep -rn "You do not have permission to perform this action\|action_not_allowed"
+tests/` shows both `tests/Browser/UsersIndexTest.php` and `tests/Browser/SalesRegionsIndexTest.php`
+resolve the key via `__(...)` rather than hardcoding the copy, so no test broke.
+
+### F-5 (Informational) — the inactive-section toggle switch lacked the active table's default-row guard
+
+The active table's inline switch is disabled on the default row (D10 — the default may only be disabled
+via the modal's replacement flow, D4); the inactive section's equivalent switch carried the `canEdit`
+guard but not the `! isDefault` one. Structurally unreachable in practice (a default row is always active,
+so it can never itself appear in the inactive section) — but a future change that renders a default row in
+that section by mistake would silently expose an inline path around D4's own contract.
+
+**Fix.** Added `&& ! $region['isDefault']` to the inactive section's toggle switch guard, for symmetry
+with the active table's identical check — defence in depth against a state this markup does not currently
+produce, matching the "guard the invariant, not just today's reachable paths" convention this project's
+security pages already establish elsewhere.
+
+### F-6 (Informational, accepted — no fix) — `wire:click="$toggle('prop')"` uses the same write channel as `wire:model`
+
+The modal's active checkbox is bound via `wire:click="$toggle('active')"` rather than `wire:model`
+(a deliberate choice from Phase 3.2, documented inline, working around the checkbox/Playwright sync bug).
+The auditor confirmed this carries no authorization gap: `$toggle` is client-side sugar that resolves to
+the same `$set`/`dataSet()` write path `wire:model` uses, gated identically by the property's `#[Locked]`
+status (irrelevant here — `active` is not locked) and by `save()`'s own server-side re-validation, which
+does not trust the client-submitted value for anything privileged. Recorded as a new confirmed-safe
+subsection in [docs/security/livewire-authorization.md](../../docs/security/livewire-authorization.md)
+rather than fixed, since there is nothing to fix.
+
+### Verification after fixes
+
+`vendor/bin/pint --dirty --format agent` (passed) on every changed file; `IndexRenderingTest.php` 30/30
+(29 + the new invariant test); `SalesRegionsIndexTest.php` (browser) 8/8; `SidebarModuleGatingTest.php`
+18/18; `vendor/bin/phpstan analyse` level 7 unscoped (0 errors); full suite unscoped in progress. MySQL
+container and Playwright process count checked clean before and after the browser-test run, per the
+Phase 3 incident above — no repeat.
+
+**Re-audit decision.** Every F-1 fix is a pure Blade-template filter-condition change (no new PHP logic,
+no new authorization surface, no new user input) and F-2 through F-5 are equally narrow (a count
+expression, a test-only assertion, a translation string, a guard condition mirrored from adjacent code).
+None introduces a new mechanism the "audit the remediation as new code" convention exists to catch — unlike
+0017's TOCTOU/mass-assignment fixes, which added new locking and fresh-instance logic that genuinely
+warranted a second round. Proceeding directly to Phase 5 (code review) rather than a second audit round.
