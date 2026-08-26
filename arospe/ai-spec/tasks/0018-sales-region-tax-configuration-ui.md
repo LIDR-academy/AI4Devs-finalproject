@@ -46,14 +46,14 @@ have since been resolved by the product owner (2026-08-26), three of them with b
 | # | Decision | Reasoning |
 |---|---|---|
 | **D1** | **The rate input is `type="text" inputmode="decimal"` — never `type="number"`.** | The single most consequential markup decision in the story. A native `<input type="number">` performs its own client-side parsing: typing `21,5` is either refused as a keystroke or coerced before submission, so the comma **never reaches the wire payload** for 0017's component-side `str_replace(',', '.', …)` normalisation (D12) to act on. `type="text"` + `inputmode="decimal"` keeps the mobile numeric keypad while doing no coercion. Both amigos reached this independently. It is invisible to `Livewire::test()->set()` — see [test 10](#tests-to-perform). |
-| **D2** | **Grouping is a view-side concern over the flat `$regions` array. No 0017 contract change.** | `$regions` already carries `parentId`, `kind` and `sortOrder` per row. The view groups at render time (`whereNull('parentId')->sortBy('sortOrder')`, then `where('parentId', $row['id'])->sortBy('sortOrder')` per parent). Because the view sorts, this also closes QA's flagged gap that 0017 guarantees **no ordering** for `$regions` — the rendering does not depend on one, and the grouping test asserts by *relationship*, not by array position. |
+| **D2** | **Grouping is a view-side concern over the flat `$regions` array. No 0017 contract change.** | `$regions` already carries `parentId`, `kind` and `sortOrder` per row. The view groups at render time (`whereNull('parentId')->sortBy('sortOrder')`, then `where('parentId', $row['id'])->sortBy('sortOrder')` per parent). Because the view sorts, this also closes QA's flagged gap about `$regions`' ordering — the rendering does not depend on one, and the grouping test asserts by *relationship*, not by array position. **Corrected at Phase 2 against `HEAD`:** QA's gap was recorded as "0017 guarantees **no ordering**", which is no longer true — the shipped `loadRegions()` really does `orderBy('sort_order')->orderBy('name')`. That makes the view's own sort *redundant in practice* but it stays **mandatory in principle**: `$regions`' order is a private implementation detail of a method 0018 does not own, so the markup must not become the thing that depends on it. Keep both sorts; do not "simplify" the view to trust the query's order. |
 | **D3** | **Spain's expansion is a client-side Alpine toggle, default-open.** | PRD §2.1's wording is *"When they **expand** Spain's entries"*, so an expand affordance is required rather than a bare indented list. Every child row is already in the locked array on first paint — there is nothing to fetch, so a `wire:click` round trip to toggle CSS visibility is the wrong tool. Default-**open** because five children framed by the PRD as inherent structure should not start hidden. Consequence QA asked for: this makes the grouping's *interactive* half a **browser** test and its *structural* half a component test. |
 | **D4** | **Disabling the current default happens only inside the edit modal; the current default row's inline switch renders `disabled` with an explanatory tooltip.** | Follows from 0017's D4 caveat. The refusal arrives as a `ValidationException` keyed `replacementDefaultId`; if the inline switch called `setActive()` directly on the default row, that error would land in the bag with **no rendered field to attach it to** — an invisible failure, the worst outcome per 0017's own reasoning. Inside the modal the replacement `flux:select` is already on screen, so the message renders exactly where the administrator can act on it. This design adds **zero new Livewire properties**. |
 | **D5** | **The inline row switch handles only the two always-safe transitions** — inactive → active, and active-but-not-default → inactive — calling `setActive($regionId, $newValue)` directly. | Neither can throw, so neither can produce an orphaned error. This is 0017's sanctioned "0018 may render an inline row switch, a modal field, or both" left deliberately as *both*, split by which transition can fail. |
 | **D6** | **A `NULL` rate renders as an em dash; `0.000` renders as `0%`.** Rendered by string manipulation, never a float cast. | 0016/0017 D6 make "unconfigured" vs "a real 0%" load-bearing. `{{ $region['rate'] === null ? '—' : rtrim(rtrim($region['rate'], '0'), '.').'%' }}` — the `decimal:3` cast returns a **string**, and 0017's Larastan notes forbid comparing it numerically. The naive `@if ($region['rate'])` is the exact PHP-truthiness trap that would render a legitimate `0.000` identically to "not set". |
 | **D7** | **`SalesRegionKind::label()` stays deferred — this story does not add it, and does not touch `app/Enums/`.** | 0016 deferred it to "the first story that actually renders `kind`", and 0017 restated the deferral. On this screen `kind` drives *structure and styling* (indentation, chevron presence, grouping-row treatment) and is **never rendered as text** — so it still has no consumer, and 0016's own stated rule ("nothing renders it yet") still applies. Keeping it out also keeps 0018 purely view-layer + tests + lang, and removes the `app/Enums/SalesRegionKind.php` file-collision risk with 0017 that `frontend-expert` flagged. **Escape hatch:** if Phase 3's design does surface a textual `kind`, adding `label()` plus its two lang keys is pre-authorised in writing by 0016 and is not scope creep — but it must then be recorded, not slipped in. |
 | **D8** | **`data-test` row hooks: `edit-region-{id}`, `toggle-active-region-{id}`, `set-default-region-{id}`, plus `expand-region-{id}` on the chevron.** Present on **both** the enabled and the disabled branch of each control. | Extends the `edit-user-{id}` / `delete-user-{id}` convention verified in `resources/views/livewire/users.blade.php`. Mandatory here because these controls are icon-only and there may be ~255 rows, so no visible text uniquely identifies a row's action. Hook-on-both-branches is what lets a test select the same control regardless of whether it is enabled — the rule `docs/api/routes.md` records for the Users screen. |
-| **D9** | **UI copy is English source strings through `__()`**, added **additively** to the `lang/{en,es}/sales-regions.php` files 0017 creates, key-for-key identical across both. | The same decision [0006](done/0006-users-list-editor-ui.md) recorded: the PRD's Spanish copy is reference layout, not literal requirement, until Epic 5's language switcher. 0017 owns `errors.*`; 0018 adds `index.*` / `fields.*` / `labels.*`. |
+| **D9** | **UI copy is English source strings through `__()`**, added **additively** to the `lang/{en,es}/sales-regions.php` files 0017 creates, key-for-key identical across both. | The same decision [0006](done/0006-users-list-editor-ui.md) recorded: the PRD's Spanish copy is reference layout, not literal requirement, until Epic 5's language switcher. **Verified at Phase 2 against the shipped files:** 0017 owns **two** top-level groups, `errors.*` *and* `attributes.*` (the latter feeds `validate()`'s third argument, so renaming a leaf there breaks 0017's own messages) — 0018 adds `index.*` / `fields.*` / `labels.*` beside them and touches neither. |
 | **D10** | **The "grouping" catalog concept is removed — this screen renders no supranational entries (no "Unión Europea", no "Internacional").** *(scope decision, 2026-08-18)* | The Sales Region catalog holds only individual countries plus Spain's five fiscal sub-territories, per the same decision applied to [0016](done/0016-sales-region-catalog-schema-and-seeder.md). Consequences owned here: no top-level "grouping" siblings to render, no `kind === Grouping` branch anywhere in the markup, no `grouping()` factory state in test arrangement, and no separate "groupings" section or filter category in the list design — the list is countries + Spain's territories only. Row counts drop accordingly (see [Q1](#q1--how-should-the-screen-handle-the-248-inactive-unconfigured-country-rows--resolved-a-with-two-additions): 254 rows, of which **6** are business-relevant, not 8). **Spain's fiscal-territory *visual* grouping (D2/D3) is a different, unrelated concept and is deliberately unaffected.** |
 
 Resolved directly from the docs, no decision needed: the view path is the **flat**
@@ -211,8 +211,40 @@ Feature: Sales Regions screen — configuring seeded entries and moving the defa
   Scenario: The current default cannot be switched off from its own row
     Given a tax administrator, with "España (Península)" as the current default entry
     When they open the Sales Regions screen
-    Then that row's enable-disable control is disabled,
-      with a tooltip explaining a replacement must be named first
+    Then that row's enable-disable control is disabled, with a tooltip that directs them
+      to the entry's edit form to name a replacement default
+
+  # --- The collapsed inactive-country section (Q1) ---
+
+  Scenario: The seeded but unconfigured countries do not bury the configured entries
+    Given a tax administrator viewing the seeded Sales Region catalog
+    When they open the Sales Regions screen
+    Then the active entries are shown, and the inactive countries are behind
+      a single collapsed "Show all countries" section
+
+  Scenario: The inactive countries can be narrowed by typing
+    Given a tax administrator with the "Show all countries" section open
+    When they type part of a country's name into the section's filter box
+    Then only the entries matching what they typed remain visible in that section
+
+  Scenario: An activated country joins the configured entries
+    Given a tax administrator with "Francia" shown as inactive in the "Show all countries" section
+    When they enable the "Francia" entry from its row
+    Then the "Francia" row is shown among the active entries and no longer inside
+      the "Show all countries" section
+
+  Scenario: Enabling a country does not close the section it was found in
+    Given a tax administrator who has opened the "Show all countries" section and filtered it
+    When they enable one of the filtered entries from its row
+    Then the section is still open and the filter box still holds what they typed
+
+  # --- A refusal that arrives with no field on screen (Q4) ---
+
+  Scenario: A refusal raised from a row control is still explained on the page
+    Given a tax administrator whose row was made the default by someone else
+      after the screen was last drawn
+    When they disable that row from its enable-disable control
+    Then a message explaining a replacement default must be named is shown above the table
 
   Scenario: An administrator who may view but not edit sees every control disabled
     Given a tax auditor whose role grants only the permission to view Sales Regions
@@ -237,7 +269,16 @@ Feature: Sales Regions screen — configuring seeded entries and moving the defa
 
 **Owned by this story:**
 
-- `resources/views/livewire/sales-regions.blade.php` — **create.** The whole screen. **Do not create
+- `resources/views/livewire/sales-regions.blade.php` — **replace.** The whole screen. **Corrected at
+  Phase 2:** this file was listed as *create*, and it already exists — 0017 shipped a **placeholder**
+  (`<p>{{ count($regions) }}</p>` plus a comment naming 0018 as its owner) so its component could mount
+  and render, exactly as 0004 did for `users.blade.php`. This story replaces that body wholesale. Two
+  facts verified against `HEAD` so nobody rediscovers them mid-implementation: 0017's four test files
+  (`IndexTest.php`, `SetSalesRegionActiveTest.php`, `SetDefaultSalesRegionTest.php`,
+  `RefusalLoggingTest.php`) contain **no** `assertSee`/`assertSeeHtml`/`->html()` assertion at all, so
+  nothing pins the placeholder's markup and the replacement breaks none of them — but every one of them
+  goes through `Livewire::test()`, which **does** render this view, so a Blade error here fails 0017's
+  suite too, not only this story's. **Do not create
   `resources/views/livewire/sales-regions/index.blade.php`** — that nested path is not what Livewire
   resolves for `App\Livewire\SalesRegions\Index` and would be a silently unused duplicate.
 - `config/modules.php` — **modify** (see the sidebar note below). 0013's shipped registry splits `groups`
@@ -245,7 +286,7 @@ Feature: Sales Regions screen — configuring seeded entries and moving the defa
   'Sales Regions'`, literal English copy) does **not** match it and would break `config:cache` in the same
   way `base-standards.md` warns against (a `group` value must name a real `groups` key; a `label` must be a
   translation key, never copy — `lang/es/` can never reach a literal string in `config/`). This story adds a
-  **new `groups.taxes` entry** (no shipped group covers Taxes yet) plus one `items.sales-regions` entry:
+  **new `groups.taxes` entry** (no shipped group covers Taxes yet) plus one `items.sales_regions` entry:
   ```php
   // config/modules.php — new 'groups' entry
   'taxes' => [
@@ -258,28 +299,62 @@ Feature: Sales Regions screen — configuring seeded entries and moving the defa
   ```
   ```php
   // config/modules.php — new 'items' entry
-  'sales-regions' => [
+  'sales_regions' => [
       'group' => 'taxes',
-      'label' => 'navigation.items.sales-regions',
-      'icon' => 'receipt-percent',
+      'label' => 'navigation.items.sales_regions',
+      'icon' => 'globe-americas',
       'route' => 'sales-regions.index',
       'current_when' => 'sales-regions.*',
       'permissions' => ['sales-regions.view'],
   ],
   ```
+  > 🔑 **The registry key is `sales_regions`, snake_case — corrected at Phase 2.** The original sketch
+  > wrote `sales-regions`, and this is the project's **first genuinely multi-word registry key**, so it is
+  > the first entry that has to choose. [naming.md](../../docs/conventions/naming.md#translation-keys)
+  > already decided it and even names this exact case: *"A future registry key that is genuinely
+  > multi-word is snake_case on both sides (`items.sales_regions`), never kebab-case — unlike the
+  > permission names above, whose kebab-case is imposed by the seeded catalog and mapped at lookup."*
+  > Three identifiers move together and must agree, since `sidebar-nav.blade.php` renders
+  > `data-test="sidebar-link-{{ $itemKey }}"` straight from the registry key: the `config/modules.php`
+  > key, the `lang/*/navigation.php` leaf, and the hook a test selects — **`sidebar-link-sales_regions`**.
+  > Only the three *values* keep their kebab-case, because they are not registry keys: the permission
+  > `sales-regions.view` (seeded catalog, story 0002), the route name `sales-regions.index`, and its
+  > `current_when` pattern. Verified against `HEAD`: all three shipped registry keys today
+  > (`dashboard`, `users`, `roles`) are single lowercase words, which is exactly why nothing forced this
+  > decision before.
+  >
+  > The item icon is `globe-americas` rather than a second `receipt-percent`: the shipped `settings`
+  > group already establishes that a group and its item carry *different* icons (`cog-6-tooth` /
+  > `shield-check`). Both icon stubs verified present in `vendor/livewire/flux/stubs/.../flux/icon/`.
 - `lang/en/navigation.php`, `lang/es/navigation.php` — **modify, additively.** New leaves
-  `groups.taxes` and `items.sales-regions`, mirroring the registry's own keys exactly per
+  `groups.taxes` and `items.sales_regions`, mirroring the registry's own keys exactly per
   [naming.md](../../docs/conventions/naming.md#translation-keys)'s registry-mirroring rule — not new files,
-  0013 already created both.
+  0013 already created both, each holding exactly two `groups` leaves and three `items` leaves today.
 - `lang/en/sales-regions.php`, `lang/es/sales-regions.php` — **modify, additively.** 0017 creates both
   for its `errors.*` copy; this story adds the list/label/field copy under new top-level groups, keeping
   the two files key-for-key identical.
 - `tests/Feature/SalesRegions/IndexRenderingTest.php` — **new.** Rendering-level `Livewire::test()`
   coverage.
 - `tests/Browser/SalesRegionsIndexTest.php` — **new.** Pest 4 browser tests for the JS-driven behaviour.
-- `tests/Feature/Navigation/SidebarModuleGatingTest.php` — **modify.** 0013's own test asserts every
-  registry entry's `permissions` set-equals its route's real `can:` middleware — adding an entry without
-  extending this test's coverage would be exactly the drift that test exists to catch.
+- `tests/Feature/Navigation/SidebarModuleGatingTest.php` — **modify.** **Reason corrected at Phase 2**,
+  after reading the real file: its two Phase-4 guard tests (*"every ungated registry item is on the
+  explicit allow-list"* and *"every gated registry item's permissions match exactly what its route's
+  `can:` middleware enforces"*) both `foreach (config('modules.items') …)` **generically**, so the
+  registry-vs-route drift cross-check picks the new entry up with **no edit at all** — the original
+  reason given here was wrong, and acting on it would have produced a redundant hand-written copy of a
+  check that already generalises. What genuinely needs adding is the per-entry coverage the generic
+  tests cannot supply, all of it hook-based per that file's own stated rule (never
+  `assertDontSee('Taxes')`, which collides with the page title and the URI `taxes/sales-regions`):
+  - a role holding exactly `sales-regions.view` sees `sidebar-link-sales_regions` and
+    `sidebar-group-taxes`;
+  - a role holding a *related but different* `sales-regions.edit` sees **neither** — the same
+    never-advertise-a-link-the-route-refuses case 0013 added for `users.create`, and the one that
+    actually pins `permissions` to the route's single `can:sales-regions.view`;
+  - the **Taxes group vanishes entirely** for a role without it (filter-before-group, its only entry);
+  - three **existing** tests enumerate hooks positively or negatively and will pass while silently
+    under-covering the new entry unless they are extended: *"a Super Admin … sees every registered
+    module entry"*, *"a user with zero module permissions still sees the Dashboard entry"*, and *"a role
+    holding neither users.view nor roles.manage sees neither gated entry"*.
 
 > 📌 **The sidebar entry goes in `config/modules.php`, not in `sidebar.blade.php`.** [Story 0013](done/0013-sidebar-module-gating-ui.md)
 > has since **shipped and closed** (verified against `HEAD`, 2026-08-26): it introduced `config/modules.php`
@@ -299,10 +374,12 @@ Feature: Sales Regions screen — configuring seeded entries and moving the defa
 | `app/Livewire/SalesRegions/Index.php` | 0017 |
 | `app/Concerns/SalesRegionValidationRules.php`, `app/Policies/SalesRegionPolicy.php` | 0017 |
 | `app/Actions/SalesRegions/{UpdateSalesRegion,SetDefaultSalesRegion,SetSalesRegionActive}.php` | 0017 |
-| `routes/web.php` — the `sales-regions.index` route and its `can:` middleware | 0017 |
-| `lang/{en,es}/sales-regions.php` — **creation** and the `errors.*` keys | 0017 |
+| `routes/sales-regions.php` — the `sales-regions.index` route (URI `taxes/sales-regions`) and its `can:sales-regions.view` middleware, plus web.php's one-line `require` | 0017 |
+| `lang/{en,es}/sales-regions.php` — **creation** and the `errors.*` **and `attributes.*`** keys | 0017 |
 | `tests/Feature/SalesRegions/IndexTest.php` (component logic, persistence, authorization) | 0017 |
 | `tests/Feature/SalesRegions/SetSalesRegionActiveTest.php` | 0017 |
+| `tests/Feature/SalesRegions/SetDefaultSalesRegionTest.php` | 0017 |
+| `tests/Feature/SalesRegions/RefusalLoggingTest.php` | 0017 |
 | `tests/Feature/Policies/SalesRegionPolicyTest.php` | 0017 |
 | `app/Enums/SalesRegionKind.php` (incl. `label()`) | deferred — see **D7** |
 | The `sales_regions` table, model, enum, ISO fixture, factory, seeder | 0016 |
@@ -340,9 +417,13 @@ public function setDefault(string $regionId): void;
 public function setActive(string $regionId, bool $active, string $replacementDefaultId): void;
 ```
 
-> ⚠️ **Every action method above also declares trailing, container-resolved parameters** — an action class
-> (e.g. `UpdateSalesRegion $updateSalesRegion`) and `LogRefusedPrivilegedAttempt $log` on every method except
-> `closeModal()`. **The markup never passes these**; Livewire resolves them from the container on every call,
+> ⚠️ **Every *mutating* method above also declares trailing, container-resolved parameters** — precisely
+> (corrected at Phase 2 by reading the real signatures): `openEditModal()` takes
+> `LogRefusedPrivilegedAttempt $log` only; `setDefault()` takes `SetDefaultSalesRegion` + `$log`;
+> `setActive()` takes `SetSalesRegionActive` + `$log`; `save()` takes **two** action classes
+> (`UpdateSalesRegion`, `SetSalesRegionActive`) plus `$log`. `closeModal()` **and `mount()`** take none —
+> the original note said "every method except `closeModal()`", which over-counted `mount()`.
+> **The markup never passes these**; Livewire resolves them from the container on every call,
 > exactly like `wire:click="deleteUser(@js($user.id))"` on the Users screen never passes `Logout $logout`.
 > Only the plain, data-shaped parameters shown above (with their real names) go in a `wire:click` call.
 >
@@ -433,6 +514,15 @@ only where real-DOM behaviour is the actual risk. Arrange **only** with `SalesRe
       `SalesRegion::count()` unchanged. *A bare `assertDontSee('Add region')` is refused as the anti-pattern [errors-log.md](../../docs/errors-log.md) records and 0016/0017 both already declined.*
 - [ ] 9. Clearing the rate field and saving renders the unconfigured marker again.
       *Retires a regression in 0017's D6 blank-clears semantics at the layer the administrator sees.*
+- [ ] 9b. **The orphaned-refusal outlet (Q4, addition A4-a).** Call `setActive($id, false, '')` on a row
+      that **is** the current default — the exact state a concurrent default swap produces between paint
+      and click — and assert the `replacementDefaultId` message renders in the page-level outlet above
+      the table, with the modal closed. Then assert the same message renders **exactly once** when the
+      modal *is* open (the `@unless ($showModal)` guard).
+      *Added at Phase 2: **A4-a had an acceptance criterion and no test.** This is reachable at component
+      level without any race — `Livewire::test()->call('setActive', $defaultRow->id, false, '')` reproduces
+      it deterministically, so it needs no browser test. Retires the one D4/D5 hole the resolution itself
+      identified: a refusal whose only field lives inside a closed modal renders nowhere at all.*
 
 **Browser — `tests/Browser/SalesRegionsIndexTest.php`:**
 
@@ -535,7 +625,10 @@ mutating control disabled and explained.
       0017 signature has **no default** for `$replacementDefaultId`. *(Q4 contract correction)*
 - [ ] A `replacementDefaultId` error raised outside the modal renders in a page-level outlet above the
       table, shown only when the modal is closed so it can never render twice. *(Q4, addition A4-a)*
-- [ ] The screen is reachable from a **Taxes** navigation heading, not as a top-level item. *(PRD AC 1)*
+- [ ] The screen is reachable from a **Taxes** navigation heading, not as a top-level item, through a
+      `config/modules.php` registry entry keyed **`sales_regions`** (snake_case) whose `permissions` is
+      exactly `['sales-regions.view']` — the single ability `routes/sales-regions.php` gates the route on.
+      *(PRD AC 1; [naming.md](../../docs/conventions/naming.md#translation-keys)'s registry-key rule)*
 - [ ] Every row control carries its `data-test` hook on **both** the enabled and the disabled branch. *(D8)*
 - [ ] All UI copy is English source strings through `__()`, added key-for-key to both
       `lang/en/sales-regions.php` and `lang/es/sales-regions.php`; no hardcoded Spanish literals. *(D9)*
@@ -672,7 +765,8 @@ that closes the section it lives in on every use. Practically this means the Alp
 `open` and the filter string must sit on an element Livewire's DOM morphing preserves, with stable
 `wire:key`s on the rows beneath it — the same class of concern
 [risk 6](#dependencies--risks) already flags for `x-show="! $wire.active"`. It gets an acceptance
-criterion and a browser test (**test 17**).
+criterion and a browser test (**test 16** — corrected at Phase 2 from "test 17", which is the
+`assertNoJavaScriptErrors()` sweep, not this).
 
 *Left to Phase 3:* whether the collapsed section's 248 rows are `x-show`-hidden (in the DOM, simplest,
 consistent with **D3**'s Spain expansion) or deferred with `<template x-if>` (cheaper first paint).
@@ -776,7 +870,7 @@ real but it is paid for by the administrator, repeatedly.
 > against the shipped 0017 component**, whose real signature is:
 >
 > ```php
-> public function setActive(string $regionId, bool $active, string $replacementDefaultId, SetSalesRegionActive $a, LogRefusedPrivilegedAttempt $log): void
+> public function setActive(string $regionId, bool $active, string $replacementDefaultId, SetSalesRegionActive $setSalesRegionActive, LogRefusedPrivilegedAttempt $log): void
 > ```
 >
 > `$replacementDefaultId` carries **no default value** — 0017's own docblock states why (a defaulted
@@ -853,9 +947,115 @@ drafted (~249 inactive, ~255 rows) were also verified and corrected to **248 ina
 active**, against [database/schema.md](../../docs/database/schema.md#sales_regions) and the 249-entry
 ISO fixture.
 
-**Still blocking Phase 3 — nothing from this gate, but read the head of this document.** The dependency
-⚠️ and the [Dependencies & risks](#dependencies--risks) section still describe 0016/0017 as at the `new`
-stage, which is stale as of their closure; that correction, and the `config/modules.php` entry sketched
-in [Files](#files-to-createmodify) (whose shape predates a reading of 0013's shipped `groups`/`items`
-registry with its translation-key `heading`/`label` values), are **adjacent items flagged but not
-applied here** — this pass was scoped to the open-questions gate alone.
+**The two adjacent items this pass flagged have since been applied.** They were left out of the
+open-questions pass itself, which was scoped to the gate alone, and both landed immediately afterwards on
+2026-08-26: the dependency-state ⚠️ at the head of this document and the
+[Dependencies & risks](#dependencies--risks) bullets now record 0016/0017/0013 as **closed and in
+`done/`** rather than at the `new` stage, and the `config/modules.php` entry in
+[Files](#files-to-createmodify) was rewritten against 0013's shipped `groups`/`items` registry with its
+translation-key `heading`/`label` values, replacing the literal-English-copy sketch that would have broken
+`config:cache`. **Nothing from this gate blocks Phase 3.**
+
+## Phase 2 reconciliation (`code-reviewer`, 2026-08-26)
+
+`code-reviewer` ran Phase 2 (INVEST + this project's "first specialist review") and returned **PASS with
+five blocking findings, all fixed in place** — the same disposition style
+[0017's own Phase 2](done/0017-sales-region-tax-configuration-backend.md#phase-2-reconciliation-code-reviewer-2026-08-25)
+used. Every finding came from verifying this document's claims against `HEAD` rather than trusting its
+text, **including today's own corrections**. This section is the change log, not a second copy of the
+reasoning — each fix is applied to the sections above.
+
+**Blocking, fixed:**
+
+- **F-1 — the registry key was kebab-case, contradicting the one convention that already decided this
+  case by name.** The sketch wrote `items.sales-regions`; `naming.md`'s registry-mirroring rule names
+  `items.sales_regions` **verbatim** as the multi-word example, and this is the project's first
+  multi-word registry key, so the sketch would have shipped the convention's own counter-example.
+  Corrected in both code blocks, the lang bullet and a new acceptance criterion, with the three
+  identifiers that move together spelled out (`sidebar-nav.blade.php` renders
+  `data-test="sidebar-link-{{ $itemKey }}"` straight from the key, so the hook is
+  `sidebar-link-sales_regions`) and the three kebab-case *values* that correctly stay kebab
+  (`sales-regions.view`, `sales-regions.index`, `current_when`).
+- **F-2 — `resources/views/livewire/sales-regions.blade.php` was listed as *create* and already
+  exists.** 0017 shipped a placeholder body, exactly as 0004 did for `users.blade.php`. Changed to
+  **replace**, with two facts verified so Phase 3 does not rediscover them: 0017's four test files carry
+  **no** rendering assertion (so the rewrite breaks none of them), but all four go through
+  `Livewire::test()`, which renders this view — a Blade error here fails 0017's suite too.
+- **F-3 — three of the four binding items from the Q1–Q4 resolutions never reached the Gherkin.**
+  A1-a, A1-b and A4-a had acceptance criteria and (mostly) tests but no scenario, so `frontend-qa`
+  translating Gherkin → browser tests would have produced coverage silently missing the collapsed
+  section, its filter, the row-moves-on-activate behaviour and the orphaned refusal. Five scenarios
+  added, all rule-1/rule-3 conformant.
+- **F-4 — A3-a claimed to "upgrade" a Gherkin scenario that was never touched, and the untouched text
+  said the exact thing A3-a rejects.** The scenario read *"a tooltip explaining a replacement must be
+  named first"* — one of the two wordings A3-a explicitly refuses in favour of routing the administrator
+  to the edit form. Rewritten to match the resolution.
+- **F-5 — A4-a had an acceptance criterion and no test at all.** Added as **test 9b**, at component
+  level rather than browser level: `call('setActive', $defaultRow->id, false, '')` reproduces the
+  race's *state* deterministically with no concurrency, and the second half asserts the
+  `@unless ($showModal)` guard so the message can never render twice.
+
+**Non-blocking, fixed:**
+
+- **F-6 — D2 asserted "0017 guarantees **no ordering** for `$regions`".** False against `HEAD`: the
+  shipped `loadRegions()` does `orderBy('sort_order')->orderBy('name')`. Corrected while *keeping* the
+  view-side sort mandatory — the ordering is a private detail of a method this story does not own.
+- **F-7 — the boundary table named `routes/web.php`.** The route lives in its own
+  `routes/sales-regions.php` (URI `taxes/sales-regions`), per the one-file-per-area convention.
+- **F-8 — the boundary table omitted two shipped 0017 test files**, `SetDefaultSalesRegionTest.php` and
+  `RefusalLoggingTest.php`. Added, so "these four files are 0017's" is enumerable rather than partial.
+- **F-9 — the `SidebarModuleGatingTest.php` "modify" reason was wrong.** Both of 0013's Phase-4 guard
+  tests iterate `config('modules.items')` **generically**, so the registry↔route drift cross-check needs
+  no edit; acting on the stated reason would have hand-written a redundant copy of a check that already
+  generalises. Replaced with what actually needs adding, including the three *existing* tests that
+  enumerate hooks and will silently under-cover the new entry unless extended.
+- **F-10 — the trailing-parameter ⚠️ over-counted.** `mount()` takes no container-resolved parameter
+  either (not only `closeModal()`), and `save()` takes **two** action classes. Each of the four real
+  signatures is now listed exactly.
+- **F-11 — A1-b cross-referenced "test 17"**; it is test 16 (17 is the `assertNoJavaScriptErrors()`
+  sweep).
+- **F-12 — D9 credited 0017 with `errors.*` only.** It also owns `attributes.*`, which feeds
+  `validate()`'s third argument — renaming a leaf there breaks 0017's own messages.
+- **F-13 — the group and item shared one `receipt-percent` icon.** Item changed to `globe-americas`,
+  matching the shipped `settings` group's own group-icon/item-icon split. Both stubs verified present.
+
+**Verified as accurate rather than rewritten** (recorded so a later pass does not re-derive them): the
+`$regions` row shape, all twelve keys, byte-for-byte against `loadRegions()`; `replacementCandidates()`'s
+`{id, name}` "active, not-self" shape; `setActive()`'s three-argument no-default signature and the
+`SetSalesRegionActive` docblock sentence quoted for it; the claim that the **only** throwing branch is
+`! $active && $target->is_default`, and that it throws keyed `replacementDefaultId` (confirmed against
+the action and `lang/*/sales-regions.php`); Q1's claim that `$regions` loads the full catalog unfiltered
+and `#[Locked]` with no `$search`/filter/pagination property; the four runtime traps (`rate` is
+`string|null` from `decimal:3`; `kind` casts to a `SalesRegionKind` **instance**; `$regions` and
+`$editingRegionId` are `#[Locked]`; every bound property is non-null); the **254 / 6 active / 248
+inactive** counts (249-entry ISO fixture + 5 territories, `is_active => $country['alpha2'] === 'ES'`);
+D7 (no `label()` on the shipped enum) and D10 (no `Grouping` case); the four factory states
+`fiscalTerritoryOf()` / `isDefault()` / `inactive()` / `withRate()`; 0013's registry shape and both
+`navigation.php` files; Flux Free shipping **no** accordion/disclosure/tree component while `switch`,
+`textarea`, `select`, `modal`, `table`, `tooltip`, `error` and `skeleton` all exist; and every one of
+this file's 16 relative links resolving from its current two-levels-deep location.
+
+**INVEST verdict — PASS, with *Small* at the ceiling.** The "stays one story" argument was re-verified
+rather than accepted: every candidate split really does land in the one Blade file, and the only part
+that *could* be split cleanly (the sidebar entry — `config/modules.php` + two lang leaves + test
+extensions, no Blade collision) is three lines of registry data without which the screen this story
+builds is unreachable from the UI, so splitting it would ship a screen nothing links to. **Independent**
+✅ — all three dependencies (0016, 0017, 0013) are closed and in `done/`, verified against `HEAD` and not
+merely against their task files. **Estimable / Testable** ✅. The size risk is real and is recorded rather
+than waved through: if Phase 3 overruns, the carve-out candidates are the **client-side filter** inside
+the collapsed section (test 16's filter half, and the Q1(a) criterion's filter clause) and **browser test
+15** (the disabled-control hover/`pointer-events` check, which duplicates a technique already pinned on
+two other screens) — in that order. Neither is blocking, and neither may be dropped silently.
+
+**Two things Phase 3 must do before writing markup, not after:**
+
+1. **Re-verify `App\Livewire\SalesRegions\Index`'s real signatures**, as the Q4 block already instructs —
+   this review confirms them at today's `HEAD` and that guarantee expires the moment anything touches
+   0017's component.
+2. **Decide `x-show` vs `<template x-if>` for the 248 collapsed rows by measurement**, per Q1's
+   *left to Phase 3* clause, and record the choice. Note the constraint the two interact on: A1-b
+   requires the disclosure state and filter text to survive a Livewire round trip, so whichever is
+   chosen, the Alpine state must live on an element the morph preserves, with stable `wire:key`s beneath
+   it.
+
+**Phase 3 may start.**
