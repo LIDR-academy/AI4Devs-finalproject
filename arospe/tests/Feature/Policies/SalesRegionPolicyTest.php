@@ -1,12 +1,9 @@
 <?php
 
-// Story 0017 — App\Policies\SalesRegionPolicy does not exist yet. RED-phase: every test below is
-// expected to fail because there is no policy to auto-discover for App\Models\SalesRegion, so
-// Gate::allows() silently denies every ability (Laravel's Gate resolves an undefined ability to
-// `false` rather than throwing) -- except the Super Admin bypass test, which is expected to PASS
-// even now, since Gate::before grants a Super Admin actor before any policy is ever consulted
-// (verified against app/Providers/AppServiceProvider.php's Gate::before closure) and does not
-// require the target ability to resolve to anything at all.
+// Story 0017 — App\Policies\SalesRegionPolicy, auto-discovered for App\Models\SalesRegion by
+// name alone (no provider registration; see conventions/base-standards.md). The Super Admin
+// bypass test passes regardless of the policy's own logic, since Gate::before grants a Super
+// Admin actor before any policy is ever consulted.
 //
 // Two abilities only (D8): sales-regions.create / sales-regions.delete get no policy method,
 // because nothing in this story or 0018 calls them -- the catalog is fixed, seeded, and has no

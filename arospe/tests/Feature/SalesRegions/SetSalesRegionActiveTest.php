@@ -1,15 +1,13 @@
 <?php
 
-// Story 0017 — App\Actions\SalesRegions\SetSalesRegionActive and App\Livewire\SalesRegions\Index
-// do not exist yet. Per the task file's file-allocation table, this file holds the deactivation
-// guard and the atomic swap (including the forced-rollback proof), via
+// Story 0017 — App\Actions\SalesRegions\SetSalesRegionActive and App\Livewire\SalesRegions\Index.
+// Per the task file's file-allocation table, this file holds the deactivation guard and the
+// atomic swap (including the forced-rollback proof), via
 // Livewire::test(Index::class)->call('setActive', ...) -- the component's own entry point --
 // plus its own direct app(SetSalesRegionActive::class)(...) authorization test, split out
 // because its failure-mode assertions do not belong mixed into IndexTest.php's edit happy path.
-//
-// RED-phase: neither class exists, so every test below is expected to fail on a
-// `Class "App\Livewire\SalesRegions\Index" not found` (or the action-class equivalent) error, not
-// on an assertion mismatch.
+// Also holds (added during Phase 4's two security-audit rounds) the F-1/F-2/R-2 caller-instance-
+// trust regression tests -- see docs/security/model-instance-trust.md.
 //
 // setActive()'s real signature has NO default for $replacementDefaultId (Phase 2 finding F-1: a
 // defaulted parameter cannot precede the trailing container-resolved LogRefusedPrivilegedAttempt
@@ -226,10 +224,10 @@ test('naming an inactive entry as the replacement directly (action level) is ref
 // Model::$dispatcher on every test's fresh application boot), so it cannot leak into any other
 // test in the suite.
 //
-// TODO(Phase 3 step 3): this is also revert-check 3 itself once SetSalesRegionActive exists --
-// temporarily remove its outer DB::transaction() wrapper and re-run this test; it must go red
-// with the CORRECTED symptom (promotion persisted, old row's is_active stays true), not the
-// original (pre-Phase-1) symptom.
+// This is also revert-check 3 itself: temporarily removing SetSalesRegionActive's outer
+// DB::transaction() wrapper and re-running this test reddens with the CORRECTED symptom
+// (promotion persisted, old row's is_active stays true) -- performed and confirmed during the
+// Phase 3 reconciliation (see the task file's "Mandatory revert-checks" table, #3).
 // =====================================================================
 
 test('a forced failure on the deactivation write rolls back the just-completed promotion too', function () {

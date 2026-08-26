@@ -1,15 +1,13 @@
 <?php
 
-// Story 0017 — App\Actions\SalesRegions\SetDefaultSalesRegion does not exist yet. Added during
-// Phase 1 reconciliation (backend-qa gap): the direct, action-level call
+// Story 0017 — App\Actions\SalesRegions\SetDefaultSalesRegion. Added during Phase 1
+// reconciliation (backend-qa gap): the direct, action-level call
 // app(SetDefaultSalesRegion::class)(...), bypassing the Livewire layer entirely, proven
 // independently of the component per the 0008a/0015b convention that an action must be
 // independently callable and independently authorized. This file holds the D10 inactive-target
-// refusal and LogRefusedPrivilegedAttempt::authorize()'s own refusal, at the action level.
-//
-// RED-phase: the class does not exist, so every test below is expected to fail on
-// `Class "App\Actions\SalesRegions\SetDefaultSalesRegion" not found` (or an equivalent
-// autoload/container-resolution error), not on an assertion mismatch.
+// refusal and LogRefusedPrivilegedAttempt::authorize()'s own refusal, at the action level, plus
+// (added during Phase 4's two security-audit rounds) the F-1/F-2 caller-instance-trust
+// regression tests -- see docs/security/model-instance-trust.md.
 //
 // Component-mediated coverage of the same rule (the single-default invariant's "both halves",
 // the old-default-specifically check, and the idempotent re-set) lives in

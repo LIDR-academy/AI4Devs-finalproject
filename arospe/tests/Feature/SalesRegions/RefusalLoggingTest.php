@@ -2,10 +2,8 @@
 
 // Story 0017 — Sales Regions is the "third admin screen" the copyable refusal-logging recipe in
 // docs/architecture/authorization.md describes prospectively (story 0015b), and this file is its
-// first real proof. Neither App\Livewire\SalesRegions\Index nor any of the three
-// app/Actions/SalesRegions/* action classes exist yet, so every test below is expected to fail on
-// a missing-class error, not on an unrelated setup failure -- no Log::warning/Log::info is ever
-// recorded because nothing exists to record it.
+// first real proof, exercising App\Livewire\SalesRegions\Index and the three
+// app/Actions/SalesRegions/* action classes.
 //
 // =====================================================================================
 // COVERAGE CHECKLIST -- the four Gate-shaped sites (mount() excepted, mirroring
@@ -290,9 +288,11 @@ test('the D3 (default-deactivation-requires-replacement) refusal is logged, dist
 });
 
 // =====================================================================
-// Must-not-over-log — a permitted save(), setDefault() and setActive() each produce exactly the
-// new Log::info('Sales region updated', [...]) success line (Phase 2 finding F-5) and NO
-// Log::warning refusal line.
+// Must-not-over-log — a permitted save(), setDefault() and setActive() each produce exactly one
+// Log::info success line (Phase 2 finding F-5) and NO Log::warning refusal line. Each method's
+// message is distinct ('Sales region updated' / 'Sales region default changed' / 'Sales region
+// active state changed', Phase 5 code review finding F-5) rather than one shared string, so an
+// operator reading the audit trail can tell the three operations apart.
 // =====================================================================
 
 test('a permitted save produces no refusal entry, only the success line', function () {
@@ -334,7 +334,7 @@ test('a permitted setDefault produces no refusal entry, only the success line', 
 
     Log::shouldNotHaveReceived('warning');
     Log::shouldHaveReceived('info')
-        ->withArgs(fn (string $message, array $context): bool => $message === 'Sales region updated'
+        ->withArgs(fn (string $message, array $context): bool => $message === 'Sales region default changed'
             && ($context['actor_id'] ?? null) === $actor->id
             && ($context['sales_region_id'] ?? null) === $candidate->id)
         ->once();
@@ -356,9 +356,10 @@ test('a permitted setActive produces no refusal entry, only the success line', f
 
     Log::shouldNotHaveReceived('warning');
     Log::shouldHaveReceived('info')
-        ->withArgs(fn (string $message, array $context): bool => $message === 'Sales region updated'
+        ->withArgs(fn (string $message, array $context): bool => $message === 'Sales region active state changed'
             && ($context['actor_id'] ?? null) === $actor->id
-            && ($context['sales_region_id'] ?? null) === $region->id)
+            && ($context['sales_region_id'] ?? null) === $region->id
+            && ($context['active'] ?? null) === true)
         ->once();
 
     expect($region->fresh()->is_active)->toBeTrue();

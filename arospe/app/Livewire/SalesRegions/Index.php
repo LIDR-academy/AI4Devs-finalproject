@@ -173,10 +173,17 @@ class Index extends Component
             'replacementDefaultId' => $this->replacementDefaultRules(),
         ], attributes: __('sales-regions.attributes'));
 
-        $code = $validated['code'] === '' ? null : $validated['code'];
-        $description = $validated['description'] === '' ? null : $validated['description'];
-        $rate = $validated['rate'] === '' ? null : $validated['rate'];
-        $replacementDefaultId = $validated['replacementDefaultId'] === '' ? null : $validated['replacementDefaultId'];
+        // Narrowed from $validated's mixed values at the point of use, the
+        // same convention Users\Index::save() follows for its own
+        // $validated reads -- SalesRegion::find() widens to
+        // SalesRegion|Collection|null for a non-string key, which is what
+        // Larastan (finding F-1, Phase 5 code review) flagged: this repo's
+        // one PHPStan-level-7 gate had never actually run against this
+        // story until that review.
+        $code = $validated['code'] === '' ? null : (string) $validated['code'];
+        $description = $validated['description'] === '' ? null : (string) $validated['description'];
+        $rate = $validated['rate'] === '' ? null : (string) $validated['rate'];
+        $replacementDefaultId = $validated['replacementDefaultId'] === '' ? null : (string) $validated['replacementDefaultId'];
 
         $replacementDefault = $replacementDefaultId !== null
             ? SalesRegion::find($replacementDefaultId)
@@ -190,6 +197,17 @@ class Index extends Component
 
         $setSalesRegionActive($target, $this->active, $replacementDefault);
 
+        // Phase 5 code review finding F-5: this success line, setDefault()'s
+        // and setActive()'s used to be byte-identical, so an operator
+        // reading the audit trail could not tell a rate edit from a default
+        // move from a deactivation apart -- the one distinction worth
+        // having on an otherwise identical shape. Three distinct messages,
+        // matching Roles\Index's 'Role saved' / 'Role deleted' and
+        // Users\Index's 'User created' / 'User updated' / 'User deleted'
+        // precedent. This is the component's own audit trail for "an
+        // administrator changed this row", not a rule the action itself
+        // enforces -- authorization.md's generic-key rule binds the
+        // REFUSAL line only, and is unaffected by this.
         Log::info('Sales region updated', [
             'actor_id' => Auth::id(),
             'sales_region_id' => $target->id,
@@ -224,7 +242,7 @@ class Index extends Component
 
         $setDefaultSalesRegion($target);
 
-        Log::info('Sales region updated', [
+        Log::info('Sales region default changed', [
             'actor_id' => Auth::id(),
             'sales_region_id' => $target->id,
         ]);
@@ -266,9 +284,10 @@ class Index extends Component
 
         $setSalesRegionActive($target, $active, $replacementDefault);
 
-        Log::info('Sales region updated', [
+        Log::info('Sales region active state changed', [
             'actor_id' => Auth::id(),
             'sales_region_id' => $target->id,
+            'active' => $active,
         ]);
 
         $this->loadRegions();

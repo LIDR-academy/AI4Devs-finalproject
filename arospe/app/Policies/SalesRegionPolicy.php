@@ -21,11 +21,22 @@ use App\Models\User;
 class SalesRegionPolicy
 {
     /**
+     * Named once on the class that owns the rule, per naming.md's
+     * "name a permission once on the class that owns the rule" convention
+     * (RolePolicy's ADMINISTRATOR_LEVEL_PERMISSION / ROLE_MANAGEMENT_PERMISSION
+     * is the pattern this follows -- UserPolicy's own literals are a
+     * documented, deferred cleanup candidate, not the shape to copy).
+     */
+    public const VIEW_PERMISSION = 'sales-regions.view';
+
+    public const EDIT_PERMISSION = 'sales-regions.edit';
+
+    /**
      * Determine whether the user can view the Sales Regions screen.
      */
     public function viewAny(User $actor): bool
     {
-        return $actor->hasPermissionTo('sales-regions.view');
+        return $actor->hasPermissionTo(self::VIEW_PERMISSION);
     }
 
     /**
@@ -50,6 +61,6 @@ class SalesRegionPolicy
      */
     public function update(User $actor, SalesRegion $target): bool
     {
-        return $actor->hasPermissionTo('sales-regions.edit');
+        return $actor->hasPermissionTo(self::EDIT_PERMISSION);
     }
 }

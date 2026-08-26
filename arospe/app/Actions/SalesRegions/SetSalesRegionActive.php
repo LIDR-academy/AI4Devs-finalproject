@@ -68,16 +68,28 @@ class SetSalesRegionActive
      * runs when $target->is_default is true, so both sides of such a race
      * would need is_default=true simultaneously, the exact state this story
      * exists to forbid (Phase 4 RE-audit finding R-1a, which corrected this
-     * docblock's original, wrong framing). What ordering-then-locking here
-     * actually buys is consistency with SetDefaultSalesRegion's OWN single
-     * ordered lock query (see that action's docblock, R-1b/R-1): as long as
-     * every multi-row lock acquisition against this table sorts its rows by
-     * primary key ascending in one query, any two transactions needing an
-     * overlapping row set always request it in the same order, which is
-     * what actually prevents a circular wait -- regardless of which of the
-     * two actions' queries originates the request. `attempts: 3` is a
-     * second, independent layer for whatever a residual race still reaches
-     * (e.g. a row outside either query's pre-locked set).
+     * docblock's original, wrong framing).
+     *
+     * What ordering-then-locking here DOES buy: within a single such query,
+     * any two transactions needing an overlapping subset of these two rows
+     * request them in the same order. What it does NOT fully buy, corrected
+     * by Phase 5 code review finding F-3 (a second over-claim in this same
+     * docblock): this method's own promotion path still acquires TWO
+     * separate lock sets in sequence -- this query, then the nested
+     * SetDefaultSalesRegion call's own single-but-separate ordered query
+     * over `is_default` (an unindexed, near-full-table scan) -- so a
+     * concurrent plain SetDefaultSalesRegion(other) call can still hold a
+     * row this sequence needs while waiting on one it holds, the same
+     * two-separate-lock-sets shape R-1b found deadlockable. What actually
+     * closes THAT residual window is `attempts: 3`: Laravel only retries a
+     * deadlock at `transactions === 1`, and the nested call's own inner
+     * transaction runs as a SAVEPOINT while this one is open, so a real
+     * deadlock there rethrows a DeadlockException that THIS (outer)
+     * transaction's `attempts: 3` retries into a converged state -- not the
+     * lock ordering. See docs/security/model-instance-trust.md's
+     * "Re-audit round 2" section for the full reasoning and why closing
+     * this residually (indexing is_default, or acquiring the full union of
+     * rows up front) is out of this story's scope.
      */
     public function __invoke(SalesRegion $region, bool $active, ?SalesRegion $replacementDefault = null): SalesRegion
     {

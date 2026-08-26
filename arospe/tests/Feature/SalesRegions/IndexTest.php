@@ -1,17 +1,11 @@
 <?php
 
 // Story 0017 — App\Livewire\SalesRegions\Index, App\Concerns\SalesRegionValidationRules and the
-// three app/Actions/SalesRegions/* action classes do not exist yet. Per the task file's
-// file-allocation table, this file holds the route-level HTTP block, and Livewire::test()
-// coverage of edit / rate validation / setDefault. setActive() coverage (the deactivation guard,
-// the atomic swap, the forced-rollback proof) lives in SetSalesRegionActiveTest.php instead, per
-// that same table's own split.
-//
-// RED-phase: every test below is expected to fail on a missing-class error
-// (`Class "App\Livewire\SalesRegions\Index" not found` and similar), not on an assertion
-// mismatch — except the HTTP-level "guest is redirected" test, which exercises no story-0017
-// class at all and is expected to fail differently: route('sales-regions.index') itself does not
-// exist yet, so RouteNotFoundException is the expected RED signal there.
+// three app/Actions/SalesRegions/* action classes. Per the task file's file-allocation table,
+// this file holds the route-level HTTP block, and Livewire::test() coverage of edit / rate
+// validation / setDefault. setActive() coverage (the deactivation guard, the atomic swap, the
+// forced-rollback proof) lives in SetSalesRegionActiveTest.php instead, per that same table's
+// own split.
 //
 // Arranged with SalesRegionFactory throughout (never SalesRegionSeeder's 249 rows), except the
 // one deliberate exception named by the task file: the seeder cross-check test at the bottom of
@@ -538,4 +532,95 @@ test('re-running the seeder after this storys actions have configured rows leave
         ->and($configuredAfter->rate)->toBe('9.999')
         ->and($configuredAfter->is_active)->toBeFalse()
         ->and($newDefaultAfter->is_default)->toBeTrue();
+});
+
+// =====================================================================
+// Phase 5 code review finding F-4: "the component public surface" is the interface story 0018
+// binds to, and the task file says so explicitly -- but nothing pinned its shape, its per-row
+// canEdit hint, or replacementCandidates() before this. A regression renaming a key, dropping a
+// field, or returning the wrong Gate result would have passed every other test in this file.
+// =====================================================================
+
+test('each row exposes the full $regions shape the component public surface promises', function () {
+    $parent = SalesRegion::factory()->create();
+    $region = SalesRegion::factory()->fiscalTerritoryOf($parent)->withRate('7.500')->create([
+        'code' => 'ES-X',
+        'description' => 'A fiscal territory',
+        'is_active' => true,
+        'is_default' => false,
+        'sort_order' => 3,
+    ]);
+
+    $actor = salesRegionsIndexTestActor(); // holds both view and edit
+    $this->actingAs($actor);
+
+    $rows = collect(Livewire::test(Index::class)->get('regions'));
+
+    expect($rows->firstWhere('id', $region->id))->toBe([
+        'id' => $region->id,
+        'slug' => $region->slug,
+        'code' => 'ES-X',
+        'name' => $region->name,
+        'description' => 'A fiscal territory',
+        'rate' => '7.500',
+        'kind' => SalesRegionKind::FiscalTerritory,
+        'parentId' => $parent->id,
+        'isDefault' => false,
+        'isActive' => true,
+        'sortOrder' => 3,
+        'canEdit' => true,
+    ]);
+});
+
+test('canEdit mirrors what SalesRegionPolicy would actually authorize for the row', function () {
+    $region = SalesRegion::factory()->create();
+
+    $editor = salesRegionsIndexTestActor(); // sales-regions.view + sales-regions.edit
+    $this->actingAs($editor);
+
+    $editorRows = collect(Livewire::test(Index::class)->get('regions'));
+    expect($editorRows->firstWhere('id', $region->id)['canEdit'])->toBeTrue();
+
+    $viewer = salesRegionsIndexTestActor(['sales-regions.view']); // no sales-regions.edit
+    $this->actingAs($viewer);
+
+    $viewerRows = collect(Livewire::test(Index::class)->get('regions'));
+    expect($viewerRows->firstWhere('id', $region->id)['canEdit'])->toBeFalse();
+});
+
+// =====================================================================
+// replacementCandidates() -- D10's third expression ("active, not self"), the one path the
+// action-level revert-checks don't reach: an inactive entry or the row being edited must never be
+// offerable as a replacement, no matter what the form later submits.
+// =====================================================================
+
+test('replacementCandidates excludes inactive entries and the entry currently being edited', function () {
+    $editing = SalesRegion::factory()->create(['is_active' => true, 'name' => 'Being Edited']);
+    $inactiveCandidate = SalesRegion::factory()->inactive()->create(['name' => 'Inactive Candidate']);
+    $eligibleCandidate = SalesRegion::factory()->create(['is_active' => true, 'name' => 'Eligible Candidate']);
+
+    $actor = salesRegionsIndexTestActor();
+    $this->actingAs($actor);
+
+    $candidateIds = collect(
+        Livewire::test(Index::class)
+            ->call('openEditModal', $editing->id)
+            ->get('replacementCandidates')
+    )->pluck('id');
+
+    expect($candidateIds)->toContain($eligibleCandidate->id)
+        ->not->toContain($inactiveCandidate->id)
+        ->not->toContain($editing->id);
+});
+
+test('replacementCandidates includes every active entry before any row is being edited', function () {
+    SalesRegion::factory()->create(['is_active' => true]);
+    SalesRegion::factory()->inactive()->create();
+
+    $actor = salesRegionsIndexTestActor();
+    $this->actingAs($actor);
+
+    $candidateCount = Livewire::test(Index::class)->get('replacementCandidates');
+
+    expect($candidateCount)->toHaveCount(SalesRegion::where('is_active', true)->count());
 });
