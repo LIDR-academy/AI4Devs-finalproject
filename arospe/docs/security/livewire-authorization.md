@@ -13,6 +13,7 @@ was verified against the installed `livewire/livewire` v4 source, not inferred f
   - [Gating a method is not the same as knowing when the gate fired](#gating-a-method-is-not-the-same-as-knowing-when-the-gate-fired)
 - [`#[Locked]` is what makes `Rule::unique()->ignore()` safe here](#locked-is-what-makes-ruleunique-ignore-safe-here)
 - [Every server-derived property is `#[Locked]`, not just the ids](#every-server-derived-property-is-locked-not-just-the-ids)
+  - [Confirmed safe: `wire:click="$toggle('prop')"` is the same write channel as `wire:model`, and `#[Locked]` still binds it](#confirmed-safe-wireclicktoggleprop-is-the-same-write-channel-as-wiremodel-and-locked-still-binds-it)
 - [Authorization that lives only in the component is bypassed by every other call site of the action](#authorization-that-lives-only-in-the-component-is-bypassed-by-every-other-call-site-of-the-action)
 
 ## `/livewire/update` is a second entry point, and only an allow-listed subset of route middleware follows the component there
@@ -349,6 +350,56 @@ a state production can never reach (see
 **Rule: locking a derived property is a change to every test that wrote it — the coverage each one
 carried must survive the rewrite, through a mechanism the application itself owns.**
 
+### Confirmed safe: `wire:click="$toggle('prop')"` is the same write channel as `wire:model`, and `#[Locked]` still binds it
+
+Task 0018 replaced a bare `wire:model="active"` with `wire:click="$toggle('active')"` on the Sales
+Regions edit modal's checkbox, for a real-browser automation reason unrelated to security (recorded in
+that story's own task file). Because it *looks* like a method call, the question it raises is whether it
+opens a second, ungated write path. **It does not** — and the reasoning is worth keeping so the next
+screen that makes the same substitution does not re-derive it.
+
+Verified against the installed vendor source, not inferred:
+
+```js
+// vendor/livewire/livewire/dist/livewire.esm.js
+wireProperty("$toggle", (component) => (name, live = true) => {
+  return component.$wire.set(name, !component.$wire.get(name), live);
+});
+
+wireProperty("$set", (component) => async (property, value, live = true) => {
+  dataSet(component.reactive, property, value);
+  if (live) {
+    component.queueUpdate(property, value);      // <-- the `updates` payload, same as wire:model
+    return fireAction(component, "$set");
+  }
+  return Promise.resolve();
+});
+```
+
+Four properties follow, and each one is why this is a non-event:
+
+- **`$toggle` is client-side sugar with no server counterpart.** It resolves to `$set`, whose only
+  server-visible effect is `queueUpdate()` — an entry in the request's **`updates`** payload, the
+  identical channel a `wire:model` write uses. There is no second pipeline.
+- **The `$set` *call* is a no-op server-side.** `Livewire\Features\SupportMagicActions` lists `$set`
+  in `$magicActions` and `$returnEarly()`s on it, so no method is dispatched and no new callable
+  surface exists.
+- **`#[Locked]` binds it**, because locking is enforced on the `updates` channel via
+  `SupportLockedProperties\BaseLocked::update()`. Confirmed by execution rather than by reading:
+  `Livewire::test(SalesRegions\Index::class)->set('regions', [])` and `->set('editingRegionId', 'forged')`
+  both raise `CannotUpdateLockedPropertyException`.
+- **The markup grants the client nothing it did not already have.** The property name is a literal in
+  the compiled Blade, but an attacker never needed it — a hand-crafted `updates` payload can name any
+  *unlocked* public property regardless of what the view binds. The markup is not the boundary;
+  `#[Locked]` is.
+
+**Rule: choosing between `wire:model`, `wire:model.live` and `wire:click="$toggle(...)"` is a
+reactivity decision, never an authorization one.** All three land in the same `updates` payload, none
+of them runs a `Gate` check, and none of them persists anything — the persisting method
+(`save()` here) is where the ability is asked. The one behavioural difference worth knowing is
+unrelated to security: `$toggle` defaults to `live = true`, so it forces a `/livewire/update` round
+trip per click where a deferred `wire:model` would batch with the next action.
+
 ## Authorization that lives only in the component is bypassed by every other call site of the action
 
 The rule for this repo: **a privilege rule about *which* role may be assigned belongs in the action,
@@ -382,7 +433,9 @@ Two rules to carry forward, both proven by how this was closed:
   [authorization-patterns.md](authorization-patterns.md#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
   for why the two Super Admin refusals are direct throws rather than `Gate` checks.
 
-_Last updated: 2026-08-24 — Task 0015b (log refused privileged attempts): this page's central rule — gate every method that mutates **or discloses** — has been stated since task 0004 and shipped in full since task 0015, and it turns out to be only half a property. Added **"Gating a method is not the same as knowing when the gate fired"**, the observability half, with the ✅/❌ pair (the shipped `$logRefusedPrivilegedAttempt->authorize(...)` call site against the bare `Gate::authorize(...)` every one of these sites carried until this story) and why it matters **more** on a Livewire component than on an ordinary route: every probe is the same `POST /livewire/update`, so a refused fiftieth attempt leaves no access-log line shaped like the attempt. Three component-specific consequences: the helper is **method**-injected here (Livewire resolves the unmatched typed parameter, so no call site changes) while the actions behind the screen constructor-inject it for the documented `__invoke()`-is-a-public-contract reason; `mount()` is the one deliberate exception, and the reason is **this page's own allow-list table read in the opposite direction** from the `password.confirm` row directly above it (`can:`'s *presence* on `PersistentMiddleware` is what makes a log there unreachable over HTTP, where `RequirePassword`'s *absence* is what forced a guard into the method) — with the tripwire that would reverse it; and a disclosure gate still needs its state assertion, since `Log::spy()` cannot distinguish a gate that ran before the assignments from one that ran after. The line's own shape, its two message strings and the shared-action log ceiling are pointed at in [architecture/authorization.md](../architecture/authorization.md#recording-a-refusal--what-every-gate-owes-the-audit-trail) rather than duplicated. **Nothing else on this page changed meaning** — verified against the diff: this story adds no `#[Locked]` property, no new disclosure gate, no component-only rule, and changes no refusal's class, status or message._
+_Last updated: 2026-08-26 — Task 0018 (Sales Regions & Taxes screen, Phase 4 audit): added the **confirmed-safe** subsection on `wire:click="$toggle('prop')"`, this repo's first use of a Livewire magic action as a form binding. That story swapped a bare `wire:model` for it on the edit modal's `active` checkbox for a real-browser-automation reason, and the substitution *looks* like it opens a second, ungated write path. It does not: `$toggle` is client-side sugar resolving to `$set`, whose only server-visible effect is `queueUpdate()` — the same `updates` payload `wire:model` writes to — while the `$set` **call** is `$returnEarly()`d by `SupportMagicActions`, so no method is dispatched. `#[Locked]` binds it unchanged, verified by execution (`->set('regions', [])` / `->set('editingRegionId', …)` both raise `CannotUpdateLockedPropertyException` on the shipped component), which is the load-bearing half: the markup is not the boundary, the lock is. Recorded as a rule — choosing between `wire:model`, `wire:model.live` and `$toggle` is a **reactivity** decision, never an authorization one — so the next screen hitting the same automation bug does not re-open the question. **Nothing else on this page changed meaning**: story 0018 is view-layer only, adds no `#[Locked]` property, no gate and no component-only rule, and every gate on that screen lives in story 0017's already-audited component class._
+
+_Previously: 2026-08-24 — Task 0015b (log refused privileged attempts): this page's central rule — gate every method that mutates **or discloses** — has been stated since task 0004 and shipped in full since task 0015, and it turns out to be only half a property. Added **"Gating a method is not the same as knowing when the gate fired"**, the observability half, with the ✅/❌ pair (the shipped `$logRefusedPrivilegedAttempt->authorize(...)` call site against the bare `Gate::authorize(...)` every one of these sites carried until this story) and why it matters **more** on a Livewire component than on an ordinary route: every probe is the same `POST /livewire/update`, so a refused fiftieth attempt leaves no access-log line shaped like the attempt. Three component-specific consequences: the helper is **method**-injected here (Livewire resolves the unmatched typed parameter, so no call site changes) while the actions behind the screen constructor-inject it for the documented `__invoke()`-is-a-public-contract reason; `mount()` is the one deliberate exception, and the reason is **this page's own allow-list table read in the opposite direction** from the `password.confirm` row directly above it (`can:`'s *presence* on `PersistentMiddleware` is what makes a log there unreachable over HTTP, where `RequirePassword`'s *absence* is what forced a guard into the method) — with the tripwire that would reverse it; and a disclosure gate still needs its state assertion, since `Log::spy()` cannot distinguish a gate that ran before the assignments from one that ran after. The line's own shape, its two message strings and the shared-action log ceiling are pointed at in [architecture/authorization.md](../architecture/authorization.md#recording-a-refusal--what-every-gate-owes-the-audit-trail) rather than duplicated. **Nothing else on this page changed meaning** — verified against the diff: this story adds no `#[Locked]` property, no new disclosure gate, no component-only rule, and changes no refusal's class, status or message._
 
 _Previously: 2026-08-24 — Task 0015a (step-up authentication for privileged Users actions): the `password.confirm` row of the `PersistentMiddleware` table has carried a bare ❌ since task 0004 with nothing in the repo acting on it; this story is that code, so the row gains its **worked example** as a new subsection. It is the clearest case in the table because the naive fix is not merely weaker — `->middleware(['password.confirm'])` on `routes/users.php` is *inert* against the mutations it would be added for (they run on `/livewire/update`) while simultaneously blocking a name-only edit the step-up layer deliberately exempts. Kept to the ❌/✅ pair plus the three properties that generalise (route middleware being unavailable is what **forces** the guard into the method; an in-method guard can be conditional where middleware cannot, which is a gain rather than a workaround; and it runs after every `Gate::authorize()` on its branch), with the full rule set pointed at in the new [step-up-authentication.md](step-up-authentication.md) rather than duplicated. Recorded `settings/security` as the row's still-unfixed case. **Nothing else on this page changed meaning** — verified against the diff rather than assumed: this story adds no `#[Locked]` property, no disclosure gate, and no component-only rule (its one component-level guard, `deleteUser()`'s, is documented as belonging there because no `DeleteUser` action exists to move it to)._
 

@@ -111,6 +111,13 @@ repo must follow — always with a real code example pulled from this repository
   **or discloses** re-authorizes as its first statement, why `#[Locked]` plus a database-read assignment
   is what keeps `Rule::unique()->ignore()` safe, why server-derived properties must be locked too, and
   why a privilege rule enforced only in the component is bypassed by every other call site of the action.
+  Since task 0018 it also carries the **confirmed-safe** verdict on `wire:click="$toggle('prop')"` — the
+  repo's first magic action used as a form binding, adopted on the Sales Regions modal for a real-browser
+  automation reason: it is client-side sugar over `$set`, which writes the *same* `updates` payload
+  `wire:model` does, while the `$set` call itself is `$returnEarly()`d server-side, so it dispatches no
+  method and `#[Locked]` binds it unchanged (verified by execution, not by reading) — with the rule that
+  choosing between `wire:model`, `wire:model.live` and `$toggle` is a **reactivity** decision and never
+  an authorization one.
 - [Soft-delete security patterns](soft-delete-patterns.md) — the rules that follow from putting
   `SoftDeletes` on this app's only authenticatable model (`App\Models\User`, task 0005): why the
   `SoftDeletingScope` *is* the sign-in refusal rather than one check among several, why
