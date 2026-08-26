@@ -208,7 +208,7 @@ Conflating listing with resolution is the single likeliest cross-wiring in the w
 
 ### D-5 — Weight and price inputs are `type="text" inputmode="decimal"`, never `type="number"`, and a Spanish decimal comma is accepted.
 
-Not a new decision — [0018](in-progress/0018-sales-region-tax-configuration-ui.md) **D1** and
+Not a new decision — [0018](done/0018-sales-region-tax-configuration-ui.md) **D1** and
 [0017](done/0017-sales-region-tax-configuration-backend.md) **D12** already settled this for the tax-rate
 field, and the reasoning transfers verbatim: a native `<input type="number">` does its own
 client-side parsing, so `4,95` is either refused as a keystroke or coerced before submission and the
@@ -278,7 +278,7 @@ always has a concrete `$rate`) avoids editing a file this story does not own. Ra
   inherited from 0024 **R-4**). Interpolate it directly; never `(float)` it and never compare it
   numerically in a Blade `@if`. A `0.00` rate is a **legal free-shipping rate** and must render as
   `0,00 €`, so the naive truthiness test `@if ($rate['price'])` is forbidden — the same trap
-  [0018](in-progress/0018-sales-region-tax-configuration-ui.md) **D6** records for a `0.000` tax rate.
+  [0018](done/0018-sales-region-tax-configuration-ui.md) **D6** records for a `0.000` tax rate.
 - **Zone badge** — a `flux:badge` carrying the zone name. **Neutral `zinc`**, one colour for all
   zones: unlike `UserStatus`, zones are admin-created with no fixed set, so per-zone colouring would
   require inventing a mapping nobody has agreed.
@@ -887,7 +887,7 @@ rendered unavailable rather than failing on click. The rate resolver is nowhere 
   though it were unset.
 - **R-4 — `type="number"` sneaking into a weight or price field**, defeating **D-5** silently and
   invisibly to every `set()`-based test. Exactly the risk
-  [0018](in-progress/0018-sales-region-tax-configuration-ui.md) records for its own rate field.
+  [0018](done/0018-sales-region-tax-configuration-ui.md) records for its own rate field.
 - **R-5 — the sidebar `:current` wildcard.** A `shipping.*` match would highlight this item on
   0034's zones screen and vice versa (**D-10**).
 - **R-6 — two stories land in the sidebar and the locale files.** 0034 and 0037 both add to both, and
@@ -929,7 +929,7 @@ relitigated:
   `UpdateShippingRate::__invoke(ShippingRate $rate, array $attributes)` imposes no restriction, and
   the zone-delete guard's own error message instructs administrators to reassign rates — so
   reassignment must work. No extra confirmation: it is an edit like any other, and it is reversible.
-- **The decimal-input format is not open** — [0018](in-progress/0018-sales-region-tax-configuration-ui.md) **D1**
+- **The decimal-input format is not open** — [0018](done/0018-sales-region-tax-configuration-ui.md) **D1**
   and [0017](done/0017-sales-region-tax-configuration-backend.md) **D12** already settled it project-wide
   (**D-5**).
 
@@ -962,7 +962,7 @@ Three notes on how this debate ran, recorded for honesty:
   prove this" conclusion from the errors-log precedent. All three are recorded in **D-2** with file
   and line references, because this is the kind of claim that must not be taken on trust.
 - **`frontend-qa` raised the decimal-input format as a blocking ambiguity; it was resolved from
-  precedent rather than escalated.** [0018](in-progress/0018-sales-region-tax-configuration-ui.md) **D1** and
+  precedent rather than escalated.** [0018](done/0018-sales-region-tax-configuration-ui.md) **D1** and
   [0017](done/0017-sales-region-tax-configuration-backend.md) **D12** had already settled it for the tax
   field. It is recorded here as **D-5** rather than as an open question, which is what the
   [Uncertainty Handling Rule](../../docs/contracts.md#uncertainty-handling-rule) asks for: ask only
