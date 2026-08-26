@@ -24,20 +24,24 @@ frontend (related_task_id: **0017**) | includes database-expert: **no**
 > [contracts.md](../../docs/contracts.md#parallel-agent-file-ownership-rule) exists to prevent, and
 > the same reasoning [story 0006](done/0006-users-list-editor-ui.md) recorded for the Users screen.
 
-> ⚠️ **Dependency-state correction.** The brief that commissioned this debate described 0017 as
-> "already done". It is **not**: `0016` and `0017` are both still at the **new** stage in
-> `ai-spec/tasks/`, and `find`/`ls` confirm that `app/Models/SalesRegion.php`,
-> `app/Livewire/SalesRegions/`, `database/factories/SalesRegionFactory.php` and any `sales_regions`
-> migration **do not exist yet**. Everything below is therefore contract-driven design against 0017's
-> *specified but unbuilt* public surface — exactly the position 0006 was in against 0004 — and
-> **0018 cannot start Phase 3 until 0016 and 0017 have both completed their Phase 7.** See
+> ✅ **Dependency-state, updated 2026-08-26.** At the time this debate ran, the brief that commissioned it
+> described 0017 as "already done" when it was not — `0016` and `0017` were both still at the **new** stage,
+> and this story's design below was built against 0017's *specified but unbuilt* public surface (exactly the
+> position 0006 was in against 0004). **Both have since completed Phase 7 and moved to `ai-spec/tasks/done/`**
+> — verified against `HEAD`: `app/Models/SalesRegion.php`, `app/Livewire/SalesRegions/Index.php`,
+> `app/Actions/SalesRegions/*`, `database/factories/SalesRegionFactory.php` and the `sales_regions` migration
+> all exist and their tests are green. **The blocker this note originally raised is closed; Phase 3 may
+> start.** The "Interface contract consumed from 0017" section below still needs reading against the real
+> shipped code rather than the contract-driven draft, since one divergence was already found and corrected
+> while resolving [Q4](#open-questions--resolved-before-phase-3) (the `setActive()` signature). See
 > [Dependencies & risks](#dependencies--risks).
 
 ## Debate decisions (confirmed during Phase 1)
 
 Reached by the two convened amigos (`frontend-expert`, `frontend-qa`) plus `product-owner`. Decisions
-**D1–D10** are settled; the genuinely-open items are in [Open questions](#open-questions--confirm-before-phase-3)
-and are **not** pre-decided here.
+**D1–D10** are settled; the items that were genuinely open at the close of the debate are in
+[Open questions](#open-questions--resolved-before-phase-3) and were **not** pre-decided here — all four
+have since been resolved by the product owner (2026-08-26), three of them with binding additions.
 
 | # | Decision | Reasoning |
 |---|---|---|
@@ -50,7 +54,7 @@ and are **not** pre-decided here.
 | **D7** | **`SalesRegionKind::label()` stays deferred — this story does not add it, and does not touch `app/Enums/`.** | 0016 deferred it to "the first story that actually renders `kind`", and 0017 restated the deferral. On this screen `kind` drives *structure and styling* (indentation, chevron presence, grouping-row treatment) and is **never rendered as text** — so it still has no consumer, and 0016's own stated rule ("nothing renders it yet") still applies. Keeping it out also keeps 0018 purely view-layer + tests + lang, and removes the `app/Enums/SalesRegionKind.php` file-collision risk with 0017 that `frontend-expert` flagged. **Escape hatch:** if Phase 3's design does surface a textual `kind`, adding `label()` plus its two lang keys is pre-authorised in writing by 0016 and is not scope creep — but it must then be recorded, not slipped in. |
 | **D8** | **`data-test` row hooks: `edit-region-{id}`, `toggle-active-region-{id}`, `set-default-region-{id}`, plus `expand-region-{id}` on the chevron.** Present on **both** the enabled and the disabled branch of each control. | Extends the `edit-user-{id}` / `delete-user-{id}` convention verified in `resources/views/livewire/users.blade.php`. Mandatory here because these controls are icon-only and there may be ~255 rows, so no visible text uniquely identifies a row's action. Hook-on-both-branches is what lets a test select the same control regardless of whether it is enabled — the rule `docs/api/routes.md` records for the Users screen. |
 | **D9** | **UI copy is English source strings through `__()`**, added **additively** to the `lang/{en,es}/sales-regions.php` files 0017 creates, key-for-key identical across both. | The same decision [0006](done/0006-users-list-editor-ui.md) recorded: the PRD's Spanish copy is reference layout, not literal requirement, until Epic 5's language switcher. 0017 owns `errors.*`; 0018 adds `index.*` / `fields.*` / `labels.*`. |
-| **D10** | **The "grouping" catalog concept is removed — this screen renders no supranational entries (no "Unión Europea", no "Internacional").** *(scope decision, 2026-08-18)* | The Sales Region catalog holds only individual countries plus Spain's five fiscal sub-territories, per the same decision applied to [0016](done/0016-sales-region-catalog-schema-and-seeder.md). Consequences owned here: no top-level "grouping" siblings to render, no `kind === Grouping` branch anywhere in the markup, no `grouping()` factory state in test arrangement, and no separate "groupings" section or filter category in the list design — the list is countries + Spain's territories only. Row counts drop accordingly (see [Q1](#open-questions--confirm-before-phase-3): ~255 rows, of which **6** are business-relevant, not 8). **Spain's fiscal-territory *visual* grouping (D2/D3) is a different, unrelated concept and is deliberately unaffected.** |
+| **D10** | **The "grouping" catalog concept is removed — this screen renders no supranational entries (no "Unión Europea", no "Internacional").** *(scope decision, 2026-08-18)* | The Sales Region catalog holds only individual countries plus Spain's five fiscal sub-territories, per the same decision applied to [0016](done/0016-sales-region-catalog-schema-and-seeder.md). Consequences owned here: no top-level "grouping" siblings to render, no `kind === Grouping` branch anywhere in the markup, no `grouping()` factory state in test arrangement, and no separate "groupings" section or filter category in the list design — the list is countries + Spain's territories only. Row counts drop accordingly (see [Q1](#q1--how-should-the-screen-handle-the-248-inactive-unconfigured-country-rows--resolved-a-with-two-additions): 254 rows, of which **6** are business-relevant, not 8). **Spain's fiscal-territory *visual* grouping (D2/D3) is a different, unrelated concept and is deliberately unaffected.** |
 
 Resolved directly from the docs, no decision needed: the view path is the **flat**
 `resources/views/livewire/sales-regions.blade.php` per the
@@ -236,33 +240,57 @@ Feature: Sales Regions screen — configuring seeded entries and moving the defa
 - `resources/views/livewire/sales-regions.blade.php` — **create.** The whole screen. **Do not create
   `resources/views/livewire/sales-regions/index.blade.php`** — that nested path is not what Livewire
   resolves for `App\Livewire\SalesRegions\Index` and would be a silently unused duplicate.
-- `config/modules.php` — **modify** (see the sidebar note below). Add one entry:
+- `config/modules.php` — **modify** (see the sidebar note below). 0013's shipped registry splits `groups`
+  and `items` — the entry sketched in this story's original Phase 1 draft (`'group' => 'Taxes', 'label' =>
+  'Sales Regions'`, literal English copy) does **not** match it and would break `config:cache` in the same
+  way `base-standards.md` warns against (a `group` value must name a real `groups` key; a `label` must be a
+  translation key, never copy — `lang/es/` can never reach a literal string in `config/`). This story adds a
+  **new `groups.taxes` entry** (no shipped group covers Taxes yet) plus one `items.sales-regions` entry:
   ```php
-  'sales-regions' => ['group' => 'Taxes', 'label' => 'Sales Regions', 'icon' => 'receipt-percent',
-                      'route' => 'sales-regions.index', 'permissions' => ['sales-regions.view']],
+  // config/modules.php — new 'groups' entry
+  'taxes' => [
+      'heading' => 'navigation.groups.taxes',
+      'icon' => 'receipt-percent',
+      'expandable' => false,   // one entry today; revisit if a second Taxes screen ships
+      'expanded_when' => null,
+      'class' => null,
+  ],
   ```
+  ```php
+  // config/modules.php — new 'items' entry
+  'sales-regions' => [
+      'group' => 'taxes',
+      'label' => 'navigation.items.sales-regions',
+      'icon' => 'receipt-percent',
+      'route' => 'sales-regions.index',
+      'current_when' => 'sales-regions.*',
+      'permissions' => ['sales-regions.view'],
+  ],
+  ```
+- `lang/en/navigation.php`, `lang/es/navigation.php` — **modify, additively.** New leaves
+  `groups.taxes` and `items.sales-regions`, mirroring the registry's own keys exactly per
+  [naming.md](../../docs/conventions/naming.md#translation-keys)'s registry-mirroring rule — not new files,
+  0013 already created both.
 - `lang/en/sales-regions.php`, `lang/es/sales-regions.php` — **modify, additively.** 0017 creates both
   for its `errors.*` copy; this story adds the list/label/field copy under new top-level groups, keeping
   the two files key-for-key identical.
 - `tests/Feature/SalesRegions/IndexRenderingTest.php` — **new.** Rendering-level `Livewire::test()`
   coverage.
 - `tests/Browser/SalesRegionsIndexTest.php` — **new.** Pest 4 browser tests for the JS-driven behaviour.
+- `tests/Feature/Navigation/SidebarModuleGatingTest.php` — **modify.** 0013's own test asserts every
+  registry entry's `permissions` set-equals its route's real `can:` middleware — adding an entry without
+  extending this test's coverage would be exactly the drift that test exists to catch.
 
-> 📌 **The sidebar entry goes in `config/modules.php`, not in `sidebar.blade.php` — and this is a
-> correction to the expert's file list, made after reading
-> [story 0013](done/0013-sidebar-module-gating-ui.md).** 0013 introduces `config/modules.php` as the
-> declarative, permission-gated nav registry and **replaces** the static `Platform` group in
-> `resources/views/layouts/app/sidebar.blade.php` with `<x-sidebar-nav />`. Its `group` field is a
-> nullable string, so `'group' => 'Taxes'` satisfies PRD §2.1's *"lives as a section **inside the Taxes
-> area** (not a top-level sidebar item)"* precisely — a requirement a flat `flux:sidebar.item` could not
-> meet. 0013 is numbered lower and is therefore sequenced first by
-> [workflow.md](../../docs/workflow.md#task-ordering-rule)'s Task ordering rule.
->
-> **Fallback if 0013 has not landed when 0018 starts Phase 3:** add a `flux:sidebar.group
-> :heading="__('Taxes')"` containing one `flux:sidebar.item` to `sidebar.blade.php`, ungated —
-> the same deliberately-cosmetic, deferred-gating posture 0006 took for the Users link (access is
-> refused server-side by `can:sales-regions.view` regardless) — and record that 0013 must migrate it
-> into `config/modules.php` when it lands. Do **not** silently do both.
+> 📌 **The sidebar entry goes in `config/modules.php`, not in `sidebar.blade.php`.** [Story 0013](done/0013-sidebar-module-gating-ui.md)
+> has since **shipped and closed** (verified against `HEAD`, 2026-08-26): it introduced `config/modules.php`
+> as the declarative, permission-gated nav registry and replaced the static `Platform` group in
+> `resources/views/layouts/app/sidebar.blade.php` with `<x-sidebar-nav />`. **The "fallback if 0013 has not
+> landed" path this note originally carried is moot and removed** — 0013 landed before 0018 started Phase 3,
+> so the fallback path (an ungated `flux:sidebar.group` hand-added to `sidebar.blade.php`) must not be taken;
+> use the registry, per the corrected entry above. A `groups.taxes` heading satisfies PRD §2.1's *"lives as a
+> section **inside the Taxes area** (not a top-level sidebar item)"* exactly the way `groups.settings` does
+> for Roles — see [architecture/authorization.md](../../docs/architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry)
+> for the registry's five rules in full.
 
 **Explicitly NOT this story** (listed so the boundary is unambiguous):
 
@@ -287,9 +315,9 @@ Feature: Sales Regions screen — configuring seeded entries and moving the defa
 
 ### Interface contract consumed from 0017
 
-This view binds to 0017's **Component public surface** section verbatim. Restated here only as the
-names the markup depends on; **0017 is the authority, and any divergence is a contract change to be
-re-agreed, not patched in the view**:
+**Corrected 2026-08-26 against the real shipped code** (`app/Livewire/SalesRegions/Index.php`), replacing
+the contract-driven draft written before 0017 existed — the original block below is what the Q4 resolution
+flagged as stale (a `setActive()` default that does not compile against the shipped signature):
 
 ```php
 #[Locked] public array $regions = [];   // rows: {id, slug, code, name, description, rate,
@@ -304,12 +332,25 @@ public string $replacementDefaultId = ''; // '' == no replacement chosen
 
 #[Computed] public function replacementCandidates(): array;   // [{id, name}] — active, not-self
 
+public function mount(): void;   // no markup call site — runs on GET, before any view renders
 public function openEditModal(string $regionId): void;
-public function save(UpdateSalesRegion $u, SetSalesRegionActive $a): void;
-public function setDefault(string $regionId, SetDefaultSalesRegion $s): void;
-public function setActive(string $regionId, bool $active, string $replacementDefaultId = ''): void;
+public function save(): void;
 public function closeModal(): void;
+public function setDefault(string $regionId): void;
+public function setActive(string $regionId, bool $active, string $replacementDefaultId): void;
 ```
+
+> ⚠️ **Every action method above also declares trailing, container-resolved parameters** — an action class
+> (e.g. `UpdateSalesRegion $updateSalesRegion`) and `LogRefusedPrivilegedAttempt $log` on every method except
+> `closeModal()`. **The markup never passes these**; Livewire resolves them from the container on every call,
+> exactly like `wire:click="deleteUser(@js($user.id))"` on the Users screen never passes `Logout $logout`.
+> Only the plain, data-shaped parameters shown above (with their real names) go in a `wire:click` call.
+>
+> **`setActive()`'s `$replacementDefaultId` has NO default value** — a defaulted parameter cannot precede
+> the trailing container-resolved dependencies in the real signature. Every `wire:click="setActive(...)"` in
+> this story's markup **must pass all three arguments explicitly**, an empty string when no replacement is
+> named: `wire:click="setActive(@js($region.id), true, '')"`. This is what Q4's resolution corrected — the
+> original D5 text said `setActive($regionId, $newValue)`, which does not compile against the shipped action.
 
 > **Four runtime traps the markup must not fall into**, each traceable to a real recorded incident:
 > 1. **`rate` is a `string|null` from a `decimal:3` cast.** Never `(float)` it, never compare it with
@@ -409,7 +450,12 @@ only where real-DOM behaviour is the actual risk. Arrange **only** with `SalesRe
 - [ ] 15. A tax-auditor session: disabled controls are genuinely inert under real pointer interaction,
       and hovering one surfaces the not-allowed tooltip and cursor — mirroring `UsersIndexTest.php`'s
       `elementFromPoint`-informed hover check, since the same `pointer-events-none` trap applies here.
-- [ ] 16. `->assertNoJavaScriptErrors()` on load and after every interaction above, per
+- [ ] 16. **The collapsed section survives a round trip (Q1, addition A1-b).** Open "Show all countries",
+      type into the filter, activate a country with its inline switch, then assert the section is still
+      open, the filter still holds its text, and the activated row has moved into the active section
+      (**A1-a**). *Retires the regression that would make Q4's inline switch worse than the modal it
+      replaces — and it is invisible to component tests, since the state under test is entirely Alpine's.*
+- [ ] 17. `->assertNoJavaScriptErrors()` on load and after every interaction above, per
       [test-quality-checklist.md](../../docs/testing/frontend/test-quality-checklist.md).
 
 **Highest-risk tests** — if only four were written, these retire the most risk: **11** (the PRD's central
@@ -475,6 +521,20 @@ mutating control disabled and explained.
 - [ ] No create/add-region control exists anywhere on the screen, and no interaction the screen offers
       changes `SalesRegion::count()`. *(PRD scenario: "The catalog does not allow inventing new countries")*
 - [ ] A row whose `canEdit` is false renders every mutating control disabled with a tooltip.
+- [ ] The 6 active entries render open; the 248 inactive countries sit in one collapsed "Show all
+      countries" section with a client-side text filter over `name`/`code`. *(Q1 (a))*
+- [ ] Activating an entry from the collapsed section moves its row into the active section on the next
+      render — no stability hack keeps it in place. *(Q1, addition A1-a)*
+- [ ] The collapsed section stays open and the filter box keeps its text across an inline `setActive()`
+      round trip. *(Q1, addition A1-b)*
+- [ ] The Active control renders `is_active` only; "unconfigured" is carried by the Rate column's em
+      dash (**D6**) and nowhere else — "España" renders active with an em-dash rate. *(Q2 (a))*
+- [ ] The current default row's disabled switch carries a tooltip that routes the administrator to the
+      entry's **edit form** to name a replacement, not a bare refusal. *(Q3, addition A3-a)*
+- [ ] The inline switch calls `setActive('{id}', <bool>, '')` — three explicit arguments; the shipped
+      0017 signature has **no default** for `$replacementDefaultId`. *(Q4 contract correction)*
+- [ ] A `replacementDefaultId` error raised outside the modal renders in a page-level outlet above the
+      table, shown only when the modal is closed so it can never render twice. *(Q4, addition A4-a)*
 - [ ] The screen is reachable from a **Taxes** navigation heading, not as a top-level item. *(PRD AC 1)*
 - [ ] Every row control carries its `data-test` hook on **both** the enabled and the disabled branch. *(D8)*
 - [ ] All UI copy is English source strings through `__()`, added key-for-key to both
@@ -489,8 +549,15 @@ mutating control disabled and explained.
 - [ ] No security findings (appsec-auditor)
 - [ ] Documentation updated (docs-keeper)
 - [ ] Acceptance criteria met
-- [ ] The [open questions](#open-questions--confirm-before-phase-3) answered by the product owner and
-      folded in **before** Phase 3 starts
+- [x] The [open questions](#open-questions--resolved-before-phase-3) answered by the product owner and
+      folded in **before** Phase 3 starts — **done 2026-08-26.** All four resolved (Q1 (a), Q2 (a), Q3
+      keep **D4**, Q4 keep **D5**), each with its rejected alternatives recorded. Phase 3 additionally
+      inherits four binding items folded in with them: **A1-a/A1-b** (section membership derives from
+      `isActive`; the disclosure state and filter text survive a Livewire round trip), **A3-a** (the
+      disabled default switch's tooltip routes the administrator to the edit form), **A4-a** (a
+      page-level `replacementDefaultId` error outlet, rendered only when the modal is closed), and the
+      **`setActive()` three-argument contract correction** — all listed in
+      [Acceptance criteria](#acceptance-criteria)
 - [ ] **D1** (`type="text" inputmode="decimal"`) and **D6** (the `NULL`-vs-`0.000` string rendering)
       implemented as recorded — the two most likely to be "simplified" into the obvious-looking wrong form
 
@@ -498,15 +565,16 @@ mutating control disabled and explained.
 
 **Dependencies**
 
-- **[Story 0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Table, model,
-  enum, factory. Still at the **new** stage.
-- **[Story 0017](done/0017-sales-region-tax-configuration-backend.md) — hard, blocking.** The component
-  class, the route, the policy, the actions, and the `lang/*/sales-regions.php` files this story grows.
-  Still at the **new** stage, **contrary to the commissioning brief's claim that it is done.**
-  **0018 cannot start Phase 3 until both have completed Phase 7.**
-- **[Story 0013](done/0013-sidebar-module-gating-ui.md) — soft.** Owns `config/modules.php`, this story's
-  preferred sidebar target. A documented fallback exists if the ordering slips (see the sidebar note
-  in [Files](#files-to-createmodify)).
+- **[Story 0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking. Satisfied.** Table,
+  model, enum, factory. Closed and in `done/` as of 2026-08-20.
+- **[Story 0017](done/0017-sales-region-tax-configuration-backend.md) — hard, blocking. Satisfied.** The
+  component class, the route, the policy, the actions, and the `lang/*/sales-regions.php` files this story
+  grows. Closed and in `done/` as of 2026-08-26 — verified against `HEAD`, not merely against its own task
+  file. **Both dependencies are met; Phase 3 may start.**
+- **[Story 0013](done/0013-sidebar-module-gating-ui.md) — soft. Satisfied.** Owns `config/modules.php`, this
+  story's sidebar target. Closed and in `done/`; the fallback this bullet originally reserved (an ungated,
+  hand-added `flux:sidebar.group` in `sidebar.blade.php`) is moot and must not be taken — see the corrected
+  sidebar note in [Files](#files-to-createmodify).
 - **[Story 0006b](done/0006b-browser-test-infra-setup.md) — satisfied.** `tests/Browser/` is wired up
   and runs on Chromium in CI, so this story's browser tests can be written and run.
 - **[Story 0002](done/0002-seed-roles-permissions-catalog.md)** — the `sales-regions.*` permission
@@ -526,54 +594,211 @@ mutating control disabled and explained.
    [contracts.md](../../docs/contracts.md#parallel-agent-file-ownership-rule)'s Parallel Agent
    File-Ownership Rule governs. D7 removes the second collision point (`app/Enums/SalesRegionKind.php`)
    by keeping this story out of `app/` entirely.
-5. **DOM size.** ~255 rows in one table even before Open question 1 is answered; verify no perceptible
-   jank on paint and modal open. Flux ships a `skeleton` component as the cheap mitigation.
+5. **DOM size.** 254 rows in one table. Mitigated by [Q1](#q1--how-should-the-screen-handle-the-248-inactive-unconfigured-country-rows--resolved-a-with-two-additions)'s
+   answer (248 of them collapsed on first paint), but verify no perceptible jank on paint and modal open
+   — and note the resolution leaves `x-show` vs. `<template x-if>` to Phase 3 precisely so this risk can
+   be answered with a measurement. Flux ships a `skeleton` component as the cheap mitigation.
 6. **`x-show="! $wire.active"` staleness** if the switch's binding is ever changed to a variant that
    does not sync until blur — the reveal would lag a keystroke. Test 11 exercises it.
-7. **The sidebar entry may be ungated** under the fallback path, exposing a Taxes link to every
-   authenticated user. Cosmetic only — `can:sales-regions.view` still refuses access server-side — but
-   it must not be forgotten, exactly as 0006's ungated Users link was recorded and is still pending 0013.
+7. ~~The sidebar entry may be ungated under the fallback path~~ — **moot, 2026-08-26.** 0013 shipped before
+   0018 reached Phase 3, so the fallback path is removed (see the corrected sidebar note in
+   [Files](#files-to-createmodify)); the entry goes through `config/modules.php`'s registry, which is gated
+   on `sales-regions.view` by construction, verified by `SidebarModuleGatingTest.php`'s cross-check. The risk
+   this bullet described cannot occur under the shipped path.
 
-## Open questions — confirm before Phase 3
+## Open questions — resolved before Phase 3
 
-Per [contracts.md](../../docs/contracts.md)'s Uncertainty Handling Rule, these are **not** pre-decided.
+**All four are resolved. The Phase 1 open-questions gate is closed (product owner, 2026-08-26).** Each
+was raised per [contracts.md](../../docs/contracts.md)'s Uncertainty Handling Rule and is recorded below
+with the answer, the reasoning that produced it, and the *rejected* alternatives — because a rejected
+alternative written down is what stops a reviewer re-opening a settled question, the same convention
+[0017's Locked decisions](done/0017-sales-region-tax-configuration-backend.md#locked-decisions-confirmed-at-phase-1)
+follows. Three carry **additions** beyond the recommended option; those additions are binding on Phase 3
+and are cross-referenced into [Acceptance criteria](#acceptance-criteria) and
+[Tests to perform](#tests-to-perform).
 
-**Q1 — How should the screen handle the ~249 inactive, unconfigured country rows?** 0016 seeds ~249 ISO
-countries **inactive with a `NULL` rate**, alongside just 6 business-relevant rows (España + its 5
-fiscal territories — there are no grouping entries, per **D10**). 0017's contract has no `$search`, no filter and no pagination property, and
-`$regions` must stay unfiltered because the edit modal has to reach an inactive country like "Francia".
-Nothing in the PRD addresses it. Both amigos raised this independently.
+> **Seeded row counts, corrected against [database/schema.md](../../docs/database/schema.md#sales_regions)
+> and `database/data/iso-3166-countries.json` (249 entries, España among them).** The catalog is
+> **254 rows**: 249 ISO countries + Spain's 5 fiscal territories. **6 are active** (España + its 5
+> territories); **248 countries are inactive with a `NULL` rate**. The "~249 inactive / ~255 rows"
+> figures used in the questions as originally drafted are each one too high; the resolutions below use
+> the verified numbers, and Phase 3 should too.
 
-- **(a) Client-side collapse + client-side filter (recommended).** The 6 active rows render open; the
-  ~249 inactive countries sit inside one Alpine-toggled "Show all countries" section, closed on first
-  paint, with a text filter over `name`/`code`. **Recommended because** it needs **no 0017 contract
-  change**, sits entirely inside this story's file ownership, ships in 0018 alone, and matches the
-  PRD's own framing — administrators configure the entries that matter, the rest await configuration.
-- **(b) Server-side search/pagination.** Cleaner at very large scale, but it is a real amendment to a
-  0017 contract already confirmed at Phase 1 (a new property plus query logic), so it re-opens a settled
-  story.
-- **(c) Ship one flat table of all ~255 rows.** Cheapest; buries the 6 rows that matter under 249 that
-  do not. Advised against.
+---
 
-**Q2 — Does the "Active" column need to distinguish *inactive* from *unconfigured*?** Every one of the
-~249 inactive countries is *also* rateless, so under option (a) the two states are visually
-near-synonymous in the collapsed section. Options: **(a) no distinction (recommended)** — `is_active` is
-the only state the PRD names, and a second visual axis invents a concept the data model does not have;
-**(b)** add an explicit "not configured" treatment. Recommend (a) and revisit only if Q1's answer makes
-the collapsed section browsable enough for the ambiguity to matter.
+### Q1 — How should the screen handle the 248 inactive, unconfigured country rows? — **RESOLVED: (a), with two additions**
 
-**Q3 — Is D4's "disable the default only inside the edit modal" the UX you want?** It is contract-clean
-(zero new properties) and is the only shape that guarantees the `replacementDefaultId` error has a
-rendered field to attach to. But a reviewer could reasonably prefer a **lighter, purpose-built
-confirmation dialog** instead of routing through the full edit form. That alternative *is* a 0017
-contract change (a new modal-open boolean plus a locked target id) and must be raised with 0017's owner
-**before** its Phase 3, not worked around later. Recommend keeping **D4** as recorded.
+**Decision: option (a) — client-side collapse + client-side filter.** The 6 active rows render open; the
+248 inactive countries sit inside one Alpine-toggled "Show all countries" section, closed on first paint,
+with a text filter over `name`/`code`. Confirmed as recommended, and the case for it is **stronger now
+than when the debate ran**:
 
-**Q4 — Should the inline row switch exist at all (D5), or should every mutation go through the edit
-modal?** 0017 explicitly leaves the trigger shape to this story. A single interaction surface is simpler
-to test and document; two surfaces are faster to use for the common enable/disable. Recommend keeping
-**D5** (both, split by which transition can fail), because the common case — activating one of the 249
-seeded-inactive countries — is a one-click operation that a modal would make three.
+- **It needs no backend change, and "reopen 0017" is no longer a live option.** When this question was
+  written, 0017 was still at the `new` stage and option (b) meant amending an unstarted contract. 0017
+  has since completed Phase 7 and is in `done/` — its `$regions` loads the full catalog unfiltered and
+  `#[Locked]`, with no `$search`, filter or pagination property. Option (b) is therefore no longer an
+  amendment to a pending story; it is a **new backend story with its own seven phases**, blocking a UI
+  story that is otherwise ready. That cost is not justified by 254 rows.
+- **Option (b) would not even reduce the payload.** `$regions` must stay unfiltered regardless, because
+  the edit modal has to reach an inactive country like "Francia" — a constraint the question itself
+  names. So (a) and (c) carry identical server cost, and (b)'s only real gain is DOM size, which is the
+  one thing a client-side collapse also addresses.
+- **It matches how the data model already divides the catalog.** The split is `is_active`, a real
+  column with a real meaning, not an invented UI concept. That is the same test Q2 below fails, and it
+  is why the two questions resolve in opposite directions rather than together.
+- **It matches the PRD's framing.** [PRD §2.1](../../docs/PRD/PRD.md#21-sales-regions--taxes) describes
+  administrators configuring seeded entries and enabling/disabling them; it never describes browsing
+  249 countries as the primary task. Burying the 6 rows that carry rates under 248 that do not — option
+  (c) — inverts the screen's purpose on first paint.
+
+*Rejected:* **(b) server-side search/pagination** — a new backend story to solve a problem 254 rows do
+not have, for no reduction in what the component must load anyway; revisit only if the catalog ever
+grows a further order of magnitude, which a fixed ISO list will not. **(c) one flat table** — cheapest
+to build and the worst screen to use; it is also the option most likely to make [risk 5](#dependencies--risks)
+(DOM size / paint jank) bite with no mitigation available.
+
+**Addition A1-a — a newly activated row moves into the active section, and that is intended.** Section
+membership is derived from each row's `isActive` at render time, so activating "Francia" from the
+collapsed section makes its row leave that section and appear among the configured entries on the next
+render. This is deliberate: the row moving *is* the confirmation that the click took effect, and the
+alternative (freezing section membership until a full page reload) would show an "inactive" row carrying
+an on switch, which is worse. Phase 3 must not add a stability hack to keep the row in place.
+
+**Addition A1-b — the disclosure state and the filter text must survive a Livewire round trip.** After
+an inline `setActive()` call re-renders the table, the "Show all countries" section must still be open
+and the filter box must still hold what the administrator typed. This is **binding, not a nicety**: it
+is the entire difference between Q4's inline switch being a one-click bulk workflow and being a control
+that closes the section it lives in on every use. Practically this means the Alpine state owning
+`open` and the filter string must sit on an element Livewire's DOM morphing preserves, with stable
+`wire:key`s on the rows beneath it — the same class of concern
+[risk 6](#dependencies--risks) already flags for `x-show="! $wire.active"`. It gets an acceptance
+criterion and a browser test (**test 17**).
+
+*Left to Phase 3:* whether the collapsed section's 248 rows are `x-show`-hidden (in the DOM, simplest,
+consistent with **D3**'s Spain expansion) or deferred with `<template x-if>` (cheaper first paint).
+Either satisfies the requirement, which is stated in terms of **visibility**, not DOM presence. If
+measured paint jank makes deferral necessary, adopting it is pre-authorised here and is not scope creep
+— but it must then be recorded, and it must not break the D3 grouping or the `data-test` hooks.
+
+---
+
+### Q2 — Does the "Active" column need to distinguish *inactive* from *unconfigured*? — **RESOLVED: (a), no distinction**
+
+**Decision: option (a) — the Active control shows `is_active` and nothing else.** Confirmed as
+recommended, on a stronger ground than the one the debate recorded ("a second visual axis invents a
+concept the data model does not have"). Two facts settle it outright:
+
+1. **The "unconfigured" axis is already rendered, in the Rate column, by D6.** A `NULL` rate shows an em
+   dash and a `0.000` rate shows `0%`. Folding that same distinction into the Active control would say
+   the same thing twice, in a column whose header promises something else — and it would be ambiguous
+   about *what* is unconfigured (rate? code? description?), where the Rate column is precise.
+2. **The two axes are genuinely orthogonal in the seeded data, and conflating them would misrepresent a
+   real row.** "España" ships **active with a `NULL` rate** — deliberately, as a disclosure/parent node
+   that is not independently rateable ([schema.md](../../docs/database/schema.md#sales_regions)). An
+   Active control that also meant "configured" would have to render España as some third thing, or lie
+   about it. That single row is sufficient to refuse (b).
+
+Under Q1's answer this is doubly moot: inside the collapsed section every row is inactive **by
+construction** — that is what defines the section — so an "inactive" treatment there marks every row
+identically and carries no information at all.
+
+*Rejected:* **(b) an explicit "not configured" treatment on the Active control** — duplicates D6,
+misdescribes España, and adds a second visual axis to the one control on the screen that must stay
+unambiguous, since it is also the control D4 disables on the default row. **Not deferred, decided:** the
+question's own "revisit if Q1 makes the collapsed section browsable" clause is answered — it does, and
+the answer is still (a), for the two reasons above rather than for the "hard to notice either way" one.
+
+---
+
+### Q3 — Is D4's "disable the default only inside the edit modal" the UX you want? — **RESOLVED: keep D4, with one addition**
+
+**Decision: keep D4 exactly as recorded.** Disabling the current default happens only inside the edit
+modal; the current default row's inline switch renders `disabled` with a tooltip. Reasoning:
+
+- **It is the only shape that guarantees the refusal is visible.** `SetSalesRegionActive` throws a
+  `ValidationException` keyed `replacementDefaultId` (verified against the shipped
+  `app/Actions/SalesRegions/SetSalesRegionActive.php`). An error keyed to a field that is not on screen
+  is an invisible failure — the outcome 0017's own D4 reasoning, and this file's
+  [test 4](#tests-to-perform), both name as the worst possible one. Inside the modal the replacement
+  `flux:select` is already rendered, so the message lands where the administrator can act on it.
+- **The cost of the alternative rose since the question was written.** The lighter purpose-built dialog
+  as described (a new modal-open boolean plus a locked target id) is a change to 0017's public surface,
+  and the question's own instruction — raise it with 0017's owner *before* its Phase 3 — can no longer
+  be followed: **0017 completed Phase 7 and is closed.** It is now a new backend story.
+- **The operation is rare and considered, so friction is not the right thing to optimise.** Moving the
+  catalog default is a store-setup action, not a repeated one. Opening the entry's edit form on the way
+  is *context* — the administrator sees the rate and code of the entry they are switching off — not an
+  obstacle. This is the opposite of Q4's case, and the asymmetry is the point: **frequency is what
+  decides how many surfaces a transition gets.**
+
+*Rejected, and recorded so it is not re-proposed:* a **client-side-only confirmation dialog** — a
+third path the debate did not name, in which an Alpine-only modal reuses the existing (unlocked)
+`replacementDefaultId` property and calls `setActive()`, needing **no 0017 change at all**. It is
+technically available and it is still refused: it would create a **second rendering surface for the
+single most consequential refusal in the story** (PRD AC 4, the never-zero-defaults invariant),
+doubling the failure-mode surface — including the error-bag-survives-the-round-trip fragility that
+[risk 6](#dependencies--risks) already flags — for an operation that happens roughly once per store.
+One surface, already specified and already covered by tests 4, 11 and 12, is worth more here than a
+saved click.
+
+**Addition A3-a — the disabled switch's tooltip must route the administrator, not just refuse them.**
+D4 is only acceptable UX if the disabled control says where to go. The tooltip copy must name the edit
+form as the place to name a replacement (e.g. *"This is the default entry. Open its edit form to name a
+replacement default before disabling it."*), not merely *"not allowed"* or *"a replacement must be named
+first"*. English source string through `__()` per **D9**, key-for-key in both lang files. This upgrades
+the [Gherkin scenario](#gherkin) *"The current default cannot be switched off from its own row"* and
+gets its own acceptance criterion.
+
+---
+
+### Q4 — Should the inline row switch exist at all (D5)? — **RESOLVED: keep D5, with one mandatory contract correction and one addition**
+
+**Decision: keep D5 — both surfaces, split by which transition can fail.** Reasoning:
+
+- **The split is principled, not a duplication.** Verified against the shipped
+  `SetSalesRegionActive::__invoke()`: the *only* throwing branch is `! $active && $target->is_default`.
+  So inactive → active and active-but-not-default → inactive genuinely cannot throw, and D5 is not "two
+  surfaces for one rule" — it is one rule partitioned by failure mode, with every throwing transition
+  routed to the one surface that can render its error (**D4/Q3**).
+- **Q1's answer makes the inline switch load-bearing.** The common case on this screen is activating
+  seeded-inactive countries out of the collapsed section — potentially several in a sitting. One click
+  versus three (open modal, toggle, save) is the difference between a workable setup flow and a tedious
+  one. Removing the inline switch would make Q1's collapsed section largely pointless to browse.
+- **It matches the screen's own precedent.** The Users screen's row actions establish per-row controls
+  for the common operation with a modal for the considered one; this is the same shape.
+
+*Rejected:* **modal-only for every mutation** — simpler to test and document, and it makes the single
+highest-frequency operation on a 254-row screen three times more expensive. The simplicity argument is
+real but it is paid for by the administrator, repeatedly.
+
+> ⚠️ **Mandatory contract correction — `setActive()` takes three arguments, with no default.** D5 as
+> recorded says the inline switch calls `setActive($regionId, $newValue)`. **That call does not compile
+> against the shipped 0017 component**, whose real signature is:
+>
+> ```php
+> public function setActive(string $regionId, bool $active, string $replacementDefaultId, SetSalesRegionActive $a, LogRefusedPrivilegedAttempt $log): void
+> ```
+>
+> `$replacementDefaultId` carries **no default value** — 0017's own docblock states why (a defaulted
+> parameter cannot precede the trailing container-resolved dependencies) and states the obligation
+> explicitly: *"Every caller (0018's Blade markup, every test) must pass all arguments explicitly, an
+> empty string when no replacement is named."* The inline switch must therefore call
+> **`setActive('{id}', true, '')`** / **`setActive('{id}', false, '')`**. The
+> [Interface contract consumed from 0017](#interface-contract-consumed-from-0017) block above has been
+> corrected to match — both blocks now agree, and both match `HEAD`. Phase 3 should still re-verify the real
+> signatures before writing the markup rather than trusting either block on faith, exactly as
+> [errors-log.md](../../docs/errors-log.md) requires of any finding written against a tree that can move.
+
+**Addition A4-a — an orphaned `replacementDefaultId` error must still surface.** D5's "these two
+transitions cannot throw" is true of the *design*, but `SetSalesRegionActive` re-reads `is_default`
+**under lock inside its transaction**, not from the instance the view rendered. So a row that became the
+default between paint and click *can* refuse an inline disable, throwing the one error that has no field
+on screen — the exact D4 failure mode, arriving through a race instead of through a design flaw. It is
+rare (it needs a concurrent default swap by a second administrator) and it fails **closed**, so nothing
+is corrupted; but a click that visibly does nothing and explains nothing is not acceptable. Phase 3 must
+render a page-level outlet for `replacementDefaultId` above the table, shown only when the modal is
+**not** open (`@unless ($showModal)`) so the message can never render twice. One element, one
+acceptance criterion, no new property, and it closes the last hole in D4/D5's reasoning.
 
 ## Provenance
 
@@ -604,3 +829,33 @@ which is the strongest signal in this debate and the reason D1 is called out in 
 `IndexRenderingTest.php` is 0018's), the recurrence risk of both Flux/Blaze traps, and the need for
 `data-test` hooks on both branches of every row control were each raised by both participants
 independently.
+
+## Phase 1 open-questions gate — closed 2026-08-26 (product owner)
+
+The Definition of Done's *"open questions answered by the product owner and folded in before Phase 3
+starts"* gate is **met**. All four questions are resolved in
+[Open questions](#open-questions--resolved-before-phase-3): **Q1 (a)** client-side collapse + filter,
+**Q2 (a)** no second visual axis on the Active control, **Q3** keep **D4**, **Q4** keep **D5**. Each was
+evaluated against [PRD §2.1](../../docs/PRD/PRD.md#21-sales-regions--taxes) and the **shipped** code of
+stories 0016/0017 rather than against the recommendation alone, which is what produced the four items
+Phase 3 inherits beyond the recommended options — **A1-a**, **A1-b**, **A3-a**, **A4-a**, and the
+`setActive()` three-argument correction. Two of those (**A4-a**, and the contract correction) exist only
+because the resolution re-read the real `app/Livewire/SalesRegions/Index.php` and
+`app/Actions/SalesRegions/SetSalesRegionActive.php`; neither was visible from this document's own text.
+
+**What changed between the debate and this resolution, and why it mattered.** Stories **0016 and 0017
+both completed Phase 7 and are now in `ai-spec/tasks/done/`.** The debate was conducted against their
+*specified but unbuilt* surface, and the dependency-state ⚠️ at the head of this document reflects that
+earlier state. This directly strengthened Q1 and Q3: both had an alternative whose stated cost was
+"amends a 0017 contract confirmed at Phase 1", and for both that alternative is now a **new backend
+story with its own seven phases** instead. Neither is worth that. The counts used in the questions as
+drafted (~249 inactive, ~255 rows) were also verified and corrected to **248 inactive of 254 rows, 6
+active**, against [database/schema.md](../../docs/database/schema.md#sales_regions) and the 249-entry
+ISO fixture.
+
+**Still blocking Phase 3 — nothing from this gate, but read the head of this document.** The dependency
+⚠️ and the [Dependencies & risks](#dependencies--risks) section still describe 0016/0017 as at the `new`
+stage, which is stale as of their closure; that correction, and the `config/modules.php` entry sketched
+in [Files](#files-to-createmodify) (whose shape predates a reading of 0013's shipped `groups`/`items`
+registry with its translation-key `heading`/`label` values), are **adjacent items flagged but not
+applied here** — this pass was scoped to the open-questions gate alone.
