@@ -429,7 +429,7 @@ I?m stuck with the Render web service. DDoes Render has MCP? Maybe you can conne
 
 ----
 
-Done. Can you connect to my Render accountthrough the MCP  and check for the web service and fix it please
+Done. Can you connect to my Render account through the MCP  and check for the web service and fix it please
 
 ----
 
