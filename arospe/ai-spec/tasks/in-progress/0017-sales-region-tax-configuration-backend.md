@@ -245,8 +245,25 @@ Class-based component (never single-file), per
 > 📌 **View-path trap — `Index` in a subfolder resolves one level shallower.** `App\Livewire\SalesRegions\Index`
 > resolves to **`resources/views/livewire/sales-regions.blade.php`**, *not* `livewire/sales-regions/index.blade.php`
 > — Livewire's `Finder::generateNameFromClass()` strips the trailing `.index`. This is the documented
-> [exception in naming.md](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name),
-> and it is exactly the file 0018 must create. A file at the nested path would be a silently unused duplicate.
+> [exception in naming.md](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name).
+> A file at the nested path would be a silently unused duplicate.
+
+### `resources/views/livewire/sales-regions.blade.php` — **create (placeholder)**
+
+**Added here at Phase 5 code review (nit), missing from this list even though Phase 3 correctly created
+it.** This story is backend-only, but the component still needs *some* view to mount and render without
+error — the same placeholder shape [story 0004](../done/0004-users-list-editor-backend.md) shipped for
+`resources/views/livewire/users.blade.php` before [story 0006](../done/0006-users-list-editor-ui.md) built
+the real markup:
+
+```blade
+<div>
+    <p>{{ count($regions) }}</p>
+</div>
+```
+
+**0018 replaces this file's contents; it does not create it.** Listed so that fact is explicit rather than
+left to be discovered from the "risk 8" cross-reference in this section's own view-path note above.
 
 ### `app/Concerns/SalesRegionValidationRules.php` — **create**
 
@@ -914,8 +931,8 @@ catalog whose "exactly one default" precondition is now enforced rather than mer
 
 ## Definition of Done
 - [x] Tests written and green (the full suite, not just this story's — per [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule)
-- [ ] Code reviewed (code-reviewer)
-- [ ] No security findings (appsec-auditor)
+- [x] Code reviewed (code-reviewer)
+- [x] No security findings (appsec-auditor)
 - [ ] Documentation updated (docs-keeper)
 - [x] Acceptance criteria met
 - [x] All seven [mandatory revert-checks](#tests-to-perform) performed, each confirmed to redden its named
@@ -1420,7 +1437,13 @@ caller-supplied one, after the re-fetch.
   rather than the rare one.
 - `whereKeyNot()` in `SetDefaultSalesRegion`'s clear-query is **kept** (still required — a separate query
   hydrates a separate instance even for $target's own row) with its docblock corrected rather than left
-  describing a scenario the fix changed.
+  describing a scenario the fix changed. **Superseded the next day**: round 2 below (R-1) collapsed the
+  clear-query into the same single combined query that locks $target, so the exclusion is now expressed as
+  `$rows->reject(fn ($row) => $row->is($target))` — no `whereKeyNot()` call exists anywhere in
+  `app/Actions/SalesRegions/` as of round 2. Left here as the historical record of round 1's shape (Phase 5
+  code review finding F-6 confirmed this line had gone stale without being revisited when round 2 landed);
+  the current mechanism and reasoning are in the "Phase 4 re-audit round 2" section below and in
+  `docs/security/model-instance-trust.md`, which is accurate.
 
 **Verification, not merely applied and trusted:**
 - Eight regression tests added (four per finding, split across `SetDefaultSalesRegionTest.php`,
@@ -1482,3 +1505,65 @@ trusted (the same `git stash` / temporary-removal discipline as round 1). Full s
 `docs/security/model-instance-trust.md` gained a third section, "Re-audit round 2", and both original
 sections' code examples were updated in place to the round-2 shape rather than left describing what round 2
 found wrong.
+
+## Phase 5 code review (`code-reviewer`, 2026-08-26)
+
+**Verdict: FAIL** — one blocking finding, five non-blocking, three nits. All applied the same day.
+
+- **F-1 — Blocking. Larastan level 7 had never actually run against this story.** `phpstan.neon` names it as
+  gate 3 of 3 in [base-standards.md](../../../docs/conventions/base-standards.md#quality-gates), and none of
+  the three prior verification passes (Phase 3 reconciliation, the Phase 4 fix, the Phase 4 re-audit round 2)
+  record running it — each recorded `sail artisan test` and `pint --test` and stopped there. Run for the
+  first time at Phase 5: **2 errors**, both in `Index::save()` — `SalesRegion::find($replacementDefaultId)`
+  widens to `SalesRegion|Collection|null` when handed a `mixed` value straight out of `$validated[...]`,
+  because `Model::find()` accepts an array-ish key. Fixed by narrowing every value read out of `$validated`
+  to `(string)` at the point of use, matching `Users\Index::save()`'s own existing convention for reading
+  `$validated`. Re-run: **0 errors.** This gate must run unscoped, exactly like the other two, before any
+  future story on this codebase is declared done — the omission was a process gap, not a one-off.
+- **F-2 — Medium, docs-only.** `model-instance-trust.md`'s status blockquote claimed *neither* finding was
+  reachable through the shipped dashboard. False for F-1: the component's `findOrFail()` runs *outside* the
+  action's transaction, so a second administrator's already-committed write landing in that window reproduces
+  the exact TOCTOU race — which is precisely what the page's own exploit table already described two
+  paragraphs later. Corrected to scope the "not dashboard-reachable" claim to F-2 only.
+- **F-3 — Low.** `SetSalesRegionActive`'s lock-ordering docblock (and the matching bullet in
+  `model-instance-trust.md`) repeated R-1a's over-claim one layer up: the action's own promotion path still
+  acquires two SEPARATE lock sets in sequence (its own ordered query, then the nested `SetDefaultSalesRegion`
+  call's own separate one), so a concurrent, unrelated `SetDefaultSalesRegion(other)` call can still contend
+  for an overlapping row outside either query's pre-locked set. Not a code change — `attempts: 3` on the
+  OUTER transaction genuinely covers it (a nested SAVEPOINT-level deadlock cannot retry itself; the outer
+  transaction's retry is what converges it), and closing it further (indexing `is_default`, or acquiring the
+  full row-set union up front) is out of this story's scope. Both docblocks reworded to state precisely what
+  ordering closes and what only the retry does.
+- **F-4 — Low.** The task file calls the component's public surface "the interface story 0018 binds to" and
+  "a change here [is] a contract change", but nothing pinned `$regions`' 12-key shape, the per-row `canEdit`
+  hint, or `replacementCandidates()` before this review — a regression in any of the three would have passed
+  every other test in the file. Three tests added to `IndexTest.php`: a full-shape pin (mirroring
+  `Users\IndexTest.php`'s own shape-pin precedent), `canEdit` mirroring `SalesRegionPolicy::update()` for an
+  editor vs. a view-only actor, and `replacementCandidates()` excluding both an inactive entry and the row
+  being edited (D10's third expression, and the one path the action-level revert-checks don't reach).
+- **F-5 — Low.** `save()`, `setDefault()` and `setActive()` emitted the byte-identical `Log::info('Sales
+  region updated', …)` success line, unlike both existing admin screens (`Roles\Index`'s `'Role saved'` /
+  `'Role deleted'`, `Users\Index`'s `'User created'` / `'User updated'` / `'User deleted'`) — an operator
+  reading the audit trail could not tell a rate edit from a default move from a deactivation apart. Split
+  into three distinct messages (`'Sales region updated'` / `'Sales region default changed'` / `'Sales region
+  active state changed'`, the last carrying an `'active'` context key); the three affected
+  `RefusalLoggingTest.php` must-not-over-log assertions updated to match. `architecture/authorization.md`'s
+  generic-key rule binds the **refusal** line only and is unaffected.
+- **F-6 — Low, docs-only.** The Phase 4 (round 1) section still described `whereKeyNot()` as "kept", which
+  round 2 (F-1/R-1) had already superseded with `$rows->reject(...)`. Corrected in place with a note
+  explaining the supersession, rather than left as a silently stale claim in a task file nobody re-reads once
+  the next phase starts.
+- **F-7 — Low, docs-only.** All five test files still opened with a "does not exist yet / RED-phase" header
+  written for Phase 3.1, false since Phase 3.2, plus one live `TODO(Phase 3 step 3)` for a revert-check the
+  Phase 3 reconciliation already records as performed. Corrected in each file.
+- **Nits, all applied:** `SalesRegionPolicy`'s two permission-name literals promoted to `public const`
+  (`VIEW_PERMISSION` / `EDIT_PERMISSION`), matching `RolePolicy`'s precedent rather than `UserPolicy`'s
+  deferred-cleanup literals; `naming.md` gained an explicit exception for a validation `attributes` block's
+  camelCase leaf (it must equal the property name Laravel substitutes, so it is not a snake_case-rule
+  violation); `resources/views/livewire/sales-regions.blade.php` (the placeholder view, correctly shipped at
+  Phase 3 matching story 0004's precedent) added to this file's own "Files to create/modify" list, which had
+  never named it.
+
+**Verification:** all three unscoped gates re-run after every fix — `sail artisan test`: **873/873 passed,
+2441 assertions**; `vendor/bin/pint --test --format agent`: **passed**; `vendor/bin/phpstan analyse`
+(level 7, unscoped): **0 errors** (the first clean run this story has ever had).
