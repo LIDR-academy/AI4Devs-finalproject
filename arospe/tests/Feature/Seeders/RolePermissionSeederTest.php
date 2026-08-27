@@ -30,10 +30,10 @@ test('seeding creates exactly one Super Admin role and one Administrator role, a
         ->and(Role::where('name', 'Administrator')->count())->toBe(1);
 });
 
-test('seeding creates exactly 38 permissions', function () {
+test('seeding creates exactly 42 permissions', function () {
     $this->seed(RolePermissionSeeder::class);
 
-    expect(Permission::count())->toBe(38);
+    expect(Permission::count())->toBe(42);
 });
 
 test('the catalog offers a view, create, edit and delete permission for each managed module', function (string $module) {
@@ -44,7 +44,7 @@ test('the catalog offers a view, create, edit and delete permission for each man
     }
 })->with([
     'users', 'products', 'sales-regions', 'shipping', 'payment-methods',
-    'customers', 'orders', 'blog', 'store-languages',
+    'customers', 'orders', 'blog', 'store-languages', 'media',
 ]);
 
 test('the catalog carries both role-management permissions', function () {
@@ -74,7 +74,7 @@ test('the Administrator role holds every catalog permission except roles.manage-
         ->values()
         ->all();
 
-    expect($granted)->toHaveCount(37)
+    expect($granted)->toHaveCount(41)
         ->and($granted)->toBe($expected)
         ->and($granted)->not->toContain('roles.manage-administrators');
 });
@@ -92,13 +92,13 @@ test('the Super Admin role is granted zero explicit permissions', function () {
 // this test -- otherwise the seeder and the test could drift together (both
 // hardcoding the same typo) without either ever going red. ---
 
-test('the seeded Administrator role is named after the RoleName enum value, and holds the same 37 permissions', function () {
+test('the seeded Administrator role is named after the RoleName enum value, and holds the same 41 permissions', function () {
     $this->seed(RolePermissionSeeder::class);
 
     $administrator = Role::where('name', RoleName::Administrator->value)->where('guard_name', 'web')->first();
 
     expect($administrator)->not->toBeNull()
-        ->and($administrator->permissions)->toHaveCount(37);
+        ->and($administrator->permissions)->toHaveCount(41);
 });
 
 // --- Seeder — edge cases ---
@@ -128,7 +128,31 @@ test('re-running the seeder restores a permission revoked from the Administrator
     $this->seed(RolePermissionSeeder::class);
 
     expect($administrator->fresh()->hasPermissionTo('blog.delete'))->toBeTrue()
-        ->and($administrator->fresh()->permissions)->toHaveCount(37);
+        ->and($administrator->fresh()->permissions)->toHaveCount(41);
+});
+
+test('re-seeding an environment that predates the media module adds its four permissions idempotently', function () {
+    // Story 0019, Phase 5 finding N3: the QA plan named this upgrade path
+    // explicitly ("re-seeding an environment already carrying the
+    // 38-permission catalog yields 42 and creates no duplicates") but no
+    // test covered it. Simulate a pre-0019 install by deleting the four
+    // `media.*` rows (and the Administrator grants pointing at them) after
+    // a normal seed, then re-seed and assert the catalog is restored to 42
+    // with no duplicate rows.
+    $this->seed(RolePermissionSeeder::class);
+
+    $mediaPermissionIds = Permission::where('name', 'like', 'media.%')->pluck('id');
+
+    DB::table('role_has_permissions')->whereIn('permission_id', $mediaPermissionIds)->delete();
+    Permission::whereIn('id', $mediaPermissionIds)->delete();
+
+    expect(Permission::count())->toBe(38);
+
+    $this->seed(RolePermissionSeeder::class);
+
+    expect(Permission::count())->toBe(42)
+        ->and(Permission::where('name', 'like', 'media.%')->count())->toBe(4)
+        ->and(Role::findByName('Administrator')->fresh()->permissions)->toHaveCount(41);
 });
 
 test('a configured super admin address matching a registered user assigns the role via the renamed morph column', function () {
@@ -164,7 +188,7 @@ test('the permission cache reflects seeded permissions immediately after seeding
 
     $this->seed();
 
-    expect($registrar->getPermissions())->toHaveCount(38);
+    expect($registrar->getPermissions())->toHaveCount(42);
 });
 
 // --- Cache-flush placement (F2) ---
@@ -344,7 +368,7 @@ test('a mail-transport failure sending the reset link does not abort the seed', 
     $this->seed(RolePermissionSeeder::class);
 
     expect(Role::count())->toBe(2)
-        ->and(Permission::count())->toBe(38)
+        ->and(Permission::count())->toBe(42)
         ->and(User::where('email', 'ghost@example.test')->exists())->toBeTrue();
 });
 
@@ -386,7 +410,7 @@ test('an unverified occupant does not abort the rest of the seed', function () {
     $this->seed(RolePermissionSeeder::class);
 
     expect(Role::count())->toBe(2)
-        ->and(Permission::count())->toBe(38);
+        ->and(Permission::count())->toBe(42);
 });
 
 test('an unverified occupant creates no second account for the same address', function () {
@@ -484,7 +508,7 @@ test('a malformed super admin address does not abort the rest of the seed', func
     $this->seed(RolePermissionSeeder::class);
 
     expect(Role::count())->toBe(2)
-        ->and(Permission::count())->toBe(38);
+        ->and(Permission::count())->toBe(42);
 })->with('malformedSuperAdminEmails');
 
 test('a malformed super admin address results in no password-reset notification', function (string $malformedEmail) {
@@ -572,5 +596,5 @@ test('a failed password-reset delivery still emits a console warning and still c
 
     expect($output)->toContain('ghost-report-console@example.test')
         ->and(Role::count())->toBe(2)
-        ->and(Permission::count())->toBe(38);
+        ->and(Permission::count())->toBe(42);
 });
