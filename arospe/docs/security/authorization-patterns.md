@@ -667,10 +667,10 @@ together the moment it shipped:
 - **Rename.** A `roles.manage-administrators` holder renames the seeded `Administrator` role. Nothing
   errors. But `isAdministratorRole()` now answers `false` for it, so every consumer of that predicate —
   `UserPolicy`'s Administrator branches, `CreateUser`, `UpdateUser`, `RolePolicy::update()` — silently
-  stops protecting the tier. The role keeps its 37 permissions and every holder keeps their access; only
+  stops protecting the tier. The role keeps its 41 permissions and every holder keeps their access; only
   the *protection* disappears.
 - **Delete.** Once the role has no holders, the same actor deletes it outright. The catalog's base role
-  is gone, and re-creating it by hand (exact byte-identical name, `web` guard, 37 of 38 permissions)
+  is gone, and re-creating it by hand (exact byte-identical name, `web` guard, 41 of 42 permissions)
   is error-prone in a way nothing in the app would detect.
 
 Neither is a bug in the predicate. The predicate reads a column, and the column became writable.
@@ -842,8 +842,8 @@ $permissionGroups = $visiblePermissions->groupBy(
 ```
 
 Verified by rendering rather than by reading: a broad `roles.manage` holder editing a role that holds
-`roles.manage-administrators` gets **37** `value="…"` checkbox attributes and no matching label; a Super
-Admin gets **38**. Saving an unrelated change from that broad actor's payload — which omits the
+`roles.manage-administrators` gets **41** `value="…"` checkbox attributes and no matching label; a Super
+Admin gets **42**. Saving an unrelated change from that broad actor's payload — which omits the
 permission — leaves the role holding `roles.manage-administrators`, because
 [`EnforceAdministratorPermissionGrant`](../../app/Actions/Roles/EnforceAdministratorPermissionGrant.php)
 re-adds it. Every *other* permission the actor cannot grant (`products.delete`, say) is still rendered,
@@ -899,7 +899,7 @@ withheld* — a count assertion fails when a second omission appears, whereas an
 not withhold the *value*: `openEditModal()` assigns `$this->selectedPermissionIds` from the role's real
 permission set, and that property is public and not `#[Locked]` (it must be writable — it is the form
 field), so the withheld permission's integer **id** still reaches a non-Super-Admin's browser in the
-Livewire snapshot. By elimination against the 37 rendered id→label pairs, the actor can infer that the
+Livewire snapshot. By elimination against the 41 rendered id→label pairs, the actor can infer that the
 role holds a permission they are not shown. It confers nothing — granting it is refused with a 403 and
 revoking it is undone by the preserve branch, both verified live. Closing it means filtering the id out
 of `selectedPermissionIds` when `! $canGrantAdministratorLevel`, which is safe but puts the withholding

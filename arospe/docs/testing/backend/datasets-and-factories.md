@@ -71,7 +71,7 @@ When a new model needs its own state variant (e.g. a future `expired()` state), 
 [`database/seeders/DatabaseSeeder.php`](../../../database/seeders/DatabaseSeeder.php) does two different things, and only one of them is fixture data:
 
 - A single fixed `test@example.com` user, created **only** when `app()->environment(['local', 'testing'])` — local/dev seeding (`php artisan migrate:fresh --seed`), not feature-test input.
-- `$this->call(RolePermissionSeeder::class)`, unconditionally in every environment — the roles and 38-permission catalog the app authorizes against (see [architecture/authorization.md](../../architecture/authorization.md#seeding)).
+- `$this->call(RolePermissionSeeder::class)`, unconditionally in every environment — the roles and 42-permission catalog the app authorizes against (see [architecture/authorization.md](../../architecture/authorization.md#seeding)).
 
 Don't rely on either inside a test by default; `RefreshDatabase` gives each test a clean, unseeded schema (see [database-strategy.md](database-strategy.md)), and a test that implicitly depends on the seeder having run is a hidden coupling that breaks the moment someone runs a single test file in isolation. Create exactly the data a given test needs, via factories, inside that test (or its `beforeEach()`).
 

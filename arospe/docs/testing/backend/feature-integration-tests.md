@@ -67,7 +67,7 @@ This asserts on real database state (`passkeys()->find()` returning null) rather
 Access control in this app comes in four layers, and a test that exercises one proves nothing about the others:
 
 1. **Route middleware** — `auth`, `verified`, `password.confirm` on the settings screens; a per-route `can:<permission>` on each of the three module routes (`can:users.view`, `can:roles.manage`, `can:sales-regions.view`).
-2. **Roles & permissions** — `spatie/laravel-permission`, with `HasRoles` attached to `App\Models\User` and a seeded 38-permission catalog (see [architecture/authorization.md](../../architecture/authorization.md)).
+2. **Roles & permissions** — `spatie/laravel-permission`, with `HasRoles` attached to `App\Models\User` and a seeded 42-permission catalog (see [architecture/authorization.md](../../architecture/authorization.md)).
 3. **Policies** — `app/Policies/{UserPolicy,RolePolicy,SalesRegionPolicy}.php`, auto-discovered and called via `Gate::authorize()` from the matching `App\Livewire\*\Index` component *and*, on the write path, from the domain actions themselves.
 4. **Step-up authentication** (task 0015a) — `App\Actions\Auth\EnsureRecentPasswordConfirmation`, an in-method check requiring a password confirmed within `config('auth.password_timeout')` before five specific Users writes. Not an ability and not a policy, so no `Gate::forUser()` test reaches it. See [architecture/authorization.md](../../architecture/authorization.md#step-up-authentication--the-third-layer).
 
