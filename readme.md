@@ -92,10 +92,11 @@ La aplicación de cocina está diseñada bajo una estética oscura de alto contr
     pnpm build
     ```
 6.  **Iniciar Servidores en modo Desarrollo:**
-    Desde la raíz del monorepo:
+    Desde la raíz del monorepo (inicia concurrentemente backend y frontend):
     ```bash
-    pnpm --filter @restostock/frontend dev
+    pnpm dev
     ```
+    *(O alternativamente vía contenedores Docker: `docker compose up --build`)*
 
 ---
 
@@ -180,7 +181,7 @@ El despliegue y aprovisionamiento están automatizados mediante **GitHub Actions
 1.  Verificación de gobernanza agéntica con `bash .agents/scripts/validate_agents.sh` (0 enlaces rotos).
 2.  Entorno de ejecución Node 24 LTS con caché optimizada de `pnpm 9`.
 3.  Servicio PostgreSQL efímero y aislado en contenedor Docker para tests de integración.
-4.  Comprobación de tipos con TypeScript, auditoría estática con linters (`pnpm run lint`), linter de especificaciones `DESIGN.md` y ejecución de la suite de 51 pruebas automatizadas unitarias/integración.
+4.  Comprobación de tipos con TypeScript, auditoría estática con linters (`pnpm run lint`), linter de especificaciones `DESIGN.md` y ejecución de la suite de 186 pruebas automatizadas unitarias/integración.
 5.  Autenticación segura en la nube mediante OpenID Connect (OIDC) sin almacenamiento de llaves estáticas.
 
 ### **2.5. Seguridad:**
@@ -192,7 +193,7 @@ El despliegue y aprovisionamiento están automatizados mediante **GitHub Actions
 ### **2.6. Tests y Gobernanza Agéntica:**
 El proyecto sigue la directiva de **Desarrollo Guiado por Pruebas (TDD)** y **Gobernanza Agéntica v2.3.0**:
 *   Se prohíbe escribir código de producción sin un test unitario/integración que falle previamente (`RED` a `GREEN`).
-*   Suite completa verificada: **51/51 tests activos al 100% de éxito**.
+*   Suite completa verificada: **186/186 tests activos al 100% de éxito (98 Backend + 88 Frontend)**.
 *   Patrón de **3 Oráculos** (UI, RED, ESTADO) para aserciones deterministas en Playwright E2E y pruebas unitarias/integración.
 *   Uso de **Fake Repositories** en memoria para pruebas de la capa de aplicación con sincronización dinámica entre modelos de lectura y escritura.
 *   Cumplimiento de **Stryker Mutation Score $\ge 70\%$** para evitar pruebas tautológicas.
@@ -204,81 +205,138 @@ El proyecto sigue la directiva de **Desarrollo Guiado por Pruebas (TDD)** y **Go
 ### **3.1. Diagrama del modelo de datos:**
 ```mermaid
 erDiagram
+    roles ||--o{ users : "asigna_rol"
+    roles ||--o{ role_permissions : "posee_permisos"
+    permissions ||--o{ role_permissions : "se_concede_en"
+
+    users ||--o{ remanentes : "registra_apertura"
+    users ||--o{ stock_movements : "ejecuta_movimiento"
+    users ||--o{ shift_reconciliations : "cierra_turno"
+
+    insumos ||--o{ warehouse_stocks : "posee_existencias"
+    insumos ||--o{ remanentes : "se_convierte_en"
+    insumos ||--o{ stock_movements : "registra_transaccion"
+    insumos ||--o{ recipe_ingredients : "forma_parte_de"
+    insumos ||--o{ shift_reconciliation_items : "se_audita_en"
+
+    remanentes ||--o{ stock_movements : "origina_consumo_o_descarte"
+    recipes ||--o{ recipe_ingredients : "contiene"
+    shift_reconciliations ||--o{ shift_reconciliation_items : "detalla_diferencias"
+
     users {
         uuid id PK
-        varchar email UK "NULL"
-        varchar password_hash "NULL"
-        varchar pin_hash "NULL"
-        varchar name
-        varchar photo_url "NULL"
-        Role role
-        boolean is_active
-        timestamp created_at
-        timestamp updated_at
+        string name
+        uuid role_id FK
+        string pin_hash "PII (Salted Hash)"
+        enum status "ACTIVE | BLOCKED"
+        integer failed_attempts
+        datetime created_at
+        datetime updated_at
     }
+
+    roles {
+        uuid id PK
+        string name UK "ADMIN | KITCHEN_STAFF"
+        string description
+    }
+
+    permissions {
+        uuid id PK
+        string code UK
+        string name
+        string module
+    }
+
     insumos {
         uuid id PK
-        varchar name
-        varchar brand "NULL"
-        varchar category
-        varchar purchase_unit
-        varchar consumption_unit
-        decimal conversion_factor
-        integer open_shelf_life_days "NULL"
-        boolean is_active
-        timestamp created_at
-        timestamp updated_at
+        string name
+        string unit_of_measure "KG | L | UNITS"
+        datetime created_at
+        datetime updated_at
     }
+
     warehouse_stocks {
         uuid id PK
         uuid insumo_id FK
-        LocationType location
-        decimal quantity
-        timestamp updated_at
+        string location "MAIN_WAREHOUSE"
+        decimal quantity "CHECK (quantity >= 0)"
+        datetime updated_at
     }
+
     remanentes {
         uuid id PK
         uuid insumo_id FK
-        uuid user_id FK
         decimal initial_quantity
         decimal current_quantity
-        LocationType location
-        varchar sublocation "NULL"
-        RemanenteStatus status
-        timestamp opened_at
-        timestamp original_expiration_date
-        timestamp calculated_expiration_date
-        timestamp created_at
-        timestamp updated_at
+        string location "KITCHEN_FRIDGE | KITCHEN_PREP"
+        enum status "ACTIVE | EXHAUSTED | DISCARDED"
+        datetime expiration_date
+        datetime created_at
+        datetime updated_at
     }
+
     stock_movements {
         uuid id PK
         uuid insumo_id FK
-        uuid remanente_id FK "NULL"
-        uuid user_id FK
-        MovementType type
-        LocationType from_location
-        LocationType to_location
+        string type "EXTRACTION | DISCARD | RECONCILIATION | RESTOCK"
         decimal quantity
-        varchar unit
-        DiscardReason reason "NULL"
-        timestamp created_at
+        string from_loc
+        string to_loc
+        uuid operator_id FK
+        string purpose
+        string reason
+        uuid recipe_id FK
+        datetime created_at
     }
 
-    users ||--o{ remanentes : "abre"
-    users ||--o{ stock_movements : "registra"
-    insumos ||--o{ warehouse_stocks : "tiene"
-    insumos ||--o{ remanentes : "se abre en"
-    insumos ||--o{ stock_movements : "se mueve"
-    remanentes ||--o{ stock_movements : "genera log"
+    recipes {
+        uuid id PK
+        string name
+        string category
+        string description
+        datetime created_at
+        datetime updated_at
+    }
+
+    recipe_ingredients {
+        uuid id PK
+        uuid recipe_id FK
+        uuid insumo_id FK
+        decimal quantity
+    }
+
+    shift_reconciliations {
+        uuid id PK
+        uuid user_id FK
+        datetime closed_at
+        datetime created_at
+    }
+
+    storage_locations {
+        uuid id PK
+        string name UK
+        enum type "WAREHOUSE | KITCHEN"
+        boolean is_active
+    }
+
+    system_settings {
+        string id PK "default"
+        string restaurant_name
+        string currency_symbol
+        integer critical_alert_hours
+        decimal variance_tolerance_percent
+    }
 ```
 
 ### **3.2. Descripción de entidades principales:**
-*   **`users`**: Almacena credenciales de administradores (email/password) y operarios (PIN hash). Restricción `RESTRICT` en FK para salvaguardar logs de auditoría física.
-*   **`insumos`**: Catálogo maestro de ingredientes. Define la unidad de compra (ej. Horma), la unidad de consumo (ej. KG) y el factor de conversión preciso (Decimal).
-*   **`warehouse_stocks`**: Existencias de insumos cerrados por ubicación. Posee una restricción `UNIQUE` en `(insumo_id, location)` e índices en `location`.
-*   **`remanentes`**: Registro de ingredientes abiertos actualmente en uso en cocina. Posee el índice compuesto FEFO `(status, calculated_expiration_date)` para optimizar búsquedas.
-*   **`stock_movements`**: Log transaccional inmutable. Almacena todos los traslados, consumos y descartes.
+*   **`users` & `roles` & `permissions`**: Almacena credenciales de administradores y operarios (PIN hash salted) con control de acceso basado en roles (RBAC) y bloqueo preventivo por intentos fallidos.
+*   **`insumos`**: Catálogo maestro de ingredientes. Define la unidad de medida estándar (`KG`, `L`, `UNITS`) y su relación con existencias y recetas.
+*   **`warehouse_stocks`**: Existencias de insumos cerrados en depósito. Posee restricción `UNIQUE` en `(insumo_id, location)` e integridad en actualización.
+*   **`remanentes`**: Registro de ingredientes abiertos en cocina. Posee índice compuesto FEFO `(status, expiration_date)` para optimizar consultas táctiles de vencimiento acelerado.
+*   **`stock_movements`**: Log transaccional inmutable para auditoría. Almacena extracciones, consumos, descartes y reabastecimientos (`RESTOCK`).
+*   **`recipes` & `recipe_ingredients`**: Definición de preparaciones maestras y porciones necesarias de insumos para el descuento automatizado en cascada FEFO.
+*   **`shift_reconciliations` & `items`**: Registro del cierre de jornada de cocina, comparando stock teórico vs. recuento físico e identificando varianzas.
+*   **`storage_locations` & `system_settings`**: Configuración física de sectores del restaurante y parámetros globales de alertas de expiración y tolerancia.
 
 ---
 
