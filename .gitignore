@@ -1,0 +1,65 @@
+# ── Entornos y secretos ─────────────────────────────────────
+# .env.example SÍ se versiona (ver README 1.4); .env nunca.
+.env
+.env.*
+!.env.example
+
+# ── Dependencias ────────────────────────────────────────────
+node_modules/
+.npm/
+.pnpm-store/
+
+# Los repositorios de muestra de fixtures/ se versionan (son el
+# arnés de pruebas y la fuente de las semillas), pero sus
+# dependencias instaladas no: el analizador no las necesita.
+fixtures/*/vendor/
+fixtures/*/node_modules/
+
+# ── Build y artefactos ──────────────────────────────────────
+dist/
+build/
+*.tsbuildinfo
+packages/web/dist/
+
+# ── Tests y cobertura ───────────────────────────────────────
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# ── Base de datos ───────────────────────────────────────────
+# seeds/graph-dump.sql SÍ se versiona: es lo que hace que el
+# sistema arranque operativo sin indexar nada (F4).
+*.sqlite
+*.sqlite3
+pgdata/
+docker/pgdata/
+
+# ── Logs y temporales ───────────────────────────────────────
+*.log
+npm-debug.log*
+logs/
+tmp/
+.cache/
+
+# ── Material de trabajo que no forma parte de la entrega ────
+# El recorrido de la propuesta y el análisis del enunciado se
+# conservan en local pero no se publican. Para publicarlos,
+# basta borrar estas dos líneas.
+proposal-codemind/
+ai4devs-requisitos-y-encaje.md
+
+# ── Editores e IDE ──────────────────────────────────────────
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.iml
+*.swp
+*.swo
+
+# ── Sistema operativo ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

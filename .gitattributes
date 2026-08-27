@@ -1,0 +1,25 @@
+# Normaliza los finales de línea: se trabaja en Windows y el repositorio
+# se lee y ejecuta en Linux y macOS. Sin esto, la mitad de los diffs
+# aparecen como «fichero entero modificado» al cruzar de sistema.
+* text=eol=lf
+
+# Binarios: nunca convertir.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.pdf  binary
+*.docx binary
+*.woff  binary
+*.woff2 binary
+
+# SVG es texto, y los wireframes de images/ deben poder verse en diff.
+*.svg text
+
+# Scripts que deben conservar CRLF por ejecutarse en Windows.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Excluir de las estadísticas de lenguaje de GitHub: no son código propio.
+fixtures/** linguist-vendored
+seeds/*.sql linguist-generated
