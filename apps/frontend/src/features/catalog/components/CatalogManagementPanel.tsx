@@ -4,8 +4,7 @@ import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
 import { SectionTabs } from '../../../shared/components/SectionTabs.js';
-import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
-import { CreateRecipeForm } from '../../recipes/components/CreateRecipeForm.js';
+import { RecipeCatalogPanel } from '../../recipes/components/RecipeCatalogPanel.js';
 import { InsumoCatalogPanel } from '../../stock/components/InsumoCatalogPanel.js';
 
 interface CatalogManagementPanelProps {
@@ -18,21 +17,16 @@ type Section = 'inventory' | 'recipe';
 
 const CATALOG_TABS = [
   { value: 'inventory' as const, label: 'Inventario de Bodega', id: 'btn-tab-inventory-stock' },
-  { value: 'recipe' as const, label: 'Alta de Receta', id: 'btn-tab-create-recipe' },
+  { value: 'recipe' as const, label: 'Recetario', id: 'btn-tab-create-recipe' },
 ];
 
 export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ isOpen, userRole, onClose }) => {
   const [section, setSection] = useState<Section>('inventory');
-  const [feedback, setFeedback] = useState<string | null>(null);
 
   if (!isOpen) return null;
   if (userRole !== 'ADMIN') {
     return <AccessDeniedState moduleLabel="Gestión de Catálogo" onClose={onClose} />;
   }
-
-  const handleUpdated = (message: string) => {
-    setFeedback(message);
-  };
 
   return (
     <Modal maxWidth="720px" width="92%">
@@ -45,18 +39,9 @@ export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ 
         onClose={onClose}
       />
 
-      <SectionTabs
-        section={section}
-        options={CATALOG_TABS}
-        onChange={(s) => {
-          setSection(s);
-          setFeedback(null);
-        }}
-      />
+      <SectionTabs section={section} options={CATALOG_TABS} onChange={setSection} />
 
-      {feedback && <SuccessFeedbackBanner message={feedback} />}
-
-      {section === 'inventory' ? <InsumoCatalogPanel /> : <CreateRecipeForm onCreated={handleUpdated} />}
+      {section === 'inventory' ? <InsumoCatalogPanel /> : <RecipeCatalogPanel />}
     </Modal>
   );
 };

@@ -40,8 +40,11 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
   });
 
   it('crea una receta con 2 ingredientes seleccionados del catálogo real (TK-057)', async () => {
-    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
       if (!init || !init.method || init.method === 'GET') {
+        if (url.endsWith('/recipes')) {
+          return { ok: true, status: 200, json: async () => [] };
+        }
         return {
           ok: true,
           status: 200,
@@ -57,7 +60,12 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
 
     render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Alta de Receta/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Recetario/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /\+ Nueva Receta/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /\+ Nueva Receta/i }));
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Nombre de la Receta/i)).toBeInTheDocument();
@@ -88,8 +96,11 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     // usuario reabriera el dropdown manualmente. Solo se reproducia con un delay
     // real (red real / este mock), no con una resolucion sincronica de fetch.
     let capturedBody: unknown = null;
-    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
       if (!init || !init.method || init.method === 'GET') {
+        if (url.endsWith('/recipes')) {
+          return { ok: true, status: 200, json: async () => [] };
+        }
         await new Promise((resolve) => setTimeout(resolve, 20));
         return {
           ok: true,
@@ -104,7 +115,12 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
 
     render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Alta de Receta/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Recetario/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /\+ Nueva Receta/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /\+ Nueva Receta/i }));
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Nombre de la Receta/i)).toBeInTheDocument();
@@ -167,14 +183,57 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     });
   });
 
-  it('muestra estado de carga si el catálogo de insumos está vacío al abrir Alta de Receta', async () => {
+  it('muestra estado de carga si el catálogo de insumos está vacío al abrir el formulario de Nueva Receta', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] }));
 
     render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
-    fireEvent.click(screen.getByRole('button', { name: /Alta de Receta/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Recetario/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /\+ Nueva Receta/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /\+ Nueva Receta/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/primero dé de alta uno en la pestaña/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renderiza el Recetario con recetas existentes y filtra por nombre', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => [
+          { id: 'rec-1', name: 'Pizza Margarita', category: 'Pizzas', ingredients: [{ insumoId: 'ins-1', quantity: '0.150' }] },
+          {
+            id: 'rec-2',
+            name: 'Lasagna Boloñesa',
+            category: 'Pastas',
+            ingredients: [
+              { insumoId: 'ins-2', quantity: '0.200' },
+              { insumoId: 'ins-3', quantity: '0.100' },
+            ],
+          },
+        ],
+      })
+    );
+
+    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: /Recetario/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Pizza Margarita')).toBeInTheDocument();
+      expect(screen.getByText('Lasagna Boloñesa')).toBeInTheDocument();
+      expect(screen.getByText(/2 ingredientes/i)).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText(/Buscar receta por nombre/i), { target: { value: 'lasagna' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Lasagna Boloñesa')).toBeInTheDocument();
+      expect(screen.queryByText('Pizza Margarita')).not.toBeInTheDocument();
     });
   });
 });
