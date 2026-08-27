@@ -1581,7 +1581,7 @@ Phase 1 (Three Amigos) debate run on 2026-08-18 with `backend-expert` (files and
 [PRD](../../docs/PRD/PRD.md#22-products) §2.2's "Product catalog" and "Product categories" Gherkin
 blocks and assumptions 8, 9, 10, 11, 17 and 19, grounded in full readings of
 [0023](0023-product-categories-backend.md) and
-[0019](0019-media-library-upload-and-conversions-backend.md), with
+[0019](done/0019-media-library-upload-and-conversions-backend.md), with
 [0005](done/0005-soft-delete-users-admin-guard.md) as the precedent for how this project models a
 guard that refuses a delete.
 

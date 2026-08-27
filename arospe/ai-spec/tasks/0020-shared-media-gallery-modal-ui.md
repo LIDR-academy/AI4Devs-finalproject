@@ -9,7 +9,7 @@ grid, a debounced title/description search with an explicit empty state, an uplo
 title/description editing on upload and on a selected tile.
 
 This story owns **no table, no migration, no upload/conversion logic and no permission-catalog
-change** — all of that is [0019](0019-media-library-upload-and-conversions-backend.md), and this
+change** — all of that is [0019](done/0019-media-library-upload-and-conversions-backend.md), and this
 story consumes it unchanged. It is the same split story **0004 → 0006** already ran for the Users
 screen: backend ships the component's server-side surface, frontend dresses it.
 
@@ -56,7 +56,7 @@ several).
 | The WYSIWYG "insert image" integration (§2.3's *"Inserting an image inline from the WYSIWYG editor"*) | **0021**, which depends on this story |
 | The product editor's featured-image consumption (§2.3's *"Selecting an image in featured mode sets the featured image"*) | **0027**, which depends on this story |
 | Upload validation, `.webp`/`.avif` generation, the `media` table, the search query, the `media.*` permissions | **0019** (done at Phase 1; **not yet implemented** — see [Dependencies](#dependencies-risks--open-questions)) |
-| Media deletion | **Nobody, this phase.** Confirmed in 0019 [D11](0019-media-library-upload-and-conversions-backend.md); this story adds no delete affordance to the modal, and a reviewer should expect its absence rather than flag it. |
+| Media deletion | **Nobody, this phase.** Confirmed in 0019 [D11](done/0019-media-library-upload-and-conversions-backend.md); this story adds no delete affordance to the modal, and a reviewer should expect its absence rather than flag it. |
 | A standalone Media Library screen or route | **Nobody, this phase.** Confirmed Phase 0 decision, matching 0019's D10. |
 
 **The visual reference** is the prototype's `openGallery()`
@@ -213,7 +213,7 @@ without them.
 
 ### D1 — `App\Livewire\Media\Gallery` is extended in place, not forked
 
-0019's [D10](0019-media-library-upload-and-conversions-backend.md) already commits the class name,
+0019's [D10](done/0019-media-library-upload-and-conversions-backend.md) already commits the class name,
 its `mount()`/upload/search surface and its `media.view`/`media.create` gating. A second modal
 component was considered and **rejected**: it would either duplicate that surface or force 0019's
 placeholder to be deleted and reintroduced. PRD AC 1 says outright there is **one** shared
@@ -917,7 +917,7 @@ Ordered. Step 0 is a hard gate.
 
 **Dependencies**
 
-- **[0019 — media library upload, conversions and search](0019-media-library-upload-and-conversions-backend.md)
+- **[0019 — media library upload, conversions and search](done/0019-media-library-upload-and-conversions-backend.md)
   — Phase 1 complete, implementation NOT started (V1).** This story is blocked on 0019's Phase 7,
   per workflow.md's [task ordering rule](../../docs/workflow.md#task-ordering-rule). The brief that
   commissioned this debate described 0019 as "already done"; that is true of the *story document*,

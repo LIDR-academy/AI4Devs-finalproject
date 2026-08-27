@@ -2879,7 +2879,7 @@ Phase 1 (Three Amigos) debate run on 2026-08-18 per
 example of its duplicate-SKU Scenario Outline, plus assumptions 9, 10 and 19, and grounded in **full
 readings** of [0024](0024-products-core-crud-backend.md),
 [0028](0028-product-attribute-types-and-values-backend.md) and
-[0019](0019-media-library-upload-and-conversions-backend.md), with
+[0019](done/0019-media-library-upload-and-conversions-backend.md), with
 [0023](0023-product-categories-backend.md) as the precedent for how this project models a delete
 guard.
 

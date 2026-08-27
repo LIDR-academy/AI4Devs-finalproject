@@ -1752,7 +1752,7 @@ approach) and `frontend-qa` (test design), per
 [workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate). Derived from
 [PRD §2.2](../../docs/PRD/PRD.md#22-products) and the
 [Design reference](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, and grounded
-in full readings of [0019](0019-media-library-upload-and-conversions-backend.md),
+in full readings of [0019](done/0019-media-library-upload-and-conversions-backend.md),
 [0020](0020-shared-media-gallery-modal-ui.md), [0021](0021-wysiwyg-rich-text-editor-component.md),
 [0022](0022-searchable-multi-select-component.md), [0023](0023-product-categories-backend.md),
 [0024](0024-products-core-crud-backend.md), [0025](0025-product-categories-ui.md),
