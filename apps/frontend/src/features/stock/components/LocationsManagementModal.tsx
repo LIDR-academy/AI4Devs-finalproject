@@ -111,8 +111,8 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
                 className="input-touch"
                 style={{ width: '100%' }}
               >
-                <option value="WAREHOUSE">📦 Bodega (Warehouse)</option>
-                <option value="KITCHEN">🍳 Cocina (Kitchen Area)</option>
+                <option value="WAREHOUSE">Bodega (Warehouse)</option>
+                <option value="KITCHEN">Cocina (Kitchen Area)</option>
               </select>
             </div>
           </div>

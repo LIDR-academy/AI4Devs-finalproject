@@ -45,12 +45,12 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
     try {
       const updated = await SettingsService.updateSettings(settings);
       setSettings(updated);
-      setMessage('✅ Configuración guardada correctamente');
+      setMessage('Configuración guardada correctamente');
       if (onSettingsUpdated) {
         onSettingsUpdated(updated);
       }
     } catch {
-      setMessage('❌ Error al guardar la configuración');
+      setMessage('Error al guardar la configuración');
     } finally {
       setIsSaving(false);
     }

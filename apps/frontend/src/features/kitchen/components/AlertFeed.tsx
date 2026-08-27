@@ -1,8 +1,9 @@
 import React from 'react';
-import { SemaphoricCard, AlertItem } from './SemaphoricCard';
-import { OfflineBanner } from './OfflineBanner';
+import { SemaphoricCard, AlertItem } from './SemaphoricCard.js';
+import { OfflineBanner } from './OfflineBanner.js';
+import { CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 
-interface AlertFeedProps {
+export interface AlertFeedProps {
   alerts?: AlertItem[];
   isLoading?: boolean;
   error?: string | null;
@@ -14,36 +15,39 @@ const AlertFeedErrorState: React.FC<{ error: string; onRetry?: () => void }> = (
   <div
     role="alert"
     style={{
-      border: '1px solid var(--color-danger, #e10600)',
-      backgroundColor: 'rgba(225, 6, 0, 0.1)',
-      padding: '1rem',
-      borderRadius: '4px',
+      padding: '1.5rem',
+      backgroundColor: 'rgba(235, 62, 62, 0.15)',
+      border: '1px solid var(--color-danger, #eb3e3e)',
+      borderRadius: '8px',
+      color: 'var(--text-primary, #f5f5f0)',
       textAlign: 'center',
     }}
   >
-    <p style={{ color: 'var(--color-danger-text, #ff6b5e)', fontWeight: 600 }}>{error}</p>
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+      <AlertTriangle size={32} style={{ color: 'var(--color-danger)' }} />
+    </div>
+    <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-danger, #eb3e3e)' }}>Error al Cargar Alertas</h3>
+    <p style={{ margin: '0 0 1rem 0', fontSize: '0.95rem' }}>{error}</p>
     {onRetry && (
       <button
+        type="button"
         onClick={onRetry}
+        className="btn-touch btn-primary"
         style={{
-          minHeight: '48px',
-          padding: '0 1.5rem',
-          backgroundColor: 'var(--color-primary, #ff6a00)',
-          color: 'var(--color-primary-on, #101010)',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontWeight: 600,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
         }}
       >
+        <RefreshCw size={18} />
         Reintentar Carga
       </button>
     )}
   </div>
 );
 
-const AlertFeedLoadingSkeleton: React.FC = () => (
-  <div data-testid="loading-skeleton" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+const AlertFeedSkeleton: React.FC = () => (
+  <div data-testid="loading-skeleton" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
     {[1, 2, 3].map((i) => (
       <div
         key={i}
@@ -61,7 +65,9 @@ const AlertFeedLoadingSkeleton: React.FC = () => (
 
 const AlertFeedEmptyState: React.FC = () => (
   <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary, #8a8a86)' }}>
-    <span style={{ fontSize: '3rem', display: 'block', marginBottom: '0.5rem' }}>✅</span>
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+      <CheckCircle2 size={48} style={{ color: 'var(--color-success)' }} />
+    </div>
     <h3>No hay remanentes en riesgo de vencimiento</h3>
     <p>Todos los insumos en cocina cumplen las directivas FEFO óptimas.</p>
   </div>
@@ -81,8 +87,8 @@ const AlertFeedDataReady: React.FC<{ alerts: AlertItem[]; onAction?: (id: string
 type AlertFeedViewState = 'error' | 'loading' | 'empty' | 'data';
 
 function resolveViewState(isLoading: boolean, error: string | null, alertsCount: number): AlertFeedViewState {
-  if (error) return 'error';
   if (isLoading) return 'loading';
+  if (error) return 'error';
   if (alertsCount === 0) return 'empty';
   return 'data';
 }
@@ -110,7 +116,9 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
       <OfflineBanner />
 
       <header style={{ padding: '1rem', borderBottom: '1px solid var(--border-card, #666666)' }}>
-        <h2 style={{ margin: 0, fontSize: '1.4rem' }}>🚨 Feed de Alertas & Remanentes CRÍTICOS</h2>
+        <h2 style={{ margin: 0, fontSize: '1.4rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertTriangle size={24} style={{ color: 'var(--color-primary)' }} /> Feed de Alertas & Remanentes CRÍTICOS
+        </h2>
         <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary, #8a8a86)', fontSize: '0.9rem' }}>
           Monitoreo en tiempo real del vencimiento de insumos por método FEFO.
         </p>
@@ -118,7 +126,7 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
 
       <main style={{ padding: '1rem', flex: 1 }}>
         {viewState === 'error' && <AlertFeedErrorState error={error as string} onRetry={onRetry} />}
-        {viewState === 'loading' && <AlertFeedLoadingSkeleton />}
+        {viewState === 'loading' && <AlertFeedSkeleton />}
         {viewState === 'empty' && <AlertFeedEmptyState />}
         {viewState === 'data' && <AlertFeedDataReady alerts={alerts} onAction={onAction} />}
       </main>

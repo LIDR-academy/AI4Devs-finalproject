@@ -1,5 +1,6 @@
 import React from 'react';
 import { useOnlineStatus } from '../../../shared/hooks/useOnlineStatus';
+import { WifiOff } from 'lucide-react';
 
 export const OfflineBanner: React.FC = () => {
   const isOnline = useOnlineStatus();
@@ -30,7 +31,7 @@ export const OfflineBanner: React.FC = () => {
         minHeight: '48px',
       }}
     >
-      <span aria-hidden="true" style={{ fontSize: '1.2rem' }}>⚠️</span>
+      <WifiOff size={20} />
       <span>Modo Sin Conexión: Operando localmente. Sincronización pendiente.</span>
     </div>
   );

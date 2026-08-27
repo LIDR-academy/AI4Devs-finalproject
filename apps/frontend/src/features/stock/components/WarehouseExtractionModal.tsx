@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus, PackageCheck } from 'lucide-react';
+import { Plus, Minus, PackageCheck, AlertTriangle } from 'lucide-react';
 import { StockService } from '../services/stock.service.js';
 import { KitchenService, RecipeItem } from '../../kitchen/services/kitchen.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
@@ -267,9 +267,9 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
 
     <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'rgba(255, 106, 0, 0.1)', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
       {purpose === 'DIRECT_DISCARD' ? (
-        <span>⚠️ Se registrará la <strong>merma directa desde bodega</strong> descontando el stock sin pasarlo a cocina.</span>
+        <span><AlertTriangle size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} /> Se registrará la <strong>merma directa desde bodega</strong> descontando el stock sin pasarlo a cocina.</span>
       ) : (
-        <span>⚠️ Al confirmar la extracción, el insumo pasará al tablero de <strong>Remanentes Activos con vencimiento prioritario FEFO</strong>.</span>
+        <span><AlertTriangle size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} /> Al confirmar la extracción, el insumo pasará al tablero de <strong>Remanentes Activos con vencimiento prioritario FEFO</strong>.</span>
       )}
     </div>
 

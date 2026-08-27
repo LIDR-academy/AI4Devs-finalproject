@@ -106,7 +106,7 @@ const ReconciliationItemInfo: React.FC<{ item: RemanenteFEFOItem; diff: number; 
     {diff !== 0 && (
       <div style={{ fontSize: '0.75rem', fontWeight: 700, color: diff < 0 ? 'var(--color-danger-text)' : 'var(--color-primary)', marginTop: '2px' }}>
         Varianza: {diff > 0 ? `+${formatQuantity(diff, item.unitOfMeasure)}` : formatQuantity(diff, item.unitOfMeasure)} {formatUnitLabel(item.unitOfMeasure)}
-        {isCritical && ' ⚠️ (>50% de desvío)'}
+        {isCritical && ' (desvío crítico >50%)'}
       </div>
     )}
   </div>
