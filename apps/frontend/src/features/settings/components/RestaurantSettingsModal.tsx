@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
+import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
 import { SettingsService, SystemSettingsDto } from '../services/settings.service.js';
 import { Building2, Save } from 'lucide-react';
 
@@ -62,84 +63,94 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
         title="Configuración General del Restaurante"
         onClose={onClose}
       />
-      <form onSubmit={handleSubmit} className="space-y-4 text-slate-100 mt-4">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Nombre del Restaurante</label>
+          <label className="form-label">Nombre del Restaurante</label>
           <input
             type="text"
             required
             value={settings.restaurantName}
             onChange={(e) => setSettings({ ...settings, restaurantName: e.target.value })}
-            className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white min-h-[48px]"
+            className="input-touch"
+            style={{ width: '100%' }}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Identificación Fiscal (RUT/NIF)</label>
+            <label className="form-label">Identificación Fiscal (RUT/NIF)</label>
             <input
               type="text"
               value={settings.taxId || ''}
               onChange={(e) => setSettings({ ...settings, taxId: e.target.value })}
-              className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white min-h-[48px]"
+              className="input-touch"
+              style={{ width: '100%' }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Símbolo de Moneda</label>
+            <label className="form-label">Símbolo de Moneda</label>
             <input
               type="text"
               required
               value={settings.currencySymbol}
               onChange={(e) => setSettings({ ...settings, currencySymbol: e.target.value })}
-              className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white min-h-[48px]"
+              className="input-touch"
+              style={{ width: '100%' }}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Alerta Crítica FEFO (Horas)</label>
+            <label className="form-label">Alerta Crítica FEFO (Horas)</label>
             <input
               type="number"
               required
               min={1}
               value={settings.criticalAlertHours}
               onChange={(e) => setSettings({ ...settings, criticalAlertHours: Number(e.target.value) })}
-              className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white min-h-[48px]"
+              className="input-touch"
+              style={{ width: '100%' }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Vida Útil Estándar Remanente (Horas)</label>
+            <label className="form-label">Vida Útil Estándar Remanente (Horas)</label>
             <input
               type="number"
               required
               min={1}
               value={settings.defaultRemanenteHours}
               onChange={(e) => setSettings({ ...settings, defaultRemanenteHours: Number(e.target.value) })}
-              className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white min-h-[48px]"
+              className="input-touch"
+              style={{ width: '100%' }}
             />
           </div>
         </div>
 
-        {message && <div className="p-3 bg-slate-800 border border-slate-700 rounded text-sm font-medium">{message}</div>}
+        {message && (
+          <div
+            style={{
+              padding: '12px',
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-card)',
+              borderRadius: '4px',
+              fontSize: '0.9rem',
+              color: 'var(--text-primary)',
+            }}
+          >
+            {message}
+          </div>
+        )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded min-h-[48px]"
-          >
-            Cerrar
-          </button>
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 font-bold text-slate-950 rounded flex items-center gap-2 min-h-[48px]"
-          >
-            <Save className="w-5 h-5" />
-            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
-        </div>
+        <ModalFooterActions
+          onCancel={onClose}
+          cancelLabel="Cerrar"
+          confirmLabel="Guardar Cambios"
+          submittingLabel="Guardando..."
+          confirmIcon={<Save size={20} />}
+          isSubmitting={isSaving}
+          marginTop="12px"
+        />
       </form>
     </Modal>
   );

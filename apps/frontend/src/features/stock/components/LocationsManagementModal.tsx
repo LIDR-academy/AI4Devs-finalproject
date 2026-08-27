@@ -54,71 +54,112 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
         title="Sectores Físicos de Almacenamiento"
         onClose={onClose}
       />
-      <div className="space-y-6 text-slate-100 mt-4">
-        <form onSubmit={handleSubmit} className="p-4 bg-slate-900 border border-slate-800 rounded space-y-3">
-          <h4 className="text-sm font-bold text-amber-400 flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Registrar Nuevo Sector Físico
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '16px' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            padding: '16px',
+            backgroundColor: 'var(--bg-root)',
+            border: '1px solid var(--border-card)',
+            borderRadius: '6px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+          }}
+        >
+          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Plus size={18} /> Registrar Nuevo Sector Físico
           </h4>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Nombre Sector</label>
+              <label className="form-label">Nombre Sector</label>
               <input
                 type="text"
                 required
                 placeholder="Ej. Cámara Congelados 2"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white min-h-[44px]"
+                className="input-touch"
+                style={{ width: '100%' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Tipo de Sector</label>
+              <label className="form-label">Tipo de Sector</label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as 'WAREHOUSE' | 'KITCHEN')}
-                className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white min-h-[44px]"
+                className="input-touch"
+                style={{ width: '100%' }}
               >
                 <option value="WAREHOUSE">📦 Bodega (Warehouse)</option>
                 <option value="KITCHEN">🍳 Cocina (Kitchen Area)</option>
               </select>
             </div>
           </div>
+
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Descripción / Ubicación</label>
+            <label className="form-label">Descripción / Ubicación</label>
             <input
               type="text"
               placeholder="Ej. Sector frío del fondo"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white min-h-[44px]"
+              className="input-touch"
+              style={{ width: '100%' }}
             />
           </div>
+
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-2 bg-amber-500 hover:bg-amber-600 font-bold text-slate-950 rounded flex items-center justify-center gap-2 min-h-[44px]"
+            className="btn-touch btn-primary"
+            style={{ width: '100%', marginTop: '4px' }}
           >
-            <Plus className="w-4 h-4" />
+            <Plus size={20} />
             {isSubmitting ? 'Guardando...' : 'Crear Sector'}
           </button>
         </form>
 
         <div>
-          <h4 className="text-sm font-bold text-slate-300 mb-2">Sectores Activos</h4>
-          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '10px' }}>
+            Sectores Activos
+          </h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto', paddingRight: '4px' }}>
             {locations.map((loc) => (
-              <div key={loc.id} className="p-3 bg-slate-800 border border-slate-700 rounded flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-amber-400" />
+              <div
+                key={loc.id}
+                style={{
+                  padding: '12px',
+                  backgroundColor: 'var(--bg-root)',
+                  border: '1px solid var(--border-card)',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <MapPin size={18} style={{ color: 'var(--color-primary)' }} />
                   <div>
-                    <span className="font-bold text-sm block">{loc.name}</span>
-                    <span className="text-xs text-slate-400">{loc.description || 'Sin descripción'}</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.95rem', display: 'block', color: 'var(--text-primary)' }}>
+                      {loc.name}
+                    </span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      {loc.description || 'Sin descripción'}
+                    </span>
                   </div>
                 </div>
                 <span
-                  className={`text-xs px-2 py-1 rounded font-bold ${
-                    loc.type === 'WAREHOUSE' ? 'bg-blue-900/50 text-blue-300' : 'bg-emerald-900/50 text-emerald-300'
-                  }`}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontWeight: 700,
+                    backgroundColor: loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.15)' : 'rgba(47, 191, 110, 0.15)',
+                    color: loc.type === 'WAREHOUSE' ? '#4da6ff' : 'var(--color-success)',
+                    border: `1px solid ${loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.3)' : 'rgba(47, 191, 110, 0.3)'}`,
+                  }}
                 >
                   {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
                 </span>
@@ -127,12 +168,8 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
           </div>
         </div>
 
-        <div className="flex justify-end pt-3 border-t border-slate-800">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded min-h-[44px]"
-          >
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--border-card)' }}>
+          <button type="button" onClick={onClose} className="btn-touch btn-secondary" style={{ width: '120px' }}>
             Cerrar
           </button>
         </div>

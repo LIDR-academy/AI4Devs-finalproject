@@ -75,94 +75,122 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
   };
 
   return (
-    <Modal maxWidth="700px" width="90%">
+    <Modal maxWidth="720px" width="90%">
       <ModalHeader
         icon={<ShieldCheck style={{ color: 'var(--color-primary)' }} />}
         title="Gestión de Roles y Matriz de Permisos (Dynamic RBAC)"
         onClose={onClose}
       />
-      <div className="space-y-6 text-slate-100 mt-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '16px' }}>
         {/* Formulario Alta Rol */}
-        <form onSubmit={handleCreateRole} className="p-3 bg-slate-900 border border-slate-800 rounded flex gap-2 items-end">
-          <div className="flex-1">
-            <label className="block text-xs text-slate-300 mb-1">Nombre Nuevo Rol</label>
+        <form
+          onSubmit={handleCreateRole}
+          style={{
+            padding: '12px',
+            backgroundColor: 'var(--bg-root)',
+            border: '1px solid var(--border-card)',
+            borderRadius: '6px',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr auto',
+            gap: '12px',
+            alignItems: 'end',
+          }}
+        >
+          <div>
+            <label className="form-label">Nombre Nuevo Rol</label>
             <input
               type="text"
               required
               placeholder="Ej. ENCARGADO_BODEGA"
               value={newRoleName}
               onChange={(e) => setNewRoleName(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white min-h-[44px]"
+              className="input-touch"
+              style={{ width: '100%' }}
             />
           </div>
-          <div className="flex-1">
-            <label className="block text-xs text-slate-300 mb-1">Descripción</label>
+          <div>
+            <label className="form-label">Descripción</label>
             <input
               type="text"
               placeholder="Descripción opcional"
               value={newRoleDesc}
               onChange={(e) => setNewRoleDesc(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white min-h-[44px]"
+              className="input-touch"
+              style={{ width: '100%' }}
             />
           </div>
-          <button
-            type="submit"
-            disabled={isCreating}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 font-bold text-slate-950 rounded flex items-center gap-1 min-h-[44px]"
-          >
-            <Plus className="w-4 h-4" /> Crear
+          <button type="submit" disabled={isCreating} className="btn-touch btn-primary" style={{ minWidth: '100px' }}>
+            <Plus size={20} /> Crear
           </button>
         </form>
 
         {/* Matriz de Roles y Permisos */}
-        <div className="grid grid-cols-3 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
           {/* Columna Selección de Rol */}
-          <div className="col-span-1 border-r border-slate-800 pr-3 space-y-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Roles Definidos</h4>
+          <div style={{ borderRight: '1px solid var(--border-card)', paddingRight: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+              Roles Definidos
+            </h4>
             {roles.map((r) => (
               <button
                 key={r.id}
+                type="button"
                 onClick={() => setSelectedRole(r)}
-                className={`w-full text-left p-3 rounded font-medium text-sm flex items-center justify-between transition-colors min-h-[44px] ${
-                  selectedRole?.id === r.id ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
-                }`}
+                className={`btn-touch ${selectedRole?.id === r.id ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ width: '100%', justifyContent: 'flex-start', textAlign: 'left' }}
               >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>{r.name}</span>
-                </div>
+                <ShieldCheck size={18} />
+                <span>{r.name}</span>
               </button>
             ))}
           </div>
 
           {/* Columna Permisos del Rol Seleccionado */}
-          <div className="col-span-2 space-y-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
               Permisos para {selectedRole?.name || 'Seleccione un rol'}
             </h4>
 
             {selectedRole && (
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
                 {permissions.map((perm) => {
                   const hasIt = selectedRole.permissions.some((p) => p.id === perm.id);
                   return (
                     <div
                       key={perm.id}
                       onClick={() => handleTogglePermission(perm.id)}
-                      className={`p-3 border rounded flex items-center justify-between cursor-pointer transition-colors min-h-[48px] ${
-                        hasIt ? 'bg-amber-950/30 border-amber-500/50 text-amber-200' : 'bg-slate-900 border-slate-800 text-slate-400'
-                      }`}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '4px',
+                        border: `1px solid ${hasIt ? 'var(--color-primary)' : 'var(--border-card)'}`,
+                        backgroundColor: hasIt ? 'rgba(255, 106, 0, 0.1)' : 'var(--bg-root)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
                     >
                       <div>
-                        <span className="text-xs font-mono font-bold block text-slate-300">{perm.code}</span>
-                        <span className="text-sm font-semibold">{perm.name}</span>
+                        <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', fontWeight: 700, display: 'block', color: 'var(--color-primary)' }}>
+                          {perm.code}
+                        </span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{perm.name}</span>
                       </div>
                       <div
-                        className={`w-6 h-6 rounded flex items-center justify-center border ${
-                          hasIt ? 'bg-amber-500 border-amber-400 text-slate-950' : 'border-slate-700'
-                        }`}
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: hasIt ? 'var(--color-primary)' : 'transparent',
+                          border: `1px solid ${hasIt ? 'var(--color-primary)' : 'var(--border-card)'}`,
+                          color: 'var(--color-primary-on)',
+                        }}
                       >
-                        {hasIt && <Check className="w-4 h-4 stroke-[3]" />}
+                        {hasIt && <Check size={16} strokeWidth={3} />}
                       </div>
                     </div>
                   );
@@ -172,12 +200,8 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
           </div>
         </div>
 
-        <div className="flex justify-end pt-3 border-t border-slate-800">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded min-h-[44px]"
-          >
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--border-card)' }}>
+          <button type="button" onClick={onClose} className="btn-touch btn-secondary" style={{ width: '120px' }}>
             Cerrar
           </button>
         </div>
