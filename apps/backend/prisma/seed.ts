@@ -8,20 +8,6 @@ dotenv.config();
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
-/**
- * Script de Sembrado Idempotente para PostgreSQL (Prisma ORM CLI: `prisma db seed`).
- * Implementa los 5 Pilares del Seeding Profesional:
- * 1. Separación de Entornos (Essential vs Synthetic Fixtures).
- * 2. Idempotencia Relacional (100% re-ejecutable con `upsert`).
- * 3. Runner Desacoplado (CLI independiente).
- * 4. PII Governance (Sobreescritura de credenciales por variables de entorno).
- *
- * Sin importaciones cruzadas hacia src/ (ni Pin.ts) a proposito: este script se compila
- * de forma standalone en el Dockerfile (ver builder stage) para poder ejecutarse en
- * produccion sin necesitar `tsx`/esbuild en la imagen final (TK-044 los elimino de
- * produccion por CVEs). hashPin() replica exactamente el algoritmo de Pin.createFromRaw
- * (mismo formato salt:hash, mismos parametros scrypt) para que el login funcione despues.
- */
 function hashPin(rawPin: string): string {
   if (!/^\d{4,6}$/.test(rawPin)) {
     throw new Error(`PIN invalido: debe ser numerico de 4 a 6 digitos (recibido: "${rawPin}").`);
@@ -31,16 +17,35 @@ function hashPin(rawPin: string): string {
   return `${saltHex}:${hashHex}`;
 }
 
-// 1a. Bootstrap del primer administrador en PRODUCCION — TK-051. Antes de este fix no
-// existia ningun camino para crear el primer usuario: POST /api/v1/auth/users exige ya
-// ser ADMIN, y una base de datos nueva no tiene ninguno. Solo UN admin generico
-// configurable por entorno — nunca los nombres de demo (esos son solo para dev/QA).
-async function seedProductionAdmin(): Promise<void> {
+async function seedDefaultRoles(): Promise<{ adminRoleId: string; kitchenRoleId: string }> {
+  const adminRole = await prisma.role.upsert({
+    where: { id: 'role-admin' },
+    update: { name: 'ADMIN' },
+    create: {
+      id: 'role-admin',
+      name: 'ADMIN',
+      description: 'Administrador General',
+    },
+  });
+
+  const kitchenRole = await prisma.role.upsert({
+    where: { id: 'role-kitchen' },
+    update: { name: 'KITCHEN_STAFF' },
+    create: {
+      id: 'role-kitchen',
+      name: 'KITCHEN_STAFF',
+      description: 'Personal de Cocina',
+    },
+  });
+
+  return { adminRoleId: adminRole.id, kitchenRoleId: kitchenRole.id };
+}
+
+async function seedProductionAdmin(adminRoleId: string): Promise<void> {
   const adminPin = process.env.SEED_ADMIN_PIN;
   if (!adminPin) {
     console.warn(
-      '⚠️  SEED_ADMIN_PIN no configurado — se omite el bootstrap del administrador inicial. ' +
-        'Sin el, POST /api/v1/auth/users no tiene forma de arrancar (exige ya ser ADMIN).'
+      '⚠️  SEED_ADMIN_PIN no configurado — se omite el bootstrap del administrador inicial.'
     );
     return;
   }
@@ -48,11 +53,11 @@ async function seedProductionAdmin(): Promise<void> {
   const adminName = process.env.SEED_ADMIN_NAME ?? 'Administrador';
   const admin = await prisma.user.upsert({
     where: { id: 'bootstrap-admin' },
-    update: {},
+    update: { roleId: adminRoleId },
     create: {
       id: 'bootstrap-admin',
       name: adminName,
-      role: 'ADMIN',
+      roleId: adminRoleId,
       pinHash: hashPin(adminPin),
       status: 'ACTIVE',
     },
@@ -60,8 +65,7 @@ async function seedProductionAdmin(): Promise<void> {
   console.log(`✅ Administrador inicial idempotente: ${admin.name} (${admin.id})`);
 }
 
-// 1b. 🌱 ESSENTIAL SEEDS de desarrollo/QA (usuarios sinteticos fijos para pruebas manuales)
-async function seedDevelopmentUsers(): Promise<void> {
+async function seedDevelopmentUsers(roles: { adminRoleId: string; kitchenRoleId: string }): Promise<void> {
   const adminPin = process.env.SEED_ADMIN_PIN ?? '1234';
   const kitchenPin = process.env.SEED_KITCHEN_PIN ?? '1234';
 
@@ -69,13 +73,13 @@ async function seedDevelopmentUsers(): Promise<void> {
     where: { id: 'usr-maria-2' },
     update: {
       name: 'Maria Silva (Administrador)',
-      role: 'ADMIN',
+      roleId: roles.adminRoleId,
       status: 'ACTIVE',
     },
     create: {
       id: 'usr-maria-2',
       name: 'Maria Silva (Administrador)',
-      role: 'ADMIN',
+      roleId: roles.adminRoleId,
       pinHash: hashPin(adminPin),
       status: 'ACTIVE',
     },
@@ -85,13 +89,13 @@ async function seedDevelopmentUsers(): Promise<void> {
     where: { id: 'usr-carlos-1' },
     update: {
       name: 'Carlos Gomez (Cocina)',
-      role: 'KITCHEN_STAFF',
+      roleId: roles.kitchenRoleId,
       status: 'ACTIVE',
     },
     create: {
       id: 'usr-carlos-1',
       name: 'Carlos Gomez (Cocina)',
-      role: 'KITCHEN_STAFF',
+      roleId: roles.kitchenRoleId,
       pinHash: hashPin(kitchenPin),
       status: 'ACTIVE',
     },
@@ -100,7 +104,6 @@ async function seedDevelopmentUsers(): Promise<void> {
   console.log(`✅ Usuarios Esenciales Idempotentes: ${adminUser.name}, ${kitchenUser.name}`);
 }
 
-// 2. 🧪 SYNTHETIC FIXTURES SEEDS (Solo en entornos de Desarrollo / Demo)
 async function seedSyntheticFixtures(): Promise<void> {
   console.log('🧪 Sembrando Fixtures Sintéticos de prueba (Insumos y Remanentes)...');
 
@@ -134,7 +137,6 @@ async function seedSyntheticFixtures(): Promise<void> {
     },
   });
 
-  // Remanente FEFO de Prueba
   const now = new Date();
   await prisma.remanente.upsert({
     where: { id: 'rem-101' },
@@ -156,10 +158,12 @@ async function seedSyntheticFixtures(): Promise<void> {
 async function main() {
   console.log('🌱 Ejecutando Seeding Profesional de PostgreSQL (Prisma ORM)...');
 
+  const roles = await seedDefaultRoles();
+
   if (process.env.NODE_ENV === 'production') {
-    await seedProductionAdmin();
+    await seedProductionAdmin(roles.adminRoleId);
   } else {
-    await seedDevelopmentUsers();
+    await seedDevelopmentUsers(roles);
     await seedSyntheticFixtures();
   }
 

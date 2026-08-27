@@ -7,6 +7,10 @@ export interface StockMovementRecord {
   quantity: string;
   fromLoc: string;
   toLoc: string;
+  operatorId?: string;
+  purpose?: string;
+  reason?: string;
+  recipeId?: string;
   // Opcional: Prisma lo genera solo (@default(now())); InMemoryStockRepository lo completa
   // si no viene seteado (TK-050, trazabilidad de movimientos).
   createdAt?: Date;

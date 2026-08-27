@@ -9,6 +9,10 @@ export interface RecordExtractionDTO {
   insumoId: string;
   quantity: number | string;
   toLocation?: string;
+  operatorId?: string;
+  purpose?: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
+  reason?: string;
+  recipeId?: string;
 }
 
 export interface ExtractionResponseDTO {
@@ -44,7 +48,41 @@ export class RecordExtractionUseCase {
       );
     }
 
-    // Debitar stock de bodega
+    const purpose = dto.purpose || 'KITCHEN_STOCK';
+
+    if (purpose === 'DIRECT_DISCARD') {
+      if (!dto.reason || dto.reason.trim().length === 0) {
+        throw new Error('El motivo es obligatorio para descarte directo desde bodega.');
+      }
+
+      insumo.deductStock(requestedQty);
+      await this.insumoRepository.save(insumo);
+
+      await this.remanenteRepository.recordMovement({
+        id: `mov-${Date.now()}`,
+        insumoId: insumo.id,
+        type: 'DISCARD_DIRECT',
+        quantity: requestedQty.toString(),
+        fromLoc: 'MAIN_WAREHOUSE',
+        toLoc: 'WASTE_BIN',
+        operatorId: dto.operatorId,
+        purpose: 'DIRECT_DISCARD',
+        reason: dto.reason,
+      });
+
+      return {
+        remanenteId: '',
+        insumoId: insumo.id,
+        insumoName: insumo.name,
+        quantityExtracted: requestedQty.toString(),
+        remainingWarehouseStock: insumo.warehouseStock.toString(),
+        location: 'WASTE_BIN',
+        expirationDate: new Date().toISOString(),
+        status: 'DISCARDED',
+      };
+    }
+
+    // Debitar stock de bodega para uso en cocina o receta
     insumo.deductStock(requestedQty);
     await this.insumoRepository.save(insumo);
 
@@ -55,14 +93,20 @@ export class RecordExtractionUseCase {
 
     await this.remanenteRepository.saveRemanente(remanente);
 
+    const movementType = purpose === 'RECIPE' ? 'EXTRACTION_RECIPE' : 'EXTRACTION';
+
     // Auditoría de movimiento
     await this.remanenteRepository.recordMovement({
       id: `mov-${Date.now()}`,
       insumoId: insumo.id,
-      type: 'EXTRACTION',
+      type: movementType,
       quantity: requestedQty.toString(),
       fromLoc: 'MAIN_WAREHOUSE',
       toLoc: location,
+      operatorId: dto.operatorId,
+      purpose,
+      reason: dto.reason,
+      recipeId: dto.recipeId,
     });
 
     return {

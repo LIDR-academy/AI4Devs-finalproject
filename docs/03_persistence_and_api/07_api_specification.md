@@ -129,7 +129,7 @@ sequenceDiagram
 ---
 
 ### 2.2. `POST /api/v1/stock/extraction`
-*   **Descripción:** Registra la salida física de un insumo desde la bodega principal. Este flujo debita el stock consolidado del depósito central y crea un nuevo remanente abierto en la cocina (en estado `ACTIVE`) con la fecha de expiración acelerada calculada (invariante de vida útil corta en bodega o el límite de 24h TRR si aplica).
+*   **Descripción:** Registra la salida física de un insumo desde la bodega principal. Permite especificar el propósito de la extracción (`KITCHEN_STOCK`, `RECIPE` o `DIRECT_DISCARD`), el motivo descriptivo (`reason`), la receta asociada (`recipeId` si aplica) y la ubicación de destino (`toLocation`), registrando la autoría del operario autenticado (`operatorId`).
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
     *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR` u `ADMIN`)
@@ -138,23 +138,23 @@ sequenceDiagram
     {
       "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
       "quantity": "2.0000",
-      "unit": "Horma",
-      "toLocation": "KITCHEN_FRIDGE"
+      "toLocation": "KITCHEN_FRIDGE",
+      "purpose": "RECIPE",
+      "reason": "Preparación menú ejecutivo del día",
+      "recipeId": "rec-12345678-90ab-cdef-1234-567890abcdef"
     }
     ```
 *   **Response Success (`201 Created` - `RecordExtractionResponse`):**
     ```json
     {
-      "message": "Stock extraction recorded successfully",
-      "movementId": "8bf9f8a3-231a-4c22-b91c-22340bb95a31",
-      "remanente": {
-        "id": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-        "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-        "currentQuantity": "2.0000",
-        "unit": "Horma",
-        "status": "ACTIVE",
-        "calculatedExpirationDate": "2026-07-05T16:36:12Z"
-      }
+      "remanenteId": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
+      "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+      "insumoName": "Queso Mozzarella",
+      "quantityExtracted": "2.0000",
+      "remainingWarehouseStock": "3.0000",
+      "location": "KITCHEN_FRIDGE",
+      "expirationDate": "2026-07-05T16:36:12.000Z",
+      "status": "ACTIVE"
     }
     ```
 *   **Response Error (`422 Unprocessable Entity`):**
@@ -162,7 +162,7 @@ sequenceDiagram
     ```json
     {
       "error": "INSUFFICIENT_STOCK",
-      "message": "Requested quantity (2.0000 Horma) exceeds available warehouse stock (0.5000 Horma)",
+      "message": "Requested quantity (2.0000) exceeds available warehouse stock (0.5000)",
       "timestamp": "2026-07-03T16:36:12Z"
     }
     ```

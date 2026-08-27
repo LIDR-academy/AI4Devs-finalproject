@@ -6,11 +6,28 @@ import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/Cre
 import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
 import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
 
-export const recordExtractionSchema = z.object({
-  insumoId: z.string().min(1, 'El ID de insumo es obligatorio.'),
-  quantity: z.union([z.number().positive('La cantidad debe ser positiva.'), z.string().min(1)]),
-  toLocation: z.string().optional().default('KITCHEN_FRIDGE'),
-});
+export const recordExtractionSchema = z
+  .object({
+    insumoId: z.string().min(1, 'El ID de insumo es obligatorio.'),
+    quantity: z.union([z.number().positive('La cantidad debe ser positiva.'), z.string().min(1)]),
+    toLocation: z.string().optional().default('KITCHEN_FRIDGE'),
+    operatorId: z.string().optional(),
+    purpose: z.enum(['KITCHEN_STOCK', 'RECIPE', 'DIRECT_DISCARD']).optional().default('KITCHEN_STOCK'),
+    reason: z.string().optional(),
+    recipeId: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.purpose === 'DIRECT_DISCARD') {
+        return !!data.reason && data.reason.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'El motivo es obligatorio para descarte directo desde bodega.',
+      path: ['reason'],
+    }
+  );
 
 export const createInsumoSchema = z.object({
   name: z.string().min(1, 'El nombre del insumo es requerido.'),
@@ -53,7 +70,12 @@ export class StockController {
   public recordExtraction = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const parsedBody = recordExtractionSchema.parse(req.body);
-      const result = await this.recordExtractionUseCase.execute(parsedBody);
+      const userObj = (req as unknown as { user?: { id: string } }).user;
+      const operatorId = userObj?.id || parsedBody.operatorId;
+      const result = await this.recordExtractionUseCase.execute({
+        ...parsedBody,
+        operatorId,
+      });
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {

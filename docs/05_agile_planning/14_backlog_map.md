@@ -135,6 +135,13 @@ graph TD
     US013 --> TK060
     US013 --> TK060FE
 
+    US014["📝 US-014: Trazabilidad Completa Extracciones"]
+    TK072["🎫 TK-072: Trazabilidad Extracciones (Backend)"]
+    TK072FE["🎫 TK-072-FE: Interfaz Extracciones (Frontend)"]
+    EpicStock --> US014
+    US014 --> TK072
+    US014 --> TK072FE
+
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
     classDef roadmap fill:#FFC300,stroke:#FF5733,stroke-width:2px,color:#000;
@@ -144,8 +151,8 @@ graph TD
 
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE tk;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE tk;
 ```
 
 ---
@@ -170,3 +177,8 @@ graph TD
 | **🛠️ Shared Kernel** | *N/A (Habilitador de Despliegue)* | [TK-051: Bootstrap Primer Administrador](12_tickets/shared/backend/TK-051.md) | N/A | ✅ Done |
 | **📖 Catálogo (`catalog`)** | [US-012: Gestión de Catálogo Maestro](11_user_stories/catalog/US-012.md) | [TK-057: Alta de Insumos y Recetas](12_tickets/catalog/backend/TK-057.md) | [TK-057-FE: Panel de Gestión de Catálogo](12_tickets/catalog/frontend/TK-057-FE.md) | ✅ Done |
 | **📦 Bodega (`stock`)** | [US-013: Reabastecimiento de Bodega](11_user_stories/stock/US-013.md) | [TK-060: Reabastecimiento de Bodega](12_tickets/stock/backend/TK-060.md) | [TK-060-FE: Panel de Reabastecimiento](12_tickets/stock/frontend/TK-060-FE.md) | ✅ Done |
+| **📦 Bodega (`stock`)** | [US-014: Trazabilidad Completa Extracciones](11_user_stories/stock/US-014.md) | [TK-072: Trazabilidad Extracciones](12_tickets/stock/backend/TK-072.md) | [TK-072-FE: Interfaz Extracciones](12_tickets/stock/frontend/TK-072-FE.md) | ✅ Done |
+| **🔐 Seguridad (`security`)** | [US-015: Permisos y Roles Dinámicos](11_user_stories/security/US-015.md) | [TK-073: Backend Dynamic RBAC](12_tickets/security/backend/TK-073.md) | [TK-073-FE: Dynamic RBAC UI](12_tickets/security/frontend/TK-073-FE.md) | 📋 Approved Spec |
+| **📦 Bodega (`stock`)** | [US-016: Sectores de Almacenamiento](11_user_stories/stock/US-016.md) | [TK-074: Storage Locations API](12_tickets/stock/backend/TK-074.md) | [TK-074-FE: Storage Locations UI](12_tickets/stock/frontend/TK-074-FE.md) | 📋 Approved Spec |
+| **⚙️ Configuración (`settings`)** | [US-017: Configuración del Restaurante](11_user_stories/settings/US-017.md) | [TK-075: System Settings API](12_tickets/settings/backend/TK-075.md) | [TK-075-FE: System Settings UI](12_tickets/settings/frontend/TK-075-FE.md) | 📋 Approved Spec |
+

@@ -1,17 +1,50 @@
--- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'KITCHEN_STAFF');
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateEnum
 CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'BLOCKED');
 
 -- CreateEnum
+CREATE TYPE "LocationType" AS ENUM ('WAREHOUSE', 'KITCHEN');
+
+-- CreateEnum
 CREATE TYPE "RemanenteStatus" AS ENUM ('ACTIVE', 'EXHAUSTED', 'DISCARDED');
+
+-- CreateTable
+CREATE TABLE "Role" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Permission" (
+    "id" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "module" TEXT NOT NULL,
+    "description" TEXT,
+
+    CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RolePermission" (
+    "roleId" TEXT NOT NULL,
+    "permissionId" TEXT NOT NULL,
+
+    CONSTRAINT "RolePermission_pkey" PRIMARY KEY ("roleId","permissionId")
+);
 
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'KITCHEN_STAFF',
+    "roleId" TEXT,
     "pinHash" TEXT NOT NULL,
     "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "failedAttempts" INTEGER NOT NULL DEFAULT 0,
@@ -19,6 +52,33 @@ CREATE TABLE "User" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "StorageLocation" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" "LocationType" NOT NULL DEFAULT 'KITCHEN',
+    "description" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "StorageLocation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SystemSettings" (
+    "id" TEXT NOT NULL DEFAULT 'default',
+    "restaurantName" TEXT NOT NULL DEFAULT 'RestoStock Kitchen',
+    "taxId" TEXT,
+    "currencySymbol" TEXT NOT NULL DEFAULT '$',
+    "criticalAlertHours" INTEGER NOT NULL DEFAULT 24,
+    "defaultRemanenteHours" INTEGER NOT NULL DEFAULT 24,
+    "varianceTolerancePercent" DECIMAL(5,2) NOT NULL DEFAULT 5.0,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SystemSettings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -66,6 +126,10 @@ CREATE TABLE "StockMovement" (
     "quantity" DECIMAL(12,3) NOT NULL,
     "fromLoc" TEXT NOT NULL,
     "toLoc" TEXT NOT NULL,
+    "operatorId" TEXT,
+    "purpose" TEXT,
+    "reason" TEXT,
+    "recipeId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "StockMovement_pkey" PRIMARY KEY ("id")
@@ -126,6 +190,24 @@ CREATE TABLE "ShiftReconciliationItem" (
     CONSTRAINT "ShiftReconciliationItem_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Permission_code_key" ON "Permission"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "StorageLocation_name_key" ON "StorageLocation"("name");
+
+-- AddForeignKey
+ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE "WarehouseStock" ADD CONSTRAINT "WarehouseStock_insumoId_fkey" FOREIGN KEY ("insumoId") REFERENCES "Insumo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -136,8 +218,10 @@ ALTER TABLE "Remanente" ADD CONSTRAINT "Remanente_insumoId_fkey" FOREIGN KEY ("i
 ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_insumoId_fkey" FOREIGN KEY ("insumoId") REFERENCES "Insumo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_operatorId_fkey" FOREIGN KEY ("operatorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "RecipeIngredient" ADD CONSTRAINT "RecipeIngredient_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ShiftReconciliationItem" ADD CONSTRAINT "ShiftReconciliationItem_reconciliationId_fkey" FOREIGN KEY ("reconciliationId") REFERENCES "ShiftReconciliation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-

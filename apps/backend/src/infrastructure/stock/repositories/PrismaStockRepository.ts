@@ -167,6 +167,10 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         quantity: movement.quantity,
         fromLoc: movement.fromLoc,
         toLoc: movement.toLoc,
+        operatorId: movement.operatorId,
+        purpose: movement.purpose,
+        reason: movement.reason,
+        recipeId: movement.recipeId,
       },
     });
   }

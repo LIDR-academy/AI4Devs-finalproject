@@ -14,6 +14,9 @@ import {
   Users,
   History,
   BookOpen,
+  Settings,
+  MapPin,
+  Shield,
 } from 'lucide-react';
 import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
 import { AuthService } from './features/auth/services/auth.service.js';
@@ -28,14 +31,22 @@ import { UserManagementPanel } from './features/auth/components/UserManagementPa
 import { MovementHistoryPanel } from './features/stock/components/MovementHistoryPanel.js';
 import { CatalogManagementPanel } from './features/catalog/components/CatalogManagementPanel.js';
 
+import { RestaurantSettingsModal } from './features/settings/components/RestaurantSettingsModal.js';
+import { LocationsManagementModal } from './features/stock/components/LocationsManagementModal.js';
+import { RolesManagementModal } from './features/security/components/RolesManagementModal.js';
+
 interface DashboardHeaderProps {
   currentUser: { name: string; role: string };
   isLoading: boolean;
+  restaurantName?: string;
   onReconcile: () => void;
   onReports: () => void;
   onUserManagement: () => void;
   onMovementHistory: () => void;
   onCatalogManagement: () => void;
+  onSettingsManagement: () => void;
+  onLocationsManagement: () => void;
+  onRolesManagement: () => void;
   onSync: () => void;
   onLogout: () => void;
 }
@@ -67,6 +78,9 @@ interface HeaderActionsProps {
   onUserManagement: () => void;
   onMovementHistory: () => void;
   onCatalogManagement: () => void;
+  onSettingsManagement: () => void;
+  onLocationsManagement: () => void;
+  onRolesManagement: () => void;
   onSync: () => void;
 }
 
@@ -77,6 +91,9 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
   onUserManagement,
   onMovementHistory,
   onCatalogManagement,
+  onSettingsManagement,
+  onLocationsManagement,
+  onRolesManagement,
   onSync,
 }) => (
   <>
@@ -93,6 +110,21 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
     <button className="btn-touch btn-secondary" onClick={onUserManagement} id="btn-open-user-management" title="Gestión de Personal">
       <Users size={20} />
       Personal
+    </button>
+
+    <button className="btn-touch btn-secondary" onClick={onRolesManagement} id="btn-open-roles-management" title="Roles y Permisos">
+      <Shield size={20} />
+      Roles
+    </button>
+
+    <button className="btn-touch btn-secondary" onClick={onLocationsManagement} id="btn-open-locations-management" title="Sectores Físicos">
+      <MapPin size={20} />
+      Sectores
+    </button>
+
+    <button className="btn-touch btn-secondary" onClick={onSettingsManagement} id="btn-open-settings-management" title="Configuración del Restaurante">
+      <Settings size={20} />
+      Ajustes
     </button>
 
     <button className="btn-touch btn-secondary" onClick={onMovementHistory} id="btn-open-movement-history" title="Auditoría de Movimientos">
@@ -120,6 +152,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onUserManagement,
   onMovementHistory,
   onCatalogManagement,
+  onSettingsManagement,
+  onLocationsManagement,
+  onRolesManagement,
   onSync,
   onLogout,
 }) => (
@@ -160,6 +195,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         onUserManagement={onUserManagement}
         onMovementHistory={onMovementHistory}
         onCatalogManagement={onCatalogManagement}
+        onSettingsManagement={onSettingsManagement}
+        onLocationsManagement={onLocationsManagement}
+        onRolesManagement={onRolesManagement}
         onSync={onSync}
       />
     </div>
@@ -258,6 +296,9 @@ interface AppModalsProps {
   isUserManagementOpen: boolean;
   isMovementHistoryOpen: boolean;
   isCatalogManagementOpen: boolean;
+  isSettingsOpen: boolean;
+  isLocationsOpen: boolean;
+  isRolesOpen: boolean;
   discardTarget: RemanenteFEFOItem | null;
   remanentes: RemanenteFEFOItem[];
   operatorId: string;
@@ -269,6 +310,9 @@ interface AppModalsProps {
   onCloseUserManagement: () => void;
   onCloseMovementHistory: () => void;
   onCloseCatalogManagement: () => void;
+  onCloseSettingsManagement: () => void;
+  onCloseLocationsManagement: () => void;
+  onCloseRolesManagement: () => void;
   onCloseDiscard: () => void;
   onSuccess: () => void;
 }
@@ -281,6 +325,9 @@ const AppModals: React.FC<AppModalsProps> = ({
   isUserManagementOpen,
   isMovementHistoryOpen,
   isCatalogManagementOpen,
+  isSettingsOpen,
+  isLocationsOpen,
+  isRolesOpen,
   discardTarget,
   remanentes,
   operatorId,
@@ -292,6 +339,9 @@ const AppModals: React.FC<AppModalsProps> = ({
   onCloseUserManagement,
   onCloseMovementHistory,
   onCloseCatalogManagement,
+  onCloseSettingsManagement,
+  onCloseLocationsManagement,
+  onCloseRolesManagement,
   onCloseDiscard,
   onSuccess,
 }) => (
@@ -302,6 +352,9 @@ const AppModals: React.FC<AppModalsProps> = ({
     <UserManagementPanel isOpen={isUserManagementOpen} userRole={userRole} onClose={onCloseUserManagement} />
     <MovementHistoryPanel isOpen={isMovementHistoryOpen} userRole={userRole} onClose={onCloseMovementHistory} />
     <CatalogManagementPanel isOpen={isCatalogManagementOpen} userRole={userRole} onClose={onCloseCatalogManagement} />
+    <RestaurantSettingsModal isOpen={isSettingsOpen} onClose={onCloseSettingsManagement} />
+    <LocationsManagementModal isOpen={isLocationsOpen} onClose={onCloseLocationsManagement} />
+    <RolesManagementModal isOpen={isRolesOpen} onClose={onCloseRolesManagement} />
     <ShiftReconciliationWizard
       isOpen={isReconciliationOpen}
       remanentes={remanentes}
@@ -321,6 +374,9 @@ function useModalVisibility() {
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
   const [isMovementHistoryOpen, setIsMovementHistoryOpen] = useState(false);
   const [isCatalogManagementOpen, setIsCatalogManagementOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLocationsOpen, setIsLocationsOpen] = useState(false);
+  const [isRolesOpen, setIsRolesOpen] = useState(false);
   const [discardTarget, setDiscardTarget] = useState<RemanenteFEFOItem | null>(null);
 
   return {
@@ -338,6 +394,12 @@ function useModalVisibility() {
     setIsMovementHistoryOpen,
     isCatalogManagementOpen,
     setIsCatalogManagementOpen,
+    isSettingsOpen,
+    setIsSettingsOpen,
+    isLocationsOpen,
+    setIsLocationsOpen,
+    isRolesOpen,
+    setIsRolesOpen,
     discardTarget,
     setDiscardTarget,
   };
@@ -398,6 +460,9 @@ function useAppHandlers(dashboard: ReturnType<typeof useDashboardState>) {
     onUserManagement: () => dashboard.setIsUserManagementOpen(true),
     onMovementHistory: () => dashboard.setIsMovementHistoryOpen(true),
     onCatalogManagement: () => dashboard.setIsCatalogManagementOpen(true),
+    onSettingsManagement: () => dashboard.setIsSettingsOpen(true),
+    onLocationsManagement: () => dashboard.setIsLocationsOpen(true),
+    onRolesManagement: () => dashboard.setIsRolesOpen(true),
     onExtract: () => dashboard.setIsExtractionOpen(true),
     onPrepareRecipe: () => dashboard.setIsRecipeOpen(true),
     onCloseExtraction: () => dashboard.setIsExtractionOpen(false),
@@ -407,6 +472,9 @@ function useAppHandlers(dashboard: ReturnType<typeof useDashboardState>) {
     onCloseUserManagement: () => dashboard.setIsUserManagementOpen(false),
     onCloseMovementHistory: () => dashboard.setIsMovementHistoryOpen(false),
     onCloseCatalogManagement: () => dashboard.setIsCatalogManagementOpen(false),
+    onCloseSettingsManagement: () => dashboard.setIsSettingsOpen(false),
+    onCloseLocationsManagement: () => dashboard.setIsLocationsOpen(false),
+    onCloseRolesManagement: () => dashboard.setIsRolesOpen(false),
     onCloseDiscard: () => dashboard.setDiscardTarget(null),
   };
 }
@@ -458,6 +526,9 @@ export const App: React.FC = () => {
         isUserManagementOpen={dashboard.isUserManagementOpen}
         isMovementHistoryOpen={dashboard.isMovementHistoryOpen}
         isCatalogManagementOpen={dashboard.isCatalogManagementOpen}
+        isSettingsOpen={dashboard.isSettingsOpen}
+        isLocationsOpen={dashboard.isLocationsOpen}
+        isRolesOpen={dashboard.isRolesOpen}
         discardTarget={dashboard.discardTarget}
         remanentes={remanentes}
         operatorId={currentUser.id}
@@ -470,3 +541,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+

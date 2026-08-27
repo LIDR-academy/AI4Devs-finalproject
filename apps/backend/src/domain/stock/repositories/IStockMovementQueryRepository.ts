@@ -6,6 +6,10 @@ export interface StockMovementHistoryItem {
   quantity: string;
   fromLoc: string;
   toLoc: string;
+  operatorId?: string | null;
+  purpose?: string | null;
+  reason?: string | null;
+  recipeId?: string | null;
   createdAt: Date;
 }
 

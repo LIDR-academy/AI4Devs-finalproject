@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Minus, PackageCheck } from 'lucide-react';
 import { StockService } from '../services/stock.service.js';
-import { KitchenService } from '../../kitchen/services/kitchen.service.js';
+import { KitchenService, RecipeItem } from '../../kitchen/services/kitchen.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
@@ -23,16 +23,30 @@ interface ExtractionSelectFieldsProps {
   insumos: Insumo[];
   selectedInsumoId: string;
   onInsumoChange: (id: string) => void;
+  purpose: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
+  onPurposeChange: (purpose: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD') => void;
   location: string;
   onLocationChange: (location: string) => void;
+  reason: string;
+  onReasonChange: (reason: string) => void;
+  recipes: { id: string; name: string }[];
+  selectedRecipeId: string;
+  onRecipeIdChange: (id: string) => void;
 }
 
 const ExtractionSelectFields: React.FC<ExtractionSelectFieldsProps> = ({
   insumos,
   selectedInsumoId,
   onInsumoChange,
+  purpose,
+  onPurposeChange,
   location,
   onLocationChange,
+  reason,
+  onReasonChange,
+  recipes,
+  selectedRecipeId,
+  onRecipeIdChange,
 }) => (
   <>
     <div>
@@ -54,15 +68,69 @@ const ExtractionSelectFields: React.FC<ExtractionSelectFieldsProps> = ({
     </div>
 
     <div>
-      <label htmlFor="select-location-extraction" className="form-label">
-        Ubicación Destino en Cocina:
+      <label htmlFor="select-purpose-extraction" className="form-label">
+        Propósito / Motivo de Extracción:
       </label>
-      <select value={location} onChange={(e) => onLocationChange(e.target.value)} className="input-touch" id="select-location-extraction">
-        <option value="KITCHEN_FRIDGE">Refrigerador Principal (KITCHEN_FRIDGE)</option>
-        <option value="KITCHEN_PREP">Mesa de Preparación (KITCHEN_PREP)</option>
-        <option value="KITCHEN_LINE">Línea de Servicio (KITCHEN_LINE)</option>
+      <select
+        value={purpose}
+        onChange={(e) => onPurposeChange(e.target.value as 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD')}
+        className="input-touch"
+        id="select-purpose-extraction"
+      >
+        <option value="KITCHEN_STOCK">Uso General en Cocina (Stock Activo)</option>
+        <option value="RECIPE">Preparación de Receta Específica</option>
+        <option value="DIRECT_DISCARD">Descarte Directo desde Bodega (Merma/Deterioro)</option>
       </select>
     </div>
+
+    {purpose === 'RECIPE' && (
+      <div>
+        <label htmlFor="select-recipe-extraction" className="form-label">
+          Seleccionar Receta Destino:
+        </label>
+        <select
+          value={selectedRecipeId}
+          onChange={(e) => onRecipeIdChange(e.target.value)}
+          className="input-touch"
+          id="select-recipe-extraction"
+        >
+          <option value="">-- Seleccionar Receta (Opcional) --</option>
+          {recipes.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    )}
+
+    {purpose === 'DIRECT_DISCARD' ? (
+      <div>
+        <label htmlFor="input-reason-extraction" className="form-label">
+          Motivo de Descarte (Obligatorio):
+        </label>
+        <input
+          type="text"
+          value={reason}
+          onChange={(e) => onReasonChange(e.target.value)}
+          placeholder="Ej: Empaque roto en transporte, vencido en bodega"
+          className="input-touch"
+          id="input-reason-extraction"
+          required
+        />
+      </div>
+    ) : (
+      <div>
+        <label htmlFor="select-location-extraction" className="form-label">
+          Ubicación Destino en Cocina:
+        </label>
+        <select value={location} onChange={(e) => onLocationChange(e.target.value)} className="input-touch" id="select-location-extraction">
+          <option value="KITCHEN_FRIDGE">Refrigerador Principal (KITCHEN_FRIDGE)</option>
+          <option value="KITCHEN_PREP">Mesa de Preparación (KITCHEN_PREP)</option>
+          <option value="KITCHEN_LINE">Línea de Servicio (KITCHEN_LINE)</option>
+        </select>
+      </div>
+    )}
   </>
 );
 
@@ -140,8 +208,15 @@ interface ExtractionFormProps {
   insumos: Insumo[];
   selectedInsumoId: string;
   onInsumoChange: (id: string) => void;
+  purpose: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
+  onPurposeChange: (purpose: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD') => void;
   location: string;
   onLocationChange: (location: string) => void;
+  reason: string;
+  onReasonChange: (reason: string) => void;
+  recipes: { id: string; name: string }[];
+  selectedRecipeId: string;
+  onRecipeIdChange: (id: string) => void;
   quantity: number;
   onIncrement: () => void;
   onDecrement: () => void;
@@ -155,8 +230,15 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
   insumos,
   selectedInsumoId,
   onInsumoChange,
+  purpose,
+  onPurposeChange,
   location,
   onLocationChange,
+  reason,
+  onReasonChange,
+  recipes,
+  selectedRecipeId,
+  onRecipeIdChange,
   quantity,
   onIncrement,
   onDecrement,
@@ -170,14 +252,25 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
       insumos={insumos}
       selectedInsumoId={selectedInsumoId}
       onInsumoChange={onInsumoChange}
+      purpose={purpose}
+      onPurposeChange={onPurposeChange}
       location={location}
       onLocationChange={onLocationChange}
+      reason={reason}
+      onReasonChange={onReasonChange}
+      recipes={recipes}
+      selectedRecipeId={selectedRecipeId}
+      onRecipeIdChange={onRecipeIdChange}
     />
 
     <QuantityStepper quantity={quantity} onIncrement={onIncrement} onDecrement={onDecrement} onChange={onQuantityChange} />
 
     <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'rgba(255, 106, 0, 0.1)', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
-      ⚠️ Al confirmar la extracción, el insumo pasará automáticamente al tablero de <strong>Remanentes Activos con vencimiento prioritario a 24 Horas FEFO</strong>.
+      {purpose === 'DIRECT_DISCARD' ? (
+        <span>⚠️ Se registrará la <strong>merma directa desde bodega</strong> descontando el stock sin pasarlo a cocina.</span>
+      ) : (
+        <span>⚠️ Al confirmar la extracción, el insumo pasará al tablero de <strong>Remanentes Activos con vencimiento prioritario FEFO</strong>.</span>
+      )}
     </div>
 
     <ModalFooterActions onCancel={onCancel} confirmLabel="Confirmar Extracción" submittingLabel="Procesando..." isSubmitting={isSubmitting} />
@@ -187,10 +280,20 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
 function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: () => void) {
   const [selectedInsumoId, setSelectedInsumoId] = useState('');
   const [quantity, setQuantity] = useState(1.0);
+  const [purpose, setPurpose] = useState<'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD'>('KITCHEN_STOCK');
   const [location, setLocation] = useState('KITCHEN_FRIDGE');
+  const [reason, setReason] = useState('');
+  const [recipes, setRecipes] = useState<{ id: string; name: string }[]>([]);
+  const [selectedRecipeId, setSelectedRecipeId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeInsumoId = selectedInsumoId || (insumos.length > 0 ? insumos[0].id : '');
+
+  React.useEffect(() => {
+    KitchenService.fetchAvailableRecipes()
+      .then((items: RecipeItem[]) => setRecipes(items.map((r: RecipeItem) => ({ id: r.id, name: r.name }))))
+      .catch(() => setRecipes([]));
+  }, []);
 
   const handleIncrement = () => setQuantity((prev) => Math.round((prev + 0.5) * 10) / 10);
   const handleDecrement = () => setQuantity((prev) => Math.max(0.5, Math.round((prev - 0.5) * 10) / 10));
@@ -198,11 +301,25 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeInsumoId) return;
+    if (purpose === 'DIRECT_DISCARD' && !reason.trim()) {
+      alert('Debe especificar el motivo del descarte directo.');
+      return;
+    }
     setIsSubmitting(true);
 
     try {
-      const result = await StockService.recordExtraction({ insumoId: activeInsumoId, quantity: quantity.toString(), toLocation: location });
-      KitchenService.addLocalRemanente(buildLocalRemanenteFromExtraction(activeInsumoId, insumos, result));
+      const result = await StockService.recordExtraction({
+        insumoId: activeInsumoId,
+        quantity: quantity.toString(),
+        toLocation: purpose === 'DIRECT_DISCARD' ? 'WASTE_BIN' : location,
+        purpose,
+        reason: reason.trim() || undefined,
+        recipeId: selectedRecipeId || undefined,
+      });
+
+      if (purpose !== 'DIRECT_DISCARD' && result.remanenteId) {
+        KitchenService.addLocalRemanente(buildLocalRemanenteFromExtraction(activeInsumoId, insumos, result));
+      }
       onSuccess();
       onClose();
     } catch (err) {
@@ -213,7 +330,25 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
     }
   };
 
-  return { selectedInsumoId: activeInsumoId, setSelectedInsumoId, quantity, setQuantity, location, setLocation, isSubmitting, handleIncrement, handleDecrement, handleSubmit };
+  return {
+    selectedInsumoId: activeInsumoId,
+    setSelectedInsumoId,
+    quantity,
+    setQuantity,
+    purpose,
+    setPurpose,
+    location,
+    setLocation,
+    reason,
+    setReason,
+    recipes,
+    selectedRecipeId,
+    setSelectedRecipeId,
+    isSubmitting,
+    handleIncrement,
+    handleDecrement,
+    handleSubmit,
+  };
 }
 
 export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> = ({
@@ -255,8 +390,15 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
         insumos={displayInsumos}
         selectedInsumoId={form.selectedInsumoId}
         onInsumoChange={form.setSelectedInsumoId}
+        purpose={form.purpose}
+        onPurposeChange={form.setPurpose}
         location={form.location}
         onLocationChange={form.setLocation}
+        reason={form.reason}
+        onReasonChange={form.setReason}
+        recipes={form.recipes}
+        selectedRecipeId={form.selectedRecipeId}
+        onRecipeIdChange={form.setSelectedRecipeId}
         quantity={form.quantity}
         onIncrement={form.handleIncrement}
         onDecrement={form.handleDecrement}

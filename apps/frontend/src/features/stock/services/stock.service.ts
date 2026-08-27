@@ -5,6 +5,9 @@ export interface ExtractionRequest {
   insumoId: string;
   quantity: number | string;
   toLocation?: string;
+  purpose?: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
+  reason?: string;
+  recipeId?: string;
 }
 
 export interface ExtractionResult {

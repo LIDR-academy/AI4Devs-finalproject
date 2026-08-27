@@ -32,6 +32,18 @@ import { createRateLimiter } from './middlewares/rateLimiter.js';
 import { IShiftReconciliationRepository } from '../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
 import { InMemoryShiftReconciliationRepository } from '../kitchen/repositories/InMemoryShiftReconciliationRepository.js';
 
+import { IRoleRepository } from '../../domain/security/repositories/IRoleRepository.js';
+import { InMemoryRoleRepository } from '../security/repositories/InMemoryRoleRepository.js';
+import { createRolesController } from '../security/http/controllers/roles.controller.js';
+
+import { IStorageLocationRepository } from '../../domain/stock/repositories/IStorageLocationRepository.js';
+import { InMemoryLocationRepository } from '../stock/repositories/InMemoryLocationRepository.js';
+import { createLocationsController } from '../stock/http/controllers/locations.controller.js';
+
+import { ISystemSettingsRepository } from '../../domain/settings/repositories/ISystemSettingsRepository.js';
+import { InMemorySettingsRepository } from '../settings/repositories/InMemorySettingsRepository.js';
+import { createSettingsController } from '../settings/http/controllers/settings.controller.js';
+
 export interface AppOptions {
   userRepository?: IUserRepository;
   stockRepository?: IInsumoRepository & IRemanenteRepository;
@@ -40,6 +52,9 @@ export interface AppOptions {
   reportRepository?: IReportRepository;
   recipeRepository?: IRecipeRepository;
   reconciliationRepository?: IShiftReconciliationRepository;
+  roleRepository?: IRoleRepository;
+  locationRepository?: IStorageLocationRepository;
+  settingsRepository?: ISystemSettingsRepository;
   jwtSecret?: string;
   corsAllowedOrigins?: string;
   rateLimit?: { windowMs: number; max: number };
@@ -118,6 +133,9 @@ interface AppRepositories {
   reportRepo: IReportRepository;
   recipeRepo: IRecipeRepository;
   reconciliationRepo: IShiftReconciliationRepository;
+  roleRepo: IRoleRepository;
+  locationRepo: IStorageLocationRepository;
+  settingsRepo: ISystemSettingsRepository;
 }
 
 // Repositorios e inyeccion de dependencias por defecto para dev/standalone
@@ -134,6 +152,9 @@ function buildDefaultRepositories(options: AppOptions): AppRepositories {
     reportRepo: options.reportRepository ?? new InMemoryReportRepository(),
     recipeRepo: options.recipeRepository ?? new InMemoryRecipeRepository(),
     reconciliationRepo: options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository(),
+    roleRepo: options.roleRepository ?? new InMemoryRoleRepository(),
+    locationRepo: options.locationRepository ?? new InMemoryLocationRepository(),
+    settingsRepo: options.settingsRepository ?? new InMemorySettingsRepository(),
   };
 }
 
@@ -160,13 +181,16 @@ function mountApiRoutes(
   authMiddleware: ReturnType<typeof createAuthenticateJWTMiddleware>,
   isAuthRequired: boolean
 ): void {
-  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, reportRepo } = repos;
+  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, reportRepo, roleRepo, locationRepo, settingsRepo } = repos;
   const guard = isAuthRequired ? [authMiddleware] : [];
 
   app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo));
   app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
   app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo));
   app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo));
+  app.use('/api/v1/roles', ...guard, createRolesController(roleRepo));
+  app.use('/api/v1/locations', ...guard, createLocationsController(locationRepo));
+  app.use('/api/v1/settings', ...guard, createSettingsController(settingsRepo));
 }
 
 export function createApp(options: AppOptions = {}): Express {

@@ -91,7 +91,7 @@ El sistema optimiza la rotación de inventarios forzando una lógica FEFO (First
 ## 3. Flujo End-to-End Prioritario
 
 ### 3.1. Happy Path: Secuencia de Pasos
-1.  **Extracción del Depósito:** Un *Operario Autorizado* accede a la terminal, selecciona su perfil, ingresa su PIN de 4 dígitos y registra el traslado de una unidad de compra sellada (ej. 1 Horma de Queso Parmesano) desde el Almacén Principal hacia el sector de Cocina. El stock del depósito principal decrece en 1 unidad.
+1.  **Extracción del Depósito:** Un *Operario Autorizado* accede a la terminal con su PIN (registrando `operatorId`), selecciona el insumo y especifica el propósito de la extracción (`KITCHEN_STOCK` para uso general, `RECIPE` para receta o `DIRECT_DISCARD` para descarte/merma directa desde bodega) junto con el lugar de destino o el motivo correspondiente. El stock del depósito principal decrece en la cantidad extraída.
 2.  **Registro de Uso Parcial:** Tras utilizar el ingrediente para el servicio, el cocinero pesa la porción consumida (ej. 400 gramos). El *Operario Autorizado* ingresa su PIN en la tablet de la cocina y registra el consumo indicando el insumo y la cantidad exacta en la unidad de consumo directo.
 3.  **Cálculo Automático de Remanente:** El sistema detecta la apertura del insumo, multiplica la unidad de compra extraída por el factor de conversión parametrizado (ej. 1 Horma = 5000g), resta el consumo registrado y genera de inmediato un registro de `Remanente` por la diferencia (ej. 4600g).
 4.  **Resguardo Físico:** El *Operario Autorizado* selecciona la sububicación de destino (ej. "Heladera A - Línea de Fríos") en la pantalla y confirma el guardado.
@@ -109,11 +109,11 @@ sequenceDiagram
 
     OP->>TAB: Ingresa PIN (4 dígitos)
     TAB->>API: POST /api/v1/auth/pin { pin }
-    API-->>TAB: HTTP 200 OK (JWT Token)
+    API-->>TAB: HTTP 200 OK (JWT Token + operatorId)
 
-    OP->>TAB: Registra Extracción (ej. 1 Horma Queso)
-    TAB->>API: POST /api/v1/stock/extractions
-    API->>DB: Descuenta Depósito & Crea Insumo Abierto
+    OP->>TAB: Registra Extracción (insumo, qty, purpose, reason/recipeId, toLocation)
+    TAB->>API: POST /api/v1/stock/extraction
+    API->>DB: Descuenta Depósito, registra StockMovement (operatorId, purpose, reason) & crea Remanente/Merma
     DB-->>API: Transacción Exitosa
     API-->>TAB: HTTP 201 Created (Stock Actualizado)
 
@@ -269,6 +269,36 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
 *   **Complejidad:** S
 *   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
 *   **Estado:** ✅ Done — Backend (`TK-060`) y Frontend (`TK-060-FE`) implementados — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
+
+
+### US-014: Trazabilidad de Extracción de Bodega por Propósito y Autoría
+*   **Historia:** Como encargado de bodega o administrador, quiero especificar el propósito exacto de la extracción (stock general, receta o descarte directo) y registrar la autoría del operario, para mantener la trazabilidad completa del inventario y descartar pérdidas prematuras directamente desde la bodega.
+*   **Complejidad:** M
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Estado:** ✅ Done — Backend (`TK-072`) y Frontend (`TK-072-FE`) implementados.
+
+
+### US-015: Gestión de Permisos y Roles Dinámicos (Dynamic RBAC)
+*   **Historia:** Como Administrador, quiero crear roles personalizados y configurar la matriz de permisos de forma dinámica desde la interfaz, para otorgar accesos granulares al personal (bodeguero, cocinero, sub-chef) y autoredirigir al inicio de sesión según el perfil.
+*   **Complejidad:** L
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Creación de Rol y Autoredirección por Permisos):**
+        *   **Given** Un nuevo rol "Cocinero Auxiliar" con el permiso `kitchen:recipe_prepare` asignado y sin permiso `stock:extract`.
+        *   **When** El usuario con dicho rol inicia sesión con su PIN.
+        *   **Then** El sistema valida las credenciales, emite JWT con permisos y la UI lo redirige automáticamente al Tablero FEFO de Cocina.
+
+
+### US-016: Definición de Sectores de Almacenamiento y Cocina
+*   **Historia:** Como Administrador, quiero dar de alta y bautizar los sectores físicos del restaurante (cámaras frías, bodegas de secos, mesas de preparación), para que los modales de extracción y reabastecimiento consuman ubicaciones reales y personalizadas.
+*   **Complejidad:** M
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+
+
+### US-017: Configuración General del Restaurante y Parámetros FEFO
+*   **Historia:** Como Administrador, quiero configurar la identidad del restaurante (nombre, moneda) y los parámetros operativos de inventario (umbral de alertas críticas FEFO y vida útil estándar), para adaptar el sistema a las reglas específicas del establecimiento.
+*   **Complejidad:** M
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
 
 
 ---

@@ -1,13 +1,13 @@
-import { PrismaClient, User as PrismaUser } from '../../../generated/prisma/client.js';
+import { PrismaClient } from '../../../generated/prisma/client.js';
 import { User, UserRole, UserStatusType } from '../../../domain/auth/entities/User.js';
 import { Pin } from '../../../domain/auth/value-objects/Pin.js';
 import { IUserRepository } from '../../../domain/auth/repositories/IUserRepository.js';
 
-function toDomain(raw: PrismaUser): User {
+function toDomain(raw: any): User {
   return new User({
     id: raw.id,
     name: raw.name,
-    role: raw.role as UserRole,
+    role: (raw.role?.name || raw.roleId || 'ADMIN') as UserRole,
     pin: Pin.createFromHash(raw.pinHash),
     status: raw.status as UserStatusType,
     failedAttempts: raw.failedAttempts,
@@ -19,12 +19,17 @@ export class PrismaUserRepository implements IUserRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   public async findById(id: string): Promise<User | null> {
-    const raw = await this.prisma.user.findUnique({ where: { id } });
+    const raw = await this.prisma.user.findUnique({
+      where: { id },
+      include: { role: true },
+    });
     return raw ? toDomain(raw) : null;
   }
 
   public async findAll(): Promise<User[]> {
-    const rows = await this.prisma.user.findMany();
+    const rows = await this.prisma.user.findMany({
+      include: { role: true },
+    });
     return rows.map(toDomain);
   }
 
@@ -38,7 +43,6 @@ export class PrismaUserRepository implements IUserRepository {
       create: {
         id: user.id,
         name: user.name,
-        role: user.role,
         pinHash: user.pin.getHash(),
         status: user.status,
         failedAttempts: user.failedAttempts,

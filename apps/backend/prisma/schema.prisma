@@ -18,14 +18,14 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  ADMIN
-  KITCHEN_STAFF
-}
-
 enum UserStatus {
   ACTIVE
   BLOCKED
+}
+
+enum LocationType {
+  WAREHOUSE
+  KITCHEN
 }
 
 enum RemanenteStatus {
@@ -34,15 +34,66 @@ enum RemanenteStatus {
   DISCARDED
 }
 
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  module      String
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
 model User {
-  id             String     @id @default(uuid())
+  id             String          @id @default(uuid())
   name           String
-  role           Role       @default(KITCHEN_STAFF)
+  roleId         String?
+  role           Role?           @relation(fields: [roleId], references: [id], onDelete: SetNull)
   pinHash        String
-  status         UserStatus @default(ACTIVE)
-  failedAttempts Int        @default(0)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  status         UserStatus      @default(ACTIVE)
+  failedAttempts Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  stockMovements StockMovement[]
+}
+
+model StorageLocation {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  type        LocationType @default(KITCHEN)
+  description String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model SystemSettings {
+  id                       String   @id @default("default")
+  restaurantName           String   @default("RestoStock Kitchen")
+  taxId                    String?
+  currencySymbol           String   @default("$")
+  criticalAlertHours       Int      @default(24)
+  defaultRemanenteHours    Int      @default(24)
+  varianceTolerancePercent Decimal  @default(5.0) @db.Decimal(5, 2)
+  updatedAt                DateTime @updatedAt
 }
 
 model Insumo {
@@ -79,14 +130,19 @@ model Remanente {
 }
 
 model StockMovement {
-  id        String   @id @default(uuid())
-  insumoId  String
-  type      String   // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK
-  quantity  Decimal  @db.Decimal(12, 3)
-  fromLoc   String
-  toLoc     String
-  createdAt DateTime @default(now())
-  insumo    Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  insumoId   String
+  type       String   // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK, EXTRACTION_RECIPE, DISCARD_DIRECT
+  quantity   Decimal  @db.Decimal(12, 3)
+  fromLoc    String
+  toLoc      String
+  operatorId String?
+  purpose    String?  // KITCHEN_STOCK, RECIPE, DIRECT_DISCARD
+  reason     String?  // Motivo descriptivo de extracción o descarte directo
+  recipeId   String?  // ID de receta asociada si purpose == RECIPE
+  createdAt  DateTime @default(now())
+  insumo     Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  operator   User?    @relation(fields: [operatorId], references: [id], onDelete: SetNull)
 }
 
 model SystemHealth {

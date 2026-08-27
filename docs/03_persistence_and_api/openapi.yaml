@@ -755,6 +755,17 @@ components:
           type: string
           enum: [KITCHEN_FRIDGE, KITCHEN_FREEZER, KITCHEN_PANTRY, KITCHEN_PREP]
           default: KITCHEN_FRIDGE
+        purpose:
+          type: string
+          enum: [KITCHEN_STOCK, RECIPE, DIRECT_DISCARD]
+          default: KITCHEN_STOCK
+          description: Propósito u origen de la extracción de bodega
+        reason:
+          type: string
+          description: Motivo o justificación descriptiva de la extracción
+        recipeId:
+          type: string
+          description: ID de la receta destino en caso de purpose == RECIPE
 
     RecordExtractionResponse:
       type: object

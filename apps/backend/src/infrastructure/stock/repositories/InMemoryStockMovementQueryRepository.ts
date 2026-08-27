@@ -21,6 +21,10 @@ export class InMemoryStockMovementQueryRepository implements IStockMovementQuery
       quantity: movement.quantity,
       fromLoc: movement.fromLoc,
       toLoc: movement.toLoc,
+      operatorId: movement.operatorId,
+      purpose: movement.purpose,
+      reason: movement.reason,
+      recipeId: movement.recipeId,
       createdAt: movement.createdAt ?? new Date(),
     }));
 
