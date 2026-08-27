@@ -38,4 +38,26 @@ The concrete model/migration convention this implies is documented in [conventio
 - Keys are UUID strings stored as `CHAR(36)` (36 bytes — Laravel's `$table->uuid()` maps to `CHAR(36)` in MySQL, per `MySqlGrammar::typeUuid()`) rather than 8-byte bigints — a larger index/FK footprint, in exchange for enumeration-safe public identifiers and preserved insert locality.
 - **Column-naming nuance in migration 4 (fresh install vs. already-migrated).** Because the `config/permission.php` rename (`model_id` → `model_uuid`) ships *before* migration 4, a **fresh** install sees the vendored `create_permission_tables` migration create the pivot morph column already named `model_uuid` (per config) but still `unsignedBigInteger`-typed, whereas an **already-migrated** database still has it named `model_id`. Migration 4 therefore **detects** the actual source column (`Schema::hasColumn($table, 'model_id') ? 'model_id' : $morphKeyColumn`) rather than assuming a fixed name, and uses a distinct temp column, so it converts correctly in both cases. This is implemented in `2026_07_22_100004_convert_model_morph_key_to_uuid_in_permission_tables_table.php`.
 
-_Last updated: 2026-07-22 — Implemented as Epic 1 (`users` done; the other six entities remain future). Added a Consequences note on migration 4's fresh-install vs. already-migrated column detection; refreshed the two convention links to the renamed `#uuid-primary-keys` doc anchors._
+## Amendment 1 (2026-08-27) — the scope is the policy, not the list of seven
+
+**Status: accepted. This amendment widens the Decision above; it reverses nothing in it.**
+
+The Context section enumerates **seven** entities because those were the seven that existed as requirements when this ADR was written. Two tables have since shipped with UUIDv7 primary keys that are **not** among them, and each one made the seven-entity list read narrower than the code:
+
+| Table | Story | Status when this amendment landed |
+| --- | --- | --- |
+| `sales_regions` | [0016](../database/schema.md#sales_regions) | Shipped 2026-08-20. Recorded at the time in [schema.md's Notes](../database/schema.md#notes) and [conventions/base-standards.md](../conventions/base-standards.md#uuid-primary-keys) as a **deferred** ADR amendment. |
+| `media` | 0019 (D9) | Shipped 2026-08-27. See [schema.md § `media`](../database/schema.md#media). |
+
+Rather than append a ninth name and wait for a tenth, the rule this ADR actually enforces is stated directly:
+
+> **Every new business entity in this application takes a UUID (v7) primary key**, under the model and migration conventions in the Decision above. The one named exception on record is a **high-volume internal geography lookup table**, which stays `bigint` — it is never exposed publicly and has nothing to enumerate.
+
+Two honest notes, so the widening is not read as stronger than it is:
+
+- **The rationale does not transfer uniformly.** This ADR's stated reason is enumeration safety, and a fixed, public ISO country catalog has nothing to enumerate — `sales_regions` is keyed this way for **consistency**, not because the original rationale applies. That trade was made knowingly: a mixed-PK domain costs more to reason about than an over-provisioned key on ~254 near-read-only rows. `media` is the opposite case and *does* fit the original rationale — its ids are interpolated into Blade and passed as `wire:click` arguments across a gallery of tiles, where a sequential integer would leak total library volume.
+- **Six of the original seven are still future.** Products, Product Variants, Product Categories (PRD Epic 2) and Blog Categories, Blog Tags, Blog Posts (PRD Epic 4) do not exist in code. The Consequences section's "six of the seven are greenfield" sentence is still true of *them*; `sales_regions` and `media` are simply two more greenfield cases that arrived first.
+
+_Last updated: 2026-08-27 — Story 0019 (Media Library upload and conversions — backend), Phase 6: added **Amendment 1**, closing the ADR-amendment follow-up [schema.md](../database/schema.md#notes) has recorded as deferred since task 0016. `media` is the **second** UUIDv7 entity this ADR's seven-entity list does not name, and a second silent contradiction is precisely the [stale-claim failure mode](../errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13) this project already records — so the amendment states the **policy** (every new business entity is UUIDv7; one named `bigint` exception) instead of extending an enumeration a third story would have to extend again. Nothing above the amendment was edited: the Context, Decision, Alternatives and Consequences sections all still describe what was decided on 2026-07-22, correctly._
+
+_Previously: 2026-07-22 — Implemented as Epic 1 (`users` done; the other six entities remain future). Added a Consequences note on migration 4's fresh-install vs. already-migrated column detection; refreshed the two convention links to the renamed `#uuid-primary-keys` doc anchors._

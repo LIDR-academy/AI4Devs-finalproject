@@ -226,7 +226,47 @@ repo must follow — always with a real code example pulled from this repository
   self-service case this layer's own `$isSelfEdit` exemption leaves alone for a different, narrower
   reason.
 
-_Last updated: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), **Phase 6 docs sync**: no new page and no new rule — [model-instance-trust.md](model-instance-trust.md) was re-verified against `HEAD` rather than rewritten (every ❌/✅ code block still matches the shipped actions, the `whereKeyNot()` → `$rows->reject(...)` supersession is recorded on the page and confirmed in the code, and nothing in this app reads `SetSalesRegionActive`'s return value, exactly as the R-2 section says). What this pass corrected is **this index entry**, which stopped at Phase 4 round 2 while the page itself gained two Phase 5 code-review corrections the next day: the status blockquote's "neither finding was dashboard-reachable" claim, which is true only of F-2, and the lock-ordering bullet's over-claim, where the residual window inside `SetSalesRegionActive`'s promotion path is closed by the **outer** transaction's `attempts: 3` rather than by ordering. Both are now summarised above. Recorded as a distinct data point rather than folded away: this is the audit-authored-page failure mode recurring with a **one-day** fuse instead of a one-story one, caught by the review that immediately followed — which is the prescribed fix working, not a new lesson (see [errors-log.md](../errors-log.md))._
+- [Image upload & server-side image processing](image-upload-processing.md) — the rules established by
+  story 0019's Phase 4 audit and **re-audit**, and the first page here about a feature that accepts a
+  file from a user and then *decodes* it. Its central rule is that **a pixel-dimension cap does not
+  bound decode memory**: bytes-per-pixel is a property of the installed ImageMagick build, not a
+  constant, and this project's Q16-HDRI build measures ~35 bytes/pixel — so an 8000×8000 PNG that is
+  **7,898 bytes on disk** (0.1% of the 8 MB size cap) extrapolates to ~2.2 GB in one request, with
+  `memory_get_peak_usage()` reporting a few MB throughout because it cannot see Imagick's C-level
+  allocations. The decoder must therefore enforce the same ceiling the validator promises, derived from
+  the *same constant* so the two cannot drift. It carries the measured evidence that the two limit
+  layers do **different** jobs and neither is redundant (`WIDTH`/`HEIGHT` refuse at header-parse time
+  at 0.00 s and 38.5 MB; the byte ceiling is slower and coarser but is the only layer that sees an
+  animated input whose *per-frame* dimensions are all legal — 965.9 MB with limits versus 2,823.1 MB
+  without, which matters because `decodeAnimation` is `true`); why `DISK => 0` is what makes the byte
+  ceiling bite instead of converting memory exhaustion into disk exhaustion; and a ⚠️ that
+  `Imagick::setResourceLimit()` is **process-global**, which is not a concurrency hazard on this NTS,
+  Octane-free stack but *is* sequential contamination — harmless only while
+  `GenerateImageConversions` remains the single Imagick consumer in `app/`. On the storage side it
+  covers why `Storage::putFile()`'s content-sniffed extension must never name a file the web server
+  serves directly (a sniffed `image/svg+xml` becomes `.svg`), the allow-listed-`match` replacement, and
+  the **enumeration** that proves such a `match`'s `default => throw` arm unreachable rather than
+  asserting it — over Symfony's full 1,848-entry table exactly three MIME types can satisfy
+  `mimes:jpg,jpeg,png`, and the one the map does not cover (`image/pjpeg`) is unproducible by either
+  detector in this stack. It also records that **`image` + `mimes:` is not by itself a content check for
+  a Livewire temporary upload**, because `TemporaryUploadedFile::getMimeType()` routes through
+  Flysystem's `FallbackMimeTypeDetector`, which guesses from the *extension* whenever finfo is
+  inconclusive — 2 KB of `random_bytes()` named `garbage.jpg` reports as `image/jpeg`, and `dimensions:`
+  is the rule that actually rejects it; that `Storage::put()` **returns `false` rather than throwing**
+  on a `'throw' => false` disk, so an ignored return commits a row pointing at a file that was never
+  written; and — the test-design half of the same finding — that a read-only-directory fixture makes the
+  *first* write fail, leaving the partial-write cleanup branch **vacuously** asserted, with the
+  `mkdir()`-over-the-second-path fixture that actually exercises it. Finally it covers why an imaging
+  exception must never reach the user (Imagick messages carry absolute paths and internal source
+  locations), why the catch must be on the base `ImageException` (a resource refusal arrives as
+  `ImageDecoderException` on one path and `DriverException` on the other), and a **confirmed-safe** list
+  of six verified mechanics — including the rule that a limiter key falling back to a shared
+  `'unauthenticated'` literal must be *proven* unreachable, the companion hazard to a limiter keyed on
+  the target.
+
+_Last updated: 2026-08-27 — Story 0019 (Media Library upload and conversions — backend), **Phase 4 re-audit**: added [image-upload-processing.md](image-upload-processing.md), the eleventh page, from the verification of findings F-1 (decompression bomb via unbounded Imagick decode), F-2 (the action not validating its own input, and trusting `putFile()`'s inferred extension), F-3 (unchecked `Storage::put()` return) and F-5 (Livewire's temporary-upload endpoint carrying no `mimes` restriction and a looser size ceiling). Every number on that page was measured against the shipped code in this worktree rather than carried over from the first audit's notes, and the reproduction fixtures were removed afterwards. Written as ❌/✅ pairs describing the **shipped** state from the outset, per [errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s rule for an audit-authored page — the failure mode that page's own footer records as having recurred with a one-day fuse._
+
+_Previously: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), **Phase 6 docs sync**: no new page and no new rule — [model-instance-trust.md](model-instance-trust.md) was re-verified against `HEAD` rather than rewritten (every ❌/✅ code block still matches the shipped actions, the `whereKeyNot()` → `$rows->reject(...)` supersession is recorded on the page and confirmed in the code, and nothing in this app reads `SetSalesRegionActive`'s return value, exactly as the R-2 section says). What this pass corrected is **this index entry**, which stopped at Phase 4 round 2 while the page itself gained two Phase 5 code-review corrections the next day: the status blockquote's "neither finding was dashboard-reachable" claim, which is true only of F-2, and the lock-ordering bullet's over-claim, where the residual window inside `SetSalesRegionActive`'s promotion path is closed by the **outer** transaction's `attempts: 3` rather than by ordering. Both are now summarised above. Recorded as a distinct data point rather than folded away: this is the audit-authored-page failure mode recurring with a **one-day** fuse instead of a one-story one, caught by the review that immediately followed — which is the prescribed fix working, not a new lesson (see [errors-log.md](../errors-log.md))._
 
 _Previously: 2026-08-26 — Task 0017, Phase 4 re-audit round 2 and
 same-day fix: [model-instance-trust.md](model-instance-trust.md) gained a third section, applying this
@@ -307,7 +347,7 @@ while the paired Blade view was still unbuilt, and no longer true now that it sh
 omission, with `EnforceAdministratorPermissionGrant`'s preserve branch live rather than dormant.
 Corrected rather than only appended to, per [errors-log.md](../errors-log.md)'s "a security page
 documented the vulnerable code as current" lesson. Every claim in the new section was verified by
-rendering the real component for both actor tiers (37 vs. 38 checkboxes) and by executing a broad
+rendering the real component for both actor tiers (41 vs. 42 checkboxes) and by executing a broad
 administrator's omitting save, not by reading the markup._
 
 _Previously: 2026-08-20 — Task 0010 (Roles & permissions management — backend), Phase 6 docs sync:
