@@ -5,7 +5,7 @@ import { PrismaStockRepository } from '../stock/repositories/PrismaStockReposito
 import { PrismaUserRepository } from '../auth/repositories/PrismaUserRepository.js';
 import { PrismaRemanenteQueryRepository } from '../kitchen/repositories/PrismaRemanenteQueryRepository.js';
 import { PrismaReportRepository } from '../reports/repositories/PrismaReportRepository.js';
-import { PrismaRecipeRepository } from '../catalog/repositories/PrismaRecipeRepository.js';
+import { PrismaRecipeRepository } from '../recipes/repositories/PrismaRecipeRepository.js';
 import { PrismaShiftReconciliationRepository } from '../kitchen/repositories/PrismaShiftReconciliationRepository.js';
 
 describe('buildRepositoriesForEnvironment — evita que producción corra silenciosamente en memoria', () => {

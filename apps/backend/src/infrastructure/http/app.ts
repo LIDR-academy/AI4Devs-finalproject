@@ -5,12 +5,12 @@ import { createAuthRouter } from './routes/auth.routes.js';
 import { createStockRouter } from '../stock/http/routes/stock.routes.js';
 import { createKitchenRouter } from '../kitchen/http/routes/kitchen.routes.js';
 import { createReportsRouter } from '../reports/http/routes/reports.routes.js';
-import { createCatalogRouter } from '../catalog/http/routes/catalog.routes.js';
+import { createRecipesRouter } from '../recipes/http/routes/recipes.routes.js';
 import { InMemoryUserRepository } from '../auth/repositories/InMemoryUserRepository.js';
 import { InMemoryStockRepository } from '../stock/repositories/InMemoryStockRepository.js';
 import { InMemoryRemanenteQueryRepository } from '../kitchen/repositories/InMemoryRemanenteQueryRepository.js';
 import { InMemoryReportRepository } from '../reports/repositories/InMemoryReportRepository.js';
-import { InMemoryRecipeRepository } from '../catalog/repositories/InMemoryRecipeRepository.js';
+import { InMemoryRecipeRepository } from '../recipes/repositories/InMemoryRecipeRepository.js';
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
 import { IInsumoRepository } from '../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../domain/stock/repositories/IRemanenteRepository.js';
@@ -18,7 +18,7 @@ import { IStockMovementQueryRepository } from '../../domain/stock/repositories/I
 import { InMemoryStockMovementQueryRepository } from '../stock/repositories/InMemoryStockMovementQueryRepository.js';
 import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 import { IReportRepository } from '../../domain/reports/repositories/IReportRepository.js';
-import { IRecipeRepository } from '../../domain/catalog/repositories/IRecipeRepository.js';
+import { IRecipeRepository } from '../../domain/recipes/repositories/IRecipeRepository.js';
 
 import path from 'path';
 import fs from 'fs';
@@ -166,7 +166,7 @@ function mountApiRoutes(
   app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo));
   app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
   app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo));
-  app.use('/api/v1/catalog', ...guard, createCatalogRouter(recipeRepo, stockRepo));
+  app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo));
 }
 
 export function createApp(options: AppOptions = {}): Express {

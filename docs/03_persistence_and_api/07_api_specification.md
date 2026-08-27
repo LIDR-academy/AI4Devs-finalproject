@@ -24,9 +24,9 @@ inputs:
 | **GET** | `/api/v1/kitchen/remanentes` | *Ninguno (Query Params)* | `GetRemanentesResponse` | Obtiene la lista de remanentes activos en cocina ordenados bajo el principio FEFO. |
 | **POST** | `/api/v1/kitchen/consumption` | `RecordConsumptionRequest` | `RecordConsumptionResponse` | Registra consumos parciales de insumos abiertos (remanentes) durante el servicio. |
 | **POST** | `/api/v1/kitchen/remanentes/:id/discard`| `DiscardRemanenteRequest` | `DiscardRemanenteResponse` | Registra el descarte físico total de un remanente activo por merma o expiración. |
-| **POST** | `/api/v1/catalog/recipes` | `CreateRecipeRequest` | `CreateRecipeResponse` | Crea una nueva receta con sus ingredientes y proporciones en el catálogo maestro (`TK-057`). |
-| **GET** | `/api/v1/catalog/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas del catálogo maestro (`TK-057`). |
-| **GET** | `/api/v1/kitchen/recipes` 🚧 | *Ninguno* | `ListRecipesResponse` | *(Nunca implementado)* Reemplazado por `GET /api/v1/catalog/recipes` (`TK-057`) — ver §2.7. |
+| **POST** | `/api/v1/recipes` | `CreateRecipeRequest` | `CreateRecipeResponse` | Crea una nueva receta con sus ingredientes y proporciones (`TK-057`, ruta actual desde `TK-069` — módulo `recipes` independiente de `catalog`). |
+| **GET** | `/api/v1/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas (`TK-057`, ruta actual desde `TK-069`). |
+| **GET** | `/api/v1/kitchen/recipes` 🚧 | *Ninguno* | `ListRecipesResponse` | *(Nunca implementado)* Reemplazado por `GET /api/v1/recipes` (`TK-057`/`TK-069`) — ver §2.7. |
 | **POST** | `/api/v1/kitchen/recipes/:id/consume` | `ConsumeRecipeRequest` | `ConsumeRecipeResponse` | Descuenta stock en cocina en cascada FEFO basado en los ingredientes de la receta. |
 | **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. |
 | **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
@@ -273,8 +273,8 @@ sequenceDiagram
     }
     ```
 
-### 2.6. `POST /api/v1/catalog/recipes`
-*   **Descripción:** Permite al administrador crear una nueva receta asociándole una lista de ingredientes e indicando las porciones necesarias expresadas en la unidad de consumo del ingrediente. Cada `insumoId` referenciado debe existir en el catálogo (`GET /api/v1/stock/insumos`); si no existe, la API responde `404 Not Found` (`TK-057`).
+### 2.6. `POST /api/v1/recipes`
+*   **Descripción:** Permite al administrador crear una nueva receta asociándole una lista de ingredientes e indicando las porciones necesarias expresadas en la unidad de consumo del ingrediente. Cada `insumoId` referenciado debe existir en el catálogo (`GET /api/v1/stock/insumos`); si no existe, la API responde `404 Not Found` (`TK-057`; ruta movida de `/api/v1/catalog/recipes` a `/api/v1/recipes` en `TK-069`, al extraer `recipes` como módulo independiente de `catalog`).
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
     *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
@@ -305,7 +305,7 @@ sequenceDiagram
 
 ---
 
-### 2.7. `GET /api/v1/kitchen/recipes` 🚧 *(Nunca implementado — hallazgo de `TK-057`: esta sección documentaba un endpoint que jamás tuvo controller/router activo; el frontend de consumo de recetas usa una lista hardcodeada `DEFAULT_RECIPES` como fallback en su lugar. Reemplazado por §2.7-bis, `GET /api/v1/catalog/recipes`, real y verificado en `TK-057`)*
+### 2.7. `GET /api/v1/kitchen/recipes` 🚧 *(Nunca implementado — hallazgo de `TK-057`: esta sección documentaba un endpoint que jamás tuvo controller/router activo; el frontend de consumo de recetas usa una lista hardcodeada `DEFAULT_RECIPES` como fallback en su lugar. Reemplazado por §2.7-bis, `GET /api/v1/recipes`, real y verificado en `TK-057`/`TK-069`)*
 *   **Descripción:** Retorna la lista de recetas activas configuradas en el catálogo maestro para su visualización y selección en la pantalla táctil de cocina.
 *   **Cabeceras Requeridas:**
     *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR`)
@@ -320,8 +320,8 @@ sequenceDiagram
     ]
     ```
 
-### 2.7-bis. `GET /api/v1/catalog/recipes`
-*   **Descripción:** Retorna la lista de recetas del catálogo maestro con sus ingredientes, implementado en `TK-057`.
+### 2.7-bis. `GET /api/v1/recipes`
+*   **Descripción:** Retorna la lista de recetas del catálogo maestro con sus ingredientes, implementado en `TK-057` (ruta movida de `/api/v1/catalog/recipes` a `/api/v1/recipes` en `TK-069`, al extraer `recipes` como módulo independiente de `catalog`).
 *   **Cabeceras Requeridas:**
     *   `Authorization: Bearer <token_jwt>` (cualquier rol autenticado)
 *   **Response Success (`200 OK` - `ListRecipesResponse`):**

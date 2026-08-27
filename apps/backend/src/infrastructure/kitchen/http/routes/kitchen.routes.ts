@@ -6,7 +6,7 @@ import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cas
 import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/ConsumeRecipeUseCase.js';
 import { IRemanenteQueryRepository } from '../../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
-import { IRecipeRepository } from '../../../../domain/catalog/repositories/IRecipeRepository.js';
+import { IRecipeRepository } from '../../../../domain/recipes/repositories/IRecipeRepository.js';
 
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
 import { InMemoryShiftReconciliationRepository } from '../../repositories/InMemoryShiftReconciliationRepository.js';

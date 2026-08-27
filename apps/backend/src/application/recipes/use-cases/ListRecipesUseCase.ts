@@ -1,4 +1,4 @@
-import { IRecipeRepository } from '../../../domain/catalog/repositories/IRecipeRepository.js';
+import { IRecipeRepository } from '../../../domain/recipes/repositories/IRecipeRepository.js';
 
 export interface RecipeIngredientListItemDTO {
   insumoId: string;

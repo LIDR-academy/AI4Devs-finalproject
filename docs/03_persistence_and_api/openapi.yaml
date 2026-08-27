@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: RestoStock API
   description: REST API specification for RestoStock real-time inventory and FEFO traceability system.
-  version: 2.0.0
+  version: 3.0.0
 servers:
   - url: http://localhost:3000
     description: Local Development Server
@@ -509,12 +509,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/catalog/recipes:
+  /api/v1/recipes:
     get:
-      summary: List all recipes in the master catalog, with ingredients (TK-057)
+      summary: List all recipes, with ingredients (TK-069, modulo recipe independiente de TK-057)
       operationId: listRecipes
       tags:
-        - Catalog
+        - Recipes
       security:
         - bearerAuth: []
       responses:
@@ -533,10 +533,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     post:
-      summary: Create a new recipe with its ingredients (ADMIN only, TK-057)
+      summary: Create a new recipe with its ingredients (ADMIN only, TK-069)
       operationId: createRecipe
       tags:
-        - Catalog
+        - Recipes
       security:
         - bearerAuth: []
       requestBody:

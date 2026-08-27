@@ -1,8 +1,8 @@
 import { PrismaClient, Prisma } from '../../../generated/prisma/client.js';
-import { Recipe } from '../../../domain/catalog/entities/Recipe.js';
-import { RecipeIngredient } from '../../../domain/catalog/entities/RecipeIngredient.js';
+import { Recipe } from '../../../domain/recipes/entities/Recipe.js';
+import { RecipeIngredient } from '../../../domain/recipes/entities/RecipeIngredient.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
-import { IRecipeRepository } from '../../../domain/catalog/repositories/IRecipeRepository.js';
+import { IRecipeRepository } from '../../../domain/recipes/repositories/IRecipeRepository.js';
 
 type RecipeWithIngredients = Prisma.RecipeGetPayload<{ include: { ingredients: true } }>;
 

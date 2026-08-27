@@ -5,12 +5,12 @@ import {
   IRemanenteQueryRepository,
   ActiveRemanenteDTO,
 } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
-import { IRecipeRepository } from '../../domain/catalog/repositories/IRecipeRepository.js';
+import { IRecipeRepository } from '../../domain/recipes/repositories/IRecipeRepository.js';
 import { User } from '../../domain/auth/entities/User.js';
 import { Pin } from '../../domain/auth/value-objects/Pin.js';
 import { Insumo } from '../../domain/stock/entities/Insumo.js';
-import { Recipe } from '../../domain/catalog/entities/Recipe.js';
-import { RecipeIngredient } from '../../domain/catalog/entities/RecipeIngredient.js';
+import { Recipe } from '../../domain/recipes/entities/Recipe.js';
+import { RecipeIngredient } from '../../domain/recipes/entities/RecipeIngredient.js';
 import { Remanente } from '../../domain/stock/entities/Remanente.js';
 import { DecimalQuantity } from '../../domain/stock/value-objects/DecimalQuantity.js';
 

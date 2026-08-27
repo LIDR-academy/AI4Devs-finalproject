@@ -1,9 +1,9 @@
-import { IRecipeRepository } from '../../../domain/catalog/repositories/IRecipeRepository.js';
+import { IRecipeRepository } from '../../../domain/recipes/repositories/IRecipeRepository.js';
 import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 import { ExcessConsumptionException } from '../../../domain/kitchen/errors/ExcessConsumptionException.js';
-import { RecipeIngredient } from '../../../domain/catalog/entities/RecipeIngredient.js';
+import { RecipeIngredient } from '../../../domain/recipes/entities/RecipeIngredient.js';
 
 export interface ConsumeRecipeCommand {
   recipeId: string;

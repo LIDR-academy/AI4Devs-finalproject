@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { CreateRecipeUseCase } from '../../../../application/catalog/use-cases/CreateRecipeUseCase.js';
-import { ListRecipesUseCase } from '../../../../application/catalog/use-cases/ListRecipesUseCase.js';
+import { CreateRecipeUseCase } from '../../../../application/recipes/use-cases/CreateRecipeUseCase.js';
+import { ListRecipesUseCase } from '../../../../application/recipes/use-cases/ListRecipesUseCase.js';
 
 export const createRecipeSchema = z.object({
   name: z.string().min(1, 'El nombre de la receta es requerido.'),
@@ -29,7 +29,7 @@ function respondValidationError(req: Request, res: Response, detailMsg: string):
   });
 }
 
-export class CatalogController {
+export class RecipesController {
   constructor(
     private readonly createRecipeUseCase: CreateRecipeUseCase,
     private readonly listRecipesUseCase: ListRecipesUseCase

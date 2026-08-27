@@ -1,8 +1,8 @@
 import crypto from 'crypto';
-import { Recipe } from '../../../domain/catalog/entities/Recipe.js';
-import { RecipeIngredient } from '../../../domain/catalog/entities/RecipeIngredient.js';
+import { Recipe } from '../../../domain/recipes/entities/Recipe.js';
+import { RecipeIngredient } from '../../../domain/recipes/entities/RecipeIngredient.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
-import { IRecipeRepository } from '../../../domain/catalog/repositories/IRecipeRepository.js';
+import { IRecipeRepository } from '../../../domain/recipes/repositories/IRecipeRepository.js';
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 

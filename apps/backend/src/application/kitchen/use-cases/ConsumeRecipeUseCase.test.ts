@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ConsumeRecipeUseCase } from './ConsumeRecipeUseCase.js';
-import { InMemoryRecipeRepository } from '../../../infrastructure/catalog/repositories/InMemoryRecipeRepository.js';
+import { InMemoryRecipeRepository } from '../../../infrastructure/recipes/repositories/InMemoryRecipeRepository.js';
 import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
-import { Recipe } from '../../../domain/catalog/entities/Recipe.js';
-import { RecipeIngredient } from '../../../domain/catalog/entities/RecipeIngredient.js';
+import { Recipe } from '../../../domain/recipes/entities/Recipe.js';
+import { RecipeIngredient } from '../../../domain/recipes/entities/RecipeIngredient.js';
 import { Remanente } from '../../../domain/stock/entities/Remanente.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 

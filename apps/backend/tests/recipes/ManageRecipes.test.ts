@@ -4,14 +4,14 @@ import jwt from 'jsonwebtoken';
 import { createApp } from '../../src/infrastructure/http/app.js';
 import { InMemoryUserRepository } from '../../src/infrastructure/auth/repositories/InMemoryUserRepository.js';
 import { InMemoryStockRepository } from '../../src/infrastructure/stock/repositories/InMemoryStockRepository.js';
-import { InMemoryRecipeRepository } from '../../src/infrastructure/catalog/repositories/InMemoryRecipeRepository.js';
+import { InMemoryRecipeRepository } from '../../src/infrastructure/recipes/repositories/InMemoryRecipeRepository.js';
 import { User } from '../../src/domain/auth/entities/User.js';
 import { Pin } from '../../src/domain/auth/value-objects/Pin.js';
 import { Insumo } from '../../src/domain/stock/entities/Insumo.js';
 import { DecimalQuantity } from '../../src/domain/stock/value-objects/DecimalQuantity.js';
 
-describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () => {
-  const secret = 'test-secret-key-manage-catalog-recipes';
+describe('TK-069: Modulo Recipe independiente (alta y listado de recetas)', () => {
+  const secret = 'test-secret-key-manage-recipes';
   let userRepo: InMemoryUserRepository;
   let stockRepo: InMemoryStockRepository;
   let recipeRepo: InMemoryRecipeRepository;
@@ -44,12 +44,12 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
     });
   }
 
-  describe('POST /api/v1/catalog/recipes', () => {
+  describe('POST /api/v1/recipes', () => {
     it('ADMIN da de alta una receta con ingredientes validos (201), y aparece en el listado', async () => {
       const app = buildApp();
 
       const response = await request(app)
-        .post('/api/v1/catalog/recipes')
+        .post('/api/v1/recipes')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           name: 'Pizza Margarita',
@@ -63,7 +63,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
       expect(response.status).toBe(201);
       expect(response.body.recipeId).toBeTruthy();
 
-      const listResponse = await request(app).get('/api/v1/catalog/recipes').set('Authorization', `Bearer ${adminToken}`);
+      const listResponse = await request(app).get('/api/v1/recipes').set('Authorization', `Bearer ${adminToken}`);
       expect(listResponse.status).toBe(200);
       const listed = listResponse.body.find((r: { id: string }) => r.id === response.body.recipeId);
       expect(listed).toMatchObject({ name: 'Pizza Margarita', category: 'Pizzas' });
@@ -74,7 +74,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
       const app = buildApp();
 
       const response = await request(app)
-        .post('/api/v1/catalog/recipes')
+        .post('/api/v1/recipes')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           name: 'Receta Invalida',
@@ -84,7 +84,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
 
       expect(response.status).toBe(404);
 
-      const listResponse = await request(app).get('/api/v1/catalog/recipes').set('Authorization', `Bearer ${adminToken}`);
+      const listResponse = await request(app).get('/api/v1/recipes').set('Authorization', `Bearer ${adminToken}`);
       expect(listResponse.body).toEqual([]);
     });
 
@@ -92,7 +92,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
       const app = buildApp();
 
       const response = await request(app)
-        .post('/api/v1/catalog/recipes')
+        .post('/api/v1/recipes')
         .set('Authorization', `Bearer ${staffToken}`)
         .send({ name: 'Intento No Autorizado', category: 'Pizzas', ingredients: [{ insumoId: 'ins-harina-1', quantity: '0.100' }] });
 
@@ -103,7 +103,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
       const app = buildApp();
 
       const response = await request(app)
-        .post('/api/v1/catalog/recipes')
+        .post('/api/v1/recipes')
         .send({ name: 'Sin Token', category: 'Pizzas', ingredients: [{ insumoId: 'ins-harina-1', quantity: '0.100' }] });
 
       expect(response.status).toBe(401);
@@ -113,7 +113,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
       const app = buildApp();
 
       const response = await request(app)
-        .post('/api/v1/catalog/recipes')
+        .post('/api/v1/recipes')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ name: 'Receta Vacia', category: 'Pizzas', ingredients: [] });
 
@@ -122,11 +122,11 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
     });
   });
 
-  describe('GET /api/v1/catalog/recipes', () => {
+  describe('GET /api/v1/recipes', () => {
     it('retorna lista vacia si no hay recetas (repositorio limpio)', async () => {
       const app = buildApp();
 
-      const response = await request(app).get('/api/v1/catalog/recipes').set('Authorization', `Bearer ${adminToken}`);
+      const response = await request(app).get('/api/v1/recipes').set('Authorization', `Bearer ${adminToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual([]);
@@ -135,7 +135,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de recetas)', () =
     it('rechaza con 401 Unauthorized sin token', async () => {
       const app = buildApp();
 
-      const response = await request(app).get('/api/v1/catalog/recipes');
+      const response = await request(app).get('/api/v1/recipes');
 
       expect(response.status).toBe(401);
     });

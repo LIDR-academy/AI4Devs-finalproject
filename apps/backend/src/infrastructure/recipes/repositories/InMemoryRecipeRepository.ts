@@ -1,5 +1,5 @@
-import { Recipe } from '../../../domain/catalog/entities/Recipe.js';
-import { IRecipeRepository } from '../../../domain/catalog/repositories/IRecipeRepository.js';
+import { Recipe } from '../../../domain/recipes/entities/Recipe.js';
+import { IRecipeRepository } from '../../../domain/recipes/repositories/IRecipeRepository.js';
 
 export class InMemoryRecipeRepository implements IRecipeRepository {
   private recipes: Map<string, Recipe> = new Map();

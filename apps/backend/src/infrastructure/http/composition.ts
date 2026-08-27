@@ -4,7 +4,7 @@ import { PrismaStockRepository } from '../stock/repositories/PrismaStockReposito
 import { PrismaUserRepository } from '../auth/repositories/PrismaUserRepository.js';
 import { PrismaRemanenteQueryRepository } from '../kitchen/repositories/PrismaRemanenteQueryRepository.js';
 import { PrismaReportRepository } from '../reports/repositories/PrismaReportRepository.js';
-import { PrismaRecipeRepository } from '../catalog/repositories/PrismaRecipeRepository.js';
+import { PrismaRecipeRepository } from '../recipes/repositories/PrismaRecipeRepository.js';
 import { PrismaShiftReconciliationRepository } from '../kitchen/repositories/PrismaShiftReconciliationRepository.js';
 import { PrismaStockMovementQueryRepository } from '../stock/repositories/PrismaStockMovementQueryRepository.js';
 
@@ -14,7 +14,7 @@ import { PrismaStockMovementQueryRepository } from '../stock/repositories/Prisma
  * de producción nunca tocaba PostgreSQL. Esta función es la composición root
  * real: fuera de "production" no fuerza nada (createApp mantiene sus defaults
  * InMemory, útiles para desarrollo rápido). En "production" instancia las
- * 6 repositories Prisma existentes (TK-048 añade report/recipe/reconciliation,
+ * 6 repositories Prisma existentes (TK-048 añade report/recipes/reconciliation,
  * cerrando la brecha de persistencia parcial).
  */
 export function buildRepositoriesForEnvironment(
