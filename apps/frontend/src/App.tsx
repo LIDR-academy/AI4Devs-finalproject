@@ -10,13 +10,6 @@ import {
   ShieldCheck,
   Utensils,
   ClipboardCheck,
-  BarChart3,
-  Users,
-  History,
-  BookOpen,
-  Settings,
-  MapPin,
-  Shield,
 } from 'lucide-react';
 import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
 import { AuthService } from './features/auth/services/auth.service.js';
@@ -34,6 +27,9 @@ import { CatalogManagementPanel } from './features/catalog/components/CatalogMan
 import { RestaurantSettingsModal } from './features/settings/components/RestaurantSettingsModal.js';
 import { LocationsManagementModal } from './features/stock/components/LocationsManagementModal.js';
 import { RolesManagementModal } from './features/security/components/RolesManagementModal.js';
+import { FEFOInventoryHealthBar } from './features/kitchen/components/FEFOInventoryHealthBar.js';
+import { LocationFilterTabs, LocationFilter } from './features/kitchen/components/LocationFilterTabs.js';
+import { AdminDropdownMenu } from './features/security/components/AdminDropdownMenu.js';
 
 interface DashboardHeaderProps {
   currentUser: { name: string; role: string };
@@ -102,40 +98,15 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
       Conciliar Turno
     </button>
 
-    <button className="btn-touch btn-secondary" onClick={onReports} id="btn-open-reports" title="Reportes de Mermas">
-      <BarChart3 size={20} />
-      Reportes
-    </button>
-
-    <button className="btn-touch btn-secondary" onClick={onUserManagement} id="btn-open-user-management" title="Gestión de Personal">
-      <Users size={20} />
-      Personal
-    </button>
-
-    <button className="btn-touch btn-secondary" onClick={onRolesManagement} id="btn-open-roles-management" title="Roles y Permisos">
-      <Shield size={20} />
-      Roles
-    </button>
-
-    <button className="btn-touch btn-secondary" onClick={onLocationsManagement} id="btn-open-locations-management" title="Sectores Físicos">
-      <MapPin size={20} />
-      Sectores
-    </button>
-
-    <button className="btn-touch btn-secondary" onClick={onSettingsManagement} id="btn-open-settings-management" title="Configuración del Restaurante">
-      <Settings size={20} />
-      Ajustes
-    </button>
-
-    <button className="btn-touch btn-secondary" onClick={onMovementHistory} id="btn-open-movement-history" title="Auditoría de Movimientos">
-      <History size={20} />
-      Movimientos
-    </button>
-
-    <button className="btn-touch btn-secondary" onClick={onCatalogManagement} id="btn-open-catalog-management" title="Gestión de Catálogo">
-      <BookOpen size={20} />
-      Catálogo
-    </button>
+    <AdminDropdownMenu
+      onReports={onReports}
+      onUserManagement={onUserManagement}
+      onMovementHistory={onMovementHistory}
+      onCatalogManagement={onCatalogManagement}
+      onSettingsManagement={onSettingsManagement}
+      onLocationsManagement={onLocationsManagement}
+      onRolesManagement={onRolesManagement}
+    />
 
     <button className="btn-touch btn-secondary" onClick={onSync} disabled={isLoading} id="btn-sync-remanentes" title="Sincronizar Remanentes">
       <RefreshCw size={20} className={isLoading ? 'spin' : ''} />
@@ -494,6 +465,7 @@ export const App: React.FC = () => {
   const dashboard = useDashboardState();
   const { currentUser, remanentes, isLoading, loadRemanentes, handleLoginSuccess, handleLogout, handleConsume } = dashboard;
   const handlers = useAppHandlers(dashboard);
+  const [activeLocation, setActiveLocation] = useState<LocationFilter>('ALL');
 
   if (!currentUser) {
     return <PinLoginModal onSuccess={handleLoginSuccess} />;
@@ -501,18 +473,31 @@ export const App: React.FC = () => {
 
   const criticalCount = remanentes.filter((r) => r.hoursRemaining < 24).length;
 
+  const counts: Record<LocationFilter, number> = {
+    ALL: remanentes.length,
+    KITCHEN_FRIDGE: remanentes.filter((r) => r.location === 'KITCHEN_FRIDGE').length,
+    KITCHEN_PREP: remanentes.filter((r) => r.location === 'KITCHEN_PREP').length,
+    KITCHEN_LINE: remanentes.filter((r) => r.location === 'KITCHEN_LINE').length,
+  };
+
+  const filteredRemanentes = activeLocation === 'ALL' ? remanentes : remanentes.filter((r) => r.location === activeLocation);
+
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', minHeight: '100vh' }}>
       <DashboardHeader currentUser={currentUser} isLoading={isLoading} onSync={loadRemanentes} onLogout={handleLogout} {...handlers} />
+
+      <FEFOInventoryHealthBar remanentes={remanentes} />
 
       <SummaryCards remanentesCount={remanentes.length} criticalCount={criticalCount} {...handlers} />
 
       <KitchenBoardTitle />
 
+      <LocationFilterTabs activeLocation={activeLocation} onLocationSelect={setActiveLocation} counts={counts} />
+
       {/* Lista de Remanentes Activos FEFO */}
       <main>
         <ActiveRemanentesList
-          items={remanentes}
+          items={filteredRemanentes}
           onConsume={handleConsume}
           onDiscard={(item) => dashboard.setDiscardTarget(item)}
         />

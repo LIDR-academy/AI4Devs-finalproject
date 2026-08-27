@@ -1,7 +1,7 @@
 ---
 name: RestoStock UI Design System
-version: "2.0.0"
-description: "Sistema de diseño 'Señal Industrial' y ergonomía táctil para RestoStock, sistema de inventario y trazabilidad FEFO en tiempo real para cocinas de restaurantes."
+version: "3.0.0"
+description: "Sistema de diseño 'Señal Industrial' v3.0 con Barra de Salud FEFO, Filtros por Estación Física y Ergonomía Táctil Industrial."
 colors:
   primary: "#ff6a00"
   secondary: "#333333"
@@ -91,39 +91,24 @@ components:
 ---
 
 ## 📌 Overview
-RestoStock combina ergonomía táctil industrial para pantallas de cocina con la sobriedad y máximo contraste del modo oscuro *Señal Industrial* (v2.0.0 — negro industrial + ámbar de seguridad + rojo de alerta exclusivo). Su propósito es maximizar la legibilidad bajo luz intensa de cocina y prevenir errores en la operación con botones de objetivo grande ($\ge 48\text{px}$). Alcance: pantallas táctiles de cocina; el dashboard administrativo de escritorio conserva su lenguaje visual anterior hasta que se decida una dirección propia.
+RestoStock combina ergonomía táctil industrial para pantallas de cocina con la sobriedad y máximo contraste del modo oscuro *Señal Industrial* (v3.0.0 — negro industrial + ámbar de seguridad + Medidor de Salud FEFO + Filtros de Estación Física). Su propósito es maximizar la legibilidad bajo luz intensa de cocina y prevenir errores en la operación con botones de objetivo grande ($\ge 48\text{px}$).
 
 ---
 
 ## 🎨 Colors & Contrast (WCAG 2.1 AA/AAA)
 La paleta cromática utiliza tokens HSL curvados y validados por cálculo de luminancia relativa (fórmula WCAG):
-- **Primary / Warning (#ff6a00):** Ámbar de seguridad industrial — acciones principales, marca y remanentes con vencimiento en menos de 24 horas. Comparte tono con Warning por diseño (ver `docs/02_architecture_design/05_ui_ux_design_system.md`); lleva texto/ícono oscuro (`#101010`, 7.06:1).
-- **Danger (#e10600):** Rojo de alerta para remanentes con vencimiento en menos de 6 horas. **Solo como fondo/badge/borde** (4.97:1 con texto blanco) — como texto directo sobre `neutral`/`card` cae a 3.5–3.8:1, insuficiente; para texto/labels de alerta usar la variante clara `#ff6b5e` (6.2–6.8:1).
-- **Success / Tertiary (#2fbf6e):** Verde de confirmación (cierre de turno, coincidencias de conciliación). Lleva texto/ícono oscuro (7.97:1).
-- **Secondary (#333333):** Gris neutro para acciones secundarias/no urgentes; texto blanco (12.6:1).
+- **Primary / Warning (#ff6a00):** Ámbar de seguridad industrial — acciones principales, marca y remanentes con vencimiento en menos de 24 horas.
+- **Danger (#e10600):** Rojo de alerta para remanentes con vencimiento en menos de 6 horas. **Solo como fondo/badge/borde** (4.97:1 con texto blanco).
+- **Success / Tertiary (#2fbf6e):** Verde de confirmación y stock seguro (>24h).
+- **Secondary (#333333):** Gris neutro para acciones secundarias/no urgentes.
 - **Neutral (#101010):** Fondo base negro industrial.
 - **Card (#1a1a1a):** Superficie de tarjetas y contenedores elevados.
 
 ---
 
-## 📱 Touch Ergonomics & Accessibility (WCAG 2.1)
-- **Superficie Táctil Mínima:** Todos los botones e insumos tienen zonas interactivas de **48px × 48px**.
-- **Teclado PIN:** Botones cuadrados/blocky de **64px × 64px** mínimo (no circulares).
-- **Contraste de Texto:** Mínimo `7:1` para números principales/texto primario y `4.5:1` para texto secundario — ver la nota de contraste por color arriba antes de usar `danger` como texto.
-- **Foco Visible:** Navegación obligatoria por teclado (`outline: 2px solid var(--color-primary)`).
+## 📱 UI/UX v3.0 Component Specifications
+1. **Inventory Health Bar (`FEFOInventoryHealthBar`):** Visualización tri-color en tiempo real del % de stock seguro (verde), en precaución (ámbar) y crítico (rojo).
+2. **Tactical Action Bar vs. Admin Drawer:** Acciones de cocina (`Extraer`, `Receta`, `Conciliar`) en primer plano táctil ($56\text{px}$); módulos administrativos agrupados bajo el menú `Administración ▾`.
+3. **Location Filter Tabs (`LocationFilterTabs`):** Pestañas táctiles para filtrar insumos por estación (`Todos`, `Refrigerador`, `Mesa Prep`, `Línea`).
+4. **Live Countdown Timers:** Reloj dinámico en tiempo real (`HH:MM:SS`) para remanentes $<6\text{h}$.
 
----
-
-## ⚡ Core Web Vitals (CWV Preventivos)
-- **LCP (Largest Contentful Paint):** `< 2.5s` (dimensiones explícitas).
-- **INP (Interaction to Next Paint):** `< 200ms` (feedback instantáneo $< 50\text{ms}$).
-- **CLS (Cumulative Layout Shift):** `< 0.1` (cero saltos de layout).
-
----
-
-## 🛡️ Defensive UI States
-Toda pantalla DEBE implementar los 4 estados defensivos:
-1. **Loading State:** Esqueleto pulsante con reservación de espacio.
-2. **Data Ready State:** Vista interactiva con datos.
-3. **Empty State:** Ilustración/mensaje amigable sin registros.
-4. **Error State:** Banner de error com botón de reintento + Banner persistente offline.

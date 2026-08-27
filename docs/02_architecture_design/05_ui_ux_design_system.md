@@ -134,3 +134,22 @@ Todas las ventanas modales de la aplicación (`PinLoginModal`, `WarehouseExtract
    - Esquinas casi rectas (`border-radius: 4px`), consistentes con el resto de componentes de esta dirección.
    - Animación de entrada suave tipo *scale-up* (`transform: scale(0.94) -> scale(1)` en $250\text{ms}$), sin cambios respecto a v1.x.
 
+---
+
+## ⚡ 7. Arquitectura UI/UX v3.0: Salud de Inventario, Navegación Táctica y Filtros de Estación
+
+**v3.0.0 — Innovaciones de Experiencia Operativa:**
+1. **Medidor Visual de Salud de Inventario (FEFO Inventory Health Bar - "1-Second Glance"):**
+   - Barra de progreso tri-color en tiempo real en la cabecera del tablero que permite al Chef Ejecutivo evaluar el nivel de riesgo global de mermas del turno en 1 segundo:
+     - 🟢 **Seguro ($>24\text{h}$):** Verde `--color-success`.
+     - 🟡 **Atención ($6\text{h}-24\text{h}$):** Ámbar `--color-primary`.
+     - 🔴 **Crítico ($<6\text{h}$):** Rojo `--color-danger`.
+2. **Desacoplamiento de Header (Barra Táctica vs. Drawer de Administración):**
+   - **Acciones Tácticas de Cocina (Foco Operatorio Mantenido):** `Extraer Bodega`, `Preparar Receta`, `Conciliar Turno`.
+   - **Menú Flotante de Administración (`Administración ▾`):** Agrupa `Personal`, `Roles`, `Sectores`, `Ajustes`, `Movimientos` y `Catálogo` bajo un menú desplegable de acceso controlado para evitar saturación cognitiva en la línea de servicio.
+3. **Filtros por Estación Física en Cocina (`LocationFilterTabs`):**
+   - Pestañas táctiles en la vista de remanentes para filtrar por sector físico: `[ Todos ]`, `[ Refrigerador Principal ]`, `[ Mesa de Preparación ]`, `[ Línea de Servicio ]`.
+4. **Reloj Regresivo en Vivo (Live Countdown):**
+   - Temporizador dinámico en formato `HH:MM:SS` con micro-animación pulsante para insumos críticos ($<6\text{h}$).
+
+
