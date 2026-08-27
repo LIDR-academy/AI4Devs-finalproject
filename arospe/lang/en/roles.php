@@ -50,6 +50,7 @@ return [
         'blog' => 'Blog',
         'store_languages' => 'Store languages',
         'roles' => 'Roles',
+        'media' => 'Media',
     ],
 
     /*

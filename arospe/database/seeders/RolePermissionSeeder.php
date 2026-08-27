@@ -16,13 +16,13 @@ use Throwable;
 class RolePermissionSeeder extends Seeder
 {
     /**
-     * The nine PRD modules gated by the module x action permission grid.
+     * The ten PRD modules gated by the module x action permission grid.
      *
      * @var array<int, string>
      */
     public const MODULES = [
         'users', 'products', 'sales-regions', 'shipping', 'payment-methods',
-        'customers', 'orders', 'blog', 'store-languages',
+        'customers', 'orders', 'blog', 'store-languages', 'media',
     ];
 
     /**

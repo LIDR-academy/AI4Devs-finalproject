@@ -52,6 +52,7 @@ return [
         'blog' => 'Blog',
         'store_languages' => 'Idiomas de la tienda',
         'roles' => 'Roles',
+        'media' => 'Medios',
     ],
 
     /*
