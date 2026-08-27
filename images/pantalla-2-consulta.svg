@@ -1,0 +1,125 @@
+<svg viewBox="0 0 720 600" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', system-ui, sans-serif">
+  <!-- Background -->
+  <rect width="720" height="600" fill="#f8f9fa" rx="12"/>
+
+  <!-- Browser chrome -->
+  <rect x="0" y="0" width="720" height="40" fill="#e9ecef" rx="12"/>
+  <rect x="0" y="28" width="720" height="12" fill="#e9ecef"/>
+  <circle cx="24" cy="20" r="6" fill="#ff5f57"/>
+  <circle cx="44" cy="20" r="6" fill="#ffbd2e"/>
+  <circle cx="64" cy="20" r="6" fill="#28c840"/>
+  <rect x="120" y="10" width="480" height="20" fill="#fff" rx="4" stroke="#dee2e6" stroke-width="1"/>
+  <text x="360" y="24" text-anchor="middle" font-size="11" fill="#6c757d">localhost:5173/acme-shop</text>
+
+  <!-- App container -->
+  <rect x="20" y="52" width="680" height="536" fill="#fff" rx="8" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- Nav bar -->
+  <rect x="20" y="52" width="680" height="44" fill="#212529" rx="8"/>
+  <rect x="20" y="84" width="680" height="12" fill="#212529"/>
+  <text x="50" y="78" font-size="13" fill="#adb5bd">←</text>
+  <text x="68" y="78" font-size="13" font-weight="700" fill="#fff">acme-shop</text>
+  <rect x="152" y="66" width="1" height="16" fill="#495057"/>
+  <text x="162" y="78" font-size="11" fill="#6c757d">PHP/Laravel</text>
+  <text x="248" y="78" font-size="11" fill="#6c757d">·  1 840 aristas</text>
+  <text x="650" y="78" font-size="13" fill="#6c757d">⟳</text>
+
+  <!-- Query section -->
+  <rect x="40" y="110" width="640" height="42" fill="#f8f9fa" rx="6" stroke="#dee2e6" stroke-width="1"/>
+  <text x="56" y="136" font-size="13" fill="#212529">¿Cómo se calcula el precio final de un pedido?</text>
+  <rect x="638" y="116" width="34" height="30" fill="#4dabf7" rx="4"/>
+  <text x="655" y="136" text-anchor="middle" font-size="14" fill="#fff">→</text>
+
+  <!-- Suggestions -->
+  <text x="56" y="166" font-size="11" fill="#868e96">Prueba:</text>
+  <rect x="98" y="156" width="150" height="18" fill="#e7f5ff" rx="9"/>
+  <text x="173" y="169" text-anchor="middle" font-size="10" fill="#1971c2">¿Cómo se validan los cupones?</text>
+  <rect x="256" y="156" width="124" height="18" fill="#e7f5ff" rx="9"/>
+  <text x="318" y="169" text-anchor="middle" font-size="10" fill="#1971c2">¿Qué hace OrderObserver?</text>
+  <rect x="388" y="156" width="160" height="18" fill="#e7f5ff" rx="9"/>
+  <text x="468" y="169" text-anchor="middle" font-size="10" fill="#1971c2">¿Por qué existe legacy_ref?</text>
+
+  <!-- Divider -->
+  <line x1="40" y1="185" x2="680" y2="185" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- Answer section -->
+  <text x="56" y="206" font-size="11" font-weight="700" fill="#868e96" letter-spacing="1">RESPUESTA</text>
+
+  <text x="56" y="228" font-size="13" fill="#212529">El precio final se calcula en</text>
+  <text x="222" y="228" font-size="13" fill="#1971c2" font-style="italic">PriceCalculator::compute()</text>
+  <text x="400" y="228" font-size="13" fill="#212529">.</text>
+
+  <!-- Statements -->
+  <!-- Statement 1 -->
+  <rect x="56" y="240" width="6" height="18" fill="#2f9e44" rx="2"/>
+  <text x="70" y="253" font-size="12" fill="#212529">1. Se obtiene el precio base del artículo.</text>
+  <rect x="510" y="242" width="76" height="16" fill="#d3f9d8" rx="8"/>
+  <text x="548" y="254" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">✓ verificado</text>
+
+  <!-- Statement 2 -->
+  <rect x="56" y="264" width="6" height="18" fill="#2f9e44" rx="2"/>
+  <text x="70" y="277" font-size="12" fill="#212529">2. Se aplica el descuento del cliente.</text>
+  <rect x="510" y="266" width="76" height="16" fill="#d3f9d8" rx="8"/>
+  <text x="548" y="278" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">✓ verificado</text>
+
+  <!-- Statement 3 -->
+  <rect x="56" y="288" width="6" height="18" fill="#2f9e44" rx="2"/>
+  <text x="70" y="301" font-size="12" fill="#212529">3. Se calculan los impuestos sobre el subtotal.</text>
+  <rect x="510" y="290" width="76" height="16" fill="#d3f9d8" rx="8"/>
+  <text x="548" y="302" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">✓ verificado</text>
+
+  <!-- Warning / inference -->
+  <rect x="56" y="316" width="608" height="44" fill="#fff9db" rx="6" stroke="#ffd43b" stroke-width="1"/>
+  <text x="70" y="333" font-size="11" fill="#e67700">⚠</text>
+  <text x="84" y="333" font-size="11" fill="#5c3d00">El orden descuento-antes-de-impuestos no está documentado.</text>
+  <text x="84" y="350" font-size="11" fill="#5c3d00">Se deduce del test y del PR #381.</text>
+  <rect x="540" y="320" width="72" height="16" fill="#ffd43b" rx="8"/>
+  <text x="576" y="332" text-anchor="middle" font-size="10" fill="#5c3d00" font-weight="700">INFERIDO</text>
+
+  <!-- Evidence section -->
+  <line x1="40" y1="374" x2="680" y2="374" stroke="#dee2e6" stroke-width="1"/>
+  <text x="56" y="392" font-size="11" font-weight="700" fill="#868e96" letter-spacing="1">EVIDENCIA</text>
+
+  <!-- Evidence item 1 -->
+  <rect x="56" y="402" width="608" height="28" fill="#f8f9fa" rx="4" stroke="#dee2e6" stroke-width="1"/>
+  <text x="70" y="421" font-size="11" fill="#1971c2">▸ app/Services/PriceCalculator.php:42-58</text>
+  <rect x="540" y="408" width="56" height="16" fill="#d3f9d8" rx="8"/>
+  <text x="568" y="420" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">entailed</text>
+
+  <!-- Evidence item 2 -->
+  <rect x="56" y="436" width="608" height="28" fill="#f8f9fa" rx="4" stroke="#dee2e6" stroke-width="1"/>
+  <text x="70" y="455" font-size="11" fill="#1971c2">▸ tests/Unit/PricingTest.php:91-104</text>
+  <rect x="540" y="442" width="56" height="16" fill="#d3f9d8" rx="8"/>
+  <text x="568" y="454" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">entailed</text>
+
+  <!-- Evidence item 3 -->
+  <rect x="56" y="470" width="608" height="28" fill="#f8f9fa" rx="4" stroke="#dee2e6" stroke-width="1"/>
+  <text x="70" y="489" font-size="11" fill="#1971c2">▸ PR #381</text>
+  <rect x="540" y="476" width="56" height="16" fill="#d3f9d8" rx="8"/>
+  <text x="568" y="488" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">entailed</text>
+
+  <!-- Usage metrics -->
+  <line x1="40" y1="510" x2="680" y2="510" stroke="#dee2e6" stroke-width="1"/>
+  <rect x="40" y="518" width="640" height="52" fill="#f8f9fa" rx="6"/>
+  <text x="56" y="538" font-size="11" fill="#495057">Confianza</text>
+  <text x="116" y="538" font-size="12" font-weight="700" fill="#212529">0.71</text>
+
+  <text x="180" y="538" font-size="11" fill="#6c757d">·</text>
+
+  <text x="196" y="538" font-size="11" fill="#495057">4 812 tokens</text>
+  <text x="270" y="538" font-size="11" fill="#6c757d">·</text>
+  <text x="282" y="538" font-size="11" fill="#495057">$0.014</text>
+  <text x="318" y="538" font-size="11" fill="#6c757d">·</text>
+  <text x="330" y="538" font-size="11" fill="#495057">2.1 s</text>
+
+  <rect x="400" y="526" width="116" height="18" fill="#d3f9d8" rx="9"/>
+  <text x="458" y="539" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">ahorro 88 % vs bruto</text>
+
+  <rect x="526" y="526" width="54" height="18" fill="#e7f5ff" rx="9"/>
+  <text x="553" y="539" text-anchor="middle" font-size="10" fill="#1971c2" font-weight="600">caché ✓</text>
+
+  <text x="56" y="558" font-size="10" fill="#adb5bd">41 200 tokens sin selección de contexto → 4 812 con CODEMIND</text>
+
+  <!-- Footer -->
+  <text x="360" y="582" text-anchor="middle" font-size="9" fill="#ced4da">PANTALLA 2 — Consulta con evidencia verificada</text>
+</svg>

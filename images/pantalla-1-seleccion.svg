@@ -1,0 +1,80 @@
+<svg viewBox="0 0 720 460" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', system-ui, sans-serif">
+  <!-- Background -->
+  <rect width="720" height="460" fill="#f8f9fa" rx="12"/>
+
+  <!-- Browser chrome -->
+  <rect x="0" y="0" width="720" height="40" fill="#e9ecef" rx="12"/>
+  <rect x="0" y="28" width="720" height="12" fill="#e9ecef"/>
+  <circle cx="24" cy="20" r="6" fill="#ff5f57"/>
+  <circle cx="44" cy="20" r="6" fill="#ffbd2e"/>
+  <circle cx="64" cy="20" r="6" fill="#28c840"/>
+  <rect x="120" y="10" width="480" height="20" fill="#fff" rx="4" stroke="#dee2e6" stroke-width="1"/>
+  <text x="360" y="24" text-anchor="middle" font-size="11" fill="#6c757d">localhost:5173</text>
+
+  <!-- App container -->
+  <rect x="20" y="52" width="680" height="396" fill="#fff" rx="8" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- Header bar -->
+  <rect x="20" y="52" width="680" height="56" fill="#212529" rx="8"/>
+  <rect x="20" y="88" width="680" height="20" fill="#212529"/>
+  <text x="50" y="84" font-size="20" font-weight="700" fill="#fff" letter-spacing="2">CODEMIND</text>
+  <text x="50" y="100" font-size="11" fill="#adb5bd">Comprensión de repositorios con evidencia verificable</text>
+
+  <!-- Subtitle -->
+  <text x="360" y="138" text-anchor="middle" font-size="15" fill="#495057" font-weight="600">Elige un proyecto para explorar</text>
+  <text x="360" y="158" text-anchor="middle" font-size="12" fill="#868e96">Repositorios precargados · sin registro · sin instalación</text>
+
+  <!-- Card 1 - acme-shop -->
+  <rect x="50" y="172" width="280" height="176" fill="#fff" rx="8" stroke="#dee2e6" stroke-width="1.5"/>
+  <rect x="50" y="172" width="280" height="6" fill="#4dabf7" rx="8"/>
+  <rect x="50" y="176" width="280" height="2" fill="#4dabf7"/>
+  <text x="74" y="208" font-size="18">🐘</text>
+  <text x="100" y="208" font-size="14" font-weight="700" fill="#212529">acme-shop</text>
+  <text x="74" y="226" font-size="11" fill="#6c757d">PHP 8.2 / Laravel 11</text>
+
+  <line x1="74" y1="240" x2="310" y2="240" stroke="#dee2e6" stroke-width="1"/>
+
+  <text x="74" y="260" font-size="11" fill="#495057">📁 47 ficheros</text>
+  <text x="200" y="260" font-size="11" fill="#495057">🔷 312 símbolos</text>
+  <text x="74" y="278" font-size="11" fill="#495057">↔ 1 840 aristas</text>
+  <text x="200" y="278" font-size="11" fill="#495057">📝 62 commits</text>
+
+  <rect x="74" y="292" width="68" height="20" fill="#d3f9d8" rx="10"/>
+  <text x="108" y="306" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">✓ indexado</text>
+  <rect x="152" y="292" width="50" height="20" fill="#e7f5ff" rx="10"/>
+  <text x="177" y="306" text-anchor="middle" font-size="10" fill="#1971c2" font-weight="600">listo</text>
+
+  <rect x="74" y="322" width="236" height="18" fill="#4dabf7" rx="4"/>
+  <text x="192" y="335" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">Explorar proyecto →</text>
+
+  <!-- Card 2 - task-api -->
+  <rect x="390" y="172" width="280" height="176" fill="#fff" rx="8" stroke="#dee2e6" stroke-width="1.5"/>
+  <rect x="390" y="172" width="280" height="6" fill="#74c0fc" rx="8"/>
+  <rect x="390" y="176" width="280" height="2" fill="#74c0fc"/>
+  <text x="414" y="208" font-size="18">📘</text>
+  <text x="440" y="208" font-size="14" font-weight="700" fill="#212529">task-api</text>
+  <text x="414" y="226" font-size="11" fill="#6c757d">TypeScript / Fastify</text>
+
+  <line x1="414" y1="240" x2="650" y2="240" stroke="#dee2e6" stroke-width="1"/>
+
+  <text x="414" y="260" font-size="11" fill="#495057">📁 38 ficheros</text>
+  <text x="540" y="260" font-size="11" fill="#495057">🔷 264 símbolos</text>
+  <text x="414" y="278" font-size="11" fill="#495057">↔ 2 110 aristas</text>
+  <text x="540" y="278" font-size="11" fill="#495057">📝 51 commits</text>
+
+  <rect x="414" y="292" width="68" height="20" fill="#d3f9d8" rx="10"/>
+  <text x="448" y="306" text-anchor="middle" font-size="10" fill="#2f9e44" font-weight="600">✓ indexado</text>
+  <rect x="492" y="292" width="50" height="20" fill="#e7f5ff" rx="10"/>
+  <text x="517" y="306" text-anchor="middle" font-size="10" fill="#1971c2" font-weight="600">listo</text>
+
+  <rect x="414" y="322" width="236" height="18" fill="#74c0fc" rx="4"/>
+  <text x="532" y="335" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">Explorar proyecto →</text>
+
+  <!-- Add own repo link -->
+  <line x1="200" y1="370" x2="520" y2="370" stroke="#dee2e6" stroke-width="1" stroke-dasharray="4"/>
+  <text x="360" y="395" text-anchor="middle" font-size="12" fill="#4dabf7">+ Indexar mi propio repositorio</text>
+  <text x="360" y="414" text-anchor="middle" font-size="10" fill="#adb5bd">Requiere Docker · PHP 8.2+ o Node 20+</text>
+
+  <!-- Footer -->
+  <text x="360" y="442" text-anchor="middle" font-size="9" fill="#ced4da">PANTALLA 1 — Selección de proyecto</text>
+</svg>

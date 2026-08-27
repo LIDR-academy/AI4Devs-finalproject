@@ -1,0 +1,127 @@
+<svg viewBox="0 0 720 520" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', system-ui, sans-serif">
+  <!-- Background -->
+  <rect width="720" height="520" fill="#f8f9fa" rx="12"/>
+
+  <!-- Browser chrome -->
+  <rect x="0" y="0" width="720" height="40" fill="#e9ecef" rx="12"/>
+  <rect x="0" y="28" width="720" height="12" fill="#e9ecef"/>
+  <circle cx="24" cy="20" r="6" fill="#ff5f57"/>
+  <circle cx="44" cy="20" r="6" fill="#ffbd2e"/>
+  <circle cx="64" cy="20" r="6" fill="#28c840"/>
+  <rect x="120" y="10" width="480" height="20" fill="#fff" rx="4" stroke="#dee2e6" stroke-width="1"/>
+  <text x="360" y="24" text-anchor="middle" font-size="11" fill="#6c757d">localhost:5173/acme-shop/impact</text>
+
+  <!-- App container -->
+  <rect x="20" y="52" width="680" height="456" fill="#fff" rx="8" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- Header -->
+  <rect x="20" y="52" width="680" height="44" fill="#212529" rx="8"/>
+  <rect x="20" y="84" width="680" height="12" fill="#212529"/>
+  <text x="50" y="78" font-size="13" fill="#adb5bd">←</text>
+  <text x="68" y="74" font-size="12" font-weight="700" fill="#fff">IMPACTO DE:</text>
+  <text x="68" y="90" font-size="12" fill="#adb5bd" font-style="italic">"cambiar el cálculo de descuentos"</text>
+
+  <!-- Left column - Impact table -->
+  <rect x="40" y="110" width="390" height="292" fill="#fff" rx="6" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- DIRECTO row -->
+  <rect x="40" y="110" width="390" height="48" fill="#f8f9fa" rx="6"/>
+  <rect x="40" y="138" width="390" height="20" fill="#f8f9fa"/>
+  <text x="56" y="130" font-size="10" font-weight="700" fill="#868e96" letter-spacing="1">DIRECTO</text>
+  <text x="56" y="148" font-size="12" fill="#212529">PriceCalculator · DiscountService</text>
+  <rect x="350" y="126" width="44" height="16" fill="#e7f5ff" rx="8"/>
+  <text x="372" y="138" text-anchor="middle" font-size="9" fill="#1971c2" font-weight="600">grafo</text>
+  <line x1="40" y1="158" x2="430" y2="158" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- INDIRECTO row -->
+  <text x="56" y="176" font-size="10" font-weight="700" fill="#868e96" letter-spacing="1">INDIRECTO</text>
+  <text x="56" y="194" font-size="12" fill="#212529">OrderService · OrdersController</text>
+  <rect x="350" y="170" width="44" height="16" fill="#e7f5ff" rx="8"/>
+  <text x="372" y="182" text-anchor="middle" font-size="9" fill="#1971c2" font-weight="600">grafo</text>
+  <line x1="40" y1="204" x2="430" y2="204" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- TESTS row -->
+  <text x="56" y="222" font-size="10" font-weight="700" fill="#868e96" letter-spacing="1">TESTS</text>
+  <text x="56" y="240" font-size="12" fill="#212529">PricingTest · OrderPricingTest</text>
+  <rect x="350" y="216" width="44" height="16" fill="#e7f5ff" rx="8"/>
+  <text x="372" y="228" text-anchor="middle" font-size="9" fill="#1971c2" font-weight="600">grafo</text>
+  <line x1="40" y1="250" x2="430" y2="250" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- DOCUMENTACIÓN row -->
+  <text x="56" y="268" font-size="10" font-weight="700" fill="#868e96" letter-spacing="1">DOCUMENTACIÓN</text>
+  <text x="56" y="286" font-size="12" fill="#212529">docs/pricing.md</text>
+  <rect x="170" y="278" width="88" height="16" fill="#fff9db" rx="8" stroke="#ffd43b" stroke-width="1"/>
+  <text x="214" y="290" text-anchor="middle" font-size="9" fill="#e67700" font-weight="600">⚠ desactualizada</text>
+  <rect x="350" y="278" width="44" height="16" fill="#e7f5ff" rx="8"/>
+  <text x="372" y="290" text-anchor="middle" font-size="9" fill="#1971c2" font-weight="600">grafo</text>
+  <line x1="40" y1="300" x2="430" y2="300" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- HISTORIAL row -->
+  <text x="56" y="318" font-size="10" font-weight="700" fill="#868e96" letter-spacing="1">HISTORIAL</text>
+  <text x="56" y="336" font-size="12" fill="#212529">PR #381 · PR #402</text>
+  <text x="170" y="336" font-size="11" fill="#868e96">(co-cambian 80 %)</text>
+  <rect x="350" y="324" width="34" height="16" fill="#e8f5e9" rx="8"/>
+  <text x="367" y="336" text-anchor="middle" font-size="9" fill="#2e7d32" font-weight="600">git</text>
+  <line x1="40" y1="346" x2="430" y2="346" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- Risk level -->
+  <rect x="40" y="358" width="390" height="44" fill="#fff3cd" rx="0"/>
+  <rect x="40" y="358" width="390" height="44" rx="6" fill="none" stroke="#ffc107" stroke-width="1"/>
+  <rect x="40" y="358" width="390" height="26" fill="#fff3cd"/>
+  <text x="56" y="374" font-size="11" fill="#5c3d00">RIESGO</text>
+  <rect x="102" y="362" width="54" height="18" fill="#fd7e14" rx="9"/>
+  <text x="129" y="375" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">MEDIO</text>
+  <text x="56" y="393" font-size="11" fill="#6c757d">4 ficheros afectados · 2 tests · 1 documento desalineado</text>
+
+  <!-- Right column - Legend + usage -->
+  <rect x="450" y="110" width="250" height="130" fill="#fff" rx="6" stroke="#dee2e6" stroke-width="1"/>
+  <text x="466" y="130" font-size="11" font-weight="700" fill="#495057">Origen de cada elemento</text>
+
+  <rect x="466" y="144" width="36" height="16" fill="#e7f5ff" rx="8"/>
+  <text x="484" y="156" text-anchor="middle" font-size="9" fill="#1971c2" font-weight="600">grafo</text>
+  <text x="510" y="156" font-size="11" fill="#495057">Análisis estático determinista</text>
+
+  <rect x="466" y="168" width="28" height="16" fill="#e8f5e9" rx="8"/>
+  <text x="480" y="180" text-anchor="middle" font-size="9" fill="#2e7d32" font-weight="600">git</text>
+  <text x="502" y="180" font-size="11" fill="#495057">Señal histórica de co-cambio</text>
+
+  <rect x="466" y="192" width="88" height="16" fill="#fff9db" rx="8" stroke="#ffd43b" stroke-width="1"/>
+  <text x="510" y="204" text-anchor="middle" font-size="9" fill="#e67700" font-weight="600">⚠ desactualizada</text>
+  <text x="562" y="204" font-size="11" fill="#495057">Doc vs. código</text>
+
+  <!-- Right column - Usage panel -->
+  <rect x="450" y="252" width="250" height="100" fill="#f8f9fa" rx="6" stroke="#dee2e6" stroke-width="1"/>
+  <text x="466" y="272" font-size="11" font-weight="700" fill="#495057">Uso de esta consulta</text>
+  <text x="466" y="292" font-size="11" fill="#495057">Tokens</text>
+  <text x="560" y="292" font-size="12" font-weight="700" fill="#212529">3 140</text>
+  <text x="466" y="312" font-size="11" fill="#495057">Coste</text>
+  <text x="560" y="312" font-size="12" font-weight="700" fill="#212529">$0.009</text>
+  <text x="466" y="332" font-size="11" fill="#495057">Caché</text>
+  <rect x="560" y="322" width="54" height="16" fill="#ffe8cc" rx="8"/>
+  <text x="587" y="334" text-anchor="middle" font-size="9" fill="#d9480f" font-weight="600">miss</text>
+
+  <!-- Graph visualization hint -->
+  <rect x="450" y="364" width="250" height="86" fill="#fff" rx="6" stroke="#dee2e6" stroke-width="1"/>
+  <text x="466" y="384" font-size="11" font-weight="700" fill="#495057">Grafo de impacto</text>
+  <!-- Simple node graph -->
+  <circle cx="530" cy="420" r="22" fill="#e7f5ff" stroke="#4dabf7" stroke-width="2"/>
+  <text x="530" y="416" text-anchor="middle" font-size="8" fill="#1971c2">Price</text>
+  <text x="530" y="426" text-anchor="middle" font-size="8" fill="#1971c2">Calc.</text>
+
+  <circle cx="590" cy="400" r="16" fill="#d3f9d8" stroke="#40c057" stroke-width="1.5"/>
+  <text x="590" y="404" text-anchor="middle" font-size="7" fill="#2f9e44">Discount</text>
+
+  <circle cx="600" cy="435" r="16" fill="#f8f9fa" stroke="#ced4da" stroke-width="1.5"/>
+  <text x="600" y="432" text-anchor="middle" font-size="7" fill="#868e96">Order</text>
+  <text x="600" y="442" text-anchor="middle" font-size="7" fill="#868e96">Svc</text>
+
+  <circle cx="470" cy="410" r="14" fill="#fff9db" stroke="#ffd43b" stroke-width="1.5"/>
+  <text x="470" y="414" text-anchor="middle" font-size="7" fill="#e67700">docs</text>
+
+  <line x1="508" y1="410" x2="484" y2="408" stroke="#ffd43b" stroke-width="1.5" stroke-dasharray="3"/>
+  <line x1="550" y1="410" x2="574" y2="404" stroke="#40c057" stroke-width="1.5"/>
+  <line x1="548" y1="428" x2="584" y2="434" stroke="#ced4da" stroke-width="1.5" stroke-dasharray="3"/>
+
+  <!-- Footer -->
+  <text x="360" y="502" text-anchor="middle" font-size="9" fill="#ced4da">PANTALLA 3 — Análisis de impacto con origen declarado</text>
+</svg>
