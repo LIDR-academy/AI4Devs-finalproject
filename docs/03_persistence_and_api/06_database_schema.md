@@ -298,6 +298,45 @@ model Insumo {
   @@map("insumos")
 }
 
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  module      String
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model StorageLocation {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  type        LocationType @default(KITCHEN)
+  description String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model SystemSettings {
+  id                       String   @id @default("default")
+  restaurantName           String   @default("RestoStock Kitchen")
+  taxId                    String?
+  currencySymbol           String   @default("$")
+  criticalAlertHours       Int      @default(24)
+  defaultRemanenteHours    Int      @default(24)
+  varianceTolerancePercent Decimal  @default(5.0) @db.Decimal(5, 2)
+  updatedAt                DateTime @updatedAt
+}
+
 model WarehouseStock {
   id        String       @id @default(uuid()) @db.Uuid
   insumoId  String       @map("insumo_id") @db.Uuid

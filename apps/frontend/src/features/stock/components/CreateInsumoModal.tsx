@@ -8,6 +8,116 @@ interface CreateInsumoModalProps {
   onSuccess: () => void;
 }
 
+interface InsumoModalFormProps {
+  name: string;
+  setName: (v: string) => void;
+  unitOfMeasure: 'KG' | 'L' | 'UNITS';
+  setUnitOfMeasure: (v: 'KG' | 'L' | 'UNITS') => void;
+  initialWarehouseStock: string;
+  setInitialWarehouseStock: (v: string) => void;
+  loading: boolean;
+  onClose: () => void;
+  handleSubmit: (e: React.FormEvent) => void;
+}
+
+const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
+  name,
+  setName,
+  unitOfMeasure,
+  setUnitOfMeasure,
+  initialWarehouseStock,
+  setInitialWarehouseStock,
+  loading,
+  onClose,
+  handleSubmit,
+}) => {
+  return (
+    <form onSubmit={handleSubmit}>
+      <div style={{ marginBottom: '16px' }}>
+        <label htmlFor="insumo-name-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          Nombre del Insumo *
+        </label>
+        <input
+          id="insumo-name-input"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ej. Queso Parmesano"
+          style={{
+            width: '100%',
+            padding: '12px',
+            borderRadius: '4px',
+            border: '1px solid var(--border-card)',
+            backgroundColor: 'var(--bg-root)',
+            color: 'var(--text-primary)',
+            fontSize: '1rem',
+          }}
+          required
+        />
+      </div>
+
+      <div style={{ marginBottom: '16px' }}>
+        <span style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          Unidad de Medida *
+        </span>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {(['KG', 'L', 'UNITS'] as const).map((unit) => (
+            <button
+              key={unit}
+              type="button"
+              onClick={() => setUnitOfMeasure(unit)}
+              style={{
+                flex: 1,
+                minHeight: '48px',
+                borderRadius: '4px',
+                border: unitOfMeasure === unit ? '2px solid var(--color-primary)' : '1px solid var(--border-card)',
+                backgroundColor: unitOfMeasure === unit ? 'var(--color-primary)' : 'var(--bg-root)',
+                color: unitOfMeasure === unit ? 'var(--color-primary-on)' : 'var(--text-primary)',
+                fontWeight: unitOfMeasure === unit ? 600 : 400,
+                cursor: 'pointer',
+              }}
+            >
+              {unit}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <label htmlFor="initial-stock-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          Stock Inicial en Bodega
+        </label>
+        <input
+          id="initial-stock-input"
+          type="number"
+          step="0.001"
+          min="0"
+          value={initialWarehouseStock}
+          onChange={(e) => setInitialWarehouseStock(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '12px',
+            borderRadius: '4px',
+            border: '1px solid var(--border-card)',
+            backgroundColor: 'var(--bg-root)',
+            color: 'var(--text-primary)',
+            fontSize: '1rem',
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+        <button type="button" onClick={onClose} disabled={loading} className="btn-touch btn-secondary">
+          Cancelar
+        </button>
+        <button type="submit" disabled={loading} className="btn-touch btn-primary">
+          {loading ? 'Guardando...' : 'Guardar Insumo'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [name, setName] = useState('');
   const [unitOfMeasure, setUnitOfMeasure] = useState<'KG' | 'L' | 'UNITS'>('KG');
@@ -97,98 +207,17 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label htmlFor="insumo-name-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Nombre del Insumo *
-            </label>
-            <input
-              id="insumo-name-input"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej. Queso Parmesano"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '4px',
-                border: '1px solid var(--border-card)',
-                backgroundColor: 'var(--bg-root)',
-                color: 'var(--text-primary)',
-                fontSize: '1rem',
-              }}
-              required
-            />
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <span style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Unidad de Medida *
-            </span>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {(['KG', 'L', 'UNITS'] as const).map((unit) => (
-                <button
-                  key={unit}
-                  type="button"
-                  onClick={() => setUnitOfMeasure(unit)}
-                  style={{
-                    flex: 1,
-                    minHeight: '48px',
-                    borderRadius: '4px',
-                    border: unitOfMeasure === unit ? '2px solid var(--color-primary)' : '1px solid var(--border-card)',
-                    backgroundColor: unitOfMeasure === unit ? 'var(--color-primary)' : 'var(--bg-root)',
-                    color: unitOfMeasure === unit ? 'var(--color-primary-on)' : 'var(--text-primary)',
-                    fontWeight: unitOfMeasure === unit ? 600 : 400,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {unit}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '24px' }}>
-            <label htmlFor="initial-stock-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Stock Inicial en Bodega
-            </label>
-            <input
-              id="initial-stock-input"
-              type="number"
-              step="0.001"
-              min="0"
-              value={initialWarehouseStock}
-              onChange={(e) => setInitialWarehouseStock(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '4px',
-                border: '1px solid var(--border-card)',
-                backgroundColor: 'var(--bg-root)',
-                color: 'var(--text-primary)',
-                fontSize: '1rem',
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="btn-touch btn-secondary"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-touch btn-primary"
-            >
-              {loading ? 'Guardando...' : 'Guardar Insumo'}
-            </button>
-          </div>
-        </form>
+        <InsumoModalForm
+          name={name}
+          setName={setName}
+          unitOfMeasure={unitOfMeasure}
+          setUnitOfMeasure={setUnitOfMeasure}
+          initialWarehouseStock={initialWarehouseStock}
+          setInitialWarehouseStock={setInitialWarehouseStock}
+          loading={loading}
+          onClose={onClose}
+          handleSubmit={handleSubmit}
+        />
       </div>
     </div>
   );

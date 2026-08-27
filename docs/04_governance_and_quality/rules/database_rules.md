@@ -46,3 +46,10 @@ Toda estrategia de datos semilla (*seeding*) creada en el proyecto DEBE cumplir 
 
 5. **Gobernanza PII y Sanitización Sintética (EU AI Act & GDPR):**
    - Las semillas de desarrollo DEBEN utilizar datos sintéticos anónimos. Queda strictly prohibido usar nombres, correos o teléfonos de clientes reales. Toda credencial o PIN de prueba debe soportar sobreescritura por variables de entorno (`SEED_ADMIN_PIN`, `SEED_KITCHEN_PIN`) y almacenarse mediante hash seguro (Argon2id / bcrypt / Salted Hash).
+
+---
+
+## 🔄 4. Gobernanza de Cero Desviación de Esquema (Zero Schema Drift)
+* **Sincronización Obligatoria DDL $\leftrightarrow$ Spec:** Toda creación, modificación o eliminación de un modelo, columna o enum en la capa de persistencia (`schema.prisma`) DEBE actualizar simultáneamente la especificación técnica en `docs/03_persistence_and_api/06_database_schema.md` §4.
+* **Verificación Automatizada:** Antes de marcar como completado cualquier ticket que altere la base de datos, el agente debe ejecutar obligatoriamente `bash docs/04_governance_and_quality/scripts/check_schema_drift.sh` para certificar cero desviaciones no documentadas.
+

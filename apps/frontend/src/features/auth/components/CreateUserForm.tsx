@@ -18,6 +18,39 @@ interface CreateUserFieldsProps {
   onPinChange: (v: string) => void;
 }
 
+interface RoleSelectFieldProps {
+  role: string;
+  onRoleChange: (v: string) => void;
+  availableRoles: RoleDto[];
+}
+
+const RoleSelectField: React.FC<RoleSelectFieldProps> = ({ role, onRoleChange, availableRoles }) => (
+  <div>
+    <label htmlFor="select-new-user-role" className="form-label">
+      Rol del Personal:
+    </label>
+    <select
+      id="select-new-user-role"
+      className="input-touch"
+      value={role}
+      onChange={(e) => onRoleChange(e.target.value)}
+    >
+      {availableRoles.length > 0 ? (
+        availableRoles.map((r) => (
+          <option key={r.id} value={r.name}>
+            {r.name} {r.description ? `(${r.description})` : ''}
+          </option>
+        ))
+      ) : (
+        <>
+          <option value="KITCHEN_STAFF">Personal de Cocina (KITCHEN_STAFF)</option>
+          <option value="ADMIN">Administrador (ADMIN)</option>
+        </>
+      )}
+    </select>
+  </div>
+);
+
 const CreateUserFields: React.FC<CreateUserFieldsProps> = ({
   name,
   onNameChange,
@@ -43,30 +76,7 @@ const CreateUserFields: React.FC<CreateUserFieldsProps> = ({
       />
     </div>
 
-    <div>
-      <label htmlFor="select-new-user-role" className="form-label">
-        Rol del Personal:
-      </label>
-      <select
-        id="select-new-user-role"
-        className="input-touch"
-        value={role}
-        onChange={(e) => onRoleChange(e.target.value)}
-      >
-        {availableRoles.length > 0 ? (
-          availableRoles.map((r) => (
-            <option key={r.id} value={r.name}>
-              {r.name} {r.description ? `(${r.description})` : ''}
-            </option>
-          ))
-        ) : (
-          <>
-            <option value="KITCHEN_STAFF">Personal de Cocina (KITCHEN_STAFF)</option>
-            <option value="ADMIN">Administrador (ADMIN)</option>
-          </>
-        )}
-      </select>
-    </div>
+    <RoleSelectField role={role} onRoleChange={onRoleChange} availableRoles={availableRoles} />
 
     <div>
       <label htmlFor="input-new-user-pin" className="form-label">

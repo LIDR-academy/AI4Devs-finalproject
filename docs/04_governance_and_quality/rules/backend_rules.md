@@ -45,3 +45,11 @@ Esta directiva rige la implementación de Casos de Uso (Aplicación) y Adaptador
 ## 🔑 5. Precisión y Serialización JSON
 * **Hashing de Credenciales:** Pines y passwords deben ser hasheados con `bcrypt`.
 * **Serialización String:** Las cantidades decimales retornadas en JSON deben serializarse obligatoriamente como cadenas de texto (`string`) en formato formateado a 3 decimales (ej. `.toFixed(3)`).
+
+---
+
+## 📏 6. Métricas de Código Limpio y Modulación de Controladores
+* **Límite de Longitud de Funciones (`max-lines-per-function` $\le$ 60 líneas):** Las funciones creadoras de controladores u operaciones UseCase que excedan las 60 líneas DEBEN modularizarse extrayendo métodos privados o sub-routers separados por intención (`registerXQueryRoutes` y `registerXMutationRoutes`).
+* **Límite de Complejidad Ciclomática (`complexity` $\le$ 10):** El Composition Root (`app.ts`) y los constructores de repositorios no deben exceder una complejidad ciclomática de 10. Las cadenas de operadores de asignación por defecto (`??`) deben dividirse en funciones builder auxiliares (`buildQueryRepositories`, `buildAuxiliaryRepositories`).
+* **Mappers de Persistencia Fuertemente Tipados (Guard 1):** Queda estrictamente prohibido el uso de `any` en funciones de transformación entre la capa de persistencia y el dominio (`toDomain(raw: PrismaUserRaw)`). Se deben usar explícitamente interfaces DTO de infraestructura o tipos generados por la herramienta de persistencia.
+

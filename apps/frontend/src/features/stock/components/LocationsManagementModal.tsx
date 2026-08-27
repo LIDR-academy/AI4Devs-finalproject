@@ -9,26 +9,15 @@ interface LocationsManagementModalProps {
   onClose: () => void;
 }
 
-export const LocationsManagementModal: React.FC<LocationsManagementModalProps> = ({ isOpen, onClose }) => {
-  const [locations, setLocations] = useState<StorageLocationDto[]>([]);
+interface NewLocationFormProps {
+  onCreated: () => void;
+}
+
+const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated }) => {
   const [name, setName] = useState('');
   const [type, setType] = useState<'WAREHOUSE' | 'KITCHEN'>('WAREHOUSE');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const loadLocations = () => {
-    LocationsService.fetchLocations()
-      .then((res) => setLocations(res))
-      .catch(() => {});
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      loadLocations();
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,13 +28,189 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
       await LocationsService.createLocation({ name, type, description });
       setName('');
       setDescription('');
-      loadLocations();
+      onCreated();
     } catch {
       alert('Error al crear el sector de almacenamiento');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        padding: '16px',
+        backgroundColor: 'var(--bg-root)',
+        border: '1px solid var(--border-card)',
+        borderRadius: '6px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+      }}
+    >
+      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Plus size={18} /> Registrar Nuevo Sector Físico
+      </h4>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div>
+          <label htmlFor="location-name" className="form-label">
+            Nombre Sector
+          </label>
+          <input
+            id="location-name"
+            type="text"
+            required
+            placeholder="Ej. Cámara Congelados 2"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input-touch"
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div>
+          <label htmlFor="location-type" className="form-label">
+            Tipo de Sector
+          </label>
+          <select
+            id="location-type"
+            value={type}
+            onChange={(e) => setType(e.target.value as 'WAREHOUSE' | 'KITCHEN')}
+            className="input-touch"
+            style={{ width: '100%' }}
+          >
+            <option value="WAREHOUSE">Bodega (Warehouse)</option>
+            <option value="KITCHEN">Cocina (Kitchen Area)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="location-desc" className="form-label">
+          Descripción / Ubicación
+        </label>
+        <input
+          id="location-desc"
+          type="text"
+          placeholder="Ej. Sector frío del fondo"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="input-touch"
+          style={{ width: '100%' }}
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="btn-touch btn-primary"
+        style={{ width: '100%', marginTop: '4px' }}
+      >
+        <Plus size={20} />
+        {isSubmitting ? 'Guardando...' : 'Crear Sector'}
+      </button>
+    </form>
+  );
+};
+
+interface LocationsListProps {
+  locations: StorageLocationDto[];
+  onToggleActive: (loc: StorageLocationDto) => void;
+  onDeleteLocation: (id: string, name: string) => void;
+}
+
+const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive, onDeleteLocation }) => {
+  return (
+    <div>
+      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '10px' }}>
+        Sectores Registrados ({locations.length})
+      </h4>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
+        {locations.map((loc) => (
+          <div
+            key={loc.id}
+            style={{
+              padding: '12px',
+              backgroundColor: 'var(--bg-root)',
+              border: `1px solid ${loc.isActive ? 'var(--border-card)' : 'var(--color-danger)'}`,
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              opacity: loc.isActive ? 1 : 0.65,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <MapPin size={18} style={{ color: loc.isActive ? 'var(--color-primary)' : 'var(--text-secondary)' }} />
+              <div>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', display: 'block', color: 'var(--text-primary)' }}>
+                  {loc.name} {!loc.isActive && '(Inactivo)'}
+                </span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  {loc.description || 'Sin descripción'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontWeight: 700,
+                  backgroundColor: loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.15)' : 'rgba(47, 191, 110, 0.15)',
+                  color: loc.type === 'WAREHOUSE' ? '#4da6ff' : 'var(--color-success)',
+                  border: `1px solid ${loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.3)' : 'rgba(47, 191, 110, 0.3)'}`,
+                }}
+              >
+                {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
+              </span>
+
+              <button
+                type="button"
+                className={`btn-touch ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
+                onClick={() => onToggleActive(loc)}
+                style={{ padding: '6px 8px' }}
+                title={loc.isActive ? 'Desactivar Sector' : 'Activar Sector'}
+              >
+                <Power size={16} />
+              </button>
+
+              <button
+                type="button"
+                className="btn-touch btn-danger"
+                onClick={() => onDeleteLocation(loc.id, loc.name)}
+                style={{ padding: '6px 8px' }}
+                title="Eliminar Sector"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export const LocationsManagementModal: React.FC<LocationsManagementModalProps> = ({ isOpen, onClose }) => {
+  const [locations, setLocations] = useState<StorageLocationDto[]>([]);
+
+  const loadLocations = React.useCallback(() => {
+    LocationsService.fetchLocations()
+      .then((res) => setLocations(res))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadLocations();
+    }
+  }, [isOpen, loadLocations]);
+
+  if (!isOpen) return null;
 
   const handleToggleActive = async (loc: StorageLocationDto) => {
     try {
@@ -74,142 +239,9 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
         onClose={onClose}
       />
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '16px' }}>
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            padding: '16px',
-            backgroundColor: 'var(--bg-root)',
-            border: '1px solid var(--border-card)',
-            borderRadius: '6px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-          }}
-        >
-          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Plus size={18} /> Registrar Nuevo Sector Físico
-          </h4>
+        <NewLocationForm onCreated={loadLocations} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <label className="form-label">Nombre Sector</label>
-              <input
-                type="text"
-                required
-                placeholder="Ej. Cámara Congelados 2"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="input-touch"
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div>
-              <label className="form-label">Tipo de Sector</label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value as 'WAREHOUSE' | 'KITCHEN')}
-                className="input-touch"
-                style={{ width: '100%' }}
-              >
-                <option value="WAREHOUSE">Bodega (Warehouse)</option>
-                <option value="KITCHEN">Cocina (Kitchen Area)</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="form-label">Descripción / Ubicación</label>
-            <input
-              type="text"
-              placeholder="Ej. Sector frío del fondo"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="input-touch"
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="btn-touch btn-primary"
-            style={{ width: '100%', marginTop: '4px' }}
-          >
-            <Plus size={20} />
-            {isSubmitting ? 'Guardando...' : 'Crear Sector'}
-          </button>
-        </form>
-
-        <div>
-          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '10px' }}>
-            Sectores Registrados ({locations.length})
-          </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
-            {locations.map((loc) => (
-              <div
-                key={loc.id}
-                style={{
-                  padding: '12px',
-                  backgroundColor: 'var(--bg-root)',
-                  border: `1px solid ${loc.isActive ? 'var(--border-card)' : 'var(--color-danger)'}`,
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  opacity: loc.isActive ? 1 : 0.65,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <MapPin size={18} style={{ color: loc.isActive ? 'var(--color-primary)' : 'var(--text-secondary)' }} />
-                  <div>
-                    <span style={{ fontWeight: 700, fontSize: '0.95rem', display: 'block', color: 'var(--text-primary)' }}>
-                      {loc.name} {!loc.isActive && '(Inactivo)'}
-                    </span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      {loc.description || 'Sin descripción'}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontWeight: 700,
-                      backgroundColor: loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.15)' : 'rgba(47, 191, 110, 0.15)',
-                      color: loc.type === 'WAREHOUSE' ? '#4da6ff' : 'var(--color-success)',
-                      border: `1px solid ${loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.3)' : 'rgba(47, 191, 110, 0.3)'}`,
-                    }}
-                  >
-                    {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
-                  </span>
-
-                  <button
-                    type="button"
-                    className={`btn-touch ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
-                    onClick={() => handleToggleActive(loc)}
-                    style={{ padding: '6px 8px' }}
-                    title={loc.isActive ? 'Desactivar Sector' : 'Activar Sector'}
-                  >
-                    <Power size={16} />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn-touch btn-danger"
-                    onClick={() => handleDeleteLocation(loc.id, loc.name)}
-                    style={{ padding: '6px 8px' }}
-                    title="Eliminar Sector"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <LocationsList locations={locations} onToggleActive={handleToggleActive} onDeleteLocation={handleDeleteLocation} />
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--border-card)' }}>
           <button type="button" onClick={onClose} className="btn-touch btn-secondary" style={{ width: '120px' }}>

@@ -34,19 +34,20 @@ interface ExtractionSelectFieldsProps {
   onRecipeIdChange: (id: string) => void;
 }
 
-const ExtractionSelectFields: React.FC<ExtractionSelectFieldsProps> = ({
+interface InsumoPurposeSelectProps {
+  insumos: Insumo[];
+  selectedInsumoId: string;
+  onInsumoChange: (id: string) => void;
+  purpose: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
+  onPurposeChange: (purpose: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD') => void;
+}
+
+const InsumoPurposeSelect: React.FC<InsumoPurposeSelectProps> = ({
   insumos,
   selectedInsumoId,
   onInsumoChange,
   purpose,
   onPurposeChange,
-  location,
-  onLocationChange,
-  reason,
-  onReasonChange,
-  recipes,
-  selectedRecipeId,
-  onRecipeIdChange,
 }) => (
   <>
     <div>
@@ -82,6 +83,31 @@ const ExtractionSelectFields: React.FC<ExtractionSelectFieldsProps> = ({
         <option value="DIRECT_DISCARD">Descarte Directo desde Bodega (Merma/Deterioro)</option>
       </select>
     </div>
+  </>
+);
+
+const ExtractionSelectFields: React.FC<ExtractionSelectFieldsProps> = ({
+  insumos,
+  selectedInsumoId,
+  onInsumoChange,
+  purpose,
+  onPurposeChange,
+  location,
+  onLocationChange,
+  reason,
+  onReasonChange,
+  recipes,
+  selectedRecipeId,
+  onRecipeIdChange,
+}) => (
+  <>
+    <InsumoPurposeSelect
+      insumos={insumos}
+      selectedInsumoId={selectedInsumoId}
+      onInsumoChange={onInsumoChange}
+      purpose={purpose}
+      onPurposeChange={onPurposeChange}
+    />
 
     {purpose === 'RECIPE' && (
       <div>
@@ -277,6 +303,33 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
   </form>
 );
 
+async function performExtraction(
+  activeInsumoId: string,
+  quantity: number,
+  location: string,
+  purpose: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD',
+  reason: string,
+  selectedRecipeId: string,
+  insumos: Insumo[],
+  onSuccess: () => void,
+  onClose: () => void
+) {
+  const result = await StockService.recordExtraction({
+    insumoId: activeInsumoId,
+    quantity: quantity.toString(),
+    toLocation: purpose === 'DIRECT_DISCARD' ? 'WASTE_BIN' : location,
+    purpose,
+    reason: reason.trim() || undefined,
+    recipeId: selectedRecipeId || undefined,
+  });
+
+  if (purpose !== 'DIRECT_DISCARD' && result.remanenteId) {
+    KitchenService.addLocalRemanente(buildLocalRemanenteFromExtraction(activeInsumoId, insumos, result));
+  }
+  onSuccess();
+  onClose();
+}
+
 function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: () => void) {
   const [selectedInsumoId, setSelectedInsumoId] = useState('');
   const [quantity, setQuantity] = useState(1.0);
@@ -308,20 +361,7 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
     setIsSubmitting(true);
 
     try {
-      const result = await StockService.recordExtraction({
-        insumoId: activeInsumoId,
-        quantity: quantity.toString(),
-        toLocation: purpose === 'DIRECT_DISCARD' ? 'WASTE_BIN' : location,
-        purpose,
-        reason: reason.trim() || undefined,
-        recipeId: selectedRecipeId || undefined,
-      });
-
-      if (purpose !== 'DIRECT_DISCARD' && result.remanenteId) {
-        KitchenService.addLocalRemanente(buildLocalRemanenteFromExtraction(activeInsumoId, insumos, result));
-      }
-      onSuccess();
-      onClose();
+      await performExtraction(activeInsumoId, quantity, location, purpose, reason, selectedRecipeId, insumos, onSuccess, onClose);
     } catch (err) {
       console.error('[WarehouseExtractionModal] Error registrando la extraccion de bodega:', err);
       alert('Error registrando extraccion de bodega');

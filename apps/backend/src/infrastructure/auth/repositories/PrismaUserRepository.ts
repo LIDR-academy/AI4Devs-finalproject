@@ -3,7 +3,18 @@ import { User, UserRole, UserStatusType } from '../../../domain/auth/entities/Us
 import { Pin } from '../../../domain/auth/value-objects/Pin.js';
 import { IUserRepository } from '../../../domain/auth/repositories/IUserRepository.js';
 
-function toDomain(raw: any): User {
+interface PrismaUserRaw {
+  id: string;
+  name: string;
+  pinHash: string;
+  status: string;
+  failedAttempts: number;
+  createdAt: Date;
+  roleId?: string | null;
+  role?: { name: string } | null;
+}
+
+function toDomain(raw: PrismaUserRaw): User {
   return new User({
     id: raw.id,
     name: raw.name,

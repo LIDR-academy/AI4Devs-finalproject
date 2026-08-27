@@ -51,35 +51,7 @@ export class RecordExtractionUseCase {
     const purpose = dto.purpose || 'KITCHEN_STOCK';
 
     if (purpose === 'DIRECT_DISCARD') {
-      if (!dto.reason || dto.reason.trim().length === 0) {
-        throw new Error('El motivo es obligatorio para descarte directo desde bodega.');
-      }
-
-      insumo.deductStock(requestedQty);
-      await this.insumoRepository.save(insumo);
-
-      await this.remanenteRepository.recordMovement({
-        id: `mov-${Date.now()}`,
-        insumoId: insumo.id,
-        type: 'DISCARD_DIRECT',
-        quantity: requestedQty.toString(),
-        fromLoc: 'MAIN_WAREHOUSE',
-        toLoc: 'WASTE_BIN',
-        operatorId: dto.operatorId,
-        purpose: 'DIRECT_DISCARD',
-        reason: dto.reason,
-      });
-
-      return {
-        remanenteId: '',
-        insumoId: insumo.id,
-        insumoName: insumo.name,
-        quantityExtracted: requestedQty.toString(),
-        remainingWarehouseStock: insumo.warehouseStock.toString(),
-        location: 'WASTE_BIN',
-        expirationDate: new Date().toISOString(),
-        status: 'DISCARDED',
-      };
+      return this.handleDirectDiscard(insumo, requestedQty, dto);
     }
 
     // Debitar stock de bodega para uso en cocina o receta
@@ -118,6 +90,42 @@ export class RecordExtractionUseCase {
       location: remanente.location,
       expirationDate: remanente.expirationDate.toISOString(),
       status: remanente.status,
+    };
+  }
+
+  private async handleDirectDiscard(
+    insumo: { id: string; name: string; warehouseStock: DecimalQuantity; deductStock(q: DecimalQuantity): void },
+    requestedQty: DecimalQuantity,
+    dto: RecordExtractionDTO
+  ): Promise<ExtractionResponseDTO> {
+    if (!dto.reason || dto.reason.trim().length === 0) {
+      throw new Error('El motivo es obligatorio para descarte directo desde bodega.');
+    }
+
+    insumo.deductStock(requestedQty);
+    await this.insumoRepository.save(insumo as unknown as Parameters<IInsumoRepository['save']>[0]);
+
+    await this.remanenteRepository.recordMovement({
+      id: `mov-${Date.now()}`,
+      insumoId: insumo.id,
+      type: 'DISCARD_DIRECT',
+      quantity: requestedQty.toString(),
+      fromLoc: 'MAIN_WAREHOUSE',
+      toLoc: 'WASTE_BIN',
+      operatorId: dto.operatorId,
+      purpose: 'DIRECT_DISCARD',
+      reason: dto.reason,
+    });
+
+    return {
+      remanenteId: '',
+      insumoId: insumo.id,
+      insumoName: insumo.name,
+      quantityExtracted: requestedQty.toString(),
+      remainingWarehouseStock: insumo.warehouseStock.toString(),
+      location: 'WASTE_BIN',
+      expirationDate: new Date().toISOString(),
+      status: 'DISCARDED',
     };
   }
 }

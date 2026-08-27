@@ -15,29 +15,22 @@ const updatePermissionsSchema = z.object({
   permissionIds: z.array(z.string()),
 });
 
-export function createRolesController(roleRepo: IRoleRepository): Router {
-  const router = Router();
+function mapPermission(p: { id: string; code: string; name: string; module: string; description?: string }) {
+  return { id: p.id, code: p.code, name: p.name, module: p.module, description: p.description };
+}
+
+function registerRoleQueryRoutes(router: Router, roleRepo: IRoleRepository): void {
   const getRolesUseCase = new GetRolesUseCase(roleRepo);
-  const createRoleUseCase = new CreateRoleUseCase(roleRepo);
-  const updatePermissionsUseCase = new UpdateRolePermissionsUseCase(roleRepo);
 
   router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const roles = await getRolesUseCase.execute();
-      res.json(
-        roles.map((r) => ({
-          id: r.id,
-          name: r.name,
-          description: r.description,
-          permissions: r.permissions.map((p) => ({
-            id: p.id,
-            code: p.code,
-            name: p.name,
-            module: p.module,
-            description: p.description,
-          })),
-        }))
-      );
+      res.json(roles.map((r) => ({
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        permissions: r.permissions.map(mapPermission),
+      })));
     } catch (err) {
       next(err);
     }
@@ -46,19 +39,16 @@ export function createRolesController(roleRepo: IRoleRepository): Router {
   router.get('/permissions', async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const permissions = await roleRepo.findAllPermissions();
-      res.json(
-        permissions.map((p) => ({
-          id: p.id,
-          code: p.code,
-          name: p.name,
-          module: p.module,
-          description: p.description,
-        }))
-      );
+      res.json(permissions.map(mapPermission));
     } catch (err) {
       next(err);
     }
   });
+}
+
+function registerRoleMutationRoutes(router: Router, roleRepo: IRoleRepository): void {
+  const createRoleUseCase = new CreateRoleUseCase(roleRepo);
+  const updatePermissionsUseCase = new UpdateRolePermissionsUseCase(roleRepo);
 
   router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -68,12 +58,7 @@ export function createRolesController(roleRepo: IRoleRepository): Router {
         id: role.id,
         name: role.name,
         description: role.description,
-        permissions: role.permissions.map((p) => ({
-          id: p.id,
-          code: p.code,
-          name: p.name,
-          module: p.module,
-        })),
+        permissions: role.permissions.map(mapPermission),
       });
     } catch (err) {
       next(err);
@@ -83,10 +68,7 @@ export function createRolesController(roleRepo: IRoleRepository): Router {
   router.put('/:id/permissions', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const parsed = updatePermissionsSchema.parse(req.body);
-      await updatePermissionsUseCase.execute({
-        roleId: req.params.id,
-        permissionIds: parsed.permissionIds,
-      });
+      await updatePermissionsUseCase.execute({ roleId: req.params.id, permissionIds: parsed.permissionIds });
       res.json({ message: 'Permisos actualizados correctamente' });
     } catch (err) {
       next(err);
@@ -107,6 +89,15 @@ export function createRolesController(roleRepo: IRoleRepository): Router {
       next(err);
     }
   });
+}
 
+function registerRoleRoutes(router: Router, roleRepo: IRoleRepository): void {
+  registerRoleQueryRoutes(router, roleRepo);
+  registerRoleMutationRoutes(router, roleRepo);
+}
+
+export function createRolesController(roleRepo: IRoleRepository): Router {
+  const router = Router();
+  registerRoleRoutes(router, roleRepo);
   return router;
 }

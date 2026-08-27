@@ -47,9 +47,14 @@ interface UserRowProps {
   onSaveEdit: (userId: string, data: { name?: string; role?: string; pin?: string }) => Promise<void>;
 }
 
-const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onSaveEdit }) => {
-  const isBlocked = user.status === 'BLOCKED';
-  const [isEditing, setIsEditing] = useState(false);
+interface EditingUserFormProps {
+  user: UserListItem;
+  roles: RoleDto[];
+  onCancel: () => void;
+  onSaveEdit: (userId: string, data: { name?: string; role?: string; pin?: string }) => Promise<void>;
+}
+
+const EditingUserForm: React.FC<EditingUserFormProps> = ({ user, roles, onCancel, onSaveEdit }) => {
   const [editName, setEditName] = useState(user.name);
   const [editRole, setEditRole] = useState(user.role);
   const [editPin, setEditPin] = useState('');
@@ -63,7 +68,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
         role: editRole,
         pin: editPin.trim() ? editPin.trim() : undefined,
       });
-      setIsEditing(false);
+      onCancel();
       setEditPin('');
     } catch {
       alert('Error al actualizar el usuario');
@@ -71,6 +76,89 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
       setIsSaving(false);
     }
   };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <div>
+          <label htmlFor={`edit-name-${user.id}`} className="form-label" style={{ fontSize: '0.75rem' }}>
+            Nombre
+          </label>
+          <input
+            id={`edit-name-${user.id}`}
+            type="text"
+            className="input-touch"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
+          />
+        </div>
+        <div>
+          <label htmlFor={`edit-role-${user.id}`} className="form-label" style={{ fontSize: '0.75rem' }}>
+            Rol
+          </label>
+          <select
+            id={`edit-role-${user.id}`}
+            className="input-touch"
+            value={editRole}
+            onChange={(e) => setEditRole(e.target.value)}
+            style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
+          >
+            {roles.length > 0 ? (
+              roles.map((r) => (
+                <option key={r.id} value={r.name}>
+                  {r.name}
+                </option>
+              ))
+            ) : (
+              <>
+                <option value="KITCHEN_STAFF">KITCHEN_STAFF</option>
+                <option value="ADMIN">ADMIN</option>
+              </>
+            )}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label htmlFor={`edit-pin-${user.id}`} className="form-label" style={{ fontSize: '0.75rem' }}>
+          Nuevo PIN (opcional)
+        </label>
+        <input
+          id={`edit-pin-${user.id}`}
+          type="password"
+          className="input-touch"
+          placeholder="Dejar en blanco para conservar actual"
+          value={editPin}
+          onChange={(e) => setEditPin(e.target.value)}
+          style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
+        />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+        <button
+          type="button"
+          className="btn-touch btn-secondary"
+          onClick={onCancel}
+          style={{ padding: '6px 12px' }}
+        >
+          <X size={16} /> Cancelar
+        </button>
+        <button
+          type="button"
+          className="btn-touch btn-primary"
+          onClick={handleSave}
+          disabled={isSaving}
+          style={{ padding: '6px 12px' }}
+        >
+          <Save size={16} /> {isSaving ? 'Guardando...' : 'Guardar'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onSaveEdit }) => {
+  const isBlocked = user.status === 'BLOCKED';
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <div
@@ -119,78 +207,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div>
-              <label className="form-label" style={{ fontSize: '0.75rem' }}>
-                Nombre
-              </label>
-              <input
-                type="text"
-                className="input-touch"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
-              />
-            </div>
-            <div>
-              <label className="form-label" style={{ fontSize: '0.75rem' }}>
-                Rol
-              </label>
-              <select
-                className="input-touch"
-                value={editRole}
-                onChange={(e) => setEditRole(e.target.value)}
-                style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
-              >
-                {roles.length > 0 ? (
-                  roles.map((r) => (
-                    <option key={r.id} value={r.name}>
-                      {r.name}
-                    </option>
-                  ))
-                ) : (
-                  <>
-                    <option value="KITCHEN_STAFF">KITCHEN_STAFF</option>
-                    <option value="ADMIN">ADMIN</option>
-                  </>
-                )}
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="form-label" style={{ fontSize: '0.75rem' }}>
-              Nuevo PIN (opcional)
-            </label>
-            <input
-              type="password"
-              className="input-touch"
-              placeholder="Dejar en blanco para conservar actual"
-              value={editPin}
-              onChange={(e) => setEditPin(e.target.value)}
-              style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
-            />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
-            <button
-              type="button"
-              className="btn-touch btn-secondary"
-              onClick={() => setIsEditing(false)}
-              style={{ padding: '6px 12px' }}
-            >
-              <X size={16} /> Cancelar
-            </button>
-            <button
-              type="button"
-              className="btn-touch btn-primary"
-              onClick={handleSave}
-              disabled={isSaving}
-              style={{ padding: '6px 12px' }}
-            >
-              <Save size={16} /> {isSaving ? 'Guardando...' : 'Guardar'}
-            </button>
-          </div>
-        </div>
+        <EditingUserForm user={user} roles={roles} onCancel={() => setIsEditing(false)} onSaveEdit={onSaveEdit} />
       )}
     </div>
   );

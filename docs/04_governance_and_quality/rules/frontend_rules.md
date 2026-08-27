@@ -49,3 +49,11 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 ## 🚨 5. Manejo Activo de Errores en Servicios
 * **Prohibición de Excepciones Tragadas (*No Swallowed Catches*):** Queda estrictamente prohibido incluir bloques `catch {}` vacíos en servicios o componentes. Todo fallo de comunicación HTTP debe ser registrado con `console.error` o notificado a la interfaz del usuario.
 
+---
+
+## 📐 6. Accesibilidad Semántica (a11y) y Métricas de Código UI
+* **Vinculación Semántica de Controles (`htmlFor` / `id`):** Todo elemento `<label>` dentro de un formulario debe incluir obligatoriamente el atributo `htmlFor` coincidiendo exactamente con el `id` único del control asociado (`<input>`, `<select>`, `<textarea>`).
+* **Elementos Interactivos Nativos (`<button type="button">`):** Queda estrictamente prohibido utilizar elementos estáticos no semánticos (`<div onClick={...}>`, `<span onClick={...}>`) para desencadenar acciones. Todo control interactivo debe ser un `<button type="button">` o `<a href>` con navegación por teclado accesible.
+* **Métricas de Función UI ($\le 60$ Líneas, Complejidad $\le 10$):** Ninguna función o componente React debe superar las 60 líneas de código ni una complejidad ciclomática mayor a 10. Si un modal o formulario crece, debe descomponerse inmediatamente en sub-componentes limpios y desacoplados (ej. `EditingUserForm`, `NewRoleForm`, `PermissionsList`).
+
+

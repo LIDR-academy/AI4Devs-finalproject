@@ -138,23 +138,41 @@ interface AppRepositories {
   settingsRepo: ISystemSettingsRepository;
 }
 
+function buildQueryRepositories(
+  options: AppOptions,
+  stockRepo: IInsumoRepository & IRemanenteRepository
+) {
+  const stockInMemory = stockRepo as InMemoryStockRepository;
+  return {
+    stockMovementQueryRepo:
+      options.stockMovementQueryRepository ?? new InMemoryStockMovementQueryRepository(stockInMemory),
+    remanenteQueryRepo:
+      options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository(stockInMemory),
+  };
+}
+
+function buildAuxiliaryRepositories(options: AppOptions) {
+  return {
+    roleRepo: options.roleRepository ?? new InMemoryRoleRepository(),
+    locationRepo: options.locationRepository ?? new InMemoryLocationRepository(),
+    settingsRepo: options.settingsRepository ?? new InMemorySettingsRepository(),
+  };
+}
+
 // Repositorios e inyeccion de dependencias por defecto para dev/standalone
 function buildDefaultRepositories(options: AppOptions): AppRepositories {
   const stockRepo = options.stockRepository ?? new InMemoryStockRepository();
+  const queryRepos = buildQueryRepositories(options, stockRepo);
+  const auxRepos = buildAuxiliaryRepositories(options);
   return {
     userRepo: options.userRepository ?? new InMemoryUserRepository(),
     jwtSecret: options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-test-only-jwt-secret',
     stockRepo,
-    stockMovementQueryRepo:
-      options.stockMovementQueryRepository ?? new InMemoryStockMovementQueryRepository(stockRepo as InMemoryStockRepository),
-    remanenteQueryRepo:
-      options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository(stockRepo as InMemoryStockRepository),
+    ...queryRepos,
+    ...auxRepos,
     reportRepo: options.reportRepository ?? new InMemoryReportRepository(),
     recipeRepo: options.recipeRepository ?? new InMemoryRecipeRepository(),
     reconciliationRepo: options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository(),
-    roleRepo: options.roleRepository ?? new InMemoryRoleRepository(),
-    locationRepo: options.locationRepository ?? new InMemoryLocationRepository(),
-    settingsRepo: options.settingsRepository ?? new InMemorySettingsRepository(),
   };
 }
 

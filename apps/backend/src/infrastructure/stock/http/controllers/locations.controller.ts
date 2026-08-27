@@ -18,23 +18,18 @@ const updateLocationSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export function createLocationsController(locationRepo: IStorageLocationRepository): Router {
-  const router = Router();
+function mapLocation(l: StorageLocation) {
+  return { id: l.id, name: l.name, type: l.type, description: l.description, isActive: l.isActive };
+}
+
+function registerLocationRoutes(router: Router, locationRepo: IStorageLocationRepository): void {
   const getLocationsUseCase = new GetLocationsUseCase(locationRepo);
   const createLocationUseCase = new CreateLocationUseCase(locationRepo);
 
   router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const locations = await getLocationsUseCase.execute();
-      res.json(
-        locations.map((l) => ({
-          id: l.id,
-          name: l.name,
-          type: l.type,
-          description: l.description,
-          isActive: l.isActive,
-        }))
-      );
+      res.json(locations.map(mapLocation));
     } catch (err) {
       next(err);
     }
@@ -44,13 +39,7 @@ export function createLocationsController(locationRepo: IStorageLocationReposito
     try {
       const parsed = createLocationSchema.parse(req.body);
       const loc = await createLocationUseCase.execute(parsed);
-      res.status(201).json({
-        id: loc.id,
-        name: loc.name,
-        type: loc.type,
-        description: loc.description,
-        isActive: loc.isActive,
-      });
+      res.status(201).json(mapLocation(loc));
     } catch (err) {
       next(err);
     }
@@ -75,13 +64,7 @@ export function createLocationsController(locationRepo: IStorageLocationReposito
       });
 
       await locationRepo.saveLocation(updated);
-      res.json({
-        id: updated.id,
-        name: updated.name,
-        type: updated.type,
-        description: updated.description,
-        isActive: updated.isActive,
-      });
+      res.json(mapLocation(updated));
     } catch (err) {
       next(err);
     }
@@ -96,6 +79,10 @@ export function createLocationsController(locationRepo: IStorageLocationReposito
       next(err);
     }
   });
+}
 
+export function createLocationsController(locationRepo: IStorageLocationRepository): Router {
+  const router = Router();
+  registerLocationRoutes(router, locationRepo);
   return router;
 }

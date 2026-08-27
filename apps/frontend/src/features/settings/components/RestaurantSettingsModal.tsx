@@ -65,8 +65,11 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
       />
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
         <div>
-          <label className="form-label">Nombre del Restaurante</label>
+          <label htmlFor="setting-restaurant-name" className="form-label">
+            Nombre del Restaurante
+          </label>
           <input
+            id="setting-restaurant-name"
             type="text"
             required
             value={settings.restaurantName}
@@ -78,8 +81,11 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label className="form-label">Identificación Fiscal (RUT/NIF)</label>
+            <label htmlFor="setting-tax-id" className="form-label">
+              Identificación Fiscal (RUT/NIF)
+            </label>
             <input
+              id="setting-tax-id"
               type="text"
               value={settings.taxId || ''}
               onChange={(e) => setSettings({ ...settings, taxId: e.target.value })}
@@ -88,8 +94,11 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
             />
           </div>
           <div>
-            <label className="form-label">Símbolo de Moneda</label>
+            <label htmlFor="setting-currency" className="form-label">
+              Símbolo de Moneda
+            </label>
             <input
+              id="setting-currency"
               type="text"
               required
               value={settings.currencySymbol}
@@ -102,8 +111,11 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label className="form-label">Alerta Crítica FEFO (Horas)</label>
+            <label htmlFor="setting-critical-hours" className="form-label">
+              Alerta Crítica FEFO (Horas)
+            </label>
             <input
+              id="setting-critical-hours"
               type="number"
               required
               min={1}
@@ -114,8 +126,11 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
             />
           </div>
           <div>
-            <label className="form-label">Vida Útil Estándar Remanente (Horas)</label>
+            <label htmlFor="setting-remanente-hours" className="form-label">
+              Vida Útil Estándar Remanente (Horas)
+            </label>
             <input
+              id="setting-remanente-hours"
               type="number"
               required
               min={1}
