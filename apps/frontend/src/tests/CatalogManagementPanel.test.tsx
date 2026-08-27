@@ -80,6 +80,49 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     });
   });
 
+  it('crea una receta usando el insumo por defecto sin tocar el selector, incluso con la carga de insumos demorada', async () => {
+    // Regresion: useState fijaba insumoId='' en el primer render (antes de que
+    // resuelva GET /stock/insumos) y nunca se resincronizaba — el <select> se veia
+    // con el primer insumo real "seleccionado" pero el estado real seguia vacio,
+    // y el POST fallaba con 400 "El ID de insumo es obligatorio" salvo que el
+    // usuario reabriera el dropdown manualmente. Solo se reproducia con un delay
+    // real (red real / este mock), no con una resolucion sincronica de fetch.
+    let capturedBody: unknown = null;
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (!init || !init.method || init.method === 'GET') {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        return {
+          ok: true,
+          status: 200,
+          json: async () => [{ id: 'ins-harina-1', name: 'Harina 000', unitOfMeasure: 'KG', warehouseStock: '10.000' }],
+        };
+      }
+      capturedBody = JSON.parse(init.body as string);
+      return { ok: true, status: 201, json: async () => ({ message: 'Recipe created successfully', recipeId: 'rec-2' }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Alta de Receta/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Nombre de la Receta/i)).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/Nombre de la Receta/i), { target: { value: 'Pan Casero' } });
+    fireEvent.change(screen.getByLabelText(/Categoría/i), { target: { value: 'Panaderia' } });
+    fireEvent.change(screen.getByLabelText(/Cantidad del ingrediente/i), { target: { value: '0.500' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Crear Receta$/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/creada \(ID rec-2\)/i)).toBeInTheDocument();
+    });
+
+    expect(capturedBody).toMatchObject({ ingredients: [{ insumoId: 'ins-harina-1', quantity: '0.500' }] });
+  });
+
   it('reabastece un insumo existente (US-013) sumando cantidad al stock actual', async () => {
     let insumoStock = '10.000';
     const fetchMock = vi.fn(async (url: string) => {

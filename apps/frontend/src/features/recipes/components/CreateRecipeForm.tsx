@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Utensils, Plus, Trash2 } from 'lucide-react';
-import { CatalogService, InsumoListItem } from '../services/catalog.service.js';
+import { RecipesService } from '../services/recipes.service.js';
+import { InsumoItem } from '../../stock/services/stock.service.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 
 interface CreateRecipeFormProps {
@@ -14,11 +15,11 @@ interface IngredientRow {
 }
 
 function useInsumosCatalog() {
-  const [insumos, setInsumos] = useState<InsumoListItem[]>([]);
+  const [insumos, setInsumos] = useState<InsumoItem[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    CatalogService.listInsumos()
+    RecipesService.listInsumos()
       .then(setInsumos)
       .catch((err) => setLoadError(err instanceof Error ? err.message : 'Error cargando el catálogo de insumos.'));
   }, []);
@@ -32,6 +33,15 @@ function useCreateRecipeForm(onCreated: (message: string) => void, defaultInsumo
   const [ingredients, setIngredients] = useState<IngredientRow[]>([{ key: 0, insumoId: defaultInsumoId, quantity: '' }]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Los insumos cargan de forma asincronica DESPUES de que useState fije su valor
+  // inicial (siempre '' en el primer render) — sin este efecto, la fila unica y
+  // no tocada por el usuario queda enviando un insumoId vacio (400) aunque el
+  // <select> ya muestre visualmente el primer insumo real como seleccionado.
+  useEffect(() => {
+    if (!defaultInsumoId) return;
+    setIngredients((prev) => (prev.length === 1 && prev[0].insumoId === '' ? [{ ...prev[0], insumoId: defaultInsumoId }] : prev));
+  }, [defaultInsumoId]);
 
   const addIngredientRow = () => {
     setIngredients((prev) => [...prev, { key: prev.length ? Math.max(...prev.map((r) => r.key)) + 1 : 0, insumoId: defaultInsumoId, quantity: '' }]);
@@ -50,7 +60,7 @@ function useCreateRecipeForm(onCreated: (message: string) => void, defaultInsumo
     setError(null);
     setIsSubmitting(true);
     try {
-      const result = await CatalogService.createRecipe({
+      const result = await RecipesService.createRecipe({
         name,
         category,
         ingredients: ingredients.map(({ insumoId, quantity }) => ({ insumoId, quantity })),
@@ -73,7 +83,7 @@ function useCreateRecipeForm(onCreated: (message: string) => void, defaultInsumo
 
 const IngredientRowFields: React.FC<{
   row: IngredientRow;
-  insumos: InsumoListItem[];
+  insumos: InsumoItem[];
   canRemove: boolean;
   onChange: (field: 'insumoId' | 'quantity', value: string) => void;
   onRemove: () => void;
@@ -158,7 +168,7 @@ const RecipeBasicFields: React.FC<{
 
 const IngredientsFieldset: React.FC<{
   rows: IngredientRow[];
-  insumos: InsumoListItem[];
+  insumos: InsumoItem[];
   onChangeRow: (key: number, field: 'insumoId' | 'quantity', value: string) => void;
   onRemoveRow: (key: number) => void;
   onAddRow: () => void;

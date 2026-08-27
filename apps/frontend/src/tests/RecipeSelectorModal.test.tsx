@@ -7,9 +7,9 @@ describe('TK-061: RecipeSelectorModal conectado al catálogo real', () => {
     vi.unstubAllGlobals();
   });
 
-  it('carga las recetas reales del catálogo (GET /catalog/recipes) en vez de datos hardcodeados', async () => {
+  it('carga las recetas reales del catálogo (GET /recipes) en vez de datos hardcodeados', async () => {
     const fetchMock = vi.fn(async (url: string) => {
-      if (url.includes('/catalog/recipes')) {
+      if (url.endsWith('/recipes')) {
         return {
           ok: true,
           status: 200,
@@ -71,7 +71,7 @@ describe('TK-061: RecipeSelectorModal conectado al catálogo real', () => {
 
   it('confirma la preparación llamando a KitchenService.consumeRecipe con la receta real seleccionada', async () => {
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-      if (url.includes('/catalog/recipes')) {
+      if (url.endsWith('/recipes')) {
         return {
           ok: true,
           status: 200,

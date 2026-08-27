@@ -1,40 +1,31 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { CatalogService } from './catalog.service.js';
+import { RecipesService } from './recipes.service.js';
 
-describe('CatalogService — gestión de catálogo (TK-057-FE)', () => {
+describe('RecipesService — modulo de recetas (TK-069)', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     localStorage.clear();
   });
 
-  it('lista los insumos reales del backend', async () => {
+  it('lista los insumos reales del backend (sin fallback silencioso)', async () => {
     const mockInsumos = [
       { id: 'ins-1', name: 'Harina 000', unitOfMeasure: 'KG', warehouseStock: '0.000' },
       { id: 'ins-2', name: 'Salsa Pomodoro', unitOfMeasure: 'L', warehouseStock: '0.000' },
     ];
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => mockInsumos }));
 
-    const result = await CatalogService.listInsumos();
+    const result = await RecipesService.listInsumos();
 
     expect(result).toEqual(mockInsumos);
   });
 
-  it('crea un insumo nuevo y retorna el registro real del backend', async () => {
-    const mockInsumo = { id: 'ins-new-1', name: 'Harina 000', unitOfMeasure: 'KG', warehouseStock: '0.000' };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 201, json: async () => mockInsumo }));
-
-    const result = await CatalogService.createInsumo({ name: 'Harina 000', unitOfMeasure: 'KG' });
-
-    expect(result).toEqual(mockInsumo);
-  });
-
-  it('propaga el error real (400) cuando falta el nombre, sin fingir éxito', async () => {
+  it('propaga el error real si el backend falla al listar insumos, sin devolver datos falsos', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: false, status: 400, json: async () => ({ message: 'El nombre es requerido' }) })
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({ message: 'Error interno' }) })
     );
 
-    await expect(CatalogService.createInsumo({ name: '', unitOfMeasure: 'KG' })).rejects.toMatchObject({ status: 400 });
+    await expect(RecipesService.listInsumos()).rejects.toMatchObject({ status: 500 });
   });
 
   it('lista las recetas reales del backend con sus ingredientes', async () => {
@@ -43,7 +34,7 @@ describe('CatalogService — gestión de catálogo (TK-057-FE)', () => {
     ];
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => mockRecipes }));
 
-    const result = await CatalogService.listRecipes();
+    const result = await RecipesService.listRecipes();
 
     expect(result).toEqual(mockRecipes);
   });
@@ -52,7 +43,7 @@ describe('CatalogService — gestión de catálogo (TK-057-FE)', () => {
     const mockResult = { message: 'Recipe created successfully', recipeId: 'rec-new-1' };
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 201, json: async () => mockResult }));
 
-    const result = await CatalogService.createRecipe({
+    const result = await RecipesService.createRecipe({
       name: 'Pizza Margarita',
       category: 'Pizzas',
       ingredients: [{ insumoId: 'ins-1', quantity: '0.150' }],
@@ -68,7 +59,7 @@ describe('CatalogService — gestión de catálogo (TK-057-FE)', () => {
     );
 
     await expect(
-      CatalogService.createRecipe({ name: 'X', category: 'Pizzas', ingredients: [{ insumoId: 'inexistente', quantity: '1' }] })
+      RecipesService.createRecipe({ name: 'X', category: 'Pizzas', ingredients: [{ insumoId: 'inexistente', quantity: '1' }] })
     ).rejects.toMatchObject({ status: 404 });
   });
 });

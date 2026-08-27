@@ -12,6 +12,8 @@ inputs:
 
 # 🎟️ TK-057-FE: Panel de Gestión de Catálogo (Frontend)
 
+> **Nota (`TK-069-FE`):** `CreateRecipeForm.tsx` y `catalog.service.ts` (recetas) se movieron a `features/recipes/` — ver [`recipes/frontend/TK-069-FE.md`](../../recipes/frontend/TK-069-FE.md). `CatalogManagementPanel.tsx` permanece en `features/catalog/` como shell de composición (Insumos de `stock` + Recetas de `recipes`), no como dueño de lógica de dominio. Este documento queda como registro histórico.
+
 > **Navegación del Framework SDD:**  
 > [⬅️ Volver a US-012 (11_user_stories/catalog/US-012.md)](../../../11_user_stories/catalog/US-012.md) | [📖 Índice de Tickets (12_indice_tickets.md)](../../indice_tickets.md) | [Siguiente: Matriz de Trazabilidad (13_matriz_trazabilidad.md) ➡️](../../../13_matriz_trazabilidad.md)
 

@@ -1,6 +1,6 @@
 import { apiRequest } from '../../../shared/http/apiClient.js';
 import { DecimalQuantity } from '../../../shared/domain/DecimalQuantity.js';
-import { CatalogService } from '../../catalog/services/catalog.service.js';
+import { RecipesService } from '../../recipes/services/recipes.service.js';
 
 export interface RecipeItem {
   id: string;
@@ -171,7 +171,7 @@ export class KitchenService {
 
   public static async fetchAvailableRecipes(): Promise<RecipeItem[]> {
     try {
-      const [recipes, insumos] = await Promise.all([CatalogService.listRecipes(), CatalogService.listInsumos()]);
+      const [recipes, insumos] = await Promise.all([RecipesService.listRecipes(), RecipesService.listInsumos()]);
       const insumoNameById = new Map(insumos.map((insumo) => [insumo.id, insumo.name]));
 
       return recipes.map((recipe) => {
