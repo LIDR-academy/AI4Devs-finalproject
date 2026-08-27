@@ -12,7 +12,7 @@ export const authPinSchema = z.object({
 
 export const createUserSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido.'),
-  role: z.enum(['ADMIN', 'KITCHEN_STAFF']),
+  role: z.string().min(1, 'El rol es requerido.'),
   pin: z.string().regex(/^\d{4,6}$/, 'El PIN debe contener entre 4 y 6 digitos numericos.'),
 });
 

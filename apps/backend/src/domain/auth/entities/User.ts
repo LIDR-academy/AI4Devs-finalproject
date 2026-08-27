@@ -1,7 +1,7 @@
 import { Pin } from '../value-objects/Pin.js';
 import { UserBlockedException } from '../errors/UserBlockedException.js';
 
-export type UserRole = 'ADMIN' | 'KITCHEN_STAFF';
+export type UserRole = string;
 export type UserStatusType = 'ACTIVE' | 'BLOCKED';
 
 export interface UserProps {

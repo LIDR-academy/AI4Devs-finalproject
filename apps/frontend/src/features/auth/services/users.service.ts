@@ -2,7 +2,7 @@ import { apiRequest } from '../../../shared/http/apiClient.js';
 
 export interface CreateUserRequest {
   name: string;
-  role: 'KITCHEN_STAFF' | 'ADMIN';
+  role: string;
   pin: string;
 }
 
