@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { LocationsService, StorageLocationDto } from '../services/locations.service.js';
-import { MapPin, Plus } from 'lucide-react';
+import { MapPin, Plus, Trash2, Power } from 'lucide-react';
 
 interface LocationsManagementModalProps {
   isOpen: boolean;
@@ -47,8 +47,27 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
     }
   };
 
+  const handleToggleActive = async (loc: StorageLocationDto) => {
+    try {
+      await LocationsService.updateLocation(loc.id, { isActive: !loc.isActive });
+      loadLocations();
+    } catch {
+      alert('Error al cambiar estado del sector');
+    }
+  };
+
+  const handleDeleteLocation = async (id: string, name: string) => {
+    if (!window.confirm(`¿Confirmas eliminar el sector "${name}"?`)) return;
+    try {
+      await LocationsService.deleteLocation(id);
+      loadLocations();
+    } catch {
+      alert('Error al eliminar el sector');
+    }
+  };
+
   return (
-    <Modal maxWidth="600px" width="90%">
+    <Modal maxWidth="640px" width="92%">
       <ModalHeader
         icon={<MapPin style={{ color: 'var(--color-primary)' }} />}
         title="Sectores Físicos de Almacenamiento"
@@ -123,46 +142,70 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
 
         <div>
           <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '10px' }}>
-            Sectores Activos
+            Sectores Registrados ({locations.length})
           </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto', paddingRight: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
             {locations.map((loc) => (
               <div
                 key={loc.id}
                 style={{
                   padding: '12px',
                   backgroundColor: 'var(--bg-root)',
-                  border: '1px solid var(--border-card)',
+                  border: `1px solid ${loc.isActive ? 'var(--border-card)' : 'var(--color-danger)'}`,
                   borderRadius: '4px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  opacity: loc.isActive ? 1 : 0.65,
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <MapPin size={18} style={{ color: 'var(--color-primary)' }} />
+                  <MapPin size={18} style={{ color: loc.isActive ? 'var(--color-primary)' : 'var(--text-secondary)' }} />
                   <div>
                     <span style={{ fontWeight: 700, fontSize: '0.95rem', display: 'block', color: 'var(--text-primary)' }}>
-                      {loc.name}
+                      {loc.name} {!loc.isActive && '(Inactivo)'}
                     </span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                       {loc.description || 'Sin descripción'}
                     </span>
                   </div>
                 </div>
-                <span
-                  style={{
-                    fontSize: '0.75rem',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontWeight: 700,
-                    backgroundColor: loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.15)' : 'rgba(47, 191, 110, 0.15)',
-                    color: loc.type === 'WAREHOUSE' ? '#4da6ff' : 'var(--color-success)',
-                    border: `1px solid ${loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.3)' : 'rgba(47, 191, 110, 0.3)'}`,
-                  }}
-                >
-                  {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
-                </span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontWeight: 700,
+                      backgroundColor: loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.15)' : 'rgba(47, 191, 110, 0.15)',
+                      color: loc.type === 'WAREHOUSE' ? '#4da6ff' : 'var(--color-success)',
+                      border: `1px solid ${loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.3)' : 'rgba(47, 191, 110, 0.3)'}`,
+                    }}
+                  >
+                    {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
+                  </span>
+
+                  <button
+                    type="button"
+                    className={`btn-touch ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
+                    onClick={() => handleToggleActive(loc)}
+                    style={{ padding: '6px 8px' }}
+                    title={loc.isActive ? 'Desactivar Sector' : 'Activar Sector'}
+                  >
+                    <Power size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-touch btn-danger"
+                    onClick={() => handleDeleteLocation(loc.id, loc.name)}
+                    style={{ padding: '6px 8px' }}
+                    title="Eliminar Sector"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

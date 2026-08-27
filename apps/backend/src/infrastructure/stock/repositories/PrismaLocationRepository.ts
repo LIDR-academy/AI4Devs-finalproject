@@ -7,7 +7,6 @@ export class PrismaLocationRepository implements IStorageLocationRepository {
 
   async findAllLocations(): Promise<StorageLocation[]> {
     const raw = await this.prisma.storageLocation.findMany({
-      where: { isActive: true },
       orderBy: { name: 'asc' },
     });
 
@@ -54,6 +53,12 @@ export class PrismaLocationRepository implements IStorageLocationRepository {
         description: location.description,
         isActive: location.isActive,
       },
+    });
+  }
+
+  async deleteLocation(id: string): Promise<void> {
+    await this.prisma.storageLocation.delete({
+      where: { id },
     });
   }
 }

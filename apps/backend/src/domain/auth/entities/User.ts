@@ -85,4 +85,10 @@ export class User {
     }
     return isValid;
   }
+
+  public updateDetails(name?: string, role?: string, newPin?: Pin): void {
+    if (name) this.props.name = name;
+    if (role) this.props.role = role;
+    if (newPin) this.props.pin = newPin;
+  }
 }

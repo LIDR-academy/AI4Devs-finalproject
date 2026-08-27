@@ -93,5 +93,20 @@ export function createRolesController(roleRepo: IRoleRepository): Router {
     }
   });
 
+  router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const role = await roleRepo.findRoleById(id);
+      if (role && (role.name === 'ADMIN' || role.name === 'KITCHEN_STAFF' || id === 'role-admin' || id === 'role-kitchen')) {
+        res.status(400).json({ error: 'No es posible eliminar los roles base predefinidos del sistema.' });
+        return;
+      }
+      await roleRepo.deleteRole(id);
+      res.json({ message: 'Rol eliminado correctamente' });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   return router;
 }

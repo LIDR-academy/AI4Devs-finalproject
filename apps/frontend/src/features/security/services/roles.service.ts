@@ -37,4 +37,10 @@ export const RolesService = {
       body: { permissionIds },
     });
   },
+
+  async deleteRole(roleId: string): Promise<void> {
+    await apiRequest<void>(`/roles/${roleId}`, {
+      method: 'DELETE',
+    });
+  },
 };

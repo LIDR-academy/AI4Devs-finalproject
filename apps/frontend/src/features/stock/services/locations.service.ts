@@ -19,4 +19,17 @@ export const LocationsService = {
       body: data,
     });
   },
+
+  async updateLocation(id: string, data: Partial<StorageLocationDto>): Promise<StorageLocationDto> {
+    return apiRequest<StorageLocationDto>(`/locations/${id}`, {
+      method: 'PUT',
+      body: data,
+    });
+  },
+
+  async deleteLocation(id: string): Promise<void> {
+    await apiRequest<void>(`/locations/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };

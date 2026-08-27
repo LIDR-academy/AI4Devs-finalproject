@@ -27,4 +27,8 @@ export class InMemoryLocationRepository implements IStorageLocationRepository {
   async saveLocation(location: StorageLocation): Promise<void> {
     this.locations.set(location.id, location);
   }
+
+  async deleteLocation(id: string): Promise<void> {
+    this.locations.delete(id);
+  }
 }

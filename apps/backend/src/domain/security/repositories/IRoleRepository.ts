@@ -8,4 +8,5 @@ export interface IRoleRepository {
   saveRole(role: Role): Promise<void>;
   updateRolePermissions(roleId: string, permissionIds: string[]): Promise<void>;
   findAllPermissions(): Promise<Permission[]>;
+  deleteRole(id: string): Promise<void>;
 }

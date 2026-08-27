@@ -62,4 +62,9 @@ export class InMemoryRoleRepository implements IRoleRepository {
   async findAllPermissions(): Promise<Permission[]> {
     return [...this.permissions];
   }
+
+  async deleteRole(id: string): Promise<void> {
+    this.roles.delete(id);
+    this.rolePermissionsMap.delete(id);
+  }
 }

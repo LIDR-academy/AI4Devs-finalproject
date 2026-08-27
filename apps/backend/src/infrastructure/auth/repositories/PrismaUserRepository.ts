@@ -37,6 +37,7 @@ export class PrismaUserRepository implements IUserRepository {
     await this.prisma.user.upsert({
       where: { id: user.id },
       update: {
+        name: user.name,
         status: user.status,
         failedAttempts: user.failedAttempts,
       },
@@ -47,6 +48,24 @@ export class PrismaUserRepository implements IUserRepository {
         status: user.status,
         failedAttempts: user.failedAttempts,
       },
+    });
+  }
+
+  public async update(user: User): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: user.name,
+        pinHash: user.pin.getHash(),
+        status: user.status,
+        failedAttempts: user.failedAttempts,
+      },
+    });
+  }
+
+  public async delete(id: string): Promise<void> {
+    await this.prisma.user.delete({
+      where: { id },
     });
   }
 }

@@ -17,6 +17,14 @@ export class InMemoryUserRepository implements IUserRepository {
     this.users.set(user.id, user);
   }
 
+  public async update(user: User): Promise<void> {
+    this.users.set(user.id, user);
+  }
+
+  public async delete(id: string): Promise<void> {
+    this.users.delete(id);
+  }
+
   // Metodo helper para tests
   public seedUser(user: User): void {
     this.users.set(user.id, user);

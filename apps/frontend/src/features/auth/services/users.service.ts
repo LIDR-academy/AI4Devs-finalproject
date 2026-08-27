@@ -6,6 +6,12 @@ export interface CreateUserRequest {
   pin: string;
 }
 
+export interface UpdateUserRequest {
+  name?: string;
+  role?: string;
+  pin?: string;
+}
+
 export interface CreateUserResult {
   id: string;
   name: string;
@@ -25,11 +31,6 @@ export interface UserListItem {
   status: string;
 }
 
-/**
- * Servicio separado de auth.service.ts (no user.service.ts) a propósito: apiClient.ts
- * importa AuthService para leer el token de sesión — si estos métodos vivieran en
- * auth.service.ts e importaran apiRequest de vuelta, se crearía un ciclo de módulos.
- */
 export class UsersService {
   public static async listUsers(): Promise<UserListItem[]> {
     return apiRequest<UserListItem[]>('/auth/users');
@@ -37,6 +38,13 @@ export class UsersService {
 
   public static async createUser(data: CreateUserRequest): Promise<CreateUserResult> {
     return apiRequest<CreateUserResult>('/auth/users', { method: 'POST', body: data });
+  }
+
+  public static async updateUser(userId: string, data: UpdateUserRequest): Promise<UserListItem> {
+    return apiRequest<UserListItem>(`/auth/users/${encodeURIComponent(userId)}`, {
+      method: 'PUT',
+      body: data,
+    });
   }
 
   public static async setUserStatus(userId: string, action: 'BLOCK' | 'ACTIVATE'): Promise<SetUserStatusResult> {

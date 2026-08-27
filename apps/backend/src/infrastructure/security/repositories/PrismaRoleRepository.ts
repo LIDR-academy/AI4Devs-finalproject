@@ -140,4 +140,10 @@ export class PrismaRoleRepository implements IRoleRepository {
         })
     );
   }
+
+  async deleteRole(id: string): Promise<void> {
+    await this.prisma.role.delete({
+      where: { id },
+    });
+  }
 }
