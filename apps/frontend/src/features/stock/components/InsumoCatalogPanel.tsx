@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Package, Search, Truck } from 'lucide-react';
 import { StockService, InsumoItem } from '../services/stock.service.js';
 import { CreateInsumoModal } from './CreateInsumoModal.js';
 import { RestockInsumoModal } from './RestockInsumoModal.js';
@@ -21,11 +22,14 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
         gap: '16px',
       }}
     >
-      <div>
-        <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>📦 Inventario y Catálogo de Bodega</h1>
-        <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-          Gestiona el catálogo maestro de ingredientes y su disponibilidad en bodega principal.
-        </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Package size={22} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+        <div>
+          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Inventario y Catálogo de Bodega</h1>
+          <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+            Gestiona el catálogo maestro de ingredientes y su disponibilidad en bodega principal.
+          </p>
+        </div>
       </div>
 
       <button onClick={onCreateClick} className="btn-touch btn-primary">
@@ -33,16 +37,19 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
       </button>
     </div>
 
-    <div style={{ marginBottom: '20px' }}>
+    <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '400px' }}>
+      <Search
+        size={18}
+        style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}
+      />
       <input
         type="text"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="🔍 Buscar insumo por nombre..."
+        placeholder="Buscar insumo por nombre..."
         style={{
           width: '100%',
-          maxWidth: '400px',
-          padding: '12px 16px',
+          padding: '12px 16px 12px 40px',
           borderRadius: '4px',
           border: '1px solid var(--border-card)',
           backgroundColor: 'var(--bg-root)',
@@ -83,9 +90,10 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
       <button
         onClick={() => onRestock(item)}
         className="btn-touch btn-secondary"
-        style={{ minHeight: '36px', padding: '6px 12px', fontSize: '0.8rem' }}
+        style={{ minHeight: '36px', padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
       >
-        🚚 Reabastecer
+        <Truck size={16} />
+        Reabastecer
       </button>
     </td>
   </tr>

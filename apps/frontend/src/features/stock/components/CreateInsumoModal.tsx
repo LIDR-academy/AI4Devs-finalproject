@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Package } from 'lucide-react';
 import { StockService, CreateInsumoDTO } from '../services/stock.service.js';
 
 interface CreateInsumoModalProps {
@@ -75,8 +76,9 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
         }}
       >
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '1.25rem', fontWeight: 600 }}>
-          📦 Registrar Nuevo Insumo
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '1.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Package size={20} style={{ color: 'var(--color-primary)' }} />
+          Registrar Nuevo Insumo
         </h2>
 
         {error && (

@@ -47,6 +47,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-069** | `recipes` | **Medio** | **Media** | 5 SP | Depende de `TK-057`. Extrae el módulo `recipes` de `catalog` (recetas ya eran 100% de ese módulo) y mueve `/api/v1/catalog/recipes` → `/api/v1/recipes`, a pedido explícito del humano tras un análisis de organización de módulos. | 🟡 P1 - Alta |
 | **TK-069-FE** | `recipes` | **Medio** | **Media** | 3 SP | Depende de `TK-069`. Contraparte frontend: mueve `CreateRecipeForm`/`catalog.service.ts` a `features/recipes/`; cierra duplicación de endpoints de insumos, código muerto y un bug real de resincronización de `insumoId` encontrado en la verificación en vivo. | 🟡 P1 - Alta |
 | **TK-070-FE** | `recipes` | **Medio** | **Media** | 3 SP | Depende de `TK-069-FE`. Restructura "Alta de Receta" a "Recetario" (lista + buscador + alta en modal), simétrico a Inventario de Bodega, a pedido explícito del humano tras comparar capturas de ambas pestañas. | 🟡 P1 - Alta |
+| **TK-071** | `shared` | **Bajo** | **Baja** | 2 SP | Depende de `TK-070-FE`. Reemplaza emoji sueltos por íconos `lucide-react` en Catálogo/Recetario, a pedido explícito del humano ("no se corresponde... no sé de dónde salió" sobre el ícono de Reabastecer). | 🟢 P2 - Media |
 
 ---
 
@@ -92,6 +93,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-060-FE** | [US-013](../11_user_stories/stock/US-013.md) | Reabastecimiento de Bodega (Frontend) | `stock` | 2 | Must Have | [stock/frontend/TK-060-FE.md](stock/frontend/TK-060-FE.md) |
 | **TK-069-FE** | [US-012](../11_user_stories/catalog/US-012.md) | Extracción del Feature `recipes` (independiente de `catalog`) | `recipes` | 3 | Should Have | [recipes/frontend/TK-069-FE.md](recipes/frontend/TK-069-FE.md) |
 | **TK-070-FE** | [US-012](../11_user_stories/catalog/US-012.md) | Recetario: lista, búsqueda y alta en modal | `recipes` | 3 | Should Have | [recipes/frontend/TK-070-FE.md](recipes/frontend/TK-070-FE.md) |
+| **TK-071** | N/A (Técnico) | Reemplaza emoji sueltos por íconos lucide-react en Catálogo/Recetario | `shared` | 2 | Should Have | [shared/frontend/TK-071.md](shared/frontend/TK-071.md) |
 | **TK-067** | N/A (Técnico) | Migración Visual al Design System v2.0.0 ("Señal Industrial") | `shared` | 3 | Should Have | [shared/frontend/TK-067.md](shared/frontend/TK-067.md) |
 | **TK-068** | N/A (Técnico) | Migración Visual del Backoffice al Design System v2.0.0 | `shared` | 3 | Should Have | [shared/frontend/TK-068.md](shared/frontend/TK-068.md) |
 ---
@@ -135,6 +137,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-064: Guards 30/31/32 (SecDevOps)](shared/backend/TK-064.md)** (Backend) — cierra el gap de gobernanza SecDevOps en `.agents/` (verificación de pins de terceros, codegen antes de build, re-verificación de seguridad post-upgrade mayor).
 *   **[TK-067: Migración Visual al Design System v2.0.0](shared/frontend/TK-067.md)** (Frontend) — propaga la paleta "Señal Industrial" (`docs/02_architecture_design/05_ui_ux_design_system.md` v2.0.0) a `index.css` y a los componentes de cocina; cero cambio de comportamiento, backoffice de Catálogo fuera de alcance.
 *   **[TK-068: Migración Visual del Backoffice al Design System v2.0.0](shared/frontend/TK-068.md)** (Frontend) — extiende `TK-067` al backoffice (Catálogo, Reportes, panel de acciones de `App.tsx`) a pedido explícito del humano; cierra de paso literales hex hardcodeados preexistentes de `TK-057-FE`/`TK-060-FE` (Guard 29).
+*   **[TK-071: Reemplaza emoji sueltos por íconos lucide-react](shared/frontend/TK-071.md)** (Frontend) — corrige la iconografía de Catálogo/Recetario (`Package`, `Search`, `Truck`, `ChefHat`) a pedido explícito del humano; misma deuda pendiente en pantallas de cocina, fuera de alcance.
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
 *   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)

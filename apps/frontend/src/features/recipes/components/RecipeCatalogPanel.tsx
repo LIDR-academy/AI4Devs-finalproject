@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ChefHat, Search } from 'lucide-react';
 import { RecipesService, RecipeListItem } from '../services/recipes.service.js';
 import { CreateRecipeModal } from './CreateRecipeModal.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
@@ -22,11 +23,14 @@ const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({ onCreateClick
         gap: '16px',
       }}
     >
-      <div>
-        <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>📖 Recetario</h1>
-        <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-          Gestiona el recetario de preparaciones y sus ingredientes.
-        </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <ChefHat size={22} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+        <div>
+          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Recetario</h1>
+          <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+            Gestiona el recetario de preparaciones y sus ingredientes.
+          </p>
+        </div>
       </div>
 
       <button onClick={onCreateClick} className="btn-touch btn-primary">
@@ -34,16 +38,19 @@ const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({ onCreateClick
       </button>
     </div>
 
-    <div style={{ marginBottom: '20px' }}>
+    <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '400px' }}>
+      <Search
+        size={18}
+        style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}
+      />
       <input
         type="text"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="🔍 Buscar receta por nombre..."
+        placeholder="Buscar receta por nombre..."
         style={{
           width: '100%',
-          maxWidth: '400px',
-          padding: '12px 16px',
+          padding: '12px 16px 12px 40px',
           borderRadius: '4px',
           border: '1px solid var(--border-card)',
           backgroundColor: 'var(--bg-root)',
