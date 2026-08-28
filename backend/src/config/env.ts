@@ -18,6 +18,7 @@ const envSchema = z.object({
   GOOGLE_CALENDAR_ID_STAGING: z.string().optional(),
   GOOGLE_CALENDAR_ID_PROD: z.string().optional(),
   FIREBASE_SERVICE_ACCOUNT_PATH: z.string().optional(),
+  FIREBASE_SERVICE_ACCOUNT_KEY: z.string().optional(),
 });
 
 const result = envSchema.safeParse(process.env);

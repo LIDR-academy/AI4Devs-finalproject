@@ -18,10 +18,37 @@ describe("FCMNotificationAdapter", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    vi.unstubAllEnvs();
   });
 
   it("returns null when FIREBASE_SERVICE_ACCOUNT_PATH is unset", async () => {
     vi.stubEnv("FIREBASE_SERVICE_ACCOUNT_PATH", "");
+    const { createFCMAdapter } = await import(
+      "../infrastructure/adapters/notifications/FCMNotificationAdapter"
+    );
+    expect(createFCMAdapter()).toBeNull();
+  });
+
+  it("uses FIREBASE_SERVICE_ACCOUNT_KEY JSON when set", async () => {
+    const serviceAccount = {
+      project_id: "coacher-test",
+      private_key: "-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----\n",
+      client_email: "coacher@coacher-test.iam.gserviceaccount.com",
+    };
+    vi.stubEnv("FIREBASE_SERVICE_ACCOUNT_PATH", "");
+    vi.stubEnv("FIREBASE_SERVICE_ACCOUNT_KEY", JSON.stringify(serviceAccount));
+
+    const { cert } = await import("firebase-admin/app");
+    const { createFCMAdapter } = await import(
+      "../infrastructure/adapters/notifications/FCMNotificationAdapter"
+    );
+    expect(createFCMAdapter()).not.toBeNull();
+    expect(cert).toHaveBeenCalledWith(serviceAccount);
+  });
+
+  it("returns null when FIREBASE_SERVICE_ACCOUNT_KEY is invalid JSON", async () => {
+    vi.stubEnv("FIREBASE_SERVICE_ACCOUNT_PATH", "");
+    vi.stubEnv("FIREBASE_SERVICE_ACCOUNT_KEY", "{not valid json");
     const { createFCMAdapter } = await import(
       "../infrastructure/adapters/notifications/FCMNotificationAdapter"
     );
