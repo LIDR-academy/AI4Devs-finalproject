@@ -11,13 +11,28 @@ const PERMANENT_ERRORS = new Set([
   "messaging/invalid-registration-token",
 ]);
 
+function resolveServiceAccountConfig(): Parameters<typeof cert>[0] | null {
+  const keyEnv = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (keyEnv) {
+    try {
+      return JSON.parse(keyEnv);
+    } catch {
+      console.error("[FCM] FIREBASE_SERVICE_ACCOUNT_KEY is not valid JSON; disabling push.");
+      return null;
+    }
+  }
+
+  const path = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  return path ?? null;
+}
+
 export function createFCMAdapter(): NotificationSender | null {
-  const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-  if (!serviceAccountPath) return null;
+  const serviceAccountConfig = resolveServiceAccountConfig();
+  if (!serviceAccountConfig) return null;
 
   const apps = getApps();
   if (apps.length === 0) {
-    initializeApp({ credential: cert(serviceAccountPath) });
+    initializeApp({ credential: cert(serviceAccountConfig) });
   }
 
   return {
