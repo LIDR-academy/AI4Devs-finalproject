@@ -1,4 +1,6 @@
 import type { ClassRepository } from "../ports/ClassRepository.js";
+import type { DeviceTokenRepository } from "../ports/DeviceTokenRepository.js";
+import type { NotificationRepository } from "../ports/NotificationRepository.js";
 import type { NotificationSender } from "../ports/NotificationSender.js";
 import type { UserRepository } from "../ports/UserRepository.js";
 import type { WaitingListRepository } from "../ports/WaitingListRepository.js";
@@ -26,7 +28,51 @@ export class ProcessWaitingListService {
     private readonly waitingListRepo: WaitingListRepository,
     private readonly notificationSender: NotificationSender,
     private readonly userRepo: UserRepository,
+    private readonly notificationRepo: NotificationRepository,
+    private readonly deviceTokenRepo: DeviceTokenRepository,
   ) {}
+
+  private async dispatchNotification(
+    recipientId: string,
+    type: number,
+    content: string,
+    classId: string,
+  ): Promise<boolean> {
+    try {
+      await this.notificationRepo.create({
+        recipientId,
+        type,
+        content,
+        classId,
+      });
+    } catch {
+      return false;
+    }
+
+    try {
+      const tokens = await this.deviceTokenRepo.listActiveTokens(recipientId);
+      if (tokens.length > 0) {
+        const outcome = await this.notificationSender.send(
+          {
+            content,
+            data: {
+              classId,
+              type: String(type),
+            },
+          },
+          tokens,
+        );
+        const permanentFailures = outcome.failed.filter((f) => f.permanent).map((f) => f.token);
+        if (permanentFailures.length > 0) {
+          await this.deviceTokenRepo.deactivate(permanentFailures);
+        }
+      }
+    } catch {
+      // Delivery failure isolation — never break the flow
+    }
+
+    return true;
+  }
 
   async processSpotOpened(classId: string): Promise<SpotOpenedResult> {
     const trainingClass = await this.classRepo.findByIdWithEnrollmentsAndWaitingLists(classId);
@@ -47,18 +93,16 @@ export class ProcessWaitingListService {
         if (!coachee) continue;
 
         const content = this.buildSpotOpenedContent(trainingClass);
-        await this.notificationSender.send(
-          {
-            content,
-            data: {
-              classId: trainingClass.id,
-              type: String(this.policy.notificationTypeForSpotOpened()),
-            },
-          },
-          [], // tokens resolved by the sender adapter
+        const dispatched = await this.dispatchNotification(
+          coachee.id,
+          this.policy.notificationTypeForSpotOpened(),
+          content,
+          trainingClass.id,
         );
-        waitingListMembersNotified++;
-        notificationsSent++;
+        if (dispatched) {
+          waitingListMembersNotified++;
+          notificationsSent++;
+        }
       } catch {
         // Delivery failure isolation — never break the flow
       }
@@ -71,17 +115,13 @@ export class ProcessWaitingListService {
         const coachNotificationType =
           this.policy.coachNotificationTypeForSpotOpened(hasWaitingList);
         const content = this.buildCoachNotificationContent(trainingClass, hasWaitingList);
-        await this.notificationSender.send(
-          {
-            content,
-            data: {
-              classId: trainingClass.id,
-              type: String(coachNotificationType),
-            },
-          },
-          [],
+        const dispatched = await this.dispatchNotification(
+          coach.id,
+          coachNotificationType,
+          content,
+          trainingClass.id,
         );
-        notificationsSent++;
+        if (dispatched) notificationsSent++;
         return {
           notificationsSent,
           waitingListMembersNotified,
@@ -168,17 +208,13 @@ export class ProcessWaitingListService {
       const coachee = await this.userRepo.findById(coacheeId);
       if (coachee) {
         const content = this.buildClaimConfirmationContent(trainingClass);
-        await this.notificationSender.send(
-          {
-            content,
-            data: {
-              classId: trainingClass.id,
-              type: String(this.policy.notificationTypeForJoin()),
-            },
-          },
-          [],
+        const dispatched = await this.dispatchNotification(
+          coachee.id,
+          this.policy.notificationTypeForJoin(),
+          content,
+          trainingClass.id,
         );
-        notificationsSent++;
+        if (dispatched) notificationsSent++;
       }
     } catch {
       // Delivery failure isolation
@@ -189,17 +225,13 @@ export class ProcessWaitingListService {
       const coach = await this.userRepo.findById(trainingClass.assignedCoachId);
       if (coach) {
         const content = this.buildCoachClaimNotificationContent(trainingClass, coacheeId);
-        await this.notificationSender.send(
-          {
-            content,
-            data: {
-              classId: trainingClass.id,
-              type: String(this.policy.notificationTypeForSpotClaimed()),
-            },
-          },
-          [],
+        const dispatched = await this.dispatchNotification(
+          coach.id,
+          this.policy.notificationTypeForSpotClaimed(),
+          content,
+          trainingClass.id,
         );
-        notificationsSent++;
+        if (dispatched) notificationsSent++;
       }
     } catch {
       // Delivery failure isolation
