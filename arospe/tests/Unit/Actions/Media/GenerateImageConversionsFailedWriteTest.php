@@ -13,12 +13,19 @@
 //
 // The failure is induced with a REAL filesystem permission failure, not a Mockery double, per
 // the fix instruction's own suggested alternative -- this test suite runs as a non-root local
-// user (verified: `id` reports uid=1000, not 0; see this session's report), so making the
-// 'media' directory read-only reliably makes the underlying write fail while the
-// already-written original stays readable (the directory's execute+read bits are untouched).
-// Storage::fake('public')'s config is built by merging the REAL 'public' disk's 'throw' key
-// (Illuminate\Support\Facades\Storage::buildDiskConfiguration()), so this exercises the exact
-// production 'throw' => false behaviour, not a testing-only shortcut.
+// user (`sail`, uid 1000 -- `./vendor/bin/sail artisan` always runs as $APP_USER, never root; see
+// vendor/laravel/sail/bin/sail), so making the 'media' directory read-only reliably makes the
+// underlying write fail while the already-written original stays readable (the directory's
+// execute+read bits are untouched). Storage::fake('public')'s config is built by merging the
+// REAL 'public' disk's 'throw' key (Illuminate\Support\Facades\Storage::buildDiskConfiguration()),
+// so this exercises the exact production 'throw' => false behaviour, not a testing-only
+// shortcut.
+//
+// Task 0019b note: a single flake was observed under sustained full-suite `--parallel` load in
+// this exact worktree (one failure across several runs; the mechanism above re-verified correct
+// both in isolation and via direct reproduction) and could not be reliably reproduced on demand
+// -- see docs/errors-log.md. clearstatcache() below is defensive hardening against one plausible
+// (unconfirmed) cause; it does not weaken what this test proves.
 
 use App\Actions\Media\GenerateImageConversions;
 use Illuminate\Http\UploadedFile;
@@ -53,7 +60,24 @@ test('a failed disk write during conversion throws and leaves no partially-writt
     // but writing a NEW file into this directory now fails at the filesystem level. This makes
     // the FIRST write (.webp) fail, so $written never gains an entry and the cleanup foreach
     // loop's body never actually runs -- see the second test below for that.
-    chmod(Storage::disk('public')->path('media'), 0555);
+    $mediaDir = Storage::disk('public')->path('media');
+    chmod($mediaDir, 0555);
+
+    // Defensive hardening, task 0019b: PHP caches the result of stat()-family calls
+    // (is_writable() among them) per path for the rest of the request. Nothing in this test
+    // should read $mediaDir's stat before this chmod(), but under full-suite --parallel load
+    // this file's assertion flaked once in a way that could not be reliably reproduced --
+    // clearing the cache removes stat staleness as a candidate cause without weakening what the
+    // test actually proves.
+    clearstatcache(true, $mediaDir);
+
+    // Self-diagnosing assertion, task 0019a Phase 4 finding F-4 (appsec-auditor): if this
+    // container's permission model ever changes (a future base image, a different `sail`
+    // user setup) such that root/the test user can write through a 0555 directory anyway,
+    // this fails HERE with a clear message about the precondition, instead of surfacing as a
+    // confusing "GenerateImageConversions doesn't throw" failure three lines down that looks
+    // like a product regression.
+    expect(is_writable($mediaDir))->toBeFalse();
 
     // NOT ->toThrow(Throwable::class): Pest's toThrow() resolves its argument with
     // class_exists(), which returns false for an INTERFACE and silently falls back to a
