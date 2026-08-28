@@ -5,39 +5,28 @@ import { CreateUserUseCase } from '../../../application/auth/use-cases/CreateUse
 import { SetUserStatusUseCase } from '../../../application/auth/use-cases/SetUserStatusUseCase.js';
 import { ListUsersUseCase } from '../../../application/auth/use-cases/ListUsersUseCase.js';
 import { UpdateUserUseCase } from '../../../application/auth/use-cases/UpdateUserUseCase.js';
+import { respondValidationError } from '../utils/responseUtils.js';
 
-export const authPinSchema = z.object({
+const authPinSchema = z.object({
   userId: z.string().min(1, 'El ID de usuario es requerido.'),
   pin: z.string().regex(/^\d{4,6}$/, 'El PIN debe contener entre 4 y 6 digitos numericos.'),
 });
 
-export const createUserSchema = z.object({
+const createUserSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido.'),
   role: z.string().min(1, 'El rol es requerido.'),
   pin: z.string().regex(/^\d{4,6}$/, 'El PIN debe contener entre 4 y 6 digitos numericos.'),
 });
 
-export const updateUserSchema = z.object({
+const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   role: z.string().min(1).optional(),
   pin: z.string().regex(/^\d{4,6}$/, 'El PIN debe contener entre 4 y 6 digitos numericos.').optional(),
 });
 
-export const setUserStatusSchema = z.object({
+const setUserStatusSchema = z.object({
   action: z.enum(['BLOCK', 'ACTIVATE']),
 });
-
-function respondValidationError(req: Request, res: Response, detailMsg: string): void {
-  res.status(400).json({
-    type: 'https://restostock.com/errors/validation-error',
-    title: 'ValidationError',
-    status: 400,
-    detail: detailMsg,
-    instance: req.originalUrl || req.url,
-    error: 'ValidationError',
-    message: detailMsg,
-  });
-}
 
 export class AuthController {
   constructor(

@@ -5,8 +5,9 @@ import { GetStockMovementHistoryUseCase } from '../../../../application/stock/us
 import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/CreateInsumoUseCase.js';
 import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
 import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
+import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
-export const recordExtractionSchema = z
+const recordExtractionSchema = z
   .object({
     insumoId: z.string().min(1, 'El ID de insumo es obligatorio.'),
     quantity: z.union([z.number().positive('La cantidad debe ser positiva.'), z.string().min(1)]),
@@ -29,34 +30,24 @@ export const recordExtractionSchema = z
     }
   );
 
-export const createInsumoSchema = z.object({
+const createInsumoSchema = z.object({
   name: z.string().min(1, 'El nombre del insumo es requerido.'),
   unitOfMeasure: z.enum(['KG', 'L', 'UNITS'], {
     errorMap: () => ({ message: 'La unidad de medida debe ser KG, L o UNITS.' }),
   }),
 });
 
-export const restockInsumoSchema = z.object({
+const restockInsumoSchema = z.object({
   quantity: z.coerce.number().positive('La cantidad a reabastecer debe ser positiva.'),
 });
 
-export const stockMovementHistoryQuerySchema = z.object({
+const stockMovementHistoryQuerySchema = z.object({
   insumoId: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
 });
 
-function respondValidationError(req: Request, res: Response, detailMsg: string): void {
-  res.status(400).json({
-    type: 'https://restostock.com/errors/validation-error',
-    title: 'ValidationError',
-    status: 400,
-    detail: detailMsg,
-    instance: req.originalUrl || req.url,
-    error: 'ValidationError',
-    message: detailMsg,
-  });
-}
+
 
 export class StockController {
   constructor(

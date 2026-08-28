@@ -2,8 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { CreateRecipeUseCase } from '../../../../application/recipes/use-cases/CreateRecipeUseCase.js';
 import { ListRecipesUseCase } from '../../../../application/recipes/use-cases/ListRecipesUseCase.js';
+import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
-export const createRecipeSchema = z.object({
+const createRecipeSchema = z.object({
   name: z.string().min(1, 'El nombre de la receta es requerido.'),
   category: z.string().min(1, 'La categoría de la receta es requerida.'),
   description: z.string().optional(),
@@ -16,18 +17,6 @@ export const createRecipeSchema = z.object({
     )
     .min(1, 'La receta debe tener al menos un ingrediente.'),
 });
-
-function respondValidationError(req: Request, res: Response, detailMsg: string): void {
-  res.status(400).json({
-    type: 'https://restostock.com/errors/validation-error',
-    title: 'ValidationError',
-    status: 400,
-    detail: detailMsg,
-    instance: req.originalUrl || req.url,
-    error: 'ValidationError',
-    message: detailMsg,
-  });
-}
 
 export class RecipesController {
   constructor(

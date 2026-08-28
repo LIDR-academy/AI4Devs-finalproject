@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { GetWasteReportUseCase } from '../../../../application/reports/use-cases/GetWasteReportUseCase.js';
+import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
-export const wasteReportQuerySchema = z.object({
+const wasteReportQuerySchema = z.object({
   startDate: z.string().min(1, 'startDate es obligatorio.'),
   endDate: z.string().min(1, 'endDate es obligatorio.'),
 });
@@ -20,13 +21,11 @@ export class ReportsController {
       res.status(200).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({
-          error: 'ValidationError',
-          details: error.errors.map((e) => e.message),
-        });
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
         return;
       }
       next(error);
     }
   };
 }
+

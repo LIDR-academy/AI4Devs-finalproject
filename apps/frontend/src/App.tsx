@@ -440,7 +440,7 @@ const KitchenBoardTitle: React.FC = () => (
   </div>
 );
 
-export const App: React.FC = () => {
+const App: React.FC = () => {
   const dashboard = useDashboardState();
   const { currentUser, remanentes, isLoading, loadRemanentes, handleLoginSuccess, handleLogout, handleConsume } = dashboard;
   const handlers = useAppHandlers(dashboard);
@@ -504,5 +504,7 @@ export const App: React.FC = () => {
   );
 };
 
+export { App };
 export default App;
+
 

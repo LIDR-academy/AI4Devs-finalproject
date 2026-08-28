@@ -5,20 +5,21 @@ import { ConsumeRemanenteUseCase } from '../../../../application/kitchen/use-cas
 import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cases/DiscardRemanenteUseCase.js';
 import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/ConsumeRecipeUseCase.js';
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
+import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
-export const consumeRemanenteSchema = z.object({
+const consumeRemanenteSchema = z.object({
   quantity: z.union([z.number().positive('La cantidad a consumir debe ser positiva.'), z.string().min(1)]),
 });
 
-export const discardRemanenteSchema = z.object({
+const discardRemanenteSchema = z.object({
   reason: z.string().min(1, 'El motivo de descarte es obligatorio.'),
 });
 
-export const consumeRecipeSchema = z.object({
+const consumeRecipeSchema = z.object({
   portions: z.number().int().positive().optional().default(1),
 });
 
-export const performShiftReconciliationSchema = z.object({
+const performShiftReconciliationSchema = z.object({
   operatorId: z.string().min(1, 'El ID de operador es obligatorio.'),
   notes: z.string().optional(),
   items: z.array(
@@ -65,10 +66,7 @@ export class KitchenController {
       res.status(200).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({
-          error: 'ValidationError',
-          details: error.errors.map((e) => e.message),
-        });
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
         return;
       }
       next(error);
@@ -92,10 +90,7 @@ export class KitchenController {
       res.status(200).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({
-          error: 'ValidationError',
-          details: error.errors.map((e) => e.message),
-        });
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
         return;
       }
       next(error);
@@ -119,10 +114,7 @@ export class KitchenController {
       res.status(200).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({
-          error: 'ValidationError',
-          details: error.errors.map((e) => e.message),
-        });
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
         return;
       }
       next(error);
@@ -141,13 +133,11 @@ export class KitchenController {
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({
-          error: 'ValidationError',
-          details: error.errors.map((e) => e.message),
-        });
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
         return;
       }
       next(error);
     }
   };
 }
+

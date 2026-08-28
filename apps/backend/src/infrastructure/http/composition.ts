@@ -7,15 +7,14 @@ import { PrismaReportRepository } from '../reports/repositories/PrismaReportRepo
 import { PrismaRecipeRepository } from '../recipes/repositories/PrismaRecipeRepository.js';
 import { PrismaShiftReconciliationRepository } from '../kitchen/repositories/PrismaShiftReconciliationRepository.js';
 import { PrismaStockMovementQueryRepository } from '../stock/repositories/PrismaStockMovementQueryRepository.js';
+import { PrismaRoleRepository } from '../security/repositories/PrismaRoleRepository.js';
+import { PrismaLocationRepository } from '../stock/repositories/PrismaLocationRepository.js';
+import { PrismaSettingsRepository } from '../settings/repositories/PrismaSettingsRepository.js';
 
 /**
- * Antes de este fix, server.ts llamaba createApp() sin argumentos, y cada
- * repositorio caía en su default InMemory sin importar NODE_ENV — el backend
- * de producción nunca tocaba PostgreSQL. Esta función es la composición root
- * real: fuera de "production" no fuerza nada (createApp mantiene sus defaults
- * InMemory, útiles para desarrollo rápido). En "production" instancia las
- * 6 repositories Prisma existentes (TK-048 añade report/recipes/reconciliation,
- * cerrando la brecha de persistencia parcial).
+ * Composición root real de infraestructura: fuera de "production" no fuerza nada (createApp
+ * mantiene sus defaults InMemory, útiles para desarrollo rápido y tests). En "production"
+ * instancia todos los repositorios reales respaldados por PostgreSQL y Prisma.
  */
 export function buildRepositoriesForEnvironment(
   nodeEnv: string | undefined,
@@ -33,5 +32,9 @@ export function buildRepositoriesForEnvironment(
     reportRepository: new PrismaReportRepository(prisma),
     recipeRepository: new PrismaRecipeRepository(prisma),
     reconciliationRepository: new PrismaShiftReconciliationRepository(prisma),
+    roleRepository: new PrismaRoleRepository(prisma),
+    locationRepository: new PrismaLocationRepository(prisma),
+    settingsRepository: new PrismaSettingsRepository(prisma),
   };
 }
+
