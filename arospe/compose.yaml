@@ -19,6 +19,7 @@ services:
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
             - '.:/var/www/html'
+            - 'sail-views:/var/www/html/storage/framework/views'
         networks:
             - sail
         depends_on:
@@ -71,4 +72,6 @@ volumes:
     sail-mysql:
         driver: local
     sail-redis:
+        driver: local
+    sail-views:
         driver: local

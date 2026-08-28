@@ -15,6 +15,16 @@ fi
 
 chmod -R ugo+rw /.composer
 
+# The sail-views named volume (compose.yaml) mounts storage/framework/views
+# on the container's own filesystem instead of the bind-mounted project
+# directory -- concurrent writes there under `--parallel` were unreliable
+# through the bind mount (see docs/errors-log.md). Docker creates a fresh
+# named volume owned by root; `sail artisan` always runs as $WWWUSER, never
+# root, so without this the directory would be unwritable on first boot.
+if [ -d /var/www/html/storage/framework/views ]; then
+    chown -R sail:sail /var/www/html/storage/framework/views
+fi
+
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
         exec "$@"
