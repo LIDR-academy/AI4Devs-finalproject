@@ -157,7 +157,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({ onCreated }) => 
   const form = useCreateUserForm(onCreated);
 
   return (
-    <form onSubmit={form.handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <form onSubmit={form.handleSubmit} className="flex-column flex-gap-md">
       {form.error && <ErrorBanner message={form.error} />}
 
       <CreateUserFields
@@ -172,9 +172,9 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({ onCreated }) => 
 
       <button
         type="submit"
-        className="btn-touch btn-primary"
+        className="btn-touch btn-primary flex-center flex-gap-xs"
         disabled={form.isSubmitting}
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '4px' }}
+        style={{ marginTop: '4px' }}
       >
         <UserPlus size={18} />
         {form.isSubmitting ? 'Creando...' : 'Crear Operario'}

@@ -42,11 +42,10 @@ export const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
     <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
       <button
         type="button"
-        className="btn-touch btn-secondary"
+        className="btn-touch btn-secondary flex-gap-xs"
         onClick={() => setIsOpen((prev) => !prev)}
         id="btn-open-admin-menu"
         title="Menú de Administración"
-        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
       >
         <Settings size={20} />
         <span>Administración</span>
@@ -54,42 +53,26 @@ export const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
       </button>
 
       {isOpen && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            right: 0,
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-card)',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-            zIndex: 100,
-            minWidth: '220px',
-            padding: '6px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-          }}
-        >
-          <button type="button" className="btn-touch btn-secondary" style={{ justifyContent: 'flex-start', width: '100%' }} onClick={() => handleAction(onReports)}>
+        <div className="dropdown-menu">
+          <button type="button" className="btn-touch btn-secondary btn-dropdown-item flex-gap-xs" onClick={() => handleAction(onReports)}>
             <BarChart3 size={18} /> Reportes de Mermas
           </button>
-          <button type="button" className="btn-touch btn-secondary" style={{ justifyContent: 'flex-start', width: '100%' }} onClick={() => handleAction(onUserManagement)}>
+          <button type="button" className="btn-touch btn-secondary btn-dropdown-item flex-gap-xs" onClick={() => handleAction(onUserManagement)}>
             <Users size={18} /> Personal
           </button>
-          <button type="button" className="btn-touch btn-secondary" style={{ justifyContent: 'flex-start', width: '100%' }} onClick={() => handleAction(onRolesManagement)}>
+          <button type="button" className="btn-touch btn-secondary btn-dropdown-item flex-gap-xs" onClick={() => handleAction(onRolesManagement)}>
             <Shield size={18} /> Roles y Permisos
           </button>
-          <button type="button" className="btn-touch btn-secondary" style={{ justifyContent: 'flex-start', width: '100%' }} onClick={() => handleAction(onLocationsManagement)}>
+          <button type="button" className="btn-touch btn-secondary btn-dropdown-item flex-gap-xs" onClick={() => handleAction(onLocationsManagement)}>
             <MapPin size={18} /> Sectores Físicos
           </button>
-          <button type="button" className="btn-touch btn-secondary" style={{ justifyContent: 'flex-start', width: '100%' }} onClick={() => handleAction(onSettingsManagement)}>
+          <button type="button" className="btn-touch btn-secondary btn-dropdown-item flex-gap-xs" onClick={() => handleAction(onSettingsManagement)}>
             <Settings size={18} /> Ajustes Restaurante
           </button>
-          <button type="button" className="btn-touch btn-secondary" style={{ justifyContent: 'flex-start', width: '100%' }} onClick={() => handleAction(onMovementHistory)}>
+          <button type="button" className="btn-touch btn-secondary btn-dropdown-item flex-gap-xs" onClick={() => handleAction(onMovementHistory)}>
             <History size={18} /> Historial Movimientos
           </button>
-          <button type="button" className="btn-touch btn-secondary" style={{ justifyContent: 'flex-start', width: '100%' }} onClick={() => handleAction(onCatalogManagement)}>
+          <button type="button" className="btn-touch btn-secondary btn-dropdown-item flex-gap-xs" onClick={() => handleAction(onCatalogManagement)}>
             <BookOpen size={18} /> Catálogo Maestro
           </button>
         </div>

@@ -172,7 +172,7 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
     <label htmlFor="input-quantity-extraction" className="form-label">
       Cantidad a Extraer:
     </label>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <div className="flex-gap-md">
       <button
         type="button"
         className="btn-touch btn-secondary"
@@ -273,7 +273,7 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
   onCancel,
   isSubmitting,
 }) => (
-  <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+  <form onSubmit={onSubmit} className="flex-column flex-gap-md">
     <ExtractionSelectFields
       insumos={insumos}
       selectedInsumoId={selectedInsumoId}
@@ -291,7 +291,7 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
 
     <QuantityStepper quantity={quantity} onIncrement={onIncrement} onDecrement={onDecrement} onChange={onQuantityChange} />
 
-    <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'rgba(255, 106, 0, 0.1)', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
+    <div className="banner-alert banner-alert-success" style={{ marginTop: '12px', fontSize: '0.85rem' }}>
       {purpose === 'DIRECT_DISCARD' ? (
         <span><AlertTriangle size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} /> Se registrará la <strong>merma directa desde bodega</strong> descontando el stock sin pasarlo a cocina.</span>
       ) : (

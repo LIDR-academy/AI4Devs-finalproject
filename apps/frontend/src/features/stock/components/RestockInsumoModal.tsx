@@ -4,6 +4,7 @@ import { StockService, InsumoItem } from '../services/stock.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
+import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 
 interface RestockInsumoModalProps {
   isOpen: boolean;
@@ -21,28 +22,14 @@ interface RestockFormFieldsProps {
 
 const RestockFormFields: React.FC<RestockFormFieldsProps> = ({ insumo, quantity, onQuantityChange, error }) => (
   <>
-    <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+    <p className="text-secondary-color" style={{ margin: '0 0 16px 0', fontSize: '0.9rem' }}>
       {insumo.name} — stock actual:{' '}
       <strong>
         {insumo.warehouseStock} {insumo.unitOfMeasure}
       </strong>
     </p>
 
-    {error && (
-      <div
-        style={{
-          backgroundColor: 'rgba(225, 6, 0, 0.15)',
-          border: '1px solid var(--color-danger)',
-          color: 'var(--color-danger-text)',
-          padding: '12px',
-          borderRadius: '4px',
-          marginBottom: '16px',
-          fontSize: '0.875rem',
-        }}
-      >
-        {error}
-      </div>
-    )}
+    {error && <ErrorBanner message={error} />}
 
     <label htmlFor="restock-quantity-input" className="form-label">
       Cantidad Recibida ({insumo.unitOfMeasure}):
@@ -55,7 +42,7 @@ const RestockFormFields: React.FC<RestockFormFieldsProps> = ({ insumo, quantity,
       value={quantity}
       onChange={(e) => onQuantityChange(e.target.value)}
       placeholder="Ej. 20"
-      className="input-touch"
+      className="input-touch w-full"
       required
     />
   </>

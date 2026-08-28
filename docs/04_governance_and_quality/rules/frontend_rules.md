@@ -7,7 +7,7 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 ## 🛠️ Pila Tecnológica Detectada & Cumplimiento de Diseño
 * **Framework Core:** React / Next.js (TypeScript)
 * **Estilos & Sistema de Diseño (Guard 29, `AGENTS.md`):** Vanilla CSS con variables centralizadas en `index.css` y exportadas al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`).
-* **Regla Innegociable de Tokens (Guard 29):** Queda estrictamente prohibido hardcodear colores hexadecimales o RGB en línea (`style={{ color: '#HEX' }}`) dentro de componentes UI en cualquier proyecto (Greenfield, Brownfield/Legacy o Mantenimiento). Todos los estilos deben consumir los tokens CSS globales de `DESIGN.md` (`var(--color-primary)`, `btn-touch btn-primary`, etc.).
+* **Regla Innegociable de Tokens y Estilos (Guard 29):** Queda estrictamente prohibido hardcodear colores hexadecimales o RGB en línea (`style={{ color: '#HEX' }}`) o maquetar estructuras con objetos `style={{ display: 'flex', gap: ... }}` inline en componentes JSX. Todos los estilos visuales y de layout DEBEN consumir las clases CSS declaradas en `index.css` o `*.module.css` (ej. `className="btn-touch flex-between"`). Única excepción permitida: valores numéricos calculados dinámicamente en runtime (ej. porcentajes de ancho en barras de progreso `style={{ width: `${pct}%` }}`).
 * **Persistencia Offline:** Dexie.js (IndexedDB / Cola FIFO local)
 * **Testing UI & QA Visual:** Vitest / React Testing Library / SK-21 a11y Auditor
 
@@ -55,5 +55,24 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 * **Vinculación Semántica de Controles (`htmlFor` / `id`):** Todo elemento `<label>` dentro de un formulario debe incluir obligatoriamente el atributo `htmlFor` coincidiendo exactamente con el `id` único del control asociado (`<input>`, `<select>`, `<textarea>`).
 * **Elementos Interactivos Nativos (`<button type="button">`):** Queda estrictamente prohibido utilizar elementos estáticos no semánticos (`<div onClick={...}>`, `<span onClick={...}>`) para desencadenar acciones. Todo control interactivo debe ser un `<button type="button">` o `<a href>` con navegación por teclado accesible.
 * **Métricas de Función UI ($\le 60$ Líneas, Complejidad $\le 10$):** Ninguna función o componente React debe superar las 60 líneas de código ni una complejidad ciclomática mayor a 10. Si un modal o formulario crece, debe descomponerse inmediatamente en sub-componentes limpios y desacoplados (ej. `EditingUserForm`, `NewRoleForm`, `PermissionsList`).
+
+---
+
+## 🏛️ 7. Manifiesto de Ingeniería Senior React (Código Limpio & Clean Architecture)
+
+1. **Arquitectura de Datos y Formularios:**
+   - **Única Fuente de Verdad:** Componentes controlados mediante `useState` por defecto.
+   - **Higienización Inicial:** Inicializar siempre estados de inputs numéricos y texto en `''` (string vacío) para prevenir la advertencia de React por cambio de no controlado a controlado.
+   - **Handler Universal `[name]`:** Centralizar formulaciones extensas en objetos de estado evaluando `type === 'checkbox'` y conversiones `Number(value)`.
+2. **Validación Reactiva y Desacoplamiento:**
+   - **Estado Espejo (`errors`):** Las validaciones residen en un objeto espejo `errors` desacoplado de los datos del formulario.
+   - **Funciones Puras:** Evaluación de reglas aislada en funciones puras o esquemas Zod.
+   - **Submit Guard:** Todo `onSubmit` ejecuta `e.preventDefault()` y realiza validación en cascada antes de consumir red.
+3. **Anatomía de Componente de 3 Zonas:**
+   - **Zona 1 (Raíz):** Declaración de Hooks incondicionales. Lógica operativa asíncrona extraída a Custom Hooks (`use...ts`).
+   - **Zona de Retorno Temprano (Early Returns):** Evaluación de Skeletons/Loading y Errores Críticos.
+   - **Zona 2 (Retorno JSX Declarativo):** Marcado JSX puro actuando como función declarativa del estado y las props (<60 líneas).
+4. **Gobernanza de Estilos:** Prohibición absoluta de objetos `style={{ display, gap }}` inline (salvo dinámicos numéricos de microsegundo en runtime). Todo layout consume clases utilitarias o componentes CSS.
+
 
 

@@ -78,7 +78,7 @@ const EditingUserForm: React.FC<EditingUserFormProps> = ({ user, roles, onCancel
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div className="flex-column flex-gap-sm">
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         <div>
           <label htmlFor={`edit-name-${user.id}`} className="form-label" style={{ fontSize: '0.75rem' }}>
@@ -87,10 +87,10 @@ const EditingUserForm: React.FC<EditingUserFormProps> = ({ user, roles, onCancel
           <input
             id={`edit-name-${user.id}`}
             type="text"
-            className="input-touch"
+            className="input-touch w-full"
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
-            style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
+            style={{ height: '38px', fontSize: '0.85rem' }}
           />
         </div>
         <div>
@@ -99,10 +99,10 @@ const EditingUserForm: React.FC<EditingUserFormProps> = ({ user, roles, onCancel
           </label>
           <select
             id={`edit-role-${user.id}`}
-            className="input-touch"
+            className="input-touch w-full"
             value={editRole}
             onChange={(e) => setEditRole(e.target.value)}
-            style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
+            style={{ height: '38px', fontSize: '0.85rem' }}
           >
             {roles.length > 0 ? (
               roles.map((r) => (
@@ -126,17 +126,17 @@ const EditingUserForm: React.FC<EditingUserFormProps> = ({ user, roles, onCancel
         <input
           id={`edit-pin-${user.id}`}
           type="password"
-          className="input-touch"
+          className="input-touch w-full"
           placeholder="Dejar en blanco para conservar actual"
           value={editPin}
           onChange={(e) => setEditPin(e.target.value)}
-          style={{ width: '100%', height: '38px', fontSize: '0.85rem' }}
+          style={{ height: '38px', fontSize: '0.85rem' }}
         />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+      <div className="flex-gap-xs" style={{ justifyContent: 'flex-end', marginTop: '4px' }}>
         <button
           type="button"
-          className="btn-touch btn-secondary"
+          className="btn-touch btn-secondary flex-gap-xs"
           onClick={onCancel}
           style={{ padding: '6px 12px' }}
         >
@@ -144,7 +144,7 @@ const EditingUserForm: React.FC<EditingUserFormProps> = ({ user, roles, onCancel
         </button>
         <button
           type="button"
-          className="btn-touch btn-primary"
+          className="btn-touch btn-primary flex-gap-xs"
           onClick={handleSave}
           disabled={isSaving}
           style={{ padding: '6px 12px' }}
@@ -162,10 +162,8 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
 
   return (
     <div
+      className="flex-column flex-gap-xs"
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
         padding: '12px',
         borderBottom: '1px solid var(--border-card)',
         backgroundColor: 'var(--bg-root)',
@@ -174,17 +172,17 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
       }}
     >
       {!isEditing ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+        <div className="flex-between" style={{ gap: '12px' }}>
           <div>
             <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>{user.name}</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Rol: <strong style={{ color: 'var(--color-primary)' }}>{user.role}</strong> · Estado:{' '}
+            <div className="text-secondary-color" style={{ fontSize: '0.8rem' }}>
+              Rol: <strong className="text-primary-color">{user.role}</strong> · Estado:{' '}
               <span style={{ fontWeight: 700, color: isBlocked ? 'var(--color-danger)' : 'var(--color-success)' }}>
                 {user.status}
               </span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div className="flex-gap-xs">
             <button
               type="button"
               className="btn-touch btn-secondary"
@@ -196,10 +194,10 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
             </button>
             <button
               type="button"
-              className={`btn-touch ${isBlocked ? 'btn-primary' : 'btn-danger'}`}
+              className={`btn-touch flex-center flex-gap-xs ${isBlocked ? 'btn-primary' : 'btn-danger'}`}
               disabled={isPending}
               onClick={() => onToggle(user)}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: '100px', justifyContent: 'center' }}
+              style={{ minWidth: '100px' }}
             >
               {isBlocked ? <CheckCircle2 size={16} /> : <Ban size={16} />}
               {isPending ? '...' : isBlocked ? 'Reactivar' : 'Bloquear'}
@@ -237,11 +235,11 @@ export const UserStatusForm: React.FC<UserStatusFormProps> = ({ onUpdated }) => 
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div className="flex-column flex-gap-sm">
       {list.error && <ErrorBanner message={list.error} />}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+      <div className="flex-between">
+        <span className="text-secondary-color" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
           Personal Registrado ({list.users.length})
         </span>
         <button
@@ -256,9 +254,9 @@ export const UserStatusForm: React.FC<UserStatusFormProps> = ({ onUpdated }) => 
       </div>
 
       {list.isLoading ? (
-        <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>Cargando operarios...</div>
+        <div className="text-secondary-color text-center" style={{ padding: '24px' }}>Cargando operarios...</div>
       ) : list.users.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+        <div className="text-secondary-color text-center" style={{ padding: '24px', fontSize: '0.9rem' }}>
           Sin operarios registrados todavía.
         </div>
       ) : (

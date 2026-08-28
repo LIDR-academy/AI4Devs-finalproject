@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
+import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
 import { SettingsService, SystemSettingsDto } from '../services/settings.service.js';
 import { Building2, Save } from 'lucide-react';
 
@@ -63,7 +64,7 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
         title="Configuración General del Restaurante"
         onClose={onClose}
       />
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+      <form onSubmit={handleSubmit} className="flex-column flex-gap-md" style={{ marginTop: '16px' }}>
         <div>
           <label htmlFor="setting-restaurant-name" className="form-label">
             Nombre del Restaurante
@@ -74,12 +75,11 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
             required
             value={settings.restaurantName}
             onChange={(e) => setSettings({ ...settings, restaurantName: e.target.value })}
-            className="input-touch"
-            style={{ width: '100%' }}
+            className="input-touch w-full"
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
             <label htmlFor="setting-tax-id" className="form-label">
               Identificación Fiscal (RUT/NIF)
@@ -89,8 +89,7 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
               type="text"
               value={settings.taxId || ''}
               onChange={(e) => setSettings({ ...settings, taxId: e.target.value })}
-              className="input-touch"
-              style={{ width: '100%' }}
+              className="input-touch w-full"
             />
           </div>
           <div>
@@ -103,13 +102,12 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
               required
               value={settings.currencySymbol}
               onChange={(e) => setSettings({ ...settings, currencySymbol: e.target.value })}
-              className="input-touch"
-              style={{ width: '100%' }}
+              className="input-touch w-full"
             />
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
             <label htmlFor="setting-critical-hours" className="form-label">
               Alerta Crítica FEFO (Horas)
@@ -121,8 +119,7 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
               min={1}
               value={settings.criticalAlertHours}
               onChange={(e) => setSettings({ ...settings, criticalAlertHours: Number(e.target.value) })}
-              className="input-touch"
-              style={{ width: '100%' }}
+              className="input-touch w-full"
             />
           </div>
           <div>
@@ -136,26 +133,12 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
               min={1}
               value={settings.defaultRemanenteHours}
               onChange={(e) => setSettings({ ...settings, defaultRemanenteHours: Number(e.target.value) })}
-              className="input-touch"
-              style={{ width: '100%' }}
+              className="input-touch w-full"
             />
           </div>
         </div>
 
-        {message && (
-          <div
-            style={{
-              padding: '12px',
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-card)',
-              borderRadius: '4px',
-              fontSize: '0.9rem',
-              color: 'var(--text-primary)',
-            }}
-          >
-            {message}
-          </div>
-        )}
+        {message && <SuccessFeedbackBanner message={message} />}
 
         <ModalFooterActions
           onCancel={onClose}

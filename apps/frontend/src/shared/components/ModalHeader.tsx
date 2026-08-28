@@ -26,12 +26,12 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   onClose,
 }) => {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom }}>
-      <h2 style={{ fontSize, fontWeight: 700, color: titleColor, display: 'flex', alignItems: 'center', gap }}>
+    <div className="flex-between" style={{ marginBottom }}>
+      <h2 className="flex-gap-xs" style={{ fontSize, fontWeight: 700, color: titleColor, gap }}>
         {icon} {title}
       </h2>
       {onClose && (
-        <button onClick={onClose} className="btn-touch btn-secondary btn-icon">
+        <button type="button" onClick={onClose} className="btn-touch btn-secondary btn-icon">
           <X size={20} />
         </button>
       )}

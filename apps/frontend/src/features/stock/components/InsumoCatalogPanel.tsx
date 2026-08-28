@@ -3,6 +3,7 @@ import { Package, Search, Truck } from 'lucide-react';
 import { StockService, InsumoItem } from '../services/stock.service.js';
 import { CreateInsumoModal } from './CreateInsumoModal.js';
 import { RestockInsumoModal } from './RestockInsumoModal.js';
+import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 
 interface InsumoCatalogHeaderProps {
   onCreateClick: () => void;
@@ -12,50 +13,31 @@ interface InsumoCatalogHeaderProps {
 
 const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange }) => (
   <>
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px',
-        flexWrap: 'wrap',
-        gap: '16px',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <Package size={22} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+    <div className="flex-between flex-wrap" style={{ marginBottom: '24px', gap: '16px' }}>
+      <div className="flex-gap-xs">
+        <Package size={22} className="text-primary-color" style={{ flexShrink: 0 }} />
         <div>
           <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Inventario y Catálogo de Bodega</h1>
-          <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+          <p className="text-secondary-color" style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>
             Gestiona el catálogo maestro de ingredientes y su disponibilidad en bodega principal.
           </p>
         </div>
       </div>
 
-      <button onClick={onCreateClick} className="btn-touch btn-primary">
+      <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
         + Nuevo Insumo
       </button>
     </div>
 
-    <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '400px' }}>
-      <Search
-        size={18}
-        style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}
-      />
+    <div className="search-input-wrapper">
+      <Search size={18} className="search-icon-left" />
       <input
         type="text"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder="Buscar insumo por nombre..."
-        style={{
-          width: '100%',
-          padding: '12px 16px 12px 40px',
-          borderRadius: '4px',
-          border: '1px solid var(--border-card)',
-          backgroundColor: 'var(--bg-root)',
-          color: 'var(--text-primary)',
-          fontSize: '0.95rem',
-        }}
+        className="input-touch input-with-icon w-full"
+        style={{ fontSize: '0.95rem' }}
       />
     </div>
   </>
@@ -67,10 +49,10 @@ interface InsumoTableRowProps {
 }
 
 const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
-  <tr style={{ borderBottom: '1px solid var(--border-card)' }}>
-    <td style={{ padding: '16px', fontFamily: 'monospace', color: 'var(--color-primary)' }}>{item.id}</td>
-    <td style={{ padding: '16px', fontWeight: 600 }}>{item.name}</td>
-    <td style={{ padding: '16px' }}>
+  <tr>
+    <td className="text-primary-color" style={{ fontFamily: 'monospace' }}>{item.id}</td>
+    <td style={{ fontWeight: 600 }}>{item.name}</td>
+    <td>
       <span
         style={{
           padding: '4px 8px',
@@ -83,14 +65,15 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
         {item.unitOfMeasure}
       </span>
     </td>
-    <td style={{ padding: '16px', fontWeight: 600, color: 'var(--color-success)' }}>
+    <td className="text-success-color" style={{ fontWeight: 600 }}>
       {item.warehouseStock} {item.unitOfMeasure}
     </td>
-    <td style={{ padding: '16px', textAlign: 'right' }}>
+    <td style={{ textAlign: 'right' }}>
       <button
+        type="button"
         onClick={() => onRestock(item)}
-        className="btn-touch btn-secondary"
-        style={{ minHeight: '36px', padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        className="btn-touch btn-secondary flex-center flex-gap-xs"
+        style={{ minHeight: '36px', padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex' }}
       >
         <Truck size={16} />
         Reabastecer
@@ -105,15 +88,15 @@ interface InsumoTableProps {
 }
 
 const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock }) => (
-  <div style={{ overflowX: 'auto', borderRadius: '6px', border: '1px solid var(--border-card)' }}>
-    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'var(--bg-card)' }}>
+  <div className="table-wrapper">
+    <table className="data-table">
       <thead>
-        <tr style={{ backgroundColor: 'var(--bg-root)', borderBottom: '1px solid var(--border-card)', color: 'var(--text-secondary)' }}>
-          <th style={{ padding: '16px' }}>ID Insumo</th>
-          <th style={{ padding: '16px' }}>Nombre Insumo</th>
-          <th style={{ padding: '16px' }}>Unidad Medida</th>
-          <th style={{ padding: '16px' }}>Stock en Bodega Principal</th>
-          <th style={{ padding: '16px' }}></th>
+        <tr>
+          <th>ID Insumo</th>
+          <th>Nombre Insumo</th>
+          <th>Unidad Medida</th>
+          <th>Stock en Bodega Principal</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -134,33 +117,12 @@ interface InsumoCatalogBodyProps {
 
 const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, filteredInsumos, onRestock }) => (
   <>
-    {error && (
-      <div
-        style={{
-          backgroundColor: 'rgba(225, 6, 0, 0.15)',
-          border: '1px solid var(--color-danger)',
-          color: 'var(--color-danger-text)',
-          padding: '12px 16px',
-          borderRadius: '4px',
-          marginBottom: '20px',
-        }}
-      >
-        {error}
-      </div>
-    )}
+    {error && <ErrorBanner message={error} />}
 
     {loading ? (
-      <div style={{ color: 'var(--text-secondary)', padding: '32px 0', textAlign: 'center' }}>Cargando inventario de bodega...</div>
+      <div className="text-secondary-color text-center" style={{ padding: '32px 0' }}>Cargando inventario de bodega...</div>
     ) : filteredInsumos.length === 0 ? (
-      <div
-        style={{
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: '6px',
-          padding: '40px',
-          textAlign: 'center',
-          color: 'var(--text-secondary)',
-        }}
-      >
+      <div className="card-dashboard text-center text-secondary-color" style={{ padding: '40px' }}>
         No se encontraron insumos registrados en bodega.
       </div>
     ) : (

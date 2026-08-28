@@ -88,10 +88,9 @@ const IngredientRowFields: React.FC<{
   onChange: (field: 'insumoId' | 'quantity', value: string) => void;
   onRemove: () => void;
 }> = ({ row, insumos, canRemove, onChange, onRemove }) => (
-  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+  <div className="flex-gap-xs" style={{ alignItems: 'center' }}>
     <select
-      className="input-touch"
-      style={{ flex: 2 }}
+      className="input-touch flex-2"
       value={row.insumoId}
       onChange={(e) => onChange('insumoId', e.target.value)}
       required
@@ -105,8 +104,7 @@ const IngredientRowFields: React.FC<{
     </select>
     <input
       type="text"
-      className="input-touch"
-      style={{ flex: 1 }}
+      className="input-touch flex-1"
       placeholder="Cantidad"
       value={row.quantity}
       onChange={(e) => onChange('quantity', e.target.value)}
@@ -140,7 +138,7 @@ const RecipeBasicFields: React.FC<{
       <input
         type="text"
         id="input-new-recipe-name"
-        className="input-touch"
+        className="input-touch w-full"
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
         required
@@ -155,7 +153,7 @@ const RecipeBasicFields: React.FC<{
       <input
         type="text"
         id="input-new-recipe-category"
-        className="input-touch"
+        className="input-touch w-full"
         value={category}
         onChange={(e) => onCategoryChange(e.target.value)}
         required
@@ -177,7 +175,7 @@ const IngredientsFieldset: React.FC<{
     <legend className="form-label" style={{ padding: 0 }}>
       Ingredientes:
     </legend>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="flex-column flex-gap-xs">
       {rows.map((row) => (
         <IngredientRowFields
           key={row.key}
@@ -191,9 +189,9 @@ const IngredientsFieldset: React.FC<{
     </div>
     <button
       type="button"
-      className="btn-touch btn-secondary"
+      className="btn-touch btn-secondary flex-center flex-gap-xs"
       onClick={onAddRow}
-      style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}
+      style={{ marginTop: '8px', display: 'inline-flex' }}
     >
       <Plus size={16} />
       Agregar Ingrediente
@@ -214,7 +212,7 @@ export const CreateRecipeForm: React.FC<CreateRecipeFormProps> = ({ onCreated })
   }
 
   return (
-    <form onSubmit={form.handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <form onSubmit={form.handleSubmit} className="flex-column flex-gap-md">
       {form.error && <ErrorBanner message={form.error} />}
 
       <RecipeBasicFields name={form.name} onNameChange={form.setName} category={form.category} onCategoryChange={form.setCategory} />
@@ -229,9 +227,9 @@ export const CreateRecipeForm: React.FC<CreateRecipeFormProps> = ({ onCreated })
 
       <button
         type="submit"
-        className="btn-touch btn-primary"
+        className="btn-touch btn-primary flex-center flex-gap-xs"
         disabled={form.isSubmitting}
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '4px' }}
+        style={{ marginTop: '4px' }}
       >
         <Utensils size={18} />
         {form.isSubmitting ? 'Creando...' : 'Crear Receta'}

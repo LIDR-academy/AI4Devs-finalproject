@@ -19,43 +19,26 @@ export const FEFOInventoryHealthBar: React.FC<FEFOInventoryHealthBarProps> = ({ 
   const criticalPct = 100 - safePct - warningPct;
 
   return (
-    <div
-      style={{
-        backgroundColor: 'var(--bg-card)',
-        border: '1px solid var(--border-card)',
-        borderRadius: '8px',
-        padding: '14px 20px',
-        marginBottom: '24px',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.95rem' }}>
+    <div className="health-bar-card">
+      <div className="flex-between" style={{ marginBottom: '10px' }}>
+        <div className="flex-gap-sm" style={{ fontWeight: 700, fontSize: '0.95rem' }}>
           <ShieldCheck size={18} style={{ color: 'var(--color-primary)' }} />
           <span>Estado de Salud del Inventario FEFO (Visión 1-Segundo)</span>
         </div>
-        <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
-          <span style={{ color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div className="flex-gap-md" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+          <span className="flex-gap-xs" style={{ color: 'var(--color-success)' }}>
             <ShieldCheck size={14} /> Seguro ({safe})
           </span>
-          <span style={{ color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span className="flex-gap-xs" style={{ color: 'var(--color-warning)' }}>
             <AlertTriangle size={14} /> Atención ({warning})
           </span>
-          <span style={{ color: 'var(--color-danger-text)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span className="flex-gap-xs" style={{ color: 'var(--color-danger-text)' }}>
             <AlertOctagon size={14} /> Crítico ({critical})
           </span>
         </div>
       </div>
 
-      <div
-        style={{
-          height: '10px',
-          width: '100%',
-          backgroundColor: '#222',
-          borderRadius: '5px',
-          overflow: 'hidden',
-          display: 'flex',
-        }}
-      >
+      <div className="health-bar-track">
         {safePct > 0 && <div style={{ width: `${safePct}%`, backgroundColor: 'var(--color-success)', transition: 'width 0.3s' }} title={`Seguro: ${safePct}%`} />}
         {warningPct > 0 && <div style={{ width: `${warningPct}%`, backgroundColor: 'var(--color-warning)', transition: 'width 0.3s' }} title={`Atención: ${warningPct}%`} />}
         {criticalPct > 0 && <div style={{ width: `${criticalPct}%`, backgroundColor: 'var(--color-danger)', transition: 'width 0.3s' }} title={`Crítico: ${criticalPct}%`} />}

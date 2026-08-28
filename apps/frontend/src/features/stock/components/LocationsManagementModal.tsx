@@ -39,21 +39,14 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      style={{
-        padding: '16px',
-        backgroundColor: 'var(--bg-root)',
-        border: '1px solid var(--border-card)',
-        borderRadius: '6px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-      }}
+      className="card-dashboard flex-column flex-gap-xs mb-2"
+      style={{ padding: '16px' }}
     >
-      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <h4 className="flex-gap-xs text-primary-color" style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>
         <Plus size={18} /> Registrar Nuevo Sector Físico
       </h4>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
           <label htmlFor="location-name" className="form-label">
             Nombre Sector
@@ -65,8 +58,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated }) => {
             placeholder="Ej. Cámara Congelados 2"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="input-touch"
-            style={{ width: '100%' }}
+            className="input-touch w-full"
           />
         </div>
         <div>
@@ -77,8 +69,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated }) => {
             id="location-type"
             value={type}
             onChange={(e) => setType(e.target.value as 'WAREHOUSE' | 'KITCHEN')}
-            className="input-touch"
-            style={{ width: '100%' }}
+            className="input-touch w-full"
           >
             <option value="WAREHOUSE">Bodega (Warehouse)</option>
             <option value="KITCHEN">Cocina (Kitchen Area)</option>
@@ -96,16 +87,15 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated }) => {
           placeholder="Ej. Sector frío del fondo"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="input-touch"
-          style={{ width: '100%' }}
+          className="input-touch w-full"
         />
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="btn-touch btn-primary"
-        style={{ width: '100%', marginTop: '4px' }}
+        className="btn-touch btn-primary w-full"
+        style={{ marginTop: '4px' }}
       >
         <Plus size={20} />
         {isSubmitting ? 'Guardando...' : 'Crear Sector'}
@@ -123,37 +113,35 @@ interface LocationsListProps {
 const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive, onDeleteLocation }) => {
   return (
     <div>
-      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '10px' }}>
+      <h4 className="text-secondary-color" style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '10px' }}>
         Sectores Registrados ({locations.length})
       </h4>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
+      <div className="flex-column flex-gap-xs" style={{ maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
         {locations.map((loc) => (
           <div
             key={loc.id}
+            className="flex-between"
             style={{
               padding: '12px',
               backgroundColor: 'var(--bg-root)',
               border: `1px solid ${loc.isActive ? 'var(--border-card)' : 'var(--color-danger)'}`,
               borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
               opacity: loc.isActive ? 1 : 0.65,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="flex-gap-xs">
               <MapPin size={18} style={{ color: loc.isActive ? 'var(--color-primary)' : 'var(--text-secondary)' }} />
               <div>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', display: 'block', color: 'var(--text-primary)' }}>
+                <span className="text-primary-color" style={{ fontWeight: 700, fontSize: '0.95rem', display: 'block' }}>
                   {loc.name} {!loc.isActive && '(Inactivo)'}
                 </span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <span className="text-secondary-color" style={{ fontSize: '0.8rem' }}>
                   {loc.description || 'Sin descripción'}
                 </span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="flex-gap-xs">
               <span
                 style={{
                   fontSize: '0.75rem',
@@ -238,12 +226,12 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
         title="Sectores Físicos de Almacenamiento"
         onClose={onClose}
       />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '16px' }}>
+      <div className="flex-column flex-gap-md" style={{ marginTop: '16px' }}>
         <NewLocationForm onCreated={loadLocations} />
 
         <LocationsList locations={locations} onToggleActive={handleToggleActive} onDeleteLocation={handleDeleteLocation} />
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--border-card)' }}>
+        <div className="modal-footer-actions" style={{ justifyContent: 'flex-end', marginTop: 0 }}>
           <button type="button" onClick={onClose} className="btn-touch btn-secondary" style={{ width: '120px' }}>
             Cerrar
           </button>

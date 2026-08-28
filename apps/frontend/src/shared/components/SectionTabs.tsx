@@ -19,14 +19,13 @@ interface SectionTabsProps<T extends string> {
  */
 export function SectionTabs<T extends string>({ section, options, onChange }: SectionTabsProps<T>): React.ReactElement {
   return (
-    <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+    <div className="section-tabs-container">
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
-          className={`btn-touch ${section === option.value ? 'btn-primary' : 'btn-secondary'}`}
+          className={`btn-touch flex-1 ${section === option.value ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => onChange(option.value)}
-          style={{ flex: 1 }}
           id={option.id}
         >
           {option.label}

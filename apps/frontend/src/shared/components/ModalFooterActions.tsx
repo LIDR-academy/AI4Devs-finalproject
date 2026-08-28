@@ -31,16 +31,15 @@ export const ModalFooterActions: React.FC<ModalFooterActionsProps> = ({
   marginTop = '16px',
 }) => {
   return (
-    <div style={{ display: 'flex', gap: '12px', marginTop }}>
-      <button type="button" className="btn-touch btn-secondary" onClick={onCancel} style={{ flex: 1 }}>
+    <div className="modal-footer-actions" style={{ marginTop }}>
+      <button type="button" className="btn-touch btn-secondary flex-half" onClick={onCancel}>
         {cancelLabel}
       </button>
       <button
         type={confirmType}
         onClick={confirmType === 'button' ? onConfirm : undefined}
-        className={`btn-touch btn-${confirmVariant}`}
+        className={`btn-touch btn-${confirmVariant} flex-double flex-center flex-gap-xs`}
         disabled={isSubmitting}
-        style={{ flex: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
       >
         {confirmIcon}
         {isSubmitting ? submittingLabel : confirmLabel}

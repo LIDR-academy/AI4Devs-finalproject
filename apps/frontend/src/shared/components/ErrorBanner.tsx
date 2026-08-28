@@ -22,17 +22,11 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
   return (
     <div
       role="alert"
+      className="banner-alert banner-alert-danger flex-gap-xs"
       style={{
-        backgroundColor: 'rgba(225, 6, 0, 0.15)',
-        border: '1px solid var(--color-danger)',
-        borderRadius: '4px',
         padding,
         marginBottom,
-        color: 'var(--color-danger-text)',
         fontSize,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
       }}
     >
       {icon}

@@ -48,17 +48,7 @@ interface DashboardHeaderProps {
 }
 
 const UserBadge: React.FC<{ name: string; role: string }> = ({ name, role }) => (
-  <div
-    style={{
-      backgroundColor: 'var(--bg-card)',
-      border: '1px solid var(--border-card)',
-      padding: '8px 16px',
-      borderRadius: '8px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-    }}
-  >
+  <div className="user-badge">
     <User size={18} style={{ color: 'var(--color-primary)' }} />
     <div>
       <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{name}</div>
@@ -118,6 +108,7 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   currentUser,
   isLoading,
+  onLogout,
   onReconcile,
   onReports,
   onUserManagement,
@@ -127,29 +118,19 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onLocationsManagement,
   onRolesManagement,
   onSync,
-  onLogout,
 }) => (
-  <header
-    style={{
-      marginBottom: '24px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      flexWrap: 'wrap',
-      gap: '16px',
-    }}
-  >
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+  <header className="flex-between flex-wrap" style={{ marginBottom: '24px', gap: '16px', alignItems: 'flex-start' }}>
+    <div className="flex-column" style={{ gap: '12px' }}>
       <div>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Package style={{ color: 'var(--color-primary)' }} /> RestoStock FEFO Dashboard - Control de Inventario FEFO
+        <h1 className="flex-gap-xs" style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)', gap: '10px' }}>
+          <Package className="text-primary-color" /> RestoStock FEFO Dashboard - Control de Inventario FEFO
         </h1>
-        <p style={{ color: 'var(--text-secondary)', marginTop: '4px', fontSize: '0.9rem' }}>
+        <p className="text-secondary-color" style={{ marginTop: '4px', fontSize: '0.9rem' }}>
           Sistema Táctil de Inventario en Tiempo Real para Cocinas Industriales
         </p>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="flex-gap-md">
         <UserBadge name={currentUser.name} role={currentUser.role} />
         <button className="btn-touch btn-danger" onClick={onLogout} id="btn-logout">
           <LogOut size={20} />
@@ -158,7 +139,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       </div>
     </div>
 
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+    <div className="flex-gap-md flex-wrap">
       <HeaderActions
         isLoading={isLoading}
         onReconcile={onReconcile}
@@ -197,10 +178,8 @@ const MetricCard: React.FC<{ icon: React.ReactNode; iconBg?: string; title: stri
       </div>
       <h2 className="card-title">{title}</h2>
     </div>
-    {/* La cifra siempre en --text-primary (nunca en el tono de valueColor): a este tamaño ningun acento
-        alcanza el 7:1 exigido para "numeros principales"; valueColor queda reservado al icono (no-texto). */}
     <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-      {value} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{unitLabel}</span>
+      {value} <span className="text-secondary-color" style={{ fontSize: '0.9rem' }}>{unitLabel}</span>
     </div>
   </div>
 );
@@ -214,11 +193,11 @@ const ActionCard: React.FC<{ icon: React.ReactNode; label: string; onClick: () =
   tint,
   className,
 }) => (
-  <div className="card-dashboard" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: tint, border: `1px dashed ${accentColor}` }}>
+  <div className="card-dashboard flex-column flex-center" style={{ backgroundColor: tint, border: `1px dashed ${accentColor}` }}>
     <button
-      className={`btn-touch ${className}`}
+      className={`btn-touch w-full flex-center flex-gap-xs ${className}`}
       onClick={onClick}
-      style={{ width: '100%', height: '56px', fontSize: '1rem', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
+      style={{ height: '56px', fontSize: '1rem', fontWeight: 700, gap: '10px' }}
       id={id}
     >
       {icon}
@@ -228,7 +207,7 @@ const ActionCard: React.FC<{ icon: React.ReactNode; label: string; onClick: () =
 );
 
 const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCount, onExtract, onPrepareRecipe }) => (
-  <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+  <section className="metrics-grid">
     <MetricCard icon={<Clock size={20} />} title="Remanentes Abiertos" value={remanentesCount} unitLabel="lotes FEFO" valueColor="var(--color-primary)" />
     <MetricCard
       icon={<AlertTriangle size={20} />}
@@ -483,7 +462,7 @@ export const App: React.FC = () => {
   const filteredRemanentes = activeLocation === 'ALL' ? remanentes : remanentes.filter((r) => r.location === activeLocation);
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', minHeight: '100vh' }}>
+    <div className="dashboard-container">
       <DashboardHeader currentUser={currentUser} isLoading={isLoading} onSync={loadRemanentes} onLogout={handleLogout} {...handlers} />
 
       <FEFOInventoryHealthBar remanentes={remanentes} />

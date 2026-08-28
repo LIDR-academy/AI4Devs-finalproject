@@ -40,14 +40,10 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({ onCreated, setSelectedRole })
   return (
     <form
       onSubmit={handleCreateRole}
+      className="card-dashboard metrics-grid flex-gap-xs"
       style={{
         padding: '12px',
-        backgroundColor: 'var(--bg-root)',
-        border: '1px solid var(--border-card)',
-        borderRadius: '6px',
-        display: 'grid',
         gridTemplateColumns: '1fr 1fr auto',
-        gap: '12px',
         alignItems: 'end',
       }}
     >
@@ -62,8 +58,7 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({ onCreated, setSelectedRole })
           placeholder="Ej. ENCARGADO_BODEGA"
           value={newRoleName}
           onChange={(e) => setNewRoleName(e.target.value)}
-          className="input-touch"
-          style={{ width: '100%' }}
+          className="input-touch w-full"
         />
       </div>
       <div>
@@ -76,8 +71,7 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({ onCreated, setSelectedRole })
           placeholder="Descripción opcional"
           value={newRoleDesc}
           onChange={(e) => setNewRoleDesc(e.target.value)}
-          className="input-touch"
-          style={{ width: '100%' }}
+          className="input-touch w-full"
         />
       </div>
       <button type="submit" disabled={isCreating} className="btn-touch btn-primary" style={{ minWidth: '100px' }}>
@@ -95,7 +89,7 @@ interface PermissionsListProps {
 
 const PermissionsList: React.FC<PermissionsListProps> = ({ permissions, selectedRole, onTogglePermission }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
+    <div className="flex-column flex-gap-xs" style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
       {permissions.map((perm) => {
         const hasIt = selectedRole.permissions.some((p) => p.id === perm.id);
         return (
@@ -103,34 +97,27 @@ const PermissionsList: React.FC<PermissionsListProps> = ({ permissions, selected
             type="button"
             key={perm.id}
             onClick={() => onTogglePermission(perm.id)}
+            className="flex-between w-full btn-touch"
             style={{
               padding: '12px',
               borderRadius: '4px',
               border: `1px solid ${hasIt ? 'var(--color-primary)' : 'var(--border-card)'}`,
               backgroundColor: hasIt ? 'rgba(255, 106, 0, 0.1)' : 'var(--bg-root)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
               textAlign: 'left',
-              width: '100%',
             }}
           >
             <div>
-              <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', fontWeight: 700, display: 'block', color: 'var(--color-primary)' }}>
+              <span className="text-primary-color" style={{ fontSize: '0.75rem', fontFamily: 'monospace', fontWeight: 700, display: 'block' }}>
                 {perm.code}
               </span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{perm.name}</span>
+              <span className="text-primary-color" style={{ fontSize: '0.9rem', fontWeight: 600 }}>{perm.name}</span>
             </div>
             <div
+              className="flex-center"
               style={{
                 width: '24px',
                 height: '24px',
                 borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 backgroundColor: hasIt ? 'var(--color-primary)' : 'transparent',
                 border: `1px solid ${hasIt ? 'var(--color-primary)' : 'var(--border-card)'}`,
                 color: 'var(--color-primary-on)',
@@ -205,23 +192,23 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
         title="Gestión de Roles y Matriz de Permisos (Dynamic RBAC)"
         onClose={onClose}
       />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '16px' }}>
+      <div className="flex-column flex-gap-md" style={{ marginTop: '16px' }}>
         <NewRoleForm onCreated={loadData} setSelectedRole={setSelectedRole} />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
-          <div style={{ borderRight: '1px solid var(--border-card)', paddingRight: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+        <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
+          <div className="flex-column flex-gap-xs" style={{ borderRight: '1px solid var(--border-card)', paddingRight: '12px' }}>
+            <h4 className="text-secondary-color" style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
               Roles Definidos
             </h4>
             {roles.map((r) => {
               const isSystemRole = r.name === 'ADMIN' || r.name === 'KITCHEN_STAFF' || r.id === 'role-admin' || r.id === 'role-kitchen';
               return (
-                <div key={r.id} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <div key={r.id} className="flex-gap-xs" style={{ alignItems: 'center' }}>
                   <button
                     type="button"
                     onClick={() => setSelectedRole(r)}
-                    className={`btn-touch ${selectedRole?.id === r.id ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ flex: 1, justifyContent: 'flex-start', textAlign: 'left', overflow: 'hidden' }}
+                    className={`btn-touch ${selectedRole?.id === r.id ? 'btn-primary' : 'btn-secondary'} flex-1`}
+                    style={{ justifyContent: 'flex-start', textAlign: 'left', overflow: 'hidden' }}
                   >
                     <ShieldCheck size={18} />
                     <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{r.name}</span>
@@ -242,8 +229,8 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
             })}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+          <div className="flex-column flex-gap-xs">
+            <h4 className="text-secondary-color" style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
               Permisos para {selectedRole?.name || 'Seleccione un rol'}
             </h4>
 
@@ -253,7 +240,7 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--border-card)' }}>
+        <div className="modal-footer-actions" style={{ justifyContent: 'flex-end', marginTop: 0 }}>
           <button type="button" onClick={onClose} className="btn-touch btn-secondary" style={{ width: '120px' }}>
             Cerrar
           </button>

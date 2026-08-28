@@ -13,50 +13,31 @@ interface RecipeCatalogHeaderProps {
 
 const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange }) => (
   <>
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px',
-        flexWrap: 'wrap',
-        gap: '16px',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <ChefHat size={22} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+    <div className="flex-between flex-wrap" style={{ marginBottom: '24px', gap: '16px' }}>
+      <div className="flex-gap-xs">
+        <ChefHat size={22} className="text-primary-color" style={{ flexShrink: 0 }} />
         <div>
           <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Recetario</h1>
-          <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+          <p className="text-secondary-color" style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>
             Gestiona el recetario de preparaciones y sus ingredientes.
           </p>
         </div>
       </div>
 
-      <button onClick={onCreateClick} className="btn-touch btn-primary">
+      <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
         + Nueva Receta
       </button>
     </div>
 
-    <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '400px' }}>
-      <Search
-        size={18}
-        style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}
-      />
+    <div className="search-input-wrapper">
+      <Search size={18} className="search-icon-left" />
       <input
         type="text"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder="Buscar receta por nombre..."
-        style={{
-          width: '100%',
-          padding: '12px 16px 12px 40px',
-          borderRadius: '4px',
-          border: '1px solid var(--border-card)',
-          backgroundColor: 'var(--bg-root)',
-          color: 'var(--text-primary)',
-          fontSize: '0.95rem',
-        }}
+        className="input-touch input-with-icon w-full"
+        style={{ fontSize: '0.95rem' }}
       />
     </div>
   </>
@@ -67,9 +48,9 @@ interface RecipeTableRowProps {
 }
 
 const RecipeTableRow: React.FC<RecipeTableRowProps> = ({ item }) => (
-  <tr style={{ borderBottom: '1px solid var(--border-card)' }}>
-    <td style={{ padding: '16px', fontWeight: 600 }}>{item.name}</td>
-    <td style={{ padding: '16px' }}>
+  <tr>
+    <td style={{ fontWeight: 600 }}>{item.name}</td>
+    <td>
       <span
         style={{
           padding: '4px 8px',
@@ -82,7 +63,7 @@ const RecipeTableRow: React.FC<RecipeTableRowProps> = ({ item }) => (
         {item.category}
       </span>
     </td>
-    <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>
+    <td className="text-secondary-color">
       {item.ingredients.length} ingrediente{item.ingredients.length === 1 ? '' : 's'}
     </td>
   </tr>
@@ -93,13 +74,13 @@ interface RecipeTableProps {
 }
 
 const RecipeTable: React.FC<RecipeTableProps> = ({ recipes }) => (
-  <div style={{ overflowX: 'auto', borderRadius: '6px', border: '1px solid var(--border-card)' }}>
-    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'var(--bg-card)' }}>
+  <div className="table-wrapper">
+    <table className="data-table">
       <thead>
-        <tr style={{ backgroundColor: 'var(--bg-root)', borderBottom: '1px solid var(--border-card)', color: 'var(--text-secondary)' }}>
-          <th style={{ padding: '16px' }}>Nombre Receta</th>
-          <th style={{ padding: '16px' }}>Categoría</th>
-          <th style={{ padding: '16px' }}>Ingredientes</th>
+        <tr>
+          <th>Nombre Receta</th>
+          <th>Categoría</th>
+          <th>Ingredientes</th>
         </tr>
       </thead>
       <tbody>
@@ -122,17 +103,9 @@ const RecipeCatalogBody: React.FC<RecipeCatalogBodyProps> = ({ error, loading, f
     {error && <ErrorBanner message={error} />}
 
     {loading ? (
-      <div style={{ color: 'var(--text-secondary)', padding: '32px 0', textAlign: 'center' }}>Cargando recetario...</div>
+      <div className="text-secondary-color text-center" style={{ padding: '32px 0' }}>Cargando recetario...</div>
     ) : filteredRecipes.length === 0 ? (
-      <div
-        style={{
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: '6px',
-          padding: '40px',
-          textAlign: 'center',
-          color: 'var(--text-secondary)',
-        }}
-      >
+      <div className="card-dashboard text-center text-secondary-color" style={{ padding: '40px' }}>
         No hay recetas registradas en el recetario.
       </div>
     ) : (

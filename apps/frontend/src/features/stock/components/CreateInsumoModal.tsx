@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Package } from 'lucide-react';
 import { StockService, CreateInsumoDTO } from '../services/stock.service.js';
+import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 
 interface CreateInsumoModalProps {
   isOpen: boolean;
@@ -34,47 +35,36 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
   return (
     <form onSubmit={handleSubmit}>
       <div style={{ marginBottom: '16px' }}>
-        <label htmlFor="insumo-name-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <label htmlFor="insumo-name-input" className="form-label">
           Nombre del Insumo *
         </label>
         <input
           id="insumo-name-input"
           type="text"
+          className="input-touch w-full"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ej. Queso Parmesano"
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '4px',
-            border: '1px solid var(--border-card)',
-            backgroundColor: 'var(--bg-root)',
-            color: 'var(--text-primary)',
-            fontSize: '1rem',
-          }}
           required
         />
       </div>
 
       <div style={{ marginBottom: '16px' }}>
-        <span style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <span className="form-label">
           Unidad de Medida *
         </span>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="flex-gap-xs">
           {(['KG', 'L', 'UNITS'] as const).map((unit) => (
             <button
               key={unit}
               type="button"
               onClick={() => setUnitOfMeasure(unit)}
+              className="flex-1 btn-touch"
               style={{
-                flex: 1,
-                minHeight: '48px',
-                borderRadius: '4px',
                 border: unitOfMeasure === unit ? '2px solid var(--color-primary)' : '1px solid var(--border-card)',
                 backgroundColor: unitOfMeasure === unit ? 'var(--color-primary)' : 'var(--bg-root)',
                 color: unitOfMeasure === unit ? 'var(--color-primary-on)' : 'var(--text-primary)',
                 fontWeight: unitOfMeasure === unit ? 600 : 400,
-                cursor: 'pointer',
               }}
             >
               {unit}
@@ -84,7 +74,7 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
       </div>
 
       <div style={{ marginBottom: '24px' }}>
-        <label htmlFor="initial-stock-input" style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <label htmlFor="initial-stock-input" className="form-label">
           Stock Inicial en Bodega
         </label>
         <input
@@ -92,21 +82,13 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
           type="number"
           step="0.001"
           min="0"
+          className="input-touch w-full"
           value={initialWarehouseStock}
           onChange={(e) => setInitialWarehouseStock(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '4px',
-            border: '1px solid var(--border-card)',
-            backgroundColor: 'var(--bg-root)',
-            color: 'var(--text-primary)',
-            fontSize: '1rem',
-          }}
         />
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+      <div className="modal-footer-actions" style={{ justifyContent: 'flex-end', marginTop: 0 }}>
         <button type="button" onClick={onClose} disabled={loading} className="btn-touch btn-secondary">
           Cancelar
         </button>
@@ -158,54 +140,14 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
   };
 
   return (
-    <div
-      className="modal-backdrop"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(16, 16, 16, 0.92)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-    >
-      <div
-        className="modal-content"
-        style={{
-          backgroundColor: 'var(--bg-card)',
-          color: 'var(--text-primary)',
-          borderTop: '4px solid var(--color-primary)',
-          borderRadius: '4px',
-          padding: '24px',
-          width: '100%',
-          maxWidth: '480px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
-        }}
-      >
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '1.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Package size={20} style={{ color: 'var(--color-primary)' }} />
+    <div className="modal-overlay">
+      <div className="modal-card" style={{ maxWidth: '480px' }}>
+        <h2 className="flex-gap-xs mb-2" style={{ margin: '0 0 16px 0', fontSize: '1.25rem', fontWeight: 600 }}>
+          <Package size={20} className="text-primary-color" />
           Registrar Nuevo Insumo
         </h2>
 
-        {error && (
-          <div
-            style={{
-              backgroundColor: 'rgba(225, 6, 0, 0.15)',
-              border: '1px solid var(--color-danger)',
-              color: 'var(--color-danger-text)',
-              padding: '12px',
-              borderRadius: '4px',
-              marginBottom: '16px',
-              fontSize: '0.875rem',
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} />}
 
         <InsumoModalForm
           name={name}

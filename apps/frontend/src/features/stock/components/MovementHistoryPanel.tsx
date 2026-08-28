@@ -31,32 +31,32 @@ const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({
   onEndDateChange,
   onSearch,
 }) => (
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+  <div className="flex-wrap flex-gap-xs mb-2" style={{ marginBottom: '16px' }}>
     <input
       type="text"
-      className="input-touch"
+      className="input-touch flex-2"
       placeholder="Filtrar por ID de insumo (opcional)"
       value={insumoId}
       onChange={(e) => onInsumoIdChange(e.target.value)}
-      style={{ flex: 2, minWidth: '180px' }}
+      style={{ minWidth: '180px' }}
       id="input-filter-insumo-id"
     />
     <input
       type="date"
-      className="input-touch"
+      className="input-touch flex-1"
       value={startDate}
       onChange={(e) => onStartDateChange(e.target.value)}
       aria-label="Fecha desde"
-      style={{ flex: 1, minWidth: '140px' }}
+      style={{ minWidth: '140px' }}
       id="input-filter-start-date"
     />
     <input
       type="date"
-      className="input-touch"
+      className="input-touch flex-1"
       value={endDate}
       onChange={(e) => onEndDateChange(e.target.value)}
       aria-label="Fecha hasta"
-      style={{ flex: 1, minWidth: '140px' }}
+      style={{ minWidth: '140px' }}
       id="input-filter-end-date"
     />
     <button type="button" className="btn-touch btn-secondary" onClick={onSearch} id="btn-search-movements">
@@ -66,14 +66,14 @@ const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({
 );
 
 const MovementRow: React.FC<{ item: StockMovementHistoryItem }> = ({ item }) => (
-  <tr style={{ borderBottom: '1px solid var(--border-card)' }}>
-    <td style={{ padding: '10px 8px', fontSize: '0.85rem' }}>{item.insumoName}</td>
-    <td style={{ padding: '10px 8px', fontSize: '0.85rem' }}>{item.type}</td>
-    <td style={{ padding: '10px 8px', fontSize: '0.85rem', textAlign: 'right' }}>{item.quantity}</td>
-    <td style={{ padding: '10px 8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+  <tr>
+    <td style={{ fontSize: '0.85rem' }}>{item.insumoName}</td>
+    <td style={{ fontSize: '0.85rem' }}>{item.type}</td>
+    <td style={{ fontSize: '0.85rem', textAlign: 'right' }}>{item.quantity}</td>
+    <td className="text-secondary-color" style={{ fontSize: '0.8rem' }}>
       {item.fromLoc} → {item.toLoc}
     </td>
-    <td style={{ padding: '10px 8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+    <td className="text-secondary-color" style={{ fontSize: '0.8rem' }}>
       {new Date(item.createdAt).toLocaleString('es')}
     </td>
   </tr>
@@ -82,22 +82,22 @@ const MovementRow: React.FC<{ item: StockMovementHistoryItem }> = ({ item }) => 
 const MovementTable: React.FC<{ items: StockMovementHistoryItem[] }> = ({ items }) => {
   if (items.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+      <div className="text-center text-secondary-color" style={{ padding: '32px', fontSize: '0.9rem' }}>
         Sin movimientos registrados en este rango.
       </div>
     );
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <div className="table-wrapper">
+      <table className="data-table">
         <thead>
-          <tr style={{ borderBottom: '2px solid var(--border-card)', textAlign: 'left' }}>
-            <th style={{ padding: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Insumo</th>
-            <th style={{ padding: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Tipo</th>
-            <th style={{ padding: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'right' }}>Cantidad</th>
-            <th style={{ padding: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Origen → Destino</th>
-            <th style={{ padding: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Fecha</th>
+          <tr>
+            <th>Insumo</th>
+            <th>Tipo</th>
+            <th style={{ textAlign: 'right' }}>Cantidad</th>
+            <th>Origen → Destino</th>
+            <th>Fecha</th>
           </tr>
         </thead>
         <tbody>
