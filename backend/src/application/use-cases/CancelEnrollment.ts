@@ -66,17 +66,21 @@ export class CancelEnrollment {
         await tx.classEnrollment.delete({ where: { id: enrollment.id } });
 
         const hasWaitingList = trainingClass.waitingLists.length > 0;
-        await tx.notification.create({
-          data: {
-            notification_type: this.policy.coachNotificationTypeForCancellation(
-              trainingClass.class_type,
-              hasWaitingList,
-            ),
-            recipient_id: trainingClass.assigned_coach_id,
-            class_id: trainingClass.id,
-            content: "A Coachee canceled their enrollment in this class.",
-          },
-        });
+        const willNotifyViaWaitingListService =
+          hasWaitingList && this.processWaitingList !== undefined;
+        if (!willNotifyViaWaitingListService) {
+          await tx.notification.create({
+            data: {
+              notification_type: this.policy.coachNotificationTypeForCancellation(
+                trainingClass.class_type,
+                hasWaitingList,
+              ),
+              recipient_id: trainingClass.assigned_coach_id,
+              class_id: trainingClass.id,
+              content: "A Coachee canceled their enrollment in this class.",
+            },
+          });
+        }
 
         return {
           openedSpot: this.policy.openedSpotDetected(hasWaitingList),

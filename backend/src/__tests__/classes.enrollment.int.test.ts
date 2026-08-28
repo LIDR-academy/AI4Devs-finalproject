@@ -491,14 +491,20 @@ describe("DELETE /api/v1/classes/:id/enrollment", () => {
       message: "Enrollment canceled.",
       waitingListProcessed: true,
       claimedByCoachee: null,
-      notificationsSent: 0,
-      waitingListMembersNotified: 0,
+      notificationsSent: 2,
+      waitingListMembersNotified: 1,
     });
 
     const notification = await prisma.notification.findFirst({
       where: { class_id: groupWlClassId, recipient_id: coachId },
     });
     expect(notification?.notification_type).toBe(4);
+
+    const waitlistedNotification = await prisma.notification.findFirst({
+      where: { class_id: groupWlClassId, recipient_id: waitlistedCoachee },
+    });
+    expect(waitlistedNotification).not.toBeNull();
+    expect(waitlistedNotification?.notification_type).toBe(1);
   });
 
   it("cancels an assigned individual enrollment (notification type 3)", async () => {

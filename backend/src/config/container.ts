@@ -90,6 +90,8 @@ const processWaitingListService = new ProcessWaitingListService(
   waitingListRepository,
   sendNotificationAdapter,
   userRepository,
+  new PrismaNotificationRepository(),
+  new PrismaDeviceTokenRepository(),
 );
 
 const classLifecycleNotificationService = new ClassLifecycleNotificationService(
