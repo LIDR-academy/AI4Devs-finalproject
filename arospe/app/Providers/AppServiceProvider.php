@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -35,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configureAuthorization();
         $this->configureEventListeners();
+        $this->configureParallelTesting();
     }
 
     /**
@@ -123,5 +125,27 @@ class AppServiceProvider extends ServiceProvider
         // see App\Listeners\RejectNonActiveUserLogin's class docblock for why.
         Event::listen(Login::class, RejectNonActiveUserLogin::class);
         Event::listen(Authenticated::class, [RejectNonActiveUserLogin::class, 'handleAuthenticated']);
+    }
+
+    /**
+     * Isolate per-process filesystem state that Laravel's own parallel-testing support does
+     * not isolate automatically -- unlike the database (a `testing_test_{token}` schema per
+     * process) and `Storage::fake()` (a `{disk}_test_{token}` root per process, both built in),
+     * the compiled Blade view cache (`storage/framework/views`) is a single shared directory by
+     * default, so every `--parallel` worker compiles into it concurrently. A `tempnam()`/rename
+     * race there was the prime suspect behind a batch of unrelated test failures observed under
+     * sustained `--parallel` load in this session -- see docs/errors-log.md's 2026-08-28 "open
+     * observation" entry. Registering the same token-suffixed path Laravel itself uses for
+     * `Storage::fake()` closes that gap without inventing a new convention.
+     */
+    protected function configureParallelTesting(): void
+    {
+        if (! $this->app->runningUnitTests()) {
+            return;
+        }
+
+        ParallelTesting::setUpTestCase(function (string $token): void {
+            config(['view.compiled' => storage_path('framework/views/test_'.$token)]);
+        });
     }
 }
