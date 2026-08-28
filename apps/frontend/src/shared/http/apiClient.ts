@@ -17,15 +17,32 @@ export interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   baseUrl?: string;
+  signal?: AbortSignal;
+  retries?: number;
+  retryDelayMs?: number;
+}
+
+type TokenProvider = () => string | null;
+
+let customTokenProvider: TokenProvider | null = null;
+
+/**
+ * Permite inyectar un proveedor de tokens desacoplado (útil para pruebas o middleware).
+ */
+export function setTokenProvider(provider: TokenProvider | null): void {
+  customTokenProvider = provider;
+}
+
+function resolveToken(): string | null {
+  if (customTokenProvider) {
+    return customTokenProvider();
+  }
+  return AuthService.getToken();
 }
 
 /**
- * Cliente HTTP compartido — reemplaza el fetch reimplementado a mano en cada
- * feature service. Centraliza el header Authorization (antes solo lo adjuntaba
- * auth.service.ts, dejando los otros 4 servicios sin token) y la distinción
- * entre "request exitoso" y "error real" (nunca trata un !response.ok como
- * éxito silencioso — el fallback offline, si aplica, es decisión de cada
- * servicio en su propio catch, no algo que el cliente esconda).
+ * Cliente HTTP compartido — maneja autenticación, deserialización, captura de errores
+ * RFC 7807 y resiliencia de red (reintentos exponenciales y cancelación con AbortSignal).
  */
 async function parseErrorResponse(response: Response): Promise<never> {
   let errorBody: unknown;
@@ -39,28 +56,71 @@ async function parseErrorResponse(response: Response): Promise<never> {
   throw new ApiError(response.status, message, errorBody);
 }
 
+function isTransientError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return [502, 503, 504].includes(error.status);
+  }
+  if (error instanceof Error) {
+    return error.name === 'TypeError' || error.message.includes('fetch') || error.message.includes('network');
+  }
+  return false;
+}
+
+async function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, baseUrl = DEFAULT_BASE_URL } = options;
-  const token = AuthService.getToken();
+  const {
+    method = 'GET',
+    body,
+    baseUrl = DEFAULT_BASE_URL,
+    signal,
+    retries = 0,
+    retryDelayMs = 100,
+  } = options;
+
+  const token = resolveToken();
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let lastError: unknown;
+  const maxAttempts = Math.max(1, retries + 1);
 
-  if (!response.ok) {
-    return parseErrorResponse(response);
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const response = await fetch(`${baseUrl}${path}`, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal,
+      });
+
+      if (!response.ok) {
+        await parseErrorResponse(response);
+      }
+
+      if (response.status === 204) {
+        return undefined as T;
+      }
+
+      return (await response.json()) as T;
+    } catch (err) {
+      lastError = err;
+      const isLastAttempt = attempt === maxAttempts - 1;
+      const isAborted = signal?.aborted;
+
+      if (isLastAttempt || isAborted || !isTransientError(err)) {
+        throw err;
+      }
+
+      const backoffMs = retryDelayMs * Math.pow(2, attempt);
+      await delay(backoffMs);
+    }
   }
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
+  throw lastError;
 }

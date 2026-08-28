@@ -29,16 +29,17 @@ Responde en tu primer turno con un breve reporte estructural:
 3. ¿Afecta al modelo físico de base de datos?
 4. ¿Afecta o introduce nuevos endpoints en la API?
 
-### FASE 1.5: Interrogatorio de Reglas de Negocio (Human-in-the-Loop, Guard 28)
-Antes de redactar cualquier archivo de especificación (Fase 2 en adelante), identifica toda decisión de regla de negocio que la funcionalidad introduce y que **no** esté ya resuelta por un patrón idéntico ya existente. Para cada una, formula una pregunta abierta explícita al humano (vía `AskUserQuestion` o pregunta directa) — nunca la resuelvas copiando en silencio el patrón del ticket más parecido. Ejemplos de lo que SIEMPRE requiere pregunta:
+### FASE 1.5: Interrogatorio de Reglas de Negocio y Fuentes Técnicas (Human-in-the-Loop, Guard 28 & Guard 34)
+Antes de redactar cualquier archivo de especificación (Fase 2 en adelante), identifica toda decisión de regla de negocio o fuente de documentación técnica que la funcionalidad introduce y que **no** esté ya resuelta por un patrón idéntico ya existente. Para cada una, formula una pregunta abierta explícita al humano (vía `AskUserQuestion` o pregunta directa) — nunca la resuelvas copiando en silencio el patrón del ticket más parecido o asumiendo URLs de documentación. Ejemplos de lo que SIEMPRE requiere pregunta:
 1. **Control de acceso:** ¿qué rol(es) pueden ejecutar cada operación nueva (crear/editar/eliminar/listar)?
 2. **Integridad y duplicados:** ¿se permite un registro duplicado, o debe rechazarse/advertirse?
 3. **Dominio de datos:** ¿los campos nuevos aceptan cualquier valor (texto libre) o deben restringirse a un conjunto cerrado?
 4. **Casos límite y fallas:** ¿qué pasa si la operación falla a mitad de camino, o si un dato referenciado no existe?
+5. **Fuentes de Documentación Técnica (Guard 34):** Si la historia requiere integrar una nueva herramienta, librería o API, pregunta al humano: *"¿Tienes enlaces a documentación oficial o guías internas preferidas para redactar las reglas de codificación en `docs/04_governance_and_quality/rules/`?"*
 
 **Excepción explícita:** si la funcionalidad es una extensión byte-a-byte de un patrón ya aprobado sin ninguna decisión de negocio nueva (ej. un campo idéntico en forma a otro ya existente), documenta esa equivalencia en el reporte de la Fase 1 y omite esta fase — no la conviertas en burocracia para cambios triviales.
 
-**Esta fase NO se satisface con el gate genérico de Human-in-the-Loop de `.agents/README.md`** (presentar un diseño ya cerrado para aprobación sí/no, ej. `EnterPlanMode`/`ExitPlanMode`): ese gate aprueba una decisión ya tomada, no expone al humano las alternativas de negocio subyacentes. Las respuestas obtenidas aquí se documentan explícitamente en la User Story y/o el Ticket Técnico resultante (sección dedicada, ej. "Decisiones de negocio consultadas con el humano"), citando pregunta y respuesta — nunca como una decisión silenciosa del agente.
+**Esta fase NO se satisface con el gate genérico de Human-in-the-Loop de `.agents/README.md`** (presentar un diseño ya cerrado para aprobación sí/no, ej. `EnterPlanMode`/`ExitPlanMode`): ese gate aprueba una decisión ya tomada, no expone al humano las alternativas de negocio o fuentes técnicas subyacentes. Las respuestas obtenidas aquí se documentan explícitamente en la User Story y/o el Ticket Técnico resultante (sección dedicada, ej. "Decisiones de negocio y fuentes técnicas consultadas con el humano"), citando pregunta y respuesta — nunca como una decisión silenciosa del agente.
 
 ### FASE 2: Modificación de Requisitos, Modelo y Sistema de Diseño
 1. **PRD (`docs/01_product_definition/`):** Integra la funcionalidad en la descripción de alcance o flujos alternativos.

@@ -74,5 +74,18 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
    - **Zona 2 (Retorno JSX Declarativo):** Marcado JSX puro actuando como función declarativa del estado y las props (<60 líneas).
 4. **Gobernanza de Estilos:** Prohibición absoluta de objetos `style={{ display, gap }}` inline (salvo dinámicos numéricos de microsegundo en runtime). Todo layout consume clases utilitarias o componentes CSS.
 
+---
+
+## 🌐 8. Política de Resiliencia de Red y Cliente HTTP Compartido (`apiClient.ts`)
+
+1. **Abstracción Única de Comunicación (`apiRequest<T>`):** Queda estrictamente prohibido invocar `fetch()` directamente en componentes React o servicios de dominio. Todas las operaciones HTTP deben pasar por [`src/shared/http/apiClient.ts`](../../../apps/frontend/src/shared/http/apiClient.ts).
+2. **Estrategia de Reintentos Automáticos (Exponential Backoff):**
+   - El cliente reintenta automáticamente fallos transitorios de red (`TypeError`, interrupciones de socket) y estados HTTP transitorios (`502 Bad Gateway`, `503 Service Unavailable`, `504 Gateway Timeout`).
+   - El parámetro `retries` define el número de reintentos exponenciales (`retryDelayMs * 2^attempt`).
+   - **Regla de Idempotencia:** Las operaciones mutantes no idempotentes (`POST` / `PUT`) solo activan reintentos cuando se solicite de forma explícita (`retries: N`), previniendo registros duplicados de merma o extracción.
+3. **Cancelación de Peticiones (`AbortSignal`):** Todo formulario o selector con autocompletado en tiempo real debe pasar el objeto `signal: controller.signal` a `apiRequest` para cancelar peticiones desfasadas y evitar *Race Conditions*.
+4. **Desacoplamiento de Proveedor de Token (`setTokenProvider`):** El cliente HTTP soporta inyección de `TokenProvider` dinámico para simplificar mocks unitarios y permitir middleware de refresh token sin acoplamientos circulares.
+
+
 
 

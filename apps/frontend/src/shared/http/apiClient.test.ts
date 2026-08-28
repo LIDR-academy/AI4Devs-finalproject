@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { apiRequest, ApiError } from './apiClient.js';
+import { apiRequest, ApiError, setTokenProvider } from './apiClient.js';
 import { AuthService } from '../../features/auth/services/auth.service.js';
 
 describe('apiClient — cliente HTTP compartido', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     localStorage.clear();
+    setTokenProvider(null);
   });
 
   it('adjunta el header Authorization Bearer cuando hay una sesión guardada', async () => {
@@ -21,6 +22,54 @@ describe('apiClient — cliente HTTP compartido', () => {
 
     const [, requestInit] = fetchMock.mock.calls[0];
     expect(requestInit.headers.Authorization).toBe('Bearer token-real-123');
+  });
+
+  it('permite usar un tokenProvider inyectado desacoplado', async () => {
+    setTokenProvider(() => 'custom-injected-token');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await apiRequest('/stock/insumos');
+
+    const [, requestInit] = fetchMock.mock.calls[0];
+    expect(requestInit.headers.Authorization).toBe('Bearer custom-injected-token');
+  });
+
+  it('reintenta automáticamente ante errores transitorios 503 usando backoff', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({ message: 'Service Unavailable' }) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ success: true }) });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await apiRequest<{ success: boolean }>('/kitchen/remanentes', { retries: 2, retryDelayMs: 10 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(res).toEqual({ success: true });
+  });
+
+  it('no reintenta si el error no es transitorio (ej: 400 Bad Request)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ message: 'Bad Request' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(apiRequest('/stock/extraction', { retries: 3, retryDelayMs: 10 })).rejects.toThrow('Bad Request');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('soporta la cancelación via AbortSignal y la respeta inmediatamente', async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    const fetchMock = vi.fn().mockRejectedValue(new DOMException('Aborted', 'AbortError'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(apiRequest('/reports/waste', { signal: controller.signal, retries: 2 })).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('no adjunta Authorization si no hay sesión guardada (ej. antes de hacer login)', async () => {
