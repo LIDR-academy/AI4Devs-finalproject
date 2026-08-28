@@ -53,11 +53,12 @@ cannot drift:
 // app/Actions/Media/GenerateImageConversions.php
 private function applyImagickResourceLimits(): void
 {
-    $byteCeiling = self::MAX_DIMENSION * self::MAX_DIMENSION * self::BYTES_PER_PIXEL_CEILING;
+    $maxLegitimateArea = self::MAX_DIMENSION * self::MAX_DIMENSION;
+    $byteCeiling = $maxLegitimateArea * self::BYTES_PER_PIXEL_CEILING;
 
     Imagick::setResourceLimit(Imagick::RESOURCETYPE_WIDTH, self::MAX_DIMENSION);
     Imagick::setResourceLimit(Imagick::RESOURCETYPE_HEIGHT, self::MAX_DIMENSION);
-    Imagick::setResourceLimit(Imagick::RESOURCETYPE_AREA, $byteCeiling);
+    Imagick::setResourceLimit(Imagick::RESOURCETYPE_AREA, $maxLegitimateArea + 1);
     Imagick::setResourceLimit(Imagick::RESOURCETYPE_MEMORY, $byteCeiling);
     Imagick::setResourceLimit(Imagick::RESOURCETYPE_MAP, $byteCeiling);
     Imagick::setResourceLimit(Imagick::RESOURCETYPE_DISK, 0);
@@ -72,10 +73,51 @@ Note the constant is read through the trait (`use MediaValidationRules;` on the 
 copied — PHP forbids `MediaValidationRules::MAX_DIMENSION` on a trait directly, and a hand-copied
 literal is exactly the drift this rule exists to prevent.
 
-> **There is no `policy.xml` on this project's ImageMagick install** (`/etc/ImageMagick-7/policy.xml`
-> does not exist), so the process defaults are effectively unlimited — `WIDTH`/`HEIGHT` are
-> 2^55, `DISK` and `TIME` are `PHP_INT_MAX`. Nothing outside the app is bounding this. Do not assume
-> a hardened system policy is present just because production images often ship one.
+> **Correction — 2026-08-28 (task 0019a).** Two claims in this section were re-verified against
+> this project's real Sail dev container and found false there, both closed by task 0019a rather
+> than left standing — see [errors-log.md](../errors-log.md) for the full investigation.
+>
+> **`RESOURCETYPE_AREA` is a pixel-count resource, not a byte one**, despite sitting next to
+> `MEMORY`/`MAP` in the code above — it mirrors `WIDTH x HEIGHT`, not the decoder's byte cost. The
+> code quote above (and the shipped code) now caps it at `$maxLegitimateArea + 1` (a pixel count
+> matching `WIDTH x HEIGHT` already being capped individually), not `$byteCeiling`. Passing a byte
+> quantity to it only ever "worked" on a host whose ImageMagick `policy.xml` permitted a value
+> that large in the first place — see the next paragraph for why that assumption doesn't hold on
+> this project's own container.
+>
+> **The `+ 1` is load-bearing, not decoration** — found independently by this task's own Phase 4
+> audit and Phase 5 review. ImageMagick's `AREA` check is a **strict `<`** against the configured
+> limit, unlike the inclusive `WIDTH`/`HEIGHT` caps, so setting it to exactly
+> `MAX_DIMENSION x MAX_DIMENSION` refused a **legitimate** upload sitting exactly at that pixel
+> count — one that `MediaValidationRules::imageUploadRules()`'s inclusive `dimensions:` rule had
+> already accepted, so it failed at decode with a misleading "could not be processed" error
+> instead of succeeding. Verified directly: `AREA = 16,000,000` refuses a real 4000×4000 image;
+> `AREA = 16,000,001` accepts it and still refuses 4200×4200. `MAX_DIMENSION^2` is the true
+> ceiling (`WIDTH`/`HEIGHT` already forbid anything larger in either dimension), so one pixel of
+> headroom is exactly what "strictly greater than the largest legal value" requires — not a wider
+> safety margin.
+>
+> **"There is no `policy.xml` on this project's ImageMagick install" is false for the Sail dev
+> image**, and was likely true only for whatever host story 0019's Phase 4 audit actually ran
+> against (this page's own header names `ImageMagick 7.1.2-8 Q16-HDRI`; `docker/8.5/Dockerfile`
+> installs `php8.5-imagick`, which pulls Debian's packaged **ImageMagick 6.9.12-98 Q16** — a
+> different major version, with no HDRI). That package ships `/etc/ImageMagick-6/policy.xml`
+> (Debian's hardened default): `area="256MP"`, `memory="1024MiB"`, `map="2048MiB"`,
+> `disk="2GiB"`, `width`/`height="32KP"`. `Imagick::setResourceLimit()` can only **tighten** a
+> resource below its policy ceiling — a request above it is silently clamped, with no error —
+> which is exactly what masked the AREA unit bug above: requesting the byte ceiling
+> (1,024,000,000) for AREA was silently clamped down to the policy's 256,000,000, so no exception
+> ever signalled the mismatch. **Do not assume this container has no policy.xml; verify with
+> `Imagick::getResourceLimit(...)` before relying on either claim on a new host.**
+>
+> ⚠️ **Not re-verified by this correction, flagged rather than fixed:** the ~35 bytes/pixel
+> measurement below (the basis for `BYTES_PER_PIXEL_CEILING = 64`) was taken on the Q16-**HDRI**
+> build this page's header names, not the shipped non-HDRI Q16.9.12-98 the Sail container
+> actually runs. HDRI builds use a wider internal pixel representation and would plausibly
+> measure *higher* bytes/pixel than a non-HDRI build for the same input, which would make `64` a
+> conservative (safe) ceiling rather than a tight one — but that is reasoning about the direction
+> of the error, not a re-measurement. Re-run the table below against this container's actual
+> build before treating any of its numbers as current.
 
 ## The two limit layers do different jobs — keep both
 
