@@ -3,6 +3,7 @@ import type { WaitingListItem } from "@/domain/types/waitingList";
 import { GYM_TIMEZONE } from "@/domain/utils/gymDateTime";
 import { waitingListErrorMessage } from "@/domain/utils/waitingListErrorMessages";
 import { useToast } from "@/infrastructure/context/ToastContext";
+import { useClaimWaitingListSpot } from "@/infrastructure/hooks/useClaimWaitingListSpot";
 import { useLeaveWaitingList } from "@/infrastructure/hooks/useLeaveWaitingList";
 import { useMyWaitingLists } from "@/infrastructure/hooks/useMyWaitingLists";
 import { EmptyState, ErrorStateWithRetry, LoadingState } from "@/ui/components/coachee/ViewState";
@@ -23,8 +24,12 @@ export function MyWaitingLists() {
   const { showToast } = useToast();
   const listsQuery = useMyWaitingLists();
   const leaveMutation = useLeaveWaitingList();
-  const [leavingId, setLeavingId] = useState<string | null>(null);
-  const [confirmEntry, setConfirmEntry] = useState<WaitingListItem | null>(null);
+  const claimMutation = useClaimWaitingListSpot();
+  const [busyClassId, setBusyClassId] = useState<string | null>(null);
+  const [confirmEntry, setConfirmEntry] = useState<{
+    entry: WaitingListItem;
+    action: "claim" | "leave";
+  } | null>(null);
 
   if (listsQuery.isError) {
     return (
@@ -44,12 +49,23 @@ export function MyWaitingLists() {
     return <EmptyState title="You are not on any waiting list" />;
   }
 
-  const handleLeave = async (entry: WaitingListItem) => {
+  const handleAction = async ({
+    entry,
+    action,
+  }: {
+    entry: WaitingListItem;
+    action: "claim" | "leave";
+  }) => {
     setConfirmEntry(null);
-    setLeavingId(entry.id);
+    setBusyClassId(entry.class.id);
     try {
-      await leaveMutation.mutateAsync(entry.class.id);
-      showToast("You left the waiting list.", "success");
+      if (action === "claim") {
+        await claimMutation.mutateAsync(entry.class.id);
+        showToast("You joined the class from the waiting list.", "success");
+      } else {
+        await leaveMutation.mutateAsync(entry.class.id);
+        showToast("You left the waiting list.", "success");
+      }
     } catch (error: unknown) {
       const code =
         error && typeof error === "object" && "response" in error
@@ -58,7 +74,7 @@ export function MyWaitingLists() {
           : undefined;
       showToast(waitingListErrorMessage(code), "error");
     } finally {
-      setLeavingId(null);
+      setBusyClassId(null);
     }
   };
 
@@ -96,14 +112,37 @@ export function MyWaitingLists() {
                   {entry.class.assignedCoach.name ?? "—"}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setConfirmEntry(entry)}
-                disabled={leavingId === entry.id}
-                className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                {leavingId === entry.id ? "Leaving..." : "Leave"}
-              </button>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                {entry.hasOpenSpots ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmEntry({ entry, action: "claim" })}
+                      disabled={busyClassId === entry.class.id}
+                      className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {busyClassId === entry.class.id ? "Joining..." : "Join class"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmEntry({ entry, action: "leave" })}
+                      disabled={busyClassId === entry.class.id}
+                      className="text-sm text-gray-500 underline hover:text-gray-700 disabled:opacity-50"
+                    >
+                      Leave waiting list
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmEntry({ entry, action: "leave" })}
+                    disabled={busyClassId === entry.class.id}
+                    className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {busyClassId === entry.class.id ? "Leaving..." : "Leave"}
+                  </button>
+                )}
+              </div>
             </div>
           </li>
         ))}
@@ -118,10 +157,13 @@ export function MyWaitingLists() {
             aria-label="Close"
           />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Leave the waiting list?</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {confirmEntry.action === "claim" ? "Join this class?" : "Leave the waiting list?"}
+            </h3>
             <p className="text-sm text-gray-600">
-              Your place for {formatTime(confirmEntry.class.startTime)} will be released for other
-              Coachees. You can join the waiting list again later.
+              {confirmEntry.action === "claim"
+                ? `A spot has opened up in this class on ${formatTime(confirmEntry.entry.class.startTime)}. Claim it now — first come, first served.`
+                : `Your place for ${formatTime(confirmEntry.entry.class.startTime)} will be released for other Coachees. You can join the waiting list again later.`}
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -133,10 +175,14 @@ export function MyWaitingLists() {
               </button>
               <button
                 type="button"
-                onClick={() => handleLeave(confirmEntry)}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-red-600 hover:bg-red-700"
+                onClick={() => void handleAction(confirmEntry)}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${
+                  confirmEntry.action === "claim"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
               >
-                Leave waiting list
+                {confirmEntry.action === "claim" ? "Join class" : "Leave waiting list"}
               </button>
             </div>
           </div>

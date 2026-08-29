@@ -437,3 +437,9 @@ Done. Can you connect to my Render account through the MCP  and check for the we
 # 25 - OpenCode - Big Pickle
 
 I have this project live in Render and its database in Neon. By logging in with the coach user, I can see a class with the coachee2 but when i login as coachee2, I can not see that class in the calendar.
+
+
+
+------
+
+Finally! However, in the scenario described, the button says "Dar de baja" and I'd like for it to say Join class and do it literally

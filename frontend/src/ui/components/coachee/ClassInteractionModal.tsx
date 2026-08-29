@@ -8,12 +8,13 @@ import { formatNextClassTime } from "@/domain/utils/nextClassInfo";
 import { waitingListErrorMessage } from "@/domain/utils/waitingListErrorMessages";
 import { useToast } from "@/infrastructure/context/ToastContext";
 import { useCancelEnrollment } from "@/infrastructure/hooks/useCancelEnrollment";
+import { useClaimWaitingListSpot } from "@/infrastructure/hooks/useClaimWaitingListSpot";
 import { useClassDetail } from "@/infrastructure/hooks/useClassDetail";
 import { useJoinClass } from "@/infrastructure/hooks/useJoinClass";
 import { useJoinWaitingList } from "@/infrastructure/hooks/useJoinWaitingList";
 import { useLeaveWaitingList } from "@/infrastructure/hooks/useLeaveWaitingList";
 
-type CalendarAction = "join" | "cancel" | "waitlist-join" | "waitlist-leave";
+type CalendarAction = "join" | "cancel" | "waitlist-join" | "waitlist-leave" | "claim";
 
 interface ClassInteractionModalProps {
   trainingClass: TrainingClass;
@@ -57,6 +58,13 @@ const ACTION_COPY: Record<CalendarAction, ConfirmCopy> = {
     confirmLabel: "Leave waiting list",
     confirmClassName: "bg-red-600 hover:bg-red-700",
   },
+  claim: {
+    title: "Join this class?",
+    body: "A spot has opened up in this class. Claim it now — first come, first served.",
+    cancelLabel: "Keep my place",
+    confirmLabel: "Join class",
+    confirmClassName: "bg-green-600 hover:bg-green-700",
+  },
 };
 
 const ACTION_BUTTON_LABEL: Record<CalendarAction, string> = {
@@ -64,6 +72,7 @@ const ACTION_BUTTON_LABEL: Record<CalendarAction, string> = {
   cancel: "Cancel enrollment",
   "waitlist-join": "Join waiting list",
   "waitlist-leave": "Leave waiting list",
+  claim: "Join class",
 };
 
 const INFO_COPY: Record<"canceled" | "out-of-reach" | "not-open", string> = {
@@ -79,6 +88,7 @@ export function ClassInteractionModal({ trainingClass, onClose }: ClassInteracti
   const cancelMutation = useCancelEnrollment();
   const joinWaitlistMutation = useJoinWaitingList();
   const leaveWaitlistMutation = useLeaveWaitingList();
+  const claimMutation = useClaimWaitingListSpot();
   const [confirming, setConfirming] = useState<CalendarAction | null>(null);
 
   const detail = detailQuery.data ?? trainingClass;
@@ -95,7 +105,8 @@ export function ClassInteractionModal({ trainingClass, onClose }: ClassInteracti
     joinMutation.isPending ||
     cancelMutation.isPending ||
     joinWaitlistMutation.isPending ||
-    leaveWaitlistMutation.isPending;
+    leaveWaitlistMutation.isPending ||
+    claimMutation.isPending;
 
   const detailsLoading = detail.visibility === "gray" && detailQuery.isLoading;
 
@@ -110,6 +121,9 @@ export function ClassInteractionModal({ trainingClass, onClose }: ClassInteracti
       } else if (action === "waitlist-join") {
         await joinWaitlistMutation.mutateAsync(trainingClass.id);
         showToast("You joined the waiting list.", "success");
+      } else if (action === "claim") {
+        await claimMutation.mutateAsync(trainingClass.id);
+        showToast("You joined the class from the waiting list.", "success");
       } else {
         await leaveWaitlistMutation.mutateAsync(trainingClass.id);
         showToast("You left the waiting list.", "success");

@@ -5,6 +5,7 @@ export type CalendarInteractionKind =
   | "join"
   | "waitlist-join"
   | "waitlist-leave"
+  | "claim"
   | "info";
 
 export type CalendarInteractionReason = "canceled" | "out-of-reach" | "not-open" | null;
@@ -14,7 +15,12 @@ export interface CalendarInteraction {
   reason: CalendarInteractionReason;
 }
 
-export type ClassOptimisticAction = "join" | "cancel" | "waitlist-join" | "waitlist-leave";
+export type ClassOptimisticAction =
+  | "join"
+  | "cancel"
+  | "waitlist-join"
+  | "waitlist-leave"
+  | "claim";
 
 interface InteractionInput {
   classType: TrainingClass["classType"];
@@ -43,7 +49,8 @@ export function deriveCalendarInteraction(input: InteractionInput): CalendarInte
     return { kind: "info", reason: "not-open" };
   }
   if (coacheeStatus.isOnWaitingList) {
-    return { kind: "waitlist-leave", reason: null };
+    const hasOpenSpot = enrollmentCount < capacity;
+    return hasOpenSpot ? { kind: "claim", reason: null } : { kind: "waitlist-leave", reason: null };
   }
   if (!coacheeStatus.isWithinReach) {
     return { kind: "info", reason: "out-of-reach" };
@@ -88,6 +95,14 @@ export function applyOptimisticClassUpdate(
         ...cls,
         visibility: "gray" as ClassVisibility,
         coacheeStatus: { ...coacheeStatus, isOnWaitingList: false },
+        waitingListCount: Math.max(0, cls.waitingListCount - 1),
+      };
+    case "claim":
+      return {
+        ...cls,
+        visibility: "blue" as ClassVisibility,
+        coacheeStatus: { ...coacheeStatus, isEnrolled: true, isOnWaitingList: false },
+        enrollmentCount: cls.enrollmentCount + 1,
         waitingListCount: Math.max(0, cls.waitingListCount - 1),
       };
   }

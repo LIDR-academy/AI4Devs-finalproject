@@ -96,6 +96,32 @@ describe("deriveCalendarInteraction", () => {
     ).toEqual({ kind: "waitlist-leave", reason: null });
   });
 
+  it("gray on waiting list with an open spot -> claim", () => {
+    expect(
+      deriveCalendarInteraction({
+        classType: "GROUP",
+        status: "ACTIVE",
+        visibility: "gray",
+        coacheeStatus: status({ isWithinReach: true, isOnWaitingList: true }),
+        enrollmentCount: 3,
+        capacity: 4,
+      }),
+    ).toEqual({ kind: "claim", reason: null });
+  });
+
+  it("waitlisted individual with open spot -> claim, not waitlist-leave", () => {
+    expect(
+      deriveCalendarInteraction({
+        classType: "INDIVIDUAL",
+        status: "ACTIVE",
+        visibility: "gray",
+        coacheeStatus: status({ isWithinReach: true, isOnWaitingList: true }),
+        enrollmentCount: 0,
+        capacity: 1,
+      }),
+    ).toEqual({ kind: "claim", reason: null });
+  });
+
   it("gray out-of-reach -> info", () => {
     expect(
       deriveCalendarInteraction({
@@ -249,6 +275,22 @@ describe("applyOptimisticClassUpdate", () => {
     const next = applyOptimisticClassUpdate(cls, "waitlist-leave");
     expect(next.visibility).toBe("gray");
     expect(next.coacheeStatus?.isOnWaitingList).toBe(false);
+    expect(next.waitingListCount).toBe(2);
+    expect(next).not.toBe(cls);
+  });
+
+  it("claim: gray -> blue, isEnrolled true, off waitlist, enrollmentCount+1, waitingListCount-1", () => {
+    const cls = classRow({
+      visibility: "gray",
+      enrollmentCount: 3,
+      coacheeStatus: status({ isWithinReach: true, isOnWaitingList: true }),
+      waitingListCount: 3,
+    });
+    const next = applyOptimisticClassUpdate(cls, "claim");
+    expect(next.visibility).toBe("blue");
+    expect(next.coacheeStatus?.isEnrolled).toBe(true);
+    expect(next.coacheeStatus?.isOnWaitingList).toBe(false);
+    expect(next.enrollmentCount).toBe(4);
     expect(next.waitingListCount).toBe(2);
     expect(next).not.toBe(cls);
   });

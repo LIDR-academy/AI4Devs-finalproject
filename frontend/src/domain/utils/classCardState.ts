@@ -1,6 +1,6 @@
 import type { ClassType, ClassVisibility, CoacheeStatus } from "@/domain/types/class";
 
-export type ClassCardAction = "join" | "cancel" | "waiting-list" | "leave" | "none";
+export type ClassCardAction = "join" | "cancel" | "waiting-list" | "leave" | "claim" | "none";
 
 export type ClassCardReason = "canceled" | "individual" | "out-of-reach" | null;
 
@@ -46,7 +46,8 @@ export function deriveClassCardState(input: ClassCardStateInput): ClassCardState
     return { action: "cancel", reason: null };
   }
   if (isOnWaitingList) {
-    return { action: "leave", reason: null };
+    const hasOpenSpot = input.enrollmentCount < input.capacity;
+    return hasOpenSpot ? { action: "claim", reason: null } : { action: "leave", reason: null };
   }
   if (input.classType === "INDIVIDUAL") {
     return { action: "none", reason: "individual" };

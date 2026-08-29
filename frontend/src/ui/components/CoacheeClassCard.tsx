@@ -6,6 +6,7 @@ import { GYM_TIMEZONE } from "@/domain/utils/gymDateTime";
 import { waitingListErrorMessage } from "@/domain/utils/waitingListErrorMessages";
 import { useToast } from "@/infrastructure/context/ToastContext";
 import { useCancelEnrollment } from "@/infrastructure/hooks/useCancelEnrollment";
+import { useClaimWaitingListSpot } from "@/infrastructure/hooks/useClaimWaitingListSpot";
 import { useJoinClass } from "@/infrastructure/hooks/useJoinClass";
 import { useJoinWaitingList } from "@/infrastructure/hooks/useJoinWaitingList";
 import { useLeaveWaitingList } from "@/infrastructure/hooks/useLeaveWaitingList";
@@ -34,7 +35,7 @@ function extractErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
-type ConfirmAction = "join" | "cancel" | "waiting-list" | "leave" | null;
+type ConfirmAction = "join" | "cancel" | "waiting-list" | "leave" | "claim" | null;
 
 export function CoacheeClassCard({ trainingClass }: { trainingClass: TrainingClass }) {
   const { showToast } = useToast();
@@ -42,6 +43,7 @@ export function CoacheeClassCard({ trainingClass }: { trainingClass: TrainingCla
   const cancelMutation = useCancelEnrollment();
   const joinWaitingListMutation = useJoinWaitingList();
   const leaveWaitingListMutation = useLeaveWaitingList();
+  const claimWaitingListSpotMutation = useClaimWaitingListSpot();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
   const state = deriveClassCardState({
@@ -65,6 +67,9 @@ export function CoacheeClassCard({ trainingClass }: { trainingClass: TrainingCla
       } else if (action === "waiting-list") {
         await joinWaitingListMutation.mutateAsync(trainingClass.id);
         showToast("You joined the waiting list.", "success");
+      } else if (action === "claim") {
+        await claimWaitingListSpotMutation.mutateAsync(trainingClass.id);
+        showToast("You joined the class from the waiting list.", "success");
       } else {
         await leaveWaitingListMutation.mutateAsync(trainingClass.id);
         showToast("You left the waiting list.", "success");
@@ -156,6 +161,15 @@ export function CoacheeClassCard({ trainingClass }: { trainingClass: TrainingCla
               className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
             >
               Leave waiting list
+            </button>
+          )}
+          {state.action === "claim" && (
+            <button
+              type="button"
+              onClick={() => setConfirmAction("claim")}
+              className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+            >
+              Join class
             </button>
           )}
         </div>
@@ -259,6 +273,14 @@ function dialogCopy(action: Exclude<ConfirmAction, null>): {
         cancelLabel: "Keep my place",
         confirmLabel: "Leave waiting list",
         confirmClassName: "bg-red-600 hover:bg-red-700",
+      };
+    case "claim":
+      return {
+        title: "Join this class?",
+        body: "A spot has opened up in this class. Claim it now — first come, first served.",
+        cancelLabel: "Keep my place",
+        confirmLabel: "Join class",
+        confirmClassName: "bg-green-600 hover:bg-green-700",
       };
   }
 }
