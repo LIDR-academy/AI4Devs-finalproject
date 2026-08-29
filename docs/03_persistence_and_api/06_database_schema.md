@@ -143,6 +143,7 @@ erDiagram
 | `users` | `email` | `VARCHAR(255)` | `UNIQUE` | PII (Dato Personal) | Correo de acceso administrativo |
 | `users` | `password_hash` | `VARCHAR(255)` | `NULLABLE` | Alta (`Argon2id Hash`) | Contraseña cifrada con sal |
 | `users` | `pin_hash` | `VARCHAR(255)` | `NULLABLE` | Alta (`Salted PIN Hash`) | PIN de 4 dígitos para cocina táctil |
+| `users` | `must_change_pin` | `BOOLEAN` | `NOT NULL DEFAULT true` | Ninguna | Bandera de rotación obligatoria de PIN en primer login (Guard 36) |
 | `insumos` | `conversion_factor` | `DECIMAL(10,2)` | `NOT NULL` | Ninguna | Factor de conversión entre unidad de compra y consumo |
 | `warehouse_stocks` | `quantity` | `DECIMAL(12,4)` | `CHECK (quantity >= 0)` | Ninguna | Cantidad física en depósito principal |
 | `remanentes` | `current_quantity` | `DECIMAL(12,4)` | `CHECK (current_quantity >= 0)` | Ninguna | Cantidad remanente utilizable en cocina |
@@ -152,22 +153,41 @@ erDiagram
 
 ## 🌱 3. Datos Semilla Iniciales (Seed Data Fixtures)
 
-Al inicializar el sistema (*cold-start*), la base de datos se poblará obligatoriamente con los siguientes registros maestros:
+Al inicializar el sistema (*cold-start*), la base de datos se poblará obligatoriamente con las siguientes semillas esenciales (*Essential Seeds*) de forma $100\%$ idempotente:
 
 ```sql
--- Usuario Administrador por Defecto
-INSERT INTO users (id, email, password_hash, pin_hash, name, role, is_active, created_at, updated_at)
+-- 1. Matriz de Permisos Estándar del Sistema
+INSERT INTO permissions (id, code, name, module) VALUES
+('perm-1', 'stock:extract', 'Extraer Insumos de Bodega', 'STOCK'),
+('perm-2', 'stock:restock', 'Reabastecer Bodega', 'STOCK'),
+('perm-3', 'stock:read', 'Consultar Stock e Historial', 'STOCK'),
+('perm-4', 'kitchen:recipe_prepare', 'Preparar Recetas FEFO', 'KITCHEN'),
+('perm-5', 'kitchen:remanente_consume', 'Consumir/Descartar Remanentes', 'KITCHEN'),
+('perm-6', 'reports:view', 'Ver Reportes y Dashboard', 'REPORTS'),
+('perm-7', 'users:manage', 'Gestionar Personal', 'USERS'),
+('perm-8', 'roles:manage', 'Gestionar Roles y Permisos', 'ROLES')
+ON CONFLICT (id) DO UPDATE SET code = EXCLUDED.code, name = EXCLUDED.name, module = EXCLUDED.module;
+
+-- 2. Roles Base y Asignación de Permisos
+INSERT INTO roles (id, name, description) VALUES
+('role-admin', 'ADMIN', 'Administrador General'),
+('role-kitchen', 'KITCHEN_STAFF', 'Personal de Cocina')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
+
+-- 3. Usuario Administrador por Defecto (bootstrap-admin)
+INSERT INTO users (id, name, role_id, pin_hash, status, must_change_pin, created_at, updated_at)
 VALUES (
-    'c596e191-230d-45db-99ff-411a2f6412b1',
-    'admin@restostock.com',
-    '$argon2id$v=19$m=65536,t=3,p=4$c2FsdF9kZW1v$hash_admin',
-    '$argon2id$v=19$m=65536,t=3,p=4$c2FsdF9kZW1v$hash_pin_1234',
-    'Administrador Central',
-    'ADMIN',
+    'bootstrap-admin',
+    'Administrador',
+    'role-admin',
+    '$salted_hash_seed_pin',
+    'ACTIVE',
     true,
     NOW(),
     NOW()
-);
+)
+ON CONFLICT (id) DO UPDATE SET role_id = EXCLUDED.role_id;
+
 
 -- Insumos Maestros de Prueba (Categorías Lácteos y Salsas)
 INSERT INTO insumos (id, name, brand, category, purchase_unit, consumption_unit, conversion_factor, open_shelf_life_days, is_active, created_at, updated_at)
