@@ -10,6 +10,7 @@ export interface UserProps {
   role: UserRole;
   pin: Pin;
   status: UserStatusType;
+  mustChangePin?: boolean;
   failedAttempts: number;
   createdAt?: Date;
 }
@@ -18,7 +19,10 @@ export class User {
   private readonly props: UserProps;
 
   constructor(props: UserProps) {
-    this.props = { ...props };
+    this.props = {
+      mustChangePin: true,
+      ...props,
+    };
   }
 
   public get id(): string {
@@ -41,6 +45,10 @@ export class User {
     return this.props.status;
   }
 
+  public get mustChangePin(): boolean {
+    return this.props.mustChangePin ?? true;
+  }
+
   public get failedAttempts(): number {
     return this.props.failedAttempts;
   }
@@ -60,9 +68,6 @@ export class User {
     this.props.failedAttempts = 0;
   }
 
-  // Bloqueo/activacion administrativa (Guard: gestion minima de personal, TK-049) — distinto
-  // del bloqueo automatico por 5 intentos fallidos, pero mismo status: un ADMIN puede
-  // desactivar a un operario que deja el restaurante, o reactivar a uno bloqueado por error.
   public block(): void {
     this.props.status = 'BLOCKED';
   }
@@ -86,9 +91,18 @@ export class User {
     return isValid;
   }
 
+  public changePin(newPin: Pin): void {
+    this.props.pin = newPin;
+    this.props.mustChangePin = false;
+  }
+
   public updateDetails(name?: string, role?: string, newPin?: Pin): void {
     if (name) this.props.name = name;
     if (role) this.props.role = role;
-    if (newPin) this.props.pin = newPin;
+    if (newPin) {
+      this.props.pin = newPin;
+      this.props.mustChangePin = false;
+    }
   }
 }
+

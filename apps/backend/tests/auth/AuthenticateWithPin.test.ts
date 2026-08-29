@@ -35,7 +35,9 @@ describe('TK-002: Authenticate By PIN TDD Suite', () => {
       id: 'usr-carlos-1',
       name: 'Carlos Gomez',
       role: 'KITCHEN_STAFF',
+      mustChangePin: true,
     });
+
     // Garantizar que el hash del PIN NUNCA se retorna
     expect(response.body.user).not.toHaveProperty('pinHash');
   });

@@ -4,6 +4,7 @@ export interface LoginPinResponse {
     id: string;
     name: string;
     role: string;
+    mustChangePin?: boolean;
   };
 }
 
@@ -37,10 +38,37 @@ export class AuthService {
       }
       throw new Error(errMessage);
     } catch (err) {
-      // Ningún error (de red, del servidor, o de validación de PIN) cae en una
-      // sesión local falsa — todo error real del backend o de la red se propaga
-      // tal cual al llamador, que es responsable de mostrarlo al usuario.
       throw err instanceof Error ? err : new Error('Error de autenticación desconocido.');
+    }
+  }
+
+  public static async changePin(userId: string, currentPin: string, newPin: string, baseUrl: string = '/api/v1'): Promise<void> {
+    const token = AuthService.getToken();
+    const response = await fetch(`${baseUrl}/auth/change-pin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId, currentPin, newPin }),
+    });
+
+    if (!response.ok) {
+      let errMessage = 'No se pudo actualizar el PIN.';
+      try {
+        const errData = await response.json();
+        errMessage = errData.message || errData.detail || errMessage;
+      } catch (parseError) {
+        console.warn('[AuthService] Error parseando respuesta de error de changePin:', parseError);
+      }
+
+      throw new Error(errMessage);
+    }
+
+    const currentUser = AuthService.getStoredUser();
+    if (currentUser) {
+      currentUser.mustChangePin = false;
+      localStorage.setItem(AuthService.USER_KEY, JSON.stringify(currentUser));
     }
   }
 
@@ -48,7 +76,7 @@ export class AuthService {
     return localStorage.getItem(AuthService.STORAGE_KEY);
   }
 
-  public static getStoredUser(): { id: string; name: string; role: string } | null {
+  public static getStoredUser(): { id: string; name: string; role: string; mustChangePin?: boolean } | null {
     const raw = localStorage.getItem(AuthService.USER_KEY);
     if (!raw) return null;
     try {
@@ -59,7 +87,7 @@ export class AuthService {
     }
   }
 
-  public static saveSession(token: string, user: { id: string; name: string; role: string }): void {
+  public static saveSession(token: string, user: { id: string; name: string; role: string; mustChangePin?: boolean }): void {
     localStorage.setItem(AuthService.STORAGE_KEY, token);
     localStorage.setItem(AuthService.USER_KEY, JSON.stringify(user));
   }
@@ -69,3 +97,4 @@ export class AuthService {
     localStorage.removeItem(AuthService.USER_KEY);
   }
 }
+

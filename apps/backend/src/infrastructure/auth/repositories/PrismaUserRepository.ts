@@ -8,6 +8,7 @@ interface PrismaUserRaw {
   name: string;
   pinHash: string;
   status: string;
+  mustChangePin?: boolean;
   failedAttempts: number;
   createdAt: Date;
   roleId?: string | null;
@@ -21,6 +22,7 @@ function toDomain(raw: PrismaUserRaw): User {
     role: (raw.role?.name || raw.roleId || 'ADMIN') as UserRole,
     pin: Pin.createFromHash(raw.pinHash),
     status: raw.status as UserStatusType,
+    mustChangePin: raw.mustChangePin ?? true,
     failedAttempts: raw.failedAttempts,
     createdAt: raw.createdAt,
   });
@@ -49,7 +51,9 @@ export class PrismaUserRepository implements IUserRepository {
       where: { id: user.id },
       update: {
         name: user.name,
+        pinHash: user.pin.getHash(),
         status: user.status,
+        mustChangePin: user.mustChangePin,
         failedAttempts: user.failedAttempts,
       },
       create: {
@@ -57,6 +61,7 @@ export class PrismaUserRepository implements IUserRepository {
         name: user.name,
         pinHash: user.pin.getHash(),
         status: user.status,
+        mustChangePin: user.mustChangePin,
         failedAttempts: user.failedAttempts,
       },
     });
@@ -69,10 +74,12 @@ export class PrismaUserRepository implements IUserRepository {
         name: user.name,
         pinHash: user.pin.getHash(),
         status: user.status,
+        mustChangePin: user.mustChangePin,
         failedAttempts: user.failedAttempts,
       },
     });
   }
+
 
   public async delete(id: string): Promise<void> {
     await this.prisma.user.delete({

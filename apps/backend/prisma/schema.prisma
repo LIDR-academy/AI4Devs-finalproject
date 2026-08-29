@@ -69,6 +69,7 @@ model User {
   role           Role?           @relation(fields: [roleId], references: [id], onDelete: SetNull)
   pinHash        String
   status         UserStatus      @default(ACTIVE)
+  mustChangePin  Boolean         @default(true)
   failedAttempts Int             @default(0)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt

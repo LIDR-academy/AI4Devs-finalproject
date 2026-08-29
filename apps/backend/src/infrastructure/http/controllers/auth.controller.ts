@@ -5,11 +5,18 @@ import { CreateUserUseCase } from '../../../application/auth/use-cases/CreateUse
 import { SetUserStatusUseCase } from '../../../application/auth/use-cases/SetUserStatusUseCase.js';
 import { ListUsersUseCase } from '../../../application/auth/use-cases/ListUsersUseCase.js';
 import { UpdateUserUseCase } from '../../../application/auth/use-cases/UpdateUserUseCase.js';
+import { ChangePinUseCase } from '../../../application/auth/use-cases/ChangePinUseCase.js';
 import { respondValidationError } from '../utils/responseUtils.js';
 
 const authPinSchema = z.object({
   userId: z.string().min(1, 'El ID de usuario es requerido.'),
   pin: z.string().regex(/^\d{4,6}$/, 'El PIN debe contener entre 4 y 6 digitos numericos.'),
+});
+
+const changePinSchema = z.object({
+  userId: z.string().min(1, 'El ID de usuario es requerido.'),
+  currentPin: z.string().regex(/^\d{4,6}$/, 'El PIN actual debe contener entre 4 y 6 digitos numericos.'),
+  newPin: z.string().regex(/^\d{4,6}$/, 'El nuevo PIN debe contener entre 4 y 6 digitos numericos.'),
 });
 
 const createUserSchema = z.object({
@@ -34,8 +41,27 @@ export class AuthController {
     private readonly createUserUseCase?: CreateUserUseCase,
     private readonly setUserStatusUseCase?: SetUserStatusUseCase,
     private readonly listUsersUseCase?: ListUsersUseCase,
-    private readonly updateUserUseCase?: UpdateUserUseCase
+    private readonly updateUserUseCase?: UpdateUserUseCase,
+    private readonly changePinUseCase?: ChangePinUseCase
   ) {}
+
+  public changePin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const parsedBody = changePinSchema.parse(req.body);
+      if (!this.changePinUseCase) {
+        throw new Error('ChangePinUseCase no configurado.');
+      }
+      const result = await this.changePinUseCase.execute(parsedBody);
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
+
 
   public loginWithPin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

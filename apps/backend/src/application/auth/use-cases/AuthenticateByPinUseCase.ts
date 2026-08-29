@@ -15,6 +15,7 @@ export interface AuthResponseDTO {
     id: string;
     name: string;
     role: string;
+    mustChangePin: boolean;
   };
 }
 
@@ -57,7 +58,9 @@ export class AuthenticateByPinUseCase {
         id: user.id,
         name: user.name,
         role: user.role,
+        mustChangePin: user.mustChangePin,
       },
     };
   }
 }
+

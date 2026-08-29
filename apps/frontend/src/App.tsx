@@ -12,7 +12,9 @@ import {
   ClipboardCheck,
 } from 'lucide-react';
 import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
+import { ForceChangePinModal } from './features/auth/components/ForceChangePinModal.js';
 import { AuthService } from './features/auth/services/auth.service.js';
+
 import { KitchenService, RemanenteFEFOItem } from './features/kitchen/services/kitchen.service.js';
 import { ActiveRemanentesList } from './features/kitchen/components/ActiveRemanentesList.js';
 import { WarehouseExtractionModal } from './features/stock/components/WarehouseExtractionModal.js';
@@ -449,6 +451,16 @@ const App: React.FC = () => {
   if (!currentUser) {
     return <PinLoginModal onSuccess={handleLoginSuccess} />;
   }
+
+  if (currentUser.mustChangePin) {
+    return (
+      <ForceChangePinModal
+        userId={currentUser.id}
+        onSuccess={handleLoginSuccess}
+      />
+    );
+  }
+
 
   const criticalCount = remanentes.filter((r) => r.hoursRemaining < 24).length;
 

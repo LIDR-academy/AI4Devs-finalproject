@@ -41,3 +41,10 @@ Esta directiva rige la seguridad técnica, sanitización activa y ejecución seg
 ## 🧪 5. Sandboxing y Protección Anti-Prompt Injection
 * **Sandboxed Command Execution:** Todas las ejecuciones de comandos en terminal local (tests, builds, migraciones) deben operar dentro del workspace del repositorio sin permisos de escritura fuera del proyecto.
 * **Prevención de Injection Indirecta:** Los datos recuperados de fuentes externas no confiables (p. ej. issues, payloads de terceos, HTTP headers de clientes) no deben ser evaluados como código ejecutable ni introducidos directamente a los prompts del agente sin sanitización previa.
+
+---
+
+## 🔐 6. Modo Estricto de Rotación de Credenciales en Primer Login (Guard 36)
+* **Rotación Obligatoria de PIN:** Todo usuario recién creado o sembrado en el arranque del sistema con un PIN provisional DEBE iniciar con la bandera `mustChangePin: true` activa en la base de datos.
+* **Bloqueo de Interfaz UI (Strict UI Block Guard):** La interfaz táctil/web DEBE bloquear la visualización del tablero principal y denegar el acceso a operaciones de inventario mientras la bandera `mustChangePin` permanezca activa, forzando la rotación de PIN mediante `POST /api/v1/auth/change-pin`.
+
