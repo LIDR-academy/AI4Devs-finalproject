@@ -113,12 +113,15 @@ export async function runPushRegistration(): Promise<PushAffordance> {
     onAccept: async () => {
       try {
         const result = await Notification.requestPermission();
+        console.log("[pushManager] requestPermission result:", result);
         if (result === "granted") {
           await silentRegister();
         } else {
+          console.warn("[pushManager] Permission not granted — starting 30-day cooldown");
           dismissPushPrompt();
         }
-      } catch {
+      } catch (err) {
+        console.error("[pushManager] requestPermission FAILED:", err);
         dismissPushPrompt();
       }
     },

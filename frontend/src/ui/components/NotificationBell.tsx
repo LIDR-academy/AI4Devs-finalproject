@@ -42,6 +42,14 @@ export function NotificationBell({ unreadCountOverride }: NotificationBellProps)
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
+  const handleBellClick = () => {
+    if (isCoachee) {
+      navigate("/coachee/notifications");
+      return;
+    }
+    setIsOpen(!isOpen);
+  };
+
   const handleClick = (notification: Notification) => {
     if (!notification.isRead) {
       markAsRead.mutate(notification.id, {
@@ -59,7 +67,7 @@ export function NotificationBell({ unreadCountOverride }: NotificationBellProps)
     <div className="relative" ref={panelRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleBellClick}
         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
         aria-label="Notifications"
       >

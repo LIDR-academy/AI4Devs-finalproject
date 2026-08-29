@@ -26,7 +26,17 @@ export function usePushRegistration() {
     };
   }, []);
 
-  return affordance;
+  const handleAccept: PushAffordance["onAccept"] = async () => {
+    setAffordance((a) => ({ ...a, visible: false }));
+    await affordance.onAccept();
+  };
+
+  const handleDismiss: PushAffordance["onDismiss"] = () => {
+    affordance.onDismiss();
+    setAffordance((a) => ({ ...a, visible: false }));
+  };
+
+  return { ...affordance, onAccept: handleAccept, onDismiss: handleDismiss };
 }
 
 export function usePushResetOnLogout() {

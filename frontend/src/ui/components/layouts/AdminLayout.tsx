@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/infrastructure/context/AuthContext";
 import { NotificationBell } from "@/ui/components/NotificationBell";
@@ -28,7 +27,6 @@ const navItems = [
 ];
 
 export function AdminLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -39,23 +37,7 @@ export function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {sidebarOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden cursor-default"
-          onClick={() => setSidebarOpen(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setSidebarOpen(false);
-          }}
-          aria-label="Close sidebar"
-        />
-      )}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-30 w-60 bg-white border-r transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
+      <aside className="hidden lg:flex flex-col w-60 bg-white border-r shrink-0">
         <div className="flex items-center h-16 px-6 border-b">
           <h1 className="text-xl font-bold text-blue-600">Coacher</h1>
         </div>
@@ -65,7 +47,6 @@ export function AdminLayout() {
             <NavLink
               key={item.to}
               to={item.to}
-              onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   isActive
@@ -90,28 +71,8 @@ export function AdminLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between h-16 px-4 lg:px-6 bg-white border-b">
-          <button
-            type="button"
-            className="lg:hidden p-2 rounded-md text-gray-500 hover:bg-gray-100"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open menu"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+        <header className="flex items-center justify-between h-16 px-4 lg:px-6 bg-white border-b shrink-0">
+          <h1 className="text-lg font-bold text-blue-600 lg:hidden">Coacher</h1>
 
           <div className="flex items-center gap-4 ml-auto">
             <NotificationBell />
@@ -126,10 +87,37 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-auto p-4 pb-20 lg:p-6 lg:pb-6">
           <Outlet />
         </main>
       </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t z-10 shrink-0 lg:hidden">
+        <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors ${
+                  isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-700"
+                }`
+              }
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+              </svg>
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
       <PushNotificationPrompt />
     </div>
   );
