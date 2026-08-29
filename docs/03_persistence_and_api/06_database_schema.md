@@ -148,6 +148,8 @@ erDiagram
 | `warehouse_stocks` | `quantity` | `DECIMAL(12,4)` | `CHECK (quantity >= 0)` | Ninguna | Cantidad física en depósito principal |
 | `remanentes` | `current_quantity` | `DECIMAL(12,4)` | `CHECK (current_quantity >= 0)` | Ninguna | Cantidad remanente utilizable en cocina |
 | `remanentes` | `calculated_expiration_date` | `TIMESTAMP` | `INDEX (status, exp_date)` | Ninguna | Fecha FEFO calculada según TRR |
+| `system_settings` | `idle_timeout_minutes` | `INTEGER` | `NOT NULL DEFAULT 15` | Ninguna | Minutos de inactividad táctil antes de cerrar sesión automáticamente |
+
 
 ---
 

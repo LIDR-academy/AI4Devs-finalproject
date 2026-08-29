@@ -32,6 +32,8 @@ import { RolesManagementModal } from './features/security/components/RolesManage
 import { FEFOInventoryHealthBar } from './features/kitchen/components/FEFOInventoryHealthBar.js';
 import { LocationFilterTabs, LocationFilter } from './features/kitchen/components/LocationFilterTabs.js';
 import { AdminDropdownMenu } from './features/security/components/AdminDropdownMenu.js';
+import { useIdleTimeout } from './shared/hooks/useIdleTimeout.js';
+
 
 interface DashboardHeaderProps {
   currentUser: { name: string; role: string };
@@ -443,12 +445,23 @@ const KitchenBoardTitle: React.FC = () => (
 );
 
 const App: React.FC = () => {
+
   const dashboard = useDashboardState();
   const { currentUser, remanentes, isLoading, loadRemanentes, handleLoginSuccess, handleLogout, handleConsume } = dashboard;
   const handlers = useAppHandlers(dashboard);
   const [activeLocation, setActiveLocation] = useState<LocationFilter>('ALL');
 
+  useIdleTimeout({
+    timeoutMinutes: 15,
+    isLoggedIn: !!currentUser && !currentUser.mustChangePin,
+    onIdle: useCallback(() => {
+      alert('Sesión cerrada por inactividad táctil (15 minutos sin interacción).');
+      handleLogout();
+    }, [handleLogout]),
+  });
+
   if (!currentUser) {
+
     return <PinLoginModal onSuccess={handleLoginSuccess} />;
   }
 

@@ -11,6 +11,7 @@ const updateSettingsSchema = z.object({
   criticalAlertHours: z.number().int().positive().optional(),
   defaultRemanenteHours: z.number().int().positive().optional(),
   varianceTolerancePercent: z.number().min(0).max(100).optional(),
+  idleTimeoutMinutes: z.number().int().min(1).max(1440).optional(),
 });
 
 export function createSettingsController(settingsRepo: ISystemSettingsRepository): Router {
@@ -29,6 +30,7 @@ export function createSettingsController(settingsRepo: ISystemSettingsRepository
         criticalAlertHours: s.criticalAlertHours,
         defaultRemanenteHours: s.defaultRemanenteHours,
         varianceTolerancePercent: s.varianceTolerancePercent,
+        idleTimeoutMinutes: s.idleTimeoutMinutes ?? 15,
       });
     } catch (err) {
       next(err);
@@ -47,11 +49,13 @@ export function createSettingsController(settingsRepo: ISystemSettingsRepository
         criticalAlertHours: s.criticalAlertHours,
         defaultRemanenteHours: s.defaultRemanenteHours,
         varianceTolerancePercent: s.varianceTolerancePercent,
+        idleTimeoutMinutes: s.idleTimeoutMinutes ?? 15,
       });
     } catch (err) {
       next(err);
     }
   });
+
 
   return router;
 }

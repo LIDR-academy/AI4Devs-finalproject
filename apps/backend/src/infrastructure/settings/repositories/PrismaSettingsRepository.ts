@@ -17,6 +17,7 @@ export class PrismaSettingsRepository implements ISystemSettingsRepository {
           criticalAlertHours: 24,
           defaultRemanenteHours: 24,
           varianceTolerancePercent: 5.0,
+          idleTimeoutMinutes: 15,
         },
       });
     }
@@ -29,6 +30,7 @@ export class PrismaSettingsRepository implements ISystemSettingsRepository {
       criticalAlertHours: s.criticalAlertHours,
       defaultRemanenteHours: s.defaultRemanenteHours,
       varianceTolerancePercent: Number(s.varianceTolerancePercent),
+      idleTimeoutMinutes: s.idleTimeoutMinutes ?? 15,
       updatedAt: s.updatedAt,
     });
   }
@@ -44,6 +46,7 @@ export class PrismaSettingsRepository implements ISystemSettingsRepository {
         criticalAlertHours: settings.criticalAlertHours,
         defaultRemanenteHours: settings.defaultRemanenteHours,
         varianceTolerancePercent: settings.varianceTolerancePercent,
+        idleTimeoutMinutes: settings.idleTimeoutMinutes,
       },
       update: {
         restaurantName: settings.restaurantName,
@@ -52,7 +55,9 @@ export class PrismaSettingsRepository implements ISystemSettingsRepository {
         criticalAlertHours: settings.criticalAlertHours,
         defaultRemanenteHours: settings.defaultRemanenteHours,
         varianceTolerancePercent: settings.varianceTolerancePercent,
+        idleTimeoutMinutes: settings.idleTimeoutMinutes,
       },
     });
   }
+
 }

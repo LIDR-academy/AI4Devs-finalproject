@@ -6,6 +6,7 @@ export interface SystemSettingsProps {
   criticalAlertHours: number;
   defaultRemanenteHours: number;
   varianceTolerancePercent: number;
+  idleTimeoutMinutes: number;
   updatedAt?: Date;
 }
 
@@ -39,4 +40,9 @@ export class SystemSettings {
   get varianceTolerancePercent(): number {
     return this.props.varianceTolerancePercent;
   }
+
+  get idleTimeoutMinutes(): number {
+    return this.props.idleTimeoutMinutes;
+  }
 }
+

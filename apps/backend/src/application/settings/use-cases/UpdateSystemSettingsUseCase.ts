@@ -8,6 +8,7 @@ export interface UpdateSystemSettingsCommand {
   criticalAlertHours?: number;
   defaultRemanenteHours?: number;
   varianceTolerancePercent?: number;
+  idleTimeoutMinutes?: number;
 }
 
 export class UpdateSystemSettingsUseCase {
@@ -24,9 +25,11 @@ export class UpdateSystemSettingsUseCase {
       criticalAlertHours: command.criticalAlertHours !== undefined ? command.criticalAlertHours : current.criticalAlertHours,
       defaultRemanenteHours: command.defaultRemanenteHours !== undefined ? command.defaultRemanenteHours : current.defaultRemanenteHours,
       varianceTolerancePercent: command.varianceTolerancePercent !== undefined ? command.varianceTolerancePercent : current.varianceTolerancePercent,
+      idleTimeoutMinutes: command.idleTimeoutMinutes !== undefined ? command.idleTimeoutMinutes : current.idleTimeoutMinutes,
     });
 
     await this.settingsRepository.saveSettings(updated);
     return updated;
   }
 }
+

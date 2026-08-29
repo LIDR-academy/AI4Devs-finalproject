@@ -94,8 +94,10 @@ model SystemSettings {
   criticalAlertHours       Int      @default(24)
   defaultRemanenteHours    Int      @default(24)
   varianceTolerancePercent Decimal  @default(5.0) @db.Decimal(5, 2)
+  idleTimeoutMinutes       Int      @default(15)
   updatedAt                DateTime @updatedAt
 }
+
 
 model Insumo {
   id              String           @id @default(uuid())

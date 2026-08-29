@@ -48,3 +48,9 @@ Esta directiva rige la seguridad técnica, sanitización activa y ejecución seg
 * **Rotación Obligatoria de PIN:** Todo usuario recién creado o sembrado en el arranque del sistema con un PIN provisional DEBE iniciar con la bandera `mustChangePin: true` activa en la base de datos.
 * **Bloqueo de Interfaz UI (Strict UI Block Guard):** La interfaz táctil/web DEBE bloquear la visualización del tablero principal y denegar el acceso a operaciones de inventario mientras la bandera `mustChangePin` permanezca activa, forzando la rotación de PIN mediante `POST /api/v1/auth/change-pin`.
 
+---
+
+## ⏱️ 7. Control de Inactividad y Cierre Automático de Sesión (Guard 37)
+* **Cierre por Inactividad Táctil:** El frontend rastrea eventos globales de interacción del operador (`touchstart`, `pointerdown`, `mousedown`, `keydown`, `scroll`). Tras 15 minutos continuos de inactividad (o el valor configurado en `SystemSettings.idleTimeoutMinutes`), la sesión del usuario se invalida automáticamente, cerrando la sesión y forzando el retorno al PIN Login.
+
+

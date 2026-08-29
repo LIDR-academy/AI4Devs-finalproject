@@ -10,7 +10,9 @@ export class InMemorySettingsRepository implements ISystemSettingsRepository {
     criticalAlertHours: 24,
     defaultRemanenteHours: 24,
     varianceTolerancePercent: 5.0,
+    idleTimeoutMinutes: 15,
   });
+
 
   async getSettings(): Promise<SystemSettings> {
     return this.settings;

@@ -138,6 +138,23 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
           </div>
         </div>
 
+        <div>
+          <label htmlFor="setting-idle-timeout" className="form-label">
+            Cierre de Sesión por Inactividad Táctil (Minutos)
+          </label>
+          <input
+            id="setting-idle-timeout"
+            type="number"
+            required
+            min={1}
+            max={1440}
+            value={settings.idleTimeoutMinutes ?? 15}
+            onChange={(e) => setSettings({ ...settings, idleTimeoutMinutes: Number(e.target.value) })}
+            className="input-touch w-full"
+          />
+        </div>
+
+
         {message && <SuccessFeedbackBanner message={message} />}
 
         <ModalFooterActions

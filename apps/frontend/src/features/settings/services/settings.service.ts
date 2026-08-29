@@ -8,7 +8,9 @@ export interface SystemSettingsDto {
   criticalAlertHours: number;
   defaultRemanenteHours: number;
   varianceTolerancePercent: number;
+  idleTimeoutMinutes?: number;
 }
+
 
 export const SettingsService = {
   async fetchSettings(): Promise<SystemSettingsDto> {
