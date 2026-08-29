@@ -34,8 +34,12 @@ export function usePullToRefresh({ refetch }: { refetch: () => void }) {
         return;
       }
       const deltaY = (event.touches[0]?.clientY ?? startY) - startY;
+      if (deltaY < 0) {
+        commit(INITIAL_PULL_STATE);
+        return;
+      }
       commit(pullGesture(mirror, { type: "MOVE", deltaY }));
-      if (mirror.active) {
+      if (mirror.active && mirror.distance > 0) {
         event.preventDefault();
       }
     };
