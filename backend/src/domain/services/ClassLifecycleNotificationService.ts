@@ -74,6 +74,7 @@ export class ClassLifecycleNotificationService {
               data: {
                 classId: trainingClass.id,
                 type: String(this.policy.notificationTypeForNewClass()),
+                link: "/",
               },
             },
             tokens,
@@ -141,6 +142,7 @@ export class ClassLifecycleNotificationService {
             data: {
               classId: trainingClass.id,
               type: String(this.policy.notificationTypeForIndividualAssignment()),
+              link: "/",
             },
           },
           tokens,
@@ -196,6 +198,7 @@ export class ClassLifecycleNotificationService {
               data: {
                 classId: trainingClass.id,
                 type: String(this.policy.notificationTypeForClassCanceled()),
+                link: "/",
               },
             },
             tokens,
@@ -263,6 +266,7 @@ export class ClassLifecycleNotificationService {
             data: {
               classId: trainingClass.id,
               type: String(this.policy.notificationTypeForCoachAssignment()),
+              link: "/",
             },
           },
           tokens,

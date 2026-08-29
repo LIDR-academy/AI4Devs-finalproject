@@ -29,16 +29,28 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const link = event.notification.data?.link ?? "/";
+  const url = new URL(link, self.registration.scope).href;
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if ("focus" in client) {
-          client.postMessage({ type: "NOTIFICATION_CLICK", ...event.notification.data });
+          if ("navigate" in client) {
+            try {
+              client.navigate(url);
+            } catch {
+              // navigate unsupported — fall through to focus + postMessage
+            }
+          }
+          try {
+            client.postMessage({ type: "NOTIFICATION_CLICK", ...event.notification.data });
+          } catch {
+            // no message channel — ignore
+          }
           return client.focus();
         }
       }
-      return clients.openWindow(link);
+      return clients.openWindow(url);
     }),
   );
 });
