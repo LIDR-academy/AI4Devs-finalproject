@@ -10,10 +10,10 @@ set -e
 export PRISMA_QUERY_ENGINE_LIBRARY="$(find node_modules/.pnpm -name 'libquery_engine-linux-musl-openssl-3.0.x.so.node' | head -1)"
 export PRISMA_SCHEMA_ENGINE_BINARY="$(find node_modules/.pnpm -name 'schema-engine-linux-musl-openssl-3.0.x' | head -1)"
 
-echo "Aplicando migraciones de base de datos pendientes (prisma migrate deploy)..."
-# --config explicito (TK-062): el CWD aqui es /app, no apps/backend/, asi que Prisma 7
-# no descubriria prisma.config.ts solo (donde ahora vive DATABASE_URL, ya no en el schema).
-apps/backend/node_modules/.bin/prisma migrate deploy --schema=apps/backend/prisma/schema.prisma --config=apps/backend/prisma.config.ts
+echo "Aplicando esquema de base de datos (prisma db push)..."
+apps/backend/node_modules/.bin/prisma db push --schema=apps/backend/prisma/schema.prisma --config=apps/backend/prisma.config.ts --accept-data-loss
+
+
 
 # Bootstrap idempotente del primer administrador (TK-051): sin esto, una base de datos
 # nueva no tiene forma de crear usuarios via la API — POST /api/v1/auth/users exige ya
