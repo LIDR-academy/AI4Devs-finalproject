@@ -17,7 +17,28 @@ function hashPin(rawPin: string): string {
   return `${saltHex}:${hashHex}`;
 }
 
+const DEFAULT_SYSTEM_PERMISSIONS = [
+  { id: 'perm-1', code: 'stock:extract', name: 'Extraer Insumos de Bodega', module: 'STOCK' },
+  { id: 'perm-2', code: 'stock:restock', name: 'Reabastecer Bodega', module: 'STOCK' },
+  { id: 'perm-3', code: 'stock:read', name: 'Consultar Stock e Historial', module: 'STOCK' },
+  { id: 'perm-4', code: 'kitchen:recipe_prepare', name: 'Preparar Recetas FEFO', module: 'KITCHEN' },
+  { id: 'perm-5', code: 'kitchen:remanente_consume', name: 'Consumir/Descartar Remanentes', module: 'KITCHEN' },
+  { id: 'perm-6', code: 'reports:view', name: 'Ver Reportes y Dashboard', module: 'REPORTS' },
+  { id: 'perm-7', code: 'users:manage', name: 'Gestionar Personal', module: 'USERS' },
+  { id: 'perm-8', code: 'roles:manage', name: 'Gestionar Roles y Permisos', module: 'ROLES' },
+];
+
 async function seedDefaultRoles(): Promise<{ adminRoleId: string; kitchenRoleId: string }> {
+  // 1. Sembrar Permisos del Sistema
+  for (const perm of DEFAULT_SYSTEM_PERMISSIONS) {
+    await prisma.permission.upsert({
+      where: { id: perm.id },
+      update: { code: perm.code, name: perm.name, module: perm.module },
+      create: perm,
+    });
+  }
+
+  // 2. Sembrar Roles Base
   const adminRole = await prisma.role.upsert({
     where: { id: 'role-admin' },
     update: { name: 'ADMIN' },
@@ -38,8 +59,27 @@ async function seedDefaultRoles(): Promise<{ adminRoleId: string; kitchenRoleId:
     },
   });
 
+  // 3. Vincular Permisos a Roles
+  for (const perm of DEFAULT_SYSTEM_PERMISSIONS) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: adminRole.id, permissionId: perm.id } },
+      update: {},
+      create: { roleId: adminRole.id, permissionId: perm.id },
+    });
+  }
+
+  const kitchenPermIds = ['perm-1', 'perm-2', 'perm-3', 'perm-4', 'perm-5'];
+  for (const permId of kitchenPermIds) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: kitchenRole.id, permissionId: permId } },
+      update: {},
+      create: { roleId: kitchenRole.id, permissionId: permId },
+    });
+  }
+
   return { adminRoleId: adminRole.id, kitchenRoleId: kitchenRole.id };
 }
+
 
 async function seedProductionAdmin(adminRoleId: string): Promise<void> {
   const adminPin = process.env.SEED_ADMIN_PIN;
