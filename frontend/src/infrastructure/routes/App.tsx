@@ -19,9 +19,9 @@ import { CoachCoacheesPage } from "@/ui/pages/coach/CoacheesPage";
 import { CoachTodayPage } from "@/ui/pages/coach/TodayPage";
 import { CoacheeCalendarPage } from "@/ui/pages/coachee/CalendarPage";
 import { CoacheeHomePage } from "@/ui/pages/coachee/HomePage";
-import { CoacheeNotificationsPage } from "@/ui/pages/coachee/NotificationsPage";
 import { LoginPage } from "@/ui/pages/LoginPage";
 import { NotFoundPage } from "@/ui/pages/NotFoundPage";
+import { NotificationsPage } from "@/ui/pages/NotificationsPage";
 import { UnauthorizedPage } from "@/ui/pages/UnauthorizedPage";
 
 function RootRedirect() {
@@ -77,6 +77,7 @@ const router = createBrowserRouter([
       { path: "coachees/:id", element: <AdminCoacheeDetailPage /> },
       { path: "coaches", element: <AdminCoachesPage /> },
       { path: "coaches/:id", element: <AdminCoachDetailPage /> },
+      { path: "notifications", element: <NotificationsPage /> },
     ],
   },
   {
@@ -92,6 +93,7 @@ const router = createBrowserRouter([
       { path: "calendar", element: <CoachCalendarPage /> },
       { path: "coachees", element: <CoachCoacheesPage /> },
       { path: "coachees/:id", element: <CoachCoacheeDetailPage /> },
+      { path: "notifications", element: <NotificationsPage /> },
     ],
   },
   {
@@ -105,7 +107,7 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/coachee/home" replace /> },
       { path: "home", element: <CoacheeHomePage /> },
       { path: "calendar", element: <CoacheeCalendarPage /> },
-      { path: "notifications", element: <CoacheeNotificationsPage /> },
+      { path: "notifications", element: <NotificationsPage /> },
     ],
   },
   { path: "/", element: <RootRedirect /> },

@@ -116,6 +116,32 @@ describe("buildOptimisticClassMutation", () => {
     expect(value?.waitingListCount).toBe(2);
   });
 
+  it("claim flips the waiting-list class to an enrolled blue class in a list cache", async () => {
+    const queryClient = makeQueryClient();
+    queryClient.setQueryData(
+      LIST_KEY,
+      listResponse([
+        classRow("cl-1", {
+          visibility: "gray",
+          enrollmentCount: 3,
+          waitingListCount: 2,
+          coacheeStatus: { isEnrolled: false, isOnWaitingList: true, isWithinReach: true },
+        }),
+      ]),
+    );
+    const { onMutate } = buildOptimisticClassMutation({ queryClient, action: "claim" });
+
+    await onMutate("cl-1");
+
+    const value = queryClient.getQueryData<ListClassesResponse>(LIST_KEY);
+    const cl1 = value?.data.find((c) => c.id === "cl-1");
+    expect(cl1?.visibility).toBe("blue");
+    expect(cl1?.coacheeStatus?.isEnrolled).toBe(true);
+    expect(cl1?.coacheeStatus?.isOnWaitingList).toBe(false);
+    expect(cl1?.enrollmentCount).toBe(4);
+    expect(cl1?.waitingListCount).toBe(1);
+  });
+
   it("updates classes in ALL classes-prefixed caches (multiple lists + detail)", async () => {
     const queryClient = makeQueryClient();
     queryClient.setQueryData(LIST_KEY, listResponse([classRow("cl-1")]));

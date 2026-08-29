@@ -6,6 +6,8 @@ const MESSAGES: Record<string, string> = {
   NOT_FOUND: "The class was not found.",
   FORBIDDEN: "You don't have permission to do that.",
   VALIDATION_ERROR: "This class currently has a free spot — join it instead.",
+  SPOT_TAKEN: "This spot was just claimed by another Coachee.",
+  NOT_ON_WAITING_LIST: "You are no longer on the waiting list for this class.",
 };
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";

@@ -17,6 +17,7 @@ vi.mock("@/infrastructure/repositories/classesRepository", () => ({
     cancelEnrollment: vi.fn(),
     joinWaitingList: vi.fn(),
     leaveWaitingList: vi.fn(),
+    claimWaitingListSpot: vi.fn(),
   },
 }));
 
@@ -314,6 +315,14 @@ describe("ClassInteractionModal waitlist flow", () => {
       capacity: 4,
       coacheeStatus: { isEnrolled: false, isOnWaitingList: true, isWithinReach: true },
     });
+  const claimGray = () =>
+    classRow({
+      visibility: "gray",
+      enrollmentCount: 3,
+      capacity: 4,
+      waitingListCount: 1,
+      coacheeStatus: { isEnrolled: false, isOnWaitingList: true, isWithinReach: true },
+    });
   const ineligibleGray = () =>
     classRow({
       visibility: "gray",
@@ -328,6 +337,7 @@ describe("ClassInteractionModal waitlist flow", () => {
     });
     mockRepository.joinWaitingList.mockReset();
     mockRepository.leaveWaitingList.mockReset();
+    mockRepository.claimWaitingListSpot.mockReset();
     mockRepository.list.mockReset();
     mockRepository.get.mockReset();
   });
@@ -423,6 +433,71 @@ describe("ClassInteractionModal waitlist flow", () => {
     expect(cached?.data.find((c) => c.id === "cl-1")?.coacheeStatus?.isOnWaitingList).toBe(false);
   });
 
+  it("shows Join class (claim) instead of Leave waiting list when a spot has opened", async () => {
+    setup(queryClient, claimGray());
+
+    expect(await screen.findByRole("button", { name: "Join class" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Leave waiting list" })).not.toBeInTheDocument();
+  });
+
+  it("shows a confirmation dialog BEFORE the claim mutation fires", async () => {
+    const user = userEvent.setup();
+    setup(queryClient, claimGray());
+
+    await user.click(await screen.findByRole("button", { name: "Join class" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Join this class?" });
+    expect(within(dialog).getByText("Join this class?")).toBeInTheDocument();
+    expect(mockRepository.claimWaitingListSpot).not.toHaveBeenCalled();
+  });
+
+  it("confirmed claim success reflects the optimistic enrolled state and toasts", async () => {
+    const user = userEvent.setup();
+    const onClose = setup(queryClient, claimGray());
+    queryClient.setQueryData(LIST_KEY, listResponse([claimGray()]));
+    mockRepository.claimWaitingListSpot.mockResolvedValue({
+      message: "You joined this class from the waiting list.",
+      enrollmentId: "enr-1",
+      classId: "cl-1",
+      coacheeId: "coachee-1",
+      joinedAt: "2026-08-20T10:00:00.000Z",
+    });
+
+    await user.click(await screen.findByRole("button", { name: "Join class" }));
+    const dialog = screen.getByRole("dialog", { name: "Join this class?" });
+    await user.click(within(dialog).getByRole("button", { name: "Join class" }));
+
+    expect(mockRepository.claimWaitingListSpot).toHaveBeenCalledWith("cl-1");
+    expect(
+      await screen.findByText("You joined the class from the waiting list."),
+    ).toBeInTheDocument();
+    expect(onClose).toHaveBeenCalled();
+    const cached = queryClient.getQueryData<ListClassesResponse>(LIST_KEY);
+    const claimRow = cached?.data.find((c) => c.id === "cl-1");
+    expect(claimRow?.visibility).toBe("blue");
+    expect(claimRow?.coacheeStatus?.isEnrolled).toBe(true);
+    expect(claimRow?.coacheeStatus?.isOnWaitingList).toBe(false);
+  });
+
+  it("confirmed claim failure on SPOT_TAKEN rolls back and toasts the mapped error", async () => {
+    const user = userEvent.setup();
+    setup(queryClient, claimGray());
+    queryClient.setQueryData(LIST_KEY, listResponse([claimGray()]));
+    mockRepository.claimWaitingListSpot.mockRejectedValue({
+      response: { data: { error: { code: "SPOT_TAKEN", message: "Taken", ref: "r" } } },
+    });
+
+    await user.click(await screen.findByRole("button", { name: "Join class" }));
+    const dialog = screen.getByRole("dialog", { name: "Join this class?" });
+    await user.click(within(dialog).getByRole("button", { name: "Join class" }));
+
+    expect(
+      await screen.findByText("This spot was just claimed by another Coachee."),
+    ).toBeInTheDocument();
+    const cached = queryClient.getQueryData<ListClassesResponse>(LIST_KEY);
+    expect(cached?.data.find((c) => c.id === "cl-1")?.coacheeStatus?.isOnWaitingList).toBe(true);
+  });
+
   it("opens on an ineligible gray card as info-only with 'not open to you'", async () => {
     setup(queryClient, ineligibleGray());
 
@@ -462,6 +537,7 @@ describe("ClassInteractionModal cross-cutting guarantees", () => {
     });
     mockRepository.join.mockReset();
     mockRepository.leaveWaitingList.mockReset();
+    mockRepository.claimWaitingListSpot.mockReset();
     mockRepository.list.mockReset();
     mockRepository.get.mockReset();
   });

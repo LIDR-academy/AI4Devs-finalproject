@@ -13,6 +13,14 @@ export interface LeaveWaitingListResponse {
   message: string;
 }
 
+export interface ClaimWaitingListResponse {
+  message: string;
+  enrollmentId: string;
+  classId: string;
+  coacheeId: string;
+  joinedAt: string;
+}
+
 export interface WaitingListItem {
   id: string;
   class: {

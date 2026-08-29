@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ListClassesResponse, TrainingClass } from "@/domain/types/class";
 import { classesRepository } from "@/infrastructure/repositories/classesRepository";
 import { useCancelEnrollment } from "./useCancelEnrollment";
+import { useClaimWaitingListSpot } from "./useClaimWaitingListSpot";
 import { useJoinClass } from "./useJoinClass";
 import { useJoinWaitingList } from "./useJoinWaitingList";
 import { useLeaveWaitingList } from "./useLeaveWaitingList";
@@ -17,6 +18,7 @@ vi.mock("@/infrastructure/repositories/classesRepository", () => ({
     cancelEnrollment: vi.fn(),
     joinWaitingList: vi.fn(),
     leaveWaitingList: vi.fn(),
+    claimWaitingListSpot: vi.fn(),
   },
 }));
 
@@ -77,6 +79,7 @@ beforeEach(() => {
   mockRepository.cancelEnrollment.mockReset();
   mockRepository.joinWaitingList.mockReset();
   mockRepository.leaveWaitingList.mockReset();
+  mockRepository.claimWaitingListSpot.mockReset();
 });
 
 afterEach(() => {
@@ -255,5 +258,65 @@ describe("useLeaveWaitingList", () => {
     expect(
       queryClient.getQueryCache().find({ queryKey: WAITING_LIST_KEY })?.state.isInvalidated,
     ).toBe(true);
+  });
+});
+
+describe("useClaimWaitingListSpot", () => {
+  const claimable = () =>
+    classRow({
+      visibility: "gray",
+      enrollmentCount: 3,
+      capacity: 4,
+      waitingListCount: 2,
+      coacheeStatus: { isEnrolled: false, isOnWaitingList: true, isWithinReach: true },
+    });
+  const WAITING_LIST_KEY = ["waiting-lists"];
+
+  it("applies the optimistic claim update and invalidates waiting lists on success", async () => {
+    queryClient.setQueryData(LIST_KEY, listResponse([claimable()]));
+    queryClient.setQueryData(WAITING_LIST_KEY, { seeded: true });
+    mockRepository.claimWaitingListSpot.mockResolvedValue({
+      message: "You joined this class from the waiting list.",
+      enrollmentId: "enr-1",
+      classId: "cl-1",
+      coacheeId: "c-1",
+      joinedAt: "2026-08-20T10:00:00.000Z",
+    });
+    const { result } = renderHookWithClient(useClaimWaitingListSpot);
+
+    let mutation!: Promise<unknown>;
+    act(() => {
+      mutation = result.current.mutateAsync("cl-1");
+    });
+    const optimistic = cachedClass();
+    expect(optimistic?.visibility).toBe("blue");
+    expect(optimistic?.coacheeStatus?.isEnrolled).toBe(true);
+    expect(optimistic?.coacheeStatus?.isOnWaitingList).toBe(false);
+    expect(optimistic?.enrollmentCount).toBe(4);
+    expect(optimistic?.waitingListCount).toBe(1);
+
+    await act(async () => {
+      await mutation;
+    });
+    expect(mockRepository.claimWaitingListSpot).toHaveBeenCalledWith("cl-1");
+    expect(
+      queryClient.getQueryCache().find({ queryKey: WAITING_LIST_KEY })?.state.isInvalidated,
+    ).toBe(true);
+  });
+
+  it("rolls back the optimistic state when the claim fails", async () => {
+    queryClient.setQueryData(LIST_KEY, listResponse([claimable()]));
+    mockRepository.claimWaitingListSpot.mockRejectedValue(new Error("boom"));
+    const { result } = renderHookWithClient(useClaimWaitingListSpot);
+
+    let mutation!: Promise<unknown>;
+    act(() => {
+      mutation = result.current.mutateAsync("cl-1");
+    });
+
+    await act(async () => {
+      await mutation.catch(() => undefined);
+    });
+    expect(cachedClass()?.coacheeStatus?.isOnWaitingList).toBe(true);
   });
 });

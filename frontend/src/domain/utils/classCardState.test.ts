@@ -69,14 +69,28 @@ describe("deriveClassCardState", () => {
     ).toEqual({ action: "none", reason: "individual" });
   });
 
-  it("offers Leave waiting list when the Coachee is on the waiting list", () => {
+  it("offers Leave waiting list when the Coachee is on the waiting list of a full class", () => {
     expect(
       deriveClassCardState(
         group({
+          enrollmentCount: 4,
+          capacity: 4,
           coacheeStatus: { isEnrolled: false, isOnWaitingList: true, isWithinReach: true },
         }),
       ),
     ).toEqual({ action: "leave", reason: null });
+  });
+
+  it("offers Join class (claim) when the Coachee is on the waiting list and a spot has opened", () => {
+    expect(
+      deriveClassCardState(
+        group({
+          enrollmentCount: 3,
+          capacity: 4,
+          coacheeStatus: { isEnrolled: false, isOnWaitingList: true, isWithinReach: true },
+        }),
+      ),
+    ).toEqual({ action: "claim", reason: null });
   });
 
   it("offers the Waiting list affordance on a full class within reach (replaces Join)", () => {

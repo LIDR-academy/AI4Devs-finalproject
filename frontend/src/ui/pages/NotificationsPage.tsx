@@ -6,7 +6,7 @@ import { useToast } from "@/infrastructure/context/ToastContext";
 import { useMarkNotificationAsRead } from "@/infrastructure/hooks/useMarkNotificationAsRead";
 import { useNotifications } from "@/infrastructure/hooks/useNotifications";
 
-export function CoacheeNotificationsPage() {
+export function NotificationsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();

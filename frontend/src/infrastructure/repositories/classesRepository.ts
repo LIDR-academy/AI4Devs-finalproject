@@ -14,6 +14,7 @@ import type {
 import type { AssignableCoach } from "@/domain/types/coach";
 import type { CoacheeDashboard } from "@/domain/types/coachee";
 import type {
+  ClaimWaitingListResponse,
   JoinWaitingListResponse,
   LeaveWaitingListResponse,
   WaitingListListResponse,
@@ -72,6 +73,13 @@ export const classesRepository = {
   async leaveWaitingList(id: string): Promise<LeaveWaitingListResponse> {
     const { data } = await apiClient.delete<LeaveWaitingListResponse>(
       `/classes/${id}/waiting-list`,
+    );
+    return data;
+  },
+
+  async claimWaitingListSpot(id: string): Promise<ClaimWaitingListResponse> {
+    const { data } = await apiClient.post<ClaimWaitingListResponse>(
+      `/classes/${id}/waiting-list/claim`,
     );
     return data;
   },

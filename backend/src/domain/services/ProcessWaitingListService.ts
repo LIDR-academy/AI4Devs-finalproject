@@ -58,6 +58,7 @@ export class ProcessWaitingListService {
             data: {
               classId,
               type: String(type),
+              link: "/",
             },
           },
           tokens,
