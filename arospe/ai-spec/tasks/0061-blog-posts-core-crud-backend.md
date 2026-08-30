@@ -2289,23 +2289,29 @@ changed shipped behaviour in this story, the category guard's count (**D-7d**), 
 Per [contracts.md](../../docs/contracts.md)'s Uncertainty Handling Rule these are recorded rather than
 guessed. **None blocks Phase 2 review. OQ-2 and OQ-3 must be settled before Phase 3.**
 
-- **OQ-2 — What happens when two titles slugify to the same value?** **D-3** makes `slug` unique but
-  does not say how a collision resolves. Three candidates:
-  **(a) Append a numeric suffix automatically** (`guia-de-compra`, `guia-de-compra-2`) *(recommended)*
-  — it never blocks an editor, it is what every CMS does, and it keeps the slug derived rather than
-  becoming a field a human must reason about. Cost: the derivation is no longer a pure function of
-  the title, so the `saving` hook must query, and the suffix loop needs the same `23000`-catch
-  race guard `CreateUser` uses.
-  **(b) Refuse with a validation error on `title`.** Simplest and race-free, but it makes a perfectly
-  reasonable "Weekly roundup" title unusable for the second post, which is a bad editorial experience.
-  **(c) Make `slug` a user-editable field.** Defers nothing — it still needs a collision answer — and
-  it adds a field the PRD does not describe for this phase.
+- **OQ-2 — What happens when two titles slugify to the same value? ✅ RESOLVED 2026-08-30 — option (b),
+  refuse with a validation error on `title`.** The human chose this over the originally-recommended
+  auto-suffix, explicitly favouring predictability over never blocking an editor. **D-3** makes `slug`
+  unique; the `saving` hook derives it and, on a collision, the create/update action surfaces a
+  validation error keyed on `title` (a `23000` from the unique index, caught and rethrown as
+  `ValidationException::withMessages(['title' => …])`, or a pre-flight `exists()` check before the
+  insert — either is acceptable, but the pre-flight check is race-prone under concurrent saves of the
+  identical title and must still fall back to the `23000` catch as the last-word guard, per this
+  project's [signed-link-verification.md](../../docs/security/signed-link-verification.md#a-pre-flight-check-is-not-a-race-guard--re-check-under-a-lock-and-let-the-unique-index-have-the-last-word)
+  precedent). This closes the collision question for every Epic 5 story that inherited it as an open
+  dependency: 0078 (Blog Posts translatable retrofit) assumed this exact resolution already and needs
+  no rework; 0079 (Blog Post editor language tabs) can now render the refusal on the **title** field for
+  the language being edited (there is no separate slug field to render it on, since the slug stays
+  derived-only per 0078's D-4).
 
-  ⚠️ **The confirmed soft delete narrows (a) rather than changing the recommendation.** Because a
-  trashed post keeps its slug reserved (**D-7b**) and `Rule::unique()` does not apply the soft-delete
-  scope, the suffix loop must count **trashed rows too** — otherwise it proposes `botas-de-invierno`,
-  the unique index refuses it against a trashed row, and the loop either fails or spins. Whichever
-  option Phase 2 picks, its collision check sees the same rows the index sees.
+  ⚠️ **The confirmed soft delete still applies to the chosen option.** Because a trashed post keeps its
+  slug reserved (**D-7b**) and `Rule::unique()` does not apply the soft-delete scope, the collision check
+  must see trashed rows too — a title that would collide with a trashed post's slug is refused exactly
+  as if the trashed post were live. This was originally written as a note on the *rejected* auto-suffix
+  option; it applies unchanged to refuse-with-validation, since either way the check must query the same
+  rows the unique index sees.
+  **(a) Auto-suffix** and **(c) user-editable slug** were the two rejected alternatives — recorded rather
+  than deleted, per this project's convention for documenting a real fork.
 
 - **OQ-3 — Is `body` `mediumText` or `LONGTEXT`?** *(This was two questions; its second half — may a
   `Draft` have an empty body? — was confirmed by the product owner and is now **D-4**. See
