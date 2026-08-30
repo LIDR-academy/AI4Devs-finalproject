@@ -31,4 +31,5 @@ export interface NotificationRepository {
   listByRecipient(filters: ListNotificationsFilters): Promise<CursorPaginatedResult<Notification>>;
   countUnreadByRecipient(recipientId: string): Promise<number>;
   markAsRead(id: string): Promise<Notification>;
+  markAllAsRead(recipientId: string): Promise<number>;
 }

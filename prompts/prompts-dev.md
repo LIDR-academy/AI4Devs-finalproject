@@ -439,7 +439,22 @@ Done. Can you connect to my Render account through the MCP  and check for the we
 I have this project live in Render and its database in Neon. By logging in with the coach user, I can see a class with the coachee2 but when i login as coachee2, I can not see that class in the calendar.
 
 
+# 26 - OpenCode - Big Pickle
 
-------
+In the home of a coachee, we have a next class card. In that card we should also have a button to cancel enrollment.
 
-Finally! However, in the scenario described, the button says "Dar de baja" and I'd like for it to say Join class and do it literally
+----
+
+In the login page, I'd like the password input to have an icon on the roght side of it that toggles and shows or hides the password
+
+----
+
+In the notifications page (or modal) I'd like to have a mark all as read button. Also, when the user clicks on them, I'd like to mark them as read but no redirects. currently it redirects.
+
+----
+
+When a user has the notifictions for chrome deactivated, no notifications are recieved at all. The bannes asking to accept the notifications, only appears if they have their chrome phone notifications on. I'd like for it to appear even if their notifications are currently off. this ways they will be really aware of it and activate them if they want to.
+
+----
+
+When a coachee cancels its enrollment to a class, the coach should recieve a notification and I have not recieved any when testing this scenario.

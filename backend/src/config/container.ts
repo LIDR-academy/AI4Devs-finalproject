@@ -24,6 +24,7 @@ import { ListCoaches } from "../application/use-cases/ListCoaches.js";
 import { ListNotifications } from "../application/use-cases/ListNotifications.js";
 import { ListTrainingClasses } from "../application/use-cases/ListTrainingClasses.js";
 import { ListWaitingLists } from "../application/use-cases/ListWaitingLists.js";
+import { MarkAllNotificationsAsRead } from "../application/use-cases/MarkAllNotificationsAsRead.js";
 import { MarkNotificationAsRead } from "../application/use-cases/MarkNotificationAsRead.js";
 import { RegisterDeviceToken } from "../application/use-cases/RegisterDeviceToken.js";
 import { SendNotification } from "../application/use-cases/SendNotification.js";
@@ -186,4 +187,5 @@ export const container = {
   listNotifications: new ListNotifications(new PrismaNotificationRepository()),
   getNotificationById: new GetNotificationById(new PrismaNotificationRepository()),
   markNotificationAsRead: new MarkNotificationAsRead(new PrismaNotificationRepository()),
+  markAllNotificationsAsRead: new MarkAllNotificationsAsRead(new PrismaNotificationRepository()),
 };

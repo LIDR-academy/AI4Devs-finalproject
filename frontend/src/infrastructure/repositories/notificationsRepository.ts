@@ -28,3 +28,8 @@ export async function markNotificationAsRead(id: string): Promise<Notification> 
   const { data } = await apiClient.patch<Notification>(`/notifications/${id}/read`);
   return data;
 }
+
+export async function markAllNotificationsAsRead(): Promise<{ count: number }> {
+  const { data } = await apiClient.patch<{ count: number }>("/notifications/read-all");
+  return data;
+}

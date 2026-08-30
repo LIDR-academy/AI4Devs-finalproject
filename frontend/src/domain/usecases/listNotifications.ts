@@ -5,6 +5,7 @@ import type {
 } from "@/domain/types/notification";
 import {
   listNotifications,
+  markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "@/infrastructure/repositories/notificationsRepository";
 
@@ -16,4 +17,8 @@ export async function fetchNotifications(
 
 export async function markAsRead(id: string): Promise<Notification> {
   return markNotificationAsRead(id);
+}
+
+export async function markAllAsRead(): Promise<{ count: number }> {
+  return markAllNotificationsAsRead();
 }

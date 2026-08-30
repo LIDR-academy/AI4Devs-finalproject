@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import type { Notification } from "@/domain/types/notification";
-import { useAuth } from "@/infrastructure/context/AuthContext";
 import { useToast } from "@/infrastructure/context/ToastContext";
+import { useMarkAllNotificationsAsRead } from "@/infrastructure/hooks/useMarkAllNotificationsAsRead";
 import { useMarkNotificationAsRead } from "@/infrastructure/hooks/useMarkNotificationAsRead";
 import { useNotifications } from "@/infrastructure/hooks/useNotifications";
 
 export function NotificationsPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const { showToast } = useToast();
   const markAsRead = useMarkNotificationAsRead();
+  const markAllAsRead = useMarkAllNotificationsAsRead();
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
 
@@ -24,6 +22,7 @@ export function NotificationsPage() {
   const hasMore = data?.meta.hasMore ?? false;
 
   const handleClick = (notification: Notification) => {
+    if (markAsRead.isPending) return;
     if (!notification.isRead) {
       markAsRead.mutate(notification.id, {
         onError: () => {
@@ -31,27 +30,45 @@ export function NotificationsPage() {
         },
       });
     }
-    if (notification.classId) {
-      navigate(`/${user?.role.toLowerCase()}/calendar`);
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead.mutateAsync();
+      showToast("All notifications marked as read.", "success");
+    } catch {
+      showToast("Failed to mark notifications as read", "error");
     }
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h2 className="text-2xl font-bold text-gray-900">Notifications</h2>
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={unreadOnly}
-            onChange={(e) => {
-              setUnreadOnly(e.target.checked);
-              setCursor(undefined);
-            }}
-            className="rounded border-gray-300"
-          />
-          Unread only
-        </label>
+        <div className="flex items-center gap-3">
+          {notifications.some((n) => !n.isRead) && (
+            <button
+              type="button"
+              onClick={() => void handleMarkAllAsRead()}
+              disabled={markAsRead.isPending || markAllAsRead.isPending}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Mark all as read
+            </button>
+          )}
+          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={unreadOnly}
+              onChange={(e) => {
+                setUnreadOnly(e.target.checked);
+                setCursor(undefined);
+              }}
+              className="rounded border-gray-300"
+            />
+            Unread only
+          </label>
+        </div>
       </div>
 
       {isLoading ? (

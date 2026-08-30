@@ -94,6 +94,14 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return this.toDomain(record);
   }
 
+  async markAllAsRead(recipientId: string): Promise<number> {
+    const result = await this.prisma.notification.updateMany({
+      where: { recipient_id: recipientId, is_read: false },
+      data: { is_read: true },
+    });
+    return result.count;
+  }
+
   private async getSentAtById(id: string): Promise<Date> {
     const record = await this.prisma.notification.findUniqueOrThrow({
       where: { id },

@@ -129,3 +129,66 @@ describe("POST /api/v1/notifications/device-token", () => {
     expect(res.body.error).toHaveProperty("code", "UNAUTHORIZED");
   });
 });
+
+describe("PATCH /api/v1/notifications/read-all", () => {
+  it("marks all of the caller's notifications as read and returns the count", async () => {
+    await prisma.notification.createMany({
+      data: [
+        { recipient_id: coacheeId, notification_type: 1, content: "Unread one" },
+        { recipient_id: coacheeId, notification_type: 1, content: "Unread two" },
+        { recipient_id: coacheeId, notification_type: 1, content: "Already read", is_read: true },
+      ],
+    });
+
+    const res = await request(app)
+      .patch("/api/v1/notifications/read-all")
+      .set("Authorization", `Bearer ${coacheeT}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ count: 2 });
+
+    const remaining = await prisma.notification.count({
+      where: { recipient_id: coacheeId, is_read: false },
+    });
+    expect(remaining).toBe(0);
+
+    await prisma.notification.deleteMany({ where: { recipient_id: coacheeId } });
+  });
+
+  it("does not touch another user's notifications", async () => {
+    await prisma.notification.create({
+      data: { recipient_id: coacheeId, notification_type: 1, content: "Coachee's unread" },
+    });
+
+    const beforeAdmin = await prisma.notification.count({
+      where: { recipient_id: adminId, is_read: false },
+    });
+
+    const res = await request(app)
+      .patch("/api/v1/notifications/read-all")
+      .set("Authorization", `Bearer ${adminT}`);
+
+    expect(res.status).toBe(200);
+
+    const stillUnread = await prisma.notification.count({
+      where: { recipient_id: coacheeId, is_read: false },
+    });
+    expect(stillUnread).toBe(1);
+    expect(
+      await prisma.notification.count({ where: { recipient_id: adminId, is_read: false } }),
+    ).toBe(beforeAdmin);
+
+    await prisma.notification.deleteMany({ where: { recipient_id: coacheeId } });
+  });
+
+  it("returns 200 with count 0 when there is nothing to mark", async () => {
+    await prisma.notification.deleteMany({ where: { recipient_id: coacheeId } });
+
+    const res = await request(app)
+      .patch("/api/v1/notifications/read-all")
+      .set("Authorization", `Bearer ${coacheeT}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ count: 0 });
+  });
+});

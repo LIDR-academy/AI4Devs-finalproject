@@ -97,6 +97,19 @@ router.post(
 );
 
 router.patch(
+  "/notifications/read-all",
+  authenticate,
+  requireRole(UserRole.ADMIN, UserRole.COACH, UserRole.COACHEE),
+  async (req, res) => {
+    const userId = req.user!.id;
+
+    const result = await container.markAllNotificationsAsRead.execute(userId);
+
+    res.status(200).json({ count: result.count });
+  },
+);
+
+router.patch(
   "/notifications/:id/read",
   authenticate,
   requireRole(UserRole.ADMIN, UserRole.COACH, UserRole.COACHEE),
