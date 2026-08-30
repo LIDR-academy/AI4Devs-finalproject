@@ -5,7 +5,7 @@ Build the **variant builder** embedded in [0027](0027-products-list-and-editor-u
 editor: a list of the product's existing variants and a form that composes one attribute-value
 combination at a time, each variant carrying its **live-previewed, read-only, derived SKU**, its own
 price and stock, and an **optional** own image picked through the shared media gallery
-([0020](0020-shared-media-gallery-modal-ui.md), single-select) that falls back to the parent product's
+([0020](done/0020-shared-media-gallery-modal-ui.md), single-select) that falls back to the parent product's
 featured image when unset.
 
 It is **frontend only**: no migration, no model, no action, no policy, no validation rule. Every one of
@@ -2353,7 +2353,7 @@ and [§2.3](../../docs/PRD/PRD.md#23-shared-media-gallery), and grounded in **fu
 the same day) and [0027](0027-products-list-and-editor-ui.md) (1,512 lines, read in full), plus
 [0028](0028-product-attribute-types-and-values-backend.md),
 [0030](0030-product-attribute-types-and-values-ui.md) and
-[0020](0020-shared-media-gallery-modal-ui.md) for their data and embedding contracts, and the whole of
+[0020](done/0020-shared-media-gallery-modal-ui.md) for their data and embedding contracts, and the whole of
 [errors-log.md](../../docs/errors-log.md).
 
 **How the three roles were covered — stated plainly rather than implied.** Both specialists were

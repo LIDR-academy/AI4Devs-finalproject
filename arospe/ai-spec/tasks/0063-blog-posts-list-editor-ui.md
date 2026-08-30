@@ -343,7 +343,7 @@ From **[0021](0021-wysiwyg-rich-text-editor-component.md)** **D3**/**D4**:
 embeds the media gallery itself** — so this story embeds **no** `Gallery` (**D-14**), and passes it
 nothing about media.
 
-From **[0020](0020-shared-media-gallery-modal-ui.md)** **D2**: consumed *transitively only*. Named
+From **[0020](done/0020-shared-media-gallery-modal-ui.md)** **D2**: consumed *transitively only*. Named
 here so a reviewer can confirm this story writes no `select-event`, no `#[On]` listener and no
 `:multi` prop anywhere.
 

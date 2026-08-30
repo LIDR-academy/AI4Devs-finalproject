@@ -1,8 +1,15 @@
 # Livewire Component Authorization
 
-Rules governing how a **full-page Livewire component** is authorized in this repo, established while
+Rules governing how a Livewire component is authorized in this repo, established while
 auditing task 0004 (`App\Livewire\Users\Index`, the first permission-gated screen). Everything here
 was verified against the installed `livewire/livewire` v4 source, not inferred from the docs.
+
+**Since story 0020 this page covers two shapes, not one.** Everything through task 0018 was about a
+**full-page** component sitting behind its own route; `App\Livewire\Media\Gallery` is the first
+**embedded child** with no route of its own, and the difference is not cosmetic — it is which of
+these rules still has a backstop behind it. Read
+[the routeless case](#the-routeless-case-a-component-with-no-route-has-no-per-request-backstop-at-all)
+before applying anything here to an embedded component.
 
 ## Table of Contents
 
@@ -11,6 +18,7 @@ was verified against the installed `livewire/livewire` v4 source, not inferred f
 - [Gate at the top of every method that mutates or discloses](#gate-at-the-top-of-every-method-that-mutates-or-discloses)
   - [The shipped disclosure gates, and why the disclosure check is the *stronger* ability](#the-shipped-disclosure-gates-and-why-the-disclosure-check-is-the-stronger-ability)
   - [Gating a method is not the same as knowing when the gate fired](#gating-a-method-is-not-the-same-as-knowing-when-the-gate-fired)
+  - [The routeless case: a component with no route has no per-request backstop at all](#the-routeless-case-a-component-with-no-route-has-no-per-request-backstop-at-all)
 - [`#[Locked]` is what makes `Rule::unique()->ignore()` safe here](#locked-is-what-makes-ruleunique-ignore-safe-here)
 - [Every server-derived property is `#[Locked]`, not just the ids](#every-server-derived-property-is-locked-not-just-the-ids)
   - [Confirmed safe: `wire:click="$toggle('prop')"` is the same write channel as `wire:model`, and `#[Locked]` still binds it](#confirmed-safe-wireclicktoggleprop-is-the-same-write-channel-as-wiremodel-and-locked-still-binds-it)
@@ -284,6 +292,67 @@ Three things specific to a Livewire component, each of which a reader hits withi
 
 What the line actually contains, why its keys are generic, the two message strings a defender must filter for, and the log-ceiling rule for a rate-limit site shared with an unprivileged caller are owned by [architecture/authorization.md](../architecture/authorization.md#recording-a-refusal--what-every-gate-owes-the-audit-trail) — not repeated here.
 
+> **`App\Livewire\Media\Gallery::mount()` is the exception's own exception, and it logs.** The middle bullet above excludes `mount()` because the route's `can:` refuses first. That component has no route (story 0020), so nothing refuses first and `mount()` is the only gate a real caller reaches — which is precisely the refusal the recipe exists to record. Same table, third conclusion.
+
+### The routeless case: a component with no route has no per-request backstop at all
+
+Story 0020's Phase 4 **F-1** (Medium). This is the sharpest real case this page's own *"gate every method that mutates or discloses"* rule has produced, because it is the one component where that rule is not one layer of two — it is the only layer there is.
+
+**The mechanism is the allow-list table at the top of this page, read for a component that has no middleware of its own.** Livewire's `PersistentMiddleware` re-applies a component's **route's** middleware on every `/livewire/update` round trip, which is why `can:users.view` keeps refusing a revoked actor on `App\Livewire\Users\Index` regardless of what the component does. `App\Livewire\Media\Gallery` is an **embedded child** — a modal Products and Blog mount inside their own screens — so there is no route, and therefore no `can:media.view` to replay. What Livewire replays is the **host page's** middleware, which says nothing about `media.*`.
+
+The consequence is exact and easy to miss in review: **`mount()` runs once, on the initial render. Every subsequent call arrives with no authorization behind it whatsoever.**
+
+❌ Bad — the shipped first implementation. It gates `mount()`, which is what the three routed screens in this repo do, and it reads correct:
+
+```php
+// as found by Phase 4 round 1 — do not copy onto a routeless component
+public function mount(LogRefusedPrivilegedAttempt $log): void
+{
+    $log->authorize('viewAny', Media::class);
+}
+
+#[Computed]
+public function tiles(): array { /* returns the whole library */ }
+
+public function toggleSelect(string $id): void { /* … */ }
+public function confirmSelection(): void      { /* … */ }
+```
+
+An actor opens the gallery legitimately, has `media.view` revoked mid-session, and keeps browsing, searching and selecting the entire media library — over `POST /livewire/update`, indistinguishable in an access log from ordinary use — for as long as the page stays open.
+
+✅ Good — the shipped fix. Each of the three re-checks, and the render-path one does it differently on purpose:
+
+```php
+// app/Livewire/Media/Gallery.php
+#[Computed]
+public function tiles(): array
+{
+    if (Gate::denies('viewAny', Media::class)) {
+        return [];                                  // fails CLOSED, never throws
+    }
+    // …
+}
+
+public function toggleSelect(string $id, LogRefusedPrivilegedAttempt $log): void
+{
+    $log->authorize('viewAny', Media::class);       // throws, and records
+    // …
+}
+```
+
+Three rules, and the third is the one a reviewer is most likely to get backwards:
+
+1. **Enumerate the *methods*, not the abilities.** "Is this screen gated" is the wrong question for a component with no route; "can this method be called on its own over `/livewire/update`" is the right one, and for any public method on a mounted component the answer is yes. The two ungated methods here — `cancel()` and `cancelEditing()` — are ungated only because each writes nothing but the component's own form state.
+2. **A `#[Computed]` property is a method.** `tiles()` reads like data and is a full entry point: the whole library, re-queried each request, filtered by whatever `$search` the client last set. Nothing about the `#[Computed]` attribute makes it internal.
+3. **A render-path gate fails closed; an action-path gate throws — do not unify them.** `tiles()` is reached from `render()`, so an `AuthorizationException` there propagates out of the *child* and takes down the **host** page — turning a revoked media permission into a 500 on the product editor, which is the exact failure the consumer's `@can('viewAny', \App\Models\Media::class)` wrapper exists to prevent, arriving one layer lower. A throwing `tiles()` and a silently-empty `confirmSelection()` are both wrong: the first breaks an unrelated screen, the second hands the consumer an empty selection with no refusal recorded anywhere.
+
+Two further properties, both already rules on this page and both worth re-reading in this shape:
+
+- **The `@can` wrapper at the consumer site is a layer, never the gate.** It decides whether the child is rendered into the host page at all — reachable only during the host's own render, and not from `/livewire/update`. It is what stops a `media.view`-less actor from 403-ing a screen they are otherwise entitled to; it protects nothing.
+- **A disclosure gate here is legitimately *stronger* than its neighbours.** `startEditing()` asks `update` (`media.edit`) where `toggleSelect()` beside it asks `viewAny` (`media.view`), because its effect is opening a **write form**, not disclosing a value the tile already renders — [the same rule](#the-shipped-disclosure-gates-and-why-the-disclosure-check-is-the-stronger-ability) `Users\Index::openEditModal()` follows. Phase 5's finding F-8 records this on the method's own docblock specifically so a reviewer does not "fix" the pair into a matching `viewAny`/`viewAny` and weaken the one gate that needs to be strong.
+
+Where this pattern sits relative to the module gate, the sidebar registry and the refusal recipe is [architecture/authorization.md](../architecture/authorization.md#a-routeless-livewire-component-has-no-per-request-authorization-backstop)'s to own; the mechanism above is this page's.
+
 ## `#[Locked]` is what makes `Rule::unique()->ignore()` safe here
 
 Laravel's validation documentation is explicit that user-controlled input must never reach
@@ -433,7 +502,9 @@ Two rules to carry forward, both proven by how this was closed:
   [authorization-patterns.md](authorization-patterns.md#a-rule-that-must-bind-a-super-admin-actor-must-be-a-direct-throw-not-a-gate-check)
   for why the two Super Admin refusals are direct throws rather than `Gate` checks.
 
-_Last updated: 2026-08-26 — Task 0018 (Sales Regions & Taxes screen, Phase 4 audit): added the **confirmed-safe** subsection on `wire:click="$toggle('prop')"`, this repo's first use of a Livewire magic action as a form binding. That story swapped a bare `wire:model` for it on the edit modal's `active` checkbox for a real-browser-automation reason, and the substitution *looks* like it opens a second, ungated write path. It does not: `$toggle` is client-side sugar resolving to `$set`, whose only server-visible effect is `queueUpdate()` — the same `updates` payload `wire:model` writes to — while the `$set` **call** is `$returnEarly()`d by `SupportMagicActions`, so no method is dispatched. `#[Locked]` binds it unchanged, verified by execution (`->set('regions', [])` / `->set('editingRegionId', …)` both raise `CannotUpdateLockedPropertyException` on the shipped component), which is the load-bearing half: the markup is not the boundary, the lock is. Recorded as a rule — choosing between `wire:model`, `wire:model.live` and `$toggle` is a **reactivity** decision, never an authorization one — so the next screen hitting the same automation bug does not re-open the question. **Nothing else on this page changed meaning**: story 0018 is view-layer only, adds no `#[Locked]` property, no gate and no component-only rule, and every gate on that screen lives in story 0017's already-audited component class._
+_Last updated: 2026-08-29 — Story 0020 (Shared media gallery modal, Phase 4 audit): added [The routeless case](#the-routeless-case-a-component-with-no-route-has-no-per-request-backstop-at-all), and **corrected this page's opening sentence**, which had scoped the whole document to a *"full-page Livewire component"* since task 0004 — true of every component audited through task 0018 and false as of `App\Livewire\Media\Gallery`, the first **embedded child** with no route of its own. That distinction is not cosmetic: it decides whether any rule on this page still has a backstop behind it. Story 0020's finding **F-1** (Medium) is the shipped proof — `tiles()`/`toggleSelect()`/`confirmSelection()` gated only `mount()`, which is exactly what the three routed screens here do and is exactly right *for them*, because `can:` **is** on `PersistentMiddleware` and is replayed on every `/livewire/update` round trip. A component with no route has no middleware to replay: Livewire replays the **host page's**, which says nothing about `media.*`, so `mount()` runs once and every later call arrives unauthorized. An actor kept browsing, searching and selecting the whole media library after `media.view` was revoked mid-session. The section carries the ❌/✅ pair, three rules (**enumerate methods, not abilities**; a `#[Computed]` property **is** a method; and **a render-path gate fails closed while an action-path gate throws** — a throwing `#[Computed]` propagates out of the child and 500s the *host* page, which is the failure the consumer's `@can` wrapper exists to prevent, one layer lower) and two re-readings of existing rules in the new shape: the consumer-side `@can` is a layer and never the gate, and a disclosure gate may be legitimately **stronger** than its neighbours (`startEditing()` asks `update` where `toggleSelect()` asks `viewAny` — recorded on the docblock at Phase 5's F-8 so it is not "fixed" into a matching pair). Also added a `>` note to the `mount()`-exclusion bullet: `Media\Gallery::mount()` is the exception's own exception and **does** log, because the exclusion's reasoning (the route's `can:` refuses first) has no route to rest on. **Verified as accurate rather than rewritten:** the `PersistentMiddleware` allow-list table and its `password.confirm` worked example, the `#[Locked]`/`Rule::unique()->ignore()` section, the `$toggle` confirmed-safe subsection, and the action-vs-component section — story 0020 adds a `#[Locked]` property set that follows the existing rule and an action (`App\Actions\Media\UpdateMediaDetails`) that authorizes itself, which is that section applied, not extended._
+
+_Previously: 2026-08-26 — Task 0018 (Sales Regions & Taxes screen, Phase 4 audit): added the **confirmed-safe** subsection on `wire:click="$toggle('prop')"`, this repo's first use of a Livewire magic action as a form binding. That story swapped a bare `wire:model` for it on the edit modal's `active` checkbox for a real-browser-automation reason, and the substitution *looks* like it opens a second, ungated write path. It does not: `$toggle` is client-side sugar resolving to `$set`, whose only server-visible effect is `queueUpdate()` — the same `updates` payload `wire:model` writes to — while the `$set` **call** is `$returnEarly()`d by `SupportMagicActions`, so no method is dispatched. `#[Locked]` binds it unchanged, verified by execution (`->set('regions', [])` / `->set('editingRegionId', …)` both raise `CannotUpdateLockedPropertyException` on the shipped component), which is the load-bearing half: the markup is not the boundary, the lock is. Recorded as a rule — choosing between `wire:model`, `wire:model.live` and `$toggle` is a **reactivity** decision, never an authorization one — so the next screen hitting the same automation bug does not re-open the question. **Nothing else on this page changed meaning**: story 0018 is view-layer only, adds no `#[Locked]` property, no gate and no component-only rule, and every gate on that screen lives in story 0017's already-audited component class._
 
 _Previously: 2026-08-24 — Task 0015b (log refused privileged attempts): this page's central rule — gate every method that mutates **or discloses** — has been stated since task 0004 and shipped in full since task 0015, and it turns out to be only half a property. Added **"Gating a method is not the same as knowing when the gate fired"**, the observability half, with the ✅/❌ pair (the shipped `$logRefusedPrivilegedAttempt->authorize(...)` call site against the bare `Gate::authorize(...)` every one of these sites carried until this story) and why it matters **more** on a Livewire component than on an ordinary route: every probe is the same `POST /livewire/update`, so a refused fiftieth attempt leaves no access-log line shaped like the attempt. Three component-specific consequences: the helper is **method**-injected here (Livewire resolves the unmatched typed parameter, so no call site changes) while the actions behind the screen constructor-inject it for the documented `__invoke()`-is-a-public-contract reason; `mount()` is the one deliberate exception, and the reason is **this page's own allow-list table read in the opposite direction** from the `password.confirm` row directly above it (`can:`'s *presence* on `PersistentMiddleware` is what makes a log there unreachable over HTTP, where `RequirePassword`'s *absence* is what forced a guard into the method) — with the tripwire that would reverse it; and a disclosure gate still needs its state assertion, since `Log::spy()` cannot distinguish a gate that ran before the assignments from one that ran after. The line's own shape, its two message strings and the shared-action log ceiling are pointed at in [architecture/authorization.md](../architecture/authorization.md#recording-a-refusal--what-every-gate-owes-the-audit-trail) rather than duplicated. **Nothing else on this page changed meaning** — verified against the diff: this story adds no `#[Locked]` property, no new disclosure gate, no component-only rule, and changes no refusal's class, status or message._
 

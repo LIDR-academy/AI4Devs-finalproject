@@ -100,12 +100,14 @@ test('upload() authorization refusal is logged, with no target', function () {
     $actor->givePermissionTo('media.view');
     $this->actingAs($actor);
 
-    $component = Livewire::test(Gallery::class);
+    // Story 0020 finding: Gallery::updatedPendingUploads() fires upload() the instant
+    // `pendingUploads` is set (the real, only trigger a genuine browser upload produces), so title
+    // must be set BEFORE pendingUploads and the refusal is thrown from inside
+    // ->set('pendingUploads', ...) itself -- there is no trailing ->call('upload') left to run.
+    $component = Livewire::test(Gallery::class)->set('title', 'Should be refused');
 
     try {
-        $component->set('photo', UploadedFile::fake()->image('product.png', 100, 100))
-            ->set('title', 'Should be refused')
-            ->call('upload');
+        $component->set('pendingUploads', [UploadedFile::fake()->image('product.png', 100, 100)]);
     } catch (AuthorizationException) {
         //
     }
@@ -164,9 +166,8 @@ test('a permitted upload produces no refusal entry', function () {
     $this->actingAs($actor);
 
     Livewire::test(Gallery::class)
-        ->set('photo', UploadedFile::fake()->image('product.png', 100, 100))
         ->set('title', 'Permitted upload')
-        ->call('upload')
+        ->set('pendingUploads', [UploadedFile::fake()->image('product.png', 100, 100)])
         ->assertHasNoErrors();
 
     Log::shouldNotHaveReceived('warning');

@@ -67,13 +67,22 @@ trait MediaValidationRules
      * Get the validation rules used to validate a media item's title and
      * description (PRD §2.3 -- title required, description optional).
      *
+     * `description` carries an explicit `max:2000` (story 0020 Phase 4
+     * security audit finding F-3, Low): the column is `TEXT`, and with no
+     * length rule an over-large value reaches the database and throws an
+     * unhandled `QueryException` (a 500) under MySQL strict mode rather
+     * than failing validation cleanly. Reachable both via `Gallery::upload()`
+     * and via `App\Actions\Media\UpdateMediaDetails`'s inline-edit
+     * `editDescription` field, an unlocked, fully client-controlled
+     * `wire:model`-bound property.
+     *
      * @return array<string, array<int, ValidationRule|array<mixed>|string>>
      */
     protected function mediaDetailsRules(): array
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:2000'],
         ];
     }
 }

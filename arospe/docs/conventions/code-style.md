@@ -256,6 +256,24 @@ public function __construct(
 
 `app()` earns its one exception because a `#[Computed]` method **cannot** accept parameters; an action's constructor is available, so nothing forces the container call. The distinction matters for testability: a constructor dependency can be swapped in a test, an `app()` call inside a method body cannot without binding the container.
 
+Story 0020 adds the exception's **second** shape, which generalises the reason rather than adding a special case. `App\Livewire\Media\Gallery::updatedPendingUploads()` — a Livewire `updated<Property>()` lifecycle hook — resolves two collaborators with `app()` before delegating:
+
+```php
+// app/Livewire/Media/Gallery.php
+public function updatedPendingUploads(): void
+{
+    if ($this->pendingUploads === []) {
+        return;
+    }
+
+    $this->upload(app(StoreUploadedImage::class), app(LogRefusedPrivilegedAttempt::class));
+}
+```
+
+Livewire invokes lifecycle hooks through `wrap($component)->__call($name, $params)` with **fixed** parameters, not a container `call()`, so a type-hinted parameter here is never resolved. `upload()` itself keeps its ordinary method-injected signature, because it is *also* called directly by every Feature test and **is** container-resolved on that path — the hook is a caller, not a replacement for the signature.
+
+**So the rule is not "a `#[Computed]` method may use `app()`" — it is: a method whose parameter list is fixed by something other than this class may use `app()`, and nothing else may.** Two instances now, a `#[Computed]` property and a lifecycle hook, and both answer the same question the same way: *is there any signature the author controls that the container would honour?* If yes, use it.
+
 ✅ Good — how a direct-call test reaches an action, per the 0008a rule that these are independently callable:
 
 ```php
@@ -270,7 +288,22 @@ app(RequestEmailChange::class)($user, 'new-address@example.com');
 (new RequestEmailChange)($user, 'new-address@example.com');
 ```
 
-_Last updated: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), Phase 6: extended the
+_Last updated: 2026-08-29 — Story 0020 (Shared media gallery modal — frontend), Phase 6: extended the
+`app()` carve-out with its **second** shape and, more usefully, restated the rule behind it. It had read
+as "a `#[Computed]` method may use `app()`", which is a description of the one instance that existed;
+story 0020's `Gallery::updatedPendingUploads()` is a Livewire lifecycle hook — invoked through
+`wrap($component)->__call($name, $params)` with fixed parameters rather than a container `call()`, so a
+type-hint there is never resolved — and it fails the same test for the same reason. The rule is now
+stated once: **a method whose parameter list is fixed by something other than this class may use
+`app()`, and nothing else may.** Note the hook delegates to `upload()`, which keeps its ordinary
+method-injected signature because it is also called directly (and container-resolved) by every Feature
+test — the hook is a caller, not a replacement for the signature. Nothing else on this page changed: the
+story's new action (`App\Actions\Media\UpdateMediaDetails`) constructor-injects
+`LogRefusedPrivilegedAttempt` for the reason the documented exception already gives — its `__invoke()`
+parameter list is a public contract — and its `array<int, array{...}>` payload shapes and explicit
+return types are the existing type/PHPDoc rules applied, not new ones._
+
+_Previously: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), Phase 6: extended the
 constructor-injection exception with **the clearest case it has** — one action constructor-injecting
 another (`SetSalesRegionActive` ← `SetDefaultSalesRegion`), with the ❌ pair against `app()`, which this
 story's own Phase 1 draft proposed before Phase 2 corrected it. The distinction is not stylistic: `app()`
