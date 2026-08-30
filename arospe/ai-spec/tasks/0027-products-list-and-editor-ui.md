@@ -1,5 +1,34 @@
 # [0027] Products — list screen and product editor (UI)
 
+> ⚠️ **This file predates Epic 5's translatable-content retrofit and has been amended, 2026-08-30, to stay accurate.** It was written on 2026-08-18 against a `products` table carrying scalar `name` and `description` columns and **no** slug or SEO fields at all. Two later Epic 5 stories change that, and both are Phase 1 text rather than shipped code:
+>
+> - **[0076 — Translatable content retrofit, Products backend](0076-translatable-content-retrofit-products-backend.md)** **drops `products.name` and `products.description` entirely** and moves them into a `product_translations` child table, one row per `(product, store language)`, read through `Product::translated('name')` / `translated('description')`. It also introduces **`slug`, `meta_title` and `meta_description` for the first time**, born on that child table and never on the parent, with `slug` unique per language (`UNIQUE(store_language_id, slug)` — 0076's **Q-2**, resolved 2026-08-30). `CreateProduct` / `UpdateProduct` gain three new parameters (0076 **D-18**), and 0076 ships `Product::scopeOrderByTranslatedName()` (its **D-14**) specifically so this story's list query does not have to invent a join.
+> - **[0077 — Product editor language tabs (UI)](0077-product-editor-language-tabs-ui.md)** adds one tab per active store language to the editor built here, so the **five** translatable fields are authored once per language while `sku`, category, `type`, `status`, `price`, `stock`, imagery and sales regions stay **outside** the tabs and render once — PRD Epic 5's own rule. It replaces this story's `public string $name` / `public string $description` with five parallel arrays keyed by store-language id, and adds a dedicated `App\Actions\Products\SetProductTranslation` action.
+>
+> **The amendments below are corrections, not a redesign.** This story's job is unchanged — the list, the routed editor, delete, the harness migration — and it does **not** grow the language-tabs UI, which is 0077's. What has been corrected here is every place this file asserts something that 0076/0077 make false. **0077 itself is scoped *out* of the list screen** (its own scope fence and **R-1**), so the list-side breaks are this file's to carry.
+>
+> **Where the corrections are**, each marked in place with what the text used to say:
+>
+> | Site | What changed |
+> | --- | --- |
+> | [Description](#description) | the editor's field list |
+> | [Gherkin](#gherkin) | the editor scenarios are now per-language |
+> | [Files to create/modify](#files-to-createmodify) | which of these files 0077 also opens |
+> | [Interface contract consumed](#interface-contract-consumed--reconciled-against-the-amended-dependencies) | `Product`'s dropped columns, the widened action signatures, the new scopes |
+> | [Component public surfaces](#component-public-surfaces) | `$deletingProductName`, `$name`, `$description` |
+> | [Tests to perform](#tests-to-perform) | the name/description assertions |
+> | **[D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)** | **the list query — `select(['…','name',…])->orderBy('name')` no longer runs at all** |
+> | [D-5](#d-5--three-selects-three-different-answers-to-the-null-desync-trap) | the never-`null` rule now binds 5 × N array leaves |
+> | [D-8](#d-8--three-gallery-instances-on-one-page-and-why-they-cannot-collide) | three `Gallery` instances → 2 + N |
+> | [D-12](#d-12--save-composition-who-calls-what-in-one-transaction-then-redirect) | the ordering survives; the translation writes join the transaction |
+> | [D-13](#d-13--a-static-notice-that-formatting-is-lossy-no-dynamic-diff-warning) | one lossy-formatting notice, not N |
+> | [D-14](#d-14--the-harness-is-retired-here-and-the-retirement-is-a-test-migration-confirmed-scope-corrected) | the migrated browser tests need store languages seeded |
+> | [Scope fences](#scope-fences-what-this-story-must-not-do) | *"No `slug`, no SEO fields, no translation scaffolding"* — still true **of this story**, no longer true of the schema |
+> | [Acceptance criteria](#acceptance-criteria) | the list-query criterion |
+> | [Open questions](#open-questions) | **OQ-10**, new: which store language the list renders |
+>
+> **Three of these need a human decision and are not guessed at here** — **OQ-10** (which language the list renders and orders by), the same question for `$deletingProductName`, and whether the category eager load's own breakage (a *different* retrofit's, 0070's) is folded into this amendment or left to whoever amends for 0070. Each is stated plainly where it arises.
+
 ## Description
 Build the two screens the whole of Epic 2's product work has been feeding: a **products list**
 (thumbnail, name + SKU, price, colour-coded stock, a status badge that reads *Agotado* at zero stock,
@@ -30,6 +59,8 @@ where four separate stories' zero-call-site deliverables — `ProductPolicy`, `C
 > builder in story **0031**. This editor ships the product-level `price` / `stock` fields exactly as
 > [0024](0024-products-core-crud-backend.md) defines them. See
 > [OQ-9](#open-questions) for the one forward dependency (0029's OQ-3) that could change that later.
+
+> ⚠️ **Correction, 2026-08-30 — the editor's field list above is per-language for two of its entries, and gains three more.** The paragraph opens *"a **routed product editor** (name, SKU, category select, …, the WYSIWYG description …)"*, which reads as one name field and one description field. After [0076](0076-translatable-content-retrofit-products-backend.md) the editor's translatable set is **five** fields — `name`, `description`, `slug`, `meta_title`, `meta_description` — and after [0077](0077-product-editor-language-tabs-ui.md) each of them is authored **once per active store language**, inside language tabs. Everything else in that list (SKU, category select, the physical/virtual type control, the featured image, the gallery strip, the Sales Region multi-select) is non-translatable and renders **exactly once**, outside the tabs, per PRD Epic 5's *"shown once"* rule. **The routed-page shape, the delete flow and the harness migration are unaffected** — and the tabs themselves are 0077's to build, not this story's.
 
 ## Type
 frontend | fullstack (related_task_id: **0024** — products core CRUD backend, whose paired UI this is)
@@ -91,6 +122,14 @@ mechanics (0019/0020), and the WYSIWYG's own editing behaviour (0021).
 
 Every scenario opens with a named business-role actor and carries exactly one `When`, per
 [gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3.
+
+> ⚠️ **Correction, 2026-08-30 — read every mention of a product's *name* or *description* below as "in one store language", and the editor scenarios as covering the **default** language's tab only.** The scenarios were written when a product had exactly one name and one description, so nothing in them names a language. They are **not struck** — every one still describes real behaviour — but three groups need reading with [0076](0076-translatable-content-retrofit-products-backend.md)/[0077](0077-product-editor-language-tabs-ui.md) in mind:
+>
+> - **The list scenarios** (*"the row shows the product's thumbnail, its name, its SKU…"*) render a name resolved for **one** language, which language being **[OQ-10](#open-questions)** — open, and a human's to answer.
+> - **The editor scenarios** — *"A product is created from the editor"*, *"Opening a product loads its stored values"*, and both **The product's description** scenarios — describe the **default store language's** tab. Their per-language counterparts (switching tabs, an untranslated tab opening empty, a blank tab writing no row, the slug/SEO refusals) are [0077's own Gherkin](0077-product-editor-language-tabs-ui.md) and are deliberately **not** duplicated here.
+> - **The delete scenarios** (*"The delete confirmation names 'Runner Pro'"*) name a product in one language too — see the `$deletingProductName` note under [Component public surfaces](#component-public-surfaces).
+>
+> **Nothing here needs a new scenario.** This story's Gherkin is about the list, the routed editor and delete; the language dimension is 0077's feature, and adding half of it here would duplicate a file that already covers it in full.
 
 ```gherkin
 Feature: Products list
@@ -360,10 +399,49 @@ Feature: Deleting a product
 > must **never** be dispatched in the same batch as any of those stories, per the
 > [Parallel Agent File-Ownership Rule](../../docs/contracts.md#parallel-agent-file-ownership-rule).
 
+> ⚠️ **Correction, 2026-08-30 — the sequential-implementation list is now longer, and five of the files above are also opened by [0077](0077-product-editor-language-tabs-ui.md).** Add **0076** and **0077** to the list of stories this one must never be batched with. 0077 modifies `app/Livewire/Products/Editor.php`, `resources/views/livewire/products/editor.blade.php`, `lang/{en,es}/products.php`, `tests/Feature/Products/EditorTest.php`, `tests/Feature/Products/EditorRenderingTest.php`, `tests/Feature/Products/AuthorizationTest.php` and `tests/Browser/Products/EditorJourneyTest.php` — every one of them created here.
+>
+> **Three things follow, and the third is the one worth planning for.** *(a)* This story still **creates** all of those files; 0077 extends them afterwards, so nothing moves out of the table above. *(b)* 0077 creates files this story does not name at all (`app/Actions/Products/SetProductTranslation.php`, three new test files, a browser test in `tests/Browser/Products/`) — they are its own and are not added here. *(c)* **`tests/Feature/Products/IndexQueryTest.php` will be red the moment 0076 lands and before this amendment's D-4 correction is implemented**, because the query it asserts on names a dropped column. 0077's **R-1** says so explicitly and forbids its own Phase 3 from "fixing" it — the fix is [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) below, and it belongs to this story.
+
 ### Interface contract consumed — reconciled against the amended dependencies
 
 Everything below was re-read on disk on 2026-08-18, **after** 0022's and 0026's amendments. Where a
 name is uncertain it is flagged, not guessed.
+
+> ⚠️ **Correction, 2026-08-30 — six entries in the block below are falsified by [0076](0076-translatable-content-retrofit-products-backend.md), and two more arrive that this contract never listed.** The block is left intact as the 0024/0026-era contract and corrected here rather than rewritten in place, because most of it is still exactly right.
+>
+> | Entry as written | State after 0076 |
+> | --- | --- |
+> | `App\Models\Product` | **`name` and `description` are no longer columns.** They live on `product_translations`, one row per `(product, store language)`, reached through `Product::translated('name')` / `translated('description')` — which resolve the requested language, fall back to the store default, and return `null` when neither exists, **per field** (0070 **D-5**, proved by 0076 **D-3**). `Product` keeps its other seven fillable columns and does **not** become identity-only (0076 **D-10**) — a reader pattern-matching against the zero-fillable taxonomy retrofits gets this wrong. |
+> | `App\Concerns\ProductValidationRules` | `productNameRules()` and `descriptionRules()` are **byte-identical** (0076 **D-4**/**D-7** — there is no name uniqueness to re-scope and none is invented), `skuRules()` is **explicitly untouched**, and **three new methods** arrive: `slugRules(string $storeLanguageId, ?string $productId = null)`, `metaTitleRules()`, `metaDescriptionRules()`. Note the slug rule's self-exclusion is an explicit **`product_id`** exclusion, never `->ignore()` (0076 **D-6**/**R-5**). |
+> | `CreateProduct` / `UpdateProduct` | **Signatures widen** with `?string $slug`, `?string $metaTitle`, `?string $metaDescription` (0076 **D-18**), and `$name` / `$description` narrow in meaning to *"the default store language's"*. Both gain their **own** `DB::transaction()` (0076 **D-15**) — which does not remove this story's outer boundary; see [D-12](#d-12--save-composition-who-calls-what-in-one-transaction-then-redirect). |
+> | `SyncProductGallery` | **Unchanged.** 0076 touches it only to note its transaction becomes a savepoint. |
+> | `App\Policies\ProductPolicy` | **Unchanged — no new ability, no new permission, and the catalog stays at 42** (0076 **D-16**). Translating a product is `products.edit`; authoring content in a language is *using* a configured language, not managing the catalog, so **no `store-languages.*` permission is required** either. |
+> | `lang/en\|es/products.php` | Gains the `attributes` leaves for the three new fields plus a slug-taken refusal string (0076), and 0077 appends an `editor.languages.*` group. **Extend, never recreate** — this story is now one of six writers. |
+>
+> **Two entries this contract could not have listed, both consumed rather than written here:**
+>
+> ```php
+> // From 0076 — the read-side scope this story's list query is the reason for (0076 D-14)
+> Product::scopeOrderByTranslatedName(Builder $query, ?string $storeLanguageId = null): void
+>                                                // orders by the requested language, COALESCEd through
+>                                                //   the store default. The exact expression is 0076's
+>                                                //   Phase 3 latitude; the name, the parameter and the
+>                                                //   fallback semantics are fixed.
+>
+> // From 0070 — the generic eager load every translated read uses
+> Product::scopeWithTranslationsFor(?string $storeLanguageId = null)
+>                                                // ⚠️ 0076 R-7: this loads WHOLE translation rows with no
+>                                                //   column selection, so a paginated 25-row list drags a
+>                                                //   MEDIUMTEXT `description` it never renders — the exact
+>                                                //   hazard 0024 R-9 makes this story's standing obligation.
+>                                                //   THE FIX IS 0070'S (an optional column list), not this
+>                                                //   story's: 0076's technical task 4 owns it. Do NOT patch
+>                                                //   it locally, and do not silently accept the regression —
+>                                                //   see D-4.
+> ```
+>
+> **A seventh obligation joins the six below**, and it is the one nothing else in this file would tell you about: **the list query must never reach for a `products.name` column, and the eager load must not undo 0024 R-9's no-`MEDIUMTEXT` rule.** Both are [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s.
 
 ```php
 // From 0024 — all present, all with ZERO call sites until this story
@@ -500,6 +578,12 @@ class Index extends Component
 }
 ```
 
+> ⚠️ **Correction, 2026-08-30 — `$deletingProductName` is fed from a column that no longer exists.** This is [0076's **R-1(b)**](0076-translatable-content-retrofit-products-backend.md), named there as this story's hand-off. The property is populated by `confirmDelete()` from `$target->name`, and after 0076 that read is `$target->translated('name', $languageId)`.
+>
+> **The property itself is unchanged** — still `#[Locked] public string $deletingProductName = ''`, still assigned server-side from a freshly-read row, and the never-`null` rule still binds it (`translated()` returns `null` for a product untranslated in both the requested and the default language, so the assignment must coalesce to `''`). What changes is one read, and **which language it reads is [OQ-10](#open-questions)** — the same unanswered question the list itself carries, and it should get the same answer, since a confirmation naming a product differently from the row above it is worse than either choice alone.
+>
+> ⚠️ **A product translated in *no* language is now a reachable state** (0076's own Gherkin covers it), so the confirmation modal must render coherently with an empty name rather than assuming one exists. That is a rendering decision this file should make before Phase 3; it is not made here.
+
 ```php
 namespace App\Livewire\Products;
 
@@ -554,6 +638,32 @@ class Editor extends Component
 }
 ```
 
+> ⚠️ **Correction, 2026-08-30 — `public string $name` and `public string $description` are removed by [0077](0077-product-editor-language-tabs-ui.md), and three more translatable fields join them.** This is the single largest change Epic 5 makes to this story's own surface, and it is recorded here rather than acted on: **0077 owns the replacement**, and this story still ships the two properties as written until 0077 lands on top of it.
+>
+> **What 0077 replaces them with** (its **D-2**, revised to match 0071's shape): **five parallel arrays**, each `array<string, string>` keyed by **store-language id** —
+>
+> ```php
+> public array $names = [];              // NOT #[Locked] — these are the wire:model targets
+> public array $descriptions = [];       //   (which is exactly why 0077's D-3 exists)
+> public array $slugs = [];
+> public array $metaTitles = [];
+> public array $metaDescriptions = [];
+>
+> #[Locked] public array  $languages = [];                    // server-derived in mount()
+> #[Locked] public string $defaultLanguageId = '';
+> #[Locked] public array  $originalTranslatedLanguageIds = [];  // 0077 D-18's three-state branch reads this
+> public string $activeLanguageId = '';                       // the server-tracked active tab
+> ```
+>
+> Four consequences worth knowing while writing *this* story, because each is cheaper to respect now than to retrofit:
+>
+> - **Everything else on this surface survives unchanged.** `$sku`, `$productCategoryId`, `$type`, `$status`, `$price`, `$stock`, `$regionIds`, all four imagery properties and every modal flag are non-translatable and render **once**, outside the tabs. `mount()`, `save()`, the three `#[Computed]` option lists and every gallery method keep their signatures.
+> - **`save()`'s parameter list grows** — 0077 adds `SetProductTranslation` for the non-default languages, while the **default** language still goes through `CreateProduct` / `UpdateProduct` on 0076 **D-18**'s widened signature. The **ordering** in [D-12](#d-12--save-composition-who-calls-what-in-one-transaction-then-redirect) is unchanged, which is worth saying explicitly because the temptation on reading it will be to assume it moved.
+> - **`$description` was the WYSIWYG's `#[Modelable]` target**, and after 0077 the editor mounts **one `WysiwygEditor` per active language**, all simultaneously in the DOM, hidden with `x-show` (0077 **D-1**) — never `@if`, which would tear down N `wire:ignore`d regions. That is the reason 0021's **D9** warning finally lands, and it is 0077's problem to solve, but it is why [D-8](#d-8--three-gallery-instances-on-one-page-and-why-they-cannot-collide)'s arithmetic below is now wrong.
+> - **The never-`null` rule ([D-5](#d-5--three-selects-three-different-answers-to-the-null-desync-trap)) now binds 5 × N nested leaves** rather than three flat properties — same rule, much wider surface.
+>
+> ⚠️ **This story must not add the tabs, the arrays or the action.** If 0077 is resequenced ahead of this one the two merge cleanly; if it is not, this file ships the two scalar properties and 0077 replaces them. What must **not** happen is a half-implementation here — one array without the others, or a language selector with no per-language write path.
+
 ## Tests to perform
 
 Levels chosen per [coverage-policy.md](../../docs/testing/frontend/coverage-policy.md): browser tests
@@ -575,6 +685,8 @@ layer up** — see [Deliberately not tested here](#deliberately-not-tested-here)
 - [ ] `deleteProduct()` with a `$deletingProductId` naming a nonexistent product fails closed.
 - [ ] `closeDeleteModal()` clears both locked properties and the error bag.
 
+> ⚠️ **Correction, 2026-08-30 — two of the eight cases above read a name that is now resolved rather than selected.** *"The list renders every product with name, SKU, price and stock"* and *"`confirmDelete()` populates `$deletingProductName` from the **database**"* both still hold as stated; what changes is where the name comes from (`translated('name', $languageId)`, not `$product->name`) and the fact that **which language** is [OQ-10](#open-questions). The *"from the database, not from a row array"* half of the second one is unaffected and still the point of the test. **One case is worth adding:** a product translated in **no** language renders and deletes without error — a reachable state after 0076, and one that produces an empty name rather than an exception.
+
 ### `tests/Feature/Products/IndexQueryTest.php` *(its own file — the query shape is a named risk)*
 
 - [ ] The list query selects **explicit columns and never `description`** — captured with
@@ -585,6 +697,18 @@ layer up** — see [Deliberately not tested here](#deliberately-not-tested-here)
       relations are load-bearing — identical ones would pass through Eloquent's identity map and hide
       the defect.
 - [ ] Pagination: page 2 returns the next page's rows and the total is correct.
+
+> ⛔ **Correction, 2026-08-30 — the first assertion above is written against a column that no longer exists, and this file goes red the moment [0076](0076-translatable-content-retrofit-products-backend.md) lands.** 0077's **R-1** names it by path and forbids its own Phase 3 from touching it: *"that is not this story's regression and must not be 'fixed' into it."* The fix is [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s corrected query, and it belongs here.
+>
+> The three cases become **five**, and the shape of the first one inverts:
+>
+> - [ ] The list query selects **explicit columns and never names `name`** — which after 0076 is not a `products` column at all. The `DB::listen()` capture stands; what it asserts on changes.
+> - [ ] **The ordering is by translated name for the chosen language, with the store default as the fallback**, asserted as an exact sequence over a fixture where the two orders genuinely differ — a product translated in the requested language, one translated only in the default, and two whose relative order flips between the two answers. **A fixture where both orders agree asserts nothing**, which is the same vacuous-coverage trap the [errors-log's `arch()` entry](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18) records.
+> - [ ] ⚠️ **The eager load does not drag `description` onto the list** — the 0024 **R-9** obligation, now one table over. This is the assertion that makes [0076's **R-7**](0076-translatable-content-retrofit-products-backend.md) visible rather than silent: if `withTranslationsFor()` still loads whole translation rows, this **fails**, and the fix is 0070's rather than a local patch. **Write it even if it is expected to fail** — a recorded, escalated red is the outcome; quietly dropping the assertion is not.
+> - [ ] The **N+1 guard**, unchanged in intent but now covering a third relation: 10 products with 10 distinct categories, 10 distinct featured images **and translations in two languages** must cost the same as 1. Distinct relations stay load-bearing.
+> - [ ] Pagination, unchanged.
+>
+> **Not tested here:** `translated()`'s fallback chain and the per-field resolution — 0070's and 0076's respectively, and re-deriving them one layer up is exactly the redundancy the table at the end of this section exists to prevent.
 
 ### `tests/Feature/Products/IndexRenderingTest.php`
 
@@ -606,6 +730,14 @@ layer up** — see [Deliberately not tested here](#deliberately-not-tested-here)
       (pending [OQ-2](#open-questions)).
 
 ### `tests/Feature/Products/EditorTest.php` *(the largest file)*
+
+> ⚠️ **Correction, 2026-08-30 — every `name` and `description` assertion in this file retargets to the default store language's translation row**, per [0077](0077-product-editor-language-tabs-ui.md)'s own file table, which lists this file as one it modifies: *"every `name` / `description` assertion retargets to `names.{defaultId}` / `descriptions.{defaultId}`."* Concretely, *"a full valid payload creates exactly one product carrying every submitted value"* becomes **one product row plus one translation row in the default language**, and the name/description halves of it assert on the child table.
+>
+> **Most of this file is untouched**, which is the useful half of the correction: the type-required case (0024's most load-bearing invariant), every SKU case including the `->ignore()` and canonicalisation ones, the price/stock boundaries, the retarget test, all eight orchestration cases, the gallery `position` assertions and both authorization cases involve no translatable field and change in **no** way. `ProductSkuUniquenessTest.php` staying byte-identical is 0076's **D-7** stated as a review signal: *"a diff to that file signals something leaked across the wrong boundary."*
+>
+> ⚠️ **The four-table assertion.** *"A save that fails mid-flight leaves nothing partially written"* asserts on `products.name`, `products.featured_media_id`, the `product_media` order and the `product_sales_region` set. `products.name` is gone, and a **fourth** table joins: `product_translations`, asserted as an **exact per-language row set**. 0077's **R-2** notes this file's equivalent covers three tables while four now exist — and that the translation table is the one 0076 leaves structurally unguarded, so it is the one worth getting right.
+>
+> **Not added here:** the per-language save composition, the engaged/untouched/blanked branch, slug uniqueness and the SEO length rules. Those are 0077's `EditorTranslationsTest.php` and `EditorTranslationValidationTest.php`, and duplicating them here would re-run a dependency's suite one layer up — the exact discipline [Deliberately not tested here](#deliberately-not-tested-here) enforces.
 
 Create path:
 
@@ -696,6 +828,12 @@ Orchestration — **the tests only this story can write**:
       and an actor without `media.view` still renders the editor page rather than a 403.
 - [ ] The description field carries the static lossy-sanitization notice (**D-13**).
 
+> ⚠️ **Correction, 2026-08-30 — two of the six cases above stop being singular once [0077](0077-product-editor-language-tabs-ui.md) lands.** The embedded-components case asserts *"one `components.wysiwyg-editor` bound to `description`"*; after 0077 there are **N**, one per active store language, each bound to its own `descriptions.{languageId}` leaf and each with a distinct `wire:key`. The lossy-sanitization notice is **one line above the tab strip**, not one per panel (see [D-13](#d-13--a-static-notice-that-formatting-is-lossy-no-dynamic-diff-warning)).
+>
+> ⚠️ **And a testing hazard this file inherits: page-global `assertSee` stops being safe on the editor.** Every label and helper line now appears N times, so a bare presence assertion cannot distinguish "rendered once, correctly" from "rendered three times because the loop is wrong". Scope by panel hook or use the `*In*` variants — this is the [`assertSee('0%')` matching inside `10%`](../../docs/testing/frontend/playwright-setup.md) trap in a new costume, and 0077's **R-9** records it.
+>
+> **The other four cases are unaffected**: the status option set, the type placeholder, the category select and the `@can('viewAny', Media::class)` branch all concern non-translatable controls that still render exactly once. 0077 adds the *"rendered exactly once"* count assertion that turns "outside the tabs" into a checked property — it needs `data-test` hooks on the six non-translatable inputs that **this** story does not currently promise, which is worth adding here rather than leaving 0077 to retrofit.
+
 ### `tests/Feature/Products/AuthorizationTest.php`
 
 Discharges 0024 **D-15**'s and 0026 **D-8**'s hand-offs explicitly, so `ProductPolicy` stops being a
@@ -773,6 +911,9 @@ the **integration and wiring** points; it never re-derives a dependency's own co
 | The multi-select's debounce timing, over-fetch arithmetic, truncation row | 0022 |
 | `SearchSalesRegions`' own matching, folding and qualified-label rules | 0026 |
 | `ResolveProductTaxRate` — this screen never calls it | 0026 |
+| ⚠️ *Added 2026-08-30:* `translated()`'s fallback chain, the `''`-is-absent rule, the default-language memo, `withTranslationsFor()`'s query bound | 0070 |
+| ⚠️ *Added 2026-08-30:* per-field fallback **as a mechanism**, the description sanitizer's second layer, slug canonicalisation as a model hook, the backfill, per-language slug uniqueness | 0076 |
+| ⚠️ *Added 2026-08-30:* language tabs, tab switching, per-language save composition, the engaged/untouched/blanked branch, the slug blur pre-fill, `SetProductTranslation` | 0077 |
 
 ## Expected outcome
 
@@ -849,6 +990,13 @@ moved onto a real screen.
 - [ ] No migration, model, action, policy, enum, validation rule, factory, seeder or permission-catalog
       change is added by this story.
 
+> ⚠️ **Correction, 2026-08-30 — three criteria above are falsified by [0076](0076-translatable-content-retrofit-products-backend.md)/[0077](0077-product-editor-language-tabs-ui.md), and the last one holds only because of a distinction worth naming.**
+>
+> - *"The list query selects explicit columns, **excludes `description`**, and eager-loads the category and featured image with no N+1"* → it still selects explicit columns and still must not drag a `description` onto the list, but `description` is **no longer a `products` column to exclude**; the obligation moves to the translation eager load ([D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) note 3, and 0076's **R-7**). Add: **the ordering resolves a translated name for the chosen language with the store default as its fallback**, never `orderBy('name')`.
+> - *"The list renders thumbnail, **name** + SKU, price…"* → the name is resolved for one store language, which one being **[OQ-10](#open-questions)**.
+> - *"A duplicate SKU is refused…"* and every other SKU criterion → **unchanged**, and deliberately so: SKU is not translatable, keeps its global `UNIQUE` and its `->ignore($productId)` (0076 **D-7**). Do not let the slug's per-language uniqueness bleed into it.
+> - *"No migration, model, action, policy, enum, validation rule, factory, seeder or permission-catalog change is added by this story"* → **still true, and it stays true.** 0076 adds the migration, the model and the rule methods; 0077 adds the one action (`SetProductTranslation`). Neither is this story's, and **the permission catalog stays at 42 across all three** — translating a product is `products.edit`, and authoring content in a language needs no `store-languages.*` permission (0076 **D-16**, 0070 **D-13**, 0068 **D18**).
+
 ## Definition of Done
 - [ ] Tests written and green, plus the **full** existing suite in a single isolated run, per
       [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule. Note this story **deletes
@@ -882,6 +1030,13 @@ moved onto a real screen.
       opened after validation and after `resolveSelected()`. Each has a named test in
       `tests/Feature/Products/EditorTest.php`.
 - [ ] Acceptance criteria met.
+
+> ⚠️ **Correction, 2026-08-30 — two items to add, both cheap and both easy to lose.**
+>
+> - [ ] **[OQ-10](#open-questions) answered before Phase 3 starts** — which store language the list renders and orders by. This restores a blocking-question gate of exactly the shape the discharged OQ-5/OQ-6 bullet above used to carry, for the same reason: [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s query and its ordering test's fixture are both unwritable without it.
+> - [ ] **The `docs-keeper` line widens.** Beyond the three product routes and the retired harness route, this story now also lands the app's **first consumer of a translated read on a list screen** — `docs/database/schema.md` and `docs/architecture/authorization.md` are 0076's to update, but the *screen*-side facts (which language a list resolves, and that the permission catalog stays at **42** across the whole Epic 5 product chain) belong in the pass this story runs.
+>
+> ⚠️ **And one caveat on the Full Test Suite Gate evidence:** if 0076 lands before this story's D-4 correction is implemented, `tests/Feature/Products/IndexQueryTest.php` is **already red** when this story starts. That red is 0076's hand-off, not a regression introduced here — record it as such rather than letting a green-suite requirement push someone into patching the wrong file, per the [deferred-findings rule](../../docs/errors-log.md#a-deferred-storys-findings-were-claims-about-a-tree-that-no-longer-existed-and-one-of-them-would-have-reopened-a-bug-in-this-log--2026-08-23).
 
 ## Documented functional decisions
 
@@ -985,6 +1140,45 @@ Product::query()
   as [OQ-4](#open-questions) because pagination without search becomes uncomfortable past a few
   hundred products.
 
+> ⛔ **Correction, 2026-08-30 — the query above no longer runs. It names a dropped column twice, and this is the sharpest break Epic 5 makes in this file.** It is [0076's **R-1(a)**](0076-translatable-content-retrofit-products-backend.md), named there as this story's hand-off (its technical task 1) and explicitly **excluded** from 0077's scope, so nobody else fixes it.
+>
+> **What the code above says, and why each half fails.** `->select([… 'name', …])` names `products.name`, which 0076's second migration **drops**; an explicit column in a `select()` throws `QueryException: column not found` rather than quietly returning nothing, so this fails loudly on the first page load. `->orderBy('name')` fails the same way. There is no in-place patch — ordering by a value that now lives one table over, per language, with a fallback, is a join.
+>
+> **The corrected shape.** 0076 shipped `scopeOrderByTranslatedName()` (its **D-14**) for exactly this reason — *"this story ships the scope rather than handing 0027 a join to invent"* — so the fix is a **consumption**, not an invention:
+>
+> ```php
+> Product::query()
+>     ->select(['id', 'product_category_id', 'featured_media_id', 'sku',
+>               'type', 'status', 'price', 'stock', 'created_at'])   // 'name' is GONE (0076)
+>     ->with([
+>         'category:id,name',                                        // ⚠️ see the second note below
+>         'featuredImage:id,title,path,webp_path,avif_path',         // 0019's real columns — D-17
+>     ])
+>     ->withTranslationsFor($languageId)      // 0070's scope — ⚠️ see the MEDIUMTEXT note below
+>     ->orderByTranslatedName($languageId)    // 0076 D-14 — never orderBy('name') again
+>     ->orderBy('id')                         // the tiebreak, unchanged and now MORE load-bearing
+>     ->paginate(25);
+> ```
+>
+> **Four things about that shape, three of them decisions and one of them a genuinely open question:**
+>
+> 1. ✅ **`$languageId` is resolved — the store default.** The scope takes `?string $storeLanguageId = null`, and per **[OQ-10](#open-questions)** (resolved 2026-08-30), every call site in this story passes the store default language explicitly. This was [0077's **Q-5**](0077-product-editor-language-tabs-ui.md), which that story raised and routed **here** — *"it belongs to the 0027 amendment, not to this story"*.
+> 2. **The `id` tiebreak stops being a nicety.** The original bullet justified it because *"two products sharing a name (permitted — only `sku` is unique)"* would otherwise reshuffle between pages. That reasoning **strengthens**: 0076 **D-4** confirms product names carry no uniqueness in **any** scope, per-language included, *and* a product untranslated in the requested language now sorts by its **fallback** value — so ties are more common, not fewer. Keep it.
+> 3. ⚠️ **The eager load must not undo 0024 R-9.** `description` was excluded from the `select()` above deliberately, because a `MEDIUMTEXT` inline in the clustered index is what R-9 exists to keep off this list. After 0076 that column moved to `product_translations` — and `withTranslationsFor()` loads **whole translation rows with no column selection**, so the naive fix drags the description back onto every row of a paginated list, plus both SEO strings. **This is [0076's **R-7**](0076-translatable-content-retrofit-products-backend.md), the fix belongs to 0070** (an optional column list on the scope — 0076's technical task 4), and it is explicitly *"not to be patched locally"*. So: this story consumes the scope, and if 0070's column list has not landed by Phase 3, the regression is **recorded and escalated**, never absorbed. The `IndexQueryTest.php` assertion below is what makes it visible.
+> 4. ✅ **`'category:id,name'` is broken too, by a *different* retrofit — and this same coordination pass
+>    fixes it, in writing, so the hand-off isn't lost.** `product_categories.name` is moved by
+>    [0070](0070-translatable-content-mechanism-product-categories-backend.md), whose own **R-1** names
+>    this story as a casualty — 0076's **R-1** pointed at it explicitly to keep the two breaks from being
+>    conflated, and this note records that *this* pass is the one that closes both, on the same day, in
+>    the same file. The eager load becomes `->with(['category' => fn ($q) => $q->withTranslationsFor($languageId)])`
+>    reading `$category->translated('name', $languageId)` at render, and `Editor::categoryOptions()`'s own
+>    `orderBy('name')` becomes `ProductCategory::query()->orderByTranslatedName($languageId)` if 0070/0071
+>    ship that scope, or an in-PHP `sortBy()` mirroring 0071's own `loadProductCategories()` fix otherwise
+>    — same `$languageId` as **OQ-10** resolves to (the store default), so the category dropdown and the
+>    product list agree on which language's names they show.
+>
+> **What does not change:** the explicit-column `select()` (still explicit, still no `description`), the two eager loads' *purpose*, pagination at 25, and the no-search decision. The list still renders a name — it just resolves one instead of selecting one.
+
 ### D-5 — Three `<select>`s, three different answers to the null-desync trap
 
 [errors-log.md](../../docs/errors-log.md)'s 2026-08-16 entry is the single most relevant prior
@@ -1012,6 +1206,16 @@ property gets its own browser test driven by real clicks (see the test plan).
 carry **`disabled`** as well as `selected`, so it is genuinely unselectable. Users' `roleId` did not
 need this — "no role" is a coherent persisted state there — but "no type" is not a state a product may
 ever reach.
+
+> ⚠️ **Correction, 2026-08-30 — the three-row table above is now a *four*-row rule, and the fourth row is 5 × N leaves rather than one property.** The three selects and their reasoning are **unchanged and still correct**; what changes is the rule's reach. After [0077](0077-product-editor-language-tabs-ui.md) the editor's translatable state is five arrays keyed by store-language id, and **every one of their leaves is `wire:model`-bound**, so the never-`null` rule binds all of them:
+>
+> | Property | Declaration | Why this one |
+> | --- | --- | --- |
+> | the five translation arrays | `public array $names = [];` (and four siblings), each leaf a `string` with `''` meaning empty | Same rule, different shape. A language with no translation row hydrates to five `''`s, **never** `null` and — per 0077's **Q-1**, resolved — never from `translated()`'s fallback either. |
+>
+> ⚠️ **And a second, sharper hazard the original rule could not have anticipated: `''` must become `NULL` before it reaches the database.** [0077's **D-4**](0077-product-editor-language-tabs-ui.md) records this as the sharpest finding in its debate, and it is a collision between *this* table's rule and 0076's schema. The never-`null` rule requires `''` in the bound property; 0076 **D-6** ships `UNIQUE(store_language_id, slug)`, and MySQL permits unlimited `NULL`s in a unique index but **not** unlimited `''`s. So the first product saved with an empty slug stores `''` and succeeds, and the **second** dies on a `23000` reported as *"this slug is already taken"* — against a slug the administrator never typed and cannot see. It is invisible until the second row exists and invisible in every single-fixture test, and **its trigger is leaving a field blank**. 0077 converts at the action boundary, inside `SetProductTranslation`; nothing about that is this story's to build, but the two rules only look contradictory until you see where the conversion happens.
+>
+> **The three selects' own analysis stands verbatim**, including the plain-string `$type` and its placeholder rule — none of `type`, `status` or `product_category_id` is translatable.
 
 ### D-6 — The badge reads `displayStatus()`; the `<select>` reads `ProductStatus::cases()`
 
@@ -1054,6 +1258,12 @@ the PRD asks for two bands); putting the threshold in `config/` (nothing else in
 presentation threshold, and one constant does not justify a config key).
 
 ### D-8 — Three `Gallery` instances on one page, and why they cannot collide
+
+> ⚠️ **Correction, 2026-08-30 — the arithmetic is wrong after [0077](0077-product-editor-language-tabs-ui.md); the *reasoning* is not.** The page mounts **2 + N** `Gallery` instances, not three, where N is the number of active store languages: the two direct embeds below, plus **one per `WysiwygEditor`**, and 0077 **D-1** mounts one editor per language simultaneously. At three store languages that is **five**.
+>
+> **The safety argument survives intact and needs no rework**, which is the point worth recording: 0021 **D5** derives its event name **per instance**, so it holds at any N — only the count in the table below is stale, which is the [stale-arithmetic failure mode](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13) at its most mechanical. The two literals here (`featured-image-selected`, `product-images-added`) stay distinct from each other and from every derived name.
+>
+> **What genuinely changes is page weight, not correctness** (0077's **R-5**): each instance mounts and calls `Gate::authorize('viewAny', Media::class)`, so a three-language store pays five. 0077 owns the bounded-query-count test for it. **Do not "fix" this by rendering only the active language's panel** — `@if` instead of `x-show` tears down a `wire:ignore`d region and silently discards typed text, which is the whole subject of 0077 **D-1**.
 
 The editor page mounts **three** `App\Livewire\Media\Gallery` instances:
 
@@ -1380,6 +1590,16 @@ guarantee anyone needs, which is why the outer boundary here is not optional.
 `resolveSelected()` → **open transaction** → create/update (which syncs the gallery) → sync regions.
 Everything that can fail on ordinary user input fails **before** a transaction is ever opened.
 
+> ✅ **Correction, 2026-08-30 — the ordering above survives Epic 5 unchanged, and that is worth stating rather than leaving to inference**, because a reader meeting [0077](0077-product-editor-language-tabs-ui.md)'s save composition will assume it moved. It did not. 0077 **D-5** adopts this decision's ordering verbatim and **inserts two steps into it**: a payload-narrowing step and a per-language description sanitize, both **before** `validate()`, and the translation writes **inside** the existing transaction —
+>
+> authorize → read server state → **narrow the payload to the active languages** → **sanitize each language's description** → validate → `resolveSelected()` → **open transaction** → create/update (which writes the *default* language's translation and syncs the gallery) → **`SetProductTranslation` per engaged non-default language** → sync regions.
+>
+> **Three notes, and the third is a real caveat this story now inherits:**
+>
+> - **The one-transaction obligation is unchanged and still this story's**, formally assigned by 0026 **D13**. The translation writes join it rather than replacing it, so the "a failed save writes nothing" assertion widens from three tables to **four** — `products`, `product_media`, `product_sales_region` and now `product_translations`.
+> - **`ValidationException` still never travels through an open transaction.** Every step 0077 adds sits above the boundary, deliberately.
+> - ⚠️ **Transaction nesting now reaches three levels** — this story's outer boundary, 0076 **D-15**'s new one inside `CreateProduct`/`UpdateProduct`, and 0024 **D-17b**'s inside `SyncProductGallery`. Laravel turns each inner one into a savepoint, and this decision's *"why nesting is safe"* paragraph above already says so for two levels — but **0076's R-15 asks that it be proven by execution rather than asserted**, and 0077's **R-6** notes it added a third level 0076 did not anticipate. The proof obligation is inherited here, since this is the story that opens the outer one.
+
 **(c) A successful save redirects; it never resets the form in place.** `redirect()->route('products.index')`
 with a status flash. This is not cosmetic: 0021 **D9** states that a server-side write to the WYSIWYG's
 bound `$value` **does not appear in the editor**, because the region is `wire:ignore`d and seeded only
@@ -1411,6 +1631,10 @@ at all** — not in the list, not in the editor (the WYSIWYG seeds itself client
 per 0021 D9). There is no `{!! !!}` anywhere in either view. 0024 **R-12** says the sanitizer is what
 *permits* unescaped rendering; this story deliberately does not exercise that permission, and Phase 4
 should verify the absence rather than the correctness of an escape.
+
+> ⚠️ **Correction, 2026-08-30 — the notice is one line above the tab strip, not one per language.** After [0077](0077-product-editor-language-tabs-ui.md) the editor renders N description fields, and the naive port of this decision renders N copies of the same sentence — visual noise that says nothing new on the second panel. 0077's **R-2(6)** makes the call: **one notice, above the strip**, since the statement is about the sanitizer and not about any one language. Still one translation key, still zero mechanism, still no dynamic diff.
+>
+> ✅ **The security scope fence holds and gets *stronger*, which is the part worth not losing.** This screen still renders no description HTML anywhere; the WYSIWYG still seeds itself client-side. And 0076 **D-8** adds a **second sanitization layer** — a `saving` hook on `ProductTranslation` — so a description now reaches the column sanitized whichever write path it arrives by, including the direct-`SetTranslation` path this story never uses. Phase 4 should still verify the **absence** of an escape here rather than its correctness.
 
 ### D-14 — The harness is retired here, and the retirement is a **test migration** *(confirmed; scope corrected)*
 
@@ -1453,6 +1677,13 @@ inside the WYSIWYG. Every harness assertion therefore has a home.
 **Ordering is not optional: steps 1–3 must be green before step 4.** Coverage improves rather than
 degrades — the assertions now run against a real embedding, closing exactly the gap 0022's "honest
 limitation" note and 0020's own D16 describe.
+
+> ⚠️ **Correction, 2026-08-30 — step 2's permission list is incomplete once [0077](0077-product-editor-language-tabs-ui.md) lands, and step 3 gets a stronger proof for free.** Both are 0077's **R-2(7)**.
+>
+> - **Step 2 (fixture setup).** The migrated browser tests need `products.view` **and** `media.view`, as written — **and at least two active store languages seeded**. With one language the editor renders one panel, so the second `WysiwygEditor` never exists and any assertion reaching for it fails as what *looks* like a selector problem. This is the single likeliest cause of a confusing migration failure after the original permissions one, and it is worth writing into the fixture helper rather than each test.
+> - **Step 3 (the re-entrancy assertions).** They get **stronger**, not just re-pointed: 0021 **D5**'s derived event name now competes with two real literals **and N−1 sibling derived names**, where the harness gave it only a second copy of itself. That is the strongest form this assertion has ever had.
+>
+> **Everything else in the plan is unaffected** — the fallback, the ordering rule, and the "steps 1–3 before step 4" constraint all stand. Note the migration is still **this story's**, not 0077's: the harness dies here.
 
 **Fallback, stated so it is a decision rather than an improvisation:** if the migration cannot be
 completed within this story, the harness **stays** and its deletion moves to a named follow-up task.
@@ -1574,11 +1805,20 @@ below.
 - No media *deletion* control anywhere (0019 **D11** defers it, and 0024 **D-9** makes it a guarded
   feature a future story must build properly).
 - No bulk actions, no CSV import/export, no duplicate-product action.
-- No `slug`, no SEO fields, no translation scaffolding (Epic 5).
+- No `slug`, no SEO fields, no translation scaffolding (Epic 5). ⚠️ **See the correction below — this
+  fence is still binding on *this story*, but it no longer describes the schema.**
 - No `{!! !!}` anywhere in either view (**D-13**).
 - No search or filter on the list in this story (**D-4**, [OQ-4](#open-questions)).
 - No third status case, no `agotado` string, no stored out-of-stock state — under any circumstance
   (0024 **D-7**).
+
+> ⚠️ **Correction, 2026-08-30 — *"No `slug`, no SEO fields, no translation scaffolding (Epic 5)"* now means something narrower than it did, and the difference matters.** When this fence was written, [0024's own scope fence](0024-products-core-crud-backend.md) said the same thing verbatim, and the product genuinely had **no** slug and **no** SEO fields anywhere — this story was declining to build UI for columns that did not exist.
+>
+> **They exist now.** [0076](0076-translatable-content-retrofit-products-backend.md) introduces `slug`, `meta_title` and `meta_description` **for the first time in this project** (its **D-5**; the field set and `meta_description`'s width were confirmed by the human as its **Q-1**, 2026-08-30), created **directly on `product_translations`** and never on the parent — so they are translatable from birth, with `slug` unique **per store language** (`UNIQUE(store_language_id, slug)`, its **Q-2**, resolved the same day) and canonicalised in place by a model hook. There is no non-translated version of any of the three, and none is coming.
+>
+> **What the fence still forbids, unchanged:** this story adds no slug input, no SEO inputs, no language tabs, no translation state and no migration. **[0077](0077-product-editor-language-tabs-ui.md) owns the editor UI for all three**, alongside the per-language `name` and `description`, and it is the story that renders the slug's blur pre-fill affordance (0076 **D-6** assigns the affordance to *"0027's editor"* by name — but 0027 has no slug field, because the slug arrives in 0076, so **0077 adopts it**; see its **D-9**).
+>
+> **Read the fence as: this story ships no slug/SEO/translation *UI*.** Read it as "the product has no slug" and you will write a list query, a test fixture or a validation expectation against a schema that no longer matches.
 
 ## Dependencies, findings, risks and open questions
 
@@ -1624,6 +1864,15 @@ Super Admin bypass and policy auto-discovery (0004), the Users screen's list+mod
 
 Optional interaction: **0013** changes *which file* the sidebar entry goes in (**D-15**), blocking
 nothing either way.
+
+> ⚠️ **Correction, 2026-08-30 — Epic 5 adds two stories to this picture, and the ordering between them and this one is a real decision rather than a detail.** Neither is a *blocker* in the "cannot start" sense; both change what this story ships.
+>
+> - **[0076](0076-translatable-content-retrofit-products-backend.md)** (backend retrofit) — if it lands **first**, this story is written against the corrected [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) query from the outset and nothing is ever red. If it lands **second**, this story ships the original query and 0076's landing breaks `IndexQueryTest.php` until the correction is applied. **Either order works; the second costs a red suite in between**, and 0077's **R-1** requires that red to be recognised as 0076's hand-off rather than "fixed" by whoever meets it.
+> - **[0077](0077-product-editor-language-tabs-ui.md)** (the language tabs) is strictly **after** this story — it modifies files this one creates — and strictly after 0076, whose widened signatures it consumes.
+>
+> ⚠️ **0076 also depends transitively on [0068](0068-store-languages-catalog-backend.md) (the store-language catalog) and [0070](0070-translatable-content-mechanism-product-categories-backend.md) (the translation mechanism)**, so the real chain past 0026 is **0068 → 0070 → 0076 → 0027-as-amended → 0077**. 0070 is the story that also breaks this file's **category** eager load ([D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) note 4) — a break this amendment deliberately does **not** cover.
+>
+> 🔴 **One resequencing option is cheaper than all of this and belongs to the coordinator, not here.** 0076's **R-4** records it: if 0076 is scheduled **before 0024 is implemented**, 0024 is amended so `name`/`description` are *never created* on `products` at all, the slug/SEO columns are born on the child table, and 0076's second migration and backfill disappear entirely. In that world this story is written once, correctly, and none of the corrections in this file are ever needed — *"cheaper to decide than to reverse."*
 
 ### Risks
 
@@ -1682,6 +1931,11 @@ nothing either way.
 Nine were raised. **OQ-5 and OQ-6 were the two blocking ones; both are now ✅ resolved upstream
 (2026-08-19) and neither blocks Phase 3** — see **D-18**. **Seven remain open**, all product-level
 calls that can be answered any time before the markup is written.
+
+> ⚠️ **Correction, 2026-08-30 — ten were raised, eight remain open, and one of them blocks again.**
+> **OQ-10** below is new, carried here from [0077's **Q-5**](0077-product-editor-language-tabs-ui.md),
+> and it is **not** in the "answer any time before the markup is written" class: [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s
+> query cannot be written without it. The paragraph above stands for OQ-1 through OQ-9.
 
 - **✅ OQ-5 — *Resolved 2026-08-19; framing superseded, retained for history.*** ~~How does a save
   behave when the product carries an assignment to a since-deactivated Sales Region?~~
@@ -1744,6 +1998,36 @@ calls that can be answered any time before the markup is written.
   product-level stock field once variants exist". Nothing changes here today (variants do not exist,
   and 0031 is not written), but whichever way it lands, **0031** will amend this screen rather than
   this story pre-empting it.
+
+- **✅ OQ-10 — RESOLVED 2026-08-30, option (a) — the store default language.** *(This was [0077's
+  **Q-5**](0077-product-editor-language-tabs-ui.md), raised there and routed **here**: "it belongs to
+  the 0027 amendment, not to this story." It was the one **blocking** question this amendment added —
+  [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s corrected query and
+  its ordering test's fixture can now be written.)* The human confirmed the store default for **all
+  three** dependent sites at once — the list's row label, its ordering, and `$deletingProductName` —
+  since a confirmation naming a product differently from the row above it would be worse than either
+  choice alone.
+  After [0076](0076-translatable-content-retrofit-products-backend.md) a product has no single name:
+  `scopeOrderByTranslatedName(?string $storeLanguageId = null)` and every `translated('name', …)` read
+  take a language, and something must supply one. The same answer should govern the row label, the
+  ordering **and** `$deletingProductName`, since a confirmation naming a product differently from the
+  row above it is worse than either choice on its own.
+  **(a) The store default language _(recommended — 0077's own recommendation, carried across
+  unchanged)_.** It is the one language guaranteed to resolve for every product (0070's **Q1(a)**:
+  every entity always holds a default-language translation), so a list cell can never render blank,
+  and it makes the list stable for every administrator regardless of who is looking at it.
+  (b) The administrator's UI locale. Rejected as a recommendation by 0077 for a reason worth
+  repeating: it conflates the two i18n axes [0068](0068-store-languages-catalog-backend.md)'s own
+  opening table draws apart deliberately — the **interface** language (ES/EN, an administrator
+  preference) and the **store content** languages (open-ended, a catalog property). It would also make
+  two administrators see different orderings of the same page.
+  (c) A per-administrator language switcher on the list itself. Genuinely useful for a translator
+  auditing coverage, **named by nothing in the PRD**, and it adds a control, a persisted preference and
+  a second narrowing set to a story that is already the largest in the chain. If it is wanted, it is
+  additive on top of (a) at any time.
+  ⚠️ **Whatever the answer, it is not derivable from the code** — every option compiles and every
+  option renders something plausible, which is exactly the shape this project's contracts require to be
+  escalated rather than assumed.
 
 ## Provenance
 
