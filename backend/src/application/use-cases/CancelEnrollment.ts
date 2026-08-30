@@ -1,4 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
+import type { DeviceTokenRepository } from "../../domain/ports/DeviceTokenRepository.js";
+import type { NotificationSender } from "../../domain/ports/NotificationSender.js";
 import type { EnrollmentPolicy } from "../../domain/services/EnrollmentPolicy.js";
 import type { ProcessWaitingListService } from "../../domain/services/ProcessWaitingListService.js";
 import {
@@ -28,11 +30,13 @@ export class CancelEnrollment {
     private readonly policy: EnrollmentPolicy,
     private readonly auditLogger: AuditLogger,
     private readonly processWaitingList?: ProcessWaitingListService,
+    private readonly deviceTokenRepo?: DeviceTokenRepository,
+    private readonly notificationSender?: NotificationSender | null,
   ) {}
 
   async execute(input: CancelEnrollmentInput): Promise<CancelEnrollmentResult> {
     try {
-      const { openedSpot } = await this.prisma.$transaction(async (tx) => {
+      const txResult = await this.prisma.$transaction(async (tx) => {
         const trainingClass = await tx.trainingClass.findUnique({
           where: { id: input.classId },
           include: { waitingLists: true },
@@ -68,8 +72,15 @@ export class CancelEnrollment {
         const hasWaitingList = trainingClass.waitingLists.length > 0;
         const willNotifyViaWaitingListService =
           hasWaitingList && this.processWaitingList !== undefined;
+
+        let coachNotification: {
+          id: string;
+          type: number;
+          content: string;
+          recipientId: string;
+        } | null = null;
         if (!willNotifyViaWaitingListService) {
-          await tx.notification.create({
+          const created = await tx.notification.create({
             data: {
               notification_type: this.policy.coachNotificationTypeForCancellation(
                 trainingClass.class_type,
@@ -80,11 +91,18 @@ export class CancelEnrollment {
               content: "A Coachee canceled their enrollment in this class.",
             },
           });
+          coachNotification = {
+            id: created.id,
+            type: created.notification_type,
+            content: created.content,
+            recipientId: created.recipient_id,
+          };
         }
 
         return {
           openedSpot: this.policy.openedSpotDetected(hasWaitingList),
           hasWaitingList,
+          coachNotification,
         };
       });
 
@@ -92,7 +110,11 @@ export class CancelEnrollment {
       let notificationsSent = 1; // coach notification already sent in transaction
       let waitingListMembersNotified = 0;
 
-      if (openedSpot && this.processWaitingList) {
+      if (txResult.coachNotification && this.notificationSender && this.deviceTokenRepo) {
+        await this.dispatchCoachPush(txResult.coachNotification, input.classId);
+      }
+
+      if (txResult.openedSpot && this.processWaitingList) {
         try {
           const wlResult = await this.processWaitingList.processSpotOpened(input.classId);
           notificationsSent = wlResult.notificationsSent;
@@ -127,7 +149,7 @@ export class CancelEnrollment {
 
       return {
         message: "Enrollment canceled.",
-        waitingListProcessed: openedSpot,
+        waitingListProcessed: txResult.openedSpot,
         claimedByCoachee: null,
         notificationsSent,
         waitingListMembersNotified,
@@ -143,6 +165,41 @@ export class CancelEnrollment {
         });
       }
       throw error;
+    }
+  }
+
+  private async dispatchCoachPush(
+    notification: { id: string; type: number; content: string; recipientId: string },
+    classId: string,
+  ): Promise<void> {
+    const repo = this.deviceTokenRepo;
+    const sender = this.notificationSender;
+    if (!repo || !sender) return;
+
+    try {
+      const tokens = await repo.listActiveTokens(notification.recipientId);
+      if (tokens.length === 0) return;
+
+      const outcome = await sender.send(
+        {
+          content: notification.content,
+          data: {
+            notificationId: notification.id,
+            type: String(notification.type),
+            classId,
+          },
+        },
+        tokens,
+      );
+
+      const permanentFailures = outcome.failed
+        .filter((failure) => failure.permanent)
+        .map((failure) => failure.token);
+      if (permanentFailures.length > 0) {
+        await repo.deactivate(permanentFailures);
+      }
+    } catch {
+      // Delivery failure isolation — a push failure must never break the cancellation
     }
   }
 }

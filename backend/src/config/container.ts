@@ -171,6 +171,8 @@ export const container = {
     enrollmentPolicy,
     auditLogger,
     processWaitingListService,
+    new PrismaDeviceTokenRepository(),
+    sendNotificationAdapter,
   ),
   claimWaitingListSpot: new ClaimWaitingListSpot(prisma, auditLogger),
   createBlock: calendarProvider

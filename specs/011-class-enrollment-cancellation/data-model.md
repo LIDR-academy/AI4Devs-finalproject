@@ -43,7 +43,7 @@ Existing model (`notification_type`, `recipient_id`, `class_id`, `content`, ...)
 - `4` — Coachee canceled a **group** class that **has** a waiting list
 - `5` — Coachee canceled a **group** class with **no** waiting list
 
-FCM dispatch is EP-04; the row is recorded now, mirroring the `CancelTrainingClass` pattern (type 7 rows).
+FCM dispatch: the assigned Coach receives a push for every cancellation row (types `3`/`4`/`5`). Type `4` (waiting-list group) is pushed by `ProcessWaitingListService` after the transaction commits (see `processSpotOpened`); types `3`/`5` are pushed by `CancelEnrollment` after the transaction commits, via `deviceTokenRepo.listActiveTokens` + `notificationSender.send` — the same path used by `SendNotification` (push data carries `notificationId`, `type`, `classId`; permanently failed tokens are deactivated). Push delivery is best-effort: a delivery failure never fails the cancellation.
 
 ### SecurityAuditLog (written)
 
