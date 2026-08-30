@@ -41,7 +41,6 @@ Owner: `usePushRegistration` hook (mounted once in the authenticated layout), im
 ```
 mount → guard checks (all must pass to continue):
   - navigator.serviceWorker + PushManager supported
-  - Notification.permission !== "denied"        // OS-level block ⇒ silent skip
   - VITE_FIREBASE_* env present                // missing config ⇒ silent skip
   - localStorage.pushDeclinedAt older than 30 days
   - at least one route navigation since login   // not on first paint
@@ -55,6 +54,10 @@ permission === "default"
       Aceptar  → Notification.requestPermission() → granted path above
                  denied/default → set pushDeclinedAt = now
       "Ahora no" → set pushDeclinedAt = now     // 30-day cooldown, no re-prompt
+
+permission === "denied"   // OS/browser-level block ⇒ page cannot call requestPermission()
+  → render awareness banner ("Notifications are off in your browser…") [Got it]
+      "Got it" → set pushDeclinedAt = now       // 30-day cooldown, no re-prompt
 ```
 
 **Invariants** (map to spec FR-005/FR-006, US1 scenarios):
@@ -62,6 +65,7 @@ permission === "default"
 2. Decline/denial leaves every feature untouched; no repeated nagging inside cooldown.
 3. Registration failure (network/API) is invisible to the user beyond a log line; retried next session mount.
 4. Token POST body always `{ token, platform: "WEB" }`; response ignored beyond success/failure.
+5. When permission is `denied`, the affordance is purely informational (the browser page cannot re-request permission); it guides the user to enable notifications and only offers dismiss.
 
 ## 4. Environment variables (frontend)
 

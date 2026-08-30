@@ -43,10 +43,20 @@ function stampNavigation() {
   }
 }
 
+export type PushAffordanceVariant = "prompt" | "blocked";
+
 export type PushAffordance = {
   visible: boolean;
+  variant: PushAffordanceVariant;
   onAccept: () => void;
   onDismiss: () => void;
+};
+
+const INVISIBLE: PushAffordance = {
+  visible: false,
+  variant: "prompt",
+  onAccept: () => {},
+  onDismiss: () => {},
 };
 
 export function dismissPushPrompt(): void {
@@ -70,22 +80,17 @@ export async function runPushRegistration(): Promise<PushAffordance> {
 
   if (!isSupported()) {
     console.log("[pushManager] Skipped: browser not supported");
-    return { visible: false, onAccept: () => {}, onDismiss: () => {} };
-  }
-
-  if (Notification.permission === "denied") {
-    console.log("[pushManager] Skipped: permission denied");
-    return { visible: false, onAccept: () => {}, onDismiss: () => {} };
+    return INVISIBLE;
   }
 
   if (!isFirebaseConfigured()) {
     console.log("[pushManager] Skipped: Firebase not configured");
-    return { visible: false, onAccept: () => {}, onDismiss: () => {} };
+    return INVISIBLE;
   }
 
   if (isInCooldown()) {
     console.log("[pushManager] Skipped: in cooldown");
-    return { visible: false, onAccept: () => {}, onDismiss: () => {} };
+    return INVISIBLE;
   }
 
   stampNavigation();
@@ -96,20 +101,32 @@ export async function runPushRegistration(): Promise<PushAffordance> {
       localStorage.getItem(NAVIGATION_KEY),
       ")",
     );
-    return { visible: false, onAccept: () => {}, onDismiss: () => {} };
+    return INVISIBLE;
   }
 
   // Already granted — auto-register silently
   if (Notification.permission === "granted") {
     console.log("[pushManager] Permission already granted — auto-registering");
     await silentRegister();
-    return { visible: false, onAccept: () => {}, onDismiss: () => {} };
+    return INVISIBLE;
+  }
+
+  // Notifications blocked — keep showing an awareness banner so users can re-enable
+  if (Notification.permission === "denied") {
+    console.log("[pushManager] Showing blocked notice (permission: denied)");
+    return {
+      visible: true,
+      variant: "blocked",
+      onAccept: () => dismissPushPrompt(),
+      onDismiss: () => dismissPushPrompt(),
+    };
   }
 
   // permission === "default" — show affordance
   console.log("[pushManager] Showing affordance (permission: default)");
   return {
     visible: true,
+    variant: "prompt",
     onAccept: async () => {
       try {
         const result = await Notification.requestPermission();

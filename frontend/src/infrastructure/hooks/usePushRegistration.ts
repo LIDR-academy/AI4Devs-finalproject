@@ -7,6 +7,7 @@ import {
 
 const INITIAL: PushAffordance = {
   visible: false,
+  variant: "prompt",
   onAccept: () => {},
   onDismiss: () => {},
 };
