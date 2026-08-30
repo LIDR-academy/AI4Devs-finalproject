@@ -84,14 +84,25 @@ This **fails the command** (non-zero exit code) if total coverage drops below 80
 
 ## Run in parallel
 
-Laravel's `--parallel` flag requires `brianium/paratest`, which **is not currently installed** in this project (not present in `composer.json`). Don't add `--parallel` to CI or local docs as if it already works — it will error (`Please install the brianium/paratest package...`) until that dependency is added deliberately:
+`brianium/paratest` is a declared `require-dev` dependency (since the test-performance review that added this section) and CI runs the full suite with `--parallel` (see [`.github/workflows/tests.yml`](../../../.github/workflows/tests.yml) and [pipeline-integration.md](pipeline-integration.md)):
 
 ```bash
-composer require brianium/paratest --dev
 php artisan test --parallel
 ```
 
-Evaluate this only if suite run time becomes a real bottleneck. It isn't one today, and note that the browser suite — the obvious candidate for wanting parallelism — drives a real browser, so it is the part least likely to benefit from naively forking processes. Pest's own test **sharding** is likewise not configured here (see [frontend/playwright-setup.md](../frontend/playwright-setup.md#test-tagging-naming-and-parallelization)).
+Measured on this repo's own suite (950 tests across `Unit`/`Feature`/`Browser`), sequential vs. `--parallel` on an 8-core Sail dev container:
+
+| Suite | Sequential | `--parallel` | Speedup |
+| --- | --- | --- | --- |
+| `Unit` + `Feature` (920 tests) | ~4m 51s | ~1m 49s (8 processes) | ~2.7x |
+| `Browser` (29 tests, 4 files) | ~49s | ~35s (4 processes) — 8 processes gains almost nothing beyond this | ~1.4x |
+| Everything (950 tests) | ~5m 39s | ~2m 10s (8 processes) | ~2.6x |
+
+The browser suite parallelizes far worse than `Unit`/`Feature`: it drives a real Chromium instance per worker, so beyond roughly one process per test **file** (4 here — see [frontend/playwright-setup.md](../frontend/playwright-setup.md#test-tagging-naming-and-parallelization)) extra processes mostly add browser-launch overhead rather than throughput. `--processes=4` for a Browser-only run is the sensible default; `--processes` omitted (auto-detects the host's core count) is fine for the combined run, since `Unit`/`Feature` dominates the total.
+
+⚠️ **A `--parallel` run needs `storage/framework/views` (the compiled Blade cache) on a filesystem that tolerates concurrent writes from multiple processes.** On this project's Sail dev setup that directory sits inside the project's bind-mounted volume (`.:/var/www/html` in `compose.yaml`) by default, and concurrent `tempnam()`/`rename()` compiles into it through a WSL2 bind mount were **not reliable** — a batch of unrelated tests failed with `tempnam(): file created in the system's temporary directory`, deterministically, on some hosts. Fixed by giving `storage/framework/views` its own **named Docker volume** (`sail-views`, native to the container, not bind-mounted) in `compose.yaml`, plus a per-`ParallelTesting`-token subdirectory inside it (`app/Providers/AppServiceProvider.php::configureParallelTesting()`), mirroring how Laravel already isolates the test database and `Storage::fake()` per worker. See [errors-log.md](../../errors-log.md) for the full investigation — this is a **Sail/WSL2-specific** fix; CI's `ubuntu-latest` runner has no bind mount in the loop and was never exposed to it.
+
+If you rebuild the Sail image after pulling this change, the named volume starts owned by `root` (Docker's default for a fresh volume) while `sail artisan` always runs as `$WWWUSER`/`sail` — `docker/8.5/start-container` now `chown`s it on every container start, so a plain `sail up -d --build` picks this up with no manual step.
 
 ## Summary table
 
@@ -104,7 +115,7 @@ Evaluate this only if suite run time becomes a real bottleneck. It isn't one tod
 | Coverage summary (terminal) | `php artisan test --coverage` |
 | Coverage report (HTML) | `php artisan test --coverage-html=coverage-report` |
 | Enforce a coverage floor (CI gate) | `php artisan test --coverage --min=80` |
-| Parallel run | Requires `composer require brianium/paratest --dev` first, then `php artisan test --parallel` |
+| Parallel run | `php artisan test --parallel` (~2.6x faster on the full suite; see caveats above) |
 | Static analysis (adjacent quality gate) | `composer types:check` (Larastan, see [conventions/base-standards.md](../../conventions/base-standards.md#quality-gates)) |
 | Formatting (adjacent quality gate) | `vendor/bin/pint --dirty --format agent` |
 
@@ -118,7 +129,9 @@ php -d memory_limit=3G vendor/bin/phpstan analyse
 
 This is an environment quirk, not a project requirement — CI runs the plain `composer types:check` successfully. If you see PHPStan die without reporting errors, try this before assuming the analysis is broken.
 
-_Last updated: 2026-08-26 — CI database connection gap (`ai-spec/tasks/ci-database-connection-gap.md`): added the "Database prerequisite" section — every command on this page needs a live MySQL connection, `phpunit.xml` pins `DB_CONNECTION`/`DB_DATABASE` ahead of any `.env`/`.env.testing`, and a `DB_DATABASE` override for `php artisan test` must be a real shell environment variable, not a worktree's `.env.testing` entry, since PHPUnit's `<env>` block already wins by the time Laravel's dotenv loader runs. Closes the doc-pass item this task's checklist left open._
+_Last updated: 2026-08-28 — Test-suite parallelization: rewrote the "Run in parallel" section, which had said `brianium/paratest` was not installed and that `--parallel` would error — the package is now a declared `require-dev` dependency and CI runs `--parallel`. Added the measured sequential-vs-parallel timing table (Unit/Feature ~2.7x, Browser ~1.4x, everything ~2.6x) and the ⚠️ for the Sail/WSL2-specific fix this required (`storage/framework/views` moved to a named Docker volume, per-token subdirectory via `AppServiceProvider::configureParallelTesting()`) — see [errors-log.md](../../errors-log.md) for the full investigation, including why the fix is Sail-only and does not apply to CI's runner._
+
+_Previously, 2026-08-26 — CI database connection gap (`ai-spec/tasks/ci-database-connection-gap.md`): added the "Database prerequisite" section — every command on this page needs a live MySQL connection, `phpunit.xml` pins `DB_CONNECTION`/`DB_DATABASE` ahead of any `.env`/`.env.testing`, and a `DB_DATABASE` override for `php artisan test` must be a real shell environment variable, not a worktree's `.env.testing` entry, since PHPUnit's `<env>` block already wins by the time Laravel's dotenv loader runs. Closes the doc-pass item this task's checklist left open._
 
 _Previously, 2026-08-16 — Task 0006b: `php artisan test` now runs three suites, not two (the `Browser` suite launches a real browser and needs the Playwright binaries present); added the `--testsuite=` command and refreshed the stale "3 test files" parallelization note._
 

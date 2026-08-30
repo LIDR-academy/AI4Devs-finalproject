@@ -38,18 +38,74 @@ test('a conversion run pins Imagick resource limits derived from MAX_DIMENSION',
     // GenerateImageConversions itself now does. This is what proves the limits are DERIVED
     // rather than a second, independently-chosen literal.
     $maxDimension = GenerateImageConversions::MAX_DIMENSION;
-    $expectedByteCeiling = $maxDimension * $maxDimension * 64;
+    $maxArea = $maxDimension * $maxDimension;
+    $expectedByteCeiling = $maxArea * 64;
 
     // Imagick::getResourceLimit() always returns float (verified: var_dump shows float(4000)
     // even for an int passed to setResourceLimit()) -- toEqual() (==) rather than toBe() (===)
     // so this asserts the VALUE Imagick reports rather than PHP's internal numeric type for it.
+    //
+    // RESOURCETYPE_AREA is asserted against $maxArea + 1 (a PIXEL count, matching
+    // WIDTH x HEIGHT), never $expectedByteCeiling -- task 0019a. AREA is a pixel-count
+    // resource despite its "byte ceiling" neighbours; asserting it against a byte quantity
+    // only ever passed on a host whose ImageMagick policy.xml permitted a value that large,
+    // which this project's own Sail image (Debian-packaged ImageMagick 6, policy.xml
+    // area="256MP") does not -- see docs/errors-log.md. The `+ 1` matters: ImageMagick's AREA
+    // check is a strict `<` against the limit (unlike WIDTH/HEIGHT, which are inclusive), so
+    // the limit itself must sit one pixel above the largest legitimate area or a real
+    // MAX_DIMENSION x MAX_DIMENSION upload is wrongly refused -- task 0019a Phase 4 finding
+    // F-1/B1, and the next test below pins the boundary this comment describes.
+    //
+    // MEMORY/MAP are asserted with toBeLessThanOrEqual(), not toEqual() -- task 0019a Phase 4
+    // finding F-2. Exact equality only held on this host because Debian's policy.xml ceiling
+    // (1024MiB / 2048MiB) happens to sit just above $expectedByteCeiling; a host with a
+    // stricter policy would silently clamp the request lower (safe -- never *more*
+    // permissive -- but a different exact number), and exact equality would fail there for a
+    // reason that has nothing to do with a real regression. <= still catches the bug this test
+    // exists for: a hand-copied or wrong formula producing a value ABOVE the intended ceiling.
     expect(Imagick::getResourceLimit(Imagick::RESOURCETYPE_WIDTH))->toEqual($maxDimension)
         ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_HEIGHT))->toEqual($maxDimension)
-        ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_AREA))->toEqual($expectedByteCeiling)
-        ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_MEMORY))->toEqual($expectedByteCeiling)
-        ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_MAP))->toEqual($expectedByteCeiling)
+        ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_AREA))->toEqual($maxArea + 1)
+        ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_MEMORY))->toBeLessThanOrEqual($expectedByteCeiling)
+        ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_MAP))->toBeLessThanOrEqual($expectedByteCeiling)
         ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_DISK))->toEqual(0)
         ->and(Imagick::getResourceLimit(Imagick::RESOURCETYPE_TIME))->toEqual(60);
+});
+
+test('an image at exactly MAX_DIMENSION x MAX_DIMENSION is accepted, not refused by the AREA boundary (0019a B1)', function () {
+    // task 0019a Phase 4/5 finding F-1/B1 (both appsec-auditor and code-reviewer found this
+    // independently): the resource-limit test above proves the limits are CONFIGURED, and the
+    // over-cap test below proves a too-large image is refused, but neither proves the boundary
+    // itself is drawn in the right place. Before the `+ 1` fix, AREA was set to exactly
+    // MAX_DIMENSION^2 -- ImageMagick's strict `<` check then refused an image sitting exactly
+    // AT that pixel count, even though MediaValidationRules::imageUploadRules()'s
+    // `dimensions:max_width=4000,max_height=4000` rule is inclusive and would have accepted
+    // the same upload at the validation layer. That combination is the worst kind of bug: a
+    // legitimate upload passes validation and then fails at decode with a misleading "could
+    // not be processed" error.
+    //
+    // Built directly with Imagick (never UploadedFile::fake()->image(), which allocates
+    // ~4 bytes/pixel of PHP-visible memory GD-side -- see the over-cap test below for why),
+    // a uniform-colour 4000x4000 PNG compresses to a few KB and builds in ~1-2s.
+    Imagick::setResourceLimit(Imagick::RESOURCETYPE_WIDTH, 100000);
+    Imagick::setResourceLimit(Imagick::RESOURCETYPE_HEIGHT, 100000);
+    Imagick::setResourceLimit(Imagick::RESOURCETYPE_AREA, 2_000_000_000);
+    Imagick::setResourceLimit(Imagick::RESOURCETYPE_MEMORY, 2_000_000_000);
+    Imagick::setResourceLimit(Imagick::RESOURCETYPE_MAP, 2_000_000_000);
+    Imagick::setResourceLimit(Imagick::RESOURCETYPE_DISK, 2_000_000_000);
+
+    $maxDimension = GenerateImageConversions::MAX_DIMENSION;
+    $atCap = new Imagick;
+    $atCap->newImage($maxDimension, $maxDimension, new ImagickPixel('green'), 'png');
+    $bytes = $atCap->getImageBlob();
+    $atCap->destroy();
+
+    Storage::disk('public')->put('media/at-cap.png', $bytes);
+
+    $result = app(GenerateImageConversions::class)('media/at-cap.png');
+
+    expect(Storage::disk('public')->exists($result['webp_path']))->toBeTrue()
+        ->and(Storage::disk('public')->exists($result['avif_path']))->toBeTrue();
 });
 
 test('the pixel-dimension ceiling was lowered from 8000 to 4000 (finding F-1)', function () {

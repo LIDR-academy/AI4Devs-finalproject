@@ -123,21 +123,50 @@ class GenerateImageConversions
      *
      * WIDTH/HEIGHT are capped in pixels at MAX_DIMENSION so an oversized
      * image is refused at header-parse time, before any pixel buffer is
-     * allocated. AREA/MEMORY/MAP are capped in bytes at
+     * allocated. AREA is *also* a pixel-count resource -- not a byte one,
+     * despite its name reading like the others -- and is capped at
+     * MAX_DIMENSION^2, matching WIDTH x HEIGHT already being capped
+     * individually (task 0019a; see docs/errors-log.md). MEMORY/MAP are the
+     * genuinely byte-based resources and are capped at
      * MAX_DIMENSION^2 x BYTES_PER_PIXEL_CEILING -- generous enough for a
      * legitimate MAX_DIMENSION x MAX_DIMENSION image at this build's
      * worst-case bytes-per-pixel, while still refusing a decompression bomb
-     * whose header claims a byte cost far beyond that. DISK is 0 so a
+     * whose header claims a byte cost far beyond that (e.g. an animated
+     * image whose every frame is individually within the WIDTH/HEIGHT/AREA
+     * caps but whose cumulative decoded size is not). DISK is 0 so a
      * refused decode fails fast rather than spilling gigabytes of pixel
      * cache to disk first. TIME is a wall-clock backstop.
+     *
+     * Task 0019a note: on a host whose ImageMagick ships a restrictive
+     * policy.xml (e.g. Debian/Ubuntu's packaged ImageMagick 6, which is what
+     * this project's own Sail image installs), `setResourceLimit()` can only
+     * *tighten* a resource below the policy's own ceiling -- it silently
+     * clamps a request that exceeds it, with no error. Requesting the byte
+     * ceiling for AREA (a pixel resource) previously asked for a value far
+     * above the policy's pixel ceiling on that host, which happened to still
+     * be silently accepted-and-clamped rather than throw, but was
+     * conceptually wrong regardless of which host runs it.
+     *
+     * Task 0019a Phase 4 finding F-1: ImageMagick's AREA check is a STRICT
+     * `<` against the limit (verified: AREA == MAX_DIMENSION^2 refuses an
+     * exactly-MAX_DIMENSION x MAX_DIMENSION image; AREA == MAX_DIMENSION^2+1
+     * admits it), so the limit itself must be one pixel *above* the largest
+     * legitimate area, not equal to it -- otherwise a legal upload at
+     * exactly the dimension ceiling is refused, contradicting
+     * MediaValidationRules::imageUploadRules()'s inclusive `dimensions:`
+     * rule. `+ 1` is the fix, not a wider margin: WIDTH/HEIGHT already cap
+     * every dimension individually, so MAX_DIMENSION^2 is the true
+     * ceiling and one pixel of headroom is exactly what "greater than the
+     * largest legal value" requires.
      */
     private function applyImagickResourceLimits(): void
     {
-        $byteCeiling = self::MAX_DIMENSION * self::MAX_DIMENSION * self::BYTES_PER_PIXEL_CEILING;
+        $maxLegitimateArea = self::MAX_DIMENSION * self::MAX_DIMENSION;
+        $byteCeiling = $maxLegitimateArea * self::BYTES_PER_PIXEL_CEILING;
 
         Imagick::setResourceLimit(Imagick::RESOURCETYPE_WIDTH, self::MAX_DIMENSION);
         Imagick::setResourceLimit(Imagick::RESOURCETYPE_HEIGHT, self::MAX_DIMENSION);
-        Imagick::setResourceLimit(Imagick::RESOURCETYPE_AREA, $byteCeiling);
+        Imagick::setResourceLimit(Imagick::RESOURCETYPE_AREA, $maxLegitimateArea + 1);
         Imagick::setResourceLimit(Imagick::RESOURCETYPE_MEMORY, $byteCeiling);
         Imagick::setResourceLimit(Imagick::RESOURCETYPE_MAP, $byteCeiling);
         Imagick::setResourceLimit(Imagick::RESOURCETYPE_DISK, 0);
