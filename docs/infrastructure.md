@@ -1,5 +1,8 @@
 # Infrastructure: Google Cloud Platform
 
+> Hosting (Render), database (Neon) and push notifications (Firebase) are documented separately in
+> [`docs/cloud-infrastructure.md`](./cloud-infrastructure.md).
+
 ## GCP Project
 
 | Property | Value |
