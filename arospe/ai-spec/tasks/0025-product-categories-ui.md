@@ -13,6 +13,66 @@ contract for.
 Frontend only — no migration, no model, no action, no policy. Every domain rule this screen enforces
 is consumed from 0023 and 0024 as already-shipped code.
 
+---
+
+## ⚠️ Epic 5 amendments — this file predates the translatable-content retrofit (2026-08-30)
+
+**This story was written on 2026-08-18, against a `product_categories` table that carried a plain
+`name` column.** Two later Epic 5 stories — both fully debated, both still unimplemented Phase 1
+files — changed that ground underneath it:
+
+- **[0070](0070-translatable-content-mechanism-product-categories-backend.md)** (backend) **drops
+  `product_categories.name` entirely** (its **D-4**) and moves the name into a
+  `product_category_translations` child table, read per language through
+  `ProductCategory::translated('name', ?string $storeLanguageId = null)`, which falls back to the
+  store default language and returns `null` when neither language supplies one (its **D-5**/**D-6**).
+- **[0071](0071-product-categories-language-tabs-ui.md)** (frontend) retrofits **this very screen**
+  with one language tab — and therefore **one name input per active store language** — replacing
+  this story's `public string $name` with `public array $names` keyed by store-language id.
+
+**0070's own R-1 flags this file by name** as one of four stories whose `orderBy('name')` list query
+breaks against a column that will no longer exist, and assigns the amendment to the coordinator
+rather than to itself. **0071's R-1** lists the four specific claims of this story it supersedes.
+This section, and the inline `⚠️ Correction, 2026-08-30` blocks below, are that amendment.
+
+**What this amendment does and does not do.** It corrects statements in this file that are now
+**false**, marked in place so the original text is still readable. It does **not** add tabbed-UI
+functionality to this story — **that is 0071's job and 0071 is already written**. 0025 stays the
+story that builds the list, the create/edit modal and the blocked-delete flow; it simply must stop
+asserting things about a `name` column and a one-input modal that will not be true.
+
+**For the real current behaviour, read 0070 (the mechanism) and 0071 (this screen's tabs) — not
+this file.** Where the two disagree with anything below, they win.
+
+**Sequencing consequence, restated because it is easy to lose:** the strict order is
+**0023 → 0024 → 0025 → 0068 → 0070 → 0071**. If 0025 ships in that order it is built *before* the
+`name` column is dropped, so the original code is momentarily correct and 0070 → 0071 then rewrite
+it. 0071's **R-2** records the window this leaves — between 0070 and 0071 this screen's list query
+throws — and its **Q-3** resolves (a): **0071 owns applying the corrected query to this screen.**
+
+### What this amendment deliberately left alone
+
+- **The Gherkin block** below is unedited. Its scenarios are behavioural and still describe what this
+  screen does; under 0070 they simply read as being *about the default store language*. 0071 carries
+  its own per-language Gherkin, and duplicating it here would create two specifications of one
+  screen.
+- **Everything about the delete flow** — the hard block, the count, the `productCategoryId` error
+  key, `D-2`, `D-3`, the Super-Admin-refused-identically test. 0071's scope fence is explicit that
+  deletion and the in-use block are untouched by tabs.
+- **The whole authorization story** — the route gate, `ProductCategoryPolicy`, the per-row
+  `canEdit`/`canDelete` hint, `D-5`. 0070's **D-13** adds no permission, no ability and no policy;
+  the catalog stays at 42, and translating gates on the same `products.edit`.
+- **`tests/Browser/ProductCategoriesIndexTest.php`'s flat path**, which 0071's **D-9** declines to
+  follow (it puts its own browser file in the mirrored `tests/Browser/ProductCategories/`) and its
+  backlog item 1 lists as a further amendment to this file. **Not applied here** — it is a testing-
+  convention decision rather than something 0070 falsified, and per
+  [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md)'s own rule a story file
+  naming a test path is making a convention decision that belongs in a Phase 2 review. Flagged for a
+  human, not silently changed.
+- **OQ-1 through OQ-4**, all still open and all unaffected by Epic 5.
+
+---
+
 ## Type
 frontend | fullstack (related_task_id: **0023** — the paired product-categories backend story) | includes database-expert: **no**
 
@@ -194,10 +254,36 @@ Route::livewire('product-categories', ProductCategoriesIndex::class)
 
 ### Interface contract consumed from 0023 and 0024
 
+> ⚠️ **Correction, 2026-08-30 — two lines of the block below are falsified by [0070](0070-translatable-content-mechanism-product-categories-backend.md).**
+> It said `App\Models\ProductCategory` carries **`#[Fillable(['name'])]`**; 0070 changes it to
+> **`#[Fillable([])]`** — the parent row has no mass-assignable column at all once `name` moves to
+> the child table, and the model gains `use HasTranslations;` plus a `translationModel()` method.
+> And `ProductCategoryValidationRules::nameRules()` — the rule helper `productCategoryRules()`
+> composes — **gains a leading `string $storeLanguageId` parameter** and scopes its uniqueness check
+> to that one language (0070's "Modify" list; 0071 quotes the widened shape as
+> `nameRules(string $storeLanguageId, ?string $categoryId = null)`). Everything else in the block —
+> the three actions' signatures, the policy's four abilities, and all of 0024's contract — is
+> **unchanged** by 0070, which is explicit that `CreateProductCategory` / `RenameProductCategory`
+> keep their signatures and only narrow in *meaning* to "the default store language's name" (its
+> **D-12**).
+>
+> ✅ **Resolved 2026-08-30 — drop `productCategoryRules()`.** 0070 and 0071 both name only
+> `nameRules()`, never the composite **`productCategoryRules()`** that 0023 also ships and that this
+> story's component composes. That composite returned a **`['name' => …]`**-keyed array for a form
+> that no longer has a `name` field to key — every field is bound to **`names.{languageId}`** instead
+> (0071), and the composite has no other caller anywhere in the three files. Re-keying it would give
+> it a shape (`['names.{languageId}' => …]`) that only makes sense for one specific language at a
+> time, which is exactly what `nameRules()` alone already expresses without the wrapper — so there is
+> nothing left for the composite to add. At Phase 3, 0023's implementation should simply not create
+> `productCategoryRules()`, or delete it if 0023 lands first: `nameRules()` is the real, sole
+> consumer-facing method, matching 0070/0071's own usage.
+
 ```php
 // From 0023 — all present, all with zero call sites until this story
 App\Models\ProductCategory                                     // HasUuids, #[Fillable(['name'])], no SoftDeletes
+                                                               //   ^ 0070: becomes #[Fillable([])] + HasTranslations
 App\Concerns\ProductCategoryValidationRules::productCategoryRules(?string $productCategoryId = null)
+                                                               //   ^ 0070 widens nameRules() with $storeLanguageId
 App\Actions\ProductCategories\CreateProductCategory::__invoke(string $name): ProductCategory
 App\Actions\ProductCategories\RenameProductCategory::__invoke(ProductCategory $c, string $name): ProductCategory
 App\Actions\ProductCategories\DeleteProductCategory::__invoke(ProductCategory $c): bool
@@ -223,6 +309,34 @@ lang/en|es/products.php                                        // created by 002
 
 ### Component public surface
 
+> ⚠️ **Correction, 2026-08-30 — two declarations in the block below are superseded by
+> [0071](0071-product-categories-language-tabs-ui.md), which retrofits this component.**
+>
+> **(a) `public string $name = '';` does not survive.** It is replaced by
+> **`public array $names = [];`**, keyed by `store_language_id`, holding `''` (never `null`) for a
+> language with no text typed. 0071 adds `public string $activeLanguageId`, a `#[Locked] public
+> array $originalTranslatedLanguageIds`, a `setActiveLanguageTab(string $languageId)` method, and a
+> third injected action on `save()`. **The reason it cannot merely be extended:** a single `$name`
+> can only describe one language, and 0070 has removed the single column it corresponded to.
+>
+> **(b) The row shape's `name` is now nullable and is not a column read.** It was declared
+> `array{id: string, name: string, productCount: int, canEdit: bool, canDelete: bool}`; under 0070
+> the correct shape is **`name: ?string`**, and its value is
+> **`$category->translated('name')`** — the fallback-resolved name for the store default language —
+> **not `$category->name`, which no longer exists**. `null` is a reachable state in normal
+> operation, not data corruption: 0070's **R-2** records that promoting a new default store language
+> leaves every category translated only into the *old* default resolving to nothing. The list cell
+> renders an em dash there, matching `users.blade.php` / `roles.blade.php`.
+>
+> **What is unchanged:** `#[Locked] $editingCategoryId` and its server-authoritative assignment (the
+> `Rule::unique()->ignore()` pair below), `$showModal`, the delete-modal trio, and every method
+> signature except `save()`. 0071 keeps all of them verbatim.
+>
+> **This story is not being rewritten to add tabs** — 0071 owns that markup, its per-tab validation,
+> its error-key contract (`names.{languageId}`) and the new
+> `App\Actions\ProductCategories\SetProductCategoryTranslation` backend layer. The correction here
+> exists only so this file stops publishing a surface that will be wrong.
+
 ```php
 namespace App\Livewire\ProductCategories;
 
@@ -237,6 +351,8 @@ class Index extends Component
     #[Locked] public ?string $editingCategoryId = null;   // written only from $target->id
     public bool $showModal = false;
     public string $name = '';                             // the only form field; never ?string
+                                                          // ^ 0071 REPLACES this with:
+                                                          //   public array $names = [];  // keyed by store_language_id
 
     public bool $showDeleteModal = false;
     #[Locked] public ?string $deletingCategoryId = null;
@@ -252,6 +368,51 @@ class Index extends Component
     public function closeDeleteModal(): void;                       // also resetErrorBag('productCategoryId')
 }
 ```
+
+> ⚠️ **Correction, 2026-08-30 — the query quoted in the next paragraph does not run once
+> [0070](0070-translatable-content-mechanism-product-categories-backend.md) lands. This is the exact
+> break 0070's own R-1 names this file for.**
+>
+> It reads `ProductCategory::query()->withCount('products')->orderBy('name')->orderBy('id')`.
+> `orderBy('name')` targets **`product_categories.name`, a column 0070 drops** (its **D-4**) — so
+> this is not a cosmetic mis-ordering but a **SQL error on page load**.
+>
+> **The replacement, from [0071](0071-product-categories-language-tabs-ui.md)'s D-12, which owns
+> applying it to this screen (its Q-3, resolved (a) on 2026-08-30):**
+>
+> ```php
+> ProductCategory::query()->withCount('products')->withTranslationsFor()->get()
+>     ->sortBy(fn (ProductCategory $c) => $c->translated('name'))->values();
+> ```
+>
+> **It sorts in PHP, deliberately, and a SQL join is the wrong fix.** A `join` on
+> `product_category_translations` filtered to the default language bypasses `translated()`'s
+> fallback chain, so it silently mis-orders — or, with an `INNER` join, **omits** — any row lacking
+> a default-language translation, which 0070's **D-6**/**R-2** make a normal-operation state.
+> `withTranslationsFor()` is 0070's own eager-load scope, so this stays a **single** query for the
+> whole list and the N+1 hazard 0070's **R-4** warns about is closed by construction. **D-10** below
+> commits this screen to no pagination, so the whole table is in PHP regardless and the sort costs
+> nothing extra.
+>
+> **Coordination gap, checked rather than assumed: 0070 ships no ordering helper for this model.**
+> A `scopeOrderByTranslatedName()` **does** exist in the Epic 5 plan — but it is
+> [0076](0076-translatable-content-retrofit-products-backend.md)'s **D-14**, written for
+> **`Product`** specifically because `products` is the first table here with no natural size bound
+> and is paginated. Nothing equivalent is specified for `ProductCategory`, and 0071 deliberately
+> does not ask for one. **So do not "reuse the scope" here — it will not exist on this model.** If a
+> Phase 2 reviewer prefers one anyway, adding it is a change to **0070's** file, not to this one or
+> to 0071's.
+>
+> **The `->orderBy('id')` tiebreak also disappears** with the SQL ordering. 0071's expression carries
+> no tiebreak at all; `sortBy()` is stable in PHP, so rows with equal resolved names keep their
+> underlying order. **D-10**'s reasoning for the tiebreak (a UUIDv7 creation-order fallback) is not
+> re-argued by 0071. ✅ **Resolved 2026-08-30 — reinstate it.** Chain a second `sortBy('id')` (or
+> `->sortBy(['name', 'id'])` in one call) after the translated-name sort in 0071's `loadProductCategories()`.
+> D-10's original reasoning is unaffected by the retrofit — a UUIDv7 PK is still monotonic creation
+> order, and per-language name collisions (0070 D-7 scopes uniqueness per language, so two categories
+> can legitimately resolve to the same displayed name when one is translated and the other falls back)
+> make a stable tiebreak *more* load-bearing than before, not less. This is a Phase 3 implementation
+> detail on 0071's already-written `loadProductCategories()`, not a reason to reopen its design.
 
 `loadProductCategories()` is private and builds the row array with
 `ProductCategory::query()->withCount('products')->orderBy('name')->orderBy('id')`, mapping
@@ -278,6 +439,14 @@ Three are already paid for in [errors-log.md](../../docs/errors-log.md); the fou
    so there is no `selectedIndex` state to desync. `public string $name = ''` is still the right
    declaration (never `?string`), for the ordinary reason that a bound property should carry an empty
    value in the type the DOM expects.
+   > ⚠️ **Correction, 2026-08-30 — "a single text `name` field" is stale, but the conclusion survives
+   > intact.** Under [0071](0071-product-categories-language-tabs-ui.md) the modal holds **one text
+   > input per active store language**, bound to `$names[$languageId]`. There is still **no
+   > `<select>` anywhere**: 0071's **D-3** records that its `$activeLanguageId` drives an `x-show`
+   > comparison rather than a bound `<select>`, so the trap stays *structurally* inapplicable — and
+   > 0071 states that explicitly for the same reason this bullet does, so nobody re-applies it
+   > defensively. The never-`null` half of the rule binds harder, not less: every value in `$names`
+   > is `''` rather than `null`.
 
 ## Tests to perform
 
@@ -295,6 +464,19 @@ than reimplementing its own.
       in the schema enforces order (0023 **D-6** has no `sort_order`); only the query does, silently.
 - [ ] Each row exposes exactly `{id, name, productCount, canEdit, canDelete}` — locks the view contract
       so a renamed or dropped key breaks here rather than silently in the Blade.
+
+> ⚠️ **Correction, 2026-08-30 — both listing tests still belong here, but what they assert changes.**
+> The ordering test's *outcome* is unchanged (create out of order, assert alphabetical) while its
+> *mechanism* is not: after [0070](0070-translatable-content-mechanism-product-categories-backend.md)
+> the order comes from a **PHP `sortBy()` over `translated('name')`**, not from `orderBy('name')` —
+> see the correction under the component surface above. Two cases the original bullet could not
+> have: a category resolving to `null` must sort without throwing, and the fixture must set its
+> names **in the store default language** rather than on a column. The row-shape test's `name` key is
+> now **`?string`** and must accept `null` for a category with no default-language translation, so a
+> `toBeString()`-style assertion on it would fail for a legitimate row.
+> **[0071](0071-product-categories-language-tabs-ui.md) owns both amended assertions** — its own test
+> plan carries "the list renders the fallback-resolved name and an em dash when it resolves to
+> `null`" — so this file records the change rather than re-specifying the tests.
 
 *Create*
 - [ ] A valid name persists exactly one row and the modal closes.
@@ -361,6 +543,24 @@ than reimplementing its own.
 - [ ] The empty state renders when the catalog holds no categories.
 - [ ] The create/edit modal contains exactly one input and **no `<select>` markup** — a cheap guard
       against a stray element copy-pasted in from the Users view.
+      > ⚠️ **Correction, 2026-08-30 — "exactly one input" is false under
+      > [0071](0071-product-categories-language-tabs-ui.md) and must not be written as stated.**
+      > The modal holds **one name input per *active* store language**, one per tab — so the correct
+      > assertion is a **count of `N` name inputs for `N` active store languages**, driven off an
+      > N-active-language fixture, never a hardcoded 1 and never a hardcoded 2. 0071 states the same
+      > shape for the tab strip itself ("N tab controls render for N active languages, counted via
+      > `data-test="language-tab-{id}"` hooks") and requires every panel to carry
+      > `data-test="language-panel-{id}"`, precisely so this is countable by hook rather than by
+      > guessing at input markup.
+      >
+      > **Two halves of the original bullet survive unchanged, and are worth keeping.** The
+      > **no-`<select>`** guard still holds and is still meaningful (0071's tab switching is `x-show`
+      > over `$activeLanguageId`, not a `<select>` — see trap 4's correction above). And the *reason*
+      > the assertion exists — catching an element copy-pasted in from another view — is unaffected;
+      > only the expected number moves from a constant to a fixture-derived count.
+      >
+      > **This bullet is listed by name in 0071's R-1** as one of the four claims of this story it
+      > supersedes. **0071 owns the replacement test**; nothing here should try to pre-empt it.
 - [ ] **The blocked-delete message renders in the DOM** with the correct digit, singular and plural. A
       test asserting only `assertHasErrors()` never proves the human actually sees the sentence.
 - [ ] Validation messages appear next to the name field and the modal stays open.
@@ -435,6 +635,20 @@ component. Nothing on the screen references, links to, or shares anything with a
 - [ ] A category can be created and renamed through a modal whose only field is `name`; blank,
       whitespace-only, over-length, duplicate, case-only-duplicate and accent-only-duplicate names are
       each refused with a message on the `name` field and add no row.
+      > ⚠️ **Correction, 2026-08-30.** *"a modal whose only field is `name`"* is superseded by
+      > [0071](0071-product-categories-language-tabs-ui.md): the modal carries **one name field per
+      > active store language**, behind tabs. The **refusal set is unchanged in kind** — blank,
+      > whitespace-only, over-length and duplicate names are all still refused — but two things move.
+      > **(a) The error key** is `names.{languageId}`, not `name`, and the refusal must render on
+      > *that language's tab*, bringing a hidden tab into view when the refusal belongs to one
+      > (0071's **D-8** and its sharpest test). **(b) Duplicate-name uniqueness is scoped per store
+      > language** by 0070's **D-7** — the same string is legitimately accepted in two different
+      > languages and refused twice within one — so a duplicate assertion that does not name a
+      > language is now under-specified. The requiredness rule also becomes conditional per tab
+      > (0071's **D-7**): the default language is always required, a previously-translated language
+      > may not be blanked, a never-translated one may be left blank. **All of it is 0071's to
+      > specify**; this criterion stands for 0025 only in the pre-0070 window described at the top of
+      > this file.
 - [ ] Saving a category under its own unchanged name is accepted.
 - [ ] An unused category can be deleted from a confirmation modal naming the target.
 - [ ] **Deleting a category assigned to N products is blocked with an inline message stating N**, the
@@ -558,6 +772,21 @@ component. Nothing on the screen references, links to, or shares anything with a
   exactly (which is also unpaginated), and a product-category catalog is a smaller lookup table than
   `users`. The `id` tiebreak costs nothing and is a meaningful creation-order tiebreak given UUIDv7, even
   though 0023 **D-4**'s normalised uniqueness makes exact name collisions structurally impossible.
+  > ⚠️ **Correction, 2026-08-30 — the ordering half is superseded; the pagination half is what
+  > survives, and it is load-bearing.** `name ASC, id ASC` is SQL ordering against a column
+  > [0070](0070-translatable-content-mechanism-product-categories-backend.md) drops; the replacement
+  > is [0071](0071-product-categories-language-tabs-ui.md)'s **D-12** PHP `sortBy()` over
+  > `translated('name')`, quoted in full under the component surface above. **"No pagination" is
+  > *why* that replacement is acceptable** — 0071 cites this decision by name for exactly that
+  > reason: the whole table is already in PHP, so sorting there costs nothing extra. If a later story
+  > ever adds pagination to this screen, the PHP sort becomes wrong (it can only order the page it
+  > has) and an ordering scope like [0076](0076-translatable-content-retrofit-products-backend.md)'s
+  > `scopeOrderByTranslatedName()` — which exists for `Product`, not `ProductCategory` — would have
+  > to be written for this model first. The 0023 **D-4** uniqueness argument for the `id` tiebreak is
+  > also narrowed by 0070's **D-7**: uniqueness is now per *store language*, so two categories
+  > **can** resolve to the same displayed name (one translated, one falling back), which makes a
+  > tiebreak more relevant than it was — and 0071's expression carries none. Flagged as unsettled,
+  > not decided here.
 
 ### Scope fences: what this story must NOT do
 
