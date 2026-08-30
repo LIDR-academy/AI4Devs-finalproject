@@ -48,6 +48,33 @@ table is story [0043](0043-customers-new-customer-notification-backend.md)'s), *
 > dispatch sites. **The seam moved with it:** the dispatch site inside `UpdateBlogPost` was originally
 > specified as this story's own cross-story edit, and is now 0061's — see **D-8**.
 
+> ### ⚠️ Epic 5 amendments — 2026-08-30
+>
+> Story [0078](0078-translatable-content-retrofit-blog-posts-backend.md) (translatable-content retrofit
+> for blog posts) **drops `blog_posts.title`, `blog_posts.slug` and `blog_posts.body` entirely**, moving
+> all three to a `blog_post_translations` child table read through
+> `BlogPost::translated('title', $languageId)`. Its **R-1(c)** names this story as the one the retrofit
+> hits hardest, and says why: *"[0065] forces a decision no sibling retrofit did"* — this story's
+> payload freezes `$this->post->title` as an immutable snapshot at publication, and once a title is
+> per-language **something has to choose which language gets frozen**. That is a product choice wearing
+> a mechanical rename's clothes, so it is recorded as a decision rather than applied silently.
+>
+> **The decision is [D-4a](#d-4a--the-frozen-title-snapshot-resolves-in-the-store-default-language-2026-08-30):
+> the store default language, via `translated('title')` with no language argument.** Corrections marked
+> **⚠️ Correction, 2026-08-30** appear in **D-4** (the payload and its `?string` type), **D-9** (the
+> "costs nothing" clause), the Gherkin, the test plan's frozen-snapshot case, and the 0057 hand-off.
+>
+> ⚠️ **One item is genuinely new and is not a rename: R-11**, under [Risks](#risks).
+> The snapshot's freshness used to be guaranteed by reading an attribute off the row the action had just
+> written; it now depends on the `translations` relation not being stale on the instance handed to the
+> notification. That is 0070's **R-5** meeting this story's **R-1** one table down, and it is the reason
+> the "is the snapshot taken at a fixed enough point" question has a *different* answer per trigger.
+>
+> Sequencing: 0078 is a hard dependency the moment it lands — this story cannot resolve a title without
+> `HasTranslations` and `StoreLanguage`. If 0078's **R-14** is taken instead (amending 0061 so the three
+> columns are never created), every amendment below still stands unchanged; only the migration story
+> differs.
+
 > ### ⛔ BLOCKED — read this before Phase 3
 >
 > Fully specified now, but Phase 3 cannot start until **all** of the following are `done`:
@@ -56,6 +83,12 @@ table is story [0043](0043-customers-new-customer-notification-backend.md)'s), *
 > `RestoreBlogPost`) and [0064](0064-scheduled-post-auto-publish-backend.md) (owns
 > `ScheduledBlogPostPublished` and the sweep that dispatches it). 0061 and 0064 transitively require
 > [0058](0058-blog-categories-backend.md) and [0059](0059-blog-tags-backend.md).
+>
+> ⚠️ *(added 2026-08-30)* **[0078](0078-translatable-content-retrofit-blog-posts-backend.md) is a
+> conditional fourth**: it is not a blocker if it ships *after* this story, but it **is** one the moment
+> it ships first, because `$post->title` will not exist and **D-4a**'s `translated('title')` needs
+> `HasTranslations` (0070) and `StoreLanguage` (0068) to be present. Check the order at Phase 2 rather
+> than at Phase 3 — the payload line differs between the two worlds and nothing else in this story does.
 >
 > **Do not stub a `notifications` table, a `BlogPost` factory or a fake event to make this story
 > testable earlier.** Every one of those is the back door 0046's own banner refuses.
@@ -119,7 +152,15 @@ Feature: Blog post published notification
   Scenario: The notification identifies the post that was published
     Given a blog administrator whose role grants the blog view permission
     When a blog editor publishes a draft post titled "Guía de invierno"
-    Then the stored notification carries that post's identifier and title
+    Then the stored notification carries that post's identifier and its title
+      in the store's default language
+
+  Scenario: A post translated into several languages is announced by its default-language title
+    Given a blog administrator whose role grants the blog view permission
+    And a draft post titled "Guía de invierno" in the store's default language
+      and "Winter guide" in another store language
+    When a blog editor publishes that post
+    Then the stored notification carries the title "Guía de invierno"
 
   Scenario: Every administrator holding the blog view permission is notified
     Given three administrators whose roles all grant the blog view permission
@@ -228,6 +269,19 @@ Feature: Blog post published notification
     Then the post is published and no notification is stored
 ```
 
+> ⚠️ **Correction, 2026-08-30 — two scenarios changed for the Epic 5 retrofit.**
+> *"The notification identifies the post that was published"* previously ended *"…carries that post's
+> identifier and title"*, which stops being a single value once story
+> [0078](0078-translatable-content-retrofit-blog-posts-backend.md) makes the title per store language;
+> it now names the language. The second scenario is **new** and is the only one that can fail if the
+> language choice is wrong — a post translated into exactly one language makes every candidate
+> resolution identical, which is precisely why **D-4a** could otherwise ship untested. Both are the
+> Gherkin face of **D-4a**; neither changes who is notified or when.
+>
+> Note the actor convention is unchanged: `Given` carries the blog administrator who receives, `When`
+> carries the blog editor who acts, one `When` per scenario. The retrofit adds no new actor — a store
+> language is a property of the content, never a role.
+
 > **The `Publishing a post at creation…` scenario was added when OQ-1 was confirmed.** It sat as a
 > deliberate gap while the question was open — writing it earlier would have decided OQ-1 by the back
 > door — and it is the only scenario in this feature whose trigger is a **creation** rather than a
@@ -265,6 +319,36 @@ class BlogPostPublished extends Notification
     }
 }
 ```
+
+> ⚠️ **Correction, 2026-08-30 — `$this->post->title` does not exist after story
+> [0078](0078-translatable-content-retrofit-blog-posts-backend.md).** The block above is left as
+> written, because what replaces it is a *decision* and not a substitution. The shipped shape is:
+>
+> ```php
+> /** @return array{blog_post_id: string, title: ?string} */
+> public function toArray(object $notifiable): array
+> {
+>     return [
+>         'blog_post_id' => $this->post->id,
+>         // Store DEFAULT language, deliberately — never $notifiable's admin UI locale. See D-4a.
+>         'title' => $this->post->translated('title'),
+>     ];
+> }
+> ```
+>
+> Three things changed and each is load-bearing:
+>
+> - **`translated('title')` with no second argument** resolves the store default — 0070's signature is
+>   `translated(string $field, ?string $storeLanguageId = null)`, and omitting the id makes *requested*
+>   and *default* the same language. **Do not pass `null` explicitly to mean "any language"**; it means
+>   the default, and there is no "any".
+> - **The PHPDoc return type is `title: ?string`, not `title: string`.** `translated()` returns
+>   `?string` and 0070's **D-6** makes never-throwing its central property, so `null` is reachable at
+>   the type level. It should not occur in practice — 0070's **Q1(a)** (assumed by 0078) holds that
+>   every entity always carries a default-language translation — but a Larastan level 7 gate reads the
+>   declared type, not the assumption. See **D-4a** for what to do about the `null`.
+> - **`$notifiable` stays unused**, exactly as it is today. Resolving per recipient is a real
+>   alternative and it is rejected in **D-4a**, not overlooked.
 
 - **`BlogPostPublished`, not `NewBlogPostPublished` or `BlogPostPublishedNotification`.** A statement
   of fact about what happened, matching `PendingEmailVerification` / `UserInvitation` /
@@ -502,6 +586,28 @@ triggers
       unpinned, and a "simplification" to store only the id and join at render time passes every other
       test in this file.
 
+      > ⚠️ **Correction, 2026-08-30 — "rename the post" is now a write to a translation row, and this
+      > case splits into three.** After story
+      > [0078](0078-translatable-content-retrofit-blog-posts-backend.md) a rename goes through
+      > `SetTranslation` against one `(post, store language)` pair, so the original one-line case cannot
+      > distinguish the property it is meant to pin from two neighbouring ones:
+      >
+      > - **The snapshot is frozen** — dispatch, then rewrite the **default** language's title, then
+      >   assert the stored payload still carries the original. This is the original case, retargeted.
+      > - **The snapshot is the *default* language's, not another one's** (**D-4a**) — arrange a post
+      >   translated into the default **and** a second store language with a *different* title, dispatch,
+      >   and assert the payload carries the **default's**. *Risk if missing:* nothing else in this file
+      >   distinguishes "resolved the default" from "resolved whichever row came back first", and a
+      >   single-language fixture makes the two identical.
+      > - **A translation in a non-default language is irrelevant to the payload** — dispatch, then
+      >   rewrite the *second* language's title, then assert the payload is unchanged. The control that
+      >   proves the first case is testing a snapshot rather than a lucky read.
+      >
+      > **Do not add a fourth case asserting a `null` title.** It is reachable at the type level and
+      > unreachable by design (**D-4a**'s ⚠️), and a test that arranges a post with no default-language
+      > translation is asserting that 0070's **Q1(a)** invariant is broken — which is 0070's test to
+      > write, not this story's.
+
 **`tests/Feature/Blog/ManualPostPublishedNotificationTest.php`** (`RefreshDatabase`, driven through
 `app(UpdateBlogPost::class)` **and** `app(CreateBlogPost::class)`) — the transition matrix, plus the
 create path
@@ -667,6 +773,15 @@ link (**R-8**).
       **not** `ShouldQueue`, and its `toArray()` returns exactly `blog_post_id` and `title`.
 - [ ] `title` is stored as a **literal string snapshot** taken at publication, not an id the viewer
       joins on and not a relation read at render time (**D-4**).
+- [ ] ⚠️ *(added 2026-08-30, Epic 5)* **That snapshot resolves in the store default language**, via
+      `translated('title')` with **no** language argument, and the payload's declared type is
+      `title: ?string` (**D-4a**). `$notifiable` is **not** consulted: a recipient's admin UI locale is
+      Layer 1 and a post's title is Layer 2, and the two are unrelated by 0066's own text.
+- [ ] ⚠️ *(added 2026-08-30, Epic 5)* **R-11 is recorded as open, not silently accepted.** On the
+      `UpdateBlogPost` path a caller-supplied model with a pre-hydrated `translations` relation can
+      freeze a **pre-edit** title, because `SetTranslation` writes through the relation method and does
+      not refresh a loaded collection (0070's **R-5**). This story ships the failing test and escalates
+      to 0061 — exactly as it does for **R-1** — and must **not** add a compensating re-read of its own.
 - [ ] `App\Actions\Blog\NotifyBlogPostPublished` resolves recipients as
       `User::permission('blog.view')->get()` on the `web` guard, evaluated at dispatch time and never
       cached.
@@ -761,7 +876,11 @@ link (**R-8**).
       1. A third notification `type` now exists: `App\Notifications\BlogPostPublished`.
       2. Its payload is `{blog_post_id, title}`. A recognized arm would render the title and link to
          the post editor; **read the keys defensively**, never with a bare array offset, per 0057's own
-         second constraint.
+         second constraint. ⚠️ *(amended 2026-08-30)* **`title` is the post's title in the store
+         default language, frozen at publication, and it is nullable** (**D-4a**) — so 0057 renders it
+         verbatim and must **not** re-resolve it against the viewer's admin UI locale or against the
+         post's current translations. The defensive read 0057 already specifies covers the `null`; no
+         0057 change is needed for this, and the story still needs none to be correct (fact 3 below).
       3. **0057 needs no change to be correct** — the row already renders through its permanent
          `default` arm. Adding a third arm is an *enhancement* (it gains a link), not a defect fix, and
          0057's fallback test must keep passing either way.
@@ -833,9 +952,24 @@ would reintroduce the staleness window that hedge names.
   storing only the id would let a two-year-old bell entry silently re-render under a name that did not
   exist when the post went live. A notification is a record of what happened at the time; a later
   rename is a *new* fact.
+
+  > ⚠️ **Correction, 2026-08-30 — the argument survives the retrofit and gets *stronger*; only the
+  > column reference is wrong.** `blog_posts.title` no longer exists (story
+  > [0078](0078-translatable-content-retrofit-blog-posts-backend.md)); read the sentence as
+  > *"a post's title is administrator-editable after publication"*, which is now true one table over,
+  > in `blog_post_translations`. The snapshot argument gains a second, independent reason it did not
+  > have: a live join would have to re-resolve **which language** to render at every future page load,
+  > against a store-language catalog that can itself change — a language can be added, or removed
+  > without its content being deleted (0068's **D5**). A frozen string cannot drift under either.
 - **Excluded — `slug`.** No consumer: 0061's scope fence rules out any public-facing blog route or
   archive, so there is no public URL a notification would build. 0057 links to the *editor*, which
   needs the id.
+
+  > ⚠️ **Correction, 2026-08-30 — still excluded, and now excluded for a second reason.** After 0078
+  > there is no single `slug`: each store language derives its own from its own title, and uniqueness is
+  > scoped per language (0078's **D-2**, **D-4**). So including a slug would have needed the same
+  > language choice **D-4a** makes for the title, for a value with no consumer at all. The original
+  > "no consumer" reason is unchanged and is still the primary one.
 - **Excluded — the category.** Not needed for a one-line entry, and visible the moment the
   administrator clicks through.
 - **Excluded — `body` / an excerpt.** Arbitrary-length sanitized HTML in an immutable JSON column is
@@ -855,6 +989,74 @@ so **every key added is permanent for existing rows and every later addition pro
 column.** Additions must be deliberate. This is the same discipline 0064 applied when it recorded that
 one of 0052's three safety properties did not transfer — adopt the decision, name the reason that
 actually holds.
+
+### D-4a — The frozen `title` snapshot resolves in the **store default** language *(2026-08-30)*
+
+**Added because story [0078](0078-translatable-content-retrofit-blog-posts-backend.md) makes it
+unavoidable, and its own R-1(c) refuses to decide it on this story's behalf** — *"recorded as a
+coordination item because it is a **product** choice hiding inside a mechanical rename."* Once
+`title` is per store language, `$this->post->title` has no single answer, and **D-4**'s entire snapshot
+argument depends on the value being resolvable at dispatch time.
+
+**Decision: `$this->post->translated('title')` — no language argument, so the store default.**
+Recommended rather than confirmed; it is cheap to change before implementation and permanent after,
+because `notifications.data` has no update path (**D-4**), so it belongs in the Phase 2 review beside
+**OQ-2** and **OQ-5**.
+
+**Why the store default:**
+
+1. **It is the canonical authoring language.** 0078's **D-6** backfills every pre-existing post into the
+   store default, 0070's **Q1(a)** (which 0078 assumes) holds that every entity always carries a
+   default-language translation, and 0061's create path writes the default's row first. It is the one
+   language a post is guaranteed to have.
+2. **The fallback chain guarantees it resolves.** `translated()` returns requested → default → `null`,
+   and with no requested language the first two collapse into one, so this is the *shortest* path to a
+   value that exists. Any other choice reintroduces a `null` case that the store default does not have.
+3. **It matches how every other Epic 5 story answered the same question.** This is the recurring
+   *"which language does a backend-only artifact speak?"* question, and the batch has answered it
+   consistently: 0066 resolves an outbound notification's locale through
+   `LocaleSetting::defaultNotificationLocale()` rather than per-recipient guessing, and 0077/0027's
+   **OQ-10** resolves list ordering against a single language rather than per-viewer. **A system-
+   generated record picks one language and records it; it does not negotiate one.**
+4. **The recipients are not the audience the content was written for.** This notification is
+   admin-facing awareness traffic (**D-1**: every `blog.view` holder, deliberately wider than "who may
+   publish"). It answers *"which post went live"*, and the default-language title is the name the
+   editorial team uses for that post internally.
+
+**Three alternatives, each rejected for a stated reason rather than overlooked:**
+
+- **(b) The recipient's own admin UI locale, via `$notifiable`.** Technically available —
+  `toArray(object $notifiable)` receives the recipient and `Notification::send()` writes one row per
+  recipient, so per-recipient payloads are possible. **Rejected because it conflates Epic 5's two
+  layers.** 0066 is explicit that Layer 1 (admin interface language, `UiLocale`, Spanish or English
+  **only**) has *"no relationship"* to Layer 2 (store content languages, `StoreLanguage`, an
+  administrator-configured catalog). A store language need not correspond to any UI locale at all, so
+  the mapping this option needs does not exist. It would also make one publication produce N different
+  frozen strings, so two administrators comparing bells would see two different records of one event —
+  and **D-5**'s "one implementation of who gets notified and with what" would acquire its first
+  per-recipient branch.
+- **(c) Every language, as a map (`{es: …, fr: …}`).** Rejected on **D-4**'s own immutability rule: it
+  makes the payload's shape depend on the store-language catalog *at write time*, so rows written
+  before and after a language is added are permanently different shapes in a column with no backfill —
+  the exact "mixed-shape column" **D-4** exists to prevent. 0057 reads these keys defensively but would
+  still have to pick one to render.
+- **(d) The language the post was *published in* / most recently edited in.** Rejected as a value that
+  does not exist: publication is a parent-row state change (0078's **D-1** keeps `status` deliberately
+  non-translatable), so no language is associated with it. The automatic trigger makes this obvious —
+  0064's sweep has no actor, no request and no language context whatsoever.
+
+⚠️ **The `null` case must be handled explicitly, not left to the type system.** `translated()` returns
+`?string`, so `title` is `?string` in the payload. Store the `null` rather than substituting a
+placeholder string: 0057's bell reads these keys defensively (its own second constraint) and a
+placeholder would be untranslatable copy frozen into a data column, which is the "no `lang/` key"
+scope fence. A `null` title is a real, if unreachable-by-design, state — and if it ever occurs it means
+0070's **Q1(a)** invariant broke, which is a finding rather than something to paper over.
+
+⚠️ **This decision does not travel to 0043 or 0046.** `CustomerCreated`'s name and `OrderCreated`'s
+number are not translatable content and never become per-language, so **D-1**'s "reverse it for all
+three together" rule does **not** apply here — this is the one payload choice in the three-producer
+family that is blog-specific by construction. **D-13**'s no-shared-abstraction verdict is unaffected
+and, if anything, reinforced.
 
 ### D-5 — One action, three callers; the listener is a thin adapter with no logic
 
@@ -1009,6 +1211,24 @@ resolved here as **the model**, on two reasons:
 **These two decisions are coupled and must move together** (see **D-3**). This resolution requires **no
 change to 0064**: it fixes an open choice in a story that has not shipped, rather than editing shipped
 code.
+
+> ⚠️ **Correction, 2026-08-30 — reason 1's "costs nothing" clause weakens, and the resolution stands.**
+> After story [0078](0078-translatable-content-retrofit-blog-posts-backend.md), reading a title is not
+> an attribute read: `translated('title')` reads the `translations` **relation** (0070's implementation
+> reads `$this->translations`, the property), so a model arriving with that relation unloaded costs one
+> lazy load. Carrying the model therefore spares the `find()` but **not** the relation load.
+>
+> **The decision is unchanged and is better supported than before**: an id-only event would cost this
+> story's listener a `find()` **and** the same relation load, so the model still strictly dominates —
+> the gap between the two options widened rather than closed.
+>
+> **Reason 2 is the one that now carries more weight than it did.** A non-queued listener means no
+> `SerializesModels` round trip, and after the retrofit that matters for a second reason: `SerializesModels`
+> re-fetches the model **without its relations**, so a queued listener would reload `translations` at
+> handle time and snapshot whatever the title is *then* — silently converting **D-4**'s
+> publication-time snapshot into a delivery-time read. **D-3** and this decision were already coupled;
+> the retrofit makes the coupling load-bearing for payload *correctness*, not only for staleness.
+> See **R-11** for the freshness question that remains open on the synchronous path.
 
 ### D-10 — No second event class for the manual trigger
 
@@ -1185,6 +1405,7 @@ none.
 | [0043](0043-customers-new-customer-notification-backend.md) — new-customer notification | **hard, `new`** | Owns the `notifications` table and its `uuidMorphs('notifiable')` correction. This story adds **no** migration and cannot run one Feature test without it |
 | [0061](0061-blog-posts-core-crud-backend.md) — blog posts core CRUD | **hard, `new`** | Owns `BlogPost`, `BlogPostStatus`, `BlogPostFactory`, `RestoreBlogPost`, and — since **OQ-1** was confirmed — **both manual dispatch sites**, `UpdateBlogPost` and `CreateBlogPost` (its revised **D-19**, **V-9**). The coupling is now one-way: 0061 calls this story's action, and this story edits nothing of 0061's |
 | [0064](0064-scheduled-post-auto-publish-backend.md) — scheduled auto-publish | **hard, `new`** | Owns `App\Events\Blog\ScheduledBlogPostPublished` and the only automatic transition. **D-9** resolves its **OQ-2** |
+| [0078](0078-translatable-content-retrofit-blog-posts-backend.md) — translatable-content retrofit (Epic 5) | **hard once it lands, `new`** *(added 2026-08-30)* | Removes `blog_posts.title` and supplies `BlogPost::translated()`, which **D-4a**'s payload calls. Ordering is one-directional but **either order works**: if 0078 ships first this story is written against `translated()` from the outset; if this story ships first, 0078's retrofit changes one line here and the amendments above describe the end state. What must **not** happen is this story implementing `$post->title` after 0078 has landed — the property would be undefined and the payload would silently store `null` on a `?string` type. Transitively brings [0068](0068-store-languages-catalog-backend.md) (`StoreLanguage`) and [0070](0070-translatable-content-mechanism-product-categories-backend.md) (`HasTranslations`) |
 | [0058](0058-blog-categories-backend.md) / [0059](0059-blog-tags-backend.md) | **transitive, via 0061** | No direct use |
 | [0046](0046-orders-new-order-notification-backend.md) | **not a dependency** | This story copies its *shape*, not its code. Sequencing is free either way |
 | [0056](0056-notification-viewing-backend.md) / [0057](0057-notification-bell-ui.md) | **not a dependency, either direction** | 0056's **D-5** means the bell needs zero change for a new producer — verified for this payload (**R-8**) |
@@ -1265,6 +1486,52 @@ Per the [task ordering rule](../../docs/workflow.md#task-ordering-rule) the numb
 - **R-9 — Unbounded row growth with no pruning.** Every publication writes N rows. Lower volume than
   orders and negligible at backoffice scale; `model:prune` is deliberately not wired, consistent with
   0043's **R-3** and 0046's **R-5**. Recorded so it is a known consequence rather than a surprise.
+- **R-11 — A stale `translations` relation can freeze a pre-edit title *(2026-08-30)*.** New with story
+  [0078](0078-translatable-content-retrofit-blog-posts-backend.md), and it is the answer to *"is the
+  snapshot taken at a fixed enough point?"* — which turns out to be **yes on two triggers and
+  not-provably-yes on the third**, so it is recorded rather than asserted either way.
+
+  **The queueing half is settled and is not the risk.** Neither the notification nor the listener is
+  `ShouldQueue` (**D-3**), so `toArray()` runs synchronously inside `Notification::send()`, in the same
+  request or the same cron tick as the publication. There is no window between "the post was published"
+  and "the payload was built" for anything to change in. Construction-time is dispatch-time here, and
+  **that remains true after the retrofit** — a queued listener would break it (see the amended **D-9**),
+  which is one more reason not to make one.
+
+  **The risk moved to the relation, not the clock.** `translated()` reads the already-loaded
+  `translations` collection rather than re-querying (0070's **R-4** makes that deliberate — it is what
+  keeps a list render bounded). So the payload is only as fresh as the relation on the instance handed
+  to the notification, and 0070's **R-5** records the exact failure: `SetTranslation` writes through
+  `$translatable->translations()->updateOrCreate(...)` — the relation **method** — which does **not**
+  refresh an already-hydrated `translations` collection. Per trigger:
+
+  | Trigger | Instance handed to the notification | Freshness |
+  | --- | --- | --- |
+  | 3 — 0064's sweep | re-fetched after the conditional `UPDATE` to satisfy `?BlogPost` (0064's **D-7**), relations unloaded | ✅ safe by construction — the lazy load reads current rows |
+  | 2 — `CreateBlogPost` | just created in the same call; the default-language translation is written in the same transaction | ✅ safe — nothing could have loaded a stale collection first |
+  | 1 — `UpdateBlogPost` | **caller-supplied**, and the same call may have just rewritten the title through `SetTranslation` | ⚠️ **unproven** — if the caller (0063's editor component) passed a model with `translations` eager-loaded, the notification can snapshot the **pre-edit** title of a post that was retitled and published in one save |
+
+  **This is R-1 one table down, and the two are related but not the same.** **R-1** is about a stale
+  *parent* attribute producing a duplicate announcement; this is about a stale *child relation*
+  producing a correct announcement with wrong content. They have the same root cause — a caller-supplied
+  instance trusted for a value the action reads later,
+  [security/model-instance-trust.md](../../docs/security/model-instance-trust.md)'s failure class — and
+  0061's `$blogPost->refresh()` (its **D-19a**, and **R-1**'s proposed fix) would close **both**, since
+  `refresh()` reloads loaded relations too. **But only if it runs after the translation write, and
+  0078's D-12 puts it first**, as `UpdateBlogPost`'s literal first statement. So the fix for **R-1** does
+  **not** automatically fix this one.
+
+  **Not closed here, deliberately, and not by a guard of this story's own** — the same reasoning
+  **R-1** already carries: the fix is one `->load('translations')` (or a `refresh()`) between the commit
+  and the dispatch, it belongs in **0061's** `UpdateBlogPost`, and adding a compensating re-read inside
+  `NotifyBlogPostPublished` would give this story a second, divergent copy of a rule **D-5** exists to
+  keep single. **Write the test, expect it to fail on trigger 1, and escalate** — mirroring exactly how
+  **R-1** is handled. The test: load a post, retitle **and** publish it in one `UpdateBlogPost` call
+  with `translations` pre-hydrated, then assert the stored payload carries the **new** title.
+
+  ⚠️ **Named for Phase 2 and for `appsec-auditor` alongside R-1**, and worth one sentence on why it is
+  not merely cosmetic: the notification is the *permanent* record (**D-4** — no update path, no
+  backfill), so unlike a stale render it cannot be corrected by reloading the page.
 - **R-10 — Several assertions in this plan can pass vacuously.** `backend-qa` enumerated them and each
   carries its prove-it-can-fail step in the test list: the restore assertion (no path was ever
   connected), every "fires nothing" row (a dead trigger passes all of them at once — mitigated by
@@ -1421,9 +1688,10 @@ reading real code or real task files rather than relayed:
    own docblock independently states the same chain and warns against reverting it — this story follows
    an existing, hard-won rule rather than rediscovering it.
 
-**Not yet run:** Phase 2 (`code-reviewer` INVEST validation). Five items deserve an explicit look there
-rather than at implementation time — **OQ-1 is no longer one of them**, having been confirmed and
-implemented upstream:
+**Not yet run:** Phase 2 (`code-reviewer` INVEST validation). ~~Five~~ **Seven** items deserve an
+explicit look there rather than at implementation time — **OQ-1 is no longer one of them**, having been
+confirmed and implemented upstream, and **items 6 and 7 were added on 2026-08-30** by the Epic 5
+coordination pass:
 
 1. **R-1** — **now the sharpest open item in the file, and it was not, before OQ-1 closed.** 0061's
    shipped update condition has no `refresh()`, so a stale instance can double-announce one transition.
@@ -1439,6 +1707,16 @@ implemented upstream:
    immediately before Phase 3. **This is no longer hypothetical:** 0061's `UpdateBlogPost` and
    `CreateBlogPost` both gained a constructor dependency and a dispatch branch after this file was
    first written, which is exactly the drift the rule exists to catch.
+6. **D-4a — ✅ CONFIRMED 2026-08-30 — the store-default language for the frozen title snapshot.** The
+   human confirmed this directly, consistent with every other Epic 5 story's answer to "which language
+   does a backend-only artifact speak?" (0066's `defaultNotificationLocale()`, 0027/0077's OQ-10). No
+   longer merely recommended.
+7. **R-11 — the stale-`translations` snapshot on the `UpdateBlogPost` path** *(added 2026-08-30)*.
+   Phase 2 must decide the same thing it decides for **R-1**: whether a test expected to fail is
+   acceptable to carry into Phase 3, or whether 0061 fixes it first. The two are close enough to be
+   confused and must be judged separately — **R-1** produces a duplicate announcement, **R-11** produces
+   a single announcement with wrong content, and 0061's `refresh()` as currently placed (0078's
+   **D-12**, first statement) closes only the first.
 
 **Stage:** `new`, and **blocked** — see the banner under [Description](#description). It moves to
 `ai-spec/tasks/in-progress/` at the start of Phase 3 and to `ai-spec/tasks/done/` at Phase 7; both
