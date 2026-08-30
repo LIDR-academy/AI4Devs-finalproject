@@ -77,9 +77,15 @@ class StoreUploadedImage
         // origin. `Validator::make(...)->validate()` throws
         // ValidationException on failure, the same as the Livewire
         // component's own `$this->validate()`.
+        // Phase 4 re-audit finding (informational, story 0020): named
+        // `pendingUploads` explicitly so a per-file batch failure surfaced
+        // through App\Livewire\Media\Gallery::upload() doesn't render "The
+        // photo field..." -- this action's own `$photo` parameter name,
+        // which its caller's Livewire property was renamed away from.
         Validator::make(
             ['photo' => $photo],
             ['photo' => $this->imageUploadRules()],
+            attributes: ['photo' => __('media.attributes.pendingUploads')],
         )->validate();
 
         $disk = Storage::disk('public');
