@@ -24,6 +24,30 @@ Covers the automatic half of [PRD](../../docs/PRD/PRD.md#epic-4--blog) Epic 4's 
 list. **The full-auto-publish behaviour is a human product decision, confirmed before this batch was
 decomposed** — see [D-0](#d-0--full-auto-publish-is-a-confirmed-product-decision-not-an-inference).
 
+> ### ⚠️ Epic 5 amendments — 2026-08-30
+>
+> Story [0078](0078-translatable-content-retrofit-blog-posts-backend.md) (translatable-content retrofit
+> for blog posts) **drops `blog_posts.title`, `blog_posts.slug` and `blog_posts.body` entirely**, moving
+> all three to a `blog_post_translations` child table read through
+> `BlogPost::translated('title', $languageId)`. Its **R-1(b)** names this story as one of three it
+> breaks, and this file carries four corrections as a result, each marked inline
+> **⚠️ Correction, 2026-08-30**: the "only `status` and `updated_at` change" test assertion
+> ([Tests to perform](#tests-to-perform)), the Expected-outcome wording, **D-6**'s clustered-index note,
+> and **D-7**'s slug consequence.
+>
+> **This story's production code is unaffected, and that was verified rather than assumed.** A grep for
+> `title` / `slug` / `body` across this file returns no runtime read of any of them: the sweep query is
+> `status` + `published_at` + the `SoftDeletingScope`'s `deleted_at` (all three stay on the parent),
+> **D-7**'s conditional `UPDATE` writes `status` alone, **D-13**'s log line carries `blog_post_id` and
+> nothing else, and **OQ-3** leaves console output copy unresolved with no title in either candidate
+> shape. **Nothing here needs to resolve a store language**, which is what separates this story from its
+> sibling [0065](0065-blog-post-published-notification-backend.md), where the same retrofit forces a
+> real product choice.
+>
+> Sequencing: whichever of 0078 and this story reaches Phase 3 second inherits the other's shape. If
+> 0078's **R-14** is taken (amending 0061 so the three columns are never created on `blog_posts` at
+> all), these corrections still stand — they describe the end state either way.
+
 ## Type
 backend | includes database-expert: **yes**
 
@@ -213,6 +237,27 @@ Backend only — no browser tests, since this story ships no screen.
       `blog_category_id` are byte-identical before and after. *Risk if missing:* a sweep built by
       copy-adapting `UpdateBlogPost` re-runs a whole validate-and-save path and touches columns it has
       no business touching.
+
+      > ⚠️ **Correction, 2026-08-30 — this assertion names three columns that no longer exist on
+      > `blog_posts`.** As written it reads *"Assert `title`, `slug`, `body` and `blog_category_id` are
+      > byte-identical before and after"*, all four against the parent row. Story
+      > [0078](0078-translatable-content-retrofit-blog-posts-backend.md) moves `title`, `slug` and
+      > `body` to `blog_post_translations`, so **the assertion splits in two** and the split is what
+      > keeps it able to fail:
+      >
+      > - **On `blog_posts`**: assert `blog_category_id` and `published_at` are unchanged, and that the
+      >   only columns written are `status` and `updated_at`. This half is the whole of the original
+      >   risk — a sweep that copy-adapts `UpdateBlogPost` writes the parent row through a full save.
+      > - **On `blog_post_translations`**: assert **every** translation row for that post is byte-
+      >   identical before and after — `title`, `slug`, `body` *and* the child's own `updated_at` — for
+      >   a post translated into **more than one** store language, not just the default. A single-
+      >   language fixture cannot distinguish "the sweep touched no translation" from "the sweep touched
+      >   the one translation it could reach", and the copy-adaptation this test exists to catch would
+      >   route through `SetTranslation` for whichever language the caller supplied.
+      >
+      > The child rows' `updated_at` is the sharper of the two assertions post-retrofit: a stray write
+      > that restores the same `title` byte-for-byte is invisible on the value and visible on the
+      > timestamp — the same reasoning the idempotency block below already applies to the parent.
 - [ ] **The post's tags are unchanged** — assert the `blog_post_tag` rows directly, not via
       `$post->tags()`. *Risk if missing:* `UpdateBlogPost` also calls `SyncBlogPostTags` (0061's
       **D-15**), so the same copy-adaptation silently detaches every tag on every scheduled publish.
@@ -358,6 +403,15 @@ body, category or tags. Each transitioned post raises exactly one `ScheduledBlog
 which story 0065 turns into a notification. Running the sweep twice, or running it while an
 administrator publishes the same post by hand, publishes each post once and announces it once. A
 deleted scheduled post never goes live. A post scheduled for the future is untouched.
+
+> ⚠️ **Correction, 2026-08-30.** The paragraph above says the sweep transitions a post *"without
+> altering the publication date its editor chose, its **title**, **body**, category or tags"*. After
+> story [0078](0078-translatable-content-retrofit-blog-posts-backend.md) the title and body are not on
+> the row this sweep writes at all — they live per store language in `blog_post_translations`. The
+> **outcome is unchanged and the guarantee is stronger**: the sweep leaves every language's title, slug
+> and body untouched, not because it is careful to avoid them but because they are on a table it never
+> writes to. Read the sentence as *"…without altering the publication date its editor chose, any
+> language's title, slug or body, its category or its tags."*
 
 The application gains its first `routes/console.php`, its first `app/Console/Commands/` class, its
 first `app/Events/` folder, and its first documented answer to *"how does a write with no human actor
@@ -656,6 +710,27 @@ tiebreak.
 costs one clustered-index lookup. That is correct and not worth contorting the shape for — and
 `pluck('id')` keeps `body` off the wire entirely on the selection pass.
 
+> ⚠️ **Correction, 2026-08-30 — the `body` half of that paragraph stops applying, and the sweep gets
+> cheaper.** After story [0078](0078-translatable-content-retrofit-blog-posts-backend.md), `body` (and
+> `title`, and `slug`) are gone from `blog_posts`, which then holds only `id`, `blog_category_id`,
+> `status`, `published_at`, timestamps and `deleted_at` — **no large inline text at all**. 0078's
+> **D-8** states the consequence directly: a parent-only query such as this sweep is *strictly cheaper*
+> after the retrofit, because the clustered index it looks rows up in is no longer fattened by a
+> `mediumText` that InnoDB DYNAMIC keeps inline while it is short.
+>
+> **Three things do not change**, and they are the load-bearing ones: the index is still
+> `(deleted_at, status, published_at)` and every one of its columns is still parent-resident, so the
+> leftmost-prefix analysis in the table above holds verbatim; the query is still not covering (`id` is
+> the clustered key, so each match is still one lookup); and `pluck('id')` is still the right selection
+> shape. **The `EXPLAIN` in the Definition of Done is still required** — it now simply runs against a
+> narrower table.
+>
+> ⚠️ **What 0078's D-8 adds is an obligation this story does *not* inherit but a reader might assume it
+> does:** the `SELECT *` discipline **relocates** to the eager-load side, because
+> `blog_post_translations` now carries `title`, `slug` *and* `body` together and any list render must
+> join it. That binds story [0063](0063-blog-posts-list-editor-ui.md)'s paginated list, not this sweep,
+> which reads `blog_posts` alone and joins nothing.
+
 **Reasoned, not measured** — `vendor/` is absent (**V-6**) and no `blog_posts` table exists yet
 (**V-3**), so no `EXPLAIN` was possible. The Definition of Done requires one at Phase 3.
 
@@ -709,6 +784,22 @@ Three consequences, each verified rather than assumed:
   never run. **Harmless for the slug**, because 0061's hook is guarded on `isDirty('title')` and this
   write never touches `title` — but it is exactly why **D-12**'s announcement must be an *explicit*
   dispatch and can never be a model observer.
+
+  > ⚠️ **Correction, 2026-08-30 — the slug reasoning is superseded by something stronger, and the
+  > conclusion is unchanged.** As written, the slug is safe *conditionally*: the hook lives on
+  > `BlogPost`, fires on `save()`, and is guarded on `isDirty('title')`, so a query-builder update that
+  > never touches `title` cannot trip it. After story
+  > [0078](0078-translatable-content-retrofit-blog-posts-backend.md) the guarantee is
+  > **structural instead**: 0078's **D-4** relocates that hook to `BlogPostTranslation`, and this
+  > sweep writes only `blog_posts`. The hook is therefore **on a model this action never instantiates
+  > and a table it never writes to** — it cannot fire at all, guard or no guard. 0078's own **R-1(b)**
+  > makes the same point in the other direction: *"its underlying reasoning gets simpler, not harder."*
+  >
+  > **Do not delete the sentence and do not weaken the test that pins it.** Two reasons. The
+  > `isDirty('title')` guard still exists and is still load-bearing — one table over, on the write path
+  > 0078 owns — so the sentence is a correct statement about a mechanism that moved, not about one that
+  > was removed. And the *second half* of this bullet, which is the reason it is here at all, is
+  > untouched: no model events fire, so **D-12**'s dispatch must stay explicit.
 - **No `DB::transaction()` wrapper.** A single statement is already atomic, and
   [errors-log.md's transaction-wrapper entry](../../docs/errors-log.md#wrapping-existing-code-in-a-dbtransaction-moved-a-cache-flush-nobody-had-written--2026-08-21)
   is a standing warning that a wrapper is a change to every side effect inside it. The one thing that
@@ -1018,6 +1109,23 @@ Read or executed against this worktree and the sibling checkout's `vendor/` duri
   under which this story's own hedge preferred the id.* The two decisions are coupled and 0065 records
   that they must move together. **This resolution requires no change to 0064** beyond closing the
   question: 0065's D-9 says so explicitly, and the shape recommended here is the shape adopted.
+
+  > ⚠️ **Correction, 2026-08-30 — one clause of the quoted rationale weakens, and the resolution still
+  > holds.** The first reason above says attaching the model *"spares 0065's listener a second `find()`
+  > just to read the title"*. After story
+  > [0078](0078-translatable-content-retrofit-blog-posts-backend.md), reading a title is no longer an
+  > attribute read: it is `translated('title')`, which reads the `translations` **relation** and
+  > lazily loads it when that relation is not already hydrated (0070's own `translated()` reads
+  > `$this->translations`, the property). So carrying the model spares the `find()` but **not** the
+  > relation load, and the "costs nothing" clause becomes "costs one query instead of two".
+  >
+  > **The decision is unchanged and is if anything better supported**: an id-only event would cost
+  > 0065's listener a `find()` **and** the same relation load, so the model still strictly dominates.
+  > What changes is a hand-off obligation this story owns: `PublishScheduledBlogPost` already re-fetches
+  > a `BlogPost` to satisfy its `?BlogPost` return type (**D-7**), and that instance is **fresh, with no
+  > translations loaded** — which is the right state, because a *stale* loaded relation would let 0065
+  > snapshot a pre-edit title. See 0065's amended **D-4** / **D-9**, which own the language choice and
+  > the staleness analysis; this story neither resolves a language nor reads a title.
 - **OQ-3 — Does the command take a `--dry-run` flag, and what does it print?** **Recommendation:
   include `--dry-run` (recommended, lightly)** — it is one flag and one branch, this is the app's first
   scheduled *write*, and giving an operator a safe way to see what a sweep would touch before enabling
