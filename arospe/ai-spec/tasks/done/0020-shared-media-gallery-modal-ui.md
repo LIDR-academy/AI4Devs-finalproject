@@ -1,7 +1,7 @@
 # [0020] Shared media gallery modal (frontend)
 
 ## Description
-Frontend half of the Shared Media Gallery ([PRD §2.3](../../docs/PRD/PRD.md#23-shared-media-gallery)):
+Frontend half of the Shared Media Gallery ([PRD §2.3](../../../docs/PRD/PRD.md#23-shared-media-gallery)):
 the reusable modal that Products and Blog both open to pick or upload images. It replaces the
 placeholder view story **0019** ships for `App\Livewire\Media\Gallery` with the real screen — a tile
 grid, a debounced title/description search with an explicit empty state, an upload dropzone
@@ -9,7 +9,7 @@ grid, a debounced title/description search with an explicit empty state, an uplo
 title/description editing on upload and on a selected tile.
 
 This story owns **no table, no migration, no upload/conversion logic and no permission-catalog
-change** — all of that is [0019](done/0019-media-library-upload-and-conversions-backend.md), and this
+change** — all of that is [0019](../done/0019-media-library-upload-and-conversions-backend.md), and this
 story consumes it unchanged. It is the same split story **0004 → 0006** already ran for the Users
 screen: backend ships the component's server-side surface, frontend dresses it.
 
@@ -34,6 +34,136 @@ not convened.
 > Claims that could not be executed (browser drag-and-drop behaviour against markup that does not
 > exist yet) are recorded as risks, not asserted.
 
+## Phase 2 — INVEST validation (passed)
+
+**Verdict: ✅ PASS** — `code-reviewer`, 2026-08-28. Moved to `ai-spec/tasks/in-progress/` as
+[Phase 3 step 0](../../../docs/workflow.md#phase-3--tdd-mandatory-in-this-order); implementation
+starts here. **Read this section before writing the first test.**
+
+PASS on all six INVEST letters. **"Small" is the weakest** — this story is larger than any prior
+single-story UI task, and a future story of this shape could reasonably be split. That was raised as
+a *non-blocking* recommendation only: this story was already fully scoped and every open question
+confirmed by the coordinator on 2026-08-18, so **it proceeds as one story and is not to be split.**
+
+### Dependency 0019 is closed, and its code is real
+
+Verified in this worktree — not assumed from the task file's `done/` location. The reconciliations
+below are therefore against **shipped code**, not against a plan.
+
+### Divergences between 0019's shipped code and this document's assumptions
+
+**These are not errors in this document** — it was written before 0019 shipped and explicitly warned
+this could happen. They are reconciliations Phase 3 must make deliberately, each one a decision to
+record rather than a drift to absorb silently.
+
+| # | This document assumes | 0019 actually shipped | Phase 3 action |
+|---|---|---|---|
+| 1 | `$search` property + a `#[Computed]` tile list already exist | Neither. 0019 shipped **only** the query scope `Media::search(Builder, string $term)` as a `#[Scope]` attribute, with **no default argument** | **D6 must ADD `$search` and the computed tile list**, not reconcile an existing one |
+| 2 | An array upload property `$pendingUploads` with `multiple` | `public ?UploadedFile $photo` — **singular** | D7/D9's change is *both* a rename **and** a semantic change (single file → array). Legitimate — 0019's own **D4 named multi-file as its revisit trigger** — but implement it as a **deliberate, documented supersession of D4**, never as if it already existed |
+| 3 | An `updatedPendingUploads()` handler | The handler is **`upload()`** | Rename/redesign consciously; don't assume the lifecycle-hook name |
+| 4 | D10's per-tile inline-edit state is free to use `$title` / `$description` | The component **already owns `public string $title` / `public string $description`** as the *pending-upload* form fields | **D10 must use different property names** — a straight reuse silently collides two unrelated forms |
+| 5 | (unmentioned) | `upload()` already carries an **undocumented `RateLimiter` throttle**: 10/hour, key `media-upload:{userId}`, refusing via `ValidationException` | Bounds **D9's multi-file-batch tests (cap corrected to 3, see D9)** and **any browser test uploading repeatedly as the same actor**. Plan fixtures around it |
+| 6 | D10/D12 gate `updateMediaDetails()` with a bare `Gate::authorize()` | Shipped `Gallery.php` gates via `App\Actions\Auth\LogRefusedPrivilegedAttempt->authorize(...)` in **both** `mount()` and `upload()` | **D12's new `updateMediaDetails()` must use the same logging wrapper**, matching the shipped screen and this project's refusal-logging convention ([authorization.md](../../../docs/architecture/authorization.md#recording-a-refusal--what-every-gate-owes-the-audit-trail)) — **not** the bare `Gate::authorize()` D10/D12 currently specify |
+| 7 | `MediaPolicy::update()` and `MediaValidationRules::mediaDetailsRules()` are as described | **Exactly as assumed** | ✅ No reconciliation needed |
+
+### Phase 6 to-do — a pre-existing docs inconsistency, unrelated to this story
+
+Found during Phase 2 review. **Do not fix it during Phase 3** — it is not this story's content, and it
+is recorded here only so it is not lost before `docs-keeper` reaches Phase 6.
+
+> [`docs/README.md`](../../../docs/README.md) and
+> [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md) both currently
+> claim that *"`LogRefusedPrivilegedAttempt` appears nowhere under `app/{Livewire,Actions}/Media/`"*.
+> **This is false as of `HEAD`** — it is used **twice** in `Gallery.php` (see divergence #6 above).
+> This is stale drift from story 0019's own docs pass, which predates a later fix round.
+>
+> **Owner:** `docs-keeper`, this story's Phase 6.
+
+## Phase 3 — TDD (record)
+
+`frontend-qa` (red) + `frontend-expert` (green). Component tests (`tests/Feature/Media/GalleryTest.php`,
+`GalleryRenderingTest.php`), the D16 harness (`app/Livewire/Dev/MediaGalleryHarness.php` +
+`tests/Feature/Dev/MediaGalleryHarnessRouteTest.php`) and browser tests
+(`tests/Browser/Media/GalleryTest.php`) were all written and driven green against the reconciled
+D2–D16 contract. Two real bugs were found and fixed mid-phase, both via the D16 harness (invisible to
+a standalone `Livewire::test()` mount): the root `<flux:modal>` carried its own literal
+`wire:model="open"`, colliding with the parent's `#[Modelable]` binding
+(`ModelableRootHasWireModelException`); and nothing in the shipped component actually invoked
+`upload()` after a file was staged (D11's title-auto-derive plus a real `updatedPendingUploads()`
+lifecycle hook were both missing). One test — the reopen/leaked-state browser test — carries a
+long-standing, honestly-documented, genuinely non-deterministic residual (see its own inline
+docblock and Phase 5 below).
+
+## Phase 4 — Security audit (record)
+
+Three rounds, `appsec-auditor`, all against this worktree.
+
+- **Round 1** (initial implementation): ❌ FAIL — 1 Medium (`App\Livewire\Media\Gallery` kept
+  disclosing the whole library — `tiles()`/`toggleSelect()`/`confirmSelection()` — after `media.view`
+  was revoked mid-session, since this routeless component has no per-request `PersistentMiddleware`
+  backstop), 2 Low (the D16 harness route surviving a stale `route:cache` built under the wrong env;
+  `description`'s missing `max:` rule reaching the database as an unhandled `QueryException`). Fixed
+  by `frontend-expert`.
+- **Round 2** (after the coordinator's decision to implement D8/D9 in full rather than defer them, and
+  after those two features were built): ❌ FAIL — 2 Medium (F-A: `$pendingUploads[0]` dereferenced
+  before `validate()`, so a crafted non-file client payload threw unhandled instead of failing
+  validation cleanly; F-B: a rejected batch stayed on `$pendingUploads`, and since Livewire's
+  `WithFileUploads` appends rather than replaces for a `multiple` input, the upload surface stayed
+  broken for the rest of the session), 3 Low (F-C: an empty-derived multi-file title reached the
+  database, and a stale title could leak onto a later unrelated upload; F-D: only the first of
+  several `$failureMessages` was ever rendered, masking a throttle stop behind an unrelated per-file
+  message; F-E: D9's own stated "5 files stays inside PHP's 30s `max_execution_time` default with
+  margin" justification measured to **34.8s** — over budget with no margin. `MAX_FILES` lowered to
+  **3**, measured at ~21s). Fixed directly by the coordinator after the fixing agent exhausted its
+  session quota mid-round.
+- **Round 3** (re-audit of the F-A…F-E fixes): ✅ **PASS**, with independent re-measurement (5.4s/file,
+  16.2s for 3 files, 27.4s for 5 — confirming the same conclusion on different hardware) rather than
+  trusting the prior round's numbers.
+
+## Phase 5 — Final code review (record)
+
+Two rounds, `code-reviewer`.
+
+- **Round 1** (before D8/D9 existed): ❌ FAIL — D8 (two-phase in-flight progress) and D9 (multi-file
+  upload, 5-file cap) were unimplemented while their AC/Gherkin text remained unstruck; the 60-tile
+  truncation notice rendered the wrong lang key (D9's `too_many_files`, not a truncation-specific
+  one); an orphaned docblock; two overclaiming docblocks (the D16 harness's 404-indistinguishability
+  claim; a browser-test finding's "removes" vs. "reduces" claim); three stale browser-test skip
+  reasons citing an already-fixed blocker; no test coverage for the 60-tile cap; and the full
+  unscoped suite was red. **Coordinator decision** (asked of the human, not assumed): implement D8
+  and D9 in full now, not deferred — see the top of this section.
+- **Round 2** (after D8/D9 were implemented and went through Phase 4's three rounds above): ❌ FAIL —
+  one blocking item (B-1: the full unscoped suite was red — one browser test's own `->wait(5)` call
+  was, per the reviewer's own execution trace, throwing against **its own** 5000ms internal budget,
+  a self-inflicted ceiling rather than genuine load latency; reverted to `->wait(2)`, the value
+  already established elsewhere in this repo, with the docblock corrected to match what was actually
+  observed rather than the plausible-but-wrong theory that motivated widening it in the first place)
+  plus five non-blocking findings (N-1: two comments still said "5-file cap"; N-2: this section, which
+  did not exist; N-3: `aria-live="polite"` sat on the tile-grid div alone, so the empty-state swap was
+  never announced; N-4: the 60-tile truncation notice can fire at exactly 60 with nothing actually
+  withheld, deferred — not fixed this round; N-5: the inline-edit bare-identifier `wire:click` call
+  and the modal's backdrop/X close path both ship correct but browser-untested, deferred — not fixed
+  this round; N-6: a docblock's "removes at the source" overstated a mitigation that reduces rather
+  than eliminates a 403 noise source). B-1, N-1, N-3 and N-6 fixed directly by the coordinator; N-4
+  and N-5 recorded as accepted, deliberate gaps rather than fixed, given this story's already
+  extensive scope.
+
+- **Round 3** (formal re-verification after the coordinator's own direct fixes): ✅ **PASS**, plus one
+  named non-blocking follow-up (F-1): the reviewer measured the reopen test's isolated failure rate
+  directly — **3 of 12 runs (25%)** — and noticed every failing run's attached context carried a
+  `ServeFile` 403 for the test's `Media::factory()->create()` row, an unproven correlation the
+  reviewer explicitly declined to assert as causal (Livewire's own error-attachment mechanism only
+  surfaces that context on a run that already failed, which the correlation would look identical
+  under either way). Proposed experiment, run the same day: swap to `->withRealFiles()` and
+  re-measure. **Result: 6 of 12 runs failed (50%)** — worse, not better, and every failure landed at
+  the identical `->assertVisible()`/`->fill()` pair as before. The 403 was never causal. Reverted to
+  plain `->create()` (matching every other test in the file, no unneeded disk I/O), with both
+  12-run samples recorded in the test's own docblock. F-1 is closed: the residual is genuinely the
+  click → Livewire → Alpine → native `<dialog>` chain's own occasional latency exceeding
+  `Pest\Browser\Playwright\Playwright::$timeout`'s 5000ms ceiling, ruled out from every angle this
+  story's own tooling can test (wait duration, wait mechanism, polling assertion, fixture choice) —
+  not a claim reached by elimination-in-theory, but by two independent 12-run measurements.
+
 ## PRD coverage
 
 This story owns six of §2.3's Gherkin scenarios and four of its acceptance criteria:
@@ -56,13 +186,13 @@ several).
 | The WYSIWYG "insert image" integration (§2.3's *"Inserting an image inline from the WYSIWYG editor"*) | **0021**, which depends on this story |
 | The product editor's featured-image consumption (§2.3's *"Selecting an image in featured mode sets the featured image"*) | **0027**, which depends on this story |
 | Upload validation, `.webp`/`.avif` generation, the `media` table, the search query, the `media.*` permissions | **0019** (done at Phase 1; **not yet implemented** — see [Dependencies](#dependencies-risks--open-questions)) |
-| Media deletion | **Nobody, this phase.** Confirmed in 0019 [D11](done/0019-media-library-upload-and-conversions-backend.md); this story adds no delete affordance to the modal, and a reviewer should expect its absence rather than flag it. |
+| Media deletion | **Nobody, this phase.** Confirmed in 0019 [D11](../done/0019-media-library-upload-and-conversions-backend.md); this story adds no delete affordance to the modal, and a reviewer should expect its absence rather than flag it. |
 | A standalone Media Library screen or route | **Nobody, this phase.** Confirmed Phase 0 decision, matching 0019's D10. |
 
 **The visual reference** is the prototype's `openGallery()`
-([`docs/arospe-handoff/project/js/common.js`](../../docs/arospe-handoff/project/js/common.js) lines
+([`docs/arospe-handoff/project/js/common.js`](../../../docs/arospe-handoff/project/js/common.js) lines
 226–356) and the screenshot at
-[`docs/PRD/images/06-productos-galeria.png`](../../docs/PRD/images/06-productos-galeria.png):
+[`docs/PRD/images/06-productos-galeria.png`](../../../docs/PRD/images/06-productos-galeria.png):
 header with title and a live count subtitle, a search field + "Subir" button on one bar, a dropzone
 above the grid, four-across tiles each showing thumbnail + title + description, and a footer with
 the selection summary on the left and Cancelar / confirm on the right.
@@ -201,7 +331,7 @@ without them.
 | V3 | **`$this->dispatch($name)` with no modifier fires a *bubbling* DOM `CustomEvent` from the dispatching component's own root element**; `->to(ComponentClass)` instead broadcasts **non-bubbling to every mounted instance of that component name** (`dispatchTo` → `componentsByName(componentName)`). **Neither targets one specific child instance by id.** | `vendor/livewire/livewire/dist/livewire.js:6796-6797` and `:6812`. | Decisive for re-entrancy: two galleries on one page cannot be told apart by `->to()`. The event name must come from the consumer. See [D2](#d2--the-consumer-contract). |
 | V4 | **The prototype's `mode` option changes exactly one thing: the confirm button's label.** `var insertLabel = multi ? 'Añadir' : (opts.mode === 'featured' ? 'Usar como destacada' : 'Insertar imagen');` — `mode` is referenced nowhere else in `openGallery()`. | `grep -n insertLabel docs/arospe-handoff/project/js/common.js` → lines 241 and 265 only. | "featured" vs "editor" is **not a behavioural mode**. No enum, no `purpose` prop — a consumer-supplied label string covers it entirely. See [D3](#d3--there-is-no-mode-or-purpose-prop). |
 | V5 | **Flux Free ships no dropzone primitive.** `flux:input type="file"` wraps its own real `<input>` in a `wire:ignore` div driven by `x-on:click.prevent.stop="$refs.input.click()"` — it owns that input and exposes no drop-target hook. `flux:progress` and `flux:skeleton` **are** present in Free. | `vendor/livewire/flux/stubs/resources/views/flux/input/file.blade.php`, `.../progress.blade.php`, `.../skeleton.blade.php`. | Hand-rolling the dropzone is correct here, not a convention violation — the "prefer Flux" rule applies where a Flux equivalent exists, and none does. |
-| V6 | **No `max_execution_time` override in this project's PHP config**, so PHP's 30-second default applies under Sail's web server. | `docker/8.5/php.ini` (sets `post_max_size`/`upload_max_filesize` only). | Bounds how many files one synchronous upload request can convert. Drives the confirmed 5-file cap in [D9](#d9--multi-file-upload-is-allowed-processed-sequentially-one-committed-row-per-file). |
+| V6 | **No `max_execution_time` override in this project's PHP config**, so PHP's 30-second default applies under Sail's web server. | `docker/8.5/php.ini` (sets `post_max_size`/`upload_max_filesize` only). | Bounds how many files one synchronous upload request can convert. Drives the D9 cap, corrected to 3 files by the Phase 4 re-audit — see D9's own correction note. |
 | V7 | **The Pest browser plugin has `attach()` for file inputs and `drag()` for element-to-element drags — and `drag()` cannot carry an OS file.** `attach(string $field, string $path)` calls Playwright's `setInputFiles` with a **literal filesystem path**; `drag(string $from, string $to)` calls `dragAndDrop` with two on-page **selectors** and has no concept of an external file. No file-drop helper exists anywhere in the plugin. | `vendor/pestphp/pest-plugin-browser/src/Api/Concerns/InteractsWithElements.php:181-186` and `:207-215`; `Playwright/Locator.php:655-661` and `:747-756`; grep of the whole `src/` tree for `upload|setInputFiles|fileChooser|drag|drop|dataTransfer`. | The file-picker scenario is straightforward; the **drag-and-drop scenario has no first-class API** and needs a hand-rolled `DataTransfer` shim through `Webpage::script()`. See [risk 3](#dependencies-risks--open-questions). |
 | V8 | **`assertSee()` takes one synchronous snapshot** — it resolves `getByText()` once, iterates `->all()`, checks `isVisible()` and throws immediately. No retry loop in the PHP wrapper. The plugin ships an explicit `wait(int\|float $seconds)`. | `Api/Concerns/MakesElementAssertions.php:44-61`; `Api/Concerns/InteractsWithTab.php:33-42`. | A browser test that fills the search box and asserts immediately **races the debounce**. An explicit, documented `wait()` is required. Whether Playwright's Node side applies its own actionability timeout underneath could not be verified from PHP source — treat as unproven. |
 | V9 | **`assertDataAttribute()` and `assertAriaAttribute()` both exist**, so tile selection state is assertable without CSS-class selectors. | `Api/Concerns/MakesElementAssertions.php:487` and `:477`. | Drives the selector strategy in [D14](#d14-selectors-accessibility-and-the-markup-rules-carried-forward). |
@@ -213,14 +343,14 @@ without them.
 
 ### D1 — `App\Livewire\Media\Gallery` is extended in place, not forked
 
-0019's [D10](done/0019-media-library-upload-and-conversions-backend.md) already commits the class name,
+0019's [D10](../done/0019-media-library-upload-and-conversions-backend.md) already commits the class name,
 its `mount()`/upload/search surface and its `media.view`/`media.create` gating. A second modal
 component was considered and **rejected**: it would either duplicate that surface or force 0019's
 placeholder to be deleted and reintroduced. PRD AC 1 says outright there is **one** shared
 component.
 
 `resources/views/livewire/media/gallery.blade.php` — the *normal* mirror path, since the class is
-not named `Index` and the [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+not named `Index` and the [`Index`-in-a-subfolder exception](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
 therefore does not apply — has its placeholder replaced wholesale.
 
 > **Phase 3 must read 0019's real code before writing a line.** Everything below names properties
@@ -298,7 +428,7 @@ public function addGalleryImages(array $media): void { /* all of $media */ }
 | `->to(Gallery::class)` targeted dispatch | **Rejected — verified impossible (V3).** `dispatchTo()` resolves by *component name*, not instance id, so it broadcasts to **every** mounted `Gallery`. The two instances in 0027's product editor would both receive every selection. |
 | One fixed event name + a `purpose` field the parent's single listener branches on | Workable, strictly worse. It collapses two listeners into one `switch`, discards Livewire's own `#[On(...)]` routing, and makes `assertDispatched()` unable to distinguish which instance fired. |
 | **Consumer-supplied event name — (recommended), adopted** | Ordinary DOM bubbling plus `#[On($name)]` does the disambiguation for free. Per-instance assertable. Costs one `#[Locked]` string. |
-| `#[Modelable] public array $selectedMedia`, mirroring [0022's](0022-searchable-multi-select-component.md) `$selected` | **Rejected.** 0022's two-way binding works because it carries *ids only* and re-derives labels through `resolveSelected()` on every read — machinery built for a continuously-live catalog. This payload is richer and is produced **once**, at confirm time. A one-shot event is the correct primitive; a two-way binding would reintroduce exactly the staleness problem 0022 built that machinery to avoid. |
+| `#[Modelable] public array $selectedMedia`, mirroring [0022's](../0022-searchable-multi-select-component.md) `$selected` | **Rejected.** 0022's two-way binding works because it carries *ids only* and re-derives labels through `resolveSelected()` on every read — machinery built for a continuously-live catalog. This payload is richer and is produced **once**, at confirm time. A one-shot event is the correct primitive; a two-way binding would reintroduce exactly the staleness problem 0022 built that machinery to avoid. |
 
 **The payload shape — one shape for both modes, always a list:**
 
@@ -320,7 +450,7 @@ every consumer's listener signature would depend on a prop it set elsewhere. One
 `Media::query()->whereIn('id', $this->selectedIds)->get()` — never assembled from anything the
 tile grid rendered. Only ids can be manipulated through a crafted `/livewire/update` payload, and
 an id the query does not vouch for is silently dropped, exactly as
-[0022's D4](0022-searchable-multi-select-component.md) requires for the same reason.
+[0022's D4](../0022-searchable-multi-select-component.md) requires for the same reason.
 
 ### D3 — There is no `mode` or `purpose` prop
 
@@ -340,7 +470,7 @@ images or WYSIWYG editors. Introducing a `MediaGalleryPurpose` enum would push P
 vocabulary into a component shared by both, for zero behavioural gain.
 
 `$confirmLabel` defaulting to `''` rather than `null` follows both the errors-log's non-null-bound-
-property rule and [0022's D5](0022-searchable-multi-select-component.md) `$emptyStateText`
+property rule and [0022's D5](../0022-searchable-multi-select-component.md) `$emptyStateText`
 precedent — blank means "use the lang fallback", never "unset".
 
 ### D4 — Single replaces, multi accumulates, and selected tiles stay visible
@@ -358,7 +488,7 @@ public function toggleSelect(string $id): void
 }
 ```
 
-Note this **deliberately diverges from [0022's D11](0022-searchable-multi-select-component.md)**,
+Note this **deliberately diverges from [0022's D11](../0022-searchable-multi-select-component.md)**,
 which removes an already-selected option from its result list. The prototype keeps a selected tile
 in the grid with a checkmark overlay (`tile.is-selected` / `tile__tick`,
 `common.js:293-296`), and gallery has no scale pressure forcing exclusion — 0019's D7 already
@@ -382,7 +512,7 @@ because it is exactly the class of bug the errors-log's `null`-`<select>` entry 
 
 ### D6 — Debounced search at 300 ms, over a `#[Computed]` tile list
 
-`wire:model.live.debounce.300ms="search"`. **300 ms matches [0022's own default](0022-searchable-multi-select-component.md)**,
+`wire:model.live.debounce.300ms="search"`. **300 ms matches [0022's own default](../0022-searchable-multi-select-component.md)**,
 so the project's two shared search components do not disagree for no reason; 0019's D7 already
 establishes the query itself is sub-millisecond, so the value is a round-trip-count tradeoff, not a
 server-load one.
@@ -398,7 +528,7 @@ is either mount-time config or server-derived, and all of it is `#[Locked]`.
 
 **The grid is capped at 60 tiles — confirmed by the coordinator (2026-08-18)**, with a
 "narrow your search" notice when the cap truncates the result set, reusing
-[0022's](0022-searchable-multi-select-component.md) own truncation-row idiom. Pagination and
+[0022's](../0022-searchable-multi-select-component.md) own truncation-row idiom. Pagination and
 infinite scroll were both considered and rejected: 0019 D7 judges the library at 10²–10³ rows, the
 PRD's screenshot shows a plain scrolling grid with no pagination control anywhere, and each tile
 renders a `<picture>` with three sources (D13), so an uncapped grid is the one shape with a real
@@ -489,14 +619,29 @@ and leaves its siblings committed, matching the prototype's per-file completion.
 Validation applies per element at the call site (`'pendingUploads.*' => $this->imageUploadRules()`);
 `MediaValidationRules` itself needs no change.
 
-**The cap is 5 files per drop or per file-picker selection — confirmed by the coordinator
-(2026-08-18).** V6 (no `max_execution_time` override, so PHP's 30-second default) plus 0019 D4's
-"sub-second to a few seconds per file" is what bounds it: five sequential two-format Imagick encodes
-stay inside 30 s with margin, while covering the realistic "drop a product's photo set" gesture.
+> **Correction (Phase 4 re-audit, D8/D9 fix round): the cap is 3 files, not 5.** The paragraph
+> below is left as originally confirmed, with this note on top, per this project's own convention
+> of recording a correction rather than silently rewriting history (`docs/errors-log.md`). The
+> re-audit *measured* the "stays inside 30s with margin" claim rather than trusting it: five files
+> at `MediaValidationRules::MAX_DIMENSION` (4000×4000, the worst legal input) took **34.8s total**
+> through `StoreUploadedImage` alone — over PHP's 30s `max_execution_time` default with no margin,
+> not under it. Three files measured ~21s, with real margin. `MAX_FILES` (the constant on
+> `App\Livewire\Media\Gallery`, `MediaValidationRules::mediaDetailsRules()` is unaffected), the
+> `too_many_files` copy in both locales, and every test asserting the boundary were updated from
+> 5/6 to 3/4 accordingly. This dev environment's CLI SAPI happens not to enforce
+> `max_execution_time` at all, which is what let the over-budget 5-file cap ship without an
+> observed failure here — a real FPM deployment inheriting the 30s default would have killed a
+> 4-or-5-file request mid-batch.
+>
+> ~~**The cap is 5 files per drop or per file-picker selection — confirmed by the coordinator
+> (2026-08-18).** V6 (no `max_execution_time` override, so PHP's 30-second default) plus 0019 D4's
+> "sub-second to a few seconds per file" is what bounds it: five sequential two-format Imagick
+> encodes stay inside 30 s with margin, while covering the realistic "drop a product's photo set"
+> gesture.~~
 
-The number appears in exactly two places — the validation rule (`'pendingUploads' => ['array', 'max:5']`)
+The number appears in exactly two places — the validation rule (`'pendingUploads' => ['array', 'max:'.self::MAX_FILES]`)
 and the user-facing `media.gallery.too_many_files` key — and **a rejection over the cap must name
-the limit**, not fail silently or truncate the selection to the first five.
+the limit**, not fail silently or truncate the selection to the first three.
 
 ### D10 — Inline title/description editing lives on two surfaces and needs one new action
 
@@ -520,7 +665,7 @@ The action writes `title` and `description` **only**. The three path columns sta
 `#[Fillable]` per 0019's D8 mass-assignment guard, and nothing in this story has any business
 touching them.
 
-Naming follows [naming.md](../../docs/conventions/naming.md#classes): imperative verb phrase, no
+Naming follows [naming.md](../../../docs/conventions/naming.md#classes): imperative verb phrase, no
 `Action` suffix, matching `StoreUploadedImage` / `GenerateImageConversions`.
 
 ### D11 — The title is auto-derived from the filename at upload, then editable
@@ -560,7 +705,7 @@ The resolution adds a layer rather than removing one:
 and Gallery keeps **every** `Gate::authorize()` call 0019 specifies — `viewAny` in `mount()`,
 `create` first in the upload method, `update` first in `updateMediaDetails()` — as defense in depth
 covering direct `Livewire::test()` mounting and the mounted-then-revoked-mid-session case. Per
-[livewire-authorization.md](../../docs/security/livewire-authorization.md#gate-at-the-top-of-every-method-that-mutates-or-discloses),
+[livewire-authorization.md](../../../docs/security/livewire-authorization.md#gate-at-the-top-of-every-method-that-mutates-or-discloses),
 hiding a control is never the control.
 
 Within the modal, a user holding `media.view` but not `media.create`/`media.edit` gets the affected
@@ -595,16 +740,16 @@ Phase 3 (V1).
 - **Icon-only controls** (`edit-media-{id}`, `media-upload-button`, `media-dropzone`,
   `media-confirm`, `media-cancel`) each carry an `aria-label` and a `data-test` hook, present on
   **both** the enabled and the disabled branch, exactly as the Users row actions do
-  ([api/routes.md](../../docs/api/routes.md#usersindex--the-first-permission-gated-route)).
+  ([api/routes.md](../../../docs/api/routes.md#usersindex--the-first-permission-gated-route)).
 - **`@js()` on every id interpolated into a `wire:*` argument** — `wire:click="toggleSelect(@js($item['id']))"`.
   Mandatory, not stylistic
-  ([blade-livewire-output-encoding.md](../../docs/security/blade-livewire-output-encoding.md)).
+  ([blade-livewire-output-encoding.md](../../../docs/security/blade-livewire-output-encoding.md)).
 - **Never bind a `null` property to a form control** — `$search` is `''`, and the inline-edit
   title/description inputs coerce `null` → `''` on open. The errors-log rule.
 - **A disabled control's tooltip is a written-out `<flux:tooltip>` wrapper on its own `@if`/`@else`
   branch**, never `:tooltip="$cond ? … : null"` — the Blaze presence trap — and any
   `cursor-not-allowed!` goes on **that wrapper**, never on the `pointer-events-none` button. Both
-  traps are recorded in [errors-log.md](../../docs/errors-log.md) with their verification method.
+  traps are recorded in [errors-log.md](../../../docs/errors-log.md) with their verification method.
 - **`aria-live="polite"`** on the result-count / empty-state region, so a debounced result swap is
   announced.
 
@@ -789,7 +934,7 @@ cheaply at component level, and only the cases that genuinely require a real DOM
 - [ ] **Re-entrancy**: on the harness page's two instances, confirming the single-select gallery
       updates only its own listener's output and leaves the multi-select one untouched — the case
       V3 proves a `->to()`-based contract would silently fail.
-- [ ] Selecting more than 5 files at once is rejected with a message naming the limit (D9).
+- [ ] Selecting more than 3 files at once is rejected with a message naming the limit (D9, cap corrected from 5).
 
 **Harness gating — `tests/Feature/Dev/MediaGalleryHarnessRouteTest.php`**
 - [ ] The harness route resolves under the `testing` environment.
@@ -798,8 +943,8 @@ cheaply at component level, and only the cases that genuinely require a real DOM
       404s: D16's gate is non-existence, not refusal, and only the collection assertion can tell
       those apart. This is the regression test that stops the scaffolding shipping.
 
-**Deliberately NOT re-tested in the browser** (per [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md)
-and [coverage-policy.md](../../docs/testing/frontend/coverage-policy.md)): the full upload
+**Deliberately NOT re-tested in the browser** (per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md)
+and [coverage-policy.md](../../../docs/testing/frontend/coverage-policy.md)): the full upload
 validation matrix, the `LIKE`-escaping and case-insensitivity semantics, and the 403 paths — all
 already proven server-side by 0019 and by the component tests above. None of it depends on the DOM,
 and **every browser test that performs a real upload pays real synchronous Imagick encode time**
@@ -859,7 +1004,7 @@ each embed the component with four attributes and one `#[On]` listener.
 - [ ] Authorization: the consumer gates whether the child renders at all, and `mount()`, the upload
       method and `updateMediaDetails()` each `Gate::authorize()` as their first statement. Controls
       the actor may not use render **disabled with a tooltip**, never merely failing on click.
-- [ ] Uploading more than 5 files at once is rejected with a message naming the limit; the grid
+- [ ] Uploading more than 3 files at once is rejected with a message naming the limit (cap corrected from 5); the grid
       renders at most 60 tiles, newest first, with a "narrow your search" notice when truncated —
       and neither cap ever drops a staged selection.
 - [ ] No **production** route, no sidebar entry, no delete affordance, no migration, no
@@ -869,11 +1014,11 @@ each embed the component with four attributes and one `#[On]` listener.
 - [ ] No user-facing string is hardcoded; `lang/en/media.php` and `lang/es/media.php` stay
       key-for-key identical.
 - [ ] The full suite is green in a single isolated run
-      ([contracts.md](../../docs/contracts.md)).
+      ([contracts.md](../../../docs/contracts.md)).
 
 ## Definition of Done
 
-- [ ] Tests written and green (full suite, isolated run — [contracts.md](../../docs/contracts.md))
+- [ ] Tests written and green (full suite, isolated run — [contracts.md](../../../docs/contracts.md))
 - [ ] Code reviewed (code-reviewer)
 - [ ] No security findings (appsec-auditor)
 - [ ] Documentation updated (docs-keeper) — including D12's embedded-child gating pattern, which
@@ -908,7 +1053,7 @@ Ordered. Step 0 is a hard gate.
 9. `frontend-qa` writes the browser tests against the harness, including the `DataTransfer` shim or
    its documented fallback (risk 3).
 9. Quality gates in order per
-   [base-standards](../../docs/conventions/base-standards.md#quality-gates): filtered tests →
+   [base-standards](../../../docs/conventions/base-standards.md#quality-gates): filtered tests →
    `vendor/bin/pint --dirty --format agent` → Larastan level 7 → full suite.
 
 ---
@@ -917,18 +1062,18 @@ Ordered. Step 0 is a hard gate.
 
 **Dependencies**
 
-- **[0019 — media library upload, conversions and search](done/0019-media-library-upload-and-conversions-backend.md)
+- **[0019 — media library upload, conversions and search](../done/0019-media-library-upload-and-conversions-backend.md)
   — Phase 1 complete, implementation NOT started (V1).** This story is blocked on 0019's Phase 7,
-  per workflow.md's [task ordering rule](../../docs/workflow.md#task-ordering-rule). The brief that
+  per workflow.md's [task ordering rule](../../../docs/workflow.md#task-ordering-rule). The brief that
   commissioned this debate described 0019 as "already done"; that is true of the *story document*,
   not of the code.
 - 0019 records a soft dependency on
-  [`0008`](done/0008-super-admin-role-invariants.md) for its red TDD tests in flight. **That is now
+  [`0008`](../done/0008-super-admin-role-invariants.md) for its red TDD tests in flight. **That is now
   stale — 0008 closed to `done/` on 2026-08-18**, so it no longer constrains either story's
   baseline. Verified: `ai-spec/tasks/in-progress/` is empty.
 - **This story is the blocker for 0021 (WYSIWYG insert-image) and 0027 (product editor featured
   image).** Numbering already satisfies the ordering rule (0019 < 0020 < 0021 < 0027).
-- **No dependency on [0022](0022-searchable-multi-select-component.md).** The two shared components
+- **No dependency on [0022](../0022-searchable-multi-select-component.md).** The two shared components
   are independent and deliberately diverge (D4, D6, and the `#[Modelable]` reasoning in D2). PRD
   §2.4 explicitly names the media gallery's search as the **wrong** precedent for 0022's, and the
   inverse holds too.
@@ -983,7 +1128,7 @@ Ordered. Step 0 is a hard gate.
 
 D2 binds `$open` with `#[Modelable]`, but Flux's `<flux:modal>` closes through its own backdrop / X
 button, and whether that propagates back through Livewire's `#[Modelable]` entanglement to the
-parent's bound property has not been traced. **This is [0022's own unresolved OQ-6](0022-searchable-multi-select-component.md)
+parent's bound property has not been traced. **This is [0022's own unresolved OQ-6](../0022-searchable-multi-select-component.md)
 inherited unchanged.** Not blocking Phase 2 — verify empirically in Phase 3 for this component
 specifically rather than assuming 0022's eventual finding transfers.
 

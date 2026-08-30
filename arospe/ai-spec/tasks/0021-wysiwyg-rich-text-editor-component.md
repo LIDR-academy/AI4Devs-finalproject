@@ -5,7 +5,7 @@ A reusable, content-agnostic rich-text editor Livewire component whose toolbar c
 actions — Bold, Italic, Underline, H2, bullet list, numbered list, link, and "Insert image" — and
 whose output is the HTML that `products.description` ([0024](0024-products-core-crud-backend.md))
 stores and Epic 4's blog body will reuse. "Insert image" opens the shared media gallery
-([0020](0020-shared-media-gallery-modal-ui.md)) in **single-select** mode and places the chosen image
+([0020](done/0020-shared-media-gallery-modal-ui.md)) in **single-select** mode and places the chosen image
 inline **at the cursor position**.
 
 The HTML is sanitized **server-side on write** (0024's [D-16](0024-products-core-crud-backend.md), an
@@ -327,7 +327,7 @@ the same place. This component must never render `$value` back out unescaped
 `WysiwygEditor` embeds `<livewire:media.gallery>` **itself** rather than asking its consumer to. The
 editor *is* the gallery's consumer; the product/blog editor is in turn the *editor's* consumer. This
 is composition, not a breach of 0020's contract — 0020's
-[D12](0020-shared-media-gallery-modal-ui.md) rule binds *whoever directly embeds Gallery*, and that
+[D12](done/0020-shared-media-gallery-modal-ui.md) rule binds *whoever directly embeds Gallery*, and that
 is this component.
 
 The four attributes are fixed by this story and are not consumer-configurable: `:multi="false"`
@@ -891,7 +891,7 @@ Ordered. Steps 0 and 1 are hard gates.
 
 **Dependencies**
 
-- **[0020 — shared media gallery modal](0020-shared-media-gallery-modal-ui.md) — hard, Phase 1
+- **[0020 — shared media gallery modal](done/0020-shared-media-gallery-modal-ui.md) — hard, Phase 1
   complete, implementation not started.** This story consumes its D2 contract and (recommended)
   extends its D16 harness. 0020 itself is blocked on **0019**, so the real chain is
   0019 → 0020 → 0021. Numbering already satisfies
@@ -981,7 +981,7 @@ unexpected answer is treated as new information rather than as a defect in this 
 Written in Phase 1 (Three Amigos) on 2026-08-18 for Epic 2, from
 [PRD §2.3](../../docs/PRD/PRD.md#23-shared-media-gallery) and the
 [Design reference](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, against the
-finalized contracts in [0020](0020-shared-media-gallery-modal-ui.md) (D2, D3, D12, D14, D16) and
+finalized contracts in [0020](done/0020-shared-media-gallery-modal-ui.md) (D2, D3, D12, D14, D16) and
 [0024](0024-products-core-crud-backend.md) (D-16). Participants: `product-owner` (lead),
 `frontend-expert`, `frontend-qa` — classified **frontend** per
 [workflow.md](../../docs/workflow.md#task-classification-rule)'s task-classification rule, with
