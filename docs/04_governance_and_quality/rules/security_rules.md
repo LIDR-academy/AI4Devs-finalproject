@@ -53,4 +53,12 @@ Esta directiva rige la seguridad técnica, sanitización activa y ejecución seg
 ## ⏱️ 7. Control de Inactividad y Cierre Automático de Sesión (Guard 37)
 * **Cierre por Inactividad Táctil:** El frontend rastrea eventos globales de interacción del operador (`touchstart`, `pointerdown`, `mousedown`, `keydown`, `scroll`). Tras 15 minutos continuos de inactividad (o el valor configurado en `SystemSettings.idleTimeoutMinutes`), la sesión del usuario se invalida automáticamente, cerrando la sesión y forzando el retorno al PIN Login.
 
+---
+
+## 🛡️ 8. Gobernanza de Documentación OpenAPI y Swagger UI en Producción
+
+* **Restricción de Swagger UI por Entorno:** La interfaz gráfica interactiva de Swagger UI (`/docs` y `/api-docs`) está habilitada únicamente en entornos de desarrollo y staging (`NODE_ENV !== 'production'`). En producción, permanece deshabilitada por defecto para mitigar el riesgo de fuga de información y reconocimiento de arquitectura (*Information Disclosure*), salvo habilitación explícita mediante la variable `ENABLE_SWAGGER=true` o la opción `enableSwagger: true`.
+* **Aislamiento de Content Security Policy (CSP):** El servidor Express aplica la política de seguridad estricta de `helmet()` en todas las rutas de la API (`/api/v1/*`). La relajación controlada de scripts y estilos (`'unsafe-inline'`) se aplica de manera aislada y exclusiva dentro del middleware montado en `/docs`, garantizando que la API global no debilite su armadura de seguridad.
+
+
 

@@ -61,6 +61,7 @@ export interface AppOptions {
   corsAllowedOrigins?: string;
   rateLimit?: { windowMs: number; max: number };
   enableDevSeeding?: boolean;
+  enableSwagger?: boolean;
   requireAuth?: boolean;
 }
 
@@ -93,23 +94,51 @@ function resolveRateLimitOptions(raw: AppOptions['rateLimit']): { windowMs: numb
   return { windowMs, max };
 }
 
+function isSwaggerEnabled(options: AppOptions): boolean {
+  if (options.enableSwagger !== undefined) {
+    return options.enableSwagger;
+  }
+  if (process.env.ENABLE_SWAGGER !== undefined) {
+    return process.env.ENABLE_SWAGGER === 'true';
+  }
+  // En produccion se deshabilita por defecto para mitigar Information Disclosure
+  return process.env.NODE_ENV !== 'production';
+}
+
 // Swagger UI - Documentacion Interactiva de API REST (OpenAPI 3.1)
-function setupSwaggerDocs(app: Express): void {
+function setupSwaggerDocs(app: Express, enabled: boolean): boolean {
+  if (!enabled) {
+    return false;
+  }
+
   const openApiPath = path.resolve(process.cwd(), 'docs/03_persistence_and_api/openapi.yaml');
   const fallbackPath = path.resolve(process.cwd(), '../../docs/03_persistence_and_api/openapi.yaml');
   const finalOpenApiPath = fs.existsSync(openApiPath) ? openApiPath : (fs.existsSync(fallbackPath) ? fallbackPath : null);
   if (!finalOpenApiPath) {
-    return;
+    return false;
   }
 
   try {
     const swaggerDocument = YAML.load(finalOpenApiPath);
-    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    // CSP Aislado especificamente para Swagger UI sin debilitar la API global
+    const swaggerCsp = helmet.contentSecurityPolicy({
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'"],
+        'img-src': ["'self'", 'data:'],
+      },
+    });
+
+    app.use('/docs', swaggerCsp, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    app.use('/api-docs', swaggerCsp, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    return true;
   } catch (err) {
     console.warn('⚠️ No se pudo cargar Swagger UI desde openapi.yaml:', err);
+    return false;
   }
 }
+
 
 // Fail-Fast Environment Validation for JWT Secret (Guard 14).
 // Solo "test" tiene excepción: Vitest fija NODE_ENV=test automáticamente y los
@@ -216,21 +245,23 @@ function mountApiRoutes(
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
 
-  app.use(helmet({ contentSecurityPolicy: false }));
+  // Helmet estricto activo por defecto a nivel global (HSTS, NoSniff, Frameguard, etc.)
+  app.use(helmet());
   app.use(cors({ origin: resolveCorsOrigin(options.corsAllowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS) }));
 
   app.use(express.json());
-  setupSwaggerDocs(app);
+  const swaggerActive = setupSwaggerDocs(app, isSwaggerEnabled(options));
 
   // Endpoint de salud
   app.get('/health', (_req, res) => {
     res.status(200).json({
       status: 'ok',
       system: 'RestoStock Backend Core',
-      docs: '/docs',
+      docs: swaggerActive ? '/docs' : 'disabled',
       timestamp: new Date().toISOString(),
     });
   });
+
 
   assertJwtSecretConfigured(options);
 
