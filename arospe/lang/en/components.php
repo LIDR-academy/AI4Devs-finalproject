@@ -37,4 +37,25 @@ return [
         'insert_image_not_allowed' => 'You do not have permission to insert images.',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Shared searchable, server-side-filtered multi-select (story 0022)
+    |--------------------------------------------------------------------------
+    |
+    | Consumed by resources/views/livewire/components/searchable-multi-select.blade.php. Second
+    | occupant of this file, appended as its own sibling top-level key -- never nested under
+    | 'wysiwyg' above.
+    |
+    */
+
+    'searchable_multi_select' => [
+        'empty_state' => 'No matching options found.',
+        'truncated' => 'More matches exist — narrow your search to see the rest.',
+        'remove_chip' => 'Remove :label',
+        'unavailable_option' => 'Unavailable option',
+        'unavailable_option_reason' => 'This option is not available for selection.',
+        'unresolvable_selection' => 'One or more selected values no longer exist and must be removed before saving.',
+        'chip_area_label' => 'Selected values',
+    ],
+
 ];
