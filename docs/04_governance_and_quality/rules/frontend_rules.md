@@ -76,6 +76,16 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 
 ---
 
+## 🚫 9. Prohibición de Alertas Nativas (`alert`) y Centralización de Errores UX (Guard 38)
+
+1. **Prohibición de `window.alert(...)` y `window.confirm(...)`:** Queda estrictamente prohibido utilizar popups nativos del navegador (`alert`, `confirm`) para notificar errores o pedir confirmación en pantallas táctiles de cocina y administración.
+2. **Traductor Centralizado (`errorMessageMapper.ts`):** Todo error capturado (`catch (err)`) en servicios o componentes de UI debe procesarse obligatoriamente mediante `mapToUserFriendlyError(err)` ([`apps/frontend/src/shared/utils/errorMessageMapper.ts`](../../../apps/frontend/src/shared/utils/errorMessageMapper.ts)).
+3. **Parseo Estricto de RFC 7807:** El traductor debe extraer y priorizar el campo `detail` entregado por el backend RFC 7807, traduciendo códigos técnicos (401, 403, 404, 409, 422, 429, 500, 502, 503) a mensajes claros en español.
+4. **Banners Inline Desacoplados:** Las notificaciones de error en modales y paneles deben renderizarse mediante componentes inline no invasivos (`ErrorBanner`).
+
+
+---
+
 ## 🌐 8. Política de Resiliencia de Red y Cliente HTTP Compartido (`apiClient.ts`)
 
 1. **Abstracción Única de Comunicación (`apiRequest<T>`):** Queda estrictamente prohibido invocar `fetch()` directamente en componentes React o servicios de dominio. Todas las operaciones HTTP deben pasar por [`src/shared/http/apiClient.ts`](../../../apps/frontend/src/shared/http/apiClient.ts).
