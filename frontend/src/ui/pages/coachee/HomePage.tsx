@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCoacheeDashboard } from "@/infrastructure/hooks/useCoacheeDashboard";
 import { usePullToRefresh } from "@/infrastructure/hooks/usePullToRefresh";
 import { JoinableClassList } from "@/ui/components/coachee/JoinableClassList";
@@ -9,7 +10,11 @@ import { WaitingListOpportunities } from "@/ui/components/coachee/WaitingListOpp
 
 export function CoacheeHomePage() {
   const dashboardQuery = useCoacheeDashboard();
-  const refetch = () => dashboardQuery.refetch();
+  const queryClient = useQueryClient();
+  const refetch = () => {
+    void dashboardQuery.refetch();
+    void queryClient.invalidateQueries({ queryKey: ["waiting-lists"] });
+  };
   usePullToRefresh({ refetch });
 
   const dashboard = dashboardQuery.data;
