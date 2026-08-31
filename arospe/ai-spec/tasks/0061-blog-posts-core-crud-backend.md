@@ -1664,7 +1664,7 @@ rule that [a control enforced only in a component is bypassed by every other cal
 The stored value is therefore always safe HTML, which is what will let 0063 render it unescaped.
 
 **Would sanitizing strip the shared gallery's images? No — verified against both sides of the
-contract, not assumed.** 0021's **D7** (`ai-spec/tasks/0021-wysiwyg-rich-text-editor-component.md:415`)
+contract, not assumed.** 0021's **D7** (`ai-spec/tasks/done/0021-wysiwyg-rich-text-editor-component.md:478`)
 states the editor emits a **bare** `<img src="…" alt="…">` and nothing else, explicitly *because*
 0024's allow-list has no `<figure>`/`<figcaption>`; and 0024's allow-list independently includes
 exactly `<img src alt>` with http/https-only schemes. The two match by construction, because the
@@ -2377,7 +2377,7 @@ nobody ran the code:
    allow-list. Confirmed by reading `ai-spec/tasks/0024-products-core-crud-backend.md:1309-1311`
    directly. It also found the matching half on the other side: 0021's **D7** emits a *bare*
    `<img src alt>` precisely because 0024's allow-list has no `<figure>`, confirmed at
-   `ai-spec/tasks/0021-wysiwyg-rich-text-editor-component.md:415`. Together these turn "will
+   `ai-spec/tasks/done/0021-wysiwyg-rich-text-editor-component.md:478`. Together these turn "will
    sanitization eat the gallery's images?" from an open worry into a verified no, and produced
    **D-14** plus its required regression test.
 2. **`backend-qa` found the `after:now` trap** — an unconditional future-date rule makes every edit to

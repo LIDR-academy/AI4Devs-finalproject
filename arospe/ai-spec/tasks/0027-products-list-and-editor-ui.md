@@ -34,7 +34,7 @@ Build the two screens the whole of Epic 2's product work has been feeding: a **p
 (thumbnail, name + SKU, price, colour-coded stock, a status badge that reads *Agotado* at zero stock,
 per-row edit/delete actions and a primary "Nuevo producto" button) and a **routed product editor**
 (name, SKU, category select, the required physical/virtual type control, the WYSIWYG description from
-[0021](0021-wysiwyg-rich-text-editor-component.md), a featured image and a gallery strip through
+[0021](done/0021-wysiwyg-rich-text-editor-component.md), a featured image and a gallery strip through
 [0020](done/0020-shared-media-gallery-modal-ui.md), and a searchable Sales Region multi-select from
 [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) built on
 [0022](0022-searchable-multi-select-component.md)).
@@ -2037,7 +2037,7 @@ approach) and `frontend-qa` (test design), per
 [PRD §2.2](../../docs/PRD/PRD.md#22-products) and the
 [Design reference](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, and grounded
 in full readings of [0019](done/0019-media-library-upload-and-conversions-backend.md),
-[0020](done/0020-shared-media-gallery-modal-ui.md), [0021](0021-wysiwyg-rich-text-editor-component.md),
+[0020](done/0020-shared-media-gallery-modal-ui.md), [0021](done/0021-wysiwyg-rich-text-editor-component.md),
 [0022](0022-searchable-multi-select-component.md), [0023](0023-product-categories-backend.md),
 [0024](0024-products-core-crud-backend.md), [0025](0025-product-categories-ui.md),
 [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) and

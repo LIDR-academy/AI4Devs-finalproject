@@ -1303,7 +1303,7 @@ a post's French title is neither identity-sensitive nor hard to reverse.
   `HasTranslations`, `SetTranslation`, `defaultStoreLanguage()`. Consumed unmodified.
 - **[0068](0068-store-languages-catalog-backend.md)** — hard. `StoreLanguage`, `scopeActive()`,
   `is_default`.
-- **[0021](0021-wysiwyg-rich-text-editor-component.md)** — hard. Its **D9** is the constraint **D-4** is
+- **[0021](done/0021-wysiwyg-rich-text-editor-component.md)** — hard. Its **D9** is the constraint **D-4** is
   built around; consumed **unmodified**, N times.
 - **[0024](0024-products-core-crud-backend.md)** — soft, for `SanitizeProductDescription` only,
   consumed exactly as 0061 **D-14** consumes it.

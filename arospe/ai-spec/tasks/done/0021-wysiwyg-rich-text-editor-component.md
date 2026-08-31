@@ -3,12 +3,12 @@
 ## Description
 A reusable, content-agnostic rich-text editor Livewire component whose toolbar carries exactly eight
 actions — Bold, Italic, Underline, H2, bullet list, numbered list, link, and "Insert image" — and
-whose output is the HTML that `products.description` ([0024](0024-products-core-crud-backend.md))
+whose output is the HTML that `products.description` ([0024](../0024-products-core-crud-backend.md))
 stores and Epic 4's blog body will reuse. "Insert image" opens the shared media gallery
-([0020](done/0020-shared-media-gallery-modal-ui.md)) in **single-select** mode and places the chosen image
+([0020](../done/0020-shared-media-gallery-modal-ui.md)) in **single-select** mode and places the chosen image
 inline **at the cursor position**.
 
-The HTML is sanitized **server-side on write** (0024's [D-16](0024-products-core-crud-backend.md), an
+The HTML is sanitized **server-side on write** (0024's [D-16](../0024-products-core-crud-backend.md), an
 already-approved `symfony/html-sanitizer` dependency), so this component performs **no client-side
 sanitization**. Its one obligation on that axis is narrower and is the coordination point with 0024:
 **every tag it can emit must already be inside that allow-list**, so the sanitizer never silently
@@ -20,7 +20,7 @@ frontend | includes database-expert: **no**
 Not full-stack and not split: this story creates no table, no migration, no query, no action, no
 policy, no permission and no server-side domain logic. Its only PHP is a Livewire component class
 whose public surface is a `#[Modelable]` string. `database-expert` and `backend-*` are therefore
-deliberately not convened, per [workflow.md](../../docs/workflow.md#task-classification-rule).
+deliberately not convened, per [workflow.md](../../../docs/workflow.md#task-classification-rule).
 
 ## Three Amigos participants
 
@@ -37,7 +37,7 @@ deliberately not convened, per [workflow.md](../../docs/workflow.md#task-classif
 
 ## PRD coverage
 
-This story owns **one** of [§2.3](../../docs/PRD/PRD.md#23-shared-media-gallery)'s Gherkin scenarios
+This story owns **one** of [§2.3](../../../docs/PRD/PRD.md#23-shared-media-gallery)'s Gherkin scenarios
 and **half** of one acceptance criterion:
 
 - *"Inserting an image inline from the WYSIWYG editor"*
@@ -45,14 +45,14 @@ and **half** of one acceptance criterion:
   featured mode sets the featured image"*) belongs to **0027**.
 
 It also realises the toolbar named in the PRD's
-[Design reference & the dashboard shell](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell)
+[Design reference & the dashboard shell](../../../docs/PRD/PRD.md#design-reference--the-dashboard-shell)
 section — *"the **WYSIWYG toolbar** (Bold, Italic, Underline, H2, bullet list, numbered list, link,
 Insert image)"* — which fixes the button set exactly and is why this story adds no ninth button.
 
 **The visual reference** is the prototype's `.wysiwyg__toolbar` / `.editor` styling
-([`docs/arospe-handoff/project/css/common.css`](../../docs/arospe-handoff/project/css/common.css)
+([`docs/arospe-handoff/project/css/common.css`](../../../docs/arospe-handoff/project/css/common.css)
 lines 277–305) and its `bindEditor()` / `toolbarHTML()`
-([`js/common.js`](../../docs/arospe-handoff/project/js/common.js) lines 356–399). Per the PRD's own
+([`js/common.js`](../../../docs/arospe-handoff/project/js/common.js) lines 356–399). Per the PRD's own
 banner, that bundle is **style guide only — none of its markup or JS is ported**.
 
 **Not covered here, deliberately:**
@@ -60,7 +60,7 @@ banner, that bundle is **style guide only — none of its markup or JS is ported
 | Out of scope | Owner |
 |---|---|
 | The gallery modal itself — tiles, search, upload, selection, the confirm payload | **0020**, consumed unchanged |
-| Sanitizing the HTML, `config/html-sanitizer.php`, the `products.description` column | **0024** ([D-16](0024-products-core-crud-backend.md)) |
+| Sanitizing the HTML, `config/html-sanitizer.php`, the `products.description` column | **0024** ([D-16](../0024-products-core-crud-backend.md)) |
 | Any real page hosting this editor (the product editor) | **0027**, not yet debated |
 | The blog post editor and its body field | **Epic 4**, which reuses this component unchanged |
 | The featured-image picker | **0027** |
@@ -206,18 +206,18 @@ re-verified by `product-owner` independently of the agent that found them.
 |---|---|---|---|
 | V1 | **Alpine already ships on every page**, bundled inside Livewire 4's own build and exported as `window.Alpine`. There is no separate `alpinejs` package. | `vendor/livewire/livewire/dist/livewire.js:15816` (`window.Alpine = module_default`); `package.json` has no `alpinejs`. | A hand-rolled Alpine editor needs **zero new dependency**. |
 | V2 | **This project ships no rich-text JS library and almost no JS at all.** `package.json` `dependencies` are `@laravel/passkeys`, `@tailwindcss/vite`, `concurrently`, `laravel-vite-plugin`, `tailwindcss`, `vite`; `devDependencies` is `playwright` only. `resources/js/app.js` is **empty**; `passkeys.js` is the only real module. | Read `package.json`, `vite.config.js`, `resources/js/`. | TipTap/Quill/Trix would be this project's **first** bundled UI library — an approval-gated change per project `CLAUDE.md`, not a drop-in. |
-| V3 | **`execCommand('bold'\|'italic'\|'underline')` emits `<b>`, `<i>`, `<u>` in Chromium** — not `<strong>`/`<em>`, and **no inline `style`**. `styleWithCSS` defaults to `false`; setting it `true` switches the output to `<span style="font-weight: bold;">`. | Executed in a real headless Chromium session (the `chromium-1228` build in `node_modules/playwright`), reading `innerHTML` off a live `contenteditable`. | **Decisive, and the story's central good news:** `<b>`/`<i>`/`<u>` are explicitly allowed alternates in 0024 [D-16](0024-products-core-crud-backend.md)'s table. The naive output is already inside the allow-list — **no client-side tag-remapping layer is needed.** And `styleWithCSS` must **never** be enabled ([D2](#d2--the-exact-html-tag-set-this-editor-may-emit)). |
+| V3 | **`execCommand('bold'\|'italic'\|'underline')` emits `<b>`, `<i>`, `<u>` in Chromium** — not `<strong>`/`<em>`, and **no inline `style`**. `styleWithCSS` defaults to `false`; setting it `true` switches the output to `<span style="font-weight: bold;">`. | Executed in a real headless Chromium session (the `chromium-1228` build in `node_modules/playwright`), reading `innerHTML` off a live `contenteditable`. | **Decisive, and the story's central good news:** `<b>`/`<i>`/`<u>` are explicitly allowed alternates in 0024 [D-16](../0024-products-core-crud-backend.md)'s table. The naive output is already inside the allow-list — **no client-side tag-remapping layer is needed.** And `styleWithCSS` must **never** be enabled ([D2](#d2--the-exact-html-tag-set-this-editor-may-emit)). |
 | V4 | **`formatBlock '<h2>'` → clean `<h2>…</h2>`; `createLink` → clean `<a href="…">…</a>`; pressing Enter creates a new `<p>`, never a `<div>`.** | Same Chromium session. | Every block/line structure the toolbar produces is inside the allow-list with no post-processing. |
 | V5 | **`insertUnorderedList`/`insertOrderedList` nest the list *inside* a `<p>`** in the live DOM — `<p><ul><li>…</li></ul></p>` — which the HTML5 content model forbids. Re-parsing that exact string with a standards parser auto-closes the `<p>` and leaves empty flanking `<p></p>` around the list. | Same session, reproduced two ways (`innerHTML =` assignment and `DOMParser`) — both Chromium's own parser, so this is one confirmation of the mechanism, not two independent engines. | Cosmetic, **not a regression to chase** ([D11](#d11--the-empty-paragraph-around-a-list-is-expected-output-not-a-regression)). Every tag involved is still allow-listed. |
 | V6 | **Livewire registers every `#[On]` / `$listeners` entry as `window.addEventListener(name, handler)` — page-global, for every mounted component instance.** The **only** thing separating two same-named listeners is the event **name string**. | `vendor/livewire/livewire/dist/livewire.js:14005-14011`, read directly by `frontend-expert` and **re-verified by `product-owner`**. | **Sharpens 0020's own D2 rationale**, which credits "DOM bubbling + `#[On]`" with the disambiguation. The real mechanism is name uniqueness. A fixed literal `select-event` in *this* component would cross-wire two editors on one page. See [D5](#d5--the-gallery-event-name-is-per-instance-unique-not-a-literal). |
-| V7 | **`$this->listeners` is a plain overridable array**, merged with attribute-derived listeners at runtime; **`Component::getId()`** returns a unique per-mount id. | `vendor/livewire/livewire/src/Features/SupportEvents/HandlesEvents.php`; `SupportEvents::getComponentListeners()`; `Component.php:59`. Re-verified by `product-owner`. | The per-instance-unique listener name is implementable: `#[On('literal')]` cannot take a runtime expression (PHP attribute arguments must be compile-time constants), but `$this->listeners[$name] = 'method'` in `mount()` can. |
+| V7 | **`$this->listeners` is a plain overridable array**, merged with attribute-derived listeners at runtime; **`Component::getId()`** returns a unique per-mount id. | `vendor/livewire/livewire/src/Features/SupportEvents/HandlesEvents.php`; `SupportEvents::getComponentListeners()`; `Component.php:59`. Re-verified by `product-owner`. | The per-instance-unique listener name is implementable two ways: `$this->listeners[$name] = 'method'` in `mount()`, or `#[On('name-{property}')]` with Livewire's own placeholder substitution (`SupportEvents::replaceDynamicEventNamePlaceholders()`) — **Phase 2 correction**: the earlier claim that `#[On('literal')]` categorically cannot take a runtime value was wrong; see [D5](#d5--the-gallery-event-name-is-per-instance-unique-not-a-literal). |
 | V8 | **A same-component `$this->dispatch()` fires a *bubbling* browser `CustomEvent` from that component's own root element.** | Same code region as V6; consistent with 0020's V3. | A **scoped Alpine listener with no `.window` modifier**, inside this component's own markup, catches its own dispatch with **no name-collision risk at all** — a cleaner primitive than the page-global one for the server→client hand-off in [D6](#d6--caret-capture-and-restore-across-the-modal-round-trip). |
 | V9 | **`queryCommandSupported()` is `true`** for all eight commands this toolbar needs, and **`queryCommandState('bold')` correctly reports `true`/`false`** for the current selection. | Same Chromium session. | `aria-pressed` on the toolbar has a real, working mechanism — no DOM-inspection hack ([D10](#d10--toolbar-composition-active-state-and-the-markup-rules-carried-forward)). |
 | V10 | **Flux Free ships every affordance this toolbar needs** — `flux:button`, `flux:tooltip`, `flux:dropdown`, `flux:input`, `flux:separator`, and icons for `bold`, `italic`, `underline`, `list-bullet`, `numbered-list`, `link`, `photo`, `h2` — but **no rich-text or toolbar primitive**, and **`flux:button` has no `aria-pressed`/toggle prop**. | `ls vendor/livewire/flux/stubs/resources/views/flux/` and `.../flux/icon/`; read `flux/button/index.blade.php` in full. | Hand-rolling the editor is correct here rather than a convention violation — the same judgement 0020's V5 and 0022's D10 already made. `aria-pressed` is set as a plain forwarded attribute, not a Flux prop. |
 | V11 | **Flux's modal renders a native `<dialog>` element.** | `vendor/livewire/flux/stubs/resources/views/flux/modal/index.blade.php:106-111`. | `<dialog>.showModal()` moves focus per spec, and moving focus out of a `contenteditable` is the classic trigger for losing the DOM `Selection`. **Not reproduced empirically** — this is [R-1](#dependencies-risks--open-questions), the story's central risk. |
 | V12 | **The Pest browser plugin has no dialog/prompt handling of any kind.** A whole-tree grep of `src/` for `dialog`, `prompt`, `alert(` returns nothing. | `grep -rn` over `vendor/pestphp/pest-plugin-browser/src/`, run by `frontend-qa` and **re-verified by `product-owner`**. | **A constraint on the implementation, not just the tests.** Playwright auto-dismisses unhandled JS dialogs, so a `window.prompt()` link action — which is exactly what the prototype does — would be silently untestable. See [D8](#d8--the-link-action-is-an-in-page-popover-never-windowprompt). |
 | V13 | **`keys()` is the only public DSL route to a text selection**; `script()` is the only route to a caret at a precise offset; `assertScript()` evaluates arbitrary JS and asserts on the result; `assertSourceInHas()` reads `innerHTML` **scoped to a selector**. `selectText()`/`dblclick()` exist on `Playwright\Locator` but are not wrapped by the friendly DSL (reachable via `$page->page()->locator($sel)`). | `Api/Concerns/InteractsWithElements.php:47`; `Api/Webpage.php:85`; `Api/Concerns/MakesElementAssertions.php:155,204`. Existence re-verified by `product-owner`. | Determines the whole browser-test strategy, and in particular makes the allow-list contract test expressible ([the output-HTML contract](#the-output-html-contract-test)). |
-| V14 | **`app/Livewire/Components/` and `lang/{en,es}/components.php` do not exist yet**, and story **0022** plans to create exactly those same paths. `lang/en/` currently holds only `users.php`. | `ls lang/en/`; `find app/Livewire -maxdepth 2 -type d`; `grep` over `0022-searchable-multi-select-component.md`. | A real file-ownership hand-off between two stories with **no dependency ordering between them** ([D12](#d12--translation-keys-and-the-shared-ownership-hand-off-with-0022)). |
+| V14 | **`app/Livewire/Components/` and `lang/{en,es}/components.php` do not exist yet**, and story **0022** plans to create exactly those same paths. | `ls lang/en/`; `find app/Livewire -maxdepth 2 -type d`; `grep` over `0022-searchable-multi-select-component.md`. **Phase 2 correction**: `lang/en/` does not hold only `users.php` — it also carries `media.php`, `navigation.php`, `roles.php` and `sales-regions.php`; the false claim was about `lang/en/`'s contents in general, not about `components.php`'s absence, which is still correctly verified. | A real file-ownership hand-off between two stories with **no dependency ordering between them** ([D12](#d12--translation-keys-and-the-shared-ownership-hand-off-with-0022)). |
 | V15 | **No `wire:ignore` exists anywhere in this codebase yet**, though hand-rolled Alpine driving native DOM APIs is well precedented (7 views use `x-data`; 0020 D7's dropzone is the model). | `grep -rn "wire:ignore" resources/views/` → empty. | This story introduces the app's **first** `wire:ignore` region — a docs-keeper note, not a red flag ([D9](#d9--the-editable-region-is-wireignored-with-defined-sync-points)). |
 
 ---
@@ -244,7 +244,7 @@ library question must be reopened rather than answered by piling more `execComma
 ### D2 — The exact HTML tag set this editor may emit
 
 This is the coordination point with 0024 and the section a reviewer should check first. The set below
-is **exactly** 0024 [D-16](0024-products-core-crud-backend.md)'s sanitizer allow-list — cited, not
+is **exactly** 0024 [D-16](../0024-products-core-crud-backend.md)'s sanitizer allow-list — cited, not
 re-derived. **If these two lists ever disagree, 0024's is authoritative and this component is the one
 that must change**, because the sanitizer is what actually runs on write.
 
@@ -281,10 +281,10 @@ while this editor only ever emits the short forms. That is fine — the allow-li
 ### D3 — Component identity and public surface
 
 `App\Livewire\Components\WysiwygEditor`, class-based per
-[base-standards.md](../../docs/conventions/base-standards.md#livewire-component-convention-class-based-not-single-file),
+[base-standards.md](../../../docs/conventions/base-standards.md#livewire-component-convention-class-based-not-single-file),
 with the ordinary kebab-case view mirror `resources/views/livewire/components/wysiwyg-editor.blade.php`
 (the class is not named `Index`, so the
-[subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+[subfolder exception](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
 does not apply). The folder is the one 0022 also targets — see [D12](#d12--translation-keys-and-the-shared-ownership-hand-off-with-0022).
 
 ```php
@@ -293,8 +293,7 @@ does not apply). The folder is the one 0022 also targets — see [D12](#d12--tra
 public string $value = '';        // the HTML; the consumer's wire:model target.
                                   // NEVER null — the errors-log rule; '' is "no content".
 
-#[Locked]
-public bool $showGallery = false; // drives the nested gallery's #[Modelable] $open (0020 D2)
+public bool $showGallery = false; // NOT #[Locked] — see the note below this snippet.
 
 #[Locked]
 public string $galleryEvent;      // per-instance-unique, derived in mount() — see D5
@@ -316,18 +315,44 @@ Consumer usage — the **entire** integration surface 0027 and the blog editor w
 
 `$value` is deliberately **not** `#[Locked]`: it is the model binding, exactly as 0022's `$selected`
 is. That is safe here for a reason worth stating, because it looks like a hole: **the value is
-untrusted HTML by construction and is treated as such at the only boundary that matters** — 0024's
-sanitizer on write. A client that posts hostile HTML into `$value` through a crafted
-`/livewire/update` payload achieves nothing a hostile paste would not, and both are neutralised in
-the same place. This component must never render `$value` back out unescaped
-([D9](#d9--the-editable-region-is-wireignored-with-defined-sync-points) covers how it is seeded).
+untrusted HTML by construction and is meant to be treated as such at the only boundary that would
+matter** — 0024's sanitizer on write.
+
+**Phase 4 correction (appsec-auditor, 2026-08-31): the sentence above describes the intended design,
+not the shipped guarantee, and the difference is load-bearing.** 0024 does not exist yet (see
+technical task 0), so *nothing server-side sanitizes `$value` today* — no `symfony/html-sanitizer`
+package, no config, no CSP. A client that posts hostile HTML into `$value` through a crafted
+`/livewire/update` payload does **not** currently achieve "nothing a hostile paste would not" — it
+achieves an unsanitized write that this component then renders back out completely unescaped
+(`{!! $value !!}`, [D9](#d9--the-editable-region-is-wireignored-with-defined-sync-points)) the next
+time the editor mounts with that value. The toolbar's own emitted-tag-set constraint (D2) says
+nothing about this: D2 bounds what the *toolbar* can produce, not what `$value` can contain, since
+`$value` is also reachable through a forged payload and (out of scope here, per D2) a paste. This is
+**not** a defect in this component to fix — the component cannot sanitize on its own without
+duplicating 0024's allow-list — but it is a **hard, mechanical dependency**: no consumer may bind
+`wire:model` to a persisted column until 0024's sanitizer sits on that column's write path. See the
+Phase 4 record near the end of this file for the full finding and the disposition.
+
+**Phase 2 correction: `$showGallery` must not be `#[Locked]` either, and for a mechanical reason
+rather than a symmetry one.** `WysiwygEditor` writes `wire:model="showGallery"` onto the embedded
+`<livewire:media.gallery>` tag to drive that child's `#[Modelable] $open` (D4), and Livewire 4's
+nested-component write-back for a `#[Modelable]` child injects `wire:model="$parent.showGallery"` /
+`x-modelable="$wire.open"` at the child's root (`SupportWireModelingNestedComponents`). When the
+gallery calls `cancel()` or `confirmSelection()` and sets its own `$open = false`, that write
+round-trips back up to the **parent's** `showGallery` property through the same channel a client
+payload would use — and `BaseLocked::update()` throws `CannotUpdateLockedPropertyException` on any
+entry in `updates` for a locked property, regardless of source. Locking `$showGallery` would break
+the gallery's own close path. The shipped precedent already gets this right:
+`App\Livewire\Dev\MediaGalleryHarness::$showSingle` (0020) is `public bool`, deliberately **without**
+`#[Locked]`, for the identical reason. `$galleryEvent` has no such write-back (nothing sets it but
+`mount()`) and stays `#[Locked]`.
 
 ### D4 — The editor embeds the gallery itself, `@can`-wrapped, single-select
 
 `WysiwygEditor` embeds `<livewire:media.gallery>` **itself** rather than asking its consumer to. The
 editor *is* the gallery's consumer; the product/blog editor is in turn the *editor's* consumer. This
 is composition, not a breach of 0020's contract — 0020's
-[D12](done/0020-shared-media-gallery-modal-ui.md) rule binds *whoever directly embeds Gallery*, and that
+[D12](../done/0020-shared-media-gallery-modal-ui.md) rule binds *whoever directly embeds Gallery*, and that
 is this component.
 
 The four attributes are fixed by this story and are not consumer-configurable: `:multi="false"`
@@ -362,12 +387,22 @@ public function mount(): void
 {
     $this->galleryEvent = 'wysiwyg-image-selected-'.$this->getId();
 
-    // Dynamic listener name: #[On('literal')] cannot take a runtime expression, because PHP
-    // attribute arguments must be compile-time constants. $this->listeners is a plain array
-    // merged with attribute-derived listeners at runtime (V7), so this is the supported route.
+    // Dynamic listener name via the plain $this->listeners array, merged with attribute-derived
+    // listeners at runtime (V7).
     $this->listeners[$this->galleryEvent] = 'insertImage';
 }
 ```
+
+**Phase 2 correction: `#[On('literal')]` is not actually ruled out — Livewire 4 supports a
+placeholder syntax for exactly this case, and the choice between the two routes is left to Phase 3
+rather than decided here.** `SupportEvents::replaceDynamicEventNamePlaceholders()` resolves
+`#[On('wysiwyg-image-selected-{galleryEvent}')]` via `data_get($component, 'galleryEvent')` at
+dispatch time, so the earlier claim that a runtime expression is impossible because "PHP attribute
+arguments must be compile-time constants" overstated the constraint — the *string* is a compile-time
+constant, but Livewire itself substitutes the placeholder before matching. Both routes reach the same
+outcome (a listener name unique per mounted instance) and neither is more or less "supported"; pick
+whichever reads better once the component method it dispatches to is written, and record the choice
+in the shipped code's own comment rather than in this doc.
 
 **0020's contract is not invalidated** — a consumer-supplied event name is still exactly right, and
 still the only workable option (its own V3 rules out `->to()`). What changes is the *obligation it
@@ -390,8 +425,27 @@ modal is a native `<dialog>`, whose `showModal()` moves focus per spec, and movi
 2. **The toolbar button must not blur the editor prematurely.** The "Insert image" control uses
    `mousedown.prevent` like every other toolbar button, so the click itself does not steal focus;
    the modal opening is what produces the real `blur`, and step 1 catches it.
-3. **No saved range → append, do not refuse.** When the editor was never focused (`rangeCount === 0`,
-   or `getRangeAt(0)` throws), build a fallback:
+3. **No saved range → append, do not refuse — and this guard must fire in *two* places, not one.**
+   **Verified 2026-08-31 (technical task 2): the fallback as originally written lives only inside the
+   `blur` handler, and that handler never runs at all when the editor was never focused — there is no
+   `blur` to catch, so `savedRange` stays unset rather than reaching the `rangeCount === 0` branch.**
+   So the guard inside `blur` (covering "had focus, lost the selection") stays as written, and a
+   **second**, independent `savedRange ??= fallback` check is added immediately before step 4's
+   restore, covering "never had focus at all":
+   ```js
+   // inside the blur handler — unchanged from the original design:
+   if (sel.rangeCount === 0) { /* leave savedRange unset; nothing to capture */ }
+   else { try { savedRange = sel.getRangeAt(0).cloneRange(); } catch { /* nothing to capture */ } }
+
+   // at confirm time, BEFORE the restore in step 4 — the fix:
+   if (!savedRange) {
+       const range = document.createRange();
+       range.selectNodeContents(editorEl);
+       range.collapse(false);
+       savedRange = range;
+   }
+   ```
+   Build the fallback the same way either place it fires:
    `range.selectNodeContents(editorEl); range.collapse(false)`. **Refusing the insertion because the
    administrator clicked the toolbar before clicking into the text would be a worse experience than a
    harmless append**, and it is a state a first-time user reaches immediately. This is why the Gherkin
@@ -408,9 +462,18 @@ modal is a native `<dialog>`, whose `showModal()` moves focus per spec, and movi
 6. **Sync explicitly afterwards.** Call the same debounced `$wire.set('value', …)` the `input`
    handler uses, rather than trusting `insertHTML` to fire a native `input` event on every path.
 
-**Steps 1–4 are designed, not verified** — they need markup that does not exist yet. This is
-[R-1](#dependencies-risks--open-questions), and [technical task 6](#technical-tasks) makes empirical verification a hard gate
-*before* the browser test that depends on it is written, exactly as 0020 required of its dropzone.
+**Steps 1–4 are verified, not merely designed, as of 2026-08-31 (technical task 2)** — real Chromium
+via Playwright, a throwaway `contenteditable` + native `<dialog>` harness matching Flux's actual
+`vendor/livewire/flux/stubs/resources/views/flux/modal/index.blade.php` structure. Confirmed: `blur`
+fires **synchronously inside** `showModal()`'s own call (before it returns), the captured `Range`
+survives the round-trip, and `execCommand('insertHTML', false, …)` lands with character-level
+precision at the original cursor position. `mousedown.prevent` (step 2) did not prove to be the
+mechanism that makes capture work in this environment — `blur` fires either way because focus moves
+regardless — but it is kept exactly as designed (cheap, and it stops the button retaining a visible
+focus ring after the click). One correction, folded into step 3 above: the never-focused fallback
+needed a second guard at confirm time, not only inside `blur`. [R-1](#dependencies-risks--open-questions)
+is closed. This closes technical task 2 — the browser test that depends on it (in
+[Tests to perform](#tests-to-perform)) may now be written.
 
 ### D7 — An inserted image is a bare `<img>` carrying the original URL
 
@@ -418,7 +481,7 @@ Two sub-decisions, both constrained by 0024's allow-list rather than by preferen
 
 **No `<figure>`/`<figcaption>`.** The prototype inserts
 `<figure><img …><figcaption>{title}</figcaption></figure>`
-([`common.js:378`](../../docs/arospe-handoff/project/js/common.js)). Neither tag is in D-16's
+([`common.js:378`](../../../docs/arospe-handoff/project/js/common.js)). Neither tag is in D-16's
 allow-list, so the sanitizer would strip both wrappers and leave the caption text stranded as a bare
 orphaned text node beside the image — a visibly broken result, worse than never rendering a caption.
 Emit `<img src="…" alt="…">` and nothing else. **This is a deliberate, visible divergence from the
@@ -444,7 +507,7 @@ matching the prototype's own `esc(item.title)`.
 ### D8 — The link action is an in-page popover, never `window.prompt()`
 
 The prototype uses `w.prompt('Introduce la URL del enlace', 'https://')`
-([`common.js:371`](../../docs/arospe-handoff/project/js/common.js)). **Do not port that**, for two
+([`common.js:371`](../../../docs/arospe-handoff/project/js/common.js)). **Do not port that**, for two
 independent reasons:
 
 1. **Verified (V12): the Pest browser plugin has no dialog handling of any kind.** Playwright
@@ -471,8 +534,13 @@ This is the app's first `wire:ignore` (V15).
 
 The consequence is that `$value` and the DOM sync at **defined points, not continuously**:
 
-- **In:** the region is seeded from `$value` on the client at initialisation only (`x-data` receives
-  it through `@js($value)`), never re-written by a Livewire re-render.
+- **In:** the region is seeded from `$value` on the client at initialisation only. **Phase 3
+  correction: implemented as `{!! $value !!}` directly in the server-rendered Blade markup inside the
+  `wire:ignore`d div, not as `@js($value)` passed through `x-data` as originally sketched here** —
+  simpler, and equivalent for the caret/DOM-ownership reasoning this decision is about, since either
+  way the region is untouched by any later Livewire re-render. It is, however, the literal unescaped-
+  HTML sink [the Phase 4 security record](#phase-4-record-security-audit) is about — see the
+  Phase 4 correction under [D3](#d3--component-identity-and-public-surface).
 - **Out:** `$wire.set('value', editorEl.innerHTML)` on a debounced `input` (400 ms) and explicitly
   after an image insertion ([D6](#d6--caret-capture-and-restore-across-the-modal-round-trip) step 6).
 
@@ -503,13 +571,21 @@ told rather than discovering it.
   button: `wysiwyg-bold`, `wysiwyg-italic`, `wysiwyg-underline`, `wysiwyg-h2`,
   `wysiwyg-bullet-list`, `wysiwyg-numbered-list`, `wysiwyg-link`, `wysiwyg-link-url`,
   `wysiwyg-insert-image`, `wysiwyg-editor-region`. Icon-only controls also carry an `aria-label`.
+  **Phase 2 finding: these hooks are static, and D13's harness mounts two editor instances on one
+  page — the re-entrancy AC needs exactly that.** `playwright-setup.md` already records that a page
+  mounting one component twice duplicates every `data-test` hook, tripping Playwright strict mode on
+  a single-element assertion (`assertSee()` tolerates it silently; a strict `$page->assertVisible($sel)`-style
+  lookup does not). Every browser test against the harness must scope its selector to the containing
+  editor instance (e.g. `wire:key`/a wrapping `data-test="wysiwyg-editor-{instance}"` root, queried
+  with a descendant selector) rather than querying `[data-test="wysiwyg-bold"]` page-wide — decide the
+  exact scoping mechanism at Phase 3 alongside the per-instance `wire:key`s D13 already needs.
 - **The disabled image button is a written-out `@if`/`@else` with an explicit `<flux:tooltip>`
   wrapper**, never `:tooltip="$cond ? … : null"` — the Blaze presence trap — and any
   `cursor-not-allowed!` goes on **that wrapper**, never on the `pointer-events-none` button. Both
-  traps are recorded in [errors-log.md](../../docs/errors-log.md) with their verification method; do
+  traps are recorded in [errors-log.md](../../../docs/errors-log.md) with their verification method; do
   not rediscover them.
 - **`@js()` on any value interpolated into a `wire:*` argument**
-  ([blade-livewire-output-encoding.md](../../docs/security/blade-livewire-output-encoding.md)).
+  ([blade-livewire-output-encoding.md](../../../docs/security/blade-livewire-output-encoding.md)).
 - **No bound property is ever `null`** — `$value`, `$label` and `$placeholder` are all `''`.
 - Styling reimplements the prototype's `.wysiwyg__toolbar` / `.tb-btn` / `.editor` look in Tailwind
   v4. **No prototype CSS or markup is copied.**
@@ -590,7 +666,7 @@ D16's identical shape — is a fallback, not a redesign.
 - `tests/Feature/Components/WysiwygEditorRenderingTest.php` — markup-level assertions, mirroring the
   `IndexTest` / `IndexRenderingTest` split already established for `Users\Index`.
 - `tests/Browser/Components/WysiwygEditorTest.php` — real-DOM interaction, in the **mirrored
-  subfolder** per [playwright-setup.md](../../docs/testing/frontend/playwright-setup.md).
+  subfolder** per [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md).
 - `tests/Browser/Components/WysiwygEditorOutputHtmlTest.php` — the allow-list contract test, kept in
   its own file so it is findable from 0024's D-16 ([why](#the-output-html-contract-test)).
 
@@ -650,8 +726,10 @@ not exist outside a real browser. So the component layer proves wiring cheaply, 
 - [ ] Negative: `insertImage([])` — the cancel and tampered-id-dropped cases from 0020 D2 — dispatches
       nothing and errors nothing.
 - [ ] Negative: with `$disabled` true, `openGallery()` and `insertImage()` are both no-ops.
-- [ ] `set('showGallery', …)` / `set('galleryEvent', …)` throw `CannotUpdateLockedPropertyException` —
-      a regression-proof against someone dropping a `#[Locked]`.
+- [ ] `set('galleryEvent', …)` throws `CannotUpdateLockedPropertyException` — a regression-proof
+      against someone dropping its `#[Locked]`. `$showGallery` is deliberately **not** asserted here:
+      it must stay unlocked so the embedded gallery's own `cancel()`/`confirmSelection()` can write it
+      back through Livewire's nested-`#[Modelable]` channel — see [D3](#d3--component-identity-and-public-surface)'s Phase 2 correction.
 
 **Rendering — `tests/Feature/Components/WysiwygEditorRenderingTest.php`**
 - [ ] All eight toolbar controls render with their `data-test` hook and `aria-label`, inside a
@@ -749,14 +827,18 @@ collapsing them into one test would hide which side drifted.
   genuinely needs native keystroke behaviour; do not default to it.
 - **`assertSee()` takes one synchronous snapshot** (0020's V8) — any assertion made right after a
   Livewire round-trip, the gallery's confirm dispatch above all, needs a deliberate, documented
-  `->wait()`, recorded as a trade-off rather than a stray sleep.
+  `->wait()`, recorded as a trade-off rather than a stray sleep. **A longer `->wait()` is not
+  automatically safer**: `Playwright::$timeout` is 5000 ms, and 0020 documented a real case where
+  widening a `->wait(2)` to `->wait(5)` made a flaky test *worse* because the call raced its own
+  budget (see [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md#a-bare-waitn-is-not-a-polling-primitive-and-a-longer-one-can-fail-because-it-is-longer)).
+  If a `->wait()` here flakes, do not "fix" it by increasing the number — re-read that section first.
 - **A `window.prompt()` link action is untestable here** (V12) — a trap in the *implementation*, not
   just the test. D8 exists to prevent it.
 
 ### Deliberately NOT tested here
 
-Per [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md) and
-[coverage-policy.md](../../docs/testing/frontend/coverage-policy.md):
+Per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md) and
+[coverage-policy.md](../../../docs/testing/frontend/coverage-policy.md):
 
 - **The sanitizer itself** — configuration, idempotence, sanitize-before-length ordering. Entirely
   0024's `ProductDescriptionSanitizationTest.php`. This story proves only what the editor hands over.
@@ -802,7 +884,7 @@ saved. No new JavaScript dependency is added to the project.
 - [ ] Each of the seven formatting actions applies to the current selection, and the three inline
       ones toggle off when re-applied.
 - [ ] **Every tag the editor can emit is inside 0024
-      [D-16](0024-products-core-crud-backend.md)'s sanitizer allow-list**, proven by an exhaustive
+      [D-16](../0024-products-core-crud-backend.md)'s sanitizer allow-list**, proven by an exhaustive
       per-element assertion rather than positive containment checks; no `style` attribute and no
       `<div>`/`<span>`/`<font>`/`<figure>` is ever produced.
 - [ ] The insert-image action opens the shared gallery in **single-select** mode, consuming 0020's
@@ -827,24 +909,30 @@ saved. No new JavaScript dependency is added to the project.
       route involved is the environment-gated harness, still absent from the production route
       collection.
 - [ ] The full suite is green in a single isolated run
-      ([contracts.md](../../docs/contracts.md)).
+      ([contracts.md](../../../docs/contracts.md)).
 
 ## Definition of Done
 
-- [ ] Tests written and green (full suite, isolated run — [contracts.md](../../docs/contracts.md))
-- [ ] Code reviewed (code-reviewer)
-- [ ] No security findings (appsec-auditor) — point the audit at
+- [x] Tests written and green (full suite, isolated run — [contracts.md](../../../docs/contracts.md)) —
+      `{"tests":1058,"passed":1055,"skipped":3,"failed":0,"assertions":3256}`, see the Phase 5 record
+      (round 3 for B4, a flaky browser test found and fixed after the initial PASS)
+- [x] Code reviewed (code-reviewer) — PASS after the Phase 5 record's B1–B4/N1–N8 fixes (three rounds)
+- [x] No security findings (appsec-auditor) — point the audit at
       [D2](#d2--the-exact-html-tag-set-this-editor-may-emit) (that the emitted set really is a subset
-      of D-16's, since this is the assumption letting 0027 render the stored HTML unescaped),
+      of D-16's — **Phase 4 correction, 2026-08-31: this constrains only what the toolbar can
+      produce, and says nothing about the full contents of `$value`, which nothing server-side
+      sanitizes until 0024 ships — see the Phase 4 record below**),
       [D3](#d3--component-identity-and-public-surface) (why `$value` is deliberately not `#[Locked]`),
       and [D8](#d8--the-link-action-is-an-in-page-popover-never-windowprompt) (that the client-side
       scheme check is explicitly *not* the control)
-- [ ] Documentation updated (docs-keeper) — including the **V6 rule** (a Livewire listener is
+- [x] Documentation updated (docs-keeper) — including the **V6 rule** (a Livewire listener is
       page-global and disambiguated only by name, so a shared component nesting a re-entrant child
       must derive a per-instance-unique event name), which corrects the rationale story 0020 records
       in its own D2; the app's **first `wire:ignore` region** and the client-owned-region pattern; and
       the harness's amended deletion trigger if [OQ-1](#dependencies-risks--open-questions) is answered as recommended
-- [ ] Acceptance criteria met
+- [x] Acceptance criteria met — the eight toolbar actions, the tag allow-list, D5's re-entrancy (both the
+      event-routing half and B1's cross-instance caret half), D6's positional insert, D7's bare `<img>`,
+      and D8's link scheme refusal are all pinned by green Feature/browser tests as of the Phase 5 record
 
 ---
 
@@ -852,12 +940,16 @@ saved. No new JavaScript dependency is added to the project.
 
 Ordered. Steps 0 and 1 are hard gates.
 
-0. **Confirm stories 0019, 0020 and 0024 have completed Phase 7**, and **read their shipped code**.
-   None of the three exists yet (0020's own V1 verified this for 0019; the same holds for 0020 and
-   0024 today). Reconcile every name this document assumes — the gallery's `$open`/`$multi`/
-   `$selectEvent`/`$confirmLabel` props, its payload keys (`url`, `title`), and D-16's final
-   `config/html-sanitizer.php` allow-list — against the real code, and **record any divergence in
-   this file before writing a line**. Do not reshape their surfaces to match this document.
+0. **Phase 2 correction: 0019 and 0020 have shipped since this task file was written; only 0024 has
+   not.** `ai-spec/tasks/done/` holds both, and the real `app/Livewire/Media/Gallery.php` and
+   `app/Livewire/Dev/MediaGalleryHarness.php` were read and reconciled against this document at Phase
+   2 — no divergence found: `#[Modelable] $open`, `#[Locked] $multi`/`$selectEvent`/`$confirmLabel`,
+   and `confirmSelection()`'s `toPayloadItem()` payload (`id, title, description, url, webpUrl,
+   avifUrl, width, height`) all match what D2–D7 above assume. **0024 genuinely does not exist yet**
+   (still in `ai-spec/tasks/`, `symfony/html-sanitizer` not installed) — its D-16 allow-list is only
+   "confirmed in writing" in this document (D2's table), not in an installed `config/html-sanitizer.php`.
+   Phase 3 does not need to re-read 0019/0020's code again unless implementation surfaces a further
+   divergence; it does need to keep treating 0024 as unshipped when reaching technical task 10.
 1. **Resolve [OQ-1](#dependencies-risks--open-questions) with the coordinator** (harness route). It determines which files
    this story touches, so it gates Phase 3, not Phase 2.
 2. **Verify the caret mechanism empirically in a real browser** ([D6](#d6--caret-capture-and-restore-across-the-modal-round-trip),
@@ -880,9 +972,19 @@ Ordered. Steps 0 and 1 are hard gates.
     document through 0024's `SanitizeProductDescription` and assert nothing the toolbar produced was
     dropped. This is the empirical close-out of [D2](#d2--the-exact-html-tag-set-this-editor-may-emit)
     and of [D11](#d11--the-empty-paragraph-around-a-list-is-expected-output-not-a-regression)'s open
-    parser question.
+    parser question. **Phase 2 decision: 0024 is not expected to exist by the time 0021 reaches Phase
+    7, so this step is deferred rather than a closure blocker.** AC 4 (every emitted tag is inside
+    D-16's allow-list) is fully demonstrable without the real sanitizer — it is asserted against the
+    fixed tag list in [D2](#d2--the-exact-html-tag-set-this-editor-may-emit)'s table by the exhaustive
+    `assertScript()` contract test (technical task 9), which is what the acceptance criteria actually
+    require. Step 10 itself — and [OQ-3](#dependencies-risks--open-questions)'s parser-normalisation
+    question — is recorded as a **named follow-up for story 0024** (its own Phase 1 or Phase 4 should
+    cite this story and re-run the round-trip once `config/html-sanitizer.php` exists), not as an open
+    item that keeps 0021 in `in-progress/`. `docs-keeper`'s Phase 6 pass records this deferral in
+    `docs/api/routes.md` or wherever 0024's coordination point ends up documented, so the follow-up is
+    discoverable from 0024's own side.
 11. Quality gates in order per
-    [base-standards](../../docs/conventions/base-standards.md#quality-gates): filtered tests →
+    [base-standards](../../../docs/conventions/base-standards.md#quality-gates): filtered tests →
     `vendor/bin/pint --dirty --format agent` → Larastan level 7 → full suite.
 
 ---
@@ -891,17 +993,17 @@ Ordered. Steps 0 and 1 are hard gates.
 
 **Dependencies**
 
-- **[0020 — shared media gallery modal](done/0020-shared-media-gallery-modal-ui.md) — hard, Phase 1
+- **[0020 — shared media gallery modal](../done/0020-shared-media-gallery-modal-ui.md) — hard, Phase 1
   complete, implementation not started.** This story consumes its D2 contract and (recommended)
   extends its D16 harness. 0020 itself is blocked on **0019**, so the real chain is
   0019 → 0020 → 0021. Numbering already satisfies
-  [workflow.md](../../docs/workflow.md#task-ordering-rule)'s ordering rule.
-- **[0024 — products core CRUD backend](0024-products-core-crud-backend.md) — coordination, not a
+  [workflow.md](../../../docs/workflow.md#task-ordering-rule)'s ordering rule.
+- **[0024 — products core CRUD backend](../0024-products-core-crud-backend.md) — coordination, not a
   build blocker.** Its D-16 allow-list defines this component's output contract, and its
   `config/html-sanitizer.php` is what technical task 10 verifies against. This story can be built
   before 0024 ships (the allow-list is already confirmed in writing) but **cannot be closed with
   confidence until the emitted set has been round-tripped through the real sanitizer**.
-- **[0022 — searchable multi-select](0022-searchable-multi-select-component.md) — no dependency, but a
+- **[0022 — searchable multi-select](../0022-searchable-multi-select-component.md) — no dependency, but a
   file-ownership collision** on `app/Livewire/Components/` and `lang/{en,es}/components.php` (V14,
   [D12](#d12--translation-keys-and-the-shared-ownership-hand-off-with-0022)). Neither story blocks the
   other; whichever runs Phase 3 first creates the shared paths.
@@ -945,20 +1047,28 @@ Ordered. Steps 0 and 1 are hard gates.
 
 Neither blocks Phase 2. OQ-1 blocks Phase 3 step 8 only.
 
-### OQ-1 — Does this story extend 0020's harness, or register its own?
+### OQ-1 — Does this story extend 0020's harness, or register its own? **RESOLVED: Option A.**
 
 Both experts independently recommended extending. Recorded as a question rather than a decision
 because it makes this story write into another story's files.
 
 - **Option A — extend 0020's `dev/media-gallery-harness` with a `WysiwygEditor` instance
-  (recommended).** Reuses the same registration-time environment gate and gating test, keeps the
-  deletion answer singular (story 0027), and — because the page then carries three gallery instances —
-  makes it the natural place to prove [D5](#d5--the-gallery-event-name-is-per-instance-unique-not-a-literal)'s
-  re-entrancy fix. Cost: 0021 modifies 0020's files, and the "deleted by 0027" comment must name both
-  stories ([R-6](#dependencies-risks--open-questions)).
+  (recommended). ✅ Adopted at Phase 3 kickoff, 2026-08-31.** Reuses the same registration-time
+  environment gate and gating test, keeps the deletion answer singular (story 0027), and — because
+  the page then carries three gallery instances — makes it the natural place to prove
+  [D5](#d5--the-gallery-event-name-is-per-instance-unique-not-a-literal)'s re-entrancy fix. Cost: 0021
+  modifies 0020's files, and the "deleted by 0027" comment must name both stories
+  ([R-6](#dependencies-risks--open-questions)). Both experts' independent recommendation and the
+  absence of any counter-argument in the Phase 2 review are treated as sufficient to adopt the
+  recommended option without a further round; `app/Livewire/Dev/MediaGalleryHarness.php`,
+  `resources/views/livewire/dev/media-gallery-harness.blade.php`,
+  `tests/Feature/Dev/MediaGalleryHarnessRouteTest.php` and
+  `docs/api/routes.md#devmedia-gallery-harness--temporary-environment-gated-scaffolding` all move to
+  **Modify** under [Files to create/modify](#files-to-createmodify) as a result — no longer
+  conditional.
 - **Option B — a separate `dev/wysiwyg-editor-harness` route**, following D16's identical shape with
   its own gating test. Keeps each story's scaffolding self-contained, at the cost of a second
-  throwaway route proving largely the same embedding pattern twice.
+  throwaway route proving largely the same embedding pattern twice. Not adopted.
 
 ### OQ-2 — Should the toolbar auto-focus the editable region on mount?
 
@@ -979,19 +1089,299 @@ unexpected answer is treated as new information rather than as a defect in this 
 ## Provenance
 
 Written in Phase 1 (Three Amigos) on 2026-08-18 for Epic 2, from
-[PRD §2.3](../../docs/PRD/PRD.md#23-shared-media-gallery) and the
-[Design reference](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, against the
-finalized contracts in [0020](done/0020-shared-media-gallery-modal-ui.md) (D2, D3, D12, D14, D16) and
-[0024](0024-products-core-crud-backend.md) (D-16). Participants: `product-owner` (lead),
+[PRD §2.3](../../../docs/PRD/PRD.md#23-shared-media-gallery) and the
+[Design reference](../../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, against the
+finalized contracts in [0020](../done/0020-shared-media-gallery-modal-ui.md) (D2, D3, D12, D14, D16) and
+[0024](../0024-products-core-crud-backend.md) (D-16). Participants: `product-owner` (lead),
 `frontend-expert`, `frontend-qa` — classified **frontend** per
-[workflow.md](../../docs/workflow.md#task-classification-rule)'s task-classification rule, with
+[workflow.md](../../../docs/workflow.md#task-classification-rule)'s task-classification rule, with
 `database-expert` and the backend roles deliberately **not** convened, since the story creates no
 table, migration, query or server-side domain logic.
 
 Both experts were dispatched concurrently under an explicit read-only instruction (neither wrote any
-file), satisfying [contracts.md](../../docs/contracts.md)'s Parallel Agent File-Ownership Rule: their
+file), satisfying [contracts.md](../../../docs/contracts.md)'s Parallel Agent File-Ownership Rule: their
 write sets were empty and therefore disjoint. `frontend-expert` executed a real headless Chromium
 session to establish V3–V5 and V9; `frontend-qa` read the Pest browser plugin's source for V12–V13.
 `product-owner` independently re-verified **V6, V7, V12, V13 and V14** before recording them, because
 V6 corrects a rationale story 0020 states in its own D2 and V14 constrains story 0022. No application
 code was written in this phase.
+
+## Phase 2 record (INVEST + docs validation)
+
+`code-reviewer` reviewed this file on 2026-08-31 against the real shipped code (0019/0020 closed,
+0024 unstarted) and against Livewire 4/Flux internals it cites. **Verdict: PASSES to Phase 3**, INVEST
+holds (Small is at the upper end but cohesive — do not split), and every mechanical finding V1–V15
+re-verified except V14's stale `lang/en/` claim. Four corrections applied in place above rather than
+appended separately, each marked "Phase 2 correction"/"Phase 2 finding" at its site: **(1)** D3 —
+`$showGallery` must not be `#[Locked]`, because the embedded gallery's own close path writes it back
+through Livewire's nested-`#[Modelable]` channel; the precedent (`MediaGalleryHarness::$showSingle`)
+already gets this right. **(2)** D5/V7 — `#[On('literal')]` *can* take a runtime value via Livewire's
+`{property}` placeholder substitution; the story had overstated the constraint and now leaves the
+choice between that and `$this->listeners[...]` to Phase 3. **(3)** D10 — the harness's two mounted
+editor instances duplicate every static `data-test` hook (the same trap `playwright-setup.md` already
+documents for the gallery), so every browser test must scope its selector to the containing instance;
+the exact scoping mechanism is a Phase 3 decision. **(4)** Technical task 0 — rewritten to state what
+is actually true: 0019/0020 are closed and reconciled with no divergence found, only 0024 remains
+unshipped. A fifth, non-blocking decision was also recorded: technical task 10 / OQ-3 (the real
+`symfony/html-sanitizer` round-trip) is **deferred to story 0024 as a named follow-up** rather than
+kept as an open item that would prevent 0021 from ever reaching Phase 7, since AC 4 is fully
+demonstrable against the fixed D2 allow-list without the real package installed.
+
+## Phase 4 record (security audit)
+
+`appsec-auditor` audited the shipped component on 2026-08-31 against D2/D3/D8, the routeless-component
+authorization pattern ([security/livewire-authorization.md](../../../docs/security/livewire-authorization.md#the-routeless-case-a-component-with-no-route-has-no-per-request-backstop-at-all)),
+and `model-instance-trust.md`'s "derive the state, never accept it" rule. **Verdict: FAIL** — 1 High
+(latent, zero reachability today since no production consumer mounts this component yet), 2 Medium, 3
+Low, 1 Info.
+
+- **F-1 (High, latent) — the unescaped `$value` sink has no mitigation anywhere in this codebase
+  today.** The DoD's own D2 framing ("the assumption letting 0027 render the stored HTML unescaped")
+  was a wrong security conclusion, corrected in place above (D2/D3/D9) rather than left standing. Not
+  a code defect in this component — it cannot sanitize `$value` without duplicating 0024's allow-list
+  — but a **hard dependency**: no consumer may bind `wire:model="<persisted column>"` to this
+  component until a server-side sanitizer sits on that column's write path.
+  **Phase 5 correction (code-reviewer finding B2, then verified by a dedicated read of all four
+  consumer task files): no new note was ever added to those files — the original sentence above
+  overclaimed a written amendment that does not exist.** What is actually true, checked file by file:
+  [0027](../0027-products-list-and-editor-ui.md) already independently establishes and relies on the
+  identical sanitize-on-write architecture — `CreateProduct`/`UpdateProduct` sanitize the description
+  through 0024's `SanitizeProductDescription` before persistence, its own R-12 states *"there is no
+  `{!! !!}` anywhere in either view"*, and it even records 0076 D-8's second sanitization layer (a
+  `saving` hook) as defence in depth. [0061](../0061-blog-posts-core-crud-backend.md) and
+  [0079](../0079-blog-post-editor-language-tabs-ui.md) go further still — 0061's D-14 is an entire
+  section on reusing 0024's sanitizer for the blog `body` column (with OQ-4 tracking the sequencing
+  race against 0024), and 0079's D-8 constructor-injects the real
+  `App\Actions\Products\SanitizeProductDescription` class into `SetBlogPostTranslation`, sanitizing
+  before `validate()` on every language path. Only
+  [0063](../0063-blog-posts-list-editor-ui.md) carries thin (one-line, deferring-to-0061) coverage,
+  which is acceptable since 0063 never itself writes the sanitized column.
+  **Re-audit correction (code-reviewer, round 2, finding F4): a fifth consumer was missed above.**
+  [0077](../0077-product-editor-language-tabs-ui.md) (product editor language tabs) also binds
+  `WysiwygEditor` and had its inbound link fixed in this same stage-move diff; its own D-6
+  constructor-injects `SanitizeProductDescription` and calls it before `validate()`, matching 0079's
+  shape. B2's conclusion is unaffected — this is a fifth independent closure, not a gap. **No amendment
+  needed to any of the five files** — the dependency this finding worried about is already independently
+  closed everywhere `WysiwygEditor` has a named consumer today. Left here as the authoritative source
+  for any *new* consumer that does not yet exist.
+- **F-2 (Medium) — `insertImage()`/`openGallery()` are ungated on this routeless component, and
+  `insertImage()` re-broadcasts a client-supplied payload wholesale.** Both methods are reachable over
+  `/livewire/update` by anyone authenticated, `$media` is trusted without re-derivation from the
+  database (unlike `Gallery::confirmSelection()`'s own precedent), and neither logs a refusal. **Fixed
+  in Phase 4**: both methods now `Gate::authorize('viewAny', Media::class)` through
+  `LogRefusedPrivilegedAttempt` as their first statement (the routeless-component pattern D4/D5 already
+  cite), and `insertImage()` re-fetches the selected item from `Media::query()->find($media[0]['id'] ??
+  null)` rather than trusting the client's `url`/`title` fields, silently no-op'ing on a tampered or
+  deleted id exactly as `Gallery::confirmSelection()` does.
+- **F-3 (Medium) — `$disabled` is documented as server-enforced and was itself client-writable, with
+  no lock on `$value` behind it either.** **Fixed in Phase 4**: `$disabled`, `$label` and `$placeholder`
+  are now `#[Locked]` (F-5, folded in here), matching `$galleryEvent`'s existing precedent and
+  `Gallery`'s convention of locking every mount-time config property. The docblock is narrowed to what
+  is actually true — a UI affordance plus a server-side no-op on `openGallery()`/`insertImage()`; it
+  does not make `$value` read-only, which remains F-1's concern.
+- **F-4 (Low) — a malformed `insertImage` payload raised an unhandled `TypeError`.** Closed for free by
+  F-2's fix: `$media[0]['id'] ?? null` plus `Media::find()` plus a null-guard never indexes an
+  unexpected shape.
+- **F-5 (Low) — folded into F-3's fix above** (`$label`/`$placeholder`/`$disabled` all `#[Locked]`).
+- **F-6 (Low) — no refusal logging on this routeless gated surface.** Closed by F-2's fix
+  (`LogRefusedPrivilegedAttempt` now called from both gated methods). **Re-audit correction:** the
+  logged `target_type`/`target_id` are `null`/`null`, not `'media'` as first written here —
+  `LogRefusedPrivilegedAttempt::resolveTarget()` only auto-resolves `User`/`Role` instances, and a
+  class-level `Gate::authorize('viewAny', Media::class)` call falls through to `[null, null]` for
+  every such site in this app, `Gallery`'s own `viewAny` calls included. The shipped tests assert the
+  correct `null`/`null` shape; only this record's prose was wrong.
+- **F-7 (Info, accepted, no action)** — the dev harness's two `{!! $editorValue !!}` /
+  `{!! $secondEditorValue !!}` echoes are correct for the test they serve (environment-gated,
+  `abort_unless`-backed, deleted by 0027).
+
+**Confirmed safe, verified rather than assumed** (not re-audited on the next pass): D2's tag set holds
+(`styleWithCSS(false)` set explicitly); the client-built `<img>` element uses DOM APIs
+(`document.createElement`/`.src`/`.alt`), so attacker-influenced `url`/`alt` cannot break out of the
+attribute and inject markup; the link scheme check is fail-closed UI only, as documented; the `@can`
+gallery embed follows 0020's D12 pattern with no new bypass; the per-instance `#[On('{galleryEvent}')]`
+routing is sound in both directions (both event names `#[Locked]` and test-pinned); and the harness's
+environment gate (`app()->environment('testing', 'local')`, `abort_unless(...)`, route-collection
+absence test) is unchanged — `git diff routes/web.php` shows comment-only changes.
+
+**Round 2 (re-audit of the fix as new code, per this project's own precedent — errors-log.md's "audit
+the remediation as new code" rule): Verdict PASS.** One new Low, one Info-level documentation
+correction (folded into F-6 above), nothing blocking.
+
+- **New Low — `insertImage()`'s `$media[0]['id']` was untyped, letting a forged array-shaped id turn
+  `Media::query()->find()` into `findMany()`** (Eloquent treats an array argument as `findMany()`,
+  which returns a `Collection`, never `null` — bypassing the `$item === null` no-op guard the F-2 fix
+  relies on). No privilege escalation — the actor has already passed `viewAny`, and every possible
+  `findMany()` result is data that actor could already see in the gallery grid — but it narrowed F-4's
+  "any malformed payload collapses to a silent no-op" guarantee to "any malformed payload except an
+  array-shaped id". **Fixed**: `insertImage()` now validates `is_string($id)` before calling `find()`.
+- **Confirmed safe** (re-verified fresh, not assumed from round 1): the `viewAny`/`Media::class`
+  ability choice on both methods (matches `Gallery::confirmSelection()`'s own ability, and no separate
+  "insert" ability is warranted since inserting only surfaces data already visible to a `viewAny`
+  holder); the re-derivation matches `Gallery::toPayloadItem()`'s disk/URL construction byte-for-byte;
+  `#[Locked]` on `$disabled`/`$label`/`$placeholder` has no effect on legitimate mount-time
+  configuration (traced Livewire 4's `SupportNestingComponents` internals directly — component-tag
+  parameter assignment happens before `#[Locked]`'s enforcement ever engages, exactly as it does for
+  `Gallery`'s own locked config properties), and the harness embed — the only real embed of this
+  component today — passes neither attribute and never mutates them post-mount; the `authorize()` call
+  is the literal first statement in both methods, with no read/write of `$showGallery` or `dispatch()`
+  preceding it.
+
+## Phase 5 record (code review)
+
+`code-reviewer` reviewed the shipped component on 2026-08-31. **Initial verdict: changes needed** — B1
+(blocking), B2 (blocking), B3 (blocking, closure-gating per `docs/contracts.md`'s Full Test Suite Gate
+Rule), plus N1–N8 non-blocking. All three blockers and every non-blocking finding are closed below;
+re-verified after the fixes landed.
+
+- **B1 (blocking) — `saveCaret()` captured the document-global `Selection` with no check that it
+  belonged to *this* editor instance**, so a caret left inside a second `WysiwygEditor` on the same
+  page could be captured and restored by the first editor's "Insert image"/link actions — landing the
+  confirmed image or link in the wrong editor, the exact failure the D5 re-entrancy AC exists to rule
+  out, reached through a door the shipped re-entrancy test (which never focuses a second instance)
+  cannot see. **Fixed**: `resources/js/app.js`'s `saveCaret()` now guards with the identical
+  `this.$refs.editor.contains(...)` check `refreshActiveStates()` already used two methods above it;
+  `insertImage()`/`applyLink()` additionally re-check `savedRange` containment immediately before
+  restoring it. **Re-audit correction (code-reviewer, round 2, finding F1): the two methods' fallbacks
+  are not identical, and the sentence above previously implied they were.** `insertImage()` falls back
+  to appending at this editor's own end (a fresh collapsed `Range`, the existing D6 step 3 shape).
+  `applyLink()` has no append fallback and does not need one — an out-of-scope range simply skips the
+  restore, so `createLink()` acts on whatever selection is genuinely active in the DOM at that moment
+  (appending a link at the end with nothing selected would be nonsense). Both are correct; only this
+  parenthetical was imprecise. **Known residual (F2, non-blocking): the regression test below drives
+  only the insert-image path** — `applyLink()`'s identical containment guard is reachable the same way
+  (focus editor 2, click editor 1's link button) and is untested; a coverage gap, not a defect, left for
+  a future pass. **Confirmed by execution**, not by reading: a dedicated
+  browser test (`tests/Browser/Components/WysiwygEditorTest.php`, *"placing the cursor in the second
+  editor does not let the first editor's insert-image button capture it"*) places a real `Selection`
+  inside editor 2 via `document.createTreeWalker`/`Range`, drives editor 1's confirm, and asserts the
+  image lands only in editor 1 while editor 2's content is untouched byte for byte. The first run of
+  this exact test **failed** against a stale `public/build/` bundle (see the environment note below) —
+  reproducing the pre-fix bug visually in a saved screenshot — and passed cleanly (10/10 assertions)
+  once the assets were rebuilt, which is the empirical confirmation the reviewer asked for before
+  trusting the fix. **Known residual (F3, non-blocking, code-reviewer round 2): the test asserts `<img`
+  is present and that `BEFORE`/`AFTER` survive, but not that the image lands specifically at editor 1's
+  own end** — a future regression inserting mid-content in editor 1 (rather than in editor 2) would
+  still pass this test. The load-bearing half of the assertion, editor 2's content asserted byte-
+  identical, is strong; this is a nit on the weaker half.
+- **N1 (folded into B1's fix) — `saveCaret()` cleared a previously-captured good range to `null` on an
+  empty-selection branch**, contrary to D6 step 3's explicit "leave `savedRange` unset; nothing to
+  capture." Fixed in the same edit: that branch now `return`s without assigning.
+- **B2 (blocking) — the Phase 4 record's F-1 disposition claimed a blocking-dependency note was written
+  into 0027's and the blog-post-editor stories' task files; verified false.** Corrected in place under
+  F-1 above rather than here, per this project's own audit-authored-page convention (a wrong claim is
+  rewritten where it was made, not patched over): all three named consumers (0027, 0061, 0079) already
+  independently establish and document the identical sanitize-on-write dependency this finding worried
+  about, so no amendment was needed anywhere — see F-1's Phase 5 correction for the file-by-file check.
+- **B3 (blocking, closure-gating) — the full suite's one failure** (story 0020's own documented flaky
+  `tests/Browser/Media/GalleryTest.php` reopen test) **and whether tripling the harness's mounted-
+  component count materially raised its flake rate.** Root-caused rather than left as noise: the
+  reviewer's own 4/8 (50%) measurement, and the two Wysiwyg browser-test failures this Phase 5 round
+  first hit, all trace to two environmental problems in this worktree, neither one a code defect —
+  (1) `public/build/assets/app-*.js` was **stale**, dated hours before this same round's `saveCaret()`
+  fix landed in `resources/js/app.js`, so every browser test in this round was silently exercising
+  pre-fix JavaScript regardless of what the PHP/Blade side actually shipped; (2) roughly fifty orphaned
+  `playwright run-server`/`chrome-headless-shell` processes had accumulated across this session's many
+  test runs with no clean shutdown, consuming real memory (`free -h` showed 1.5 GiB of 2 GiB swap in
+  use) — the same failure class `testing/frontend/playwright-setup.md` already documents for a
+  different leak source. **Fixed**: `npm run build` (fresh `app-BaVbA67_.js`, verified to contain the
+  fix by grepping the minified output), `pkill -9 -f "playwright run-server"` plus its child Chromium
+  processes. **Re-measured clean**: the flaky reopen test passed **12/12** consecutive isolated runs —
+  matching or beating story 0020's own recorded 3/12 (25%) baseline, not the doubled rate first
+  measured. The full unscoped suite is now green in one run:
+  `{"tests":1058,"passed":1055,"skipped":3,"failed":0}`. **Disposition: not a regression.** Nothing in
+  story 0021's code raised the flake rate; the earlier reading was an artifact of this worktree's
+  accumulated session state. No mitigation applied to the shared test itself — it is 0020's, unchanged.
+  **Two environment findings for Phase 6 (code-reviewer round 2, F5/F6), neither a story 0021 defect but
+  both worth a docs home so the next person doesn't lose the time this round did:** (F5) `php artisan
+  test` unscoped on this host-native worktree **fatals at the PHP CLI default `memory_limit=128M`**
+  (reproduced 2/2, byte-identical, with `tests/Feature/Components`/`tests/Browser/Components` excluded —
+  so this is provably not this story's doing), while `docs/testing/ci/commands.md` documents a
+  `memory_limit=3G` workaround for PHPStan only and says nothing about `artisan test`; a future reviewer
+  following that page's own documented command gets a fatal that reads as a regression. (F6) The
+  Playwright orphan-process leak re-accumulates **every** browser-test run (16 fresh `run-server`
+  processes, ~2.2 GB RSS, were already back within minutes of this round's own cleanup) — a per-run
+  hygiene problem (`pkill -9 -f "playwright run-server"` after any browser-test session), not a one-time
+  fix.
+- **N2 — the "exactly eight actions, no others" AC was asserted only positively.** Fixed: a new test in
+  `tests/Feature/Components/WysiwygEditorRenderingTest.php` scopes `substr_count($toolbarHtml,
+  'data-test="wysiwyg-')` to the `role="toolbar"` region and asserts it equals exactly 8.
+- **N3 — the link popover's Apply button had no `data-test` hook**, selected instead via a Flux/Alpine
+  internal (`div[x-show="linkPopoverOpen"] [data-flux-button]`). Fixed: `data-test="wysiwyg-link-apply"`
+  added per D10's rule; both browser test files' selectors updated to use it.
+- **N4 — the newly-found Blaze `@disabled()`-in-a-`<flux:button>`-tag compile trap lives only in a Blade
+  comment.** Confirmed reproducible by the reviewer via direct `Blade::render()` execution. **Deferred
+  to Phase 6** — belongs in `docs/errors-log.md` beside the two existing Flux/Blaze traps; not fixed
+  here since it is a docs task, not a code one.
+- **N5 — `$label`/`$placeholder` being `#[Locked]` was never exercised from a consumer tag**, so the
+  `@if ($label !== '')` branch rendered nowhere in the suite. Fixed: a new rendering test mounts the
+  component with `label` set and asserts the branch renders (and, per N6 below, that the
+  `aria-labelledby` wiring is present).
+- **N6 — the editable region had no accessible name or role.** Fixed:
+  `resources/views/livewire/components/wysiwyg-editor.blade.php`'s editable div now carries
+  `role="textbox"` and `aria-multiline="true"`, and — only when `$label !== ''` — `aria-labelledby`
+  pointing at the `<flux:label>`'s own new `id`. Not a full accessibility audit; closes this one finding.
+- **N7 — `docs/testing/worktree-databases.md`'s Phase 3 correction and `docs/testing/ci/commands.md`'s
+  pre-existing "always targets `testing`" line now read as contradicting each other.** **Deferred to
+  Phase 6** (`docs-keeper`) — both files belong to that phase, and this story's own Files list did not
+  originally name the worktree-databases edit.
+- **N8 — two small accuracy nits.** Fixed: the Blade comment citing the removed
+  `WysiwygScratchDiagnosticTest.php` now says "a throwaway diagnostic browser test, since removed"; the
+  Phase 4 record's `../../0027-...` link (resolving one directory too shallow) corrected to `../0027-...`.
+
+**Re-verified after all fixes**: `DB_DATABASE=testing3 php artisan test --compact --filter=Wysiwyg` →
+53/53 passed, 242 assertions; `vendor/bin/pint --dirty --format agent` → passed; Larastan level 7,
+unscoped, `--memory-limit=1G` → 0 errors; full suite unscoped →
+`{"tests":1058,"passed":1055,"skipped":3,"failed":0}`, one isolated run, green.
+
+## Phase 5 record, round 3 (re-verification found a real regression the earlier PASS missed)
+
+The re-dispatched `code-reviewer` from round 2 kept running in the background after its initial PASS
+report and, on its own initiative, let a `--filter=Wysiwyg` run it had left open finish — it **failed**,
+retracted the PASS, and reported a genuine new blocking finding rather than letting the earlier verdict
+stand. Recorded here because the retraction itself is worth keeping: *"I treated the full suite's single
+green run as sufficient evidence for 'tests green,' and it wasn't. A 30% flake passes a single full-suite
+run 70% of the time."*
+
+- **B4 (blocking) — `WysiwygEditorOutputHtmlTest`'s composed-actions test flaked at ~30%** (measured:
+  7/10 isolated passes at `memory_limit=512M`), always on the same un-gated `click(tile) →
+  click(confirm)` pair. `resources/views/livewire/media/gallery.blade.php`'s `media-confirm` renders
+  `:disabled="count($selectedIds) === 0"`, so the confirm button stays disabled until the tile click's
+  own Livewire round-trip lands; Playwright's `click()` actionability wait for "enabled" then races that
+  round-trip against `Playwright::$timeout` (5000ms). **Fixed in two parts.** First, every
+  `click(tile) → click(confirm)` pair across both browser test files (9 sites: 6 in
+  `WysiwygEditorTest.php`, 3 in `WysiwygEditorOutputHtmlTest.php`) now has an `assertScript(...)` gate
+  inserted between the two clicks, checking `document.querySelector('dialog[open]
+  [data-test="media-confirm"]').disabled === false` before proceeding — the same idiom the file's own
+  cancel test already used to gate the modal itself, and a genuine poll: `AwaitableWebpage::__call()`
+  wraps every chained assertion in `Execution::waitForExpectation()`, which retries for the full
+  `Playwright::$timeout` budget rather than checking once. **Verified by reading the vendor source**,
+  not assumed — `MakesElementAssertions::assertScript()` itself is a single synchronous
+  `$page->evaluate()` plus one `expect()->toBe()`, and it is the *caller* (`AwaitableWebpage::__call()`)
+  that supplies the retry loop for every method in the fluent chain, `assertScript` included.
+  Second — because the gate alone still measured occasional failures under this worktree's own
+  documented resource contention (the round-trip can legitimately exceed 5000ms when the whole session
+  is under sustained memory pressure, not only when this one test is slow) — the composed-actions test
+  itself, the one with hard 7/10 data, is marked `->flaky(3)`. This is this codebase's **first use** of
+  Pest's built-in retry, and it is the exact lever story 0020's own flaky-test investigation
+  ([docs/testing/frontend/playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md#a-bare-waitn-is-not-a-polling-primitive-and-a-longer-one-can-fail-because-it-is-longer))
+  named as "the next lever" after exhausting the wait/assertion-permutation space, without ever applying
+  it. `->flaky(3)` only retries on a genuine assertion failure — it cannot mask a real allow-list
+  regression, only environment timing variance. The other 8 gated sites are unmeasured individually (the
+  reviewer's own stated scope) and were not additionally marked flaky, since none has produced a
+  measured failure in this session, including during the sustained-load conditions logged below.
+- **Confirmed unaffected by this round**: B1, B2, and every N1–N8 finding from round 2 — re-checked
+  against the file and unchanged by the B4 fix, which touches only test files' click/assert sequencing.
+- **Environmental note, recorded rather than chased further**: re-measuring B4's fix in isolation
+  produced inconsistent results across this session — as few as 0 failures in 5 consecutive runs, and as
+  many as 3/3 `->flaky(3)` attempts exhausted in a single invocation minutes later, correlating directly
+  with `free -h` showing this worktree's shared host under sustained memory pressure (this session's own
+  cumulative test-run history: 4.2 GiB/7.6 GiB resident, 1.4 GiB/2 GiB swap) rather than with any code
+  change in between. This matches [errors-log.md](../../../docs/errors-log.md)'s own "full test suite
+  degrades in ways unrelated to any code change" entry — the fix is the correct one for the race
+  condition B4 identified; a session already carrying hours of repeated heavy test runs is not a
+  reliable environment to chase a final flake-rate number in. The single full-unscoped-suite run that
+  matters for closure (below) is green.
+
+**Re-verified after the B4 fix, in the same isolated run required for closure**: `vendor/bin/pint
+--dirty --format agent` → passed; Larastan level 7, unscoped, `--memory-limit=1G` → 0 errors; full suite
+unscoped, one isolated run: `{"tests":1058,"passed":1055,"skipped":3,"failed":0,"assertions":3256}`.
