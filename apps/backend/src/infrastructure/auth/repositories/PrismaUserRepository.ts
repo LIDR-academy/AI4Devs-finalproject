@@ -10,6 +10,9 @@ interface PrismaUserRaw {
   status: string;
   mustChangePin?: boolean;
   failedAttempts: number;
+  email?: string | null;
+  resetTokenHash?: string | null;
+  resetTokenExpires?: Date | null;
   createdAt: Date;
   roleId?: string | null;
   role?: { name: string } | null;
@@ -24,6 +27,9 @@ function toDomain(raw: PrismaUserRaw): User {
     status: raw.status as UserStatusType,
     mustChangePin: raw.mustChangePin ?? true,
     failedAttempts: raw.failedAttempts,
+    email: raw.email ?? undefined,
+    resetTokenHash: raw.resetTokenHash ?? undefined,
+    resetTokenExpires: raw.resetTokenExpires ?? undefined,
     createdAt: raw.createdAt,
   });
 }
@@ -34,6 +40,23 @@ export class PrismaUserRepository implements IUserRepository {
   public async findById(id: string): Promise<User | null> {
     const raw = await this.prisma.user.findUnique({
       where: { id },
+      include: { role: true },
+    });
+    return raw ? toDomain(raw) : null;
+  }
+
+  public async findByEmail(email: string): Promise<User | null> {
+    const normalized = email.trim().toLowerCase();
+    const raw = await this.prisma.user.findUnique({
+      where: { email: normalized },
+      include: { role: true },
+    });
+    return raw ? toDomain(raw) : null;
+  }
+
+  public async findByResetTokenHash(tokenHash: string): Promise<User | null> {
+    const raw = await this.prisma.user.findFirst({
+      where: { resetTokenHash: tokenHash },
       include: { role: true },
     });
     return raw ? toDomain(raw) : null;
@@ -55,6 +78,9 @@ export class PrismaUserRepository implements IUserRepository {
         status: user.status,
         mustChangePin: user.mustChangePin,
         failedAttempts: user.failedAttempts,
+        email: user.email ?? null,
+        resetTokenHash: user.resetTokenHash ?? null,
+        resetTokenExpires: user.resetTokenExpires ?? null,
       },
       create: {
         id: user.id,
@@ -63,6 +89,9 @@ export class PrismaUserRepository implements IUserRepository {
         status: user.status,
         mustChangePin: user.mustChangePin,
         failedAttempts: user.failedAttempts,
+        email: user.email ?? null,
+        resetTokenHash: user.resetTokenHash ?? null,
+        resetTokenExpires: user.resetTokenExpires ?? null,
       },
     });
   }
@@ -76,10 +105,12 @@ export class PrismaUserRepository implements IUserRepository {
         status: user.status,
         mustChangePin: user.mustChangePin,
         failedAttempts: user.failedAttempts,
+        email: user.email ?? null,
+        resetTokenHash: user.resetTokenHash ?? null,
+        resetTokenExpires: user.resetTokenExpires ?? null,
       },
     });
   }
-
 
   public async delete(id: string): Promise<void> {
     await this.prisma.user.delete({

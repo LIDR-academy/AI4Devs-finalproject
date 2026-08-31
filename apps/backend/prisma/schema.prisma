@@ -63,18 +63,22 @@ model RolePermission {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  name           String
-  roleId         String?
-  role           Role?           @relation(fields: [roleId], references: [id], onDelete: SetNull)
-  pinHash        String
-  status         UserStatus      @default(ACTIVE)
-  mustChangePin  Boolean         @default(true)
-  failedAttempts Int             @default(0)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  stockMovements StockMovement[]
+  id                String          @id @default(uuid())
+  name              String
+  roleId            String?
+  role              Role?           @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  pinHash           String
+  status            UserStatus      @default(ACTIVE)
+  mustChangePin     Boolean         @default(true)
+  failedAttempts    Int             @default(0)
+  email             String?         @unique
+  resetTokenHash    String?
+  resetTokenExpires DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  stockMovements    StockMovement[]
 }
+
 
 model StorageLocation {
   id          String       @id @default(uuid())

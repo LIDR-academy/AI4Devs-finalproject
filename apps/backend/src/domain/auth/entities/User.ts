@@ -12,6 +12,9 @@ export interface UserProps {
   status: UserStatusType;
   mustChangePin?: boolean;
   failedAttempts: number;
+  email?: string;
+  resetTokenHash?: string;
+  resetTokenExpires?: Date;
   createdAt?: Date;
 }
 
@@ -51,6 +54,18 @@ export class User {
 
   public get failedAttempts(): number {
     return this.props.failedAttempts;
+  }
+
+  public get email(): string | undefined {
+    return this.props.email;
+  }
+
+  public get resetTokenHash(): string | undefined {
+    return this.props.resetTokenHash;
+  }
+
+  public get resetTokenExpires(): Date | undefined {
+    return this.props.resetTokenExpires;
   }
 
   public isBlocked(): boolean {
@@ -96,9 +111,28 @@ export class User {
     this.props.mustChangePin = false;
   }
 
-  public updateDetails(name?: string, role?: string, newPin?: Pin): void {
+  public setResetToken(tokenHash: string, expiresAt: Date): void {
+    this.props.resetTokenHash = tokenHash;
+    this.props.resetTokenExpires = expiresAt;
+  }
+
+  public clearResetToken(): void {
+    this.props.resetTokenHash = undefined;
+    this.props.resetTokenExpires = undefined;
+  }
+
+  public resetPin(newPin: Pin): void {
+    this.props.pin = newPin;
+    this.props.mustChangePin = false;
+    this.props.status = 'ACTIVE';
+    this.props.failedAttempts = 0;
+    this.clearResetToken();
+  }
+
+  public updateDetails(name?: string, role?: string, newPin?: Pin, email?: string): void {
     if (name) this.props.name = name;
     if (role) this.props.role = role;
+    if (email !== undefined) this.props.email = email;
     if (newPin) {
       this.props.pin = newPin;
       this.props.mustChangePin = false;

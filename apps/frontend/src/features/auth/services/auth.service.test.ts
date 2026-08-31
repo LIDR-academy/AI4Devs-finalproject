@@ -59,4 +59,37 @@ describe('AuthService.loginWithPin — sin bypass de autenticación', () => {
     await expect(AuthService.loginWithPin('maria-operario', '1234')).rejects.toThrow();
     expect(localStorage.getItem('restostock_user_info')).toBeNull();
   });
+
+  describe('requestForgotPin & resetAdminPin (TK-077-FE)', () => {
+    it('requestForgotPin envía solicitud POST al backend y retorna mensaje exitoso', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ message: 'Instrucciones enviadas.' }),
+      }));
+
+      const res = await AuthService.requestForgotPin('admin@restostock.com');
+      expect(res.message).toBe('Instrucciones enviadas.');
+    });
+
+    it('resetAdminPin envía token y nuevo PIN y confirma restablecimiento', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ message: 'PIN actualizado exitosamente.' }),
+      }));
+
+      const res = await AuthService.resetAdminPin('valid-token-12345678', '9876');
+      expect(res.message).toBe('PIN actualizado exitosamente.');
+    });
+
+    it('resetAdminPin propaga error RFC 7807 detail cuando el token es inválido o ha expirado', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ detail: 'El token de recuperación es inválido o ha expirado.' }),
+      }));
+
+      await expect(AuthService.resetAdminPin('invalid-token', '9876')).rejects.toThrow(
+        /inválido o ha expirado/
+      );
+    });
+  });
 });

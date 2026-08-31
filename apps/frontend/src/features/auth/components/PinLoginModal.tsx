@@ -150,28 +150,55 @@ function usePinLoginForm(onSuccess: (authData: LoginPinResponse) => void) {
   return { selectedUserId, setSelectedUserId, pin, error, isLoading, handleDigitPress, handleDeletePress, handleLoginSubmit };
 }
 
+import { ForgotPinModal } from './ForgotPinModal.js';
+
 export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initialNotice }) => {
   const form = usePinLoginForm(onSuccess);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   return (
-    <Modal maxWidth="420px" width="100%" textAlign="center">
-      <PinLoginHeader />
+    <>
+      <Modal maxWidth="420px" width="100%" textAlign="center">
+        <PinLoginHeader />
 
-      <UserSelector selectedUserId={form.selectedUserId} onChange={form.setSelectedUserId} disabled={form.isLoading} />
-      <PinDotsDisplay pinLength={form.pin.length} />
+        <UserSelector selectedUserId={form.selectedUserId} onChange={form.setSelectedUserId} disabled={form.isLoading} />
+        <PinDotsDisplay pinLength={form.pin.length} />
 
-      {(form.error || initialNotice) && (
-        <ErrorBanner message={form.error || initialNotice || ''} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
-      )}
+        {(form.error || initialNotice) && (
+          <ErrorBanner message={form.error || initialNotice || ''} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
+        )}
 
+        <PinPad onDigitPress={form.handleDigitPress} onDeletePress={form.handleDeletePress} disabled={form.isLoading} />
 
-      <PinPad onDigitPress={form.handleDigitPress} onDeletePress={form.handleDeletePress} disabled={form.isLoading} />
+        <PinSubmitButton
+          disabled={form.isLoading || form.pin.length < 4 || !form.selectedUserId.trim()}
+          isLoading={form.isLoading}
+          onClick={form.handleLoginSubmit}
+        />
 
-      <PinSubmitButton
-        disabled={form.isLoading || form.pin.length < 4 || !form.selectedUserId.trim()}
-        isLoading={form.isLoading}
-        onClick={form.handleLoginSubmit}
+        <div style={{ marginTop: '12px' }}>
+          <button
+            type="button"
+            onClick={() => setIsForgotModalOpen(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-primary)',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: '6px 10px',
+            }}
+          >
+            ¿Olvidó su PIN de Administrador?
+          </button>
+        </div>
+      </Modal>
+
+      <ForgotPinModal
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
       />
-    </Modal>
+    </>
   );
 };

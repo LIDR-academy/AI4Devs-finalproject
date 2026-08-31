@@ -13,6 +13,9 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite a un Administrador dar de alta operarios y bloquear/reactivar cuentas existentes vía API, sin depender de un redeploy de código. ✅ Backend (`TK-049`) y Frontend (`TK-049-FE`) implementados.
 *   **[US-015: Gestión de Permisos y Roles Dinámicos (Dynamic RBAC)](security/US-015.md)**
     *   *Descripción:* Permite al Administrador crear roles dinámicos, configurar su matriz de permisos y autoredirigir a la pantalla de cocina o bodega al iniciar sesión.
+*   **[US-018: Recuperación de Acceso y Reseteo de PIN del Administrador por Email](auth/US-018.md)**
+    *   *Descripción:* Permite al Administrador restablecer su PIN mediante un correo verificado y token temporal de 15 minutos en caso de olvido o bloqueo de cuenta.
+
 
 ### 📦 Bodega y Stock (`/stock/`)
 *   **[US-002: Registro de Extracciones de Bodega](stock/US-002.md)**

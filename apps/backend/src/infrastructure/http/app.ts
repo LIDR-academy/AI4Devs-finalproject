@@ -45,9 +45,11 @@ import { createLocationsController } from '../stock/http/controllers/locations.c
 import { ISystemSettingsRepository } from '../../domain/settings/repositories/ISystemSettingsRepository.js';
 import { InMemorySettingsRepository } from '../settings/repositories/InMemorySettingsRepository.js';
 import { createSettingsController } from '../settings/http/controllers/settings.controller.js';
+import { IEmailService } from '../../domain/auth/ports/IEmailService.js';
 
 export interface AppOptions {
   userRepository?: IUserRepository;
+  emailService?: IEmailService;
   stockRepository?: IInsumoRepository & IRemanenteRepository;
   stockMovementQueryRepository?: IStockMovementQueryRepository;
   remanenteQueryRepository?: IRemanenteQueryRepository;
@@ -64,6 +66,7 @@ export interface AppOptions {
   enableSwagger?: boolean;
   requireAuth?: boolean;
 }
+
 
 // CORS_ALLOWED_ORIGINS es "*" (dev/test) o una lista separada por comas de origenes exactos
 // (produccion — Guard 14 ya prohibe "*" ahi vía Fail-Fast en environment.ts). Antes de este
@@ -275,7 +278,7 @@ export function createApp(options: AppOptions = {}): Express {
   // limiter mas estricto, aplicado despues de este en la cadena de middlewares.
   app.use('/api/v1', createRateLimiter(resolveRateLimitOptions(options.rateLimit)));
 
-  app.use('/api/v1/auth', createAuthRouter(repos.userRepo, repos.jwtSecret));
+  app.use('/api/v1/auth', createAuthRouter(repos.userRepo, repos.jwtSecret, options.emailService));
   mountApiRoutes(app, repos, authMiddleware, isAuthRequired);
 
   // Middleware global de errores

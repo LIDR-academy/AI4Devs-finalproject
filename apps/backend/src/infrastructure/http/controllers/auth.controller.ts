@@ -6,6 +6,8 @@ import { SetUserStatusUseCase } from '../../../application/auth/use-cases/SetUse
 import { ListUsersUseCase } from '../../../application/auth/use-cases/ListUsersUseCase.js';
 import { UpdateUserUseCase } from '../../../application/auth/use-cases/UpdateUserUseCase.js';
 import { ChangePinUseCase } from '../../../application/auth/use-cases/ChangePinUseCase.js';
+import { RequestAdminPinResetUseCase } from '../../../application/auth/use-cases/RequestAdminPinResetUseCase.js';
+import { ResetAdminPinUseCase } from '../../../application/auth/use-cases/ResetAdminPinUseCase.js';
 import { respondValidationError } from '../utils/responseUtils.js';
 
 const authPinSchema = z.object({
@@ -19,16 +21,27 @@ const changePinSchema = z.object({
   newPin: z.string().regex(/^\d{4,6}$/, 'El nuevo PIN debe contener entre 4 y 6 digitos numericos.'),
 });
 
+const forgotPinSchema = z.object({
+  email: z.string().email('Debe ingresar un formato de correo electronico valido.'),
+});
+
+const resetPinSchema = z.object({
+  token: z.string().min(16, 'El token de recuperacion es invalido.'),
+  newPin: z.string().regex(/^\d{4,6}$/, 'El nuevo PIN debe contener entre 4 y 6 digitos numericos.'),
+});
+
 const createUserSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido.'),
   role: z.string().min(1, 'El rol es requerido.'),
   pin: z.string().regex(/^\d{4,6}$/, 'El PIN debe contener entre 4 y 6 digitos numericos.'),
+  email: z.string().email().optional(),
 });
 
 const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   role: z.string().min(1).optional(),
   pin: z.string().regex(/^\d{4,6}$/, 'El PIN debe contener entre 4 y 6 digitos numericos.').optional(),
+  email: z.string().email().optional(),
 });
 
 const setUserStatusSchema = z.object({
@@ -42,8 +55,49 @@ export class AuthController {
     private readonly setUserStatusUseCase?: SetUserStatusUseCase,
     private readonly listUsersUseCase?: ListUsersUseCase,
     private readonly updateUserUseCase?: UpdateUserUseCase,
-    private readonly changePinUseCase?: ChangePinUseCase
+    private readonly changePinUseCase?: ChangePinUseCase,
+    private readonly requestAdminPinResetUseCase?: RequestAdminPinResetUseCase,
+    private readonly resetAdminPinUseCase?: ResetAdminPinUseCase
   ) {}
+
+  public forgotPin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const parsedBody = forgotPinSchema.parse(req.body);
+      if (!this.requestAdminPinResetUseCase) {
+        throw new Error('RequestAdminPinResetUseCase no configurado.');
+      }
+      const clientOrigin = req.headers.origin as string | undefined;
+      const result = await this.requestAdminPinResetUseCase.execute({
+        email: parsedBody.email,
+        clientOrigin,
+      });
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
+
+  public resetPin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const parsedBody = resetPinSchema.parse(req.body);
+      if (!this.resetAdminPinUseCase) {
+        throw new Error('ResetAdminPinUseCase no configurado.');
+      }
+      const result = await this.resetAdminPinUseCase.execute(parsedBody);
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
+
 
   public changePin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

@@ -156,6 +156,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/auth/forgot-pin:
+    post:
+      summary: Request Administrator PIN reset via email token (TK-077)
+      operationId: requestForgotPin
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPinRequest'
+      responses:
+        '200':
+          description: Recovery request processed (generic response to prevent user enumeration)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPinResponse'
+        '400':
+          description: Malformed email input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/reset-pin:
+    post:
+      summary: Reset Administrator PIN using one-time signed email token (TK-077)
+      operationId: resetAdminPin
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPinRequest'
+      responses:
+        '200':
+          description: Administrator PIN successfully updated and account unblocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPinResponse'
+        '400':
+          description: Invalid PIN format (must be 4-6 digits)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired reset token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/stock/extraction:
     post:
       summary: Record stock extraction from main warehouse to kitchen
@@ -690,6 +754,44 @@ components:
             role:
               type: string
               enum: [KITCHEN_STAFF, ADMIN]
+
+    ForgotPinRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: "admin@restostock.com"
+
+    ForgotPinResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Si el correo coincide con un administrador registrado, se enviaron instrucciones de recuperación."
+
+    ResetPinRequest:
+      type: object
+      required:
+        - token
+        - newPin
+      properties:
+        token:
+          type: string
+          example: "a8f5c3b2e1d04f6789abcde..."
+        newPin:
+          type: string
+          pattern: '^\d{4,6}$'
+          example: "9876"
+
+    ResetPinResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "PIN de administrador actualizado exitosamente."
 
     CreateUserRequest:
       type: object

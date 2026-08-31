@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { PinLoginModal } from './features/auth/components/PinLoginModal.js';
 import { ForceChangePinModal } from './features/auth/components/ForceChangePinModal.js';
+import { ResetPinModal } from './features/auth/components/ResetPinModal.js';
 import { AuthService } from './features/auth/services/auth.service.js';
 
 import { KitchenService, RemanenteFEFOItem } from './features/kitchen/services/kitchen.service.js';
@@ -475,6 +476,29 @@ const App: React.FC = () => {
     };
   }, [handleLogout]);
 
+  const [urlResetToken, setUrlResetToken] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('resetToken');
+  });
+
+  if (urlResetToken) {
+    return (
+      <ResetPinModal
+        token={urlResetToken}
+        isOpen={true}
+        onSuccess={() => {
+          setUrlResetToken(null);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setSessionNotice('¡PIN restablecido con éxito! Ingrese con su nuevo PIN.');
+        }}
+        onCancel={() => {
+          setUrlResetToken(null);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }}
+      />
+    );
+  }
+
   if (!currentUser) {
     return (
       <PinLoginModal
@@ -482,7 +506,6 @@ const App: React.FC = () => {
           setSessionNotice(null);
           handleLoginSuccess();
         }}
-
         initialNotice={sessionNotice || undefined}
       />
     );

@@ -91,14 +91,16 @@ async function seedProductionAdmin(adminRoleId: string): Promise<void> {
   }
 
   const adminName = process.env.SEED_ADMIN_NAME ?? 'Administrador';
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@restostock.com';
   const admin = await prisma.user.upsert({
     where: { id: 'bootstrap-admin' },
-    update: { roleId: adminRoleId },
+    update: { roleId: adminRoleId, email: adminEmail },
     create: {
       id: 'bootstrap-admin',
       name: adminName,
       roleId: adminRoleId,
       pinHash: hashPin(adminPin),
+      email: adminEmail,
       status: 'ACTIVE',
     },
   });
@@ -107,6 +109,7 @@ async function seedProductionAdmin(adminRoleId: string): Promise<void> {
 
 async function seedDevelopmentUsers(roles: { adminRoleId: string; kitchenRoleId: string }): Promise<void> {
   const adminPin = process.env.SEED_ADMIN_PIN ?? '1234';
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@restostock.com';
   const kitchenPin = process.env.SEED_KITCHEN_PIN ?? '1234';
 
   const adminUser = await prisma.user.upsert({
@@ -114,6 +117,7 @@ async function seedDevelopmentUsers(roles: { adminRoleId: string; kitchenRoleId:
     update: {
       name: 'Maria Silva (Administrador)',
       roleId: roles.adminRoleId,
+      email: adminEmail,
       status: 'ACTIVE',
     },
     create: {
@@ -121,6 +125,7 @@ async function seedDevelopmentUsers(roles: { adminRoleId: string; kitchenRoleId:
       name: 'Maria Silva (Administrador)',
       roleId: roles.adminRoleId,
       pinHash: hashPin(adminPin),
+      email: adminEmail,
       status: 'ACTIVE',
     },
   });

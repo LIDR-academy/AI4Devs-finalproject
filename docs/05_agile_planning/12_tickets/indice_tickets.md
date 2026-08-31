@@ -55,6 +55,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-074-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-074`. Modal de administración de sectores y desplegables dinámicos en extracciones. | 🟢 P2 - Media |
 | **TK-075** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-001`. API de Configuración General del Restaurante (`SystemSettings`). | 🟢 P2 - Media |
 | **TK-075-FE** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-075`. Modal de Configuración General y branding dinámico en header. | 🟢 P2 - Media |
+| **TK-077** | `auth` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Recuperación de Acceso y Reseteo de PIN del Administrador por Email. | 🟡 P1 - Alta |
+| **TK-077-FE** | `auth` | **Alto** | **Alta** | 3 SP | Depende de `TK-077`. Modal Táctil y Pantalla de Recuperación de PIN de Administrador. | 🟡 P1 - Alta |
 
 ---
 
@@ -86,6 +88,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-073** | [US-015](../11_user_stories/security/US-015.md) | Backend Dynamic RBAC Models, Seed & Middleware | `security` | 5 | Should Have | [security/backend/TK-073.md](security/backend/TK-073.md) |
 | **TK-074** | [US-016](../11_user_stories/stock/US-016.md) | Backend Storage Locations API | `stock` | 3 | Should Have | [stock/backend/TK-074.md](stock/backend/TK-074.md) |
 | **TK-075** | [US-017](../11_user_stories/settings/US-017.md) | Backend System Settings API | `settings` | 3 | Should Have | [settings/backend/TK-075.md](settings/backend/TK-075.md) |
+| **TK-077** | [US-018](../11_user_stories/auth/US-018.md) | Backend Admin PIN Recovery via Email Token & Magic Link | `auth` | 5 | Should Have | [auth/backend/TK-077.md](auth/backend/TK-077.md) |
+
 
 ### 🖥️ Tickets de Frontend
 
@@ -111,6 +115,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-073-FE** | [US-015](../11_user_stories/security/US-015.md) | Frontend Dynamic RBAC UI & Autoredirection | `security` | 3 | Should Have | [security/frontend/TK-073-FE.md](security/frontend/TK-073-FE.md) |
 | **TK-074-FE** | [US-016](../11_user_stories/stock/US-016.md) | Frontend Storage Locations UI | `stock` | 3 | Should Have | [stock/frontend/TK-074-FE.md](stock/frontend/TK-074-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
+| **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |
 ---
 
 ## 🗂️ 3. Resumen de Fichas Técnicas de Tickets por Módulo
@@ -124,6 +129,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-007-B: Pantalla de Login por PIN](auth/frontend/TK-007-B.md)** (Frontend)
 *   **[TK-073: Backend Dynamic RBAC](security/backend/TK-073.md)** (Backend)
 *   **[TK-073-FE: Frontend Dynamic RBAC UI](security/frontend/TK-073-FE.md)** (Frontend)
+*   **[TK-077: Backend Admin PIN Recovery via Email Token & Magic Link](auth/backend/TK-077.md)** (Backend)
+
 
 ### 📦 Bodega y Stock (`stock/`)
 *   **[TK-003: Extracciones de Bodega](stock/backend/TK-003.md)** (Backend)

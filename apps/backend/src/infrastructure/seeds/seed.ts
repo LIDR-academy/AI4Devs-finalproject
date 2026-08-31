@@ -52,6 +52,7 @@ async function seedEssentialUsers(userRepo: IUserRepository): Promise<void> {
         name: 'Maria Silva (Administrador)',
         role: 'ADMIN',
         pin: Pin.createFromRaw(adminPin),
+        email: process.env.SEED_ADMIN_EMAIL ?? 'admin@restostock.com',
         status: 'ACTIVE',
         failedAttempts: 0,
       })
