@@ -1,5 +1,7 @@
 import express, { Express } from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
+
 import { errorHandler } from './middlewares/errorHandler.js';
 import { createAuthRouter } from './routes/auth.routes.js';
 import { createStockRouter } from '../stock/http/routes/stock.routes.js';
@@ -214,7 +216,9 @@ function mountApiRoutes(
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
 
+  app.use(helmet({ contentSecurityPolicy: false }));
   app.use(cors({ origin: resolveCorsOrigin(options.corsAllowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS) }));
+
   app.use(express.json());
   setupSwaggerDocs(app);
 

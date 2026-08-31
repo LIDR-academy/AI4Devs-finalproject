@@ -37,6 +37,8 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Precisión Aritmética** | decimal.js | **10.x** | Obligatorio para stock, cantidades y costos |
 | **Cifrado** | bcrypt | **5.x** | PIN/password hashing (cost 10) |
 | **Autenticación** | JWT (jsonwebtoken) | **9.x** | Access Token ≤15 min |
+| **Cabeceras de Seguridad** | Helmet | **7.x** | HSTS, X-Frame-Options, X-Content-Type-Options |
+
 
 ---
 
