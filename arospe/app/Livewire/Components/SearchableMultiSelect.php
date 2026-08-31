@@ -201,6 +201,23 @@ class SearchableMultiSelect extends Component
     }
 
     /**
+     * Phase 4 re-audit finding R-1 (Low): $selected is #[Modelable], not #[Locked] (D4), so it is
+     * writable on every /livewire/update round trip -- not only at mount(). Before this fix,
+     * coerceToStringIds() ran once, in mount(), so a post-mount tampered `->set('selected', [...])`
+     * payload carrying a non-string entry (a nested array, an int, null) reached the Blade view's
+     * `{{ $id }}` echo (resources/views/livewire/components/searchable-multi-select.blade.php)
+     * still un-coerced, throwing `TypeError: htmlspecialchars(): Argument #1 ($string) must be of
+     * type string, array given` -- a 500 on the HOST page, not a scoped failure, reproduced by a
+     * direct Livewire::test()->set('selected', [...]) call. Livewire's own updated<Property>()
+     * lifecycle hook is what re-runs the same coercion on every subsequent write, guaranteeing
+     * array<int, string> after every request rather than only the first.
+     */
+    public function updatedSelected(): void
+    {
+        $this->selected = $this->coerceToStringIds($this->selected);
+    }
+
+    /**
      * Resolves $optionResolver into a real instance, typed. `app($this->optionResolver)` alone
      * returns `mixed` to static analysis -- the class-string is read from a property, not a
      * literal, so Larastan's Laravel-specific `app()` narrowing cannot apply -- and every caller
@@ -457,6 +474,21 @@ class SearchableMultiSelect extends Component
     }
 
     /**
+     * Phase 4 re-audit finding R-2 (Low): a defence-in-depth CEILING on how many ids
+     * resolveIdsAllowingPartialFailure() will ever hand to the resolver in one request — never a
+     * product-facing selection limit. D5's own note is explicit that this component ships with no
+     * `maxSelections` prop ("a shipping zone may bundle arbitrarily many geography entries"), so
+     * this constant must never reject or silently drop a legitimate large selection; it exists
+     * purely to bound a *tampered* `$selected` payload's cost against a future database-backed
+     * resolver (0026/0027/0034), where an unbounded `whereIn(...)` is sized entirely by client
+     * input. 500 sits far above any plausible real administrator selection (500+ geography
+     * entries is already well beyond a real shipping zone) and matches the magnitude of the
+     * existing defence-in-depth clamp on $fetchLimit in updatedSearch() (Phase 4 finding F-3),
+     * for consistency rather than by coincidence.
+     */
+    private const MAX_RESOLVABLE_SELECTED = 500;
+
+    /**
      * The single place that decides "is this id set fully resolved" (Phase 4 finding F-2) —
      * shared by assertSelectionResolvable() (D12's save-time gate) and refreshSelectedOptions()
      * (D2's chip-label refresh), so the two can never drift about what counts as resolved.
@@ -474,20 +506,40 @@ class SearchableMultiSelect extends Component
      * is what makes assertSelectionResolvable() catch a misbehaving resolver too, not only
      * refreshSelectedOptions()'s display path.
      *
+     * Phase 4 re-audit finding R-2 (Low): $ids is drawn from $this->selected, client-writable on
+     * every request (D4/D6 leave it unlocked so the #[Modelable] binding works). Before this fix,
+     * a tampered several-thousand-id $selected reached resolveSelected() in full — and, because
+     * this method's own retry branch above re-calls resolveSelected() whenever even one id is
+     * unresolvable, a single call here could hand the resolver nearly the same huge id set
+     * *twice* in one request (verified by execution: two calls, each carrying almost the full
+     * tampered count). Slicing to self::MAX_RESOLVABLE_SELECTED here — before either the primary
+     * or the retry call runs — fixes both problems with one change: neither call can ever exceed
+     * the ceiling, so the pre-existing retry logic is left completely intact rather than
+     * duplicated with a second cap. Every id beyond the ceiling is folded into the returned
+     * missingIds via the *same* D12 mechanism a genuinely-unresolvable id uses — never a second
+     * "too many" concept — so it renders exactly like any other unresolvable chip and is never
+     * silently dropped from the selection, and it is never handed to the resolver at all. This
+     * component has no `Gate::authorize()` call of its own (D7 — authorization belongs to the
+     * resolver), so App\Actions\Auth\LogRefusedPrivilegedAttempt does not apply here: it is
+     * shaped around a Gate ability plus a User/Role target, and this ceiling is neither.
+     *
      * @param  array<int, string>  $ids
      * @return array{resolved: array<int, array{id: string, label: string, group: string|null, disabled: bool}>, missingIds: array<int, string>}
      */
     private function resolveIdsAllowingPartialFailure(array $ids): array
     {
+        $boundedIds = array_slice($ids, 0, self::MAX_RESOLVABLE_SELECTED);
+        $overflowIds = array_slice($ids, self::MAX_RESOLVABLE_SELECTED);
+
         $resolved = [];
         $missingIds = [];
 
         try {
-            $resolved = $this->resolver()->resolveSelected($ids);
+            $resolved = $this->resolver()->resolveSelected($boundedIds);
         } catch (UnresolvedSelectionException $exception) {
             $missingIds = $exception->missingIds;
 
-            $resolvableIds = array_values(array_diff($ids, $missingIds));
+            $resolvableIds = array_values(array_diff($boundedIds, $missingIds));
 
             if ($resolvableIds !== []) {
                 try {
@@ -501,7 +553,8 @@ class SearchableMultiSelect extends Component
         $returnedIds = collect($resolved)->pluck('id')->all();
         $missingIds = array_values(array_unique(array_merge(
             $missingIds,
-            array_diff($ids, $returnedIds, $missingIds),
+            array_diff($boundedIds, $returnedIds, $missingIds),
+            $overflowIds,
         )));
 
         return ['resolved' => $resolved, 'missingIds' => $missingIds];

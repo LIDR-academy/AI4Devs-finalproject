@@ -628,6 +628,65 @@ test('setting maxChipAreaHeight renders max-height plus the overflow class on th
         ->assertSee('aria-label=', false);
 });
 
+// =====================================================================
+// Phase 4 re-audit findings R-1/R-2 (Low) -- post-mount $selected tampering
+// =====================================================================
+
+test('a post-mount tampered $selected containing a non-string entry is coerced rather than throwing during render (R-1)', function () {
+    $resolver = multiSelectResolver();
+
+    $component = Livewire::test(SearchableMultiSelect::class, [
+        'optionResolver' => $resolver,
+    ]);
+
+    // No expect()->not->toThrow() wrapper -- Pest 4's toThrow() requires at least one argument
+    // even negated (see the sibling comments elsewhere in this file). Before the fix,
+    // coerceToStringIds() ran only in mount(), so this ->set() call itself threw
+    // `TypeError: htmlspecialchars(): Argument #1 ($string) must be of type string, array given`
+    // from the Blade view's `{{ $id }}` chip echo -- reproduced live by appsec-auditor via a
+    // direct Livewire::test()->set('selected', [...]) call -- and would fail this test with an
+    // error. Completing without throwing IS "no longer 500s the host page".
+    $component->set('selected', ['madrid', ['nested' => 'array'], 123, null]);
+
+    // Non-scalar entries (the nested array, null) are dropped; scalar-but-non-string entries
+    // (123) are stringified -- coerceToStringIds()'s existing rule, now proven to apply on every
+    // write, not only the first.
+    expect($component->get('selected'))->toBe(['madrid', '123']);
+});
+
+test('a $selected array far beyond the resolvable ceiling never reaches resolveSelected() with its full unbounded count (R-2)', function () {
+    $matchingRows = multiSelectManyMatchingRows(700, 'match');
+    $resolver = multiSelectResolver($matchingRows);
+    $double = app(ArrayMultiSelectOptionsResolver::class);
+
+    $tamperedSelected = array_merge(['ghost-id'], collect($matchingRows)->pluck('id')->all());
+    expect($tamperedSelected)->toHaveCount(701);
+
+    $component = Livewire::test(SearchableMultiSelect::class, [
+        'optionResolver' => $resolver,
+        'selected' => $tamperedSelected,
+    ]);
+
+    // mount()'s chip refresh calls resolveIdsAllowingPartialFailure($this->selected), which
+    // (because 'ghost-id' is unresolvable) retries once for the remaining good ids -- two calls
+    // to resolveSelected() in this one request, proven from the double's own call log. Neither
+    // call ever carries the full 701-id tampered array; each is capped at the private ceiling.
+    expect($double->resolveSelectedCalls)->not->toBeEmpty();
+
+    foreach ($double->resolveSelectedCalls as $call) {
+        expect(count($call))->toBeLessThanOrEqual(500);
+    }
+
+    // Every id past the ceiling is still accounted for -- folded into $unresolvableSelected via
+    // the same D12 mechanism a genuinely-bad id uses, never silently dropped from the selection
+    // -- so resolved + unresolvable sums back to the full tampered count.
+    $accountedFor = collect($component->get('selectedOptions'))->count()
+        + count($component->get('unresolvableSelected'));
+
+    expect($accountedFor)->toBe(701)
+        ->and($component->get('unresolvableSelected'))->toContain('ghost-id');
+});
+
 test('mount() throws InvalidArgumentException for a maxChipAreaHeight outside the CSS-length allow-list', function (string $invalidValue) {
     $resolver = multiSelectResolver();
 
