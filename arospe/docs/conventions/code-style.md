@@ -274,6 +274,23 @@ Livewire invokes lifecycle hooks through `wrap($component)->__call($name, $param
 
 **So the rule is not "a `#[Computed]` method may use `app()`" — it is: a method whose parameter list is fixed by something other than this class may use `app()`, and nothing else may.** Two instances now, a `#[Computed]` property and a lifecycle hook, and both answer the same question the same way: *is there any signature the author controls that the container would honour?* If yes, use it.
 
+Story 0022 reuses `updatedSearch()`'s already-established lifecycle-hook shape (`App\Livewire\Components\SearchableMultiSelect` resolves `NormalizeForSearch` with `app()` there for the identical reason `Gallery::updatedPendingUploads()` does), and adds a **third** shape to the rule rather than a fourth instance of an existing one. `hasSearchedEnough()` is a plain public method — not `#[Computed]`, not a lifecycle hook — called directly from the Blade view with `$this->hasSearchedEnough()`:
+
+```php
+// app/Livewire/Components/SearchableMultiSelect.php
+public function hasSearchedEnough(): bool
+{
+    return mb_strlen(app(NormalizeForSearch::class)->__invoke($this->search)) >= $this->minSearchLength;
+}
+```
+
+```blade
+{{-- resources/views/livewire/components/searchable-multi-select.blade.php --}}
+@if ($this->hasSearchedEnough())
+```
+
+The Blade template's own call site is what fixes the parameter list here — a view invokes `$this->method()` with exactly the arguments it writes, and this one writes none — so the rule's test ("is there any signature the author controls that the container would honour?") answers `no` here for the same underlying reason it answers `no` for a `#[Computed]` property or a lifecycle hook: **the caller is not this class, and the caller cannot be made to pass a dependency.** The rule's own wording — "a method whose parameter list is fixed by something other than this class" — already covered this shape without needing a rewrite; it had simply never had an example that was neither `#[Computed]` nor a lifecycle hook until now.
+
 ✅ Good — how a direct-call test reaches an action, per the 0008a rule that these are independently callable:
 
 ```php
@@ -288,7 +305,9 @@ app(RequestEmailChange::class)($user, 'new-address@example.com');
 (new RequestEmailChange)($user, 'new-address@example.com');
 ```
 
-_Last updated: 2026-08-29 — Story 0020 (Shared media gallery modal — frontend), Phase 6: extended the
+_Last updated: 2026-08-31 — Story 0022 (Shared searchable, server-side-filtered multi-select component). Extended the `app()` carve-out's list of confirmed instances with a **third shape**, not a rewritten rule: `App\Livewire\Components\SearchableMultiSelect::hasSearchedEnough()`, a plain public method (neither `#[Computed]` nor a Livewire lifecycle hook) invoked directly from its Blade view as `$this->hasSearchedEnough()` with a fixed, zero-argument call site — the rule's existing wording already covered it, since the Blade template rather than this class is what fixes the parameter list. `updatedSearch()` in the same component reuses the already-established lifecycle-hook shape (`app(NormalizeForSearch::class)`, matching `Gallery::updatedPendingUploads()`) rather than adding a fourth. **Verified as unchanged rather than assumed:** every other section on this page (explicit types, braces, validation traits, PHPDoc array shapes, per-method action injection) — this story adds no new action, no new validation trait, and its one `array<int, array{...}>` PHPDoc shape on `MultiSelectOptionsResolver::search()`/`resolveSelected()` is the existing array-shape convention applied, not extended._
+
+_Previously: 2026-08-29 — Story 0020 (Shared media gallery modal — frontend), Phase 6: extended the
 `app()` carve-out with its **second** shape and, more usefully, restated the rule behind it. It had read
 as "a `#[Computed]` method may use `app()`", which is a description of the one instance that existed;
 story 0020's `Gallery::updatedPendingUploads()` is a Livewire lifecycle hook — invoked through

@@ -263,6 +263,24 @@ when `$disabled` is true, server-side — hiding the input is not a control, per
 
 ### D9 — Debounce, truncation, and why a result limit is mandatory
 
+> **Phase 6 correction (2026-08-31, `docs-keeper`): the paragraph below describes a mechanism that was
+> never shippable and was corrected before Phase 3 wrote real code around it.** `wire:model.live.debounce.{$debounceMs}ms="search"`
+> cannot compile: Blade's `ComponentTagCompiler` parses a component tag's attribute **names** with a
+> regex that excludes `{`/`}`/`$`, so an interpolated duration inside the modifier chain is not a shape
+> the compiler can parse at all — a different and previously-undocumented failure from every
+> `livewire/blaze` attribute-*value* trap this project's errors log already records. **What actually
+> shipped**, in `resources/views/livewire/components/searchable-multi-select.blade.php`, is a plain
+> (non-`.live`) `wire:model="search"` plus a hand-rolled Alpine `x-on:input="clearTimeout(...);
+> searchDebounceTimeout = setTimeout(() => $wire.set('search', $event.target.value),
+> {{ $debounceMs }})"` — the same mechanism `wysiwyg-editor.blade.php` already established for its own
+> debounce, still driving the identical `updatedSearch()` `updated<Property>()` lifecycle hook once the
+> timeout fires. See
+> [errors-log.md](../../../docs/errors-log.md#a-livewire-directive-modifiers-duration-cannot-be-interpolated-as-part-of-a-component-tags-attribute-name--2026-08-31)
+> for the full mechanism and
+> [conventions/base-standards.md](../../../docs/conventions/base-standards.md#flux-frees-ui-dropdown-requires-a-real-button-trigger-descendant--confirmed-twice-not-a-one-off)
+> for D10's own parallel correction, below. The paragraph immediately below is left standing as the
+> record of what Phase 1 specified, not as a description of the shipped view.
+
 `wire:model.live.debounce.{$debounceMs}ms="search"` drives an `updatedSearch()` hook — plain Livewire,
 no hand-rolled Alpine debounce (nothing in `app/Livewire/**` hand-rolls one today).
 
@@ -311,6 +329,14 @@ Open/close, outside-click dismissal and menu focus come from `flux:dropdown` (`u
 a live pattern in `resources/views/components/desktop-user-menu.blade.php` and
 `resources/views/layouts/app/sidebar.blade.php`, so no bespoke Alpine is needed for them.
 
+> **Phase 6 correction (2026-08-31): this paragraph did not survive Phase 3 either — see D10 below,
+> which was forced to abandon `flux:dropdown` for the identical reason `wysiwyg-editor.blade.php`
+> already had.** `ui-dropdown` requires a real `<button>` descendant to resolve its trigger
+> (`this.querySelector("button")`), and `flux:input` renders none, so this mechanism throws on every
+> page load rather than merely failing to style correctly. The shipped mechanism is a hand-rolled
+> `x-show`/`x-cloak`/`x-on:click.outside`/`x-on:keydown.escape.window` popover instead — bespoke Alpine
+> genuinely was needed. Left standing below as the record of what Phase 1 specified.
+
 ### D10 — Flux **Free** has no combobox; this is hand-assembled
 
 Verified: `vendor/livewire/flux/stubs/resources/views/flux/select/variants/` contains only
@@ -318,6 +344,26 @@ Verified: `vendor/livewire/flux/stubs/resources/views/flux/select/variants/` con
 `flux:command` exists anywhere in `vendor/livewire/flux/`. The component is assembled from
 `flux:input` + `flux:dropdown` + `flux:menu.group` / `.heading` / `.item` + `flux:badge` /
 `flux:badge.close`. `flux:menu.group` and `flux:menu.heading` are exactly what 0034's grouping needs.
+
+> **Phase 6 correction (2026-08-31): the `flux:dropdown` half of this decision did not survive Phase 3
+> and is now false as a description of what shipped.** Verified live, not reasoned about:
+> `flux:dropdown` (`ui-dropdown`) resolves its trigger with `this.querySelector("button")`
+> (`vendor/livewire/flux/dist/flux.min.js`), a hard requirement `ui-menu`'s own `boot()` depends on to
+> attach its keydown listener. `flux:input` — this component's trigger — renders only an `<input>`, no
+> `<button>` descendant, so `querySelector("button")` returns `null` and the listener attachment throws
+> `Cannot read properties of null (reading 'addEventListener')` on **every page load**, confirmed via
+> `assertNoJavaScriptErrors()`. This is the identical failure `wysiwyg-editor.blade.php`'s own D8 link
+> popover already hit and worked around, and this component is that pattern's **second** use, not a
+> new one: `flux:menu` / `.group` / `.heading` / `.item` are kept for their styling (plain
+> presentational components, no `ui-menu` custom element among them), and only the outer
+> `<flux:dropdown>`/`ui-dropdown` wrapper is replaced with a hand-assembled
+> `x-show`/`x-cloak`/`x-on:click.outside`/`x-on:keydown.escape.window` popover. See
+> [conventions/base-standards.md](../../../docs/conventions/base-standards.md#flux-frees-ui-dropdown-requires-a-real-button-trigger-descendant--confirmed-twice-not-a-one-off)
+> for the now-generalised rule and
+> [the searchable-multi-select view's own file-banner comment](../../../resources/views/livewire/components/searchable-multi-select.blade.php)
+> for the exact reproduction. Everything else in this decision — the "no combobox in Flux Free" finding,
+> `flux:input` as the trigger, `flux:menu.group`/`.heading`/`.item`/`flux:badge`/`flux:badge.close` as
+> the presentational building blocks — shipped exactly as written.
 
 ### D11 — An already-selected option is **excluded** from the results **(confirmed)**
 
@@ -1071,6 +1117,23 @@ should be sequenced before both per [workflow.md](../../../docs/workflow.md)'s t
   2026-08-18:** D14's bounded chip area joins that in-scope list (`role="group"` + `aria-label` on the
   scrollable container, so it is reachable and named), and D12's field-level error must be announced
   through the same `aria-live` region rather than only rendered.
+
+  > **Phase 6 honesty note (2026-08-31): two of the four in-scope items above shipped, two did not,**
+  > and D10's forced deviation is the reason for both misses. "Keyboard operability via Flux's own
+  > menu primitive" assumed the results dropdown would render inside a real `<ui-menu>` (per the
+  > original D9/D10 text) — D10's manual popover keeps `flux:menu.item` as a plain presentational
+  > component with no `ui-menu` custom element wrapping it at all, per its own Phase 6 correction, so
+  > the roving-tabindex/arrow-key navigation a real `ui-menu` would have supplied for free was never
+  > delivered; the only keyboard operability that shipped is `x-on:keydown.escape.window` (close on
+  > Escape) and native tab order through the input and any focusable chip controls. The
+  > `aria-live="polite"` result-count/empty-state/D12-error announcement region was never added at
+  > all — `resources/views/livewire/components/searchable-multi-select.blade.php` renders no
+  > `aria-live` region anywhere. **What did ship**, verified against the real view: real `flux:label`
+  > association on the search input, `aria-label` on every chip's `flux:badge.close` remove control
+  > (both the resolved and the D12 unavailable-chip variant), and D14's `role="group"` + `aria-label`
+  > on the bounded chip container. Recorded as a real gap rather than closed silently — if arrow-key
+  > navigation or a live-region announcement becomes a concrete requirement, it is new work against
+  > this component, not a bug in what shipped against an item this decision had already scoped out.
 - **OQ-8 — `app/Support/` as a future home for `NormalizeForSearch`.** Recommend **leaving it at
   `App\Actions\NormalizeForSearch` for now (recommended)**, per D13's reasoning: it needs no approval,
   it is exactly what base-standards prescribes for an action belonging to no domain, and it keeps this
@@ -1124,3 +1187,23 @@ sibling top-level key. Three non-blocking notes were applied in the same pass: t
 trap from the 2026-08-31 errors-log entry, a reconciliation of the light/dark acceptance criterion with
 the deliberate no-visual-regression decision, and OQ-3 moved to Resolved now that story 0021 has
 already established `app/Livewire/Components/`. No decision (D1–D14) changed meaning.
+
+**Amended 2026-08-31 by `docs-keeper` — Phase 6 documentation sync, after Phase 3–5 shipped real code
+against this spec.** Two decisions this file states as *what Phase 1 specified* turned out not to
+survive Phase 3 intact, and both are corrected in place with the original text left standing as the
+historical record: **D9**'s `wire:model.live.debounce.{$debounceMs}ms` mechanism could never compile
+(Blade's `ComponentTagCompiler` cannot interpolate a value into a component tag's attribute *name*),
+so the shipped debounce is the same hand-rolled Alpine `setTimeout()` + `$wire.set()` mechanism
+`wysiwyg-editor.blade.php` already established; and **D10**'s `flux:dropdown` mechanism throws on
+every page load against a `flux:input` trigger (`ui-dropdown`'s `querySelector("button")` requirement
+is unmet), so the shipped popover is the identical `x-show`/`x-cloak`/`click.outside` shape D10's own
+sibling decision already used once before, in `wysiwyg-editor.blade.php`'s link popover. Both are now
+durable rules in [conventions/base-standards.md](../../../docs/conventions/base-standards.md#directory-structure)
+and (for the debounce case) [errors-log.md](../../../docs/errors-log.md). **OQ-7's ARIA scope is also
+corrected from an intent statement to a shipped-state record**: real `flux:label` association and
+per-chip `aria-label`s (including D14's chip-area `role="group"`) shipped as specified, but keyboard
+arrow-key/roving-tabindex navigation and the `aria-live="polite"` announcement region did not — both
+casualties of D10's forced popover deviation, which left `flux:menu.item` a plain presentational
+component with no real `ui-menu` behind it. No test, no acceptance criterion and no `D1`–`D14` decision
+itself changed meaning in this pass — only the prose describing two mechanisms and one scope item was
+brought into agreement with the code that actually shipped.
