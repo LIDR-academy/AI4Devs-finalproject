@@ -44,6 +44,8 @@ function resolveToken(): string | null {
  * Cliente HTTP compartido — maneja autenticación, deserialización, captura de errores
  * RFC 7807 y resiliencia de red (reintentos exponenciales y cancelación con AbortSignal).
  */
+import { mapToUserFriendlyError } from '../utils/errorMessageMapper.js';
+
 async function parseErrorResponse(response: Response): Promise<never> {
   let errorBody: unknown;
   try {
@@ -52,17 +54,21 @@ async function parseErrorResponse(response: Response): Promise<never> {
     errorBody = undefined;
   }
   const parsed = errorBody as { detail?: string; message?: string; error?: string; title?: string } | undefined;
-  const message = parsed?.detail || parsed?.message || parsed?.error || parsed?.title || `Error HTTP ${response.status}`;
+  const rawMessage = parsed?.detail || parsed?.message || parsed?.error || parsed?.title || `Error HTTP ${response.status}`;
+
+  const tempApiError = new ApiError(response.status, rawMessage, errorBody);
+  const friendly = mapToUserFriendlyError(tempApiError);
 
   if (response.status === 401) {
     AuthService.logout();
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('restostock:unauthorized', { detail: { message } }));
+      window.dispatchEvent(new CustomEvent('restostock:unauthorized', { detail: { message: friendly.message } }));
     }
   }
 
-  throw new ApiError(response.status, message, errorBody);
+  throw new ApiError(response.status, friendly.message, errorBody);
 }
+
 
 
 function isTransientError(error: unknown): boolean {

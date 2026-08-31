@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { LocationsService, StorageLocationDto } from '../services/locations.service.js';
 import { MapPin, Plus, Trash2, Power } from 'lucide-react';
+import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
 
 interface LocationsManagementModalProps {
   isOpen: boolean;
@@ -11,11 +14,12 @@ interface LocationsManagementModalProps {
 
 interface NewLocationFormProps {
   onCreated: () => void;
+  setError: (msg: string | null) => void;
 }
 
-const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated }) => {
+const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }) => {
   const [name, setName] = useState('');
-  const [type, setType] = useState<'WAREHOUSE' | 'KITCHEN'>('WAREHOUSE');
+  const [type, setType] = useState<'WAREHOUSE' | 'KITCHEN'>('KITCHEN');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,13 +28,15 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated }) => {
     if (!name.trim()) return;
 
     setIsSubmitting(true);
+    setError(null);
     try {
       await LocationsService.createLocation({ name, type, description });
       setName('');
       setDescription('');
       onCreated();
-    } catch {
-      alert('Error al crear el sector de almacenamiento');
+    } catch (err) {
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -185,12 +191,18 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
 
 export const LocationsManagementModal: React.FC<LocationsManagementModalProps> = ({ isOpen, onClose }) => {
   const [locations, setLocations] = useState<StorageLocationDto[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadLocations = React.useCallback(() => {
-    LocationsService.fetchLocations()
-      .then((res) => setLocations(res))
-      .catch(() => {});
+  const loadLocations = useCallback(async () => {
+    try {
+      const data = await LocationsService.fetchLocations();
+      setLocations(data);
+    } catch (err) {
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
+    }
   }, []);
+
 
   useEffect(() => {
     if (isOpen) {
@@ -201,21 +213,25 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
   if (!isOpen) return null;
 
   const handleToggleActive = async (loc: StorageLocationDto) => {
+    setError(null);
     try {
       await LocationsService.updateLocation(loc.id, { isActive: !loc.isActive });
       loadLocations();
-    } catch {
-      alert('Error al cambiar estado del sector');
+    } catch (err) {
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
     }
   };
 
   const handleDeleteLocation = async (id: string, name: string) => {
     if (!window.confirm(`¿Confirmas eliminar el sector "${name}"?`)) return;
+    setError(null);
     try {
       await LocationsService.deleteLocation(id);
       loadLocations();
-    } catch {
-      alert('Error al eliminar el sector');
+    } catch (err) {
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
     }
   };
 
@@ -227,7 +243,8 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
         onClose={onClose}
       />
       <div className="flex-column flex-gap-md" style={{ marginTop: '16px' }}>
-        <NewLocationForm onCreated={loadLocations} />
+        {error && <ErrorBanner message={error} />}
+        <NewLocationForm onCreated={loadLocations} setError={setError} />
 
         <LocationsList locations={locations} onToggleActive={handleToggleActive} onDeleteLocation={handleDeleteLocation} />
 

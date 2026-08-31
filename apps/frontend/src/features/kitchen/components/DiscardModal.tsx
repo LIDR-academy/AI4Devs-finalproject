@@ -38,15 +38,20 @@ const DiscardReasonSelect: React.FC<DiscardReasonSelectProps> = ({ value, onChan
   </div>
 );
 
+import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+
 export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, onSuccess }) => {
   const [reason, setReason] = useState('EXPIRATION');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!remanente) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
       await KitchenService.discardRemanente(remanente.id, reason);
@@ -54,11 +59,13 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, 
       onClose();
     } catch (err) {
       console.error('[DiscardModal] Error registrando el descarte:', err);
-      alert('Error registrando el descarte');
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <Modal maxWidth="450px" width="90%">
@@ -74,7 +81,9 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, 
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {error && <ErrorBanner message={error} />}
         <DiscardReasonSelect value={reason} onChange={setReason} />
+
 
         <ModalFooterActions
           onCancel={onClose}

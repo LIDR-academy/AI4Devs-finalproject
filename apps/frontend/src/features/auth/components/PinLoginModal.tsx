@@ -7,7 +7,9 @@ import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 
 interface PinLoginModalProps {
   onSuccess: (authData: LoginPinResponse) => void;
+  initialNotice?: string;
 }
+
 
 interface UserSelectorProps {
   selectedUserId: string;
@@ -148,7 +150,7 @@ function usePinLoginForm(onSuccess: (authData: LoginPinResponse) => void) {
   return { selectedUserId, setSelectedUserId, pin, error, isLoading, handleDigitPress, handleDeletePress, handleLoginSubmit };
 }
 
-export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
+export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initialNotice }) => {
   const form = usePinLoginForm(onSuccess);
 
   return (
@@ -158,9 +160,10 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess }) => {
       <UserSelector selectedUserId={form.selectedUserId} onChange={form.setSelectedUserId} disabled={form.isLoading} />
       <PinDotsDisplay pinLength={form.pin.length} />
 
-      {form.error && (
-        <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
+      {(form.error || initialNotice) && (
+        <ErrorBanner message={form.error || initialNotice || ''} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
       )}
+
 
       <PinPad onDigitPress={form.handleDigitPress} onDeletePress={form.handleDeletePress} disabled={form.isLoading} />
 

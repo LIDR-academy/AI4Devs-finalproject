@@ -450,12 +450,13 @@ const App: React.FC = () => {
   const { currentUser, remanentes, isLoading, loadRemanentes, handleLoginSuccess, handleLogout, handleConsume } = dashboard;
   const handlers = useAppHandlers(dashboard);
   const [activeLocation, setActiveLocation] = useState<LocationFilter>('ALL');
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
 
   useIdleTimeout({
     timeoutMinutes: 15,
     isLoggedIn: !!currentUser && !currentUser.mustChangePin,
     onIdle: useCallback(() => {
-      alert('Sesión cerrada por inactividad táctil (15 minutos sin interacción).');
+      setSessionNotice('Sesión cerrada por inactividad táctil (15 minutos sin interacción).');
       handleLogout();
     }, [handleLogout]),
   });
@@ -463,8 +464,8 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleUnauthorized = (e: Event) => {
       const customEvt = e as CustomEvent<{ message?: string }>;
-      const detailMsg = customEvt.detail?.message || 'Tu sesión ha expirado o el token de autenticación no es válido.';
-      alert(`[Sesión Expirada] ${detailMsg}\nPor favor, ingresa tu PIN de acceso nuevamente.`);
+      const detailMsg = customEvt.detail?.message || 'Tu sesión ha expirado por seguridad. Por favor, ingresa tu PIN nuevamente.';
+      setSessionNotice(detailMsg);
       handleLogout();
     };
 
@@ -475,10 +476,18 @@ const App: React.FC = () => {
   }, [handleLogout]);
 
   if (!currentUser) {
+    return (
+      <PinLoginModal
+        onSuccess={() => {
+          setSessionNotice(null);
+          handleLoginSuccess();
+        }}
 
-
-    return <PinLoginModal onSuccess={handleLoginSuccess} />;
+        initialNotice={sessionNotice || undefined}
+      />
+    );
   }
+
 
   if (currentUser.mustChangePin) {
     return (

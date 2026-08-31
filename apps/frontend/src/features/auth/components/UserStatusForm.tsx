@@ -3,6 +3,8 @@ import { Ban, CheckCircle2, RefreshCw, Edit2, Save, X } from 'lucide-react';
 import { UsersService, UserListItem } from '../services/users.service.js';
 import { RolesService, RoleDto } from '../../security/services/roles.service.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+
 
 interface UserStatusFormProps {
   onUpdated: (message: string) => void;
@@ -47,21 +49,23 @@ interface UserRowProps {
   onSaveEdit: (userId: string, data: { name?: string; role?: string; pin?: string }) => Promise<void>;
 }
 
-interface EditingUserFormProps {
+interface EditUserInlineFormProps {
   user: UserListItem;
   roles: RoleDto[];
-  onCancel: () => void;
   onSaveEdit: (userId: string, data: { name?: string; role?: string; pin?: string }) => Promise<void>;
+  onCancel: () => void;
 }
 
-const EditingUserForm: React.FC<EditingUserFormProps> = ({ user, roles, onCancel, onSaveEdit }) => {
+const EditUserInlineForm: React.FC<EditUserInlineFormProps> = ({ user, roles, onSaveEdit, onCancel }) => {
   const [editName, setEditName] = useState(user.name);
   const [editRole, setEditRole] = useState(user.role);
   const [editPin, setEditPin] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleSave = async () => {
     setIsSaving(true);
+    setFormError(null);
     try {
       await onSaveEdit(user.id, {
         name: editName,
@@ -70,15 +74,18 @@ const EditingUserForm: React.FC<EditingUserFormProps> = ({ user, roles, onCancel
       });
       onCancel();
       setEditPin('');
-    } catch {
-      alert('Error al actualizar el usuario');
+    } catch (err) {
+      const friendly = mapToUserFriendlyError(err);
+      setFormError(friendly.message);
     } finally {
       setIsSaving(false);
     }
   };
 
+
   return (
     <div className="flex-column flex-gap-sm">
+      {formError && <ErrorBanner message={formError} />}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         <div>
           <label htmlFor={`edit-name-${user.id}`} className="form-label" style={{ fontSize: '0.75rem' }}>
@@ -205,8 +212,9 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
           </div>
         </div>
       ) : (
-        <EditingUserForm user={user} roles={roles} onCancel={() => setIsEditing(false)} onSaveEdit={onSaveEdit} />
+        <EditUserInlineForm user={user} roles={roles} onCancel={() => setIsEditing(false)} onSaveEdit={onSaveEdit} />
       )}
+
     </div>
   );
 };

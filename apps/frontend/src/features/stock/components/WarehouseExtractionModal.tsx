@@ -5,6 +5,9 @@ import { KitchenService, RecipeItem } from '../../kitchen/services/kitchen.servi
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
+import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+
 
 interface WarehouseExtractionModalProps {
   isOpen: boolean;
@@ -339,6 +342,8 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
   const [recipes, setRecipes] = useState<{ id: string; name: string }[]>([]);
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
 
   const activeInsumoId = selectedInsumoId || (insumos.length > 0 ? insumos[0].id : '');
 
@@ -355,16 +360,18 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
     e.preventDefault();
     if (!activeInsumoId) return;
     if (purpose === 'DIRECT_DISCARD' && !reason.trim()) {
-      alert('Debe especificar el motivo del descarte directo.');
+      setError('Debe especificar el motivo descriptivo del descarte directo.');
       return;
     }
     setIsSubmitting(true);
+    setError(null);
 
     try {
       await performExtraction(activeInsumoId, quantity, location, purpose, reason, selectedRecipeId, insumos, onSuccess, onClose);
     } catch (err) {
       console.error('[WarehouseExtractionModal] Error registrando la extraccion de bodega:', err);
-      alert('Error registrando extraccion de bodega');
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -385,6 +392,7 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
     selectedRecipeId,
     setSelectedRecipeId,
     isSubmitting,
+    error,
     handleIncrement,
     handleDecrement,
     handleSubmit,
@@ -425,6 +433,9 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
         marginBottom="20px"
         onClose={onClose}
       />
+
+      {form.error && <ErrorBanner message={form.error} />}
+
 
       <ExtractionForm
         insumos={displayInsumos}

@@ -4,6 +4,9 @@ import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { RolesService, RoleDto, PermissionDto } from '../services/roles.service.js';
 import { ShieldCheck, Plus, Check, Trash2 } from 'lucide-react';
 
+import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+
 interface RolesManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,9 +15,10 @@ interface RolesManagementModalProps {
 interface NewRoleFormProps {
   onCreated: () => Promise<void>;
   setSelectedRole: (role: RoleDto) => void;
+  setError: (err: string | null) => void;
 }
 
-const NewRoleForm: React.FC<NewRoleFormProps> = ({ onCreated, setSelectedRole }) => {
+const NewRoleForm: React.FC<NewRoleFormProps> = ({ onCreated, setSelectedRole, setError }) => {
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleDesc, setNewRoleDesc] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -24,18 +28,21 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({ onCreated, setSelectedRole })
     if (!newRoleName.trim()) return;
 
     setIsCreating(true);
+    setError(null);
     try {
       const created = await RolesService.createRole({ name: newRoleName, description: newRoleDesc });
       setNewRoleName('');
       setNewRoleDesc('');
       await onCreated();
       setSelectedRole(created);
-    } catch {
-      alert('Error al crear el rol');
+    } catch (err) {
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
     } finally {
       setIsCreating(false);
     }
   };
+
 
   return (
     <form
@@ -136,6 +143,8 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
   const [roles, setRoles] = useState<RoleDto[]>([]);
   const [permissions, setPermissions] = useState<PermissionDto[]>([]);
   const [selectedRole, setSelectedRole] = useState<RoleDto | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
 
   const loadData = React.useCallback(async () => {
     try {
@@ -170,18 +179,21 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
       await loadData();
       const updated = roles.find((r) => r.id === selectedRole.id);
       if (updated) setSelectedRole(updated);
-    } catch {
-      alert('Error al actualizar permisos');
+    } catch (err) {
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
     }
   };
 
   const handleDeleteRole = async (roleId: string, roleName: string) => {
     if (!window.confirm(`¿Confirmas eliminar el rol "${roleName}"?`)) return;
+    setError(null);
     try {
       await RolesService.deleteRole(roleId);
       await loadData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al eliminar el rol');
+      const friendly = mapToUserFriendlyError(err);
+      setError(friendly.message);
     }
   };
 
@@ -193,7 +205,9 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
         onClose={onClose}
       />
       <div className="flex-column flex-gap-md" style={{ marginTop: '16px' }}>
-        <NewRoleForm onCreated={loadData} setSelectedRole={setSelectedRole} />
+        {error && <ErrorBanner message={error} />}
+        <NewRoleForm onCreated={loadData} setSelectedRole={setSelectedRole} setError={setError} />
+
 
         <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
           <div className="flex-column flex-gap-xs" style={{ borderRight: '1px solid var(--border-card)', paddingRight: '12px' }}>
