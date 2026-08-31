@@ -460,7 +460,22 @@ const App: React.FC = () => {
     }, [handleLogout]),
   });
 
+  useEffect(() => {
+    const handleUnauthorized = (e: Event) => {
+      const customEvt = e as CustomEvent<{ message?: string }>;
+      const detailMsg = customEvt.detail?.message || 'Tu sesión ha expirado o el token de autenticación no es válido.';
+      alert(`[Sesión Expirada] ${detailMsg}\nPor favor, ingresa tu PIN de acceso nuevamente.`);
+      handleLogout();
+    };
+
+    window.addEventListener('restostock:unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('restostock:unauthorized', handleUnauthorized);
+    };
+  }, [handleLogout]);
+
   if (!currentUser) {
+
 
     return <PinLoginModal onSuccess={handleLoginSuccess} />;
   }

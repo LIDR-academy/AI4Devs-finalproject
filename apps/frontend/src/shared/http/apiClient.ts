@@ -51,10 +51,19 @@ async function parseErrorResponse(response: Response): Promise<never> {
   } catch {
     errorBody = undefined;
   }
-  const parsed = errorBody as { message?: string; error?: string } | undefined;
-  const message = parsed?.message || parsed?.error || `Error HTTP ${response.status}`;
+  const parsed = errorBody as { detail?: string; message?: string; error?: string; title?: string } | undefined;
+  const message = parsed?.detail || parsed?.message || parsed?.error || parsed?.title || `Error HTTP ${response.status}`;
+
+  if (response.status === 401) {
+    AuthService.logout();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('restostock:unauthorized', { detail: { message } }));
+    }
+  }
+
   throw new ApiError(response.status, message, errorBody);
 }
+
 
 function isTransientError(error: unknown): boolean {
   if (error instanceof ApiError) {
