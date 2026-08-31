@@ -13,6 +13,7 @@ Baseline stack versions and project-structure standards for this Laravel + Livew
   - [Deleting a user goes through the model, not the query builder](#deleting-a-user-goes-through-the-model-not-the-query-builder)
   - [UUID primary keys](#uuid-primary-keys)
 - [Livewire component convention: class-based, not single-file](#livewire-component-convention-class-based-not-single-file)
+- [A `wire:ignore`d client-owned region — the app's first instance](#a-wireignored-client-owned-region--the-apps-first-instance)
 - [Artisan-first workflow](#artisan-first-workflow)
 - [Quality gates](#quality-gates)
   - [Steps 1 and 2 are the *iteration* forms](#steps-1-and-2-are-the-iteration-forms-run-both-unscoped-before-declaring-the-work-done)
@@ -34,7 +35,7 @@ From [`composer.json`](../../composer.json):
 | `larastan/larastan` (dev) | `^3.9` |
 | `laravel/pint` (dev) | `^1.27` |
 
-Frontend: Tailwind CSS v4 + Vite (see [`vite.config.js`](../../vite.config.js), [`package.json`](../../package.json)). `pest-plugin-browser` drives real-browser tests through Playwright (`playwright` `^1.61.1` in `package.json` `devDependencies`); the wired-up `tests/Browser/` suite, its one-time browser-binary setup, and what CI does and does not cover live in [../testing/frontend/playwright-setup.md](../testing/frontend/playwright-setup.md).
+Frontend: Tailwind CSS v4 + Vite (see [`vite.config.js`](../../vite.config.js), [`package.json`](../../package.json)). `pest-plugin-browser` drives real-browser tests through Playwright (`playwright` `^1.61.1` in `package.json` `devDependencies`); the wired-up `tests/Browser/` suite, its one-time browser-binary setup, and what CI does and does not cover live in [../testing/frontend/playwright-setup.md](../testing/frontend/playwright-setup.md). Story 0021 makes [`resources/js/app.js`](../../resources/js/app.js) the app's **first real JS module** — a hand-rolled `contenteditable`/`document.execCommand` Alpine component for the WYSIWYG editor, registered on `alpine:init` — with **no new npm dependency**: Alpine already ships bundled inside Livewire 4's own build (`window.Alpine`), and no rich-text library (TipTap/Quill/Trix) was added, a deliberate decision recorded in the story's own D1.
 
 ## Directory structure
 
@@ -65,7 +66,10 @@ app/
   Http/Controllers/    Abstract base + domain controllers used as HTTP boundaries in front of actions
   Listeners/           Event listeners (ActivateVerifiedUser), registered in AppServiceProvider
   Livewire/            Livewire components, grouped by area (Users/, Roles/, SalesRegions/,
-                       Media/, Settings/, Settings/TwoFactor/, Actions/, plus Dev/ — see below)
+                       Media/, Components/, Settings/, Settings/TwoFactor/, Actions/, plus Dev/ —
+                       see below). Components/ (story 0021) is not a module area like the others —
+                       it holds reusable, content-agnostic components a screen embeds rather than
+                       one screen's own logic; see the wire:ignore section below
   Models/              Eloquent models (User, SalesRegion, Media; Role, which subclasses the
                        package's role model)
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
@@ -83,7 +87,8 @@ database/
   seeders/
 lang/                   Published translation files, one folder per locale (en/, es/), plus
                         app-owned domain files kept key-for-key identical across both
-                        (users.php, roles.php, navigation.php, sales-regions.php, media.php)
+                        (users.php, roles.php, navigation.php, sales-regions.php, media.php,
+                        components.php)
 resources/
   views/
     components/        Blade components — all anonymous (no app/View/Components/ in this repo)
@@ -96,13 +101,14 @@ routes/                 web.php, plus one file per functional area that web.php 
                         test harness), deliberately not an area file; see ../api/routes.md
 tests/
   Feature/              Feature tests, mirrors app structure (Actions/Auth/, Auth/, Settings/,
-                        Seeders/, Users/, Roles/, SalesRegions/, Media/, Dev/, Models/, Policies/,
-                        Authorization/, Navigation/, ...)
+                        Seeders/, Users/, Roles/, SalesRegions/, Media/, Components/, Dev/, Models/,
+                        Policies/, Authorization/, Navigation/, ...)
   Unit/                 Mirrors app structure too (Actions/Auth/, Actions/Media/, Enums/,
                         Exceptions/, Listeners/, Models/), plus ArchitectureTest.php
-  Browser/              Pest browser tests. Mirrors app structure (Auth/, Media/) — but two of the
-                        four files sit flat instead (UsersIndexTest.php, SalesRegionsIndexTest.php);
-                        see ../testing/frontend/playwright-setup.md#folder-structure
+  Browser/              Pest browser tests. Mirrors app structure (Auth/, Media/, Components/) —
+                        but two of the six files sit flat instead (UsersIndexTest.php,
+                        SalesRegionsIndexTest.php); see
+                        ../testing/frontend/playwright-setup.md#folder-structure
   Browser/Fixtures/     Real, checked-in binary fixtures a browser test needs as bytes on disk
                         (sample-upload.jpg) — never generated at runtime
   Pest.php, TestCase.php
@@ -374,6 +380,34 @@ class Appearance extends Component
 
 Every Livewire route in `routes/settings.php` is mounted with `Route::livewire('<uri>', <Component>::class)`, and every component declares its page `#[Title(...)]` attribute rather than setting the title from the Blade view. Follow this pattern for new settings/feature pages instead of introducing single-file components, to keep the codebase's one way of doing this.
 
+## A `wire:ignore`d client-owned region — the app's first instance
+
+Every Livewire component in this repo up to task 0021 lets Livewire own its whole rendered DOM: the server re-renders, Livewire morphs the difference into the page, and that is the entire lifecycle. [`App\Livewire\Components\WysiwygEditor`](../../app/Livewire/Components/WysiwygEditor.php) is the first to need a **carve-out** from that, and it establishes the shape a later component follows if it ever needs the same thing.
+
+The problem a plain Livewire re-render cannot survive is a browser `Selection`/caret inside a `contenteditable` region a user is actively typing into: a server round trip that morphs that subtree — even one that produces byte-identical HTML — destroys the caret position and can discard in-flight input. The fix is `wire:ignore` on the editable `<div>` itself:
+
+```blade
+{{-- resources/views/livewire/components/wysiwyg-editor.blade.php --}}
+<div
+    x-ref="editor"
+    wire:ignore
+    contenteditable="{{ $disabled ? 'false' : 'true' }}"
+    role="textbox"
+    aria-multiline="true"
+    data-test="wysiwyg-editor-region"
+    x-on:input="onEditorInput()"
+    x-on:blur="onEditorBlur()"
+>{!! $value !!}</div>
+```
+
+Three rules come with a `wire:ignore`d region like this one, and they generalise past this one component:
+
+- **The region is seeded from server state exactly once, in the initial server-rendered HTML, never re-injected by JS.** `{!! $value !!}` runs once, on first mount — because the div is `wire:ignore`d, Livewire never touches it again, so a *later* server-side write to the bound property (a host resetting its form, say) intentionally does **not** reach the DOM. This is a documented consequence for any consumer to know, not a bug: a `wire:ignore`d region has no built-in "refresh me" mechanism, and one must be added explicitly (an Alpine method the host can call) if a future consumer needs programmatic content replacement.
+- **The region syncs back to the server at defined points only, never continuously.** `wire:model.live` on every keystroke was considered and rejected: it would round-trip the whole value on every character and make the caret's survival depend on Livewire's morph running successfully on every keystroke — the exact risk `wire:ignore` exists to remove — for no benefit, since the value is only needed when the host form saves. `WysiwygEditor` instead debounces `$wire.set('value', editorEl.innerHTML)` 400 ms after `input`, plus one explicit call after a discrete action that does not reliably fire a native `input` event (an image insertion via `execCommand('insertHTML', ...)`).
+- **`{!! !!}` unescaped output is safe here only because of what the value already is, not because the region is client-owned.** The seeded value is untrusted HTML by construction (a `#[Modelable]` property a consumer's `wire:model` writes through), and this component performs **no** sanitization of its own — it is rendered back out exactly as received. That is a *load-bearing dependency on the consumer*, not a property of `wire:ignore`: whatever persisted column ends up bound here must be sanitized server-side on its own write path before this component ever renders it, or the `{!! !!}` becomes a stored-XSS sink. See [api/routes.md](../api/routes.md#applivewirecomponentswysiwygeditor--the-gallerys-first-real-consumer-and-the-second-routeless-gated-component) for which consumers already close this dependency and how.
+
+**When to reach for this**: only for a region a browser API (here, `contenteditable`/`Selection`) actively owns and would fight a server re-render over. Do not reach for `wire:ignore` as a general performance shortcut — every other component in this app re-renders normally, and that remains the default.
+
 ## Artisan-first workflow
 
 Per project `CLAUDE.md` (Laravel Boost guidelines): use `php artisan make:*` to scaffold new files (models, migrations, controllers, tests, etc.) instead of hand-writing boilerplate, and pass `--no-interaction` plus the correct options. Use `php artisan make:test --pest <Name>` for tests (see [pest-testing skill](../../.claude/skills/pest-testing/SKILL.md)).
@@ -402,7 +436,9 @@ Use the scoped forms freely while iterating; the unscoped runs are what counts a
 
 **`php artisan test --parallel` is an equally valid unscoped record, and the faster one** (measured on this repo's own 950-test suite: ~2.6x on this project's dev container — see [testing/ci/commands.md#run-in-parallel](../testing/ci/commands.md#run-in-parallel)). It runs every test in every suite exactly like the plain unscoped form; `--parallel` changes how the work is distributed across processes, not what gets checked. CI runs it this way since the test-performance review that measured it. The one thing `--parallel` needs that the sequential form doesn't: `storage/framework/views` must sit on a filesystem that tolerates concurrent writes — see the ⚠️ in the linked section if you rebuild the Sail image and hit `tempnam()` errors under load.
 
-_Last updated: 2026-08-29 — Story 0020 (Shared media gallery modal — frontend). **Directory listing:** `UpdateMediaDetails` in `app/Actions/Media/` (the folder's third class, and `MediaPolicy::update()`'s first caller), `Dev/` in the `app/Livewire/` line, `Dev/` in `tests/Feature/`, `Media/` in `tests/Browser/` (which is now four files, two of them still flat), the new `tests/Browser/Fixtures/` folder, and a note on the `routes/` line that `web.php` holds one environment-gated dev route that is deliberately **not** an area file. **Added the `app/Livewire/Dev/` paragraph** — the first subfolder here that is neither a functional area nor permanent, which is a shape worth writing down once because the next story needing a test-only host page will otherwise re-derive it: the route is gated at **registration** time rather than by middleware (non-existence, not refusal), it carries `auth`+`verified` and a second `mount()`-level `abort_unless(…, 404)` for the stale-`route:cache` case the registration gate structurally cannot cover, its test asserts absence from the route **collection** rather than a 404, and it names its own deletion trigger (story 0027) in every file it occupies. Scaffolding without a named expiry is surface nobody has admitted to yet. **The `Media` `#[Fillable]` ⚠️ is updated rather than left forward-looking**: it predicted that story 0020's inline editing was where "no code updates a `media` row" stops being true, and it is — but the update lands through `$media->update([...])` with a literal two-key array, so this is the guard working, not the guard failing; the residual (a future caller assigning a path column and calling `save()`) is unchanged and restated. Also grew the `app/Actions/` grouping paragraph from two Media classes to three. **Verified as unchanged rather than assumed:** the stack-versions table (no dependency added or bumped), the UUID-primary-keys subsection and the delete-through-the-model rule (no model, column or migration in this story's diff), the app-owned-config rule (`config/modules.php` untouched — this story adds no sidebar entry, deliberately), the action-owns-the-rule convention (`UpdateMediaDetails` authorizes and validates itself, which is that rule applied for the third story running, not extended), the Livewire class-based convention, and the quality gates — Pint and Larastan level 7 both clean unscoped, and the full suite run unscoped at 1004 tests with one honestly-documented browser-test residual recorded in [testing/frontend/playwright-setup.md](../testing/frontend/playwright-setup.md#waiting-one-call-is-banned-in-this-repo-and-one-is-bounded)._
+_Last updated: 2026-08-31 — Story 0021 (Shared WYSIWYG rich-text editor component — frontend). **Directory listing:** added `Components/` to the `app/Livewire/` grouping (the first subfolder here that is neither a module area nor scaffolding — a *reusable, content-agnostic component* screens embed, with a one-line note pointing at the new `wire:ignore` section for why it needed one), `components.php` to the `lang/` line, `Components/` to both `tests/Feature/` and (mirrored) `tests/Browser/` — the latter now six files with two still flat, corrected from the prior "four files, two flat." **Added a new top-level section, [A `wire:ignore`d client-owned region — the app's first instance](#a-wireignored-client-owned-region--the-apps-first-instance)** — this repo's first component to opt a subtree out of Livewire's own re-render/morph cycle, and the shape a later component copies if it ever needs the same carve-out: seed from server state exactly once (never re-injected by JS, so a later server-side write to the bound property intentionally does not reach the DOM), sync back only at defined points (a debounced `input` plus explicit calls after discrete actions, never `wire:model.live`), and — the load-bearing caveat — an unescaped `{!! !!}` echo inside such a region is safe only because of what the seeded value *already is* (sanitized elsewhere on write), never because the region is client-owned. **Stack versions**: noted `resources/js/app.js` is now the app's first real JS module (a hand-rolled Alpine component, no new npm dependency — Alpine ships bundled inside Livewire 4) rather than the empty file it was through story 0020. **Verified as unchanged rather than assumed:** the model conventions and UUID-primary-keys subsection (no model, column or migration in this story's diff), the app-owned-config rule (`config/modules.php` untouched — no sidebar entry, deliberately, per the story's own D13/OQ-1 harness-only route), the action-owns-the-rule convention (this story adds no `app/Actions/` class at all), the Livewire class-based convention (`WysiwygEditor` follows it unmodified), and the quality gates — Pint and Larastan level 7 both clean unscoped, full suite unscoped at `{"tests":1058,"passed":1055,"skipped":3,"failed":0}` per the task file's own Phase 5 record._
+
+_Previously: 2026-08-29 — Story 0020 (Shared media gallery modal — frontend). **Directory listing:** `UpdateMediaDetails` in `app/Actions/Media/` (the folder's third class, and `MediaPolicy::update()`'s first caller), `Dev/` in the `app/Livewire/` line, `Dev/` in `tests/Feature/`, `Media/` in `tests/Browser/` (which is now four files, two of them still flat), the new `tests/Browser/Fixtures/` folder, and a note on the `routes/` line that `web.php` holds one environment-gated dev route that is deliberately **not** an area file. **Added the `app/Livewire/Dev/` paragraph** — the first subfolder here that is neither a functional area nor permanent, which is a shape worth writing down once because the next story needing a test-only host page will otherwise re-derive it: the route is gated at **registration** time rather than by middleware (non-existence, not refusal), it carries `auth`+`verified` and a second `mount()`-level `abort_unless(…, 404)` for the stale-`route:cache` case the registration gate structurally cannot cover, its test asserts absence from the route **collection** rather than a 404, and it names its own deletion trigger (story 0027) in every file it occupies. Scaffolding without a named expiry is surface nobody has admitted to yet. **The `Media` `#[Fillable]` ⚠️ is updated rather than left forward-looking**: it predicted that story 0020's inline editing was where "no code updates a `media` row" stops being true, and it is — but the update lands through `$media->update([...])` with a literal two-key array, so this is the guard working, not the guard failing; the residual (a future caller assigning a path column and calling `save()`) is unchanged and restated. Also grew the `app/Actions/` grouping paragraph from two Media classes to three. **Verified as unchanged rather than assumed:** the stack-versions table (no dependency added or bumped), the UUID-primary-keys subsection and the delete-through-the-model rule (no model, column or migration in this story's diff), the app-owned-config rule (`config/modules.php` untouched — this story adds no sidebar entry, deliberately), the action-owns-the-rule convention (`UpdateMediaDetails` authorizes and validates itself, which is that rule applied for the third story running, not extended), the Livewire class-based convention, and the quality gates — Pint and Larastan level 7 both clean unscoped, and the full suite run unscoped at 1004 tests with one honestly-documented browser-test residual recorded in [testing/frontend/playwright-setup.md](../testing/frontend/playwright-setup.md#waiting-one-call-is-banned-in-this-repo-and-one-is-bounded)._
 
 _Previously: 2026-08-28 — Test-suite parallelization: added the "`--parallel` is an equally valid unscoped record" paragraph to the Quality gates section, with the measured ~2.6x speedup and a pointer to the Sail/WSL2-specific `storage/framework/views` caveat in [testing/ci/commands.md](../testing/ci/commands.md#run-in-parallel). No directory-structure or convention change — `AppServiceProvider` gained one new private method (`configureParallelTesting()`) inside an existing file, not a new class or folder._
 

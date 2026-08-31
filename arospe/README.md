@@ -66,8 +66,8 @@ app/
                        RoleInUseException, PasswordConfirmationRequiredException)
   Http/Controllers/    Abstract base + domain controllers (HTTP boundary in front of an action)
   Listeners/           Event listeners (ActivateVerifiedUser, RejectNonActiveUserLogin)
-  Livewire/            Livewire components, grouped by area (Actions/, Roles/, SalesRegions/,
-                       Settings/, Users/, ...)
+  Livewire/            Livewire components, grouped by area (Actions/, Components/, Roles/,
+                       SalesRegions/, Settings/, Users/, ...)
   Models/              Eloquent models (User, SalesRegion; Role, a spatie/laravel-permission subclass)
   Notifications/       Notification classes (PendingEmailVerification, UserInvitation)
   Policies/            Model policies (UserPolicy, RolePolicy, SalesRegionPolicy),
