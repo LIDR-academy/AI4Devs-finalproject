@@ -14,10 +14,12 @@ require __DIR__.'/roles.php';
 require __DIR__.'/users.php';
 require __DIR__.'/sales-regions.php';
 
-// TEMPORARY SCAFFOLDING for story 0020's own browser tests (D16). NOT app
-// surface -- delete this whole block, together with
-// App\Livewire\Dev\MediaGalleryHarness and its view, when story 0027
-// (product editor) provides a real host page for App\Livewire\Media\Gallery.
+// TEMPORARY SCAFFOLDING for story 0020's own browser tests (D16), EXTENDED
+// by story 0021 (D13/OQ-1, Option A) to also host a WysiwygEditor instance
+// for its own browser tests. NOT app surface -- delete this whole block,
+// together with App\Livewire\Dev\MediaGalleryHarness and its view, when
+// story 0027 (product editor) provides a real host page for both
+// App\Livewire\Media\Gallery and App\Livewire\Components\WysiwygEditor.
 // The environment check is the security control and it is a
 // REGISTRATION-time gate, not a middleware check: the route does not exist
 // at all outside testing/local, rather than existing and refusing a

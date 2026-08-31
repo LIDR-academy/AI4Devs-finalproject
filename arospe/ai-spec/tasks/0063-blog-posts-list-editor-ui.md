@@ -493,7 +493,7 @@ name-keyed, case- and accent-insensitive via `normalized_name`, and asking a **d
 branch** (`blog.view` to reuse, `blog.create` to mint — its **D-11**). Reached only through the post
 actions. From **[0058](0058-blog-categories-backend.md)**: `App\Models\BlogCategory`, `#[Fillable(['name'])]`.
 
-From **[0021](0021-wysiwyg-rich-text-editor-component.md)** **D3**/**D4**:
+From **[0021](done/0021-wysiwyg-rich-text-editor-component.md)** **D3**/**D4**:
 
 ```blade
 <livewire:components.wysiwyg-editor wire:model="body" wire:key="blog-post-body-editor" :label="__('…')" />
@@ -967,7 +967,7 @@ The Users (0006), Roles (0011), Sales Regions (0018), Product Categories (0025) 
 screens all put create/edit in a `flux:modal`, so this is a deliberate divergence from the house
 pattern and needs its reasons stated. Both amigos converged on it independently.
 
-The decisive reason is a mechanism, not a component count. **[0021](0021-wysiwyg-rich-text-editor-component.md)'s
+The decisive reason is a mechanism, not a component count. **[0021](done/0021-wysiwyg-rich-text-editor-component.md)'s
 D9 states the `contenteditable` region is seeded from `$value` at *client initialisation only*, and
 never re-written by a Livewire re-render.** A modal that closes and reopens for a different post
 therefore either remounts the editor (needing a `wire:key` dance to force it) or serves the previous
