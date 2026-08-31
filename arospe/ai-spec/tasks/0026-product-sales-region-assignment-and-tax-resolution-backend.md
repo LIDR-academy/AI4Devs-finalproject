@@ -7,7 +7,7 @@ Sales Region entries (Spain's fiscal sub-entries included), and a resolver answe
 applies to this product at this destination" — the assigned region's rate when the destination is one
 the product targets, the catalog default's rate otherwise. It is **backend only**: no screen, no
 route, no Livewire component. The product editor and its region picker are story **0027**, built on
-the searchable multi-select shell of story [0022](0022-searchable-multi-select-component.md).
+the searchable multi-select shell of story [0022](done/0022-searchable-multi-select-component.md).
 
 > **Scope change — 2026-08-18 (two confirmed user decisions).**
 > **(1) Groupings are gone.** The supranational **grouping** entries (Unión Europea, Internacional)
@@ -17,7 +17,7 @@ the searchable multi-select shell of story [0022](0022-searchable-multi-select-c
 > resolver loses its grouping tier entirely and **[OQ-1](#open-questions) is resolved as moot**. See
 > **D10**.
 > **(2) An unresolvable submitted id rejects the whole save.** Story
-> [0022](0022-searchable-multi-select-component.md)'s option contract has been amended (its D12) so a
+> [0022](done/0022-searchable-multi-select-component.md)'s option contract has been amended (its D12) so a
 > consumer can detect an id its resolver cannot vouch for — `resolveSelected()` is a total function
 > throwing `App\Exceptions\UnresolvedSelectionException`; this story's assignment path uses that to
 > **fail the entire save** rather than silently persisting a subset. This resolves this story's own
@@ -420,7 +420,7 @@ declined for `SalesRegionKind`.
 
 ### `app/Actions/Products/SearchSalesRegions.php` — **create**
 
-**Implements story [0022](0022-searchable-multi-select-component.md)'s locked
+**Implements story [0022](done/0022-searchable-multi-select-component.md)'s locked
 `App\Livewire\Components\MultiSelectOptionsResolver` interface** — and 0022's own consumer example
 already names this exact class-string, so the name is a contract, not a preference:
 
@@ -456,7 +456,7 @@ sharpest trap (**D7**):
   no-longer-assignable one `disabled: true`. This is not symmetry-breaking for its own sake — see
   **D7**; getting it wrong silently deletes data.
 - **An id neither method can vouch for is now a *rejection*, not a silent drop (D11).** Per
-  [0022's D12](0022-searchable-multi-select-component.md#d12--an-unresolvable-id-is-rejected-never-silently-dropped-confirmed),
+  [0022's D12](done/0022-searchable-multi-select-component.md#d12--an-unresolvable-id-is-rejected-never-silently-dropped-confirmed),
   `resolveSelected()` is a **total function**: it returns exactly one entry per requested id, or it
   throws `App\Exceptions\UnresolvedSelectionException` (new class at
   `app/Exceptions/UnresolvedSelectionException.php`, following the `ImmutableRoleException` precedent
@@ -466,7 +466,7 @@ sharpest trap (**D7**):
   `ValidationException` is the **consumer's** job: 0027 calls the shell's `assertSelectionResolvable()`
   (or `resolveSelected()` itself) in its save path, alongside the validation rule below.
 - **Text matching uses `App\Actions\NormalizeForSearch`, not a local fold.** Per
-  [0022's D13](0022-searchable-multi-select-component.md#d13--one-centralized-search-term-normalizer-appactionsnormalizeforsearch-confirmed),
+  [0022's D13](done/0022-searchable-multi-select-component.md#d13--one-centralized-search-term-normalizer-appactionsnormalizeforsearch-confirmed),
   the one shared normalizer is an invokable class at `app/Actions/NormalizeForSearch.php` with
   signature `__invoke(string $value): string`, implemented as `trim` → `Str::lower` → `Str::ascii` →
   collapse whitespace. The `$term` handed to `search()` **arrives already normalized** by the shell, so
@@ -1210,7 +1210,7 @@ Executed during this debate, against this repository.
 - **[0017](done/0017-sales-region-tax-configuration-backend.md) — hard, blocking.** Nothing in this story
   calls its code, but the resolver's entire fallback tier rests on 0017's enforced "exactly one
   default, and it is active" invariant. Without it the default lookup has no guarantee behind it.
-- **[0022](0022-searchable-multi-select-component.md) — hard, blocking, and easy to miss.**
+- **[0022](done/0022-searchable-multi-select-component.md) — hard, blocking, and easy to miss.**
   `SearchSalesRegions` implements 0022's `MultiSelectOptionsResolver` interface, which 0022 creates.
   Numbering already satisfies [workflow.md](../../docs/workflow.md#task-ordering-rule); what must be
   enforced is the **sequencing** — all four reach Phase 7 before 0026 starts Phase 3.
@@ -1236,12 +1236,12 @@ Executed during this debate, against this repository.
 - ~~**R-9 — 0022's amended contract is not yet published.**~~ **Resolved 2026-08-18 — published and
   substituted into this document.** Both pieces this story depends on are now locked in 0022 and named
   concretely above, so nothing here is implemented against a guessed shape:
-  - **Unresolved-id rejection (D11 / [0022 D12](0022-searchable-multi-select-component.md#d12--an-unresolvable-id-is-rejected-never-silently-dropped-confirmed))** —
+  - **Unresolved-id rejection (D11 / [0022 D12](done/0022-searchable-multi-select-component.md#d12--an-unresolvable-id-is-rejected-never-silently-dropped-confirmed))** —
     `resolveSelected()` is a total function throwing `App\Exceptions\UnresolvedSelectionException`
     (`app/Exceptions/UnresolvedSelectionException.php`, modelled on `ImmutableRoleException`, no
     `render()`) with `public readonly array $missingIds`; the consumer calls
     `assertSelectionResolvable()` in its save path and converts it to a `ValidationException`.
-  - **Centralized normalizer ([0022 D13](0022-searchable-multi-select-component.md#d13--one-centralized-search-term-normalizer-appactionsnormalizeforsearch-confirmed))** —
+  - **Centralized normalizer ([0022 D13](done/0022-searchable-multi-select-component.md#d13--one-centralized-search-term-normalizer-appactionsnormalizeforsearch-confirmed))** —
     `App\Actions\NormalizeForSearch` at `app/Actions/NormalizeForSearch.php`, invokable,
     `__invoke(string $value): string`, `trim` → `Str::lower` → `Str::ascii` → collapse whitespace.
     Both classes are **created and unit-tested by 0022**, not by this story; 0026 is their first

@@ -120,7 +120,7 @@ the product owner across the Epic 2 Phase 1 debates on 2026-08-18.
 
 The rule itself is therefore **not defined here**. This story consumes the project's centralized
 text-normalizer utility — a single function that is the one source of truth for what "normalized"
-means — introduced by story [0022](0022-searchable-multi-select-component.md): the invokable
+means — introduced by story [0022](done/0022-searchable-multi-select-component.md): the invokable
 **`App\Actions\NormalizeForSearch`**, at `app/Actions/NormalizeForSearch.php`, with the signature
 `__invoke(string $value): string`, implemented as trim → `Str::lower` → `Str::ascii` → collapse
 whitespace. Three obligations follow:

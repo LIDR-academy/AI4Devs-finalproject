@@ -475,7 +475,7 @@ Epic 2 Phase 1 debates. It is a **five-story** decision, not the two-story one O
 utility** — one function that is the single source of truth for what "normalized" means: the
 invokable **`App\Actions\NormalizeForSearch`**, at `app/Actions/NormalizeForSearch.php`, with the
 signature `__invoke(string $value): string`, implemented as trim → `Str::lower` → `Str::ascii` →
-collapse whitespace, owned by [0022](0022-searchable-multi-select-component.md)'s **D13**.
+collapse whitespace, owned by [0022](done/0022-searchable-multi-select-component.md)'s **D13**.
 Concretely:
 
 - `app/Concerns/ShippingZoneValidationRules.php`'s `shippingZoneNameRules()` folds by **calling that
@@ -1083,7 +1083,7 @@ migration.
 
 **OQ-C — who owns the zone management *screen*? (genuinely unresolved)**
 [0032](0032-shipping-geography-catalog-seed.md) describes **0034** as *"the zone geography
-picker"*; [0022](0022-searchable-multi-select-component.md) describes it as owning *"its resolver,
+picker"*; [0022](done/0022-searchable-multi-select-component.md) describes it as owning *"its resolver,
 the by-level grouping content, and the search query/index"*; this story's brief calls it *"the
 paired UI story"*. Those are not the same scope, and **0035 already owns `/shipping` and
 `App\Livewire\Shipping\Index`**. So either 0034 absorbs the whole zone CRUD screen (and should be

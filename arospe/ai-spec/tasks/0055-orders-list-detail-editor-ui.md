@@ -36,7 +36,7 @@ every control mirrors a predicate its own guard already reads.
 > ## ⚠️ This story has a **soft** dependency on a PENDING Epic 2 story, and ships an interim around it
 >
 > `AddOrderItem` needs a product/variant picker, and **nothing in this repo builds one yet.** The
-> natural fit is Epic 2's [0022](0022-searchable-multi-select-component.md) (shared searchable,
+> natural fit is Epic 2's [0022](done/0022-searchable-multi-select-component.md) (shared searchable,
 > server-side-filtered multi-select), which is `new` and **has no committed timeline within this Epic 3
 > decomposition**. This story therefore ships a **documented, intentional stopgap** — a plain
 > `<flux:select>` over a bounded product query — rather than blocking on it. See **[D-1](#d-1)**, which
@@ -1018,7 +1018,7 @@ human may override** — the reasoning is recorded so an override is a decision 
 *(Resolves `frontend-expert`'s open question 2 — the one real gap the debate found.)*
 
 `AddOrderItem` (0048) needs a product and an optional variant. **Nothing in this repo builds a picker for
-either**, and the natural fit — Epic 2's [0022](0022-searchable-multi-select-component.md), the shared
+either**, and the natural fit — Epic 2's [0022](done/0022-searchable-multi-select-component.md), the shared
 searchable, server-side-filtered multi-select — is `new`, is itself a dependency of three Epic 2 screens,
 and **has no committed timeline within this Epic 3 decomposition**.
 
@@ -1417,7 +1417,7 @@ follow-up; that is a deliberate degradation rather than a ghost affordance, and 
 
 #### ⚠️ Soft dependency — story 0022, worked around rather than waited on
 
-[0022](0022-searchable-multi-select-component.md) (the shared searchable multi-select) is `new` and has
+[0022](done/0022-searchable-multi-select-component.md) (the shared searchable multi-select) is `new` and has
 **no committed timeline in this decomposition**. This story ships the interim in **D-1** and does not
 block. The replacement criterion is recorded verbatim in D-1 so the swap is scheduled work.
 
@@ -1613,7 +1613,7 @@ the filter together.
 
 Derived from this story, none of them in scope:
 
-1. **Replace the interim product picker with story [0022](0022-searchable-multi-select-component.md)'s
+1. **Replace the interim product picker with story [0022](done/0022-searchable-multi-select-component.md)'s
    shared searchable multi-select** (**D-1**), applying the recorded acceptance-criterion replacement
    verbatim and removing `productOptions()`, `variantOptions()` and the product select's
    `wire:model.live` binding in the same change.
@@ -1677,5 +1677,5 @@ Derived from this story, none of them in scope:
 - **Epic 3 decomposition:** story **15 of 15** — the last, and the only one that consumes rather than
   produces. Hard dependencies on 0045, 0047, 0048, 0049, 0050, 0051, 0052 (transitively via 0051), 0053
   and 0054; ⛔ blocked transitively through 0045 on Epic 2 stories 0024, 0029, 0035, 0036 and 0038; and
-  a documented **soft** dependency on Epic 2's pending [0022](0022-searchable-multi-select-component.md),
+  a documented **soft** dependency on Epic 2's pending [0022](done/0022-searchable-multi-select-component.md),
   worked around per **D-1** rather than waited on.

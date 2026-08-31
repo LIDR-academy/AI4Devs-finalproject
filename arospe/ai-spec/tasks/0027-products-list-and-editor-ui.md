@@ -37,7 +37,7 @@ per-row edit/delete actions and a primary "Nuevo producto" button) and a **route
 [0021](done/0021-wysiwyg-rich-text-editor-component.md), a featured image and a gallery strip through
 [0020](done/0020-shared-media-gallery-modal-ui.md), and a searchable Sales Region multi-select from
 [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) built on
-[0022](0022-searchable-multi-select-component.md)).
+[0022](done/0022-searchable-multi-select-component.md)).
 
 It is **frontend only**: no migration, no model, no action, no policy, no enum, no validation rule.
 Every one of those is consumed as already-shipped code from [0024](0024-products-core-crud-backend.md)
@@ -869,7 +869,7 @@ Plus the cases a `Livewire::test()` genuinely cannot reach:
       Users' `roleId` the type field has **no** safe fallback value to fall back to.
 - [ ] Typing `España` in the region picker narrows the live dropdown to Spain's fiscal sub-entries
       and does **not** offer España itself. This is explicitly **owed forward** by
-      [0022](0022-searchable-multi-select-component.md)'s own provenance note: 0022 proves the
+      [0022](done/0022-searchable-multi-select-component.md)'s own provenance note: 0022 proves the
       mechanics against a test-only host, and named 0027 as the story that proves the real embedding
       with the real resolver.
 - [ ] A duplicate SKU refusal is **visible** next to the field, not merely present in the error bag.
@@ -2038,7 +2038,7 @@ approach) and `frontend-qa` (test design), per
 [Design reference](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, and grounded
 in full readings of [0019](done/0019-media-library-upload-and-conversions-backend.md),
 [0020](done/0020-shared-media-gallery-modal-ui.md), [0021](done/0021-wysiwyg-rich-text-editor-component.md),
-[0022](0022-searchable-multi-select-component.md), [0023](0023-product-categories-backend.md),
+[0022](done/0022-searchable-multi-select-component.md), [0023](0023-product-categories-backend.md),
 [0024](0024-products-core-crud-backend.md), [0025](0025-product-categories-ui.md),
 [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
 [0029](0029-product-variants-backend.md), with

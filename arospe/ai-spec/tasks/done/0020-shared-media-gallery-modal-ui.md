@@ -428,7 +428,7 @@ public function addGalleryImages(array $media): void { /* all of $media */ }
 | `->to(Gallery::class)` targeted dispatch | **Rejected — verified impossible (V3).** `dispatchTo()` resolves by *component name*, not instance id, so it broadcasts to **every** mounted `Gallery`. The two instances in 0027's product editor would both receive every selection. |
 | One fixed event name + a `purpose` field the parent's single listener branches on | Workable, strictly worse. It collapses two listeners into one `switch`, discards Livewire's own `#[On(...)]` routing, and makes `assertDispatched()` unable to distinguish which instance fired. |
 | **Consumer-supplied event name — (recommended), adopted** | Ordinary DOM bubbling plus `#[On($name)]` does the disambiguation for free. Per-instance assertable. Costs one `#[Locked]` string. |
-| `#[Modelable] public array $selectedMedia`, mirroring [0022's](../0022-searchable-multi-select-component.md) `$selected` | **Rejected.** 0022's two-way binding works because it carries *ids only* and re-derives labels through `resolveSelected()` on every read — machinery built for a continuously-live catalog. This payload is richer and is produced **once**, at confirm time. A one-shot event is the correct primitive; a two-way binding would reintroduce exactly the staleness problem 0022 built that machinery to avoid. |
+| `#[Modelable] public array $selectedMedia`, mirroring [0022's](0022-searchable-multi-select-component.md) `$selected` | **Rejected.** 0022's two-way binding works because it carries *ids only* and re-derives labels through `resolveSelected()` on every read — machinery built for a continuously-live catalog. This payload is richer and is produced **once**, at confirm time. A one-shot event is the correct primitive; a two-way binding would reintroduce exactly the staleness problem 0022 built that machinery to avoid. |
 
 **The payload shape — one shape for both modes, always a list:**
 
@@ -450,7 +450,7 @@ every consumer's listener signature would depend on a prop it set elsewhere. One
 `Media::query()->whereIn('id', $this->selectedIds)->get()` — never assembled from anything the
 tile grid rendered. Only ids can be manipulated through a crafted `/livewire/update` payload, and
 an id the query does not vouch for is silently dropped, exactly as
-[0022's D4](../0022-searchable-multi-select-component.md) requires for the same reason.
+[0022's D4](0022-searchable-multi-select-component.md) requires for the same reason.
 
 ### D3 — There is no `mode` or `purpose` prop
 
@@ -470,7 +470,7 @@ images or WYSIWYG editors. Introducing a `MediaGalleryPurpose` enum would push P
 vocabulary into a component shared by both, for zero behavioural gain.
 
 `$confirmLabel` defaulting to `''` rather than `null` follows both the errors-log's non-null-bound-
-property rule and [0022's D5](../0022-searchable-multi-select-component.md) `$emptyStateText`
+property rule and [0022's D5](0022-searchable-multi-select-component.md) `$emptyStateText`
 precedent — blank means "use the lang fallback", never "unset".
 
 ### D4 — Single replaces, multi accumulates, and selected tiles stay visible
@@ -488,7 +488,7 @@ public function toggleSelect(string $id): void
 }
 ```
 
-Note this **deliberately diverges from [0022's D11](../0022-searchable-multi-select-component.md)**,
+Note this **deliberately diverges from [0022's D11](0022-searchable-multi-select-component.md)**,
 which removes an already-selected option from its result list. The prototype keeps a selected tile
 in the grid with a checkmark overlay (`tile.is-selected` / `tile__tick`,
 `common.js:293-296`), and gallery has no scale pressure forcing exclusion — 0019's D7 already
@@ -512,7 +512,7 @@ because it is exactly the class of bug the errors-log's `null`-`<select>` entry 
 
 ### D6 — Debounced search at 300 ms, over a `#[Computed]` tile list
 
-`wire:model.live.debounce.300ms="search"`. **300 ms matches [0022's own default](../0022-searchable-multi-select-component.md)**,
+`wire:model.live.debounce.300ms="search"`. **300 ms matches [0022's own default](0022-searchable-multi-select-component.md)**,
 so the project's two shared search components do not disagree for no reason; 0019's D7 already
 establishes the query itself is sub-millisecond, so the value is a round-trip-count tradeoff, not a
 server-load one.
@@ -528,7 +528,7 @@ is either mount-time config or server-derived, and all of it is `#[Locked]`.
 
 **The grid is capped at 60 tiles — confirmed by the coordinator (2026-08-18)**, with a
 "narrow your search" notice when the cap truncates the result set, reusing
-[0022's](../0022-searchable-multi-select-component.md) own truncation-row idiom. Pagination and
+[0022's](0022-searchable-multi-select-component.md) own truncation-row idiom. Pagination and
 infinite scroll were both considered and rejected: 0019 D7 judges the library at 10²–10³ rows, the
 PRD's screenshot shows a plain scrolling grid with no pagination control anywhere, and each tile
 renders a `<picture>` with three sources (D13), so an uncapped grid is the one shape with a real
@@ -1073,7 +1073,7 @@ Ordered. Step 0 is a hard gate.
   baseline. Verified: `ai-spec/tasks/in-progress/` is empty.
 - **This story is the blocker for 0021 (WYSIWYG insert-image) and 0027 (product editor featured
   image).** Numbering already satisfies the ordering rule (0019 < 0020 < 0021 < 0027).
-- **No dependency on [0022](../0022-searchable-multi-select-component.md).** The two shared components
+- **No dependency on [0022](0022-searchable-multi-select-component.md).** The two shared components
   are independent and deliberately diverge (D4, D6, and the `#[Modelable]` reasoning in D2). PRD
   §2.4 explicitly names the media gallery's search as the **wrong** precedent for 0022's, and the
   inverse holds too.
@@ -1128,7 +1128,7 @@ Ordered. Step 0 is a hard gate.
 
 D2 binds `$open` with `#[Modelable]`, but Flux's `<flux:modal>` closes through its own backdrop / X
 button, and whether that propagates back through Livewire's `#[Modelable]` entanglement to the
-parent's bound property has not been traced. **This is [0022's own unresolved OQ-6](../0022-searchable-multi-select-component.md)
+parent's bound property has not been traced. **This is [0022's own unresolved OQ-6](0022-searchable-multi-select-component.md)
 inherited unchanged.** Not blocking Phase 2 — verify empirically in Phase 3 for this component
 specifically rather than assuming 0022's eventual finding transfers.
 

@@ -37,4 +37,25 @@ return [
         'insert_image_not_allowed' => 'No tienes permiso para insertar imágenes.',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Selección múltiple compartida con búsqueda del lado del servidor (historia 0022)
+    |--------------------------------------------------------------------------
+    |
+    | Consumido por resources/views/livewire/components/searchable-multi-select.blade.php.
+    | Segundo ocupante de este fichero, añadido como clave de nivel superior hermana -- nunca
+    | anidada bajo 'wysiwyg' de arriba.
+    |
+    */
+
+    'searchable_multi_select' => [
+        'empty_state' => 'No se han encontrado opciones coincidentes.',
+        'truncated' => 'Hay más coincidencias — acota la búsqueda para ver el resto.',
+        'remove_chip' => 'Quitar :label',
+        'unavailable_option' => 'Opción no disponible',
+        'unavailable_option_reason' => 'Esta opción no está disponible para su selección.',
+        'unresolvable_selection' => 'Uno o más valores seleccionados ya no existen y deben eliminarse antes de guardar.',
+        'chip_area_label' => 'Valores seleccionados',
+    ],
+
 ];
