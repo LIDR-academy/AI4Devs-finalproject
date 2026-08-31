@@ -179,16 +179,8 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initial
         <div style={{ marginTop: '12px' }}>
           <button
             type="button"
+            className="btn-link"
             onClick={() => setIsForgotModalOpen(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-primary)',
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              padding: '6px 10px',
-            }}
           >
             ¿Olvidó su PIN de Administrador?
           </button>

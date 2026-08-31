@@ -1,3 +1,5 @@
+import { apiRequest } from '../../../shared/http/apiClient.js';
+
 export interface LoginPinResponse {
   accessToken: string;
   user: {
@@ -93,35 +95,19 @@ export class AuthService {
   }
 
   public static async requestForgotPin(email: string, baseUrl: string = '/api/v1'): Promise<{ message: string }> {
-    const response = await fetch(`${baseUrl}/auth/forgot-pin`, {
+    return apiRequest<{ message: string }>('/auth/forgot-pin', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
+      body: { email },
+      baseUrl,
     });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.detail || data.message || 'Error al procesar la solicitud de recuperación.');
-    }
-    return data;
   }
 
   public static async resetAdminPin(token: string, newPin: string, baseUrl: string = '/api/v1'): Promise<{ message: string }> {
-    const response = await fetch(`${baseUrl}/auth/reset-pin`, {
+    return apiRequest<{ message: string }>('/auth/reset-pin', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token, newPin }),
+      body: { token, newPin },
+      baseUrl,
     });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.detail || data.message || 'El token de recuperación es inválido o ha expirado.');
-    }
-    return data;
   }
 
   public static logout(): void {

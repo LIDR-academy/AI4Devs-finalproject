@@ -471,6 +471,73 @@ h3 {
   animation: pulse 1.5s infinite ease-in-out;
 }
 
+/* Helper classes for PIN recovery & Auth Modals (TK-077) */
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 8px 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: opacity 0.15s ease;
+}
+
+.btn-link:hover {
+  opacity: 0.85;
+}
+
+.banner-success {
+  background-color: rgba(47, 191, 110, 0.12);
+  border: 1px solid rgba(47, 191, 110, 0.35);
+  border-radius: 6px;
+  padding: 14px 16px;
+  color: var(--color-success);
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.pin-dots-bar {
+  background-color: var(--bg-root);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pin-dot-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--border-card);
+  transition: all 0.15s ease;
+}
+
+.pin-dot-indicator.active {
+  background-color: var(--color-primary);
+}
+
+.form-group-touch {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.modal-header-center {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+
 
 
 

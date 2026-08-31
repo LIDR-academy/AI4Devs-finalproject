@@ -42,6 +42,11 @@ erDiagram
         string pin_hash "PII (Salted Hash)"
         string name
         enum role
+        enum status
+        boolean must_change_pin
+        int failed_attempts
+        string reset_token_hash
+        datetime reset_token_expires
         boolean is_active
         datetime created_at
         datetime updated_at
@@ -278,16 +283,20 @@ enum RemanenteStatus {
 // ==========================================
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  email        String?  @unique @db.VarChar(255)
-  passwordHash String?  @map("password_hash") @db.VarChar(255)
-  pinHash      String?  @map("pin_hash") @db.VarChar(255)
-  name         String   @db.VarChar(100)
-  photoUrl     String?  @map("photo_url") @db.VarChar(500)
-  role         Role     @default(OPERATOR)
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id                String          @id @default(uuid()) @db.Uuid
+  name              String          @db.VarChar(100)
+  roleId            String?         @map("role_id") @db.Uuid
+  role              Role?           @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  pinHash           String          @map("pin_hash") @db.VarChar(255)
+  status            UserStatus      @default(ACTIVE)
+  mustChangePin     Boolean         @default(true) @map("must_change_pin")
+  failedAttempts    Int             @default(0) @map("failed_attempts")
+  email             String?         @unique @db.VarChar(255)
+  resetTokenHash    String?         @map("reset_token_hash") @db.VarChar(255)
+  resetTokenExpires DateTime?       @map("reset_token_expires")
+  isActive          Boolean         @default(true) @map("is_active")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
 
   // Relaciones
   remanentes           Remanente[]
