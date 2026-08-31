@@ -4,7 +4,7 @@
 Build the **shipping-zone management screen**: a list of the admin-created zones, a zone editor that
 creates / renames / deletes a zone, and — inside that editor — the geography-assignment picker that
 lets an administrator add and remove seeded geography-catalog entries at country, comunidad autónoma
-or municipio level. The picker is [0022](0022-searchable-multi-select-component.md)'s shared
+or municipio level. The picker is [0022](in-progress/0022-searchable-multi-select-component.md)'s shared
 searchable multi-select bound to this story's own geography resolver; every mutation goes through
 [0033](0033-shipping-zones-backend.md)'s four domain actions. This story ships the first — and
 currently only — caller of `ShippingZonePolicy`.
@@ -21,7 +21,7 @@ convened, per [workflow.md](../../docs/workflow.md#task-classification-rule).
 > **Scope was widened, deliberately and on record.** Earlier Epic 2 documents describe 0034 as *"the
 > zone geography picker"* ([0032](0032-shipping-geography-catalog-seed.md)) or as owning *"its
 > resolver, the by-level grouping content, and the search query/index"*
-> ([0022](0022-searchable-multi-select-component.md)). 0033's **OQ-C** flagged that those are not the
+> ([0022](in-progress/0022-searchable-multi-select-component.md)). 0033's **OQ-C** flagged that those are not the
 > same scope, that **0035 already owns `/shipping`**, and recommended widening 0034 to the whole zone
 > screen rather than inserting a new story between the two. **That recommendation is accepted here**,
 > which also closes 0033's OQ-C and names this story as the consumer 0033's Definition-of-Done

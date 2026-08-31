@@ -17,21 +17,21 @@ it is searching. The one place data shape is decided is the `MultiSelectOptionsR
 below, and the two implementations of it belong to **0027** and **0034**, not here.
 
 **PRD coverage.** This component is **implied infrastructure, not a directly-cited PRD feature** —
-there is no `Feature:` block in [PRD](../../docs/PRD/PRD.md) naming it, and this story's own Gherkin
+there is no `Feature:` block in [PRD](../../../docs/PRD/PRD.md) naming it, and this story's own Gherkin
 therefore describes the *widget's* behaviour rather than restating either consumer's scenarios. It
 underwrites exactly two acceptance criteria, one per consumer:
 
 > - [ ] Products are assignable to one or more Sales Regions via a searchable multi-select where
 >       selecting Spain surfaces its fiscal sub-entries.
-> — [§2.2 Products](../../docs/PRD/PRD.md#22-products)
+> — [§2.2 Products](../../../docs/PRD/PRD.md#22-products)
 
 > - [ ] The zone's geography picker is a **searchable, server-side-filtered multi-select** with a
 >       "no results" empty state — the same shared component the product editor's Sales Region picker
 >       uses. A client-side filter is explicitly insufficient at this dataset's size.
-> — [§2.4 Shipping](../../docs/PRD/PRD.md#24-shipping) (rewritten 2026-08-17)
+> — [§2.4 Shipping](../../../docs/PRD/PRD.md#24-shipping) (rewritten 2026-08-17)
 
 **Why server-side filtering is the requirement, not an implementation preference.** The shared media
-gallery ([§2.3](../../docs/PRD/PRD.md#23-shared-media-gallery)) has a superficially similar
+gallery ([§2.3](../../../docs/PRD/PRD.md#23-shared-media-gallery)) has a superficially similar
 search-with-empty-state, and it is the wrong precedent to copy: its dataset is an uploaded image
 library, and §2.4 states outright that "a client-side filter like the media gallery's does not scale"
 to ~8,100 rows. The distinguishing constraint of this story is that **the option list is never fully
@@ -72,7 +72,7 @@ Three mechanisms were debated. **A closure cannot be a component property** (not
 |---|---|
 | (a) Abstract component the consumer **extends** | Workable, rejected on cost: one full Livewire component class **plus** its own request lifecycle and test surface per consumer, for what is fundamentally one query. |
 | (b) Child **dispatches an event**, parent answers | **Rejected.** Livewire has no synchronous dispatch-and-return; it needs a listener plus a dispatch back keyed by component id, with a real risk of an extra round trip per keystroke. No precedent anywhere in `app/Livewire/**`. |
-| (c) **Class-string implementing a 2-method interface**, passed to `mount()` | **Confirmed by the product owner (2026-08-18).** A string serializes cleanly, and the consumer writes one Action-shaped class — zero new Livewire components, zero new views per consumer. Matches the `app/Actions/` convention this codebase already leans on ([code-style.md](../../docs/conventions/code-style.md#inject-single-purpose-actions-per-method)). |
+| (c) **Class-string implementing a 2-method interface**, passed to `mount()` | **Confirmed by the product owner (2026-08-18).** A string serializes cleanly, and the consumer writes one Action-shaped class — zero new Livewire components, zero new views per consumer. Matches the `app/Actions/` convention this codebase already leans on ([code-style.md](../../../docs/conventions/code-style.md#inject-single-purpose-actions-per-method)). |
 
 ```php
 // app/Livewire/Components/MultiSelectOptionsResolver.php
@@ -133,7 +133,7 @@ chip labels from `$results` renders that chip blank or raw-id. **Chip labels com
 `array{id: string, label: string, group: string|null, disabled: bool}`.
 
 - **`id` is `string`**, never `int`, so both consumers fit without the shell caring — 0027's region ids
-  and 0034's ids (UUID per [ADR 0001](../../docs/decisions/0001-uuid-primary-keys.md), or a composite
+  and 0034's ids (UUID per [ADR 0001](../../../docs/decisions/0001-uuid-primary-keys.md), or a composite
   like `municipio:28079`) both serialize identically.
 - **`group`** is the level/section heading (`"Municipio"`, `"Comunidad Autónoma"`, `"País"`) that
   0034's grouped-by-level AC needs; `null` for 0027's flat list, which renders no headings at all.
@@ -208,7 +208,7 @@ and `assertSelectionResolvable()` (D12, the helper a consumer calls from its own
   disclosure primitive, not a cosmetic bug. It is set once, server-side, from the consumer's own Blade
   attribute, so locking costs nothing.
 - **`$selectedOptions`** and **`$results`** — server-derived display state, per
-  [livewire-authorization.md](../../docs/security/livewire-authorization.md#every-server-derived-property-is-locked-not-just-the-ids)'s
+  [livewire-authorization.md](../../../docs/security/livewire-authorization.md#every-server-derived-property-is-locked-not-just-the-ids)'s
   rule that the test is "is this value ever legitimate request input", not "is it an id".
 - **`$unresolvableSelected`** (added 2026-08-18) — same rule: it is a server-derived *verdict*. If the
   client could write it, it could clear its own error state, and the in-field warning D12 relies on
@@ -229,24 +229,37 @@ and the screen it is embedded in is already gated. Reviewers should expect its a
 
 What the shell *does* owe: `selectOption()`, `removeOption()` and `updatedSearch()` must each refuse
 when `$disabled` is true, server-side — hiding the input is not a control, per
-[livewire-authorization.md](../../docs/security/livewire-authorization.md#gate-at-the-top-of-every-method-that-mutates-or-discloses).
+[livewire-authorization.md](../../../docs/security/livewire-authorization.md#gate-at-the-top-of-every-method-that-mutates-or-discloses).
 
-### D8 — Three known traps this component must be built around
+### D8 — Four known traps this component must be built around
 
 1. **`@js()` on every id in a `wire:*` argument** — `wire:click="selectOption(@js($option['id']))"`,
    same for `removeOption`. Mandatory, not stylistic: a value interpolated into a `wire:` directive
    lands in a JS evaluator where Blade's escaping is undone
-   ([blade-livewire-output-encoding.md](../../docs/security/blade-livewire-output-encoding.md)). It
+   ([blade-livewire-output-encoding.md](../../../docs/security/blade-livewire-output-encoding.md)). It
    matters *more* here than on the Users screen, because these ids may come from an external fixture
    (INE municipio codes, ISO country codes) rather than being UUIDs by construction.
 2. **A disabled `flux:menu.item` gets two full `@if`/`@else` branches, never a conditionally-bound
    prop.** Under `livewire/blaze` a Flux prop that decides whether a wrapper renders counts as
    *present* whenever the attribute is written on the tag at all — the trap already recorded in
-   [errors-log.md](../../docs/errors-log.md) and worked around in
+   [errors-log.md](../../../docs/errors-log.md) and worked around in
    `resources/views/livewire/users.blade.php`. Reuse that shape; do not rediscover it.
 3. **`$selected` defaults to `[]`, never `null`.** The literal native-`<select>` desync in the errors
    log does not apply (there is no native `<select>` here), but its general rule does: a bound
    property must hold a real empty value in the type the DOM expects.
+4. **A conditional `disabled` on a `<flux:*>` tag is a full `@if`/`@else` tag pair, never a bare
+   `@disabled(...)` / `:disabled="..."` attribute.** Added 2026-08-31, from the newest
+   [errors-log.md](../../../docs/errors-log.md#a-bare-disableddisabled-inside-a-fluxbutton-tags-attribute-list-corrupts-the-whole-compiled-view--2026-08-31)
+   entry (story 0021's Phase 5 finding N4, reproduced via `Blade::render()`). Written inside a
+   `<flux:*>` tag's attribute list, that directive does **not** resolve to a conditional `disabled=""`
+   the way it would on a plain HTML `<button>` — `livewire/blaze`'s compile-time folding corrupts the
+   tag's **whole** attribute string into invalid PHP, a syntax error that breaks the entire compiled
+   view rather than merely mis-rendering one control. This story hits it directly: the search
+   `flux:input` is disabled when `$disabled` is true, and a `disabled: true` option's control is
+   disabled per-row (D3). Branch the whole tag both times. It shares its root cause with point 2 above
+   — Blaze not tolerating a directive where a plain attribute is expected — and is the **third** such
+   trap the errors log records; the difference is that this one fails loudly rather than silently, but
+   only for whoever renders the page first.
 
 ### D9 — Debounce, truncation, and why a result limit is mandatory
 
@@ -254,11 +267,11 @@ when `$disabled` is true, server-side — hiding the input is not a control, per
 no hand-rolled Alpine debounce (nothing in `app/Livewire/**` hand-rolls one today).
 
 ```php
-public function updatedSearch(NormalizeForSearch $normalizeForSearch): void
+public function updatedSearch(): void
 {
     // D13: one shared normalizer, applied here so every resolver receives an identically
     // folded term. This subsumes the old trim() — and OQ-5's whitespace-only case with it.
-    $term = $normalizeForSearch($this->search);
+    $term = app(NormalizeForSearch::class)->__invoke($this->search);
 
     if (mb_strlen($term) < $this->minSearchLength) {
         $this->results = [];
@@ -276,9 +289,16 @@ public function updatedSearch(NormalizeForSearch $normalizeForSearch): void
 
 > **`minSearchLength` is measured against the *normalized* term, not the raw input** (changed
 > 2026-08-18 by D13). `"  ñ  "` is length 1, not 5, and `"   "` is length 0 — which is why OQ-5 is
-> now resolved rather than open. The action is injected as a trailing container-resolved parameter,
-> matching the per-method action-injection convention
-> ([code-style.md](../../docs/conventions/code-style.md#inject-single-purpose-actions-per-method)).
+> now resolved rather than open. **The action is resolved with `app()`, deliberately, and the
+> per-method action-injection convention does *not* apply here**: `updatedSearch()` is a Livewire
+> `updated<Property>()` **lifecycle hook**, and Livewire invokes lifecycle hooks through
+> `wrap($component)->__call($name, $params)` with fixed parameters rather than a container `call()`,
+> so a type-hinted parameter would never be resolved. This is exactly the `app()` carve-out
+> [code-style.md](../../../docs/conventions/code-style.md#exception-an-actions-own-dependency-is-constructor-injected-when-the-method-signature-is-a-public-contract)
+> states — *a method whose parameter list is fixed by something other than this class may use `app()`,
+> and nothing else may* — established by story 0020's `Gallery::updatedPendingUploads()`, which
+> resolves its own two collaborators the same way for the same reason. Do not "fix" this into a
+> method-injected signature.
 
 **Fetch `resultLimit + 1` (plus the selection count), trim back to `resultLimit`.** The `+ 1` detects
 "there are more matches" without a second `COUNT(*)`, and is what tells the view to render the "narrow
@@ -402,7 +422,7 @@ default-on-neglect outcome is also invisible partial success cannot be the fix.
    mandatory, not belt-and-braces**: the shell's flag is UI state and `/livewire/update` is an
    independent entry point, so a save must never trust it. This is the same "a rule enforced only in
    a component is bypassed by every other call site" rule as
-   [livewire-authorization.md](../../docs/security/livewire-authorization.md#gate-at-the-top-of-every-method-that-mutates-or-discloses).
+   [livewire-authorization.md](../../../docs/security/livewire-authorization.md#gate-at-the-top-of-every-method-that-mutates-or-discloses).
 
 **The unavailable chip shows a generic localized label, never the raw id.** D4's reasoning extends
 here: ids in `$selected` are client-writable, so echoing one into the chip row hands an attacker a
@@ -428,7 +448,7 @@ as "the same search works on one screen and not another".
 `__invoke(string $value): string`.
 
 Directly under `app/Actions/`, not in a subfolder, because
-[base-standards.md](../../docs/conventions/base-standards.md#directory-structure) says exactly that:
+[base-standards.md](../../../docs/conventions/base-standards.md#directory-structure) says exactly that:
 "A new action goes in the subfolder for its domain (**or directly under `app/Actions/` if it belongs
 to none**)". Normalization belongs to no domain — products, geography and Sales Regions all call it.
 The naming follows the same file's convention for single-purpose invokables: imperative verb phrase,
@@ -442,7 +462,7 @@ it** — the needle a user typed *and* the haystack value a resolver matches aga
 > **new base folder** requiring approval under base-standards — the identical reason OQ-3 already
 > rejects `app/Contracts/` for the D1 interface. `app/Concerns/` was also rejected: it holds
 > validation-rule *traits* whose every method is suffixed `Rules`
-> ([naming.md](../../docs/conventions/naming.md#traits-and-their-methods)), which this is not. If
+> ([naming.md](../../../docs/conventions/naming.md#traits-and-their-methods)), which this is not. If
 > `app/Support/` is ever approved for other reasons, moving this class is a mechanical rename with a
 > single call-site sweep — see OQ-8.
 
@@ -462,7 +482,7 @@ public function __invoke(string $value): string
 1. `trim()` — strip leading/trailing whitespace.
 2. `Str::lower()` — mb-safe lowercasing (`mb_strtolower`). **Before** the folding step, matching the
    order this repo already uses in
-   [`FortifyServiceProvider`](../../app/Providers/FortifyServiceProvider.php)'s login-throttle key.
+   [`FortifyServiceProvider`](../../../app/Providers/FortifyServiceProvider.php)'s login-throttle key.
 3. `Str::ascii()` — accent/diacritic folding.
 4. `preg_replace('/\s+/u', ' ', …)` — collapse internal whitespace runs to a single space, so
    `"a   coruna"` and `"a coruna"` are one term.
@@ -545,11 +565,11 @@ summary, that is another additive prop under the same rule.
 Actor is phrased **"a catalog administrator using a searchable multi-select field"** — deliberately
 naming no consumer domain. This is shared infrastructure with no screen of its own, and saying "Sales
 Region" or "municipio" here would be a ghost precondition
-([rule 6](../../docs/testing/frontend/gherkin-guidelines.md#6-no-ghost-scenarios)) about screens that
+([rule 6](../../../docs/testing/frontend/gherkin-guidelines.md#6-no-ghost-scenarios)) about screens that
 do not exist. Every scenario follows
-[rule 1](../../docs/testing/frontend/gherkin-guidelines.md#1-imperative-vs-declarative-scenarios)
+[rule 1](../../../docs/testing/frontend/gherkin-guidelines.md#1-imperative-vs-declarative-scenarios)
 (named business-role actor) and
-[rule 3](../../docs/testing/frontend/gherkin-guidelines.md#3-single-when-per-scenario) (one `When`).
+[rule 3](../../../docs/testing/frontend/gherkin-guidelines.md#3-single-when-per-scenario) (one `When`).
 
 ```gherkin
 Feature: Searchable multi-select field
@@ -711,12 +731,17 @@ Feature: Searchable multi-select field
   result carries a `group`, flat when none do), the chip row (bounded and scrollable only when
   `$maxChipAreaHeight` is set — D14), the unavailable-chip variant and its field-level error (D12),
   the empty state, and the truncation row.
-- `lang/en/components.php` + `lang/es/components.php` — **new.** Shared-component copy
-  (`components.searchable_multi_select.*`: empty state, truncation notice, chip-remove `aria-label`,
+- `lang/en/components.php` + `lang/es/components.php` — **existing files this story extends, not new.**
+  Story 0021 created both for the shared WYSIWYG editor, and each currently holds a single top-level
+  `wysiwyg` key. This story **appends one sibling top-level key**, `searchable_multi_select`, beside it
+  — never touching or nesting under `wysiwyg`. (Both files carry a header comment from 0021 naming this
+  story by number and saying exactly that: whichever of 0021/0022 reached Phase 3 first creates the
+  paths, the other extends them under its own top-level key. 0021 got there first.) The new key holds
+  `components.searchable_multi_select.*`: empty state, truncation notice, chip-remove `aria-label`,
   unavailable-option explanation, plus the two D12 keys `unresolvable_selection` — the field error —
   and `unavailable_option` — the generic chip label that stands in for the raw id, and the
-  chip-area `aria-label` from D14). English source strings; both files stay key-for-key identical per
-  [naming.md](../../docs/conventions/naming.md#translation-keys).
+  chip-area `aria-label` from D14. English source strings; both files stay key-for-key identical per
+  [naming.md](../../../docs/conventions/naming.md#translation-keys).
 - `tests/Support/Livewire/ArrayMultiSelectOptionsResolver.php` — **new.** The test-only resolver
   (see "Test double" below).
 - `tests/Feature/Components/SearchableMultiSelectTest.php` — **new.** Component-level tests.
@@ -731,13 +756,16 @@ Feature: Searchable multi-select field
 **Directory justification.** `app/Livewire/Components/` is a **subfolder of the existing
 `app/Livewire/` base directory**, exactly as `Actions/`, `Settings/` and `Users/` already are — the
 "don't create new base folders without approval" rule in
-[base-standards.md](../../docs/conventions/base-standards.md#directory-structure) governs new
+[base-standards.md](../../../docs/conventions/base-standards.md#directory-structure) governs new
 top-level directories under `app/`, which this is not. `Components` was chosen over `Shared`/`UI` to
 mirror `resources/views/components/`, giving `app/Livewire/Components/` = reusable Livewire-backed UI
-against `resources/views/components/` = reusable plain Blade. **It is still raised as OQ-3**, because
-it establishes the pattern every future shared Livewire component will follow.
+against `resources/views/components/` = reusable plain Blade. **This was raised as OQ-3 and is now
+resolved** — not by this story, but by story 0021 shipping `App\Livewire\Components\WysiwygEditor`
+there first; the folder is an established convention in
+[base-standards.md](../../../docs/conventions/base-standards.md#directory-structure), so this story
+follows it rather than setting it. See the Resolved-questions section.
 
-**View resolution.** The [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+**View resolution.** The [`Index`-in-a-subfolder exception](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
 does **not** apply — it keys off the class literally being named `Index`. `SearchableMultiSelect`
 follows the ordinary kebab-case mirror rule:
 `App\Livewire\Components\SearchableMultiSelect` → `resources/views/livewire/components/searchable-multi-select.blade.php`.
@@ -765,7 +793,7 @@ Confirm against Livewire's `Finder` in Phase 3 before relying on it.
 
 ## Tests to perform
 
-Level chosen per [coverage-policy.md](../../docs/testing/frontend/coverage-policy.md): browser tests
+Level chosen per [coverage-policy.md](../../../docs/testing/frontend/coverage-policy.md): browser tests
 only where the DOM/JS round-trip is itself the risk. That balance tilts further toward browser tests
 than any previous story here, because this is the first widget in the codebase whose *input mechanism*
 (debounced `wire:model.live` into a JS-driven result list) is hand-assembled rather than a plain form
@@ -843,12 +871,19 @@ control.
 - [ ] **Typing an unaccented term surfaces the accented option in the real rendered list** (D13) — the round-trip proof that normalization survives `wire:model.live`'s encoding, which no component test covers.
 - [ ] **A selection holding an unresolvable id renders the unavailable chip and the field error on first paint** (D12), and the host page's save control refuses with a visible validation message rather than saving a subset.
 - [ ] **With `maxChipAreaHeight` set, the chip container's rendered `scrollHeight` exceeds its `clientHeight` while the field's own height stays bounded** (D14) — measured from the real layout, since "it scrolls" is not observable in markup. The same assertion inverted (no overflow, container grows) for the unbounded default.
-- [ ] `->assertNoJavaScriptErrors()` in **every** browser test (mandatory per [test-quality-checklist.md](../../docs/testing/frontend/test-quality-checklist.md)).
+- [ ] `->assertNoJavaScriptErrors()` in **every** browser test (mandatory per [test-quality-checklist.md](../../../docs/testing/frontend/test-quality-checklist.md)).
 
 **Not tested, deliberately:** dark-mode rendering. Per
-[test-quality-checklist.md](../../docs/testing/frontend/test-quality-checklist.md), visual regression
+[test-quality-checklist.md](../../../docs/testing/frontend/test-quality-checklist.md), visual regression
 earns its place only where visual correctness is the requirement; nothing in §2.2/§2.3/§2.4 asks for
 dark-mode-specific behaviour here, and this is a shell, not a designed page.
+
+> **This does not contradict the "renders correctly in light and dark mode" acceptance criterion** —
+> the two are about different things and both stand. That AC is a **design/manual-review** expectation:
+> build the component out of Flux components and Tailwind `dark:` variants exactly as every other
+> screen in this app already does, and confirm it by looking at it, the same way every previous UI
+> story here has. What is excluded is only an **automated visual-regression test** asserting it, which
+> this codebase has never had for any screen and which would be the wrong first place to introduce one.
 
 ### Test double — how this is testable with no consumer
 
@@ -889,7 +924,7 @@ Neither consumer exists, so there is no model or dataset to search. Verified fac
 
 Proving real-world throughput is **not this story's job** — that would be a load test in a browser
 test's costume, and it would be asserting behaviour owned by 0032's index and 0034's query, neither of
-which exists. Per [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md)'s proportionality
+which exists. Per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md)'s proportionality
 rule, what this story asserts instead is the **bounded contract** that makes 8,100 rows safe: a result
 set capped at `resultLimit` regardless of dataset size, a resolver never asked for more than
 `resultLimit + 1 + count($selected)`, and one resolver call per settled search rather than one per
@@ -935,13 +970,17 @@ identically over 250 rows and over 8,100.
 - [ ] Every id interpolated into a `wire:*` argument goes through `@js()`.
 - [ ] The component performs no authorization of its own; that responsibility sits with the resolver and is documented as such.
 - [ ] All copy is English source through `__()` in `lang/en/components.php`, mirrored key-for-key in `lang/es/components.php`; no hardcoded literals.
-- [ ] The component renders correctly in light and dark mode and produces no JavaScript console errors.
+- [ ] The component renders correctly in light and dark mode (a **design/manual-review** expectation —
+  Flux components and Tailwind `dark:` variants used throughout, consistent with every other screen in
+  this app — deliberately **not** covered by an automated visual-regression test; see "Not tested,
+  deliberately" in the Tests section, which this does not contradict) and produces no JavaScript
+  console errors (this half **is** automated, via `->assertNoJavaScriptErrors()` in every browser test).
 - [ ] The contract in **Documented functional decisions** is implemented exactly as written, so 0027 and 0034 can bind to it unchanged.
 
 ## Dependencies, risks, open questions
 
 **Dependencies: none.** This is new shared infrastructure. It is the *blocker* for 0027 and 0034, and
-should be sequenced before both per [workflow.md](../../docs/workflow.md)'s task-ordering rule
+should be sequenced before both per [workflow.md](../../../docs/workflow.md)'s task-ordering rule
 (a dependency's number is lower than its dependents' — 0022 < 0027 < 0034 already holds).
 
 **Risks.**
@@ -967,7 +1006,7 @@ should be sequenced before both per [workflow.md](../../docs/workflow.md)'s task
   control. Flux Free gives no combobox, so `flux:dropdown` + `flux:menu` is being used for something
   it was not designed for (search results, not a static action menu). Expect Phase 3 to hit at least
   one Flux/Blaze rendering surprise of the kind already recorded twice in
-  [errors-log.md](../../docs/errors-log.md).
+  [errors-log.md](../../../docs/errors-log.md).
 - **The isolated-host test gap** described above — mitigated, not eliminated, by the forward
   dependency on 0027/0034.
 
@@ -991,6 +1030,16 @@ should be sequenced before both per [workflow.md](../../docs/workflow.md)'s task
   validation error; the previous silent drop is struck through in D4, not deleted.
 - **Bounded chip display. Resolved 2026-08-18 by D14** (raised by 0034's debate): the additive
   `maxChipAreaHeight` prop, defaulting to `null` = unbounded = today's behaviour.
+- **OQ-3 — `app/Livewire/Components/` as the home for shared Livewire components. Resolved
+  2026-08-31, and not by this story.** It was raised here because it would set the precedent for every
+  future shared component; **story 0021 got there first** and shipped `App\Livewire\Components\WysiwygEditor`
+  into exactly that folder, which is now documented in
+  [base-standards.md](../../../docs/conventions/base-standards.md#directory-structure) as an established
+  subfolder ("not a module area like the others — it holds reusable, content-agnostic components a
+  screen embeds"). So this story **follows** the convention rather than establishing it, and the
+  "Directory justification" paragraph above is retained as background, not as an open decision. The
+  rejection of a new `app/Contracts/` base folder for the D1 interface stands unchanged — it does not
+  exist, and creating it would need approval.
 
 **Still-open questions.** None are blocking — all can be settled during Phase 3.
 
@@ -1000,11 +1049,8 @@ should be sequenced before both per [workflow.md](../../docs/workflow.md)'s task
   filter; 250 regions could tolerate browsing, but a shared default should favour the consumer where
   the wrong choice is actively harmful. A later `browseOnFocus` prop can add it per-consumer without
   changing the contract.
-- **OQ-3 — confirm `app/Livewire/Components/` as the home for shared Livewire components.** Recommend
-  **yes (recommended)** — it is a normal subfolder of an existing base directory, not a new base
-  folder, and mirrors `resources/views/components/`. Raised only because it sets the precedent for
-  every future shared component. A generic `app/Contracts/` for the interface was considered and
-  rejected: it does not exist, and creating it **would** be a new base folder needing approval.
+- ~~**OQ-3 — `app/Livewire/Components/` as the home for shared Livewire components.**~~ **Moved to
+  Resolved 2026-08-31** — settled independently by story 0021 shipping there first. See above.
 - ~~**OQ-5 — whitespace-only terms.**~~ **Moved to Resolved 2026-08-18** — subsumed by D13's
   normalizer. See above.
 - **OQ-6 — `#[Modelable]` + `#[Locked]` interaction, to verify in Phase 3, not decide now.**
@@ -1043,10 +1089,10 @@ should be sequenced before both per [workflow.md](../../docs/workflow.md)'s task
 
 ## Provenance
 Written in Phase 1 (Three Amigos) on 2026-08-17 for Epic 2, from
-[§2.2](../../docs/PRD/PRD.md#22-products), [§2.3](../../docs/PRD/PRD.md#23-shared-media-gallery) (read
-for contrast) and the [§2.4 Shipping](../../docs/PRD/PRD.md#24-shipping) section rewritten the same
+[§2.2](../../../docs/PRD/PRD.md#22-products), [§2.3](../../../docs/PRD/PRD.md#23-shared-media-gallery) (read
+for contrast) and the [§2.4 Shipping](../../../docs/PRD/PRD.md#24-shipping) section rewritten the same
 day. Participants: `product-owner`, `frontend-expert`, `frontend-qa` — classified **frontend** per
-[workflow.md](../../docs/workflow.md)'s task-classification rule, with `database-expert` deliberately
+[workflow.md](../../../docs/workflow.md)'s task-classification rule, with `database-expert` deliberately
 **not** convened since the story creates no table, migration or query. No application code was written
 in this phase.
 
@@ -1066,3 +1112,15 @@ reasoning, D9's `updatedSearch()`, the files list, the test lists, the acceptanc
 expected outcome, and the resolution of OQ-5 (plus the new, non-blocking OQ-8). Still no application
 code written. 0026, 0032, 0033 and 0034 are being amended in parallel to consume these decisions;
 this file is the authoritative source for all three contracts.
+
+**Amended 2026-08-31 by `product-owner` — a real Phase 2 INVEST loop, not a polish pass.**
+`code-reviewer`'s Phase 2 validation returned **FAIL** with two blocking defects, both corrected here
+before Phase 3: **B1**, D9's `updatedSearch()` was written with a method-injected
+`NormalizeForSearch` parameter, which Livewire never resolves for an `updated<Property>()` lifecycle
+hook (it invokes those with fixed parameters), so the snippet and its cited convention are replaced
+with the `app()` carve-out that actually governs the case; and **B2**, `lang/{en,es}/components.php`
+were listed as **new** files when story 0021 already created both — this story extends them with a
+sibling top-level key. Three non-blocking notes were applied in the same pass: the fourth D8 Flux/Blaze
+trap from the 2026-08-31 errors-log entry, a reconciliation of the light/dark acceptance criterion with
+the deliberate no-visual-regression decision, and OQ-3 moved to Resolved now that story 0021 has
+already established `app/Livewire/Components/`. No decision (D1–D14) changed meaning.
