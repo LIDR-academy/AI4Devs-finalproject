@@ -20,6 +20,19 @@ interface MultiSelectOptionsResolver
      * haystack side with that same utility (or match a column already stored folded); comparing
      * a folded needle against an unfolded haystack silently matches nothing.
      *
+     * Two things this shell deliberately does NOT do on the implementer's behalf (Phase 4
+     * finding F-8), because it owns no table and no domain knowledge (D7):
+     *
+     * - **Authorization.** This shell ships no `Gate::authorize()` call of its own — the
+     *   resolver is the ONLY place row-level authorization for this data can live. A real
+     *   implementation MUST perform its own authorization (e.g. scope the query to what the
+     *   acting user may see, or `Gate::authorize('viewAny', ...)` before querying) if the
+     *   underlying data is not uniformly visible to every authenticated user.
+     * - **`LIKE`-wildcard escaping.** If the implementation matches $term against a `LIKE`
+     *   query, it MUST escape the term's own `%`/`_`/`\` wildcard characters before
+     *   interpolating it — the way `App\Models\Media::search()` already does with
+     *   `addcslashes($term, '%_\\')` — rather than interpolating the normalized term raw.
+     *
      * @return array<int, array{id: string, label: string, group: string|null, disabled: bool}>
      */
     public function search(string $term, int $limit): array;

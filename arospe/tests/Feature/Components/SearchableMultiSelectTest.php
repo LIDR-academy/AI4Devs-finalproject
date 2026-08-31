@@ -376,6 +376,12 @@ test('locked server-derived properties reject a client-initiated set() -- a regr
     'results' => ['results', [['id' => 'x', 'label' => 'x', 'group' => null, 'disabled' => false]]],
     'unresolvableSelected' => ['unresolvableSelected', ['x']],
     'maxChipAreaHeight' => ['maxChipAreaHeight', '99rem'],
+    // Phase 4 findings F-1/F-3/F-5: newly-locked config/gating properties.
+    'disabled' => ['disabled', true],
+    'resultLimit' => ['resultLimit', 999999],
+    'minSearchLength' => ['minSearchLength', 0],
+    'debounceMs' => ['debounceMs', 0],
+    'field' => ['field', 'tampered'],
 ]);
 
 // =====================================================================
@@ -494,6 +500,18 @@ test('a resolver that (wrongly) returns a short array instead of throwing is sti
         ->and($component->get('selected'))->toBe(['madrid', 'ghost-id']);
 
     $component->assertHasErrors('selected');
+});
+
+test('Phase 4 finding F-2: assertSelectionResolvable() also catches a resolver that (wrongly) returns a short array instead of throwing -- the save-time gate, not only the display path', function () {
+    $resolver = multiSelectResolver(rows: ArrayMultiSelectOptionsResolver::DEFAULT_ROWS, misbehave: true);
+
+    $component = Livewire::test(SearchableMultiSelect::class, [
+        'optionResolver' => $resolver,
+        'selected' => ['madrid', 'ghost-id'],
+    ]);
+
+    expect(fn () => $component->instance()->assertSelectionResolvable())
+        ->toThrow(ValidationException::class);
 });
 
 test('UnresolvedSelectionException has no render() method, so it can never accidentally become an HTTP response', function () {

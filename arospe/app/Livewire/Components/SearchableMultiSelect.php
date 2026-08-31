@@ -80,19 +80,53 @@ class SearchableMultiSelect extends Component
 
     /**
      * Error-bag key, so $errors->has($field) works (D5). Also the key
-     * assertSelectionResolvable() raises its ValidationException against.
+     * assertSelectionResolvable() raises its ValidationException against. #[Locked] (Phase 4
+     * finding F-5): a tampered payload changing $field mid-session could otherwise clear or
+     * redirect a consumer's own validation error bag on chip removal -- the security weight is
+     * in what this value is used FOR (an error-bag key), not in the string itself, which is why
+     * it is locked while purely cosmetic strings like $label/$placeholder/$emptyStateText are
+     * not (see D6's own "is this value ever legitimate request input" test).
      */
+    #[Locked]
     public string $field = 'selected';
 
+    /**
+     * #[Locked] (Phase 4 finding F-3): a client-writable $minSearchLength defeats the debounce
+     * hook's own search-cost bound -- setting it to 0 forces a resolver call on every keystroke,
+     * including a single character against a resolver backed by an unindexed LIKE scan.
+     */
+    #[Locked]
     public int $minSearchLength = 1;
 
+    /**
+     * #[Locked] (Phase 4 finding F-3): purely a client-side debounce timing hint today, but
+     * locked alongside $minSearchLength/$resultLimit since all three are the same "bounded
+     * contract" configuration D9 relies on -- a consumer sets it once, server-side.
+     */
+    #[Locked]
     public int $debounceMs = 300;
 
+    /**
+     * #[Locked] (Phase 4 finding F-3): a client-writable $resultLimit directly drives
+     * $fetchLimit (resultLimit + 1 + count($selected)) in updatedSearch() -- a tampered
+     * `resultLimit: 999999` would defeat D9's whole "bounded fetch is what makes an 8,100-row
+     * resolver safe" contract. updatedSearch() also clamps $fetchLimit to a hard ceiling as
+     * defence in depth, independent of this lock.
+     */
+    #[Locked]
     public int $resultLimit = 20;
 
     /** Blank => lang fallback (D5). */
     public string $emptyStateText = '';
 
+    /**
+     * Consumer-set-once (from the Blade attribute), gating every server-side mutation/disclosure
+     * method (D7). #[Locked] (Phase 4 finding F-1): without it, a tampered /livewire/update
+     * `updates` payload sets `disabled: false` directly, bypassing every `if ($this->disabled)`
+     * guard in selectOption()/removeOption()/updatedSearch() -- the near-exact repeat of story
+     * 0021's WysiwygEditor::$disabled finding.
+     */
+    #[Locked]
     public bool $disabled = false;
 
     /**
@@ -115,6 +149,13 @@ class SearchableMultiSelect extends Component
 
     public function mount(): void
     {
+        // Phase 4 finding F-6: $selected is declared array<int, string>, but a tampered
+        // /livewire/update payload can hand it non-string entries (a nested array, an int, null),
+        // which reach array_diff()/whereIn()-style operations downstream and emit PHP "Array to
+        // string conversion" warnings rather than being rejected outright. Coerce rather than
+        // drop -- an int-looking id is still a real id string a resolver may legitimately hold.
+        $this->selected = $this->coerceToStringIds($this->selected);
+
         if (! is_subclass_of($this->optionResolver, MultiSelectOptionsResolver::class)) {
             $this->throwMountValidationError(sprintf(
                 '[%s] must implement %s.',
@@ -123,7 +164,11 @@ class SearchableMultiSelect extends Component
             ));
         }
 
-        if ($this->maxChipAreaHeight !== null && ! preg_match('/^\d+(\.\d+)?(rem|em|px|vh)$/', $this->maxChipAreaHeight)) {
+        // Phase 4 finding F-7: a bare `$` anchor matches before a trailing newline, not only at
+        // the true end of string, so "12rem\n" would otherwise pass. `\z` anchors to the
+        // absolute end of the subject. This value flows into a rendered `style` attribute, so
+        // it is tightened even though "12rem\n" is harmless today.
+        if ($this->maxChipAreaHeight !== null && ! preg_match('/^\d+(\.\d+)?(rem|em|px|vh)\z/', $this->maxChipAreaHeight)) {
             $this->throwMountValidationError(sprintf(
                 '[%s] is not a valid CSS length for maxChipAreaHeight.',
                 $this->maxChipAreaHeight,
@@ -131,6 +176,28 @@ class SearchableMultiSelect extends Component
         }
 
         $this->refreshSelectedOptions();
+    }
+
+    /**
+     * Phase 4 finding F-6: guarantees every entry is actually a `string`, independent of the
+     * $selected property's own declared "array of string" docblock type above. That declared
+     * type is a promise, not an enforcement -- a tampered `/livewire/update` payload can violate
+     * it -- and Larastan trusts the property's declared type on every *other* read of
+     * `$this->selected`, which would make an `is_scalar()` check written inline always evaluate
+     * true from its point of view. This method's own parameter is deliberately typed wider than
+     * that property (a mixed-valued array, not a string-valued one), so the type boundary resets
+     * honestly here rather than being suppressed with an ignore comment or an inline type
+     * override.
+     *
+     * @param  array<int, mixed>  $ids
+     * @return array<int, string>
+     */
+    private function coerceToStringIds(array $ids): array
+    {
+        return array_values(array_map(
+            'strval',
+            array_filter($ids, fn (mixed $id): bool => is_scalar($id)),
+        ));
     }
 
     /**
@@ -143,6 +210,14 @@ class SearchableMultiSelect extends Component
      * elimination) rather than an `@var` override or `assert()`; mount()'s own
      * `is_subclass_of()` check already makes the throw here unreachable in practice, so this is
      * belt-and-braces, not a new runtime rule.
+     *
+     * Phase 4 finding F-4, confirmed by construction rather than by a second runtime check: this
+     * method is only ever called from updatedSearch()/selectOption()/removeOption()/
+     * assertSelectionResolvable()/refreshSelectedOptions(), and Livewire always runs mount() to
+     * completion before any of those can be reached — so `app($this->optionResolver)` is never
+     * asked to build an arbitrary, unvalidated class string; `is_subclass_of()` has already
+     * passed by the time this line can execute. `$optionResolver` being #[Locked] additionally
+     * means that check, once passed, cannot be invalidated by a later request.
      */
     private function resolver(): MultiSelectOptionsResolver
     {
@@ -200,6 +275,13 @@ class SearchableMultiSelect extends Component
 
         $term = app(NormalizeForSearch::class)->__invoke($this->search);
 
+        // Phase 4 finding F-3, defence in depth independent of $search NOT being #[Locked] (it
+        // is the live search-box wire:model.live target, correctly writable): cap the
+        // normalized term's length before it is ever handed to a resolver, so an oversized
+        // $search payload cannot be used as an amplification vector against a resolver backed
+        // by an unindexed LIKE scan.
+        $term = mb_substr($term, 0, 255);
+
         if (mb_strlen($term) < $this->minSearchLength) {
             $this->results = [];
             $this->hasMoreResults = false;
@@ -208,8 +290,12 @@ class SearchableMultiSelect extends Component
         }
 
         // Over-fetch by the current selection count so excluding already-selected rows (D11)
-        // can never leave fewer than $resultLimit + 1 candidates behind.
-        $fetchLimit = $this->resultLimit + 1 + count($this->selected);
+        // can never leave fewer than $resultLimit + 1 candidates behind. Phase 4 finding F-3:
+        // $resultLimit/$minSearchLength are now #[Locked], but this ceiling is defence in
+        // depth independent of the lock, capping $fetchLimit at a value that comfortably
+        // covers every legitimate use in this codebase's Epic 2 datasets (~254 sales regions,
+        // ~10^2-10^3 users) without depending on the lock alone to bound the resolver call.
+        $fetchLimit = min($this->resultLimit + 1 + count($this->selected), 500);
 
         $fetched = $this->resolver()->search($term, $fetchLimit);
 
@@ -320,13 +406,24 @@ class SearchableMultiSelect extends Component
      * this component's own $unresolvableSelected flag, which is UI state and must never be
      * trusted by a save: /livewire/update is an independent entry point.
      *
+     * Phase 4 finding F-2: this used to catch only a thrown UnresolvedSelectionException, which
+     * a resolver that (wrongly) returns a short array instead of throwing defeats entirely --
+     * the exact defence in depth refreshSelectedOptions() already has. It now shares
+     * resolveIdsAllowingPartialFailure() with refreshSelectedOptions(), so the two can never
+     * disagree about what "resolved" means and this gate independently verifies coverage via
+     * the same diff regardless of whether an exception was thrown at all.
+     *
      * @throws ValidationException when any selected id is unresolvable
      */
     public function assertSelectionResolvable(): void
     {
-        try {
-            $this->resolver()->resolveSelected($this->selected);
-        } catch (UnresolvedSelectionException) {
+        if ($this->selected === []) {
+            return;
+        }
+
+        ['missingIds' => $missingIds] = $this->resolveIdsAllowingPartialFailure($this->selected);
+
+        if ($missingIds !== []) {
             throw ValidationException::withMessages([
                 $this->field => __('components.searchable_multi_select.unresolvable_selection'),
             ]);
@@ -335,17 +432,7 @@ class SearchableMultiSelect extends Component
 
     /**
      * D2's chip-label refresh, and D12's reject-never-drop mechanism — called on mount() and
-     * after every select/remove. resolveSelected() is a total function (D12): it either returns
-     * one entry per requested id, or throws carrying every id it could not vouch for. On a throw,
-     * a second, narrower call is attempted for the ids NOT named in the exception, so a mix of
-     * one bad id and several good ones still renders correct labels for the good ones — that
-     * second call's own failure (a race, or a still-misbehaving resolver) degrades to treating
-     * every one of those ids as unresolvable too, rather than throwing out of here and 500-ing
-     * the host screen.
-     *
-     * Defence in depth against a resolver that (wrongly) returns a short array instead of
-     * throwing (D12): any requested id absent from whatever was actually returned is folded into
-     * $unresolvableSelected regardless of whether an exception was thrown at all.
+     * after every select/remove.
      */
     private function refreshSelectedOptions(): void
     {
@@ -357,15 +444,50 @@ class SearchableMultiSelect extends Component
             return;
         }
 
+        ['resolved' => $resolved, 'missingIds' => $missingIds] = $this->resolveIdsAllowingPartialFailure($this->selected);
+
+        $this->selectedOptions = collect($resolved)->keyBy('id')->all();
+        $this->unresolvableSelected = $missingIds;
+
+        $this->resetErrorBag($this->field);
+
+        if ($missingIds !== []) {
+            $this->addError($this->field, __('components.searchable_multi_select.unresolvable_selection'));
+        }
+    }
+
+    /**
+     * The single place that decides "is this id set fully resolved" (Phase 4 finding F-2) —
+     * shared by assertSelectionResolvable() (D12's save-time gate) and refreshSelectedOptions()
+     * (D2's chip-label refresh), so the two can never drift about what counts as resolved.
+     *
+     * resolveSelected() is a total function (D12): it either returns one entry per requested
+     * id, or throws carrying every id it could not vouch for. On a throw, a second, narrower
+     * call is attempted for the ids NOT named in the exception, so a mix of one bad id and
+     * several good ones still resolves the good ones — that second call's own failure (a race,
+     * or a still-misbehaving resolver) degrades to treating every one of those ids as
+     * unresolvable too, rather than throwing out of here.
+     *
+     * Defence in depth against a resolver that (wrongly) returns a short array instead of
+     * throwing (D12): any requested id absent from whatever was actually returned is folded
+     * into the returned missingIds regardless of whether an exception was thrown at all — this
+     * is what makes assertSelectionResolvable() catch a misbehaving resolver too, not only
+     * refreshSelectedOptions()'s display path.
+     *
+     * @param  array<int, string>  $ids
+     * @return array{resolved: array<int, array{id: string, label: string, group: string|null, disabled: bool}>, missingIds: array<int, string>}
+     */
+    private function resolveIdsAllowingPartialFailure(array $ids): array
+    {
         $resolved = [];
         $missingIds = [];
 
         try {
-            $resolved = $this->resolver()->resolveSelected($this->selected);
+            $resolved = $this->resolver()->resolveSelected($ids);
         } catch (UnresolvedSelectionException $exception) {
             $missingIds = $exception->missingIds;
 
-            $resolvableIds = array_values(array_diff($this->selected, $missingIds));
+            $resolvableIds = array_values(array_diff($ids, $missingIds));
 
             if ($resolvableIds !== []) {
                 try {
@@ -379,17 +501,10 @@ class SearchableMultiSelect extends Component
         $returnedIds = collect($resolved)->pluck('id')->all();
         $missingIds = array_values(array_unique(array_merge(
             $missingIds,
-            array_diff($this->selected, $returnedIds, $missingIds),
+            array_diff($ids, $returnedIds, $missingIds),
         )));
 
-        $this->selectedOptions = collect($resolved)->keyBy('id')->all();
-        $this->unresolvableSelected = $missingIds;
-
-        $this->resetErrorBag($this->field);
-
-        if ($missingIds !== []) {
-            $this->addError($this->field, __('components.searchable_multi_select.unresolvable_selection'));
-        }
+        return ['resolved' => $resolved, 'missingIds' => $missingIds];
     }
 
     /**

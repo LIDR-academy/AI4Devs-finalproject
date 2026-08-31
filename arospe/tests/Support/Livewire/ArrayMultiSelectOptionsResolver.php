@@ -76,6 +76,12 @@ class ArrayMultiSelectOptionsResolver implements MultiSelectOptionsResolver
      */
     public function search(string $term, int $limit): array
     {
+        // Deliberately performs neither of the two things the interface docblock (Phase 4
+        // finding F-8) tells a REAL resolver it must do: no authorization check (this is an
+        // in-memory array double with no rows to scope), and no LIKE-wildcard escaping (there is
+        // no SQL LIKE query here at all -- str_contains() has no wildcard semantics to escape).
+        // Neither omission is a bug in this double; both are the responsibility of a real
+        // resolver implementation (0026/0027/0034), never of this test fixture.
         $this->searchCalls[] = ['term' => $term, 'limit' => $limit];
 
         $normalizeForSearch = new NormalizeForSearch;
