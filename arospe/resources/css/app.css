@@ -64,3 +64,13 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Story 0021 -- the shared WYSIWYG editor's empty-state placeholder. A
+   contenteditable region has no native `placeholder` attribute; the
+   `data-placeholder` value (resources/views/livewire/components/wysiwyg-editor.blade.php)
+   is rendered as pseudo-content only while the region is genuinely empty. */
+.wysiwyg-editor-region:empty:before {
+    content: attr(data-placeholder);
+    color: var(--color-zinc-400);
+    pointer-events: none;
+}
