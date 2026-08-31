@@ -63,6 +63,14 @@ class SearchableMultiSelectBrowserTestHost extends Component
 
     public ?string $maxChipAreaHeight = null;
 
+    /**
+     * N1 code-review fix: null means "let the widget's own #[Locked] $debounceMs default (300)
+     * apply" -- the fixture Blade file below only forwards `:debounce-ms` when this is non-null,
+     * so a test that never sets it exercises the real default rather than a duplicated literal
+     * 300 here.
+     */
+    public ?int $debounceMs = null;
+
     public bool $saved = false;
 
     public function mount(): void
@@ -80,6 +88,7 @@ class SearchableMultiSelectBrowserTestHost extends Component
 
         $this->selected = $config['selected'] ?? [];
         $this->maxChipAreaHeight = $config['maxChipAreaHeight'] ?? null;
+        $this->debounceMs = $config['debounceMs'] ?? null;
     }
 
     /**
@@ -125,7 +134,7 @@ function multiSelectBrowserBind(?array $rows = null): ArrayMultiSelectOptionsRes
 }
 
 /**
- * @param  array{selected?: array<int, string>, maxChipAreaHeight?: string|null}  $config
+ * @param  array{selected?: array<int, string>, maxChipAreaHeight?: string|null, debounceMs?: int|null}  $config
  */
 function multiSelectBrowserConfig(array $config): void
 {
@@ -164,9 +173,12 @@ test('debounce coalesces a rapid keystroke burst into fewer resolver calls than 
 
     $page = visit('/__test/searchable-multi-select')->assertNoJavaScriptErrors();
 
-    // Each ->fill() overwrites the field's value and fires its own `input` event, restarting
-    // wire:model.live.debounce.300ms's timer -- three fills issued back-to-back (no artificial
-    // wait between them) exercise the same coalescing a fast human typist triggers.
+    // Each ->fill() overwrites the field's value and fires its own native `input` event,
+    // restarting the hand-rolled Alpine setTimeout() debounce that x-on:input drives (N1, code
+    // review -- resources/views/livewire/components/searchable-multi-select.blade.php) -- three
+    // fills issued back-to-back (no artificial wait between them) exercise the same coalescing a
+    // fast human typist triggers, at the widget's real #[Locked] default (this host is not
+    // configured with a debounceMs override, so it renders the literal 300).
     $page->fill('Regions', 'm')
         ->fill('Regions', 'ma')
         ->fill('Regions', 'mad');
@@ -176,6 +188,46 @@ test('debounce coalesces a rapid keystroke burst into fewer resolver calls than 
     $page->assertSee('Madrid')->assertNoJavaScriptErrors();
 
     expect(count($double->searchCalls))->toBeLessThan(3);
+});
+
+test('debounceMs is a real, per-instance-configurable value, not silently ignored in favour of a hardcoded 300ms (N1, code review)', function () {
+    // A RELATIVE comparison across two visits, not an assertion on an exact call count for
+    // either one: this environment's real inter-fill() timing is not precise enough to promise
+    // a specific number (measured directly, over three consecutive runs: debounceMs=0 produced
+    // exactly 2 calls every time for this identical three-fill burst, never 3 or 1 -- the JS
+    // macrotask queue does not guarantee every fill's 0ms timer fires before the next fill
+    // lands). What IS stable and reproducible, and what actually proves $debounceMs is read and
+    // honored rather than silently ignored (N1's exact finding -- the widget could not
+    // parameterize a native wire:model.live.debounce.Xms modifier by $debounceMs at all, so
+    // every consumer got a literal 300 regardless of what they configured), is that configuring
+    // debounceMs far BELOW the real default produces MORE independent resolver calls than the
+    // real default does for the identical burst. See docs/testing/frontend/playwright-setup.md's
+    // own warnings about exact-timing browser assertions in this environment -- this test
+    // deliberately avoids relying on one.
+    $this->actingAs(User::factory()->create());
+
+    $doubleDefault = multiSelectBrowserBind();
+    visit('/__test/searchable-multi-select')
+        ->assertNoJavaScriptErrors()
+        ->fill('Regions', 'm')
+        ->fill('Regions', 'ma')
+        ->fill('Regions', 'mad')
+        ->assertSee('Madrid')
+        ->assertNoJavaScriptErrors();
+    $defaultCallCount = count($doubleDefault->searchCalls);
+
+    $doubleShort = multiSelectBrowserBind();
+    multiSelectBrowserConfig(['debounceMs' => 0]);
+    visit('/__test/searchable-multi-select')
+        ->assertNoJavaScriptErrors()
+        ->fill('Regions', 'm')
+        ->fill('Regions', 'ma')
+        ->fill('Regions', 'mad')
+        ->assertSee('Madrid')
+        ->assertNoJavaScriptErrors();
+    $shortCallCount = count($doubleShort->searchCalls);
+
+    expect($shortCallCount)->toBeGreaterThan($defaultCallCount);
 });
 
 // =====================================================================

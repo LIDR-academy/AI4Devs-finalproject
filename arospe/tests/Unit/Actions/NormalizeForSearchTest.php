@@ -27,6 +27,15 @@
 // string operations with no dependency on the container, the translator, or config. tests/Pest.php
 // only binds `Feature` and `Browser` to Tests\TestCase; `Unit` gets the bare PHPUnit\TestCase Pest
 // defaults to, which is exactly right here.
+//
+// Every construction below is `app(NormalizeForSearch::class)`, never `new NormalizeForSearch`
+// (docs/conventions/code-style.md's "an action must be resolved from the container, never `new`-ed
+// -- including in tests" rule, N2 of story 0022's code review). This still needs no framework
+// bootstrap: `app()` with no bound Laravel Application falls back to
+// `Illuminate\Container\Container::getInstance()`, a bare container that auto-resolves
+// NormalizeForSearch by reflection alone, since its constructor takes no arguments -- verified by
+// running this file in isolation, with no other test file's TestCase::createApplication() having
+// run first.
 
 use App\Actions\NormalizeForSearch;
 
@@ -51,7 +60,7 @@ function normalizeForSearchFoldingTable(): array
 }
 
 it('folds the exact D13 dataset', function (string $input, string $expected) {
-    expect((new NormalizeForSearch)($input))->toBe($expected);
+    expect(app(NormalizeForSearch::class)($input))->toBe($expected);
 })->with(normalizeForSearchFoldingTable());
 
 // D13's own comparison table (Str::transliterate(Str::lower(...)) vs Str::ascii(Str::lower(...)))
@@ -66,19 +75,19 @@ it('folds the exact D13 dataset', function (string $input, string $expected) {
 // instead of dropped, so 'n' would fail. Do not weaken either assertion to accommodate that swap.
 it('drops what it cannot map instead of injecting a literal "?" or romanizing CJK (pins Str::ascii() over Str::transliterate())', function () {
     // Str::transliterate(Str::lower('café☕')) === 'cafe?' -- Str::ascii() must never do this.
-    expect((new NormalizeForSearch)('café☕'))->toBe('cafe');
+    expect(app(NormalizeForSearch::class)('café☕'))->toBe('cafe');
 
     // Str::transliterate(Str::lower('Ñ东')) === 'nDong ' -- CJK is romanized and re-uppercased.
     // Str::ascii() must drop it entirely instead.
-    expect((new NormalizeForSearch)('Ñ东'))->toBe('n');
+    expect(app(NormalizeForSearch::class)('Ñ东'))->toBe('n');
 });
 
 it('trims leading/trailing whitespace and collapses internal whitespace runs to a single space', function () {
-    expect((new NormalizeForSearch)('  A   Coruña  '))->toBe('a coruna');
+    expect(app(NormalizeForSearch::class)('  A   Coruña  '))->toBe('a coruna');
 });
 
 it('is idempotent: applying it twice is the same as applying it once, across the whole folding dataset', function (string $input) {
-    $normalizeForSearch = new NormalizeForSearch;
+    $normalizeForSearch = app(NormalizeForSearch::class);
 
     $once = $normalizeForSearch($input);
     $twice = $normalizeForSearch($once);
@@ -90,12 +99,12 @@ it('is idempotent: applying it twice is the same as applying it once, across the
 ));
 
 it('normalizes the empty string and a whitespace-only string both to an empty string', function () {
-    expect((new NormalizeForSearch)(''))->toBe('')
-        ->and((new NormalizeForSearch)('   '))->toBe('');
+    expect(app(NormalizeForSearch::class)(''))->toBe('')
+        ->and(app(NormalizeForSearch::class)('   '))->toBe('');
 });
 
 it('always outputs lowercase ASCII, as a property over the whole folding dataset', function (string $input) {
-    $result = (new NormalizeForSearch)($input);
+    $result = app(NormalizeForSearch::class)($input);
 
     // No byte >= 0x80 remains -- the output is pure ASCII, never multibyte UTF-8.
     expect(mb_check_encoding($result, 'ASCII'))->toBeTrue();

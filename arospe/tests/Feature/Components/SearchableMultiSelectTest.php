@@ -552,7 +552,7 @@ test('the resolver receives an already-normalized term -- asserted from the doub
     ])->set('search', '  ÑÍÑO  ');
 
     expect($double->searchCalls)->toHaveCount(1)
-        ->and($double->searchCalls[0]['term'])->toBe((new NormalizeForSearch)('  ÑÍÑO  '));
+        ->and($double->searchCalls[0]['term'])->toBe(app(NormalizeForSearch::class)('  ÑÍÑO  '));
 });
 
 test('a whitespace-only term normalizes to empty, so no resolver call is made (OQ-5, now covered by D13)', function () {

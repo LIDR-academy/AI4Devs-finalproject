@@ -20,16 +20,31 @@
     element) are kept for their styling; only the `<flux:menu>` OUTER wrapper -- the one that renders
     `<ui-menu popover="manual">` -- is replaced.
 
-    `wire:model.live.debounce.300ms` is hard-coded, not interpolated from $debounceMs: Blade's
-    ComponentTagCompiler parses a component tag's attribute NAMES with the regex
+    `wire:model.live.debounce.{{ $debounceMs }}ms` cannot be written as an ATTRIBUTE NAME:
+    Blade's ComponentTagCompiler parses a component tag's attribute NAMES with the regex
     `[\w\-:.@%]+`, which does not include `{`/`}`/`$` -- an interpolated
     `wire:model.live.debounce.{{ $debounceMs }}ms` attribute NAME does not compile the way a
     value would, since compileComponentTags() runs before Blade's own `{{ }}` echo compiler even
-    sees the string. $debounceMs stays a real, readable public property (D5's contract), it just
-    cannot parameterize this one directive -- the same reason
-    resources/views/livewire/media/gallery.blade.php hard-codes its own "300ms" literal.
+    sees the string. This is the reason resources/views/livewire/media/gallery.blade.php hard-
+    codes its own "300ms" literal for the identical directive shape.
+
+    Fixed here (N1, code review) rather than left as a documented gap, because $debounceMs is
+    part of D5's public contract and a consumer setting `debounceMs={100}` silently getting
+    300ms anyway contradicts it. The fix follows the working precedent this codebase already
+    has for a debounce whose duration is not bakeable into a wire:*.debounce.Xms modifier --
+    resources/views/livewire/components/wysiwyg-editor.blade.php's wire:ignore'd region, which
+    debounces via a hand-rolled Alpine setTimeout() + $wire.set() instead of a Livewire
+    attribute modifier. The trap above is specific to an interpolated ATTRIBUTE NAME on a
+    component tag; {{ $debounceMs }} interpolated inside an ordinary attribute VALUE (the
+    x-on:input expression below) is not that shape at all -- Blade echoes inside a component
+    tag's attribute VALUES compile correctly throughout this file (:name, data-test="...-{{
+    $id }}", etc.), and $debounceMs here is no different.
 --}}
-<div x-data="{ multiSelectOpen: false }" x-on:click.outside="multiSelectOpen = false" class="relative w-full">
+<div
+    x-data="{ multiSelectOpen: false, searchDebounceTimeout: null }"
+    x-on:click.outside="multiSelectOpen = false"
+    class="relative w-full"
+>
     @if ($disabled)
         <flux:input
             type="text"
@@ -49,14 +64,21 @@
             plain unassociated tag, not a real <label>, so GuessLocator's text-search fallback
             resolves to it and fails actionability -- verified live, not assumed.
         --}}
+        {{--
+            wire:model (NOT .live): the debounce dispatch below is what triggers the request,
+            never a native Livewire debounce modifier -- see the file banner comment. A plain
+            wire:model still keeps this input's DOM value deferred-bound to $search as a
+            fallback, matching every other non-.live field's behaviour in this codebase.
+        --}}
         <flux:input
             type="text"
             :label="$label !== '' ? $label : null"
             :name="$label !== '' ? $label : 'search'"
             :placeholder="$placeholder"
-            wire:model.live.debounce.300ms="search"
+            wire:model="search"
             autocomplete="off"
             x-on:focus="multiSelectOpen = true"
+            x-on:input="clearTimeout(searchDebounceTimeout); searchDebounceTimeout = setTimeout(() => $wire.set('search', $event.target.value), {{ $debounceMs }})"
             data-test="searchable-multi-select-search"
         />
     @endif

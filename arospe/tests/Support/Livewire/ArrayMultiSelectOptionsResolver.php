@@ -84,7 +84,7 @@ class ArrayMultiSelectOptionsResolver implements MultiSelectOptionsResolver
         // resolver implementation (0026/0027/0034), never of this test fixture.
         $this->searchCalls[] = ['term' => $term, 'limit' => $limit];
 
-        $normalizeForSearch = new NormalizeForSearch;
+        $normalizeForSearch = app(NormalizeForSearch::class);
 
         return collect($this->rows)
             ->filter(fn (array $row): bool => str_contains($normalizeForSearch($row['label']), $term))

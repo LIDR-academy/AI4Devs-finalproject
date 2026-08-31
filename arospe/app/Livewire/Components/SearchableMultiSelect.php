@@ -273,12 +273,16 @@ class SearchableMultiSelect extends Component
     }
 
     /**
-     * The debounce hook (D9) — `wire:model.live.debounce.{$debounceMs}ms="search"` in the view
-     * drives this. Resolved with `app()`, deliberately: this is a Livewire `updated<Property>()`
-     * lifecycle hook, invoked through `wrap($component)->__call($name, $params)` with FIXED
-     * parameters rather than a container `call()`, so a type-hinted parameter here would never be
-     * resolved — the same `app()` carve-out story 0020's Gallery::updatedPendingUploads() and this
-     * class-style docblock precedent already establish
+     * The debounce hook (D9). Since the N1 code-review fix, the view no longer drives this via a
+     * `wire:model.live.debounce.Xms` attribute modifier (a Blade compile-time trap prevents that
+     * modifier's duration from being interpolated from $debounceMs at all — see the file banner
+     * comment in searchable-multi-select.blade.php) — instead a hand-rolled Alpine `setTimeout()`
+     * calls `$wire.set('search', ...)` after $debounceMs elapses, which triggers this same
+     * `updated<Property>()` lifecycle hook exactly as a `wire:model.live` write would. Resolved
+     * with `app()`, deliberately: this is invoked through `wrap($component)->__call($name,
+     * $params)` with FIXED parameters rather than a container `call()`, so a type-hinted
+     * parameter here would never be resolved — the same `app()` carve-out story 0020's
+     * Gallery::updatedPendingUploads() and this class-style docblock precedent already establish
      * (docs/conventions/code-style.md#exception-an-actions-own-dependency-is-constructor-injected-when-the-method-signature-is-a-public-contract).
      */
     public function updatedSearch(): void
