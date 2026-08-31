@@ -47,7 +47,18 @@ test('the harness route resolves under the testing environment', function () {
 
     $this->actingAs($actor)
         ->get(route('dev.media-gallery-harness'))
-        ->assertOk();
+        ->assertOk()
+        // Story 0021 D13/OQ-1: the harness hosts TWO WysiwygEditor
+        // instances, not one -- assert both data-test roots and both
+        // (always-rendered, D9) seeded contents are present, so a
+        // regression that drops either embed from the view is caught here
+        // rather than only by a browser test discovering D5's re-entrancy
+        // acceptance criterion has become unwriteable.
+        ->assertSee('data-test="harness-editor-instance"', false)
+        ->assertSee('data-test="harness-editor-instance-2"', false)
+        ->assertSee('data-test="wysiwyg-editor-region"', false)
+        ->assertSee('BEFORE AFTER', false)
+        ->assertSee('SECOND BEFORE AFTER', false);
 });
 
 test('the harness route is not registered at all under production', function () {
