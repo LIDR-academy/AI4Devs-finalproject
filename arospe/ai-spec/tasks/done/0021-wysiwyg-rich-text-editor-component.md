@@ -1003,7 +1003,7 @@ Ordered. Steps 0 and 1 are hard gates.
   `config/html-sanitizer.php` is what technical task 10 verifies against. This story can be built
   before 0024 ships (the allow-list is already confirmed in writing) but **cannot be closed with
   confidence until the emitted set has been round-tripped through the real sanitizer**.
-- **[0022 — searchable multi-select](../in-progress/0022-searchable-multi-select-component.md) — no dependency, but a
+- **[0022 — searchable multi-select](0022-searchable-multi-select-component.md) — no dependency, but a
   file-ownership collision** on `app/Livewire/Components/` and `lang/{en,es}/components.php` (V14,
   [D12](#d12--translation-keys-and-the-shared-ownership-hand-off-with-0022)). Neither story blocks the
   other; whichever runs Phase 3 first creates the shared paths.

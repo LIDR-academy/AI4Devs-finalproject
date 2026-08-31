@@ -500,7 +500,7 @@ divergence is deliberate and is the cheapest way to teach the rule; see
 [D-4](#d-4--the-live-sku-preview-is-a-server-side-computed-never-a-property-and-never-client-side)'s
 provisional-label note for the wrinkle it creates.
 
-*Rejected:* [0022](in-progress/0022-searchable-multi-select-component.md)'s searchable multi-select, on three
+*Rejected:* [0022](done/0022-searchable-multi-select-component.md)'s searchable multi-select, on three
 grounds. Its selection carries **bare ids with no structure**, so its `group` field could display the
 type name but cannot *enforce* one option per group — reopening DIS-1 from the UI. Its **D11** excludes
 an already-selected option from results, which is the wrong exclusion here (after picking Size 40 you
@@ -1275,7 +1275,7 @@ wrapped in `@if ($showGenerateModal)` so only one Cancel control is ever in the 
   that *"the selected types need not be 'offered by' the product"* — there is no declaration table — so
   restricting the list would invent a constraint the backend does not have. The `max:5` array rule is
   the only ceiling, and it is the server's.
-- *Rejected:* [0022](in-progress/0022-searchable-multi-select-component.md)'s searchable multi-select, on **D-2**'s
+- *Rejected:* [0022](done/0022-searchable-multi-select-component.md)'s searchable multi-select, on **D-2**'s
   grounds unchanged (a bare-id selection with no group structure), plus one specific to this control:
   the count preview below needs the **value count per selected type**, which a component returning bare
   ids cannot supply without a second query.
