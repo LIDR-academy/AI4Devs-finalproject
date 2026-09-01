@@ -33,6 +33,7 @@ Antes de escribir cualquier línea de código:
 1. Revisa la carpeta `docs/04_governance_and_quality/rules/`.
 2. Ejecuta `bash .agents/scripts/check_rules_freshness.sh` para verificar de forma determinista (vía timestamps de git, no inferencia) si algún doc fuente cambió después que su regla derivada.
 3. Ejecuta la skill [SK-27 Extracción de Reglas](../skills/development/01_rules_extraction/SK-27_extract_project_rules.md) para sincronizar las reglas de gobernanza técnica solo si: (a) los archivos de reglas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`) no existen, o (b) el script reportó `⚠️ Posible drift` para algún archivo relevante al ticket en curso.
+4. **Guarda nueva descubierta a mitad de proyecto:** si este ticket agrega una guarda nueva de "prohibir/mandatar patrón X" a la sección 6 de `AGENTS.md` (el patrón `"Discovered in TK-XXX"` ya usado por la mayoría de las guardas existentes), el mismo ticket DEBE también agregar el bullet correspondiente a la lista enumerada del paso "Generación de Scripts de Gobernanza Ejecutable" de `SK-27` — nunca dejar la guarda solo en prosa. Un `AGENTS.md` con una regla nueva y ningún script que la verifique es, en sí mismo, deuda de gobernanza sin cerrar: la próxima vez que alguien corra `SK-27` en este proyecto (o lo instale en uno nuevo vía `install.sh`), esa guarda debe generarse como script ejecutable, no solo copiarse como texto.
 
 ---
 
