@@ -5,6 +5,7 @@ export interface InsumoProps {
   name: string;
   unitOfMeasure: string;
   warehouseStock: DecimalQuantity;
+  unitCost?: DecimalQuantity;
 }
 
 export class Insumo {
@@ -28,6 +29,10 @@ export class Insumo {
 
   public get warehouseStock(): DecimalQuantity {
     return this.props.warehouseStock;
+  }
+
+  public get unitCost(): DecimalQuantity | undefined {
+    return this.props.unitCost;
   }
 
   public hasSufficientStock(requested: DecimalQuantity): boolean {

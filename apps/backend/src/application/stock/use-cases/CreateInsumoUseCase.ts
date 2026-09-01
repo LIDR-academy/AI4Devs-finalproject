@@ -8,6 +8,7 @@ export interface CreateInsumoInputDTO {
   name: string;
   unitOfMeasure: string;
   initialWarehouseStock?: string;
+  unitCost?: string;
 }
 
 export interface InsumoOutputDTO {
@@ -15,6 +16,7 @@ export interface InsumoOutputDTO {
   name: string;
   unitOfMeasure: string;
   warehouseStock: string;
+  unitCost: string | null;
 }
 
 export class CreateInsumoUseCase {
@@ -34,6 +36,7 @@ export class CreateInsumoUseCase {
       name: trimmedName,
       unitOfMeasure: input.unitOfMeasure.toUpperCase(),
       warehouseStock: new DecimalQuantity(stockQtyStr),
+      unitCost: input.unitCost !== undefined ? new DecimalQuantity(input.unitCost) : undefined,
     });
 
     await this.insumoRepository.save(insumo);
@@ -43,6 +46,7 @@ export class CreateInsumoUseCase {
       name: insumo.name,
       unitOfMeasure: insumo.unitOfMeasure,
       warehouseStock: insumo.warehouseStock.toString(),
+      unitCost: insumo.unitCost ? insumo.unitCost.toDecimal().toFixed(2) : null,
     };
   }
 }

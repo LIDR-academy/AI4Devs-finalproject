@@ -11,6 +11,7 @@ export class ListInsumosUseCase {
       name: insumo.name,
       unitOfMeasure: insumo.unitOfMeasure,
       warehouseStock: insumo.warehouseStock.toString(),
+      unitCost: insumo.unitCost ? insumo.unitCost.toDecimal().toFixed(2) : null,
     }));
   }
 }

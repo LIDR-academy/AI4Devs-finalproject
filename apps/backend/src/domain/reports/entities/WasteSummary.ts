@@ -6,6 +6,7 @@ export interface WasteSummaryProps {
   unitOfMeasure: string;
   totalDiscardedQuantity: DecimalQuantity;
   reason: string;
+  unitCost?: DecimalQuantity;
 }
 
 export class WasteSummary {
@@ -33,5 +34,9 @@ export class WasteSummary {
 
   public get reason(): string {
     return this.props.reason;
+  }
+
+  public get unitCost(): DecimalQuantity | undefined {
+    return this.props.unitCost;
   }
 }

@@ -451,7 +451,7 @@ sequenceDiagram
       "unitCost": "1800.00"
     }
     ```
-    *   `unitCost` (Opcional, `US-019`): Costo expresado **por unidad de compra** (ej. costo de 1 KG completo, no por gramo) — coincide con `unitOfMeasure`, sin factor de conversión intermedio. Si se omite, el insumo queda sin costo registrado (`unitCost: null`) y su merma no se valoriza en `$` en los reportes hasta que un Administrador lo complete.
+    *   `unitCost` (Opcional, `US-019`): Costo expresado **por unidad de compra** (ej. costo de 1 KG completo, no por gramo) — coincide con `unitOfMeasure`, sin factor de conversión intermedio. Máximo 2 decimales y 10 dígitos enteros (coincide exactamente con la columna `Decimal(12,2)` — a diferencia de otros campos `DecimalString` de hasta 4 decimales). Si se omite, el insumo queda sin costo registrado (`unitCost: null`) y su merma no se valoriza en `$` en los reportes hasta que un Administrador lo complete.
 *   **Response Success (`201 Created` - `CreateInsumoResponse`):**
     ```json
     {

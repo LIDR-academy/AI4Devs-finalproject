@@ -23,6 +23,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       name: raw.name,
       unitOfMeasure: raw.unitOfMeasure,
       warehouseStock: new DecimalQuantity(quantity),
+      unitCost: raw.unitCost !== null ? new DecimalQuantity(raw.unitCost.toString()) : undefined,
     });
   }
 
@@ -41,6 +42,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       name: raw.name,
       unitOfMeasure: raw.unitOfMeasure,
       warehouseStock: new DecimalQuantity(quantity),
+      unitCost: raw.unitCost !== null ? new DecimalQuantity(raw.unitCost.toString()) : undefined,
     });
   }
 
@@ -56,6 +58,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         name: raw.name,
         unitOfMeasure: raw.unitOfMeasure,
         warehouseStock: new DecimalQuantity(quantity),
+        unitCost: raw.unitCost !== null ? new DecimalQuantity(raw.unitCost.toString()) : undefined,
       });
     });
   }
@@ -106,12 +109,14 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
 
   public async save(insumo: Insumo): Promise<void> {
     const stockQty = insumo.warehouseStock.toDecimal();
+    const unitCost = insumo.unitCost ? insumo.unitCost.toDecimal() : null;
 
     await this.prisma.insumo.upsert({
       where: { id: insumo.id },
       update: {
         name: insumo.name,
         unitOfMeasure: insumo.unitOfMeasure,
+        unitCost,
         warehouseStocks: {
           upsert: {
             where: { id: `${insumo.id}_MAIN_WAREHOUSE` },
@@ -128,6 +133,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         id: insumo.id,
         name: insumo.name,
         unitOfMeasure: insumo.unitOfMeasure,
+        unitCost,
         warehouseStocks: {
           create: {
             id: `${insumo.id}_MAIN_WAREHOUSE`,

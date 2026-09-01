@@ -11,6 +11,7 @@ export interface WasteSummaryDTO {
   unitOfMeasure: string;
   totalDiscardedQuantity: string;
   reason: string;
+  totalDiscardedCost: string | null;
 }
 
 export class GetWasteReportUseCase {
@@ -36,6 +37,11 @@ export class GetWasteReportUseCase {
       unitOfMeasure: s.unitOfMeasure,
       totalDiscardedQuantity: s.totalDiscardedQuantity.toString(),
       reason: s.reason,
+      // US-019: null (no "0.00") cuando el insumo no tiene unitCost registrado — el
+      // reporte debe distinguir "sin costo" de "costo genuinamente cero".
+      totalDiscardedCost: s.unitCost
+        ? s.totalDiscardedQuantity.toDecimal().times(s.unitCost.toDecimal()).toFixed(2)
+        : null,
     }));
   }
 }

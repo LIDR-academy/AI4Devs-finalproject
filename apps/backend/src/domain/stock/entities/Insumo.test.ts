@@ -33,4 +33,20 @@ describe('Insumo Domain Entity — Stock de Bodega', () => {
     insumo.increaseStock(new DecimalQuantity('5.500'));
     expect(insumo.warehouseStock.toString()).toBe('15.500');
   });
+
+  it('unitCost debe ser undefined cuando el insumo no tiene costo registrado (US-019)', () => {
+    const insumo = buildInsumo('10.000');
+    expect(insumo.unitCost).toBeUndefined();
+  });
+
+  it('unitCost debe exponer el costo por unidad de compra cuando fue registrado (US-019)', () => {
+    const insumo = new Insumo({
+      id: 'ins-1',
+      name: 'Queso Mozzarella',
+      unitOfMeasure: 'KG',
+      warehouseStock: new DecimalQuantity('10.000'),
+      unitCost: new DecimalQuantity('1800.00'),
+    });
+    expect(insumo.unitCost?.toDecimal().toFixed(2)).toBe('1800.00');
+  });
 });

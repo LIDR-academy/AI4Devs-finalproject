@@ -42,4 +42,23 @@ describe('CreateInsumoUseCase', () => {
       })
     ).rejects.toThrow(InsumoAlreadyExistsException);
   });
+
+  it('debe registrar el costo por unidad de compra cuando se provee unitCost (US-019)', async () => {
+    const result = await useCase.execute({
+      name: 'Queso Mozzarella',
+      unitOfMeasure: 'KG',
+      unitCost: '1800.00',
+    });
+
+    expect(result.unitCost).toBe('1800.00');
+  });
+
+  it('debe dejar unitCost como null cuando no se provee costo (US-019)', async () => {
+    const result = await useCase.execute({
+      name: 'Salsa de Tomate',
+      unitOfMeasure: 'L',
+    });
+
+    expect(result.unitCost).toBeNull();
+  });
 });

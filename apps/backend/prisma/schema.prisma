@@ -107,6 +107,7 @@ model Insumo {
   id              String           @id @default(uuid())
   name            String
   unitOfMeasure   String           @default("KG")
+  unitCost        Decimal?         @db.Decimal(12, 2)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   warehouseStocks WarehouseStock[]

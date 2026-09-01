@@ -40,7 +40,7 @@ coverage/
 .nyc_output/
 
 # Mutation Testing Reports (Stryker)
-reports/mutation/
+**/reports/mutation/
 .stryker-tmp/
 
 # IDEs, Editors & Workspaces

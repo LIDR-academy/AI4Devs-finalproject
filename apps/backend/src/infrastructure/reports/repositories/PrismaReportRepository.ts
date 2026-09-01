@@ -9,6 +9,7 @@ interface WasteAccumulator {
   unitOfMeasure: string;
   reason: string;
   total: DecimalQuantity;
+  unitCost: DecimalQuantity | undefined;
 }
 
 // El motivo de descarte no vive en una columna propia (StockMovement no tiene `reason` en el
@@ -54,9 +55,13 @@ export class PrismaReportRepository implements IReportRepository {
         unitOfMeasure: movement.insumo.unitOfMeasure,
         reason,
         total: quantity,
+        unitCost: movement.insumo.unitCost !== null ? new DecimalQuantity(movement.insumo.unitCost.toString()) : undefined,
       });
     }
 
+    // US-019: unitCost se transporta tal cual (sin multiplicar) — el calculo de
+    // totalDiscardedCost es una regla de negocio y vive en GetWasteReportUseCase
+    // (capa Application), no en este adaptador de infraestructura.
     return Array.from(summaryByKey.values()).map(
       (accumulator) =>
         new WasteSummary({
@@ -65,6 +70,7 @@ export class PrismaReportRepository implements IReportRepository {
           unitOfMeasure: accumulator.unitOfMeasure,
           totalDiscardedQuantity: accumulator.total,
           reason: accumulator.reason,
+          unitCost: accumulator.unitCost,
         })
     );
   }

@@ -35,6 +35,13 @@ const createInsumoSchema = z.object({
   unitOfMeasure: z.enum(['KG', 'L', 'UNITS'], {
     errorMap: () => ({ message: 'La unidad de medida debe ser KG, L o UNITS.' }),
   }),
+  // US-019: costo por unidad de compra, opcional. Maximo 2 decimales y 10 digitos enteros
+  // para coincidir exactamente con la columna Decimal(12,2) — evita redondeo silencioso
+  // (regex de 4 decimales) y overflow numerico sin capturar (400 explicito en vez de 500).
+  unitCost: z
+    .string()
+    .regex(/^\d{1,10}(\.\d{1,2})?$/, 'El costo unitario debe ser un numero decimal valido de hasta 2 decimales (ej. "1800.00").')
+    .optional(),
 });
 
 const restockInsumoSchema = z.object({
