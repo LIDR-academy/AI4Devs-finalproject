@@ -19,7 +19,7 @@ Esta directiva rige las convenciones físicas y modelos ORM en PostgreSQL y Pris
 ---
 
 ## 📐 2. Precisión y Restricciones
-* **Campos Decimales:** Toda cantidad o costo debe definirse como `Decimal(12, 3)` en el esquema Prisma.
+* **Campos Decimales:** Toda cantidad física (stock, consumo, merma) debe definirse como `Decimal(12, 3)` o `Decimal(12, 4)` en el esquema Prisma, según el precedente ya usado por el campo análogo más cercano. **Excepción — montos monetarios (Discovered in `TK-078`):** un costo o precio en moneda (ej. `Insumo.unitCost`) se define como `Decimal(12, 2)` — 2 decimales, no 3 — reflejando la precisión estándar de céntimos/centavos, nunca la escala de las cantidades físicas. La validación Zod en el controlador HTTP debe coincidir exactamente con la escala elegida (ver `backend_rules.md §3`).
 * **Integridad y Claves:** Todas las relaciones deben exigir claves foráneas con restricciones explícitas de integridad referencial.
 * **Consultas FEFO:** Creación obligatoria de índices compuestos sobre `(status, calculated_expiration_date)` para optimizar el ordenamiento de remanentes por vencimiento FEFO.
 
