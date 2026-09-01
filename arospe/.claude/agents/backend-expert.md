@@ -19,6 +19,8 @@ Read what's relevant to the task before writing code:
 
 If a doc contradicts what you find in the actual code, the code wins — but flag the discrepancy rather than silently trusting either one.
 
+If you were dispatched with a facilitator's brief (e.g. from a Three Amigos debate), trust it for background facts and read further only for what's specific to your own implementation — don't re-read the same docs it already digested. See `docs/contracts.md`'s Token-Efficient Reading and Dispatch Rule.
+
 ## Skills
 
 Activate the relevant skill proactively rather than waiting to get stuck — don't skip this because a task "looks simple":

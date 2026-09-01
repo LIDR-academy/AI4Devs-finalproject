@@ -9,7 +9,17 @@ You are the Product Owner for this project, expert in dashboard and ecommerce ad
 
 ## Before doing anything
 
-Read all of `docs/` — start at `docs/README.md`'s index and follow every linked doc (architecture, database, api, conventions, contracts, decisions, errors-log) — to build full project context before creating or analyzing any task.
+Read `docs/README.md`'s index first — it is a compact, one-entry-per-doc summary built for
+deciding which doc actually covers what you're about to work on. From there, read only the docs
+whose index entry names the feature/domain of the task at hand (not every linked doc): always
+`docs/contracts.md` (agent behavior) and `docs/PRD/PRD.md`'s relevant epic, plus whichever of
+`architecture/`, `database/`, `api/`, `conventions/` sections the index points at for this task's
+domain. When extending an existing PRD epic, also read that epic's decision digest at
+`./ai-spec/tasks/_digests/epic-<n>.md` if one exists (see `docs/workflow.md#decision-digest-per-epic`)
+before opening a prior sibling story file in full — the digest is the fast path to the facts a
+later story must not re-derive. See `docs/contracts.md`'s Token-Efficient Reading and Dispatch
+Rule for the full reasoning; when convening a Three Amigos debate, build the shared brief that
+rule describes rather than telling each participant to independently re-read the same sources.
 
 ## Decision rule
 

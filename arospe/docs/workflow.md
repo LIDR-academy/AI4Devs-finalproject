@@ -41,6 +41,38 @@ previous one is met.
 knowledge (the workflow definition itself, the root cause of a poorly designed test, the
 final changes made during development).
 
+## Decision digest per epic
+
+Every agent dispatched against a task independently re-reads large parts of `docs/`, with no
+context shared between sibling calls — see [contracts.md](contracts.md#token-efficient-reading-and-dispatch-rule)
+and [workflow-token-efficiency.md](workflow-token-efficiency.md) for why this is the dominant
+token cost in this workflow, not a minor one. A **decision digest** is the concrete fix for the
+single largest driver of that cost within one epic: a later story in the same epic re-reading
+every already-closed sibling story in full to inherit an established shape, when a handful of
+facts from that story are actually load-bearing.
+
+- **Where it lives:** `./ai-spec/tasks/_digests/epic-<n>.md`, one file per PRD epic. Create the
+  folder and the file the first time a second story in an epic needs one — a single-story epic
+  needs no digest.
+- **What it holds, and what it must not:** only the shapes and decisions a later story in the
+  same epic must not re-derive — trait/class/method names and signatures already established,
+  resolved cross-story questions, naming or schema decisions that set a precedent. A few hundred
+  lines at most, in short bullets, never the full prose of a finalized story. It is a lookup
+  table for facts, not a second copy of `docs/errors-log.md` or of the story files themselves —
+  don't duplicate content that already has a durable home there.
+- **Who writes it:** `docs-keeper`, appended (never rewritten wholesale) at Phase 6/7 of each
+  story in the epic, immediately after the doc-sync pass for that story — the same moment it
+  already has the story's real diff in hand.
+- **Who reads it:** `product-owner` (directly, or via the `three-amigos-debate` skill) at Phase 0
+  decomposition and Phase 1 debate for any story in that epic, **before** deciding whether it
+  needs to open a prior sibling story file in full at all. Reading the digest first is what makes
+  "read the full sibling story only when the digest doesn't already answer the question" possible
+  instead of habitual.
+
+A digest entry is short by construction: `- <fact/decision> — <which story it's from>`. If a
+later reader needs more than the digest gives, that is the signal to open the cited story's
+specific section — never a reason to pad the digest itself into a second story file.
+
 ## Link-integrity check on every stage move
 
 Moving a task file breaks relative links in **two directions**, and both have to be repaired as
@@ -218,6 +250,14 @@ it as a file at `./ai-spec/tasks/<id>-<slug>.md` (**new** stage — not yet in p
 > agents above, and writes one User Story file per story to `./ai-spec/tasks/` (the **new**
 > stage). It never writes application code and never advances a story past Phase 1 — Phases 2–7
 > below stay manually orchestrated.
+>
+> **Read scoped, distill once.** Before convening participants, `product-owner` reads the
+> epic's [decision digest](#decision-digest-per-epic) (if one exists) and only the `docs/`
+> sections that actually cover this story's domain — not every linked doc — then hands each
+> participant a short brief of the load-bearing facts rather than instructing each of them to
+> re-read the same sources independently. See
+> [contracts.md](contracts.md#token-efficient-reading-and-dispatch-rule) for the full rule this
+> follows.
 
 ## Phase 2 — INVEST validation and documentation check
 
@@ -353,7 +393,17 @@ What should be observable/working once done.
 - Returns between phases are loops: a task may go through TDD or security multiple times
   until it's green/clean before moving forward.
 
-_Last updated: 2026-08-21 — Task 0010 closure: split "Link-integrity check on every stage move"
+_Last updated: 2026-09-01 — Added the "Decision digest per epic" section (`./ai-spec/tasks/_digests/epic-<n>.md`,
+written by `docs-keeper` at each story's Phase 6/7 and read by `product-owner` before Phase 0/1
+of a later story in the same epic) and a note under Phase 1 pointing at
+[contracts.md](contracts.md#token-efficient-reading-and-dispatch-rule)'s new Token-Efficient
+Reading and Dispatch Rule — read `docs/README.md`'s index and scope reads to the task's domain
+instead of "read all of `docs/`", and have the facilitator distill a shared brief once rather
+than have every Three Amigos participant re-read the same sources independently. Prompted by a
+direct request to apply [workflow-token-efficiency.md](workflow-token-efficiency.md)'s
+recommendations as binding process rather than leaving them as a standalone analysis._
+
+_Previously, 2026-08-21 — Task 0010 closure: split "Link-integrity check on every stage move"
 into **two directions** and added the second one. The section previously covered only the moved
 file's own *outbound* links; it now also requires grepping the repository for the moved file's
 basename and re-pointing every **inbound** reference from files that never moved — computed from
