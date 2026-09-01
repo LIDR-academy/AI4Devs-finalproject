@@ -307,6 +307,7 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
 ### US-019: Costeo de Insumos y Valorización Monetaria de Mermas
 *   **Historia:** Como Administrador, quiero registrar el costo unitario de cada insumo y visualizar el valor monetario de las mermas en el dashboard de reportes, para auditar la pérdida financiera real y no solo las cantidades físicas descartadas.
 *   **Complejidad:** S
+*   **Estado:** ✅ Done — Backend (`TK-078`) y Frontend (`TK-078-FE`) implementados y aprobados por revisión adversarial independiente — ver [Matriz de Trazabilidad](../05_agile_planning/13_matriz_trazabilidad.md).
 *   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
 *   **Decisiones de negocio consultadas con el humano:** El costo se captura por unidad de compra (ej. costo de 1 kg completo), no por unidad de consumo — coincide con `unitOfMeasure`, sin factor de conversión intermedio.
 *   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**

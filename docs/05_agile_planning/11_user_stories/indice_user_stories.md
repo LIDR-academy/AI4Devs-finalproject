@@ -57,6 +57,6 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 *   **[US-009: Dashboard y Reporte de Mermas Visibles](reports/US-009.md)**
     *   *Descripción:* Permite visualizar de forma agrupada los desperdicios físicos y mermas por ingrediente y motivo en un periodo de tiempo.
 *   **[US-019: Costeo de Insumos y Valorización Monetaria de Mermas](reports/US-019.md)**
-    *   *Descripción:* Registra el costo unitario de cada insumo y valoriza en `$` el reporte de mermas, cerrando el gap del KPI #1 del PRD (hoy solo medible en cantidades físicas).
+    *   *Descripción:* Registra el costo unitario de cada insumo y valoriza en `$` el reporte de mermas, cerrando el gap del KPI #1 del PRD (hoy solo medible en cantidades físicas). ✅ Backend (`TK-078`) y Frontend (`TK-078-FE`) implementados.
 *   **[US-020: Indicador TRR Real en el Dashboard de Reportes](reports/US-020.md)**
     *   *Descripción:* Calcula y muestra el tiempo real promedio de rotación de remanentes, el único indicador que valida en la práctica el KPI #2 del PRD (TRR < 72h).
