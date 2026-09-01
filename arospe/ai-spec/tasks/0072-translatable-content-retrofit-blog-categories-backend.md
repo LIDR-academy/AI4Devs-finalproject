@@ -18,7 +18,7 @@ the one place the recipe does not fit as written — see the box below.
 > **Read this before anything else: this story diverges from 0070's pilot in exactly one structural
 > way, and getting it wrong is a regression rather than an omission.**
 >
-> 0070 retrofits `product_categories`, whose story [0023](0023-product-categories-backend.md)
+> 0070 retrofits `product_categories`, whose story [0023](in-progress/0023-product-categories-backend.md)
 > enforces name uniqueness with a plain `unique('name')` index plus a PHP-only comparison. **Blog
 > categories do not work that way.** Story [0058](0058-blog-categories-backend.md) specifies
 > `blog_categories` with a stored, derived **`normalized_name`** column carrying the sole `UNIQUE`

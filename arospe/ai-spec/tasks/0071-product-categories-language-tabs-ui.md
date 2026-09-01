@@ -791,7 +791,7 @@ it whenever that layer is the action, and has **failed** it whenever that layer 
 - **[0070](0070-translatable-content-mechanism-product-categories-backend.md)** — hard, blocking. `HasTranslations`, `SetTranslation`, the widened validation trait, the dropped `name` column. **Specified, not implemented.**
 - **[0025](0025-product-categories-ui.md)** — hard, blocking. The component, view, route and sidebar entry this story widens. **Specified, not implemented.**
 - **[0068](0068-store-languages-catalog-backend.md)** — hard. `StoreLanguage`, `scopeActive()`, `defaultStoreLanguage()`. **Specified, not implemented.**
-- **[0023](0023-product-categories-backend.md) / [0024](0024-products-core-crud-backend.md)** — hard, transitively via 0025.
+- **[0023](in-progress/0023-product-categories-backend.md) / [0024](0024-products-core-crud-backend.md)** — hard, transitively via 0025.
 - Sequencing, strictly: **0023 → 0024 → 0025 → 0068 → 0070 → 0071**, each fully closed before the next starts.
 - **No new package.** No tabs library, no searchable-select; story 0022 stays unbuilt.
 

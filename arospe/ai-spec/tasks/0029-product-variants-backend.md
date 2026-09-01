@@ -2880,7 +2880,7 @@ example of its duplicate-SKU Scenario Outline, plus assumptions 9, 10 and 19, an
 readings** of [0024](0024-products-core-crud-backend.md),
 [0028](0028-product-attribute-types-and-values-backend.md) and
 [0019](done/0019-media-library-upload-and-conversions-backend.md), with
-[0023](0023-product-categories-backend.md) as the precedent for how this project models a delete
+[0023](in-progress/0023-product-categories-backend.md) as the precedent for how this project models a delete
 guard.
 
 **How the three roles were actually covered — stated plainly rather than implied:**

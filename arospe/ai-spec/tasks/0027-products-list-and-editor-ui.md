@@ -42,7 +42,7 @@ per-row edit/delete actions and a primary "Nuevo producto" button) and a **route
 It is **frontend only**: no migration, no model, no action, no policy, no enum, no validation rule.
 Every one of those is consumed as already-shipped code from [0024](0024-products-core-crud-backend.md)
 (core CRUD), [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) (region
-assignment) and [0023](0023-product-categories-backend.md) (the category taxonomy). This story is
+assignment) and [0023](in-progress/0023-product-categories-backend.md) (the category taxonomy). This story is
 where four separate stories' zero-call-site deliverables — `ProductPolicy`, `CreateProduct` /
 `UpdateProduct` / `DeleteProduct` / `SyncProductGallery`, `SyncProductSalesRegions` /
 `SearchSalesRegions`, and the two shared UI components — finally acquire a caller.
@@ -2038,7 +2038,7 @@ approach) and `frontend-qa` (test design), per
 [Design reference](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, and grounded
 in full readings of [0019](done/0019-media-library-upload-and-conversions-backend.md),
 [0020](done/0020-shared-media-gallery-modal-ui.md), [0021](done/0021-wysiwyg-rich-text-editor-component.md),
-[0022](done/0022-searchable-multi-select-component.md), [0023](0023-product-categories-backend.md),
+[0022](done/0022-searchable-multi-select-component.md), [0023](in-progress/0023-product-categories-backend.md),
 [0024](0024-products-core-crud-backend.md), [0025](0025-product-categories-ui.md),
 [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
 [0029](0029-product-variants-backend.md), with

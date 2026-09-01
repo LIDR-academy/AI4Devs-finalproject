@@ -2,13 +2,13 @@
 
 ## Description
 Introduce the product category taxonomy as a first-class, standalone entity: a new
-`product_categories` table (UUID v7 primary key per [ADR 0001](../../docs/decisions/0001-uuid-primary-keys.md)),
+`product_categories` table (UUID v7 primary key per [ADR 0001](../../../docs/decisions/0001-uuid-primary-keys.md)),
 its `App\Models\ProductCategory` model, and the create / rename / delete domain logic with name
 validation. This is the foundational Epic 2 story every other product story builds on — it is
 **backend only** (no screen, no route) and deliberately **independent from any future blog
 taxonomy**: no shared table, no shared model, no polymorphic taxonomy.
 
-Covers [PRD](../../docs/PRD/PRD.md#22-products) §2.2's "Product categories (extends the prototype)"
+Covers [PRD](../../../docs/PRD/PRD.md#22-products) §2.2's "Product categories (extends the prototype)"
 scenarios *Create*, *Rename*, *Delete an unused category*, and *independent from blog categories*,
 plus the CRUD half of Products acceptance criterion 2 and acceptance criterion 7. It does **not**
 cover the "deleting a category still in use is hard-blocked with a count" scenario — see
@@ -92,7 +92,7 @@ Feature: Product categories
 
 **Migration**
 - `database/migrations/<timestamp>_create_product_categories_table.php` — new. Greenfield UUID
-  table per [migrations.md](../../docs/database/migrations.md#uuid-primary-keys):
+  table per [migrations.md](../../../docs/database/migrations.md#uuid-primary-keys):
 
   ```php
   public function up(): void
@@ -125,7 +125,7 @@ Feature: Product categories
 **Model**
 - `app/Models/ProductCategory.php` — new. `use HasFactory, HasUuids;`, `#[Fillable(['name'])]`,
   `@property string $id` (string, not int) per
-  [base-standards.md](../../docs/conventions/base-standards.md#uuid-primary-keys). No
+  [base-standards.md](../../../docs/conventions/base-standards.md#uuid-primary-keys). No
   `$keyType`/`$incrementing` properties (the trait already overrides them as methods), no
   `SoftDeletes`, no `#[Hidden]` (nothing sensitive), no `casts()` beyond Eloquent's default
   timestamp handling.
@@ -140,7 +140,7 @@ Feature: Product categories
 
 **Validation trait**
 - `app/Concerns/ProductCategoryValidationRules.php` — new, following
-  [naming.md](../../docs/conventions/naming.md#traits-and-their-methods)'s `<Noun>ValidationRules`
+  [naming.md](../../../docs/conventions/naming.md#traits-and-their-methods)'s `<Noun>ValidationRules`
   / `<noun>Rules()` convention and `ProfileValidationRules`' two-method shape:
 
   ```php
@@ -164,9 +164,11 @@ Feature: Product categories
               'string',
               'max:255',
               // Uniqueness is compared against the SHARED normaliser's output in
-              // PHP, never left to the connection's collation -- CI runs SQLite
-              // (BINARY, case-sensitive) while production runs MySQL
-              // utf8mb4_unicode_ci (case- and accent-insensitive).
+              // PHP, never left to the connection's collation. utf8mb4_unicode_ci
+              // WOULD reject a case-/accent-duplicate pair, but only as a raw
+              // 23000 QueryException with no field-level message; the PHP
+              // pre-check is what produces a clean ValidationException on `name`
+              // before the database ever has to enforce it.
               // See D-4, D-12 and R-2.
               $this->uniqueNormalisedName($normalizeForSearch, $productCategoryId),
           ];
@@ -178,14 +180,14 @@ Feature: Product categories
 
   - **The `->ignore()` branch** is what makes "save a category under its own current name" succeed;
     it is also the branch that is only safe when the id it receives is server-authoritative — see
-    [security/livewire-authorization.md](../../docs/security/livewire-authorization.md) and the DoD
+    [security/livewire-authorization.md](../../../docs/security/livewire-authorization.md) and the DoD
     hand-off note below.
   - **`uniqueNormalisedName()` is a closure/custom rule, not a bare `Rule::unique()`**, because a
     bare one compiles to `WHERE name = ?` and hands the case/accent decision to the connection's
     collation — the exact thing **D-4** exists to prevent. It compares the candidate's normalised
     form against the normalised form of existing names (excluding `$productCategoryId` when
     renaming). **The fold on both sides of that comparison is
-    [`App\Actions\NormalizeForSearch`](../../docs/conventions/base-standards.md#directory-structure)
+    [`App\Actions\NormalizeForSearch`](../../../docs/conventions/base-standards.md#directory-structure)
     (`app/Actions/NormalizeForSearch.php`, `__invoke(string $value): string`) — the project's one
     shared text normaliser — never a private helper on this trait and never an inline
     `Str::lower()` / `Str::ascii()` pipeline (**D-12**).** The behaviour is unchanged from this
@@ -193,14 +195,14 @@ Feature: Product categories
     only the implementation now delegates instead of reimplementing. The normaliser is
     **container-resolved and threaded through** the rule helpers as a parameter rather than resolved
     with `app()` inside the closure, matching this repo's per-method action-injection convention
-    ([code-style.md](../../docs/conventions/code-style.md#inject-single-purpose-actions-per-method)).
+    ([code-style.md](../../../docs/conventions/code-style.md#inject-single-purpose-actions-per-method)).
 
 **Actions** — new subfolder `app/Actions/ProductCategories/`, one per domain area, same rule as
 `app/Actions/Users/`:
 - `CreateProductCategory.php` — `__invoke(string $name): ProductCategory`. Trims the name before
   validating/persisting, and catches `QueryException` code `23000` to rethrow as a
   `ValidationException` on `name`, exactly as
-  [`App\Actions\Users\CreateUser`](../../app/Actions/Users/CreateUser.php) does for `email` — the
+  [`App\Actions\Users\CreateUser`](../../../app/Actions/Users/CreateUser.php) does for `email` — the
   unique index is the last-word race guard behind the validation rule, not a 500.
 - `RenameProductCategory.php` — `__invoke(ProductCategory $productCategory, string $name): ProductCategory`.
   Same trim + `23000` handling, with the uniqueness rule ignoring the target's own id.
@@ -293,17 +295,25 @@ Backend only — **no browser tests** in this story, since it ships no screen.
       the test that proves the `23000` catch, and it must drive the collision through the real
       unique index rather than a hand-written assertion about the catch block. `Rule::unique()` is
       a pre-flight check, not a race guard — the rule
-      [signed-link-verification.md](../../docs/security/signed-link-verification.md#a-pre-flight-check-is-not-a-race-guard--re-check-under-a-lock-and-let-the-unique-index-have-the-last-word)
+      [signed-link-verification.md](../../../docs/security/signed-link-verification.md#a-pre-flight-check-is-not-a-race-guard--re-check-under-a-lock-and-let-the-unique-index-have-the-last-word)
       already established for `pending_email`. The test asserts the *outcome* (a duplicate is
       refused cleanly, never as a 500), so it holds whichever way the action implements it.
 - [ ] Case-only-different duplicate: creating "footwear" alongside "Footwear" is refused **by
-      validation** (`ValidationException`, not a `QueryException`) — proving the app-level
-      normalised comparison did the work, not the collation. This assertion must hold on both
-      engines; see **R-2** and **D-4**.
+      validation** — asserting `ValidationException` on `name`, and **explicitly not** a
+      `QueryException`. The exception *class* is the whole point of the test: MySQL's
+      `utf8mb4_unicode_ci` index would also refuse this pair, so a test that only asserted "the
+      second row was not created" would pass with the app-level comparison deleted. See **R-2** and
+      **D-4**.
 - [ ] Accent-only-different duplicate: creating "Nino" alongside "Niño" is likewise refused **by
-      validation**. This is the test that pins **D-4**'s "fold at least as aggressively as
-      `utf8mb4_unicode_ci`" constraint. Without it, SQLite CI would happily accept the pair that
-      MySQL production rejects with a `23000`, and nothing would catch the divergence.
+      validation** (same class assertion, same reason). This is the test that pins **D-4**'s "fold
+      at least as aggressively as `utf8mb4_unicode_ci`" constraint — a normaliser folding case but
+      not accents lets PHP accept this pair and hands the refusal to the index as a raw `23000`,
+      which this test would catch as a wrong exception class.
+      *(Corrected 2026-09-01 — both bullets previously required the assertion to "hold on both
+      engines" and justified the second by SQLite CI accepting what MySQL rejects. There is one
+      engine, MySQL, everywhere; the tests are kept unchanged in substance because they still catch
+      a real regression — someone reverting `uniqueNormalisedName()` to a bare `Rule::unique()`, or
+      dropping the accent fold — and the exception-class assertion is what makes them able to.)*
 
 **Feature — `tests/Feature/ProductCategories/RenameProductCategoryTest.php`**
 - [ ] Renaming to a free name updates the row and leaves the old name unused.
@@ -330,7 +340,7 @@ Backend only — **no browser tests** in this story, since it ships no screen.
 
 **Feature — `tests/Feature/Policies/ProductCategoryPolicyTest.php`**
 - [ ] Every ability gets **both an allow and a deny test**, per
-      [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md)'s authorization rule: an
+      [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md)'s authorization rule: an
       actor holding the relevant `products.*` permission is allowed; an actor holding none is
       refused.
 - [ ] A `Super Admin` actor is allowed through `Gate::before`, consistent with every other policy
@@ -342,7 +352,7 @@ Backend only — **no browser tests** in this story, since it ships no screen.
 
 **Explicitly not tested here**
 - `HasUuids` itself, Eloquent timestamps, or `Rule::unique`'s own SQL — framework/vendor behaviour
-  per [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md).
+  per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md).
 - Migration `up()`/`down()` mechanics — `RefreshDatabase` proves every migration runs on every
   feature-test run; `down()` symmetry is a code-review concern.
 - Anything about a category being "in use" by products — story 0024.
@@ -369,17 +379,18 @@ consumes these arrives in a later UI story, and the products that reference a ca
       reusable.
 - [ ] Authorization is expressed in `ProductCategoryPolicy` (not only in a future component), with
       both an allow and a deny test per ability.
-- [ ] Case-only and accent-only duplicates are refused **by validation** on both engines, and the
-      fold behind that comparison is the shared `App\Actions\NormalizeForSearch` (**D-12**) — no
-      fold logic is inlined in `ProductCategoryValidationRules` or in the actions, and no second
-      normaliser is added to the tree.
+- [ ] Case-only and accent-only duplicates are refused **by validation** — a `ValidationException`
+      on `name`, never a raw `QueryException`/500 from the `UNIQUE` index — and the fold behind that
+      comparison is the shared `App\Actions\NormalizeForSearch` (**D-12**): no fold logic is inlined
+      in `ProductCategoryValidationRules` or in the actions, and no second normaliser is added to
+      the tree.
 - [ ] Product categories share no table, model, or namespace with any blog taxonomy.
 - [ ] No in-use/hard-block delete guard is implemented, and no permission-catalog, route, Livewire,
       view or `lang/` file is added by this story.
 
 ## Definition of Done
 - [ ] Tests written and green, plus the full existing suite (per
-      [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule).
+      [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule).
 - [ ] `vendor/bin/pint --dirty --format agent` clean and Larastan level 7 passing.
 - [ ] Code reviewed (code-reviewer).
 - [ ] No security findings (appsec-auditor).
@@ -395,7 +406,7 @@ consumes these arrives in a later UI story, and the products that reference a ca
       UI story wires it in. That story must (a) call `Gate::authorize()` before invoking every
       action, and (b) keep the id fed to `Rule::unique()->ignore()` server-authoritative
       (`#[Locked]` / re-read from the model), per
-      [security/livewire-authorization.md](../../docs/security/livewire-authorization.md).
+      [security/livewire-authorization.md](../../../docs/security/livewire-authorization.md).
 - [ ] Acceptance criteria met.
 
 ## Documented functional decisions
@@ -417,7 +428,7 @@ consumes these arrives in a later UI story, and the products that reference a ca
   reasons that do not generalize (identity retention, freeing an authentication identifier,
   relations that must survive). A lookup-table row has none of those. Three concrete costs of the
   other choice: (i) `Rule::unique()` does **not** apply the soft-delete scope (verified on `users`
-  — see [schema.md](../../docs/database/schema.md#soft-deletes)), so a trashed "Footwear" would
+  — see [schema.md](../../../docs/database/schema.md#soft-deletes)), so a trashed "Footwear" would
   squat its name forever unless every uniqueness check were made trashed-aware; (ii) `products`
   could reference a trashed parent in 0024, since `cascadeOnDelete()` never fires on a soft delete;
   (iii) 0024's guard is a *count-based gate that runs before the delete*, so it works identically
@@ -427,29 +438,37 @@ consumes these arrives in a later UI story, and the products that reference a ca
 - **D-4 — Name uniqueness is enforced in **two layers**: a normalised comparison in PHP as the
   primary guard, and a MySQL `UNIQUE` index as the defence-in-depth backstop.** *(Confirmed;
   resolves the former OQ-2.)* Two categories named "Footwear" is a data-integrity bug, and on a
-  table of this size the index's write cost is negligible — but the index **cannot be the primary
-  guard here**, and that is the whole point of this decision. The suite runs on **SQLite in CI**
-  (`BINARY` collation, case-sensitive) and **MySQL in production** (`utf8mb4_unicode_ci`, case-
-  *and* accent-insensitive), so a collation-backed rule is literally a different rule in the two
-  places and CI cannot reproduce production's folding behaviour (see **R-2**). The application-level
-  check therefore normalises and compares explicitly in PHP, giving identical behaviour on both
-  engines, and the `UNIQUE` index sits behind it as the last-word race guard — the same relationship
-  [schema.md](../../docs/database/schema.md#users) documents for `pending_email`, whose unique index
+  table of this size the index's write cost is negligible — but the index **should not be the
+  primary guard here**, and that is the whole point of this decision.
+  **Corrected 2026-09-01 (Phase 2 INVEST review):** this decision previously justified the split by
+  claiming the suite runs on two engines (SQLite in CI, MySQL in production) so that a
+  collation-backed rule "is literally a different rule in the two places". **That is false against
+  `HEAD`** — `DB_CONNECTION=mysql` is pinned in `phpunit.xml`, `.env.example` and
+  `.github/workflows/tests.yml` alike, so there is one engine everywhere; see the rewritten **R-2**
+  and the amendment note at the end of this file. **The two-layer design is unchanged, on its own
+  merits.** The real reason the index cannot be the primary guard is the *shape of its refusal*:
+  `utf8mb4_unicode_ci` genuinely would reject a case- or accent-duplicate pair, but only as a raw
+  `23000` `QueryException` — no field-level validation message, and a 500 if the catch is ever
+  missed. The application-level check therefore normalises and compares explicitly in PHP so a
+  duplicate is refused **cleanly, on the `name` field, before the database is ever asked**, and the
+  `UNIQUE` index sits behind it purely as the last-word **race** guard for two concurrent creates
+  that both pass validation — the same relationship
+  [schema.md](../../../docs/database/schema.md#users) documents for `pending_email`, whose unique index
   is "the last-word guard behind the application checks". Both actions convert a `23000`
   `QueryException` into a `ValidationException` on `name`, the exact pattern
-  [`CreateUser`](../../app/Actions/Users/CreateUser.php) already uses for `email`.
+  [`CreateUser`](../../../app/Actions/Users/CreateUser.php) already uses for `email`.
   **Amended 2026-08-18 (D-12):** the PHP half of this decision is implemented by calling
   `App\Actions\NormalizeForSearch`, not by a helper this story writes. The rule D-4 states is
   unchanged — same two layers, same case- and accent-insensitive comparison, same
   `23000` → `ValidationException` conversion — only its implementation is now shared.
-  **Consequence to implement knowingly:** for the two layers to agree on MySQL, the PHP
-  normalisation must fold **at least** as aggressively as `utf8mb4_unicode_ci` does — i.e. it folds
-  both case *and* accents, so "Niño" and "Nino" are the same category name, refused by the
-  application before the index ever sees them. Folding only case would let PHP accept a pair that
-  the MySQL index then rejects with a `23000`, reintroducing the very divergence this decision
-  removes. That is the reading the "identical in SQLite and MySQL" requirement forces; it is called
-  out explicitly because an accent-folding catalog is a real product consequence for a
-  Spanish-language store, and Phase 2 should confirm it rather than discover it.
+  **Consequence to implement knowingly:** for the two layers to agree, the PHP normalisation must
+  fold **at least** as aggressively as `utf8mb4_unicode_ci` does — i.e. it folds both case *and*
+  accents, so "Niño" and "Nino" are the same category name, refused by the application before the
+  index ever sees them. Folding only case would let PHP accept a pair the MySQL index then rejects
+  with a `23000`, which is exactly the raw, message-less refusal the PHP layer exists to prevent.
+  This is forced by the column's own collation rather than by any cross-engine concern, and it is
+  called out explicitly because an accent-folding catalog is a real product consequence for a
+  Spanish-language store — Phase 2 should confirm it rather than discover it.
 - **D-5 — `VARCHAR(255)` with `max:255`, matching this repo's existing name-like columns.**
   *(Confirmed; resolves the former OQ-3.)* `users.name` is `string()`/`max:255`, and — decisively —
   `users.email` is a `VARCHAR(255)` column that **already carries a `unique` index** in this schema,
@@ -457,7 +476,7 @@ consumes these arrives in a later UI story, and the products that reference a ca
   inside InnoDB's 3072-byte limit under the DYNAMIC row format. Consistency with the existing
   precedent won over the narrower indexed 100.
   The earlier draft argued for 100 on the strength of
-  [migrations.md](../../docs/database/migrations.md#adding-a-column-to-an-existing-table)'s
+  [migrations.md](../../../docs/database/migrations.md#adding-a-column-to-an-existing-table)'s
   bare-`string()` warning; that rule is recorded here as **considered and not applied**, because its
   worked example is a 10-character *enum token* (`users.status`) whose ceiling is knowable from the
   value set, not a free-text human label with no natural maximum. The migration length and the
@@ -485,7 +504,7 @@ consumes these arrives in a later UI story, and the products that reference a ca
   about category CRUD resembles the cross-cutting escalation risk that justified `roles.manage` /
   `roles.manage-administrators` sitting outside the module grid.
 - **D-9 — `ProductCategoryPolicy` is created now even though it has no caller yet.**
-  [security/livewire-authorization.md](../../docs/security/livewire-authorization.md)'s rule is
+  [security/livewire-authorization.md](../../../docs/security/livewire-authorization.md)'s rule is
   that a rule enforced only in a component is bypassed by every other call site of the action, so
   the policy is the right home for it regardless of which consumer arrives first. It is tested
   directly (`Gate::allows(...)`) rather than through a route, exactly as
@@ -535,10 +554,13 @@ consumes these arrives in a later UI story, and the products that reference a ca
   collation — and **the MySQL `UNIQUE(name)` index backstop, which stays exactly as confirmed in
   D-4/RQ-2**, including the `23000` → `ValidationException` conversion in both actions.
   **The bug class this closes** is two implementations of "fold at least as aggressively as
-  `utf8mb4_unicode_ci`" drifting apart *invisibly*: SQLite reproduces neither engine's folding, so CI
-  cannot see the divergence, and each side's tests stay green because each side is internally
-  consistent. One function means one specification, unit-tested once (0022's
-  `tests/Unit/Actions/NormalizeForSearchTest.php`).
+  `utf8mb4_unicode_ci`" drifting apart *invisibly* — each side's tests stay green because each side
+  is internally consistent, and nothing compares the two specifications against each other. One
+  function means one specification, unit-tested once (0022's
+  `tests/Unit/Actions/NormalizeForSearchTest.php`). *(Corrected 2026-09-01: this paragraph
+  originally attributed the invisibility to SQLite reproducing neither engine's folding in CI. There
+  is one engine — MySQL — everywhere; the drift risk is between the two **PHP** implementations, and
+  it is real without any cross-engine story. See **R-2** and the amendment note at the end.)*
   **Two obligations that follow.** (i) `Str::lower()` or `Str::ascii()` appearing anywhere in this
   story's validation trait or actions is a review finding — no second copy, no wrapper, no local
   override. (ii) A change to the normaliser is a **cross-story event**: it re-specifies category
@@ -574,7 +596,7 @@ consumes these arrives in a later UI story, and the products that reference a ca
   auto-discovery convention (story 0004).
 - **Story 0024 (products-core-crud-backend) depends on this one** and is the story that adds
   `products.product_category_id` and retrofits the hard-block-with-count guard onto
-  `DeleteProductCategory`. Per [workflow.md](../../docs/workflow.md#task-ordering-rule)'s task
+  `DeleteProductCategory`. Per [workflow.md](../../../docs/workflow.md#task-ordering-rule)'s task
   ordering rule, this story's lower id is deliberate.
 - **Story 0025 (`product-categories-ui`)** is the dedicated management screen that consumes the
   actions and the policy built here — confirmed in Phase 0 as a screen of its own, not merely an
@@ -584,34 +606,44 @@ consumes these arrives in a later UI story, and the products that reference a ca
 ### Risks
 - **R-1 — The `Rule::unique()->ignore()` omission.** The single most likely bug: without it, saving
   a category under its own unchanged name fails. Caught by the dedicated rename-to-own-name test.
-- **R-2 — Name uniqueness behaves differently in CI than it does locally and in production. This
-  is the highest-severity finding of the debate and it is verified, not theoretical.**
-  `phpunit.xml` pins `DB_DATABASE=testing` but **never pins `DB_CONNECTION`**. Local `.env` sets
-  `DB_CONNECTION=mysql`; CI (`.github/workflows/tests.yml`) runs `cp .env.example .env`, and
-  `.env.example` line 23 sets `DB_CONNECTION=sqlite`. So the suite genuinely runs on **two
-  different engines**: SQLite in CI, MySQL locally and in production. Their default collations
-  disagree on exactly the rule this story introduces — SQLite's `BINARY` is **case-sensitive**,
-  while `config/database.php`'s pinned `utf8mb4_unicode_ci` is both case- **and
-  accent-insensitive** (so MySQL also collides "Café" with "Cafe", a live concern for a
-  Spanish-language catalog). A uniqueness guarantee left to collation therefore **passes in CI and
-  production for opposite reasons**, and a case-duplicate test would assert one behaviour in one
-  place and the other elsewhere. This is what forced **RQ-2**'s two-layer answer rather than an
-  index-only one, and it is the direct analogue of the `docs/errors-log.md` lesson that a security
-  or integrity control must never be an accident of collation
-  ([soft-delete-patterns.md](../../docs/security/soft-delete-patterns.md#freeing-an-identifier-means-revoking-everything-keyed-by-its-string-not-just-the-row)),
-  and of the lesson that a test must pin the configuration it depends on rather than inherit it
-  from the developer's environment.
-  **Mitigation (confirmed, D-4):** the primary uniqueness check is a normalised comparison in PHP,
-  so the rule is identical on both engines and CI genuinely tests the production behaviour; the
-  `UNIQUE` index is the backstop, not the definition. The residual risk is narrow and worth naming:
-  the PHP normalisation must fold at least as aggressively as `utf8mb4_unicode_ci`, or MySQL will
-  reject with a `23000` a pair that PHP accepted — a divergence CI could never reproduce. A test
-  asserting that an accent-differing pair is refused *by validation* is what pins this.
-  **Further reduced 2026-08-18 (D-12):** the fold is now the single shared
+- **R-2 — A collation-backed uniqueness rule refuses a duplicate with a raw `23000`, not a
+  validation message. There is exactly one engine everywhere, and that is what this risk is really
+  about.**
+  **Corrected 2026-09-01 (Phase 2 INVEST review) — see the amendment note at the end of this file.**
+  As originally written, this risk claimed the suite runs on **two different engines** (SQLite in
+  CI, MySQL locally and in production) because `phpunit.xml` pinned `DB_DATABASE` but not
+  `DB_CONNECTION`, and `.env.example` defaulted to `sqlite`. **That is false against `HEAD`**, and
+  was verified false at Phase 2 by reading the three files it named:
+  `phpunit.xml` line 29 is `<env name="DB_CONNECTION" value="mysql"/>`; `.env.example` line 28 is
+  `DB_CONNECTION=mysql`, under a comment reading *"never SQLite"*; and
+  `.github/workflows/tests.yml` line 42 sets a job-level `DB_CONNECTION: mysql` against a
+  `mysql` service container. **One engine, everywhere: MySQL, `utf8mb4_unicode_ci`** (per
+  `config/database.php`). This story was debated on 2026-08-17/18 and the environment has changed
+  under it since; that is the [deferred-findings failure mode](../../../docs/errors-log.md#a-deferred-storys-findings-were-claims-about-a-tree-that-no-longer-existed-and-one-of-them-would-have-reopened-a-bug-in-this-log--2026-08-23)
+  this project already records — a claim about a tree, outliving the tree.
+  **The real risk, which survives the correction and still justifies two layers.**
+  `utf8mb4_unicode_ci` is case- **and** accent-insensitive, so the `UNIQUE(name)` index really does
+  refuse "footwear" alongside "Footwear", and "Nino" alongside "Niño" (a live consequence for a
+  Spanish-language catalog — see **D-4**). But the *only* thing an index-only rule can produce is a
+  `QueryException` with SQLSTATE `23000`: **no `ValidationException`, no message bound to the `name`
+  field, and — if the catch is ever missed — a 500 rather than a form error.** That is a bad
+  administrator experience and a fragile contract, not a data-integrity hole. So the layering is:
+  the **PHP-level normalised comparison is the primary guard**, because it is the only layer that
+  can refuse a duplicate *cleanly*, with a field-level message, before the database is ever asked;
+  the **`UNIQUE` index remains purely as a race-condition backstop** for two concurrent creates that
+  both pass validation, exactly the relationship
+  [schema.md](../../../docs/database/schema.md#users) documents for `pending_email`, whose unique index
+  is "the last-word guard behind the application checks".
+  **The residual risk, unchanged and still worth naming:** the PHP normalisation must fold **at
+  least** as aggressively as `utf8mb4_unicode_ci`, or a pair PHP accepts gets rejected by the index
+  as a `23000` — the ugly path the PHP layer exists to avoid. A test asserting that an
+  accent-differing pair is refused *by validation* (`ValidationException`, not `QueryException`) is
+  what pins this, and it is a meaningful test on MySQL: it distinguishes "the app refused it" from
+  "the database refused it", which is precisely the property under test.
+  **Further reduced 2026-08-18 (D-12):** the fold is the single shared
   `App\Actions\NormalizeForSearch` rather than a helper local to this story, so there is one
   specification of "folds at least as aggressively as `utf8mb4_unicode_ci`" to get right and one
-  unit test pinning it — instead of one copy per story, drifting invisibly because SQLite
-  reproduces neither engine's behaviour.
+  unit test pinning it, instead of one copy per consuming story drifting apart.
 - **R-3 — The policy has no call site.** Nothing in this story can regress if the policy is wrong,
   because nothing calls it. Mitigated by direct `Gate::allows()` tests and the explicit DoD
   hand-off note; the residual risk is that the UI story invokes the actions without authorizing
@@ -645,21 +677,29 @@ confirmed answer, so a later reader sees what was decided and why the alternativ
   rather than being genuinely open. Implemented by **D-8**; the policy's four abilities map to
   `products.view` / `products.create` / `products.edit` / `products.delete`.
 
-- **RQ-2 (was OQ-2) — How is name uniqueness enforced, given CI runs SQLite and production runs
-  MySQL? → both layers: a normalised comparison in PHP as the primary guard, plus the MySQL
-  `UNIQUE` index as defence in depth.** The application-level check is authoritative precisely
-  because the `UNIQUE` index **cannot be trusted to reproduce production's folding behaviour in
-  CI** — SQLite's `BINARY` collation is case-sensitive while MySQL's `utf8mb4_unicode_ci` is case-
-  and accent-insensitive, so an index-only rule is a different rule in each environment. Comparing
-  normalised values in PHP makes the behaviour identical on both engines; the index then sits
-  behind it as the last-word race guard, the same relationship
-  [schema.md](../../docs/database/schema.md#users) documents for `pending_email`. Implemented by
+- **RQ-2 (was OQ-2) — How is name uniqueness enforced? → both layers: a normalised comparison in
+  PHP as the primary guard, plus the MySQL `UNIQUE` index as defence in depth.**
+  **Corrected 2026-09-01 (Phase 2 INVEST review):** this question was originally phrased *"given CI
+  runs SQLite and production runs MySQL"*, and answered on the grounds that an index-only rule "is a
+  different rule in each environment". **That premise is false against `HEAD`** — `DB_CONNECTION`
+  is pinned to `mysql` in `phpunit.xml`, `.env.example` and `.github/workflows/tests.yml`, so tests,
+  local development and production all run one engine on `utf8mb4_unicode_ci`; see the rewritten
+  **R-2**. **The answer is unchanged, for a reason that still holds.** The application-level check
+  is authoritative because it is the only layer that can refuse a duplicate as a
+  **`ValidationException` on the `name` field**: the `UNIQUE` index *would* catch a case- or
+  accent-duplicate (the collation is case- and accent-insensitive), but only as a raw `23000`
+  `QueryException` — no field-level message, and a 500 if the catch is ever missed. Comparing
+  normalised values in PHP puts the refusal in the form where the administrator can act on it; the
+  index then sits behind it as the last-word **race** guard for two concurrent creates that both
+  pass validation, the same relationship
+  [schema.md](../../../docs/database/schema.md#users) documents for `pending_email`. Implemented by
   **D-4**, with its one implementation constraint spelled out there: the PHP normalisation must
   fold at least as aggressively as `utf8mb4_unicode_ci` (case **and** accents), or MySQL will
-  reject with a `23000` a pair PHP just accepted — a divergence CI could never catch.
-  Dropped alternatives: relying on collation alone (unprovable in CI), and adding an
-  accent-sensitive column collation such as `utf8mb4_0900_as_ci` (would make the index disagree
-  with the app-level rule rather than back it up).
+  reject with a `23000` a pair PHP just accepted.
+  Dropped alternatives: relying on the collation alone (correct on data integrity, unacceptable as
+  UX — a raw `23000` is not a form error), and adding an accent-sensitive column collation such as
+  `utf8mb4_0900_as_ci` (would make the index disagree with the app-level rule rather than back it
+  up).
   **Amended 2026-08-18 by D-12:** the answer itself stands unchanged — two layers, PHP primary,
   `UNIQUE` index as backstop. Only *where the PHP fold lives* moved: it is now the shared
   `App\Actions\NormalizeForSearch` rather than a helper this story writes.
@@ -668,7 +708,7 @@ confirmed answer, so a later reader sees what was decided and why the alternativ
   name-like columns rather than a narrower indexed 100. `users.email` is already a `VARCHAR(255)`
   carrying a `unique` index here, so the resulting 1020-byte utf8mb4 key is a shape this schema has
   accepted before. Implemented by **D-5**, which also records why
-  [migrations.md](../../docs/database/migrations.md#adding-a-column-to-an-existing-table)'s
+  [migrations.md](../../../docs/database/migrations.md#adding-a-column-to-an-existing-table)'s
   bare-`string()` warning was considered and not applied.
 
 - **RQ-4 (was OQ-4) — Who owns the product category management screen? → story 0025
@@ -680,19 +720,20 @@ confirmed answer, so a later reader sees what was decided and why the alternativ
 ## Provenance
 Phase 1 (Three Amigos) debate run on 2026-08-17 with `backend-expert` (files and approach),
 `database-expert` (schema, index and soft-delete decisions) and `backend-qa` (test design), per
-[workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate). Derived from
-[PRD](../../docs/PRD/PRD.md#22-products) §2.2's "Product categories (extends the prototype)"
+[workflow.md](../../../docs/workflow.md#phase-1--three-amigos-debate). Derived from
+[PRD](../../../docs/PRD/PRD.md#22-products) §2.2's "Product categories (extends the prototype)"
 Gherkin block and assumptions 8, 14, 17 and 19. The `products`-does-not-exist-yet scoping and the
 0024 hand-off of the in-use delete guard are a confirmed Phase 0 decomposition decision, recorded
 here so the missing guard is never read as an oversight.
 
 All three amigos' contributions are reflected above, including one **recorded dissent** (D-9,
-where authorization lives) and one finding that the debate surfaced and this file verified
-independently against `phpunit.xml`, `.env.example` and `.github/workflows/tests.yml`: **the test
-suite runs on SQLite in CI and MySQL locally, because `phpunit.xml` pins `DB_DATABASE` but not
-`DB_CONNECTION`** (see R-2). That is a pre-existing property of this repo, not something this
-story introduces — but this is the first story whose core business rule (name uniqueness) is one
-the two engines disagree about, which is why it is raised here rather than left as background.
+where authorization lives) and one finding this file originally recorded as verified independently
+against `phpunit.xml`, `.env.example` and `.github/workflows/tests.yml`: *"the test suite runs on
+SQLite in CI and MySQL locally, because `phpunit.xml` pins `DB_DATABASE` but not `DB_CONNECTION`"*.
+**That finding is false against `HEAD` and is corrected throughout this file** — one engine, MySQL,
+everywhere. The sentence is left standing as the record of what the debate asserted; the correction,
+what each of the three files actually says, and why the two-layer design survives it regardless are
+in **R-2** and in the amendment note directly below.
 
 **Amended 2026-08-18 — D-12 (shared text normaliser).** After this story was written and closed,
 the parallel Phase 1 amendments to stories **0032** (shipping geography catalog) and **0033**
@@ -710,9 +751,54 @@ the acceptance criteria and the scope fences.
 the decisions they drive folded into D-4, D-5, D-8 and D-9, the migration and trait snippets, the
 test list, and R-2/R-4. Nothing in this story is blocked on a product decision any more.
 
-**Not yet run:** Phase 2 (`code-reviewer` INVEST validation). One item is worth an explicit look
-there rather than at implementation time: **D-4**'s consequence that the PHP normalisation folds
-accents as well as case, so "Niño" and "Nino" cannot coexist as two categories. That follows
-necessarily from "identical behaviour in SQLite and MySQL" plus a `utf8mb4_unicode_ci` unique
-index, but it is a real product-visible outcome for a Spanish-language catalog and deserves a
-deliberate confirmation rather than being inherited from a technical constraint.
+**Amended 2026-09-01 — the two-engine premise behind R-2 / RQ-2 / D-4 / D-12 was false, and is
+corrected in place.** Phase 2 (`code-reviewer` INVEST validation) ran on 2026-08-31/2026-09-01 and
+**FAILED** this story on exactly one blocking finding, verified against this worktree's real files.
+
+**What was wrong.** The story's central technical justification for its two-layer name-uniqueness
+design claimed the test suite runs on **two different database engines** — SQLite in CI, MySQL
+locally and in production — citing `phpunit.xml` as pinning `DB_DATABASE` but not `DB_CONNECTION`,
+and `.env.example` as defaulting to `DB_CONNECTION=sqlite`. Re-read at Phase 2, all three cited
+files say the opposite:
+
+| File | Line | Actual content |
+| --- | --- | --- |
+| `phpunit.xml` | 29 | `<env name="DB_CONNECTION" value="mysql"/>` — **it is pinned** |
+| `.env.example` | 28 | `DB_CONNECTION=mysql`, under a comment reading *"never SQLite"* |
+| `.github/workflows/tests.yml` | 42 | job-level `DB_CONNECTION: mysql`, against a `mysql` service |
+
+So there is **one engine everywhere** — MySQL on `utf8mb4_unicode_ci` — not two, and every sentence
+in this file that reasoned from a CI/local split was reasoning from something that is not true.
+
+**Why it happened, and why it is not a normal staleness.** This story was debated on 2026-08-17/18,
+and the claim may well have held then; the environment has been changed by other work since. That is
+precisely the [deferred-story failure mode](../../../docs/errors-log.md#a-deferred-storys-findings-were-claims-about-a-tree-that-no-longer-existed-and-one-of-them-would-have-reopened-a-bug-in-this-log--2026-08-23)
+this project already records — *a finding is a claim about a tree, and the task file freezes while
+the tree does not* — with the aggravating detail that the claim was written up as
+**verified against three named files**, which is the hedge shape
+[the 2026-08-29 entry](../../../docs/errors-log.md#one-docs-pass-reported-two-gaps-that-were-not-there-both-marked-verified--2026-08-29)
+identifies as making a false claim *more* trusted rather than less.
+
+**What changed, and what deliberately did not.** **No shipped behaviour changes.** The two-layer
+design stands exactly as specified — the PHP-level normalised comparison via the shared
+`App\Actions\NormalizeForSearch` (**D-12**), **plus** the MySQL `UNIQUE(name)` index with its
+`23000` → `ValidationException` conversion in both actions — but it is now justified on the ground
+that actually holds: `utf8mb4_unicode_ci` alone refuses a case/accent duplicate only as a **raw
+`23000` with no field-level message** (and a 500 if the catch is ever missed), so the PHP pre-check
+exists to surface a clean validation error before the database is ever asked, and the index remains
+**purely a race-condition backstop**. Rewritten in place, each carrying its own dated correction
+rather than being silently overwritten: **R-2**, **RQ-2**, **D-4** (both halves), **D-12**'s
+bug-class paragraph, the `nameRules()` code comment in *Files to create/modify*, the two duplicate
+tests under *Tests to perform*, the case/accent acceptance criterion, and the Provenance paragraph
+above. **The tests are kept, not removed** — they still catch a real regression (someone reverting
+`uniqueNormalisedName()` to a bare `Rule::unique()`, or dropping the accent fold) — with their
+assertions sharpened from "on both engines" to the **exception class**, `ValidationException` on
+`name` and never a `QueryException`, which is what distinguishes "the app refused it" from "the
+database refused it" now that both layers really do refuse.
+
+**Still open for Phase 2's re-run, unchanged by this correction:** **D-4**'s product-visible
+consequence that the PHP normalisation folds accents as well as case, so "Niño" and "Nino" cannot
+coexist as two categories. It follows from the column's own `utf8mb4_unicode_ci` collation rather
+than from any cross-engine argument, but it remains a real outcome for a Spanish-language catalog
+and deserves a deliberate confirmation rather than being inherited from a technical constraint.
+Two minor `code-reviewer` notes were left unaddressed by this pass and are not blocking.
