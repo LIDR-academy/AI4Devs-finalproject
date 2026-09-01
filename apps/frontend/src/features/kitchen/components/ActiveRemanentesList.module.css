@@ -1,0 +1,46 @@
+.flex-gap-lg { display: flex; align-items: center; gap: var(--space-4); }
+
+.icon-badge-sm { width: 48px; height: 48px; }
+
+.remanente-card {
+  border-left: 6px solid var(--color-primary);
+}
+.remanente-card--critical {
+  border-left: 6px solid var(--color-danger);
+}
+
+.fefo-alert-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  color: var(--color-danger-text);
+}
+
+.remanentes-empty-state { text-align: center; padding: 48px var(--space-6); color: var(--text-secondary); }
+.empty-state-icon { color: var(--color-primary); margin: 0 auto var(--space-3); }
+
+.fefo-index-badge {
+  background-color: var(--bg-main);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  color: var(--color-primary);
+}
+
+.remanente-qty-display { text-align: right; min-width: 140px; }
+.remanente-info-block { flex: 1; min-width: 220px; }
+
+.remanente-qty-btn {
+  min-width: 70px;
+  height: 48px;
+  padding: 0 var(--space-3);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+}
+.remanente-qty-btn--wide { min-width: 75px; }

@@ -1,0 +1,17 @@
+.offline-banner {
+  background-color: var(--color-danger);
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-elevation-2);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  min-height: 48px;
+}

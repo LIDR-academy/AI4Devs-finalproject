@@ -5,6 +5,7 @@ import { ReconciliationService } from '../services/reconciliation.service.js';
 import { formatQuantity, formatUnitLabel } from '../../../utils/formatters.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
+import styles from './ShiftReconciliationWizard.module.css';
 
 interface ReconciliationFormState {
   counts: { [remanenteId: string]: number };
@@ -104,7 +105,7 @@ const ReconciliationItemInfo: React.FC<{ item: RemanenteFEFOItem; diff: number; 
       Teórico: {formatQuantity(item.currentQuantity, item.unitOfMeasure)} {formatUnitLabel(item.unitOfMeasure)} | Expira en {item.hoursRemaining}h
     </div>
     {diff !== 0 && (
-      <div className={`fs-xs fw-bold mt-1 ${diff < 0 ? 'variance-negative' : 'variance-positive'}`}>
+      <div className={`fs-xs fw-bold mt-1 ${diff < 0 ? styles['variance-negative'] : styles['variance-positive']}`}>
         Varianza: {diff > 0 ? `+${formatQuantity(diff, item.unitOfMeasure)}` : formatQuantity(diff, item.unitOfMeasure)} {formatUnitLabel(item.unitOfMeasure)}
         {isCritical && ' (desvío crítico >50%)'}
       </div>
@@ -122,7 +123,7 @@ const ReconciliationQuantityControls: React.FC<ReconciliationQuantityControlsPro
   <div className="flex-gap-sm">
     <button
       type="button"
-      className="btn-touch btn-secondary qty-stepper-btn-sm"
+      className={`btn-touch btn-secondary ${styles['qty-stepper-btn-sm']}`}
       onClick={() => onQuantityChange(itemId, physicalQuantity - 0.1)}
     >
       <Minus size={18} />
@@ -134,13 +135,13 @@ const ReconciliationQuantityControls: React.FC<ReconciliationQuantityControlsPro
       min="0"
       value={physicalQuantity}
       onChange={(e) => onQuantityChange(itemId, parseFloat(e.target.value) || 0)}
-      className="qty-stepper-input-sm"
+      className={styles['qty-stepper-input-sm']}
       id={`input-phys-${itemId}`}
     />
 
     <button
       type="button"
-      className="btn-touch btn-secondary qty-stepper-btn-sm"
+      className={`btn-touch btn-secondary ${styles['qty-stepper-btn-sm']}`}
       onClick={() => onQuantityChange(itemId, physicalQuantity + 0.1)}
     >
       <Plus size={18} />
@@ -153,7 +154,7 @@ const ReconciliationItemRow: React.FC<ReconciliationItemRowProps> = ({ item, phy
   const { diff, isCritical } = getVarianceInfo(theo, physicalQuantity);
 
   return (
-    <div className={`flex-between gap-3 reconciliation-row${isCritical ? ' reconciliation-row--critical' : ''}`}>
+    <div className={`flex-between gap-3 ${styles['reconciliation-row']}${isCritical ? ` ${styles['reconciliation-row--critical']}` : ''}`}>
       <ReconciliationItemInfo item={item} diff={diff} isCritical={isCritical} />
       <ReconciliationQuantityControls itemId={item.id} physicalQuantity={physicalQuantity} onQuantityChange={onQuantityChange} />
     </div>
@@ -166,15 +167,15 @@ interface CriticalVarianceBannerProps {
 }
 
 const CriticalVarianceBanner: React.FC<CriticalVarianceBannerProps> = ({ isAuthorized, onAuthorize }) => (
-  <div className="critical-variance-banner mb-5">
-    <div className="critical-variance-alert-row fw-bold mb-2">
+  <div className={`${styles['critical-variance-banner']} mb-5`}>
+    <div className={`${styles['critical-variance-alert-row']} fw-bold mb-2`}>
       <AlertOctagon size={22} />
       ¡Alerta de Varianza Crítica Mayor al 50%!
     </div>
     <p className="fs-sm mb-3">
       Se detectó una desviación significativa entre el inventario físico y el teórico. Debe autorizar la diferencia para enviar el cierre.
     </p>
-    <label className="flex-gap-sm fs-sm fw-semibold cursor-pointer">
+    <label className={`flex-gap-sm fs-sm fw-semibold ${styles['cursor-pointer']}`}>
       <input
         type="checkbox"
         checked={isAuthorized}
@@ -210,7 +211,7 @@ const ReconciliationFooter: React.FC<ReconciliationFooterProps> = ({ notes, setN
       />
     </div>
 
-    <div className="d-flex justify-end gap-3">
+    <div className={`${styles['d-flex']} justify-end gap-3`}>
       <button type="button" className="btn-touch btn-secondary" onClick={onCancel} disabled={isSubmitting}>
         Cancelar
       </button>
@@ -247,7 +248,7 @@ export const ShiftReconciliationWizard: React.FC<ShiftReconciliationWizardProps>
           Ingresa las cantidades reales medidas en cocina. Los insumos expirados serán descartados automáticamente.
         </p>
 
-        <div className="flex-column gap-3 mb-5 reconciliation-list-scroll">
+        <div className={`flex-column gap-3 mb-5 ${styles['reconciliation-list-scroll']}`}>
           {remanentes.map((r) => (
             <ReconciliationItemRow
               key={r.id}

@@ -1,0 +1,33 @@
+.recipe-card {
+  padding: var(--space-4);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border-card);
+  background-color: var(--overlay-white-faint);
+}
+.recipe-card--selected {
+  border: 2px solid var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-warning) 8%, transparent);
+}
+.recipe-category-badge {
+  font-size: var(--fs-xs);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  background-color: var(--bg-primary);
+  color: var(--color-primary);
+}
+.portion-display {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-black);
+  color: var(--color-primary);
+  background-color: var(--bg-primary);
+  padding: var(--space-3);
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+}
+.recipe-body-message { color: var(--text-secondary); padding: 24px 0; text-align: center; }

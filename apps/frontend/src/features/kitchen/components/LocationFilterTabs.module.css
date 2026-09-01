@@ -1,0 +1,12 @@
+.badge-count {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.location-tabs-bar { margin-bottom: var(--space-4); }
+.location-tabs-label { font-size: var(--fs-sm); color: var(--text-secondary); margin-right: var(--space-1); }
+.location-tab-btn { height: 40px; padding: 0 14px; font-size: var(--fs-sm); }
+.badge-count--active { background-color: var(--color-primary-on); color: var(--color-primary); }
+.badge-count--inactive { background-color: var(--bg-card); color: var(--text-secondary); }

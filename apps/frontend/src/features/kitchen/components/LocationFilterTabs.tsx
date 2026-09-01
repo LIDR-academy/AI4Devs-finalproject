@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
+import styles from './LocationFilterTabs.module.css';
 
 export type LocationFilter = 'ALL' | 'KITCHEN_FRIDGE' | 'KITCHEN_PREP' | 'KITCHEN_LINE';
 
@@ -18,8 +19,8 @@ export const LocationFilterTabs: React.FC<LocationFilterTabsProps> = ({ activeLo
   ];
 
   return (
-    <div className="flex-gap-sm flex-wrap location-tabs-bar">
-      <div className="flex-gap-xs location-tabs-label">
+    <div className={`flex-gap-sm flex-wrap ${styles['location-tabs-bar']}`}>
+      <div className={`flex-gap-xs ${styles['location-tabs-label']}`}>
         <MapPin size={16} /> Estaciones:
       </div>
       {tabs.map((tab) => {
@@ -30,11 +31,11 @@ export const LocationFilterTabs: React.FC<LocationFilterTabsProps> = ({ activeLo
           <button
             key={tab.id}
             type="button"
-            className={`btn-touch flex-gap-xs location-tab-btn ${isActive ? 'btn-primary fw-bold' : 'btn-secondary'}`}
+            className={`btn-touch flex-gap-xs ${styles['location-tab-btn']} ${isActive ? 'btn-primary fw-bold' : 'btn-secondary'}`}
             onClick={() => onLocationSelect(tab.id)}
           >
             {tab.label}
-            <span className={`badge-count ${isActive ? 'badge-count--active' : 'badge-count--inactive'}`}>
+            <span className={`${styles['badge-count']} ${isActive ? styles['badge-count--active'] : styles['badge-count--inactive']}`}>
               {count}
             </span>
           </button>

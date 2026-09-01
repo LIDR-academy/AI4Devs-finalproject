@@ -5,6 +5,7 @@ import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import styles from './RecipeSelectorModal.module.css';
 
 interface RecipeSelectorModalProps {
   isOpen: boolean;
@@ -30,12 +31,12 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isSelected, onSelect })
         onSelect(recipe.id);
       }
     }}
-    className={`recipe-card${isSelected ? ' recipe-card--selected' : ''}`}
+    className={`${styles['recipe-card']}${isSelected ? ` ${styles['recipe-card--selected']}` : ''}`}
   >
     <div>
       <div className="fw-bold fs-base">
         {recipe.name}{' '}
-        <span className="recipe-category-badge">
+        <span className={styles['recipe-category-badge']}>
           {recipe.category}
         </span>
       </div>
@@ -89,7 +90,7 @@ const PortionStepper: React.FC<PortionStepperProps> = ({ portions, onChange }) =
     >
       -
     </button>
-    <div className="portion-display">
+    <div className={styles['portion-display']}>
       {portions} {portions === 1 ? 'porción' : 'porciones'}
     </div>
     <button
@@ -145,14 +146,14 @@ const RecipeSelectionBody: React.FC<RecipeSelectionBodyProps> = ({
 }) => {
   if (isLoadingRecipes) {
     return (
-      <div className="recipe-body-message">
+      <div className={styles['recipe-body-message']}>
         Cargando recetas del catálogo...
       </div>
     );
   }
   if (recipes.length === 0) {
     return (
-      <div className="recipe-body-message">
+      <div className={styles['recipe-body-message']}>
         No hay recetas dadas de alta en el catálogo todavía.
       </div>
     );

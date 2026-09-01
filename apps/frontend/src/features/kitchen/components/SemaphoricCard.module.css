@@ -1,0 +1,32 @@
+.severity-critical { --severity-color: var(--color-danger); --severity-text: var(--color-danger-text); --severity-bg: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+.severity-warning { --severity-color: var(--color-warning); --severity-text: var(--color-warning); --severity-bg: color-mix(in srgb, var(--color-warning) 12%, transparent); }
+.severity-safe { --severity-color: var(--color-success); --severity-text: var(--color-success); --severity-bg: color-mix(in srgb, var(--color-success) 12%, transparent); }
+
+.semaphoric-card {
+  background-color: var(--bg-card);
+  border-left: 6px solid var(--severity-color, var(--color-primary));
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-elevation-1);
+}
+.semaphoric-header { display: flex; justify-content: space-between; align-items: center; }
+.semaphoric-title { margin: 0; font-size: 1.1rem; }
+.severity-badge {
+  background-color: var(--severity-bg);
+  color: var(--severity-text);
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.semaphoric-meta { color: var(--text-secondary); font-size: 0.9rem; }
+.semaphoric-footer { display: flex; align-items: center; justify-content: space-between; }
+.semaphoric-time { font-weight: 700; font-size: 0.95rem; }
+.semaphoric-actions { display: flex; gap: 0.5rem; }
+.semaphoric-action-btn { min-height: 48px; min-width: 90px; border-radius: 4px; font-weight: 600; cursor: pointer; }
+.semaphoric-action-btn--consume { background-color: var(--color-primary); color: var(--color-primary-on); border: none; }
+.semaphoric-action-btn--discard { background-color: transparent; color: var(--color-danger-text); border: 1px solid var(--color-danger); }

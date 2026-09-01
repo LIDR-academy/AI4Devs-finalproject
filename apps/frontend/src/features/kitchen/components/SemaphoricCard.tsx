@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './SemaphoricCard.module.css';
 
 export interface AlertItem {
   id: string;
@@ -35,18 +36,18 @@ interface AlertActionButtonsProps {
 }
 
 const AlertActionButtons: React.FC<AlertActionButtonsProps> = ({ alert, onAction }) => (
-  <div className="semaphoric-actions">
+  <div className={styles['semaphoric-actions']}>
     <button
       onClick={() => onAction(alert.id, 'consume')}
       aria-label={`Consumir ${alert.ingredientName}`}
-      className="semaphoric-action-btn semaphoric-action-btn--consume"
+      className={`${styles['semaphoric-action-btn']} ${styles['semaphoric-action-btn--consume']}`}
     >
       Consumir
     </button>
     <button
       onClick={() => onAction(alert.id, 'discard')}
       aria-label={`Descartar ${alert.ingredientName}`}
-      className="semaphoric-action-btn semaphoric-action-btn--discard"
+      className={`${styles['semaphoric-action-btn']} ${styles['semaphoric-action-btn--discard']}`}
     >
       Descartar
     </button>
@@ -59,27 +60,27 @@ export const SemaphoricCard: React.FC<SemaphoricCardProps> = ({ alert, onAction 
   return (
     <article
       data-testid={`semaphoric-card-${alert.id}`}
-      className={`semaphoric-card severity-${severity.key}`}
+      className={`${styles['semaphoric-card']} ${styles[`severity-${severity.key}`]}`}
     >
-      <div className="semaphoric-header">
-        <h4 className="semaphoric-title">
+      <div className={styles['semaphoric-header']}>
+        <h4 className={styles['semaphoric-title']}>
           {alert.ingredientName}
         </h4>
-        <span className="severity-badge">
+        <span className={styles['severity-badge']}>
           {severity.label}
         </span>
       </div>
 
-      <div className="semaphoric-meta">
+      <div className={styles['semaphoric-meta']}>
         <span>Lote: <strong>{alert.lotNumber}</strong></span> •
         <span> Cantidad: <strong>{alert.quantity} {alert.unit}</strong></span>
       </div>
 
-      <div className="semaphoric-footer">
+      <div className={styles['semaphoric-footer']}>
         {/* Texto siempre en --text-primary (no en el tono del tier): a este tamaño/peso ningún tono de acento
             alcanza el 7:1 exigido para "números principales" por el Design System v2.0.0; la urgencia ya la
             comunican el borde izquierdo y el badge (uso no-textual, ≥3:1). */}
-        <span className="semaphoric-time">
+        <span className={styles['semaphoric-time']}>
           ⏳ Vence en {alert.hoursRemaining}h
         </span>
 

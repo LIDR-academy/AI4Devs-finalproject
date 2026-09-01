@@ -1,0 +1,27 @@
+.health-bar-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+}
+
+.health-bar-track {
+  height: 10px;
+  width: 100%;
+  background-color: #222;
+  border-radius: 5px;
+  overflow: hidden;
+  display: flex;
+}
+
+.text-danger-text-color { color: var(--color-danger-text); }
+.text-warning-color { color: var(--color-warning); }
+
+.health-bar-segment {
+  width: var(--bar-pct, 0%);
+  transition: width 0.3s;
+}
+.health-bar-segment--safe { background-color: var(--color-success); }
+.health-bar-segment--warning { background-color: var(--color-warning); }
+.health-bar-segment--critical { background-color: var(--color-danger); }

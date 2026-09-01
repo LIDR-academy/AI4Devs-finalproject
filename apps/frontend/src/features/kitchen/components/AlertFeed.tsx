@@ -2,6 +2,7 @@ import React from 'react';
 import { SemaphoricCard, AlertItem } from './SemaphoricCard.js';
 import { OfflineBanner } from './OfflineBanner.js';
 import { CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import styles from './AlertFeed.module.css';
 
 export interface AlertFeedProps {
   alerts?: AlertItem[];
@@ -34,13 +35,13 @@ const AlertFeedErrorState: React.FC<{ error: string; onRetry?: () => void }> = (
 const AlertFeedSkeleton: React.FC = () => (
   <div data-testid="loading-skeleton" className="flex-column gap-4">
     {[1, 2, 3].map((i) => (
-      <div key={i} className="skeleton-item" />
+      <div key={i} className={styles['skeleton-item']} />
     ))}
   </div>
 );
 
 const AlertFeedEmptyState: React.FC = () => (
-  <div className="alert-empty-state">
+  <div className={styles['alert-empty-state']}>
     <div className="flex-center mb-2">
       <CheckCircle2 size={48} className="text-success-color" />
     </div>
@@ -79,10 +80,10 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
   const viewState = resolveViewState(isLoading, error, alerts.length);
 
   return (
-    <section aria-label="Feed de Alertas FEFO de Cocina" className="alert-feed-container">
+    <section aria-label="Feed de Alertas FEFO de Cocina" className={styles['alert-feed-container']}>
       <OfflineBanner />
 
-      <header className="alert-feed-header">
+      <header className={styles['alert-feed-header']}>
         <h2 className="flex-gap-xs m-0 fs-xl">
           <AlertTriangle size={24} className="text-primary-color" /> Feed de Alertas & Remanentes CRÍTICOS
         </h2>
@@ -91,7 +92,7 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
         </p>
       </header>
 
-      <main className="alert-feed-main">
+      <main className={styles['alert-feed-main']}>
         {viewState === 'error' && <AlertFeedErrorState error={error as string} onRetry={onRetry} />}
         {viewState === 'loading' && <AlertFeedSkeleton />}
         {viewState === 'empty' && <AlertFeedEmptyState />}
