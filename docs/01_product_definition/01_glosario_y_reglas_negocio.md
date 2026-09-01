@@ -21,6 +21,9 @@ Este documento centraliza los conceptos clave del dominio gastronómico de **Res
 *   **Conciliación de Fin de Turno:** Proceso guiado en el que el personal de cocina valida el stock físico real contra el saldo lógico del sistema y procesa el descarte masivo automático de remanentes vencidos.
 *   **PIN de Operario:** Código numérico de 4 dígitos asignado a cada cocinero para autenticación rápida en la terminal táctil de cocina.
 *   **Almacén Central / Bodega:** Depósito principal donde los insumos se conservan en envases cerrados bajo su vida útil comercial de fabricante.
+*   **Costo Unitario (`unitCost`):** Valor monetario opcional asignado a un insumo, expresado por unidad de compra (ej. costo de 1 kg completo, no por gramo). Permite valorizar en `$` el reporte de mermas (`US-019`); nulo por defecto para insumos preexistentes.
+*   **TRR Efectivo (Rotation Metric):** A diferencia del TRR (ventana de vencimiento acelerado, ver arriba), el TRR Efectivo es el tiempo **real** transcurrido entre la apertura de un remanente y su estado terminal (consumido o descartado), promediado sobre un rango de fechas (`US-020`). Es la métrica que valida en la práctica si el objetivo de las 72h se cumple.
+*   **Advertencia de Apertura Duplicada:** Aviso visual no bloqueante ("Soft Limit", mismo patrón que la saturación de almacenes secundarios) mostrado al operario cuando intenta extraer un insumo sellado de bodega mientras ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina (`US-021`).
 
 ---
 

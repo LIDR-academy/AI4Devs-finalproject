@@ -38,6 +38,9 @@ inputs:
    - [US-011: Trazabilidad y Auditoría de Movimientos de Stock](#us-011-trazabilidad-y-auditoría-de-movimientos-de-stock)
    - [US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](#us-012-gestión-de-catálogo-maestro-alta-de-insumos-y-recetas)
    - [US-013: Reabastecimiento de Bodega](#us-013-reabastecimiento-de-bodega)
+   - [US-019: Costeo de Insumos y Valorización Monetaria de Mermas](#us-019-costeo-de-insumos-y-valorización-monetaria-de-mermas)
+   - [US-020: Indicador TRR Real en el Dashboard de Reportes](#us-020-indicador-trr-real-en-el-dashboard-de-reportes)
+   - [US-021: Advertencia de Apertura Duplicada al Extraer Insumo](#us-021-advertencia-de-apertura-duplicada-al-extraer-insumo)
 6. [Estrategia de Calidad y Verificación (QA/Testing)](#6-estrategia-de-calidad-y-verificación-qatesting)
 7. [Roadmap Post-MVP (Fase 2)](#7-roadmap-post-mvp-fase-2)
 
@@ -299,6 +302,54 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
 *   **Historia:** Como Administrador, quiero configurar la identidad del restaurante (nombre, moneda) y los parámetros operativos de inventario (umbral de alertas críticas FEFO y vida útil estándar), para adaptar el sistema a las reglas específicas del establecimiento.
 *   **Complejidad:** M
 *   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+
+
+### US-019: Costeo de Insumos y Valorización Monetaria de Mermas
+*   **Historia:** Como Administrador, quiero registrar el costo unitario de cada insumo y visualizar el valor monetario de las mermas en el dashboard de reportes, para auditar la pérdida financiera real y no solo las cantidades físicas descartadas.
+*   **Complejidad:** S
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Decisiones de negocio consultadas con el humano:** El costo se captura por unidad de compra (ej. costo de 1 kg completo), no por unidad de consumo — coincide con `unitOfMeasure`, sin factor de conversión intermedio.
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Insumo con costo registrado):**
+        *   **Given** Un insumo "Queso Mozzarella" con `unitCost` "1800.00" registrado.
+        *   **When** Se descartan 3.5kg de ese insumo por motivo "EXPIRATION" dentro del rango de fechas consultado.
+        *   **Then** El reporte de mermas retorna `totalDiscardedCost: "6300.00"` para esa fila.
+    *   **Escenario 2 (Insumo sin costo registrado):**
+        *   **Given** Un insumo "Salsa de Tomate" sin `unitCost` registrado (`null`).
+        *   **When** Se descarta 1L de ese insumo por motivo "DAMAGE_OR_DROP".
+        *   **Then** El reporte retorna `totalDiscardedCost: null` para esa fila, y la UI muestra "Sin costo registrado" — nunca `"$0"`, que subestimaría la pérdida real.
+
+
+### US-020: Indicador TRR Real en el Dashboard de Reportes
+*   **Historia:** Como Administrador, quiero visualizar el tiempo real promedio de rotación de remanentes (TRR efectivo) en el dashboard de reportes, para verificar si el objetivo de 72 horas definido en el producto se cumple en la práctica.
+*   **Complejidad:** M
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Decisiones de negocio consultadas con el humano:** Los remanentes descartados (merma) cuentan en el promedio con el tiempo transcurrido hasta su descarte — el TRR mide el ciclo de vida completo del remanente (éxito o fracaso), no solo el consumo exitoso.
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Cálculo con muestra):**
+        *   **Given** 3 remanentes que alcanzaron estado terminal en el rango consultado, con tiempos de 24h, 48h y 96h respectivamente.
+        *   **When** El Administrador consulta el indicador TRR del dashboard.
+        *   **Then** El sistema retorna `averageTrrHours: 56.0`, `targetTrrHours: 72` y `sampleSize: 3`.
+    *   **Escenario 2 (Sin muestra en el rango):**
+        *   **Given** Ningún remanente alcanzó estado terminal en el rango de fechas consultado.
+        *   **When** El Administrador consulta el indicador TRR.
+        *   **Then** El sistema retorna `sampleSize: 0` y la UI muestra un estado vacío explícito — nunca `"0h"`, que se leería engañosamente como un resultado perfecto.
+
+
+### US-021: Advertencia de Apertura Duplicada al Extraer Insumo
+*   **Historia:** Como operario autorizado, quiero recibir una advertencia visual al intentar extraer un insumo de bodega si ya existe un remanente activo del mismo insumo en cocina, para evitar aperturas duplicadas y reducir la merma por insumos abiertos olvidados.
+*   **Complejidad:** M
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Decisiones de negocio consultadas con el humano:** La advertencia es no bloqueante (patrón "Soft Limits", consistente con la saturación de almacenes secundarios ya aprobada en `01_product_discovery.md §7`) y detecta remanentes activos en **cualquier** ubicación de cocina, no solo la ubicación de destino seleccionada.
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Advertencia mostrada, extracción no bloqueada):**
+        *   **Given** Un remanente activo de "Queso Parmesano" con 2.3kg disponibles en "Heladera A - Línea de Fríos".
+        *   **When** El operario abre el modal de extracción de bodega y selecciona "Queso Parmesano".
+        *   **Then** El sistema muestra una advertencia no bloqueante indicando la ubicación y cantidad del remanente existente, y el operario puede confirmar la extracción igualmente.
+    *   **Escenario 2 (Sin remanente activo, sin advertencia):**
+        *   **Given** Ningún remanente activo de "Aceite de Oliva" en ninguna ubicación de cocina.
+        *   **When** El operario abre el modal de extracción y selecciona "Aceite de Oliva".
+        *   **Then** El sistema no muestra ninguna advertencia y permite continuar el flujo normal de extracción.
 
 
 ---

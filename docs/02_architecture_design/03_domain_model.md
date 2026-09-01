@@ -36,6 +36,7 @@ classDiagram
             +UnidadConsumo unidadConsumo
             +Int diasVidaUtilBodega
             +Int horasVidaUtilCocina
+            +DecimalMonetario? costoUnitario
         }
     }
 

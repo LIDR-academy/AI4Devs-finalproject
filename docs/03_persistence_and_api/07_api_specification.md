@@ -32,6 +32,7 @@ inputs:
 | **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
 | **GET** | `/api/v1/stock/insumos` | *Ninguno* | `ListInsumosResponse` | Obtiene la lista de insumos del catálogo maestro (`TK-057`). |
 | **PATCH** | `/api/v1/stock/insumos/{id}/restock` | `RestockInsumoRequest` | `RestockInsumoResponse` | Suma la cantidad recibida al stock de bodega de un insumo existente (`TK-060`). |
+| **GET** | `/api/v1/reports/rotation-metrics` | *Ninguno (Query Params)* | `RotationMetricsResponse` | Retorna la TRR promedio real (`US-020`), el único endpoint que mide directamente el KPI de rotación del PRD. |
 
 ---
 
@@ -175,6 +176,7 @@ sequenceDiagram
     *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR` u `ADMIN`)
 *   **Query Parameters:**
     *   `location` (Opcional): Filtra por ubicación específica (`KITCHEN_FRIDGE`, `KITCHEN_FREEZER`, `KITCHEN_PANTRY`, `KITCHEN_PREP`).
+    *   `insumoId` (Opcional, `US-021`): Filtra a los remanentes activos de un único insumo, **en cualquier ubicación de cocina** (no se combina con `location`). Usado por la pantalla de extracción de bodega para advertir de una posible apertura duplicada antes de confirmar una nueva extracción del mismo insumo.
 *   **Response Success (`200 OK` - `GetRemanentesResponse`):**
     ```json
     [
@@ -408,7 +410,8 @@ sequenceDiagram
         "category": "Lácteos",
         "consumptionUnit": "KG",
         "reason": "EXPIRATION",
-        "totalDiscardedQuantity": "3.5000"
+        "totalDiscardedQuantity": "3.5000",
+        "totalDiscardedCost": "12600.00"
       },
       {
         "insumoId": "d9b01518-9276-46c5-84a1-db9b01518f88",
@@ -417,10 +420,12 @@ sequenceDiagram
         "category": "Salsas",
         "consumptionUnit": "L",
         "reason": "DAMAGE_OR_DROP",
-        "totalDiscardedQuantity": "1.0000"
+        "totalDiscardedQuantity": "1.0000",
+        "totalDiscardedCost": null
       }
     ]
     ```
+    *   `totalDiscardedCost` (`US-019`): `totalDiscardedQuantity × insumo.unitCost`, en la moneda configurada en `SystemSettings.currencySymbol`. Es `null` (no `"0.00"`) cuando el insumo no tiene `unitCost` registrado — la UI debe distinguir "sin costo registrado" de "costo cero" para no subestimar la merma financiera real.
 *   **Response Error (`400 Bad Request`):**
     *   *Causa:* Formato incorrecto o no-ISO de las fechas `startDate` o `endDate`.
     ```json
@@ -442,16 +447,19 @@ sequenceDiagram
     ```json
     {
       "name": "Harina 000",
-      "unitOfMeasure": "KG"
+      "unitOfMeasure": "KG",
+      "unitCost": "1800.00"
     }
     ```
+    *   `unitCost` (Opcional, `US-019`): Costo expresado **por unidad de compra** (ej. costo de 1 KG completo, no por gramo) — coincide con `unitOfMeasure`, sin factor de conversión intermedio. Si se omite, el insumo queda sin costo registrado (`unitCost: null`) y su merma no se valoriza en `$` en los reportes hasta que un Administrador lo complete.
 *   **Response Success (`201 Created` - `CreateInsumoResponse`):**
     ```json
     {
       "id": "f3a1c2e0-1234-4abc-9def-0123456789ab",
       "name": "Harina 000",
       "unitOfMeasure": "KG",
-      "warehouseStock": "0.000"
+      "warehouseStock": "0.000",
+      "unitCost": "1800.00"
     }
     ```
 *   **Response Error (`403 Forbidden`):**
@@ -470,7 +478,8 @@ sequenceDiagram
         "id": "f3a1c2e0-1234-4abc-9def-0123456789ab",
         "name": "Harina 000",
         "unitOfMeasure": "KG",
-        "warehouseStock": "0.000"
+        "warehouseStock": "0.000",
+        "unitCost": "1800.00"
       }
     ]
     ```
@@ -501,6 +510,31 @@ sequenceDiagram
     *   *Causa:* El `id` de insumo no existe en el catálogo.
 *   **Response Error (`400 Bad Request`):**
     *   *Causa:* `quantity` es cero, negativo o no numérico.
+*   **Response Error (`403 Forbidden`):**
+    *   *Causa:* El solicitante autenticado no tiene rol `ADMIN`.
+
+---
+
+### 2.14. `GET /api/v1/reports/rotation-metrics`
+*   **Descripción:** Retorna la Tasa de Rotación de Remanentes (TRR) promedio real, calculada sobre todos los remanentes que alcanzaron un estado terminal (`CONSUMED` o `DISCARDED`) dentro del rango de fechas indicado. Es el único endpoint que mide directamente el KPI de éxito del producto (`docs/01_product_definition/02_prd.md §1.3`) — hasta `US-020` el sistema forzaba la ventana de 72h pero nunca reportaba si el objetivo se cumplía en la práctica.
+*   **Cabeceras Requeridas:**
+    *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
+*   **Query Parameters:**
+    *   `startDate` (String, requerido): Fecha de inicio en formato ISO 8601.
+    *   `endDate` (String, requerido): Fecha de fin en formato ISO 8601.
+*   **Response Success (`200 OK` - `RotationMetricsResponse`):**
+    ```json
+    {
+      "averageTrrHours": 48.3,
+      "targetTrrHours": 72,
+      "sampleSize": 134
+    }
+    ```
+    *   `averageTrrHours` (`US-020`): Promedio de horas transcurridas entre `Remanente.createdAt` y su timestamp terminal. **Decisión de negocio confirmada:** los remanentes descartados (merma) cuentan en el promedio con el tiempo hasta su descarte — el TRR mide el ciclo de vida completo (éxito o fracaso), no solo el consumo exitoso.
+    *   `targetTrrHours`: Refleja el umbral de 72h del PRD, para que el frontend renderice un estado visual de cumplimiento sin hardcodear el número.
+    *   `sampleSize`: Si es `0`, el frontend debe mostrar un estado vacío explícito — nunca `"0h"`, que se leería engañosamente como un resultado perfecto.
+*   **Response Error (`400 Bad Request`):**
+    *   *Causa:* Formato incorrecto o no-ISO de las fechas `startDate` o `endDate`.
 *   **Response Error (`403 Forbidden`):**
     *   *Causa:* El solicitante autenticado no tiene rol `ADMIN`.
 

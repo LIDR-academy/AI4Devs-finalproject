@@ -142,6 +142,28 @@ graph TD
     US014 --> TK072
     US014 --> TK072FE
 
+    %% Gap Analysis del PRD (US-019 a US-021) — cierran los 3 KPIs del producto
+    US019["📝 US-019: Costeo y Valorización de Mermas"]
+    TK078["🎫 TK-078: Costeo de Insumos (Backend)"]
+    TK078FE["🎫 TK-078-FE: Valorización en Dashboard (Frontend)"]
+    EpicReports --> US019
+    US019 --> TK078
+    US019 --> TK078FE
+
+    US020["📝 US-020: Indicador TRR Real"]
+    TK079["🎫 TK-079: Rotation Metrics (Backend)"]
+    TK079FE["🎫 TK-079-FE: Card de KPI TRR (Frontend)"]
+    EpicReports --> US020
+    US020 --> TK079
+    US020 --> TK079FE
+
+    US021["📝 US-021: Advertencia Apertura Duplicada"]
+    TK080["🎫 TK-080: Filtro insumoId (Backend)"]
+    TK080FE["🎫 TK-080-FE: Advertencia en Extracción (Frontend)"]
+    EpicStock --> US021
+    US021 --> TK080
+    US021 --> TK080FE
+
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
     classDef roadmap fill:#FFC300,stroke:#FF5733,stroke-width:2px,color:#000;
@@ -151,8 +173,8 @@ graph TD
 
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE tk;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US019,US020,US021 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE tk;
 ```
 
 ---
@@ -182,5 +204,8 @@ graph TD
 | **📦 Bodega (`stock`)** | [US-016: Sectores de Almacenamiento](11_user_stories/stock/US-016.md) | [TK-074: Storage Locations API](12_tickets/stock/backend/TK-074.md) | [TK-074-FE: Storage Locations UI](12_tickets/stock/frontend/TK-074-FE.md) | 📋 Approved Spec |
 | **⚙️ Configuración (`settings`)** | [US-017: Configuración del Restaurante](11_user_stories/settings/US-017.md) | [TK-075: System Settings API](12_tickets/settings/backend/TK-075.md) | [TK-075-FE: System Settings UI](12_tickets/settings/frontend/TK-075-FE.md) | 📋 Approved Spec |
 | **🔐 Autenticación (`auth`)** | [US-018: Recuperación de PIN de Administrador](11_user_stories/auth/US-018.md) | [TK-077: Admin PIN Recovery API](12_tickets/auth/backend/TK-077.md) | [TK-077-FE: Admin PIN Recovery UI](12_tickets/auth/frontend/TK-077-FE.md) | ✅ Done |
+| **📊 Reportes (`reports`)** | [US-019: Costeo y Valorización de Mermas](11_user_stories/reports/US-019.md) | [TK-078: Costeo de Insumos](12_tickets/reports/backend/TK-078.md) | [TK-078-FE: Valorización en Dashboard](12_tickets/reports/frontend/TK-078-FE.md) | 📋 Approved Spec |
+| **📊 Reportes (`reports`)** | [US-020: Indicador TRR Real](11_user_stories/reports/US-020.md) | [TK-079: Rotation Metrics](12_tickets/reports/backend/TK-079.md) | [TK-079-FE: Card de KPI TRR](12_tickets/reports/frontend/TK-079-FE.md) | 📋 Approved Spec |
+| **📦 Bodega (`stock`)** | [US-021: Advertencia Apertura Duplicada](11_user_stories/stock/US-021.md) | [TK-080: Filtro `insumoId`](12_tickets/stock/backend/TK-080.md) | [TK-080-FE: Advertencia en Extracción](12_tickets/stock/frontend/TK-080-FE.md) | 📋 Approved Spec |
 
 

@@ -57,6 +57,12 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-075-FE** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-075`. Modal de Configuración General y branding dinámico en header. | 🟢 P2 - Media |
 | **TK-077** | `auth` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Recuperación de Acceso y Reseteo de PIN del Administrador por Email. | 🟡 P1 - Alta |
 | **TK-077-FE** | `auth` | **Alto** | **Alta** | 3 SP | Depende de `TK-077`. Modal Táctil y Pantalla de Recuperación de PIN de Administrador. | 🟡 P1 - Alta |
+| **TK-078** | `reports` | **Alto** | **Media** | 3 SP | Depende de `TK-057`, `TK-010`. Costeo de insumos y valorización monetaria de mermas — cierra el gap del KPI financiero #1 del PRD. | 🟡 P1 - Alta |
+| **TK-078-FE** | `reports` | **Alto** | **Media** | 2 SP | Depende de `TK-078`. Campo de costo en alta de insumo y valor `$` en el dashboard de mermas. | 🟡 P1 - Alta |
+| **TK-079** | `reports` | **Alto** | **Media** | 3 SP | Depende de `TK-004`, `TK-006`. Indicador TRR real (rotation metrics) — cierra el gap del KPI #2 del PRD, hoy nunca medido. | 🟡 P1 - Alta |
+| **TK-079-FE** | `reports` | **Alto** | **Media** | 2 SP | Depende de `TK-079`. Card de KPI de TRR real en el dashboard de reportes. | 🟡 P1 - Alta |
+| **TK-080** | `stock` | **Medio** | **Media** | 2 SP | Depende de `TK-004`. Filtro `insumoId` en remanentes activos, para detección de apertura duplicada — cierra el gap del KPI #3 del PRD. | 🟢 P2 - Media |
+| **TK-080-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-080`, `TK-072-FE`. Advertencia no bloqueante de apertura duplicada en el modal de extracción. | 🟢 P2 - Media |
 
 ---
 
@@ -89,6 +95,9 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-074** | [US-016](../11_user_stories/stock/US-016.md) | Backend Storage Locations API | `stock` | 3 | Should Have | [stock/backend/TK-074.md](stock/backend/TK-074.md) |
 | **TK-075** | [US-017](../11_user_stories/settings/US-017.md) | Backend System Settings API | `settings` | 3 | Should Have | [settings/backend/TK-075.md](settings/backend/TK-075.md) |
 | **TK-077** | [US-018](../11_user_stories/auth/US-018.md) | Backend Admin PIN Recovery via Email Token & Magic Link | `auth` | 5 | Should Have | [auth/backend/TK-077.md](auth/backend/TK-077.md) |
+| **TK-078** | [US-019](../11_user_stories/reports/US-019.md) | Costeo de Insumos y Valorización Monetaria de Mermas | `reports` | 3 | Should Have | [reports/backend/TK-078.md](reports/backend/TK-078.md) |
+| **TK-079** | [US-020](../11_user_stories/reports/US-020.md) | Indicador TRR Real (Rotation Metrics) | `reports` | 3 | Should Have | [reports/backend/TK-079.md](reports/backend/TK-079.md) |
+| **TK-080** | [US-021](../11_user_stories/stock/US-021.md) | Filtro `insumoId` para Detección de Apertura Duplicada | `stock` | 2 | Should Have | [stock/backend/TK-080.md](stock/backend/TK-080.md) |
 
 
 ### 🖥️ Tickets de Frontend
@@ -116,6 +125,9 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-074-FE** | [US-016](../11_user_stories/stock/US-016.md) | Frontend Storage Locations UI | `stock` | 3 | Should Have | [stock/frontend/TK-074-FE.md](stock/frontend/TK-074-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |
+| **TK-078-FE** | [US-019](../11_user_stories/reports/US-019.md) | Costo de Insumo y Valorización Monetaria en Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-078-FE.md](reports/frontend/TK-078-FE.md) |
+| **TK-079-FE** | [US-020](../11_user_stories/reports/US-020.md) | Card de KPI de TRR Real en el Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-079-FE.md](reports/frontend/TK-079-FE.md) |
+| **TK-080-FE** | [US-021](../11_user_stories/stock/US-021.md) | Advertencia de Apertura Duplicada en Extracción | `stock` | 3 | Should Have | [stock/frontend/TK-080-FE.md](stock/frontend/TK-080-FE.md) |
 ---
 
 ## 🗂️ 3. Resumen de Fichas Técnicas de Tickets por Módulo
@@ -137,6 +149,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-007-F: Pantalla de Extracciones](stock/frontend/TK-007-F.md)** (Frontend)
 *   **[TK-074: Storage Locations API](stock/backend/TK-074.md)** (Backend)
 *   **[TK-074-FE: Storage Locations UI](stock/frontend/TK-074-FE.md)** (Frontend)
+*   **[TK-080: Filtro `insumoId` para Detección de Apertura Duplicada](stock/backend/TK-080.md)** (Backend) — cierra el gap del KPI #3 del PRD (duplicidad de aperturas), hoy sin ningún mecanismo activo.
+*   **[TK-080-FE: Advertencia de Apertura Duplicada en Extracción](stock/frontend/TK-080-FE.md)** (Frontend)
 
 ### ⚙️ Configuración (`settings/`)
 *   **[TK-075: System Settings API](settings/backend/TK-075.md)** (Backend)
@@ -154,7 +168,11 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 
 ### 📊 Reportes (`reports/`)
 *   **[TK-010: Módulo de Reportes](reports/backend/TK-010.md)** (Backend)
-*   **[TK-007-E: Dashboard de Mermas](reports/frontend/TK-007-E.md)** (Frontend)uración del Workspace Frontend y Design System Base](shared/frontend/TK-001-FE.md)**
+*   **[TK-007-E: Dashboard de Mermas](reports/frontend/TK-007-E.md)** (Frontend)
+*   **[TK-078: Costeo de Insumos y Valorización Monetaria de Mermas](reports/backend/TK-078.md)** (Backend) — cierra el gap del KPI #1 del PRD (diferencia financiera), hoy solo medible en cantidades físicas.
+*   **[TK-078-FE: Costo de Insumo y Valorización Monetaria en Dashboard](reports/frontend/TK-078-FE.md)** (Frontend)
+*   **[TK-079: Indicador TRR Real (Rotation Metrics)](reports/backend/TK-079.md)** (Backend) — cierra el gap del KPI #2 del PRD (TRR < 72h), hoy forzado pero nunca reportado.
+*   **[TK-079-FE: Card de KPI de TRR Real en el Dashboard](reports/frontend/TK-079-FE.md)** (Frontend)
 
 ### 🔐 Autenticación (`auth/`)
 *   **[TK-002: Autenticación por PIN](auth/backend/TK-002.md)** (Backend)

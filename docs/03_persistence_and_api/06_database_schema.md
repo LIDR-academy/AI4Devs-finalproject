@@ -314,6 +314,7 @@ model Insumo {
   purchaseUnit      String   @map("purchase_unit") @db.VarChar(20)
   consumptionUnit   String   @map("consumption_unit") @db.VarChar(20)
   conversionFactor  Decimal  @map("conversion_factor") @db.Decimal(10, 2)
+  unitCost          Decimal? @map("unit_cost") @db.Decimal(12, 2) // US-019: costo por unidad de compra (purchaseUnit), nullable — insumos preexistentes sin costo capturado no bloquean el reporte de mermas, solo quedan fuera de su valorización monetaria.
   openShelfLifeDays Int?     @map("open_shelf_life_days")
   isActive          Boolean  @default(true) @map("is_active")
   createdAt         DateTime @default(now()) @map("created_at")

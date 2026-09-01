@@ -431,6 +431,12 @@ paths:
           schema:
             type: string
             enum: [KITCHEN_FRIDGE, KITCHEN_FREEZER, KITCHEN_PANTRY, KITCHEN_PREP]
+        - name: insumoId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filters to active remanentes of a single insumo, across all kitchen locations. Used by the warehouse extraction screen to warn about a possible duplicate opening before confirming a new extraction (US-021).
       responses:
         '200':
           description: List of active remanentes ordered by earliest expiration date
@@ -712,6 +718,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/reports/rotation-metrics:
+    get:
+      summary: Get the average Remanente Rotation Time (TRR) over a date range (ADMIN role only, US-020)
+      operationId: getRotationMetrics
+      tags:
+        - Reports & Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Average TRR across all remanentes that reached a terminal state (CONSUMED or DISCARDED) in the range
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotationMetricsResponse'
+        '400':
+          description: Missing or invalid startDate/endDate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -926,6 +973,9 @@ components:
           type: string
           enum: [KG, L, UNITS]
           example: "KG"
+        unitCost:
+          $ref: '#/components/schemas/DecimalString'
+          description: Optional cost per purchase unit of unitOfMeasure (e.g. cost per KG), used to valuate waste reports in currency (US-019). Nullable — legacy insumos may have no cost recorded.
 
     CreateInsumoResponse:
       type: object
@@ -939,6 +989,9 @@ components:
           enum: [KG, L, UNITS]
         warehouseStock:
           $ref: '#/components/schemas/DecimalString'
+        unitCost:
+          $ref: '#/components/schemas/DecimalString'
+          description: Nullable — absent when the insumo has no cost recorded yet.
 
     RestockInsumoRequest:
       type: object
@@ -1180,8 +1233,27 @@ components:
           type: string
         totalDiscardedQuantity:
           $ref: '#/components/schemas/DecimalString'
+        totalDiscardedCost:
+          $ref: '#/components/schemas/DecimalString'
+          description: totalDiscardedQuantity × insumo.unitCost. Null when the insumo has no unitCost recorded (US-019) — the frontend must render "Sin costo registrado" instead of "$0", never conflating the two.
         reason:
           type: string
+
+    RotationMetricsResponse:
+      type: object
+      properties:
+        averageTrrHours:
+          type: number
+          description: Average elapsed hours between Remanente.createdAt and its terminal timestamp (CONSUMED or DISCARDED), across every remanente that reached a terminal state within the requested range (US-020 — discards count toward the average, per explicit product decision).
+          example: 48.3
+        targetTrrHours:
+          type: number
+          description: The product's TRR target, mirrored from the PRD North Star metric (72h) for the frontend to render a pass/fail visual state without hardcoding the threshold.
+          example: 72
+        sampleSize:
+          type: integer
+          description: Number of remanentes included in the average. 0 means no remanente reached a terminal state in the range — the frontend must render an empty state, not "0h" (which would misleadingly read as a perfect score).
+          example: 134
 
     ErrorResponse:
       description: RFC 7807 Problem Details format (Guard 19)

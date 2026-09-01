@@ -28,6 +28,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite especificar el propósito (`KITCHEN_STOCK`, `RECIPE`, `DIRECT_DISCARD`), motivo y responsable en las extracciones de bodega. ✅ Backend (`TK-072`) y Frontend (`TK-072-FE`) implementados.
 *   **[US-016: Definición de Sectores de Almacenamiento](stock/US-016.md)**
     *   *Descripción:* Permite configurar y administrar los sectores físicos reales del restaurante (cámaras frías, bodegas secas, mesas de preparación).
+*   **[US-021: Advertencia de Apertura Duplicada al Extraer Insumo](stock/US-021.md)**
+    *   *Descripción:* Advierte de forma no bloqueante al operario si ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina, para reducir aperturas duplicadas (KPI #3 del PRD).
 
 ### ⚙️ Configuración (`/settings/`)
 *   **[US-017: Configuración General del Restaurante y Parámetros FEFO](settings/US-017.md)**
@@ -54,3 +56,7 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 ### 📊 Reportes (`/reports/`)
 *   **[US-009: Dashboard y Reporte de Mermas Visibles](reports/US-009.md)**
     *   *Descripción:* Permite visualizar de forma agrupada los desperdicios físicos y mermas por ingrediente y motivo en un periodo de tiempo.
+*   **[US-019: Costeo de Insumos y Valorización Monetaria de Mermas](reports/US-019.md)**
+    *   *Descripción:* Registra el costo unitario de cada insumo y valoriza en `$` el reporte de mermas, cerrando el gap del KPI #1 del PRD (hoy solo medible en cantidades físicas).
+*   **[US-020: Indicador TRR Real en el Dashboard de Reportes](reports/US-020.md)**
+    *   *Descripción:* Calcula y muestra el tiempo real promedio de rotación de remanentes, el único indicador que valida en la práctica el KPI #2 del PRD (TRR < 72h).
