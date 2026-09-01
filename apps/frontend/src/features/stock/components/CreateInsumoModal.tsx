@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Package } from 'lucide-react';
 import { StockService, CreateInsumoDTO } from '../services/stock.service.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { Modal } from '../../../shared/components/Modal.js';
 
 interface CreateInsumoModalProps {
   isOpen: boolean;
@@ -134,27 +135,25 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-card modal-md">
-        <h2 className="flex-gap-xs mb-4 fs-lg fw-semibold">
-          <Package size={20} className="text-primary-color" />
-          Registrar Nuevo Insumo
-        </h2>
+    <Modal size="md">
+      <h2 className="flex-gap-xs mb-4 fs-lg fw-semibold">
+        <Package size={20} className="text-primary-color" />
+        Registrar Nuevo Insumo
+      </h2>
 
-        {error && <ErrorBanner message={error} />}
+      {error && <ErrorBanner message={error} />}
 
-        <InsumoModalForm
-          name={name}
-          setName={setName}
-          unitOfMeasure={unitOfMeasure}
-          setUnitOfMeasure={setUnitOfMeasure}
-          initialWarehouseStock={initialWarehouseStock}
-          setInitialWarehouseStock={setInitialWarehouseStock}
-          loading={loading}
-          onClose={onClose}
-          handleSubmit={handleSubmit}
-        />
-      </div>
-    </div>
+      <InsumoModalForm
+        name={name}
+        setName={setName}
+        unitOfMeasure={unitOfMeasure}
+        setUnitOfMeasure={setUnitOfMeasure}
+        initialWarehouseStock={initialWarehouseStock}
+        setInitialWarehouseStock={setInitialWarehouseStock}
+        loading={loading}
+        onClose={onClose}
+        handleSubmit={handleSubmit}
+      />
+    </Modal>
   );
 };
