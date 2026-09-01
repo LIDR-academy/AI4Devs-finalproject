@@ -60,7 +60,7 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 |:-----------|:-----------|:-------:|:------|
 | **Framework UI** | React | **18** | Hooks + Functional Components |
 | **Bundler** | Vite | **5.x** | Dev server + production build |
-| **Estilos** | Vanilla CSS Modular | — | Sin Tailwind ni CSS-in-JS |
+| **Estilos** | Vanilla CSS + CSS Modules | — | Sin Tailwind ni CSS-in-JS. Tokens y utilidades compartidas en `index.css`; estilos de un solo componente en `Componente.module.css` colocado junto al `.tsx` |
 | **Touch Targets** | — | — | Mínimo **48px** (WCAG 2.1 AAA) |
 | **Offline Queue** | IndexedDB | — | Para operaciones sin conexión |
 

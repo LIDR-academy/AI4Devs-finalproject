@@ -6,7 +6,7 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 
 ## 🛠️ Pila Tecnológica Detectada & Cumplimiento de Diseño
 * **Framework Core:** React / Next.js (TypeScript)
-* **Estilos & Sistema de Diseño (Guard 29, `AGENTS.md`):** Vanilla CSS con variables centralizadas en `index.css` y exportadas al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`).
+* **Estilos & Sistema de Diseño (Guard 29, `AGENTS.md`):** Vanilla CSS con variables/tokens centralizados en `index.css`, exportados al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`). `index.css` contiene solo la capa compartida (tokens de espaciado/tipografía, botones, primitivas de layout — clases usadas por 2+ componentes); toda clase específica de un único componente vive en un `Componente.module.css` colocado junto al `.tsx` e importado como `import styles from './Componente.module.css'`.
 * **Regla Innegociable de Tokens y Estilos (Guard 29):** Queda estrictamente prohibido hardcodear colores hexadecimales o RGB en línea (`style={{ color: '#HEX' }}`) o maquetar estructuras con objetos `style={{ display: 'flex', gap: ... }}` inline en componentes JSX. Todos los estilos visuales y de layout DEBEN consumir las clases CSS declaradas en `index.css` o `*.module.css` (ej. `className="btn-touch flex-between"`). Única excepción permitida: valores numéricos calculados dinámicamente en runtime (ej. porcentajes de ancho en barras de progreso `style={{ width: `${pct}%` }}`).
 * **Persistencia Offline:** Dexie.js (IndexedDB / Cola FIFO local)
 * **Testing UI & QA Visual:** Vitest / React Testing Library / SK-21 a11y Auditor

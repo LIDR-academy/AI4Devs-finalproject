@@ -111,7 +111,7 @@ if blocking:
     for msg in blocking:
         print(f"❌ {msg}")
     print("")
-    print("❌ El ticket en curso introduce/toca estilos inline sin excepcion sancionada (Guard 29). Usa una clase CSS en index.css, o si es un valor continuo calculado en runtime, escribe solo una custom property (ej. style={{ '--bar-pct': `${pct}%` }}).")
+    print("❌ El ticket en curso introduce/toca estilos inline sin excepcion sancionada (Guard 29). Usa una clase CSS en index.css (compartida) o en Componente.module.css (especifica de un componente), o si es un valor continuo calculado en runtime, escribe solo una custom property (ej. style={{ '--bar-pct': `${pct}%` }}).")
     sys.exit(1)
 
 print("✨ Ningún archivo tocado por el ticket en curso introduce estilos inline nuevos fuera de las excepciones sancionadas.")
