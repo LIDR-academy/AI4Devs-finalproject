@@ -71,8 +71,9 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 
 ### FASE 6: Emisión y Persistencia del Veredicto Formal de Código
 
-1. Genera el informe final en pantalla.
-2. **MANDATORIO:** Guarda obligatoriamente el informe completo como un archivo Markdown en `docs/audits/AUDIT-XXX-[ticket-id]-quality-report.md`.
+1. **Filtro de sistemicidad (antes de redactar el informe):** para cada defecto detectado en las Fases 0-5, pregúntate explícitamente *"¿este defecto podría repetirse en un archivo o ticket distinto si no queda codificado en algún lado?"* Si la respuesta es sí, no lo dejes solo como línea del informe de este ticket — proponlo como candidato a Guard nueva/actualizada en `AGENTS.md` (o regla en `docs/04_governance_and_quality/rules/`, o paso de workflow, según corresponda) siguiendo el mismo procedimiento de clasificación + aprobación humana explícita de la FASE 5.C de [02_cascading_dev_workflow.md](02_cascading_dev_workflow.md) — nunca lo escribas sin esa confirmación. La mayoría de los defectos NO deben pasar este filtro; es para el patrón sistémico, no para el error puntual.
+2. Genera el informe final en pantalla, incluyendo la sección `## 🔁 Candidatos a Regla Permanente` (ver plantilla abajo) aunque esté vacía.
+3. **MANDATORIO:** Guarda obligatoriamente el informe completo como un archivo Markdown en `docs/audits/AUDIT-XXX-[ticket-id]-quality-report.md`.
 
 # 📊 Informe de Auditoría de Código VSDD - Ticket [TK-XXX]
 
@@ -91,6 +92,9 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 
 ## 🚨 Defectos Detectados (Si los hay):
 - [Lista detallada de hallazgos indicando archivo y línea]
+
+## 🔁 Candidatos a Regla Permanente (Filtro de Sistemicidad, FASE 6.1):
+- [Para cada defecto que pasó el filtro: descripción, destino propuesto (Guard en AGENTS.md / regla en docs/04_governance_and_quality/rules/ / paso de workflow), y si requiere script de verificación. "Ninguno" si nada pasó el filtro — no omitir esta sección.]
 
 ## ⚖️ VEREDICTO FINAL:
 [ APROBADO PARA COMMIT | RECHAZADO CON DEFECTOS ]
