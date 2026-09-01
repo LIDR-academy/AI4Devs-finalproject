@@ -1,0 +1,12 @@
+.unit-toggle-btn {
+  border: 1px solid var(--border-card);
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+  font-weight: var(--fw-regular);
+}
+.unit-toggle-btn--active {
+  border: 2px solid var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-primary-on);
+  font-weight: var(--fw-semibold);
+}

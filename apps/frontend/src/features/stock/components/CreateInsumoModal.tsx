@@ -3,6 +3,7 @@ import { Package } from 'lucide-react';
 import { StockService, CreateInsumoDTO } from '../services/stock.service.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { Modal } from '../../../shared/components/Modal.js';
+import styles from './CreateInsumoModal.module.css';
 
 interface CreateInsumoModalProps {
   isOpen: boolean;
@@ -60,7 +61,7 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
               key={unit}
               type="button"
               onClick={() => setUnitOfMeasure(unit)}
-              className={`flex-1 btn-touch ${unitOfMeasure === unit ? 'unit-toggle-btn--active' : 'unit-toggle-btn'}`}
+              className={`flex-1 btn-touch ${unitOfMeasure === unit ? styles['unit-toggle-btn--active'] : styles['unit-toggle-btn']}`}
             >
               {unit}
             </button>

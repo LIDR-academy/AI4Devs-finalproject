@@ -4,6 +4,7 @@ import { RecipesService, RecipeListItem } from '../services/recipes.service.js';
 import { CreateRecipeModal } from './CreateRecipeModal.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
+import styles from './RecipeCatalogPanel.module.css';
 
 interface RecipeCatalogHeaderProps {
   onCreateClick: () => void;
@@ -94,9 +95,9 @@ const RecipeCatalogBody: React.FC<RecipeCatalogBodyProps> = ({ error, loading, f
     {error && <ErrorBanner message={error} />}
 
     {loading ? (
-      <div className="catalog-state-message">Cargando recetario...</div>
+      <div className={styles['catalog-state-message']}>Cargando recetario...</div>
     ) : filteredRecipes.length === 0 ? (
-      <div className="card-dashboard catalog-empty-card">
+      <div className={`card-dashboard ${styles['catalog-empty-card']}`}>
         No hay recetas registradas en el recetario.
       </div>
     ) : (
@@ -143,7 +144,7 @@ export const RecipeCatalogPanel: React.FC = () => {
   };
 
   return (
-    <div className="recipe-catalog-panel">
+    <div className={styles['recipe-catalog-panel']}>
       <RecipeCatalogHeader
         onCreateClick={() => {
           setFeedback(null);

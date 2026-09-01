@@ -5,6 +5,7 @@ import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
+import styles from './MovementHistoryPanel.module.css';
 
 interface MovementHistoryPanelProps {
   isOpen: boolean;
@@ -31,10 +32,10 @@ const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({
   onEndDateChange,
   onSearch,
 }) => (
-  <div className="flex-wrap flex-gap-xs movement-filters-bar">
+  <div className={`flex-wrap flex-gap-xs ${styles['movement-filters-bar']}`}>
     <input
       type="text"
-      className="input-touch flex-2 movement-filter-input"
+      className={`input-touch flex-2 ${styles['movement-filter-input']}`}
       placeholder="Filtrar por ID de insumo (opcional)"
       value={insumoId}
       onChange={(e) => onInsumoIdChange(e.target.value)}
@@ -42,7 +43,7 @@ const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({
     />
     <input
       type="date"
-      className="input-touch flex-1 movement-filter-date"
+      className={`input-touch flex-1 ${styles['movement-filter-date']}`}
       value={startDate}
       onChange={(e) => onStartDateChange(e.target.value)}
       aria-label="Fecha desde"
@@ -50,7 +51,7 @@ const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({
     />
     <input
       type="date"
-      className="input-touch flex-1 movement-filter-date"
+      className={`input-touch flex-1 ${styles['movement-filter-date']}`}
       value={endDate}
       onChange={(e) => onEndDateChange(e.target.value)}
       aria-label="Fecha hasta"

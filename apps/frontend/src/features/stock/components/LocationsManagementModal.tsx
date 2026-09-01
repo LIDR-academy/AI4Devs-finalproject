@@ -7,6 +7,7 @@ import { LocationsService, StorageLocationDto } from '../services/locations.serv
 import { MapPin, Plus, Trash2, Power } from 'lucide-react';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+import styles from './LocationsManagementModal.module.css';
 
 interface LocationsManagementModalProps {
   isOpen: boolean;
@@ -44,12 +45,12 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card-dashboard flex-column flex-gap-xs mb-2 p-4">
+    <form onSubmit={handleSubmit} className={`card-dashboard flex-column flex-gap-xs mb-2 ${styles['p-4']}`}>
       <h4 className="flex-gap-xs text-primary-color fs-md fw-bold m-0">
         <Plus size={18} /> Registrar Nuevo Sector Físico
       </h4>
 
-      <div className="metrics-grid location-form-grid">
+      <div className={`metrics-grid ${styles['location-form-grid']}`}>
         <div>
           <label htmlFor="location-name" className="form-label">
             Nombre Sector
@@ -114,9 +115,9 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
       <h4 className="text-secondary-color fs-md fw-bold mb-3">
         Sectores Registrados ({locations.length})
       </h4>
-      <div className="flex-column flex-gap-xs locations-list-scroll">
+      <div className={`flex-column flex-gap-xs ${styles['locations-list-scroll']}`}>
         {locations.map((loc) => (
-          <div key={loc.id} className={`flex-between location-row${loc.isActive ? '' : ' location-row--inactive'}`}>
+          <div key={loc.id} className={`flex-between ${styles['location-row']}${loc.isActive ? '' : ` ${styles['location-row--inactive']}`}`}>
             <div className="flex-gap-xs">
               <MapPin size={18} className={loc.isActive ? 'text-primary-color' : 'text-secondary-color'} />
               <div>
@@ -130,13 +131,13 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
             </div>
 
             <div className="flex-gap-xs">
-              <span className={`location-badge ${loc.type === 'WAREHOUSE' ? 'location-badge--warehouse' : 'location-badge--kitchen'}`}>
+              <span className={`${styles['location-badge']} ${loc.type === 'WAREHOUSE' ? styles['location-badge--warehouse'] : styles['location-badge--kitchen']}`}>
                 {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
               </span>
 
               <button
                 type="button"
-                className={`btn-touch btn-compact-icon-sm ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
+                className={`btn-touch ${styles['btn-compact-icon-sm']} ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
                 onClick={() => onToggleActive(loc)}
                 title={loc.isActive ? 'Desactivar Sector' : 'Activar Sector'}
               >
@@ -145,7 +146,7 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
 
               <button
                 type="button"
-                className="btn-touch btn-danger btn-compact-icon-sm"
+                className={`btn-touch btn-danger ${styles['btn-compact-icon-sm']}`}
                 onClick={() => onDeleteLocation(loc.id, loc.name)}
                 title="Eliminar Sector"
               >

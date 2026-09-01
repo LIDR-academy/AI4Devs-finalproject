@@ -1,0 +1,3 @@
+.movement-filters-bar { margin-bottom: var(--space-4); }
+.movement-filter-input { min-width: 180px; }
+.movement-filter-date { min-width: 140px; }

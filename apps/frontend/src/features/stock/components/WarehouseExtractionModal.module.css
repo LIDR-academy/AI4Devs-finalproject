@@ -1,0 +1,4 @@
+.qty-stepper-btn-lg { width: 56px; height: 56px; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+.qty-stepper-input-lg { text-align: center; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+.extraction-note-banner { margin-top: var(--space-3); font-size: var(--fs-sm); }
+.inline-icon-spacer { display: inline; margin-right: var(--space-2); vertical-align: text-bottom; }

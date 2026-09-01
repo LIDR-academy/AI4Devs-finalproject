@@ -1,0 +1,2 @@
+.insumo-catalog-panel { padding: var(--space-6); color: var(--text-primary); }
+.btn-table-action { min-height: 36px; padding: 6px var(--space-3); font-size: 0.8rem; display: inline-flex; }

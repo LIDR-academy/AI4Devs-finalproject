@@ -1,0 +1,4 @@
+.ingredient-row-remove-btn { padding: var(--space-2); }
+.fieldset-reset { border: none; padding: 0; margin: 0; }
+.p-0 { padding: 0; }
+.add-ingredient-btn { margin-top: var(--space-2); display: inline-flex; }

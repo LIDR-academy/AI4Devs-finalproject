@@ -4,6 +4,7 @@ import { StockService, InsumoItem } from '../services/stock.service.js';
 import { CreateInsumoModal } from './CreateInsumoModal.js';
 import { RestockInsumoModal } from './RestockInsumoModal.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import styles from './InsumoCatalogPanel.module.css';
 
 interface InsumoCatalogHeaderProps {
   onCreateClick: () => void;
@@ -63,7 +64,7 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
       <button
         type="button"
         onClick={() => onRestock(item)}
-        className="btn-touch btn-secondary flex-center flex-gap-xs btn-table-action"
+        className={`btn-touch btn-secondary flex-center flex-gap-xs ${styles['btn-table-action']}`}
       >
         <Truck size={16} />
         Reabastecer
@@ -153,7 +154,7 @@ export const InsumoCatalogPanel: React.FC = () => {
   const filteredInsumos = insumos.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="insumo-catalog-panel">
+    <div className={styles['insumo-catalog-panel']}>
       <InsumoCatalogHeader onCreateClick={() => setIsModalOpen(true)} search={search} onSearchChange={setSearch} />
 
       <InsumoCatalogBody

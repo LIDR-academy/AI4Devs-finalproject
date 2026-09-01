@@ -434,7 +434,6 @@ h3 {
 .mt-3 { margin-top: var(--space-3); }
 .mt-4 { margin-top: var(--space-4); }
 
-.p-4 { padding: var(--space-4); }
 .p-5 { padding: var(--space-5); }
 .p-6 { padding: var(--space-6); }
 
@@ -467,23 +466,6 @@ h3 {
    Guard 29 extendido — modificadores de estado (2-3 estados discretos),
    reemplazan ternarios inline por toggle de className.
    ========================================================================== */
-.location-badge {
-  font-size: 0.75rem;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-}
-.location-badge--warehouse {
-  background-color: color-mix(in srgb, var(--color-info) 15%, transparent);
-  color: var(--color-info);
-  border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
-}
-.location-badge--kitchen {
-  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
-  color: var(--color-success);
-  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
-}
-
 .permission-chip {
   padding: 12px;
   border-radius: 4px;
@@ -501,68 +483,22 @@ h3 {
 .d-block { display: block; }
 
 .m-0 { margin: 0; }
-.btn-compact-icon-sm { padding: 6px 8px; }
-.location-form-grid { grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-.locations-list-scroll { max-height: 240px; overflow-y: auto; padding-right: var(--space-1); }
-.location-row {
-  padding: var(--space-3);
-  background-color: var(--bg-root);
-  border: 1px solid var(--border-card);
-  border-radius: 4px;
-}
-.location-row--inactive {
-  border-color: var(--color-danger);
-  opacity: 0.65;
-}
-
 .dashboard-header { margin-bottom: var(--space-6); gap: var(--space-4); align-items: flex-start; }
 .action-card--primary { background-color: color-mix(in srgb, var(--color-warning) 5%, transparent); border: 1px dashed var(--color-primary); }
 .action-card--warning { background-color: color-mix(in srgb, var(--color-warning) 5%, transparent); border: 1px dashed var(--color-warning); }
 .action-card-btn { height: 56px; font-size: var(--fs-base); font-weight: var(--fw-bold); gap: 10px; }
 
-.insumo-catalog-panel { padding: var(--space-6); color: var(--text-primary); }
 .neutral-badge { padding: var(--space-1) var(--space-2); border-radius: 4px; background-color: var(--border-card); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
-.movement-filters-bar { margin-bottom: var(--space-4); }
-.movement-filter-input { min-width: 180px; }
-.movement-filter-date { min-width: 140px; }
 .text-right { text-align: right; }
 .flex-shrink-0 { flex-shrink: 0; }
-.btn-table-action { min-height: 36px; padding: 6px var(--space-3); font-size: 0.8rem; display: inline-flex; }
 
 .text-left { text-align: left; }
-
-.recipe-catalog-panel { padding: var(--space-6); color: var(--text-primary); }
-.catalog-state-message { text-align: center; color: var(--text-secondary); padding: 32px 0; }
-.catalog-empty-card { text-align: center; color: var(--text-secondary); padding: 40px; }
-
-.unit-toggle-btn {
-  border: 1px solid var(--border-card);
-  background-color: var(--bg-root);
-  color: var(--text-primary);
-  font-weight: var(--fw-regular);
-}
-.unit-toggle-btn--active {
-  border: 2px solid var(--color-primary);
-  background-color: var(--color-primary);
-  color: var(--color-primary-on);
-  font-weight: var(--fw-semibold);
-}
-
-.ingredient-row-remove-btn { padding: var(--space-2); }
-.fieldset-reset { border: none; padding: 0; margin: 0; }
-.p-0 { padding: 0; }
-.add-ingredient-btn { margin-top: var(--space-2); display: inline-flex; }
 
 .admin-menu-wrapper { position: relative; display: inline-block; }
 .dropdown-chevron { transition: transform 0.2s; }
 .dropdown-chevron--open { transform: rotate(180deg); }
 
 .two-col-grid { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-.qty-stepper-btn-lg { width: 56px; height: 56px; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
-.qty-stepper-input-lg { text-align: center; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
-.extraction-note-banner { margin-top: var(--space-3); font-size: var(--fs-sm); }
-.inline-icon-spacer { display: inline; margin-right: var(--space-2); vertical-align: text-bottom; }
-
 /* ==========================================================================
    Guard 29 extendido — única excepción a "sin style inline": barras de
    progreso continuas via custom property escrita desde style={{'--bar-pct'}}.

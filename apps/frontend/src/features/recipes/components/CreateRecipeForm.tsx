@@ -3,6 +3,7 @@ import { Utensils, Plus, Trash2 } from 'lucide-react';
 import { RecipesService } from '../services/recipes.service.js';
 import { InsumoItem } from '../../stock/services/stock.service.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import styles from './CreateRecipeForm.module.css';
 
 interface CreateRecipeFormProps {
   onCreated: (message: string) => void;
@@ -113,7 +114,7 @@ const IngredientRowFields: React.FC<{
     />
     <button
       type="button"
-      className="btn-touch btn-secondary ingredient-row-remove-btn"
+      className={`btn-touch btn-secondary ${styles['ingredient-row-remove-btn']}`}
       onClick={onRemove}
       disabled={!canRemove}
       aria-label="Quitar ingrediente"
@@ -170,8 +171,8 @@ const IngredientsFieldset: React.FC<{
   onRemoveRow: (key: number) => void;
   onAddRow: () => void;
 }> = ({ rows, insumos, onChangeRow, onRemoveRow, onAddRow }) => (
-  <fieldset className="fieldset-reset">
-    <legend className="form-label p-0">
+  <fieldset className={styles['fieldset-reset']}>
+    <legend className={`form-label ${styles['p-0']}`}>
       Ingredientes:
     </legend>
     <div className="flex-column flex-gap-xs">
@@ -188,7 +189,7 @@ const IngredientsFieldset: React.FC<{
     </div>
     <button
       type="button"
-      className="btn-touch btn-secondary flex-center flex-gap-xs add-ingredient-btn"
+      className={`btn-touch btn-secondary flex-center flex-gap-xs ${styles['add-ingredient-btn']}`}
       onClick={onAddRow}
     >
       <Plus size={16} />

@@ -7,6 +7,7 @@ import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+import styles from './WarehouseExtractionModal.module.css';
 
 
 interface WarehouseExtractionModalProps {
@@ -178,7 +179,7 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
     <div className="flex-gap-md">
       <button
         type="button"
-        className="btn-touch btn-secondary qty-stepper-btn-lg"
+        className={`btn-touch btn-secondary ${styles['qty-stepper-btn-lg']}`}
         onClick={onDecrement}
         id="btn-decrement-qty"
       >
@@ -190,13 +191,13 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
         step="0.1"
         value={quantity}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0.5)}
-        className="input-touch qty-stepper-input-lg"
+        className={`input-touch ${styles['qty-stepper-input-lg']}`}
         id="input-quantity-extraction"
       />
 
       <button
         type="button"
-        className="btn-touch btn-secondary qty-stepper-btn-lg"
+        className={`btn-touch btn-secondary ${styles['qty-stepper-btn-lg']}`}
         onClick={onIncrement}
         id="btn-increment-qty"
       >
@@ -291,11 +292,11 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
 
     <QuantityStepper quantity={quantity} onIncrement={onIncrement} onDecrement={onDecrement} onChange={onQuantityChange} />
 
-    <div className="banner-alert banner-alert-success extraction-note-banner">
+    <div className={`banner-alert banner-alert-success ${styles['extraction-note-banner']}`}>
       {purpose === 'DIRECT_DISCARD' ? (
-        <span><AlertTriangle size={16} className="inline-icon-spacer" /> Se registrará la <strong>merma directa desde bodega</strong> descontando el stock sin pasarlo a cocina.</span>
+        <span><AlertTriangle size={16} className={styles['inline-icon-spacer']} /> Se registrará la <strong>merma directa desde bodega</strong> descontando el stock sin pasarlo a cocina.</span>
       ) : (
-        <span><AlertTriangle size={16} className="inline-icon-spacer" /> Al confirmar la extracción, el insumo pasará al tablero de <strong>Remanentes Activos con vencimiento prioritario FEFO</strong>.</span>
+        <span><AlertTriangle size={16} className={styles['inline-icon-spacer']} /> Al confirmar la extracción, el insumo pasará al tablero de <strong>Remanentes Activos con vencimiento prioritario FEFO</strong>.</span>
       )}
     </div>
 
