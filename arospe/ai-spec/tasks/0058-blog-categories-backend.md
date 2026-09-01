@@ -16,7 +16,7 @@ CRUD and are distinct from product categories" and the UUID-PK acceptance criter
 cover the "deleting a blog category still in use is hard-blocked with a count" scenario — see
 [Scope fences](#scope-fences-what-this-story-must-not-do).
 
-This story is the blog mirror image of [0023 (product-categories-backend)](in-progress/0023-product-categories-backend.md),
+This story is the blog mirror image of [0023 (product-categories-backend)](done/0023-product-categories-backend.md),
 and is deliberately written to be read against it. Its decisions **D-1**…**D-12** are numbered to
 correspond to 0023's, so a reviewer can diff the two taxonomies decision by decision; **D-13** and
 **D-14** are the two places this story genuinely departs from its sibling, and both departures are
@@ -101,7 +101,7 @@ Feature: Blog categories
 > not exist, so no category can be "in use" and there is nothing to count. That scenario is owned by
 > story **0061 (blog-posts-core-crud-backend)**, which introduces `blog_posts.blog_category_id` and
 > retrofits the guard onto `DeleteBlogCategory`. This is the identical scoping
-> [0023](in-progress/0023-product-categories-backend.md) applied to product categories, whose guard 0024 owns.
+> [0023](done/0023-product-categories-backend.md) applied to product categories, whose guard 0024 owns.
 > See [Scope fences](#scope-fences-what-this-story-must-not-do) and **D-10**.
 
 > **Glossary note (OQ-3).** [gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md#todo--blog--ecommerce-vocabulary-undefined)
@@ -622,7 +622,7 @@ posts that reference a category arrive in 0061.
 
 ## Documented functional decisions
 
-Decisions **D-1**…**D-12** correspond one-for-one to [0023](in-progress/0023-product-categories-backend.md)'s, so
+Decisions **D-1**…**D-12** correspond one-for-one to [0023](done/0023-product-categories-backend.md)'s, so
 the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are this story's own.
 
 - **D-1 — Domain artifacts only; no Livewire component, route or view.** Story 0004 (users backend)
@@ -695,7 +695,7 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
   it is now a property of the *project's* normaliser, so changing it is an amendment to 0022's D13
   affecting six stories, not a local decision here.
 
-  **Discrepancy recorded, not acted on:** [0023](in-progress/0023-product-categories-backend.md)
+  **Discrepancy recorded, not acted on:** [0023](done/0023-product-categories-backend.md)
   (product-categories-backend) still specifies the older `unique('name')` + PHP-only-comparison
   shape. 0023 predates D-N1's confirmation and is the **outlier, not the standard**. It is an Epic 2
   story outside this Epic 4 batch's mandate, so it is deliberately left untouched here; this note

@@ -242,10 +242,10 @@ Feature: Product categories
 Backend only — **no browser tests** in this story, since it ships no screen.
 
 **Unit — `tests/Unit/Concerns/ProductCategoryValidationRulesTest.php`**
-- [ ] `nameRules($normalizeForSearch, null)` and `nameRules($normalizeForSearch, $id)` return the
+- [x] `nameRules($normalizeForSearch, null)` and `nameRules($normalizeForSearch, $id)` return the
       expected rule arrays, and the second carries the `->ignore()` branch. This is the story's only
       genuinely unit-testable surface — everything else needs a real row for the uniqueness check.
-- [ ] The **exhaustive folding table is not re-asserted here.** `App\Actions\NormalizeForSearch`'s
+- [x] The **exhaustive folding table is not re-asserted here.** `App\Actions\NormalizeForSearch`'s
       own behaviour (`ß`, `ç`, CJK, double spaces, idempotence) is owned and unit-tested by story
       0022 in `tests/Unit/Actions/NormalizeForSearchTest.php` (**D-12**); duplicating it would
       create a second specification of the fold that can drift from the first. What this story
@@ -253,44 +253,44 @@ Backend only — **no browser tests** in this story, since it ships no screen.
       case-only and accent-only duplicate tests below.
 
 **Feature — `tests/Feature/Models/ProductCategoryTest.php`** (mirrors `tests/Feature/Models/UserTest.php`)
-- [ ] A factory-created category's `id` is a UUID **v7** string (`Str::isUuid($id, 7)`), not an
+- [x] A factory-created category's `id` is a UUID **v7** string (`Str::isUuid($id, 7)`), not an
       integer — proves `HasUuids` is actually wired, which is this app's usage rather than the
       trait's own correctness.
-- [ ] Two categories created in immediate succession sort lexicographically in creation order
+- [x] Two categories created in immediate succession sort lexicographically in creation order
       (`strcmp($first->id, $second->id) < 0`) — the same time-ordering assertion `UserTest` makes.
-- [ ] Creating and re-fetching a category persists `name` and populates both timestamps.
-- [ ] `name` is mass-assignable and nothing else is (guards against a future column being added to
+- [x] Creating and re-fetching a category persists `name` and populates both timestamps.
+- [x] `name` is mass-assignable and nothing else is (guards against a future column being added to
       `#[Fillable]` by reflex).
-- [ ] The model does **not** use `SoftDeletes` — a regression guard on decision **D-3**, since
+- [x] The model does **not** use `SoftDeletes` — a regression guard on decision **D-3**, since
       adding the trait later silently changes what `Rule::unique()` and every future query see.
 
 **Unit — `tests/Unit/ArchitectureTest.php` (extend the existing file)**
-- [ ] `arch()` assertion that `App\Models\ProductCategory` does not reference any blog-taxonomy
+- [x] `arch()` assertion that `App\Models\ProductCategory` does not reference any blog-taxonomy
       class/namespace. Honest caveat: with no blog taxonomy in code yet this is a **scope fence
       expressed as a test**, not a behavioral assertion — it starts earning its keep the moment
       Epic 4 lands, and until then it documents the boundary in an executable place. See
       [Documented functional decisions](#documented-functional-decisions) D-11.
 
 **Feature — `tests/Feature/ProductCategories/CreateProductCategoryTest.php`**
-- [ ] Creating with a valid name persists exactly one row with that name, and populates
+- [x] Creating with a valid name persists exactly one row with that name, and populates
       `created_at`/`updated_at`.
-- [ ] Creating with a blank name throws `ValidationException` on `name` and writes no row. Assert
+- [x] Creating with a blank name throws `ValidationException` on `name` and writes no row. Assert
       against the **action's own** validation (`expect(fn () => $action(''))->toThrow(...)` and
       inspect `->errors()['name']`) — there is no Livewire component in this story to assert
       through.
-- [ ] Creating with a **whitespace-only** name (`'   '`) is refused. This is the highest-value case
+- [x] Creating with a **whitespace-only** name (`'   '`) is refused. This is the highest-value case
       in the story and it fails silently by default: Laravel's `required` treats a string of
       spaces as *present*, so with a bare `['required', 'string', 'max:100']` rule set a
       whitespace-only name validates and persists. The test proves the trim happens **before**
       validation, not after.
-- [ ] A name with leading/trailing whitespace is stored trimmed — assert the exact persisted
+- [x] A name with leading/trailing whitespace is stored trimmed — assert the exact persisted
       value, not merely "no error". Without a trim, `'Footwear'` and `'  Footwear  '` are two rows
       that are indistinguishable to a human and do not collide as duplicates.
-- [ ] Length boundary **pair**: a name of exactly the maximum length is accepted, and one
+- [x] Length boundary **pair**: a name of exactly the maximum length is accepted, and one
       character over is refused (per `risk-based-testing.md`'s maximum-boundary question).
-- [ ] Creating a duplicate name is refused at the **validation** layer (`ValidationException`, not
+- [x] Creating a duplicate name is refused at the **validation** layer (`ValidationException`, not
       a `QueryException`).
-- [ ] A duplicate that bypasses validation (e.g. the action called directly with a colliding name
+- [x] A duplicate that bypasses validation (e.g. the action called directly with a colliding name
       under a simulated race) surfaces as a `ValidationException` on `name`, not a 500 — this is
       the test that proves the `23000` catch, and it must drive the collision through the real
       unique index rather than a hand-written assertion about the catch block. `Rule::unique()` is
@@ -298,13 +298,13 @@ Backend only — **no browser tests** in this story, since it ships no screen.
       [signed-link-verification.md](../../../docs/security/signed-link-verification.md#a-pre-flight-check-is-not-a-race-guard--re-check-under-a-lock-and-let-the-unique-index-have-the-last-word)
       already established for `pending_email`. The test asserts the *outcome* (a duplicate is
       refused cleanly, never as a 500), so it holds whichever way the action implements it.
-- [ ] Case-only-different duplicate: creating "footwear" alongside "Footwear" is refused **by
+- [x] Case-only-different duplicate: creating "footwear" alongside "Footwear" is refused **by
       validation** — asserting `ValidationException` on `name`, and **explicitly not** a
       `QueryException`. The exception *class* is the whole point of the test: MySQL's
       `utf8mb4_unicode_ci` index would also refuse this pair, so a test that only asserted "the
       second row was not created" would pass with the app-level comparison deleted. See **R-2** and
       **D-4**.
-- [ ] Accent-only-different duplicate: creating "Nino" alongside "Niño" is likewise refused **by
+- [x] Accent-only-different duplicate: creating "Nino" alongside "Niño" is likewise refused **by
       validation** (same class assertion, same reason). This is the test that pins **D-4**'s "fold
       at least as aggressively as `utf8mb4_unicode_ci`" constraint — a normaliser folding case but
       not accents lets PHP accept this pair and hands the refusal to the index as a raw `23000`,
@@ -316,36 +316,36 @@ Backend only — **no browser tests** in this story, since it ships no screen.
       dropping the accent fold — and the exception-class assertion is what makes them able to.)*
 
 **Feature — `tests/Feature/ProductCategories/RenameProductCategoryTest.php`**
-- [ ] Renaming to a free name updates the row and leaves the old name unused.
-- [ ] Renaming onto another category's name is refused and the target keeps its original name.
-- [ ] Renaming a category to **its own current name** is accepted — the `Rule::unique()->ignore()`
+- [x] Renaming to a free name updates the row and leaves the old name unused.
+- [x] Renaming onto another category's name is refused and the target keeps its original name.
+- [x] Renaming a category to **its own current name** is accepted — the `Rule::unique()->ignore()`
       trap, and the single most likely bug in this story (it is precisely why
       `ProfileValidationRules::emailRules()` takes a nullable id). Write this as **three** tests,
       not one, so a rule that rejects everything cannot pass the first trivially: (a) the no-op
       rename to the identical name succeeds; (b) the category's row is genuinely unchanged
       afterwards; (c) a genuinely free name is still accepted, as the control.
-- [ ] The full validation depth (blank / whitespace-only / length boundary pair) is re-asserted on
+- [x] The full validation depth (blank / whitespace-only / length boundary pair) is re-asserted on
       the **rename** path independently, not assumed symmetric with create. A `nameRules($id)`
       signature that forgets to thread `$id` through on one of the two paths is a real, silent bug
       class, and testing the trait once does not prove both call sites use it correctly.
 
 **Feature — `tests/Feature/ProductCategories/DeleteProductCategoryTest.php`**
-- [ ] Deleting a category removes the row outright (`assertDatabaseMissing`, not
+- [x] Deleting a category removes the row outright (`assertDatabaseMissing`, not
       `assertSoftDeleted`) — a hard delete, per **D-3**.
-- [ ] The freed name can immediately be reused by a new category (proves nothing lingers to hold
+- [x] The freed name can immediately be reused by a new category (proves nothing lingers to hold
       the unique index, which is exactly what a soft delete would have broken).
-- [ ] Deleting an unknown or malformed-UUID category fails cleanly (`ModelNotFoundException` /
+- [x] Deleting an unknown or malformed-UUID category fails cleanly (`ModelNotFoundException` /
       404), not as a silent no-op — note `HasUuids`' `resolveRouteBindingQuery()` rejects a
       non-UUID parameter before querying.
 
 **Feature — `tests/Feature/Policies/ProductCategoryPolicyTest.php`**
-- [ ] Every ability gets **both an allow and a deny test**, per
+- [x] Every ability gets **both an allow and a deny test**, per
       [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md)'s authorization rule: an
       actor holding the relevant `products.*` permission is allowed; an actor holding none is
       refused.
-- [ ] A `Super Admin` actor is allowed through `Gate::before`, consistent with every other policy
+- [x] A `Super Admin` actor is allowed through `Gate::before`, consistent with every other policy
       in this repo.
-- [ ] The permission names are asserted against `RolePermissionSeeder`'s seeded catalog (the test
+- [x] The permission names are asserted against `RolePermissionSeeder`'s seeded catalog (the test
       seeds `RolePermissionSeeder` and calls `forgetCachedPermissions()` in `beforeEach`, as
       `tests/Feature/Users/CreateUserTest.php` does) — a permission string not in the catalog
       throws `PermissionDoesNotExist` at runtime, so this is a correctness test, not a style one.
@@ -367,38 +367,38 @@ consumes these arrives in a later UI story, and the products that reference a ca
 0024.
 
 ## Acceptance criteria
-- [ ] `product_categories` exists with `id` (UUID v7 PK), `name` (unique), `created_at`,
+- [x] `product_categories` exists with `id` (UUID v7 PK), `name` (unique), `created_at`,
       `updated_at` — and nothing else.
-- [ ] `App\Models\ProductCategory` uses `HasUuids`, exposes `name` as its only fillable attribute,
+- [x] `App\Models\ProductCategory` uses `HasUuids`, exposes `name` as its only fillable attribute,
       and does **not** use `SoftDeletes`.
-- [ ] A category can be created with a valid name; blank, whitespace-only, over-length and
+- [x] A category can be created with a valid name; blank, whitespace-only, over-length and
       duplicate names are all refused with a validation message on `name`.
-- [ ] A category can be renamed; renaming onto another category's name is refused, and saving a
+- [x] A category can be renamed; renaming onto another category's name is refused, and saving a
       category under its own unchanged name is accepted.
-- [ ] A category can be deleted, the row is really gone, and its name becomes immediately
+- [x] A category can be deleted, the row is really gone, and its name becomes immediately
       reusable.
-- [ ] Authorization is expressed in `ProductCategoryPolicy` (not only in a future component), with
+- [x] Authorization is expressed in `ProductCategoryPolicy` (not only in a future component), with
       both an allow and a deny test per ability.
-- [ ] Case-only and accent-only duplicates are refused **by validation** — a `ValidationException`
+- [x] Case-only and accent-only duplicates are refused **by validation** — a `ValidationException`
       on `name`, never a raw `QueryException`/500 from the `UNIQUE` index — and the fold behind that
       comparison is the shared `App\Actions\NormalizeForSearch` (**D-12**): no fold logic is inlined
       in `ProductCategoryValidationRules` or in the actions, and no second normaliser is added to
       the tree.
-- [ ] Product categories share no table, model, or namespace with any blog taxonomy.
-- [ ] No in-use/hard-block delete guard is implemented, and no permission-catalog, route, Livewire,
+- [x] Product categories share no table, model, or namespace with any blog taxonomy.
+- [x] No in-use/hard-block delete guard is implemented, and no permission-catalog, route, Livewire,
       view or `lang/` file is added by this story.
 
 ## Definition of Done
-- [ ] Tests written and green, plus the full existing suite (per
+- [x] Tests written and green, plus the full existing suite (per
       [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule).
-- [ ] `vendor/bin/pint --dirty --format agent` clean and Larastan level 7 passing.
-- [ ] Code reviewed (code-reviewer).
-- [ ] No security findings (appsec-auditor).
-- [ ] Documentation updated (docs-keeper): `docs/database/schema.md` gains a
+- [x] `vendor/bin/pint --dirty --format agent` clean and Larastan level 7 passing.
+- [x] Code reviewed (code-reviewer).
+- [x] No security findings (appsec-auditor).
+- [x] Documentation updated (docs-keeper): `docs/database/schema.md` gains a
       `product_categories` section and an ER-diagram entry; `docs/conventions/base-standards.md`'s
       UUID-PK subsection stops describing `User` as the only live example; ADR 0001's "still
       future" list drops Product Categories.
-- [ ] **Hand-off note recorded for the UI story and for 0024** (this is a real gap, not a
+- [x] **Hand-off note recorded for the UI story and for 0024** (this is a real gap, not a
       formality): these actions perform **no authorization of their own** — matching
       `App\Actions\Users\CreateUser`/`UpdateUser`, where the caller
       (`App\Livewire\Users\Index`) calls `Gate::authorize()` first. Since this story ships no
@@ -407,7 +407,7 @@ consumes these arrives in a later UI story, and the products that reference a ca
       action, and (b) keep the id fed to `Rule::unique()->ignore()` server-authoritative
       (`#[Locked]` / re-read from the model), per
       [security/livewire-authorization.md](../../../docs/security/livewire-authorization.md).
-- [ ] Acceptance criteria met.
+- [x] Acceptance criteria met.
 
 ## Documented functional decisions
 
@@ -802,3 +802,58 @@ coexist as two categories. It follows from the column's own `utf8mb4_unicode_ci`
 than from any cross-engine argument, but it remains a real outcome for a Spanish-language catalog
 and deserves a deliberate confirmation rather than being inherited from a technical constraint.
 Two minor `code-reviewer` notes were left unaddressed by this pass and are not blocking.
+
+## Closure record — 2026-09-01 (Phase 7, `product-owner`)
+
+**All seven phases passed. Every acceptance criterion and Definition of Done item above is checked
+off against verified, shipped artifacts** — not against the plan: the migration
+(`2026_09_01_084836_create_product_categories_table.php`, `uuid` PK + `string('name')->unique()` +
+`timestamps()` and nothing else), `App\Models\ProductCategory` (`HasUuids`, `#[Fillable(['name'])]`,
+**no** `SoftDeletes`), the three `app/Actions/ProductCategories/` actions, the
+`ProductCategoryValidationRules` trait (whose `uniqueNormalisedName()` folds through the shared
+`App\Actions\NormalizeForSearch` — **D-12** verified by grep: no `Str::lower()`/`Str::ascii()` in
+this story's trait or actions), `App\Policies\ProductCategoryPolicy`, the factory, and the four test
+files plus the extended `tests/Unit/ArchitectureTest.php`. Re-run at closure:
+**42 passed, 104 assertions**. The scope fences held — `git status` confirms **no** change to
+`database/seeders/`, `routes/`, `app/Livewire/`, `resources/views/` or `lang/`.
+
+- **Phase 2 (INVEST): passed after one blocking correction**, recorded in full in the
+  2026-09-01 amendment note above. The story's own central technical justification claimed the suite
+  ran on **two** database engines (SQLite in CI, MySQL locally); re-reading the three files it cited
+  showed `DB_CONNECTION=mysql` pinned in all three, so there is one engine everywhere. **No shipped
+  behaviour changed** — the two-layer name-uniqueness design stands on the ground that actually
+  holds (the index alone can only refuse with a raw `23000`, never a field-level
+  `ValidationException`), and the case/accent tests were kept with their assertions sharpened from
+  "holds on both engines" to the **exception class**. This is the
+  [deferred-story failure mode](../../../docs/errors-log.md#a-deferred-storys-findings-were-claims-about-a-tree-that-no-longer-existed-and-one-of-them-would-have-reopened-a-bug-in-this-log--2026-08-23)
+  caught by the phase designed to catch it.
+- **Phase 3 (TDD): green.** Migration, model, factory, validation trait, three actions, policy, plus
+  40 new tests.
+- **Phase 4 (`appsec-auditor`): PASS, no findings.** Three informational notes recorded for later
+  stories (all concerning the deliberate no-authorization hand-off to 0025).
+- **Phase 5 (`code-reviewer`): PASS**, after one blocking Larastan level 7 finding and two
+  low-severity test-comment/assertion nits were fixed.
+- **Phase 6 (`docs-keeper`): complete.** `docs/database/schema.md` (new `product_categories`
+  section), `docs/conventions/base-standards.md`, `docs/decisions/0001-uuid-primary-keys.md`
+  (Amendment 2), `docs/README.md`, and `docs/architecture/authorization.md` — the last only because
+  a fifth policy falsified two existing "four policies" counts. **No `docs/errors-log.md` entry**:
+  evaluated against that log's own bar ("only entries that produced a lasting convention") and
+  explicitly rejected.
+
+**The two failing browser tests in Phase 5's full-suite run do not block closure, and this is the
+record of why.** That run was **1185 tests / 1180 passed / 3 skipped / 2 failed**, the two being
+`tests/Browser/Components/WysiwygEditorTest.php` and `tests/Browser/Media/GalleryTest.php` — both
+**pre-existing and unrelated**, independently confirmed by the reviewer to reproduce in isolation on
+a tree with none of this story's changes applied. Story 0023 touches **no** JS, Livewire component,
+route, Blade view or browser-test file at all (verified against `git status`, above), so it has no
+mechanism by which to affect either. Both belong to stories 0020 and 0021 and are already documented
+as honestly-flaky in
+[testing/frontend/playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md).
+
+**Two things this story deliberately hands off rather than closes**, both recorded as decisions
+rather than gaps: the three actions perform **no authorization of their own**, and
+`ProductCategoryPolicy` therefore ships with **zero call sites** until story **0025**
+(`product-categories-ui`) wires in `Gate::authorize()` before every action call and keeps the id fed
+to the `->ignore()` branch server-authoritative (**D-9**, and the Definition of Done's hand-off
+item); and the in-use hard-block delete guard belongs to story **0024**, which extends
+`DeleteProductCategory` rather than introducing that rule anywhere new (**D-10**).

@@ -176,7 +176,7 @@ Feature: Shipping zones
 > still referenced by a rate rule is hard-blocked with a count"* is **confirmed as a functional
 > decision** (D-1) but is **not implementable here**: `shipping_rates` does not exist until story
 > 0036, so no zone can be in use and there is nothing to count. It is handed off to 0036 exactly as
-> [0023](in-progress/0023-product-categories-backend.md) handed the identical product-category guard to 0024
+> [0023](done/0023-product-categories-backend.md) handed the identical product-category guard to 0024
 > (its decision **D-10**). See D-1 for what this story pre-shapes so the hand-off is a one-file
 > extension rather than a new rule in a new place.
 
@@ -206,7 +206,7 @@ behavioural regression for anyone who relied on it. Two rules genuinely rejected
   everything or nothing. That is a pricing bug wearing a nullable column, and it would surface in
   Epic 3 as wrong money rather than as an error.
 
-**Consistency**: this is the same rule [0023/0024](in-progress/0023-product-categories-backend.md) apply to
+**Consistency**: this is the same rule [0023/0024](done/0023-product-categories-backend.md) apply to
 product categories, so the panel answers "you cannot delete something that is in use" the same way
 in two modules. That mattered enough to the PRD to be named as the model; it is honoured.
 
@@ -360,7 +360,7 @@ destination, which is a silent pricing gap rather than an error.
 ### D-6 — Zone names are **unique**, enforced in PHP first and by the index last.
 
 Two "Península" rows in the rate modal's zone selector is a real defect, so uniqueness is required.
-It is enforced exactly as [0023](in-progress/0023-product-categories-backend.md)'s **D-4** enforces product
+It is enforced exactly as [0023](done/0023-product-categories-backend.md)'s **D-4** enforces product
 category names, and for a verified reason: `phpunit.xml` pins `DB_DATABASE` but **not**
 `DB_CONNECTION`, `.env.example` sets `DB_CONNECTION=sqlite`, and `config/database.php` pins
 `utf8mb4_unicode_ci` on MySQL. SQLite's `BINARY` is case-sensitive; `utf8mb4_unicode_ci` folds case
@@ -391,7 +391,7 @@ squat its name forever. Deletes here are hard deletes, and a test pins the absen
 
 ### D-8 — This story ships **no route, no Livewire component and no Blade view**.
 
-It follows [0023](in-progress/0023-product-categories-backend.md)'s pure-domain-layer shape, **not**
+It follows [0023](done/0023-product-categories-backend.md)'s pure-domain-layer shape, **not**
 [0035](0035-shipping-carriers-backend.md)'s. Four reasons, in descending strength:
 
 1. **The route and the view path are already taken.** 0035 ships

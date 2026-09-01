@@ -6,7 +6,7 @@ modal carrying a single `name` field, and a delete-confirmation modal that rende
 **hard-block-with-count** refusal ("This category is used by 12 products and cannot be deleted")
 when the category still has products assigned. This is the **first and only call site** of the
 `ProductCategoryPolicy` and the three `app/Actions/ProductCategories/` actions that story
-[0023](in-progress/0023-product-categories-backend.md) shipped with zero consumers, and it is the screen the
+[0023](done/0023-product-categories-backend.md) shipped with zero consumers, and it is the screen the
 delete guard story [0024](0024-products-core-crud-backend.md) built its `productCategoryId` error-bag
 contract for.
 
@@ -820,7 +820,7 @@ component. Nothing on the screen references, links to, or shares anything with a
 
 ### Dependencies
 
-- **[0023](in-progress/0023-product-categories-backend.md) — hard, blocking.** The model, actions, validation trait
+- **[0023](done/0023-product-categories-backend.md) — hard, blocking.** The model, actions, validation trait
   and policy this screen calls. **Not yet implemented (F-2).**
 - **[0024](0024-products-core-crud-backend.md) — hard, blocking (F-1).** The delete guard, the `products()`
   relation, the error-bag key and the `lang/*/products.php` files. **Not yet implemented (F-2).**
@@ -916,7 +916,7 @@ Phase 1 (Three Amigos) debate run on 2026-08-18 with `frontend-expert` (files an
 `database-expert` was convened — this story adds no backend or schema artifact. Derived from
 [PRD](../../docs/PRD/PRD.md#22-products) §2.2's "Product categories (extends the prototype)" Gherkin
 block and Products acceptance criterion 2, grounded in full readings of
-[0023](in-progress/0023-product-categories-backend.md) and [0024](0024-products-core-crud-backend.md), with
+[0023](done/0023-product-categories-backend.md) and [0024](0024-products-core-crud-backend.md), with
 [0006](done/0006-users-list-editor-ui.md) / `App\Livewire\Users\Index` as the list+modal pattern and
 [0039](0039-payment-methods-ui.md) as the precedent for a UI story's sidebar branching.
 
