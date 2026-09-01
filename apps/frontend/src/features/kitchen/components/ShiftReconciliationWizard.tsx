@@ -122,7 +122,7 @@ const ReconciliationQuantityControls: React.FC<ReconciliationQuantityControlsPro
   <div className="flex-gap-sm">
     <button
       type="button"
-      className="btn-touch btn-secondary qty-stepper-btn"
+      className="btn-touch btn-secondary qty-stepper-btn-sm"
       onClick={() => onQuantityChange(itemId, physicalQuantity - 0.1)}
     >
       <Minus size={18} />
@@ -134,13 +134,13 @@ const ReconciliationQuantityControls: React.FC<ReconciliationQuantityControlsPro
       min="0"
       value={physicalQuantity}
       onChange={(e) => onQuantityChange(itemId, parseFloat(e.target.value) || 0)}
-      className="qty-stepper-input"
+      className="qty-stepper-input-sm"
       id={`input-phys-${itemId}`}
     />
 
     <button
       type="button"
-      className="btn-touch btn-secondary qty-stepper-btn"
+      className="btn-touch btn-secondary qty-stepper-btn-sm"
       onClick={() => onQuantityChange(itemId, physicalQuantity + 0.1)}
     >
       <Plus size={18} />
@@ -153,7 +153,7 @@ const ReconciliationItemRow: React.FC<ReconciliationItemRowProps> = ({ item, phy
   const { diff, isCritical } = getVarianceInfo(theo, physicalQuantity);
 
   return (
-    <div className={`flex-between gap-3 ${isCritical ? 'reconciliation-row--critical' : 'reconciliation-row'}`}>
+    <div className={`flex-between gap-3 reconciliation-row${isCritical ? ' reconciliation-row--critical' : ''}`}>
       <ReconciliationItemInfo item={item} diff={diff} isCritical={isCritical} />
       <ReconciliationQuantityControls itemId={item.id} physicalQuantity={physicalQuantity} onQuantityChange={onQuantityChange} />
     </div>

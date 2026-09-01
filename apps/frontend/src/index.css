@@ -344,10 +344,6 @@ h3 {
   flex: 1;
 }
 
-.flex-half {
-  flex: 1;
-}
-
 .flex-double {
   flex: 2;
 }
@@ -726,14 +722,12 @@ h3 {
   border-radius: 4px;
 }
 .reconciliation-row--critical {
-  border: 1px solid var(--color-danger);
+  border-color: var(--color-danger);
   background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);
-  padding: var(--space-3) var(--space-4);
-  border-radius: 4px;
 }
 
-.qty-stepper-btn { min-width: 40px; min-height: 40px; padding: 0; }
-.qty-stepper-input {
+.qty-stepper-btn-sm { min-width: 40px; min-height: 40px; padding: 0; }
+.qty-stepper-input-sm {
   width: 90px;
   text-align: center;
   font-size: var(--fs-base);
@@ -771,13 +765,9 @@ h3 {
   background-color: var(--bg-root);
   border: 1px solid var(--border-card);
   border-radius: 4px;
-  opacity: 1;
 }
 .location-row--inactive {
-  padding: var(--space-3);
-  background-color: var(--bg-root);
-  border: 1px solid var(--color-danger);
-  border-radius: 4px;
+  border-color: var(--color-danger);
   opacity: 0.65;
 }
 
@@ -792,12 +782,6 @@ h3 {
   background-color: var(--overlay-white-faint);
 }
 .recipe-card--selected {
-  padding: var(--space-4);
-  border-radius: 12px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   border: 2px solid var(--color-primary);
   background-color: color-mix(in srgb, var(--color-warning) 8%, transparent);
 }
@@ -890,12 +874,12 @@ h3 {
 .location-tabs-bar { margin-bottom: var(--space-4); }
 .location-tabs-label { font-size: var(--fs-sm); color: var(--text-secondary); margin-right: var(--space-1); }
 .location-tab-btn { height: 40px; padding: 0 14px; font-size: var(--fs-sm); }
-.badge-count--active { background-color: var(--neutral); color: var(--color-primary); }
+.badge-count--active { background-color: var(--color-primary-on); color: var(--color-primary); }
 .badge-count--inactive { background-color: var(--bg-card); color: var(--text-secondary); }
 
 .two-col-grid { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-.quantity-stepper-btn { width: 56px; height: 56px; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
-.quantity-stepper-input { text-align: center; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+.qty-stepper-btn-lg { width: 56px; height: 56px; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+.qty-stepper-input-lg { text-align: center; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
 .extraction-note-banner { margin-top: var(--space-3); font-size: var(--fs-sm); }
 .inline-icon-spacer { display: inline; margin-right: var(--space-2); vertical-align: text-bottom; }
 .access-denied-icon { margin: 0 auto var(--space-4) auto; }

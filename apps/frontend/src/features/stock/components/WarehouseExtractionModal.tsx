@@ -178,7 +178,7 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
     <div className="flex-gap-md">
       <button
         type="button"
-        className="btn-touch btn-secondary quantity-stepper-btn"
+        className="btn-touch btn-secondary qty-stepper-btn-lg"
         onClick={onDecrement}
         id="btn-decrement-qty"
       >
@@ -190,13 +190,13 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
         step="0.1"
         value={quantity}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0.5)}
-        className="input-touch quantity-stepper-input"
+        className="input-touch qty-stepper-input-lg"
         id="input-quantity-extraction"
       />
 
       <button
         type="button"
-        className="btn-touch btn-secondary quantity-stepper-btn"
+        className="btn-touch btn-secondary qty-stepper-btn-lg"
         onClick={onIncrement}
         id="btn-increment-qty"
       >

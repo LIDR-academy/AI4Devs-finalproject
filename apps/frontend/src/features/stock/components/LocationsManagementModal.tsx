@@ -116,7 +116,7 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
       </h4>
       <div className="flex-column flex-gap-xs locations-list-scroll">
         {locations.map((loc) => (
-          <div key={loc.id} className={`flex-between ${loc.isActive ? 'location-row' : 'location-row--inactive'}`}>
+          <div key={loc.id} className={`flex-between location-row${loc.isActive ? '' : ' location-row--inactive'}`}>
             <div className="flex-gap-xs">
               <MapPin size={18} className={loc.isActive ? 'text-primary-color' : 'text-secondary-color'} />
               <div>

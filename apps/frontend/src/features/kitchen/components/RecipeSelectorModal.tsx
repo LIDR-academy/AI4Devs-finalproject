@@ -30,7 +30,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isSelected, onSelect })
         onSelect(recipe.id);
       }
     }}
-    className={isSelected ? 'recipe-card--selected' : 'recipe-card'}
+    className={`recipe-card${isSelected ? ' recipe-card--selected' : ''}`}
   >
     <div>
       <div className="fw-bold fs-base">

@@ -36,7 +36,7 @@ export const ModalFooterActions: React.FC<ModalFooterActionsProps> = ({
 }) => {
   return (
     <div className={`modal-footer-actions${noMarginTop ? ' no-margin-top' : ''}`}>
-      <button type="button" className="btn-touch btn-secondary flex-half" onClick={onCancel}>
+      <button type="button" className="btn-touch btn-secondary flex-1" onClick={onCancel}>
         {cancelLabel}
       </button>
       <button
