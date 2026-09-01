@@ -434,26 +434,6 @@ h3 {
 }
 
 /* Helper classes for PIN recovery & Auth Modals (TK-077) */
-.btn-link {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  font-size: 0.88rem;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 8px 12px;
-  min-height: 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-  transition: opacity 0.15s ease;
-}
-
-.btn-link:hover {
-  opacity: 0.85;
-}
-
 .banner-success {
   background-color: rgba(47, 191, 110, 0.12);
   border: 1px solid rgba(47, 191, 110, 0.35);
@@ -487,11 +467,6 @@ h3 {
 
 .pin-dot-indicator.active {
   background-color: var(--color-primary);
-}
-
-.form-group-touch {
-  margin-bottom: 16px;
-  text-align: left;
 }
 
 .modal-header-center {
@@ -713,7 +688,6 @@ h3 {
 .btn-table-action { min-height: 36px; padding: 6px var(--space-3); font-size: 0.8rem; display: inline-flex; }
 
 .text-left { text-align: left; }
-.auth-modal-subtitle { color: var(--text-secondary); font-size: var(--fs-sm); margin-bottom: var(--space-5); line-height: 1.4; }
 
 .recipe-catalog-panel { padding: var(--space-6); color: var(--text-primary); }
 .catalog-state-message { text-align: center; color: var(--text-secondary); padding: 32px 0; }
@@ -755,11 +729,6 @@ h3 {
   min-height: 48px;
 }
 
-.pin-digit-btn { width: 64px; height: 64px; border-radius: 4px; background-color: var(--bg-card); border: 1px solid var(--border-card); color: var(--text-primary); font-size: var(--fs-xl); font-weight: var(--fw-bold); }
-.pin-digit-spacer { width: 64px; height: 64px; }
-.pin-pad-grid { display: grid; grid-template-columns: repeat(3, 64px); gap: var(--space-3); justify-content: center; margin: var(--space-5) auto; }
-.pin-delete-btn { width: 64px; height: 64px; border-radius: 4px; background-color: color-mix(in srgb, var(--color-danger) 15%, transparent); border: 1px solid var(--color-danger); color: var(--color-danger-text); }
-
 .admin-menu-wrapper { position: relative; display: inline-block; }
 .dropdown-chevron { transition: transform 0.2s; }
 .dropdown-chevron--open { transform: rotate(180deg); }
@@ -775,7 +744,6 @@ h3 {
 .qty-stepper-input-lg { text-align: center; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
 .extraction-note-banner { margin-top: var(--space-3); font-size: var(--fs-sm); }
 .inline-icon-spacer { display: inline; margin-right: var(--space-2); vertical-align: text-bottom; }
-.access-denied-icon { margin: 0 auto var(--space-4) auto; }
 
 .semaphoric-card {
   background-color: var(--bg-card);

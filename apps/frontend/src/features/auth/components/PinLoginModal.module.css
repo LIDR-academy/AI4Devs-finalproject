@@ -1,0 +1,19 @@
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 8px 12px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: opacity 0.15s ease;
+}
+
+.btn-link:hover {
+  opacity: 0.85;
+}

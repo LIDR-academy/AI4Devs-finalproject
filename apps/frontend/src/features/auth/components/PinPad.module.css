@@ -1,0 +1,4 @@
+.pin-digit-btn { width: 64px; height: 64px; border-radius: 4px; background-color: var(--bg-card); border: 1px solid var(--border-card); color: var(--text-primary); font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+.pin-digit-spacer { width: 64px; height: 64px; }
+.pin-pad-grid { display: grid; grid-template-columns: repeat(3, 64px); gap: var(--space-3); justify-content: center; margin: var(--space-5) auto; }
+.pin-delete-btn { width: 64px; height: 64px; border-radius: 4px; background-color: color-mix(in srgb, var(--color-danger) 15%, transparent); border: 1px solid var(--color-danger); color: var(--color-danger-text); }

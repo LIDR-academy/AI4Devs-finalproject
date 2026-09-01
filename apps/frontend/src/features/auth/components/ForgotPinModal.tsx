@@ -3,6 +3,7 @@ import { Modal } from '../../../shared/components/Modal.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { AuthService } from '../services/auth.service.js';
 import { Mail, CheckCircle2, AlertCircle, ArrowLeft, Send } from 'lucide-react';
+import styles from './ForgotPinModal.module.css';
 
 interface ForgotPinModalProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ const ForgotPinFormView: React.FC<{
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
 }> = ({ email, isLoading, onChange, onSubmit, onClose }) => (
-  <form onSubmit={onSubmit} className="form-group-touch">
+  <form onSubmit={onSubmit} className={styles['form-group-touch']}>
     <div className="mb-5">
       <label htmlFor="input-forgot-pin-email" className="form-label">
         Correo del Administrador:
@@ -99,7 +100,7 @@ export const ForgotPinModal: React.FC<ForgotPinModalProps> = ({ isOpen, onClose 
         </div>
       </div>
       <h2 className="fs-xl fw-bold mb-2">Recuperar PIN de Administrador</h2>
-      <p className="auth-modal-subtitle">
+      <p className={styles['auth-modal-subtitle']}>
         Ingresa el correo corporativo del Administrador para recibir un enlace temporal de recuperación.
       </p>
       {form.error && <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} compact />}

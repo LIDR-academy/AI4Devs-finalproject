@@ -1,5 +1,6 @@
 import React from 'react';
 import { Delete } from 'lucide-react';
+import styles from './PinPad.module.css';
 
 interface PinPadProps {
   onDigitPress: (digit: string) => void;
@@ -14,7 +15,7 @@ interface PinDigitButtonProps {
 }
 
 const PinDigitButton: React.FC<PinDigitButtonProps> = ({ digit, disabled, onPress }) => (
-  <button type="button" disabled={disabled} onClick={() => onPress(digit)} className="btn-touch pin-digit-btn">
+  <button type="button" disabled={disabled} onClick={() => onPress(digit)} className={`btn-touch ${styles['pin-digit-btn']}`}>
     {digit}
   </button>
 );
@@ -23,13 +24,13 @@ export const PinPad: React.FC<PinPadProps> = ({ onDigitPress, onDeletePress, dis
   const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
   return (
-    <div className="pin-pad-grid">
+    <div className={styles['pin-pad-grid']}>
       {digits.map((digit) => (
         <PinDigitButton key={digit} digit={digit} disabled={disabled} onPress={onDigitPress} />
       ))}
 
       {/* Fila inferior: espacio vacio, 0, y borrar */}
-      <div className="pin-digit-spacer" />
+      <div className={styles['pin-digit-spacer']} />
 
       <PinDigitButton digit="0" disabled={disabled} onPress={onDigitPress} />
 
@@ -38,7 +39,7 @@ export const PinPad: React.FC<PinPadProps> = ({ onDigitPress, onDeletePress, dis
         disabled={disabled}
         aria-label="Borrar digito"
         onClick={onDeletePress}
-        className="btn-touch pin-delete-btn"
+        className={`btn-touch ${styles['pin-delete-btn']}`}
       >
         <Delete size={24} />
       </button>

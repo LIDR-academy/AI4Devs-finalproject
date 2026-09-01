@@ -4,6 +4,7 @@ import { AuthService, LoginPinResponse } from '../services/auth.service.js';
 import { Lock, UserCheck, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import styles from './PinLoginModal.module.css';
 
 interface PinLoginModalProps {
   onSuccess: (authData: LoginPinResponse) => void;
@@ -156,7 +157,7 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initial
         <div className="mt-3">
           <button
             type="button"
-            className="btn-link"
+            className={styles['btn-link']}
             onClick={() => setIsForgotModalOpen(true)}
           >
             ¿Olvidó su PIN de Administrador?

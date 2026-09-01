@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { Modal } from './Modal.js';
+import styles from './AccessDeniedState.module.css';
 
 interface AccessDeniedStateProps {
   moduleLabel: string;
@@ -13,7 +14,7 @@ interface AccessDeniedStateProps {
  */
 export const AccessDeniedState: React.FC<AccessDeniedStateProps> = ({ moduleLabel, onClose }) => (
   <Modal size="md" centered>
-    <ShieldAlert size={48} className="text-danger-color access-denied-icon" />
+    <ShieldAlert size={48} className={`text-danger-color ${styles['access-denied-icon']}`} />
     <h2 className="fs-xl fw-bold mb-2">Acceso Restringido</h2>
     <p className="text-secondary-color fs-md mb-6">
       El módulo de {moduleLabel} requiere rol de Administrador.
