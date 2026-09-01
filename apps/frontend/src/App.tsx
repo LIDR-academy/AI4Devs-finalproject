@@ -54,10 +54,10 @@ interface DashboardHeaderProps {
 
 const UserBadge: React.FC<{ name: string; role: string }> = ({ name, role }) => (
   <div className="user-badge">
-    <User size={18} style={{ color: 'var(--color-primary)' }} />
+    <User size={18} className="text-primary-color" />
     <div>
-      <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{name}</div>
-      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{role}</div>
+      <div className="fs-md fw-semibold">{name}</div>
+      <div className="fs-xs text-secondary-color">{role}</div>
     </div>
   </div>
 );
@@ -124,13 +124,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onRolesManagement,
   onSync,
 }) => (
-  <header className="flex-between flex-wrap" style={{ marginBottom: '24px', gap: '16px', alignItems: 'flex-start' }}>
-    <div className="flex-column" style={{ gap: '12px' }}>
+  <header className="flex-between flex-wrap dashboard-header">
+    <div className="flex-column gap-3">
       <div>
-        <h1 className="flex-gap-xs" style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)', gap: '10px' }}>
+        <h1 className="flex-gap-md fs-2xl fw-bold">
           <Package className="text-primary-color" /> RestoStock FEFO Dashboard - Control de Inventario FEFO
         </h1>
-        <p className="text-secondary-color" style={{ marginTop: '4px', fontSize: '0.9rem' }}>
+        <p className="text-secondary-color mt-1 fs-md">
           Sistema Táctil de Inventario en Tiempo Real para Cocinas Industriales
         </p>
       </div>
@@ -168,41 +168,38 @@ interface SummaryCardsProps {
   onPrepareRecipe: () => void;
 }
 
-const MetricCard: React.FC<{ icon: React.ReactNode; iconBg?: string; title: string; value: number; unitLabel: string; valueColor: string }> = ({
+const MetricCard: React.FC<{ icon: React.ReactNode; danger?: boolean; title: string; value: number; unitLabel: string }> = ({
   icon,
-  iconBg,
+  danger = false,
   title,
   value,
   unitLabel,
-  valueColor,
 }) => (
   <div className="card-dashboard">
     <div className="card-header">
-      <div className="card-badge-icon" style={iconBg ? { backgroundColor: iconBg, color: valueColor } : undefined}>
+      <div className={`card-badge-icon${danger ? ' card-badge-icon--danger' : ''}`}>
         {icon}
       </div>
       <h2 className="card-title">{title}</h2>
     </div>
-    <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-      {value} <span className="text-secondary-color" style={{ fontSize: '0.9rem' }}>{unitLabel}</span>
+    <div className="fs-3xl fw-black">
+      {value} <span className="text-secondary-color fs-md">{unitLabel}</span>
     </div>
   </div>
 );
 
-const ActionCard: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; id: string; accentColor: string; tint: string; className: string }> = ({
+const ActionCard: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; id: string; variant: 'primary' | 'warning'; className: string }> = ({
   icon,
   label,
   onClick,
   id,
-  accentColor,
-  tint,
+  variant,
   className,
 }) => (
-  <div className="card-dashboard flex-column flex-center" style={{ backgroundColor: tint, border: `1px dashed ${accentColor}` }}>
+  <div className={`card-dashboard flex-column flex-center action-card--${variant}`}>
     <button
-      className={`btn-touch w-full flex-center flex-gap-xs ${className}`}
+      className={`btn-touch w-full flex-center flex-gap-xs action-card-btn ${className}`}
       onClick={onClick}
-      style={{ height: '56px', fontSize: '1rem', fontWeight: 700, gap: '10px' }}
       id={id}
     >
       {icon}
@@ -213,22 +210,20 @@ const ActionCard: React.FC<{ icon: React.ReactNode; label: string; onClick: () =
 
 const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCount, onExtract, onPrepareRecipe }) => (
   <section className="metrics-grid">
-    <MetricCard icon={<Clock size={20} />} title="Remanentes Abiertos" value={remanentesCount} unitLabel="lotes FEFO" valueColor="var(--color-primary)" />
+    <MetricCard icon={<Clock size={20} />} title="Remanentes Abiertos" value={remanentesCount} unitLabel="lotes FEFO" />
     <MetricCard
       icon={<AlertTriangle size={20} />}
-      iconBg="color-mix(in srgb, var(--color-danger) 15%, transparent)"
+      danger
       title="Vencimiento Próximo (<24h)"
       value={criticalCount}
       unitLabel="lotes críticos"
-      valueColor="var(--color-danger)"
     />
     <ActionCard
       icon={<PlusCircle size={22} />}
       label="Extraer Insumo de Bodega"
       onClick={onExtract}
       id="btn-open-extraction"
-      accentColor="var(--color-primary)"
-      tint="color-mix(in srgb, var(--color-warning) 5%, transparent)"
+      variant="primary"
       className="btn-primary"
     />
     <ActionCard
@@ -236,8 +231,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
       label="Preparar Receta FEFO"
       onClick={onPrepareRecipe}
       id="btn-open-recipe"
-      accentColor="var(--color-warning)"
-      tint="color-mix(in srgb, var(--color-warning) 5%, transparent)"
+      variant="warning"
       className="btn-warning"
     />
   </section>
@@ -435,11 +429,11 @@ function useAppHandlers(dashboard: ReturnType<typeof useDashboardState>) {
 }
 
 const KitchenBoardTitle: React.FC = () => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <ShieldCheck style={{ color: 'var(--color-primary)' }} /> Tablero FEFO de Cocina (Prioridad por Expiración)
+  <div className="flex-between mb-4">
+    <h2 className="flex-gap-sm fs-xl fw-bold">
+      <ShieldCheck className="text-primary-color" /> Tablero FEFO de Cocina (Prioridad por Expiración)
     </h2>
-    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+    <span className="fs-sm text-secondary-color">
       Botones táctiles optimizados a <strong>&ge;48px</strong>
     </span>
   </div>

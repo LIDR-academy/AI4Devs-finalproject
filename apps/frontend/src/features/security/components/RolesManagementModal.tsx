@@ -46,15 +46,7 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({ onCreated, setSelectedRole, s
 
 
   return (
-    <form
-      onSubmit={handleCreateRole}
-      className="card-dashboard metrics-grid flex-gap-xs"
-      style={{
-        padding: '12px',
-        gridTemplateColumns: '1fr 1fr auto',
-        alignItems: 'end',
-      }}
-    >
+    <form onSubmit={handleCreateRole} className="card-dashboard metrics-grid flex-gap-xs new-role-form">
       <div>
         <label htmlFor="new-role-name" className="form-label">
           Nombre Nuevo Rol
@@ -82,7 +74,7 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({ onCreated, setSelectedRole, s
           className="input-touch w-full"
         />
       </div>
-      <button type="submit" disabled={isCreating} className="btn-touch btn-primary" style={{ minWidth: '100px' }}>
+      <button type="submit" disabled={isCreating} className="btn-touch btn-primary min-w-100">
         <Plus size={20} /> Crear
       </button>
     </form>
@@ -97,7 +89,7 @@ interface PermissionsListProps {
 
 const PermissionsList: React.FC<PermissionsListProps> = ({ permissions, selectedRole, onTogglePermission }) => {
   return (
-    <div className="flex-column flex-gap-xs" style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
+    <div className="flex-column flex-gap-xs permissions-list-scroll">
       {permissions.map((perm) => {
         const hasIt = selectedRole.permissions.some((p) => p.id === perm.id);
         return (
@@ -105,32 +97,15 @@ const PermissionsList: React.FC<PermissionsListProps> = ({ permissions, selected
             type="button"
             key={perm.id}
             onClick={() => onTogglePermission(perm.id)}
-            className="flex-between w-full btn-touch"
-            style={{
-              padding: '12px',
-              borderRadius: '4px',
-              border: `1px solid ${hasIt ? 'var(--color-primary)' : 'var(--border-card)'}`,
-              backgroundColor: hasIt ? 'color-mix(in srgb, var(--color-warning) 10%, transparent)' : 'var(--bg-root)',
-              textAlign: 'left',
-            }}
+            className={`flex-between w-full btn-touch permission-chip ${hasIt ? 'permission-chip--active' : 'permission-chip--inactive'}`}
           >
             <div>
-              <span className="text-primary-color" style={{ fontSize: '0.75rem', fontFamily: 'monospace', fontWeight: 700, display: 'block' }}>
+              <span className="text-primary-color permission-code fs-xs fw-bold font-mono">
                 {perm.code}
               </span>
-              <span className="text-primary-color" style={{ fontSize: '0.9rem', fontWeight: 600 }}>{perm.name}</span>
+              <span className="text-primary-color fs-md fw-semibold">{perm.name}</span>
             </div>
-            <div
-              className="flex-center"
-              style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '4px',
-                backgroundColor: hasIt ? 'var(--color-primary)' : 'transparent',
-                border: `1px solid ${hasIt ? 'var(--color-primary)' : 'var(--border-card)'}`,
-                color: 'var(--color-primary-on)',
-              }}
-            >
+            <div className={`permission-check-indicator ${hasIt ? 'permission-check-indicator--active' : 'permission-check-indicator--inactive'}`}>
               {hasIt && <Check size={16} strokeWidth={3} />}
             </div>
           </button>
@@ -202,41 +177,39 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
   };
 
   return (
-    <Modal maxWidth="760px" width="92%">
+    <Modal size="xl">
       <ModalHeader
-        icon={<ShieldCheck style={{ color: 'var(--color-primary)' }} />}
+        icon={<ShieldCheck className="text-primary-color" />}
         title="Gestión de Roles y Matriz de Permisos (Dynamic RBAC)"
         onClose={onClose}
       />
-      <div className="flex-column flex-gap-md" style={{ marginTop: '16px' }}>
+      <div className="flex-column flex-gap-md mt-4">
         {error && <ErrorBanner message={error} />}
         <NewRoleForm onCreated={loadData} setSelectedRole={setSelectedRole} setError={setError} />
 
 
-        <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
-          <div className="flex-column flex-gap-xs" style={{ borderRight: '1px solid var(--border-card)', paddingRight: '12px' }}>
-            <h4 className="text-secondary-color" style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+        <div className="metrics-grid roles-permissions-grid">
+          <div className="flex-column flex-gap-xs roles-list-column">
+            <h4 className="text-secondary-color section-label fs-xs fw-bold mb-1">
               Roles Definidos
             </h4>
             {roles.map((r) => {
               const isSystemRole = r.name === 'ADMIN' || r.name === 'KITCHEN_STAFF' || r.id === 'role-admin' || r.id === 'role-kitchen';
               return (
-                <div key={r.id} className="flex-gap-xs" style={{ alignItems: 'center' }}>
+                <div key={r.id} className="flex-gap-xs">
                   <button
                     type="button"
                     onClick={() => setSelectedRole(r)}
-                    className={`btn-touch ${selectedRole?.id === r.id ? 'btn-primary' : 'btn-secondary'} flex-1`}
-                    style={{ justifyContent: 'flex-start', textAlign: 'left', overflow: 'hidden' }}
+                    className={`btn-touch ${selectedRole?.id === r.id ? 'btn-primary' : 'btn-secondary'} flex-1 role-select-btn`}
                   >
                     <ShieldCheck size={18} />
-                    <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{r.name}</span>
+                    <span className="text-truncate">{r.name}</span>
                   </button>
                   {!isSystemRole && (
                     <button
                       type="button"
-                      className="btn-touch btn-danger"
+                      className="btn-touch btn-danger btn-compact-icon"
                       onClick={() => setRoleToDelete({ id: r.id, name: r.name })}
-                      style={{ padding: '6px 10px' }}
                       title="Eliminar Rol"
                     >
                       <Trash2 size={16} />
@@ -248,7 +221,7 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
           </div>
 
           <div className="flex-column flex-gap-xs">
-            <h4 className="text-secondary-color" style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+            <h4 className="text-secondary-color section-label fs-xs fw-bold mb-1">
               Permisos para {selectedRole?.name || 'Seleccione un rol'}
             </h4>
 
@@ -258,8 +231,8 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
           </div>
         </div>
 
-        <div className="modal-footer-actions" style={{ justifyContent: 'flex-end', marginTop: 0 }}>
-          <button type="button" onClick={onClose} className="btn-touch btn-secondary" style={{ width: '120px' }}>
+        <div className="modal-footer-actions justify-end no-margin-top">
+          <button type="button" onClick={onClose} className="btn-touch btn-secondary w-120">
             Cerrar
           </button>
         </div>

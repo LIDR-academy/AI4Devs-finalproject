@@ -86,30 +86,28 @@ const EditUserInlineForm: React.FC<EditUserInlineFormProps> = ({ user, roles, on
   return (
     <div className="flex-column flex-gap-sm">
       {formError && <ErrorBanner message={formError} />}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+      <div className="edit-user-grid">
         <div>
-          <label htmlFor={`edit-name-${user.id}`} className="form-label" style={{ fontSize: '0.75rem' }}>
+          <label htmlFor={`edit-name-${user.id}`} className="form-label fs-xs">
             Nombre
           </label>
           <input
             id={`edit-name-${user.id}`}
             type="text"
-            className="input-touch w-full"
+            className="input-touch w-full input-touch-compact"
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
-            style={{ height: '38px', fontSize: '0.85rem' }}
           />
         </div>
         <div>
-          <label htmlFor={`edit-role-${user.id}`} className="form-label" style={{ fontSize: '0.75rem' }}>
+          <label htmlFor={`edit-role-${user.id}`} className="form-label fs-xs">
             Rol
           </label>
           <select
             id={`edit-role-${user.id}`}
-            className="input-touch w-full"
+            className="input-touch w-full input-touch-compact"
             value={editRole}
             onChange={(e) => setEditRole(e.target.value)}
-            style={{ height: '38px', fontSize: '0.85rem' }}
           >
             {roles.length > 0 ? (
               roles.map((r) => (
@@ -127,34 +125,31 @@ const EditUserInlineForm: React.FC<EditUserInlineFormProps> = ({ user, roles, on
         </div>
       </div>
       <div>
-        <label htmlFor={`edit-pin-${user.id}`} className="form-label" style={{ fontSize: '0.75rem' }}>
+        <label htmlFor={`edit-pin-${user.id}`} className="form-label fs-xs">
           Nuevo PIN (opcional)
         </label>
         <input
           id={`edit-pin-${user.id}`}
           type="password"
-          className="input-touch w-full"
+          className="input-touch w-full input-touch-compact"
           placeholder="Dejar en blanco para conservar actual"
           value={editPin}
           onChange={(e) => setEditPin(e.target.value)}
-          style={{ height: '38px', fontSize: '0.85rem' }}
         />
       </div>
-      <div className="flex-gap-xs" style={{ justifyContent: 'flex-end', marginTop: '4px' }}>
+      <div className="flex-gap-xs mt-1 justify-end">
         <button
           type="button"
-          className="btn-touch btn-secondary flex-gap-xs"
+          className="btn-touch btn-secondary flex-gap-xs edit-user-action-btn"
           onClick={onCancel}
-          style={{ padding: '6px 12px' }}
         >
           <X size={16} /> Cancelar
         </button>
         <button
           type="button"
-          className="btn-touch btn-primary flex-gap-xs"
+          className="btn-touch btn-primary flex-gap-xs edit-user-action-btn"
           onClick={handleSave}
           disabled={isSaving}
-          style={{ padding: '6px 12px' }}
         >
           <Save size={16} /> {isSaving ? 'Guardando...' : 'Guardar'}
         </button>
@@ -168,23 +163,14 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <div
-      className="flex-column flex-gap-xs"
-      style={{
-        padding: '12px',
-        borderBottom: '1px solid var(--border-card)',
-        backgroundColor: 'var(--bg-root)',
-        borderRadius: '6px',
-        marginBottom: '8px',
-      }}
-    >
+    <div className="flex-column flex-gap-xs user-row">
       {!isEditing ? (
-        <div className="flex-between" style={{ gap: '12px' }}>
+        <div className="flex-between gap-3">
           <div>
-            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>{user.name}</div>
-            <div className="text-secondary-color" style={{ fontSize: '0.8rem' }}>
+            <div className="fs-md fw-bold">{user.name}</div>
+            <div className="text-secondary-color fs-xs">
               Rol: <strong className="text-primary-color">{user.role}</strong> · Estado:{' '}
-              <span style={{ fontWeight: 700, color: isBlocked ? 'var(--color-danger)' : 'var(--color-success)' }}>
+              <span className={`fw-bold ${isBlocked ? 'text-danger-color' : 'text-success-color'}`}>
                 {user.status}
               </span>
             </div>
@@ -192,19 +178,17 @@ const UserRow: React.FC<UserRowProps> = ({ user, roles, isPending, onToggle, onS
           <div className="flex-gap-xs">
             <button
               type="button"
-              className="btn-touch btn-secondary"
+              className="btn-touch btn-secondary user-row-icon-btn"
               onClick={() => setIsEditing(true)}
-              style={{ padding: '6px 10px' }}
               title="Editar Operario"
             >
               <Edit2 size={16} />
             </button>
             <button
               type="button"
-              className={`btn-touch flex-center flex-gap-xs ${isBlocked ? 'btn-primary' : 'btn-danger'}`}
+              className={`btn-touch flex-center flex-gap-xs user-row-toggle-btn ${isBlocked ? 'btn-primary' : 'btn-danger'}`}
               disabled={isPending}
               onClick={() => onToggle(user)}
-              style={{ minWidth: '100px' }}
             >
               {isBlocked ? <CheckCircle2 size={16} /> : <Ban size={16} />}
               {isPending ? '...' : isBlocked ? 'Reactivar' : 'Bloquear'}
@@ -247,7 +231,7 @@ export const UserStatusForm: React.FC<UserStatusFormProps> = ({ onUpdated }) => 
       {list.error && <ErrorBanner message={list.error} />}
 
       <div className="flex-between">
-        <span className="text-secondary-color" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
+        <span className="text-secondary-color fs-sm fw-bold">
           Personal Registrado ({list.users.length})
         </span>
         <button
@@ -262,13 +246,13 @@ export const UserStatusForm: React.FC<UserStatusFormProps> = ({ onUpdated }) => 
       </div>
 
       {list.isLoading ? (
-        <div className="text-secondary-color text-center" style={{ padding: '24px' }}>Cargando operarios...</div>
+        <div className="text-secondary-color text-center p-6">Cargando operarios...</div>
       ) : list.users.length === 0 ? (
-        <div className="text-secondary-color text-center" style={{ padding: '24px', fontSize: '0.9rem' }}>
+        <div className="text-secondary-color text-center p-6 fs-md">
           Sin operarios registrados todavía.
         </div>
       ) : (
-        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+        <div className="user-list-scroll">
           {list.users.map((user) => (
             <UserRow
               key={user.id}

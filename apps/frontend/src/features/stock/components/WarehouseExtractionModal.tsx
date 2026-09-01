@@ -424,13 +424,11 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
   if (!isOpen) return null;
 
   return (
-    <Modal maxWidth="500px" width="90%">
+    <Modal size="md">
       <ModalHeader
         icon={<PackageCheck style={{ color: 'var(--color-primary)' }} />}
         title="Extracción de Bodega (Alta TRR)"
-        fontSize="1.4rem"
-        gap="10px"
-        marginBottom="20px"
+        size="lg"
         onClose={onClose}
       />
 

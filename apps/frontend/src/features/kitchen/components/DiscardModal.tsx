@@ -68,11 +68,11 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, 
 
 
   return (
-    <Modal maxWidth="450px" width="90%">
+    <Modal size="sm">
       <ModalHeader
         icon={<AlertTriangle />}
         title="Registrar Descarte de Merma"
-        titleColor="var(--color-danger)"
+        danger
         onClose={onClose}
       />
 

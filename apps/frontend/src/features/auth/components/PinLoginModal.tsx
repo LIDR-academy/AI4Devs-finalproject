@@ -158,14 +158,14 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initial
 
   return (
     <>
-      <Modal maxWidth="420px" width="100%" textAlign="center">
+      <Modal size="sm" centered>
         <PinLoginHeader />
 
         <UserSelector selectedUserId={form.selectedUserId} onChange={form.setSelectedUserId} disabled={form.isLoading} />
         <PinDotsDisplay pinLength={form.pin.length} />
 
         {(form.error || initialNotice) && (
-          <ErrorBanner message={form.error || initialNotice || ''} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
+          <ErrorBanner message={form.error || initialNotice || ''} icon={<AlertCircle size={18} />} compact />
         )}
 
         <PinPad onDigitPress={form.handleDigitPress} onDeletePress={form.handleDeletePress} disabled={form.isLoading} />

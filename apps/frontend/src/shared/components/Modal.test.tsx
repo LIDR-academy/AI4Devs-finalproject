@@ -15,31 +15,19 @@ describe('Modal — shell compartido de overlay + card (dedup de DiscardModal/Wa
     expect(container.querySelector('.modal-card')).not.toBeNull();
   });
 
-  it('aplica maxWidth, width y textAlign personalizados a la card (preserva estilos por-instancia de cada modal original)', () => {
+  it('aplica el tamano y el centrado solicitados via className (sin estilos inline, Guard 29 extendido)', () => {
     const { container } = render(
-      <Modal maxWidth="420px" width="100%" textAlign="center">
+      <Modal size="sm" centered>
         <p>x</p>
       </Modal>
     );
 
     const card = container.querySelector('.modal-card') as HTMLElement;
-    expect(card.style.maxWidth).toBe('420px');
-    expect(card.style.width).toBe('100%');
-    expect(card.style.textAlign).toBe('center');
+    expect(card.className).toContain('modal-sm');
+    expect(card.className).toContain('modal-centered');
   });
 
-  it('aplica un padding personalizado a la card cuando se especifica', () => {
-    const { container } = render(
-      <Modal padding="32px">
-        <p>x</p>
-      </Modal>
-    );
-
-    const card = container.querySelector('.modal-card') as HTMLElement;
-    expect(card.style.padding).toBe('32px');
-  });
-
-  it('usa maxWidth 500px y width 90% por defecto si no se especifican', () => {
+  it('usa el tamano "md" por defecto si no se especifica', () => {
     const { container } = render(
       <Modal>
         <p>x</p>
@@ -47,7 +35,7 @@ describe('Modal — shell compartido de overlay + card (dedup de DiscardModal/Wa
     );
 
     const card = container.querySelector('.modal-card') as HTMLElement;
-    expect(card.style.maxWidth).toBe('500px');
-    expect(card.style.width).toBe('90%');
+    expect(card.className).toContain('modal-md');
+    expect(card.className).not.toContain('modal-centered');
   });
 });

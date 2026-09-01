@@ -144,7 +144,7 @@ export const ResetPinModal: React.FC<ResetPinModalProps> = ({ token, isOpen, onS
   if (!isOpen) return null;
 
   return (
-    <Modal maxWidth="420px" width="100%" textAlign="center">
+    <Modal size="sm" centered>
       <div className="modal-header-center">
         <div className="card-badge-icon" style={{ width: '56px', height: '56px' }}>
           <KeyRound size={28} />
@@ -154,7 +154,7 @@ export const ResetPinModal: React.FC<ResetPinModalProps> = ({ token, isOpen, onS
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '16px' }}>
         {form.step === 'ENTER_NEW' ? 'Ingrese su nuevo PIN de 4 a 6 dígitos' : 'Confirme su nuevo PIN de seguridad'}
       </p>
-      {form.error && <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />}
+      {form.error && <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} compact />}
       {form.success ? (
         <ResetPinSuccessBanner />
       ) : (

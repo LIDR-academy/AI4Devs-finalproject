@@ -51,7 +51,7 @@ export const ForceChangePinModal: React.FC<ForceChangePinModalProps> = ({ userId
   };
 
   return (
-    <Modal maxWidth="440px" width="100%" textAlign="center">
+    <Modal size="sm" centered>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
         <div className="card-badge-icon" style={{ width: '56px', height: '56px', backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)', color: 'var(--color-danger)' }}>
           <ShieldAlert size={32} />
@@ -66,7 +66,7 @@ export const ForceChangePinModal: React.FC<ForceChangePinModalProps> = ({ userId
       </p>
 
       {error && (
-        <ErrorBanner message={error} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />
+        <ErrorBanner message={error} icon={<AlertCircle size={18} />} compact />
       )}
 
       <form onSubmit={handleSubmit} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>

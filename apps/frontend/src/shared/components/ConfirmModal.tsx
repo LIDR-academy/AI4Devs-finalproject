@@ -28,7 +28,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Modal maxWidth="420px" width="90%">
+    <Modal size="sm">
       <ModalHeader icon={<AlertTriangle style={{ color: 'var(--color-danger)' }} />} title={title} onClose={onCancel} />
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginBottom: '8px' }}>{message}</p>
       <ModalFooterActions

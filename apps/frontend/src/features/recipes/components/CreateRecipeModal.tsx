@@ -14,13 +14,10 @@ export const CreateRecipeModal: React.FC<CreateRecipeModalProps> = ({ isOpen, on
   if (!isOpen) return null;
 
   return (
-    <Modal maxWidth="560px" width="100%">
+    <Modal size="md">
       <ModalHeader
         icon={<Utensils style={{ color: 'var(--color-primary)' }} />}
         title="Nueva Receta"
-        fontSize="1.25rem"
-        gap="8px"
-        marginBottom="16px"
         onClose={onClose}
       />
 

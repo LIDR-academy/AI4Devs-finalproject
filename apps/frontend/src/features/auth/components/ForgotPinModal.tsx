@@ -92,7 +92,7 @@ export const ForgotPinModal: React.FC<ForgotPinModalProps> = ({ isOpen, onClose 
   if (!isOpen) return null;
 
   return (
-    <Modal maxWidth="420px" width="100%" textAlign="center">
+    <Modal size="sm" centered>
       <div className="modal-header-center">
         <div className="card-badge-icon" style={{ width: '56px', height: '56px' }}>
           <Mail size={28} />
@@ -102,7 +102,7 @@ export const ForgotPinModal: React.FC<ForgotPinModalProps> = ({ isOpen, onClose 
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '20px', lineHeight: 1.4 }}>
         Ingresa el correo corporativo del Administrador para recibir un enlace temporal de recuperación.
       </p>
-      {form.error && <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} padding="10px 14px" fontSize="0.88rem" />}
+      {form.error && <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} compact />}
       {form.successMessage ? (
         <ForgotPinSuccessView message={form.successMessage} onClose={onClose} />
       ) : (

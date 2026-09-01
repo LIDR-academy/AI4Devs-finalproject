@@ -20,28 +20,46 @@ export const FEFOInventoryHealthBar: React.FC<FEFOInventoryHealthBarProps> = ({ 
 
   return (
     <div className="health-bar-card">
-      <div className="flex-between" style={{ marginBottom: '10px' }}>
-        <div className="flex-gap-sm" style={{ fontWeight: 700, fontSize: '0.95rem' }}>
-          <ShieldCheck size={18} style={{ color: 'var(--color-primary)' }} />
+      <div className="flex-between mb-3">
+        <div className="flex-gap-sm fw-bold fs-md">
+          <ShieldCheck size={18} className="text-primary-color" />
           <span>Estado de Salud del Inventario FEFO (Visión 1-Segundo)</span>
         </div>
-        <div className="flex-gap-md" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-          <span className="flex-gap-xs" style={{ color: 'var(--color-success)' }}>
+        <div className="flex-gap-md fs-sm fw-semibold">
+          <span className="flex-gap-xs text-success-color">
             <ShieldCheck size={14} /> Seguro ({safe})
           </span>
-          <span className="flex-gap-xs" style={{ color: 'var(--color-warning)' }}>
+          <span className="flex-gap-xs text-warning-color">
             <AlertTriangle size={14} /> Atención ({warning})
           </span>
-          <span className="flex-gap-xs" style={{ color: 'var(--color-danger-text)' }}>
+          <span className="flex-gap-xs text-danger-text-color">
             <AlertOctagon size={14} /> Crítico ({critical})
           </span>
         </div>
       </div>
 
       <div className="health-bar-track">
-        {safePct > 0 && <div style={{ width: `${safePct}%`, backgroundColor: 'var(--color-success)', transition: 'width 0.3s' }} title={`Seguro: ${safePct}%`} />}
-        {warningPct > 0 && <div style={{ width: `${warningPct}%`, backgroundColor: 'var(--color-warning)', transition: 'width 0.3s' }} title={`Atención: ${warningPct}%`} />}
-        {criticalPct > 0 && <div style={{ width: `${criticalPct}%`, backgroundColor: 'var(--color-danger)', transition: 'width 0.3s' }} title={`Crítico: ${criticalPct}%`} />}
+        {safePct > 0 && (
+          <div
+            className="health-bar-segment health-bar-segment--safe"
+            style={{ '--bar-pct': `${safePct}%` } as React.CSSProperties}
+            title={`Seguro: ${safePct}%`}
+          />
+        )}
+        {warningPct > 0 && (
+          <div
+            className="health-bar-segment health-bar-segment--warning"
+            style={{ '--bar-pct': `${warningPct}%` } as React.CSSProperties}
+            title={`Atención: ${warningPct}%`}
+          />
+        )}
+        {criticalPct > 0 && (
+          <div
+            className="health-bar-segment health-bar-segment--critical"
+            style={{ '--bar-pct': `${criticalPct}%` } as React.CSSProperties}
+            title={`Crítico: ${criticalPct}%`}
+          />
+        )}
       </div>
     </div>
   );

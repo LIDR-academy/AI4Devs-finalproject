@@ -44,16 +44,12 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="card-dashboard flex-column flex-gap-xs mb-2"
-      style={{ padding: '16px' }}
-    >
-      <h4 className="flex-gap-xs text-primary-color" style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>
+    <form onSubmit={handleSubmit} className="card-dashboard flex-column flex-gap-xs mb-2 p-4">
+      <h4 className="flex-gap-xs text-primary-color fs-md fw-bold m-0">
         <Plus size={18} /> Registrar Nuevo Sector Físico
       </h4>
 
-      <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div className="metrics-grid location-form-grid">
         <div>
           <label htmlFor="location-name" className="form-label">
             Nombre Sector
@@ -98,12 +94,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="btn-touch btn-primary w-full"
-        style={{ marginTop: '4px' }}
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-touch btn-primary w-full mt-1">
         <Plus size={20} />
         {isSubmitting ? 'Guardando...' : 'Crear Sector'}
       </button>
@@ -120,61 +111,33 @@ interface LocationsListProps {
 const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive, onDeleteLocation }) => {
   return (
     <div>
-      <h4 className="text-secondary-color" style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '10px' }}>
+      <h4 className="text-secondary-color fs-md fw-bold mb-3">
         Sectores Registrados ({locations.length})
       </h4>
-      <div className="flex-column flex-gap-xs" style={{ maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
+      <div className="flex-column flex-gap-xs locations-list-scroll">
         {locations.map((loc) => (
-          <div
-            key={loc.id}
-            className="flex-between"
-            style={{
-              padding: '12px',
-              backgroundColor: 'var(--bg-root)',
-              border: `1px solid ${loc.isActive ? 'var(--border-card)' : 'var(--color-danger)'}`,
-              borderRadius: '4px',
-              opacity: loc.isActive ? 1 : 0.65,
-            }}
-          >
+          <div key={loc.id} className={`flex-between ${loc.isActive ? 'location-row' : 'location-row--inactive'}`}>
             <div className="flex-gap-xs">
-              <MapPin size={18} style={{ color: loc.isActive ? 'var(--color-primary)' : 'var(--text-secondary)' }} />
+              <MapPin size={18} className={loc.isActive ? 'text-primary-color' : 'text-secondary-color'} />
               <div>
-                <span className="text-primary-color" style={{ fontWeight: 700, fontSize: '0.95rem', display: 'block' }}>
+                <span className="text-primary-color fw-bold fs-md d-block">
                   {loc.name} {!loc.isActive && '(Inactivo)'}
                 </span>
-                <span className="text-secondary-color" style={{ fontSize: '0.8rem' }}>
+                <span className="text-secondary-color fs-sm">
                   {loc.description || 'Sin descripción'}
                 </span>
               </div>
             </div>
 
             <div className="flex-gap-xs">
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontWeight: 700,
-                  backgroundColor:
-                    loc.type === 'WAREHOUSE'
-                      ? 'color-mix(in srgb, var(--color-info) 15%, transparent)'
-                      : 'color-mix(in srgb, var(--color-success) 15%, transparent)',
-                  color: loc.type === 'WAREHOUSE' ? 'var(--color-info)' : 'var(--color-success)',
-                  border: `1px solid ${
-                    loc.type === 'WAREHOUSE'
-                      ? 'color-mix(in srgb, var(--color-info) 30%, transparent)'
-                      : 'color-mix(in srgb, var(--color-success) 30%, transparent)'
-                  }`,
-                }}
-              >
+              <span className={`location-badge ${loc.type === 'WAREHOUSE' ? 'location-badge--warehouse' : 'location-badge--kitchen'}`}>
                 {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
               </span>
 
               <button
                 type="button"
-                className={`btn-touch ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
+                className={`btn-touch btn-compact-icon-sm ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
                 onClick={() => onToggleActive(loc)}
-                style={{ padding: '6px 8px' }}
                 title={loc.isActive ? 'Desactivar Sector' : 'Activar Sector'}
               >
                 <Power size={16} />
@@ -182,9 +145,8 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
 
               <button
                 type="button"
-                className="btn-touch btn-danger"
+                className="btn-touch btn-danger btn-compact-icon-sm"
                 onClick={() => onDeleteLocation(loc.id, loc.name)}
-                style={{ padding: '6px 8px' }}
                 title="Eliminar Sector"
               >
                 <Trash2 size={16} />
@@ -247,13 +209,13 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
   };
 
   return (
-    <Modal maxWidth="640px" width="92%">
+    <Modal size="lg">
       <ModalHeader
-        icon={<MapPin style={{ color: 'var(--color-primary)' }} />}
+        icon={<MapPin className="text-primary-color" />}
         title="Sectores Físicos de Almacenamiento"
         onClose={onClose}
       />
-      <div className="flex-column flex-gap-md" style={{ marginTop: '16px' }}>
+      <div className="flex-column flex-gap-md mt-4">
         {error && <ErrorBanner message={error} />}
         <NewLocationForm onCreated={loadLocations} setError={setError} />
 
@@ -263,8 +225,8 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
           onDeleteLocation={(id, name) => setLocationToDelete({ id, name })}
         />
 
-        <div className="modal-footer-actions" style={{ justifyContent: 'flex-end', marginTop: 0 }}>
-          <button type="button" onClick={onClose} className="btn-touch btn-secondary" style={{ width: '120px' }}>
+        <div className="modal-footer-actions justify-end no-margin-top">
+          <button type="button" onClick={onClose} className="btn-touch btn-secondary w-120">
             Cerrar
           </button>
         </div>

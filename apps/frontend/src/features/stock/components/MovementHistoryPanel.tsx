@@ -31,32 +31,29 @@ const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({
   onEndDateChange,
   onSearch,
 }) => (
-  <div className="flex-wrap flex-gap-xs mb-2" style={{ marginBottom: '16px' }}>
+  <div className="flex-wrap flex-gap-xs movement-filters-bar">
     <input
       type="text"
-      className="input-touch flex-2"
+      className="input-touch flex-2 movement-filter-input"
       placeholder="Filtrar por ID de insumo (opcional)"
       value={insumoId}
       onChange={(e) => onInsumoIdChange(e.target.value)}
-      style={{ minWidth: '180px' }}
       id="input-filter-insumo-id"
     />
     <input
       type="date"
-      className="input-touch flex-1"
+      className="input-touch flex-1 movement-filter-date"
       value={startDate}
       onChange={(e) => onStartDateChange(e.target.value)}
       aria-label="Fecha desde"
-      style={{ minWidth: '140px' }}
       id="input-filter-start-date"
     />
     <input
       type="date"
-      className="input-touch flex-1"
+      className="input-touch flex-1 movement-filter-date"
       value={endDate}
       onChange={(e) => onEndDateChange(e.target.value)}
       aria-label="Fecha hasta"
-      style={{ minWidth: '140px' }}
       id="input-filter-end-date"
     />
     <button type="button" className="btn-touch btn-secondary" onClick={onSearch} id="btn-search-movements">
@@ -67,13 +64,13 @@ const MovementFiltersBar: React.FC<MovementFiltersBarProps> = ({
 
 const MovementRow: React.FC<{ item: StockMovementHistoryItem }> = ({ item }) => (
   <tr>
-    <td style={{ fontSize: '0.85rem' }}>{item.insumoName}</td>
-    <td style={{ fontSize: '0.85rem' }}>{item.type}</td>
-    <td style={{ fontSize: '0.85rem', textAlign: 'right' }}>{item.quantity}</td>
-    <td className="text-secondary-color" style={{ fontSize: '0.8rem' }}>
+    <td className="fs-sm">{item.insumoName}</td>
+    <td className="fs-sm">{item.type}</td>
+    <td className="fs-sm text-right">{item.quantity}</td>
+    <td className="text-secondary-color fs-xs">
       {item.fromLoc} → {item.toLoc}
     </td>
-    <td className="text-secondary-color" style={{ fontSize: '0.8rem' }}>
+    <td className="text-secondary-color fs-xs">
       {new Date(item.createdAt).toLocaleString('es')}
     </td>
   </tr>
@@ -82,7 +79,7 @@ const MovementRow: React.FC<{ item: StockMovementHistoryItem }> = ({ item }) => 
 const MovementTable: React.FC<{ items: StockMovementHistoryItem[] }> = ({ items }) => {
   if (items.length === 0) {
     return (
-      <div className="text-center text-secondary-color" style={{ padding: '32px', fontSize: '0.9rem' }}>
+      <div className="text-center text-secondary-color p-5 fs-md">
         Sin movimientos registrados en este rango.
       </div>
     );
@@ -95,7 +92,7 @@ const MovementTable: React.FC<{ items: StockMovementHistoryItem[] }> = ({ items 
           <tr>
             <th>Insumo</th>
             <th>Tipo</th>
-            <th style={{ textAlign: 'right' }}>Cantidad</th>
+            <th className="text-right">Cantidad</th>
             <th>Origen → Destino</th>
             <th>Fecha</th>
           </tr>
@@ -164,13 +161,11 @@ export const MovementHistoryPanel: React.FC<MovementHistoryPanelProps> = ({ isOp
   }
 
   return (
-    <Modal maxWidth="720px" width="94%">
+    <Modal size="xl">
       <ModalHeader
-        icon={<History style={{ color: 'var(--color-primary)' }} />}
+        icon={<History className="text-primary-color" />}
         title="Auditoría de Movimientos de Stock"
-        fontSize="1.4rem"
-        gap="10px"
-        marginBottom="20px"
+        size="lg"
         onClose={onClose}
       />
 
@@ -187,7 +182,7 @@ export const MovementHistoryPanel: React.FC<MovementHistoryPanelProps> = ({ isOp
       {history.error && <ErrorBanner message={history.error} />}
 
       {history.isLoading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+        <div className="text-center text-secondary-color p-6">
           <RefreshCw className="spin" size={24} /> Cargando historial...
         </div>
       ) : (

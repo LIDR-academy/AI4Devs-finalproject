@@ -25,14 +25,13 @@ const FILTER_OPTIONS: Array<{ value: FilterRange; label: string }> = [
 ];
 
 const ReportsFilterBar: React.FC<ReportsFilterBarProps> = ({ filterRange, onFilterChange, onClose }) => (
-  <div className="flex-gap-xs" style={{ alignItems: 'center' }}>
-    <div className="flex-gap-xs" style={{ backgroundColor: 'var(--bg-card)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-card)' }}>
+  <div className="flex-gap-xs">
+    <div className="flex-gap-xs filter-toggle-group">
       {FILTER_OPTIONS.map((option) => (
         <button
           key={option.value}
           type="button"
-          className={`btn-touch ${filterRange === option.value ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ padding: '6px 12px', fontSize: '0.8rem', minHeight: '36px' }}
+          className={`btn-touch filter-toggle-btn ${filterRange === option.value ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => onFilterChange(option.value)}
         >
           {option.label}
@@ -52,29 +51,29 @@ interface KpiCardsProps {
 }
 
 const KpiCards: React.FC<KpiCardsProps> = ({ totalQuantity, expirationWaste }) => (
-  <div className="metrics-grid mb-2" style={{ marginBottom: '28px' }}>
+  <div className="metrics-grid mb-7">
     <div className="card-dashboard">
       <div className="card-header">
-        <div className="card-badge-icon" style={{ backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)', color: 'var(--color-danger)' }}>
+        <div className="card-badge-icon card-badge-icon--danger">
           <Trash2 size={20} />
         </div>
         <h3 className="card-title">Total Insumos Descartados</h3>
       </div>
-      {/* Cifra siempre en --text-primary: mismo criterio que MetricCard en App.tsx, ver TK-068. */}
-      <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-        {totalQuantity.toFixed(2)} <span className="text-secondary-color" style={{ fontSize: '0.85rem' }}>unidades/KG</span>
+      {/* Cifra siempre en el color de texto por defecto (hereda --text-primary): mismo criterio que MetricCard en App.tsx, ver TK-068. */}
+      <div className="fs-3xl fw-black">
+        {totalQuantity.toFixed(2)} <span className="text-secondary-color fs-sm">unidades/KG</span>
       </div>
     </div>
 
     <div className="card-dashboard">
       <div className="card-header">
-        <div className="card-badge-icon" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' }}>
+        <div className="card-badge-icon card-badge-icon--warning">
           <PieChart size={20} />
         </div>
         <h3 className="card-title">Mermas por Expiración</h3>
       </div>
-      <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-        {expirationWaste.toFixed(2)} <span className="text-secondary-color" style={{ fontSize: '0.85rem' }}>unidades</span>
+      <div className="fs-3xl fw-black">
+        {expirationWaste.toFixed(2)} <span className="text-secondary-color fs-sm">unidades</span>
       </div>
     </div>
   </div>
@@ -87,41 +86,36 @@ interface WasteBarChartProps {
 }
 
 const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal }) => (
-  <div className="card-dashboard mb-2" style={{ marginBottom: '20px' }}>
-    <h3 className="flex-gap-xs mb-2" style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+  <div className="card-dashboard mb-5">
+    <h3 className="flex-gap-xs mb-2 fs-lg fw-bold">
       <Calendar size={18} className="text-primary-color" /> Desglose de Descartes por Insumo
     </h3>
 
     {isLoading ? (
-      <div className="text-center text-secondary-color" style={{ padding: '40px' }}>
+      <div className="text-center text-secondary-color p-6">
         <RefreshCw className="spin" size={24} /> Cargando reporte...
       </div>
     ) : (
       <div className="flex-column flex-gap-sm">
         {data.map((item) => {
           const qty = parseFloat(item.totalDiscardedQuantity || '0');
-          const pct = (qty / maxVal) * 100;
+          const pct = Math.min(100, Math.max(5, (qty / maxVal) * 100));
 
           return (
             <div key={item.insumoId + item.reason}>
-              <div className="flex-between mb-1" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+              <div className="flex-between mb-1 fs-sm fw-semibold">
                 <span>
-                  {item.insumoName} <span className="text-secondary-color" style={{ fontWeight: 400 }}>({item.reason})</span>
+                  {item.insumoName} <span className="text-secondary-color fw-regular">({item.reason})</span>
                 </span>
                 <span className="text-danger-color">
                   {item.totalDiscardedQuantity} {item.unitOfMeasure}
                 </span>
               </div>
 
-              <div style={{ backgroundColor: 'var(--overlay-white-subtle)', borderRadius: '6px', height: '12px', width: '100%', overflow: 'hidden' }}>
+              <div className="progress-bar-track">
                 <div
-                  style={{
-                    width: `${Math.min(100, Math.max(5, pct))}%`,
-                    height: '100%',
-                    backgroundColor: item.reason === 'EXPIRATION' ? 'var(--color-danger)' : 'var(--color-warning)',
-                    borderRadius: '6px',
-                    transition: 'width 0.4s ease',
-                  }}
+                  className={`progress-bar-fill ${item.reason === 'EXPIRATION' ? 'progress-bar-fill--danger' : 'progress-bar-fill--warning'}`}
+                  style={{ '--bar-pct': `${pct}%` } as React.CSSProperties}
                 />
               </div>
             </div>
@@ -164,14 +158,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
   const maxVal = Math.max(...data.map((d) => parseFloat(d.totalDiscardedQuantity || '0')), 1);
 
   return (
-    <Modal maxWidth="850px" width="92%">
+    <Modal size="xl">
       {/* Header Dashboard */}
-      <div className="flex-between mb-2" style={{ marginBottom: '24px' }}>
+      <div className="flex-between mb-6">
         <div>
-          <h2 className="flex-gap-xs" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+          <h2 className="flex-gap-xs fs-xl fw-bold">
             <BarChart3 className="text-primary-color" /> Dashboard de Reportes y Mermas FEFO
           </h2>
-          <p className="text-secondary-color" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+          <p className="text-secondary-color fs-sm mt-1">
             Indicadores de Desperdicio y Eficiencia en Tiempo Real
           </p>
         </div>

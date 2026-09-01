@@ -13,12 +13,12 @@ interface InsumoCatalogHeaderProps {
 
 const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange }) => (
   <>
-    <div className="flex-between flex-wrap" style={{ marginBottom: '24px', gap: '16px' }}>
+    <div className="flex-between flex-wrap mb-6 gap-4">
       <div className="flex-gap-xs">
-        <Package size={22} className="text-primary-color" style={{ flexShrink: 0 }} />
+        <Package size={22} className="text-primary-color flex-shrink-0" />
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Inventario y Catálogo de Bodega</h1>
-          <p className="text-secondary-color" style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>
+          <h1 className="m-0 fs-lg fw-bold">Inventario y Catálogo de Bodega</h1>
+          <p className="text-secondary-color mt-1 fs-sm">
             Gestiona el catálogo maestro de ingredientes y su disponibilidad en bodega principal.
           </p>
         </div>
@@ -36,8 +36,7 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder="Buscar insumo por nombre..."
-        className="input-touch input-with-icon w-full"
-        style={{ fontSize: '0.95rem' }}
+        className="input-touch input-with-icon w-full fs-md"
       />
     </div>
   </>
@@ -50,30 +49,21 @@ interface InsumoTableRowProps {
 
 const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
   <tr>
-    <td className="text-primary-color" style={{ fontFamily: 'monospace' }}>{item.id}</td>
-    <td style={{ fontWeight: 600 }}>{item.name}</td>
+    <td className="text-primary-color font-mono">{item.id}</td>
+    <td className="fw-semibold">{item.name}</td>
     <td>
-      <span
-        style={{
-          padding: '4px 8px',
-          borderRadius: '4px',
-          backgroundColor: 'var(--border-card)',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-        }}
-      >
+      <span className="insumo-unit-badge">
         {item.unitOfMeasure}
       </span>
     </td>
-    <td className="text-success-color" style={{ fontWeight: 600 }}>
+    <td className="text-success-color fw-semibold">
       {item.warehouseStock} {item.unitOfMeasure}
     </td>
-    <td style={{ textAlign: 'right' }}>
+    <td className="text-right">
       <button
         type="button"
         onClick={() => onRestock(item)}
-        className="btn-touch btn-secondary flex-center flex-gap-xs"
-        style={{ minHeight: '36px', padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex' }}
+        className="btn-touch btn-secondary flex-center flex-gap-xs btn-table-action"
       >
         <Truck size={16} />
         Reabastecer
@@ -120,9 +110,9 @@ const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, f
     {error && <ErrorBanner message={error} />}
 
     {loading ? (
-      <div className="text-secondary-color text-center" style={{ padding: '32px 0' }}>Cargando inventario de bodega...</div>
+      <div className="text-secondary-color text-center p-5">Cargando inventario de bodega...</div>
     ) : filteredInsumos.length === 0 ? (
-      <div className="card-dashboard text-center text-secondary-color" style={{ padding: '40px' }}>
+      <div className="card-dashboard text-center text-secondary-color p-6">
         No se encontraron insumos registrados en bodega.
       </div>
     ) : (
@@ -163,7 +153,7 @@ export const InsumoCatalogPanel: React.FC = () => {
   const filteredInsumos = insumos.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="insumo-catalog-panel" style={{ padding: '24px', color: 'var(--text-primary)' }}>
+    <div className="insumo-catalog-panel">
       <InsumoCatalogHeader onCreateClick={() => setIsModalOpen(true)} search={search} onSearchChange={setSearch} />
 
       <InsumoCatalogBody

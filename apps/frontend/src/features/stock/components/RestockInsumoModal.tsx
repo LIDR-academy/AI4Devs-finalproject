@@ -86,13 +86,10 @@ export const RestockInsumoModal: React.FC<RestockInsumoModalProps> = ({ isOpen, 
   if (!isOpen || !insumo) return null;
 
   return (
-    <Modal maxWidth="480px" width="100%">
+    <Modal size="md">
       <ModalHeader
         icon={<Truck style={{ color: 'var(--color-primary)' }} />}
         title="Reabastecer Insumo"
-        fontSize="1.25rem"
-        gap="8px"
-        marginBottom="16px"
         onClose={onClose}
       />
 

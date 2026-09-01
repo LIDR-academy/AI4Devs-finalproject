@@ -58,7 +58,7 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
   };
 
   return (
-    <Modal maxWidth="600px" width="90%">
+    <Modal size="lg">
       <ModalHeader
         icon={<Building2 style={{ color: 'var(--color-primary)' }} />}
         title="Configuración General del Restaurante"
@@ -164,7 +164,6 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
           submittingLabel="Guardando..."
           confirmIcon={<Save size={20} />}
           isSubmitting={isSaving}
-          marginTop="12px"
         />
       </form>
     </Modal>

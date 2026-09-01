@@ -29,6 +29,16 @@
   --font-family: var(--font-family-body);
   --text-primary: hsl(84, 12%, 96%);      /* #f5f5f0 - ~18:1 sobre --bg-root */
   --text-secondary: hsl(60, 2%, 55%);     /* #8a8a86 - 5.0-5.5:1 sobre --bg-root/--bg-card */
+
+  /* Escala de espaciado (Guard 29 extendido: fundamento de las utilidades de margen, padding y gap) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-7: 28px;
+
+  /* Escala tipográfica */
+  --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 0.9rem; --fs-base: 1rem;
+  --fs-lg: 1.25rem; --fs-xl: 1.4rem; --fs-2xl: 1.8rem; --fs-3xl: 2rem;
+
+  --fw-regular: 400; --fw-semibold: 600; --fw-bold: 700; --fw-black: 800;
 }
 
 * {
@@ -162,11 +172,19 @@ h3 {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: rgba(255, 106, 0, 0.15);
+  background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
   color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.card-badge-icon--danger {
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  color: var(--color-danger);
+}
+.card-badge-icon--warning {
+  background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  color: var(--color-warning);
 }
 
 .card-title {
@@ -201,7 +219,7 @@ h3 {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   max-height: 90vh;
   overflow-y: auto;
-  width: 100%;
+  width: 94%;
   animation: scaleUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -420,7 +438,7 @@ h3 {
 .modal-footer-actions {
   display: flex;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: var(--space-4);
 }
 
 .section-tabs-container {
@@ -453,6 +471,7 @@ h3 {
 .text-primary-color { color: var(--color-primary); }
 .text-secondary-color { color: var(--text-secondary); }
 .text-danger-color { color: var(--color-danger); }
+.text-danger-text-color { color: var(--color-danger-text); }
 .text-success-color { color: var(--color-success); }
 .text-warning-color { color: var(--color-warning); }
 
@@ -554,6 +573,372 @@ h3 {
   justify-content: center;
   margin-bottom: 16px;
 }
+
+/* ==========================================================================
+   Guard 29 extendido — utilidades de espaciado/tipografía generadas desde
+   la escala de tokens de :root. Reemplazan los style={{}} inline de spacing
+   y tipografía en toda la app.
+   ========================================================================== */
+.mb-1 { margin-bottom: var(--space-1); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-5 { margin-bottom: var(--space-5); }
+.mb-6 { margin-bottom: var(--space-6); }
+.mb-7 { margin-bottom: var(--space-7); }
+
+.mt-1 { margin-top: var(--space-1); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+.mt-5 { margin-top: var(--space-5); }
+.mt-6 { margin-top: var(--space-6); }
+.mt-7 { margin-top: var(--space-7); }
+
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-2); }
+.p-3 { padding: var(--space-3); }
+.p-4 { padding: var(--space-4); }
+.p-5 { padding: var(--space-5); }
+.p-6 { padding: var(--space-6); }
+
+.px-1 { padding-left: var(--space-1); padding-right: var(--space-1); }
+.px-2 { padding-left: var(--space-2); padding-right: var(--space-2); }
+.px-3 { padding-left: var(--space-3); padding-right: var(--space-3); }
+.px-4 { padding-left: var(--space-4); padding-right: var(--space-4); }
+
+.py-1 { padding-top: var(--space-1); padding-bottom: var(--space-1); }
+.py-2 { padding-top: var(--space-2); padding-bottom: var(--space-2); }
+.py-3 { padding-top: var(--space-3); padding-bottom: var(--space-3); }
+.py-4 { padding-top: var(--space-4); padding-bottom: var(--space-4); }
+
+.flex-gap-lg { display: flex; align-items: center; gap: var(--space-4); }
+
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+
+.justify-end { justify-content: flex-end; }
+
+.fs-xs { font-size: var(--fs-xs); }
+.fs-sm { font-size: var(--fs-sm); }
+.fs-md { font-size: var(--fs-md); }
+.fs-base { font-size: var(--fs-base); }
+.fs-lg { font-size: var(--fs-lg); }
+.fs-xl { font-size: var(--fs-xl); }
+.fs-2xl { font-size: var(--fs-2xl); }
+.fs-3xl { font-size: var(--fs-3xl); }
+
+.fw-regular { font-weight: var(--fw-regular); }
+.fw-semibold { font-weight: var(--fw-semibold); }
+.fw-bold { font-weight: var(--fw-bold); }
+.fw-black { font-weight: var(--fw-black); }
+
+.icon-badge-sm { width: 48px; height: 48px; }
+.icon-badge-md { width: 56px; height: 56px; }
+.icon-badge-lg { width: 64px; height: 64px; }
+
+/* ==========================================================================
+   Guard 29 extendido — tamaños fijos para los 4 componentes compartidos
+   parametrizados (Modal, ModalHeader, ErrorBanner, ModalFooterActions),
+   reemplazando sus props de string/px libres por un enum de clases.
+   ========================================================================== */
+.modal-sm { max-width: 420px; }
+.modal-md { max-width: 500px; }
+.modal-lg { max-width: 640px; }
+.modal-xl { max-width: 760px; }
+.modal-centered { text-align: center; }
+
+.modal-header-lg { margin-bottom: var(--space-5); }
+.modal-header-md { margin-bottom: var(--space-4); }
+.modal-header-title { display: flex; align-items: center; font-weight: 700; }
+.modal-header-title-lg { font-size: var(--fs-xl); gap: var(--space-3); }
+.modal-header-title-md { font-size: var(--fs-lg); gap: var(--space-2); }
+
+.error-banner-compact { padding: 10px 14px; font-size: 0.88rem; }
+
+.no-margin-top { margin-top: 0; }
+
+/* ==========================================================================
+   Guard 29 extendido — modificadores de estado (2-3 estados discretos),
+   reemplazan ternarios inline por toggle de className.
+   ========================================================================== */
+.severity-critical { --severity-color: var(--color-danger); --severity-text: var(--color-danger-text); --severity-bg: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+.severity-warning { --severity-color: var(--color-warning); --severity-text: var(--color-warning); --severity-bg: color-mix(in srgb, var(--color-warning) 12%, transparent); }
+.severity-safe { --severity-color: var(--color-success); --severity-text: var(--color-success); --severity-bg: color-mix(in srgb, var(--color-success) 12%, transparent); }
+
+.location-badge {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.location-badge--warehouse {
+  background-color: color-mix(in srgb, var(--color-info) 15%, transparent);
+  color: var(--color-info);
+  border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
+}
+.location-badge--kitchen {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+}
+
+.permission-chip {
+  padding: 12px;
+  border-radius: 4px;
+  text-align: left;
+}
+.permission-chip--active {
+  border: 1px solid var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
+}
+.permission-chip--inactive {
+  border: 1px solid var(--border-card);
+  background-color: var(--bg-root);
+}
+
+.remanente-card {
+  border-left: 6px solid var(--color-primary);
+}
+.remanente-card--critical {
+  border-left: 6px solid var(--color-danger);
+}
+
+.fefo-alert-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  color: var(--color-danger-text);
+}
+
+.reconciliation-row {
+  border: 1px solid var(--border-card);
+  background-color: var(--bg-card);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 4px;
+}
+.reconciliation-row--critical {
+  border: 1px solid var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 4px;
+}
+
+.qty-stepper-btn { min-width: 40px; min-height: 40px; padding: 0; }
+.qty-stepper-input {
+  width: 90px;
+  text-align: center;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  padding: var(--space-2);
+  border-radius: 6px;
+  border: 1px solid var(--border-card);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.critical-variance-banner {
+  background-color: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  border: 1px solid var(--color-danger);
+  padding: 14px;
+  border-radius: 4px;
+}
+.critical-variance-alert-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-danger-text);
+}
+.cursor-pointer { cursor: pointer; }
+.d-flex { display: flex; }
+.d-block { display: block; }
+.reconciliation-list-scroll { max-height: 340px; overflow-y: auto; }
+
+.m-0 { margin: 0; }
+.btn-compact-icon-sm { padding: 6px 8px; }
+.location-form-grid { grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.locations-list-scroll { max-height: 240px; overflow-y: auto; padding-right: var(--space-1); }
+.location-row {
+  padding: var(--space-3);
+  background-color: var(--bg-root);
+  border: 1px solid var(--border-card);
+  border-radius: 4px;
+  opacity: 1;
+}
+.location-row--inactive {
+  padding: var(--space-3);
+  background-color: var(--bg-root);
+  border: 1px solid var(--color-danger);
+  border-radius: 4px;
+  opacity: 0.65;
+}
+
+.recipe-card {
+  padding: var(--space-4);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border-card);
+  background-color: var(--overlay-white-faint);
+}
+.recipe-card--selected {
+  padding: var(--space-4);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 2px solid var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-warning) 8%, transparent);
+}
+.recipe-category-badge {
+  font-size: var(--fs-xs);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  background-color: var(--bg-primary);
+  color: var(--color-primary);
+}
+.portion-display {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-black);
+  color: var(--color-primary);
+  background-color: var(--bg-primary);
+  padding: var(--space-3);
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+}
+.recipe-body-message { color: var(--text-secondary); padding: 24px 0; text-align: center; }
+
+.dashboard-header { margin-bottom: var(--space-6); gap: var(--space-4); align-items: flex-start; }
+.action-card--primary { background-color: color-mix(in srgb, var(--color-warning) 5%, transparent); border: 1px dashed var(--color-primary); }
+.action-card--warning { background-color: color-mix(in srgb, var(--color-warning) 5%, transparent); border: 1px dashed var(--color-warning); }
+.action-card-btn { height: 56px; font-size: var(--fs-base); font-weight: var(--fw-bold); gap: 10px; }
+
+.insumo-catalog-panel { padding: var(--space-6); color: var(--text-primary); }
+.insumo-unit-badge { padding: var(--space-1) var(--space-2); border-radius: 4px; background-color: var(--border-card); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.movement-filters-bar { margin-bottom: var(--space-4); }
+.movement-filter-input { min-width: 180px; }
+.movement-filter-date { min-width: 140px; }
+.text-right { text-align: right; }
+.flex-shrink-0 { flex-shrink: 0; }
+.btn-table-action { min-height: 36px; padding: 6px var(--space-3); font-size: 0.8rem; display: inline-flex; }
+
+.variance-positive { color: var(--color-primary); }
+.variance-negative { color: var(--color-danger-text); }
+
+/* ==========================================================================
+   Guard 29 extendido — única excepción a "sin style inline": barras de
+   progreso continuas via custom property escrita desde style={{'--bar-pct'}}.
+   ========================================================================== */
+.progress-bar-track {
+  background-color: var(--overlay-white-subtle);
+  border-radius: 6px;
+  height: 12px;
+  width: 100%;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  width: var(--bar-pct, 0%);
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+.progress-bar-fill--danger { background-color: var(--color-danger); }
+.progress-bar-fill--warning { background-color: var(--color-warning); }
+
+.health-bar-segment {
+  width: var(--bar-pct, 0%);
+  transition: width 0.3s;
+}
+.health-bar-segment--safe { background-color: var(--color-success); }
+.health-bar-segment--warning { background-color: var(--color-warning); }
+.health-bar-segment--critical { background-color: var(--color-danger); }
+
+.filter-toggle-group {
+  background-color: var(--bg-card);
+  padding: var(--space-1);
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+}
+.filter-toggle-btn {
+  padding: 6px var(--space-3);
+  font-size: 0.8rem;
+  min-height: 36px;
+}
+
+.remanentes-empty-state { text-align: center; padding: 48px var(--space-6); color: var(--text-secondary); }
+.empty-state-icon { color: var(--color-primary); margin: 0 auto var(--space-3); }
+
+.fefo-index-badge {
+  background-color: var(--bg-main);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  color: var(--color-primary);
+}
+
+.remanente-qty-display { text-align: right; min-width: 140px; }
+.remanente-info-block { flex: 1; min-width: 220px; }
+
+.edit-user-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.input-touch-compact { height: 38px; font-size: var(--fs-sm); }
+.edit-user-action-btn { padding: 6px var(--space-3); }
+.user-row {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-card);
+  background-color: var(--bg-root);
+  border-radius: 6px;
+  margin-bottom: var(--space-2);
+}
+.user-row-icon-btn { padding: 6px 10px; }
+.user-row-toggle-btn { min-width: 100px; }
+.user-list-scroll { max-height: 300px; overflow-y: auto; }
+
+.min-w-100 { min-width: 100px; }
+.w-120 { width: 120px; }
+.btn-compact-icon { padding: 6px 10px; }
+.text-truncate { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.section-label { text-transform: uppercase; letter-spacing: 0.05em; }
+.font-mono { font-family: monospace; }
+
+.new-role-form { padding: var(--space-3); grid-template-columns: 1fr 1fr auto; align-items: end; }
+.permissions-list-scroll { max-height: 260px; overflow-y: auto; padding-right: var(--space-1); }
+.permission-code { display: block; }
+.permission-check-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--color-primary-on);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.permission-check-indicator--active { background-color: var(--color-primary); border: 1px solid var(--color-primary); }
+.permission-check-indicator--inactive { background-color: transparent; border: 1px solid var(--border-card); }
+.roles-permissions-grid { grid-template-columns: 1fr 2fr; gap: var(--space-4); }
+.roles-list-column { border-right: 1px solid var(--border-card); padding-right: var(--space-3); }
+.role-select-btn { justify-content: flex-start; text-align: left; overflow: hidden; }
+
+.remanente-qty-btn {
+  min-width: 70px;
+  height: 48px;
+  padding: 0 var(--space-3);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+}
+.remanente-qty-btn--wide { min-width: 75px; }
 
 
 

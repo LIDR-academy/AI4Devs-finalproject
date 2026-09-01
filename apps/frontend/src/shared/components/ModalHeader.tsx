@@ -4,10 +4,8 @@ import { X } from 'lucide-react';
 interface ModalHeaderProps {
   icon: React.ReactNode;
   title: string;
-  titleColor?: string;
-  fontSize?: string;
-  gap?: string;
-  marginBottom?: string;
+  danger?: boolean;
+  size?: 'md' | 'lg';
   onClose?: () => void;
 }
 
@@ -15,19 +13,15 @@ interface ModalHeaderProps {
  * Header compartido de icono + titulo + boton de cerrar opcional.
  * Usado por DiscardModal/RecipeSelectorModal/WarehouseExtractionModal.
  * PinLoginModal no lo usa: es la pantalla de login obligatoria, sin boton de cerrar.
+ *
+ * `size`/`danger` reemplazan los antiguos props de string libre (fontSize/gap/
+ * marginBottom/titleColor): los 2 combos reales que existian en la app quedan
+ * fijos en `.modal-header-md`/`.modal-header-lg` (Guard 29 extendido).
  */
-export const ModalHeader: React.FC<ModalHeaderProps> = ({
-  icon,
-  title,
-  titleColor = 'var(--text-primary)',
-  fontSize = '1.3rem',
-  gap = '8px',
-  marginBottom = '16px',
-  onClose,
-}) => {
+export const ModalHeader: React.FC<ModalHeaderProps> = ({ icon, title, danger = false, size = 'md', onClose }) => {
   return (
-    <div className="flex-between" style={{ marginBottom }}>
-      <h2 className="flex-gap-xs" style={{ fontSize, fontWeight: 700, color: titleColor, gap }}>
+    <div className={`flex-between modal-header-${size}`}>
+      <h2 className={`modal-header-title modal-header-title-${size}${danger ? ' text-danger-color' : ''}`}>
         {icon} {title}
       </h2>
       {onClose && (
