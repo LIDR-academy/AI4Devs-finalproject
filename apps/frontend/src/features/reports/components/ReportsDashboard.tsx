@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, X } from 'lucide-react';
 import { ReportsService, WasteSummaryItem } from '../services/reports.service.js';
+import { SettingsService } from '../../settings/services/settings.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
 import styles from './ReportsDashboard.module.css';
@@ -84,9 +85,10 @@ interface WasteBarChartProps {
   isLoading: boolean;
   data: WasteSummaryItem[];
   maxVal: number;
+  currencySymbol: string;
 }
 
-const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal }) => (
+const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal, currencySymbol }) => (
   <div className="card-dashboard mb-5">
     <h3 className="flex-gap-xs mb-2 fs-lg fw-bold">
       <Calendar size={18} className="text-primary-color" /> Desglose de Descartes por Insumo
@@ -113,6 +115,15 @@ const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal }
                 </span>
               </div>
 
+              <div className="flex-between mb-1 fs-xs text-secondary-color">
+                <span />
+                {item.totalDiscardedCost !== null ? (
+                  <span>{currencySymbol}{item.totalDiscardedCost}</span>
+                ) : (
+                  <span>Sin costo registrado</span>
+                )}
+              </div>
+
               <div className={styles['progress-bar-track']}>
                 <div
                   className={`${styles['progress-bar-fill']} ${item.reason === 'EXPIRATION' ? styles['progress-bar-fill--danger'] : styles['progress-bar-fill--warning']}`}
@@ -131,6 +142,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
   const [data, setData] = useState<WasteSummaryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filterRange, setFilterRange] = useState<FilterRange>('week');
+  const [currencySymbol, setCurrencySymbol] = useState('$');
 
   useEffect(() => {
     if (isOpen && userRole === 'ADMIN') {
@@ -142,6 +154,10 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
       ReportsService.fetchWasteReport(startDate, endDate)
         .then(setData)
         .finally(() => setIsLoading(false));
+
+      SettingsService.fetchSettings()
+        .then((settings) => setCurrencySymbol(settings.currencySymbol))
+        .catch(() => {});
     }
   }, [isOpen, userRole, filterRange]);
 
@@ -175,7 +191,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
       </div>
 
       <KpiCards totalQuantity={totalQuantity} expirationWaste={expirationWaste} />
-      <WasteBarChart isLoading={isLoading} data={data} maxVal={maxVal} />
+      <WasteBarChart isLoading={isLoading} data={data} maxVal={maxVal} currencySymbol={currencySymbol} />
     </Modal>
   );
 };

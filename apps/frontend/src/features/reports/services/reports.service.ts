@@ -6,6 +6,7 @@ export interface WasteSummaryItem {
   unitOfMeasure: string;
   totalDiscardedQuantity: string;
   reason: string;
+  totalDiscardedCost: string | null;
 }
 
 export class ReportsService {
@@ -23,6 +24,7 @@ export class ReportsService {
           unitOfMeasure: 'KG',
           totalDiscardedQuantity: '3.5000',
           reason: 'EXPIRATION',
+          totalDiscardedCost: '6300.00',
         },
         {
           insumoId: 'ins-tomate-1',
@@ -30,6 +32,7 @@ export class ReportsService {
           unitOfMeasure: 'KG',
           totalDiscardedQuantity: '1.2000',
           reason: 'PHYSICAL_DAMAGE',
+          totalDiscardedCost: null,
         },
         {
           insumoId: 'ins-masa-1',
@@ -37,6 +40,7 @@ export class ReportsService {
           unitOfMeasure: 'UNITS',
           totalDiscardedQuantity: '5.0000',
           reason: 'EXPIRATION',
+          totalDiscardedCost: '1250.00',
         },
       ];
     }

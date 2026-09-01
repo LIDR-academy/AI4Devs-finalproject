@@ -43,12 +43,14 @@ export interface InsumoItem {
   name: string;
   unitOfMeasure: string;
   warehouseStock: string;
+  unitCost?: string | null;
 }
 
 export interface CreateInsumoDTO {
   name: string;
   unitOfMeasure: string;
   initialWarehouseStock?: string;
+  unitCost?: string;
 }
 
 export interface RestockInsumoDTO {

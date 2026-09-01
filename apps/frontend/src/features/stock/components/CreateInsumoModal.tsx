@@ -18,6 +18,8 @@ interface InsumoModalFormProps {
   setUnitOfMeasure: (v: 'KG' | 'L' | 'UNITS') => void;
   initialWarehouseStock: string;
   setInitialWarehouseStock: (v: string) => void;
+  unitCost: string;
+  setUnitCost: (v: string) => void;
   loading: boolean;
   onClose: () => void;
   handleSubmit: (e: React.FormEvent) => void;
@@ -30,6 +32,8 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
   setUnitOfMeasure,
   initialWarehouseStock,
   setInitialWarehouseStock,
+  unitCost,
+  setUnitCost,
   loading,
   onClose,
   handleSubmit,
@@ -84,6 +88,22 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
         />
       </div>
 
+      <div className="mb-6">
+        <label htmlFor="unit-cost-input" className="form-label">
+          Costo por {unitOfMeasure} (Opcional)
+        </label>
+        <input
+          id="unit-cost-input"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="Ej. 1800.00"
+          className="input-touch w-full"
+          value={unitCost}
+          onChange={(e) => setUnitCost(e.target.value)}
+        />
+      </div>
+
       <div className="modal-footer-actions justify-end no-margin-top">
         <button type="button" onClick={onClose} disabled={loading} className="btn-touch btn-secondary">
           Cancelar
@@ -100,6 +120,7 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
   const [name, setName] = useState('');
   const [unitOfMeasure, setUnitOfMeasure] = useState<'KG' | 'L' | 'UNITS'>('KG');
   const [initialWarehouseStock, setInitialWarehouseStock] = useState('0');
+  const [unitCost, setUnitCost] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,6 +141,7 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
         name: name.trim(),
         unitOfMeasure,
         initialWarehouseStock: initialWarehouseStock || '0',
+        unitCost: unitCost.trim() ? unitCost.trim() : undefined,
       };
       await StockService.createInsumo(payload);
       onSuccess();
@@ -151,6 +173,8 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
         setUnitOfMeasure={setUnitOfMeasure}
         initialWarehouseStock={initialWarehouseStock}
         setInitialWarehouseStock={setInitialWarehouseStock}
+        unitCost={unitCost}
+        setUnitCost={setUnitCost}
         loading={loading}
         onClose={onClose}
         handleSubmit={handleSubmit}
