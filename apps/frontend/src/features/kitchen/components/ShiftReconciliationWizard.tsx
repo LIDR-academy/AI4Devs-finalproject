@@ -167,7 +167,7 @@ const ReconciliationItemRow: React.FC<ReconciliationItemRowProps> = ({ item, phy
   return (
     <div
       style={{
-        backgroundColor: isCritical ? 'rgba(225, 6, 0, 0.08)' : 'var(--bg-card)',
+        backgroundColor: isCritical ? 'color-mix(in srgb, var(--color-danger) 8%, transparent)' : 'var(--bg-card)',
         border: `1px solid ${isCritical ? 'var(--color-danger)' : 'var(--border-card)'}`,
         padding: '12px 16px',
         borderRadius: '4px',
@@ -191,7 +191,7 @@ interface CriticalVarianceBannerProps {
 const CriticalVarianceBanner: React.FC<CriticalVarianceBannerProps> = ({ isAuthorized, onAuthorize }) => (
   <div
     style={{
-      backgroundColor: 'rgba(225, 6, 0, 0.12)',
+      backgroundColor: 'color-mix(in srgb, var(--color-danger) 12%, transparent)',
       border: '1px solid var(--color-danger)',
       padding: '14px',
       borderRadius: '4px',

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
+import { ConfirmModal } from '../../../shared/components/ConfirmModal.js';
 import { LocationsService, StorageLocationDto } from '../services/locations.service.js';
 import { MapPin, Plus, Trash2, Power } from 'lucide-react';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
@@ -154,9 +155,16 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
                   padding: '4px 8px',
                   borderRadius: '4px',
                   fontWeight: 700,
-                  backgroundColor: loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.15)' : 'rgba(47, 191, 110, 0.15)',
-                  color: loc.type === 'WAREHOUSE' ? '#4da6ff' : 'var(--color-success)',
-                  border: `1px solid ${loc.type === 'WAREHOUSE' ? 'rgba(0, 102, 255, 0.3)' : 'rgba(47, 191, 110, 0.3)'}`,
+                  backgroundColor:
+                    loc.type === 'WAREHOUSE'
+                      ? 'color-mix(in srgb, var(--color-info) 15%, transparent)'
+                      : 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+                  color: loc.type === 'WAREHOUSE' ? 'var(--color-info)' : 'var(--color-success)',
+                  border: `1px solid ${
+                    loc.type === 'WAREHOUSE'
+                      ? 'color-mix(in srgb, var(--color-info) 30%, transparent)'
+                      : 'color-mix(in srgb, var(--color-success) 30%, transparent)'
+                  }`,
                 }}
               >
                 {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
@@ -192,6 +200,7 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
 export const LocationsManagementModal: React.FC<LocationsManagementModalProps> = ({ isOpen, onClose }) => {
   const [locations, setLocations] = useState<StorageLocationDto[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [locationToDelete, setLocationToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const loadLocations = useCallback(async () => {
     try {
@@ -223,15 +232,17 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
     }
   };
 
-  const handleDeleteLocation = async (id: string, name: string) => {
-    if (!window.confirm(`¿Confirmas eliminar el sector "${name}"?`)) return;
+  const handleConfirmDeleteLocation = async () => {
+    if (!locationToDelete) return;
     setError(null);
     try {
-      await LocationsService.deleteLocation(id);
+      await LocationsService.deleteLocation(locationToDelete.id);
       loadLocations();
     } catch (err) {
       const friendly = mapToUserFriendlyError(err);
       setError(friendly.message);
+    } finally {
+      setLocationToDelete(null);
     }
   };
 
@@ -246,7 +257,11 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
         {error && <ErrorBanner message={error} />}
         <NewLocationForm onCreated={loadLocations} setError={setError} />
 
-        <LocationsList locations={locations} onToggleActive={handleToggleActive} onDeleteLocation={handleDeleteLocation} />
+        <LocationsList
+          locations={locations}
+          onToggleActive={handleToggleActive}
+          onDeleteLocation={(id, name) => setLocationToDelete({ id, name })}
+        />
 
         <div className="modal-footer-actions" style={{ justifyContent: 'flex-end', marginTop: 0 }}>
           <button type="button" onClick={onClose} className="btn-touch btn-secondary" style={{ width: '120px' }}>
@@ -254,6 +269,14 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={locationToDelete !== null}
+        title="Eliminar Sector"
+        message={`¿Confirmas eliminar el sector "${locationToDelete?.name}"? Esta acción no se puede deshacer.`}
+        onConfirm={handleConfirmDeleteLocation}
+        onCancel={() => setLocationToDelete(null)}
+      />
     </Modal>
   );
 };

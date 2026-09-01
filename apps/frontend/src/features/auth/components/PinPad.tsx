@@ -62,7 +62,7 @@ export const PinPad: React.FC<PinPadProps> = ({ onDigitPress, onDeletePress, dis
           width: '64px',
           height: '64px',
           borderRadius: '4px',
-          backgroundColor: 'rgba(225, 6, 0, 0.15)',
+          backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)',
           border: '1px solid var(--color-danger)',
           color: 'var(--color-danger-text)',
         }}

@@ -55,7 +55,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({ totalQuantity, expirationWaste }) =
   <div className="metrics-grid mb-2" style={{ marginBottom: '28px' }}>
     <div className="card-dashboard">
       <div className="card-header">
-        <div className="card-badge-icon" style={{ backgroundColor: 'rgba(225, 6, 0, 0.15)', color: 'var(--color-danger)' }}>
+        <div className="card-badge-icon" style={{ backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)', color: 'var(--color-danger)' }}>
           <Trash2 size={20} />
         </div>
         <h3 className="card-title">Total Insumos Descartados</h3>
@@ -68,7 +68,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({ totalQuantity, expirationWaste }) =
 
     <div className="card-dashboard">
       <div className="card-header">
-        <div className="card-badge-icon" style={{ backgroundColor: 'rgba(255, 106, 0, 0.15)', color: 'var(--color-warning)' }}>
+        <div className="card-badge-icon" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' }}>
           <PieChart size={20} />
         </div>
         <h3 className="card-title">Mermas por Expiración</h3>
@@ -113,7 +113,7 @@ const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal }
                 </span>
               </div>
 
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderRadius: '6px', height: '12px', width: '100%', overflow: 'hidden' }}>
+              <div style={{ backgroundColor: 'var(--overlay-white-subtle)', borderRadius: '6px', height: '12px', width: '100%', overflow: 'hidden' }}>
                 <div
                   style={{
                     width: `${Math.min(100, Math.max(5, pct))}%`,

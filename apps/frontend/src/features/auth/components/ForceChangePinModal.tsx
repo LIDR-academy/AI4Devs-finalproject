@@ -53,7 +53,7 @@ export const ForceChangePinModal: React.FC<ForceChangePinModalProps> = ({ userId
   return (
     <Modal maxWidth="440px" width="100%" textAlign="center">
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <div className="card-badge-icon" style={{ width: '56px', height: '56px', backgroundColor: 'rgba(225, 6, 0, 0.15)', color: 'var(--color-danger)' }}>
+        <div className="card-badge-icon" style={{ width: '56px', height: '56px', backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)', color: 'var(--color-danger)' }}>
           <ShieldAlert size={32} />
         </div>
       </div>

@@ -24,7 +24,7 @@ export const OfflineBanner: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '0.5rem',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        boxShadow: 'var(--shadow-elevation-2)',
         position: 'sticky',
         top: 0,
         zIndex: 1000,

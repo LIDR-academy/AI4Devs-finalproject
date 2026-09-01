@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
+import { ConfirmModal } from '../../../shared/components/ConfirmModal.js';
 import { RolesService, RoleDto, PermissionDto } from '../services/roles.service.js';
 import { ShieldCheck, Plus, Check, Trash2 } from 'lucide-react';
 
@@ -109,7 +110,7 @@ const PermissionsList: React.FC<PermissionsListProps> = ({ permissions, selected
               padding: '12px',
               borderRadius: '4px',
               border: `1px solid ${hasIt ? 'var(--color-primary)' : 'var(--border-card)'}`,
-              backgroundColor: hasIt ? 'rgba(255, 106, 0, 0.1)' : 'var(--bg-root)',
+              backgroundColor: hasIt ? 'color-mix(in srgb, var(--color-warning) 10%, transparent)' : 'var(--bg-root)',
               textAlign: 'left',
             }}
           >
@@ -144,6 +145,7 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
   const [permissions, setPermissions] = useState<PermissionDto[]>([]);
   const [selectedRole, setSelectedRole] = useState<RoleDto | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<{ id: string; name: string } | null>(null);
 
 
   const loadData = React.useCallback(async () => {
@@ -185,15 +187,17 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
     }
   };
 
-  const handleDeleteRole = async (roleId: string, roleName: string) => {
-    if (!window.confirm(`¿Confirmas eliminar el rol "${roleName}"?`)) return;
+  const handleConfirmDeleteRole = async () => {
+    if (!roleToDelete) return;
     setError(null);
     try {
-      await RolesService.deleteRole(roleId);
+      await RolesService.deleteRole(roleToDelete.id);
       await loadData();
     } catch (err) {
       const friendly = mapToUserFriendlyError(err);
       setError(friendly.message);
+    } finally {
+      setRoleToDelete(null);
     }
   };
 
@@ -231,7 +235,7 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
                     <button
                       type="button"
                       className="btn-touch btn-danger"
-                      onClick={() => handleDeleteRole(r.id, r.name)}
+                      onClick={() => setRoleToDelete({ id: r.id, name: r.name })}
                       style={{ padding: '6px 10px' }}
                       title="Eliminar Rol"
                     >
@@ -260,6 +264,14 @@ export const RolesManagementModal: React.FC<RolesManagementModalProps> = ({ isOp
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={roleToDelete !== null}
+        title="Eliminar Rol"
+        message={`¿Confirmas eliminar el rol "${roleToDelete?.name}"? Esta acción no se puede deshacer.`}
+        onConfirm={handleConfirmDeleteRole}
+        onCancel={() => setRoleToDelete(null)}
+      />
     </Modal>
   );
 };

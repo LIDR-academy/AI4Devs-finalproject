@@ -15,6 +15,13 @@
   --color-danger-text: hsl(4, 100%, 71%);   /* #ff6b5e - variante clara para texto/labels de alerta (6.2-6.8:1) */
   --color-warning: hsl(24, 100%, 50%);      /* #ff6a00 - mismo tono que --color-primary por diseño (< 24h FEFO) */
   --color-success: hsl(148, 61%, 47%);      /* #2fbf6e - Verde de Confirmación (Fresco / OK) */
+  --color-info: hsl(211, 100%, 65%);        /* #4da6ff - Azul informativo (badge Bodega/Warehouse) */
+
+  /* Overlays neutros y sombras de elevación (Guard 29) */
+  --overlay-white-subtle: rgba(255, 255, 255, 0.08);
+  --overlay-white-faint: rgba(255, 255, 255, 0.02);
+  --shadow-elevation-1: 0 2px 6px rgba(0, 0, 0, 0.2);
+  --shadow-elevation-2: 0 2px 8px rgba(0, 0, 0, 0.3);
 
   /* Tipografía y Textos */
   --font-family-display: 'Oswald', system-ui, sans-serif; /* Titulares, labels, cifras destacadas */
@@ -89,6 +96,17 @@ h3 {
 }
 
 .btn-warning:hover {
+  filter: brightness(1.1);
+}
+
+/* .btn-danger: usado por acciones destructivas (RolesManagementModal, LocationsManagementModal,
+   ConfirmModal) pero nunca se definio en CSS - los botones renderizaban sin estilo. */
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--text-primary);
+}
+
+.btn-danger:hover {
   filter: brightness(1.1);
 }
 

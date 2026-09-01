@@ -216,7 +216,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
     <MetricCard icon={<Clock size={20} />} title="Remanentes Abiertos" value={remanentesCount} unitLabel="lotes FEFO" valueColor="var(--color-primary)" />
     <MetricCard
       icon={<AlertTriangle size={20} />}
-      iconBg="rgba(225, 6, 0, 0.15)"
+      iconBg="color-mix(in srgb, var(--color-danger) 15%, transparent)"
       title="Vencimiento Próximo (<24h)"
       value={criticalCount}
       unitLabel="lotes críticos"
@@ -228,7 +228,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
       onClick={onExtract}
       id="btn-open-extraction"
       accentColor="var(--color-primary)"
-      tint="rgba(255, 106, 0, 0.05)"
+      tint="color-mix(in srgb, var(--color-warning) 5%, transparent)"
       className="btn-primary"
     />
     <ActionCard
@@ -237,7 +237,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
       onClick={onPrepareRecipe}
       id="btn-open-recipe"
       accentColor="var(--color-warning)"
-      tint="rgba(255, 106, 0, 0.05)"
+      tint="color-mix(in srgb, var(--color-warning) 5%, transparent)"
       className="btn-warning"
     />
   </section>

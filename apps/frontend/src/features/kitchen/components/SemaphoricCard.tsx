@@ -28,7 +28,7 @@ function getSeverity(hours: number): Severity {
     return {
       accentColor: 'var(--color-danger, #e10600)',
       textColor: 'var(--color-danger-text, #ff6b5e)',
-      bg: 'rgba(225, 6, 0, 0.12)',
+      bg: 'color-mix(in srgb, var(--color-danger, #e10600) 12%, transparent)',
       label: 'CRÍTICO (< 6h)',
     };
   }
@@ -36,14 +36,14 @@ function getSeverity(hours: number): Severity {
     return {
       accentColor: 'var(--color-warning, #ff6a00)',
       textColor: 'var(--color-warning, #ff6a00)',
-      bg: 'rgba(255, 106, 0, 0.12)',
+      bg: 'color-mix(in srgb, var(--color-warning, #ff6a00) 12%, transparent)',
       label: 'ADVERTENCIA (< 24h)',
     };
   }
   return {
     accentColor: 'var(--color-success, #2fbf6e)',
     textColor: 'var(--color-success, #2fbf6e)',
-    bg: 'rgba(47, 191, 110, 0.12)',
+    bg: 'color-mix(in srgb, var(--color-success, #2fbf6e) 12%, transparent)',
     label: 'ÓPTIMO',
   };
 }
@@ -105,7 +105,7 @@ export const SemaphoricCard: React.FC<SemaphoricCardProps> = ({ alert, onAction 
         display: 'flex',
         flexDirection: 'column',
         gap: '0.75rem',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+        boxShadow: 'var(--shadow-elevation-1)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

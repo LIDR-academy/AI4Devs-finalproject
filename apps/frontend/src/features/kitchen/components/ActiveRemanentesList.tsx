@@ -40,7 +40,7 @@ const RemanenteInfoBlock: React.FC<RemanenteInfoBlockProps> = ({ item, index, is
       {isCritical && (
         <span
           style={{
-            backgroundColor: 'rgba(225, 6, 0, 0.15)',
+            backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)',
             color: 'var(--color-danger-text)',
             fontSize: '0.75rem',
             fontWeight: 700,
