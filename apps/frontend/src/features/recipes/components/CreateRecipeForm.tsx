@@ -88,7 +88,7 @@ const IngredientRowFields: React.FC<{
   onChange: (field: 'insumoId' | 'quantity', value: string) => void;
   onRemove: () => void;
 }> = ({ row, insumos, canRemove, onChange, onRemove }) => (
-  <div className="flex-gap-xs" style={{ alignItems: 'center' }}>
+  <div className="flex-gap-xs">
     <select
       className="input-touch flex-2"
       value={row.insumoId}
@@ -113,11 +113,10 @@ const IngredientRowFields: React.FC<{
     />
     <button
       type="button"
-      className="btn-touch btn-secondary"
+      className="btn-touch btn-secondary ingredient-row-remove-btn"
       onClick={onRemove}
       disabled={!canRemove}
       aria-label="Quitar ingrediente"
-      style={{ padding: '10px' }}
     >
       <Trash2 size={16} />
     </button>
@@ -171,8 +170,8 @@ const IngredientsFieldset: React.FC<{
   onRemoveRow: (key: number) => void;
   onAddRow: () => void;
 }> = ({ rows, insumos, onChangeRow, onRemoveRow, onAddRow }) => (
-  <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-    <legend className="form-label" style={{ padding: 0 }}>
+  <fieldset className="fieldset-reset">
+    <legend className="form-label p-0">
       Ingredientes:
     </legend>
     <div className="flex-column flex-gap-xs">
@@ -189,9 +188,8 @@ const IngredientsFieldset: React.FC<{
     </div>
     <button
       type="button"
-      className="btn-touch btn-secondary flex-center flex-gap-xs"
+      className="btn-touch btn-secondary flex-center flex-gap-xs add-ingredient-btn"
       onClick={onAddRow}
-      style={{ marginTop: '8px', display: 'inline-flex' }}
     >
       <Plus size={16} />
       Agregar Ingrediente
@@ -227,9 +225,8 @@ export const CreateRecipeForm: React.FC<CreateRecipeFormProps> = ({ onCreated })
 
       <button
         type="submit"
-        className="btn-touch btn-primary flex-center flex-gap-xs"
+        className="btn-touch btn-primary flex-center flex-gap-xs mt-1"
         disabled={form.isSubmitting}
-        style={{ marginTop: '4px' }}
       >
         <Utensils size={18} />
         {form.isSubmitting ? 'Creando...' : 'Crear Receta'}

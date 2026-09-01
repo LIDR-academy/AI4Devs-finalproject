@@ -60,11 +60,11 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
   return (
     <Modal size="lg">
       <ModalHeader
-        icon={<Building2 style={{ color: 'var(--color-primary)' }} />}
+        icon={<Building2 className="text-primary-color" />}
         title="Configuración General del Restaurante"
         onClose={onClose}
       />
-      <form onSubmit={handleSubmit} className="flex-column flex-gap-md" style={{ marginTop: '16px' }}>
+      <form onSubmit={handleSubmit} className="flex-column flex-gap-md mt-4">
         <div>
           <label htmlFor="setting-restaurant-name" className="form-label">
             Nombre del Restaurante
@@ -79,7 +79,7 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
           />
         </div>
 
-        <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="metrics-grid two-col-grid">
           <div>
             <label htmlFor="setting-tax-id" className="form-label">
               Identificación Fiscal (RUT/NIF)
@@ -107,7 +107,7 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
           </div>
         </div>
 
-        <div className="metrics-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="metrics-grid two-col-grid">
           <div>
             <label htmlFor="setting-critical-hours" className="form-label">
               Alerta Crítica FEFO (Horas)

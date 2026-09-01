@@ -37,7 +37,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen
   return (
     <Modal size="md">
       <ModalHeader
-        icon={<Users style={{ color: 'var(--color-primary)' }} />}
+        icon={<Users className="text-primary-color" />}
         title="Gestión de Personal"
         size="lg"
         onClose={onClose}

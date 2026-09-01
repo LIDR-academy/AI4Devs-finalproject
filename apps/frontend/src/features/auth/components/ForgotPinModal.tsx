@@ -38,15 +38,15 @@ function useForgotPinForm() {
 
 const ForgotPinSuccessView: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => (
   <div className="banner-success">
-    <div className="flex-gap-sm" style={{ fontWeight: 600, marginBottom: '6px' }}>
+    <div className="flex-gap-sm fw-semibold mb-2">
       <CheckCircle2 size={20} />
       <span>Solicitud Procesada</span>
     </div>
-    <p style={{ fontSize: '0.86rem', margin: 0, color: 'var(--text-primary)' }}>{message}</p>
-    <p style={{ fontSize: '0.80rem', margin: '8px 0 0 0', color: 'var(--text-secondary)' }}>
+    <p className="fs-sm m-0">{message}</p>
+    <p className="fs-xs mt-2 text-secondary-color">
       (Revisa la consola del servidor o tu bandeja de entrada para obtener el enlace de 15 minutos).
     </p>
-    <button type="button" className="btn-touch btn-secondary" onClick={onClose} style={{ width: '100%', marginTop: '16px' }}>
+    <button type="button" className="btn-touch btn-secondary w-full mt-4" onClick={onClose}>
       <ArrowLeft size={18} /> Volver al Inicio de Sesión
     </button>
   </div>
@@ -60,7 +60,7 @@ const ForgotPinFormView: React.FC<{
   onClose: () => void;
 }> = ({ email, isLoading, onChange, onSubmit, onClose }) => (
   <form onSubmit={onSubmit} className="form-group-touch">
-    <div style={{ marginBottom: '20px' }}>
+    <div className="mb-5">
       <label htmlFor="input-forgot-pin-email" className="form-label">
         Correo del Administrador:
       </label>
@@ -76,11 +76,11 @@ const ForgotPinFormView: React.FC<{
         required
       />
     </div>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <button type="submit" disabled={isLoading || !email.trim()} className="btn-touch btn-primary" style={{ width: '100%' }}>
+    <div className="flex-column gap-3">
+      <button type="submit" disabled={isLoading || !email.trim()} className="btn-touch btn-primary w-full">
         <Send size={18} /> {isLoading ? 'Enviando enlace...' : 'Enviar Enlace de Recuperación'}
       </button>
-      <button type="button" disabled={isLoading} className="btn-touch btn-secondary" onClick={onClose} style={{ width: '100%' }}>
+      <button type="button" disabled={isLoading} className="btn-touch btn-secondary w-full" onClick={onClose}>
         <ArrowLeft size={18} /> Cancelar
       </button>
     </div>
@@ -94,12 +94,12 @@ export const ForgotPinModal: React.FC<ForgotPinModalProps> = ({ isOpen, onClose 
   return (
     <Modal size="sm" centered>
       <div className="modal-header-center">
-        <div className="card-badge-icon" style={{ width: '56px', height: '56px' }}>
+        <div className="card-badge-icon icon-badge-md">
           <Mail size={28} />
         </div>
       </div>
-      <h2 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '6px' }}>Recuperar PIN de Administrador</h2>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '20px', lineHeight: 1.4 }}>
+      <h2 className="fs-xl fw-bold mb-2">Recuperar PIN de Administrador</h2>
+      <p className="auth-modal-subtitle">
         Ingresa el correo corporativo del Administrador para recibir un enlace temporal de recuperación.
       </p>
       {form.error && <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} compact />}

@@ -52,16 +52,16 @@ export const ForceChangePinModal: React.FC<ForceChangePinModalProps> = ({ userId
 
   return (
     <Modal size="sm" centered>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <div className="card-badge-icon" style={{ width: '56px', height: '56px', backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)', color: 'var(--color-danger)' }}>
+      <div className="modal-header-center">
+        <div className="card-badge-icon card-badge-icon--danger icon-badge-md">
           <ShieldAlert size={32} />
         </div>
       </div>
 
-      <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '4px', color: 'var(--text-primary)' }}>
+      <h2 className="fs-xl fw-bold mb-1">
         Cambio Obligatorio de PIN
       </h2>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
+      <p className="text-secondary-color fs-md mb-5">
         Modo Estricto de Seguridad (Guard 36): Por políticas del sistema debe reemplazar su PIN de acceso inicial antes de ingresar al tablero.
       </p>
 
@@ -69,64 +69,60 @@ export const ForceChangePinModal: React.FC<ForceChangePinModalProps> = ({ userId
         <ErrorBanner message={error} icon={<AlertCircle size={18} />} compact />
       )}
 
-      <form onSubmit={handleSubmit} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
+      <form onSubmit={handleSubmit} className="flex-column gap-3 mt-3 text-left">
         <div>
-          <label htmlFor="input-force-current-pin" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>
+          <label htmlFor="input-force-current-pin" className="fs-sm text-secondary-color mb-1 d-block">
             PIN Actual de Acceso:
           </label>
           <input
             id="input-force-current-pin"
             type="password"
-            className="input-touch"
+            className="input-touch w-full"
             value={currentPin}
             onChange={(e) => setCurrentPin(e.target.value)}
             maxLength={6}
             placeholder="****"
             disabled={isLoading}
-            style={{ width: '100%' }}
           />
         </div>
 
         <div>
-          <label htmlFor="input-force-new-pin" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>
+          <label htmlFor="input-force-new-pin" className="fs-sm text-secondary-color mb-1 d-block">
             Nuevo PIN Personal (4 a 6 dígitos):
           </label>
           <input
             id="input-force-new-pin"
             type="password"
-            className="input-touch"
+            className="input-touch w-full"
             value={newPin}
             onChange={(e) => setNewPin(e.target.value)}
             maxLength={6}
             placeholder="****"
             disabled={isLoading}
-            style={{ width: '100%' }}
           />
         </div>
 
         <div>
-          <label htmlFor="input-force-confirm-pin" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>
+          <label htmlFor="input-force-confirm-pin" className="fs-sm text-secondary-color mb-1 d-block">
             Confirmar Nuevo PIN:
           </label>
           <input
             id="input-force-confirm-pin"
             type="password"
-            className="input-touch"
+            className="input-touch w-full"
             value={confirmPin}
             onChange={(e) => setConfirmPin(e.target.value)}
             maxLength={6}
             placeholder="****"
             disabled={isLoading}
-            style={{ width: '100%' }}
           />
         </div>
 
 
         <button
           type="submit"
-          className="btn-touch btn-primary"
+          className="btn-touch btn-primary w-full mt-3"
           disabled={isLoading || !currentPin || !newPin || !confirmPin}
-          style={{ width: '100%', marginTop: '12px' }}
         >
           <CheckCircle2 size={20} />
           {isLoading ? 'Actualizando PIN...' : 'Confirmar y Desbloquear Tablero'}

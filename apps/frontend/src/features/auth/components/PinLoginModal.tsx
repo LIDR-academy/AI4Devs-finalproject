@@ -27,67 +27,44 @@ interface UserSelectorProps {
  * lista que podría no reflejar los usuarios reales de este despliegue.
  */
 const UserSelector: React.FC<UserSelectorProps> = ({ selectedUserId, onChange, disabled }) => (
-  <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+  <div className="mb-5 text-left">
     <label
       htmlFor="input-pin-login-user"
-      style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}
+      className="fs-sm text-secondary-color mb-2 d-block"
     >
       ID de Operario:
     </label>
     <input
       type="text"
       id="input-pin-login-user"
-      className="input-touch"
+      className="input-touch w-full"
       value={selectedUserId}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       placeholder="ej. bootstrap-admin"
       autoComplete="off"
-      style={{ width: '100%' }}
     />
   </div>
 );
 
 const PinDotsDisplay: React.FC<{ pinLength: number }> = ({ pinLength }) => (
-  <div
-    style={{
-      backgroundColor: 'var(--bg-root)',
-      border: '1px solid var(--border-card)',
-      borderRadius: '12px',
-      padding: '16px',
-      marginBottom: '16px',
-      minHeight: '56px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '12px',
-    }}
-  >
+  <div className="pin-dots-bar">
     {Array.from({ length: Math.max(4, pinLength) }).map((_, idx) => (
-      <div
-        key={idx}
-        style={{
-          width: '16px',
-          height: '16px',
-          borderRadius: '50%',
-          backgroundColor: idx < pinLength ? 'var(--color-primary)' : 'var(--border-card)',
-          transition: 'all 0.15s ease',
-        }}
-      />
+      <div key={idx} className={`pin-dot-indicator ${idx < pinLength ? 'active' : ''}`} />
     ))}
   </div>
 );
 
 const PinLoginHeader: React.FC = () => (
   <>
-    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-      <div className="card-badge-icon" style={{ width: '56px', height: '56px' }}>
+    <div className="modal-header-center">
+      <div className="card-badge-icon icon-badge-md">
         <Lock size={28} />
       </div>
     </div>
 
-    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '4px' }}>Acceso Táctil de Operarios</h2>
-    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
+    <h2 className="fs-xl fw-bold mb-1">Acceso Táctil de Operarios</h2>
+    <p className="text-secondary-color fs-md mb-5">
       Ingrese su ID de operario y su PIN de seguridad
     </p>
   </>
@@ -98,7 +75,7 @@ const PinSubmitButton: React.FC<{ disabled: boolean; isLoading: boolean; onClick
   isLoading,
   onClick,
 }) => (
-  <button type="button" disabled={disabled} onClick={onClick} className="btn-touch btn-primary" style={{ width: '100%', marginTop: '12px' }}>
+  <button type="button" disabled={disabled} onClick={onClick} className="btn-touch btn-primary w-full mt-3">
     <UserCheck size={20} />
     {isLoading ? 'Verificando PIN...' : 'Ingresar a Cocina'}
   </button>
@@ -176,7 +153,7 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initial
           onClick={form.handleLoginSubmit}
         />
 
-        <div style={{ marginTop: '12px' }}>
+        <div className="mt-3">
           <button
             type="button"
             className="btn-link"

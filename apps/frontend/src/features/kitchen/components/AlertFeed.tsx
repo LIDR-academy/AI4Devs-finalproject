@@ -16,8 +16,8 @@ const AlertFeedErrorState: React.FC<{ error: string; onRetry?: () => void }> = (
     <div className="flex-center mb-2">
       <AlertTriangle size={32} className="text-danger-color" />
     </div>
-    <h3 className="text-danger-color mb-1" style={{ margin: '0 0 0.5rem 0' }}>Error al Cargar Alertas</h3>
-    <p style={{ margin: '0 0 1rem 0', fontSize: '0.95rem' }}>{error}</p>
+    <h3 className="text-danger-color mb-2">Error al Cargar Alertas</h3>
+    <p className="mb-4 fs-md">{error}</p>
     {onRetry && (
       <button
         type="button"
@@ -32,7 +32,7 @@ const AlertFeedErrorState: React.FC<{ error: string; onRetry?: () => void }> = (
 );
 
 const AlertFeedSkeleton: React.FC = () => (
-  <div data-testid="loading-skeleton" className="flex-column" style={{ gap: '1rem' }}>
+  <div data-testid="loading-skeleton" className="flex-column gap-4">
     {[1, 2, 3].map((i) => (
       <div key={i} className="skeleton-item" />
     ))}
@@ -83,10 +83,10 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
       <OfflineBanner />
 
       <header className="alert-feed-header">
-        <h2 className="flex-gap-xs" style={{ margin: 0, fontSize: '1.4rem' }}>
+        <h2 className="flex-gap-xs m-0 fs-xl">
           <AlertTriangle size={24} className="text-primary-color" /> Feed de Alertas & Remanentes CRÍTICOS
         </h2>
-        <p className="text-secondary-color" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem' }}>
+        <p className="text-secondary-color mt-1 fs-md">
           Monitoreo en tiempo real del vencimiento de insumos por método FEFO.
         </p>
       </header>

@@ -34,7 +34,7 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
 }) => {
   return (
     <form onSubmit={handleSubmit}>
-      <div style={{ marginBottom: '16px' }}>
+      <div className="mb-4">
         <label htmlFor="insumo-name-input" className="form-label">
           Nombre del Insumo *
         </label>
@@ -49,7 +49,7 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
         />
       </div>
 
-      <div style={{ marginBottom: '16px' }}>
+      <div className="mb-4">
         <span className="form-label">
           Unidad de Medida *
         </span>
@@ -59,13 +59,7 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
               key={unit}
               type="button"
               onClick={() => setUnitOfMeasure(unit)}
-              className="flex-1 btn-touch"
-              style={{
-                border: unitOfMeasure === unit ? '2px solid var(--color-primary)' : '1px solid var(--border-card)',
-                backgroundColor: unitOfMeasure === unit ? 'var(--color-primary)' : 'var(--bg-root)',
-                color: unitOfMeasure === unit ? 'var(--color-primary-on)' : 'var(--text-primary)',
-                fontWeight: unitOfMeasure === unit ? 600 : 400,
-              }}
+              className={`flex-1 btn-touch ${unitOfMeasure === unit ? 'unit-toggle-btn--active' : 'unit-toggle-btn'}`}
             >
               {unit}
             </button>
@@ -73,7 +67,7 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
         </div>
       </div>
 
-      <div style={{ marginBottom: '24px' }}>
+      <div className="mb-6">
         <label htmlFor="initial-stock-input" className="form-label">
           Stock Inicial en Bodega
         </label>
@@ -88,7 +82,7 @@ const InsumoModalForm: React.FC<InsumoModalFormProps> = ({
         />
       </div>
 
-      <div className="modal-footer-actions" style={{ justifyContent: 'flex-end', marginTop: 0 }}>
+      <div className="modal-footer-actions justify-end no-margin-top">
         <button type="button" onClick={onClose} disabled={loading} className="btn-touch btn-secondary">
           Cancelar
         </button>
@@ -141,8 +135,8 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
 
   return (
     <div className="modal-overlay">
-      <div className="modal-card" style={{ maxWidth: '480px' }}>
-        <h2 className="flex-gap-xs mb-2" style={{ margin: '0 0 16px 0', fontSize: '1.25rem', fontWeight: 600 }}>
+      <div className="modal-card modal-md">
+        <h2 className="flex-gap-xs mb-4 fs-lg fw-semibold">
           <Package size={20} className="text-primary-color" />
           Registrar Nuevo Insumo
         </h2>

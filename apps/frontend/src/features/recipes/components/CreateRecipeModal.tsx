@@ -16,7 +16,7 @@ export const CreateRecipeModal: React.FC<CreateRecipeModalProps> = ({ isOpen, on
   return (
     <Modal size="md">
       <ModalHeader
-        icon={<Utensils style={{ color: 'var(--color-primary)' }} />}
+        icon={<Utensils className="text-primary-color" />}
         title="Nueva Receta"
         onClose={onClose}
       />

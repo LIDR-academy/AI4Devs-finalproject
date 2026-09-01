@@ -39,7 +39,7 @@ export const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
+    <div ref={containerRef} className="admin-menu-wrapper">
       <button
         type="button"
         className="btn-touch btn-secondary flex-gap-xs"
@@ -49,7 +49,7 @@ export const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
       >
         <Settings size={20} />
         <span>Administración</span>
-        <ChevronDown size={16} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        <ChevronDown size={16} className={`dropdown-chevron${isOpen ? ' dropdown-chevron--open' : ''}`} />
       </button>
 
       {isOpen && (

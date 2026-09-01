@@ -172,9 +172,8 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({ onCreated }) => 
 
       <button
         type="submit"
-        className="btn-touch btn-primary flex-center flex-gap-xs"
+        className="btn-touch btn-primary flex-center flex-gap-xs mt-1"
         disabled={form.isSubmitting}
-        style={{ marginTop: '4px' }}
       >
         <UserPlus size={18} />
         {form.isSubmitting ? 'Creando...' : 'Crear Operario'}

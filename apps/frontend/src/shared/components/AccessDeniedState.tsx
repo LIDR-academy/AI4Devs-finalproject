@@ -13,9 +13,9 @@ interface AccessDeniedStateProps {
  */
 export const AccessDeniedState: React.FC<AccessDeniedStateProps> = ({ moduleLabel, onClose }) => (
   <Modal size="md" centered>
-    <ShieldAlert size={48} className="text-danger-color" style={{ margin: '0 auto 16px auto' }} />
-    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Acceso Restringido</h2>
-    <p className="text-secondary-color" style={{ fontSize: '0.9rem', marginBottom: '24px' }}>
+    <ShieldAlert size={48} className="text-danger-color access-denied-icon" />
+    <h2 className="fs-xl fw-bold mb-2">Acceso Restringido</h2>
+    <p className="text-secondary-color fs-md mb-6">
       El módulo de {moduleLabel} requiere rol de Administrador.
     </p>
     <button type="button" className="btn-touch btn-primary w-full" onClick={onClose}>

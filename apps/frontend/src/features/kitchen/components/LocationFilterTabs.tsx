@@ -18,8 +18,8 @@ export const LocationFilterTabs: React.FC<LocationFilterTabsProps> = ({ activeLo
   ];
 
   return (
-    <div className="flex-gap-sm flex-wrap" style={{ marginBottom: '16px' }}>
-      <div className="flex-gap-xs" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginRight: '4px' }}>
+    <div className="flex-gap-sm flex-wrap location-tabs-bar">
+      <div className="flex-gap-xs location-tabs-label">
         <MapPin size={16} /> Estaciones:
       </div>
       {tabs.map((tab) => {
@@ -30,23 +30,11 @@ export const LocationFilterTabs: React.FC<LocationFilterTabsProps> = ({ activeLo
           <button
             key={tab.id}
             type="button"
-            className={`btn-touch flex-gap-xs ${isActive ? 'btn-primary' : 'btn-secondary'}`}
+            className={`btn-touch flex-gap-xs location-tab-btn ${isActive ? 'btn-primary fw-bold' : 'btn-secondary'}`}
             onClick={() => onLocationSelect(tab.id)}
-            style={{
-              height: '40px',
-              padding: '0 14px',
-              fontSize: '0.85rem',
-              fontWeight: isActive ? 700 : 500,
-            }}
           >
             {tab.label}
-            <span
-              className="badge-count"
-              style={{
-                backgroundColor: isActive ? 'var(--neutral)' : 'var(--bg-card)',
-                color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)',
-              }}
-            >
+            <span className={`badge-count ${isActive ? 'badge-count--active' : 'badge-count--inactive'}`}>
               {count}
             </span>
           </button>

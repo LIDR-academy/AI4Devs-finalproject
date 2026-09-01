@@ -104,11 +104,11 @@ const ResetPinDotsDisplay: React.FC<{ length: number }> = ({ length }) => (
 
 const ResetPinSuccessBanner: React.FC = () => (
   <div className="banner-success">
-    <div className="flex-center flex-gap-sm" style={{ fontWeight: 600 }}>
+    <div className="flex-center flex-gap-sm fw-semibold">
       <CheckCircle2 size={20} />
       <span>¡PIN restablecido con éxito!</span>
     </div>
-    <p style={{ fontSize: '0.85rem', margin: '6px 0 0 0', textAlign: 'center', color: 'var(--text-primary)' }}>
+    <p className="fs-sm mt-2 text-center">
       Redirigiendo a la pantalla de inicio de sesión...
     </p>
   </div>
@@ -123,17 +123,17 @@ const ResetPinActionButtons: React.FC<{
   onSubmit: () => void;
   onCancel: () => void;
 }> = ({ step, newPinLength, confirmPinLength, isLoading, onNext, onSubmit, onCancel }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '16px' }}>
+  <div className="flex-column gap-3 mt-4">
     {step === 'ENTER_NEW' ? (
-      <button type="button" disabled={newPinLength < 4 || isLoading} className="btn-touch btn-primary" onClick={onNext} style={{ width: '100%' }}>
+      <button type="button" disabled={newPinLength < 4 || isLoading} className="btn-touch btn-primary w-full" onClick={onNext}>
         Continuar
       </button>
     ) : (
-      <button type="button" disabled={confirmPinLength < 4 || isLoading} className="btn-touch btn-primary" onClick={onSubmit} style={{ width: '100%' }}>
+      <button type="button" disabled={confirmPinLength < 4 || isLoading} className="btn-touch btn-primary w-full" onClick={onSubmit}>
         {isLoading ? 'Actualizando PIN...' : 'Confirmar y Guardar PIN'}
       </button>
     )}
-    <button type="button" disabled={isLoading} className="btn-touch btn-secondary" onClick={onCancel} style={{ width: '100%' }}>
+    <button type="button" disabled={isLoading} className="btn-touch btn-secondary w-full" onClick={onCancel}>
       Cancelar
     </button>
   </div>
@@ -146,12 +146,12 @@ export const ResetPinModal: React.FC<ResetPinModalProps> = ({ token, isOpen, onS
   return (
     <Modal size="sm" centered>
       <div className="modal-header-center">
-        <div className="card-badge-icon" style={{ width: '56px', height: '56px' }}>
+        <div className="card-badge-icon icon-badge-md">
           <KeyRound size={28} />
         </div>
       </div>
-      <h2 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '6px' }}>Restablecer PIN de Administrador</h2>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '16px' }}>
+      <h2 className="fs-xl fw-bold mb-2">Restablecer PIN de Administrador</h2>
+      <p className="text-secondary-color fs-sm mb-4">
         {form.step === 'ENTER_NEW' ? 'Ingrese su nuevo PIN de 4 a 6 dígitos' : 'Confirme su nuevo PIN de seguridad'}
       </p>
       {form.error && <ErrorBanner message={form.error} icon={<AlertCircle size={18} />} compact />}

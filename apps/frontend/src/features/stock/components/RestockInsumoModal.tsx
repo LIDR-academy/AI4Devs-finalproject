@@ -22,7 +22,7 @@ interface RestockFormFieldsProps {
 
 const RestockFormFields: React.FC<RestockFormFieldsProps> = ({ insumo, quantity, onQuantityChange, error }) => (
   <>
-    <p className="text-secondary-color" style={{ margin: '0 0 16px 0', fontSize: '0.9rem' }}>
+    <p className="text-secondary-color mb-4 fs-md">
       {insumo.name} — stock actual:{' '}
       <strong>
         {insumo.warehouseStock} {insumo.unitOfMeasure}
@@ -88,7 +88,7 @@ export const RestockInsumoModal: React.FC<RestockInsumoModalProps> = ({ isOpen, 
   return (
     <Modal size="md">
       <ModalHeader
-        icon={<Truck style={{ color: 'var(--color-primary)' }} />}
+        icon={<Truck className="text-primary-color" />}
         title="Reabastecer Insumo"
         onClose={onClose}
       />

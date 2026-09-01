@@ -178,9 +178,8 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
     <div className="flex-gap-md">
       <button
         type="button"
-        className="btn-touch btn-secondary"
+        className="btn-touch btn-secondary quantity-stepper-btn"
         onClick={onDecrement}
-        style={{ width: '56px', height: '56px', fontSize: '1.5rem', fontWeight: 700 }}
         id="btn-decrement-qty"
       >
         <Minus size={24} />
@@ -191,16 +190,14 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
         step="0.1"
         value={quantity}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0.5)}
-        className="input-touch"
-        style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 700 }}
+        className="input-touch quantity-stepper-input"
         id="input-quantity-extraction"
       />
 
       <button
         type="button"
-        className="btn-touch btn-secondary"
+        className="btn-touch btn-secondary quantity-stepper-btn"
         onClick={onIncrement}
-        style={{ width: '56px', height: '56px', fontSize: '1.5rem', fontWeight: 700 }}
         id="btn-increment-qty"
       >
         <Plus size={24} />
@@ -294,11 +291,11 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
 
     <QuantityStepper quantity={quantity} onIncrement={onIncrement} onDecrement={onDecrement} onChange={onQuantityChange} />
 
-    <div className="banner-alert banner-alert-success" style={{ marginTop: '12px', fontSize: '0.85rem' }}>
+    <div className="banner-alert banner-alert-success extraction-note-banner">
       {purpose === 'DIRECT_DISCARD' ? (
-        <span><AlertTriangle size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} /> Se registrará la <strong>merma directa desde bodega</strong> descontando el stock sin pasarlo a cocina.</span>
+        <span><AlertTriangle size={16} className="inline-icon-spacer" /> Se registrará la <strong>merma directa desde bodega</strong> descontando el stock sin pasarlo a cocina.</span>
       ) : (
-        <span><AlertTriangle size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} /> Al confirmar la extracción, el insumo pasará al tablero de <strong>Remanentes Activos con vencimiento prioritario FEFO</strong>.</span>
+        <span><AlertTriangle size={16} className="inline-icon-spacer" /> Al confirmar la extracción, el insumo pasará al tablero de <strong>Remanentes Activos con vencimiento prioritario FEFO</strong>.</span>
       )}
     </div>
 
@@ -426,7 +423,7 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
   return (
     <Modal size="md">
       <ModalHeader
-        icon={<PackageCheck style={{ color: 'var(--color-primary)' }} />}
+        icon={<PackageCheck className="text-primary-color" />}
         title="Extracción de Bodega (Alta TRR)"
         size="lg"
         onClose={onClose}

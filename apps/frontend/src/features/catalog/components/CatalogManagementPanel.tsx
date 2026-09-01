@@ -31,7 +31,7 @@ export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ 
   return (
     <Modal size="xl">
       <ModalHeader
-        icon={<BookOpen style={{ color: 'var(--color-primary)' }} />}
+        icon={<BookOpen className="text-primary-color" />}
         title="Gestión de Catálogo e Inventario"
         size="lg"
         onClose={onClose}

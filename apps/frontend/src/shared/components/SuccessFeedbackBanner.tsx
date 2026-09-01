@@ -10,7 +10,7 @@ interface SuccessFeedbackBannerProps {
  * entre UserManagementPanel y CatalogManagementPanel (ver regla de reuso de SK-17).
  */
 export const SuccessFeedbackBanner: React.FC<SuccessFeedbackBannerProps> = ({ message }) => (
-  <div role="status" className="banner-alert banner-alert-success flex-gap-xs" style={{ padding: '10px 14px', marginBottom: '16px', fontSize: '0.88rem' }}>
+  <div role="status" className="banner-alert banner-alert-success flex-gap-xs error-banner-compact mb-4">
     <CheckCircle2 size={18} />
     <span>{message}</span>
   </div>

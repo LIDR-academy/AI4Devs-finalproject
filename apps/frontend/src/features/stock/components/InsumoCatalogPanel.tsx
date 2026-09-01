@@ -52,7 +52,7 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
     <td className="text-primary-color font-mono">{item.id}</td>
     <td className="fw-semibold">{item.name}</td>
     <td>
-      <span className="insumo-unit-badge">
+      <span className="neutral-badge">
         {item.unitOfMeasure}
       </span>
     </td>

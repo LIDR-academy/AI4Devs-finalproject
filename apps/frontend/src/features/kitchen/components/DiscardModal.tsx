@@ -76,11 +76,11 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({ remanente, onClose, 
         onClose={onClose}
       />
 
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '0.95rem' }}>
+      <p className="text-secondary-color mb-4 fs-md">
         Se dará de baja el insumo <strong>{remanente.insumoName}</strong> ({formatQuantity(remanente.currentQuantity, remanente.unitOfMeasure)} {formatUnitLabel(remanente.unitOfMeasure)}) del inventario activo.
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <form onSubmit={handleSubmit} className="flex-column gap-4">
         {error && <ErrorBanner message={error} />}
         <DiscardReasonSelect value={reason} onChange={setReason} />
 

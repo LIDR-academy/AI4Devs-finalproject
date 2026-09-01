@@ -29,8 +29,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <Modal size="sm">
-      <ModalHeader icon={<AlertTriangle style={{ color: 'var(--color-danger)' }} />} title={title} onClose={onCancel} />
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginBottom: '8px' }}>{message}</p>
+      <ModalHeader icon={<AlertTriangle className="text-danger-color" />} title={title} onClose={onCancel} />
+      <p className="text-secondary-color fs-md mb-2">{message}</p>
       <ModalFooterActions
         onCancel={onCancel}
         confirmLabel={confirmLabel}

@@ -13,23 +13,7 @@ export const OfflineBanner: React.FC = () => {
     <div
       role="alert"
       aria-live="assertive"
-      style={{
-        backgroundColor: 'var(--color-danger, #e10600)',
-        color: 'var(--text-primary, #f5f5f0)',
-        padding: '0.75rem 1rem',
-        textAlign: 'center',
-        fontWeight: 600,
-        fontSize: '0.95rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        boxShadow: 'var(--shadow-elevation-2)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        minHeight: '48px',
-      }}
+      className="offline-banner"
     >
       <WifiOff size={20} />
       <span>Modo Sin Conexión: Operando localmente. Sincronización pendiente.</span>
