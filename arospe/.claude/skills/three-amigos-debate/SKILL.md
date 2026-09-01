@@ -30,6 +30,8 @@ ThreeAmigosDebate {
     contracts: "docs/contracts.md"
     conventions: "docs/conventions/*.md"
     gherkinGuidelines: "docs/testing/frontend/gherkin-guidelines.md"
+    docsIndex: "docs/README.md"                        // read this FIRST to find what's relevant
+    epicDigest: "./ai-spec/tasks/_digests/epic-<n>.md"  // read if it exists, before any sibling story
     outputDir: "./ai-spec/tasks/"   // new stage — precedes in-progress/, see workflow.md
   }
 
@@ -39,6 +41,7 @@ ThreeAmigosDebate {
     candidateStories: []      // populated only in Epic mode
     confirmedStories: []
     currentStory
+    brief                     // built once per story by the facilitator, see buildBrief()
   }
 
   Constraints {
@@ -53,8 +56,12 @@ ThreeAmigosDebate {
     - Every Gherkin scenario must open with a named business-role actor (never a bare "I") and
       contain exactly one When per scenario, per gherkinGuidelines rules 1 and 3 — this applies
       to PRD-derived stories too, not just browser-test translations (see errors-log.md).
-    - Re-read prd/workflow/contracts/conventions from disk each run; never rely on memory of a
-      previous invocation.
+    - Read docsIndex first, every run, to decide which docs actually cover this story's domain
+      — never open a doc "just because it's linked" (see docs/contracts.md's Token-Efficient
+      Reading and Dispatch Rule). Re-read whatever you do open from disk each run; never rely on
+      memory of a previous invocation.
+    - Build the brief once per story (buildBrief()) and pass it to every participant instead of
+      instructing each one to independently re-read the same sources — see phase1_debate().
     - One output file per user story, using workflow.md's exact User Story template.
   }
 
@@ -101,9 +108,35 @@ ThreeAmigosDebate {
     }
   }
 
+  // The facilitator (product-owner) reads once, distills, and hands every participant the
+  // same short brief instead of each of them independently re-reading the same docs. This is
+  // the "N agents reading M files" -> "one agent reading M files once, plus N agents reading
+  // one brief" shape from docs/workflow-token-efficiency.md.
+  fn buildBrief(story) -> Brief {
+    read(docsIndex)                                          // cheap: what exists, and where
+    targets = locateSections(docsIndex, story.domain)         // file#heading pairs, via grep on
+                                                                // each candidate doc's headings —
+                                                                // NOT "the whole conventions/ folder"
+    digest = exists(epicDigest(story.epic)) ? read(epicDigest(story.epic)) : none
+    each target in targets:
+      readBounded(target.file, offset: target.headingLine, limit: target.sectionLength)
+      // bounded to that section (+ a small buffer for a cross-reference), never the bare file
+    return {
+      applicableConventions: extractConventions(targets),  // e.g. action-owns-the-rule, UUID PK
+      priorDecisions: digest ?? extractFromSections(targets),
+      relevantSchemaRoutePermissions: extractFacts(targets, story.domain),
+    }
+    // Kept to a few bullets per field — this is a lookup aid for participants, not a second
+    // copy of the docs. A participant needing more re-reads the cited file#heading, not the brief.
+  }
+
   fn phase1_debate(story) {
     participants = selectParticipants(story.classification)
-    contributions = convene(participants) {
+    brief = buildBrief(story)
+    contributions = convene(participants, brief) {
+      // Each participant's dispatch prompt includes `brief` directly. Instruct them to trust
+      // it for background and read further only for their own specific design decisions —
+      // not to re-derive what the brief already states.
       each expertAgent in participants.experts:
         contribute { filesToCreateOrModify, technicalApproach }
       each qaAgent in participants.qas:
@@ -166,7 +199,9 @@ Use the `Agent` tool with these `subagent_type` values — they are real agents 
 
 Run each story's debate as its own set of agent calls — do not batch multiple stories'
 debates into one agent call, since each story gets its own output file and its own
-ambiguity-handling loop.
+ambiguity-handling loop. Within one story's debate, dispatch participants in twos or threes at a
+time rather than all at once, per `docs/contracts.md`'s Token-Efficient Reading and Dispatch
+Rule — this is about dispatch rate, not about batching multiple stories together.
 
 ## Notes
 
@@ -180,3 +215,8 @@ ambiguity-handling loop.
 - This skill's output is the *input* to Phase 2 onward in `docs/workflow.md`; it does not
   invoke `code-reviewer`, `backend-qa`/`frontend-qa` test-writing, `appsec-auditor`, or
   `docs-keeper` itself.
+- Before debating a story that extends an existing epic, check that epic's decision digest at
+  `./ai-spec/tasks/_digests/epic-<n>.md` (see `docs/workflow.md#decision-digest-per-epic`) —
+  written by `docs-keeper` as each sibling story in the epic closes. It is the fast path to the
+  facts a later story must not re-derive; open a prior sibling story file in full only when the
+  digest doesn't already answer the question. This skill never writes the digest itself.

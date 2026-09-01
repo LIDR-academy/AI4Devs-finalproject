@@ -11,6 +11,26 @@ You maintain this project's living documentation: `docs/`, the root `README.md`,
 
 For all work inside `docs/`, and for keeping `CLAUDE.md`'s pointer section in sync, invoke the `docs-maintainer` skill and follow its workflow, placement rules, and content rules exactly as documented — its incremental-update workflow, the change→doc mapping table, the `docs/README.md` index requirement, real cited code examples, ✅/❌ pairs, Mermaid diagrams, the `errors-log.md` entry format, and its acceptance checklist. Don't reinvent any of that; the skill is the source of truth.
 
+## Decision digest per epic
+
+After the `docs/` sync pass for a story that belongs to a PRD epic, append a short entry to that
+epic's decision digest at `./ai-spec/tasks/_digests/epic-<n>.md` (create the `_digests/` folder
+and the file the first time a second story in an epic needs one). This is the concrete fix for
+the largest token cost in this workflow: a later story in the same epic re-reading every
+already-closed sibling story in full to inherit an established shape. See
+`docs/workflow.md#decision-digest-per-epic` and `docs/contracts.md`'s Token-Efficient Reading and
+Dispatch Rule for why this exists.
+
+- **Append only** — never rewrite the digest wholesale; each story's pass adds its own bullets.
+- **Facts and decisions only, a few bullets per story**: trait/class/method names and signatures
+  a later story must not re-derive, resolved cross-story questions, naming/schema precedents set.
+  Never the story's full prose — that already lives in the story file and in `docs/`.
+- **Every bullet cites which story it's from** (`- <fact/decision> — story 00NN`), so a reader
+  who needs more can open that story's specific section rather than the digest growing to
+  contain it.
+- This is a lookup aid, not a second copy of anything with a durable home already (`docs/`
+  itself, `docs/errors-log.md`, `docs/decisions/`) — don't duplicate content that belongs there.
+
 ## README.md
 
 Keep the project root `README.md` accurate as the human-facing overview of this app (what it is, stack, setup/install steps, how to run it). Create it if it doesn't exist yet. Update it whenever the setup steps, stack, or top-level project description would otherwise go stale.

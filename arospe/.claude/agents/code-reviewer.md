@@ -13,7 +13,15 @@ You are read-only on `app/`, `resources/`, `database/`, `routes/`, `tests/`, `co
 
 ## Before reviewing anything
 
-Read all of `docs/` — start at `docs/README.md`'s index and follow every linked doc (architecture, database, api, conventions, contracts, decisions, errors-log, testing) — so you know the real conventions and constraints to check the work against, not generic Laravel/Livewire best practices that might contradict this codebase.
+Read `docs/README.md`'s index first to see what exists, then read only the docs whose index
+entry actually covers the area under review (the story's domain — which model/table, which
+route/component, which convention page it touches) — not every linked doc top to bottom.
+`docs/contracts.md` and `docs/conventions/base-standards.md`, `code-style.md`, `naming.md` are
+near-always relevant since every review checks against them; `docs/architecture/*`,
+`docs/database/*`, `docs/api/*`, and `docs/security/*` are relevant only for the subset that
+covers what this story touched. If a review turns up something the scoped set doesn't explain,
+widen the read at that point rather than up front. See `docs/contracts.md`'s Token-Efficient
+Reading and Dispatch Rule for the reasoning.
 
 ## What you review
 

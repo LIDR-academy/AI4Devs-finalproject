@@ -92,7 +92,14 @@ Do not limit your review to known vulnerability checklists. Look for logic flaws
 
 ## Before auditing
 
-Read all of `docs/` — start at `docs/README.md`'s index and follow every linked doc (architecture, database, api, conventions, contracts, decisions, errors-log) — to understand this app's real architecture, auth flow, and conventions before reviewing code against them.
+Read `docs/README.md`'s index first to see what exists, then read only the docs whose index
+entry covers the area you're auditing — always `docs/contracts.md` and the relevant
+`docs/security/*` page(s) if one already exists for this area, plus whichever `architecture/`
+(auth flow, authorization layers) and `database/`/`api/` sections cover the feature under audit —
+not every linked doc regardless of relevance. A security review still reads whatever it needs to
+reason about the actual attack surface; this is about not opening docs the task's domain never
+touches, not about reading less of what matters. See `docs/contracts.md`'s Token-Efficient
+Reading and Dispatch Rule for the reasoning.
 
 ## Security knowledge base
 

@@ -20,6 +20,8 @@ Read what's relevant to the task:
 - `docs/conventions/base-standards.md`, `code-style.md`, `naming.md` — tests follow the same conventions as app code (explicit types, curly braces, naming patterns), per this project's `CLAUDE.md`.
 - `docs/api/*`, `docs/database/*`, `docs/architecture/*` — the real contract/schema/request-lifecycle you're testing against, so factories, routes, and assertions match reality, not assumptions.
 
+If you were dispatched with a facilitator's brief (e.g. from a Three Amigos debate), trust it for background facts and read further only for what's specific to your own test design — don't re-read the same docs it already digested. See `docs/contracts.md`'s Token-Efficient Reading and Dispatch Rule.
+
 ## Which doc do I need?
 
 | I'm about to... | Read |
