@@ -181,6 +181,6 @@ graph TD
 | **🔐 Seguridad (`security`)** | [US-015: Permisos y Roles Dinámicos](11_user_stories/security/US-015.md) | [TK-073: Backend Dynamic RBAC](12_tickets/security/backend/TK-073.md) | [TK-073-FE: Dynamic RBAC UI](12_tickets/security/frontend/TK-073-FE.md) | 📋 Approved Spec |
 | **📦 Bodega (`stock`)** | [US-016: Sectores de Almacenamiento](11_user_stories/stock/US-016.md) | [TK-074: Storage Locations API](12_tickets/stock/backend/TK-074.md) | [TK-074-FE: Storage Locations UI](12_tickets/stock/frontend/TK-074-FE.md) | 📋 Approved Spec |
 | **⚙️ Configuración (`settings`)** | [US-017: Configuración del Restaurante](11_user_stories/settings/US-017.md) | [TK-075: System Settings API](12_tickets/settings/backend/TK-075.md) | [TK-075-FE: System Settings UI](12_tickets/settings/frontend/TK-075-FE.md) | 📋 Approved Spec |
-| **🔐 Autenticación (`auth`)** | [US-018: Recuperación de PIN de Administrador](11_user_stories/auth/US-018.md) | [TK-077: Admin PIN Recovery API](12_tickets/auth/backend/TK-077.md) | [TK-077-FE: Admin PIN Recovery UI](12_tickets/auth/frontend/TK-077-FE.md) | 📋 Approved Spec |
+| **🔐 Autenticación (`auth`)** | [US-018: Recuperación de PIN de Administrador](11_user_stories/auth/US-018.md) | [TK-077: Admin PIN Recovery API](12_tickets/auth/backend/TK-077.md) | [TK-077-FE: Admin PIN Recovery UI](12_tickets/auth/frontend/TK-077-FE.md) | ✅ Done |
 
 

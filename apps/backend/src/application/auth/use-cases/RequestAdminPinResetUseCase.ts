@@ -18,8 +18,11 @@ export class RequestAdminPinResetUseCase {
   ) {}
 
   public async execute(dto: RequestAdminPinResetDTO): Promise<RequestAdminPinResetResponseDTO> {
-    const normalizedEmail = dto.email.trim().toLowerCase();
-    const user = await this.userRepository.findByEmail(normalizedEmail);
+    // No se normaliza aqui: IUserRepository.findByEmail ya normaliza (trim + lowercase)
+    // en ambas implementaciones (InMemory y Prisma) — duplicarlo aqui era codigo muerto
+    // en la practica (AUDIT-DEV-002): ningun input observable distinguia el codigo
+    // normalizado del no-normalizado, porque el repositorio absorbe la diferencia.
+    const user = await this.userRepository.findByEmail(dto.email);
 
     // Solo se permite reseteo por email a usuarios con rol ADMIN
     if (user && user.role === 'ADMIN') {
@@ -34,7 +37,7 @@ export class RequestAdminPinResetUseCase {
       const resetUrl = `${origin}?resetToken=${rawToken}`;
 
       await this.emailService.sendPasswordResetEmail({
-        to: user.email || normalizedEmail,
+        to: user.email ?? dto.email,
         recipientName: user.name,
         resetToken: rawToken,
         resetUrl,
