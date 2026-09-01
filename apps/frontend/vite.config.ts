@@ -26,5 +26,10 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     include: ['src/**/*.test.{ts,tsx}'],
     exclude: ['node_modules', 'dist', 'e2e/**'],
+    css: {
+      modules: {
+        classNameStrategy: 'non-scoped',
+      },
+    },
   },
 });

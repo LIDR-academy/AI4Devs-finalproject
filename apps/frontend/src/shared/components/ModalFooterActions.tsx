@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './ModalFooterActions.module.css';
 
 interface ModalFooterActionsProps {
   onCancel: () => void;
@@ -42,7 +43,7 @@ export const ModalFooterActions: React.FC<ModalFooterActionsProps> = ({
       <button
         type={confirmType}
         onClick={confirmType === 'button' ? onConfirm : undefined}
-        className={`btn-touch btn-${confirmVariant} flex-double flex-center flex-gap-xs`}
+        className={`btn-touch btn-${confirmVariant} ${styles['flex-double']} flex-center flex-gap-xs`}
         disabled={isSubmitting}
       >
         {confirmIcon}

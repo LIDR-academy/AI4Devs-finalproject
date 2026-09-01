@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import styles from './ModalHeader.module.css';
 
 interface ModalHeaderProps {
   icon: React.ReactNode;
@@ -20,8 +21,8 @@ interface ModalHeaderProps {
  */
 export const ModalHeader: React.FC<ModalHeaderProps> = ({ icon, title, danger = false, size = 'md', onClose }) => {
   return (
-    <div className={`flex-between modal-header-${size}`}>
-      <h2 className={`modal-header-title modal-header-title-${size}${danger ? ' text-danger-color' : ''}`}>
+    <div className={`flex-between ${styles[`modal-header-${size}`]}`}>
+      <h2 className={`${styles['modal-header-title']} ${styles[`modal-header-title-${size}`]}${danger ? ' text-danger-color' : ''}`}>
         {icon} {title}
       </h2>
       {onClose && (

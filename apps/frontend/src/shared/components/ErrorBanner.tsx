@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './ErrorBanner.module.css';
 
 interface ErrorBannerProps {
   message: string;
@@ -18,7 +19,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({ message, icon, compact
   return (
     <div
       role="alert"
-      className={`banner-alert banner-alert-danger flex-gap-xs mb-4 fs-md p-3${compact ? ' error-banner-compact' : ''}`}
+      className={`banner-alert banner-alert-danger flex-gap-xs mb-4 fs-md ${styles['p-3']}${compact ? ' error-banner-compact' : ''}`}
     >
       {icon}
       <span>{message}</span>

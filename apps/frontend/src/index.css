@@ -193,55 +193,6 @@ h3 {
   color: var(--text-primary);
 }
 
-/* 🪟 Sistema de Ventanas Emergentes Flotantes (Solid Industrial Overlays) */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(16, 16, 16, 0.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  animation: fadeInOverlay 0.2s ease-out;
-}
-
-.modal-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
-  border-top: 4px solid var(--color-primary);
-  border-radius: 4px;
-  padding: 28px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  max-height: 90vh;
-  overflow-y: auto;
-  width: 94%;
-  animation: scaleUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes fadeInOverlay {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scaleUpModal {
-  from {
-    opacity: 0;
-    transform: scale(0.94) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
 /* --- Utilidades de Layout Flexbox --- */
 .flex-between {
   display: flex;
@@ -343,10 +294,6 @@ h3 {
   flex: 1;
 }
 
-.flex-double {
-  flex: 2;
-}
-
 .w-full {
   width: 100%;
 }
@@ -423,12 +370,6 @@ h3 {
   display: flex;
   gap: 12px;
   margin-top: var(--space-4);
-}
-
-.section-tabs-container {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
 }
 
 .banner-alert {
@@ -577,7 +518,6 @@ h3 {
 .mt-3 { margin-top: var(--space-3); }
 .mt-4 { margin-top: var(--space-4); }
 
-.p-3 { padding: var(--space-3); }
 .p-4 { padding: var(--space-4); }
 .p-5 { padding: var(--space-5); }
 .p-6 { padding: var(--space-6); }
@@ -605,23 +545,6 @@ h3 {
 
 .icon-badge-sm { width: 48px; height: 48px; }
 .icon-badge-md { width: 56px; height: 56px; }
-
-/* ==========================================================================
-   Guard 29 extendido — tamaños fijos para los 4 componentes compartidos
-   parametrizados (Modal, ModalHeader, ErrorBanner, ModalFooterActions),
-   reemplazando sus props de string/px libres por un enum de clases.
-   ========================================================================== */
-.modal-sm { max-width: 420px; }
-.modal-md { max-width: 500px; }
-.modal-lg { max-width: 640px; }
-.modal-xl { max-width: 760px; }
-.modal-centered { text-align: center; }
-
-.modal-header-lg { margin-bottom: var(--space-5); }
-.modal-header-md { margin-bottom: var(--space-4); }
-.modal-header-title { display: flex; align-items: center; font-weight: 700; }
-.modal-header-title-lg { font-size: var(--fs-xl); gap: var(--space-3); }
-.modal-header-title-md { font-size: var(--fs-lg); gap: var(--space-2); }
 
 .error-banner-compact { padding: 10px 14px; font-size: 0.88rem; }
 

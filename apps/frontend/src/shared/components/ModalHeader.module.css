@@ -1,0 +1,5 @@
+.modal-header-lg { margin-bottom: var(--space-5); }
+.modal-header-md { margin-bottom: var(--space-4); }
+.modal-header-title { display: flex; align-items: center; font-weight: 700; }
+.modal-header-title-lg { font-size: var(--fs-xl); gap: var(--space-3); }
+.modal-header-title-md { font-size: var(--fs-lg); gap: var(--space-2); }

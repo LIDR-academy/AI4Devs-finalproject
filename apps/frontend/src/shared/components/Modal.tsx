@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './Modal.module.css';
 
 interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -16,9 +17,9 @@ interface ModalProps {
  * casi unicos que existian en la app en 4 tamanos fijos (Guard 29 extendido).
  */
 export const Modal: React.FC<ModalProps> = ({ size = 'md', centered = false, children }) => {
-  const className = `modal-card modal-${size}${centered ? ' modal-centered' : ''}`;
+  const className = `${styles['modal-card']} ${styles[`modal-${size}`]}${centered ? ` ${styles['modal-centered']}` : ''}`;
   return (
-    <div className="modal-overlay">
+    <div className={styles['modal-overlay']}>
       <div className={className}>{children}</div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './SectionTabs.module.css';
 
 export interface SectionTabOption<T extends string> {
   value: T;
@@ -19,7 +20,7 @@ interface SectionTabsProps<T extends string> {
  */
 export function SectionTabs<T extends string>({ section, options, onChange }: SectionTabsProps<T>): React.ReactElement {
   return (
-    <div className="section-tabs-container">
+    <div className={styles['section-tabs-container']}>
       {options.map((option) => (
         <button
           key={option.value}
