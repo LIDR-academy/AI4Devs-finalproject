@@ -27,3 +27,20 @@ arch('no application code imports the raw Spatie role model directly')
 arch('no seeder imports the raw Spatie role model directly')
     ->expect('Database\Seeders')
     ->not->toUse(Role::class);
+
+// Story 0023, D-11: App\Models\ProductCategory must remain structurally independent from any
+// future blog taxonomy -- own table, own model, own action namespace, own policy, no shared
+// storage or identity, no polymorphic taxonomy. There is no blog taxonomy in code yet (PRD Epic 4
+// -- Blog Categories/Tags/Posts do not exist), so this is honestly a SCOPE FENCE expressed as an
+// executable test rather than a behavioral assertion today: it cannot fail yet, because there is
+// nothing under a blog-taxonomy namespace for ProductCategory to import in the first place. It
+// starts genuinely biting the moment Epic 4 lands a real blog taxonomy namespace under
+// App\Models\Blog.
+//
+// A single-namespace `expect()` target, matching this file's own established one-rule-per-namespace
+// convention (see the comment above the first two rules) -- not because this specific rule is at
+// risk of the disjunctive-array-evaluation bug that convention exists to avoid (there is only one
+// target here), but because every rule in this file follows the same shape for consistency.
+arch('App\Models\ProductCategory does not reference any blog taxonomy namespace')
+    ->expect('App\Models\ProductCategory')
+    ->not->toUse('App\Models\Blog');

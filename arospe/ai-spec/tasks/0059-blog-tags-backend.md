@@ -257,7 +257,7 @@ Feature: Blog tags
 - `RenameBlogTag.php` — `__invoke(BlogTag $blogTag, string $name): BlogTag`. Same trim + `23000`
   handling, with `nameRules()` ignoring the target's own id.
 - `DeleteBlogTag.php` — `__invoke(BlogTag $blogTag): bool`. An unconditional instance
-  `$blogTag->delete()`. **Unlike [0023's `DeleteProductCategory`](0023-product-categories-backend.md),
+  `$blogTag->delete()`. **Unlike [0023's `DeleteProductCategory`](done/0023-product-categories-backend.md),
   this action is complete as shipped and no later story extends it** (**D-8**) — its docblock carries
   the cross-story promise that makes that true, quoted in **D-8**.
 - `FindOrCreateBlogTag.php` — `__invoke(string $name): BlogTag`. The reusable resolver 0060 and 0061
@@ -664,7 +664,7 @@ user-visible yet: the management screen is 0060, and the posts that attach a tag
   structural difference from every taxonomy story before it.** PRD's own Gherkin says deleting a tag
   *"is removed from every post that used it"* — there is no hard block, no count, no
   reassign-first requirement. Contrast blog **categories** (story 0058), which PRD hard-blocks with a
-  count, exactly as [0023](0023-product-categories-backend.md) defers its in-use guard to 0024.
+  count, exactly as [0023](done/0023-product-categories-backend.md) defers its in-use guard to 0024.
 
   So where `DeleteProductCategory` exists as its own file *specifically so a later story can extend
   it*, `DeleteBlogTag` exists as its own file and **no later story extends it**. Its body is a bare
