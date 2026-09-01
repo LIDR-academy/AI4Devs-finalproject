@@ -34,6 +34,7 @@ import { FEFOInventoryHealthBar } from './features/kitchen/components/FEFOInvent
 import { LocationFilterTabs, LocationFilter } from './features/kitchen/components/LocationFilterTabs.js';
 import { AdminDropdownMenu } from './features/security/components/AdminDropdownMenu.js';
 import { useIdleTimeout } from './shared/hooks/useIdleTimeout.js';
+import styles from './App.module.css';
 
 
 interface DashboardHeaderProps {
@@ -53,7 +54,7 @@ interface DashboardHeaderProps {
 }
 
 const UserBadge: React.FC<{ name: string; role: string }> = ({ name, role }) => (
-  <div className="user-badge">
+  <div className={styles['user-badge']}>
     <User size={18} className="text-primary-color" />
     <div>
       <div className="fs-md fw-semibold">{name}</div>
@@ -124,7 +125,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onRolesManagement,
   onSync,
 }) => (
-  <header className="flex-between flex-wrap dashboard-header">
+  <header className={`flex-between flex-wrap ${styles['dashboard-header']}`}>
     <div className="flex-column gap-3">
       <div>
         <h1 className="flex-gap-md fs-2xl fw-bold">
@@ -196,9 +197,9 @@ const ActionCard: React.FC<{ icon: React.ReactNode; label: string; onClick: () =
   variant,
   className,
 }) => (
-  <div className={`card-dashboard flex-column flex-center action-card--${variant}`}>
+  <div className={`card-dashboard flex-column flex-center ${styles[`action-card--${variant}`]}`}>
     <button
-      className={`btn-touch w-full flex-center flex-gap-xs action-card-btn ${className}`}
+      className={`btn-touch w-full flex-center flex-gap-xs ${styles['action-card-btn']} ${className}`}
       onClick={onClick}
       id={id}
     >
@@ -232,7 +233,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
       onClick={onPrepareRecipe}
       id="btn-open-recipe"
       variant="warning"
-      className="btn-warning"
+      className={styles['btn-warning']}
     />
   </section>
 );
@@ -528,7 +529,7 @@ const App: React.FC = () => {
   const filteredRemanentes = activeLocation === 'ALL' ? remanentes : remanentes.filter((r) => r.location === activeLocation);
 
   return (
-    <div className="dashboard-container">
+    <div className={styles['dashboard-container']}>
       <DashboardHeader currentUser={currentUser} isLoading={isLoading} onSync={loadRemanentes} onLogout={handleLogout} {...handlers} />
 
       <FEFOInventoryHealthBar remanentes={remanentes} />

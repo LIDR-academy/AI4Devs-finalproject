@@ -1,0 +1,30 @@
+.btn-warning {
+  background-color: var(--color-warning);
+  color: var(--color-primary-on);
+}
+
+.btn-warning:hover {
+  filter: brightness(1.1);
+}
+
+.user-badge {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.dashboard-header { margin-bottom: var(--space-6); gap: var(--space-4); align-items: flex-start; }
+.action-card--primary { background-color: color-mix(in srgb, var(--color-warning) 5%, transparent); border: 1px dashed var(--color-primary); }
+.action-card--warning { background-color: color-mix(in srgb, var(--color-warning) 5%, transparent); border: 1px dashed var(--color-warning); }
+.action-card-btn { height: 56px; font-size: var(--fs-base); font-weight: var(--fw-bold); gap: 10px; }
