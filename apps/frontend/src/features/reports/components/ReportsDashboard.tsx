@@ -3,6 +3,7 @@ import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, X } from 'lucide-reac
 import { ReportsService, WasteSummaryItem } from '../services/reports.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
+import styles from './ReportsDashboard.module.css';
 
 interface ReportsDashboardProps {
   userRole: string;
@@ -26,12 +27,12 @@ const FILTER_OPTIONS: Array<{ value: FilterRange; label: string }> = [
 
 const ReportsFilterBar: React.FC<ReportsFilterBarProps> = ({ filterRange, onFilterChange, onClose }) => (
   <div className="flex-gap-xs">
-    <div className="flex-gap-xs filter-toggle-group">
+    <div className={`flex-gap-xs ${styles['filter-toggle-group']}`}>
       {FILTER_OPTIONS.map((option) => (
         <button
           key={option.value}
           type="button"
-          className={`btn-touch filter-toggle-btn ${filterRange === option.value ? 'btn-primary' : 'btn-secondary'}`}
+          className={`btn-touch ${styles['filter-toggle-btn']} ${filterRange === option.value ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => onFilterChange(option.value)}
         >
           {option.label}
@@ -51,7 +52,7 @@ interface KpiCardsProps {
 }
 
 const KpiCards: React.FC<KpiCardsProps> = ({ totalQuantity, expirationWaste }) => (
-  <div className="metrics-grid mb-7">
+  <div className={`metrics-grid ${styles['mb-7']}`}>
     <div className="card-dashboard">
       <div className="card-header">
         <div className="card-badge-icon card-badge-icon--danger">
@@ -105,16 +106,16 @@ const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal }
             <div key={item.insumoId + item.reason}>
               <div className="flex-between mb-1 fs-sm fw-semibold">
                 <span>
-                  {item.insumoName} <span className="text-secondary-color fw-regular">({item.reason})</span>
+                  {item.insumoName} <span className={`text-secondary-color ${styles['fw-regular']}`}>({item.reason})</span>
                 </span>
                 <span className="text-danger-color">
                   {item.totalDiscardedQuantity} {item.unitOfMeasure}
                 </span>
               </div>
 
-              <div className="progress-bar-track">
+              <div className={styles['progress-bar-track']}>
                 <div
-                  className={`progress-bar-fill ${item.reason === 'EXPIRATION' ? 'progress-bar-fill--danger' : 'progress-bar-fill--warning'}`}
+                  className={`${styles['progress-bar-fill']} ${item.reason === 'EXPIRATION' ? styles['progress-bar-fill--danger'] : styles['progress-bar-fill--warning']}`}
                   style={{ '--bar-pct': `${pct}%` } as React.CSSProperties}
                 />
               </div>

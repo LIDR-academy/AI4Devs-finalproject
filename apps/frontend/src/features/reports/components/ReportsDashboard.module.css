@@ -1,0 +1,30 @@
+.mb-7 { margin-bottom: var(--space-7); }
+.fw-regular { font-weight: var(--fw-regular); }
+
+.progress-bar-track {
+  background-color: var(--overlay-white-subtle);
+  border-radius: 6px;
+  height: 12px;
+  width: 100%;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  width: var(--bar-pct, 0%);
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+.progress-bar-fill--danger { background-color: var(--color-danger); }
+.progress-bar-fill--warning { background-color: var(--color-warning); }
+
+.filter-toggle-group {
+  background-color: var(--bg-card);
+  padding: var(--space-1);
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+}
+.filter-toggle-btn {
+  padding: 6px var(--space-3);
+  font-size: 0.8rem;
+  min-height: 36px;
+}

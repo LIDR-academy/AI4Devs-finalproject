@@ -1,0 +1,36 @@
+.permission-chip {
+  padding: 12px;
+  border-radius: 4px;
+  text-align: left;
+}
+.permission-chip--active {
+  border: 1px solid var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
+}
+.permission-chip--inactive {
+  border: 1px solid var(--border-card);
+  background-color: var(--bg-root);
+}
+
+.min-w-100 { min-width: 100px; }
+.btn-compact-icon { padding: 6px 10px; }
+.text-truncate { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.section-label { text-transform: uppercase; letter-spacing: 0.05em; }
+
+.new-role-form { padding: var(--space-3); grid-template-columns: 1fr 1fr auto; align-items: end; }
+.permissions-list-scroll { max-height: 260px; overflow-y: auto; padding-right: var(--space-1); }
+.permission-code { display: block; }
+.permission-check-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--color-primary-on);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.permission-check-indicator--active { background-color: var(--color-primary); border: 1px solid var(--color-primary); }
+.permission-check-indicator--inactive { background-color: transparent; border: 1px solid var(--border-card); }
+.roles-permissions-grid { grid-template-columns: 1fr 2fr; gap: var(--space-4); }
+.roles-list-column { border-right: 1px solid var(--border-card); padding-right: var(--space-3); }
+.role-select-btn { justify-content: flex-start; text-align: left; overflow: hidden; }

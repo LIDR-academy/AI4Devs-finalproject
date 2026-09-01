@@ -229,27 +229,6 @@ h3 {
 }
 
 /* --- Componentes UI v3.0 --- */
-.dropdown-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  z-index: 100;
-  min-width: 220px;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.btn-dropdown-item {
-  justify-content: flex-start;
-  width: 100%;
-}
-
 .user-badge {
   background-color: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -427,7 +406,6 @@ h3 {
 .mb-4 { margin-bottom: var(--space-4); }
 .mb-5 { margin-bottom: var(--space-5); }
 .mb-6 { margin-bottom: var(--space-6); }
-.mb-7 { margin-bottom: var(--space-7); }
 
 .mt-1 { margin-top: var(--space-1); }
 .mt-2 { margin-top: var(--space-2); }
@@ -451,7 +429,6 @@ h3 {
 .fs-2xl { font-size: var(--fs-2xl); }
 .fs-3xl { font-size: var(--fs-3xl); }
 
-.fw-regular { font-weight: var(--fw-regular); }
 .fw-semibold { font-weight: var(--fw-semibold); }
 .fw-bold { font-weight: var(--fw-bold); }
 .fw-black { font-weight: var(--fw-black); }
@@ -461,24 +438,6 @@ h3 {
 .error-banner-compact { padding: 10px 14px; font-size: 0.88rem; }
 
 .no-margin-top { margin-top: 0; }
-
-/* ==========================================================================
-   Guard 29 extendido — modificadores de estado (2-3 estados discretos),
-   reemplazan ternarios inline por toggle de className.
-   ========================================================================== */
-.permission-chip {
-  padding: 12px;
-  border-radius: 4px;
-  text-align: left;
-}
-.permission-chip--active {
-  border: 1px solid var(--color-primary);
-  background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
-}
-.permission-chip--inactive {
-  border: 1px solid var(--border-card);
-  background-color: var(--bg-root);
-}
 
 .d-block { display: block; }
 
@@ -494,43 +453,6 @@ h3 {
 
 .text-left { text-align: left; }
 
-.admin-menu-wrapper { position: relative; display: inline-block; }
-.dropdown-chevron { transition: transform 0.2s; }
-.dropdown-chevron--open { transform: rotate(180deg); }
-
-.two-col-grid { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-/* ==========================================================================
-   Guard 29 extendido — única excepción a "sin style inline": barras de
-   progreso continuas via custom property escrita desde style={{'--bar-pct'}}.
-   ========================================================================== */
-.progress-bar-track {
-  background-color: var(--overlay-white-subtle);
-  border-radius: 6px;
-  height: 12px;
-  width: 100%;
-  overflow: hidden;
-}
-.progress-bar-fill {
-  width: var(--bar-pct, 0%);
-  height: 100%;
-  border-radius: 6px;
-  transition: width 0.4s ease;
-}
-.progress-bar-fill--danger { background-color: var(--color-danger); }
-.progress-bar-fill--warning { background-color: var(--color-warning); }
-
-.filter-toggle-group {
-  background-color: var(--bg-card);
-  padding: var(--space-1);
-  border-radius: 8px;
-  border: 1px solid var(--border-card);
-}
-.filter-toggle-btn {
-  padding: 6px var(--space-3);
-  font-size: 0.8rem;
-  min-height: 36px;
-}
-
 .edit-user-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
 .input-touch-compact { height: 38px; font-size: var(--fs-sm); }
 .edit-user-action-btn { padding: 6px var(--space-3); }
@@ -545,30 +467,8 @@ h3 {
 .user-row-toggle-btn { min-width: 100px; }
 .user-list-scroll { max-height: 300px; overflow-y: auto; }
 
-.min-w-100 { min-width: 100px; }
 .w-120 { width: 120px; }
-.btn-compact-icon { padding: 6px 10px; }
-.text-truncate { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-.section-label { text-transform: uppercase; letter-spacing: 0.05em; }
 .font-mono { font-family: monospace; }
-
-.new-role-form { padding: var(--space-3); grid-template-columns: 1fr 1fr auto; align-items: end; }
-.permissions-list-scroll { max-height: 260px; overflow-y: auto; padding-right: var(--space-1); }
-.permission-code { display: block; }
-.permission-check-indicator {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  color: var(--color-primary-on);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.permission-check-indicator--active { background-color: var(--color-primary); border: 1px solid var(--color-primary); }
-.permission-check-indicator--inactive { background-color: transparent; border: 1px solid var(--border-card); }
-.roles-permissions-grid { grid-template-columns: 1fr 2fr; gap: var(--space-4); }
-.roles-list-column { border-right: 1px solid var(--border-card); padding-right: var(--space-3); }
-.role-select-btn { justify-content: flex-start; text-align: left; overflow: hidden; }
 
 
 

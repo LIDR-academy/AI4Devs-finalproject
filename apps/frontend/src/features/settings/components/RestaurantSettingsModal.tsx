@@ -5,6 +5,7 @@ import { ModalFooterActions } from '../../../shared/components/ModalFooterAction
 import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
 import { SettingsService, SystemSettingsDto } from '../services/settings.service.js';
 import { Building2, Save } from 'lucide-react';
+import styles from './RestaurantSettingsModal.module.css';
 
 interface RestaurantSettingsModalProps {
   isOpen: boolean;
@@ -79,7 +80,7 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
           />
         </div>
 
-        <div className="metrics-grid two-col-grid">
+        <div className={`metrics-grid ${styles['two-col-grid']}`}>
           <div>
             <label htmlFor="setting-tax-id" className="form-label">
               Identificación Fiscal (RUT/NIF)
@@ -107,7 +108,7 @@ export const RestaurantSettingsModal: React.FC<RestaurantSettingsModalProps> = (
           </div>
         </div>
 
-        <div className="metrics-grid two-col-grid">
+        <div className={`metrics-grid ${styles['two-col-grid']}`}>
           <div>
             <label htmlFor="setting-critical-hours" className="form-label">
               Alerta Crítica FEFO (Horas)
