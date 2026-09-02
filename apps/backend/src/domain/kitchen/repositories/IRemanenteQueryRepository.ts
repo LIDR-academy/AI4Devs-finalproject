@@ -14,5 +14,5 @@ export interface ActiveRemanenteDTO {
 }
 
 export interface IRemanenteQueryRepository {
-  findActiveRemanentes(location?: string): Promise<ActiveRemanenteDTO[]>;
+  findActiveRemanentes(location?: string, insumoId?: string): Promise<ActiveRemanenteDTO[]>;
 }

@@ -7,11 +7,12 @@ import {
 export class PrismaRemanenteQueryRepository implements IRemanenteQueryRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  public async findActiveRemanentes(location?: string): Promise<ActiveRemanenteDTO[]> {
+  public async findActiveRemanentes(location?: string, insumoId?: string): Promise<ActiveRemanenteDTO[]> {
+    // TK-080: insumoId busca en cualquier ubicacion de cocina, no se combina con location (US-021).
     const rawList = await this.prisma.remanente.findMany({
       where: {
         status: 'ACTIVE',
-        ...(location ? { location } : {}),
+        ...(insumoId ? { insumoId } : location ? { location } : {}),
       },
       include: {
         insumo: true, // Prevencion Anti-N+1 Query

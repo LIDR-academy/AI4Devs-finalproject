@@ -7,6 +7,11 @@ import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
+const getActiveRemanentesQuerySchema = z.object({
+  location: z.string().min(1).optional(),
+  insumoId: z.string().min(1, 'insumoId no puede ser una cadena vacia.').optional(),
+});
+
 const consumeRemanenteSchema = z.object({
   quantity: z.union([z.number().positive('La cantidad a consumir debe ser positiva.'), z.string().min(1)]),
 });
@@ -41,10 +46,14 @@ export class KitchenController {
 
   public getActiveRemanentes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const location = req.query.location as string | undefined;
-      const result = await this.getActiveRemanentesUseCase.execute(location);
+      const query = getActiveRemanentesQuerySchema.parse(req.query);
+      const result = await this.getActiveRemanentesUseCase.execute(query.location, query.insumoId);
       res.status(200).json(result);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
       next(error);
     }
   };

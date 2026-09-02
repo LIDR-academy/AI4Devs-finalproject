@@ -43,7 +43,7 @@ export class InMemoryRemanenteQueryRepository implements IRemanenteQueryReposito
 
   constructor(private readonly stockRepo?: InMemoryStockRepository) {}
 
-  public async findActiveRemanentes(location?: string): Promise<ActiveRemanenteDTO[]> {
+  public async findActiveRemanentes(location?: string, insumoId?: string): Promise<ActiveRemanenteDTO[]> {
     let activeItems: ActiveRemanenteDTO[] = [];
 
     if (this.stockRepo && this.stockRepo.remanentes.size > 0) {
@@ -53,6 +53,13 @@ export class InMemoryRemanenteQueryRepository implements IRemanenteQueryReposito
         .map((rem) => toActiveDTO(rem, this.stockRepo!.insumos.get(rem.insumoId), now));
     } else {
       activeItems = [...this.remanentes].filter((r) => r.status === 'ACTIVE');
+    }
+
+    // TK-080: insumoId busca en cualquier ubicacion de cocina, no se combina con location (US-021).
+    if (insumoId) {
+      return activeItems
+        .filter((r) => r.insumoId === insumoId)
+        .sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime());
     }
 
     if (location) {

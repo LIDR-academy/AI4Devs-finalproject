@@ -96,4 +96,45 @@ describe('TK-004: FEFO Active Remanentes Query TDD Suite', () => {
     expect(response.body[0].id).toBe('rem-c');
     expect(response.body[0].location).toBe('KITCHEN_PREP');
   });
+
+  it('debe filtrar remanentes activos por insumoId en cualquier ubicacion de cocina (US-021 Escenario 1, TK-080)', async () => {
+    // rem-a (ins-1, KITCHEN_FRIDGE) y rem-d-exhausted (ins-1, EXHAUSTED) tambien son ins-1;
+    // solo rem-a debe volver, confirmando que insumoId no se combina con location y excluye EXHAUSTED.
+    const app = createApp({ remanenteQueryRepository: queryRepo, requireAuth: false });
+    const response = await request(app).get('/api/v1/kitchen/remanentes-activos?insumoId=ins-1');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].id).toBe('rem-a');
+    expect(response.body[0].insumoId).toBe('ins-1');
+  });
+
+  it('debe retornar lista vacia cuando el insumo no tiene ningun remanente activo (US-021 Escenario 2, TK-080)', async () => {
+    const app = createApp({ remanenteQueryRepository: queryRepo, requireAuth: false });
+    const response = await request(app).get('/api/v1/kitchen/remanentes-activos?insumoId=ins-sin-remanente');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
+
+  it('debe rechazar un insumoId vacio con 400 Bad Request', async () => {
+    const app = createApp({ remanenteQueryRepository: queryRepo, requireAuth: false });
+    const response = await request(app).get('/api/v1/kitchen/remanentes-activos?insumoId=');
+
+    expect(response.status).toBe(400);
+  });
+
+  it('insumoId debe prevalecer sobre location cuando ambos se envian, sin combinarse (US-021 Escenario 1)', async () => {
+    // rem-a (ins-1) esta en KITCHEN_FRIDGE, no en KITCHEN_PREP. Si location se combinara con
+    // insumoId (AND) en vez de ser ignorado, rem-a NO deberia volver. Debe volver igualmente.
+    const app = createApp({ remanenteQueryRepository: queryRepo, requireAuth: false });
+    const response = await request(app).get(
+      '/api/v1/kitchen/remanentes-activos?insumoId=ins-1&location=KITCHEN_PREP'
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].id).toBe('rem-a');
+    expect(response.body[0].location).toBe('KITCHEN_FRIDGE');
+  });
 });

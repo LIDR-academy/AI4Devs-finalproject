@@ -17,8 +17,8 @@ export interface RemanenteFEFOResponseDTO {
 export class GetActiveRemanentesUseCase {
   constructor(private readonly remanenteQueryRepository: IRemanenteQueryRepository) {}
 
-  public async execute(location?: string): Promise<RemanenteFEFOResponseDTO[]> {
-    const rawRemanentes = await this.remanenteQueryRepository.findActiveRemanentes(location);
+  public async execute(location?: string, insumoId?: string): Promise<RemanenteFEFOResponseDTO[]> {
+    const rawRemanentes = await this.remanenteQueryRepository.findActiveRemanentes(location, insumoId);
     const now = new Date();
 
     return rawRemanentes.map((item) => {
