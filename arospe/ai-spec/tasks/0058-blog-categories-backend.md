@@ -101,7 +101,7 @@ Feature: Blog categories
 > not exist, so no category can be "in use" and there is nothing to count. That scenario is owned by
 > story **0061 (blog-posts-core-crud-backend)**, which introduces `blog_posts.blog_category_id` and
 > retrofits the guard onto `DeleteBlogCategory`. This is the identical scoping
-> [0023](done/0023-product-categories-backend.md) applied to product categories, whose guard [0024b](0024b-product-category-in-use-delete-guard.md) owns (split out of 0024 on 2026-09-01).
+> [0023](done/0023-product-categories-backend.md) applied to product categories, whose guard [0024b](done/0024b-product-category-in-use-delete-guard.md) owns (split out of 0024 on 2026-09-01).
 > See [Scope fences](#scope-fences-what-this-story-must-not-do) and **D-10**.
 
 > **Glossary note (OQ-3).** [gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md#todo--blog--ecommerce-vocabulary-undefined)

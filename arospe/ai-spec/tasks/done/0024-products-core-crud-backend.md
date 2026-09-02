@@ -7,7 +7,7 @@
 > | --- | --- | --- |
 > | **0024** (this file) | `products` + `product_media` schema, three enums, `Product` + factory, `ProductValidationRules`, the four `app/Actions/Products/` actions, `ProductPolicy` | 0019 ✅, 0023 ✅ |
 > | [**0024a**](0024a-product-description-html-sanitization.md) | `symfony/html-sanitizer`, `config/html-sanitizer.php`, `SanitizeProductDescription`, the sanitize-on-write wiring and its security-critical test file | **0024** |
-> | [**0024b**](../0024b-product-category-in-use-delete-guard.md) | the retrofit to 0023's `DeleteProductCategory`, `ProductCategory::products()`, the `categories.delete_blocked` key | **0024** (needs `products.product_category_id`) |
+> | [**0024b**](0024b-product-category-in-use-delete-guard.md) | the retrofit to 0023's `DeleteProductCategory`, `ProductCategory::products()`, the `categories.delete_blocked` key | **0024** (needs `products.product_category_id`) |
 >
 > **Decision, risk and question numbering is deliberately unchanged**, because ~30 sibling story files
 > cite `0024 D-5`, `0024 D-11`, `0024 D-17b`, `0024 R-4`, `0024 R-9`, `0024 RQ-4` and so on by number.
@@ -32,7 +32,7 @@ the paired story **0027**.
 Covers [PRD](../../../docs/PRD/PRD.md#22-products) §2.2's *"Create a product with core fields"* and the
 *"another product"* example of *"Scenario Outline: A duplicate SKU is rejected"* — i.e. Products
 acceptance criteria 1, 4 (the product-SKU half), 6 and 7. Acceptance criterion 2 (the category
-in-use delete block) is [0024b](../0024b-product-category-in-use-delete-guard.md)'s.
+in-use delete block) is [0024b](0024b-product-category-in-use-delete-guard.md)'s.
 
 ## Type
 backend | fullstack (related_task_id: **0027** — products list/editor UI) | includes database-expert: **yes**
@@ -317,7 +317,7 @@ to four actions.
 
 > ⚠️ **File-ownership hand-off, now three-way.** `lang/en|es/products.php` is **created here** and
 > then **extended, never recreated**, by [0024a](0024a-product-description-html-sanitization.md) (no
-> keys today, but it is in the same family), [0024b](../0024b-product-category-in-use-delete-guard.md)
+> keys today, but it is in the same family), [0024b](0024b-product-category-in-use-delete-guard.md)
 > (`categories.delete_blocked`), **0026**, **0027** and **0028**. If any of them runs uncoordinated,
 > one silently overwrites another's keys — and a key missing from `lang/es` renders as its own raw
 > key with no error. This is **R-13**.
@@ -372,7 +372,7 @@ states what it asserts, and the non-obvious ones state **why they can genuinely 
 - [ ] `#[Fillable]` contains exactly the intended set.
 - [ ] `$product->category` resolves, and `$category->products` **excludes** a product in another
       category — the decoy is what makes it non-trivial. *(The `products()` relation itself is
-      [0024b](../0024b-product-category-in-use-delete-guard.md)'s; until it ships, assert the inverse
+      [0024b](0024b-product-category-in-use-delete-guard.md)'s; until it ships, assert the inverse
       `$product->category` half only and mark the second half as 0024b's.)*
 - [ ] The model does **not** use `SoftDeletes` — a regression guard on **D-12**, because adding the
       trait later silently changes both `Rule::unique()` and 0024b's delete-guard count.
@@ -466,7 +466,7 @@ distinction is the whole point)
 - [ ] **The FK is a real constraint**: a raw insert with a random UUID category id throws
       `QueryException`. A deliberate, argued exception to
       [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md)'s "database guarantees" rule —
-      here the FK is [0024b](../0024b-product-category-in-use-delete-guard.md)'s delete guard's second
+      here the FK is [0024b](0024b-product-category-in-use-delete-guard.md)'s delete guard's second
       line of defence, and a migration quietly dropping `->constrained()` would remove that backstop
       with nothing else going red. One test, not a suite.
 
@@ -551,7 +551,7 @@ would be asserting the factory.
 facade, MySQL's own decimal arithmetic; migration `up()`/`down()` mechanics (`RefreshDatabase` proves
 every migration runs, and `down()` symmetry is a code-review concern); the `.webp`/`.avif` pipeline
 (0019); HTML sanitization ([0024a](0024a-product-description-html-sanitization.md)); the
-category-delete block ([0024b](../0024b-product-category-in-use-delete-guard.md)); variant SKUs and
+category-delete block ([0024b](0024b-product-category-in-use-delete-guard.md)); variant SKUs and
 attribute combinations (0029); sales-region assignment and tax resolution (0026); any badge markup,
 colour or screen (0027). The two FK tests above are argued exceptions, not oversights.
 
@@ -717,12 +717,12 @@ interim and what must not happen before it closes.
       are `restrictOnDelete`, so a bare `DELETE` on a referenced image fails with a `23000`. That story
       **must** count references across `products.featured_media_id`, `product_media`, and by then
       0029's variants and Epic 4's blog posts, and refuse with a "used by N products" message — the
-      same shape [0024b](../0024b-product-category-in-use-delete-guard.md) uses for categories. It cannot
+      same shape [0024b](0024b-product-category-in-use-delete-guard.md) uses for categories. It cannot
       ship a delete without that guard; this is a deliberately accepted cost of the confirmed decision,
       not an oversight.
 - [x] **The two follow-on stories are named as blocking their own consumers, not as optional**:
       [0024a](0024a-product-description-html-sanitization.md) blocks **0027** (and 0061/0076/0077/0079),
-      and [0024b](../0024b-product-category-in-use-delete-guard.md) blocks **0025**. Recording it here is
+      and [0024b](0024b-product-category-in-use-delete-guard.md) blocks **0025**. Recording it here is
       what stops this story reading as "products are done".
 - [x] Acceptance criteria met.
 
@@ -736,7 +736,7 @@ reader of a sibling story will have absorbed the wrong version.
 | **C-1** | **D-15 / RQ-10**: *"`CreateUser`/`UpdateUser` (verified to contain no `Gate` call) … authorize at the caller"*, so this story's actions must not self-authorize. | **False, and it reverses the decision.** `App\Actions\Users\CreateUser::__invoke()` line 66 is `$this->logRefusedPrivilegedAttempt->authorize('create', User::class);`, and `UpdateUser` self-authorizes four abilities through `authorize()` and logs two further non-`Gate` refusals through `->log()`. The **documented** convention is the opposite of what RQ-10 preserved — [base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers) quotes `CreateUser` as its ✅ example. `backend-qa`'s recorded dissent was right and was overruled on false evidence. **D-15** is rewritten; the actions self-authorize. |
 | **C-2** | **V-1 / R-1**: CI cannot open a database connection; `phpunit.xml` never pins `DB_CONNECTION`, `.env.example` selects sqlite, the workflow runs no MySQL service. | **True on 2026-08-18, fixed on 2026-08-26**, by the task this very finding spawned — [`ci-database-connection-gap.md`](../ci-database-connection-gap.md), which records `866/866` passing against real MySQL. Verified at the split: `phpunit.xml:29` sets `DB_CONNECTION=mysql`, `.env.example:28` sets `DB_CONNECTION=mysql`, and `.github/workflows/tests.yml:27-47` runs a `mysql:8.4` service with job-level `DB_CONNECTION`/`DB_DATABASE`. **The dependent claim that 0019's V7 and 0023's R-2 were "wrong about CI" is withdrawn.** This is [the 2026-08-29 errors-log entry](../../../docs/errors-log.md#one-docs-pass-reported-two-gaps-that-were-not-there-both-marked-verified--2026-08-29)'s exact shape — a real finding whose write-up outlived its own fix — and a candidate for that log. |
 | **C-3** | **V-6**: *"`app/Models/` holds only `Role.php` and `User.php`; there is no `media` migration, no `Media` model, no `product_categories` migration, no `ProductCategory`."* | **False.** Both [0019](../done/0019-media-library-upload-and-conversions-backend.md) and [0023](../done/0023-product-categories-backend.md) are closed and merged; `app/Models/{Media,ProductCategory}.php`, `database/factories/MediaFactory.php` and both migrations exist. **This story is unblocked**, and R-2's sequencing warning is discharged. |
-| **C-4** | **R-8**: *"there is no `trans_choice` precedent anywhere in `lang/` today."* | **False.** `lang/en/roles.php`'s `index.delete_blocked` has used the `|`-delimited plural form since task 0010, with six `trans_choice()` call sites, and [naming.md](../../../docs/conventions/naming.md#translation-keys) has owned the convention since then. The consequence lands in [0024b](../0024b-product-category-in-use-delete-guard.md), which now **matches** that precedent's simple `singular|plural` form rather than introducing explicit-range syntax. |
+| **C-4** | **R-8**: *"there is no `trans_choice` precedent anywhere in `lang/` today."* | **False.** `lang/en/roles.php`'s `index.delete_blocked` has used the `|`-delimited plural form since task 0010, with six `trans_choice()` call sites, and [naming.md](../../../docs/conventions/naming.md#translation-keys) has owned the convention since then. The consequence lands in [0024b](0024b-product-category-in-use-delete-guard.md), which now **matches** that precedent's simple `singular|plural` form rather than introducing explicit-range syntax. |
 
 **A fifth finding, outside this file, that the split surfaced and nobody owns yet.**
 `app/Actions/ProductCategories/CreateProductCategory.php:36` carries the comment *"matching
@@ -1014,7 +1014,7 @@ non-obvious (**R-3**).
 
 This is `backend-expert`'s position, and it is confirmed on the ground that it makes the media library
 consistent with **this project's existing house pattern for "you cannot delete something that is in
-use"** — the very pattern [0024b](../0024b-product-category-in-use-delete-guard.md) implements for product
+use"** — the very pattern [0024b](0024b-product-category-in-use-delete-guard.md) implements for product
 categories, and which the PRD states for roles, shipping zones and blog categories too. Applying it to
 media as well means the backoffice behaves the same way everywhere: the system refuses and tells you
 what is using the thing, rather than silently degrading data behind your back. 0019's **D11**
@@ -1204,7 +1204,7 @@ the ordering here; there is nothing to order yet.
 
 ### D-14 — *(moved)* The category-delete guard
 
-**Moved in full to [0024b](../0024b-product-category-in-use-delete-guard.md)**, which owns the exact file,
+**Moved in full to [0024b](0024b-product-category-in-use-delete-guard.md)**, which owns the exact file,
 method, guard shape, exception type, error-bag key, `trans_choice` message, the three
 no-confirm-and-proceed reasons and the FK reasoning. Nothing about it changed except its home and the
 `trans_choice` form (see **C-4**). Cited as `0024 D-14` by 0025, 0029, 0058 and 0061 — those citations
@@ -1219,7 +1219,7 @@ requires the UI hint to come from *the same policy method* the mutating path aut
 0027 renders per-row edit/delete actions while 0028's screen renders rows that all answer identically;
 (b) Epic 2 already has a `ProductCategoryPolicy` (0023 D-9), and two sibling entities in one module
 with opposite authorization idioms is a coherence cost; (c) a per-record deletability rule is already
-visible — [0024b](../0024b-product-category-in-use-delete-guard.md) establishes "cannot be deleted because
+visible — [0024b](0024b-product-category-in-use-delete-guard.md) establishes "cannot be deleted because
 N others reference it" for categories, and Epic 3's orders make the identical rule true of products.
 
 **The reversal.** This entry previously said the actions must **not** authorize, "on convention":
@@ -1271,7 +1271,7 @@ callers, and `ProductAuthorizationTest` asserts that no other class under `app/`
 later story ever calls it directly, that story owns adding the gate**, and this paragraph is what tells
 it so. Flagged for Phase 4 in the Definition of Done rather than asserted as settled.
 
-**What must NOT go in the policy: the category in-use guard** ([0024b](../0024b-product-category-in-use-delete-guard.md)).
+**What must NOT go in the policy: the category in-use guard** ([0024b](0024b-product-category-in-use-delete-guard.md)).
 A policy denial renders 403 *unauthorized*, which is a lie there — the actor holds `products.delete`
 and the answer is still no.
 
@@ -1371,7 +1371,7 @@ That is precisely the property that makes the reorder control expressible withou
 - **No HTML sanitizer, no `symfony/html-sanitizer`, no `config/html-sanitizer.php`, no
   `SanitizeProductDescription`** — [0024a](0024a-product-description-html-sanitization.md)'s, in full.
 - **No `ProductCategory::products()` relation, no change to `app/Actions/ProductCategories/**`, no
-  `categories.delete_blocked` key** — [0024b](../0024b-product-category-in-use-delete-guard.md)'s, in full.
+  `categories.delete_blocked` key** — [0024b](0024b-product-category-in-use-delete-guard.md)'s, in full.
 - **No code anywhere that renders, echoes or returns `products.description` to a client.** This is the
   fence that makes the unsanitized interim safe (see the note below); it binds this story only, because
   0024a lifts it.
@@ -1455,7 +1455,7 @@ cite them by number.
   `ProductMediaTest` needs `MediaFactory`. Closed and merged.
 - **This story blocks its own two siblings**, both of which are worthless without it:
   [0024a](0024a-product-description-html-sanitization.md) (needs `CreateProduct`/`UpdateProduct` to
-  wire into) and [0024b](../0024b-product-category-in-use-delete-guard.md) (needs
+  wire into) and [0024b](0024b-product-category-in-use-delete-guard.md) (needs
   `products.product_category_id` to count through). 0024a and 0024b are **independent of each other**
   and may ship in either order.
 - **Story 0027 depends on all three** (the paired UI), as do **0026** (sales regions on products) and
@@ -1487,14 +1487,14 @@ cite them by number.
 - **R-8 — ⚠️ CORRECTED (was: no `trans_choice` precedent in `lang/`).** There is one, since task 0010:
   `lang/en/roles.php`'s `index.delete_blocked`, with six `trans_choice()` call sites and a documented
   convention in [naming.md](../../../docs/conventions/naming.md#translation-keys). Consumed by
-  [0024b](../0024b-product-category-in-use-delete-guard.md), which matches the existing simple
+  [0024b](0024b-product-category-in-use-delete-guard.md), which matches the existing simple
   `singular|plural` form. See **C-4**. Retained as a stub because 0025 **R-4**, 0029 and 0036 **R-6**
   all cite it.
 - **R-9 — `SELECT *` on the products list** drags `description` out of the clustered index on every
   row (**D-4**). A constraint 0027 inherits.
 - **R-10 — `type`'s no-default relies on MySQL strict mode (V-2).** If strict were ever disabled, an
   omitted `type` becomes `''` and fails at *read* time in the enum cast, far from the cause.
-- **R-11 — *(moved to [0024b](../0024b-product-category-in-use-delete-guard.md))*** — `restrictOnDelete`
+- **R-11 — *(moved to [0024b](0024b-product-category-in-use-delete-guard.md))*** — `restrictOnDelete`
   on the category FK is load-bearing only while `ProductCategory` stays hard-deleted.
 - **R-12 — Stored XSS via `description`. NOT mitigated in this story.** Before the split this risk was
   marked mitigated by D-16; with the sanitizer moved to
@@ -1506,7 +1506,7 @@ cite them by number.
 - **R-13 — `lang/*/products.php` is claimed by five stories** (0024 creates it; 0024b, 0026, 0027 and
   0028 extend it). Uncoordinated, one silently overwrites another's keys, and a missing `lang/es` key
   renders as its own raw key.
-- **R-14 — *(moved to [0024b](../0024b-product-category-in-use-delete-guard.md))*** — the reassign-away
+- **R-14 — *(moved to [0024b](0024b-product-category-in-use-delete-guard.md))*** — the reassign-away
   race between the count and the delete.
 - **R-15 — The `->ignore()` omission.** Saving a product under its own unchanged SKU fails. 0023's R-1,
   one entity over; caught only by writing it as three tests, not one.
@@ -1537,7 +1537,7 @@ dropped alternatives, so a later reader sees what was decided and why.
   both media FKs.** An image cannot be deleted while any product references it as its featured image or
   through the gallery pivot. Confirmed on the ground that it makes media consistent with **this
   project's house pattern for refusing to delete something in use** — the same pattern
-  [0024b](../0024b-product-category-in-use-delete-guard.md) implements for categories and the PRD states
+  [0024b](0024b-product-category-in-use-delete-guard.md) implements for categories and the PRD states
   for roles, shipping zones and blog categories. Implemented by **D-9**. *Dropped:* `nullOnDelete` +
   `cascadeOnDelete`, which would have let a product survive with a blanked image and spared a future
   media-delete story from building a reference guard first. That cost is now **accepted deliberately**

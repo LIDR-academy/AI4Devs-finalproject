@@ -111,7 +111,7 @@ ordering as part of this story's implementation, not a doc-sync afterthought —
 edit riding along with the actions it describes. · any migration (no column changes, no backfill — **D-A3**) ·
 `app/Livewire/**` · `resources/views/**` · `routes/**` · `lang/**` (this story adds no user-facing
 string; **R-16**'s "warn the administrator" idea is 0027's, deliberately) ·
-`app/Actions/ProductCategories/**` ([0024b](../0024b-product-category-in-use-delete-guard.md)'s) · Epic 4's
+`app/Actions/ProductCategories/**` ([0024b](0024b-product-category-in-use-delete-guard.md)'s) · Epic 4's
 blog body (0061 **reuses** this configuration; it does not fork it — see **D-16**'s scope fence).
 
 ## Tests to perform
@@ -417,7 +417,7 @@ them through `UpdateProduct`, not to add a migration. Record it if it happens.
 - **[0024](../done/0024-products-core-crud-backend.md) (products core CRUD backend) — hard, blocking.** This
   story modifies `CreateProduct` and `UpdateProduct` and tests through them; neither exists before it.
   0024 also creates the `description` column this sanitizes.
-- **Independent of [0024b](../0024b-product-category-in-use-delete-guard.md).** They touch disjoint files
+- **Independent of [0024b](0024b-product-category-in-use-delete-guard.md).** They touch disjoint files
   and may ship in either order.
 - **[0021](../done/0021-wysiwyg-rich-text-editor-component.md) — soft, and ✅ SATISFIED.** The allow-list
   is defined as that component's toolbar output; its own deferred round-trip follow-up is discharged

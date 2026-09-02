@@ -1125,7 +1125,7 @@ the screen on top of this.
   0024 **R-8**, which was itself wrong).** There has been one since task 0010 —
   `lang/en/roles.php`'s `index.delete_blocked`, six `trans_choice()` call sites, and a documented
   convention in [naming.md](../../docs/conventions/naming.md#translation-keys) — and
-  [0024b](0024b-product-category-in-use-delete-guard.md)'s `products.categories.delete_blocked` is the
+  [0024b](done/0024b-product-category-in-use-delete-guard.md)'s `products.categories.delete_blocked` is the
   second. **Copy the shipped simple `singular|plural` form** rather than inventing an explicit-range
   one. **What survives of this risk**: Spanish pluralisation is not English's, both locale files land
   in this change, and a mis-written plural branch shows up as a message that reads wrong rather than

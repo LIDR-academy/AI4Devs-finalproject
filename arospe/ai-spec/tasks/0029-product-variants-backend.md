@@ -2650,7 +2650,7 @@ policies, and "the actions are self-protecting" is a reasonable and dangerous in
 > a **project-level decision made once**, plus the `ArchitectureTest` assertion that every
 > `app/Actions/` class has an authorizing call site — because `app/Actions/ProductCategories/`'s three
 > actions are still the standing exception, deliberately deferred to **0025** (see
-> [0024b](0024b-product-category-in-use-delete-guard.md) **D-B1** for why 0024b did not close a third
+> [0024b](done/0024b-product-category-in-use-delete-guard.md) **D-B1** for why 0024b did not close a third
 > of that folder unilaterally).
 `backend-expert` explicitly does **not** ask 0029 to diverge — a third idiom would be worse — but asks
 the coordinator to treat this as a **project-level decision made once** (a `docs/security/` rule plus

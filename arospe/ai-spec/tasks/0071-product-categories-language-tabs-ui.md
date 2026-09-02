@@ -75,7 +75,7 @@ frontend | includes database-expert: **no** | consumes **0070** (mechanism), **0
 
 **Scope fence.** This story adds no route, model, migration, action, policy or permission. It
 widens one Livewire component and one Blade view, extracts one shared partial, and appends one
-lang group. Deletion, the in-use hard block and the product-count column are [0024b](0024b-product-category-in-use-delete-guard.md)/0025's and are
+lang group. Deletion, the in-use hard block and the product-count column are [0024b](done/0024b-product-category-in-use-delete-guard.md)/0025's and are
 untouched.
 
 ## Gherkin — 2. Detailed acceptance criteria (Given/When/Then)
@@ -253,7 +253,7 @@ Feature: Product category names authored per store language
 | `routes/web.php`, `config/modules.php`, `lang/*/navigation.php` | 0025 — no route and no sidebar entry is added or changed |
 | `config/store-languages.php` | 0070 already appends `product_category_translations` |
 | `database/seeders/RolePermissionSeeder.php` | nobody — catalog stays at **42**; translating adds no permission (0070 **D-13**) |
-| The delete-confirmation modal and its in-use hard block | [0024b](0024b-product-category-in-use-delete-guard.md) / 0025 — untouched by tabs |
+| The delete-confirmation modal and its in-use hard block | [0024b](done/0024b-product-category-in-use-delete-guard.md) / 0025 — untouched by tabs |
 
 ### The new backend action — the layer that does not depend on a caller
 
@@ -436,7 +436,7 @@ the new one.
 - **The uniqueness fold, the accent/case matrix, the composite `UNIQUE` backstop and the `23000` misattribution guard** — 0070's. Two canaries only here, one per scoping direction.
 - **`SetTranslation`'s `updateOrCreate` semantics** — 0070's; one row-count assertion here, no re-derivation.
 - **`StoreLanguage::active()`'s own correctness and the `defaultStoreLanguage()` memo** — 0068's / 0070's **D-10**.
-- **The delete guard, the in-use block and the `productCategoryId` error key** — [0024b](0024b-product-category-in-use-delete-guard.md)'s (split out of 0024 on 2026-09-01); untouched by tabs.
+- **The delete guard, the in-use block and the `productCategoryId` error key** — [0024b](done/0024b-product-category-in-use-delete-guard.md)'s (split out of 0024 on 2026-09-01); untouched by tabs.
 - **`ProductCategoryPolicy`'s abilities in the abstract** — 0023's / 0025's. No new ability (0070 **D-13**).
 - **`trans_choice`'s pluralisation engine, `HasUuids`, Eloquent timestamps** — vendor.
 
