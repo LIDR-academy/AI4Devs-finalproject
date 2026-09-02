@@ -772,7 +772,7 @@ Run them; do not merely assert the tests exist (the pattern 0016 and 0017 establ
   `is_default`/`is_active` single-writer invariants — **0017's, entirely**. This story only *reads* an
   already-validated `rate`.
 - **The seeder's idempotency / no-clobber / drift-repair guarantees** — 0016's, entirely.
-- **Product CRUD, SKU canonicalisation, description sanitization, gallery mechanics** — 0024's and [0024a](0024a-product-description-html-sanitization.md)'s,
+- **Product CRUD, SKU canonicalisation, description sanitization, gallery mechanics** — 0024's and [0024a](done/0024a-product-description-html-sanitization.md)'s,
   entirely.
 - **Address → region resolution** (shipping vs billing, the IP-geo mismatch check) — PRD §3.2 /
   Epic 3. This story's resolver receives an already-resolved region.

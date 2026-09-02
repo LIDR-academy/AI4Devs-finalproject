@@ -72,7 +72,7 @@ therefore not convened, matching [0025](0025-product-categories-ui.md)'s precede
 category screen.
 
 **Hard dependency chain, and it is longer than `related_task_id` suggests.** This story cannot start
-until **0019 → 0020 → 0021 → 0022 → 0023 → 0024 → [0024a](0024a-product-description-html-sanitization.md) → 0026**
+until **0019 → 0020 → 0021 → 0022 → 0023 → 0024 → [0024a](done/0024a-product-description-html-sanitization.md) → 0026**
 are all closed. `related_task_id` correctly names the FE/BE pair (0024); the others are hard blockers
 from different pairs, exactly the situation [0025](0025-product-categories-ui.md)'s **F-1** records for
 itself.
@@ -396,7 +396,7 @@ Feature: Deleting a product
 | --- | --- |
 | `database/migrations/*products*`, `app/Models/Product.php`, `app/Enums/Product*.php` | 0024 |
 | `app/Actions/Products/{Create,Update,Delete}Product.php`, `SyncProductGallery.php` | 0024 |
-| `app/Actions/Products/SanitizeProductDescription.php`, `config/html-sanitizer.php` | **[0024a](0024a-product-description-html-sanitization.md)** (split out of 0024 on 2026-09-01) — **a hard, blocking dependency of this story**, because this screen renders `description` unescaped and binds 0021's `WysiwygEditor` to it |
+| `app/Actions/Products/SanitizeProductDescription.php`, `config/html-sanitizer.php` | **[0024a](done/0024a-product-description-html-sanitization.md)** (split out of 0024 on 2026-09-01) — **a hard, blocking dependency of this story**, because this screen renders `description` unescaped and binds 0021's `WysiwygEditor` to it |
 | `app/Concerns/ProductValidationRules.php`, `app/Policies/ProductPolicy.php` | 0024 (0026 extends the trait) |
 | `app/Actions/Products/{SyncProductSalesRegions,SearchSalesRegions,ResolveProductTaxRate}.php` | 0026 |
 | `app/Livewire/Media/Gallery.php`, `app/Livewire/Components/{WysiwygEditor,SearchableMultiSelect}.php` | 0020 / 0021 / 0022 |
@@ -1648,7 +1648,7 @@ than explaining a surprise afterwards.
 *Rejected:* detecting the loss and warning dynamically. It requires comparing pre- and
 post-sanitization HTML server-side and round-tripping a diff to the client, for an event that is rare
 and non-destructive to anything but formatting — real complexity for a marginal gain, and it would put
-a second consumer of the sanitizer's behaviour outside [0024a](0024a-product-description-html-sanitization.md)'s single call site.
+a second consumer of the sanitizer's behaviour outside [0024a](done/0024a-product-description-html-sanitization.md)'s single call site.
 
 **Scope fence, and it is a security-relevant one:** this screen renders **no product description HTML
 at all** — not in the list, not in the editor (the WYSIWYG seeds itself client-side through `@js()`
@@ -1879,7 +1879,7 @@ Executed against this repository on 2026-08-18, during this debate.
 ### Dependencies
 
 Hard and blocking, in required order: **0019 → 0020 → 0021 → 0022 → 0023 → 0024 →
-[0024a](0024a-product-description-html-sanitization.md) → 0026 → 0027.**
+[0024a](done/0024a-product-description-html-sanitization.md) → 0026 → 0027.**
 (0025 is not a blocker, but shipping it first gives the category screen the editor's empty-catalog
 link a destination — see [OQ-1](#open-questions). Nor is
 [0024b](0024b-product-category-in-use-delete-guard.md), which blocks 0025 rather than this story.)

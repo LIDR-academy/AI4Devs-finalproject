@@ -6,7 +6,7 @@
 > | Story | Deliverable | Depends on |
 > | --- | --- | --- |
 > | **0024** (this file) | `products` + `product_media` schema, three enums, `Product` + factory, `ProductValidationRules`, the four `app/Actions/Products/` actions, `ProductPolicy` | 0019 ✅, 0023 ✅ |
-> | [**0024a**](../0024a-product-description-html-sanitization.md) | `symfony/html-sanitizer`, `config/html-sanitizer.php`, `SanitizeProductDescription`, the sanitize-on-write wiring and its security-critical test file | **0024** |
+> | [**0024a**](0024a-product-description-html-sanitization.md) | `symfony/html-sanitizer`, `config/html-sanitizer.php`, `SanitizeProductDescription`, the sanitize-on-write wiring and its security-critical test file | **0024** |
 > | [**0024b**](../0024b-product-category-in-use-delete-guard.md) | the retrofit to 0023's `DeleteProductCategory`, `ProductCategory::products()`, the `categories.delete_blocked` key | **0024** (needs `products.product_category_id`) |
 >
 > **Decision, risk and question numbering is deliberately unchanged**, because ~30 sibling story files
@@ -316,7 +316,7 @@ to four actions.
 | `lang/es/products.php` | **New**, key-for-key identical, per [naming.md](../../../docs/conventions/naming.md#translation-keys). |
 
 > ⚠️ **File-ownership hand-off, now three-way.** `lang/en|es/products.php` is **created here** and
-> then **extended, never recreated**, by [0024a](../0024a-product-description-html-sanitization.md) (no
+> then **extended, never recreated**, by [0024a](0024a-product-description-html-sanitization.md) (no
 > keys today, but it is in the same family), [0024b](../0024b-product-category-in-use-delete-guard.md)
 > (`categories.delete_blocked`), **0026**, **0027** and **0028**. If any of them runs uncoordinated,
 > one silently overwrites another's keys — and a key missing from `lang/es` renders as its own raw
@@ -550,7 +550,7 @@ would be asserting the factory.
 `HasUuids` itself, Eloquent timestamps, `Rule::unique`/`Rule::exists`'s generated SQL, the `Storage`
 facade, MySQL's own decimal arithmetic; migration `up()`/`down()` mechanics (`RefreshDatabase` proves
 every migration runs, and `down()` symmetry is a code-review concern); the `.webp`/`.avif` pipeline
-(0019); HTML sanitization ([0024a](../0024a-product-description-html-sanitization.md)); the
+(0019); HTML sanitization ([0024a](0024a-product-description-html-sanitization.md)); the
 category-delete block ([0024b](../0024b-product-category-in-use-delete-guard.md)); variant SKUs and
 attribute combinations (0029); sales-region assignment and tax resolution (0026); any badge markup,
 colour or screen (0027). The two FK tests above are argued exceptions, not oversights.
@@ -588,7 +588,7 @@ same refusal the dashboard will get. "Agotado" exists only as a **computed** bad
 `stock`, with no column, no enum case, no validation value and no code path that could write it.
 
 Nothing is user-visible yet: the screen that consumes all of this is story 0027. The description
-column accepts HTML and **nothing sanitizes it until [0024a](../0024a-product-description-html-sanitization.md)
+column accepts HTML and **nothing sanitizes it until [0024a](0024a-product-description-html-sanitization.md)
 ships** — see that story's own framing, and the scope fence below, for why that is safe in the
 interim and what must not happen before it closes.
 
@@ -721,7 +721,7 @@ interim and what must not happen before it closes.
       ship a delete without that guard; this is a deliberately accepted cost of the confirmed decision,
       not an oversight.
 - [x] **The two follow-on stories are named as blocking their own consumers, not as optional**:
-      [0024a](../0024a-product-description-html-sanitization.md) blocks **0027** (and 0061/0076/0077/0079),
+      [0024a](0024a-product-description-html-sanitization.md) blocks **0027** (and 0061/0076/0077/0079),
       and [0024b](../0024b-product-category-in-use-delete-guard.md) blocks **0025**. Recording it here is
       what stops this story reading as "products are done".
 - [x] Acceptance criteria met.
@@ -818,7 +818,7 @@ Nullable, because a Draft mid-authoring has none. **No cast** — it is HTML; an
 would corrupt it.
 
 **The stored HTML is *not* sanitized by this story.** That is
-[0024a](../0024a-product-description-html-sanitization.md)'s whole deliverable, and it is what makes the
+[0024a](0024a-product-description-html-sanitization.md)'s whole deliverable, and it is what makes the
 `max:` rule finally meaningful: once 0024a ships, the rule measures the post-sanitization value. Until
 then `productDescriptionRules()`'s `max:65535` measures the submitted value, which is the *stricter*
 direction and therefore safe — a description that passes the rule now still passes it after 0024a
@@ -1198,7 +1198,7 @@ the upper-casing must happen **before** `validate()`, not only in the action, or
 sees a value the database never stores.
 
 **`productDescriptionRules()`'s `max:65535` currently measures the submitted value.**
-[0024a](../0024a-product-description-html-sanitization.md) inserts the sanitize step **ahead of**
+[0024a](0024a-product-description-html-sanitization.md) inserts the sanitize step **ahead of**
 `validate()`, at which point it measures the stored value — its **D-16** constraint 1. Do not "fix"
 the ordering here; there is nothing to order yet.
 
@@ -1282,7 +1282,7 @@ one of the two layers has removed a layer, not a redundancy.
 
 ### D-16 — *(moved)* `description` HTML sanitization
 
-**Moved in full to [0024a](../0024a-product-description-html-sanitization.md)**, which owns the package
+**Moved in full to [0024a](0024a-product-description-html-sanitization.md)**, which owns the package
 choice (`symfony/html-sanitizer`, with `mews/purifier` / `stevebauman/purify` considered and rejected),
 the allow-list table, `config/html-sanitizer.php`, `SanitizeProductDescription`, the three
 implementation constraints (sanitize-before-length, idempotence, lossiness) and the security-critical
@@ -1369,7 +1369,7 @@ That is precisely the property that makes the reorder control expressible withou
 
 - No Livewire component, route, Blade view, sidebar entry or browser test (0027).
 - **No HTML sanitizer, no `symfony/html-sanitizer`, no `config/html-sanitizer.php`, no
-  `SanitizeProductDescription`** — [0024a](../0024a-product-description-html-sanitization.md)'s, in full.
+  `SanitizeProductDescription`** — [0024a](0024a-product-description-html-sanitization.md)'s, in full.
 - **No `ProductCategory::products()` relation, no change to `app/Actions/ProductCategories/**`, no
   `categories.delete_blocked` key** — [0024b](../0024b-product-category-in-use-delete-guard.md)'s, in full.
 - **No code anywhere that renders, echoes or returns `products.description` to a client.** This is the
@@ -1454,7 +1454,7 @@ cite them by number.
   and ✅ SATISFIED.** The featured-image FK and the gallery pivot both point into `media`, and
   `ProductMediaTest` needs `MediaFactory`. Closed and merged.
 - **This story blocks its own two siblings**, both of which are worthless without it:
-  [0024a](../0024a-product-description-html-sanitization.md) (needs `CreateProduct`/`UpdateProduct` to
+  [0024a](0024a-product-description-html-sanitization.md) (needs `CreateProduct`/`UpdateProduct` to
   wire into) and [0024b](../0024b-product-category-in-use-delete-guard.md) (needs
   `products.product_category_id` to count through). 0024a and 0024b are **independent of each other**
   and may ship in either order.
@@ -1498,7 +1498,7 @@ cite them by number.
   on the category FK is load-bearing only while `ProductCategory` stays hard-deleted.
 - **R-12 — Stored XSS via `description`. NOT mitigated in this story.** Before the split this risk was
   marked mitigated by D-16; with the sanitizer moved to
-  [0024a](../0024a-product-description-html-sanitization.md), **this story's own state is unmitigated by
+  [0024a](0024a-product-description-html-sanitization.md), **this story's own state is unmitigated by
   construction** and is safe only for the three structural reasons in the scope-fence note above (no
   render path, no non-test writer, 0024a blocking every consumer). It is rated **high the moment any
   of those three stops holding**, which is exactly why the third is a Definition-of-Done item rather
@@ -1510,7 +1510,7 @@ cite them by number.
   race between the count and the delete.
 - **R-15 — The `->ignore()` omission.** Saving a product under its own unchanged SKU fails. 0023's R-1,
   one entity over; caught only by writing it as three tests, not one.
-- **R-16 — *(moved to [0024a](../0024a-product-description-html-sanitization.md))*** — sanitization is
+- **R-16 — *(moved to [0024a](0024a-product-description-html-sanitization.md))*** — sanitization is
   silently lossy.
 - **R-17 — `restrictOnDelete` on the media FKs is a constraint on a story that does not exist yet.**
   Nothing can delete media today, so these FKs are unreachable in production and their only proof is
@@ -1529,7 +1529,7 @@ cite them by number.
 **re-decided** at the split; two moved with their stories. Recorded with the confirmed answer and the
 dropped alternatives, so a later reader sees what was decided and why.
 
-- **RQ-1 — *(moved to [0024a](../0024a-product-description-html-sanitization.md))*** — is the
+- **RQ-1 — *(moved to [0024a](0024a-product-description-html-sanitization.md))*** — is the
   `description` HTML sanitized, and where? Answered there, unchanged: sanitized on write, before
   persistence, with an approved new Composer dependency.
 

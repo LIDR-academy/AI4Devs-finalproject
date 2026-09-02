@@ -8,7 +8,7 @@ stores and Epic 4's blog body will reuse. "Insert image" opens the shared media 
 ([0020](../done/0020-shared-media-gallery-modal-ui.md)) in **single-select** mode and places the chosen image
 inline **at the cursor position**.
 
-The HTML is sanitized **server-side on write** (0024a's [D-16](../0024a-product-description-html-sanitization.md), an
+The HTML is sanitized **server-side on write** (0024a's [D-16](0024a-product-description-html-sanitization.md), an
 already-approved `symfony/html-sanitizer` dependency), so this component performs **no client-side
 sanitization**. Its one obligation on that axis is narrower and is the coordination point with 0024:
 **every tag it can emit must already be inside that allow-list**, so the sanitizer never silently
@@ -60,7 +60,7 @@ banner, that bundle is **style guide only — none of its markup or JS is ported
 | Out of scope | Owner |
 |---|---|
 | The gallery modal itself — tiles, search, upload, selection, the confirm payload | **0020**, consumed unchanged |
-| Sanitizing the HTML, `config/html-sanitizer.php` | **0024a** ([D-16](../0024a-product-description-html-sanitization.md)) — was 0024's until that story was split on 2026-09-01 |
+| Sanitizing the HTML, `config/html-sanitizer.php` | **0024a** ([D-16](0024a-product-description-html-sanitization.md)) — was 0024's until that story was split on 2026-09-01 |
 | The `products.description` column | **0024** ([D-4](0024-products-core-crud-backend.md)) |
 | Any real page hosting this editor (the product editor) | **0027**, not yet debated |
 | The blog post editor and its body field | **Epic 4**, which reuses this component unchanged |
@@ -207,7 +207,7 @@ re-verified by `product-owner` independently of the agent that found them.
 |---|---|---|---|
 | V1 | **Alpine already ships on every page**, bundled inside Livewire 4's own build and exported as `window.Alpine`. There is no separate `alpinejs` package. | `vendor/livewire/livewire/dist/livewire.js:15816` (`window.Alpine = module_default`); `package.json` has no `alpinejs`. | A hand-rolled Alpine editor needs **zero new dependency**. |
 | V2 | **This project ships no rich-text JS library and almost no JS at all.** `package.json` `dependencies` are `@laravel/passkeys`, `@tailwindcss/vite`, `concurrently`, `laravel-vite-plugin`, `tailwindcss`, `vite`; `devDependencies` is `playwright` only. `resources/js/app.js` is **empty**; `passkeys.js` is the only real module. | Read `package.json`, `vite.config.js`, `resources/js/`. | TipTap/Quill/Trix would be this project's **first** bundled UI library — an approval-gated change per project `CLAUDE.md`, not a drop-in. |
-| V3 | **`execCommand('bold'\|'italic'\|'underline')` emits `<b>`, `<i>`, `<u>` in Chromium** — not `<strong>`/`<em>`, and **no inline `style`**. `styleWithCSS` defaults to `false`; setting it `true` switches the output to `<span style="font-weight: bold;">`. | Executed in a real headless Chromium session (the `chromium-1228` build in `node_modules/playwright`), reading `innerHTML` off a live `contenteditable`. | **Decisive, and the story's central good news:** `<b>`/`<i>`/`<u>` are explicitly allowed alternates in 0024a [D-16](../0024a-product-description-html-sanitization.md)'s table. The naive output is already inside the allow-list — **no client-side tag-remapping layer is needed.** And `styleWithCSS` must **never** be enabled ([D2](#d2--the-exact-html-tag-set-this-editor-may-emit)). |
+| V3 | **`execCommand('bold'\|'italic'\|'underline')` emits `<b>`, `<i>`, `<u>` in Chromium** — not `<strong>`/`<em>`, and **no inline `style`**. `styleWithCSS` defaults to `false`; setting it `true` switches the output to `<span style="font-weight: bold;">`. | Executed in a real headless Chromium session (the `chromium-1228` build in `node_modules/playwright`), reading `innerHTML` off a live `contenteditable`. | **Decisive, and the story's central good news:** `<b>`/`<i>`/`<u>` are explicitly allowed alternates in 0024a [D-16](0024a-product-description-html-sanitization.md)'s table. The naive output is already inside the allow-list — **no client-side tag-remapping layer is needed.** And `styleWithCSS` must **never** be enabled ([D2](#d2--the-exact-html-tag-set-this-editor-may-emit)). |
 | V4 | **`formatBlock '<h2>'` → clean `<h2>…</h2>`; `createLink` → clean `<a href="…">…</a>`; pressing Enter creates a new `<p>`, never a `<div>`.** | Same Chromium session. | Every block/line structure the toolbar produces is inside the allow-list with no post-processing. |
 | V5 | **`insertUnorderedList`/`insertOrderedList` nest the list *inside* a `<p>`** in the live DOM — `<p><ul><li>…</li></ul></p>` — which the HTML5 content model forbids. Re-parsing that exact string with a standards parser auto-closes the `<p>` and leaves empty flanking `<p></p>` around the list. | Same session, reproduced two ways (`innerHTML =` assignment and `DOMParser`) — both Chromium's own parser, so this is one confirmation of the mechanism, not two independent engines. | Cosmetic, **not a regression to chase** ([D11](#d11--the-empty-paragraph-around-a-list-is-expected-output-not-a-regression)). Every tag involved is still allow-listed. |
 | V6 | **Livewire registers every `#[On]` / `$listeners` entry as `window.addEventListener(name, handler)` — page-global, for every mounted component instance.** The **only** thing separating two same-named listeners is the event **name string**. | `vendor/livewire/livewire/dist/livewire.js:14005-14011`, read directly by `frontend-expert` and **re-verified by `product-owner`**. | **Sharpens 0020's own D2 rationale**, which credits "DOM bubbling + `#[On]`" with the disambiguation. The real mechanism is name uniqueness. A fixed literal `select-event` in *this* component would cross-wire two editors on one page. See [D5](#d5--the-gallery-event-name-is-per-instance-unique-not-a-literal). |
@@ -245,7 +245,7 @@ library question must be reopened rather than answered by piling more `execComma
 ### D2 — The exact HTML tag set this editor may emit
 
 This is the coordination point with 0024 and the section a reviewer should check first. The set below
-is **exactly** 0024a [D-16](../0024a-product-description-html-sanitization.md)'s sanitizer allow-list — cited, not
+is **exactly** 0024a [D-16](0024a-product-description-html-sanitization.md)'s sanitizer allow-list — cited, not
 re-derived. **If these two lists ever disagree, 0024's is authoritative and this component is the one
 that must change**, because the sanitizer is what actually runs on write.
 
@@ -885,7 +885,7 @@ saved. No new JavaScript dependency is added to the project.
 - [ ] Each of the seven formatting actions applies to the current selection, and the three inline
       ones toggle off when re-applied.
 - [ ] **Every tag the editor can emit is inside 0024
-      [D-16](../0024a-product-description-html-sanitization.md)'s sanitizer allow-list**, proven by an exhaustive
+      [D-16](0024a-product-description-html-sanitization.md)'s sanitizer allow-list**, proven by an exhaustive
       per-element assertion rather than positive containment checks; no `style` attribute and no
       `<div>`/`<span>`/`<font>`/`<figure>` is ever produced.
 - [ ] The insert-image action opens the shared gallery in **single-select** mode, consuming 0020's
@@ -999,7 +999,7 @@ Ordered. Steps 0 and 1 are hard gates.
   extends its D16 harness. 0020 itself is blocked on **0019**, so the real chain is
   0019 → 0020 → 0021. Numbering already satisfies
   [workflow.md](../../../docs/workflow.md#task-ordering-rule)'s ordering rule.
-- **[0024a — product description HTML sanitization](../0024a-product-description-html-sanitization.md) —
+- **[0024a — product description HTML sanitization](0024a-product-description-html-sanitization.md) —
   coordination, not a build blocker.** *(Repointed 2026-09-01: this named story 0024, whose **D-16**
   was split into its own story on that date; 0024a depends on 0024 in turn.)* Its D-16 allow-list
   defines this component's output contract, and its `config/html-sanitizer.php` is what technical task
@@ -1096,7 +1096,7 @@ Written in Phase 1 (Three Amigos) on 2026-08-18 for Epic 2, from
 [PRD §2.3](../../../docs/PRD/PRD.md#23-shared-media-gallery) and the
 [Design reference](../../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, against the
 finalized contracts in [0020](../done/0020-shared-media-gallery-modal-ui.md) (D2, D3, D12, D14, D16) and
-[0024a](../0024a-product-description-html-sanitization.md) (D-16, split out of
+[0024a](0024a-product-description-html-sanitization.md) (D-16, split out of
 [0024](0024-products-core-crud-backend.md) on 2026-09-01). Participants: `product-owner` (lead),
 `frontend-expert`, `frontend-qa` — classified **frontend** per
 [workflow.md](../../../docs/workflow.md#task-classification-rule)'s task-classification rule, with

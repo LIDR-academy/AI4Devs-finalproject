@@ -814,7 +814,7 @@ deliberately does not re-derive 0061's rules:
 | The WYSIWYG's tag emission, caret restore, toolbar `aria-pressed` | 0021 |
 | The media gallery's search, upload, tile cap, detail editing | 0019 / 0020 |
 | `SearchableMultiSelect`'s debounce and truncation | 0022 — **not used by this story at all** (**D-10**) |
-| The HTML sanitizer's allow-list | [0024a](0024a-product-description-html-sanitization.md), consumed unchanged through 0061 |
+| The HTML sanitizer's allow-list | [0024a](done/0024a-product-description-html-sanitization.md), consumed unchanged through 0061 |
 | The blog-category delete block's count, race and logging | 0058 + 0061; this story consumes only the fact that an exit must exist |
 | The scheduled auto-publish transition | 0064 |
 | The published-post notification | 0065 |

@@ -463,7 +463,7 @@ stories are consistent with each other, not divergent. *Rejected:* `PublishBlogP
 - `App\Actions\Auth\LogRefusedPrivilegedAttempt` — the refusal audit line (story 0015b), already
   constructor-injected into eight domain actions.
 - The HTML sanitizer and `config/html-sanitizer.php` — story
-  [**0024a**](0024a-product-description-html-sanitization.md)'s **D-16** deliverable (split out of 0024
+  [**0024a**](done/0024a-product-description-html-sanitization.md)'s **D-16** deliverable (split out of 0024
   on 2026-09-01). **Consumed, never forked** (**D-14**, **OQ-4**).
 - `App\Actions\Blog\NotifyBlogPostPublished` — story **0065**'s deliverable,
   `__invoke(BlogPost $blogPost): void`. This story **calls** it from two sites and neither defines nor
@@ -2170,7 +2170,7 @@ Executed or read against this worktree during the debate.
 - **0059 (blog tags backend) — hard, blocking.** The pivot FKs into `blog_tags`, this story adds a
   relation method to its model, and `SyncBlogPostTags` calls its `FindOrCreateBlogTag`. Not yet
   implemented (**V-1**).
-- **[0024a](0024a-product-description-html-sanitization.md) (product description HTML sanitization) —
+- **[0024a](done/0024a-product-description-html-sanitization.md) (product description HTML sanitization) —
   soft, for the HTML sanitizer only** (**D-14**, **OQ-4**). Its **D-16** owns
   `symfony/html-sanitizer`, `config/html-sanitizer.php` and the allow-list this story consumes.
   ⚠️ **Repointed 2026-09-01**: this named 0024, which no longer owns the sanitizer — it was split into
@@ -2339,7 +2339,7 @@ guessed. **None blocks Phase 2 review. OQ-2 and OQ-3 must be settled before Phas
   `LONGTEXT` as the brief specified, at the cost of that signal. **Nothing else in the story depends
   on the answer** — the column is nullable either way, and the status-parameterised rule is unaffected.
 
-- **OQ-4 — Sequencing of the shared HTML sanitizer between [0024a](0024a-product-description-html-sanitization.md)
+- **OQ-4 — Sequencing of the shared HTML sanitizer between [0024a](done/0024a-product-description-html-sanitization.md)
   and 0061.** *(Repointed 2026-09-01: the sanitizer was **D-16** of story 0024 when this question was
   written; it is now its own story, 0024a, whose sole hard dependency is 0024's two write actions.)*
   0024a's **D-16** owns `symfony/html-sanitizer` and `config/html-sanitizer.php`, and neither exists in

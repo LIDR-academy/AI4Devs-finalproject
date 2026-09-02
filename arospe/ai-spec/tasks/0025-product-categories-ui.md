@@ -255,7 +255,7 @@ Route::livewire('product-categories', ProductCategoriesIndex::class)
 > Phase 3 work must **never be dispatched in the same batch**, per the
 > [Parallel Agent File-Ownership Rule](../../docs/contracts.md#parallel-agent-file-ownership-rule):
 > 0023, then 0024, then 0024b must each be fully closed before 0025 starts.
-> ([0024a](0024a-product-description-html-sanitization.md) is *not* in this chain — it touches no file
+> ([0024a](done/0024a-product-description-html-sanitization.md) is *not* in this chain — it touches no file
 > this story reads — so it may ship anywhere after 0024.)
 
 ### Interface contract consumed from 0023 and 0024
