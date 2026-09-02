@@ -63,4 +63,4 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 
 ### 🛠️ Shared / Transversal (`/shared/`)
 *   **[US-022: Sistema de Diseño FEFO — Turno Día/Noche](shared/US-022.md)**
-    *   *Descripción:* Reemplaza el tema oscuro único "Señal Industrial" por un sistema de dos turnos (Día/Noche) con interruptor persistido por dispositivo, aplicado a toda la aplicación. Ver `TK-081-FE` a `TK-084-FE`.
+    *   *Descripción:* Reemplaza el tema oscuro único "Señal Industrial" por un sistema de dos turnos (Día/Noche) con interruptor persistido por dispositivo, aplicado a toda la aplicación. ✅ Frontend (`TK-081-FE`, `TK-082-FE`, `TK-083-FE`, `TK-084-FE`) implementado.
