@@ -345,9 +345,9 @@ Two consequences recorded rather than discovered:
   in the resolver and has its own test (**R-1**).
 - **Hand-off to 0037:** an open-ended bracket renders as "5 kg y superior", never "5–null kg".
 
-### D-5 — The zone-delete guard **mirrors 0024's product-category guard exactly**.
+### D-5 — The zone-delete guard **mirrors 0024b's product-category guard exactly**.
 
-[0024](0024-products-core-crud-backend.md) **D-10** already solved this problem for
+[0024](done/0024-products-core-crud-backend.md) **D-10** already solved this problem for
 `product_categories` ← `products`, and the shape is adopted verbatim rather than re-derived. It
 belongs in `app/Actions/Shipping/DeleteShippingZone.php` — **never in `ShippingZonePolicy`** — for
 the two reasons 0033 **D-1** gives, the second decisive: a policy-level rule is reachable by the
@@ -417,7 +417,7 @@ That is a UI hint, never a block.
 
 | Column | Type | Reasoning |
 | --- | --- | --- |
-| `price` | `decimal(10,2)` NOT NULL | **Verbatim consistency with [0024](0024-products-core-crud-backend.md) D-2's `products.price`** — same currency (assumption 10, single EUR), same minor unit, same Epic. A second money convention inside one epic is the thing to avoid; the €99,999,999.99 ceiling being absurd for a parcel rate is harmless, whereas a `decimal(8,2)` cliff would surface as MySQL `22003` (a 500), not a field message. Casts to **string** via `'price' => 'decimal:2'` — so `@property string $price`, which is 0024's **R-4** and the likeliest silent bug to inherit. |
+| `price` | `decimal(10,2)` NOT NULL | **Verbatim consistency with [0024](done/0024-products-core-crud-backend.md) D-2's `products.price`** — same currency (assumption 10, single EUR), same minor unit, same Epic. A second money convention inside one epic is the thing to avoid; the €99,999,999.99 ceiling being absurd for a parcel rate is harmless, whereas a `decimal(8,2)` cliff would surface as MySQL `22003` (a 500), not a field message. Casts to **string** via `'price' => 'decimal:2'` — so `@property string $price`, which is 0024's **R-4** and the likeliest silent bug to inherit. |
 | `min_weight_kg` | `decimal(8,3)` NOT NULL default `0` | Grams precision (scale 3), ceiling 99,999.999 kg — far above any parcel, so no plausible overflow cliff. Default `0` matches the prototype's `wmin: '0'`. |
 | `max_weight_kg` | `decimal(8,3)` **nullable** | Same shape; null = "and above" (**D-4**). |
 | `name` | `string(150)` | Matches `shipping_zones.name`'s length (0033), so the two never disagree in a form. |
@@ -1121,9 +1121,15 @@ the screen on top of this.
   keeps province as a *column*, not a level, precisely so the depth stays three. If that is ever
   revisited, **D-1**'s "no `WITH RECURSIVE`" reasoning must be revisited with it. Named so the two
   decisions stay linked.
-- **R-6 — `trans_choice` has no precedent anywhere in `lang/`** (0024 **R-8**). Spanish pluralisation
-  is not English's, both locale files land in this change, and a mis-written plural branch shows up
-  as a message that reads wrong rather than as a failure.
+- **R-6 — ⚠️ CORRECTED 2026-09-01 (was: `trans_choice` has no precedent anywhere in `lang/`, citing
+  0024 **R-8**, which was itself wrong).** There has been one since task 0010 —
+  `lang/en/roles.php`'s `index.delete_blocked`, six `trans_choice()` call sites, and a documented
+  convention in [naming.md](../../docs/conventions/naming.md#translation-keys) — and
+  [0024b](0024b-product-category-in-use-delete-guard.md)'s `products.categories.delete_blocked` is the
+  second. **Copy the shipped simple `singular|plural` form** rather than inventing an explicit-range
+  one. **What survives of this risk**: Spanish pluralisation is not English's, both locale files land
+  in this change, and a mis-written plural branch shows up as a message that reads wrong rather than
+  as a failure.
 - **R-7 — `price` cast to a string.** `if ($rate->price > 100)` on a cast string is a silent numeric
   coercion, and `@property float $price` reads as obviously correct. 0024 **R-4**, inherited whole.
 - **R-8 — over-helpful transitive membership.** 0033 **D-3** makes membership literal; this story is

@@ -101,7 +101,7 @@ Feature: Blog categories
 > not exist, so no category can be "in use" and there is nothing to count. That scenario is owned by
 > story **0061 (blog-posts-core-crud-backend)**, which introduces `blog_posts.blog_category_id` and
 > retrofits the guard onto `DeleteBlogCategory`. This is the identical scoping
-> [0023](done/0023-product-categories-backend.md) applied to product categories, whose guard 0024 owns.
+> [0023](done/0023-product-categories-backend.md) applied to product categories, whose guard [0024b](0024b-product-category-in-use-delete-guard.md) owns (split out of 0024 on 2026-09-01).
 > See [Scope fences](#scope-fences-what-this-story-must-not-do) and **D-10**.
 
 > **Glossary note (OQ-3).** [gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md#todo--blog--ecommerce-vocabulary-undefined)
@@ -316,7 +316,7 @@ posts alike, not an entity folder — this diverges from Epic 2's `ProductCatego
   target first (**D-13**); today the body is then a plain instance `->delete()`. **It exists as its
   own file now specifically so story 0061 extends this one file** with the in-use hard-block guard,
   rather than introducing that rule somewhere new — the same reasoning 0023's **D-10** gives for
-  `DeleteProductCategory`, which 0024's **D-14** then honours by modifying exactly that file.
+  `DeleteProductCategory`, which 0024b's **D-14** then honours by modifying exactly that file.
 
   All three constructor-inject `App\Actions\NormalizeForSearch` and
   `App\Actions\Auth\LogRefusedPrivilegedAttempt`, and pass the normaliser into
@@ -766,11 +766,11 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
   time `blog_posts` does not exist, so no category can be in use and there is nothing to count. The
   guard, and the PRD scenario that describes it, belong to story **0061**. `DeleteBlogCategory`
   exists as its own file now precisely so 0061 extends that one file — the same seam 0023's D-10
-  created and 0024's D-14 then used, which is the proof the pattern works rather than a hope that it
+  created and 0024b's D-14 then used, which is the proof the pattern works rather than a hope that it
   will. **One forward note for 0061, flagged rather than decided:** the PRD's blog wording is
   stricter than its product wording — *"deletion is always blocked (no confirm-and-proceed path)"*
   and *"they must reassign those posts before it can be deleted"* — so 0061's Three Amigos pass must
-  re-read the PRD rather than assume behavioural parity with 0024's product-category guard.
+  re-read the PRD rather than assume behavioural parity with 0024b's product-category guard.
 - **D-11 — Independence from the product taxonomy is a structural scope fence, and its executable
   form is not settled here.** It is honoured by construction — own table, own model, own action
   namespace, own policy, own validation trait, no polymorphic taxonomy — and 0023 pins the mirror

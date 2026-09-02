@@ -786,11 +786,11 @@ Partially re-deriving would leave a product whose variants disagree about their 
    to Larastan and to `db:table`, no SQLite equivalent, and a `SIGNAL` error mapping (`HY000`/3819,
    **V-11**) that the repo's standard `23000` catch would not even catch.
 5. **Single-table inheritance (variants as rows in `products`) is dead**, with three concrete
-   failures rather than aesthetic ones: it would silently corrupt 0024's shipped category-delete
+   failures rather than aesthetic ones: it would silently corrupt 0024b's shipped category-delete
    guard (`ProductCategory::products()` would count variants, so *"used by 12 products"* becomes a
    lie, and 0024's own decoy-seeded test would still pass); `product_category_id` and `type` are
    `NOT NULL` on `products` and a variant has neither, so either they go nullable — permanently
-   un-enforcing "every product has a category", which 0024 **D-14** reason 2 refuses — or every
+   un-enforcing "every product has a category", which 0024b **D-14** reason 2 refuses — or every
    variant carries a duplicable copy; and every existing query would need
    `whereNull('parent_product_id')`, where forgetting once is silent. Structurally identical to the
    discriminator design 0028's **D1** already rejected in this sub-domain.
@@ -857,7 +857,7 @@ static::saved(function (self $product): void {
 ```
 
 Three reasons for that placement: it binds **every** call site — factories, seeders, tinker, a future
-import — which is 0024 **D-16**'s own argument applied one layer deeper; it means **`ProductFactory`
+import — which is 0024a **D-16**'s own argument applied one layer deeper; it means **`ProductFactory`
 needs no change**, which matters enormously because a factory that silently skips registration would
 make *every SKU-uniqueness test in the suite vacuously green* (**T-4**); and it keeps the actions
 thin. Ordering is enforced by the mechanism rather than by discipline — the owner row is inserted
@@ -1002,7 +1002,7 @@ objection that would otherwise have been its biggest cost. Against it: a third t
 and a wider retrofit.
 
 `backend-expert`'s strongest argument is precedent-based and worth quoting in substance: this repo
-pays real cost for a database last word with unusual consistency — 0024 **D-14** chose
+pays real cost for a database last word with unusual consistency — 0024b **D-14** chose
 `restrictOnDelete` explicitly so the guard is *"genuine defence-in-depth rather than the only
 protection"*; 0024 **D-9** accepted a **named forward cost** on a future story for the same house
 consistency; 0028 **D1** chose two tables so the FK *"is* the guarantee" rather than "an application
@@ -1276,7 +1276,7 @@ $count = DB::table('product_variant_values')
 ```
 
 Both are **hard blocks with a count and no confirm-and-proceed**, per the product-category precedent
-(0024 **D-14**) — including the `ValidationException` exception type and its rendering rationale.
+(0024b **D-14**) — including the `ValidationException` exception type and its rendering rationale.
 0028 raised the type-level reading as its **Q3**; carried forward here as **OQ-7**.
 
 > 🔴 **There are TWO 0028 code paths needing this guard, not one — and the second is easy to miss.**
@@ -1328,6 +1328,20 @@ follows 0028's **D6** reasoning ("a policy would add an allow/deny matrix that e
 identically") while staying consistent with 0024, because the ability object 0031's per-row UI hints
 need already exists on `ProductPolicy` and takes the **parent product** as its target. Gate variant
 operations against the parent: `Gate::authorize('update', $variant->product)`.
+
+> ⚠️ **This decision rests on a premise that was withdrawn on 2026-09-01, and 0029 must re-decide it
+> before Phase 3.** The paragraph below says the actions do not self-authorize *"per 0024's
+> **D-15**/**RQ-10** (`CreateUser`/`UpdateUser` … authorize at the caller)"*. **That parenthetical is
+> false** — `App\Actions\Users\CreateUser::__invoke()` opens with
+> `$this->logRefusedPrivilegedAttempt->authorize('create', User::class);` and `UpdateUser` carries
+> seven such calls — and [0024](done/0024-products-core-crud-backend.md) **reversed its own D-15/RQ-10** at
+> its split on exactly that finding (its **C-1**): its four product actions now self-authorize, and
+> `ProductPolicy` ships with real call sites. The **documented** convention
+> ([base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers))
+> is that the check lives in the class performing the operation, with 0023's `ProductCategories/`
+> actions the sole explicitly-flagged exception. `backend-qa`'s dissent below was **right**, and was
+> adopted in 0024. **Recorded here rather than re-decided**: whether 0029's variant actions follow
+> 0024's reversal is 0029's own Phase 1/2 call, but it can no longer be settled by citing 0024.
 
 **The actions do not self-authorize**, per 0024's **D-15**/**RQ-10** (`CreateUser`/`UpdateUser` and
 0023's actions all authorize at the caller). Consequence, stated as 0024 required: **this story ships
@@ -1833,7 +1847,7 @@ What actually scales here is doing less work, and the cap is that.
 | `app/Models/ProductAttributeType.php` **(0028's file)** | Gains `variantUsageCount(): int` — the real query behind the seam, `COUNT(DISTINCT variant)` not a pivot-row count |
 | `app/Models/ProductAttributeValue.php` **(0028's file)** | Gains `variants(): BelongsToMany` through the pivot, **and names 0028's unnamed value→type relation `type(): BelongsTo`** (🟣 2026-08-19, 0031 OQ-3(d) — see **[D-17.2](#d-172--every-relation-named-with-its-return-type)**) |
 | `App\Livewire\Products\AttributeTypes\Index` **(0028's file)** | `$deletingTypeUsageCount` gets its real query, replacing the always-`0` placeholder. One query, zero contract changes — exactly as 0028 designed |
-| `lang/en/products.php`, `lang/es/products.php` | **Extend, never recreate** — 0024 creates this file (its **R-13** hand-off; 0028 was already amended the same way). New keys: `products.variants.duplicate_combination`; `products.variants.derived_sku_taken` (**must interpolate the derived `:sku` and name the conflicting record** — a derived SKU cannot be retyped, so a bare "already taken" leaves the administrator with no action, **D-4.5**); `products.variants.derived_sku_empty_segment` (naming the offending attribute value) and `products.variants.derived_sku_too_long` (**D-4.4**); `products.variants.parent_sku_change_collides` (**D-4.6**, naming the variant); `products.variants.value_in_use` and `products.variants.type_in_use` (both `trans_choice`, per 0024 **D-14**/**R-8**). 🟣 **2026-08-19, for D-18**: `products.variants.generate.empty_type` (naming the type), `products.variants.generate.too_many` (interpolating `:limit` and `:attempted`) and `products.variants.generate.summary` (a `trans_choice` over the created count, interpolating `:skipped` and `:refused`) — the last is the sentence 0031 renders, and it lives here rather than in 0031 because the *action* owns the outcome vocabulary. Key-for-key identical in both locales |
+| `lang/en/products.php`, `lang/es/products.php` | **Extend, never recreate** — 0024 creates this file (its **R-13** hand-off; 0028 was already amended the same way). New keys: `products.variants.duplicate_combination`; `products.variants.derived_sku_taken` (**must interpolate the derived `:sku` and name the conflicting record** — a derived SKU cannot be retyped, so a bare "already taken" leaves the administrator with no action, **D-4.5**); `products.variants.derived_sku_empty_segment` (naming the offending attribute value) and `products.variants.derived_sku_too_long` (**D-4.4**); `products.variants.parent_sku_change_collides` (**D-4.6**, naming the variant); `products.variants.value_in_use` and `products.variants.type_in_use` (both `trans_choice`, per 0024b **D-14**). 🟣 **2026-08-19, for D-18**: `products.variants.generate.empty_type` (naming the type), `products.variants.generate.too_many` (interpolating `:limit` and `:attempted`) and `products.variants.generate.summary` (a `trans_choice` over the created count, interpolating `:skipped` and `:refused`) — the last is the sentence 0031 renders, and it lives here rather than in 0031 because the *action* owns the outcome vocabulary. Key-for-key identical in both locales |
 | `tests/Unit/ArchitectureTest.php` | One `expect()` **per namespace, never `expect([...])`** — that form is disjunctive and this repo has shipped one vacuous arch rule that way already (0024 **V-7**) |
 
 ### Explicitly **not** touched
@@ -2089,7 +2103,7 @@ proof of 0028's **D4** mandate in the whole codebase.
       for the reason it exists.
 - [ ] A variant using **two** values of the same type counts **once**, not twice — what the `DISTINCT`
       in **D-10**'s query is for, and it is invisible without a test.
-- [ ] **No confirm-and-proceed path**, proven as 0024 **D-14** does: reflection on the signature,
+- [ ] **No confirm-and-proceed path**, proven as 0024b **D-14** does: reflection on the signature,
       calling twice in succession, and **a `Super Admin` refused identically** (the strongest, because
       it proves the block is data integrity and not authorization).
 - [ ] Singular/plural forms differ between N = 1 and N = 2 (`trans_choice`, **R-8** — still no
@@ -2531,9 +2545,13 @@ Several decisions would be wrong without them.
   seeder/import/raw-`INSERT` that writes `products.sku` without checking `product_variants`, plus the
   same for a raw variant insert. Accepted on `database-expert`'s original grounds: nothing joins on
   SKU, and Epic 3 snapshots it.)*
-- **R-H — 0024's V-1 / `ci-database-connection-gap.md` is still open.** Every FK, gap-lock and unique-
-  index assertion here is exercised only under MySQL in practice, and the gap lock has no SQLite
-  equivalent at all.
+- **R-H — ⚠️ CLOSED 2026-09-01 (was: 0024's V-1 / `ci-database-connection-gap.md` is still open).**
+  That task shipped on **2026-08-26** — `phpunit.xml`, `.env.example` and
+  `.github/workflows/tests.yml` all pin MySQL, with a `mysql:8.4` service in CI and a recorded clean
+  `866/866` run. **What survives, and is the useful half**: every FK, gap-lock and unique-index
+  assertion here is exercised only under **MySQL**, which is now a deliberate project decision rather
+  than an accident (MySQL is this project's only supported database) — and the gap lock still has no
+  SQLite equivalent at all, so none of these assertions is portable.
 - **R-I — the local dev schema is stale (V-M)**, so the DoD index verification must follow a fresh
   migrate — the same trap that let `users_uuid_unique` survive.
 - **R-J — this story modifies four files owned by two other stories** (**D-4**, **D-10**). 0024's
@@ -2622,6 +2640,18 @@ enforcement deferred to UI stories (0025, 0027, 0031) that do not exist yet. `ba
 at 0023 **D-9** and again at 0024 **D-15**; it was overruled on consistency grounds, correctly at the
 time. What has changed is **scale**: the next reader will find ten actions and two zero-call-site
 policies, and "the actions are self-protecting" is a reasonable and dangerous inference.
+
+> ⚠️ **Partly answered on 2026-09-01, in `backend-qa`'s and `backend-expert`'s favour.** The
+> "overruled on consistency grounds" reading rested on a **false** claim that `CreateUser`/`UpdateUser`
+> contain no `Gate` call; they do, and the documented convention is action-owns-the-rule. At its split
+> [0024](done/0024-products-core-crud-backend.md) **reversed** its D-15/RQ-10 accordingly, so the arithmetic
+> above is already out of date: `ProductPolicy` is **not** a zero-call-site policy, and four of the ten
+> actions this paragraph counts now authorize. What remains open is exactly `backend-expert`'s ask —
+> a **project-level decision made once**, plus the `ArchitectureTest` assertion that every
+> `app/Actions/` class has an authorizing call site — because `app/Actions/ProductCategories/`'s three
+> actions are still the standing exception, deliberately deferred to **0025** (see
+> [0024b](0024b-product-category-in-use-delete-guard.md) **D-B1** for why 0024b did not close a third
+> of that folder unilaterally).
 `backend-expert` explicitly does **not** ask 0029 to diverge — a third idiom would be worse — but asks
 the coordinator to treat this as a **project-level decision made once** (a `docs/security/` rule plus
 an `ArchitectureTest` assertion that every `app/Actions/` class has an authorizing call site) rather
@@ -2877,7 +2907,7 @@ Phase 1 (Three Amigos) debate run on 2026-08-18 per
 [workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate), derived from
 [PRD](../../docs/PRD/PRD.md#22-products) §2.2's "Product variants" Gherkin block and the "a variant"
 example of its duplicate-SKU Scenario Outline, plus assumptions 9, 10 and 19, and grounded in **full
-readings** of [0024](0024-products-core-crud-backend.md),
+readings** of [0024](done/0024-products-core-crud-backend.md),
 [0028](0028-product-attribute-types-and-values-backend.md) and
 [0019](done/0019-media-library-upload-and-conversions-backend.md), with
 [0023](done/0023-product-categories-backend.md) as the precedent for how this project models a delete

@@ -3,12 +3,12 @@
 ## Description
 A reusable, content-agnostic rich-text editor Livewire component whose toolbar carries exactly eight
 actions — Bold, Italic, Underline, H2, bullet list, numbered list, link, and "Insert image" — and
-whose output is the HTML that `products.description` ([0024](../0024-products-core-crud-backend.md))
+whose output is the HTML that `products.description` ([0024](0024-products-core-crud-backend.md))
 stores and Epic 4's blog body will reuse. "Insert image" opens the shared media gallery
 ([0020](../done/0020-shared-media-gallery-modal-ui.md)) in **single-select** mode and places the chosen image
 inline **at the cursor position**.
 
-The HTML is sanitized **server-side on write** (0024's [D-16](../0024-products-core-crud-backend.md), an
+The HTML is sanitized **server-side on write** (0024a's [D-16](../0024a-product-description-html-sanitization.md), an
 already-approved `symfony/html-sanitizer` dependency), so this component performs **no client-side
 sanitization**. Its one obligation on that axis is narrower and is the coordination point with 0024:
 **every tag it can emit must already be inside that allow-list**, so the sanitizer never silently
@@ -60,7 +60,8 @@ banner, that bundle is **style guide only — none of its markup or JS is ported
 | Out of scope | Owner |
 |---|---|
 | The gallery modal itself — tiles, search, upload, selection, the confirm payload | **0020**, consumed unchanged |
-| Sanitizing the HTML, `config/html-sanitizer.php`, the `products.description` column | **0024** ([D-16](../0024-products-core-crud-backend.md)) |
+| Sanitizing the HTML, `config/html-sanitizer.php` | **0024a** ([D-16](../0024a-product-description-html-sanitization.md)) — was 0024's until that story was split on 2026-09-01 |
+| The `products.description` column | **0024** ([D-4](0024-products-core-crud-backend.md)) |
 | Any real page hosting this editor (the product editor) | **0027**, not yet debated |
 | The blog post editor and its body field | **Epic 4**, which reuses this component unchanged |
 | The featured-image picker | **0027** |
@@ -206,7 +207,7 @@ re-verified by `product-owner` independently of the agent that found them.
 |---|---|---|---|
 | V1 | **Alpine already ships on every page**, bundled inside Livewire 4's own build and exported as `window.Alpine`. There is no separate `alpinejs` package. | `vendor/livewire/livewire/dist/livewire.js:15816` (`window.Alpine = module_default`); `package.json` has no `alpinejs`. | A hand-rolled Alpine editor needs **zero new dependency**. |
 | V2 | **This project ships no rich-text JS library and almost no JS at all.** `package.json` `dependencies` are `@laravel/passkeys`, `@tailwindcss/vite`, `concurrently`, `laravel-vite-plugin`, `tailwindcss`, `vite`; `devDependencies` is `playwright` only. `resources/js/app.js` is **empty**; `passkeys.js` is the only real module. | Read `package.json`, `vite.config.js`, `resources/js/`. | TipTap/Quill/Trix would be this project's **first** bundled UI library — an approval-gated change per project `CLAUDE.md`, not a drop-in. |
-| V3 | **`execCommand('bold'\|'italic'\|'underline')` emits `<b>`, `<i>`, `<u>` in Chromium** — not `<strong>`/`<em>`, and **no inline `style`**. `styleWithCSS` defaults to `false`; setting it `true` switches the output to `<span style="font-weight: bold;">`. | Executed in a real headless Chromium session (the `chromium-1228` build in `node_modules/playwright`), reading `innerHTML` off a live `contenteditable`. | **Decisive, and the story's central good news:** `<b>`/`<i>`/`<u>` are explicitly allowed alternates in 0024 [D-16](../0024-products-core-crud-backend.md)'s table. The naive output is already inside the allow-list — **no client-side tag-remapping layer is needed.** And `styleWithCSS` must **never** be enabled ([D2](#d2--the-exact-html-tag-set-this-editor-may-emit)). |
+| V3 | **`execCommand('bold'\|'italic'\|'underline')` emits `<b>`, `<i>`, `<u>` in Chromium** — not `<strong>`/`<em>`, and **no inline `style`**. `styleWithCSS` defaults to `false`; setting it `true` switches the output to `<span style="font-weight: bold;">`. | Executed in a real headless Chromium session (the `chromium-1228` build in `node_modules/playwright`), reading `innerHTML` off a live `contenteditable`. | **Decisive, and the story's central good news:** `<b>`/`<i>`/`<u>` are explicitly allowed alternates in 0024a [D-16](../0024a-product-description-html-sanitization.md)'s table. The naive output is already inside the allow-list — **no client-side tag-remapping layer is needed.** And `styleWithCSS` must **never** be enabled ([D2](#d2--the-exact-html-tag-set-this-editor-may-emit)). |
 | V4 | **`formatBlock '<h2>'` → clean `<h2>…</h2>`; `createLink` → clean `<a href="…">…</a>`; pressing Enter creates a new `<p>`, never a `<div>`.** | Same Chromium session. | Every block/line structure the toolbar produces is inside the allow-list with no post-processing. |
 | V5 | **`insertUnorderedList`/`insertOrderedList` nest the list *inside* a `<p>`** in the live DOM — `<p><ul><li>…</li></ul></p>` — which the HTML5 content model forbids. Re-parsing that exact string with a standards parser auto-closes the `<p>` and leaves empty flanking `<p></p>` around the list. | Same session, reproduced two ways (`innerHTML =` assignment and `DOMParser`) — both Chromium's own parser, so this is one confirmation of the mechanism, not two independent engines. | Cosmetic, **not a regression to chase** ([D11](#d11--the-empty-paragraph-around-a-list-is-expected-output-not-a-regression)). Every tag involved is still allow-listed. |
 | V6 | **Livewire registers every `#[On]` / `$listeners` entry as `window.addEventListener(name, handler)` — page-global, for every mounted component instance.** The **only** thing separating two same-named listeners is the event **name string**. | `vendor/livewire/livewire/dist/livewire.js:14005-14011`, read directly by `frontend-expert` and **re-verified by `product-owner`**. | **Sharpens 0020's own D2 rationale**, which credits "DOM bubbling + `#[On]`" with the disambiguation. The real mechanism is name uniqueness. A fixed literal `select-event` in *this* component would cross-wire two editors on one page. See [D5](#d5--the-gallery-event-name-is-per-instance-unique-not-a-literal). |
@@ -231,7 +232,7 @@ approval is needed for this story.** That conclusion rests on V3/V4 rather than 
 
 | Option | Verdict |
 |---|---|
-| **Hand-rolled `contenteditable` + `document.execCommand`, driven by Alpine — (recommended), adopted** | Zero new dependency (V1, V2). The eight commands this toolbar needs were **executed** in the exact engine CI uses and emit `<b>`/`<i>`/`<u>`/`<h2>`/`<ul>`/`<ol>`/`<li>`/`<a href>`/`<p>` (V3, V4) — **already inside 0024's allow-list**, so no translation layer is needed at all. Matches the project's established "Flux has no primitive for this, hand-roll it" pattern (0019/0020's dropzone, 0022's combobox). |
+| **Hand-rolled `contenteditable` + `document.execCommand`, driven by Alpine — (recommended), adopted** | Zero new dependency (V1, V2). The eight commands this toolbar needs were **executed** in the exact engine CI uses and emit `<b>`/`<i>`/`<u>`/`<h2>`/`<ul>`/`<ol>`/`<li>`/`<a href>`/`<p>` (V3, V4) — **already inside 0024a's allow-list**, so no translation layer is needed at all. Matches the project's established "Flux has no primitive for this, hand-roll it" pattern (0019/0020's dropzone, 0022's combobox). |
 | TipTap / Quill / Trix / Toast UI | **Rejected — needs approval, and does not remove the problem it would be bought for.** Each ships its own internal document model (ProseMirror schema, Quill Delta) that must still be serialised to HTML and reconciled against D-16's allow-list, so it adds a translation layer rather than removing one. Quill emits `class="ql-*"` and Trix emits `<figure>`/`<div>`/attachment elements, none of which are allow-listed. It would also be this project's first bundled UI library (V2). Given V3/V4 show the native path already produces compatible markup, the cost buys nothing here. |
 | A Markdown editor with a preview pane | **Rejected as a scope invention.** The PRD names a WYSIWYG toolbar with these exact eight buttons, and the prototype is a live `contenteditable`. |
 
@@ -244,7 +245,7 @@ library question must be reopened rather than answered by piling more `execComma
 ### D2 — The exact HTML tag set this editor may emit
 
 This is the coordination point with 0024 and the section a reviewer should check first. The set below
-is **exactly** 0024 [D-16](../0024-products-core-crud-backend.md)'s sanitizer allow-list — cited, not
+is **exactly** 0024a [D-16](../0024a-product-description-html-sanitization.md)'s sanitizer allow-list — cited, not
 re-derived. **If these two lists ever disagree, 0024's is authoritative and this component is the one
 that must change**, because the sanitizer is what actually runs on write.
 
@@ -316,7 +317,7 @@ Consumer usage — the **entire** integration surface 0027 and the blog editor w
 `$value` is deliberately **not** `#[Locked]`: it is the model binding, exactly as 0022's `$selected`
 is. That is safe here for a reason worth stating, because it looks like a hole: **the value is
 untrusted HTML by construction and is meant to be treated as such at the only boundary that would
-matter** — 0024's sanitizer on write.
+matter** — 0024a's sanitizer on write.
 
 **Phase 4 correction (appsec-auditor, 2026-08-31): the sentence above describes the intended design,
 not the shipped guarantee, and the difference is load-bearing.** 0024 does not exist yet (see
@@ -329,8 +330,8 @@ time the editor mounts with that value. The toolbar's own emitted-tag-set constr
 nothing about this: D2 bounds what the *toolbar* can produce, not what `$value` can contain, since
 `$value` is also reachable through a forged payload and (out of scope here, per D2) a paste. This is
 **not** a defect in this component to fix — the component cannot sanitize on its own without
-duplicating 0024's allow-list — but it is a **hard, mechanical dependency**: no consumer may bind
-`wire:model` to a persisted column until 0024's sanitizer sits on that column's write path. See the
+duplicating 0024a's allow-list — but it is a **hard, mechanical dependency**: no consumer may bind
+`wire:model` to a persisted column until 0024a's sanitizer sits on that column's write path. See the
 Phase 4 record near the end of this file for the full finding and the disposition.
 
 **Phase 2 correction: `$showGallery` must not be `#[Locked]` either, and for a mechanical reason
@@ -477,7 +478,7 @@ is closed. This closes technical task 2 — the browser test that depends on it 
 
 ### D7 — An inserted image is a bare `<img>` carrying the original URL
 
-Two sub-decisions, both constrained by 0024's allow-list rather than by preference.
+Two sub-decisions, both constrained by 0024a's allow-list rather than by preference.
 
 **No `<figure>`/`<figcaption>`.** The prototype inserts
 `<figure><img …><figcaption>{title}</figcaption></figure>`
@@ -668,7 +669,7 @@ D16's identical shape — is a fallback, not a redesign.
 - `tests/Browser/Components/WysiwygEditorTest.php` — real-DOM interaction, in the **mirrored
   subfolder** per [playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md).
 - `tests/Browser/Components/WysiwygEditorOutputHtmlTest.php` — the allow-list contract test, kept in
-  its own file so it is findable from 0024's D-16 ([why](#the-output-html-contract-test)).
+  its own file so it is findable from 0024a's D-16 ([why](#the-output-html-contract-test)).
 
 ### Modify
 
@@ -841,9 +842,9 @@ Per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md) and
 [coverage-policy.md](../../../docs/testing/frontend/coverage-policy.md):
 
 - **The sanitizer itself** — configuration, idempotence, sanitize-before-length ordering. Entirely
-  0024's `ProductDescriptionSanitizationTest.php`. This story proves only what the editor hands over.
+  0024a's `ProductDescriptionSanitizationTest.php`. This story proves only what the editor hands over.
 - **Persisting and reloading a description.** 0024 (the server round trip) and 0027 (the real page).
-- **Malicious paste / XSS payloads.** 0024's sanitizer suite owns hostile input; this story's contract
+- **Malicious paste / XSS payloads.** 0024a's sanitizer suite owns hostile input; this story's contract
   test is about what the toolbar produces from *legitimate* use.
 - **Paste-from-Word behaviour.** 0024's R-16 already accepts the stored value is lossy; simulating a
   real OS clipboard paste with HTML flavour data is its own undertaking. **An honest gap, recorded,
@@ -884,7 +885,7 @@ saved. No new JavaScript dependency is added to the project.
 - [ ] Each of the seven formatting actions applies to the current selection, and the three inline
       ones toggle off when re-applied.
 - [ ] **Every tag the editor can emit is inside 0024
-      [D-16](../0024-products-core-crud-backend.md)'s sanitizer allow-list**, proven by an exhaustive
+      [D-16](../0024a-product-description-html-sanitization.md)'s sanitizer allow-list**, proven by an exhaustive
       per-element assertion rather than positive containment checks; no `style` attribute and no
       `<div>`/`<span>`/`<font>`/`<figure>` is ever produced.
 - [ ] The insert-image action opens the shared gallery in **single-select** mode, consuming 0020's
@@ -969,7 +970,7 @@ Ordered. Steps 0 and 1 are hard gates.
 9. `frontend-qa` writes the browser tests, including the `script()`-`Range` caret technique and the
    exhaustive allow-list contract test.
 10. **Confirm the emitted set against the real installed sanitizer** — round-trip a representative
-    document through 0024's `SanitizeProductDescription` and assert nothing the toolbar produced was
+    document through 0024a's `SanitizeProductDescription` and assert nothing the toolbar produced was
     dropped. This is the empirical close-out of [D2](#d2--the-exact-html-tag-set-this-editor-may-emit)
     and of [D11](#d11--the-empty-paragraph-around-a-list-is-expected-output-not-a-regression)'s open
     parser question. **Phase 2 decision: 0024 is not expected to exist by the time 0021 reaches Phase
@@ -998,11 +999,14 @@ Ordered. Steps 0 and 1 are hard gates.
   extends its D16 harness. 0020 itself is blocked on **0019**, so the real chain is
   0019 → 0020 → 0021. Numbering already satisfies
   [workflow.md](../../../docs/workflow.md#task-ordering-rule)'s ordering rule.
-- **[0024 — products core CRUD backend](../0024-products-core-crud-backend.md) — coordination, not a
-  build blocker.** Its D-16 allow-list defines this component's output contract, and its
-  `config/html-sanitizer.php` is what technical task 10 verifies against. This story can be built
-  before 0024 ships (the allow-list is already confirmed in writing) but **cannot be closed with
-  confidence until the emitted set has been round-tripped through the real sanitizer**.
+- **[0024a — product description HTML sanitization](../0024a-product-description-html-sanitization.md) —
+  coordination, not a build blocker.** *(Repointed 2026-09-01: this named story 0024, whose **D-16**
+  was split into its own story on that date; 0024a depends on 0024 in turn.)* Its D-16 allow-list
+  defines this component's output contract, and its `config/html-sanitizer.php` is what technical task
+  10 verifies against. This story can be built before 0024a ships (the allow-list is already confirmed
+  in writing) but **cannot be closed with confidence until the emitted set has been round-tripped
+  through the real sanitizer** — 0024a's own test plan now carries that round-trip as an explicit
+  discharge item, so the follow-up has a named owner rather than only a named condition.
 - **[0022 — searchable multi-select](0022-searchable-multi-select-component.md) — no dependency, but a
   file-ownership collision** on `app/Livewire/Components/` and `lang/{en,es}/components.php` (V14,
   [D12](#d12--translation-keys-and-the-shared-ownership-hand-off-with-0022)). Neither story blocks the
@@ -1092,7 +1096,8 @@ Written in Phase 1 (Three Amigos) on 2026-08-18 for Epic 2, from
 [PRD §2.3](../../../docs/PRD/PRD.md#23-shared-media-gallery) and the
 [Design reference](../../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, against the
 finalized contracts in [0020](../done/0020-shared-media-gallery-modal-ui.md) (D2, D3, D12, D14, D16) and
-[0024](../0024-products-core-crud-backend.md) (D-16). Participants: `product-owner` (lead),
+[0024a](../0024a-product-description-html-sanitization.md) (D-16, split out of
+[0024](0024-products-core-crud-backend.md) on 2026-09-01). Participants: `product-owner` (lead),
 `frontend-expert`, `frontend-qa` — classified **frontend** per
 [workflow.md](../../../docs/workflow.md#task-classification-rule)'s task-classification rule, with
 `database-expert` and the backend roles deliberately **not** convened, since the story creates no
@@ -1138,7 +1143,7 @@ Low, 1 Info.
 - **F-1 (High, latent) — the unescaped `$value` sink has no mitigation anywhere in this codebase
   today.** The DoD's own D2 framing ("the assumption letting 0027 render the stored HTML unescaped")
   was a wrong security conclusion, corrected in place above (D2/D3/D9) rather than left standing. Not
-  a code defect in this component — it cannot sanitize `$value` without duplicating 0024's allow-list
+  a code defect in this component — it cannot sanitize `$value` without duplicating 0024a's allow-list
   — but a **hard dependency**: no consumer may bind `wire:model="<persisted column>"` to this
   component until a server-side sanitizer sits on that column's write path.
   **Phase 5 correction (code-reviewer finding B2, then verified by a dedicated read of all four
@@ -1146,11 +1151,11 @@ Low, 1 Info.
   overclaimed a written amendment that does not exist.** What is actually true, checked file by file:
   [0027](../0027-products-list-and-editor-ui.md) already independently establishes and relies on the
   identical sanitize-on-write architecture — `CreateProduct`/`UpdateProduct` sanitize the description
-  through 0024's `SanitizeProductDescription` before persistence, its own R-12 states *"there is no
+  through 0024a's `SanitizeProductDescription` before persistence, its own R-12 states *"there is no
   `{!! !!}` anywhere in either view"*, and it even records 0076 D-8's second sanitization layer (a
   `saving` hook) as defence in depth. [0061](../0061-blog-posts-core-crud-backend.md) and
   [0079](../0079-blog-post-editor-language-tabs-ui.md) go further still — 0061's D-14 is an entire
-  section on reusing 0024's sanitizer for the blog `body` column (with OQ-4 tracking the sequencing
+  section on reusing 0024a's sanitizer for the blog `body` column (with OQ-4 tracking the sequencing
   race against 0024), and 0079's D-8 constructor-injects the real
   `App\Actions\Products\SanitizeProductDescription` class into `SetBlogPostTranslation`, sanitizing
   before `validate()` on every language path. Only

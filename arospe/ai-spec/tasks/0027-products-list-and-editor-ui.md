@@ -40,7 +40,7 @@ per-row edit/delete actions and a primary "Nuevo producto" button) and a **route
 [0022](done/0022-searchable-multi-select-component.md)).
 
 It is **frontend only**: no migration, no model, no action, no policy, no enum, no validation rule.
-Every one of those is consumed as already-shipped code from [0024](0024-products-core-crud-backend.md)
+Every one of those is consumed as already-shipped code from [0024](done/0024-products-core-crud-backend.md)
 (core CRUD), [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) (region
 assignment) and [0023](done/0023-product-categories-backend.md) (the category taxonomy). This story is
 where four separate stories' zero-call-site deliverables — `ProductPolicy`, `CreateProduct` /
@@ -57,7 +57,7 @@ where four separate stories' zero-call-site deliverables — `ProductPolicy`, `C
 
 > **Scope note — variants are not on this screen.** Product variants (0028/0029) get their own
 > builder in story **0031**. This editor ships the product-level `price` / `stock` fields exactly as
-> [0024](0024-products-core-crud-backend.md) defines them. See
+> [0024](done/0024-products-core-crud-backend.md) defines them. See
 > [OQ-9](#open-questions) for the one forward dependency (0029's OQ-3) that could change that later.
 
 > ⚠️ **Correction, 2026-08-30 — the editor's field list above is per-language for two of its entries, and gains three more.** The paragraph opens *"a **routed product editor** (name, SKU, category select, …, the WYSIWYG description …)"*, which reads as one name field and one description field. After [0076](0076-translatable-content-retrofit-products-backend.md) the editor's translatable set is **five** fields — `name`, `description`, `slug`, `meta_title`, `meta_description` — and after [0077](0077-product-editor-language-tabs-ui.md) each of them is authored **once per active store language**, inside language tabs. Everything else in that list (SKU, category select, the physical/virtual type control, the featured image, the gallery strip, the Sales Region multi-select) is non-translatable and renders **exactly once**, outside the tabs, per PRD Epic 5's *"shown once"* rule. **The routed-page shape, the delete flow and the harness migration are unaffected** — and the tabs themselves are 0077's to build, not this story's.
@@ -72,9 +72,19 @@ therefore not convened, matching [0025](0025-product-categories-ui.md)'s precede
 category screen.
 
 **Hard dependency chain, and it is longer than `related_task_id` suggests.** This story cannot start
-until **0019 → 0020 → 0021 → 0022 → 0023 → 0024 → 0026** are all closed. `related_task_id` correctly
-names the FE/BE pair (0024); the other six are hard blockers from different pairs, exactly the
-situation [0025](0025-product-categories-ui.md)'s **F-1** records for itself.
+until **0019 → 0020 → 0021 → 0022 → 0023 → 0024 → [0024a](0024a-product-description-html-sanitization.md) → 0026**
+are all closed. `related_task_id` correctly names the FE/BE pair (0024); the others are hard blockers
+from different pairs, exactly the situation [0025](0025-product-categories-ui.md)'s **F-1** records for
+itself.
+
+> ⚠️ **0024a added to the chain on 2026-09-01**, when 0024 was split three ways. It owns
+> `symfony/html-sanitizer`, `config/html-sanitizer.php` and `SanitizeProductDescription`, and it is a
+> **hard** blocker for this story specifically because this screen renders `description` unescaped and
+> binds 0021's `WysiwygEditor` to it — which
+> [api/routes.md](../../docs/api/routes.md#applivewirecomponentswysiwygeditor--the-gallerys-first-real-consumer-and-the-second-routeless-gated-component)
+> forbids until *"that column's own write path runs a server-side sanitizer first"*. The third split
+> story, [0024b](0024b-product-category-in-use-delete-guard.md) (the category in-use delete guard), is
+> **not** in this chain — it blocks 0025, not this story.
 
 ## Three Amigos participants
 
@@ -93,7 +103,7 @@ See [Provenance](#provenance) for exactly which role covered what.
 > this story raised against its dependencies (**OQ-5** / **D-11** and **OQ-6** / **D-9a**) and the
 > transaction-boundary gap (**D-12b**) were carried upstream and settled by amendments to
 > [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) (**D12**, **D13**, **D14**)
-> and [0024](0024-products-core-crud-backend.md) (**D-17**). All three are now **resolved with concrete
+> and [0024](done/0024-products-core-crud-backend.md) (**D-17**). All three are now **resolved with concrete
 > mechanisms**, recorded in **D-18** and folded into the decisions, tests and acceptance criteria they
 > touch. Nothing about them blocks Phase 3 any more.
 
@@ -375,7 +385,7 @@ Feature: Deleting a product
 | `tests/Feature/Products/IndexRenderingTest.php` | **New.** Markup-level assertions for the list. |
 | `tests/Feature/Products/EditorTest.php` | **New.** The largest file: the editor's save orchestration. |
 | `tests/Feature/Products/EditorRenderingTest.php` | **New.** Option-set and embedded-component markup guards. |
-| `tests/Feature/Products/AuthorizationTest.php` | **New.** Discharges 0024 **D-15** and 0026 **D-8**'s zero-call-site hand-offs. |
+| `tests/Feature/Products/AuthorizationTest.php` | **New.** Discharges 0026 **D-8**'s zero-call-site hand-off, and covers this story's own component-level gates as the **second** layer over 0024's self-authorizing actions. ⚠️ **Narrowed 2026-09-01**: this row used to name 0024 **D-15** too. That decision was **reversed** at 0024's split — `CreateProduct`/`UpdateProduct`/`DeleteProduct` now authorize themselves and `ProductPolicy` ships with real call sites, so there is no 0024 hand-off left to discharge here. |
 | `tests/Browser/Products/EditorJourneyTest.php` | **New.** The one comprehensive happy-path journey (**D-16** rationale). |
 | `tests/Browser/Products/IndexTest.php` | **New.** The list's real-DOM cases only. |
 | `tests/Unit/ArchitectureTest.php` | **Modify** — extend the existing scope fence to cover `App\Livewire\Products\*`, matching 0025 **D-9**. |
@@ -385,7 +395,8 @@ Feature: Deleting a product
 | File / concern | Owner |
 | --- | --- |
 | `database/migrations/*products*`, `app/Models/Product.php`, `app/Enums/Product*.php` | 0024 |
-| `app/Actions/Products/{Create,Update,Delete}Product.php`, `SyncProductGallery.php`, `SanitizeProductDescription.php` | 0024 |
+| `app/Actions/Products/{Create,Update,Delete}Product.php`, `SyncProductGallery.php` | 0024 |
+| `app/Actions/Products/SanitizeProductDescription.php`, `config/html-sanitizer.php` | **[0024a](0024a-product-description-html-sanitization.md)** (split out of 0024 on 2026-09-01) — **a hard, blocking dependency of this story**, because this screen renders `description` unescaped and binds 0021's `WysiwygEditor` to it |
 | `app/Concerns/ProductValidationRules.php`, `app/Policies/ProductPolicy.php` | 0024 (0026 extends the trait) |
 | `app/Actions/Products/{SyncProductSalesRegions,SearchSalesRegions,ResolveProductTaxRate}.php` | 0026 |
 | `app/Livewire/Media/Gallery.php`, `app/Livewire/Components/{WysiwygEditor,SearchableMultiSelect}.php` | 0020 / 0021 / 0022 |
@@ -836,8 +847,18 @@ Orchestration — **the tests only this story can write**:
 
 ### `tests/Feature/Products/AuthorizationTest.php`
 
-Discharges 0024 **D-15**'s and 0026 **D-8**'s hand-offs explicitly, so `ProductPolicy` stops being a
-zero-call-site policy:
+Discharges 0026 **D-8**'s hand-off explicitly, and covers this story's own component gates.
+
+> ⚠️ **Corrected 2026-09-01.** This section previously said it discharges **0024 D-15**'s hand-off
+> too, "so `ProductPolicy` stops being a zero-call-site policy". `ProductPolicy` is **not** a
+> zero-call-site policy any more:
+> [0024](done/0024-products-core-crud-backend.md)'s **D-15** was reversed at its split (its **C-1** — the
+> original decision rested on a false claim that `CreateUser`/`UpdateUser` contain no `Gate` call),
+> and its three write actions now authorize themselves. **What that changes here is the framing, not
+> the tests**: every case below is still required, now as *defence in depth plus the honest source of
+> the per-row hints* rather than as the only enforcement. See
+> [base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)'s
+> task-0017 blockquote — *"a component that authorizes as well is a layer, not a redundancy"*.
 
 - [ ] One allow/deny pair per component method that mutates or discloses, driven through
       `Livewire::test()` as the acting user — never inferred from hidden UI.
@@ -905,7 +926,7 @@ the **integration and wiring** points; it never re-derives a dependency's own co
 | Not tested here | Owner |
 | --- | --- |
 | SKU canonicalisation rules, the `23000` race catch, the collation reasoning | 0024 **D-11** |
-| The HTML sanitizer's allow-list, its idempotence, its scheme restrictions | 0024 **D-16** |
+| The HTML sanitizer's allow-list, its idempotence, its scheme restrictions | 0024a **D-16** |
 | The WYSIWYG's tag emission, caret restore, toolbar `aria-pressed` | 0021 |
 | The media gallery's search, upload, tile cap, detail editing | 0019 / 0020 |
 | The multi-select's debounce timing, over-fetch arithmetic, truncation row | 0022 |
@@ -1014,11 +1035,14 @@ moved onto a real screen.
       records that `ProductPolicy` now has call sites; `docs/conventions/naming.md`'s `Index`-exception
       section can cite the real `Products\Index` / `Products\Editor` depth asymmetry rather than a
       hypothetical one.
-- [ ] **Hand-off discharged, not deferred**: this story closes 0024 **D-15** and its hand-off item
-      **(d)** (0024 **D-17a**), 0026 **D-8** plus its hand-off items **3** (0026 **D12**) and **4**
-      (0026 **D13**), 0022's "prove the real embedding" forward dependency, and 0020 **D16** / 0021
-      **D13**'s harness expiry. Each is a checkbox in another story's Definition of Done; record
-      explicitly which one this story satisfied.
+- [ ] **Hand-off discharged, not deferred**: this story closes 0024's hand-off item **(d)** (0024
+      **D-17a** — pass the ordered array into `CreateProduct`/`UpdateProduct`, never call
+      `SyncProductGallery` directly), 0026 **D-8** plus its hand-off items **3** (0026 **D12**) and
+      **4** (0026 **D13**), 0022's "prove the real embedding" forward dependency, and 0020 **D16** /
+      0021 **D13**'s harness expiry. Each is a checkbox in another story's Definition of Done; record
+      explicitly which one this story satisfied. ⚠️ **0024 D-15 is no longer on this list** — it was
+      reversed at 0024's 2026-09-01 split and the actions self-authorize, so this story's gates are a
+      second layer rather than a discharge.
 - [x] ~~**[OQ-5](#open-questions) and [OQ-6](#open-questions) answered before Phase 3 starts.**~~
       ✅ **Discharged 2026-08-19 — both answered upstream** by 0026 **D12** and 0024 **D-17**
       respectively; the transaction gap was answered by 0026 **D13**. See **D-18**. Phase 3 is no
@@ -1302,7 +1326,7 @@ Consequences the markup must honour:
 Phase 3; **it is now answered upstream.**
 
 **(a) `SyncProductGallery` writes `position` from the 0-based array index — confirmed by
-[0024 **D-17**](0024-products-core-crud-backend.md) (2026-08-19).** ✅ **Resolved; supersedes the
+[0024 **D-17**](done/0024-products-core-crud-backend.md) (2026-08-19).** ✅ **Resolved; supersedes the
 open-question framing this section previously carried ([OQ-6](#open-questions)).**
 
 0024 **D-8** as originally written said two things that pull in opposite directions — *"assign on
@@ -1532,7 +1556,7 @@ calls `SyncProductSalesRegions` itself. Calling `SyncProductGallery` directly as
 double-sync; calling neither would silently drop the imagery. Pinned here because both mistakes are
 one-line and neither errors.
 
-> ✅ **Confirmed 2026-08-19 by both owners.** [0024 **D-17a**](0024-products-core-crud-backend.md)
+> ✅ **Confirmed 2026-08-19 by both owners.** [0024 **D-17a**](done/0024-products-core-crud-backend.md)
 > declares `SyncProductGallery` *"defined and owned exclusively by story 0024"* and its hand-off item
 > (d) instructs this story to *"pass the **ordered** gallery array into `CreateProduct` /
 > `UpdateProduct` and **never call `SyncProductGallery` directly**"*.
@@ -1608,7 +1632,7 @@ text visibly sitting in the editor. A redirect sidesteps it entirely — and is 
 argument for **D-1**'s routed shape.
 
 **(d) A failed save keeps the page and the user's input.** `ValidationException` is what Livewire
-already routes into the error bag with no plumbing, which is why 0024 **D-14** chose it for the
+already routes into the error bag with no plumbing, which is why 0024b **D-14** chose it for the
 category guard and why **D-10** rethrows as one here.
 
 ### D-13 — A static notice that formatting is lossy; no dynamic diff warning
@@ -1624,7 +1648,7 @@ than explaining a surprise afterwards.
 *Rejected:* detecting the loss and warning dynamically. It requires comparing pre- and
 post-sanitization HTML server-side and round-tripping a diff to the client, for an event that is rare
 and non-destructive to anything but formatting — real complexity for a marginal gain, and it would put
-a second consumer of the sanitizer's behaviour outside 0024's single call site.
+a second consumer of the sanitizer's behaviour outside [0024a](0024a-product-description-html-sanitization.md)'s single call site.
 
 **Scope fence, and it is a security-relevant one:** this screen renders **no product description HTML
 at all** — not in the list, not in the editor (the WYSIWYG seeds itself client-side through `@js()`
@@ -1766,8 +1790,8 @@ it costs this story; each is also folded into the decision it belongs to.
 | Finding (as raised here) | Answered by | Outcome for this story |
 | --- | --- | --- |
 | **OQ-5 / D-11 / R-1** — the `is_active` rule makes a legitimately-assigned product unsaveable | [0026 **D12**](0026-product-sales-region-assignment-and-tax-resolution-backend.md) | `salesRegionIdRules(array $preservedSalesRegionIds = [])`; the match becomes `(is_active AND no children) OR id IN (preserved)`. `Editor::save()` reads `$preserved` from the persisted product **before** validating and passes it in. See [the D-11 resolution](#d-11-resolution). |
-| **OQ-6 / D-9a / R-2** — is `position` the array index or `MAX(position)+1`? | [0024 **D-17**](0024-products-core-crud-backend.md) | Index, confirmed. `SyncProductGallery(Product, ?string, array $orderedGalleryMediaIds)` takes the **complete, ordered** array and rewrites `position` from its 0-based index in one transaction. The reorder buttons resubmit the full array; **no amendment to 0024's code was needed.** See **D-9a**. |
-| **D-12b / R-1's sibling** — nobody owned the transaction across the core write and the region sync | [0026 **D13**](0026-product-sales-region-assignment-and-tax-resolution-backend.md) (+ [0024 **D-17a**](0024-products-core-crud-backend.md) / [0026 **D14**](0026-product-sales-region-assignment-and-tax-resolution-backend.md) on ownership) | **This story owns it, explicitly.** One `DB::transaction()` wraps `CreateProduct`/`UpdateProduct` (which reaches `SyncProductGallery` internally) **and** `SyncProductSalesRegions`, opened after validation and after `resolveSelected()`. See **D-12b**. |
+| **OQ-6 / D-9a / R-2** — is `position` the array index or `MAX(position)+1`? | [0024 **D-17**](done/0024-products-core-crud-backend.md) | Index, confirmed. `SyncProductGallery(Product, ?string, array $orderedGalleryMediaIds)` takes the **complete, ordered** array and rewrites `position` from its 0-based index in one transaction. The reorder buttons resubmit the full array; **no amendment to 0024's code was needed.** See **D-9a**. |
+| **D-12b / R-1's sibling** — nobody owned the transaction across the core write and the region sync | [0026 **D13**](0026-product-sales-region-assignment-and-tax-resolution-backend.md) (+ [0024 **D-17a**](done/0024-products-core-crud-backend.md) / [0026 **D14**](0026-product-sales-region-assignment-and-tax-resolution-backend.md) on ownership) | **This story owns it, explicitly.** One `DB::transaction()` wraps `CreateProduct`/`UpdateProduct` (which reaches `SyncProductGallery` internally) **and** `SyncProductSalesRegions`, opened after validation and after `resolveSelected()`. See **D-12b**. |
 
 **Superseded framings, marked rather than deleted**, per this project's convention:
 
@@ -1812,7 +1836,7 @@ below.
 - No third status case, no `agotado` string, no stored out-of-stock state — under any circumstance
   (0024 **D-7**).
 
-> ⚠️ **Correction, 2026-08-30 — *"No `slug`, no SEO fields, no translation scaffolding (Epic 5)"* now means something narrower than it did, and the difference matters.** When this fence was written, [0024's own scope fence](0024-products-core-crud-backend.md) said the same thing verbatim, and the product genuinely had **no** slug and **no** SEO fields anywhere — this story was declining to build UI for columns that did not exist.
+> ⚠️ **Correction, 2026-08-30 — *"No `slug`, no SEO fields, no translation scaffolding (Epic 5)"* now means something narrower than it did, and the difference matters.** When this fence was written, [0024's own scope fence](done/0024-products-core-crud-backend.md) said the same thing verbatim, and the product genuinely had **no** slug and **no** SEO fields anywhere — this story was declining to build UI for columns that did not exist.
 >
 > **They exist now.** [0076](0076-translatable-content-retrofit-products-backend.md) introduces `slug`, `meta_title` and `meta_description` **for the first time in this project** (its **D-5**; the field set and `meta_description`'s width were confirmed by the human as its **Q-1**, 2026-08-30), created **directly on `product_translations`** and never on the parent — so they are translatable from birth, with `slug` unique **per store language** (`UNIQUE(store_language_id, slug)`, its **Q-2**, resolved the same day) and canonicalised in place by a model hook. There is no non-translated version of any of the three, and none is coming.
 >
@@ -1854,9 +1878,21 @@ Executed against this repository on 2026-08-18, during this debate.
 
 ### Dependencies
 
-Hard and blocking, in required order: **0019 → 0020 → 0021 → 0022 → 0023 → 0024 → 0026 → 0027.**
+Hard and blocking, in required order: **0019 → 0020 → 0021 → 0022 → 0023 → 0024 →
+[0024a](0024a-product-description-html-sanitization.md) → 0026 → 0027.**
 (0025 is not a blocker, but shipping it first gives the category screen the editor's empty-catalog
-link a destination — see [OQ-1](#open-questions).)
+link a destination — see [OQ-1](#open-questions). Nor is
+[0024b](0024b-product-category-in-use-delete-guard.md), which blocks 0025 rather than this story.)
+
+> ⚠️ **0024a joined this chain on 2026-09-01** when [0024](done/0024-products-core-crud-backend.md) was split
+> three ways after a Phase 2 INVEST FAIL. It is small — a Composer dependency, a config file, one
+> action and one test file — but it is a **hard** blocker here: it owns `SanitizeProductDescription`,
+> without which this screen may not render `description` unescaped or bind `WysiwygEditor` to it.
+> **Two other things changed in that split that touch this story**, both narrowing rather than adding:
+> 0024's **D-15** was reversed (its actions now self-authorize, so this story's gates are a second
+> layer rather than the only enforcement — see the `AuthorizationTest.php` section), and its **V-1**/
+> this file's **R-10** CI-database finding is **closed**, so Full Test Suite Gate evidence can come
+> from CI.
 
 Already-shipped work this relies on: the seeded `products.*` permissions (0002), the `Gate::before`
 Super Admin bypass and policy auto-discovery (0004), the Users screen's list+modal+per-row-hint pattern
@@ -1917,11 +1953,14 @@ nothing either way.
   authorization *matrix* (`ProductPolicy`'s abilities gate on the actor's module permission, so every
   row answers identically — 0025 **D-5**'s reasoning applies verbatim), and re-running 0024's
   validation suite one layer up.
-- **R-10 — CI cannot open a database connection at all** (0024 **V-1**, tracked separately as
-  `ci-database-connection-gap.md`). Inherited here at its largest scale, since this is the biggest
-  story in the chain and the only one whose closure evidence spans feature *and* browser suites. Not
-  this story's bug, but its Full Test Suite Gate evidence can only come from a local run until it is
-  fixed.
+- **R-10 — ⚠️ CLOSED 2026-09-01 (was: CI cannot open a database connection at all, citing 0024
+  **V-1**).** Real when raised on 2026-08-18, and **fixed on 2026-08-26** by the task it spawned,
+  [`ci-database-connection-gap.md`](ci-database-connection-gap.md), which records a clean `866/866`
+  run against real MySQL. Verified at 0024's split: `phpunit.xml` pins `DB_CONNECTION=mysql`,
+  `.env.example` sets it too, and `.github/workflows/tests.yml` runs a `mysql:8.4` service with
+  job-level `DB_CONNECTION`/`DB_DATABASE`. **This story's Full Test Suite Gate evidence can come from
+  CI**, which matters most here precisely because it is the biggest story in the chain and the only
+  one whose closure evidence spans feature *and* browser suites.
 - **R-11 — The `->ignore()` id becoming client-controlled.** Dropping `#[Locked]`, or assigning the
   raw method argument instead of `$product->id`, silently turns a uniqueness check into a
   rename-any-product primitive. The retarget test is what pins the pair.
@@ -1951,7 +1990,7 @@ calls that can be answered any time before the markup is written.
 
 - **✅ OQ-6 — *Resolved 2026-08-19; framing superseded, retained for history.*** ~~Does
   `SyncProductGallery` write `position` from the array index, or append with `MAX(position)+1`?~~
-  **Answered by [0024 **D-17**](0024-products-core-crud-backend.md): the 0-based array index.** The
+  **Answered by [0024 **D-17**](done/0024-products-core-crud-backend.md): the 0-based array index.** The
   signature is confirmed as
   `__invoke(Product $product, ?string $featuredMediaId, array $orderedGalleryMediaIds): void`; the
   array is the complete, authoritative order, `position` is rewritten for every surviving row from its
@@ -2039,7 +2078,7 @@ approach) and `frontend-qa` (test design), per
 in full readings of [0019](done/0019-media-library-upload-and-conversions-backend.md),
 [0020](done/0020-shared-media-gallery-modal-ui.md), [0021](done/0021-wysiwyg-rich-text-editor-component.md),
 [0022](done/0022-searchable-multi-select-component.md), [0023](done/0023-product-categories-backend.md),
-[0024](0024-products-core-crud-backend.md), [0025](0025-product-categories-ui.md),
+[0024](done/0024-products-core-crud-backend.md), [0025](0025-product-categories-ui.md),
 [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
 [0029](0029-product-variants-backend.md), with
 [0006](done/0006-users-list-editor-ui.md) / `App\Livewire\Users\Index` as the list+row-action pattern

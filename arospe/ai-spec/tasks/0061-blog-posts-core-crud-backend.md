@@ -26,7 +26,7 @@ hold more than one tag*), and `Feature: Blog categories`' *Deleting a blog categ
 hard-blocked with a count* — i.e. Blog acceptance criteria 1, the block half of 2, the
 create-on-the-fly half of 3, and the UUID-PK criterion 6.
 
-This story is the blog mirror image of [0024 (products-core-crud-backend)](0024-products-core-crud-backend.md),
+This story is the blog mirror image of [0024 (products-core-crud-backend)](done/0024-products-core-crud-backend.md),
 and is deliberately written to be read against it: both create a core entity on top of an
 already-shipped category table, and both are the story that **retrofits** the in-use delete guard
 onto a `Delete<Taxonomy>` action a prior story shipped deliberately unguarded.
@@ -462,8 +462,9 @@ stories are consistent with each other, not divergent. *Rejected:* `PublishBlogP
   re-query-on-lost-race semantics (0059's **D-10**) are consumed unchanged, never re-implemented.
 - `App\Actions\Auth\LogRefusedPrivilegedAttempt` — the refusal audit line (story 0015b), already
   constructor-injected into eight domain actions.
-- The HTML sanitizer and `config/html-sanitizer.php` — story [0024](0024-products-core-crud-backend.md)'s
-  **D-16** deliverable. **Consumed, never forked** (**D-14**, **OQ-4**).
+- The HTML sanitizer and `config/html-sanitizer.php` — story
+  [**0024a**](0024a-product-description-html-sanitization.md)'s **D-16** deliverable (split out of 0024
+  on 2026-09-01). **Consumed, never forked** (**D-14**, **OQ-4**).
 - `App\Actions\Blog\NotifyBlogPostPublished` — story **0065**'s deliverable,
   `__invoke(BlogPost $blogPost): void`. This story **calls** it from two sites and neither defines nor
   modifies it (**D-19**); what it notifies, whom, and through which channel is entirely 0065's.
@@ -833,7 +834,7 @@ named residual risk.
 **Explicitly not tested here**
 - `HasUuids`, Eloquent timestamps, `Rule::exists`'s own SQL, or `BelongsToMany::sync()`'s own
   behaviour — framework/vendor per [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md).
-- The **sanitizer's own allow-list semantics** — story 0024's `SanitizeProductDescription` tests own
+- The **sanitizer's own allow-list semantics** — story 0024a's `SanitizeProductDescription` tests own
   that. This story asserts only that the body goes **through** it, pinned by the `<img>`-survives and
   `<script>`-stripped cases above (**D-14**).
 - `App\Actions\NormalizeForSearch`'s folding table — story 0022's unit test owns it, and this story
@@ -929,7 +930,7 @@ is 0065's.
       when none is given; and **editing an unrelated field on a `Scheduled` post whose date has
       already passed still succeeds**.
 - [ ] **The body is sanitized before it is persisted**, on the create path *and* the update path,
-      through story 0024's existing sanitizer and its existing allow-list — **no second allow-list is
+      through story 0024a's existing sanitizer and its existing allow-list — **no second allow-list is
       added** — and an `<img>` inserted from the shared media gallery survives it intact.
 - [ ] A post can hold multiple tags; submitting a name reuses an existing tag (including one
       differing only by case or accent) and an unknown name creates one, through 0059's
@@ -1612,6 +1613,15 @@ precedent**, because `app/Actions/Blog/` will already contain seven self-authori
 time these land, and not following it would make one folder internally inconsistent — which is the
 "third idiom" 0024's own D-15 warns against, arrived at from the opposite direction.
 
+> ✅ **Strengthened, not weakened, on 2026-09-01 — the disagreement has largely dissolved.**
+> [0024](done/0024-products-core-crud-backend.md) **reversed** its **D-15**/**RQ-10** at its three-way
+> split (its **C-1**): the decision had rested on a claim that `App\Actions\Users\CreateUser` and
+> `UpdateUser` contain no `Gate` call, and they do. Its four product actions now self-authorize. So
+> this story's conclusion is unchanged and its *reasoning gets simpler*: there is no longer a genuine
+> second idiom to weigh against — `Users/`, `Roles/`, `SalesRegions/`, `Media/` and now `Products/`
+> all self-authorize, with `app/Actions/ProductCategories/` (0023) the one explicitly-flagged
+> exception, deferred to 0025. Read "two idioms are live" as historical.
+
 **Gating is the already-seeded `blog.*` tier; no new module slug.**
 [architecture/authorization.md](../../docs/architecture/authorization.md) states granularity is
 *"deliberately coarse per module: `products.*` covers categories and variants, `blog.*` covers
@@ -1646,11 +1656,11 @@ new.** That refusal must surface, not be silently swallowed by dropping the unma
 it would be a second, undocumented interpretation of the editor's own input, and they would watch
 "invierno" vanish with no explanation.
 
-### D-14 — The `body` is sanitized on write, reusing story 0024's sanitizer and its existing allow-list
+### D-14 — The `body` is sanitized on write, reusing story 0024a's sanitizer and its existing allow-list
 
 **Not a new decision — an inherited constraint.** 0024's **D-16** carries a scope fence naming this
 story in advance, verified verbatim at
-`ai-spec/tasks/0024-products-core-crud-backend.md:1309-1311`:
+`ai-spec/tasks/done/0024-products-core-crud-backend.md:1309-1311`:
 
 > *"the sanitizer is applied to `products.description` only. 0021's WYSIWYG editor and Epic 4's blog
 > body are separate stories; when the blog arrives it must **reuse this configuration** rather than
@@ -1666,7 +1676,7 @@ The stored value is therefore always safe HTML, which is what will let 0063 rend
 **Would sanitizing strip the shared gallery's images? No — verified against both sides of the
 contract, not assumed.** 0021's **D7** (`ai-spec/tasks/done/0021-wysiwyg-rich-text-editor-component.md:478`)
 states the editor emits a **bare** `<img src="…" alt="…">` and nothing else, explicitly *because*
-0024's allow-list has no `<figure>`/`<figcaption>`; and 0024's allow-list independently includes
+0024a's allow-list has no `<figure>`/`<figcaption>`; and 0024a's allow-list independently includes
 exactly `<img src alt>` with http/https-only schemes. The two match by construction, because the
 allow-list was scoped to what the shared toolbar can produce and the toolbar is shared with blog.
 
@@ -2160,8 +2170,14 @@ Executed or read against this worktree during the debate.
 - **0059 (blog tags backend) — hard, blocking.** The pivot FKs into `blog_tags`, this story adds a
   relation method to its model, and `SyncBlogPostTags` calls its `FindOrCreateBlogTag`. Not yet
   implemented (**V-1**).
-- **0024 (products core CRUD) — soft, for the HTML sanitizer only** (**D-14**, **OQ-4**). Its **D-16**
-  owns `symfony/html-sanitizer`, `config/html-sanitizer.php` and the allow-list this story consumes.
+- **[0024a](0024a-product-description-html-sanitization.md) (product description HTML sanitization) —
+  soft, for the HTML sanitizer only** (**D-14**, **OQ-4**). Its **D-16** owns
+  `symfony/html-sanitizer`, `config/html-sanitizer.php` and the allow-list this story consumes.
+  ⚠️ **Repointed 2026-09-01**: this named 0024, which no longer owns the sanitizer — it was split into
+  its own story, which in turn depends on 0024 for the `CreateProduct`/`UpdateProduct` it wires into.
+  **That makes the OQ-4 race below cheaper, not moot**: 0024a is a small story whose only hard
+  dependency is 0024's actions, so "0024 → 0024a" is a shorter path to the sanitizer than the whole of
+  0024 used to be.
 - **0022 — not a dependency**, unlike its sibling Epic 4 stories: this story does not call
   `NormalizeForSearch` at all (**D-10**).
 - Per [workflow.md](../../docs/workflow.md#task-ordering-rule) the numbering is already correct; what
@@ -2323,11 +2339,13 @@ guessed. **None blocks Phase 2 review. OQ-2 and OQ-3 must be settled before Phas
   `LONGTEXT` as the brief specified, at the cost of that signal. **Nothing else in the story depends
   on the answer** — the column is nullable either way, and the status-parameterised rule is unaffected.
 
-- **OQ-4 — Sequencing of the shared HTML sanitizer between 0024 and 0061.** 0024's **D-16** owns
-  `symfony/html-sanitizer` and `config/html-sanitizer.php`, and neither exists in the tree today
-  (**V-1**). This is the same shape as the `NormalizeForSearch` ownership race 0058's and 0059's
+- **OQ-4 — Sequencing of the shared HTML sanitizer between [0024a](0024a-product-description-html-sanitization.md)
+  and 0061.** *(Repointed 2026-09-01: the sanitizer was **D-16** of story 0024 when this question was
+  written; it is now its own story, 0024a, whose sole hard dependency is 0024's two write actions.)*
+  0024a's **D-16** owns `symfony/html-sanitizer` and `config/html-sanitizer.php`, and neither exists in
+  the tree today (**V-1**). This is the same shape as the `NormalizeForSearch` ownership race 0058's and 0059's
   **OQ-2** both record. **Recommendation: whichever of 0024 / 0061 reaches Phase 3 first creates the
-  package, the config and the sanitizing action to 0024's D-16 spec verbatim, and the other consumes
+  package, the config and the sanitizing action to 0024a's D-16 spec verbatim, and the other consumes
   it unchanged (recommended)** — rather than serialising Epic 4 behind an Epic 2 story. The invariant
   is non-negotiable either way: **exactly one sanitizer and exactly one allow-list exist in the tree.**
   What must not happen under time pressure is a blog-specific allow-list "just for now" — that is the
@@ -2372,11 +2390,11 @@ rather than merely supporting it, and each was independently verified by the fac
 real tree before being accepted**, per this project's rule that a second-hand claim is a flag that
 nobody ran the code:
 
-1. **`backend-expert` found that 0024's D-16 carries a scope fence naming *this* story in advance** —
+1. **`backend-expert` found that 0024a's D-16 carries a scope fence naming *this* story in advance** —
    the blog body must reuse the product sanitizer's configuration rather than define a second
-   allow-list. Confirmed by reading `ai-spec/tasks/0024-products-core-crud-backend.md:1309-1311`
+   allow-list. Confirmed by reading `ai-spec/tasks/done/0024-products-core-crud-backend.md:1309-1311`
    directly. It also found the matching half on the other side: 0021's **D7** emits a *bare*
-   `<img src alt>` precisely because 0024's allow-list has no `<figure>`, confirmed at
+   `<img src alt>` precisely because 0024a's allow-list has no `<figure>`, confirmed at
    `ai-spec/tasks/done/0021-wysiwyg-rich-text-editor-component.md:478`. Together these turn "will
    sanitization eat the gallery's images?" from an open worry into a verified no, and produced
    **D-14** plus its required regression test.
@@ -2406,7 +2424,9 @@ A third potential conflict resolved cleanly rather than needing arbitration: `ba
 that **two self-authorization idioms are live in this codebase** — `app/Actions/SalesRegions/` and
 both Epic 4 siblings self-authorize, while 0024's **D-15** deliberately does not — and chose the Blog
 folder's own precedent, since not following it would make a single folder internally inconsistent.
-The facilitator accepted that reasoning unchanged (**D-13**).
+The facilitator accepted that reasoning unchanged (**D-13**). *(2026-09-01: 0024 reversed D-15, so the
+second idiom has all but disappeared — the conclusion holds and the argument for it is now shorter.
+See the ✅ note on **D-13**.)*
 
 **One thing this story deliberately does *not* inherit from its Epic 4 siblings, stated so its absence
 is not read as an oversight:** the stored `normalized_name` + `NormalizeForSearch` convention that

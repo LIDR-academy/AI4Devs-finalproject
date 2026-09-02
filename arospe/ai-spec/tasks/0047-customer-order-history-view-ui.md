@@ -14,7 +14,7 @@ unreachable.
 >
 > **This story is fully specified now, but its Phase 3 implementation cannot start until story
 > [0045](0045-orders-core-crud-backend.md) is `done` — and 0045 is itself ⛔ blocked on five PRD Epic 2
-> stories ([0024](0024-products-core-crud-backend.md), [0029](0029-product-variants-backend.md),
+> stories ([0024](done/0024-products-core-crud-backend.md), [0029](0029-product-variants-backend.md),
 > [0035](0035-shipping-carriers-backend.md), [0036](0036-shipping-rate-rules-backend.md),
 > [0038](0038-payment-methods-bank-transfer-backend.md)).**
 >
@@ -760,7 +760,7 @@ names the customer. Reversible in one line if the product asks.
 #### ⛔ Blocked — inherited cross-epic dependency
 
 **Phase 3 cannot begin until [0045](0045-orders-core-crud-backend.md) is `done`**, and 0045 is itself
-blocked on [0024](0024-products-core-crud-backend.md), [0029](0029-product-variants-backend.md),
+blocked on [0024](done/0024-products-core-crud-backend.md), [0029](0029-product-variants-backend.md),
 [0035](0035-shipping-carriers-backend.md), [0036](0036-shipping-rate-rules-backend.md) and
 [0038](0038-payment-methods-bank-transfer-backend.md). The chain is **0047 → 0045 → five Epic 2 stories**.
 

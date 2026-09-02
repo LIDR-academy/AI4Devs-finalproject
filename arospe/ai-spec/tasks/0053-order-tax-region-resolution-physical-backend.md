@@ -25,7 +25,7 @@ returns. No route, no Livewire component, no Blade markup, no migration and no n
 >
 > **This story is fully specified now, but its Phase 3 implementation cannot start until story
 > [0045](0045-orders-core-crud-backend.md) is `done` — and 0045 is itself blocked** on PRD Epic 2
-> stories [0024](0024-products-core-crud-backend.md) (Products),
+> stories [0024](done/0024-products-core-crud-backend.md) (Products),
 > [0029](0029-product-variants-backend.md) (Product Variants),
 > [0035](0035-shipping-carriers-backend.md), [0036](0036-shipping-rate-rules-backend.md) and
 > [0038](0038-payment-methods-bank-transfer-backend.md).
@@ -987,7 +987,7 @@ rediscovery.
 | `orders` table + `App\Models\Order` | story [0045](0045-orders-core-crud-backend.md) — **hard dependency, and itself ⛔ blocked** | This story writes `sales_region_id`, `tax_rate`, `flagged_for_review` and reads both shipping-address columns |
 | `orders`' twelve frozen address columns | story [0045](0045-orders-core-crud-backend.md) **D-4** | 0045's D-4 names this story as the reason those columns exist rather than a live join |
 | `order_items` + `App\Models\OrderItem` | story [0045](0045-orders-core-crud-backend.md) | The product-type guard reads `items.product` |
-| `products.type` / `App\Enums\ProductType` | story [0024](0024-products-core-crud-backend.md) — **hard dependency** | `case Physical = 'physical'; case Virtual = 'virtual';`, read from 0024's own file |
+| `products.type` / `App\Enums\ProductType` | story [0024](done/0024-products-core-crud-backend.md) — **hard dependency** | `case Physical = 'physical'; case Virtual = 'virtual';`, read from 0024's own file |
 | `sales_regions` table + `App\Models\SalesRegion` | task 0016 — **done (shipped)** | `docs/database/schema.md` § `sales_regions`; `slug` UNIQUE, `is_active`, `is_default`, `rate` all present |
 | `SalesRegionSeeder::SPAIN_TERRITORIES` / `DEFAULT_SLUG` | **shipped** | Read from `database/seeders/SalesRegionSeeder.php`; the five slugs and `es-peninsula` confirmed |
 | `slug = strtolower(alpha2)` for every country row | **shipped** | Line 79 of the same seeder, read rather than recalled |
@@ -1211,7 +1211,7 @@ Derived from this story, none of them in scope:
   docblock stating that nothing resolves by `code` — all read from
   [`database/seeders/SalesRegionSeeder.php`](../../database/seeders/SalesRegionSeeder.php) at composition
   time. `ProductType`'s two cases were read from
-  [0024](0024-products-core-crud-backend.md); `orders`' column shapes and 0045's **D-2**/**D-4**/**D-8**/
+  [0024](done/0024-products-core-crud-backend.md); `orders`' column shapes and 0045's **D-2**/**D-4**/**D-8**/
   **D-9**/**D-10** from [0045](0045-orders-core-crud-backend.md); `ResolvedTaxRate`'s shape and tiers from
   [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md).
 - **Stage:** `new`, and **blocked** — see the banner under [Description](#description). It moves to

@@ -14,7 +14,7 @@ markup, no auto-cancel.
 >
 > **This story is fully specified now, but its Phase 3 implementation cannot start until story
 > [0045](0045-orders-core-crud-backend.md) is `done`** — and 0045 is itself blocked on five Epic 2
-> stories ([0024](0024-products-core-crud-backend.md), [0029](0029-product-variants-backend.md),
+> stories ([0024](done/0024-products-core-crud-backend.md), [0029](0029-product-variants-backend.md),
 > [0035](0035-shipping-carriers-backend.md), [0036](0036-shipping-rate-rules-backend.md),
 > [0038](0038-payment-methods-bank-transfer-backend.md)).
 >

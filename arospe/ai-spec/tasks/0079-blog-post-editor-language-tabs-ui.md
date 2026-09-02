@@ -68,7 +68,7 @@ refined.** Almost nothing here is new mechanism; what *is* new is named in
 ## Type
 frontend | includes database-expert: **no** | consumes **0078** (the retrofit), **0071** (the tab strip),
 **0070** (the mechanism), **0068** (`StoreLanguage`), **0063** (the screen), **0061**/**0059**/**0058**
-(the domain), **0021** (the WYSIWYG), **0024** (the sanitizer, transitively)
+(the domain), **0021** (the WYSIWYG), **[0024a](0024a-product-description-html-sanitization.md)** (the sanitizer, transitively)
 
 > **On the classification — settled, not re-escalated.** This story stays **frontend** while adding one
 > `app/Actions/Blog/` class, which is the shape 0071, 0073, 0075 and 0077 all ship. The coordinator has
@@ -392,7 +392,7 @@ this story is its **fourth** consumer and must not fork, copy or widen it (**D-5
 | `app/Concerns/BlogPostValidationRules.php` | 0061, re-scoped by **0078**; this story is a **consumer** and adds no method — but see **Q-1**, which is the one place that may not hold |
 | `app/Actions/Blog/{Create,Update,Delete,Restore}BlogPost.php`, `SyncBlogPostTags.php`, `BackfillBlogPostTranslations.php` | 0061 / 0078 — signatures unchanged per 0078 **D-12**. ⚠️ **This row no longer covers the whole folder** — this story *adds* `SetBlogPostTranslation.php` beside them |
 | `app/Actions/Blog/FindOrCreateBlogTag.php`, `{Create,Rename,Delete}BlogTag.php` | 0059 / 0074 — **never called directly** (0061's hand-off forbids it). But see **R-3**, an unresolved cross-story gap |
-| `app/Actions/Products/SanitizeProductDescription.php` | 0024 — the **only** class in the app that touches the HTML sanitizer; **consumed by injection**, never re-implemented (**D-8**, **V-1**) |
+| `app/Actions/Products/SanitizeProductDescription.php` | **[0024a](0024a-product-description-html-sanitization.md)** (split out of 0024 on 2026-09-01) — the **only** class in the app that touches the HTML sanitizer; **consumed by injection**, never re-implemented (**D-8**, **V-1**) |
 | `app/Livewire/Components/WysiwygEditor.php`, `app/Livewire/Media/Gallery.php` | 0021 / 0020 — embedded N times, **never edited** (**D-4**) |
 | `app/Policies/BlogPostPolicy.php`, `database/seeders/RolePermissionSeeder.php` | 0061 — five abilities, catalog stays at **42** (**D-18**) |
 | `routes/blog-posts.php`, `config/modules.php`, `lang/*/navigation.php` | 0063 — no route, no registry entry, no sidebar change |
@@ -409,7 +409,7 @@ final class SetBlogPostTranslation
     use BlogPostValidationRules;
 
     public function __construct(
-        private readonly SanitizeProductDescription $sanitizeProductDescription,  // 0024's — V-1
+        private readonly SanitizeProductDescription $sanitizeProductDescription,  // 0024a's — V-1
         private readonly SetTranslation $setTranslation,                          // reached from NOWHERE else
         private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
     ) {}
@@ -777,7 +777,7 @@ place only where the real-DOM/JS round trip **is** the risk. Every test closes w
 | `translated()`'s fallback chain, per-field resolution, the default-language memo, `withTranslationsFor()`'s query bound | 0070 |
 | The slug-derivation hook itself (insert, retitle, `isDirty` guard, forged-attribute override), the backfill, the soft-delete slug reservation, the `23000`-vs-FK misattribution | 0078 |
 | `SetTranslation`'s `updateOrCreate` semantics | 0070 — one row-count assertion here, no re-derivation |
-| The HTML sanitiser's allow-list, scheme rules and idempotence | 0024 **D-16** / 0061 **D-14** |
+| The HTML sanitiser's allow-list, scheme rules and idempotence | 0024a **D-16** / 0061 **D-14** |
 | The WYSIWYG's tag emission, caret restore, toolbar `aria-pressed`, link sanitisation | 0021 |
 | The media gallery's search/upload/tile cap | 0019/0020 |
 | `StoreLanguage` CRUD and the add/remove/default-swap invariants | 0068 |
@@ -857,7 +857,7 @@ nowhere else in the application.
       against **compiled output** rather than the absence of an error.
 - [ ] No new permission, ability, policy, route, migration, model or `config/modules.php` entry; the
       catalog stays at **42**. **Exactly one action is added** (`SetBlogPostTranslation`); 0061's and
-      0078's six existing Blog Post actions, 0070's `SetTranslation`, 0024's sanitizer and
+      0078's six existing Blog Post actions, 0070's `SetTranslation`, 0024a's sanitizer and
       `BlogPostValidationRules` are all **unmodified** — subject to **Q-1**.
 - [ ] `lang/en/blog-posts.php` and `lang/es/blog-posts.php` stay key-for-key identical; no user-facing
       string is hardcoded in a view.
@@ -1066,7 +1066,7 @@ are the family's, applied unchanged:
    folder, which by the time this lands holds seven self-authorizing actions. This is the one place
    this story diverges from 0071/0077, whose Product-side actions do not log; following the *entity's*
    folder rather than the *pattern's* sibling is 0073's precedent applied again.
-3. **Sanitization runs before `validate()`.** 0061 **D-14** and 0024 **D-16** constraint 1 require it,
+3. **Sanitization runs before `validate()`.** 0061 **D-14** and 0024a **D-16** constraint 1 require it,
    so a body whose *pre*-sanitisation length exceeds a rule but whose sanitised form does not is judged
    on the sanitised value. Putting it here rather than only in the component is what closes 0078's
    **R-8** structurally rather than by remembering.
@@ -1090,7 +1090,7 @@ are the family's, applied unchanged:
   **D-4**). Nothing in this story touches a slug at any point. That makes it *simpler* than
   `SetProductTranslation`, not more complex.
 - **It injects a class from another area folder.** The sanitizer is
-  `App\Actions\Products\SanitizeProductDescription` — 0024 declares it *"the **only** class in the app
+  `App\Actions\Products\SanitizeProductDescription` — 0024a declares it *"the **only** class in the app
   that touches the HTML sanitizer"* and 0061 **D-14** reuses it deliberately rather than defining a
   second allow-list. So an `app/Actions/Blog/` class constructor-injects an `app/Actions/Products/`
   one, which looks wrong at a glance and is correct: the alternative is the drift 0024's own scope
@@ -1305,8 +1305,9 @@ a post's French title is neither identity-sensitive nor hard to reverse.
   `is_default`.
 - **[0021](done/0021-wysiwyg-rich-text-editor-component.md)** — hard. Its **D9** is the constraint **D-4** is
   built around; consumed **unmodified**, N times.
-- **[0024](0024-products-core-crud-backend.md)** — soft, for `SanitizeProductDescription` only,
-  consumed exactly as 0061 **D-14** consumes it.
+- **[0024a](0024a-product-description-html-sanitization.md)** — soft, for `SanitizeProductDescription`
+  only, consumed exactly as 0061 **D-14** consumes it. *(Repointed 2026-09-01: that class was story
+  0024's until 0024 was split; 0024a owns it, and depends on 0024 in turn.)*
 - **[0061](0061-blog-posts-core-crud-backend.md)** / **[0059](0059-blog-tags-backend.md)** /
   **[0058](0058-blog-categories-backend.md)** — hard, transitively via 0063.
 - Sequencing, strictly: **0058 → 0059 → 0061 → 0063 → 0068 → 0070 → 0074 → 0078 → 0079**, each fully
@@ -1517,7 +1518,7 @@ Six points, each reached from opposite directions:
 
 - **V-1 — `frontend-expert` invented a sanitizer class that does not exist.** Its action sketch
   constructor-injects `SanitizeBlogPostBody` *"whatever 0061 D-14 names its sanitizer"*. **Verified
-  against 0061 rather than propagated:** 0061 **D-14** reuses **0024's `SanitizeProductDescription`**
+  against 0061 rather than propagated:** 0061 **D-14** reuses **0024a's `SanitizeProductDescription`**
   and explicitly forbids a blog-specific allow-list, quoting 0024's own scope fence
   (*"when the blog arrives it must **reuse this configuration** rather than define a second
   allow-list"*). 0024 additionally declares that class *"the **only** class in the app that touches the
