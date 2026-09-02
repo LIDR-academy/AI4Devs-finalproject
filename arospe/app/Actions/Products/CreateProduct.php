@@ -20,13 +20,14 @@ class CreateProduct
     /**
      * Constructor injection, not method injection: __invoke()'s domain
      * arguments are this action's whole public signature, matched verbatim
-     * by every direct-call test, so both collaborators are resolved from
-     * the container without widening that signature (code-style.md's
+     * by every direct-call test, so all three collaborators are resolved
+     * from the container without widening that signature (code-style.md's
      * constructor-injection exception).
      */
     public function __construct(
         private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
         private readonly SyncProductGallery $syncProductGallery,
+        private readonly SanitizeProductDescription $sanitizeProductDescription,
     ) {}
 
     /**
@@ -96,6 +97,11 @@ class CreateProduct
 
         $name = trim($name);
         $sku = Str::upper(trim($sku));
+        // 0024a D-16/D-A1: sanitize BEFORE validating, so max:65535 measures the
+        // stored value rather than markup the sanitizer is about to remove, and
+        // reassign $description so both the Validator::make() array below and the
+        // DB::transaction() closure further down read the sanitized value.
+        $description = ($this->sanitizeProductDescription)($description);
 
         Validator::make(
             [
