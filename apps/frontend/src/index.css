@@ -380,7 +380,7 @@ h3 {
 
 .banner-alert {
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 0;
   margin-bottom: 20px;
   display: flex;
   align-items: flex-start;
@@ -388,13 +388,13 @@ h3 {
 }
 
 .banner-alert-danger {
-  background-color: rgba(224, 86, 36, 0.15);
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
   border: 1px solid var(--color-danger);
   color: var(--text-primary);
 }
 
 .banner-alert-success {
-  background-color: rgba(76, 175, 80, 0.15);
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
   border: 1px solid var(--color-success);
   color: var(--text-primary);
 }

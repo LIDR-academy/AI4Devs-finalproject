@@ -15,11 +15,11 @@
 
 .modal-card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
+  border: 2px solid var(--rule);
   border-top: 4px solid var(--color-primary);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 28px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: none;
   max-height: 90vh;
   overflow-y: auto;
   width: 94%;

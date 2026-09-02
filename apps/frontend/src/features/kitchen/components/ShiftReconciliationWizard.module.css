@@ -1,8 +1,8 @@
 .reconciliation-row {
-  border: 1px solid var(--border-card);
+  border: 2px solid var(--rule);
   background-color: var(--bg-card);
   padding: var(--space-3) var(--space-4);
-  border-radius: 4px;
+  border-radius: 0;
 }
 .reconciliation-row--critical {
   border-color: var(--color-danger);
@@ -13,12 +13,13 @@
 .qty-stepper-input-sm {
   width: 90px;
   text-align: center;
+  font-family: var(--font-family-mono);
   font-size: var(--fs-base);
   font-weight: var(--fw-bold);
   padding: var(--space-2);
-  border-radius: 6px;
-  border: 1px solid var(--border-card);
-  background-color: var(--bg-primary);
+  border-radius: 0;
+  border: 2px solid var(--rule);
+  background-color: var(--bg-root);
   color: var(--text-primary);
 }
 
@@ -26,7 +27,7 @@
   background-color: color-mix(in srgb, var(--color-danger) 12%, transparent);
   border: 1px solid var(--color-danger);
   padding: 14px;
-  border-radius: 4px;
+  border-radius: 0;
 }
 .critical-variance-alert-row {
   display: flex;
