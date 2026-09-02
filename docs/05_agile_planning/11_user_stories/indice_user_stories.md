@@ -29,7 +29,7 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 *   **[US-016: Definición de Sectores de Almacenamiento](stock/US-016.md)**
     *   *Descripción:* Permite configurar y administrar los sectores físicos reales del restaurante (cámaras frías, bodegas secas, mesas de preparación).
 *   **[US-021: Advertencia de Apertura Duplicada al Extraer Insumo](stock/US-021.md)**
-    *   *Descripción:* Advierte de forma no bloqueante al operario si ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina, para reducir aperturas duplicadas (KPI #3 del PRD).
+    *   *Descripción:* Advierte de forma no bloqueante al operario si ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina, para reducir aperturas duplicadas (KPI #3 del PRD). ✅ Backend (`TK-080`) y Frontend (`TK-080-FE`) implementados.
 
 ### ⚙️ Configuración (`/settings/`)
 *   **[US-017: Configuración General del Restaurante y Parámetros FEFO](settings/US-017.md)**
