@@ -3,7 +3,7 @@
 
 .progress-bar-track {
   background-color: var(--overlay-white-subtle);
-  border-radius: 6px;
+  border-radius: 0;
   height: 12px;
   width: 100%;
   overflow: hidden;
@@ -11,7 +11,7 @@
 .progress-bar-fill {
   width: var(--bar-pct, 0%);
   height: 100%;
-  border-radius: 6px;
+  border-radius: 0;
   transition: width 0.4s ease;
 }
 .progress-bar-fill--danger { background-color: var(--color-danger); }
@@ -20,8 +20,8 @@
 .filter-toggle-group {
   background-color: var(--bg-card);
   padding: var(--space-1);
-  border-radius: 8px;
-  border: 1px solid var(--border-card);
+  border-radius: 0;
+  border: 2px solid var(--rule);
 }
 .filter-toggle-btn {
   padding: 6px var(--space-3);

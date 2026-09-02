@@ -3,9 +3,9 @@
   top: calc(100% + 6px);
   right: 0;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--rule);
+  border-radius: 0;
+  box-shadow: none;
   z-index: 100;
   min-width: 220px;
   padding: 6px;

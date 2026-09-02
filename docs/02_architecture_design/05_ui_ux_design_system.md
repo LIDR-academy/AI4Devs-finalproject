@@ -30,7 +30,8 @@ inputs:
   --color-primary: #2e5f76;  --color-primary-hover: #24495c;  --color-primary-on: #fbf8ef;
   --color-secondary: #6e6555;
   --color-danger: #b43a24;   --color-danger-text: #a03420;   --color-danger-on: #fbf8ef;
-  --color-warning: #8a6414;  --color-warning-text: #6b4c0e;  --color-success: #3e6b3a;  --color-info: #2e5f76;
+  --color-warning: #8a6414;  --color-warning-text: #6b4c0e;
+  --color-success: #3e6b3a;  --color-success-text: #345c2f;  --color-info: #2e5f76;  --color-info-text: #244d61;
   --text-primary: #18140f;   --text-secondary: #6e6555;
   --font-family-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
   --font-family-body: 'IBM Plex Sans', system-ui, sans-serif;
@@ -44,12 +45,13 @@ inputs:
   --color-primary: #6faac7;  --color-primary-hover: #8bc0d8;  --color-primary-on: #171c18;
   --color-secondary: #9aa394;
   --color-danger: #e1573a;   --color-danger-text: #f0806a;   --color-danger-on: #171c18;
-  --color-warning: #e6be55;  --color-warning-text: #e6be55;  --color-success: #7cb36e;  --color-info: #6faac7;
+  --color-warning: #e6be55;  --color-warning-text: #e6be55;
+  --color-success: #7cb36e;  --color-success-text: #7cb36e;  --color-info: #6faac7;  --color-info-text: #6faac7;
   --text-primary: #f2eedd;   --text-secondary: #9aa394;
 }
 ```
 
-> **Nota de contraste (validada con formula de luminancia relativa WCAG, no estimada — corregido durante `TK-081-FE`):** `--color-danger`/`--color-warning` son fondos/rellenos, no texto directo. Cada uno tiene su propia variante `-text` para usarse como texto sobre el badge tintado al 12–15% de su propio color (el caso mas exigente): de dia, `--color-danger-text` (`#a03420`, ~5.6:1) y `--color-warning-text` (`#6b4c0e`, ~5.84:1, mas oscuro que `--color-warning` — reusar este ultimo como texto da solo ~3.98:1, por debajo de AA); de noche, `--color-danger-text` (`#f0806a`, ~5.02:1 — igualarlo a `--color-danger` daba ~3.55:1) y `--color-warning-text` (igual a `--color-warning`, `#e6be55`, ya suficientemente claro de noche). `--color-danger-on`/`--color-primary-on` son un tercer caso distinto: texto sobre el **relleno solido** de un boton (`.btn-danger`, `.btn-primary`), no sobre un tinte transparente.
+> **Nota de contraste (validada con formula de luminancia relativa WCAG, no estimada — corregido durante `TK-081-FE` y `TK-084-FE`):** `--color-danger`/`--color-warning`/`--color-success`/`--color-info` son fondos/rellenos, no texto directo. Cada uno tiene su propia variante `-text` para usarse como texto sobre el badge tintado al 12–15% de su propio color (el caso mas exigente, contra el fondo real donde compone el badge — `--bg-root` o `--bg-card` segun el contenedor, **verificar contra el fondo real de cada uso, no asumir uno**: un primer calculo de `TK-084-FE` contra `--bg-card` dio numeros optimistas que no correspondian al `--bg-root` real detras de `.location-row`, y ademas nunca se habia verificado `--color-success` como texto — resultó en un fallo AA real de ~4.19:1 en turno dia, encontrado recien en la revision adversarial de `TK-084-FE`): de dia, `--color-danger-text` (`#a03420`, ~5.6:1), `--color-warning-text` (`#6b4c0e`, ~5.84:1 — `--color-warning` solo da ~3.98:1), `--color-success-text` (`#345c2f`, ~5.2:1 — `--color-success` solo da ~4.19:1, bajo AA) y `--color-info-text` (`#244d61`, ~6:1 — `--color-info` solo pasaba por apenas ~4.63:1, sin margen real); de noche, `--color-danger-text` (`#f0806a`, ~5.02:1 — igualarlo a `--color-danger` daba ~3.55:1) y `--color-warning-text`/`--color-success-text`/`--color-info-text` iguales a su color base (ya suficientemente claros de noche, verificado ≥4.7:1 en los cuatro casos). `--color-danger-on`/`--color-primary-on` son un tercer caso distinto: texto sobre el **relleno solido** de un boton (`.btn-danger`, `.btn-primary`), no sobre un tinte transparente.
 
 ### Cambios Estructurales (no solo de color)
 * **Bordes en vez de sombras:** `box-shadow` se elimina de `.card-dashboard` y equivalentes; se reemplaza por `border: 2px solid var(--rule)`.

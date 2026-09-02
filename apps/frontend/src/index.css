@@ -15,6 +15,7 @@
   --color-primary: #2e5f76;
   --color-primary-hover: #24495c;
   --color-primary-on: #fbf8ef;
+  --color-primary-text: #244d61; /* mas oscuro que --color-primary: AA 6:1 sobre su propio badge 15% tint (--color-primary solo pasaba por apenas ~4.63:1) — mismo valor que --color-info-text, --color-info es un alias intencional de --color-primary */
   --color-secondary: #6e6555;
 
   --color-danger: #b43a24;
@@ -23,7 +24,9 @@
   --color-warning: #8a6414;
   --color-warning-text: #6b4c0e; /* mas oscuro que --color-warning: AA 4.5:1 como texto sobre su propio badge 15% tint (--color-warning solo, sin este ajuste, da ~3.98:1) */
   --color-success: #3e6b3a;
+  --color-success-text: #345c2f; /* mas oscuro que --color-success: AA 5.2:1 sobre su propio badge 15% tint (--color-success solo da ~4.19:1, bajo AA — bug real encontrado en TK-084-FE) */
   --color-info: #2e5f76;
+  --color-info-text: #244d61; /* mas oscuro que --color-info: AA 6:1 sobre su propio badge 15% tint (--color-info solo pasaba por apenas 4.63:1, sin margen real) */
 
   --overlay-white-subtle: rgba(24, 20, 15, 0.06);
   --overlay-white-faint: rgba(24, 20, 15, 0.02);
@@ -57,6 +60,7 @@
     --color-primary: #6faac7;
     --color-primary-hover: #8bc0d8;
     --color-primary-on: #171c18;
+    --color-primary-text: #6faac7;
     --color-secondary: #9aa394;
 
     --color-danger: #e1573a;
@@ -65,7 +69,9 @@
     --color-warning: #e6be55;
     --color-warning-text: #e6be55;
     --color-success: #7cb36e;
+    --color-success-text: #7cb36e;
     --color-info: #6faac7;
+    --color-info-text: #6faac7;
 
     --overlay-white-subtle: rgba(242, 238, 221, 0.08);
     --overlay-white-faint: rgba(242, 238, 221, 0.02);
@@ -84,6 +90,7 @@
   --color-primary: #6faac7;
   --color-primary-hover: #8bc0d8;
   --color-primary-on: #171c18;
+  --color-primary-text: #6faac7;
   --color-secondary: #9aa394;
 
   --color-danger: #e1573a;
@@ -92,7 +99,9 @@
   --color-warning: #e6be55;
   --color-warning-text: #e6be55;
   --color-success: #7cb36e;
+  --color-success-text: #7cb36e;
   --color-info: #6faac7;
+  --color-info-text: #6faac7;
 
   --overlay-white-subtle: rgba(242, 238, 221, 0.08);
   --overlay-white-faint: rgba(242, 238, 221, 0.02);
@@ -235,14 +244,14 @@ h3 {
   border-radius: 50%;
   border: 2px solid currentColor;
   background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .card-badge-icon--danger {
   background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 .card-badge-icon--warning {
   background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
@@ -250,7 +259,7 @@ h3 {
 }
 .card-badge-icon--success {
   background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 
 .card-title {
@@ -416,7 +425,7 @@ h3 {
   border: 1px solid var(--color-success);
   border-radius: 0;
   padding: 14px 16px;
-  color: var(--color-success);
+  color: var(--color-success-text);
   margin-bottom: 16px;
   text-align: left;
 }
