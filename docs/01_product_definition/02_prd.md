@@ -65,6 +65,8 @@ El sistema optimiza la rotación de inventarios forzando una lógica FEFO (First
 *   **Cierre de turno y conciliación física:** Flujo de fin de jornada para que el operario declare el inventario real en cocina y el sistema genere de manera guiada los registros de merma y discrepancias.
 *   **Dashboard y reporte de mermas visibles:** Panel web administrativo para que el administrador visualice en tiempo real los descartes acumulados agrupados por insumo y causa, haciendo la merma visible de inmediato.
 
+La identidad visual de la aplicación sigue el **Sistema FEFO** (turno Día/Noche, `US-022`) — ver [`DESIGN.md`](../../DESIGN.md) y [`docs/02_architecture_design/05_ui_ux_design_system.md`](../02_architecture_design/05_ui_ux_design_system.md) para el detalle completo de tokens, tipografía y ergonomía táctil.
+
 ### 1.3. Objetivos de Negocio y KPIs (Métricas de Éxito)
 *   **Reducción de Merma Desconocida:** Disminuir en un **30%** la diferencia financiera entre el inventario teórico del sistema y las auditorías físicas semanales en un periodo de 90 días.
 *   **Tasa de Rotación de Remanentes (TRR):** Lograr que el tiempo promedio desde que se abre un insumo y se registra su remanente hasta que se marca como "totalmente consumido" sea **menor a 72 horas (3 días)**.

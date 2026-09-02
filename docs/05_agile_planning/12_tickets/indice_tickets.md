@@ -128,6 +128,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-078-FE** | [US-019](../11_user_stories/reports/US-019.md) | Costo de Insumo y Valorización Monetaria en Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-078-FE.md](reports/frontend/TK-078-FE.md) |
 | **TK-079-FE** | [US-020](../11_user_stories/reports/US-020.md) | Card de KPI de TRR Real en el Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-079-FE.md](reports/frontend/TK-079-FE.md) |
 | **TK-080-FE** | [US-021](../11_user_stories/stock/US-021.md) | Advertencia de Apertura Duplicada en Extracción | `stock` | 3 | Should Have | [stock/frontend/TK-080-FE.md](stock/frontend/TK-080-FE.md) |
+| **TK-081-FE** | [US-022](../11_user_stories/shared/US-022.md) | Núcleo del Sistema FEFO (Tokens Día/Noche + Interruptor) — Tablero Principal | `shared` | 5 | Should Have | [shared/frontend/TK-081-FE.md](shared/frontend/TK-081-FE.md) |
+| **TK-082-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Modales de Operación de Cocina | `shared` | 3 | Should Have | [shared/frontend/TK-082-FE.md](shared/frontend/TK-082-FE.md) |
+| **TK-083-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Autenticación Táctil (PIN) | `shared` | 3 | Should Have | [shared/frontend/TK-083-FE.md](shared/frontend/TK-083-FE.md) |
+| **TK-084-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Backoffice y Administración | `shared` | 5 | Should Have | [shared/frontend/TK-084-FE.md](shared/frontend/TK-084-FE.md) |
 ---
 
 ## 🗂️ 3. Resumen de Fichas Técnicas de Tickets por Módulo
@@ -208,6 +212,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-067: Migración Visual al Design System v2.0.0](shared/frontend/TK-067.md)** (Frontend) — propaga la paleta "Señal Industrial" (`docs/02_architecture_design/05_ui_ux_design_system.md` v2.0.0) a `index.css` y a los componentes de cocina; cero cambio de comportamiento, backoffice de Catálogo fuera de alcance.
 *   **[TK-068: Migración Visual del Backoffice al Design System v2.0.0](shared/frontend/TK-068.md)** (Frontend) — extiende `TK-067` al backoffice (Catálogo, Reportes, panel de acciones de `App.tsx`) a pedido explícito del humano; cierra de paso literales hex hardcodeados preexistentes de `TK-057-FE`/`TK-060-FE` (Guard 29).
 *   **[TK-071: Reemplaza emoji sueltos por íconos lucide-react](shared/frontend/TK-071.md)** (Frontend) — corrige la iconografía de Catálogo/Recetario (`Package`, `Search`, `Truck`, `ChefHat`) a pedido explícito del humano; misma deuda pendiente en pantallas de cocina, fuera de alcance.
+*   **[TK-081-FE: Núcleo del Sistema FEFO (Tokens Día/Noche + Interruptor)](shared/frontend/TK-081-FE.md)** (Frontend) — reemplaza la paleta única oscura "Señal Industrial" v3.0.0 por el sistema dual Día/Noche (`US-022`); introduce el interruptor de tema y lo aplica al tablero principal. Prerrequisito de `TK-082-FE`/`TK-083-FE`/`TK-084-FE`.
+*   **[TK-082-FE: Sistema FEFO — Modales de Operación de Cocina](shared/frontend/TK-082-FE.md)** (Frontend) — extiende `TK-081-FE` a `WarehouseExtractionModal`/`RecipeSelectorModal`/`DiscardModal`/`ShiftReconciliationWizard` y al shell compartido `Modal.tsx`.
+*   **[TK-083-FE: Sistema FEFO — Autenticación Táctil (PIN)](shared/frontend/TK-083-FE.md)** (Frontend) — extiende `TK-081-FE` a `PinLoginModal`/`PinPad`/`ForceChangePinModal`/`ResetPinModal`/`ForgotPinModal`; preserva el mínimo táctil de 64×64px del teclado de PIN.
+*   **[TK-084-FE: Sistema FEFO — Backoffice y Administración](shared/frontend/TK-084-FE.md)** (Frontend) — cierra `US-022` extendiendo `TK-081-FE` a Reportes, Gestión de Usuarios, Catálogo, Recetas, Configuración, Ubicaciones y Roles.
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
 *   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)

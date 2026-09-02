@@ -60,3 +60,7 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Registra el costo unitario de cada insumo y valoriza en `$` el reporte de mermas, cerrando el gap del KPI #1 del PRD (hoy solo medible en cantidades físicas). ✅ Backend (`TK-078`) y Frontend (`TK-078-FE`) implementados.
 *   **[US-020: Indicador TRR Real en el Dashboard de Reportes](reports/US-020.md)**
     *   *Descripción:* Calcula y muestra el tiempo real promedio de rotación de remanentes, el único indicador que valida en la práctica el KPI #2 del PRD (TRR < 72h). ✅ Backend (`TK-079`) y Frontend (`TK-079-FE`) implementados.
+
+### 🛠️ Shared / Transversal (`/shared/`)
+*   **[US-022: Sistema de Diseño FEFO — Turno Día/Noche](shared/US-022.md)**
+    *   *Descripción:* Reemplaza el tema oscuro único "Señal Industrial" por un sistema de dos turnos (Día/Noche) con interruptor persistido por dispositivo, aplicado a toda la aplicación. Ver `TK-081-FE` a `TK-084-FE`.

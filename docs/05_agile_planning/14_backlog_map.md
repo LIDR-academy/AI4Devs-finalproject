@@ -164,6 +164,21 @@ graph TD
     US021 --> TK080
     US021 --> TK080FE
 
+    %% Sistema de Diseño FEFO (Turno Dia/Noche) — reemplaza "Senal Industrial" v3.0.0
+    US022["📝 US-022: Sistema FEFO Dia/Noche"]
+    TK081FE["🎫 TK-081-FE: Nucleo Tokens + Interruptor"]
+    TK082FE["🎫 TK-082-FE: Modales de Operacion"]
+    TK083FE["🎫 TK-083-FE: Autenticacion Tactil (PIN)"]
+    TK084FE["🎫 TK-084-FE: Backoffice y Administracion"]
+    EpicShared --> US022
+    US022 --> TK081FE
+    US022 --> TK082FE
+    US022 --> TK083FE
+    US022 --> TK084FE
+    TK081FE --> TK082FE
+    TK081FE --> TK083FE
+    TK081FE --> TK084FE
+
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
     classDef roadmap fill:#FFC300,stroke:#FF5733,stroke-width:2px,color:#000;
@@ -173,8 +188,8 @@ graph TD
 
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US019,US020,US021 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE tk;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US019,US020,US021,US022 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE,TK081FE,TK082FE,TK083FE,TK084FE tk;
 ```
 
 ---
@@ -207,5 +222,6 @@ graph TD
 | **📊 Reportes (`reports`)** | [US-019: Costeo y Valorización de Mermas](11_user_stories/reports/US-019.md) | [TK-078: Costeo de Insumos](12_tickets/reports/backend/TK-078.md) | [TK-078-FE: Valorización en Dashboard](12_tickets/reports/frontend/TK-078-FE.md) | ✅ Done |
 | **📊 Reportes (`reports`)** | [US-020: Indicador TRR Real](11_user_stories/reports/US-020.md) | [TK-079: Rotation Metrics](12_tickets/reports/backend/TK-079.md) | [TK-079-FE: Card de KPI TRR](12_tickets/reports/frontend/TK-079-FE.md) | ✅ Done |
 | **📦 Bodega (`stock`)** | [US-021: Advertencia Apertura Duplicada](11_user_stories/stock/US-021.md) | [TK-080: Filtro `insumoId`](12_tickets/stock/backend/TK-080.md) | [TK-080-FE: Advertencia en Extracción](12_tickets/stock/frontend/TK-080-FE.md) | ✅ Done |
+| **🛠️ Shared (`shared`)** | [US-022: Sistema FEFO Día/Noche](11_user_stories/shared/US-022.md) | N/A | [TK-081-FE](12_tickets/shared/frontend/TK-081-FE.md) → [082](12_tickets/shared/frontend/TK-082-FE.md) → [083](12_tickets/shared/frontend/TK-083-FE.md) → [084](12_tickets/shared/frontend/TK-084-FE.md) | 📋 Approved Spec |
 
 

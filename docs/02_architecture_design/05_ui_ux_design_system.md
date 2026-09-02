@@ -1,16 +1,61 @@
 ---
 document: ui_ux_design_system
-version: 2.0.0
+version: 4.0.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
   - docs/02_architecture_design/04_technical_design.md
+  - docs/05_agile_planning/11_user_stories/shared/US-022.md
 ---
 
 # 🎨 Especificación de Sistema de Diseño UI/UX y Ergonomía Táctil
 
 > **Navegación del Framework SDD:**  
 > [⬅️ Volver a Arquitectura de Sistema (04_technical_design.md)](./04_technical_design.md) | [📖 Glosario & Reglas](../01_product_definition/01_glosario_y_reglas_negocio.md) | [Siguiente: Modelado de Datos (06_database_schema.md) ➡️](../03_persistence_and_api/06_database_schema.md)
+
+---
+
+## 🎫 v4.0.0 — Dirección "Sistema FEFO" (Turno Día/Noche)
+
+> **Reemplaza** la dirección v2.0.0/v3.0.0 "Señal Industrial" (tema oscuro único) documentada más abajo, que queda conservada solo como referencia histórica. Cubierto por `US-022` y sus tickets `TK-081-FE` a `TK-084-FE`.
+
+**Concepto:** dos turnos, un mismo sistema. De día la interfaz es una **comanda de papel** — ficha clara, tinta oscura, bordes de sello. De noche es la **pizarra del turno** — fondo oscuro tipo pizarrón, texto y acentos en tiza (tonos más brillantes para sostener el mismo contraste objetivo). El operario alterna entre ambos con un interruptor visible en el header; la elección se guarda por dispositivo (`localStorage`) y, si no hay elección guardada, arranca según `prefers-color-scheme` del sistema operativo.
+
+### Paleta de Tokens (CSS Variables)
+
+```css
+/* Turno Día (valores por defecto en :root) */
+:root {
+  --bg-root: #efe8d8;        --bg-card: #f7f2e6;        --border-card: #18140f;   --rule: #18140f;
+  --color-primary: #2e5f76;  --color-primary-hover: #24495c;  --color-primary-on: #fbf8ef;
+  --color-secondary: #6e6555;
+  --color-danger: #b43a24;   --color-danger-text: #a03420;
+  --color-warning: #8a6414;  --color-success: #3e6b3a;  --color-info: #2e5f76;
+  --text-primary: #18140f;   --text-secondary: #6e6555;
+  --font-family-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-family-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace; /* lotes, cantidades, timestamps */
+}
+
+/* Turno Noche — @media (prefers-color-scheme: dark), guardado :root:not([data-theme="light"]),
+   y repetido en :root[data-theme="dark"] para que el interruptor gane en ambos sentidos */
+:root[data-theme="dark"] {
+  --bg-root: #171c18;        --bg-card: #1f251f;        --border-card: #e9e4d0;   --rule: #e9e4d0;
+  --color-primary: #6faac7;  --color-primary-hover: #8bc0d8;  --color-primary-on: #171c18;
+  --color-secondary: #9aa394;
+  --color-danger: #e1573a;   --color-danger-text: #e1573a;
+  --color-warning: #e6be55;  --color-success: #7cb36e;  --color-info: #6faac7;
+  --text-primary: #f2eedd;   --text-secondary: #9aa394;
+}
+```
+
+> **Nota de contraste:** el mostaza (`--color-warning`) es el único tono que no sostiene texto blanco encima en ningún turno — de día se usa una variante oscura (`#8a6414`) apta como texto directo sobre `--bg-root`; de noche se aclara (`#e6be55`) porque el fondo ya es oscuro. Contraste real por validar con herramienta dedicada antes de cerrar `TK-081-FE` (ver Decisiones Abiertas de la propuesta original).
+
+### Cambios Estructurales (no solo de color)
+* **Bordes en vez de sombras:** `box-shadow` se elimina de `.card-dashboard` y equivalentes; se reemplaza por `border: 2px solid var(--rule)`.
+* **Esquinas rectas:** `border-radius: 0` en tarjetas, botones e inputs (antes 4–8px).
+* **Tipografía:** `Big Shoulders Display` (titulares/cifras, condensada tipo sello) + `IBM Plex Sans` (cuerpo) + `IBM Plex Mono` (datos alineados en columna: lotes, cantidades, `HH:MM:SS`) — reemplazan `Oswald`/`Barlow` en todo el sistema, no solo en el tablero de cocina.
+* **Objetivos táctiles sin cambio:** `.btn-touch` sigue en 48×48px mínimo; el teclado de PIN sigue en 64×64px — ver `TK-083-FE`.
 
 ---
 
