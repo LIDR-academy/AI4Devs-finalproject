@@ -171,3 +171,20 @@ test('explicitly passing an empty gallery array and a null featured image genuin
     expect($updated->fresh()->featured_media_id)->toBeNull()
         ->and($updated->fresh()->gallery)->toHaveCount(0);
 });
+
+// Story 0024a: the sanitize-on-write guarantee is visible from this action's own test file too,
+// asserted independently of CreateProductTest.php's identical-looking case -- a sanitizer wired
+// into CreateProduct alone would leave this exact test green for the wrong reason. See
+// ProductDescriptionSanitizationTest.php for the full vector coverage, ordering, idempotence and
+// characterization tests.
+test('a description containing a script is stored clean on update', function () {
+    $product = makeUpdatableProduct('RNR-001');
+
+    $updated = updateProductWith($product, ['description' => 'Before text <script>alert(1)</script> After text']);
+
+    $stored = $updated->fresh()->description;
+
+    expect($stored)->not->toContain('<script')
+        ->and($stored)->toContain('Before text')
+        ->and($stored)->toContain('After text');
+});

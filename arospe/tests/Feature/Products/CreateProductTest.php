@@ -234,3 +234,17 @@ test('a SKU one character over the maximum length (65) is refused', function () 
 
     expectCreateProductRefusal(['sku' => $sku], 'sku');
 });
+
+// Story 0024a: the sanitize-on-write guarantee is visible from this action's own test file too,
+// not only from ProductDescriptionSanitizationTest.php, so a future reader does not assume it is
+// an optional concern covered somewhere else. See ProductDescriptionSanitizationTest.php for the
+// full vector coverage, ordering, idempotence and characterization tests.
+test('a description containing a script is stored clean', function () {
+    $product = createProductWith(['description' => 'Before text <script>alert(1)</script> After text']);
+
+    $stored = $product->fresh()->description;
+
+    expect($stored)->not->toContain('<script')
+        ->and($stored)->toContain('Before text')
+        ->and($stored)->toContain('After text');
+});
