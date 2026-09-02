@@ -325,6 +325,12 @@ h3 {
   color: var(--text-primary);
 }
 
+.banner-alert-warning {
+  background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  border: 1px solid var(--color-warning);
+  color: var(--text-primary);
+}
+
 .text-primary-color { color: var(--color-primary); }
 .text-secondary-color { color: var(--text-secondary); }
 .text-danger-color { color: var(--color-danger); }

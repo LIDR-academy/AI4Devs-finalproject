@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Minus, PackageCheck, AlertTriangle } from 'lucide-react';
 import { StockService } from '../services/stock.service.js';
-import { KitchenService, RecipeItem } from '../../kitchen/services/kitchen.service.js';
+import { KitchenService, RecipeItem, RemanenteFEFOItem } from '../../kitchen/services/kitchen.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
@@ -207,6 +207,26 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
   </div>
 );
 
+const DuplicateRemanenteWarning: React.FC<{ activeRemanentes: RemanenteFEFOItem[] }> = ({ activeRemanentes }) => {
+  if (activeRemanentes.length === 0) return null;
+
+  return (
+    <div className="banner-alert banner-alert-warning" role="status">
+      <AlertTriangle size={16} className={styles['inline-icon-spacer']} />
+      <span>
+        Atención: ya existe un remanente activo de este insumo en cocina.{' '}
+        {activeRemanentes.map((r, index) => (
+          <strong key={r.id}>
+            {index > 0 ? ', ' : ''}
+            {r.currentQuantity} {r.unitOfMeasure} en {r.location}
+          </strong>
+        ))}
+        . Puede continuar con la extracción de todos modos.
+      </span>
+    </div>
+  );
+};
+
 const UNIT_BY_INSUMO_ID: Record<string, string> = { 'ins-2': 'L', 'ins-3': 'UNITS' };
 
 function resolveUnitOfMeasure(selectedInsumoId: string, insumos: Insumo[]): string {
@@ -251,6 +271,7 @@ interface ExtractionFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   isSubmitting: boolean;
+  duplicateActiveRemanentes: RemanenteFEFOItem[];
 }
 
 const ExtractionForm: React.FC<ExtractionFormProps> = ({
@@ -273,6 +294,7 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
   onSubmit,
   onCancel,
   isSubmitting,
+  duplicateActiveRemanentes,
 }) => (
   <form onSubmit={onSubmit} className="flex-column flex-gap-md">
     <ExtractionSelectFields
@@ -289,6 +311,8 @@ const ExtractionForm: React.FC<ExtractionFormProps> = ({
       selectedRecipeId={selectedRecipeId}
       onRecipeIdChange={onRecipeIdChange}
     />
+
+    <DuplicateRemanenteWarning activeRemanentes={duplicateActiveRemanentes} />
 
     <QuantityStepper quantity={quantity} onIncrement={onIncrement} onDecrement={onDecrement} onChange={onQuantityChange} />
 
@@ -331,6 +355,29 @@ async function performExtraction(
   onClose();
 }
 
+// US-021: detecta una apertura duplicada en CUALQUIER ubicacion de cocina al cambiar de insumo.
+function useDuplicateRemanenteWarning(insumoId: string): RemanenteFEFOItem[] {
+  const [duplicateActiveRemanentes, setDuplicateActiveRemanentes] = useState<RemanenteFEFOItem[]>([]);
+
+  React.useEffect(() => {
+    // Limpia la advertencia del insumo anterior de inmediato: de lo contrario, mientras la
+    // nueva consulta esta en vuelo, el texto "ya existe un remanente activo de este insumo"
+    // seguiria mostrando el remanente del insumo YA DESELECCIONADO (falso positivo transitorio).
+    setDuplicateActiveRemanentes([]);
+    if (!insumoId) return;
+
+    let cancelled = false;
+    KitchenService.checkActiveRemanente(insumoId).then((items) => {
+      if (!cancelled) setDuplicateActiveRemanentes(items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [insumoId]);
+
+  return duplicateActiveRemanentes;
+}
+
 function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: () => void) {
   const [selectedInsumoId, setSelectedInsumoId] = useState('');
   const [quantity, setQuantity] = useState(1.0);
@@ -342,8 +389,8 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-
   const activeInsumoId = selectedInsumoId || (insumos.length > 0 ? insumos[0].id : '');
+  const duplicateActiveRemanentes = useDuplicateRemanenteWarning(activeInsumoId);
 
   React.useEffect(() => {
     KitchenService.fetchAvailableRecipes()
@@ -391,17 +438,14 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
     setSelectedRecipeId,
     isSubmitting,
     error,
+    duplicateActiveRemanentes,
     handleIncrement,
     handleDecrement,
     handleSubmit,
   };
 }
 
-export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> = ({
-  isOpen,
-  onClose,
-  onSuccess,
-}) => {
+function useAvailableInsumos(isOpen: boolean): Insumo[] {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
 
   React.useEffect(() => {
@@ -416,7 +460,15 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
     }
   }, [isOpen]);
 
-  const displayInsumos = insumos.length > 0 ? insumos : StockService.getAvailableInsumos();
+  return insumos.length > 0 ? insumos : StockService.getAvailableInsumos();
+}
+
+export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
+  const displayInsumos = useAvailableInsumos(isOpen);
   const form = useExtractionForm(displayInsumos, onSuccess, onClose);
 
   if (!isOpen) return null;
@@ -453,6 +505,7 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
         onSubmit={form.handleSubmit}
         onCancel={onClose}
         isSubmitting={form.isSubmitting}
+        duplicateActiveRemanentes={form.duplicateActiveRemanentes}
       />
     </Modal>
   );

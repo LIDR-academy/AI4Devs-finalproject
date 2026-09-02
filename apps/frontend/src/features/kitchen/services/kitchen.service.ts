@@ -113,6 +113,17 @@ export class KitchenService {
     );
   }
 
+  public static async checkActiveRemanente(insumoId: string): Promise<RemanenteFEFOItem[]> {
+    try {
+      return await apiRequest<RemanenteFEFOItem[]>(
+        `/kitchen/remanentes-activos?insumoId=${encodeURIComponent(insumoId)}`
+      );
+    } catch (err) {
+      console.error('[KitchenService] Error en checkActiveRemanente, omitiendo advertencia de apertura duplicada:', err);
+      return [];
+    }
+  }
+
   public static async consumeRemanente(remanenteId: string, quantity: number | string): Promise<void> {
     try {
       await apiRequest(`/kitchen/remanentes/${remanenteId}/consume`, { method: 'POST', body: { quantity } });
