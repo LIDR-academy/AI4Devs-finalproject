@@ -1,6 +1,6 @@
 # [0024a] Product description — HTML sanitization on write
 
-> **Split out of [0024](done/0024-products-core-crud-backend.md) on 2026-09-01**, after that story failed
+> **Split out of [0024](../done/0024-products-core-crud-backend.md) on 2026-09-01**, after that story failed
 > its Phase 2 INVEST review and the coordinator approved a three-way split. This file owns everything
 > that was **D-16** and **RQ-1** there: the Composer dependency, the allow-list config, the
 > `SanitizeProductDescription` action, the wiring into the two write paths, and the security-critical
@@ -12,7 +12,7 @@
 
 ## Description
 
-`products.description` holds HTML produced by [story 0021](done/0021-wysiwyg-rich-text-editor-component.md)'s
+`products.description` holds HTML produced by [story 0021](../done/0021-wysiwyg-rich-text-editor-component.md)'s
 WYSIWYG editor, and story 0027 will render it **unescaped** — that is the whole point of a rich-text
 field. This story is what makes that safe: it adds `symfony/html-sanitizer` (an **already-approved**
 new dependency), an allow-list configuration limited to the toolbar's own tag set, a single
@@ -24,10 +24,10 @@ existing actions and adds three files.
 
 **This story is a blocking prerequisite of every consumer that renders or re-binds a product
 description** — 0027, 0061, 0076, 0077 and 0079 (**D-A2**). Until it ships, `products.description` is
-an unsanitized column, which [0024](done/0024-products-core-crud-backend.md)'s own scope fence keeps safe
+an unsanitized column, which [0024](../done/0024-products-core-crud-backend.md)'s own scope fence keeps safe
 only by forbidding any reader.
 
-Covers [PRD](../../docs/PRD/PRD.md#22-products) §2.2's rich-text description implicitly rather than by
+Covers [PRD](../../../docs/PRD/PRD.md#22-products) §2.2's rich-text description implicitly rather than by
 a named acceptance criterion: the PRD describes the editor, and this is the server-side guarantee that
 makes storing its output defensible.
 
@@ -36,7 +36,7 @@ backend | fullstack (related_task_id: **0027** — products list/editor UI, the 
 
 ## Three Amigos participants
 
-Inherited from [0024](done/0024-products-core-crud-backend.md)'s Phase 1 debate (2026-08-18) —
+Inherited from [0024](../done/0024-products-core-crud-backend.md)'s Phase 1 debate (2026-08-18) —
 `product-owner` (lead) + `backend-expert` + `database-expert` + `backend-qa`. No new debate was
 convened for the split; the decisions below are the ones that debate reached, moved intact. Their
 `backend-qa` content is the test file, which is the largest part of this story.
@@ -44,7 +44,7 @@ convened for the split; the decisions below are the ones that debate reached, mo
 ## Gherkin
 
 Every scenario opens with a named business-role actor and carries exactly one `When`, per
-[gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3.
+[gherkin-guidelines.md](../../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3.
 
 ```gherkin
 Feature: A product description is stored as safe HTML
@@ -92,20 +92,26 @@ Feature: A product description is stored as safe HTML
 | Path | What & why |
 | --- | --- |
 | `composer.json` / `composer.lock` | **Modify.** Add `symfony/html-sanitizer` (**D-16** — a new dependency, **explicitly approved** by the coordinator when resolving 0024's RQ-1, satisfying project `CLAUDE.md`'s "do not change dependencies without approval" rule). Record the **resolved** constraint after running `composer require`; 0019's D1 sets the precedent that the exact version is settled by running it, not asserted in a task file. |
-| `config/html-sanitizer.php` | **New.** The allow-list configuration — the WYSIWYG toolbar's tag set and nothing else, plus explicit `allowedLinkSchemes` / `allowedMediaSchemes`. See **D-16**. This is the app's **second** app-owned config file after `config/modules.php`, and it inherits that file's two hard rules: no closures anywhere (`config:cache` serialises with `var_export()`), and no user-facing copy — see [base-standards.md](../../docs/conventions/base-standards.md#an-app-owned-config-file-is-a-registry-and-must-survive-configcache). |
+| `config/html-sanitizer.php` | **New.** The allow-list configuration — the WYSIWYG toolbar's tag set and nothing else, plus explicit `allowedLinkSchemes` / `allowedMediaSchemes`. See **D-16**. This is the app's **second** app-owned config file after `config/modules.php`, and it inherits that file's two hard rules: no closures anywhere (`config:cache` serialises with `var_export()`), and no user-facing copy — see [base-standards.md](../../../docs/conventions/base-standards.md#an-app-owned-config-file-is-a-registry-and-must-survive-configcache). |
 | `app/Actions/Products/SanitizeProductDescription.php` | **New.** Invokable, `__invoke(?string $html): ?string`. The **only** class in the app that imports the sanitizer, mirroring how 0019 confines the imaging library to `GenerateImageConversions`. |
-| `app/Actions/Products/CreateProduct.php` | **Modify** ([0024](done/0024-products-core-crud-backend.md) creates it). Constructor-injects `SanitizeProductDescription` and calls it on `$description` **before** `validate()` — see **D-A1**. |
+| `app/Actions/Products/CreateProduct.php` | **Modify** ([0024](../done/0024-products-core-crud-backend.md) creates it). Constructor-injects `SanitizeProductDescription` and calls it on `$description` **before** `validate()` — see **D-A1**. |
 | `app/Actions/Products/UpdateProduct.php` | **Modify.** Identical wiring, asserted independently rather than assumed symmetric (**D-A1**). |
 | `tests/Feature/Products/ProductDescriptionSanitizationTest.php` | **New.** The security-critical file of this story; see Tests below. |
 
 ### Explicitly **not** touched
 
-`app/Models/Product.php` (no cast, no model event — **D-A1**) · `app/Concerns/ProductValidationRules.php`
-(`productDescriptionRules()` is unchanged; only the *order* in which it runs relative to the sanitizer
-changes, and that lives in the actions) · any migration (no column changes, no backfill — **D-A3**) ·
+`app/Models/Product.php` (no cast, no model event — **D-A1**) · `app/Concerns/ProductValidationRules.php`'s
+**rule array** (`productDescriptionRules()`'s `max:65535` rule itself is unchanged; only the *order* in
+which it runs relative to the sanitizer changes, and that lives in the actions) — but **not** that
+method's docblock, which currently states forward-looking, at-the-time-of-writing-still-true prose
+(*"`max:65535` currently measures the SUBMITTED value; once 0024a ships its sanitize-before-validate
+step, this rule measures the stored value instead"*) that this story's own closure makes false the
+moment it ships (Phase 2 finding F-2). Turn it into a plain, present-tense record of the shipped
+ordering as part of this story's implementation, not a doc-sync afterthought — it is a one-sentence
+edit riding along with the actions it describes. · any migration (no column changes, no backfill — **D-A3**) ·
 `app/Livewire/**` · `resources/views/**` · `routes/**` · `lang/**` (this story adds no user-facing
 string; **R-16**'s "warn the administrator" idea is 0027's, deliberately) ·
-`app/Actions/ProductCategories/**` ([0024b](0024b-product-category-in-use-delete-guard.md)'s) · Epic 4's
+`app/Actions/ProductCategories/**` ([0024b](../0024b-product-category-in-use-delete-guard.md)'s) · Epic 4's
 blog body (0061 **reuses** this configuration; it does not fork it — see **D-16**'s scope fence).
 
 ## Tests to perform
@@ -152,7 +158,7 @@ never the action's return value — the guarantee being tested is about what is 
       is visible from the action's own test file and not only from a file named "sanitization" that a
       future reader might assume covers an optional concern.
 
-**Explicitly not tested**, per [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md):
+**Explicitly not tested**, per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md):
 `symfony/html-sanitizer`'s own parser correctness beyond the vectors above (it is a maintained
 library, not this app's code — what is tested is *this app's configuration of it*); the `max:65535`
 rule itself (0024's boundary tests own it — this story tests only the **ordering** relative to
@@ -180,57 +186,87 @@ Nothing is user-visible: this story adds no screen and no message. What it unblo
 to render the description unescaped at all.
 
 ## Acceptance criteria
-- [ ] `symfony/html-sanitizer` is added to `composer.json` with its **resolved** constraint recorded,
+- [x] `symfony/html-sanitizer` is added to `composer.json` with its **resolved** constraint recorded,
       and `composer.lock` is committed.
-- [ ] `config/html-sanitizer.php` holds the allow-list, contains **no closures** and **no user-facing
+- [x] `config/html-sanitizer.php` holds the allow-list, contains **no closures** and **no user-facing
       copy**, and survives `php artisan config:cache`.
-- [ ] `App\Actions\Products\SanitizeProductDescription` is the **only** class in `app/` that imports
+- [x] `App\Actions\Products\SanitizeProductDescription` is the **only** class in `app/` that imports
       the sanitizer — asserted by a test, not by convention.
-- [ ] **The `description` HTML is sanitized before it is persisted**, against an allow-list limited to
+- [x] **The `description` HTML is sanitized before it is persisted**, against an allow-list limited to
       the WYSIWYG toolbar's own tag set; scripts, event handlers, `javascript:`/`data:` URIs, embedded
       frames and inline styles never reach the column, on the create path **and** the update path.
-- [ ] **The length limit is applied to the post-sanitization value** — a description over the limit
+- [x] **The length limit is applied to the post-sanitization value** — a description over the limit
       only because of markup the sanitizer removes is accepted.
-- [ ] **Sanitizing is idempotent**: `sanitize(sanitize($x)) === sanitize($x)`, asserted byte-for-byte.
-- [ ] Every tag the WYSIWYG toolbar can produce survives a round-trip unchanged.
-- [ ] `null` and `''` pass through untouched.
-- [ ] No migration, no column change, no backfill, no route, no Livewire component, no Blade view, no
+- [x] **Sanitizing is idempotent for well-formed markup** (every shape the WYSIWYG toolbar can produce,
+      verified across 15 real shapes) **and converges to a stable value by the second pass otherwise**
+      (Phase 5 finding, note (b) — libxml's auto-nesting normalisation can need a second pass to reach
+      a fixed point after a blocked wrapper is removed between two same-name elements; every
+      intermediate value stays safe HTML, so this is content drift, not a security window). The
+      original wording ("`sanitize(sanitize($x)) === sanitize($x)`, asserted byte-for-byte" with no
+      qualification) overstated what the shipped code guarantees and is corrected here rather than left
+      for a future reader to discover was never quite true — the three downstream consumers (0076 D-8,
+      0077 D-6, 0079) depend on **convergence**, which holds, not on strict one-pass equality, which
+      does not for pathological input.
+- [x] Every tag the WYSIWYG toolbar can produce survives a round-trip unchanged.
+- [x] `null` and `''` pass through untouched.
+- [x] No migration, no column change, no backfill, no route, no Livewire component, no Blade view, no
       browser test, no permission-catalog change and no new user-facing string.
 
 ## Definition of Done
-- [ ] Tests written and green, plus the **full** existing suite in a single isolated run, per
-      [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule.
-- [ ] **All three quality gates run unscoped and each result recorded — including "not run"**, per
-      [errors-log.md](../../docs/errors-log.md#a-verification-record-that-lists-two-of-three-quality-gates-is-a-record-of-two-gates--2026-08-26):
+- [x] Tests written and green, plus the **full** existing suite in a single isolated run, per
+      [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule.
+- [x] **All three quality gates run unscoped and each result recorded — including "not run"**, per
+      [errors-log.md](../../../docs/errors-log.md#a-verification-record-that-lists-two-of-three-quality-gates-is-a-record-of-two-gates--2026-08-26):
       `php artisan test`, `vendor/bin/pint --format agent`, `vendor/bin/phpstan analyse`.
-- [ ] Code reviewed (code-reviewer).
-- [ ] **No security findings (appsec-auditor) — and this is the story's centre, not a formality.**
+- [x] Code reviewed (code-reviewer).
+- [x] **No security findings (appsec-auditor) — and this is the story's centre, not a formality.**
       Point the audit at: the allow-list's completeness against the toolbar's real output; the
       link/media scheme restrictions (`allowedLinkSchemes` / `allowedMediaSchemes` set explicitly, not
       left to defaults); the sanitize-then-validate ordering; and whether any write path into
       `products.description` exists that does **not** pass through the two actions.
-- [ ] Documentation updated (docs-keeper): `docs/conventions/base-standards.md`'s `app/Actions/Products/`
-      listing and its **app-owned config** section (this is the second such file, and the first whose
-      contents are a *security control* rather than a UI registry — worth recording as the rule's
-      second instance, the way 0018 was recorded as `config/modules.php`'s); `docs/database/schema.md`'s
-      `products.description` row gains the sanitize-on-write guarantee; and the security knowledge base
-      gains whatever the Phase 4 audit establishes — **as a ❌/✅ pair from the start**, per
-      [the 2026-08-20 errors-log rule](../../docs/errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)
-      for audit-authored pages.
-- [ ] **The two residual exposures are recorded rather than assumed closed** (**R-12**): a future writer
+- [x] **Documentation updated (docs-keeper) — Phase 6 run 2026-09-02, verified by the orchestrator.**
+      `docs/database/schema.md`'s `products.description` row and its `Indexes` ⚠️ blockquote were both
+      **corrected in place** (not merely appended to) from the now-false "stored unsanitized as of this
+      story" claim to a ✅ describing the shipped `App\Actions\Products\SanitizeProductDescription`
+      mechanism — the exact fix this checkbox demanded. `docs/conventions/base-standards.md` gained
+      `SanitizeProductDescription` in the `app/Actions/Products/` listing plus a ⚠️ stating
+      `config/html-sanitizer.php` does **not** fit that page's "registry a later story appends to"
+      framing — it is a fixed security allow-list a later consumer (0061) must reuse exactly. New
+      security page [`docs/security/html-sanitization.md`](../../../docs/security/html-sanitization.md)
+      (the app's 12th) documents both Phase 4 findings (F-1 block-vs-drop, F-2
+      idempotence-to-convergence) as ❌/✅ pairs from the outset, per the audit-authored-page rule cited
+      below. `docs/api/routes.md`'s `WysiwygEditor` section was also corrected — it had speculatively
+      credited 0027/0077 with `SanitizeProductDescription`, which is actually this story's class wired
+      into 0024's own `CreateProduct`/`UpdateProduct`. `docs/README.md` and `docs/security/README.md`
+      indexes updated, and a new `ai-spec/tasks/_digests/epic-2.md` records the load-bearing facts
+      (signature, wiring order, allow-list-is-fixed-not-a-registry, convergence-not-equality) for
+      0025/0026/0027 to consult instead of re-opening this file.
+- [x] **Link-integrity check on both stage moves (Phase 2 finding F-3) — complete.** This story has an
+      unusually large inbound citation fan-in — thirteen sibling task files (including `done/0021` and
+      `done/0024`) link to it by path — so both the `in-progress/` move and the `done/` closure move
+      needed the full two-direction check from
+      [workflow.md](../../../docs/workflow.md#link-integrity-check-on-every-stage-move), not an
+      abbreviated one. **The `in-progress/` half**: 12 sibling files + `docs/database/schema.md`
+      repointed, confirmed by both `docs-keeper` and `code-reviewer` independently. **The `done/` half
+      (Phase 7, 2026-09-02)**: 10 open task files, `done/0021`, `done/0024` and `docs/api/routes.md`
+      repointed from `in-progress/` to `done/`; a pre-existing, unrelated outbound-link bug in this
+      file's own line 235 (two `../` instead of three, resolving outside the repo) was also found and
+      fixed while verifying the outbound half. A fresh repo-wide `grep -rn "in-progress/0024a"` returns
+      zero hits.
+- [x] **The two residual exposures are recorded rather than assumed closed** (**R-12**): a future writer
       that bypasses the actions re-opens the hole, and the allow-list itself is now the control, so a
       tag added to it later without thought is a new sink.
-- [ ] **Consumers unblocked, in writing**: 0027, 0061, 0076, 0077 and 0079 each depend on this story
+- [x] **Consumers unblocked, in writing**: 0027, 0061, 0076, 0077 and 0079 each depend on this story
       (**D-A2**), and 0024's own scope fence forbidding a `description` reader is lifted by its closure.
       Record it in this file's closure note so the fence is visibly retired rather than forgotten.
-- [ ] **0021's deferred round-trip follow-up is discharged** — see the note under Tests.
-- [ ] Acceptance criteria met.
+- [x] **0021's deferred round-trip follow-up is discharged** — see the note under Tests.
+- [x] Acceptance criteria met.
 
 ## Documented functional decisions
 
 ### D-16 — `description` HTML is sanitized **on write**, with `symfony/html-sanitizer` *(confirmed; approved new dependency)*
 
-*(Moved verbatim from [0024](done/0024-products-core-crud-backend.md), where it was resolved as **RQ-1** on
+*(Moved verbatim from [0024](../done/0024-products-core-crud-backend.md), where it was resolved as **RQ-1** on
 2026-08-18. The label is kept so existing citations resolve.)*
 
 **Sanitize on write, before persistence** — not on render. The decisive property is that it binds
@@ -238,15 +274,18 @@ to render the description unescaped at all.
 seeder, an Artisan command, a future import or a REST controller all inherit the guarantee without
 knowing it exists. Sanitizing on render is bypassed by the first consumer that forgets, and this
 codebase already has the rule that
-[a control enforced only in a component is bypassed by every other call site](../../docs/security/livewire-authorization.md).
+[a control enforced only in a component is bypassed by every other call site](../../../docs/security/livewire-authorization.md).
 The stored value is therefore *always* safe HTML, which is what lets 0027 render it unescaped at all.
 
 **Package: `symfony/html-sanitizer`.** Justification, in the order that decided it:
 
-1. **The Symfony 8.1 line is already installed and locked here** — 34 `symfony/*` packages, all
-   `v8.1.x` (verified in `composer.lock`), pulled in transitively by Laravel itself. Adding one more
-   component from a major line the lockfile already pins is the smallest possible dependency-graph
-   change, and it cannot introduce a conflicting version of anything.
+1. **The Symfony 8.1 line is already installed and locked here** — 49 `symfony/*` packages in
+   `composer.lock` (re-verified at Phase 2), of which **21 sit on the `v8.1.x` line** (the other 28 are
+   independent `v3.7.x` contracts packages and `v1.37`–`1.38.x` polyfills), pulled in transitively by
+   Laravel itself. Adding one more component from a major line the lockfile already pins is the
+   smallest possible dependency-graph change, and it cannot introduce a conflicting version of
+   anything. *(Corrected at Phase 2, finding F-1 — the original count of "34, all v8.1.x" was wrong;
+   the conclusion it supports is unaffected.)*
 2. **PHP 8.5 support is certain.** This project runs PHP 8.5 (`composer.json` requires `^8.3`) and
    Symfony 8.1 supports it today. That is not a given for the alternatives — see below.
 3. **It is an allow-list sanitizer by construction**, modelled on the W3C HTML Sanitizer API: unknown
@@ -264,7 +303,7 @@ version control. Neither buys anything over a directly-injected sanitizer given 
 this story has. *Also rejected:* `strip_tags()` — it takes a tag allow-list but **no attribute
 allow-list at all**, so `<a onclick="…">` survives it; it is not a sanitizer.
 
-**The allow-list is exactly the WYSIWYG toolbar's own tag set** ([PRD](../../docs/PRD/PRD.md) names it:
+**The allow-list is exactly the WYSIWYG toolbar's own tag set** ([PRD](../../../docs/PRD/PRD.md) names it:
 Bold, Italic, Underline, H2, bullet list, numbered list, link, insert image), and nothing else:
 
 | Allowed | For |
@@ -298,7 +337,7 @@ defaults, and keep the list in `config/html-sanitizer.php` so it is reviewable i
 
 **Scope fence:** the sanitizer is applied to `products.description` only. Epic 4's blog body is a
 separate story; when it arrives it must **reuse this configuration** rather than define a second
-allow-list, or the two drift. [0061](0061-blog-posts-core-crud-backend.md) already records that
+allow-list, or the two drift. [0061](../0061-blog-posts-core-crud-backend.md) already records that
 obligation and cites this decision by name.
 
 ### D-A1 — The call sites are the two actions, before `validate()` — not a model event, not a validation rule
@@ -309,7 +348,7 @@ the stored value):
 - **✅ In `CreateProduct` and `UpdateProduct`, as the statement immediately before `validate()`.**
   Binds every caller of the actions, and puts the sanitized value in front of the length rule, which
   is **D-16** constraint 1. `SanitizeProductDescription` is **constructor**-injected into both, per
-  [code-style.md](../../docs/conventions/code-style.md#exception-an-actions-own-dependency-is-constructor-injected-when-the-method-signature-is-a-public-contract)'s
+  [code-style.md](../../../docs/conventions/code-style.md#exception-an-actions-own-dependency-is-constructor-injected-when-the-method-signature-is-a-public-contract)'s
   documented exception — `__invoke()`'s parameter list is a public contract those actions' direct-call
   tests match verbatim, so it must not widen for an internal collaborator.
 - **❌ A `saving` model event on `Product`.** It binds *more* writers (a raw `$product->save()` too),
@@ -325,6 +364,17 @@ the stored value):
 sanitizer into `CreateProduct` and forgetting `UpdateProduct`, which leaves a hole reachable by editing
 any product — and a test suite that asserts sanitization only through the create path stays green.
 
+**Two implementation notes from Phase 2 review, both mechanical rather than decisions (N-1/N-2):**
+`SanitizeProductDescription` **joins** each action's existing canonicalisation block (`trim($name)`,
+`Str::upper(trim($sku))`) rather than displacing it, and the sanitized value must **reassign
+`$description`** at that point — both the `Validator::make([...])` array built right after and the
+`DB::transaction()` closure captured further down read the same local variable, so one reassignment is
+what makes a single call satisfy constraint 1 (sanitize-before-length) and the persistence guarantee
+together; a call that discards its return value or sanitizes a copy satisfies neither. Also:
+`SanitizeProductDescription` is each action's **third** constructor-injected collaborator (after
+`LogRefusedPrivilegedAttempt` and `SyncProductGallery`, both already present from story 0024), not the
+second — update either action's docblock if it says "both collaborators".
+
 ### D-A2 — This story blocks every consumer that renders or re-binds a description
 
 Stated as a decision rather than left in a dependency list, because it is the reason the story exists
@@ -332,7 +382,7 @@ as its own unit rather than as a nice-to-have:
 
 | Consumer | Why it is blocked |
 | --- | --- |
-| **0027** (products list/editor UI) | Renders `description` unescaped and binds 0021's `WysiwygEditor` to it. [api/routes.md](../../docs/api/routes.md#applivewirecomponentswysiwygeditor--the-gallerys-first-real-consumer-and-the-second-routeless-gated-component) states the rule directly: *"no consumer may bind `wire:model` to a persisted column until that column's own write path runs a server-side sanitizer first."* |
+| **0027** (products list/editor UI) | Renders `description` unescaped and binds 0021's `WysiwygEditor` to it. [api/routes.md](../../../docs/api/routes.md#applivewirecomponentswysiwygeditor--the-gallerys-first-real-consumer-and-the-second-routeless-gated-component) states the rule directly: *"no consumer may bind `wire:model` to a persisted column until that column's own write path runs a server-side sanitizer first."* |
 | **0061** (blog posts backend) | Reuses this exact class and config for the blog `body` column. |
 | **0076** (products i18n retrofit) | Adds a second call site plus a model-event layer over the same value. |
 | **0077**, **0079** (language-tab editors) | Each injects `SanitizeProductDescription` directly. |
@@ -344,13 +394,13 @@ so a reader can tell "lifted" from "forgotten".
 
 ### D-A3 — No backfill, and why that is a decision rather than an omission
 
-[migrations.md](../../docs/database/migrations.md#when-the-new-columns-default-is-wrong-for-existing-rows-backfill-in-the-same-up)
+[migrations.md](../../../docs/database/migrations.md#when-the-new-columns-default-is-wrong-for-existing-rows-backfill-in-the-same-up)
 establishes that a change whose effect is wrong for pre-existing rows backfills in the same `up()`. It
 does not apply here, and a reader applying it by reflex would write a migration this story must not
 have:
 
 - **There is no migration to hang a backfill on** — this story adds no column and alters none.
-- **There are no rows to backfill.** `products` is created by [0024](done/0024-products-core-crud-backend.md)
+- **There are no rows to backfill.** `products` is created by [0024](../done/0024-products-core-crud-backend.md)
   and, per that story's own scope fence, has no non-test writer until 0027. Every environment's
   `products` table is either empty or holds only locally-created fixtures.
 - **A backfill would be an editorial event disguised as a schema change**, which 0076's **D-9** later
@@ -364,12 +414,12 @@ them through `UpdateProduct`, not to add a migration. Record it if it happens.
 
 ### Dependencies
 
-- **[0024](done/0024-products-core-crud-backend.md) (products core CRUD backend) — hard, blocking.** This
+- **[0024](../done/0024-products-core-crud-backend.md) (products core CRUD backend) — hard, blocking.** This
   story modifies `CreateProduct` and `UpdateProduct` and tests through them; neither exists before it.
   0024 also creates the `description` column this sanitizes.
-- **Independent of [0024b](0024b-product-category-in-use-delete-guard.md).** They touch disjoint files
+- **Independent of [0024b](../0024b-product-category-in-use-delete-guard.md).** They touch disjoint files
   and may ship in either order.
-- **[0021](done/0021-wysiwyg-rich-text-editor-component.md) — soft, and ✅ SATISFIED.** The allow-list
+- **[0021](../done/0021-wysiwyg-rich-text-editor-component.md) — soft, and ✅ SATISFIED.** The allow-list
   is defined as that component's toolbar output; its own deferred round-trip follow-up is discharged
   here.
 - **This story blocks 0027, 0061, 0076, 0077 and 0079** — see **D-A2**.
@@ -409,7 +459,7 @@ them through `UpdateProduct`, not to add a migration. Record it if it happens.
 
 - **RQ-1 — Is the `description` HTML sanitized, and where? → Sanitized on write, before
   persistence, with a new approved Composer dependency.** *(Resolved 2026-08-18 as part of
-  [0024](done/0024-products-core-crud-backend.md)'s debate; moved here with the story.)* The allow-list is
+  [0024](../done/0024-products-core-crud-backend.md)'s debate; moved here with the story.)* The allow-list is
   limited to the WYSIWYG toolbar's own tag set. Implemented by **D-16**, which owns the package choice,
   the allow-list table, and the three implementation constraints — most importantly that sanitization
   runs **before** the length rule. *Dropped:* sanitizing on render (bypassed by the first consumer that
@@ -420,7 +470,7 @@ them through `UpdateProduct`, not to add a migration. Record it if it happens.
 
 ## Provenance
 
-Split out of [0024](done/0024-products-core-crud-backend.md) on 2026-09-01, on the coordinator's explicit
+Split out of [0024](../done/0024-products-core-crud-backend.md) on 2026-09-01, on the coordinator's explicit
 instruction, after `code-reviewer`'s Phase 2 INVEST review returned **FAIL** and recommended a
 three-way split. Its own reasoning for this cut line: the sanitization work adds a Composer
 dependency, a config file, a fifth action and a security-critical test file **on top of** an already
@@ -438,3 +488,37 @@ and why a story that changes a column's contents ships no migration.
 "mitigated". Between 0024 and this story the risk is genuinely live, and it is recorded as such in
 both files (**R-A1** here, **R-12** there) rather than smoothed over — the interim is safe because of
 three named structural conditions, not because the sanitizer exists.
+
+## Closure note (Phase 5, 2026-09-02)
+
+**Consumers unblocked, in writing (DoD item).** This story's closure lifts [0024](../done/0024-products-core-crud-backend.md)'s
+own scope fence forbidding any code from rendering, echoing or returning `products.description` to a
+client — that fence exists only because no sanitizer was wired in yet, and one now is, on both write
+paths, independently verified twice by `appsec-auditor` (initial audit + re-audit after the F-1/F-2
+fix round). **0027, 0061, 0076, 0077 and 0079 (D-A2) are unblocked as of this story's Phase 4 PASS.**
+The interim risk **R-A1** (an unsanitized column between 0024's closure and this story's) is retired;
+**R-12**'s two residual exposures (a future writer bypassing the actions; the allow-list itself
+becoming the control) remain open by design and are not affected by this closure.
+
+**0021's deferred round-trip follow-up (DoD item) — discharged, with one caveat found along the way.**
+[done/0021](../done/0021-wysiwyg-rich-text-editor-component.md) asked that its own toolbar output be
+round-tripped through this sanitizer once `config/html-sanitizer.php` existed, to confirm nothing the
+editor legitimately produces is stripped. Confirmed: `ProductDescriptionSanitizationTest.php`'s
+allowed-tag dataset round-trips all eight toolbar actions' real output unchanged. **The one thing
+0021's original follow-up got slightly wrong**, found during Phase 5 review (finding F-2): the
+dataset's Bold/Italic rows initially asserted `<strong>`/`<em>` survive, but 0021's own D2 table
+(verified live in Chromium) records the editor actually emits `<b>`/`<i>` for those two buttons — both
+pairs are correctly in the allow-list, so there was no functional gap, only a labeling one in the test
+data, closed by adding the two missing rows rather than replacing the existing ones (`<strong>`/`<em>`
+are still legitimately-allowed tags, just not what these two specific buttons produce).
+
+**Verification record.** All three quality gates, run unscoped, after the Phase 4 and Phase 5 fix
+rounds:
+- **Tests**: `DB_DATABASE=testing_0024 php -d memory_limit=1G vendor/bin/pest --compact` → 1335 tests,
+  1332 passed, 3 skipped, **0 failed** (the one previously-seen failure across this story's several
+  full-suite runs was `tests/Browser/Media/GalleryTest.php`'s reopen test, story 0020's own
+  pre-existing, docblock-measured 25–50% non-deterministic flake — confirmed unrelated to this story
+  by both `code-reviewer`'s Phase 5 pass and an earlier isolated re-run, and absent from the final run).
+- **Pint**: `vendor/bin/pint --format agent` (unscoped) → passed, 0 files needing changes.
+- **Larastan** (level 7, `phpstan.neon`): `php -d memory_limit=1G vendor/bin/phpstan analyse` (unscoped)
+  → passed, 0 errors.

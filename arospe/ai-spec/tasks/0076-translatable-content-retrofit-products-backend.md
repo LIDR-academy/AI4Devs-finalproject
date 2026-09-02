@@ -371,7 +371,7 @@ Feature: Per-store-language product content
 - **`app/Policies/ProductPolicy.php`** — no new ability, and deliberately no `ProductTranslationPolicy` (**D-16**).
 - **`app/Concerns/HasTranslations.php`**, **`app/Actions/Translations/SetTranslation.php`**, **`App\Models\StoreLanguage`** — 0070's and 0068's, consumed **unmodified**. **D-8** is what makes this possible.
 - **`app/Actions/NormalizeForSearch.php`** — story 0022's, and **this story does not use it at all**. Products has no folded comparison column, because it has no name uniqueness to fold for (**D-4**) and its slug is canonicalized in place rather than shadowed (**D-6**). `NormalizeForSearch` appearing anywhere in this diff is a review finding.
-- **`app/Actions/Products/SanitizeProductDescription.php`** and **`config/html-sanitizer.php`** — [0024a](0024a-product-description-html-sanitization.md)'s, consumed unchanged. This story adds a **second call site**, never a second allow-list (**D-8**).
+- **`app/Actions/Products/SanitizeProductDescription.php`** and **`config/html-sanitizer.php`** — [0024a](done/0024a-product-description-html-sanitization.md)'s, consumed unchanged. This story adds a **second call site**, never a second allow-list (**D-8**).
 - **Stories 0027, 0045 and 0048's own files** — this story must not edit another story's file; the amendments it forces are coordination actions (**R-1**, **R-3**).
 - **`routes/**`**, **`resources/views/**`**, **`app/Livewire/**`**, **`config/modules.php`** — no screen, no route, no sidebar entry.
 
@@ -626,7 +626,7 @@ Two instructions follow, and they pull in opposite directions on purpose. **(a) 
 - **[Story 0068](0068-store-languages-catalog-backend.md)** — hard, and not implemented. Supplies `store_languages`, the `is_default` row the fallback resolves through, and the registry.
 - **Story 0022** — supplies `App\Actions\NormalizeForSearch`, which this story **does not use** (**D-4**, **D-6**). Listed so its absence reads as a decision rather than an omission.
 - **Stories 0027, 0045 and 0048 depend on this story** and are broken by it — **R-1**, **R-3**.
-- **No new Composer package.** `symfony/html-sanitizer` is [0024a](0024a-product-description-html-sanitization.md)'s, already approved there.
+- **No new Composer package.** `symfony/html-sanitizer` is [0024a](done/0024a-product-description-html-sanitization.md)'s, already approved there.
 
 ### Risks
 

@@ -100,7 +100,7 @@ Feature: Deleting a product category that is in use
 [0024](done/0024-products-core-crud-backend.md)'s, already `restrictOnDelete`) ·
 `app/Models/Product.php` (the inverse `category()` relation is 0024's) ·
 `app/Actions/Products/**` · `app/Livewire/**` · `resources/views/**` · `routes/**` ·
-`config/**` · anything in [0024a](0024a-product-description-html-sanitization.md).
+`config/**` · anything in [0024a](done/0024a-product-description-html-sanitization.md).
 
 ## Tests to perform
 
@@ -418,7 +418,7 @@ choice rather than decided unilaterally.
   this story appends one key to.
 - **[0023](done/0023-product-categories-backend.md) (product categories backend) — hard, and
   ✅ SATISFIED.** This story modifies its `DeleteProductCategory` and its `ProductCategory` model.
-- **Independent of [0024a](0024a-product-description-html-sanitization.md).** They touch disjoint files
+- **Independent of [0024a](done/0024a-product-description-html-sanitization.md).** They touch disjoint files
   and may ship in either order.
 - **Story 0025 depends on this one** — half of that screen's stated scope (the blocked-delete message,
   the count, the `productCategoryId` error-bag binding) comes from here, and 0025's own **F-1** already

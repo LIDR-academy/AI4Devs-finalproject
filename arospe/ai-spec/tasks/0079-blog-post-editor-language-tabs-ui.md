@@ -68,7 +68,7 @@ refined.** Almost nothing here is new mechanism; what *is* new is named in
 ## Type
 frontend | includes database-expert: **no** | consumes **0078** (the retrofit), **0071** (the tab strip),
 **0070** (the mechanism), **0068** (`StoreLanguage`), **0063** (the screen), **0061**/**0059**/**0058**
-(the domain), **0021** (the WYSIWYG), **[0024a](0024a-product-description-html-sanitization.md)** (the sanitizer, transitively)
+(the domain), **0021** (the WYSIWYG), **[0024a](done/0024a-product-description-html-sanitization.md)** (the sanitizer, transitively)
 
 > **On the classification — settled, not re-escalated.** This story stays **frontend** while adding one
 > `app/Actions/Blog/` class, which is the shape 0071, 0073, 0075 and 0077 all ship. The coordinator has
@@ -392,7 +392,7 @@ this story is its **fourth** consumer and must not fork, copy or widen it (**D-5
 | `app/Concerns/BlogPostValidationRules.php` | 0061, re-scoped by **0078**; this story is a **consumer** and adds no method — but see **Q-1**, which is the one place that may not hold |
 | `app/Actions/Blog/{Create,Update,Delete,Restore}BlogPost.php`, `SyncBlogPostTags.php`, `BackfillBlogPostTranslations.php` | 0061 / 0078 — signatures unchanged per 0078 **D-12**. ⚠️ **This row no longer covers the whole folder** — this story *adds* `SetBlogPostTranslation.php` beside them |
 | `app/Actions/Blog/FindOrCreateBlogTag.php`, `{Create,Rename,Delete}BlogTag.php` | 0059 / 0074 — **never called directly** (0061's hand-off forbids it). But see **R-3**, an unresolved cross-story gap |
-| `app/Actions/Products/SanitizeProductDescription.php` | **[0024a](0024a-product-description-html-sanitization.md)** (split out of 0024 on 2026-09-01) — the **only** class in the app that touches the HTML sanitizer; **consumed by injection**, never re-implemented (**D-8**, **V-1**) |
+| `app/Actions/Products/SanitizeProductDescription.php` | **[0024a](done/0024a-product-description-html-sanitization.md)** (split out of 0024 on 2026-09-01) — the **only** class in the app that touches the HTML sanitizer; **consumed by injection**, never re-implemented (**D-8**, **V-1**) |
 | `app/Livewire/Components/WysiwygEditor.php`, `app/Livewire/Media/Gallery.php` | 0021 / 0020 — embedded N times, **never edited** (**D-4**) |
 | `app/Policies/BlogPostPolicy.php`, `database/seeders/RolePermissionSeeder.php` | 0061 — five abilities, catalog stays at **42** (**D-18**) |
 | `routes/blog-posts.php`, `config/modules.php`, `lang/*/navigation.php` | 0063 — no route, no registry entry, no sidebar change |
@@ -1305,7 +1305,7 @@ a post's French title is neither identity-sensitive nor hard to reverse.
   `is_default`.
 - **[0021](done/0021-wysiwyg-rich-text-editor-component.md)** — hard. Its **D9** is the constraint **D-4** is
   built around; consumed **unmodified**, N times.
-- **[0024a](0024a-product-description-html-sanitization.md)** — soft, for `SanitizeProductDescription`
+- **[0024a](done/0024a-product-description-html-sanitization.md)** — soft, for `SanitizeProductDescription`
   only, consumed exactly as 0061 **D-14** consumes it. *(Repointed 2026-09-01: that class was story
   0024's until 0024 was split; 0024a owns it, and depends on 0024 in turn.)*
 - **[0061](0061-blog-posts-core-crud-backend.md)** / **[0059](0059-blog-tags-backend.md)** /

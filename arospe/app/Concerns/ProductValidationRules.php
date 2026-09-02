@@ -169,10 +169,13 @@ trait ProductValidationRules
     /**
      * Get the validation rules used to validate a product's description.
      *
-     * `max:65535` currently measures the SUBMITTED value; once 0024a ships
-     * its sanitize-before-validate step, this rule measures the stored
-     * value instead. Do not "fix" that ordering here -- there is nothing to
-     * order yet (D-13).
+     * `max:65535` measures the SANITIZED value, not the submitted one: both
+     * `CreateProduct` and `UpdateProduct` call `App\Actions\Products\
+     * SanitizeProductDescription` and reassign `$description` before this
+     * rule set is ever consulted (story 0024a, D-16/D-A1) -- so a
+     * description that is over the limit only because of markup the
+     * sanitizer removes is accepted, and this rule never needs to
+     * duplicate that ordering itself.
      *
      * @return array<int, ValidationRule|array<mixed>|string>
      */
