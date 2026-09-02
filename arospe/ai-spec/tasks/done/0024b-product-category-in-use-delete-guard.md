@@ -336,7 +336,7 @@ Nothing is user-visible yet: the screen that renders the refusal is story 0025, 
       `app/Actions/ProductCategories/CreateProductCategory.php` claims the caller-authorizes shape
       "matches `CreateUser`/`UpdateUser`", which is false. Not this story's to fix; recorded here, in
       [0024](0024-products-core-crud-backend.md)'s corrections table and in
-      [0025](../0025-product-categories-ui.md)'s risks, so 0025 meets a decision rather than a silence.
+      [0025](../in-progress/0025-product-categories-ui.md)'s risks, so 0025 meets a decision rather than a silence.
 - [x] Acceptance criteria met.
 
 ## Documented functional decisions

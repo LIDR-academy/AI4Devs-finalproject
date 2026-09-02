@@ -35,7 +35,7 @@ includes database-expert: **no**
 
 No schema change, no migration, no index decision, no new query shape beyond two eager loads over
 tables 0029 designed. `database-expert` is therefore not convened, matching
-[0025](0025-product-categories-ui.md)'s and [0027](0027-products-list-and-editor-ui.md)'s precedent for
+[0025](in-progress/0025-product-categories-ui.md)'s and [0027](0027-products-list-and-editor-ui.md)'s precedent for
 the sibling screens.
 
 > 🟣 **The classification is unchanged by the 2026-08-19 generator decision, and this is stated

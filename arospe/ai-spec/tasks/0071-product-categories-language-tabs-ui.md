@@ -1,7 +1,7 @@
 # [0071] Product Categories taxonomy screen — language tabs (frontend)
 
 ## Description
-Retrofit story [0025](0025-product-categories-ui.md)'s Product Categories management screen so a
+Retrofit story [0025](in-progress/0025-product-categories-ui.md)'s Product Categories management screen so a
 category's name is authored **per active store language** through language tabs, satisfying
 [PRD Epic 5, Layer 2](../../docs/PRD/PRD.md#epic-5--internationalization)'s *"each active store
 language surfaces as a tab … in the taxonomy management screens"* and its `Taxonomy names are
@@ -789,7 +789,7 @@ it whenever that layer is the action, and has **failed** it whenever that layer 
 ### Dependencies
 
 - **[0070](0070-translatable-content-mechanism-product-categories-backend.md)** — hard, blocking. `HasTranslations`, `SetTranslation`, the widened validation trait, the dropped `name` column. **Specified, not implemented.**
-- **[0025](0025-product-categories-ui.md)** — hard, blocking. The component, view, route and sidebar entry this story widens. **Specified, not implemented.**
+- **[0025](in-progress/0025-product-categories-ui.md)** — hard, blocking. The component, view, route and sidebar entry this story widens. **Specified, not implemented.**
 - **[0068](0068-store-languages-catalog-backend.md)** — hard. `StoreLanguage`, `scopeActive()`, `defaultStoreLanguage()`. **Specified, not implemented.**
 - **[0023](done/0023-product-categories-backend.md) / [0024](done/0024-products-core-crud-backend.md)** — hard, transitively via 0025.
 - Sequencing, strictly: **0023 → 0024 → 0025 → 0068 → 0070 → 0071**, each fully closed before the next starts.
