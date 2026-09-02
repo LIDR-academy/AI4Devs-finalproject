@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, X } from 'lucide-react';
-import { ReportsService, WasteSummaryItem } from '../services/reports.service.js';
+import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, X, Clock } from 'lucide-react';
+import { ReportsService, WasteSummaryItem, RotationMetrics } from '../services/reports.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
@@ -50,9 +50,64 @@ const ReportsFilterBar: React.FC<ReportsFilterBarProps> = ({ filterRange, onFilt
 interface KpiCardsProps {
   totalQuantity: number;
   expirationWaste: number;
+  rotationMetrics: RotationMetrics | null;
 }
 
-const KpiCards: React.FC<KpiCardsProps> = ({ totalQuantity, expirationWaste }) => (
+const RotationMetricsCard: React.FC<{ rotationMetrics: RotationMetrics | null }> = ({ rotationMetrics }) => {
+  if (!rotationMetrics) {
+    return (
+      <div className="card-dashboard">
+        <div className="card-header">
+          <div className="card-badge-icon">
+            <Clock size={20} />
+          </div>
+          <h3 className="card-title">TRR Real (Rotación de Remanentes)</h3>
+        </div>
+        <div className="fs-md text-secondary-color">Cargando...</div>
+      </div>
+    );
+  }
+
+  // US-020 Escenario 2: sampleSize 0 (o, defensivamente, un contrato de backend violado que
+  // devolviera averageTrrHours null con sampleSize > 0) muestra un estado vacio explicito,
+  // nunca "0h" (que se leeria enganosamente como un resultado perfecto).
+  if (rotationMetrics.sampleSize === 0 || rotationMetrics.averageTrrHours === null) {
+    return (
+      <div className="card-dashboard">
+        <div className="card-header">
+          <div className="card-badge-icon">
+            <Clock size={20} />
+          </div>
+          <h3 className="card-title">TRR Real (Rotación de Remanentes)</h3>
+        </div>
+        <div className="fs-md text-secondary-color">Sin remanentes finalizados en este periodo</div>
+      </div>
+    );
+  }
+
+  const isCompliant = rotationMetrics.averageTrrHours <= rotationMetrics.targetTrrHours;
+  const badgeVariant = isCompliant ? 'card-badge-icon--success' : 'card-badge-icon--danger';
+  const textVariant = isCompliant ? 'text-success-color' : 'text-danger-color';
+
+  return (
+    <div className="card-dashboard">
+      <div className="card-header">
+        <div className={`card-badge-icon ${badgeVariant}`}>
+          <Clock size={20} />
+        </div>
+        <h3 className="card-title">TRR Real (Rotación de Remanentes)</h3>
+      </div>
+      <div className="fs-3xl fw-black">
+        {rotationMetrics.averageTrrHours.toFixed(1)} <span className="text-secondary-color fs-sm">horas</span>
+      </div>
+      <div className={`fs-sm ${textVariant}`}>
+        Objetivo: {rotationMetrics.targetTrrHours}h {isCompliant ? '· Dentro del objetivo' : '· Fuera del objetivo'}
+      </div>
+    </div>
+  );
+};
+
+const KpiCards: React.FC<KpiCardsProps> = ({ totalQuantity, expirationWaste, rotationMetrics }) => (
   <div className={`metrics-grid ${styles['mb-7']}`}>
     <div className="card-dashboard">
       <div className="card-header">
@@ -78,6 +133,8 @@ const KpiCards: React.FC<KpiCardsProps> = ({ totalQuantity, expirationWaste }) =
         {expirationWaste.toFixed(2)} <span className="text-secondary-color fs-sm">unidades</span>
       </div>
     </div>
+
+    <RotationMetricsCard rotationMetrics={rotationMetrics} />
   </div>
 );
 
@@ -143,6 +200,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
   const [isLoading, setIsLoading] = useState(false);
   const [filterRange, setFilterRange] = useState<FilterRange>('week');
   const [currencySymbol, setCurrencySymbol] = useState('$');
+  const [rotationMetrics, setRotationMetrics] = useState<RotationMetrics | null>(null);
 
   useEffect(() => {
     if (isOpen && userRole === 'ADMIN') {
@@ -154,6 +212,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
       ReportsService.fetchWasteReport(startDate, endDate)
         .then(setData)
         .finally(() => setIsLoading(false));
+
+      ReportsService.fetchRotationMetrics(startDate, endDate).then(setRotationMetrics);
 
       SettingsService.fetchSettings()
         .then((settings) => setCurrencySymbol(settings.currencySymbol))
@@ -190,7 +250,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
         <ReportsFilterBar filterRange={filterRange} onFilterChange={setFilterRange} onClose={onClose} />
       </div>
 
-      <KpiCards totalQuantity={totalQuantity} expirationWaste={expirationWaste} />
+      <KpiCards totalQuantity={totalQuantity} expirationWaste={expirationWaste} rotationMetrics={rotationMetrics} />
       <WasteBarChart isLoading={isLoading} data={data} maxVal={maxVal} currencySymbol={currencySymbol} />
     </Modal>
   );

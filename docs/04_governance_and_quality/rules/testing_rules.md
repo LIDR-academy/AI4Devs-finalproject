@@ -47,6 +47,7 @@ Esta directiva rige las pruebas automatizadas de **RestoStock** y el control de 
 ### 4. Aserciones Ricas y Mensajes Descriptivos
 * Incluir etiquetas descriptivas en aserciones complejas: `expect(result, label).toBe(expected)`.
 * Preferir matchers ricos (`toHaveLength`, `toMatchObject`, `toThrow(RFC7807Error)`) sobre comparaciones booleanas genéricas `toBe(true)`.
+* **Aserciones de Clase CSS con Scope Obligatorio (Discovered in `TK-079-FE`):** Prohibido usar `document.querySelector('.clase')` (o `screen`/`container` sin acotar) para verificar la presencia de una clase CSS cuando esa clase puede repetirse en múltiples elementos hermanos (ej. varias `.card-dashboard` compartiendo `.card-badge-icon--danger`/`--success`). La aserción DEBE acotarse primero al contenedor específico bajo prueba (`elemento.closest('.card-dashboard')` o `within(container)`) antes de buscar la clase — de lo contrario el test puede pasar en falso al matchear un elemento no relacionado que siempre porta esa clase, en vez de verificar el elemento realmente bajo prueba.
 
 ### 5. Descubrimiento de Edge Cases con IA (Contexto de Negocio Humano)
 * Usar la IA para explorar casos límite de formato (Unicode, caracteres de escape, nulos).

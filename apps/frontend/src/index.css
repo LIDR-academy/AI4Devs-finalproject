@@ -177,6 +177,10 @@ h3 {
   background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
   color: var(--color-warning);
 }
+.card-badge-icon--success {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+}
 
 .card-title {
   font-size: 1.1rem;

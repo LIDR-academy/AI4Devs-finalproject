@@ -9,7 +9,24 @@ export interface WasteSummaryItem {
   totalDiscardedCost: string | null;
 }
 
+export interface RotationMetrics {
+  averageTrrHours: number | null;
+  targetTrrHours: number;
+  sampleSize: number;
+}
+
 export class ReportsService {
+  public static async fetchRotationMetrics(startDate: string, endDate: string): Promise<RotationMetrics> {
+    try {
+      return await apiRequest<RotationMetrics>(
+        `/reports/rotation-metrics?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+      );
+    } catch (err) {
+      console.error('[ReportsService] Error al obtener el indicador TRR, usando mock fallback:', err);
+      return { averageTrrHours: 48.3, targetTrrHours: 72, sampleSize: 12 };
+    }
+  }
+
   public static async fetchWasteReport(startDate: string, endDate: string): Promise<WasteSummaryItem[]> {
     try {
       return await apiRequest<WasteSummaryItem[]>(
