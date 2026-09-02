@@ -1,5 +1,5 @@
 .severity-critical { --severity-color: var(--color-danger); --severity-text: var(--color-danger-text); --severity-bg: color-mix(in srgb, var(--color-danger) 12%, transparent); }
-.severity-warning { --severity-color: var(--color-warning); --severity-text: var(--color-warning); --severity-bg: color-mix(in srgb, var(--color-warning) 12%, transparent); }
+.severity-warning { --severity-color: var(--color-warning); --severity-text: var(--color-warning-text); --severity-bg: color-mix(in srgb, var(--color-warning) 12%, transparent); }
 .severity-safe { --severity-color: var(--color-success); --severity-text: var(--color-success); --severity-bg: color-mix(in srgb, var(--color-success) 12%, transparent); }
 
 .semaphoric-card {

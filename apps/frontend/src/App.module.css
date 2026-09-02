@@ -1,6 +1,7 @@
 .btn-warning {
   background-color: var(--color-warning);
   color: var(--color-primary-on);
+  border-color: var(--color-warning);
 }
 
 .btn-warning:hover {
@@ -9,9 +10,9 @@
 
 .user-badge {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
+  border: 2px solid var(--rule);
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -25,6 +26,54 @@
 }
 
 .dashboard-header { margin-bottom: var(--space-6); gap: var(--space-4); align-items: flex-start; }
-.action-card--primary { background-color: color-mix(in srgb, var(--color-warning) 5%, transparent); border: 1px dashed var(--color-primary); }
-.action-card--warning { background-color: color-mix(in srgb, var(--color-warning) 5%, transparent); border: 1px dashed var(--color-warning); }
-.action-card-btn { height: 56px; font-size: var(--fs-base); font-weight: var(--fw-bold); gap: 10px; }
+
+.action-card--primary {
+  background-color: var(--bg-card);
+  border: 2px solid var(--color-primary);
+  border-radius: 0;
+}
+.action-card--warning {
+  background-color: var(--bg-card);
+  border: 2px solid var(--color-warning);
+  border-radius: 0;
+}
+.action-card-btn {
+  height: 56px;
+  font-family: var(--font-family-display);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  gap: 10px;
+  border-radius: 0;
+}
+
+/* Interruptor Dia / Noche (Sistema FEFO, US-022/TK-081-FE) — objetivo tactil >=48px,
+   ver frontend_rules.md Ergonomia Tactil. Los tokens (--rule, --text-primary, --bg-root)
+   ya son globales (index.css), asi que este control no necesita un scope propio. */
+.theme-toggle {
+  display: inline-flex;
+  border: 2px solid var(--rule);
+}
+.theme-toggle-btn {
+  font-family: var(--font-family-body);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  padding: 10px 16px;
+  min-height: 48px;
+  min-width: 48px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.theme-toggle-btn + .theme-toggle-btn {
+  border-left: 2px solid var(--rule);
+}
+.theme-toggle-btn[aria-pressed="true"] {
+  background: var(--text-primary);
+  color: var(--bg-root);
+}

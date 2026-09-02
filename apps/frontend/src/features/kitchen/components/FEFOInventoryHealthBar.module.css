@@ -1,7 +1,7 @@
 .health-bar-card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
-  border-radius: 8px;
+  border: 2px solid var(--rule);
+  border-radius: 0;
   padding: 14px 20px;
   margin-bottom: 24px;
 }
@@ -9,14 +9,15 @@
 .health-bar-track {
   height: 10px;
   width: 100%;
-  background-color: #222;
-  border-radius: 5px;
+  background-color: var(--bg-root);
+  border: 1px solid var(--rule);
+  border-radius: 0;
   overflow: hidden;
   display: flex;
 }
 
 .text-danger-text-color { color: var(--color-danger-text); }
-.text-warning-color { color: var(--color-warning); }
+.text-warning-color { color: var(--color-warning-text); }
 
 .health-bar-segment {
   width: var(--bar-pct, 0%);

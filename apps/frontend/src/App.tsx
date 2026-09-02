@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import {
   Package,
   AlertTriangle,
@@ -37,10 +37,79 @@ import { useIdleTimeout } from './shared/hooks/useIdleTimeout.js';
 import styles from './App.module.css';
 
 
+type FefoTheme = 'light' | 'dark';
+
+const FEFO_THEME_STORAGE_KEY = 'fefo-theme';
+
+/**
+ * Sistema FEFO (turno dia/noche, US-022/TK-081-FE): reemplaza "Senal Industrial"
+ * como unico tema de la app. Aplica `data-theme` en <html> (no un wrapper scoped)
+ * para que el interruptor alcance a toda la aplicacion, incluidos los modales.
+ * Persiste en localStorage y cae a la preferencia del sistema operativo si no
+ * hay eleccion guardada.
+ */
+function useFefoTheme() {
+  const [theme, setThemeState] = useState<FefoTheme>(() => {
+    try {
+      const stored = localStorage.getItem(FEFO_THEME_STORAGE_KEY);
+      if (stored === 'light' || stored === 'dark') return stored;
+    } catch (err) {
+      console.error('[App] localStorage no disponible para el tema Sistema FEFO:', err);
+    }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  // useLayoutEffect (no useEffect): aplica el atributo antes del paint del navegador,
+  // cerrando el flash de tema incorrecto cuando la preferencia guardada difiere de
+  // prefers-color-scheme del SO (el caso exacto que la funcionalidad existe para resolver).
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  const setTheme = (next: FefoTheme) => {
+    setThemeState(next);
+    try {
+      localStorage.setItem(FEFO_THEME_STORAGE_KEY, next);
+    } catch (err) {
+      console.error('[App] No se pudo persistir el tema Sistema FEFO:', err);
+    }
+  };
+
+  return { theme, setTheme };
+}
+
+const ThemeToggle: React.FC<{ theme: FefoTheme; onChange: (theme: FefoTheme) => void }> = ({
+  theme,
+  onChange,
+}) => (
+  <div className={styles['theme-toggle']} role="group" aria-label="Modo de color del tablero">
+    <button
+      type="button"
+      className={styles['theme-toggle-btn']}
+      aria-pressed={theme === 'light'}
+      onClick={() => onChange('light')}
+      id="btn-theme-day"
+    >
+      Día
+    </button>
+    <button
+      type="button"
+      className={styles['theme-toggle-btn']}
+      aria-pressed={theme === 'dark'}
+      onClick={() => onChange('dark')}
+      id="btn-theme-night"
+    >
+      Noche
+    </button>
+  </div>
+);
+
 interface DashboardHeaderProps {
   currentUser: { name: string; role: string };
   isLoading: boolean;
   restaurantName?: string;
+  theme: FefoTheme;
+  onThemeChange: (theme: FefoTheme) => void;
   onReconcile: () => void;
   onReports: () => void;
   onUserManagement: () => void;
@@ -114,6 +183,8 @@ const HeaderActions: React.FC<HeaderActionsProps> = ({
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   currentUser,
   isLoading,
+  theme,
+  onThemeChange,
   onLogout,
   onReconcile,
   onReports,
@@ -146,6 +217,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     </div>
 
     <div className="flex-gap-md flex-wrap">
+      <ThemeToggle theme={theme} onChange={onThemeChange} />
       <HeaderActions
         isLoading={isLoading}
         onReconcile={onReconcile}
@@ -447,6 +519,7 @@ const App: React.FC = () => {
   const handlers = useAppHandlers(dashboard);
   const [activeLocation, setActiveLocation] = useState<LocationFilter>('ALL');
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const { theme, setTheme } = useFefoTheme();
 
   useIdleTimeout({
     timeoutMinutes: 15,
@@ -530,7 +603,18 @@ const App: React.FC = () => {
 
   return (
     <div className={styles['dashboard-container']}>
-      <DashboardHeader currentUser={currentUser} isLoading={isLoading} onSync={loadRemanentes} onLogout={handleLogout} {...handlers} />
+      {/* Sistema FEFO (turno dia/noche, US-022/TK-081-FE): el tema se aplica globalmente
+          via document.documentElement.dataset.theme (ver useFefoTheme), asi que alcanza
+          tambien a AppModals sin necesidad de un wrapper con atributo scoped aqui. */}
+      <DashboardHeader
+        currentUser={currentUser}
+        isLoading={isLoading}
+        theme={theme}
+        onThemeChange={setTheme}
+        onSync={loadRemanentes}
+        onLogout={handleLogout}
+        {...handlers}
+      />
 
       <FEFOInventoryHealthBar remanentes={remanentes} />
 

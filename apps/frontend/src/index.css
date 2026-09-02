@@ -1,44 +1,104 @@
+/* ============================================================
+   Sistema FEFO v4.0.0 (turno Dia/Noche) — TK-081-FE, US-022.
+   Reemplaza "Senal Industrial" v3.0.0. Turno Dia = valores por defecto
+   en :root (evita FOUC antes de que App.tsx evalue localStorage/SO).
+   Turno Noche: prefers-color-scheme (si no hay eleccion guardada) y
+   :root[data-theme="dark"] (interruptor explicito, gana en ambos sentidos).
+   ============================================================ */
 :root {
-  /* Fondo Principal y Contenedores - "Señal Industrial" v2.0.0 */
-  --bg-root: hsl(0, 0%, 6%);                /* #101010 - Negro Industrial */
-  --bg-card: hsl(0, 0%, 10%);               /* #1a1a1a - Superficie de Tarjeta */
-  --border-card: hsl(0, 0%, 40%);           /* #666666 - Borde de componente táctil (≥3:1 no-texto, WCAG 1.4.11) */
+  /* Turno Dia — "comanda de papel" */
+  --bg-root: #efe8d8;
+  --bg-card: #f7f2e6;
+  --border-card: #18140f;
+  --rule: #18140f;
 
-  /* Colores Primarios y Acentos */
-  --color-primary: hsl(24, 100%, 50%);      /* #ff6a00 - Ámbar de Seguridad Industrial */
-  --color-primary-hover: hsl(24, 100%, 44%); /* #e05f00 */
-  --color-primary-on: hsl(0, 0%, 6%);       /* #101010 - texto/icono sobre fondo --color-primary (7.06:1 AAA) */
-  --color-secondary: hsl(0, 0%, 20%);       /* #333333 - Gris Neutro (acciones secundarias/no urgentes) */
+  --color-primary: #2e5f76;
+  --color-primary-hover: #24495c;
+  --color-primary-on: #fbf8ef;
+  --color-secondary: #6e6555;
 
-  /* Indicadores Tri-Color FEFO & Alertas */
-  --color-danger: hsl(2, 100%, 44%);        /* #e10600 - Rojo de Alerta (< 6h FEFO). Solo fondo/badge/borde, nunca texto directo */
-  --color-danger-text: hsl(4, 100%, 71%);   /* #ff6b5e - variante clara para texto/labels de alerta (6.2-6.8:1) */
-  --color-warning: hsl(24, 100%, 50%);      /* #ff6a00 - mismo tono que --color-primary por diseño (< 24h FEFO) */
-  --color-success: hsl(148, 61%, 47%);      /* #2fbf6e - Verde de Confirmación (Fresco / OK) */
-  --color-info: hsl(211, 100%, 65%);        /* #4da6ff - Azul informativo (badge Bodega/Warehouse) */
+  --color-danger: #b43a24;
+  --color-danger-text: #a03420;
+  --color-danger-on: #fbf8ef;
+  --color-warning: #8a6414;
+  --color-warning-text: #6b4c0e; /* mas oscuro que --color-warning: AA 4.5:1 como texto sobre su propio badge 15% tint (--color-warning solo, sin este ajuste, da ~3.98:1) */
+  --color-success: #3e6b3a;
+  --color-info: #2e5f76;
 
-  /* Overlays neutros y sombras de elevación (Guard 29) */
-  --overlay-white-subtle: rgba(255, 255, 255, 0.08);
-  --overlay-white-faint: rgba(255, 255, 255, 0.02);
-  --shadow-elevation-1: 0 2px 6px rgba(0, 0, 0, 0.2);
-  --shadow-elevation-2: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --overlay-white-subtle: rgba(24, 20, 15, 0.06);
+  --overlay-white-faint: rgba(24, 20, 15, 0.02);
+  --shadow-elevation-1: none;
+  --shadow-elevation-2: none;
 
-  /* Tipografía y Textos */
-  --font-family-display: 'Oswald', system-ui, sans-serif; /* Titulares, labels, cifras destacadas */
-  --font-family-body: 'Barlow', system-ui, sans-serif;    /* Cuerpo de texto, metadatos */
+  --font-family-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-family-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
   --font-family: var(--font-family-body);
-  --text-primary: hsl(84, 12%, 96%);      /* #f5f5f0 - ~18:1 sobre --bg-root */
-  --text-secondary: hsl(60, 2%, 55%);     /* #8a8a86 - 5.0-5.5:1 sobre --bg-root/--bg-card */
+  --text-primary: #18140f;
+  --text-secondary: #6e6555;
 
-  /* Escala de espaciado (Guard 29 extendido: fundamento de las utilidades de margen, padding y gap) */
   --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
   --space-5: 20px; --space-6: 24px; --space-7: 28px;
 
-  /* Escala tipográfica */
   --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 0.9rem; --fs-base: 1rem;
   --fs-lg: 1.25rem; --fs-xl: 1.4rem; --fs-2xl: 1.8rem; --fs-3xl: 2rem;
 
   --fw-regular: 400; --fw-semibold: 600; --fw-bold: 700; --fw-black: 800;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* Turno Noche — "pizarra de turno" */
+    --bg-root: #171c18;
+    --bg-card: #1f251f;
+    --border-card: #e9e4d0;
+    --rule: #e9e4d0;
+
+    --color-primary: #6faac7;
+    --color-primary-hover: #8bc0d8;
+    --color-primary-on: #171c18;
+    --color-secondary: #9aa394;
+
+    --color-danger: #e1573a;
+    --color-danger-text: #f0806a; /* mas claro que --color-danger: distinguible y AA 5:1+ sobre su propio badge tint (igualar ambos daba ~3.57:1) */
+    --color-danger-on: #171c18;
+    --color-warning: #e6be55;
+    --color-warning-text: #e6be55;
+    --color-success: #7cb36e;
+    --color-info: #6faac7;
+
+    --overlay-white-subtle: rgba(242, 238, 221, 0.08);
+    --overlay-white-faint: rgba(242, 238, 221, 0.02);
+
+    --text-primary: #f2eedd;
+    --text-secondary: #9aa394;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-root: #171c18;
+  --bg-card: #1f251f;
+  --border-card: #e9e4d0;
+  --rule: #e9e4d0;
+
+  --color-primary: #6faac7;
+  --color-primary-hover: #8bc0d8;
+  --color-primary-on: #171c18;
+  --color-secondary: #9aa394;
+
+  --color-danger: #e1573a;
+  --color-danger-text: #f0806a;
+  --color-danger-on: #171c18;
+  --color-warning: #e6be55;
+  --color-warning-text: #e6be55;
+  --color-success: #7cb36e;
+  --color-info: #6faac7;
+
+  --overlay-white-subtle: rgba(242, 238, 221, 0.08);
+  --overlay-white-faint: rgba(242, 238, 221, 0.02);
+
+  --text-primary: #f2eedd;
+  --text-secondary: #9aa394;
 }
 
 * {
@@ -55,10 +115,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  body { transition: background-color 0.2s ease, color 0.2s ease; }
+}
+
 h1,
 h2,
 h3 {
   font-family: var(--font-family-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 /* Regla de Ergonomía Táctil Innegociable (Touch Target >= 48px x 48px) */
@@ -66,10 +133,10 @@ h3 {
   min-height: 48px;
   min-width: 48px;
   padding: 12px 20px;
-  border-radius: 4px;
-  font-weight: 600;
+  border-radius: 0;
+  font-weight: 700;
   font-size: 1rem;
-  border: none;
+  border: 2px solid transparent;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -82,6 +149,7 @@ h3 {
 .btn-primary {
   background-color: var(--color-primary);
   color: var(--color-primary-on);
+  border-color: var(--color-primary);
 }
 
 .btn-primary:hover {
@@ -91,7 +159,7 @@ h3 {
 
 .btn-secondary {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
+  border-color: var(--rule);
   color: var(--text-primary);
 }
 
@@ -101,10 +169,12 @@ h3 {
 }
 
 /* .btn-danger: usado por acciones destructivas (RolesManagementModal, LocationsManagementModal,
-   ConfirmModal) pero nunca se definio en CSS - los botones renderizaban sin estilo. */
+   ConfirmModal). --color-danger-on evita el bug de contraste del turno Dia: --text-primary es
+   tinta oscura de dia, y --color-danger de dia es un rojo medio que necesita texto claro encima. */
 .btn-danger {
   background-color: var(--color-danger);
-  color: var(--text-primary);
+  color: var(--color-danger-on);
+  border-color: var(--color-danger);
 }
 
 .btn-danger:hover {
@@ -114,9 +184,9 @@ h3 {
 .input-touch {
   min-height: 48px;
   padding: 12px 16px;
-  border-radius: 4px;
+  border-radius: 0;
   background-color: var(--bg-root);
-  border: 1px solid var(--border-card);
+  border: 2px solid var(--rule);
   color: var(--text-primary);
   font-size: 1rem;
   width: 100%;
@@ -126,7 +196,7 @@ h3 {
 
 .input-touch:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 /* Modificador de boton solo-icono (ej. cerrar modal); combinar con .btn-touch .btn-secondary */
@@ -141,13 +211,13 @@ h3 {
   color: var(--text-secondary);
 }
 
-/* Estructura de Tarjetas (Señal Industrial Cards) */
+/* Estructura de Tarjetas (Sistema FEFO — bordes de sello, sin sombra) */
 .card-dashboard {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
-  border-radius: 6px;
+  border: 2px solid var(--rule);
+  border-radius: 0;
   padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
 }
 
 .card-header {
@@ -156,13 +226,14 @@ h3 {
   gap: 12px;
   padding-bottom: 12px;
   margin-bottom: 16px;
-  border-bottom: 1px solid var(--border-card);
+  border-bottom: 2px dashed var(--rule);
 }
 
 .card-badge-icon {
   width: 36px;
   height: 36px;
   border-radius: 50%;
+  border: 2px solid currentColor;
   background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
   color: var(--color-primary);
   display: flex;
@@ -175,7 +246,7 @@ h3 {
 }
 .card-badge-icon--warning {
   background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
-  color: var(--color-warning);
+  color: var(--color-warning-text);
 }
 .card-badge-icon--success {
   background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
@@ -183,8 +254,11 @@ h3 {
 }
 
 .card-title {
+  font-family: var(--font-family-display);
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
   color: var(--text-primary);
 }
 

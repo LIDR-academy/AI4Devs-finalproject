@@ -1,6 +1,7 @@
 .badge-count {
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: 0;
+  border: 1px solid currentColor;
   font-size: 0.75rem;
   font-weight: 700;
 }
