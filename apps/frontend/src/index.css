@@ -412,9 +412,9 @@ h3 {
 
 /* Helper classes for PIN recovery & Auth Modals (TK-077) */
 .banner-success {
-  background-color: rgba(47, 191, 110, 0.12);
-  border: 1px solid rgba(47, 191, 110, 0.35);
-  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  border: 1px solid var(--color-success);
+  border-radius: 0;
   padding: 14px 16px;
   color: var(--color-success);
   margin-bottom: 16px;
@@ -423,8 +423,8 @@ h3 {
 
 .pin-dots-bar {
   background-color: var(--bg-root);
-  border: 1px solid var(--border-card);
-  border-radius: 8px;
+  border: 2px solid var(--rule);
+  border-radius: 0;
   padding: 14px;
   margin-bottom: 16px;
   min-height: 56px;
