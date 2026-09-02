@@ -78,6 +78,20 @@ test('a product resolves its own category, with a decoy category present', funct
         ->and($product->category->id)->not->toBe($decoyCategory->id);
 });
 
+// Story 0024b: the products() relation on ProductCategory, and its inverse-exclusion half. The
+// decoy product (in ITS OWN category) is what makes this non-trivial -- a category must resolve
+// only the products that reference it, not merely any product that happens to exist.
+test('a category resolves only its own products, excluding one assigned to a decoy category', function () {
+    $category = ProductCategory::factory()->create();
+    $decoyCategory = ProductCategory::factory()->create();
+
+    $ownProduct = Product::factory()->create(['product_category_id' => $category->id]);
+    Product::factory()->create(['product_category_id' => $decoyCategory->id]);
+
+    expect($category->products)->toHaveCount(1)
+        ->and($category->products->first()->id)->toBe($ownProduct->id);
+});
+
 // D-12 regression guard: adding SoftDeletes later would silently change what Rule::unique() sees
 // on `sku` (the story's central uniqueness rule) and 0029's variant cascade semantics.
 test('the model does not use SoftDeletes', function () {

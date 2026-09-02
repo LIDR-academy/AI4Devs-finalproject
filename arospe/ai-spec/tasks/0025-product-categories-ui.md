@@ -76,7 +76,7 @@ throws — and its **Q-3** resolves (a): **0071 owns applying the corrected quer
 ## Type
 frontend | fullstack (related_task_id: **0023** — the paired product-categories backend story) | includes database-expert: **no**
 
-> **`related_task_id` is 0023, but the hard blockers are 0024 *and* [0024b](0024b-product-category-in-use-delete-guard.md).**
+> **`related_task_id` is 0023, but the hard blockers are 0024 *and* [0024b](done/0024b-product-category-in-use-delete-guard.md).**
 > 0023 is this story's FE/BE split partner. The other two are a *separate* family (0024's partner is
 > 0027) that this story nonetheless **cannot ship without**. ⚠️ **Repointed 2026-09-01**, when 0024 was
 > split three ways: the delete guard, the `ProductCategory::products()` relation the count reads
@@ -250,7 +250,7 @@ Route::livewire('product-categories', ProductCategoriesIndex::class)
 | The products list/editor screen | 0027 |
 
 > **Sequential-implementation requirement.** This story, 0024 and
-> [0024b](0024b-product-category-in-use-delete-guard.md) all write `lang/en|es/products.php`, and 0024b
+> [0024b](done/0024b-product-category-in-use-delete-guard.md) all write `lang/en|es/products.php`, and 0024b
 > also edits `app/Actions/ProductCategories/DeleteProductCategory.php` that this screen calls. Their
 > Phase 3 work must **never be dispatched in the same batch**, per the
 > [Parallel Agent File-Ownership Rule](../../docs/contracts.md#parallel-agent-file-ownership-rule):
@@ -305,13 +305,47 @@ DeleteProductCategory                                          // now throws Val
 lang/en|es/products.php                                        // created by 0024, with categories.delete_blocked
 ```
 
-**Two obligations this story inherits verbatim from 0023's Definition of Done**, both non-negotiable:
+**Two obligations this story inherits, both non-negotiable:**
 
-1. **The actions do not self-authorize.** `Gate::authorize()` is the first statement of every method
-   that mutates. This story is where `ProductCategoryPolicy` stops being a zero-call-site policy.
+1. **Corrected — 2026-09-02, per [0024b](done/0024b-product-category-in-use-delete-guard.md)'s Phase 4
+   security audit finding F-1 (blocking).** This bullet previously read *"the actions do not
+   self-authorize; `Gate::authorize()` is the first statement of every method that mutates"* — meaning
+   the **component's** methods. That is false against 0024's own precedent (`app/Actions/Products/`
+   self-authorizes) and against 0024b's own corrected **D-B2**, and reading it that way would leave
+   `CreateProductCategory`/`RenameProductCategory`/`DeleteProductCategory` **permanently ungated for any
+   non-HTTP caller** — the identical gap [errors-log.md's task 0008a entry](../../docs/errors-log.md)
+   records. **The actions gain their own `Gate::authorize()` call as their first statement** —
+   constructor-injecting `App\Actions\Auth\LogRefusedPrivilegedAttempt`, the identical self-authorizing
+   shape `App\Actions\Products\CreateProduct`/`UpdateProduct`/`DeleteProduct` already use — with
+   `Gate::authorize()` (or the equivalent `->authorize()` call) **also** present in this component's own
+   `save()`/`deleteProductCategory()` methods as a fail-fast UI layer, defence in depth rather than
+   duplication (see [base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)'s
+   task 0017 precedent). This story is where `ProductCategoryPolicy` stops being a zero-call-site
+   policy **at both layers**, and its own Authorization test block needs an action-layer case per
+   action (a direct `app(DeleteProductCategory::class)($category)` etc. as a denied actor must throw
+   `AuthorizationException`), not only a component-layer one. **Also (0024b Phase 5 review finding
+   B-2): `tests/Feature/ProductCategories/DeleteProductCategoryTest.php`'s `beforeEach` must gain
+   `$this->seed(RolePermissionSeeder::class)` plus `$this->actor->givePermissionTo('products.delete')`**
+   — every test in that file currently `actingAs()`es a bare `User::factory()` with no seeded catalog
+   and no permission, which passed only because the guard it exercises had no `Gate` call in front of
+   it; once this story adds one, those tests fail on an authorization refusal instead of the
+   domain-invariant one they assert, unless this seed/grant is added.
 2. **The id fed to `Rule::unique()->ignore()` must be server-authoritative** — `#[Locked]`, and
    assigned from a value read back out of the database, never from the method argument. See
    [security/livewire-authorization.md](../../docs/security/livewire-authorization.md#locked-is-what-makes-ruleunique-ignore-safe-here).
+
+⚠️ **A third obligation, new at 0024b's Phase 4 audit (finding F-5, low, recorded rather than fixed
+there — it has no caller to reach it until this story exists).** `DeleteProductCategory::__invoke()`
+resolves its guard count from `$productCategory->products()` (the caller-supplied instance's
+**in-memory** primary key) but its `deleteOrFail()` call resolves the DELETE target from
+`getKeyForSaveQuery()` (the instance's **original**, as-hydrated primary key). Those two can diverge if
+the instance handed to the action was mutated after being hydrated — a `Livewire` property carrying a
+`ProductCategory` instance across a `/livewire/update` round trip is exactly the shape that can happen
+to. **This component must resolve a fresh `ProductCategory::findOrFail($deletingCategoryId)` from the
+`#[Locked]` id immediately before calling `DeleteProductCategory`**, never pass along an instance that
+was hydrated earlier in the request lifecycle or carried in component state. This is the identical
+requirement [security/model-instance-trust.md](../../docs/security/model-instance-trust.md) already
+establishes for `SalesRegions`, applied here before it is discovered as a live gap rather than after.
 
 ### Component public surface
 
@@ -834,7 +868,7 @@ component. Nothing on the screen references, links to, or shares anything with a
   validation trait and policy this screen calls. Closed and merged.
 - **[0024](done/0024-products-core-crud-backend.md) — hard, blocking (F-1).** `Product`, `ProductFactory`,
   the `products` migration and `lang/*/products.php` itself. **Not yet implemented.**
-- **[0024b](0024b-product-category-in-use-delete-guard.md) — hard, blocking (F-1).** The delete guard,
+- **[0024b](done/0024b-product-category-in-use-delete-guard.md) — hard, blocking (F-1).** The delete guard,
   the `ProductCategory::products()` relation, the `productCategoryId` error-bag key and the
   `categories.delete_blocked` message — i.e. **half this story's stated scope**. Split out of 0024 on
   2026-09-01 and dependent on it. **Not yet implemented.**
@@ -854,7 +888,7 @@ component. Nothing on the screen references, links to, or shares anything with a
   [`ci-database-connection-gap.md`](ci-database-connection-gap.md): `phpunit.xml`, `.env.example` and
   `.github/workflows/tests.yml` now all pin MySQL, with a `mysql:8.4` service in CI and a recorded
   clean `866/866` run. This story's Full Test Suite Gate evidence can come from CI.
-- **R-2 — Building this screen before [0024b](0024b-product-category-in-use-delete-guard.md) lands.**
+- **R-2 — Building this screen before [0024b](done/0024b-product-category-in-use-delete-guard.md) lands.**
   If implementation starts early, every blocked-delete test must be *deferred with the reason
   recorded*, never silently skipped — the delete block is the story's headline requirement, and a
   story that ships its list and modal while quietly dropping its hardest scenario would pass a filtered
@@ -881,7 +915,7 @@ component. Nothing on the screen references, links to, or shares anything with a
   0024 **R-8**).** There **is** one, and has been since task 0010: `lang/en/roles.php`'s
   `index.delete_blocked`, with six `trans_choice()` call sites and a documented convention in
   [naming.md](../../docs/conventions/naming.md#translation-keys).
-  [0024b](0024b-product-category-in-use-delete-guard.md) — which now owns
+  [0024b](done/0024b-product-category-in-use-delete-guard.md) — which now owns
   `products.categories.delete_blocked`, the key this screen renders — matches that precedent's simple
   `singular|plural` form rather than the explicit-range syntax 0024's draft proposed. **What survives
   of this risk**: Spanish pluralisation is still not identical to English, so assert the resolved

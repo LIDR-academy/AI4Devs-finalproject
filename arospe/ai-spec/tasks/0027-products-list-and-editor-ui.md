@@ -83,7 +83,7 @@ itself.
 > binds 0021's `WysiwygEditor` to it — which
 > [api/routes.md](../../docs/api/routes.md#applivewirecomponentswysiwygeditor--the-gallerys-first-real-consumer-and-the-second-routeless-gated-component)
 > forbids until *"that column's own write path runs a server-side sanitizer first"*. The third split
-> story, [0024b](0024b-product-category-in-use-delete-guard.md) (the category in-use delete guard), is
+> story, [0024b](done/0024b-product-category-in-use-delete-guard.md) (the category in-use delete guard), is
 > **not** in this chain — it blocks 0025, not this story.
 
 ## Three Amigos participants
@@ -1882,7 +1882,7 @@ Hard and blocking, in required order: **0019 → 0020 → 0021 → 0022 → 0023
 [0024a](done/0024a-product-description-html-sanitization.md) → 0026 → 0027.**
 (0025 is not a blocker, but shipping it first gives the category screen the editor's empty-catalog
 link a destination — see [OQ-1](#open-questions). Nor is
-[0024b](0024b-product-category-in-use-delete-guard.md), which blocks 0025 rather than this story.)
+[0024b](done/0024b-product-category-in-use-delete-guard.md), which blocks 0025 rather than this story.)
 
 > ⚠️ **0024a joined this chain on 2026-09-01** when [0024](done/0024-products-core-crud-backend.md) was split
 > three ways after a Phase 2 INVEST FAIL. It is small — a Composer dependency, a config file, one

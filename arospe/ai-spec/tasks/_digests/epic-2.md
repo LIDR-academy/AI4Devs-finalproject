@@ -35,3 +35,38 @@ re-derive, never the full prose of a finalized story.
   `config/html-sanitizer.php` — story 0024a.
 - Full mechanism and both Phase 4 findings (F-1 block-vs-drop, F-2 idempotence-to-convergence) are
   documented at [docs/security/html-sanitization.md](../../../docs/security/html-sanitization.md).
+
+## Story 0024b — Product category in-use delete guard
+
+- `App\Models\ProductCategory::products(): HasMany<Product, $this>` — the one new relation this story
+  adds, keyed on `products.product_category_id` — story 0024b.
+- `App\Actions\ProductCategories\DeleteProductCategory::__invoke(ProductCategory $productCategory): bool`
+  — signature unchanged from 0023. Body now: count `$productCategory->products()->count()`; if > 0,
+  throw `ValidationException::withMessages(['productCategoryId' => trans_choice(...)])` before
+  attempting the delete; otherwise `deleteOrFail()` inside a `catch (QueryException $e)` narrowed to
+  `$e->getCode() === '23000' && $e->errorInfo[1] === 1451` (not the whole `23000` class — safe
+  unnarrowed here only because this method issues exactly one statement, a `DELETE`, and
+  `products.product_category_id` is the only restricting FK anywhere in this schema referencing
+  `product_categories`), re-counting (floored at `max(1, ...)`) and throwing the identical exception —
+  story 0024b.
+- **`DeleteProductCategory` still performs NO authorization of its own** — this story does not close
+  that gap (deliberate, see D-B1/D-B2 in its own task file). Story 0025 must add the gate **inside**
+  `DeleteProductCategory` itself, as its own first statement (self-authorizing, matching
+  `App\Actions\Products\DeleteProduct`'s shape) — gate first, invariant second — never only in the
+  calling Livewire component. Also must bind its delete-confirmation modal's `@error` to
+  **`productCategoryId`**, must not add any confirm-and-proceed/force-delete control, and must log the
+  invariant refusal itself (`->log($actor, 'category_in_use', 'product_category', $category->id)`
+  immediately after catching the `ValidationException` — the domain-invariant check has no `Gate` call
+  of its own to log through) — story 0024b.
+- New lang key `products.categories.delete_blocked` (both locales), in the repo's existing **simple**
+  `singular|plural` `trans_choice()` form (matching `roles.php`'s form, not `media.php`'s
+  explicit-range form) — the count is always ≥ 1 when the message renders, so there is no zero case
+  to express. This is the **sixth** `trans_choice()` key overall (`roles.php` 3, `media.php` 2, this
+  one) — story 0024b.
+- `App\Actions\ProductCategories\CreateProductCategory.php`'s docblock contains a known, pre-existing
+  false comment ("matches `CreateUser`/`UpdateUser`'s caller-authorizes shape" — those two actually
+  self-authorize). Not this story's or 0025's to silently inherit as license; raised, not fixed —
+  story 0024b (originating in 0023/0024).
+- Full mechanism, the exception-type reasoning (`ValidationException` not a domain exception, since a
+  Livewire error bag needs no per-call-site try/catch), and the residual count-disclosure note are
+  documented at [docs/database/schema.md#product_categories](../../../docs/database/schema.md#product_categories).
