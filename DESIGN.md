@@ -1,7 +1,7 @@
 ---
 name: RestoStock UI Design System
-version: "4.0.0"
-description: "Sistema FEFO — turno Dia (comanda de papel) / Noche (pizarra de turno), con interruptor persistido por dispositivo. Reemplaza 'Señal Industrial' v3.0 como unico tema. Ver docs/02_architecture_design/05_ui_ux_design_system.md."
+version: "4.1.0"
+description: "Sistema FEFO — turno Dia (comanda de papel) / Noche (pizarra de turno), con interruptor persistido por dispositivo. Reemplaza 'Señal Industrial' v3.0 como unico tema. v4.1.0 anade la lamina Aplicacion (shell de rutas con barra lateral comanda, boton de accion circular, chip de urgencia de 4 niveles, panel Estado de 3 cubetas) — US-023. Ver docs/02_architecture_design/05_ui_ux_design_system.md."
 colors:
   light:
     primary: "#2e5f76"
@@ -97,6 +97,25 @@ components:
     rounded: "{rounded.sm}"
     height: "64px"
     width: "64px"
+  # v4.1.0 (US-023 / lamina Aplicacion). El boton circular es la unica
+  # excepcion deliberada a rounded:0 del sistema (ver 05_ui_ux_design_system.md).
+  action-button-circular:
+    backgroundColor: "{colors.light.danger}"
+    textColor: "#fbf8ef"
+    rounded: "9999px"
+    height: "72px"
+    width: "72px"
+  urgency-chip:
+    backgroundColor: "{colors.light.card}"
+    textColor: "#18140f"
+    rounded: "{rounded.sm}"
+    height: "32px"
+    padding: "{spacing.sm}"
+  app-shell-sidebar:
+    backgroundColor: "#18140f"
+    textColor: "#fbf8ef"
+    rounded: "{rounded.sm}"
+    padding: "{spacing.lg}"
 ---
 
 # 🎨 RestoStock Design System & UI/UX Guidelines (DESIGN.md)
@@ -128,4 +147,19 @@ Dos paletas — ver bloque `colors.light` / `colors.dark` del frontmatter y el d
 2. **Tactical Action Bar vs. Admin Drawer:** Acciones de cocina (`Extraer`, `Receta`, `Conciliar`) en primer plano táctil ($56\text{px}$); módulos administrativos agrupados bajo el menú `Administración ▾`.
 3. **Location Filter Tabs (`LocationFilterTabs`):** Pestañas táctiles para filtrar insumos por estación (`Todos`, `Refrigerador`, `Mesa Prep`, `Línea`).
 4. **Live Countdown Timers:** Reloj dinámico en tiempo real (`HH:MM:SS`) para remanentes $<6\text{h}$.
+
+---
+
+## 🧾 v4.1.0 — Lámina "Aplicación": Shell de Rutas y Componentes (US-023)
+
+Formaliza la tercera lámina de la propuesta Sistema FEFO (el artefacto de diseño validado por el humano). Detalle técnico completo en [`docs/02_architecture_design/05_ui_ux_design_system.md`](./docs/02_architecture_design/05_ui_ux_design_system.md) §v4.1.0.
+
+1. **Shell de aplicación (`AppShell`):** Grid `sidebar (88px) + main`. La **barra lateral** es una "ficha de comanda": fondo `--rule` (tinta), wordmark del restaurante en vertical (`writing-mode: vertical-rl`), dos perforaciones decorativas. Invierte su tono respecto al fondo en ambos turnos para contrastar siempre. La **topbar** aloja la navegación de rutas + estado de sesión + `Cerrar Sesión`.
+2. **Navegación de rutas de nivel superior:** `Inventario`, `Estaciones`, `Recetas`, `Reportes`, `Ajustes`. Ruta activa marcada con borde inferior de 3px en `--color-primary`. Reportes y Ajustes solo `ADMIN` (redirige a Inventario si falta rol).
+3. **Botón de acción circular (`ActionButton`):** Objetivo táctil **72px**, `border-radius: 9999px` — única excepción deliberada a las esquinas rectas del sistema, para separar visualmente "acción" de "dato/estado". Dos capas de color independientes: la capa **acción** (rojo `Extraer` / azul `Agregar` / mostaza `Receta`) y, por separado, la capa **estado/urgencia** de los chips. De noche ambas capas pasan de relleno sólido a contorno de tiza.
+4. **Chip de urgencia de 4 niveles (`UrgencyChip`):** Escala completa `Hoy` (crítico) · `Mañana` (atención) · `2 Días` · `4 Días` (vigente). Siempre **marca cuadrada + texto**, nunca solo color (WCAG 1.4.1). Reemplaza el `StatusBadge` tri-color heredado.
+5. **Botón de fila con prioridad (`RowButton`):** Variante `--urgent` (fondo `--color-danger`) visualmente distinta de la variante normal y de la `--ghost` (contorno), para que la fila crítica de la tabla FEFO se distinga de un vistazo.
+6. **Panel Estado de 3 cubetas + leyenda numérica:** El bloque de métricas del tablero pasa de 2 tarjetas a 3 cubetas de severidad (`Vigentes` / `Vencimiento Próximo` / `Críticos Hoy`) alineadas con los 3 segmentos de la `FEFOInventoryHealthBar`, que gana una leyenda numérica explícita (`58% vigente (7)`).
+
+> **Contraste (Guard 29 + decisión abierta #3 del artefacto):** todos los tokens nuevos se auditan a AAA 7:1 en ambos turnos con verificador real de luminancia relativa WCAG en `TK-088-FE` (Skill `SK-21`), no por estimación.
 

@@ -51,14 +51,17 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 *   **Persistencia Real en Producción:** Todos los repositorios (incluyendo recetas, conciliaciones de turno y reportes) están respaldados por PostgreSQL en producción, con bootstrap idempotente del primer administrador en cada despliegue nuevo.
 *   **Gestión de Catálogo Maestro:** Panel de administración para dar de alta insumos y recetas (rol `ADMIN`) sin depender del script de seed, permitiendo operar con el inventario real del restaurante.
 *   **Reabastecimiento de Bodega:** Un Administrador puede sumar stock a un insumo existente cuando llega una entrega del proveedor, para que el restaurante siga operando más allá de la carga inicial de inventario.
+*   **Sistema de Diseño FEFO (Turno Día/Noche):** Interruptor de tema persistido por dispositivo — turno Día (comanda de papel, alto contraste sobre fondo claro) y turno Noche (pizarra de turno, fondo oscuro con acentos en tiza), aplicado a toda la aplicación.
+*   **Navegación por Rutas (Shell de Aplicación):** Barra de navegación de nivel superior con direcciones propias (Inventario, Estaciones, Recetas, Reportes, Ajustes) y acceso por rol (Reportes y Ajustes solo `ADMIN`), con soporte de deep-link y botón "atrás" del navegador.
 
 
 
 
 ### **1.3. Diseño y experiencia de usuario:**
-La aplicación de cocina está diseñada bajo una estética oscura de alto contraste (**sleek dark mode** con elementos de **glassmorphism**), optimizada para pantallas táctiles de tablets de 10 pulgadas resistentes a la grasa de cocina:
-*   Botones y controles de gran tamaño para evitar errores de selección.
-*   Indicadores visuales semafóricos de proximidad de vencimiento (Rojo: menos de 6 horas, Amarillo: menos de 24 horas, Verde: seguro).
+La aplicación sigue el **Sistema de Diseño FEFO** (`US-022`/`US-023`, ver [`DESIGN.md`](./DESIGN.md) y [`docs/02_architecture_design/05_ui_ux_design_system.md`](./docs/02_architecture_design/05_ui_ux_design_system.md)): superficies opacas de alto contraste con dos turnos conmutables — **Día** (comanda de papel sobre fondo claro) y **Noche** (pizarra de turno sobre fondo oscuro) — optimizada para pantallas táctiles de tablets de 10 pulgadas resistentes a la grasa de cocina:
+*   Botones y controles de gran tamaño (mínimo 48px, PIN Pad 64px) para evitar errores de selección.
+*   Navegación en un shell de rutas (barra lateral tipo comanda + topbar) con secciones enlazables y acceso por rol.
+*   Indicadores de urgencia con **color + texto** (nunca solo color): chip de 4 niveles (`Hoy` / `Mañana` / `2 Días` / `4 Días`) y barra "Salud FEFO" con leyenda numérica.
 *   PIN Pad digital integrado para autenticación instantánea sin teclados físicos.
 
 ### **1.4. Instrucciones de instalación:**
@@ -148,7 +151,7 @@ graph TB
 ```
 
 ### **2.2. Descripción de componentes principales:**
-*   **Presentation Layer (Frontend):** Construido en Next.js (Admin Backoffice) y React Vanilla (Tablet Cocina). Implementa llamadas seguras interceptando y enviando los tokens JWT/PIN. En la tablet, incluye una cola local en **IndexedDB** para encolar transacciones en escenarios de inestabilidad de red (conmutación offline).
+*   **Presentation Layer (Frontend):** SPA única en React 18 + Vite con `react-router-dom` 7 (shell de rutas `AppShell` + `ProtectedRoute` por rol). Implementa llamadas seguras interceptando y enviando los tokens JWT/PIN. En la tablet, incluye una cola local en **IndexedDB** para encolar transacciones en escenarios de inestabilidad de red (conmutación offline).
 *   **API & Processing Layer (Backend):** Servidor HTTP Express estructurado en TypeScript. Implementa la lógica de puertos de entrada a través de controladores Express y middlewares de sanitización activa (`Zod`).
 *   **Domain & Application Layer:** Capa pura libre de librerías de infraestructura. Define las entidades (`Remanente`, `Insumo`, `User`) y los casos de uso (`RecordExtraction`, `RecordConsumption`, `AuthenticatePin`).
 *   **Persistence Layer:** PostgreSQL y Prisma ORM encargados del mapeo físico e integridad transaccional (CASCADE y RESTRICT).
@@ -159,11 +162,11 @@ El proyecto está estructurado como un Monorepo utilizando workspaces de `pnpm`.
 ```
 restostock-monorepo/
 ├── apps/
-│   ├── frontend/             # Frontend React/Next.js
+│   ├── frontend/             # Frontend React 18 + Vite + react-router-dom 7
 │   │   └── src/
-│       │       ├── app/          # Mapeo de Rutas (Admin y Kitchen)
-│       │       ├── components/   # UI Reutilizable
-│       │       └── features/     # Slices del Cliente (auth, catalog, stock, kitchen, reports)
+│       │       ├── app/          # Shell de rutas: router.tsx, AppShell, ProtectedRoute, routes/
+│       │       ├── shared/       # UI reutilizable (ActionButton, UrgencyChip, RowButton, Modal…)
+│       │       └── features/     # Slices del Cliente (auth, catalog, stock, kitchen, recipes, reports, security, settings)
 │       │
 │       └── backend/              # API Express / Node.js
 │           ├── prisma/           # schema.prisma y migraciones SQL

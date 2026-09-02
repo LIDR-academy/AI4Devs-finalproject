@@ -65,7 +65,7 @@ El sistema optimiza la rotación de inventarios forzando una lógica FEFO (First
 *   **Cierre de turno y conciliación física:** Flujo de fin de jornada para que el operario declare el inventario real en cocina y el sistema genere de manera guiada los registros de merma y discrepancias.
 *   **Dashboard y reporte de mermas visibles:** Panel web administrativo para que el administrador visualice en tiempo real los descartes acumulados agrupados por insumo y causa, haciendo la merma visible de inmediato.
 
-La identidad visual de la aplicación sigue el **Sistema FEFO** (turno Día/Noche, `US-022`) — ver [`DESIGN.md`](../../DESIGN.md) y [`docs/02_architecture_design/05_ui_ux_design_system.md`](../02_architecture_design/05_ui_ux_design_system.md) para el detalle completo de tokens, tipografía y ergonomía táctil.
+La identidad visual de la aplicación sigue el **Sistema FEFO** (turno Día/Noche, `US-022`) — ver [`DESIGN.md`](../../DESIGN.md) y [`docs/02_architecture_design/05_ui_ux_design_system.md`](../02_architecture_design/05_ui_ux_design_system.md) para el detalle completo de tokens, tipografía y ergonomía táctil. La navegación se organiza en un **shell de rutas de nivel superior** (Inventario, Estaciones, Recetas, Reportes, Ajustes) con acceso por rol (`US-023`), en lugar de un tablero único con menús superpuestos.
 
 ### 1.3. Objetivos de Negocio y KPIs (Métricas de Éxito)
 *   **Reducción de Merma Desconocida:** Disminuir en un **30%** la diferencia financiera entre el inventario teórico del sistema y las auditorías físicas semanales en un periodo de 90 días.
@@ -353,6 +353,22 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
         *   **Given** Ningún remanente activo de "Aceite de Oliva" en ninguna ubicación de cocina.
         *   **When** El operario abre el modal de extracción y selecciona "Aceite de Oliva".
         *   **Then** El sistema no muestra ninguna advertencia y permite continuar el flujo normal de extracción.
+
+
+### US-023: Navegación por Rutas y Shell de Aplicación FEFO
+*   **Historia:** Como operario o administrador, quiero que la aplicación tenga una barra de navegación de nivel superior con direcciones propias (Inventario, Estaciones, Recetas, Reportes, Ajustes) en vez de un único tablero con menús superpuestos, para orientarme de un vistazo, volver atrás con el navegador y compartir un enlace directo a la sección que estoy usando.
+*   **Complejidad:** L
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Decisiones de negocio consultadas con el humano (Guard 24/28/34):** Adoptar `react-router-dom@7.18.3` (data router) — enmienda aprobada en `docs/00_stack_manifest.md` §4 v1.13.0. Mapeo de nav: Inventario = Tablero FEFO de cocina; Estaciones = extracción de bodega + gestión de ubicaciones + reabastecimiento; Recetas = Recetario; Reportes = dashboard de mermas/KPIs; Ajustes = configuración + usuarios + roles + historial de movimientos. Control de acceso por ruta: **Reportes y Ajustes solo `ADMIN`** (ruta protegida redirige a Inventario si falta el rol); Inventario / Estaciones / Recetas visibles para cualquier operario autenticado. Las operaciones transitorias (Extraer, Preparar Receta, Conciliar Turno, Descartar) siguen como modales lanzados desde su ruta padre, no como rutas propias. Se adopta además el tratamiento espacial de la lámina "Aplicación" (barra lateral tipo comanda con wordmark vertical). Fuente de reglas de codificación (Guard 34): documentación oficial `reactrouter.com`.
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Deep-link y botón atrás):**
+        *   **Given** Un operario autenticado que navega de Inventario a Recetas usando la barra superior.
+        *   **When** Recarga la página y luego pulsa el botón "atrás" del navegador.
+        *   **Then** La recarga lo mantiene en Recetas (la URL refleja la ruta) y el botón "atrás" lo devuelve a Inventario sin recargar la aplicación completa.
+    *   **Escenario 2 (Ruta protegida por rol):**
+        *   **Given** Un operario con rol distinto de `ADMIN` autenticado en Inventario.
+        *   **When** Intenta abrir la ruta de Reportes escribiendo su URL directamente.
+        *   **Then** El sistema lo redirige a Inventario sin exponer el contenido de Reportes, de forma consistente con el gating que hoy aplica el menú de Administración.
 
 
 ---

@@ -1,11 +1,12 @@
 ---
 document: ui_ux_design_system
-version: 4.0.0
+version: 4.1.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
   - docs/02_architecture_design/04_technical_design.md
   - docs/05_agile_planning/11_user_stories/shared/US-022.md
+  - docs/05_agile_planning/11_user_stories/shared/US-023.md
 ---
 
 # 🎨 Especificación de Sistema de Diseño UI/UX y Ergonomía Táctil
@@ -58,6 +59,82 @@ inputs:
 * **Esquinas rectas:** `border-radius: 0` en tarjetas, botones e inputs (antes 4–8px).
 * **Tipografía:** `Big Shoulders Display` (titulares/cifras, condensada tipo sello) + `IBM Plex Sans` (cuerpo) + `IBM Plex Mono` (datos alineados en columna: lotes, cantidades, `HH:MM:SS`) — reemplazan `Oswald`/`Barlow` en todo el sistema, no solo en el tablero de cocina.
 * **Objetivos táctiles sin cambio:** `.btn-touch` sigue en 48×48px mínimo; el teclado de PIN sigue en 64×64px — ver `TK-083-FE`.
+
+---
+
+## 🧾 v4.1.0 — Lámina "Aplicación": Shell de Rutas, Componentes y Panel de Estado
+
+> **Amplía** la dirección v4.0.0 con la tercera lámina de la propuesta Sistema FEFO. Cubierto por `US-023` y sus tickets `TK-085-FE` a `TK-088-FE`. No cambia ningún token cromático de v4.0.0 — añade estructura de navegación y tres componentes nuevos.
+
+### 1. `AppShell` — estructura de navegación
+
+```
+┌────┬──────────────────────────────────────────────┐
+│ S  │  [Inventario] Estaciones Recetas Reportes …   │  ← topbar: nav + sesión + Cerrar Sesión
+│ I  ├──────────────────────────────────────────────┤
+│ D  │                                              │
+│ E  │            <Outlet /> (ruta activa)           │
+│ B  │                                              │
+│ A  │                                              │
+│ R  │                                              │
+└────┴──────────────────────────────────────────────┘
+```
+
+* **Grid:** `grid-template-columns: 88px 1fr`. En breakpoint `sm` (<640px) la barra lateral colapsa a una franja superior de 44px con el wordmark horizontal.
+* **Barra lateral (ficha de comanda):** `background: var(--rule)`; wordmark del restaurante en `writing-mode: vertical-rl; transform: rotate(180deg)`, `--font-family-display`, color `var(--bg-root)` (invertido, contrasta en ambos turnos); dos perforaciones circulares decorativas (`aria-hidden`) de 18px sobre el borde derecho. El nombre sale de `SystemSettings` (branding dinámico, `TK-075-FE`) con fallback `"RestoStock"`.
+* **Topbar:** `border-bottom: 3px solid var(--rule)`. Contiene `<nav>` de rutas, indicador `● Conectado` (`--color-success`), badge de usuario y botón `Cerrar Sesión` (`.btn-danger`). El interruptor Día/Noche de `US-022` se mantiene aquí.
+* **Rutas y acceso:**
+
+  | Ruta | Path | Contenido | Acceso |
+  | :--- | :--- | :--- | :--- |
+  | Inventario | `/` | Tablero FEFO de cocina (remanentes activos, health bar, filtros de estación) | Operario autenticado |
+  | Estaciones | `/estaciones` | Extracción de bodega + gestión de ubicaciones + reabastecimiento | Operario autenticado |
+  | Recetas | `/recetas` | Recetario (`features/recipes`) | Operario autenticado |
+  | Reportes | `/reportes` | Dashboard de mermas + KPIs (TRR, valorización) | **`ADMIN`** |
+  | Ajustes | `/ajustes` | Configuración del restaurante + usuarios + roles + historial de movimientos | **`ADMIN`** |
+
+* **`<ProtectedRoute requiredRole?>`:** envuelve el `<Outlet />`. Sin sesión → render de `PinLoginModal` (comportamiento actual). Con sesión pero sin el rol requerido → `<Navigate to="/" replace />`. Alinea con la autoredirección por permisos que introducirá `US-015` (Dynamic RBAC) sin bloquearse a ella: hoy compara `currentUser.role`.
+* **Operaciones transitorias:** `WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard` **siguen siendo modales** lanzados desde su ruta padre — no son rutas. Nav activa con `border-bottom: 3px solid var(--color-primary)`.
+
+### 2. `ActionButton` — botón de acción circular
+
+* **Objetivo táctil:** 72×72px (supera el mínimo de 48px). `border-radius: 9999px` — **única excepción documentada** a la regla de esquinas rectas del sistema; su forma redonda es la señal que lo distingue de todo lo demás (que es cuadrado).
+* **Dos capas de color independientes** (la confusión que la referencia original mezclaba):
+  * capa **acción** — cuál botón es cuál: `Extraer` = `--color-danger`, `Agregar` = `--color-primary`, `Receta` = `--color-warning`.
+  * capa **estado/urgencia** — vive solo en los chips y la health bar, nunca en los botones.
+* **Turno Noche:** relleno sólido → contorno de 3px + ícono/label en el color (mismo patrón "tiza" que los badges v4.0.0). Borde exterior siempre `var(--rule)` de día.
+* **Composición:** círculo + label debajo (`--font-family-body`, 600) + hint opcional (`--font-family-mono`, `--text-secondary`).
+
+### 3. `UrgencyChip` — escala de urgencia de 4 niveles
+
+Reemplaza el `StatusBadge` tri-color heredado. Escala completa, sin cortar a la mitad:
+
+| Nivel | Etiqueta | Token de color | Umbral |
+| :--- | :--- | :--- | :--- |
+| Crítico | `Hoy` | `--color-danger` / `--color-danger-text` | vence hoy |
+| Atención | `Mañana` | `--color-warning` / `--color-warning-text` | vence mañana |
+| Vigente | `2 Días` | `--color-success` / `--color-success-text` | 2 días |
+| Vigente | `4 Días` | `--color-success` / `--color-success-text` | 3+ días |
+
+* **Regla WCAG 1.4.1:** siempre marca cuadrada de 9px (`currentColor`) **+ texto**, nunca solo color.
+* De día: relleno tintado al 12–15% del color + texto en la variante `-text`. De noche: contorno + texto en el color base (más brillante).
+
+### 4. `RowButton` — botón de fila con prioridad
+
+* `RowButton` normal (`--rule` sólido), `RowButton--urgent` (`--color-danger` sólido, para la fila cuyo chip es `Hoy`), `RowButton--ghost` (transparente + contorno, para `Cancelar`).
+* La variante crítica se decide por la urgencia de la fila, no manualmente.
+
+### 5. Panel `Estado` de 3 cubetas + leyenda numérica
+
+* El bloque de resumen del tablero pasa de 2 tarjetas (`Remanentes Abiertos`, `Vencimiento Próximo <24h`) a **3 cubetas de severidad** alineadas con los 3 segmentos de la health bar:
+  * `Vigentes` (`--color-success`) · `Vencimiento Próximo` (`--color-warning`) · `Críticos Hoy` (`--color-danger`).
+* `FEFOInventoryHealthBar` gana una **leyenda numérica** bajo la barra: `58% vigente (7)` · `25% próximo (3)` · `17% crítico (2)` — `--font-family-mono`, cada entrada con su punto de color. La barra en sí conserva `role="img"` con `aria-label` descriptivo.
+* **Grid `Acciones | Estado`:** en breakpoint `md+`, panel izquierdo con los 3 `ActionButton`, panel derecho con las 3 cubetas + health bar, separados por `border-left: 2px dashed var(--rule)`. En `sm` se apilan.
+
+### Cambios estructurales de layout
+
+* Nuevo contenedor raíz `<AppShell>` en `App.tsx`; el contenido actual del tablero se mueve a una ruta `IndexRoute`.
+* `App.module.css` reescribe `.dashboard-container` como el grid del shell; el header full-width apilado se sustituye por sidebar + topbar.
 
 ---
 

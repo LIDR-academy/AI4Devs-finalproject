@@ -317,6 +317,10 @@ sequenceDiagram
 *   **Capa de Aplicación (`application/`):** Implementa los casos de uso específicos del sistema. Orquesta los flujos invocando entidades de dominio y utilizando los puertos.
 *   **Capa de Infraestructura (`infrastructure/`):** Adaptadores concretos (controladores HTTP Express, validadores Zod, repositorios Prisma, integraciones).
 
+### Frontend — Shell de Navegación (`US-023`)
+
+El cliente React adopta `react-router-dom@7.18.3` (data router) a partir de v1.13.0 del stack manifest. El componente raíz `<AppShell>` (barra lateral tipo comanda + topbar de navegación) envuelve un `<Outlet />` con las rutas de nivel superior (`/`, `/estaciones`, `/recetas`, `/reportes`, `/ajustes`). Un componente `<ProtectedRoute requiredRole?>` centraliza el gating por sesión y por rol (`ADMIN` para `/reportes` y `/ajustes`), reemplazando el gating disperso dentro de cada pantalla del menú de Administración. Las features verticales del cliente (`features/*`) no cambian de responsabilidad — solo se montan bajo una ruta en vez de un flag de modal. Detalle en [`05_ui_ux_design_system.md`](./05_ui_ux_design_system.md) §v4.1.0.
+
 ---
 
 ## 📌 5. Próximos Pasos de Especificación (Siguiente en Cascada SDD)

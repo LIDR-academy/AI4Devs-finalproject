@@ -63,6 +63,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-079-FE** | `reports` | **Alto** | **Media** | 2 SP | Depende de `TK-079`. Card de KPI de TRR real en el dashboard de reportes. | 🟡 P1 - Alta |
 | **TK-080** | `stock` | **Medio** | **Media** | 2 SP | Depende de `TK-004`. Filtro `insumoId` en remanentes activos, para detección de apertura duplicada — cierra el gap del KPI #3 del PRD. | 🟢 P2 - Media |
 | **TK-080-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-080`, `TK-072-FE`. Advertencia no bloqueante de apertura duplicada en el modal de extracción. | 🟢 P2 - Media |
+| **TK-085-FE** | `shared` | **Alto** | **Media** | 8 SP | Depende de `TK-084-FE` + enmienda al stack manifest v1.13.0 (Guard 24). Adopta `react-router-dom@7.18.3`, `AppShell` y `ProtectedRoute` — prerrequisito de `TK-086-FE`/`TK-087-FE`/`TK-088-FE`. | 🟡 P1 - Alta |
+| **TK-086-FE** | `shared` | **Medio** | **Media** | 5 SP | Depende de `TK-085-FE`. Botón de acción circular, chip de urgencia de 4 niveles y botón de fila con prioridad; separa la capa de color de acción de la de estado. | 🟢 P2 - Media |
+| **TK-087-FE** | `shared` | **Medio** | **Media** | 3 SP | Depende de `TK-086-FE`. Panel Estado de 3 cubetas + leyenda numérica en la health bar + grid Acciones\|Estado. | 🟢 P2 - Media |
+| **TK-088-FE** | `shared` | **Alto** | **Media** | 3 SP | Depende de `TK-085-FE`..`TK-087-FE`. Auditoría de contraste AAA 7:1 (`SK-21`) en ambos turnos — cierra la decisión abierta #3 del artefacto Sistema FEFO. | 🟡 P1 - Alta |
 
 ---
 
@@ -132,6 +136,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-082-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Modales de Operación de Cocina | `shared` | 3 | Should Have | [shared/frontend/TK-082-FE.md](shared/frontend/TK-082-FE.md) |
 | **TK-083-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Autenticación Táctil (PIN) | `shared` | 3 | Should Have | [shared/frontend/TK-083-FE.md](shared/frontend/TK-083-FE.md) |
 | **TK-084-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Backoffice y Administración | `shared` | 5 | Should Have | [shared/frontend/TK-084-FE.md](shared/frontend/TK-084-FE.md) |
+| **TK-085-FE** | [US-023](../11_user_stories/shared/US-023.md) | Adopción de react-router + Shell de Rutas FEFO (`AppShell` + `ProtectedRoute`) | `shared` | 8 | Should Have | [shared/frontend/TK-085-FE.md](shared/frontend/TK-085-FE.md) |
+| **TK-086-FE** | [US-023](../11_user_stories/shared/US-023.md) | Componentes de la Lámina "Aplicación" (Botón Circular, Chip 4 Niveles, Botón de Fila) | `shared` | 5 | Should Have | [shared/frontend/TK-086-FE.md](shared/frontend/TK-086-FE.md) |
+| **TK-087-FE** | [US-023](../11_user_stories/shared/US-023.md) | Panel "Estado" de 3 Cubetas + Leyenda Numérica + Grid Acciones\|Estado | `shared` | 3 | Should Have | [shared/frontend/TK-087-FE.md](shared/frontend/TK-087-FE.md) |
+| **TK-088-FE** | [US-023](../11_user_stories/shared/US-023.md) | Auditoría de Contraste AAA 7:1 del Sistema FEFO (Ambos Turnos) | `shared` | 3 | Should Have | [shared/frontend/TK-088-FE.md](shared/frontend/TK-088-FE.md) |
 ---
 
 ## 🗂️ 3. Resumen de Fichas Técnicas de Tickets por Módulo
@@ -216,6 +224,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-082-FE: Sistema FEFO — Modales de Operación de Cocina](shared/frontend/TK-082-FE.md)** (Frontend) — extiende `TK-081-FE` a `WarehouseExtractionModal`/`RecipeSelectorModal`/`DiscardModal`/`ShiftReconciliationWizard` y al shell compartido `Modal.tsx`.
 *   **[TK-083-FE: Sistema FEFO — Autenticación Táctil (PIN)](shared/frontend/TK-083-FE.md)** (Frontend) — extiende `TK-081-FE` a `PinLoginModal`/`PinPad`/`ForceChangePinModal`/`ResetPinModal`/`ForgotPinModal`; preserva el mínimo táctil de 64×64px del teclado de PIN.
 *   **[TK-084-FE: Sistema FEFO — Backoffice y Administración](shared/frontend/TK-084-FE.md)** (Frontend) — cierra `US-022` extendiendo `TK-081-FE` a Reportes, Gestión de Usuarios, Catálogo, Recetas, Configuración, Ubicaciones y Roles.
+*   **[TK-085-FE: Adopción de react-router + Shell de Rutas FEFO](shared/frontend/TK-085-FE.md)** (Frontend) — `US-023`: introduce `react-router-dom@7.18.3` (enmienda al stack manifest v1.13.0), el componente raíz `AppShell` (barra lateral comanda + topbar de navegación) y `ProtectedRoute` (gating por sesión y por rol `ADMIN` para Reportes/Ajustes). Prerrequisito de `TK-086-FE`/`TK-087-FE`/`TK-088-FE`.
+*   **[TK-086-FE: Componentes de la Lámina "Aplicación"](shared/frontend/TK-086-FE.md)** (Frontend) — `US-023`: botón de acción circular (72px), chip de urgencia de 4 niveles (`Hoy`/`Mañana`/`2 Días`/`4 Días`, marca + texto) y botón de fila con variante crítica; separa la capa de color de acción de la de estado/urgencia.
+*   **[TK-087-FE: Panel "Estado" de 3 Cubetas + Leyenda Numérica](shared/frontend/TK-087-FE.md)** (Frontend) — `US-023`: el resumen del tablero pasa de 2 tarjetas a 3 cubetas de severidad alineadas con la `FEFOInventoryHealthBar`, que gana leyenda numérica; grid `Acciones|Estado`.
+*   **[TK-088-FE: Auditoría de Contraste AAA 7:1 del Sistema FEFO](shared/frontend/TK-088-FE.md)** (Frontend) — `US-023`: ejecuta `SK-21` sobre las 5 rutas en ambos turnos, verifica cada par color/fondo con fórmula WCAG real contra el fondo real, corrige tokens que fallen y archiva evidencia. Cierra la decisión abierta #3 del artefacto Sistema FEFO.
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
 *   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)

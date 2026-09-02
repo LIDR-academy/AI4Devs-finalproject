@@ -1,6 +1,6 @@
 ---
 document: backlog_map
-version: 1.2.0
+version: 1.3.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
@@ -179,6 +179,22 @@ graph TD
     TK081FE --> TK083FE
     TK081FE --> TK084FE
 
+    %% Navegacion por Rutas y Shell FEFO (lamina "Aplicacion" de la propuesta Sistema FEFO)
+    US023["📝 US-023: Navegacion por Rutas y Shell FEFO"]
+    TK085FE["🎫 TK-085-FE: react-router + AppShell + ProtectedRoute"]
+    TK086FE["🎫 TK-086-FE: Boton Circular + Chip 4 Niveles + Boton de Fila"]
+    TK087FE["🎫 TK-087-FE: Panel Estado 3 Cubetas + Leyenda Numerica"]
+    TK088FE["🎫 TK-088-FE: Auditoria Contraste AAA 7:1"]
+    EpicShared --> US023
+    US023 --> TK085FE
+    US023 --> TK086FE
+    US023 --> TK087FE
+    US023 --> TK088FE
+    TK084FE --> TK085FE
+    TK085FE --> TK086FE
+    TK086FE --> TK087FE
+    TK087FE --> TK088FE
+
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
     classDef roadmap fill:#FFC300,stroke:#FF5733,stroke-width:2px,color:#000;
@@ -188,8 +204,8 @@ graph TD
 
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US019,US020,US021,US022 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE,TK081FE,TK082FE,TK083FE,TK084FE tk;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US019,US020,US021,US022,US023 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE,TK081FE,TK082FE,TK083FE,TK084FE,TK085FE,TK086FE,TK087FE,TK088FE tk;
 ```
 
 ---
@@ -223,5 +239,6 @@ graph TD
 | **📊 Reportes (`reports`)** | [US-020: Indicador TRR Real](11_user_stories/reports/US-020.md) | [TK-079: Rotation Metrics](12_tickets/reports/backend/TK-079.md) | [TK-079-FE: Card de KPI TRR](12_tickets/reports/frontend/TK-079-FE.md) | ✅ Done |
 | **📦 Bodega (`stock`)** | [US-021: Advertencia Apertura Duplicada](11_user_stories/stock/US-021.md) | [TK-080: Filtro `insumoId`](12_tickets/stock/backend/TK-080.md) | [TK-080-FE: Advertencia en Extracción](12_tickets/stock/frontend/TK-080-FE.md) | ✅ Done |
 | **🛠️ Shared (`shared`)** | [US-022: Sistema FEFO Día/Noche](11_user_stories/shared/US-022.md) | N/A | [TK-081-FE](12_tickets/shared/frontend/TK-081-FE.md) → [082](12_tickets/shared/frontend/TK-082-FE.md) → [083](12_tickets/shared/frontend/TK-083-FE.md) → [084](12_tickets/shared/frontend/TK-084-FE.md) | ✅ Done |
+| **🛠️ Shared (`shared`)** | [US-023: Navegación por Rutas y Shell FEFO](11_user_stories/shared/US-023.md) | N/A | [TK-085-FE](12_tickets/shared/frontend/TK-085-FE.md) → [086](12_tickets/shared/frontend/TK-086-FE.md) → [087](12_tickets/shared/frontend/TK-087-FE.md) → [088](12_tickets/shared/frontend/TK-088-FE.md) | 📋 Approved Spec |
 
 
