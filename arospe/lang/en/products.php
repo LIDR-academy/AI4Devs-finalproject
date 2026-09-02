@@ -19,4 +19,9 @@ return [
     'display_statuses' => [
         'out_of_stock' => 'Out of stock',
     ],
+
+    'categories' => [
+        'delete_blocked' => 'This category is used by :count product and cannot be deleted.'
+            .'|This category is used by :count products and cannot be deleted.',
+    ],
 ];
