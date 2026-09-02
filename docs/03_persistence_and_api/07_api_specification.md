@@ -516,7 +516,7 @@ sequenceDiagram
 ---
 
 ### 2.14. `GET /api/v1/reports/rotation-metrics`
-*   **Descripción:** Retorna la Tasa de Rotación de Remanentes (TRR) promedio real, calculada sobre todos los remanentes que alcanzaron un estado terminal (`CONSUMED` o `DISCARDED`) dentro del rango de fechas indicado. Es el único endpoint que mide directamente el KPI de éxito del producto (`docs/01_product_definition/02_prd.md §1.3`) — hasta `US-020` el sistema forzaba la ventana de 72h pero nunca reportaba si el objetivo se cumplía en la práctica.
+*   **Descripción:** Retorna la Tasa de Rotación de Remanentes (TRR) promedio real, calculada sobre todos los remanentes que alcanzaron un estado terminal (`EXHAUSTED` o `DISCARDED` — el enum real de `Remanente.status`; la redacción original de este ticket decía "CONSUMED", copiado por error del modelo aspiracional de `06_database_schema.md`, que no coincide con el schema implementado) dentro del rango de fechas indicado. Es el único endpoint que mide directamente el KPI de éxito del producto (`docs/01_product_definition/02_prd.md §1.3`) — hasta `US-020` el sistema forzaba la ventana de 72h pero nunca reportaba si el objetivo se cumplía en la práctica.
 *   **Cabeceras Requeridas:**
     *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
 *   **Query Parameters:**

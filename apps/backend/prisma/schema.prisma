@@ -134,6 +134,7 @@ model Remanente {
   expirationDate  DateTime
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  terminalAt      DateTime?
   insumo          Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade)
 }
 

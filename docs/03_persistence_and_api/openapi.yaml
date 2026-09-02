@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: RestoStock API
   description: REST API specification for RestoStock real-time inventory and FEFO traceability system.
-  version: 3.0.0
+  version: 4.0.0 # TK-079: RotationMetricsResponse.averageTrrHours marked nullable (correcting the TK-078 draft to match the real, first-ever implementation of this endpoint — oasdiff flags this as breaking against that draft commit, but the endpoint had zero real consumers until this ticket).
 servers:
   - url: http://localhost:3000
     description: Local Development Server
@@ -741,7 +741,7 @@ paths:
             format: date-time
       responses:
         '200':
-          description: Average TRR across all remanentes that reached a terminal state (CONSUMED or DISCARDED) in the range
+          description: Average TRR across all remanentes that reached a terminal state (EXHAUSTED or DISCARDED — the real Remanente.status enum; "CONSUMED" is aspirational-doc wording that doesn't match the implemented schema) in the range
           content:
             application/json:
               schema:
@@ -1244,7 +1244,8 @@ components:
       properties:
         averageTrrHours:
           type: number
-          description: Average elapsed hours between Remanente.createdAt and its terminal timestamp (CONSUMED or DISCARDED), across every remanente that reached a terminal state within the requested range (US-020 — discards count toward the average, per explicit product decision).
+          nullable: true
+          description: Average elapsed hours between Remanente.createdAt and its terminalAt timestamp (status EXHAUSTED or DISCARDED — the real enum), across every remanente that reached a terminal state within the requested range (US-020 — discards count toward the average, per explicit product decision). Null when sampleSize is 0.
           example: 48.3
         targetTrrHours:
           type: number

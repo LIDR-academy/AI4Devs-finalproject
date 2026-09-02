@@ -1,7 +1,7 @@
 import { PrismaClient } from '../../../generated/prisma/client.js';
 import { WasteSummary } from '../../../domain/reports/entities/WasteSummary.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
-import { IReportRepository } from '../../../domain/reports/repositories/IReportRepository.js';
+import { IReportRepository, RemanenteRotationRecord } from '../../../domain/reports/repositories/IReportRepository.js';
 
 interface WasteAccumulator {
   insumoId: string;
@@ -73,5 +73,24 @@ export class PrismaReportRepository implements IReportRepository {
           unitCost: accumulator.unitCost,
         })
     );
+  }
+
+  public async getTerminalRemanentes(startDate: Date, endDate: Date): Promise<RemanenteRotationRecord[]> {
+    // US-020: EXHAUSTED (consumo total) y DISCARDED cuentan ambos como estado terminal —
+    // decision de negocio confirmada, el TRR mide el ciclo de vida completo del remanente.
+    // Remanentes preexistentes a esta migracion pueden tener el status terminal pero
+    // terminalAt null (nunca se registro la transicion): se excluyen explicitamente, no
+    // se infieren desde updatedAt (que muta por razones no terminales, ver getWasteReport).
+    const remanentes = await this.prisma.remanente.findMany({
+      where: {
+        status: { in: ['EXHAUSTED', 'DISCARDED'] },
+        terminalAt: { not: null, gte: startDate, lte: endDate },
+      },
+      select: { createdAt: true, terminalAt: true },
+    });
+
+    return remanentes
+      .filter((r): r is { createdAt: Date; terminalAt: Date } => r.terminalAt !== null)
+      .map((r) => ({ createdAt: r.createdAt, terminalAt: r.terminalAt }));
   }
 }

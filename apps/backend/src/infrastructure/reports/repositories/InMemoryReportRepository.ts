@@ -1,12 +1,17 @@
-import { IReportRepository } from '../../../domain/reports/repositories/IReportRepository.js';
+import { IReportRepository, RemanenteRotationRecord } from '../../../domain/reports/repositories/IReportRepository.js';
 import { WasteSummary } from '../../../domain/reports/entities/WasteSummary.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 
 export class InMemoryReportRepository implements IReportRepository {
   private wasteEntries: WasteSummary[] = [];
+  private rotationEntries: RemanenteRotationRecord[] = [];
 
   public seedWasteSummary(item: WasteSummary): void {
     this.wasteEntries.push(item);
+  }
+
+  public seedTerminalRemanente(record: RemanenteRotationRecord): void {
+    this.rotationEntries.push(record);
   }
 
   public async getWasteReport(_startDate: Date, _endDate: Date): Promise<WasteSummary[]> {
@@ -29,5 +34,9 @@ export class InMemoryReportRepository implements IReportRepository {
       ];
     }
     return [...this.wasteEntries];
+  }
+
+  public async getTerminalRemanentes(_startDate: Date, _endDate: Date): Promise<RemanenteRotationRecord[]> {
+    return [...this.rotationEntries];
   }
 }

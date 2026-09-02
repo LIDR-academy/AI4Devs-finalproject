@@ -274,7 +274,7 @@ enum LocationType {
 
 enum RemanenteStatus {
   ACTIVE      // Disponible para su uso en cocina
-  CONSUMED    // Agotado al 100%
+  EXHAUSTED   // Agotado al 100% (nombre real del enum en schema.prisma — "CONSUMED" era un error de este doc, corregido en TK-079)
   DISCARDED   // Retirado por merma/vencimiento
 }
 
@@ -399,6 +399,7 @@ model Remanente {
   calculatedExpirationDate DateTime        @map("calculated_expiration_date")
   createdAt                DateTime        @default(now()) @map("created_at")
   updatedAt                DateTime        @updatedAt @map("updated_at")
+  terminalAt               DateTime?       @map("terminal_at") // US-020: instante exacto de la transicion a EXHAUSTED/DISCARDED — nunca se infiere de updatedAt, que tambien muta por operaciones no terminales (conciliacion de turno).
 
   // Relaciones
   insumo Insumo @relation(fields: [insumoId], references: [id], onDelete: Cascade, onUpdate: Cascade)

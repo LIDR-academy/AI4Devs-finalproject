@@ -12,6 +12,7 @@ export interface RemanenteProps {
   status: RemanenteStatusType;
   expirationDate: Date;
   createdAt?: Date;
+  terminalAt?: Date;
 }
 
 export class Remanente {
@@ -71,6 +72,14 @@ export class Remanente {
     return this.props.expirationDate;
   }
 
+  public get createdAt(): Date | undefined {
+    return this.props.createdAt;
+  }
+
+  public get terminalAt(): Date | undefined {
+    return this.props.terminalAt;
+  }
+
   public consumeQuantity(quantityToConsume: DecimalQuantity): void {
     if (this.props.status !== 'ACTIVE') {
       throw new ExcessConsumptionException(
@@ -91,6 +100,9 @@ export class Remanente {
 
     if (remaining.toNumber() === 0) {
       this.props.status = 'EXHAUSTED';
+      // US-020: fija el instante exacto de la transicion terminal — nunca se infiere
+      // de updatedAt, que tambien muta por operaciones no terminales (conciliacion).
+      this.props.terminalAt = new Date();
     }
   }
 
@@ -105,6 +117,7 @@ export class Remanente {
     const discardedQuantity = this.props.currentQuantity;
     this.props.currentQuantity = new DecimalQuantity('0.0000');
     this.props.status = 'DISCARDED';
+    this.props.terminalAt = new Date();
 
     return discardedQuantity;
   }

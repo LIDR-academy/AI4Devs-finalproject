@@ -65,4 +65,49 @@ describe('Remanente Domain Entity — Consumo FEFO y Descarte', () => {
 
     expect(() => remanente.discard()).toThrow(ExcessConsumptionException);
   });
+
+  it('terminalAt debe ser undefined mientras el remanente esta ACTIVE (US-020)', () => {
+    const remanente = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.500'));
+    expect(remanente.terminalAt).toBeUndefined();
+  });
+
+  it('consumeQuantity debe fijar terminalAt al momento exacto en que el saldo llega a cero (US-020)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    const remanente = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('3.000'));
+
+    vi.setSystemTime(new Date('2026-01-03T00:00:00.000Z'));
+    remanente.consumeQuantity(new DecimalQuantity('3.000'));
+
+    expect(remanente.terminalAt?.toISOString()).toBe('2026-01-03T00:00:00.000Z');
+    vi.useRealTimers();
+  });
+
+  it('consumeQuantity NO debe fijar terminalAt si el remanente sigue ACTIVE tras el consumo parcial (US-020)', () => {
+    const remanente = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('5.000'));
+    remanente.consumeQuantity(new DecimalQuantity('2.000'));
+
+    expect(remanente.terminalAt).toBeUndefined();
+  });
+
+  it('discard debe fijar terminalAt al momento exacto del descarte (US-020)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    const remanente = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.500'));
+
+    vi.setSystemTime(new Date('2026-01-04T12:00:00.000Z'));
+    remanente.discard();
+
+    expect(remanente.terminalAt?.toISOString()).toBe('2026-01-04T12:00:00.000Z');
+    vi.useRealTimers();
+  });
+
+  it('createdAt debe exponer la fecha de creacion fijada por createNew (US-020)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    const remanente = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.500'));
+
+    expect(remanente.createdAt?.toISOString()).toBe('2026-01-01T00:00:00.000Z');
+    vi.useRealTimers();
+  });
 });

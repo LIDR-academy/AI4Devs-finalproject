@@ -78,6 +78,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       status: raw.status as RemanenteStatusType,
       expirationDate: raw.expirationDate,
       createdAt: raw.createdAt,
+      terminalAt: raw.terminalAt ?? undefined,
     });
   }
 
@@ -103,6 +104,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
           status: raw.status as RemanenteStatusType,
           expirationDate: raw.expirationDate,
           createdAt: raw.createdAt,
+          terminalAt: raw.terminalAt ?? undefined,
         })
     );
   }
@@ -151,6 +153,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       update: {
         currentQuantity: remanente.currentQuantity.toDecimal(),
         status: remanente.status as RemanenteStatusType,
+        terminalAt: remanente.terminalAt ?? null,
       },
       create: {
         id: remanente.id,
@@ -160,6 +163,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         location: remanente.location,
         status: remanente.status as RemanenteStatusType,
         expirationDate: remanente.expirationDate,
+        terminalAt: remanente.terminalAt ?? null,
       },
     });
   }
