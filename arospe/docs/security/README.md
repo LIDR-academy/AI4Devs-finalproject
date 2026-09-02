@@ -264,7 +264,40 @@ repo must follow — always with a real code example pulled from this repository
   `'unauthenticated'` literal must be *proven* unreachable, the companion hazard to a limiter keyed on
   the target.
 
-_Last updated: 2026-08-27 — Story 0019 (Media Library upload and conversions — backend), **Phase 4 re-audit**: added [image-upload-processing.md](image-upload-processing.md), the eleventh page, from the verification of findings F-1 (decompression bomb via unbounded Imagick decode), F-2 (the action not validating its own input, and trusting `putFile()`'s inferred extension), F-3 (unchecked `Storage::put()` return) and F-5 (Livewire's temporary-upload endpoint carrying no `mimes` restriction and a looser size ceiling). Every number on that page was measured against the shipped code in this worktree rather than carried over from the first audit's notes, and the reproduction fixtures were removed afterwards. Written as ❌/✅ pairs describing the **shipped** state from the outset, per [errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s rule for an audit-authored page — the failure mode that page's own footer records as having recurred with a one-day fuse._
+- [HTML sanitization](html-sanitization.md) — the rules established by story 0024a's Phase 4 audit
+  and re-audit, and the first page here about **untrusted-HTML-storage** rather than authorization or
+  file decoding. `App\Livewire\Components\WysiwygEditor` (story 0021) echoes its bound value
+  unescaped inside a `wire:ignore`d region by design — a hard, load-bearing dependency
+  [conventions/base-standards.md](../conventions/base-standards.md#a-wireignored-client-owned-region--the-apps-first-instance)
+  already names — and this story is what discharges it for `products.description`:
+  `App\Actions\Products\SanitizeProductDescription`, the only class in `app/` importing
+  `symfony/html-sanitizer`, runs on both `CreateProduct` and `UpdateProduct` before validation,
+  against the allow-list in `config/html-sanitizer.php`. Its central rule is why
+  `default_action: 'block'` is not enough on its own: `Block` keeps a removed element's *text
+  content*, which is correct for an ordinary unknown wrapper and wrong for a raw-text element —
+  verified by execution that `<script>alert(1)</script>` blocks down to the literal string
+  `alert(1)` surviving in the stored column — so every genuinely dangerous element must be
+  explicitly **dropped** (tag and content both removed) ahead of the `block` default, never left to
+  it (Phase 4 finding F-1). It also carries the corrected idempotence guarantee (Phase 4 finding
+  F-2): sanitizing twice always **converges** to a stable value, which three later stories (0076,
+  0077, 0079) depend on directly, but is not the same as strict one-pass byte-for-byte equality,
+  which does not hold for pathological input. Plus the one known, unavoidable residual
+  (`<style>`/`<title>` in body context, which the library structurally cannot drop or block) and the
+  two accepted residual exposures recorded rather than assumed closed: a future writer bypassing the
+  two actions, and the allow-list itself becoming the new sink the moment a tag is added to it
+  without the same scrutiny.
+
+_Last updated: 2026-09-02 — Story 0024a (Product description — HTML sanitization on write): added
+[html-sanitization.md](html-sanitization.md), the **twelfth** page and the first about
+untrusted-HTML-storage rather than authorization or file decoding. Written as ❌/✅ pairs describing
+the shipped, closed state from the outset (both Phase 4 findings — F-1's `block`-vs-`drop`
+distinction, F-2's idempotence-to-convergence correction — were already closed by the time this page
+was written), per [errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s
+rule. No other page on this index changed — this story's other findings (F-3/F-4, both scheme/host
+restrictions left at an informational, accepted default) are recorded on the new page itself rather
+than duplicated here._
+
+_Previously: 2026-08-27 — Story 0019 (Media Library upload and conversions — backend), **Phase 4 re-audit**: added [image-upload-processing.md](image-upload-processing.md), the eleventh page, from the verification of findings F-1 (decompression bomb via unbounded Imagick decode), F-2 (the action not validating its own input, and trusting `putFile()`'s inferred extension), F-3 (unchecked `Storage::put()` return) and F-5 (Livewire's temporary-upload endpoint carrying no `mimes` restriction and a looser size ceiling). Every number on that page was measured against the shipped code in this worktree rather than carried over from the first audit's notes, and the reproduction fixtures were removed afterwards. Written as ❌/✅ pairs describing the **shipped** state from the outset, per [errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s rule for an audit-authored page — the failure mode that page's own footer records as having recurred with a one-day fuse._
 
 _Previously: 2026-08-26 — Task 0017 (Sales Region tax configuration — backend), **Phase 6 docs sync**: no new page and no new rule — [model-instance-trust.md](model-instance-trust.md) was re-verified against `HEAD` rather than rewritten (every ❌/✅ code block still matches the shipped actions, the `whereKeyNot()` → `$rows->reject(...)` supersession is recorded on the page and confirmed in the code, and nothing in this app reads `SetSalesRegionActive`'s return value, exactly as the R-2 section says). What this pass corrected is **this index entry**, which stopped at Phase 4 round 2 while the page itself gained two Phase 5 code-review corrections the next day: the status blockquote's "neither finding was dashboard-reachable" claim, which is true only of F-2, and the lock-ordering bullet's over-claim, where the residual window inside `SetSalesRegionActive`'s promotion path is closed by the **outer** transaction's `attempts: 3` rather than by ordering. Both are now summarised above. Recorded as a distinct data point rather than folded away: this is the audit-authored-page failure mode recurring with a **one-day** fuse instead of a one-story one, caught by the review that immediately followed — which is the prescribed fix working, not a new lesson (see [errors-log.md](../errors-log.md))._
 

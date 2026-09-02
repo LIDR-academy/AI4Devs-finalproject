@@ -24,6 +24,7 @@ Confirmed against `composer.json` and `package.json`:
 - **Laravel Tinker** `^3.0`
 - **Laravel Chisel** `^0.1.0`
 - **spatie/laravel-permission** `^8.3` — roles and permissions
+- **symfony/html-sanitizer** `^8.1` — allow-list HTML sanitizer, applied to `products.description` on write before persistence (see [`docs/security/html-sanitization.md`](docs/security/html-sanitization.md))
 
 ### Frontend
 
