@@ -296,7 +296,7 @@ final class SetProductTranslation
     ): ProductTranslation {
         Gate::authorize('update', $product);   // -> products.edit, via ProductPolicy
 
-        // Layer 2 sanitizes too. Idempotent by 0024 D-16 constraint 2, and this is a
+        // Layer 2 sanitizes too. Idempotent by 0024a D-16 constraint 2, and this is a
         // third CALL SITE, never a second allow-list (0076 D-8 permits exactly this).
         // It must run BEFORE validate(), or max: measures unsanitized markup (D-6).
         $description = $this->sanitizeProductDescription($description);
@@ -345,7 +345,7 @@ final class SetProductTranslation
 - `app/Livewire/Components/WysiwygEditor.php` and its view — 0021's. **D-1** exists precisely so this stays true; the alternative shape would have required amending it.
 - `app/Actions/Translations/SetTranslation.php`, `app/Concerns/HasTranslations.php` — 0070's, consumed unmodified.
 - `app/Models/{Product,ProductTranslation,StoreLanguage}.php` — 0024's / 0076's / 0068's.
-- `app/Actions/Products/{Create,Update,Delete}Product.php`, `SyncProductGallery.php`, `SanitizeProductDescription.php` — 0024's and 0076's. The widened signature is **consumed**; a diff in any of these means something leaked across the boundary. ⚠️ **This row no longer covers the whole folder** — this story *adds* `SetProductTranslation.php` beside them (**D-17**) and modifies none of the existing five.
+- `app/Actions/Products/{Create,Update,Delete}Product.php`, `SyncProductGallery.php` — 0024's and 0076's; `SanitizeProductDescription.php` — **[0024a](0024a-product-description-html-sanitization.md)**'s (split out of 0024 on 2026-09-01). The widened signature is **consumed**; a diff in any of these means something leaked across the boundary. ⚠️ **This row no longer covers the whole folder** — this story *adds* `SetProductTranslation.php` beside them (**D-17**) and modifies none of the existing five.
 - `app/Concerns/ProductValidationRules.php` — 0076 adds the three new rule methods; this story **composes** them and adds none.
 - `app/Policies/ProductPolicy.php`, [`database/seeders/RolePermissionSeeder.php`](../../database/seeders/RolePermissionSeeder.php) — no new ability, no new permission; the catalog stays at **42** (**D-8**).
 - `routes/**`, `config/modules.php`, `config/store-languages.php`, any migration — this story adds no route, no sidebar entry and no schema.
@@ -426,7 +426,7 @@ Redundant-coverage discipline, per [what-not-to-test.md](../../docs/testing/qa/w
 | --- | --- |
 | `translated()`'s fallback chain, the `''`-is-absent rule, the default-language memo, `withTranslationsFor()`'s query bound | 0070 |
 | Per-field fallback **as a mechanism** (0076's **D-3** fixture) — this story asserts only what the *form* shows | 0076 |
-| The HTML sanitiser's allow-list, scheme rules and idempotence; the direct-`SetTranslation` bypass | 0024 **D-16** / 0076 **D-8** |
+| The HTML sanitiser's allow-list, scheme rules and idempotence; the direct-`SetTranslation` bypass | 0024a **D-16** / 0076 **D-8** |
 | Slug canonicalisation **as a model hook**; the backfill; the FK-vs-duplicate-slug misattribution | 0076 |
 | SKU canonicalisation and its global uniqueness — a diff to `ProductSkuUniquenessTest.php` is itself a review finding (0076 **D-7**) | 0024 |
 | The WYSIWYG's tag emission, caret restore, toolbar `aria-pressed`, link sanitisation | 0021 |
@@ -536,6 +536,8 @@ So `save()` runs `SanitizeProductDescription` over each non-default language's d
 
 ⚠️ **0076's D-16 means this component is the *only* authorization anywhere in the write path — not the outer of two layers.** `CreateProduct`/`UpdateProduct` deliberately do not self-authorize (0024's **D-15**, confirmed at its **RQ-10**); `SetTranslation` authorizes nothing (0070's **D-9**). 0076's **D-16** instruction (b) — *"do not read it as safe"* — lands on **this file**. `AuthorizationTest.php` must assert a `products.view`-only actor cannot reach the translation write **through the component**, not merely that the policy would refuse.
 
+> ⚠️ **Narrowed 2026-09-01 — the first clause is no longer true.** [0024](done/0024-products-core-crud-backend.md) **reversed** its **D-15**/**RQ-10** at its three-way split (its **C-1**), on the finding that the decision's premise about `App\Actions\Users\CreateUser`/`UpdateUser` was false. `CreateProduct` / `UpdateProduct` / `DeleteProduct` **now self-authorize**, so this component is the outer of **two** layers on the *core-field* path after all. 0076's **D-16** carries a matching warning. **What still stands, and is what the assertion above is really for**: `SetTranslation` authorizes nothing (0070 **D-9**), so the *translation* path's only gate is still here — which is precisely the gap **D-17** below closes, and it is why that test must drive the component rather than the policy.
+
 Also: `mount()` on the edit path now **discloses** every language's content, which is [livewire-authorization.md](../../docs/security/livewire-authorization.md)'s *"gate every method that mutates **or discloses**"* rule. 0027's `mount()` already authorizes; this story widens what that gate protects. And `prefillSlug()` mutates component state, so it authorizes too — cheap, and it keeps the "every mutating method authorizes" claim true without an exception to explain.
 
 **No new ability, no `ProductTranslationPolicy`, no `store-languages.*` requirement** — 0076's **D-16** / 0070's **D-13** / 0068's **D18**: authoring content in a language is *using* a configured language, not managing the catalog. The catalog stays at **42**.
@@ -588,7 +590,9 @@ The hook family, **keyed by `{id}` per C-3**, each present on **every** branch o
 | **1 — component** | `Editor::save()` | `Gate::authorize(create\|update)`, the active-language intersection (**D-3**), and the form-wide `validate()` that puts errors in the bag | It fails fast and it is what makes the *form* usable — but it binds **only this caller**. An Artisan command, importer or queued job inherits nothing from it. |
 | **2 — action** | `SetProductTranslation` | `Gate::authorize('update', $product)` then its own `Validator`, then `SetTranslation` | It binds **every** caller, with no component in sight — and it is the layer a `Livewire::test()` structurally cannot prove, which is why it gets direct-call tests that mount nothing. |
 
-**This closes a gap 0076's D-16 recorded and could not fix.** That decision found the whole product write path un-self-authorizing — `CreateProduct`/`UpdateProduct` by 0024's **D-15** (confirmed at its **RQ-10**), `SetTranslation` by 0070's **D-9** — and instructed: *"do not read it as safe … this story **widens** it, because `SetTranslation` adds a second, more generic entry point to the same data."* **D-17 narrows it back**: the new entry point is now the *guarded* one, and `SetTranslation` is reachable from nowhere but the action. ⚠️ **It does not close the gap for the core product row** — `CreateProduct` / `UpdateProduct` still self-authorize nothing, and this story has no mandate to change that (0024's **RQ-10** is a coordinator-confirmed decision). So after this story the *translation* path is protected at two layers and the *core-field* path at one, which is an asymmetry a reviewer should see as recorded rather than accidental.
+**This closes a gap 0076's D-16 recorded and could not fix.** That decision found the whole product write path un-self-authorizing — `CreateProduct`/`UpdateProduct` by 0024's **D-15** (confirmed at its **RQ-10**), `SetTranslation` by 0070's **D-9** — and instructed: *"do not read it as safe … this story **widens** it, because `SetTranslation` adds a second, more generic entry point to the same data."* **D-17 narrows it back**: the new entry point is now the *guarded* one, and `SetTranslation` is reachable from nowhere but the action.
+
+> ✅ **Updated 2026-09-01 — the residual asymmetry this paragraph recorded no longer exists.** It used to end: *"⚠️ It does not close the gap for the core product row — `CreateProduct` / `UpdateProduct` still self-authorize nothing, and this story has no mandate to change that (0024's **RQ-10** is a coordinator-confirmed decision). So after this story the *translation* path is protected at two layers and the *core-field* path at one."* [0024](done/0024-products-core-crud-backend.md) **reversed** D-15/RQ-10 at its three-way split (its **C-1**), because the decision rested on a false claim about `App\Actions\Users\CreateUser`/`UpdateUser`. **Both paths are now protected at two layers**, and this story's follow-up item 2b (*"close the core-field authorization asymmetry"*) is discharged by 0024 rather than left open here — verify that before closing it, rather than assuming it.
 
 ⚠️ **0071's D-13 states the direction of the asymmetry and it is easy to get backwards**: component-only is **never** acceptable; action-only *is* acceptable where a component would have to duplicate a rule to add a layer. The test — *"if I delete the component, is the operation still protected?"* — must answer **yes**.
 

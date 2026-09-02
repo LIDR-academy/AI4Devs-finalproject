@@ -664,7 +664,7 @@ user-visible yet: the management screen is 0060, and the posts that attach a tag
   structural difference from every taxonomy story before it.** PRD's own Gherkin says deleting a tag
   *"is removed from every post that used it"* — there is no hard block, no count, no
   reassign-first requirement. Contrast blog **categories** (story 0058), which PRD hard-blocks with a
-  count, exactly as [0023](done/0023-product-categories-backend.md) defers its in-use guard to 0024.
+  count, exactly as [0023](done/0023-product-categories-backend.md) defers its in-use guard to [0024b](0024b-product-category-in-use-delete-guard.md).
 
   So where `DeleteProductCategory` exists as its own file *specifically so a later story can extend
   it*, `DeleteBlogTag` exists as its own file and **no later story extends it**. Its body is a bare

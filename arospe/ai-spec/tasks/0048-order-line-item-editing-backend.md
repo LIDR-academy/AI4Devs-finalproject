@@ -13,7 +13,7 @@ no Livewire component, no Blade markup, no status transition, no refund, no tax 
 >
 > **This story is fully specified now, but its Phase 3 implementation cannot start until story
 > [0045](0045-orders-core-crud-backend.md) is `done` — and 0045 is itself blocked on five PRD Epic 2
-> stories:** [0024](0024-products-core-crud-backend.md) (Products),
+> stories:** [0024](done/0024-products-core-crud-backend.md) (Products),
 > [0029](0029-product-variants-backend.md) (Product Variants),
 > [0035](0035-shipping-carriers-backend.md) (Shipping Carriers),
 > [0036](0036-shipping-rate-rules-backend.md) (Shipping Rates) and
@@ -817,7 +817,7 @@ rediscovery.
 | Depends on | State | Verified how |
 | --- | --- | --- |
 | `orders` + `order_items` tables, `Order` / `OrderItem` models & factories, `OrderStatus`, `App\Concerns\OrderValidationRules`, `app/Actions/Orders/` | story [0045](0045-orders-core-crud-backend.md) — **hard dependency, and it is itself ⛔ blocked** | Every action here writes both tables, reads `orders.status`, and extends 0045's trait and folder |
-| `products` / `product_variants` (live catalog) | stories [0024](0024-products-core-crud-backend.md) / [0029](0029-product-variants-backend.md) — **blocked, via 0045** | `AddOrderItem` resolves a real catalog row for its snapshot; the price-snapshot regression needs a mutable `products.price` |
+| `products` / `product_variants` (live catalog) | stories [0024](done/0024-products-core-crud-backend.md) / [0029](0029-product-variants-backend.md) — **blocked, via 0045** | `AddOrderItem` resolves a real catalog row for its snapshot; the price-snapshot regression needs a mutable `products.price` |
 | `orders.edit` in the seeded catalog | **shipped** | `RolePermissionSeeder::MODULES` carries `orders`, so all four `orders.*` abilities exist (**D-2**) |
 | `Gate::before` Super Admin bypass | **shipped** (Epic 1) | [architecture/authorization.md](../../docs/architecture/authorization.md) — and this story tests both what it does and what it must not reach (**D-5**) |
 | The rendering-domain-exception pattern | **shipped** (tasks 0008 / 0010 / 0015a) | [`RoleInUseException`](../../app/Exceptions/RoleInUseException.php)'s 409 `render()` is copied shape-for-shape |

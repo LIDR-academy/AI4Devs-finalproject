@@ -568,7 +568,7 @@ consumes these arrives in a later UI story, and the products that reference a ca
   so it is an amendment to 0022's D13 rather than a local edit.
 
 ### Scope fences: what this story must NOT do
-- No in-use / hard-block-with-count delete guard (story 0024).
+- No in-use / hard-block-with-count delete guard (story **0024b**, split out of story 0024 on 2026-09-01).
 - No `products` table, no `product_category_id` column, no FK, no relationship method.
 - No new permission module slug and no `RolePermissionSeeder` change.
 - No Livewire component, route, or Blade view.

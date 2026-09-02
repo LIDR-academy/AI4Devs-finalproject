@@ -1,7 +1,7 @@
 # [0076] Translatable content retrofit — Products backend
 
 ## Description
-Applies story [0070](0070-translatable-content-mechanism-product-categories-backend.md)'s per-store-language translatable-content mechanism to **Products** ([PRD Epic 5, Layer 2](../../docs/PRD/PRD.md#epic-5--internationalization); [assumption 14](../../docs/PRD/PRD.md#assumptions--confirmed-decisions) names *"product title/description"* and *"slug/SEO fields … on products"* as translatable content). Story [0024](0024-products-core-crud-backend.md)'s `products.name` and `products.description` move to a `product_translations` child table, one row per `(product, store language)`, and the **slug/SEO fields arrive for the first time — created directly on that child table, never on the parent.**
+Applies story [0070](0070-translatable-content-mechanism-product-categories-backend.md)'s per-store-language translatable-content mechanism to **Products** ([PRD Epic 5, Layer 2](../../docs/PRD/PRD.md#epic-5--internationalization); [assumption 14](../../docs/PRD/PRD.md#assumptions--confirmed-decisions) names *"product title/description"* and *"slug/SEO fields … on products"* as translatable content). Story [0024](done/0024-products-core-crud-backend.md)'s `products.name` and `products.description` move to a `product_translations` child table, one row per `(product, store language)`, and the **slug/SEO fields arrive for the first time — created directly on that child table, never on the parent.**
 
 **This story consumes a recipe; it does not write one.** `App\Concerns\HasTranslations`, `App\Actions\Translations\SetTranslation` and `StoreLanguage::defaultStoreLanguage()` are 0070's and are used **unmodified**.
 
@@ -12,7 +12,7 @@ Applies story [0070](0070-translatable-content-mechanism-product-categories-back
 > 3. **The action signatures widen, they do not merely narrow in meaning** — the opposite of every sibling, and for the reason above (**D-18**).
 > 4. **This is the first multi-field translation table**, so 0070's **D-5** (fallback resolves per *field*, not per row) stops being an untestable claim and becomes this story's to prove (**D-3**).
 > 5. **`description` carries sanitized HTML**, and the retrofit puts the deliberately sanitizer-free `SetTranslation` in front of the column whose safety 0024's **D-16** guarantees on the grounds that *"the actions are the only way a description reaches the column"* (**D-8** — the story's primary design decision).
-> 6. **The only `Gate` check in the whole write path lives in a component that does not exist yet.** 0024's **D-15**, confirmed by the coordinator at its **RQ-10**, deliberately keeps `CreateProduct` / `UpdateProduct` un-self-authorizing. Combined with 0070's **D-9** (`SetTranslation` authorizes nothing), this story's write path contains **no authorization at any layer it owns** (**D-16**). That is inherited, not introduced — but it is materially different from all three taxonomy siblings and must not be "fixed" by a false parallel to them.
+> 6. ⚠️ **SUPERSEDED 2026-09-01 — see the warning on D-16.** This read: *"The only `Gate` check in the whole write path lives in a component that does not exist yet.* 0024's **D-15**, confirmed by the coordinator at its **RQ-10**, deliberately keeps `CreateProduct` / `UpdateProduct` un-self-authorizing …*must not be "fixed" by a false parallel to them."* [0024](done/0024-products-core-crud-backend.md) **reversed** D-15/RQ-10 at its split (its **C-1**), so those actions now self-authorize and Products is **no longer** structurally different from the taxonomy siblings. The residual is smaller and still real: 0070's **D-9** `SetTranslation` authorizes nothing, so *that* entry point is the gap this story widens.
 
 > **Neither the parent nor the mechanism exists in code. Verified against the live tree at authoring time:** `app/Models/` holds only `User`, `Role`, `SalesRegion`, `Media`; `app/Actions/` holds only `Auth/`, `Fortify/`, `Media/`, `Roles/`, `SalesRegions/`, `Users/`; `app/Concerns/` holds six `*ValidationRules` traits and no `HasTranslations`; `database/migrations/` ends at `create_media_table` — there is no `products`, no `product_categories`, no `store_languages`. There is **no `vendor/` directory**, so nothing here could be settled by executing Laravel code.
 >
@@ -371,7 +371,7 @@ Feature: Per-store-language product content
 - **`app/Policies/ProductPolicy.php`** — no new ability, and deliberately no `ProductTranslationPolicy` (**D-16**).
 - **`app/Concerns/HasTranslations.php`**, **`app/Actions/Translations/SetTranslation.php`**, **`App\Models\StoreLanguage`** — 0070's and 0068's, consumed **unmodified**. **D-8** is what makes this possible.
 - **`app/Actions/NormalizeForSearch.php`** — story 0022's, and **this story does not use it at all**. Products has no folded comparison column, because it has no name uniqueness to fold for (**D-4**) and its slug is canonicalized in place rather than shadowed (**D-6**). `NormalizeForSearch` appearing anywhere in this diff is a review finding.
-- **`app/Actions/Products/SanitizeProductDescription.php`** and **`config/html-sanitizer.php`** — 0024's, consumed unchanged. This story adds a **second call site**, never a second allow-list (**D-8**).
+- **`app/Actions/Products/SanitizeProductDescription.php`** and **`config/html-sanitizer.php`** — [0024a](0024a-product-description-html-sanitization.md)'s, consumed unchanged. This story adds a **second call site**, never a second allow-list (**D-8**).
 - **Stories 0027, 0045 and 0048's own files** — this story must not edit another story's file; the amendments it forces are coordination actions (**R-1**, **R-3**).
 - **`routes/**`**, **`resources/views/**`**, **`app/Livewire/**`**, **`config/modules.php`** — no screen, no route, no sidebar entry.
 
@@ -404,7 +404,7 @@ Feature and Unit only. **No browser tests** — this story ships no screen. This
 
 ### The description sanitizer — the story's highest-value block
 - [ ] Feature: **the bypass test.** Call `SetTranslation` **directly**, with no `CreateProduct`/`UpdateProduct` in the path, passing a `description` containing `<script>alert(1)</script>`, and assert the **persisted** value is sanitized. *Risk if missing:* this is the entire argument for **D-8**. Without the hook this test fails — correctly, because the gap it proves is the one the language-tab UI story would ship into.
-- [ ] Feature: sanitize-before-length ordering survives on the action path — a description whose **pre**-sanitization length exceeds `max:65535` but whose sanitized form does not is **accepted** (0024 **D-16** constraint 1), asserted independently on **both** the create and the update path rather than assumed symmetric.
+- [ ] Feature: sanitize-before-length ordering survives on the action path — a description whose **pre**-sanitization length exceeds `max:65535` but whose sanitized form does not is **accepted** (0024a **D-16** constraint 1), asserted independently on **both** the create and the update path rather than assumed symmetric.
 - [ ] Feature: **idempotence**, re-asserted here rather than inherited — `sanitize(sanitize($x)) === sanitize($x)` on a value traversing both layers. *Risk if missing:* **D-8** applies the sanitizer twice on the action path, and that is safe **only** because idempotence holds.
 - [ ] Feature: a save not touching `description` does not rewrite it — pins the `isDirty('description')` guard, and stops a no-op save re-sanitizing historical content under a drifted allow-list.
 - [ ] Feature: every existing `ProductDescriptionSanitizationTest` case (allowed-tag round-trip, script/handler/scheme stripping, mangled-tag non-reassembly, null/empty pass-through) **retargeted** to the translation row. The logic under test is unchanged — `SanitizeProductDescription` is untouched — so this is a mechanical rewrite of roughly ten cases, not a redesign.
@@ -436,7 +436,7 @@ Feature and Unit only. **No browser tests** — this story ships no screen. This
 ### The backfill
 - [ ] Unit: `BackfillProductTranslations::write()` against fabricated rows produces **exactly one** translation row each, in the default store language, with `name` **and** `description` byte-identical to the input — asserted **per row, never as a count**. *Why:* a count passes even if every row got the wrong value or all rows collapsed to one — the [count-assertion failure mode](../../docs/errors-log.md#a-count-based-assertion-over-rendered-html-counted-a-wrapper-element-it-never-meant-to-include--2026-08-21) this project records.
 - [ ] Unit: a `null` description backfills as `null`, not `''`. *Why:* the first sibling backfill facing an **optional** field; all three predecessors moved a `NOT NULL` column.
-- [ ] Unit: a description containing every tag in 0024's allow-list backfills **byte-identically** — asserted as equality, not as "still contains no script tag" (**D-9**).
+- [ ] Unit: a description containing every tag in 0024a's allow-list backfills **byte-identically** — asserted as equality, not as "still contains no script tag" (**D-9**).
 - [ ] Unit: `slug`, `meta_title` and `meta_description` are left `NULL` for every row, and **no slug is generated** (**D-9**).
 - [ ] Feature: the backfill with **no default store language** throws and writes nothing.
 - [ ] The migration itself is **not** separately tested — `RefreshDatabase` proves it runs, and **D-13**'s split is what makes the part that could be wrong directly testable without arranging a schema state that no longer exists.
@@ -454,7 +454,7 @@ Feature and Unit only. **No browser tests** — this story ships no screen. This
 - [ ] Feature: `StoreLanguage::translationUsageCount()` includes this table's rows once the entry is registered.
 - [ ] Feature: **regression run only** of 0070's drift guard, now against a further registered entry. **This story writes no drift guard of its own.**
 - [ ] Feature: `php artisan config:cache` succeeds with the appended entry — an assertion, not a review promise.
-- [ ] Feature: `Gate::forUser($denied)->authorize('update', $product)` throws while a holder passes — asserted against `ProductPolicy` directly, **not** through the actions, because the actions deliberately do not authorize (**D-16**).
+- [ ] Feature: `Gate::forUser($denied)->authorize('update', $product)` throws while a holder passes — asserted against `ProductPolicy` directly. ⚠️ **The stated reason no longer holds (2026-09-01)**: this said *"not through the actions, because the actions deliberately do not authorize (**D-16**)"*, and [0024](done/0024-products-core-crud-backend.md) reversed that decision at its split — the actions **do** authorize, and 0024 ships its own allow/deny pair per action. Asserting against the policy directly is still fine as a *unit-level* check; add the through-the-action assertion too, or drop this case as a duplicate of 0024's.
 - [ ] **Regression only, no new tests:** `ProductPolicyTest`. If it fails, that is itself a finding — it would mean the retrofit touched the policy, which it must not.
 
 ### Deliberately NOT tested here
@@ -556,7 +556,7 @@ Neither single layer suffices, which is why there are two:
 - **A model hook alone breaks D-16 constraint 1.** A `saving` event fires *after* validation, so `max:65535` would measure unsanitized markup — the precise bug that constraint names.
 - **The actions alone leave the `SetTranslation` path open** — the gap above.
 
-So the actions keep sanitizing before `validate()` (layer 1, preserving the ordering), and `ProductTranslation::booted()` sanitizes on `saving` when `description` is dirty (layer 2, binding every writer). **Applying the sanitizer twice on the action path is safe only because 0024's D-16 constraint 2 already requires and tests idempotence** — the same argument 0072/0074 already make for their fold, as `backend-expert` noted independently. Note this is a **pure addition, not a relocation**: unlike `BlogCategory`/`BlogTag`, `Product` never had a model-level hook to move, because sanitization lived only in the actions.
+So the actions keep sanitizing before `validate()` (layer 1, preserving the ordering), and `ProductTranslation::booted()` sanitizes on `saving` when `description` is dirty (layer 2, binding every writer). **Applying the sanitizer twice on the action path is safe only because 0024a's D-16 constraint 2 already requires and tests idempotence** — the same argument 0072/0074 already make for their fold, as `backend-expert` noted independently. Note this is a **pure addition, not a relocation**: unlike `BlogCategory`/`BlogTag`, `Product` never had a model-level hook to move, because sanitization lived only in the actions.
 
 *Rejected:* relocating sanitization wholly into the hook — it trades a security gap for a correctness one. *Rejected:* leaving it action-level with a documented rule that no other caller may use `SetTranslation` for `description` — a discipline-only guard on a shared primitive four entities import, which is the failure mode this project's errors log records repeatedly.
 
@@ -592,6 +592,21 @@ Nesting is safe in principle — Laravel implements a nested `DB::transaction()`
 
 **D-16 — Translated content adds no permission, ability or policy — and the write path this story ships contains no `Gate` check at any layer it owns. (`backend-expert`'s correction to the facilitator's draft, verified and adopted.)** The first half is 0070's **D-13** unchanged: `MODULES` already contains `products`, the catalog stays at **42**, authoring a translation is *using* a configured language rather than managing the catalog so no `store-languages.*` permission is required (0068's **D18**), there is deliberately no `ProductTranslationPolicy`, and there is no step-up requirement.
 
+> ⚠️ **The second half below was overtaken on 2026-09-01 and must be re-derived before Phase 3.**
+> [0024](done/0024-products-core-crud-backend.md) **reversed** its **D-15**/**RQ-10** at its three-way split:
+> the original decision rested on a claim that `App\Actions\Users\CreateUser`/`UpdateUser` contain no
+> `Gate` call, which is **false** (`CreateUser::__invoke()` line 66 authorizes `create`, `UpdateUser`
+> carries seven such calls), and the documented convention is that the check lives in the class
+> performing the operation. `CreateProduct` / `UpdateProduct` / `DeleteProduct` **now self-authorize**,
+> and `ProductPolicy` ships with real call sites. **What that means here, concretely:** instruction
+> **(a)** below inverts — making `CreateProduct` self-authorize is no longer "a false parallel to the
+> taxonomy siblings", it is what 0024 ships, so this story must place its `SetTranslation` call
+> **below** those existing `Gate` calls exactly as the three taxonomy siblings do. Instruction **(b)**
+> is **narrowed rather than withdrawn**: the residual gap is now only `SetTranslation`'s own generic
+> entry point (0070 **D-9** authorizes nothing), not the whole write path — so `appsec-auditor` should
+> still be pointed here, at a smaller target. The first half of D-16 (no new permission, ability or
+> policy) is **unaffected**.
+
 **The second half is a genuine structural divergence from all three taxonomy siblings, and the facilitator's first draft got it backwards.** That draft asserted the sibling rule — *"each action's `Gate::authorize()` calls must sit above the `SetTranslation` call"* — which is true for `CreateProductCategory`, `CreateBlogCategory` and `CreateBlogTag`, all of which self-authorize. **It is false for Products.** 0024's **D-15**, over a recorded `backend-qa` dissent and **confirmed by the coordinator at its RQ-10**, deliberately keeps `CreateProduct` / `UpdateProduct` un-self-authorizing, handing authorization to 0027's component and recording the gap as an explicit acknowledged item. Combined with 0070's **D-9** (`SetTranslation` authorizes nothing), the whole write path from caller to row contains **no authorization in any file this story touches** — the invariant is satisfied one layer further up, in a Livewire component that does not exist yet.
 
 Two instructions follow, and they pull in opposite directions on purpose. **(a) Do not "fix" this** by making `CreateProduct` self-authorize as a false parallel to the taxonomy siblings; that would silently reverse a decision the coordinator confirmed, in a story that has no mandate to revisit it. **(b) Do not read it as safe.** It is an inherited, acknowledged gap that this story *widens* — because `SetTranslation` adds a second, more generic entry point to the same data — and it is why the Definition of Done points `appsec-auditor` here as well as at **D-8**.
@@ -606,12 +621,12 @@ Two instructions follow, and they pull in opposite directions on purpose. **(a) 
 
 ### Dependencies
 
-- **[Story 0024](0024-products-core-crud-backend.md)** — hard, and **not implemented**. This story retrofits its table, its model, its validation trait and two of its four actions, and adds a second call site to its sanitizer. See **R-4**.
+- **[Story 0024](done/0024-products-core-crud-backend.md)** — hard, and **not implemented**. This story retrofits its table, its model, its validation trait and two of its four actions, and adds a second call site to its sanitizer. See **R-4**.
 - **[Story 0070](0070-translatable-content-mechanism-product-categories-backend.md)** — hard, and **not implemented**. Supplies `HasTranslations`, `SetTranslation`, `StoreLanguage::defaultStoreLanguage()` and the drift guard, all consumed unmodified. **0070's Q1 is still open** (must every entity always hold a default-language translation?) and this story assumes its recommended answer **(a) yes**.
 - **[Story 0068](0068-store-languages-catalog-backend.md)** — hard, and not implemented. Supplies `store_languages`, the `is_default` row the fallback resolves through, and the registry.
 - **Story 0022** — supplies `App\Actions\NormalizeForSearch`, which this story **does not use** (**D-4**, **D-6**). Listed so its absence reads as a decision rather than an omission.
 - **Stories 0027, 0045 and 0048 depend on this story** and are broken by it — **R-1**, **R-3**.
-- **No new Composer package.** `symfony/html-sanitizer` is 0024's, already approved there.
+- **No new Composer package.** `symfony/html-sanitizer` is [0024a](0024a-product-description-html-sanitization.md)'s, already approved there.
 
 ### Risks
 
@@ -685,7 +700,7 @@ Derived from this debate; **none are in scope for 0076**.
 
 1. `RolePermissionSeeder::MODULES` contains `products` — read from the shipped file — so **D-16** needs no seeder change and the catalog stays at 42.
 2. `products.name` carries **no** uniqueness: 0024's **D-13** rule table, and 0027's **D-4** relying on the same fact from the consuming side. Checked from both directions rather than once, and independently confirmed by all three amigos.
-3. **0024's D-15 and RQ-10** — read directly after `backend-expert` contradicted the draft — confirm the Products actions deliberately do not self-authorize (**D-16**). The draft's claim was false and is corrected rather than softened.
+3. ⚠️ **SUPERSEDED 2026-09-01.** This read *"0024's D-15 and RQ-10 — read directly after `backend-expert` contradicted the draft — confirm the Products actions deliberately do not self-authorize (**D-16**)."* That was an accurate reading of 0024 as it then stood, and **0024 has since reversed those very entries** at its three-way split (its **C-1**), on the finding that D-15's own premise about `CreateUser`/`UpdateUser` was false. The Products actions **do** self-authorize. Ironically the facilitator's original draft — which asserted the sibling rule and was corrected here — was right about the destination, for the wrong reason. See the ⚠️ on **D-16** above; this story must re-derive that half rather than inherit either version.
 4. 0024's scope fence states verbatim *"No `slug`, no SEO meta, no translation table or any other i18n scaffolding (Epic 5)"* — so this story **introduces** those columns, unlike `blog_posts`, whose story 0061 **D-3** already ships a global-unique, title-derived slug that story 0078 must reconcile differently.
 5. 0070's own backlog assigns **two** items to this story by name: item 4 (the multi-field fallback proof) and item 5 (*"A `slug` uniqueness decision for 0076/0078"*). Both are discharged, as **D-3** and **D-6**/**Q-2**.
 6. 0070's **D-1** anticipated that *"0076/0078 translate five fields"*, which is what **D-5**'s set reaches — corroboration, not authority.

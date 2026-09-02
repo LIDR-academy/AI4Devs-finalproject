@@ -7,7 +7,7 @@ modal carrying a single `name` field, and a delete-confirmation modal that rende
 when the category still has products assigned. This is the **first and only call site** of the
 `ProductCategoryPolicy` and the three `app/Actions/ProductCategories/` actions that story
 [0023](done/0023-product-categories-backend.md) shipped with zero consumers, and it is the screen the
-delete guard story [0024](0024-products-core-crud-backend.md) built its `productCategoryId` error-bag
+delete guard story [0024](done/0024-products-core-crud-backend.md) built its `productCategoryId` error-bag
 contract for.
 
 Frontend only — no migration, no model, no action, no policy. Every domain rule this screen enforces
@@ -76,12 +76,15 @@ throws — and its **Q-3** resolves (a): **0071 owns applying the corrected quer
 ## Type
 frontend | fullstack (related_task_id: **0023** — the paired product-categories backend story) | includes database-expert: **no**
 
-> **`related_task_id` is 0023, but the hard blocker is 0024.** 0023 is this story's FE/BE split
-> partner. 0024 is a *separate* pair (its partner is 0027) that this story nonetheless **cannot ship
-> without**: the delete guard, the `ProductCategory::products()` relation the count reads through,
-> the `productCategoryId` error-bag key, and `lang/en|es/products.php` itself are all 0024's, not
-> 0023's. Both amigos raised this independently and it is recorded as **F-1** below rather than left
-> implicit in the metadata.
+> **`related_task_id` is 0023, but the hard blockers are 0024 *and* [0024b](0024b-product-category-in-use-delete-guard.md).**
+> 0023 is this story's FE/BE split partner. The other two are a *separate* family (0024's partner is
+> 0027) that this story nonetheless **cannot ship without**. ⚠️ **Repointed 2026-09-01**, when 0024 was
+> split three ways: the delete guard, the `ProductCategory::products()` relation the count reads
+> through, the `productCategoryId` error-bag key and the `categories.delete_blocked` message are
+> **0024b**'s; `lang/en|es/products.php` itself, plus `Product` and `ProductFactory` — without which no
+> blocked-delete test is writable at all — are **0024**'s. Since 0024b depends on 0024, the practical
+> sequence is unchanged and one story longer. Both amigos raised the original dependency independently
+> and it is recorded as **F-1** below rather than left implicit in the metadata.
 
 ## Three Amigos participants
 
@@ -238,19 +241,22 @@ Route::livewire('product-categories', ProductCategoriesIndex::class)
 | File | Owner |
 | --- | --- |
 | `database/migrations/*_create_product_categories_table.php` | 0023 |
-| `app/Models/ProductCategory.php` — including the `products()` relation | 0023 (created), 0024 (relation) |
-| `app/Actions/ProductCategories/{Create,Rename,Delete}ProductCategory.php` | 0023 (created), 0024 (delete guard) |
+| `app/Models/ProductCategory.php` — including the `products()` relation | 0023 (created), **0024b** (relation) |
+| `app/Actions/ProductCategories/{Create,Rename,Delete}ProductCategory.php` | 0023 (created), **0024b** (delete guard) |
 | `app/Concerns/ProductCategoryValidationRules.php`, `app/Policies/ProductCategoryPolicy.php` | 0023 |
 | `database/factories/ProductCategoryFactory.php`, `ProductFactory.php` | 0023 / 0024 |
-| `lang/*/products.php`'s `categories.delete_blocked` key itself | 0024 |
+| `lang/*/products.php` (the file) / its `categories.delete_blocked` key | 0024 / **0024b** |
 | `database/seeders/RolePermissionSeeder.php` | nobody — `products.*` is already seeded (0023 **D-8**) |
 | The products list/editor screen | 0027 |
 
-> **Sequential-implementation requirement.** This story and 0024 both write
-> `lang/en|es/products.php`, and 0024 also edits `app/Actions/ProductCategories/DeleteProductCategory.php`
-> that this screen calls. Their Phase 3 work must **never be dispatched in the same batch**, per the
+> **Sequential-implementation requirement.** This story, 0024 and
+> [0024b](0024b-product-category-in-use-delete-guard.md) all write `lang/en|es/products.php`, and 0024b
+> also edits `app/Actions/ProductCategories/DeleteProductCategory.php` that this screen calls. Their
+> Phase 3 work must **never be dispatched in the same batch**, per the
 > [Parallel Agent File-Ownership Rule](../../docs/contracts.md#parallel-agent-file-ownership-rule):
-> 0023, then 0024, must each be fully closed before 0025 starts.
+> 0023, then 0024, then 0024b must each be fully closed before 0025 starts.
+> ([0024a](0024a-product-description-html-sanitization.md) is *not* in this chain — it touches no file
+> this story reads — so it may ship anywhere after 0024.)
 
 ### Interface contract consumed from 0023 and 0024
 
@@ -680,7 +686,7 @@ component. Nothing on the screen references, links to, or shares anything with a
       sidebar link's gating status; [architecture/authorization.md](../../docs/architecture/authorization.md)
       records that `ProductCategoryPolicy` now has its first call site.
 - [ ] **0023's and 0024's hand-off items are discharged and marked as such** in both of those task
-      files: 0023's "the policy has zero call sites" (**R-3**) and 0024's `productCategoryId` error-bag
+      files: 0023's "the policy has zero call sites" (**R-3**) and 0024b's `productCategoryId` error-bag
       contract are both closed by this story.
 - [ ] Acceptance criteria met.
 
@@ -695,7 +701,7 @@ component. Nothing on the screen references, links to, or shares anything with a
   `app/Actions/Users/*`.
 - **D-2 — The blocked-delete message renders inline in the still-open delete modal, and
   `deleteProductCategory()` does not catch the exception.** Both amigos converged here independently.
-  0024 **D-14** chose `ValidationException` *specifically* because it is "the one exception Livewire
+  0024b **D-14** chose `ValidationException` *specifically* because it is "the one exception Livewire
   already routes into the component's error bag with no plumbing at the call site" — so catching it
   would defeat the reason it was chosen. The throw aborts the method before `closeDeleteModal()` runs,
   which is what keeps the modal open by construction rather than by an explicit flag. The view binds
@@ -710,7 +716,7 @@ component. Nothing on the screen references, links to, or shares anything with a
 - **D-3 — The product count is shown as an informational column but is NEVER used to disable the delete
   action.** This is the sharpest design point in the story. Pre-disabling delete on `productCount > 0`
   would visually conflate the in-use refusal with the `canEdit`/`canDelete` **authorization** UI-hint
-  pattern, which exists precisely to mirror what a `Gate::authorize()` call would do. 0024 **D-14** is
+  pattern, which exists precisely to mirror what a `Gate::authorize()` call would do. 0024b **D-14** is
   explicit that this refusal is *not* an authorization denial ("the actor holds `products.delete` and the
   answer is still no") and that the guard must **not** go in the policy. Letting the user attempt the
   delete and read the count in the modal is also the only path that satisfies the PRD's own wording,
@@ -792,7 +798,7 @@ component. Nothing on the screen references, links to, or shares anything with a
 
 - No migration, model, action, policy, factory, seeder, enum or validation trait — all consumed from
   0023/0024 as shipped.
-- No confirm-and-proceed, force-delete, or bulk-delete control of any kind. 0024 **D-14** makes this
+- No confirm-and-proceed, force-delete, or bulk-delete control of any kind. 0024b **D-14** makes this
   architecturally impossible server-side (`__invoke()` takes no `force` flag); the UI must not invent a
   client-side equivalent.
 - No reassign-products-then-delete flow. The PRD requires the administrator to reassign first, from the
@@ -814,19 +820,27 @@ component. Nothing on the screen references, links to, or shares anything with a
   0024 ships**, since `Product` and `ProductFactory` do not exist before it. Recorded here rather than
   silently corrected in the metadata, because `related_task_id` correctly identifies the FE/BE *pair*
   (0023) while 0024 is a hard dependency from a different pair.
-- **F-2 — Neither dependency exists in code yet.** Verified during the debate: there is no
-  `app/Models/ProductCategory.php`, no `app/Actions/ProductCategories/`, and no `product_categories` or
-  `products` migration. This story's entire interface contract is *documented*, not *shipped*.
+- **F-2 — ⚠️ HALF-CLOSED 2026-09-01 (was: neither dependency exists in code yet).**
+  [0023](done/0023-product-categories-backend.md) has since **shipped**: `app/Models/ProductCategory.php`,
+  `app/Actions/ProductCategories/`, `app/Policies/ProductCategoryPolicy.php`,
+  `app/Concerns/ProductCategoryValidationRules.php`, `database/factories/ProductCategoryFactory.php`
+  and the `product_categories` migration all exist and are merged. What is **still** documented rather
+  than shipped is the 0024 family: no `products` migration, no `Product`, no `ProductFactory`, no
+  `products()` relation, no delete guard, no `lang/*/products.php`.
 
 ### Dependencies
 
-- **[0023](done/0023-product-categories-backend.md) — hard, blocking.** The model, actions, validation trait
-  and policy this screen calls. **Not yet implemented (F-2).**
-- **[0024](0024-products-core-crud-backend.md) — hard, blocking (F-1).** The delete guard, the `products()`
-  relation, the error-bag key and the `lang/*/products.php` files. **Not yet implemented (F-2).**
-- Sequencing, enforced strictly: **0023 → 0024 → 0025**, each fully closed before the next starts, per
-  [workflow.md](../../docs/workflow.md#task-ordering-rule) and the Parallel Agent File-Ownership note
-  above.
+- **[0023](done/0023-product-categories-backend.md) — hard, and ✅ SATISFIED.** The model, actions,
+  validation trait and policy this screen calls. Closed and merged.
+- **[0024](done/0024-products-core-crud-backend.md) — hard, blocking (F-1).** `Product`, `ProductFactory`,
+  the `products` migration and `lang/*/products.php` itself. **Not yet implemented.**
+- **[0024b](0024b-product-category-in-use-delete-guard.md) — hard, blocking (F-1).** The delete guard,
+  the `ProductCategory::products()` relation, the `productCategoryId` error-bag key and the
+  `categories.delete_blocked` message — i.e. **half this story's stated scope**. Split out of 0024 on
+  2026-09-01 and dependent on it. **Not yet implemented.**
+- Sequencing, enforced strictly: **0023 → 0024 → 0024b → 0025**, each fully closed before the next
+  starts, per [workflow.md](../../docs/workflow.md#task-ordering-rule) and the Parallel Agent
+  File-Ownership note above.
 - Depends on already-shipped work: the seeded `products.*` permissions (0002), the `Gate::before` Super
   Admin bypass, policy auto-discovery (0004), the Users screen's list+modal pattern (0006), and the
   wired-up browser suite (0006b).
@@ -835,22 +849,44 @@ component. Nothing on the screen references, links to, or shares anything with a
 
 ### Risks
 
-- **R-1 — CI cannot open a database connection at all.** 0024's **V-1** verified this against the repo:
-  `phpunit.xml` pins `DB_DATABASE` but never `DB_CONNECTION`, `.env.example` sets `sqlite` with no file
-  created, and the workflow provides no MySQL service. Every test in this plan is therefore a promise
-  about what runs **locally** until that is fixed. Not this story's bug; 0024 already recommends it as
-  its own task, and it should be resolved before this story's Full Test Suite Gate is relied on.
-- **R-2 — Building this screen before 0024 lands.** If implementation starts early, every blocked-delete
-  test must be *deferred with the reason recorded*, never silently skipped — the delete block is the
-  story's headline requirement, and a story that ships its list and modal while quietly dropping its
-  hardest scenario would pass a filtered test run.
+- **R-1 — ⚠️ CLOSED 2026-09-01 (was: CI cannot open a database connection at all, citing 0024's
+  **V-1**).** Real when raised, and **fixed on 2026-08-26** by the task it spawned,
+  [`ci-database-connection-gap.md`](ci-database-connection-gap.md): `phpunit.xml`, `.env.example` and
+  `.github/workflows/tests.yml` now all pin MySQL, with a `mysql:8.4` service in CI and a recorded
+  clean `866/866` run. This story's Full Test Suite Gate evidence can come from CI.
+- **R-2 — Building this screen before [0024b](0024b-product-category-in-use-delete-guard.md) lands.**
+  If implementation starts early, every blocked-delete test must be *deferred with the reason
+  recorded*, never silently skipped — the delete block is the story's headline requirement, and a
+  story that ships its list and modal while quietly dropping its hardest scenario would pass a filtered
+  test run. *(Repointed 2026-09-01: the guard is 0024b's, not 0024's.)*
+- **R-6 — (added 2026-09-01) `app/Actions/ProductCategories/`'s three actions still do not authorize,
+  and one of them says so falsely.** 0023 shipped all three with authorization deliberately handed off
+  to **this story**, which is recorded in
+  [schema.md](../../docs/database/schema.md#product_categories) and
+  [base-standards.md](../../docs/conventions/base-standards.md#directory-structure) — so this screen
+  must call `Gate::authorize()` before each action, and **above** 0024b's in-use guard, never below it
+  (0024b **D-B2**: an inverted order turns a permission refusal into a business message that discloses
+  the product count to someone with no right to it). Two things make this easy to get wrong. First,
+  `app/Actions/ProductCategories/CreateProductCategory.php:36`'s docblock claims the caller-authorizes
+  shape *"matches `App\Actions\Users\CreateUser`/`UpdateUser`"* — **it does not**; both of those
+  self-authorize, and [0024](done/0024-products-core-crud-backend.md) reversed its own equivalent decision
+  (its **C-1**) on that finding. Second, 0024b deliberately did **not** gate the one action it edits,
+  to avoid leaving the folder a third converted (0024b **D-B1**). **All three gates are this story's**,
+  and the false comment should be corrected as part of it.
 - **R-3 — The `->ignore()` id becoming client-controlled.** Dropping `#[Locked]`, or assigning
   `$this->editingCategoryId = $categoryId` (the raw argument) instead of `$target->id`, silently turns a
   uniqueness check into a rename-any-category primitive. The two lines are a pair; the dedicated
   retarget test above is what pins them.
-- **R-4 — `trans_choice` has no precedent anywhere in `lang/`** (0024 **R-8**). Spanish pluralisation is
-  not identical to English. Assert the resolved **digit in the rendered DOM**, never a hand-typed
-  sentence, or the test silently desyncs from the real copy.
+- **R-4 — ⚠️ CORRECTED 2026-09-01 (was: `trans_choice` has no precedent anywhere in `lang/`, citing
+  0024 **R-8**).** There **is** one, and has been since task 0010: `lang/en/roles.php`'s
+  `index.delete_blocked`, with six `trans_choice()` call sites and a documented convention in
+  [naming.md](../../docs/conventions/naming.md#translation-keys).
+  [0024b](0024b-product-category-in-use-delete-guard.md) — which now owns
+  `products.categories.delete_blocked`, the key this screen renders — matches that precedent's simple
+  `singular|plural` form rather than the explicit-range syntax 0024's draft proposed. **What survives
+  of this risk**: Spanish pluralisation is still not identical to English, so assert the resolved
+  **digit in the rendered DOM**, never a hand-typed sentence, or the test silently desyncs from the
+  real copy.
 - **R-5 — Modelling the tests too literally on the Users screen.** Two specific over-reaches to avoid: the
   per-row authorization matrix (**D-5**) and re-running 0023's normalisation suite one layer up. Both
   inflate the count without adding coverage, which
@@ -916,7 +952,7 @@ Phase 1 (Three Amigos) debate run on 2026-08-18 with `frontend-expert` (files an
 `database-expert` was convened — this story adds no backend or schema artifact. Derived from
 [PRD](../../docs/PRD/PRD.md#22-products) §2.2's "Product categories (extends the prototype)" Gherkin
 block and Products acceptance criterion 2, grounded in full readings of
-[0023](done/0023-product-categories-backend.md) and [0024](0024-products-core-crud-backend.md), with
+[0023](done/0023-product-categories-backend.md) and [0024](done/0024-products-core-crud-backend.md), with
 [0006](done/0006-users-list-editor-ui.md) / `App\Livewire\Users\Index` as the list+modal pattern and
 [0039](0039-payment-methods-ui.md) as the precedent for a UI story's sidebar branching.
 
@@ -929,9 +965,9 @@ all 0024's.
 
 Two things this debate deliberately did *not* re-litigate, both settled upstream and recorded here so a
 later reader does not reopen them: that the in-use refusal is a `ValidationException` rather than a
-policy denial (0024 **D-14**, with its acknowledged counter-argument already recorded there), and that
+policy denial (0024b **D-14**, with its acknowledged counter-argument already recorded there), and that
 there is no confirm-and-proceed path at any privilege level (PRD §2.2, stated twice, plus two
-independent structural reasons in 0024 **D-14**).
+independent structural reasons in 0024b **D-14**).
 
 **Not yet run:** Phase 2 (`code-reviewer` INVEST validation). Three items deserve an explicit look there
 rather than at implementation time. **Independence** is the fair challenge — F-1 means this story is

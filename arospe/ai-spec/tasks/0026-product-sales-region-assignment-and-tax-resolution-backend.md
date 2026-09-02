@@ -341,7 +341,7 @@ sibling story's files is the same discipline 0024 applies when it *does* edit
 `DeleteProductCategory` — it names the reason first.
 
 > 📌 **Gallery sync is not this story's, in any sense — see D14.** `SyncProductGallery` is created,
-> owned and tested **exclusively by [0024](0024-products-core-crud-backend.md)**. This story neither
+> owned and tested **exclusively by [0024](done/0024-products-core-crud-backend.md)**. This story neither
 > calls it, wraps it, extends it, nor specifies its behaviour; every mention of it here is a *shape*
 > comparison for a sibling action. 0026 handles **sales-region assignment only, never product media**.
 
@@ -772,7 +772,7 @@ Run them; do not merely assert the tests exist (the pattern 0016 and 0017 establ
   `is_default`/`is_active` single-writer invariants — **0017's, entirely**. This story only *reads* an
   already-validated `rate`.
 - **The seeder's idempotency / no-clobber / drift-repair guarantees** — 0016's, entirely.
-- **Product CRUD, SKU canonicalisation, description sanitization, gallery mechanics** — 0024's,
+- **Product CRUD, SKU canonicalisation, description sanitization, gallery mechanics** — 0024's and [0024a](0024a-product-description-html-sanitization.md)'s,
   entirely.
 - **Address → region resolution** (shipping vs billing, the IP-geo mismatch check) — PRD §3.2 /
   Epic 3. This story's resolver receives an already-resolved region.
@@ -1004,6 +1004,19 @@ asymmetry looks like an inconsistency to a reviewer who has not read this paragr
 > administrator and silent data loss; D11 is now the backstop, and D7 the reason the backstop rarely
 > fires. Revert-check #7 remains mandatory.
 
+> ⚠️ **The convention this decision cites was reversed on 2026-09-01, and D8's first half must be
+> re-decided before Phase 3.** [0024](done/0024-products-core-crud-backend.md)'s **RQ-10**/**D-15** rested
+> on a claim that `App\Actions\Users\CreateUser`/`UpdateUser` contain no `Gate` call, which is
+> **false** (`CreateUser::__invoke()` line 66 authorizes `create`; `UpdateUser` carries seven such
+> calls) — and 0024 reversed itself at its three-way split (its **C-1**). Its four product actions now
+> self-authorize, and the **documented** convention
+> ([base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers))
+> is that the check lives in the class performing the operation. **What is unaffected**: the second
+> half below — the *resolver* needing no authorization because it reads values already visible and may
+> run from a queued job — is an independent argument that stands on its own. **What must be
+> re-decided**: whether `SyncProductSalesRegions` (a *writer*) self-authorizes. On the corrected
+> convention it should, and the "no enforcement path" sentence would then no longer apply to it.
+
 **D8 — Neither action self-authorizes.** 0024's RQ-10 convention: actions are plain domain
 operations, and the caller (0027, or Epic 3's order pipeline) authorizes. The resolver additionally
 needs no authorization at its call sites at all — it reads values already visible to anyone holding
@@ -1159,7 +1172,7 @@ two writers, so the scenario proving it belongs to 0027.
 
 **D14 — `SyncProductGallery` is 0024's alone; product media is entirely out of this story's scope. —
 2026-08-19 (ownership clarification, coordinated with
-[0024](0024-products-core-crud-backend.md).)** This story handles **sales-region assignment only**. It
+[0024](done/0024-products-core-crud-backend.md).)** This story handles **sales-region assignment only**. It
 does not create, call, wrap, extend, test or specify `SyncProductGallery`, and no obligation about
 product media attaches to it. Every remaining mention of that class here is a deliberate *analogy* —
 "a single named writer of one pivot, shaped like the sibling that writes the other" — or a hand-off
@@ -1203,7 +1216,7 @@ Executed during this debate, against this repository.
 
 ### Dependencies
 
-- **[0024](0024-products-core-crud-backend.md) — hard, blocking.** Creates `products`, `Product`,
+- **[0024](done/0024-products-core-crud-backend.md) — hard, blocking.** Creates `products`, `Product`,
   `ProductFactory` and `ProductValidationRules`, all of which this story extends.
 - **[0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Creates
   `sales_regions`, `SalesRegion`, `SalesRegionKind` and `SalesRegionFactory`.
@@ -1260,13 +1273,21 @@ Executed during this debate, against this repository.
   both tiers.
 - **R-6 — Three stories write `lang/{en,es}/products.php`** (0024 creates, 0028 extends, 0026
   extends). 0024's R-13 with one more writer.
-- **R-7 — CI cannot open a database connection.** 0024's **V-1** found `phpunit.xml` never sets
+- **R-7 — ⚠️ CLOSED 2026-09-01 (was: CI cannot open a database connection, citing 0024's **V-1**).**
+  Real when raised, and **fixed on 2026-08-26** by the task it spawned,
+  [`ci-database-connection-gap.md`](ci-database-connection-gap.md) — `phpunit.xml`, `.env.example` and
+  `.github/workflows/tests.yml` all pin MySQL now, with a `mysql:8.4` service in CI and a recorded
+  clean `866/866` run. **The original text is retained below for the record**, and its Full Test Suite
+  Gate consequence no longer applies.
+  <details><summary>Original wording</summary>0024's **V-1** found `phpunit.xml` never sets
   `DB_CONNECTION`, `.env.example` ships `sqlite` with `DB_DATABASE` commented out, and the workflow
   stands up neither a MySQL service nor a SQLite file. Not this story's bug, and 0024 already
   recommends raising it as its own task — but until it lands, this story's Full Test Suite Gate
   evidence can only come from a local MySQL run. None of this story's assertions are
   collation-sensitive (UUID equality, decimal-string equality, boolean casts), so the exposure is
-  "can the suite run at all", not "does an assertion behave differently per engine".
+  "can the suite run at all", not "does an assertion behave differently per engine".</details>
+  **What survives the closure**: the last sentence above is still the useful observation — none of
+  this story's assertions are collation-sensitive, so MySQL-only execution costs it nothing.
 - **R-8 — The workflow constraint D3 imposes.** An administrator must enable and rate-configure a
   region before any product can be assigned to it. Correct, but it is a real sequencing requirement
   that 0027's UX should make legible rather than surfacing as a bare validation error. **Narrowed
@@ -1351,7 +1372,7 @@ Non-blocking for the schema; **confirm before Phase 3.**
 - **Correct [`migrations.md`](../../docs/database/migrations.md#structure)'s explicit-FK-index
   instruction** — already owned by 0024's D-10; this story is the second table it would damage, and
   V-3 is a second independent confirmation.
-- **Raise CI's database configuration as its own task** (0024 V-1 / R-7). It blocks the Full Test
+- **Raise CI's database configuration as its own task** (0024 V-1 / R-7). ⚠️ **Done — closed 2026-08-26** by [`ci-database-connection-gap.md`](ci-database-connection-gap.md); no longer an action item. It blocked the Full Test
   Suite Gate from being satisfiable in CI for every story, not just this one.
 - ~~**If OQ-1 resolves to (b)**, a story to model grouping membership.~~ **Withdrawn 2026-08-18 (D10)**
   — groupings are removed from the catalog, so no membership data is ever needed.
@@ -1365,7 +1386,7 @@ Phase 1 (Three Amigos) debate run on 2026-08-18 per
 [workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate), grounded in full readings of
 [0016](done/0016-sales-region-catalog-schema-and-seeder.md),
 [0017](done/0017-sales-region-tax-configuration-backend.md),
-[0024](0024-products-core-crud-backend.md), [PRD](../../docs/PRD/PRD.md) §2.1 / §2.2 / §3.2, and this
+[0024](done/0024-products-core-crud-backend.md), [PRD](../../docs/PRD/PRD.md) §2.1 / §2.2 / §3.2, and this
 project's conventions, security and testing doc sets.
 
 **Participants, and one honest gap:**
