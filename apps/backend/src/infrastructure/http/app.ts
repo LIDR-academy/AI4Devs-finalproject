@@ -236,8 +236,8 @@ function mountApiRoutes(
   const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, reportRepo, roleRepo, locationRepo, settingsRepo } = repos;
   const guard = isAuthRequired ? [authMiddleware] : [];
 
-  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo));
-  app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo));
+  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired));
+  app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired));
   app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo));
   app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo));
   app.use('/api/v1/roles', ...guard, createRolesController(roleRepo));

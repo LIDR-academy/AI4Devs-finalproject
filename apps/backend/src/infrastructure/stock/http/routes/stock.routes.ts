@@ -12,9 +12,16 @@ import { requireRole } from '../../../http/middlewares/requireRole.js';
 
 export function createStockRouter(
   stockRepository: IInsumoRepository & IRemanenteRepository,
-  stockMovementQueryRepository?: IStockMovementQueryRepository
+  stockMovementQueryRepository?: IStockMovementQueryRepository,
+  isAuthRequired = true
 ): Router {
   const router = Router();
+
+  // TK-093 (AUDIT-SEC-001 F-3): rol explícito por ruta. Cuando la auth está desactivada
+  // (tests de negocio, requireAuth:false) el guard de rol se omite — mismo criterio que
+  // el authMiddleware a nivel de mount en app.ts.
+  const role = (...roles: string[]): ReturnType<typeof requireRole>[] =>
+    isAuthRequired ? [requireRole(...roles)] : [];
   const useCase = new RecordExtractionUseCase(stockRepository, stockRepository);
   const getMovementHistoryUseCase = stockMovementQueryRepository
     ? new GetStockMovementHistoryUseCase(stockMovementQueryRepository)
@@ -30,14 +37,15 @@ export function createStockRouter(
     restockInsumoUseCase
   );
 
-  router.post('/extraction', controller.recordExtraction);
+  // Extracción de bodega (US-014/TK-072): la ejecutan operarios de cocina y admins.
+  router.post('/extraction', ...role('ADMIN', 'KITCHEN_STAFF'), controller.recordExtraction);
   // Trazabilidad de movimientos (TK-050): dato administrativo — solo ADMIN.
-  router.get('/movements', requireRole('ADMIN'), controller.getMovementHistory);
+  router.get('/movements', ...role('ADMIN'), controller.getMovementHistory);
   // Catálogo de insumos (TK-057): alta administrativa, listado para cualquier autenticado.
-  router.post('/insumos', requireRole('ADMIN'), controller.createInsumo);
+  router.post('/insumos', ...role('ADMIN'), controller.createInsumo);
   router.get('/insumos', controller.listInsumos);
   // Reabastecimiento de bodega (US-013/TK-060): incrementa warehouseStock, solo ADMIN.
-  router.patch('/insumos/:id/restock', requireRole('ADMIN'), controller.restockInsumo);
+  router.patch('/insumos/:id/restock', ...role('ADMIN'), controller.restockInsumo);
 
   return router;
 }
