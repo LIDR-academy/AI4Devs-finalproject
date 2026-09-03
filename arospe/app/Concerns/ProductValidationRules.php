@@ -216,10 +216,8 @@ trait ProductValidationRules
      *
      * `max:254` (Phase 4 finding F-3) bounds the array the same way its
      * sibling `productGalleryMediaIdsRules()` already bounds the gallery
-     * array -- an unbounded array here is a real per-request cost, since
-     * each element's `Rule::exists()` + `distinct` is one query and one
-     * O(n) comparison. 254 is not an arbitrary round number: it is the
-     * Sales Region catalog's real ceiling, ~249 ISO countries
+     * array. 254 is not an arbitrary round number: it is the Sales Region
+     * catalog's real ceiling, 249 ISO countries
      * (`database/data/iso-3166-countries.json`, verified 249 entries) plus
      * Spain's 5 fixed fiscal territories
      * (`SalesRegionSeeder::SPAIN_TERRITORIES`) -- 254 rows total, so a
@@ -228,6 +226,27 @@ trait ProductValidationRules
      * refuses a sparse/associative array before either per-element rule
      * runs, matching the shape every other id-array submission in this
      * codebase expects.
+     *
+     * ⚠️ CORRECTED (Phase 4 re-audit, R-1): `max:254` bounds what may
+     * SUCCEED, not what a request COSTS -- Laravel expands `field.*`
+     * against every element it was given and runs each expanded rule
+     * regardless of whether `field`'s own rules already failed, so a
+     * caller who submits BOTH these rule sets in one `validate()` call
+     * (as a bare `$this->validate([...])` on a Livewire component would)
+     * still pays one `Rule::exists()` query per submitted element before
+     * `max:254` is ever consulted -- measured linear, one query per
+     * element, with no early exit. **Whoever calls these two rule sets
+     * (story 0027's save path) MUST validate `salesRegionIdsRules()`
+     * alone, in its own `Validator::make(...)->validate()` call, BEFORE
+     * validating `salesRegionIds.*` against `salesRegionIdRules($preserved)`
+     * in a second call** -- two sequential calls, not one combined rule
+     * array, so an oversized submission throws before a single per-element
+     * query runs. This does not reopen D12's rejected delta-validation
+     * shape (which split ids into two *different* rule sets by
+     * preserved/new); both calls here use the identical per-element rules,
+     * just sequenced so the shape check runs first. See
+     * [docs/security/array-validation-bounds.md](../../docs/security/array-validation-bounds.md)
+     * and this story's own Definition-of-Done hand-off item 5.
      *
      * @return array<int, ValidationRule|array<mixed>|string>
      */

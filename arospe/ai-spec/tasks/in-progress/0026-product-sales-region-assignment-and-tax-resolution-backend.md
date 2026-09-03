@@ -899,6 +899,20 @@ charge but which region to record on the order.
          `assertSelectionResolvable()`, so no exception can leave a renamed product with a stale
          region set. Neither owning story can open that transaction without reaching into the other's
          files; 0027 is the only place all three compose.
+      5. **`salesRegionIdsRules()` and `salesRegionIdRules()` must be validated in two *separate,
+         sequential* `Validator::make(...)->validate()` calls, never combined into one rule array**
+         (Phase 4 re-audit finding R-1, 2026-09-03). `max:254` bounds what may pass, not what a
+         request costs — Laravel runs every `salesRegionIds.*` element's `Rule::exists()` query
+         regardless of whether `salesRegionIds`' own `max:254` already failed, so a single combined
+         `validate()` call (a bare `$this->validate([...])` on a Livewire component, say) still pays
+         one query per submitted element before the cap is ever consulted — measured linear, no early
+         exit, up to ~40,000 elements ≈ 40,000 queries on one request from an actor holding only
+         `products.edit`. Validate `salesRegionIdsRules()` alone first — it throws before any
+         per-element query runs on an oversized submission — **then** validate `salesRegionIds.*`
+         against `salesRegionIdRules($preserved)` in a second call. This is not D12's rejected delta
+         shape (which split ids into *different* rule sets by preserved/new); both calls here use the
+         identical per-element rule, only sequenced. See
+         [docs/security/array-validation-bounds.md](../../../docs/security/array-validation-bounds.md).
 - [ ] **Hand-off recorded for Epic 3**: `ResolvedTaxRate::$region` is the value to snapshot onto the
       order; the default row should be fetched **once per request** and reused across line items
       rather than re-queried per line; and a `rate === null` answer must be surfaced or flagged, never
