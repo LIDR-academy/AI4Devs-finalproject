@@ -886,7 +886,13 @@ charge but which region to record on the order.
          picker.
       3. `salesRegionIdRules()` must be called **with the persisted product's current region ids**,
          read server-side (**D12**). Calling it with no argument on an *edit* re-introduces the bug
-         D12 fixes; calling it with a request-supplied array re-introduces a worse one.
+         D12 fixes; calling it with a request-supplied array re-introduces a worse one. **Upgraded
+         2026-09-03 (Phase 4 audit, F-2): this is not a hardening layer over `resolveSelected()` — it
+         is the *only* gate a stale-but-still-existing preserved id ever meets.**
+         `SearchSalesRegions::resolveSelected()` vouches for any id that exists anywhere in
+         `sales_regions`, not only ones assigned to the product being edited (0022's interface has no
+         channel to express "this product"), so a save path that skips this rule has nothing behind
+         it, not merely a weaker check.
       4. **One `DB::transaction()` must wrap the core-field write and this sync together** (**D13**) —
          `UpdateProduct` (0024) + `SyncProductSalesRegions` (this story) + `SyncProductGallery` (0024)
          in a single boundary, opened *after* validation and after
@@ -1022,6 +1028,28 @@ asymmetry looks like an inconsistency to a reviewer who has not read this paragr
 > administrator and silent data loss; D11 is now the backstop, and D7 the reason the backstop rarely
 > fires. Revert-check #7 remains mandatory.
 
+> ⚠️ **Corrected 2026-09-03 (Phase 4 security audit, finding F-2) — "vouches for ids currently
+> assigned to the product being edited" overstates what the shipped code can express, and this is a
+> property of 0022's locked interface, not an implementation bug.**
+> `MultiSelectOptionsResolver::resolveSelected(array $ids): array` carries no product parameter, and
+> the shell instantiates the resolver with a bare `app($optionResolver)` — there is no channel through
+> which "the product currently being edited" could reach it. `App\Actions\Products\SearchSalesRegions::resolveSelected()`
+> therefore vouches for **any id that still exists in `sales_regions`**, not only ids assigned to a
+> particular product — one assigned to a *different* product, or one never assigned to anything at
+> all, is vouched for identically, with `disabled: true` when it fails the assignable() match. **This
+> creates no save-time bypass**: `salesRegionIdRules($preserved)`'s `$preserved` set is independently
+> server-derived from `$product->salesRegions`, so a vouched-for id that isn't genuinely preserved
+> still faces the full newly-added-assignability match. Two real consequences instead. **(a)**
+> `salesRegionIdRules()` is the **sole** enforcement point for a stale-but-still-existing preserved id
+> — `resolveSelected()` never throws for it, so if 0027 ever omits Definition-of-Done hand-off item 3
+> (calling the rule with the persisted product's ids), there is nothing behind it; that hand-off item
+> is upgraded below from "must be called with the persisted ids" to "is the only gate — omitting it is
+> not a degraded check, it is no check." **(b)** A `products.edit`-holding actor who can reach the
+> picker can probe an arbitrary `sales_regions` id and learn its name, active state and whether it has
+> children, without `sales-regions.view` — a minor disclosure (UUIDv7 makes enumeration impractical),
+> recorded as an accepted residual rather than closed, since 0022's interface has no room to close it
+> without a locked-contract change that is out of this story's scope.
+
 > ⚠️ **RESOLVED 2026-09-03 (Phase 2 INVEST review).** This block previously read: *"The convention this
 > decision cites was reversed on 2026-09-01, and D8's first half must be re-decided before Phase 3.
 > [0024](../done/0024-products-core-crud-backend.md)'s **RQ-10**/**D-15** rested on a claim that
@@ -1048,12 +1076,19 @@ asymmetry looks like an inconsistency to a reviewer who has not read this paragr
 > no class other than `CreateProduct`/`UpdateProduct` references `SyncProductGallery` — rather than a
 > gate. **D13 already commits the actual call shape**: 0027 opens one transaction, authorizes the
 > product update once, then calls both `SyncProductGallery` and `SyncProductSalesRegions` inside it.
-> **So: `SyncProductSalesRegions` does not self-authorize**, matching `SyncProductGallery` exactly, and
-> D8's "no enforcement path" sentence below is correct as originally written and needs no further
-> change. `SyncProductSalesRegions` should carry the identical reachability-test guard
-> (`tests/Feature/Products/SalesRegionAuthorizationTest.php` or folded into the existing file) —
-> **added to the Definition-of-Done hand-off for 0027's authors to be aware of, though the test itself
-> belongs to this story's own Phase 3, not 0027's.**
+> **So: `SyncProductSalesRegions` does not self-authorize**, matching `SyncProductGallery` on the
+> property that matters — no `Gate` call, enforced by reachability rather than authorization —
+> and D8's "no enforcement path" sentence below is correct as originally written and needs no further
+> change. `SyncProductSalesRegions` carries the identical reachability-test guard, shipped in this
+> story's own Phase 3 (`tests/Feature/Products/ProductSalesRegionAssignmentTest.php`, scanning
+> `app/`, `database/` **and** `routes/` via `token_get_all()` so a comment mention doesn't count) rather
+> than deferred to 0027. **Corrected 2026-09-03 (Phase 4 audit) — "matching `SyncProductGallery`
+> exactly" overstated the analogy on one axis that doesn't affect this conclusion**:
+> `SyncProductGallery` **does** open its own `DB::transaction()` (it writes `featured_media_id` *and*
+> the pivot in one boundary), while `SyncProductSalesRegions` opens none, per its own D13 obligation to
+> be composable inside a caller-opened transaction without nesting one. Both are correct for what each
+> writes — a single-table `sync()` needs no transaction of its own — and D13's hand-off to 0027 is
+> unaffected either way; the two classes match on self-authorization, not on transaction ownership.
 
 **D8 — Neither action self-authorizes.** 0024's RQ-10 convention: actions are plain domain
 operations, and the caller (0027, or Epic 3's order pipeline) authorizes. **Confirmed correct — see the
