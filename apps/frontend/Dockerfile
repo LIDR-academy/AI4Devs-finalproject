@@ -30,7 +30,10 @@ USER restostock
 
 EXPOSE 8080
 
+# 127.0.0.1 (no `localhost`): `localhost` resuelve primero a ::1 (IPv6) y nginx
+# solo escucha en IPv4:8080 — el healthcheck con `localhost` daba "unhealthy"
+# pese a que la app respondía correctamente.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:8080 || exit 1
+  CMD wget -qO- http://127.0.0.1:8080 || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
