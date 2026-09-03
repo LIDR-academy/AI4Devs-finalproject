@@ -22,9 +22,16 @@ use Illuminate\Validation\Rule;
  * onto one class declare the same method, and the obvious future consumer
  * (0027's editor, with a create-a-category-on-the-fly control) composes
  * exactly ProductValidationRules with ProductCategoryValidationRules.
- * Prefixed UNIFORMLY, not selectively -- a blanket rule is reviewable in one
- * glance, a per-method judgement about which names might collide with a
- * trait that does not exist yet is not.
+ * Prefixed uniformly for every method naming one of the product's own
+ * fields -- a blanket rule there is reviewable in one glance, a per-method
+ * judgement about which names might collide with a trait that does not
+ * exist yet is not. Corrected 2026-09-03 (story 0026, Phase 5 finding
+ * N-8): this no longer describes every method in the trait. Story 0026's
+ * `salesRegionIdsRules()`/`salesRegionIdRules()` are correctly UNprefixed
+ * -- they name the related Sales Region entity, not a product field, and
+ * neither name collides with any trait this one composes with (verified,
+ * not assumed) -- so "uniformly" now means "uniform within the product-
+ * field group", not "every method in this file".
  */
 trait ProductValidationRules
 {

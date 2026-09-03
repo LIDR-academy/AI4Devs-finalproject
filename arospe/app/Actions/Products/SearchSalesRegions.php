@@ -64,7 +64,15 @@ class SearchSalesRegions implements MultiSelectOptionsResolver
      * that) while still bounding a full-table scan on a much larger future
      * table to a fixed, small cost. A COPYING STORY OVER A LARGE TABLE:
      * re-derive this constant for your own table's realistic scale rather
-     * than reusing 1000 unexamined.
+     * than reusing 1000 unexamined -- and know what "too small" looks like
+     * (Phase 5 finding N-7): the ceiling is applied via `->limit()` BEFORE
+     * the in-PHP name match, in `sort_order`/`name` order, so a genuine
+     * match sorted past the ceiling is silently invisible to search, with
+     * no truncation signal to the consumer (unlike `Media\Gallery`, which
+     * renders a `media-results-truncated` notice at its own cap). Harmless
+     * at this catalog's real size (~6 assignable rows); a copier over a
+     * table where the ceiling can plausibly bind should add an equivalent
+     * signal rather than let a real match silently vanish.
      */
     private const MAX_SCANNED_ROWS = 1000;
 
@@ -102,7 +110,10 @@ class SearchSalesRegions implements MultiSelectOptionsResolver
     }
 
     /**
-     * TOTAL FUNCTION: exactly one entry per requested id, or it throws.
+     * TOTAL FUNCTION: never a short return -- every requested id is either present in the result or
+     * this throws (Phase 5 finding N-6: this is NOT a dedupe guarantee -- a duplicate id in `$ids`
+     * produces a duplicate row in the result, matching `$ids`' own shape; `distinct` in
+     * `salesRegionIdRules()` and the shell's own dedupe are what a caller relies on for uniqueness).
      *
      * @param  array<int, string>  $ids
      * @return array<int, array{id: string, label: string, group: string|null, disabled: bool}>

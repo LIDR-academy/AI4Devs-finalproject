@@ -249,10 +249,15 @@ is reachable from the agent shell:
   `sales_region_id` is not covered by that prefix, so InnoDB creates its own supporting index for the
   FK — which is exactly the index the reverse lookup would want, obtained for free.
 
-> ⚠️ [`migrations.md`](../../../docs/database/migrations.md#structure) still instructs the opposite
-> ("this repo is explicit about it", citing `create_passkeys_table`'s manual
-> `$table->index('user_id')`). **That instruction is wrong** and 0024's **D-10** already owns
-> correcting it; this story is the second table it would damage. Flagged, not fixed here.
+> ✅ **Corrected 2026-09-03 (Phase 5 review, finding N-5) — the ⚠️ this cell used to carry was itself
+> stale.** It previously claimed `migrations.md` "still instructs the opposite … that instruction is
+> wrong and 0024's D-10 already owns correcting it." That correction has already shipped: the page's
+> Structure section has named `create_passkeys_table`'s `$table->index('user_id')` as a divergence
+> "not a pattern to copy" since task 0016, and its own [An FK column does not also get an explicit
+> index here](../../../docs/database/migrations.md#an-fk-column-does-not-also-get-an-explicit-index-here)
+> section states the rule outright, listing story 0024's two tables as confirming instances. This
+> story's own migration is this rule's fifth confirming instance, not a second table the stale
+> instruction would have damaged.
 
 > 📌 **`constrained()` needs no table argument on either FK — verified.** The probe confirmed it
 > infers `products` from `product_id` **and** `sales_regions` from `sales_region_id`. This story
@@ -597,7 +602,12 @@ A `sales_regions.*` group for the two refusal messages (not in the catalog / not
 `database/seeders/**` (no new permission — `products.edit` and `sales-regions.view` already cover
 everything here) · `database/factories/SalesRegionFactory.php` (0016's states already cover every
 arrangement these tests need) · `app/Actions/Products/CreateProduct.php` / `UpdateProduct.php` ·
-`docs/**` (Phase 6).
+`docs/**` (Phase 6), **with one deliberate exception**: `docs/security/array-validation-bounds.md`
+and `docs/security/README.md` were committed at Phase 4 (finding R-1's resolution), since the
+correction it records — `salesRegionIdsRules()`'s `max:254` does not bound the per-request validation
+cost — is cited directly from a committed docblock and this story's own DoD hand-off item 5, so leaving
+that page uncommitted meant two committed files pointed at one that didn't exist. Phase 6 still owns
+every other `docs/**` file this story affects.
 
 ## Tests to perform
 
@@ -750,8 +760,12 @@ Run them; do not merely assert the tests exist (the pattern 0016 and 0017 establ
 2. **Add a fall-through from an unconfigured assigned region to the default** → the "unconfigured
    assigned region" test must go red. This is what pins **D5** against the recommendation both amigos
    made.
-3. **Add an ancestor walk (`whereIn('parent_id', …)`) to the match query** → both no-hierarchy-climbing
-   tests must go red. Proves those negatives are not vacuously passing.
+3. **Add a hierarchy walk to the match query** (an ancestor walk, a descendant walk, **or** a
+   shared-parent walk — Phase 5 finding N-3 corrected this from "ancestor walk" specifically: the
+   "assigning a fiscal territory does not cover its parent" test arranges **siblings**, Canarias
+   assigned against a Península destination, both children of España, so only a shared-parent variant
+   reddens it; a pure ancestor/descendant walk does not) → both no-hierarchy-climbing tests must go
+   red. Proves those negatives are not vacuously passing.
 4. **Swap `sync()` for a `foreach` + `attach()`** → the reassignment-narrows and duplicate-id tests
    must go red.
 5. **Drop `Rule::exists(...)` from `salesRegionIdRules()`** → the nonexistent- and malformed-id tests
@@ -766,7 +780,12 @@ Run them; do not merely assert the tests exist (the pattern 0016 and 0017 establ
 9. **Filter the submitted set down to its resolvable ids before syncing** (i.e. restore the silent-drop
    behaviour **D11** replaces) → the "rejected entirely" test must go red, and it must go red on the
    *pivot contents*, not merely on a missing exception. This is the check that proves the no-partial-
-   save rule is enforced rather than assumed.
+   save rule is enforced rather than assumed. ⚠️ **Partially executable today (Phase 5 finding N-4).**
+   The pivot-contents half of this check breaks code that lives in story 0027's save path, which
+   doesn't exist yet — only the validation-boundary half (restoring the silent drop and confirming the
+   named test reddens) is runnable against this story's own code. **Story 0027's own Definition of
+   Done must re-run this check's pivot-contents half** once its save path composes
+   `SyncProductSalesRegions`; it is not fully discharged by this story alone.
 10. **Drop the `orWhereIn('id', $preservedSalesRegionIds)` branch** (i.e. restore the unconditional
     assignable match this story carried before **D12**) → the "product carrying a since-deactivated
     assigned region still saves" test must go red. This is the check that proves D6/D7's preservation
@@ -877,7 +896,9 @@ charge but which region to record on the order.
       section, the ER relationship and the deliberate-index-omission note; `docs/api/routes.md`
       unchanged (no route); `docs/conventions/base-standards.md`'s `app/Actions/` listing is unaffected
       (`Products/` arrives with 0024).
-- [ ] **Hand-off recorded for story 0027** (real gaps, not formalities). Four obligations this story
+- [ ] **Hand-off recorded for story 0027** (real gaps, not formalities). **Five obligations** (updated
+      2026-09-03, Phase 5 finding N-1 — item 5 was appended by the Phase 4 re-audit without updating
+      this count) this story
       deliberately does not discharge in code:
       1. Neither action authorizes (**D8**), so 0027 must call `Gate::authorize('update', $product)`
          before `SyncProductSalesRegions` and gate its route with **`can:products.view`, never
@@ -1461,9 +1482,10 @@ Non-blocking for the schema; **confirm before Phase 3.**
 
 ## Technical tasks for later backlog
 
-- **Correct [`migrations.md`](../../../docs/database/migrations.md#structure)'s explicit-FK-index
-  instruction** — already owned by 0024's D-10; this story is the second table it would damage, and
-  V-3 is a second independent confirmation.
+- ~~**Correct `migrations.md`'s explicit-FK-index instruction**~~ **Withdrawn 2026-09-03 (Phase 5, N-5)
+  — already done.** The page has stated the correct rule since task 0016; there was nothing left for
+  this story to fix. V-3 stands as an independent confirmation of the correct rule, not evidence a
+  correction was still owed.
 - **Raise CI's database configuration as its own task** (0024 V-1 / R-7). ⚠️ **Done — closed 2026-08-26** by [`ci-database-connection-gap.md`](../ci-database-connection-gap.md); no longer an action item. It blocked the Full Test
   Suite Gate from being satisfiable in CI for every story, not just this one.
 - ~~**If OQ-1 resolves to (b)**, a story to model grouping membership.~~ **Withdrawn 2026-08-18 (D10)**
