@@ -111,7 +111,7 @@ class Index extends Component
      */
     public function openCreateModal(LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void
     {
-        $logRefusedPrivilegedAttempt->authorize('create', ProductCategory::class);
+        $logRefusedPrivilegedAttempt->authorize('create', ProductCategory::class, targetType: 'product_category');
 
         $this->reset(['editingCategoryId', 'name']);
         $this->showModal = true;
@@ -134,7 +134,7 @@ class Index extends Component
     {
         $target = ProductCategory::findOrFail($categoryId);
 
-        $logRefusedPrivilegedAttempt->authorize('update', $target);
+        $logRefusedPrivilegedAttempt->authorize('update', $target, targetType: 'product_category', targetId: $target->id);
 
         $this->editingCategoryId = $target->id;
         $this->name = $target->name;
@@ -160,10 +160,10 @@ class Index extends Component
         $target = null;
 
         if ($this->editingCategoryId === null) {
-            $logRefusedPrivilegedAttempt->authorize('create', ProductCategory::class);
+            $logRefusedPrivilegedAttempt->authorize('create', ProductCategory::class, targetType: 'product_category');
         } else {
             $target = ProductCategory::findOrFail($this->editingCategoryId);
-            $logRefusedPrivilegedAttempt->authorize('update', $target);
+            $logRefusedPrivilegedAttempt->authorize('update', $target, targetType: 'product_category', targetId: $target->id);
         }
 
         $validated = $this->validate($this->productCategoryRules($normalizeForSearch, $this->editingCategoryId));
@@ -180,11 +180,18 @@ class Index extends Component
 
     /**
      * Close the create/edit modal and reset its form field.
+     *
+     * Also resets the 'name' validation error (Phase 4 audit finding N-3):
+     * Livewire persists the error bag across round trips, so without this a
+     * refused save's inline message would leak into the next time the
+     * create/edit modal opens, mirroring closeDeleteModal()'s identical
+     * resetErrorBag() call for the same reason.
      */
     public function closeModal(): void
     {
         $this->showModal = false;
         $this->reset(['editingCategoryId', 'name']);
+        $this->resetValidation('name');
     }
 
     /**
@@ -197,7 +204,7 @@ class Index extends Component
     {
         $target = ProductCategory::findOrFail($categoryId);
 
-        $logRefusedPrivilegedAttempt->authorize('delete', $target);
+        $logRefusedPrivilegedAttempt->authorize('delete', $target, targetType: 'product_category', targetId: $target->id);
 
         $this->deletingCategoryId = $target->id;
         $this->deletingCategoryName = $target->name;
@@ -229,7 +236,7 @@ class Index extends Component
 
         $target = ProductCategory::findOrFail($this->deletingCategoryId);
 
-        $logRefusedPrivilegedAttempt->authorize('delete', $target);
+        $logRefusedPrivilegedAttempt->authorize('delete', $target, targetType: 'product_category', targetId: $target->id);
 
         $deleteProductCategory($target);
 

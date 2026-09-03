@@ -29,7 +29,7 @@ class RenameProductCategory
      *
      * Authorizes `update` on `$productCategory` as its own first statement
      * (story 0025), the identical self-authorizing shape
-     * App\Actions\Products\DeleteProduct already uses -- see
+     * App\Actions\Products\UpdateProduct already uses -- see
      * CreateProductCategory's docblock for the full reasoning.
      *
      * The uniqueness rule ignores the target's own id (R-1), which is what

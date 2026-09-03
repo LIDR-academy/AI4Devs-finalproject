@@ -123,3 +123,21 @@ test('a validation message appears next to the name field and the modal stays op
         ->assertSee(__('validation.required', ['attribute' => 'name']))
         ->assertSet('showModal', true);
 });
+
+// Phase 4 audit finding N-3: closeModal() must clear the 'name' validation error, or a refused
+// save's inline message leaks into the next time the create/edit modal opens -- Livewire persists
+// the error bag across round trips, and this modal's flux:input renders the 'name' error whenever
+// one is present in the bag, regardless of which category (or none) the modal is now open for.
+test('closing the modal after a refused save clears the stale validation error', function () {
+    $actor = productCategoriesIndexRenderingActor();
+    $this->actingAs($actor);
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', '')
+        ->call('save')
+        ->assertHasErrors('name')
+        ->call('closeModal')
+        ->call('openCreateModal')
+        ->assertHasNoErrors();
+});
