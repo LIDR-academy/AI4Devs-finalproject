@@ -17,7 +17,7 @@ shipping address); the two are independent of each other and both depend only on
 > `billing_*` snapshot to read until 0045 ships. This story adds columns to a table that does not
 > exist yet.
 >
-> It additionally consumes [0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s
+> It additionally consumes [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s
 > `ResolveProductTaxRate` / `ResolvedTaxRate` contract and 0024's `ProductType` enum. See
 > [Dependencies](#dependencies).
 >
@@ -314,7 +314,7 @@ It performs, in this order:
    `$this->resolveSalesRegionFromAddress($order->billing_country, $order->billing_postal_code)`, the
    *same* call [0053](0053-order-tax-region-resolution-physical-backend.md) makes with its
    **shipping** columns — then ask
-   [0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s
+   [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s
    `ResolveProductTaxRate(Product, SalesRegion): ResolvedTaxRate` for the rate. That action already
    owns the two-tier assigned-entry/catalog-default fallback and honours `null` and `'0.000'` as
    distinct answers — **this story re-implements none of it**.
@@ -329,7 +329,7 @@ It performs, in this order:
 > that does not exist — the same rule 0045 states for its own "new order received" notification.
 
 **This action self-authorizes nothing** (**D-6**), following
-[0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s precedent rather than
+[0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s precedent rather than
 0045's: it is a pipeline step that Epic 3 may run with **no acting user at all** (the future external
 channel), and a `Gate::authorize()` there would either fail closed for every machine-originated order
 or be satisfied by a fictional actor. The gate belongs to whichever caller a human actually drives —
@@ -615,7 +615,7 @@ override is a decision rather than a rediscovery.
   flagged order carrying a confident-looking `tax_rate` is materially worse than an unflagged one,
   because manual review reads a populated column as a working answer. Asserted from both sides.
 - **D-6 — The resolution action self-authorizes nothing**, following
-  [0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s precedent rather than
+  [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s precedent rather than
   0045's `CreateOrder`. It is a pipeline step Epic 3 may run with **no acting user at all** — the whole
   premise of the external channel PRD §3.2 assumes. A `Gate::authorize()` here would fail closed for
   every machine-originated order. The gate belongs to the human-driven caller (story 0055's re-resolve
@@ -686,7 +686,7 @@ override is a decision rather than a rediscovery.
 | --- | --- | --- |
 | **[0045](0045-orders-core-crud-backend.md) — Orders core CRUD** | **HARD dependency; `new` and ⛔ BLOCKED** | This story `ALTER`s `orders`, reads its `billing_*` snapshot and writes `sales_region_id` / `tax_rate` / `tax_amount` / `flagged_for_review`. **This story inherits 0045's blocked status in full** — including its five Epic 2 blockers (0024, 0029, 0035, 0036, 0038) |
 | **0053 — physical-product tax resolution** | **SIBLING, not a dependency** | Both depend only on 0045; **there is no dependency between 0053 and 0054 in either direction**, and either may be implemented first. They share exactly one artifact — the `App\Concerns\ResolvesSalesRegionFromAddress` trait, specified as create-if-absent (**D-7**), whose country→`slug` rule and Spain postal-prefix map are [0053's **D-4**/**D-5**](0053-order-tax-region-resolution-physical-backend.md#documented-functional-decisions) and are referenced here, never restated |
-| [0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) — product↔region assignment + `ResolveProductTaxRate` | `new` | Provides the `ResolveProductTaxRate` / `ResolvedTaxRate` / `TaxRateResolutionTier` contract this story consumes verbatim; its scope fence explicitly hands address→region mapping to Epic 3 |
+| [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) — product↔region assignment + `ResolveProductTaxRate` | `new` | Provides the `ResolveProductTaxRate` / `ResolvedTaxRate` / `TaxRateResolutionTier` contract this story consumes verbatim; its scope fence explicitly hands address→region mapping to Epic 3 |
 | [0024](done/0024-products-core-crud-backend.md) — Products | `new` | Provides `App\Enums\ProductType` (`Physical` / `Virtual`), which is how "the order is virtual" is determined at all |
 | `sales_regions` catalog | **done** (task 0016) | [`schema.md`](../../docs/database/schema.md#sales_regions); the fiscal territories the postal mapping targets, and the `is_default` row the fallback tier needs |
 

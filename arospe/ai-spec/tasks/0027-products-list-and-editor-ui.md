@@ -36,12 +36,12 @@ per-row edit/delete actions and a primary "Nuevo producto" button) and a **route
 (name, SKU, category select, the required physical/virtual type control, the WYSIWYG description from
 [0021](done/0021-wysiwyg-rich-text-editor-component.md), a featured image and a gallery strip through
 [0020](done/0020-shared-media-gallery-modal-ui.md), and a searchable Sales Region multi-select from
-[0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) built on
+[0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) built on
 [0022](done/0022-searchable-multi-select-component.md)).
 
 It is **frontend only**: no migration, no model, no action, no policy, no enum, no validation rule.
 Every one of those is consumed as already-shipped code from [0024](done/0024-products-core-crud-backend.md)
-(core CRUD), [0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (region
+(core CRUD), [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (region
 assignment) and [0023](done/0023-product-categories-backend.md) (the category taxonomy). This story is
 where four separate stories' zero-call-site deliverables — `ProductPolicy`, `CreateProduct` /
 `UpdateProduct` / `DeleteProduct` / `SyncProductGallery`, `SyncProductSalesRegions` /
@@ -50,7 +50,7 @@ where four separate stories' zero-call-site deliverables — `ProductPolicy`, `C
 > **Scope note — the grouping concept is gone.** The supranational Sales Region *grouping* entries
 > (Unión Europea, Internacional) were removed project-wide on 2026-08-18 (see
 > [0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and
-> [0026 D10](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md)). The region picker
+> [0026 D10](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)). The region picker
 > on this screen therefore shows **only individual countries and Spain's fiscal sub-territories**, as
 > a flat list with no group headings, and nothing on this screen expands, infers or implies
 > membership of any kind.
@@ -102,7 +102,7 @@ See [Provenance](#provenance) for exactly which role covered what.
 > **Amended 2026-08-19 — three of those findings came back answered.** The two blocking open questions
 > this story raised against its dependencies (**OQ-5** / **D-11** and **OQ-6** / **D-9a**) and the
 > transaction-boundary gap (**D-12b**) were carried upstream and settled by amendments to
-> [0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (**D12**, **D13**, **D14**)
+> [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (**D12**, **D13**, **D14**)
 > and [0024](done/0024-products-core-crud-backend.md) (**D-17**). All three are now **resolved with concrete
 > mechanisms**, recorded in **D-18** and folded into the decisions, tests and acceptance criteria they
 > touch. Nothing about them blocks Phase 3 any more.
@@ -1493,7 +1493,7 @@ mechanism** (see the resolution below, which is what Phase 3 implements):
 <a id="d-11-resolution"></a>
 #### ✅ Resolution — 0026 **D12** and **D13**, 2026-08-19
 
-[0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) accepted the finding and
+[0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) accepted the finding and
 amended its own validation rule. **`salesRegionIdRules()` now takes
 `array $preservedSalesRegionIds = []`**, and the per-element `exists` match became
 **`(is_active AND no children) OR id IN (preserved)`** — one rule, one error bag, the conditions still
@@ -1560,7 +1560,7 @@ one-line and neither errors.
 > declares `SyncProductGallery` *"defined and owned exclusively by story 0024"* and its hand-off item
 > (d) instructs this story to *"pass the **ordered** gallery array into `CreateProduct` /
 > `UpdateProduct` and **never call `SyncProductGallery` directly**"*.
-> [0026 **D14**](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) reciprocally
+> [0026 **D14**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) reciprocally
 > disclaims it — every remaining mention of the class in 0026 is an analogy or a hand-off sentence
 > about what 0027 composes, never a claim of ownership or a call site. The loose prose that produced
 > this finding has been reworded in 0026 itself. **This paragraph is no longer an inference; it is the
@@ -1568,7 +1568,7 @@ one-line and neither errors.
 
 **(b) ✅ The whole save is one transaction, and that boundary is *this* story's to own — now
 confirmed by both dependencies rather than asserted here.** Raised by this story as a gap; accepted
-and formally assigned to 0027 by [0026 **D13**](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md)
+and formally assigned to 0027 by [0026 **D13**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)
 (2026-08-19) as its Definition-of-Done hand-off item 4. 0026 weighed and **rejected** all three
 alternative homes for the boundary: inside `SyncProductSalesRegions` (it writes one table and cannot
 reach the core-field write), inside `UpdateProduct` (0024 must not learn that a region pivot exists,
@@ -1789,9 +1789,9 @@ it costs this story; each is also folded into the decision it belongs to.
 
 | Finding (as raised here) | Answered by | Outcome for this story |
 | --- | --- | --- |
-| **OQ-5 / D-11 / R-1** — the `is_active` rule makes a legitimately-assigned product unsaveable | [0026 **D12**](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) | `salesRegionIdRules(array $preservedSalesRegionIds = [])`; the match becomes `(is_active AND no children) OR id IN (preserved)`. `Editor::save()` reads `$preserved` from the persisted product **before** validating and passes it in. See [the D-11 resolution](#d-11-resolution). |
+| **OQ-5 / D-11 / R-1** — the `is_active` rule makes a legitimately-assigned product unsaveable | [0026 **D12**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) | `salesRegionIdRules(array $preservedSalesRegionIds = [])`; the match becomes `(is_active AND no children) OR id IN (preserved)`. `Editor::save()` reads `$preserved` from the persisted product **before** validating and passes it in. See [the D-11 resolution](#d-11-resolution). |
 | **OQ-6 / D-9a / R-2** — is `position` the array index or `MAX(position)+1`? | [0024 **D-17**](done/0024-products-core-crud-backend.md) | Index, confirmed. `SyncProductGallery(Product, ?string, array $orderedGalleryMediaIds)` takes the **complete, ordered** array and rewrites `position` from its 0-based index in one transaction. The reorder buttons resubmit the full array; **no amendment to 0024's code was needed.** See **D-9a**. |
-| **D-12b / R-1's sibling** — nobody owned the transaction across the core write and the region sync | [0026 **D13**](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (+ [0024 **D-17a**](done/0024-products-core-crud-backend.md) / [0026 **D14**](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) on ownership) | **This story owns it, explicitly.** One `DB::transaction()` wraps `CreateProduct`/`UpdateProduct` (which reaches `SyncProductGallery` internally) **and** `SyncProductSalesRegions`, opened after validation and after `resolveSelected()`. See **D-12b**. |
+| **D-12b / R-1's sibling** — nobody owned the transaction across the core write and the region sync | [0026 **D13**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (+ [0024 **D-17a**](done/0024-products-core-crud-backend.md) / [0026 **D14**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) on ownership) | **This story owns it, explicitly.** One `DB::transaction()` wraps `CreateProduct`/`UpdateProduct` (which reaches `SyncProductGallery` internally) **and** `SyncProductSalesRegions`, opened after validation and after `resolveSelected()`. See **D-12b**. |
 
 **Superseded framings, marked rather than deleted**, per this project's convention:
 
@@ -1978,7 +1978,7 @@ calls that can be answered any time before the markup is written.
 
 - **✅ OQ-5 — *Resolved 2026-08-19; framing superseded, retained for history.*** ~~How does a save
   behave when the product carries an assignment to a since-deactivated Sales Region?~~
-  **Answered by [0026 **D12**](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md):**
+  **Answered by [0026 **D12**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md):**
   a *preserved* assignment need only still **exist**; only *newly added* ids face the
   `is_active` + no-children match. Mechanically:
   `salesRegionIdRules(array $preservedSalesRegionIds = [])`, whose per-element `exists` becomes
@@ -2079,7 +2079,7 @@ in full readings of [0019](done/0019-media-library-upload-and-conversions-backen
 [0020](done/0020-shared-media-gallery-modal-ui.md), [0021](done/0021-wysiwyg-rich-text-editor-component.md),
 [0022](done/0022-searchable-multi-select-component.md), [0023](done/0023-product-categories-backend.md),
 [0024](done/0024-products-core-crud-backend.md), [0025](done/0025-product-categories-ui.md),
-[0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
+[0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
 [0029](0029-product-variants-backend.md), with
 [0006](done/0006-users-list-editor-ui.md) / `App\Livewire\Users\Index` as the list+row-action pattern
 and [0025](done/0025-product-categories-ui.md) as the most recent sibling screen.

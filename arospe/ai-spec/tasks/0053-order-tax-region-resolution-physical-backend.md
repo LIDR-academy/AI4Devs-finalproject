@@ -297,7 +297,7 @@ Four properties to carry into implementation:
 - **It self-authorizes nothing** — no `Gate::authorize()`, no policy. This is a system-triggered
   resolution step rather than an administrator-initiated write, and it is invoked on the authorized
   success path of `CreateOrder`, which has already asked `orders.create`. It matches
-  [0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s own decision for
+  [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)'s own decision for
   `ResolveProductTaxRate` ("it self-authorizes nothing… Epic 3 may invoke it from a queued job with no
   acting user at all"), and the same reasoning applies here with more force: a future queued or
   scheduled caller has no acting user, and a `Gate` check would fail closed on it. **Recorded as a
@@ -1213,7 +1213,7 @@ Derived from this story, none of them in scope:
   time. `ProductType`'s two cases were read from
   [0024](done/0024-products-core-crud-backend.md); `orders`' column shapes and 0045's **D-2**/**D-4**/**D-8**/
   **D-9**/**D-10** from [0045](0045-orders-core-crud-backend.md); `ResolvedTaxRate`'s shape and tiers from
-  [0026](in-progress/0026-product-sales-region-assignment-and-tax-resolution-backend.md).
+  [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md).
 - **Stage:** `new`, and **blocked** — see the banner under [Description](#description). It moves to
   `ai-spec/tasks/in-progress/` at the start of Phase 3, and to `ai-spec/tasks/done/` at Phase 7 — the
   first of those changes this file's directory depth, so every relative link above must be re-resolved on
