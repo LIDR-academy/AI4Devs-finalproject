@@ -45,3 +45,14 @@ inputs:
 4. **Cero regresión:** `pnpm --filter frontend test -- --run` verde sin cambiar aserciones de comportamiento (solo forma).
 5. **Verificación:** `lint`, `build`, `check_ticket_code_quality.sh`, `check_ticket_duplication.sh`, `check_dead_code.sh` — 0 errores en el diff.
 6. **Verificación visual:** captura de `/reportes` inline en Día y Noche (`SK-20`).
+
+---
+
+## 🧩 Implementación
+
+* `ReportsDashboard` pierde `isOpen`/`onClose` por completo (único consumidor = `ReportesRoute`); sin `<Modal>` — envuelve en `<>…</>` con un `<header>` inline; `<h2>` → `<h1>` (consistente con las demás rutas). `ReportsFilterBar` pierde el botón "X". Eliminados: import de `Modal`, `AccessDeniedState`, `X` (lucide) — `AccessDeniedState` sigue vivo en `CatalogManagementPanel`/`MovementHistoryPanel`/`UserManagementPanel` (los limpia `TK-090-FE`); `Modal` sigue vivo en los modales transitorios.
+* `ReportesRoute` → `<ReportsDashboard userRole={currentUser.role} />` (sin `useNavigate`).
+* `tests/ReportsDashboard.test.tsx`: los 8 render pierden `isOpen`/`onClose`; el test del rol OPERATOR → `AccessDeniedState` se reemplaza por uno que asevera render inline (sin `.modal-overlay`, sin `#btn-close-reports`) — el gating ADMIN lo cubre `AppShellRouting.test.tsx` (no-admin en `/reportes` → `/`).
+* **Verificado en el stack Docker real:** `/reportes` inline, sin overlay/X, 0 errores de consola, día y noche.
+* **FASE 5.C:** sin hallazgos sistémicos.
+* **Nota:** `check_dead_code.sh` lista `check_fefo_contrast.mjs` como archivo sin usar — deuda de `TK-088-FE` (script `node` de auditoría, no importado), fuera del diff de este ticket.

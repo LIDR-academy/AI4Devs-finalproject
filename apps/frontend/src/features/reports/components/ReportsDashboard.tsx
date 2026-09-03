@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, X, Clock } from 'lucide-react';
+import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, Clock } from 'lucide-react';
 import { ReportsService, WasteSummaryItem, RotationMetrics } from '../services/reports.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
-import { Modal } from '../../../shared/components/Modal.js';
-import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
 import styles from './ReportsDashboard.module.css';
 
 interface ReportsDashboardProps {
+  /** Rol de sesión — el acceso a `/reportes` ya lo garantiza `<ProtectedRoute requiredRole="ADMIN">`. */
   userRole: string;
-  isOpen: boolean;
-  onClose: () => void;
 }
 
 type FilterRange = 'today' | 'week' | 'month';
@@ -17,7 +14,6 @@ type FilterRange = 'today' | 'week' | 'month';
 interface ReportsFilterBarProps {
   filterRange: FilterRange;
   onFilterChange: (range: FilterRange) => void;
-  onClose: () => void;
 }
 
 const FILTER_OPTIONS: Array<{ value: FilterRange; label: string }> = [
@@ -26,24 +22,18 @@ const FILTER_OPTIONS: Array<{ value: FilterRange; label: string }> = [
   { value: 'month', label: 'Mes' },
 ];
 
-const ReportsFilterBar: React.FC<ReportsFilterBarProps> = ({ filterRange, onFilterChange, onClose }) => (
-  <div className="flex-gap-xs">
-    <div className={`flex-gap-xs ${styles['filter-toggle-group']}`}>
-      {FILTER_OPTIONS.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          className={`btn-touch ${styles['filter-toggle-btn']} ${filterRange === option.value ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => onFilterChange(option.value)}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-
-    <button className="btn-touch btn-secondary btn-icon" onClick={onClose} id="btn-close-reports">
-      <X size={20} />
-    </button>
+const ReportsFilterBar: React.FC<ReportsFilterBarProps> = ({ filterRange, onFilterChange }) => (
+  <div className={`flex-gap-xs ${styles['filter-toggle-group']}`}>
+    {FILTER_OPTIONS.map((option) => (
+      <button
+        key={option.value}
+        type="button"
+        className={`btn-touch ${styles['filter-toggle-btn']} ${filterRange === option.value ? 'btn-primary' : 'btn-secondary'}`}
+        onClick={() => onFilterChange(option.value)}
+      >
+        {option.label}
+      </button>
+    ))}
   </div>
 );
 
@@ -195,7 +185,12 @@ const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal, 
   </div>
 );
 
-export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, isOpen, onClose }) => {
+/**
+ * Dashboard de mermas y KPIs FEFO. Desde `US-024` se renderiza **inline** en el
+ * `<main>` del shell (ruta `/reportes`), no como `<Modal>` flotante — consistente
+ * con `/estaciones` y `/recetas`. El gating `ADMIN` vive en `<ProtectedRoute>`.
+ */
+export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole }) => {
   const [data, setData] = useState<WasteSummaryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filterRange, setFilterRange] = useState<FilterRange>('week');
@@ -203,29 +198,22 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
   const [rotationMetrics, setRotationMetrics] = useState<RotationMetrics | null>(null);
 
   useEffect(() => {
-    if (isOpen && userRole === 'ADMIN') {
-      setIsLoading(true);
-      const now = new Date();
-      const startDate = new Date(now.getTime() - 7 * 86400000).toISOString();
-      const endDate = now.toISOString();
+    if (userRole !== 'ADMIN') return;
+    setIsLoading(true);
+    const now = new Date();
+    const startDate = new Date(now.getTime() - 7 * 86400000).toISOString();
+    const endDate = now.toISOString();
 
-      ReportsService.fetchWasteReport(startDate, endDate)
-        .then(setData)
-        .finally(() => setIsLoading(false));
+    ReportsService.fetchWasteReport(startDate, endDate)
+      .then(setData)
+      .finally(() => setIsLoading(false));
 
-      ReportsService.fetchRotationMetrics(startDate, endDate).then(setRotationMetrics);
+    ReportsService.fetchRotationMetrics(startDate, endDate).then(setRotationMetrics);
 
-      SettingsService.fetchSettings()
-        .then((settings) => setCurrencySymbol(settings.currencySymbol))
-        .catch(() => {});
-    }
-  }, [isOpen, userRole, filterRange]);
-
-  if (!isOpen) return null;
-
-  if (userRole !== 'ADMIN') {
-    return <AccessDeniedState moduleLabel="Reportes y Analíticas de Mermas" onClose={onClose} />;
-  }
+    SettingsService.fetchSettings()
+      .then((settings) => setCurrencySymbol(settings.currencySymbol))
+      .catch(() => {});
+  }, [userRole, filterRange]);
 
   const totalQuantity = data.reduce((acc, item) => acc + parseFloat(item.totalDiscardedQuantity || '0'), 0);
   const expirationWaste = data
@@ -235,23 +223,22 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole, is
   const maxVal = Math.max(...data.map((d) => parseFloat(d.totalDiscardedQuantity || '0')), 1);
 
   return (
-    <Modal size="xl">
-      {/* Header Dashboard */}
-      <div className="flex-between mb-6">
+    <>
+      <header className="flex-between flex-wrap mb-6 gap-3">
         <div>
-          <h2 className="flex-gap-xs fs-xl fw-bold">
+          <h1 className="flex-gap-xs fs-xl fw-bold">
             <BarChart3 className="text-primary-color" /> Dashboard de Reportes y Mermas FEFO
-          </h2>
+          </h1>
           <p className="text-secondary-color fs-sm mt-1">
             Indicadores de Desperdicio y Eficiencia en Tiempo Real
           </p>
         </div>
 
-        <ReportsFilterBar filterRange={filterRange} onFilterChange={setFilterRange} onClose={onClose} />
-      </div>
+        <ReportsFilterBar filterRange={filterRange} onFilterChange={setFilterRange} />
+      </header>
 
       <KpiCards totalQuantity={totalQuantity} expirationWaste={expirationWaste} rotationMetrics={rotationMetrics} />
       <WasteBarChart isLoading={isLoading} data={data} maxVal={maxVal} currencySymbol={currencySymbol} />
-    </Modal>
+    </>
   );
 };

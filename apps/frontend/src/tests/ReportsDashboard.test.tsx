@@ -41,28 +41,31 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
     vi.unstubAllGlobals();
   });
 
-  it('debe mostrar la pantalla de Acceso Restringido si el usuario no es ADMIN', () => {
-    render(<ReportsDashboard isOpen={true} userRole="OPERATOR" onClose={() => {}} />);
+  it('se renderiza inline (US-024): sin overlay de modal ni botón de cerrar', () => {
+    const { container } = render(<ReportsDashboard userRole="ADMIN" />);
 
-    expect(screen.getByText(/Acceso Restringido/i)).toBeInTheDocument();
-    expect(screen.getByText(/requiere rol de Administrador/i)).toBeInTheDocument();
+    // El gating ADMIN vive ahora en <ProtectedRoute>; ReportsDashboard ya no envuelve
+    // en <Modal> ni expone una "X" de cerrar (una ruta no se cierra, se navega).
+    expect(container.querySelector('[class*="modal-overlay"]')).toBeNull();
+    expect(container.querySelector('#btn-close-reports')).toBeNull();
+    expect(screen.getByText(/Dashboard de Reportes y Mermas FEFO/i)).toBeInTheDocument();
   });
 
   it('debe renderizar el dashboard con metricas cuando el usuario posee rol ADMIN', async () => {
-    render(<ReportsDashboard isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<ReportsDashboard userRole="ADMIN" />);
 
     expect(screen.getByText(/Dashboard de Reportes y Mermas FEFO/i)).toBeInTheDocument();
     expect(screen.getByText(/Total Insumos Descartados/i)).toBeInTheDocument();
   });
 
   it('debe mostrar el valor monetario de la merma cuando el insumo tiene costo registrado (US-019 Escenario 1)', async () => {
-    render(<ReportsDashboard isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<ReportsDashboard userRole="ADMIN" />);
 
     expect(await screen.findByText('$6300.00')).toBeInTheDocument();
   });
 
   it('debe mostrar "Sin costo registrado" cuando el insumo no tiene costo, nunca "$0.00" (US-019 Escenario 2)', async () => {
-    render(<ReportsDashboard isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<ReportsDashboard userRole="ADMIN" />);
 
     expect(await screen.findByText('Sin costo registrado')).toBeInTheDocument();
     expect(screen.queryByText(/\$0\.00/)).not.toBeInTheDocument();
@@ -83,7 +86,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
       '$'
     );
 
-    render(<ReportsDashboard isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<ReportsDashboard userRole="ADMIN" />);
 
     expect(await screen.findByText('$0.00')).toBeInTheDocument();
     expect(screen.queryByText('Sin costo registrado')).not.toBeInTheDocument();
@@ -104,7 +107,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
       '€'
     );
 
-    render(<ReportsDashboard isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<ReportsDashboard userRole="ADMIN" />);
 
     expect(await screen.findByText('€6300.00')).toBeInTheDocument();
     expect(screen.queryByText('$6300.00')).not.toBeInTheDocument();
@@ -113,7 +116,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
   it('debe mostrar un estado vacio explicito cuando sampleSize es 0, nunca un valor numerico (US-020 Escenario 2)', async () => {
     stubFetchWithWasteAndSettings([], '$', { averageTrrHours: null, targetTrrHours: 72, sampleSize: 0 });
 
-    render(<ReportsDashboard isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<ReportsDashboard userRole="ADMIN" />);
 
     expect(await screen.findByText('Sin remanentes finalizados en este periodo')).toBeInTheDocument();
     expect(screen.queryByText(/horas/)).not.toBeInTheDocument();
@@ -123,7 +126,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
   it('debe indicar cumplimiento (badge/texto verde) cuando el TRR real esta dentro del objetivo de 72h', async () => {
     stubFetchWithWasteAndSettings([], '$', { averageTrrHours: 50.0, targetTrrHours: 72, sampleSize: 12 });
 
-    render(<ReportsDashboard isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<ReportsDashboard userRole="ADMIN" />);
 
     expect(await screen.findByText('50.0')).toBeInTheDocument();
     expect(await screen.findByText(/Dentro del objetivo/i)).toBeInTheDocument();
@@ -135,7 +138,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
   it('debe indicar incumplimiento (badge/texto rojo) cuando el TRR real supera el objetivo de 72h, sin hardcodear el umbral', async () => {
     stubFetchWithWasteAndSettings([], '$', { averageTrrHours: 96.5, targetTrrHours: 72, sampleSize: 5 });
 
-    render(<ReportsDashboard isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<ReportsDashboard userRole="ADMIN" />);
 
     expect(await screen.findByText('96.5')).toBeInTheDocument();
     expect(await screen.findByText(/Fuera del objetivo/i)).toBeInTheDocument();
