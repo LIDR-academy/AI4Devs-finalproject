@@ -782,31 +782,280 @@ Las historias de usuario convenientes (Historias 6 y 7) se consideran parte de u
 
 ## Implementación ejecutable — Entrega 2
 
-El MVP ejecutable reconcilia las propuestas de la Entrega 1 con el contrato explícito de la Entrega 2. El backend utiliza NestJS + TypeScript + Prisma + PostgreSQL; el frontend utiliza React + TypeScript + Vite. La propuesta de FastAPI/SQLAlchemy del PRD y el modelo ampliado de publicación quedan registrados como alternativas arquitectónicas aplazadas en [`docs/ENTREGA2-IMPLEMENTATION-CONTRACT.md`](docs/ENTREGA2-IMPLEMENTATION-CONTRACT.md).
+Esta sección describe únicamente la implementación funcional disponible en el repositorio. El backend utiliza NestJS + TypeScript + Prisma + PostgreSQL y el frontend utiliza React + TypeScript + Vite. La propuesta histórica de FastAPI/SQLAlchemy y el modelo ampliado de publicación se conservan como referencia de Entrega 1 y no forman parte del MVP ejecutable.
 
-### Configuración local
+La reconciliación entre el diseño inicial y el contrato ejecutable se documenta en [`docs/ENTREGA2-IMPLEMENTATION-CONTRACT.md`](docs/ENTREGA2-IMPLEMENTATION-CONTRACT.md).
 
-Requisitos: Node.js 20+, npm y Docker Desktop con el daemon de Docker en ejecución.
+### 1. Requisitos previos
+
+Para ejecutar el MVP localmente se necesita:
+
+- Node.js.
+- npm con soporte para npm workspaces.
+- Docker Desktop con el daemon de Docker en ejecución.
+- Docker Compose, disponible mediante el comando `docker compose` incluido en Docker Desktop.
+- Un navegador web moderno.
+- Una terminal compatible con los comandos de esta guía (`bash`, como la disponible en macOS/Linux o Git Bash).
+
+Los `package.json` del repositorio no declaran una versión mínima mediante `engines`. Por tanto, no se fija aquí una versión que no esté respaldada por el proyecto. Debe utilizarse una versión de Node.js compatible con las versiones de TypeScript, NestJS, React y Vite declaradas en los workspaces.
+
+### 2. Configuración del entorno
+
+#### 2.1. Clonar e instalar
+
+Desde la carpeta en la que se quiera guardar el proyecto:
+
+```bash
+git clone https://github.com/mgutbor/AI4Devs-finalproject.git
+cd AI4Devs-finalproject
+npm install
+```
+
+El `package.json` raíz declara los workspaces `backend` y `frontend`; por eso `npm install` instala las dependencias de ambas aplicaciones desde la raíz.
+
+#### 2.2. Crear `.env`
+
+Desde la raíz del repositorio:
 
 ```bash
 cp .env.example .env
-npm install
+```
+
+El archivo `.env.example` contiene únicamente comentarios y valores de ejemplo seguros, por lo que puede copiarse directamente. Después, abre `.env` y sustituye el valor de `JWT_SECRET` por un secreto local generado para el desarrollo. No se debe modificar ni versionar ningún secreto real. La configuración local puede quedar así:
+
+```dotenv
+DATABASE_URL="postgresql://app:app@localhost:5432/ai_bpb?schema=public"
+JWT_SECRET="replace-with-a-long-local-secret"
+JWT_EXPIRES_IN="1d"
+AI_MOCK_TEMPERATURE="0.2"
+PORT="3000"
+FRONTEND_URL="http://localhost:5173"
+VITE_API_URL="http://localhost:3000/api/v1"
+```
+
+Variables disponibles:
+
+| Variable | Obligatoria | Finalidad y valor local |
+| --- | --- | --- |
+| `DATABASE_URL` | sí | URL de conexión de Prisma a PostgreSQL local. Debe apuntar a `ai_bpb` en `localhost:5432`. |
+| `JWT_SECRET` | sí | Secreto utilizado para firmar y verificar JWT. Debe sustituirse por un valor local privado. |
+| `JWT_EXPIRES_IN` | no | Duración del JWT; si se omite, el backend utiliza `1d`. |
+| `AI_MOCK_TEMPERATURE` | no | Temperatura registrada en los metadatos de la generación mock; el valor local del ejemplo es `0.2`. |
+| `PORT` | no | Puerto HTTP del backend; si se omite, utiliza `3000`. |
+| `FRONTEND_URL` | no | Origen permitido por CORS; el valor local esperado es `http://localhost:5173`. |
+| `VITE_API_URL` | no | URL base que el frontend utiliza para comunicarse con la API; el valor local esperado es `http://localhost:3000/api/v1`. |
+
+`.env` está excluido de Git mediante `.gitignore`. No se deben guardar en el repositorio contraseñas personales, JWT secrets, API keys ni credenciales de proveedores.
+
+La Entrega 2 utiliza `MockLLMGateway`. No se necesita una API key de OpenAI, Anthropic, Gemini ni de ningún otro proveedor LLM externo para ejecutar o probar el MVP actual.
+
+#### 2.3. Cargar las variables en la terminal
+
+En cada terminal que vaya a ejecutar comandos del backend, Prisma o frontend, carga la configuración desde la raíz:
+
+```bash
+set -a
+source .env
+set +a
+```
+
+Este paso garantiza que las variables estén disponibles para Prisma, NestJS y Vite, incluso cuando npm ejecute los scripts dentro de un workspace.
+
+### 3. Base de datos PostgreSQL y Prisma
+
+El archivo `docker-compose.yml` define un único servicio local:
+
+- Servicio: `postgres`.
+- Imagen: `postgres:16-alpine`.
+- Base de datos: `ai_bpb`.
+- Usuario local: `app`.
+- Puerto publicado: `5432`.
+
+Las credenciales anteriores son únicamente las credenciales locales definidas por Docker Compose. No deben reutilizarse en entornos públicos.
+
+#### 3.1. Iniciar PostgreSQL
+
+Con Docker Desktop iniciado, desde la raíz:
+
+```bash
 docker compose up -d postgres
+```
+
+Comprobar el contenedor y su estado:
+
+```bash
+docker compose ps
+```
+
+Comprobar que PostgreSQL acepta conexiones:
+
+```bash
+docker compose exec postgres pg_isready -U app -d ai_bpb
+```
+
+El resultado esperado contiene:
+
+```text
+accepting connections
+```
+
+#### 3.2. Generar Prisma Client y aplicar migraciones
+
+Después de cargar `.env`:
+
+```bash
+set -a
+source .env
+set +a
+
 npm run prisma:generate
 npm run prisma:migrate
+```
+
+Los scripts raíz delegan en el workspace backend:
+
+- `npm run prisma:generate` ejecuta `prisma generate`.
+- `npm run prisma:migrate` ejecuta `prisma migrate dev`.
+
+`Prisma Client` proporciona el cliente TypeScript utilizado por `PrismaService`; las migraciones crean y actualizan el esquema real de PostgreSQL. El modelo ejecutable contiene exactamente estas seis entidades:
+
+```text
+User
+Business
+DiscoveryResponses
+BusinessProfile
+Asset
+AIGeneration
+```
+
+### 4. Ejecución en desarrollo
+
+Backend y frontend se ejecutan como procesos independientes. Mantén abiertas dos terminales separadas, ambas situadas en la raíz del repositorio.
+
+#### Terminal 1 — Backend NestJS
+
+```bash
+set -a
+source .env
+set +a
 npm run dev:backend
+```
+
+El backend escucha en:
+
+```text
+http://localhost:3000
+```
+
+El script raíz ejecuta `npm --workspace backend run start:dev`, que inicia NestJS en modo watch.
+
+#### Terminal 2 — Frontend React/Vite
+
+```bash
+set -a
+source .env
+set +a
 npm run dev:frontend
 ```
 
-Abre `http://localhost:5173`. La API se ejecuta en `http://localhost:3000`.
+El frontend escucha en:
 
-La implementación de IA predeterminada es una simulación síncrona. No se necesita una clave de API de proveedor para el desarrollo local ni para las pruebas. Es necesario sustituir `JWT_SECRET` por un secreto local en `.env`; `.env` está excluido de Git.
+```text
+http://localhost:5173
+```
 
-### Flujo del MVP implementado
+El script raíz ejecuta `npm --workspace frontend run dev`, que inicia Vite.
 
-`REGISTER → LOGIN → CREATE BUSINESS → COMPLETE DISCOVERY → REVIEW/APPROVE PROFILE → GENERATE DIGITAL PRESENCE → REVIEW/EDIT FIVE ASSETS`
+Abre en el navegador:
 
-Los cinco tipos de activos generados son exactamente:
+```text
+http://localhost:5173
+```
+
+### 5. Verificación del entorno
+
+Estas comprobaciones utilizan únicamente comandos, rutas y servicios presentes en el repositorio.
+
+#### PostgreSQL
+
+```bash
+docker compose ps
+docker compose exec postgres pg_isready -U app -d ai_bpb
+```
+
+Debe aparecer el contenedor `postgres` en ejecución/saludable y PostgreSQL debe responder `accepting connections`.
+
+#### Backend y autenticación
+
+Con el backend en ejecución:
+
+```bash
+curl -i http://localhost:3000/api/v1/business
+```
+
+La respuesta esperada es `401 Unauthorized`, porque `GET /api/v1/business` es una ruta protegida. Esta respuesta confirma que NestJS está atendiendo peticiones y que `JwtAuthGuard` está activo.
+
+#### Frontend
+
+Con Vite en ejecución:
+
+```bash
+curl -I http://localhost:5173
+```
+
+Debe devolverse una respuesta HTTP del servidor de desarrollo de Vite. La comprobación visual definitiva consiste en abrir:
+
+```text
+http://localhost:5173
+```
+
+### 6. Flujo funcional del MVP
+
+El flujo implementado es:
+
+```text
+REGISTER
+→ LOGIN
+→ CREATE BUSINESS
+→ COMPLETE DISCOVERY
+→ REVIEW/APPROVE PROFILE
+→ GENERATE DIGITAL PRESENCE
+→ REVIEW/EDIT FIVE ASSETS
+→ REGENERATE
+```
+
+#### `REGISTER`
+
+En la pantalla inicial, cambia a registro e introduce nombre, email y contraseña. El backend crea `User`, almacena un hash bcrypt en `passwordHash` y devuelve un JWT junto con los datos públicos del usuario. El frontend guarda el token de sesión y abre el espacio de trabajo.
+
+#### `LOGIN`
+
+Introduce las credenciales registradas. Con credenciales válidas, el backend devuelve un JWT y el frontend recupera el acceso al espacio de trabajo. Las credenciales inválidas muestran un error y no permiten continuar.
+
+#### `CREATE BUSINESS`
+
+Introduce el nombre del negocio y selecciona `Create business`. El backend crea un `Business` asociado al usuario autenticado y el frontend abre el wizard con el nombre del negocio preseleccionado.
+
+#### `COMPLETE DISCOVERY`
+
+Completa los seis pasos implementados:
+
+1. `business_identity`: `businessName` y `category` son obligatorios.
+2. `offer`: `services` debe contener al menos un elemento; `products` es opcional. En la interfaz se introducen elementos separados por comas.
+3. `target_audience`: texto obligatorio de al menos 10 caracteres.
+4. `brand_voice`: `tone` es obligatorio y `style` es opcional.
+5. `contact_location`: `location` es obligatorio; `phone` y `website` son opcionales. El sitio web debe usar `http://` o `https://`.
+6. `consent`: el consentimiento GDPR debe estar activado.
+
+El frontend valida cada paso y el backend vuelve a validar el payload completo mediante DTOs antes de persistirlo. Un envío válido persiste `DiscoveryResponses` y crea/actualiza un `BusinessProfile` con estado `NORMALIZED`.
+
+#### `REVIEW/APPROVE PROFILE`
+
+La pantalla de perfil muestra los datos normalizados. Mientras el perfil está en `NORMALIZED`, la generación no está disponible. Al seleccionar `Approve profile`, el backend comprueba ownership, estado y consentimiento, y cambia el perfil a `APPROVED`.
+
+#### `GENERATE DIGITAL PRESENCE`
+
+Selecciona `Generate digital presence`. La operación es síncrona: el backend ejecuta el pipeline completo dentro de la petición y genera exactamente un asset actual de cada tipo:
 
 - `BUSINESS_SUMMARY`
 - `WEBSITE_CONTENT`
@@ -814,31 +1063,76 @@ Los cinco tipos de activos generados son exactamente:
 - `SOCIAL_MEDIA_BIO`
 - `FAQ`
 
-### API implementada
+Los assets aparecen inicialmente con estado `READY_FOR_REVIEW`.
 
-Todas las rutas tienen el prefijo `/api/v1`.
+#### `REVIEW ASSETS`
 
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /auth/me`
-- `POST /business`
-- `GET /business`
-- `POST /discovery/submit`
-- `GET /business-profile?businessId=...`
-- `POST /business-profile/review`
-- `POST /assets/generate-digital-presence`
-- `GET /assets?businessId=...`
-- `GET /assets/:id`
-- `PATCH /assets/:id`
-- `POST /assets/:id/regenerate`
+La pantalla de assets muestra las cinco tarjetas con tipo, título, contenido, estado, controles de edición y acción `Regenerate`. El contenido del mock es determinista y utiliza el contexto del perfil aprobado.
 
-### Verificación
+#### `EDIT ASSET`
 
-El repositorio incluye pruebas unitarias para la normalización, la fundamentación del contexto de IA, la validación de resultados y el servicio de generación de IA, además de pruebas HTTP para la creación de negocios, el envío del descubrimiento y la generación.
+Modifica el título o el contenido de una tarjeta y selecciona `Save edit`. El backend actualiza el asset propio, lo marca como `EDITED` y el frontend muestra el contenido actualizado.
+
+#### `REGENERATE`
+
+Selecciona `Regenerate` en un asset. El backend vuelve a comprobar ownership, perfil aprobado y tipo de asset; regenera desde el `BusinessProfile` canónico y devuelve el asset actual a `READY_FOR_REVIEW`. La generación anterior no se elimina: se conserva en `AIGeneration` como historial.
+
+La interfaz actual no incluye una pantalla de historial de generaciones. La conservación del historial se verifica en la base de datos.
+
+### 7. Arquitectura de generación IA
+
+La generación sigue este flujo obligatorio:
+
+```text
+DiscoveryResponses
+→ BusinessProfile
+→ ContextBuilder
+→ PromptBuilder
+→ LLMGateway
+→ Validation
+→ Asset/AIGeneration
+```
+
+- `DiscoveryResponses` almacena el envío validado y sirve como entrada de la normalización.
+- `BusinessProfile` es la fuente canónica y única de contexto para la generación.
+- `ContextBuilder` transforma únicamente un `BusinessProfile` en `BusinessProfileContext`.
+- `PromptBuilder` construye el prompt versionado a partir de `BusinessProfileContext`.
+- `LLMGateway` abstrae la invocación del modelo mediante la interfaz `LLMGateway`.
+- La implementación concreta de Entrega 2 es `MockLLMGateway`.
+- El mock es determinista y síncrono; no realiza llamadas de red ni requiere credenciales externas.
+- La arquitectura permite sustituir posteriormente el mock por un proveedor LLM real sin cambiar el flujo de dominio/aplicación.
+- `validateGenerationOutput` valida la respuesta antes de persistir un `Asset`.
+- `AIGeneration` conserva `promptSnapshot`, `contextSnapshot`, `responseSnapshot`, versiones, modelo, temperatura, tokens, estado, timestamps y usuario solicitante.
+- Las generaciones fallidas se registran con estado `FAILED` y no crean un asset a partir de una respuesta inválida.
+
+Para esta entrega, `promptVersion=v1` y `contextVersion=v1` son identificadores fijos explícitos del MVP; no existe todavía un sistema de versionado dinámico.
+
+### 8. Tests y verificación técnica
+
+#### Tests automatizados
+
+Desde la raíz, con PostgreSQL disponible y las variables cargadas:
+
+```bash
+set -a
+source .env
+set +a
+npm test
+```
+
+La suite actual contiene 12 suites y 27 tests, incluyendo pruebas unitarias de autenticación, ownership, normalización, BusinessProfile, pipeline IA, validación de outputs y assets, además de pruebas HTTP.
 
 #### E2E automatizado database-backed
 
-La prueba E2E automatizada recorre exactamente:
+La prueba `backend/test/database.e2e-spec.ts` utiliza:
+
+- `AppModule` real.
+- `PrismaService` real.
+- PostgreSQL real mediante `DATABASE_URL`.
+- Controllers y services reales.
+- Persistencia real, sin mockear repositorios ni la base de datos.
+
+Su recorrido automatizado es:
 
 ```text
 REGISTER
@@ -850,23 +1144,58 @@ REGISTER
 → VERIFY DATABASE PERSISTENCE
 ```
 
-Utiliza `AppModule` real, `PrismaService` real, PostgreSQL real, controllers y services reales, sin mockear repositorios ni la persistencia. Verifica la persistencia de las seis entidades, los cinco tipos de assets y los snapshots/metadata de `AIGeneration`.
+Comprueba los cinco tipos de assets y los snapshots/metadata de `AIGeneration`.
 
-#### Validación adicional
+#### Validaciones manuales adicionales
 
-Por separado, edit, regeneration, preservation of `AIGeneration` history y ownership isolation fueron verificados mediante tests de servicio y validación manual del flujo real contra NestJS + Prisma + PostgreSQL. Estas comprobaciones adicionales no forman parte del E2E automatizado descrito anteriormente.
+De forma separada del E2E automatizado, se verificaron mediante tests de servicio y validación manual contra NestJS + Prisma + PostgreSQL:
 
-Verificado localmente:
+- Edición de assets.
+- Regeneración de assets.
+- Conservación del historial de `AIGeneration`.
+- Aislamiento de ownership entre usuarios.
 
-- Validación del esquema de Prisma
-- Verificación de tipos de backend y frontend
-- Análisis estático de backend y frontend
-- Compilación de producción de backend y frontend
-- Suite de pruebas backend: 12 suites y 27 pruebas superadas
-- E2E automatizado database-backed: `REGISTER → LOGIN → CREATE BUSINESS → DISCOVERY → APPROVE PROFILE → GENERATE FIVE ASSETS → VERIFY DATABASE PERSISTENCE`, contra NestJS + Prisma + PostgreSQL reales.
-- Validación adicional manual y mediante tests de servicio: edición, regeneración, conservación del historial de `AIGeneration` y aislamiento de ownership.
-- Pipeline AI: `DiscoveryResponses → BusinessProfile → ContextBuilder → PromptBuilder → LLMGateway → Validation → Asset/AIGeneration`.
-- `BusinessProfile` es la fuente canónica de IA; `DiscoveryResponses` no se envía directamente al LLM.
-- Para Entrega 2, `promptVersion=v1` y `contextVersion=v1` son versiones fijas y explícitas del MVP.
+#### Verificaciones técnicas
 
-Quedan aplazados para una fase posterior a la Entrega 2: publicación externa, integraciones con CMS/Google, OAuth, colaboración, notificaciones, búsqueda, analítica/KPIs, evaluación externa de IA, colas, workers y la infraestructura asíncrona.
+```bash
+npm run typecheck:backend
+npm run typecheck:frontend
+npm run lint:backend
+npm run lint:frontend
+npm run build:backend
+npm run build:frontend
+DATABASE_URL="postgresql://app:app@localhost:5432/ai_bpb?schema=public" npm --workspace backend exec prisma validate -- --schema prisma/schema.prisma
+```
+
+Resultado verificado para Entrega 2:
+
+- 12 suites y 27 tests superados.
+- Typecheck de backend y frontend: PASS.
+- Lint de backend y frontend: PASS.
+- Build de backend y frontend: PASS.
+- Validación del schema Prisma: PASS.
+- Migraciones aplicadas y ejecución E2E previamente verificada contra PostgreSQL real.
+
+### 9. Limitaciones conocidas y trabajo futuro
+
+No forman parte de la implementación ejecutable de Entrega 2:
+
+- Integración con un proveedor LLM real.
+- Publicación externa.
+- Integraciones CMS.
+- Integración con Google Business.
+- OAuth.
+- Colaboración.
+- Notificaciones.
+- Búsqueda/OpenSearch.
+- Analítica y KPIs.
+- Evaluación externa de IA.
+- Colas, workers, Redis e infraestructura asíncrona.
+- Generation-history UI.
+
+Deudas técnicas conocidas, sin ampliar el alcance actual:
+
+- `promptVersion` y `contextVersion` permanecen fijos en `v1`.
+- `AIGeneration` se persiste y puede auditarse directamente en PostgreSQL, pero todavía no tiene endpoint ni pantalla de consulta.
+- El JWT se conserva en `localStorage` en el frontend; una estrategia de almacenamiento más robusta corresponde a una fase posterior.
+- El control de conflictos de edición concurrente y las pruebas de componentes frontend quedan para una fase posterior.
