@@ -70,6 +70,9 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-089-FE** | `shared` | **Medio** | **Media** | 3 SP | Depende de `TK-085-FE`. `US-024`: `ReportsDashboard` gana modo `embedded`; `/reportes` deja de abrirse como `<Modal>` flotante. | 🟢 P2 - Media |
 | **TK-090-FE** | `shared` | **Medio** | **Media** | 8 SP | Depende de `TK-085-FE`, `TK-089-FE`. `US-024`: `/ajustes` pasa a layout route con 5 sub-rutas inline deep-linkables; los 5 paneles admin ganan modo `embedded`. | 🟢 P2 - Media |
 | **TK-091** | `shared` | **Bajo** | **Baja** | 3 SP | Sin dependencias. Deuda de calidad: extrae el mapeo de error→RFC 7807 duplicado en `auth.controller.ts` a un helper; baja el baseline `jscpd` bajo 3% para revertir el umbral a 3. | 🟢 P2 - Media |
+| **TK-092** | `shared` | **Alto** | **Baja** | 5 SP | Sin dependencias. Cierra `AUDIT-SEC-001` F-1 (**Crítica** — todo usuario creado por API autentica como ADMIN): `PrismaUserRepository` persiste `roleId` y resuelve rol fail-safe (`UNASSIGNED`, nunca `ADMIN`); rechaza roles fuera del catálogo (F-2); seed reconcilia huérfanos. | 🔴 P0 - Crítica |
+| **TK-093** | `shared` | **Medio** | **Baja** | 3 SP | Depende de `TK-092`. Cierra `AUDIT-SEC-001` F-3: `requireRole(...)` explícito por ruta en las mutaciones de `kitchen.routes.ts` / `stock.routes.ts` (hoy sólo auth a nivel de mount). Sin cambio de comportamiento. | 🟢 P2 - Media |
+| **TK-094** | `shared` | **Medio** | **Baja** | 3 SP | Sin dependencias. Cierra `AUDIT-DEV-005` D-6: `prisma/migrations/` desincronizado de `schema.prisma` (faltan `mustChangePin` / `email`) → `check_seed_idempotency.sh` rojo con `migrate deploy`. El stack real usa `db push` y no lo nota. | 🟢 P2 - Media |
 
 ---
 
@@ -106,6 +109,9 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-079** | [US-020](../11_user_stories/reports/US-020.md) | Indicador TRR Real (Rotation Metrics) | `reports` | 3 | Should Have | [reports/backend/TK-079.md](reports/backend/TK-079.md) |
 | **TK-080** | [US-021](../11_user_stories/stock/US-021.md) | Filtro `insumoId` para Detección de Apertura Duplicada | `stock` | 2 | Should Have | [stock/backend/TK-080.md](stock/backend/TK-080.md) |
 | **TK-091** | N/A (Técnico) | Saneamiento de Duplicación en `auth.controller.ts` (jscpd) | `shared` | 3 | Should Have | [shared/backend/TK-091.md](shared/backend/TK-091.md) |
+| **TK-092** | [US-010](../11_user_stories/auth/US-010.md) · [US-015](../11_user_stories/security/US-015.md) | Resolución Fail-Safe de Rol de Usuario (AUDIT-SEC-001 F-1/F-2) | `shared` | 5 | Must Have | [shared/backend/TK-092.md](shared/backend/TK-092.md) |
+| **TK-093** | [US-015](../11_user_stories/security/US-015.md) | Declaración Explícita de Rol por Ruta en Mutaciones Cocina/Stock (AUDIT-SEC-001 F-3) | `shared` | 3 | Should Have | [shared/backend/TK-093.md](shared/backend/TK-093.md) |
+| **TK-094** | N/A (Técnico) | Paridad `prisma/migrations/` ↔ `schema.prisma` (`mustChangePin` / `email`) (AUDIT-DEV-005 D-6) | `shared` | 3 | Should Have | [shared/backend/TK-094.md](shared/backend/TK-094.md) |
 
 
 ### 🖥️ Tickets de Frontend
@@ -160,6 +166,9 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-073: Backend Dynamic RBAC](security/backend/TK-073.md)** (Backend)
 *   **[TK-073-FE: Frontend Dynamic RBAC UI](security/frontend/TK-073-FE.md)** (Frontend)
 *   **[TK-077: Backend Admin PIN Recovery via Email Token & Magic Link](auth/backend/TK-077.md)** (Backend)
+*   **[TK-092: Resolución Fail-Safe de Rol de Usuario (AUDIT-SEC-001 F-1/F-2)](shared/backend/TK-092.md)** (Backend) — cierra la escalada de privilegios Crítica: usuarios creados por API dejan de autenticar como ADMIN.
+*   **[TK-093: Declaración Explícita de Rol por Ruta en Mutaciones Cocina/Stock (AUDIT-SEC-001 F-3)](shared/backend/TK-093.md)** (Backend)
+*   **[TK-094: Paridad `prisma/migrations/` ↔ `schema.prisma` (AUDIT-DEV-005 D-6)](shared/backend/TK-094.md)** (Backend)
 
 
 ### 📦 Bodega y Stock (`stock/`)
