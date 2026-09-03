@@ -7,17 +7,7 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     vi.unstubAllGlobals();
   });
 
-  it('debe mostrar la pantalla de Acceso Restringido si el usuario no es ADMIN', () => {
-    render(<CatalogManagementPanel isOpen={true} userRole="KITCHEN_STAFF" onClose={() => {}} />);
 
-    expect(screen.getByText(/Acceso Restringido/i)).toBeInTheDocument();
-    expect(screen.getByText(/requiere rol de Administrador/i)).toBeInTheDocument();
-  });
-
-  it('no renderiza nada si isOpen es false', () => {
-    const { container } = render(<CatalogManagementPanel isOpen={false} userRole="ADMIN" onClose={() => {}} />);
-    expect(container).toBeEmptyDOMElement();
-  });
 
   it('renderiza la vista de Inventario de Bodega por defecto', async () => {
     vi.stubGlobal(
@@ -31,7 +21,7 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
       })
     );
 
-    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<CatalogManagementPanel />);
 
     await waitFor(() => {
       expect(screen.getByText(/Inventario y Catálogo de Bodega/i)).toBeInTheDocument();
@@ -58,7 +48,7 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<CatalogManagementPanel />);
 
     fireEvent.click(screen.getByRole('button', { name: /Recetario/i }));
 
@@ -113,7 +103,7 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<CatalogManagementPanel />);
 
     fireEvent.click(screen.getByRole('button', { name: /Recetario/i }));
 
@@ -163,7 +153,7 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<CatalogManagementPanel />);
 
     await waitFor(() => {
       expect(screen.getByText(/Queso Mozzarella/i)).toBeInTheDocument();
@@ -186,7 +176,7 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
   it('muestra estado de carga si el catálogo de insumos está vacío al abrir el formulario de Nueva Receta', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] }));
 
-    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<CatalogManagementPanel />);
     fireEvent.click(screen.getByRole('button', { name: /Recetario/i }));
 
     await waitFor(() => {
@@ -220,7 +210,7 @@ describe('TK-057-FE: CatalogManagementPanel Component Suite', () => {
       })
     );
 
-    render(<CatalogManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<CatalogManagementPanel />);
     fireEvent.click(screen.getByRole('button', { name: /Recetario/i }));
 
     await waitFor(() => {

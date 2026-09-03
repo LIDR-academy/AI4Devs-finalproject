@@ -8,6 +8,8 @@ import { InventarioRoute } from '../app/routes/InventarioRoute.js';
 import { RecetasRoute } from '../app/routes/RecetasRoute.js';
 import { ReportesRoute } from '../app/routes/ReportesRoute.js';
 import { EstacionesRoute } from '../app/routes/EstacionesRoute.js';
+import { AjustesLayout } from '../app/routes/ajustes/AjustesLayout.js';
+import { PersonalRoute, MovimientosRoute } from '../app/routes/ajustes/index.js';
 import { router } from '../app/router.js';
 import { AuthService } from '../features/auth/services/auth.service.js';
 
@@ -36,6 +38,13 @@ describe('TK-085-FE: forma del árbol de rutas real (app/router.tsx)', () => {
       expect(el?.props.requiredRole).toBe('ADMIN');
     }
   });
+
+  it('/ajustes es un layout route con 5 sub-rutas + index redirect (US-024)', () => {
+    const ajustes = byPath('ajustes');
+    const subPaths = (ajustes?.children ?? []).map((r) => r.path).filter(Boolean);
+    expect(subPaths).toEqual(['configuracion', 'personal', 'roles', 'movimientos', 'catalogo']);
+    expect((ajustes?.children ?? []).some((r) => r.index)).toBe(true); // <Navigate to="configuracion">
+  });
 });
 
 /**
@@ -60,6 +69,18 @@ function renderAt(path: string) {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="ajustes"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AjustesLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="personal" replace />} />
+            <Route path="personal" element={<PersonalRoute />} />
+            <Route path="movimientos" element={<MovimientosRoute />} />
+          </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
@@ -120,6 +141,19 @@ describe('TK-085-FE: Shell de rutas y ProtectedRoute (US-023)', () => {
     renderAt('/estaciones');
     await waitFor(() => expect(screen.getByRole('button', { name: /Nuevo Insumo/i })).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /Ubicaciones/i })).toBeInTheDocument();
+  });
+
+  it('US-024: /ajustes/personal deep-link renderiza la sección inline (sin overlay); no-ADMIN → /', async () => {
+    AuthService.saveSession('t', { id: 'a1', name: 'Admin Uno', role: 'ADMIN' });
+    const { container, unmount } = renderAt('/ajustes/personal');
+    await waitFor(() => expect(screen.getByRole('heading', { name: /Gestión de Personal/i })).toBeInTheDocument());
+    expect(screen.getByRole('navigation', { name: /Secciones de Ajustes/i })).toBeInTheDocument();
+    expect(container.querySelector('[class*="modal-overlay"]')).toBeNull();
+    unmount();
+
+    AuthService.saveSession('t', { id: 'u1', name: 'Operario Uno', role: 'KITCHEN_STAFF' });
+    renderAt('/ajustes/movimientos');
+    await waitFor(() => expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument());
   });
 
   it('D-1: en /recetas el operario ve el recetario sin "+ Nueva Receta"; el ADMIN sí', async () => {

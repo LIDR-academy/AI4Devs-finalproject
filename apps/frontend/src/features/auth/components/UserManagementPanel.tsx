@@ -1,18 +1,10 @@
 import React, { useState } from 'react';
 import { Users } from 'lucide-react';
-import { Modal } from '../../../shared/components/Modal.js';
-import { ModalHeader } from '../../../shared/components/ModalHeader.js';
-import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
+import { PanelHeader } from '../../../shared/components/PanelHeader.js';
 import { SectionTabs } from '../../../shared/components/SectionTabs.js';
 import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
 import { CreateUserForm } from './CreateUserForm.js';
 import { UserStatusForm } from './UserStatusForm.js';
-
-interface UserManagementPanelProps {
-  isOpen: boolean;
-  userRole: string;
-  onClose: () => void;
-}
 
 type Section = 'create' | 'status';
 
@@ -21,27 +13,17 @@ const USER_MANAGEMENT_TABS = [
   { value: 'status' as const, label: 'Bloquear / Reactivar', id: 'btn-tab-user-status' },
 ];
 
-export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, userRole, onClose }) => {
+/**
+ * Sección Personal de `/ajustes/personal` (US-024) — inline en el `<main>` del shell.
+ * El gating `ADMIN` lo garantiza `<ProtectedRoute>` sobre el layout de Ajustes.
+ */
+export const UserManagementPanel: React.FC = () => {
   const [section, setSection] = useState<Section>('create');
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  if (!isOpen) return null;
-  if (userRole !== 'ADMIN') {
-    return <AccessDeniedState moduleLabel="Gestión de Personal" onClose={onClose} />;
-  }
-
-  const handleUpdated = (message: string) => {
-    setFeedback(message);
-  };
-
   return (
-    <Modal size="md">
-      <ModalHeader
-        icon={<Users className="text-primary-color" />}
-        title="Gestión de Personal"
-        size="lg"
-        onClose={onClose}
-      />
+    <>
+      <PanelHeader icon={<Users className="text-primary-color" />} title="Gestión de Personal" />
 
       <SectionTabs
         section={section}
@@ -54,7 +36,11 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen
 
       {feedback && <SuccessFeedbackBanner message={feedback} />}
 
-      {section === 'create' ? <CreateUserForm onCreated={handleUpdated} /> : <UserStatusForm onUpdated={handleUpdated} />}
-    </Modal>
+      {section === 'create' ? (
+        <CreateUserForm onCreated={setFeedback} />
+      ) : (
+        <UserStatusForm onUpdated={setFeedback} />
+      )}
+    </>
   );
 };

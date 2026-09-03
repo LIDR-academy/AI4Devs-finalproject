@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { History, RefreshCw, Search } from 'lucide-react';
 import { StockService, StockMovementHistoryItem } from '../services/stock.service.js';
-import { Modal } from '../../../shared/components/Modal.js';
-import { ModalHeader } from '../../../shared/components/ModalHeader.js';
+import { PanelHeader } from '../../../shared/components/PanelHeader.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
-import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
 import styles from './MovementHistoryPanel.module.css';
-
-interface MovementHistoryPanelProps {
-  isOpen: boolean;
-  userRole: string;
-  onClose: () => void;
-}
 
 interface MovementFiltersBarProps {
   insumoId: string;
@@ -116,7 +108,7 @@ function toEndOfDayIso(dateOnly: string): string {
   return `${dateOnly}T23:59:59.999Z`;
 }
 
-function useMovementHistory(isOpen: boolean, userRole: string) {
+function useMovementHistory() {
   const [items, setItems] = useState<StockMovementHistoryItem[]>([]);
   const [insumoId, setInsumoId] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -144,31 +136,23 @@ function useMovementHistory(isOpen: boolean, userRole: string) {
   }, [insumoId, startDate, endDate]);
 
   useEffect(() => {
-    if (isOpen && userRole === 'ADMIN') {
-      load();
-    }
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, userRole]);
+  }, []);
 
   return { items, insumoId, setInsumoId, startDate, setStartDate, endDate, setEndDate, isLoading, error, load };
 }
 
-export const MovementHistoryPanel: React.FC<MovementHistoryPanelProps> = ({ isOpen, userRole, onClose }) => {
-  const history = useMovementHistory(isOpen, userRole);
-
-  if (!isOpen) return null;
-  if (userRole !== 'ADMIN') {
-    return <AccessDeniedState moduleLabel="Auditoría de Movimientos" onClose={onClose} />;
-  }
+/**
+ * Sección Movimientos de `/ajustes/movimientos` (US-024) — inline. ADMIN-only vía
+ * `<ProtectedRoute>` sobre el layout de Ajustes.
+ */
+export const MovementHistoryPanel: React.FC = () => {
+  const history = useMovementHistory();
 
   return (
-    <Modal size="xl">
-      <ModalHeader
-        icon={<History className="text-primary-color" />}
-        title="Auditoría de Movimientos de Stock"
-        size="lg"
-        onClose={onClose}
-      />
+    <>
+      <PanelHeader icon={<History className="text-primary-color" />} title="Auditoría de Movimientos de Stock" />
 
       <MovementFiltersBar
         insumoId={history.insumoId}
@@ -189,6 +173,6 @@ export const MovementHistoryPanel: React.FC<MovementHistoryPanelProps> = ({ isOp
       ) : (
         !history.error && <MovementTable items={history.items} />
       )}
-    </Modal>
+    </>
   );
 };

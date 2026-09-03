@@ -7,17 +7,7 @@ describe('TK-050-FE: MovementHistoryPanel Component Suite', () => {
     vi.unstubAllGlobals();
   });
 
-  it('debe mostrar la pantalla de Acceso Restringido si el usuario no es ADMIN', () => {
-    render(<MovementHistoryPanel isOpen={true} userRole="KITCHEN_STAFF" onClose={() => {}} />);
 
-    expect(screen.getByText(/Acceso Restringido/i)).toBeInTheDocument();
-    expect(screen.getByText(/requiere rol de Administrador/i)).toBeInTheDocument();
-  });
-
-  it('no renderiza nada si isOpen es false', () => {
-    const { container } = render(<MovementHistoryPanel isOpen={false} userRole="ADMIN" onClose={() => {}} />);
-    expect(container).toBeEmptyDOMElement();
-  });
 
   it('carga y muestra el historial real poblado por el backend', async () => {
     vi.stubGlobal(
@@ -40,7 +30,7 @@ describe('TK-050-FE: MovementHistoryPanel Component Suite', () => {
       })
     );
 
-    render(<MovementHistoryPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<MovementHistoryPanel />);
 
     await waitFor(() => {
       expect(screen.getByText('Queso Mozzarella')).toBeInTheDocument();
@@ -51,7 +41,7 @@ describe('TK-050-FE: MovementHistoryPanel Component Suite', () => {
   it('muestra un estado vacío explícito cuando no hay movimientos, no una tabla en blanco', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] }));
 
-    render(<MovementHistoryPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<MovementHistoryPanel />);
 
     await waitFor(() => {
       expect(screen.getByText(/Sin movimientos registrados en este rango/i)).toBeInTheDocument();
@@ -62,7 +52,7 @@ describe('TK-050-FE: MovementHistoryPanel Component Suite', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<MovementHistoryPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<MovementHistoryPanel />);
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
     fireEvent.change(screen.getByLabelText('Fecha desde'), { target: { value: '2026-08-01' } });
@@ -81,7 +71,7 @@ describe('TK-050-FE: MovementHistoryPanel Component Suite', () => {
       vi.fn().mockResolvedValue({ ok: false, status: 403, json: async () => ({ message: 'Rol insuficiente' }) })
     );
 
-    render(<MovementHistoryPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<MovementHistoryPanel />);
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/Rol insuficiente/i);

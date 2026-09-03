@@ -7,17 +7,7 @@ describe('TK-049-FE: UserManagementPanel Component Suite', () => {
     vi.unstubAllGlobals();
   });
 
-  it('debe mostrar la pantalla de Acceso Restringido si el usuario no es ADMIN', () => {
-    render(<UserManagementPanel isOpen={true} userRole="KITCHEN_STAFF" onClose={() => {}} />);
 
-    expect(screen.getByText(/Acceso Restringido/i)).toBeInTheDocument();
-    expect(screen.getByText(/requiere rol de Administrador/i)).toBeInTheDocument();
-  });
-
-  it('no renderiza nada si isOpen es false', () => {
-    const { container } = render(<UserManagementPanel isOpen={false} userRole="ADMIN" onClose={() => {}} />);
-    expect(container).toBeEmptyDOMElement();
-  });
 
   it('crea un operario exitosamente y muestra el mensaje de confirmación real del backend', async () => {
     vi.stubGlobal(
@@ -29,7 +19,7 @@ describe('TK-049-FE: UserManagementPanel Component Suite', () => {
       })
     );
 
-    render(<UserManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<UserManagementPanel />);
 
     fireEvent.change(screen.getByLabelText(/Nombre Completo/i), { target: { value: 'Nuevo Operario' } });
     fireEvent.change(screen.getByLabelText(/PIN/i), { target: { value: '4321' } });
@@ -48,7 +38,7 @@ describe('TK-049-FE: UserManagementPanel Component Suite', () => {
       vi.fn().mockResolvedValue({ ok: false, status: 400, json: async () => ({ message: 'El nombre ya está en uso' }) })
     );
 
-    render(<UserManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<UserManagementPanel />);
 
     fireEvent.change(screen.getByLabelText(/Nombre Completo/i), { target: { value: 'Nuevo Operario' } });
     fireEvent.change(screen.getByLabelText(/PIN/i), { target: { value: '4321' } });
@@ -72,7 +62,7 @@ describe('TK-049-FE: UserManagementPanel Component Suite', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<UserManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<UserManagementPanel />);
 
     fireEvent.click(screen.getByRole('button', { name: /Bloquear \/ Reactivar/i }));
 
@@ -90,7 +80,7 @@ describe('TK-049-FE: UserManagementPanel Component Suite', () => {
   it('muestra estado vacío cuando no hay operarios registrados', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] }));
 
-    render(<UserManagementPanel isOpen={true} userRole="ADMIN" onClose={() => {}} />);
+    render(<UserManagementPanel />);
     fireEvent.click(screen.getByRole('button', { name: /Bloquear \/ Reactivar/i }));
 
     await waitFor(() => {

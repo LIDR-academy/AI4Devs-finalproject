@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
 import { BookOpen } from 'lucide-react';
-import { Modal } from '../../../shared/components/Modal.js';
-import { ModalHeader } from '../../../shared/components/ModalHeader.js';
-import { AccessDeniedState } from '../../../shared/components/AccessDeniedState.js';
+import { PanelHeader } from '../../../shared/components/PanelHeader.js';
 import { SectionTabs } from '../../../shared/components/SectionTabs.js';
 import { RecipeCatalogPanel } from '../../recipes/components/RecipeCatalogPanel.js';
 import { InsumoCatalogPanel } from '../../stock/components/InsumoCatalogPanel.js';
-
-interface CatalogManagementPanelProps {
-  isOpen: boolean;
-  userRole: string;
-  onClose: () => void;
-}
 
 type Section = 'inventory' | 'recipe';
 
@@ -20,26 +12,18 @@ const CATALOG_TABS = [
   { value: 'recipe' as const, label: 'Recetario', id: 'btn-tab-create-recipe' },
 ];
 
-export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ isOpen, userRole, onClose }) => {
+/**
+ * Sección Catálogo de `/ajustes/catalogo` (US-024) — inline. Monta los paneles de
+ * insumos/recetas con `canManage` (esta ruta es ADMIN-only vía `<ProtectedRoute>`).
+ */
+export const CatalogManagementPanel: React.FC = () => {
   const [section, setSection] = useState<Section>('inventory');
 
-  if (!isOpen) return null;
-  if (userRole !== 'ADMIN') {
-    return <AccessDeniedState moduleLabel="Gestión de Catálogo" onClose={onClose} />;
-  }
-
   return (
-    <Modal size="xl">
-      <ModalHeader
-        icon={<BookOpen className="text-primary-color" />}
-        title="Gestión de Catálogo e Inventario"
-        size="lg"
-        onClose={onClose}
-      />
-
+    <>
+      <PanelHeader icon={<BookOpen className="text-primary-color" />} title="Catálogo Maestro e Inventario" />
       <SectionTabs section={section} options={CATALOG_TABS} onChange={setSection} />
-
       {section === 'inventory' ? <InsumoCatalogPanel canManage /> : <RecipeCatalogPanel canManage />}
-    </Modal>
+    </>
   );
 };
