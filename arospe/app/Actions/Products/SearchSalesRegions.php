@@ -30,9 +30,44 @@ use App\Models\SalesRegion;
  * `group: "España"` (D-OQ4) -- that is PRD §2.1's own spelling of the
  * entry, it makes a selected chip self-describing out of context, and it
  * matches 0022's D3 expectation that this consumer renders a flat list.
+ *
+ * AUTHORIZATION (Phase 4 finding F-1): `MultiSelectOptionsResolver`'s own
+ * docblock states, IN CAPITALS, that a real implementation MUST perform its
+ * own authorization if the underlying data is not uniformly visible to
+ * every authenticated user. Decision (already made -- not a call for a
+ * future reader to re-litigate): no `Gate` call is added here. The Sales
+ * Region catalog data this resolver exposes -- `name`, `is_active` (via
+ * `disabled`) and has-children (also via `disabled`, indirectly through
+ * `assignable()`) -- is treated as uniformly visible to any authenticated
+ * admin reaching this resolver, exactly the reasoning `ResolveProductTaxRate`
+ * already states for the identical omission (see that class's own
+ * docblock). What this resolver deliberately does NOT disclose, in either
+ * method: `rate`, `description`, `is_default`. Verified against `toOption()`
+ * below, the single formatter both `search()` and `resolveSelected()` route
+ * through -- it returns exactly `{id, label, group, disabled}` and nothing
+ * else, so neither method can leak a fiscal figure or the seeder-only
+ * default flag regardless of which catalog columns are hydrated on the
+ * underlying `SalesRegion` instance.
  */
 class SearchSalesRegions implements MultiSelectOptionsResolver
 {
+    /**
+     * Hard ceiling on the number of `assignable()` rows this class will ever
+     * pull into memory before applying `$limit` and before the in-PHP name
+     * match runs (Phase 4 finding F-6). Negligible today -- the catalog's
+     * `assignable()` set is ~6 rows -- but this class is the template a
+     * later story (0034, shipping zones) is expected to copy over a table
+     * that can hold thousands of rows, and an unbounded `->get()` copied
+     * verbatim would silently become an unbounded full-table pull the day
+     * that happens. 1000 is chosen as comfortably above any plausible
+     * `$limit` a consumer passes (0022's own shell caps results well below
+     * that) while still bounding a full-table scan on a much larger future
+     * table to a fixed, small cost. A COPYING STORY OVER A LARGE TABLE:
+     * re-derive this constant for your own table's realistic scale rather
+     * than reusing 1000 unexamined.
+     */
+    private const MAX_SCANNED_ROWS = 1000;
+
     /**
      * `$term`/`$limit` are fixed by `MultiSelectOptionsResolver`'s public
      * contract, so `NormalizeForSearch` is resolved via `app()` rather than
@@ -51,6 +86,7 @@ class SearchSalesRegions implements MultiSelectOptionsResolver
             ->with('parent')
             ->orderBy('sort_order')
             ->orderBy('name')
+            ->limit(self::MAX_SCANNED_ROWS)
             ->get()
             ->filter(function (SalesRegion $region) use ($term, $normalizeForSearch): bool {
                 if (str_contains($normalizeForSearch($region->name), $term)) {

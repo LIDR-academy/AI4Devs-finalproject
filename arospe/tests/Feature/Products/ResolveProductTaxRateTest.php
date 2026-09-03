@@ -205,6 +205,37 @@ test('a disabled but still-assigned region keeps deciding the rate, rather than 
         ->and($result->tier)->toBe(TaxRateResolutionTier::AssignedRegion);
 });
 
+// Phase 4 finding F-4: a caller may hand this action a Product whose `salesRegions` relation was
+// already eager-loaded with a CONSTRAINED closure (Product::with(['salesRegions' => fn ($q) =>
+// $q->active()])) -- a `loadMissing()`-based match would be a no-op against that pre-loaded,
+// filtered collection and silently drop the deactivated-but-assigned region from the match,
+// producing the WRONG (CatalogDefault) answer. This must still resolve to the region's own rate.
+test('a deactivated-but-assigned region still decides the rate when the caller eager-loads salesRegions constrained to active-only', function () {
+    $region = SalesRegion::factory()->withRate('7.500')->create();
+    $default = SalesRegion::factory()->isDefault()->withRate('21.000')->create();
+    $product = Product::factory()->create();
+
+    app(SyncProductSalesRegions::class)($product, [$region->id]);
+
+    $region->is_active = false;
+    $region->save();
+
+    // The trap: pre-load the relation constrained to active-only, exactly the shape a caller
+    // resolving many products might reach for to "optimise" the eager-load.
+    $constrainedProduct = Product::with(['salesRegions' => fn ($query) => $query->active()])
+        ->findOrFail($product->id);
+
+    // Prove the trap is real: the constrained relation genuinely does NOT contain the deactivated
+    // region, so a loadMissing()-based implementation would find nothing here.
+    expect($constrainedProduct->salesRegions->pluck('id')->all())->not->toContain($region->id);
+
+    $result = app(ResolveProductTaxRate::class)($constrainedProduct, $region);
+
+    expect($result->rate)->toBe('7.500')
+        ->and($result->rate)->not->toBe('21.000')
+        ->and($result->tier)->toBe(TaxRateResolutionTier::AssignedRegion);
+});
+
 // =====================================================================
 // D4 -- no hierarchy climbing, in either direction. No grouping tier exists (D10).
 // =====================================================================
@@ -253,6 +284,31 @@ test('a different country never matches -- with groupings gone, this is the whol
     expect($result->rate)->toBe('15.000')
         ->and($result->region->id)->toBe($default->id)
         ->and($result->tier)->toBe(TaxRateResolutionTier::CatalogDefault);
+});
+
+// =====================================================================
+// Phase 4 finding F-5 -- deterministic tiebreak if the single-default
+// invariant is ever violated (nothing in the database enforces it; see
+// docs/database/schema.md's ⚠️ on sales_regions).
+// =====================================================================
+
+test('when two rows are flagged default, the older one (by created_at) wins, consistently across calls', function () {
+    $older = SalesRegion::factory()->isDefault()->withRate('5.000')->create();
+    $older->forceFill(['created_at' => now()->subDay()])->saveQuietly();
+
+    $newer = SalesRegion::factory()->isDefault()->withRate('9.000')->create();
+    $newer->forceFill(['created_at' => now()])->saveQuietly();
+
+    $destination = SalesRegion::factory()->create();
+    $product = Product::factory()->create();
+
+    $first = app(ResolveProductTaxRate::class)($product, $destination);
+    $second = app(ResolveProductTaxRate::class)($product, $destination);
+
+    expect($first->region->id)->toBe($older->id)
+        ->and($first->rate)->toBe('5.000')
+        ->and($second->region->id)->toBe($older->id)
+        ->and($second->rate)->toBe('5.000');
 });
 
 // =====================================================================

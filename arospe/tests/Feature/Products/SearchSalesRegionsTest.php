@@ -146,3 +146,27 @@ test('every returned row matches the exact option shape, with id a string and gr
         }
     }
 });
+
+// Phase 4 finding F-1: the resolver's own docblock records a deliberate decision NOT to
+// authorize itself, on the basis that the fields it discloses -- name, active state, has-children
+// -- are uniformly visible. That decision only holds if `rate`, `description` and `is_default`
+// (the catalog's genuinely sensitive/administrator-configured columns) are never part of the
+// returned shape. Asserted as an EXACT key set, not merely toHaveKeys() (which only proves the
+// four expected keys are present, not that nothing else is) -- a leak of a fifth key would pass
+// the test above and only this one would catch it.
+test('neither search() nor resolveSelected() discloses rate, description or is_default', function () {
+    $region = SalesRegion::factory()->withRate('12.345')->create(['name' => 'Ruritania', 'description' => 'A secret note']);
+
+    $term = app(NormalizeForSearch::class)('Ruritania');
+
+    $searchResults = app(SearchSalesRegions::class)->search($term, 50);
+    $resolvedResults = app(SearchSalesRegions::class)->resolveSelected([$region->id]);
+
+    foreach ([$searchResults, $resolvedResults] as $results) {
+        expect($results)->not->toBe([]);
+
+        foreach ($results as $row) {
+            expect(array_keys($row))->toEqualCanonicalizing(['id', 'label', 'group', 'disabled']);
+        }
+    }
+});

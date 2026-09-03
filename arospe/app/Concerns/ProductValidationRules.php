@@ -214,11 +214,26 @@ trait ProductValidationRules
      * or `salesRegionIdRules()` -- 0024's naming trap applies only to leaf
      * methods that clash across composed traits, and neither of these does.
      *
+     * `max:254` (Phase 4 finding F-3) bounds the array the same way its
+     * sibling `productGalleryMediaIdsRules()` already bounds the gallery
+     * array -- an unbounded array here is a real per-request cost, since
+     * each element's `Rule::exists()` + `distinct` is one query and one
+     * O(n) comparison. 254 is not an arbitrary round number: it is the
+     * Sales Region catalog's real ceiling, ~249 ISO countries
+     * (`database/data/iso-3166-countries.json`, verified 249 entries) plus
+     * Spain's 5 fixed fiscal territories
+     * (`SalesRegionSeeder::SPAIN_TERRITORIES`) -- 254 rows total, so a
+     * legitimate submission can never exceed it even in the (currently
+     * impossible) case a caller submitted the entire catalog. `list`
+     * refuses a sparse/associative array before either per-element rule
+     * runs, matching the shape every other id-array submission in this
+     * codebase expects.
+     *
      * @return array<int, ValidationRule|array<mixed>|string>
      */
     protected function salesRegionIdsRules(): array
     {
-        return ['array'];
+        return ['array', 'list', 'max:254'];
     }
 
     /**

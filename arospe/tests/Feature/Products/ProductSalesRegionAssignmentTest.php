@@ -270,6 +270,42 @@ test('a malformed submitted id fails validation, never a QueryException, never a
     'null' => [null],
 ]);
 
+// Phase 4 finding F-3: salesRegionIdsRules() must bound the submitted array's size, matching its
+// sibling productGalleryMediaIdsRules()'s existing max:20 -- an unbounded array is a real
+// per-request cost (one Rule::exists() query per element). 254 is the catalog's real ceiling
+// (~249 ISO countries + Spain's 5 fixed fiscal territories), not an arbitrary round number.
+test('a salesRegionIds array of more than 254 elements is rejected', function () {
+    $ids = array_map(fn () => (string) Str::uuid(), range(1, 255));
+
+    $caught = null;
+
+    try {
+        validateSalesRegionIds($ids);
+    } catch (ValidationException $e) {
+        $caught = $e;
+    }
+
+    expect($caught)->toBeInstanceOf(ValidationException::class);
+    expect(array_key_exists('salesRegionIds', $caught->errors()))->toBeTrue();
+});
+
+// F-3's `list` rule: a sparse/associative array must be refused before either per-element rule
+// runs, matching the shape every other id-array submission in this codebase expects.
+test('a non-list (associative) salesRegionIds array is rejected', function () {
+    $region = SalesRegion::factory()->create();
+
+    $caught = null;
+
+    try {
+        validateSalesRegionIds(['first' => $region->id]);
+    } catch (ValidationException $e) {
+        $caught = $e;
+    }
+
+    expect($caught)->toBeInstanceOf(ValidationException::class);
+    expect(array_key_exists('salesRegionIds', $caught->errors()))->toBeTrue();
+});
+
 test('an inactive region id is refused by validation', function () {
     $inactive = SalesRegion::factory()->inactive()->create();
 
