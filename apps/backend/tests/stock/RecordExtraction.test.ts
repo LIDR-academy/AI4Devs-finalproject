@@ -15,7 +15,8 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       id: 'ins-mozzarella-1',
       name: 'Queso Mozzarella',
       unitOfMeasure: 'KG',
-      warehouseStock: new DecimalQuantity('5.000'),
+      // US-025: stock alojado en un sub-sector concreto de bodega (seed InMemoryLocationRepository).
+      stockLines: [{ storageLocationId: 'loc-1', quantity: new DecimalQuantity('5.000') }],
     });
     stockRepo.seedInsumo(insumoMozzarella);
   });
@@ -29,6 +30,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'ins-mozzarella-1',
+        fromStorageLocationId: 'loc-1',
         quantity: '2.000',
         toLocation: 'KITCHEN_FRIDGE',
       });
@@ -40,12 +42,16 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
     expect(response.body).toHaveProperty('insumoName', 'Queso Mozzarella');
     expect(response.body).toHaveProperty('quantityExtracted', '2.000');
     expect(response.body).toHaveProperty('remainingWarehouseStock', '3.000');
+    // US-025: saldo del sub-sector de origen
+    expect(response.body).toHaveProperty('fromStorageLocationId', 'loc-1');
+    expect(response.body).toHaveProperty('remainingSectorStock', '3.000');
     expect(response.body).toHaveProperty('status', 'ACTIVE');
     expect(response.body).toHaveProperty('expirationDate');
 
     // ORACULO ESTADO: Verificación de persistencia de stock e histórico de movimientos
     const updatedInsumo = await stockRepo.findById('ins-mozzarella-1');
     expect(updatedInsumo?.warehouseStock.toString()).toBe('3.000');
+    expect(updatedInsumo?.stockAt('loc-1').toString()).toBe('3.000');
     expect(stockRepo.remanentes.size).toBe(1);
     expect(stockRepo.movements.length).toBe(1);
   });
@@ -59,6 +65,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'ins-mozzarella-1',
+        fromStorageLocationId: 'loc-1',
         quantity: '10.000',
       });
 
@@ -80,6 +87,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'insumo-inexistente',
+        fromStorageLocationId: 'loc-1',
         quantity: '1.000',
       });
 
@@ -93,6 +101,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'ins-mozzarella-1',
+        fromStorageLocationId: 'loc-1',
         quantity: '1.500',
         toLocation: 'KITCHEN_PREP',
         purpose: 'RECIPE',
@@ -119,6 +128,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'ins-mozzarella-1',
+        fromStorageLocationId: 'loc-1',
         quantity: '2.000',
         purpose: 'DIRECT_DISCARD',
         reason: 'Empaque roto en bodega',
@@ -148,6 +158,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
       .post('/api/v1/stock/extraction')
       .send({
         insumoId: 'ins-mozzarella-1',
+        fromStorageLocationId: 'loc-1',
         quantity: '1.000',
         purpose: 'DIRECT_DISCARD',
       });
@@ -155,5 +166,68 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty('error', 'ValidationError');
     expect(response.body.detail).toMatch(/motivo es obligatorio/i);
+  });
+
+  it('US-025: rechaza 400 si falta fromStorageLocationId', async () => {
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false });
+    const response = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({ insumoId: 'ins-mozzarella-1', quantity: '1.000' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.detail).toMatch(/sub-sector de bodega de origen es obligatorio/i);
+  });
+
+  it('US-025: rechaza 422 si el sub-sector de origen no alcanza, sin tocar otras líneas', async () => {
+    const multi = new Insumo({
+      id: 'ins-lomo',
+      name: 'Lomo Vacuno',
+      unitOfMeasure: 'KG',
+      stockLines: [
+        { storageLocationId: 'loc-seed-meat-fridge', quantity: new DecimalQuantity('12.000') },
+        { storageLocationId: 'loc-seed-freezer', quantity: new DecimalQuantity('8.000') },
+      ],
+    });
+    stockRepo.seedInsumo(multi);
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false });
+
+    const response = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({ insumoId: 'ins-lomo', fromStorageLocationId: 'loc-seed-freezer', quantity: '15.000' });
+
+    expect(response.status).toBe(422);
+    expect(response.body).toHaveProperty('error', 'InsufficientStockException');
+
+    const after = await stockRepo.findById('ins-lomo');
+    expect(after?.stockAt('loc-seed-meat-fridge').toString()).toBe('12.000');
+    expect(after?.stockAt('loc-seed-freezer').toString()).toBe('8.000');
+    expect(stockRepo.remanentes.size).toBe(0);
+  });
+
+  it('US-025: extrae del sub-sector elegido y deja intactas las demás líneas', async () => {
+    const multi = new Insumo({
+      id: 'ins-lomo-2',
+      name: 'Lomo Vacuno',
+      unitOfMeasure: 'KG',
+      stockLines: [
+        { storageLocationId: 'loc-seed-meat-fridge', quantity: new DecimalQuantity('12.000') },
+        { storageLocationId: 'loc-seed-freezer', quantity: new DecimalQuantity('8.000') },
+      ],
+    });
+    stockRepo.seedInsumo(multi);
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false });
+
+    const response = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({ insumoId: 'ins-lomo-2', fromStorageLocationId: 'loc-seed-meat-fridge', quantity: '3.000', toLocation: 'KITCHEN_FRIDGE' });
+
+    expect(response.status).toBe(201);
+    expect(response.body.remainingSectorStock).toBe('9.000');
+    expect(response.body.remainingWarehouseStock).toBe('17.000');
+
+    const after = await stockRepo.findById('ins-lomo-2');
+    expect(after?.stockAt('loc-seed-meat-fridge').toString()).toBe('9.000');
+    expect(after?.stockAt('loc-seed-freezer').toString()).toBe('8.000');
+    expect(stockRepo.movements[0].fromLoc).toBe('Heladera de Carnes');
   });
 });

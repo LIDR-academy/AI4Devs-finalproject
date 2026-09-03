@@ -1,14 +1,19 @@
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
+import { IStorageLocationRepository } from '../../../domain/stock/repositories/IStorageLocationRepository.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { Remanente } from '../../../domain/stock/entities/Remanente.js';
+import { Insumo, UNCLASSIFIED_WAREHOUSE_LOCATION_ID } from '../../../domain/stock/entities/Insumo.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
+import { resolveWarehouseSector } from './resolveWarehouseSector.js';
 
 export interface RecordExtractionDTO {
   insumoId: string;
   quantity: number | string;
   toLocation?: string;
+  /** US-025: sub-sector de bodega del que sale el stock. */
+  fromStorageLocationId?: string;
   operatorId?: string;
   purpose?: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
   reason?: string;
@@ -20,6 +25,8 @@ export interface ExtractionResponseDTO {
   insumoId: string;
   insumoName: string;
   quantityExtracted: string;
+  fromStorageLocationId: string;
+  remainingSectorStock: string;
   remainingWarehouseStock: string;
   location: string;
   expirationDate: string;
@@ -29,7 +36,8 @@ export interface ExtractionResponseDTO {
 export class RecordExtractionUseCase {
   constructor(
     private readonly insumoRepository: IInsumoRepository,
-    private readonly remanenteRepository: IRemanenteRepository
+    private readonly remanenteRepository: IRemanenteRepository,
+    private readonly locationRepository?: IStorageLocationRepository
   ) {}
 
   public async execute(dto: RecordExtractionDTO): Promise<ExtractionResponseDTO> {
@@ -38,27 +46,27 @@ export class RecordExtractionUseCase {
       throw new EntityNotFoundException('Insumo', dto.insumoId);
     }
 
-    const requestedQty = new DecimalQuantity(dto.quantity);
+    const fromStorageLocationId = dto.fromStorageLocationId ?? UNCLASSIFIED_WAREHOUSE_LOCATION_ID;
+    const sector = await resolveWarehouseSector(this.locationRepository, fromStorageLocationId);
 
-    if (!insumo.hasSufficientStock(requestedQty)) {
+    const requestedQty = new DecimalQuantity(dto.quantity);
+    if (!insumo.hasSufficientStockAt(requestedQty, fromStorageLocationId)) {
       throw new InsufficientStockException(
         insumo.name,
         requestedQty.toString(),
-        insumo.warehouseStock.toString()
+        insumo.stockAt(fromStorageLocationId).toString()
       );
     }
 
     const purpose = dto.purpose || 'KITCHEN_STOCK';
 
     if (purpose === 'DIRECT_DISCARD') {
-      return this.handleDirectDiscard(insumo, requestedQty, dto);
+      return this.handleDirectDiscard(insumo, requestedQty, fromStorageLocationId, sector.name, dto);
     }
 
-    // Debitar stock de bodega para uso en cocina o receta
-    insumo.deductStock(requestedQty);
+    insumo.deductStockAt(requestedQty, fromStorageLocationId);
     await this.insumoRepository.save(insumo);
 
-    // Crear remanente activo FEFO en cocina
     const remanenteId = `rem-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const location = dto.toLocation || 'KITCHEN_FRIDGE';
     const remanente = Remanente.createNew(remanenteId, insumo.id, requestedQty, location, 24);
@@ -66,14 +74,12 @@ export class RecordExtractionUseCase {
     await this.remanenteRepository.saveRemanente(remanente);
 
     const movementType = purpose === 'RECIPE' ? 'EXTRACTION_RECIPE' : 'EXTRACTION';
-
-    // Auditoría de movimiento
     await this.remanenteRepository.recordMovement({
       id: `mov-${Date.now()}`,
       insumoId: insumo.id,
       type: movementType,
       quantity: requestedQty.toString(),
-      fromLoc: 'MAIN_WAREHOUSE',
+      fromLoc: sector.name,
       toLoc: location,
       operatorId: dto.operatorId,
       purpose,
@@ -86,6 +92,8 @@ export class RecordExtractionUseCase {
       insumoId: insumo.id,
       insumoName: insumo.name,
       quantityExtracted: requestedQty.toString(),
+      fromStorageLocationId,
+      remainingSectorStock: insumo.stockAt(fromStorageLocationId).toString(),
       remainingWarehouseStock: insumo.warehouseStock.toString(),
       location: remanente.location,
       expirationDate: remanente.expirationDate.toISOString(),
@@ -94,23 +102,25 @@ export class RecordExtractionUseCase {
   }
 
   private async handleDirectDiscard(
-    insumo: { id: string; name: string; warehouseStock: DecimalQuantity; deductStock(q: DecimalQuantity): void },
+    insumo: Insumo,
     requestedQty: DecimalQuantity,
+    fromStorageLocationId: string,
+    sectorName: string,
     dto: RecordExtractionDTO
   ): Promise<ExtractionResponseDTO> {
     if (!dto.reason || dto.reason.trim().length === 0) {
       throw new Error('El motivo es obligatorio para descarte directo desde bodega.');
     }
 
-    insumo.deductStock(requestedQty);
-    await this.insumoRepository.save(insumo as unknown as Parameters<IInsumoRepository['save']>[0]);
+    insumo.deductStockAt(requestedQty, fromStorageLocationId);
+    await this.insumoRepository.save(insumo);
 
     await this.remanenteRepository.recordMovement({
       id: `mov-${Date.now()}`,
       insumoId: insumo.id,
       type: 'DISCARD_DIRECT',
       quantity: requestedQty.toString(),
-      fromLoc: 'MAIN_WAREHOUSE',
+      fromLoc: sectorName,
       toLoc: 'WASTE_BIN',
       operatorId: dto.operatorId,
       purpose: 'DIRECT_DISCARD',
@@ -122,6 +132,8 @@ export class RecordExtractionUseCase {
       insumoId: insumo.id,
       insumoName: insumo.name,
       quantityExtracted: requestedQty.toString(),
+      fromStorageLocationId,
+      remainingSectorStock: insumo.stockAt(fromStorageLocationId).toString(),
       remainingWarehouseStock: insumo.warehouseStock.toString(),
       location: 'WASTE_BIN',
       expirationDate: new Date().toISOString(),

@@ -47,6 +47,16 @@ export class InMemoryStockRepository implements IInsumoRepository, IRemanenteRep
     this.insumos.set(insumo.id, insumo);
   }
 
+  async existsStockAtLocation(storageLocationId: string): Promise<boolean> {
+    for (const insumo of this.insumos.values()) {
+      const line = insumo.stockLines.find((l) => l.storageLocationId === storageLocationId);
+      if (line && !line.quantity.toDecimal().isZero()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   async saveRemanente(remanente: Remanente): Promise<void> {
     this.remanentes.set(remanente.id, remanente);
   }

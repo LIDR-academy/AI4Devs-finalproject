@@ -15,7 +15,7 @@ describe('TK-050: Trazabilidad de Movimientos de Stock (auditoria, solo ADMIN)',
   beforeEach(() => {
     stockRepo = new InMemoryStockRepository();
     stockRepo.seedInsumo(
-      new Insumo({ id: 'ins-mozzarella-1', name: 'Queso Mozzarella', unitOfMeasure: 'KG', warehouseStock: new DecimalQuantity('10.000') })
+      new Insumo({ id: 'ins-mozzarella-1', name: 'Queso Mozzarella', unitOfMeasure: 'KG', stockLines: [{ storageLocationId: 'loc-1', quantity: new DecimalQuantity('10.000') }] })
     );
     adminToken = jwt.sign({ sub: 'usr-admin-1', name: 'Admin', role: 'ADMIN' }, secret, { expiresIn: '1h' });
     staffToken = jwt.sign({ sub: 'usr-staff-1', name: 'Cocinero', role: 'KITCHEN_STAFF' }, secret, { expiresIn: '1h' });
@@ -28,7 +28,7 @@ describe('TK-050: Trazabilidad de Movimientos de Stock (auditoria, solo ADMIN)',
     await request(app)
       .post('/api/v1/stock/extraction')
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ insumoId: 'ins-mozzarella-1', quantity: '2.000', toLocation: 'KITCHEN_FRIDGE' });
+      .send({ insumoId: 'ins-mozzarella-1', fromStorageLocationId: 'loc-1', quantity: '2.000', toLocation: 'KITCHEN_FRIDGE' });
 
     const response = await request(app)
       .get('/api/v1/stock/movements')
@@ -50,11 +50,11 @@ describe('TK-050: Trazabilidad de Movimientos de Stock (auditoria, solo ADMIN)',
   it('filtra correctamente por insumoId', async () => {
     const app = createApp({ stockRepository: stockRepo, jwtSecret: secret });
     stockRepo.seedInsumo(
-      new Insumo({ id: 'ins-tomate-1', name: 'Salsa de Tomate', unitOfMeasure: 'L', warehouseStock: new DecimalQuantity('5.000') })
+      new Insumo({ id: 'ins-tomate-1', name: 'Salsa de Tomate', unitOfMeasure: 'L', stockLines: [{ storageLocationId: 'loc-1', quantity: new DecimalQuantity('5.000') }] })
     );
 
-    await request(app).post('/api/v1/stock/extraction').set('Authorization', `Bearer ${adminToken}`).send({ insumoId: 'ins-mozzarella-1', quantity: '1.000' });
-    await request(app).post('/api/v1/stock/extraction').set('Authorization', `Bearer ${adminToken}`).send({ insumoId: 'ins-tomate-1', quantity: '1.000' });
+    await request(app).post('/api/v1/stock/extraction').set('Authorization', `Bearer ${adminToken}`).send({ insumoId: 'ins-mozzarella-1', fromStorageLocationId: 'loc-1', quantity: '1.000' });
+    await request(app).post('/api/v1/stock/extraction').set('Authorization', `Bearer ${adminToken}`).send({ insumoId: 'ins-tomate-1', fromStorageLocationId: 'loc-1', quantity: '1.000' });
 
     const response = await request(app)
       .get('/api/v1/stock/movements')

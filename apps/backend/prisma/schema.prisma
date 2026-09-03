@@ -81,13 +81,15 @@ model User {
 
 
 model StorageLocation {
-  id          String       @id @default(uuid())
-  name        String       @unique
-  type        LocationType @default(KITCHEN)
-  description String?
-  isActive    Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              String           @id @default(uuid())
+  name            String           @unique
+  type            LocationType     @default(KITCHEN)
+  description     String?
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  // US-025: existencias de bodega alojadas en este sub-sector
+  warehouseStocks WarehouseStock[]
 }
 
 model SystemSettings {
@@ -116,12 +118,17 @@ model Insumo {
 }
 
 model WarehouseStock {
-  id        String   @id @default(uuid())
-  insumoId  String
-  location  String   @default("MAIN_WAREHOUSE")
-  quantity  Decimal  @default(0) @db.Decimal(12, 3)
-  updatedAt DateTime @updatedAt
-  insumo    Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  id                String          @id @default(uuid())
+  insumoId          String
+  storageLocationId String
+  quantity          Decimal         @default(0) @db.Decimal(12, 3)
+  updatedAt         DateTime        @updatedAt
+  insumo            Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  // US-025: RESTRICT — un sub-sector con existencias no puede borrarse (Invariante 1-bis)
+  storageLocation   StorageLocation @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
+
+  @@unique([insumoId, storageLocationId])
+  @@index([storageLocationId])
 }
 
 model Remanente {

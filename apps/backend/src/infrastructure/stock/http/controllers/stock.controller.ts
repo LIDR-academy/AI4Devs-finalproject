@@ -11,6 +11,10 @@ const recordExtractionSchema = z
   .object({
     insumoId: z.string().min(1, 'El ID de insumo es obligatorio.'),
     quantity: z.union([z.number().positive('La cantidad debe ser positiva.'), z.string().min(1)]),
+    // US-025: sub-sector de bodega de origen — obligatorio.
+    fromStorageLocationId: z
+      .string({ required_error: 'El sub-sector de bodega de origen es obligatorio.' })
+      .min(1, 'El sub-sector de bodega de origen es obligatorio.'),
     toLocation: z.string().optional().default('KITCHEN_FRIDGE'),
     operatorId: z.string().optional(),
     purpose: z.enum(['KITCHEN_STOCK', 'RECIPE', 'DIRECT_DISCARD']).optional().default('KITCHEN_STOCK'),
@@ -35,6 +39,14 @@ const createInsumoSchema = z.object({
   unitOfMeasure: z.enum(['KG', 'L', 'UNITS'], {
     errorMap: () => ({ message: 'La unidad de medida debe ser KG, L o UNITS.' }),
   }),
+  // US-025: sub-sector de bodega donde queda depositado el stock inicial — obligatorio.
+  storageLocationId: z
+    .string({ required_error: 'El sub-sector de bodega es obligatorio.' })
+    .min(1, 'El sub-sector de bodega es obligatorio.'),
+  initialWarehouseStock: z
+    .string()
+    .regex(/^\d+(\.\d{1,4})?$/, 'El stock inicial debe ser un número decimal válido de hasta 4 decimales.')
+    .optional(),
   // US-019: costo por unidad de compra, opcional. Maximo 2 decimales y 10 digitos enteros
   // para coincidir exactamente con la columna Decimal(12,2) — evita redondeo silencioso
   // (regex de 4 decimales) y overflow numerico sin capturar (400 explicito en vez de 500).
@@ -46,6 +58,10 @@ const createInsumoSchema = z.object({
 
 const restockInsumoSchema = z.object({
   quantity: z.coerce.number().positive('La cantidad a reabastecer debe ser positiva.'),
+  // US-025: sub-sector de bodega al que se suma la cantidad recibida — obligatorio.
+  storageLocationId: z
+    .string({ required_error: 'El sub-sector de bodega es obligatorio.' })
+    .min(1, 'El sub-sector de bodega es obligatorio.'),
 });
 
 const stockMovementHistoryQuerySchema = z.object({
@@ -149,6 +165,7 @@ export class StockController {
       const result = await this.restockInsumoUseCase.execute({
         insumoId: req.params.id,
         quantity: parsedBody.quantity,
+        storageLocationId: parsedBody.storageLocationId,
       });
       res.status(200).json(result);
     } catch (error) {

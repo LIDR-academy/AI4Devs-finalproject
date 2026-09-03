@@ -3,6 +3,7 @@ import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { createApp } from '../../src/infrastructure/http/app.js';
 import { InMemoryLocationRepository } from '../../src/infrastructure/stock/repositories/InMemoryLocationRepository.js';
+import { InMemoryStockRepository } from '../../src/infrastructure/stock/repositories/InMemoryStockRepository.js';
 
 describe('Storage Locations API — Sectores Físicos (TK-074)', () => {
   const app = createApp({ requireAuth: false });
@@ -83,6 +84,23 @@ describe('Storage Locations API — RBAC por ruta (TK-074, patrón TK-093)', () 
 
     const del = await request(app).delete('/api/v1/locations/loc-1').set('Authorization', t);
     expect(del.status).toBe(403);
+  });
+
+  it('ADMIN NO puede eliminar ni desactivar un sector con existencias (409, US-025)', async () => {
+    const stockRepo = new InMemoryStockRepository();
+    const app = createApp({ requireAuth: false, stockRepository: stockRepo, locationRepository: new InMemoryLocationRepository() });
+
+    const created = await request(app)
+      .post('/api/v1/stock/insumos')
+      .send({ name: 'Lomo Vacuno', unitOfMeasure: 'KG', initialWarehouseStock: '10.000', storageLocationId: 'loc-seed-meat-fridge' });
+    expect(created.status).toBe(201);
+
+    const del = await request(app).delete('/api/v1/locations/loc-seed-meat-fridge');
+    expect(del.status).toBe(409);
+    expect(del.body).toHaveProperty('title', 'LocationHasStockException');
+
+    const deactivate = await request(app).put('/api/v1/locations/loc-seed-meat-fridge').send({ isActive: false });
+    expect(deactivate.status).toBe(409);
   });
 
   it('ADMIN puede crear, editar y eliminar sectores', async () => {

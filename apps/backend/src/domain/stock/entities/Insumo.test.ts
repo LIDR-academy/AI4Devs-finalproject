@@ -50,3 +50,55 @@ describe('Insumo Domain Entity — Stock de Bodega', () => {
     expect(insumo.unitCost?.toDecimal().toFixed(2)).toBe('1800.00');
   });
 });
+
+describe('Insumo Domain Entity — Stock Multi-Sub-Sector (US-025)', () => {
+  const multiSector = (): Insumo =>
+    new Insumo({
+      id: 'ins-lomo',
+      name: 'Lomo Vacuno',
+      unitOfMeasure: 'KG',
+      stockLines: [
+        { storageLocationId: 'sec-carnes', quantity: new DecimalQuantity('12.000') },
+        { storageLocationId: 'sec-congelados', quantity: new DecimalQuantity('8.000') },
+      ],
+    });
+
+  it('warehouseStock es la suma de todas las líneas de sub-sector', () => {
+    expect(multiSector().warehouseStock.toString()).toBe('20.000');
+  });
+
+  it('stockAt devuelve el saldo de un sub-sector concreto (0 si no hay línea)', () => {
+    const insumo = multiSector();
+    expect(insumo.stockAt('sec-carnes').toString()).toBe('12.000');
+    expect(insumo.stockAt('sec-inexistente').toString()).toBe('0.000');
+  });
+
+  it('hasSufficientStockAt valida contra el saldo del sub-sector, no el total', () => {
+    const insumo = multiSector();
+    expect(insumo.hasSufficientStockAt(new DecimalQuantity('15.000'), 'sec-carnes')).toBe(false);
+    expect(insumo.hasSufficientStockAt(new DecimalQuantity('12.000'), 'sec-carnes')).toBe(true);
+  });
+
+  it('deductStockAt debita solo del sub-sector indicado', () => {
+    const insumo = multiSector();
+    insumo.deductStockAt(new DecimalQuantity('5.000'), 'sec-carnes');
+    expect(insumo.stockAt('sec-carnes').toString()).toBe('7.000');
+    expect(insumo.stockAt('sec-congelados').toString()).toBe('8.000');
+  });
+
+  it('deductStockAt rechaza con InsufficientStockException si el sub-sector no alcanza, sin tocar otras líneas', () => {
+    const insumo = multiSector();
+    expect(() => insumo.deductStockAt(new DecimalQuantity('15.000'), 'sec-congelados')).toThrow(
+      /Stock insuficiente/
+    );
+    expect(insumo.stockAt('sec-carnes').toString()).toBe('12.000');
+    expect(insumo.stockAt('sec-congelados').toString()).toBe('8.000');
+  });
+
+  it('restockAt crea la línea del sub-sector si aún no existía', () => {
+    const insumo = multiSector();
+    insumo.restockAt(new DecimalQuantity('3.000'), 'sec-secos');
+    expect(insumo.stockAt('sec-secos').toString()).toBe('3.000');
+    expect(insumo.warehouseStock.toString()).toBe('23.000');
+  });
+});

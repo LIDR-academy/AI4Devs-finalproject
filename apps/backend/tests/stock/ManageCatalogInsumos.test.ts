@@ -31,7 +31,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de insumos)', () =
       const response = await request(app)
         .post('/api/v1/stock/insumos')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Harina 000', unitOfMeasure: 'KG' });
+        .send({ name: 'Harina 000', unitOfMeasure: 'KG', storageLocationId: 'loc-1' });
 
       expect(response.status).toBe(201);
       expect(response.body).toMatchObject({ name: 'Harina 000', unitOfMeasure: 'KG', warehouseStock: '0.000' });
@@ -113,12 +113,12 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de insumos)', () =
       const created = await request(app)
         .post('/api/v1/stock/insumos')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Aceite de Oliva', unitOfMeasure: 'L' });
+        .send({ name: 'Aceite de Oliva', unitOfMeasure: 'L', storageLocationId: 'loc-1' });
 
       const response = await request(app)
         .patch(`/api/v1/stock/insumos/${created.body.id}/restock`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ quantity: 20 });
+        .send({ quantity: 20, storageLocationId: 'loc-1' });
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
@@ -139,7 +139,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de insumos)', () =
       const response = await request(app)
         .patch('/api/v1/stock/insumos/ins-inexistente/restock')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ quantity: 5 });
+        .send({ quantity: 5, storageLocationId: 'loc-1' });
 
       expect(response.status).toBe(404);
     });
@@ -150,12 +150,12 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de insumos)', () =
       const created = await request(app)
         .post('/api/v1/stock/insumos')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Sal Fina', unitOfMeasure: 'KG' });
+        .send({ name: 'Sal Fina', unitOfMeasure: 'KG', storageLocationId: 'loc-1' });
 
       const response = await request(app)
         .patch(`/api/v1/stock/insumos/${created.body.id}/restock`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ quantity: 0 });
+        .send({ quantity: 0, storageLocationId: 'loc-1' });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('title', 'ValidationError');
@@ -167,7 +167,7 @@ describe('TK-057: Gestion de Catalogo Maestro (alta y listado de insumos)', () =
       const created = await request(app)
         .post('/api/v1/stock/insumos')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Azucar Blanca', unitOfMeasure: 'KG' });
+        .send({ name: 'Azucar Blanca', unitOfMeasure: 'KG', storageLocationId: 'loc-1' });
 
       const response = await request(app)
         .patch(`/api/v1/stock/insumos/${created.body.id}/restock`)

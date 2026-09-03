@@ -1,10 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
+import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { GetLocationsUseCase } from '../../../../application/stock/use-cases/GetLocationsUseCase.js';
 import { CreateLocationUseCase } from '../../../../application/stock/use-cases/CreateLocationUseCase.js';
 import { StorageLocation } from '../../../../domain/stock/entities/StorageLocation.js';
 import { EntityNotFoundException } from '../../../../domain/errors/EntityNotFoundException.js';
+import { LocationHasStockException } from '../../../../domain/stock/errors/LocationHasStockException.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
@@ -35,7 +37,42 @@ function handleControllerError(req: Request, res: Response, next: NextFunction, 
   next(err as Error);
 }
 
-function buildHandlers(locationRepo: IStorageLocationRepository) {
+async function assertLocationHasNoStock(
+  insumoRepo: IInsumoRepository | undefined,
+  location: StorageLocation
+): Promise<void> {
+  if (!insumoRepo) return;
+  if (await insumoRepo.existsStockAtLocation(location.id)) {
+    throw new LocationHasStockException(location.name);
+  }
+}
+
+async function applyLocationUpdate(
+  locationRepo: IStorageLocationRepository,
+  insumoRepo: IInsumoRepository | undefined,
+  id: string,
+  parsed: ReturnType<typeof updateLocationSchema.parse>
+): Promise<StorageLocation> {
+  const existing = await locationRepo.findLocationById(id);
+  if (!existing) {
+    throw new EntityNotFoundException('Sector de almacenamiento', id);
+  }
+  // US-025: no permitir desactivar un sector con existencias.
+  if (parsed.isActive === false && existing.isActive) {
+    await assertLocationHasNoStock(insumoRepo, existing);
+  }
+  const updated = new StorageLocation({
+    id: existing.id,
+    name: parsed.name ?? existing.name,
+    type: parsed.type ?? existing.type,
+    description: parsed.description ?? existing.description,
+    isActive: parsed.isActive ?? existing.isActive,
+  });
+  await locationRepo.saveLocation(updated);
+  return updated;
+}
+
+function buildHandlers(locationRepo: IStorageLocationRepository, insumoRepo?: IInsumoRepository) {
   const getLocationsUseCase = new GetLocationsUseCase(locationRepo);
   const createLocationUseCase = new CreateLocationUseCase(locationRepo);
 
@@ -60,20 +97,8 @@ function buildHandlers(locationRepo: IStorageLocationRepository) {
 
   const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.params;
       const parsed = updateLocationSchema.parse(req.body);
-      const existing = await locationRepo.findLocationById(id);
-      if (!existing) {
-        throw new EntityNotFoundException('Sector de almacenamiento', id);
-      }
-      const updated = new StorageLocation({
-        id: existing.id,
-        name: parsed.name ?? existing.name,
-        type: parsed.type ?? existing.type,
-        description: parsed.description ?? existing.description,
-        isActive: parsed.isActive ?? existing.isActive,
-      });
-      await locationRepo.saveLocation(updated);
+      const updated = await applyLocationUpdate(locationRepo, insumoRepo, req.params.id, parsed);
       res.json(mapLocation(updated));
     } catch (err) {
       handleControllerError(req, res, next, err);
@@ -82,6 +107,10 @@ function buildHandlers(locationRepo: IStorageLocationRepository) {
 
   const remove = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const existing = await locationRepo.findLocationById(req.params.id);
+      if (existing) {
+        await assertLocationHasNoStock(insumoRepo, existing);
+      }
       await locationRepo.deleteLocation(req.params.id);
       res.status(204).send();
     } catch (err) {
@@ -101,11 +130,12 @@ function buildHandlers(locationRepo: IStorageLocationRepository) {
  */
 export function createLocationsController(
   locationRepo: IStorageLocationRepository,
-  isAuthRequired = true
+  isAuthRequired = true,
+  insumoRepo?: IInsumoRepository
 ): Router {
   const router = Router();
   const adminOnly = isAuthRequired ? [requireRole('ADMIN')] : [];
-  const { list, create, update, remove } = buildHandlers(locationRepo);
+  const { list, create, update, remove } = buildHandlers(locationRepo, insumoRepo);
 
   router.get('/', list);
   router.post('/', ...adminOnly, create);

@@ -1,49 +1,130 @@
 import { DecimalQuantity } from '../value-objects/DecimalQuantity.js';
+import { InsufficientStockException } from '../errors/InsufficientStockException.js';
+
+/**
+ * Sector semilla al que se re-apuntan las existencias migradas desde la antigua
+ * ubicación única `MAIN_WAREHOUSE` (US-025). Los casos de uso legados que no
+ * indican sub-sector operan implícitamente sobre esta línea.
+ */
+export const UNCLASSIFIED_WAREHOUSE_LOCATION_ID = 'loc-seed-unclassified';
+
+export interface WarehouseStockLine {
+  storageLocationId: string;
+  quantity: DecimalQuantity;
+}
 
 export interface InsumoProps {
   id: string;
   name: string;
   unitOfMeasure: string;
-  warehouseStock: DecimalQuantity;
   unitCost?: DecimalQuantity;
+  /** Existencias por sub-sector de bodega (US-025). Fuente canónica del stock. */
+  stockLines?: WarehouseStockLine[];
+  /**
+   * @deprecated Stock de bodega en una sola ubicación. Se conserva por
+   * retrocompatibilidad: se convierte en una única línea del sector "sin clasificar".
+   */
+  warehouseStock?: DecimalQuantity;
 }
 
+/**
+ * Agregado `Insumo` (US-025). El stock de bodega ya no es un escalar: es la suma
+ * de una o varias `WarehouseStockLine`, una por cada sub-sector físico donde el
+ * insumo tiene existencias. Toda operación de saldo se resuelve a nivel de línea.
+ */
 export class Insumo {
-  private readonly props: InsumoProps;
+  private readonly _id: string;
+  private readonly _name: string;
+  private readonly _unitOfMeasure: string;
+  private readonly _unitCost?: DecimalQuantity;
+  private readonly _lines: Map<string, DecimalQuantity>;
 
   constructor(props: InsumoProps) {
-    this.props = { ...props };
+    this._id = props.id;
+    this._name = props.name;
+    this._unitOfMeasure = props.unitOfMeasure;
+    this._unitCost = props.unitCost;
+    this._lines = new Map();
+
+    if (props.stockLines && props.stockLines.length > 0) {
+      for (const line of props.stockLines) {
+        this._lines.set(line.storageLocationId, line.quantity);
+      }
+    } else if (props.warehouseStock && !props.warehouseStock.toDecimal().isZero()) {
+      this._lines.set(UNCLASSIFIED_WAREHOUSE_LOCATION_ID, props.warehouseStock);
+    }
   }
 
   public get id(): string {
-    return this.props.id;
+    return this._id;
   }
 
   public get name(): string {
-    return this.props.name;
+    return this._name;
   }
 
   public get unitOfMeasure(): string {
-    return this.props.unitOfMeasure;
-  }
-
-  public get warehouseStock(): DecimalQuantity {
-    return this.props.warehouseStock;
+    return this._unitOfMeasure;
   }
 
   public get unitCost(): DecimalQuantity | undefined {
-    return this.props.unitCost;
+    return this._unitCost;
+  }
+
+  /** Suma de todas las líneas de stock de bodega. */
+  public get warehouseStock(): DecimalQuantity {
+    let total = new DecimalQuantity('0');
+    for (const qty of this._lines.values()) {
+      total = total.add(qty);
+    }
+    return total;
+  }
+
+  /** Líneas de stock, una por sub-sector con existencias. */
+  public get stockLines(): WarehouseStockLine[] {
+    return Array.from(this._lines.entries()).map(([storageLocationId, quantity]) => ({
+      storageLocationId,
+      quantity,
+    }));
+  }
+
+  public stockAt(storageLocationId: string): DecimalQuantity {
+    return this._lines.get(storageLocationId) ?? new DecimalQuantity('0');
   }
 
   public hasSufficientStock(requested: DecimalQuantity): boolean {
-    return this.props.warehouseStock.isGreaterThanOrEqualTo(requested);
+    return this.warehouseStock.isGreaterThanOrEqualTo(requested);
   }
 
+  public hasSufficientStockAt(requested: DecimalQuantity, storageLocationId: string): boolean {
+    return this.stockAt(storageLocationId).isGreaterThanOrEqualTo(requested);
+  }
+
+  /**
+   * Debita de la línea del sub-sector indicado. Rechaza atómicamente si el saldo
+   * de ESE sector es insuficiente, sin tocar ninguna otra línea (Invariante 1 por-sector).
+   */
+  public deductStockAt(quantity: DecimalQuantity, storageLocationId: string): void {
+    const current = this.stockAt(storageLocationId);
+    if (!current.isGreaterThanOrEqualTo(quantity)) {
+      throw new InsufficientStockException(this._name, quantity.toString(), current.toString());
+    }
+    this._lines.set(storageLocationId, current.subtract(quantity));
+  }
+
+  /** Suma a la línea del sub-sector indicado, creándola si aún no existía. */
+  public restockAt(quantity: DecimalQuantity, storageLocationId: string): void {
+    const current = this.stockAt(storageLocationId);
+    this._lines.set(storageLocationId, current.add(quantity));
+  }
+
+  /** @deprecated Usa `deductStockAt`. Opera sobre el sector "sin clasificar". */
   public deductStock(quantity: DecimalQuantity): void {
-    this.props.warehouseStock = this.props.warehouseStock.subtract(quantity);
+    this.deductStockAt(quantity, UNCLASSIFIED_WAREHOUSE_LOCATION_ID);
   }
 
+  /** @deprecated Usa `restockAt`. Opera sobre el sector "sin clasificar". */
   public increaseStock(quantity: DecimalQuantity): void {
-    this.props.warehouseStock = this.props.warehouseStock.add(quantity);
+    this.restockAt(quantity, UNCLASSIFIED_WAREHOUSE_LOCATION_ID);
   }
 }

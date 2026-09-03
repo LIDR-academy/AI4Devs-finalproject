@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CreateInsumoUseCase } from './CreateInsumoUseCase.js';
 import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
+import { InMemoryLocationRepository } from '../../../infrastructure/stock/repositories/InMemoryLocationRepository.js';
 import { InsumoAlreadyExistsException } from '../../../domain/stock/errors/InsumoAlreadyExistsException.js';
+import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 
 describe('CreateInsumoUseCase', () => {
   let repository: InMemoryStockRepository;
@@ -60,5 +62,46 @@ describe('CreateInsumoUseCase', () => {
     });
 
     expect(result.unitCost).toBeNull();
+  });
+});
+
+describe('CreateInsumoUseCase — depósito en sub-sector de bodega (US-025)', () => {
+  let repository: InMemoryStockRepository;
+  let locationRepo: InMemoryLocationRepository;
+  let useCase: CreateInsumoUseCase;
+
+  beforeEach(() => {
+    repository = new InMemoryStockRepository();
+    locationRepo = new InMemoryLocationRepository();
+    useCase = new CreateInsumoUseCase(repository, locationRepo);
+  });
+
+  it('deposita el stock inicial en el sub-sector indicado y lo refleja en stockByLocation', async () => {
+    const result = await useCase.execute({
+      name: 'Lomo Vacuno',
+      unitOfMeasure: 'KG',
+      initialWarehouseStock: '12.0000',
+      storageLocationId: 'loc-seed-meat-fridge',
+    });
+
+    expect(result.warehouseStock).toBe('12.000');
+    expect(result.stockByLocation).toEqual([
+      { storageLocationId: 'loc-seed-meat-fridge', storageLocationName: 'Heladera de Carnes', quantity: '12.000' },
+    ]);
+
+    const saved = await repository.findById(result.id);
+    expect(saved?.stockAt('loc-seed-meat-fridge').toString()).toBe('12.000');
+  });
+
+  it('rechaza con EntityNotFoundException si el sub-sector no existe', async () => {
+    await expect(
+      useCase.execute({ name: 'Harina', unitOfMeasure: 'KG', storageLocationId: 'sec-fantasma' })
+    ).rejects.toThrow(EntityNotFoundException);
+  });
+
+  it('rechaza con EntityNotFoundException si el sector es de tipo KITCHEN, no WAREHOUSE', async () => {
+    await expect(
+      useCase.execute({ name: 'Harina', unitOfMeasure: 'KG', storageLocationId: 'loc-2' })
+    ).rejects.toThrow(EntityNotFoundException);
   });
 });

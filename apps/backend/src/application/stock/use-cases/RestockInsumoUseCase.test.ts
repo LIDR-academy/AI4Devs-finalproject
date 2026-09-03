@@ -43,7 +43,8 @@ describe('RestockInsumoUseCase', () => {
       type: 'RESTOCK',
       quantity: '3.000',
       fromLoc: 'SUPPLIER',
-      toLoc: 'MAIN_WAREHOUSE',
+      // US-025: el reabastecimiento apunta a un sub-sector; sin sector explícito cae al "sin clasificar".
+      toLoc: 'loc-seed-unclassified',
     });
   });
 
@@ -51,5 +52,28 @@ describe('RestockInsumoUseCase', () => {
     await expect(restockUseCase.execute({ insumoId: 'ins-inexistente', quantity: '1' })).rejects.toThrow(
       EntityNotFoundException
     );
+  });
+
+  it('US-025: reabastece a un segundo sub-sector sumando al total sin mezclar líneas', async () => {
+    const insumo = await createInsumoUseCase.execute({
+      name: 'Lomo Vacuno',
+      unitOfMeasure: 'KG',
+      initialWarehouseStock: '12.000',
+      storageLocationId: 'sec-carnes',
+    });
+
+    const result = await restockUseCase.execute({
+      insumoId: insumo.id,
+      quantity: '8.000',
+      storageLocationId: 'sec-congelados',
+    });
+
+    expect(result.storageLocationId).toBe('sec-congelados');
+    expect(result.newSectorStock).toBe('8.000');
+    expect(result.newWarehouseStock).toBe('20.000');
+
+    const saved = await repository.findById(insumo.id);
+    expect(saved?.stockAt('sec-carnes').toString()).toBe('12.000');
+    expect(saved?.stockAt('sec-congelados').toString()).toBe('8.000');
   });
 });

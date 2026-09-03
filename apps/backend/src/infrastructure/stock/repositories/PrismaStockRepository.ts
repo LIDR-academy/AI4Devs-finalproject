@@ -5,26 +5,33 @@ import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuan
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository, StockMovementRecord } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 
+type RawInsumo = {
+  id: string;
+  name: string;
+  unitOfMeasure: string;
+  unitCost: { toString(): string } | null;
+  warehouseStocks: { storageLocationId: string; quantity: { toString(): string } }[];
+};
+
+function toInsumo(raw: RawInsumo): Insumo {
+  return new Insumo({
+    id: raw.id,
+    name: raw.name,
+    unitOfMeasure: raw.unitOfMeasure,
+    unitCost: raw.unitCost !== null ? new DecimalQuantity(raw.unitCost.toString()) : undefined,
+    stockLines: raw.warehouseStocks.map((s) => ({
+      storageLocationId: s.storageLocationId,
+      quantity: new DecimalQuantity(s.quantity.toString()),
+    })),
+  });
+}
+
 export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   public async findById(id: string): Promise<Insumo | null> {
-    const raw = await this.prisma.insumo.findUnique({
-      where: { id },
-      include: { warehouseStocks: true },
-    });
-    if (!raw) return null;
-
-    const mainStock = raw.warehouseStocks.find((s) => s.location === 'MAIN_WAREHOUSE');
-    const quantity = mainStock ? mainStock.quantity.toString() : '0';
-
-    return new Insumo({
-      id: raw.id,
-      name: raw.name,
-      unitOfMeasure: raw.unitOfMeasure,
-      warehouseStock: new DecimalQuantity(quantity),
-      unitCost: raw.unitCost !== null ? new DecimalQuantity(raw.unitCost.toString()) : undefined,
-    });
+    const raw = await this.prisma.insumo.findUnique({ where: { id }, include: { warehouseStocks: true } });
+    return raw ? toInsumo(raw) : null;
   }
 
   public async findByName(name: string): Promise<Insumo | null> {
@@ -32,118 +39,58 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       where: { name: { equals: name, mode: 'insensitive' } },
       include: { warehouseStocks: true },
     });
-    if (!raw) return null;
-
-    const mainStock = raw.warehouseStocks.find((s) => s.location === 'MAIN_WAREHOUSE');
-    const quantity = mainStock ? mainStock.quantity.toString() : '0';
-
-    return new Insumo({
-      id: raw.id,
-      name: raw.name,
-      unitOfMeasure: raw.unitOfMeasure,
-      warehouseStock: new DecimalQuantity(quantity),
-      unitCost: raw.unitCost !== null ? new DecimalQuantity(raw.unitCost.toString()) : undefined,
-    });
+    return raw ? toInsumo(raw) : null;
   }
 
   public async findAll(): Promise<Insumo[]> {
     const list = await this.prisma.insumo.findMany({ include: { warehouseStocks: true } });
+    return list.map(toInsumo);
+  }
 
-    return list.map((raw) => {
-      const mainStock = raw.warehouseStocks.find((s) => s.location === 'MAIN_WAREHOUSE');
-      const quantity = mainStock ? mainStock.quantity.toString() : '0';
-
-      return new Insumo({
-        id: raw.id,
-        name: raw.name,
-        unitOfMeasure: raw.unitOfMeasure,
-        warehouseStock: new DecimalQuantity(quantity),
-        unitCost: raw.unitCost !== null ? new DecimalQuantity(raw.unitCost.toString()) : undefined,
-      });
+  public async existsStockAtLocation(storageLocationId: string): Promise<boolean> {
+    const count = await this.prisma.warehouseStock.count({
+      where: { storageLocationId, quantity: { gt: 0 } },
     });
+    return count > 0;
   }
 
   public async findRemanenteById(id: string): Promise<Remanente | null> {
-    const raw = await this.prisma.remanente.findUnique({
-      where: { id },
-    });
+    const raw = await this.prisma.remanente.findUnique({ where: { id } });
     if (!raw) return null;
-
-    return new Remanente({
-      id: raw.id,
-      insumoId: raw.insumoId,
-      currentQuantity: new DecimalQuantity(raw.currentQuantity.toString()),
-      initialQuantity: new DecimalQuantity(raw.initialQuantity.toString()),
-      location: raw.location,
-      status: raw.status as RemanenteStatusType,
-      expirationDate: raw.expirationDate,
-      createdAt: raw.createdAt,
-      terminalAt: raw.terminalAt ?? undefined,
-    });
+    return this.toRemanente(raw);
   }
 
   public async findActiveRemanentesByInsumoId(insumoId: string): Promise<Remanente[]> {
     const list = await this.prisma.remanente.findMany({
-      where: {
-        insumoId,
-        status: 'ACTIVE',
-      },
-      orderBy: {
-        expirationDate: 'asc',
-      },
+      where: { insumoId, status: 'ACTIVE' },
+      orderBy: { expirationDate: 'asc' },
     });
-
-    return list.map(
-      (raw) =>
-        new Remanente({
-          id: raw.id,
-          insumoId: raw.insumoId,
-          currentQuantity: new DecimalQuantity(raw.currentQuantity.toString()),
-          initialQuantity: new DecimalQuantity(raw.initialQuantity.toString()),
-          location: raw.location,
-          status: raw.status as RemanenteStatusType,
-          expirationDate: raw.expirationDate,
-          createdAt: raw.createdAt,
-          terminalAt: raw.terminalAt ?? undefined,
-        })
-    );
+    return list.map((raw) => this.toRemanente(raw));
   }
 
   public async save(insumo: Insumo): Promise<void> {
-    const stockQty = insumo.warehouseStock.toDecimal();
     const unitCost = insumo.unitCost ? insumo.unitCost.toDecimal() : null;
 
-    await this.prisma.insumo.upsert({
-      where: { id: insumo.id },
-      update: {
-        name: insumo.name,
-        unitOfMeasure: insumo.unitOfMeasure,
-        unitCost,
-        warehouseStocks: {
-          upsert: {
-            where: { id: `${insumo.id}_MAIN_WAREHOUSE` },
-            update: { quantity: stockQty },
-            create: {
-              id: `${insumo.id}_MAIN_WAREHOUSE`,
-              location: 'MAIN_WAREHOUSE',
-              quantity: stockQty,
+    await this.prisma.$transaction(async (tx) => {
+      await tx.insumo.upsert({
+        where: { id: insumo.id },
+        update: { name: insumo.name, unitOfMeasure: insumo.unitOfMeasure, unitCost },
+        create: { id: insumo.id, name: insumo.name, unitOfMeasure: insumo.unitOfMeasure, unitCost },
+      });
+
+      for (const line of insumo.stockLines) {
+        const quantity = line.quantity.toDecimal();
+        await tx.warehouseStock.upsert({
+          where: {
+            insumoId_storageLocationId: {
+              insumoId: insumo.id,
+              storageLocationId: line.storageLocationId,
             },
           },
-        },
-      },
-      create: {
-        id: insumo.id,
-        name: insumo.name,
-        unitOfMeasure: insumo.unitOfMeasure,
-        unitCost,
-        warehouseStocks: {
-          create: {
-            id: `${insumo.id}_MAIN_WAREHOUSE`,
-            location: 'MAIN_WAREHOUSE',
-            quantity: stockQty,
-          },
-        },
-      },
+          update: { quantity },
+          create: { insumoId: insumo.id, storageLocationId: line.storageLocationId, quantity },
+        });
+      }
     });
   }
 
@@ -182,6 +129,30 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         reason: movement.reason,
         recipeId: movement.recipeId,
       },
+    });
+  }
+
+  private toRemanente(raw: {
+    id: string;
+    insumoId: string;
+    currentQuantity: { toString(): string };
+    initialQuantity: { toString(): string };
+    location: string;
+    status: string;
+    expirationDate: Date;
+    createdAt: Date;
+    terminalAt: Date | null;
+  }): Remanente {
+    return new Remanente({
+      id: raw.id,
+      insumoId: raw.insumoId,
+      currentQuantity: new DecimalQuantity(raw.currentQuantity.toString()),
+      initialQuantity: new DecimalQuantity(raw.initialQuantity.toString()),
+      location: raw.location,
+      status: raw.status as RemanenteStatusType,
+      expirationDate: raw.expirationDate,
+      createdAt: raw.createdAt,
+      terminalAt: raw.terminalAt ?? undefined,
     });
   }
 }

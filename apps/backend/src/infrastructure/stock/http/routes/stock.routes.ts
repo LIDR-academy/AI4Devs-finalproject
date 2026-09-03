@@ -8,12 +8,14 @@ import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/Re
 import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IStockMovementQueryRepository } from '../../../../domain/stock/repositories/IStockMovementQueryRepository.js';
+import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
 
 export function createStockRouter(
   stockRepository: IInsumoRepository & IRemanenteRepository,
   stockMovementQueryRepository?: IStockMovementQueryRepository,
-  isAuthRequired = true
+  isAuthRequired = true,
+  locationRepository?: IStorageLocationRepository
 ): Router {
   const router = Router();
 
@@ -22,13 +24,13 @@ export function createStockRouter(
   // el authMiddleware a nivel de mount en app.ts.
   const role = (...roles: string[]): ReturnType<typeof requireRole>[] =>
     isAuthRequired ? [requireRole(...roles)] : [];
-  const useCase = new RecordExtractionUseCase(stockRepository, stockRepository);
+  const useCase = new RecordExtractionUseCase(stockRepository, stockRepository, locationRepository);
   const getMovementHistoryUseCase = stockMovementQueryRepository
     ? new GetStockMovementHistoryUseCase(stockMovementQueryRepository)
     : undefined;
-  const createInsumoUseCase = new CreateInsumoUseCase(stockRepository);
-  const listInsumosUseCase = new ListInsumosUseCase(stockRepository);
-  const restockInsumoUseCase = new RestockInsumoUseCase(stockRepository, stockRepository);
+  const createInsumoUseCase = new CreateInsumoUseCase(stockRepository, locationRepository);
+  const listInsumosUseCase = new ListInsumosUseCase(stockRepository, locationRepository);
+  const restockInsumoUseCase = new RestockInsumoUseCase(stockRepository, stockRepository, locationRepository);
   const controller = new StockController(
     useCase,
     getMovementHistoryUseCase,

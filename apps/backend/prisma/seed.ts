@@ -165,6 +165,34 @@ async function seedDevelopmentUsers(roles: { adminRoleId: string; kitchenRoleId:
   console.log(`✅ Usuarios Esenciales Idempotentes: ${adminUser.name}, ${kitchenUser.name}`);
 }
 
+// US-016 / US-025: sectores físicos de almacenamiento. Idempotente por `name` (UNIQUE).
+const STORAGE_LOCATIONS = [
+  { id: 'loc-seed-unclassified', name: 'Bodega Principal – Sin clasificar', type: 'WAREHOUSE' as const, description: 'Sector por defecto para existencias sin sub-sector asignado' },
+  { id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE' as const, description: 'Estantería de secos y no perecederos' },
+  { id: 'loc-seed-meat-fridge', name: 'Heladera de Carnes', type: 'WAREHOUSE' as const, description: 'Refrigerador dedicado a proteínas' },
+  { id: 'loc-seed-freezer', name: 'Cámara de Congelados', type: 'WAREHOUSE' as const, description: 'Cámara de congelación' },
+  { id: 'loc-seed-kitchen-fridge', name: 'Refrigerador Principal Cocina', type: 'KITCHEN' as const, description: 'Destino de remanentes en línea de fríos' },
+];
+
+async function seedStorageLocations(): Promise<void> {
+  for (const loc of STORAGE_LOCATIONS) {
+    await prisma.storageLocation.upsert({
+      where: { name: loc.name },
+      update: { type: loc.type, description: loc.description },
+      create: { id: loc.id, name: loc.name, type: loc.type, description: loc.description, isActive: true },
+    });
+  }
+  console.log(`✅ Sectores físicos de almacenamiento sembrados: ${STORAGE_LOCATIONS.length}`);
+}
+
+async function seedWarehouseStock(insumoId: string, storageLocationId: string, quantity: number): Promise<void> {
+  await prisma.warehouseStock.upsert({
+    where: { insumoId_storageLocationId: { insumoId, storageLocationId } },
+    update: { quantity },
+    create: { insumoId, storageLocationId, quantity },
+  });
+}
+
 async function seedSyntheticFixtures(): Promise<void> {
   console.log('🧪 Sembrando Fixtures Sintéticos de prueba (Insumos y Remanentes)...');
 
@@ -198,6 +226,11 @@ async function seedSyntheticFixtures(): Promise<void> {
     },
   });
 
+  // US-025: existencias iniciales por sub-sector de bodega
+  await seedWarehouseStock(insumo1.id, 'loc-seed-meat-fridge', 8.0);
+  await seedWarehouseStock(insumo2.id, 'loc-seed-dry', 12.0);
+  await seedWarehouseStock(insumo3.id, 'loc-seed-freezer', 20.0);
+
   const now = new Date();
   await prisma.remanente.upsert({
     where: { id: 'rem-101' },
@@ -221,6 +254,7 @@ async function main() {
 
   const roles = await seedDefaultRoles();
   await reconcileOrphanUserRoles(roles.kitchenRoleId);
+  await seedStorageLocations();
 
   if (process.env.NODE_ENV === 'production') {
     await seedProductionAdmin(roles.adminRoleId);
