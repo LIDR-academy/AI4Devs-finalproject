@@ -287,7 +287,67 @@ repo must follow — always with a real code example pulled from this repository
   two actions, and the allow-list itself becoming the new sink the moment a tag is added to it
   without the same scrutiny.
 
-_Last updated: 2026-09-02 — Story 0024a (Product description — HTML sanitization on write): added
+- [Bounding an array of ids at the validation boundary](array-validation-bounds.md) — the rule
+  established by story 0026's Phase 4 **re-audit**, while verifying that story's own first-round fix:
+  **a `max:N` rule on an array attribute does not gate that array's `.*` rules.** Laravel expands the
+  wildcard against the data it was given and runs every expanded rule regardless of whether the parent
+  attribute already failed, so `max:254` bounds what may *succeed* and not what the request *costs* —
+  measured on this worktree, a 4,000-id submission still issues **4,000 `Rule::exists()` queries in
+  6.60 s** before returning the `max:254` message, exactly one query per submitted element. The trap is
+  that `max:N` looks like a bound on the work because the number it names is the number of elements.
+  Carries the measured table, the confirmation that **neither** `bail` form helps (`bail` stops rules
+  for the attribute it is on, and `field` and `field.*` are different attributes — 300 queries either
+  way), the two shapes that do bound it (a two-pass validation, measured at **0 queries**; or one
+  array-level closure rule issuing a single batch `whereIn`, with the ⚠️ that the closure must
+  `array_slice()` internally because it is itself an array-level rule and inherits the same
+  behaviour), and the pointer to `SearchableMultiSelect::resolveIdsAllowingPartialFailure()` as this
+  repo's existing worked example of bounding a client-supplied id array in PHP before it reaches a
+  query. Names **both** call sites carrying the shape today — story 0026's `salesRegionIdsRules()` and
+  **shipped** story 0024's `productGalleryMediaIdsRules()` (`max:20`, and still 1,000 queries for
+  1,000 submitted ids) — recorded as unreachable in production only because the products editor
+  (story 0027) does not exist yet, so the next audit treats them as known rather than new. Ends with
+  the review question that catches the class: *what does one element cost, and who chose the element
+  count?* **Extended by story 0026's second re-audit (2026-09-03)** in two directions. The rule is
+  **not a property of `max:`** — no rule on the parent attribute gates the `.*` rules, and `list`,
+  the *other* rule in `salesRegionIdsRules()`, carried the identical false "runs before the
+  per-element rules" claim in the same docblock: measured, a 30-element **associative** array fails
+  `list` and still issues **30 `Rule::exists()` queries**, returning `ids` plus `ids.k0` … `ids.k29`.
+  And the page now records its own **disposition** rather than leaving the ❌ open indefinitely —
+  there is still **no code-level cost bound**, because the hazard lives at a `validate()` call site
+  story 0026 does not ship at all (no route, no component, no `validate()` invocation); what shipped
+  is the deletion of the false docblock claim plus a Definition-of-Done hand-off instructing story
+  0027 to use the two-pass shape. It also records why the batch-`whereIn` ✅ was re-examined against
+  **D12** and deliberately **not** adopted in its place: a batch closure added *beside* the
+  per-element rule bounds nothing, so adopting it means deleting D12's validated preserved-vs-
+  assignable per-element rule outright, hand-rolling `required`/`string`/`distinct` and the
+  per-element error keys in PHP, and resting the bound on an `array_slice()` line nothing enforces.
+
+_Last updated: 2026-09-03 — Story 0026, **Phase 4 second re-audit**: no new page. Updated the
+[array-validation-bounds.md](array-validation-bounds.md) entry above for finding **R-1's**
+resolution — the ❌ it marked "open" is now recorded as a **decision** rather than left standing,
+since the hazard is a property of a `validate()` call site this story structurally does not contain,
+so the resolution is the corrected docblock plus a written hand-off (DoD item 5) and not a code fix.
+The same pass found the identical false claim about `list` in the same docblock and measured it
+(30 associative ids → 30 queries), which is now that page's own section. This is the
+audit-authored-page rule below working as intended: the ❌/✅ pair left a slot, and the slot was
+filled inside the same story rather than a story later._
+
+_Previously: 2026-09-03 — Story 0026 (Product ↔ Sales Region assignment and tax resolution
+backend), **Phase 4 re-audit**: added [array-validation-bounds.md](array-validation-bounds.md), the
+**thirteenth** page and the first about the cost of a validation rule rather than about what it
+permits. It exists because re-auditing story 0026's first-round F-3 fix as new code — per this
+project's own standing rule — found that the fix does not close what its docblock claims: the
+`['array', 'list', 'max:254']` bound rejects an oversized or associative array cleanly (verified: a
+`ValidationException`, never a crash) and 254 is genuinely the catalog's hard ceiling (249 +
+`SPAIN_TERRITORIES`' 5, with no create path), but it does not prevent the per-element
+`Rule::exists()` queries from running first. Written as a ❌/✅ pair with the ❌ marked **open**, per
+[errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s
+audit-authored-page rule. No other page on this index changed — story 0026's other four fixes
+(F-1's non-disclosure docblock, F-4's direct pivot query, F-5's deterministic tiebreak, F-6's scan
+ceiling) were each re-verified closed by execution and produced no new durable rule, so they live in
+the audit response rather than here._
+
+_Previously: 2026-09-02 — Story 0024a (Product description — HTML sanitization on write): added
 [html-sanitization.md](html-sanitization.md), the **twelfth** page and the first about
 untrusted-HTML-storage rather than authorization or file decoding. Written as ❌/✅ pairs describing
 the shipped, closed state from the outset (both Phase 4 findings — F-1's `block`-vs-`drop`

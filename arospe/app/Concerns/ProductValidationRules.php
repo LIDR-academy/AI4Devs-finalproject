@@ -223,9 +223,11 @@ trait ProductValidationRules
      * (`SalesRegionSeeder::SPAIN_TERRITORIES`) -- 254 rows total, so a
      * legitimate submission can never exceed it even in the (currently
      * impossible) case a caller submitted the entire catalog. `list`
-     * refuses a sparse/associative array before either per-element rule
-     * runs, matching the shape every other id-array submission in this
-     * codebase expects.
+     * refuses a sparse/associative array, matching the shape every other
+     * id-array submission in this codebase expects -- it does **not**
+     * prevent the per-element rules from running either, for the identical
+     * reason `max:254` doesn't (see the ⚠️ below): a 30-key associative
+     * array still issues 30 `Rule::exists()` queries before `list` fails.
      *
      * ⚠️ CORRECTED (Phase 4 re-audit, R-1): `max:254` bounds what may
      * SUCCEED, not what a request COSTS -- Laravel expands `field.*`
