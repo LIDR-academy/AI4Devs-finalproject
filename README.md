@@ -11,6 +11,10 @@
 
 ---
 
+> **Documentación de referencia — Entrega 1 / diseño inicial**
+>
+> Las secciones siguientes conservan el diseño histórico de la Entrega 1. No describen necesariamente la API ni el modelo ejecutable de la Entrega 2.
+
 ## 0. Ficha del proyecto
 
 ### **0.1. Tu nombre completo:**
@@ -776,7 +780,7 @@ Las historias de usuario convenientes (Historias 6 y 7) se consideran parte de u
 
 ---
 
-## Entrega 2: MVP ejecutable
+## Implementación ejecutable — Entrega 2
 
 El MVP ejecutable reconcilia las propuestas de la Entrega 1 con el contrato explícito de la Entrega 2. El backend utiliza NestJS + TypeScript + Prisma + PostgreSQL; el frontend utiliza React + TypeScript + Vite. La propuesta de FastAPI/SQLAlchemy del PRD y el modelo ampliado de publicación quedan registrados como alternativas arquitectónicas aplazadas en [`docs/ENTREGA2-IMPLEMENTATION-CONTRACT.md`](docs/ENTREGA2-IMPLEMENTATION-CONTRACT.md).
 
@@ -830,7 +834,27 @@ Todas las rutas tienen el prefijo `/api/v1`.
 
 ### Verificación
 
-El repositorio incluye pruebas unitarias para la normalización, la fundamentación del contexto de IA, la validación de resultados y el servicio de generación de IA, además de pruebas HTTP para la creación de negocios, el envío del descubrimiento y la generación. También incluye una prueba E2E con `AppModule`, Prisma y PostgreSQL reales; el gateway LLM predeterminado es el mock determinista y reemplazable del MVP.
+El repositorio incluye pruebas unitarias para la normalización, la fundamentación del contexto de IA, la validación de resultados y el servicio de generación de IA, además de pruebas HTTP para la creación de negocios, el envío del descubrimiento y la generación.
+
+#### E2E automatizado database-backed
+
+La prueba E2E automatizada recorre exactamente:
+
+```text
+REGISTER
+→ LOGIN
+→ CREATE BUSINESS
+→ DISCOVERY
+→ APPROVE PROFILE
+→ GENERATE FIVE ASSETS
+→ VERIFY DATABASE PERSISTENCE
+```
+
+Utiliza `AppModule` real, `PrismaService` real, PostgreSQL real, controllers y services reales, sin mockear repositorios ni la persistencia. Verifica la persistencia de las seis entidades, los cinco tipos de assets y los snapshots/metadata de `AIGeneration`.
+
+#### Validación adicional
+
+Por separado, edit, regeneration, preservation of `AIGeneration` history y ownership isolation fueron verificados mediante tests de servicio y validación manual del flujo real contra NestJS + Prisma + PostgreSQL. Estas comprobaciones adicionales no forman parte del E2E automatizado descrito anteriormente.
 
 Verificado localmente:
 
@@ -839,8 +863,8 @@ Verificado localmente:
 - Análisis estático de backend y frontend
 - Compilación de producción de backend y frontend
 - Suite de pruebas backend: 12 suites y 27 pruebas superadas
-- Prueba E2E real: `REGISTER → LOGIN → CREATE BUSINESS → COMPLETE DISCOVERY → REVIEW/APPROVE PROFILE → GENERATE DIGITAL PRESENCE → REVIEW/EDIT/REGENERATE ASSETS`, ejecutada contra NestJS + Prisma + PostgreSQL.
-- Persistencia verificada: seis entidades, cinco tipos de assets y snapshots/metadata de `AIGeneration`; la regeneración conserva el historial previo.
+- E2E automatizado database-backed: `REGISTER → LOGIN → CREATE BUSINESS → DISCOVERY → APPROVE PROFILE → GENERATE FIVE ASSETS → VERIFY DATABASE PERSISTENCE`, contra NestJS + Prisma + PostgreSQL reales.
+- Validación adicional manual y mediante tests de servicio: edición, regeneración, conservación del historial de `AIGeneration` y aislamiento de ownership.
 - Pipeline AI: `DiscoveryResponses → BusinessProfile → ContextBuilder → PromptBuilder → LLMGateway → Validation → Asset/AIGeneration`.
 - `BusinessProfile` es la fuente canónica de IA; `DiscoveryResponses` no se envía directamente al LLM.
 - Para Entrega 2, `promptVersion=v1` y `contextVersion=v1` son versiones fijas y explícitas del MVP.

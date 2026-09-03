@@ -211,7 +211,31 @@ La validación rechaza contenido vacío, estructuras FAQ malformadas y respuesta
 
 Los metadatos predeterminados son `contextVersion=v1`, `promptVersion=v1`, `modelUsed=mock-deterministic-v1` y una temperatura fija documentada en la configuración. Las credenciales de un modelo real son opcionales y nunca se envían al frontend ni se registran en logs.
 
-## 8. Criterios de aceptación del MVP
+## 8. Evidencia de testing
+
+### E2E automatizado database-backed
+
+La prueba E2E automatizada recorre exactamente:
+
+```text
+REGISTER
+→ LOGIN
+→ CREATE BUSINESS
+→ DISCOVERY
+→ APPROVE PROFILE
+→ GENERATE FIVE ASSETS
+→ VERIFY DATABASE PERSISTENCE
+```
+
+Utiliza `AppModule` real, `PrismaService` real y PostgreSQL real, sin mockear repositorios ni la persistencia.
+
+### Validación adicional
+
+Edit, regeneration, preservation of `AIGeneration` history y ownership isolation fueron verificados por separado mediante tests de servicio y validación manual del flujo real contra NestJS + Prisma + PostgreSQL. Estas comprobaciones no forman parte del E2E automatizado.
+
+Resultado de la suite actual: 12 suites y 27 pruebas superadas.
+
+## 9. Criterios de aceptación del MVP
 
 - Se puede iniciar una instancia local de PostgreSQL con el archivo Docker Compose suministrado.
 - La validación del esquema y las migraciones de Prisma funcionan sobre una base de datos limpia.
@@ -228,7 +252,7 @@ Los metadatos predeterminados son `contextVersion=v1`, `promptVersion=v1`, `mode
 - Las pruebas automatizadas cubren la normalización, la orquestación de IA, la validación de resultados, los flujos API de business/discovery/generation y la regla de fuente única `BusinessProfile`.
 - La verificación de tipos, el análisis estático y la compilación de backend y frontend terminan correctamente; el flujo documentado de ejecución local es reproducible.
 
-## 9. Orden de implementación
+## 10. Orden de implementación
 
 1. Base y base de datos: scripts del workspace, shells de NestJS/Vite, esquema Prisma, configuración de migraciones, Docker Compose, plantilla de entorno y configuración común.
 2. Autenticación: registro, login, hash de contraseñas, guard JWT y contexto del usuario autenticado.
@@ -240,7 +264,7 @@ Los metadatos predeterminados son `contextVersion=v1`, `promptVersion=v1`, `mode
 8. Pruebas y refuerzo: pruebas unitarias/API, manejo de errores, comprobaciones de seguridad, Verificación de tipos, análisis estático y compilación.
 9. Documentación: actualizar únicamente la configuración local, las variables de entorno, los endpoints implementados y el estado real del MVP.
 
-## 10. Trazabilidad de Entrega 1 a Entrega 2
+## 11. Trazabilidad de Entrega 1 a Entrega 2
 
 La implementación de Entrega 2 se relaciona con el backlog y las historias históricas de la siguiente forma:
 
