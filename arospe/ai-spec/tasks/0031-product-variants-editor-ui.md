@@ -12,7 +12,7 @@ It is **frontend only**: no migration, no model, no action, no policy, no valida
 those is consumed as already-shipped code from [0029](0029-product-variants-backend.md) (variant
 persistence, the SKU derivation, the duplicate-combination rule, read-time image inheritance, and —
 since 0029's 2026-08-19 amendment — the **cartesian combination generator**) and
-[0028](0028-product-attribute-types-and-values-backend.md) (the attribute taxonomy). This story is
+[0028](done/0028-product-attribute-types-and-values-backend.md) (the attribute taxonomy). This story is
 where 0029's eleven zero-call-site deliverables — **four** actions (`CreateProductVariant`,
 `UpdateProductVariant`, `DeleteProductVariant`, `GenerateProductVariantCombinations`),
 `ProductVariant`, `VariantSku`, `VariantCombination`, and `ProductPolicy`'s newly-widened coverage —
@@ -2351,7 +2351,7 @@ approach) and `frontend-qa` (test design), per
 and [§2.3](../../docs/PRD/PRD.md#23-shared-media-gallery), and grounded in **full readings** of
 [0029](0029-product-variants-backend.md) (2,306 lines, read in full — it was substantially redesigned on
 the same day) and [0027](0027-products-list-and-editor-ui.md) (1,512 lines, read in full), plus
-[0028](0028-product-attribute-types-and-values-backend.md),
+[0028](done/0028-product-attribute-types-and-values-backend.md),
 [0030](0030-product-attribute-types-and-values-ui.md) and
 [0020](done/0020-shared-media-gallery-modal-ui.md) for their data and embedding contracts, and the whole of
 [errors-log.md](../../docs/errors-log.md).

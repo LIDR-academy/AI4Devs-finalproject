@@ -13,9 +13,11 @@ tests — number to be assigned when Epic 2's frontend stories are sequenced) | 
 database-expert: **yes**
 
 **Dependencies: none within Epic 2.** This story is the root of the variant sub-domain — it does
-not read or write `products`, `product_categories` or `product_variants`, none of which exist in
-code yet. It depends only on Epic 1's already-seeded `products.*` permissions
-([`database/seeders/RolePermissionSeeder.php`](../../database/seeders/RolePermissionSeeder.php)).
+not read or write `products`, `product_categories` or `product_variants`. `products` and
+`product_categories` already exist in code (stories 0023/0024 shipped both tables, models and
+`app/Actions/{Products,ProductCategories}/`); only `product_variants` (story 0029) does not exist
+yet. This story depends only on Epic 1's already-seeded `products.*` permissions
+([`database/seeders/RolePermissionSeeder.php`](../../../database/seeders/RolePermissionSeeder.php)).
 
 **Known consumer: story 0029 (product variants).** 0029 builds variant combinations directly on
 this schema and references individual attribute **value ids** from its combination pivot. The
@@ -147,7 +149,7 @@ single-table alternative was considered and **rejected** for four reasons, the f
 2. **Single-table uniqueness would be silently unenforceable.** The two levels have genuinely
    different rules (D3): a type name is globally unique, a value only within its type. Collapsed
    into one table that becomes `unique(['parent_id', 'name'])` with `parent_id IS NULL` on type
-   rows — and [`docs/database/schema.md`](../../docs/database/schema.md) already records the
+   rows — and [`docs/database/schema.md`](../../../docs/database/schema.md) already records the
    consequence in its `pending_email` note: MySQL allows unlimited `NULL`s in a unique index, so
    the constraint only binds rows actually holding a non-null parent. Global uniqueness of type
    names would be **not enforced at all**, while looking enforced in the migration.
@@ -199,20 +201,27 @@ Column-level rationale:
 | Column | Decision | Why |
 | --- | --- | --- |
 | `id` | UUID v7 via `$table->uuid('id')->primary()` | **Confirmed** — see D9 |
-| `name` / `value` | `string(100)`, never bare `string()` | [`migrations.md`](../../docs/database/migrations.md) states the rule verbatim; a bare `string()` is `VARCHAR(255)`, which would make the composite unique a 2040-byte utf8mb4 key. At 100 the composite is 144 + 400 = **544 bytes**, far under InnoDB's 3072-byte DYNAMIC limit |
+| `name` / `value` | `string(100)`, never bare `string()` | [`migrations.md`](../../../docs/database/migrations.md) states the rule verbatim; a bare `string()` is `VARCHAR(255)`, which would make the composite unique a 2040-byte utf8mb4 key. At 100 the composite is 144 + 400 = **544 bytes**, far under InnoDB's 3072-byte DYNAMIC limit |
 | `value`, not `name`, on the values table | deliberate | The PRD's own example is `Size` → `38` — `38` is a value, not a name. It also disambiguates `$type->name` from `$value->value` when both are in scope |
 | `position` | `unsignedInteger`, **not nullable**, default `0` | See D5 |
 | `timestamps()` | present | Universal in this repo |
 
-**Deliberate, flagged departure from a stated convention.**
-[`migrations.md`](../../docs/database/migrations.md) says this repo is explicit about FK indexes
-(`$table->index('user_id')` in `create_passkeys_table`). Here that index is **omitted on purpose**,
-because the composite unique already has the FK column as its leftmost prefix and therefore
-satisfies both InnoDB's FK requirement and every `WHERE product_attribute_type_id = ?` lookup.
-`create_passkeys_table` has no such composite, which is why the explicit index is right there and
-wrong here. The migration must carry the comment above so a later reviewer does not "restore" it.
+**Follows the established convention — not a departure from one.**
+[`migrations.md`](../../../docs/database/migrations.md#an-fk-column-does-not-also-get-an-explicit-index-here)
+has stated since task 0016 that an FK column here does **not** get a hand-written
+`$table->index(...)`, because `constrained()` alone already leaves InnoDB's own auto-created
+supporting index in place — adding a second is pure write amplification, the exact
+`users_uuid_unique` mistake [`errors-log.md`](../../../docs/errors-log.md) records. That rule already
+has five confirming instances (`sales_regions`, `media`, `products` ×2, `product_sales_region`);
+this migration's own omission — the composite unique's leftmost prefix (`product_attribute_type_id`)
+satisfies both InnoDB's FK requirement and every `WHERE product_attribute_type_id = ?` lookup on its
+own — is a **sixth** confirming instance, not an exception. `create_passkeys_table`'s explicit
+`$table->index('user_id')` is the documented **legacy divergence** from this rule (predates the
+index discipline), not the current convention — do not cite it as the reason to add an index here.
+The migration may still carry a short inline comment noting which index covers the FK, citing the
+established rule rather than framing the omission as a special case.
 
-Model shape, per [`base-standards.md`](../../docs/conventions/base-standards.md) — attribute-based
+Model shape, per [`base-standards.md`](../../../docs/conventions/base-standards.md) — attribute-based
 `#[Fillable]`, a `casts()` **method**, `HasUuids` in the trait list, **no** `$keyType` /
 `$incrementing`, `@property string $id`:
 
@@ -244,24 +253,24 @@ is the documented escape hatch for the rare case that does not.
 **Normalisation happens in PHP, before validation, not in the action and not in the database.**
 `Str::squish()` (trim + collapse internal whitespace runs) is applied to the type name and to every
 submitted value *before* `validate()` runs — the same ordering as
-[`app/Livewire/Users/Index.php`](../../app/Livewire/Users/Index.php)'s `Str::lower($this->email)`.
+[`app/Livewire/Users/Index.php`](../../../app/Livewire/Users/Index.php)'s `Str::lower($this->email)`.
 If normalisation happened only inside the action, the uniqueness rule would inspect the
 un-normalised string and `"Size "` would slip past an existing `"Size"`.
 
 **Verified fact that changes a test's design:** this project's collation is
 **`utf8mb4_unicode_ci`**, not MySQL 8.4's server default `utf8mb4_0900_ai_ci` —
-[`config/database.php`](../../config/database.php) sets
+[`config/database.php`](../../../config/database.php) sets
 `'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci')` and `.env` defines no `DB_COLLATION`.
 That collation is case- *and accent*-insensitive and is **PAD SPACE** (trailing spaces ignored in
 comparison). Two consequences: `Size`/`SIZE`/`size` collide for free, which is the behaviour a
 taxonomy wants; and a test asserting case-insensitive rejection must assert a **validation error on
 the name field**, never a row count — a count assertion passes on the collation alone, whether or
 not the application owns the rule (see FP1 in [Tests to perform](#tests-to-perform)).
-[`errors-log.md`](../../docs/errors-log.md)'s rule against leaning on collation is scoped to
+[`errors-log.md`](../../../docs/errors-log.md)'s rule against leaning on collation is scoped to
 *security controls*; it does not forbid a data-quality constraint, but it does mean the application
 check comes first and the index is the last word, exactly as `pending_email` is documented.
 
-Tests also run against this same MySQL — [`phpunit.xml`](../../phpunit.xml) overrides only
+Tests also run against this same MySQL — [`phpunit.xml`](../../../phpunit.xml) overrides only
 `DB_DATABASE`, not the connection — so there is no SQLite portability caveat to design around here.
 
 ### D4 — Values are edited inline in the type's modal, and **diffed** on save
@@ -283,7 +292,7 @@ identity: it is meaningless outside its type and would never be searched for on 
 Step 2 is a security requirement, not tidiness: `$values` is the form's own input and therefore
 **not** `#[Locked]`, so every id in it is client-writable. Without the re-scope, a crafted
 `/livewire/update` payload could point an `UPDATE` at another type's value row — the exact hazard
-[`security/livewire-authorization.md`](../../docs/security/livewire-authorization.md) describes
+[`security/livewire-authorization.md`](../../../docs/security/livewire-authorization.md) describes
 ("a modal must read authoritative values from the model rather than back them out of a
 client-writable array").
 
@@ -320,38 +329,85 @@ PRD's own example. Concrete rules:
   submitted order), not by pairwise adjacent swaps, which corrupt under concurrency.
 - **No unique index on `(type_id, position)`** — it would force every reorder through a temporary
   out-of-range shuffle, and duplicates are harmless given the deterministic tiebreak.
-- **No index on `position`** — same reasoning [`schema.md`](../../docs/database/schema.md) gives for
+- **No index on `position`** — same reasoning [`schema.md`](../../../docs/database/schema.md) gives for
   `users.status`: the table is read wholesale into a dropdown at 10¹–10² rows.
 
 The **column** ships here regardless, so neither 0029 nor the UI sibling needs an `ALTER`.
 
 ### D6 — Permissions reuse `products.*`; the seeded catalog is not touched
 
-[`docs/architecture/authorization.md`](../../docs/architecture/authorization.md) already records
+[`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md) already records
 `products` as covering "products, product categories **and variants**", with the explicit note that
 granularity is "deliberately **coarse per module**". That is a recorded decision this story must not
-reopen. Gating uses the existing four-action grid:
-
-| Component method | Gate |
-| --- | --- |
-| `mount()` | `products.view` |
-| `openEditModal()` | `products.edit` — it **discloses** the value list, and this repo gates methods that mutate *or disclose* |
-| `save()` (create branch) | `products.create` |
-| `save()` (edit branch) | `products.edit` |
-| `confirmDelete()` / `deleteType()` | `products.delete` |
+reopen.
 
 Adding a tenth module slug was considered and **rejected**: it would be +4 permissions and would
-break the hardcoded `38`/`37` assertions in
-[`tests/Feature/Seeders/RolePermissionSeederTest.php`](../../tests/Feature/Seeders/RolePermissionSeederTest.php),
-the permission-count claims in four `docs/` files, and story 0011's role-editor UI — a cross-story
-ripple for zero functional gain.
+break the hardcoded `42`/`41` assertions in
+[`tests/Feature/Seeders/RolePermissionSeederTest.php`](../../../tests/Feature/Seeders/RolePermissionSeederTest.php)
+(verified against the real file: `Permission::count()` is asserted `toBe(42)` and the Administrator
+role's grant count `toHaveCount(41)` at five separate call sites), the permission-count claims in
+several `docs/` files, and story 0011's role-editor UI — a cross-story ripple for zero functional
+gain.
 
-**No `ProductAttributeTypePolicy`.** `UserPolicy` exists because user rows carry genuine *per-row*
-rules (self-edit, administrator-level targets). An attribute type has no per-row distinction
-anywhere in the PRD, so a policy would add an allow/deny matrix that every method answers
-identically. Gate directly on the permission names. (`backend-expert` proposed a policy; the debate
-resolved against it on this reasoning. If a per-row rule ever appears, adding the policy later is a
-local change, because every gate call already names a single ability.)
+**A `ProductAttributeTypePolicy` *is* created, mirroring `App\Policies\ProductCategoryPolicy`'s
+exact shape.** The original debate reasoned that a policy is only warranted when per-row rules
+exist (citing `UserPolicy`'s self-edit/administrator-level branches), and concluded attribute types
+have none — that second half is correct, but the conclusion drawn from it was wrong: `SalesRegionPolicy`,
+`MediaPolicy` and `ProductCategoryPolicy` all exist today with **no target-dependent branch at all**
+(each ability decides on the actor's permission alone, ignoring the target), so "no per-row
+distinction" is not a reason to skip the policy class — it is simply what those policies' method
+bodies look like. `App\Policies\ProductAttributeTypePolicy` follows `ProductCategoryPolicy` exactly:
+four abilities (`viewAny`, `create`, `update`, `delete`), each backed by a `public const *_PERMISSION`
+constant naming the exact `products.*` permission it gates on (per
+[`naming.md`](../../../docs/conventions/naming.md#permission-names)'s "name a permission once on the
+class that owns the rule" convention — `ProductCategoryPolicy`, `SalesRegionPolicy`, `MediaPolicy` and
+`ProductPolicy` all already follow it), and `update()`/`delete()` still take the target instance as a
+parameter (never used inside the body) so a future per-row rule needs no signature change:
+
+| Component method | Gates through |
+| --- | --- |
+| `mount()` | `Gate::authorize('viewAny', ProductAttributeType::class)` → `products.view` |
+| `openEditModal()` | `Gate::authorize('update', $target)` → `products.edit` — it **discloses** the value list, and this repo gates methods that mutate *or disclose* |
+| `save()` (create branch) | `Gate::authorize('create', ProductAttributeType::class)` → `products.create` |
+| `save()` (edit branch) | `Gate::authorize('update', $target)` → `products.edit` |
+| `confirmDelete()` / `deleteType()` | `Gate::authorize('delete', $target)` → `products.delete` |
+
+**Every mutating/disclosing action self-authorizes as its own first statement, per
+[`base-standards.md`](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)'s
+"an authorization rule belongs to the action, not to one of its callers" convention** — verified
+against the real `App\Actions\ProductCategories\CreateProductCategory`, which constructor-injects
+`App\Actions\Auth\LogRefusedPrivilegedAttempt` and calls
+`$this->logRefusedPrivilegedAttempt->authorize('create', ProductCategory::class, targetType:
+'product_category')` as its literal first line, before any validation or write. `CreateProductAttributeType`,
+`UpdateProductAttributeType` and `DeleteProductAttributeType` each do the same: constructor-inject
+`LogRefusedPrivilegedAttempt`, call `->authorize()` against the relevant
+`ProductAttributeTypePolicy` ability as the first statement of `__invoke()`, and pass
+`targetType: 'product_attribute_type'` explicitly (`resolveTarget()` auto-resolves only `User`/`Role`
+instances — see `App\Actions\Auth\LogRefusedPrivilegedAttempt::resolveTarget()`). This gives a
+future Artisan command, queued job or REST controller the identical refusal the dashboard gets,
+rather than leaving the actions ungated.
+
+**`SyncProductAttributeValues` deliberately authorizes NOTHING — the same collaborator-needs-no-gate
+pattern this codebase already ships four times.** It is invoked only from inside
+`CreateProductAttributeType`'s and `UpdateProductAttributeType`'s already-authorized transaction, the
+identical structural reason `App\Actions\Products\SyncProductGallery`'s own docblock states for
+itself: *"Deliberately authorizes NOTHING: it is a collaborator of two actions that have already
+authorized the whole operation, never an independently-reachable entry point. ... `tests/Feature/Products/ProductAuthorizationTest.php`
+asserts that no class under `app/` other than CreateProduct/UpdateProduct references this class,
+which is what makes the missing Gate call structural rather than an oversight."* `SyncProductAttributeValues`
+carries the same docblock reasoning and the same kind of reachability test, joining
+`GenerateImageConversions`, `EnforceGrantorPermissionScope`, `SyncProductGallery` and
+`SyncProductSalesRegions` as this codebase's **fifth** shipped instance of the pattern.
+
+**The Livewire component re-checks the same abilities in its own mutating/disclosing methods, as
+defence in depth on top of the actions' own gates** — matching
+[`App\Livewire\ProductCategories\Index`](../../../app/Livewire/ProductCategories/Index.php)'s shape,
+whose `mount()`, `openCreateModal()`, `openEditModal()`, `save()`, `confirmDelete()` and
+`deleteProductCategory()` all gate (verified against the real file: every one of those six methods
+carries either a `Gate::authorize(...)` or a `$logRefusedPrivilegedAttempt->authorize(...)` call as
+its first statement). `App\Livewire\Products\AttributeTypes\Index` follows the identical shape —
+`mount()`, `openCreateModal()`, `openEditModal()`, `save()`, `confirmDelete()` and `deleteType()`
+each gate before doing anything else, never a substitute for the actions' own gates.
 
 ### D7 — Deletion: cascade to values now, in-use block lands with 0029
 
@@ -362,7 +418,7 @@ no pivot. So this story ships:
   as `create_passkeys_table`'s "no orphaned passkeys".
 - **Type deletion itself: unguarded**, but routed through a named action
   (`DeleteProductAttributeType`) that exists specifically so 0029 has **one** call site to bolt its
-  guard onto — the same reasoning [`base-standards.md`](../../docs/conventions/base-standards.md)
+  guard onto — the same reasoning [`base-standards.md`](../../../docs/conventions/base-standards.md)
   gives for `User::delete()` being an override rather than scattered logic. Writing the guard now,
   against a table that does not exist, would produce an untestable code path.
 - **`#[Locked] public int $deletingTypeUsageCount = 0;`** is in the component's public surface from
@@ -382,7 +438,7 @@ a single value. This is an inference by analogy and is raised as **Q3** for PO s
 
 **No soft deletes.** `User` is the only `SoftDeletes` model and it earned it (identifier reuse,
 session invalidation, token revocation) — none of which applies to a taxonomy row. Worse,
-[`schema.md`](../../docs/database/schema.md) records that `Rule::unique()` does **not** apply the
+[`schema.md`](../../../docs/database/schema.md) records that `Rule::unique()` does **not** apply the
 soft-delete scope, so a soft-deleted "Size" would permanently block ever creating a type named
 "Size" again, with no restore UI anywhere in the app (`restore()` already has no call site).
 
@@ -397,7 +453,7 @@ soft-delete scope, so a soft-deleted "Size" would permanently block ever creatin
 | `description` on a type | against | Not in the PRD; a four-word admin label needs no help text |
 | `is_active` / status toggle | against | The attribute Gherkin has no enable/disable scenario, unlike carriers which explicitly do. A status column no UI ever sets is dead schema |
 | a `data_type` discriminator (text/number/color) | against | Implies per-datatype validation, input widgets and sorting — substantial hidden scope. Numeric ordering is already solved correctly by `position` |
-| a `ProductAttributeSeeder` | against | Assumption 9 says these are **admin-defined**, in explicit contrast to the seeded Sales Region catalog. Seeding demo data would reopen the production-reachability question [`security/seeder-safety.md`](../../docs/security/seeder-safety.md) settled |
+| a `ProductAttributeSeeder` | against | Assumption 9 says these are **admin-defined**, in explicit contrast to the seeded Sales Region catalog. Seeding demo data would reopen the production-reachability question [`security/seeder-safety.md`](../../../docs/security/seeder-safety.md) settled |
 | translatable names | out of scope, flagged | See **Q4** |
 
 ### D9 — Primary key: UUID v7 via `HasUuids` (confirmed)
@@ -405,10 +461,10 @@ soft-delete scope, so a soft-deleted "Size" would permanently block ever creatin
 Both tables key on a **UUID v7** string primary key generated by Laravel 13's native `HasUuids`
 trait, applied at both the migration level (`$table->uuid('id')->primary()`,
 `foreignUuid(...)->constrained()`) and the Eloquent level (`use HasUuids;`), per the model-side
-convention in [`base-standards.md`](../../docs/conventions/base-standards.md#uuid-primary-keys).
+convention in [`base-standards.md`](../../../docs/conventions/base-standards.md#uuid-primary-keys).
 
 This was raised during the debate because PRD
-[assumption 19](../../docs/PRD/PRD.md#assumptions--confirmed-decisions) enumerates exactly seven
+[assumption 19](../../../docs/PRD/PRD.md#assumptions--confirmed-decisions) enumerates exactly seven
 UUID entities and neither of these two is among them. **It is now confirmed and closed**: project-wide
 policy is UUID v7 for **all new Epic 2 business entities**, with one deliberate exception — the
 shipping geography catalog (story 0032), which stays on integer keys. These two tables are business
@@ -420,12 +476,16 @@ The reasoning that supported the recommendation still holds and is worth keeping
 generalises the convention to "every new model in PRD Epics 2 and 4"; and UUIDv7's index-locality
 cost is nil at this table's 10¹–10² rows.
 
-**Follow-up (non-blocking, not this story):** [ADR 0001](../../docs/decisions/0001-uuid-primary-keys.md)
-and PRD assumption 19 both still describe the UUID set as a closed list of seven entities, which the
-new project-wide policy supersedes. Amending them is a separate task for `docs-keeper` /
-`product-owner` and **does not gate 0028** — this story implements the confirmed policy regardless.
-Flagged here so the stale seven-entity framing is not mistaken for a contradiction during Phase 2
-INVEST review or Phase 5 code review.
+**Follow-up (non-blocking, not this story) — corrected.** ADR 0001 no longer describes the UUID set
+as a closed list of seven entities: [Amendment 1](../../../docs/decisions/0001-uuid-primary-keys.md#amendment-1-2026-08-27--the-scope-is-the-policy-not-the-list-of-seven)
+(2026-08-27, story 0019) already states the project-wide policy this D9 relies on — every new Epic
+2 business entity is UUIDv7, with one named `bigint` exception (the shipping geography lookup
+table) — precisely so a later story would not need to extend an enumeration a third time. Amendments
+2 and 3 (stories 0023/0024) further confirm the pattern is live and maintained. Only PRD assumption
+19 still enumerates the original seven by name, which is expected and not a contradiction: the ADR
+is the source of truth for the *policy*, and assumption 19 is a historical snapshot of the PRD's own
+scoping decision. This story's two tables are UUIDv7 under the ADR's confirmed policy, and no
+further ADR amendment or docs follow-up is needed on account of this note.
 
 ## Files to create/modify
 
@@ -444,7 +504,7 @@ INVEST review or Phase 5 code review.
   `HasUuids`, `values(): HasMany` ordered per D5.
 - `app/Models/ProductAttributeValue.php` — `belongsTo(ProductAttributeType::class)`.
 - `app/Concerns/ProductAttributeValidationRules.php` — the `<Noun>ValidationRules` trait per
-  [`naming.md`](../../docs/conventions/naming.md), flat and single-concern:
+  [`naming.md`](../../../docs/conventions/naming.md), flat and single-concern:
 
   ```php
   /** $typeId comes from a #[Locked] property — see security/livewire-authorization.md. */
@@ -482,12 +542,16 @@ INVEST review or Phase 5 code review.
   above so the diff exists once, not twice.
 - `app/Actions/Products/DeleteProductAttributeType.php` — thin today (`$type->delete()` in a
   transaction); exists as the single seam 0029 adds its in-use guard to (D7).
+- `app/Policies/ProductAttributeTypePolicy.php` — four abilities (`viewAny`/`create`/`update`/`delete`),
+  mirroring `App\Policies\ProductCategoryPolicy`'s exact shape: `public const *_PERMISSION`
+  constants naming the `products.*` permission each ability gates on, no target-dependent branch.
+  See D6.
 - `app/Livewire/Products/AttributeTypes/Index.php` — the screen component (surface below).
 - `resources/views/livewire/products/attribute-types.blade.php` — **minimal placeholder only.**
   ⚠️ **The view path is the trap.** Livewire kebab-cases each namespace segment then strips a
   trailing `.index`, so `App\Livewire\Products\AttributeTypes\Index` resolves to
   `livewire/products/attribute-types` — one level *shallower* than the class, per the
-  [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name).
+  [`Index`-in-a-subfolder exception](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name).
   Do **not** create `resources/views/livewire/products/attribute-types/index.blade.php`.
 - `database/factories/ProductAttributeTypeFactory.php` — with a `withValues(int $count = 3)` state,
   mirroring `UserFactory::withTwoFactor()`'s `with*` naming.
@@ -499,7 +563,8 @@ INVEST review or Phase 5 code review.
 - `lang/en/products.php` + `lang/es/products.php` — new domain file, key-for-key identical.
 - `tests/Feature/Products/AttributeTypesIndexTest.php`,
   `tests/Feature/Products/SyncProductAttributeValuesTest.php`,
-  `tests/Feature/Models/ProductAttributeTypeTest.php` — Phase 3, `backend-qa`.
+  `tests/Feature/Models/ProductAttributeTypeTest.php`,
+  `tests/Feature/Policies/ProductAttributeTypePolicyTest.php` — Phase 3, `backend-qa`.
 
 ### Modifies
 
@@ -553,14 +618,18 @@ class Index extends Component
     #[Locked] public string $deletingTypeName = '';
     #[Locked] public int $deletingTypeUsageCount = 0;   // always 0 until 0029 — see D7
 
-    public function openCreateModal(): void {}
-    public function openEditModal(string $typeId): void {}
+    // mount(), openCreateModal(), openEditModal(), save(), confirmDelete() and deleteType() each
+    // authorize as their own first statement via LogRefusedPrivilegedAttempt (method-injected,
+    // matching App\Livewire\ProductCategories\Index's identical shape), as defence in depth on
+    // top of the actions' own gates -- see D6.
+    public function openCreateModal(LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void {}
+    public function openEditModal(string $typeId, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void {}
     public function addValue(): void {}
     public function removeValue(string $key): void {}          // by key, NOT by index
     public function moveValue(string $key, int $direction): void {}
-    public function save(CreateProductAttributeType $create, UpdateProductAttributeType $update): void {}
-    public function confirmDelete(string $typeId): void {}
-    public function deleteType(DeleteProductAttributeType $delete): void {}
+    public function save(CreateProductAttributeType $create, UpdateProductAttributeType $update, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void {}
+    public function confirmDelete(string $typeId, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void {}
+    public function deleteType(DeleteProductAttributeType $delete, LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt): void {}
 
     /** @return array{total: int, values: int} */
     #[Computed] public function typesSummary(): array {}
@@ -577,7 +646,7 @@ removes the entire class of bug. This is the single most important thing to hand
 ## Tests to perform
 
 All Feature tests unless noted. `tests/Unit/` gets **no** database trait in this repo — verified at
-[`tests/Pest.php`](../../tests/Pest.php), which binds `RefreshDatabase` to `Feature` and `Browser`
+[`tests/Pest.php`](../../../tests/Pest.php), which binds `RefreshDatabase` to `Feature` and `Browser`
 only — so anything needing a row is a Feature test even when it is integration-shaped. Do not
 create a `tests/Integration/` directory.
 
@@ -740,9 +809,13 @@ relevant product permission is refused server-side, on page load and on every ac
       middleware **and** by an explicit check inside every mutating or disclosing method.
 - [ ] No change to `RolePermissionSeeder`, and no new permission strings.
 - [ ] `docs/database/schema.md` and `docs/api/routes.md` are flagged to `docs-keeper` for Phase 6:
-      two new tables in the ER diagram, and the "No domain model exists beyond `User`" note becomes
-      false. `docs/database/migrations.md` gains this repo's **first real** `create_*` example of
-      the UUID-PK / `foreignUuid` pattern, which that file currently shows only as a target snippet.
+      two new tables in the ER diagram and their own `### product_attribute_types` /
+      `### product_attribute_values` sections (following `product_categories`'/`products`'
+      shape — verified column order, index list, seeded-state note). `docs/database/migrations.md`
+      already quotes a real `create_*` example of the UUID-PK / `foreignUuid` pattern (since task
+      0016, with five confirming instances of the no-hand-written-FK-index rule as of story 0026)
+      — this story's `create_product_attribute_types_table`/`create_product_attribute_values_table`
+      migrations become that rule's **sixth** confirming instance, not the first real example.
 - [ ] Pint clean and Larastan level 7 clean.
 
 ## Definition of Done
@@ -801,4 +874,79 @@ backend — it holds the authorization, validation and action wiring. So this st
 `app/Livewire/Products/AttributeTypes/Index.php` in full **plus a minimal placeholder view**, and
 the UI sibling replaces the view. Without the placeholder the route 500s and this story's own
 feature tests cannot run. This mirrors the 0004 → 0006 split already recorded in
-[`lang/en/users.php`](../../lang/en/users.php)'s own comment. Please confirm this is intended.
+[`lang/en/users.php`](../../../lang/en/users.php)'s own comment. Please confirm this is intended.
+
+## Phase 2 — Open questions resolved (orchestrator decision, before Phase 3)
+
+Per this repo's Auto Mode convention, the following were resolved by adopting each question's own
+recommended option, since every recommendation was already argued against real house precedent and
+none of them is a security-relevant judgement call that needs escalation. Recorded here so Phase 3
+implements against a settled contract rather than re-litigating.
+
+- **Q2 → Q2a.** A type with zero values is legal and inert (matches story 0010's "a role with zero
+  permissions is a legal, inert state" precedent). `attributeValueListRules()` does **not** carry
+  `min:1`. A test proves it (create a type, submit no values, assert it persists with an empty
+  value set).
+- **Q3 → confirmed.** The hard-block-with-a-count / no-confirm-and-proceed pattern is the house
+  precedent (product categories, roles, sales regions all use it) and is what 0029 must apply when
+  it adds the in-use guard. Nothing for **this** story to implement — D7 already ships the
+  unguarded `DeleteProductAttributeType` action and the `#[Locked] $deletingTypeUsageCount = 0`
+  placeholder. Recorded so 0029 does not have to re-derive it.
+- **Q4 → Q4a.** Not translatable in 0028. Plain `name`/`value` columns. Recorded as a known
+  migration Epic 5 inherits, not a silent gap.
+- **Q5 → `product-attribute-types.index`.** Two-segment `<resource>.<action>` route name, per the
+  recommendation. **One deviation from the task file's literal "Modifies routes/web.php" snippet**:
+  [`conventions/base-standards.md`](../../../docs/conventions/base-standards.md#directory-structure)
+  has established the one-file-per-area convention since task 0040 (`routes/users.php`,
+  `roles.php`, `sales-regions.php`, `product-categories.php`, all `require`d from `web.php`), and
+  every later story that added a gated route followed it rather than inlining into `web.php`. This
+  story creates `routes/product-attribute-types.php` (aliased `Index` import, `can:products.view`
+  gate, matching every sibling area file) and adds one `require` line to `web.php`, rather than
+  inlining the route — following the established convention over the task file's own placeholder
+  snippet, which pre-dates a full survey of the current routes layout.
+- **Q6 → confirmed.** `app/Livewire/Products/AttributeTypes/Index.php` ships in full (auth,
+  validation, action wiring) plus a minimal placeholder view — the UI sibling story replaces the
+  view only.
+
+## Phase 2 — Re-review corrections applied
+
+A subsequent `code-reviewer` INVEST/docs-consistency pass returned **FAIL** on the draft above (three
+blocking findings, several non-blocking stale claims). All were corrected in place, in the sections
+above, rather than appended separately:
+
+- **B1 — action-owns-the-rule convention.** D6 previously gated only in the Livewire component,
+  with the four domain actions carrying no `Gate` call of their own. Rewrote D6 so
+  `CreateProductAttributeType`, `UpdateProductAttributeType` and `DeleteProductAttributeType` each
+  self-authorize as their own first statement (constructor-injecting `LogRefusedPrivilegedAttempt`,
+  matching the real, verified shape of `App\Actions\ProductCategories\CreateProductCategory`), while
+  `SyncProductAttributeValues` deliberately authorizes nothing — documented as this codebase's
+  **fifth** shipped instance of "a collaborator invoked only by an already-authorized action needs
+  no gate of its own" (after `GenerateImageConversions`, `EnforceGrantorPermissionScope`,
+  `SyncProductGallery`, `SyncProductSalesRegions`), mirroring `SyncProductGallery`'s own docblock
+  reasoning. The Livewire component's public-surface contract was updated to show it re-checking the
+  same abilities in its mutating/disclosing methods as defence in depth, matching
+  `App\Livewire\ProductCategories\Index`'s verified shape.
+- **B2 — the "no policy" decision was reversed.** D6's stated reason for shipping no
+  `ProductAttributeTypePolicy` (a policy exists only when per-row rules exist) was false against
+  this codebase: `SalesRegionPolicy`, `MediaPolicy` and `ProductCategoryPolicy` all ship today with
+  no target-dependent branch at all. D6 now creates `App\Policies\ProductAttributeTypePolicy`,
+  mirroring `ProductCategoryPolicy`'s exact shape — four abilities, one `public const *_PERMISSION`
+  constant per ability, `update()`/`delete()` taking an unused target parameter for future-proofing.
+  Added the policy to the "Files to create" list and `tests/Feature/Policies/ProductAttributeTypePolicyTest.php`
+  to the test list.
+- **B3 — the FK-index paragraph was backwards.** D2 framed omitting the explicit
+  `$table->index('product_attribute_type_id')` as a "deliberate, flagged departure" from a stated
+  convention. Reframed: omitting a hand-written FK index is the **established** rule since task
+  0016 (five confirming instances already), and `create_passkeys_table`'s explicit index is the
+  documented legacy divergence, not the current convention. This migration is a **sixth** confirming
+  instance.
+- **Stale numbers/claims corrected**: D6's "would break the hardcoded `38`/`37` assertions" is now
+  `42`/`41` (verified against the real `RolePermissionSeederTest.php`); D9's follow-up paragraph no
+  longer claims ADR 0001 "still describes the UUID set as a closed list of seven entities" (Amendment
+  1 already states the general policy, since story 0019); the acceptance-criteria bullet no longer
+  claims this story falsifies a "No domain model exists beyond `User`" note in `schema.md` (that note
+  was removed by task 0016) or that `migrations.md` shows the UUID-PK pattern "only as a target
+  snippet" (it has quoted a real example since task 0016, with five confirming instances); and the
+  Dependencies/Files-to-create preamble no longer implies `products`/`product_categories` don't exist
+  in code — both shipped in stories 0023/0024, and `app/Actions/Products/` already holds several
+  classes. Only `product_variants` (story 0029) remains not-yet-built.
