@@ -195,7 +195,7 @@ Feature: Blog tag management screen
 ```
 
 > **Two scenarios that deliberately do not exist here, both of which a reader coming from
-> [0025](in-progress/0025-product-categories-ui.md) will expect.** There is no *"deletion is blocked with a
+> [0025](done/0025-product-categories-ui.md) will expect.** There is no *"deletion is blocked with a
 > count"* scenario and no *"the screen offers no confirm-and-proceed control"* scenario — the second
 > is meaningless without the first, and the first describes a guard this domain does not have
 > (**D-2**). Writing either would be a ghost scenario under
@@ -454,7 +454,7 @@ re-fetches with `findOrFail()` and hands the **model instance** to `RenameBlogTa
 
 **Without `#[Locked]`, a forged `->set('editingTagId', $otherId)` between opening the modal and
 saving turns a uniqueness check into a rename-any-tag primitive** — identical to
-[0025's **R-3**](in-progress/0025-product-categories-ui.md), and exactly the vulnerability class 0059's hand-off
+[0025's **R-3**](done/0025-product-categories-ui.md), and exactly the vulnerability class 0059's hand-off
 note names. The two lines are a pair; the dedicated retarget test in the plan below is what pins
 them.
 
@@ -690,7 +690,7 @@ rather than the full matrix.
 - [ ] **Deleting a tag through the confirmation modal removes it in one click, with no intermediate
       count or blocked step ever appearing, and no JS errors.** ***The highest-value browser test in
       this story*** — and the exact inverse of
-      [0025's highest-value test](in-progress/0025-product-categories-ui.md#tests-to-perform), which proves a
+      [0025's highest-value test](done/0025-product-categories-ui.md#tests-to-perform), which proves a
       real block *does* render. Only a real DOM click proves the confirm control was never wired to a
       guard that does not exist server-side, and only a browser test goes through the compiled
       `wire:click` at all.
@@ -877,7 +877,7 @@ product taxonomy.
   idiom rather than the Livewire `$this->validate()` idiom `Roles\Index::saveRole()` uses. The
   component therefore calls the action and lets `ValidationException` propagate into Livewire's error
   bag automatically — the same "do not catch it; the throw aborts the method, which is what keeps the
-  modal open by construction" discipline [0025's **D-2**](in-progress/0025-product-categories-ui.md) states.
+  modal open by construction" discipline [0025's **D-2**](done/0025-product-categories-ui.md) states.
   *Rejected:* mirror `saveRole()` — compose the trait in the component, validate there, then call the
   action with a pre-validated string. Rejected on two grounds: it duplicates a rule 0059 deliberately
   put **inside** the action so that a non-dashboard caller inherits it (0059 **D-12**), and
@@ -930,7 +930,7 @@ product taxonomy.
   dead markup that results is invisible to every ordinary test — which is why **R-2** exists and why
   the negative rendering assertion is this story's signature test.
   *Rejected:* a confirmation modal that shows a post count "for information" once 0061 lands. Rejected
-  as **D-5**, and separately because [0025's **D-3**](in-progress/0025-product-categories-ui.md) records how easily
+  as **D-5**, and separately because [0025's **D-3**](done/0025-product-categories-ui.md) records how easily
   a count column next to a delete control reads as a gate even when it is not one.
 
 - **D-3 — Component namespace `App\Livewire\BlogTags\Index`, view `livewire/blog-tags.blade.php`,
@@ -973,7 +973,7 @@ product taxonomy.
 
 - **D-6 — `$tags` is `#[Locked]`, as is every id-carrying property.** This follows the *newer*
   precedent — `App\Livewire\SalesRegions\Index::$regions` is `#[Locked]` (verified) — rather than
-  [0025's **D-4**](in-progress/0025-product-categories-ui.md), which deliberately leaves `$productCategories`
+  [0025's **D-4**](done/0025-product-categories-ui.md), which deliberately leaves `$productCategories`
   unlocked on the reasoning that nothing reads it for a decision. Both are safe here, because every
   mutating method re-reads its target with `findOrFail()` and re-authorizes; locking is simply the
   stricter of two safe options and the one the most recent screen chose. Record the reason in the
@@ -996,7 +996,7 @@ product taxonomy.
   `sales-regions.php`). `blog.*` being a single permission module does not imply a single lang file;
   `sales-regions.*` and `roles.*` are single modules with dedicated files too.
   *Rejected:* one shared `lang/{en,es}/blog.php` for tags, categories and posts. It recreates precisely
-  the file-ownership hazard [0025's sequential-implementation note](in-progress/0025-product-categories-ui.md)
+  the file-ownership hazard [0025's sequential-implementation note](done/0025-product-categories-ui.md)
   exists to warn about — two stories writing the same lang file, which the
   [Parallel Agent File-Ownership Rule](../../docs/contracts.md#parallel-agent-file-ownership-rule)
   makes a real scheduling constraint — for no benefit. Separate files mean 0060, 0062 and 0063 never
@@ -1066,7 +1066,7 @@ product taxonomy.
   file.** Verified by `frontend-expert` against the tree: `app/Actions/Blog/`, `app/Models/BlogTag.php`
   and `app/Policies/BlogTagPolicy.php` do not exist, and `0059-blog-tags-backend.md` is still in
   `ai-spec/tasks/` (Phase 1), not `in-progress/` or `done/`. This mirrors [0025's own
-  **F-2**](in-progress/0025-product-categories-ui.md#findings) exactly. Recorded as a dependency, **not** a blocker
+  **F-2**](done/0025-product-categories-ui.md#findings) exactly. Recorded as a dependency, **not** a blocker
   to Phase 1 — but per [the deferred-findings rule](../../docs/errors-log.md#a-deferred-storys-findings-were-claims-about-a-tree-that-no-longer-existed-and-one-of-them-would-have-reopened-a-bug-in-this-log--2026-08-23),
   every statement in the **Interface contract** and **D-1** must be **re-verified against `HEAD`
   before this story enters Phase 3**, with each disposition recorded.
@@ -1285,7 +1285,7 @@ moment 0059's code exists. Each carries a recommendation, per
 
 - **OQ-6 — Header summary line, and a search filter?** Two small UI questions with the same answer
   today.
-  **(a) Neither (recommended)** — matching [0025's **D-7**](in-progress/0025-product-categories-ui.md): nothing in
+  **(a) Neither (recommended)** — matching [0025's **D-7**](done/0025-product-categories-ui.md): nothing in
   the PRD or this brief asks for a count header, and unlike Users (which has an *active* dimension) a
   tag catalog has no second dimension to summarise. A filter is speculative until 0063's
   create-on-the-fly reveals how fast the catalog really grows (**D-9**).
@@ -1320,7 +1320,7 @@ layered test plan, level calibration and the false-green analysis behind **R-2**
 `database-expert` was convened — this story adds no backend or schema artifact. Derived from
 [PRD](../../docs/PRD/PRD.md#epic-4--blog) Epic 4's `Feature: Blog tags (extends the prototype)` block
 (first three scenarios) and the management-screen half of Blog acceptance criterion 3, grounded in full
-readings of [0059](0059-blog-tags-backend.md) and [0025](in-progress/0025-product-categories-ui.md), with
+readings of [0059](0059-blog-tags-backend.md) and [0025](done/0025-product-categories-ui.md), with
 [0018](done/0018-sales-region-tax-configuration-ui.md)'s shipped screen and
 [0013](done/0013-sidebar-module-gating-ui.md)'s registry as the most recent precedents.
 

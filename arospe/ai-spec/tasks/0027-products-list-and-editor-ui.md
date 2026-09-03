@@ -68,13 +68,13 @@ frontend | fullstack (related_task_id: **0024** — products core CRUD backend, 
 
 No schema change, no migration, no index decision, no new query shape beyond an explicit-column
 `select()` and two eager loads over tables 0024 and 0026 already designed. `database-expert` is
-therefore not convened, matching [0025](in-progress/0025-product-categories-ui.md)'s precedent for the sibling
+therefore not convened, matching [0025](done/0025-product-categories-ui.md)'s precedent for the sibling
 category screen.
 
 **Hard dependency chain, and it is longer than `related_task_id` suggests.** This story cannot start
 until **0019 → 0020 → 0021 → 0022 → 0023 → 0024 → [0024a](done/0024a-product-description-html-sanitization.md) → 0026**
 are all closed. `related_task_id` correctly names the FE/BE pair (0024); the others are hard blockers
-from different pairs, exactly the situation [0025](in-progress/0025-product-categories-ui.md)'s **F-1** records for
+from different pairs, exactly the situation [0025](done/0025-product-categories-ui.md)'s **F-1** records for
 itself.
 
 > ⚠️ **0024a added to the chain on 2026-09-01**, when 0024 was split three ways. It owns
@@ -1733,7 +1733,7 @@ state: `config/modules.php` does not exist, `routes/web.php` carries one hardcod
 `:current="request()->routeIs('products.*')"` is deliberate — it keeps the nav item highlighted on
 `products.create` and `products.edit`, which a bare `routeIs('products.index')` would not.
 
-Placement follows whatever [OQ-1 of 0025](in-progress/0025-product-categories-ui.md) settled; if a "Catalog"
+Placement follows whatever [OQ-1 of 0025](done/0025-product-categories-ui.md) settled; if a "Catalog"
 group has been created by then, Productos and Categorías belong in it together.
 
 ### D-16 — Every Flux/Blaze/encoding trap carried forward, plus one new one
@@ -2078,11 +2078,11 @@ approach) and `frontend-qa` (test design), per
 in full readings of [0019](done/0019-media-library-upload-and-conversions-backend.md),
 [0020](done/0020-shared-media-gallery-modal-ui.md), [0021](done/0021-wysiwyg-rich-text-editor-component.md),
 [0022](done/0022-searchable-multi-select-component.md), [0023](done/0023-product-categories-backend.md),
-[0024](done/0024-products-core-crud-backend.md), [0025](in-progress/0025-product-categories-ui.md),
+[0024](done/0024-products-core-crud-backend.md), [0025](done/0025-product-categories-ui.md),
 [0026](0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
 [0029](0029-product-variants-backend.md), with
 [0006](done/0006-users-list-editor-ui.md) / `App\Livewire\Users\Index` as the list+row-action pattern
-and [0025](in-progress/0025-product-categories-ui.md) as the most recent sibling screen.
+and [0025](done/0025-product-categories-ui.md) as the most recent sibling screen.
 
 **A note on how this document was produced, recorded because it affects how much weight each part
 carries.** An earlier run of this debate collected full contributions from both specialists; that run
