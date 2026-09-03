@@ -239,6 +239,6 @@ graph TD
 | **📊 Reportes (`reports`)** | [US-020: Indicador TRR Real](11_user_stories/reports/US-020.md) | [TK-079: Rotation Metrics](12_tickets/reports/backend/TK-079.md) | [TK-079-FE: Card de KPI TRR](12_tickets/reports/frontend/TK-079-FE.md) | ✅ Done |
 | **📦 Bodega (`stock`)** | [US-021: Advertencia Apertura Duplicada](11_user_stories/stock/US-021.md) | [TK-080: Filtro `insumoId`](12_tickets/stock/backend/TK-080.md) | [TK-080-FE: Advertencia en Extracción](12_tickets/stock/frontend/TK-080-FE.md) | ✅ Done |
 | **🛠️ Shared (`shared`)** | [US-022: Sistema FEFO Día/Noche](11_user_stories/shared/US-022.md) | N/A | [TK-081-FE](12_tickets/shared/frontend/TK-081-FE.md) → [082](12_tickets/shared/frontend/TK-082-FE.md) → [083](12_tickets/shared/frontend/TK-083-FE.md) → [084](12_tickets/shared/frontend/TK-084-FE.md) | ✅ Done |
-| **🛠️ Shared (`shared`)** | [US-023: Navegación por Rutas y Shell FEFO](11_user_stories/shared/US-023.md) | N/A | [TK-085-FE](12_tickets/shared/frontend/TK-085-FE.md) → [086](12_tickets/shared/frontend/TK-086-FE.md) → [087](12_tickets/shared/frontend/TK-087-FE.md) → [088](12_tickets/shared/frontend/TK-088-FE.md) | 📋 Approved Spec |
+| **🛠️ Shared (`shared`)** | [US-023: Navegación por Rutas y Shell FEFO](11_user_stories/shared/US-023.md) | N/A | ✅ [TK-085-FE](12_tickets/shared/frontend/TK-085-FE.md) → 📋 [086](12_tickets/shared/frontend/TK-086-FE.md) · [087](12_tickets/shared/frontend/TK-087-FE.md) · [088](12_tickets/shared/frontend/TK-088-FE.md) | ⚠️ Parcial (shell Done) |
 
 
