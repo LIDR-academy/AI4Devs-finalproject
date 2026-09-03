@@ -10,9 +10,10 @@ interface RecipeCatalogHeaderProps {
   onCreateClick: () => void;
   search: string;
   onSearchChange: (value: string) => void;
+  canManage: boolean;
 }
 
-const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange }) => (
+const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange, canManage }) => (
   <>
     <div className="flex-between flex-wrap mb-6 gap-4">
       <div className="flex-gap-xs">
@@ -25,9 +26,11 @@ const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({ onCreateClick
         </div>
       </div>
 
-      <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
-        + Nueva Receta
-      </button>
+      {canManage && (
+        <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
+          + Nueva Receta
+        </button>
+      )}
     </div>
 
     <div className="search-input-wrapper">
@@ -106,7 +109,12 @@ const RecipeCatalogBody: React.FC<RecipeCatalogBodyProps> = ({ error, loading, f
   </>
 );
 
-export const RecipeCatalogPanel: React.FC = () => {
+/**
+ * @param canManage `true` sólo para ADMIN — muestra "+ Nueva Receta" (`POST /recipes`,
+ * `requireRole('ADMIN')` en backend). Default `false`: en `/recetas` (ruta de operario)
+ * el recetario es sólo de consulta.
+ */
+export const RecipeCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManage = false }) => {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -152,6 +160,7 @@ export const RecipeCatalogPanel: React.FC = () => {
         }}
         search={search}
         onSearchChange={setSearch}
+        canManage={canManage}
       />
 
       {feedback && <SuccessFeedbackBanner message={feedback} />}

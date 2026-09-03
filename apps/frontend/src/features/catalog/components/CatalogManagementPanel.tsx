@@ -39,7 +39,7 @@ export const CatalogManagementPanel: React.FC<CatalogManagementPanelProps> = ({ 
 
       <SectionTabs section={section} options={CATALOG_TABS} onChange={setSection} />
 
-      {section === 'inventory' ? <InsumoCatalogPanel /> : <RecipeCatalogPanel />}
+      {section === 'inventory' ? <InsumoCatalogPanel canManage /> : <RecipeCatalogPanel canManage />}
     </Modal>
   );
 };

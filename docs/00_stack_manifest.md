@@ -161,6 +161,9 @@ pnpm run duplication
 # Gate de complejidad/longitud/profundidad acotado al ticket en curso (sin commitear)
 bash docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh
 
+# Gate de duplicación acotado al ticket (clones nuevos vs. HEAD, C-1/AUDIT-DEV-003)
+bash docs/04_governance_and_quality/scripts/check_ticket_duplication.sh
+
 # Servidor de desarrollo backend
 pnpm --filter @restostock/backend dev
 

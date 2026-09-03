@@ -47,6 +47,7 @@ Ticket fundacional de `US-023`. Introduce `react-router-dom@7.18.3` (data router
 * **`apps/frontend/src/App.tsx`:** se reduce a montar `<RouterProvider router={router} />` + los providers globales que hoy viven en el árbol (`useIdleTimeout`, listener `restostock:unauthorized`, manejo de `resetToken` de la URL — este último se reexpresa como ruta/searchParam con `react-router`). El JSX del tablero se extrae a `src/app/routes/InventarioRoute.tsx`.
 * **`apps/frontend/src/main.tsx`:** sin cambios más allá de seguir renderizando `<App />`.
 * **`apps/frontend/src/features/security/components/AdminDropdownMenu.tsx`:** deja de ser el punto de gating; se conserva solo como acceso rápido dentro de `/ajustes` o se elimina si queda sin referencias (Guard 5 — `knip`).
+* **Gating de acción por rol (hallazgo D-1, `AUDIT-DEV-003`):** al montar `InsumoCatalogPanel` (`/estaciones`) y `RecipeCatalogPanel` (`/recetas`) — rutas de operario — dejan de estar tras el gate `userRole !== 'ADMIN'` del menú Admin. Se añade a ambos un prop `canManage?: boolean` (default `false`) que oculta cada botón de mutación cuyo endpoint exige `requireRole('ADMIN')` en backend: `+ Nuevo Insumo` (`POST /insumos`), `Reabastecer` (`PATCH /insumos/:id/restock`), `+ Nueva Receta` (`POST /recipes`). `EstacionesRoute`/`RecetasRoute` pasan `canManage={role === 'ADMIN'}`; `CatalogManagementPanel` (ya ADMIN-gated) pasa `canManage`. El botón "Ubicaciones" de `EstacionesRoute` también se oculta a no-ADMIN. `US-023` Pregunta 3/4 y `05_ui_ux_design_system.md` §v4.1.0 se actualizan para reflejar el gating por acción.
 * **Tests:** los tests que renderizan `<App />` o pantallas sueltas se envuelven en `createMemoryRouter`/`<MemoryRouter>` con la ruta inicial adecuada. No se modifica ninguna aserción de comportamiento (`US-023` Escenario 3).
 
 **Fuera de alcance:** los 3 componentes visuales nuevos (`TK-086-FE`), el panel Estado de 3 cubetas y la leyenda numérica (`TK-087-FE`), la auditoría de contraste (`TK-088-FE`). Convertir en rutas los flujos que hoy son modales (decisión explícita `US-023` Pregunta 5: no se hace).
@@ -64,3 +65,10 @@ Ticket fundacional de `US-023`. Introduce `react-router-dom@7.18.3` (data router
 7. **Guard 29:** 0 `style={{}}` inline nuevos; clases desde la escala de tokens `--space-*`/`--fs-*`.
 8. **Verificación:** `pnpm --filter frontend run lint`, `pnpm --filter frontend run build`, `bash docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh` — 0 errores en el diff del ticket.
 9. **Objetivo táctil:** todo enlace de nav y botón del shell ≥48px.
+10. **Gating de acción por rol (D-1):** un operario no-ADMIN en `/estaciones` y `/recetas` NO ve `+ Nuevo Insumo` / `Reabastecer` / `+ Nueva Receta` / `Ubicaciones` (test en `AppShellRouting.test.tsx`); un ADMIN sí. Cero botones que devuelvan 403.
+
+---
+
+## 🔍 Auditoría (`AUDIT-DEV-003`)
+
+Reviewer Independiente: **RECHAZADO → correcciones aplicadas**. D-1 (acciones ADMIN visibles a operario) resuelto con `canManage` + decisión humana registrada en `US-023`; D-2 (regla↔test) resuelto ampliando `react-router_rules.md` §7 con la excepción jsdom/undici; O-1..O-4 aplicados (`type="button"`, label "Conectado", tokens en CSS, smoke test del router real). Candidatos a regla permanente C-1/C-2 en tramitación (FASE 5.C).

@@ -88,10 +88,12 @@ inputs:
   | Ruta | Path | Contenido | Acceso |
   | :--- | :--- | :--- | :--- |
   | Inventario | `/` | Tablero FEFO de cocina (remanentes activos, health bar, filtros de estación) | Operario autenticado |
-  | Estaciones | `/estaciones` | Extracción de bodega + gestión de ubicaciones + reabastecimiento | Operario autenticado |
-  | Recetas | `/recetas` | Recetario (`features/recipes`) | Operario autenticado |
+  | Estaciones | `/estaciones` | Extracción de bodega (operario); catálogo/reabastecimiento de insumos y ubicaciones (acciones solo `ADMIN`, ocultas a operario) | Operario autenticado (ruta); `ADMIN` (acciones de gestión) |
+  | Recetas | `/recetas` | Recetario: consulta (operario); alta de recetas (solo `ADMIN`, oculta a operario) | Operario autenticado (ruta); `ADMIN` (alta) |
   | Reportes | `/reportes` | Dashboard de mermas + KPIs (TRR, valorización) | **`ADMIN`** |
   | Ajustes | `/ajustes` | Configuración del restaurante + usuarios + roles + historial de movimientos | **`ADMIN`** |
+
+* **Gating de acción por rol (dentro de rutas de operario):** los componentes reutilizados en rutas de menor restricción que su montaje anterior (`InsumoCatalogPanel`, `RecipeCatalogPanel`) reciben un prop `canManage` (default `false`) que oculta cada `<button>` de mutación cuyo endpoint exige `ADMIN`. Un botón que devolvería 403 no debe renderizarse (evita la falsa regresión de "cero cambio funcional").
 
 * **`<ProtectedRoute requiredRole?>`:** envuelve el `<Outlet />`. Sin sesión → render de `PinLoginModal` (comportamiento actual). Con sesión pero sin el rol requerido → `<Navigate to="/" replace />`. Alinea con la autoredirección por permisos que introducirá `US-015` (Dynamic RBAC) sin bloquearse a ella: hoy compara `currentUser.role`.
 * **Operaciones transitorias:** `WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard` **siguen siendo modales** lanzados desde su ruta padre — no son rutas. Nav activa con `border-bottom: 3px solid var(--color-primary)`.

@@ -10,9 +10,10 @@ interface InsumoCatalogHeaderProps {
   onCreateClick: () => void;
   search: string;
   onSearchChange: (value: string) => void;
+  canManage: boolean;
 }
 
-const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange }) => (
+const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange, canManage }) => (
   <>
     <div className="flex-between flex-wrap mb-6 gap-4">
       <div className="flex-gap-xs">
@@ -25,9 +26,11 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
         </div>
       </div>
 
-      <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
-        + Nuevo Insumo
-      </button>
+      {canManage && (
+        <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
+          + Nuevo Insumo
+        </button>
+      )}
     </div>
 
     <div className="search-input-wrapper">
@@ -46,9 +49,10 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
 interface InsumoTableRowProps {
   item: InsumoItem;
   onRestock: (insumo: InsumoItem) => void;
+  canManage: boolean;
 }
 
-const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
+const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock, canManage }) => (
   <tr>
     <td className="text-primary-color font-mono">{item.id}</td>
     <td className="fw-semibold">{item.name}</td>
@@ -61,14 +65,16 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
       {item.warehouseStock} {item.unitOfMeasure}
     </td>
     <td className="text-right">
-      <button
-        type="button"
-        onClick={() => onRestock(item)}
-        className={`btn-touch btn-secondary flex-center flex-gap-xs ${styles['btn-table-action']}`}
-      >
-        <Truck size={16} />
-        Reabastecer
-      </button>
+      {canManage && (
+        <button
+          type="button"
+          onClick={() => onRestock(item)}
+          className={`btn-touch btn-secondary flex-center flex-gap-xs ${styles['btn-table-action']}`}
+        >
+          <Truck size={16} />
+          Reabastecer
+        </button>
+      )}
     </td>
   </tr>
 );
@@ -76,9 +82,10 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock }) => (
 interface InsumoTableProps {
   insumos: InsumoItem[];
   onRestock: (insumo: InsumoItem) => void;
+  canManage: boolean;
 }
 
-const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock }) => (
+const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock, canManage }) => (
   <div className="table-wrapper">
     <table className="data-table">
       <thead>
@@ -92,7 +99,7 @@ const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock }) => (
       </thead>
       <tbody>
         {insumos.map((item) => (
-          <InsumoTableRow key={item.id} item={item} onRestock={onRestock} />
+          <InsumoTableRow key={item.id} item={item} onRestock={onRestock} canManage={canManage} />
         ))}
       </tbody>
     </table>
@@ -104,9 +111,10 @@ interface InsumoCatalogBodyProps {
   loading: boolean;
   filteredInsumos: InsumoItem[];
   onRestock: (insumo: InsumoItem) => void;
+  canManage: boolean;
 }
 
-const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, filteredInsumos, onRestock }) => (
+const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, filteredInsumos, onRestock, canManage }) => (
   <>
     {error && <ErrorBanner message={error} />}
 
@@ -117,12 +125,17 @@ const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, f
         No se encontraron insumos registrados en bodega.
       </div>
     ) : (
-      <InsumoTable insumos={filteredInsumos} onRestock={onRestock} />
+      <InsumoTable insumos={filteredInsumos} onRestock={onRestock} canManage={canManage} />
     )}
   </>
 );
 
-export const InsumoCatalogPanel: React.FC = () => {
+/**
+ * @param canManage `true` sólo para ADMIN — muestra "+ Nuevo Insumo" y "Reabastecer"
+ * (endpoints `POST /insumos` y `PATCH /insumos/:id/restock`, ambos `requireRole('ADMIN')`
+ * en backend). Default `false`: montado en `/estaciones` (ruta de operario) sólo lista.
+ */
+export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManage = false }) => {
   const [insumos, setInsumos] = useState<InsumoItem[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -155,13 +168,19 @@ export const InsumoCatalogPanel: React.FC = () => {
 
   return (
     <div className={styles['insumo-catalog-panel']}>
-      <InsumoCatalogHeader onCreateClick={() => setIsModalOpen(true)} search={search} onSearchChange={setSearch} />
+      <InsumoCatalogHeader
+        onCreateClick={() => setIsModalOpen(true)}
+        search={search}
+        onSearchChange={setSearch}
+        canManage={canManage}
+      />
 
       <InsumoCatalogBody
         error={error}
         loading={loading}
         filteredInsumos={filteredInsumos}
         onRestock={setRestockTarget}
+        canManage={canManage}
       />
 
       <CreateInsumoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={fetchInsumos} />

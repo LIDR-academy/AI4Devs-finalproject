@@ -5,7 +5,8 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 ---
 
 ## 🛠️ Pila Tecnológica Detectada & Cumplimiento de Diseño
-* **Framework Core:** React / Next.js (TypeScript)
+* **Framework Core:** React 18 + Vite 5 (TypeScript) — SPA única, sin SSR.
+* **Routing:** `react-router-dom` 7 (data router). Reglas dedicadas: [`react-router_rules.md`](./react-router_rules.md). El shell de rutas (`AppShell`, `ProtectedRoute`, `router.tsx`) vive en `apps/frontend/src/app/`.
 * **Estilos & Sistema de Diseño (Guard 29, `AGENTS.md`):** Vanilla CSS con variables/tokens centralizados en `index.css`, exportados al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`). `index.css` contiene solo la capa compartida (tokens de espaciado/tipografía, botones, primitivas de layout — clases usadas por 2+ componentes); toda clase específica de un único componente vive en un `Componente.module.css` colocado junto al `.tsx` e importado como `import styles from './Componente.module.css'`.
 * **Regla Innegociable de Tokens y Estilos (Guard 29):** Queda estrictamente prohibido hardcodear colores hexadecimales o RGB en línea (`style={{ color: '#HEX' }}`) o maquetar estructuras con objetos `style={{ display: 'flex', gap: ... }}` inline en componentes JSX. Todos los estilos visuales y de layout DEBEN consumir las clases CSS declaradas en `index.css` o `*.module.css` (ej. `className="btn-touch flex-between"`). Única excepción permitida: valores numéricos calculados dinámicamente en runtime (ej. porcentajes de ancho en barras de progreso `style={{ width: `${pct}%` }}`).
 * **Persistencia Offline:** Dexie.js (IndexedDB / Cola FIFO local)
@@ -15,7 +16,7 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 
 ## 📱 1. Ergonomía Táctil y Layout
 * **Objetivos Táctiles:** Botones e inputs interactivos deben medir mínimo **48px x 48px** con **8px** de margen alrededor. Teclado de PIN: **64px x 64px**.
-* **Tokens de Diseño (Dark Petrol Dashboard):** Usar variables CSS del tema oscuro HSL con encabezados de tarjeta con badge circular turquesa a la izquierda y separador de 1px.
+* **Tokens de Diseño (Sistema FEFO, `US-022`/`US-023`):** Usar exclusivamente las variables CSS de `apps/frontend/src/index.css` (turno Día por defecto en `:root`, turno Noche en `:root[data-theme="dark"]`). Encabezados de tarjeta con badge circular a la izquierda y separador de 2px `dashed var(--rule)`; esquinas rectas (`border-radius: 0`) salvo el botón de acción circular de la lámina "Aplicación".
 
 ---
 
@@ -27,6 +28,7 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 ---
 
 ## 🛡️ 3. Arquitectura, SOLID y Estados Defensivos
+* **RBAC al Reubicar un Componente a un Contexto Menos Restringido (Discovered in `TK-085-FE`, `AUDIT-DEV-003` D-1):** Antes de montar un componente existente en una ruta o contenedor con **menor restricción de acceso** que su punto de montaje anterior, auditar cada `<button>` / acción de mutación del componente contra el RBAC del endpoint que dispara. Si el endpoint exige un rol superior al de la nueva ubicación, la acción se renderiza condicionalmente por rol (prop `canManage`/equivalente con default seguro `false`), nunca se deja fallar en 403 — un botón que devuelve 403 es una regresión de UX, no "cero cambio funcional". Caso concreto: mover `InsumoCatalogPanel`/`RecipeCatalogPanel` del menú `Administración ▾` (gate `userRole !== 'ADMIN'`) a las rutas de operario `/estaciones` y `/recetas` expuso `+ Nuevo Insumo` / `Reabastecer` / `+ Nueva Receta` (todos `requireRole('ADMIN')` en backend) a `KITCHEN_STAFF`.
 * **Abstracción por Repositorios (DIP):** Componentes React consumen la API mediante interfaces de repositorio (`IRemanenteRepository`), soportando repositorios HTTP o InMemory (Mock).
 * **Custom Hooks (SRP):** Encapsular la lógica de estado o colas de eventos en Custom Hooks dedicados.
 * **Limpieza Incondicional de Estado Derivado en Efectos Dependientes de una Key (Discovered in `TK-080-FE`):** En un `useEffect` que dispara una consulta asíncrona dependiente de una key cambiante (`insumoId`, filtro, término de búsqueda), el estado derivado de la respuesta anterior DEBE limpiarse incondicionalmente al inicio del efecto — antes de cualquier `if (!key) return` — y no solo en la rama donde la key es falsy. De lo contrario, al cambiar de un valor de key A a un valor B mientras la nueva consulta está en vuelo, el resultado ya resuelto de A permanece visible y se atribuye erróneamente al valor B recién seleccionado (falso positivo/negativo transitorio pero engañoso para el usuario), incluso con guard de cancelación (`let cancelled = false`) correctamente implementado — el guard de cancelación previene que una respuesta desordenada sobrescriba una más reciente, pero no limpia el estado obsoleto del valor previamente seleccionado.
