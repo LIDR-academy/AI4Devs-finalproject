@@ -214,6 +214,12 @@ class Index extends Component
     /**
      * Authorize and delete the confirmed category.
      *
+     * The `$this->deletingCategoryId === null` guard below is a no-op
+     * short-circuit (nothing has been confirmed for deletion), not an
+     * ungated path -- it precedes the gate because there is no target yet
+     * to authorize against, and it neither mutates nor discloses anything
+     * (Phase 5 review finding N-5).
+     *
      * Resolves a FRESH ProductCategory::findOrFail($this->deletingCategoryId)
      * immediately before authorizing and calling DeleteProductCategory --
      * never an instance hydrated earlier in the request lifecycle or

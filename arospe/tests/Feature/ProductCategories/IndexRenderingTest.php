@@ -1,25 +1,23 @@
 <?php
 
-// RED-phase (TDD Phase 3 step 1) view-level rendering tests for the not-yet-built
-// App\Livewire\ProductCategories\Index / resources/views/livewire/product-categories.blade.php,
-// per ai-spec/tasks/in-progress/0025-product-categories-ui.md's "Tests to perform" section,
-// WRITTEN AGAINST THE ORIGINAL (pre-0070/0071) design -- a single `public string $name` field, no
+// View-level rendering tests for App\Livewire\ProductCategories\Index /
+// resources/views/livewire/product-categories.blade.php, per
+// ai-spec/tasks/in-progress/0025-product-categories-ui.md's "Tests to perform" section, WRITTEN
+// AGAINST THE ORIGINAL (pre-0070/0071) design -- a single `public string $name` field, no
 // language tabs. Every "⚠️ Correction, 2026-08-30" block in the story file describes 0070/0071's
 // later contract and is deliberately not applied here.
 //
-// EVERY TEST IN THIS FILE IS EXPECTED TO FAIL. Component logic, persistence, validation-rule
-// enforcement and both authorization layers are already covered by
+// Written at TDD Phase 3 step 1 (red), before the real component/view existed. Component logic,
+// persistence, validation-rule enforcement and both authorization layers are covered by
 // tests/Feature/ProductCategories/IndexTest.php -- nothing here duplicates that. Every test below
 // asserts against the RENDERED HTML (assertSee/assertDontSee/->html()), which that file never
 // does directly (its own trans_choice() assertSee() calls are the one exception, kept there
 // because they are inseparable from the "surfaces an error" assertion they sit beside).
 //
-// Mirrors tests/Feature/SalesRegions/IndexRenderingTest.php's shape and its own stated method:
-// where the real markup does not exist yet, this file establishes the data-test hook / structural
-// contract the not-yet-written Blade view must satisfy, adjustable here first if Phase 3 names a
-// hook differently. The two hooks named explicitly in the story's own Acceptance Criteria --
-// data-test="edit-product-category-{id}" / data-test="delete-product-category-{id}" -- are
-// authoritative and used as-is; the empty-state hook below is this file's own contract.
+// Mirrors tests/Feature/SalesRegions/IndexRenderingTest.php's shape. The two hooks named
+// explicitly in the story's own Acceptance Criteria -- data-test="edit-product-category-{id}" /
+// data-test="delete-product-category-{id}" -- are authoritative and used as-is; the empty-state
+// hook below is this file's own contract, now satisfied by the shipped Blade view.
 
 use App\Actions\ProductCategories\CreateProductCategory;
 use App\Livewire\ProductCategories\Index;
@@ -122,6 +120,19 @@ test('a validation message appears next to the name field and the modal stays op
         ->call('save')
         ->assertSee(__('validation.required', ['attribute' => 'name']))
         ->assertSet('showModal', true);
+});
+
+// D-9's second pin, alongside ArchitectureTest.php's namespace-scope arch() rule: the screen
+// shows only product categories, with no link or reference to any blog taxonomy. Scoped to the
+// component's own ->html(), never the full page -- the shared sidebar may legitimately gain a
+// "Blog" entry once Epic 4 lands, which has nothing to do with this screen.
+test('the product category screen references no blog taxonomy', function () {
+    $actor = productCategoriesIndexRenderingActor();
+    $this->actingAs($actor);
+
+    app(CreateProductCategory::class)('Footwear');
+
+    Livewire::test(Index::class)->assertDontSee('blog');
 });
 
 // Phase 4 audit finding N-3: closeModal() must clear the 'name' validation error, or a refused

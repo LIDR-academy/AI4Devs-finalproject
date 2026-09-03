@@ -1,10 +1,10 @@
 <?php
 
-// RED-phase (TDD Phase 3 step 1) Pest 4 browser tests for the not-yet-built product category
-// management screen, per ai-spec/tasks/in-progress/0025-product-categories-ui.md's "Tests to
-// perform" section, WRITTEN AGAINST THE ORIGINAL (pre-0070/0071) design -- a single `name` field,
-// no language tabs, no per-language tab strip. Every "⚠️ Correction, 2026-08-30" block in the
-// story file describes 0070/0071's later contract and is deliberately not applied here.
+// Pest 4 browser tests for the product category management screen, per
+// ai-spec/tasks/in-progress/0025-product-categories-ui.md's "Tests to perform" section, WRITTEN
+// AGAINST THE ORIGINAL (pre-0070/0071) design -- a single `name` field, no language tabs, no
+// per-language tab strip. Every "⚠️ Correction, 2026-08-30" block in the story file describes
+// 0070/0071's later contract and is deliberately not applied here.
 //
 // Deliberately kept FLAT (tests/Browser/ProductCategoriesIndexTest.php, not a
 // tests/Browser/ProductCategories/ subfolder), per the story file's own explicit note: 0071's D-9
@@ -12,9 +12,8 @@
 // to this story -- "not applied here ... flagged for a human, not silently changed." A testing
 // convention decision belongs in a Phase 2 review, not to this dispatch.
 //
-// EVERY TEST IN THIS FILE IS EXPECTED TO FAIL. Neither App\Livewire\ProductCategories\Index nor
-// routes/product-categories.php exist yet, so visit('/product-categories') 404s -- an acceptable
-// red state for a not-yet-created route.
+// Written at TDD Phase 3 step 1 (red), before App\Livewire\ProductCategories\Index or
+// routes/product-categories.php existed. Every test below is green against the shipped screen.
 //
 // SELECTOR STRATEGY, mirroring tests/Browser/UsersIndexTest.php's own established convention: the
 // per-row edit/delete actions are icon-only and carry the story's own explicitly-named hooks
@@ -24,8 +23,7 @@
 // with click('@edit-product-category-'.$category->id) / click('@delete-product-category-'.$category->id).
 // The "New category" opener and the modal's Save/Cancel/Delete-confirm controls carry real, visible
 // text (matching every other screen in this app -- Users, Roles, Sales Regions), so they are
-// targeted by text. This file's own contract for the not-yet-built opener button text is
-// "New category", adjustable here first if Phase 3 names it differently.
+// targeted by text.
 
 use App\Actions\ProductCategories\CreateProductCategory;
 use App\Models\Product;

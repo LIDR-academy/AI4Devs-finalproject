@@ -169,6 +169,35 @@ test('the Taxes group renders no heading at all when its only entry is hidden', 
 });
 
 // =====================================================================
+// Story 0025 — the product_categories entry. Two generic Phase-4 guard tests
+// already cross-check the registry against the route for every entry with no
+// edit needed (see below); what is added here is the per-entry coverage those
+// generic checks cannot supply, mirroring story 0018's sales_regions tests
+// (Phase 5 review finding N-4).
+// =====================================================================
+
+test('a role holding exactly products.view sees the Product categories entry under the Platform group', function () {
+    $this->actingAs(sidebarNavUserWith(['products.view']));
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('data-test="sidebar-group-platform"', false)
+        ->assertSee('data-test="sidebar-link-product_categories"', false);
+});
+
+test('a role holding the related-but-different products.edit permission never sees the Product categories entry', function () {
+    // routes/product-categories.php gates product-categories.index on exactly
+    // can:products.view.
+    $this->actingAs(sidebarNavUserWith(['products.edit']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('data-test="sidebar-link-dashboard"', false);
+    $response->assertDontSee('data-test="sidebar-link-product_categories"', false);
+});
+
+// =====================================================================
 // Negative — an entry stays hidden without its own exact permission.
 // Anchored with an assertSee() on the always-visible Dashboard hook so the
 // assertion actually exercises the sidebar-nav component once it exists,

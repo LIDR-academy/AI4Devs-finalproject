@@ -1,17 +1,18 @@
 <?php
 
-// RED-phase (TDD Phase 3 step 1) component + route-authorization tests for the not-yet-built
-// App\Livewire\ProductCategories\Index, per ai-spec/tasks/in-progress/0025-product-categories-ui.md's
-// "Tests to perform" section, WRITTEN AGAINST THE ORIGINAL (pre-0070/0071) design: a single
-// `public string $name` field on ProductCategory::name, per the coordinator's explicit framing
-// for this dispatch. Every "⚠️ Correction, 2026-08-30" block inside the story file describes a
-// LATER story's (0070/0071) contract and is deliberately NOT followed here.
+// Component + route-authorization tests for App\Livewire\ProductCategories\Index, per
+// ai-spec/tasks/in-progress/0025-product-categories-ui.md's "Tests to perform" section, WRITTEN
+// AGAINST THE ORIGINAL (pre-0070/0071) design: a single `public string $name` field on
+// ProductCategory::name, per the coordinator's explicit framing for this dispatch. Every
+// "⚠️ Correction, 2026-08-30" block inside the story file describes a LATER story's (0070/0071)
+// contract and is deliberately NOT followed here.
 //
-// EVERY TEST IN THIS FILE IS EXPECTED TO FAIL. Neither App\Livewire\ProductCategories\Index nor
-// routes/product-categories.php exist yet -- a fatal "class not found" / RouteNotFoundException is
-// an acceptable red state for a not-yet-created Livewire component and route, per this dispatch's
-// own framing. 0023's model/actions/policy/validation-trait ARE already shipped and are consumed
-// as-is (no application code is written by this file).
+// Written at TDD Phase 3 step 1 (red), before App\Livewire\ProductCategories\Index or
+// routes/product-categories.php existed. Both now ship and every test below is green -- see this
+// story's own Phase 4/5 record for the full test-run evidence. 0023's model/actions/policy/
+// validation-trait were already shipped and are consumed as-is (no application code is written
+// by this file); this story's own three actions self-authorize, per D-B2 -- see the Authorization
+// -- action layer block further down.
 //
 // Mirrors tests/Feature/Users/IndexTest.php's two-part shape (Livewire::test() component
 // assertions, then a dedicated Authorization block covering both the route and the component
@@ -392,6 +393,12 @@ test('calling delete twice in succession on the same in-use category is refused 
 // shape tests/Feature/Users/IndexTest.php and tests/Feature/SalesRegions/IndexTest.php already
 // use for their own single-gated-route screens.
 
+test('guests are redirected to the login page when visiting the product category screen', function () {
+    // The only test that would catch the route being moved out of the auth+verified group --
+    // per AC 1, matching tests/Feature/Users/IndexTest.php's identical guest-redirect case.
+    $this->get(route('product-categories.index'))->assertRedirect(route('login'));
+});
+
 test('an administrator holding products.view can reach the product category screen', function () {
     $actor = User::factory()->create();
     $actor->givePermissionTo('products.view');
@@ -579,12 +586,11 @@ test('an actor holding only products.view sees every row action disabled', funct
 // Authorization -- action layer (0025's own self-authorization hand-off, D-B2/R-6)
 // =====================================================================
 //
-// app/Actions/ProductCategories/{Create,Rename,Delete}ProductCategory.php currently do NOT
-// self-authorize (verified by reading all three) -- this story adds Gate::authorize() as the
-// literal first statement of each __invoke(), via App\Actions\Auth\LogRefusedPrivilegedAttempt,
-// matching App\Actions\Products\CreateProduct/DeleteProduct's shape exactly. These tests call the
-// actions DIRECTLY, bypassing the component entirely, proving the gate is not only a
-// component-layer convenience a non-HTTP caller (a queued job, an Artisan command) would miss.
+// All three actions now self-authorize as the literal first statement of each __invoke(), via
+// App\Actions\Auth\LogRefusedPrivilegedAttempt, matching App\Actions\Products\CreateProduct/
+// UpdateProduct/DeleteProduct's shape exactly. These tests call the actions DIRECTLY, bypassing
+// the component entirely, proving the gate is not only a component-layer convenience a non-HTTP
+// caller (a queued job, an Artisan command) would miss.
 
 test('creating a product category directly is forbidden for a denied actor', function () {
     $actor = User::factory()->create();
