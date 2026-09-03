@@ -202,6 +202,9 @@ bash docs/04_governance_and_quality/scripts/check_dependency_audit.sh
 # Gate de patrones de privilegio inseguros acotado al ticket (C-SEC-1/C-SEC-2, AUDIT-SEC-001)
 bash docs/04_governance_and_quality/scripts/check_privilege_defaults.sh
 
+# Paridad prisma/migrations/ <-> schema.prisma (siempre-on, C-DEV-005-2/AUDIT-DEV-005 D-6)
+bash docs/04_governance_and_quality/scripts/check_migration_schema_parity.sh
+
 # Validar infraestructura OpenTofu (dry-run)
 tofu validate && tofu plan
 ```
