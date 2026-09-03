@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Package, AlertTriangle, RefreshCw, PlusCircle, Clock, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
+import { Package, AlertTriangle, RefreshCw, ArrowRightLeft, Clock, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
+import { ActionButton } from '../../shared/components/ActionButton.js';
 import { KitchenService, RemanenteFEFOItem } from '../../features/kitchen/services/kitchen.service.js';
 import { ActiveRemanentesList } from '../../features/kitchen/components/ActiveRemanentesList.js';
 import { WarehouseExtractionModal } from '../../features/stock/components/WarehouseExtractionModal.js';
@@ -28,19 +29,8 @@ const MetricCard: React.FC<{ icon: React.ReactNode; danger?: boolean; title: str
   </div>
 );
 
-const ActionCard: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; id: string; className: string }> = ({
-  icon,
-  label,
-  onClick,
-  id,
-  className,
-}) => (
-  <div className="card-dashboard flex-column flex-center">
-    <button type="button" className={`btn-touch w-full flex-center flex-gap-xs ${className}`} onClick={onClick} id={id}>
-      {icon}
-      {label}
-    </button>
-  </div>
+const ActionButtonCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="card-dashboard flex-column flex-center">{children}</div>
 );
 
 interface SummaryCardsProps {
@@ -60,8 +50,26 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCo
       value={criticalCount}
       unitLabel="lotes críticos"
     />
-    <ActionCard icon={<PlusCircle size={22} />} label="Extraer Insumo de Bodega" onClick={onExtract} id="btn-open-extraction" className="btn-primary" />
-    <ActionCard icon={<Utensils size={22} />} label="Preparar Receta FEFO" onClick={onPrepareRecipe} id="btn-open-recipe" className="btn-primary" />
+    <ActionButtonCard>
+      <ActionButton
+        action="extract"
+        label="Extraer de Bodega"
+        hint="bodega → cocina"
+        icon={<ArrowRightLeft size={26} />}
+        onClick={onExtract}
+        id="btn-open-extraction"
+      />
+    </ActionButtonCard>
+    <ActionButtonCard>
+      <ActionButton
+        action="recipe"
+        label="Preparar Receta"
+        hint="consumo FEFO en cascada"
+        icon={<Utensils size={26} />}
+        onClick={onPrepareRecipe}
+        id="btn-open-recipe"
+      />
+    </ActionButtonCard>
   </section>
 );
 

@@ -1,0 +1,66 @@
+/* ActionButton — botón de acción circular de la lámina "Aplicación" (US-023 / TK-086-FE).
+   Consume tokens globales de index.css. */
+
+.action-btn {
+  display: inline-grid;
+  justify-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px; /* única excepción a rounded:0 del sistema — ver 05_ui_ux_design_system.md §v4.1.0 */
+  border: 3px solid var(--rule);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.circle:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .circle:hover:not(:disabled) { transform: translateY(-2px); }
+}
+
+.glyph {
+  display: grid;
+  place-items: center;
+}
+
+/* --- Turno Día: relleno sólido, capa "acción" --- */
+.circle--extract { background-color: var(--color-danger); color: var(--color-danger-on); }
+.circle--add { background-color: var(--color-primary); color: var(--color-primary-on); }
+.circle--recipe { background-color: var(--color-warning); color: var(--color-primary-on); }
+
+/* --- Turno Noche: contorno de tiza (sin relleno, ícono/borde en el color) --- */
+:global(:root[data-theme='dark']) .circle--extract {
+  background-color: transparent;
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+:global(:root[data-theme='dark']) .circle--add {
+  background-color: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+:global(:root[data-theme='dark']) .circle--recipe {
+  background-color: transparent;
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.label {
+  font-family: var(--font-family-body);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+}
+
+.hint {
+  font-family: var(--font-family-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+}

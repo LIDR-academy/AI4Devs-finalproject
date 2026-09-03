@@ -50,7 +50,17 @@ Implementa los tres componentes visuales nuevos de la lámina "Aplicación" (`do
 2. **Canal redundante (WCAG 1.4.1):** el `UrgencyChip` renderiza marca + texto en las 4 etiquetas; un test lo asevera.
 3. **Escala completa:** `ActiveRemanentesList` muestra `Hoy`/`Mañana`/`2 Días`/`4 Días` según `hoursRemaining`, sin cortar la escala.
 4. **Excepción de forma documentada:** `ActionButton` es el único componente con `border-radius` ≠ 0; el resto sigue recto.
-5. **Turno Noche:** los 3 componentes cambian a contorno de tiza al alternar el interruptor de `US-022`, sin JS adicional.
+5. **Turno Noche (solo CSS, sin JS):** `ActionButton` y `UrgencyChip` pasan de relleno sólido a contorno de tiza al alternar el interruptor de `US-022`. `RowButton--urgent` conserva su relleno sólido `--color-danger` en ambos turnos (consistente con `DESIGN.md` §v4.1.0.4 / `05_ui_ux_design_system.md` §v4.1.0 punto 4 — la fila crítica debe destacar, no atenuarse de noche). Redacción corregida tras `AUDIT-DEV-004` D-1.
 6. **Guard 29:** 0 `style={{}}` inline; clases desde `--space-*`/`--fs-*`/`--fw-*`; una clase usada por 2+ componentes va a `index.css`, una de un solo componente a su `*.module.css`.
 7. **Cero regresión:** `pnpm --filter frontend test -- --run` verde sin cambiar aserciones de comportamiento.
-8. **Verificación:** `pnpm --filter frontend run lint`, `pnpm --filter frontend run build`, `pnpm --filter frontend run duplication`, `check_ticket_code_quality.sh` — 0 errores en el diff.
+8. **Verificación:** `pnpm --filter frontend run lint`, `pnpm --filter frontend run build`, `check_ticket_duplication.sh`, `check_ticket_code_quality.sh`, `check_dead_code.sh` — 0 errores en el diff.
+
+---
+
+## 🔍 Auditoría (`AUDIT-DEV-004`)
+
+Reviewer Independiente: **APROBADO PARA COMMIT**. Todos los gates acotados al diff en verde, 133/133 tests, lint 0 errores, ACs verificados (separación de capas, canal redundante, escala completa, `rounded:0` confinado a `ActionButton`, turno noche solo-CSS con especificidad correcta, Guard 29). Sin candidatos a regla permanente.
+
+**Deuda conocida (no bloqueante, no imputada al ticket):**
+* `urgencyFromHours` con `hoursRemaining` negativo (remanente ya vencido) etiqueta "Hoy" en vez de "Vencido" — estado "Vencido" no está en el design system; candidato a `TK-087-FE` (que añade tokens/estados) o backlog.
+* Sin test de que "Preparar Receta" abra `RecipeSelectorModal` (solo extracción cubierta en `FrontendMVP.test.tsx`) — gap preexistente, cableado estructuralmente idéntico al de extracción.

@@ -1,0 +1,51 @@
+/* UrgencyChip — escala de urgencia FEFO de 4 niveles (US-023 / TK-086-FE).
+   Consume tokens globales de index.css. */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 2px solid;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.mark {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  background-color: currentColor;
+}
+
+/* --- Turno Día: fondo tintado al 15% del color + texto en la variante -text --- */
+.chip--critical {
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  border-color: var(--color-danger);
+  color: var(--color-danger-text);
+}
+.chip--warning {
+  background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  border-color: var(--color-warning);
+  color: var(--color-warning-text);
+}
+.chip--safe {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  border-color: var(--color-success);
+  color: var(--color-success-text);
+}
+
+/* --- Turno Noche: contorno, sin relleno, texto en el color base (ya más claro) --- */
+:global(:root[data-theme='dark']) .chip--critical {
+  background-color: transparent;
+  color: var(--color-danger);
+}
+:global(:root[data-theme='dark']) .chip--warning {
+  background-color: transparent;
+  color: var(--color-warning);
+}
+:global(:root[data-theme='dark']) .chip--safe {
+  background-color: transparent;
+  color: var(--color-success);
+}

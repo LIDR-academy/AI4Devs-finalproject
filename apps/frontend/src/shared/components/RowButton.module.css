@@ -1,0 +1,27 @@
+/* RowButton — botón de fila con prioridad, tabla FEFO (US-023 / TK-086-FE).
+   Combina con .btn-touch global (índice.css) para el objetivo táctil de 48px. */
+
+.row-btn {
+  border: 2px solid;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
+  padding: var(--space-2) var(--space-4);
+}
+
+.row-btn--default {
+  background-color: var(--rule);
+  color: var(--bg-root);
+  border-color: var(--rule);
+}
+
+.row-btn--urgent {
+  background-color: var(--color-danger);
+  color: var(--color-danger-on);
+  border-color: var(--color-danger);
+}
+
+.row-btn--ghost {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}

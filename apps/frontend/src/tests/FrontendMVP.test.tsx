@@ -19,13 +19,13 @@ describe('Frontend MVP: Tactile FEFO Dashboard & Stock Extraction Suite', () => 
 
     expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument();
     expect(screen.getByText(/Chef Operario/i)).toBeInTheDocument();
-    expect(screen.getByText(/Extraer Insumo de Bodega/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Extraer de Bodega/i })).toBeInTheDocument();
   });
 
   it('debe abrir el modal de extraccion de bodega al presionar el boton de extraccion', async () => {
     render(<App />);
 
-    const openBtn = screen.getByRole('button', { name: /Extraer Insumo de Bodega/i });
+    const openBtn = screen.getByRole('button', { name: /Extraer de Bodega/i });
     fireEvent.click(openBtn);
 
     expect(screen.getByText(/Extracción de Bodega \(Alta TRR\)/i)).toBeInTheDocument();

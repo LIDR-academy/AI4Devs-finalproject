@@ -40,6 +40,8 @@ Reestructura el bloque de resumen del tablero FEFO según la lámina "Aplicació
 
 **Fuera de alcance:** los componentes de `TK-086-FE` (aquí solo se consumen), routing (`TK-085-FE`), auditoría de contraste (`TK-088-FE`).
 
+**Recoger de `AUDIT-DEV-004` (D-3):** si este ticket toca `urgency.ts`/`UrgencyChip` para las 3 cubetas, resolver de paso el caso `hoursRemaining` negativo (remanente ya vencido) → etiqueta "Vencido" en vez de "Hoy", con su token/tratamiento en `05_ui_ux_design_system.md` §v4.1.0.
+
 ---
 
 ## ✅ Criterios de Aceptación & DoD

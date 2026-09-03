@@ -11,19 +11,6 @@
   border-radius: 0;
 }
 
-.fefo-alert-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 0;
-  border: 1px solid var(--color-danger);
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
-  color: var(--color-danger-text);
-}
-
 .remanentes-empty-state { text-align: center; padding: 48px var(--space-6); color: var(--text-secondary); }
 .empty-state-icon { color: var(--color-primary); margin: 0 auto var(--space-3); }
 
