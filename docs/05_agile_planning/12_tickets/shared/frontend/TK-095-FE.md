@@ -5,7 +5,13 @@ related_story: US-023 · US-024 (auditoría de fidelidad visual vs artefacto "Si
 points: 13
 type: frontend
 priority: Should Have
-status: approved
+status: in-progress
+progress:
+  - WS-1 (P0) — ✅ Done (commit 86febb2): borde del keypad PIN, login como <AuthScreen> a sangre completa, proporción del grid Acciones|Estado, logout como botón fantasma.
+  - WS-2 (P1) — ✅ Done (commit e82c694): `.flex-column { align-items: stretch }` + `.settings-form` — /ajustes/personal, /roles y /configuracion usan el lienzo.
+  - WS-4 (P2) — ✅ Done (commit b95e7ec): quitada la nota "≥48px", toggle día/noche al final del cluster de sesión, etiquetas de filtro cortas.
+  - WS-3 (P1, decisión de producto) — ⏸️ PENDIENTE: 3 preguntas de IA sin responder (ver abajo).
+  - #13 (h1 del dashboard) y #14 (input date nativo) — ⏸️ diferidos (decisión de producto / baja prioridad).
 inputs:
   - Artefacto de diseño "Sistema FEFO" — https://claude.ai/code/artifact/699b9f38-d198-47b1-8051-7e764b4a8f22
   - docs/02_architecture_design/05_ui_ux_design_system.md (v4.1.0)
