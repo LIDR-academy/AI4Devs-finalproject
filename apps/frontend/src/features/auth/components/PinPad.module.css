@@ -1,4 +1,8 @@
-.pin-digit-btn { width: 64px; height: 64px; border-radius: 0; background-color: var(--bg-card); border: 2px solid var(--rule); color: var(--text-primary); font-family: var(--font-family-mono); font-size: var(--fs-xl); font-weight: var(--fw-bold); }
-.pin-digit-spacer { width: 64px; height: 64px; }
 .pin-pad-grid { display: grid; grid-template-columns: repeat(3, 64px); gap: var(--space-3); justify-content: center; margin: var(--space-5) auto; }
-.pin-delete-btn { width: 64px; height: 64px; border-radius: 0; background-color: color-mix(in srgb, var(--color-danger) 15%, transparent); border: 2px solid var(--color-danger); color: var(--color-danger-text); }
+.pin-digit-spacer { width: 64px; height: 64px; }
+
+/* TK-095-FE WS-1 #1: el borde de "sello" de estos botones lo pisaba
+   `.btn-touch { border: 2px solid transparent }` de index.css (misma especificidad,
+   gana por orden de cascada). Se anida bajo `.pin-pad-grid` para ganar especificidad. */
+.pin-pad-grid .pin-digit-btn { width: 64px; height: 64px; border-radius: 0; background-color: var(--bg-card); border: 2px solid var(--rule); color: var(--text-primary); font-family: var(--font-family-mono); font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+.pin-pad-grid .pin-delete-btn { width: 64px; height: 64px; border-radius: 0; background-color: color-mix(in srgb, var(--color-danger) 15%, transparent); border: 2px solid var(--color-danger); color: var(--color-danger-text); }

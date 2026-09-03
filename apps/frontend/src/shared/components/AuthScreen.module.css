@@ -1,0 +1,28 @@
+/* TK-095-FE WS-1 #2: las pantallas de autenticación (PIN login, rotación forzada,
+   reset por token) son la vista COMPLETA cuando no hay sesión — no hay contenido
+   detrás. Por eso van sobre el fondo FEFO (papel día / pizarra noche), no sobre el
+   scrim negro de `.modal-overlay`. El `<Modal>` genuino (ForgotPinModal) sí es un
+   diálogo encima de esta pantalla y conserva su overlay. */
+
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+  overflow-y: auto;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 2px solid var(--rule);
+  border-top: 4px solid var(--color-primary);
+  border-radius: 0;
+  padding: 28px;
+  width: 94%;
+  max-width: 420px;
+  text-align: center;
+}

@@ -32,7 +32,9 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ currentUser, theme, onThem
     <div className={styles['topbar-session']}>
       <ThemeToggle theme={theme} onChange={onThemeChange} />
       <SessionBadge name={currentUser.name} role={currentUser.role} />
-      <button type="button" className="btn-touch btn-danger" onClick={onLogout} id="btn-logout">
+      {/* TK-095-FE WS-1 #4: cerrar sesión es una acción rutinaria — botón fantasma
+          con borde de tinta (como `.mockup__logout` del artefacto), no `btn-danger`. */}
+      <button type="button" className="btn-touch btn-secondary" onClick={onLogout} id="btn-logout">
         <LogOut size={20} />
         Cerrar Sesión
       </button>

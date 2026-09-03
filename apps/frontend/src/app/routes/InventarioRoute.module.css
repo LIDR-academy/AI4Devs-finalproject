@@ -39,7 +39,9 @@
 
 @media (min-width: 768px) {
   .acciones-estado-grid {
-    grid-template-columns: minmax(0, auto) 1fr;
+    /* TK-095-FE WS-1 #3: el artefacto "Sistema FEFO" usa ~1fr 1.2fr (paneles casi
+       parejos). `minmax(0, auto) 1fr` dejaba Acciones como una tira de ~200px. */
+    grid-template-columns: minmax(260px, 0.85fr) 1fr;
   }
   .estado-panel {
     border-left: 2px dashed var(--rule);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PinPad } from './PinPad.js';
 import { AuthService, LoginPinResponse } from '../services/auth.service.js';
 import { Lock, UserCheck, AlertCircle } from 'lucide-react';
-import { Modal } from '../../../shared/components/Modal.js';
+import { AuthScreen } from '../../../shared/components/AuthScreen.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import styles from './PinLoginModal.module.css';
 
@@ -136,7 +136,7 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initial
 
   return (
     <>
-      <Modal size="sm" centered>
+      <AuthScreen>
         <PinLoginHeader />
 
         <UserSelector selectedUserId={form.selectedUserId} onChange={form.setSelectedUserId} disabled={form.isLoading} />
@@ -163,7 +163,7 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initial
             ¿Olvidó su PIN de Administrador?
           </button>
         </div>
-      </Modal>
+      </AuthScreen>
 
       <ForgotPinModal
         isOpen={isForgotModalOpen}

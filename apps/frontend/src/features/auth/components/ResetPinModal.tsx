@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../shared/components/Modal.js';
+import { AuthScreen } from '../../../shared/components/AuthScreen.js';
 import { PinPad } from './PinPad.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { AuthService } from '../services/auth.service.js';
@@ -144,7 +144,7 @@ export const ResetPinModal: React.FC<ResetPinModalProps> = ({ token, isOpen, onS
   if (!isOpen) return null;
 
   return (
-    <Modal size="sm" centered>
+    <AuthScreen>
       <div className="modal-header-center">
         <div className="card-badge-icon icon-badge-md">
           <KeyRound size={28} />
@@ -172,6 +172,6 @@ export const ResetPinModal: React.FC<ResetPinModalProps> = ({ token, isOpen, onS
           />
         </>
       )}
-    </Modal>
+    </AuthScreen>
   );
 };
