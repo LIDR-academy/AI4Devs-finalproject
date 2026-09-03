@@ -31,7 +31,11 @@ inputs:
 | **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. |
 | **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
 | **GET** | `/api/v1/stock/insumos` | *Ninguno* | `ListInsumosResponse` | Obtiene la lista de insumos del catálogo maestro (`TK-057`). |
-| **PATCH** | `/api/v1/stock/insumos/{id}/restock` | `RestockInsumoRequest` | `RestockInsumoResponse` | Suma la cantidad recibida al stock de bodega de un insumo existente (`TK-060`). |
+| **PATCH** | `/api/v1/stock/insumos/{id}/restock` | `RestockInsumoRequest` | `RestockInsumoResponse` | Suma la cantidad recibida a un sub-sector de bodega de un insumo existente (`TK-060` / `US-025`). |
+| **GET** | `/api/v1/locations` | *Ninguno* | `ListStorageLocationsResponse` | Lista los sectores físicos de almacenamiento (`US-016`). Cualquier rol autenticado. |
+| **POST** | `/api/v1/locations` | `CreateStorageLocationRequest` | `StorageLocationResponse` | Da de alta un sector físico (`US-016`). Rol `ADMIN`. |
+| **PUT** | `/api/v1/locations/{id}` | `UpdateStorageLocationRequest` | `StorageLocationResponse` | Edita o activa/desactiva un sector (`US-016`). Rol `ADMIN`. `409` si se desactiva un sector con existencias (`US-025`). |
+| **DELETE** | `/api/v1/locations/{id}` | *Ninguno* | `204 No Content` | Elimina un sector (`US-016`). Rol `ADMIN`. `409` si tiene existencias asociadas (`US-025`). |
 | **GET** | `/api/v1/reports/rotation-metrics` | *Ninguno (Query Params)* | `RotationMetricsResponse` | Retorna la TRR promedio real (`US-020`), el único endpoint que mide directamente el KPI de rotación del PRD. |
 
 ---
@@ -130,21 +134,23 @@ sequenceDiagram
 ---
 
 ### 2.2. `POST /api/v1/stock/extraction`
-*   **Descripción:** Registra la salida física de un insumo desde la bodega principal. Permite especificar el propósito de la extracción (`KITCHEN_STOCK`, `RECIPE` o `DIRECT_DISCARD`), el motivo descriptivo (`reason`), la receta asociada (`recipeId` si aplica) y la ubicación de destino (`toLocation`), registrando la autoría del operario autenticado (`operatorId`).
+*   **Descripción:** Registra la salida física de un insumo desde un **sub-sector concreto de la bodega** (`fromStorageLocationId`, obligatorio desde `US-025`). Permite especificar el propósito de la extracción (`KITCHEN_STOCK`, `RECIPE` o `DIRECT_DISCARD`), el motivo descriptivo (`reason`), la receta asociada (`recipeId` si aplica) y la ubicación de destino (`toLocation`), registrando la autoría del operario autenticado (`operatorId`). El backend valida el saldo **de la línea `(insumoId, fromStorageLocationId)`**; si es insuficiente rechaza con `422` sin tocar otras líneas del mismo insumo.
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
-    *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR` u `ADMIN`)
+    *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `KITCHEN_STAFF` u `ADMIN`)
 *   **Request Payload (`RecordExtractionRequest`):**
     ```json
     {
       "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
       "quantity": "2.0000",
+      "fromStorageLocationId": "loc-seed-meat-fridge",
       "toLocation": "KITCHEN_FRIDGE",
       "purpose": "RECIPE",
       "reason": "Preparación menú ejecutivo del día",
       "recipeId": "rec-12345678-90ab-cdef-1234-567890abcdef"
     }
     ```
+    *   `fromStorageLocationId` **(obligatorio, US-025)**: id de un `StorageLocation` con `type = WAREHOUSE` y `isActive = true`. `404` si no existe; `422` si el insumo no tiene línea de stock en ese sector.
 *   **Response Success (`201 Created` - `RecordExtractionResponse`):**
     ```json
     {
@@ -152,12 +158,15 @@ sequenceDiagram
       "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
       "insumoName": "Queso Mozzarella",
       "quantityExtracted": "2.0000",
-      "remainingWarehouseStock": "3.0000",
+      "fromStorageLocationId": "loc-seed-meat-fridge",
+      "remainingSectorStock": "10.0000",
+      "remainingWarehouseStock": "18.0000",
       "location": "KITCHEN_FRIDGE",
       "expirationDate": "2026-07-05T16:36:12.000Z",
       "status": "ACTIVE"
     }
     ```
+    *   `remainingSectorStock` **(US-025)**: saldo restante en el sub-sector de origen. `remainingWarehouseStock` sigue siendo el total del insumo sumando todos sus sub-sectores.
 *   **Response Error (`422 Unprocessable Entity`):**
     *   *Causa:* Cantidad insuficiente en la bodega principal o violación de restricciones.
     ```json
@@ -448,17 +457,24 @@ sequenceDiagram
     {
       "name": "Harina 000",
       "unitOfMeasure": "KG",
-      "unitCost": "1800.00"
+      "unitCost": "1800.00",
+      "initialWarehouseStock": "25.0000",
+      "storageLocationId": "loc-seed-dry"
     }
     ```
     *   `unitCost` (Opcional, `US-019`): Costo expresado **por unidad de compra** (ej. costo de 1 KG completo, no por gramo) — coincide con `unitOfMeasure`, sin factor de conversión intermedio. Máximo 2 decimales y 10 dígitos enteros (coincide exactamente con la columna `Decimal(12,2)` — a diferencia de otros campos `DecimalString` de hasta 4 decimales). Si se omite, el insumo queda sin costo registrado (`unitCost: null`) y su merma no se valoriza en `$` en los reportes hasta que un Administrador lo complete.
+    *   `storageLocationId` **(obligatorio, US-025)**: id de un `StorageLocation` con `type = WAREHOUSE` y `isActive = true` donde queda depositado el stock inicial. `400` si falta; `404` si no existe o no es de tipo `WAREHOUSE`.
+    *   `initialWarehouseStock` (Opcional, default `"0"`): crea la línea `WarehouseStock (insumo, storageLocationId, initialWarehouseStock)`.
 *   **Response Success (`201 Created` - `CreateInsumoResponse`):**
     ```json
     {
       "id": "f3a1c2e0-1234-4abc-9def-0123456789ab",
       "name": "Harina 000",
       "unitOfMeasure": "KG",
-      "warehouseStock": "0.000",
+      "warehouseStock": "25.0000",
+      "stockByLocation": [
+        { "storageLocationId": "loc-seed-dry", "storageLocationName": "Bodega de Secos", "quantity": "25.0000" }
+      ],
       "unitCost": "1800.00"
     }
     ```
@@ -478,36 +494,44 @@ sequenceDiagram
         "id": "f3a1c2e0-1234-4abc-9def-0123456789ab",
         "name": "Harina 000",
         "unitOfMeasure": "KG",
-        "warehouseStock": "0.000",
+        "warehouseStock": "25.0000",
+        "stockByLocation": [
+          { "storageLocationId": "loc-seed-dry", "storageLocationName": "Bodega de Secos", "quantity": "25.0000" }
+        ],
         "unitCost": "1800.00"
       }
     ]
     ```
+    *   `warehouseStock` es la suma de `stockByLocation[].quantity` (US-025). Un insumo sin existencias devuelve `stockByLocation: []`.
 
 ---
 
 ### 2.13. `PATCH /api/v1/stock/insumos/{id}/restock`
-*   **Descripción:** Suma la cantidad recibida al `warehouseStock` actual de un insumo ya existente (`TK-060`) — semántica **incremental**, nunca fija un total absoluto. Sin esto, un insumo que llega a `0` en bodega quedaba inutilizable para siempre.
+*   **Descripción:** Suma la cantidad recibida a la línea de stock del insumo en el **sub-sector indicado** (`TK-060`, ampliado `US-025`) — semántica **incremental**, nunca fija un total absoluto. Si el insumo aún no tenía existencias en ese sub-sector, se crea la línea `WarehouseStock`.
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
     *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
 *   **Request Payload (`RestockInsumoRequest`):**
     ```json
     {
-      "quantity": 20
+      "quantity": 20,
+      "storageLocationId": "loc-seed-freezer"
     }
     ```
+    *   `storageLocationId` **(obligatorio, US-025)**: `StorageLocation` de `type = WAREHOUSE` y activo. `400` si falta; `404` si no existe o no es `WAREHOUSE`.
 *   **Response Success (`200 OK` - `RestockInsumoResponse`):**
     ```json
     {
       "insumoId": "f3a1c2e0-1234-4abc-9def-0123456789ab",
       "insumoName": "Harina 000",
-      "quantityAdded": "20.000",
-      "newWarehouseStock": "20.000"
+      "storageLocationId": "loc-seed-freezer",
+      "quantityAdded": "20.0000",
+      "newSectorStock": "20.0000",
+      "newWarehouseStock": "45.0000"
     }
     ```
 *   **Response Error (`404 Not Found`):**
-    *   *Causa:* El `id` de insumo no existe en el catálogo.
+    *   *Causa:* El `id` de insumo no existe en el catálogo, o `storageLocationId` no existe / no es de tipo `WAREHOUSE`.
 *   **Response Error (`400 Bad Request`):**
     *   *Causa:* `quantity` es cero, negativo o no numérico.
 *   **Response Error (`403 Forbidden`):**

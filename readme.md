@@ -51,6 +51,7 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 *   **Persistencia Real en Producción:** Todos los repositorios (incluyendo recetas, conciliaciones de turno y reportes) están respaldados por PostgreSQL en producción, con bootstrap idempotente del primer administrador en cada despliegue nuevo.
 *   **Gestión de Catálogo Maestro:** Panel de administración para dar de alta insumos y recetas (rol `ADMIN`) sin depender del script de seed, permitiendo operar con el inventario real del restaurante.
 *   **Reabastecimiento de Bodega:** Un Administrador puede sumar stock a un insumo existente cuando llega una entrega del proveedor, para que el restaurante siga operando más allá de la carga inicial de inventario.
+*   **Sectores Físicos de Almacenamiento y Stock Multi-Sector** *(spec aprobada — `US-016` / `US-025`)*: la bodega se subdivide en sub-sectores reales (Heladera de Carnes, Cámara de Congelados, Bodega de Secos); cada insumo se deposita en un sub-sector concreto al darlo de alta o reabastecerlo, su stock se rastrea por par `(insumo, sub-sector)`, y la extracción a cocina exige elegir el sector de origen validando su saldo.
 *   **Sistema de Diseño FEFO (Turno Día/Noche):** Interruptor de tema persistido por dispositivo — turno Día (comanda de papel, alto contraste sobre fondo claro) y turno Noche (pizarra de turno, fondo oscuro con acentos en tiza), aplicado a toda la aplicación.
 *   **Navegación por Rutas (Shell de Aplicación):** Barra de navegación de nivel superior con direcciones propias (Inventario, Estaciones, Recetas, Reportes, Ajustes) y acceso por rol (Reportes y Ajustes solo `ADMIN`), con soporte de deep-link y botón "atrás" del navegador.
 
@@ -334,12 +335,12 @@ erDiagram
 ### **3.2. Descripción de entidades principales:**
 *   **`users` & `roles` & `permissions`**: Almacena credenciales de administradores y operarios (PIN hash salted) con control de acceso basado en roles (RBAC) y bloqueo preventivo por intentos fallidos.
 *   **`insumos`**: Catálogo maestro de ingredientes. Define la unidad de medida estándar (`KG`, `L`, `UNITS`) y su relación con existencias y recetas.
-*   **`warehouse_stocks`**: Existencias de insumos cerrados en depósito. Posee restricción `UNIQUE` en `(insumo_id, location)` e integridad en actualización.
+*   **`warehouse_stocks`**: Existencias de insumos cerrados en depósito, una línea por par insumo/sub-sector. Restricción `UNIQUE (insumo_id, storage_location_id)` y FK `RESTRICT` a `storage_locations` (`US-025` — un sector con existencias no puede borrarse).
 *   **`remanentes`**: Registro de ingredientes abiertos en cocina. Posee índice compuesto FEFO `(status, expiration_date)` para optimizar consultas táctiles de vencimiento acelerado.
 *   **`stock_movements`**: Log transaccional inmutable para auditoría. Almacena extracciones, consumos, descartes y reabastecimientos (`RESTOCK`).
 *   **`recipes` & `recipe_ingredients`**: Definición de preparaciones maestras y porciones necesarias de insumos para el descuento automatizado en cascada FEFO.
 *   **`shift_reconciliations` & `items`**: Registro del cierre de jornada de cocina, comparando stock teórico vs. recuento físico e identificando varianzas.
-*   **`storage_locations` & `system_settings`**: Configuración física de sectores del restaurante y parámetros globales de alertas de expiración y tolerancia.
+*   **`storage_locations` & `system_settings`**: Catálogo de sub-sectores físicos del restaurante (`WAREHOUSE` / `KITCHEN`, `US-016`) referenciado por `warehouse_stocks`, y parámetros globales de alertas de expiración y tolerancia.
 
 ---
 

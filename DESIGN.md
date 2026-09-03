@@ -163,3 +163,16 @@ Formaliza la tercera lámina de la propuesta Sistema FEFO (el artefacto de dise�
 
 > **Contraste (Guard 29 + decisión abierta #3 del artefacto):** todos los tokens nuevos se auditan a AAA 7:1 en ambos turnos con verificador real de luminancia relativa WCAG en `TK-088-FE` (Skill `SK-21`), no por estimación.
 
+---
+
+## 🧾 v4.2.0 — Sub-Sectores de Bodega y Desglose de Stock (US-016 / US-025)
+
+Detalle técnico en [`docs/02_architecture_design/05_ui_ux_design_system.md`](./docs/02_architecture_design/05_ui_ux_design_system.md) §v4.2.0.
+
+1. **Selector de sub-sector obligatorio (`StorageSectorSelect`):** `<select>` táctil ≥ 48px con `<label>` asociado, usado en el alta de insumo, el reabastecimiento y la extracción (sector de origen). Opciones cargadas de `GET /api/v1/locations` filtradas por `type` (`WAREHOUSE` para bodega, `KITCHEN` para destino de cocina) y `isActive`. Placeholder deshabilitado `— Seleccionar sector —`; el submit se bloquea con `ErrorBanner` inline si queda vacío. Sin literales hardcodeados.
+2. **Fila de catálogo expandible con desglose (`InsumoStockBreakdownRow`):** la celda "Stock en Bodega (total)" muestra la suma; un disclosure (`▸`/`▾`, target ≥ 44px, `aria-expanded`) revela una sub-lista `sector — cantidad unidad` por cada `stockByLocation[]`. Sin existencias → texto atenuado "Sin stock en bodega". El desglose no es una tabla anidada: lista de definición con los tokens `--space-*`/`--fs-sm`.
+3. **Saldo por sector en extracción:** al elegir el sector de origen, junto al insumo se muestra `Disponible aquí: <n> <u>` (token `--fs-sm`, `--text-secondary`). El saldo insuficiente se comunica con el `422` traducido por `errorMessageMapper` en `ErrorBanner`, nunca con un popup nativo (Guard 38).
+4. **Sector con existencias en gestión (`LocationsManagementModal`):** los botones `Power` (desactivar) y `Trash2` (borrar) quedan `aria-disabled` con tooltip "El sector tiene existencias asociadas" cuando `hasStock`; el `409` del backend se traduce igual.
+
+> **Guards:** cero `style={{}}` inline (Guard 29) — todo por clase desde el escalado de tokens; errores vía `ErrorBanner` + `errorMessageMapper` (Guard 38); contraste AAA auditado en ambos turnos.
+

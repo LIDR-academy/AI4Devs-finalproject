@@ -51,8 +51,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-072-FE** | `stock` | **Muy Alto** | **Alta** | 3 SP | Depende de `TK-072`, `TK-007-F`. Interfaz táctil para extracciones con motivo y responsable. | 🔴 P0 - Crítica |
 | **TK-073** | `security` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Dynamic RBAC: Modelos `Role`, `Permission`, `RolePermission`, endpoints y middleware `authorizePermissions`. | 🟡 P1 - Alta |
 | **TK-073-FE** | `security` | **Alto** | **Alta** | 3 SP | Depende de `TK-073`. Interfaz táctil de administración de roles, matriz de permisos y autoredirección por perfiles. | 🟡 P1 - Alta |
-| **TK-074** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-003`. CRUD de sectores físicos de almacenamiento (`StorageLocation`). | 🟢 P2 - Media |
-| **TK-074-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-074`. Modal de administración de sectores y desplegables dinámicos en extracciones. | 🟢 P2 - Media |
+| **TK-074** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-003`. Cierra deuda del CRUD de sectores (`StorageLocation`): `requireRole('ADMIN')` por ruta, RFC 7807, flag `hasStock`. | 🟢 P2 - Media |
+| **TK-074-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-074`. Destino de cocina dinámico en extracción + bloqueo de toggle/borrado de sector con existencias. | 🟢 P2 - Media |
+| **TK-096** | `stock` | **Muy Alto** | **Media** | 8 SP | Depende de `TK-060`, `TK-072`, `TK-074`. Stock multi-sector de bodega (`WarehouseStock` 1:N con FK a `StorageLocation`), sector obligatorio en alta/reabastecimiento, origen elegido en extracción, migración de datos. | 🟢 P2 - Media |
+| **TK-096-FE** | `stock` | **Alto** | **Media** | 5 SP | Depende de `TK-096`, `TK-074-FE`. Selectores de sub-sector en alta/reabastecimiento/extracción + desglose de stock por sector en el catálogo. | 🟢 P2 - Media |
 | **TK-075** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-001`. API de Configuración General del Restaurante (`SystemSettings`). | 🟢 P2 - Media |
 | **TK-075-FE** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-075`. Modal de Configuración General y branding dinámico en header. | 🟢 P2 - Media |
 | **TK-077** | `auth` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Recuperación de Acceso y Reseteo de PIN del Administrador por Email. | 🟡 P1 - Alta |
@@ -104,6 +106,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-072** | [US-014](../11_user_stories/stock/US-014.md) | Trazabilidad Completa en Extracciones de Bodega (Backend) | `stock` | 5 | Must Have | [stock/backend/TK-072.md](stock/backend/TK-072.md) |
 | **TK-073** | [US-015](../11_user_stories/security/US-015.md) | Backend Dynamic RBAC Models, Seed & Middleware | `security` | 5 | Should Have | [security/backend/TK-073.md](security/backend/TK-073.md) |
 | **TK-074** | [US-016](../11_user_stories/stock/US-016.md) | Backend Storage Locations API | `stock` | 3 | Should Have | [stock/backend/TK-074.md](stock/backend/TK-074.md) |
+| **TK-096** | [US-025](../11_user_stories/stock/US-025.md) | Stock Multi-Sector de Bodega y Depósito por Sub-Sector (Backend) | `stock` | 8 | Should Have | [stock/backend/TK-096.md](stock/backend/TK-096.md) |
 | **TK-075** | [US-017](../11_user_stories/settings/US-017.md) | Backend System Settings API | `settings` | 3 | Should Have | [settings/backend/TK-075.md](settings/backend/TK-075.md) |
 | **TK-077** | [US-018](../11_user_stories/auth/US-018.md) | Backend Admin PIN Recovery via Email Token & Magic Link | `auth` | 5 | Should Have | [auth/backend/TK-077.md](auth/backend/TK-077.md) |
 | **TK-078** | [US-019](../11_user_stories/reports/US-019.md) | Costeo de Insumos y Valorización Monetaria de Mermas | `reports` | 3 | Should Have | [reports/backend/TK-078.md](reports/backend/TK-078.md) |
@@ -138,6 +141,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-072-FE** | [US-014](../11_user_stories/stock/US-014.md) | Interfaz Táctil para Extracciones con Responsable y Motivo | `stock` | 3 | Must Have | [stock/frontend/TK-072-FE.md](stock/frontend/TK-072-FE.md) |
 | **TK-073-FE** | [US-015](../11_user_stories/security/US-015.md) | Frontend Dynamic RBAC UI & Autoredirection | `security` | 3 | Should Have | [security/frontend/TK-073-FE.md](security/frontend/TK-073-FE.md) |
 | **TK-074-FE** | [US-016](../11_user_stories/stock/US-016.md) | Frontend Storage Locations UI | `stock` | 3 | Should Have | [stock/frontend/TK-074-FE.md](stock/frontend/TK-074-FE.md) |
+| **TK-096-FE** | [US-025](../11_user_stories/stock/US-025.md) | Selector de Sub-Sector de Bodega y Desglose de Stock (Frontend) | `stock` | 5 | Should Have | [stock/frontend/TK-096-FE.md](stock/frontend/TK-096-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |
 | **TK-078-FE** | [US-019](../11_user_stories/reports/US-019.md) | Costo de Insumo y Valorización Monetaria en Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-078-FE.md](reports/frontend/TK-078-FE.md) |
@@ -176,8 +180,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 ### 📦 Bodega y Stock (`stock/`)
 *   **[TK-003: Extracciones de Bodega](stock/backend/TK-003.md)** (Backend)
 *   **[TK-007-F: Pantalla de Extracciones](stock/frontend/TK-007-F.md)** (Frontend)
-*   **[TK-074: Storage Locations API](stock/backend/TK-074.md)** (Backend)
-*   **[TK-074-FE: Storage Locations UI](stock/frontend/TK-074-FE.md)** (Frontend)
+*   **[TK-074: Storage Locations API](stock/backend/TK-074.md)** (Backend) — cierra deuda: `requireRole('ADMIN')` por ruta (gap RBAC), RFC 7807, flag `hasStock`.
+*   **[TK-074-FE: Storage Locations UI](stock/frontend/TK-074-FE.md)** (Frontend) — destino de cocina dinámico en extracción + bloqueo de sector con existencias.
+*   **[TK-096: Stock Multi-Sector de Bodega](stock/backend/TK-096.md)** (Backend) — `WarehouseStock` 1:N real con FK a `StorageLocation`, sector obligatorio en alta/reabastecimiento, origen elegido en extracción con validación de saldo por sector, migración de `MAIN_WAREHOUSE`.
+*   **[TK-096-FE: Selector de Sub-Sector y Desglose de Stock](stock/frontend/TK-096-FE.md)** (Frontend) — selectores de sub-sector en alta/reabastecimiento/extracción + desglose por sector en el catálogo.
 *   **[TK-080: Filtro `insumoId` para Detección de Apertura Duplicada](stock/backend/TK-080.md)** (Backend) — cierra el gap del KPI #3 del PRD (duplicidad de aperturas), hoy sin ningún mecanismo activo.
 *   **[TK-080-FE: Advertencia de Apertura Duplicada en Extracción](stock/frontend/TK-080-FE.md)** (Frontend)
 

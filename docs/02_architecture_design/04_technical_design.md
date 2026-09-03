@@ -297,17 +297,23 @@ sequenceDiagram
     participant RemanenteRepo as 🗄️ RemanenteRepository
     participant EventBus as ⚡ EventPublisher
 
-    Staff->>UC: execute({ insumoId, quantity, userId, destination })
+    Staff->>UC: execute({ insumoId, quantity, userId, fromStorageLocationId, destination })
     UC->>InsumoRepo: findById(insumoId)
-    InsumoRepo-->>UC: Insumo (Vida útil bodega vs cocina)
-    
+    InsumoRepo-->>UC: Insumo (agregado con líneas WarehouseStock por sub-sector)
+
+    UC->>UC: hasSufficientStockAt(quantity, fromStorageLocationId) — si falla → 422 InsufficientStockException (sin tocar otras líneas)
+    UC->>UC: deductStockAt(quantity, fromStorageLocationId)
+    UC->>InsumoRepo: save(insumo) — persiste el diff de la línea del sector
     UC->>UC: Calcula fechaExpiracionCalculada = min(expiracionBodega, now + horasVidaUtilCocina)
     UC->>RemanenteRepo: createRemanente({ insumoId, quantity, fechaExpiracionCalculada, status: "ACTIVE" })
     RemanenteRepo-->>UC: Nuevo Remanente Creado
-    
+    UC->>RemanenteRepo: recordMovement({ type: EXTRACTION, fromLoc: <sub-sector>, toLoc: destination })
+
     UC->>EventBus: publish(RemanenteCreadoEvent)
     UC-->>Staff: Remanente Activo Registrado (Etiqueta FEFO generada)
 ```
+
+> **US-025 — stock por sub-sector:** el agregado `Insumo` mantiene una `WarehouseStockLine` por cada sub-sector de bodega donde tiene existencias (`WarehouseStock` es `1:N` con FK a `StorageLocation`). No hay línea "por defecto": el alta (`CreateInsumoUseCase`) y el reabastecimiento (`RestockInsumoUseCase`) reciben `storageLocationId` obligatorio, y la extracción recibe `fromStorageLocationId`. El "stock de bodega" total del insumo es la suma de sus líneas; el saldo consumible se valida siempre a nivel de línea.
 
 ---
 

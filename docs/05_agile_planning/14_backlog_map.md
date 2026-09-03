@@ -142,6 +142,22 @@ graph TD
     US014 --> TK072
     US014 --> TK072FE
 
+    US016["📝 US-016: Sectores de Almacenamiento"]
+    TK074["🎫 TK-074: Storage Locations API (Backend)"]
+    TK074FE["🎫 TK-074-FE: Storage Locations UI (Frontend)"]
+    EpicStock --> US016
+    US016 --> TK074
+    US016 --> TK074FE
+
+    US025["📝 US-025: Stock Multi-Sector de Bodega"]
+    TK096["🎫 TK-096: Stock Multi-Sector (Backend)"]
+    TK096FE["🎫 TK-096-FE: Selectores de Sub-Sector (Frontend)"]
+    EpicStock --> US025
+    US016 --> US025
+    US025 --> TK096
+    US025 --> TK096FE
+    TK074 --> TK096
+
     %% Gap Analysis del PRD (US-019 a US-021) — cierran los 3 KPIs del producto
     US019["📝 US-019: Costeo y Valorización de Mermas"]
     TK078["🎫 TK-078: Costeo de Insumos (Backend)"]
@@ -214,7 +230,7 @@ graph TD
 
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US019,US020,US021,US022,US023,US024 us;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US016,US019,US020,US021,US022,US023,US024,US025 us;
     class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE,TK081FE,TK082FE,TK083FE,TK084FE,TK085FE,TK086FE,TK087FE,TK088FE,TK089FE,TK090FE tk;
 ```
 
@@ -242,7 +258,8 @@ graph TD
 | **📦 Bodega (`stock`)** | [US-013: Reabastecimiento de Bodega](11_user_stories/stock/US-013.md) | [TK-060: Reabastecimiento de Bodega](12_tickets/stock/backend/TK-060.md) | [TK-060-FE: Panel de Reabastecimiento](12_tickets/stock/frontend/TK-060-FE.md) | ✅ Done |
 | **📦 Bodega (`stock`)** | [US-014: Trazabilidad Completa Extracciones](11_user_stories/stock/US-014.md) | [TK-072: Trazabilidad Extracciones](12_tickets/stock/backend/TK-072.md) | [TK-072-FE: Interfaz Extracciones](12_tickets/stock/frontend/TK-072-FE.md) | ✅ Done |
 | **🔐 Seguridad (`security`)** | [US-015: Permisos y Roles Dinámicos](11_user_stories/security/US-015.md) | [TK-073: Backend Dynamic RBAC](12_tickets/security/backend/TK-073.md) | [TK-073-FE: Dynamic RBAC UI](12_tickets/security/frontend/TK-073-FE.md) | 📋 Approved Spec |
-| **📦 Bodega (`stock`)** | [US-016: Sectores de Almacenamiento](11_user_stories/stock/US-016.md) | [TK-074: Storage Locations API](12_tickets/stock/backend/TK-074.md) | [TK-074-FE: Storage Locations UI](12_tickets/stock/frontend/TK-074-FE.md) | 📋 Approved Spec |
+| **📦 Bodega (`stock`)** | [US-016: Sectores de Almacenamiento](11_user_stories/stock/US-016.md) | [TK-074: Storage Locations API](12_tickets/stock/backend/TK-074.md) | [TK-074-FE: Storage Locations UI](12_tickets/stock/frontend/TK-074-FE.md) | 🚧 Ready |
+| **📦 Bodega (`stock`)** | [US-025: Stock Multi-Sector de Bodega](11_user_stories/stock/US-025.md) | [TK-096: Stock Multi-Sector (Backend)](12_tickets/stock/backend/TK-096.md) | [TK-096-FE: Selectores de Sub-Sector (Frontend)](12_tickets/stock/frontend/TK-096-FE.md) | 📋 Approved Spec |
 | **⚙️ Configuración (`settings`)** | [US-017: Configuración del Restaurante](11_user_stories/settings/US-017.md) | [TK-075: System Settings API](12_tickets/settings/backend/TK-075.md) | [TK-075-FE: System Settings UI](12_tickets/settings/frontend/TK-075-FE.md) | 📋 Approved Spec |
 | **🔐 Autenticación (`auth`)** | [US-018: Recuperación de PIN de Administrador](11_user_stories/auth/US-018.md) | [TK-077: Admin PIN Recovery API](12_tickets/auth/backend/TK-077.md) | [TK-077-FE: Admin PIN Recovery UI](12_tickets/auth/frontend/TK-077-FE.md) | ✅ Done |
 | **📊 Reportes (`reports`)** | [US-019: Costeo y Valorización de Mermas](11_user_stories/reports/US-019.md) | [TK-078: Costeo de Insumos](12_tickets/reports/backend/TK-078.md) | [TK-078-FE: Valorización en Dashboard](12_tickets/reports/frontend/TK-078-FE.md) | ✅ Done |

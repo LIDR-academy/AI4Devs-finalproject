@@ -21,6 +21,7 @@ Este documento centraliza los conceptos clave del dominio gastronómico de **Res
 *   **Conciliación de Fin de Turno:** Proceso guiado en el que el personal de cocina valida el stock físico real contra el saldo lógico del sistema y procesa el descarte masivo automático de remanentes vencidos.
 *   **PIN de Operario:** Código numérico de 4 dígitos asignado a cada cocinero para autenticación rápida en la terminal táctil de cocina.
 *   **Almacén Central / Bodega:** Depósito principal donde los insumos se conservan en envases cerrados bajo su vida útil comercial de fabricante.
+*   **Sub-Sector de Bodega (`StorageLocation` de tipo `WAREHOUSE`):** Subdivisión física real de la bodega de la única sucursal (ej. *Heladera de Carnes*, *Cámara de Congelados*, *Bodega de Secos*). Cada existencia de un insumo reside en un sub-sector concreto; un mismo insumo puede tener stock en varios sub-sectores a la vez, rastreado por par `(insumo, sub-sector)` (`US-025`). No debe confundirse con "Multisede" (fuera de alcance): son sectores de **una** bodega, no bodegas de distintas sucursales.
 *   **Costo Unitario (`unitCost`):** Valor monetario opcional asignado a un insumo, expresado por unidad de compra (ej. costo de 1 kg completo, no por gramo). Permite valorizar en `$` el reporte de mermas (`US-019`); nulo por defecto para insumos preexistentes.
 *   **TRR Efectivo (Rotation Metric):** A diferencia del TRR (ventana de vencimiento acelerado, ver arriba), el TRR Efectivo es el tiempo **real** transcurrido entre la apertura de un remanente y su estado terminal (consumido o descartado), promediado sobre un rango de fechas (`US-020`). Es la métrica que valida en la práctica si el objetivo de las 72h se cumple.
 *   **Advertencia de Apertura Duplicada:** Aviso visual no bloqueante ("Soft Limit", mismo patrón que la saturación de almacenes secundarios) mostrado al operario cuando intenta extraer un insumo sellado de bodega mientras ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina (`US-021`).
@@ -31,6 +32,11 @@ Este documento centraliza los conceptos clave del dominio gastronómico de **Res
 
 ### Invariante 1: Prohibición de Saldos Negativos
 > *Bajo ninguna circunstancia el saldo o cantidad disponible de un insumo, lote o remanente activo puede ser menor a cero.* Si una transacción intenta consumir una cantidad superior a la disponible, la operación debe ser rechazada atómicamente retornando un error HTTP 422 Unprocessable Entity.
+>
+> **Extensión `US-025` (saldo por sub-sector):** el saldo se controla **por línea `(insumo, sub-sector de bodega)`**. Una extracción indica el sub-sector de origen y sólo puede consumir hasta el saldo de esa línea; si lo supera se rechaza con HTTP 422 sin descontar de ninguna otra línea del mismo insumo. El "stock de bodega" total de un insumo es la suma de sus líneas y nunca se usa como saldo consumible directo.
+
+### Invariante 1-bis: Sub-Sector con Existencias es Indeleble (`US-025`)
+> Un `StorageLocation` referenciado por al menos una línea de `WarehouseStock` con cantidad `> 0` no puede eliminarse ni marcarse como inactivo; la operación se rechaza con HTTP 409 Conflict. Debe vaciarse (extraer o trasladar todas sus existencias) antes de poder darlo de baja.
 
 ### Invariante 2: Precisión Aritmética Interna vs. Formateo Limpio en Interfaz (UI)
 > 1. **Backend & DB (Precisión Absoluta):** Los montos numéricos de insumos y cantidades físicas se gestionan internamente con `decimal.js` y se almacenan como `Decimal(12,4)`. En las APIs JSON se serializan estrictamente como cadenas de texto (`string`, ej: `"4.6000"`).

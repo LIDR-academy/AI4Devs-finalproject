@@ -41,6 +41,7 @@ inputs:
    - [US-019: Costeo de Insumos y Valorización Monetaria de Mermas](#us-019-costeo-de-insumos-y-valorización-monetaria-de-mermas)
    - [US-020: Indicador TRR Real en el Dashboard de Reportes](#us-020-indicador-trr-real-en-el-dashboard-de-reportes)
    - [US-021: Advertencia de Apertura Duplicada al Extraer Insumo](#us-021-advertencia-de-apertura-duplicada-al-extraer-insumo)
+   - [US-025: Depósito de Insumos en Sub-Sector de Bodega y Stock Multi-Sector](#us-025-depósito-de-insumos-en-sub-sector-de-bodega-y-stock-multi-sector)
 6. [Estrategia de Calidad y Verificación (QA/Testing)](#6-estrategia-de-calidad-y-verificación-qatesting)
 7. [Roadmap Post-MVP (Fase 2)](#7-roadmap-post-mvp-fase-2)
 
@@ -152,7 +153,7 @@ sequenceDiagram
 
 *   **Descuento automático de inventario por receta (BOM):** No se calcularán deducciones automáticas de ingredientes basándose en el software de facturación o comandas. Todos los consumos y aperturas se declaran explícitamente en la terminal.
 *   **Gestión de Compras y Proveedores:** Quedan fuera de alcance las alertas automáticas de reabastecimiento, generación de órdenes de compra y el módulo de cuentas por pagar a proveedores.
-*   **Multisede:** La base de datos y la arquitectura del backend operan estrictamente para una sucursal física única.
+*   **Multisede:** La base de datos y la arquitectura del backend operan estrictamente para una sucursal física única. *(Nota: la subdivisión de la bodega de esa única sucursal en sub-sectores físicos —Heladera de Carnes, Cámara de Congelados, Bodega de Secos— SÍ está en alcance; ver `US-016` y `US-025`.)*
 *   **Integración de Hardware Físico:** No se integran balanzas electrónicas por USB/Bluetooth ni escáneres de código de barras en esta primera fase.
 
 ---
@@ -298,6 +299,36 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
 *   **Historia:** Como Administrador, quiero dar de alta y bautizar los sectores físicos del restaurante (cámaras frías, bodegas de secos, mesas de preparación), para que los modales de extracción y reabastecimiento consuman ubicaciones reales y personalizadas.
 *   **Complejidad:** M
 *   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Estado:** 🚧 Spec aprobada — el CRUD de sectores (`StorageLocation`) y su pantalla de gestión ya existen (Escenario 1); resta cablear los desplegables dinámicos de origen/destino en los modales de extracción y reabastecimiento (Escenario 2, `TK-074` / `TK-074-FE`) y blindar el endpoint `/api/v1/locations` con `requireRole('ADMIN')`.
+*   **Habilitador de:** `US-025` (stock multi-sector) depende de este catálogo de sectores.
+
+### US-025: Depósito de Insumos en Sub-Sector de Bodega y Stock Multi-Sector
+*   **Historia:** Como Administrador, quiero indicar en qué sub-sector físico de la bodega queda depositado un insumo al darlo de alta o reabastecerlo, y que el operario elija de qué sub-sector extrae al pasar stock a cocina, para reflejar la ubicación física real de cada existencia y validar el saldo por sector.
+*   **Complejidad:** L
+*   **Evaluación INVEST:** Independiente (depende solo de `US-016`), Negociable, Valiosa, Estimable, Small (partible en backend/frontend), Testeable.
+*   **Decisiones de negocio consultadas con el humano (Guard 28):**
+    *   **Multiplicidad:** el stock de bodega de un insumo puede repartirse en **varios sub-sectores a la vez**; se rastrea por par `(insumo, sub-sector)` sobre `WarehouseStock`.
+    *   **Extracción:** el operario **elige el sub-sector de origen** en el modal de extracción; el backend valida el saldo **de ese sector** (Invariante 1 pasa a ser por-sector).
+    *   **Obligatoriedad y migración:** el sub-sector es **obligatorio** en el alta y el reabastecimiento de insumos; los insumos preexistentes (stock en `MAIN_WAREHOUSE`) se migran a un sector semilla `"Bodega Principal – Sin clasificar"` (`type = WAREHOUSE`) vía migración Prisma.
+    *   **Borrado de sector:** un `StorageLocation` con saldo `> 0` en alguna línea `WarehouseStock` no puede eliminarse ni desactivarse (rechazo `HTTP 409`).
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Alta de insumo con sub-sector obligatorio):**
+        *   **Given** Los sub-sectores de bodega `"Heladera de Carnes"` y `"Cámara de Congelados"` dados de alta y activos.
+        *   **When** El Administrador registra el insumo `"Lomo Vacuno"` con stock inicial `12` KG seleccionando `"Heladera de Carnes"`.
+        *   **Then** Se crea el insumo y una línea `WarehouseStock (insumo, "Heladera de Carnes", 12.0000)`; el catálogo muestra `Stock Bodega: 12 KG` con desglose `Heladera de Carnes: 12 KG`.
+    *   **Escenario 2 (Reabastecimiento a un segundo sub-sector):**
+        *   **Given** El insumo `"Lomo Vacuno"` con `12` KG en `"Heladera de Carnes"`.
+        *   **When** El Administrador reabastece `8` KG seleccionando `"Cámara de Congelados"`.
+        *   **Then** El total de bodega es `20` KG, con desglose `Heladera de Carnes: 12 KG` y `Cámara de Congelados: 8 KG`.
+    *   **Escenario 3 (Extracción con saldo insuficiente en el sector elegido):**
+        *   **Given** El insumo `"Lomo Vacuno"` con `12` KG en `"Heladera de Carnes"` y `8` KG en `"Cámara de Congelados"`.
+        *   **When** Un operario intenta extraer `15` KG indicando origen `"Cámara de Congelados"`.
+        *   **Then** El backend rechaza atómicamente con `HTTP 422` (saldo del sector `8` < `15`), sin descontar de otros sectores.
+    *   **Escenario 4 (Bloqueo de borrado de sector con saldo):**
+        *   **Given** El sub-sector `"Heladera de Carnes"` con `12` KG de `"Lomo Vacuno"`.
+        *   **When** El Administrador intenta eliminar o desactivar ese sector.
+        *   **Then** El sistema responde `HTTP 409 Conflict` indicando que existen existencias asociadas.
+*   **Estado:** 📋 Spec aprobada — pendiente de implementación (`TK-096` / `TK-096-FE`).
 
 
 ### US-017: Configuración General del Restaurante y Parámetros FEFO

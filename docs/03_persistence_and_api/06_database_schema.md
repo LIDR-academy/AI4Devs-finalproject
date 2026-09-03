@@ -24,6 +24,7 @@ erDiagram
     users ||--o{ shift_reconciliations : "cierra_turno"
 
     insumos ||--o{ warehouse_stocks : "posee_existencias"
+    storage_locations ||--o{ warehouse_stocks : "aloja_existencias"
     insumos ||--o{ remanentes : "se_convierte_en"
     insumos ||--o{ stock_movements : "registra_transaccion"
     insumos ||--o{ recipe_ingredients : "forma_parte_de"
@@ -69,8 +70,18 @@ erDiagram
     warehouse_stocks {
         uuid id PK
         uuid insumo_id FK
-        enum location
+        uuid storage_location_id FK "US-025: sub-sector físico"
         decimal quantity "CHECK (quantity >= 0)"
+        datetime updated_at
+    }
+
+    storage_locations {
+        uuid id PK
+        string name UK
+        enum type "WAREHOUSE | KITCHEN"
+        string description
+        boolean is_active
+        datetime created_at
         datetime updated_at
     }
 
@@ -150,7 +161,11 @@ erDiagram
 | `users` | `pin_hash` | `VARCHAR(255)` | `NULLABLE` | Alta (`Salted PIN Hash`) | PIN de 4 dígitos para cocina táctil |
 | `users` | `must_change_pin` | `BOOLEAN` | `NOT NULL DEFAULT true` | Ninguna | Bandera de rotación obligatoria de PIN en primer login (Guard 36) |
 | `insumos` | `conversion_factor` | `DECIMAL(10,2)` | `NOT NULL` | Ninguna | Factor de conversión entre unidad de compra y consumo |
-| `warehouse_stocks` | `quantity` | `DECIMAL(12,4)` | `CHECK (quantity >= 0)` | Ninguna | Cantidad física en depósito principal |
+| `warehouse_stocks` | `quantity` | `DECIMAL(12,4)` | `CHECK (quantity >= 0)` | Ninguna | Cantidad física del insumo en un sub-sector concreto de la bodega |
+| `warehouse_stocks` | `storage_location_id` | `UUID` | `FK → storage_locations(id)` · `UNIQUE (insumo_id, storage_location_id)` | Ninguna | Sub-sector físico de bodega donde reside esta existencia (US-025). `ON DELETE RESTRICT` |
+| `storage_locations` | `name` | `VARCHAR(120)` | `UNIQUE` | Ninguna | Nombre del sector físico (ej. `Heladera de Carnes`) |
+| `storage_locations` | `type` | `ENUM(WAREHOUSE, KITCHEN)` | `NOT NULL DEFAULT KITCHEN` | Ninguna | Clasifica el sector como sub-bodega o área de cocina |
+| `storage_locations` | `is_active` | `BOOLEAN` | `NOT NULL DEFAULT true` | Ninguna | Baja lógica; no puede pasar a `false` si tiene `warehouse_stocks` con saldo (US-025) |
 | `remanentes` | `current_quantity` | `DECIMAL(12,4)` | `CHECK (current_quantity >= 0)` | Ninguna | Cantidad remanente utilizable en cocina |
 | `remanentes` | `calculated_expiration_date` | `TIMESTAMP` | `INDEX (status, exp_date)` | Ninguna | Fecha FEFO calculada según TRR |
 | `system_settings` | `idle_timeout_minutes` | `INTEGER` | `NOT NULL DEFAULT 15` | Ninguna | Minutos de inactividad táctil antes de cerrar sesión automáticamente |
@@ -225,7 +240,19 @@ VALUES
     NOW(),
     NOW()
 );
+
+-- Sectores Físicos de Almacenamiento (US-016 / US-025) — idempotentes por `name` (UNIQUE)
+INSERT INTO storage_locations (id, name, type, description, is_active, created_at, updated_at)
+VALUES
+('loc-seed-unclassified', 'Bodega Principal – Sin clasificar', 'WAREHOUSE', 'Sector por defecto para existencias migradas desde MAIN_WAREHOUSE', true, NOW(), NOW()),
+('loc-seed-dry',          'Bodega de Secos',          'WAREHOUSE', 'Estantería de secos y no perecederos', true, NOW(), NOW()),
+('loc-seed-meat-fridge',  'Heladera de Carnes',       'WAREHOUSE', 'Refrigerador dedicado a proteínas', true, NOW(), NOW()),
+('loc-seed-freezer',      'Cámara de Congelados',     'WAREHOUSE', 'Cámara de congelación', true, NOW(), NOW()),
+('loc-seed-kitchen-fridge','Refrigerador Principal Cocina','KITCHEN','Destino de remanentes en línea de fríos', true, NOW(), NOW())
+ON CONFLICT (name) DO UPDATE SET type = EXCLUDED.type, description = EXCLUDED.description;
 ```
+
+> **Migración de datos (US-025):** al aplicar la migración que introduce `warehouse_stocks.storage_location_id`, cada fila existente cuyo antiguo valor `location = 'MAIN_WAREHOUSE'` se re-apunta al sector semilla `loc-seed-unclassified`. La columna `location` antigua se elimina en la misma migración. Ninguna migración aplicada previamente se modifica.
 
 ---
 
@@ -349,13 +376,18 @@ model RolePermission {
 }
 
 model StorageLocation {
-  id          String       @id @default(uuid())
+  id          String       @id @default(uuid()) @db.Uuid
   name        String       @unique
   type        LocationType @default(KITCHEN)
   description String?
   isActive    Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+  // US-025: existencias de bodega alojadas en este sub-sector
+  warehouseStocks WarehouseStock[]
+
+  @@map("storage_locations")
 }
 
 model SystemSettings {
@@ -370,18 +402,20 @@ model SystemSettings {
 }
 
 model WarehouseStock {
-  id        String       @id @default(uuid()) @db.Uuid
-  insumoId  String       @map("insumo_id") @db.Uuid
-  location  LocationType
-  quantity  Decimal      @db.Decimal(12, 4)
-  updatedAt DateTime     @updatedAt @map("updated_at")
+  id                String   @id @default(uuid()) @db.Uuid
+  insumoId          String   @map("insumo_id") @db.Uuid
+  storageLocationId String   @map("storage_location_id") @db.Uuid
+  quantity          Decimal  @db.Decimal(12, 4)
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   // Relaciones e Integridad Referencial
-  insumo Insumo @relation(fields: [insumoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  insumo          Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  // US-025: RESTRICT — un sub-sector con existencias no puede borrarse (Invariante 4 de dominio)
+  storageLocation StorageLocation @relation(fields: [storageLocationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   // Restricciones e Índices
-  @@unique([insumoId, location], name: "idx_unique_insumo_location")
-  @@index([location])
+  @@unique([insumoId, storageLocationId], name: "idx_unique_insumo_storage_location")
+  @@index([storageLocationId])
   @@map("warehouse_stocks")
 }
 
@@ -509,8 +543,8 @@ Para garantizar el rendimiento óptimo del motor PostgreSQL ante alta concurrenc
 1. **Índice FEFO en `remanentes (status, calculated_expiration_date)`**:
    - *Justificación:* La pantalla táctil del cocinero consulta constantemente los insumos abiertos y utilizables (`status = 'ACTIVE'`) ordenados del de vencimiento más próximo al más lejano (política FEFO). Un índice compuesto ordenado permite resolver esta consulta con un costo de búsqueda logarítmico $O(\log N)$ directo sobre el índice.
 
-2. **Índice Único en `warehouse_stocks (insumo_id, location)`**:
-   - *Justificación:* Asegura la consistencia lógica de que no existan registros de stock duplicados para el mismo insumo en una ubicación física específica.
+2. **Índice Único en `warehouse_stocks (insumo_id, storage_location_id)`** (US-025):
+   - *Justificación:* Asegura que exista **como máximo una** línea de stock por par insumo/sub-sector — el reabastecimiento sobre un sector ya existente hace `UPDATE` de esa fila, no `INSERT` de una duplicada. El índice secundario en `storage_location_id` resuelve en $O(\log N)$ la comprobación "¿este sub-sector tiene existencias?" que bloquea su borrado/desactivación (Invariante 4).
 
 3. **Índice Cronológico Compuesto en `stock_movements (created_at, insumo_id)`**:
    - *Justificación:* Las consultas en el panel administrativo del backoffice suelen listar transacciones de inventario filtrando por rangos de fecha y agrupando por insumo.

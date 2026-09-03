@@ -152,6 +152,38 @@ Reemplaza el `StatusBadge` tri-color heredado. Escala completa, sin cortar a la 
 
 ---
 
+## 🧾 v4.2.0 — Sub-Sectores de Bodega y Desglose de Stock (US-016 / US-025)
+
+> **Amplía** v4.1.0 sin tocar tokens cromáticos. Cubierto por `TK-074-FE` (destino de cocina dinámico + gestión) y `TK-096-FE` (selectores de sub-sector + desglose). No introduce componentes visuales nuevos: reutiliza `<select class="input-touch">`, `ErrorBanner` y el patrón de fila expandible.
+
+### 1. `StorageSectorSelect` — selector de sub-sector obligatorio
+
+* `<select class="input-touch">` (≥ 48px) con `<label>` asociado por `htmlFor`. Usado en 3 sitios: alta de insumo (`CreateInsumoModal`), reabastecimiento (`RestockInsumoModal`) y sector de origen en extracción (`WarehouseExtractionModal`).
+* Opciones desde `GET /api/v1/locations` filtradas por `isActive` y por `type`: `WAREHOUSE` para bodega, `KITCHEN` para el destino de cocina de la extracción. **Prohibido** el array de literales hardcodeado (`KITCHEN_FRIDGE`/`PREP`/`LINE`) que existe hoy — fallback tolerado solo si la llamada falla (patrón `useAvailableInsumos`).
+* Primera opción `value=""` deshabilitada: `— Seleccionar sector —`. Submit bloqueado + `ErrorBanner` inline (`El sector de bodega es obligatorio`) si queda vacío.
+
+### 2. Desglose de stock por sector en el catálogo
+
+* La columna del `InsumoCatalogPanel` pasa de `Stock en Bodega Principal` a **`Stock en Bodega (total)`** mostrando la suma (`warehouseStock`).
+* Disclosure por fila (`▸`/`▾`, target ≥ 44px, `aria-expanded`, `aria-controls`) que revela una **lista de definición** (`<dl>`), no una tabla anidada: un par `sector — cantidad unidad` por cada `stockByLocation[]`, con `--space-2xs` de gap y `--fs-sm`. Sin existencias → `<span>` atenuado `Sin stock en bodega`.
+
+### 3. Saldo por sector y errores en extracción
+
+* Al elegir el sector de origen, junto al insumo seleccionado se muestra `Disponible aquí: <n> <u>` (`--fs-sm`, `--text-secondary`), leído de `stockByLocation`.
+* El saldo insuficiente NO se previene en cliente con lógica duplicada: se envía la petición y el `422` (`INSUFFICIENT_STOCK`) se traduce vía `errorMessageMapper` a `ErrorBanner` (`No hay suficiente stock de «X» en «sector»: disponible N, solicitado M`). Guard 38 — sin `window.alert/confirm`.
+
+### 4. Sector con existencias en `LocationsManagementModal`
+
+* Cuando `loc.hasStock`, los botones `Power` (desactivar) y `Trash2` (borrar) van `aria-disabled` + `title="El sector tiene existencias asociadas"`; el `409` del backend se traduce con el mismo mapper.
+
+### Guards aplicables
+
+* **Guard 29:** cero `style={{}}` inline; toda medida por clase desde `--space-*`/`--fs-*`/`--fw-*`; clases de un solo componente en su `*.module.css` colocalizado.
+* **Guard 38:** errores solo vía `ErrorBanner` + `errorMessageMapper`.
+* **WCAG 2.1 AAA:** `<label>` por cada `<select>`, targets táctiles ≥ 48px (44px para el disclosure), contraste auditado en ambos turnos.
+
+---
+
 ## 📝 Visión General y Estilo Visual
 **v2.0.0 — Dirección "Señal Industrial":** reemplaza el tema *Dark Petrol & Charcoal* (v1.x) para la **pantalla táctil de cocina** (login por PIN, consulta FEFO, extracción, alertas críticas, cierre de turno). El sistema utiliza negro industrial casi puro, un único ámbar de seguridad como acento estructural/de marca y un rojo de alerta reservado en exclusiva a la urgencia FEFO crítica — inspirado en señalética de planta, pensado para leerse a distancia de brazo bajo la luz intensa de cocina. Tipografía condensada en titulares (`Oswald`) + grotesca robusta en cuerpo/datos (`Barlow`), bordes gruesos y esquinas casi rectas en lugar de sombras suaves.
 

@@ -410,7 +410,153 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Insumo not found
+          description: Insumo not found, or storageLocationId does not exist / is not WAREHOUSE-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/locations:
+    get:
+      summary: List physical storage locations (US-016)
+      operationId: listStorageLocations
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of storage locations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListStorageLocationsResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a physical storage location (US-016)
+      operationId: createStorageLocation
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStorageLocationRequest'
+      responses:
+        '201':
+          description: Storage location created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageLocation'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/locations/{id}:
+    put:
+      summary: Update or (de)activate a storage location (US-016)
+      operationId: updateStorageLocation
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStorageLocationRequest'
+      responses:
+        '200':
+          description: Storage location updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageLocation'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Storage location not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: US-025 — cannot deactivate a location that still holds stock
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a storage location (US-016)
+      operationId: deleteStorageLocation
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Storage location deleted
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: US-025 — cannot delete a location that still holds stock
           content:
             application/json:
               schema:
@@ -895,11 +1041,19 @@ components:
       required:
         - insumoId
         - quantity
+        - fromStorageLocationId
       properties:
         insumoId:
           type: string
         quantity:
           $ref: '#/components/schemas/DecimalString'
+        fromStorageLocationId:
+          type: string
+          description: >-
+            US-025 — id of the WAREHOUSE-type, active StorageLocation the stock is
+            drawn from. The backend validates the balance of the
+            (insumoId, fromStorageLocationId) line only. 404 if it does not exist,
+            422 if the insumo has no stock line in that sector.
         toLocation:
           type: string
           enum: [KITCHEN_FRIDGE, KITCHEN_FREEZER, KITCHEN_PANTRY, KITCHEN_PREP]
@@ -926,6 +1080,11 @@ components:
         insumoName:
           type: string
         quantityExtracted:
+          $ref: '#/components/schemas/DecimalString'
+        fromStorageLocationId:
+          type: string
+          description: US-025 — sub-sector the stock was drawn from.
+        remainingSectorStock:
           $ref: '#/components/schemas/DecimalString'
         remainingWarehouseStock:
           $ref: '#/components/schemas/DecimalString'
@@ -960,11 +1119,23 @@ components:
           format: date-time
           enum: [ACTIVE, CONSUMED, DISCARDED]
 
+    StockByLocationEntry:
+      type: object
+      description: US-025 — quantity of one insumo held in one warehouse sub-sector.
+      properties:
+        storageLocationId:
+          type: string
+        storageLocationName:
+          type: string
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+
     CreateInsumoRequest:
       type: object
       required:
         - name
         - unitOfMeasure
+        - storageLocationId
       properties:
         name:
           type: string
@@ -973,6 +1144,15 @@ components:
           type: string
           enum: [KG, L, UNITS]
           example: "KG"
+        storageLocationId:
+          type: string
+          description: >-
+            US-025 — required. Id of the WAREHOUSE-type, active StorageLocation
+            where the initial stock is deposited. 400 if missing, 404 if it does
+            not exist or is not WAREHOUSE-type.
+          example: "loc-seed-dry"
+        initialWarehouseStock:
+          $ref: '#/components/schemas/DecimalString'
         unitCost:
           $ref: '#/components/schemas/DecimalString'
           description: Optional cost per purchase unit of unitOfMeasure (e.g. cost per KG), used to valuate waste reports in currency (US-019). Nullable — legacy insumos may have no cost recorded. Unlike other DecimalString fields (up to 4 decimals), the HTTP layer enforces at most 2 decimals and 10 integer digits here to match the Decimal(12,2) column exactly.
@@ -989,6 +1169,10 @@ components:
           enum: [KG, L, UNITS]
         warehouseStock:
           $ref: '#/components/schemas/DecimalString'
+        stockByLocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockByLocationEntry'
         unitCost:
           $ref: '#/components/schemas/DecimalString'
           description: Nullable — absent when the insumo has no cost recorded yet. At most 2 decimals (see CreateInsumoRequest.unitCost).
@@ -997,11 +1181,18 @@ components:
       type: object
       required:
         - quantity
+        - storageLocationId
       properties:
         quantity:
           type: number
           exclusiveMinimum: 0
           example: 20
+        storageLocationId:
+          type: string
+          description: >-
+            US-025 — required. WAREHOUSE-type, active StorageLocation to add the
+            received quantity to; the (insumo, sector) line is created if absent.
+          example: "loc-seed-freezer"
 
     RestockInsumoResponse:
       type: object
@@ -1010,10 +1201,65 @@ components:
           type: string
         insumoName:
           type: string
+        storageLocationId:
+          type: string
         quantityAdded:
+          $ref: '#/components/schemas/DecimalString'
+        newSectorStock:
           $ref: '#/components/schemas/DecimalString'
         newWarehouseStock:
           $ref: '#/components/schemas/DecimalString'
+
+    StorageLocation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: "Heladera de Carnes"
+        type:
+          type: string
+          enum: [WAREHOUSE, KITCHEN]
+        description:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+
+    CreateStorageLocationRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          minLength: 2
+        type:
+          type: string
+          enum: [WAREHOUSE, KITCHEN]
+        description:
+          type: string
+
+    UpdateStorageLocationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+        type:
+          type: string
+          enum: [WAREHOUSE, KITCHEN]
+        description:
+          type: string
+        isActive:
+          type: boolean
+
+    ListStorageLocationsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/StorageLocation'
 
     RemanenteItem:
       type: object
