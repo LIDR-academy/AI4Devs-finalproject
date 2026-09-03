@@ -195,6 +195,16 @@ graph TD
     TK086FE --> TK087FE
     TK087FE --> TK088FE
 
+    %% Correccion de consistencia de US-023: contenido de ruta inline
+    US024["📝 US-024: Contenido de Ruta Inline"]
+    TK089FE["🎫 TK-089-FE: Reportes Inline"]
+    TK090FE["🎫 TK-090-FE: Ajustes Sub-Rutas Inline"]
+    EpicShared --> US024
+    US024 --> TK089FE
+    US024 --> TK090FE
+    TK085FE --> TK089FE
+    TK089FE --> TK090FE
+
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
     classDef roadmap fill:#FFC300,stroke:#FF5733,stroke-width:2px,color:#000;
@@ -204,8 +214,8 @@ graph TD
 
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US019,US020,US021,US022,US023 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE,TK081FE,TK082FE,TK083FE,TK084FE,TK085FE,TK086FE,TK087FE,TK088FE tk;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US019,US020,US021,US022,US023,US024 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE,TK081FE,TK082FE,TK083FE,TK084FE,TK085FE,TK086FE,TK087FE,TK088FE,TK089FE,TK090FE tk;
 ```
 
 ---
@@ -240,5 +250,6 @@ graph TD
 | **📦 Bodega (`stock`)** | [US-021: Advertencia Apertura Duplicada](11_user_stories/stock/US-021.md) | [TK-080: Filtro `insumoId`](12_tickets/stock/backend/TK-080.md) | [TK-080-FE: Advertencia en Extracción](12_tickets/stock/frontend/TK-080-FE.md) | ✅ Done |
 | **🛠️ Shared (`shared`)** | [US-022: Sistema FEFO Día/Noche](11_user_stories/shared/US-022.md) | N/A | [TK-081-FE](12_tickets/shared/frontend/TK-081-FE.md) → [082](12_tickets/shared/frontend/TK-082-FE.md) → [083](12_tickets/shared/frontend/TK-083-FE.md) → [084](12_tickets/shared/frontend/TK-084-FE.md) | ✅ Done |
 | **🛠️ Shared (`shared`)** | [US-023: Navegación por Rutas y Shell FEFO](11_user_stories/shared/US-023.md) | N/A | ✅ [TK-085-FE](12_tickets/shared/frontend/TK-085-FE.md) → [086](12_tickets/shared/frontend/TK-086-FE.md) → [087](12_tickets/shared/frontend/TK-087-FE.md) → [088](12_tickets/shared/frontend/TK-088-FE.md) | ✅ Done |
+| **🛠️ Shared (`shared`)** | [US-024: Contenido de Ruta Inline](11_user_stories/shared/US-024.md) | N/A | 📋 [TK-089-FE](12_tickets/shared/frontend/TK-089-FE.md) → [090](12_tickets/shared/frontend/TK-090-FE.md) | 📋 Approved Spec |
 
 

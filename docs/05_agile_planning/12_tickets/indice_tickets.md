@@ -67,6 +67,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-086-FE** | `shared` | **Medio** | **Media** | 5 SP | Depende de `TK-085-FE`. Botón de acción circular, chip de urgencia de 4 niveles y botón de fila con prioridad; separa la capa de color de acción de la de estado. | 🟢 P2 - Media |
 | **TK-087-FE** | `shared` | **Medio** | **Media** | 3 SP | Depende de `TK-086-FE`. Panel Estado de 3 cubetas + leyenda numérica en la health bar + grid Acciones\|Estado. | 🟢 P2 - Media |
 | **TK-088-FE** | `shared` | **Alto** | **Media** | 3 SP | Depende de `TK-085-FE`..`TK-087-FE`. Auditoría de contraste AAA 7:1 (`SK-21`) en ambos turnos — cierra la decisión abierta #3 del artefacto Sistema FEFO. | 🟡 P1 - Alta |
+| **TK-089-FE** | `shared` | **Medio** | **Media** | 3 SP | Depende de `TK-085-FE`. `US-024`: `ReportsDashboard` gana modo `embedded`; `/reportes` deja de abrirse como `<Modal>` flotante. | 🟢 P2 - Media |
+| **TK-090-FE** | `shared` | **Medio** | **Media** | 8 SP | Depende de `TK-085-FE`, `TK-089-FE`. `US-024`: `/ajustes` pasa a layout route con 5 sub-rutas inline deep-linkables; los 5 paneles admin ganan modo `embedded`. | 🟢 P2 - Media |
 
 ---
 
@@ -140,6 +142,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-086-FE** | [US-023](../11_user_stories/shared/US-023.md) | Componentes de la Lámina "Aplicación" (Botón Circular, Chip 4 Niveles, Botón de Fila) | `shared` | 5 | Should Have | [shared/frontend/TK-086-FE.md](shared/frontend/TK-086-FE.md) |
 | **TK-087-FE** | [US-023](../11_user_stories/shared/US-023.md) | Panel "Estado" de 3 Cubetas + Leyenda Numérica + Grid Acciones\|Estado | `shared` | 3 | Should Have | [shared/frontend/TK-087-FE.md](shared/frontend/TK-087-FE.md) |
 | **TK-088-FE** | [US-023](../11_user_stories/shared/US-023.md) | Auditoría de Contraste AAA 7:1 del Sistema FEFO (Ambos Turnos) | `shared` | 3 | Should Have | [shared/frontend/TK-088-FE.md](shared/frontend/TK-088-FE.md) |
+| **TK-089-FE** | [US-024](../11_user_stories/shared/US-024.md) | Reportes Inline (sin `<Modal>` flotante) | `shared` | 3 | Should Have | [shared/frontend/TK-089-FE.md](shared/frontend/TK-089-FE.md) |
+| **TK-090-FE** | [US-024](../11_user_stories/shared/US-024.md) | Ajustes con Sub-Rutas Inline Deep-Linkables | `shared` | 8 | Should Have | [shared/frontend/TK-090-FE.md](shared/frontend/TK-090-FE.md) |
 ---
 
 ## 🗂️ 3. Resumen de Fichas Técnicas de Tickets por Módulo
@@ -228,6 +232,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-086-FE: Componentes de la Lámina "Aplicación"](shared/frontend/TK-086-FE.md)** (Frontend) — `US-023`: botón de acción circular (72px), chip de urgencia de 4 niveles (`Hoy`/`Mañana`/`2 Días`/`4 Días`, marca + texto) y botón de fila con variante crítica; separa la capa de color de acción de la de estado/urgencia.
 *   **[TK-087-FE: Panel "Estado" de 3 Cubetas + Leyenda Numérica](shared/frontend/TK-087-FE.md)** (Frontend) — `US-023`: el resumen del tablero pasa de 2 tarjetas a 3 cubetas de severidad alineadas con la `FEFOInventoryHealthBar`, que gana leyenda numérica; grid `Acciones|Estado`.
 *   **[TK-088-FE: Auditoría de Contraste AAA 7:1 del Sistema FEFO](shared/frontend/TK-088-FE.md)** (Frontend) — `US-023`: ejecuta `SK-21` sobre las 5 rutas en ambos turnos, verifica cada par color/fondo con fórmula WCAG real contra el fondo real, corrige tokens que fallen y archiva evidencia. Cierra la decisión abierta #3 del artefacto Sistema FEFO.
+*   **[TK-089-FE: Reportes Inline (sin `<Modal>` flotante)](shared/frontend/TK-089-FE.md)** (Frontend) — `US-024`: `ReportsDashboard` gana `embedded`; `/reportes` se renderiza inline en el `<main>` del shell, consistente con `/estaciones`/`/recetas`. Limpia `isOpen`/`onClose`/`AccessDeniedState` muertos.
+*   **[TK-090-FE: Ajustes con Sub-Rutas Inline Deep-Linkables](shared/frontend/TK-090-FE.md)** (Frontend) — `US-024`: `/ajustes` pasa a layout route (`<nav>` de sub-pestañas + `<Outlet>`) con 5 sub-rutas deep-linkables (`configuracion`/`personal`/`roles`/`movimientos`/`catalogo`); los 5 paneles admin ganan `embedded`; `*Modal.tsx` renombrados a `*Panel.tsx`.
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
 *   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)

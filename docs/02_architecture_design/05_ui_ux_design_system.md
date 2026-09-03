@@ -92,13 +92,20 @@ inputs:
   | Inventario | `/` | Tablero FEFO de cocina (remanentes activos, health bar, filtros de estación) | Operario autenticado |
   | Estaciones | `/estaciones` | Extracción de bodega (operario); catálogo/reabastecimiento de insumos y ubicaciones (acciones solo `ADMIN`, ocultas a operario) | Operario autenticado (ruta); `ADMIN` (acciones de gestión) |
   | Recetas | `/recetas` | Recetario: consulta (operario); alta de recetas (solo `ADMIN`, oculta a operario) | Operario autenticado (ruta); `ADMIN` (alta) |
-  | Reportes | `/reportes` | Dashboard de mermas + KPIs (TRR, valorización) | **`ADMIN`** |
-  | Ajustes | `/ajustes` | Configuración del restaurante + usuarios + roles + historial de movimientos | **`ADMIN`** |
+  | Reportes | `/reportes` | Dashboard de mermas + KPIs (TRR, valorización) — **inline** | **`ADMIN`** |
+  | Ajustes | `/ajustes` | Redirige a `/ajustes/configuracion` | **`ADMIN`** |
+  | Ajustes › Configuración | `/ajustes/configuracion` | Configuración del restaurante y parámetros FEFO | **`ADMIN`** |
+  | Ajustes › Personal | `/ajustes/personal` | Alta y bloqueo de operarios | **`ADMIN`** |
+  | Ajustes › Roles | `/ajustes/roles` | Roles y matriz de permisos | **`ADMIN`** |
+  | Ajustes › Movimientos | `/ajustes/movimientos` | Historial de movimientos de stock | **`ADMIN`** |
+  | Ajustes › Catálogo | `/ajustes/catalogo` | Catálogo maestro de insumos y recetas | **`ADMIN`** |
+
+* **Contenido de ruta = inline, nunca `<Modal>` (`US-024`):** el `element` de una ruta de nivel superior (o sub-ruta) se renderiza **inline** dentro del `<main>` del shell — nunca como `<Modal>` (overlay flotante `position: fixed; z-index: 1000`). Los `<Modal>` quedan reservados a **acciones transitorias** (formularios de alta/edición, confirmaciones, selectores) lanzadas *desde dentro* de una ruta. `/ajustes` es un **layout route** con `<nav>` de sub-pestañas (`<NavLink>`) + `<Outlet>`; sus 5 sub-rutas son deep-linkables y recargables. Descubierto tras `US-023`: `ReportsDashboard` se montó verbatim en `/reportes` conservando su `<Modal>`, quedando visualmente inconsistente con `/estaciones`/`/recetas` (paneles inline).
 
 * **Gating de acción por rol (dentro de rutas de operario):** los componentes reutilizados en rutas de menor restricción que su montaje anterior (`InsumoCatalogPanel`, `RecipeCatalogPanel`) reciben un prop `canManage` (default `false`) que oculta cada `<button>` de mutación cuyo endpoint exige `ADMIN`. Un botón que devolvería 403 no debe renderizarse (evita la falsa regresión de "cero cambio funcional").
 
 * **`<ProtectedRoute requiredRole?>`:** envuelve el `<Outlet />`. Sin sesión → render de `PinLoginModal` (comportamiento actual). Con sesión pero sin el rol requerido → `<Navigate to="/" replace />`. Alinea con la autoredirección por permisos que introducirá `US-015` (Dynamic RBAC) sin bloquearse a ella: hoy compara `currentUser.role`.
-* **Operaciones transitorias:** `WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard` **siguen siendo modales** lanzados desde su ruta padre — no son rutas. Nav activa con `border-bottom: 3px solid var(--color-primary)`.
+* **Operaciones transitorias:** `WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard`, y los formularios de alta/edición internos de las secciones de Ajustes (alta de operario, edición de configuración, alta de insumo/receta, reabastecimiento, confirmaciones de borrado) **siguen siendo modales** lanzados desde su ruta padre — no son rutas. Nav activa con `border-bottom: 3px solid var(--color-primary)`.
 
 ### 2. `ActionButton` — botón de acción circular
 

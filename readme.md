@@ -60,7 +60,7 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 ### **1.3. Diseño y experiencia de usuario:**
 La aplicación sigue el **Sistema de Diseño FEFO** (`US-022`/`US-023`, ver [`DESIGN.md`](./DESIGN.md) y [`docs/02_architecture_design/05_ui_ux_design_system.md`](./docs/02_architecture_design/05_ui_ux_design_system.md)): superficies opacas de alto contraste con dos turnos conmutables — **Día** (comanda de papel sobre fondo claro) y **Noche** (pizarra de turno sobre fondo oscuro) — optimizada para pantallas táctiles de tablets de 10 pulgadas resistentes a la grasa de cocina:
 *   Botones y controles de gran tamaño (mínimo 48px, PIN Pad 64px) para evitar errores de selección.
-*   Navegación en un shell de rutas (barra lateral tipo comanda + topbar) con secciones enlazables y acceso por rol.
+*   Navegación en un shell de rutas (barra lateral tipo comanda + topbar) con secciones enlazables y acceso por rol; el contenido de cada ruta se muestra inline y Ajustes tiene sub-rutas propias (Configuración, Personal, Roles, Movimientos, Catálogo).
 *   Indicadores de urgencia con **color + texto** (nunca solo color): chip de 4 niveles (`Hoy` / `Mañana` / `2 Días` / `4 Días`) y barra "Salud FEFO" con leyenda numérica.
 *   PIN Pad digital integrado para autenticación instantánea sin teclados físicos.
 
@@ -164,7 +164,7 @@ restostock-monorepo/
 ├── apps/
 │   ├── frontend/             # Frontend React 18 + Vite + react-router-dom 7
 │   │   └── src/
-│       │       ├── app/          # Shell de rutas: router.tsx, AppShell, ProtectedRoute, routes/
+│       │       ├── app/          # Shell de rutas: router.tsx, AppShell, ProtectedRoute, routes/ (Inventario, Estaciones, Recetas, Reportes, Ajustes/{configuracion,personal,roles,movimientos,catalogo})
 │       │       ├── shared/       # UI reutilizable (ActionButton, UrgencyChip, RowButton, Modal…)
 │       │       └── features/     # Slices del Cliente (auth, catalog, stock, kitchen, recipes, reports, security, settings)
 │       │

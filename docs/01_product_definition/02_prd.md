@@ -65,7 +65,7 @@ El sistema optimiza la rotación de inventarios forzando una lógica FEFO (First
 *   **Cierre de turno y conciliación física:** Flujo de fin de jornada para que el operario declare el inventario real en cocina y el sistema genere de manera guiada los registros de merma y discrepancias.
 *   **Dashboard y reporte de mermas visibles:** Panel web administrativo para que el administrador visualice en tiempo real los descartes acumulados agrupados por insumo y causa, haciendo la merma visible de inmediato.
 
-La identidad visual de la aplicación sigue el **Sistema FEFO** (turno Día/Noche, `US-022`) — ver [`DESIGN.md`](../../DESIGN.md) y [`docs/02_architecture_design/05_ui_ux_design_system.md`](../02_architecture_design/05_ui_ux_design_system.md) para el detalle completo de tokens, tipografía y ergonomía táctil. La navegación se organiza en un **shell de rutas de nivel superior** (Inventario, Estaciones, Recetas, Reportes, Ajustes) con acceso por rol (`US-023`), en lugar de un tablero único con menús superpuestos.
+La identidad visual de la aplicación sigue el **Sistema FEFO** (turno Día/Noche, `US-022`) — ver [`DESIGN.md`](../../DESIGN.md) y [`docs/02_architecture_design/05_ui_ux_design_system.md`](../02_architecture_design/05_ui_ux_design_system.md) para el detalle completo de tokens, tipografía y ergonomía táctil. La navegación se organiza en un **shell de rutas de nivel superior** (Inventario, Estaciones, Recetas, Reportes, Ajustes) con acceso por rol (`US-023`), en lugar de un tablero único con menús superpuestos; el contenido de cada ruta se muestra inline y Ajustes tiene sub-rutas enlazables (`US-024`).
 
 ### 1.3. Objetivos de Negocio y KPIs (Métricas de Éxito)
 *   **Reducción de Merma Desconocida:** Disminuir en un **30%** la diferencia financiera entre el inventario teórico del sistema y las auditorías físicas semanales en un periodo de 90 días.
@@ -369,6 +369,27 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
         *   **Given** Un operario con rol distinto de `ADMIN` autenticado en Inventario.
         *   **When** Intenta abrir la ruta de Reportes escribiendo su URL directamente.
         *   **Then** El sistema lo redirige a Inventario sin exponer el contenido de Reportes, de forma consistente con el gating que hoy aplica el menú de Administración.
+
+
+### US-024: Contenido de Ruta Inline y Consistente
+*   **Historia:** Como administrador, quiero que Reportes y cada sección de Ajustes se abran como una página normal dentro de la aplicación (no como una ventana emergente flotante) y tengan su propia dirección enlazable, para navegar entre ellas de forma coherente con el resto de la app y poder recargar o compartir el enlace de una sección concreta.
+*   **Complejidad:** M
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Justificación:** `US-023` montó los componentes existentes bajo rutas "tal cual" (alcance frontend-only, sin reescribirlos). `ReportsDashboard` era un `<Modal>`, así que `/reportes` abre un overlay flotante mientras `/estaciones` y `/recetas` se ven inline — inconsistencia detectada en la verificación en vivo del stack. `/ajustes` además es una única pantalla con 5 modales, sin URL para cada sección.
+*   **Decisiones de negocio consultadas con el humano (Guard 28):** `/ajustes` pasa a **sub-rutas deep-linkables** (`/ajustes/configuracion`, `/ajustes/personal`, `/ajustes/roles`, `/ajustes/movimientos`, `/ajustes/catalogo`) con barra de pestañas compartida, no pestañas sin URL. `/reportes` y todas las sub-rutas de `/ajustes` siguen siendo solo `ADMIN`. Los formularios transitorios (alta de operario, alta de insumo/receta, reabastecimiento, edición de configuración, confirmaciones de borrado) **siguen siendo `<Modal>`** lanzados desde dentro de su ruta.
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Reportes inline):**
+        *   **Given** Un administrador autenticado.
+        *   **When** Navega a Reportes.
+        *   **Then** El dashboard de mermas se muestra inline en la página, sin overlay oscuro ni card flotante ni botón "X" de cerrar; se sale navegando a otra sección.
+    *   **Escenario 2 (Sub-ruta de Ajustes deep-linkable):**
+        *   **Given** Un administrador que abre `/ajustes/personal` directamente en la barra de direcciones y recarga.
+        *   **When** Luego pulsa "Movimientos" en la barra de pestañas de Ajustes y después el botón "atrás" del navegador.
+        *   **Then** La recarga lo mantiene en Personal (URL `/ajustes/personal`); pulsar "Movimientos" cambia la URL a `/ajustes/movimientos`; y "atrás" lo devuelve a Personal — todo sin recargar la aplicación completa.
+    *   **Escenario 3 (Acceso por rol conservado):**
+        *   **Given** Un operario con rol distinto de `ADMIN`.
+        *   **When** Escribe `/ajustes/roles` en la barra de direcciones.
+        *   **Then** El sistema lo redirige a Inventario sin exponer el contenido.
 
 
 ---
