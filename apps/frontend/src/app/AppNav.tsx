@@ -12,7 +12,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Inventario', icon: <Package size={18} /> },
-  { to: '/estaciones', label: 'Estaciones', icon: <Boxes size={18} /> },
+  { to: '/bodega', label: 'Bodega', icon: <Boxes size={18} /> },
   { to: '/recetas', label: 'Recetas', icon: <ChefHat size={18} /> },
   { to: '/reportes', label: 'Reportes', icon: <BarChart3 size={18} />, adminOnly: true },
   { to: '/ajustes', label: 'Ajustes', icon: <Settings size={18} />, adminOnly: true },

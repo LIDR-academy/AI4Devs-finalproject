@@ -7,7 +7,7 @@ import { ProtectedRoute } from '../app/ProtectedRoute.js';
 import { InventarioRoute } from '../app/routes/InventarioRoute.js';
 import { RecetasRoute } from '../app/routes/RecetasRoute.js';
 import { ReportesRoute } from '../app/routes/ReportesRoute.js';
-import { EstacionesRoute } from '../app/routes/EstacionesRoute.js';
+import { BodegaRoute } from '../app/routes/BodegaRoute.js';
 import { AjustesLayout } from '../app/routes/ajustes/AjustesLayout.js';
 import { PersonalRoute, MovimientosRoute } from '../app/routes/ajustes/index.js';
 import { router } from '../app/router.js';
@@ -26,7 +26,8 @@ describe('TK-085-FE: forma del árbol de rutas real (app/router.tsx)', () => {
 
   it('la ruta index y las rutas de sesión existen', () => {
     expect(children.some((r) => r.index)).toBe(true);
-    expect(byPath('estaciones')).toBeDefined();
+    expect(byPath('bodega')).toBeDefined();
+    expect(byPath('estaciones')).toBeDefined(); // redirect legacy -> /bodega
     expect(byPath('recetas')).toBeDefined();
     expect(byPath('*')).toBeDefined();
   });
@@ -39,10 +40,10 @@ describe('TK-085-FE: forma del árbol de rutas real (app/router.tsx)', () => {
     }
   });
 
-  it('/ajustes es un layout route con 5 sub-rutas + index redirect (US-024)', () => {
+  it('/ajustes es un layout route con 4 sub-rutas + index redirect (US-024; catalogo retirada en TK-095-FE)', () => {
     const ajustes = byPath('ajustes');
     const subPaths = (ajustes?.children ?? []).map((r) => r.path).filter(Boolean);
-    expect(subPaths).toEqual(['configuracion', 'personal', 'roles', 'movimientos', 'catalogo']);
+    expect(subPaths).toEqual(['configuracion', 'personal', 'roles', 'movimientos']);
     expect((ajustes?.children ?? []).some((r) => r.index)).toBe(true); // <Navigate to="configuracion">
   });
 });
@@ -59,7 +60,7 @@ function renderAt(path: string) {
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<InventarioRoute />} />
-          <Route path="estaciones" element={<EstacionesRoute />} />
+          <Route path="bodega" element={<BodegaRoute />} />
           <Route path="recetas" element={<RecetasRoute />} />
           <Route
             path="reportes"
@@ -101,14 +102,14 @@ describe('TK-085-FE: Shell de rutas y ProtectedRoute (US-023)', () => {
   it('con sesión de operario, la ruta index renderiza el Tablero FEFO dentro del shell', async () => {
     AuthService.saveSession('t', { id: 'u1', name: 'Operario Uno', role: 'KITCHEN_STAFF' });
     renderAt('/');
-    await waitFor(() => expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Tablero FEFO de Cocina/i)).toBeInTheDocument());
     expect(screen.getByRole('navigation', { name: /Navegación principal/i })).toBeInTheDocument();
   });
 
   it('un operario no-ADMIN que abre /reportes es redirigido a Inventario (US-023 Escenario 2)', async () => {
     AuthService.saveSession('t', { id: 'u1', name: 'Operario Uno', role: 'KITCHEN_STAFF' });
     renderAt('/reportes');
-    await waitFor(() => expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Tablero FEFO de Cocina/i)).toBeInTheDocument());
     expect(screen.queryByText(/Reporte de Mermas y Eficiencia/i)).not.toBeInTheDocument();
   });
 
@@ -127,18 +128,18 @@ describe('TK-085-FE: Shell de rutas y ProtectedRoute (US-023)', () => {
     expect(screen.getByRole('link', { name: /Ajustes/i })).toBeInTheDocument();
   });
 
-  it('D-1: en /estaciones un operario no-ADMIN NO ve acciones de gestión (403 evitado)', async () => {
+  it('D-1: en /bodega un operario no-ADMIN NO ve acciones de gestión (403 evitado)', async () => {
     AuthService.saveSession('t', { id: 'u1', name: 'Operario Uno', role: 'KITCHEN_STAFF' });
-    renderAt('/estaciones');
-    await waitFor(() => expect(screen.getByText(/Estaciones y Bodega/i)).toBeInTheDocument());
+    renderAt('/bodega');
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Bodega' })).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /Extraer de Bodega/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Nuevo Insumo/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Ubicaciones/i })).not.toBeInTheDocument();
   });
 
-  it('D-1: en /estaciones un ADMIN sí ve "+ Nuevo Insumo" y "Ubicaciones"', async () => {
+  it('D-1: en /bodega un ADMIN sí ve "+ Nuevo Insumo" y "Ubicaciones"', async () => {
     AuthService.saveSession('t', { id: 'a1', name: 'Admin Uno', role: 'ADMIN' });
-    renderAt('/estaciones');
+    renderAt('/bodega');
     await waitFor(() => expect(screen.getByRole('button', { name: /Nuevo Insumo/i })).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /Ubicaciones/i })).toBeInTheDocument();
   });
@@ -153,7 +154,7 @@ describe('TK-085-FE: Shell de rutas y ProtectedRoute (US-023)', () => {
 
     AuthService.saveSession('t', { id: 'u1', name: 'Operario Uno', role: 'KITCHEN_STAFF' });
     renderAt('/ajustes/movimientos');
-    await waitFor(() => expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Tablero FEFO de Cocina/i)).toBeInTheDocument());
   });
 
   it('D-1: en /recetas el operario ve el recetario sin "+ Nueva Receta"; el ADMIN sí', async () => {

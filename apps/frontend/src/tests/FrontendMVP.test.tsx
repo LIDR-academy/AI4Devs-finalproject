@@ -17,7 +17,7 @@ describe('Frontend MVP: Tactile FEFO Dashboard & Stock Extraction Suite', () => 
   it('debe renderizar el Dashboard FEFO con las tarjetas de resumen y lista de remanentes', async () => {
     render(<App />);
 
-    expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tablero FEFO de Cocina/i)).toBeInTheDocument();
     expect(screen.getByText(/Chef Operario/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Extraer de Bodega/i })).toBeInTheDocument();
   });

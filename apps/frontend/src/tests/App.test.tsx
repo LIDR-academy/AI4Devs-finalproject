@@ -12,7 +12,7 @@ describe('TK-001-FE: Frontend Core & Design System TDD', () => {
 
   it('debe renderizar el encabezado principal de RestoStock', () => {
     render(<App />);
-    const heading = screen.getByText(/RestoStock FEFO Dashboard/i);
+    const heading = screen.getByText(/Tablero FEFO de Cocina/i);
     expect(heading).toBeInTheDocument();
   });
 

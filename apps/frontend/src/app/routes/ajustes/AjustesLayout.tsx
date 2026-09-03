@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Settings, Users, ShieldCheck, History, BookOpen } from 'lucide-react';
+import { Settings, Users, ShieldCheck, History } from 'lucide-react';
 import styles from './AjustesLayout.module.css';
 
 const SUB_TABS = [
@@ -8,7 +8,6 @@ const SUB_TABS = [
   { to: 'personal', label: 'Personal', icon: <Users size={18} /> },
   { to: 'roles', label: 'Roles', icon: <ShieldCheck size={18} /> },
   { to: 'movimientos', label: 'Movimientos', icon: <History size={18} /> },
-  { to: 'catalogo', label: 'Catálogo', icon: <BookOpen size={18} /> },
 ];
 
 /**

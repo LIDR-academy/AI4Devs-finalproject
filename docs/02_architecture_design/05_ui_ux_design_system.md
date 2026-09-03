@@ -90,7 +90,7 @@ inputs:
   | Ruta | Path | Contenido | Acceso |
   | :--- | :--- | :--- | :--- |
   | Inventario | `/` | Tablero FEFO de cocina (remanentes activos, health bar, filtros de estación) | Operario autenticado |
-  | Estaciones | `/estaciones` | Extracción de bodega (operario); catálogo/reabastecimiento de insumos y ubicaciones (acciones solo `ADMIN`, ocultas a operario) | Operario autenticado (ruta); `ADMIN` (acciones de gestión) |
+  | Bodega | `/bodega` | Extracción de bodega (operario); catálogo/reabastecimiento de insumos y ubicaciones (acciones solo `ADMIN`, ocultas a operario). *Renombrada de `/estaciones` en `TK-095-FE` WS-3 — la página siempre fue el catálogo de bodega; `/estaciones` redirige aquí.* | Operario autenticado (ruta); `ADMIN` (acciones de gestión) |
   | Recetas | `/recetas` | Recetario: consulta (operario); alta de recetas (solo `ADMIN`, oculta a operario) | Operario autenticado (ruta); `ADMIN` (alta) |
   | Reportes | `/reportes` | Dashboard de mermas + KPIs (TRR, valorización) — **inline** | **`ADMIN`** |
   | Ajustes | `/ajustes` | Redirige a `/ajustes/configuracion` | **`ADMIN`** |
@@ -98,9 +98,10 @@ inputs:
   | Ajustes › Personal | `/ajustes/personal` | Alta y bloqueo de operarios | **`ADMIN`** |
   | Ajustes › Roles | `/ajustes/roles` | Roles y matriz de permisos | **`ADMIN`** |
   | Ajustes › Movimientos | `/ajustes/movimientos` | Historial de movimientos de stock | **`ADMIN`** |
-  | Ajustes › Catálogo | `/ajustes/catalogo` | Catálogo maestro de insumos y recetas | **`ADMIN`** |
 
-* **Contenido de ruta = inline, nunca `<Modal>` (`US-024`):** el `element` de una ruta de nivel superior (o sub-ruta) se renderiza **inline** dentro del `<main>` del shell — nunca como `<Modal>` (overlay flotante `position: fixed; z-index: 1000`). Los `<Modal>` quedan reservados a **acciones transitorias** (formularios de alta/edición, confirmaciones, selectores) lanzadas *desde dentro* de una ruta. `/ajustes` es un **layout route** con `<nav>` de sub-pestañas (`<NavLink>`) + `<Outlet>`; sus 5 sub-rutas son deep-linkables y recargables. Descubierto tras `US-023`: `ReportsDashboard` se montó verbatim en `/reportes` conservando su `<Modal>`, quedando visualmente inconsistente con `/estaciones`/`/recetas` (paneles inline).
+  > *`Ajustes › Catálogo` (`/ajustes/catalogo`) se retiró en `TK-095-FE` WS-3: duplicaba exactamente `/bodega` (alta de insumos) + `/recetas` (alta de recetas) para un `ADMIN`.*
+
+* **Contenido de ruta = inline, nunca `<Modal>` (`US-024`):** el `element` de una ruta de nivel superior (o sub-ruta) se renderiza **inline** dentro del `<main>` del shell — nunca como `<Modal>` (overlay flotante `position: fixed; z-index: 1000`). Los `<Modal>` quedan reservados a **acciones transitorias** (formularios de alta/edición, confirmaciones, selectores) lanzadas *desde dentro* de una ruta. `/ajustes` es un **layout route** con `<nav>` de sub-pestañas (`<NavLink>`) + `<Outlet>`; sus 4 sub-rutas (`configuracion`/`personal`/`roles`/`movimientos`) son deep-linkables y recargables. Descubierto tras `US-023`: `ReportsDashboard` se montó verbatim en `/reportes` conservando su `<Modal>`, quedando visualmente inconsistente con `/bodega`/`/recetas` (paneles inline). Las **pantallas de autenticación** (login PIN, rotación forzada, reset por token) usan el layout `<AuthScreen>` (`TK-095-FE` WS-1) — pantalla completa sobre el fondo FEFO, no `<Modal>` sobre scrim.
 
 * **Gating de acción por rol (dentro de rutas de operario):** los componentes reutilizados en rutas de menor restricción que su montaje anterior (`InsumoCatalogPanel`, `RecipeCatalogPanel`) reciben un prop `canManage` (default `false`) que oculta cada `<button>` de mutación cuyo endpoint exige `ADMIN`. Un botón que devolvería 403 no debe renderizarse (evita la falsa regresión de "cero cambio funcional").
 

@@ -82,7 +82,7 @@ describe('TK-007-FE: Tactile PIN Login Screen TDD Suite', () => {
     // 3. ASSERT (Entonces): Verificación con los 3 Oráculos (Guard 20)
     // ORACULO UI: Redirección al Dashboard táctil de cocina y bienvenida a Carlos Gomez
     await waitFor(() => {
-      expect(screen.getByText(/RestoStock FEFO Dashboard/i)).toBeInTheDocument();
+      expect(screen.getByText(/Tablero FEFO de Cocina/i)).toBeInTheDocument();
       expect(screen.getByText(/Carlos Gomez \(Cocina\)/i)).toBeInTheDocument();
     });
 

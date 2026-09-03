@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Package, RefreshCw, ArrowRightLeft, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
+import { RefreshCw, ArrowRightLeft, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
 import { ActionButton } from '../../shared/components/ActionButton.js';
 import { bucketRemanentes, type UrgencyLevel } from '../../shared/components/urgency.js';
 import { KitchenService, RemanenteFEFOItem } from '../../features/kitchen/services/kitchen.service.js';
@@ -125,25 +125,20 @@ function useKitchenOpModals() {
   };
 }
 
+/* TK-095-FE WS-3 #13: el artefacto va directo a la rejilla Acciones|Estado — sin
+   h1 de página (el wordmark lateral + la pestaña activa identifican la vista).
+   Conciliar/Sincronizar quedan como una barra de acciones discreta alineada a la derecha. */
 const PageHeading: React.FC<{ isLoading: boolean; onSync: () => void; onReconcile: () => void }> = ({ isLoading, onSync, onReconcile }) => (
-  <header className="flex-between flex-wrap mb-6 gap-3">
-    <div>
-      <h1 className="flex-gap-md fs-2xl fw-bold">
-        <Package className="text-primary-color" /> RestoStock FEFO Dashboard
-      </h1>
-      <p className="text-secondary-color mt-1 fs-md">Sistema Táctil de Inventario en Tiempo Real para Cocinas Industriales</p>
-    </div>
-    <div className="flex-gap-md flex-wrap">
-      <button type="button" className="btn-touch btn-secondary" onClick={onReconcile} id="btn-open-reconciliation" title="Cierre de Turno y Conciliación">
-        <ClipboardCheck size={20} />
-        Conciliar Turno
-      </button>
-      <button type="button" className="btn-touch btn-secondary" onClick={onSync} disabled={isLoading} id="btn-sync-remanentes" title="Sincronizar Remanentes">
-        <RefreshCw size={20} className={isLoading ? 'spin' : ''} />
-        Sincronizar
-      </button>
-    </div>
-  </header>
+  <div className="flex-gap-md flex-wrap justify-end mb-4">
+    <button type="button" className="btn-touch btn-secondary" onClick={onReconcile} id="btn-open-reconciliation" title="Cierre de Turno y Conciliación">
+      <ClipboardCheck size={20} />
+      Conciliar Turno
+    </button>
+    <button type="button" className="btn-touch btn-secondary" onClick={onSync} disabled={isLoading} id="btn-sync-remanentes" title="Sincronizar Remanentes">
+      <RefreshCw size={20} className={isLoading ? 'spin' : ''} />
+      Sincronizar
+    </button>
+  </div>
 );
 
 const KitchenBoardTitle: React.FC = () => (

@@ -1,3 +1,18 @@
 .movement-filters-bar { margin-bottom: var(--space-4); }
 .movement-filter-input { min-width: 180px; }
-.movement-filter-date { min-width: 140px; }
+
+/* TK-095-FE WS-3 #14: los `<input type="date">` nativos ya usan `.input-touch`
+   (borde de sello + fondo FEFO). Aquí sólo se alinea el chrome nativo: el
+   indicador del selector toma la tinta del tema y el popup nativo sigue el
+   turno día/noche vía `color-scheme`. Un selector de fecha 100% custom queda
+   fuera de alcance (deuda aceptada). */
+.movement-filter-date {
+  min-width: 140px;
+  color-scheme: light dark;
+  font-family: var(--font-family-mono);
+}
+.movement-filter-date::-webkit-calendar-picker-indicator {
+  filter: grayscale(1);
+  opacity: 0.75;
+  cursor: pointer;
+}

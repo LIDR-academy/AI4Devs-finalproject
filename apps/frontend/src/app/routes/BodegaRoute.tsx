@@ -6,11 +6,11 @@ import { LocationsManagementModal } from '../../features/stock/components/Locati
 import { useAppShell } from '../session.js';
 
 /**
- * Ruta Estaciones (`/estaciones`, US-023): bodega + ubicaciones + reabastecimiento.
+ * Ruta Bodega (`/bodega`, US-023 · renombrada TK-095-FE WS-3): bodega + ubicaciones + reabastecimiento.
  * El panel de insumos (con su alta y reabastecimiento internos) se monta inline;
  * la extracción de bodega y la gestión de ubicaciones se lanzan como modales.
  */
-export const EstacionesRoute: React.FC = () => {
+export const BodegaRoute: React.FC = () => {
   const { currentUser } = useAppShell();
   const isAdmin = currentUser.role === 'ADMIN';
   const [isExtractionOpen, setIsExtractionOpen] = useState(false);
@@ -22,7 +22,7 @@ export const EstacionesRoute: React.FC = () => {
   return (
     <>
       <header className="flex-between flex-wrap mb-4 gap-3">
-        <h1 className="fs-2xl fw-bold">Estaciones y Bodega</h1>
+        <h1 className="fs-2xl fw-bold">Bodega</h1>
         <div className="flex-gap-md flex-wrap">
           {/* Extracción de bodega: `POST /stock/extraction` sin requireRole → cualquier operario. */}
           <button type="button" className="btn-touch btn-primary" id="btn-open-extraction" onClick={() => setIsExtractionOpen(true)}>
