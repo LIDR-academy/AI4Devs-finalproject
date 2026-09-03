@@ -199,6 +199,9 @@ bash docs/04_governance_and_quality/scripts/check_devsecops_manifest_coverage.sh
 # Auditoría de dependencias (bloqueante salvo riesgo residual documentado)
 bash docs/04_governance_and_quality/scripts/check_dependency_audit.sh
 
+# Gate de patrones de privilegio inseguros acotado al ticket (C-SEC-1/C-SEC-2, AUDIT-SEC-001)
+bash docs/04_governance_and_quality/scripts/check_privilege_defaults.sh
+
 # Validar infraestructura OpenTofu (dry-run)
 tofu validate && tofu plan
 ```
