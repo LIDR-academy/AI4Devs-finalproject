@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BusinessProfileStatus {
+  DRAFT
+  NORMALIZED
+  APPROVED
+}
+
+enum AssetType {
+  BUSINESS_SUMMARY
+  WEBSITE_CONTENT
+  GOOGLE_BUSINESS_DESCRIPTION
+  SOCIAL_MEDIA_BIO
+  FAQ
+}
+
+enum AssetStatus {
+  READY_FOR_REVIEW
+  EDITED
+}
+
+enum AIGenerationStatus {
+  SUCCEEDED
+  FAILED
+}
+
+model User {
+  id                   String           @id @default(uuid()) @db.Uuid
+  email                String           @unique
+  name                 String
+  passwordHash         String
+  businesses           Business[]
+  aiGenerations        AIGeneration[]   @relation("GenerationRequester")
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+model Business {
+  id                String             @id @default(uuid()) @db.Uuid
+  userId            String             @db.Uuid
+  name              String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discoveryResponses DiscoveryResponses?
+  businessProfile   BusinessProfile?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([userId])
+}
+
+model DiscoveryResponses {
+  id          String   @id @default(uuid()) @db.Uuid
+  businessId  String   @unique @db.Uuid
+  responses   Json
+  submittedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model BusinessProfile {
+  id             String                 @id @default(uuid()) @db.Uuid
+  businessId     String                 @unique @db.Uuid
+  businessName   String
+  category       String
+  services       Json
+  products       Json
+  targetAudience String
+  tone           String
+  style          String?
+  location       String
+  phone          String?
+  website        String?
+  gdprConsent    Boolean                @default(false)
+  status         BusinessProfileStatus   @default(DRAFT)
+  business       Business               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  assets         Asset[]
+  aiGenerations  AIGeneration[]
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+}
+
+model Asset {
+  id                String          @id @default(uuid()) @db.Uuid
+  businessProfileId String          @db.Uuid
+  assetType         AssetType
+  title             String
+  content           String          @db.Text
+  status            AssetStatus     @default(READY_FOR_REVIEW)
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  aiGenerations     AIGeneration[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([businessProfileId, assetType])
+  @@index([businessProfileId])
+}
+
+model AIGeneration {
+  id                String              @id @default(uuid()) @db.Uuid
+  businessProfileId String              @db.Uuid
+  assetId           String?             @db.Uuid
+  requestedById     String              @db.Uuid
+  assetType         AssetType
+  promptSnapshot    String              @db.Text
+  contextSnapshot   String              @db.Text
+  responseSnapshot  String              @db.Text
+  status            AIGenerationStatus
+  promptVersion     String
+  contextVersion    String
+  modelUsed         String
+  temperature       Float
+  tokensUsed        Int?
+  createdAt         DateTime            @default(now())
+  completedAt       DateTime?
+  businessProfile   BusinessProfile     @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  asset             Asset?              @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  requestedBy       User                @relation("GenerationRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+
+  @@index([businessProfileId, assetType])
+  @@index([requestedById])
+}
