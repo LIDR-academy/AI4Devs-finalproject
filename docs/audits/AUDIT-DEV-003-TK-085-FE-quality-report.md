@@ -144,3 +144,9 @@
 | **C-2** | Aprobada. Viñeta nueva en `docs/04_governance_and_quality/rules/frontend_rules.md` §3 ("RBAC al Reubicar un Componente a un Contexto Menos Restringido", `Discovered in TK-085-FE`). |
 
 **Verificación tras correcciones:** 125/125 tests, lint 0 errores, build limpio, `check_ticket_code_quality.sh` / `check_dead_code.sh` / `check_ticket_duplication.sh` verdes, `validate_agents.sh` 0 problemas.
+
+---
+
+## 🐳 Gap de despliegue detectado post-cierre (fix aparte)
+
+La FASE 3.3/3.4 de esta auditoría se marcó "N/A — el ticket no toca `Dockerfile`/`nginx.conf`". **Eso era precisamente el defecto:** `createBrowserRouter` usa paths reales (`/reportes`, `/estaciones`, …) y `apps/frontend/nginx.conf` no tenía `try_files ... /index.html`, así que en el build de producción servido por nginx una recarga o deep-link a cualquier ruta ≠ `/` daría **404** (US-023 Escenario 1 solo pasaba en el dev server de Vite). Corregido con `try_files $uri $uri/ /index.html` en `location /` + `try_files $uri =404` en `location /assets/` (para no servir HTML como JS). **Verificado en un contenedor nginx real:** las 5 rutas + path desconocido → 200 (shell SPA); asset inexistente → 404. Regla candidata para `SK-27`/`SK-17`: al introducir routing de cliente, el gate de contenedor debe exigir fallback SPA en la config del servidor de estáticos.
