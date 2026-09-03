@@ -398,15 +398,24 @@ consumes these arrives in a later UI story, and the products that reference a ca
       `product_categories` section and an ER-diagram entry; `docs/conventions/base-standards.md`'s
       UUID-PK subsection stops describing `User` as the only live example; ADR 0001's "still
       future" list drops Product Categories.
-- [x] **Hand-off note recorded for the UI story and for 0024** (this is a real gap, not a
-      formality): these actions perform **no authorization of their own** — matching
-      `App\Actions\Users\CreateUser`/`UpdateUser`, where the caller
-      (`App\Livewire\Users\Index`) calls `Gate::authorize()` first. Since this story ships no
-      caller, `ProductCategoryPolicy` is created and tested but has **zero call sites** until the
-      UI story wires it in. That story must (a) call `Gate::authorize()` before invoking every
-      action, and (b) keep the id fed to `Rule::unique()->ignore()` server-authoritative
-      (`#[Locked]` / re-read from the model), per
-      [security/livewire-authorization.md](../../../docs/security/livewire-authorization.md).
+- [x] **Hand-off note recorded for the UI story and for 0024 — ✅ DISCHARGED 2026-09-03 by story
+      0025.** Recorded in place with what it used to say, per this project's audit-authored-page
+      convention: *"these actions perform **no authorization of their own** — matching
+      `App\Actions\Users\CreateUser`/`UpdateUser`, where the caller (`App\Livewire\Users\Index`)
+      calls `Gate::authorize()` first. Since this story ships no caller, `ProductCategoryPolicy` is
+      created and tested but has **zero call sites** until the UI story wires it in. That story
+      must (a) call `Gate::authorize()` before invoking every action, and (b) keep the id fed to
+      `Rule::unique()->ignore()` server-authoritative (`#[Locked]` / re-read from the model), per
+      [security/livewire-authorization.md](../../../docs/security/livewire-authorization.md)."*
+      Both halves are closed: `CreateProductCategory`/`RenameProductCategory`/`DeleteProductCategory`
+      each now authorize their own operation as their first statement (the actions self-authorize,
+      not only the caller — a stricter shape than this note asked for, matching
+      `App\Actions\Products\{Create,Update,Delete}Product`'s), and `App\Livewire\ProductCategories\Index`
+      keeps `#[Locked] $editingCategoryId` assigned only from `$target->id`. `ProductCategoryPolicy`'s
+      "zero call sites" is likewise false as of story 0025 — it is `App\Livewire\ProductCategories\Index`'s
+      first and only caller, for all four abilities. See
+      [docs/architecture/authorization.md](../../../docs/architecture/authorization.md#productcategorypolicy--the-fifth-policy-and-the-first-to-gain-its-call-site-in-a-later-story-than-the-one-that-created-it)
+      and [docs/database/schema.md](../../../docs/database/schema.md#product_categories).
 - [x] Acceptance criteria met.
 
 ## Documented functional decisions
@@ -644,10 +653,15 @@ consumes these arrives in a later UI story, and the products that reference a ca
   `App\Actions\NormalizeForSearch` rather than a helper local to this story, so there is one
   specification of "folds at least as aggressively as `utf8mb4_unicode_ci`" to get right and one
   unit test pinning it, instead of one copy per consuming story drifting apart.
-- **R-3 — The policy has no call site.** Nothing in this story can regress if the policy is wrong,
-  because nothing calls it. Mitigated by direct `Gate::allows()` tests and the explicit DoD
-  hand-off note; the residual risk is that the UI story invokes the actions without authorizing
-  first.
+- **R-3 — ✅ CLOSED 2026-09-03 by story 0025.** Recorded in place with what it used to say: *"The
+  policy has no call site. Nothing in this story can regress if the policy is wrong, because
+  nothing calls it. Mitigated by direct `Gate::allows()` tests and the explicit DoD hand-off note;
+  the residual risk is that the UI story invokes the actions without authorizing first."* Story
+  0025's `App\Livewire\ProductCategories\Index` is now `ProductCategoryPolicy`'s first and only
+  caller, and the residual risk named here did not materialise: the actions self-authorize (not
+  only the UI story's own component), so an actions-level authorization test now exists alongside
+  the component-level ones — see
+  [docs/architecture/authorization.md](../../../docs/architecture/authorization.md#productcategorypolicy--the-fifth-policy-and-the-first-to-gain-its-call-site-in-a-later-story-than-the-one-that-created-it).
 - **R-4 — The migration length and the validation `max:` drifting apart.** Both are 255 today
   (**D-5**); if either moves without the other, a validation refusal becomes a truncation or a
   `22001` database error. Caught by the length-boundary pair only if that test's boundary is
@@ -850,10 +864,17 @@ mechanism by which to affect either. Both belong to stories 0020 and 0021 and ar
 as honestly-flaky in
 [testing/frontend/playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md).
 
-**Two things this story deliberately hands off rather than closes**, both recorded as decisions
-rather than gaps: the three actions perform **no authorization of their own**, and
-`ProductCategoryPolicy` therefore ships with **zero call sites** until story **0025**
+**Two things this story deliberately handed off rather than closed — both now discharged, and
+recorded here as closed rather than left reading as still-open.** Quoted in full first, per this
+project's audit-authored-page convention: *"the three actions perform **no authorization of their
+own**, and `ProductCategoryPolicy` therefore ships with **zero call sites** until story **0025**
 (`product-categories-ui`) wires in `Gate::authorize()` before every action call and keeps the id fed
 to the `->ignore()` branch server-authoritative (**D-9**, and the Definition of Done's hand-off
 item); and the in-use hard-block delete guard belongs to story **0024**, which extends
-`DeleteProductCategory` rather than introducing that rule anywhere new (**D-10**).
+`DeleteProductCategory` rather than introducing that rule anywhere new (**D-10**)."* **✅ Both
+closed as of 2026-09-03.** The delete guard shipped as story **0024b** (split out of 0024 on
+2026-09-01, not 0024 itself — see that story's own file for the mechanism). The authorization
+hand-off closed with story **0025**: all three actions now self-authorize, `App\Livewire\ProductCategories\Index`
+is `ProductCategoryPolicy`'s first and only caller for all four abilities, and `#[Locked] $editingCategoryId`
+is assigned only from `$target->id`, exactly as D-9 specified. See
+[docs/architecture/authorization.md](../../../docs/architecture/authorization.md#productcategorypolicy--the-fifth-policy-and-the-first-to-gain-its-call-site-in-a-later-story-than-the-one-that-created-it).

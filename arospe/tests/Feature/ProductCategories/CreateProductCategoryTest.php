@@ -2,6 +2,8 @@
 
 use App\Actions\ProductCategories\CreateProductCategory;
 use App\Models\ProductCategory;
+use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -15,6 +17,18 @@ use Illuminate\Validation\ValidationException;
 // Every assertion goes through the ACTION directly (`app(CreateProductCategory::class)(...)`),
 // never a Livewire component -- D-1 is explicit this story ships no screen at all, so there is
 // nothing else to assert through.
+//
+// Story 0025: CreateProductCategory now authorizes `create` on ProductCategory::class as its own
+// first statement (the corrected D-B2 shape, matching DeleteProductCategoryTest.php's identical
+// fix). Every test below runs actingAs() an actor holding products.create, or the call throws
+// AuthorizationException before validation ever runs.
+beforeEach(function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $this->actor = User::factory()->create();
+    $this->actor->givePermissionTo('products.create');
+    $this->actingAs($this->actor);
+});
 
 test('creating with a valid name persists exactly one row and populates timestamps', function () {
     $category = app(CreateProductCategory::class)('Footwear');

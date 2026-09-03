@@ -743,7 +743,7 @@ reader of a sibling story will have absorbed the wrong version.
 `App\Actions\Users\CreateUser`/`UpdateUser`'s caller-authorizes shape"* — the same false premise as
 **C-1**, in shipped code rather than a task file, where it will be read as licence by the next author.
 It is **not** this story's to fix (0023's actions are 0025's hand-off), and it is recorded here plus in
-[0025](../0025-product-categories-ui.md)'s risks so it is met as a decision rather than as a silence.
+[0025](../done/0025-product-categories-ui.md)'s risks so it is met as a decision rather than as a silence.
 
 ## Documented functional decisions
 

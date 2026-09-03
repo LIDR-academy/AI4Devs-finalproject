@@ -69,7 +69,7 @@ frontend | fullstack (related_task_id: **0058** — the paired blog-categories b
 > partner. 0061 is a *separate* pair (its partner is 0063) that this story nonetheless **cannot ship
 > without**: the delete guard, the `BlogCategory::posts()` relation the count reads through, the
 > `blogCategoryId` error-bag key, and `lang/{en,es}/blog.php` itself are all 0061's, not 0058's.
-> This is the identical shape [0025](0025-product-categories-ui.md)'s **F-1** recorded for the
+> This is the identical shape [0025](done/0025-product-categories-ui.md)'s **F-1** recorded for the
 > product taxonomy, and it is recorded here as **F-1** rather than left implicit in the metadata.
 
 ## Three Amigos participants
@@ -585,7 +585,7 @@ validation rule at all: it re-fetches with `findOrFail()` and hands the **model 
 
 **Without `#[Locked]`, a forged `->set('editingCategoryId', $otherId)` between opening the modal and
 saving turns a uniqueness check into a rename-any-category primitive** — identical to
-[0025's **R-3**](0025-product-categories-ui.md) and 0060's **R-1**, and exactly the vulnerability
+[0025's **R-3**](done/0025-product-categories-ui.md) and 0060's **R-1**, and exactly the vulnerability
 class 0058's hand-off note names. The two lines are a pair; the dedicated retarget test below is what
 pins them.
 
@@ -1487,7 +1487,7 @@ component surface, the delete-modal markup and the `withTrashed()` count analysi
 [PRD](../../docs/PRD/PRD.md#epic-4--blog) Epic 4's `Feature: Blog categories (extends the prototype)`
 block and the CRUD half of Blog acceptance criterion 2, grounded in full readings of
 [0058](0058-blog-categories-backend.md) and [0061](0061-blog-posts-core-crud-backend.md), with
-[0025](0025-product-categories-ui.md) as the structural template and [0060](0060-blog-tags-ui.md) as
+[0025](done/0025-product-categories-ui.md) as the structural template and [0060](0060-blog-tags-ui.md) as
 the Blog-area convention source.
 
 Both amigos' contributions are reflected above. **Three divergences are recorded rather than silently

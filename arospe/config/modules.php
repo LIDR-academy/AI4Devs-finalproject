@@ -78,5 +78,13 @@ return [
             'current_when' => 'sales-regions.*',
             'permissions' => ['sales-regions.view'],
         ],
+        'product_categories' => [
+            'group' => 'platform',
+            'label' => 'navigation.items.product_categories',
+            'icon' => 'tag',
+            'route' => 'product-categories.index',
+            'current_when' => 'product-categories.*',
+            'permissions' => ['products.view'],
+        ],
     ],
 ];

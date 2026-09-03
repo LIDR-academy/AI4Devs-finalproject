@@ -22,5 +22,10 @@ return [
         // house style (index.delete_blocked), rather than leading with the category.
         'delete_blocked' => 'No se puede eliminar esta categoría porque la utiliza :count producto.'
             .'|No se puede eliminar esta categoría porque la utilizan :count productos.',
+
+        // Story 0025 -- key-for-key identical to lang/en/products.php.
+        'index' => [
+            'action_not_allowed' => 'Acción no permitida',
+        ],
     ],
 ];

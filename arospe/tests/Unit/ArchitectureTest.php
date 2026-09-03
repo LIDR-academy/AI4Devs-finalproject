@@ -60,3 +60,21 @@ arch('App\Models\ProductCategory does not reference any blog taxonomy namespace'
 arch('App\Models\Product does not reference any blog taxonomy namespace')
     ->expect('App\Models\Product')
     ->not->toUse('App\Models\Blog');
+
+// Story 0025 (D-9): App\Livewire\ProductCategories\* must remain structurally independent from
+// any future blog taxonomy, matching App\Models\ProductCategory's and App\Models\Product's
+// identical fences directly above (0023 D-11, 0024). There is no blog taxonomy in code yet (PRD
+// Epic 4 -- Blog Categories/Tags/Posts do not exist), so this is honestly a SCOPE FENCE expressed
+// as an executable test rather than a behavioral assertion today: it cannot fail yet, because
+// there is nothing under a blog-taxonomy namespace for the component to import in the first
+// place. It starts genuinely biting the moment Epic 4 lands a real blog taxonomy namespace under
+// App\Models\Blog.
+//
+// A single-namespace `expect()` target, per this file's own established one-rule-per-namespace
+// convention (see the comment above the first two rules) and per this story's own note about a
+// prior vacuous arch() rule (docs/errors-log.md): expect(array $targets) evaluates
+// DISJUNCTIVELY, so `expect(['App\Models\ProductCategory', 'App\Livewire\ProductCategories'])`
+// would stay green even if only one of the two namespaces violated it.
+arch('App\Livewire\ProductCategories does not reference any blog taxonomy namespace')
+    ->expect('App\Livewire\ProductCategories')
+    ->not->toUse('App\Models\Blog');
