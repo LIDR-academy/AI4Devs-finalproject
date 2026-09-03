@@ -108,3 +108,82 @@ re-derive, never the full prose of a finalized story.
   parity) is documented at
   [docs/api/routes.md#product-categoriesindex--the-fourth-permission-gated-route](../../../docs/api/routes.md#product-categoriesindex--the-fourth-permission-gated-route)
   and [docs/architecture/authorization.md#productcategorypolicy--the-fifth-policy-and-the-first-to-gain-its-call-site-in-a-later-story-than-the-one-that-created-it](../../../docs/architecture/authorization.md#productcategorypolicy--the-fifth-policy-and-the-first-to-gain-its-call-site-in-a-later-story-than-the-one-that-created-it).
+
+## Story 0026 — Product ↔ Sales Region assignment and tax resolution backend (blocks story 0027)
+
+- `product_sales_region` pivot: composite PK `(product_id, sales_region_id)`, no surrogate id, no
+  extra columns at all (no `position`, no per-assignment rate override — a rate lives only on
+  `sales_regions.rate`). `product_id` → `cascadeOnDelete()`, `sales_region_id` →
+  `restrictOnDelete()` (currently unreachable — no delete path on the catalog). No hand-written
+  index on either FK — story 0026.
+- `App\Models\Product::salesRegions(): BelongsToMany<SalesRegion, $this>` — table/columns named
+  explicitly. **No inverse `SalesRegion::products()`** — no consumer needs it — story 0026.
+- `App\Models\SalesRegion::scopeActive()` / `scopeAssignable()` (active + `whereDoesntHave('children')`)
+  — the single "may this entry be newly assigned" definition, consumed by both validation and the
+  options resolver — story 0026.
+- `App\Actions\Products\SyncProductSalesRegions::__invoke(Product $product, array $salesRegionIds): void`
+  — `$product->salesRegions()->sync($salesRegionIds)`. **Self-authorizes NOTHING** (D8) — matches
+  `SyncProductGallery`'s shape exactly: a collaborator invoked only inside an already-authorized
+  transaction, enforced by a reachability test, not a `Gate` call. Opens **no** transaction of its own
+  and swallows no exception — must be called inside a caller-opened `DB::transaction()` — story 0026.
+- `App\Actions\Products\ResolveProductTaxRate::__invoke(Product $product, SalesRegion $destination): ResolvedTaxRate`
+  — exactly two tiers (`AssignedRegion` then `CatalogDefault`), exact-id match only, **no ancestor
+  walk in either direction**. Matches via a direct `$product->salesRegions()->whereKey($destination->id)->first()`
+  pivot query — **never** `loadMissing('salesRegions')` + in-memory search, since `loadMissing()` is a
+  no-op once any (possibly constrained) version of the relation is already loaded, which would
+  silently drop a disabled-but-assigned region from the match. Self-authorizes nothing (pure read,
+  may run from a queued job with no acting user) — story 0026.
+- `App\Actions\Products\ResolvedTaxRate` — `final readonly class(public ?string $rate, public
+  SalesRegion $region, public TaxRateResolutionTier $tier)`. `$rate` is **never `?float`** —
+  `decimal:3` casts to string; `null` and `'0.000'` are both honoured verbatim, neither falls through
+  to the other tier, neither is fabricated as `0` — story 0026.
+- `App\Enums\TaxRateResolutionTier: string` — exactly `AssignedRegion = 'assigned_region'`,
+  `CatalogDefault = 'catalog_default'`. No `label()` (nothing renders it yet) — story 0026.
+- `App\Exceptions\NoDefaultSalesRegionException extends RuntimeException` — thrown only when the
+  catalog has **no** `is_default` row at all (a genuine invariant violation per story 0017's
+  guarantee), never for an unconfigured rate. Deliberately no `render()` — story 0026.
+- `App\Actions\Products\SearchSalesRegions` implements story 0022's `MultiSelectOptionsResolver` —
+  **this is the exact class-string 0022's own consumer example already names**. `search()` offers only
+  `assignable()` entries, matched against the entry's own name **and its parent's name** (via
+  `App\Actions\NormalizeForSearch`, folding the haystack side). `resolveSelected()` vouches for
+  **every currently-assigned id regardless of `is_active`/children**, marking a no-longer-assignable
+  one `disabled: true`, and is a **total function** — throws `App\Exceptions\UnresolvedSelectionException`
+  (0022's) for any id it cannot vouch for at all, never a short return. Labels are qualified
+  (`"España (Península)"`), `group: null` always. Self-authorizes nothing (catalog data — name,
+  `is_active`, has-children — treated as uniformly visible to any authenticated admin) — story 0026.
+- **D12 (validation): an id's treatment depends on whether it is new to this product.** A **preserved**
+  id (already on the product before this request) need only still exist in the catalog; a **newly
+  added** id must additionally be active and childless. `App\Concerns\ProductValidationRules::
+  salesRegionIdRules(array $preservedSalesRegionIds = [])` — the OR sits **inside** the single
+  per-element `Rule::exists()->where()` match, never a follow-up `if`. `$preservedSalesRegionIds`
+  **must be read server-side from `$product->salesRegions`, never from the request** — a
+  client-supplied preserved list bypasses the assignability gate entirely. `salesRegionIdsRules()` is
+  `['array', 'list', 'max:254']` (254 = 249 ISO countries + 5 Spain fiscal territories, the catalog's
+  real hard ceiling) — story 0026.
+- **D11: an unresolvable submitted id rejects the WHOLE save, never a partial one.** The
+  per-element `salesRegionIds.*` rule failing means `SyncProductSalesRegions` is **never invoked** —
+  no subset written. The refusal must name the problem via `lang/{en,es}/products.php`'s
+  `sales_regions.not_in_catalog` / `sales_regions.not_assignable` keys — story 0026.
+- **DoD hand-off item 5 (mandatory for story 0027, R-1 security finding): `salesRegionIdsRules()` and
+  `salesRegionIdRules()` MUST be validated in two separate, sequential `Validator::make(...)->validate()`
+  calls, never combined into one rule array.** `max:254` bounds what may succeed, not what a request
+  *costs* — Laravel runs every element's `Rule::exists()` query regardless of whether the array-level
+  `max`/`list` rule already failed (measured: up to ~40,000 elements ≈ ~40,000 queries on one request
+  from a `products.edit`-only actor). Validate `salesRegionIdsRules()` alone first; only then validate
+  `salesRegionIds.*` against `salesRegionIdRules($preserved)`. Full mechanism, measurements and the two
+  bounding shapes are at [docs/security/array-validation-bounds.md](../../../docs/security/array-validation-bounds.md)
+  — story 0026.
+- **DoD hand-off items 1–4 (mandatory for story 0027, not yet discharged in code):** (1) authorize
+  `Gate::authorize('update', $product)` before calling `SyncProductSalesRegions`, and gate the route
+  with `can:products.view`; (2) the submitted region-id array must be server-validated, never trusted
+  from the picker; (3) `salesRegionIdRules()` must be called with the **persisted** product's current
+  region ids (D12) — this is the *only* gate a stale-but-still-existing preserved id ever meets,
+  `resolveSelected()` vouches for **any** id still in `sales_regions`, not only ones assigned to this
+  product; (4) **D13**: one `DB::transaction()` must wrap `UpdateProduct`/`CreateProduct` +
+  `SyncProductSalesRegions` + `SyncProductGallery` together, opened *after* validation and after
+  `assertSelectionResolvable()` — story 0026.
+- Groupings (the supranational `SalesRegionKind::Grouping` case) **do not exist in the catalog at
+  all** — removed project-wide by story 0016's own scope-change amendment (D11 there). The resolver
+  and the picker have exactly two/no grouping tiers respectively — do not reintroduce a
+  grouping-membership concept anywhere in story 0027 — story 0026 (D10).
+- Full mechanism is documented at [docs/database/schema.md#product_sales_region](../../../docs/database/schema.md#product_sales_region).
