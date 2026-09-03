@@ -11,11 +11,13 @@ interface LocationFilterTabsProps {
 }
 
 export const LocationFilterTabs: React.FC<LocationFilterTabsProps> = ({ activeLocation, onLocationSelect, counts }) => {
-  const tabs: { id: LocationFilter; label: string }[] = [
+  // TK-095-FE WS-4 #12: etiquetas cortas (como el artefacto "Sistema FEFO"); el
+  // nombre completo va en `title` para no perder contexto.
+  const tabs: { id: LocationFilter; label: string; full?: string }[] = [
     { id: 'ALL', label: 'Todos' },
-    { id: 'KITCHEN_FRIDGE', label: 'Refrigerador Principal' },
-    { id: 'KITCHEN_PREP', label: 'Mesa de Preparación' },
-    { id: 'KITCHEN_LINE', label: 'Línea de Servicio' },
+    { id: 'KITCHEN_FRIDGE', label: 'Refrigerador', full: 'Refrigerador Principal' },
+    { id: 'KITCHEN_PREP', label: 'Mesa Prep', full: 'Mesa de Preparación' },
+    { id: 'KITCHEN_LINE', label: 'Línea', full: 'Línea de Servicio' },
   ];
 
   return (
@@ -31,6 +33,7 @@ export const LocationFilterTabs: React.FC<LocationFilterTabsProps> = ({ activeLo
           <button
             key={tab.id}
             type="button"
+            title={tab.full ?? tab.label}
             className={`btn-touch flex-gap-xs ${styles['location-tab-btn']} ${isActive ? 'btn-primary fw-bold' : 'btn-secondary'}`}
             onClick={() => onLocationSelect(tab.id)}
           >

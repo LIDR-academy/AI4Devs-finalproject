@@ -30,7 +30,6 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ currentUser, theme, onThem
   <header className={styles.topbar}>
     <AppNav userRole={currentUser.role} />
     <div className={styles['topbar-session']}>
-      <ThemeToggle theme={theme} onChange={onThemeChange} />
       <SessionBadge name={currentUser.name} role={currentUser.role} />
       {/* TK-095-FE WS-1 #4: cerrar sesión es una acción rutinaria — botón fantasma
           con borde de tinta (como `.mockup__logout` del artefacto), no `btn-danger`. */}
@@ -38,6 +37,9 @@ export const AppTopBar: React.FC<AppTopBarProps> = ({ currentUser, theme, onThem
         <LogOut size={20} />
         Cerrar Sesión
       </button>
+      {/* TK-095-FE WS-4 #11: el interruptor de turno va al final del cluster de
+          sesión (preferencia), no flotando entre la nav y la identidad. */}
+      <ThemeToggle theme={theme} onChange={onThemeChange} />
     </div>
   </header>
 );

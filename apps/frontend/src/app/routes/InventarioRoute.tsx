@@ -147,13 +147,10 @@ const PageHeading: React.FC<{ isLoading: boolean; onSync: () => void; onReconcil
 );
 
 const KitchenBoardTitle: React.FC = () => (
-  <div className="flex-between mb-4">
+  <div className="mb-4">
     <h2 className="flex-gap-sm fs-xl fw-bold">
       <ShieldCheck className="text-primary-color" /> Tablero FEFO de Cocina (Prioridad por Expiración)
     </h2>
-    <span className="fs-sm text-secondary-color">
-      Botones táctiles optimizados a <strong>&ge;48px</strong>
-    </span>
   </div>
 );
 
