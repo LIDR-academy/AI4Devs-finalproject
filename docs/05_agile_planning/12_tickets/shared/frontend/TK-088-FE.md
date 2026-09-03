@@ -51,3 +51,12 @@ Motivación histórica: la nota de contraste de `05_ui_ux_design_system.md` §v4
 4. **Evidencia archivada:** informe de ratios en `docs/04_governance_and_quality/`.
 5. **Sin regresión visual:** `npx -y @google/design.md lint DESIGN.md` limpio; `pnpm --filter frontend test -- --run` y `run build` verdes.
 6. **`SK-21`** ejecutada y su salida adjunta al informe.
+
+---
+
+## 🧩 Implementación
+
+* **Verificador:** `docs/04_governance_and_quality/scripts/check_fefo_contrast.mjs` — implementa luminancia relativa WCAG + compositing sRGB de `color-mix`; 40 pares (20 por turno) contra el fondo compuesto real.
+* **Informe:** `docs/audits/AUDIT-A11Y-001-TK-088-FE-contrast-report.md` (matriz Día/Noche + FASE 3 táctil + veredicto).
+* **Corrección C-1:** `UrgencyChip.module.css` — el chip crítico en turno Noche daba **4.19:1** (`--color-danger` sobre `--bg-card`, bajo AA); los 3 chips de noche pasan a su variante `--color-<x>-text` → crítico **5.96:1**. Warning/success: `-text` == base de noche (sin cambio visual). Nota de contraste de `05_ui_ux_design_system.md` §v4.1.0 actualizada con antes/después.
+* **Resultado:** 40/40 pares cumplen su objetivo. `--text-primary` (cuerpo/nav/wordmark): 13–16:1 AAA. Variantes `-text`/`-on`: 4.6–8.8:1 AA (convención v4.0.0, el 7:1 AAA es para `--text-primary`). Táctil: 0 elementos <48px en las 5 rutas. FASE 4 (regresión visual) N/A — sin infraestructura de baselines, fuera de alcance.

@@ -36,16 +36,18 @@
   color: var(--color-success-text);
 }
 
-/* --- Turno Noche: contorno, sin relleno, texto en el color base (ya más claro) --- */
+/* --- Turno Noche: contorno, sin relleno, texto en la variante -text (TK-088-FE:
+   --color-danger sobre --bg-card daba solo 4.19:1 en noche, bajo AA;
+   --color-danger-text #f0806a da 5.96:1. warning/success: -text == base en noche). --- */
 :global(:root[data-theme='dark']) .chip--critical {
   background-color: transparent;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 :global(:root[data-theme='dark']) .chip--warning {
   background-color: transparent;
-  color: var(--color-warning);
+  color: var(--color-warning-text);
 }
 :global(:root[data-theme='dark']) .chip--safe {
   background-color: transparent;
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
