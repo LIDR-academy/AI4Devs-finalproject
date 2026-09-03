@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Package, AlertTriangle, RefreshCw, ArrowRightLeft, Clock, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
+import { Package, RefreshCw, ArrowRightLeft, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
 import { ActionButton } from '../../shared/components/ActionButton.js';
+import { bucketRemanentes, type UrgencyLevel } from '../../shared/components/urgency.js';
 import { KitchenService, RemanenteFEFOItem } from '../../features/kitchen/services/kitchen.service.js';
 import { ActiveRemanentesList } from '../../features/kitchen/components/ActiveRemanentesList.js';
 import { WarehouseExtractionModal } from '../../features/stock/components/WarehouseExtractionModal.js';
@@ -10,66 +11,70 @@ import { ShiftReconciliationWizard } from '../../features/kitchen/components/Shi
 import { FEFOInventoryHealthBar } from '../../features/kitchen/components/FEFOInventoryHealthBar.js';
 import { LocationFilterTabs, LocationFilter } from '../../features/kitchen/components/LocationFilterTabs.js';
 import { useAppShell } from '../session.js';
+import styles from './InventarioRoute.module.css';
 
-const MetricCard: React.FC<{ icon: React.ReactNode; danger?: boolean; title: string; value: number; unitLabel: string }> = ({
-  icon,
-  danger = false,
-  title,
-  value,
-  unitLabel,
-}) => (
-  <div className="card-dashboard">
-    <div className="card-header">
-      <div className={`card-badge-icon${danger ? ' card-badge-icon--danger' : ''}`}>{icon}</div>
-      <h2 className="card-title">{title}</h2>
-    </div>
-    <div className="fs-3xl fw-black">
-      {value} <span className="text-secondary-color fs-md">{unitLabel}</span>
-    </div>
-  </div>
-);
+const STATUS_BUCKETS: { key: UrgencyLevel; label: string }[] = [
+  { key: 'safe', label: 'Vigentes' },
+  { key: 'warning', label: 'Vencimiento Próximo' },
+  { key: 'critical', label: 'Críticos Hoy' },
+];
 
-const ActionButtonCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="card-dashboard flex-column flex-center">{children}</div>
-);
+/** Panel Estado: 3 cubetas de severidad alineadas con los 3 segmentos de la health bar (TK-087-FE). */
+const StatusPanel: React.FC<{ remanentes: RemanenteFEFOItem[] }> = ({ remanentes }) => {
+  const buckets = bucketRemanentes(remanentes);
 
-interface SummaryCardsProps {
-  remanentesCount: number;
-  criticalCount: number;
+  return (
+    <section className={styles['estado-panel']}>
+      <h3 className="card-title mb-3">Estado</h3>
+      {buckets.total === 0 ? (
+        <p className="text-secondary-color fs-sm">Sin remanentes abiertos en cocina — nada que vigilar este turno.</p>
+      ) : (
+        <>
+          <div className={styles['bucket-row']}>
+            {STATUS_BUCKETS.map((b) => (
+              <div key={b.key} className={styles.bucket}>
+                <div className={`fs-2xl fw-black ${styles[`bucket-value--${b.key}`]}`}>{buckets[b.key]}</div>
+                <div className="fs-xs text-secondary-color">{b.label}</div>
+              </div>
+            ))}
+          </div>
+          <FEFOInventoryHealthBar remanentes={remanentes} embedded />
+        </>
+      )}
+    </section>
+  );
+};
+
+interface AccionesEstadoGridProps {
+  remanentes: RemanenteFEFOItem[];
   onExtract: () => void;
   onPrepareRecipe: () => void;
 }
 
-const SummaryCards: React.FC<SummaryCardsProps> = ({ remanentesCount, criticalCount, onExtract, onPrepareRecipe }) => (
-  <section className="metrics-grid">
-    <MetricCard icon={<Clock size={20} />} title="Remanentes Abiertos" value={remanentesCount} unitLabel="lotes FEFO" />
-    <MetricCard
-      icon={<AlertTriangle size={20} />}
-      danger
-      title="Vencimiento Próximo (<24h)"
-      value={criticalCount}
-      unitLabel="lotes críticos"
-    />
-    <ActionButtonCard>
-      <ActionButton
-        action="extract"
-        label="Extraer de Bodega"
-        hint="bodega → cocina"
-        icon={<ArrowRightLeft size={26} />}
-        onClick={onExtract}
-        id="btn-open-extraction"
-      />
-    </ActionButtonCard>
-    <ActionButtonCard>
-      <ActionButton
-        action="recipe"
-        label="Preparar Receta"
-        hint="consumo FEFO en cascada"
-        icon={<Utensils size={26} />}
-        onClick={onPrepareRecipe}
-        id="btn-open-recipe"
-      />
-    </ActionButtonCard>
+const AccionesEstadoGrid: React.FC<AccionesEstadoGridProps> = ({ remanentes, onExtract, onPrepareRecipe }) => (
+  <section className={styles['acciones-estado-grid']}>
+    <div className={styles['acciones-panel']}>
+      <h3 className="card-title mb-3">Acciones</h3>
+      <div className={styles['acciones-row']}>
+        <ActionButton
+          action="extract"
+          label="Extraer de Bodega"
+          hint="bodega → cocina"
+          icon={<ArrowRightLeft size={26} />}
+          onClick={onExtract}
+          id="btn-open-extraction"
+        />
+        <ActionButton
+          action="recipe"
+          label="Preparar Receta"
+          hint="consumo FEFO en cascada"
+          icon={<Utensils size={26} />}
+          onClick={onPrepareRecipe}
+          id="btn-open-recipe"
+        />
+      </div>
+    </div>
+    <StatusPanel remanentes={remanentes} />
   </section>
 );
 
@@ -159,7 +164,6 @@ export const InventarioRoute: React.FC = () => {
   const modals = useKitchenOpModals();
   const [activeLocation, setActiveLocation] = useState<LocationFilter>('ALL');
 
-  const criticalCount = remanentes.filter((r) => r.hoursRemaining < 24).length;
   const counts: Record<LocationFilter, number> = {
     ALL: remanentes.length,
     KITCHEN_FRIDGE: remanentes.filter((r) => r.location === 'KITCHEN_FRIDGE').length,
@@ -175,10 +179,8 @@ export const InventarioRoute: React.FC = () => {
         onSync={loadRemanentes}
         onReconcile={() => modals.setIsReconciliationOpen(true)}
       />
-      <FEFOInventoryHealthBar remanentes={remanentes} />
-      <SummaryCards
-        remanentesCount={remanentes.length}
-        criticalCount={criticalCount}
+      <AccionesEstadoGrid
+        remanentes={remanentes}
         onExtract={() => modals.setIsExtractionOpen(true)}
         onPrepareRecipe={() => modals.setIsRecipeOpen(true)}
       />

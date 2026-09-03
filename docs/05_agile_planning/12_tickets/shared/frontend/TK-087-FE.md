@@ -53,4 +53,12 @@ Reestructura el bloque de resumen del tablero FEFO según la lámina "Aplicació
 5. **Anti-duplicación:** la lógica de segmentación FEFO existe una sola vez (helper compartido); `pnpm --filter frontend run duplication` bajo el umbral 3%.
 6. **Guard 29:** 0 `style={{}}` inline (excepto `--bar-pct` custom property si aplica, patrón sancionado); clases desde tokens.
 7. **Cero regresión:** `pnpm --filter frontend test -- --run` verde.
-8. **Verificación:** `pnpm --filter frontend run lint`, `run build`, `check_ticket_code_quality.sh` — 0 errores en el diff.
+8. **Verificación:** `pnpm --filter frontend run lint`, `run build`, `check_ticket_code_quality.sh`, `check_dead_code.sh`, `check_ticket_duplication.sh` — 0 errores en el diff.
+
+---
+
+## 🧩 Implementación
+
+* **Fuente única de segmentación:** `shared/components/urgency.ts` gana `bucketRemanentes()` (cuenta crítico/atención/vigente con el mismo umbral que `urgencyFromHours`: `<0`→Vencido, `<24`→Hoy, `<48`→Mañana, resto→N Días) y `bucketPercentages()` (siempre suma 100, residuo en el segmento mayor). D-3 de `AUDIT-DEV-004` resuelto aquí: `hoursRemaining < 0` → etiqueta "Vencido" (mismo nivel `critical`).
+* **`FEFOInventoryHealthBar`:** consume el helper; barra con `role="img"` + `aria-label` numérico; leyenda numérica (`N% vigente (n) · …`) en `--font-family-mono` con punto de color por segmento; nuevo prop `embedded` (sin tarjeta ni cabecera larga) para montarse dentro del panel Estado.
+* **`InventarioRoute`:** las 2 `MetricCard` viejas → panel `Estado` de 3 cubetas (`Vigentes` / `Vencimiento Próximo` / `Críticos Hoy`) + health bar embebida; grid `Acciones | Estado` (2 columnas en `md+`, apilado en `sm`, separador `border-left: 2px dashed`). `InventarioRoute.module.css` nuevo.

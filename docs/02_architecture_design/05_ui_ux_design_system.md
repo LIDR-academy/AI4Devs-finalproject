@@ -111,12 +111,14 @@ inputs:
 
 Reemplaza el `StatusBadge` tri-color heredado. Escala completa, sin cortar a la mitad:
 
-| Nivel | Etiqueta | Token de color | Umbral |
+| Nivel | Etiqueta | Token de color | Umbral (`hoursRemaining`) |
 | :--- | :--- | :--- | :--- |
-| Crítico | `Hoy` | `--color-danger` / `--color-danger-text` | vence hoy |
-| Atención | `Mañana` | `--color-warning` / `--color-warning-text` | vence mañana |
-| Vigente | `2 Días` | `--color-success` / `--color-success-text` | 2 días |
-| Vigente | `4 Días` | `--color-success` / `--color-success-text` | 3+ días |
+| Crítico | `Vencido` | `--color-danger` / `--color-danger-text` | `< 0` (ya vencido) |
+| Crítico | `Hoy` | `--color-danger` / `--color-danger-text` | `< 24` |
+| Atención | `Mañana` | `--color-warning` / `--color-warning-text` | `< 48` |
+| Vigente | `N Días` | `--color-success` / `--color-success-text` | `>= 48` (`Math.ceil(h/24)`) |
+
+> La segmentación vive en **un solo helper** (`shared/components/urgency.ts`: `urgencyFromHours` + `bucketRemanentes`), consumido por el chip de fila, la `FEFOInventoryHealthBar` y el panel Estado de 3 cubetas — todos muestran los mismos conteos (TK-087-FE).
 
 * **Regla WCAG 1.4.1:** siempre marca cuadrada de 9px (`currentColor`) **+ texto**, nunca solo color.
 * De día: relleno tintado al 12–15% del color + texto en la variante `-text`. De noche: contorno + texto en el color base (más brillante).
