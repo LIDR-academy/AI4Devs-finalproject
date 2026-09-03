@@ -26,7 +26,9 @@ services:
     container_name: restostock_backend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # Puerto del HOST configurable (colisiones con otras apps locales). El puerto
+      # interno del contenedor y el proxy `/api` del frontend siempre usan 3000.
+      - "${BACKEND_PORT:-3000}:3000"
     environment:
       PORT: 3000
       NODE_ENV: production
