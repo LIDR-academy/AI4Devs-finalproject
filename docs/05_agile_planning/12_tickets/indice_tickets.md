@@ -69,6 +69,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-088-FE** | `shared` | **Alto** | **Media** | 3 SP | Depende de `TK-085-FE`..`TK-087-FE`. Auditoría de contraste AAA 7:1 (`SK-21`) en ambos turnos — cierra la decisión abierta #3 del artefacto Sistema FEFO. | 🟡 P1 - Alta |
 | **TK-089-FE** | `shared` | **Medio** | **Media** | 3 SP | Depende de `TK-085-FE`. `US-024`: `ReportsDashboard` gana modo `embedded`; `/reportes` deja de abrirse como `<Modal>` flotante. | 🟢 P2 - Media |
 | **TK-090-FE** | `shared` | **Medio** | **Media** | 8 SP | Depende de `TK-085-FE`, `TK-089-FE`. `US-024`: `/ajustes` pasa a layout route con 5 sub-rutas inline deep-linkables; los 5 paneles admin ganan modo `embedded`. | 🟢 P2 - Media |
+| **TK-091** | `shared` | **Bajo** | **Baja** | 3 SP | Sin dependencias. Deuda de calidad: extrae el mapeo de error→RFC 7807 duplicado en `auth.controller.ts` a un helper; baja el baseline `jscpd` bajo 3% para revertir el umbral a 3. | 🟢 P2 - Media |
 
 ---
 
@@ -104,6 +105,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-078** | [US-019](../11_user_stories/reports/US-019.md) | Costeo de Insumos y Valorización Monetaria de Mermas | `reports` | 3 | Should Have | [reports/backend/TK-078.md](reports/backend/TK-078.md) |
 | **TK-079** | [US-020](../11_user_stories/reports/US-020.md) | Indicador TRR Real (Rotation Metrics) | `reports` | 3 | Should Have | [reports/backend/TK-079.md](reports/backend/TK-079.md) |
 | **TK-080** | [US-021](../11_user_stories/stock/US-021.md) | Filtro `insumoId` para Detección de Apertura Duplicada | `stock` | 2 | Should Have | [stock/backend/TK-080.md](stock/backend/TK-080.md) |
+| **TK-091** | N/A (Técnico) | Saneamiento de Duplicación en `auth.controller.ts` (jscpd) | `shared` | 3 | Should Have | [shared/backend/TK-091.md](shared/backend/TK-091.md) |
 
 
 ### 🖥️ Tickets de Frontend
@@ -234,6 +236,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-088-FE: Auditoría de Contraste AAA 7:1 del Sistema FEFO](shared/frontend/TK-088-FE.md)** (Frontend) — `US-023`: ejecuta `SK-21` sobre las 5 rutas en ambos turnos, verifica cada par color/fondo con fórmula WCAG real contra el fondo real, corrige tokens que fallen y archiva evidencia. Cierra la decisión abierta #3 del artefacto Sistema FEFO.
 *   **[TK-089-FE: Reportes Inline (sin `<Modal>` flotante)](shared/frontend/TK-089-FE.md)** (Frontend) — `US-024`: `ReportsDashboard` gana `embedded`; `/reportes` se renderiza inline en el `<main>` del shell, consistente con `/estaciones`/`/recetas`. Limpia `isOpen`/`onClose`/`AccessDeniedState` muertos.
 *   **[TK-090-FE: Ajustes con Sub-Rutas Inline Deep-Linkables](shared/frontend/TK-090-FE.md)** (Frontend) — `US-024`: `/ajustes` pasa a layout route (`<nav>` de sub-pestañas + `<Outlet>`) con 5 sub-rutas deep-linkables (`configuracion`/`personal`/`roles`/`movimientos`/`catalogo`); los 5 paneles admin ganan `embedded`; `*Modal.tsx` renombrados a `*Panel.tsx`.
+*   **[TK-091: Saneamiento de Duplicación en `auth.controller.ts`](shared/backend/TK-091.md)** (Backend) — deuda de calidad: extrae el mapeo de error→RFC 7807 duplicado entre métodos del controlador de auth a un helper compartido; baja el baseline `jscpd` del ~3.2% bajo el 3% para revertir el umbral de `.jscpd.json` a 3.
 
 ### 🔐 Autenticación (`auth/`) — Post-MVP
 *   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)
