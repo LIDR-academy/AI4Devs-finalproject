@@ -2,6 +2,7 @@
 
 namespace App\Actions\ProductCategories;
 
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Actions\NormalizeForSearch;
 use App\Concerns\ProductCategoryValidationRules;
 use App\Models\ProductCategory;
@@ -19,20 +20,30 @@ class RenameProductCategory
      * signature.
      */
     public function __construct(
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
         private readonly NormalizeForSearch $normalizeForSearch,
     ) {}
 
     /**
      * Rename an existing product category.
      *
+     * Authorizes `update` on `$productCategory` as its own first statement
+     * (story 0025), the identical self-authorizing shape
+     * App\Actions\Products\DeleteProduct already uses -- see
+     * CreateProductCategory's docblock for the full reasoning.
+     *
      * The uniqueness rule ignores the target's own id (R-1), which is what
      * makes saving a category under its own unchanged name succeed.
-     *
-     * No authorization of its own -- see CreateProductCategory's docblock
-     * and the story's Definition of Done hand-off note.
      */
     public function __invoke(ProductCategory $productCategory, string $name): ProductCategory
     {
+        $this->logRefusedPrivilegedAttempt->authorize(
+            'update',
+            $productCategory,
+            targetType: 'product_category',
+            targetId: $productCategory->id,
+        );
+
         $name = trim($name);
 
         Validator::make(

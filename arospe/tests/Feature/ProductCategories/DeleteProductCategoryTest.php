@@ -14,6 +14,17 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
 
+// Story 0025 Phase 2 review, finding B-2: every test in this file must now seed the catalog and
+// grant $this->actor `products.delete`, once story 0025's own D-B2 correction lands
+// Gate::authorize('delete', ...) as DeleteProductCategory::__invoke()'s literal first
+// statement. Until then $this->actor was a bare User::factory() with no seeded catalog and no
+// permission, which passed only because the guard it exercises had no Gate call in front of it --
+// once one exists, every test below would fail on an authorization refusal instead of the
+// domain-invariant refusal it actually asserts, unless this seed/grant is in place. The Super
+// Admin test further down deliberately seeds a second time inside its own test body rather than
+// relying on this beforeEach (Phase 5 review finding N-12) -- RolePermissionSeeder's two
+// firstOrCreate*Role() entry points make that second run a no-op, not a collision.
+
 // Story 0023 created this file; story 0024b (D-14) extended it with the in-use
 // hard-block-with-count guard, once products.product_category_id exists. Every test below --
 // the four regression cases and the new block/no-confirm-and-proceed/race cases -- now runs
@@ -34,7 +45,13 @@ use Spatie\Permission\PermissionRegistrar;
 // one seed call moved up, not new).
 
 beforeEach(function () {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seed(RolePermissionSeeder::class);
+
     $this->actor = User::factory()->create();
+    // products.create too: every test below sets up its fixture category via
+    // app(CreateProductCategory::class)(...), which now self-authorizes as well.
+    $this->actor->givePermissionTo(['products.delete', 'products.create']);
     $this->actingAs($this->actor);
 });
 

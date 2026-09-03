@@ -2,6 +2,7 @@
 
 namespace App\Actions\ProductCategories;
 
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Actions\NormalizeForSearch;
 use App\Concerns\ProductCategoryValidationRules;
 use App\Models\ProductCategory;
@@ -16,31 +17,38 @@ class CreateProductCategory
     /**
      * Constructor injection, not method injection: __invoke()'s single
      * domain argument is this action's whole public signature, called that
-     * way by every direct-call test (there is no Livewire caller yet -- D-1)
-     * -- so the shared normaliser is resolved from the container without
-     * widening that signature. See docs/conventions/code-style.md's
-     * constructor-injection exception.
+     * way by every direct-call test -- so both collaborators are resolved
+     * from the container without widening that signature. See
+     * docs/conventions/code-style.md's constructor-injection exception.
      */
     public function __construct(
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
         private readonly NormalizeForSearch $normalizeForSearch,
     ) {}
 
     /**
      * Create a new product category.
      *
+     * Authorizes `create` on `ProductCategory::class` as its own first
+     * statement (story 0025, discharging the hand-off 0023 recorded --
+     * see docs/database/schema.md#product_categories and
+     * docs/conventions/base-standards.md#directory-structure) -- the
+     * identical self-authorizing shape App\Actions\Products\CreateProduct
+     * already uses, so a future Artisan command, queued job or REST
+     * controller inherits the same refusal the dashboard gets.
+     * `targetType: 'product_category'` is passed explicitly, since
+     * LogRefusedPrivilegedAttempt::resolveTarget() auto-resolves only User
+     * and Role instances/classes; there is no `targetId` yet, matching
+     * CreateProduct's own `Product::class` create-time call.
+     *
      * The name is trimmed BEFORE validation, not after (R-6): Laravel's
      * `required` treats a string of spaces as present, so without this a
      * whitespace-only name would validate and persist.
-     *
-     * This action performs NO authorization of its own -- matching
-     * App\Actions\Users\CreateUser/UpdateUser's caller-authorizes shape.
-     * Since this story ships no caller, that is a real, recorded gap: the
-     * UI story (0025) must call Gate::authorize('create', ...) before
-     * invoking this action. See the story's Definition of Done hand-off
-     * note and docs/security/livewire-authorization.md.
      */
     public function __invoke(string $name): ProductCategory
     {
+        $this->logRefusedPrivilegedAttempt->authorize('create', ProductCategory::class, targetType: 'product_category');
+
         $name = trim($name);
 
         Validator::make(

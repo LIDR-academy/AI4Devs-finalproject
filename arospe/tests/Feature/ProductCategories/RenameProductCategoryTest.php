@@ -3,6 +3,8 @@
 use App\Actions\ProductCategories\CreateProductCategory;
 use App\Actions\ProductCategories\RenameProductCategory;
 use App\Models\ProductCategory;
+use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -11,6 +13,18 @@ use Illuminate\Validation\ValidationException;
 // same applies here.
 // RenameProductCategory::__invoke(ProductCategory $productCategory, string $name): ProductCategory
 // does not exist yet.
+//
+// Story 0025: both CreateProductCategory (used here only to set up fixtures) and
+// RenameProductCategory now authorize themselves as their own first statement, so the actor below
+// needs both products.create and products.edit -- see CreateProductCategoryTest.php's identical
+// fix and DeleteProductCategoryTest.php's original one (Phase 2 review finding B-2).
+beforeEach(function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $this->actor = User::factory()->create();
+    $this->actor->givePermissionTo(['products.create', 'products.edit']);
+    $this->actingAs($this->actor);
+});
 
 test('renaming to a free name updates the row and leaves the old name unused', function () {
     $category = app(CreateProductCategory::class)('Footwear');

@@ -2,46 +2,53 @@
 
 namespace App\Actions\ProductCategories;
 
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Models\ProductCategory;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 
 class DeleteProductCategory
 {
+    public function __construct(
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
+    ) {}
+
     /**
      * Delete a product category, hard-blocked while any product still
      * references it (story 0024b, D-14).
      *
-     * The count is unfiltered by product status -- a Draft product still
-     * occupies the category, so counting only Active ones would let an
-     * administrator delete a category out from under a dozen drafts.
+     * Authorizes `delete` on `$productCategory` as its own first statement
+     * (story 0025, D-B2), discharging the hand-off 0024b's D-B1 recorded --
+     * the identical self-authorizing shape App\Actions\Products\
+     * DeleteProduct already uses. This MUST run before the in-use count
+     * below, never after: a reversed order would leak the product count to
+     * an actor who does not even hold products.delete (R-6) -- turning a
+     * plain authorization refusal into a business message that discloses
+     * data the actor has no right to see.
+     *
+     * The count itself is unfiltered by product status -- a Draft product
+     * still occupies the category, so counting only Active ones would let
+     * an administrator delete a category out from under a dozen drafts.
      *
      * Throws ValidationException keyed on 'productCategoryId' -- a
-     * hand-off contract story 0025 binds its delete-confirmation modal's
+     * hand-off contract story 0025's delete-confirmation modal binds its
      * error outlet to. This is a domain-invariant refusal, not an
      * authorization one (see docs/architecture/authorization.md's "a domain
      * invariant is not an authorization rule" section): the actor may hold
      * products.delete and the answer is still no, which is why this is a
-     * ValidationException rather than a Gate-mediated 403.
-     *
-     * No authorization of its own -- see this story's D-B1 (0024b's task
-     * file). Do NOT trust CreateProductCategory's own docblock, which
-     * claims a shape D-B1 records as false. When 0025 closes this hand-off
-     * (per D-B2), the gate goes INSIDE this action as its own first
-     * statement -- constructor-injected
-     * $this->logRefusedPrivilegedAttempt->authorize('delete',
-     * $productCategory, targetType: 'product_category', targetId:
-     * $productCategory->id), the identical self-authorizing shape
-     * App\Actions\Products\DeleteProduct already uses -- never only in the
-     * calling Livewire component. The domain-invariant refusal below stays
-     * unlogged from inside this action (per OQ-B1): it has no Gate call of
-     * its own to log through, which is a property of THIS check, not of
-     * the action lacking actor context in general -- once the gate above
-     * exists, this action resolves Auth::user() internally exactly like
-     * DeleteProduct does.
+     * ValidationException rather than a Gate-mediated 403, and why it stays
+     * unlogged through LogRefusedPrivilegedAttempt -- it has no Gate call
+     * of its own to log through.
      */
     public function __invoke(ProductCategory $productCategory): bool
     {
+        $this->logRefusedPrivilegedAttempt->authorize(
+            'delete',
+            $productCategory,
+            targetType: 'product_category',
+            targetId: $productCategory->id,
+        );
+
         $inUseCount = $productCategory->products()->count();
 
         if ($inUseCount > 0) {

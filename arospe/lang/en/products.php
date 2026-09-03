@@ -23,5 +23,11 @@ return [
     'categories' => [
         'delete_blocked' => 'This category is used by :count product and cannot be deleted.'
             .'|This category is used by :count products and cannot be deleted.',
+
+        // Story 0025 -- the product categories management screen. OQ-2 resolved: no header
+        // summary key (nothing in the PRD or brief asks for one, unlike users.index.summary).
+        'index' => [
+            'action_not_allowed' => 'Action not allowed',
+        ],
     ],
 ];

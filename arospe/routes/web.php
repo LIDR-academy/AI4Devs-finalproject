@@ -13,6 +13,7 @@ require __DIR__.'/settings.php';
 require __DIR__.'/roles.php';
 require __DIR__.'/users.php';
 require __DIR__.'/sales-regions.php';
+require __DIR__.'/product-categories.php';
 
 // TEMPORARY SCAFFOLDING for story 0020's own browser tests (D16), EXTENDED
 // by story 0021 (D13/OQ-1, Option A) to also host a WysiwygEditor instance
