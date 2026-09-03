@@ -250,6 +250,6 @@ graph TD
 | **📦 Bodega (`stock`)** | [US-021: Advertencia Apertura Duplicada](11_user_stories/stock/US-021.md) | [TK-080: Filtro `insumoId`](12_tickets/stock/backend/TK-080.md) | [TK-080-FE: Advertencia en Extracción](12_tickets/stock/frontend/TK-080-FE.md) | ✅ Done |
 | **🛠️ Shared (`shared`)** | [US-022: Sistema FEFO Día/Noche](11_user_stories/shared/US-022.md) | N/A | [TK-081-FE](12_tickets/shared/frontend/TK-081-FE.md) → [082](12_tickets/shared/frontend/TK-082-FE.md) → [083](12_tickets/shared/frontend/TK-083-FE.md) → [084](12_tickets/shared/frontend/TK-084-FE.md) | ✅ Done |
 | **🛠️ Shared (`shared`)** | [US-023: Navegación por Rutas y Shell FEFO](11_user_stories/shared/US-023.md) | N/A | ✅ [TK-085-FE](12_tickets/shared/frontend/TK-085-FE.md) → [086](12_tickets/shared/frontend/TK-086-FE.md) → [087](12_tickets/shared/frontend/TK-087-FE.md) → [088](12_tickets/shared/frontend/TK-088-FE.md) | ✅ Done |
-| **🛠️ Shared (`shared`)** | [US-024: Contenido de Ruta Inline](11_user_stories/shared/US-024.md) | N/A | 📋 [TK-089-FE](12_tickets/shared/frontend/TK-089-FE.md) → [090](12_tickets/shared/frontend/TK-090-FE.md) | 📋 Approved Spec |
+| **🛠️ Shared (`shared`)** | [US-024: Contenido de Ruta Inline](11_user_stories/shared/US-024.md) | N/A | ✅ [TK-089-FE](12_tickets/shared/frontend/TK-089-FE.md) → 📋 [090](12_tickets/shared/frontend/TK-090-FE.md) | ⚠️ Parcial (Reportes inline Done) |
 
 
