@@ -81,6 +81,22 @@ async function seedDefaultRoles(): Promise<{ adminRoleId: string; kitchenRoleId:
 }
 
 
+// TK-092 (AUDIT-SEC-001 F-1): antes del fix, un usuario creado por la API se persistía
+// con roleId = NULL y el mapper lo resolvía a 'ADMIN' (escalada de privilegios). Este
+// paso idempotente reconcilia cualquier usuario huérfano preexistente asignándole el
+// rol de MENOR privilegio (KITCHEN_STAFF); un administrador puede promoverlo después.
+async function reconcileOrphanUserRoles(kitchenRoleId: string): Promise<void> {
+  const { count } = await prisma.user.updateMany({
+    where: { roleId: null },
+    data: { roleId: kitchenRoleId },
+  });
+  if (count > 0) {
+    console.log(
+      `🔐 Reconciliados ${count} usuario(s) sin rol → KITCHEN_STAFF (TK-092 / AUDIT-SEC-001 F-1).`
+    );
+  }
+}
+
 async function seedProductionAdmin(adminRoleId: string): Promise<void> {
   const adminPin = process.env.SEED_ADMIN_PIN;
   if (!adminPin) {
@@ -204,6 +220,7 @@ async function main() {
   console.log('🌱 Ejecutando Seeding Profesional de PostgreSQL (Prisma ORM)...');
 
   const roles = await seedDefaultRoles();
+  await reconcileOrphanUserRoles(roles.kitchenRoleId);
 
   if (process.env.NODE_ENV === 'production') {
     await seedProductionAdmin(roles.adminRoleId);

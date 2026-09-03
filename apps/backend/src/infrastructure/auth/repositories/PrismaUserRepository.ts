@@ -2,6 +2,13 @@ import { PrismaClient } from '../../../generated/prisma/client.js';
 import { User, UserRole, UserStatusType } from '../../../domain/auth/entities/User.js';
 import { Pin } from '../../../domain/auth/value-objects/Pin.js';
 import { IUserRepository } from '../../../domain/auth/repositories/IUserRepository.js';
+import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
+
+// TK-092 (AUDIT-SEC-001 F-1b): rol centinela para una fila sin rol resoluble.
+// NUNCA coincide con un `requireRole(...)` → el usuario queda sin acceso privilegiado
+// (mínimo privilegio) pero sigue siendo visible en la pantalla admin para corregirlo.
+// El fallback anterior era `'ADMIN'` (escalada de privilegios).
+export const UNASSIGNED_ROLE = 'UNASSIGNED';
 
 interface PrismaUserRaw {
   id: string;
@@ -14,15 +21,20 @@ interface PrismaUserRaw {
   resetTokenHash?: string | null;
   resetTokenExpires?: Date | null;
   createdAt: Date;
-  roleId?: string | null;
   role?: { name: string } | null;
 }
 
 function toDomain(raw: PrismaUserRaw): User {
+  const resolvedRole = raw.role?.name ?? UNASSIGNED_ROLE;
+  if (resolvedRole === UNASSIGNED_ROLE) {
+    console.warn(
+      `[PrismaUserRepository] Usuario ${raw.id} sin rol resoluble — se asigna el rol centinela "${UNASSIGNED_ROLE}" (sin privilegios). Reasignar desde Gestión de Personal.`
+    );
+  }
   return new User({
     id: raw.id,
     name: raw.name,
-    role: (raw.role?.name || raw.roleId || 'ADMIN') as UserRole,
+    role: resolvedRole as UserRole,
     pin: Pin.createFromHash(raw.pinHash),
     status: raw.status as UserStatusType,
     mustChangePin: raw.mustChangePin ?? true,
@@ -36,6 +48,33 @@ function toDomain(raw: PrismaUserRaw): User {
 
 export class PrismaUserRepository implements IUserRepository {
   constructor(private readonly prisma: PrismaClient) {}
+
+  // TK-092 (AUDIT-SEC-001 F-1a / F-2): el `User` de dominio modela `role` por nombre;
+  // la fila Prisma guarda `roleId`. Resolvemos contra el catálogo `Role` (fuente de
+  // verdad cerrada — alineado con US-015, sin hardcodear un enum). Un nombre que no
+  // existe en el catálogo se rechaza en vez de persistirse en silencio.
+  private async resolveRoleId(roleName: string): Promise<string> {
+    const role = await this.prisma.role.findFirst({
+      where: { name: { equals: roleName, mode: 'insensitive' } },
+      select: { id: true },
+    });
+    if (!role) {
+      throw new EntityNotFoundException('Rol', roleName);
+    }
+    return role.id;
+  }
+
+  // TK-092 (AUDIT-DEV-005 D-1): un usuario huérfano (Role borrado vía onDelete: SetNull)
+  // porta el rol centinela `UNASSIGNED`. En ese caso NO se toca `roleId` en la escritura:
+  // la mutación debe pasar igual (persistir intentos fallidos de login, BLOCK como acción
+  // de contención, edición de nombre/PIN por un admin). El `roleId` real (NULL) se preserva
+  // y un admin lo corrige con un PUT que trae un rol válido explícito → `resolveRoleId`.
+  private async roleIdPatchForWrite(user: User): Promise<{ roleId?: string }> {
+    if (user.role === UNASSIGNED_ROLE) {
+      return {};
+    }
+    return { roleId: await this.resolveRoleId(user.role) };
+  }
 
   public async findById(id: string): Promise<User | null> {
     const raw = await this.prisma.user.findUnique({
@@ -70,10 +109,12 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   public async save(user: User): Promise<void> {
+    const rolePatch = await this.roleIdPatchForWrite(user);
     await this.prisma.user.upsert({
       where: { id: user.id },
       update: {
         name: user.name,
+        ...rolePatch,
         pinHash: user.pin.getHash(),
         status: user.status,
         mustChangePin: user.mustChangePin,
@@ -85,6 +126,7 @@ export class PrismaUserRepository implements IUserRepository {
       create: {
         id: user.id,
         name: user.name,
+        ...rolePatch,
         pinHash: user.pin.getHash(),
         status: user.status,
         mustChangePin: user.mustChangePin,
@@ -97,10 +139,12 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   public async update(user: User): Promise<void> {
+    const rolePatch = await this.roleIdPatchForWrite(user);
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         name: user.name,
+        ...rolePatch,
         pinHash: user.pin.getHash(),
         status: user.status,
         mustChangePin: user.mustChangePin,
