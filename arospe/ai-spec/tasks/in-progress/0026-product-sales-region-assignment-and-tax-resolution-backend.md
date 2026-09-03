@@ -7,26 +7,26 @@ Sales Region entries (Spain's fiscal sub-entries included), and a resolver answe
 applies to this product at this destination" — the assigned region's rate when the destination is one
 the product targets, the catalog default's rate otherwise. It is **backend only**: no screen, no
 route, no Livewire component. The product editor and its region picker are story **0027**, built on
-the searchable multi-select shell of story [0022](done/0022-searchable-multi-select-component.md).
+the searchable multi-select shell of story [0022](../done/0022-searchable-multi-select-component.md).
 
 > **Scope change — 2026-08-18 (two confirmed user decisions).**
 > **(1) Groupings are gone.** The supranational **grouping** entries (Unión Europea, Internacional)
 > have been removed from the Sales Region catalog project-wide by user decision — see
-> [0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s own scope-change amendment and its **D11**.
+> [0016](../done/0016-sales-region-catalog-schema-and-seeder.md)'s own scope-change amendment and its **D11**.
 > The catalog holds only individual countries and Spain's fiscal sub-territories, so this story's
 > resolver loses its grouping tier entirely and **[OQ-1](#open-questions) is resolved as moot**. See
 > **D10**.
 > **(2) An unresolvable submitted id rejects the whole save.** Story
-> [0022](done/0022-searchable-multi-select-component.md)'s option contract has been amended (its D12) so a
+> [0022](../done/0022-searchable-multi-select-component.md)'s option contract has been amended (its D12) so a
 > consumer can detect an id its resolver cannot vouch for — `resolveSelected()` is a total function
 > throwing `App\Exceptions\UnresolvedSelectionException`; this story's assignment path uses that to
 > **fail the entire save** rather than silently persisting a subset. This resolves this story's own
 > **D7** data-loss finding. See **D11**.
 
-Covers [PRD](../../docs/PRD/PRD.md#22-products) §2.2's *"Selecting Spain surfaces its fiscal
+Covers [PRD](../../../docs/PRD/PRD.md#22-products) §2.2's *"Selecting Spain surfaces its fiscal
 sub-entries in the region picker"* (the **data half** — the options a picker renders; the picker
 itself is 0027), *"Assign a product to several sales regions"* and *"A product's tax uses its
-assigned region's rate"*, plus [§2.1](../../docs/PRD/PRD.md#21-sales-regions--taxes)'s *"The default
+assigned region's rate"*, plus [§2.1](../../../docs/PRD/PRD.md#21-sales-regions--taxes)'s *"The default
 rate applies when no region matches"* — i.e. Sales Regions acceptance criterion 5 and Products
 acceptance criterion 5.
 
@@ -42,7 +42,7 @@ scenarios actually assert. Recorded here so Phase 2 does not re-litigate the sto
 ## Gherkin
 
 Every scenario opens with a named business-role actor and carries exactly one `When`, per
-[gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3.
+[gherkin-guidelines.md](../../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3.
 
 ```gherkin
 Feature: Assigning a product to Sales Regions
@@ -243,13 +243,13 @@ is reachable from the agent shell:
 - Adding `$table->index('sales_region_id')` emits a **fourth** statement creating
   `product_sales_region_sales_region_id_index` *in addition to* the index MySQL auto-creates for the
   FK constraint — two indexes on one column, which is precisely the `users_uuid_unique` write
-  amplification recorded in [errors-log.md](../../docs/errors-log.md) and re-flagged as 0024's
+  amplification recorded in [errors-log.md](../../../docs/errors-log.md) and re-flagged as 0024's
   **D-10**. **Do not add it.**
 - `product_id` needs no index of its own: it is the composite PK's **leftmost prefix**.
   `sales_region_id` is not covered by that prefix, so InnoDB creates its own supporting index for the
   FK — which is exactly the index the reverse lookup would want, obtained for free.
 
-> ⚠️ [`migrations.md`](../../docs/database/migrations.md#structure) still instructs the opposite
+> ⚠️ [`migrations.md`](../../../docs/database/migrations.md#structure) still instructs the opposite
 > ("this repo is explicit about it", citing `create_passkeys_table`'s manual
 > `$table->index('user_id')`). **That instruction is wrong** and 0024's **D-10** already owns
 > correcting it; this story is the second table it would damage. Flagged, not fixed here.
@@ -341,7 +341,7 @@ sibling story's files is the same discipline 0024 applies when it *does* edit
 `DeleteProductCategory` — it names the reason first.
 
 > 📌 **Gallery sync is not this story's, in any sense — see D14.** `SyncProductGallery` is created,
-> owned and tested **exclusively by [0024](done/0024-products-core-crud-backend.md)**. This story neither
+> owned and tested **exclusively by [0024](../done/0024-products-core-crud-backend.md)**. This story neither
 > calls it, wraps it, extends it, nor specifies its behaviour; every mention of it here is a *shape*
 > comparison for a sibling action. 0026 handles **sales-region assignment only, never product media**.
 
@@ -420,7 +420,7 @@ declined for `SalesRegionKind`.
 
 ### `app/Actions/Products/SearchSalesRegions.php` — **create**
 
-**Implements story [0022](done/0022-searchable-multi-select-component.md)'s locked
+**Implements story [0022](../done/0022-searchable-multi-select-component.md)'s locked
 `App\Livewire\Components\MultiSelectOptionsResolver` interface** — and 0022's own consumer example
 already names this exact class-string, so the name is a contract, not a preference:
 
@@ -456,7 +456,7 @@ sharpest trap (**D7**):
   no-longer-assignable one `disabled: true`. This is not symmetry-breaking for its own sake — see
   **D7**; getting it wrong silently deletes data.
 - **An id neither method can vouch for is now a *rejection*, not a silent drop (D11).** Per
-  [0022's D12](done/0022-searchable-multi-select-component.md#d12--an-unresolvable-id-is-rejected-never-silently-dropped-confirmed),
+  [0022's D12](../done/0022-searchable-multi-select-component.md#d12--an-unresolvable-id-is-rejected-never-silently-dropped-confirmed),
   `resolveSelected()` is a **total function**: it returns exactly one entry per requested id, or it
   throws `App\Exceptions\UnresolvedSelectionException` (new class at
   `app/Exceptions/UnresolvedSelectionException.php`, following the `ImmutableRoleException` precedent
@@ -466,13 +466,13 @@ sharpest trap (**D7**):
   `ValidationException` is the **consumer's** job: 0027 calls the shell's `assertSelectionResolvable()`
   (or `resolveSelected()` itself) in its save path, alongside the validation rule below.
 - **Text matching uses `App\Actions\NormalizeForSearch`, not a local fold.** Per
-  [0022's D13](done/0022-searchable-multi-select-component.md#d13--one-centralized-search-term-normalizer-appactionsnormalizeforsearch-confirmed),
+  [0022's D13](../done/0022-searchable-multi-select-component.md#d13--one-centralized-search-term-normalizer-appactionsnormalizeforsearch-confirmed),
   the one shared normalizer is an invokable class at `app/Actions/NormalizeForSearch.php` with
   signature `__invoke(string $value): string`, implemented as `trim` → `Str::lower` → `Str::ascii` →
   collapse whitespace. The `$term` handed to `search()` **arrives already normalized** by the shell, so
   this class must fold the **haystack** side — the entry's own name and its parent's name — through
   that same class (injected per-method, per
-  [code-style.md](../../docs/conventions/code-style.md#inject-single-purpose-actions-per-method));
+  [code-style.md](../../../docs/conventions/code-style.md#inject-single-purpose-actions-per-method));
   comparing a folded needle against an unfolded haystack silently matches nothing. Hand-rolling
   `Str::lower()`/`iconv()` here is a review finding.
 - **Labels are qualified: `"España (Península)"`, not `"Península"`** — with `group: null`. That is
@@ -541,15 +541,26 @@ across composed traits (`nameRules`), and neither of these does.
 > — "already assigned to this product" is another branch of the same match, not a check bolted on
 > afterwards.
 
-> ⚠️ **The OR must be wrapped in its own nested group, or the rule matches everything.** `Exists`
-> applies each `where(Closure)` to the **top-level** count query, which already carries
-> `where id = <submitted value>`. A bare `->orWhereIn('id', $preserved)` at that level produces
-> `where id = ? and (assignable…) or id in (…)` — whose right-hand branch is true for any non-empty
-> `$preserved` **regardless of the submitted value**, so every garbage id would pass. The single
-> outer `->where(fn ($group) => …)` above is what yields the correct
-> `where id = ? and ((is_active = 1 and not exists(children)) or id in (…))`. Do not flatten it.
-> An empty `$preserved` is safe as-is: `orWhereIn('id', [])` compiles to `or 0 = 1`, so a create
-> falls back to exactly the pre-D12 strict rule with no `when()` guard needed.
+> ⚠️ **Corrected 2026-09-03 (`database-expert` re-convention, per Provenance) — the code below is
+> correct, but the stated reason it's needed is wrong.** This block previously read: *"The OR must be
+> wrapped in its own nested group, or the rule matches everything. `Exists` applies each
+> `where(Closure)` to the **top-level** count query, which already carries `where id = <submitted
+> value>`. A bare `->orWhereIn('id', $preserved)` at that level produces `where id = ? and
+> (assignable…) or id in (…)` — whose right-hand branch is true for any non-empty `$preserved`
+> **regardless of the submitted value**, so every garbage id would pass."* **Verified false by
+> compiling both forms against a live database**: `Illuminate\Validation\Rules\DatabaseRule::where()`
+> already wraps *every* registered closure in its own `$query->where(fn ($query) => $value($query))`
+> before your closure body ever runs — so even the "naive," un-nested form
+> (`fn ($query) => $query->where('is_active', true)->orWhereIn('id', $preserved)`, with no inner
+> `->where(fn ($group) => …)` wrapper) compiles to `where id = ? and (is_active = 1 or id in (…))`,
+> **not** the top-level `... and (...) or id in (...)` shape this warning described. A bare
+> `Rule::exists()->orWhereIn(...)` chain doesn't even compile — `Exists` exposes no such method, so
+> the literal bypass this warned about is structurally unreachable on Laravel `^13.17`. **The extra
+> inner `->where(fn ($group) => …)` grouping in the code above is harmless and may be kept** — it adds
+> a redundant nesting level, not a required one — but do not cite "or every garbage id passes" as the
+> reason for keeping it; nothing here would let that happen either way. What the code must still get
+> right, confirmed by the same live comparison: `orWhereIn('id', [])` compiles to `or 0 = 1`, so an
+> empty `$preserved` (a create) is bit-for-bit the pre-D12 strict rule.
 
 > 🔒 **`$preservedSalesRegionIds` is server-derived, always.** It must come from
 > `$product->salesRegions` (or a direct pivot query) for the product the request is editing. Taking it
@@ -566,18 +577,18 @@ across composed traits (`nameRules`), and neither of these does.
 > must name the problem (`lang/{en,es}/products.php`, below), never fail silently.
 
 > ⚠️ **A rule enforced only in a form is bypassed by every other call site of the action**
-> ([livewire-authorization.md](../../docs/security/livewire-authorization.md)). This validation runs
+> ([livewire-authorization.md](../../../docs/security/livewire-authorization.md)). This validation runs
 > on 0027's component path only. See [risk R-4](#risks) — whether `SyncProductSalesRegions` should
 > re-assert assignability inside itself is a deliberate open decision, not an oversight.
 
 ### `lang/en/products.php`, `lang/es/products.php` — **modify** (0024 creates them)
 
 A `sales_regions.*` group for the two refusal messages (not in the catalog / not assignable), added
-**key-for-key to both files** per [naming.md](../../docs/conventions/naming.md#translation-keys).
+**key-for-key to both files** per [naming.md](../../../docs/conventions/naming.md#translation-keys).
 
 > ⚠️ **Three stories now touch these two files** — 0024 creates them, 0028 extends them, and this
 > story extends them. 0024's R-13 already records the hazard; this is a third writer, and
-> [contracts.md](../../docs/contracts.md#parallel-agent-file-ownership-rule)'s Parallel Agent
+> [contracts.md](../../../docs/contracts.md#parallel-agent-file-ownership-rule)'s Parallel Agent
 > File-Ownership Rule governs if any two ever run concurrently.
 
 ### Explicitly **not** touched
@@ -657,12 +668,19 @@ permission-cache flush — this story has no permission-gated surface.
       product → refused. A test that hands the id under test straight into `$preserved` proves nothing;
       the arrangement must go through `Product::salesRegions`.
 - [ ] **The FKs really constrain** — two raw-query tests, an argued exception to
-      [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md)'s "database guarantees" rule,
+      [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md)'s "database guarantees" rule,
       identical in kind to 0024's category- and media-FK tests: (a) a raw
       `DB::table('product_sales_region')->insert([...])` with a random region UUID throws
       `QueryException`; (b) a raw `DB::table('sales_regions')->…->delete()` on an assigned region
       throws `QueryException` `23000` and the region survives. (b) is the **only** executable proof of
       `restrictOnDelete()` anywhere in the codebase, since no application path deletes a region.
+- [ ] **`SyncProductSalesRegions` is unreachable from anywhere but its intended callers** (D8, resolved
+      2026-09-03) — a reachability assertion matching `tests/Feature/Products/ProductAuthorizationTest.php`'s
+      existing guard on `SyncProductGallery`: no class under `app/` other than this story's own tests
+      and — once 0027 ships — `App\Livewire\Products\*` references it. Today, before 0027 exists, the
+      assertion is simply that nothing under `app/` calls it at all. This is what stands in for a
+      `Gate::authorize()` call: `SyncProductSalesRegions` self-authorizes nothing, by design, exactly
+      like its sibling pivot-writer.
 
 **Feature — `tests/Feature/Products/ResolveProductTaxRateTest.php`**
 - [ ] **Direct match**: product assigned to `{Península, Canarias}`, Canarias `withRate('7.500')`,
@@ -763,7 +781,7 @@ Run them; do not merely assert the tests exist (the pattern 0016 and 0017 establ
 ### Deliberately not tested, as decisions rather than gaps
 
 - **`HasUuids`, UUIDv7 ordering, route-binding 404s** — proved once against `users` in
-  [0001](done/0001-users-uuid-primary-key.md) and re-proved at key-type level by 0016's own model test.
+  [0001](../done/0001-users-uuid-primary-key.md) and re-proved at key-type level by 0016's own model test.
 - **`BelongsToMany` / `sync()` internals as framework facts.** These tests assert *this app's* use of
   `sync()`, never that Eloquent's pivot mechanics work in the abstract.
 - **Migration `up()`/`down()` mechanics** — `RefreshDatabase` runs every migration on every Feature
@@ -772,7 +790,7 @@ Run them; do not merely assert the tests exist (the pattern 0016 and 0017 establ
   `is_default`/`is_active` single-writer invariants — **0017's, entirely**. This story only *reads* an
   already-validated `rate`.
 - **The seeder's idempotency / no-clobber / drift-repair guarantees** — 0016's, entirely.
-- **Product CRUD, SKU canonicalisation, description sanitization, gallery mechanics** — 0024's and [0024a](done/0024a-product-description-html-sanitization.md)'s,
+- **Product CRUD, SKU canonicalisation, description sanitization, gallery mechanics** — 0024's and [0024a](../done/0024a-product-description-html-sanitization.md)'s,
   entirely.
 - **Address → region resolution** (shipping vs billing, the IP-geo mismatch check) — PRD §3.2 /
   Epic 3. This story's resolver receives an already-resolved region.
@@ -781,7 +799,7 @@ Run them; do not merely assert the tests exist (the pattern 0016 and 0017 establ
 - **Authorization** — none exists here by design (**D8**), discharged as a Definition-of-Done hand-off
   to 0027 exactly as 0024 discharged the same gap, not silently assumed safe.
 - **"There is no way to invent a region from the product side", as a bare absence assertion** — the
-  anti-pattern [errors-log.md](../../docs/errors-log.md) warns against and 0016 already declined once.
+  anti-pattern [errors-log.md](../../../docs/errors-log.md) warns against and 0016 already declined once.
   The testable substitute is the España-heading and inactive-region refusals above.
 
 ## Expected outcome
@@ -842,7 +860,7 @@ charge but which region to record on the order.
 
 ## Definition of Done
 - [ ] Tests written and green, plus the **full** existing suite in a single isolated run, per
-      [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule.
+      [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule.
 - [ ] All eleven [mandatory revert-checks](#mandatory-revert-checks) performed, each confirmed to
       redden its named test — in particular **#2** (no fall-through on an unconfigured rate),
       **#7** (`resolveSelected()`'s deliberate asymmetry), **#9** (no partial save on a stale id),
@@ -967,7 +985,7 @@ a `try`/`catch` is the wrong shape. This repo throws for *input* problems
 (`ValidationException`), and there is no input to blame here. **One exception is retained**: **no
 default row existing at all** is a genuine invariant violation (0017 guarantees production cannot
 reach it) and throws — following the
-[`ImmutableRoleException`](../../app/Exceptions/ImmutableRoleException.php) precedent of a domain
+[`ImmutableRoleException`](../../../app/Exceptions/ImmutableRoleException.php) precedent of a domain
 exception in `app/Exceptions/`. It must be distinguishable from an unconfigured rate, or "the
 developer forgot to arrange a default" reads as "the administrator hasn't set a rate".
 
@@ -1004,25 +1022,48 @@ asymmetry looks like an inconsistency to a reviewer who has not read this paragr
 > administrator and silent data loss; D11 is now the backstop, and D7 the reason the backstop rarely
 > fires. Revert-check #7 remains mandatory.
 
-> ⚠️ **The convention this decision cites was reversed on 2026-09-01, and D8's first half must be
-> re-decided before Phase 3.** [0024](done/0024-products-core-crud-backend.md)'s **RQ-10**/**D-15** rested
-> on a claim that `App\Actions\Users\CreateUser`/`UpdateUser` contain no `Gate` call, which is
-> **false** (`CreateUser::__invoke()` line 66 authorizes `create`; `UpdateUser` carries seven such
-> calls) — and 0024 reversed itself at its three-way split (its **C-1**). Its four product actions now
+> ⚠️ **RESOLVED 2026-09-03 (Phase 2 INVEST review).** This block previously read: *"The convention this
+> decision cites was reversed on 2026-09-01, and D8's first half must be re-decided before Phase 3.
+> [0024](../done/0024-products-core-crud-backend.md)'s **RQ-10**/**D-15** rested on a claim that
+> `App\Actions\Users\CreateUser`/`UpdateUser` contain no `Gate` call, which is **false**
+> (`CreateUser::__invoke()` line 66 authorizes `create`; `UpdateUser` carries seven such calls) — and
+> 0024 reversed itself at its three-way split (its **C-1**). Its four product actions now
 > self-authorize, and the **documented** convention
-> ([base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers))
+> ([base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers))
 > is that the check lives in the class performing the operation. **What is unaffected**: the second
 > half below — the *resolver* needing no authorization because it reads values already visible and may
 > run from a queued job — is an independent argument that stands on its own. **What must be
 > re-decided**: whether `SyncProductSalesRegions` (a *writer*) self-authorizes. On the corrected
-> convention it should, and the "no enforcement path" sentence would then no longer apply to it.
+> convention it should, and the 'no enforcement path' sentence would then no longer apply to it."*
+> **The Phase 2 review checked 0024's real, shipped code rather than re-deriving from the convention in
+> the abstract, and found `SyncProductSalesRegions` is architecturally identical to
+> `App\Actions\Products\SyncProductGallery`, not to `CreateProduct`/`UpdateProduct`.**
+> `CreateProduct`/`UpdateProduct` *do* self-authorize (`Gate::authorize('create'|'update', ...)` as
+> their first statement) — but `SyncProductGallery`, the sibling pivot-writer this story has repeatedly
+> analogised itself to (D1, D14), **deliberately does not**: its own docblock states it is a
+> collaborator invoked only inside an already-authorized transaction, and a reflexive `update` gate on
+> it would wrongly refuse a legitimate `products.create`-only actor mid-create (the actor holds
+> `create`, not `update`, and the product row does not exist yet when `CreateProduct` calls it).
+> `tests/Feature/Products/ProductAuthorizationTest.php` enforces this with a reachability assertion —
+> no class other than `CreateProduct`/`UpdateProduct` references `SyncProductGallery` — rather than a
+> gate. **D13 already commits the actual call shape**: 0027 opens one transaction, authorizes the
+> product update once, then calls both `SyncProductGallery` and `SyncProductSalesRegions` inside it.
+> **So: `SyncProductSalesRegions` does not self-authorize**, matching `SyncProductGallery` exactly, and
+> D8's "no enforcement path" sentence below is correct as originally written and needs no further
+> change. `SyncProductSalesRegions` should carry the identical reachability-test guard
+> (`tests/Feature/Products/SalesRegionAuthorizationTest.php` or folded into the existing file) —
+> **added to the Definition-of-Done hand-off for 0027's authors to be aware of, though the test itself
+> belongs to this story's own Phase 3, not 0027's.**
 
 **D8 — Neither action self-authorizes.** 0024's RQ-10 convention: actions are plain domain
-operations, and the caller (0027, or Epic 3's order pipeline) authorizes. The resolver additionally
-needs no authorization at its call sites at all — it reads values already visible to anyone holding
-`products.view` or `sales-regions.view`, and Epic 3 may invoke it from a queued job with no acting
-user. This ships **no enforcement path** for assignment, which is the same acknowledged gap 0024
-recorded at D-15 and discharged through a Definition-of-Done hand-off rather than through code.
+operations, and the caller (0027, or Epic 3's order pipeline) authorizes. **Confirmed correct — see the
+✅ above — against 0024's actual shipped shape, not merely its original premise**: `SyncProductGallery`,
+the sibling pivot-writer, self-authorizes nothing for the identical structural reason
+`SyncProductSalesRegions` doesn't, and both are enforced by a reachability test rather than a gate. The
+resolver additionally needs no authorization at its call sites at all — it reads values already visible
+to anyone holding `products.view` or `sales-regions.view`, and Epic 3 may invoke it from a queued job
+with no acting user. This ships **no enforcement path** for assignment, which is the same acknowledged
+gap 0024 recorded at D-15 and discharged through a Definition-of-Done hand-off rather than through code.
 
 **D9 — `ResolveProductTaxRate` returns an object, not a `?string`.** PRD §3.2 requires an order to
 record *"the Sales Region used for tax resolution"*, so Epic 3 needs to know which entry won, not just
@@ -1034,7 +1075,7 @@ apart. `TaxRateResolutionTier` is an enum rather than a `bool $isExactMatch` bec
 (confirmed user decision; supersedes D4's second bullet and resolves OQ-1 as moot.)** The Sales Region
 catalog no longer contains supranational grouping entries at all: it holds individual countries and
 Spain's fiscal sub-territories, and nothing else — see
-[0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and its D11, where
+[0016](../done/0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and its D11, where
 `SalesRegionKind` drops its `Grouping` case, leaving `country` / `fiscal_territory`.
 
 Consequences here, all subtractive:
@@ -1083,7 +1124,7 @@ property of 0022's contract and worked around it entirely through D7's `resolveS
 That asymmetry is still required (see D7's resolution note) but is no longer load-bearing on its own.
 
 **D12 — Validation gates *newly added* ids, not *preserved* ones. — 2026-08-19 (bug found by story
-[0027](0027-products-list-and-editor-ui.md) while building the picker, raised there as its OQ-5;
+[0027](../0027-products-list-and-editor-ui.md) while building the picker, raised there as its OQ-5;
 supersedes the unconditional form of `salesRegionIdRules()` this story shipped at D3.)**
 
 *The bug.* `salesRegionIdRules()` applied `is_active = true` + no-children to **every** submitted
@@ -1110,8 +1151,10 @@ conditions live in the `exists` match, never in a follow-up `if` — and keeps t
 exactly where **D11** put it, so a single bad element still fails the request and
 `SyncProductSalesRegions` is still never invoked. Three constraints, each with a real failure mode:
 
-- **The OR is wrapped in its own nested group.** `Exists` applies the closure to the top-level count
-  query that already carries `where id = <value>`, so an ungrouped `orWhereIn` matches every id.
+- **The OR sits inside the per-element `Rule::exists()->where(Closure)` call**, matching the code
+  above. *(Corrected 2026-09-03: the extra inner grouping is harmless but not load-bearing the way
+  this bullet originally claimed — `DatabaseRule::where()` already isolates every registered closure
+  in its own group regardless. See the ⚠️ under the code block for the verified mechanism.)*
 - **`$preservedSalesRegionIds` is read from the persisted product**, `$product->salesRegions`, never
   from the request. A client-supplied preserved list turns the whole gate off. Revert-check **#11**.
 - **Create passes `[]`**, which compiles to `or 0 = 1` — a create is therefore bit-for-bit the
@@ -1137,7 +1180,7 @@ slug — is unchanged and still governs the newly-added branch.
 
 **D13 — Atomicity across the core-field write and the region sync is 0027's, and it is a hand-off, not
 an assumption. — 2026-08-19 (gap found by story
-[0027](0027-products-list-and-editor-ui.md).)** Nothing in this story previously said the product's
+[0027](../0027-products-list-and-editor-ui.md).)** Nothing in this story previously said the product's
 own update and its region sync must commit or fail together. Without a boundary, a `sync()` that throws
 after `UpdateProduct` has already committed leaves a renamed product wearing its **old** tax reach — a
 silently wrong tax outcome with a successful-looking save behind it.
@@ -1172,7 +1215,7 @@ two writers, so the scenario proving it belongs to 0027.
 
 **D14 — `SyncProductGallery` is 0024's alone; product media is entirely out of this story's scope. —
 2026-08-19 (ownership clarification, coordinated with
-[0024](done/0024-products-core-crud-backend.md).)** This story handles **sales-region assignment only**. It
+[0024](../done/0024-products-core-crud-backend.md).)** This story handles **sales-region assignment only**. It
 does not create, call, wrap, extend, test or specify `SyncProductGallery`, and no obligation about
 product media attaches to it. Every remaining mention of that class here is a deliberate *analogy* —
 "a single named writer of one pivot, shaped like the sibling that writes the other" — or a hand-off
@@ -1216,16 +1259,16 @@ Executed during this debate, against this repository.
 
 ### Dependencies
 
-- **[0024](done/0024-products-core-crud-backend.md) — hard, blocking.** Creates `products`, `Product`,
+- **[0024](../done/0024-products-core-crud-backend.md) — hard, blocking.** Creates `products`, `Product`,
   `ProductFactory` and `ProductValidationRules`, all of which this story extends.
-- **[0016](done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Creates
+- **[0016](../done/0016-sales-region-catalog-schema-and-seeder.md) — hard, blocking.** Creates
   `sales_regions`, `SalesRegion`, `SalesRegionKind` and `SalesRegionFactory`.
-- **[0017](done/0017-sales-region-tax-configuration-backend.md) — hard, blocking.** Nothing in this story
+- **[0017](../done/0017-sales-region-tax-configuration-backend.md) — hard, blocking.** Nothing in this story
   calls its code, but the resolver's entire fallback tier rests on 0017's enforced "exactly one
   default, and it is active" invariant. Without it the default lookup has no guarantee behind it.
-- **[0022](done/0022-searchable-multi-select-component.md) — hard, blocking, and easy to miss.**
+- **[0022](../done/0022-searchable-multi-select-component.md) — hard, blocking, and easy to miss.**
   `SearchSalesRegions` implements 0022's `MultiSelectOptionsResolver` interface, which 0022 creates.
-  Numbering already satisfies [workflow.md](../../docs/workflow.md#task-ordering-rule); what must be
+  Numbering already satisfies [workflow.md](../../../docs/workflow.md#task-ordering-rule); what must be
   enforced is the **sequencing** — all four reach Phase 7 before 0026 starts Phase 3.
 - **Story 0027 depends on this one** (the paired UI), consuming both the assignment action and the
   options resolver.
@@ -1249,12 +1292,12 @@ Executed during this debate, against this repository.
 - ~~**R-9 — 0022's amended contract is not yet published.**~~ **Resolved 2026-08-18 — published and
   substituted into this document.** Both pieces this story depends on are now locked in 0022 and named
   concretely above, so nothing here is implemented against a guessed shape:
-  - **Unresolved-id rejection (D11 / [0022 D12](done/0022-searchable-multi-select-component.md#d12--an-unresolvable-id-is-rejected-never-silently-dropped-confirmed))** —
+  - **Unresolved-id rejection (D11 / [0022 D12](../done/0022-searchable-multi-select-component.md#d12--an-unresolvable-id-is-rejected-never-silently-dropped-confirmed))** —
     `resolveSelected()` is a total function throwing `App\Exceptions\UnresolvedSelectionException`
     (`app/Exceptions/UnresolvedSelectionException.php`, modelled on `ImmutableRoleException`, no
     `render()`) with `public readonly array $missingIds`; the consumer calls
     `assertSelectionResolvable()` in its save path and converts it to a `ValidationException`.
-  - **Centralized normalizer ([0022 D13](done/0022-searchable-multi-select-component.md#d13--one-centralized-search-term-normalizer-appactionsnormalizeforsearch-confirmed))** —
+  - **Centralized normalizer ([0022 D13](../done/0022-searchable-multi-select-component.md#d13--one-centralized-search-term-normalizer-appactionsnormalizeforsearch-confirmed))** —
     `App\Actions\NormalizeForSearch` at `app/Actions/NormalizeForSearch.php`, invokable,
     `__invoke(string $value): string`, `trim` → `Str::lower` → `Str::ascii` → collapse whitespace.
     Both classes are **created and unit-tested by 0022**, not by this story; 0026 is their first
@@ -1263,7 +1306,7 @@ Executed during this debate, against this repository.
 - **R-4 — Assignability enforced only in validation.** `SyncProductSalesRegions` itself does not
   re-check that each id is active and childless, so a future Artisan command or importer calling the
   action directly bypasses D3 entirely — the exact failure mode
-  [livewire-authorization.md](../../docs/security/livewire-authorization.md) documents, and the one
+  [livewire-authorization.md](../../../docs/security/livewire-authorization.md) documents, and the one
   0017 answered by re-checking inside `SetDefaultSalesRegion`. Not adopted here because the pivot has
   no invariant to protect (an unassignable assignment is untidy, not corrupting) and because the
   database FK already refuses a nonexistent id. **Recorded as a deliberate, arguable asymmetry with
@@ -1275,7 +1318,7 @@ Executed during this debate, against this repository.
   extends). 0024's R-13 with one more writer.
 - **R-7 — ⚠️ CLOSED 2026-09-01 (was: CI cannot open a database connection, citing 0024's **V-1**).**
   Real when raised, and **fixed on 2026-08-26** by the task it spawned,
-  [`ci-database-connection-gap.md`](ci-database-connection-gap.md) — `phpunit.xml`, `.env.example` and
+  [`ci-database-connection-gap.md`](../ci-database-connection-gap.md) — `phpunit.xml`, `.env.example` and
   `.github/workflows/tests.yml` all pin MySQL now, with a `mysql:8.4` service in CI and a recorded
   clean `866/866` run. **The original text is retained below for the record**, and its Full Test Suite
   Gate consequence no longer applies.
@@ -1313,33 +1356,33 @@ Non-blocking for the schema; **confirm before Phase 3.**
 
 1. ✅ **OQ-1 — Does a grouping automatically cover its member countries? — RESOLVED 2026-08-18: moot.**
    **Groupings removed project-wide** by user decision, so neither option is live — see **D10** and
-   [0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s amendment. The resolver matches assigned
+   [0016](../done/0016-sales-region-catalog-schema-and-seeder.md)'s amendment. The resolver matches assigned
    entries directly against the destination and falls back to the default; there is no grouping tier.
    Kept as a numbered, resolved item rather than deleted, so Phase 2 can see the question was answered
    rather than dropped.
-2. **OQ-2 — Should `SyncProductSalesRegions` re-assert assignability inside itself?** *(R-4)*
-   - **(a) No — validation owns it *(recommended)*.** The pivot has no invariant to corrupt, and the
-     FK already refuses a nonexistent id; adding a second enforcement point means a second place to
-     keep in sync.
-   - (b) Yes — mirror 0017's `SetDefaultSalesRegion`, which re-checks `is_active` inside the action
-     precisely so every call site inherits the rule. Defensible, and the more conservative choice if
-     an importer or Artisan command is expected soon.
+2. ✅ **OQ-2 — Should `SyncProductSalesRegions` re-assert assignability inside itself? — RESOLVED
+   2026-09-03: (a), no.** Validation owns it. The pivot has no invariant to corrupt, the FK already
+   refuses a nonexistent id, and — per the 2026-08-19 update below — a naïve action-level re-check
+   would have to duplicate D12's preserved-vs-new delta to avoid re-breaking that fix, which is a
+   second copy of the same rule in a second place. `App\Exceptions\UnresolvedSelectionException` +
+   D11's per-element `Rule::exists` rejection is the sole enforcement point; R-4's asymmetry with
+   0017 is accepted as recorded there.
+   - ~~(a) No — validation owns it *(recommended)*.~~ Adopted.
+   - ~~(b) Yes — mirror 0017's `SetDefaultSalesRegion`.~~ Declined — see the ⚠️ below, unchanged.
    - ⚠️ **Updated 2026-08-19 (D12): (b) got harder, and (a) got stronger.** A naïve action-level
      `is_active` re-check would re-introduce exactly the bug D12 just fixed — every `sync()` on a
      product holding a since-deactivated region would throw. To choose (b), the action would have to
      compute the same preserved-vs-new delta the validation rule does, i.e. read the product's current
      pivot before writing it, making it a second copy of D12's rule in a second place. That is the
      "second place to keep in sync" (a) already warned about, now with a concrete failure mode.
-3. **OQ-3 — Where should `ResolvedTaxRate` live?**
-   - **(a) `app/Actions/Products/`, beside its only producer *(recommended)*.** Needs no new base
-     folder, so no `CLAUDE.md` approval is required.
-   - (b) A new `app/DataTransferObjects/`. Cleaner conceptually, but creating a base folder Laravel
-     does not ship **requires explicit approval** per project `CLAUDE.md`, and it would be this
-     repo's first DTO folder — a convention decision larger than this story.
-4. **OQ-4 — Should the picker's labels be qualified (`"España (Península)"`) or grouped
-   (`label: "Península"`, `group: "España"`)?** Recommended: **qualified**, matching PRD §2.1's own
-   spelling and 0022's D3 expectation of a flat list for this consumer, and making a selected chip
-   self-describing. Switching to grouped later is purely additive to this resolver and changes
+3. ✅ **OQ-3 — Where should `ResolvedTaxRate` live? — RESOLVED 2026-09-03: (a), `app/Actions/Products/`.**
+   Beside its only producer. Needs no new base folder, so no `CLAUDE.md` approval is required, and it
+   matches this codebase's existing precedent (`Actions/` classes composed with a plain PHP value
+   object living beside them rather than in a dedicated DTO folder).
+4. ✅ **OQ-4 — Should the picker's labels be qualified or grouped? — RESOLVED 2026-09-03: qualified**
+   (`"España (Península)"`, `group: null`), matching PRD §2.1's own spelling and 0022's D3 expectation
+   of a flat list for this consumer, and making a selected chip self-describing. Grouped
+   (`label: "Península"`, `group: "España"`) is purely additive if a later story prefers it — changes
    nothing in 0022's shell or 0027's binding.
 
 ### Larastan level 7 notes
@@ -1369,10 +1412,10 @@ Non-blocking for the schema; **confirm before Phase 3.**
 
 ## Technical tasks for later backlog
 
-- **Correct [`migrations.md`](../../docs/database/migrations.md#structure)'s explicit-FK-index
+- **Correct [`migrations.md`](../../../docs/database/migrations.md#structure)'s explicit-FK-index
   instruction** — already owned by 0024's D-10; this story is the second table it would damage, and
   V-3 is a second independent confirmation.
-- **Raise CI's database configuration as its own task** (0024 V-1 / R-7). ⚠️ **Done — closed 2026-08-26** by [`ci-database-connection-gap.md`](ci-database-connection-gap.md); no longer an action item. It blocked the Full Test
+- **Raise CI's database configuration as its own task** (0024 V-1 / R-7). ⚠️ **Done — closed 2026-08-26** by [`ci-database-connection-gap.md`](../ci-database-connection-gap.md); no longer an action item. It blocked the Full Test
   Suite Gate from being satisfiable in CI for every story, not just this one.
 - ~~**If OQ-1 resolves to (b)**, a story to model grouping membership.~~ **Withdrawn 2026-08-18 (D10)**
   — groupings are removed from the catalog, so no membership data is ever needed.
@@ -1383,10 +1426,10 @@ Non-blocking for the schema; **confirm before Phase 3.**
 ## Provenance
 
 Phase 1 (Three Amigos) debate run on 2026-08-18 per
-[workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate), grounded in full readings of
-[0016](done/0016-sales-region-catalog-schema-and-seeder.md),
-[0017](done/0017-sales-region-tax-configuration-backend.md),
-[0024](done/0024-products-core-crud-backend.md), [PRD](../../docs/PRD/PRD.md) §2.1 / §2.2 / §3.2, and this
+[workflow.md](../../../docs/workflow.md#phase-1--three-amigos-debate), grounded in full readings of
+[0016](../done/0016-sales-region-catalog-schema-and-seeder.md),
+[0017](../done/0017-sales-region-tax-configuration-backend.md),
+[0024](../done/0024-products-core-crud-backend.md), [PRD](../../../docs/PRD/PRD.md) §2.1 / §2.2 / §3.2, and this
 project's conventions, security and testing doc sets.
 
 **Participants, and one honest gap:**
@@ -1403,8 +1446,25 @@ project's conventions, security and testing doc sets.
   `is_default`/`parent_id` index re-examination above are `product-owner`'s own work, verified by
   probing the real schema grammar (V-1–V-3) rather than reasoned from memory. It carries **no
   independent specialist review**, which is exactly the single-source weakness
-  [errors-log.md](../../docs/errors-log.md) records for the `getOriginal()`/`getPrevious()` mistake.
-  **Re-convene `database-expert` on this document before Phase 3.**
+  [errors-log.md](../../../docs/errors-log.md) records for the `getOriginal()`/`getPrevious()` mistake.
+  ~~**Re-convene `database-expert` on this document before Phase 3.**~~ **Done 2026-09-03.**
+  `database-expert` reviewed the migration/schema design (D1, the pivot shape, indexes), D12's
+  `Rule::exists()->where()` query shape, and V-1–V-3 — this time against a **live** MySQL database
+  (`testing_0026`, migrated and reachable, unlike Phase 1's agent shell), not schema-grammar probing
+  alone. **Sign-off: no blocking concerns for Phase 3.** V-1–V-3 all reconfirmed live (`php artisan
+  db:table product_sales_region` against a real, migrated instance of the documented migration shows
+  exactly two indexes: the compound primary key and the FK-support index InnoDB auto-creates on
+  `sales_region_id` — no duplicate, nothing hand-written). One real finding, already corrected in
+  place at D12 rather than left standing: the nested-group warning under `salesRegionIdRules()`
+  stated the wrong mechanism (its **code** was always correct; its **stated reason** was not —
+  `DatabaseRule::where()` already isolates every registered closure in its own group, so the
+  "un-nested `orWhereIn` matches everything" scenario it warned against is unreachable on this
+  Laravel version). The naming question it separately raised (whether `salesRegionIdsRules()` /
+  `salesRegionIdRules()` should carry `ProductValidationRules`'s `product` prefix) was already
+  resolved by this document's own text a few lines below the trait code — "no entity prefix needed on
+  either name" — and needs no change; `docs-keeper` should narrow
+  [naming.md](../../../docs/conventions/naming.md)'s "applied uniformly" phrasing at Phase 6 to say the
+  entity-prefix exception binds where a real cross-trait collision exists, not unconditionally.
 
 **Two places this document departs from a specialist's recommendation**, recorded so Phase 2 sees them
 as decisions rather than oversights:
@@ -1428,7 +1488,7 @@ most separable piece. **Open questions**: OQ-1 is now **resolved** (D10); OQ-2�
 be answered before Phase 3 the same way 0017's seven questions were resolved before its own.
 
 **Amended 2026-08-19** with three findings raised by story
-[0027](0027-products-list-and-editor-ui.md) while building the product editor that consumes this
+[0027](../0027-products-list-and-editor-ui.md) while building the product editor that consumes this
 story — **D12** (validation must exempt already-assigned ids, or a product holding a since-deactivated
 region becomes unsaveable; raised there as OQ-5), **D13** (no transaction spanned the core-field write
 and the region sync — assigned to 0027 as an explicit orchestration hand-off) and **D14** (an ownership
