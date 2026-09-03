@@ -95,7 +95,7 @@ export const RestaurantSettingsPanel: React.FC = () => {
   return (
     <>
       <PanelHeader icon={<Building2 className="text-primary-color" />} title="Configuración General del Restaurante" />
-      <form onSubmit={submit} className="flex-column flex-gap-md mt-4">
+      <form onSubmit={submit} className="flex-column flex-gap-md mt-4 settings-form">
         <Field id="setting-restaurant-name" label="Nombre del Restaurante" type="text" required value={settings.restaurantName} onChange={(v) => setField('restaurantName', v)} />
 
         <div className={`metrics-grid ${styles['two-col-grid']}`}>

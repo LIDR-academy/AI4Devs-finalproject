@@ -220,6 +220,13 @@ h3 {
   color: var(--text-secondary);
 }
 
+/* TK-095-FE WS-2 #5/#6: los formularios de /ajustes ya no se centran ni se
+   encogen (ver `.flex-column`), pero un campo único no debe estirarse a todo el
+   ancho del `<main>`. Los acota a un ancho legible, alineados a la izquierda. */
+.settings-form {
+  max-width: 680px;
+}
+
 /* Estructura de Tarjetas (Sistema FEFO — bordes de sello, sin sombra) */
 .card-dashboard {
   background-color: var(--bg-card);
@@ -310,6 +317,10 @@ h3 {
 .flex-column {
   display: flex;
   flex-direction: column;
+  /* TK-095-FE WS-2 #5: los utilitarios `.flex-gap-*` traen `align-items: center`
+     (semántica de fila). Compuestos con `.flex-column` en formularios eso encogía
+     y centraba los campos a ~240px. En columna, los hijos se estiran. */
+  align-items: stretch;
 }
 
 .flex-1 {

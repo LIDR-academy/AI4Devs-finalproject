@@ -157,7 +157,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({ onCreated }) => 
   const form = useCreateUserForm(onCreated);
 
   return (
-    <form onSubmit={form.handleSubmit} className="flex-column flex-gap-md">
+    <form onSubmit={form.handleSubmit} className="flex-column flex-gap-md settings-form">
       {form.error && <ErrorBanner message={form.error} />}
 
       <CreateUserFields
