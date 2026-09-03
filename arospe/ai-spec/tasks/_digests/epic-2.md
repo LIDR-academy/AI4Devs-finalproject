@@ -70,3 +70,41 @@ re-derive, never the full prose of a finalized story.
 - Full mechanism, the exception-type reasoning (`ValidationException` not a domain exception, since a
   Livewire error bag needs no per-call-site try/catch), and the residual count-disclosure note are
   documented at [docs/database/schema.md#product_categories](../../../docs/database/schema.md#product_categories).
+
+## Story 0025 — Product categories management screen (list, create/edit modal, blocked delete)
+
+- `App\Livewire\ProductCategories\Index` — flat view path per the `Index`-in-a-subfolder exception
+  (`resources/views/livewire/product-categories.blade.php`, not `product-categories/index.blade.php`).
+  Route `GET /product-categories` → `product-categories.index`, `can:products.view`, declared in
+  `routes/product-categories.php` — story 0025.
+- Public surface: `$productCategories` (array of `{id, name, productCount, canEdit, canDelete}`,
+  **deliberately unlocked** — display-only, every mutating method re-`findOrFail()`s + re-authorizes),
+  `#[Locked] ?string $editingCategoryId` (assigned only from `$target->id`), `string $name = ''`
+  (the only form field, never `?string`), `#[Locked] ?string $deletingCategoryId`,
+  `#[Locked] string $deletingCategoryName` — story 0025.
+- `App\Actions\ProductCategories\{Create,Rename,Delete}ProductCategory` **were modified by this
+  story** to each self-authorize as their own first statement (constructor-injecting
+  `App\Actions\Auth\LogRefusedPrivilegedAttempt`), discharging 0023's/0024b's hand-off — this is the
+  first and only call site of `ProductCategoryPolicy`, for all four abilities at once. In
+  `DeleteProductCategory` the new authorize call runs **before** the in-use count — order is
+  load-bearing (leaking the count to a `products.delete`-less actor otherwise) — story 0025.
+- The component gates as defence in depth on **all five** mutating/disclosing methods
+  (`openCreateModal`, `openEditModal`, `save`, `confirmDelete`, `deleteProductCategory`), passing
+  `targetType: 'product_category'`/`targetId` explicitly to every `LogRefusedPrivilegedAttempt::authorize()`
+  call (`resolveTarget()` only auto-resolves `User`/`Role`) — story 0025.
+- The domain-invariant in-use refusal is logged too, per 0024b's OQ-B1 hand-off: inside
+  `blockedByProducts()` (reached from both the primary count check and the 1451-race catch),
+  `$this->logRefusedPrivilegedAttempt->log(Auth::user(), 'category_in_use', 'product_category',
+  $productCategory->id)`, distinguishable from the `'delete'` Gate refusal by its `ability` value —
+  `tests/Feature/ProductCategories/RefusalLoggingTest.php`'s seventh test pins it — story 0025.
+- `config/modules.php` gained `items.product_categories` (`group: platform`, icon `tag`,
+  `permissions: ['products.view']`) with matching `lang/{en,es}/navigation.php` leaves;
+  `resources/views/layouts/app/sidebar.blade.php` untouched (registry-only, per task 0013's
+  mechanism) — story 0025.
+- `lang/{en,es}/products.php` gained `categories.index.action_not_allowed` only — **no**
+  `summary`/header-count key (OQ-2 resolved: no header line, since nothing in the PRD asks for one
+  and there's no second dimension to summarise like Users has "active") — story 0025.
+- Full mechanism (the two-layer gating, the `#[Locked]`/unlocked property split, the row-hint
+  parity) is documented at
+  [docs/api/routes.md#product-categoriesindex--the-fourth-permission-gated-route](../../../docs/api/routes.md#product-categoriesindex--the-fourth-permission-gated-route)
+  and [docs/architecture/authorization.md#productcategorypolicy--the-fifth-policy-and-the-first-to-gain-its-call-site-in-a-later-story-than-the-one-that-created-it](../../../docs/architecture/authorization.md#productcategorypolicy--the-fifth-policy-and-the-first-to-gain-its-call-site-in-a-later-story-than-the-one-that-created-it).

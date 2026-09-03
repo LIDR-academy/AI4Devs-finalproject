@@ -312,7 +312,20 @@ Nothing is user-visible yet: the screen that renders the refusal is story 0025, 
       also states the refusal message-carrying retrofit is *"0024b's retrofit to
       `DeleteProductCategory`, **not yet shipped as of this story**"* — false the moment this story
       merges; correct it in the same pass rather than only the section this bullet already named.
-- [x] **Hand-off recorded for story 0025 — corrected at Phase 4 (audit finding F-1, blocking)**: it
+- [x] **Hand-off recorded for story 0025 — corrected at Phase 4 (audit finding F-1, blocking) —
+      ✅ FULLY DISCHARGED 2026-09-03.** *Interim note, same day: the docs-sync pass initially found
+      this only partially discharged (three of four items shipped, the invariant-refusal log call
+      missing) and recorded it honestly as an open gap rather than marking it done — the paragraph
+      below is left as written at that moment, since it is what a reader following the hand-off chain
+      needs. The gap was then closed the same day: `App\Actions\ProductCategories\DeleteProductCategory`
+      now calls `$this->logRefusedPrivilegedAttempt->log(Auth::user(), 'category_in_use',
+      'product_category', $productCategory->id)` inside `blockedByProducts()` (reached from both the
+      primary `$inUseCount > 0` check and the 1451-race catch, so every occurrence of the block logs
+      once), and `tests/Feature/ProductCategories/RefusalLoggingTest.php` gained a seventh test —
+      `"the 'category in use' domain-invariant refusal is logged, distinguishable from an authorization
+      refusal"` — pinning `ability: 'category_in_use'` distinct from `'delete'`. All four items of the
+      original instruction are now shipped.*
+      The instruction is quoted in full first, per this project's audit-authored-page convention: *"it
       must bind its delete-confirmation modal's `@error` to **`productCategoryId`**, must **not** add a
       confirm-and-proceed or force-delete control of any kind, and must add the authorization gate
       **inside `App\Actions\ProductCategories\DeleteProductCategory` itself, as its own first statement**
@@ -331,12 +344,30 @@ Nothing is user-visible yet: the screen that renders the refusal is story 0025, 
       below the gate, never to the gate itself. 0025 must also log the invariant refusal itself —
       `->log($actor, 'category_in_use', 'product_category', $category->id)` immediately after catching
       this action's `ValidationException`, per **OQ-B1**'s resolution (unchanged: the invariant check has
-      no `Gate` call of its own to log through).
-- [x] **The 0023 comment defect is raised rather than absorbed** (see **D-B1**): the docblock in
-      `app/Actions/ProductCategories/CreateProductCategory.php` claims the caller-authorizes shape
-      "matches `CreateUser`/`UpdateUser`", which is false. Not this story's to fix; recorded here, in
-      [0024](0024-products-core-crud-backend.md)'s corrections table and in
-      [0025](../in-progress/0025-product-categories-ui.md)'s risks, so 0025 meets a decision rather than a silence.
+      no `Gate` call of its own to log through)."* **Three of four items shipped as instructed**: the
+      `@error('productCategoryId')` binding, no confirm-and-proceed/force-delete control, and the
+      authorization gate inside `DeleteProductCategory` itself as its own first statement (verified —
+      `app/Actions/ProductCategories/DeleteProductCategory.php`), above the in-use count, exactly per
+      **D-B2**'s ordering. **The fourth — logging the invariant refusal itself — was not shipped.**
+      The shipped action's own docblock states the opposite of this instruction: *"why this is a
+      ValidationException rather than a Gate-mediated 403, and why it stays unlogged through
+      LogRefusedPrivilegedAttempt -- it has no Gate call of its own to log through."* No
+      `->log('category_in_use', ...)` call, or equivalent, exists anywhere in `app/` (verified by
+      grep), and `tests/Feature/ProductCategories/RefusalLoggingTest.php` covers only the six
+      `Gate`-mediated refusals, none of them the in-use block. Recorded here as an open gap against
+      this hand-off's own instruction, not silently marked done — a future story revisiting this
+      screen's logging should treat **OQ-B1**'s resolution as still unimplemented rather than assume
+      story 0025 closed it.
+- [x] **The 0023 comment defect is raised rather than absorbed — ✅ CLOSED 2026-09-03 by story 0025**
+      (see **D-B1**): recorded in full first, per this project's audit-authored-page convention, this
+      bullet used to read *"the docblock in `app/Actions/ProductCategories/CreateProductCategory.php`
+      claims the caller-authorizes shape 'matches `CreateUser`/`UpdateUser`', which is false. Not this
+      story's to fix; recorded here, in [0024](0024-products-core-crud-backend.md)'s corrections table
+      and in [0025](../in-progress/0025-product-categories-ui.md)'s risks, so 0025 meets a decision
+      rather than a silence."* Story 0025 rewrote the action's docblock wholesale as part of adding its
+      own self-authorization (its **R-6**), so the false comment is gone rather than merely superseded
+      — `CreateProductCategory`'s current docblock cites `App\Actions\Products\CreateProduct`/
+      `UpdateProduct`'s **self**-authorizing shape as the precedent it matches, which is now true.
 - [x] Acceptance criteria met.
 
 ## Documented functional decisions

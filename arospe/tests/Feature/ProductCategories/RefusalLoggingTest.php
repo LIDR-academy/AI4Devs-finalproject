@@ -14,6 +14,8 @@
 
 use App\Actions\ProductCategories\CreateProductCategory;
 use App\Livewire\ProductCategories\Index;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -188,4 +190,38 @@ test('deleteProductCategory() authorization refusal is logged', function () {
             && ($context['target_id'] ?? null) === $target->id
             && productCategoriesRefusalLogContextHasNoSecretLookingKey($context))
         ->once();
+});
+
+// =====================================================================
+// The domain-invariant "category in use" block -- reached through
+// deleteProductCategory() with no action-layer detour. 0024b's OQ-B1
+// resolution requires this refusal to be logged too, distinguishably from
+// an authorization refusal (0024b's own Definition of Done, discharged by
+// this story).
+// =====================================================================
+
+test("the 'category in use' domain-invariant refusal is logged, distinguishable from an authorization refusal", function () {
+    Log::spy();
+
+    $creator = productCategoriesRefusalTestActor(['products.view', 'products.create', 'products.delete']);
+    $this->actingAs($creator);
+    $target = app(CreateProductCategory::class)('Calzado');
+    Product::factory()->create(['product_category_id' => $target->id]);
+
+    Livewire::test(Index::class)
+        ->call('confirmDelete', $target->id)
+        ->call('deleteProductCategory')
+        ->assertHasErrors('productCategoryId');
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context): bool => $message === 'Privileged action refused'
+            && ($context['actor_id'] ?? null) === $creator->id
+            && ($context['ability'] ?? null) === 'category_in_use'
+            && $context['ability'] !== 'delete'
+            && ($context['target_type'] ?? null) === 'product_category'
+            && ($context['target_id'] ?? null) === $target->id
+            && productCategoriesRefusalLogContextHasNoSecretLookingKey($context))
+        ->once();
+
+    expect(ProductCategory::find($target->id))->not->toBeNull();
 });

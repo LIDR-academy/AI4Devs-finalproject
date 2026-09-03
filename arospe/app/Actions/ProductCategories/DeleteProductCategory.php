@@ -5,6 +5,7 @@ namespace App\Actions\ProductCategories;
 use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Models\ProductCategory;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class DeleteProductCategory
@@ -36,9 +37,14 @@ class DeleteProductCategory
      * authorization one (see docs/architecture/authorization.md's "a domain
      * invariant is not an authorization rule" section): the actor may hold
      * products.delete and the answer is still no, which is why this is a
-     * ValidationException rather than a Gate-mediated 403, and why it stays
-     * unlogged through LogRefusedPrivilegedAttempt -- it has no Gate call
-     * of its own to log through.
+     * ValidationException rather than a Gate-mediated 403 -- and, per
+     * 0024b's OQ-B1 resolution (discharged 2026-09-03, story 0025), it IS
+     * logged via LogRefusedPrivilegedAttempt::log() (never ->authorize(),
+     * which would re-run the already-passed Gate check above), with the
+     * snake_case reason 'category_in_use' matching the non-Gate refusal
+     * convention App\Actions\SalesRegions\SetDefaultSalesRegion/
+     * SetSalesRegionActive already established for their own D10/D3
+     * domain-invariant refusals.
      */
     public function __invoke(ProductCategory $productCategory): bool
     {
@@ -52,7 +58,7 @@ class DeleteProductCategory
         $inUseCount = $productCategory->products()->count();
 
         if ($inUseCount > 0) {
-            throw $this->blockedByProducts($inUseCount);
+            throw $this->blockedByProducts($productCategory, $inUseCount);
         }
 
         try {
@@ -86,14 +92,14 @@ class DeleteProductCategory
             // true rather than merely asserted. Re-derive this catch the day a THIRD table adds a
             // restricting FK here and the drift guard fails.
             if (($e->errorInfo[1] ?? null) === 1451) {
-                throw $this->blockedByProducts($productCategory->products()->count());
+                throw $this->blockedByProducts($productCategory, $productCategory->products()->count());
             }
 
             throw $e;
         }
     }
 
-    private function blockedByProducts(int $count): ValidationException
+    private function blockedByProducts(ProductCategory $productCategory, int $count): ValidationException
     {
         // max(1, ...): a PRESENTATION floor, not a correctness claim about how many products
         // actually reference the row (Phase 4 audit finding F-3, comment corrected at Phase 5
@@ -110,6 +116,8 @@ class DeleteProductCategory
         // The primary $inUseCount > 0 call site never needs this floor; it only ever runs once
         // the count is already positive.
         $count = max(1, $count);
+
+        $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'category_in_use', 'product_category', $productCategory->id);
 
         return ValidationException::withMessages([
             'productCategoryId' => trans_choice('products.categories.delete_blocked', $count, ['count' => $count]),
