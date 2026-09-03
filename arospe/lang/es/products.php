@@ -28,4 +28,10 @@ return [
             'action_not_allowed' => 'Acción no permitida',
         ],
     ],
+
+    // Story 0026 -- key-for-key identical to lang/en/products.php.
+    'sales_regions' => [
+        'not_in_catalog' => 'Una de las zonas de venta seleccionadas no está en el catálogo.',
+        'not_assignable' => 'Una de las zonas de venta seleccionadas no se puede asignar -- puede estar desactivada, o puede ser una cabecera sobre territorios fiscales en lugar de una entrada asignable.',
+    ],
 ];

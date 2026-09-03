@@ -30,4 +30,14 @@ return [
             'action_not_allowed' => 'Action not allowed',
         ],
     ],
+
+    // Story 0026 -- refusal messages for App\Concerns\ProductValidationRules'
+    // salesRegionIdRules(). Both keys back the same Rule::exists()->where() match, so a
+    // consumer's validate() call cannot distinguish which of the two conditions failed
+    // (nonexistent vs. not assignable) from the closure alone -- either key is a reasonable
+    // choice for the field-level message; 0027's save path decides which.
+    'sales_regions' => [
+        'not_in_catalog' => 'One of the selected sales regions is not in the catalog.',
+        'not_assignable' => 'One of the selected sales regions cannot be assigned -- it may be disabled, or it may be a heading over fiscal territories rather than an assignable entry.',
+    ],
 ];

@@ -42,6 +42,7 @@ use Illuminate\Support\Carbon;
  * @property-read ProductCategory|null $category
  * @property-read Media|null $featuredImage
  * @property-read Collection<int, Media> $gallery
+ * @property-read Collection<int, SalesRegion> $salesRegions
  */
 #[Fillable(['name', 'sku', 'product_category_id', 'type', 'status', 'price', 'stock', 'description'])]
 class Product extends Model
@@ -108,6 +109,21 @@ class Product extends Model
             ->withPivot('position')
             ->orderByPivot('position')
             ->orderByPivot('media_id');
+    }
+
+    /**
+     * The Sales Region entries this product is assigned to (story 0026).
+     * Table/column names written explicitly even though all three match
+     * convention -- this relation is the one place a future rename would
+     * silently start pointing at nothing. No inverse `SalesRegion::products()`
+     * relation exists -- nothing in this story or its declared consumers
+     * needs "which products target this region".
+     *
+     * @return BelongsToMany<SalesRegion, $this>
+     */
+    public function salesRegions(): BelongsToMany
+    {
+        return $this->belongsToMany(SalesRegion::class, 'product_sales_region', 'product_id', 'sales_region_id');
     }
 
     /**

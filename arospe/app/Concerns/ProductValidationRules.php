@@ -6,6 +6,7 @@ use App\Enums\ProductStatus;
 use App\Enums\ProductType;
 use App\Models\Product;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
 /**
@@ -205,5 +206,71 @@ trait ProductValidationRules
     protected function productGalleryMediaIdsRules(): array
     {
         return ['array', 'max:20'];
+    }
+
+    /**
+     * Get the validation rules used to validate a product's Sales Region
+     * assignment array (story 0026). No entity prefix needed on either this
+     * or `salesRegionIdRules()` -- 0024's naming trap applies only to leaf
+     * methods that clash across composed traits, and neither of these does.
+     *
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function salesRegionIdsRules(): array
+    {
+        return ['array'];
+    }
+
+    /**
+     * Rules for ONE submitted sales-region id (story 0026, D12).
+     *
+     * $preservedSalesRegionIds are the ids **already persisted on the
+     * product being edited**, read from the database and never from the
+     * request. They are exempt from the *assignable* conditions, because a
+     * since-deactivated entry that is already assigned is being
+     * **preserved**, not newly chosen -- it must only still exist in the
+     * catalog. Every other submitted id (i.e. every genuinely new one)
+     * still faces the full active + not-a-heading match.
+     *
+     * The `is_active` and no-children conditions are part of the `exists`
+     * MATCH, not a follow-up `if` -- same shape as 0017's
+     * `replacementDefaultRules()` -- and the OR sits INSIDE the same
+     * per-element `Rule::exists()->where(Closure)` call, so a single bad
+     * element still fails the whole request and `SyncProductSalesRegions`
+     * is never invoked.
+     *
+     * `$preservedSalesRegionIds` must be server-derived, always -- from
+     * `$product->salesRegions` (or a direct pivot query), never from the
+     * request. Taking it from a client-supplied value would let a caller
+     * name any id as "already assigned" and bypass the `is_active` /
+     * no-heading gate entirely.
+     *
+     * `required` is what makes an empty-string element fail: Laravel's
+     * Validator skips every non-implicit rule (`string`, `distinct`,
+     * `exists`) for a trimmed-empty string value
+     * (`Validator::presentOrRuleIsImplicit()`), so without an implicit rule
+     * present an empty-string id would silently validate.
+     *
+     * @param  array<int, string>  $preservedSalesRegionIds
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function salesRegionIdRules(array $preservedSalesRegionIds = []): array
+    {
+        return [
+            'required',
+            'string',
+            'distinct',
+            Rule::exists('sales_regions', 'id')->where(
+                fn (Builder $query) => $query->where(
+                    fn (Builder $group) => $group
+                        ->where(fn (Builder $assignable) => $assignable
+                            ->where('is_active', true)
+                            ->whereNotExists(fn (Builder $sub) => $sub->selectRaw('1')
+                                ->from('sales_regions as children')
+                                ->whereColumn('children.parent_id', 'sales_regions.id')))
+                        ->orWhereIn('id', $preservedSalesRegionIds),
+                ),
+            ),
+        ];
     }
 }

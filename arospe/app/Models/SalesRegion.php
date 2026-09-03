@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\SalesRegionKind;
 use Database\Factories\SalesRegionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -71,5 +72,29 @@ class SalesRegion extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * Scope a query to active entries (story 0026).
+     *
+     * @param  Builder<SalesRegion>  $query
+     */
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('is_active', true);
+    }
+
+    /**
+     * Scope a query to active entries that are not headings over fiscal
+     * territories -- i.e. the entries a product may actually be assigned
+     * to (story 0026, D3). Consumed by both the validation rule and the
+     * options resolver, so the "assignable" definition exists once rather
+     * than being restated in two places that can drift.
+     *
+     * @param  Builder<SalesRegion>  $query
+     */
+    public function scopeAssignable(Builder $query): void
+    {
+        $query->active()->whereDoesntHave('children');
     }
 }
